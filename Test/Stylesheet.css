@@ -1,0 +1,145 @@
+.w200 > * {
+  width: 230px;
+}
+
+.material-icons {
+  vertical-align: middle;
+  font-size: 36px;
+  padding: 10px 2px 0 2px;
+}
+
+.material-icons-outlined {
+  vertical-align: middle;
+  width: 36px;
+  font-size: 36px;
+}
+
+.material-icons-round {
+  vertical-align: middle;
+  font-size: 1.3rem;
+}
+
+th.footable-sortable > span.fooicon-sort {
+  margin-top: -12px;
+}
+
+.fooicon-sort:before {
+  font-family: "Material Icons";
+  font-size: 1.5rem;
+  content: "\e164";
+}
+
+th.footable-sortable > span.fooicon-sort-asc {
+  margin-top: -20px;
+}
+
+.fooicon-sort-asc:before {
+  font-family: "Material Icons";
+  font-size: 1.5rem;
+  content: "\e5c7";
+}
+
+th.footable-sortable > span.fooicon-sort-desc {
+  margin-top: -4px;
+}
+
+.fooicon-sort-desc:before {
+  font-family: "Material Icons";
+  font-size: 1.5rem;
+  content: "\e5c5";
+}
+
+.btn-default {
+  padding: 0;
+}
+
+.d-flex {
+  justify-content: center;
+}
+
+.alertstyle {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.alertstyle > button {
+  margin: 0.5rem;
+}
+
+.table {
+  max-width: fit-content;
+  margin: auto;
+}
+
+table.footable-details.table {
+  max-width: none;
+  --bs-table-striped-bg: transparent;
+  border-color: transparent;
+  text-align: end;
+}
+
+table.footable-details > tbody > tr > td {
+  text-align: start;
+}
+
+.footable-header {
+  --bs-table-bg: #cfe2ff;
+  color: #000;
+  border-color: #bacbe6;
+}
+
+.table > tbody {
+  white-space: nowrap;
+}
+
+.vertical-center {
+  min-height: 85%;
+  min-height: 85vh;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.nav-link {
+  padding: 1.1rem;
+}
+
+.navbar-toggler.collapsed {
+  margin-bottom: 0rem !important;
+}
+
+.modal-footer {
+  justify-content: space-evenly;
+}
+
+.form-group.required .control-label:after,
+.form-floating.required label:after {
+  content: "*";
+  color: red;
+  margin-left: 4px;
+}
+
+.row > .form-floating > label {
+  left: auto;
+}
+
+.modal-body.row {
+  align-content: start;
+}
+
+.form-floating.required.readonly label:after {
+  content: "";
+  color: red;
+  margin-left: 4px;
+}
+
+.form-switch {
+  margin-left: 1rem;
+  width: 90%;
+}
+
+footer {
+  pointer-events: none;
+}
