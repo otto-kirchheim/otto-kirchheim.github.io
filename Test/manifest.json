@@ -1,7 +1,7 @@
 {
   "name": "WebApp Bereitschaft, EWT & Nebenbezüge",
   "short_name": "WebApp",
-  "start_url": "/",
+  "start_url": "/Test/",
   "display": "standalone",
   "description": "Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zettel",
   "lang": "de_DE",
@@ -687,7 +687,7 @@
   "shortcuts": [
     {
       "name": "Start",
-      "url": "/",
+      "url": "/Test/",
       "description": "Start"
     }
   ]
