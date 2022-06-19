@@ -1,7 +1,7 @@
 {
   "name": "WebApp Bereitschaft, EWT & Nebenbezüge",
   "short_name": "WebApp",
-  "start_url": "otto-kirchheim.github.io/Test",
+  "start_url": "/",
   "display": "standalone",
   "description": "Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zettel",
   "lang": "de_DE",
@@ -683,19 +683,12 @@
       "purpose": "any"
     }
   ],
-  "screenshots": [
-    {
-      "src": "https://www.pwabuilder.com/assets/screenshots/screen1.png",
-      "sizes": "2880x1800",
-      "type": "image/png",
-      "description": "A screenshot of the home page"
-    }
-  ],
+  "url": "https://otto-kirchheim.github.io/Test/",
   "shortcuts": [
     {
-      "name":"Start",
-      "url":"/",
-      "description":"Start"
-  }
+      "name": "Start",
+      "url": "/",
+      "description": "Start"
+    }
   ]
 }
