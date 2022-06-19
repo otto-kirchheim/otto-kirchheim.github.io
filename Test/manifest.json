@@ -684,11 +684,5 @@
     }
   ],
   "url": "https://otto-kirchheim.github.io/Test/",
-  "shortcuts": [
-    {
-      "name": "Start",
-      "url": "/Test/",
-      "description": "Start"
-    }
-  ]
+  "shortcuts": [{}]
 }
