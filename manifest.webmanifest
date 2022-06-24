@@ -1,7 +1,7 @@
 {
   "name": "WebApp Bereitschaft, EWT & Nebenbezüge",
   "short_name": "WebApp",
-  "start_url": "/Test/",
+  "start_url": "/",
   "display": "standalone",
   "description": "Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zettel",
   "lang": "de_DE",
@@ -9,7 +9,7 @@
   "theme_color": "#000000",
   "background_color": "#000000",
   "orientation": "any",
-  "url": "https://otto-kirchheim.github.io/Test/",
+  "url": "https://otto-kirchheim.github.io/",
   "icons": [
     {
       "src": "icons/71x71-icon.png",
@@ -694,34 +694,34 @@
   ],
   "shortcuts": [
     {
-      "name": "Start",
-      "url": "/Test/",
-      "description": "Start"
-    },
-    {
       "name": "Bereitschaft",
-      "url": "/Test/#AnzeigenB",
+      "url": "/#AnzeigenB",
       "description": "Bereitschafts-Zettel"
     },
     {
       "name": "EWT",
-      "url": "/Test/#AnzeigenE",
+      "url": "/#AnzeigenE",
       "description": "EWT-Zettel"
     },
     {
       "name": "Nebenbezüge",
-      "url": "/Test/#AnzeigenN",
+      "url": "/#AnzeigenN",
       "description": "Nebenbezüge-Zettel"
     },
     {
       "name": "Berechnung",
-      "url": "/Test/#Berechnung",
+      "url": "/#Berechnung",
       "description": "Berechnung"
     },
     {
       "name": "Einstellungen",
-      "url": "/Test/#Einstellungen",
+      "url": "/#Einstellungen",
       "description": "Einstellungen"
+    },
+    {
+      "name": "Start",
+      "url": "/",
+      "description": "Start"
     }
   ]
 }

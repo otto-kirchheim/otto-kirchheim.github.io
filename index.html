@@ -1,30 +1,1185 @@
-<html>
-  <head>
-    <meta name="robots" content="noindex">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
-    <meta name="author" content="Jan Otto">
-    <meta name="mobile-web-app-capable" content="true">
-    <meta name="apple-mobile-web-app-capable" content="true">
-    <title>WebApp Bereitschaft, EWT & Nebenbezüge</title>
-  </head>
-  <body style="margin: 0px; padding: 0px; overflow: hidden">
-    <iframe
-      src="https://script.google.com/macros/s/AKfycbzj2dPFeGQuO-FaCBGsuQ3xcjTuDW4I499LUgmWJiM_OXoVB6pgtDI43DhX6SxpzA1x/exec"
-      frameborder="0"
-      style="
-        overflow: hidden;
-        overflow-x: hidden;
-        overflow-y: hidden;
-        height: 100%;
-        width: 100%;
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        right: 0px;
-        bottom: 0px;
-      "
-      height="100%"
-      width="100%"
-    ></iframe>
-  </body>
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <base target="_top">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
+  <meta name="author" content="Jan Otto">
+  <meta name="mobile-web-app-capable" content="true">
+  <meta name="apple-mobile-web-app-capable" content="true">
+  <title>WebApp Bereitschaft, EWT & Nebenbezüge</title>
+  <link rel="icon" type="image/png" href="icons/16x16-icon.png" sizes="16x16">
+  <link rel="icon" type="image/png" href="icons/32x32-icon.png" sizes="32x32">
+  <link rel="shortcut icon" type="image/png" href="icons/48x48-icon.png" sizes="48x48">
+  <link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96">
+  <link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192">
+  <link rel="stylesheet" href="src/bootstrap.min.css">
+  <link rel="stylesheet" href="src/fonts.css">
+  <link rel="stylesheet" href="src/toastr.min.css">
+  <link rel="stylesheet" href="src/footable.bootstrap.min.css">
+  <script>navigator.serviceWorker.register("sw.js")</script>
+  <link rel="stylesheet" href="src/Stylesheet.css">
+</head>
+
+<body class="d-flex flex-column mb-3">
+  <nav class="navbar navbar-expand-sm navbar-dark bg-dark d-none" id="tab">
+    <button class="navbar-toggler ms-2 mb-2 collapsed" type="button" data-bs-toggle="collapse"
+      data-bs-target="#navmenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navmenu">
+      <ul class="nav nav-pills mx-auto nav-justified flex-column flex-sm-row" id="tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active text-center" id="home-tab" data-bs-toggle="pill" data-bs-target="#home"
+            type="button" role="tab">Home</button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button class="nav-link text-center" id="AnzeigenB-tab" data-bs-toggle="pill" data-bs-target="#AnzeigenB"
+            type="button" role="tab">Bereitschaft</button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button class="nav-link text-center" id="AnzeigenE-tab" data-bs-toggle="pill" data-bs-target="#AnzeigenE"
+            type="button" role="tab">EWT</button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button class="nav-link text-center d-none" id="AnzeigenN-tab" data-bs-toggle="pill"
+            data-bs-target="#AnzeigenN" type="button" role="tab">Nebenbezüge</button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button class="nav-link text-center" id="Berechnung-tab" data-bs-toggle="pill" data-bs-target="#Berechnung"
+            type="button" role="tab">Berechnung</button>
+        </li>
+
+        <li class="nav-item" role="presentation">
+          <button class="nav-link text-center" id="Einstellungen-tab" data-bs-toggle="pill"
+            data-bs-target="#Einstellungen" type="button" role="tab">Einstellungen</button>
+        </li>
+      </ul>
+    </div>
+
+  </nav>
+
+  <div class="container mx-auto" id="alertPlaceholder">
+    <div class="alert alert-danger show fade text-center" role="alert">
+      Bitte Cookies zulassen!
+    </div>
+  </div>
+
+  <div class="tab-content" id="tabContent">
+    <!-- Tab Home -->
+    <div class="tab-pane fade show active" id="home" role="tabpanel">
+      <div class="container text-center vertical-center">
+        <div class="col-6 mx-auto">
+          <h1 class="mx-auto" id="Willkommen">Willkommen</h1>
+        </div>
+
+        <div id="loginDisplay" class="d-grid col-6 col-md-3 mx-auto">
+          <form onsubmit="event.preventDefault(); loginUser()">
+            <div class="form-floating">
+              <input id="Benutzer" type="text" class="form-control validate" pattern="[A-z]*" required>
+              <label for="Benutzer">Benutzer</label>
+            </div>
+            <div class="form-floating">
+              <input id="Passwort" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*" required>
+              <label for="Passwort">Passwort</label>
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-primary" type="submit" name="Einloggen" id="btnLogin">
+                Einloggen
+              </button>
+            </div>
+            <div class="d-grid gap-2 mt-2">
+              <button class="btn btn-primary" type="button" name="Neu"
+                onclick="document.getElementById('loginDisplay').classList.add('d-none'), document.getElementById('NewDisplay').classList.remove('d-none')">
+                Neuer Benutzer
+              </button>
+            </div>
+            <span id="errorMessage" class="text-danger mx-auto"></span>
+          </form>
+        </div>
+
+        <div id="NewDisplay" class="d-grid col-6 col-md-3 mx-auto d-none">
+          <form onsubmit="event.preventDefault(); checkNeuerBenutzer()">
+            <div class="form-floating">
+              <input id="Zugang" type="text" class="form-control validate" required>
+              <label for="Zugang">Zugangscode</label>
+            </div>
+            <div class="form-floating">
+              <input id="Benutzer2" type="text" class="form-control validate" pattern="[A-z]*" data-bs-toggle="popover"
+                data-bs-trigger="focus" data-bs-placement="right" data-bs-original-titel="Benutzer"
+                data-bs-content="Kein Ää Öö Üü ß" required>
+              <label for="Benutzer2">Benutzer</label>
+            </div>
+            <div class="form-floating">
+              <input id="Passwort1" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+              <label for="Passwort1">Passwort</label>
+            </div>
+            <div class="form-floating">
+              <input id="Passwort2" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+              <label for="Passwort2">Passwort wiederholen</label>
+            </div>
+            <div class="d-grid gap-2 mt-2">
+              <button class="btn btn-primary" type="submit" name="Neu" id="btnNeu">
+                Neuer Benutzer
+              </button>
+            </div>
+            <div class="d-grid gap-2 mt-2">
+              <button class="btn btn-primary" type="button"
+                onclick="document.getElementById('NewDisplay').classList.add('d-none'), document.getElementById('loginDisplay').classList.remove('d-none')">
+                Abbrechen
+              </button>
+            </div>
+            <span id="errorMessageNew" class="text-danger mx-auto"></span>
+          </form>
+        </div>
+
+        <div id="ChangeDisplay" class="d-grid col-6 col-md-3 mx-auto d-none">
+          <form onsubmit="event.preventDefault(); checkPasswort()">
+            <div class="form-floating">
+              <input id="passwortOld" type="password" class="form-control validate" required>
+              <label for="passwortOld">Altes Passwort</label>
+            </div>
+            <div class="form-floating">
+              <input id="Passwort3" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+              <label for="Passwort3">Neues Passwort</label>
+            </div>
+            <div class="form-floating">
+              <input id="Passwort4" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+              <label for="Passwort4">Neues Passwort wiederholen</label>
+            </div>
+            <div class="d-grid gap-2 mt-2">
+              <button class="btn btn-primary" type="submit" name="Change" id="btnChange">
+                Passwort Ändern
+              </button>
+            </div>
+            <div class="d-grid gap-2 mt-2">
+              <button class="btn btn-primary" type="button"
+                onclick="document.getElementById('ChangeDisplay').classList.add('d-none'), document.getElementById('SelectDisplay').classList.remove('d-none')">
+                Abbrechen
+              </button>
+            </div>
+            <span id="errorMessageChange" class="text-danger mx-auto"></span>
+          </form>
+        </div>
+
+        <div id="SelectDisplay" class="d-grid col-6 col-md-3 my-1 mx-auto d-none">
+
+          <button class="btn btn-primary col-12 mx-auto mb-2" type="button" name="Logout" onclick="Logout()">
+            Ausloggen
+          </button>
+
+          <button class="btn btn-secondary col-12 mx-auto mb-2" type="button" name="PasswortAEndern"
+            onclick="document.getElementById('SelectDisplay').classList.add('d-none'), document.getElementById('ChangeDisplay').classList.remove('d-none')">
+            Passwort Ändern
+          </button>
+
+          <form onsubmit="event.preventDefault(); SelectYear()">
+            <div class="form-floating">
+              <input id="Monat" type="number" class="form-control validate" min="1" max="12" required
+                onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Monatswechsel Speichern!!">
+              <label for="Monat">Monat</label>
+            </div>
+            <div class="form-floating">
+              <input id="Jahr" type="number" class="form-control validate" min="2021" max="2030" required
+                onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
+                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Jahreswechsel Speichern!!">
+              <label for="Jahr">Jahr</label>
+            </div>
+            <div class="d-grid gap-2 col-12 mx-auto">
+              <button class="btn btn-primary" type="submit" id="btnAuswaehlen" name="Auswählen">
+                Auswählen
+              </button>
+            </div>
+            <span id="errorMessageSelect" class="text-danger mx-auto"></span>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Bereitschaft -->
+    <div class="tab-pane fade" id="AnzeigenB" role="tabpanel">
+      <div class="container text-center">
+        <div class="row justify-content-center">
+          <h1>Bereitschaft</h1>
+          <h4 id="MonatB"></h4>
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+          <button type="button" class="btn btn-primary" id="btnESZ" data-bs-toggle="modal"
+            data-bs-target="#eingabeZeit">
+            <span class="material-icons-outlined right">add_circle_outlined</span>
+            Bereitschaftszeit
+          </button>
+          <button type="button" class="btn btn-primary" id="btnESE" data-bs-toggle="modal"
+            data-bs-target="#eingabeEinsatz">
+            <span class="material-icons-outlined right">add_circle_outlined</span>
+            Bereitschaftseinsatz
+          </button>
+          <button type="button" class="btn btn-success" id="btnUEB" onclick="saveDaten(this)">
+            <span class="material-icons-outlined right">save</span>
+            Speichern
+          </button>
+          <button type="button" class="btn btn-info" id="btnDLB" onclick="download(this, 'B')">
+            <span class="material-icons-outlined right">download</span>
+            Herunterladen (PDF)
+          </button>
+        </div>
+
+        <div class="table-responsive py-1">
+          <h4>Bereitschaftszeitraum</h4>
+          <table id="tableBZ" class="table table-bordered table-striped table-hover align-middle"></table>
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+          <button type="button" class="btn btn-danger" id="btnALB"
+            onclick="FooTable.get('#tableBZ').rows.load([]); buttonDisable(false); localStorage.setItem('dataBZ', JSON.stringify([]))">
+            Alle Zeilen löschen
+          </button>
+        </div>
+
+        <div class="table-responsive py-1">
+          <h4>Bereitschaftseinsätze</h4>
+          <table id="tableBE" class="table table-bordered table-striped table-hover align-middle"></table>
+        </div>
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+          <button class="btn btn-danger" type="button" id="btnALB" name="btnALB"
+            onclick="FooTable.get('#tableBE').rows.load([]); buttonDisable(false); localStorage.setItem('dataBE', JSON.stringify([]))">
+            Alle Zeilen löschen
+          </button>
+        </div>
+      </div>
+      <div class="modal" id="eingabeZeit" tabindex="-1">
+        <div class="modal-dialog">
+          <form class="modal-content"
+            onsubmit="event.preventDefault(); bereitschaftEingabeWeb(localStorage.getItem('UserID'))">
+            <div class="modal-header">
+              <h5 class="modal-title" id="eingabeZeitLabel">Neue Bereitschaftszeit eingeben</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+
+              <div class="form-check form-switch ">
+                <input class="form-check-input" type="checkbox" id="b12"
+                  onchange="b12aendern(JSON.parse(localStorage.getItem('VorgabenB')))">
+                <label class="form-check-label" for="b12">B1 - B2?</label>
+              </div>
+
+              <h4 class="text-center mb-1">Bereitschafts Anfang</h4>
+
+              <div class="form-floating col-7 col-sm-6 required pb-3">
+                <input id="bA" type="Date" class="form-control validate" value=""
+                  onchange="datumAnpassen(JSON.parse(localStorage.getItem('VorgabenB')))" required>
+                <label for="bA">Datum</label>
+              </div>
+
+              <div class="form-floating col-5 col-sm-6 required pb-3">
+                <input id="bAT" type="time" class="form-control validate" value="" readonly required>
+                <label for="bAT">Von</label>
+              </div>
+
+              <h4 class="text-center mb-1">Bereitschafts Ende</h4>
+
+              <div class="form-floating col-7 col-sm-6 required pb-3">
+                <input id="bE" type="Date" class="form-control validate" value="" readonly required>
+                <label for="bE">Datum</label>
+              </div>
+
+              <div class="form-floating col-5 col-sm-6 required pb-3">
+                <input id="bET" type="time" class="form-control validate" value="" readonly required>
+                <label for="bET">Bis</label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="nacht" onchange="nachtAusblenden()" checked>
+                <label class="form-check-label" for="nacht">Nachtschicht</label>
+              </div>
+
+              <div id="nachtschicht" class="row m-0 p-0">
+
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="sa"
+                    onclick="saAEndern(JSON.parse(localStorage.getItem('VorgabenB')))">
+                  <label class="form-check-label" for="sa">Nachtschicht ab Samstag?</label>
+                </div>
+
+                <h4 class="text-center my-1">Nacht Anfang</h4>
+
+                <div class="form-floating col-7 col-sm-6 required pb-3">
+                  <input id="nA" type="Date" class="form-control validate" value="" readonly required>
+                  <label for="nA">Datum</label>
+                </div>
+
+                <div class="form-floating col-5 col-sm-6 required pb-3">
+                  <input id="nAT" type="time" class="form-control validate" value="" readonly required>
+                  <label for="nAT">Von</label>
+                </div>
+
+                <h4 class="text-center mb-1">Nacht Ende</h4>
+
+                <div class="form-floating col-7 col-sm-6 required pb-3">
+                  <input id="nE" type="Date" class="form-control validate" value="" readonly required>
+                  <label for="nE">Datum</label>
+                </div>
+
+                <div class="form-floating col-5 col-sm-6 required pb-3">
+                  <input id="nET" type="time" class="form-control validate" value="" readonly required>
+                  <label for="nET">Bis</label>
+                </div>
+
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="eigen"
+                  onclick="eigeneWerte(JSON.parse(localStorage.getItem('VorgabenB')))">
+                <label class="form-check-label" for="eigen">Eingabe Eigene Werte?</label>
+              </div>
+            </div>
+            <div class="modal-footer justify-content-space-evenly">
+              <button type="submit" class="btn btn-primary">Senden</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal" id="editor-modalB" tabindex="-1">
+        <div class="modal-dialog modal-sm" role="document">
+          <form class="modal-content form-horizontal" id="editorB">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editor-titleB">Zeile hinzufügen</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+
+              <div class="form-floating col-12 required pb-3">
+                <input type="datetime-local" class="form-control" id="beginB" placeholder="Von" required>
+                <label for="beginB">Von</label>
+              </div>
+
+              <div class="form-floating col-12 required pb-3">
+                <input type="datetime-local" class="form-control" id="endeB" placeholder="Bis" required>
+                <label for="endeB">Bis</label>
+              </div>
+
+              <div class="form-floating col-12 pb-3">
+                <input type="number" class="form-control" id="pauseB" placeholder="Pause" min="0" max="60">
+                <label for="pauseB">Pause</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Speichern</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal" id="eingabeEinsatz" tabindex="-1">
+        <div class="modal-dialog">
+          <form class="modal-content" onsubmit="event.preventDefault(); sendDataE(localStorage.getItem('UserID'))">
+            <div class="modal-header">
+              <h5 class="modal-title" id="eingabeEinsatzLabel">Neuer Bereitschaftseinsatz eingeben</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input type="date" class="form-control validate" id="Datum" required>
+                <label for="Datum">Datum</label>
+              </div>
+
+              <div class="form-floating col-12 required pb-3">
+                <input type="Text" id="SAPNR" class="form-control validate" placeholder="SAP-Nr / Einsatzbeschreibung"
+                  required>
+                <label for="SAPNR">SAP-Nr / Einsatzbeschreibung</label>
+              </div>
+
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input id="ZeitVon" type="Time" class="form-control validate" required>
+                <label for="ZeitVon">Von</label>
+              </div>
+
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input id="ZeitBis" type="Time" class="form-control validate" required>
+                <label for="ZeitBis">Bis</label>
+              </div>
+
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <select class="form-select validate" id="LRE" name="LRE" required>
+                  <option value="" disabled selected>Bitte Einsatz Wählen</option>
+                  <option value="LRE1">LRE 1</option>
+                  <option value="LRE2">LRE 2</option>
+                  <option value="LRE12o">LRE 1/2 ohne x</option>
+                  <option value="LRE3">LRE 3</option>
+                  <option value="LRE3o">LRE 3 ohne x</option>
+                </select>
+                <label for="LRE">LRE</label>
+              </div>
+
+              <div class="w-100"></div>
+
+              <div class="form-floating col-12 col-sm-6 pb-3">
+                <input id="privatkm" type="Number" class="form-control" placeholder="Privat Km">
+                <label for="privatkm">Privat Km</label>
+              </div>
+
+              <div class="col-12">
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" id="berZeit">
+                  <label class="form-check-label" for="berZeit">zusätzliche Bereitschaftszeit Eingeben?<br><small>(z.B.
+                      LRE3 Außerhalb der Bereitschaft.)</small></label>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer justify-content-space-evenly">
+              <button type="submit" class="btn btn-primary">Senden</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal" id="editor-modalBE" tabindex="-1">
+        <div class="modal-dialog" role="document">
+          <form class="modal-content form-horizontal" id="editorBE">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editor-titleBE">Zeile hinzufügen</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input type="date" class="form-control" id="tagBE" placeholder="Tag" required>
+                <label for="tagBE">Tag</label>
+              </div>
+              <div class="form-floating col-12required pb-3">
+                <input type="text" class="form-control" id="auftragsnummerBE" placeholder="SAP-Nr / Einsatzbeschreibung"
+                  required>
+                <label for="auftragsnummerBE">SAP-Nr / Einsatzbeschreibung</label>
+              </div>
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input type="time" class="form-control" id="beginBE" placeholder="Von" required>
+                <label for="beginBE">Von</label>
+              </div>
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <input type="time" class="form-control" id="endeBE" placeholder="Bis" required>
+                <label for="endeBE">Bis</label>
+              </div>
+              <div class="form-floating col-12 col-sm-6 required pb-3">
+                <select class="form-select validate" id="lreBE" required>
+                  <option value="" disabled selected>Bitte Einsatz Wählen</option>
+                  <option value="LRE 1">LRE 1</option>
+                  <option value="LRE 2">LRE 2</option>
+                  <option value="LRE 1/2 ohne x">LRE 1/2 ohne x</option>
+                  <option value="LRE 3">LRE 3</option>
+                  <option value="LRE 3 ohne x">LRE 3 ohne x</option>
+                </select>
+                <label for="lreBE">LRE</label>
+              </div>
+              <div class="w-100"></div>
+              <div class="form-floating col-12 col-sm-6 pb-3">
+                <input type="number" class="form-control" id="privatkmBE" placeholder="Privat Km" min="0">
+                <label for="privatkmBE">Privat Km</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Speichern</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab EWT Anzeigen -->
+    <div class="tab-pane fade" id="AnzeigenE" role="tabpanel">
+      <div class="container-lg text-center">
+        <div class="row justify-content-center">
+          <h1>EWT</h1>
+          <h4 id="MonatE"></h4>
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+
+          <button type="button" class="btn btn-primary" id="btnESEE" data-bs-toggle="modal"
+            data-bs-target="#eingabeEWT">
+            <span class="material-icons-outlined right">add_circle_outlined</span>
+            Anwesenheit
+          </button>
+
+          <button class="btn btn-primary" type="button" id="btnZb"
+            onclick="ewtBerechnen(localStorage.getItem('Monat'), localStorage.getItem('Jahr'), localStorage.getItem('dataE'), localStorage.getItem('VorgabenU'))">
+            <span class="material-icons-outlined">calculate</span>
+            Berechnen
+          </button>
+
+          <button class="btn btn-success" type="button" id="btnUEE" onclick="saveDaten(this)">
+            <span class="material-icons-outlined right">save</span>
+            Speichern
+          </button>
+
+          <button class="btn btn-info" type="button" id="btnDLE" onclick="download(this, 'E')">
+            <span class="material-icons-outlined right">download</span>
+            Herunterladen (PDF)
+          </button>
+
+        </div>
+
+        <div class="table-responsive py-1">
+          <table id="tableE" class="table table-bordered table-striped table-hover align-middle"></table>
+
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+          <button class="btn btn-danger" type="button" id="btnALE"
+            onclick="FooTable.get('#tableE').rows.load([]); buttonDisable(false); localStorage.setItem('dataE', JSON.stringify([]))">
+            Alle Zeilen löschen
+          </button>
+        </div>
+      </div>
+      <div class="modal" id="eingabeEWT" tabindex="-1">
+        <div class="modal-dialog modal-dialog-top">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="eingabeEWTLabel">Neue Anwesenheit eingeben</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <form onsubmit="event.preventDefault(); addEWTtag()">
+                <div class="input-group mb-3 justify-content-center flex-md-row">
+
+                  <button type="button" class="btn btn-secondary col-2 mb-3" onclick="naechsterTag()">+1</button>
+
+                  <div class="form-floating col-10 mb-3">
+                    <input id="tagE" type="date" class="form-control validate" required>
+                    <label for="tagE">Tag</label>
+                  </div>
+
+                  <div class="form-floating col-12 mb-3">
+                    <select class="form-select validate" id="EOrt" name="EOrt">
+                    </select>
+                    <label for="EOrt">Einsatzort</label>
+                  </div>
+
+                  <div class="form-floating col-12 mb-3">
+                    <select class="form-select validate" id="Schicht" name="Schicht">
+                      <option value="" selected>Tag</option>
+                      <option value="N">Nacht</option>
+                      <option value="BN">Nacht/Bereitschaft</option>
+                      <option value="S">Sonder</option>
+                    </select>
+                    <label for="Schicht">Schicht</label>
+                  </div>
+                </div>
+
+                <div class="modal-footer justify-content-space-evenly">
+                  <button type="submit" class="btn btn-primary">Hinzufügen</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal" id="editor-modalE" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen-sm-down" role="document">
+          <form class="modal-content form-horizontal" id="editorE">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editor-titleE">Anwesenheit hinzufügen</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+
+              <div class="form-floating col-12 col-sm-5 required pb-3">
+                <input type="date" class="form-control" id="tagE2" placeholder="Tag" required>
+                <label for="tagE2">Tag</label>
+              </div>
+
+              <div class="form-floating col-12 col-sm-7 pb-3">
+                <select class="form-select validate" id="eOrtE"></select>
+                <label for="eOrtE">Einsatzort</label>
+              </div>
+
+              <div class="form-floating col-12 col-sm-7 pb-3">
+                <select class="form-select validate" id="schichtE" name="schichtE">
+                  <option value="" selected>Tag</option>
+                  <option value="N">Nacht</option>
+                  <option value="BN">Nacht/Bereitschaft</option>
+                  <option value="S">Sonder</option>
+                </select>
+                <label for="schichtE" class="col-sm-6 control-label">Schicht</label>
+              </div>
+
+              <hr />
+
+              <div style="display: flex;align-items: center;justify-content: space-evenly;">
+                <span class="material-icons-outlined">arrow_downward</span>
+                <h4 class="my-1">Wohnung</h4>
+                <span class="material-icons-outlined">arrow_upward</span>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="abWE" placeholder="ab Wohnung">
+                <label for="abWE">ab</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="anWE" placeholder="an Wohnung">
+                <label for="anWE">an</label>
+              </div>
+
+              <h4 class="text-center my-1">Arbeitszeit</h4>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="beginE" placeholder="Arbeitszeit Von">
+                <label for="beginE">Von</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="endeE" placeholder="Arbeitszeit Bis">
+                <label for="endeE">Bis</label>
+              </div>
+
+              <h4 class="text-center my-1">1. Tätigkeitsstätte</h4>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="ab1E" placeholder="ab 1. Tätigkeitsstätte">
+                <label for="ab1E">ab</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="an1E" placeholder="an 1. Tätigkeitsstätte">
+                <label for="an1E">an</label>
+              </div>
+
+              <h4 class="text-center my-1">Einsatzort</h4>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="anEE" placeholder="An Einsatzort">
+                <label for="anEE">An</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="abEE" placeholder="Ab Einsatzort">
+                <label for="abEE">Ab</label>
+              </div>
+
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-danger" type="button" onclick="clearZeiten()">Zeiten löschen</button>
+              <div class="w-100"></div>
+              <button type="submit" class="btn btn-primary">Speichern</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Nebenbezüge Anzeigen -->
+    <div class="tab-pane fade" id="AnzeigenN" role="tabpanel">
+      <div class="container-lg text-center">
+        <div class="row justify-content-center">
+          <h1>Nebenbezüge</h1>
+          <h4 id="MonatN"></h4>
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+
+          <button type="button" class="btn btn-primary" id="btnESN" data-bs-toggle="modal"
+            data-bs-target="#eingabeNeben">
+            <span class="material-icons-outlined right">add_circle_outlined</span>
+            Hinzufügen
+          </button>
+
+          <button class="btn btn-success" type="button" id="btnUEN" onclick="saveDaten(this)">
+            <span class="material-icons-outlined right">save</span>
+            Speichern
+          </button>
+
+          <button class="btn btn-info" type="button" id="btnDLN" onclick="download(this, 'N')">
+            <span class="material-icons-outlined right">download</span>
+            Herunterladen (PDF)
+          </button>
+
+        </div>
+
+        <div class="table-responsive py-1">
+          <table id="tableN" class="table table-bordered table-striped table-hover align-middle"></table>
+        </div>
+
+        <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+          <button class="btn btn-danger" type="button" id="btnALN"
+            onclick="FooTable.get('#tableN').rows.load([]); buttonDisable(false); localStorage.setItem('dataN', JSON.stringify([]))">
+            Alle Zeilen löschen
+          </button>
+        </div>
+      </div>
+      <div class="modal" id="eingabeNeben" tabindex="-1">
+        <div class="modal-dialog">
+          <form class="modal-content" onsubmit="event.preventDefault(); addNebenTag()">
+            <div class="modal-header">
+              <h5 class="modal-title" id="eingabeNebenLabel">Neuer Nebenbezug eingeben</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-center">!Erst EWT Eingeben und Berechnen!</p>
+
+              <div class="form-floating col mb-3">
+                <select class="form-select validate" id="tagN"></select>
+                <label for="tagN">Tag (Aus EWT)</label>
+              </div>
+
+              <div class="form-floating col mb-3">
+                <select class="form-select validate" id="Nebenbezug">
+                  <!-- Bei anpassung auch Berechnung ändern!! -->
+                  <option value="040 Fahrentsch." selected>040 Fahrentsch.</option>
+                </select>
+                <label for="Nebenbezug">Nebenbezug (Aktuell nur 1 möglichkeit)</label>
+              </div>
+
+              <div class="form-floating col mb-3">
+                <input class="form-control validate" id="AnzahlN" type="Text" value="1">
+                <label for="AnzahlN">Anzahl</label>
+              </div>
+            </div>
+
+            <div class="modal-footer justify-content-space-evenly">
+              <button type="submit" class="btn btn-primary">Hinzufügen</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal" id="editor-modalN" tabindex="-1">
+        <div class="modal-dialog" role="document">
+          <form class="modal-content form-horizontal" id="editorN">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editor-titleN">Zeile hinzufügen</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body row">
+
+              <div class="form-floating col-6 pb-3 required">
+                <input type="date" class="form-control" id="tagN2" placeholder="Tag" required>
+                <label for="tagN2">Tag</label>
+              </div>
+
+              <h4 class="text-center my-1">Arbeitszeit</h4>
+
+              <div class="form-floating col-6 pb-3 required">
+                <input type="time" class="form-control" id="beginN" placeholder="Arbeitszeit Von" required>
+                <label for="beginN">Von</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3 required">
+                <input type="time" class="form-control" id="endeN" placeholder="Arbeitszeit Bis" required>
+                <label for="endeN">Bis</label>
+              </div>
+
+              <h4 class="text-center my-1">Pause</h4>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="beginPauseN" placeholder="Pause Von">
+                <label for="beginPauseN">Von</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3">
+                <input type="time" class="form-control" id="endePauseN" placeholder="Pause Bis">
+                <label for="endePauseN">Bis</label>
+              </div>
+
+              <h4 class="text-center my-1">Zulage</h4>
+
+              <div class="form-floating col-6 pb-3 required">
+                <select class="form-select validate" id="nrN" name="nrN" required>
+                  <option value="040 Fahrentsch.">040 Fahrentsch.</option>
+                </select>
+                <label for="nrN">Zulage</label>
+              </div>
+
+              <div class="form-floating col-6 pb-3 required">
+                <input type="number" class="form-control" id="dauerN" placeholder="Dauer / Anzahl" min="1" value="1"
+                  required>
+                <label for="dauerN">Dauer / Anzahl</label>
+
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Speichern</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Berechnung -->
+    <div class="tab-pane fade" id="Berechnung" role="tabpanel">
+      <div class="container-lg text-center mb-3">
+        <div>
+          <h1>Berechnung</h1>
+          <h4 id="MonatBerechnung"></h4>
+        </div>
+
+        <!-- <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+
+          <button class="btn btn-primary" type="button" id="btnAktBerech"
+            onclick="setLoading(this.id); google.script.run.withSuccessHandler(generateTableBerechnung).ladeDatenBerechnung(localStorage.getItem('UserID'), localStorage.getItem('Jahr'))">
+            <span class="material-icons-outlined">refresh</span>
+            Aktualisieren
+          </button>
+
+          <button class="btn btn-secondary" type="button" id="btnNeuBerech"
+            onclick="setLoading(this.id); google.script.run.withSuccessHandler(generateTableBerechnung).aktualisiereBerechnung(localStorage.getItem('UserID'), localStorage.getItem('Jahr'), '', true)">
+            <span class="material-icons-outlined">calculate</span>
+            Neu Berechnen
+          </button>
+
+        </div> -->
+
+        <div class="table-responsive py-1">
+          <table class="table table-bordered table-striped table-hover align-middle">
+            <thead class="align-middle">
+              <tr class="table-primary align-middle">
+                <th colSpan="2"></th>
+                <th class="col-1">Jan</th>
+                <th class="col-1">Feb</th>
+                <th class="col-1">Mär</th>
+                <th class="col-1">Apr</th>
+                <th class="col-1">Mai</th>
+                <th class="col-1">Jun</th>
+                <th class="col-1">Jul</th>
+                <th class="col-1">Aug</th>
+                <th class="col-1">Sep</th>
+                <th class="col-1">Okt</th>
+                <th class="col-1">Nov</th>
+                <th class="col-1">Dez</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyBerechnung">
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Einstellungen -->
+    <div class="tab-pane fade" id="Einstellungen" role="tabpanel">
+      <div class="container text-center mb-3">
+        <div>
+          <h1>Einstellungen</h1>
+        </div>
+        <form class=" text-center"
+          onsubmit="event.preventDefault(); saveDaten(document.getElementById('btnUEbernehmenES'))">
+
+          <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
+            <button type="submit" class="btn btn-success" name="btnES" id="btnUEbernehmenES">
+              <span class="material-icons-outlined right">save</span>
+              Speichern
+            </button>
+          </div>
+
+          <div class="accordion" id="einstellungen">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingOne">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseOne">
+                  Persönliche Daten
+                </button>
+              </h2>
+              <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
+                <div class="accordion-body">
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">person</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="Mustermann, Max" id="Name" class="form-control validate" required>
+                      <label for="Name">Name</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">badge</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required>
+                      <label for="PNummer">Personalnummer</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">phone</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="tel" id="Telefon" placeholder="0123/45678910" class="form-control validate" required>
+                      <label for="Telefon">Telefon</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">home</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress1"
+                        class="form-control validate" required>
+                      <label for="Adress1">Wohnsitz 1</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">home_work</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress2"
+                        class="form-control validate">
+                      <label for="Adress2">Wohnsitz 2</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">business</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="Kirchheim" id="ErsteTkgSt" class="form-control validate" required>
+                      <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">business</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="DB Netz AG" id="Betrieb" class="form-control validate" required>
+                      <label for="Betrieb">Betrieb</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">business</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="I.NA-MI-N-KSL-IL 03" id="OE" class="form-control validate"
+                        required>
+                      <label for="OE">OE</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">business</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required>
+                      <label for="Gewerk">Gewerk</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">business</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Number" placeholder="12" id="kmArbeitsort" class="form-control validate" min="1"
+                        max="100" required>
+                      <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">train</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Text" placeholder="Bad Hersfeld" id="nBhf" class="form-control validate" required>
+                      <label for="nBhf">nächster Bahnhof</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">train</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="Number" placeholder="12" id="kmnBhf" class="form-control validate" min="1" max="100"
+                        required>
+                      <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">group</span>
+                    <div class="form-floating" style="width:75%">
+                      <select class="form-select validate" id="TB" name="TB" required>
+                        <option value="" disabled selected>Bitte Wählen</option>
+                        <option value="Tarifkraft">Tarifkraft</option>
+                        <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
+                        <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
+                      </select>
+                      <label for="TB">Tarif / Beamter</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingTwo">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseTwo">
+                  Arbeitszeit
+                </button>
+              </h2>
+              <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
+                <div class="accordion-body">
+                  <h4>Fahrzeit</h4>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">drive_eta</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="rZ" class="form-control validate" required>
+                      <label for="rZ">Fahrzeit Wo / Ao</label>
+                    </div>
+                  </div>
+                  <h4>Tagschicht</h4>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">history</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="bT" class="form-control validate" required>
+                      <label for="bT">Arbeitsbeginn Tag</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">update</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="eT" class="form-control validate" required>
+                      <label for="eT">Arbeitsende Mo-Do</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">update</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="eTF" class="form-control validate" required>
+                      <label for="eTF">Arbeitsende Fr</label>
+                    </div>
+                  </div>
+                  <h4>Nachtschicht</h4>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">history</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="bN" class="form-control validate" required>
+                      <label for="bN">Arbeitsbeginn Nacht</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">history</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="bBN" class="form-control validate" required>
+                      <label for="bBN">Arbeitsbeginn Nacht Bereitschaft</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">update</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="eN" class="form-control validate" required>
+                      <label for="eN">Arbeitsende Nacht</label>
+                    </div>
+                  </div>
+                  <h4>Sonderschicht</h4>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">history</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="bS" class="form-control validate" required>
+                      <label for="bS">Arbeitsbeginn Sonderschicht</label>
+                    </div>
+                  </div>
+                  <div class="input-group mb-3">
+                    <span class="input-group-text material-icons prefix">update</span>
+                    <div class="form-floating" style="width:75%">
+                      <input type="time" id="eS" class="form-control validate" required>
+                      <label for="eS">Arbeitsende Sonderschicht</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingThree">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                  data-bs-target="#collapseThree">
+                  Fahrzeiten
+                </button>
+              </h2>
+              <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
+                <div class="accordion-body">
+                  <table class="table table-bordered table-striped table-hover">
+                    <thead>
+                      <tr class="table-primary align-middle text-center">
+                        <th>Tätigkeitsstätte</th>
+                        <th style="width:40%">Beschreibung</th>
+                        <th style="width:20%">Fahrzeit</th>
+                      </tr>
+                    </thead>
+                    <tbody id="TbodyTätigkeitsstätten">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* const API_URL = "https://otto1989.dnshome.de:443" */
+    const API_URL = "https://raspberrypi.e9sjen1nkmqatnay.myfritz.net:443"
+    /* const API_URL = "https://localhost:8443" */
+  </script>
+
+  <script src="src/bootstrap.bundle.min.js"></script>
+  <script src="src/jquery.min.js"></script>
+  <script src="src/toastr.min.js"></script>
+  <script src="src/footable.min.js"></script>
+  <script src="src/moment-with-locales.min.js"></script>
+  <script src="src/feiertage.js"></script>
+
+  <script src="src/Home.js"></script>
+  <script src="src/Berechnung.js"></script>
+  <script src="src/Bereitschaft.js"></script>
+  <script src="src/EWT.js"></script>
+  <script src="src/Einstellungen.js"></script>
+  <script src="src/Neben.js"></script>
+  <script src="src/Login.js"></script>
+
+  <script>
+    if (
+      localStorage.getItem('datenBerechnung') &&
+      localStorage.getItem('VorgabenU') &&
+      localStorage.getItem('VorgabenGeld')
+    ) generateTableBerechnung(
+      JSON.parse(localStorage.getItem('datenBerechnung')),
+      JSON.parse(localStorage.getItem('VorgabenGeld'))
+    );
+    if (localStorage.getItem('VorgabenU')) generateEingabeMaskeEinstellungen(JSON.parse(localStorage.getItem('VorgabenU')));
+
+    $(document).ready(function () {
+      $('#Benutzer2').popover();
+      $('#Passwort1').popover();
+      $('#Passwort2').popover();
+      $('#Passwort3').popover();
+      $('#Passwort4').popover();
+      $('#Monat').popover();
+      $('#Jahr').popover();
+      if (localStorage.getItem('UserID')) {
+        var url = document.location.toString()
+        if (url.match('#')) {
+          activeTab(url.split('#')[1])
+        }
+      }
+    });
+
+    function activeTab(tab) {
+      console.log(tab);
+      var sel = document.querySelector("#" + tab + "-tab");
+      console.log(sel);
+      bootstrap.Tab.getOrCreateInstance(sel).show();
+    }
+  </script>
+
+  <footer class="footer fixed-bottom mt-autobg-light">
+    <span class="text-muted">&copy; 2021-2022 Jan Otto </span>
+    <span><a href="https://otto-kirchheim.github.io/alt">zurück zur alten Version</a></span>
+  </footer>
+</body>
+
 </html>
