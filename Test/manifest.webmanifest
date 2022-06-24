@@ -695,32 +695,32 @@
   "shortcuts": [
     {
       "name": "Start",
-      "url": "/",
+      "url": "/Test/",
       "description": "Start"
     },
     {
       "name": "Bereitschaft",
-      "url": "/#AnzeigenB",
+      "url": "/Test/#AnzeigenB",
       "description": "Bereitschafts-Zettel"
     },
     {
       "name": "EWT",
-      "url": "/#AnzeigenE",
+      "url": "/Test/#AnzeigenE",
       "description": "EWT-Zettel"
     },
     {
       "name": "Nebenbezüge",
-      "url": "/#AnzeigenN",
+      "url": "/Test/#AnzeigenN",
       "description": "Nebenbezüge-Zettel"
     },
     {
       "name": "Berechnung",
-      "url": "/#Berechnung",
+      "url": "/Test/#Berechnung",
       "description": "Berechnung"
     },
     {
       "name": "Einstellungen",
-      "url": "/#Einstellungen",
+      "url": "/Test/#Einstellungen",
       "description": "Einstellungen"
     }
   ]
