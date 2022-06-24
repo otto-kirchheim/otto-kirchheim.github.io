@@ -9,6 +9,7 @@
   "theme_color": "#000000",
   "background_color": "#000000",
   "orientation": "any",
+  "url": "https://otto-kirchheim.github.io/Test/",
   "icons": [
     {
       "src": "icons/71x71-icon.png",
@@ -683,7 +684,6 @@
       "purpose": "any"
     }
   ],
-  "url": "https://otto-kirchheim.github.io/Test/",
   "screenshots": [
     {
       "src": "icons/1024x1024-icon.png",

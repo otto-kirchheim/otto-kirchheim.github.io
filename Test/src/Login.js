@@ -36,6 +36,7 @@ async function loginUser(username, passwort) {
 
   try {
     const response = await fetch(`${API_URL}/checkpw`, {
+      mode: 'cors',
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -151,6 +152,7 @@ async function checkPasswort() {
       PasswortNeu: passwort3,
     };
     const response = await fetch(`${API_URL}/changePW`, {
+      mode: 'cors',
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -226,6 +228,7 @@ async function checkNeuerBenutzer() {
       Passwort: passwort1,
     };
     const response = await fetch(`${API_URL}/add`, {
+      mode: 'cors',
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -288,6 +291,7 @@ async function LadeUserDaten(UserID, monat, jahr) {
   let user;
   try {
     const response = await fetch(`${API_URL}/${UserID}&${monat}&${jahr}`, {
+      mode: 'cors',
       method: "GET",
     });
     user = await response.json();
