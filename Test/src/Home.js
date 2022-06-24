@@ -48,7 +48,7 @@ function autoCollapse(x) {
     });
   }
 }
-x = window.matchMedia("(max-width: 575.98px)");
+var x = window.matchMedia("(max-width: 575.98px)");
 autoCollapse(x);
 x.addListener(autoCollapse);
 
@@ -301,12 +301,12 @@ function buttonDisable(status) {
 
   var btnALE = document.getElementsByName("btnALE");
   //console.log(btnALE)
-  for (i = 0; i < btnALE.length; i++) {
+  for (let i = 0; i < btnALE.length; i++) {
     btnALE[i].disabled = status;
   }
   var btnALB = document.getElementsByName("btnALB");
   //console.log(btnALB)
-  for (i = 0; i < btnALB.length; i++) {
+  for (let i = 0; i < btnALB.length; i++) {
     btnALB[i].disabled = status;
   }
 

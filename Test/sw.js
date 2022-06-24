@@ -22,30 +22,18 @@ if (!self.define) {
       location.href;
     if (i[s]) return;
     let r = {};
-    const d = (c) => n(c, s),
-      f = { module: { uri: s }, exports: r, require: d };
-    i[s] = Promise.all(e.map((c) => f[c] || d(c))).then((c) => (o(...c), r));
+    const f = (c) => n(c, s),
+      d = { module: { uri: s }, exports: r, require: f };
+    i[s] = Promise.all(e.map((c) => d[c] || f(c))).then((c) => (o(...c), r));
   };
 }
-define(["./workbox-2671632a"], function (c) {
+define(["./workbox-08e67d2d"], function (c) {
   "use strict";
   self.addEventListener("message", (c) => {
     c.data && "SKIP_WAITING" === c.data.type && self.skipWaiting();
   }),
     c.precacheAndRoute(
       [
-        { url: "Berechnung.js", revision: "9da4f29b0bf61ee7877528abdbab7eb6" },
-        {
-          url: "Bereitschaft.js",
-          revision: "f5abd5aa2698b8e36ac7d39c44c351a5",
-        },
-        {
-          url: "Einstellungen.js",
-          revision: "af5045cdfe111fcb15844c7339325cbb",
-        },
-        { url: "EWT.js", revision: "14f5d0b5bd97c8052c7381c27612c968" },
-        { url: "feiertage.js", revision: "53fbe8fa3f527bcc1b8ed66199ad31e3" },
-        { url: "Home.js", revision: "de797375b348f8982cbfc1100a6e9395" },
         {
           url: "icons/100x100-icon.png",
           revision: "cbbf09d8284b241c6a4ee040cb81b60b",
@@ -294,11 +282,84 @@ define(["./workbox-2671632a"], function (c) {
           url: "icons/96x96-icon.png",
           revision: "89778a81724043cb832707cc291035e4",
         },
-        { url: "index.html", revision: "fd5c72a1b7ca39d0f00c0da336e31290" },
-        { url: "Login.js", revision: "c5a601746d8142afe934ff9d11103672" },
-        { url: "manifest.json", revision: "a1e5bc4b36523ce620be1a8ce167d745" },
-        { url: "Neben.js", revision: "d258c7ffc76c078f06e14ab239e1222b" },
-        { url: "Stylesheet.css", revision: "d9f81649eaba260260afca3212456970" },
+        { url: "index.html", revision: "6a5050cea244ebd31465e05b5641c65e" },
+        {
+          url: "manifest.webmanifest",
+          revision: "13c373515481d7e261317c23e9403961",
+        },
+        {
+          url: "src/Berechnung.js",
+          revision: "9da4f29b0bf61ee7877528abdbab7eb6",
+        },
+        {
+          url: "src/Bereitschaft.js",
+          revision: "f5abd5aa2698b8e36ac7d39c44c351a5",
+        },
+        {
+          url: "src/bootstrap.bundle.min.js",
+          revision: "7ccd9d390d31af98110f74f842ea9b32",
+        },
+        {
+          url: "src/bootstrap.min.css",
+          revision: "94994c66fec8c3468b269dc0cc242151",
+        },
+        {
+          url: "src/Einstellungen.js",
+          revision: "af5045cdfe111fcb15844c7339325cbb",
+        },
+        { url: "src/EWT.js", revision: "14f5d0b5bd97c8052c7381c27612c968" },
+        {
+          url: "src/feiertage.js",
+          revision: "53fbe8fa3f527bcc1b8ed66199ad31e3",
+        },
+        { url: "src/fonts.css", revision: "11c9a3d8e24590b76eca192e97b8bab9" },
+        {
+          url: "src/footable.bootstrap.min.css",
+          revision: "c7eb9ae3dd5a5481e0149f8989040c5d",
+        },
+        {
+          url: "src/footable.min.js",
+          revision: "d92d546170ac3770f060db863a497d10",
+        },
+        { url: "src/Home.js", revision: "6bcd9ce59217f9d66f25ee886141a2ed" },
+        {
+          url: "src/jquery.min.js",
+          revision: "8fb8fee4fcc3cc86ff6c724154c49c42",
+        },
+        { url: "src/Login.js", revision: "c5a601746d8142afe934ff9d11103672" },
+        {
+          url: "src/manifest.json",
+          revision: "328a41ac03572c5ea84bb8c088bdbd81",
+        },
+        {
+          url: "src/Material_Icons_Outlined-400-fallback2.woff2",
+          revision: "80ffd7f38b1f58a1a8c7125c12cc7878",
+        },
+        {
+          url: "src/Material_Icons_Round-400-fallback3.woff2",
+          revision: "82f9b1b404daf3f2637660b24d6e0e8e",
+        },
+        {
+          url: "src/Material_Icons-400-fallback1.woff2",
+          revision: "2ef373830aa561f31f385b4f343fd646",
+        },
+        {
+          url: "src/moment-with-locales.min.js",
+          revision: "086467ffe4ec91805eca31466c2c4124",
+        },
+        { url: "src/Neben.js", revision: "d258c7ffc76c078f06e14ab239e1222b" },
+        {
+          url: "src/Stylesheet.css",
+          revision: "d9f81649eaba260260afca3212456970",
+        },
+        {
+          url: "src/toastr.min.css",
+          revision: "f284028c678041d687c6f1be6968f68a",
+        },
+        {
+          url: "src/toastr.min.js",
+          revision: "8ee1218b09fb02d43fcf0b84e30637ad",
+        },
       ],
       { ignoreURLParametersMatching: [/^utm_/, /^fbclid$/] }
     );
