@@ -36,7 +36,7 @@ async function loginUser(username, passwort) {
 
   try {
     const response = await fetch(`${API_URL}/checkpw`, {
-      mode: 'cors',
+      mode: "cors",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -65,6 +65,7 @@ async function loginUser(username, passwort) {
       document.getElementById("Passwort").value = "";
       document.getElementById("errorMessage").innerHTML = "";
 
+      console.log("Eingeloggt");
       SelectYear(monat, aktJahr);
     } else {
       document.getElementById(
@@ -76,7 +77,6 @@ async function loginUser(username, passwort) {
   } finally {
     clearLoading("btnLogin");
   }
-  console.log("Eingeloggt");
 }
 
 function SelectYear(monat, jahr) {
@@ -152,38 +152,36 @@ async function checkPasswort() {
       PasswortNeu: passwort3,
     };
     const response = await fetch(`${API_URL}/changePW`, {
-      mode: 'cors',
+      mode: "cors",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     user = await response.json();
-    //console.log("Request complete! response:", response);
-    if (response.status == 400 || response.status == 401) {
+    if (response.status >= 400 || response.status <= 500) {
       console.log(user.message);
       document.getElementById("errorMessageChange").innerHTML = user.message;
-      clearLoading("btnChange");
+      toastr.error("Passwort konnte nicht geändert werden.");
       return;
     }
     if (response.status == 200) {
-      console.log(`Passwort geändert?: ${user}`);
-      toastr.success("Passwort geändert");
+      console.log(`Passwort geändert: ${user}`);
+      toastr.success("Passwort wurde geändert");
     } else {
       console.log("Fehler");
       toastr.error("Passwort konnte nicht geändert werden.");
       return;
     }
-  } catch (err) {
-    console.log(err);
-    return;
-  } finally {
-    clearLoading("btnChange");
-
     document.getElementById("SelectDisplay").classList.remove("d-none");
     document.getElementById("ChangeDisplay").classList.add("d-none");
     document.getElementById("passwortOld").value = "";
     document.getElementById("Passwort3").value = "";
     document.getElementById("Passwort4").value = "";
+  } catch (err) {
+    console.log(err);
+    return;
+  } finally {
+    clearLoading("btnChange");
   }
 }
 
@@ -218,33 +216,31 @@ async function checkNeuerBenutzer() {
       "Passwörter falsch wiederholt";
     return;
   }
-
   setLoading("btnNeu");
-
+  let data = {
+    Code: zugangscode,
+    Name: benutzer,
+    Passwort: passwort1,
+  };
   try {
-    let data = {
-      Code: zugangscode,
-      Name: benutzer,
-      Passwort: passwort1,
-    };
     const response = await fetch(`${API_URL}/add`, {
-      mode: 'cors',
+      mode: "cors",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
     var user = await response.json();
-    //console.log("Request complete! response:", response);
     if (response.status == 401) {
       console.log(user.message);
       document.getElementById("errorMessageNew").innerHTML = user.message;
-      clearLoading("btnNeu");
       return;
     }
     if (response.status == 201) {
       console.log(`Neue User ID: ${user}`);
+      toastr.success("Benutzer erfolgreich angelegt");
     } else {
-      console.log("Fehler");
+      console.log("Fehler: ", user.message);
+      toastr.error(`Fehler bei Benutzerstellung ${user.message}`);
       return;
     }
   } catch (err) {
@@ -268,38 +264,27 @@ async function checkNeuerBenutzer() {
 }
 
 async function LadeUserDaten(UserID, monat, jahr) {
-  //console.log(monat)
-  //console.log(jahr)
   document.getElementById("Monat").value = monat;
-  document.getElementById("Datum").value = moment()
-    .year(jahr)
-    .month(monat)
-    .format("YYYY-MM-DD");
-  document.getElementById("MonatB").innerText = `${("0" + monat).slice(
-    -2
-  )} / ${(jahr + "").slice(-2)}`;
-  document.getElementById("MonatE").innerText = `${("0" + monat).slice(
-    -2
-  )} / ${(jahr + "").slice(-2)}`;
-  document.getElementById("MonatN").innerText = `${("0" + monat).slice(
-    -2
-  )} / ${(jahr + "").slice(-2)}`;
-  document.getElementById("MonatBerechnung").innerText = `${("0" + monat).slice(
-    -2
-  )} / ${(jahr + "").slice(-2)}`;
-  //return
+  let datum = moment().year(jahr).month(monat);
+  let datumkurz = datum.format("MM / YY");
+  document.getElementById("Datum").value = datum.format("YYYY-MM-DD");
+  document.getElementById("MonatB").innerText = datumkurz;
+  document.getElementById("MonatE").innerText = datumkurz;
+  document.getElementById("MonatN").innerText = datumkurz;
+  document.getElementById("MonatBerechnung").innerText = datumkurz;
+
   let user;
   try {
     const response = await fetch(`${API_URL}/${UserID}&${monat}&${jahr}`, {
-      mode: 'cors',
+      mode: "cors",
       method: "GET",
     });
     user = await response.json();
-    //console.log("Request complete! response:", response);
     if (response.status == 200) {
       console.log(user);
     } else {
-      console.log("Fehler");
+      console.log("Fehler: ", user.message);
+      toastr.error("Keine Verbindung zum Server oder Serverfehler");
       return;
     }
   } catch (err) {

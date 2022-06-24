@@ -33,10 +33,8 @@ if (storageAvailable("localStorage")) {
 }
 
 function autoCollapse(x) {
-  //console.log("geändert")
   const navLinks = document.querySelectorAll(".nav-item");
   if (x.matches) {
-    // If media query matches
     navLinks.forEach((l) => {
       l.setAttribute("data-bs-toggle", "collapse");
       l.setAttribute("data-bs-target", "#navmenu");
@@ -50,7 +48,7 @@ function autoCollapse(x) {
 }
 var x = window.matchMedia("(max-width: 575.98px)");
 autoCollapse(x);
-x.addListener(autoCollapse);
+x.addEventListener("change", autoCollapse);
 
 //https://codeseven.github.io/toastr/
 toastr.options = {
@@ -74,34 +72,24 @@ toastr.options = {
 async function download(button, modus) {
   setLoading(button.id);
   buttonDisable(true);
+  var data = {
+    VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
+    VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
+    Daten: {},
+    Monat: document.getElementById("Monat").value,
+    Jahr: document.getElementById("Jahr").value,
+  };
 
   switch (modus) {
     case "B":
-      var data = {
-        VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
-        VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
-        Daten: { BZ: tableToArray("#tableBZ"), BE: tableToArray("#tableBE") },
-        Monat: document.getElementById("Monat").value,
-        Jahr: document.getElementById("Jahr").value,
-      };
+      data.Daten.BZ = tableToArray("#tableBZ");
+      data.Daten.BE = tableToArray("#tableBE");
       break;
     case "E":
-      var data = {
-        VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
-        VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
-        Daten: { EWT: tableToArray("#tableE") },
-        Monat: document.getElementById("Monat").value,
-        Jahr: document.getElementById("Jahr").value,
-      };
+      data.Daten.EWT = tableToArray("#tableE");
       break;
     case "N":
-      var data = {
-        VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
-        VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
-        Daten: { N: tableToArray("#tableN") },
-        Monat: document.getElementById("Monat").value,
-        Jahr: document.getElementById("Jahr").value,
-      };
+      data.Daten.N = tableToArray("#tableN");
       break;
   }
 
@@ -121,6 +109,7 @@ async function download(button, modus) {
       console.timeEnd("download");
     } else {
       console.log("Fehler");
+      toastr.error(`Download fehlerhaft: ${data.message}`);
       return;
     }
   } catch (err) {
@@ -147,9 +136,8 @@ async function saveDaten(button) {
   saveTableData("tableE");
   saveTableData("tableN");
   saveEinstellungen();
-  let user;
-  try {
-    let data = {
+  let user,
+    data = {
       BZ: JSON.parse(localStorage.getItem("dataBZ")),
       BE: JSON.parse(localStorage.getItem("dataBE")),
       E: JSON.parse(localStorage.getItem("dataE")),
@@ -159,6 +147,7 @@ async function saveDaten(button) {
       Monat: localStorage.getItem("Monat"),
       Jahr: localStorage.getItem("Jahr"),
     };
+  try {
     const response = await fetch(`${API_URL}/saveData`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -211,10 +200,6 @@ async function saveDaten(button) {
 }
 
 function saveTableData(tableID, ft) {
-  console.log("---Save---");
-  //console.log(tableID)
-  //console.log(ft)
-
   switch (tableID) {
     case "tableBZ":
       localStorage.setItem(
@@ -243,7 +228,7 @@ function saveTableData(tableID, ft) {
 }
 
 function tableToArray(tableID, ft) {
-  console.log("---Table to Array---");
+  //console.log("---Table to Array---");
   if (!ft) ft = FooTable.get(tableID);
   data = ft
     .toCSV()
@@ -252,7 +237,7 @@ function tableToArray(tableID, ft) {
     .split("\n")
     .slice(1, -1)
     .map((v) => v.split(","));
-  console.log(data);
+  //console.log(data);
   return data;
 }
 
@@ -294,18 +279,14 @@ function buttonDisable(status) {
   document.getElementById("btnESZ").disabled = status;
 
   document.getElementById("btnAuswaehlen").disabled = status;
-  /* document.getElementById("btnAktBerech").disabled = status;
-  document.getElementById("btnNeuBerech").disabled = status; */
 
   document.getElementById("btnUEbernehmenES").disabled = status;
 
   var btnALE = document.getElementsByName("btnALE");
-  //console.log(btnALE)
   for (let i = 0; i < btnALE.length; i++) {
     btnALE[i].disabled = status;
   }
   var btnALB = document.getElementsByName("btnALB");
-  //console.log(btnALB)
   for (let i = 0; i < btnALB.length; i++) {
     btnALB[i].disabled = status;
   }
@@ -322,21 +303,18 @@ function buttonDisable(status) {
 
   if (document.getElementById("btnAEE")) {
     var btnAEE = document.getElementsByName("btnAEE");
-    //console.log(btnAEE)
     for (i = 0; i < btnAEE.length; i++) {
       btnAEE[i].disabled = status;
     }
   }
   if (document.getElementById("btnAEB")) {
     var btnAEB = document.getElementsByName("btnAEB");
-    //console.log(btnAEB);
     for (i = 0; i < btnAEB.length; i++) {
       btnAEB[i].disabled = status;
     }
   }
   if (document.getElementById("btnAEBE")) {
     var btnAEBE = document.getElementsByName("btnAEBE");
-    //console.log(btnAEBE);
     for (i = 0; i < btnAEBE.length; i++) {
       btnAEBE[i].disabled = status;
     }
@@ -346,8 +324,6 @@ function buttonDisable(status) {
 
 function DatenSortieren(daten) {
   daten.sort(function (x, y) {
-    //console.log(x[0]);
-    //console.log(y[0]);
     var xp = x[0];
     var yp = y[0];
     return xp == yp ? 0 : xp < yp ? -1 : 1;

@@ -62,18 +62,7 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 }
 
 function saveEinstellungen() {
-  /*
-    var unterschrift = $("#signature").jSignature("getData") 
-    var unterschrift2 = $("#signature").jSignature("getData", "base30")
-    console.log(unterschrift)
-    console.log(unterschrift2 + '')
-
-    google.script.run.testUnterschrift(unterschrift)
-
-
-    return */
-
-  var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
+    var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
 
   Object.keys(VorgabenU.pers).forEach(function (key, index) {
     VorgabenU.pers[key] = document.getElementById(key).value;
@@ -82,12 +71,8 @@ function saveEinstellungen() {
   Object.keys(VorgabenU.aZ).forEach(function (key, index) {
     VorgabenU.aZ[key] = document.getElementById(key).value;
   });
-  //console.log(VorgabenU);
-
   VorgabenU.fZ = table_to_array_einstellungen("TbodyTätigkeitsstätten");
-
-  //console.log(VorgabenU);
-
+  
   if (VorgabenU.pers.TB == "Tarifkraft") {
     document.getElementById("AnzeigenN-tab").classList.remove("d-none");
   } else {
