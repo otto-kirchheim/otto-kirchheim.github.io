@@ -277,7 +277,7 @@
             </div>
             <div class="modal-body row">
 
-              <div class="form-check form-switch ">
+              <div class="form-check form-switch bereitschaft">
                 <input class="form-check-input" type="checkbox" id="b12"
                   onchange="b12aendern(JSON.parse(localStorage.getItem('VorgabenB')))">
                 <label class="form-check-label" for="b12">B1 - B2?</label>
@@ -308,14 +308,14 @@
                 <label for="bET">Bis</label>
               </div>
 
-              <div class="form-check form-switch">
+              <div class="form-check form-switch bereitschaft">
                 <input class="form-check-input" type="checkbox" id="nacht" onchange="nachtAusblenden()" checked>
                 <label class="form-check-label" for="nacht">Nachtschicht</label>
               </div>
 
               <div id="nachtschicht" class="row m-0 p-0">
 
-                <div class="form-check form-switch">
+                <div class="form-check form-switch bereitschaft">
                   <input class="form-check-input" type="checkbox" id="sa"
                     onclick="saAEndern(JSON.parse(localStorage.getItem('VorgabenB')))">
                   <label class="form-check-label" for="sa">Nachtschicht ab Samstag?</label>
@@ -347,7 +347,7 @@
 
               </div>
 
-              <div class="form-check form-switch">
+              <div class="form-check form-switch bereitschaft">
                 <input class="form-check-input" type="checkbox" id="eigen"
                   onclick="eigeneWerte(JSON.parse(localStorage.getItem('VorgabenB')))">
                 <label class="form-check-label" for="eigen">Eingabe Eigene Werte?</label>
@@ -441,7 +441,7 @@
               </div>
 
               <div class="col-12">
-                <div class="form-check form-switch">
+                <div class="form-check form-switch bereitschaft">
                   <input class="form-check-input" type="checkbox" id="berZeit">
                   <label class="form-check-label" for="berZeit">zusätzliche Bereitschaftszeit Eingeben?<br><small>(z.B.
                       LRE3 Außerhalb der Bereitschaft.)</small></label>
@@ -585,7 +585,13 @@
                     </select>
                     <label for="Schicht">Schicht</label>
                   </div>
+
+                  <div class="form-check form-switch col-12 mb-3">
+                    <input type="checkbox" class="form-check-input" id="berechnen1" checked>
+                    <label for="berechnen1" class="form-check-label">Berechnen</label>
+                  </div>
                 </div>
+
 
                 <div class="modal-footer justify-content-space-evenly">
                   <button type="submit" class="btn btn-primary">Hinzufügen</button>
@@ -623,6 +629,11 @@
                   <option value="S">Sonder</option>
                 </select>
                 <label for="schichtE" class="col-sm-6 control-label">Schicht</label>
+              </div>
+
+              <div class="form-check form-switch col-12 col-sm-4 pb-3">
+                <input type="checkbox" class="form-check-input" id="berechnen" checked>
+                <label for="berechnen" class="form-check-label">Berechnen</label>
               </div>
 
               <hr />

@@ -61,6 +61,19 @@ jQuery(function ($) {
           sortable: false,
           breakpoints: "xs sm md",
         },
+        {
+          name: "berechnen",
+          title: "",
+          sortable: false,
+          visible: false,
+        },
+        {
+          name: "_checkbox",
+          title: "Berechnen?",
+          visible: true,
+          sortable: false,
+          breakpoints: "xs sm md",
+        },
       ],
       rows: DataE(),
       empty: "Keine Daten verfügbar",
@@ -123,6 +136,9 @@ jQuery(function ($) {
           $editorE
             .find("#anWE")
             .val(moment(values.anWE, "HH:mm").format("HH:mm"));
+          $editorE
+            .find("#berechnen")
+            .prop("checked", JSON.parse(values.berechnen));
 
           $modalE.data("row", row);
           $editorTitleE.text("Anwesenheit Bearbeiten");
@@ -156,7 +172,15 @@ jQuery(function ($) {
         abEE: $editorE.find("#abEE").val(),
         an1E: $editorE.find("#an1E").val(),
         anWE: $editorE.find("#anWE").val(),
+        berechnen: $editorE.find("#berechnen").prop("checked"),
       };
+    if (JSON.parse(values.berechnen) == true) {
+      values._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input" checked></div>';
+    } else {
+      values._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"></div>';
+    }
     $editorE.find("#tagE2").removeAttr("min").removeAttr("max");
     //console.log(values)
 
@@ -171,6 +195,38 @@ jQuery(function ($) {
     }, 100);
 
     $modalE.modal("hide");
+  });
+  $tableE = $("#tableE");
+  $tableE.on("click", ".row-checkbox", function () {
+    var newValues = {};
+    var row;
+    console.log($(this).closest("tr").has("th").length);
+    if ($(this).closest("tr").has("th").length == 1) {
+      row = $(this)
+        .closest("tr")
+        .parent()
+        .closest("tr")
+        .prev()
+        .data("__FooTableRow__");
+    } else {
+      row = $(this).closest("tr").data("__FooTableRow__");
+    }
+    if ($(this).prop("checked")) {
+      //Prepare Values
+      newValues.berechnen = "true";
+      newValues._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input" checked></div>';
+    } else {
+      //Prepare Values
+      newValues.berechnen = "false";
+      newValues._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"></div>';
+    }
+    row.val(newValues, true);
+
+    setTimeout(function () {
+      saveTableData("tableE", ftE);
+    }, 100);
   });
 });
 
@@ -201,9 +257,16 @@ function DataE(data) {
       abEE: row[8],
       an1E: row[9],
       anWE: row[10],
+      berechnen: row[11] || true,
     };
+    if (JSON.parse(data1[i].berechnen) == true) {
+      data1[i]._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input" checked></div>';
+    } else {
+      data1[i]._checkbox =
+        '<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"></div>';
+    }
   });
-  //console.log(data1)
   return data1;
 }
 
@@ -216,29 +279,35 @@ function clearZeiten() {
   $("#abEE").val("");
   $("#an1E").val("");
   $("#anWE").val("");
+  $("#berechnen").val(true);
 }
 
 function ewtBerechnen(monat, jahr, daten, vorgabenU) {
+  monat = Number(monat);
+  jahr = Number(jahr);
   daten = JSON.parse(daten);
   vorgabenU = JSON.parse(vorgabenU);
   //console.log(daten)
 
   daten.forEach(function (zeile) {
-    var tag = zeile[0];
-    zeile[0] = Number(zeile[0]);
+    if (JSON.parse(zeile[11]) == false) return;
+    var tag = Number(zeile[0]);
+    zeile[0] = tag;
     for (var i = 3; i <= 10; i++) {
       if (zeile[i]) {
-        if ((i > 6 && zeile[2] == "BN") || zeile[2] == "N") {
-          tag = zeile[0] + 1;
+        let tagI = tag;
+        let zeit = zeile[i].split(":");
+        if (i > 6 && (zeile[2] == "BN" || zeile[2] == "N")) {
+          tagI = zeile[0] - 1;
         }
-        zeile[i] =
-          `${moment()
-            .year(jahr)
-            .month(monat - 1)
-            .day(tag)
-            .hour(moment(zeile[i], "HH:mm").hour())
-            .minute(moment(zeile[i], "HH:mm").minute())
-            .format("YYYY-MM-DDTHH:mm:00.000")}Z`;
+        zeile[i] = moment()
+          .year(jahr)
+          .month(monat - 1)
+          .date(tagI)
+          .hour(zeit[0])
+          .minute(zeit[1])
+          .seconds(0)
+          .millisecond(0);
       } else {
         zeile[i] = "";
       }
@@ -249,175 +318,132 @@ function ewtBerechnen(monat, jahr, daten, vorgabenU) {
 
   //console.log(daten)
 
-  var beginn;
-  var ende;
-  var svzA;
-  var svzE;
-  var datumAbW;
-  var datumAb1;
-  var datumAnE;
-  var datumBeginn;
-  var datumEnde;
-  var datumAbE;
-  var datumAn1;
-  var datumAnW;
-
-  // Konstante Variablen
-  const millisTag = 1000 * 60 * 60 * 24;
+  var beginn,
+    ende,
+    svzA,
+    svzE,
+    datumAbW,
+    datumAb1,
+    datumAnE,
+    datumBeginn,
+    datumEnde,
+    datumAbE,
+    datumAn1,
+    datumAnW;
 
   // Wandle vorgabenU um
   //console.log("vorgabenU: ", vorgabenU)
 
-  var endePascal = 0;
+  var endePascal = moment.duration(0, "m");
   //console.log(vorgabenU.pers.Name)
   if (vorgabenU.pers.Name == "Ackermann, Pascal") {
-    endePascal = 5 * 1000 * 60;
+    endePascal = moment.duration(5, "minute"); //5 * 1000 * 60;
   }
   //console.log(endePascal)
 
   var vorgabenE = vorgabenU.aZ;
   for (const [key, value] of Object.entries(vorgabenE)) {
-    vorgabenE[key] = new Date(`1970-01-01T${value}:00.000Z`);
+    vorgabenE[key] = moment.duration(value);
   }
-
-  vorgabenE.fZ = vorgabenU.fZ;
-
-  //console.log("VorgabenE: ", vorgabenE)
-  //Logger.log(vorgabenE.fZ)
+  vorgabenE.fZ = {};
+  for (const [key, value] of Object.entries(vorgabenU.fZ)) {
+    vorgabenE.fZ[key] = moment.duration(value[1]);
+  }
 
   // Beginn der Berechnung
   for (var i = 0; i < daten.length; i++) {
-    //console.log("Daten Tag: ", daten[i])
-    var datum = new Date(jahr, monat - 1, daten[i][0]);
+    if (JSON.parse(daten[i][11]) == false) continue;
+    var datum = moment([jahr, monat - 1, daten[i][0]]);
     var schicht = daten[i][2];
-    //console.log("Datum: ", datum)
-    //console.log("Schicht: ", schicht)
     switch (schicht) {
       case "N":
         //console.log("Nachtschicht")
-        beginn = vorgabenE.bN;
-        ende = new Date(vorgabenE.eN.getTime() + millisTag);
-        svzA = 45 * 60 * 1000;
-        svzE = svzA;
+        beginn = moment.duration(vorgabenE.bN);
+        ende = moment.duration(vorgabenE.eN).add(1, "d");
+        svzA = moment.duration(45, "m");
+        svzE = moment.duration(svzA);
         break;
       case "S":
         //console.log("Sonderschicht")
-        beginn = vorgabenE.bS;
-        ende = vorgabenE.eS;
-        svzA = 20 * 60 * 1000;
-        svzE = svzA;
+        beginn = moment.duration(vorgabenE.bS);
+        ende = moment.duration(vorgabenE.eS);
+        svzA = moment.duration(20, "m");
+        svzE = moment.duration(svzA);
         break;
       case "BN":
         //console.log("Nachtschicht Bereitschaft")
-        beginn = vorgabenE.bBN;
-        ende = new Date(vorgabenE.eN.getTime() + millisTag);
-        svzA = 60 * 60 * 1000;
-        svzE = 45 * 60 * 1000;
+        beginn = moment.duration(vorgabenE.bBN);
+        ende = moment.duration(vorgabenE.eN).add(1, "d");
+        svzA = moment.duration(60, "m");
+        svzE = moment.duration(45, "m");
         break;
       case "":
         //console.log("ohne Schicht")
-        beginn = vorgabenE.bT;
-        if (datum.getDay() === 5) {
-          ende = vorgabenE.eTF;
+        beginn = moment.duration(vorgabenE.bT);
+        if (datum.day() === 5) {
+          ende = moment.duration(vorgabenE.eTF);
         } else {
-          ende = vorgabenE.eT;
+          ende = moment.duration(vorgabenE.eT);
         }
-        svzA = 20 * 60 * 1000;
-        svzE = svzA;
+        svzA = moment.duration(20, "m");
+        svzE = moment.duration(svzA);
         break;
       default:
         throw Error("Schichtfehler");
     }
-    //console.log("Beginn: ", beginn)
-    //console.log("Ende: ", ende)
-    //console.log("TimeZoneOffset: ", datum.getTimezoneOffset() * 60000)
 
     // Arbeitszeit Beginn
     if (daten[i][6] === "") {
-      datumBeginn = new Date(datum.getTime() + beginn.getTime());
+      datumBeginn = moment(datum).add(beginn);
       daten[i][6] = datumBeginn;
     } else {
-      daten[i][6] = new Date(
-        new Date(daten[i][6]).getTime() + datum.getTimezoneOffset() * 60000
-      );
       datumBeginn = daten[i][6];
     }
     //console.log(datumBeginn)
     // Arbeitszeit Ende
     if (daten[i][7] === "") {
-      datumEnde = new Date(datum.getTime() + ende.getTime());
+      datumEnde = moment(datum).add(ende);
       daten[i][7] = datumEnde;
     } else {
-      daten[i][7] = new Date(
-        new Date(daten[i][7]).getTime() + datum.getTimezoneOffset() * 60000
-      );
       datumEnde = daten[i][7];
     }
     //console.log(datumEnde)
     // Ab Wohnung
     if (daten[i][3] === "") {
-      datumAbW = new Date(datumBeginn.getTime() - vorgabenE.rZ.getTime());
+      datumAbW = moment(datumBeginn).subtract(vorgabenE.rZ);
       daten[i][3] = datumAbW;
-    } else {
-      daten[i][3] = new Date(
-        new Date(daten[i][3]).getTime() + datum.getTimezoneOffset() * 60000
-      );
     }
     // Ab erste Tätigkeitsstätte
     if (daten[i][4] === "") {
-      datumAb1 = new Date(datumBeginn.getTime() + svzA);
+      datumAb1 = moment(datumBeginn).add(svzA);
       daten[i][4] = datumAb1;
     } else {
-      daten[i][4] = new Date(
-        new Date(daten[i][4]).getTime() + datum.getTimezoneOffset() * 60000
-      );
       datumAb1 = daten[i][4];
     }
     // An erste Tätigkeitsstätte
     if (daten[i][9] === "") {
-      datumAn1 = new Date(datumEnde.getTime() - svzE);
+      datumAn1 = moment(datumEnde).subtract(svzE);
       daten[i][9] = datumAn1;
     } else {
-      daten[i][9] = new Date(
-        new Date(daten[i][9]).getTime() + datum.getTimezoneOffset() * 60000
-      );
       datumAn1 = daten[i][9];
     }
     // An Wohnung
     if (daten[i][10] === "") {
-      datumAnW = new Date(
-        datumEnde.getTime() + vorgabenE.rZ.getTime() + endePascal
-      );
+      datumAnW = moment(datumEnde).add(vorgabenE.rZ).add(endePascal);
       daten[i][10] = datumAnW;
-    } else {
-      daten[i][10] = new Date(
-        new Date(daten[i][10]).getTime() + datum.getTimezoneOffset() * 60000
-      );
     }
     if (daten[i][1] !== "") {
       //console.log("Arbeitsort: ", daten[i][1])
       //console.log("Zeit Arbeitsort: ", vorgabenE.fZ[daten[i][1]])
       // An Einsatzort
       if (daten[i][5] === "") {
-        datumAnE = new Date(
-          datumAb1.getTime() + new Date(vorgabenE.fZ[daten[i][1]][1]).getTime()
-        );
+        datumAnE = moment(datumAb1).add(vorgabenE.fZ[daten[i][1]]);
         daten[i][5] = datumAnE;
-      } else {
-        daten[i][5] = new Date(
-          new Date(daten[i][5]).getTime() + datum.getTimezoneOffset() * 60000
-        );
       }
       // Ab Einsatzort
       if (daten[i][8] === "") {
-        datumAbE = new Date(
-          datumAn1.getTime() - new Date(vorgabenE.fZ[daten[i][1]][1]).getTime()
-        );
+        datumAbE = moment(datumAn1).subtract(vorgabenE.fZ[daten[i][1]]);
         daten[i][8] = datumAbE;
-      } else {
-        daten[i][8] = new Date(
-          new Date(daten[i][8]).getTime() + datum.getTimezoneOffset() * 60000
-        );
       }
     }
     //console.log("Daten Tag bearbeitet: ", daten[i])
@@ -425,11 +451,12 @@ function ewtBerechnen(monat, jahr, daten, vorgabenU) {
   //console.log(daten)
 
   daten.forEach((zeile) => {
+    if (JSON.parse(zeile[11]) == false) return;
     //Logger.log(zeile)
-    zeile[0] = (`0${zeile[0]}`).slice(-2);
+    zeile[0] = `0${zeile[0]}`.slice(-2);
     for (var i = 3; i <= 10; i++) {
       //console.log(zeile[i])
-      if (zeile[i]) zeile[i] = moment(zeile[i]).format("HH:mm"); //("0" + zeile[i].getHours()).slice(-2) + ":" + ("0" + zeile[i].getMinutes()).slice(-2)
+      if (zeile[i]) zeile[i] = moment(zeile[i]).format("HH:mm");
     }
   });
 
@@ -466,10 +493,9 @@ function generateEditorModalE(eOrt) {
 }
 
 function generateEingabeMaskeEWT() {
-  var dataE = tableToArray("#tableE");
-  //console.log(dataE)
-  var monat = document.getElementById("Monat").value;
-  var jahr = document.getElementById("Jahr").value;
+  var dataE = tableToArray("#tableE"),
+    monat = document.getElementById("Monat").value,
+    jahr = document.getElementById("Jahr").value;
 
   document.getElementById("tagE").min = moment([jahr, monat - 1, 1])
     .startOf("month")
@@ -499,8 +525,8 @@ function naechsterTag(tag, dataE) {
   //console.log("nächster Tag")
   if (tag == null) tag = moment(document.getElementById("tagE").value).date();
   if (tag == "") tag = 1;
-  var monat = document.getElementById("Monat").value;
-  var jahr = document.getElementById("Jahr").value;
+  var monat = document.getElementById("Monat").value,
+    jahr = document.getElementById("Jahr").value;
 
   if (dataE == null) {
     dataE = tableToArray("#tableE");
@@ -539,16 +565,16 @@ function naechsterTag(tag, dataE) {
 }
 
 function addEWTtag() {
-  var tag = (`0${document.getElementById("tagE").value}`).slice(-2);
-  var ort = document.getElementById("EOrt").value;
-  var schicht = document.getElementById("Schicht").value;
+  var tag = `0${document.getElementById("tagE").value}`.slice(-2),
+    ort = document.getElementById("EOrt").value,
+    schicht = document.getElementById("Schicht").value;
   //console.log(tag)
   //console.log(ort)
   //console.log(schicht)
 
   naechsterTag(tag);
 
-  var data = [[tag, ort, schicht, "", "", "", "", "", "", "", ""]];
+  var data = [[tag, ort, schicht, "", "", "", "", "", "", "", "", true]];
 
   let ftE = FooTable.get("#tableE");
   console.log("save ", ftE);

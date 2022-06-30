@@ -136,7 +136,14 @@ table.footable-details > tbody > tr > td {
 }
 
 .form-switch {
-  margin-left: 1rem;
+  margin: auto 0 auto 1rem;
+}
+
+td > .form-switch {
+  margin: unset;
+}
+
+.bereitschaft {
   width: 90%;
 }
 

@@ -34,7 +34,7 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
       var input = document.createElement("input");
       input.setAttribute("type", "time");
       input.setAttribute("class", "form-control");
-      input.setAttribute("value", VorgabenU.fZ[tgkSKeys[i]][1].slice(11, 16));
+      input.setAttribute("value", VorgabenU.fZ[tgkSKeys[i]][1]);
       td.appendChild(input);
     } else {
       td = tr.insertCell(0);
@@ -62,7 +62,7 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 }
 
 function saveEinstellungen() {
-    var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
+  var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
 
   Object.keys(VorgabenU.pers).forEach(function (key, index) {
     VorgabenU.pers[key] = document.getElementById(key).value;
@@ -71,8 +71,12 @@ function saveEinstellungen() {
   Object.keys(VorgabenU.aZ).forEach(function (key, index) {
     VorgabenU.aZ[key] = document.getElementById(key).value;
   });
+  //console.log(VorgabenU);
+
   VorgabenU.fZ = table_to_array_einstellungen("TbodyTätigkeitsstätten");
-  
+
+  //console.log(VorgabenU);
+
   if (VorgabenU.pers.TB == "Tarifkraft") {
     document.getElementById("AnzeigenN-tab").classList.remove("d-none");
   } else {
@@ -94,24 +98,10 @@ function table_to_array_einstellungen(table_id) {
     }
     var km = el[1].children[0].value;
     var zeit = el[2].children[0].value;
-    if (zeit) {
-      zeit = `${zeitUmwandeln(zeit)}:00.000Z`;
-    }
     //console.log(key);
     //console.log(km);
     //console.log(zeit);
     my_liste[key] = [km, zeit];
   }
   return my_liste;
-}
-
-function zeitUmwandeln(string) {
-  //console.log(string)
-  var minute = string.substring(3, 5);
-  //console.log(minute);
-  var hour = string.substring(0, 2);
-  //console.log(hour);
-  var time = `1970-01-01T${hour}:${minute}`;
-  //console.log(time)
-  return time;
 }

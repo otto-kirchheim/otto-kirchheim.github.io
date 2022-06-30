@@ -136,8 +136,9 @@ async function saveDaten(button) {
   saveTableData("tableE");
   saveTableData("tableN");
   saveEinstellungen();
-  let user,
-    data = {
+  let user;
+  try {
+    let data = {
       BZ: JSON.parse(localStorage.getItem("dataBZ")),
       BE: JSON.parse(localStorage.getItem("dataBE")),
       E: JSON.parse(localStorage.getItem("dataE")),
@@ -147,7 +148,6 @@ async function saveDaten(button) {
       Monat: localStorage.getItem("Monat"),
       Jahr: localStorage.getItem("Jahr"),
     };
-  try {
     const response = await fetch(`${API_URL}/saveData`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -214,10 +214,9 @@ function saveTableData(tableID, ft) {
       );
       break;
     case "tableE":
-      localStorage.setItem(
-        "dataE",
-        JSON.stringify(tableToArray("#tableE", ft))
-      );
+      var data = tableToArray("#tableE", ft);
+      data.forEach((value) => value.pop());
+      localStorage.setItem("dataE", JSON.stringify(data));
       break;
     case "tableN":
       localStorage.setItem(
@@ -230,7 +229,7 @@ function saveTableData(tableID, ft) {
 function tableToArray(tableID, ft) {
   //console.log("---Table to Array---");
   if (!ft) ft = FooTable.get(tableID);
-  data = ft
+  var data = ft
     .toCSV()
     .replace(/"/g, "")
     .replace(/^,/gm, "")
