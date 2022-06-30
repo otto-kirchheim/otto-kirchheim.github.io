@@ -265,7 +265,9 @@ async function checkNeuerBenutzer() {
 
 async function LadeUserDaten(UserID, monat, jahr) {
   document.getElementById("Monat").value = monat;
-  let datum = moment().year(jahr).month(monat);
+  let datum = moment()
+    .year(jahr)
+    .month(monat - 1);
   let datumkurz = datum.format("MM / YY");
   document.getElementById("Datum").value = datum.format("YYYY-MM-DD");
   document.getElementById("MonatB").innerText = datumkurz;
