@@ -86,7 +86,9 @@ async function download(button, modus) {
       data.Daten.BE = tableToArray("#tableBE");
       break;
     case "E":
-      data.Daten.EWT = tableToArray("#tableE");
+      var dataE = tableToArray("#tableE");
+      dataE.forEach((value) => value.pop());
+      data.Daten.EWT = dataE;
       break;
     case "N":
       data.Daten.N = tableToArray("#tableN");

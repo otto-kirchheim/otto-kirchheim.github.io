@@ -258,7 +258,10 @@ function DataBE(data) {
 // Eingabemaske Bereitschaftszeiten
 
 function generateEingabeMaskeZeiten(vorgabenB) {
-  var datum = moment();
+  var datumHeute = moment();
+  var Monat = localStorage.getItem("Monat");
+  var Jahr = localStorage.getItem("Jahr");
+  var datum = moment([Jahr, Monat - 1, datumHeute.date()]);
   var datum1 = moment(datum).day(3).format("YYYY-MM-DD"); //Beginn B
   var datum2 = moment(datum1).day(7).format("YYYY-MM-DD"); //Beginn N
   var datum3 = moment(datum1).day(10).format("YYYY-MM-DD"); //Ende B
