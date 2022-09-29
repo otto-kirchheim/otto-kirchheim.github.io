@@ -464,5 +464,5 @@ function toUtcTimestamp(date) {
     return internalDate.getTime();
 }
 
-export { addTranslation, setLanguage, getLanguage, isSunOrHoliday, isHoliday, getHolidayByDate, isSpecificHoliday, getHolidays };
+//export { addTranslation, setLanguage, getLanguage, isSunOrHoliday, isHoliday, getHolidayByDate, isSpecificHoliday, getHolidays };
 //# sourceMappingURL=feiertage.js.map
