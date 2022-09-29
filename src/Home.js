@@ -67,6 +67,7 @@ toastr.options = {
   hideEasing: "linear",
   showMethod: "fadeIn",
   hideMethod: "fadeOut",
+  escapeHtml: true,
 };
 
 async function download(button, modus) {
