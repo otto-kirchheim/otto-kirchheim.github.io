@@ -81,7 +81,7 @@ async function loginUser(username, passwort) {
 
 function SelectYear(monat, jahr) {
   setLoading("btnAuswaehlen");
-  document.getElementById("errorMessageSelect").innerHTML = "";
+  document.getElementById("errorMessage").innerHTML = "";
 
   if (!monat) monat = document.getElementById("Monat").value;
   if (!jahr) jahr = document.getElementById("Jahr").value;
@@ -118,27 +118,27 @@ async function checkPasswort() {
   var passwort4 = document.getElementById("Passwort4").value;
 
   if (!passwortAlt) {
-    document.getElementById("errorMessageChange").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Aktuelles Passwort Eingeben";
     return;
   }
   if (!passwort3) {
-    document.getElementById("errorMessageChange").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Neues Passwort Eingeben";
     return;
   }
   if (!passwort4) {
-    document.getElementById("errorMessageChange").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Neues Passwort wiederholen";
     return;
   }
   if (passwort3 != passwort4) {
-    document.getElementById("errorMessageChange").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Passworter falsch wiederholt";
     return;
   }
   if (passwortAlt == passwort3) {
-    document.getElementById("errorMessageChange").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Passwörter Alt und neu sind gleich";
     return;
   }
@@ -160,7 +160,7 @@ async function checkPasswort() {
     user = await response.json();
     if (response.status >= 400 || response.status <= 500) {
       console.log(user.message);
-      document.getElementById("errorMessageChange").innerHTML = user.message;
+      document.getElementById("errorMessage").innerHTML = user.message;
       toastr.error("Passwort konnte nicht geändert werden.");
       return;
     }
@@ -192,27 +192,27 @@ async function checkNeuerBenutzer() {
   var passwort2 = document.getElementById("Passwort2").value;
 
   if (!zugangscode) {
-    document.getElementById("errorMessageNew").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Zugangscode Eingeben";
     return;
   }
   if (!benutzer) {
-    document.getElementById("errorMessageNew").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Benutzername Eingeben";
     return;
   }
   if (!passwort1) {
-    document.getElementById("errorMessageNew").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Passwort Eingeben";
     return;
   }
   if (!passwort2) {
-    document.getElementById("errorMessageNew").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Bitte Passwort wiederholen";
     return;
   }
   if (passwort1 != passwort2) {
-    document.getElementById("errorMessageNew").innerHTML =
+    document.getElementById("errorMessage").innerHTML =
       "Passwörter falsch wiederholt";
     return;
   }
@@ -232,7 +232,7 @@ async function checkNeuerBenutzer() {
     var user = await response.json();
     if (response.status == 401) {
       console.log(user.message);
-      document.getElementById("errorMessageNew").innerHTML = user.message;
+      document.getElementById("errorMessage").innerHTML = user.message;
       return;
     }
     if (response.status == 201) {
@@ -250,7 +250,7 @@ async function checkNeuerBenutzer() {
     clearLoading("btnNeu");
   }
 
-  document.getElementById("errorMessageNew").innerHTML = "";
+  document.getElementById("errorMessage").innerHTML = "";
 
   loginUser(
     document.getElementById("Benutzer2").value,

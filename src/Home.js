@@ -46,7 +46,7 @@ function autoCollapse(x) {
     });
   }
 }
-var x = window.matchMedia("(max-width: 575.98px)");
+var x = window.matchMedia("(max-width: 767.98px)");
 autoCollapse(x);
 x.addEventListener("change", autoCollapse);
 

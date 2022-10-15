@@ -6,7 +6,7 @@
   <base target="_top">
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="robots" content="noindex">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="author" content="Jan Otto">
   <meta name="mobile-web-app-capable" content="true">
   <meta name="apple-mobile-web-app-capable" content="true">
@@ -16,8 +16,8 @@
   <link rel="shortcut icon" type="image/png" href="icons/48x48-icon.png" sizes="48x48">
   <link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96">
   <link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Icons&family=Material+Icons+Round&family=Material+Icons+Outlined"
     rel="stylesheet">
@@ -30,14 +30,14 @@
 </head>
 
 <body class="d-flex flex-column mb-3">
-  <nav class="navbar navbar-expand-sm navbar-dark bg-dark d-none" id="tab">
+  <nav class="navbar navbar-expand-md navbar-dark bg-dark d-none" id="tab">
     <button class="navbar-toggler ms-2 mb-2 collapsed" type="button" data-bs-toggle="collapse"
       data-bs-target="#navmenu">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <div class="collapse navbar-collapse" id="navmenu">
-      <ul class="nav nav-pills mx-auto nav-justified flex-column flex-sm-row" id="tabs" role="tablist">
+    <div class="collapse navbar-collapse navbar-dark bg-dark" id="navmenu">
+      <ul class="nav nav-pills mx-auto nav-justified flex-column flex-md-row" id="tabs" role="tablist">
         <li class="nav-item" role="presentation">
           <button class="nav-link active text-center" id="home-tab" data-bs-toggle="pill" data-bs-target="#home"
             type="button" role="tab">Home</button>
@@ -73,7 +73,7 @@
   </nav>
 
   <div class="container mx-auto" id="alertPlaceholder">
-    <div class="alert alert-danger show fade text-center" role="alert">
+    <div class="alert alert-danger show fade text-center mt-4" role="alert">
       Bitte Cookies zulassen!
     </div>
   </div>
@@ -81,141 +81,126 @@
   <div class="tab-content" id="tabContent">
     <!-- Tab Home -->
     <div class="tab-pane fade show active" id="home" role="tabpanel">
-      <div class="container text-center vertical-center">
-        <div class="col-6 mx-auto">
-          <h1 class="mx-auto" id="Willkommen">Willkommen</h1>
-        </div>
+      <div class="container flex-column text-center vertical-center">
+        <div class="card d-grid col-12 col-sm-8 col-md-6 col-xl-3 mx-auto">
+          <div class="card-header">
+            <h1 class="card-title" id="Willkommen">Willkommen</h1>
+          </div>
 
-        <div id="loginDisplay" class="d-grid col-6 col-md-3 mx-auto">
-          <form onsubmit="event.preventDefault(); loginUser()">
-            <div class="form-floating">
-              <input id="Benutzer" type="text" class="form-control validate" pattern="[A-z]*" required>
-              <label for="Benutzer">Benutzer</label>
-            </div>
-            <div class="form-floating">
-              <input id="Passwort" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*" required>
-              <label for="Passwort">Passwort</label>
-            </div>
-            <div class="d-grid gap-2">
+          <div id="loginDisplay" class="card-body">
+            <form onsubmit="event.preventDefault(); loginUser()" class="d-grid gap-2">
+              <div class="form-floating">
+                <input id="Benutzer" type="text" class="form-control validate" pattern="[A-z]*" required>
+                <label for="Benutzer">Benutzer</label>
+              </div>
+              <div class="form-floating">
+                <input id="Passwort" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*" required>
+                <label for="Passwort">Passwort</label>
+              </div>
               <button class="btn btn-primary" type="submit" name="Einloggen" id="btnLogin">
                 Einloggen
               </button>
-            </div>
-            <div class="d-grid gap-2 mt-2">
               <button class="btn btn-primary" type="button" name="Neu"
                 onclick="document.getElementById('loginDisplay').classList.add('d-none'), document.getElementById('NewDisplay').classList.remove('d-none')">
                 Neuer Benutzer
               </button>
-            </div>
-            <span id="errorMessage" class="text-danger mx-auto"></span>
-          </form>
-        </div>
+            </form>
+          </div>
 
-        <div id="NewDisplay" class="d-grid col-6 col-md-3 mx-auto d-none">
-          <form onsubmit="event.preventDefault(); checkNeuerBenutzer()">
-            <div class="form-floating">
-              <input id="Zugang" type="text" class="form-control validate" required>
-              <label for="Zugang">Zugangscode</label>
-            </div>
-            <div class="form-floating">
-              <input id="Benutzer2" type="text" class="form-control validate" pattern="[A-z]*" data-bs-toggle="popover"
-                data-bs-trigger="focus" data-bs-placement="right" data-bs-original-titel="Benutzer"
-                data-bs-content="Kein Ää Öö Üü ß" required>
-              <label for="Benutzer2">Benutzer</label>
-            </div>
-            <div class="form-floating">
-              <input id="Passwort1" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
-              <label for="Passwort1">Passwort</label>
-            </div>
-            <div class="form-floating">
-              <input id="Passwort2" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
-              <label for="Passwort2">Passwort wiederholen</label>
-            </div>
-            <div class="d-grid gap-2 mt-2">
+          <div id="NewDisplay" class="card-body d-none">
+            <form onsubmit="event.preventDefault(); checkNeuerBenutzer()" class="d-grid gap-2">
+              <div class="form-floating">
+                <input id="Zugang" type="text" class="form-control validate" required>
+                <label for="Zugang">Zugangscode</label>
+              </div>
+              <div class="form-floating">
+                <input id="Benutzer2" type="text" class="form-control validate" pattern="[A-z]*"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Benutzer" data-bs-content="Kein Ää Öö Üü ß" required>
+                <label for="Benutzer2">Benutzer</label>
+              </div>
+              <div class="form-floating">
+                <input id="Passwort1" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+                <label for="Passwort1">Passwort</label>
+              </div>
+              <div class="form-floating">
+                <input id="Passwort2" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+                <label for="Passwort2">Passwort wiederholen</label>
+              </div>
               <button class="btn btn-primary" type="submit" name="Neu" id="btnNeu">
                 Neuer Benutzer
               </button>
-            </div>
-            <div class="d-grid gap-2 mt-2">
               <button class="btn btn-primary" type="button"
                 onclick="document.getElementById('NewDisplay').classList.add('d-none'), document.getElementById('loginDisplay').classList.remove('d-none')">
                 Abbrechen
               </button>
-            </div>
-            <span id="errorMessageNew" class="text-danger mx-auto"></span>
-          </form>
-        </div>
+            </form>
+          </div>
 
-        <div id="ChangeDisplay" class="d-grid col-6 col-md-3 mx-auto d-none">
-          <form onsubmit="event.preventDefault(); checkPasswort()">
-            <div class="form-floating">
-              <input id="passwortOld" type="password" class="form-control validate" required>
-              <label for="passwortOld">Altes Passwort</label>
-            </div>
-            <div class="form-floating">
-              <input id="Passwort3" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
-              <label for="Passwort3">Neues Passwort</label>
-            </div>
-            <div class="form-floating">
-              <input id="Passwort4" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
-              <label for="Passwort4">Neues Passwort wiederholen</label>
-            </div>
-            <div class="d-grid gap-2 mt-2">
+          <div id="ChangeDisplay" class="card-body d-none">
+            <form onsubmit="event.preventDefault(); checkPasswort()" class="d-grid gap-2">
+              <div class="form-floating">
+                <input id="passwortOld" type="password" class="form-control validate" required>
+                <label for="passwortOld">Altes Passwort</label>
+              </div>
+              <div class="form-floating">
+                <input id="Passwort3" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+                <label for="Passwort3">Neues Passwort</label>
+              </div>
+              <div class="form-floating">
+                <input id="Passwort4" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Benutzer" data-bs-content="A-Z a-z 0-9 ._%+-" required>
+                <label for="Passwort4">Neues Passwort wiederholen</label>
+              </div>
               <button class="btn btn-primary" type="submit" name="Change" id="btnChange">
                 Passwort Ändern
               </button>
-            </div>
-            <div class="d-grid gap-2 mt-2">
               <button class="btn btn-primary" type="button"
                 onclick="document.getElementById('ChangeDisplay').classList.add('d-none'), document.getElementById('SelectDisplay').classList.remove('d-none')">
                 Abbrechen
               </button>
-            </div>
-            <span id="errorMessageChange" class="text-danger mx-auto"></span>
-          </form>
-        </div>
+            </form>
+          </div>
 
-        <div id="SelectDisplay" class="d-grid col-6 col-md-3 my-1 mx-auto d-none">
-
-          <button class="btn btn-primary col-12 mx-auto mb-2" type="button" name="Logout" onclick="Logout()">
-            Ausloggen
-          </button>
-
-          <button class="btn btn-secondary col-12 mx-auto mb-2" type="button" name="PasswortAEndern"
-            onclick="document.getElementById('SelectDisplay').classList.add('d-none'), document.getElementById('ChangeDisplay').classList.remove('d-none')">
-            Passwort Ändern
-          </button>
-
-          <form onsubmit="event.preventDefault(); SelectYear()">
-            <div class="form-floating">
-              <input id="Monat" type="number" class="form-control validate" min="1" max="12" required
-                onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Monatswechsel Speichern!!">
-              <label for="Monat">Monat</label>
-            </div>
-            <div class="form-floating">
-              <input id="Jahr" type="number" class="form-control validate" min="2021" max="2030" required
-                onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
-                data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
-                data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Jahreswechsel Speichern!!">
-              <label for="Jahr">Jahr</label>
-            </div>
-            <div class="d-grid gap-2 col-12 mx-auto">
+          <div id="SelectDisplay" class="card-body d-none d-grid gap-2">
+            <button class="btn btn-primary col-12 mx-auto" type="button" name="Logout" onclick="Logout()">
+              Ausloggen
+            </button>
+            <button class="btn btn-secondary col-12 mx-auto" type="button" name="PasswortAEndern"
+              onclick="document.getElementById('SelectDisplay').classList.add('d-none'), document.getElementById('ChangeDisplay').classList.remove('d-none')">
+              Passwort Ändern
+            </button>
+            <form onsubmit="event.preventDefault(); SelectYear()" class="d-grid gap-2">
+              <div class="form-floating">
+                <input id="Monat" type="number" class="form-control validate" min="1" max="12" required
+                  onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Monatswechsel Speichern!!">
+                <label for="Monat">Monat</label>
+              </div>
+              <div class="form-floating">
+                <input id="Jahr" type="number" class="form-control validate" min="2021" max="2030" required
+                  onchange="if (document.getElementById('Monat').value != localStorage.getItem('Monat')) {buttonDisable(true); document.getElementById('btnAuswaehlen').disabled = false} else {buttonDisable(false)}"
+                  data-bs-toggle="popover" data-bs-trigger="focus" data-bs-placement="right"
+                  data-bs-original-titel="Monatswechsel" data-bs-content="Achtung: Vor Jahreswechsel Speichern!!">
+                <label for="Jahr">Jahr</label>
+              </div>
               <button class="btn btn-primary" type="submit" id="btnAuswaehlen" name="Auswählen">
                 Auswählen
               </button>
-            </div>
-            <span id="errorMessageSelect" class="text-danger mx-auto"></span>
-          </form>
+            </form>
+          </div>
+
+          <div class="card-footer text-danger">
+            <span id="errorMessage"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -925,28 +910,28 @@
                 <div class="accordion-body">
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">person</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="Mustermann, Max" id="Name" class="form-control validate" required>
                       <label for="Name">Name</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">badge</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required>
                       <label for="PNummer">Personalnummer</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">phone</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="tel" id="Telefon" placeholder="0123/45678910" class="form-control validate" required>
                       <label for="Telefon">Telefon</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">home</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress1"
                         class="form-control validate" required>
                       <label for="Adress1">Wohnsitz 1</label>
@@ -954,7 +939,7 @@
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">home_work</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress2"
                         class="form-control validate">
                       <label for="Adress2">Wohnsitz 2</label>
@@ -962,21 +947,21 @@
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">business</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="Kirchheim" id="ErsteTkgSt" class="form-control validate" required>
                       <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">business</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="DB Netz AG" id="Betrieb" class="form-control validate" required>
                       <label for="Betrieb">Betrieb</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">business</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="I.NA-MI-N-KSL-IL 03" id="OE" class="form-control validate"
                         required>
                       <label for="OE">OE</label>
@@ -984,14 +969,14 @@
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">business</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required>
                       <label for="Gewerk">Gewerk</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">business</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Number" placeholder="12" id="kmArbeitsort" class="form-control validate" min="1"
                         max="100" required>
                       <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
@@ -999,14 +984,14 @@
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">train</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Text" placeholder="Bad Hersfeld" id="nBhf" class="form-control validate" required>
                       <label for="nBhf">nächster Bahnhof</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">train</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="Number" placeholder="12" id="kmnBhf" class="form-control validate" min="1" max="100"
                         required>
                       <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
@@ -1014,7 +999,7 @@
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">group</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <select class="form-select validate" id="TB" name="TB" required>
                         <option value="" disabled selected>Bitte Wählen</option>
                         <option value="Tarifkraft">Tarifkraft</option>
@@ -1040,7 +1025,7 @@
                   <h4>Fahrzeit</h4>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">drive_eta</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="rZ" class="form-control validate" required>
                       <label for="rZ">Fahrzeit Wo / Ao</label>
                     </div>
@@ -1048,21 +1033,21 @@
                   <h4>Tagschicht</h4>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">history</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="bT" class="form-control validate" required>
                       <label for="bT">Arbeitsbeginn Tag</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">update</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="eT" class="form-control validate" required>
                       <label for="eT">Arbeitsende Mo-Do</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">update</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="eTF" class="form-control validate" required>
                       <label for="eTF">Arbeitsende Fr</label>
                     </div>
@@ -1070,21 +1055,21 @@
                   <h4>Nachtschicht</h4>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">history</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="bN" class="form-control validate" required>
                       <label for="bN">Arbeitsbeginn Nacht</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">history</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="bBN" class="form-control validate" required>
                       <label for="bBN">Arbeitsbeginn Nacht Bereitschaft</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">update</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="eN" class="form-control validate" required>
                       <label for="eN">Arbeitsende Nacht</label>
                     </div>
@@ -1092,14 +1077,14 @@
                   <h4>Sonderschicht</h4>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">history</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="bS" class="form-control validate" required>
                       <label for="bS">Arbeitsbeginn Sonderschicht</label>
                     </div>
                   </div>
                   <div class="input-group mb-3">
                     <span class="input-group-text material-icons prefix">update</span>
-                    <div class="form-floating" style="width:75%">
+                    <div class="form-floating">
                       <input type="time" id="eS" class="form-control validate" required>
                       <label for="eS">Arbeitsende Sonderschicht</label>
                     </div>
@@ -1143,8 +1128,9 @@
     /* const API_URL = "https://localhost:8443" */
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js"
-    integrity="sha256-qFsv4wd3fI60fwah7sOZ/L3f6D0lL9IC0+E1gFH88n0=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+    crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"
     integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/toastr@2.1.4/build/toastr.min.js"

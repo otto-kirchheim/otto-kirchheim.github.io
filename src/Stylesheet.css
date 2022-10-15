@@ -1,3 +1,7 @@
+body {
+  margin-top: 56px;
+}
+
 .w200 > * {
   width: 230px;
 }
@@ -17,6 +21,10 @@
 .material-icons-round {
   vertical-align: middle;
   font-size: 1.3rem;
+}
+
+.card {
+  min-width: min-content;
 }
 
 th.footable-sortable > span.fooicon-sort {
@@ -97,7 +105,7 @@ table.footable-details > tbody > tr > td {
 .vertical-center {
   min-height: 85%;
   min-height: 85vh;
-
+  
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -105,6 +113,16 @@ table.footable-details > tbody > tr > td {
 
 .nav-link {
   padding: 1.1rem;
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: 56px;
+  z-index: 100;
 }
 
 .navbar-toggler.collapsed {
