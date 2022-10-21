@@ -104,15 +104,15 @@ async function download(button, modus) {
       body: JSON.stringify(data),
     });
     if (response.status == 200) {
-      var data = await response.json();
+      var responsed = await response.json();
       var uri = `data:application/pdf;base64,${encodeURIComponent(
-        await data.data
+        await responsed.data
       )}`;
-      downloadURI(uri, data.name);
+      downloadURI(uri, responsed.name);
       console.timeEnd("download");
     } else {
       console.log("Fehler");
-      toastr.error(`Download fehlerhaft: ${data.message}`);
+      toastr.error(`Download fehlerhaft: ${responsed.message}`);
       return;
     }
   } catch (err) {
@@ -139,7 +139,6 @@ async function saveDaten(button) {
   saveTableData("tableE");
   saveTableData("tableN");
   saveEinstellungen();
-  let user;
   try {
     let data = {
       BZ: JSON.parse(localStorage.getItem("dataBZ")),
@@ -156,40 +155,40 @@ async function saveDaten(button) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    user = await response.json();
-    console.log(user);
+    var responded = await response.json();
+    console.log(responded);
 
     if (response.status == 200) {
-      generateTableBerechnung(user.datenBerechnung);
-      generateEingabeMaskeEinstellungen(user.User);
+      generateTableBerechnung(responded.datenBerechnung);
+      generateEingabeMaskeEinstellungen(responded.User);
 
       let ftBZ = FooTable.get("#tableBZ");
       console.log("save ", ftBZ);
-      ftBZ.rows.load(DataBZ(user.daten.datenBZ));
+      ftBZ.rows.load(DataBZ(responded.daten.datenBZ));
 
       let ftBE = FooTable.get("#tableBE");
       console.log("save ", ftBE);
-      ftBE.rows.load(DataBE(user.daten.datenBE));
+      ftBE.rows.load(DataBE(responded.daten.datenBE));
 
       let ftE = FooTable.get("#tableE");
       console.log("save ", ftE);
-      ftE.rows.load(DataE(user.daten.datenE));
+      ftE.rows.load(DataE(responded.daten.datenE));
 
       let ftN = FooTable.get("#tableN");
       console.log("save ", ftN);
-      ftN.rows.load(DataN(user.daten.datenN));
+      ftN.rows.load(DataN(responded.daten.datenN));
 
       setTimeout(function () {
         saveTableData("tableBZ", ftBZ);
         saveTableData("tableBE", ftBE);
         saveTableData("tableE", ftE);
         saveTableData("tableN", ftN);
-        localStorage.setItem("VorgabenU", JSON.stringify(user.User));
+        localStorage.setItem("VorgabenU", JSON.stringify(responded.User));
       }, 100);
       console.log("Erfolgreich gespeichert");
       toastr.success("Daten gespeichert");
     } else {
-      console.log("Fehler", user.message);
+      console.log("Fehler", responded.message);
       toastr.error("Es ist ein Fehler aufgetreten");
       return;
     }
@@ -284,14 +283,10 @@ function buttonDisable(status) {
 
   document.getElementById("btnUEbernehmenES").disabled = status;
 
-  var btnALE = document.getElementsByName("btnALE");
-  for (let i = 0; i < btnALE.length; i++) {
-    btnALE[i].disabled = status;
-  }
-  var btnALB = document.getElementsByName("btnALB");
-  for (let i = 0; i < btnALB.length; i++) {
-    btnALB[i].disabled = status;
-  }
+  document.getElementsByName("btnALE").disabled = status;
+
+  document.getElementsByName("btnALBZ").disabled = status;
+  document.getElementsByName("btnALBE").disabled = status;
 
   if (document.getElementById("btnUEZE")) {
     document.getElementById("btnUEZE").disabled = status;

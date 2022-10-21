@@ -240,7 +240,7 @@
         </div>
 
         <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
-          <button type="button" class="btn btn-danger" id="btnALB"
+          <button type="button" class="btn btn-danger" id="btnALBZ"
             onclick="FooTable.get('#tableBZ').rows.load([]); buttonDisable(false); localStorage.setItem('dataBZ', JSON.stringify([]))">
             Alle Zeilen löschen
           </button>
@@ -251,7 +251,7 @@
           <table id="tableBE" class="table table-bordered table-striped table-hover align-middle"></table>
         </div>
         <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
-          <button class="btn btn-danger" type="button" id="btnALB" name="btnALB"
+          <button class="btn btn-danger" type="button" id="btnALBE" name="btnALB"
             onclick="FooTable.get('#tableBE').rows.load([]); buttonDisable(false); localStorage.setItem('dataBE', JSON.stringify([]))">
             Alle Zeilen löschen
           </button>
@@ -628,7 +628,7 @@
 
               <hr />
 
-              <div style="display: flex;align-items: center;justify-content: space-evenly;">
+              <div class="fooicon-ewt">
                 <span class="material-icons-outlined">arrow_downward</span>
                 <h4 class="my-1">Wohnung</h4>
                 <span class="material-icons-outlined">arrow_upward</span>
@@ -1106,8 +1106,8 @@
                     <thead>
                       <tr class="table-primary align-middle text-center">
                         <th>Tätigkeitsstätte</th>
-                        <th style="width:40%">Beschreibung</th>
-                        <th style="width:20%">Fahrzeit</th>
+                        <th class="w40">Beschreibung</th>
+                        <th class="w20">Fahrzeit</th>
                       </tr>
                     </thead>
                     <tbody id="TbodyTätigkeitsstätten">

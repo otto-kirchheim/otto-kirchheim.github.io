@@ -1,10 +1,9 @@
 function generateEingabeMaskeEinstellungen(VorgabenU) {
-  //console.log(VorgabenU);
-  Object.keys(VorgabenU.pers).forEach(function (key, index) {
+  Object.keys(VorgabenU.pers).forEach(function (key) {
     document.getElementById(key).value = VorgabenU.pers[key];
   });
 
-  Object.keys(VorgabenU.aZ).forEach((key, index) => {
+  Object.keys(VorgabenU.aZ).forEach((key) => {
     document.getElementById(key).value = VorgabenU.aZ[key];
   });
 
@@ -64,11 +63,11 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 function saveEinstellungen() {
   var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
 
-  Object.keys(VorgabenU.pers).forEach(function (key, index) {
+  Object.keys(VorgabenU.pers).forEach(function (key) {
     VorgabenU.pers[key] = document.getElementById(key).value;
   });
 
-  Object.keys(VorgabenU.aZ).forEach(function (key, index) {
+  Object.keys(VorgabenU.aZ).forEach(function (key) {
     VorgabenU.aZ[key] = document.getElementById(key).value;
   });
   //console.log(VorgabenU);
@@ -91,16 +90,12 @@ function table_to_array_einstellungen(table_id) {
   var my_liste = {};
   for (var i = 0; i < myData.length; i++) {
     el = myData[i].children;
-    //console.log(el);
     var key = el[0].children[0].value;
     if (!key) {
       continue;
     }
     var km = el[1].children[0].value;
     var zeit = el[2].children[0].value;
-    //console.log(key);
-    //console.log(km);
-    //console.log(zeit);
     my_liste[key] = [km, zeit];
   }
   return my_liste;

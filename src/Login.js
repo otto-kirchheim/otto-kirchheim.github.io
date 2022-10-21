@@ -41,10 +41,9 @@ async function loginUser(username, passwort) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    const userID = await response.json();
-    //console.log("Request complete! response:", response);
+    const responded = await response.json();
     if (response.status == 200) {
-      console.log(userID.userID);
+      console.log(responded.userID);
       username = `${username[0].toUpperCase()}${username.substring(1)}`;
       localStorage.setItem("Benutzer", username);
       document.getElementById("Willkommen").innerHTML = `Hallo, ${username}.`;
@@ -52,7 +51,7 @@ async function loginUser(username, passwort) {
       document.getElementById("ChangeDisplay").classList.add("d-none");
       document.getElementById("NewDisplay").classList.add("d-none");
 
-      localStorage.setItem("UserID", userID.userID);
+      localStorage.setItem("UserID", responded.userID);
 
       var aktJahr = moment().year();
       document.getElementById("Jahr").value = aktJahr;
@@ -70,7 +69,7 @@ async function loginUser(username, passwort) {
     } else {
       document.getElementById(
         "errorMessage"
-      ).innerHTML = `Fehler beim Login: ${userID.message}`;
+      ).innerHTML = `Fehler beim Login: ${responded.message}`;
     }
   } catch (err) {
     console.log(err.message);
@@ -157,15 +156,15 @@ async function checkPasswort() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    user = await response.json();
+    var responded = await response.json();
     if (response.status >= 400 || response.status <= 500) {
-      console.log(user.message);
-      document.getElementById("errorMessage").innerHTML = user.message;
+      console.log(responded.message);
+      document.getElementById("errorMessage").innerHTML = responded.message;
       toastr.error("Passwort konnte nicht geändert werden.");
       return;
     }
     if (response.status == 200) {
-      console.log(`Passwort geändert: ${user}`);
+      console.log(`Passwort geändert: ${responded}`);
       toastr.success("Passwort wurde geändert");
     } else {
       console.log("Fehler");
@@ -229,18 +228,18 @@ async function checkNeuerBenutzer() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    var user = await response.json();
+    var responded = await response.json();
     if (response.status == 401) {
-      console.log(user.message);
-      document.getElementById("errorMessage").innerHTML = user.message;
+      console.log(responded.message);
+      document.getElementById("errorMessage").innerHTML = responded.message;
       return;
     }
     if (response.status == 201) {
-      console.log(`Neue User ID: ${user}`);
+      console.log(`Neue User ID: ${responded}`);
       toastr.success("Benutzer erfolgreich angelegt");
     } else {
-      console.log("Fehler: ", user.message);
-      toastr.error(`Fehler bei Benutzerstellung ${user.message}`);
+      console.log("Fehler: ", responded.message);
+      toastr.error(`Fehler bei Benutzerstellung ${responded.message}`);
       return;
     }
   } catch (err) {

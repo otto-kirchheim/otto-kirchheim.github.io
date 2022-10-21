@@ -1,10 +1,7 @@
 function generateTableBerechnung(datenBerechnung, datenGeld) {
-  //console.log("datenBerechnung", datenBerechnung)
-  //console.log("datenGeld", datenGeld)
   if (datenBerechnung === true) return clearLoading("btnNeuBerech");
   if (!datenGeld) datenGeld = JSON.parse(localStorage.getItem("VorgabenGeld"));
   var tarif_beamter = JSON.parse(localStorage.getItem("VorgabenU")).pers.TB;
-  //console.log(tarif_beamter)
 
   var berechnung = [[], [], [], [], [], [], [], [], [], [], [], []];
 
@@ -15,7 +12,6 @@ function generateTableBerechnung(datenBerechnung, datenGeld) {
   let rows = tbody.querySelectorAll("tr");
   //console.log(rows)
 
-  let td = document.createElement("td");
   rows.forEach((row, index) => {
     //console.log("Zeile: (index) ", index)
     //console.log(berechnung)

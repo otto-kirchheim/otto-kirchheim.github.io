@@ -775,8 +775,6 @@ function BereitschaftEingabe(
   // Sonstige Variablen Vorbereiten
 
   bereitschaftsEndeMerker = moment(bereitschaftsAnfang);
-  var monat = bereitschaftsAnfang.month() + 1;
-  var jahr = bereitschaftsAnfang.year();
 
   var datenVorher = daten.length;
 

@@ -6,6 +6,14 @@ body {
   width: 230px;
 }
 
+.w20 {
+  width: 20%;
+}
+
+.w40 {
+  width: 40%;
+}
+
 .material-icons {
   vertical-align: middle;
   font-size: 36px;
@@ -29,6 +37,12 @@ body {
 
 th.footable-sortable > span.fooicon-sort {
   margin-top: -12px;
+}
+
+.fooicon-ewt {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
 }
 
 .fooicon-sort:before {
@@ -105,7 +119,7 @@ table.footable-details > tbody > tr > td {
 .vertical-center {
   min-height: 85%;
   min-height: 85vh;
-  
+
   display: flex;
   flex-direction: column;
   justify-content: center;

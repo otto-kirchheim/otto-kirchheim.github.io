@@ -568,9 +568,6 @@ function addEWTtag() {
   var tag = `0${document.getElementById("tagE").value}`.slice(-2),
     ort = document.getElementById("EOrt").value,
     schicht = document.getElementById("Schicht").value;
-  //console.log(tag)
-  //console.log(ort)
-  //console.log(schicht)
 
   naechsterTag(tag);
 
