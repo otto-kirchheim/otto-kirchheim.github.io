@@ -543,7 +543,7 @@
         </div>
       </div>
       <div class="modal" id="eingabeEWT" tabindex="-1">
-        <div class="modal-dialog modal-dialog-top">
+        <div class="modal-dialog modal-sm">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="eingabeEWTLabel">Neue Anwesenheit eingeben</h5>
@@ -551,22 +551,23 @@
             </div>
             <div class="modal-body">
               <form onsubmit="event.preventDefault(); addEWTtag()">
-                <div class="input-group mb-3 justify-content-center flex-md-row">
+                <div class="row g-2">
+                  <div>
+                    <button type="button" class="btn btn-secondary btn-lg col-12" onclick="naechsterTag()">+1</button>
+                  </div>
 
-                  <button type="button" class="btn btn-secondary col-2 mb-3" onclick="naechsterTag()">+1</button>
-
-                  <div class="form-floating col-10 mb-3">
+                  <div class="form-floating">
                     <input id="tagE" type="date" class="form-control validate" required>
                     <label for="tagE">Tag</label>
                   </div>
 
-                  <div class="form-floating col-12 mb-3">
+                  <div class="form-floating">
                     <select class="form-select validate" id="EOrt" name="EOrt">
                     </select>
                     <label for="EOrt">Einsatzort</label>
                   </div>
 
-                  <div class="form-floating col-12 mb-3">
+                  <div class="form-floating">
                     <select class="form-select validate" id="Schicht" name="Schicht">
                       <option value="" selected>Tag</option>
                       <option value="N">Nacht</option>
@@ -576,7 +577,7 @@
                     <label for="Schicht">Schicht</label>
                   </div>
 
-                  <div class="form-check form-switch col-12 mb-3">
+                  <div class="form-check form-switch my-3">
                     <input type="checkbox" class="form-check-input" id="berechnen1" checked>
                     <label for="berechnen1" class="form-check-label">Berechnen</label>
                   </div>
@@ -838,22 +839,6 @@
           <h1>Berechnung</h1>
           <h4 id="MonatBerechnung"></h4>
         </div>
-
-        <!-- <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
-
-          <button class="btn btn-primary" type="button" id="btnAktBerech"
-            onclick="setLoading(this.id); google.script.run.withSuccessHandler(generateTableBerechnung).ladeDatenBerechnung(localStorage.getItem('UserID'), localStorage.getItem('Jahr'))">
-            <span class="material-icons-outlined">refresh</span>
-            Aktualisieren
-          </button>
-
-          <button class="btn btn-secondary" type="button" id="btnNeuBerech"
-            onclick="setLoading(this.id); google.script.run.withSuccessHandler(generateTableBerechnung).aktualisiereBerechnung(localStorage.getItem('UserID'), localStorage.getItem('Jahr'), '', true)">
-            <span class="material-icons-outlined">calculate</span>
-            Neu Berechnen
-          </button>
-
-        </div> -->
 
         <div class="table-responsive py-1">
           <table class="table table-bordered table-striped table-hover align-middle">

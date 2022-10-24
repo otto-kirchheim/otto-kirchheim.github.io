@@ -411,21 +411,21 @@ function eigeneWerte(vorgabenB) {
     vorgabenB = JSON.parse(localStorage.getItem("VorgabenB"));
   }
   if (document.getElementById("eigen").checked) {
-    document.getElementById("bAT").readOnly = false;
-    document.getElementById("bE").readOnly = false;
-    document.getElementById("bET").readOnly = false;
-    document.getElementById("nA").readOnly = false;
-    document.getElementById("nAT").readOnly = false;
-    document.getElementById("nE").readOnly = false;
-    document.getElementById("nET").readOnly = false;
+    document.getElementById("bAT").disabled = false;
+    document.getElementById("bE").disabled = false;
+    document.getElementById("bET").disabled = false;
+    document.getElementById("nA").disabled = false;
+    document.getElementById("nAT").disabled = false;
+    document.getElementById("nE").disabled = false;
+    document.getElementById("nET").disabled = false;
   } else {
-    document.getElementById("bAT").readOnly = true;
-    document.getElementById("bE").readOnly = true;
-    document.getElementById("bET").readOnly = true;
-    document.getElementById("nA").readOnly = true;
-    document.getElementById("nAT").readOnly = true;
-    document.getElementById("nE").readOnly = true;
-    document.getElementById("nET").readOnly = true;
+    document.getElementById("bAT").disabled = true;
+    document.getElementById("bE").disabled = true;
+    document.getElementById("bET").disabled = true;
+    document.getElementById("nA").disabled = true;
+    document.getElementById("nAT").disabled = true;
+    document.getElementById("nE").disabled = true;
+    document.getElementById("nET").disabled = true;
     datumAnpassen(vorgabenB);
     document.getElementById("bAT").value = vorgabenB[1];
     b12aendern(vorgabenB);
