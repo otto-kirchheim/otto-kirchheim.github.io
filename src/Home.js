@@ -187,7 +187,7 @@ async function saveDaten(button) {
         saveTableData("tableBE", ftBE);
         saveTableData("tableE", ftE);
         saveTableData("tableN", ftN);
-        localStorage.setItem("VorgabenU", JSON.stringify(dataResponded.User));
+        localStorage.setItem("VorgabenU", JSON.stringify(dataResponded.user));
       }, 100);
       console.log("Erfolgreich gespeichert");
       toastr.success("Daten gespeichert");
