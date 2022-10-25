@@ -99,19 +99,21 @@ async function download(button, modus) {
   try {
     console.time("download");
     const response = await fetch(`${API_URL}/download/${modus}`, {
+      mode: "cors",
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    const responsed = await response.json();
     if (response.status == 200) {
-      var responsed = await response.json();
+      let dataResponded = responsed.data;
       var uri = `data:application/pdf;base64,${encodeURIComponent(
-        await responsed.data
+        dataResponded.data
       )}`;
-      downloadURI(uri, responsed.name);
+      downloadURI(uri, dataResponded.name);
       console.timeEnd("download");
     } else {
-      console.log("Fehler");
+      console.log("Fehler", responsed.message);
       toastr.error(`Download fehlerhaft: ${responsed.message}`);
       return;
     }
@@ -155,35 +157,37 @@ async function saveDaten(button) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    var responded = await response.json();
-    console.log(responded);
 
+    const responded = await response.json();
     if (response.status == 200) {
-      generateTableBerechnung(responded.datenBerechnung);
-      generateEingabeMaskeEinstellungen(responded.User);
+      const dataResponded = responded.data;
+      console.log(dataResponded);
+
+      generateTableBerechnung(dataResponded.datenBerechnung);
+      generateEingabeMaskeEinstellungen(dataResponded.user);
 
       let ftBZ = FooTable.get("#tableBZ");
       console.log("save ", ftBZ);
-      ftBZ.rows.load(DataBZ(responded.daten.datenBZ));
+      ftBZ.rows.load(DataBZ(dataResponded.daten.datenBZ));
 
       let ftBE = FooTable.get("#tableBE");
       console.log("save ", ftBE);
-      ftBE.rows.load(DataBE(responded.daten.datenBE));
+      ftBE.rows.load(DataBE(dataResponded.daten.datenBE));
 
       let ftE = FooTable.get("#tableE");
       console.log("save ", ftE);
-      ftE.rows.load(DataE(responded.daten.datenE));
+      ftE.rows.load(DataE(dataResponded.daten.datenE));
 
       let ftN = FooTable.get("#tableN");
       console.log("save ", ftN);
-      ftN.rows.load(DataN(responded.daten.datenN));
+      ftN.rows.load(DataN(dataResponded.daten.datenN));
 
       setTimeout(function () {
         saveTableData("tableBZ", ftBZ);
         saveTableData("tableBE", ftBE);
         saveTableData("tableE", ftE);
         saveTableData("tableN", ftN);
-        localStorage.setItem("VorgabenU", JSON.stringify(responded.User));
+        localStorage.setItem("VorgabenU", JSON.stringify(dataResponded.User));
       }, 100);
       console.log("Erfolgreich gespeichert");
       toastr.success("Daten gespeichert");

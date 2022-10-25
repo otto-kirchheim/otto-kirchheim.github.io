@@ -35,7 +35,7 @@ async function loginUser(username, passwort) {
   let data = { Name: username, Passwort: passwort };
 
   try {
-    const response = await fetch(`${API_URL}/checkpw`, {
+    const response = await fetch(`${API_URL}/login`, {
       mode: "cors",
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -43,7 +43,8 @@ async function loginUser(username, passwort) {
     });
     const responded = await response.json();
     if (response.status == 200) {
-      console.log(responded.userID);
+      let UserID = responded.data.UserID;
+      console.log({ UserID });
       username = `${username[0].toUpperCase()}${username.substring(1)}`;
       localStorage.setItem("Benutzer", username);
       document.getElementById("Willkommen").innerHTML = `Hallo, ${username}.`;
@@ -51,7 +52,7 @@ async function loginUser(username, passwort) {
       document.getElementById("ChangeDisplay").classList.add("d-none");
       document.getElementById("NewDisplay").classList.add("d-none");
 
-      localStorage.setItem("UserID", responded.userID);
+      localStorage.setItem("UserID", UserID);
 
       var aktJahr = moment().year();
       document.getElementById("Jahr").value = aktJahr;
@@ -156,16 +157,17 @@ async function checkPasswort() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    var responded = await response.json();
-    if (response.status >= 400 || response.status <= 500) {
+    const responded = await response.json();
+    if (response.status >= 400) {
       console.log(responded.message);
       document.getElementById("errorMessage").innerHTML = responded.message;
       toastr.error("Passwort konnte nicht geändert werden.");
       return;
     }
     if (response.status == 200) {
-      console.log(`Passwort geändert: ${responded}`);
+      console.log(`Passwort geändert: ${responded.data}`);
       toastr.success("Passwort wurde geändert");
+      document.getElementById("errorMessage").innerHTML = "";
     } else {
       console.log("Fehler");
       toastr.error("Passwort konnte nicht geändert werden.");
@@ -228,14 +230,14 @@ async function checkNeuerBenutzer() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    var responded = await response.json();
-    if (response.status == 401) {
+    const responded = await response.json();
+    if (response.status >= 400) {
       console.log(responded.message);
       document.getElementById("errorMessage").innerHTML = responded.message;
       return;
     }
     if (response.status == 201) {
-      console.log(`Neue User ID: ${responded}`);
+      console.log(`Neue User ID: ${responded.data.UserID}`);
       toastr.success("Benutzer erfolgreich angelegt");
     } else {
       console.log("Fehler: ", responded.message);
@@ -280,11 +282,11 @@ async function LadeUserDaten(UserID, monat, jahr) {
       mode: "cors",
       method: "GET",
     });
-    user = await response.json();
+    const responded = await response.json();
     if (response.status == 200) {
-      console.log(user);
+      user = responded.data;
     } else {
-      console.log("Fehler: ", user.message);
+      console.log("Fehler: ", responded.message);
       toastr.error("Keine Verbindung zum Server oder Serverfehler");
       return;
     }

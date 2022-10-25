@@ -612,13 +612,15 @@ async function bereitschaftEingabeWeb(UserID) {
       const response = await fetch(
         `${API_URL}/${UserID}&${monat2 + 1}&${jahr2}`,
         {
+          mode: "cors",
           method: "GET",
         }
       );
+      let responded2 = await response.json();
+      let dataResponded2;
       if (response.status == 200) {
-        data2 = (await response.json()).datenB.datenBZ;
-        //console.log("Request complete! response:", response);
-        console.log(data2);
+        dataResponded2 = responded2.data.datenB.datenBZ;
+        console.log(dataResponded2);
       } else {
         console.log("Fehler");
         return;
@@ -629,7 +631,7 @@ async function bereitschaftEingabeWeb(UserID) {
         nachtAnfang2,
         nachtEnde,
         nacht,
-        data2
+        dataResponded2
       );
       let dataSave = {
         BZ: data2,
@@ -638,17 +640,18 @@ async function bereitschaftEingabeWeb(UserID) {
         Jahr: jahr2,
       };
       const responseSave = await fetch(`${API_URL}/saveData`, {
+        mode: "cors",
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataSave),
       });
-      dataResponse = await responseSave.json();
-      console.log(dataResponse);
 
+      let dataResponse = await responseSave.json();
       if (responseSave.status == 200) {
+        console.log(dataResponse.data);
         toastr.success(`Daten für Monat ${monat2 + 1} gespeichert`);
       } else {
-        console.log("Fehler", dataResponse.message);
+        console.log("Fehler:", dataResponse.message);
         toastr.error("Es ist ein Fehler beim Monatswechsel aufgetreten");
         return;
       }
@@ -704,36 +707,30 @@ function BereitschaftEingabe(
   console.log("Nacht Anfang: " + nachtAnfang.toDate());
   console.log("Nacht Ende: " + nachtEnde.toDate());
 
-  var bereitschaftsAnfangNacht;
-  var bereitschaftsAnfangMerker;
-  var bereitschaftsAnfangA;
-  var bereitschaftsEndeMerker;
-  var bereitschaftsEndeA;
-  var bereitschaftsEndeB;
-  //var monat;
-  //var jahr;
-  var arbeitstagHeute; // W
-  var arbeitstagMorgen; // W1
-  var pause; // P
-  var pauseMerker;
-  var pauseMerkerTag;
-  var pauseMerkerNacht;
+  var bereitschaftsAnfangNacht,
+    bereitschaftsAnfangMerker,
+    bereitschaftsAnfangA,
+    bereitschaftsEndeMerker,
+    bereitschaftsEndeA,
+    bereitschaftsEndeB,
+    arbeitstagHeute,
+    arbeitstagMorgen,
+    pause,
+    pauseMerker,
+    pauseMerkerTag,
+    pauseMerkerNacht;
 
   // Voreinstellungen Übernehmen
-
   var datenU = JSON.parse(localStorage.getItem("VorgabenU"));
-  //console.log(datenU)
-  const tagAnfangsZeitMoDo = moment("1970-01-01T" + datenU.aZ.eT); // AE1 Tagschicht Anfangszeit Mo-Do
-  const tagAnfangsZeitFr = moment("1970-01-01T" + datenU.aZ.eTF); // AE2 Tagschicht Anfangszeit Fr
-  const tagEndeZeitMoFr = moment("1970-01-01T" + datenU.aZ.bT); // AA1 Tagschicht Endezeit Mo-Fr
+  const tagAnfangsZeitMoDo = moment("1970-01-01T" + datenU.aZ.eT); // Tagschicht Anfangszeit Mo-Do
+  const tagAnfangsZeitFr = moment("1970-01-01T" + datenU.aZ.eTF); // Tagschicht Anfangszeit Fr
+  const tagEndeZeitMoFr = moment("1970-01-01T" + datenU.aZ.bT); // Tagschicht Endezeit Mo-Fr
 
   // Feste Variablen
-
   const ruheZeit = 10;
-  const tagPausenVorgabe = 30; // APV
-  const nachtPausenVorgabe = 45; // NP
-  const bereitschaftsZeitraumWechsel = moment([1970, 0, 1, 8, 0]); // f
-
+  const tagPausenVorgabe = 30;
+  const nachtPausenVorgabe = 45;
+  const bereitschaftsZeitraumWechsel = moment([1970, 0, 1, 8, 0]);
   const arbeitsAnfang = [
     bereitschaftsZeitraumWechsel,
     tagEndeZeitMoFr,
@@ -743,7 +740,7 @@ function BereitschaftEingabe(
     tagEndeZeitMoFr,
     bereitschaftsZeitraumWechsel,
     bereitschaftsZeitraumWechsel,
-  ]; // AA Arbeits Anfang
+  ];
   const arbeitsEnde = [
     bereitschaftsZeitraumWechsel,
     tagAnfangsZeitMoDo,
@@ -753,7 +750,7 @@ function BereitschaftEingabe(
     tagAnfangsZeitFr,
     bereitschaftsZeitraumWechsel,
     bereitschaftsZeitraumWechsel,
-  ]; // AE Arbeits Ende
+  ];
   const pausenTag = [
     "",
     tagPausenVorgabe,
@@ -766,20 +763,17 @@ function BereitschaftEingabe(
   ];
 
   // Berechne ob Tag ein Arbeitstag ist
-
   arbeitstagHeute = Arbeitstag(bereitschaftsAnfang, 0);
   console.log(`Arbeitstag Heute: ${arbeitstagHeute}`);
   arbeitstagMorgen = Arbeitstag(bereitschaftsAnfang, 1);
   console.log(`Arbeitstag Morgen: ${arbeitstagMorgen}`);
 
   // Sonstige Variablen Vorbereiten
-
   bereitschaftsEndeMerker = moment(bereitschaftsAnfang);
 
   var datenVorher = daten.length;
 
-  // Beginn Berechnung //
-
+  /// --- Beginn Berechnung --- ///
   while (daten.length < 26 && bereitschaftsAnfang.isBefore(bereitschaftsEnde)) {
     /// #Berechnung Bereitschaftsende# ///
 
@@ -981,7 +975,7 @@ function BereitschaftEingabe(
         `Bereitschafts Ende Merker: ${bereitschaftsEndeMerker.toDate()}`
       );
 
-      //Überprüfe ob Ruhe nach Nacht nötig ist
+      // überprüfe ob Ruhe nach Nacht nötig ist
       if (
         bereitschaftsAnfang.isSame(nachtAnfang, "day") &&
         moment(bereitschaftsAnfangNacht).isBefore(
@@ -1007,8 +1001,6 @@ function BereitschaftEingabe(
   }
   DatenSortieren(daten);
 
-  //console.log(datenVorher)
-  //console.log(daten.length)
   if (datenVorher == daten.length) {
     console.log("Keine änderung, Bereitschaft bereits vorhanden");
     return;
@@ -1025,7 +1017,7 @@ function B2(
   nacht
 ) {
   var merker;
-  tagBereitschaftsAnfang = bereitschaftsAnfang.weekday();
+  var tagBereitschaftsAnfang = bereitschaftsAnfang.weekday();
   console.log(`Wochentag Bereitschafts Anfang: ${tagBereitschaftsAnfang}`);
   // neues Ende 2,
   // am nächsten Tag,
