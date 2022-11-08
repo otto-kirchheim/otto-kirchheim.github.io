@@ -58,7 +58,10 @@ self.addEventListener("activate", event => {
  */
 self.addEventListener("fetch", event => {
 	// Skip some of cross-origin requests, like those for Google Analytics.
-	if (HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1) {
+	if (
+		HOSTNAME_WHITELIST.indexOf(new URL(event.request.url).hostname) > -1 &&
+		new URL(event.request.url).pathname.split("/")[1] != "api"
+	) {
 		// Stale-while-revalidate
 		// similar to HTTP's stale-while-revalidate: https://www.mnot.net/blog/2007/12/12/stale
 		// Upgrade from Jake's to Surma's: https://gist.github.com/surma/eb441223daaedf880801ad80006389f1
