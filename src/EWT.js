@@ -42,7 +42,7 @@ jQuery($ => {
 				$modalE.modal("show");
 			},
 			editRow: row => {
-				var values = row.val();
+				const values = row.val();
 				console.log(values);
 				$editorE.find("#tagE2").val(
 					moment(values.tagE, "DD.MM.YYYY")
@@ -110,11 +110,12 @@ jQuery($ => {
 	});
 
 	$("#tableE").on("click", ".row-checkbox", e => {
-		var newValues = {};
-		var row;
-		$(e.target).closest("tr").has("th").length == 1
-			? (row = $(e.target).closest("tr").parent().closest("tr").prev().data("__FooTableRow__"))
-			: (row = $(e.target).closest("tr").data("__FooTableRow__"));
+		let newValues = {};
+		let row;
+		row =
+			$(e.target).closest("tr").has("th").length == 1
+				? $(e.target).closest("tr").parent().closest("tr").prev().data("__FooTableRow__")
+				: $(e.target).closest("tr").data("__FooTableRow__");
 
 		if ($(e.target).prop("checked")) {
 			newValues.berechnen = "true";
@@ -178,7 +179,7 @@ function DataE(data) {
 		if (localStorage.getItem("dataE") == null) return [];
 		data = JSON.parse(localStorage.getItem("dataE"));
 	}
-	var data1 = [];
+	let data1 = [];
 	data.forEach((row, i) => {
 		data1[i] = {
 			tagE: {
@@ -223,11 +224,37 @@ function ewtBerechnen(monat, jahr, daten, vorgabenU) {
 	jahr = Number(jahr);
 	daten = JSON.parse(daten);
 	vorgabenU = JSON.parse(vorgabenU);
-	daten.forEach(zeile => {
-		if (JSON.parse(zeile[11]) == false) return;
-		var tag = Number(zeile[0]);
+	daten = convertDaten(daten, jahr, monat);
+
+	DatenSortieren(daten);
+
+	daten = berechnen(vorgabenU, daten, jahr, monat);
+
+	for (const zeile of daten) {
+		if (zeile[11] == "false") continue;
+		zeile[0] = `0${zeile[0]}`.slice(-2);
+		for (let i = 3; i <= 10; i++) {
+			if (zeile[i]) zeile[i] = moment(zeile[i]).format("HH:mm");
+		}
+	}
+
+	const ftE = FooTable.get("#tableE");
+	console.log("save ", { ftE });
+	ftE.rows.load(DataE(daten));
+
+	setTimeout(() => {
+		saveTableData("tableE", ftE);
+	}, 100);
+
+	toastr.success("Zeiten berechnet, Bitte Manuell speichern");
+}
+
+function convertDaten(daten, jahr, monat) {
+	for (const zeile of daten) {
+		if (!JSON.parse(zeile[11])) continue;
+		const tag = Number(zeile[0]);
 		zeile[0] = tag;
-		for (var i = 3; i <= 10; i++) {
+		for (let i = 3; i <= 10; i++) {
 			if (zeile[i]) {
 				let tagI = tag;
 				let zeit = zeile[i].split(":");
@@ -246,25 +273,20 @@ function ewtBerechnen(monat, jahr, daten, vorgabenU) {
 				zeile[i] = "";
 			}
 		}
-	});
-
-	DatenSortieren(daten);
-
-	let beginn, ende, svzA, svzE, datumAbW, datumAb1, datumAnE, datumBeginn, datumEnde, datumAbE, datumAn1, datumAnW;
-
-	// Wandle vorgabenU um
-	var endePascal = moment.duration(0, "m");
-	if (vorgabenU.pers.Name == "Ackermann, Pascal") {
-		endePascal = moment.duration(5, "minute");
 	}
-	var vorgabenE = vorgabenU.aZ;
-	for (const [key, value] of Object.entries(vorgabenE)) {
-		vorgabenE[key] = moment.duration(value);
-	}
+	return daten;
+}
+
+function berechnen(vorgabenU, daten, jahr, monat) {
+	let beginn, ende, svzA, svzE, datumAb1, datumBeginn, datumEnde, datumAn1;
+
+	const endePascal = vorgabenU.pers.Name == "Ackermann, Pascal" ? moment.duration(5, "minute") : moment.duration(0, "m");
+
+	const vorgabenE = vorgabenU.aZ;
+	for (const [key, value] of Object.entries(vorgabenE)) vorgabenE[key] = moment.duration(value);
+
 	vorgabenE.fZ = {};
-	for (const [key, value] of Object.entries(vorgabenU.fZ)) {
-		vorgabenE.fZ[key] = moment.duration(value[1]);
-	}
+	for (const [key, value] of Object.entries(vorgabenU.fZ)) vorgabenE.fZ[key] = moment.duration(value[1]);
 
 	// Beginn der Berechnung
 	for (const Tag of daten) {
@@ -323,28 +345,11 @@ function ewtBerechnen(monat, jahr, daten, vorgabenU) {
 			Tag[8] = Tag[8] === "" ? moment(datumAn1).subtract(vorgabenE.fZ[Tag[1]]) : Tag[8];
 		}
 	}
-
-	daten.forEach(zeile => {
-		if (zeile[11] == "false") return;
-		zeile[0] = `0${zeile[0]}`.slice(-2);
-		for (var i = 3; i <= 10; i++) {
-			if (zeile[i]) zeile[i] = moment(zeile[i]).format("HH:mm");
-		}
-	});
-
-	const ftE = FooTable.get("#tableE");
-	console.log("save ", { ftE });
-	ftE.rows.load(DataE(daten));
-
-	setTimeout(() => {
-		saveTableData("tableE", ftE);
-	}, 100);
-
-	toastr.success("Zeiten berechnet, Bitte Manuell speichern");
+	return daten;
 }
 
 function generateEditorModalE(eOrt) {
-	var vorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
+	const vorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
 	eOrt = document.getElementById(eOrt);
 	eOrt.innerHTML = "";
 
@@ -379,7 +384,7 @@ function generateEingabeMaskeEWT() {
 		dataE[index] = Number(value[0]);
 	});
 
-	var max = dataE.reduce((a, b) => {
+	const max = dataE.reduce((a, b) => {
 		return Math.max(a, b);
 	}, -Infinity);
 
@@ -398,15 +403,17 @@ function naechsterTag(tag, dataE) {
 		});
 	}
 	let letzterTag = moment(document.getElementById("tagE").max).date();
+	let found;
 	do {
 		tag = Number(tag) + 1;
 		found = dataE.length > 0 ? dataE.find(element => Number(element) == Number(tag)) : undefined;
 	} while (found != undefined);
 
-	tag <= letzterTag
-		? (document.getElementById("tagE").value = moment([jahr, monat - 1, tag]).format("YYYY-MM-DD"))
-		: naechsterTag("0", dataE);
-	return;
+	if (tag <= letzterTag) {
+		document.getElementById("tagE").value = moment([jahr, monat - 1, tag]).format("YYYY-MM-DD");
+	} else {
+		naechsterTag("0", dataE);
+	}
 }
 
 function addEWTtag() {

@@ -252,8 +252,9 @@
         </div>
 
         <div class="table-responsive py-1">
-          <h4>Bereitschaftszeitraum</h4>
-          <table id="tableBZ" class="table table-bordered table-striped table-hover align-middle"></table>
+          <h4 id="titelBZ">Bereitschaftszeitraum</h4>
+          <table id="tableBZ" class="table table-bordered table-striped table-hover align-middle"
+            aria-describedby="TitelBZ"></table>
         </div>
 
         <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
@@ -263,8 +264,9 @@
         </div>
 
         <div class="table-responsive py-1">
-          <h4>Bereitschaftseinsätze</h4>
-          <table id="tableBE" class="table table-bordered table-striped table-hover align-middle"></table>
+          <h4 id="titelBE">Bereitschaftseinsätze</h4>
+          <table id="tableBE" class="table table-bordered table-striped table-hover align-middle"
+            aria-describedby="titelBE"></table>
         </div>
         <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
           <button class="btn btn-danger" type="button" id="btnALBE" name="btnALB" data-disabler>
@@ -540,7 +542,8 @@
         </div>
 
         <div class="table-responsive py-1">
-          <table id="tableE" class="table table-bordered table-striped table-hover align-middle"></table>
+          <table id="tableE" class="table table-bordered table-striped table-hover align-middle" aria-label="EWT">
+          </table>
 
         </div>
 
@@ -733,7 +736,8 @@
         </div>
 
         <div class="table-responsive py-1">
-          <table id="tableN" class="table table-bordered table-striped table-hover align-middle"></table>
+          <table id="tableN" class="table table-bordered table-striped table-hover align-middle" aria-label="Nebengeld">
+          </table>
         </div>
 
         <div class="row row-cols-auto w200 justify-content-center gap-3 my-3">
@@ -845,12 +849,12 @@
     <div class="tab-pane fade" id="Berechnung" role="tabpanel">
       <div class="container-lg text-center mb-3">
         <div>
-          <h1>Berechnung</h1>
+          <h1 id="titelBerechnung">Berechnung</h1>
           <h4 id="MonatBerechnung"></h4>
         </div>
 
         <div class="table-responsive py-1">
-          <table class="table table-bordered table-striped table-hover align-middle">
+          <table class="table table-bordered table-striped table-hover align-middle" aria-describedby="titelBerechnung">
             <thead class="align-middle">
               <tr class="table-primary align-middle">
                 <th colSpan="2"></th>
@@ -1095,10 +1099,10 @@
               </h2>
               <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
                 <div class="accordion-body">
-                  <table class="table table-bordered table-striped table-hover">
+                  <table class="table table-bordered table-striped table-hover" aria-describedby="titelTkgSt">
                     <thead>
                       <tr class="table-primary align-middle text-center">
-                        <th>Tätigkeitsstätte</th>
+                        <th id="titelTkgSt">Tätigkeitsstätte</th>
                         <th class="w40">Beschreibung</th>
                         <th class="w20">Fahrzeit</th>
                       </tr>

@@ -79,9 +79,9 @@ function changeMonatJahr() {
 	) {
 		buttonDisable(true);
 		document.getElementById("btnAuswaehlen").disabled = false;
-	} else {
-		buttonDisable(false);
+		return;
 	}
+	buttonDisable(false);
 }
 
 async function loginUser(
@@ -113,10 +113,10 @@ async function loginUser(
 
 			localStorage.setItem("UserID", UserID);
 
-			var aktJahr = moment().year();
+			const aktJahr = moment().year();
 			document.getElementById("Jahr").value = aktJahr;
 
-			var monat = moment().month() + 1;
+			const monat = moment().month() + 1;
 			document.getElementById("Monat").value = monat;
 
 			document.getElementById("SelectDisplay").classList.remove("d-none");
@@ -148,7 +148,7 @@ function SelectYear(monat = document.getElementById("Monat").value, jahr = docum
 	localStorage.setItem("Jahr", jahr);
 	localStorage.setItem("Monat", monat);
 
-	var userID = localStorage.getItem("UserID");
+	const userID = localStorage.getItem("UserID");
 	if (!userID) return;
 
 	LadeUserDaten(userID, monat, jahr);
@@ -164,7 +164,7 @@ function Logout() {
 }
 
 async function checkPasswort() {
-	var passwortAlt = document.getElementById("passwortOld").value,
+	const passwortAlt = document.getElementById("passwortOld").value,
 		passwort3 = document.getElementById("Passwort3").value,
 		passwort4 = document.getElementById("Passwort4").value;
 
@@ -233,10 +233,10 @@ async function checkPasswort() {
 }
 
 async function checkNeuerBenutzer() {
-	var zugangscode = document.getElementById("Zugang").value;
-	var benutzer = document.getElementById("Benutzer2").value;
-	var passwort1 = document.getElementById("Passwort1").value;
-	var passwort2 = document.getElementById("Passwort2").value;
+	const zugangscode = document.getElementById("Zugang").value,
+		benutzer = document.getElementById("Benutzer2").value,
+		passwort1 = document.getElementById("Passwort1").value,
+		passwort2 = document.getElementById("Passwort2").value;
 
 	if (!zugangscode) {
 		document.getElementById("errorMessage").innerHTML = "Bitte Zugangscode Eingeben";
@@ -335,32 +335,28 @@ async function LadeUserDaten(UserID, monat, jahr) {
 		clearLoading("btnAuswaehlen");
 	}
 
-	var dataArray = user;
+	const dataArray = user;
 
 	console.log("Daten geladen: ", dataArray);
-	var vorgabenB = dataArray.vorgabenB;
-	var vorgabenU = dataArray.vorgabenU;
-	var dataBZ = dataArray.datenB.datenBZ;
-	var dataBE = dataArray.datenB.datenBE;
-	var dataE = dataArray.datenE;
-	var dataN = dataArray.datenN;
-	var datenBerechnung = dataArray.datenBerechnung;
-	var datenGeld = dataArray.datenGeld;
+	const { vorgabenB, vorgabenU, datenBerechnung, datenGeld } = dataArray,
+		dataBZ = dataArray.datenB.datenBZ,
+		dataBE = dataArray.datenB.datenBE,
+		dataE = dataArray.datenE,
+		dataN = dataArray.datenN;
 
-	var vorhanden = [];
+	let vorhanden = [];
 
-	var monatswechsel = false;
+	let monatswechsel = false;
 
 	if (localStorage.getItem("monatswechsel")) {
 		monatswechsel = true;
 		localStorage.removeItem("monatswechsel");
 	}
 
+	let dataServer = {};
 	if (localStorage.getItem("dataServer")) {
 		dataServer = JSON.parse(localStorage.getItem("dataServer"));
 		console.log("Unterschiede Server - Client | Bereits vorhanden", dataServer);
-	} else {
-		var dataServer = {};
 	}
 
 	localStorage.setItem("VorgabenB", JSON.stringify(vorgabenB));
@@ -437,7 +433,6 @@ async function LadeUserDaten(UserID, monat, jahr) {
 	if (vorgabenU.pers.TB == "Tarifkraft") document.getElementById("AnzeigenN-tab").classList.remove("d-none");
 	document.getElementById("tab").classList.remove("d-none");
 	toastr.success("Neue Daten geladen");
-	return;
 }
 
 function SaveUserDatenUEberschreiben(ueberschreiben = true) {
@@ -446,7 +441,7 @@ function SaveUserDatenUEberschreiben(ueberschreiben = true) {
 		toastr.remove();
 		return;
 	}
-	var dataServer = JSON.parse(localStorage.getItem("dataServer"));
+	let dataServer = JSON.parse(localStorage.getItem("dataServer"));
 	console.log({ dataServer });
 	if (dataServer.vorgabenU) {
 		console.log("VorgabenU überschreiben");
