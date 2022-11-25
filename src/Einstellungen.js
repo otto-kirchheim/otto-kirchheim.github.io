@@ -20,7 +20,6 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 	let tbody = document.getElementById("TbodyTätigkeitsstätten");
 	tbody.innerHTML = "";
 
-	let td, input;
 	for (const key in VorgabenU.fZ) {
 		let tr = tbody.insertRow();
 		td = tr.insertCell(0);
@@ -47,7 +46,8 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 
 	for (let i = 0; i < 5; i++) {
 		let tr = tbody.insertRow();
-		let input;
+		var td = document.createElement("td");
+		var input;
 		td = tr.insertCell(0);
 		input = document.createElement("input");
 		input.setAttribute("type", "Text");
@@ -72,7 +72,7 @@ function generateEingabeMaskeEinstellungen(VorgabenU) {
 }
 
 function saveEinstellungen() {
-	let VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
+	var VorgabenU = JSON.parse(localStorage.getItem("VorgabenU"));
 
 	Object.keys(VorgabenU.pers).forEach(key => {
 		VorgabenU.pers[key] = document.getElementById(key).value;
@@ -92,18 +92,17 @@ function saveEinstellungen() {
 }
 
 function table_to_array_einstellungen(table_id) {
-	const myData = document.getElementById(table_id).rows;
-	let my_liste = {};
-	for (const myDatum of myData) {
-		let el = myDatum.children;
-		const key = el[0].children[0].value;
+	var myData = document.getElementById(table_id).rows;
+	var my_liste = {};
+	for (var i = 0; i < myData.length; i++) {
+		let el = myData[i].children;
+		var key = el[0].children[0].value;
 		if (!key) {
 			continue;
 		}
-		const km = el[1].children[0].value;
-		const zeit = el[2].children[0].value;
+		var km = el[1].children[0].value;
+		var zeit = el[2].children[0].value;
 		my_liste[key] = [km, zeit];
 	}
-
 	return my_liste;
 }

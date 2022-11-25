@@ -36,7 +36,7 @@ jQuery($ => {
 				$modalN.modal("show");
 			},
 			editRow: row => {
-				const values = row.val();
+				var values = row.val();
 				$editorN.find("#tagN2").val(
 					moment(values.tagN, "DD.MM.YYYY")
 						.year(localStorage.getItem("Jahr"))
@@ -68,16 +68,16 @@ jQuery($ => {
 	$editorN.on("submit", e => {
 		if (this.checkValidity && !this.checkValidity()) return;
 		e.preventDefault();
-		let row = $modalN.data("row");
-		const values = {
-			tagN: moment($editorN.find("#tagN2").val()).format("DD"),
-			beginN: $editorN.find("#beginN").val(),
-			endeN: $editorN.find("#endeN").val(),
-			beginPauseN: $editorN.find("#beginPauseN").val(),
-			endePauseN: $editorN.find("#endePauseN").val(),
-			nrN: $editorN.find("#nrN option:selected").val(),
-			dauerN: $editorN.find("#dauerN").val(),
-		};
+		var row = $modalN.data("row"),
+			values = {
+				tagN: moment($editorN.find("#tagN2").val()).format("DD"),
+				beginN: $editorN.find("#beginN").val(),
+				endeN: $editorN.find("#endeN").val(),
+				beginPauseN: $editorN.find("#beginPauseN").val(),
+				endePauseN: $editorN.find("#endePauseN").val(),
+				nrN: $editorN.find("#nrN option:selected").val(),
+				dauerN: $editorN.find("#dauerN").val(),
+			};
 		$editorN.find("#tagN2").removeAttr("min").removeAttr("max");
 
 		if (row instanceof FooTable.Row) {
@@ -123,7 +123,7 @@ function DataN(data) {
 		if (localStorage.getItem("dataN") == null) return [];
 		data = JSON.parse(localStorage.getItem("dataN"));
 	}
-	let data1 = [];
+	var data1 = [];
 	data.forEach((row, i) => {
 		data1[i] = {
 			tagN: {
@@ -144,20 +144,21 @@ function DataN(data) {
 }
 
 function generateEingabeMaskeNeben() {
-	document.getElementById("tagN").innerHTML = "";
+	var select = document.getElementById("tagN");
+	select.innerHTML = "";
 
-	const dataE = tableToArray("#tableE");
+	var dataE = tableToArray("#tableE");
 	console.log(dataE);
-	const dataN = tableToArray("#tableN");
+	var dataN = tableToArray("#tableN");
 
-	const jahr = localStorage.getItem("Jahr");
-	const monat = localStorage.getItem("Monat");
+	var jahr = localStorage.getItem("Jahr");
+	var monat = localStorage.getItem("Monat");
 	for (const day of dataE) {
-		const schicht = day[2];
-		let tag1,
-			tag,
-			pauseA = "12:00",
-			pauseE = "12:30";
+		var schicht = day[2];
+		var tag1;
+		var tag;
+		var pauseA = "12:00";
+		var pauseE = "12:30";
 		if (["N", "BN"].includes(schicht)) {
 			tag1 = `0${day[0] - 1}`.slice(-2);
 			tag = `${tag1} | ${new Date(jahr, monat - 1, day[0] - 1).toLocaleDateString("de", {
@@ -175,7 +176,7 @@ function generateEingabeMaskeNeben() {
 			pauseA = "";
 			pauseE = "";
 		}
-		let el = document.createElement("option");
+		var el = document.createElement("option");
 		if (schicht == "N") {
 			el.textContent = `${tag} | Nacht`;
 		} else if (schicht == "BN") {
@@ -191,16 +192,16 @@ function generateEingabeMaskeNeben() {
 				}
 			});
 		}
-		document.getElementById("tagN").appendChild(el);
+		select.appendChild(el);
 	}
 }
 
 function addNebenTag() {
-	let select = document.getElementById("tagN");
+	var select = document.getElementById("tagN");
 
-	let idN = select.selectedIndex;
+	var idN = select.selectedIndex;
 	if (idN < 0) return;
-	let daten = JSON.parse(select.value);
+	var daten = JSON.parse(select.value);
 	daten.push(document.getElementById("Nebenbezug").value);
 	daten.push(document.getElementById("AnzahlN").value);
 	console.log(daten);

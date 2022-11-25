@@ -148,7 +148,9 @@ jQuery($ => {
 			lreBE: $editorBE.find("#lreBE option:selected").val(),
 			privatkmBE: $editorBE.find("#privatkmBE").val(),
 		};
-		values.privatkmBE = !values.privatkmBE || values.privatkmBE === 0 ? "" : values.privatkmBE + "";
+		!values.privatkmBE || values.privatkmBE === 0
+			? (values.privatkmBE = "")
+			: (values.privatkmBE = values.privatkmBE + "");
 
 		if (row instanceof FooTable.Row) {
 			row.val(values);
@@ -436,7 +438,7 @@ async function bereitschaftEingabeWeb(UserID) {
 	const bereitschaftsAnfang = moment(`${document.getElementById("bA").value}T${document.getElementById("bAT").value}`);
 	const bereitschaftsEnde = moment(`${document.getElementById("bE").value}T${document.getElementById("bET").value}`);
 	const nacht = document.getElementById("nacht").checked;
-	let nachtAnfang, nachtEnde;
+	var nachtAnfang, nachtEnde;
 	if (nacht === true) {
 		nachtAnfang = moment(`${document.getElementById("nA").value}T${document.getElementById("nAT").value}`);
 		nachtEnde = moment(`${document.getElementById("nE").value}T${document.getElementById("nET").value}`);
@@ -460,14 +462,12 @@ async function bereitschaftEingabeWeb(UserID) {
 	console.log({ jahr });
 	console.log({ UserID });
 
-	if (bereitschaftsAnfang.isSame(bereitschaftsEnde, "month")) {
-		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, data1);
-	} else {
+	if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, "month")) {
 		const monat2 = bereitschaftsEnde.month();
 		const jahr2 = bereitschaftsEnde.year();
 
 		const bereitschaftsEndeWechsel = moment([jahr2, monat2, 1]);
-		let nachtEnde1, nachtAnfang2, bereitschaftsEndeWechsel2;
+		var nachtEnde1, nachtAnfang2, bereitschaftsEndeWechsel2;
 		if (bereitschaftsEndeWechsel.isBefore(nachtAnfang)) {
 			nachtEnde1 = moment(nachtEnde);
 			nachtAnfang2 = moment(nachtAnfang);
@@ -496,14 +496,14 @@ async function bereitschaftEingabeWeb(UserID) {
 				method: "GET",
 			});
 			const responded2 = await response.json();
-
-			if (response.status != 200) {
+			let dataResponded2;
+			if (response.status == 200) {
+				dataResponded2 = responded2.data.datenB.datenBZ;
+				console.log(dataResponded2);
+			} else {
 				console.log("Fehler");
 				return;
 			}
-			let dataResponded2 = responded2.data.datenB.datenBZ;
-			console.log(dataResponded2);
-
 			data2 = BereitschaftEingabe(
 				bereitschaftsEndeWechsel2,
 				bereitschaftsEnde,
@@ -526,13 +526,14 @@ async function bereitschaftEingabeWeb(UserID) {
 			});
 
 			const dataResponse = await responseSave.json();
-			if (responseSave.status != 200) {
+			if (responseSave.status == 200) {
+				console.log(dataResponse.data);
+				toastr.success(`Daten für Monat ${monat2 + 1} gespeichert`);
+			} else {
 				console.log("Fehler:", dataResponse.message);
 				toastr.error("Es ist ein Fehler beim Monatswechsel aufgetreten");
 				return;
 			}
-			console.log(dataResponse.data);
-			toastr.success(`Daten für Monat ${monat2 + 1} gespeichert`);
 		} catch (err) {
 			console.log(err);
 			return;
@@ -542,6 +543,8 @@ async function bereitschaftEingabeWeb(UserID) {
 		console.log("Daten Monat 2", data2);
 
 		data = data1;
+	} else {
+		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, data1);
 	}
 	if (data == null) {
 		clearLoading("btnESZ");
@@ -623,39 +626,41 @@ function BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang
 		// am nächsten Tag,
 		// Begin normale Schicht bzw. neuer Bereitschaftszyklus
 		if (!bereitschaftsAnfang.isSame(nachtAnfang, "day")) {
-			merker =
-				arbeitstagMorgen === true
-					? moment(bereitschaftsAnfang)
-						.add(1, "d")
-						.hour(arbeitsAnfang[tagBereitschaftsAnfang + 1].hour())
-						.minute(arbeitsAnfang[tagBereitschaftsAnfang + 1].minute())
-					: moment(bereitschaftsAnfang).add(1, "d").hour(8).minute(0);
-
+			if (arbeitstagMorgen === true) {
+				merker = moment(bereitschaftsAnfang)
+					.add(1, "d")
+					.hour(arbeitsAnfang[tagBereitschaftsAnfang + 1].hour())
+					.minute(arbeitsAnfang[tagBereitschaftsAnfang + 1].minute());
+			} else {
+				merker = moment(bereitschaftsAnfang).add(1, "d").hour(8).minute(0);
+			}
 			console.log(`Merker B2.1: ${merker.toDate()}`);
 		}
 		// Wie oben, aber:
 		// 2x Ende am gleichen Tag
 		if (bereitschaftsAnfang.isSame(nachtAnfang, "day") | (nacht === false)) {
-			merker =
-				arbeitstagHeute === true
-					? moment(bereitschaftsAnfang)
-						.hour(arbeitsAnfang[tagBereitschaftsAnfang].hour())
-						.minute(arbeitsAnfang[tagBereitschaftsAnfang].minute())
-					: moment(bereitschaftsAnfang).hour(8).minute(0);
-
+			if (arbeitstagHeute === true) {
+				merker = moment(bereitschaftsAnfang)
+					.hour(arbeitsAnfang[tagBereitschaftsAnfang].hour())
+					.minute(arbeitsAnfang[tagBereitschaftsAnfang].minute());
+			} else {
+				merker = moment(bereitschaftsAnfang).hour(8).minute(0);
+			}
 			console.log(`Merker B2.2: ${merker.toDate()}`);
 		}
 		// Wie oben, aber:
 		// wenn merker kleiner/gleich Bereitschafts Anfang -> am nächsten Tag
-		if (!merker.isAfter(bereitschaftsAnfang)) {
-			merker =
-				arbeitstagMorgen === true
-					? moment(bereitschaftsAnfang)
-						.add(1, "d")
-						.hour(arbeitsAnfang[tagBereitschaftsAnfang + 1].hour())
-						.minute(arbeitsAnfang[tagBereitschaftsAnfang + 1].minute())
-					: moment(bereitschaftsAnfang).add(1, "d").hour(8).minute(0);
-
+		if (merker.isAfter(bereitschaftsAnfang)) {
+			return merker;
+		} else {
+			if (arbeitstagMorgen === true) {
+				merker = moment(bereitschaftsAnfang)
+					.add(1, "d")
+					.hour(arbeitsAnfang[tagBereitschaftsAnfang + 1].hour())
+					.minute(arbeitsAnfang[tagBereitschaftsAnfang + 1].minute());
+			} else {
+				merker = moment(bereitschaftsAnfang).add(1, "d").hour(8).minute(0);
+			}
 			console.log(`Merker B2.3: ${merker.toDate()}`);
 		}
 		return merker;
@@ -664,7 +669,7 @@ function BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang
 	const Arbeitstag = (datum, zusatz = 0) => {
 		datum = moment(datum).add(zusatz, "d");
 		const feiertag = feiertagejs.isHoliday(datum.toDate(), "HE");
-		return !(feiertag | (datum.weekday() < 1) | (datum.weekday() > 5));
+		return feiertag | (datum.weekday() < 1) | (datum.weekday() > 5) ? false : true;
 	};
 
 	// Berechne ob Tag ein Arbeitstag ist

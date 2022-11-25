@@ -1,12 +1,12 @@
 jQuery($ => {
 	if (storageAvailable("localStorage")) {
-		let alertNode = document.querySelector(".alert");
-		let alert = new bootstrap.Alert(alertNode);
+		var alertNode = document.querySelector(".alert");
+		var alert = new bootstrap.Alert(alertNode);
 		alert.close();
 	}
 
 	if (localStorage.getItem("UserID")) {
-		let url = document.location.toString();
+		var url = document.location.toString();
 		if (url.match("#")) {
 			activeTab(url.split("#")[1]);
 		}
@@ -18,16 +18,16 @@ navigator.serviceWorker.register("service-worker.js");
 
 const activeTab = tab => {
 	console.log(tab);
-	let sel = document.querySelector("#" + tab + "-tab");
+	var sel = document.querySelector("#" + tab + "-tab");
 	console.log(sel);
 	bootstrap.Tab.getOrCreateInstance(sel).show();
 };
 
 const storageAvailable = type => {
-	let storage;
+	var storage;
 	try {
 		storage = window[type];
-		let x = "__storage_test__";
+		var x = "__storage_test__";
 		storage.setItem(x, x);
 		storage.removeItem(x);
 		return true;
@@ -65,7 +65,7 @@ const autoCollapse = x => {
 	}
 };
 
-let x = window.matchMedia("(max-width: 767.98px)");
+var x = window.matchMedia("(max-width: 767.98px)");
 autoCollapse(x);
 x.addEventListener("change", autoCollapse);
 
@@ -92,14 +92,13 @@ toastr.options = {
 async function download(button, modus) {
 	setLoading(button.id);
 	buttonDisable(true);
-	let data = {
-			VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
-			VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
-			Daten: {},
-			Monat: document.getElementById("Monat").value,
-			Jahr: document.getElementById("Jahr").value,
-		},
-		dataE;
+	var data = {
+		VorgabenU: JSON.parse(localStorage.getItem("VorgabenU")),
+		VorgabenGeld: JSON.parse(localStorage.getItem("VorgabenGeld")),
+		Daten: {},
+		Monat: document.getElementById("Monat").value,
+		Jahr: document.getElementById("Jahr").value,
+	};
 
 	switch (modus) {
 		case "B":
@@ -107,7 +106,7 @@ async function download(button, modus) {
 			data.Daten.BE = tableToArray("#tableBE");
 			break;
 		case "E":
-			dataE = tableToArray("#tableE");
+			var dataE = tableToArray("#tableE");
 			dataE.forEach(value => value.pop());
 			data.Daten.EWT = dataE;
 			break;
@@ -126,7 +125,9 @@ async function download(button, modus) {
 		});
 		const responsed = await response.json();
 		if (response.status == 200) {
-			downloadURI(`data:application/pdf;base64,${encodeURIComponent(responsed.data.data)}`, responsed.data.name);
+			let dataResponded = responsed.data;
+			var uri = `data:application/pdf;base64,${encodeURIComponent(dataResponded.data)}`;
+			downloadURI(uri, dataResponded.name);
 			console.timeEnd("download");
 		} else {
 			console.log("Fehler", responsed.message);
@@ -198,7 +199,6 @@ async function saveDaten(button, modus = "") {
 			const dataResponded = responded.data;
 			console.log(dataResponded);
 
-			let ftBZ, ftBE, ftE, ftN;
 			switch (modus) {
 				case "B":
 					ftBZ = FooTable.get("#tableBZ");
@@ -290,7 +290,6 @@ async function saveDaten(button, modus = "") {
 }
 
 function saveTableData(tableID, ft) {
-	let data;
 	switch (tableID) {
 		case "tableBZ":
 			localStorage.setItem("dataBZ", JSON.stringify(tableToArray("#tableBZ", ft)));
@@ -299,7 +298,7 @@ function saveTableData(tableID, ft) {
 			localStorage.setItem("dataBE", JSON.stringify(tableToArray("#tableBE", ft)));
 			break;
 		case "tableE":
-			data = tableToArray("#tableE", ft);
+			var data = tableToArray("#tableE", ft);
 			data.forEach(value => value.pop());
 			localStorage.setItem("dataE", JSON.stringify(data));
 			break;
@@ -310,7 +309,7 @@ function saveTableData(tableID, ft) {
 
 function tableToArray(tableID, ft) {
 	if (!ft) ft = FooTable.get(tableID);
-	const data = ft
+	var data = ft
 		.toCSV()
 		.replace(/"/g, "")
 		.replace(/^,/gm, "")
@@ -339,27 +338,22 @@ function clearLoading(btn) {
 }
 
 function buttonDisable(status) {
-	let buttons = document.querySelectorAll("[data-disabler]");
+	var buttons = document.querySelectorAll("[data-disabler]");
 	buttons.forEach(button => (button.disabled = status));
 	console.log(`Button disabled: ${status}`);
 }
 
 function setMinMaxDatum(tag, datum, start = 0, ende = 0) {
 	if (!datum) datum = moment($(tag).val());
-	const min = moment(datum).subtract(start, "M").startOf("M").format("YYYY-MM-DD");
-	const max = moment(datum).add(ende, "M").endOf("M").format("YYYY-MM-DD");
+	var min = moment(datum).subtract(start, "M").startOf("M").format("YYYY-MM-DD");
+	var max = moment(datum).add(ende, "M").endOf("M").format("YYYY-MM-DD");
 	$(tag).attr("min", min).attr("max", max);
 }
 
 function DatenSortieren(daten) {
 	daten.sort((x, y) => {
-		const xp = x[0];
-		const yp = y[0];
-
-		if (xp < yp) {
-			return xp == yp ? 0 : -1;
-		} else {
-			return xp == yp ? 0 : 1;
-		}
+		var xp = x[0];
+		var yp = y[0];
+		return xp == yp ? 0 : xp < yp ? -1 : 1;
 	});
 }
