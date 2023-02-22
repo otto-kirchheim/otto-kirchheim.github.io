@@ -16,8 +16,8 @@
 		<link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96" />
 		<link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192" />
 		
-		<script type="module" crossorigin src="/assets/index-d78381a9.js"></script>
-		<link rel="stylesheet" href="/assets/index-82dc2549.css">
+		<script type="module" crossorigin src="/assets/index-ec82f8ab.js"></script>
+		<link rel="stylesheet" href="/assets/index-6de6b30e.css">
 	<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 	<body class="flex-column mb-5">
@@ -141,7 +141,7 @@
 									<label for="Benutzer">Benutzer</label>
 								</div>
 								<div class="form-floating">
-									<input id="Passwort" type="password" class="form-control validate" pattern="[A-z0-9._%+-]*" required />
+									<input id="Passwort" type="password" class="form-control validate" pattern="^[A-Za-z0-9\.\-\+_%]*$" required />
 									<label for="Passwort">Passwort</label>
 								</div>
 								<button class="btn btn-primary" type="submit" name="Einloggen" id="btnLogin">Einloggen</button>
@@ -175,7 +175,7 @@
 										id="Passwort1"
 										type="password"
 										class="form-control validate"
-										pattern="[A-z0-9._%+-]*"
+										pattern="^[A-Za-z0-9\.\-\+_%]*$"
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
 										data-bs-placement="right"
@@ -190,7 +190,7 @@
 										id="Passwort2"
 										type="password"
 										class="form-control validate"
-										pattern="[A-z0-9._%+-]*"
+										pattern="^[A-Za-z0-9\.\-\+_%]*$"
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
 										data-bs-placement="right"
@@ -216,7 +216,7 @@
 										id="Passwort3"
 										type="password"
 										class="form-control validate"
-										pattern="[A-z0-9._%+-]*"
+										pattern="^[A-Za-z0-9\.\-\+_%]*$"
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
 										data-bs-placement="right"
@@ -231,7 +231,7 @@
 										id="Passwort4"
 										type="password"
 										class="form-control validate"
-										pattern="[A-z0-9._%+-]*"
+										pattern="^[A-Za-z0-9\.\-\+_%]*$"
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
 										data-bs-placement="right"
@@ -741,7 +741,7 @@
 								</h2>
 								<div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
 									<div class="accordion-body row g-3">
-										<table class="table table-bordered table-striped table-hover" aria-describedby="titelTkgSt">
+										<table class="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">
 											<thead>
 												<tr class="table-primary align-middle text-center">
 													<th id="titelTkgSt">Tätigkeitsstätte</th>
