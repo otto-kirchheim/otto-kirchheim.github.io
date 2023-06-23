@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de" data-bs-theme="auto">
 	<head>
-		<link rel="preload" href="/assets/index-6d5ec497.css" type="text/css" as="style">
+		<link rel="preload" href="/assets/index-25058f04.css" type="text/css" as="style">
 		<link rel="preload" href="/assets/material-icons-round-c948f126.woff2" type="font/woff2" as="font" crossOrigin="anonymous">
 
 		<meta charset="utf-8" />
@@ -19,13 +19,13 @@
 		<link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96" />
 		<link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192" />
 		
-		<script type="module" crossorigin src="/assets/index-9d320476.js"></script>
-		<link rel="stylesheet" href="/assets/index-6d5ec497.css">
+		<script type="module" crossorigin src="/assets/index-875044f7.js"></script>
+		<link rel="stylesheet" href="/assets/index-25058f04.css">
 	<link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 	<body class="flex-column mb-5">
-		<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom" data-bs-theme="dark" id="tab">
-			<div class="container-fluid" id="tabs" role="tablist">
+		<header class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top" data-bs-theme="dark">
+			<nav class="container-fluid" id="tabs" role="tablist" id="tab">
 				<button
 					class="navbar-brand nav-link me-1"
 					id="brand-start-tab"
@@ -49,7 +49,13 @@
 				>
 					<span class="navbar-toggler-icon"></span>
 				</button>
-				<div class="offcanvas offcanvas-end text-bg-dark d-none" id="navmenu" aria-labelledby="navmenuLabel" tabindex="-1">
+				<div
+					class="offcanvas offcanvas-end text-bg-dark d-none"
+					id="navmenu"
+					aria-labelledby="navmenuLabel"
+					tabindex="-1"
+					role="navigation"
+				>
 					<div class="offcanvas-header">
 						<h5 class="offcanvas-title" id="navmenuLabel">
 							<img src="icons/192x192-icon.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top me-1" />
@@ -79,7 +85,7 @@
 							<li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 px-0 px-lg-2"
-									id="Bereitschaft-tab"
+									id="bereitschaft-tab"
 									data-bs-toggle="pill"
 									data-bs-target="#Bereitschaft"
 									type="button"
@@ -91,7 +97,7 @@
 							<li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 me-lg-5 px-lg-3"
-									id="EWT-tab"
+									id="ewt-tab"
 									data-bs-toggle="pill"
 									data-bs-target="#EWT"
 									type="button"
@@ -103,7 +109,7 @@
 							<li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 px-0 px-lg-2"
-									id="Neben-tab"
+									id="neben-tab"
 									data-bs-toggle="pill"
 									data-bs-target="#Neben"
 									type="button"
@@ -121,7 +127,7 @@
 							<li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 px-0 px-lg-2"
-									id="Berechnung-tab"
+									id="berechnung-tab"
 									data-bs-toggle="pill"
 									data-bs-target="#Berechnung"
 									type="button"
@@ -136,20 +142,20 @@
 							<li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 px-0 px-lg-2"
-									id="Einstellungen-tab"
+									id="einstellungen-tab"
 									data-bs-toggle="pill"
 									data-bs-target="#Einstellungen"
 									type="button"
 									role="tab"
 								>
-									<span class="material-icons-round align-text-top d-md-block d-none">settings</span>
+									<span class="material-icons-round align-text-top d-lg-block d-none">settings</span>
 									<span class="d-lg-none">Einstellungen</span>
 								</button>
 							</li>
 
 							<li class="nav-item col-12 col-lg-auto d-none" id="admin" role="presentation">
 								<a class="nav-link py-2 px-0 px-lg-2" type="button" href="https://web-app-rn6h2lgzma-ey.a.run.app/admin">
-									<span class="material-icons-round align-text-top d-md-block d-none">admin_panel_settings</span>
+									<span class="material-icons-round align-text-top d-lg-block d-none">admin_panel_settings</span>
 									<span class="d-lg-none">Admin</span>
 								</a>
 							</li>
@@ -213,10 +219,19 @@
 							</li>
 						</ul>
 					</div>
+					<div class="d-flex justify-content-end m-2 d-lg-none">
+						<button
+							type="button"
+							class="btn btn-outline-secondary btn-sm impressum"
+							data-bs-toggle="modal"
+							data-bs-target="#impressum"
+						>
+							Impressum
+						</button>
+					</div>
 				</div>
-			</div>
-		</nav>
-
+			</nav>
+		</header>
 		<noscript>
 			<div class="container mx-auto" id="alertPlaceholder">
 				<div class="alert alert-danger show fade text-center mt-4" role="alert">Bitte Cookies zulassen!</div>
@@ -881,8 +896,71 @@
 			</div>
 		</div>
 
-		<footer class="footer fixed-bottom mt-autobg-light">
+		<div class="modal" id="impressum" tabindex="-1" aria-labelledby="impressumTitel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-scrollable modal-fullscreen modal-dialog-centered modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3 class="modal-title" id="impressumTitel">Impressum</h3>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="impressum">
+							<p>Angaben gemäß § 5 TMG</p>
+							<p>Jan Otto <br />Weingarten 7<br />36272 Niederaula <br /></p>
+							<p>
+								<strong>Kontakt:</strong> <br />Telefon: +49(0)170-6708692<br />E-Mail:
+								<a href="mailto:janotto1989+DB@gmail.com">janotto1989@gmail.com</a><br />
+							</p>
+							<p>
+								<strong>Haftungsausschluss: </strong><br /><br /><strong>Haftung für Links</strong><br /><br />
+								Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb
+								können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist
+								stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum
+								Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der
+								Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete
+								Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir
+								derartige Links umgehend entfernen.<br /><br />
+								<strong>Urheberrecht</strong><br /><br />
+								Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen
+								Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen
+								des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und
+								Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet. Soweit die Inhalte auf
+								dieser Seite nicht vom Betreiber erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden
+								Inhalte Dritter als solche gekennzeichnet. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam
+								werden, bitten wir um einen entsprechenden Hinweis. Bei Bekanntwerden von Rechtsverletzungen werden wir
+								derartige Inhalte umgehend entfernen.<br /><br />
+								<strong>Datenschutz</strong><br /><br />
+								Die Nutzung unserer Webseite ist in der Regel ohne Angabe personenbezogener Daten möglich. Soweit auf unseren
+								Seiten personenbezogene Daten (beispielsweise Name, Anschrift oder eMail-Adressen) erhoben werden, erfolgt dies,
+								soweit möglich, stets auf freiwilliger Basis. Diese Daten werden ohne Ihre ausdrückliche Zustimmung nicht an
+								Dritte weitergegeben. <br />
+								Wir weisen darauf hin, dass die Datenübertragung im Internet (z.B. bei der Kommunikation per E-Mail)
+								Sicherheitslücken aufweisen kann. Ein lückenloser Schutz der Daten vor dem Zugriff durch Dritte ist nicht
+								möglich. <br />
+								Der Nutzung von im Rahmen der Impressumspflicht veröffentlichten Kontaktdaten durch Dritte zur Übersendung von
+								nicht ausdrücklich angeforderter Werbung und Informationsmaterialien wird hiermit ausdrücklich widersprochen.
+								Die Betreiber der Seiten behalten sich ausdrücklich rechtliche Schritte im Falle der unverlangten Zusendung von
+								Werbeinformationen, etwa durch Spam-Mails, vor.<br />
+							</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<footer class="footer fixed-bottom mt-autobg-light d-flex justify-content-between align-items-end">
 			<span class="text-muted">&copy; 2021-2023 Jan Otto </span>
+			<button
+				type="button"
+				class="btn btn-outline-secondary btn-sm impressum d-none d-lg-block"
+				data-bs-toggle="modal"
+				data-bs-target="#impressum"
+			>
+				Impressum
+			</button>
 		</footer>
 	</body>
 </html>
