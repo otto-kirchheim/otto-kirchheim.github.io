@@ -1,0 +1,299 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`#Bereitschaftseingabe > Berechnet Bereitschaft mit Nacht 1`] = `
+[
+  {
+    "beginB": "2023-04-12T13:45:00.000Z",
+    "endeB": "2023-04-13T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-13T13:45:00.000Z",
+    "endeB": "2023-04-14T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-14T11:00:00.000Z",
+    "endeB": "2023-04-15T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-15T06:00:00.000Z",
+    "endeB": "2023-04-15T17:45:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-16T14:15:00.000Z",
+    "endeB": "2023-04-16T17:45:00.000Z",
+    "pauseB": 45,
+  },
+  {
+    "beginB": "2023-04-17T04:15:00.000Z",
+    "endeB": "2023-04-17T05:00:00.000Z",
+    "pauseB": 45,
+  },
+  {
+    "beginB": "2023-04-17T13:45:00.000Z",
+    "endeB": "2023-04-17T17:45:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-18T04:15:00.000Z",
+    "endeB": "2023-04-18T05:00:00.000Z",
+    "pauseB": 45,
+  },
+  {
+    "beginB": "2023-04-18T13:45:00.000Z",
+    "endeB": "2023-04-18T17:45:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-19T04:15:00.000Z",
+    "endeB": "2023-04-19T05:00:00.000Z",
+    "pauseB": 45,
+  },
+]
+`;
+
+exports[`#Bereitschaftseingabe > Berechnet Bereitschaft mit Nacht über Feiertag 1`] = `
+[
+  {
+    "beginB": "2023-04-05T13:45:00.000Z",
+    "endeB": "2023-04-06T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-06T13:45:00.000Z",
+    "endeB": "2023-04-07T06:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-07T06:00:00.000Z",
+    "endeB": "2023-04-08T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-08T06:00:00.000Z",
+    "endeB": "2023-04-09T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-09T06:00:00.000Z",
+    "endeB": "2023-04-10T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-10T06:00:00.000Z",
+    "endeB": "2023-04-10T17:30:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-11T04:15:00.000Z",
+    "endeB": "2023-04-11T05:00:00.000Z",
+    "pauseB": 45,
+  },
+  {
+    "beginB": "2023-04-11T13:45:00.000Z",
+    "endeB": "2023-04-11T17:30:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-12T04:15:00.000Z",
+    "endeB": "2023-04-12T05:00:00.000Z",
+    "pauseB": 45,
+  },
+]
+`;
+
+exports[`#Bereitschaftseingabe > Berechnet Monatsübergang (anfang) korrekt 1`] = `
+[
+  {
+    "beginB": "2023-03-31T22:00:00.000Z",
+    "endeB": "2023-04-01T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-01T06:00:00.000Z",
+    "endeB": "2023-04-02T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-02T06:00:00.000Z",
+    "endeB": "2023-04-03T05:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-03T13:45:00.000Z",
+    "endeB": "2023-04-04T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-04T13:45:00.000Z",
+    "endeB": "2023-04-05T05:00:00.000Z",
+    "pauseB": 30,
+  },
+]
+`;
+
+exports[`#Bereitschaftseingabe > Berechnet Monatsübergang (ende) korrekt 1`] = `
+[
+  {
+    "beginB": "2023-04-26T13:45:00.000Z",
+    "endeB": "2023-04-27T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-27T13:45:00.000Z",
+    "endeB": "2023-04-28T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-28T11:00:00.000Z",
+    "endeB": "2023-04-29T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-29T06:00:00.000Z",
+    "endeB": "2023-04-30T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-30T06:00:00.000Z",
+    "endeB": "2023-04-30T22:00:00.000Z",
+    "pauseB": 0,
+  },
+]
+`;
+
+exports[`#Bereitschaftseingabe > Berechnet normale Bereitschaft 1`] = `
+[
+  {
+    "beginB": "2023-04-12T13:45:00.000Z",
+    "endeB": "2023-04-13T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-13T13:45:00.000Z",
+    "endeB": "2023-04-14T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-14T11:00:00.000Z",
+    "endeB": "2023-04-15T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-15T06:00:00.000Z",
+    "endeB": "2023-04-16T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-16T06:00:00.000Z",
+    "endeB": "2023-04-17T05:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-17T13:45:00.000Z",
+    "endeB": "2023-04-18T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-18T13:45:00.000Z",
+    "endeB": "2023-04-19T05:00:00.000Z",
+    "pauseB": 30,
+  },
+]
+`;
+
+exports[`#Bereitschaftseingabe > Berechnet normale Bereitschaft über Feiertag 1`] = `
+[
+  {
+    "beginB": "2023-04-05T13:45:00.000Z",
+    "endeB": "2023-04-06T05:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-06T13:45:00.000Z",
+    "endeB": "2023-04-07T06:00:00.000Z",
+    "pauseB": 30,
+  },
+  {
+    "beginB": "2023-04-07T06:00:00.000Z",
+    "endeB": "2023-04-08T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-08T06:00:00.000Z",
+    "endeB": "2023-04-09T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-09T06:00:00.000Z",
+    "endeB": "2023-04-10T06:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-10T06:00:00.000Z",
+    "endeB": "2023-04-11T05:00:00.000Z",
+    "pauseB": 0,
+  },
+  {
+    "beginB": "2023-04-11T13:45:00.000Z",
+    "endeB": "2023-04-12T05:00:00.000Z",
+    "pauseB": 30,
+  },
+]
+`;
+
+exports[`#bereitschaftEingabeWeb > Should calculate the correct Bereitschaft if month is the same 1`] = `
+[MockFunction set] {
+  "calls": [
+    [
+      "dataBZ",
+      [
+        {
+          "beginB": "2023-04-12T13:45:00.000Z",
+          "endeB": "2023-04-13T05:00:00.000Z",
+          "pauseB": 30,
+        },
+        {
+          "beginB": "2023-04-13T13:45:00.000Z",
+          "endeB": "2023-04-14T05:00:00.000Z",
+          "pauseB": 30,
+        },
+        {
+          "beginB": "2023-04-14T11:00:00.000Z",
+          "endeB": "2023-04-15T06:00:00.000Z",
+          "pauseB": 0,
+        },
+        {
+          "beginB": "2023-04-15T06:00:00.000Z",
+          "endeB": "2023-04-16T06:00:00.000Z",
+          "pauseB": 0,
+        },
+        {
+          "beginB": "2023-04-16T06:00:00.000Z",
+          "endeB": "2023-04-17T05:00:00.000Z",
+          "pauseB": 0,
+        },
+        {
+          "beginB": "2023-04-17T13:45:00.000Z",
+          "endeB": "2023-04-18T05:00:00.000Z",
+          "pauseB": 30,
+        },
+        {
+          "beginB": "2023-04-18T13:45:00.000Z",
+          "endeB": "2023-04-19T05:00:00.000Z",
+          "pauseB": 30,
+        },
+      ],
+    ],
+  ],
+  "results": [
+    {
+      "type": "return",
+      "value": undefined,
+    },
+  ],
+}
+`;

@@ -1,0 +1,170 @@
+.CustomSnackbar-container {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	max-width: 100%;
+	z-index: 1050;
+	overflow: hidden;
+}
+
+.CustomSnackbar-container--top-left {
+	bottom: unset;
+	right: unset;
+	top: 0;
+	left: 0;
+}
+
+.CustomSnackbar-container--top-center {
+	top: 0;
+	bottom: unset;
+	left: 50%;
+	right: unset;
+	transform: translateX(-50%);
+}
+
+.CustomSnackbar-container--top-right {
+	bottom: unset;
+	right: 0;
+	left: unset;
+	top: 0;
+}
+
+.CustomSnackbar-container--bottom-left {
+	bottom: 0;
+	right: unset;
+	left: 0;
+	top: unset;
+}
+
+.CustomSnackbar-container--bottom-center {
+	bottom: 0;
+	right: unset;
+	left: 50%;
+	top: unset;
+	transform: translateX(-50%);
+}
+
+.CustomSnackbar-container--fixed {
+	position: fixed;
+}
+
+.CustomSnackbar-container * {
+	box-sizing: border-box;
+}
+
+.CustomSnackbar__wrapper {
+	overflow: hidden;
+	/* height: auto; */
+	margin: 0;
+	border-radius: 3px;
+	display: flex;
+	min-width: auto;
+	transition-property: all;
+	transition-timing-function: ease;
+	transition-duration: 0.5s;
+}
+
+.CustomSnackbar {
+	display: inline-flex;
+	box-sizing: border-box;
+	border-radius: 3px;
+	color: #eee;
+	font-size: 16px;
+	background-color: #262626;
+	vertical-align: bottom;
+	box-shadow: 0 0 4px 0 black;
+	margin: 0 10px;
+	flex-grow: 1;
+}
+
+.CustomSnackbar__close,
+.CustomSnackbar__status,
+.CustomSnackbar__message-wrapper {
+	position: relative;
+}
+
+.CustomSnackbar__message-wrapper {
+	flex: 1;
+	padding: 12px;
+}
+
+.CustomSnackbar__message {
+	display: inline-block;
+}
+
+.CustomSnackbar__status {
+	display: none;
+	min-width: 15px;
+	margin-right: 5px;
+	border-radius: 3px 0 0 3px;
+	background-color: transparent;
+}
+
+.CustomSnackbar__status.CustomSnackbar--success,
+.CustomSnackbar__status.CustomSnackbar--warning,
+.CustomSnackbar__status.CustomSnackbar--danger,
+.CustomSnackbar__status.CustomSnackbar--info {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.CustomSnackbar__status.CustomSnackbar--success {
+	background-color: #4caf50;
+}
+
+.CustomSnackbar__status.CustomSnackbar--warning {
+	background-color: #ff9800;
+}
+
+.CustomSnackbar__status.CustomSnackbar--danger {
+	background-color: #b90909;
+}
+
+.CustomSnackbar__status.CustomSnackbar--info {
+	background-color: #2196f3;
+}
+
+.CustomSnackbar__icon {
+	display: flex;
+	border: 2px solid white;
+	font-weight: bold;
+	border-radius: 20px;
+	height: 25px;
+	width: 25px;
+	margin: 0 5px;
+	font-family: monospace;
+	justify-content: center;
+	align-items: center;
+}
+
+.CustomSnackbar__action {
+	display: flex;
+	align-items: center;
+	padding: 0 10px;
+	color: #838cff;
+	cursor: pointer;
+	max-width: min-content;
+	white-space: normal;
+}
+
+.CustomSnackbar__action:hover {
+	background-color: #333;
+}
+
+.CustomSnackbar__close {
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	padding: 0 10px;
+	-webkit-user-select: none;
+	user-select: none;
+	color: #bbb;
+}
+
+.CustomSnackbar__close:hover {
+	background-color: #444;
+}

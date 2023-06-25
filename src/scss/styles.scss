@@ -1,0 +1,208 @@
+$material-icons-font-path: "~material-icons/iconfont/";
+
+@import "~bootstrap/scss/bootstrap";
+@import "./customtable.css";
+@import "./CustomSnackbar.css";
+@import "~material-icons/iconfont/round.scss";
+
+.dropdown-menu .active .bi {
+	display: block !important;
+}
+
+.bi {
+	font-size: 16px;
+}
+
+body {
+	justify-content: center;
+}
+
+.w200 > * {
+	max-width: 250px;
+}
+
+.w20 {
+	width: 20%;
+}
+
+.w40 {
+	width: 40%;
+}
+
+.small-icons {
+	vertical-align: middle;
+	font-size: 1.3rem;
+}
+
+.big-icons {
+	vertical-align: middle;
+	width: 36px;
+	font-size: 36px;
+	margin-right: 0.2rem;
+}
+
+.einstellungen-icons {
+	font-size: 36px;
+	padding: 10px 2px 0;
+}
+
+.card {
+	min-width: min-content;
+}
+
+.icon-ewt {
+	display: flex;
+	align-items: center;
+	justify-content: space-evenly;
+	padding-inline: 30px;
+	font-size: smaller;
+}
+
+.icon-ewt-arrow {
+	display: flex;
+	justify-content: space-around;
+}
+
+td:has(.SchichtBereitschaft) {
+	padding: 0 0.5rem;
+}
+
+.alertstyle {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+}
+
+.alertstyle > button {
+	margin: 0.5rem;
+}
+
+.table {
+	max-width: -moz-fit-content;
+	max-width: fit-content;
+	margin: auto;
+}
+
+.table > tbody {
+	white-space: nowrap;
+}
+
+.table-Berechnung {
+	position: relative;
+	overflow: auto;
+}
+
+.table-Berechnung > thead > tr > th:nth-child(1),
+.table-Berechnung tbody tr th {
+	font-weight: normal;
+	left: -2px;
+	position: -webkit-sticky;
+	position: sticky;
+}
+.table-Berechnung tbody tr th {
+	background-color: var(--bs-body-bg);
+}
+
+.vertical-center {
+	min-height: 85%;
+	min-height: 85vh;
+
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.modal-footer {
+	justify-content: space-evenly;
+}
+
+.modal-body.row {
+	align-content: start;
+}
+
+.form-group.required .control-label:after,
+.form-floating.required label:after {
+	content: "*" !important;
+	color: var(--bs-danger);
+	margin-right: -4px;
+	padding-right: 2px;
+	display: flex;
+	justify-content: end;
+}
+
+.form-floating.required input:disabled + label::after {
+	color: rgba(var(--bs-body-color-rgb), 0.65);
+	background-color: var(--bs-secondary-bg);
+}
+
+.row > .form-floating > label {
+	left: auto;
+}
+
+.form-floating.required.readonly label:after {
+	content: "" !important;
+	color: var(--bs-danger);
+	margin-left: -5px;
+	padding-left: 2px;
+}
+
+.form-switch {
+	margin: auto 0 auto 1rem;
+}
+
+td > .form-switch {
+	margin: auto 0 auto 1.7rem;
+}
+
+.bereitschaft {
+	width: 90%;
+}
+
+footer {
+	pointer-events: none;
+}
+footer > .impressum {
+	pointer-events: all;
+}
+
+.custom-text-truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media screen and (max-width: 479.95px) {
+	.custom-text-truncate {
+		max-width: 120px;
+	}
+}
+
+@media screen and (min-width: 480px) and (max-width: 575.95px) {
+	.custom-text-truncate {
+		max-width: 130px;
+	}
+}
+
+@media screen and (min-width: 576px) and (max-width: 767.95px) {
+	.custom-text-truncate {
+		max-width: 140px;
+	}
+}
+
+@media screen and (min-width: 768px) and (max-width: 991.95px) {
+	.custom-text-truncate {
+		max-width: 240px;
+	}
+}
+
+@media screen and (min-width: 992px) and (max-width: 1199.95px) {
+	.custom-text-truncate {
+		max-width: 480px;
+	}
+}
+
+@media screen and (min-width: 1200px) and (max-width: 1399.95px) {
+	.custom-text-truncate {
+		max-width: 650px;
+	}
+}

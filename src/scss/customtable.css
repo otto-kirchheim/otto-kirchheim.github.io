@@ -1,0 +1,157 @@
+.customtable-empty {
+	vertical-align: middle;
+	text-align: center;
+	font-size: 30px;
+}
+
+tr.customtable-editing td div {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+}
+
+table.customtable > tbody > tr > td.customtable-sortable,
+table.customtable > tbody > tr > th.customtable-sortable,
+table.customtable > tfoot > tr > td.customtable-sortable,
+table.customtable > tfoot > tr > th.customtable-sortable,
+table.customtable > thead > tr > td.customtable-sortable,
+table.customtable > thead > tr > th.customtable-sortable {
+	position: relative;
+	padding-right: 30px;
+	cursor: pointer;
+}
+
+td.customtable-sortable.customtable-asc > span.customtableIcon,
+td.customtable-sortable.customtable-desc > span.customtableIcon,
+td.customtable-sortable:hover > span.customtableIcon,
+th.customtable-sortable.customtable-asc > span.customtableIcon,
+th.customtable-sortable.customtable-desc > span.customtableIcon,
+th.customtable-sortable:hover > span.customtableIcon {
+	opacity: 1;
+}
+
+td.customtable-sortable.customtable-asc > span.customtableIcon,
+th.customtable-sortable.customtable-asc > span.customtableIcon {
+	margin-top: -20px;
+}
+td.customtable-sortable.customtable-desc > span.customtableIcon,
+th.customtable-sortable.customtable-desc > span.customtableIcon {
+	margin-top: -4px;
+}
+
+.customtableIcon.customtable-sort:before {
+	content: "sort";
+}
+
+.customtableIcon.customtable-sort-asc:before {
+	content: "arrow_drop_up";
+}
+
+.customtableIcon.customtable-sort-desc:before {
+	content: "arrow_drop_down";
+}
+
+th.customtable-sortable > span.customtableIcon {
+	position: absolute;
+	right: 6px;
+	top: 50%;
+	margin-top: -12px;
+	opacity: 0;
+	transition: opacity 0.3s ease-in;
+}
+
+.customtableIcon {
+	position: relative;
+	top: 1px;
+	display: inline-block;
+	font-family: "Material Icons Round" !important;
+	font-size: 1.5rem;
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+th.customtable-sortable:hover > span.customtableIcon {
+	opacity: 1;
+}
+
+@media screen and (max-width: 479.95px) {
+	[data-breakpoints*="xs"] {
+		display: none;
+	}
+
+	.customtable-editing > div > button {
+		padding-inline: 4px;
+	}
+	.customtable-editing.customtable-toggle-xxl::before,
+	.customtable-editing.customtable-toggle-xl::before,
+	.customtable-editing.customtable-toggle-lg::before,
+	.customtable-editing.customtable-toggle-md::before,
+	.customtable-editing.customtable-toggle-sm::before,
+	.customtable-editing.customtable-toggle-xs::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+}
+@media screen and (max-width: 575.95px) {
+	[data-breakpoints*="sm"] {
+		display: none;
+	}
+
+	.customtable-editing.customtable-toggle-sm::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+
+	th.customtable-sortable > span.customtableIcon {
+		opacity: 1;
+	}
+}
+
+@media screen and (max-width: 767.95px) {
+	[data-breakpoints*="md"] {
+		display: none;
+	}
+	.customtable-editing.customtable-toggle-md::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+}
+
+@media screen and (max-width: 991.95px) {
+	[data-breakpoints*="lg"] {
+		display: none;
+	}
+	.customtable-editing.customtable-toggle-lg::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+}
+
+@media screen and (max-width: 1199.95px) {
+	[data-breakpoints*="xl"] {
+		display: none;
+	}
+	.customtable-editing.customtable-toggle-xl::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+}
+@media screen and (max-width: 1399.95px) {
+	[data-breakpoints*="xxl"] {
+		display: none;
+	}
+	.customtable-editing.customtable-toggle-xxl::before {
+		content: "+";
+		opacity: 0.3;
+		margin-right: 8px;
+	}
+}
