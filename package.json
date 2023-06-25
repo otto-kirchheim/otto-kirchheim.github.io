@@ -4,11 +4,13 @@
 	"description": "",
 	"scripts": {
 		"start": "vite --host",
-		"build": "tsc && vitest run && vite build",
+		"test": "tsc && vitest run",
+		"build": "vite build",
 		"build-Server": "tsc && vitest run && vite build --outDir='../../public'",
 		"preview": "vite preview --outDir=../public",
-		"test": "vitest --ui --api 9527",
-		"coverage": "vitest run --coverage"
+		"dev-test": "vitest --ui --api 9527",
+		"coverage": "vitest run --coverage",
+		"prepare": "husky install"
 	},
 	"type": "module",
 	"keywords": [],
@@ -28,6 +30,7 @@
 		"eslint-plugin-import": "^2.27.5",
 		"eslint-plugin-n": "^16.0.0",
 		"eslint-plugin-promise": "^6.1.1",
+		"husky": "^8.0.3",
 		"jsdom": "^22.1.0",
 		"jsonwebtoken": "^9.0.0",
 		"rimraf": "^5.0.1",
