@@ -34,7 +34,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 	const data = {
 		VorgabenU: Storage.get<IVorgabenU>("VorgabenU"),
 		VorgabenGeld: VorgabenGeld.getMonat(Monat),
-		Daten: {} as IDaten,
+		Daten: {} as IDaten, // IMonatsdaten
 		Monat,
 		Jahr,
 	};
@@ -60,7 +60,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 			{
 				VorgabenU: IVorgabenU;
 				VorgabenGeld: IVorgabenGeldType;
-				Daten: Partial<IDaten>;
+				Daten: Partial<IDaten>; // IMonatsdaten
 				Monat: number;
 				Jahr: number;
 			},
@@ -73,7 +73,6 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 				message: `Download fehlerhaft:<br/>${fetched.message}`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;

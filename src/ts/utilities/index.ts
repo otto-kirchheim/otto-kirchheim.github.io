@@ -8,6 +8,7 @@ import clearLoading from "./clearLoading";
 import convertToBlob from "./convertToBlob";
 import decodeAccessToken from "./decodeAccessToken";
 import download from "./download";
+import getDurationFromTime from "./getDurationFromTime";
 import getValidAccesstoken from "./getValidAccesstoken";
 import saveDaten from "./saveDaten";
 import saveTableData from "./saveTableData";
@@ -29,6 +30,7 @@ export {
 	convertToBlob,
 	decodeAccessToken,
 	download,
+	getDurationFromTime,
 	getValidAccesstoken,
 	saveDaten,
 	saveTableData,

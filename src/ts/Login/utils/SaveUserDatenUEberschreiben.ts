@@ -23,7 +23,7 @@ export default function SaveUserDatenUEberschreiben(ueberschreiben = true): void
 		dataBE?: IDaten["BE"];
 		dataE?: IDaten["EWT"];
 		dataN?: IDaten["N"];
-	} = Storage.get("dataServer");
+	} = Storage.get("dataServer") ?? {};
 	console.log({ dataServer });
 
 	if (dataServer.vorgabenU) {

@@ -1,4 +1,4 @@
-import type { CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type { CustomHTMLTableElement, IDatenN } from "../../interfaces";
 import { saveTableData } from "../../utilities";
 
 export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): void {
@@ -8,7 +8,7 @@ export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): voi
 	}
 	let idN = select.selectedIndex;
 	if (idN < 0) return;
-	const daten = JSON.parse(select.value) as Required<IDaten>["N"][0];
+	const daten = JSON.parse(select.value) as IDatenN;
 	const inputNebenbezug = form.querySelector<HTMLSelectElement>("#Nebenbezug");
 	if (!inputNebenbezug) {
 		throw new Error("Select element with ID 'Nebenbezug' not found");

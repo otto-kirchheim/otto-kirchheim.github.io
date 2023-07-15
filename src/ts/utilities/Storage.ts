@@ -12,9 +12,9 @@ class Storage {
 		localStorage.setItem(key, JSON.stringify(value));
 	}
 
-	get<T>(key: string, defaultValue: T | null = null): T {
+	get<T>(key: string): T {
 		const value = localStorage.getItem(key);
-		if (!value) return defaultValue as T;
+		if (!value) throw new Error(`Wert "${key}" nicht gefunden`);
 		if (!this.isJsonString(value)) return this.convertToJson<T>(key, value as T);
 		return JSON.parse(value);
 	}

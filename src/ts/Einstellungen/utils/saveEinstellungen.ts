@@ -1,5 +1,5 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from "../../interfaces";
 import { Storage, tableToArray } from "../../utilities";
 
 export default function saveEinstellungen(): IVorgabenU {
@@ -11,12 +11,12 @@ export default function saveEinstellungen(): IVorgabenU {
 
 	for (const key of Object.keys(VorgabenU.pers)) {
 		const input = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
-		if (input) updateVorgabenU(VorgabenU.pers, key as keyof IVorgabenU["pers"], input.value);
+		if (input) updateVorgabenU(VorgabenU.pers, key as keyof IVorgabenUPers, input.value);
 	}
 
 	for (const key of Object.keys(VorgabenU.aZ)) {
 		const input = document.querySelector<HTMLInputElement>(`#${key}`);
-		if (input) updateVorgabenU(VorgabenU.aZ, key as keyof IVorgabenU["aZ"], input.value);
+		if (input) updateVorgabenU(VorgabenU.aZ, key as keyof IVorgabenUaZ, input.value);
 	}
 
 	VorgabenU.fZ = table_to_array_einstellungen("TbodyTätigkeitsstätten");
@@ -28,7 +28,7 @@ export default function saveEinstellungen(): IVorgabenU {
 		nebenTab?.classList.add("d-none");
 	}
 
-	VorgabenU.vorgabenB = Object.fromEntries(tableToArray("tableVE").entries()) as IVorgabenU["vorgabenB"];
+	VorgabenU.vorgabenB = Object.fromEntries(tableToArray("tableVE").entries()) as { [key: string]: IVorgabenUvorgabenB };
 
 	Storage.set("VorgabenU", VorgabenU);
 
@@ -52,7 +52,6 @@ function table_to_array_einstellungen(table_id: string): { key: string; text: st
 				message: `Einstellungen > Fahrzeiten > "${key}": Beschreibung / Fahrzeit fehlt`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			throw new Error("Beschreibung / Fahrzeit fehlt");

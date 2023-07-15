@@ -18,7 +18,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 		null,
 		createBodyElement,
 		createEditorModalFooter(null, row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 
 	return modal;
@@ -52,7 +52,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				required: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 
 		modalBody.appendChild(createModalBodyTitelElement("Arbeitszeit"));
@@ -67,7 +67,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 					value: row instanceof Row ? row.cells[column.name] : null,
 					type: "time",
 					required: true,
-				})
+				}),
 			);
 		});
 
@@ -82,7 +82,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 					name: column.name,
 					value: row instanceof Row ? row.cells[column.name] : null,
 					type: "time",
-				})
+				}),
 			);
 		});
 
@@ -99,7 +99,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				required: true,
 				min: 1,
 				max: 1,
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "nrN") as Column;
@@ -111,7 +111,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				value: row instanceof Row ? row.cells[column.name] : null,
 				required: true,
 				options: [{ value: "040 Fahrentsch.", text: "040 Fahrentsch.", selected: true }],
-			})
+			}),
 		);
 
 		return modalBody;
@@ -146,7 +146,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 			};
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 	}

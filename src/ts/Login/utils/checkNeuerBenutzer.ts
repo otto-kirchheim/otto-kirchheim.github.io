@@ -58,7 +58,6 @@ export default async function checkNeuerBenutzer(): Promise<void> {
 				message: `Registrierung<br/>Benutzer erfolgreich angelegt.`,
 				status: "success",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 		} else {
@@ -67,7 +66,6 @@ export default async function checkNeuerBenutzer(): Promise<void> {
 				message: `Registrierung <br/>Fehler bei Benutzerstellung: </br>${fetched.message}`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;

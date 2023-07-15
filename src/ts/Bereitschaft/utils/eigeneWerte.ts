@@ -1,11 +1,11 @@
 import { bereitschaftsVorgabeAEndern } from ".";
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 
 export default function eigeneWerte(
 	parentElement: HTMLDivElement,
-	vorgabenB: IVorgabenU["vorgabenB"][0],
-	datum: dayjs.Dayjs
+	vorgabenB: IVorgabenUvorgabenB,
+	datum: dayjs.Dayjs,
 ): void {
 	const bATInput = parentElement.querySelector<HTMLInputElement>("#bAT");
 	const bEInput = parentElement.querySelector<HTMLInputElement>("#bE");

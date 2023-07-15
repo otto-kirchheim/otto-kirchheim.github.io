@@ -27,7 +27,6 @@ export default function ewtBerechnen({
 		message: `EWT<br/>Zeiten berechnet.`,
 		status: "success",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

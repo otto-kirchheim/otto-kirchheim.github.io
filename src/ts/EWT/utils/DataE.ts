@@ -3,10 +3,7 @@ import { Storage } from "../../utilities";
 
 export function DataE(data?: IDaten["EWT"]): IDaten["EWT"] {
 	if (data === undefined) {
-		if (!Storage.check("dataE")) return [];
-		data = Storage.get<IDaten["EWT"]>("dataE");
+		data = Storage.check("dataE") ? Storage.get("dataE") ?? [] : [];
 	}
-
-	if (data === undefined) return [];
 	return data;
 }

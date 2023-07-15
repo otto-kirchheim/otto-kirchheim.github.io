@@ -1,5 +1,5 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type { CustomHTMLTableElement, IDatenBZ } from "../../interfaces";
 import { Storage, clearLoading, saveTableData, setLoading, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
@@ -61,7 +61,7 @@ export default function sendDataE($modal: HTMLDivElement): void {
 			bereitschaftsEnde = dayjs(`${daten.tagBE}T${daten.endeBE}`).isBefore(bereitschaftsAnfang)
 				? dayjs(`${daten.tagBE}T${daten.endeBE}`).add(1, "d")
 				: dayjs(`${daten.tagBE}T${daten.endeBE}`),
-			dataTable = tableToArray<IDaten["BZ"][0]>("tableBZ");
+			dataTable = tableToArray<IDatenBZ>("tableBZ");
 
 		const data = BereitschaftEingabe(
 			bereitschaftsAnfang,
@@ -69,7 +69,7 @@ export default function sendDataE($modal: HTMLDivElement): void {
 			bereitschaftsEnde,
 			bereitschaftsEnde,
 			false,
-			dataTable
+			dataTable,
 		);
 
 		if (!data) {
@@ -78,7 +78,6 @@ export default function sendDataE($modal: HTMLDivElement): void {
 				message: "Bereitschaft<br/>Zeitraum bereits vorhanden!",
 				status: "warning",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
@@ -91,7 +90,6 @@ export default function sendDataE($modal: HTMLDivElement): void {
 				"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
 			status: "success",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 	}

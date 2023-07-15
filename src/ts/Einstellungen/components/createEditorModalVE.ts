@@ -7,7 +7,7 @@ import {
 	createModalBodyInputElement,
 	createModalBodySelectElement,
 } from "../../components";
-import type { CustomHTMLDivElement, IVorgabenU } from "../../interfaces";
+import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from "../../interfaces";
 import { saveTableData } from "../../utilities";
 
 export default function createEditorModalVE(row: Row | CustomTable, titel: string): CustomHTMLDivElement {
@@ -17,7 +17,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 		null,
 		createBodyElement,
 		createEditorModalFooter(null, row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 	return modal;
 
@@ -34,7 +34,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 				value: row instanceof Row ? row.cells?.[column.name] : "",
 				type: "text",
 				required: true,
-			})
+			}),
 		);
 
 		column = row.columns.array.find((column: Column) => column.name === "standard") as Column;
@@ -44,7 +44,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 				id: column.name,
 				text: column.title,
 				status: row instanceof Row ? row.cells?.[column.name] : false,
-			})
+			}),
 		);
 
 		modalBody.appendChild(document.createElement("hr"));
@@ -67,7 +67,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 						{ value: 6, text: "Samstag" },
 						{ value: 0, text: "Sonntag" },
 					],
-				})
+				}),
 			);
 			modalBody.appendChild(
 				createModalBodyInputElement({
@@ -77,7 +77,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 					name: `${column.name}Zeit`,
 					value: row instanceof Row ? row.cells?.[column.name].zeit : "",
 					required: true,
-				})
+				}),
 			);
 			if (value === "endeB") {
 				modalBody.appendChild(
@@ -86,7 +86,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 						id: `${column.name}Nwoche`,
 						text: '+1 Woche? <span class="text-secondary text-opacity-75">(Sonntag - Samstag)</span>',
 						status: row instanceof Row ? row.cells?.[column.name].Nwoche : false,
-					})
+					}),
 				);
 			}
 		});
@@ -100,7 +100,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 				id: column.name,
 				text: column.title,
 				status: row instanceof Row ? row.cells?.[column.name] : false,
-			})
+			}),
 		);
 
 		["beginnN", "endeN"].forEach(value => {
@@ -121,7 +121,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 						{ value: 6, text: "Samstag" },
 						{ value: 0, text: "Sonntag" },
 					],
-				})
+				}),
 			);
 			modalBody.appendChild(
 				createModalBodyInputElement({
@@ -131,7 +131,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 					name: `${column.name}Zeit`,
 					value: row instanceof Row ? row.cells?.[column.name].zeit : "",
 					required: true,
-				})
+				}),
 			);
 			modalBody.appendChild(
 				createModalBodyCheckbox({
@@ -139,7 +139,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 					id: `${column.name}Nwoche`,
 					text: '+1 Woche? <span class="text-secondary text-opacity-75">(Sonntag - Samstag)</span>',
 					status: row instanceof Row ? row.cells?.[column.name].Nwoche : false,
-				})
+				}),
 			);
 		});
 
@@ -171,7 +171,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 			const nacht = form.querySelector<HTMLInputElement>("#nacht")?.checked ?? false;
 			const standard = form.querySelector<HTMLInputElement>("#standard")?.checked ?? false;
 
-			const values: IVorgabenU["vorgabenB"][0] = {
+			const values: IVorgabenUvorgabenB = {
 				Name: nameN,
 				beginnB: { tag: beginnBTag, zeit: beginnBZeit },
 				endeB: { tag: endeBTag, zeit: endeBZeit, Nwoche: endeBNwoche },
@@ -194,7 +194,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 			}
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 

@@ -72,7 +72,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 			status: "error",
 			dismissible: false,
 			timeout: false,
-			position: "br",
 			actions: [
 				{
 					text: "ohne wechsel fortsetzten?",
@@ -84,7 +83,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 							nachtAnfang,
 							nachtEnde,
 							nacht,
-							data1
+							data1,
 						);
 						if (!data) {
 							clearLoading("btnESZ");
@@ -93,7 +92,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 								icon: "!",
 								status: "warning",
 								timeout: 3000,
-								position: "br",
 								fixed: true,
 							});
 							return;
@@ -108,7 +106,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 								"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
 							status: "success",
 							timeout: 3000,
-							position: "br",
 							fixed: true,
 						});
 					},
@@ -169,7 +166,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 				nachtAnfang2,
 				nachtEnde,
 				nacht,
-				dataResponded2
+				dataResponded2,
 			);
 
 			const dataSave = {
@@ -186,7 +183,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 					message: "Bereitschaft<br/>Es ist ein Fehler beim Monatswechsel aufgetreten",
 					status: "error",
 					timeout: 3000,
-					position: "br",
 					fixed: true,
 				});
 				return;
@@ -196,7 +192,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 				message: `Bereitschaft<br/>Daten für Monat ${monat2 + 1} gespeichert`,
 				status: "success",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 		} catch (err) {
@@ -215,7 +210,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 			message: "Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!",
 			status: "warning",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 		return;
@@ -230,7 +224,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 			"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
 		status: "success",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

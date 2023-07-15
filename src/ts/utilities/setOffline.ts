@@ -21,7 +21,6 @@ export default function setOffline(): void {
 		createSnackBar({
 			message: "Du bist wieder online",
 			dismissible: false,
-			status: "info",
 			timeout: 2000,
 			position: "tc",
 			fixed: true,

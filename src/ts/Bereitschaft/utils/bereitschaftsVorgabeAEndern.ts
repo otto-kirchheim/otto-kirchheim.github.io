@@ -1,11 +1,11 @@
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 import nachtAusblenden from "./nachtAusblenden";
 
 export default function bereitschaftsVorgabeAEndern(
 	parentElement: HTMLDivElement,
-	vorgabenB: IVorgabenU["vorgabenB"][0],
-	datum = dayjs(parentElement.querySelector<HTMLInputElement>("#bA")?.value) ?? null
+	vorgabenB: IVorgabenUvorgabenB,
+	datum = dayjs(parentElement.querySelector<HTMLInputElement>("#bA")?.value) ?? null,
 ): void {
 	if (!datum) throw new Error("Datum nicht gefunden");
 

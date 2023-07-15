@@ -452,7 +452,7 @@ export const mockNeben = (): void => {
 		"beforeend",
 		'<div class="table-responsive">' +
 			'<table id="tableN" class="table table-bordered table-striped table-hover align-middle" aria-label="Nebengeld"></table>' +
-			"</div>"
+			"</div>",
 	);
 
 	createCustomTable("tableN", {
@@ -474,7 +474,7 @@ export const mockEWT = (): void => {
 		"beforeend",
 		'<div class="table-responsive">' +
 			'<table id="tableE" class="table table-bordered table-striped table-hover align-middle" aria-label="EWT"></table>' +
-			"</div>"
+			"</div>",
 	);
 
 	const berechnenParser = (value: boolean) => {
@@ -525,7 +525,7 @@ export const mockBereitschaft = (): void => {
 			'<div class="table-responsive">' +
 			'<h4 id="titelBE">Bereitschaftseinsätze</h4>' +
 			'<table id="tableBE" class="table table-bordered table-striped table-hover align-middle" aria-describedby="titelBE"></table>' +
-			"</div>"
+			"</div>",
 	);
 
 	const datetimeParser = (value: string): string => dayjs(value).format("DD.MM.YYYY, LT");
@@ -839,6 +839,6 @@ export const mockEinstellungen = (): void => {
 			'<table class="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">' +
 			'<thead><tr class="table-primary align-middle text-center"><th id="titelTkgSt">Tätigkeitsstätte</th><th class="w40">Beschreibung</th><th class="w20">Fahrzeit</th></tr></thead>' +
 			'<tbody id="TbodyTätigkeitsstätten"></tbody>' +
-			"</table></form>"
+			"</table></form>",
 	);
 };

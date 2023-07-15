@@ -1,7 +1,7 @@
 import { Modal } from "bootstrap";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { IVorgabenU } from "../interfaces";
+import { IVorgabenUvorgabenB } from "../interfaces";
 import { Storage, buttonDisable, download, saveDaten, saveTableData } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 import {
@@ -13,7 +13,7 @@ import {
 } from "./components";
 import { DataBE, DataBZ } from "./utils";
 
-export const BereitschaftsEinsatzZeiträume: IVorgabenU["vorgabenB"] = {
+export const BereitschaftsEinsatzZeiträume: { [key: string]: IVorgabenUvorgabenB } = {
 	0: {
 		Name: "B1",
 		beginnB: { tag: 3, zeit: "15:45" },
@@ -88,7 +88,6 @@ window.addEventListener("load", () => {
 						status: "error",
 						dismissible: false,
 						timeout: false,
-						position: "br",
 						fixed: true,
 						actions: [
 							{
@@ -149,7 +148,6 @@ window.addEventListener("load", () => {
 					status: "error",
 					dismissible: false,
 					timeout: false,
-					position: "br",
 					fixed: true,
 					actions: [
 						{

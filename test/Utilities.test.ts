@@ -28,14 +28,14 @@ describe("#Storage", () => {
 		expect(Storage.get("key")).toBe("value");
 	});
 
-	it("should return default value when key does not exist", () => {
-		expect(Storage.get("non-existing-key", "default")).toBe("default");
+	it("should throw Error when key does not exist", () => {
+		expect(() => Storage.get("non-existing-key")).toThrowError('Wert "non-existing-key" nicht gefunden');
 	});
 
 	it("should remove a value", () => {
 		Storage.set("key", "value");
 		Storage.remove("key");
-		expect(Storage.get("key")).toBeNull();
+		expect(Storage.check("key")).toBeFalsy();
 	});
 
 	it("should clear all values", () => {
@@ -47,8 +47,8 @@ describe("#Storage", () => {
 
 	it("should check if key exists", () => {
 		Storage.set("key", "value");
-		expect(Storage.check("key")).toBe(true);
-		expect(Storage.check("non-existing-key")).toBe(false);
+		expect(Storage.check("key")).toBeTruthy();
+		expect(Storage.check("non-existing-key")).toBeFalsy();
 	});
 
 	it("should compare a value with the stored value", () => {
@@ -66,8 +66,8 @@ describe("#decodeAccessToken", () => {
 	it("should throw an error if no accessToken is provided", () => {
 		Storage.remove("accessToken");
 		expect(() => {
-			decodeAccessToken(undefined);
-		}).toThrow("accessToken fehlt");
+			decodeAccessToken();
+		}).toThrowError('Wert "accessToken" nicht gefunden');
 	});
 
 	it("should return a JSON object if a valid accessToken is provided", () => {
@@ -114,7 +114,7 @@ describe("#getValidAccesstoken", async () => {
 
 	it("should throw an error if no accessToken is provided", async () => {
 		Storage.remove("accessToken");
-		await expect(getValidAccesstoken(undefined)).rejects.toThrow("accessToken fehlt");
+		await expect(getValidAccesstoken()).rejects.toThrowError('Wert "accessToken" nicht gefunden');
 	});
 
 	it("should return the accessToken if it is valid", async () => {
@@ -339,7 +339,7 @@ describe("#DatenSortieren", () => {
 // 			message: "Speichern<br/>Daten gespeichert",
 // 			status: "success",
 // 			timeout: 3000,
-// 			position: "br",
+//
 // 			fixed: true,
 // 		});
 // 		expect(generateEingabeMaskeEinstellungenSpy).toHaveBeenCalledWith({});

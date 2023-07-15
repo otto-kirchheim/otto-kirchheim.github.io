@@ -69,7 +69,6 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort konnte nicht geändert werden.`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
@@ -79,7 +78,6 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort wurde geändert.`,
 				status: "success",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			errorMessage.innerHTML = "";
@@ -89,7 +87,6 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort konnte nicht geändert werden.`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;

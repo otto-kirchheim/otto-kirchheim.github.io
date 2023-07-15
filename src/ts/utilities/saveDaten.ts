@@ -8,6 +8,15 @@ import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenU } from "../interfaces";
 import { FetchRetry } from "./FetchRetry";
 
+// type SaveData = {
+// 	BZ: IDaten["BZ"];
+// 	BE: IDaten["BE"];
+// 	E: IDaten["EWT"];
+// 	N: IDaten["N"];
+// 	User: IVorgabenU;
+// 	Jahr: number;
+// };
+
 type SaveData = {
 	BZ: IDaten["BZ"];
 	BE: IDaten["BE"];
@@ -63,7 +72,6 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
 				message: "Speichern<br/>Es ist ein Fehler aufgetreten:" + messages.map((message: string) => `<br/>- ${message}`),
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
@@ -96,7 +104,6 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
 			message: `Speichern<br/>Daten gespeichert`,
 			status: "success",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 	} catch (err) {

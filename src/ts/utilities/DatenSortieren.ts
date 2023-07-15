@@ -1,6 +1,6 @@
-import dayjs from "./configDayjs";
+import { Dayjs } from "dayjs";
 
-export default function DatenSortieren<T extends Record<string, string | number | boolean | dayjs.Dayjs>>(
+export default function DatenSortieren<T extends Record<string, string | number | boolean | Dayjs>>(
 	daten: T[],
 	sortBy: string | number = 0,
 	type = "number"

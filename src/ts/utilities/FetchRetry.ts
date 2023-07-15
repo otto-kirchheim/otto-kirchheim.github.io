@@ -28,7 +28,7 @@ export async function FetchRetry<I, T>(
 			dismissible: false,
 			status: "info",
 			timeout: false,
-			position: "br",
+
 			fixed: true,
 		});
 
@@ -41,7 +41,6 @@ export async function FetchRetry<I, T>(
 			createSnackBar({
 				message: "Server nicht Erreichbar",
 				status: "error",
-				position: "br",
 				fixed: true,
 			});
 			throw new Error("Server nicht Erreichbar");

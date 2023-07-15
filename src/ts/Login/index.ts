@@ -9,13 +9,11 @@ window.addEventListener("load", () => {
 		Logout();
 		createSnackBar({
 			message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
-			status: "info",
 			timeout: 10000,
-			position: "br",
 			fixed: true,
 		});
 	}
-	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU").vorgabenB[0].endeB.Nwoche === undefined)
+	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU")?.vorgabenB[0].endeB.Nwoche === undefined)
 		Storage.remove("VorgabenU");
 
 	const formLogin = document.querySelector<HTMLFormElement>("#formLogin");
@@ -107,15 +105,18 @@ window.addEventListener("load", () => {
 
 	if (Storage.check("Benutzer") && Storage.check("accessToken")) {
 		const benutzer = Storage.check("VorgabenU")
-			? Storage.get<IVorgabenU>("VorgabenU").pers.Vorname
+			? Storage.get<IVorgabenU>("VorgabenU")?.pers.Vorname
 			: Storage.get<string>("Benutzer");
+		if (!benutzer) throw new Error("Benutzer nicht gefunden");
+
 		if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
 		if (loginDisplayEl) loginDisplayEl.classList.add("d-none");
 
 		const jahr = Storage.get<number>("Jahr");
-		if (jahrEl) jahrEl.value = jahr.toString();
-
 		const monat = Storage.get<number>("Monat");
+		if (!jahr || !monat) throw new Error("Jahr oder Monat nicht erkannt");
+
+		if (jahrEl) jahrEl.value = jahr.toString();
 		if (monatEl) monatEl.value = monat.toString();
 
 		selectDisplayEl?.classList.remove("d-none");

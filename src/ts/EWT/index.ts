@@ -71,7 +71,6 @@ window.addEventListener("load", () => {
 						status: "error",
 						dismissible: false,
 						timeout: false,
-						position: "br",
 						fixed: true,
 						actions: [
 							{
@@ -100,7 +99,6 @@ window.addEventListener("load", () => {
 								status: "error",
 								dismissible: false,
 								timeout: false,
-								position: "br",
 								fixed: true,
 								actions: [
 									{

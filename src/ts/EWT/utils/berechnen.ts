@@ -1,12 +1,13 @@
 import { Duration } from "dayjs/plugin/duration";
-import type { IDaten, IVorgabenE, IVorgabenU } from "../../interfaces";
+import type { IDaten, IDatenEWT, IVorgabenE, IVorgabenU } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
+import { getDurationFromTime } from "../../utilities";
 
 export default function berechnen(
 	vorgabenU: IVorgabenU,
 	daten: IDaten["EWT"],
 	jahr: number,
-	monat: number
+	monat: number,
 ): IDaten["EWT"] {
 	const { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten } = createHelpers(vorgabenU);
 
@@ -16,7 +17,7 @@ export default function berechnen(
 
 	for (const Tag of daten) {
 		if (!Tag.berechnen) continue;
-		const datum = dayjs([jahr, monat - 1, +Tag.tagE]);
+		const datum = dayjs([jahr, monat - 1, Number(Tag.tagE)]);
 		const schichtDaten = getSchichtDaten(Tag.schichtE as "T" | "N" | "BN" | "S", datum, vorgabenE);
 
 		Object.assign(Tag, calculateTimes(Tag, datum, schichtDaten, eOrte, vorgabenE, getPascalEnde()));
@@ -26,7 +27,7 @@ export default function berechnen(
 }
 
 function createHelpers(userSettings: IVorgabenU) {
-	const getPascalEnde = () =>
+	const getPascalEnde = (): Duration =>
 		userSettings.pers.Vorname === "Ackermann" && userSettings.pers.Nachname === "Pascal"
 			? dayjs.duration(5, "m")
 			: dayjs.duration(0, "m");
@@ -64,38 +65,33 @@ function createHelpers(userSettings: IVorgabenU) {
 		return schichten[schicht as SchichtKeys];
 	};
 
-	const getDurationFromTime = (value: dayjs.ConfigType) => {
-		const time = dayjs(value, "HH:mm");
-		return { hours: time.hour(), minutes: time.minute() };
-	};
-
 	const initializeVorgabenE = () => {
 		const vorgabenE = { fZ: {} } as IVorgabenE;
 
 		Object.entries(userSettings.aZ).forEach(([key, value]) => {
-			vorgabenE[key] = dayjs.duration(getDurationFromTime(value));
+			vorgabenE[key] = getDurationFromTime(value);
 		});
 
 		userSettings.fZ.forEach(place => {
-			vorgabenE.fZ[place.key] = dayjs.duration(getDurationFromTime(place.value));
+			vorgabenE.fZ[place.key] = getDurationFromTime(place.value);
 		});
 
 		return vorgabenE;
 	};
 
 	const calculateTimes = (
-		Tag: IDaten["EWT"][0],
+		Tag: IDatenEWT,
 		datum: dayjs.Dayjs,
 		schichtDaten: ReturnType<typeof getSchichtDaten>,
 		eOrte: string[],
 		vorgabenE: IVorgabenE,
-		endePascal: Duration
+		endePascal: Duration,
 	) => {
 		const jahr = datum.year(),
 			monat = datum.month(),
 			eOrt = eOrte.includes(Tag.eOrtE);
 
-		const convertToDayjs = (value: string, addTag: boolean, Tag: IDaten["EWT"][0]): dayjs.Dayjs => {
+		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
 			const zeit = value.split(":");
 			let tag = Number(Tag.tagE);
 			if (addTag && ["BN", "N"].includes(Tag.schichtE)) {

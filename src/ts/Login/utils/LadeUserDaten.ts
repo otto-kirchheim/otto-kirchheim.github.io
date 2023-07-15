@@ -5,7 +5,14 @@ import { DataE } from "../../EWT/utils/DataE";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from "../../interfaces";
+import type {
+	CustomHTMLTableElement,
+	IDaten,
+	IVorgabenBerechnung,
+	IVorgabenGeld,
+	IVorgabenU,
+	IVorgabenUvorgabenB,
+} from "../../interfaces";
 import { Storage, buttonDisable, clearLoading } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
 
@@ -43,7 +50,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 			message: `Server <br/>Keine Verbindung zum Server oder Serverfehler.`,
 			status: "error",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 		return;
@@ -72,17 +78,17 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 
 	let dataServer: { [key: string]: unknown } = {};
 	if (Storage.check("dataServer")) {
-		dataServer = Storage.get("dataServer");
+		dataServer = Storage.get("dataServer") ?? {};
 		console.log("Unterschiede Server - Client | Bereits vorhanden", dataServer);
 	}
 
-	const saveDaten = <T>(
+	const saveDaten = <T, K extends object[]>(
 		nameStorage: string,
 		name: string,
 		data: T,
 		dataName: string,
 		beschreibung: string,
-		loadTable: false | { name: string; data: { [key: string]: unknown }[] } = false
+		loadTable: false | { name: string; data: K } = false,
 	): T => {
 		if (!Storage.check(nameStorage)) {
 			console.log(`${name} speichern, nicht vorhanden`);
@@ -102,7 +108,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 	};
 	vorgabenU = saveDaten("VorgabenU", "VorgabenU", vorgabenU, "vorgabenU", "Persönliche Daten", {
 		name: "tableVE",
-		data: [...Object.values(vorgabenU.vorgabenB)],
+		data: [...Object.values(vorgabenU.vorgabenB)] as IVorgabenUvorgabenB[],
 	});
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	if (willkommen) {
@@ -137,7 +143,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 			status: "info",
 			dismissible: false,
 			timeout: false,
-			position: "br",
 			fixed: true,
 			actions: [
 				{
@@ -191,7 +196,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 		message: `Neue Daten geladen.`,
 		status: "success",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

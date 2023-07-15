@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de" data-bs-theme="auto">
 	<head>
 		<meta charset="utf-8" />
@@ -19,6 +19,19 @@
 	</head>
 
 	<body class="flex-column mb-5">
+		<noscript>
+			<div class="container mx-auto" id="alertPlaceholder">
+				<div class="alert alert-danger show fade text-center mt-4" role="alert">
+					Bitte Cookies zulassen! <br />Für die volle Funktionalität dieser Website ist es notwendig, Cookies zu
+					aktivieren.<br />
+					Hier ist die
+					<a href="https://enablecookies.info" target="_blank">
+						Anleitung, wie Sie Cookies in Ihrem Webbrowser aktivieren können</a
+					>.
+				</div>
+			</div>
+		</noscript>
+
 		<header class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top" data-bs-theme="dark">
 			<nav class="container-fluid" id="tabs" role="tablist" id="tab">
 				<button
@@ -227,11 +240,6 @@
 				</div>
 			</nav>
 		</header>
-		<noscript>
-			<div class="container mx-auto" id="alertPlaceholder">
-				<div class="alert alert-danger show fade text-center mt-4" role="alert">Bitte Cookies zulassen!</div>
-			</div>
-		</noscript>
 
 		<div class="modal" id="modal" tabindex="-1"></div>
 
@@ -363,19 +371,29 @@
 							</button>
 							<form id="formSelectMonatJahr" class="d-grid gap-2">
 								<div class="form-floating">
-									<input
+									<select
 										id="Monat"
-										type="number"
-										class="form-control validate"
-										min="1"
-										max="12"
+										class="form-select validate"
 										required
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
-										data-bs-placement="right"
+										data-bs-placement="top"
 										data-bs-original-titel="Monatswechsel"
 										data-bs-content="Achtung: Vor Monatswechsel Speichern!!"
-									/>
+									>
+										<option value="1">1</option>
+										<option value="2">2</option>
+										<option value="3">3</option>
+										<option value="4">4</option>
+										<option value="5">5</option>
+										<option value="6">6</option>
+										<option value="7">7</option>
+										<option value="8">8</option>
+										<option value="9">9</option>
+										<option value="10">10</option>
+										<option value="11">11</option>
+										<option value="12">12</option>
+									</select>
 									<label for="Monat">Monat</label>
 								</div>
 								<div class="form-floating">
@@ -388,7 +406,7 @@
 										required
 										data-bs-toggle="popover"
 										data-bs-trigger="focus"
-										data-bs-placement="right"
+										data-bs-placement="top"
 										data-bs-original-titel="Monatswechsel"
 										data-bs-content="Achtung: Vor Jahreswechsel Speichern!!"
 									/>
