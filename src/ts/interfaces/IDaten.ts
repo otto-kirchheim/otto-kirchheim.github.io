@@ -1,32 +1,32 @@
-export interface IDaten {
-	[key: number]: IMonatsdaten;
-	1: IMonatsdaten;
-	2: IMonatsdaten;
-	3: IMonatsdaten;
-	4: IMonatsdaten;
-	5: IMonatsdaten;
-	6: IMonatsdaten;
-	7: IMonatsdaten;
-	8: IMonatsdaten;
-	9: IMonatsdaten;
-	10: IMonatsdaten;
-	11: IMonatsdaten;
-	12: IMonatsdaten;
-}
+// export interface IDaten {
+// 	[key: number]: IMonatsdaten;
+// 	1: IMonatsdaten;
+// 	2: IMonatsdaten;
+// 	3: IMonatsdaten;
+// 	4: IMonatsdaten;
+// 	5: IMonatsdaten;
+// 	6: IMonatsdaten;
+// 	7: IMonatsdaten;
+// 	8: IMonatsdaten;
+// 	9: IMonatsdaten;
+// 	10: IMonatsdaten;
+// 	11: IMonatsdaten;
+// 	12: IMonatsdaten;
+// }
 
-export interface IMonatsdaten<EWTType = string> {
-	BZ: IDatenBZ[];
-	BE: IDatenBE[];
-	EWT: IDatenEWT<EWTType>[];
-	N: IDatenN[];
-}
-
-// export interface IDaten<EWTType = string> {
+// export interface IMonatsdaten<EWTType = string> {
 // 	BZ: IDatenBZ[];
 // 	BE: IDatenBE[];
 // 	EWT: IDatenEWT<EWTType>[];
 // 	N: IDatenN[];
 // }
+
+export interface IDaten<EWTType = string> {
+	BZ: IDatenBZ[];
+	BE: IDatenBE[];
+	EWT: IDatenEWT<EWTType>[];
+	N: IDatenN[];
+}
 export interface IDatenBZ {
 	[key: string]: string | number;
 	beginB: string;
