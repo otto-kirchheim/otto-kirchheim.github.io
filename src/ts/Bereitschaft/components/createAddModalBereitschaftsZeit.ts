@@ -43,12 +43,11 @@ export default function createAddModalBereitschaftsZeit(): void {
 			: BereitschaftsEinsatzZeiträume;
 
 		let vorgabenBStandardIndex = "2";
-		for (const key in vorgabenB) {
+		for (const key in vorgabenB)
 			if (vorgabenB[key].standard) {
 				vorgabenBStandardIndex = key;
 				break;
 			}
-		}
 
 		const vorgabeB_Div = createModalBodySelectElement({
 			divClass: "form-floating col-12 pb-3",
@@ -256,9 +255,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
 			Modal.getInstance(modal)?.hide();
 
-			if (table) {
-				saveTableData(table.instance);
-			}
+			if (table) saveTableData(table.instance);
 		};
 	}
 }

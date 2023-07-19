@@ -18,7 +18,7 @@ export default function createAddModalEWT(): void {
 		"sm",
 		createBodyElement,
 		createEditorModalFooter(),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 	naechsterTag("");
 	new Modal(modal).show();
@@ -58,7 +58,7 @@ export default function createAddModalEWT(): void {
 				required: true,
 				min: datum.format("YYYY-MM-DD"),
 				max: maxDate,
-			})
+			}),
 		);
 
 		modalBody.appendChild(
@@ -77,7 +77,7 @@ export default function createAddModalEWT(): void {
 						};
 					}),
 				],
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodySelectElement({
@@ -92,7 +92,7 @@ export default function createAddModalEWT(): void {
 					{ value: "S", text: "Sonder" },
 				],
 				required: true,
-			})
+			}),
 		);
 
 		modalBody.appendChild(
@@ -101,7 +101,7 @@ export default function createAddModalEWT(): void {
 				id: "berechnen1",
 				text: "Berechnen",
 				status: true,
-			})
+			}),
 		);
 
 		return modalBody;
@@ -116,9 +116,7 @@ export default function createAddModalEWT(): void {
 			addEWTtag();
 
 			const table = document.querySelector<CustomHTMLTableElement>("#tableE");
-			if (table) {
-				saveTableData(table.instance);
-			}
+			if (table) saveTableData(table.instance);
 		};
 	}
 }

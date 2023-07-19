@@ -26,11 +26,9 @@ export default function createModalBodySelectElement(options: TModalBodySelectEl
 	options.options.forEach(optionObject => {
 		const option = document.createElement("option");
 		option.value = String(optionObject.value);
-		if (optionObject.html) {
-			option.innerHTML = optionObject.text;
-		} else {
-			option.textContent = optionObject.text;
-		}
+		if (optionObject.html) option.innerHTML = optionObject.text;
+		else option.textContent = optionObject.text;
+
 		if (optionObject.disabled) option.disabled = true;
 		if (optionObject.selected && !options.value) option.selected = true;
 		if (+option.value === options.value) option.selected = true;

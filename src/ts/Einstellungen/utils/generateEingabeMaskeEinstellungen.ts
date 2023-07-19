@@ -20,9 +20,7 @@ export default function generateEingabeMaskeEinstellungen(VorgabenU: IVorgabenU 
 		ftVE.rows.load([...Object.values(VorgabenB)]);
 		saveTableData(ftVE);
 		console.log("saved", ftVE);
-	} else {
-		generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
-	}
+	} else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
 }
 
 function populateTable(VorgabenU: IVorgabenU): void {
@@ -59,11 +57,8 @@ function setElementValues<T>(values: T): void {
 		const element = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
 		const value = values[key as keyof T];
 		if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement) {
-			if (isNumberOrString(value)) {
-				element.value = value.toString();
-			} else {
-				throw new Error("unbekannter Wert");
-			}
+			if (isNumberOrString(value)) element.value = value.toString();
+			else throw new Error("unbekannter Wert");
 		}
 	}
 }

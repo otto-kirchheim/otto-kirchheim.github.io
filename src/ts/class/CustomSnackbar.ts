@@ -131,9 +131,8 @@ export class SnackBar implements ISnackbar {
 		this._MessageWrapper = _MessageWrapper;
 		this._Container.appendChild(this._Element);
 
-		if (this._Options.timeout && this._Options.timeout > 0) {
+		if (this._Options.timeout && this._Options.timeout > 0)
 			this._Interval = setTimeout(() => this.Close.call(this), Number(this._Options.timeout));
-		}
 
 		function _setUserOptions(options: SnackBarOptions): SnackBarOptionsAll {
 			return {
@@ -171,9 +170,8 @@ export class SnackBar implements ISnackbar {
 							node.classList.length > 0 &&
 							node.classList.contains("CustomSnackbar-container") &&
 							node.classList.contains(positionClass)
-						) {
+						)
 							return node as HTMLElement;
-						}
 					}
 
 				return createNewContainer(target);
@@ -183,9 +181,7 @@ export class SnackBar implements ISnackbar {
 				const container = document.createElement("div");
 				container.classList.add("CustomSnackbar-container");
 
-				if (_This._Options.fixed) {
-					container.classList.add("CustomSnackbar-container--fixed");
-				}
+				if (_This._Options.fixed) container.classList.add("CustomSnackbar-container--fixed");
 
 				target.appendChild(container);
 				return container;
@@ -319,13 +315,9 @@ export class SnackBar implements ISnackbar {
 			}
 
 			function addActionsTo(element: HTMLDivElement): void {
-				if (typeof _This._Options.actions !== "object") {
-					return;
-				}
+				if (typeof _This._Options.actions !== "object") return;
 
-				_This._Options.actions.forEach((action): void => {
-					addAction(element, action);
-				});
+				_This._Options.actions.forEach((action): void => addAction(element, action));
 
 				function addAction(element: HTMLDivElement, action: SnackBarOptionsAll["actions"][0]): void {
 					const button = document.createElement("span");
@@ -338,21 +330,15 @@ export class SnackBar implements ISnackbar {
 								if (action.function) action.function();
 								_This.Close.call(_This);
 							};
-						} else {
-							button.onclick = action.function;
-						}
-					} else {
-						button.onclick = _This.Close.bind(_This);
-					}
+						} else button.onclick = action.function;
+					} else button.onclick = _This.Close.bind(_This);
 
 					element.appendChild(button);
 				}
 			}
 
 			function addDismissButtonTo(element: HTMLDivElement) {
-				if (!_This._Options.dismissible) {
-					return;
-				}
+				if (!_This._Options.dismissible) return;
 
 				const closeButton = document.createElement("span");
 				closeButton.classList.add("CustomSnackbar__close");

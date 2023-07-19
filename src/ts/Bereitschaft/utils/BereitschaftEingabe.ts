@@ -1,6 +1,6 @@
 import duration from "dayjs/plugin/duration.js";
 import { isHoliday } from "../../class/feiertagets/feiertage";
-import type { IDaten, IDatenBZ, IVorgabenU } from "../../interfaces";
+import type { IMonatsDaten, IDatenBZ, IVorgabenU } from "../../interfaces";
 import { DatenSortieren, Storage, getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
@@ -10,8 +10,8 @@ export default function BereitschaftEingabe(
 	nachtAnfang: dayjs.Dayjs,
 	nachtEnde: dayjs.Dayjs,
 	nacht: boolean,
-	daten: IDaten["BZ"],
-): IDaten["BZ"] | false {
+	daten: IMonatsDaten["BZ"],
+): IMonatsDaten["BZ"] | false {
 	console.groupCollapsed("Vorgaben");
 	console.log("nacht: " + nacht);
 	console.log("Bereitschafts Anfang: " + bereitschaftsAnfang.toDate());
@@ -33,21 +33,21 @@ export default function BereitschaftEingabe(
 	let pauseMerkerTag;
 	let pauseMerkerNacht;
 
-	const // Voreinstellungen Übernehmen
-		datenU = Storage.get<IVorgabenU>("VorgabenU");
+	// Voreinstellungen Übernehmen
+	const datenU = Storage.get<IVorgabenU>("VorgabenU");
 	if (!datenU) throw new Error("VorgabenU nicht gefunden");
 
-	const // Tagschicht Anfangszeit Mo-Do
-		tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);
+	// Tagschicht Anfangszeit Mo-Do
+	const tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);
 
-	const // Tagschicht Anfangszeit Fr
-		tagAnfangsZeitFr = getDurationFromTime(datenU.aZ.eTF);
+	// Tagschicht Anfangszeit Fr
+	const tagAnfangsZeitFr = getDurationFromTime(datenU.aZ.eTF);
 
-	const // Tagschicht Endezeit Mo-Fr
-		tagEndeZeitMoFr = getDurationFromTime(datenU.aZ.bT);
+	// Tagschicht Endezeit Mo-Fr
+	const tagEndeZeitMoFr = getDurationFromTime(datenU.aZ.bT);
 
-	const // Feste Variablen
-		ruheZeit = 10;
+	// Feste Variablen
+	const ruheZeit = 10;
 
 	const tagPausenVorgabe = 30;
 	const nachtPausenVorgabe = 45;
@@ -197,9 +197,9 @@ export default function BereitschaftEingabe(
 		// Pause Nachtschicht, normal und bei Ruhe nach Nacht
 		pauseMerkerNacht = bereitschaftsAnfang.hour(nachtEnde.hour()).minute(nachtEnde.minute());
 		pauseMerkerTag = pauseMerker.hour(nachtEnde.hour()).add(ruheZeit, "h").minute(nachtEnde.minute());
-		if (bereitschaftsAnfang.isSame(pauseMerkerNacht) || bereitschaftsAnfang.isSame(pauseMerkerTag)) {
+		if (bereitschaftsAnfang.isSame(pauseMerkerNacht) || bereitschaftsAnfang.isSame(pauseMerkerTag))
 			pause = nachtPausenVorgabe;
-		}
+
 		console.groupEnd();
 		console.log(`Pausen Zeit: ${pause}`);
 
@@ -229,9 +229,7 @@ export default function BereitschaftEingabe(
 		console.log("Bereitschafts Anfang: " + bereitschaftsAnfang.toDate());
 
 		// neuen Nachtschichtanfang setzten, Wenn kleiner als Bereitschaftsanfang
-		if (bereitschaftsAnfang.isAfter(nachtAnfang)) {
-			nachtAnfang = nachtAnfang.add(1, "d");
-		}
+		if (bereitschaftsAnfang.isAfter(nachtAnfang)) nachtAnfang = nachtAnfang.add(1, "d");
 		console.log(`Nacht Anfang: ${nachtAnfang.toDate()}`);
 		if (nachtAnfang.isAfter(nachtEnde) && !nachtAnfang.isSame(bereitschaftsEnde)) {
 			nachtAnfang = bereitschaftsEnde.clone();

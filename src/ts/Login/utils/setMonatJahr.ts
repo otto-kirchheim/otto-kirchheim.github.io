@@ -7,9 +7,8 @@ export default function setMonatJahr(jahr: number, monat: number): void {
 	const headingMonatN = document.querySelector<HTMLHeadingElement>("#MonatN");
 	const headingMonatBerechnung = document.querySelector<HTMLHeadingElement>("#MonatBerechnung");
 
-	if (!inputMonat || !headingMonatB || !headingMonatE || !headingMonatN || !headingMonatBerechnung) {
+	if (!inputMonat || !headingMonatB || !headingMonatE || !headingMonatN || !headingMonatBerechnung)
 		throw new Error("One or more elements not found.");
-	}
 
 	inputMonat.value = monat.toString();
 	const datum = dayjs([+jahr, monat - 1]);

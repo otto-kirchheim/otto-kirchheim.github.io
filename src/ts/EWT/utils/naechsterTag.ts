@@ -1,11 +1,11 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { IDaten } from "../../interfaces";
+import type { IMonatsDaten } from "../../interfaces";
 import { Storage, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
 export default function naechsterTag(
 	tag?: string | number | null,
-	dataE: IDaten["EWT"] = tableToArray("tableE"),
+	dataE: IMonatsDaten["EWT"] = tableToArray("tableE"),
 ): void {
 	const eingabefeldTagE = document.querySelector<HTMLInputElement>("#tagE");
 	if (!eingabefeldTagE) throw new Error("Eingabefeld für Tag nicht gefunden");

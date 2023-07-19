@@ -124,13 +124,10 @@ export default function createAddModalNeben(): void {
 					disabled: boolean | undefined;
 					selected: boolean | undefined;
 				};
-				if (schicht == "N") {
-					option.text = `${tag} | Nacht`;
-				} else if (schicht == "BN") {
-					option.text = `${tag} | Nacht / Bereitschaft`;
-				} else {
-					option.text = tag;
-				}
+				if (schicht == "N") option.text = `${tag} | Nacht`;
+				else if (schicht == "BN") option.text = `${tag} | Nacht / Bereitschaft`;
+				else option.text = tag;
+
 				option.value = JSON.stringify({
 					tagN,
 					beginN: day.beginE,
@@ -140,13 +137,11 @@ export default function createAddModalNeben(): void {
 					nrN: "",
 					dauerN: 0,
 				});
-				if (dataN) {
+				if (dataN)
 					dataN.forEach(value => {
-						if (Number(value.tagN) == Number(tagN)) {
-							option.disabled = true;
-						}
+						if (Number(value.tagN) == Number(tagN)) option.disabled = true;
 					});
-				}
+
 				options.push(option);
 			}
 			return options;

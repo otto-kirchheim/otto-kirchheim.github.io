@@ -36,11 +36,9 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 		const Jahr: number = Storage.get<number>("Jahr");
 
 		let Tag: number;
-		if (row instanceof Row) {
-			Tag = Number(row.cells.tagE);
-		} else if (row instanceof CustomTable) {
-			Tag = checkMaxTag(Jahr, Monat);
-		} else throw new Error("unbekannter Fehler");
+		if (row instanceof Row) Tag = Number(row.cells.tagE);
+		else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
+		else throw new Error("unbekannter Fehler");
 
 		const datum = dayjs([Jahr, Monat, Tag]);
 

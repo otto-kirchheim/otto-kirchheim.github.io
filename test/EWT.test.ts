@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { berechnen } from "../src/ts/EWT/utils";
-import { IDaten } from "../src/ts/interfaces/IDaten";
 import { IVorgabenU } from "../src/ts/interfaces/IVorgabenU";
 import { VorgabenUMock } from "./mockData";
+import { IMonatsDaten } from "../src/ts/interfaces";
 
 describe("berechnen", () => {
 	it("sollte die richtigen Daten für einen gegebenen Monat berechnen", () => {
 		const vorgabenU: IVorgabenU = VorgabenUMock;
 
-		const daten: IDaten["EWT"] = [
+		const daten: IMonatsDaten["EWT"] = [
 			{
 				tagE: "03",
 				eOrtE: "Kirchheim",
@@ -211,7 +211,7 @@ describe("berechnen", () => {
 		const monat = 4;
 
 		// Erwartete Ergebnisse
-		const expected: IDaten["EWT"] = [
+		const expected: IMonatsDaten["EWT"] = [
 			{
 				tagE: "03",
 				eOrtE: "Kirchheim",

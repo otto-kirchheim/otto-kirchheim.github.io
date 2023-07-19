@@ -13,9 +13,7 @@ export default function datumAnpassen(
 	const nE = parentElement.querySelector<HTMLInputElement>("#nE");
 	const nET = parentElement.querySelector<HTMLInputElement>("#nET");
 
-	if (!bE || !bET || !nA || !nAT || !nE || !nET) {
-		throw new Error("Element not found");
-	}
+	if (!bE || !bET || !nA || !nAT || !nE || !nET) throw new Error("Element not found");
 
 	bE.value = datum
 		.isoWeekday(vorgabenB.endeB.tag)

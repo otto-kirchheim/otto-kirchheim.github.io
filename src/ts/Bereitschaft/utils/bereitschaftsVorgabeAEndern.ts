@@ -19,9 +19,8 @@ export default function bereitschaftsVorgabeAEndern(
 	const nEInput = parentElement.querySelector<HTMLInputElement>("#nE");
 	const nETInput = parentElement.querySelector<HTMLInputElement>("#nET");
 
-	if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput) {
+	if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput)
 		throw new Error("Input Element nicht gefunden");
-	}
 
 	bAInput.value = datum.isoWeekday(vorgabenB.beginnB.tag).format("YYYY-MM-DD");
 	bATInput.value = vorgabenB.beginnB.zeit;

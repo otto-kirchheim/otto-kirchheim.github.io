@@ -22,11 +22,8 @@ export default function saveEinstellungen(): IVorgabenU {
 	VorgabenU.fZ = table_to_array_einstellungen("TbodyTätigkeitsstätten");
 
 	const nebenTab = document.querySelector<HTMLDivElement>("#neben-tab")?.parentElement as HTMLLIElement;
-	if (VorgabenU.pers.TB === "Tarifkraft") {
-		nebenTab?.classList.remove("d-none");
-	} else {
-		nebenTab?.classList.add("d-none");
-	}
+	if (VorgabenU.pers.TB === "Tarifkraft") nebenTab?.classList.remove("d-none");
+	else nebenTab?.classList.add("d-none");
 
 	VorgabenU.vorgabenB = Object.fromEntries(tableToArray("tableVE").entries()) as { [key: string]: IVorgabenUvorgabenB };
 
@@ -42,9 +39,8 @@ function table_to_array_einstellungen(table_id: string): { key: string; text: st
 	for (const myDatum of Array.from(myData)) {
 		const el = myDatum.children;
 		const key: string = (<HTMLInputElement>el[0].children[0]).value;
-		if (!key) {
-			continue;
-		}
+		if (!key) continue;
+
 		const text: string = (<HTMLInputElement>el[1].children[0]).value;
 		const value: string = (<HTMLInputElement>el[2].children[0]).value;
 		if (!text || !value) {

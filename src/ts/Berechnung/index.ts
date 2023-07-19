@@ -1,13 +1,14 @@
 import { IVorgabenBerechnung, IVorgabenGeld } from "../interfaces";
 import { Storage } from "../utilities";
+import aktualisiereBerechnung from "./aktualisiereBerechnung";
 import generateTableBerechnung from "./generateTableBerechnung";
 
-export { generateTableBerechnung };
+export { generateTableBerechnung, aktualisiereBerechnung };
 
 window.addEventListener("load", () => {
 	if (Storage.check("VorgabenU") && Storage.check("datenBerechnung") && Storage.check("VorgabenGeld"))
 		generateTableBerechnung(
 			Storage.get<IVorgabenBerechnung>("datenBerechnung"),
-			Storage.get<IVorgabenGeld>("VorgabenGeld")
+			Storage.get<IVorgabenGeld>("VorgabenGeld"),
 		);
 });

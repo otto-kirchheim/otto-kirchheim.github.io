@@ -3,21 +3,17 @@ import { saveTableData } from "../../utilities";
 
 export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): void {
 	const select = form.querySelector<HTMLSelectElement>("#tagN");
-	if (!select) {
-		throw new Error("Select element with ID 'tagN' not found");
-	}
+	if (!select) throw new Error("Select element with ID 'tagN' not found");
 	let idN = select.selectedIndex;
 	if (idN < 0) return;
 	const daten = JSON.parse(select.value) as IDatenN;
 	const inputNebenbezug = form.querySelector<HTMLSelectElement>("#Nebenbezug");
-	if (!inputNebenbezug) {
-		throw new Error("Select element with ID 'Nebenbezug' not found");
-	}
+	if (!inputNebenbezug) throw new Error("Select element with ID 'Nebenbezug' not found");
+
 	daten.nrN = inputNebenbezug.value;
 	const inputAnzahlN = form.querySelector<HTMLInputElement>("#AnzahlN");
-	if (!inputAnzahlN) {
-		throw new Error("Input element with ID 'AnzahlN' not found");
-	}
+	if (!inputAnzahlN) throw new Error("Input element with ID 'AnzahlN' not found");
+
 	daten.dauerN = +inputAnzahlN.value;
 
 	console.log(daten);

@@ -10,7 +10,7 @@ import {
 import type { CustomHTMLTableElement } from "../../interfaces";
 import { Storage, checkMaxTag, saveTableData } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
-import { sendDataE } from "../utils";
+import { BerEinsatzEingabe } from "../utils";
 
 export default function createAddModalBereitschaftsEinsatz(): void {
 	const { modal, form } = createModal(
@@ -123,7 +123,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 			if (form instanceof HTMLFormElement && !form.checkValidity()) return;
 			event.preventDefault();
 
-			sendDataE(modal);
+			BerEinsatzEingabe(modal);
 
 			const table = document.querySelector<CustomHTMLTableElement>("#tableBE");
 

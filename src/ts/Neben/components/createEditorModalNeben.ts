@@ -31,11 +31,9 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 		const Jahr: number = Storage.get<number>("Jahr");
 
 		let Tag: number;
-		if (row instanceof Row) {
-			Tag = row.cells.tagN;
-		} else if (row instanceof CustomTable) {
-			Tag = checkMaxTag(Jahr, Monat);
-		} else throw new Error("unbekannter Fehler");
+		if (row instanceof Row) Tag = row.cells.tagN;
+		else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
+		else throw new Error("unbekannter Fehler");
 
 		const datum = dayjs([Jahr, Monat, Tag]);
 
@@ -142,7 +140,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				beginPauseN: form.querySelector<HTMLInputElement>("#beginPauseN")?.value ?? "",
 				endePauseN: form.querySelector<HTMLInputElement>("#endePauseN")?.value ?? "",
 				nrN: form.querySelector<HTMLInputElement>("#nrN")?.value ?? "",
-				dauerN: Number(form.querySelector<HTMLInputElement>("#dauerN")?.value) ?? 0,
+				dauerN: Number(form.querySelector<HTMLInputElement>("#dauerN")?.value) || 0,
 			};
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 

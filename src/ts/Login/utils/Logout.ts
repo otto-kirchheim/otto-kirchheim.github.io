@@ -13,14 +13,10 @@ export default function Logout(): void {
 
 	const selectorsToAddDNone = ["#navmenu", "#btn-navmenu", "#NewDisplay", "#SelectDisplay", "#admin", "#Neben-tab"];
 
-	for (const selector of selectorsToAddDNone) {
-		toggleClassForElement(selector, "d-none", true);
-	}
+	for (const selector of selectorsToAddDNone) toggleClassForElement(selector, "d-none", true);
 
 	toggleClassForElement("#loginDisplay", "d-none", false);
 
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
-	if (willkommen) {
-		willkommen.innerHTML = "Willkommen";
-	}
+	if (willkommen) willkommen.innerHTML = "Willkommen";
 }

@@ -1,13 +1,9 @@
 export default function setDisableButton(status: boolean): void {
 	const btnAuswaehlen = document.querySelector<HTMLButtonElement>("#btnAuswaehlen");
-	if (btnAuswaehlen) {
-		btnAuswaehlen.disabled = status;
-	}
+	if (btnAuswaehlen) btnAuswaehlen.disabled = status;
 
 	const btnChange = document.querySelector<HTMLButtonElement>("#btnChange");
-	if (btnChange) {
-		btnChange.disabled = status;
-	}
+	if (btnChange) btnChange.disabled = status;
 
 	const btnSaveList = document.querySelectorAll<HTMLButtonElement>("[id^='btnSave']");
 	btnSaveList.forEach(button => {
@@ -20,7 +16,5 @@ export default function setDisableButton(status: boolean): void {
 	});
 
 	const btnPasswortAEndern = document.querySelector<HTMLButtonElement>("#btnPasswortAEndern");
-	if (btnPasswortAEndern) {
-		btnPasswortAEndern.disabled = status;
-	}
+	if (btnPasswortAEndern) btnPasswortAEndern.disabled = status;
 }

@@ -1,5 +1,5 @@
 import { Storage, buttonDisable, clearLoading, saveTableData, setLoading } from ".";
-import { generateTableBerechnung } from "../Berechnung";
+import { aktualisiereBerechnung, generateTableBerechnung } from "../Berechnung";
 import { DataBE, DataBZ } from "../Bereitschaft/utils";
 import { DataE } from "../EWT/utils";
 import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
@@ -8,33 +8,14 @@ import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenU } from "../interfaces";
 import { FetchRetry } from "./FetchRetry";
 
-// type SaveData = {
-// 	BZ: IDaten["BZ"];
-// 	BE: IDaten["BE"];
-// 	E: IDaten["EWT"];
-// 	N: IDaten["N"];
-// 	User: IVorgabenU;
-// 	Jahr: number;
-// };
-
-type SaveData = {
-	BZ: IDaten["BZ"];
-	BE: IDaten["BE"];
-	E: IDaten["EWT"];
-	N: IDaten["N"];
+interface SaveData extends IDaten {
 	User: IVorgabenU;
-	Monat: number;
 	Jahr: number;
-};
+}
 
 type ReturnTypeSaveData = {
-	datenBerechnung: IVorgabenBerechnung;
-	daten: {
-		datenBZ: IDaten["BZ"];
-		datenBE: IDaten["BE"];
-		datenE: IDaten["EWT"];
-		datenN: IDaten["N"];
-	};
+	datenBerechnung: IVorgabenBerechnung | false;
+	daten: IDaten;
 	user: IVorgabenU;
 };
 
@@ -44,21 +25,21 @@ function findCustomTableInstance(id: string): CustomHTMLTableElement["instance"]
 	return table.instance;
 }
 
-export default async function saveDaten(button: HTMLButtonElement | null): Promise<void> {
+export default async function saveDaten(button: HTMLButtonElement | null, Monat?: number): Promise<void> {
 	if (button === null) return;
 	setLoading(button.id);
 	buttonDisable(true);
+	if (!Monat) Monat = Storage.get<number>("Monat");
 
 	try {
 		const [ftBZ, ftBE, ftE, ftN] = ["tableBZ", "tableBE", "tableE", "tableN"].map(findCustomTableInstance);
 
 		const data: SaveData = {
-			BZ: saveTableData(ftBZ),
-			BE: saveTableData(ftBE),
-			E: saveTableData(ftE),
-			N: saveTableData(ftN),
+			BZ: saveTableData(ftBZ, Monat),
+			BE: saveTableData(ftBE, Monat),
+			EWT: saveTableData(ftE, Monat),
+			N: saveTableData(ftN, Monat),
 			User: saveEinstellungen(),
-			Monat: Storage.get("Monat"),
 			Jahr: Storage.get("Jahr"),
 		};
 
@@ -79,25 +60,28 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
 
 		const dataResponded = fetched.data;
 		console.log(dataResponded);
-
-		generateTableBerechnung(dataResponded.datenBerechnung);
+		if (dataResponded.datenBerechnung) {
+			Storage.set("datenBerechnung", dataResponded.datenBerechnung);
+			generateTableBerechnung(dataResponded.datenBerechnung);
+		} else {
+			generateTableBerechnung(aktualisiereBerechnung(undefined, dataResponded.daten));
+		}
 
 		const tables = [
-			{ ft: ftBZ, data: DataBZ(dataResponded.daten.datenBZ) },
-			{ ft: ftBE, data: DataBE(dataResponded.daten.datenBE) },
-			{ ft: ftE, data: DataE(dataResponded.daten.datenE) },
-			{ ft: ftN, data: DataN(dataResponded.daten.datenN) },
+			{ ft: ftBZ, storageKey: "dataBZ", dataJahr: dataResponded.daten.BZ, data: DataBZ(dataResponded.daten.BZ[Monat]) },
+			{ ft: ftBE, storageKey: "dataBE", dataJahr: dataResponded.daten.BE, data: DataBE(dataResponded.daten.BE[Monat]) },
+			{ ft: ftE, storageKey: "dataE", dataJahr: dataResponded.daten.EWT, data: DataE(dataResponded.daten.EWT[Monat]) },
+			{ ft: ftN, storageKey: "dataN", dataJahr: dataResponded.daten.N, data: DataN(dataResponded.daten.N[Monat]) },
 		];
 
-		tables.forEach(({ ft, data }) => {
+		tables.forEach(({ ft, storageKey, dataJahr, data }) => {
+			Storage.set(storageKey, dataJahr);
 			ft.rows.load(data);
-			saveTableData(ft);
 			console.log("saved", ft);
 		});
 
 		generateEingabeMaskeEinstellungen(dataResponded.user);
 		Storage.set("VorgabenU", dataResponded.user);
-		Storage.set("datenBerechnung", dataResponded.datenBerechnung);
 
 		console.log("Erfolgreich gespeichert");
 		createSnackBar({

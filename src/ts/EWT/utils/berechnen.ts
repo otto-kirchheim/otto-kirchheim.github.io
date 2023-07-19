@@ -1,14 +1,14 @@
 import { Duration } from "dayjs/plugin/duration";
-import type { IDaten, IDatenEWT, IVorgabenE, IVorgabenU } from "../../interfaces";
+import type { IMonatsDaten, IDatenEWT, IVorgabenE, IVorgabenU } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 import { getDurationFromTime } from "../../utilities";
 
 export default function berechnen(
 	vorgabenU: IVorgabenU,
-	daten: IDaten["EWT"],
+	daten: IMonatsDaten["EWT"],
 	jahr: number,
 	monat: number,
-): IDaten["EWT"] {
+): IMonatsDaten["EWT"] {
 	const { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten } = createHelpers(vorgabenU);
 
 	const vorgabenE = initializeVorgabenE();
@@ -94,9 +94,7 @@ function createHelpers(userSettings: IVorgabenU) {
 		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
 			const zeit = value.split(":");
 			let tag = Number(Tag.tagE);
-			if (addTag && ["BN", "N"].includes(Tag.schichtE)) {
-				tag -= 1;
-			}
+			if (addTag && ["BN", "N"].includes(Tag.schichtE)) tag -= 1;
 			return dayjs([jahr, monat - 1, tag, +zeit[0], +zeit[1], 0, 0]);
 		};
 

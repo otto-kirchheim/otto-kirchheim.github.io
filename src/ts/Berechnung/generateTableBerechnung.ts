@@ -9,7 +9,7 @@ import { Storage, clearLoading } from "../utilities";
 
 export default function generateTableBerechnung(
 	datenBerechnung: true | IVorgabenBerechnung,
-	datenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld")
+	datenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld"),
 ): void {
 	if (datenBerechnung === true) return clearLoading("btnNeuBerech");
 
@@ -17,11 +17,10 @@ export default function generateTableBerechnung(
 		getMonat: function (maxMonat: number): IVorgabenGeldType {
 			let returnObjekt = datenGeld[1];
 			const keys = Object.keys(datenGeld).map(Number);
-			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1) {
-				for (let monat = 2; monat <= maxMonat; monat++) {
+			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
+				for (let monat = 2; monat <= maxMonat; monat++)
 					if (typeof datenGeld[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...datenGeld[monat] };
-				}
-			}
+
 			return returnObjekt;
 		},
 	});

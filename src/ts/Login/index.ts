@@ -123,15 +123,11 @@ window.addEventListener("load", () => {
 		console.log("Benutzer gefunden");
 
 		const vorgabenU = Storage.get<IVorgabenU>("VorgabenU");
-		if (vorgabenU && vorgabenU.pers.TB == "Tarifkraft" && nebenTabEl) {
-			nebenTabEl.classList.remove("d-none");
-		}
+		if (vorgabenU && vorgabenU.pers.TB == "Tarifkraft" && nebenTabEl) nebenTabEl.classList.remove("d-none");
 
 		if (Storage.check("accessToken")) {
 			const berechtigung = decodeAccessToken().Berechtigung;
-			if (adminEl && berechtigung & 2) {
-				adminEl.classList.remove("d-none");
-			}
+			if (adminEl && berechtigung & 2) adminEl.classList.remove("d-none");
 		}
 
 		navmenuEl?.classList.remove("d-none");

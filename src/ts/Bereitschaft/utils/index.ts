@@ -5,7 +5,7 @@ import { DataBE, DataBZ } from "./convertDaten";
 import datumAnpassen from "./datumAnpassen";
 import eigeneWerte from "./eigeneWerte";
 import nachtAusblenden from "./nachtAusblenden";
-import sendDataE from "./sendDataE";
+import BerEinsatzEingabe from "./BerEinsatzEingabe";
 
 export {
 	BereitschaftEingabe,
@@ -16,5 +16,5 @@ export {
 	datumAnpassen,
 	eigeneWerte,
 	nachtAusblenden,
-	sendDataE,
+	BerEinsatzEingabe,
 };

@@ -79,7 +79,7 @@ describe("#download", () => {
 				Monat: 3,
 				Jahr: 2023,
 			},
-			"POST"
+			"POST",
 		);
 		expect(spy).toHaveBeenCalledTimes(1);
 		expect(spy).toHaveBeenCalledWith(mockResponseDataBlob, mockResponseData.data.name);
@@ -107,7 +107,7 @@ describe("#download", () => {
 				Monat: 3,
 				Jahr: 2023,
 			},
-			"POST"
+			"POST",
 		);
 		expect(spy).toHaveBeenCalledTimes(1);
 		expect(spy).toHaveBeenCalledWith(mockResponseDataBlob, mockResponseData.data.name);
@@ -135,7 +135,7 @@ describe("#download", () => {
 				Monat: 3,
 				Jahr: 2023,
 			},
-			"POST"
+			"POST",
 		);
 		expect(spy).toHaveBeenCalledTimes(1);
 		expect(spy).toHaveBeenCalledWith(mockResponseDataBlob, mockResponseData.data.name);

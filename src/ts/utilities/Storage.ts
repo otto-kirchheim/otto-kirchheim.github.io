@@ -2,9 +2,7 @@ class Storage {
 	private static instance: Storage;
 
 	static getInstance(): Storage {
-		if (!Storage.instance) {
-			Storage.instance = new Storage();
-		}
+		if (!Storage.instance) Storage.instance = new Storage();
 		return Storage.instance;
 	}
 

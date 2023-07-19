@@ -5,7 +5,7 @@ import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
 import { DataBZ } from "./convertDaten";
 
-export default function sendDataE($modal: HTMLDivElement): void {
+export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	setLoading("btnESE");
 
 	const datumInput = $modal.querySelector<HTMLInputElement>("#Datum");
@@ -28,9 +28,8 @@ export default function sendDataE($modal: HTMLDivElement): void {
 		!berZeitInput ||
 		!tableBE ||
 		!tableBZ
-	) {
+	)
 		throw new Error("Input Element nicht gefunden");
-	}
 
 	const daten = {
 		tagBE: dayjs(datumInput.value).format("DD.MM.YYYY"),
@@ -86,8 +85,7 @@ export default function sendDataE($modal: HTMLDivElement): void {
 		Storage.set("dataBZ", data);
 		tableBZ.instance.rows.load(DataBZ(data));
 		createSnackBar({
-			message:
-				"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
+			message: "Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!",
 			status: "success",
 			timeout: 3000,
 			fixed: true,

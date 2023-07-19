@@ -183,13 +183,9 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 			if (standard) {
 				let ft: CustomTable;
 				let newStandard: Row | null;
-				if (row instanceof Row) {
-					[ft, newStandard] = [row.CustomTable, row];
-				} else if (row instanceof CustomTable) {
-					[ft, newStandard] = [row, null];
-				} else {
-					throw new Error("CustomTable nicht gefunden");
-				}
+				if (row instanceof Row) [ft, newStandard] = [row.CustomTable, row];
+				else if (row instanceof CustomTable) [ft, newStandard] = [row, null];
+				else throw new Error("CustomTable nicht gefunden");
 				setStandard(ft, newStandard);
 			}
 			row instanceof Row ? row.val(values) : row.rows.add(values);
@@ -206,11 +202,9 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 				if (newStandard && newStandard === rows[key]) {
 					value.standard = true;
 					rows[key].val(value);
-				} else {
-					if (value.standard) {
-						delete value.standard;
-						rows[key].val(value);
-					}
+				} else if (value.standard) {
+					delete value.standard;
+					rows[key].val(value);
 				}
 			}
 		}

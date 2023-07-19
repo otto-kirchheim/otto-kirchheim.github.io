@@ -8,13 +8,10 @@ import { createEditorModalVE, createShowModalVE } from "../components";
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
 	[key: string]: IVorgabenUvorgabenB;
 }) {
-	if (!VorgabenB) {
-		VorgabenB = Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU").vorgabenB : {};
-	}
+	if (!VorgabenB) VorgabenB = Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU").vorgabenB : {};
 
-	const trueParser = (value: boolean | null): string => {
-		return value ? "Ja" : "Nein";
-	};
+	const trueParser = (value: boolean | null): string => (value ? "Ja" : "Nein");
+
 	const addWeekParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruchString: string): string => {
 		if (value.Nwoche === undefined || value.Nwoche === false) return `${umbruchString} - `;
 		return `${umbruchString}+1 Woche`;

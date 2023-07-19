@@ -1,13 +1,11 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
 import { clearLoading, setLoading } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
-import loginUser from "./loginUser";
+import userLoginSuccess from "./userLoginSuccess";
 
 export default async function checkNeuerBenutzer(): Promise<void> {
 	const errorMessage = document.querySelector<HTMLDivElement>("#errorMessage");
-	if (!errorMessage) {
-		throw new Error("errorMessage not found");
-	}
+	if (!errorMessage) throw new Error("errorMessage not found");
 	const zugangscode = document.querySelector<HTMLInputElement>("#Zugang");
 	if (!zugangscode?.value.trim()) {
 		errorMessage.textContent = "Bitte Zugangscode Eingeben";
@@ -45,7 +43,7 @@ export default async function checkNeuerBenutzer(): Promise<void> {
 				Name: string;
 				Passwort: string;
 			},
-			null
+			{ accessToken: string; refreshToken: string }
 		>("add", data, "POST");
 		if (fetched instanceof Error) throw fetched;
 		if (fetched.statusCode >= 400) {
@@ -60,6 +58,14 @@ export default async function checkNeuerBenutzer(): Promise<void> {
 				timeout: 3000,
 				fixed: true,
 			});
+
+			userLoginSuccess({ ...fetched.data, username: data.Name });
+
+			errorMessage.innerHTML = "";
+			zugangscode.value = "";
+			benutzer.value = "";
+			passwort1.value = "";
+			passwort2.value = "";
 		} else {
 			console.log("Fehler: ", fetched.message);
 			createSnackBar({
@@ -76,13 +82,4 @@ export default async function checkNeuerBenutzer(): Promise<void> {
 	} finally {
 		clearLoading("btnNeu");
 	}
-
-	errorMessage.innerHTML = "";
-
-	await loginUser(benutzer.value, passwort1.value);
-
-	zugangscode.value = "";
-	benutzer.value = "";
-	passwort1.value = "";
-	passwort2.value = "";
 }

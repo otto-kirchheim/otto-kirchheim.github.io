@@ -290,6 +290,7 @@ describe("#DatenSortieren", () => {
 // 		mockEWT();
 // 		mockNeben();
 // 		Storage.set("VorgabenU", VorgabenUMock);
+// 		Storage.set("Monat", 3);
 // 		button = document.createElement("button");
 // 		button.id = "test-button";
 // 		button.disabled = false;
@@ -307,12 +308,12 @@ describe("#DatenSortieren", () => {
 // 			statusCode: 200,
 // 			message: "Test",
 // 			data: {
-// 				datenBerechnung: {},
+// 				datenBerechnung: false,
 // 				daten: {
-// 					datenBZ: [],
-// 					datenBE: [],
-// 					datenE: [],
-// 					datenN: [],
+// 					BZ: [],
+// 					BE: [],
+// 					E: [],
+// 					N: [],
 // 				},
 // 				user: {},
 // 			},
@@ -329,6 +330,7 @@ describe("#DatenSortieren", () => {
 
 // 		expect(setLoadingSpy).toHaveBeenCalledWith(button.id);
 // 		expect(buttonDisableSpy).toHaveBeenCalledWith(true);
+// 		console.log(mockFetchRetry);
 // 		expect(mockFetchRetry).toHaveBeenCalledWith("saveData", expect.any(Object), "POST");
 // 		expect(saveTableDataSpy).toHaveBeenCalledWith("tableBZ", expect.any(Object));
 // 		expect(saveTableDataSpy).toHaveBeenCalledWith("tableBE", expect.any(Object));
@@ -339,7 +341,7 @@ describe("#DatenSortieren", () => {
 // 			message: "Speichern<br/>Daten gespeichert",
 // 			status: "success",
 // 			timeout: 3000,
-//
+
 // 			fixed: true,
 // 		});
 // 		expect(generateEingabeMaskeEinstellungenSpy).toHaveBeenCalledWith({});
