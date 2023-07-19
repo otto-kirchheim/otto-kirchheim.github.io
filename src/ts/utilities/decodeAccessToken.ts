@@ -1,13 +1,14 @@
 import { Storage } from ".";
 
-export default function decodeAccessToken(accesstoken: string | undefined = Storage.get("accessToken")): {
+type decodedAccessToken = {
 	id: string;
 	Name: string;
 	Berechtigung: number;
 	iat: number;
 	exp: number;
-} {
-	if (!accesstoken) throw new Error("accessToken fehlt");
+};
+
+export default function decodeAccessToken(accesstoken = Storage.get<string>("accessToken")): decodedAccessToken {
 	const base64Url = accesstoken.split(".")[1];
 	const base64 = convertUrlBase64ToBase64(base64Url);
 	const jsonPayload = decodeBase64ToJSON(base64);

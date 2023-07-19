@@ -9,6 +9,7 @@ import {
 	createModalBodyTitelElement,
 } from "../../components";
 import type { CustomHTMLTableElement, IVorgabenU } from "../../interfaces";
+import { IVorgabenUvorgabenB } from "../../interfaces/IVorgabenU";
 import { Storage, checkMaxTag, saveTableData } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import {
@@ -26,7 +27,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 		null,
 		createBodyElement,
 		createEditorModalFooter(),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 	new Modal(modal).show();
 
@@ -34,18 +35,19 @@ export default function createAddModalBereitschaftsZeit(): void {
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row";
 
-		const vorgabenU = Storage.get<Partial<IVorgabenU>>("VorgabenU", { vorgabenB: BereitschaftsEinsatzZeiträume });
+		const vorgabenU = Storage.get<Partial<IVorgabenU>>("VorgabenU") ?? { vorgabenB: BereitschaftsEinsatzZeiträume };
 		const Monat = Storage.get<number>("Monat") - 1;
 		const Jahr = Storage.get<number>("Jahr");
-		const vorgabenB: IVorgabenU["vorgabenB"] = vorgabenU.vorgabenB ? vorgabenU.vorgabenB : BereitschaftsEinsatzZeiträume;
+		const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB
+			? vorgabenU.vorgabenB
+			: BereitschaftsEinsatzZeiträume;
 
 		let vorgabenBStandardIndex = "2";
-		for (const key in vorgabenB) {
+		for (const key in vorgabenB)
 			if (vorgabenB[key].standard) {
 				vorgabenBStandardIndex = key;
 				break;
 			}
-		}
 
 		const vorgabeB_Div = createModalBodySelectElement({
 			divClass: "form-floating col-12 pb-3",
@@ -104,7 +106,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 					if (!datum) throw new Error("Datum nicht gefunden");
 					datumAnpassen(modalBody, vorgabenB[vorgabeB_Select.value], dayjs(datum.value));
 				},
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodyInputElement({
@@ -115,7 +117,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				type: "time",
 				required: true,
 				disabled: true,
-			})
+			}),
 		);
 		modalBody.appendChild(createModalBodyTitelElement("Bereitschafts Ende"));
 		modalBody.appendChild(
@@ -132,7 +134,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				disabled: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.add(1, "M").endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodyInputElement({
@@ -143,7 +145,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				type: "time",
 				required: true,
 				disabled: true,
-			})
+			}),
 		);
 		modalBody.appendChild(document.createElement("hr"));
 		modalBody.appendChild(
@@ -153,7 +155,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				text: "Nachtschicht",
 				status: vorgabenB[auswahl].nacht,
 				eventListener: () => nachtAusblenden(modalBody),
-			})
+			}),
 		);
 
 		const nachtWrapper = document.createElement("div");
@@ -177,7 +179,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				disabled: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.add(1, "M").endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 		nachtWrapper.appendChild(
 			createModalBodyInputElement({
@@ -188,7 +190,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				type: "time",
 				required: true,
 				disabled: true,
-			})
+			}),
 		);
 
 		nachtWrapper.appendChild(createModalBodyTitelElement("Nacht Ende"));
@@ -206,7 +208,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				disabled: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.add(1, "M").endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 		nachtWrapper.appendChild(
 			createModalBodyInputElement({
@@ -217,7 +219,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 				type: "time",
 				required: true,
 				disabled: true,
-			})
+			}),
 		);
 		const customHrElement = document.createElement("hr");
 		customHrElement.classList.add("mt-3");
@@ -234,7 +236,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 					if (!datum) throw new Error("Datum nicht gefunden");
 					eigeneWerte(modalBody, vorgabenB[vorgabeB_Select.value], dayjs(datum.value));
 				},
-			})
+			}),
 		);
 
 		return modalBody;
@@ -251,11 +253,9 @@ export default function createAddModalBereitschaftsZeit(): void {
 
 			const table = document.querySelector<CustomHTMLTableElement>("#tableBZ");
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 
-			if (table) {
-				saveTableData(table.instance);
-			}
+			if (table) saveTableData(table.instance);
 		};
 	}
 }

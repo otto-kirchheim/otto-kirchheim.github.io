@@ -1,10 +1,10 @@
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 
 export default function datumAnpassen(
 	parentElement: HTMLDivElement,
-	vorgabenB: IVorgabenU["vorgabenB"][0],
-	datum: dayjs.Dayjs
+	vorgabenB: IVorgabenUvorgabenB,
+	datum: dayjs.Dayjs,
 ): void {
 	const bE = parentElement.querySelector<HTMLInputElement>("#bE");
 	const bET = parentElement.querySelector<HTMLInputElement>("#bET");
@@ -13,9 +13,7 @@ export default function datumAnpassen(
 	const nE = parentElement.querySelector<HTMLInputElement>("#nE");
 	const nET = parentElement.querySelector<HTMLInputElement>("#nET");
 
-	if (!bE || !bET || !nA || !nAT || !nE || !nET) {
-		throw new Error("Element not found");
-	}
+	if (!bE || !bET || !nA || !nAT || !nE || !nET) throw new Error("Element not found");
 
 	bE.value = datum
 		.isoWeekday(vorgabenB.endeB.tag)

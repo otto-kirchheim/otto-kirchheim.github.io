@@ -20,7 +20,7 @@ export default function createModalBodyShowElement(options: TModalBodyShowElemen
 	const span = document.createElement("span");
 	span.className = options.spanClass ?? "col-9 align-middle text-break my-auto";
 	span.id = options.name;
-	span.innerHTML = String(options.text) ?? "&nbsp;";
+	span.innerHTML = options.text.toString() ?? "&nbsp;";
 	divElement.appendChild(span);
 
 	return divElement;

@@ -1,4 +1,4 @@
-import type { CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type { CustomHTMLTableElement, IMonatsDaten, IDatenEWT } from "../../interfaces";
 import { saveTableData } from "../../utilities";
 import naechsterTag from "./naechsterTag";
 
@@ -22,7 +22,7 @@ export default function addEWTtag(): void {
 	const berechnen = berechnenInput.checked;
 
 	// Create a new data object with the values
-	const data: IDaten["EWT"][0] = {
+	const data: IDatenEWT = {
 		tagE,
 		eOrtE,
 		schichtE,
@@ -49,6 +49,6 @@ export default function addEWTtag(): void {
 	saveTableData(ftE);
 
 	// Calculate and set the next tag value
-	const existingRows = ftE.getRows().map(row => row.cells);
+	const existingRows = ftE.getRows().map(row => row.cells) as IMonatsDaten["EWT"];
 	naechsterTag(+tagE, existingRows);
 }

@@ -1,18 +1,17 @@
 import { Modal } from "bootstrap";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import { Row, createCustomTable } from "../../class/CustomTable";
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenU, IVorgabenUvorgabenB } from "../../interfaces";
 import { Storage, buttonDisable } from "../../utilities";
 import { createEditorModalVE, createShowModalVE } from "../components";
 
-export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: IVorgabenU["vorgabenB"]) {
-	if (!VorgabenB) {
-		VorgabenB = Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU").vorgabenB : {};
-	}
+export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
+	[key: string]: IVorgabenUvorgabenB;
+}) {
+	if (!VorgabenB) VorgabenB = Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU").vorgabenB : {};
 
-	const trueParser = (value: boolean | null): string => {
-		return value ? "Ja" : "Nein";
-	};
+	const trueParser = (value: boolean | null): string => (value ? "Ja" : "Nein");
+
 	const addWeekParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruchString: string): string => {
 		if (value.Nwoche === undefined || value.Nwoche === false) return `${umbruchString} - `;
 		return `${umbruchString}+1 Woche`;
@@ -60,9 +59,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 						message: "Löschen von Standard nicht möglich<br /><small>(Bitte erst neuen Standart setzten)</small>",
 						icon: "!",
 						status: "info",
-						dismissible: true,
 						timeout: 3000,
-						position: "br",
 						fixed: true,
 					});
 				}
@@ -74,7 +71,6 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 					status: "error",
 					dismissible: false,
 					timeout: false,
-					position: "br",
 					fixed: true,
 					actions: [
 						{

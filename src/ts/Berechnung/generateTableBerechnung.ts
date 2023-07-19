@@ -9,7 +9,7 @@ import { Storage, clearLoading } from "../utilities";
 
 export default function generateTableBerechnung(
 	datenBerechnung: true | IVorgabenBerechnung,
-	datenGeld: IVorgabenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld")
+	datenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld"),
 ): void {
 	if (datenBerechnung === true) return clearLoading("btnNeuBerech");
 
@@ -17,11 +17,10 @@ export default function generateTableBerechnung(
 		getMonat: function (maxMonat: number): IVorgabenGeldType {
 			let returnObjekt = datenGeld[1];
 			const keys = Object.keys(datenGeld).map(Number);
-			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1) {
-				for (let monat = 2; monat <= maxMonat; monat++) {
+			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
+				for (let monat = 2; monat <= maxMonat; monat++)
 					if (typeof datenGeld[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...datenGeld[monat] };
-				}
-			}
+
 			return returnObjekt;
 		},
 	});
@@ -77,17 +76,14 @@ export default function generateTableBerechnung(
 
 			switch (index) {
 				case 0:
-					if (datenBerechnungItem.B.B !== 0) {
-						td.textContent = datenBerechnungItem.B.B.toString();
-					}
+					if (datenBerechnungItem.B.B !== 0) td.textContent = datenBerechnungItem.B.B.toString();
 					break;
 				case 1:
-					if (datenBerechnungItem.B.B !== 0) {
+					if (datenBerechnungItem.B.B !== 0)
 						td.textContent =
 							tarif_beamter === "Tarifkraft"
 								? time_convert(datenBerechnungItem.B.B)
 								: Math.round((datenBerechnungItem.B.B - 600) / 8 / 60).toString();
-					}
 					break;
 				case 2:
 					if (datenBerechnungItem.B.B !== 0) {
@@ -101,7 +97,7 @@ export default function generateTableBerechnung(
 					break;
 				case 3:
 					if (datenBerechnungItem.B.L1 !== 0) {
-						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * +datenGeld.getMonat(monat).LRE1;
+						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * datenGeld.getMonat(monat).LRE1;
 						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L1) * datenGeld.getMonat(monat).LRE1);
 					}
 					break;
@@ -148,14 +144,13 @@ export default function generateTableBerechnung(
 							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld.getMonat(monat).TE24;
 						}
 					}
-					if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0) {
+					if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0)
 						td.innerHTML =
 							`${nullParser(datenBerechnungItem.E.A8)} <br />` +
 							`${nullParser(datenBerechnungItem.E.A14)} <br />` +
 							`${nullParser(datenBerechnungItem.E.A24)}`;
-					}
-					break;
 
+					break;
 				case 9:
 					if (tarif_beamter !== "Tarifkraft") {
 						if (datenBerechnungItem.E.S8 !== 0) {
@@ -165,9 +160,9 @@ export default function generateTableBerechnung(
 							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld.getMonat(monat).BE14;
 						}
 					}
-					if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0) {
+					if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0)
 						td.innerHTML = `${nullParser(datenBerechnungItem.E.S8)} <br /> ${nullParser(datenBerechnungItem.E.S14)}`;
-					}
+
 					row.appendChild(td);
 					break;
 

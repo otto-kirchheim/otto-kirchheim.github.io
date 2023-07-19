@@ -10,7 +10,7 @@ import {
 import type { CustomHTMLTableElement } from "../../interfaces";
 import { Storage, checkMaxTag, saveTableData } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
-import { sendDataE } from "../utils";
+import { BerEinsatzEingabe } from "../utils";
 
 export default function createAddModalBereitschaftsEinsatz(): void {
 	const { modal, form } = createModal(
@@ -19,7 +19,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 		null,
 		createBodyElement,
 		createEditorModalFooter(),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 	new Modal(modal).show();
 
@@ -41,7 +41,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				required: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodyInputElement({
@@ -51,7 +51,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				value: "",
 				type: "text",
 				required: true,
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodyInputElement({
@@ -61,7 +61,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				value: null,
 				type: "time",
 				required: true,
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodyInputElement({
@@ -71,7 +71,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				value: null,
 				type: "time",
 				required: true,
-			})
+			}),
 		);
 		modalBody.appendChild(
 			createModalBodySelectElement({
@@ -88,7 +88,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 					{ value: "LRE 3 ohne x", text: "LRE 3 ohne x" },
 				],
 				required: true,
-			})
+			}),
 		);
 		modalBody.appendChild(createModalBodyFillerElement());
 		modalBody.appendChild(
@@ -99,7 +99,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				value: "",
 				type: "number",
 				min: 0,
-			})
+			}),
 		);
 
 		const wrapper = document.createElement("div");
@@ -111,7 +111,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				id: "berZeit",
 				text: "zusätzliche Bereitschaftszeit Eingeben?<br><small>(z.B. LRE3 Außerhalb der Bereitschaft.)</small>",
 				status: false,
-			})
+			}),
 		);
 		modalBody.appendChild(wrapper);
 
@@ -123,11 +123,11 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 			if (form instanceof HTMLFormElement && !form.checkValidity()) return;
 			event.preventDefault();
 
-			sendDataE(modal);
+			BerEinsatzEingabe(modal);
 
 			const table = document.querySelector<CustomHTMLTableElement>("#tableBE");
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 
 			if (table) {
 				saveTableData(table.instance);

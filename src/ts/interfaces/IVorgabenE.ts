@@ -1,12 +1,7 @@
 import duration from "dayjs/plugin/duration.js";
 
 export interface IVorgabenE {
-	[key: string]:
-		| duration.Duration
-		| {
-				[key: string]: duration.Duration;
-				// eslint-disable-next-line no-mixed-spaces-and-tabs
-		  };
+	[key: string]: duration.Duration | { [key: string]: duration.Duration };
 	bBN: duration.Duration;
 	bN: duration.Duration;
 	bS: duration.Duration;

@@ -7,13 +7,13 @@ import {
 	createModalBodyInputElement,
 	createModalBodySelectElement,
 } from "../../components";
-import type { CustomHTMLDivElement, IDaten } from "../../interfaces";
+import type { CustomHTMLDivElement, IDatenBE } from "../../interfaces";
 import { Storage, checkMaxTag, saveTableData } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
 export default function createEditorModalBereitschaftsEinsatz(
 	row: CustomTable | Row,
-	titel: string
+	titel: string,
 ): CustomHTMLDivElement {
 	const { modal, form } = createModal(
 		titel,
@@ -21,7 +21,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 		null,
 		createBodyElement,
 		createEditorModalFooter(null, row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 
 	return modal;
@@ -52,7 +52,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 							required: true,
 							min: datum.startOf("M").format("YYYY-MM-DD"),
 							max: datum.endOf("M").format("YYYY-MM-DD"),
-						})
+						}),
 					);
 					break;
 
@@ -65,7 +65,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 							value: row instanceof Row ? row.cells[column.name] : "",
 							type: "text",
 							required: true,
-						})
+						}),
 					);
 					break;
 
@@ -79,7 +79,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 							value: row instanceof Row ? row.cells[column.name] : "",
 							type: "time",
 							required: true,
-						})
+						}),
 					);
 					break;
 
@@ -99,7 +99,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 								{ value: "LRE 3 ohne x", text: "LRE 3 ohne x" },
 							],
 							required: true,
-						})
+						}),
 					);
 					modalBody.appendChild(createModalBodyFillerElement());
 					break;
@@ -113,7 +113,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 							value: row instanceof Row ? row.cells[column.name] : "",
 							type: "number",
 							min: 0,
-						})
+						}),
 					);
 					break;
 
@@ -135,18 +135,18 @@ export default function createEditorModalBereitschaftsEinsatz(
 			if (!row) throw new Error("Row nicht gefunden");
 			const table = row instanceof Row ? row.CustomTable : row;
 
-			const values: IDaten<dayjs.Dayjs>["BE"][0] = {
+			const values: IDatenBE = {
 				tagBE: dayjs(form.querySelector<HTMLInputElement>("#tagBE")?.value).format("DD.MM.)YYYY") ?? "",
 				auftragsnummerBE: form.querySelector<HTMLInputElement>("#auftragsnummerBE")?.value ?? "",
 				beginBE: form.querySelector<HTMLInputElement>("#beginBE")?.value ?? "",
 				endeBE: form.querySelector<HTMLInputElement>("#endeBE")?.value ?? "",
 				lreBE: form.querySelector<HTMLSelectElement>("#lreBE")?.value ?? "",
-				privatkmBE: Number(form.querySelector<HTMLInputElement>("#privatkmBE")?.value) ?? 0,
+				privatkmBE: Number(form.querySelector<HTMLInputElement>("#privatkmBE")?.value ?? 0),
 			};
 
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 	}

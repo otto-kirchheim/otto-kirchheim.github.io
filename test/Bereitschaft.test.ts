@@ -157,6 +157,8 @@ describe("#bereitschaftEingabeWeb", async () => {
     <input id="Jahr" value="2023"/>
   `;
 		document.body.appendChild($modal);
+		const storageData: IDaten["BZ"] = datenBZMock;
+		Storage.set("dataBZ", storageData);
 		const StorageSpy = vi.spyOn(Storage, "set");
 
 		await bereitschaftEingabeWeb($modal, "mockAccessToken");
@@ -171,21 +173,21 @@ describe("#DataBZ", () => {
 	});
 
 	it("should return an empty array when no data is provided and nothing is in storage", () => {
-		const result = DataBZ();
+		const result = DataBZ(undefined, 3);
 		expect(result).toEqual([]);
 	});
 
 	it("should return data from storage when no data is provided but storage has data", () => {
 		const storageData: IDaten["BZ"] = datenBZMock;
 		Storage.set("dataBZ", storageData);
-		const result = DataBZ();
-		expect(result).toEqual(storageData);
+		const result = DataBZ(undefined, 3);
+		expect(result).toEqual(storageData[3]);
 	});
 
 	it("should return the provided data when data is provided", () => {
 		const inputData: IDaten["BZ"] = datenBZMock;
-		const result = DataBZ(inputData);
-		expect(result).toEqual(inputData);
+		const result = DataBZ(inputData[3], 3);
+		expect(result).toEqual(inputData[3]);
 	});
 });
 
@@ -195,21 +197,21 @@ describe("#DataBE", () => {
 	});
 
 	it("should return an empty array when no data is provided and nothing is in storage", () => {
-		const result = DataBE();
+		const result = DataBE(undefined, 3);
 		expect(result).toEqual([]);
 	});
 
 	it("should return data from storage when no data is provided but storage has data", () => {
 		const storageData: IDaten["BE"] = datenBEMock;
 		Storage.set("dataBE", storageData);
-		const result = DataBE();
-		expect(result).toEqual(storageData);
+		const result = DataBE(undefined, 3);
+		expect(result).toEqual(storageData[3]);
 	});
 
 	it("should return the provided data when data is provided", () => {
 		const inputData: IDaten["BE"] = datenBEMock;
-		const result = DataBE(inputData);
-		expect(result).toEqual(inputData);
+		const result = DataBE(inputData[3], 3);
+		expect(result).toEqual(inputData[3]);
 	});
 });
 

@@ -1,11 +1,10 @@
-import type { IDaten } from "../../interfaces";
+import type { IDatenNJahr, IMonatsDaten } from "../../interfaces";
 import { Storage } from "../../utilities";
 
-export default function DataN(data?: IDaten["N"]): IDaten["N"] {
-	if (data !== undefined) return data;
-	if (Storage.check("dataN")) {
-		data = Storage.get<IDaten["N"]>("dataN");
-		return data ?? [];
+export default function DataN(data?: IMonatsDaten["N"], Monat?: number): IMonatsDaten["N"] {
+	if (data === undefined) {
+		if (!Monat) Monat = Storage.get<number>("Monat");
+		data = Storage.check("dataN") ? Storage.get<IDatenNJahr>("dataN")?.[Monat] ?? [] : [];
 	}
-	return [];
+	return data;
 }

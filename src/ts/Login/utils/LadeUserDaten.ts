@@ -1,49 +1,44 @@
 import { SaveUserDatenUEberschreiben, setMonatJahr } from ".";
+import { aktualisiereBerechnung } from "../../Berechnung";
 import generateTableBerechnung from "../../Berechnung/generateTableBerechnung";
 import { DataBE, DataBZ } from "../../Bereitschaft/utils/convertDaten";
 import { DataE } from "../../EWT/utils/DataE";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from "../../interfaces";
+import type {
+	CustomHTMLTableElement,
+	IDaten,
+	IVorgabenBerechnung,
+	IVorgabenGeld,
+	IVorgabenU,
+	IVorgabenUvorgabenB,
+} from "../../interfaces";
 import { Storage, buttonDisable, clearLoading } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
 
+interface UserDatenServer extends IDaten {
+	vorgabenU: IVorgabenU;
+	datenGeld: IVorgabenGeld;
+	datenBerechnung: IVorgabenBerechnung;
+}
+
 export default async function LadeUserDaten(monat: number, jahr: number): Promise<void> {
 	setMonatJahr(jahr, monat);
-	let user: {
-		vorgabenU: IVorgabenU;
-		datenGeld: IVorgabenGeld;
-		datenBerechnung: IVorgabenBerechnung;
-		datenB: { datenBZ: IDaten["BZ"]; datenBE: IDaten["BE"] };
-		datenE: IDaten["EWT"];
-		datenN: IDaten["N"];
-	};
+
+	let userData: UserDatenServer;
+
 	try {
-		const fetched = await FetchRetry<
-			null,
-			{
-				vorgabenU: IVorgabenU;
-				datenBerechnung: IVorgabenBerechnung;
-				datenGeld: IVorgabenGeld;
-				datenB: { datenBZ: IDaten["BZ"]; datenBE: IDaten["BE"] };
-				datenE: IDaten["EWT"];
-				datenN: IDaten["N"];
-			}
-		>(`${monat}&${jahr}`);
+		const fetched = await FetchRetry<null, UserDatenServer>(`${jahr}`);
 		if (fetched instanceof Error) throw fetched;
-		if (fetched.statusCode == 200) {
-			user = fetched.data;
-		} else {
-			throw new Error(fetched.message);
-		}
+		if (fetched.statusCode == 200) userData = fetched.data;
+		else throw new Error(fetched.message);
 	} catch (err) {
 		console.error(err);
 		createSnackBar({
 			message: `Server <br/>Keine Verbindung zum Server oder Serverfehler.`,
 			status: "error",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 		return;
@@ -51,47 +46,31 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 		clearLoading("btnAuswaehlen");
 	}
 
-	const dataArray = user;
-
-	console.log("Daten geladen: ", dataArray);
-	const { datenBerechnung, datenGeld } = dataArray;
-	let { vorgabenU } = dataArray;
-	let dataBZ = dataArray.datenB.datenBZ;
-	let dataBE = dataArray.datenB.datenBE;
-	let dataE = dataArray.datenE;
-	let dataN = dataArray.datenN;
+	console.log("Daten geladen: ", userData);
+	const { datenGeld } = userData;
+	let { vorgabenU, BZ, BE, EWT, N } = userData;
 
 	const vorhanden: string[] = [];
 
-	let monatswechsel = false;
-
-	if (Storage.check("monatswechsel")) {
-		monatswechsel = true;
-		Storage.remove("monatswechsel");
-	}
-
 	let dataServer: { [key: string]: unknown } = {};
 	if (Storage.check("dataServer")) {
-		dataServer = Storage.get("dataServer");
+		dataServer = Storage.get("dataServer") ?? {};
 		console.log("Unterschiede Server - Client | Bereits vorhanden", dataServer);
 	}
 
-	const saveDaten = <T>(
+	const saveDaten = <T, K extends object[]>(
 		nameStorage: string,
 		name: string,
 		data: T,
 		dataName: string,
 		beschreibung: string,
-		loadTable: false | { name: string; data: { [key: string]: unknown }[] } = false
+		loadTable: false | { name: string; data: K } = false,
 	): T => {
 		if (!Storage.check(nameStorage)) {
 			console.log(`${name} speichern, nicht vorhanden`);
 			Storage.set(nameStorage, data);
 			if (loadTable)
 				document.querySelector<CustomHTMLTableElement>(`#${loadTable.name}`)?.instance.rows.load(loadTable.data);
-		} else if (monatswechsel) {
-			console.log(`${name} speichern`);
-			Storage.set(nameStorage, data);
 		} else if (!Storage.compare(nameStorage, data)) {
 			console.log(`${name} vorhanden & änderungen`);
 			if (!vorhanden.find(element => element == beschreibung)) vorhanden.push(beschreibung);
@@ -102,32 +81,33 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 	};
 	vorgabenU = saveDaten("VorgabenU", "VorgabenU", vorgabenU, "vorgabenU", "Persönliche Daten", {
 		name: "tableVE",
-		data: [...Object.values(vorgabenU.vorgabenB)],
+		data: [...Object.values(vorgabenU.vorgabenB)] as IVorgabenUvorgabenB[],
 	});
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	if (willkommen) {
 		willkommen.innerHTML = `Hallo, ${vorgabenU.pers.Vorname}.`;
 	}
-	dataBZ = saveDaten("dataBZ", "DatenBZ", dataBZ, "dataBZ", "Bereitschaftszeit", {
+	BZ = saveDaten("dataBZ", "DatenBZ", BZ, "dataBZ", "Bereitschaftszeit", {
 		name: "tableBZ",
-		data: DataBZ(dataBZ),
+		data: DataBZ(BZ[monat], monat),
 	});
-	dataBE = saveDaten("dataBE", "DatenBE", dataBE, "dataBE", "Bereitschaftseinsatz", {
+	BE = saveDaten("dataBE", "DatenBE", BE, "dataBE", "Bereitschaftseinsatz", {
 		name: "tableBE",
-		data: DataBE(dataBE),
+		data: DataBE(BE[monat], monat),
 	});
-	dataE = saveDaten("dataE", "DatenE", dataE, "dataE", "EWT", {
+	EWT = saveDaten("dataE", "DatenE", EWT, "dataE", "EWT", {
 		name: "tableE",
-		data: DataE(dataE),
+		data: DataE(EWT[monat], monat),
 	});
-	dataN = saveDaten("dataN", "DatenN", dataN, "dataN", "Nebenbezüge", {
+	N = saveDaten("dataN", "DatenN", N, "dataN", "Nebenbezüge", {
 		name: "tableN",
-		data: DataN(dataN),
+		data: DataN(N[monat], monat),
 	});
 
-	Storage.set("datenBerechnung", datenBerechnung);
+	const datenBerechnung = aktualisiereBerechnung(jahr, { BZ, BE, EWT, N });
 	Storage.set("VorgabenGeld", datenGeld);
 
+	// TODO: Unterschiede auf Monat anpassen?
 	if (vorhanden.length > 0) {
 		if (Object.keys(dataServer).length > 0) console.log("Unterschiede Server - Client", dataServer);
 		Storage.set("dataServer", dataServer);
@@ -137,7 +117,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 			status: "info",
 			dismissible: false,
 			timeout: false,
-			position: "br",
 			fixed: true,
 			actions: [
 				{
@@ -167,15 +146,15 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 		buttonDisable(false);
 	}
 
-	if (dataServer.dataBZ != null || monatswechsel)
-		document.querySelector<CustomHTMLTableElement>("#tableBZ")?.instance.rows.load(DataBZ(dataBZ));
-	if (dataServer.dataBE != null || monatswechsel)
-		document.querySelector<CustomHTMLTableElement>("#tableBE")?.instance.rows.load(DataBE(dataBE));
-	if (dataServer.dataE != null || monatswechsel)
-		document.querySelector<CustomHTMLTableElement>("#tableE")?.instance.rows.load(DataE(dataE));
-	if (dataServer.dataN != null || monatswechsel)
-		document.querySelector<CustomHTMLTableElement>("#tableN")?.instance.rows.load(DataN(dataN));
-	if (dataServer.dataVE != null || monatswechsel)
+	if (dataServer.dataBZ != null)
+		document.querySelector<CustomHTMLTableElement>("#tableBZ")?.instance.rows.load(DataBZ(BZ[monat], monat));
+	if (dataServer.dataBE != null)
+		document.querySelector<CustomHTMLTableElement>("#tableBE")?.instance.rows.load(DataBE(BE[monat], monat));
+	if (dataServer.dataE != null)
+		document.querySelector<CustomHTMLTableElement>("#tableE")?.instance.rows.load(DataE(EWT[monat], monat));
+	if (dataServer.dataN != null)
+		document.querySelector<CustomHTMLTableElement>("#tableN")?.instance.rows.load(DataN(N[monat], monat));
+	if (dataServer.dataVE != null)
 		document
 			.querySelector<CustomHTMLTableElement>("#tableVE")
 			?.instance.rows.load([...Object.values(vorgabenU.vorgabenB)]);
@@ -191,7 +170,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 		message: `Neue Daten geladen.`,
 		status: "success",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

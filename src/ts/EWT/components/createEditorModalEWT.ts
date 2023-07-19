@@ -9,7 +9,7 @@ import {
 	createModalBodySpanElement,
 	createModalBodyTitelElement,
 } from "../../components";
-import type { CustomHTMLDivElement, IDaten, IVorgabenU } from "../../interfaces";
+import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from "../../interfaces";
 import { Storage, checkMaxTag, saveTableData } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import { clearZeiten } from "../utils";
@@ -21,7 +21,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 		"fullscreen-sm-down",
 		createBodyElement,
 		createEditorModalFooter(customFooterButtton(), row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 
 	return modal;
@@ -36,11 +36,9 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 		const Jahr: number = Storage.get<number>("Jahr");
 
 		let Tag: number;
-		if (row instanceof Row) {
-			Tag = Number(row.cells.tagE);
-		} else if (row instanceof CustomTable) {
-			Tag = checkMaxTag(Jahr, Monat);
-		} else throw new Error("unbekannter Fehler");
+		if (row instanceof Row) Tag = Number(row.cells.tagE);
+		else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
+		else throw new Error("unbekannter Fehler");
 
 		const datum = dayjs([Jahr, Monat, Tag]);
 
@@ -57,7 +55,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				required: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "eOrtE") as Column;
@@ -77,7 +75,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 						};
 					}),
 				],
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "schichtE") as Column;
@@ -94,7 +92,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 					{ value: "BN", text: "Nacht/Bereitschaft" },
 					{ value: "S", text: "Sonder" },
 				],
-			})
+			}),
 		);
 		column = row.columns.array.find(column => column.name === "berechnen") as Column;
 		modalBody.appendChild(
@@ -103,7 +101,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				id: column.name,
 				text: column.title,
 				status: row instanceof Row ? row.cells[column.name] : true,
-			})
+			}),
 		);
 
 		modalBody.appendChild(document.createElement("hr"));
@@ -124,7 +122,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "anWE") as Column;
@@ -135,7 +133,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		modalBody.appendChild(createModalBodyTitelElement("Arbeitszeit"));
@@ -148,7 +146,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "endeE") as Column;
@@ -159,7 +157,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		modalBody.appendChild(createModalBodyTitelElement("1. Tätigkeitsstätte"));
@@ -172,7 +170,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "an1E") as Column;
@@ -183,7 +181,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		modalBody.appendChild(createModalBodyTitelElement("Einsatzort"));
@@ -196,7 +194,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "abEE") as Column;
@@ -207,7 +205,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				name: column.name,
 				value: row instanceof Row ? row.cells[column.name] : "",
 				type: "time",
-			})
+			}),
 		);
 
 		return modalBody;
@@ -236,7 +234,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 			if (!row) throw new Error("Row nicht gefunden");
 			const table = row instanceof Row ? row.CustomTable : row;
 
-			const values: IDaten["EWT"][0] = {
+			const values: IDatenEWT = {
 				tagE: dayjs(form.querySelector<HTMLInputElement>("#tagE")?.value).format("DD") ?? "",
 				eOrtE: form.querySelector<HTMLInputElement>("#eOrtE")?.value ?? "",
 				schichtE: form.querySelector<HTMLInputElement>("#schichtE")?.value ?? "",
@@ -253,7 +251,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 	}

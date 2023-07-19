@@ -1,7 +1,7 @@
 import duration from "dayjs/plugin/duration.js";
 import { isHoliday } from "../../class/feiertagets/feiertage";
-import type { IDaten, IVorgabenU } from "../../interfaces";
-import { DatenSortieren, Storage } from "../../utilities";
+import type { IMonatsDaten, IDatenBZ, IVorgabenU } from "../../interfaces";
+import { DatenSortieren, Storage, getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
 export default function BereitschaftEingabe(
@@ -10,8 +10,8 @@ export default function BereitschaftEingabe(
 	nachtAnfang: dayjs.Dayjs,
 	nachtEnde: dayjs.Dayjs,
 	nacht: boolean,
-	daten: IDaten["BZ"]
-): IDaten["BZ"] | false {
+	daten: IMonatsDaten["BZ"],
+): IMonatsDaten["BZ"] | false {
 	console.groupCollapsed("Vorgaben");
 	console.log("nacht: " + nacht);
 	console.log("Bereitschafts Anfang: " + bereitschaftsAnfang.toDate());
@@ -33,29 +33,25 @@ export default function BereitschaftEingabe(
 	let pauseMerkerTag;
 	let pauseMerkerNacht;
 
-	const getTimeForDuration = (value: string) => {
-		const time = dayjs(value, "HH:mm");
-		return { hours: time.hour(), minutes: time.minute() };
-	};
+	// Voreinstellungen Übernehmen
+	const datenU = Storage.get<IVorgabenU>("VorgabenU");
+	if (!datenU) throw new Error("VorgabenU nicht gefunden");
 
-	const // Voreinstellungen Übernehmen
-		datenU: IVorgabenU = Storage.get("VorgabenU");
+	// Tagschicht Anfangszeit Mo-Do
+	const tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);
 
-	const // Tagschicht Anfangszeit Mo-Do
-		tagAnfangsZeitMoDo = dayjs.duration(getTimeForDuration(datenU.aZ.eT));
+	// Tagschicht Anfangszeit Fr
+	const tagAnfangsZeitFr = getDurationFromTime(datenU.aZ.eTF);
 
-	const // Tagschicht Anfangszeit Fr
-		tagAnfangsZeitFr = dayjs.duration(getTimeForDuration(datenU.aZ.eTF));
+	// Tagschicht Endezeit Mo-Fr
+	const tagEndeZeitMoFr = getDurationFromTime(datenU.aZ.bT);
 
-	const // Tagschicht Endezeit Mo-Fr
-		tagEndeZeitMoFr = dayjs.duration(getTimeForDuration(datenU.aZ.bT));
-
-	const // Feste Variablen
-		ruheZeit = 10;
+	// Feste Variablen
+	const ruheZeit = 10;
 
 	const tagPausenVorgabe = 30;
 	const nachtPausenVorgabe = 45;
-	const bereitschaftsZeitraumWechsel = dayjs.duration({ hours: 8 });
+	const bereitschaftsZeitraumWechsel = dayjs.duration(8, "hours");
 
 	const arbeitsAnfang = [
 		tagEndeZeitMoFr,
@@ -87,7 +83,7 @@ export default function BereitschaftEingabe(
 		arbeitsAnfang: duration.Duration[],
 		arbeitstagHeute: boolean,
 		arbeitstagMorgen: boolean,
-		nacht: boolean
+		nacht: boolean,
 	): dayjs.Dayjs => {
 		console.group("B2");
 		let merker: dayjs.Dayjs | undefined;
@@ -164,7 +160,9 @@ export default function BereitschaftEingabe(
 		console.groupEnd();
 
 		// überprüfe welches Bereitschaftsende Zutrifft
+
 		bereitschaftsEndeMerker = dayjs.min(bereitschaftsEndeA, bereitschaftsEndeB, nachtAnfang, bereitschaftsEnde);
+		if (!bereitschaftsEndeMerker) throw new Error("Fehler bei Berechnung: bereitschaftsEndeMerker");
 		console.log(`Bereitschafts Ende Merker: ${bereitschaftsEndeMerker.toDate()}`);
 
 		/// #Berechnung Bereitschaftsanfang# ///
@@ -181,8 +179,8 @@ export default function BereitschaftEingabe(
 
 		bereitschaftsAnfangMerker = bereitschaftsAnfang.isSame(bereitschaftsEndeMerker, "d")
 			? dayjs.min(bereitschaftsAnfangNacht, bereitschaftsAnfangA, bereitschaftsEndeB)
-			: dayjs.min(dayjs.max(bereitschaftsAnfangA, bereitschaftsEndeB), bereitschaftsAnfangNacht);
-
+			: dayjs.min(dayjs.max(bereitschaftsAnfangA, bereitschaftsEndeB) ?? bereitschaftsEnde, bereitschaftsAnfangNacht);
+		if (!bereitschaftsAnfangMerker) throw new Error("Fehler bei Berechnung bereitschaftsAnfangMerker");
 		console.log(`Bereitschafts Anfang Merker: ${bereitschaftsAnfangMerker.toDate()}`);
 
 		/// #Berechnung Pause# ///
@@ -199,18 +197,20 @@ export default function BereitschaftEingabe(
 		// Pause Nachtschicht, normal und bei Ruhe nach Nacht
 		pauseMerkerNacht = bereitschaftsAnfang.hour(nachtEnde.hour()).minute(nachtEnde.minute());
 		pauseMerkerTag = pauseMerker.hour(nachtEnde.hour()).add(ruheZeit, "h").minute(nachtEnde.minute());
-		if (bereitschaftsAnfang.isSame(pauseMerkerNacht) || bereitschaftsAnfang.isSame(pauseMerkerTag)) {
+		if (bereitschaftsAnfang.isSame(pauseMerkerNacht) || bereitschaftsAnfang.isSame(pauseMerkerTag))
 			pause = nachtPausenVorgabe;
-		}
+
 		console.groupEnd();
 		console.log(`Pausen Zeit: ${pause}`);
 
 		console.log(
-			`Eingabe Tabelle: ${bereitschaftsAnfang.format("L, LT")} --- ${bereitschaftsEndeMerker.format("L, LT")} --- ${pause}`
+			`Eingabe Tabelle: ${bereitschaftsAnfang.format("L, LT")} --- ${bereitschaftsEndeMerker.format(
+				"L, LT",
+			)} --- ${pause}`,
 		);
 
 		/// #Prüfen ob Daten bereits vorhanden# ///
-		const newDaten: IDaten["BZ"][0] = {
+		const newDaten: IDatenBZ = {
 			beginB: bereitschaftsAnfang.toISOString(),
 			endeB: bereitschaftsEndeMerker.toISOString(),
 			pauseB: pause,
@@ -229,9 +229,7 @@ export default function BereitschaftEingabe(
 		console.log("Bereitschafts Anfang: " + bereitschaftsAnfang.toDate());
 
 		// neuen Nachtschichtanfang setzten, Wenn kleiner als Bereitschaftsanfang
-		if (bereitschaftsAnfang.isAfter(nachtAnfang)) {
-			nachtAnfang = nachtAnfang.add(1, "d");
-		}
+		if (bereitschaftsAnfang.isAfter(nachtAnfang)) nachtAnfang = nachtAnfang.add(1, "d");
 		console.log(`Nacht Anfang: ${nachtAnfang.toDate()}`);
 		if (nachtAnfang.isAfter(nachtEnde) && !nachtAnfang.isSame(bereitschaftsEnde)) {
 			nachtAnfang = bereitschaftsEnde.clone();
@@ -262,6 +260,7 @@ export default function BereitschaftEingabe(
 
 		// überprüfe welches Bereitschaftsende Zutrifft
 		bereitschaftsEndeMerker = dayjs.min(bereitschaftsEndeA, bereitschaftsEndeB, nachtAnfang, bereitschaftsEnde);
+		if (!bereitschaftsEndeMerker) throw new Error("Fehler bei Berechnung bereitschaftsEndeMerker");
 		console.log(`Bereitschafts Ende Merker: ${bereitschaftsEndeMerker.toDate()}`);
 
 		// überprüfe ob Ruhe nach Nacht nötig ist
@@ -272,7 +271,12 @@ export default function BereitschaftEingabe(
 		) {
 			bereitschaftsAnfangNacht = bereitschaftsAnfangNacht.add(ruheZeit, "h");
 			console.log(`Bereitschafts Anfang Nacht: ${bereitschaftsAnfangNacht.toDate()}`);
-			bereitschaftsAnfang = dayjs.max(dayjs.min(bereitschaftsAnfangA, bereitschaftsEndeB), bereitschaftsAnfangNacht);
+			const bereitschaftsAnfangMerker = dayjs.max(
+				dayjs.min(bereitschaftsAnfangA, bereitschaftsEndeB) ?? bereitschaftsEnde,
+				bereitschaftsAnfangNacht,
+			);
+			if (!bereitschaftsAnfangMerker) throw new Error("Fehler bei Berechnung bereitschaftsAnfang");
+			bereitschaftsAnfang = bereitschaftsAnfangMerker;
 			console.log(`Bereitschafts Anfang: ${bereitschaftsAnfang.toDate()}`);
 			arbeitstagHeute = Arbeitstag(bereitschaftsAnfang);
 			console.log(`Arbeitstag Heute: ${arbeitstagHeute} --- ${bereitschaftsAnfang.format("dd")}`);

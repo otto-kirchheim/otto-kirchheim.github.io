@@ -1,14 +1,14 @@
 import { generateEingabeTabelleEinstellungenVorgabenB } from ".";
 import { BereitschaftsEinsatzZeiträume } from "../../Bereitschaft";
 import { CustomTable } from "../../class/CustomTable";
-import type { CustomHTMLTableElement, IVorgabenU } from "../../interfaces";
+import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUaZ } from "../../interfaces";
 import { Storage, saveTableData } from "../../utilities";
 
 export default function generateEingabeMaskeEinstellungen(VorgabenU: IVorgabenU = Storage.get("VorgabenU")): void {
 	const VorgabenB = VorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
 
-	setElementValues<IVorgabenU["pers"]>(VorgabenU.pers);
-	setElementValues<IVorgabenU["aZ"]>(VorgabenU.aZ);
+	setElementValues<IVorgabenUPers>(VorgabenU.pers);
+	setElementValues<IVorgabenUaZ>(VorgabenU.aZ);
 
 	populateTable(VorgabenU);
 
@@ -20,9 +20,7 @@ export default function generateEingabeMaskeEinstellungen(VorgabenU: IVorgabenU 
 		ftVE.rows.load([...Object.values(VorgabenB)]);
 		saveTableData(ftVE);
 		console.log("saved", ftVE);
-	} else {
-		generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
-	}
+	} else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
 }
 
 function populateTable(VorgabenU: IVorgabenU): void {
@@ -59,11 +57,8 @@ function setElementValues<T>(values: T): void {
 		const element = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
 		const value = values[key as keyof T];
 		if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement) {
-			if (isNumberOrString(value)) {
-				element.value = value.toString();
-			} else {
-				throw new Error("unbekannter Wert");
-			}
+			if (isNumberOrString(value)) element.value = value.toString();
+			else throw new Error("unbekannter Wert");
 		}
 	}
 }

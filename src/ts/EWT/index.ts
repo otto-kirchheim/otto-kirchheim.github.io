@@ -71,7 +71,6 @@ window.addEventListener("load", () => {
 						status: "error",
 						dismissible: false,
 						timeout: false,
-						position: "br",
 						fixed: true,
 						actions: [
 							{
@@ -100,7 +99,6 @@ window.addEventListener("load", () => {
 								status: "error",
 								dismissible: false,
 								timeout: false,
-								position: "br",
 								fixed: true,
 								actions: [
 									{
@@ -138,12 +136,13 @@ window.addEventListener("load", () => {
 			},
 		});
 
+	const monat = Storage.get<number>("Monat");
 	const btnZb = document.querySelector<HTMLButtonElement>("#btnZb");
 	btnZb?.addEventListener("click", () => {
 		ewtBerechnen({
-			monat: Storage.get<number>("Monat"),
+			monat,
 			jahr: Storage.get<number>("Jahr"),
-			daten: Storage.get<IDaten["EWT"]>("dataE"),
+			daten: Storage.get<IDaten["EWT"]>("dataE")[monat] ?? [],
 			vorgabenU: Storage.get<IVorgabenU>("VorgabenU"),
 		});
 	});

@@ -1,11 +1,11 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type { CustomHTMLTableElement, IDatenBZ } from "../../interfaces";
 import { Storage, clearLoading, saveTableData, setLoading, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
 import { DataBZ } from "./convertDaten";
 
-export default function sendDataE($modal: HTMLDivElement): void {
+export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	setLoading("btnESE");
 
 	const datumInput = $modal.querySelector<HTMLInputElement>("#Datum");
@@ -28,9 +28,8 @@ export default function sendDataE($modal: HTMLDivElement): void {
 		!berZeitInput ||
 		!tableBE ||
 		!tableBZ
-	) {
+	)
 		throw new Error("Input Element nicht gefunden");
-	}
 
 	const daten = {
 		tagBE: dayjs(datumInput.value).format("DD.MM.YYYY"),
@@ -61,7 +60,7 @@ export default function sendDataE($modal: HTMLDivElement): void {
 			bereitschaftsEnde = dayjs(`${daten.tagBE}T${daten.endeBE}`).isBefore(bereitschaftsAnfang)
 				? dayjs(`${daten.tagBE}T${daten.endeBE}`).add(1, "d")
 				: dayjs(`${daten.tagBE}T${daten.endeBE}`),
-			dataTable = tableToArray<IDaten["BZ"][0]>("tableBZ");
+			dataTable = tableToArray<IDatenBZ>("tableBZ");
 
 		const data = BereitschaftEingabe(
 			bereitschaftsAnfang,
@@ -69,7 +68,7 @@ export default function sendDataE($modal: HTMLDivElement): void {
 			bereitschaftsEnde,
 			bereitschaftsEnde,
 			false,
-			dataTable
+			dataTable,
 		);
 
 		if (!data) {
@@ -78,7 +77,6 @@ export default function sendDataE($modal: HTMLDivElement): void {
 				message: "Bereitschaft<br/>Zeitraum bereits vorhanden!",
 				status: "warning",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
@@ -87,11 +85,9 @@ export default function sendDataE($modal: HTMLDivElement): void {
 		Storage.set("dataBZ", data);
 		tableBZ.instance.rows.load(DataBZ(data));
 		createSnackBar({
-			message:
-				"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
+			message: "Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!",
 			status: "success",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 	}

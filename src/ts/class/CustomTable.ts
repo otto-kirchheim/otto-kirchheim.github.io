@@ -185,12 +185,7 @@ export class Rows {
 		this.CustomTable.drawRows();
 	}
 
-	/**
-	 * The load function takes an array of objects and adds them to the CustomTable.
-	 * @param {object[]} array - The array of data to load.
-	 * @param {boolean} [add=false] - If true, the new rows will be added to the existing rows. If false, the
-	 * existing rows will be replaced with the new rows.
-	 */
+	/** The load function takes an array of objects and adds them to the CustomTable. */
 	load(array: object[], add = false): void {
 		if (!add) this.array.length = 0;
 		array.forEach(row => this.array.push(new Row(this.CustomTable, row)));
@@ -216,9 +211,8 @@ export class CustomTable {
 		} else if (initTable instanceof HTMLTableElement) {
 			this.table = initTable.id;
 			this.$el = initTable;
-		} else {
-			throw new Error("Tabellen Fehler");
-		}
+		} else throw new Error("Tabellen Fehler");
+
 		this.$el.instance = this;
 		this.options = ApplyOptions.bind(this)(options);
 		this.state = setState.bind(this)();
@@ -264,12 +258,8 @@ export class CustomTable {
 		console.log(this);
 		return this;
 
-		/**
-		 * It takes an object as an argument and returns an object with the same properties as the argument,
-		 * but with default values for the properties that are not defined in the argument
-		 * @param options - The options object that is passed to the constructor.
-		 * @returns
-		 */
+		/** It takes an object as an argument and returns an object with the same properties as the argument,
+		 * but with default values for the properties that are not defined in the argument */
 		function ApplyOptions(this: CustomTable, options: CustomTableOptions): CustomTableOptionsAll {
 			if (!options.columns) throw new Error("Spalten fehlen");
 			return {
@@ -369,9 +359,7 @@ export class CustomTable {
 	 * @returns An array of arrays.
 	 */
 	public getArray<T>(): T[] {
-		return this.rows.array.map(row => {
-			return Object.values(row.cells) as T;
-		});
+		return this.rows.array.map(row => Object.values(row.cells) as T);
 	}
 
 	/**
@@ -407,7 +395,7 @@ export class CustomTable {
 			const buttonDeleteAlle = createButton(
 				["btn", "btn-danger"],
 				this.options.editing.deleteAllText,
-				this.options.editing.deleteAllRows
+				this.options.editing.deleteAllRows,
 			);
 
 			divFooter.appendChild(buttonAdd);
@@ -484,13 +472,13 @@ export class CustomTable {
 							["btn", "btn-outline-primary"],
 							column.editing.editText,
 							this.options.editing.editRow,
-							"edit"
+							"edit",
 						);
 						const buttonDelete = createButton(
 							["btn", "btn-outline-danger"],
 							column.editing.deleteText,
 							this.options.editing.deleteRow,
-							"delete"
+							"delete",
 						);
 
 						divBtnGroup.append(buttonEdit);
@@ -528,9 +516,7 @@ export class CustomTable {
 			const dangerBtn = tfoot?.querySelector<HTMLButtonElement>(".btn-danger");
 			if (dangerBtn) dangerBtn.style.display = "none";
 		}
-		if (this.options.customFunction?.afterDrawRows) {
-			this.options.customFunction.afterDrawRows.call(this);
-		}
+		if (this.options.customFunction?.afterDrawRows) this.options.customFunction.afterDrawRows.call(this);
 	}
 
 	/**

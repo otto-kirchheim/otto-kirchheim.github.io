@@ -6,7 +6,7 @@ import {
 	createModalBodyInputElement,
 	createModalBodySelectElement,
 } from "../../components";
-import type { CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from "../../interfaces";
 import { Storage, tableToArray } from "../../utilities";
 import { addNebenTag } from "../utils";
 
@@ -17,17 +17,16 @@ export default function createAddModalNeben(): void {
 		null,
 		createBodyElement,
 		createEditorModalFooter([customFooterButtton()]),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 	new Modal(modal).show();
 
 	function createBodyElement(): HTMLDivElement {
-		const dataE: IDaten["EWT"] = tableToArray("tableE");
+		const dataE = tableToArray<IDatenEWT>("tableE");
 		if (dataE.length === 0) {
 			createSnackBar({
 				message: 'Keine Tage in EWT gefunden. </br></br>Bitte erst EWT ausfüllen! </br>oder Manuell über "Neue Zeile"',
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			throw new Error("'Keine Tage in EWT gefunden.");
@@ -50,7 +49,7 @@ export default function createAddModalNeben(): void {
 				required: true,
 				value: null,
 				options: getTagOptions(),
-			})
+			}),
 		);
 
 		modalBody.appendChild(
@@ -67,7 +66,7 @@ export default function createAddModalNeben(): void {
 						selected: true,
 					},
 				],
-			})
+			}),
 		);
 
 		modalBody.appendChild(
@@ -80,7 +79,7 @@ export default function createAddModalNeben(): void {
 				required: true,
 				min: 1,
 				max: 1,
-			})
+			}),
 		);
 
 		return modalBody;
@@ -91,7 +90,7 @@ export default function createAddModalNeben(): void {
 			disabled: boolean | undefined;
 			selected: boolean | undefined;
 		}[] {
-			const dataN: IDaten["N"] = tableToArray("tableN");
+			const dataN = tableToArray<IDatenN>("tableN");
 			const jahr = Storage.get<number>("Jahr");
 			const monat = Storage.get<number>("Monat");
 			const options = [];
@@ -125,13 +124,10 @@ export default function createAddModalNeben(): void {
 					disabled: boolean | undefined;
 					selected: boolean | undefined;
 				};
-				if (schicht == "N") {
-					option.text = `${tag} | Nacht`;
-				} else if (schicht == "BN") {
-					option.text = `${tag} | Nacht / Bereitschaft`;
-				} else {
-					option.text = tag;
-				}
+				if (schicht == "N") option.text = `${tag} | Nacht`;
+				else if (schicht == "BN") option.text = `${tag} | Nacht / Bereitschaft`;
+				else option.text = tag;
+
 				option.value = JSON.stringify({
 					tagN,
 					beginN: day.beginE,
@@ -141,13 +137,11 @@ export default function createAddModalNeben(): void {
 					nrN: "",
 					dauerN: 0,
 				});
-				if (dataN) {
+				if (dataN)
 					dataN.forEach(value => {
-						if (Number(value.tagN) == Number(tagN)) {
-							option.disabled = true;
-						}
+						if (Number(value.tagN) == Number(tagN)) option.disabled = true;
 					});
-				}
+
 				options.push(option);
 			}
 			return options;

@@ -1,20 +1,18 @@
-import type { IDaten } from "../../interfaces";
+import type { IDatenBEJahr, IDatenBZJahr, IMonatsDaten } from "../../interfaces";
 import { Storage } from "../../utilities";
 
-export function DataBZ(data?: IDaten["BZ"]): IDaten["BZ"] {
+export function DataBZ(data?: IMonatsDaten["BZ"], Monat?: number): IMonatsDaten["BZ"] {
 	if (data === undefined) {
-		if (!Storage.check("dataBZ")) return [];
-		data = Storage.get("dataBZ");
+		if (!Monat) Monat = Storage.get<number>("Monat");
+		data = Storage.check("dataBZ") ? Storage.get<IDatenBZJahr>("dataBZ")?.[Monat] ?? [] : [];
 	}
-	if (data === undefined) return [];
 	return data;
 }
 
-export function DataBE(data?: IDaten["BE"]): IDaten["BE"] {
+export function DataBE(data?: IMonatsDaten["BE"], Monat?: number): IMonatsDaten["BE"] {
 	if (data === undefined) {
-		if (!Storage.check("dataBE")) return [];
-		data = Storage.get("dataBE");
+		if (!Monat) Monat = Storage.get<number>("Monat");
+		data = Storage.check("dataBE") ? Storage.get<IDatenBEJahr>("dataBE")?.[Monat] ?? [] : [];
 	}
-	if (data === undefined) return [];
 	return data;
 }

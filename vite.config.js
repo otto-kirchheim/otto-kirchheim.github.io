@@ -305,10 +305,14 @@ export default defineConfig({
 				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
 			},
 		}),
-		compression({ exclude: /\.(woff|woff2|map|nojekyll|png)$/i }),
+		compression({
+			exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
+			skipIfLargerOrEqual: true,
+		}),
 		compression({
 			algorithm: "brotliCompress",
 			exclude: [/\.(gz)$/, /\.(woff|woff2|map|nojekyll|png)$/],
+			skipIfLargerOrEqual: true,
 		}),
 		VitePluginInjectPreload({
 			files: [

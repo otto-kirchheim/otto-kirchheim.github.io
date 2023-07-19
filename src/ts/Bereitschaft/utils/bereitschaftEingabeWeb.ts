@@ -1,5 +1,13 @@
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDaten } from "../../interfaces";
+import type {
+	CustomHTMLDivElement,
+	CustomHTMLTableElement,
+	IDaten,
+	IDatenBZJahr,
+	IMonatsDaten,
+	IVorgabenBerechnung,
+	IVorgabenU,
+} from "../../interfaces";
 import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
 import dayjs from "../../utilities/configDayjs";
@@ -54,25 +62,25 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 	const monat = +MonatInput.value;
 	const jahr = +JahrInput.value;
 
-	let data: IDaten["BZ"] | false = [];
-	let data1: IDaten["BZ"] | false = tableToArray("tableBZ");
-	let data2: IDaten["BZ"] | false = [];
+	let data: IMonatsDaten["BZ"] | false = false;
+	const data1: IMonatsDaten["BZ"] = tableToArray("tableBZ");
+	let data2: IMonatsDaten["BZ"] | false = false;
 	if (!data1) throw new Error("Fehler bei Datenermittlung");
 	console.log({ bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, monat, jahr, accessToken });
+
 	if (
 		bereitschaftsAnfang.isSame(bereitschaftsEnde, "M") ||
 		(!bereitschaftsAnfang.isSame(bereitschaftsEnde, "M") &&
 			bereitschaftsEnde.isSameOrBefore(dayjs([jahr, bereitschaftsEnde.month(), 1, 0, 0])))
 	) {
 		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, data1);
-	} else if (!navigator.onLine) {
+	} else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, "y") && !navigator.onLine) {
 		createSnackBar({
-			message: "Bereitschaft<br/>Du bist Offline: <br/>Kein Monatswechsel möglich!",
+			message: "Bereitschaft<br/>Du bist Offline: <br/>Kein Jahreswechsel möglich!",
 			icon: "question",
 			status: "error",
 			dismissible: false,
 			timeout: false,
-			position: "br",
 			actions: [
 				{
 					text: "ohne wechsel fortsetzten?",
@@ -84,7 +92,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 							nachtAnfang,
 							nachtEnde,
 							nacht,
-							data1
+							data1,
 						);
 						if (!data) {
 							clearLoading("btnESZ");
@@ -93,14 +101,15 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 								icon: "!",
 								status: "warning",
 								timeout: 3000,
-								position: "br",
 								fixed: true,
 							});
 							return;
 						}
 
-						Storage.set("dataBZ", data);
-						tableBZ.instance.rows.load(DataBZ(data));
+						const savedData: IDatenBZJahr = Storage.get("dataBZ");
+						savedData[monat] = data;
+						Storage.set("dataBZ", savedData);
+						tableBZ.instance.rows.load(DataBZ(data, monat));
 
 						clearLoading("btnESZ");
 						createSnackBar({
@@ -108,7 +117,6 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 								"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
 							status: "success",
 							timeout: 3000,
-							position: "br",
 							fixed: true,
 						});
 					},
@@ -151,86 +159,97 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 			throw new Error("Fehler bei Nacht und Bereitschaft");
 		}
 
-		data1 = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
+		if (jahr !== jahr2) {
+			try {
+				const fetched2 = await FetchRetry<null, IDaten>(`${jahr2}`);
+				if (fetched2 instanceof Error) throw fetched2;
+				if (fetched2.statusCode != 200) {
+					console.log("Fehler");
+					return;
+				}
+				const dataResponded = fetched2.data.BZ;
+				console.log(dataResponded);
 
-		try {
-			const fetched2 = await FetchRetry<null, { datenB: { datenBZ: IDaten["BZ"] } }>(`${monat2 + 1}&${jahr2}`);
-			if (fetched2 instanceof Error) throw fetched2;
-			if (fetched2.statusCode != 200) {
-				console.log("Fehler");
-				return;
-			}
-			const dataResponded2 = fetched2.data.datenB.datenBZ;
-			console.log(dataResponded2);
+				data2 = BereitschaftEingabe(
+					bereitschaftsEndeWechsel2,
+					bereitschaftsEnde,
+					nachtAnfang2,
+					nachtEnde,
+					nacht,
+					dataResponded[1],
+				);
 
-			data2 = BereitschaftEingabe(
-				bereitschaftsEndeWechsel2,
-				bereitschaftsEnde,
-				nachtAnfang2,
-				nachtEnde,
-				nacht,
-				dataResponded2
-			);
+				if (!data2) return;
 
-			const dataSave = {
-				BZ: data2,
-				Monat: monat2 + 1,
-				Jahr: jahr2,
-			};
+				dataResponded[1] = data2;
 
-			const fetchedSave = await FetchRetry("saveData", dataSave, "POST");
-			if (fetchedSave instanceof Error) throw fetchedSave;
-			if (fetchedSave.statusCode != 200) {
-				console.log("Fehler:", fetchedSave.message);
+				const dataSave = {
+					BZ: dataResponded,
+					Jahr: jahr2,
+				};
+
+				const fetchedSave = await FetchRetry<
+					typeof dataSave,
+					{
+						datenBerechnung: IVorgabenBerechnung | false;
+						daten: IDaten;
+						user: IVorgabenU;
+					}
+				>("saveData", dataSave, "POST");
+				if (fetchedSave instanceof Error) throw fetchedSave;
+				if (fetchedSave.statusCode != 200) {
+					console.log("Fehler:", fetchedSave.message);
+					createSnackBar({
+						message: "Bereitschaft<br/>Es ist ein Fehler beim Jahreswechsel aufgetreten",
+						status: "error",
+						timeout: 3000,
+						fixed: true,
+					});
+					return;
+				}
+				console.log(fetchedSave.data);
 				createSnackBar({
-					message: "Bereitschaft<br/>Es ist ein Fehler beim Monatswechsel aufgetreten",
-					status: "error",
+					message: `Bereitschaft<br/>Daten für 01/${jahr2} gespeichert`,
+					status: "success",
 					timeout: 3000,
-					position: "br",
 					fixed: true,
 				});
+			} catch (err) {
+				console.log(err);
 				return;
 			}
-			console.log(fetchedSave.data);
-			createSnackBar({
-				message: `Bereitschaft<br/>Daten für Monat ${monat2 + 1} gespeichert`,
-				status: "success",
-				timeout: 3000,
-				position: "br",
-				fixed: true,
-			});
-		} catch (err) {
-			console.log(err);
-			return;
+		} else {
+			data2 = Storage.get<IDatenBZJahr>("dataBZ")[monat2 + 1] ?? [];
+			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel2, bereitschaftsEnde, nachtAnfang2, nachtEnde, nacht, data2);
 		}
 
-		console.log("Daten Monat 1", data1);
-		console.log("Daten Monat 2", data2);
+		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
 
-		data = data1;
+		console.log("Daten Monat 1", data);
+		console.log("Daten Monat 2", data2);
 	}
+
 	if (!data) {
 		clearLoading("btnESZ");
 		createSnackBar({
 			message: "Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!",
 			status: "warning",
 			timeout: 3000,
-			position: "br",
 			fixed: true,
 		});
 		return;
 	}
 
-	Storage.set("dataBZ", data);
-	tableBZ.instance.rows.load(DataBZ(data));
+	const savedData: IDatenBZJahr = Storage.get("dataBZ");
+	savedData[monat] = data;
+	Storage.set("dataBZ", savedData);
+	tableBZ.instance.rows.load(DataBZ(data, monat));
 
 	clearLoading("btnESZ");
 	createSnackBar({
-		message:
-			"Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!</br></br>Berechnung wird erst nach Speichern aktualisiert.",
+		message: "Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!",
 		status: "success",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

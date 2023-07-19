@@ -55,7 +55,6 @@ function showErrorAndLogout(): void {
 		message: `Login<br/>Fehlerhafte Anmeldung,</br> bitte Erneut anmelden!`,
 		status: "error",
 		timeout: 3000,
-		position: "br",
 		fixed: true,
 	});
 }

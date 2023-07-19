@@ -1,13 +1,13 @@
 import { Modal } from "bootstrap";
 import { CustomTable, Row } from "../../class/CustomTable";
 import { createEditorModalFooter, createModal, createModalBodyInputElement } from "../../components";
-import type { CustomHTMLDivElement, IDaten } from "../../interfaces";
+import type { CustomHTMLDivElement, IDatenBZ } from "../../interfaces";
 import { Storage, checkMaxTag, saveTableData, toJSON } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
 export default function createEditorModalBereitschaftsZeit(
 	row: CustomTable | Row,
-	title: string
+	title: string,
 ): CustomHTMLDivElement {
 	const { modal, form } = createModal(
 		title,
@@ -15,7 +15,7 @@ export default function createEditorModalBereitschaftsZeit(
 		"sm",
 		createBodyElement,
 		createEditorModalFooter(null, row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 
 	return modal;
@@ -45,7 +45,7 @@ export default function createEditorModalBereitschaftsZeit(
 								required: true,
 								min,
 								max,
-							})
+							}),
 						);
 						break;
 					default:
@@ -58,7 +58,7 @@ export default function createEditorModalBereitschaftsZeit(
 								type: "number",
 								min: 0,
 								max: 60,
-							})
+							}),
 						);
 						break;
 				}
@@ -86,7 +86,7 @@ export default function createEditorModalBereitschaftsZeit(
 								required: true,
 								min,
 								max,
-							})
+							}),
 						);
 						break;
 					default:
@@ -99,7 +99,7 @@ export default function createEditorModalBereitschaftsZeit(
 								type: "number",
 								min: 0,
 								max: 60,
-							})
+							}),
 						);
 						break;
 				}
@@ -119,8 +119,8 @@ export default function createEditorModalBereitschaftsZeit(
 			if (!row) throw new Error("Row nicht gefunden");
 			const table = row instanceof Row ? row.CustomTable : row;
 
-			const formData = toJSON<IDaten["BZ"][0]>(new FormData(form), table);
-			const values: IDaten["BZ"][0] = {
+			const formData = toJSON<IDatenBZ>(new FormData(form), table);
+			const values: IDatenBZ = {
 				beginB: dayjs(formData.beginB).toISOString(),
 				endeB: dayjs(formData.endeB).toISOString(),
 				pauseB: Number(formData.pauseB),
@@ -128,7 +128,7 @@ export default function createEditorModalBereitschaftsZeit(
 
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 	}

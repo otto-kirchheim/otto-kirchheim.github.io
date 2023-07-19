@@ -4,25 +4,18 @@ import { FetchRetry } from "../../utilities/FetchRetry";
 
 export default async function checkPasswort(): Promise<void> {
 	const errorMessage = document.querySelector<HTMLDivElement>("#errorMessage");
-	if (!errorMessage) {
-		throw new Error("Fehler: errorMessage nicht gefunden!");
-	}
+	if (!errorMessage) throw new Error("Fehler: errorMessage nicht gefunden!");
+
 	const passwortAltInput = document.querySelector<HTMLInputElement>("#passwortOld");
-	if (!passwortAltInput) {
-		throw new Error("Fehler: passwortOld InputElement nicht gefunden!");
-	}
+	if (!passwortAltInput) throw new Error("Fehler: passwortOld InputElement nicht gefunden!");
 	const passwortAlt = passwortAltInput.value.trim();
 
 	const passwort3Input = document.querySelector<HTMLInputElement>("#Passwort3");
-	if (!passwort3Input) {
-		throw new Error("Fehler: Passwort3 InputElement nicht gefunden!");
-	}
+	if (!passwort3Input) throw new Error("Fehler: Passwort3 InputElement nicht gefunden!");
 	const passwort3 = passwort3Input.value.trim();
 
 	const passwort4Input = document.querySelector<HTMLInputElement>("#Passwort4");
-	if (!passwort4Input) {
-		throw new Error("Fehler: Passwort4 InputElement nicht gefunden!");
-	}
+	if (!passwort4Input) throw new Error("Fehler: Passwort4 InputElement nicht gefunden!");
 	const passwort4 = passwort4Input.value.trim();
 
 	if (!passwortAlt) {
@@ -59,7 +52,7 @@ export default async function checkPasswort(): Promise<void> {
 				PasswortAlt: string;
 				PasswortNeu: string;
 			},
-			null
+			true | Error
 		>("changePW", data, "POST");
 		if (fetched instanceof Error) throw fetched;
 		if (fetched.statusCode >= 400) {
@@ -69,7 +62,6 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort konnte nicht geändert werden.`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
@@ -79,7 +71,6 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort wurde geändert.`,
 				status: "success",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			errorMessage.innerHTML = "";
@@ -89,21 +80,16 @@ export default async function checkPasswort(): Promise<void> {
 				message: `Login<br/>Passwort konnte nicht geändert werden.`,
 				status: "error",
 				timeout: 3000,
-				position: "br",
 				fixed: true,
 			});
 			return;
 		}
 		const selectDisplay = document.querySelector<HTMLDivElement>("#SelectDisplay");
-		if (!selectDisplay) {
-			throw new Error("Fehler: SelectDisplay nicht gefunden!");
-		}
+		if (!selectDisplay) throw new Error("Fehler: SelectDisplay nicht gefunden!");
 		selectDisplay.classList.remove("d-none");
 
 		const changeDisplay = document.querySelector<HTMLDivElement>("#ChangeDisplay");
-		if (!changeDisplay) {
-			throw new Error("Fehler: ChangeDisplay nicht gefunden!");
-		}
+		if (!changeDisplay) throw new Error("Fehler: ChangeDisplay nicht gefunden!");
 		changeDisplay.classList.add("d-none");
 
 		passwortAltInput.value = "";

@@ -1,12 +1,10 @@
-import type { IDaten } from "../../interfaces";
+import type { IDaten, IMonatsDaten } from "../../interfaces";
 import { Storage } from "../../utilities";
 
-export function DataE(data?: IDaten["EWT"]): IDaten["EWT"] {
+export function DataE(data?: IMonatsDaten["EWT"], Monat?: number): IMonatsDaten["EWT"] {
 	if (data === undefined) {
-		if (!Storage.check("dataE")) return [];
-		data = Storage.get<IDaten["EWT"]>("dataE");
+		if (!Monat) Monat = Storage.get<number>("Monat");
+		data = Storage.check("dataE") ? Storage.get<IDaten["EWT"]>("dataE")?.[Monat] ?? [] : [];
 	}
-
-	if (data === undefined) return [];
 	return data;
 }

@@ -18,7 +18,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 		null,
 		createBodyElement,
 		createEditorModalFooter(null, row instanceof Row ? "Speichern" : undefined),
-		SubmitEventListener
+		SubmitEventListener,
 	);
 
 	return modal;
@@ -31,11 +31,9 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 		const Jahr: number = Storage.get<number>("Jahr");
 
 		let Tag: number;
-		if (row instanceof Row) {
-			Tag = row.cells.tagN;
-		} else if (row instanceof CustomTable) {
-			Tag = checkMaxTag(Jahr, Monat);
-		} else throw new Error("unbekannter Fehler");
+		if (row instanceof Row) Tag = row.cells.tagN;
+		else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
+		else throw new Error("unbekannter Fehler");
 
 		const datum = dayjs([Jahr, Monat, Tag]);
 
@@ -52,7 +50,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				required: true,
 				min: datum.startOf("M").format("YYYY-MM-DD"),
 				max: datum.endOf("M").format("YYYY-MM-DD"),
-			})
+			}),
 		);
 
 		modalBody.appendChild(createModalBodyTitelElement("Arbeitszeit"));
@@ -67,7 +65,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 					value: row instanceof Row ? row.cells[column.name] : null,
 					type: "time",
 					required: true,
-				})
+				}),
 			);
 		});
 
@@ -82,7 +80,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 					name: column.name,
 					value: row instanceof Row ? row.cells[column.name] : null,
 					type: "time",
-				})
+				}),
 			);
 		});
 
@@ -99,7 +97,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				required: true,
 				min: 1,
 				max: 1,
-			})
+			}),
 		);
 
 		column = row.columns.array.find(column => column.name === "nrN") as Column;
@@ -111,7 +109,7 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				value: row instanceof Row ? row.cells[column.name] : null,
 				required: true,
 				options: [{ value: "040 Fahrentsch.", text: "040 Fahrentsch.", selected: true }],
-			})
+			}),
 		);
 
 		return modalBody;
@@ -142,11 +140,11 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 				beginPauseN: form.querySelector<HTMLInputElement>("#beginPauseN")?.value ?? "",
 				endePauseN: form.querySelector<HTMLInputElement>("#endePauseN")?.value ?? "",
 				nrN: form.querySelector<HTMLInputElement>("#nrN")?.value ?? "",
-				dauerN: Number(form.querySelector<HTMLInputElement>("#dauerN")?.value) ?? 0,
+				dauerN: Number(form.querySelector<HTMLInputElement>("#dauerN")?.value) || 0,
 			};
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
-			(<Modal>Modal.getInstance(modal)).hide();
+			Modal.getInstance(modal)?.hide();
 			saveTableData(table);
 		};
 	}

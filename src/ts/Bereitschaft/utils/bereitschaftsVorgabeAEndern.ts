@@ -1,11 +1,11 @@
-import type { IVorgabenU } from "../../interfaces";
+import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 import nachtAusblenden from "./nachtAusblenden";
 
 export default function bereitschaftsVorgabeAEndern(
 	parentElement: HTMLDivElement,
-	vorgabenB: IVorgabenU["vorgabenB"][0],
-	datum = dayjs(parentElement.querySelector<HTMLInputElement>("#bA")?.value) ?? null
+	vorgabenB: IVorgabenUvorgabenB,
+	datum = dayjs(parentElement.querySelector<HTMLInputElement>("#bA")?.value) ?? null,
 ): void {
 	if (!datum) throw new Error("Datum nicht gefunden");
 
@@ -19,9 +19,8 @@ export default function bereitschaftsVorgabeAEndern(
 	const nEInput = parentElement.querySelector<HTMLInputElement>("#nE");
 	const nETInput = parentElement.querySelector<HTMLInputElement>("#nET");
 
-	if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput) {
+	if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput)
 		throw new Error("Input Element nicht gefunden");
-	}
 
 	bAInput.value = datum.isoWeekday(vorgabenB.beginnB.tag).format("YYYY-MM-DD");
 	bATInput.value = vorgabenB.beginnB.zeit;
