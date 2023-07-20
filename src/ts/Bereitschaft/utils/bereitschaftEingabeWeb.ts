@@ -222,7 +222,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 		} else {
 			data2 = Storage.get<IDatenBZJahr>("dataBZ")[monat2 + 1] ?? [];
 			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel2, bereitschaftsEnde, nachtAnfang2, nachtEnde, nacht, data2);
-			if (data2) savedData[monat2] = data2;
+			if (data2) savedData[monat2 + 1] = data2;
 		}
 
 		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
