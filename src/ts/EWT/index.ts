@@ -136,7 +136,7 @@ window.addEventListener("load", () => {
 			},
 		});
 
-	const monat = Storage.get<number>("Monat");
+	const monat = Storage.check("Monat") ? Storage.get<number>("Monat") : 0;
 	const btnZb = document.querySelector<HTMLButtonElement>("#btnZb");
 	btnZb?.addEventListener("click", () => {
 		ewtBerechnen({

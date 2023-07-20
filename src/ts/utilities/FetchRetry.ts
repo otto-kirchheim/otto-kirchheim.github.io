@@ -17,8 +17,9 @@ export async function FetchRetry<I, T>(
 	data?: I,
 	method: "GET" | "POST" | "UPDATE" = "GET",
 	retry = 0,
-	accessToken: string = Storage.get("accessToken"),
+	accessToken?: string,
 ): Promise<{ data: T; status: boolean; statusCode: number; message: string } | Error> {
+	if (!accessToken && Storage.check("accessToken")) accessToken = Storage.get<string>("accessToken");
 	if (retry > 2) throw new Error("Zu viele Tokenfehler");
 	const lastServerContact = +(sessionStorage.getItem("lastServerContact") as string);
 	let serverReady = false;
@@ -71,6 +72,7 @@ export async function FetchRetry<I, T>(
 	const response = await fetch(`${API_URL}/${UrlPath}`, fetchObject);
 	const responded = await response.json();
 	if (response.status == 401 && responded.message == "Token abgelaufen") {
+		if (!accessToken) throw new Error("Fehler bei Token aktualisieren");
 		accessToken = await tokenErneuern(retry, undefined, accessToken);
 		return await FetchRetry(UrlPath, data, method, retry + 1, accessToken);
 	}
