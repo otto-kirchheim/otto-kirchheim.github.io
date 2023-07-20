@@ -170,6 +170,8 @@ describe("#bereitschaftEingabeWeb", async () => {
 describe("#DataBZ", () => {
 	beforeEach(() => {
 		Storage.clear();
+		Storage.set("Benutzer", "TEST");
+		Storage.set("accessToken", "TEST");
 	});
 
 	it("should return an empty array when no data is provided and nothing is in storage", () => {
@@ -194,6 +196,8 @@ describe("#DataBZ", () => {
 describe("#DataBE", () => {
 	beforeEach(() => {
 		Storage.clear();
+		Storage.set("Benutzer", "TEST");
+		Storage.set("accessToken", "TEST");
 	});
 
 	it("should return an empty array when no data is provided and nothing is in storage", () => {
