@@ -136,7 +136,7 @@ export default function createEditorModalBereitschaftsEinsatz(
 			const table = row instanceof Row ? row.CustomTable : row;
 
 			const values: IDatenBE = {
-				tagBE: dayjs(form.querySelector<HTMLInputElement>("#tagBE")?.value).format("DD.MM.)YYYY") ?? "",
+				tagBE: dayjs(form.querySelector<HTMLInputElement>("#tagBE")?.value).format("DD.MM.YYYY") ?? "",
 				auftragsnummerBE: form.querySelector<HTMLInputElement>("#auftragsnummerBE")?.value ?? "",
 				beginBE: form.querySelector<HTMLInputElement>("#beginBE")?.value ?? "",
 				endeBE: form.querySelector<HTMLInputElement>("#endeBE")?.value ?? "",
