@@ -4,7 +4,15 @@ export interface IVorgabenU {
 	fZ: IVorgabenUfZ[];
 	vorgabenB: { [key: string]: IVorgabenUvorgabenB };
 }
-
+export interface IVorgabenUServer {
+	pers: IVorgabenUPers;
+	aZ: IVorgabenUaZ;
+	fZ: IVorgabenUfZ[];
+	vorgabenB: {
+		key: string;
+		value: IVorgabenUvorgabenB;
+	}[];
+}
 export interface IVorgabenUPers {
 	Vorname: string;
 	Nachname: string;
@@ -39,6 +47,7 @@ export interface IVorgabenUfZ {
 	text: string;
 	value: string;
 }
+
 export interface IVorgabenUvorgabenB {
 	Name: string;
 	beginnB: {

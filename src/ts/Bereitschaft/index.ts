@@ -179,15 +179,11 @@ window.addEventListener("load", () => {
 
 	if (btnSaveB)
 		btnSaveB.addEventListener("click", () => {
-			saveDaten(btnSaveB).catch((err: Error) => {
-				throw err;
-			});
+			saveDaten(btnSaveB);
 		});
 
 	if (btnDownloadB)
 		btnDownloadB.addEventListener("click", () => {
-			download(btnDownloadB, "B").catch((err: Error) => {
-				throw err;
-			});
+			download(btnDownloadB, "B");
 		});
 });

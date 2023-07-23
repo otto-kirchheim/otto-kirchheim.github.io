@@ -5,7 +5,7 @@ import { BereitschaftEingabe, DataBE, DataBZ, bereitschaftEingabeWeb } from "../
 import { CustomHTMLDivElement } from "../src/ts/interfaces/CustomHTMLElements";
 import { IDaten } from "../src/ts/interfaces/IDaten";
 import { Storage } from "../src/ts/utilities";
-import { VorgabenUMock, datenBEMock, datenBZMock, mockBereitschaft } from "./mockData";
+import { VorgabenUMock, datenBEMock, datenBZMock, datenEWTMock, datenNMock, mockBereitschaft } from "./mockData";
 
 describe("#Bereitschaftseingabe", () => {
 	beforeAll(() => {
@@ -139,6 +139,7 @@ describe("#bereitschaftEingabeWeb", async () => {
 
 		globalThis.createSnackBar = vi.fn();
 		globalThis.FetchRetry = vi.fn();
+		globalThis.aktualisiereBerechnung = vi.fn();
 	});
 
 	it("Should calculate the correct Bereitschaft if month is the same", async () => {
@@ -157,8 +158,10 @@ describe("#bereitschaftEingabeWeb", async () => {
     <input id="Jahr" value="2023"/>
   `;
 		document.body.appendChild($modal);
-		const storageData: IDaten["BZ"] = datenBZMock;
-		Storage.set("dataBZ", storageData);
+		Storage.set("dataBZ", datenBZMock);
+		Storage.set("dataBE", datenBEMock);
+		Storage.set("dataE", datenEWTMock);
+		Storage.set("dataN", datenNMock);
 		const StorageSpy = vi.spyOn(Storage, "set");
 
 		await bereitschaftEingabeWeb($modal, "mockAccessToken");

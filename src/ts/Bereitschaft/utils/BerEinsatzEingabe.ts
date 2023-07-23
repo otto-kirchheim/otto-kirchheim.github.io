@@ -1,3 +1,4 @@
+import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IDatenBZ } from "../../interfaces";
 import { Storage, clearLoading, saveTableData, setLoading, tableToArray } from "../../utilities";
@@ -84,6 +85,9 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 
 		Storage.set("dataBZ", data);
 		tableBZ.instance.rows.load(DataBZ(data));
+
+		aktualisiereBerechnung();
+
 		createSnackBar({
 			message: "Bereitschaft<br/>Neuer Zeitraum hinzugefügt</br>Speichern nicht vergessen!",
 			status: "success",

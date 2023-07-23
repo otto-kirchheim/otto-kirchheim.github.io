@@ -5,34 +5,34 @@ export interface IMonatsDaten<EWTType = string> {
 	N: IDatenN[];
 }
 
-export interface IDaten<EWTType = string> {
-	BZ: IDatenBZJahr;
+export interface IDaten<BZType = string, EWTType = string> {
+	BZ: IDatenBZJahr<BZType>;
 	BE: IDatenBEJahr;
 	EWT: IDatenEWTJahr<EWTType>;
 	N: IDatenNJahr;
 }
 
-export interface IDatenBZ {
-	[key: string]: string | number;
-	beginB: string;
-	endeB: string;
+export interface IDatenBZ<BZType = string> {
+	[key: string]: BZType | number;
+	beginB: BZType;
+	endeB: BZType;
 	pauseB: number;
 }
 
-export interface IDatenBZJahr {
-	[key: number]: IDatenBZ[];
-	1: IDatenBZ[];
-	2: IDatenBZ[];
-	3: IDatenBZ[];
-	4: IDatenBZ[];
-	5: IDatenBZ[];
-	6: IDatenBZ[];
-	7: IDatenBZ[];
-	8: IDatenBZ[];
-	9: IDatenBZ[];
-	10: IDatenBZ[];
-	11: IDatenBZ[];
-	12: IDatenBZ[];
+export interface IDatenBZJahr<BZType = string> {
+	[key: number]: IDatenBZ<BZType>[];
+	1: IDatenBZ<BZType>[];
+	2: IDatenBZ<BZType>[];
+	3: IDatenBZ<BZType>[];
+	4: IDatenBZ<BZType>[];
+	5: IDatenBZ<BZType>[];
+	6: IDatenBZ<BZType>[];
+	7: IDatenBZ<BZType>[];
+	8: IDatenBZ<BZType>[];
+	9: IDatenBZ<BZType>[];
+	10: IDatenBZ<BZType>[];
+	11: IDatenBZ<BZType>[];
+	12: IDatenBZ<BZType>[];
 }
 
 export interface IDatenBE {
@@ -96,10 +96,10 @@ export interface IDatenEWTJahr<EWTType = string> {
 export interface IDatenN {
 	[key: string]: string | number;
 	tagN: string;
-	beginN: `${number}${number}:${number}${number}`;
-	endeN: `${number}${number}:${number}${number}`;
-	beginPauseN: `${number}${number}:${number}${number}`;
-	endePauseN: `${number}${number}:${number}${number}`;
+	beginN: string;
+	endeN: string;
+	beginPauseN: string;
+	endePauseN: string;
 	nrN: string;
 	dauerN: number;
 }

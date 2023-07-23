@@ -14,7 +14,14 @@ import {
 import { IVorgabenBerechnung, IVorgabenBerechnungMonat } from "./IVorgabenBerechnungMonat.js";
 import { IVorgabenE } from "./IVorgabenE.js";
 import { IVorgabenGeld, IVorgabenGeldType } from "./IVorgabenGeldType.js";
-import { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUfZ, IVorgabenUvorgabenB } from "./IVorgabenU.js";
+import {
+	IVorgabenU,
+	IVorgabenUPers,
+	IVorgabenUServer,
+	IVorgabenUaZ,
+	IVorgabenUfZ,
+	IVorgabenUvorgabenB,
+} from "./IVorgabenU.js";
 
 export type {
 	CustomHTMLDivElement,
@@ -36,6 +43,7 @@ export type {
 	IVorgabenGeldType,
 	IVorgabenGeld,
 	IVorgabenU,
+	IVorgabenUServer,
 	IVorgabenUPers,
 	IVorgabenUaZ,
 	IVorgabenUfZ,

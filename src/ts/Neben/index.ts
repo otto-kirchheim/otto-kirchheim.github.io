@@ -72,15 +72,11 @@ window.addEventListener("load", () => {
 
 	const btnSaveN = document.querySelector<HTMLButtonElement>("#btnSaveN");
 	btnSaveN?.addEventListener("click", () => {
-		saveDaten(btnSaveN).catch((err: Error) => {
-			throw err;
-		});
+		saveDaten(btnSaveN);
 	});
 
 	const btnDownloadN = document.querySelector<HTMLButtonElement>("#btnDownloadN");
 	btnDownloadN?.addEventListener("click", () => {
-		download(btnDownloadN, "N").catch((err: Error) => {
-			throw err;
-		});
+		download(btnDownloadN, "N");
 	});
 });

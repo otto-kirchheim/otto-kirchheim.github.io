@@ -1,3 +1,4 @@
+import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type {
 	CustomHTMLDivElement,
@@ -245,6 +246,8 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 	savedData[monat] = data;
 	Storage.set("dataBZ", savedData);
 	tableBZ.instance.rows.load(DataBZ(data, monat));
+
+	aktualisiereBerechnung(jahr);
 
 	clearLoading("btnESZ");
 	createSnackBar({
