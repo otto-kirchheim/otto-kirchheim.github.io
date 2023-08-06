@@ -24,7 +24,7 @@ export default function createEditorModalVE(row: Row | CustomTable, titel: strin
 	function createBodyElement(): HTMLDivElement {
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row";
-		let column;
+		let column: Column;
 		column = row.columns.array.find((column: Column) => column.name === "Name") as Column;
 		modalBody.appendChild(
 			createModalBodyInputElement({

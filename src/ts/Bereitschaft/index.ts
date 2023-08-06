@@ -1,7 +1,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { IVorgabenUvorgabenB } from "../interfaces";
+import type { IVorgabenUvorgabenB } from "../interfaces";
 import { Storage, buttonDisable, download, saveDaten, saveTableData } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 import {
@@ -13,7 +13,7 @@ import {
 } from "./components";
 import { DataBE, DataBZ } from "./utils";
 
-export const BereitschaftsEinsatzZeiträume: { [key: string]: IVorgabenUvorgabenB } = {
+export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgabenB } = {
 	0: {
 		Name: "B1",
 		beginnB: { tag: 3, zeit: "15:45" },
@@ -173,17 +173,12 @@ window.addEventListener("load", () => {
 	const btnSaveB = document.querySelector<HTMLButtonElement>("#btnSaveB");
 	const btnDownloadB = document.querySelector<HTMLButtonElement>("#btnDownloadB");
 
-	if (btnESZ) btnESZ.addEventListener("click", createAddModalBereitschaftsZeit);
-
-	if (btnESE) btnESE.addEventListener("click", createAddModalBereitschaftsEinsatz);
-
-	if (btnSaveB)
-		btnSaveB.addEventListener("click", () => {
-			saveDaten(btnSaveB);
-		});
-
-	if (btnDownloadB)
-		btnDownloadB.addEventListener("click", () => {
-			download(btnDownloadB, "B");
-		});
+	btnESZ?.addEventListener("click", createAddModalBereitschaftsZeit);
+	btnESE?.addEventListener("click", createAddModalBereitschaftsEinsatz);
+	btnSaveB?.addEventListener("click", () => {
+		saveDaten(btnSaveB);
+	});
+	btnDownloadB?.addEventListener("click", () => {
+		download(btnDownloadB, "B");
+	});
 });

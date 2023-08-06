@@ -86,7 +86,6 @@ export default function createModalChangePassword(): void {
 			if (!(form instanceof HTMLFormElement)) return;
 			if (form.checkValidity && !form.checkValidity()) return;
 			event.preventDefault();
-
 			checkPasswort(modal);
 		};
 	}

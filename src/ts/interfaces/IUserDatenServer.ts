@@ -5,3 +5,9 @@ export interface UserDatenServer extends IDaten {
 	datenGeld: IVorgabenGeld;
 	datenBerechnung: IVorgabenBerechnung | false;
 }
+
+export type ReturnTypeSaveData = {
+	datenBerechnung: IVorgabenBerechnung | false;
+	daten: IDaten;
+	user: IVorgabenU;
+};

@@ -5,19 +5,13 @@ import { DataE } from "../EWT/utils";
 import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
 import { DataN } from "../Neben/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
-import { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenU } from "../interfaces";
+import { CustomHTMLTableElement, IDaten, IVorgabenU, ReturnTypeSaveData } from "../interfaces";
 import { FetchRetry } from "./FetchRetry";
 
 interface SaveData extends IDaten {
 	User: IVorgabenU;
 	Jahr: number;
 }
-
-type ReturnTypeSaveData = {
-	datenBerechnung: IVorgabenBerechnung | false;
-	daten: IDaten;
-	user: IVorgabenU;
-};
 
 function findCustomTableInstance(id: string): CustomHTMLTableElement["instance"] {
 	const table = document.querySelector<CustomHTMLTableElement>(`#${id}`);

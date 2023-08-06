@@ -1,8 +1,8 @@
 import { SaveUserDatenUEberschreiben } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import generateTableBerechnung from "../../Berechnung/generateTableBerechnung";
-import { DataBE, DataBZ } from "../../Bereitschaft/utils/convertDaten";
-import { DataE } from "../../EWT/utils/DataE";
+import { DataBE, DataBZ } from "../../Bereitschaft/utils";
+import { DataE } from "../../EWT/utils";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
 import { createSnackBar } from "../../class/CustomSnackbar";

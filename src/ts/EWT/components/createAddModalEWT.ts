@@ -6,8 +6,8 @@ import {
 	createModalBodyInputElement,
 	createModalBodySelectElement,
 } from "../../components";
-import type { CustomHTMLTableElement, IVorgabenU } from "../../interfaces";
-import { Storage, saveTableData } from "../../utilities";
+import type { IVorgabenU } from "../../interfaces";
+import { Storage } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import { addEWTtag, naechsterTag } from "../utils";
 
@@ -109,11 +109,7 @@ export default function createAddModalEWT(): void {
 			if (!(form instanceof HTMLFormElement)) return;
 			if (form.checkValidity && !form.checkValidity()) return;
 			event.preventDefault();
-
 			addEWTtag();
-
-			const table = document.querySelector<CustomHTMLTableElement>("#tableE");
-			if (table) saveTableData(table.instance);
 		};
 	}
 }

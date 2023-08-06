@@ -73,7 +73,6 @@ export default function createModalLogin(): void {
 			if (!(form instanceof HTMLFormElement)) return;
 			if (form.checkValidity && !form.checkValidity()) return;
 			event.preventDefault();
-
 			loginUser(modal);
 		};
 	}

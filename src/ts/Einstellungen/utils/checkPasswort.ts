@@ -69,12 +69,11 @@ export default async function checkPasswort(modal: CustomHTMLDivElement): Promis
 
 			console.log(`Passwort geändert: ${fetched.data}`);
 			createSnackBar({
-				message: `Passwort wurde geändert.`,
+				message: fetched.data ? `Passwort wurde geändert.` : `Passwort wurde nicht geändert.`,
 				status: "success",
 				timeout: 3000,
 				fixed: true,
 			});
-			errorMessage.innerHTML = "";
 		}
 	} catch (err) {
 		console.log(err);

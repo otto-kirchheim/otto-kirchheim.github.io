@@ -18,9 +18,8 @@ export default function Logout(): void {
 		window.scrollTo(0, 1);
 	}
 
-	const selectorsToAddDNone = ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"];
-
-	for (const selector of selectorsToAddDNone) toggleClassForElement(selector, "d-none", true);
+	for (const selector of ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"])
+		toggleClassForElement(selector, "d-none", true);
 
 	toggleClassForElement("#btnLogin", "d-none", false);
 

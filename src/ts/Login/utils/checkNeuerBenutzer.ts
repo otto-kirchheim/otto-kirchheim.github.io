@@ -10,23 +10,23 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
 	if (!errorMessage) throw new Error("errorMessage not found");
 
 	const zugangscode = document.querySelector<HTMLInputElement>("#Zugang");
-	if (!zugangscode?.value.trim()) {
+	if (!zugangscode) {
 		errorMessage.textContent = "Bitte Zugangscode Eingeben";
 		return;
 	}
 	const benutzer = document.querySelector<HTMLInputElement>("#Benutzer");
-	if (!benutzer?.value.trim()) {
+	if (!benutzer) {
 		errorMessage.textContent = "Bitte Benutzername Eingeben";
 		return;
 	}
 
 	const passwort1 = document.querySelector<HTMLInputElement>("#Passwort");
-	if (!passwort1?.value.trim()) {
+	if (!passwort1) {
 		errorMessage.textContent = "Bitte Passwort Eingeben";
 		return;
 	}
 	const passwort2 = document.querySelector<HTMLInputElement>("#Passwort2");
-	if (!passwort2?.value.trim()) {
+	if (!passwort2) {
 		errorMessage.textContent = "Bitte Passwort wiederholen";
 		return;
 	}

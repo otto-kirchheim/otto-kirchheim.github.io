@@ -1,6 +1,6 @@
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { DataBE, DataBZ } from "../../Bereitschaft/utils/convertDaten";
-import { DataE } from "../../EWT/utils/DataE";
+import { DataE } from "../../EWT/utils";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
 import type { CustomHTMLTableElement, UserDatenServer } from "../../interfaces";

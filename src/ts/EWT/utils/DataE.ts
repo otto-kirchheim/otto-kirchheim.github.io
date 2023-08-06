@@ -1,7 +1,7 @@
 import type { IDaten, IMonatsDaten } from "../../interfaces";
 import { Storage } from "../../utilities";
 
-export function DataE(data?: IMonatsDaten["EWT"], Monat?: number): IMonatsDaten["EWT"] {
+export default function DataE(data?: IMonatsDaten["EWT"], Monat?: number): IMonatsDaten["EWT"] {
 	if (!(Storage.check("Benutzer") && Storage.check("accessToken"))) return [];
 	if (Storage.check("dataE")) {
 		//! Remove nächsten Monat

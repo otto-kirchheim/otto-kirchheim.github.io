@@ -36,23 +36,17 @@ export default function BereitschaftEingabe(
 	// Voreinstellungen Übernehmen
 	const datenU = Storage.get<IVorgabenU>("VorgabenU");
 	if (!datenU) throw new Error("VorgabenU nicht gefunden");
-
 	// Tagschicht Anfangszeit Mo-Do
 	const tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);
-
 	// Tagschicht Anfangszeit Fr
 	const tagAnfangsZeitFr = getDurationFromTime(datenU.aZ.eTF);
-
 	// Tagschicht Endezeit Mo-Fr
 	const tagEndeZeitMoFr = getDurationFromTime(datenU.aZ.bT);
-
 	// Feste Variablen
 	const ruheZeit = 10;
-
 	const tagPausenVorgabe = 30;
 	const nachtPausenVorgabe = 45;
 	const bereitschaftsZeitraumWechsel = dayjs.duration(8, "hours");
-
 	const arbeitsAnfang = [
 		tagEndeZeitMoFr,
 		tagEndeZeitMoFr,
@@ -63,7 +57,6 @@ export default function BereitschaftEingabe(
 		bereitschaftsZeitraumWechsel,
 		tagEndeZeitMoFr,
 	];
-
 	const arbeitsEnde = [
 		tagAnfangsZeitMoDo,
 		tagAnfangsZeitMoDo,
@@ -74,7 +67,6 @@ export default function BereitschaftEingabe(
 		bereitschaftsZeitraumWechsel,
 		tagAnfangsZeitMoDo,
 	];
-
 	const pausenTag = [0, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, 0, 0, 0];
 
 	const B2 = (
@@ -93,35 +85,29 @@ export default function BereitschaftEingabe(
 		// am nächsten Tag,
 		// Begin normale Schicht bzw. neuer Bereitschaftszyklus
 		if (!bereitschaftsAnfang.isSame(nachtAnfang, "d")) {
-			if (arbeitstagMorgen === true) {
+			if (arbeitstagMorgen === true)
 				merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(arbeitsAnfang[tagBereitschaftsAnfang]);
-			} else {
-				merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(bereitschaftsZeitraumWechsel);
-			}
+			else merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(bereitschaftsZeitraumWechsel);
 
 			console.log(`Merker B2.1: ${merker.toDate()}`);
 		}
 		// Wie oben, aber:
 		// 2x Ende am gleichen Tag
 		if (bereitschaftsAnfang.isSame(nachtAnfang, "d") || nacht === false) {
-			if (arbeitstagHeute === true) {
+			if (arbeitstagHeute === true)
 				merker = bereitschaftsAnfang
 					.startOf("d")
 					.add(arbeitsAnfang[tagBereitschaftsAnfang === 0 ? 6 : tagBereitschaftsAnfang - 1]);
-			} else {
-				merker = bereitschaftsAnfang.startOf("d").add(bereitschaftsZeitraumWechsel);
-			}
+			else merker = bereitschaftsAnfang.startOf("d").add(bereitschaftsZeitraumWechsel);
 
 			console.log(`Merker B2.2: ${merker.toDate()}`);
 		}
 		// Wie oben, aber:
 		// wenn merker kleiner/gleich Bereitschafts Anfang -> am nächsten Tag
 		if (merker?.isSameOrBefore(bereitschaftsAnfang)) {
-			if (arbeitstagMorgen === true) {
+			if (arbeitstagMorgen === true)
 				merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(arbeitsAnfang[tagBereitschaftsAnfang]);
-			} else {
-				merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(bereitschaftsZeitraumWechsel);
-			}
+			else merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(bereitschaftsZeitraumWechsel);
 
 			console.log(`Merker B2.3: ${merker.toDate()}`);
 		}
@@ -129,10 +115,9 @@ export default function BereitschaftEingabe(
 		return merker as dayjs.Dayjs;
 	};
 
-	const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0) => {
+	const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
 		datum = datum.add(zusatz, "d");
-		const feiertag = isHoliday(datum.toDate(), "HE");
-		return !(feiertag || datum.isoWeekday() > 5);
+		return !(isHoliday(datum.toDate(), "HE") || datum.isoWeekday() > 5);
 	};
 
 	// Berechne ob Tag ein Arbeitstag ist

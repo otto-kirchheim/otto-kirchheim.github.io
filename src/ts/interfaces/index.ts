@@ -11,6 +11,7 @@ import {
 	IDatenNJahr,
 	IMonatsDaten,
 } from "./IDaten.js";
+import { ReturnTypeSaveData, UserDatenServer } from "./IUserDatenServer.js";
 import { IVorgabenBerechnung, IVorgabenBerechnungMonat } from "./IVorgabenBerechnungMonat.js";
 import { IVorgabenE } from "./IVorgabenE.js";
 import { IVorgabenGeld, IVorgabenGeldType } from "./IVorgabenGeldType.js";
@@ -22,7 +23,6 @@ import {
 	IVorgabenUfZ,
 	IVorgabenUvorgabenB,
 } from "./IVorgabenU.js";
-import { UserDatenServer } from "./IUserDatenServer.js";
 
 export type {
 	CustomHTMLDivElement,
@@ -49,5 +49,6 @@ export type {
 	IVorgabenUaZ,
 	IVorgabenUfZ,
 	IVorgabenUvorgabenB,
+	ReturnTypeSaveData,
 	UserDatenServer,
 };

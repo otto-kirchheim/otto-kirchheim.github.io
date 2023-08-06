@@ -4,7 +4,7 @@ import { saveTableData } from "../../utilities";
 
 export default function addEventlistenerToggleBerechnen(this: CustomTable): void {
 	const checkboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#tableE .row-checkbox"));
-	for (const checkbox of checkboxes) {
+	for (const checkbox of checkboxes)
 		checkbox.addEventListener("click", (event: Event) => {
 			event.stopPropagation();
 			const row = checkbox.closest<CustomHTMLTableRowElement>("tr")?.data;
@@ -13,5 +13,4 @@ export default function addEventlistenerToggleBerechnen(this: CustomTable): void
 			row.val(newValues);
 			saveTableData(this);
 		});
-	}
 }

@@ -69,7 +69,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 
 		const savedData: IDatenBZJahr = Storage.get("dataBZ");
 
-		if (!data || JSON.stringify(savedData[monat]) === JSON.stringify(data)) {
+		if (!data || savedData[monat].length === data.length) {
 			clearLoading("btnESE");
 			createSnackBar({
 				message: "Bereitschaft<br/>Zeitraum bereits vorhanden!",

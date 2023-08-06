@@ -66,9 +66,7 @@ window.addEventListener("load", () => {
 	});
 
 	const btnESN = document.querySelector<HTMLButtonElement>("#btnESN");
-	btnESN?.addEventListener("click", () => {
-		createAddModalNeben();
-	});
+	btnESN?.addEventListener("click", createAddModalNeben);
 
 	const btnSaveN = document.querySelector<HTMLButtonElement>("#btnSaveN");
 	btnSaveN?.addEventListener("click", () => {

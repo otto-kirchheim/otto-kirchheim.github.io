@@ -6,8 +6,7 @@ import type {
 	IDaten,
 	IDatenBZJahr,
 	IMonatsDaten,
-	IVorgabenBerechnung,
-	IVorgabenU,
+	ReturnTypeSaveData,
 } from "../../interfaces";
 import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
@@ -157,16 +156,20 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 			nachtEnde1 = dayjs([jahr2, monat2, 1, nachtEnde.hour(), nachtEnde.minute()]);
 			nachtAnfang2 = dayjs([jahr2, monat2, 1, nachtAnfang.hour(), nachtAnfang.minute()]);
 			bereitschaftsEndeWechsel2 = nachtEnde1.clone();
-		} else {
-			throw new Error("Fehler bei Nacht und Bereitschaft");
-		}
+		} else throw new Error("Fehler bei Nacht und Bereitschaft");
 
 		if (jahr !== jahr2) {
 			try {
-				const fetched2 = await FetchRetry<null, IDaten>(`${jahr2}`);
+				const fetched2 = await FetchRetry<null, IDaten>(jahr2.toString());
 				if (fetched2 instanceof Error) throw fetched2;
 				if (fetched2.statusCode != 200) {
-					console.log("Fehler");
+					console.log("Fehler:", fetched2.message);
+					createSnackBar({
+						message: "Bereitschaft<br/>Es ist ein Fehler beim Jahreswechsel aufgetreten",
+						status: "error",
+						timeout: 3000,
+						fixed: true,
+					});
 					return;
 				}
 				const dataResponded = fetched2.data.BZ;
@@ -185,19 +188,12 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 
 				dataResponded[1] = data2;
 
-				const dataSave = {
+				const dataSave: { BZ: IDatenBZJahr; Jahr: number } = {
 					BZ: dataResponded,
 					Jahr: jahr2,
 				};
 
-				const fetchedSave = await FetchRetry<
-					typeof dataSave,
-					{
-						datenBerechnung: IVorgabenBerechnung | false;
-						daten: IDaten;
-						user: IVorgabenU;
-					}
-				>("saveData", dataSave, "POST");
+				const fetchedSave = await FetchRetry<typeof dataSave, ReturnTypeSaveData>("saveData", dataSave, "POST");
 				if (fetchedSave instanceof Error) throw fetchedSave;
 				if (fetchedSave.statusCode != 200) {
 					console.log("Fehler:", fetchedSave.message);
