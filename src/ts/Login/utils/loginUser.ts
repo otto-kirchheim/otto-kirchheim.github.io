@@ -1,14 +1,22 @@
+import Modal from "bootstrap/js/dist/modal";
 import { userLoginSuccess } from ".";
 import { clearLoading, setLoading } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
+import { CustomHTMLDivElement } from "../../interfaces";
 
-export default async function loginUser(username?: string, passwort?: string): Promise<void> {
-	const usernameInput = document.querySelector<HTMLInputElement>("#Benutzer");
+export default async function loginUser(
+	modal: CustomHTMLDivElement,
+	username?: string,
+	passwort?: string,
+): Promise<void> {
+	const usernameInput = modal.querySelector<HTMLInputElement>("#Benutzer");
 	if (!usernameInput) throw new Error("Benutzer Input nicht gefunden");
 	if (!username) username = usernameInput.value;
-	const passwortInput = document.querySelector<HTMLInputElement>("#Passwort");
+
+	const passwortInput = modal.querySelector<HTMLInputElement>("#Passwort");
 	if (!passwortInput) throw new Error("Passwort Input nicht gefunden");
 	if (!passwort) passwort = passwortInput.value;
+
 	const btnLogin = document.querySelector<HTMLButtonElement>("#btnLogin");
 	if (btnLogin) btnLogin.disabled = true;
 	setLoading("btnLogin");
@@ -25,16 +33,14 @@ export default async function loginUser(username?: string, passwort?: string): P
 			"POST",
 		);
 		if (fetched instanceof Error) throw fetched;
-		if (fetched.statusCode == 200) {
-			userLoginSuccess({ ...fetched.data, username });
+		if (fetched.statusCode === 200) {
+			Modal.getInstance(modal)?.hide();
 
-			errorMessage.innerHTML = "";
-			usernameInput.value = "";
-			passwortInput.value = "";
+			userLoginSuccess({ ...fetched.data, username });
 		} else errorMessage.innerHTML = fetched.message;
 	} catch (err) {
 		err instanceof Error ? console.log(err.message) : console.log(err);
 	} finally {
-		clearLoading("btnLogin");
+		clearLoading("btnLogin", false);
 	}
 }

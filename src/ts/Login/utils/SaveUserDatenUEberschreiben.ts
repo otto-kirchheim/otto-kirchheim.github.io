@@ -3,7 +3,7 @@ import { DataBE, DataBZ } from "../../Bereitschaft/utils/convertDaten";
 import { DataE } from "../../EWT/utils/DataE";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
-import type { CustomHTMLTableElement, IDaten, IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from "../../interfaces";
+import type { CustomHTMLTableElement, UserDatenServer } from "../../interfaces";
 import { Storage } from "../../utilities";
 
 function applyDataToTable(selector: string, data: object[]): void {
@@ -11,20 +11,8 @@ function applyDataToTable(selector: string, data: object[]): void {
 	table?.instance.rows.load(data);
 }
 
-export default function SaveUserDatenUEberschreiben(ueberschreiben = true): void {
-	if (!ueberschreiben) {
-		Storage.remove("dataServer");
-		return;
-	}
-	const dataServer: {
-		vorgabenU?: IVorgabenU;
-		datenGeld?: IVorgabenGeld;
-		datenBerechnung?: IVorgabenBerechnung;
-		dataBZ?: IDaten["BZ"];
-		dataBE?: IDaten["BE"];
-		dataE?: IDaten["EWT"];
-		dataN?: IDaten["N"];
-	} = Storage.get("dataServer") ?? {};
+export default function SaveUserDatenUEberschreiben(): void {
+	const dataServer: Partial<UserDatenServer> = Storage.get("dataServer") ?? {};
 	console.log({ dataServer });
 
 	const Monat = Storage.get<number>("Monat");
@@ -36,29 +24,29 @@ export default function SaveUserDatenUEberschreiben(ueberschreiben = true): void
 		generateEingabeMaskeEinstellungen(dataServer.vorgabenU);
 		delete dataServer.vorgabenU;
 	}
-	if (dataServer.dataBZ) {
+	if (dataServer.BZ) {
 		console.log("DatenBZ überschreiben");
-		Storage.set("dataBZ", dataServer.dataBZ);
-		applyDataToTable("#tableBZ", DataBZ(dataServer.dataBZ[Monat], Monat));
-		delete dataServer.dataBZ;
+		Storage.set("dataBZ", dataServer.BZ);
+		applyDataToTable("#tableBZ", DataBZ(dataServer.BZ[Monat], Monat));
+		delete dataServer.BZ;
 	}
-	if (dataServer.dataBE) {
+	if (dataServer.BE) {
 		console.log("DatenBE überschreiben");
-		Storage.set("dataBE", dataServer.dataBE);
-		applyDataToTable("#tableBE", DataBE(dataServer.dataBE[Monat], Monat));
-		delete dataServer.dataBE;
+		Storage.set("dataBE", dataServer.BE);
+		applyDataToTable("#tableBE", DataBE(dataServer.BE[Monat], Monat));
+		delete dataServer.BE;
 	}
-	if (dataServer.dataE) {
+	if (dataServer.EWT) {
 		console.log("DatenE überschreiben");
-		Storage.set("dataE", dataServer.dataE);
-		applyDataToTable("#tableE", DataE(dataServer.dataE[Monat], Monat));
-		delete dataServer.dataE;
+		Storage.set("dataE", dataServer.EWT);
+		applyDataToTable("#tableE", DataE(dataServer.EWT[Monat], Monat));
+		delete dataServer.EWT;
 	}
-	if (dataServer.dataN) {
+	if (dataServer.N) {
 		console.log("DatenN überschreiben");
-		Storage.set("dataN", dataServer.dataN);
-		applyDataToTable("#tableN", DataN(dataServer.dataN[Monat], Monat));
-		delete dataServer.dataN;
+		Storage.set("dataN", dataServer.N);
+		applyDataToTable("#tableN", DataN(dataServer.N[Monat], Monat));
+		delete dataServer.N;
 	}
 	aktualisiereBerechnung();
 

@@ -1,6 +1,7 @@
 import createEditorModalFooter from "./createEditorModalFooter";
 import createModal from "./createModal";
 import createModalBodyCheckbox from "./createModalBodyCheckbox";
+import createModalBodyDivSpanElement from "./createModalBodyDivSpanElement";
 import createModalBodyFillerElement from "./createModalBodyFillerElement";
 import createModalBodyInputElement from "./createModalBodyInputElement";
 import createModalBodySelectElement from "./createModalBodySelectElement";
@@ -17,6 +18,7 @@ export {
 	createModalBodySelectElement,
 	createModalBodyShowElement,
 	createModalBodySpanElement,
+	createModalBodyDivSpanElement,
 	createModalBodyTitelElement,
 	createEditorModalFooter,
 	createShowModalFooter,

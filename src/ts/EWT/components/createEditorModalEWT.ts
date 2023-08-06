@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import { Column, CustomTable, Row } from "../../class/CustomTable";
 import {
 	createEditorModalFooter,
@@ -67,7 +67,7 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 				value: row instanceof Row ? row.cells[column.name] : null,
 				required: false,
 				options: [
-					{ value: "", text: "", selected: true },
+					{ text: "", selected: true },
 					...vorgabenU.fZ.map(ort => {
 						return {
 							value: ort.key,

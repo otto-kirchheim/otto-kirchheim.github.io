@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import {
 	createEditorModalFooter,
 	createModal,
@@ -7,8 +7,7 @@ import {
 	createModalBodyInputElement,
 	createModalBodySelectElement,
 } from "../../components";
-import type { CustomHTMLTableElement } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableData } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import { BerEinsatzEingabe } from "../utils";
 
@@ -48,7 +47,6 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				divClass: "form-floating col-12 pb-3",
 				title: "SAP-Nr / Einsatzbeschreibung",
 				name: "SAPNR",
-				value: "",
 				type: "text",
 				required: true,
 			}),
@@ -58,7 +56,6 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				divClass: "form-floating col-12 col-sm-6 pb-3",
 				title: "Von",
 				name: "ZeitVon",
-				value: null,
 				type: "time",
 				required: true,
 			}),
@@ -68,7 +65,6 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				divClass: "form-floating col-12 col-sm-6 pb-3",
 				title: "Bis",
 				name: "ZeitBis",
-				value: null,
 				type: "time",
 				required: true,
 			}),
@@ -78,9 +74,8 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				divClass: "form-floating col-12 col-sm-6 pb-3",
 				title: "LRE",
 				name: "LRE",
-				value: null,
 				options: [
-					{ value: "", text: "Bitte Einsatz auswählen", disabled: true, selected: true },
+					{ text: "Bitte Einsatz auswählen", disabled: true, selected: true },
 					{ value: "LRE 1", text: "LRE 1" },
 					{ value: "LRE 2", text: "LRE 2" },
 					{ value: "LRE 1/2 ohne x", text: "LRE 1/2 ohne x" },
@@ -96,7 +91,6 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 				divClass: "form-floating col-12 col-sm-6 pb-3",
 				title: "Privat Km",
 				name: "privatkm",
-				value: "",
 				type: "number",
 				min: 0,
 			}),
@@ -125,13 +119,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 
 			BerEinsatzEingabe(modal);
 
-			const table = document.querySelector<CustomHTMLTableElement>("#tableBE");
-
 			Modal.getInstance(modal)?.hide();
-
-			if (table) {
-				saveTableData(table.instance);
-			}
 		};
 	}
 }

@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import {
 	createEditorModalFooter,
 	createModal,
@@ -53,7 +53,6 @@ export default function createAddModalEWT(): void {
 				divClass: "form-floating",
 				title: "Tag",
 				name: "tagE",
-				value: "",
 				type: "date",
 				required: true,
 				min: datum.format("YYYY-MM-DD"),
@@ -66,10 +65,9 @@ export default function createAddModalEWT(): void {
 				divClass: "form-floating",
 				title: "Einsatzort",
 				name: "EOrt",
-				value: null,
 				required: false,
 				options: [
-					{ value: "", text: "", selected: true },
+					{ text: "", selected: true },
 					...vorgabenU.fZ.map(ort => {
 						return {
 							value: ort.key,
@@ -84,7 +82,6 @@ export default function createAddModalEWT(): void {
 				divClass: "form-floating",
 				title: "Schicht",
 				name: "Schicht",
-				value: "",
 				options: [
 					{ value: "T", text: "Tag", selected: true },
 					{ value: "N", text: "Nacht" },

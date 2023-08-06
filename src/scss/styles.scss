@@ -132,7 +132,6 @@ td:has(.SchichtBereitschaft) {
 
 .form-floating.required input:disabled + label::after {
 	color: rgba(var(--bs-body-color-rgb), 0.65);
-	background-color: var(--bs-secondary-bg);
 }
 
 .row > .form-floating > label {

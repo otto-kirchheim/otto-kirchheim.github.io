@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import { Row, createCustomTable } from "../../class/CustomTable";
 import type { IVorgabenU, IVorgabenUvorgabenB } from "../../interfaces";

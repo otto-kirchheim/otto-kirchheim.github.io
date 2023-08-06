@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import { CustomTable, Row } from "../../class/CustomTable";
 import { createEditorModalFooter, createModal, createModalBodyInputElement } from "../../components";
 import type { CustomHTMLDivElement, IDatenBZ } from "../../interfaces";
@@ -81,7 +81,6 @@ export default function createEditorModalBereitschaftsZeit(
 								divClass: "form-floating col-12 pb-3",
 								title: column.title,
 								name: column.name,
-								value: null,
 								type: "datetime-local",
 								required: true,
 								min,
@@ -95,7 +94,6 @@ export default function createEditorModalBereitschaftsZeit(
 								divClass: "form-floating col-12",
 								title: column.title,
 								name: column.name,
-								value: "",
 								type: "number",
 								min: 0,
 								max: 60,

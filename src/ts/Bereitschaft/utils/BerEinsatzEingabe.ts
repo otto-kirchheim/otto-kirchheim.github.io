@@ -1,6 +1,6 @@
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
-import type { CustomHTMLTableElement, IDatenBZ } from "../../interfaces";
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenBZJahr } from "../../interfaces";
 import { Storage, clearLoading, saveTableData, setLoading, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
@@ -32,7 +32,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	)
 		throw new Error("Input Element nicht gefunden");
 
-	const daten = {
+	const daten: IDatenBE = {
 		tagBE: dayjs(datumInput.value).format("DD.MM.YYYY"),
 		auftragsnummerBE: sapnrInput.value,
 		beginBE: vonInput.value,
@@ -41,19 +41,12 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 		privatkmBE: Number(privatkmInput.value),
 	};
 
-	const berZeit = berZeitInput.checked;
+	const berZeit: boolean = berZeitInput.checked;
 
 	console.log(daten);
 	const ftBE = tableBE.instance;
 	ftBE.rows.add(daten);
 	saveTableData(ftBE);
-
-	sapnrInput.value = "";
-	vonInput.value = "";
-	bisInput.value = "";
-	privatkmInput.value = "";
-	berZeitInput.checked = false;
-	lreSelect.value = "";
 
 	if (berZeit) {
 		daten.tagBE = datumInput.value;
@@ -63,7 +56,9 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 				: dayjs(`${daten.tagBE}T${daten.endeBE}`),
 			dataTable = tableToArray<IDatenBZ>("tableBZ");
 
-		const data = BereitschaftEingabe(
+		const monat: number = bereitschaftsAnfang.month() + 1;
+
+		const data: false | IDatenBZ[] = BereitschaftEingabe(
 			bereitschaftsAnfang,
 			bereitschaftsEnde,
 			bereitschaftsEnde,
@@ -72,7 +67,9 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 			dataTable,
 		);
 
-		if (!data) {
+		const savedData: IDatenBZJahr = Storage.get("dataBZ");
+
+		if (!data || JSON.stringify(savedData[monat]) === JSON.stringify(data)) {
 			clearLoading("btnESE");
 			createSnackBar({
 				message: "Bereitschaft<br/>Zeitraum bereits vorhanden!",
@@ -83,8 +80,9 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 			return;
 		}
 
-		Storage.set("dataBZ", data);
-		tableBZ.instance.rows.load(DataBZ(data));
+		savedData[monat] = data;
+		Storage.set("dataBZ", savedData);
+		tableBZ.instance.rows.load(DataBZ(data, monat));
 
 		aktualisiereBerechnung();
 

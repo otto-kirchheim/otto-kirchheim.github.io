@@ -1,14 +1,14 @@
 import { createSnackBar } from "../class/CustomSnackbar";
-import { Logout } from "../Login/utils";
 import { FetchRetry } from ".";
 import { Storage } from "../utilities";
+import { Logout } from "../Einstellungen/utils";
 
 let REFRESHED = 0;
 
 export default async function tokenErneuern(
 	retry?: number,
 	refreshToken: string = Storage.get("refreshToken"),
-	accessToken: string = Storage.get("accessToken")
+	accessToken: string = Storage.get("accessToken"),
 ): Promise<string> {
 	if (isTokenRefreshLimitReached(refreshToken, accessToken)) {
 		resetRefreshCounter();
@@ -21,7 +21,7 @@ export default async function tokenErneuern(
 		{ refreshToken },
 		"POST",
 		retry,
-		accessToken
+		accessToken,
 	);
 	if (responded instanceof Error) throw responded;
 	if (responded.statusCode === 200) {

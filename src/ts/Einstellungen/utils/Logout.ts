@@ -1,3 +1,4 @@
+import Tab from "bootstrap/js/dist/tab";
 import { Storage } from "../../utilities";
 import { controller, newAbortControler } from "../../utilities/FetchRetry";
 
@@ -11,11 +12,17 @@ export default function Logout(): void {
 	newAbortControler();
 	Storage.clear();
 
-	const selectorsToAddDNone = ["#navmenu", "#btn-navmenu", "#NewDisplay", "#SelectDisplay", "#admin", "#Neben-tab"];
+	const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
+	if (sel instanceof HTMLButtonElement) {
+		Tab.getOrCreateInstance(sel).show();
+		window.scrollTo(0, 1);
+	}
+
+	const selectorsToAddDNone = ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"];
 
 	for (const selector of selectorsToAddDNone) toggleClassForElement(selector, "d-none", true);
 
-	toggleClassForElement("#loginDisplay", "d-none", false);
+	toggleClassForElement("#btnLogin", "d-none", false);
 
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	if (willkommen) willkommen.innerHTML = "Willkommen";

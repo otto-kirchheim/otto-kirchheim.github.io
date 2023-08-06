@@ -1,4 +1,6 @@
 export default function setLoading(btn: string): void {
+	document.querySelector<HTMLDivElement>("#ladeAnzeige")?.classList.remove("d-none");
+
 	const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
 	if (!btnElement) return;
 	if (!btnElement.dataset.normaltext) btnElement.dataset.normaltext = btnElement.innerHTML;

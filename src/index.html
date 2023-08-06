@@ -46,17 +46,6 @@
 					Nebengeld
 				</button>
 
-				<button
-					class="navbar-toggler d-none"
-					type="button"
-					aria-label="Menü"
-					data-bs-toggle="offcanvas"
-					data-bs-target="#navmenu"
-					aria-controls="navmenu"
-					id="btn-navmenu"
-				>
-					<span class="navbar-toggler-icon"></span>
-				</button>
 				<div
 					class="offcanvas offcanvas-end text-bg-dark d-none"
 					id="navmenu"
@@ -72,8 +61,10 @@
 						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
 					</div>
 					<div class="offcanvas-body p-4 pt-0 p-lg-0">
-						<hr class="d-lg-none my-1 text-white-50" />
 						<ul class="navbar-nav nav-pills flex-row nav-fill flex-wrap bd-navbar-nav">
+							<li class="nav-item py-lg-1 col-12 col-lg-auto">
+								<hr class="d-lg-none my-1 text-white-50" />
+							</li>
 							<li class="nav-item col-6 col-lg-auto d-lg-none" data-bs-dismiss="offcanvas" role="presentation">
 								<button
 									class="nav-link py-2 px-0 px-lg-2 active"
@@ -87,7 +78,7 @@
 								</button>
 							</li>
 							<li class="nav-item py-lg-1 col-12 col-lg-auto">
-								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white"></div>
+								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
 								<hr class="d-lg-none my-1 text-white-50" />
 							</li>
 							<li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
@@ -128,7 +119,7 @@
 							</li>
 
 							<li class="py-lg-1 col-12 col-lg-auto">
-								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white"></div>
+								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
 								<hr class="d-lg-none my-1 text-white-50" />
 							</li>
 
@@ -169,7 +160,7 @@
 							</li>
 
 							<li class="py-lg-1 col-12 col-lg-auto">
-								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white"></div>
+								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
 								<hr class="d-lg-none my-1 text-white-50" />
 							</li>
 
@@ -225,6 +216,9 @@
 									</li>
 								</ul>
 							</li>
+							<li class="py-lg-1 col-12 col-lg-auto">
+								<div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
+							</li>
 						</ul>
 					</div>
 					<div class="d-flex justify-content-end m-2 d-lg-none">
@@ -238,189 +232,53 @@
 						</button>
 					</div>
 				</div>
+
+				<div class="ms-auto me-2">
+					<button class="btn btn-primary" id="btnLogin">Anmelden</button>
+					<select
+						id="Monat"
+						class="text-dark-emphasis form-select validate d-none"
+						required
+						data-bs-original-titel="Monatswechsel"
+					>
+						<option value="1">Januar</option>
+						<option value="2">Februar</option>
+						<option value="3">März</option>
+						<option value="4">April</option>
+						<option value="5">Mai</option>
+						<option value="6">Juni</option>
+						<option value="7">Juli</option>
+						<option value="8">August</option>
+						<option value="9">September</option>
+						<option value="10">Oktober</option>
+						<option value="11">November</option>
+						<option value="12">Dezember</option>
+					</select>
+				</div>
+				<button
+					class="navbar-toggler d-none"
+					type="button"
+					aria-label="Menü"
+					data-bs-toggle="offcanvas"
+					data-bs-target="#navmenu"
+					aria-controls="navmenu"
+					id="btn-navmenu"
+				>
+					<span class="navbar-toggler-icon"></span>
+				</button>
 			</nav>
 		</header>
 
 		<div class="modal" id="modal" tabindex="-1"></div>
 
 		<div class="tab-content mt-1" id="tabContent">
-			<!-- Tab start -->
+			<!-- Tab Start -->
 			<div class="tab-pane fade show active" id="start" role="tabpanel">
-				<div class="container flex-column text-center vertical-center">
-					<div class="card d-grid col-12 col-sm-8 col-md-6 col-xl-3 mx-auto">
-						<div class="card-header">
-							<h1 class="card-title" id="Willkommen">Willkommen</h1>
-						</div>
-
-						<div id="loginDisplay" class="card-body">
-							<form id="formLogin" class="d-grid gap-2">
-								<div class="form-floating">
-									<input id="Benutzer" type="text" class="form-control validate" pattern="[A-z]*" required />
-									<label for="Benutzer">Benutzer</label>
-								</div>
-								<div class="form-floating">
-									<input id="Passwort" type="password" class="form-control validate" pattern="^[A-Za-z0-9\.\-\+_%]*$" required />
-									<label for="Passwort">Passwort</label>
-								</div>
-								<button class="btn btn-primary" type="submit" name="Einloggen" id="btnLogin">Einloggen</button>
-								<button class="btn btn-primary" type="button" name="Neu" id="btnNewUser">Neuer Benutzer</button>
-							</form>
-						</div>
-
-						<div id="NewDisplay" class="card-body d-none">
-							<form id="formNewUser" class="d-grid gap-2">
-								<div class="form-floating">
-									<input id="Zugang" type="text" class="form-control validate" pattern="[A-z]*" required />
-									<label for="Zugang">Zugangscode</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Benutzer2"
-										type="text"
-										class="form-control validate"
-										pattern="[A-z]*"
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="right"
-										data-bs-original-titel="Benutzer"
-										data-bs-content="Kein Ää Öö Üü ß"
-										required
-									/>
-									<label for="Benutzer2">Benutzer</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Passwort1"
-										type="password"
-										class="form-control validate"
-										pattern="^[A-Za-z0-9\.\-\+_%]*$"
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="right"
-										data-bs-original-titel="Benutzer"
-										data-bs-content="A-Z a-z 0-9 ._%+-"
-										required
-									/>
-									<label for="Passwort1">Passwort</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Passwort2"
-										type="password"
-										class="form-control validate"
-										pattern="^[A-Za-z0-9\.\-\+_%]*$"
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="right"
-										data-bs-original-titel="Benutzer"
-										data-bs-content="A-Z a-z 0-9 ._%+-"
-										required
-									/>
-									<label for="Passwort2">Passwort wiederholen</label>
-								</div>
-								<button class="btn btn-primary" type="submit" name="Neu" id="btnNeu">Neuer Benutzer</button>
-								<button class="btn btn-primary" type="button" id="btnCancelNewUser">Abbrechen</button>
-							</form>
-						</div>
-
-						<div id="ChangeDisplay" class="card-body d-none">
-							<form id="formChangePW" class="d-grid gap-2">
-								<div class="form-floating">
-									<input id="passwortOld" type="password" class="form-control validate" required />
-									<label for="passwortOld">Altes Passwort</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Passwort3"
-										type="password"
-										class="form-control validate"
-										pattern="^[A-Za-z0-9\.\-\+_%]*$"
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="right"
-										data-bs-original-titel="Benutzer"
-										data-bs-content="A-Z a-z 0-9 ._%+-"
-										required
-									/>
-									<label for="Passwort3">Neues Passwort</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Passwort4"
-										type="password"
-										class="form-control validate"
-										pattern="^[A-Za-z0-9\.\-\+_%]*$"
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="right"
-										data-bs-original-titel="Benutzer"
-										data-bs-content="A-Z a-z 0-9 ._%+-"
-										required
-									/>
-									<label for="Passwort4">Neues Passwort wiederholen</label>
-								</div>
-								<button class="btn btn-primary" type="submit" name="Change" id="btnChange">Passwort Ändern</button>
-								<button class="btn btn-primary" type="button" id="btnCancelChangePW">Abbrechen</button>
-							</form>
-						</div>
-
-						<div id="SelectDisplay" class="card-body d-none d-grid gap-2">
-							<button class="btn btn-primary col-12 mx-auto" type="button" name="Logout" id="btnLogout">Ausloggen</button>
-							<button class="btn btn-secondary col-12 mx-auto" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
-								Passwort Ändern
-							</button>
-							<form id="formSelectMonatJahr" class="d-grid gap-2">
-								<div class="form-floating">
-									<select
-										id="Monat"
-										class="form-select validate"
-										required
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="top"
-										data-bs-original-titel="Monatswechsel"
-										data-bs-content="Achtung: Vor Monatswechsel Speichern!!"
-									>
-										<option value="1">1</option>
-										<option value="2">2</option>
-										<option value="3">3</option>
-										<option value="4">4</option>
-										<option value="5">5</option>
-										<option value="6">6</option>
-										<option value="7">7</option>
-										<option value="8">8</option>
-										<option value="9">9</option>
-										<option value="10">10</option>
-										<option value="11">11</option>
-										<option value="12">12</option>
-									</select>
-									<label for="Monat">Monat</label>
-								</div>
-								<div class="form-floating">
-									<input
-										id="Jahr"
-										type="number"
-										class="form-control validate"
-										min="2021"
-										max="2030"
-										required
-										data-bs-toggle="popover"
-										data-bs-trigger="focus"
-										data-bs-placement="top"
-										data-bs-original-titel="Monatswechsel"
-										data-bs-content="Achtung: Vor Jahreswechsel Speichern!!"
-									/>
-									<label for="Jahr">Jahr</label>
-								</div>
-								<button class="btn btn-primary" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
-									Auswählen
-								</button>
-							</form>
-						</div>
-
-						<div class="card-footer text-danger">
-							<span id="errorMessage"></span>
-						</div>
+				<div class="container flex-column text-center">
+					<h1 class="mt-5" id="Willkommen">Willkommen</h1>
+					<div class="d-flex flex-column align-items-center justify-content-center mt-5 d-none" id="ladeAnzeige">
+						<strong role="status">Lädt...</strong>
+						<div class="spinner-grow text-primary" style="width: 3rem; height: 3rem" role="status"></div>
 					</div>
 				</div>
 			</div>
@@ -612,18 +470,52 @@
 					<div>
 						<h1>Einstellungen</h1>
 					</div>
-					<form class="text-center" id="formEinstellungen">
-						<div class="container">
-							<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-								<div class="col d-grid">
-									<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
-										<span class="material-icons-round big-icons">save</span>
-										Speichern
-									</button>
-								</div>
+
+					<div class="container">
+						<div
+							class="row row-cols-1 row-cols-md-3 justify-content-center justify-content-sm-start justify-content-md-center g-3 mb-3 w200"
+						>
+							<div class="d-grid">
+								<button class="btn btn-primary" type="button" name="Logout" id="btnLogout">Ausloggen</button>
+							</div>
+							<div class="d-grid">
+								<button class="btn btn-secondary" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
+									Passwort Ändern
+								</button>
 							</div>
 						</div>
+					</div>
 
+					<div class="container">
+						<form id="formSelectMonatJahr" class="my-3">
+							<div class="row row-cols-lg-auto align-items-center justify-content-center g-3">
+								<div class="col-8">
+									<div class="input-group justify-content-center justify-content-sm-start justify-content-md-center">
+										<label for="Jahr" class="input-group-text text-dark-emphasis">Jahr</label>
+										<input
+											id="Jahr"
+											type="number"
+											class="form-control text-dark-emphasis validate"
+											min="2021"
+											max="2030"
+											required
+											data-bs-toggle="popover"
+											data-bs-trigger="focus"
+											data-bs-placement="top"
+											data-bs-original-titel="Monatswechsel"
+											data-bs-content="Achtung: Vor Jahreswechsel Speichern!!"
+										/>
+
+										<button class="btn btn-primary" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
+											Auswählen
+										</button>
+									</div>
+								</div>
+							</div>
+						</form>
+					</div>
+
+					<form class="text-center" id="formEinstellungen">
 						<div class="accordion" id="einstellungen">
 							<div class="accordion-item">
 								<h2 class="accordion-header">
@@ -901,6 +793,16 @@
 											<tbody id="TbodyTätigkeitsstätten"></tbody>
 										</table>
 									</div>
+								</div>
+							</div>
+						</div>
+						<div class="container">
+							<div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
+								<div class="col d-grid">
+									<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
+										<span class="material-icons-round big-icons">save</span>
+										Speichern
+									</button>
 								</div>
 							</div>
 						</div>

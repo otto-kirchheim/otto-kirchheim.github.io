@@ -1,7 +1,8 @@
+import { Logout, SelectYear } from "../Einstellungen/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { IVorgabenU } from "../interfaces";
 import { Storage, decodeAccessToken } from "../utilities";
-import { Logout, loginUser, checkNeuerBenutzer, checkPasswort, SelectYear, changeMonatJahr } from "./utils";
+import { createModalLogin } from "./components";
 
 window.addEventListener("load", () => {
 	if (Storage.size() > 3 && Storage.check("UserID")) {
@@ -16,84 +17,13 @@ window.addEventListener("load", () => {
 	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU")?.vorgabenB[0].endeB.Nwoche === undefined)
 		Storage.remove("VorgabenU");
 
-	const formLogin = document.querySelector<HTMLFormElement>("#formLogin");
-	formLogin?.addEventListener("submit", e => {
-		e.preventDefault();
-		loginUser();
-	});
-
-	const formNewUser = document.querySelector<HTMLFormElement>("#formNewUser");
-	formNewUser?.addEventListener("submit", e => {
-		e.preventDefault();
-		checkNeuerBenutzer();
-	});
-
-	const formChangePW = document.querySelector<HTMLFormElement>("#formChangePW");
-	formChangePW?.addEventListener("submit", e => {
-		e.preventDefault();
-		checkPasswort();
-	});
-
-	const formSelectMonatJahr = document.querySelector<HTMLFormElement>("#formSelectMonatJahr");
-	formSelectMonatJahr?.addEventListener("submit", e => {
-		e.preventDefault();
-		SelectYear();
-	});
-
-	const btnNewUser = document.querySelector<HTMLButtonElement>("#btnNewUser");
-	btnNewUser?.addEventListener("click", () => {
-		const loginDisplay = document.querySelector<HTMLDivElement>("#loginDisplay");
-		const newDisplay = document.querySelector<HTMLDivElement>("#NewDisplay");
-		if (loginDisplay && newDisplay) {
-			loginDisplay.classList.add("d-none");
-			newDisplay.classList.remove("d-none");
-		}
-	});
-
-	const btnCancelNewUser = document.querySelector<HTMLButtonElement>("#btnCancelNewUser");
-	btnCancelNewUser?.addEventListener("click", () => {
-		const newDisplay = document.querySelector<HTMLDivElement>("#NewDisplay");
-		const loginDisplay = document.querySelector<HTMLDivElement>("#loginDisplay");
-		if (newDisplay && loginDisplay) {
-			newDisplay.classList.add("d-none");
-			loginDisplay.classList.remove("d-none");
-		}
-	});
-
-	const btnCancelChangePW = document.querySelector<HTMLButtonElement>("#btnCancelChangePW");
-	btnCancelChangePW?.addEventListener("click", () => {
-		const changeDisplay = document.querySelector<HTMLDivElement>("#ChangeDisplay");
-		const selectDisplay = document.querySelector<HTMLDivElement>("#SelectDisplay");
-		if (changeDisplay && selectDisplay) {
-			changeDisplay.classList.add("d-none");
-			selectDisplay.classList.remove("d-none");
-		}
-	});
-
-	const btnPasswortAEndern = document.querySelector<HTMLButtonElement>("#btnPasswortAEndern");
-	btnPasswortAEndern?.addEventListener("click", () => {
-		const selectDisplay = document.querySelector<HTMLDivElement>("#SelectDisplay");
-		const changeDisplay = document.querySelector<HTMLDivElement>("#ChangeDisplay");
-		if (selectDisplay && changeDisplay) {
-			selectDisplay.classList.add("d-none");
-			changeDisplay.classList.remove("d-none");
-		}
-	});
-
-	const btnLogout = document.querySelector<HTMLButtonElement>("#btnLogout");
-	btnLogout?.addEventListener("click", Logout);
-
-	const Monat = document.querySelector<HTMLInputElement>("#Monat");
-	Monat?.addEventListener("change", changeMonatJahr);
-
-	const Jahr = document.querySelector<HTMLInputElement>("#Jahr");
-	Jahr?.addEventListener("change", changeMonatJahr);
+	const btnLogin = document.querySelector<HTMLButtonElement>("#btnLogin");
+	btnLogin?.addEventListener("click", () => createModalLogin());
 
 	const willkommenEl = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	const jahrEl = document.querySelector<HTMLInputElement>("#Jahr");
 	const monatEl = document.querySelector<HTMLInputElement>("#Monat");
 	const loginDisplayEl = document.querySelector<HTMLDivElement>("#loginDisplay");
-	const selectDisplayEl = document.querySelector<HTMLDivElement>("#SelectDisplay");
 
 	const nebenTab = document.querySelector<HTMLButtonElement>("#neben-tab");
 	if (!nebenTab) throw new Error("Element nicht gefunden");
@@ -109,6 +39,8 @@ window.addEventListener("load", () => {
 			: Storage.get<string>("Benutzer");
 		if (!benutzer) throw new Error("Benutzer nicht gefunden");
 
+		if (btnLogin) btnLogin.classList.add("d-none");
+
 		if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
 		if (loginDisplayEl) loginDisplayEl.classList.add("d-none");
 
@@ -119,7 +51,6 @@ window.addEventListener("load", () => {
 		if (jahrEl) jahrEl.value = jahr.toString();
 		if (monatEl) monatEl.value = monat.toString();
 
-		selectDisplayEl?.classList.remove("d-none");
 		console.log("Benutzer gefunden");
 
 		const vorgabenU = Storage.get<IVorgabenU>("VorgabenU");
@@ -130,6 +61,7 @@ window.addEventListener("load", () => {
 			if (adminEl && berechtigung & 2) adminEl.classList.remove("d-none");
 		}
 
+		monatEl?.classList.remove("d-none");
 		navmenuEl?.classList.remove("d-none");
 		btnNavmenuEl?.classList.remove("d-none");
 

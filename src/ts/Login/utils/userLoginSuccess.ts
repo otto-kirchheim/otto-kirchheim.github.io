@@ -1,5 +1,5 @@
-import { SelectYear } from ".";
-import { Storage, decodeAccessToken } from "../../utilities";
+import { SelectYear } from "../../Einstellungen/utils";
+import { Storage, decodeAccessToken, setLoading } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
 export default function userLoginSuccess({
@@ -11,15 +11,14 @@ export default function userLoginSuccess({
 	refreshToken: string;
 	username: string;
 }): void {
+	setLoading("btnLogin");
 	console.log({ accessToken, refreshToken });
 	username = `${username[0].toUpperCase()}${username.substring(1)}`;
 	Storage.set("Benutzer", username);
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	if (willkommen) willkommen.innerHTML = `Hallo, ${username}.`;
 
-	document.querySelector<HTMLDivElement>("#loginDisplay")?.classList.add("d-none");
-	document.querySelector<HTMLDivElement>("#ChangeDisplay")?.classList.add("d-none");
-	document.querySelector<HTMLDivElement>("#NewDisplay")?.classList.add("d-none");
+	document.querySelector<HTMLButtonElement>("#btnLogin")?.classList.add("d-none");
 
 	Storage.set("accessToken", accessToken);
 	Storage.set("refreshToken", refreshToken);
@@ -32,11 +31,12 @@ export default function userLoginSuccess({
 	const monatInput = document.querySelector<HTMLInputElement>("#Monat");
 	if (monatInput) monatInput.value = monat.toString();
 
-	document.querySelector<HTMLDivElement>("#SelectDisplay")?.classList.remove("d-none");
-
 	if (Storage.check("accessToken"))
 		if (decodeAccessToken().Berechtigung & 2)
 			document.querySelector<HTMLDivElement>("#admin")?.classList.remove("d-none");
+
+	const monatEl = document.querySelector<HTMLInputElement>("#Monat");
+	monatEl?.classList.remove("d-none");
 
 	console.log("Eingeloggt");
 	SelectYear(monat, aktJahr);

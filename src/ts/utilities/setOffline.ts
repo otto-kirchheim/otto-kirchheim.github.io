@@ -1,6 +1,6 @@
-import { changeMonatJahr } from "../Login/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { setDisableButton } from ".";
+import { changeMonatJahr } from "../Einstellungen/utils";
 
 export default function setOffline(): void {
 	setDisableButton(true);

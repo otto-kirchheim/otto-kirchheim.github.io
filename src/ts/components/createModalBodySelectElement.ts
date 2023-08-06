@@ -1,12 +1,12 @@
 type TModalBodySelectElementOption = {
 	name: string;
 	title: string;
-	value: string | number | Date | null;
+	value?: string | number | Date;
 	divClass: string;
 	required?: boolean;
 	eventListener?: (this: HTMLElement, ev: Event) => void;
 	options: {
-		value: string | number;
+		value?: string | number;
 		text: string;
 		disabled?: boolean;
 		selected?: boolean;
@@ -25,7 +25,7 @@ export default function createModalBodySelectElement(options: TModalBodySelectEl
 	if (options.required) select.required = true;
 	options.options.forEach(optionObject => {
 		const option = document.createElement("option");
-		option.value = String(optionObject.value);
+		option.value = optionObject.value ? String(optionObject.value) : "";
 		if (optionObject.html) option.innerHTML = optionObject.text;
 		else option.textContent = optionObject.text;
 

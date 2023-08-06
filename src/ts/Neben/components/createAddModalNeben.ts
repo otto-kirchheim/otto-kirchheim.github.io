@@ -1,4 +1,4 @@
-import { Modal } from "bootstrap";
+import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import {
 	createEditorModalFooter,
@@ -37,7 +37,7 @@ export default function createAddModalNeben(): void {
 		modalBody.className = "modal-body";
 
 		const warnung = document.createElement("p");
-		warnung.className = "text-center";
+		warnung.className = "text-center text-bg-warning p-1";
 		warnung.textContent = "!!! Erst EWT Eingeben und Berechnen !!!";
 		modalBody.appendChild(warnung);
 
@@ -47,7 +47,6 @@ export default function createAddModalNeben(): void {
 				title: "Tag (Aus EWT)",
 				name: "tagN",
 				required: true,
-				value: null,
 				options: getTagOptions(),
 			}),
 		);
@@ -58,7 +57,6 @@ export default function createAddModalNeben(): void {
 				title: "Nebenbezug (Aktuell nur 1 möglichkeit)",
 				name: "Nebenbezug",
 				required: true,
-				value: null,
 				options: [
 					{
 						value: "040 Fahrentsch.",

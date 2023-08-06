@@ -1,4 +1,8 @@
-import { Popover, Tab } from "bootstrap";
+import Popover from "bootstrap/js/dist/popover";
+import Tab from "bootstrap/js/dist/tab";
+import Offcanvas from "bootstrap/js/dist/offcanvas";
+import Dropdown from "bootstrap/js/dist/dropdown";
+import Collapse from "bootstrap/js/dist/collapse";
 import { createSnackBar } from "./class/CustomSnackbar";
 import { Storage, initializeColorModeToggler, setOffline, storageAvailable } from "./utilities";
 
@@ -33,7 +37,10 @@ window.addEventListener("load", () => {
 		}
 	}
 
+	Array.from(document.querySelectorAll(".dropdown-toggle")).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
+	Array.from(document.querySelectorAll(".offcanvas")).forEach(offcanvasEl => new Offcanvas(offcanvasEl));
+	Array.from(document.querySelectorAll(".collapse")).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
 	Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
-		popoverTriggerEl => new Popover(popoverTriggerEl)
+		popoverTriggerEl => new Popover(popoverTriggerEl),
 	);
 });
