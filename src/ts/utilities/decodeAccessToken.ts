@@ -8,7 +8,9 @@ type decodedAccessToken = {
 	exp: number;
 };
 
-export default function decodeAccessToken(accesstoken = Storage.get<string>("accessToken")): decodedAccessToken {
+export default function decodeAccessToken(
+	accesstoken = Storage.get<string>("accessToken", { check: true }),
+): decodedAccessToken {
 	const base64Url = accesstoken.split(".")[1];
 	const base64 = convertUrlBase64ToBase64(base64Url);
 	const jsonPayload = decodeBase64ToJSON(base64);
@@ -24,7 +26,7 @@ export default function decodeAccessToken(accesstoken = Storage.get<string>("acc
 				.atob(base64)
 				.split("")
 				.map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-				.join("")
+				.join(""),
 		);
 	}
 }

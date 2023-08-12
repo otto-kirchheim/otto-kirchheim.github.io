@@ -1,6 +1,8 @@
 import { Storage, decodeAccessToken, tokenErneuern } from ".";
 
-export default async function getValidAccesstoken(accesstoken = Storage.get<string>("accessToken")): Promise<string> {
+export default async function getValidAccesstoken(
+	accesstoken = Storage.get<string>("accessToken", { check: true }),
+): Promise<string> {
 	if (!accesstoken) throw new Error("accessToken fehlt");
 	const tokenPayload = decodeAccessToken(accesstoken);
 	const expirationTimeInSeconds = getExpirationTimeInSeconds(tokenPayload.exp);

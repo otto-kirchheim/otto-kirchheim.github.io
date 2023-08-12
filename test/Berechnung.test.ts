@@ -29,14 +29,14 @@ describe("#generateTableBerechnung", () => {
 				'<th class="col-1">Okt</th>' +
 				'<th class="col-1">Nov</th>' +
 				'<th class="col-1">Dez</th>' +
-				'</tr></thead><tbody id="tbodyBerechnung"></tbody></table>'
+				'</tr></thead><tbody id="tbodyBerechnung"></tbody></table>',
 		);
 		global.document = dom.window.document;
 	});
 	it("should generate 'Berechnung' Table", () => {
 		generateTableBerechnung(
-			Storage.get<IVorgabenBerechnung>("datenBerechnung"),
-			Storage.get<IVorgabenGeld>("VorgabenGeld")
+			Storage.get<IVorgabenBerechnung>("datenBerechnung", { check: true }),
+			Storage.get<IVorgabenGeld>("VorgabenGeld", { check: true }),
 		);
 
 		const tbody = document.querySelector<HTMLTableSectionElement>("#tbodyBerechnung");
@@ -67,7 +67,7 @@ describe("#generateTableBerechnung", () => {
 				if (cellIndex === 0 && rowIndex !== 1) return;
 				if (cell.innerHTML !== expectedValue) {
 					throw new Error(
-						`Expected cell at (${rowIndex}, ${cellIndex}) to have value '${expectedValue}', but found '${cell.innerHTML}'`
+						`Expected cell at (${rowIndex}, ${cellIndex}) to have value '${expectedValue}', but found '${cell.innerHTML}'`,
 					);
 				}
 			});

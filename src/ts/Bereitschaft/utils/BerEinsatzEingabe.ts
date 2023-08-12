@@ -67,7 +67,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 			dataTable,
 		);
 
-		const savedData: IDatenBZJahr = Storage.get("dataBZ");
+		const savedData: IDatenBZJahr = Storage.get("dataBZ", { check: true });
 
 		if (!data || savedData[monat].length === data.length) {
 			clearLoading("btnESE");

@@ -38,7 +38,9 @@ export default function naechsterTag(
 		}
 	} while (vorhandeTage.has(tag));
 
-	eingabefeldTagE.value = dayjs([Storage.get<number>("Jahr"), Storage.get<number>("Monat") - 1, tag]).format(
-		"YYYY-MM-DD",
-	);
+	eingabefeldTagE.value = dayjs([
+		Storage.get<number>("Jahr", { check: true }),
+		Storage.get<number>("Monat", { check: true }) - 1,
+		tag,
+	]).format("YYYY-MM-DD");
 }

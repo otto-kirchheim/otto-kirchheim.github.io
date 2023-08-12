@@ -19,7 +19,7 @@ export async function FetchRetry<I, T>(
 	retry = 0,
 	accessToken?: string,
 ): Promise<{ data: T; status: boolean; statusCode: number; message: string } | Error> {
-	if (!accessToken && Storage.check("accessToken")) accessToken = Storage.get<string>("accessToken");
+	if (!accessToken && Storage.check("accessToken")) accessToken = Storage.get<string>("accessToken", { check: true });
 	if (retry > 2) throw new Error("Zu viele Tokenfehler");
 	const lastServerContact = +(sessionStorage.getItem("lastServerContact") as string);
 	let serverReady = false;

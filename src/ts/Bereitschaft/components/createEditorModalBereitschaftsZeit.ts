@@ -64,8 +64,8 @@ export default function createEditorModalBereitschaftsZeit(
 				}
 			});
 		} else if (row instanceof CustomTable) {
-			const Monat = Storage.get<number>("Monat");
-			const Jahr = Storage.get<number>("Jahr");
+			const Monat: number = Storage.get<number>("Monat", { check: true });
+			const Jahr: number = Storage.get<number>("Jahr", { check: true });
 			row.columns.array.forEach(column => {
 				let datum, min, max;
 				switch (column.name) {

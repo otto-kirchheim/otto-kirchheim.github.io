@@ -1,19 +1,27 @@
-import { IDaten, IVorgabenBerechnung, IVorgabenBerechnungMonat } from "../interfaces";
+import {
+	IDaten,
+	IDatenBEJahr,
+	IDatenBZJahr,
+	IDatenEWTJahr,
+	IDatenNJahr,
+	IVorgabenBerechnung,
+	IVorgabenBerechnungMonat,
+} from "../interfaces";
 import { Storage } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 
 export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): IVorgabenBerechnung {
-	Jahr = Jahr ?? Storage.get<number>("Jahr");
+	Jahr = Jahr ?? Storage.get<number>("Jahr", { check: true });
 	daten = daten ?? {
-		BZ: Storage.get("dataBZ") ?? {},
-		BE: Storage.get("dataBE") ?? {},
-		EWT: Storage.get("dataE") ?? {},
-		N: Storage.get("dataN") ?? {},
+		BZ: Storage.get("dataBZ", { default: {} as IDatenBZJahr }),
+		BE: Storage.get("dataBE", { default: {} as IDatenBEJahr }),
+		EWT: Storage.get("dataE", { default: {} as IDatenEWTJahr }),
+		N: Storage.get("dataN", { default: {} as IDatenNJahr }),
 	};
 	if (!daten) throw new Error("Keine Daten gefunden");
 
 	const Berechnung: IVorgabenBerechnung = Storage.check("datenBerechnung")
-		? Storage.get("datenBerechnung")
+		? Storage.get("datenBerechnung", true)
 		: ({} as IVorgabenBerechnung);
 
 	for (let Monat = 1; Monat <= 12; Monat++)

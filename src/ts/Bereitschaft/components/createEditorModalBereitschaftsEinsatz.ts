@@ -34,8 +34,8 @@ export default function createEditorModalBereitschaftsEinsatz(
 		if (row instanceof Row) {
 			datum = dayjs(row.cells.tagBE, "DD.MM.YYYY");
 		} else if (row instanceof CustomTable) {
-			const Monat = Storage.get<number>("Monat");
-			const Jahr = Storage.get<number>("Jahr");
+			const Monat: number = Storage.get<number>("Monat", { check: true });
+			const Jahr: number = Storage.get<number>("Jahr", { check: true });
 			datum = dayjs([Jahr, Monat - 1, checkMaxTag(Jahr, Monat - 1)]);
 		} else throw new Error("unbekannter Fehler");
 

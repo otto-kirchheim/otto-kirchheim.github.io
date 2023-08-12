@@ -8,7 +8,7 @@ export { generateTableBerechnung, aktualisiereBerechnung };
 window.addEventListener("load", () => {
 	if (Storage.check("VorgabenU") && Storage.check("datenBerechnung") && Storage.check("VorgabenGeld"))
 		generateTableBerechnung(
-			Storage.get<IVorgabenBerechnung>("datenBerechnung"),
-			Storage.get<IVorgabenGeld>("VorgabenGeld"),
+			Storage.get<IVorgabenBerechnung>("datenBerechnung", { check: true }),
+			Storage.get<IVorgabenGeld>("VorgabenGeld", { check: true }),
 		);
 });

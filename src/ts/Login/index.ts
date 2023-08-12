@@ -6,7 +6,7 @@ import { createModalLogin } from "./components";
 
 window.addEventListener("load", () => {
 	if (Storage.size() > 3 && Storage.check("UserID")) {
-		const benutzer = Storage.get<string>("Benutzer");
+		const benutzer: string = Storage.get<string>("Benutzer", { check: true });
 		Logout();
 		createSnackBar({
 			message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
@@ -14,7 +14,7 @@ window.addEventListener("load", () => {
 			fixed: true,
 		});
 	}
-	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU")?.vorgabenB[0].endeB.Nwoche === undefined)
+	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU", true).vorgabenB[0].endeB.Nwoche === undefined)
 		Storage.remove("VorgabenU");
 
 	const btnLogin = document.querySelector<HTMLButtonElement>("#btnLogin");
@@ -34,9 +34,9 @@ window.addEventListener("load", () => {
 	const btnNavmenuEl = document.querySelector<HTMLButtonElement>("#btn-navmenu");
 
 	if (Storage.check("Benutzer") && Storage.check("accessToken")) {
-		const benutzer = Storage.check("VorgabenU")
-			? Storage.get<IVorgabenU>("VorgabenU")?.pers.Vorname
-			: Storage.get<string>("Benutzer");
+		const benutzer: string = Storage.check("VorgabenU")
+			? Storage.get<IVorgabenU>("VorgabenU", true).pers.Vorname
+			: Storage.get<string>("Benutzer", true);
 		if (!benutzer) throw new Error("Benutzer nicht gefunden");
 
 		if (btnLogin) btnLogin.classList.add("d-none");
@@ -44,8 +44,8 @@ window.addEventListener("load", () => {
 		if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
 		if (loginDisplayEl) loginDisplayEl.classList.add("d-none");
 
-		const jahr = Storage.get<number>("Jahr");
-		const monat = Storage.get<number>("Monat");
+		const jahr: number = Storage.get<number>("Jahr", { check: true });
+		const monat: number = Storage.get<number>("Monat", { check: true });
 		if (!jahr || !monat) throw new Error("Jahr oder Monat nicht erkannt");
 
 		if (jahrEl) jahrEl.value = jahr.toString();
@@ -53,7 +53,7 @@ window.addEventListener("load", () => {
 
 		console.log("Benutzer gefunden");
 
-		const vorgabenU = Storage.get<IVorgabenU>("VorgabenU");
+		const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 		if (vorgabenU && vorgabenU.pers.TB == "Tarifkraft" && nebenTabEl) nebenTabEl.classList.remove("d-none");
 
 		if (Storage.check("accessToken")) {

@@ -9,6 +9,7 @@ import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IVorgabenUvorgabenB, UserDatenServer } from "../../interfaces";
 import { Storage, buttonDisable, clearLoading } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
+import { TStorageData } from "../../utilities/Storage";
 
 export default async function LadeUserDaten(monat: number, jahr: number): Promise<void> {
 	let userData: UserDatenServer | undefined;
@@ -40,7 +41,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 
 	let dataServer: Partial<UserDatenServer> = {};
 	if (Storage.check("dataServer")) {
-		dataServer = Storage.get("dataServer");
+		dataServer = Storage.get("dataServer", { check: true });
 		console.log("Unterschiede Server - Client | Bereits vorhanden", dataServer);
 	}
 
@@ -50,7 +51,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 	}
 
 	const saveDaten = <T extends UserDatenServer[K], D extends object[], K extends keyof UserDatenServer>(
-		nameStorage: string,
+		nameStorage: TStorageData,
 		data: T,
 		dataName: K,
 		beschreibung: string,
@@ -68,7 +69,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 			console.log(`${nameStorage} vorhanden & änderungen`);
 			if (!vorhanden.find(element => element === beschreibung)) vorhanden.push(beschreibung);
 			dataServer[dataName] = data;
-			return Storage.get<T>(nameStorage);
+			return Storage.get<T>(nameStorage, true);
 		}
 		return data;
 	};

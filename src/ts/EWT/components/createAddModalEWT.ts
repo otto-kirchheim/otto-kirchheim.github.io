@@ -24,13 +24,13 @@ export default function createAddModalEWT(): void {
 	new Modal(modal).show();
 
 	function createBodyElement(): HTMLDivElement {
-		const vorgabenU: IVorgabenU = Storage.get("VorgabenU");
+		const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row g-2";
 
-		const Jahr = Storage.get<number>("Jahr");
-		const Monat = Storage.get<number>("Monat") - 1;
+		const Jahr: number = Storage.get<number>("Jahr", { check: true });
+		const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
 		const datum = dayjs([Jahr, Monat, 1]);
 		const maxDate = datum.endOf("month").format("YYYY-MM-DD");
 

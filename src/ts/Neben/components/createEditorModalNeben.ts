@@ -27,8 +27,8 @@ export default function createEditorModalNeben(row: Row | CustomTable, titel: st
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row";
 
-		const Monat: number = Storage.get<number>("Monat") - 1;
-		const Jahr: number = Storage.get<number>("Jahr");
+		const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
+		const Jahr: number = Storage.get<number>("Jahr", { check: true });
 
 		let Tag: number;
 		if (row instanceof Row) Tag = row.cells.tagN;

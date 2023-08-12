@@ -1,4 +1,41 @@
-class Storage {
+import { createSnackBar } from "../class/CustomSnackbar";
+
+interface IStorage {
+	set<T>(key: TStorageData, value: T): void;
+
+	get<T>(key: TStorageData): T | null;
+	get<T>(key: TStorageData, checked: true): T;
+	get<T>(key: TStorageData, options: { check?: true; default?: T }): T;
+
+	remove(key: TStorageData): void;
+	clear(): void;
+	check(key: TStorageData): boolean;
+	size(): number;
+	compare<T>(key: TStorageData, compareValue: T): boolean;
+}
+
+enum StorageData {
+	accessToken = "Server Zugriffscode",
+	refreshToken = "Server Zugriffscode aktualisierungscode",
+	Benutzer = "Benutzer",
+	Jahr = "Jahr",
+	Monat = "Monat",
+	dataBZ = "Daten Bereitschaftszeitraum",
+	dataBE = "Daten Bereitschaftseinsatz",
+	dataE = "Daten EWT",
+	dataN = "Daten Nebengeld",
+	VorgabenU = "Persönliche Daten",
+	VorgabenGeld = "Vorgaben Geld",
+	datenBerechnung = "Daten Berechnung",
+	Jahreswechsel = "Jahreswechsel",
+	theme = "Theme",
+	dataServer = "Server Daten",
+	UserID = "veraltete Daten",
+}
+
+export type TStorageData = keyof typeof StorageData;
+
+class Storage implements IStorage {
 	private static instance: Storage;
 
 	static getInstance(): Storage {
@@ -6,18 +43,35 @@ class Storage {
 		return Storage.instance;
 	}
 
-	set<T>(key: string, value: T): void {
+	set<T>(key: TStorageData, value: T): void {
 		localStorage.setItem(key, JSON.stringify(value));
 	}
 
-	get<T>(key: string): T {
+	get<T>(key: TStorageData): T | null;
+	get<T>(key: TStorageData, checked: true): T;
+	get<T>(key: TStorageData, options: { check?: true; default?: T }): T;
+	get<T>(key: TStorageData, optionsOrChecked?: { check?: true; default?: T } | true): T | null {
+		if (optionsOrChecked !== true && optionsOrChecked !== undefined) {
+			if (optionsOrChecked.default !== undefined && !this.check(key)) {
+				return optionsOrChecked.default;
+			} else if (optionsOrChecked.check && !this.check(key)) {
+				throw this.showSnackbarAndThrowError(new Error(`"${StorageData[key] ?? key}" nicht gefunden`));
+			}
+		}
 		const value = localStorage.getItem(key);
-		if (!value) throw new Error(`Wert "${key}" nicht gefunden`);
-		if (!this.isJsonString(value)) return this.convertToJson<T>(key, value as T);
-		return JSON.parse(value);
+
+		if (optionsOrChecked === true) {
+			if (value === null) throw this.showSnackbarAndThrowError(new Error(`"${StorageData[key] ?? key}" nicht gefunden`));
+		} else if (value === null) {
+			if (optionsOrChecked?.default !== undefined) return optionsOrChecked.default;
+			else return null;
+		}
+
+		if (this.isJsonString(value)) return JSON.parse(value);
+		else return this.convertToJson<T>(key, value as T);
 	}
 
-	remove(key: string): void {
+	remove(key: TStorageData): void {
 		localStorage.removeItem(key);
 	}
 
@@ -25,7 +79,7 @@ class Storage {
 		localStorage.clear();
 	}
 
-	check(key: string): boolean {
+	check(key: TStorageData): boolean {
 		return Boolean(localStorage.getItem(key));
 	}
 
@@ -33,12 +87,12 @@ class Storage {
 		return localStorage.length;
 	}
 
-	compare<T>(key: string, compareValue: T): boolean {
+	compare<T>(key: TStorageData, compareValue: T): boolean {
 		const value = localStorage.getItem(key);
 		return value === JSON.stringify(compareValue);
 	}
 
-	private convertToJson<T>(key: string, value: T): T {
+	private convertToJson<T>(key: TStorageData, value: T): T {
 		this.set(key, value);
 		return value;
 	}
@@ -50,6 +104,16 @@ class Storage {
 			return false;
 		}
 		return true;
+	}
+
+	private showSnackbarAndThrowError(err: Error): Error {
+		createSnackBar({
+			message: `Fehler: ${err.message}`,
+			status: "error",
+			timeout: 3000,
+			fixed: true,
+		});
+		return err;
 	}
 }
 

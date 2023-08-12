@@ -27,13 +27,13 @@ export default function createEditorModalEWT(row: CustomTable | Row, titel: stri
 	return modal;
 
 	function createBodyElement(): HTMLDivElement {
-		const vorgabenU: IVorgabenU = Storage.get("VorgabenU");
+		const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row";
 
-		const Monat: number = Storage.get<number>("Monat") - 1;
-		const Jahr: number = Storage.get<number>("Jahr");
+		const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
+		const Jahr: number = Storage.get<number>("Jahr", { check: true });
 
 		let Tag: number;
 		if (row instanceof Row) Tag = Number(row.cells.tagE);

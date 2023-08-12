@@ -7,6 +7,7 @@ import { DataN } from "../Neben/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomHTMLTableElement, IDaten, IVorgabenU, ReturnTypeSaveData } from "../interfaces";
 import { FetchRetry } from "./FetchRetry";
+import { TStorageData } from "./Storage";
 
 interface SaveData extends IDaten {
 	User: IVorgabenU;
@@ -23,7 +24,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 	if (button === null) return;
 	setLoading(button.id);
 	buttonDisable(true);
-	if (!Monat) Monat = Storage.get<number>("Monat");
+	if (!Monat) Monat = Storage.get<number>("Monat", { check: true });
 
 	try {
 		const [ftBZ, ftBE, ftE, ftN] = ["tableBZ", "tableBE", "tableE", "tableN"].map(findCustomTableInstance);
@@ -34,7 +35,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			EWT: saveTableData(ftE, Monat),
 			N: saveTableData(ftN, Monat),
 			User: saveEinstellungen(),
-			Jahr: Storage.get("Jahr"),
+			Jahr: Storage.get("Jahr", { check: true }),
 		};
 
 		const fetched = await FetchRetry<SaveData, ReturnTypeSaveData>("saveData", data, "POST");
@@ -69,7 +70,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 		];
 
 		tables.forEach(({ ft, storageKey, dataJahr, data }) => {
-			Storage.set(storageKey, dataJahr);
+			Storage.set(storageKey as TStorageData, dataJahr);
 			ft.rows.load(data);
 			console.log("saved", ft);
 		});

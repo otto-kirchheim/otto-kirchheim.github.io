@@ -7,13 +7,13 @@ let REFRESHED = 0;
 
 export default async function tokenErneuern(
 	retry?: number,
-	refreshToken: string = Storage.get("refreshToken"),
-	accessToken: string = Storage.get("accessToken"),
+	refreshToken: string = Storage.get("refreshToken", { check: true }),
+	accessToken: string = Storage.get("accessToken", { check: true }),
 ): Promise<string> {
 	if (isTokenRefreshLimitReached(refreshToken, accessToken)) {
 		resetRefreshCounter();
 		showErrorAndLogout();
-		throw new Error("Fehler bei Token erneuerung");
+		throw new Error("Fehler bei Token erneuerung, refreshlimit erreicht");
 	}
 
 	const responded = await FetchRetry<{ refreshToken: string }, { accessToken: string; refreshToken: string }>(
@@ -33,6 +33,7 @@ export default async function tokenErneuern(
 		return accessToken;
 	} else {
 		showErrorAndLogout();
+		console.error(responded.message);
 		throw new Error("Fehler bei Token erneuerung");
 	}
 }

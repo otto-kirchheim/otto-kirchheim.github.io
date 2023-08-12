@@ -3,7 +3,7 @@ import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } fr
 import { Storage, tableToArray } from "../../utilities";
 
 export default function saveEinstellungen(): IVorgabenU {
-	const VorgabenU: IVorgabenU = Storage.get("VorgabenU");
+	const VorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 
 	const updateVorgabenU = <T, K extends keyof T>(obj: T, key: K, value: T[K]): void => {
 		obj[key] = value;

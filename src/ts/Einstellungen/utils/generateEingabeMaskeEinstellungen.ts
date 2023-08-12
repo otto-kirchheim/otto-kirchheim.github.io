@@ -4,7 +4,9 @@ import { CustomTable } from "../../class/CustomTable";
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUaZ } from "../../interfaces";
 import { Storage, saveTableData } from "../../utilities";
 
-export default function generateEingabeMaskeEinstellungen(VorgabenU: IVorgabenU = Storage.get("VorgabenU")): void {
+export default function generateEingabeMaskeEinstellungen(
+	VorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true }),
+): void {
 	const VorgabenB = VorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
 
 	setElementValues<IVorgabenUPers>(VorgabenU.pers);

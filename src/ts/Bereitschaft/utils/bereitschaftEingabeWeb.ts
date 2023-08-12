@@ -62,7 +62,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 	const monat = +MonatInput.value;
 	const jahr = +JahrInput.value;
 
-	const savedData: IDatenBZJahr = Storage.get("dataBZ");
+	const savedData: IDatenBZJahr = Storage.get("dataBZ", { check: true });
 
 	let data: IMonatsDaten["BZ"] | false = false;
 	const data1: IMonatsDaten["BZ"] = tableToArray("tableBZ");
@@ -217,7 +217,7 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 				return;
 			}
 		} else {
-			data2 = Storage.get<IDatenBZJahr>("dataBZ")[monat2 + 1] ?? [];
+			data2 = Storage.get<IDatenBZJahr>("dataBZ", { check: true })[monat2 + 1] ?? [];
 			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel2, bereitschaftsEnde, nachtAnfang2, nachtEnde, nacht, data2);
 			if (data2) savedData[monat2 + 1] = data2;
 		}

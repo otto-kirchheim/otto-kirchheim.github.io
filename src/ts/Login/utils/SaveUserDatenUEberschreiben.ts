@@ -12,10 +12,10 @@ function applyDataToTable(selector: string, data: object[]): void {
 }
 
 export default function SaveUserDatenUEberschreiben(): void {
-	const dataServer: Partial<UserDatenServer> = Storage.get("dataServer") ?? {};
+	const dataServer: Partial<UserDatenServer> = Storage.get<Partial<UserDatenServer>>("dataServer", { default: {} });
 	console.log({ dataServer });
 
-	const Monat = Storage.get<number>("Monat");
+	const Monat: number = Storage.get<number>("Monat", { check: true });
 
 	if (dataServer.vorgabenU) {
 		console.log("VorgabenU überschreiben");

@@ -9,7 +9,7 @@ import { Storage, clearLoading } from "../utilities";
 
 export default function generateTableBerechnung(
 	datenBerechnung: true | IVorgabenBerechnung,
-	datenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld"),
+	datenGeld: IVorgabenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld", { check: true }),
 ): void {
 	if (datenBerechnung === true) return clearLoading("btnNeuBerech");
 
@@ -25,7 +25,7 @@ export default function generateTableBerechnung(
 		},
 	});
 
-	const tarif_beamter = Storage.get<IVorgabenU>("VorgabenU").pers.TB;
+	const tarif_beamter = Storage.get<IVorgabenU>("VorgabenU", { check: true }).pers.TB;
 	const berechnung = Array.from({ length: 12 }, () => []) as Array<Array<number>>;
 
 	const tbody = document.querySelector<HTMLTableSectionElement>("#tbodyBerechnung");

@@ -138,12 +138,12 @@ window.addEventListener("load", () => {
 
 	const btnZb = document.querySelector<HTMLButtonElement>("#btnZb");
 	btnZb?.addEventListener("click", () => {
-		const monat = Storage.check("Monat") ? Storage.get<number>("Monat") : 0;
+		const monat = Storage.check("Monat") ? Storage.get<number>("Monat", true) : 0;
 		ewtBerechnen({
 			monat,
-			jahr: Storage.get<number>("Jahr"),
-			daten: Storage.get<IDaten["EWT"]>("dataE")[monat] ?? [],
-			vorgabenU: Storage.get<IVorgabenU>("VorgabenU"),
+			jahr: Storage.get<number>("Jahr", { check: true }),
+			daten: Storage.get<IDaten["EWT"]>("dataE", { check: true })[monat] ?? [],
+			vorgabenU: Storage.get<IVorgabenU>("VorgabenU", { check: true }),
 		});
 	});
 

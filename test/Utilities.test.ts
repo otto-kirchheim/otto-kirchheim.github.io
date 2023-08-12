@@ -25,11 +25,11 @@ describe("#Storage", () => {
 
 	it("should set and get a value", () => {
 		Storage.set("key", "value");
-		expect(Storage.get("key")).toBe("value");
+		expect(Storage.get<string>("key")).toBe("value");
 	});
 
 	it("should throw Error when key does not exist", () => {
-		expect(() => Storage.get("non-existing-key")).toThrowError('Wert "non-existing-key" nicht gefunden');
+		expect(() => Storage.get("non-existing-key", { check: true })).toThrowError('"non-existing-key" nicht gefunden');
 	});
 
 	it("should remove a value", () => {
@@ -67,7 +67,7 @@ describe("#decodeAccessToken", () => {
 		Storage.remove("accessToken");
 		expect(() => {
 			decodeAccessToken();
-		}).toThrowError('Wert "accessToken" nicht gefunden');
+		}).toThrowError('"Server Zugriffscode" nicht gefunden');
 	});
 
 	it("should return a JSON object if a valid accessToken is provided", () => {
@@ -114,7 +114,7 @@ describe("#getValidAccesstoken", async () => {
 
 	it("should throw an error if no accessToken is provided", async () => {
 		Storage.remove("accessToken");
-		await expect(getValidAccesstoken()).rejects.toThrowError('Wert "accessToken" nicht gefunden');
+		await expect(getValidAccesstoken()).rejects.toThrowError('"Server Zugriffscode" nicht gefunden');
 	});
 
 	it("should return the accessToken if it is valid", async () => {

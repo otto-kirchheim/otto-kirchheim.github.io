@@ -88,9 +88,9 @@ export default function createAddModalNeben(): void {
 			disabled: boolean | undefined;
 			selected: boolean | undefined;
 		}[] {
-			const dataN = tableToArray<IDatenN>("tableN");
-			const jahr = Storage.get<number>("Jahr");
-			const monat = Storage.get<number>("Monat");
+			const dataN: IDatenN[] = tableToArray<IDatenN>("tableN");
+			const jahr: number = Storage.get<number>("Jahr", { check: true });
+			const monat: number = Storage.get<number>("Monat", { check: true });
 			const options = [];
 			for (const day of dataE) {
 				const schicht = day.schichtE;

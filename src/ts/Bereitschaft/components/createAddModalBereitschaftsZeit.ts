@@ -36,8 +36,8 @@ export default function createAddModalBereitschaftsZeit(): void {
 		modalBody.className = "modal-body row";
 
 		const vorgabenU = Storage.get<Partial<IVorgabenU>>("VorgabenU") ?? { vorgabenB: BereitschaftsEinsatzZeiträume };
-		const Monat = Storage.get<number>("Monat") - 1;
-		const Jahr = Storage.get<number>("Jahr");
+		const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
+		const Jahr: number = Storage.get<number>("Jahr", { check: true });
 		const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB
 			? vorgabenU.vorgabenB
 			: BereitschaftsEinsatzZeiträume;
@@ -247,7 +247,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 			if (form instanceof HTMLFormElement && !form.checkValidity()) return;
 			event.preventDefault();
 
-			bereitschaftEingabeWeb(modal, Storage.get("accessToken")).catch((err: Error) => {
+			bereitschaftEingabeWeb(modal, Storage.get("accessToken", { check: true })).catch((err: Error) => {
 				throw err;
 			});
 

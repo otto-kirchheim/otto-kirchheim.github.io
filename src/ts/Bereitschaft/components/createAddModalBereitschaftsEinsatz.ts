@@ -26,8 +26,8 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 		const modalBody = document.createElement("div");
 		modalBody.className = "modal-body row";
 
-		const Jahr = Storage.get<number>("Jahr");
-		const Monat = Storage.get<number>("Monat") - 1;
+		const Jahr: number = Storage.get<number>("Jahr", { check: true });
+		const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
 		const datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
 
 		modalBody.appendChild(

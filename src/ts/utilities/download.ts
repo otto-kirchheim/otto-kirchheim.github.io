@@ -16,7 +16,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 
 	if (!MonatInput || !JahrInput) throw new Error("Input Element nicht gefunden");
 
-	const VorgabenGeld: IVorgabenGeld = Storage.get("VorgabenGeld");
+	const VorgabenGeld: IVorgabenGeld = Storage.get("VorgabenGeld", { check: true });
 	Object.setPrototypeOf(VorgabenGeld, {
 		getMonat: function (maxMonat: number): IVorgabenGeldType {
 			let returnObjekt = VorgabenGeld[1];
@@ -32,7 +32,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 	const Monat = +MonatInput.value;
 	const Jahr = +JahrInput.value;
 	const data = {
-		VorgabenU: Storage.get<IVorgabenU>("VorgabenU"),
+		VorgabenU: Storage.get<IVorgabenU>("VorgabenU", { check: true }),
 		VorgabenGeld: VorgabenGeld.getMonat(Monat),
 		Daten: {} as Partial<IMonatsDaten>,
 		Monat,

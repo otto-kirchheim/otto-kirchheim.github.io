@@ -34,7 +34,7 @@ export default function BereitschaftEingabe(
 	let pauseMerkerNacht;
 
 	// Voreinstellungen Übernehmen
-	const datenU = Storage.get<IVorgabenU>("VorgabenU");
+	const datenU: IVorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true });
 	if (!datenU) throw new Error("VorgabenU nicht gefunden");
 	// Tagschicht Anfangszeit Mo-Do
 	const tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);

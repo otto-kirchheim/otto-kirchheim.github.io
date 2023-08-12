@@ -5,7 +5,7 @@ type Theme = "light" | "dark" | "auto";
 export default function initializeColorModeToggler() {
 	"use strict";
 
-	const getStoredTheme = (): Theme => (Storage.check("theme") ? Storage.get("theme") : "auto");
+	const getStoredTheme = (): Theme => Storage.get<Theme>("theme", { default: "auto" });
 
 	const setStoredTheme = (theme: Theme) => (theme === "auto" ? Storage.remove("theme") : Storage.set("theme", theme));
 

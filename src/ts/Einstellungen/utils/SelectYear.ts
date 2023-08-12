@@ -18,7 +18,7 @@ export default function SelectYear(monat?: number, jahr?: number): void {
 	setLoading("btnAuswaehlen");
 
 	if (Storage.check("Jahr") && Storage.check("Monat"))
-		if (Storage.get<number>("Jahr") != jahr) Storage.set("Jahreswechsel", true);
+		if (!Storage.compare<number>("Jahr", jahr)) Storage.set("Jahreswechsel", true);
 
 	Storage.set("Jahr", jahr);
 	Storage.set("Monat", monat);
