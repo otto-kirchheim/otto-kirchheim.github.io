@@ -1,8 +1,7 @@
-import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { buttonDisable, download, saveDaten, saveTableData, Storage } from "../utilities";
-import { createAddModalNeben, createEditorModalNeben, createShowModalNeben } from "./components";
+import { buttonDisable, download, saveDaten, saveTableDataN, Storage } from "../utilities";
+import { createAddModalNeben, EditorModalNeben, ShowModalNeben } from "./components";
 import { DataN } from "./utils";
 
 window.addEventListener("load", () => {
@@ -21,23 +20,17 @@ window.addEventListener("load", () => {
 		editing: {
 			enabled: true,
 			addRow: () => {
-				const $modal = createEditorModalNeben(ftN, "Nebenbezug hinzufügen");
-				$modal.row = ftN;
-				new Modal($modal).show();
+				EditorModalNeben(ftN, "Nebenbezug hinzufügen");
 			},
 			editRow: row => {
-				const $modal = createEditorModalNeben(row, "Nebenbezug bearbeiten");
-				$modal.row = row;
-				new Modal($modal).show();
+				EditorModalNeben(row, "Nebenbezug bearbeiten");
 			},
 			showRow: row => {
-				const $modal = createShowModalNeben(row, "Nebenbezug anzeigen");
-				$modal.row = row;
-				new Modal($modal).show();
+				ShowModalNeben(row, "Nebenbezug anzeigen");
 			},
 			deleteRow: row => {
 				row.deleteRow();
-				saveTableData(ftN);
+				saveTableDataN(ftN);
 			},
 			deleteAllRows: () => {
 				createSnackBar({

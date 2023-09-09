@@ -1,9 +1,15 @@
+import { CustomTableTypes } from "../class/CustomTable";
+
 export interface IMonatsDaten<EWTType = string> {
 	BZ: IDatenBZ[];
 	BE: IDatenBE[];
 	EWT: IDatenEWT<EWTType>[];
 	N: IDatenN[];
 }
+
+export type IDatenAllValuesWithKey<BZType = string, EWTType = string> = {
+	[key: string]: IDatenBZValues<BZType> | IDatenBEValues | IDatenEWTValues<EWTType> | IDatenNValues;
+};
 
 export interface IDaten<BZType = string, EWTType = string> {
 	BZ: IDatenBZJahr<BZType>;
@@ -12,8 +18,10 @@ export interface IDaten<BZType = string, EWTType = string> {
 	N: IDatenNJahr;
 }
 
-export interface IDatenBZ<BZType = string> {
-	[key: string]: BZType | number;
+type IDatenBZValues<BZType = string> = BZType | number;
+
+export interface IDatenBZ<BZType = string> extends CustomTableTypes {
+	[key: string]: IDatenBZValues<BZType>;
 	beginB: BZType;
 	endeB: BZType;
 	pauseB: number;
@@ -35,8 +43,10 @@ export interface IDatenBZJahr<BZType = string> {
 	12: IDatenBZ<BZType>[];
 }
 
-export interface IDatenBE {
-	[key: string]: string | number;
+type IDatenBEValues = string | number;
+
+export interface IDatenBE extends CustomTableTypes {
+	[key: string]: IDatenBEValues;
 	tagBE: string;
 	auftragsnummerBE: string;
 	beginBE: string;
@@ -61,8 +71,9 @@ export interface IDatenBEJahr {
 	12: IDatenBE[];
 }
 
+type IDatenEWTValues<EWTType = string> = string | EWTType | boolean;
 export interface IDatenEWT<EWTType = string> {
-	[key: string]: string | EWTType | boolean;
+	[key: string]: IDatenEWTValues<EWTType>;
 	tagE: string;
 	eOrtE: string;
 	schichtE: string;
@@ -93,8 +104,9 @@ export interface IDatenEWTJahr<EWTType = string> {
 	12: IDatenEWT<EWTType>[];
 }
 
+type IDatenNValues = string | number;
 export interface IDatenN {
-	[key: string]: string | number;
+	[key: string]: IDatenNValues;
 	tagN: string;
 	beginN: string;
 	endeN: string;

@@ -1,25 +1,27 @@
-import createEditorModalFooter from "./createEditorModalFooter";
-import createModal from "./createModal";
-import createModalBodyCheckbox from "./createModalBodyCheckbox";
-import createModalBodyDivSpanElement from "./createModalBodyDivSpanElement";
-import createModalBodyFillerElement from "./createModalBodyFillerElement";
-import createModalBodyInputElement from "./createModalBodyInputElement";
-import createModalBodySelectElement from "./createModalBodySelectElement";
-import createModalBodyShowElement from "./createModalBodyShowElement";
-import createModalBodySpanElement from "./createModalBodySpanElement";
-import createModalBodyTitelElement from "./createModalBodyTitelElement";
-import createShowModalFooter from "./createShowModalFooter";
+import MyButton from "./MyButton";
+import MyCheckbox from "./MyCheckbox";
+import MyDivModal from "./MyDivModal";
+import MyEditorFooter from "./MyEditorFooter";
+import MyFormModal from "./MyFormModal";
+import MyInput from "./MyInput";
+import MyModalBody from "./MyModalBody";
+import MyModalHeader from "./MyModalHeader";
+import MySelect from "./MySelect";
+import MyShowElement from "./MyShowElement";
+import MyShowFooter from "./MyShowFooter";
+import showModal from "./showModal";
 
 export {
-	createModal,
-	createModalBodyCheckbox,
-	createModalBodyFillerElement,
-	createModalBodyInputElement,
-	createModalBodySelectElement,
-	createModalBodyShowElement,
-	createModalBodySpanElement,
-	createModalBodyDivSpanElement,
-	createModalBodyTitelElement,
-	createEditorModalFooter,
-	createShowModalFooter,
+	MyButton,
+	MyCheckbox,
+	MyDivModal,
+	MyEditorFooter,
+	MyFormModal,
+	MyInput,
+	MyModalBody,
+	MyModalHeader,
+	MySelect,
+	MyShowElement,
+	MyShowFooter,
+	showModal,
 };

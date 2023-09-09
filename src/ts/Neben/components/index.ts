@@ -1,5 +1,5 @@
 import createAddModalNeben from "./createAddModalNeben";
-import createEditorModalNeben from "./createEditorModalNeben";
-import createShowModalNeben from "./createShowModalNeben";
+import EditorModalNeben from "./createEditorModalNeben";
+import ShowModalNeben from "./createShowModalNeben";
 
-export { createAddModalNeben, createEditorModalNeben, createShowModalNeben };
+export { createAddModalNeben, EditorModalNeben, ShowModalNeben };

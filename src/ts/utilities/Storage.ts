@@ -31,6 +31,7 @@ enum StorageData {
 	theme = "Theme",
 	dataServer = "Server Daten",
 	UserID = "veraltete Daten",
+	key = "Test Daten",
 }
 
 export type TStorageData = keyof typeof StorageData;
@@ -79,7 +80,7 @@ class Storage implements IStorage {
 		localStorage.clear();
 	}
 
-	check(key: TStorageData): boolean {
+	check(key: string extends TStorageData ? TStorageData : string): boolean {
 		return Boolean(localStorage.getItem(key));
 	}
 

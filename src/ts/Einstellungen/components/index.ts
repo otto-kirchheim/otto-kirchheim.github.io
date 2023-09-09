@@ -1,5 +1,5 @@
-import createEditorModalVE from "./createEditorModalVE";
+import EditorModalVE from "./createEditorModalVE";
 import createModalChangePassword from "./createModalChangePassword";
-import createShowModalVE from "./createShowModalVE";
+import ShowModalVE from "./createShowModalVE";
 
-export { createEditorModalVE, createModalChangePassword, createShowModalVE };
+export { EditorModalVE, createModalChangePassword, ShowModalVE };

@@ -1,8 +1,14 @@
 import { generateEingabeTabelleEinstellungenVorgabenB } from ".";
 import { BereitschaftsEinsatzZeiträume } from "../../Bereitschaft";
 import { CustomTable } from "../../class/CustomTable";
-import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUaZ } from "../../interfaces";
-import { Storage, saveTableData } from "../../utilities";
+import type {
+	CustomHTMLTableElement,
+	IVorgabenU,
+	IVorgabenUPers,
+	IVorgabenUaZ,
+	IVorgabenUvorgabenB,
+} from "../../interfaces";
+import { Storage, saveTableDataVorgabenU } from "../../utilities";
 
 export default function generateEingabeMaskeEinstellungen(
 	VorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true }),
@@ -14,13 +20,13 @@ export default function generateEingabeMaskeEinstellungen(
 
 	populateTable(VorgabenU);
 
-	const table = document.querySelector<CustomHTMLTableElement>(`#tableVE`);
+	const table = document.querySelector<CustomHTMLTableElement<IVorgabenUvorgabenB>>(`#tableVE`);
 	if (!table) throw new Error("Tabelle nicht gefunden");
 	const ftVE = table.instance;
 
 	if (ftVE instanceof CustomTable) {
 		ftVE.rows.load([...Object.values(VorgabenB)]);
-		saveTableData(ftVE);
+		saveTableDataVorgabenU(ftVE);
 		console.log("saved", ftVE);
 	} else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
 }

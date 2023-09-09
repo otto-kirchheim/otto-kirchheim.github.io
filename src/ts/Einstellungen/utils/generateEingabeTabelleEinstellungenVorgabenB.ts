@@ -1,9 +1,8 @@
-import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../../class/CustomSnackbar";
-import { Row, createCustomTable } from "../../class/CustomTable";
+import { createCustomTable } from "../../class/CustomTable";
 import type { IVorgabenU, IVorgabenUvorgabenB } from "../../interfaces";
 import { Storage, buttonDisable } from "../../utilities";
-import { createEditorModalVE, createShowModalVE } from "../components";
+import { EditorModalVE, ShowModalVE } from "../components";
 
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
 	[key: string]: IVorgabenUvorgabenB;
@@ -37,21 +36,15 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 		editing: {
 			enabled: true,
 			addRow: () => {
-				const $modal = createEditorModalVE(ftVE, "Voreinstellung hinzufügen");
-				$modal.row = ftVE;
-				new Modal($modal).show();
+				EditorModalVE(ftVE, "Voreinstellung hinzufügen");
 			},
-			editRow: (row: Row) => {
-				const $modal = createEditorModalVE(row, "Voreinstellung bearbeiten");
-				$modal.row = row;
-				new Modal($modal).show();
+			editRow: row => {
+				EditorModalVE(row, "Voreinstellung bearbeiten");
 			},
-			showRow: (row: Row) => {
-				const $modal = createShowModalVE(row, "Voreinstellung anzeigen");
-				$modal.row = row;
-				new Modal($modal).show();
+			showRow: row => {
+				ShowModalVE(row, "Voreinstellung anzeigen");
 			},
-			deleteRow: (row: Row) => {
+			deleteRow: row => {
 				if (!row.cells.standard) {
 					row.deleteRow();
 				} else {

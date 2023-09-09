@@ -1,9 +1,9 @@
-import dayjs from "dayjs";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import dayjs from "../src/ts/utilities/configDayjs";
+import { beforeAll, beforeEach, describe, it, vi } from "vitest";
 import { createAddModalBereitschaftsZeit } from "../src/ts/Bereitschaft/components";
 import { BereitschaftEingabe, DataBE, DataBZ, bereitschaftEingabeWeb } from "../src/ts/Bereitschaft/utils";
 import { CustomHTMLDivElement } from "../src/ts/interfaces/CustomHTMLElements";
-import { IDaten } from "../src/ts/interfaces/IDaten";
+import { IDaten, IDatenBZ } from "../src/ts/interfaces/IDaten";
 import { Storage } from "../src/ts/utilities";
 import { VorgabenUMock, datenBEMock, datenBZMock, datenEWTMock, datenNMock, mockBereitschaft } from "./mockData";
 
@@ -11,7 +11,7 @@ describe("#Bereitschaftseingabe", () => {
 	beforeAll(() => {
 		Storage.set("VorgabenU", VorgabenUMock);
 	});
-	it("Berechnet normale Bereitschaft", () => {
+	it("Berechnet normale Bereitschaft", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-12T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-04-19T07:00:00"),
 			nacht = false,
@@ -24,7 +24,7 @@ describe("#Bereitschaftseingabe", () => {
 		expect(result.length === 7);
 		expect(result).toMatchSnapshot();
 	});
-	it("Berechnet normale Bereitschaft über Feiertag", () => {
+	it("Berechnet normale Bereitschaft über Feiertag", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-05T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-04-12T07:00:00"),
 			nacht = false,
@@ -36,7 +36,7 @@ describe("#Bereitschaftseingabe", () => {
 		expect(result.length === 7);
 		expect(result).toMatchSnapshot();
 	});
-	it("Berechnet Bereitschaft mit Nacht", () => {
+	it("Berechnet Bereitschaft mit Nacht", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-12T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-04-19T07:00:00"),
 			nacht = true,
@@ -48,7 +48,7 @@ describe("#Bereitschaftseingabe", () => {
 		expect(result.length === 10);
 		expect(result).toMatchSnapshot();
 	});
-	it("Berechnet Bereitschaft mit Nacht über Feiertag", () => {
+	it("Berechnet Bereitschaft mit Nacht über Feiertag", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-05T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-04-12T12:00:00"),
 			nacht = true,
@@ -60,7 +60,7 @@ describe("#Bereitschaftseingabe", () => {
 		expect(result.length === 10);
 		expect(result).toMatchSnapshot();
 	});
-	it("Berechnet Monatsübergang (anfang) korrekt", () => {
+	it("Berechnet Monatsübergang (anfang) korrekt", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-01T00:00:00"),
 			bereitschaftsEnde = dayjs("2023-04-05T07:00:00"),
 			nacht = false,
@@ -68,11 +68,12 @@ describe("#Bereitschaftseingabe", () => {
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
 			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
-		if (result === false) return;
+		expect(result).not.toBeFalsy();
+		if (!result) return;
 		expect(result.length === 5);
 		expect(result).toMatchSnapshot();
 	});
-	it("Berechnet Monatsübergang (ende) korrekt", () => {
+	it("Berechnet Monatsübergang (ende) korrekt", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-26T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-05-01T00:00:00"),
 			nacht = false,
@@ -84,7 +85,7 @@ describe("#Bereitschaftseingabe", () => {
 		expect(result.length === 5);
 		expect(result).toMatchSnapshot();
 	});
-	it("Return undefined, wenn Bereitschaftszeit bereits vorhanden", () => {
+	it("Return undefined, wenn Bereitschaftszeit bereits vorhanden", ({ expect }) => {
 		const bereitschaftsAnfang = dayjs("2023-04-12T15:45:00"),
 			bereitschaftsEnde = dayjs("2023-04-19T07:00:00"),
 			nacht = false,
@@ -142,8 +143,8 @@ describe("#bereitschaftEingabeWeb", async () => {
 		globalThis.aktualisiereBerechnung = vi.fn();
 	});
 
-	it("Should calculate the correct Bereitschaft if month is the same", async () => {
-		const $modal = document.createElement("div") as CustomHTMLDivElement;
+	it("Should calculate the correct Bereitschaft if month is the same", async ({ expect }) => {
+		const $modal = document.createElement("div") as CustomHTMLDivElement<IDatenBZ>;
 		$modal.innerHTML = `
     <input id="bA" value="2023-04-12"/>
     <input id="bAT" value="15:45"/>
@@ -177,19 +178,19 @@ describe("#DataBZ", () => {
 		Storage.set("accessToken", "TEST");
 	});
 
-	it("should return an empty array when no data is provided and nothing is in storage", () => {
+	it("should return an empty array when no data is provided and nothing is in storage", ({ expect }) => {
 		const result = DataBZ(undefined, 3);
 		expect(result).toEqual([]);
 	});
 
-	it("should return data from storage when no data is provided but storage has data", () => {
+	it("should return data from storage when no data is provided but storage has data", ({ expect }) => {
 		const storageData: IDaten["BZ"] = datenBZMock;
 		Storage.set("dataBZ", storageData);
 		const result = DataBZ(undefined, 3);
 		expect(result).toEqual(storageData[3]);
 	});
 
-	it("should return the provided data when data is provided", () => {
+	it("should return the provided data when data is provided", ({ expect }) => {
 		const inputData: IDaten["BZ"] = datenBZMock;
 		const result = DataBZ(inputData[3], 3);
 		expect(result).toEqual(inputData[3]);
@@ -203,19 +204,19 @@ describe("#DataBE", () => {
 		Storage.set("accessToken", "TEST");
 	});
 
-	it("should return an empty array when no data is provided and nothing is in storage", () => {
+	it("should return an empty array when no data is provided and nothing is in storage", ({ expect }) => {
 		const result = DataBE(undefined, 3);
 		expect(result).toEqual([]);
 	});
 
-	it("should return data from storage when no data is provided but storage has data", () => {
+	it("should return data from storage when no data is provided but storage has data", ({ expect }) => {
 		const storageData: IDaten["BE"] = datenBEMock;
 		Storage.set("dataBE", storageData);
 		const result = DataBE(undefined, 3);
 		expect(result).toEqual(storageData[3]);
 	});
 
-	it("should return the provided data when data is provided", () => {
+	it("should return the provided data when data is provided", ({ expect }) => {
 		const inputData: IDaten["BE"] = datenBEMock;
 		const result = DataBE(inputData[3], 3);
 		expect(result).toEqual(inputData[3]);
@@ -231,7 +232,7 @@ describe("#createAddModalBereitschaftsZeit", () => {
 		document.body.innerHTML = '<div class="modal" id="modal" tabindex="-1"></div>';
 	});
 
-	it("should create a modal with the correct structure and elements", () => {
+	it("should create a modal with the correct structure and elements", ({ expect }) => {
 		createAddModalBereitschaftsZeit();
 
 		const modal = document.querySelector<HTMLDivElement>(".modal");

@@ -1,9 +1,8 @@
-import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { IDaten, IVorgabenU } from "../interfaces";
-import { Storage, buttonDisable, download, saveDaten, saveTableData } from "../utilities";
-import { createAddModalEWT, createEditorModalEWT, createShowModalEWT } from "./components";
+import { IDaten, IDatenEWT, IVorgabenU } from "../interfaces";
+import { Storage, buttonDisable, download, saveDaten, saveTableDataEWT } from "../utilities";
+import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from "./components";
 import { DataE, addEventlistenerToggleBerechnen, ewtBerechnen } from "./utils";
 
 window.addEventListener("load", () => {
@@ -46,23 +45,17 @@ window.addEventListener("load", () => {
 			editing: {
 				enabled: true,
 				addRow: () => {
-					const $modal = createEditorModalEWT(ftE, "Anwesenheit hinzufügen");
-					$modal.row = ftE;
-					new Modal($modal).show();
+					EditorModalEWT(ftE, "Anwesenheit hinzufügen");
 				},
 				editRow: row => {
-					const $modal = createEditorModalEWT(row, "Anwesenheit bearbeiten");
-					$modal.row = row;
-					new Modal($modal).show();
+					EditorModalEWT(row, "Anwesenheit bearbeiten");
 				},
 				showRow: row => {
-					const $modal = createShowModalEWT(row, "Anwesenheit anzeigen");
-					$modal.row = row;
-					new Modal($modal).show();
+					ShowModalEWT(row, "Anwesenheit anzeigen");
 				},
 				deleteRow: row => {
 					row.deleteRow();
-					saveTableData(ftE);
+					saveTableDataEWT(ftE);
 				},
 				deleteAllRows: () => {
 					createSnackBar({
@@ -105,7 +98,7 @@ window.addEventListener("load", () => {
 										text: "Ja",
 										function: () => {
 											const rows = [...ftE.rows.array];
-											const newRows: { [key: string]: unknown }[] = [];
+											const newRows: IDatenEWT[] = [];
 											rows.forEach(row => {
 												if (!row.cells.berechnen) return newRows.push(row.cells);
 												row.cells.abWE = "";
@@ -119,7 +112,7 @@ window.addEventListener("load", () => {
 												return newRows.push(row.cells);
 											});
 											ftE.rows.load(newRows);
-											saveTableData(ftE);
+											saveTableDataEWT(ftE);
 										},
 										dismiss: true,
 										class: ["text-danger"],

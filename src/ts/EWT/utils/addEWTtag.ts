@@ -1,13 +1,13 @@
-import type { CustomHTMLTableElement, IMonatsDaten, IDatenEWT } from "../../interfaces";
-import { saveTableData } from "../../utilities";
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT } from "../../interfaces";
+import { saveTableDataEWT } from "../../utilities";
 import naechsterTag from "./naechsterTag";
 
-export default function addEWTtag(): void {
+export default function addEWTtag(modal: CustomHTMLDivElement<IDatenEWT>): void {
 	// Get the input and select elements
-	const tagEInput = document.querySelector<HTMLInputElement>("#tagE");
-	const eOrtESelect = document.querySelector<HTMLSelectElement>("#EOrt");
-	const schichtESelect = document.querySelector<HTMLSelectElement>("#Schicht");
-	const berechnenInput = document.querySelector<HTMLInputElement>("#berechnen1");
+	const tagEInput = modal.querySelector<HTMLInputElement>("#tagE");
+	const eOrtESelect = modal.querySelector<HTMLSelectElement>("#EOrt");
+	const schichtESelect = modal.querySelector<HTMLSelectElement>("#Schicht");
+	const berechnenInput = modal.querySelector<HTMLInputElement>("#berechnen1");
 
 	// Throw an error if any of the required elements is missing
 	if (!tagEInput) throw new Error("TagE input not found");
@@ -38,7 +38,7 @@ export default function addEWTtag(): void {
 	};
 
 	// Get the table and its instance
-	const tableE = document.querySelector<CustomHTMLTableElement>("#tableE");
+	const tableE = document.querySelector<CustomHTMLTableElement<IDatenEWT>>("#tableE");
 	if (!tableE) throw new Error("TableE not found");
 	const ftE = tableE.instance;
 
@@ -46,9 +46,9 @@ export default function addEWTtag(): void {
 
 	// Add the new row to the table and save the data
 	ftE.rows.add(data);
-	saveTableData(ftE);
+	saveTableDataEWT(ftE);
 
 	// Calculate and set the next tag value
-	const existingRows = ftE.getRows().map(row => row.cells) as IMonatsDaten["EWT"];
+	const existingRows: IDatenEWT[] = ftE.getRows().map(row => row.cells);
 	naechsterTag(+tagE, existingRows);
 }

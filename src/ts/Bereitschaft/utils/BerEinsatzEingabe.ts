@@ -1,7 +1,7 @@
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenBZJahr } from "../../interfaces";
-import { Storage, clearLoading, saveTableData, setLoading, tableToArray } from "../../utilities";
+import { Storage, clearLoading, saveTableDataBE, setLoading, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
 import { DataBZ } from "./convertDaten";
@@ -16,8 +16,8 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	const lreSelect = $modal.querySelector<HTMLSelectElement>("#LRE");
 	const privatkmInput = $modal.querySelector<HTMLInputElement>("#privatkm");
 	const berZeitInput = $modal.querySelector<HTMLInputElement>("#berZeit");
-	const tableBE = document.querySelector<CustomHTMLTableElement>("#tableBE");
-	const tableBZ = document.querySelector<CustomHTMLTableElement>("#tableBZ");
+	const tableBE = document.querySelector<CustomHTMLTableElement<IDatenBE>>("#tableBE");
+	const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>("#tableBZ");
 
 	if (
 		!datumInput ||
@@ -46,7 +46,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	console.log(daten);
 	const ftBE = tableBE.instance;
 	ftBE.rows.add(daten);
-	saveTableData(ftBE);
+	saveTableDataBE(ftBE);
 
 	if (berZeit) {
 		daten.tagBE = datumInput.value;

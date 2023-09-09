@@ -1,17 +1,22 @@
+import { Dayjs } from "dayjs";
 import duration from "dayjs/plugin/duration.js";
+import isBetween from "dayjs/plugin/isBetween";
 import { isHoliday } from "../../class/feiertagets/feiertage";
-import type { IMonatsDaten, IDatenBZ, IVorgabenU } from "../../interfaces";
+import type { IDatenBZ, IMonatsDaten, IVorgabenU } from "../../interfaces";
 import { DatenSortieren, Storage, getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
+dayjs.extend(isBetween);
 
 export default function BereitschaftEingabe(
-	bereitschaftsAnfang: dayjs.Dayjs,
-	bereitschaftsEnde: dayjs.Dayjs,
-	nachtAnfang: dayjs.Dayjs,
-	nachtEnde: dayjs.Dayjs,
+	bereitschaftsAnfang: Dayjs,
+	bereitschaftsEnde: Dayjs,
+	nachtAnfang: Dayjs,
+	nachtEnde: Dayjs,
 	nacht: boolean,
 	daten: IMonatsDaten["BZ"],
 ): IMonatsDaten["BZ"] | false {
+	console.time("Generiere Bereitschaft");
+
 	console.groupCollapsed("Vorgaben");
 	console.log("nacht: " + nacht);
 	console.log("Bereitschafts Anfang: " + bereitschaftsAnfang.toDate());
@@ -20,34 +25,36 @@ export default function BereitschaftEingabe(
 	console.log("Nacht Ende: " + nachtEnde.toDate());
 	console.groupEnd();
 
-	let bereitschaftsAnfangNacht;
-	let bereitschaftsAnfangMerker;
-	let bereitschaftsAnfangA;
-	let bereitschaftsEndeMerker;
-	let bereitschaftsEndeA;
-	let bereitschaftsEndeB;
-	let arbeitstagHeute;
-	let arbeitstagMorgen;
-	let pause;
-	let pauseMerker;
-	let pauseMerkerTag;
-	let pauseMerkerNacht;
+	let bereitschaftsAnfangNacht: Dayjs;
+	let bereitschaftsAnfangMerker: Dayjs | null;
+	let bereitschaftsAnfangA: Dayjs;
+	let bereitschaftsEndeMerker: Dayjs | null;
+	let bereitschaftsEndeA: Dayjs;
+	let bereitschaftsEndeB: Dayjs;
+	let arbeitstagHeute: boolean;
+	let arbeitstagMorgen: boolean;
+	let pause: number | null = null;
+	let pauseMerker: Dayjs;
+	let pauseMerkerTag: Dayjs;
+	let pauseMerkerNacht: Dayjs;
+
+	let changed: boolean = false;
 
 	// Voreinstellungen Übernehmen
 	const datenU: IVorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true });
 	if (!datenU) throw new Error("VorgabenU nicht gefunden");
 	// Tagschicht Anfangszeit Mo-Do
-	const tagAnfangsZeitMoDo = getDurationFromTime(datenU.aZ.eT);
+	const tagAnfangsZeitMoDo: duration.Duration = getDurationFromTime(datenU.aZ.eT);
 	// Tagschicht Anfangszeit Fr
-	const tagAnfangsZeitFr = getDurationFromTime(datenU.aZ.eTF);
+	const tagAnfangsZeitFr: duration.Duration = getDurationFromTime(datenU.aZ.eTF);
 	// Tagschicht Endezeit Mo-Fr
-	const tagEndeZeitMoFr = getDurationFromTime(datenU.aZ.bT);
+	const tagEndeZeitMoFr: duration.Duration = getDurationFromTime(datenU.aZ.bT);
 	// Feste Variablen
-	const ruheZeit = 10;
-	const tagPausenVorgabe = 30;
-	const nachtPausenVorgabe = 45;
-	const bereitschaftsZeitraumWechsel = dayjs.duration(8, "hours");
-	const arbeitsAnfang = [
+	const ruheZeit: number = 10;
+	const tagPausenVorgabe: number = 30;
+	const nachtPausenVorgabe: number = 45;
+	const bereitschaftsZeitraumWechsel: duration.Duration = dayjs.duration(8, "hours");
+	const arbeitsAnfang: duration.Duration[] = [
 		tagEndeZeitMoFr,
 		tagEndeZeitMoFr,
 		tagEndeZeitMoFr,
@@ -57,7 +64,7 @@ export default function BereitschaftEingabe(
 		bereitschaftsZeitraumWechsel,
 		tagEndeZeitMoFr,
 	];
-	const arbeitsEnde = [
+	const arbeitsEnde: duration.Duration[] = [
 		tagAnfangsZeitMoDo,
 		tagAnfangsZeitMoDo,
 		tagAnfangsZeitMoDo,
@@ -67,7 +74,7 @@ export default function BereitschaftEingabe(
 		bereitschaftsZeitraumWechsel,
 		tagAnfangsZeitMoDo,
 	];
-	const pausenTag = [0, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, 0, 0, 0];
+	const pausenTag: number[] = [0, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, tagPausenVorgabe, 0, 0, 0];
 
 	const B2 = (
 		bereitschaftsAnfang: dayjs.Dayjs,
@@ -129,7 +136,7 @@ export default function BereitschaftEingabe(
 	// Sonstige Variablen Vorbereiten
 	bereitschaftsEndeMerker = bereitschaftsAnfang.clone();
 
-	const datenVorher = daten.length;
+	const datenVorher: number = daten.length;
 
 	/// --- Beginn Berechnung --- ///
 	while (daten.length < 26 && bereitschaftsAnfang.isBefore(bereitschaftsEnde)) {
@@ -201,11 +208,10 @@ export default function BereitschaftEingabe(
 			pauseB: pause,
 		};
 
-		if (!daten.some(row => JSON.stringify(row) === JSON.stringify(newDaten))) {
-			daten.push(newDaten);
-		} else {
-			console.log("Bereitschaftszeitraum bereits vorhanden");
-		}
+		let change: boolean = false;
+		[change, daten] = vorhandenCheck(daten, newDaten);
+		if (!changed && change) changed = change;
+
 		console.group("Übernehme Daten neuer Tag");
 
 		/// #Übernehme Daten für nächsten Tag# ///
@@ -272,10 +278,92 @@ export default function BereitschaftEingabe(
 	}
 	DatenSortieren(daten, "beginB");
 
-	if (datenVorher == daten.length) {
+	console.timeEnd("Generiere Bereitschaft");
+
+	if (datenVorher == daten.length && !changed) {
 		console.log("Keine änderung, Bereitschaft bereits vorhanden");
+
 		return false;
 	}
 
 	return daten;
+}
+
+function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1): [boolean, IDatenBZ[]] {
+	const MAX_DEPTH = 3;
+	if (depth > MAX_DEPTH) throw new Error("Fehler bei vorhandenCheck - Recurse Funktion");
+
+	const B_WECHSEL_STUNDE = 8;
+	const B_WECHSEL_MINUTE = 0;
+
+	const updatedDaten: IDatenBZ[] = [...daten];
+	const newBegin: Dayjs = dayjs(newDaten.beginB);
+	const newEnd: Dayjs = dayjs(newDaten.endeB);
+
+	const Tag1Neu: number = newBegin.date();
+	const Tag2Neu: number = newEnd.date();
+
+	const filteredDaten: IDatenBZ[] = daten.filter(value => {
+		const TagBeginB: number = dayjs(value.beginB).date();
+		const TagEndeB: number = dayjs(value.endeB).date();
+		return TagBeginB === Tag1Neu || TagBeginB === Tag2Neu || TagEndeB === Tag1Neu || TagEndeB === Tag2Neu;
+	});
+
+	for (const row of filteredDaten) {
+		const rowBegin = dayjs(row.beginB);
+		const rowEnd = dayjs(row.endeB);
+
+		if (newBegin.isBetween(rowBegin, rowEnd, null, "[]") && newEnd.isBetween(rowBegin, rowEnd, null, "[]")) {
+			console.log("Bereitschaftszeitraum bereits in einem anderen Zeitraum vorhanden");
+			return [false, daten];
+		}
+
+		if (rowBegin.isBetween(newBegin, newEnd, null, "()") && rowEnd.isBetween(newBegin, newEnd, null, "()")) {
+			console.log("Bereitschaftszeitraum überschneidet andern Zeitraum komplett");
+			row.beginB = newBegin.toISOString();
+			row.endeB = newEnd.toISOString();
+			return [true, daten];
+		}
+
+		const endeBDate: Dayjs = rowEnd.set("hour", B_WECHSEL_STUNDE).set("minute", B_WECHSEL_MINUTE);
+		if (newBegin.isBetween(rowBegin, rowEnd, null, "[)") && !rowEnd.isSame(endeBDate) && newEnd.isAfter(row.endeB)) {
+			if (newEnd.isAfter(endeBDate)) {
+				row.endeB = endeBDate.toISOString();
+
+				const neuerZeitraum: IDatenBZ = {
+					beginB: endeBDate.toISOString(),
+					endeB: newDaten.endeB,
+					pauseB: 0,
+				};
+				console.log("Überschneidung Bereitschaftszeitraum neues Ende nach vorhandenem und Bereitschaftszeitraumwechsel");
+				return vorhandenCheck(daten, neuerZeitraum, depth + 1);
+			} else {
+				row.endeB = newDaten.endeB;
+				console.log("Überschneidung Bereitschaftszeitraum neues Ende nach vorhandenem");
+				return [true, daten];
+			}
+		}
+
+		const beginBDate: Dayjs = rowBegin.set("hour", B_WECHSEL_STUNDE).set("minute", B_WECHSEL_MINUTE);
+		if (newEnd.isBetween(rowBegin, rowEnd, null, "(]") && !rowBegin.isSame(beginBDate) && newBegin.isBefore(row.beginB)) {
+			if (newBegin.isBefore(beginBDate)) {
+				row.beginB = beginBDate.toISOString();
+
+				const neuerZeitraum: IDatenBZ = {
+					beginB: newDaten.beginB,
+					endeB: beginBDate.toISOString(),
+					pauseB: 0,
+				};
+				console.log("Überschneidung Bereitschaftszeitraum neuer Begin vor vorhandenem und Bereitschaftszeitraumwechsel");
+
+				return vorhandenCheck(daten, neuerZeitraum, depth + 1);
+			} else {
+				row.beginB = newDaten.beginB;
+				console.log("Überschneidung Bereitschaftszeitraum neuer Begin vor vorhandenem");
+				return [true, daten];
+			}
+		}
+	}
+	updatedDaten.push(newDaten);
+	return [true, updatedDaten];
 }

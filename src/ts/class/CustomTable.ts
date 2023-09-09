@@ -3,9 +3,13 @@
  *
  * Copyright 2022-2023 Jan Otto
  */
+import dayjs, { Dayjs } from "dayjs";
 import type { CustomHTMLTableElement } from "../interfaces/index.js";
 
-interface CustomTableOptions {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type CustomTableTypes = Record<string, any>;
+
+interface CustomTableOptions<T extends CustomTableTypes> {
 	columns: {
 		name: string;
 		title: string;
@@ -16,12 +20,11 @@ interface CustomTableOptions {
 		type?: string;
 		visible?: boolean;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		parser?: (this: Column, value: any, option?: any) => string | number;
+		parser?: (this: Column<T>, value: any, option?: any) => string | number;
 		classes?: string[];
-		editing?: CustomTableOptions["editing"];
+		editing?: CustomTableOptions<T>["editing"];
 	}[];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	rows: { [key: CustomTableOptions["columns"][0]["name"]]: any }[];
+	rows: T[];
 	empty?: string;
 	sorting?: { enabled: boolean };
 	editing?: {
@@ -31,26 +34,26 @@ interface CustomTableOptions {
 		deleteText?: string;
 		deleteAllText?: string;
 		addRow: () => void;
-		editRow: (row: Row) => void;
-		showRow: (row: Row) => void;
-		deleteRow: (row: Row) => void;
+		editRow: (row: Row<T>) => void;
+		showRow: (row: Row<T>) => void;
+		deleteRow: (row: Row<T>) => void;
 		deleteAllRows?: () => void;
 		customButton?: { text: string; classes: string[]; function: () => void }[] | null;
 	};
 	classes?: string[];
 	customFunction?: {
-		beforeDraw?: (this: CustomTable) => void;
-		afterDraw?: (this: CustomTable) => void;
-		beforeDrawFooter?: (this: CustomTable) => void;
-		afterDrawFooter?: (this: CustomTable) => void;
-		beforeDrawRows?: (this: CustomTable) => void;
-		afterDrawRows?: (this: CustomTable) => void;
-		beforeDrawHeader?: (this: CustomTable) => void;
-		afterDrawHeader?: (this: CustomTable) => void;
+		beforeDraw?: (this: CustomTable<T>) => void;
+		afterDraw?: (this: CustomTable<T>) => void;
+		beforeDrawFooter?: (this: CustomTable<T>) => void;
+		afterDrawFooter?: (this: CustomTable<T>) => void;
+		beforeDrawRows?: (this: CustomTable<T>) => void;
+		afterDrawRows?: (this: CustomTable<T>) => void;
+		beforeDrawHeader?: (this: CustomTable<T>) => void;
+		afterDrawHeader?: (this: CustomTable<T>) => void;
 	} | null;
 }
 
-interface CustomTableOptionsAll {
+interface CustomTableOptionsAll<T extends CustomTableTypes> {
 	columns: {
 		name: string;
 		title: string;
@@ -60,13 +63,13 @@ interface CustomTableOptionsAll {
 		direction: Directions | null;
 		type: string;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		parser: (this: Column, value: any, option?: any) => string | number;
+		parser: (this: Column<T>, value: any, option?: any) => string | number;
 		classes: string[];
 		visible: boolean;
-		editing?: CustomTableOptionsAll["editing"];
+		editing?: CustomTableOptionsAll<T>["editing"];
 	}[];
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	rows: { [key: CustomTableOptions["columns"][0]["name"]]: any }[];
+	rows: T[];
 	empty: string;
 	sorting: { enabled: boolean };
 	editing: {
@@ -76,34 +79,34 @@ interface CustomTableOptionsAll {
 		deleteText: string;
 		deleteAllText: string;
 		addRow: () => void;
-		editRow: (row: Row) => void;
-		showRow: (row: Row) => void;
-		deleteRow: (row: Row) => void;
+		editRow: (row: Row<T>) => void;
+		showRow: (row: Row<T>) => void;
+		deleteRow: (row: Row<T>) => void;
 		deleteAllRows: () => void;
 		customButton: { text: string; classes: string[]; function: () => void }[] | null;
 	};
 	classes: string[];
 	customFunction?: {
-		beforeDraw?: (this: CustomTable) => void;
-		afterDraw?: (this: CustomTable) => void;
-		beforeDrawFooter?: (this: CustomTable) => void;
-		afterDrawFooter?: (this: CustomTable) => void;
-		beforeDrawRows?: (this: CustomTable) => void;
-		afterDrawRows?: (this: CustomTable) => void;
-		beforeDrawHeader?: (this: CustomTable) => void;
-		afterDrawHeader?: (this: CustomTable) => void;
+		beforeDraw?: (this: CustomTable<T>) => void;
+		afterDraw?: (this: CustomTable<T>) => void;
+		beforeDrawFooter?: (this: CustomTable<T>) => void;
+		afterDrawFooter?: (this: CustomTable<T>) => void;
+		beforeDrawRows?: (this: CustomTable<T>) => void;
+		afterDrawRows?: (this: CustomTable<T>) => void;
+		beforeDrawHeader?: (this: CustomTable<T>) => void;
+		afterDrawHeader?: (this: CustomTable<T>) => void;
 	} | null;
 }
 
-interface CustomHTMLTableRowElement extends HTMLTableRowElement {
-	data?: Row;
+interface CustomHTMLTableRowElement<T extends CustomTableTypes> extends HTMLTableRowElement {
+	data?: Row<T>;
 }
 
 type Breakpoints = "xs" | "sm" | "md" | "lg" | "xl" | "xxl";
 type Directions = "ASC" | "DESC";
 
-export class Column {
-	public CustomTable: CustomTable;
+export class Column<T extends CustomTableTypes> {
+	public CustomTable: CustomTable<T>;
 	public name: string;
 	public title: string;
 	public breakpoints: Breakpoints | null;
@@ -112,13 +115,13 @@ export class Column {
 	public direction: Directions | null;
 	public type: string;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	public parser: (this: Column, value: any, option?: any) => string | number;
+	public parser: (this: Column<T>, value: any, option?: any) => string | number;
 	public classes: string[];
 	public visible: boolean;
-	public editing?: CustomTableOptionsAll["editing"] | null;
+	public editing?: CustomTableOptionsAll<T>["editing"] | null;
 	public index: number;
 	public $el: HTMLTableCellElement | null = null;
-	constructor(table: CustomTable, column: CustomTableOptionsAll["columns"][0], index: number) {
+	constructor(table: CustomTable<T>, column: CustomTableOptionsAll<T>["columns"][0], index: number) {
 		if (!column.name) throw new Error("Name fehlt");
 		if (!column.title && !column.editing) throw new Error("Title fehlt");
 		this.index = index;
@@ -136,23 +139,23 @@ export class Column {
 		this.CustomTable = table;
 	}
 }
-export class Columns {
-	public CustomTable: CustomTable;
-	public array: Column[] = [];
+export class Columns<T extends CustomTableTypes> {
+	public CustomTable: CustomTable<T>;
+	public array: Column<T>[] = [];
 
-	constructor(table: CustomTable, columns: CustomTableOptionsAll["columns"]) {
+	constructor(table: CustomTable<T>, columns: CustomTableOptionsAll<T>["columns"]) {
 		this.array = columns.map((column, index) => new Column(table, column, index));
 		this.CustomTable = table;
 	}
 }
 
-export class Row {
-	public CustomTable: CustomTable;
-	public columns: Columns;
-	public cells: CustomTableOptions["rows"][0];
-	public $el: CustomHTMLTableRowElement | null = null;
+export class Row<T extends CustomTableTypes> {
+	public CustomTable: CustomTable<T>;
+	public columns: Columns<T>;
+	public cells: T;
+	public $el: CustomHTMLTableRowElement<T> | null = null;
 
-	constructor(table: CustomTable, row: object) {
+	constructor(table: CustomTable<T>, row: T) {
 		this.CustomTable = table;
 		this.columns = table.columns;
 		this.cells = row;
@@ -165,47 +168,47 @@ export class Row {
 	}
 
 	/** The function takes a value, sets the cells property to that value, and then calls the drawRows function. */
-	val(value: object): void {
+	val(value: T): void {
 		this.cells = value;
 		this.CustomTable.drawRows();
 	}
 }
 
-export class Rows {
-	public CustomTable: CustomTable;
-	public array: Row[] = [];
+export class Rows<T extends CustomTableTypes> {
+	public CustomTable: CustomTable<T>;
+	public array: Array<Row<T>> = [];
 
-	constructor(table: CustomTable, rows: object[]) {
+	constructor(table: CustomTable<T>, rows: T[]) {
 		this.array = rows.map(row => new Row(table, row));
 		this.CustomTable = table;
 	}
 	/** It adds a new row to the table. */
-	add(value: object): void {
+	add(value: T): void {
 		this.array.push(new Row(this.CustomTable, value));
 		this.CustomTable.drawRows();
 	}
 
 	/** The load function takes an array of objects and adds them to the CustomTable. */
-	load(array: object[], add = false): void {
+	load(array: T[], add = false): void {
 		if (!add) this.array.length = 0;
 		array.forEach(row => this.array.push(new Row(this.CustomTable, row)));
 		this.CustomTable.drawRows();
 	}
 }
 
-export class CustomTable {
-	public $el: CustomHTMLTableElement;
+export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
+	public $el: CustomHTMLTableElement<T>;
 	public table: string;
-	public rows: Rows;
-	public columns: Columns;
+	public rows: Rows<T>;
+	public columns: Columns<T>;
 	public state: { editing: boolean | null; sorting: boolean | null };
 	private o = { breakpoints: { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1400 } };
-	public options: CustomTableOptionsAll;
+	public options: CustomTableOptionsAll<T>;
 
-	constructor(initTable: string | CustomHTMLTableElement, options: CustomTableOptions) {
+	constructor(initTable: string | CustomHTMLTableElement<T>, options: CustomTableOptions<T>) {
 		if (typeof initTable === "string") {
 			this.table = initTable;
-			const el = document.querySelector<CustomHTMLTableElement>(`#${initTable}`);
+			const el = document.querySelector<CustomHTMLTableElement<T>>(`#${initTable}`);
 			if (!el) throw new Error("Tabelle nicht gefunden");
 			this.$el = el;
 		} else if (initTable instanceof HTMLTableElement) {
@@ -224,7 +227,7 @@ export class CustomTable {
 		this.$el.classList.add(...["customtable", ...this.options.classes]);
 
 		if (this.state.editing) {
-			const editingRow: CustomTableOptionsAll["columns"][0] = {
+			const editingRow: CustomTableOptionsAll<T>["columns"][0] = {
 				name: "editing",
 				title: "",
 				type: "editing",
@@ -248,7 +251,7 @@ export class CustomTable {
 			this.options.columns.unshift(editingRow);
 		}
 		this.columns = new Columns(this, this.options.columns);
-		this.rows = new Rows(this, this.options.rows);
+		this.rows = new Rows<T>(this, this.options.rows);
 
 		this.draw();
 
@@ -260,7 +263,7 @@ export class CustomTable {
 
 		/** It takes an object as an argument and returns an object with the same properties as the argument,
 		 * but with default values for the properties that are not defined in the argument */
-		function ApplyOptions(this: CustomTable, options: CustomTableOptions): CustomTableOptionsAll {
+		function ApplyOptions(this: CustomTable<T>, options: CustomTableOptions<T>): CustomTableOptionsAll<T> {
 			if (!options.columns) throw new Error("Spalten fehlen");
 			return {
 				columns: options.columns.map(column => {
@@ -319,7 +322,7 @@ export class CustomTable {
 			};
 		}
 
-		function _parser(this: Column, value: string | number): string {
+		function _parser(this: Column<T>, value: string | number): string {
 			if (typeof value === "number") value = value.toString();
 			switch (this.type) {
 				case "text":
@@ -337,7 +340,7 @@ export class CustomTable {
 		 * property of the options object, otherwise return null.
 		 * @returns The return value is an object with two properties: sorting and editing.
 		 */
-		function setState(this: CustomTable): { sorting: boolean | null; editing: boolean | null } {
+		function setState(this: CustomTable<T>): { sorting: boolean | null; editing: boolean | null } {
 			return {
 				sorting: this.options.sorting?.enabled ?? null,
 				editing: this.options.editing?.enabled ?? null,
@@ -349,7 +352,7 @@ export class CustomTable {
 	 * It returns an array of the rows in the table.
 	 * @returns {object[]} An array of rows.
 	 */
-	public getRows(): Row[] {
+	public getRows(): Row<T>[] {
 		return this.rows.array;
 	}
 
@@ -444,7 +447,7 @@ export class CustomTable {
 
 		if (this.rows.array.length > 0) {
 			for (const row of this.rows.array) {
-				const tr: CustomHTMLTableRowElement = document.createElement("tr");
+				const tr: CustomHTMLTableRowElement<T> = document.createElement("tr");
 				row.columns.array.forEach(column => {
 					if (!column.visible) {
 						return;
@@ -455,7 +458,12 @@ export class CustomTable {
 						divBtnGroup.classList.add("btn-group", "btn-group-sm");
 						divBtnGroup.setAttribute("role", "group");
 
-						const createButton = (classList: string[], text: string, eventListener: (row: Row) => void, title = "button") => {
+						const createButton = (
+							classList: string[],
+							text: string,
+							eventListener: (row: Row<T>) => void,
+							title = "button",
+						) => {
 							const button = document.createElement("button");
 							button.classList.add(...classList);
 							button.innerHTML = text;
@@ -485,7 +493,7 @@ export class CustomTable {
 						divBtnGroup.append(buttonDelete);
 						td.appendChild(divBtnGroup);
 					} else {
-						td.innerHTML = column.parser(row.cells[column.name]) as string;
+						td.innerHTML = column.parser(row.cells[column.name]).toString();
 					}
 					if (column.breakpoints) td.dataset.breakpoints = column.breakpoints;
 					if (column.classes.length > 0) td.classList.add(...column.classes);
@@ -543,7 +551,7 @@ export class CustomTable {
 		thead.appendChild(tr);
 		if (this.options.customFunction?.afterDrawHeader) this.options.customFunction.afterDrawHeader.call(this);
 
-		function handleSortable(this: CustomTable, th: HTMLTableCellElement, column: Column): void {
+		function handleSortable(this: CustomTable<T>, th: HTMLTableCellElement, column: Column<T>): void {
 			th.classList.add("customtable-sortable");
 			const span = document.createElement("span");
 			span.classList.add("customtableIcon");
@@ -555,7 +563,12 @@ export class CustomTable {
 			});
 		}
 
-		function handleSorted(this: CustomTable, column: Column, th: HTMLTableCellElement, span: HTMLSpanElement): void {
+		function handleSorted(
+			this: CustomTable<T>,
+			column: Column<T>,
+			th: HTMLTableCellElement,
+			span: HTMLSpanElement,
+		): void {
 			if (!column.sorted) return span.classList.add("customtable-sort");
 			const direction = column.direction ? column.direction.toLowerCase() : "asc";
 			this.sort(column.index, <Directions>direction.toUpperCase());
@@ -570,24 +583,51 @@ export class CustomTable {
 	}
 
 	private sort(columnIndex: number, direction: Directions | null): void {
-		const directionOrder = {
-			ASC: [1, -1],
-			DESC: [-1, 1],
-			default: [1, -1],
-		};
+		type ValueType = string | number | boolean | object | Dayjs;
+
+		const Order = getDirectionOrder(direction);
 		const rows = this.rows.array;
-		const Sorter = (a: Row, b: Row): number => {
-			let aValue = a.cells[a.columns.array[columnIndex].name];
-			let bValue = b.cells[b.columns.array[columnIndex].name];
-			return (
-				"string" == typeof aValue && (aValue = aValue.toLowerCase()),
-				"string" == typeof bValue && (bValue = bValue.toLowerCase()),
-				bValue.localeCompare(aValue, undefined, { numeric: true }) *
-					(direction ? directionOrder[direction] : directionOrder.default)[1]
-			);
+
+		const Sorter = (a: Row<T>, b: Row<T>): number => {
+			const aColumn = a.columns.array[columnIndex].name;
+			const aValue: ValueType = a.cells[aColumn];
+
+			const bColumn = b.columns.array[columnIndex].name;
+			const bValue: ValueType = b.cells[bColumn];
+
+			if (!aValue || !bValue) throw new Error("Daten zum Sortieren dürfen nicht leer sein");
+
+			if (dayjs.isDayjs(aValue) && dayjs.isDayjs(bValue)) return Number(bValue.isAfter(aValue)) * Order[1];
+
+			const normalizedA = normalizeValue(aValue);
+			const normalizedB = normalizeValue(bValue);
+
+			return normalizedB.localeCompare(normalizedA, undefined, { numeric: true }) * Order[1];
 		};
 
 		rows.sort(Sorter);
+
+		function normalizeValue(value: ValueType): string {
+			switch (typeof value) {
+				case "string":
+					return value.toLowerCase();
+				case "number":
+				case "boolean":
+					return value.toString();
+				case "object":
+					return dayjs.isDayjs(value) ? value.toISOString() : JSON.stringify(value);
+				default:
+					return String(value);
+			}
+		}
+
+		function getDirectionOrder(direction: Directions | null): number[] {
+			const directionOrder = {
+				ASC: [1, -1],
+				DESC: [-1, 1],
+			};
+			return direction ? directionOrder[direction] : directionOrder.ASC;
+		}
 	}
 
 	private onSortClicked(element: HTMLTableCellElement): void {
@@ -610,7 +650,7 @@ export class CustomTable {
 	 * columns.array property.
 	 * @returns {string[]} An array of unique breakpoints.
 	 */
-	public breakpoints(array: Column[] | CustomTableOptionsAll["columns"]): Breakpoints[] | [] {
+	public breakpoints(array: Column<T>[] | CustomTableOptionsAll<T>["columns"]): Breakpoints[] | [] {
 		if (!array) array = this.columns.array;
 		return <Breakpoints[] | []>(
 			Array.from(new Set(array.map(column => column.breakpoints).flatMap(f => (f ? f.split(" ") : []))))
@@ -618,11 +658,14 @@ export class CustomTable {
 	}
 
 	/** It returns the largest breakpoint value from an array of breakpoint names */
-	public maxBreakpoint(array: Column[] | CustomTableOptionsAll["columns"] = this.columns.array): number {
+	public maxBreakpoint(array: Column<T>[] | CustomTableOptionsAll<T>["columns"] = this.columns.array): number {
 		return Math.max(...this.breakpoints(array).map(breakpoint => this.o.breakpoints[breakpoint]));
 	}
 }
 
-export function createCustomTable(table: string | CustomHTMLTableElement, options: CustomTableOptions): CustomTable {
-	return new CustomTable(table, options);
+export function createCustomTable<T extends CustomTableTypes>(
+	table: string | CustomHTMLTableElement<T>,
+	options: CustomTableOptions<T>,
+): CustomTable<T> {
+	return new CustomTable<T>(table, options);
 }

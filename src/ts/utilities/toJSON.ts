@@ -1,6 +1,7 @@
 import { CustomTable } from "../class/CustomTable";
+import { IDatenAllValuesWithKey } from "../interfaces";
 
-export default function toJSON<T = unknown>(formData: FormData, table: CustomTable): T {
+export default function toJSON<T extends IDatenAllValuesWithKey>(formData: FormData, table: CustomTable<T>): T {
 	const nameConvert = createNameConvertMap(table);
 	const output: Record<string, unknown> = {};
 
@@ -14,13 +15,16 @@ export default function toJSON<T = unknown>(formData: FormData, table: CustomTab
 	return output as T;
 }
 
-function createNameConvertMap(table: CustomTable): Record<string, string> {
+function createNameConvertMap<T extends IDatenAllValuesWithKey>(table: CustomTable<T>): Record<string, string> {
 	return table.columns.array
 		.filter(column => column.name !== "editing")
-		.reduce((nameConvertMap, column) => {
-			nameConvertMap[column.title] = column.name;
-			return nameConvertMap;
-		}, {} as Record<string, string>);
+		.reduce(
+			(nameConvertMap, column) => {
+				nameConvertMap[column.title] = column.name;
+				return nameConvertMap;
+			},
+			{} as Record<string, string>,
+		);
 }
 
 function addValueToOutput(existingValue: unknown, newValue: unknown): unknown {

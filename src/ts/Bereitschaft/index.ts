@@ -1,15 +1,14 @@
-import Modal from "bootstrap/js/dist/modal";
 import { createSnackBar } from "../class/CustomSnackbar";
-import { createCustomTable } from "../class/CustomTable";
-import type { IVorgabenUvorgabenB } from "../interfaces";
-import { Storage, buttonDisable, download, saveDaten, saveTableData } from "../utilities";
+import { CustomTable, createCustomTable } from "../class/CustomTable";
+import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from "../interfaces";
+import { Storage, buttonDisable, download, saveDaten, saveTableDataBE, saveTableDataBZ } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 import {
+	EditorModalBE,
+	EditorModalBereitschaftsZeit,
+	ShowModalBereitschaft,
 	createAddModalBereitschaftsEinsatz,
 	createAddModalBereitschaftsZeit,
-	createEditorModalBereitschaftsEinsatz,
-	createEditorModalBereitschaftsZeit,
-	createShowModalBereitschaft,
 } from "./components";
 import { DataBE, DataBZ } from "./utils";
 
@@ -52,7 +51,7 @@ export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgaben
 window.addEventListener("load", () => {
 	const datetimeParser = (value: string): string => dayjs(value).format("DD.MM.YYYY, LT"),
 		timeZeroParser = (value: number): number | string => (!value ? "" : value),
-		ftBZ = createCustomTable("tableBZ", {
+		ftBZ: CustomTable<IDatenBZ> = createCustomTable<IDatenBZ>("tableBZ", {
 			columns: [
 				{ name: "beginB", title: "Von", parser: datetimeParser, sortable: true, sorted: true, direction: "ASC" },
 				{ name: "endeB", title: "Bis", parser: datetimeParser, sortable: true },
@@ -63,23 +62,17 @@ window.addEventListener("load", () => {
 			editing: {
 				enabled: true,
 				addRow: () => {
-					const $modal = createEditorModalBereitschaftsZeit(ftBZ, "Zeitraum hinzufügen");
-					$modal.row = ftBZ;
-					new Modal($modal).show();
+					EditorModalBereitschaftsZeit(ftBZ, "Zeitraum hinzufügen");
 				},
 				editRow: row => {
-					const $modal = createEditorModalBereitschaftsZeit(row, "Zeitraum bearbeiten");
-					$modal.row = row;
-					new Modal($modal).show();
+					EditorModalBereitschaftsZeit(row, "Zeitraum bearbeiten");
 				},
 				showRow: row => {
-					const $modal = createShowModalBereitschaft(row, "Zeitraum anzeigen");
-					$modal.row = row;
-					new Modal($modal).show();
+					ShowModalBereitschaft(row, "Zeitraum anzeigen");
 				},
 				deleteRow: row => {
 					row.deleteRow();
-					saveTableData(ftBZ);
+					saveTableDataBZ(ftBZ);
 				},
 				deleteAllRows: () => {
 					createSnackBar({
@@ -109,7 +102,7 @@ window.addEventListener("load", () => {
 
 	// ----------------------------- Bereitschaftseinsätze ------------------------------------------------
 
-	const ftBE = createCustomTable("tableBE", {
+	const ftBE: CustomTable<IDatenBE> = createCustomTable<IDatenBE>("tableBE", {
 		columns: [
 			{ name: "tagBE", title: "Tag", sortable: true, sorted: true, direction: "ASC" },
 			{ name: "auftragsnummerBE", title: "Auftrags-Nr.", classes: ["custom-text-truncate"] },
@@ -123,23 +116,17 @@ window.addEventListener("load", () => {
 		editing: {
 			enabled: true,
 			addRow: () => {
-				const $modal = createEditorModalBereitschaftsEinsatz(ftBE, "Einsatz hinzufügen");
-				$modal.row = ftBE;
-				new Modal($modal).show();
+				EditorModalBE(ftBE, "Einsatz hinzufügen");
 			},
 			editRow: row => {
-				const $modal = createEditorModalBereitschaftsEinsatz(row, "Einsatz bearbeiten");
-				$modal.row = row;
-				new Modal($modal).show();
+				EditorModalBE(row, "Einsatz bearbeiten");
 			},
 			showRow: row => {
-				const $modal = createShowModalBereitschaft(row, "Einsatz anzeigen");
-				$modal.row = row;
-				new Modal($modal).show();
+				ShowModalBereitschaft(row, "Einsatz anzeigen");
 			},
 			deleteRow: row => {
 				row.deleteRow();
-				saveTableData(ftBE);
+				saveTableDataBE(ftBE);
 			},
 			deleteAllRows: () => {
 				createSnackBar({

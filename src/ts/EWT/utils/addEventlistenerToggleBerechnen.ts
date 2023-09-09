@@ -1,8 +1,8 @@
 import { CustomTable } from "../../class/CustomTable";
-import type { CustomHTMLTableRowElement } from "../../interfaces";
-import { saveTableData } from "../../utilities";
+import type { CustomHTMLTableRowElement, IDatenEWT } from "../../interfaces";
+import { saveTableDataEWT } from "../../utilities";
 
-export default function addEventlistenerToggleBerechnen(this: CustomTable): void {
+export default function addEventlistenerToggleBerechnen(this: CustomTable<IDatenEWT>): void {
 	const checkboxes = Array.from(document.querySelectorAll<HTMLInputElement>("#tableE .row-checkbox"));
 	for (const checkbox of checkboxes)
 		checkbox.addEventListener("click", (event: Event) => {
@@ -11,6 +11,6 @@ export default function addEventlistenerToggleBerechnen(this: CustomTable): void
 			if (!row) return;
 			const newValues = { ...row.cells, berechnen: checkbox.checked };
 			row.val(newValues);
-			saveTableData(this);
+			saveTableDataEWT(this);
 		});
 }

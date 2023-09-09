@@ -4,6 +4,7 @@ import type {
 	CustomHTMLDivElement,
 	CustomHTMLTableElement,
 	IDaten,
+	IDatenBZ,
 	IDatenBZJahr,
 	IMonatsDaten,
 	ReturnTypeSaveData,
@@ -14,21 +15,24 @@ import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
 import { DataBZ } from "./convertDaten";
 
-export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElement, accessToken: string): Promise<void> {
+export default async function bereitschaftEingabeWeb(
+	modal: CustomHTMLDivElement<IDatenBZ>,
+	accessToken: string,
+): Promise<void> {
 	setLoading("btnESZ");
 
-	const bAInput = $modal.querySelector<HTMLInputElement>("#bA");
-	const bATInput = $modal.querySelector<HTMLInputElement>("#bAT");
-	const bEInput = $modal.querySelector<HTMLInputElement>("#bE");
-	const bETInput = $modal.querySelector<HTMLInputElement>("#bET");
-	const nachtInput = $modal.querySelector<HTMLInputElement>("#nacht");
-	const nAInput = $modal.querySelector<HTMLInputElement>("#nA");
-	const nATInput = $modal.querySelector<HTMLInputElement>("#nAT");
-	const nEInput = $modal.querySelector<HTMLInputElement>("#nE");
-	const nETInput = $modal.querySelector<HTMLInputElement>("#nET");
+	const bAInput = modal.querySelector<HTMLInputElement>("#bA");
+	const bATInput = modal.querySelector<HTMLInputElement>("#bAT");
+	const bEInput = modal.querySelector<HTMLInputElement>("#bE");
+	const bETInput = modal.querySelector<HTMLInputElement>("#bET");
+	const nachtInput = modal.querySelector<HTMLInputElement>("#nacht");
+	const nAInput = modal.querySelector<HTMLInputElement>("#nA");
+	const nATInput = modal.querySelector<HTMLInputElement>("#nAT");
+	const nEInput = modal.querySelector<HTMLInputElement>("#nE");
+	const nETInput = modal.querySelector<HTMLInputElement>("#nET");
 	const MonatInput = document.querySelector<HTMLInputElement>("#Monat");
 	const JahrInput = document.querySelector<HTMLInputElement>("#Jahr");
-	const tableBZ = document.querySelector<CustomHTMLTableElement>("#tableBZ");
+	const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>("#tableBZ");
 
 	if (
 		!bAInput ||
@@ -49,15 +53,8 @@ export default async function bereitschaftEingabeWeb($modal: CustomHTMLDivElemen
 	const bereitschaftsAnfang = dayjs(`${bAInput.value}T${bATInput.value}`);
 	const bereitschaftsEnde = dayjs(`${bEInput.value}T${bETInput.value}`);
 	const nacht = nachtInput.checked;
-	let nachtAnfang: dayjs.Dayjs;
-	let nachtEnde: dayjs.Dayjs;
-	if (nacht === true) {
-		nachtAnfang = dayjs(`${nAInput.value}T${nATInput.value}`);
-		nachtEnde = dayjs(`${nEInput.value}T${nETInput.value}`);
-	} else {
-		nachtAnfang = bereitschaftsEnde;
-		nachtEnde = bereitschaftsEnde;
-	}
+	const nachtAnfang: dayjs.Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
+	let nachtEnde: dayjs.Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
 
 	const monat = +MonatInput.value;
 	const jahr = +JahrInput.value;

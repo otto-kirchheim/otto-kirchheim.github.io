@@ -49,6 +49,7 @@ export interface IVorgabenUfZ {
 }
 
 export interface IVorgabenUvorgabenB {
+	[k: string]: any;
 	Name: string;
 	beginnB: {
 		tag: number;

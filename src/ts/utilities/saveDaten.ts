@@ -1,21 +1,39 @@
-import { Storage, buttonDisable, clearLoading, saveTableData, setLoading } from ".";
+import {
+	Storage,
+	buttonDisable,
+	clearLoading,
+	saveTableDataBE,
+	saveTableDataBZ,
+	saveTableDataEWT,
+	saveTableDataN,
+	setLoading,
+} from ".";
 import { aktualisiereBerechnung, generateTableBerechnung } from "../Berechnung";
 import { DataBE, DataBZ } from "../Bereitschaft/utils";
 import { DataE } from "../EWT/utils";
 import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
 import { DataN } from "../Neben/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
-import { CustomHTMLTableElement, IDaten, IVorgabenU, ReturnTypeSaveData } from "../interfaces";
+import { CustomTableTypes } from "../class/CustomTable";
+import type {
+	CustomHTMLTableElement,
+	IDaten,
+	IDatenBE,
+	IDatenBZ,
+	IDatenEWT,
+	IDatenN,
+	IVorgabenU,
+	ReturnTypeSaveData,
+} from "../interfaces";
 import { FetchRetry } from "./FetchRetry";
-import { TStorageData } from "./Storage";
 
 interface SaveData extends IDaten {
 	User: IVorgabenU;
 	Jahr: number;
 }
 
-function findCustomTableInstance(id: string): CustomHTMLTableElement["instance"] {
-	const table = document.querySelector<CustomHTMLTableElement>(`#${id}`);
+function findCustomTableInstance<T extends CustomTableTypes>(id: string): CustomHTMLTableElement<T>["instance"] {
+	const table = document.querySelector<CustomHTMLTableElement<T>>(`#${id}`);
 	if (!table) throw new Error(`Custom table ${id} not found`);
 	return table.instance;
 }
@@ -27,13 +45,16 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 	if (!Monat) Monat = Storage.get<number>("Monat", { check: true });
 
 	try {
-		const [ftBZ, ftBE, ftE, ftN] = ["tableBZ", "tableBE", "tableE", "tableN"].map(findCustomTableInstance);
+		const ftBZ = findCustomTableInstance<IDatenBZ>("tableBZ");
+		const ftBE = findCustomTableInstance<IDatenBE>("tableBE");
+		const ftE = findCustomTableInstance<IDatenEWT>("tableE");
+		const ftN = findCustomTableInstance<IDatenN>("tableN");
 
 		const data: SaveData = {
-			BZ: saveTableData(ftBZ, Monat),
-			BE: saveTableData(ftBE, Monat),
-			EWT: saveTableData(ftE, Monat),
-			N: saveTableData(ftN, Monat),
+			BZ: saveTableDataBZ(ftBZ, Monat),
+			BE: saveTableDataBE(ftBE, Monat),
+			EWT: saveTableDataEWT(ftE, Monat),
+			N: saveTableDataN(ftN, Monat),
 			User: saveEinstellungen(),
 			Jahr: Storage.get("Jahr", { check: true }),
 		};
@@ -62,18 +83,21 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			generateTableBerechnung(aktualisiereBerechnung(undefined, dataResponded.daten));
 		}
 
-		const tables = [
-			{ ft: ftBZ, storageKey: "dataBZ", dataJahr: dataResponded.daten.BZ, data: DataBZ(dataResponded.daten.BZ[Monat]) },
-			{ ft: ftBE, storageKey: "dataBE", dataJahr: dataResponded.daten.BE, data: DataBE(dataResponded.daten.BE[Monat]) },
-			{ ft: ftE, storageKey: "dataE", dataJahr: dataResponded.daten.EWT, data: DataE(dataResponded.daten.EWT[Monat]) },
-			{ ft: ftN, storageKey: "dataN", dataJahr: dataResponded.daten.N, data: DataN(dataResponded.daten.N[Monat]) },
-		];
+		Storage.set("dataBZ", dataResponded.daten.BZ);
+		ftBZ.rows.load(DataBZ(dataResponded.daten.BZ[Monat]));
+		console.log("saved", ftBZ);
 
-		tables.forEach(({ ft, storageKey, dataJahr, data }) => {
-			Storage.set(storageKey as TStorageData, dataJahr);
-			ft.rows.load(data);
-			console.log("saved", ft);
-		});
+		Storage.set("dataBE", dataResponded.daten.BE);
+		ftBE.rows.load(DataBE(dataResponded.daten.BE[Monat]));
+		console.log("saved", ftBE);
+
+		Storage.set("dataE", dataResponded.daten.EWT);
+		ftE.rows.load(DataE(dataResponded.daten.EWT[Monat]));
+		console.log("saved", ftE);
+
+		Storage.set("dataN", dataResponded.daten.N);
+		ftN.rows.load(DataN(dataResponded.daten.N[Monat]));
+		console.log("saved", ftN);
 
 		generateEingabeMaskeEinstellungen(dataResponded.user);
 		Storage.set("VorgabenU", dataResponded.user);

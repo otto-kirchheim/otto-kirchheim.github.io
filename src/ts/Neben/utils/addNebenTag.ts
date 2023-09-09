@@ -1,5 +1,5 @@
 import type { CustomHTMLTableElement, IDatenN } from "../../interfaces";
-import { saveTableData } from "../../utilities";
+import { saveTableDataN } from "../../utilities";
 
 export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): void {
 	const select = form.querySelector<HTMLSelectElement>("#tagN");
@@ -28,9 +28,9 @@ export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): voi
 		idN++;
 	}
 
-	const tableN = document.querySelector<CustomHTMLTableElement>("#tableN");
+	const tableN = document.querySelector<CustomHTMLTableElement<IDatenN>>("#tableN");
 	if (!tableN) throw new Error("table N nicht gefunden");
 	const ftN = tableN.instance;
 	ftN.rows.add(daten);
-	saveTableData(ftN);
+	saveTableDataN(ftN);
 }

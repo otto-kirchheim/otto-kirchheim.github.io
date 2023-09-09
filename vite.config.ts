@@ -1,9 +1,10 @@
-/* eslint-disable no-undef */
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
 import { compression } from "vite-plugin-compression2";
 import VitePluginInjectPreload from "vite-plugin-inject-preload";
 import { defineConfig } from "vitest/config";
+import preact from "@preact/preset-vite";
+import pluginPurgeCSS from "vite-plugin-purge";
 
 export default defineConfig({
 	root: path.resolve(__dirname, "src"),
@@ -33,10 +34,41 @@ export default defineConfig({
 		root: path.resolve(__dirname, "test"),
 		globals: true,
 		environment: "jsdom",
-		deps: { external: ["../src/node_modules/**"] },
+		server: {
+			deps: { external: ["../src/node_modules/**"] },
+		},
 		setupFiles: ["./setupVitest.ts"],
 	},
 	plugins: [
+		preact(),
+		pluginPurgeCSS({
+			content: ["**/*.html", "**/*.js"],
+		}),
+		compression({
+			exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
+			skipIfLargerOrEqual: true,
+		}),
+		compression({
+			algorithm: "brotliCompress",
+			exclude: [/\.(gz)$/, /\.(woff|woff2|map|nojekyll|png)$/],
+			skipIfLargerOrEqual: true,
+		}),
+		VitePluginInjectPreload({
+			files: [
+				{
+					match: /material-icons-round-[a-z-0-9]*\.woff2$/,
+					attributes: {
+						crossOrigin: "anonymous",
+					},
+				},
+				{
+					match: /[a-z-0-9]*\.css$/,
+				},
+				{
+					match: /[a-z-0-9]*\.js$/,
+				},
+			],
+		}),
 		VitePWA({
 			strategies: "generateSW",
 			injectRegister: "auto",
@@ -302,34 +334,13 @@ export default defineConfig({
 			workbox: {
 				cleanupOutdatedCaches: true,
 				sourcemap: true,
-				globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+				globPatterns: ["**/*.{js.br,css.br,html.br,ico,png.br,woff2}"],
+				globIgnores: ["icons/*"],
 			},
-		}),
-		compression({
-			exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
-			skipIfLargerOrEqual: true,
-		}),
-		compression({
-			algorithm: "brotliCompress",
-			exclude: [/\.(gz)$/, /\.(woff|woff2|map|nojekyll|png)$/],
-			skipIfLargerOrEqual: true,
-		}),
-		VitePluginInjectPreload({
-			files: [
-				{
-					match: /material-icons-round-[a-z-0-9]*\.woff2$/,
-					attributes: {
-						crossOrigin: "anonymous",
-					},
-				},
-				{
-					match: /[a-z-0-9]*\.css$/,
-				},
-			],
 		}),
 	],
 	server: {
 		port: 8081,
-		hot: true,
+		hmr: true,
 	},
 });

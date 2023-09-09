@@ -1,5 +1,5 @@
 import createAddModalEWT from "./createAddModalEWT";
-import createEditorModalEWT from "./createEditorModalEWT";
-import createShowModalEWT from "./createShowModalEWT";
+import EditorModalEWT from "./createEditorModalEWT";
+import ShowModalEWT from "./createShowModalEWT";
 
-export { createAddModalEWT, createEditorModalEWT, createShowModalEWT };
+export { createAddModalEWT, EditorModalEWT, ShowModalEWT };
