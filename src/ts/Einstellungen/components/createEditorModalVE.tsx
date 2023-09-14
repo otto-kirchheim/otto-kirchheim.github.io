@@ -5,18 +5,16 @@ import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } fr
 import type { IVorgabenUvorgabenB } from "../../interfaces";
 import { saveTableDataVorgabenU } from "../../utilities";
 
+type vorgabenBElement = { tag: number; zeit: string; Nwoche: boolean };
+
 const createNameElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>) => {
 	const column = row.columns.array.find(column => column.name === "Name");
 	if (!column) throw Error(`Spalte "Name" nicht gefunden`);
+
+	const value: string = row instanceof Row ? (row.cells[column.name] as string) : "";
+
 	return (
-		<MyInput
-			divClass="form-floating col-12 pb-3"
-			required
-			type="text"
-			id={column.name}
-			name={column.title}
-			value={row instanceof Row ? row.cells[column.name] : ""}
-		>
+		<MyInput divClass="form-floating col-12 pb-3" required type="text" id={column.name} name={column.title} value={value}>
 			{column.title}
 		</MyInput>
 	);
@@ -27,12 +25,11 @@ const createcheckboxElement = (
 ) => {
 	const column = row.columns.array.find(column => column.name === columnName);
 	if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
+
+	const isChecked: boolean = row instanceof Row ? (row.cells?.[column.name] as boolean) : false;
+
 	return (
-		<MyCheckbox
-			className="form-check form-switch col-12 pb-3"
-			id={column.name}
-			checked={row instanceof Row ? row.cells?.[column.name] : false}
-		>
+		<MyCheckbox className="form-check form-switch col-12 pb-3" id={column.name} checked={isChecked}>
 			{column.title}
 		</MyCheckbox>
 	);
@@ -45,6 +42,10 @@ const createVariableElement = (
 	const column = row.columns.array.find(column => column.name === columnName);
 	if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
 
+	const selectValue: number = row instanceof Row ? (row.cells?.[column.name] as vorgabenBElement).tag : -1;
+	const inputValue: string = row instanceof Row ? (row.cells?.[column.name] as vorgabenBElement).zeit : "";
+	const checkBoxState: boolean = row instanceof Row ? (row.cells?.[column.name] as vorgabenBElement).Nwoche : false;
+
 	return (
 		<Fragment>
 			<MySelect
@@ -52,7 +53,7 @@ const createVariableElement = (
 				required
 				id={`${column.name}Tag`}
 				title={column.title}
-				value={row instanceof Row ? row.cells?.[column.name]?.tag : ""}
+				value={selectValue}
 				options={[
 					{ value: 1, text: "Montag" },
 					{ value: 2, text: "Dienstag" },
@@ -69,26 +70,16 @@ const createVariableElement = (
 				type="time"
 				id={`${column.name}Zeit`}
 				name={column.title}
-				value={row instanceof Row ? row.cells?.[column.name].zeit : ""}
+				value={inputValue}
 			>
 				{column.title}
 			</MyInput>
 			{columnName === "beginnB" ? (
 				[]
 			) : (
-				<MyCheckbox
-					className="form-check form-switch col-12 pb-3"
-					id={`${column.name}Nwoche`}
-					checked={row instanceof Row ? row.cells?.[column.name].Nwoche : false}
-				>
+				<MyCheckbox className="form-check form-switch col-12 pb-3" id={`${column.name}Nwoche`} checked={checkBoxState}>
 					+1 Woche?
-					<span
-						className="text-secondary text-opacity-75"
-						id={`${column.name}Nwoche`}
-						checked={row instanceof Row ? row.cells?.[column.name].Nwoche : false}
-					>
-						(Sonntag - Samstag)
-					</span>
+					<span className="text-secondary text-opacity-75">(Sonntag - Samstag)</span>
 				</MyCheckbox>
 			)}
 		</Fragment>

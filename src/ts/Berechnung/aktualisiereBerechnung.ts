@@ -1,3 +1,4 @@
+import { generateTableBerechnung } from ".";
 import {
 	IDaten,
 	IDatenBEJahr,
@@ -13,33 +14,30 @@ import dayjs from "../utilities/configDayjs";
 export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): IVorgabenBerechnung {
 	Jahr = Jahr ?? Storage.get<number>("Jahr", { check: true });
 	daten = daten ?? {
-		BZ: Storage.get("dataBZ", { default: {} as IDatenBZJahr }),
-		BE: Storage.get("dataBE", { default: {} as IDatenBEJahr }),
-		EWT: Storage.get("dataE", { default: {} as IDatenEWTJahr }),
-		N: Storage.get("dataN", { default: {} as IDatenNJahr }),
+		BZ: Storage.get<IDatenBZJahr>("dataBZ", { default: {} as IDatenBZJahr }),
+		BE: Storage.get<IDatenBEJahr>("dataBE", { default: {} as IDatenBEJahr }),
+		EWT: Storage.get<IDatenEWTJahr>("dataE", { default: {} as IDatenEWTJahr }),
+		N: Storage.get<IDatenNJahr>("dataN", { default: {} as IDatenNJahr }),
 	};
 	if (!daten) throw new Error("Keine Daten gefunden");
 
-	const Berechnung: IVorgabenBerechnung = Storage.check("datenBerechnung")
-		? Storage.get("datenBerechnung", true)
-		: ({} as IVorgabenBerechnung);
+	const Berechnung: IVorgabenBerechnung = Storage.get<IVorgabenBerechnung>("datenBerechnung", {
+		check: true,
+		default: {} as IVorgabenBerechnung,
+	});
 
 	for (let Monat = 1; Monat <= 12; Monat++)
 		Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(daten, Monat, Jahr);
 
-	Storage.set("datenBerechnung", Berechnung);
+	Storage.set<IVorgabenBerechnung>("datenBerechnung", Berechnung);
+	generateTableBerechnung(Berechnung);
 
 	return Berechnung;
 
-	function aktualisiereBerechnungMonat(
-		daten: IDaten,
-		monat: number,
-		jahr: number,
-	): {
-		B: { B: number; L1: number; L2: number; L3: number; K: number };
-		E: { A8: number; A14: number; A24: number; S8: number; S14: number };
-		N: { F: number };
-	} {
+	function aktualisiereBerechnungMonat(daten: IDaten, monat: number, jahr: number): IVorgabenBerechnungMonat {
+		if (!("BZ" in daten && "BE" in daten && "EWT" in daten && "N" in daten))
+			throw new Error("Daten entsprechen nicht dem Interface IDaten");
+
 		const Berechnung: IVorgabenBerechnungMonat = {
 			B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
 			E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },

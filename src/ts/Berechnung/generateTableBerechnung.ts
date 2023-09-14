@@ -26,7 +26,7 @@ export default function generateTableBerechnung(
 	});
 
 	const tarif_beamter = Storage.get<IVorgabenU>("VorgabenU", { check: true }).pers.TB;
-	const berechnung = Array.from({ length: 12 }, () => []) as Array<Array<number>>;
+	const berechnung: number[][] = Array.from<unknown, number[]>({ length: 12 }, () => []);
 
 	const tbody = document.querySelector<HTMLTableSectionElement>("#tbodyBerechnung");
 	if (!tbody) return;
@@ -66,9 +66,7 @@ export default function generateTableBerechnung(
 		});
 
 	Array.from(tbody.children).forEach((row, index) => {
-		for (const [Monat, datenBerechnungItem1] of Object.entries(datenBerechnung)) {
-			const datenBerechnungItem: IVorgabenBerechnungMonat = datenBerechnungItem1;
-
+		for (const [Monat, datenBerechnungItem] of Object.entries(datenBerechnung) as [string, IVorgabenBerechnungMonat][]) {
 			const monat = +Monat;
 			const monatZeroIndex = monat - 1;
 			const td = document.createElement("td");

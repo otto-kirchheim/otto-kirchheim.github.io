@@ -1,6 +1,6 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { buttonDisable, download, saveDaten, saveTableDataN, Storage } from "../utilities";
+import { buttonDisable, download, saveDaten, saveTableDataN } from "../utilities";
 import { createAddModalNeben, EditorModalNeben, ShowModalNeben } from "./components";
 import { DataN } from "./utils";
 
@@ -46,7 +46,7 @@ window.addEventListener("load", () => {
 							function: () => {
 								ftN.rows.load([]);
 								buttonDisable(false);
-								Storage.set("dataBE", []);
+								saveTableDataN(ftN);
 							},
 							dismiss: true,
 							class: ["text-danger"],

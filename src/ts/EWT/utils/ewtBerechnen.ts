@@ -1,4 +1,5 @@
 import { DataE, berechnen } from ".";
+import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IDatenEWT, IMonatsDaten, IVorgabenU } from "../../interfaces";
 import { saveTableDataEWT } from "../../utilities";
@@ -20,6 +21,8 @@ export default function ewtBerechnen({ monat, jahr, daten, vorgabenU }: ewtBerec
 	console.log("save ", { ftE });
 	ftE.rows.load(DataE(berechneteDaten, monat));
 	saveTableDataEWT(ftE, monat);
+
+	aktualisiereBerechnung(jahr);
 
 	createSnackBar({
 		message: `EWT<br/>Zeiten berechnet.`,

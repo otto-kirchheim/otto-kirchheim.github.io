@@ -19,22 +19,15 @@ export default function eigeneWerte(
 	if (!bATInput || !bEInput || !bETInput || !nAInput || !nATInput || !nEInput || !nETInput || !eigenCheckbox)
 		throw new Error("Input Element nicht gefunden");
 
-	if (eigenCheckbox.checked) {
-		bATInput.disabled = false;
-		bEInput.disabled = false;
-		bETInput.disabled = false;
-		nAInput.disabled = false;
-		nATInput.disabled = false;
-		nEInput.disabled = false;
-		nETInput.disabled = false;
-	} else {
-		bATInput.disabled = true;
-		bEInput.disabled = true;
-		bETInput.disabled = true;
-		nAInput.disabled = true;
-		nATInput.disabled = true;
-		nEInput.disabled = true;
-		nETInput.disabled = true;
-		bereitschaftsVorgabeAEndern(parentElement, vorgabenB, datum);
-	}
+	const disable: boolean = !eigenCheckbox.checked;
+
+	bATInput.disabled = disable;
+	bEInput.disabled = disable;
+	bETInput.disabled = disable;
+	nAInput.disabled = disable;
+	nATInput.disabled = disable;
+	nEInput.disabled = disable;
+	nETInput.disabled = disable;
+
+	if (disable) bereitschaftsVorgabeAEndern(parentElement, vorgabenB, datum);
 }

@@ -1,8 +1,6 @@
 import { FunctionalComponent } from "preact";
 
-type TMyModalBody = { className?: string };
-
-const MyModalBody: FunctionalComponent<TMyModalBody> = ({ className, children }) => {
+const MyModalBody: FunctionalComponent<{ className?: string }> = ({ className, children }) => {
 	const defaultClass = "modal-body";
 	const additionalClass = className ? ` ${className}` : " row g-2";
 

@@ -1,4 +1,4 @@
-import "preact/debug";
+// import "preact/debug";
 
 import Popover from "bootstrap/js/dist/popover";
 import Tab from "bootstrap/js/dist/tab";

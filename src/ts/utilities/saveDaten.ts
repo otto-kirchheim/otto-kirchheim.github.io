@@ -80,7 +80,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			Storage.set("datenBerechnung", dataResponded.datenBerechnung);
 			generateTableBerechnung(dataResponded.datenBerechnung);
 		} else {
-			generateTableBerechnung(aktualisiereBerechnung(undefined, dataResponded.daten));
+			aktualisiereBerechnung(undefined, dataResponded.daten);
 		}
 
 		Storage.set("dataBZ", dataResponded.daten.BZ);

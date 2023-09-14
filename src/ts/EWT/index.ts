@@ -71,7 +71,7 @@ window.addEventListener("load", () => {
 								function: () => {
 									ftE.rows.load([]);
 									buttonDisable(false);
-									Storage.set("dataE", []);
+									saveTableDataEWT(ftE);
 								},
 								dismiss: true,
 								class: ["text-danger"],

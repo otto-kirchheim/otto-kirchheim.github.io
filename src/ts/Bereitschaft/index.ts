@@ -1,7 +1,7 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomTable, createCustomTable } from "../class/CustomTable";
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from "../interfaces";
-import { Storage, buttonDisable, download, saveDaten, saveTableDataBE, saveTableDataBZ } from "../utilities";
+import { buttonDisable, download, saveDaten, saveTableDataBE, saveTableDataBZ } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 import {
 	EditorModalBE,
@@ -88,7 +88,7 @@ window.addEventListener("load", () => {
 								function: () => {
 									ftBZ.rows.load([]);
 									buttonDisable(false);
-									Storage.set("dataBZ", []);
+									saveTableDataBZ(ftBZ);
 								},
 								dismiss: true,
 								class: ["text-danger"],
@@ -142,7 +142,7 @@ window.addEventListener("load", () => {
 							function: () => {
 								ftBE.rows.load([]);
 								buttonDisable(false);
-								Storage.set("dataBE", []);
+								saveTableDataBE(ftBE);
 							},
 							dismiss: true,
 							class: ["text-danger"],

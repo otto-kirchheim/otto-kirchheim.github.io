@@ -5,7 +5,15 @@ import { BereitschaftEingabe, DataBE, DataBZ, bereitschaftEingabeWeb } from "../
 import { CustomHTMLDivElement } from "../src/ts/interfaces/CustomHTMLElements";
 import { IDaten, IDatenBZ } from "../src/ts/interfaces/IDaten";
 import { Storage } from "../src/ts/utilities";
-import { VorgabenUMock, datenBEMock, datenBZMock, datenEWTMock, datenNMock, mockBereitschaft } from "./mockData";
+import {
+	VorgabenGeldMock,
+	VorgabenUMock,
+	datenBEMock,
+	datenBZMock,
+	datenEWTMock,
+	datenNMock,
+	mockBereitschaft,
+} from "./mockData";
 
 describe("#Bereitschaftseingabe", () => {
 	beforeAll(() => {
@@ -163,6 +171,7 @@ describe("#bereitschaftEingabeWeb", async () => {
 		Storage.set("dataBE", datenBEMock);
 		Storage.set("dataE", datenEWTMock);
 		Storage.set("dataN", datenNMock);
+		Storage.set("VorgabenGeld", VorgabenGeldMock);
 		const StorageSpy = vi.spyOn(Storage, "set");
 
 		await bereitschaftEingabeWeb($modal, "mockAccessToken");

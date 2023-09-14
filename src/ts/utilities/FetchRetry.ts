@@ -56,8 +56,7 @@ export async function FetchRetry<I, T>(
 	const headers = new Headers();
 	if (method !== "GET") headers.set("Content-Type", "application/json");
 	if (accessToken) {
-		if (!data || (data && !Object.prototype.hasOwnProperty.call(data, "refreshToken")))
-			accessToken = await getValidAccesstoken(accessToken);
+		if (!data || (data && !Object.hasOwn(data, "refreshToken"))) accessToken = await getValidAccesstoken(accessToken);
 		headers.set("Authorization", `Bearer ${accessToken}`);
 	}
 	const fetchObject: RequestInit = {

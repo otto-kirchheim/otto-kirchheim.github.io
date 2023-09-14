@@ -50,14 +50,14 @@ export default async function bereitschaftEingabeWeb(
 	)
 		throw new Error("Input Element nicht gefunden");
 
-	const bereitschaftsAnfang = dayjs(`${bAInput.value}T${bATInput.value}`);
-	const bereitschaftsEnde = dayjs(`${bEInput.value}T${bETInput.value}`);
-	const nacht = nachtInput.checked;
+	const bereitschaftsAnfang: dayjs.Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
+	const bereitschaftsEnde: dayjs.Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
+	const nacht: boolean = nachtInput.checked;
 	const nachtAnfang: dayjs.Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
 	let nachtEnde: dayjs.Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
 
-	const monat = +MonatInput.value;
-	const jahr = +JahrInput.value;
+	const monat: number = +MonatInput.value;
+	const jahr: number = +JahrInput.value;
 
 	const savedData: IDatenBZJahr = Storage.get("dataBZ", { check: true });
 

@@ -2,7 +2,7 @@ import Tab from "bootstrap/js/dist/tab";
 import { Storage } from "../../utilities";
 import { controller, newAbortControler } from "../../utilities/FetchRetry";
 
-function toggleClassForElement(selector: string, className: string, addClass: boolean): void {
+function toggleClassForElement(selector: string, addClass: boolean = true, className: string = "d-none"): void {
 	const element = document.querySelector<HTMLElement>(selector);
 	addClass ? element?.classList.add(className) : element?.classList.remove(className);
 }
@@ -18,10 +18,9 @@ export default function Logout(): void {
 		window.scrollTo(0, 1);
 	}
 
-	for (const selector of ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"])
-		toggleClassForElement(selector, "d-none", true);
+	for (const selector of ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"]) toggleClassForElement(selector);
 
-	toggleClassForElement("#btnLogin", "d-none", false);
+	toggleClassForElement("#btnLogin", false);
 
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
 	if (willkommen) willkommen.innerHTML = "Willkommen";
