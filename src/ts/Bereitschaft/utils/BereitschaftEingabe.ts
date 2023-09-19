@@ -1,5 +1,5 @@
 import { Dayjs } from "dayjs";
-import duration from "dayjs/plugin/duration.js";
+import { Duration } from "dayjs/plugin/duration.js";
 import isBetween from "dayjs/plugin/isBetween";
 import { isHoliday } from "../../class/feiertagets/feiertage";
 import type { IDatenBZ, IMonatsDaten, IVorgabenU } from "../../interfaces";
@@ -44,17 +44,17 @@ export default function BereitschaftEingabe(
 	const datenU: IVorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true });
 	if (!datenU) throw new Error("VorgabenU nicht gefunden");
 	// Tagschicht Anfangszeit Mo-Do
-	const tagAnfangsZeitMoDo: duration.Duration = getDurationFromTime(datenU.aZ.eT);
+	const tagAnfangsZeitMoDo: Duration = getDurationFromTime(datenU.aZ.eT);
 	// Tagschicht Anfangszeit Fr
-	const tagAnfangsZeitFr: duration.Duration = getDurationFromTime(datenU.aZ.eTF);
+	const tagAnfangsZeitFr: Duration = getDurationFromTime(datenU.aZ.eTF);
 	// Tagschicht Endezeit Mo-Fr
-	const tagEndeZeitMoFr: duration.Duration = getDurationFromTime(datenU.aZ.bT);
+	const tagEndeZeitMoFr: Duration = getDurationFromTime(datenU.aZ.bT);
 	// Feste Variablen
 	const ruheZeit: number = 10;
 	const tagPausenVorgabe: number = 30;
 	const nachtPausenVorgabe: number = 45;
-	const bereitschaftsZeitraumWechsel: duration.Duration = dayjs.duration(8, "hours");
-	const arbeitsAnfang: duration.Duration[] = [
+	const bereitschaftsZeitraumWechsel: Duration = dayjs.duration(8, "hours");
+	const arbeitsAnfang: Duration[] = [
 		tagEndeZeitMoFr,
 		tagEndeZeitMoFr,
 		tagEndeZeitMoFr,
@@ -64,7 +64,7 @@ export default function BereitschaftEingabe(
 		bereitschaftsZeitraumWechsel,
 		tagEndeZeitMoFr,
 	];
-	const arbeitsEnde: duration.Duration[] = [
+	const arbeitsEnde: Duration[] = [
 		tagAnfangsZeitMoDo,
 		tagAnfangsZeitMoDo,
 		tagAnfangsZeitMoDo,
@@ -79,7 +79,7 @@ export default function BereitschaftEingabe(
 	const B2 = (
 		bereitschaftsAnfang: dayjs.Dayjs,
 		nachtAnfang: dayjs.Dayjs,
-		arbeitsAnfang: duration.Duration[],
+		arbeitsAnfang: Duration[],
 		arbeitstagHeute: boolean,
 		arbeitstagMorgen: boolean,
 		nacht: boolean,
