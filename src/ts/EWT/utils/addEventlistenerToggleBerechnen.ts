@@ -1,6 +1,6 @@
+import { saveTableDataEWT } from ".";
 import { CustomTable } from "../../class/CustomTable";
 import type { CustomHTMLTableRowElement, IDatenEWT } from "../../interfaces";
-import { saveTableDataEWT } from "../../utilities";
 
 export default function addEventlistenerToggleBerechnen(this: CustomTable<IDatenEWT>): void {
 	const checkboxes = document.querySelectorAll<HTMLInputElement>("#tableE .row-checkbox");

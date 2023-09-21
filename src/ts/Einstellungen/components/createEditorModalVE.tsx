@@ -3,7 +3,7 @@ import { Fragment, createRef } from "preact";
 import { CustomTable, Row } from "../../class/CustomTable";
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from "../../components";
 import type { IVorgabenUvorgabenB } from "../../interfaces";
-import { saveTableDataVorgabenU } from "../../utilities";
+import { saveTableDataVorgabenU } from "../utils";
 
 type vorgabenBElement = { tag: number; zeit: string; Nwoche: boolean };
 

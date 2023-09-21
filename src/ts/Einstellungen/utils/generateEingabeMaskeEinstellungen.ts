@@ -1,4 +1,4 @@
-import { generateEingabeTabelleEinstellungenVorgabenB } from ".";
+import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from ".";
 import { BereitschaftsEinsatzZeiträume } from "../../Bereitschaft";
 import { CustomTable } from "../../class/CustomTable";
 import type {
@@ -8,7 +8,7 @@ import type {
 	IVorgabenUaZ,
 	IVorgabenUvorgabenB,
 } from "../../interfaces";
-import { Storage, saveTableDataVorgabenU } from "../../utilities";
+import { Storage } from "../../utilities";
 
 export default function generateEingabeMaskeEinstellungen(
 	VorgabenU = Storage.get<IVorgabenU>("VorgabenU", { check: true }),

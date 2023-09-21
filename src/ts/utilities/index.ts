@@ -11,19 +11,12 @@ import download from "./download";
 import getDurationFromTime from "./getDurationFromTime";
 import getValidAccesstoken from "./getValidAccesstoken";
 import saveDaten from "./saveDaten";
-import {
-	saveTableDataBE,
-	saveTableDataBZ,
-	saveTableDataEWT,
-	saveTableDataN,
-	saveTableDataVorgabenU,
-} from "./saveTableData";
 import setDisableButton from "./setDisableButton";
 import setLoading from "./setLoading";
 import setOffline from "./setOffline";
 import storageAvailable from "./storageAvailable";
 import tableToArray from "./tableToArray";
-import toJSON from "./toJSON";
+
 import tokenErneuern from "./tokenErneuern";
 
 export {
@@ -40,16 +33,10 @@ export {
 	getValidAccesstoken,
 	initializeColorModeToggler,
 	saveDaten,
-	saveTableDataBE,
-	saveTableDataBZ,
-	saveTableDataEWT,
-	saveTableDataN,
-	saveTableDataVorgabenU,
 	setDisableButton,
 	setLoading,
 	setOffline,
 	storageAvailable,
 	tableToArray,
-	toJSON,
 	tokenErneuern,
 };

@@ -1,8 +1,7 @@
-import { DataE, berechnen } from ".";
+import { DataE, berechnen, saveTableDataEWT } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IDatenEWT, IMonatsDaten, IVorgabenU } from "../../interfaces";
-import { saveTableDataEWT } from "../../utilities";
 
 type ewtBerechnenType = {
 	monat: number;

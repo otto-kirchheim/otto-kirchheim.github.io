@@ -3,9 +3,9 @@ import { createRef } from "preact";
 import { CustomTable, Row } from "../../class/CustomTable";
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableDataEWT } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
-import { clearZeiten } from "../utils";
+import { clearZeiten, saveTableDataEWT } from "../utils";
 
 const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnName: string) => {
 	const column = row.columns.array.find(column => column.name === columnName);

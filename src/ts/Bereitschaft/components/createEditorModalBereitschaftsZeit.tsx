@@ -3,8 +3,9 @@ import { ComponentChild, ComponentChildren, createRef } from "preact";
 import { Column, CustomTable, Row } from "../../class/CustomTable";
 import { MyFormModal, MyInput, MyModalBody, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenBZ } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableDataBZ, toJSON } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
+import { saveTableDataBZ } from "../utils";
 
 const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ComponentChild => {
 	let datum, min, max;
@@ -118,11 +119,10 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 			if (!row) throw new Error("Row nicht gefunden");
 			const table: CustomTable<IDatenBZ> = row instanceof Row ? row.CustomTable : row;
 
-			const formData = toJSON<IDatenBZ>(new FormData(form), table);
 			const values: IDatenBZ = {
-				beginB: dayjs(formData.beginB).toISOString(),
-				endeB: dayjs(formData.endeB).toISOString(),
-				pauseB: Number(formData.pauseB),
+				beginB: dayjs(form.querySelector<HTMLInputElement>("#beginB")?.value).toISOString(),
+				endeB: dayjs(form.querySelector<HTMLInputElement>("#endeB")?.value).toISOString(),
+				pauseB: Number(form.querySelector<HTMLInputElement>("#pauseB")?.value),
 			};
 
 			row instanceof Row ? row.val(values) : row.rows.add(values);

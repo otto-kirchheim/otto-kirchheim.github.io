@@ -1,7 +1,7 @@
 import { Column, Row } from "../../class/CustomTable";
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenEWT } from "../../interfaces";
-import { saveTableDataEWT } from "../../utilities";
+import { saveTableDataEWT } from "../utils";
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
 	const column = row.columns.array.find(column => column.name === columnName);

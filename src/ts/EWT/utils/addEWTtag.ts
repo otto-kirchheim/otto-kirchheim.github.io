@@ -1,5 +1,5 @@
+import { saveTableDataEWT } from ".";
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT } from "../../interfaces";
-import { saveTableDataEWT } from "../../utilities";
 import naechsterTag from "./naechsterTag";
 
 export default function addEWTtag(modal: CustomHTMLDivElement<IDatenEWT>): void {

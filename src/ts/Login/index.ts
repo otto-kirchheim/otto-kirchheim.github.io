@@ -1,19 +1,9 @@
-import { Logout, SelectYear } from "../Einstellungen/utils";
-import { createSnackBar } from "../class/CustomSnackbar";
+import { SelectYear } from "../Einstellungen/utils";
 import { IVorgabenU } from "../interfaces";
 import { Storage, decodeAccessToken } from "../utilities";
 import { createModalLogin } from "./components";
 
 window.addEventListener("load", () => {
-	if (Storage.size() > 3 && Storage.check("UserID")) {
-		const benutzer: string = Storage.get<string>("Benutzer", { check: true });
-		Logout();
-		createSnackBar({
-			message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
-			timeout: 10000,
-			fixed: true,
-		});
-	}
 	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU", true).vorgabenB[0].endeB.Nwoche === undefined)
 		Storage.remove("VorgabenU");
 
@@ -56,10 +46,8 @@ window.addEventListener("load", () => {
 		const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 		if (vorgabenU && vorgabenU.pers.TB == "Tarifkraft" && nebenTabEl) nebenTabEl.classList.remove("d-none");
 
-		if (Storage.check("accessToken")) {
-			const berechtigung = decodeAccessToken().Berechtigung;
-			if (adminEl && berechtigung & 2) adminEl.classList.remove("d-none");
-		}
+		if (Storage.check("accessToken"))
+			if (adminEl && decodeAccessToken().Berechtigung & 2) adminEl.classList.remove("d-none");
 
 		monatEl?.classList.remove("d-none");
 		navmenuEl?.classList.remove("d-none");

@@ -1,3 +1,4 @@
+import { DataBZ } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type {
@@ -13,7 +14,6 @@ import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities
 import { FetchRetry } from "../../utilities/FetchRetry";
 import dayjs from "../../utilities/configDayjs";
 import BereitschaftEingabe from "./BereitschaftEingabe";
-import { DataBZ } from "./convertDaten";
 
 export default async function bereitschaftEingabeWeb(
 	modal: CustomHTMLDivElement<IDatenBZ>,

@@ -5,6 +5,7 @@ import checkPasswort from "./checkPasswort";
 import generateEingabeMaskeEinstellungen from "./generateEingabeMaskeEinstellungen";
 import generateEingabeTabelleEinstellungenVorgabenB from "./generateEingabeTabelleEinstellungenVorgabenB";
 import saveEinstellungen from "./saveEinstellungen";
+import saveTableDataVorgabenU from "./saveTableDataVorgabenU";
 import setMonatJahr from "./setMonatJahr";
 
 export {
@@ -15,5 +16,6 @@ export {
 	generateEingabeMaskeEinstellungen,
 	generateEingabeTabelleEinstellungenVorgabenB,
 	saveEinstellungen,
+	saveTableDataVorgabenU,
 	setMonatJahr,
 };

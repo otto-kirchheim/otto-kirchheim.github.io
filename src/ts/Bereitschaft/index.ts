@@ -1,7 +1,7 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomTable, createCustomTable } from "../class/CustomTable";
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from "../interfaces";
-import { buttonDisable, download, saveDaten, saveTableDataBE, saveTableDataBZ } from "../utilities";
+import { buttonDisable, download, saveDaten } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 import {
 	EditorModalBE,
@@ -10,7 +10,7 @@ import {
 	createAddModalBereitschaftsEinsatz,
 	createAddModalBereitschaftsZeit,
 } from "./components";
-import { DataBE, DataBZ } from "./utils";
+import { DataBE, DataBZ, saveTableDataBE, saveTableDataBZ } from "./utils";
 
 export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgabenB } = {
 	0: {

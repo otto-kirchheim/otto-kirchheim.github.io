@@ -5,5 +5,15 @@ import clearZeiten from "./clearZeiten";
 import DataE from "./DataE";
 import ewtBerechnen from "./ewtBerechnen";
 import naechsterTag from "./naechsterTag";
+import saveTableDataEWT from "./saveTableDataEWT";
 
-export { addEventlistenerToggleBerechnen, addEWTtag, ewtBerechnen, berechnen, clearZeiten, DataE, naechsterTag };
+export {
+	addEventlistenerToggleBerechnen,
+	addEWTtag,
+	berechnen,
+	clearZeiten,
+	DataE,
+	ewtBerechnen,
+	naechsterTag,
+	saveTableDataEWT,
+};

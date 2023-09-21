@@ -9,7 +9,7 @@ import type {
 	IVorgabenU,
 	IVorgabenUvorgabenB,
 } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableDataBZ } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import {
 	bereitschaftEingabeWeb,
@@ -17,6 +17,7 @@ import {
 	datumAnpassen,
 	eigeneWerte,
 	nachtAusblenden,
+	saveTableDataBZ,
 } from "../utils";
 
 const createDateInputElement = (id: string, name: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (

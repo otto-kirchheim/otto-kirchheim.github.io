@@ -1,5 +1,5 @@
+import { saveTableDataN } from ".";
 import type { CustomHTMLTableElement, IDatenN } from "../../interfaces";
-import { saveTableDataN } from "../../utilities";
 
 export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): void {
 	const select = form.querySelector<HTMLSelectElement>("#tagN");

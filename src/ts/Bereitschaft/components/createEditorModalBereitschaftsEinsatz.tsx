@@ -4,8 +4,9 @@ import { ComponentChildren, Fragment, createRef } from "preact";
 import { CustomTable, Row } from "../../class/CustomTable";
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenBE } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableDataBE } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
+import { saveTableDataBE } from "../utils";
 
 const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ComponentChildren => {
 	return row.columns.array.map(column => {

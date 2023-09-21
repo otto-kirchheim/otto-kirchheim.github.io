@@ -1,18 +1,9 @@
-import {
-	Storage,
-	buttonDisable,
-	clearLoading,
-	saveTableDataBE,
-	saveTableDataBZ,
-	saveTableDataEWT,
-	saveTableDataN,
-	setLoading,
-} from ".";
+import { Storage, buttonDisable, clearLoading, setLoading } from ".";
 import { aktualisiereBerechnung, generateTableBerechnung } from "../Berechnung";
-import { DataBE, DataBZ } from "../Bereitschaft/utils";
-import { DataE } from "../EWT/utils";
+import { DataBE, DataBZ, saveTableDataBE, saveTableDataBZ } from "../Bereitschaft/utils";
+import { DataE, saveTableDataEWT } from "../EWT/utils";
 import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
-import { DataN } from "../Neben/utils";
+import { DataN, saveTableDataN } from "../Neben/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomTableTypes } from "../class/CustomTable";
 import type {

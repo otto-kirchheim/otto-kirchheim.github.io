@@ -3,8 +3,9 @@ import { createRef } from "preact";
 import { Column, CustomTable, Row } from "../../class/CustomTable";
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenN } from "../../interfaces";
-import { Storage, checkMaxTag, saveTableDataN } from "../../utilities";
+import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
+import { saveTableDataN } from "../utils";
 
 const getColumn = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string): Column<IDatenN> => {
 	const column = row.columns.array.find(column => column.name === columnName);

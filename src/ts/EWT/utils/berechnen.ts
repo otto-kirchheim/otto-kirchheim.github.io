@@ -93,16 +93,16 @@ function createHelpers(userSettings: IVorgabenU) {
 			return dayjs([jahr, monat - 1, tag, +zeit[0], +zeit[1], 0, 0]);
 		};
 
-		const beginE_d = Tag.beginE.length === 5 ? convertToDayjs(Tag.beginE, !1, Tag) : datum.add(schichtDaten.beginn);
+		const beginE_d = Tag.beginE.length === 5 ? convertToDayjs(Tag.beginE, false, Tag) : datum.add(schichtDaten.beginn);
 		const beginE = beginE_d.format("LT");
-		const endeE_d = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, !0, Tag) : datum.add(schichtDaten.ende);
+		const endeE_d = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, true, Tag) : datum.add(schichtDaten.ende);
 		const endeE = endeE_d.format("LT");
 
 		const abWE = Tag.abWE.length === 5 ? Tag.abWE : beginE_d.subtract(vorgabenE.rZ).format("LT");
-		const ab1E_d = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, !1, Tag) : beginE_d.add(schichtDaten.svzA);
+		const ab1E_d = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, false, Tag) : beginE_d.add(schichtDaten.svzA);
 		const ab1E = ab1E_d.format("LT");
 
-		const an1E_d = Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, !0, Tag) : endeE_d.subtract(schichtDaten.svzE);
+		const an1E_d = Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, true, Tag) : endeE_d.subtract(schichtDaten.svzE);
 		const an1E = an1E_d.format("LT");
 		const anWE = Tag.anWE.length === 5 ? Tag.anWE : endeE_d.add(vorgabenE.rZ).add(endePascal).format("LT");
 

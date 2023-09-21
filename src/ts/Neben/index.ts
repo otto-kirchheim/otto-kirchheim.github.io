@@ -1,8 +1,8 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { buttonDisable, download, saveDaten, saveTableDataN } from "../utilities";
-import { createAddModalNeben, EditorModalNeben, ShowModalNeben } from "./components";
-import { DataN } from "./utils";
+import { buttonDisable, download, saveDaten } from "../utilities";
+import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from "./components";
+import { DataN, saveTableDataN } from "./utils";
 
 window.addEventListener("load", () => {
 	const ftN = createCustomTable("tableN", {

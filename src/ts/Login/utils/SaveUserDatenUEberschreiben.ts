@@ -1,5 +1,5 @@
 import { aktualisiereBerechnung } from "../../Berechnung";
-import { DataBE, DataBZ } from "../../Bereitschaft/utils/convertDaten";
+import { DataBE, DataBZ } from "../../Bereitschaft/utils";
 import { DataE } from "../../EWT/utils";
 import { generateEingabeMaskeEinstellungen } from "../../Einstellungen/utils";
 import { DataN } from "../../Neben/utils";
