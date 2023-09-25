@@ -2,7 +2,6 @@ import preact from "@preact/preset-vite";
 import path from "path";
 import { compression } from "vite-plugin-compression2";
 import VitePluginInjectPreload from "vite-plugin-inject-preload";
-import pluginPurgeCSS from "vite-plugin-purge";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 import { version } from "./package.json";
@@ -45,9 +44,6 @@ export default defineConfig({
 	},
 	plugins: [
 		preact(),
-		pluginPurgeCSS({
-			content: ["**/*.html", "**/*.js"],
-		}),
 		compression({
 			exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
 			skipIfLargerOrEqual: true,
@@ -67,9 +63,6 @@ export default defineConfig({
 				},
 				{
 					match: /[a-z-0-9]*\.css$/,
-				},
-				{
-					match: /[a-z-0-9]*\.js$/,
 				},
 			],
 		}),
