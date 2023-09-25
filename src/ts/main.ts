@@ -20,7 +20,6 @@ const updateSW = registerSW({
 					text: "Neu Laden",
 					function: () => {
 						updateSW(true);
-						Logout();
 					},
 					dismiss: true,
 				},
@@ -73,9 +72,6 @@ window.addEventListener("load", () => {
 		const currentVersion: string = import.meta.env.APP_VERSION;
 		const clientVersion: string = Storage.get("Version", { check: true, default: "0.0.0" });
 		if (compareMajorMinor(clientVersion, currentVersion) < 0) {
-			(async () => {
-				return await updateSW(true);
-			})();
 			const benutzer = Storage.get<string>("Benutzer", { check: true, default: "" });
 			Logout();
 			createSnackBar({
