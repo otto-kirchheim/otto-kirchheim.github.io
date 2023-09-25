@@ -1,10 +1,11 @@
+import preact from "@preact/preset-vite";
 import path from "path";
-import { VitePWA } from "vite-plugin-pwa";
 import { compression } from "vite-plugin-compression2";
 import VitePluginInjectPreload from "vite-plugin-inject-preload";
-import { defineConfig } from "vitest/config";
-import preact from "@preact/preset-vite";
 import pluginPurgeCSS from "vite-plugin-purge";
+import { VitePWA } from "vite-plugin-pwa";
+import { defineConfig } from "vitest/config";
+import { version } from "./package.json";
 
 export default defineConfig({
 	root: path.resolve(__dirname, "src"),
@@ -16,6 +17,9 @@ export default defineConfig({
 		},
 	},
 	base: "/",
+	define: {
+		"import.meta.env.APP_VERSION": JSON.stringify(version),
+	},
 	build: {
 		outDir: "../dist",
 		emptyOutDir: true,
@@ -72,7 +76,7 @@ export default defineConfig({
 		VitePWA({
 			strategies: "generateSW",
 			injectRegister: "auto",
-			registerType: "autoUpdate",
+			registerType: "prompt",
 			manifest: {
 				name: "DB Nebengeld",
 				short_name: "Nebengeld",
@@ -330,6 +334,7 @@ export default defineConfig({
 			devOptions: {
 				enabled: true,
 				type: "module",
+				suppressWarnings: true,
 			},
 			workbox: {
 				cleanupOutdatedCaches: true,

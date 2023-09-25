@@ -54,7 +54,8 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 			if (bis.isBefore(von)) bis = bis.add(1, "day");
 			Berechnung.B.B -= bis.diff(von, "minute");
 
-			switch (value.lreBE.toString()) {
+			const LREValue = value.lreBE.toString();
+			switch (LREValue) {
 				case "LRE 1":
 					Berechnung.B.L1++;
 					break;
@@ -81,13 +82,9 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 
 				const abWohnung = bis.diff(von, "hour", true);
 
-				if (abWohnung >= 8 && abWohnung < 14) {
-					Berechnung.E.A8++;
-				} else if (abWohnung > 14 && abWohnung < 24) {
-					Berechnung.E.A14++;
-				} else if (abWohnung >= 24) {
-					Berechnung.E.A24++;
-				}
+				if (abWohnung >= 8 && abWohnung < 14) Berechnung.E.A8++;
+				else if (abWohnung > 14 && abWohnung < 24) Berechnung.E.A14++;
+				else if (abWohnung >= 24) Berechnung.E.A24++;
 			}
 			if (value.ab1E && value.an1E) {
 				const von = dayjs(`${jahr}-${Monat}-${tag1}T${value.ab1E}`);
@@ -95,11 +92,8 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 
 				const ab1Taetigkeit = bis.diff(von, "hour", true);
 
-				if (ab1Taetigkeit >= 8 && ab1Taetigkeit < 24) {
-					Berechnung.E.S8++;
-				} else if (ab1Taetigkeit >= 24) {
-					Berechnung.E.S14++;
-				}
+				if (ab1Taetigkeit >= 8 && ab1Taetigkeit < 24) Berechnung.E.S8++;
+				else if (ab1Taetigkeit >= 24) Berechnung.E.S14++;
 			}
 		});
 

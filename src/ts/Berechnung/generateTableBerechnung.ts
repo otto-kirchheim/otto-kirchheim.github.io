@@ -124,39 +124,30 @@ export default function generateTableBerechnung(
 					}
 					break;
 				case 7:
-					if (berechnung[monatZeroIndex].length !== 0) {
-						td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
-					} else if (!berechnung[monatZeroIndex][0]) {
-						berechnung[monatZeroIndex][0] = 0;
-					}
+					if (berechnung[monatZeroIndex].length !== 0) td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
+					else if (!berechnung[monatZeroIndex][0]) berechnung[monatZeroIndex][0] = 0;
 					break;
 				case 8:
 					if (tarif_beamter === "Tarifkraft") {
-						if (datenBerechnungItem.E.A8 !== 0) {
+						if (datenBerechnungItem.E.A8 !== 0)
 							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld.getMonat(monat).TE8;
-						}
-						if (datenBerechnungItem.E.A14 !== 0) {
+						if (datenBerechnungItem.E.A14 !== 0)
 							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A14 * datenGeld.getMonat(monat).TE14;
-						}
-						if (datenBerechnungItem.E.A24 !== 0) {
+						if (datenBerechnungItem.E.A24 !== 0)
 							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld.getMonat(monat).TE24;
-						}
 					}
 					if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0)
 						td.innerHTML =
 							`${nullParser(datenBerechnungItem.E.A8)} <br />` +
 							`${nullParser(datenBerechnungItem.E.A14)} <br />` +
 							`${nullParser(datenBerechnungItem.E.A24)}`;
-
 					break;
 				case 9:
 					if (tarif_beamter !== "Tarifkraft") {
-						if (datenBerechnungItem.E.S8 !== 0) {
+						if (datenBerechnungItem.E.S8 !== 0)
 							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld.getMonat(monat).BE8;
-						}
-						if (datenBerechnungItem.E.S14 !== 0) {
+						if (datenBerechnungItem.E.S14 !== 0)
 							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld.getMonat(monat).BE14;
-						}
 					}
 					if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0)
 						td.innerHTML = `${nullParser(datenBerechnungItem.E.S8)} <br /> ${nullParser(datenBerechnungItem.E.S14)}`;
@@ -165,21 +156,16 @@ export default function generateTableBerechnung(
 					break;
 
 				case 10:
-					if (berechnung[monatZeroIndex].length > 1) {
-						td.textContent = formatCurrency(berechnung[monatZeroIndex][1]);
-					} else if (!berechnung[monatZeroIndex][1]) {
-						berechnung[monatZeroIndex][1] = 0;
-					}
+					if (berechnung[monatZeroIndex].length > 1) td.textContent = formatCurrency(berechnung[monatZeroIndex][1]);
+					else if (!berechnung[monatZeroIndex][1]) berechnung[monatZeroIndex][1] = 0;
+
 					break;
 				case 11:
-					if (datenBerechnungItem.N.F === 0) {
-						berechnung[monatZeroIndex][2] = 0;
-					} else {
-						if (tarif_beamter !== "Tarifkraft") {
-							berechnung[monatZeroIndex][2] = 0;
-						} else {
-							berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld.getMonat(monat).Fahrentsch;
-						}
+					if (datenBerechnungItem.N.F === 0) berechnung[monatZeroIndex][2] = 0;
+					else {
+						if (tarif_beamter !== "Tarifkraft") berechnung[monatZeroIndex][2] = 0;
+						else berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld.getMonat(monat).Fahrentsch;
+
 						td.textContent = formatCurrency(berechnung[monatZeroIndex][2]);
 					}
 					break;

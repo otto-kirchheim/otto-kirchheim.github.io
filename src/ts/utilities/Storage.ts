@@ -30,7 +30,7 @@ enum StorageData {
 	Jahreswechsel = "Jahreswechsel",
 	theme = "Theme",
 	dataServer = "Server Daten",
-	UserID = "veraltete Daten",
+	Version = "Version der App",
 	key = "Test Daten",
 }
 
@@ -63,13 +63,9 @@ class Storage implements IStorage {
 
 		if (optionsOrChecked === true) {
 			if (value === null) throw this.showSnackbarAndThrowError(new Error(`"${StorageData[key] ?? key}" nicht gefunden`));
-		} else if (value === null) {
-			if (optionsOrChecked?.default !== undefined) return optionsOrChecked.default;
-			else return null;
-		}
+		} else if (value === null) return optionsOrChecked?.default !== undefined ? optionsOrChecked.default : null;
 
-		if (this.isJsonString(value)) return JSON.parse(value);
-		else return this.convertToJson<T>(key, value as T);
+		return this.isJsonString(value) ? JSON.parse(value) : this.convertToJson<T>(key, value as T);
 	}
 
 	remove(key: TStorageData): void {
@@ -89,8 +85,7 @@ class Storage implements IStorage {
 	}
 
 	compare<T>(key: TStorageData, compareValue: T): boolean {
-		const value = localStorage.getItem(key);
-		return value === JSON.stringify(compareValue);
+		return localStorage.getItem(key) === JSON.stringify(compareValue);
 	}
 
 	private convertToJson<T>(key: TStorageData, value: T): T {

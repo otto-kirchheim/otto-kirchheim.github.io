@@ -12,6 +12,9 @@ export default function userLoginSuccess({
 	username: string;
 }): void {
 	setLoading("btnLogin");
+
+	Storage.set("Version", import.meta.env.APP_VERSION);
+
 	console.log({ accessToken, refreshToken });
 	username = `${username[0].toUpperCase()}${username.substring(1)}`;
 	Storage.set("Benutzer", username);
