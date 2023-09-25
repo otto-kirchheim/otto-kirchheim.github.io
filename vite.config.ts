@@ -69,7 +69,7 @@ export default defineConfig({
 		VitePWA({
 			strategies: "generateSW",
 			injectRegister: "auto",
-			registerType: "prompt",
+			registerType: "autoUpdate",
 			manifest: {
 				name: "DB Nebengeld",
 				short_name: "Nebengeld",

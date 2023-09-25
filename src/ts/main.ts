@@ -7,37 +7,7 @@ import { Storage, compareVersion, initializeColorModeToggler, setOffline, storag
 
 const intervalMS = 60 * 60 * 1000;
 
-const updateSW = registerSW({
-	onNeedRefresh() {
-		const benutzer = Storage.get<string>("Benutzer", { check: true, default: "" });
-		createSnackBar({
-			message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte Lade die Seite neu um die<br/>neusten Funktionen zu erhalten.`,
-			dismissible: false,
-			timeout: false,
-			fixed: true,
-			actions: [
-				{
-					text: "Neu Laden",
-					function: () => {
-						updateSW(true);
-					},
-					dismiss: true,
-				},
-				{ text: "Abbrechen", dismiss: true, class: ["text-primary"] },
-			],
-		});
-	},
-	onOfflineReady() {
-		createSnackBar({
-			message: "Du arbeitest Offline",
-			dismissible: true,
-			status: "info",
-			timeout: false,
-			position: "bc",
-			fixed: false,
-			actions: [{ text: "Ok", dismiss: true }],
-		});
-	},
+registerSW({
 	onRegisteredSW(swUrl, r) {
 		r &&
 			setInterval(async () => {
