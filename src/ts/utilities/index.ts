@@ -5,6 +5,7 @@ import Storage from "./Storage";
 import buttonDisable from "./buttonDisable";
 import checkMaxTag from "./checkMaxTag";
 import clearLoading from "./clearLoading";
+import { compareVersion } from "./compareMajorMinor";
 import convertToBlob from "./convertToBlob";
 import decodeAccessToken from "./decodeAccessToken";
 import download from "./download";
@@ -26,6 +27,7 @@ export {
 	buttonDisable,
 	checkMaxTag,
 	clearLoading,
+	compareVersion,
 	convertToBlob,
 	decodeAccessToken,
 	download,

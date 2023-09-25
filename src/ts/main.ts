@@ -3,7 +3,7 @@ import { registerSW } from "virtual:pwa-register";
 
 import { Logout } from "./Einstellungen/utils";
 import { createSnackBar } from "./class/CustomSnackbar";
-import { Storage, initializeColorModeToggler, setOffline, storageAvailable } from "./utilities";
+import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from "./utilities";
 
 const intervalMS = 60 * 60 * 1000;
 
@@ -71,7 +71,7 @@ window.addEventListener("load", () => {
 	if (Storage.size() > 3) {
 		const currentVersion: string = import.meta.env.APP_VERSION;
 		const clientVersion: string = Storage.get("Version", { check: true, default: "0.0.0" });
-		if (compareMajorMinor(clientVersion, currentVersion) < 0) {
+		if (compareVersion(clientVersion, currentVersion) < 0) {
 			const benutzer = Storage.get<string>("Benutzer", { check: true, default: "" });
 			Logout();
 			createSnackBar({
@@ -124,10 +124,3 @@ import "./Login";
 import "./Neben";
 
 import "../scss/styles.scss";
-
-function compareMajorMinor(version1: string, version2: string): number {
-	const [major1, minor1] = version1.split(".").map(Number);
-	const [major2, minor2] = version2.split(".").map(Number);
-
-	return major1 - major2 || minor1 - minor2;
-}
