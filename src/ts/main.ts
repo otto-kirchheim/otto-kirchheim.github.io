@@ -30,20 +30,13 @@ const updateSW = registerSW({
 	},
 	onOfflineReady() {
 		createSnackBar({
-			message: `Du bist Offline,<br/>möchtest du Offline weiterarbeiten?.`,
-			dismissible: false,
+			message: "Du arbeitest Offline",
+			dismissible: true,
+			status: "info",
 			timeout: false,
-			fixed: true,
-			actions: [
-				{
-					text: "Ja",
-					function: () => {
-						updateSW(true);
-						setOffline();
-					},
-				},
-				{ text: "Nein", dismiss: true, class: ["text-primary"] },
-			],
+			position: "bc",
+			fixed: false,
+			actions: [{ text: "Ok", dismiss: true }],
 		});
 	},
 	onRegisteredSW(swUrl, r) {
