@@ -17,5 +17,5 @@ export interface IVorgabenGeldType {
 
 export interface IVorgabenGeld {
 	[key: number]: IVorgabenGeldType;
-	getMonat: (maxMonat: number) => IVorgabenGeldType;
+	//getMonat: (maxMonat: number) => IVorgabenGeldType;
 }

@@ -16,24 +16,29 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 
 	if (!MonatInput || !JahrInput) throw new Error("Input Element nicht gefunden");
 
-	const VorgabenGeld: IVorgabenGeld = Storage.get("VorgabenGeld", { check: true });
-	Object.setPrototypeOf(VorgabenGeld, {
-		getMonat: function (maxMonat: number): IVorgabenGeldType {
-			let returnObjekt = VorgabenGeld[1];
-			const keys = Object.keys(VorgabenGeld).map(Number);
-			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1) {
-				for (let monat = 2; monat <= maxMonat; monat++) {
-					if (typeof VorgabenGeld[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...VorgabenGeld[monat] };
-				}
-			}
+	const VorgabenGeldDaten: IVorgabenGeld = Storage.get("VorgabenGeld", { check: true });
+	const VorgabenGeldHandler: ProxyHandler<IVorgabenGeld> = {
+		get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
+			const maxMonat: number = Number(prop);
+			let returnObjekt = target[1];
+			const keys = Object.keys(target).map(Number);
+			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
+				for (let monat = 2; monat <= maxMonat; monat++)
+					if (typeof target[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...target[monat] };
 			return returnObjekt;
 		},
-	});
+		set: (_target: IVorgabenGeld, prop: string, newValue) => {
+			console.log("veränderung von datenGeld nicht erlaubt:", prop, newValue);
+			return false;
+		},
+	};
+	const VorgabenGeld = new Proxy(VorgabenGeldDaten, VorgabenGeldHandler);
+
 	const Monat = +MonatInput.value;
 	const Jahr = +JahrInput.value;
 	const data = {
 		VorgabenU: Storage.get<IVorgabenU>("VorgabenU", { check: true }),
-		VorgabenGeld: VorgabenGeld.getMonat(Monat),
+		VorgabenGeld: VorgabenGeld[Monat],
 		Daten: {} as Partial<IMonatsDaten>,
 		Monat,
 		Jahr,

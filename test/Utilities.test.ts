@@ -10,14 +10,14 @@ import {
 	setLoading,
 	clearLoading,
 	DatenSortieren,
-	saveDaten,
+	/* saveDaten, */
 } from "../src/ts/utilities";
-import * as exportBerechnung from "../src/ts/Berechnung";
+/* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
-import * as exportEinstelllungen from "../src/ts/Einstellungen/utils";
+import * as exportEinstelllungen from "../src/ts/Einstellungen/utils"; */
 import { base64StringData } from "./mockPDFString";
-import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
-
+/* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
+ */
 describe("#Storage", () => {
 	afterEach(() => {
 		localStorage.clear(); // reset localStorage after each test
@@ -112,12 +112,11 @@ describe("#getValidAccesstoken", async () => {
 		Storage.set("accessToken", accessToken);
 	});
 
-	// it("should throw an error if no accessToken is provided", async () => {
-	// 	debugger;
-	// 	Storage.remove("accessToken");
-	// 	// expect(Storage.get("accessToken")).toThrowError("'Server Zugriffscode' nicht gefunden");
-	// 	expect(await getValidAccesstoken()).toThrowError("'Server Zugriffscode' nicht gefunden");
-	// });
+	/* it("should throw an error if no accessToken is provided", async () => {
+		Storage.remove("accessToken");
+		expect(Storage.get("accessToken")).toBeNull();
+		expect(await getValidAccesstoken()).toThrowError('"Server Zugriffscode" nicht gefunden');
+	}); */
 
 	it("should return the accessToken if it is valid", async () => {
 		const mockdecodeAccessToken = vi.spyOn(exports, "decodeAccessToken").mockReturnValue(decodedToken);

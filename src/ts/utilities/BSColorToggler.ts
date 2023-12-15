@@ -9,11 +9,8 @@ export default function initializeColorModeToggler() {
 
 	const setStoredTheme = (theme: Theme) => (theme === "auto" ? Storage.remove("theme") : Storage.set("theme", theme));
 
-	const getPreferredTheme = (): Theme => {
-		const storedTheme = getStoredTheme();
-		if (storedTheme) return storedTheme;
-		return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-	};
+	const getPreferredTheme = (): Theme =>
+		getStoredTheme() || window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
 	const preferredTheme = getPreferredTheme();
 

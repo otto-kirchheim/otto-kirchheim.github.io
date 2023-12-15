@@ -32,8 +32,10 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	)
 		throw new Error("Input Element nicht gefunden");
 
+	const tagBE = datumInput.value;
+
 	const daten: IDatenBE = {
-		tagBE: dayjs(datumInput.value).format("DD.MM.YYYY"),
+		tagBE: dayjs(tagBE).format("DD.MM.YYYY"),
 		auftragsnummerBE: sapnrInput.value,
 		beginBE: vonInput.value,
 		endeBE: bisInput.value,
@@ -49,15 +51,12 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	saveTableDataBE(ftBE);
 
 	if (berZeit) {
-		daten.tagBE = datumInput.value;
-		const bereitschaftsAnfang = dayjs(`${daten.tagBE}T${daten.beginBE}`),
-			bereitschaftsEnde = dayjs(`${daten.tagBE}T${daten.endeBE}`).isBefore(bereitschaftsAnfang)
-				? dayjs(`${daten.tagBE}T${daten.endeBE}`).add(1, "d")
-				: dayjs(`${daten.tagBE}T${daten.endeBE}`),
-			dataTable = tableToArray<IDatenBZ>("tableBZ");
-
+		const bereitschaftsAnfang = dayjs(`${tagBE}T${daten.beginBE}`);
+		const bereitschaftsEnde = dayjs(`${tagBE}T${daten.endeBE}`).isBefore(bereitschaftsAnfang)
+			? dayjs(`${tagBE}T${daten.endeBE}`).add(1, "d")
+			: dayjs(`${tagBE}T${daten.endeBE}`);
+		const dataTable = tableToArray<IDatenBZ>("tableBZ");
 		const monat: number = bereitschaftsAnfang.month() + 1;
-
 		const data: false | IDatenBZ[] = BereitschaftEingabe(
 			bereitschaftsAnfang,
 			bereitschaftsEnde,

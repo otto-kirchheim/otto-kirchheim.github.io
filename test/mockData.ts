@@ -5,7 +5,7 @@ import { IVorgabenBerechnung } from "../src/ts/interfaces/IVorgabenBerechnungMon
 import { IVorgabenGeld } from "../src/ts/interfaces/IVorgabenGeldType";
 import { IVorgabenU } from "../src/ts/interfaces/IVorgabenU";
 
-export const VorgabenGeldMock: Omit<IVorgabenGeld, "getMonat"> = {
+export const VorgabenGeldMock: IVorgabenGeld = {
 	1: {
 		BE14: 24,
 		BE8: 9,

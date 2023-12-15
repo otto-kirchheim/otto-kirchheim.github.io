@@ -3,6 +3,6 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
 
 	const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
 	if (!btnElement) return;
-	btnElement.innerHTML = <string>btnElement.dataset.normaltext;
+	btnElement.innerHTML = btnElement.dataset.normaltext!;
 	btnElement.disabled = false;
 }

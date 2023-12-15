@@ -6,6 +6,7 @@ import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock, mockBereitschaft, 
 import { base64StringData } from "./mockPDFString";
 
 describe("#download", () => {
+	debugger;
 	const mockResponseData = {
 		data: {
 			data: base64StringData,

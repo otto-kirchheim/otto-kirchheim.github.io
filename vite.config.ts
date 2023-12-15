@@ -1,7 +1,7 @@
 import preact from "@preact/preset-vite";
 import path from "path";
 import { compression } from "vite-plugin-compression2";
-import VitePluginInjectPreload from "vite-plugin-inject-preload";
+import UnpluginInjectPreload from "unplugin-inject-preload/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 import { version } from "./package.json";
@@ -34,13 +34,25 @@ export default defineConfig({
 		},
 	},
 	test: {
-		root: path.resolve(__dirname, "test"),
+		root: path.resolve(__dirname),
+		exclude: [
+			".github/*",
+			".husky/*",
+			"dist",
+			"dev-dist",
+			"src/node_modules",
+			"node_modules",
+			"dist",
+			".idea",
+			".git",
+			".cache",
+		],
 		globals: true,
 		environment: "jsdom",
 		server: {
 			deps: { external: ["../src/node_modules/**"] },
 		},
-		setupFiles: ["./setupVitest.ts"],
+		setupFiles: ["./test/setupVitest.ts"],
 	},
 	plugins: [
 		preact(),
@@ -53,16 +65,16 @@ export default defineConfig({
 			exclude: [/\.(gz)$/, /\.(woff|woff2|map|nojekyll|png)$/],
 			skipIfLargerOrEqual: true,
 		}),
-		VitePluginInjectPreload({
+		UnpluginInjectPreload({
 			files: [
 				{
-					match: /material-icons-round-[a-z-0-9]*\.woff2$/,
+					outputMatch: /material-icons-round-[a-z-0-9]*\.woff2$/,
 					attributes: {
 						crossOrigin: "anonymous",
 					},
 				},
 				{
-					match: /[a-z-0-9]*\.css$/,
+					outputMatch: /[a-z-0-9]*\.css$/,
 				},
 			],
 		}),
@@ -74,8 +86,8 @@ export default defineConfig({
 				name: "DB Nebengeld",
 				short_name: "Nebengeld",
 				start_url: "/",
+				display_override: ["window-controls-overlay", "standalone", "browser"],
 				display: "standalone",
-				display_override: ["window-control-overlay", "standalone", "browser"],
 				description: "Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zetteln",
 				lang: "de",
 				dir: "ltr",
@@ -332,7 +344,7 @@ export default defineConfig({
 			workbox: {
 				cleanupOutdatedCaches: true,
 				sourcemap: true,
-				globPatterns: ["**/*.{js.br,css.br,html.br,ico,png.br,woff2}"],
+				globPatterns: ["**/*.{js,css,html,ico,png,woff2}"],
 				globIgnores: ["icons/*"],
 			},
 		}),

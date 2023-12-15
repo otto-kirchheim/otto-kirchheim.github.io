@@ -1,9 +1,13 @@
 import { generateTableBerechnung } from ".";
 import {
 	IDaten,
+	IDatenBE,
 	IDatenBEJahr,
+	IDatenBZ,
 	IDatenBZJahr,
+	IDatenEWT,
 	IDatenEWTJahr,
+	IDatenN,
 	IDatenNJahr,
 	IVorgabenBerechnung,
 	IVorgabenBerechnungMonat,
@@ -26,29 +30,46 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 		default: {} as IVorgabenBerechnung,
 	});
 
-	for (let Monat = 1; Monat <= 12; Monat++)
-		Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(daten, Monat, Jahr);
+	if (!("BZ" in daten && "BE" in daten && "EWT" in daten && "N" in daten))
+		throw new Error("Daten entsprechen nicht dem Interface IDaten");
+	const { BZ, BE, EWT, N } = daten;
+
+	for (let Monat = 1; Monat <= 12; Monat++) {
+		const [BZMonat, BEMonat, EWTMonat, NMonat] = [BZ[Monat], BE[Monat], EWT[Monat], N[Monat]];
+		Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(
+			BZMonat,
+			BEMonat,
+			EWTMonat,
+			NMonat,
+			Monat,
+			Jahr,
+		);
+	}
 
 	Storage.set<IVorgabenBerechnung>("datenBerechnung", Berechnung);
 	generateTableBerechnung(Berechnung);
 
 	return Berechnung;
 
-	function aktualisiereBerechnungMonat(daten: IDaten, monat: number, jahr: number): IVorgabenBerechnungMonat {
-		if (!("BZ" in daten && "BE" in daten && "EWT" in daten && "N" in daten))
-			throw new Error("Daten entsprechen nicht dem Interface IDaten");
-
+	function aktualisiereBerechnungMonat(
+		BZMonat: IDatenBZ[],
+		BEMonat: IDatenBE[],
+		EWTMonat: IDatenEWT[],
+		NMonat: IDatenN[],
+		monat: number,
+		jahr: number,
+	): IVorgabenBerechnungMonat {
 		const Berechnung: IVorgabenBerechnungMonat = {
 			B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
 			E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
 			N: { F: 0 },
 		};
 
-		daten.BZ[monat].forEach(value => {
+		BZMonat.forEach(value => {
 			Berechnung.B.B += dayjs(value.endeB).diff(dayjs(value.beginB), "minute") + value.pauseB;
 		});
 
-		daten.BE[monat].forEach(value => {
+		BEMonat.forEach(value => {
 			const von = dayjs(`${value.tagBE} ${value.beginBE}`, "DD.MM.YYYY HH:mm");
 			let bis = dayjs(`${value.tagBE} ${value.endeBE}`, "DD.MM.YYYY HH:mm");
 			if (bis.isBefore(von)) bis = bis.add(1, "day");
@@ -70,7 +91,7 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 			if (value.privatkmBE) Berechnung.B.K += value.privatkmBE;
 		});
 
-		daten.EWT[monat].forEach(value => {
+		EWTMonat.forEach(value => {
 			const Monat = `0${monat}`.slice(-2);
 			const tag = `0${value.tagE}`.slice(-2);
 			let tag1 = tag;
@@ -97,7 +118,7 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): I
 			}
 		});
 
-		Berechnung.N.F = daten.N[monat].length;
+		Berechnung.N.F = NMonat.length;
 
 		return Berechnung;
 	}

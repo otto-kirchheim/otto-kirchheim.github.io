@@ -9,21 +9,27 @@ import { Storage, clearLoading } from "../utilities";
 
 export default function generateTableBerechnung(
 	datenBerechnung: true | IVorgabenBerechnung,
-	datenGeld: IVorgabenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld", { check: true }),
+	datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>("VorgabenGeld", { check: true }),
 ): void {
 	if (datenBerechnung === true) return clearLoading("btnNeuBerech");
 
-	Object.setPrototypeOf(datenGeld, {
-		getMonat: function (maxMonat: number): IVorgabenGeldType {
-			let returnObjekt = datenGeld[1];
-			const keys = Object.keys(datenGeld).map(Number);
+	const datenGeldHandler: ProxyHandler<IVorgabenGeld> = {
+		get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
+			const maxMonat: number = Number(prop);
+			let returnObjekt = target[1];
+			const keys = Object.keys(target).map(Number);
 			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
 				for (let monat = 2; monat <= maxMonat; monat++)
-					if (typeof datenGeld[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...datenGeld[monat] };
-
+					if (typeof target[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...target[monat] };
 			return returnObjekt;
 		},
-	});
+		set: (_target: IVorgabenGeld, prop: string, newValue) => {
+			console.log("veränderung von datenGeld nicht erlaubt:", prop, newValue);
+			return false;
+		},
+	};
+
+	const datenGeld = new Proxy(datenGeldVorgabe, datenGeldHandler);
 
 	const tarif_beamter = Storage.get<IVorgabenU>("VorgabenU", { check: true }).pers.TB;
 	const berechnung: number[][] = Array.from<unknown, number[]>({ length: 12 }, () => []);
@@ -87,37 +93,35 @@ export default function generateTableBerechnung(
 					if (datenBerechnungItem.B.B !== 0) {
 						berechnung[monatZeroIndex][0] =
 							tarif_beamter === "Tarifkraft"
-								? Math.round(datenBerechnungItem.B.B / 60) * datenGeld.getMonat(monat)[tarif_beamter]
-								: Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld.getMonat(monat)[tarif_beamter];
+								? Math.round(datenBerechnungItem.B.B / 60) * datenGeld[monat][tarif_beamter]
+								: Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld[monat][tarif_beamter];
 
 						td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
 					}
 					break;
 				case 3:
 					if (datenBerechnungItem.B.L1 !== 0) {
-						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * datenGeld.getMonat(monat).LRE1;
-						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L1) * datenGeld.getMonat(monat).LRE1);
+						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1;
+						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1);
 					}
 					break;
 				case 4:
 					if (datenBerechnungItem.B.L2 !== 0) {
-						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L2) * datenGeld.getMonat(monat).LRE2;
-						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L2) * datenGeld.getMonat(monat).LRE2);
+						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2;
+						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2);
 					}
 					break;
 				case 5:
 					if (datenBerechnungItem.B.L3 !== 0) {
-						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L3) * datenGeld.getMonat(monat).LRE3;
-						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L3) * datenGeld.getMonat(monat).LRE3);
+						berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3;
+						td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3);
 					}
 					break;
 				case 6:
 					if (datenBerechnungItem.B.K !== 0) {
 						privatPKW =
 							Math.round(datenBerechnungItem.B.K) *
-							(tarif_beamter === "Tarifkraft"
-								? datenGeld.getMonat(monat).PrivatPKWTarif
-								: datenGeld.getMonat(monat).PrivatPKWBeamter);
+							(tarif_beamter === "Tarifkraft" ? datenGeld[monat].PrivatPKWTarif : datenGeld[monat].PrivatPKWBeamter);
 
 						berechnung[monatZeroIndex][0] += privatPKW;
 						td.textContent = formatCurrency(privatPKW);
@@ -130,11 +134,11 @@ export default function generateTableBerechnung(
 				case 8:
 					if (tarif_beamter === "Tarifkraft") {
 						if (datenBerechnungItem.E.A8 !== 0)
-							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld.getMonat(monat).TE8;
+							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld[monat].TE8;
 						if (datenBerechnungItem.E.A14 !== 0)
-							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A14 * datenGeld.getMonat(monat).TE14;
+							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A14 * datenGeld[monat].TE14;
 						if (datenBerechnungItem.E.A24 !== 0)
-							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld.getMonat(monat).TE24;
+							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld[monat].TE24;
 					}
 					if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0)
 						td.innerHTML =
@@ -145,9 +149,9 @@ export default function generateTableBerechnung(
 				case 9:
 					if (tarif_beamter !== "Tarifkraft") {
 						if (datenBerechnungItem.E.S8 !== 0)
-							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld.getMonat(monat).BE8;
+							berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld[monat].BE8;
 						if (datenBerechnungItem.E.S14 !== 0)
-							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld.getMonat(monat).BE14;
+							berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld[monat].BE14;
 					}
 					if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0)
 						td.innerHTML = `${nullParser(datenBerechnungItem.E.S8)} <br /> ${nullParser(datenBerechnungItem.E.S14)}`;
@@ -164,7 +168,7 @@ export default function generateTableBerechnung(
 					if (datenBerechnungItem.N.F === 0) berechnung[monatZeroIndex][2] = 0;
 					else {
 						if (tarif_beamter !== "Tarifkraft") berechnung[monatZeroIndex][2] = 0;
-						else berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld.getMonat(monat).Fahrentsch;
+						else berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld[monat].Fahrentsch;
 
 						td.textContent = formatCurrency(berechnung[monatZeroIndex][2]);
 					}
