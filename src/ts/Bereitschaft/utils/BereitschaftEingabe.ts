@@ -122,7 +122,6 @@ export default function BereitschaftEingabe(
 			(bereitschaftsAnfang.isSame(bereitschaftsAnfang.startOf("month")) ||
 				(bereitschaftsAnfang.hour() === nachtEnde.hour() && bereitschaftsAnfang.minute() === nachtEnde.minute()))
 		) {
-			debugger;
 			if (arbeitstagHeute === true)
 				merker = bereitschaftsAnfang
 					.startOf("d")
@@ -162,7 +161,7 @@ export default function BereitschaftEingabe(
 	bereitschaftsEndeMerker = bereitschaftsAnfang.clone();
 
 	const datenVorher: number = daten.length;
-	debugger;
+
 	/// --- Beginn Berechnung --- ///
 	while (daten.length < 26 && bereitschaftsAnfang.isBefore(bereitschaftsEnde)) {
 		/// #Berechnung Bereitschaftsende# ///
