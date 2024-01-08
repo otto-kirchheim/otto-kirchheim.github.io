@@ -3,9 +3,8 @@
 		"es2022": true,
 		"browser": true
 	},
-	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+	"extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
 	"parser": "@typescript-eslint/parser",
-	"plugins": ["@typescript-eslint"],
 	"root": true,
 	"overrides": [],
 	"parserOptions": {
@@ -25,5 +24,6 @@
 		],
 		"semi": ["error", "always"],
 		"no-process-env": "off"
-	}
+	},
+	"plugins": ["@typescript-eslint"]
 }

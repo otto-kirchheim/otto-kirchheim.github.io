@@ -1,20 +1,35 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { buttonDisable, download, saveDaten } from "../utilities";
+import { Storage, buttonDisable, download, saveDaten } from "../utilities";
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from "./components";
 import { DataN, saveTableDataN } from "./utils";
 
 window.addEventListener("load", () => {
+	const Jahr: number = Storage.get("Jahr", { default: new Date().getFullYear() });
+
+	const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
+		const checked: boolean = Jahr >= 2024;
+		if (!checked && showError)
+			createSnackBar({
+				message: "Sorry, für 2023 gibt es keine Nebengelder mehr...",
+				icon: "!",
+				status: "error",
+			});
+
+		return checked;
+	};
+
+	const getEmptyText = (Jahr: number) => (checkIfGreater2024(Jahr) ? "Keine Daten gefunden" : "Neu ab 2024");
+
 	const ftN = createCustomTable("tableN", {
 		columns: [
 			{ name: "tagN", title: "Tag", sortable: true, sorted: true, direction: "ASC" },
 			{ name: "beginN", title: "Arbeit Von", type: "time" },
 			{ name: "endeN", title: "Arbeit Bis", type: "time" },
-			{ name: "beginPauseN", title: "Pause Von", breakpoints: "sm", type: "time" },
-			{ name: "endePauseN", title: "Pause Bis", breakpoints: "sm", type: "time" },
-			{ name: "dauerN", title: "Anzahl", breakpoints: "md" },
-			{ name: "nrN", title: "Zulage", breakpoints: "md" },
+			{ name: "anzahl040N", title: "040 Fahrentschädigung", breakpoints: "md" },
+			{ name: "auftragN", title: "Auftragsnummer", breakpoints: "md" },
 		],
+		empty: () => getEmptyText(Jahr),
 		rows: DataN(),
 		sorting: { enabled: true },
 		editing: {
@@ -59,7 +74,9 @@ window.addEventListener("load", () => {
 	});
 
 	const btnESN = document.querySelector<HTMLButtonElement>("#btnESN");
-	btnESN?.addEventListener("click", createAddModalNeben);
+	btnESN?.addEventListener("click", () => {
+		if (checkIfGreater2024(Jahr, true)) createAddModalNeben();
+	});
 
 	const btnSaveN = document.querySelector<HTMLButtonElement>("#btnSaveN");
 	btnSaveN?.addEventListener("click", () => {
@@ -68,6 +85,6 @@ window.addEventListener("load", () => {
 
 	const btnDownloadN = document.querySelector<HTMLButtonElement>("#btnDownloadN");
 	btnDownloadN?.addEventListener("click", () => {
-		download(btnDownloadN, "N");
+		if (checkIfGreater2024(Jahr, true)) download(btnDownloadN, "N");
 	});
 });

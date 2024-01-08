@@ -3,6 +3,8 @@ import { Storage } from "../../utilities";
 
 export default function DataN(data?: IMonatsDaten["N"], Monat?: number): IMonatsDaten["N"] {
 	if (!(Storage.check("Benutzer") && Storage.check("accessToken"))) return [];
+	const Jahr = Storage.get("Jahr", { default: new Date().getFullYear() });
+	if (Jahr < 2024) return [];
 
 	if (data === undefined) {
 		if (!Monat)

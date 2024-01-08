@@ -25,7 +25,8 @@ interface CustomTableOptions<T extends CustomTableTypes> {
 		editing?: CustomTableOptions<T>["editing"];
 	}[];
 	rows: T[];
-	empty?: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	empty?: string | (() => string);
 	sorting?: { enabled: boolean };
 	editing?: {
 		enabled: boolean;
@@ -70,7 +71,8 @@ interface CustomTableOptionsAll<T extends CustomTableTypes> {
 	}[];
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	rows: T[];
-	empty: string;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	empty: string | (() => string);
 	sorting: { enabled: boolean };
 	editing: {
 		enabled: boolean;
@@ -516,7 +518,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 			tr.classList.add("customtable-empty");
 			const td = document.createElement("td");
 			td.colSpan = this.columns.array.length + 1;
-			td.innerText = this.options.empty;
+			td.innerText = typeof this.options.empty === "function" ? this.options.empty() : this.options.empty;
 			tr.appendChild(td);
 			tbody.appendChild(tr);
 

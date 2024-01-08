@@ -7,14 +7,14 @@ export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): voi
 	let idN = select.selectedIndex;
 	if (idN < 0) return;
 	const daten = JSON.parse(select.value) as IDatenN;
-	const inputNebenbezug = form.querySelector<HTMLSelectElement>("#Nebenbezug");
-	if (!inputNebenbezug) throw new Error("Select element with ID 'Nebenbezug' not found");
 
-	daten.nrN = inputNebenbezug.value;
-	const inputAnzahlN = form.querySelector<HTMLInputElement>("#AnzahlN");
-	if (!inputAnzahlN) throw new Error("Input element with ID 'AnzahlN' not found");
+	const inputAnzahl040N = form.querySelector<HTMLInputElement>("#anzahl040N");
+	if (!inputAnzahl040N) throw new Error("Input element with ID 'anzahl040N' not found");
+	daten.anzahl040N = +inputAnzahl040N.value;
 
-	daten.dauerN = +inputAnzahlN.value;
+	const inputAuftragN = form.querySelector<HTMLInputElement>("#AuftragN");
+	if (!inputAuftragN) throw new Error("Input element with ID 'AuftragN' not found");
+	daten.auftragN = inputAuftragN.value;
 
 	console.log(daten);
 	select.options[idN].selected = false;
@@ -27,6 +27,8 @@ export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): voi
 		}
 		idN++;
 	}
+
+	inputAuftragN.value = "";
 
 	const tableN = document.querySelector<CustomHTMLTableElement<IDatenN>>("#tableN");
 	if (!tableN) throw new Error("table N nicht gefunden");

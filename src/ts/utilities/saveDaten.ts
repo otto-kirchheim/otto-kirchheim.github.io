@@ -1,5 +1,5 @@
 import { FetchRetry, Storage, buttonDisable, clearLoading, setLoading } from ".";
-import { aktualisiereBerechnung, generateTableBerechnung } from "../Berechnung";
+import { aktualisiereBerechnung } from "../Berechnung";
 import { DataBE, DataBZ, saveTableDataBE, saveTableDataBZ } from "../Bereitschaft/utils";
 import { DataE, saveTableDataEWT } from "../EWT/utils";
 import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
@@ -7,6 +7,7 @@ import { DataN, saveTableDataN } from "../Neben/utils";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomTableTypes } from "../class/CustomTable";
 import type {
+	AtLeastOne,
 	CustomHTMLTableElement,
 	IDaten,
 	IDatenBE,
@@ -17,7 +18,7 @@ import type {
 	ReturnTypeSaveData,
 } from "../interfaces";
 
-interface SaveData extends IDaten {
+interface SaveData {
 	User: IVorgabenU;
 	Jahr: number;
 }
@@ -40,7 +41,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 		const ftE = findCustomTableInstance<IDatenEWT>("tableE");
 		const ftN = findCustomTableInstance<IDatenN>("tableN");
 
-		const data: SaveData = {
+		const data: SaveData & AtLeastOne<IDaten> = {
 			BZ: saveTableDataBZ(ftBZ, Monat),
 			BE: saveTableDataBE(ftBE, Monat),
 			EWT: saveTableDataEWT(ftE, Monat),
@@ -49,14 +50,23 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			Jahr: Storage.get("Jahr", { check: true }),
 		};
 
-		const fetched = await FetchRetry<SaveData, ReturnTypeSaveData>("saveData", data, "POST");
+		const fetched = await FetchRetry<SaveData & AtLeastOne<IDaten>, ReturnTypeSaveData>("saveData", data, "POST");
 
 		if (fetched instanceof Error) throw fetched;
 		if (fetched.statusCode != 200) {
 			console.error("Fehler", fetched.message);
-			const messages = JSON.parse(fetched.message);
+			let messages;
+			try {
+				messages = JSON.parse(fetched.message);
+			} catch (error) {
+				messages = fetched.message ?? "unbekannter Fehler";
+			} finally {
+				messages =
+					typeof fetched.message == "object" ? messages.map((message: string) => `<br/>- ${message}`) : fetched.message;
+			}
+
 			createSnackBar({
-				message: "Speichern<br/>Es ist ein Fehler aufgetreten:" + messages.map((message: string) => `<br/>- ${message}`),
+				message: `Speichern<br/>Es ist ein Fehler aufgetreten: ${messages}`,
 				status: "error",
 				timeout: 3000,
 				fixed: true,
@@ -66,12 +76,8 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 
 		const dataResponded = fetched.data;
 		console.log(dataResponded);
-		if (dataResponded.datenBerechnung) {
-			Storage.set("datenBerechnung", dataResponded.datenBerechnung);
-			generateTableBerechnung(dataResponded.datenBerechnung);
-		} else {
-			aktualisiereBerechnung(undefined, dataResponded.daten);
-		}
+
+		aktualisiereBerechnung(data.Jahr, dataResponded.daten);
 
 		Storage.set("dataBZ", dataResponded.daten.BZ);
 		ftBZ.rows.load(DataBZ(dataResponded.daten.BZ[Monat]));
@@ -85,9 +91,11 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 		ftE.rows.load(DataE(dataResponded.daten.EWT[Monat]));
 		console.log("saved", ftE);
 
-		Storage.set("dataN", dataResponded.daten.N);
-		ftN.rows.load(DataN(dataResponded.daten.N[Monat]));
-		console.log("saved", ftN);
+		if (data.Jahr >= 2024) {
+			Storage.set("dataN", dataResponded.daten.N);
+			ftN.rows.load(DataN(dataResponded.daten.N[Monat]));
+			console.log("saved", ftN);
+		} else console.log("not saved (Jahr < 2024", ftN);
 
 		generateEingabeMaskeEinstellungen(dataResponded.user);
 		Storage.set("VorgabenU", dataResponded.user);

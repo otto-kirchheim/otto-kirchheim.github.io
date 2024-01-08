@@ -1,13 +1,11 @@
-import { IDaten, IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from ".";
+import { IDaten, IVorgabenGeld, IVorgabenU } from ".";
 
-export interface UserDatenServer extends IDaten {
+export interface UserDatenServer extends Required<IDaten> {
 	vorgabenU: IVorgabenU;
 	datenGeld: IVorgabenGeld;
-	datenBerechnung: IVorgabenBerechnung | false;
 }
 
 export type ReturnTypeSaveData = {
-	datenBerechnung: IVorgabenBerechnung | false;
-	daten: IDaten;
+	daten: Required<IDaten>;
 	user: IVorgabenU;
 };

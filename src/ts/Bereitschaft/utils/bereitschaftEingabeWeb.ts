@@ -4,11 +4,12 @@ import { createSnackBar } from "../../class/CustomSnackbar";
 import type {
 	CustomHTMLDivElement,
 	CustomHTMLTableElement,
-	IDaten,
 	IDatenBZ,
 	IDatenBZJahr,
 	IMonatsDaten,
+	IVorgabenU,
 	ReturnTypeSaveData,
+	UserDatenServer,
 } from "../../interfaces";
 import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
@@ -157,7 +158,7 @@ export default async function bereitschaftEingabeWeb(
 
 		if (jahr !== jahr2) {
 			try {
-				const fetched2 = await FetchRetry<null, IDaten>(jahr2.toString());
+				const fetched2 = await FetchRetry<null, UserDatenServer>(jahr2.toString());
 				if (fetched2 instanceof Error) throw fetched2;
 				if (fetched2.statusCode != 200) {
 					console.log("Fehler:", fetched2.message);
@@ -171,6 +172,7 @@ export default async function bereitschaftEingabeWeb(
 				}
 				const dataResponded = fetched2.data.BZ;
 				console.log(dataResponded);
+				const User: IVorgabenU = fetched2.data.vorgabenU;
 
 				data2 = BereitschaftEingabe(
 					bereitschaftsEndeWechsel2,
@@ -185,9 +187,10 @@ export default async function bereitschaftEingabeWeb(
 
 				dataResponded[1] = data2;
 
-				const dataSave: { BZ: IDatenBZJahr; Jahr: number } = {
+				const dataSave: { BZ: IDatenBZJahr; User: IVorgabenU; Jahr: number } = {
 					BZ: dataResponded,
 					Jahr: jahr2,
+					User,
 				};
 
 				const fetchedSave = await FetchRetry<typeof dataSave, ReturnTypeSaveData>("saveData", dataSave, "POST");

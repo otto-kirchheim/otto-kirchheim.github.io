@@ -11,11 +11,13 @@ export type IDatenAllValuesWithKey<BZType = string, EWTType = string> = {
 	[key: string]: IDatenBZValues<BZType> | IDatenBEValues | IDatenEWTValues<EWTType> | IDatenNValues;
 };
 
+export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U];
+
 export interface IDaten<BZType = string, EWTType = string> {
-	BZ: IDatenBZJahr<BZType>;
-	BE: IDatenBEJahr;
-	EWT: IDatenEWTJahr<EWTType>;
-	N: IDatenNJahr;
+	BZ?: IDatenBZJahr<BZType>;
+	BE?: IDatenBEJahr;
+	EWT?: IDatenEWTJahr<EWTType>;
+	N?: IDatenNJahr;
 }
 
 type IDatenBZValues<BZType = string> = BZType | number;
@@ -110,10 +112,8 @@ export interface IDatenN {
 	tagN: string;
 	beginN: string;
 	endeN: string;
-	beginPauseN: string;
-	endePauseN: string;
-	nrN: string;
-	dauerN: number;
+	anzahl040N: number;
+	auftragN: string;
 }
 
 export interface IDatenNJahr {

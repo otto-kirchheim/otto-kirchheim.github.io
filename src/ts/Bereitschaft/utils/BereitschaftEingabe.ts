@@ -1,7 +1,7 @@
 import { Dayjs } from "dayjs";
 import { Duration } from "dayjs/plugin/duration.js";
 import isBetween from "dayjs/plugin/isBetween";
-import { isHoliday } from "../../class/feiertagets/feiertage";
+import { isHoliday } from "feiertagejs";
 import type { IDatenBZ, IMonatsDaten, IVorgabenU } from "../../interfaces";
 import { DatenSortieren, Storage, getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
@@ -100,7 +100,14 @@ export default function BereitschaftEingabe(
 		}
 		// Wie oben, aber:
 		// 2x Ende am gleichen Tag
-		if (bereitschaftsAnfang.isSame(nachtAnfang, "d") || nacht === false) {
+		// nach Monatswechsel (0 Uhr bzw. Nachtschicht Ende )
+		if (
+			bereitschaftsAnfang.isSame(nachtAnfang, "d") ||
+			nacht === false ||
+			(bereitschaftsAnfang.date() === 1 &&
+				(bereitschaftsAnfang.isSame(bereitschaftsAnfang.startOf("month")) ||
+					(bereitschaftsAnfang.hour() === nachtEnde.hour() && bereitschaftsAnfang.minute() === nachtEnde.minute())))
+		) {
 			if (arbeitstagHeute === true)
 				merker = bereitschaftsAnfang
 					.startOf("d")
@@ -109,6 +116,21 @@ export default function BereitschaftEingabe(
 
 			console.log(`Merker B2.2: ${merker.toDate()}`);
 		}
+
+		if (
+			bereitschaftsAnfang.date() === 1 &&
+			(bereitschaftsAnfang.isSame(bereitschaftsAnfang.startOf("month")) ||
+				(bereitschaftsAnfang.hour() === nachtEnde.hour() && bereitschaftsAnfang.minute() === nachtEnde.minute()))
+		) {
+			debugger;
+			if (arbeitstagHeute === true)
+				merker = bereitschaftsAnfang
+					.startOf("d")
+					.add(arbeitsAnfang[tagBereitschaftsAnfang === 0 ? 6 : tagBereitschaftsAnfang - 1]);
+			else merker = bereitschaftsAnfang.startOf("d").add(bereitschaftsZeitraumWechsel);
+			console.log(`Merker B2.3: ${merker.toDate()}`);
+		}
+
 		// Wie oben, aber:
 		// wenn merker kleiner/gleich Bereitschafts Anfang -> am nächsten Tag
 		if (merker?.isSameOrBefore(bereitschaftsAnfang)) {
@@ -116,15 +138,18 @@ export default function BereitschaftEingabe(
 				merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(arbeitsAnfang[tagBereitschaftsAnfang]);
 			else merker = bereitschaftsAnfang.add(1, "d").startOf("d").add(bereitschaftsZeitraumWechsel);
 
-			console.log(`Merker B2.3: ${merker.toDate()}`);
+			console.log(`Merker B2.4: ${merker.toDate()}`);
 		}
 		console.groupEnd();
 		return merker as dayjs.Dayjs;
 	};
 
 	const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
-		datum = datum.add(zusatz, "d");
-		return !(isHoliday(datum.toDate(), "HE") || datum.isoWeekday() > 5);
+		const adjustedDatum = datum.add(zusatz, "d");
+		const isWeekend = adjustedDatum.isoWeekday() > 5;
+		const isHolidayHE = isHoliday(adjustedDatum.toDate(), "HE");
+
+		return !(isHolidayHE || isWeekend);
 	};
 
 	// Berechne ob Tag ein Arbeitstag ist
@@ -137,7 +162,7 @@ export default function BereitschaftEingabe(
 	bereitschaftsEndeMerker = bereitschaftsAnfang.clone();
 
 	const datenVorher: number = daten.length;
-
+	debugger;
 	/// --- Beginn Berechnung --- ///
 	while (daten.length < 26 && bereitschaftsAnfang.isBefore(bereitschaftsEnde)) {
 		/// #Berechnung Bereitschaftsende# ///
@@ -149,10 +174,10 @@ export default function BereitschaftEingabe(
 		// neues Ende Bereitschaftszyklus
 		bereitschaftsEndeB = bereitschaftsAnfang.add(1, "d").hour(8).minute(0);
 		console.log(`Bereitschafts Ende B: ${bereitschaftsEndeB.toDate()}`);
+
 		console.groupEnd();
 
 		// überprüfe welches Bereitschaftsende Zutrifft
-
 		bereitschaftsEndeMerker = dayjs.min(bereitschaftsEndeA, bereitschaftsEndeB, nachtAnfang, bereitschaftsEnde);
 		if (!bereitschaftsEndeMerker) throw new Error("Fehler bei Berechnung: bereitschaftsEndeMerker");
 		console.log(`Bereitschafts Ende Merker: ${bereitschaftsEndeMerker.toDate()}`);
@@ -167,6 +192,7 @@ export default function BereitschaftEingabe(
 		// neues Ende 2, Arbeitszeit
 		bereitschaftsAnfangA = B2(bereitschaftsAnfang, nachtAnfang, arbeitsEnde, arbeitstagHeute, arbeitstagMorgen, nacht);
 		console.log(`Bereitschafts Anfang A: ${bereitschaftsAnfangA.toDate()}`);
+
 		console.groupEnd();
 
 		bereitschaftsAnfangMerker = bereitschaftsAnfang.isSame(bereitschaftsEndeMerker, "d")

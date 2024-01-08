@@ -15,7 +15,7 @@ import {
 import { Storage } from "../utilities";
 import dayjs from "../utilities/configDayjs";
 
-export default function aktualisiereBerechnung(Jahr?: number, daten?: IDaten): IVorgabenBerechnung {
+export default function aktualisiereBerechnung(Jahr?: number, daten?: Required<IDaten>): IVorgabenBerechnung {
 	Jahr = Jahr ?? Storage.get<number>("Jahr", { check: true });
 	daten = daten ?? {
 		BZ: Storage.get<IDatenBZJahr>("dataBZ", { default: {} as IDatenBZJahr }),

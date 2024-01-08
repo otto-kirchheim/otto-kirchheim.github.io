@@ -45,26 +45,56 @@ const createShowElement = (
 	);
 };
 
-export default function ShowModalN(row: Row<IDatenN>, titel: string): void {
+const createShowElement2 = (
+	row: Row<IDatenN>,
+	column: [columnName: string, className?: string],
+	classNameDiv: string = "mb-2 col-12 text-center",
+) => {
+	const column1: Column<IDatenN> = getColumn(row, column[0]);
+
+	return (
+		<div className={classNameDiv}>
+			<span className={column[1]} id={column1.name}>
+				{`${column1.title} x `}
+			</span>
+
+			<span className={column[1]} id={column1.name}>
+				{column1.parser(row.cells[column1.name])}
+			</span>
+		</div>
+	);
+};
+
+const createShowElement3 = (
+	row: Row<IDatenN>,
+	column: [columnName: string, className?: string],
+	classNameDiv: string = "mb-2 col-12 text-center",
+) => {
+	const column1: Column<IDatenN> = getColumn(row, column[0]);
+
+	return (
+		<div className={classNameDiv}>
+			<span className={column[1]} id={column1.name}>
+				{column1.parser(row.cells[column1.name])}
+			</span>
+		</div>
+	);
+};
+
+export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
 	const modal: CustomHTMLDivElement<IDatenN> = showModal(
 		<MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />}>
-			<MyModalBody>
+			<MyModalBody className="p-3">
 				{createTagElement(row)}
+
+				<h4 className="text-center mb-0">Auftragsnummer</h4>
+				{createShowElement3(row, ["auftragN"])}
 
 				<h4 className="text-center mb-0">Arbeitszeit</h4>
 				{createShowElement(row, ["beginN"], ["endeN"])}
 
-				<h4 className="text-center mb-0">Pause</h4>
-				{createShowElement(row, ["beginPauseN"], ["endePauseN"], "mb-2 text-center")}
-
 				<h4 className="text-center mb-0">Zulage</h4>
-				{createShowElement(
-					row,
-					["dauerN", "col-4 align-middle text-break my-auto"],
-					["nrN", "col-6 align-middle text-break my-auto"],
-					undefined,
-					<span className="align-middle fw-semibold mx-1">X</span>,
-				)}
+				{createShowElement2(row, ["anzahl040N", "col-6 align-middle text-break my-auto"])}
 			</MyModalBody>
 		</MyDivModal>,
 	);

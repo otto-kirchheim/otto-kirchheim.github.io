@@ -1,5 +1,6 @@
 import type { CustomHTMLDivElement, CustomHTMLTableElement, CustomHTMLTableRowElement } from "./CustomHTMLElements.js";
 import type {
+	AtLeastOne,
 	IDaten,
 	IDatenAllValuesWithKey,
 	IDatenBE,
@@ -27,6 +28,7 @@ import type {
 import type { TMyModal } from "./TMyModal.js";
 
 export type {
+	AtLeastOne,
 	CustomHTMLDivElement,
 	CustomHTMLTableElement,
 	CustomHTMLTableRowElement,

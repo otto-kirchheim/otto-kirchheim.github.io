@@ -1,4 +1,3 @@
-//setupVitest.js or similar file
 import { vi } from "vitest";
 import createFetchMock from "vitest-fetch-mock";
 

@@ -1,3 +1,5 @@
+import { saveEinstellungen } from ".";
+import { BereitschaftsEinsatzZeiträume } from "../../Bereitschaft";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import { createCustomTable } from "../../class/CustomTable";
 import type { IVorgabenU, IVorgabenUvorgabenB } from "../../interfaces";
@@ -79,6 +81,16 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 					],
 				});
 			},
+			customButton: [
+				{
+					text: "Standarteinstellungen",
+					classes: ["btn", "btn-secondary"],
+					function: () => {
+						ftVE.rows.load(Object.values(BereitschaftsEinsatzZeiträume));
+						saveEinstellungen();
+					},
+				},
+			],
 		},
 	});
 }

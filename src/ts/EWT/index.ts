@@ -1,6 +1,6 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { IDaten, IDatenEWT, IVorgabenU } from "../interfaces";
+import { IDatenEWT, IDatenEWTJahr, IVorgabenU } from "../interfaces";
 import { Storage, buttonDisable, download, saveDaten } from "../utilities";
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from "./components";
 import { DataE, addEventlistenerToggleBerechnen, ewtBerechnen, saveTableDataEWT } from "./utils";
@@ -135,7 +135,7 @@ window.addEventListener("load", () => {
 		ewtBerechnen({
 			monat,
 			jahr: Storage.get<number>("Jahr", { check: true }),
-			daten: Storage.get<IDaten["EWT"]>("dataE", { check: true })[monat] ?? [],
+			daten: Storage.get<IDatenEWTJahr>("dataE", { check: true })[monat] ?? [],
 			vorgabenU: Storage.get<IVorgabenU>("VorgabenU", { check: true }),
 		});
 	});

@@ -1,7 +1,7 @@
 import Modal from "bootstrap/js/dist/modal";
 import { createRef } from "preact";
 import { Column, CustomTable, Row } from "../../class/CustomTable";
-import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from "../../components";
+import { MyFormModal, MyInput, MyModalBody, showModal } from "../../components";
 import type { CustomHTMLDivElement, IDatenN } from "../../interfaces";
 import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
@@ -33,6 +33,22 @@ const createTimeElement = (
 	);
 };
 
+const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string) => {
+	const column = getColumn(row, columnName);
+	return (
+		<MyInput
+			divClass="form-floating col-6 pb-3"
+			type="text"
+			id={column.name}
+			name={column.title}
+			value={row instanceof Row ? row.cells[column.name] : undefined}
+			required
+		>
+			{column.title}
+		</MyInput>
+	);
+};
+
 const createNumberElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string) => {
 	const column = getColumn(row, columnName);
 	return (
@@ -48,20 +64,6 @@ const createNumberElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnNam
 		>
 			{column.title}
 		</MyInput>
-	);
-};
-
-const createSelectElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string) => {
-	const column = getColumn(row, columnName);
-	return (
-		<MySelect
-			className="form-floating col-6 pb-3"
-			id={column.name}
-			title={column.title}
-			value={row instanceof Row ? row.cells[column.name].toString() : undefined}
-			required
-			options={[{ value: "040 Fahrentsch.", text: "040 Fahrentsch.", selected: true }]}
-		/>
 	);
 };
 
@@ -86,6 +88,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 			onSubmit={onSubmit()}
 		>
 			<MyModalBody>
+				<h4 className="text-center mb-1">Tag</h4>
 				<MyInput
 					divClass="form-floating col-6 pb-3"
 					required
@@ -99,15 +102,14 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 					{row.columns.array.find(column => column.name === "tagN")?.title ?? "Tag"}
 				</MyInput>
 
+				<h4 className="text-center mb-1">Auftragsnummer</h4>
+				{createTextElement(row, "auftragN")}
+
 				<h4 className="text-center mb-1">Arbeitszeit</h4>
 				{["beginN", "endeN"].map(value => createTimeElement(row, value, { required: true }))}
 
-				<h4 className="text-center mb-1">Pause</h4>
-				{["beginPauseN", "endePauseN"].map(value => createTimeElement(row, value))}
-
-				<h4 className="text-center mb-1">Zulage</h4>
-				{createNumberElement(row, "dauerN")}
-				{createSelectElement(row, "nrN")}
+				<h4 className="text-center mb-1">Zulagen</h4>
+				{createNumberElement(row, "anzahl040N")}
 			</MyModalBody>
 		</MyFormModal>,
 	);
@@ -126,22 +128,12 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 			if (!row) throw new Error("Row nicht gefunden");
 			const table = row instanceof Row ? row.CustomTable : row;
 
-			const values: {
-				tagN: string;
-				beginN: string;
-				endeN: string;
-				beginPauseN: string;
-				endePauseN: string;
-				nrN: string;
-				dauerN: number;
-			} = {
+			const values: IDatenN = {
 				tagN: dayjs(form.querySelector<HTMLInputElement>("#tagN")?.value ?? 0).format("DD"),
 				beginN: form.querySelector<HTMLInputElement>("#beginN")?.value ?? "",
 				endeN: form.querySelector<HTMLInputElement>("#endeN")?.value ?? "",
-				beginPauseN: form.querySelector<HTMLInputElement>("#beginPauseN")?.value ?? "",
-				endePauseN: form.querySelector<HTMLInputElement>("#endePauseN")?.value ?? "",
-				nrN: form.querySelector<HTMLInputElement>("#nrN")?.value ?? "",
-				dauerN: Number(form.querySelector<HTMLInputElement>("#dauerN")?.value) || 0,
+				anzahl040N: Number(form.querySelector<HTMLInputElement>("#anzahl040N")?.value) || 1,
+				auftragN: form.querySelector<HTMLInputElement>("#auftragN")?.value ?? "",
 			};
 			row instanceof Row ? row.val(values) : row.rows.add(values);
 
