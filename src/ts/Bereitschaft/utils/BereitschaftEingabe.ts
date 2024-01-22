@@ -81,7 +81,6 @@ export default function BereitschaftEingabe(
 
 	const getTagSchichten = (anfang: Dayjs, ende: Dayjs, pausenVorgabe: number): Schicht[] => {
 		const maxEnde: Dayjs = anfang.add(1, "month").startOf("month");
-		if (!anfang.isSame(maxEnde, "month")) debugger;
 
 		const TagEndeZeitMoDo: Duration = getDurationFromTime(datenU.aZ.eT);
 		const TagEndeZeitFr: Duration = getDurationFromTime(datenU.aZ.eTF);
@@ -128,7 +127,6 @@ export default function BereitschaftEingabe(
 	const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, nachtPausenVorgabe) : [];
 	const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, tagPausenVorgabe);
 
-	debugger;
 	const kombinierteSchichten: Schicht[] = tagSchichten.concat(nachtSchichten);
 	DatenSortieren<Schicht>(kombinierteSchichten, "beginn");
 
@@ -200,7 +198,6 @@ export default function BereitschaftEingabe(
 		});
 		if (!changed && change) changed = change;
 	}
-	debugger;
 
 	DatenSortieren(daten, "beginB");
 
