@@ -18,7 +18,7 @@ export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgaben
 		beginnB: { tag: 4, zeit: "15:45" },
 		endeB: { tag: 4, zeit: "07:00", Nwoche: true },
 		nacht: false,
-		beginnN: { tag: 0, zeit: "19:30", Nwoche: true },
+		beginnN: { tag: 0, zeit: "19:45", Nwoche: true },
 		endeN: { tag: 4, zeit: "06:15", Nwoche: true },
 	},
 	1: {
@@ -34,7 +34,7 @@ export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgaben
 		beginnB: { tag: 4, zeit: "15:45" },
 		endeB: { tag: 4, zeit: "07:00", Nwoche: true },
 		nacht: true,
-		beginnN: { tag: 0, zeit: "19:30", Nwoche: true },
+		beginnN: { tag: 0, zeit: "19:45", Nwoche: true },
 		endeN: { tag: 4, zeit: "06:15", Nwoche: true },
 		standard: true,
 	},
@@ -44,7 +44,7 @@ export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgaben
 		endeB: { tag: 4, zeit: "07:00", Nwoche: true },
 		nacht: true,
 		beginnN: { tag: 6, zeit: "19:45", Nwoche: false },
-		endeN: { tag: 4, zeit: "06:15", Nwoche: true },
+		endeN: { tag: 3, zeit: "06:15", Nwoche: true },
 	},
 };
 

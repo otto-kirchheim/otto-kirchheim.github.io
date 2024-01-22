@@ -1,10 +1,9 @@
-import { DataBZ, saveTableDataBE } from ".";
+import { BereitschaftEingabe, DataBZ, saveTableDataBE } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenBZJahr } from "../../interfaces";
 import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
-import BereitschaftEingabe from "./BereitschaftEingabe";
 
 export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 	setLoading("btnESE");

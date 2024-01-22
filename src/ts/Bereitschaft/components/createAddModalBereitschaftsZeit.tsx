@@ -165,7 +165,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 						"nA",
 						"Datum",
 						datum.isoWeekday(vorgabenB[auswahl].beginnN.tag).add(vorgabenB[auswahl].beginnN.Nwoche ? 7 : 0, "d"),
-						datum.startOf("M"),
+						datum.subtract(1, "month").endOf("M"),
 						datum.add(1, "M").endOf("M"),
 					)}
 					{createTimeInputElement("nAT", "Von", vorgabenB[auswahl].beginnN.zeit)}

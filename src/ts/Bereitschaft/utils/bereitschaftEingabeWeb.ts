@@ -1,4 +1,5 @@
-import { DataBZ } from ".";
+import { Dayjs } from "dayjs";
+import { BereitschaftEingabe, DataBZ } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type {
@@ -14,7 +15,6 @@ import type {
 import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities";
 import { FetchRetry } from "../../utilities/FetchRetry";
 import dayjs from "../../utilities/configDayjs";
-import BereitschaftEingabe from "./BereitschaftEingabe";
 
 export default async function bereitschaftEingabeWeb(
 	modal: CustomHTMLDivElement<IDatenBZ>,
@@ -51,11 +51,11 @@ export default async function bereitschaftEingabeWeb(
 	)
 		throw new Error("Input Element nicht gefunden");
 
-	const bereitschaftsAnfang: dayjs.Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
-	const bereitschaftsEnde: dayjs.Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
-	const nacht: boolean = nachtInput.checked;
-	const nachtAnfang: dayjs.Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
-	let nachtEnde: dayjs.Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
+	const bereitschaftsAnfang: Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
+	const bereitschaftsEnde: Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
+	let nacht: boolean = nachtInput.checked;
+	const nachtAnfang: Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
+	let nachtEnde: Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
 
 	const monat: number = +MonatInput.value;
 	const jahr: number = +JahrInput.value;
@@ -69,11 +69,15 @@ export default async function bereitschaftEingabeWeb(
 	console.log({ bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, monat, jahr, accessToken });
 
 	if (
-		bereitschaftsAnfang.isSame(bereitschaftsEnde, "M") ||
-		(!bereitschaftsAnfang.isSame(bereitschaftsEnde, "M") &&
+		bereitschaftsAnfang.isSame(bereitschaftsEnde, "month") ||
+		(!bereitschaftsAnfang.isSame(bereitschaftsEnde, "month") &&
 			bereitschaftsEnde.isSameOrBefore(dayjs([jahr, bereitschaftsEnde.month(), 1, 0, 0])))
 	) {
-		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, data1);
+		let nachtEnde2: Dayjs = bereitschaftsEnde.isSameOrBefore(nachtEnde, "month")
+			? nachtEnde
+			: bereitschaftsEnde.hour(nachtEnde.hour()).minute(nachtEnde.minute());
+
+		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde2, nacht, data1);
 	} else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, "y") && !navigator.onLine) {
 		createSnackBar({
 			message: "Bereitschaft<br/>Du bist Offline: <br/>Kein Jahreswechsel möglich!",
@@ -134,26 +138,25 @@ export default async function bereitschaftEingabeWeb(
 		});
 		return;
 	} else {
-		const monat2 = bereitschaftsEnde.month();
-		const jahr2 = bereitschaftsEnde.year();
+		const monat2: number = bereitschaftsEnde.month();
+		const jahr2: number = bereitschaftsEnde.year();
 
-		const bereitschaftsEndeWechsel = dayjs([jahr2, monat2]);
-		let nachtEnde1;
-		let nachtAnfang2;
-		let bereitschaftsEndeWechsel2;
+		const bereitschaftsEndeWechsel: Dayjs = dayjs([jahr2, monat2]);
+		let nacht2: boolean = false;
+		let nachtEnde1: Dayjs;
+		let nachtEnde2: Dayjs = nachtEnde.clone();
+		let nachtAnfang2: Dayjs;
 		if (bereitschaftsEndeWechsel.isBefore(nachtAnfang)) {
+			[nacht, nacht2] = [nacht2, nacht];
 			nachtEnde1 = nachtEnde.clone();
 			nachtAnfang2 = nachtAnfang.clone();
-			bereitschaftsEndeWechsel2 = bereitschaftsEndeWechsel.clone();
 		} else if (bereitschaftsEndeWechsel.isAfter(nachtEnde)) {
 			nachtEnde1 = nachtEnde.clone();
-			bereitschaftsEndeWechsel2 = bereitschaftsEndeWechsel.clone();
 			nachtAnfang2 = bereitschaftsEnde.clone();
-			nachtEnde = bereitschaftsEnde.clone();
 		} else if (bereitschaftsEndeWechsel.isAfter(nachtAnfang) && bereitschaftsEndeWechsel.isBefore(nachtEnde)) {
+			nacht2 = nacht;
 			nachtEnde1 = dayjs([jahr2, monat2, 1, nachtEnde.hour(), nachtEnde.minute()]);
-			nachtAnfang2 = dayjs([jahr2, monat2, 1, nachtAnfang.hour(), nachtAnfang.minute()]);
-			bereitschaftsEndeWechsel2 = nachtEnde1.clone();
+			nachtAnfang2 = dayjs([jahr2, monat2, 1, nachtAnfang.hour(), nachtAnfang.minute()]).subtract(1, "day");
 		} else throw new Error("Fehler bei Nacht und Bereitschaft");
 
 		if (jahr !== jahr2) {
@@ -175,11 +178,11 @@ export default async function bereitschaftEingabeWeb(
 				const User: IVorgabenU = fetched2.data.vorgabenU;
 
 				data2 = BereitschaftEingabe(
-					bereitschaftsEndeWechsel2,
+					bereitschaftsEndeWechsel,
 					bereitschaftsEnde,
 					nachtAnfang2,
-					nachtEnde,
-					nacht,
+					nachtEnde2,
+					nacht2,
 					dataResponded[1],
 				);
 
@@ -218,7 +221,7 @@ export default async function bereitschaftEingabeWeb(
 			}
 		} else {
 			data2 = Storage.get<IDatenBZJahr>("dataBZ", { check: true })[monat2 + 1] ?? [];
-			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel2, bereitschaftsEnde, nachtAnfang2, nachtEnde, nacht, data2);
+			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel, bereitschaftsEnde, nachtAnfang2, nachtEnde2, nacht2, data2);
 			if (data2) savedData[monat2 + 1] = data2;
 		}
 
