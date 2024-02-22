@@ -16,7 +16,17 @@ export default function saveEinstellungen(): IVorgabenU {
 
 	for (const key of Object.keys(VorgabenU.aZ)) {
 		const input = document.querySelector<HTMLInputElement>(`#${key}`);
-		if (input) updateVorgabenU(VorgabenU.aZ, key as keyof IVorgabenUaZ, input.value);
+		if (!input) continue;
+		if (input.value) updateVorgabenU(VorgabenU.aZ, key as keyof IVorgabenUaZ, input.value);
+		else if (input.required) {
+			createSnackBar({
+				message: `Einstellungen > Persönliche Daten > "${key}" fehlt`,
+				status: "error",
+				timeout: 3000,
+				fixed: true,
+			});
+			throw new Error("Persönliche Daten fehlerhaft fehlt");
+		}
 	}
 
 	VorgabenU.fZ = table_to_array_einstellungen("TbodyTätigkeitsstätten");

@@ -75,41 +75,35 @@ export default function aktualisiereBerechnung(Jahr?: number, daten?: Required<I
 			if (bis.isBefore(von)) bis = bis.add(1, "day");
 			Berechnung.B.B -= bis.diff(von, "minute");
 
-			const LREValue = value.lreBE.toString();
-			switch (LREValue) {
-				case "LRE 1":
-					Berechnung.B.L1++;
-					break;
-				case "LRE 2":
-					Berechnung.B.L2++;
-					break;
-				case "LRE 3":
-					Berechnung.B.L3++;
-					break;
-			}
+			const LREValue = value.lreBE;
+
+			if (LREValue === "LRE 1") Berechnung.B.L1++;
+			else if (LREValue === "LRE 2") Berechnung.B.L2++;
+			else if (LREValue === "LRE 3") Berechnung.B.L3++;
 
 			if (value.privatkmBE) Berechnung.B.K += value.privatkmBE;
 		});
 
+		const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;
+
 		EWTMonat.forEach(value => {
 			const Monat = `0${monat}`.slice(-2);
-			const tag = `0${value.tagE}`.slice(-2);
-			let tag1 = tag;
-			if (["BN", "N"].includes(value.schichtE)) tag1 = `0${Number(value.tagE) - 1}`.slice(-2);
+			const tagBuchung = `0${value.tagE}`.slice(-2);
+			const tagAnfang = ["BN", "N"].includes(value.schichtE) ? `0${Number(value.tagE) - 1}`.slice(-2) : tagBuchung;
 
-			if (value.abWE && value.anWE) {
-				const von = dayjs(`${jahr}-${Monat}-${tag1}T${value.abWE}`);
-				const bis = dayjs(`${jahr}-${Monat}-${tag}T${value.anWE}`);
+			if ("abWE" in value && "anWE" in value) {
+				const von = dayjs(`${jahr}-${Monat}-${tagAnfang}T${value.abWE}`);
+				const bis = dayjs(`${jahr}-${Monat}-${tagBuchung}T${value.anWE}`);
 
 				const abWohnung = bis.diff(von, "hour", true);
 
-				if (abWohnung >= 8 && abWohnung < 14) Berechnung.E.A8++;
-				else if (abWohnung > 14 && abWohnung < 24) Berechnung.E.A14++;
-				else if (abWohnung >= 24) Berechnung.E.A24++;
+				if (isInRange(abWohnung, 8, 14)) Berechnung.E.A8++;
+				else if (isInRange(abWohnung, 14, 24)) Berechnung.E.A14++;
+				else Berechnung.E.A24++;
 			}
-			if (value.ab1E && value.an1E) {
-				const von = dayjs(`${jahr}-${Monat}-${tag1}T${value.ab1E}`);
-				const bis = dayjs(`${jahr}-${Monat}-${tag}T${value.an1E}`);
+			if ("ab1E" in value && "an1E" in value) {
+				const von = dayjs(`${jahr}-${Monat}-${tagAnfang}T${value.ab1E}`);
+				const bis = dayjs(`${jahr}-${Monat}-${tagBuchung}T${value.an1E}`);
 
 				const ab1Taetigkeit = bis.diff(von, "hour", true);
 

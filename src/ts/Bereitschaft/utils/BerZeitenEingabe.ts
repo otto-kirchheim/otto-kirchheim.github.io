@@ -1,5 +1,5 @@
 import { Dayjs } from "dayjs";
-import { BereitschaftEingabe, DataBZ } from ".";
+import { BerZeitenBerechnen, DataBZ } from ".";
 import { aktualisiereBerechnung } from "../../Berechnung";
 import { createSnackBar } from "../../class/CustomSnackbar";
 import type {
@@ -16,7 +16,7 @@ import { Storage, clearLoading, setLoading, tableToArray } from "../../utilities
 import { FetchRetry } from "../../utilities/FetchRetry";
 import dayjs from "../../utilities/configDayjs";
 
-export default async function bereitschaftEingabeWeb(
+export default async function BerZeitenEingabe(
 	modal: CustomHTMLDivElement<IDatenBZ>,
 	accessToken: string,
 ): Promise<void> {
@@ -77,7 +77,7 @@ export default async function bereitschaftEingabeWeb(
 			? nachtEnde
 			: bereitschaftsEnde.hour(nachtEnde.hour()).minute(nachtEnde.minute());
 
-		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde2, nacht, data1);
+		data = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde2, nacht, data1);
 	} else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, "y") && !navigator.onLine) {
 		createSnackBar({
 			message: "Bereitschaft<br/>Du bist Offline: <br/>Kein Jahreswechsel möglich!",
@@ -90,7 +90,7 @@ export default async function bereitschaftEingabeWeb(
 					text: "ohne wechsel fortsetzten?",
 					function: () => {
 						if (!data1) throw new Error("Fehler bei Datenermittlung");
-						data = BereitschaftEingabe(
+						data = BerZeitenBerechnen(
 							bereitschaftsAnfang,
 							dayjs([bereitschaftsEnde.year(), bereitschaftsEnde.month()]),
 							nachtAnfang,
@@ -177,7 +177,7 @@ export default async function bereitschaftEingabeWeb(
 				console.log(dataResponded);
 				const User: IVorgabenU = fetched2.data.vorgabenU;
 
-				data2 = BereitschaftEingabe(
+				data2 = BerZeitenBerechnen(
 					bereitschaftsEndeWechsel,
 					bereitschaftsEnde,
 					nachtAnfang2,
@@ -221,11 +221,11 @@ export default async function bereitschaftEingabeWeb(
 			}
 		} else {
 			data2 = Storage.get<IDatenBZJahr>("dataBZ", { check: true })[monat2 + 1] ?? [];
-			data2 = BereitschaftEingabe(bereitschaftsEndeWechsel, bereitschaftsEnde, nachtAnfang2, nachtEnde2, nacht2, data2);
+			data2 = BerZeitenBerechnen(bereitschaftsEndeWechsel, bereitschaftsEnde, nachtAnfang2, nachtEnde2, nacht2, data2);
 			if (data2) savedData[monat2 + 1] = data2;
 		}
 
-		data = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
+		data = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
 
 		console.log("Daten Monat 1", data);
 		console.log("Daten Monat 2", data2);

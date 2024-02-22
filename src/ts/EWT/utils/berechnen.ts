@@ -82,9 +82,10 @@ function createHelpers(userSettings: IVorgabenU) {
 		vorgabenE: IVorgabenE,
 		endePascal: Duration,
 	) => {
-		const jahr = datum.year(),
-			monat = datum.month(),
-			eOrt = eOrte.includes(Tag.eOrtE);
+		const jahr: number = datum.year(),
+			monat: number = datum.month(),
+			eOrt: boolean = eOrte.includes(Tag.eOrtE),
+			tarifkraft: boolean = userSettings.pers.TB === "Tarifkraft";
 
 		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
 			const zeit = value.split(":");
@@ -93,23 +94,34 @@ function createHelpers(userSettings: IVorgabenU) {
 			return dayjs([jahr, monat - 1, tag, +zeit[0], +zeit[1], 0, 0]);
 		};
 
-		const beginE_d = Tag.beginE.length === 5 ? convertToDayjs(Tag.beginE, false, Tag) : datum.add(schichtDaten.beginn);
-		const beginE = beginE_d.format("LT");
-		const endeE_d = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, true, Tag) : datum.add(schichtDaten.ende);
-		const endeE = endeE_d.format("LT");
+		const beginE_dayjs =
+			Tag.beginE.length === 5 ? convertToDayjs(Tag.beginE, false, Tag) : datum.add(schichtDaten.beginn);
+		const beginE = beginE_dayjs.format("LT");
+		const endeE_dayjs = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, true, Tag) : datum.add(schichtDaten.ende);
+		const endeE = endeE_dayjs.format("LT");
 
-		const abWE = Tag.abWE.length === 5 ? Tag.abWE : beginE_d.subtract(vorgabenE.rZ).format("LT");
-		const ab1E_d = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, false, Tag) : beginE_d.add(schichtDaten.svzA);
-		const ab1E = ab1E_d.format("LT");
+		const abWE = getabWE();
+		const ab1E_dayjs = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, false, Tag) : beginE_dayjs.add(schichtDaten.svzA);
+		const ab1E = ab1E_dayjs.format("LT");
 
-		const an1E_d = Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, true, Tag) : endeE_d.subtract(schichtDaten.svzE);
-		const an1E = an1E_d.format("LT");
-		const anWE = Tag.anWE.length === 5 ? Tag.anWE : endeE_d.add(vorgabenE.rZ).add(endePascal).format("LT");
+		const an1E_dayjs =
+			Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, true, Tag) : endeE_dayjs.subtract(schichtDaten.svzE);
+		const an1E = an1E_dayjs.format("LT");
+		const anWE = getanWE();
 
-		const anEE = !(eOrt && Tag.anEE === "") ? Tag.anEE : ab1E_d.add(vorgabenE.fZ[Tag.eOrtE]).format("LT");
-		const abEE = !(eOrt && Tag.abEE === "") ? Tag.abEE : an1E_d.subtract(vorgabenE.fZ[Tag.eOrtE]).format("LT");
+		const anEE = !(eOrt && Tag.anEE === "") ? Tag.anEE : ab1E_dayjs.add(vorgabenE.fZ[Tag.eOrtE]).format("LT");
+		const abEE = !(eOrt && Tag.abEE === "") ? Tag.abEE : an1E_dayjs.subtract(vorgabenE.fZ[Tag.eOrtE]).format("LT");
 
 		return { beginE, endeE, abWE, ab1E, an1E, anWE, anEE, abEE };
+
+		function getabWE(): string {
+			if (tarifkraft) return Tag.abWE.length === 5 ? Tag.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format("LT");
+			return "";
+		}
+		function getanWE(): string {
+			if (tarifkraft) return Tag.anWE.length === 5 ? Tag.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format("LT");
+			return "";
+		}
 	};
 
 	return { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten };

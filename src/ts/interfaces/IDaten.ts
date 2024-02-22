@@ -53,7 +53,7 @@ export interface IDatenBE extends CustomTableTypes {
 	auftragsnummerBE: string;
 	beginBE: string;
 	endeBE: string;
-	lreBE: string;
+	lreBE: "LRE 1" | "LRE 2" | "LRE 1/2 ohne x" | "LRE 3" | "LRE 3 ohne x";
 	privatkmBE: number;
 }
 

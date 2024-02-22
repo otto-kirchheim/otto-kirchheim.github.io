@@ -1,11 +1,9 @@
 import { Dayjs } from "dayjs";
 import { Duration } from "dayjs/plugin/duration.js";
-import isBetween from "dayjs/plugin/isBetween";
 import { isHoliday } from "feiertagejs";
 import type { IDatenBZ, IMonatsDaten, IVorgabenU } from "../../interfaces";
 import { DatenSortieren, Storage, getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
-dayjs.extend(isBetween);
 
 type Schicht = {
 	beginn: Dayjs;
@@ -13,7 +11,7 @@ type Schicht = {
 	pause: number;
 };
 
-export default function BereitschaftEingabe(
+export default function BerZeitenBerechnen(
 	bereitschaftsAnfang: Dayjs,
 	bereitschaftsEnde: Dayjs,
 	nachtAnfang: Dayjs,
@@ -93,7 +91,7 @@ export default function BereitschaftEingabe(
 		};
 
 		const getPause = (anfang: Dayjs): number => {
-			if (anfang.isBetween(nachtAnfang, nachtEnde)) return 0;
+			if (nacht && anfang.isBetween(nachtAnfang, nachtEnde)) return 0;
 			if (anfang.isoWeekday() < 5) return pausenVorgabe;
 			return 0;
 		};
@@ -103,21 +101,19 @@ export default function BereitschaftEingabe(
 		const schichten: Schicht[] = [];
 
 		while (tagAnfang.isSameOrBefore(ende, "day") && tagAnfang.isBefore(maxEnde)) {
-			if (Arbeitstag(tagAnfang)) {
-				const beginn = tagAnfang.add(tagAnfangZeit);
-				schichten.push({
-					beginn,
-					ende: tagAnfang.add(TagEndeZeit(tagAnfang)),
-					pause: getPause(beginn),
-				});
-			} else {
-				const zeitbereitschaftsZeitraumWechsel = tagAnfang.add(bereitschaftsZeitraumWechsel);
-				schichten.push({
-					beginn: zeitbereitschaftsZeitraumWechsel,
-					ende: zeitbereitschaftsZeitraumWechsel,
-					pause: 0,
-				});
-			}
+			schichten.push(
+				Arbeitstag(tagAnfang)
+					? {
+							beginn: tagAnfang.add(tagAnfangZeit),
+							ende: tagAnfang.add(TagEndeZeit(tagAnfang)),
+							pause: getPause(tagAnfang.add(tagAnfangZeit)),
+						}
+					: {
+							beginn: tagAnfang.add(bereitschaftsZeitraumWechsel),
+							ende: tagAnfang.add(bereitschaftsZeitraumWechsel),
+							pause: 0,
+						},
+			);
 			tagAnfang = tagAnfang.add(1, "day");
 		}
 
@@ -127,7 +123,7 @@ export default function BereitschaftEingabe(
 	const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, nachtPausenVorgabe) : [];
 	const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, tagPausenVorgabe);
 
-	const kombinierteSchichten: Schicht[] = tagSchichten.concat(nachtSchichten);
+	const kombinierteSchichten: Schicht[] = [...tagSchichten, ...nachtSchichten];
 	DatenSortieren<Schicht>(kombinierteSchichten, "beginn");
 
 	// Prüfen ob bereitschaftsAnfang vor der 1. Schicht ist
@@ -179,6 +175,8 @@ export default function BereitschaftEingabe(
 
 		//Prüfen auf ruheZeit
 		if (
+			nacht &&
+			nachtEnde &&
 			aktuelleSchicht.ende.hour() === nachtEnde.hour() &&
 			aktuelleSchicht.ende.minute() === nachtEnde.minute() &&
 			(
@@ -236,11 +234,13 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
 		const rowBegin = dayjs(row.beginB);
 		const rowEnd = dayjs(row.endeB);
 
+		// Prüfen, ob der neue Zeitraum bereits in einem anderen Zeitraum vorhanden ist
 		if (newBegin.isBetween(rowBegin, rowEnd, null, "[]") && newEnd.isBetween(rowBegin, rowEnd, null, "[]")) {
 			console.log("Bereitschaftszeitraum bereits in einem anderen Zeitraum vorhanden");
 			return [false, daten];
 		}
 
+		// Prüfen, ob der neue Zeitraum einen vorhandenen Zeitraum vollständig überschneidet
 		if (rowBegin.isBetween(newBegin, newEnd, null, "()") && rowEnd.isBetween(newBegin, newEnd, null, "()")) {
 			console.log("Bereitschaftszeitraum überschneidet andern Zeitraum komplett");
 			row.beginB = newBegin.toISOString();
@@ -250,6 +250,7 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
 
 		const endeBDate: Dayjs = rowEnd.set("hour", B_WECHSEL_STUNDE).set("minute", B_WECHSEL_MINUTE);
 		if (newBegin.isBetween(rowBegin, rowEnd, null, "[)") && !rowEnd.isSame(endeBDate) && newEnd.isAfter(row.endeB)) {
+			// Überlappung, wobei das neue Ende nach dem vorhandenen Ende und dem Bereitschaftszeitraumwechsel liegt
 			if (newEnd.isAfter(endeBDate)) {
 				row.endeB = endeBDate.toISOString();
 
@@ -269,6 +270,7 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
 
 		const beginBDate: Dayjs = rowBegin.set("hour", B_WECHSEL_STUNDE).set("minute", B_WECHSEL_MINUTE);
 		if (newEnd.isBetween(rowBegin, rowEnd, null, "(]") && !rowBegin.isSame(beginBDate) && newBegin.isBefore(row.beginB)) {
+			// Überlappung, wobei der neue Beginn vor dem vorhandenen Beginn und dem Bereitschaftszeitraumwechsel liegt
 			if (newBegin.isBefore(beginBDate)) {
 				row.beginB = beginBDate.toISOString();
 
@@ -287,6 +289,7 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
 			}
 		}
 	}
+	// Wenn keine Überlappung gefunden wurde, fügen Sie den neuen Zeitraum hinzu
 	updatedDaten.push(newDaten);
 	return [true, updatedDaten];
 }

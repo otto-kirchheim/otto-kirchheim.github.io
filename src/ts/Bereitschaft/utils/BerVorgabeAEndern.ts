@@ -2,7 +2,7 @@ import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 import nachtAusblenden from "./nachtAusblenden";
 
-export default function bereitschaftsVorgabeAEndern(
+export default function BerVorgabeAEndern(
 	parentElement: HTMLDivElement,
 	vorgabenB: IVorgabenUvorgabenB,
 	datum = dayjs(parentElement.querySelector<HTMLInputElement>("#bA")?.value) ?? null,

@@ -1,4 +1,4 @@
-import { bereitschaftsVorgabeAEndern } from ".";
+import { BerVorgabeAEndern } from ".";
 import type { IVorgabenUvorgabenB } from "../../interfaces";
 import dayjs from "../../utilities/configDayjs";
 
@@ -29,5 +29,5 @@ export default function eigeneWerte(
 	nEInput.disabled = disable;
 	nETInput.disabled = disable;
 
-	if (disable) bereitschaftsVorgabeAEndern(parentElement, vorgabenB, datum);
+	if (disable) BerVorgabeAEndern(parentElement, vorgabenB, datum);
 }

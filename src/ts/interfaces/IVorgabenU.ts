@@ -21,6 +21,7 @@ export interface IVorgabenUPers {
 	Adress1: string;
 	Adress2: string;
 	ErsteTkgSt: string;
+	ErsteTkgStAdresse: string;
 	Betrieb: string;
 	OE: string;
 	Gewerk: string;

@@ -551,7 +551,7 @@ export const mockBereitschaft = (): void => {
 	});
 };
 
-export const datenBZMock: IDaten["BZ"] = {
+export const datenBZMock: Required<IDaten>["BZ"] = {
 	1: [],
 	2: [],
 	3: [
@@ -622,7 +622,7 @@ export const datenBZMock: IDaten["BZ"] = {
 	12: [],
 };
 
-export const datenBEMock: IDaten["BE"] = {
+export const datenBEMock: Required<IDaten>["BE"] = {
 	1: [],
 	2: [],
 	3: [
@@ -646,7 +646,7 @@ export const datenBEMock: IDaten["BE"] = {
 	12: [],
 };
 
-export const datenEWTMock: IDaten["EWT"] = {
+export const datenEWTMock: Required<IDaten>["EWT"] = {
 	1: [],
 	2: [],
 	3: [
@@ -816,7 +816,7 @@ export const datenEWTMock: IDaten["EWT"] = {
 	12: [],
 };
 
-export const datenNMock: IDaten["N"] = {
+export const datenNMock: Required<IDaten>["N"] = {
 	1: [],
 	2: [],
 	3: [
@@ -824,28 +824,22 @@ export const datenNMock: IDaten["N"] = {
 			tagN: "12",
 			beginN: "19:30",
 			endeN: "06:15",
-			beginPauseN: "01:00",
-			endePauseN: "01:45",
-			nrN: "040 Fahrentsch.",
-			dauerN: 1,
+			anzahl040N: 1,
+			auftragN: "123456789",
 		},
 		{
 			tagN: "13",
 			beginN: "19:30",
 			endeN: "06:15",
-			beginPauseN: "01:00",
-			endePauseN: "01:45",
-			nrN: "040 Fahrentsch.",
-			dauerN: 1,
+			anzahl040N: 1,
+			auftragN: "223456789",
 		},
 		{
 			tagN: "14",
 			beginN: "19:30",
 			endeN: "06:15",
-			beginPauseN: "01:00",
-			endePauseN: "01:45",
-			nrN: "040 Fahrentsch.",
-			dauerN: 1,
+			anzahl040N: 1,
+			auftragN: "323456789",
 		},
 	],
 	4: [],

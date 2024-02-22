@@ -1,7 +1,7 @@
 import dayjs from "../src/ts/utilities/configDayjs";
 import { beforeAll, beforeEach, describe, it, vi } from "vitest";
 import { createAddModalBereitschaftsZeit } from "../src/ts/Bereitschaft/components";
-import { BereitschaftEingabe, DataBE, DataBZ, bereitschaftEingabeWeb } from "../src/ts/Bereitschaft/utils";
+import { BerZeitenBerechnen, DataBE, DataBZ, BerZeitenEingabe } from "../src/ts/Bereitschaft/utils";
 import { CustomHTMLDivElement } from "../src/ts/interfaces/CustomHTMLElements";
 import { IDaten, IDatenBZ } from "../src/ts/interfaces/IDaten";
 import { Storage } from "../src/ts/utilities";
@@ -26,7 +26,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = bereitschaftsEnde,
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		expect(result).not.toBeFalsy;
 		if (result === false) return;
 		expect(result.length === 7);
@@ -39,7 +39,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = bereitschaftsEnde,
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		if (result === false) return;
 		expect(result.length === 7);
 		expect(result).toMatchSnapshot();
@@ -51,7 +51,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = dayjs("2023-04-15T19:45:00"),
 			nachtEnde = dayjs("2023-04-19T06:15:00"),
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		if (result === false) return;
 		expect(result.length === 10);
 		expect(result).toMatchSnapshot();
@@ -63,7 +63,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = dayjs("2023-04-10T19:30:00"),
 			nachtEnde = dayjs("2023-04-12T06:15:00"),
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		if (result === false) return;
 		expect(result.length === 10);
 		expect(result).toMatchSnapshot();
@@ -75,7 +75,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = bereitschaftsEnde,
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		expect(result).not.toBeFalsy();
 		if (!result) return;
 		expect(result.length === 5);
@@ -88,7 +88,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtAnfang = bereitschaftsEnde,
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		if (result === false) return;
 		expect(result.length === 5);
 		expect(result).toMatchSnapshot();
@@ -136,7 +136,7 @@ describe("#Bereitschaftseingabe", () => {
 					pauseB: 30,
 				},
 			],
-			result = BereitschaftEingabe(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
+			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
 		expect(result).toBeFalsy();
 	});
 });
@@ -174,7 +174,7 @@ describe("#bereitschaftEingabeWeb", async () => {
 		Storage.set("VorgabenGeld", VorgabenGeldMock);
 		const StorageSpy = vi.spyOn(Storage, "set");
 
-		await bereitschaftEingabeWeb($modal, "mockAccessToken");
+		await BerZeitenEingabe($modal, "mockAccessToken");
 
 		expect(StorageSpy).toMatchSnapshot();
 	});
@@ -219,14 +219,14 @@ describe("#DataBE", () => {
 	});
 
 	it("should return data from storage when no data is provided but storage has data", ({ expect }) => {
-		const storageData: IDaten["BE"] = datenBEMock;
+		const storageData: Required<IDaten>["BE"] = datenBEMock;
 		Storage.set("dataBE", storageData);
 		const result = DataBE(undefined, 3);
 		expect(result).toEqual(storageData[3]);
 	});
 
 	it("should return the provided data when data is provided", ({ expect }) => {
-		const inputData: IDaten["BE"] = datenBEMock;
+		const inputData: Required<IDaten>["BE"] = datenBEMock;
 		const result = DataBE(inputData[3], 3);
 		expect(result).toEqual(inputData[3]);
 	});

@@ -7,7 +7,7 @@ export default function initializeColorModeToggler() {
 
 	const getStoredTheme = (): Theme => Storage.get<Theme>("theme", { default: "auto" });
 
-	const setStoredTheme = (theme: Theme) => (theme === "auto" ? Storage.remove("theme") : Storage.set("theme", theme));
+	const setStoredTheme = (theme: Theme) => Storage.set("theme", theme);
 
 	const getPreferredTheme = (): Theme =>
 		getStoredTheme() || window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -15,8 +15,11 @@ export default function initializeColorModeToggler() {
 	const preferredTheme = getPreferredTheme();
 
 	const setTheme = (theme: Theme) => {
-		if (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches)
-			document.documentElement.setAttribute("data-bs-theme", "dark");
+		if (theme === "auto")
+			document.documentElement.setAttribute(
+				"data-bs-theme",
+				window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+			);
 		else document.documentElement.setAttribute("data-bs-theme", theme);
 	};
 
@@ -60,6 +63,7 @@ export default function initializeColorModeToggler() {
 
 	document.querySelectorAll("[data-bs-theme-value]").forEach(toggle => {
 		toggle.addEventListener("click", () => {
+			debugger;
 			const theme = toggle.getAttribute("data-bs-theme-value") as Theme;
 			setStoredTheme(theme);
 			setTheme(theme);

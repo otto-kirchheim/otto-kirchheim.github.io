@@ -6,7 +6,7 @@ const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(col
 	if (column.editing) return;
 	return (
 		<div className="mb-1 row">
-			<label className="col-5 col-form-label text-wrap fw-bold" for={column.name}>
+			<label className="col-5 col-form-label text-wrap fw-bold" htmlFor={column.name}>
 				{column.title}
 			</label>
 			<span className="col-7 align-middle text-break my-auto" id={column.name}>

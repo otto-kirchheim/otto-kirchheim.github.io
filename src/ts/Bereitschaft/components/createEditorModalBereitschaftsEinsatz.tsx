@@ -137,7 +137,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 				auftragsnummerBE: form.querySelector<HTMLInputElement>("#auftragsnummerBE")?.value ?? "",
 				beginBE: form.querySelector<HTMLInputElement>("#beginBE")?.value ?? "",
 				endeBE: form.querySelector<HTMLInputElement>("#endeBE")?.value ?? "",
-				lreBE: form.querySelector<HTMLSelectElement>("#lreBE")?.value ?? "",
+				lreBE: (form.querySelector<HTMLSelectElement>("#lreBE")?.value as IDatenBE["lreBE"]) ?? "",
 				privatkmBE: Number(form.querySelector<HTMLInputElement>("#privatkmBE")?.value ?? 0),
 			};
 

@@ -12,8 +12,8 @@ import type {
 import { Storage, checkMaxTag } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 import {
-	bereitschaftEingabeWeb,
-	bereitschaftsVorgabeAEndern,
+	BerVorgabeAEndern,
+	BerZeitenEingabe,
 	datumAnpassen,
 	eigeneWerte,
 	nachtAusblenden,
@@ -65,7 +65,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 		const changeHandler = () => {
 			if (ref.current === null) throw Error("Referenz fehlt");
 			auswahl = ref.current.value;
-			bereitschaftsVorgabeAEndern(modal, vorgabenB[auswahl], datum);
+			BerVorgabeAEndern(modal, vorgabenB[auswahl], datum);
 		};
 		return (
 			<MySelect
@@ -203,7 +203,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 			if (!(form instanceof HTMLFormElement)) return;
 			if (form?.checkValidity && !form.checkValidity()) return;
 			event.preventDefault();
-			bereitschaftEingabeWeb(modal, Storage.get("accessToken", { check: true }));
+			BerZeitenEingabe(modal, Storage.get("accessToken", { check: true }));
 
 			const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>("#tableBZ");
 			Modal.getInstance(modal)?.hide();
