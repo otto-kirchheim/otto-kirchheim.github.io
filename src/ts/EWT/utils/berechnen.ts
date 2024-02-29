@@ -84,8 +84,7 @@ function createHelpers(userSettings: IVorgabenU) {
 	) => {
 		const jahr: number = datum.year(),
 			monat: number = datum.month(),
-			eOrt: boolean = eOrte.includes(Tag.eOrtE),
-			tarifkraft: boolean = userSettings.pers.TB === "Tarifkraft";
+			eOrt: boolean = eOrte.includes(Tag.eOrtE);
 
 		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
 			const zeit = value.split(":");

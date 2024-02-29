@@ -53,10 +53,14 @@ export default function createAddModalEWT(): void {
 					id="Schicht"
 					required
 					options={[
-						{ value: "T", text: "Tag", selected: true },
-						{ value: "N", text: "Nacht" },
-						{ value: "BN", text: "Nacht/Bereitschaft" },
-						{ value: "S", text: "Sonder" },
+						{
+							value: "T",
+							text: `Tag | ${vorgabenU.aZ.bT.toString()}-${vorgabenU.aZ.eT.toString()}/${vorgabenU.aZ.eTF.toString()}`,
+							selected: true,
+						},
+						{ value: "N", text: `Nacht | ${vorgabenU.aZ.bN.toString()}-${vorgabenU.aZ.eN.toString()}` },
+						{ value: "BN", text: `Nacht (Ber) | ${vorgabenU.aZ.bBN.toString()}-${vorgabenU.aZ.eN.toString()}` },
+						{ value: "S", text: `Sonder | ${vorgabenU.aZ.bS.toString()}-${vorgabenU.aZ.eS.toString()}` },
 					]}
 				/>
 				<MyCheckbox className="form-check form-switch mt-3" id="berechnen1" checked>

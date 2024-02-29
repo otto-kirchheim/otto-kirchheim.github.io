@@ -1,10 +1,4 @@
-import type {
-	IVorgabenBerechnung,
-	IVorgabenBerechnungMonat,
-	IVorgabenGeld,
-	IVorgabenGeldType,
-	IVorgabenU,
-} from "../interfaces";
+import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from "../interfaces";
 import { Storage, clearLoading } from "../utilities";
 
 export default function generateTableBerechnung(
@@ -72,7 +66,7 @@ export default function generateTableBerechnung(
 		});
 
 	Array.from(tbody.children).forEach((row, index) => {
-		for (const [Monat, datenBerechnungItem] of Object.entries(datenBerechnung) as [string, IVorgabenBerechnungMonat][]) {
+		for (const [Monat, datenBerechnungItem] of Object.entries(datenBerechnung)) {
 			const monat = +Monat;
 			const monatZeroIndex = monat - 1;
 			const td = document.createElement("td");

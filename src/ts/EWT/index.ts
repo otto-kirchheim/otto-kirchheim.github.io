@@ -22,7 +22,7 @@ window.addEventListener("load", () => {
 				case "S":
 					return "Sonder";
 				default:
-					return "";
+					return "Unbekannt";
 			}
 		},
 		ftE = createCustomTable("tableE", {
