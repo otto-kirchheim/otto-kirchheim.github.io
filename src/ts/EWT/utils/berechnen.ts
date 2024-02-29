@@ -100,28 +100,19 @@ function createHelpers(userSettings: IVorgabenU) {
 		const endeE_dayjs = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, true, Tag) : datum.add(schichtDaten.ende);
 		const endeE = endeE_dayjs.format("LT");
 
-		const abWE = getabWE();
+		const abWE = Tag.abWE.length === 5 ? Tag.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format("LT");
 		const ab1E_dayjs = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, false, Tag) : beginE_dayjs.add(schichtDaten.svzA);
 		const ab1E = ab1E_dayjs.format("LT");
 
 		const an1E_dayjs =
 			Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, true, Tag) : endeE_dayjs.subtract(schichtDaten.svzE);
 		const an1E = an1E_dayjs.format("LT");
-		const anWE = getanWE();
+		const anWE = Tag.anWE.length === 5 ? Tag.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format("LT");
 
 		const anEE = !(eOrt && Tag.anEE === "") ? Tag.anEE : ab1E_dayjs.add(vorgabenE.fZ[Tag.eOrtE]).format("LT");
 		const abEE = !(eOrt && Tag.abEE === "") ? Tag.abEE : an1E_dayjs.subtract(vorgabenE.fZ[Tag.eOrtE]).format("LT");
 
 		return { beginE, endeE, abWE, ab1E, an1E, anWE, anEE, abEE };
-
-		function getabWE(): string {
-			if (tarifkraft) return Tag.abWE.length === 5 ? Tag.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format("LT");
-			return "";
-		}
-		function getanWE(): string {
-			if (tarifkraft) return Tag.anWE.length === 5 ? Tag.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format("LT");
-			return "";
-		}
 	};
 
 	return { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten };
