@@ -10,12 +10,15 @@ export default function berechnen(vorgabenU: IVorgabenU, daten: IDatenEWT[], jah
 
 	const eOrte = Object.keys(vorgabenE.fZ);
 
-	for (const Tag of daten) {
-		if (!Tag.berechnen) continue;
-		const datum = dayjs([jahr, monat - 1, Number(Tag.tagE)]);
-		const schichtDaten = getSchichtDaten(Tag.schichtE as "T" | "N" | "BN" | "S", datum, vorgabenE);
+	for (const TagDaten of daten) {
+		if (!TagDaten.berechnen) continue;
+		const datum = dayjs([jahr, monat - 1, Number(TagDaten.tagE)]);
+		const schichtDaten = getSchichtDaten(TagDaten.schichtE as "T" | "N" | "BN" | "S", datum, vorgabenE);
 
-		Object.assign(Tag, calculateTimes(Tag, datum, schichtDaten, eOrte, vorgabenE, getPascalEnde()));
+		Object.assign(
+			TagDaten,
+			calculateTimes(TagDaten, datum, schichtDaten, eOrte.includes(TagDaten.eOrtE), vorgabenE, getPascalEnde()),
+		);
 	}
 
 	return daten;
@@ -75,16 +78,15 @@ function createHelpers(userSettings: IVorgabenU) {
 	};
 
 	const calculateTimes = (
-		Tag: IDatenEWT,
+		TagDaten: IDatenEWT,
 		datum: dayjs.Dayjs,
 		schichtDaten: ReturnType<typeof getSchichtDaten>,
-		eOrte: string[],
+		eOrt: boolean,
 		vorgabenE: IVorgabenE,
 		endePascal: Duration,
 	) => {
 		const jahr: number = datum.year(),
-			monat: number = datum.month(),
-			eOrt: boolean = eOrte.includes(Tag.eOrtE);
+			monat: number = datum.month();
 
 		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
 			const zeit = value.split(":");
@@ -94,22 +96,28 @@ function createHelpers(userSettings: IVorgabenU) {
 		};
 
 		const beginE_dayjs =
-			Tag.beginE.length === 5 ? convertToDayjs(Tag.beginE, false, Tag) : datum.add(schichtDaten.beginn);
+			TagDaten.beginE.length === 5 ? convertToDayjs(TagDaten.beginE, false, TagDaten) : datum.add(schichtDaten.beginn);
 		const beginE = beginE_dayjs.format("LT");
-		const endeE_dayjs = Tag.endeE.length === 5 ? convertToDayjs(Tag.endeE, true, Tag) : datum.add(schichtDaten.ende);
+		const endeE_dayjs =
+			TagDaten.endeE.length === 5 ? convertToDayjs(TagDaten.endeE, true, TagDaten) : datum.add(schichtDaten.ende);
 		const endeE = endeE_dayjs.format("LT");
 
-		const abWE = Tag.abWE.length === 5 ? Tag.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format("LT");
-		const ab1E_dayjs = Tag.ab1E.length === 5 ? convertToDayjs(Tag.ab1E, false, Tag) : beginE_dayjs.add(schichtDaten.svzA);
+		const abWE = TagDaten.abWE.length === 5 ? TagDaten.abWE : beginE_dayjs.subtract(vorgabenE.rZ).format("LT");
+		const ab1E_dayjs =
+			TagDaten.ab1E.length === 5 ? convertToDayjs(TagDaten.ab1E, false, TagDaten) : beginE_dayjs.add(schichtDaten.svzA);
 		const ab1E = ab1E_dayjs.format("LT");
 
 		const an1E_dayjs =
-			Tag.an1E.length === 5 ? convertToDayjs(Tag.an1E, true, Tag) : endeE_dayjs.subtract(schichtDaten.svzE);
+			TagDaten.an1E.length === 5 ? convertToDayjs(TagDaten.an1E, true, TagDaten) : endeE_dayjs.subtract(schichtDaten.svzE);
 		const an1E = an1E_dayjs.format("LT");
-		const anWE = Tag.anWE.length === 5 ? Tag.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format("LT");
+		const anWE = TagDaten.anWE.length === 5 ? TagDaten.anWE : endeE_dayjs.add(vorgabenE.rZ).add(endePascal).format("LT");
 
-		const anEE = !(eOrt && Tag.anEE === "") ? Tag.anEE : ab1E_dayjs.add(vorgabenE.fZ[Tag.eOrtE]).format("LT");
-		const abEE = !(eOrt && Tag.abEE === "") ? Tag.abEE : an1E_dayjs.subtract(vorgabenE.fZ[Tag.eOrtE]).format("LT");
+		const anEE = !(eOrt && TagDaten.anEE === "")
+			? TagDaten.anEE
+			: ab1E_dayjs.add(vorgabenE.fZ[TagDaten.eOrtE]).format("LT");
+		const abEE = !(eOrt && TagDaten.abEE === "")
+			? TagDaten.abEE
+			: an1E_dayjs.subtract(vorgabenE.fZ[TagDaten.eOrtE]).format("LT");
 
 		return { beginE, endeE, abWE, ab1E, an1E, anWE, anEE, abEE };
 	};

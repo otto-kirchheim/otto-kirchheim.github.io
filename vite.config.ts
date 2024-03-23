@@ -1,7 +1,7 @@
 import preact from "@preact/preset-vite";
 import path from "path";
-import { compression } from "vite-plugin-compression2";
 import UnpluginInjectPreload from "unplugin-inject-preload/vite";
+import { compression } from "vite-plugin-compression2";
 import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vitest/config";
 import { version } from "./package.json";

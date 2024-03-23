@@ -1,8 +1,15 @@
 import { saveTableDataEWT } from ".";
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT } from "../../interfaces";
-import naechsterTag from "./naechsterTag";
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IVorgabenU } from "../../interfaces";
+import { naechsterTag } from ".";
+import { berechnen as ewtBerechnen } from ".";
 
-export default function addEWTtag(modal: CustomHTMLDivElement<IDatenEWT>): void {
+export default function addEWTtag(
+	modal: CustomHTMLDivElement<IDatenEWT>,
+	vorgabenU: IVorgabenU,
+	Jahr: number,
+	Monat: number,
+	berechneBuero: boolean = false,
+): void {
 	// Get the input and select elements
 	const tagEInput = modal.querySelector<HTMLInputElement>("#tagE");
 	const eOrtESelect = modal.querySelector<HTMLSelectElement>("#EOrt");
@@ -22,7 +29,7 @@ export default function addEWTtag(modal: CustomHTMLDivElement<IDatenEWT>): void 
 	const berechnen = berechnenInput.checked;
 
 	// Create a new data object with the values
-	const data: IDatenEWT = {
+	let data: IDatenEWT = {
 		tagE,
 		eOrtE,
 		schichtE,
@@ -36,6 +43,14 @@ export default function addEWTtag(modal: CustomHTMLDivElement<IDatenEWT>): void 
 		anWE: "",
 		berechnen,
 	};
+
+	if (berechneBuero) {
+		data.berechnen = true;
+		data = ewtBerechnen(vorgabenU, [data], Jahr, Monat)[0];
+		data = { ...data, ...{ ab1E: "", anEE: "", abEE: "", an1E: "", berechnen: false } };
+	} else {
+		data = ewtBerechnen(vorgabenU, [data], Jahr, Monat)[0];
+	}
 
 	// Get the table and its instance
 	const tableE = document.querySelector<CustomHTMLTableElement<IDatenEWT>>("#tableE");
