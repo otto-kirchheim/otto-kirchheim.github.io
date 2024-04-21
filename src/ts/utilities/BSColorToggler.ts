@@ -63,7 +63,6 @@ export default function initializeColorModeToggler() {
 
 	document.querySelectorAll("[data-bs-theme-value]").forEach(toggle => {
 		toggle.addEventListener("click", () => {
-			debugger;
 			const theme = toggle.getAttribute("data-bs-theme-value") as Theme;
 			setStoredTheme(theme);
 			setTheme(theme);

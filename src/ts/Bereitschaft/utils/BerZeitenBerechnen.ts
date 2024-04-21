@@ -85,7 +85,7 @@ export default function BerZeitenBerechnen(
 
 		const tagAnfangZeit: Duration = getDurationFromTime(datenU.aZ.bT);
 		const TagEndeZeit = (tagAnfang: Dayjs): Duration => {
-			if (tagAnfang.isoWeekday() < 5) return TagEndeZeitMoDo;
+			if (tagAnfang.isoWeekday() > 0 && tagAnfang.isoWeekday() < 5) return TagEndeZeitMoDo;
 			if (tagAnfang.isoWeekday() === 5) return TagEndeZeitFr;
 			return bereitschaftsZeitraumWechsel;
 		};
@@ -133,16 +133,6 @@ export default function BerZeitenBerechnen(
 			ende: bereitschaftsAnfang,
 			pause: 0,
 		});
-	// Prüfen ob bereitschaftsAnfang zwischen Schicht 1 und 2 ist
-	else if (
-		kombinierteSchichten.length > 2 &&
-		bereitschaftsAnfang.isBetween(kombinierteSchichten[0].ende, kombinierteSchichten[1].beginn, null, "()")
-	)
-		kombinierteSchichten.splice(0, 1, {
-			beginn: bereitschaftsAnfang,
-			ende: bereitschaftsAnfang,
-			pause: 0,
-		});
 
 	// Prüfen ob bereitschaftsEnde nach der letzten Schicht ist
 	if (bereitschaftsEnde.isAfter(kombinierteSchichten[kombinierteSchichten.length - 1].ende))
@@ -151,9 +141,21 @@ export default function BerZeitenBerechnen(
 			ende: bereitschaftsEnde,
 			pause: 0,
 		});
+
+	// Prüfen ob bereitschaftsAnfang zwischen Schicht 1 und 2 ist
+	if (
+		kombinierteSchichten.length > 1 &&
+		bereitschaftsAnfang.isBetween(kombinierteSchichten[0].ende, kombinierteSchichten[1].beginn, null, "()")
+	)
+		kombinierteSchichten.splice(0, 1, {
+			beginn: bereitschaftsAnfang,
+			ende: bereitschaftsAnfang,
+			pause: 0,
+		});
+
 	// Prüfen ob bereitschaftsEnde zwischen den letzten Schichten ist
-	else if (
-		kombinierteSchichten.length > 2 &&
+	if (
+		kombinierteSchichten.length > 1 &&
 		bereitschaftsEnde.isBetween(
 			kombinierteSchichten[kombinierteSchichten.length - 2].ende,
 			kombinierteSchichten[kombinierteSchichten.length - 1].beginn,

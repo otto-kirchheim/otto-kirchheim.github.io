@@ -57,6 +57,27 @@ export default async function BerZeitenEingabe(
 	const nachtAnfang: Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
 	let nachtEnde: Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
 
+	if (nachtAnfang.isBefore(bereitschaftsAnfang)) {
+		clearLoading("btnESZ");
+		createSnackBar({
+			message: "Nacht Anfang darf nicht vor Bereitschafts Anfang liegen",
+			status: "error",
+			timeout: 3000,
+			fixed: true,
+		});
+		return;
+	}
+	if (nachtEnde.isAfter(bereitschaftsEnde)) {
+		clearLoading("btnESZ");
+		createSnackBar({
+			message: "Nacht Ende darf nicht nach Bereitschafts Ende liegen",
+			status: "error",
+			timeout: 3000,
+			fixed: true,
+		});
+		return;
+	}
+
 	const monat: number = +MonatInput.value;
 	const jahr: number = +JahrInput.value;
 
