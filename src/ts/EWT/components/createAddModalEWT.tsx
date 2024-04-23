@@ -11,8 +11,8 @@ export default function createAddModalEWT(): void {
 	const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
 
 	const Jahr: number = Storage.get<number>("Jahr", { check: true });
-	const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
-	const datum = dayjs([Jahr, Monat, 1]);
+	const Monat: number = Storage.get<number>("Monat", { check: true });
+	const datum = dayjs([Jahr, Monat - 1, 1]);
 	const maxDate = datum.endOf("month").format("YYYY-MM-DD");
 
 	const berechnenRef = createRef<HTMLInputElement>();

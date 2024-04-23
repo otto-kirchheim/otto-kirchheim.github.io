@@ -92,7 +92,7 @@ function createHelpers(userSettings: IVorgabenU) {
 			const zeit = value.split(":");
 			let tag = Number(Tag.tagE);
 			if (addTag && ["BN", "N"].includes(Tag.schichtE)) tag -= 1;
-			return dayjs([jahr, monat - 1, tag, +zeit[0], +zeit[1], 0, 0]);
+			return dayjs([jahr, monat, tag, +zeit[0], +zeit[1], 0, 0]);
 		};
 
 		const beginE_dayjs =

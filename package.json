@@ -1,6 +1,6 @@
 {
 	"name": "public-src",
-	"version": "1.2.6",
+	"version": "1.2.7",
 	"description": "",
 	"private": "true",
 	"scripts": {
@@ -49,6 +49,6 @@
 		"file-saver": "^2.0.5",
 		"material-icons": "^1.13.12",
 		"preact": "^10.20.2",
-		"typescript-eslint": "^7.7.0"
+		"typescript-eslint": "^7.7.1"
 	}
 }
