@@ -1,10 +1,9 @@
 import { saveAs } from "file-saver";
-import { Storage, buttonDisable, clearLoading, setLoading } from ".";
+import { Storage, buttonDisable, clearLoading, setLoading, getServerUrl, abortController } from ".";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { IMonatsDaten, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from "../interfaces";
-import { FetchRetry } from "./FetchRetry";
-import convertToBlob from "./convertToBlob";
 import tableToArray from "./tableToArray";
+import dayjs from "./configDayjs";
 
 export default async function download(button: HTMLButtonElement | null, modus: "B" | "E" | "N"): Promise<void> {
 	if (button === null) return;
@@ -61,31 +60,73 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 
 	try {
 		console.time("download");
-		const fetched = await FetchRetry<
-			{
-				VorgabenU: IVorgabenU;
-				VorgabenGeld: IVorgabenGeldType;
-				Daten: Partial<IMonatsDaten>;
-				Monat: number;
-				Jahr: number;
+
+		let accessToken = Storage.get<string>("accessToken", { check: true });
+		const serverUrl = await getServerUrl();
+
+		const fetchObject: RequestInit = {
+			mode: "cors",
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Content-Type": "application/json",
 			},
-			{ data: string; name: string }
-		>(`download/${modus}`, data, "POST");
-		if (fetched instanceof Error) throw fetched;
-		if (fetched.statusCode != 200) {
-			console.error("Fehler", fetched.message);
+			signal: abortController.signal,
+			body: JSON.stringify(data),
+			cache: "no-cache",
+		};
+
+		const response = await fetch(`${serverUrl}/download/${modus}`, fetchObject);
+
+		if (!response.ok) {
+			const errorData = await response.json();
+			console.error("Fehler", errorData.message);
 			createSnackBar({
-				message: `Download fehlerhaft:<br/>${fetched.message}`,
+				message: `Download fehlerhaft:<br/>${errorData.message}`,
 				status: "error",
 				timeout: 3000,
 				fixed: true,
 			});
 			return;
 		}
-		saveAs(convertToBlob(fetched.data.data), fetched.data.name);
-	} catch (err) {
-		console.error(err);
-		return;
+
+		const blob = await response.blob();
+		const contentDisposition = response.headers.get("Content-Disposition");
+
+		let dateiName: string | undefined;
+		if (contentDisposition) {
+			const matches = /filename="([^"]+)"/.exec(contentDisposition);
+			if (matches?.[1]) dateiName = matches[1];
+		}
+		if (!dateiName) {
+			console.error("Fehler", "Dateiname fehlt");
+			createSnackBar({
+				message: `Download fehlerhaft:<br/>Dateiname fehlt`,
+				status: "error",
+				timeout: 3000,
+				fixed: true,
+			});
+
+			const vorDateiName: { [key in typeof modus]: string } = {
+				B: "RB",
+				E: "Verpfl",
+				N: "EZ",
+			};
+
+			dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format("MM_YY")}_${data.VorgabenU.pers.Vorname} ${
+				data.VorgabenU.pers.Nachname
+			}_${data.VorgabenU.pers.Gewerk} ${data.VorgabenU.pers.ErsteTkgSt}.pdf`;
+		}
+
+		saveAs(blob, dateiName);
+	} catch (error: any) {
+		console.error("Fehler", error.message ?? error);
+		createSnackBar({
+			message: `Download fehlerhaft:<br/>${error.message ?? error}`,
+			status: "error",
+			timeout: 3000,
+			fixed: true,
+		});
 	} finally {
 		console.timeEnd("download");
 		buttonDisable(false);

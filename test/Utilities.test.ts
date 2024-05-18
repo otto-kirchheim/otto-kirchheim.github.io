@@ -1,21 +1,18 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import * as exports from "../src/ts/utilities";
 import {
+	DatenSortieren,
 	Storage,
-	convertToBlob,
-	decodeAccessToken,
-	getValidAccesstoken,
 	buttonDisable,
 	checkMaxTag,
-	setLoading,
 	clearLoading,
-	DatenSortieren,
-	/* saveDaten, */
+	decodeAccessToken,
+	getValidAccesstoken,
+	setLoading,
 } from "../src/ts/utilities";
 /* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
 import * as exportEinstelllungen from "../src/ts/Einstellungen/utils"; */
-import { base64StringData } from "./mockPDFString";
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */
 describe("#Storage", () => {
@@ -146,26 +143,6 @@ describe("#getValidAccesstoken", async () => {
 
 	afterAll(() => {
 		vi.clearAllMocks();
-	});
-});
-
-describe("#convertToBlob", () => {
-	it("should convert a base64 string to a Blob", () => {
-		const base64String = base64StringData;
-		const expectedType = "application/pdf";
-		const blob = convertToBlob(base64String, expectedType);
-
-		expect(blob).toBeInstanceOf(Blob);
-		expect(blob.type).toBe(expectedType);
-
-		const reader = new FileReader();
-		reader.readAsArrayBuffer(blob);
-		reader.onload = () => {
-			const arrayBuffer = reader.result as ArrayBuffer;
-			const uint8Array = new Uint8Array(arrayBuffer);
-			const binaryData = uint8Array.reduce((acc, value) => acc + String.fromCharCode(value), "");
-			expect(binaryData).toBe(atob(base64String));
-		};
 	});
 });
 

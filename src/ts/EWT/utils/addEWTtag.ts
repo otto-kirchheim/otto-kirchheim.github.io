@@ -1,7 +1,5 @@
-import { saveTableDataEWT } from ".";
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IVorgabenU } from "../../interfaces";
-import { naechsterTag } from ".";
-import { berechnen as ewtBerechnen } from ".";
+import { naechsterTag, saveTableDataEWT, berechnen as ewtBerechnen } from ".";
 
 export default function addEWTtag(
 	modal: CustomHTMLDivElement<IDatenEWT>,

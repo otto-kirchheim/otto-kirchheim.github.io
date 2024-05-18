@@ -3,6 +3,8 @@ import type { IDatenEWT, IVorgabenE, IVorgabenU } from "../../interfaces";
 import { getDurationFromTime } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
+type SchichtKeys = "T" | "N" | "BN" | "S";
+
 export default function berechnen(vorgabenU: IVorgabenU, daten: IDatenEWT[], jahr: number, monat: number): IDatenEWT[] {
 	const { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten } = createHelpers(vorgabenU);
 
@@ -13,7 +15,7 @@ export default function berechnen(vorgabenU: IVorgabenU, daten: IDatenEWT[], jah
 	for (const TagDaten of daten) {
 		if (!TagDaten.berechnen) continue;
 		const datum = dayjs([jahr, monat - 1, Number(TagDaten.tagE)]);
-		const schichtDaten = getSchichtDaten(TagDaten.schichtE as "T" | "N" | "BN" | "S", datum, vorgabenE);
+		const schichtDaten = getSchichtDaten(TagDaten.schichtE as SchichtKeys, datum, vorgabenE);
 
 		Object.assign(
 			TagDaten,
@@ -30,8 +32,7 @@ function createHelpers(userSettings: IVorgabenU) {
 			? dayjs.duration(5, "m")
 			: dayjs.duration(0, "m");
 
-	const getSchichtDaten = (schicht: string, datum: dayjs.Dayjs, vorgabenE: IVorgabenE) => {
-		type SchichtKeys = "T" | "N" | "BN" | "S";
+	const getSchichtDaten = (schicht: SchichtKeys, datum: dayjs.Dayjs, vorgabenE: IVorgabenE) => {
 		const schichten: Record<SchichtKeys, { beginn: Duration; ende: Duration; svzA: Duration; svzE: Duration }> = {
 			T: {
 				beginn: vorgabenE.bT,
@@ -85,14 +86,11 @@ function createHelpers(userSettings: IVorgabenU) {
 		vorgabenE: IVorgabenE,
 		endePascal: Duration,
 	) => {
-		const jahr: number = datum.year(),
-			monat: number = datum.month();
-
 		const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
-			const zeit = value.split(":");
+			const [stunden, minuten] = value.split(":");
 			let tag = Number(Tag.tagE);
 			if (addTag && ["BN", "N"].includes(Tag.schichtE)) tag -= 1;
-			return dayjs([jahr, monat, tag, +zeit[0], +zeit[1], 0, 0]);
+			return dayjs([datum.year(), datum.month(), tag, +stunden, +minuten, 0, 0]);
 		};
 
 		const beginE_dayjs =

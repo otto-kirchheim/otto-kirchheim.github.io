@@ -350,7 +350,7 @@ export default defineConfig({
 		}),
 	],
 	server: {
-		port: 8081,
+		port: 8080,
 		hmr: true,
 	},
 });

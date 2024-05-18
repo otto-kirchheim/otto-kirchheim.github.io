@@ -1,6 +1,5 @@
 import Tab from "bootstrap/js/dist/tab";
-import { Storage } from "../../utilities";
-import { controller, newAbortControler } from "../../utilities/FetchRetry";
+import { Storage, abortController } from "../../utilities";
 
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = "d-none"): void {
 	const element = document.querySelector<HTMLElement>(selector);
@@ -8,8 +7,7 @@ function toggleClassForElement(selector: string, addClass: boolean = true, class
 }
 
 export default function Logout(): void {
-	controller.abort();
-	newAbortControler();
+	abortController.reset("Logout");
 	Storage.clear();
 
 	const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
