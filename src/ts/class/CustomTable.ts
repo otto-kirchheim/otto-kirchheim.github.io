@@ -204,7 +204,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 	public rows: Rows<T>;
 	public columns: Columns<T>;
 	public state: { editing: boolean | null; sorting: boolean | null };
-	private o = { breakpoints: { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1400 } };
+	private readonly o = { breakpoints: { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1400 } };
 	public options: CustomTableOptionsAll<T>;
 
 	constructor(initTable: string | CustomHTMLTableElement<T>, options: CustomTableOptions<T>) {
@@ -400,7 +400,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 			const buttonDeleteAlle = createButton(
 				["btn", "btn-danger"],
 				this.options.editing.deleteAllText,
-				this.options.editing.deleteAllRows,
+				this.options.editing.deleteAllRows
 			);
 
 			divFooter.appendChild(buttonAdd);
@@ -464,7 +464,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 							classList: string[],
 							text: string,
 							eventListener: (row: Row<T>) => void,
-							title = "button",
+							title = "button"
 						) => {
 							const button = document.createElement("button");
 							button.classList.add(...classList);
@@ -482,13 +482,13 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 							["btn", "btn-outline-primary"],
 							column.editing.editText,
 							this.options.editing.editRow,
-							"edit",
+							"edit"
 						);
 						const buttonDelete = createButton(
 							["btn", "btn-outline-danger"],
 							column.editing.deleteText,
 							this.options.editing.deleteRow,
-							"delete",
+							"delete"
 						);
 
 						divBtnGroup.append(buttonEdit);
@@ -569,7 +569,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 			this: CustomTable<T>,
 			column: Column<T>,
 			th: HTMLTableCellElement,
-			span: HTMLSpanElement,
+			span: HTMLSpanElement
 		): void {
 			if (!column.sorted) return span.classList.add("customtable-sort");
 			const direction = column.direction ? column.direction.toLowerCase() : "asc";
@@ -667,7 +667,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
 export function createCustomTable<T extends CustomTableTypes>(
 	table: string | CustomHTMLTableElement<T>,
-	options: CustomTableOptions<T>,
+	options: CustomTableOptions<T>
 ): CustomTable<T> {
 	return new CustomTable<T>(table, options);
 }

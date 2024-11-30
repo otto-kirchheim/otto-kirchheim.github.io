@@ -46,7 +46,7 @@ export async function FetchRetry<I, T>(
 	data?: I,
 	method: "GET" | "POST" | "UPDATE" = "GET",
 	retry = 0,
-	accessToken?: string,
+	accessToken?: string
 ): Promise<{ data: T; status: boolean; statusCode: number; message: string } | Error> {
 	if (!accessToken && Storage.check("accessToken")) accessToken = Storage.get<string>("accessToken", { check: true });
 	if (retry > 2) throw new Error("Zu viele Tokenfehler");
@@ -83,5 +83,9 @@ export async function FetchRetry<I, T>(
 }
 
 export const API_URL = import.meta.env.PROD
-	? ["https://otto1989.dnshome.de/api/v1", "https://web-app-rn6h2lgzma-ey.a.run.app/api/v1"]
+	? [
+			"https://lst-kirchheim.dnshome.de/api/v1",
+			"https://otto1989.dnshome.de/api/v1",
+			"https://web-app-rn6h2lgzma-ey.a.run.app/api/v1",
+	  ]
 	: ["http://192.168.178.56:8081/api/v1", "http://192.168.178.56:8081/api/v1"];

@@ -65,12 +65,12 @@ type Ticon =
 	| (string & { fromT?: string });
 
 export class SnackBar implements ISnackbar {
-	private _Element: HTMLDivElement;
-	private _Container: HTMLElement | HTMLDivElement;
-	private _Interval: NodeJS.Timeout | undefined;
-	private _Message: HTMLSpanElement;
-	private _MessageWrapper: HTMLDivElement | Element;
-	private _Options: SnackBarOptionsAll;
+	private readonly _Element: HTMLDivElement;
+	private readonly _Container: HTMLElement | HTMLDivElement;
+	private readonly _Interval: NodeJS.Timeout | undefined;
+	private readonly _Message: HTMLSpanElement;
+	private readonly _MessageWrapper: HTMLDivElement | Element;
+	private readonly _Options: SnackBarOptionsAll;
 
 	public Open(this: SnackBar): SnackBar {
 		const getMessageHeight = (): number => {

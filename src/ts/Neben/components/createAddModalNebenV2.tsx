@@ -25,7 +25,7 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 			const tag = `${tagN} | ${new Date(
 				jahr,
 				monat - 1,
-				tagE - (["N", "BN"].includes(schicht) ? 1 : 0),
+				tagE - (["N", "BN"].includes(schicht) ? 1 : 0)
 			).toLocaleDateString("de", {
 				weekday: "short",
 			})}`;
@@ -110,13 +110,13 @@ export default function createAddModalNeben(): void {
 					name="040 Fahrentschädigung"
 					required
 					value={1}
-					min={1}
-					max={1}
+					min={"1"}
+					max={"1"}
 				>
 					040 Fahrentschädigung
 				</MyInput>
 			</MyModalBody>
-		</MyFormModal>,
+		</MyFormModal>
 	);
 
 	if (ref.current === null) throw new Error("referenz nicht gesetzt");

@@ -8,7 +8,7 @@ import dayjs from "../../utilities/configDayjs";
 import { saveTableDataBZ } from "../utils";
 
 const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ComponentChild => {
-	let datum, min, max;
+	let datum: dayjs.Dayjs, min: string, max: string;
 	switch (column.name) {
 		case "editing":
 			return;
@@ -38,8 +38,8 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): Compone
 					type="number"
 					id={column.name}
 					name={column.title}
-					min={0}
-					max={60}
+					min={"0"}
+					max={"60"}
 					value={column.parser(row.cells[column.name])}
 				>
 					{column.title}
@@ -73,7 +73,7 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
 			);
 		default:
 			return (
-				<MyInput divClass="form-floating col-12" type="number" id={column.name} name={column.title} min={0} max={60}>
+				<MyInput divClass="form-floating col-12" type="number" id={column.name} name={column.title} min={"0"} max={"60"}>
 					{column.title}
 				</MyInput>
 			);
@@ -102,7 +102,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 			onSubmit={onSubmit()}
 		>
 			<MyModalBody>{createElements(row)}</MyModalBody>
-		</MyFormModal>,
+		</MyFormModal>
 	);
 
 	if (ref.current === null) throw new Error("referenz nicht gesetzt");

@@ -27,8 +27,8 @@ type TModalBodyInputElementOption = {
 		placement?: "top" | "right" | "left" | "bottom";
 		html?: boolean;
 	};
-	min?: string | number;
-	max?: string | number;
+	min?: string;
+	max?: string;
 	onChange?: (this: HTMLInputElement, ev: Event) => void;
 };
 

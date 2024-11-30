@@ -16,7 +16,7 @@ const getColumn = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string)
 const createTimeElement = (
 	row: CustomTable<IDatenN> | Row<IDatenN>,
 	columnName: string,
-	options?: { required?: boolean },
+	options?: { required?: boolean }
 ) => {
 	const column = getColumn(row, columnName);
 	return (
@@ -59,8 +59,8 @@ const createNumberElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnNam
 			name={column.title}
 			value={row instanceof Row ? row.cells[column.name] : 1}
 			required
-			min={1}
-			max={1}
+			min={"1"}
+			max={"1"}
 		>
 			{column.title}
 		</MyInput>
@@ -111,7 +111,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 				<h4 className="text-center mb-1">Zulagen</h4>
 				{createNumberElement(row, "anzahl040N")}
 			</MyModalBody>
-		</MyFormModal>,
+		</MyFormModal>
 	);
 
 	if (ref.current === null) throw new Error("referenz nicht gesetzt");

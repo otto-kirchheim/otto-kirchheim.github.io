@@ -52,7 +52,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 					]}
 				/>
 				<div className="w-100" />
-				<MyInput divClass="form-floating col-12 col-sm-6 pb-3" type="number" id="privatkm" name="Privat Km" min={0}>
+				<MyInput divClass="form-floating col-12 col-sm-6 pb-3" type="number" id="privatkm" name="Privat Km" min={"0"}>
 					Privat Km
 				</MyInput>
 				<div className="col-12">
@@ -63,7 +63,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 					</MyCheckbox>
 				</div>
 			</MyModalBody>
-		</MyFormModal>,
+		</MyFormModal>
 	);
 
 	if (formRef.current === null) throw new Error("referenz nicht gesetzt");

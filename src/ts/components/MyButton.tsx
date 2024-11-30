@@ -2,7 +2,7 @@ import { JSX, FunctionalComponent } from "preact";
 
 type TMyButton = {
 	id?: string;
-	type?: string;
+	type?: "button" | "reset" | "submit";
 	className?: string;
 	ariaLabel?: string;
 	dataBsDismiss?: string;
