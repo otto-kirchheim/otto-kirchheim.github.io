@@ -91,8 +91,6 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 		}
 		const blob = await response.blob();
 
-		await response.headers.forEach(value => console.log(value));
-
 		const contentDisposition = response.headers.get("content-disposition");
 
 		let dateiName: string | undefined;
