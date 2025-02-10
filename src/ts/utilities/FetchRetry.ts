@@ -84,8 +84,8 @@ export async function FetchRetry<I, T>(
 
 export const API_URL = import.meta.env.PROD
 	? [
-			"https://lst-kirchheim.dnshome.de/api/v1",
 			"https://lst.otto.home64.de/api/v1",
+			"https://lst-kirchheim.dnshome.de/api/v1",
 			"https://otto1989.dnshome.de/api/v1",
 			"https://web-app-rn6h2lgzma-ey.a.run.app/api/v1",
 		]
