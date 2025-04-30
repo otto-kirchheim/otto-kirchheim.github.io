@@ -2,6 +2,19 @@ import { SelectYear } from "../../Einstellungen/utils";
 import { Storage, decodeAccessToken, setLoading } from "../../utilities";
 import dayjs from "../../utilities/configDayjs";
 
+function escapeHtml(unsafe: string): string {
+	return unsafe.replace(/[&<"']/g, function (match) {
+		const escape: { [key: string]: string } = {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#039;",
+		};
+		return escape[match];
+	});
+}
+
 export default function userLoginSuccess({
 	accessToken,
 	refreshToken,
@@ -19,7 +32,7 @@ export default function userLoginSuccess({
 	username = `${username[0].toUpperCase()}${username.substring(1)}`;
 	Storage.set("Benutzer", username);
 	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
-	if (willkommen) willkommen.innerHTML = `Hallo, ${username}.`;
+	if (willkommen) willkommen.innerHTML = `Hallo, ${escapeHtml(username)}.`;
 
 	document.querySelector<HTMLButtonElement>("#btnLogin")?.classList.add("d-none");
 

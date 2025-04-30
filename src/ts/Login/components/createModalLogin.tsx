@@ -31,7 +31,7 @@ export default function createModalLogin(): void {
 					type="text"
 					id="Benutzer"
 					name="benutzer"
-					pattern={new RegExp(/[A-z]*/).source}
+					pattern={new RegExp(/[A-Za-z]*/).source}
 					autoComplete="username"
 				>
 					Benutzer

@@ -13,7 +13,7 @@ export default function createModalNewUser(): void {
 					type="text"
 					id="Zugang"
 					name="Zugangscode"
-					pattern={new RegExp(/[A-z]*/).source}
+					pattern={new RegExp(/[A-Za-z]*/).source}
 					autoComplete="off"
 				>
 					Zugangscode
@@ -23,7 +23,7 @@ export default function createModalNewUser(): void {
 					type="text"
 					id="Benutzer"
 					name="Benutzer"
-					pattern={new RegExp(/^[A-z]*/).source}
+					pattern={new RegExp(/^[A-Za-z]*/).source}
 					autoComplete="off"
 					popover={{ content: "Nur Buchstaben, kein Ää Öö Üü ß", placement: "right", trigger: "focus" }}
 				>
