@@ -9,7 +9,7 @@ import { EditorModalVE, ShowModalVE } from "../components";
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
 	[key: string]: IVorgabenUvorgabenB;
 }) {
-	if (!VorgabenB) VorgabenB = Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU", true).vorgabenB : {};
+	VorgabenB ??= Storage.check("VorgabenU") ? Storage.get<IVorgabenU>("VorgabenU", true).vorgabenB : {};
 
 	const trueParser = (value: boolean | null): string => (value ? "Ja" : "Nein");
 

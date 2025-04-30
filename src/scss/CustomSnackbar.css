@@ -57,7 +57,6 @@
 
 .CustomSnackbar__wrapper {
 	overflow: hidden;
-	/* height: auto; */
 	margin: 0;
 	border-radius: 3px;
 	display: flex;

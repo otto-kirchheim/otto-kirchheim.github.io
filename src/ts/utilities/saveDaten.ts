@@ -33,7 +33,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 	if (button === null) return;
 	setLoading(button.id);
 	buttonDisable(true);
-	if (!Monat) Monat = Storage.get<number>("Monat", { check: true });
+	Monat ??= Storage.get<number>("Monat", { check: true });
 
 	try {
 		const ftBZ = findCustomTableInstance<IDatenBZ>("tableBZ");

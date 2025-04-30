@@ -5,7 +5,7 @@ import Storage from "../../utilities/Storage";
 import tableToArray from "../../utilities/tableToArray";
 
 export default function saveTableDataBE(ft: CustomTable<IDatenBE>, Monat?: number): IDatenBEJahr {
-	if (!Monat) Monat = Storage.get<number>("Monat", { check: true });
+	Monat ??= Storage.get<number>("Monat", { check: true });
 
 	const data = Storage.get<IDatenBEJahr>("dataBE", { check: true });
 	data[Monat] = tableToArray<IDatenBE>(ft);

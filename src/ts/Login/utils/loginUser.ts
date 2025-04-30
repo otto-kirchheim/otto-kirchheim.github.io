@@ -11,11 +11,11 @@ export default async function loginUser(
 ): Promise<void> {
 	const usernameInput = modal.querySelector<HTMLInputElement>("#Benutzer");
 	if (!usernameInput) throw new Error("Benutzer Input nicht gefunden");
-	if (!username) username = usernameInput.value;
+	username ??= usernameInput.value;
 
 	const passwortInput = modal.querySelector<HTMLInputElement>("#Passwort");
 	if (!passwortInput) throw new Error("Passwort Input nicht gefunden");
-	if (!passwort) passwort = passwortInput.value;
+	passwort ??= passwortInput.value;
 
 	const btnLogin = document.querySelector<HTMLButtonElement>("#btnLogin");
 	if (btnLogin) btnLogin.disabled = true;

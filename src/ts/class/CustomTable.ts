@@ -222,8 +222,8 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 		this.options = ApplyOptions.bind(this)(options);
 		this.state = setState.bind(this)();
 
-		const thead = this.$el.tHead ? this.$el.tHead : this.$el.createTHead();
-		const tfoot = this.$el.tFoot ? this.$el.tFoot : this.$el.createTFoot();
+		const thead = this.$el.tHead ?? this.$el.createTHead();
+		const tfoot = this.$el.tFoot ?? this.$el.createTFoot();
 		if (this.$el.tBodies.length === 0) this.$el.createTBody();
 
 		this.$el.classList.add(...["customtable", ...this.options.classes]);

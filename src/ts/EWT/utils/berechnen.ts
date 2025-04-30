@@ -61,7 +61,7 @@ function createHelpers(userSettings: IVorgabenU) {
 		};
 
 		if (!(schicht in schichten)) throw new Error("Schicht unbekannt");
-		return schichten[schicht as SchichtKeys];
+		return schichten[schicht];
 	};
 
 	const initializeVorgabenE = () => {

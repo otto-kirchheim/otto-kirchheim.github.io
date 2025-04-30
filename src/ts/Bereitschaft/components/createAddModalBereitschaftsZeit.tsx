@@ -48,9 +48,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 	const vorgabenU = Storage.get<Partial<IVorgabenU>>("VorgabenU") ?? { vorgabenB: BereitschaftsEinsatzZeiträume };
 	const Monat: number = Storage.get<number>("Monat", { check: true }) - 1;
 	const Jahr: number = Storage.get<number>("Jahr", { check: true });
-	const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB
-		? vorgabenU.vorgabenB
-		: BereitschaftsEinsatzZeiträume;
+	const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
 
 	let vorgabenBStandardIndex = "2";
 	for (const key in vorgabenB)

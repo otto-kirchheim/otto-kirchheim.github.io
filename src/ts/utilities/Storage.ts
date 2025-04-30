@@ -63,7 +63,7 @@ class Storage implements IStorage {
 
 		if (optionsOrChecked === true) {
 			if (value === null) throw this.showSnackbarAndThrowError(new Error(`"${StorageData[key] ?? key}" nicht gefunden`));
-		} else if (value === null) return optionsOrChecked?.default !== undefined ? optionsOrChecked.default : null;
+		} else if (value === null) return optionsOrChecked?.default ?? null;
 
 		return this.isJsonString(value) ? JSON.parse(value) : this.convertToJson<T>(key, value as T);
 	}

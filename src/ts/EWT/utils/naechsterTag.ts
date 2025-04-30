@@ -13,7 +13,7 @@ export default function naechsterTag(
 	const vorhandeTage = new Set(dataE.map(tag => +tag.tagE)),
 		letzterTag = dayjs(eingabefeldTagE.max).date();
 	let loop = false;
-	if (tag == null) tag = dayjs(eingabefeldTagE.value).date();
+	tag ??= dayjs(eingabefeldTagE.value).date();
 	if (tag == "") tag = Math.max(...vorhandeTage.values()) | 0;
 	if (typeof tag === "string") tag = +tag;
 
