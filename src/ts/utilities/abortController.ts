@@ -7,7 +7,7 @@ class AbortControllerWrapper {
 		this.signal = this.controller.signal;
 	}
 
-	reset(reason?: string) {
+	reset(reason: string = "Unbekannt abgebrochen") {
 		this.controller?.abort(reason);
 		this.controller = new AbortController();
 		this.signal = this.controller.signal;

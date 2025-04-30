@@ -63,7 +63,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 					</MyCheckbox>
 				</div>
 			</MyModalBody>
-		</MyFormModal>
+		</MyFormModal>,
 	);
 
 	if (formRef.current === null) throw new Error("referenz nicht gesetzt");

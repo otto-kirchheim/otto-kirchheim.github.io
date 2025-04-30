@@ -33,6 +33,7 @@ export const VorgabenUMock: IVorgabenU = {
 		Adress1: "Weingarten 7, 36272 Niederaula",
 		Adress2: "",
 		ErsteTkgSt: "Kirchheim",
+		ErsteTkgStAdresse: "Beiersgraben, 36275 Kirchheim",
 		Betrieb: "DB Netz AG",
 		OE: "I.NA-MI-N-KSL-IL 03",
 		Gewerk: "LST",

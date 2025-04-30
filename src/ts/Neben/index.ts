@@ -1,6 +1,7 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
-import { Storage, buttonDisable, download, saveDaten } from "../utilities";
+import { Storage, buttonDisable, saveDaten } from "../utilities";
+import download from "../utilities/download";
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from "./components";
 import { DataN, saveTableDataN } from "./utils";
 

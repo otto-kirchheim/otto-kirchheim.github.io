@@ -8,7 +8,6 @@ import checkMaxTag from "./checkMaxTag";
 import clearLoading from "./clearLoading";
 import compareVersion from "./compareVersion";
 import decodeAccessToken from "./decodeAccessToken";
-import download from "./download";
 import getDurationFromTime from "./getDurationFromTime";
 import getValidAccesstoken from "./getValidAccesstoken";
 import saveDaten from "./saveDaten";
@@ -29,7 +28,6 @@ export {
 	clearLoading,
 	compareVersion,
 	decodeAccessToken,
-	download,
 	getDurationFromTime,
 	getServerUrl,
 	getValidAccesstoken,

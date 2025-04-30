@@ -1,5 +1,10 @@
 import { saveAs } from "file-saver";
-import { Storage, buttonDisable, clearLoading, setLoading, getServerUrl, abortController } from ".";
+import Storage from "./Storage";
+import buttonDisable from "./buttonDisable";
+import clearLoading from "./clearLoading";
+import setLoading from "./setLoading";
+import { getServerUrl } from "./FetchRetry";
+import { abortController } from "./abortController";
 import { createSnackBar } from "../class/CustomSnackbar";
 import { IMonatsDaten, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from "../interfaces";
 import tableToArray from "./tableToArray";
@@ -61,7 +66,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 	try {
 		console.time("download");
 
-		let accessToken = Storage.get<string>("accessToken", { check: true });
+		const accessToken = Storage.get<string>("accessToken", { check: true });
 		const serverUrl = await getServerUrl();
 
 		const fetchObject: RequestInit = {
@@ -119,10 +124,10 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 		}
 
 		saveAs(blob, dateiName);
-	} catch (error: any) {
-		console.error("Fehler", error.message ?? error);
+	} catch (error: unknown) {
+		console.error("Fehler", error instanceof Error ? error.message : error);
 		createSnackBar({
-			message: `Download fehlerhaft:<br/>${error.message ?? error}`,
+			message: `Download fehlerhaft:<br/>${error instanceof Error ? error.message : String(error)}`,
 			status: "error",
 			timeout: 3000,
 			fixed: true,

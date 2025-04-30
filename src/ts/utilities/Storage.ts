@@ -93,13 +93,14 @@ class Storage implements IStorage {
 		return value;
 	}
 
-	private isJsonString<T>(str: T): boolean {
+	private isJsonString(str: unknown): boolean {
+		if (typeof str !== "string") return false;
 		try {
-			JSON.parse(str as string);
-		} catch (e) {
+			JSON.parse(str);
+			return true;
+		} catch {
 			return false;
 		}
-		return true;
 	}
 
 	private showSnackbarAndThrowError(err: Error): Error {

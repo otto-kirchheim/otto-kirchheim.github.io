@@ -1,23 +1,46 @@
 import { Storage, abortController, getValidAccesstoken, tokenErneuern } from ".";
 import { createSnackBar } from "../class/CustomSnackbar";
 
-async function checkServerConnection(serverUrl: string): Promise<boolean> {
+interface ServerConfig {
+	url: string;
+	timeout: number;
+}
+/**
+ * Checks the server connection with a configurable timeout.
+ * @param serverUrl - The URL of the server to check.
+ * @param timeout - The timeout duration in milliseconds.
+ * @returns A promise that resolves to a boolean indicating the server's availability.
+ */
+async function checkServerConnection(serverUrl: string, timeout: number): Promise<boolean> {
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => {
+		console.log(`Server check for ${serverUrl} timed out after ${timeout}ms.`);
+		controller.abort("Timeout");
+	}, timeout);
+
 	try {
 		console.time("Serververbindung herstellen");
-		await fetch(`${serverUrl}/`, { method: "GET", signal: abortController.signal });
+		await fetch(`${serverUrl}/`, { method: "GET", signal: controller.signal });
 		sessionStorage.setItem("lastServerContact", Date.now().toString());
 		return true;
-	} catch {
+	} catch (error) {
+		if (error instanceof Error && error.name === "AbortError")
+			console.error(`Fetch aborted for ${serverUrl}:`, error.message);
 		return false;
 	} finally {
+		clearTimeout(timeoutId);
 		console.timeEnd("Serververbindung herstellen");
 	}
 }
 
 export async function getServerUrl(): Promise<string> {
 	const lastServerContact = sessionStorage.getItem("lastServerContact");
-	const serverUrls = API_URL;
-	let currentServerUrl = sessionStorage.getItem("currentServerUrl");
+	const serverConfigs: ServerConfig[] = API_URL.map(config => ({
+		...config,
+		timeout: config.timeout || 5000, // Default timeout if not provided
+	}));
+	const currentServerUrl = sessionStorage.getItem("currentServerUrl");
+	const defaultServerUrl = serverConfigs[0].url;
 
 	if (!lastServerContact || +lastServerContact - Date.now() + 5 * 60 * 1000 < 0) {
 		const statusSnackBar = createSnackBar({
@@ -27,17 +50,25 @@ export async function getServerUrl(): Promise<string> {
 			timeout: false,
 			fixed: true,
 		});
-		for (const serverUrl of serverUrls) {
-			if (await checkServerConnection(serverUrl)) {
-				sessionStorage.setItem("currentServerUrl", serverUrl);
+		for (const config of serverConfigs) {
+			if (await checkServerConnection(config.url, config.timeout)) {
+				sessionStorage.setItem("currentServerUrl", config.url);
 				statusSnackBar.Close();
-				return serverUrl;
+				return config.url;
 			}
 		}
 		statusSnackBar.Close();
+		createSnackBar({
+			message: "Server nicht Erreichbar",
+			dismissible: true,
+			icon: "warning",
+			status: "warning",
+			timeout: 3000,
+			fixed: true,
+		});
 		throw new Error("Server nicht Erreichbar");
 	} else {
-		return currentServerUrl ?? serverUrls[0];
+		return currentServerUrl ?? defaultServerUrl;
 	}
 }
 
@@ -77,16 +108,20 @@ export async function FetchRetry<I, T>(
 		}
 		responded.statusCode = response.status;
 		return responded;
-	} catch (error: any) {
-		throw new Error("Fetch-Fehler: " + (error.message || error));
+	} catch (error: unknown) {
+		console.error("Fetch error occurred:", error);
+		throw new Error(
+			`Fetch-Fehler: ${(<Error>error).message || error}. URL: ${serverUrl}/${UrlPath}, Method: ${method}, Retry: ${retry}`,
+		);
 	}
 }
 
-export const API_URL = import.meta.env.PROD
+export const API_URL: ServerConfig[] = import.meta.env.PROD
 	? [
-			"https://lst.otto.home64.de/api/v1",
-			"https://lst-kirchheim.dnshome.de/api/v1",
-			"https://otto1989.dnshome.de/api/v1",
-			"https://web-app-rn6h2lgzma-ey.a.run.app/api/v1",
+			{ url: "https://lst.otto.home64.de/api/v1", timeout: 5000 },
+			{ url: "https://web-app-rn6h2lgzma-ey.a.run.app/api/v1", timeout: 20000 },
 		]
-	: ["http://192.168.178.56:8081/api/v1", "http://192.168.178.56:8081/api/v1"];
+	: [
+			{ url: "http://192.168.178.56:8081/api/v1", timeout: 3000 },
+			{ url: "http://localhost:8081/api/v1", timeout: 2000 },
+		];

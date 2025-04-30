@@ -1,8 +1,9 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { createCustomTable } from "../class/CustomTable";
 import { IDatenEWT, IDatenEWTJahr, IVorgabenU } from "../interfaces";
-import { Storage, buttonDisable, download, saveDaten } from "../utilities";
+import { Storage, buttonDisable, saveDaten } from "../utilities";
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from "./components";
+import download from "../utilities/download";
 import { DataE, addEventlistenerToggleBerechnen, ewtBerechnen, saveTableDataEWT } from "./utils";
 
 window.addEventListener("load", () => {

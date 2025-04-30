@@ -20,7 +20,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
 		if (fetched instanceof Error) throw fetched;
 		if (fetched.statusCode == 200) userData = fetched.data;
 		else throw new Error(fetched.message);
-	} catch (err) {
+	} catch (err: unknown) {
 		console.error(err);
 		createSnackBar({
 			message: `Server <br/>Keine Verbindung zum Server oder Serverfehler.`,

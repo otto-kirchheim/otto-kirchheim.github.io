@@ -1,5 +1,5 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import * as exports from "../src/ts/utilities";
+import * as exports from "../../src/ts/utilities";
 import {
 	DatenSortieren,
 	Storage,
@@ -9,7 +9,7 @@ import {
 	decodeAccessToken,
 	getValidAccesstoken,
 	setLoading,
-} from "../src/ts/utilities";
+} from "../../src/ts/utilities";
 /* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
 import * as exportEinstelllungen from "../src/ts/Einstellungen/utils"; */
@@ -26,6 +26,7 @@ describe("#Storage", () => {
 	});
 
 	it("should throw Error when key does not exist", () => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		expect(() => Storage.get<any>("non-existing-key", { check: true })).toThrowError('"non-existing-key" nicht gefunden');
 	});
 

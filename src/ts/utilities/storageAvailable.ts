@@ -6,7 +6,7 @@ export default function storageAvailable(type: "localStorage" | "sessionStorage"
 		storage.setItem(x, x);
 		storage.removeItem(x);
 		return true;
-	} catch (e) {
+	} catch (e: unknown) {
 		if (!storage) return false;
 		return (
 			e instanceof DOMException &&

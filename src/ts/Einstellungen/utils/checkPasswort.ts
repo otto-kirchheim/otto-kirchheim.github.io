@@ -75,7 +75,7 @@ export default async function checkPasswort(modal: CustomHTMLDivElement): Promis
 				fixed: true,
 			});
 		}
-	} catch (err) {
+	} catch (err: unknown) {
 		console.log(err);
 		return;
 	} finally {

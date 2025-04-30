@@ -55,7 +55,7 @@ export default async function BerZeitenEingabe(
 	const bereitschaftsEnde: Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
 	let nacht: boolean = nachtInput.checked;
 	const nachtAnfang: Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
-	let nachtEnde: Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
+	const nachtEnde: Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
 
 	if (nachtAnfang.isBefore(bereitschaftsAnfang)) {
 		clearLoading("btnESZ");
@@ -94,7 +94,7 @@ export default async function BerZeitenEingabe(
 		(!bereitschaftsAnfang.isSame(bereitschaftsEnde, "month") &&
 			bereitschaftsEnde.isSameOrBefore(dayjs([jahr, bereitschaftsEnde.month(), 1, 0, 0])))
 	) {
-		let nachtEnde2: Dayjs = bereitschaftsEnde.isSameOrBefore(nachtEnde, "month")
+		const nachtEnde2: Dayjs = bereitschaftsEnde.isSameOrBefore(nachtEnde, "month")
 			? nachtEnde
 			: bereitschaftsEnde.hour(nachtEnde.hour()).minute(nachtEnde.minute());
 
@@ -165,7 +165,7 @@ export default async function BerZeitenEingabe(
 		const bereitschaftsEndeWechsel: Dayjs = dayjs([jahr2, monat2]);
 		let nacht2: boolean = false;
 		let nachtEnde1: Dayjs;
-		let nachtEnde2: Dayjs = nachtEnde.clone();
+		const nachtEnde2: Dayjs = nachtEnde.clone();
 		let nachtAnfang2: Dayjs;
 		if (bereitschaftsEndeWechsel.isBefore(nachtAnfang)) {
 			[nacht, nacht2] = [nacht2, nacht];
@@ -236,7 +236,7 @@ export default async function BerZeitenEingabe(
 					timeout: 3000,
 					fixed: true,
 				});
-			} catch (err) {
+			} catch (err: unknown) {
 				console.log(err);
 				return;
 			}

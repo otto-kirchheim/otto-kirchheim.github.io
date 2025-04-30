@@ -58,7 +58,8 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			let messages;
 			try {
 				messages = JSON.parse(fetched.message);
-			} catch (error) {
+			} catch (error: unknown) {
+				console.log(error, fetched.message);
 				messages = fetched.message ?? "unbekannter Fehler";
 			} finally {
 				messages =
@@ -107,7 +108,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, Monat?
 			timeout: 3000,
 			fixed: true,
 		});
-	} catch (err) {
+	} catch (err: unknown) {
 		console.error(err);
 		return;
 	} finally {

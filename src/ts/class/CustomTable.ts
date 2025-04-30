@@ -25,7 +25,7 @@ interface CustomTableOptions<T extends CustomTableTypes> {
 		editing?: CustomTableOptions<T>["editing"];
 	}[];
 	rows: T[];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	empty?: string | (() => string);
 	sorting?: { enabled: boolean };
 	editing?: {
@@ -69,9 +69,9 @@ interface CustomTableOptionsAll<T extends CustomTableTypes> {
 		visible: boolean;
 		editing?: CustomTableOptionsAll<T>["editing"];
 	}[];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	rows: T[];
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	empty: string | (() => string);
 	sorting: { enabled: boolean };
 	editing: {
@@ -400,7 +400,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 			const buttonDeleteAlle = createButton(
 				["btn", "btn-danger"],
 				this.options.editing.deleteAllText,
-				this.options.editing.deleteAllRows
+				this.options.editing.deleteAllRows,
 			);
 
 			divFooter.appendChild(buttonAdd);
@@ -419,7 +419,6 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 		}
 		if (this.options.customFunction?.afterDrawFooter) this.options.customFunction.afterDrawFooter.call(this);
 
-		// eslint-disable-next-line @typescript-eslint/no-empty-function
 		function createButton(classes = ["btn", "btn-primary"], text = "Button", eventlistener = () => {}) {
 			const button = document.createElement("button");
 			button.classList.add(...classes);
@@ -464,7 +463,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 							classList: string[],
 							text: string,
 							eventListener: (row: Row<T>) => void,
-							title = "button"
+							title = "button",
 						) => {
 							const button = document.createElement("button");
 							button.classList.add(...classList);
@@ -482,13 +481,13 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 							["btn", "btn-outline-primary"],
 							column.editing.editText,
 							this.options.editing.editRow,
-							"edit"
+							"edit",
 						);
 						const buttonDelete = createButton(
 							["btn", "btn-outline-danger"],
 							column.editing.deleteText,
 							this.options.editing.deleteRow,
-							"delete"
+							"delete",
 						);
 
 						divBtnGroup.append(buttonEdit);
@@ -569,7 +568,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 			this: CustomTable<T>,
 			column: Column<T>,
 			th: HTMLTableCellElement,
-			span: HTMLSpanElement
+			span: HTMLSpanElement,
 		): void {
 			if (!column.sorted) return span.classList.add("customtable-sort");
 			const direction = column.direction ? column.direction.toLowerCase() : "asc";
@@ -667,7 +666,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
 export function createCustomTable<T extends CustomTableTypes>(
 	table: string | CustomHTMLTableElement<T>,
-	options: CustomTableOptions<T>
+	options: CustomTableOptions<T>,
 ): CustomTable<T> {
 	return new CustomTable<T>(table, options);
 }

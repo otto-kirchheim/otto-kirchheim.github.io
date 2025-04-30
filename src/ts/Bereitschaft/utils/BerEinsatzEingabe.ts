@@ -93,7 +93,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): void {
 				timeout: 3000,
 				fixed: true,
 			});
-		} catch (error: any) {
+		} catch (error) {
 			console.log(error);
 		}
 	}

@@ -115,7 +115,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 			onSubmit={onSubmit()}
 		>
 			<MyModalBody>{createElements(row, datum)}</MyModalBody>
-		</MyFormModal>
+		</MyFormModal>,
 	);
 
 	if (ref.current === null) throw new Error("referenz nicht gesetzt");

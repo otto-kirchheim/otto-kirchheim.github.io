@@ -102,7 +102,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 			onSubmit={onSubmit()}
 		>
 			<MyModalBody>{createElements(row)}</MyModalBody>
-		</MyFormModal>
+		</MyFormModal>,
 	);
 
 	if (ref.current === null) throw new Error("referenz nicht gesetzt");

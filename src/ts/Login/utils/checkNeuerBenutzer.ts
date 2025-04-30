@@ -72,7 +72,7 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
 
 			userLoginSuccess({ ...fetched.data, username: data.Name });
 		}
-	} catch (err) {
+	} catch (err: unknown) {
 		console.log(err);
 		return;
 	} finally {

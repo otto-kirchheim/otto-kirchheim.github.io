@@ -38,7 +38,7 @@ export default async function loginUser(
 
 			userLoginSuccess({ ...fetched.data, username });
 		} else errorMessage.innerHTML = fetched.message;
-	} catch (err) {
+	} catch (err: unknown) {
 		err instanceof Error ? console.log(err.message) : console.log(err);
 	} finally {
 		clearLoading("btnLogin", false);

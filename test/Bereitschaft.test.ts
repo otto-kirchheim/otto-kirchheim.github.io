@@ -27,7 +27,7 @@ describe("#Bereitschaftseingabe", () => {
 			nachtEnde = bereitschaftsEnde,
 			daten = [],
 			result = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, daten);
-		expect(result).not.toBeFalsy;
+		expect(result).not.toBeFalsy();
 		if (result === false) return;
 		expect(result.length === 7);
 		expect(result).toMatchSnapshot();

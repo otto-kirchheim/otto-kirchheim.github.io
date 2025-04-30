@@ -1,8 +1,9 @@
 import { createSnackBar } from "../class/CustomSnackbar";
 import { CustomTable, createCustomTable } from "../class/CustomTable";
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from "../interfaces";
-import { buttonDisable, download, saveDaten } from "../utilities";
+import { buttonDisable, saveDaten } from "../utilities";
 import dayjs from "../utilities/configDayjs";
+import download from "../utilities/download";
 import {
 	EditorModalBE,
 	EditorModalBereitschaftsZeit,
