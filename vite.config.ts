@@ -60,11 +60,6 @@ export default defineConfig({
 			exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
 			skipIfLargerOrEqual: true,
 		}),
-		compression({
-			algorithm: "brotliCompress",
-			exclude: [/\.(gz)$/, /\.(woff|woff2|map|nojekyll|png)$/],
-			skipIfLargerOrEqual: true,
-		}),
 		UnpluginInjectPreload({
 			files: [
 				{
