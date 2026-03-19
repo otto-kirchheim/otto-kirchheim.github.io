@@ -36,6 +36,7 @@ export default async function userLoginSuccess({
 
   username = `${username[0].toUpperCase()}${username.substring(1)}`;
   Storage.set('Benutzer', username);
+  if (role) Storage.set('BenutzerRolle', role);
   if (email) Storage.set('BenutzerEmail', email);
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) willkommen.innerHTML = `Hallo, ${escapeHtml(username)}.`;
