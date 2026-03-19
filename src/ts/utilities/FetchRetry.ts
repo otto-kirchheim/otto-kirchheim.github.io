@@ -174,8 +174,8 @@ export async function FetchRetry<I, T>(
 
 export const API_URL: ServerConfig[] = import.meta.env.PROD
   ? [
-      { url: 'https://lst.otto.home64.de/api/v2', timeout: 5000 },
-      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 20000 },
+      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 8000 },
+      { url: 'https://lst.otto.home64.de/api/v2', timeout: 3000 },
     ]
   : [
       { url: 'http://192.168.178.56:8081/api/v2', timeout: 3000 },

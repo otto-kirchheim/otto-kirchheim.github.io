@@ -13,11 +13,12 @@ vi.mock('../../src/ts/utilities/apiService', () => ({
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/Einstellungen/utils', () => ({ Logout: mockLogout }));
 
-import tokenErneuern from '../../src/ts/utilities/tokenErneuern';
+import tokenErneuern, { resetTokenState } from '../../src/ts/utilities/tokenErneuern';
 
 describe('tokenErneuern', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetTokenState();
   });
 
   it('ruft authApi.refreshToken() auf bei erfolgreichem Refresh', async () => {

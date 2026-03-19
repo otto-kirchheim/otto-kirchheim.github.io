@@ -179,10 +179,16 @@ export const authApi = {
 
   /**
    * Logout: POST /auth/logout
+   * Verwendet raw fetch (nicht FetchRetry), um Re-Entry in tokenErneuern zu verhindern.
    */
   async logout(): Promise<void> {
     try {
-      await apiFetch('auth/logout', undefined, 'POST');
+      const serverUrl = await getServerUrl();
+      await fetch(`${serverUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        mode: 'cors',
+      });
     } catch {
       // Logout-Fehler ignorieren – lokale Daten werden sowieso gelöscht
     }
