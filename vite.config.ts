@@ -21,9 +21,6 @@ export default defineConfig({
             crossOrigin: 'anonymous',
           },
         },
-        {
-          outputMatch: /[a-z-0-9]*\.css$/,
-        },
       ],
     }),
     VitePWA({

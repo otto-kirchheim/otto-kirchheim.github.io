@@ -3,10 +3,13 @@ import { Logout } from '../Einstellungen/utils';
 import { authApi } from './apiService';
 
 let REFRESHED = 0;
+let isLogoutInProgress = false;
 
 export default async function tokenErneuern(retry?: number): Promise<void> {
+  if (isLogoutInProgress) return;
   if ((retry ?? 0) > 2 || REFRESHED > 2) {
     resetRefreshCounter();
+    isLogoutInProgress = true;
     showErrorAndLogout();
     throw new Error('Zu viele Token-Refresh-Versuche');
   }
@@ -16,6 +19,7 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
     incrementRefreshCounter();
   } catch (err: unknown) {
     console.error('Token-Refresh fehlgeschlagen:', err);
+    isLogoutInProgress = true;
     showErrorAndLogout();
     throw new Error('Fehler bei Token erneuerung');
   }
@@ -23,6 +27,13 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
 
 function resetRefreshCounter(): void {
   REFRESHED = 0;
+  isLogoutInProgress = false;
+}
+
+/** Nur für Tests: setzt internen Modulzustand vollständig zurück. */
+export function resetTokenState(): void {
+  REFRESHED = 0;
+  isLogoutInProgress = false;
 }
 
 function incrementRefreshCounter(): void {
