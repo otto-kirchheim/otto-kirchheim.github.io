@@ -54,6 +54,7 @@ window.addEventListener('load', () => {
     const clientVersion: string = Storage.get('Version', { check: true, default: '0.0.0' });
     if (compareVersion(clientVersion, currentVersion) < 0) {
       const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
+      sessionStorage.clear();
       Logout();
       createSnackBar({
         message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
