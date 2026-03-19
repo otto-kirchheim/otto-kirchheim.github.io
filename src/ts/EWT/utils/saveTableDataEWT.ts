@@ -1,14 +1,14 @@
-import { aktualisiereBerechnung } from "../../Berechnung";
-import { CustomTable } from "../../class/CustomTable";
-import type { IDatenEWT, IDatenEWTJahr } from "../../interfaces";
-import Storage from "../../utilities/Storage";
-import tableToArray from "../../utilities/tableToArray";
+import type { IDatenEWT, IDatenEWTJahr } from '../../interfaces';
+import type { CustomTable } from '../../class/CustomTable';
+import { Storage, tableToArray } from '../../utilities';
+import aktualisiereBerechnung from '../../Berechnung/aktualisiereBerechnung';
 
 export default function saveTableDataEWT(ft: CustomTable<IDatenEWT>, Monat?: number): IDatenEWTJahr {
-	Monat ??= Storage.get<number>("Monat", { check: true });
-	const data = Storage.get<IDatenEWTJahr>("dataE", { check: true });
-	data[Monat] = tableToArray<IDatenEWT>(ft);
-	Storage.set("dataE", data);
-	aktualisiereBerechnung();
-	return data;
+  Monat ??= Storage.get<number>('Monat', { check: true });
+
+  const ewtData: IDatenEWTJahr = Storage.get<IDatenEWTJahr>('dataE', { default: {} as IDatenEWTJahr });
+  ewtData[Monat] = tableToArray<IDatenEWT>(ft);
+  Storage.set('dataE', ewtData);
+  aktualisiereBerechnung();
+  return ewtData;
 }

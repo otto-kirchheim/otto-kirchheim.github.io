@@ -1,3 +1,3 @@
-import TableComponent from "./createBerechnungTableBody";
+import TableComponent from './createBerechnungTableBody';
 
 export { TableComponent };
