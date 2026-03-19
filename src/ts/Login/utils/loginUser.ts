@@ -2,6 +2,7 @@ import Modal from 'bootstrap/js/dist/modal';
 import { userLoginSuccess } from '.';
 import { clearLoading, setLoading } from '../../utilities';
 import { authApi } from '../../utilities/apiService';
+import { resetTokenState } from '../../utilities/tokenErneuern';
 import type { CustomHTMLDivElement } from '../../interfaces';
 
 export default async function loginUser(
@@ -32,6 +33,7 @@ export default async function loginUser(
 
   try {
     await authApi.login(username, passwort);
+    resetTokenState();
     const me = await authApi.me().catch(() => null);
     Modal.getInstance(modal)?.hide();
     await userLoginSuccess({ username, role: me?.role, email: me?.email, emailVerified: me?.emailVerified });
