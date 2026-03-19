@@ -30,7 +30,7 @@ function resetRefreshCounter(): void {
   isLogoutInProgress = false;
 }
 
-/** Nur für Tests: setzt internen Modulzustand vollständig zurück. */
+/** Setzt internen Modulzustand zurück (nach erfolgreichem Login aufrufen). */
 export function resetTokenState(): void {
   REFRESHED = 0;
   isLogoutInProgress = false;

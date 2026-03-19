@@ -132,8 +132,8 @@ window.addEventListener('load', () => {
 
   const einstellungenTab = document.querySelector<HTMLButtonElement>('#einstellungen-tab');
   einstellungenTab?.addEventListener('click', () => {
-    void ensureEmailAnzeigeLoaded();
+    if (Storage.check('Benutzer')) void ensureEmailAnzeigeLoaded();
   });
 
-  void ensureEmailAnzeigeLoaded();
+  if (Storage.check('Benutzer')) void ensureEmailAnzeigeLoaded();
 });
