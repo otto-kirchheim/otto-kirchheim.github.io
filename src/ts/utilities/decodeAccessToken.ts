@@ -1,32 +1,30 @@
-import { Storage } from ".";
-
-type decodedAccessToken = {
-	id: string;
-	Name: string;
-	Berechtigung: number;
-	iat: number;
-	exp: number;
+export type UserCookieData = {
+  userName: string;
+  role: string;
 };
 
-export default function decodeAccessToken(
-	accesstoken = Storage.get<string>("accessToken", { check: true }),
-): decodedAccessToken {
-	const base64Url = accesstoken.split(".")[1];
-	const base64 = convertUrlBase64ToBase64(base64Url);
-	const jsonPayload = decodeBase64ToJSON(base64);
-	return JSON.parse(jsonPayload);
+/** Admin-Rollen (alles außer "member") */
+const ADMIN_ROLES = new Set(['team-admin', 'org-admin', 'super-admin']);
 
-	function convertUrlBase64ToBase64(base64Url: string): string {
-		return base64Url.replace(/-/g, "+").replace(/_/g, "/");
-	}
+/**
+ * Liest das `user`-Cookie (nicht-HttpOnly, vom Server gesetzt).
+ * Enthält { userName, role } als JSON.
+ */
+export function getUserCookie(): UserCookieData | null {
+  const match = document.cookie.match(/(?:^|;\s*)user=([^;]*)/);
+  if (!match) return null;
+  try {
+    return JSON.parse(decodeURIComponent(match[1]));
+  } catch {
+    return null;
+  }
+}
 
-	function decodeBase64ToJSON(base64: string): string {
-		return decodeURIComponent(
-			window
-				.atob(base64)
-				.split("")
-				.map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-				.join(""),
-		);
-	}
+/**
+ * Prüft, ob der aktuelle Benutzer eine Admin-Rolle hat.
+ * Liest das `user`-Cookie.
+ */
+export function isAdmin(): boolean {
+  const user = getUserCookie();
+  return user ? ADMIN_ROLES.has(user.role) : false;
 }

@@ -1,58 +1,99 @@
-import { SelectYear } from "../Einstellungen/utils";
-import { IVorgabenU } from "../interfaces";
-import { Storage, decodeAccessToken } from "../utilities";
-import { createModalLogin } from "./components";
+import { SelectYear } from '../Einstellungen/utils';
+import type { IVorgabenU } from '../interfaces';
+import { Storage, updateTabVisibility } from '../utilities';
+import dayjs from '../utilities/configDayjs';
+import { getUserCookie, isAdmin } from '../utilities/decodeAccessToken';
+import { initAutoSaveIndicator } from '../utilities/autoSaveIndicator';
+import { createModalLogin } from './components';
+import { handleAuthUrlState } from './utils';
 
-window.addEventListener("load", () => {
-	if (Storage.check("VorgabenU") && Storage.get<IVorgabenU>("VorgabenU", true).vorgabenB[0].endeB.Nwoche === undefined)
-		Storage.remove("VorgabenU");
+let adminTabMounted = false;
 
-	const btnLogin = document.querySelector<HTMLButtonElement>("#btnLogin");
-	btnLogin?.addEventListener("click", () => createModalLogin());
+async function ensureAdminTabMounted(): Promise<void> {
+  if (adminTabMounted || !isAdmin()) return;
+  const { mountAdminTab } = await import('../Admin');
+  const currentUserName = getUserCookie()?.userName ?? 'admin';
+  mountAdminTab(currentUserName);
+  adminTabMounted = true;
+}
 
-	const willkommenEl = document.querySelector<HTMLHeadingElement>("#Willkommen");
-	const jahrEl = document.querySelector<HTMLInputElement>("#Jahr");
-	const monatEl = document.querySelector<HTMLInputElement>("#Monat");
-	const loginDisplayEl = document.querySelector<HTMLDivElement>("#loginDisplay");
+window.addEventListener('load', () => {
+  handleAuthUrlState();
 
-	const nebenTab = document.querySelector<HTMLButtonElement>("#neben-tab");
-	if (!nebenTab) throw new Error("Element nicht gefunden");
-	const nebenTabEl = nebenTab.parentElement as HTMLLIElement;
+  if (Storage.check('VorgabenU')) {
+    const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', true);
+    if (vorgabenU?.vorgabenB?.[0]?.endeB?.Nwoche === undefined) Storage.remove('VorgabenU');
+  }
 
-	const adminEl = document.querySelector<HTMLDivElement>("#admin");
-	const navmenuEl = document.querySelector<HTMLDivElement>("#navmenu");
-	const btnNavmenuEl = document.querySelector<HTMLButtonElement>("#btn-navmenu");
+  const btnLogin = document.querySelector<HTMLButtonElement>('#btnLogin');
+  btnLogin?.addEventListener('click', () => createModalLogin());
 
-	if (Storage.check("Benutzer") && Storage.check("accessToken")) {
-		const benutzer: string = Storage.check("VorgabenU")
-			? Storage.get<IVorgabenU>("VorgabenU", true).pers.Vorname
-			: Storage.get<string>("Benutzer", true);
-		if (!benutzer) throw new Error("Benutzer nicht gefunden");
+  const willkommenEl = document.querySelector<HTMLHeadingElement>('#Willkommen');
+  const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
+  const monatEl = document.querySelector<HTMLInputElement>('#Monat');
+  const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
 
-		if (btnLogin) btnLogin.classList.add("d-none");
+  const adminEl = document.querySelector<HTMLDivElement>('#admin');
+  const adminTabPaneEl = document.querySelector<HTMLDivElement>('#Admin');
+  const adminTabButtonEl = document.querySelector<HTMLButtonElement>('#admin-tab');
+  const brandStartTabEl = document.querySelector<HTMLButtonElement>('#brand-start-tab');
+  const navmenuEl = document.querySelector<HTMLDivElement>('#navmenu');
+  const btnNavmenuEl = document.querySelector<HTMLButtonElement>('#btn-navmenu');
 
-		if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
-		if (loginDisplayEl) loginDisplayEl.classList.add("d-none");
+  adminTabButtonEl?.addEventListener('click', () => {
+    void ensureAdminTabMounted();
+  });
 
-		const jahr: number = Storage.get<number>("Jahr", { check: true });
-		const monat: number = Storage.get<number>("Monat", { check: true });
-		if (!jahr || !monat) throw new Error("Jahr oder Monat nicht erkannt");
+  if (Storage.check('Benutzer') && getUserCookie()) {
+    const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
+    const benutzer: string = localVorgabenU?.pers?.Vorname || Storage.get<string>('Benutzer', true);
+    if (!benutzer) {
+      Storage.remove('Benutzer');
+      return;
+    }
 
-		if (jahrEl) jahrEl.value = jahr.toString();
-		if (monatEl) monatEl.value = monat.toString();
+    if (btnLogin) btnLogin.classList.add('d-none');
 
-		console.log("Benutzer gefunden");
+    if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
+    if (loginDisplayEl) loginDisplayEl.classList.add('d-none');
 
-		const vorgabenU: IVorgabenU = Storage.get("VorgabenU", { check: true });
-		if (vorgabenU && vorgabenU.pers.TB == "Tarifkraft" && nebenTabEl) nebenTabEl.classList.remove("d-none");
+    const jahr: number = Storage.get<number>('Jahr', { default: dayjs().year() });
+    const monat: number = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
 
-		if (Storage.check("accessToken"))
-			if (adminEl && decodeAccessToken().Berechtigung & 2) adminEl.classList.remove("d-none");
+    if (jahrEl) jahrEl.value = jahr.toString();
+    if (monatEl) monatEl.value = monat.toString();
 
-		monatEl?.classList.remove("d-none");
-		navmenuEl?.classList.remove("d-none");
-		btnNavmenuEl?.classList.remove("d-none");
+    console.log('Benutzer gefunden');
 
-		if (navigator.onLine) SelectYear(monat, jahr);
-	}
+    updateTabVisibility(localVorgabenU?.Einstellungen?.aktivierteTabs);
+
+    const userIsAdmin = isAdmin();
+    adminEl?.classList.toggle('d-none', !userIsAdmin);
+    adminTabPaneEl?.classList.toggle('d-none', !userIsAdmin);
+
+    if (!userIsAdmin) {
+      Storage.remove('actAsUserId');
+      Storage.remove('actAsUserName');
+    }
+
+    if (userIsAdmin) {
+      void ensureAdminTabMounted();
+    }
+
+    if (!userIsAdmin && window.location.hash.toLowerCase() === '#admin') {
+      brandStartTabEl?.click();
+      window.location.hash = '#start';
+    }
+
+    monatEl?.classList.remove('d-none');
+    navmenuEl?.classList.remove('d-none');
+    btnNavmenuEl?.classList.remove('d-none');
+
+    initAutoSaveIndicator();
+
+    if (navigator.onLine) SelectYear(monat, jahr);
+  } else {
+    adminEl?.classList.add('d-none');
+    adminTabPaneEl?.classList.add('d-none');
+  }
 });

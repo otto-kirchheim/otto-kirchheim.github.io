@@ -1,264 +1,299 @@
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import * as exports from "../../src/ts/utilities";
-import {
-	DatenSortieren,
-	Storage,
-	buttonDisable,
-	checkMaxTag,
-	clearLoading,
-	decodeAccessToken,
-	getValidAccesstoken,
-	setLoading,
-} from "../../src/ts/utilities";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { DatenSortieren, Storage, buttonDisable, checkMaxTag, clearLoading, setLoading } from '../../src/ts/utilities';
+import { getUserCookie, isAdmin } from '../../src/ts/utilities/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
 import * as exportEinstelllungen from "../src/ts/Einstellungen/utils"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */
-describe("#Storage", () => {
-	afterEach(() => {
-		localStorage.clear(); // reset localStorage after each test
-	});
+describe('#Storage', () => {
+  afterEach(() => {
+    localStorage.clear(); // reset localStorage after each test
+  });
 
-	it("should set and get a value", () => {
-		Storage.set("key", "value");
-		expect(Storage.get<string>("key")).toBe("value");
-	});
+  it('should set and get a value', () => {
+    Storage.set('key', 'value');
+    expect(Storage.get<string>('key')).toBe('value');
+  });
 
-	it("should throw Error when key does not exist", () => {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		expect(() => Storage.get<any>("non-existing-key", { check: true })).toThrowError('"non-existing-key" nicht gefunden');
-	});
+  it('should throw Error when key does not exist', () => {
+    expect(() => Storage.get<any>('non-existing-key', { check: true })).toThrowError(
+      '"non-existing-key" nicht gefunden',
+    );
+  });
 
-	it("should remove a value", () => {
-		Storage.set("key", "value");
-		Storage.remove("key");
-		expect(Storage.check("key")).toBeFalsy();
-	});
+  it('should remove a value', () => {
+    Storage.set('key', 'value');
+    Storage.remove('key');
+    expect(Storage.check('key')).toBeFalsy();
+  });
 
-	it("should clear all values", () => {
-		Storage.set("key1", "value1");
-		Storage.set("key2", "value2");
-		Storage.clear();
-		expect(Storage.size()).toBe(0);
-	});
+  it('should clear all values', () => {
+    Storage.set('key1', 'value1');
+    Storage.set('key2', 'value2');
+    Storage.clear();
+    expect(Storage.size()).toBe(0);
+  });
 
-	it("should check if key exists", () => {
-		Storage.set("key", "value");
-		expect(Storage.check("key")).toBeTruthy();
-		expect(Storage.check("non-existing-key")).toBeFalsy();
-	});
+  it('should check if key exists', () => {
+    Storage.set('key', 'value');
+    expect(Storage.check('key')).toBeTruthy();
+    expect(Storage.check('non-existing-key')).toBeFalsy();
+  });
 
-	it("should compare a value with the stored value", () => {
-		Storage.set("key", "value");
-		expect(Storage.compare("key", "value")).toBe(true);
-		expect(Storage.compare("key", "other-value")).toBe(false);
-	});
+  describe('compare', () => {
+    it('should compare a simple string value', () => {
+      Storage.set('key', 'value');
+      expect(Storage.compare('key', 'value')).toBe(true);
+      expect(Storage.compare('key', 'other-value')).toBe(false);
+    });
+
+    it('should return false when key does not exist', () => {
+      expect(Storage.compare('key', 'test')).toBe(false);
+    });
+
+    it('should compare numbers correctly', () => {
+      Storage.set('key', 42);
+      expect(Storage.compare('key', 42)).toBe(true);
+      expect(Storage.compare('key', 43)).toBe(false);
+    });
+
+    it('should compare booleans correctly', () => {
+      Storage.set('key', true);
+      expect(Storage.compare('key', true)).toBe(true);
+      expect(Storage.compare('key', false)).toBe(false);
+    });
+
+    it('should compare null correctly', () => {
+      Storage.set('key', null);
+      expect(Storage.compare('key', null)).toBe(true);
+      expect(Storage.compare('key', 'null')).toBe(false);
+    });
+
+    it('should compare objects correctly', () => {
+      Storage.set('key', { a: 1, b: 'test' });
+      expect(Storage.compare('key', { a: 1, b: 'test' })).toBe(true);
+      expect(Storage.compare('key', { a: 2, b: 'test' })).toBe(false);
+    });
+
+    it('should compare objects independent of key order', () => {
+      Storage.set('key', { a: 1, b: 2, c: 3 });
+      expect(Storage.compare('key', { c: 3, a: 1, b: 2 })).toBe(true);
+    });
+
+    it('should compare nested objects correctly', () => {
+      const nested = { a: { b: { c: 1 } }, d: [1, 2, 3] };
+      Storage.set('key', nested);
+      expect(Storage.compare('key', { a: { b: { c: 1 } }, d: [1, 2, 3] })).toBe(true);
+      expect(Storage.compare('key', { a: { b: { c: 2 } }, d: [1, 2, 3] })).toBe(false);
+    });
+
+    it('should compare nested objects independent of key order', () => {
+      Storage.set('key', { x: { b: 2, a: 1 }, y: 3 });
+      expect(Storage.compare('key', { y: 3, x: { a: 1, b: 2 } })).toBe(true);
+    });
+
+    it('should compare arrays correctly (order-sensitive)', () => {
+      Storage.set('key', [1, 2, 3]);
+      expect(Storage.compare('key', [1, 2, 3])).toBe(true);
+      expect(Storage.compare('key', [3, 2, 1])).toBe(false);
+    });
+
+    it('should distinguish empty arrays and objects', () => {
+      Storage.set('key', []);
+      expect(Storage.compare('key', [])).toBe(true);
+      expect(Storage.compare('key', {})).toBe(false);
+
+      Storage.set('key', {});
+      expect(Storage.compare('key', {})).toBe(true);
+      expect(Storage.compare('key', [])).toBe(false);
+    });
+
+    it('should compare arrays containing objects', () => {
+      const data = [
+        { id: 1, name: 'A' },
+        { id: 2, name: 'B' },
+      ];
+      Storage.set('key', data);
+      expect(
+        Storage.compare('key', [
+          { id: 1, name: 'A' },
+          { id: 2, name: 'B' },
+        ]),
+      ).toBe(true);
+      expect(
+        Storage.compare('key', [
+          { id: 2, name: 'B' },
+          { id: 1, name: 'A' },
+        ]),
+      ).toBe(false);
+    });
+
+    it('should detect different types as unequal', () => {
+      Storage.set('key', '42');
+      expect(Storage.compare('key', 42)).toBe(false);
+
+      Storage.set('key', 0);
+      expect(Storage.compare('key', false)).toBe(false);
+    });
+
+    it('should handle undefined values in objects (stripped by JSON.stringify)', () => {
+      Storage.set('key', { a: 1 });
+      expect(Storage.compare('key', { a: 1, b: undefined })).toBe(true);
+    });
+  });
 });
 
-describe("#decodeAccessToken", () => {
-	afterAll(() => {
-		Storage.remove("accessToken");
-	});
+describe('#getUserCookie & isAdmin', () => {
+  afterEach(() => {
+    // Clear cookies
+    document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  });
 
-	it("should throw an error if no accessToken is provided", () => {
-		Storage.remove("accessToken");
-		expect(() => {
-			decodeAccessToken();
-		}).toThrowError('"Server Zugriffscode" nicht gefunden');
-	});
+  it('getUserCookie sollte null zurückgeben wenn kein Cookie existiert', () => {
+    expect(getUserCookie()).toBeNull();
+  });
 
-	it("should return a JSON object if a valid accessToken is provided", () => {
-		const accessToken =
-			"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
-		Storage.set("accessToken", accessToken);
-		const expected = {
-			sub: "1234567890",
-			name: "John Doe",
-			iat: 1516239022,
-		};
-		const decoded = decodeAccessToken(accessToken);
-		expect(decoded).toEqual(expect.objectContaining(expected));
-	});
+  it('getUserCookie sollte Cookie-Daten parsen', () => {
+    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'member' }))}`;
+    const result = getUserCookie();
+    expect(result).toEqual({ userName: 'test', role: 'member' });
+  });
+
+  it('isAdmin sollte false zurückgeben ohne Cookie', () => {
+    expect(isAdmin()).toBe(false);
+  });
+
+  it('isAdmin sollte false zurückgeben für member', () => {
+    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'member' }))}`;
+    expect(isAdmin()).toBe(false);
+  });
+
+  it('isAdmin sollte true zurückgeben für team-admin', () => {
+    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'team-admin' }))}`;
+    expect(isAdmin()).toBe(true);
+  });
+
+  it('isAdmin sollte true zurückgeben für super-admin', () => {
+    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'super-admin' }))}`;
+    expect(isAdmin()).toBe(true);
+  });
 });
 
-describe("#getValidAccesstoken", async () => {
-	let accessToken: string;
-	let expiredAccessToken: string;
-	let decodedToken: {
-		id: string;
-		Name: string;
-		Berechtigung: number;
-		iat: number;
-		exp: number;
-	};
+describe('#buttonDisable', () => {
+  let buttons: HTMLButtonElement[];
 
-	beforeAll(() => {
-		vi.mock("./decodeAccessToken");
-		vi.mock("./tokenErneuern");
-		accessToken = "validAccessToken";
-		expiredAccessToken = "expiredAccessToken";
-		decodedToken = {
-			id: "TEST",
-			Name: "Max",
-			Berechtigung: 1,
-			iat: Math.floor(Date.now() / 1000),
-			exp: Math.floor(Date.now() / 1000) + 60,
-		};
-	});
-	beforeEach(() => {
-		Storage.set("accessToken", accessToken);
-	});
+  beforeAll(() => {
+    buttons = [document.createElement('button'), document.createElement('button'), document.createElement('button')];
+    buttons[0].setAttribute('data-disabler', 'true');
+    buttons[1].setAttribute('data-disabler', 'true');
+    buttons[2].setAttribute('data-enabler', 'true');
+    document.body.appendChild(buttons[0]);
+    document.body.appendChild(buttons[1]);
+    document.body.appendChild(buttons[2]);
+  });
 
-	/* it("should throw an error if no accessToken is provided", async () => {
-		Storage.remove("accessToken");
-		expect(Storage.get("accessToken")).toBeNull();
-		expect(await getValidAccesstoken()).toThrowError('"Server Zugriffscode" nicht gefunden');
-	}); */
+  it('should disable all buttons with data-disabler attribute when status is true', () => {
+    buttonDisable(true);
+    expect(buttons[0].disabled).toBe(true);
+    expect(buttons[1].disabled).toBe(true);
+    expect(buttons[2].disabled).toBe(false);
+  });
 
-	it("should return the accessToken if it is valid", async () => {
-		const mockdecodeAccessToken = vi.spyOn(exports, "decodeAccessToken").mockReturnValue(decodedToken);
-		const result = await getValidAccesstoken(accessToken);
-		expect(mockdecodeAccessToken).toBeCalledWith(accessToken);
-		expect(result).toBe(accessToken);
-	});
+  it('should enable all buttons with data-disabler attribute when status is false', () => {
+    buttonDisable(false);
+    expect(buttons[0].disabled).toBe(false);
+    expect(buttons[1].disabled).toBe(false);
+    expect(buttons[2].disabled).toBe(false);
+  });
 
-	it("should renew the accessToken if it is expired", async () => {
-		const newAccessToken = "newAccessToken";
-		const expiredToken = {
-			id: "TEST",
-			Name: "Max",
-			Berechtigung: 1,
-			iat: Math.floor(Date.now() / 1000),
-			exp: Math.floor(Date.now() / 1000) - 60,
-		};
-		vi.spyOn(exports, "decodeAccessToken").mockReturnValue(expiredToken);
-		vi.spyOn(exports, "tokenErneuern").mockResolvedValue(newAccessToken);
-		const result = await getValidAccesstoken(expiredAccessToken);
-		expect(result).toBe(newAccessToken);
-	});
-
-	afterEach(() => {
-		vi.restoreAllMocks();
-	});
-
-	afterAll(() => {
-		vi.clearAllMocks();
-	});
+  afterAll(() => {
+    buttons.forEach(button => button.remove());
+  });
 });
 
-describe("#buttonDisable", () => {
-	let buttons: HTMLButtonElement[];
+describe('#checkMaxTag', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
 
-	beforeAll(() => {
-		buttons = [document.createElement("button"), document.createElement("button"), document.createElement("button")];
-		buttons[0].setAttribute("data-disabler", "true");
-		buttons[1].setAttribute("data-disabler", "true");
-		buttons[2].setAttribute("data-enabler", "true");
-		document.body.appendChild(buttons[0]);
-		document.body.appendChild(buttons[1]);
-		document.body.appendChild(buttons[2]);
-	});
+  it('should return the current day of the month, if the current date is in the month', () => {
+    const mockDate = new Date(2023, 2, 20);
+    vi.setSystemTime(mockDate);
 
-	it("should disable all buttons with data-disabler attribute when status is true", () => {
-		buttonDisable(true);
-		expect(buttons[0].disabled).toBe(true);
-		expect(buttons[1].disabled).toBe(true);
-		expect(buttons[2].disabled).toBe(false);
-	});
+    const result = checkMaxTag(2023, 2);
+    expect(result).toBe(20);
+  });
 
-	it("should enable all buttons with data-disabler attribute when status is false", () => {
-		buttonDisable(false);
-		expect(buttons[0].disabled).toBe(false);
-		expect(buttons[1].disabled).toBe(false);
-		expect(buttons[2].disabled).toBe(false);
-	});
+  it('should return 1 if the current date is not in the month', () => {
+    const mockDate = new Date(2023, 2, 31);
+    vi.setSystemTime(mockDate);
 
-	afterAll(() => {
-		buttons.forEach(button => button.remove());
-	});
+    const result = checkMaxTag(2023, 3);
+    expect(result).toBe(1);
+  });
 });
 
-describe("#checkMaxTag", () => {
-	afterEach(() => {
-		vi.useRealTimers();
-	});
+describe('#setLoading + #clearLoading', () => {
+  let button: HTMLButtonElement;
 
-	it("should return the current day of the month, if the current date is in the month", () => {
-		const mockDate = new Date(2023, 2, 20);
-		vi.setSystemTime(mockDate);
+  beforeAll(() => {
+    button = document.createElement('button');
+    button.id = 'test-button';
+    button.innerHTML = 'Submit';
+    button.disabled = false;
+    document.body.appendChild(button);
+  });
 
-		const result = checkMaxTag(2023, 2);
-		expect(result).toBe(20);
-	});
+  it('should set the button to loading state', () => {
+    setLoading('test-button');
+    expect(button.innerHTML).toBe(
+      '<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>',
+    );
+    expect(button.disabled).toBe(true);
+  });
 
-	it("should return 1 if the current date is not in the month", () => {
-		const mockDate = new Date(2023, 2, 31);
-		vi.setSystemTime(mockDate);
+  it('should restore the button to its normal state', () => {
+    clearLoading('test-button');
+    expect(button.innerHTML).toBe('Submit');
+    expect(button.disabled).toBe(false);
+  });
 
-		const result = checkMaxTag(2023, 3);
-		expect(result).toBe(1);
-	});
+  afterAll(() => {
+    button.remove();
+  });
 });
 
-describe("#setLoading + #clearLoading", () => {
-	let button: HTMLButtonElement;
+describe('#DatenSortieren', () => {
+  it('should sort the data array in ascending order', () => {
+    const data = [
+      { tag: '2', name: 'Foo' },
+      { tag: '1', name: 'Bar' },
+      { tag: '3', name: 'Baz' },
+    ];
+    const expectedData = [
+      { tag: '1', name: 'Bar' },
+      { tag: '2', name: 'Foo' },
+      { tag: '3', name: 'Baz' },
+    ];
+    DatenSortieren(data, 'tag');
+    expect(data).toEqual(expectedData);
+  });
 
-	beforeAll(() => {
-		button = document.createElement("button");
-		button.id = "test-button";
-		button.innerHTML = "Submit";
-		button.disabled = false;
-		document.body.appendChild(button);
-	});
-
-	it("should set the button to loading state", () => {
-		setLoading("test-button");
-		expect(button.innerHTML).toBe('<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>');
-		expect(button.disabled).toBe(true);
-	});
-
-	it("should restore the button to its normal state", () => {
-		clearLoading("test-button");
-		expect(button.innerHTML).toBe("Submit");
-		expect(button.disabled).toBe(false);
-	});
-
-	afterAll(() => {
-		button.remove();
-	});
-});
-
-describe("#DatenSortieren", () => {
-	it("should sort the data array in ascending order", () => {
-		const data = [
-			{ tag: "2", name: "Foo" },
-			{ tag: "1", name: "Bar" },
-			{ tag: "3", name: "Baz" },
-		];
-		const expectedData = [
-			{ tag: "1", name: "Bar" },
-			{ tag: "2", name: "Foo" },
-			{ tag: "3", name: "Baz" },
-		];
-		DatenSortieren(data, "tag");
-		expect(data).toEqual(expectedData);
-	});
-
-	it("should not change the data array if it is already sorted", () => {
-		const data = [
-			{ tag: "1", name: "Bar" },
-			{ tag: "2", name: "Foo" },
-			{ tag: "3", name: "Baz" },
-		];
-		const expectedData = [
-			{ tag: "1", name: "Bar" },
-			{ tag: "2", name: "Foo" },
-			{ tag: "3", name: "Baz" },
-		];
-		DatenSortieren(data, "tag");
-		expect(data).toEqual(expectedData);
-	});
+  it('should not change the data array if it is already sorted', () => {
+    const data = [
+      { tag: '1', name: 'Bar' },
+      { tag: '2', name: 'Foo' },
+      { tag: '3', name: 'Baz' },
+    ];
+    const expectedData = [
+      { tag: '1', name: 'Bar' },
+      { tag: '2', name: 'Foo' },
+      { tag: '3', name: 'Baz' },
+    ];
+    DatenSortieren(data, 'tag');
+    expect(data).toEqual(expectedData);
+  });
 });
 
 // describe("saveDaten", async () => {

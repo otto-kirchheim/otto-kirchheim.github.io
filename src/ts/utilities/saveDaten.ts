@@ -1,118 +1,74 @@
-import { FetchRetry, Storage, buttonDisable, clearLoading, setLoading } from ".";
-import { aktualisiereBerechnung } from "../Berechnung";
-import { DataBE, DataBZ, saveTableDataBE, saveTableDataBZ } from "../Bereitschaft/utils";
-import { DataE, saveTableDataEWT } from "../EWT/utils";
-import { generateEingabeMaskeEinstellungen, saveEinstellungen } from "../Einstellungen/utils";
-import { DataN, saveTableDataN } from "../Neben/utils";
-import { createSnackBar } from "../class/CustomSnackbar";
-import { CustomTableTypes } from "../class/CustomTable";
-import type {
-	AtLeastOne,
-	CustomHTMLTableElement,
-	IDaten,
-	IDatenBE,
-	IDatenBZ,
-	IDatenEWT,
-	IDatenN,
-	IVorgabenU,
-	ReturnTypeSaveData,
-} from "../interfaces";
+import { Storage, buttonDisable, clearLoading, setLoading } from '.';
+import { saveEinstellungen } from '../Einstellungen/utils';
+import { createSnackBar } from '../class/CustomSnackbar';
+import type { IVorgabenU } from '../interfaces';
+import { flushAll, markResourceSaved } from './autoSave';
+import { profileApi } from './apiService';
 
-interface SaveData {
-	User: IVorgabenU;
-	Jahr: number;
+function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
+  return JSON.stringify(previousData) !== JSON.stringify(nextData);
 }
 
-function findCustomTableInstance<T extends CustomTableTypes>(id: string): CustomHTMLTableElement<T>["instance"] {
-	const table = document.querySelector<CustomHTMLTableElement<T>>(`#${id}`);
-	if (!table) throw new Error(`Custom table ${id} not found`);
-	return table.instance;
-}
+/**
+ * Speichert alle Daten: Tabellen-Änderungen via AutoSave-Flush + Einstellungen via API.
+ * Ersetzt den alten einzelnen POST /saveData Call.
+ */
 
-export default async function saveDaten(button: HTMLButtonElement | null, Monat?: number): Promise<void> {
-	if (button === null) return;
-	setLoading(button.id);
-	buttonDisable(true);
-	Monat ??= Storage.get<number>("Monat", { check: true });
+export default async function saveDaten(button: HTMLButtonElement | null, _Monat?: number): Promise<void> {
+  if (button === null) return;
 
-	try {
-		const ftBZ = findCustomTableInstance<IDatenBZ>("tableBZ");
-		const ftBE = findCustomTableInstance<IDatenBE>("tableBE");
-		const ftE = findCustomTableInstance<IDatenEWT>("tableE");
-		const ftN = findCustomTableInstance<IDatenN>("tableN");
+  if (!navigator.onLine) {
+    createSnackBar({
+      message: 'Speichern nicht möglich – keine Internetverbindung',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
 
-		const data: SaveData & AtLeastOne<IDaten> = {
-			BZ: saveTableDataBZ(ftBZ, Monat),
-			BE: saveTableDataBE(ftBE, Monat),
-			EWT: saveTableDataEWT(ftE, Monat),
-			N: saveTableDataN(ftN, Monat),
-			User: saveEinstellungen(),
-			Jahr: Storage.get("Jahr", { check: true }),
-		};
+  setLoading(button.id);
+  buttonDisable(true);
 
-		const fetched = await FetchRetry<SaveData & AtLeastOne<IDaten>, ReturnTypeSaveData>("saveData", data, "POST");
+  try {
+    const previousUserData = Storage.get<IVorgabenU>('VorgabenU', { check: true });
 
-		if (fetched instanceof Error) throw fetched;
-		if (fetched.statusCode != 200) {
-			console.error("Fehler", fetched.message);
-			let messages;
-			try {
-				messages = JSON.parse(fetched.message);
-			} catch (error: unknown) {
-				console.log(error, fetched.message);
-				messages = fetched.message ?? "unbekannter Fehler";
-			} finally {
-				messages =
-					typeof fetched.message == "object" ? messages.map((message: string) => `<br/>- ${message}`) : fetched.message;
-			}
+    // 1. Einstellungen aus dem Formular sammeln und speichern
+    const userData = saveEinstellungen();
+    Storage.set('VorgabenU', userData);
+    const settingsChanged = hasLocalSettingsChanges(previousUserData, userData);
 
-			createSnackBar({
-				message: `Speichern<br/>Es ist ein Fehler aufgetreten: ${messages}`,
-				status: "error",
-				timeout: 3000,
-				fixed: true,
-			});
-			return;
-		}
+    // 2. Alle ausstehenden Tabellen-Änderungen sofort senden
+    await flushAll();
 
-		const dataResponded = fetched.data;
-		console.log(dataResponded);
+    // 3. Profil nur bei Änderungen speichern
+    const profileResult = settingsChanged ? await profileApi.updateMyProfile(userData) : null;
 
-		aktualisiereBerechnung(data.Jahr, dataResponded.daten);
+    // 4. Wrapper-Timestamp mit Server-Zeit aktualisieren
+    if (profileResult?.updatedAt) {
+      Storage.setWithTimestamp('VorgabenU', userData, Date.parse(profileResult.updatedAt));
+    }
 
-		Storage.set("dataBZ", dataResponded.daten.BZ);
-		ftBZ.rows.load(DataBZ(dataResponded.daten.BZ[Monat]));
-		console.log("saved", ftBZ);
+    // 5. Settings-Resource nur bei Änderungen als gespeichert markieren
+    if (settingsChanged) markResourceSaved('settings');
 
-		Storage.set("dataBE", dataResponded.daten.BE);
-		ftBE.rows.load(DataBE(dataResponded.daten.BE[Monat]));
-		console.log("saved", ftBE);
-
-		Storage.set("dataE", dataResponded.daten.EWT);
-		ftE.rows.load(DataE(dataResponded.daten.EWT[Monat]));
-		console.log("saved", ftE);
-
-		if (data.Jahr >= 2024) {
-			Storage.set("dataN", dataResponded.daten.N);
-			ftN.rows.load(DataN(dataResponded.daten.N[Monat]));
-			console.log("saved", ftN);
-		} else console.log("not saved (Jahr < 2024", ftN);
-
-		generateEingabeMaskeEinstellungen(dataResponded.user);
-		Storage.set("VorgabenU", dataResponded.user);
-
-		console.log("Erfolgreich gespeichert");
-		createSnackBar({
-			message: `Speichern<br/>Daten gespeichert`,
-			status: "success",
-			timeout: 3000,
-			fixed: true,
-		});
-	} catch (err: unknown) {
-		console.error(err);
-		return;
-	} finally {
-		clearLoading(button.id);
-		buttonDisable(false);
-	}
+    createSnackBar({
+      message: `Speichern<br/>Daten gespeichert`,
+      status: 'success',
+      timeout: 3000,
+      fixed: true,
+    });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Speichern fehlgeschlagen:', msg);
+    createSnackBar({
+      message: `Speichern<br/>Es ist ein Fehler aufgetreten: ${msg}`,
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+  } finally {
+    clearLoading(button.id);
+    buttonDisable(false);
+  }
 }

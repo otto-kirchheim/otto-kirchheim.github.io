@@ -1,29 +1,40 @@
-import { Storage, setLoading } from "../../utilities";
-import { LadeUserDaten } from "../../Login/utils";
-import setMonatJahr from "./setMonatJahr";
+import { Storage, setLoading } from '../../utilities';
+import { createSnackBar } from '../../class/CustomSnackbar';
+import { LadeUserDaten } from '../../Login/utils';
+import setMonatJahr from './setMonatJahr';
 
 export default function SelectYear(monat?: number, jahr?: number): void {
-	if (!monat) {
-		const monatInput = document.querySelector<HTMLInputElement>("#Monat");
-		if (!monatInput) throw new Error("Monats Input nicht gefunden");
-		monat = +monatInput.value;
-	}
+  if (!navigator.onLine) {
+    createSnackBar({
+      message: 'Daten laden nicht möglich – keine Internetverbindung',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
 
-	if (!jahr) {
-		const jahrInput = document.querySelector<HTMLInputElement>("#Jahr");
-		if (!jahrInput) throw new Error("Jahres Input nicht gefunden");
-		jahr = +jahrInput.value;
-	}
+  if (!monat) {
+    const monatInput = document.querySelector<HTMLInputElement>('#Monat');
+    if (!monatInput) throw new Error('Monats Input nicht gefunden');
+    monat = +monatInput.value;
+  }
 
-	setLoading("btnAuswaehlen");
+  if (!jahr) {
+    const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
+    if (!jahrInput) throw new Error('Jahres Input nicht gefunden');
+    jahr = +jahrInput.value;
+  }
 
-	if (Storage.check("Jahr") && Storage.check("Monat"))
-		if (!Storage.compare<number>("Jahr", jahr)) Storage.set("Jahreswechsel", true);
+  setLoading('btnAuswaehlen');
 
-	Storage.set("Jahr", jahr);
-	Storage.set("Monat", monat);
+  if (Storage.check('Jahr') && Storage.check('Monat'))
+    if (!Storage.compare<number>('Jahr', jahr)) Storage.set('Jahreswechsel', true);
 
-	setMonatJahr(jahr, monat);
+  Storage.set('Jahr', jahr);
+  Storage.set('Monat', monat);
 
-	if (Storage.check("accessToken")) LadeUserDaten(monat, jahr);
+  setMonatJahr(jahr, monat);
+
+  if (Storage.check('Benutzer')) LadeUserDaten(monat, jahr);
 }

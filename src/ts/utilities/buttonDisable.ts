@@ -1,5 +1,14 @@
-export default function buttonDisable(status: boolean): void {
-	const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-disabler]"));
-	buttons.forEach(button => (button.disabled = status));
-	console.log(`Button disabled: ${status}`);
+/**
+ * Deaktiviert oder aktiviert alle Buttons mit [data-disabler] im gesamten DOM.
+ * Wird z.B. bei Offline-Wechsel oder globalen Sperren verwendet.
+ */
+export function setDisableButton(disabled: boolean): void {
+  const buttons = document.querySelectorAll<HTMLButtonElement>('button[data-disabler]');
+  buttons.forEach(btn => {
+    btn.disabled = disabled;
+  });
 }
+
+// Legacy-Kompatibilität: default-Export für buttonDisable
+const buttonDisable = setDisableButton;
+export default buttonDisable;

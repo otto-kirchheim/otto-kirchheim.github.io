@@ -1,76 +1,83 @@
+export interface IVorgabenUEinstellungen {
+  aktivierteTabs: string[];
+  benoetigteZulagen?: string[];
+}
+
 export interface IVorgabenU {
-	pers: IVorgabenUPers;
-	aZ: IVorgabenUaZ;
-	fZ: IVorgabenUfZ[];
-	vorgabenB: { [key: string]: IVorgabenUvorgabenB };
+  pers: IVorgabenUPers;
+  aZ: IVorgabenUaZ;
+  fZ: IVorgabenUfZ[];
+  vorgabenB: { [key: string]: IVorgabenUvorgabenB };
+  Einstellungen: IVorgabenUEinstellungen;
 }
 export interface IVorgabenUServer {
-	pers: IVorgabenUPers;
-	aZ: IVorgabenUaZ;
-	fZ: IVorgabenUfZ[];
-	vorgabenB: {
-		key: string;
-		value: IVorgabenUvorgabenB;
-	}[];
+  pers: IVorgabenUPers;
+  aZ: IVorgabenUaZ;
+  fZ: IVorgabenUfZ[];
+  vorgabenB: {
+    key: string;
+    value: IVorgabenUvorgabenB;
+  }[];
+  Einstellungen: IVorgabenUEinstellungen;
 }
 export interface IVorgabenUPers {
-	Vorname: string;
-	Nachname: string;
-	PNummer: string;
-	Telefon: string;
-	Adress1: string;
-	Adress2: string;
-	ErsteTkgSt: string;
-	ErsteTkgStAdresse: string;
-	Betrieb: string;
-	OE: string;
-	Gewerk: string;
-	kmArbeitsort: number;
-	nBhf: string;
-	kmnBhf: number;
-	TB: "Besoldungsgruppe A 8" | "Besoldungsgruppe A 9" | "Tarifkraft";
+  Vorname: string;
+  Nachname: string;
+  PNummer: string;
+  Telefon: string;
+  Adress1: string;
+  Adress2: string;
+  ErsteTkgSt: string;
+  ErsteTkgStAdresse: string;
+  Betrieb: string;
+  OE: string;
+  Gewerk: string;
+  kmArbeitsort: number;
+  nBhf: string;
+  kmnBhf: number;
+  TB: 'Besoldungsgruppe A 8' | 'Besoldungsgruppe A 9' | 'Tarifkraft';
 }
 export interface IVorgabenUaZ {
-	[key: string]: string;
-	bBN: string;
-	bN: string;
-	bS: string;
-	bT: string;
-	eN: string;
-	eS: string;
-	eT: string;
-	eTF: string;
-	rZ: string;
+  [key: string]: string;
+  bBN: string;
+  bN: string;
+  bS: string;
+  bT: string;
+  eN: string;
+  eS: string;
+  eT: string;
+  eTF: string;
+  rZ: string;
 }
 export interface IVorgabenUfZ {
-	[key: string]: string;
-	key: string;
-	text: string;
-	value: string;
+  [key: string]: string;
+  key: string;
+  text: string;
+  value: string;
 }
 
 export interface IVorgabenUvorgabenB {
-	[k: string]: unknown;
-	Name: string;
-	beginnB: {
-		tag: number;
-		zeit: string;
-	};
-	endeB: {
-		tag: number;
-		zeit: string;
-		Nwoche: boolean;
-	};
-	nacht: boolean;
-	beginnN: {
-		tag: number;
-		zeit: string;
-		Nwoche: boolean;
-	};
-	endeN: {
-		tag: number;
-		zeit: string;
-		Nwoche: boolean;
-	};
-	standard?: true;
+  [k: string]: unknown;
+  Name: string;
+  beginnB: {
+    tag: number;
+    zeit: string;
+  };
+  endeB: {
+    tag: number;
+    zeit: string;
+    Nwoche: boolean;
+  };
+  nacht: boolean;
+  beginnN: {
+    tag: number;
+    zeit: string;
+    Nwoche: boolean;
+  };
+  endeN: {
+    tag: number;
+    zeit: string;
+    Nwoche: boolean;
+  };
+  standard?: true;
 }

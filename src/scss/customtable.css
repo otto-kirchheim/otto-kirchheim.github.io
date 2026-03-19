@@ -4,6 +4,21 @@
 	font-size: 30px;
 }
 
+/* Soft-Delete: Gelöschte Zeilen durchgestrichen + ausgegraut */
+tr.customtable-deleted {
+	opacity: 0.45;
+	text-decoration: line-through;
+	background-color: var(--bs-danger-bg-subtle, #f8d7da) !important;
+}
+
+tr.customtable-deleted td {
+	color: var(--bs-secondary-color, #6c757d);
+}
+
+tr.customtable-deleted:hover {
+	opacity: 0.6;
+}
+
 tr.customtable-editing td div {
 	display: flex;
 	flex-wrap: wrap;
@@ -154,4 +169,46 @@ th.customtable-sortable:hover > span.customtableIcon {
 		opacity: 0.3;
 		margin-right: 8px;
 	}
+}
+
+/* ─── AutoSave Indicator ─────────────────────────────── */
+
+/* ─── AutoSave Badge auf Speichern-Buttons ─── */
+
+.autosave-badge {
+	pointer-events: none;
+	user-select: none;
+	line-height: 1;
+	z-index: 1;
+	padding: 0.3em !important;
+}
+
+.autosave-badge .material-icons-round {
+	font-size: 0.85rem;
+	line-height: 1;
+	display: block;
+}
+
+/* Auf kleinen Bildschirmen etwas kleiner */
+@media screen and (max-width: 575.95px) {
+	.autosave-badge .material-icons-round {
+		font-size: 0.7rem;
+	}
+	.autosave-badge {
+		padding: 0.2em !important;
+	}
+}
+
+@keyframes autosave-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.4;
+	}
+}
+
+.autosave-pulse {
+	animation: autosave-pulse 1.2s ease-in-out infinite;
 }

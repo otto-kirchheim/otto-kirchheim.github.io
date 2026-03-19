@@ -1,140 +1,162 @@
-import { saveAs } from "file-saver";
-import Storage from "./Storage";
-import buttonDisable from "./buttonDisable";
-import clearLoading from "./clearLoading";
-import setLoading from "./setLoading";
-import { getServerUrl } from "./FetchRetry";
-import { abortController } from "./abortController";
-import { createSnackBar } from "../class/CustomSnackbar";
-import { IMonatsDaten, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from "../interfaces";
-import tableToArray from "./tableToArray";
-import dayjs from "./configDayjs";
+import { saveAs } from 'file-saver';
+import Storage from './Storage';
+import buttonDisable from './buttonDisable';
+import clearLoading from './clearLoading';
+import setLoading from './setLoading';
+import { createSnackBar } from '../class/CustomSnackbar';
+import type {
+  IDatenBE,
+  IDatenBZ,
+  IDatenEWT,
+  IDatenN,
+  IVorgabenGeld,
+  IVorgabenGeldType,
+  IVorgabenU,
+} from '../interfaces';
+import tableToArray from './tableToArray';
+import dayjs from './configDayjs';
+import { userProfileToBackend } from './fieldMapper';
+import { downloadPdf } from './apiService';
 
-export default async function download(button: HTMLButtonElement | null, modus: "B" | "E" | "N"): Promise<void> {
-	if (button === null) return;
-	setLoading(button.id);
-	buttonDisable(true);
+export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N'): Promise<void> {
+  if (button === null) return;
 
-	const MonatInput = document.querySelector<HTMLInputElement>("#Monat");
-	const JahrInput = document.querySelector<HTMLInputElement>("#Jahr");
+  if (!navigator.onLine) {
+    createSnackBar({
+      message: 'Download nicht möglich – keine Internetverbindung',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
 
-	if (!MonatInput || !JahrInput) throw new Error("Input Element nicht gefunden");
+  setLoading(button.id);
+  buttonDisable(true);
 
-	const VorgabenGeldDaten: IVorgabenGeld = Storage.get("VorgabenGeld", { check: true });
-	const VorgabenGeldHandler: ProxyHandler<IVorgabenGeld> = {
-		get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
-			const maxMonat: number = Number(prop);
-			let returnObjekt = target[1];
-			const keys = Object.keys(target).map(Number);
-			if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
-				for (let monat = 2; monat <= maxMonat; monat++)
-					if (typeof target[monat] !== "undefined") returnObjekt = { ...returnObjekt, ...target[monat] };
-			return returnObjekt;
-		},
-		set: (_target: IVorgabenGeld, prop: string, newValue) => {
-			console.log("veränderung von datenGeld nicht erlaubt:", prop, newValue);
-			return false;
-		},
-	};
-	const VorgabenGeld = new Proxy(VorgabenGeldDaten, VorgabenGeldHandler);
+  const MonatInput = document.querySelector<HTMLInputElement>('#Monat');
+  const JahrInput = document.querySelector<HTMLInputElement>('#Jahr');
 
-	const Monat = +MonatInput.value;
-	const Jahr = +JahrInput.value;
-	const data = {
-		VorgabenU: Storage.get<IVorgabenU>("VorgabenU", { check: true }),
-		VorgabenGeld: VorgabenGeld[Monat],
-		Daten: {} as Partial<IMonatsDaten>,
-		Monat,
-		Jahr,
-	};
+  if (!MonatInput || !JahrInput) throw new Error('Input Element nicht gefunden');
 
-	switch (modus) {
-		case "B":
-			data.Daten.BZ = tableToArray("tableBZ");
-			data.Daten.BE = tableToArray("tableBE");
-			break;
-		case "E":
-			data.Daten.EWT = tableToArray("tableE");
-			break;
-		case "N":
-			data.Daten.N = tableToArray("tableN");
-			break;
-		default:
-			throw new Error("Modus fehlt");
-	}
+  const VorgabenGeldDaten: IVorgabenGeld = Storage.get('VorgabenGeld', { check: true });
+  const VorgabenGeldHandler: ProxyHandler<IVorgabenGeld> = {
+    get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
+      const maxMonat: number = Number(prop);
+      let returnObjekt = target[1];
+      const keys = Object.keys(target).map(Number);
+      if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
+        for (let monat = 2; monat <= maxMonat; monat++)
+          if (typeof target[monat] !== 'undefined') returnObjekt = { ...returnObjekt, ...target[monat] };
+      return returnObjekt;
+    },
+    set: (_target: IVorgabenGeld, prop: string, newValue) => {
+      console.log('veränderung von datenGeld nicht erlaubt:', prop, newValue);
+      return false;
+    },
+  };
+  const VorgabenGeld = new Proxy(VorgabenGeldDaten, VorgabenGeldHandler);
 
-	try {
-		console.time("download");
+  const Monat = +MonatInput.value;
+  const Jahr = +JahrInput.value;
+  const localVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
+  const backendVorgabenU = userProfileToBackend(localVorgabenU);
 
-		const accessToken = Storage.get<string>("accessToken", { check: true });
-		const serverUrl = await getServerUrl();
+  const data: Record<string, unknown> = {
+    // Backend-Download-Schema erwartet `Pers` und `Fahrzeit` im Backend-Format.
+    VorgabenU: {
+      Pers: backendVorgabenU.Pers,
+      Fahrzeit: backendVorgabenU.Fahrzeit,
+    },
+    VorgabenGeld: VorgabenGeld[Monat],
+    Monat,
+    Jahr,
+  };
 
-		const fetchObject: RequestInit = {
-			mode: "cors",
-			method: "POST",
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				"Content-Type": "application/json",
-			},
-			signal: abortController.signal,
-			body: JSON.stringify(data),
-			cache: "no-cache",
-		};
+  // Daten: Frontend-Feldnamen → Backend-Feldnamen mappen
+  switch (modus) {
+    case 'B': {
+      const bzRaw = tableToArray<IDatenBZ<string>>('tableBZ');
+      const beRaw = tableToArray<IDatenBE>('tableBE');
+      data.Daten = {
+        BZ: bzRaw.map(bz => ({ Beginn: bz.beginB, Ende: bz.endeB, Pause: bz.pauseB ?? 0 })),
+        BE: beRaw.map(be => ({
+          Tag: be.tagBE,
+          Auftragsnummer: be.auftragsnummerBE,
+          Beginn: be.beginBE,
+          Ende: be.endeBE,
+          LRE: be.lreBE,
+          PrivatKm: be.privatkmBE ?? 0,
+        })),
+      };
+      break;
+    }
+    case 'E': {
+      const ewtRaw = tableToArray<IDatenEWT<string>>('tableE');
+      data.Daten = {
+        EWT: ewtRaw.map(e => ({
+          Tag: dayjs(e.tagE).format('DD'),
+          Einsatzort: e.eOrtE,
+          Schicht: e.schichtE,
+          abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
+          ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
+          anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
+          beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
+          endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
+          abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
+          an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
+          anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
+          berechnen: e.berechnen,
+        })),
+      };
+      break;
+    }
+    case 'N': {
+      const nRaw = tableToArray<IDatenN>('tableN');
+      data.Daten = {
+        N: nRaw.map(n => ({
+          Tag: dayjs(n.tagN, 'DD.MM.YYYY').format('DD'),
+          Beginn: n.beginN,
+          Ende: n.endeN,
+          Anzahl040: String(n.anzahl040N ?? ''),
+          Auftragsnummer: n.auftragN,
+        })),
+      };
+      break;
+    }
+    default:
+      throw new Error('Modus fehlt');
+  }
 
-		const response = await fetch(`${serverUrl}/download/${modus}`, fetchObject);
+  try {
+    console.time('download');
 
-		if (!response.ok) {
-			const errorData = await response.json();
-			console.error("Fehler", errorData.message);
-			createSnackBar({
-				message: `Download fehlerhaft:<br/>${errorData.message}`,
-				status: "error",
-				timeout: 3000,
-				fixed: true,
-			});
-			return;
-		}
-		const blob = await response.blob();
+    const { blob, filename } = await downloadPdf(modus, data);
 
-		const contentDisposition = response.headers.get("content-disposition");
+    let dateiName = filename;
+    if (!dateiName || dateiName === 'download.pdf') {
+      const vorDateiName: { [key in typeof modus]: string } = {
+        B: 'RB',
+        E: 'Verpfl',
+        N: 'EZ',
+      };
+      dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format('MM_YY')}_${localVorgabenU.pers.Vorname} ${
+        localVorgabenU.pers.Nachname
+      }_${localVorgabenU.pers.Gewerk} ${localVorgabenU.pers.ErsteTkgSt}.pdf`;
+    }
 
-		let dateiName: string | undefined;
-		if (contentDisposition) {
-			const matches = /filename="([^"]+)"/.exec(contentDisposition);
-			if (matches?.[1]) dateiName = matches[1];
-		}
-		if (!dateiName) {
-			console.error("Fehler", "Dateiname fehlt");
-			createSnackBar({
-				message: `Download fehlerhaft:<br/>Dateiname fehlt`,
-				status: "error",
-				timeout: 3000,
-				fixed: true,
-			});
-
-			const vorDateiName: { [key in typeof modus]: string } = {
-				B: "RB",
-				E: "Verpfl",
-				N: "EZ",
-			};
-
-			dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format("MM_YY")}_${data.VorgabenU.pers.Vorname} ${
-				data.VorgabenU.pers.Nachname
-			}_${data.VorgabenU.pers.Gewerk} ${data.VorgabenU.pers.ErsteTkgSt}.pdf`;
-		}
-
-		saveAs(blob, dateiName);
-	} catch (error: unknown) {
-		console.error("Fehler", error instanceof Error ? error.message : error);
-		createSnackBar({
-			message: `Download fehlerhaft:<br/>${error instanceof Error ? error.message : String(error)}`,
-			status: "error",
-			timeout: 3000,
-			fixed: true,
-		});
-	} finally {
-		console.timeEnd("download");
-		buttonDisable(false);
-		clearLoading(button.id);
-	}
+    saveAs(blob, dateiName);
+  } catch (error: unknown) {
+    console.error('Fehler', error instanceof Error ? error.message : error);
+    createSnackBar({
+      message: `Download fehlerhaft:<br/>${error instanceof Error ? error.message : String(error)}`,
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+  } finally {
+    console.timeEnd('download');
+    buttonDisable(false);
+    clearLoading(button.id);
+  }
 }

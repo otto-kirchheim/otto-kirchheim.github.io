@@ -1,17 +1,16 @@
-import { aktualisiereBerechnung } from "../../Berechnung";
-import { CustomTable } from "../../class/CustomTable";
-import type { IDatenN, IDatenNJahr } from "../../interfaces";
-import Storage from "../../utilities/Storage";
-import tableToArray from "../../utilities/tableToArray";
+import type { IDatenN, IDatenNJahr } from '../../interfaces';
+import type { CustomTable } from '../../class/CustomTable';
+import { Storage, tableToArray } from '../../utilities';
+import aktualisiereBerechnung from '../../Berechnung/aktualisiereBerechnung';
 
-export default function saveTableDataN<T extends IDatenNJahr>(ft: CustomTable<IDatenN>, Monat?: number): T | undefined {
-	Monat ??= Storage.get<number>("Monat", { check: true });
-	const Jahr = Storage.get<number>("Jahr", { check: true, default: 2024 });
-	if (Jahr < 2024) return Storage.get<IDatenNJahr>("dataN", { check: true }) as T;
+export default function saveTableDataN(ft: CustomTable<IDatenN>, Monat?: number): IDatenNJahr {
+  Monat ??= Storage.get<number>('Monat', { check: true });
+  const Jahr = Storage.get<number>('Jahr', { check: true, default: 2024 });
+  if (Jahr < 2024) return Storage.get<IDatenNJahr>('dataN', { default: {} as IDatenNJahr });
 
-	const data = Storage.get<IDatenNJahr>("dataN", { check: true });
-	data[Monat] = tableToArray<IDatenN>(ft);
-	Storage.set("dataN", data);
-	aktualisiereBerechnung();
-	return data as T;
+  const nData: IDatenNJahr = Storage.get<IDatenNJahr>('dataN', { default: {} as IDatenNJahr });
+  nData[Monat] = tableToArray<IDatenN>(ft);
+  Storage.set('dataN', nData);
+  aktualisiereBerechnung();
+  return nData;
 }

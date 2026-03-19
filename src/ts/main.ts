@@ -1,96 +1,138 @@
-import { pwaInfo } from "virtual:pwa-info";
-import { registerSW } from "virtual:pwa-register";
+import { pwaInfo } from 'virtual:pwa-info';
+import { registerSW } from 'virtual:pwa-register';
 
-import { Logout } from "./Einstellungen/utils";
-import { createSnackBar } from "./class/CustomSnackbar";
-import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from "./utilities";
+import { Logout } from './Einstellungen/utils';
+import { createSnackBar } from './class/CustomSnackbar';
+import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from './utilities';
+import dayjs from './utilities/configDayjs';
+// import { setDisableButton } from './utilities/buttonDisable';
 
 const intervalMS = 60 * 60 * 1000;
 
 registerSW({
-	onRegisteredSW(swUrl, r) {
-		r &&
-			setInterval(async () => {
-				if (!(!r.installing && navigator)) return;
+  onRegisteredSW(swUrl, r) {
+    if (r)
+      setInterval(async () => {
+        if (!(!r.installing && navigator)) return;
 
-				if ("connection" in navigator && !navigator.onLine) return;
+        if ('connection' in navigator && !navigator.onLine) return;
 
-				const resp = await fetch(swUrl, {
-					cache: "no-store",
-					headers: {
-						cache: "no-store",
-						"cache-control": "no-cache",
-					},
-				});
+        const resp = await fetch(swUrl, {
+          cache: 'no-store',
+          headers: {
+            cache: 'no-store',
+            'cache-control': 'no-cache',
+          },
+        });
 
-				if (resp?.status === 200) await r.update();
-			}, intervalMS);
-	},
+        if (resp?.status === 200) await r.update();
+      }, intervalMS);
+  },
 });
 console.log(pwaInfo);
 
-import Collapse from "bootstrap/js/dist/collapse";
-import Dropdown from "bootstrap/js/dist/dropdown";
-import Offcanvas from "bootstrap/js/dist/offcanvas";
-import Popover from "bootstrap/js/dist/popover";
-import Tab from "bootstrap/js/dist/tab";
+import Collapse from 'bootstrap/js/dist/collapse';
+import Dropdown from 'bootstrap/js/dist/dropdown';
+import Offcanvas from 'bootstrap/js/dist/offcanvas';
+import Popover from 'bootstrap/js/dist/popover';
+import Tab from 'bootstrap/js/dist/tab';
 
-console.log("Version:", import.meta.env.APP_VERSION);
+console.log('Version:', import.meta.env.APP_VERSION);
 
-window.addEventListener("load", () => {
-	if (Storage.size() > 3) {
-		const currentVersion: string = import.meta.env.APP_VERSION;
-		const clientVersion: string = Storage.get("Version", { check: true, default: "0.0.0" });
-		if (compareVersion(clientVersion, currentVersion) < 0) {
-			const benutzer = Storage.get<string>("Benutzer", { check: true, default: "" });
-			Logout();
-			createSnackBar({
-				message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
-				timeout: 10000,
-				fixed: true,
-			});
-		} else if (clientVersion !== currentVersion) Storage.set("Version", currentVersion);
-	}
-	if (!storageAvailable("localStorage")) {
-		createSnackBar({
-			message: "Bitte Cookies zulassen!",
-			dismissible: true,
-			status: "error",
-			timeout: false,
-			position: "tc",
-			fixed: false,
-		});
-	}
-	initializeColorModeToggler();
+window.addEventListener('load', () => {
+  setImpressumAndCopyright();
 
-	if (!navigator.onLine) setOffline();
-	else window.addEventListener("offline", setOffline);
+  Array.from(document.querySelectorAll('.dropdown-toggle')).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
+  Array.from(document.querySelectorAll('.offcanvas')).forEach(offcanvasEl => new Offcanvas(offcanvasEl));
+  Array.from(document.querySelectorAll('.collapse')).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
+  Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
+    popoverTriggerEl => new Popover(popoverTriggerEl),
+  );
 
-	if (Storage.check("accessToken")) {
-		const hash: string = document.location.hash;
+  if (Storage.size() > 3) {
+    const currentVersion: string = import.meta.env.APP_VERSION;
+    const clientVersion: string = Storage.get('Version', { check: true, default: '0.0.0' });
+    if (compareVersion(clientVersion, currentVersion) < 0) {
+      const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
+      Logout();
+      createSnackBar({
+        message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
+        timeout: 10000,
+        fixed: true,
+      });
+    } else if (clientVersion !== currentVersion) Storage.set('Version', currentVersion);
+  }
+  if (!storageAvailable('localStorage')) {
+    createSnackBar({
+      message: 'Bitte Cookies zulassen!',
+      dismissible: true,
+      status: 'error',
+      timeout: false,
+      position: 'tc',
+      fixed: false,
+    });
+  }
+  initializeColorModeToggler();
 
-		if (hash.length === 0) return;
-		const selector: string = `${hash.toLowerCase()}-tab`;
-		const tabElement = document.querySelector<HTMLButtonElement>(selector);
+  if (!navigator.onLine) setOffline();
+  else window.addEventListener('offline', setOffline);
 
-		if (!(tabElement instanceof HTMLButtonElement)) return;
-		Tab.getOrCreateInstance(tabElement).show();
-		window.scrollTo(0, 1);
-	}
+  if (Storage.check('Benutzer')) {
+    const hash: string = document.location.hash;
 
-	Array.from(document.querySelectorAll(".dropdown-toggle")).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
-	Array.from(document.querySelectorAll(".offcanvas")).forEach(offcanvasEl => new Offcanvas(offcanvasEl));
-	Array.from(document.querySelectorAll(".collapse")).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
-	Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
-		popoverTriggerEl => new Popover(popoverTriggerEl),
-	);
+    if (hash.length === 0) return;
+    const selector: string = `${hash.toLowerCase()}-tab`;
+    const tabElement = document.querySelector<HTMLButtonElement>(selector);
+
+    if (!(tabElement instanceof HTMLButtonElement)) return;
+    Tab.getOrCreateInstance(tabElement).show();
+    window.scrollTo(0, 1);
+  }
+
+  function setImpressumAndCopyright() {
+    const copyrightElement = document.querySelector<HTMLSpanElement>('#copyrightText');
+    if (copyrightElement) {
+      const startYearRaw = copyrightElement.dataset.startYear;
+      const startYear = Number.parseInt(startYearRaw ?? '2021', 10);
+      const currentYear = dayjs().year();
+      const yearLabel =
+        Number.isFinite(startYear) && startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
+      copyrightElement.textContent = `© ${yearLabel} Jan Otto | v${import.meta.env.APP_VERSION}`;
+    }
+
+    const telefonElement = document.querySelector<HTMLSpanElement>('#impressumTelefon');
+    const mailElement = document.querySelector<HTMLAnchorElement>('#impressumMail');
+    if (telefonElement) {
+      const country = ['+', '4', '9', '(', '0', ')'];
+      const number = ['1', '7', '0', '-', '6', '7', '0', '8', '6', '9', '2'];
+      telefonElement.textContent = `${country.join('')}${number.join('')}`;
+    }
+    if (mailElement) {
+      const local = ['j', 'a', 'n', 'o', 't', 't', 'o', '1', '9', '8', '9'].join('');
+      const domain = ['g', 'm', 'a', 'i', 'l', '.', 'c', 'o', 'm'].join('');
+      const mail = `${local}@${domain}`;
+      mailElement.textContent = mail;
+      mailElement.href = `mailto:${mail}`;
+    }
+  }
+
+  // Direkt nach DOMContentLoaded (defer) und auch im load-Event aufrufen
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setImpressumAndCopyright);
+  } else {
+    setImpressumAndCopyright();
+  }
+
+  window.addEventListener('load', () => {
+    setImpressumAndCopyright();
+  });
 });
 
-import "./Berechnung";
-import "./Bereitschaft";
-import "./EWT";
-import "./Einstellungen";
-import "./Login";
-import "./Neben";
+import './Berechnung';
+import './Bereitschaft';
+import './EWT';
+import './Einstellungen';
+import './Login';
+import './Neben';
 
-import "../scss/styles.scss";
+import '../scss/styles.scss';

@@ -1,0 +1,35 @@
+import path from 'path';
+import { version } from './package.json';
+
+export default {
+  root: path.resolve(__dirname, 'src'),
+  resolve: {
+    alias: {
+      '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
+      '~material-icons': path.resolve(__dirname, 'node_modules/material-icons'),
+      feiertagejs: path.resolve(__dirname, 'node_modules/feiertagejs'),
+    },
+  },
+  base: '/',
+  define: {
+    'import.meta.env.APP_VERSION': JSON.stringify(version),
+  },
+  build: {
+    outDir: '../dist',
+    emptyOutDir: true,
+    sourcemap: true,
+  },
+  preview: {
+    port: 8082,
+    host: true,
+    strictPort: true,
+    headers: {
+      origin: 'https://otto-kirchheim.github.io',
+      referer: 'https://otto-kirchheim.github.io',
+    },
+  },
+  server: {
+    port: 8080,
+    hmr: true,
+  },
+};

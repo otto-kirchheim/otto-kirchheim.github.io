@@ -1,23 +1,24 @@
-import Modal from "bootstrap/js/dist/modal";
-import { ComponentChild, render } from "preact";
-import type { CustomHTMLDivElement } from "../interfaces";
-import { CustomTableTypes } from "../class/CustomTable";
+import Modal from 'bootstrap/js/dist/modal';
+import type { ComponentChild } from 'preact';
+import { render } from 'preact';
+import type { CustomHTMLDivElement } from '../interfaces';
+import type { CustomTableTypes } from '../class/CustomTable';
 
 function resetModalProperties<T extends CustomTableTypes>(modal: CustomHTMLDivElement<T>): void {
-	modal.row = null;
-	modal.role = "document";
-	modal.innerHTML = "";
+  modal.row = null;
+  modal.role = 'document';
+  modal.innerHTML = '';
 }
 
 export default function showModal<T extends CustomTableTypes>(children: ComponentChild): CustomHTMLDivElement<T> {
-	const modal = document.querySelector<CustomHTMLDivElement<T>>("#modal");
-	if (!modal) throw new Error("Element nicht gefunden");
+  const modal = document.querySelector<CustomHTMLDivElement<T>>('#modal');
+  if (!modal) throw new Error('Element nicht gefunden');
 
-	resetModalProperties(modal);
+  resetModalProperties(modal);
 
-	render(null, modal);
-	render(children, modal);
+  render(null, modal);
+  render(children, modal);
 
-	Modal.getOrCreateInstance(modal).show();
-	return modal;
+  Modal.getOrCreateInstance(modal).show();
+  return modal;
 }

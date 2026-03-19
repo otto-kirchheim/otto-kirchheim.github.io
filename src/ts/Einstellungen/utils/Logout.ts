@@ -1,25 +1,38 @@
-import Tab from "bootstrap/js/dist/tab";
-import { Storage, abortController } from "../../utilities";
+import Tab from 'bootstrap/js/dist/tab';
+import { Storage, abortController, cancelAllPending, clearLoading, hideAllFeatureTabs } from '../../utilities';
+import { destroyAutoSaveIndicator } from '../../utilities/autoSaveIndicator';
+import { authApi } from '../../utilities/apiService';
 
-function toggleClassForElement(selector: string, addClass: boolean = true, className: string = "d-none"): void {
-	const element = document.querySelector<HTMLElement>(selector);
-	addClass ? element?.classList.add(className) : element?.classList.remove(className);
+function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
+  const element = document.querySelector<HTMLElement>(selector);
+  if (addClass) element?.classList.add(className);
+  else element?.classList.remove(className);
 }
 
 export default function Logout(): void {
-	abortController.reset("Logout");
-	Storage.clear();
+  cancelAllPending();
+  destroyAutoSaveIndicator();
+  abortController.reset('Logout');
 
-	const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
-	if (sel instanceof HTMLButtonElement) {
-		Tab.getOrCreateInstance(sel).show();
-		window.scrollTo(0, 1);
-	}
+  // Server-seitigen Logout auslösen (Cookies löschen)
+  authApi.logout().catch(() => {});
 
-	for (const selector of ["#navmenu", "#btn-navmenu", "#admin", "#Neben-tab", "#Monat"]) toggleClassForElement(selector);
+  import('../../Admin').then(({ unmountAdminTab }) => unmountAdminTab());
 
-	toggleClassForElement("#btnLogin", false);
+  Storage.clear();
 
-	const willkommen = document.querySelector<HTMLHeadingElement>("#Willkommen");
-	if (willkommen) willkommen.innerHTML = "Willkommen";
+  const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
+  if (sel instanceof HTMLButtonElement) {
+    Tab.getOrCreateInstance(sel).show();
+    window.scrollTo(0, 1);
+  }
+
+  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#Monat']) toggleClassForElement(selector);
+  hideAllFeatureTabs();
+
+  clearLoading('btnLogin', false);
+  toggleClassForElement('#btnLogin', false);
+
+  const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
+  if (willkommen) willkommen.innerHTML = 'Willkommen';
 }

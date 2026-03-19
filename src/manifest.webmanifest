@@ -10,7 +10,8 @@
 	"background_color": "#000000",
 	"orientation": "any",
 	"url": "https://otto-kirchheim.github.io/",
-	"id": "https://otto-kirchheim.github.io/",
+	"scope": "/",
+	"id": "/",
 	"icons": [
 		{
 			"src": "icons/16x16-icon.png",
