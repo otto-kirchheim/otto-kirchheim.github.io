@@ -1,3 +1,5 @@
+import Storage from './Storage';
+
 export type UserCookieData = {
   userName: string;
   role: string;
@@ -7,17 +9,18 @@ export type UserCookieData = {
 const ADMIN_ROLES = new Set(['team-admin', 'org-admin', 'super-admin']);
 
 /**
- * Liest das `user`-Cookie (nicht-HttpOnly, vom Server gesetzt).
- * Enthält { userName, role } als JSON.
+ * Liest User-Daten (role, userName) aus localStorage.
+ * Frueher wurde das `user`-Cookie gelesen, das aber bei Cross-Origin
+ * nicht per `document.cookie` zugaenglich ist.
  */
 export function getUserCookie(): UserCookieData | null {
-  const match = document.cookie.match(/(?:^|;\s*)user=([^;]*)/);
-  if (!match) return null;
-  try {
-    return JSON.parse(decodeURIComponent(match[1]));
-  } catch {
-    return null;
+  if (Storage.check('Benutzer') && Storage.check('BenutzerRolle')) {
+    return {
+      userName: Storage.get<string>('Benutzer', true),
+      role: Storage.get<string>('BenutzerRolle', true),
+    };
   }
+  return null;
 }
 
 /**

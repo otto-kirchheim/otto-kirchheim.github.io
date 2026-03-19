@@ -146,36 +146,39 @@ describe('#Storage', () => {
 
 describe('#getUserCookie & isAdmin', () => {
   afterEach(() => {
-    // Clear cookies
-    document.cookie = 'user=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+    localStorage.clear();
   });
 
-  it('getUserCookie sollte null zurückgeben wenn kein Cookie existiert', () => {
+  it('getUserCookie sollte null zurückgeben wenn nichts gespeichert ist', () => {
     expect(getUserCookie()).toBeNull();
   });
 
-  it('getUserCookie sollte Cookie-Daten parsen', () => {
-    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'member' }))}`;
+  it('getUserCookie sollte Daten aus localStorage lesen', () => {
+    localStorage.setItem('Benutzer', JSON.stringify('test'));
+    localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
     const result = getUserCookie();
     expect(result).toEqual({ userName: 'test', role: 'member' });
   });
 
-  it('isAdmin sollte false zurückgeben ohne Cookie', () => {
+  it('isAdmin sollte false zurückgeben ohne Daten', () => {
     expect(isAdmin()).toBe(false);
   });
 
   it('isAdmin sollte false zurückgeben für member', () => {
-    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'member' }))}`;
+    localStorage.setItem('Benutzer', JSON.stringify('test'));
+    localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
     expect(isAdmin()).toBe(false);
   });
 
   it('isAdmin sollte true zurückgeben für team-admin', () => {
-    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'team-admin' }))}`;
+    localStorage.setItem('Benutzer', JSON.stringify('test'));
+    localStorage.setItem('BenutzerRolle', JSON.stringify('team-admin'));
     expect(isAdmin()).toBe(true);
   });
 
   it('isAdmin sollte true zurückgeben für super-admin', () => {
-    document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'test', role: 'super-admin' }))}`;
+    localStorage.setItem('Benutzer', JSON.stringify('test'));
+    localStorage.setItem('BenutzerRolle', JSON.stringify('super-admin'));
     expect(isAdmin()).toBe(true);
   });
 });

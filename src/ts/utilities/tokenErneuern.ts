@@ -1,6 +1,7 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { Logout } from '../Einstellungen/utils';
 import { authApi } from './apiService';
+import Storage from './Storage';
 
 let REFRESHED = 0;
 let isLogoutInProgress = false;
@@ -15,7 +16,8 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
   }
 
   try {
-    await authApi.refreshToken();
+    const userData = await authApi.refreshToken();
+    if (userData?.role) Storage.set('BenutzerRolle', userData.role);
     incrementRefreshCounter();
   } catch (err: unknown) {
     console.error('Token-Refresh fehlgeschlagen:', err);

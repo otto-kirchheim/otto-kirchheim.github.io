@@ -68,14 +68,18 @@ describe('apiService', () => {
 
     it('refreshToken sendet direkten fetch mit credentials', async () => {
       mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true });
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ success: true, data: { userName: 'Max', role: 'member' } }),
+      });
 
-      await authApi.refreshToken();
+      const result = await authApi.refreshToken();
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/v2/auth/refresh-token',
         expect.objectContaining({ method: 'POST', credentials: 'include' }),
       );
+      expect(result).toEqual({ userName: 'Max', role: 'member' });
     });
 
     it('changePassword sendet alte und neue Passwörter', async () => {

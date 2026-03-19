@@ -118,7 +118,7 @@ export const authApi = {
    * Alt: POST /refreshToken
    * Neu: POST /auth/refresh-token
    */
-  async refreshToken(): Promise<void> {
+  async refreshToken(): Promise<{ userName: string; role: string } | null> {
     const serverUrl = await getServerUrl();
     const response = await fetch(`${serverUrl}/auth/refresh-token`, {
       method: 'POST',
@@ -129,6 +129,8 @@ export const authApi = {
       const data = await response.json().catch(() => ({}));
       throw new Error(data.message ?? 'Token-Refresh fehlgeschlagen');
     }
+    const body = await response.json().catch(() => null);
+    return body?.data ?? null;
   },
 
   /**

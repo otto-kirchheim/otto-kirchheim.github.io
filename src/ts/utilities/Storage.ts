@@ -31,6 +31,7 @@ enum StorageData {
   dataServer = 'Server Daten',
   actAsUserId = 'Act-As User-ID',
   actAsUserName = 'Act-As User-Name',
+  BenutzerRolle = 'Benutzer Rolle',
   Version = 'Version der App',
   key = 'Test Daten',
 }

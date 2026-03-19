@@ -3,64 +3,61 @@ import { getUserCookie, isAdmin } from '../../src/ts/utilities/decodeAccessToken
 
 describe('decodeAccessToken', () => {
   beforeEach(() => {
-    // Cookies löschen
-    document.cookie.split(';').forEach(c => {
-      document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/');
-    });
+    localStorage.clear();
   });
 
   afterEach(() => {
-    document.cookie.split(';').forEach(c => {
-      document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/');
-    });
+    localStorage.clear();
   });
 
   describe('getUserCookie', () => {
-    it('gibt null zurück wenn kein user-Cookie existiert', () => {
+    it('gibt null zurück wenn nichts gespeichert ist', () => {
       expect(getUserCookie()).toBeNull();
     });
 
-    it('liest user-Cookie korrekt', () => {
-      const userData = { userName: 'Max', role: 'member' };
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/`;
-      expect(getUserCookie()).toEqual(userData);
+    it('liest User-Daten aus localStorage', () => {
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+      expect(getUserCookie()).toEqual({ userName: 'Max', role: 'member' });
     });
 
-    it('gibt null zurück bei ungültigem JSON im Cookie', () => {
-      document.cookie = `user=${encodeURIComponent('kein-json{{')}; path=/`;
+    it('gibt null zurück wenn nur Benutzer aber keine Rolle gespeichert ist', () => {
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
       expect(getUserCookie()).toBeNull();
     });
 
-    it('liest Cookie auch mit anderen Cookies davor', () => {
-      document.cookie = 'other=value; path=/';
-      const userData = { userName: 'Test', role: 'super-admin' };
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/`;
-      expect(getUserCookie()).toEqual(userData);
+    it('gibt null zurück wenn nur Rolle aber kein Benutzer gespeichert ist', () => {
+      localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+      expect(getUserCookie()).toBeNull();
     });
   });
 
   describe('isAdmin', () => {
-    it('gibt false zurück ohne Cookie', () => {
+    it('gibt false zurück ohne gespeicherte Daten', () => {
       expect(isAdmin()).toBe(false);
     });
 
     it('gibt false zurück für member', () => {
-      document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'Max', role: 'member' }))}; path=/`;
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
       expect(isAdmin()).toBe(false);
     });
 
     it('gibt true zurück für team-admin', () => {
-      document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'Max', role: 'team-admin' }))}; path=/`;
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('team-admin'));
       expect(isAdmin()).toBe(true);
     });
 
     it('gibt true zurück für org-admin', () => {
-      document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'Max', role: 'org-admin' }))}; path=/`;
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('org-admin'));
       expect(isAdmin()).toBe(true);
     });
 
     it('gibt true zurück für super-admin', () => {
-      document.cookie = `user=${encodeURIComponent(JSON.stringify({ userName: 'Max', role: 'super-admin' }))}; path=/`;
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('super-admin'));
       expect(isAdmin()).toBe(true);
     });
   });
