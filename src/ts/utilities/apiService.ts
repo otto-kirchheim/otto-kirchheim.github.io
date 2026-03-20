@@ -19,6 +19,7 @@ import type {
 } from '../interfaces';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
+import Storage from './Storage';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
@@ -97,7 +98,12 @@ export const authApi = {
    * Neu: POST /auth/login mit { userName, password }
    */
   async login(userName: string, password: string): Promise<void> {
-    await apiFetch<{ userName: string; password: string }, unknown>('auth/login', { userName, password }, 'POST');
+    const result = await apiFetch<
+      { userName: string; password: string },
+      { user: unknown; accessToken: string; refreshToken: string }
+    >('auth/login', { userName, password }, 'POST');
+    Storage.set('AccessToken', result.accessToken);
+    Storage.set('RefreshToken', result.refreshToken);
   },
 
   /**
@@ -106,11 +112,12 @@ export const authApi = {
    * Neu: POST /auth/register mit { userName, email, password, accessCode }
    */
   async register(userName: string, email: string, password: string, accessCode: string): Promise<void> {
-    await apiFetch<{ userName: string; email: string; password: string; accessCode: string }, unknown>(
-      'auth/register',
-      { userName, email, password, accessCode },
-      'POST',
-    );
+    const result = await apiFetch<
+      { userName: string; email: string; password: string; accessCode: string },
+      { user: unknown; accessToken: string; refreshToken: string }
+    >('auth/register', { userName, email, password, accessCode }, 'POST');
+    Storage.set('AccessToken', result.accessToken);
+    Storage.set('RefreshToken', result.refreshToken);
   },
 
   /**
@@ -119,17 +126,25 @@ export const authApi = {
    * Neu: POST /auth/refresh-token
    */
   async refreshToken(): Promise<{ userName: string; role: string } | null> {
+    const refreshToken = Storage.check('RefreshToken') ? Storage.get<string>('RefreshToken', true) : null;
+    if (!refreshToken) throw new Error('Kein Refresh-Token vorhanden');
+
     const serverUrl = await getServerUrl();
     const response = await fetch(`${serverUrl}/auth/refresh-token`, {
       method: 'POST',
-      credentials: 'include',
       mode: 'cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
     });
     if (!response.ok) {
+      Storage.remove('AccessToken');
+      Storage.remove('RefreshToken');
       const data = await response.json().catch(() => ({}));
       throw new Error(data.message ?? 'Token-Refresh fehlgeschlagen');
     }
     const body = await response.json().catch(() => null);
+    if (body?.data?.accessToken) Storage.set('AccessToken', body.data.accessToken);
+    if (body?.data?.refreshToken) Storage.set('RefreshToken', body.data.refreshToken);
     return body?.data ?? null;
   },
 
@@ -186,10 +201,13 @@ export const authApi = {
   async logout(): Promise<void> {
     try {
       const serverUrl = await getServerUrl();
+      const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
+      const headers: HeadersInit = {};
+      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
       await fetch(`${serverUrl}/auth/logout`, {
         method: 'POST',
-        credentials: 'include',
         mode: 'cors',
+        headers,
       });
     } catch {
       // Logout-Fehler ignorieren – lokale Daten werden sowieso gelöscht
@@ -515,13 +533,14 @@ export async function downloadPdf(
   const endpoint = endpointMap[modus];
   const serverUrl = await getServerUrl();
 
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
+  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
+
   const response = await fetch(`${serverUrl}/${endpoint}`, {
     mode: 'cors',
-    credentials: 'include',
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     signal: abortController.signal,
     body: JSON.stringify(data),
     cache: 'no-cache',

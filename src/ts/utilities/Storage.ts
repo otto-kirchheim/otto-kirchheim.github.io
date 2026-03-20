@@ -33,6 +33,8 @@ enum StorageData {
   actAsUserName = 'Act-As User-Name',
   BenutzerRolle = 'Benutzer Rolle',
   Version = 'Version der App',
+  AccessToken = 'Access Token',
+  RefreshToken = 'Refresh Token',
   key = 'Test Daten',
 }
 
