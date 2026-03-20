@@ -234,7 +234,7 @@ describe('FetchRetry.ts', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(1);
       expect(globalThis.fetch).toHaveBeenCalledWith(
         `${primaryServerUrl}/${testPath}`,
-        expect.objectContaining({ method: 'GET', credentials: 'include' }),
+        expect.objectContaining({ method: 'GET' }),
       );
     });
 
@@ -254,7 +254,6 @@ describe('FetchRetry.ts', () => {
         `${primaryServerUrl}/${testPath}`,
         expect.objectContaining({
           method: 'POST',
-          credentials: 'include',
           body: JSON.stringify(testData),
           headers: expect.any(Headers),
         }),
@@ -310,8 +309,8 @@ describe('FetchRetry.ts', () => {
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
       expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
       expect(Utils.tokenErneuern).toHaveBeenCalledWith(0);
-      // Beide Requests sollen credentials: include haben
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].credentials).toBe('include');
+      // Retry-Request soll ohne credentials laufen (Bearer statt Cookie)
+      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].method).toBe('GET');
     });
 
     it('should throw error if token refresh fails during retry', async () => {

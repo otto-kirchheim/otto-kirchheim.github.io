@@ -50,36 +50,50 @@ describe('apiService', () => {
   // ─── Auth-Endpunkte ──────────────────────────────
 
   describe('authApi', () => {
-    it('login sendet korrekte Daten', async () => {
-      mockApiSuccess({ user: { userName: 'user', role: 'member' } });
+    it('login sendet korrekte Daten und speichert Tokens', async () => {
+      mockApiSuccess({ user: { userName: 'user', role: 'member' }, accessToken: 'at123', refreshToken: 'rt123' });
       await authApi.login('user', 'pass');
       expect(mockFetchRetry).toHaveBeenCalledWith('auth/login', { userName: 'user', password: 'pass' }, 'POST');
+      expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('at123'));
+      expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('rt123'));
     });
 
-    it('register sendet korrekte Daten', async () => {
-      mockApiSuccess({ user: { userName: 'user', role: 'member' } });
+    it('register sendet korrekte Daten und speichert Tokens', async () => {
+      mockApiSuccess({ user: { userName: 'user', role: 'member' }, accessToken: 'at456', refreshToken: 'rt456' });
       await authApi.register('user', 'email@test.de', 'pass', 'code123');
       expect(mockFetchRetry).toHaveBeenCalledWith(
         'auth/register',
         { userName: 'user', email: 'email@test.de', password: 'pass', accessCode: 'code123' },
         'POST',
       );
+      expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('at456'));
+      expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('rt456'));
     });
 
-    it('refreshToken sendet direkten fetch mit credentials', async () => {
+    it('refreshToken sendet Refresh-Token im Body und speichert neue Tokens', async () => {
+      localStorage.setItem('RefreshToken', JSON.stringify('old-rt'));
       mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
-        json: () => Promise.resolve({ success: true, data: { userName: 'Max', role: 'member' } }),
+        json: () =>
+          Promise.resolve({
+            success: true,
+            data: { userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' },
+          }),
       });
 
       const result = await authApi.refreshToken();
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/v2/auth/refresh-token',
-        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ refreshToken: 'old-rt' }),
+        }),
       );
-      expect(result).toEqual({ userName: 'Max', role: 'member' });
+      expect(result).toEqual({ userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' });
+      expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('new-at'));
+      expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('new-rt'));
     });
 
     it('changePassword sendet alte und neue Passwörter', async () => {
@@ -380,7 +394,7 @@ describe('apiService', () => {
 
       expect(globalThis.fetch).toHaveBeenCalledWith(
         'http://localhost:3000/api/v2/bereitschaftszeitraum/download',
-        expect.objectContaining({ method: 'POST', credentials: 'include' }),
+        expect.objectContaining({ method: 'POST' }),
       );
     });
 

@@ -1,5 +1,6 @@
 import { abortController, tokenErneuern } from '.';
 import { createSnackBar } from '../class/CustomSnackbar';
+import Storage from './Storage';
 
 interface ServerConfig {
   url: string;
@@ -143,12 +144,14 @@ export async function FetchRetry<I, T>(
   const headers = new Headers();
   if (method !== 'GET') headers.set('Content-Type', 'application/json');
 
+  const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+
   const actAsUserId = getActAsUserIdFromStorage();
   if (actAsUserId && shouldAttachActAsHeader(UrlPath)) headers.set('x-act-as-user-id', actAsUserId);
 
   const fetchObject: RequestInit = {
     mode: 'cors',
-    credentials: 'include',
     headers,
     method,
     signal: abortController.signal,
