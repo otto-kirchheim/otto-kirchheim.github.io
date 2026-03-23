@@ -21,8 +21,8 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
       const schicht = day.schichtE;
       const tagEDate = dayjs(day.tagE);
       const tagENum = tagEDate.date();
-      const tagN = `0${tagENum}`.slice(-2);
-      const tag = `${tagN} | ${tagEDate.toDate().toLocaleDateString('de', { weekday: 'short' })}`;
+      const tagN = tagEDate.format('DD.MM.YYYY');
+      const tag = `${`0${tagENum}`.slice(-2)} | ${tagEDate.toDate().toLocaleDateString('de', { weekday: 'short' })}`;
 
       const option: ReturnTypeTagOptions = {
         text: '',
@@ -44,7 +44,13 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
         option.text = tag;
       }
 
-      if (dataN?.some(value => Number(value.tagN) === Number(tagN))) option.disabled = true;
+      if (
+        dataN?.some(value => {
+          const d = dayjs(value.tagN, 'DD.MM.YYYY');
+          return (d.isValid() ? d.date() : Number(value.tagN)) === tagENum;
+        })
+      )
+        option.disabled = true;
 
       return option;
     })

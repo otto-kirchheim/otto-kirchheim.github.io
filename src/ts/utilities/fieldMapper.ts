@@ -326,7 +326,7 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
     EWT: item.ewtRef || undefined,
     Monat: monat,
     Jahr: jahr,
-    Tag: dayjs([jahr, monat - 1, Number(item.tagN)]).toISOString(),
+    Tag: dayjs(item.tagN, 'DD.MM.YYYY').toISOString(),
     Beginn: item.beginN,
     Ende: item.endeN,
     Auftragsnummer: item.auftragN || undefined,
