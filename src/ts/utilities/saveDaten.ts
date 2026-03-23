@@ -2,7 +2,7 @@ import { Storage, buttonDisable, clearLoading, setLoading } from '.';
 import { saveEinstellungen } from '../Einstellungen/utils';
 import { createSnackBar } from '../class/CustomSnackbar';
 import type { IVorgabenU } from '../interfaces';
-import { flushAll, markResourceSaved } from './autoSave';
+import { flushAll, getResourceStatus, markResourceSaved } from './autoSave';
 import { profileApi } from './apiService';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
@@ -37,20 +37,22 @@ export default async function saveDaten(button: HTMLButtonElement | null, _Monat
     const userData = saveEinstellungen();
     Storage.set('VorgabenU', userData);
     const settingsChanged = hasLocalSettingsChanges(previousUserData, userData);
+    const settingsStatus = getResourceStatus('settings').status;
+    const settingsNeedsSync = settingsChanged || settingsStatus === 'pending' || settingsStatus === 'error';
 
     // 2. Alle ausstehenden Tabellen-Änderungen sofort senden
     await flushAll();
 
     // 3. Profil nur bei Änderungen speichern
-    const profileResult = settingsChanged ? await profileApi.updateMyProfile(userData) : null;
+    const profileResult = settingsNeedsSync ? await profileApi.updateMyProfile(userData) : null;
 
     // 4. Wrapper-Timestamp mit Server-Zeit aktualisieren
     if (profileResult?.updatedAt) {
       Storage.setWithTimestamp('VorgabenU', userData, Date.parse(profileResult.updatedAt));
     }
 
-    // 5. Settings-Resource nur bei Änderungen als gespeichert markieren
-    if (settingsChanged) markResourceSaved('settings');
+    // 5. Settings-Resource als gespeichert markieren, sobald sie explizit synchronisiert wurde.
+    if (settingsNeedsSync) markResourceSaved('settings');
 
     createSnackBar({
       message: `Speichern<br/>Daten gespeichert`,

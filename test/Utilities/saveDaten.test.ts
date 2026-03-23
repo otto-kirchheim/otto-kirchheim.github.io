@@ -7,6 +7,7 @@ const {
   mockButtonDisable,
   mockCreateSnackBar,
   mockFlushAll,
+  mockGetResourceStatus,
   mockMarkResourceSaved,
   mockUpdateMyProfile,
   mockSaveEinstellungen,
@@ -16,6 +17,7 @@ const {
   mockButtonDisable: vi.fn(),
   mockCreateSnackBar: vi.fn(),
   mockFlushAll: vi.fn(),
+  mockGetResourceStatus: vi.fn(),
   mockMarkResourceSaved: vi.fn(),
   mockUpdateMyProfile: vi.fn(),
   mockSaveEinstellungen: vi.fn(),
@@ -28,6 +30,7 @@ vi.mock('../../src/ts/utilities/buttonDisable', () => ({ default: mockButtonDisa
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/utilities/autoSave', () => ({
   flushAll: mockFlushAll,
+  getResourceStatus: mockGetResourceStatus,
   markResourceSaved: mockMarkResourceSaved,
 }));
 vi.mock('../../src/ts/utilities/apiService', () => ({
@@ -58,6 +61,7 @@ describe('saveDaten', () => {
     mockSaveEinstellungen.mockReturnValue(mockUserData);
     mockUpdateMyProfile.mockResolvedValue({ data: mockUserData, updatedAt: '2026-03-07T12:00:00.000Z' });
     mockFlushAll.mockResolvedValue(undefined);
+    mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
 
     // navigator.onLine standardmäßig auf true
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
@@ -100,6 +104,26 @@ describe('saveDaten', () => {
     expect(mockFlushAll).toHaveBeenCalled();
     expect(mockUpdateMyProfile).not.toHaveBeenCalled();
     expect(mockMarkResourceSaved).not.toHaveBeenCalled();
+  });
+
+  it('synchronisiert Settings bei pending AutoSave auch ohne lokale Differenz', async () => {
+    Storage.set('VorgabenU', mockUserData);
+    mockGetResourceStatus.mockReturnValue({ status: 'pending', timer: null, lastSaved: null, lastError: null });
+
+    await saveDaten(button);
+
+    expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
+  });
+
+  it('synchronisiert Settings bei error AutoSave auch ohne lokale Differenz', async () => {
+    Storage.set('VorgabenU', mockUserData);
+    mockGetResourceStatus.mockReturnValue({ status: 'error', timer: null, lastSaved: null, lastError: 'x' });
+
+    await saveDaten(button);
+
+    expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
   });
 
   it('speichert UserData in Storage', async () => {
