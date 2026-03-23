@@ -174,6 +174,16 @@ export async function updateUserOe(userId: string, oe: string): Promise<void> {
   unwrapResponse<BackendUserProfile>(response);
 }
 
+export async function updateUserPassword(userId: string, newPassword: string): Promise<void> {
+  const response = await FetchRetry<{ newPassword: string }, unknown>(
+    `users/${userId}/password`,
+    { newPassword },
+    'PATCH',
+  );
+  unwrapResponse<unknown>(response);
+  createSnackBar({ message: 'Passwort wurde gesetzt', status: 'success', timeout: 2000 });
+}
+
 export async function deleteUser(userId: string): Promise<void> {
   const response = await FetchRetry<undefined, unknown>(`users/${userId}`, undefined, 'DELETE');
   unwrapResponse<unknown>(response);

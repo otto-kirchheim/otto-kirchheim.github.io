@@ -282,7 +282,7 @@ describe('fieldMapper – Nebengeld', () => {
   it('nebengeldToBackend konvertiert korrekt', () => {
     const frontendN: IDatenN = {
       _id: 'n1',
-      tagN: '20',
+      tagN: '20.03.2024',
       beginN: '18:00',
       endeN: '06:00',
       anzahl040N: 3,
@@ -297,11 +297,14 @@ describe('fieldMapper – Nebengeld', () => {
     expect(result.Auftragsnummer).toBe('NB-456');
     expect(result.Zulagen).toEqual([{ Typ: '040', Wert: 3 }]);
     expect(dayjs(result.Tag).isValid()).toBe(true);
+    expect(dayjs(result.Tag).date()).toBe(20);
+    expect(dayjs(result.Tag).month()).toBe(2); // 0-indexed
+    expect(dayjs(result.Tag).year()).toBe(2024);
   });
 
   it('nebengeldToBackend setzt leere Auftragsnummer auf undefined', () => {
     const frontendN: IDatenN = {
-      tagN: '15',
+      tagN: '15.03.2024',
       beginN: '20:00',
       endeN: '04:00',
       anzahl040N: 0,
@@ -313,7 +316,7 @@ describe('fieldMapper – Nebengeld', () => {
 
   it('nebengeldToBackend mit anzahl040N = 0 setzt Fallback-Zulage', () => {
     const frontendN: IDatenN = {
-      tagN: '10',
+      tagN: '10.03.2024',
       beginN: '19:00',
       endeN: '05:00',
       anzahl040N: 0,

@@ -14,6 +14,7 @@ import { LadeUserDaten } from '../../Login/utils';
 import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { OeTagInput } from './OeTagInput';
+import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 
 type UserRole = 'member' | 'team-admin' | 'org-admin' | 'super-admin';
 
@@ -592,6 +593,19 @@ export function AdminUserList() {
                         </span>
                         {isSelfRow ? 'Eigene Daten' : 'Daten laden'}
                       </button>
+                      {editable && (
+                        <button
+                          class="btn btn-outline-warning btn-sm"
+                          onClick={() => createAdminUserPasswordModal(currentUser._id, currentUser.userName)}
+                          disabled={isSaving}
+                          title="Passwort für diesen Benutzer setzen"
+                          data-disabler
+                        >
+                          <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle">
+                            password
+                          </span>
+                        </button>
+                      )}
                       {editable && (
                         <button
                           class="btn btn-outline-danger btn-sm"

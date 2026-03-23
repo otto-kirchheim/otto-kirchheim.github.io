@@ -75,9 +75,12 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
 
   let Tag: number;
-  if (row instanceof Row) Tag = Number(row.cells.tagN);
-  else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
-  else throw new Error('unbekannter Fehler');
+  if (row instanceof Row) {
+    const d = dayjs(row.cells.tagN as string, 'DD.MM.YYYY');
+    Tag = d.isValid() ? d.date() : Number(row.cells.tagN);
+  } else if (row instanceof CustomTable) {
+    Tag = checkMaxTag(Jahr, Monat);
+  } else throw new Error('unbekannter Fehler');
 
   const datum = dayjs([Jahr, Monat, Tag]);
 
@@ -132,7 +135,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       const values: IDatenN = {
         _id: row instanceof Row ? row.cells._id : undefined,
         ewtRef: row instanceof Row ? row.cells.ewtRef : undefined,
-        tagN: dayjs(form.querySelector<HTMLInputElement>('#tagN')?.value ?? 0).format('DD'),
+        tagN: dayjs(form.querySelector<HTMLInputElement>('#tagN')?.value ?? 0).format('DD.MM.YYYY'),
         beginN: form.querySelector<HTMLInputElement>('#beginN')?.value ?? '',
         endeN: form.querySelector<HTMLInputElement>('#endeN')?.value ?? '',
         anzahl040N: Number(form.querySelector<HTMLInputElement>('#anzahl040N')?.value) || 1,

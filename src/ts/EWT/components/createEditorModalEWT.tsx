@@ -186,18 +186,21 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
       const currentWindow = getEwtWindow(values);
       if (currentWindow) {
-        const overlaps = DataE().some(existing => {
+        const conflictingEntry = DataE().find(existing => {
           if (values._id && existing._id === values._id) return false;
           const existingWindow = getEwtWindow(existing);
           if (!existingWindow) return false;
           return currentWindow.start.isBefore(existingWindow.end) && existingWindow.start.isBefore(currentWindow.end);
         });
 
-        if (overlaps) {
+        if (conflictingEntry) {
+          const schichtHinweis = ['N', 'BN'].includes(conflictingEntry.schichtE)
+            ? ` (${conflictingEntry.schichtE}-Schicht beginnt am Vortag)`
+            : '';
           createSnackBar({
-            message: 'EWT<br/>Einträge dürfen sich zeitlich nicht überschneiden.',
+            message: `EWT<br/>Zeitüberschneidung mit Tag ${dayjs(conflictingEntry.tagE).format('DD.MM.')}${schichtHinweis}.`,
             status: 'warning',
-            timeout: 4000,
+            timeout: 5000,
             fixed: true,
           });
           return;
