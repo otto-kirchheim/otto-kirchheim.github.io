@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import clearLoading from '../../src/ts/utilities/clearLoading';
+import setLoading from '../../src/ts/utilities/setLoading';
 
 describe('clearLoading', () => {
   let container: HTMLDivElement;
@@ -22,12 +23,13 @@ describe('clearLoading', () => {
 
   it('versteckt Ladeanzeige und aktiviert Button', () => {
     const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
-    btn.dataset.normaltext = 'Speichern';
+    const originalMarkup = btn.innerHTML;
 
+    setLoading('btnTest');
     clearLoading('btnTest');
 
     expect(document.querySelector('#ladeAnzeige')!.classList.contains('d-none')).toBe(true);
-    expect(btn.innerHTML).toBe('Speichern');
+    expect(btn.innerHTML).toBe(originalMarkup);
     expect(btn.disabled).toBe(false);
   });
 
@@ -47,6 +49,16 @@ describe('clearLoading', () => {
     btn.textContent = 'Absenden';
     clearLoading('btnTest');
     expect(btn.innerHTML).toBe('Absenden');
+  });
+
+  it('interpretiert Fallback-Text nicht als HTML', () => {
+    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
+    btn.dataset.normaltext = '<img src=x onerror=alert(1)>';
+
+    clearLoading('btnTest');
+
+    expect(btn.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(btn.querySelector('img')).toBeNull();
   });
 
   it('tut nichts wenn Button nicht existiert', () => {
