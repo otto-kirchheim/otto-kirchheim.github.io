@@ -6,7 +6,7 @@ import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, show
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { DataE, clearZeiten, saveTableDataEWT } from '../utils';
+import { DataE, clearZeiten, saveTableDataEWT, validateZeitenReihenfolge } from '../utils';
 
 const getEwtWindow = (entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null => {
   if (!entry.beginE || !entry.endeE) return null;
@@ -183,6 +183,12 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         anWE: form.querySelector<HTMLInputElement>('#anWE')?.value ?? '',
         berechnen: form.querySelector<HTMLInputElement>('#berechnen')?.checked ?? true,
       };
+
+      const zeitFehler = validateZeitenReihenfolge(values);
+      if (zeitFehler) {
+        createSnackBar({ message: `EWT<br/>${zeitFehler}`, status: 'warning', timeout: 5000, fixed: true });
+        return;
+      }
 
       const currentWindow = getEwtWindow(values);
       if (currentWindow) {

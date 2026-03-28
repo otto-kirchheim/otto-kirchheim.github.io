@@ -6,6 +6,7 @@ import DataE from './DataE';
 import ewtBerechnen from './ewtBerechnen';
 import naechsterTag from './naechsterTag';
 import saveTableDataEWT from './saveTableDataEWT';
+import validateZeitenReihenfolge from './validateZeitenReihenfolge';
 
 export {
   addEventlistenerToggleBerechnen,
@@ -16,4 +17,5 @@ export {
   ewtBerechnen,
   naechsterTag,
   saveTableDataEWT,
+  validateZeitenReihenfolge,
 };

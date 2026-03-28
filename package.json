@@ -1,25 +1,26 @@
 {
   "name": "db_nebengeld_frontend",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "",
   "private": "true",
   "scripts": {
     "start": "bunx --bun vite --host",
-    "test": "tsc && vitest run",
+    "test": "tsc && TZ=Europe/Berlin vitest run",
     "build": "bunx --bun vite build",
     "format": "prettier --write 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "format:check": "prettier --check 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "lint-staged": "lint-staged",
-    "lint": "eslint src/ test/",
-    "lint:fix": "eslint src/ test/ --fix",
+    "lint": "bunx --bun eslint src/ test/",
+    "lint:fix": "bunx --bun eslint src/ test/ --fix",
+    "lint:files": "bunx --bun eslint",
     "preview": "bunx --bun vite preview --outDir=../public/public",
-    "dev-test": "vitest --ui --api 9527",
-    "coverage": "vitest run --coverage",
+    "dev-test": "TZ=Europe/Berlin vitest --ui --api 9527",
+    "coverage": "TZ=Europe/Berlin vitest run --coverage",
     "prepare": "husky"
   },
   "lint-staged": {
-    "**/*": [
-      "bun run lint"
+    "**/*.{ts,tsx}": [
+      "bun run lint:files --"
     ]
   },
   "type": "module",
@@ -33,7 +34,7 @@
     "@types/jsdom": "^28.0.1",
     "@vitest/coverage-v8": "^4.1.1",
     "@vitest/ui": "^4.1.1",
-    "eslint": "^10.1.0",
+    "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "husky": "^9.1.7",
