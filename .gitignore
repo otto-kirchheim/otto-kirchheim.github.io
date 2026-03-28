@@ -3,3 +3,4 @@ coverage
 dist/
 dev-dist/
 .vscode/
+plan/

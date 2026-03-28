@@ -31,6 +31,7 @@ type TModalBodyInputElementOption = {
   min?: string;
   max?: string;
   onChange?: (this: HTMLInputElement, ev: Event) => void;
+  invalidFeedbackId?: string;
 };
 
 export default class MyInput extends Component<TModalBodyInputElementOption> {
@@ -49,12 +50,13 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
 
   render() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { myRef, divClass, popover, children, ...inputProps } = this.props;
+    const { myRef, divClass, popover, children, invalidFeedbackId, ...inputProps } = this.props;
 
     return (
       <div className={divClass ?? 'form-floating'}>
         <input ref={this.input} className="form-control validate" {...inputProps} />
         <label htmlFor={this.props.id}>{children}</label>
+        {invalidFeedbackId ? <div id={invalidFeedbackId} className="invalid-feedback" /> : null}
       </div>
     );
   }

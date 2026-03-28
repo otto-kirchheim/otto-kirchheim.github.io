@@ -8,6 +8,9 @@ import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { DataE, clearZeiten, saveTableDataEWT, validateZeitenReihenfolge } from '../utils';
 
+const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
+const getZeitfehlerElementId = (feld: (typeof ZEITFELDER)[number]): string => `zeitfehler-${feld}`;
+
 const getEwtWindow = (entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null => {
   if (!entry.beginE || !entry.endeE) return null;
 
@@ -37,6 +40,7 @@ const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnN
       id={column.name}
       name={column.title}
       value={row instanceof Row ? (row.cells[column.name]?.toString() ?? '') : ''}
+      invalidFeedbackId={getZeitfehlerElementId(column.name as (typeof ZEITFELDER)[number])}
     >
       {column.title}
     </MyInput>
@@ -157,12 +161,42 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  const clearZeitfehler = (): void => {
+    ZEITFELDER.forEach(feld => {
+      const input = form.querySelector<HTMLInputElement>(`#${feld}`);
+      const feedback = form.querySelector<HTMLDivElement>(`#${getZeitfehlerElementId(feld)}`);
+      if (!input) return;
+      input.setCustomValidity('');
+      input.classList.remove('is-invalid');
+      if (feedback) feedback.textContent = '';
+    });
+  };
+
+  const showZeitfehlerPopup = (event: Event): void => {
+    const input = event.currentTarget as HTMLInputElement | null;
+    if (!input) return;
+    if (!input.classList.contains('is-invalid')) return;
+    if (!input.validationMessage) return;
+    input.reportValidity();
+  };
+
+  ZEITFELDER.forEach(feld => {
+    const input = form.querySelector<HTMLInputElement>(`#${feld}`);
+    if (!input) return;
+    input.addEventListener('input', clearZeitfehler);
+    input.addEventListener('change', clearZeitfehler);
+    input.addEventListener('click', showZeitfehlerPopup);
+    input.addEventListener('focus', showZeitfehlerPopup);
+  });
+
   modal.row = row;
 
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {
-      if (!form.checkValidity()) return;
       event.preventDefault();
+      clearZeitfehler();
+
+      if (!form.checkValidity()) return;
 
       const row = modal.row;
       if (!row) throw new Error('Row nicht gefunden');
@@ -185,8 +219,22 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       };
 
       const zeitFehler = validateZeitenReihenfolge(values);
-      if (zeitFehler) {
-        createSnackBar({ message: `EWT<br/>${zeitFehler}`, status: 'warning', timeout: 5000, fixed: true });
+      console.log(JSON.stringify({ Fehler: zeitFehler, Values: values }));
+      if (zeitFehler && zeitFehler.length > 0) {
+        for (const fehler of zeitFehler) {
+          const invalidInput = form.querySelector<HTMLInputElement>(`#${fehler.feld}`);
+          const feedback = form.querySelector<HTMLDivElement>(`#${getZeitfehlerElementId(fehler.feld)}`);
+          if (!invalidInput) continue;
+          invalidInput.setCustomValidity(fehler.message);
+          invalidInput.classList.add('is-invalid');
+          if (feedback) feedback.textContent = fehler.message;
+        }
+
+        const firstInvalidInput = form.querySelector<HTMLInputElement>(`#${zeitFehler[0].feld}`);
+        if (firstInvalidInput) {
+          firstInvalidInput.reportValidity();
+          firstInvalidInput.focus();
+        }
         return;
       }
 

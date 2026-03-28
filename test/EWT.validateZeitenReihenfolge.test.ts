@@ -64,8 +64,9 @@ describe('validateZeitenReihenfolge', () => {
         createEWT({ abWE: '06:00', beginE: '06:20', endeE: '15:00', anWE: '04:00' }),
       );
       expect(result).not.toBeNull();
-      expect(result).toContain('Arbeitszeit Bis');
-      expect(result).toContain('An Wohnung');
+      expect(result?.map(fehler => fehler.feld)).toEqual(['endeE', 'anWE']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "Arbeitszeit Von" und "An Wohnung" liegen.');
+      expect(result?.[1]?.message).toContain('Muss nach "Arbeitszeit Bis" liegen.');
     });
   });
 
@@ -112,8 +113,141 @@ describe('validateZeitenReihenfolge', () => {
         }),
       );
       expect(result).not.toBeNull();
-      expect(result).toContain('An 1.Tgk.-St.');
-      expect(result).toContain('Arbeitszeit Bis');
+      expect(result?.map(fehler => fehler.feld)).toEqual(['an1E', 'endeE']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "Ab Einsatzort" und "An Wohnung" liegen.');
+      expect(result?.[1]?.message).toContain('Muss zwischen "An 1.Tgk.-St." und "An Wohnung" liegen.');
+    });
+
+    it('erkennt an1E als zu früh wenn es vor abEE liegt', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '19:25',
+          beginE: '19:45',
+          ab1E: '20:30',
+          anEE: '20:50',
+          abEE: '05:10',
+          an1E: '04:30',
+          endeE: '06:15',
+          anWE: '06:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['abEE', 'an1E']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "An Einsatzort" und "Arbeitszeit Bis" liegen.');
+    });
+
+    it('markiert beginE bei beginE vor abWE', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '19:25',
+          beginE: '18:45',
+          ab1E: '20:30',
+          anEE: '20:50',
+          abEE: '05:10',
+          an1E: '05:30',
+          endeE: '06:15',
+          anWE: '06:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['abWE', 'beginE']);
+      expect(result?.[0]?.message).toContain('Muss vor "Arbeitszeit Von" liegen.');
+    });
+
+    it('markiert beginE bei beginE vor abWE (zweiter Repro-Fall)', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '20:25',
+          beginE: '19:45',
+          ab1E: '20:30',
+          anEE: '20:50',
+          abEE: '05:10',
+          an1E: '05:30',
+          endeE: '06:15',
+          anWE: '06:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['abWE', 'beginE']);
+    });
+
+    it('markiert beginE und ab1E wenn anEE formal zu frueh ist (ab1E vor beginE)', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '19:25',
+          beginE: '19:45',
+          ab1E: '19:30',
+          anEE: '20:50',
+          abEE: '05:10',
+          an1E: '05:30',
+          endeE: '06:15',
+          anWE: '06:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['beginE', 'ab1E']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "Ab Wohnung" und "An Einsatzort" liegen.');
+    });
+
+    it('zeigt bei beginE=20:45 und ab1E=20:30 den beginE-Hinweis zwischen Ab Wohnung und An Einsatzort', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '19:25',
+          beginE: '20:45',
+          ab1E: '20:30',
+          anEE: '20:50',
+          abEE: '05:10',
+          an1E: '05:30',
+          endeE: '06:15',
+          anWE: '06:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['beginE', 'ab1E']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "Ab Wohnung" und "An Einsatzort" liegen.');
+    });
+
+    it('zeigt bei anWE vor endeE den endeE-Hinweis mit zwischen-Text', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          tagE: '2026-03-20',
+          eOrtE: 'Mühlbach',
+          schichtE: 'N',
+          abWE: '19:25',
+          beginE: '19:45',
+          ab1E: '20:30',
+          anEE: '21:00',
+          abEE: '05:10',
+          an1E: '05:30',
+          endeE: '06:15',
+          anWE: '05:35',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.map(fehler => fehler.feld)).toEqual(['endeE', 'anWE']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "An 1.Tgk.-St." und "An Wohnung" liegen.');
+      expect(result?.[1]?.message).toContain('Muss nach "Arbeitszeit Bis" liegen.');
     });
   });
 
@@ -144,8 +278,29 @@ describe('validateZeitenReihenfolge', () => {
         createEWT({ abWE: '05:50', beginE: '06:00', endeE: '05:00', anWE: '05:30' }),
       );
       expect(result).not.toBeNull();
-      expect(result).toContain('Arbeitszeit Von');
-      expect(result).toContain('Arbeitszeit Bis');
+      expect(result?.map(fehler => fehler.feld)).toEqual(['beginE', 'endeE']);
+      expect(result?.[0]?.message).toContain('Muss zwischen "Ab Wohnung" und "An Wohnung" liegen.');
+      expect(result?.[1]?.message).toContain('Muss zwischen "Arbeitszeit Von" und "An Wohnung" liegen.');
+    });
+
+    it('gibt mehrere Fehlermeldungen zurück wenn mehrere unerwartete Rollovers vorliegen', () => {
+      const result = validateZeitenReihenfolge(
+        createEWT({
+          abWE: '06:00',
+          beginE: '06:30',
+          ab1E: '05:00',
+          anEE: '05:20',
+          abEE: '04:00',
+          an1E: '04:10',
+          endeE: '15:00',
+          anWE: '15:30',
+        }),
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.length).toBe(4);
+      expect(result?.map(fehler => fehler.feld)).toEqual(['beginE', 'ab1E', 'anEE', 'abEE']);
+      expect(result?.[1]?.message).toContain('Muss zwischen "Arbeitszeit Von" und "An Einsatzort" liegen.');
     });
 
     it('gibt null zurück wenn nur anWE befüllt', () => {
