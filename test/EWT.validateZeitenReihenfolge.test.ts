@@ -34,7 +34,16 @@ describe('validateZeitenReihenfolge', () => {
     it('gibt null zurück bei korrekter aufsteigender Reihenfolge', () => {
       expect(
         validateZeitenReihenfolge(
-          createEWT({ abWE: '06:00', beginE: '06:20', ab1E: '07:00', anEE: '07:30', abEE: '15:30', an1E: '16:00', endeE: '16:30', anWE: '17:00' }),
+          createEWT({
+            abWE: '06:00',
+            beginE: '06:20',
+            ab1E: '07:00',
+            anEE: '07:30',
+            abEE: '15:30',
+            an1E: '16:00',
+            endeE: '16:30',
+            anWE: '17:00',
+          }),
         ),
       ).toBeNull();
     });
@@ -51,7 +60,9 @@ describe('validateZeitenReihenfolge', () => {
 
     it('gibt Fehlermeldung zurück bei falscher Reihenfolge über 20h-Grenze', () => {
       // anWE (04:00) < abWE (06:00) → Rollover → Gesamtspanne > 20h
-      const result = validateZeitenReihenfolge(createEWT({ abWE: '06:00', beginE: '06:20', endeE: '15:00', anWE: '04:00' }));
+      const result = validateZeitenReihenfolge(
+        createEWT({ abWE: '06:00', beginE: '06:20', endeE: '15:00', anWE: '04:00' }),
+      );
       expect(result).not.toBeNull();
       expect(result).toContain('Arbeitszeit Bis');
       expect(result).toContain('An Wohnung');
@@ -80,7 +91,9 @@ describe('validateZeitenReihenfolge', () => {
 
     it('gibt null zurück wenn N-Schicht nur Abendfelder befüllt hat (kein Tageswechsel nötig)', () => {
       expect(
-        validateZeitenReihenfolge(createEWT({ schichtE: 'N', abWE: '19:00', beginE: '19:30', endeE: '20:00', anWE: '20:30' })),
+        validateZeitenReihenfolge(
+          createEWT({ schichtE: 'N', abWE: '19:00', beginE: '19:30', endeE: '20:00', anWE: '20:30' }),
+        ),
       ).toBeNull();
     });
 
@@ -127,7 +140,9 @@ describe('validateZeitenReihenfolge', () => {
 
     it('gibt Fehlermeldung zurück wenn beginE nach endeE liegt (T-Schicht, 2. Rollover)', () => {
       // endeE (05:00) < beginE (06:00) → Rollover → Spanne > 20h
-      const result = validateZeitenReihenfolge(createEWT({ abWE: '05:50', beginE: '06:00', endeE: '05:00', anWE: '05:30' }));
+      const result = validateZeitenReihenfolge(
+        createEWT({ abWE: '05:50', beginE: '06:00', endeE: '05:00', anWE: '05:30' }),
+      );
       expect(result).not.toBeNull();
       expect(result).toContain('Arbeitszeit Von');
       expect(result).toContain('Arbeitszeit Bis');
