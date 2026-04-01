@@ -36,7 +36,7 @@ export default function updateTabVisibility(aktivierteTabs?: string[]): void {
 }
 
 /**
- * Versteckt alle Feature-Tabs (z. B. beim Logout).
+ * Versteckt alle Feature-Tabs (z. B. beim logoutUser).
  */
 export function hideAllFeatureTabs(): void {
   for (const tabId of ALL_TAB_IDS) {

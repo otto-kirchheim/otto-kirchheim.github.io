@@ -1,5 +1,5 @@
 import { createSnackBar } from '../class/CustomSnackbar';
-import { Logout } from '../Einstellungen/utils';
+import { logoutUser } from '../Einstellungen/utils';
 import { authApi } from './apiService';
 import Storage from './Storage';
 
@@ -43,7 +43,7 @@ function incrementRefreshCounter(): void {
 }
 
 function showErrorAndLogout(): void {
-  Logout();
+  logoutUser();
   createSnackBar({
     message: `Login<br/>Fehlerhafte Anmeldung,</br> bitte Erneut anmelden!`,
     status: 'error',

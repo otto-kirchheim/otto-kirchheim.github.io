@@ -5,18 +5,7 @@
  * Nutzt fieldMapper für die Konvertierung zwischen Frontend- und Backend-Formaten.
  */
 
-import type {
-  IDatenBE,
-  IDatenBEJahr,
-  IDatenBZ,
-  IDatenBZJahr,
-  IDatenEWT,
-  IDatenEWTJahr,
-  IDatenN,
-  IDatenNJahr,
-  IVorgabenGeld,
-  IVorgabenU,
-} from '../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../interfaces';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
 import Storage from './Storage';
@@ -27,14 +16,14 @@ import {
   type BackendNebengeld,
   type BackendUserProfile,
   type BackendVorgabe,
-  type GroupedByMonat,
+  type FlatMappedDocs,
   beFromBackend,
   beToBackend,
   bzFromBackend,
   bzToBackend,
   ewtFromBackend,
   ewtToBackend,
-  groupByMonat,
+  flatMapDocs,
   nebengeldFromBackend,
   nebengeldToBackend,
   userProfileFromBackend,
@@ -195,7 +184,7 @@ export const authApi = {
   },
 
   /**
-   * Logout: POST /auth/logout
+   * logoutUser: POST /auth/logout
    * Verwendet raw fetch (nicht FetchRetry), um Re-Entry in tokenErneuern zu verhindern.
    */
   async logout(): Promise<void> {
@@ -210,7 +199,7 @@ export const authApi = {
         headers,
       });
     } catch {
-      // Logout-Fehler ignorieren – lokale Daten werden sowieso gelöscht
+      // logoutUser-Fehler ignorieren – lokale Daten werden sowieso gelöscht
     }
   },
 };
@@ -257,16 +246,16 @@ type ResourceName = 'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzw
 
 /**
  * Generische Funktion: Lade alle Einträge eines Jahres für eine Ressource.
- * GET /:resource/:year → Backend liefert flaches Array → gruppiert nach Monat.
+ * GET /:resource/:year → Backend liefert flaches Array.
  * Gibt Daten + max updatedAt zurück.
  */
-async function loadResourceYear<TBackend extends { Monat: number; updatedAt?: string }, TFrontend>(
+async function loadResourceYear<TBackend extends { updatedAt?: string }, TFrontend>(
   resource: ResourceName,
   year: number,
   mapper: (doc: TBackend) => TFrontend,
-): Promise<GroupedByMonat<TFrontend>> {
+): Promise<FlatMappedDocs<TFrontend>> {
   const docs = await apiFetch<undefined, TBackend[]>(`${resource}/${year}`);
-  return groupByMonat(docs, mapper);
+  return flatMapDocs(docs, mapper);
 }
 
 /**
@@ -338,13 +327,13 @@ async function smartSync<TBackend>(resource: ResourceName, bulk: BulkRequest): P
 // ─── Bereitschaftszeitraum ───────────────────────────────
 
 export const bereitschaftszeitraumApi = {
-  async loadYear(year: number): Promise<{ data: IDatenBZJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenBZ[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendBereitschaftszeitraum, IDatenBZ>(
       'bereitschaftszeitraum',
       year,
       bzFromBackend,
     );
-    return { data: result.data as IDatenBZJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -371,13 +360,13 @@ export const bereitschaftszeitraumApi = {
 // ─── Bereitschaftseinsatz ────────────────────────────────
 
 export const bereitschaftseinsatzApi = {
-  async loadYear(year: number): Promise<{ data: IDatenBEJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenBE[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendBereitschaftseinsatz, IDatenBE>(
       'bereitschaftseinsatz',
       year,
       beFromBackend,
     );
-    return { data: result.data as IDatenBEJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -404,9 +393,9 @@ export const bereitschaftseinsatzApi = {
 // ─── Einsatzwechseltätigkeit ─────────────────────────────
 
 export const ewtApi = {
-  async loadYear(year: number): Promise<{ data: IDatenEWTJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenEWT[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendEWT, IDatenEWT>('einsatzwechseltaetigkeit', year, ewtFromBackend);
-    return { data: result.data as IDatenEWTJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -433,9 +422,9 @@ export const ewtApi = {
 // ─── Nebengeld ───────────────────────────────────────────
 
 export const nebengeldApi = {
-  async loadYear(year: number): Promise<{ data: IDatenNJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenN[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendNebengeld, IDatenN>('nebengeld', year, nebengeldFromBackend);
-    return { data: result.data as IDatenNJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -473,10 +462,10 @@ export interface SyncTimestamps {
 export interface LoadedYearData {
   vorgabenU: IVorgabenU;
   datenGeld: IVorgabenGeld;
-  BZ: IDatenBZJahr;
-  BE: IDatenBEJahr;
-  EWT: IDatenEWTJahr;
-  N: IDatenNJahr;
+  BZ: IDatenBZ[];
+  BE: IDatenBE[];
+  EWT: IDatenEWT[];
+  N: IDatenN[];
   timestamps: SyncTimestamps;
 }
 

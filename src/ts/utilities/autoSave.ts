@@ -13,14 +13,12 @@ import type { CustomTable, CustomTableTypes, TableChanges } from '../class/Custo
 import type {
   CustomHTMLTableElement,
   IDatenBE,
-  IDatenBEJahr,
   IDatenBZ,
-  IDatenBZJahr,
   IDatenEWT,
-  IDatenEWTJahr,
   IDatenN,
-  IDatenNJahr,
   IVorgabenU,
+  TResourceKey,
+  TSaveStatus,
 } from '../interfaces';
 import {
   type BulkRequest,
@@ -32,10 +30,11 @@ import {
 } from './apiService';
 import Storage from './Storage';
 import type { TStorageData } from './Storage';
+import dayjs from './configDayjs';
 
 // ─── Konfiguration ───────────────────────────────────────
-/** Mapping von ResourceKey auf Storage-Key */
-const RESOURCE_STORAGE_MAP: Record<Exclude<ResourceKey, 'settings'>, TStorageData> = {
+/** Mapping von TResourceKey auf Storage-Key */
+const RESOURCE_STORAGE_MAP: Record<Exclude<TResourceKey, 'settings'>, TStorageData> = {
   BZ: 'dataBZ',
   BE: 'dataBE',
   EWT: 'dataE',
@@ -52,29 +51,25 @@ let onlineListenerRegistered = false;
 
 // ─── Typen ───────────────────────────────────────────────
 
-type ResourceKey = 'BZ' | 'BE' | 'EWT' | 'N' | 'settings';
-
-const TABLE_ID_MAP: Record<Exclude<ResourceKey, 'settings'>, string> = {
+const TABLE_ID_MAP: Record<Exclude<TResourceKey, 'settings'>, string> = {
   BZ: 'tableBZ',
   BE: 'tableBE',
   EWT: 'tableE',
   N: 'tableN',
 };
 
-type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
-
 interface ResourceState {
   timer: ReturnType<typeof setTimeout> | null;
-  status: SaveStatus;
+  status: TSaveStatus;
   lastSaved: Date | null;
   lastError: string | null;
 }
 
-type StatusListener = (resource: ResourceKey, status: SaveStatus, error?: string) => void;
+type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: string) => void;
 
 // ─── State ───────────────────────────────────────────────
 
-const resourceStates: Record<ResourceKey, ResourceState> = {
+const resourceStates: Record<TResourceKey, ResourceState> = {
   BZ: { timer: null, status: 'idle', lastSaved: null, lastError: null },
   BE: { timer: null, status: 'idle', lastSaved: null, lastError: null },
   EWT: { timer: null, status: 'idle', lastSaved: null, lastError: null },
@@ -86,7 +81,7 @@ const statusListeners: StatusListener[] = [];
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
-function setStatus(resource: ResourceKey, status: SaveStatus, error?: string): void {
+function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string): void {
   const state = resourceStates[resource];
   state.status = status;
   if (status === 'saved') state.lastSaved = new Date();
@@ -145,7 +140,7 @@ export function onAutoSaveStatus(listener: StatusListener): () => void {
 /**
  * Aktueller Status einer Ressource.
  */
-export function getResourceStatus(resource: ResourceKey): ResourceState {
+export function getResourceStatus(resource: TResourceKey): ResourceState {
   return { ...resourceStates[resource] };
 }
 
@@ -153,7 +148,7 @@ export function getResourceStatus(resource: ResourceKey): ResourceState {
  * Alle ausstehenden Timer abbrechen.
  */
 export function cancelAllPending(): void {
-  for (const key of Object.keys(resourceStates) as ResourceKey[]) {
+  for (const key of Object.keys(resourceStates) as TResourceKey[]) {
     const state = resourceStates[key];
     if (state.timer) {
       clearTimeout(state.timer);
@@ -178,7 +173,7 @@ export async function flushAll(): Promise<void> {
   await Promise.allSettled(promises);
 }
 
-function hasPendingResourceChanges(resource: Exclude<ResourceKey, 'settings'>, includeDeletes = false): boolean {
+function hasPendingResourceChanges(resource: Exclude<TResourceKey, 'settings'>, includeDeletes = false): boolean {
   const table = findTable(TABLE_ID_MAP[resource]);
   if (!table) return false;
   const changes = table.rows.getChanges(includeDeletes);
@@ -192,7 +187,7 @@ function hasPendingResourceChanges(resource: Exclude<ResourceKey, 'settings'>, i
  * Wird als `onChange` Option beim createCustomTable übergeben.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createOnChangeHandler(resource: ResourceKey): (table: CustomTable<any>) => void {
+export function createOnChangeHandler(resource: TResourceKey): (table: CustomTable<any>) => void {
   return () => {
     if (!autoSaveEnabled) return;
     scheduleAutoSave(resource);
@@ -203,7 +198,7 @@ export function createOnChangeHandler(resource: ResourceKey): (table: CustomTabl
  * Manuell eine Ressource zum Auto-Save vormerken.
  * Nützlich wenn Daten außerhalb der Tabelle geändert werden.
  */
-export function scheduleAutoSave(resource: ResourceKey): void {
+export function scheduleAutoSave(resource: TResourceKey): void {
   if (!autoSaveEnabled) return;
 
   const state = resourceStates[resource];
@@ -230,7 +225,7 @@ export function scheduleAutoSave(resource: ResourceKey): void {
 /**
  * Speichert sofort die Änderungen einer Ressource (ohne Löschungen).
  */
-async function saveResourceNow(resource: ResourceKey, includeDeletes = false): Promise<void> {
+async function saveResourceNow(resource: TResourceKey, includeDeletes = false): Promise<void> {
   // Offline? Nicht senden, bleibt pending für online-Retry
   if (!navigator.onLine) {
     setStatus(resource, 'pending');
@@ -344,43 +339,108 @@ async function saveSettingsNow(): Promise<void> {
  * Sendet die Bulk-Operation an die passende API.
  */
 async function sendBulk(
-  resource: Exclude<ResourceKey, 'settings'>,
+  resource: Exclude<TResourceKey, 'settings'>,
   changes: TableChanges<CustomTableTypes>,
   monat: number,
   jahr: number,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-): Promise<{ created: any[]; updated: any[]; deleted: string[]; errors: any[] }> {
-  const bulk: BulkRequest = {
-    create: changes.create,
-    update: changes.update as (CustomTableTypes & { _id: string })[],
-    delete: changes.delete,
+): Promise<{
+  created: CustomTableTypes[];
+  updated: CustomTableTypes[];
+  deleted: string[];
+  errors: { operation: string; index: number; id?: string; message: string }[];
+}> {
+  const getMonth = (item: CustomTableTypes): number => {
+    switch (resource) {
+      case 'BZ':
+        return dayjs(String((item as IDatenBZ).beginB)).month() + 1;
+      case 'BE':
+        return dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY').month() + 1;
+      case 'EWT':
+        return dayjs((item as IDatenEWT).tagE).month() + 1;
+      case 'N':
+        return dayjs((item as IDatenN).tagN, 'DD.MM.YYYY').month() + 1;
+    }
   };
 
-  switch (resource) {
-    case 'BZ':
-      return bereitschaftszeitraumApi.bulk(
-        bulk as { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
-        monat,
-        jahr,
-      );
-    case 'BE':
-      return bereitschaftseinsatzApi.bulk(
-        bulk as { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
-        monat,
-        jahr,
-      );
-    case 'EWT':
-      return ewtApi.bulk(bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] }, monat, jahr);
-    case 'N':
-      return nebengeldApi.bulk(bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] }, monat, jahr);
+  const createByMonth = new Map<number, CustomTableTypes[]>();
+  const updateByMonth = new Map<number, (CustomTableTypes & { _id: string })[]>();
+
+  for (const item of changes.create) {
+    const m = getMonth(item);
+    const arr = createByMonth.get(m) ?? [];
+    arr.push(item);
+    createByMonth.set(m, arr);
   }
+
+  for (const item of changes.update as (CustomTableTypes & { _id: string })[]) {
+    const m = getMonth(item);
+    const arr = updateByMonth.get(m) ?? [];
+    arr.push(item);
+    updateByMonth.set(m, arr);
+  }
+
+  const months = Array.from(new Set([...createByMonth.keys(), ...updateByMonth.keys()]));
+  const combined: {
+    created: CustomTableTypes[];
+    updated: CustomTableTypes[];
+    deleted: string[];
+    errors: { operation: string; index: number; id?: string; message: string }[];
+  } = { created: [], updated: [], deleted: [], errors: [] };
+
+  const callBulk = async (m: number, withDelete: boolean) => {
+    const bulk: BulkRequest = {
+      create: createByMonth.get(m) ?? [],
+      update: updateByMonth.get(m) ?? [],
+      delete: withDelete ? changes.delete : [],
+    };
+
+    switch (resource) {
+      case 'BZ':
+        return bereitschaftszeitraumApi.bulk(
+          bulk as { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
+          m,
+          jahr,
+        );
+      case 'BE':
+        return bereitschaftseinsatzApi.bulk(
+          bulk as { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
+          m,
+          jahr,
+        );
+      case 'EWT':
+        return ewtApi.bulk(bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] }, m, jahr);
+      case 'N':
+        return nebengeldApi.bulk(bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] }, m, jahr);
+    }
+  };
+
+  if (months.length === 0) {
+    const result = await callBulk(monat, true);
+    combined.created.push(...result.created);
+    combined.updated.push(...result.updated);
+    combined.deleted.push(...result.deleted);
+    combined.errors.push(...result.errors);
+    return combined;
+  }
+
+  let deleteSent = false;
+  for (const m of months) {
+    const result = await callBulk(m, !deleteSent);
+    deleteSent = deleteSent || changes.delete.length > 0;
+    combined.created.push(...result.created);
+    combined.updated.push(...result.updated);
+    combined.deleted.push(...result.deleted);
+    combined.errors.push(...result.errors);
+  }
+
+  return combined;
 }
 
 /**
  * LocalStorage nach erfolgreichem Auto-Save aktualisieren.
  */
 function updateLocalStorage(
-  resource: Exclude<ResourceKey, 'settings'>,
+  resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
   monat: number,
 ): void {
@@ -392,14 +452,12 @@ function updateLocalStorage(
   };
 
   const storageKey = storageKeyMap[resource] as TStorageData;
-  type JahrData = IDatenBZJahr | IDatenBEJahr | IDatenEWTJahr | IDatenNJahr;
-  const data = Storage.get<JahrData>(storageKey, { check: true });
 
-  // Aktive (nicht gelöschte) Zeilen im localStorage speichern
+  // Aktive (nicht gelöschte) Zeilen der gesamten Tabelle im localStorage speichern.
   const activeRows = table.rows.array.filter(row => row._state !== 'deleted').map(row => row.cells);
-  (data as Record<number, unknown[]>)[monat] = activeRows;
-
-  Storage.set(storageKey, data);
+  void resource;
+  void monat;
+  Storage.set(storageKey, activeRows);
 }
 
 // ─── Online-Retry ────────────────────────────────────────
@@ -417,7 +475,7 @@ function registerOnlineRetry(): void {
     () => {
       onlineListenerRegistered = false;
       console.log('[AutoSave] Wieder online – starte ausstehende Saves');
-      for (const key of Object.keys(resourceStates) as ResourceKey[]) {
+      for (const key of Object.keys(resourceStates) as TResourceKey[]) {
         if (resourceStates[key].status === 'pending') {
           scheduleAutoSave(key);
         }
@@ -430,6 +488,6 @@ function registerOnlineRetry(): void {
 /**
  * Markiert eine Ressource als gespeichert (für externes Speichern, z.B. saveDaten).
  */
-export function markResourceSaved(resource: ResourceKey): void {
+export function markResourceSaved(resource: TResourceKey): void {
   setStatus(resource, 'saved');
 }

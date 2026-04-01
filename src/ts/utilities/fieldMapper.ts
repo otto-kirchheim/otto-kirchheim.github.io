@@ -385,6 +385,26 @@ export interface GroupedByMonat<TFrontend> {
   maxUpdatedAt: string | null;
 }
 
+export interface FlatMappedDocs<TFrontend> {
+  data: TFrontend[];
+  maxUpdatedAt: string | null;
+}
+
+export function flatMapDocs<TBackend extends { updatedAt?: string }, TFrontend>(
+  docs: TBackend[],
+  mapper: (doc: TBackend) => TFrontend,
+): FlatMappedDocs<TFrontend> {
+  let maxUpdatedAt: string | null = null;
+  const data = docs.map(doc => {
+    if (doc.updatedAt && (!maxUpdatedAt || doc.updatedAt > maxUpdatedAt)) {
+      maxUpdatedAt = doc.updatedAt;
+    }
+    return mapper(doc);
+  });
+
+  return { data, maxUpdatedAt };
+}
+
 /**
  * Gruppiert ein flaches Array von Backend-Dokumenten nach Monat → Jahres-Objekt.
  * Backend liefert z.B. [{Monat: 1, ...}, {Monat: 3, ...}],

@@ -22,7 +22,9 @@ import clearLoading from './clearLoading';
 import compareVersion from './compareVersion';
 import { isAdmin, getUserCookie } from './decodeAccessToken';
 import getDurationFromTime from './getDurationFromTime';
+import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from './getMonatFromItem';
 import saveDaten from './saveDaten';
+import normalizeResourceRows from './normalizeResourceRows';
 import setDisableButton from './setDisableButton';
 import setLoading from './setLoading';
 import setOffline from './setOffline';
@@ -43,8 +45,13 @@ export {
   compareVersion,
   createOnChangeHandler,
   flushAll,
+  filterByMonat,
   getAutoSaveDelay,
   getDurationFromTime,
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEWT,
+  getMonatFromN,
   getResourceStatus,
   getServerUrl,
   getUserCookie,
@@ -52,6 +59,7 @@ export {
   isAdmin,
   isAutoSaveEnabled,
   markResourceSaved,
+  normalizeResourceRows,
   onAutoSaveStatus,
   saveDaten,
   scheduleAutoSave,

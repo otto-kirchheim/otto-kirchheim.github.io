@@ -1,19 +1,18 @@
+import type { TUserRole } from './IAdmin.js';
+import type { TResourceKey, TSaveStatus } from './IAutoSave.js';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, CustomHTMLTableRowElement } from './CustomHTMLElements.js';
 import type {
   AtLeastOne,
   IDaten,
   IDatenAllValuesWithKey,
   IDatenBE,
-  IDatenBEJahr,
   IDatenBZ,
-  IDatenBZJahr,
   IDatenEWT,
-  IDatenEWTJahr,
   IDatenN,
-  IDatenNJahr,
   IMonatsDaten,
 } from './IDaten.js';
 import type { ReturnTypeSaveData, UserDatenServer } from './IUserDatenServer.js';
+import type { IDataQueryOptions, TDataScope } from './IDataQuery.js';
 import type { IVorgabenBerechnung, IVorgabenBerechnungMonat } from './IVorgabenBerechnungMonat.js';
 import type { IVorgabenE } from './IVorgabenE.js';
 import type { IVorgabenGeld, IVorgabenGeldType } from './IVorgabenGeldType.js';
@@ -32,17 +31,18 @@ export type {
   CustomHTMLDivElement,
   CustomHTMLTableElement,
   CustomHTMLTableRowElement,
+  TDataScope,
+  TSaveStatus,
   IDaten,
   IDatenAllValuesWithKey,
   IDatenBE,
-  IDatenBEJahr,
   IDatenBZ,
-  IDatenBZJahr,
   IDatenEWT,
-  IDatenEWTJahr,
   IDatenN,
-  IDatenNJahr,
   IMonatsDaten,
+  IDataQueryOptions,
+  TResourceKey,
+  TUserRole,
   IVorgabenBerechnung,
   IVorgabenBerechnungMonat,
   IVorgabenE,
