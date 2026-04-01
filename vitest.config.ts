@@ -23,6 +23,9 @@ export default mergeConfig(
       globals: true,
       environment: 'jsdom',
       setupFiles: ['./test/setupVitest.ts'],
+      environmentOptions: {
+        jsxImportSource: 'preact',
+      },
       coverage: {
         provider: 'v8',
         reportsDirectory: './coverage',
