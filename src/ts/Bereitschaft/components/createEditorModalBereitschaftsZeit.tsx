@@ -8,7 +8,7 @@ import { MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
 import type { CustomHTMLDivElement, IDatenBZ } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { DataBZ, saveTableDataBZ } from '../utils';
+import { getBereitschaftsZeitraumDaten, persistBereitschaftsZeitraumTableData } from '../utils';
 
 const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ComponentChild => {
   let datum: dayjs.Dayjs, min: string, max: string;
@@ -148,7 +148,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
         return;
       }
 
-      const overlaps = DataBZ().some(existing => {
+      const overlaps = getBereitschaftsZeitraumDaten().some(existing => {
         if (values._id && existing._id === values._id) return false;
         const existingStart = dayjs(String(existing.beginB));
         const existingEnd = dayjs(String(existing.endeB));
@@ -169,7 +169,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
       else row.rows.add(values);
 
       Modal.getInstance(modal)?.hide();
-      saveTableDataBZ(table);
+      persistBereitschaftsZeitraumTableData(table);
     };
   }
 }

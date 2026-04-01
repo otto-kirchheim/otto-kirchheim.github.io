@@ -1,5 +1,5 @@
-import Logout from './Logout';
-import SelectYear from './SelectYear';
+import logoutUser from './logoutUser';
+import selectYear from './selectYear';
 import changeMonatJahr from './changeMonatJahr';
 import checkPasswort from './checkPasswort';
 import generateEingabeMaskeEinstellungen from './generateEingabeMaskeEinstellungen';
@@ -9,8 +9,8 @@ import saveTableDataVorgabenU from './saveTableDataVorgabenU';
 import setMonatJahr from './setMonatJahr';
 
 export {
-  Logout,
-  SelectYear,
+  logoutUser,
+  selectYear,
   changeMonatJahr,
   checkPasswort,
   generateEingabeMaskeEinstellungen,

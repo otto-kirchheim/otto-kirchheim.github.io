@@ -8,7 +8,11 @@ import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../co
 import type { CustomHTMLDivElement, IDatenBE } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { DataBE, DataBZ, saveTableDataBE } from '../utils';
+import {
+  getBereitschaftsEinsatzDaten,
+  getBereitschaftsZeitraumDaten,
+  persistBereitschaftsEinsatzTableData,
+} from '../utils';
 
 const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ComponentChildren => {
   return row.columns.array.map(column => {
@@ -150,7 +154,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       const einsatzEndRaw = dayjs(`${einsatzDate}T${values.endeBE}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-      const bzData = DataBZ();
+      const bzData = getBereitschaftsZeitraumDaten();
       const startBz = bzData.find(bz => {
         const bzStart = dayjs(String(bz.beginB));
         const bzEnd = dayjs(String(bz.endeB));
@@ -202,7 +206,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
       values.bereitschaftszeitraumBE = startBz._id;
 
-      const overlapsExistingBe = DataBE().some(be => {
+      const overlapsExistingBe = getBereitschaftsEinsatzDaten().some(be => {
         if (values._id && be._id === values._id) return false;
         const existingDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
         const existingStart = dayjs(`${existingDate}T${be.beginBE}`);
@@ -222,7 +226,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       }
 
       if (values.lreBE === 'LRE 1') {
-        const hasOtherLre1InSameBz = DataBE().some(be => {
+        const hasOtherLre1InSameBz = getBereitschaftsEinsatzDaten().some(be => {
           if (be.lreBE !== 'LRE 1') return false;
           if (values._id && be._id === values._id) return false;
 
@@ -250,7 +254,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       else row.rows.add(values);
 
       Modal.getInstance(modal)?.hide();
-      saveTableDataBE(table);
+      persistBereitschaftsEinsatzTableData(table);
     };
   }
 }

@@ -1,4 +1,4 @@
-import { SelectYear } from '../Einstellungen/utils';
+import { selectYear } from '../Einstellungen/utils';
 import type { IVorgabenU } from '../interfaces';
 import { Storage, updateTabVisibility } from '../utilities';
 import dayjs from '../utilities/configDayjs';
@@ -91,7 +91,7 @@ window.addEventListener('load', () => {
 
     initAutoSaveIndicator();
 
-    if (navigator.onLine) SelectYear(monat, jahr);
+    if (navigator.onLine) selectYear(monat, jahr);
   } else {
     adminEl?.classList.add('d-none');
     adminTabPaneEl?.classList.add('d-none');

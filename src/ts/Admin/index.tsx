@@ -37,6 +37,7 @@ export function AdminTab() {
     capabilities?.role === 'team-admin' || capabilities?.role === 'org-admin' || capabilities?.role === 'super-admin';
   const canSeeVorgabenTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditVorgabenGeld);
   const canSeeTemplatesTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditProfileTemplates);
+  const isSuperAdmin = capabilities?.role === 'super-admin';
 
   return (
     <div class="admin-tab-bg py-4 px-2 px-md-4">
@@ -97,14 +98,16 @@ export function AdminTab() {
               </button>
             </li>
           )}
-          <li class="nav-item ms-md-auto" role="presentation">
-            <a href={adminJsUrl} target="_blank" rel="noreferrer" class="nav-link d-flex align-items-center">
-              <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
-                open_in_new
-              </span>
-              AdminJS
-            </a>
-          </li>
+          {isSuperAdmin && (
+            <li class="nav-item ms-md-auto" role="presentation">
+              <a href={adminJsUrl} target="_blank" rel="noreferrer" class="nav-link d-flex align-items-center">
+                <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+                  open_in_new
+                </span>
+                AdminJS
+              </a>
+            </li>
+          )}
         </ul>
       </div>
 

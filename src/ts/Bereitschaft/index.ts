@@ -2,7 +2,7 @@ import { createSnackBar } from '../class/CustomSnackbar';
 import type { CustomTable } from '../class/CustomTable';
 import { createCustomTable } from '../class/CustomTable';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../interfaces';
-import { buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import { buttonDisable, createOnChangeHandler, getMonatFromBE, getMonatFromBZ, saveDaten, Storage } from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import download from '../utilities/download';
 import {
@@ -12,7 +12,12 @@ import {
   createAddModalBereitschaftsEinsatz,
   createAddModalBereitschaftsZeit,
 } from './components';
-import { DataBE, DataBZ, saveTableDataBE, saveTableDataBZ } from './utils';
+import {
+  getBereitschaftsEinsatzDaten,
+  getBereitschaftsZeitraumDaten,
+  persistBereitschaftsEinsatzTableData,
+  persistBereitschaftsZeitraumTableData,
+} from './utils';
 
 export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgabenB } = {
   0: {
@@ -64,7 +69,9 @@ window.addEventListener('load', () => {
   };
 
   const countLinkedEinsaetze = (zeitraum: IDatenBZ): number => {
-    return DataBE().filter(einsatz => isEinsatzLinkedToZeitraum(einsatz, zeitraum)).length;
+    return getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }).filter(einsatz =>
+      isEinsatzLinkedToZeitraum(einsatz, zeitraum),
+    ).length;
   };
 
   const datetimeParser = (value: string): string => dayjs(value).format('DD.MM.YYYY, LT'),
@@ -75,7 +82,7 @@ window.addEventListener('load', () => {
         { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true },
         { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
       ],
-      rows: DataBZ(),
+      rows: getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }),
       sorting: { enabled: true },
       onChange: createOnChangeHandler('BZ'),
       editing: {
@@ -91,7 +98,9 @@ window.addEventListener('load', () => {
         },
         deleteRow: row => {
           const bzToDelete = row.cells as IDatenBZ;
-          const beImZeitraum = DataBE().some(einsatz => isEinsatzLinkedToZeitraum(einsatz, bzToDelete));
+          const beImZeitraum = getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }).some(einsatz =>
+            isEinsatzLinkedToZeitraum(einsatz, bzToDelete),
+          );
           if (beImZeitraum) {
             createSnackBar({
               message:
@@ -103,10 +112,10 @@ window.addEventListener('load', () => {
             return;
           }
           row.deleteRow();
-          saveTableDataBZ(ftBZ);
+          persistBereitschaftsZeitraumTableData(ftBZ);
         },
         deleteAllRows: () => {
-          const hasLinked = DataBZ().some(zeitraum => countLinkedEinsaetze(zeitraum) > 0);
+          const hasLinked = getBereitschaftsZeitraumDaten().some(zeitraum => countLinkedEinsaetze(zeitraum) > 0);
           if (hasLinked) {
             createSnackBar({
               message:
@@ -129,9 +138,11 @@ window.addEventListener('load', () => {
               {
                 text: 'Ja',
                 function: () => {
-                  ftBZ.rows.deleteAll();
+                  const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+                  const monthRows = [...ftBZ.rows.array].filter(row => getMonatFromBZ(row.cells) === activeMonat);
+                  monthRows.forEach(row => row.deleteRow());
                   buttonDisable(false);
-                  saveTableDataBZ(ftBZ);
+                  persistBereitschaftsZeitraumTableData(ftBZ);
                 },
                 dismiss: true,
                 class: ['text-danger'],
@@ -154,7 +165,7 @@ window.addEventListener('load', () => {
       { name: 'lreBE', title: 'LRE', sortable: true },
       { name: 'privatkmBE', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
     ],
-    rows: DataBE(),
+    rows: getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }),
     sorting: { enabled: true },
     onChange: createOnChangeHandler('BE'),
     editing: {
@@ -171,7 +182,7 @@ window.addEventListener('load', () => {
       deleteRow: row => {
         // Neue Logik: Bereitschaftseinsatz kann immer gelöscht werden
         row.deleteRow();
-        saveTableDataBE(ftBE);
+        persistBereitschaftsEinsatzTableData(ftBE);
       },
       deleteAllRows: () => {
         createSnackBar({
@@ -185,9 +196,11 @@ window.addEventListener('load', () => {
             {
               text: 'Ja',
               function: () => {
-                ftBE.rows.deleteAll();
+                const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+                const monthRows = [...ftBE.rows.array].filter(row => getMonatFromBE(row.cells) === activeMonat);
+                monthRows.forEach(row => row.deleteRow());
                 buttonDisable(false);
-                saveTableDataBE(ftBE);
+                persistBereitschaftsEinsatzTableData(ftBE);
               },
               dismiss: true,
               class: ['text-danger'],
@@ -213,4 +226,8 @@ window.addEventListener('load', () => {
   btnDownloadB?.addEventListener('click', () => {
     download(btnDownloadB, 'B');
   });
+
+  const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  ftBZ.rows.setFilter(row => getMonatFromBZ(row) === monat);
+  ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
 });

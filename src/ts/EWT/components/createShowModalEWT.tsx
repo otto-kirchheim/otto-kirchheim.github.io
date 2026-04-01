@@ -1,7 +1,7 @@
 import type { Column, Row } from '../../class/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../components';
 import type { CustomHTMLDivElement, IDatenEWT } from '../../interfaces';
-import { saveTableDataEWT } from '../utils';
+import { persistEwtTableData } from '../utils';
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -68,7 +68,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
             row.cells.berechnen = (e.target as HTMLInputElement).checked;
             const table = row.CustomTable;
             table.drawRows();
-            saveTableDataEWT(table);
+            persistEwtTableData(table);
           }}
         >
           {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}

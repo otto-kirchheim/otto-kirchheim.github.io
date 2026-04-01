@@ -3,8 +3,8 @@ import { authApi } from '../utilities/apiService';
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createModalChangePassword } from './components';
 import {
-  Logout,
-  SelectYear,
+  logoutUser,
+  selectYear,
   changeMonatJahr,
   generateEingabeMaskeEinstellungen,
   generateEingabeTabelleEinstellungenVorgabenB,
@@ -103,7 +103,7 @@ window.addEventListener('load', () => {
   const formSelectMonatJahr = document.querySelector<HTMLFormElement>('#formSelectMonatJahr');
   formSelectMonatJahr?.addEventListener('submit', e => {
     e.preventDefault();
-    SelectYear();
+    selectYear();
   });
 
   const btnPasswortAEndern = document.querySelector<HTMLButtonElement>('#btnPasswortAEndern');
@@ -115,7 +115,7 @@ window.addEventListener('load', () => {
   });
 
   const btnLogout = document.querySelector<HTMLButtonElement>('#btnLogout');
-  btnLogout?.addEventListener('click', Logout);
+  btnLogout?.addEventListener('click', logoutUser);
 
   const form = document.querySelector<HTMLFormElement>('#formEinstellungen');
   const saveButton = document.querySelector<HTMLButtonElement>('#btnSaveEinstellungen');

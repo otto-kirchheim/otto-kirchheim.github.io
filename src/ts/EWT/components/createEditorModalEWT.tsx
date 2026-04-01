@@ -6,7 +6,7 @@ import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, show
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { DataE, clearZeiten, saveTableDataEWT, validateZeitenReihenfolge } from '../utils';
+import { clearEwtZeiten, getEwtDaten, persistEwtTableData, validateEwtZeitenReihenfolge } from '../utils';
 
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
 const getZeitfehlerElementId = (feld: (typeof ZEITFELDER)[number]): string => `zeitfehler-${feld}`;
@@ -68,7 +68,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         key="Zeitenloeschen"
         className="btn btn-danger"
         text="Zeiten löschen"
-        clickHandler={() => clearZeiten(modal)}
+        clickHandler={() => clearEwtZeiten(modal)}
       />
     ) : undefined;
 
@@ -218,7 +218,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         berechnen: form.querySelector<HTMLInputElement>('#berechnen')?.checked ?? true,
       };
 
-      const zeitFehler = validateZeitenReihenfolge(values);
+      const zeitFehler = validateEwtZeitenReihenfolge(values);
       console.log(JSON.stringify({ Fehler: zeitFehler, Values: values }));
       if (zeitFehler && zeitFehler.length > 0) {
         for (const fehler of zeitFehler) {
@@ -240,7 +240,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
       const currentWindow = getEwtWindow(values);
       if (currentWindow) {
-        const conflictingEntry = DataE().find(existing => {
+        const conflictingEntry = getEwtDaten().find(existing => {
           if (values._id && existing._id === values._id) return false;
           const existingWindow = getEwtWindow(existing);
           if (!existingWindow) return false;
@@ -261,11 +261,42 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         }
       }
 
+      const hasExactDuplicate = table.rows.array.some(existingRow => {
+        if (existingRow._state === 'deleted') return false;
+        if (row instanceof Row && existingRow === row) return false;
+
+        const existing = existingRow.cells;
+        return (
+          existing.tagE === values.tagE &&
+          existing.eOrtE === values.eOrtE &&
+          existing.schichtE === values.schichtE &&
+          existing.abWE === values.abWE &&
+          existing.ab1E === values.ab1E &&
+          existing.anEE === values.anEE &&
+          existing.beginE === values.beginE &&
+          existing.endeE === values.endeE &&
+          existing.abEE === values.abEE &&
+          existing.an1E === values.an1E &&
+          existing.anWE === values.anWE &&
+          existing.berechnen === values.berechnen
+        );
+      });
+
+      if (hasExactDuplicate) {
+        createSnackBar({
+          message: 'EWT<br/>Ein identischer Eintrag ist bereits vorhanden.',
+          status: 'warning',
+          timeout: 4000,
+          fixed: true,
+        });
+        return;
+      }
+
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
       Modal.getInstance(modal)?.hide();
-      saveTableDataEWT(table);
+      persistEwtTableData(table);
     };
   }
 }

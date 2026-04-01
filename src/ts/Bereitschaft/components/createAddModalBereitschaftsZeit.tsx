@@ -12,12 +12,12 @@ import type {
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import {
-  BerVorgabeAEndern,
-  BerZeitenEingabe,
-  datumAnpassen,
-  eigeneWerte,
-  nachtAusblenden,
-  saveTableDataBZ,
+  applyBereitschaftsVorgabe,
+  submitBereitschaftsZeiten,
+  updateBereitschaftsDatum,
+  toggleBereitschaftsEigeneWerte,
+  hideBereitschaftsNachtfelder,
+  persistBereitschaftsZeitraumTableData,
 } from '../utils';
 
 const createDateInputElement = (id: string, name: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
@@ -63,7 +63,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       auswahl = ref.current.value;
-      BerVorgabeAEndern(modal, vorgabenB[auswahl], datum);
+      applyBereitschaftsVorgabe(modal, vorgabenB[auswahl], datum);
     };
     return (
       <MySelect
@@ -105,7 +105,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       datum = dayjs(ref.current.value);
-      datumAnpassen(modal, vorgabenB[auswahl], datum);
+      updateBereitschaftsDatum(modal, vorgabenB[auswahl], datum);
     };
     return (
       <MyInput
@@ -151,7 +151,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           id="nacht"
           checked={vorgabenB[auswahl].nacht}
           changeHandler={() => {
-            nachtAusblenden(modal);
+            hideBereitschaftsNachtfelder(modal);
           }}
         >
           Nachtschicht
@@ -188,7 +188,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           className="form-check form-switch bereitschaft"
           id="eigen"
           changeHandler={() => {
-            eigeneWerte(modal, vorgabenB[auswahl], datum);
+            toggleBereitschaftsEigeneWerte(modal, vorgabenB[auswahl], datum);
           }}
         >
           Eingabe Eigene Werte?
@@ -205,11 +205,11 @@ export default function createAddModalBereitschaftsZeit(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      BerZeitenEingabe(modal);
+      submitBereitschaftsZeiten(modal);
 
       const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
       Modal.getInstance(modal)?.hide();
-      if (table) saveTableDataBZ(table.instance);
+      if (table) persistBereitschaftsZeitraumTableData(table.instance);
     };
   }
 }

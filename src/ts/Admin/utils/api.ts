@@ -1,8 +1,7 @@
 import { FetchRetry } from '../../utilities/FetchRetry';
 import { Storage } from '../../utilities';
 import { createSnackBar } from '../../class/CustomSnackbar';
-
-type UserRole = 'member' | 'team-admin' | 'org-admin' | 'super-admin';
+import type { TUserRole } from '../../interfaces';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -14,7 +13,7 @@ type ApiResponse<T> = {
 type BackendUser = {
   _id: string;
   userName: string;
-  role: UserRole;
+  role: TUserRole;
   adminForTeamOes?: string[];
   adminForOrganizationOes?: string[];
   canEditVorgabenGeld?: boolean;
@@ -23,7 +22,7 @@ type BackendUser = {
 };
 
 type CurrentUserCapabilities = {
-  role: UserRole;
+  role: TUserRole;
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
@@ -65,7 +64,7 @@ export type AdminUserRow = {
   _id: string;
   userName: string;
   fullName: string;
-  role: UserRole;
+  role: TUserRole;
   oe: string;
   adminForTeamOes: string[];
   adminForOrganizationOes: string[];
@@ -160,8 +159,8 @@ export async function fetchCurrentAdminCapabilities(): Promise<CurrentUserCapabi
   };
 }
 
-export async function updateUserRole(userId: string, role: UserRole): Promise<void> {
-  const response = await FetchRetry<{ role: UserRole }, BackendUser>(`users/${userId}/role`, { role }, 'PATCH');
+export async function updateUserRole(userId: string, role: TUserRole): Promise<void> {
+  const response = await FetchRetry<{ role: TUserRole }, BackendUser>(`users/${userId}/role`, { role }, 'PATCH');
   unwrapResponse<BackendUser>(response);
 }
 

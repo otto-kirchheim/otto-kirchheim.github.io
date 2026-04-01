@@ -4,7 +4,7 @@ import type { IDatenEWT } from '../../interfaces';
 import { type IVorgabenU, type IVorgabenUfZ } from '../../interfaces';
 import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { addEWTtag, naechsterTag } from '../utils';
+import { addEwtTag, setNaechsterEwtTag } from '../utils';
 
 export default function createAddModalEWT(): void {
   const ref = createRef<HTMLFormElement>();
@@ -46,7 +46,7 @@ export default function createAddModalEWT(): void {
             id="btnNaechsterTag"
             clickHandler={(e: MouseEvent) => {
               e.preventDefault();
-              naechsterTag();
+              setNaechsterEwtTag();
             }}
             text="+1 Tag"
             ariaLabel="Nächster Tag"
@@ -104,7 +104,7 @@ export default function createAddModalEWT(): void {
     </MyFormModal>,
   );
 
-  naechsterTag('');
+  setNaechsterEwtTag('');
 
   if (ref.current === null || bueroRef.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
@@ -115,7 +115,7 @@ export default function createAddModalEWT(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      addEWTtag(modal, vorgabenU, bueroCheckbox.checked);
+      addEwtTag(modal, vorgabenU, bueroCheckbox.checked);
     };
   }
 }
