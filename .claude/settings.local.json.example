@@ -1,0 +1,5 @@
+{
+  "env": {
+    "CLAUDE_THINKING_BUDGET_TOKENS": "12000"
+  }
+}
