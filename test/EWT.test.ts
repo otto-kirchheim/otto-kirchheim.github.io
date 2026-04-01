@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { berechnen } from '../src/ts/EWT/utils';
+import { calculateEwtEintraege } from '../src/ts/EWT/utils';
 import type { IVorgabenU } from '../src/ts/interfaces/IVorgabenU';
 import { VorgabenUMock } from './mockData';
 import type { IMonatsDaten } from '../src/ts/interfaces';
@@ -408,7 +408,7 @@ describe('berechnen', () => {
     ];
 
     // Führen Sie die berechnen-Funktion aus
-    const result = berechnen(vorgabenU, daten);
+    const result = calculateEwtEintraege(vorgabenU, daten);
 
     // Überprüfen Sie die Ergebnisse
     expect(result).to.deep.equal(expected);

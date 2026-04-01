@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
-import validateZeitenReihenfolge from '../src/ts/EWT/utils/validateZeitenReihenfolge';
+import validateEwtZeitenReihenfolge from '../src/ts/EWT/utils/validateEwtZeitenReihenfolge';
 
 function createEWT(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
@@ -24,16 +24,16 @@ function createEWT(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
 describe('validateZeitenReihenfolge', () => {
   describe('Tagschicht (T)', () => {
     it('gibt null zurück wenn alle Felder leer sind', () => {
-      expect(validateZeitenReihenfolge(createEWT())).toBeNull();
+      expect(validateEwtZeitenReihenfolge(createEWT())).toBeNull();
     });
 
     it('gibt null zurück wenn weniger als 2 Felder befüllt sind', () => {
-      expect(validateZeitenReihenfolge(createEWT({ abWE: '06:00' }))).toBeNull();
+      expect(validateEwtZeitenReihenfolge(createEWT({ abWE: '06:00' }))).toBeNull();
     });
 
     it('gibt null zurück bei korrekter aufsteigender Reihenfolge', () => {
       expect(
-        validateZeitenReihenfolge(
+        validateEwtZeitenReihenfolge(
           createEWT({
             abWE: '06:00',
             beginE: '06:20',
@@ -50,17 +50,17 @@ describe('validateZeitenReihenfolge', () => {
 
     it('gibt null zurück wenn mehrere Felder gleiche Zeit haben', () => {
       expect(
-        validateZeitenReihenfolge(createEWT({ abWE: '06:00', beginE: '06:00', endeE: '14:30', anWE: '14:30' })),
+        validateEwtZeitenReihenfolge(createEWT({ abWE: '06:00', beginE: '06:00', endeE: '14:30', anWE: '14:30' })),
       ).toBeNull();
     });
 
     it('gibt null zurück wenn nur 2 Felder korrekt befüllt sind', () => {
-      expect(validateZeitenReihenfolge(createEWT({ abWE: '06:00', anWE: '15:00' }))).toBeNull();
+      expect(validateEwtZeitenReihenfolge(createEWT({ abWE: '06:00', anWE: '15:00' }))).toBeNull();
     });
 
     it('gibt Fehlermeldung zurück bei falscher Reihenfolge über 20h-Grenze', () => {
       // anWE (04:00) < abWE (06:00) → Rollover → Gesamtspanne > 20h
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({ abWE: '06:00', beginE: '06:20', endeE: '15:00', anWE: '04:00' }),
       );
       expect(result).not.toBeNull();
@@ -74,7 +74,7 @@ describe('validateZeitenReihenfolge', () => {
     it('gibt null zurück bei korrekter N-Schicht mit Mitternacht', () => {
       // Schicht beginnt am 25.03., endet am 26.03.
       expect(
-        validateZeitenReihenfolge(
+        validateEwtZeitenReihenfolge(
           createEWT({
             schichtE: 'N',
             abWE: '19:25',
@@ -92,14 +92,14 @@ describe('validateZeitenReihenfolge', () => {
 
     it('gibt null zurück wenn N-Schicht nur Abendfelder befüllt hat (kein Tageswechsel nötig)', () => {
       expect(
-        validateZeitenReihenfolge(
+        validateEwtZeitenReihenfolge(
           createEWT({ schichtE: 'N', abWE: '19:00', beginE: '19:30', endeE: '20:00', anWE: '20:30' }),
         ),
       ).toBeNull();
     });
 
     it('gibt Fehlermeldung zurück wenn an1E falsch (19:40 statt ~05:40)', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           schichtE: 'N',
           abWE: '19:25',
@@ -119,7 +119,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('erkennt an1E als zu früh wenn es vor abEE liegt', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -141,7 +141,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('markiert beginE bei beginE vor abWE', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -163,7 +163,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('markiert beginE bei beginE vor abWE (zweiter Repro-Fall)', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -184,7 +184,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('markiert beginE und ab1E wenn anEE formal zu frueh ist (ab1E vor beginE)', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -206,7 +206,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('zeigt bei beginE=20:45 und ab1E=20:30 den beginE-Hinweis zwischen Ab Wohnung und An Einsatzort', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -228,7 +228,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('zeigt bei anWE vor endeE den endeE-Hinweis mit zwischen-Text', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           tagE: '2026-03-20',
           eOrtE: 'Mühlbach',
@@ -254,7 +254,7 @@ describe('validateZeitenReihenfolge', () => {
   describe('Bereitschaft + Nacht (BN)', () => {
     it('gibt null zurück bei korrekter BN-Schicht mit Tageswechsel', () => {
       expect(
-        validateZeitenReihenfolge(
+        validateEwtZeitenReihenfolge(
           createEWT({
             schichtE: 'BN',
             abWE: '17:00',
@@ -269,12 +269,12 @@ describe('validateZeitenReihenfolge', () => {
 
   describe('Teilweise befüllte Felder', () => {
     it('gibt null zurück wenn nur Arbeitszeit-Felder korrekt gesetzt sind', () => {
-      expect(validateZeitenReihenfolge(createEWT({ beginE: '06:00', endeE: '14:30' }))).toBeNull();
+      expect(validateEwtZeitenReihenfolge(createEWT({ beginE: '06:00', endeE: '14:30' }))).toBeNull();
     });
 
     it('gibt Fehlermeldung zurück wenn beginE nach endeE liegt (T-Schicht, 2. Rollover)', () => {
       // endeE (05:00) < beginE (06:00) → Rollover → Spanne > 20h
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({ abWE: '05:50', beginE: '06:00', endeE: '05:00', anWE: '05:30' }),
       );
       expect(result).not.toBeNull();
@@ -284,7 +284,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('gibt mehrere Fehlermeldungen zurück wenn mehrere unerwartete Rollovers vorliegen', () => {
-      const result = validateZeitenReihenfolge(
+      const result = validateEwtZeitenReihenfolge(
         createEWT({
           abWE: '06:00',
           beginE: '06:30',
@@ -304,7 +304,7 @@ describe('validateZeitenReihenfolge', () => {
     });
 
     it('gibt null zurück wenn nur anWE befüllt', () => {
-      expect(validateZeitenReihenfolge(createEWT({ anWE: '15:00' }))).toBeNull();
+      expect(validateEwtZeitenReihenfolge(createEWT({ anWE: '15:00' }))).toBeNull();
     });
   });
 });

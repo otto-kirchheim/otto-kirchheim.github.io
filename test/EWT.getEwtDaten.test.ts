@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import type { IDatenEWT, IDatenEWTJahr } from '../src/ts/interfaces';
-import DataE from '../src/ts/EWT/utils/DataE';
+import type { IDatenEWT } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
+import { getEwtDaten } from '../src/ts/EWT/utils';
 
 function createRow(day: string): IDatenEWT {
   return {
@@ -21,47 +21,47 @@ function createRow(day: string): IDatenEWT {
   };
 }
 
-describe('DataE', () => {
+describe('getEwtDaten', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
   it('gibt [] zurueck wenn kein Benutzer vorhanden ist', () => {
-    expect(DataE()).toEqual([]);
+    expect(getEwtDaten()).toEqual([]);
   });
 
   it('gibt uebergebene Daten direkt zurueck wenn Benutzer vorhanden ist', () => {
     Storage.set('Benutzer', { id: 'u1' });
     const data = [createRow('2026-03-10')];
 
-    expect(DataE(data, 3)).toEqual(data);
+    expect(getEwtDaten(data, 3)).toEqual(data);
   });
 
   it('gibt [] zurueck wenn weder Monat noch gespeicherter Monat vorhanden ist', () => {
     Storage.set('Benutzer', { id: 'u1' });
 
-    expect(DataE()).toEqual([]);
+    expect(getEwtDaten()).toEqual([]);
   });
 
-  it('liest Monat aus Storage und gibt dataE[Monat] zurueck', () => {
+  it('liest Monat aus Storage und gibt getEwtDaten[Monat] zurueck', () => {
     Storage.set('Benutzer', { id: 'u1' });
     Storage.set('Monat', 3);
 
     const monat3 = [createRow('2026-03-11')];
     const dataE = {
       3: monat3,
-    } as unknown as IDatenEWTJahr;
+    };
 
     Storage.set('dataE', dataE);
 
-    expect(DataE()).toEqual(monat3);
+    expect(getEwtDaten()).toEqual(monat3);
   });
 
   it('gibt [] zurueck wenn dataE nicht vorhanden ist', () => {
     Storage.set('Benutzer', { id: 'u1' });
     Storage.set('Monat', 3);
 
-    expect(DataE()).toEqual([]);
+    expect(getEwtDaten()).toEqual([]);
   });
 
   it('nutzt uebergebenen Monat anstelle des Storage-Monats', () => {
@@ -73,10 +73,10 @@ describe('DataE', () => {
     const dataE = {
       3: monat3,
       4: monat4,
-    } as unknown as IDatenEWTJahr;
+    };
 
     Storage.set('dataE', dataE);
 
-    expect(DataE(undefined, 3)).toEqual(monat3);
+    expect(getEwtDaten(undefined, 3)).toEqual(monat3);
   });
 });

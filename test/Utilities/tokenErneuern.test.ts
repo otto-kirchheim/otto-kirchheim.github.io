@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // --- Hoisted mocks ---
-const { mockRefreshToken, mockCreateSnackBar, mockLogout } = vi.hoisted(() => ({
+const { mockRefreshToken, mockCreateSnackBar, mocklogoutUser } = vi.hoisted(() => ({
   mockRefreshToken: vi.fn(),
   mockCreateSnackBar: vi.fn(),
-  mockLogout: vi.fn(),
+  mocklogoutUser: vi.fn(),
 }));
 
 vi.mock('../../src/ts/utilities/apiService', () => ({
   authApi: { refreshToken: mockRefreshToken },
 }));
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/Einstellungen/utils', () => ({ Logout: mockLogout }));
+vi.mock('../../src/ts/Einstellungen/utils', () => ({ logoutUser: mocklogoutUser }));
 
 import tokenErneuern, { resetTokenState } from '../../src/ts/utilities/tokenErneuern';
 
@@ -30,7 +30,7 @@ describe('tokenErneuern', () => {
 
   it('wirft Fehler nach zu vielen Retries (retry > 2)', async () => {
     await expect(tokenErneuern(3)).rejects.toThrow('Zu viele Token-Refresh-Versuche');
-    expect(mockLogout).toHaveBeenCalled();
+    expect(mocklogoutUser).toHaveBeenCalled();
     expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   });
 
@@ -38,7 +38,7 @@ describe('tokenErneuern', () => {
     mockRefreshToken.mockRejectedValue(new Error('Network error'));
 
     await expect(tokenErneuern(0)).rejects.toThrow('Fehler bei Token erneuerung');
-    expect(mockLogout).toHaveBeenCalled();
+    expect(mocklogoutUser).toHaveBeenCalled();
     expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   });
 
@@ -52,6 +52,6 @@ describe('tokenErneuern', () => {
 
     // 4. Versuch sollte fehlschlagen (REFRESHED > 2)
     await expect(tokenErneuern(0)).rejects.toThrow('Zu viele Token-Refresh-Versuche');
-    expect(mockLogout).toHaveBeenCalled();
+    expect(mocklogoutUser).toHaveBeenCalled();
   });
 });

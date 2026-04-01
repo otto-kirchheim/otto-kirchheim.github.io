@@ -29,7 +29,7 @@ vi.mock('../src/ts/Login/utils/requestVerificationMail', () => ({
 }));
 
 vi.mock('../src/ts/Einstellungen/utils', () => ({
-  SelectYear: selectYearMock,
+  selectYear: selectYearMock,
 }));
 
 vi.mock('../src/ts/utilities', () => ({

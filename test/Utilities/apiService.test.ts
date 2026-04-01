@@ -188,7 +188,7 @@ describe('apiService', () => {
   // ─── Ressourcen-Loading ──────────────────────────
 
   describe('loadYear', () => {
-    it('bereitschaftszeitraumApi.loadYear gruppiert nach Monat', async () => {
+    it('bereitschaftszeitraumApi.loadYear liefert flache Liste mit updatedAt', async () => {
       mockApiSuccess([
         {
           _id: 'bz1',
@@ -208,8 +208,8 @@ describe('apiService', () => {
         },
       ]);
       const result = await bereitschaftszeitraumApi.loadYear(2024);
-      expect(result.data[4]).toHaveLength(2);
-      expect(result.data[1]).toEqual([]);
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0]._id).toBe('bz1');
       expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
       expect(mockFetchRetry).toHaveBeenCalledWith('bereitschaftszeitraum/2024', undefined, 'GET');
     });
@@ -219,12 +219,12 @@ describe('apiService', () => {
         { _id: 'ewt1', Monat: 3, Jahr: 2024, Tag: '2024-03-10', Schicht: 'Tag', updatedAt: '2024-06-15T12:00:00.000Z' },
       ]);
       const result = await ewtApi.loadYear(2024);
-      expect(result.data[3]).toHaveLength(1);
-      expect(result.data[3][0].schichtE).toBe('Tag');
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].schichtE).toBe('Tag');
       expect(result.updatedAt).toBe('2024-06-15T12:00:00.000Z');
     });
 
-    it('nebengeldApi.loadYear konvertiert', async () => {
+    it('nebengeldApi.loadYear konvertiert in flache Liste', async () => {
       mockApiSuccess([
         {
           _id: 'n1',
@@ -238,8 +238,8 @@ describe('apiService', () => {
         },
       ]);
       const result = await nebengeldApi.loadYear(2024);
-      expect(result.data[6]).toHaveLength(1);
-      expect(result.data[6][0].anzahl040N).toBe(2);
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].anzahl040N).toBe(2);
       expect(result.updatedAt).toBe('2024-06-15T14:00:00.000Z');
     });
   });

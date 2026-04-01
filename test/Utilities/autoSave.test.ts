@@ -311,17 +311,21 @@ describe('autoSave', () => {
     it('speichert BZ-Änderungen nach Timer-Ablauf', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', { 3: [] });
+      Storage.set('dataBZ', []);
 
-      const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
-      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { beginB: '10:00' } }]);
+      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } }]);
 
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'new-id-1' }], updated: [], deleted: [], errors: [] });
 
       scheduleAutoSave('BZ');
       await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
-      expect(mockBzBulk).toHaveBeenCalledWith(expect.objectContaining({ create: [{ beginB: '10:00' }] }), 3, 2025);
+      expect(mockBzBulk).toHaveBeenCalledWith(
+        expect.objectContaining({ create: [{ beginB: '2025-03-10T10:00:00.000Z' }], delete: [], update: [] }),
+        3,
+        2025,
+      );
       expect(getResourceStatus('BZ').status).toBe('saved');
       expect(mockAktualisiereBerechnung).toHaveBeenCalled();
     });
@@ -423,7 +427,7 @@ describe('autoSave', () => {
     it('aktualisiert localStorage nach erfolgreichem Save', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', { 3: [{ beginB: 'old' }] });
+      Storage.set('dataBZ', [{ beginB: 'old' }]);
 
       const changes = { create: [{ beginB: 'new' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [
@@ -436,8 +440,8 @@ describe('autoSave', () => {
       scheduleAutoSave('BZ');
       await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
-      const stored = Storage.get<Record<number, unknown[]>>('dataBZ');
-      expect(stored[3]).toHaveLength(2); // Beide aktiven Zeilen
+      const stored = Storage.get<unknown[]>('dataBZ');
+      expect(stored).toHaveLength(2); // Beide aktiven Zeilen
     });
 
     it('bleibt pending bei offline und speichert nicht', async () => {

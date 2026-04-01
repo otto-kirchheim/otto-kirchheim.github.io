@@ -1,21 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as UtilitiesModule from '../src/ts/utilities';
 
 const {
   aktualisiereBerechnungMock,
-  dataBZMock,
-  dataBEMock,
-  dataEMock,
-  dataNMock,
+  getBereitschaftsZeitraumDatenMock,
+  getBereitschaftsEinsatzDatenMock,
+  getEwtDatenMock,
+  getNebengeldDatenMock,
   generateEingabeMaskeEinstellungenMock,
   storageGetMock,
   storageSetMock,
   storageRemoveMock,
 } = vi.hoisted(() => ({
   aktualisiereBerechnungMock: vi.fn(),
-  dataBZMock: vi.fn(),
-  dataBEMock: vi.fn(),
-  dataEMock: vi.fn(),
-  dataNMock: vi.fn(),
+  getBereitschaftsZeitraumDatenMock: vi.fn(),
+  getBereitschaftsEinsatzDatenMock: vi.fn(),
+  getEwtDatenMock: vi.fn(),
+  getNebengeldDatenMock: vi.fn(),
   generateEingabeMaskeEinstellungenMock: vi.fn(),
   storageGetMock: vi.fn(),
   storageSetMock: vi.fn(),
@@ -27,42 +28,46 @@ vi.mock('../src/ts/Berechnung', () => ({
 }));
 
 vi.mock('../src/ts/Bereitschaft/utils', () => ({
-  DataBZ: dataBZMock,
-  DataBE: dataBEMock,
+  getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
+  getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
 }));
 
 vi.mock('../src/ts/EWT/utils', () => ({
-  DataE: dataEMock,
+  getEwtDaten: getEwtDatenMock,
 }));
 
 vi.mock('../src/ts/Neben/utils', () => ({
-  DataN: dataNMock,
+  getNebengeldDaten: getNebengeldDatenMock,
 }));
 
 vi.mock('../src/ts/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
-    get: storageGetMock,
-    set: storageSetMock,
-    remove: storageRemoveMock,
-  },
-}));
+vi.mock('../src/ts/utilities', async importOriginal => {
+  const actual = await importOriginal<typeof UtilitiesModule>();
+  return {
+    ...actual,
+    Storage: {
+      get: storageGetMock,
+      set: storageSetMock,
+      remove: storageRemoveMock,
+    },
+  };
+});
 
-import SaveUserDatenUEberschreiben from '../src/ts/Login/utils/SaveUserDatenUEberschreiben';
+import overwriteUserDaten from '../src/ts/Login/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
   const table = document.createElement('table') as HTMLTableElement & {
-    instance: { rows: { load: ReturnType<typeof vi.fn> } };
+    instance: { rows: { load: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> } };
   };
   table.id = id;
-  table.instance = { rows: { load: loadSpy } };
+  table.instance = { rows: { load: loadSpy, setFilter: vi.fn() } };
   document.body.appendChild(table);
 }
 
-describe('SaveUserDatenUEberschreiben', () => {
+describe('overwriteUserDaten', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
@@ -103,12 +108,12 @@ describe('SaveUserDatenUEberschreiben', () => {
       return undefined;
     });
 
-    dataBZMock.mockReturnValue([{ mapped: 'bz' }]);
-    dataBEMock.mockReturnValue([{ mapped: 'be' }]);
-    dataEMock.mockReturnValue([{ mapped: 'ewt' }]);
-    dataNMock.mockReturnValue([{ mapped: 'n' }]);
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([{ mapped: 'bz' }]);
+    getBereitschaftsEinsatzDatenMock.mockReturnValue([{ mapped: 'be' }]);
+    getEwtDatenMock.mockReturnValue([{ mapped: 'ewt' }]);
+    getNebengeldDatenMock.mockReturnValue([{ mapped: 'n' }]);
 
-    SaveUserDatenUEberschreiben();
+    overwriteUserDaten();
 
     expect(storageSetMock).toHaveBeenCalledWith('VorgabenU', vorgabenU);
     expect(storageSetMock).toHaveBeenCalledWith('dataBZ', expectedBZ);
@@ -122,6 +127,11 @@ describe('SaveUserDatenUEberschreiben', () => {
     expect(loadE).toHaveBeenCalledWith([{ mapped: 'ewt' }]);
     expect(loadN).toHaveBeenCalledWith([{ mapped: 'n' }]);
 
+    expect(getBereitschaftsZeitraumDatenMock).toHaveBeenCalledWith(expectedBZ, undefined, { scope: 'all' });
+    expect(getBereitschaftsEinsatzDatenMock).toHaveBeenCalledWith(expectedBE, undefined, { scope: 'all' });
+    expect(getEwtDatenMock).toHaveBeenCalledWith(expectedEWT, undefined, { scope: 'all' });
+    expect(getNebengeldDatenMock).toHaveBeenCalledWith(expectedN, undefined, { scope: 'all' });
+
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
@@ -134,7 +144,7 @@ describe('SaveUserDatenUEberschreiben', () => {
       return undefined;
     });
 
-    SaveUserDatenUEberschreiben();
+    overwriteUserDaten();
 
     expect(storageSetMock).not.toHaveBeenCalled();
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
