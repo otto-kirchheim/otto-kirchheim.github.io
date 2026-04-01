@@ -1,12 +1,18 @@
 import type { Dayjs } from 'dayjs';
-import { BerZeitenBerechnen, DataBE, DataBZ, saveTableDataBE } from '.';
+import {
+  calculateBereitschaftsZeiten,
+  getBereitschaftsEinsatzDaten,
+  getBereitschaftsZeitraumDaten,
+  persistBereitschaftsEinsatzTableData,
+} from '.';
 import { aktualisiereBerechnung } from '../../Berechnung';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenBZJahr } from '../../interfaces';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../interfaces';
 import { Storage, clearLoading, setLoading } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
+import { getMonatFromBZ } from '../../utilities/getMonatFromItem';
 
-export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
+export default function submitBereitschaftsEinsatz($modal: HTMLDivElement): boolean {
   setLoading('btnESE');
 
   const datumInput = $modal.querySelector<HTMLInputElement>('#Datum');
@@ -52,7 +58,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
   const einsatzEndRaw = dayjs(`${tagBE}T${daten.endeBE}`);
   const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-  const bzData = DataBZ();
+  const bzData = getBereitschaftsZeitraumDaten();
   const startBz = bzData.find(bz => {
     const bzStart = dayjs(String(bz.beginB));
     const bzEnd = dayjs(String(bz.endeB));
@@ -97,7 +103,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
     daten.bereitschaftszeitraumBE = startBz._id;
   }
 
-  const overlapsExistingBe = DataBE().some(be => {
+  const overlapsExistingBe = getBereitschaftsEinsatzDaten().some(be => {
     const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const existingStart = dayjs(`${beDate}T${be.beginBE}`);
     const existingEndRaw = dayjs(`${beDate}T${be.endeBE}`);
@@ -117,7 +123,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
   }
 
   if (daten.lreBE === 'LRE 1') {
-    const hasLre1InBz = DataBE().some(be => {
+    const hasLre1InBz = getBereitschaftsEinsatzDaten().some(be => {
       if (be.lreBE !== 'LRE 1') return false;
       const start = dayjs(`${dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD')}T${be.beginBE}`);
       const endRaw = dayjs(`${dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD')}T${be.endeBE}`);
@@ -140,7 +146,7 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
   console.log(daten);
   const ftBE = tableBE.instance;
   ftBE.rows.add(daten);
-  saveTableDataBE(ftBE);
+  persistBereitschaftsEinsatzTableData(ftBE);
 
   if (berZeit) {
     try {
@@ -148,18 +154,18 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
       const bereitschaftsEnde: Dayjs = dayjs(`${tagBE}T${daten.endeBE}`).isBefore(bereitschaftsAnfang)
         ? dayjs(`${tagBE}T${daten.endeBE}`).add(1, 'd')
         : dayjs(`${tagBE}T${daten.endeBE}`);
-      const savedData: IDatenBZJahr = Storage.get<IDatenBZJahr>('dataBZ', { check: true });
+      const savedData = Storage.get<IDatenBZ[]>('dataBZ', { default: [] });
       const monat: number = bereitschaftsAnfang.month() + 1;
-      const data: false | IDatenBZ[] = BerZeitenBerechnen(
+      const data: false | IDatenBZ[] = calculateBereitschaftsZeiten(
         bereitschaftsAnfang,
         bereitschaftsEnde,
         bereitschaftsEnde,
         bereitschaftsEnde,
         false,
-        savedData[monat],
+        savedData.filter(item => getMonatFromBZ(item) === monat),
       );
 
-      if (!data || savedData[monat].length === data.length) {
+      if (!data || savedData.filter(item => getMonatFromBZ(item) === monat).length === data.length) {
         clearLoading('btnESE');
         createSnackBar({
           message: 'Bereitschaft<br/>Zeitraum bereits vorhanden!',
@@ -170,9 +176,11 @@ export default function BerEinsatzEingabe($modal: HTMLDivElement): boolean {
         return true;
       }
 
-      savedData[monat] = data;
-      Storage.set('dataBZ', savedData);
-      tableBZ.instance.rows.loadSmart(DataBZ(data, monat));
+      const otherMonths = savedData.filter(item => getMonatFromBZ(item) !== monat);
+      const mergedRows = [...otherMonths, ...data];
+      Storage.set('dataBZ', mergedRows);
+      tableBZ.instance.rows.loadSmart(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
+      tableBZ.instance.rows.setFilter(row => getMonatFromBZ(row) === monat);
 
       aktualisiereBerechnung();
 

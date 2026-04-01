@@ -37,7 +37,7 @@ const MAX_SPAN_MINUTES = 20 * 60;
  *
  * @returns Feldbezogene Fehlermeldungen oder null bei korrekter Reihenfolge.
  */
-export default function validateZeitenReihenfolge(values: IDatenEWT): TZeitreihenfolgeFehler[] | null {
+export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitreihenfolgeFehler[] | null {
   const isNacht = ['N', 'BN'].includes(values.schichtE);
   const baseDate = dayjs(values.tagE);
 

@@ -1,18 +1,15 @@
-import { SaveUserDatenUEberschreiben } from '.';
+import { overwriteUserDaten } from '.';
 import { aktualisiereBerechnung } from '../../Berechnung';
 import generateTableBerechnung from '../../Berechnung/generateTableBerechnung';
-import { DataBE, DataBZ } from '../../Bereitschaft/utils';
-import { DataE } from '../../EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
-import { DataN } from '../../Neben/utils';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomHTMLTableElement, IVorgabenUvorgabenB, UserDatenServer } from '../../interfaces';
-import type { CustomTableTypes } from '../../class/CustomTable';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../interfaces';
 import { Storage, buttonDisable, clearLoading, updateTabVisibility } from '../../utilities';
 import { type LoadedYearData, loadAllYearData } from '../../utilities/apiService';
 import type { TStorageData } from '../../utilities/Storage';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN, normalizeResourceRows } from '../../utilities';
 
-export default async function LadeUserDaten(monat: number, jahr: number): Promise<void> {
+export default async function loadUserDaten(monat: number, jahr: number): Promise<void> {
   let userData: LoadedYearData | undefined;
   // jahreswechsel wird nicht mehr benötigt
 
@@ -37,6 +34,10 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
   const { datenGeld, timestamps: serverTimestamps } = userData;
   let { vorgabenU, BZ, BE, EWT, N } = userData;
 
+  const normalizeRows = <T>(rows: unknown): T[] => {
+    return normalizeResourceRows<T>(rows);
+  };
+
   const vorhanden: string[] = [];
 
   let dataServer: Partial<UserDatenServer> = {};
@@ -55,17 +56,14 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
     serverData: T,
     serverTimestamp: number,
     _beschreibung: string,
-    loadTable?: { name: string; data: CustomTableTypes[] },
   ): T => {
     const localTs = Storage.getTimestamp(storageName);
     if (localTs === 0 || serverTimestamp > localTs) {
       // Serverdaten übernehmen
       Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
-      if (loadTable)
-        document.querySelector<CustomHTMLTableElement>(`#${loadTable.name}`)?.instance.rows.load(loadTable.data);
       return serverData;
     }
-    return Storage.get<T>(storageName, { default: {} as T });
+    return Storage.get<T>(storageName, { default: serverData });
   };
 
   // Ressourcen synchronisieren
@@ -74,10 +72,6 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
     vorgabenU,
     serverTimestamps.VorgabenU ? Date.parse(serverTimestamps.VorgabenU) : 0,
     'Persönliche Daten',
-    {
-      name: 'tableVE',
-      data: [...Object.values(vorgabenU.vorgabenB)] as IVorgabenUvorgabenB[],
-    },
   );
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) {
@@ -88,29 +82,20 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
     BZ,
     serverTimestamps.dataBZ ? Date.parse(serverTimestamps.dataBZ) : 0,
     'Bereitschaftszeit',
-    {
-      name: 'tableBZ',
-      data: DataBZ(BZ[monat], monat),
-    },
   );
   BE = syncResource(
     'dataBE',
     BE,
     serverTimestamps.dataBE ? Date.parse(serverTimestamps.dataBE) : 0,
     'Bereitschaftseinsatz',
-    {
-      name: 'tableBE',
-      data: DataBE(BE[monat], monat),
-    },
   );
-  EWT = syncResource('dataE', EWT, serverTimestamps.dataE ? Date.parse(serverTimestamps.dataE) : 0, 'EWT', {
-    name: 'tableE',
-    data: DataE(EWT[monat], monat),
-  });
-  N = syncResource('dataN', N, serverTimestamps.dataN ? Date.parse(serverTimestamps.dataN) : 0, 'Nebenbezüge', {
-    name: 'tableN',
-    data: DataN(N[monat], monat),
-  });
+  EWT = syncResource('dataE', EWT, serverTimestamps.dataE ? Date.parse(serverTimestamps.dataE) : 0, 'EWT');
+  N = syncResource('dataN', N, serverTimestamps.dataN ? Date.parse(serverTimestamps.dataN) : 0, 'Nebenbezüge');
+
+  BZ = normalizeRows(BZ);
+  BE = normalizeRows(BE);
+  EWT = normalizeRows(EWT);
+  N = normalizeRows(N);
 
   Storage.set('VorgabenGeld', datenGeld);
 
@@ -131,7 +116,7 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
         {
           text: 'Lokale Daten überschreiben',
           function: () => {
-            SaveUserDatenUEberschreiben();
+            overwriteUserDaten();
             clearLoading('btnAuswaehlen');
             buttonDisable(false);
           },
@@ -155,18 +140,27 @@ export default async function LadeUserDaten(monat: number, jahr: number): Promis
     buttonDisable(false);
   }
 
-  if (!('BZ' in dataServer))
-    document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(DataBZ(BZ[monat], monat));
-  if (!('BE' in dataServer))
-    document.querySelector<CustomHTMLTableElement>('#tableBE')?.instance.rows.load(DataBE(BE[monat], monat));
-  if (!('EWT' in dataServer))
-    document.querySelector<CustomHTMLTableElement>('#tableE')?.instance.rows.load(DataE(EWT[monat], monat));
-  if (!('N' in dataServer))
-    document.querySelector<CustomHTMLTableElement>('#tableN')?.instance.rows.load(DataN(N[monat], monat));
+  if (!('BZ' in dataServer)) document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(BZ);
+  if (!('BE' in dataServer)) document.querySelector<CustomHTMLTableElement>('#tableBE')?.instance.rows.load(BE);
+  if (!('EWT' in dataServer)) document.querySelector<CustomHTMLTableElement>('#tableE')?.instance.rows.load(EWT);
+  if (!('N' in dataServer)) document.querySelector<CustomHTMLTableElement>('#tableN')?.instance.rows.load(N);
   if (!('vorgabenU' in dataServer))
     document
       .querySelector<CustomHTMLTableElement>('#tableVE')
       ?.instance.rows.load([...Object.values(vorgabenU.vorgabenB)]);
+
+  document
+    .querySelector<CustomHTMLTableElement>('#tableBZ')
+    ?.instance.rows.setFilter(row => getMonatFromBZ(row as IDatenBZ) === monat);
+  document
+    .querySelector<CustomHTMLTableElement>('#tableBE')
+    ?.instance.rows.setFilter(row => getMonatFromBE(row as IDatenBE) === monat);
+  document
+    .querySelector<CustomHTMLTableElement>('#tableE')
+    ?.instance.rows.setFilter(row => getMonatFromEWT(row as IDatenEWT) === monat);
+  document
+    .querySelector<CustomHTMLTableElement>('#tableN')
+    ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === monat && jahr >= 2024);
 
   generateTableBerechnung(datenBerechnung, datenGeld);
   generateEingabeMaskeEinstellungen(vorgabenU);

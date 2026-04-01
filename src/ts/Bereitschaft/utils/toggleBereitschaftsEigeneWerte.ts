@@ -1,8 +1,8 @@
-import { BerVorgabeAEndern } from '.';
+import { applyBereitschaftsVorgabe } from '.';
 import type { IVorgabenUvorgabenB } from '../../interfaces';
 import type dayjs from '../../utilities/configDayjs';
 
-export default function eigeneWerte(
+export default function toggleBereitschaftsEigeneWerte(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,
   datum: dayjs.Dayjs,
@@ -29,5 +29,5 @@ export default function eigeneWerte(
   nEInput.disabled = disable;
   nETInput.disabled = disable;
 
-  if (disable) BerVorgabeAEndern(parentElement, vorgabenB, datum);
+  if (disable) applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
 }

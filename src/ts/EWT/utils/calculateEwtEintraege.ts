@@ -5,7 +5,20 @@ import dayjs from '../../utilities/configDayjs';
 
 type SchichtKeys = 'T' | 'N' | 'BN' | 'S';
 
-export default function berechnen(vorgabenU: IVorgabenU, daten: IDatenEWT[]): IDatenEWT[] {
+export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDatenEWT[]): IDatenEWT[] {
+  if (vorgabenU == null || daten == null || !Array.isArray(daten)) {
+    throw new Error('Daten fehlen');
+  }
+  if (
+    !('aZ' in vorgabenU) ||
+    !('fZ' in vorgabenU) ||
+    !vorgabenU.aZ ||
+    typeof vorgabenU.aZ !== 'object' ||
+    !vorgabenU.fZ ||
+    !Array.isArray(vorgabenU.fZ)
+  ) {
+    throw new Error('Vorgaben unvollständig');
+  }
   const { getPascalEnde, initializeVorgabenE, calculateTimes, getSchichtDaten } = createHelpers(vorgabenU);
 
   const vorgabenE = initializeVorgabenE();

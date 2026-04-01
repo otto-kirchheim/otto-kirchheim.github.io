@@ -1,7 +1,7 @@
 import type { IVorgabenUvorgabenB } from '../../interfaces';
 import type dayjs from '../../utilities/configDayjs';
 
-export default function datumAnpassen(
+export default function updateBereitschaftsDatum(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,
   datum: dayjs.Dayjs,

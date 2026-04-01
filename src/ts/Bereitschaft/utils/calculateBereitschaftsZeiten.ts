@@ -11,7 +11,7 @@ type Schicht = {
   pause: number;
 };
 
-export default function BerZeitenBerechnen(
+export default function calculateBereitschaftsZeiten(
   bereitschaftsAnfang: Dayjs,
   bereitschaftsEnde: Dayjs,
   nachtAnfang: Dayjs,
@@ -38,10 +38,12 @@ export default function BerZeitenBerechnen(
   const datenVorher: number = daten.length;
 
   // Feste Variablen
-  const ruheZeit: number = 10;
-  const tagPausenVorgabe: number = 30;
-  const nachtPausenVorgabe: number = 45;
-  const bereitschaftsZeitraumWechsel: Duration = dayjs.duration(8, 'hours');
+  const RUHE_ZEIT: number = 10;
+  const TAG_PAUSEN_VORGABE: number = 30;
+  const NACHT_PAUSEN_VORGABE: number = 45;
+  const B_WECHSEL_STUNDE: number = 8;
+  const B_WECHSEL_MINUTE: number = 0;
+  const B_ZEITRAUM_WECHSEL: Duration = dayjs.duration(B_WECHSEL_STUNDE, 'hours');
 
   const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
     const adjustedDatum = datum.add(zusatz, 'd');
@@ -87,7 +89,7 @@ export default function BerZeitenBerechnen(
     const TagEndeZeit = (tagAnfang: Dayjs): Duration => {
       if (tagAnfang.isoWeekday() > 0 && tagAnfang.isoWeekday() < 5) return TagEndeZeitMoDo;
       if (tagAnfang.isoWeekday() === 5) return TagEndeZeitFr;
-      return bereitschaftsZeitraumWechsel;
+      return B_ZEITRAUM_WECHSEL;
     };
 
     const getPause = (anfang: Dayjs): number => {
@@ -109,8 +111,16 @@ export default function BerZeitenBerechnen(
               pause: getPause(tagAnfang.add(tagAnfangZeit)),
             }
           : {
-              beginn: tagAnfang.add(bereitschaftsZeitraumWechsel),
-              ende: tagAnfang.add(bereitschaftsZeitraumWechsel),
+              beginn: tagAnfang
+                .set('hour', B_WECHSEL_STUNDE)
+                .set('minute', B_WECHSEL_MINUTE)
+                .set('second', 0)
+                .set('millisecond', 0),
+              ende: tagAnfang
+                .set('hour', B_WECHSEL_STUNDE)
+                .set('minute', B_WECHSEL_MINUTE)
+                .set('second', 0)
+                .set('millisecond', 0),
               pause: 0,
             },
       );
@@ -120,8 +130,8 @@ export default function BerZeitenBerechnen(
     return schichten;
   };
 
-  const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, nachtPausenVorgabe) : [];
-  const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, tagPausenVorgabe);
+  const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, NACHT_PAUSEN_VORGABE) : [];
+  const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, TAG_PAUSEN_VORGABE);
 
   const kombinierteSchichten: Schicht[] = [...tagSchichten, ...nachtSchichten];
   DatenSortieren<Schicht>(kombinierteSchichten, 'beginn');
@@ -187,7 +197,7 @@ export default function BerZeitenBerechnen(
       ).diff(aktuelleSchicht.ende, 'hour') > 1
     ) {
       kombinierteSchichten[i + 1].beginn = kombinierteSchichten[i + 1].ende = aktuelleSchicht.ende.add(
-        ruheZeit,
+        RUHE_ZEIT,
         'hour',
       );
       kombinierteSchichten[i + 1].pause = aktuelleSchicht.pause;

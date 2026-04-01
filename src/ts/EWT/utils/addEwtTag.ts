@@ -1,8 +1,9 @@
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IVorgabenU } from '../../interfaces';
+import { createSnackBar } from '../../class/CustomSnackbar';
 import dayjs from '../../utilities/configDayjs';
-import { naechsterTag, saveTableDataEWT, berechnen as ewtBerechnen } from '.';
+import { calculateEwtEintraege, setNaechsterEwtTag, persistEwtTableData } from '.';
 
-export default function addEWTtag(
+export default function addEwtTag(
   modal: CustomHTMLDivElement<IDatenEWT>,
   vorgabenU: IVorgabenU,
   berechneBuero: boolean = false,
@@ -43,10 +44,10 @@ export default function addEWTtag(
 
   if (berechneBuero) {
     data.berechnen = true;
-    data = ewtBerechnen(vorgabenU, [data])[0];
+    data = calculateEwtEintraege(vorgabenU, [data])[0];
     data = { ...data, ...{ ab1E: '', anEE: '', abEE: '', an1E: '', berechnen: false } };
   } else {
-    data = ewtBerechnen(vorgabenU, [data])[0];
+    data = calculateEwtEintraege(vorgabenU, [data])[0];
   }
 
   // Get the table and its instance
@@ -54,13 +55,40 @@ export default function addEWTtag(
   if (!tableE) throw new Error('TableE not found');
   const ftE = tableE.instance;
 
-  console.log('save ', { ftE });
+  const hasExactDuplicate = ftE.rows.array.some(existingRow => {
+    if (existingRow._state === 'deleted') return false;
+    const existing = existingRow.cells;
+    return (
+      existing.tagE === data.tagE &&
+      existing.eOrtE === data.eOrtE &&
+      existing.schichtE === data.schichtE &&
+      existing.abWE === data.abWE &&
+      existing.ab1E === data.ab1E &&
+      existing.anEE === data.anEE &&
+      existing.beginE === data.beginE &&
+      existing.endeE === data.endeE &&
+      existing.abEE === data.abEE &&
+      existing.an1E === data.an1E &&
+      existing.anWE === data.anWE &&
+      existing.berechnen === data.berechnen
+    );
+  });
+
+  if (hasExactDuplicate) {
+    createSnackBar({
+      message: 'EWT<br/>Ein identischer Eintrag ist bereits vorhanden.',
+      status: 'warning',
+      timeout: 3500,
+      fixed: true,
+    });
+    return;
+  }
 
   // Add the new row to the table and save the data
   ftE.rows.add(data);
-  saveTableDataEWT(ftE);
+  persistEwtTableData(ftE);
 
   // Calculate and set the next tag value
   const existingRows: IDatenEWT[] = ftE.getRows().map(row => row.cells);
-  naechsterTag(dayjs(tagE).date(), existingRows);
+  setNaechsterEwtTag(dayjs(tagE).date(), existingRows);
 }

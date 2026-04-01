@@ -1,8 +1,8 @@
 import type { IVorgabenUvorgabenB } from '../../interfaces';
 import dayjs from '../../utilities/configDayjs';
-import nachtAusblenden from './nachtAusblenden';
+import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 
-export default function BerVorgabeAEndern(
+export default function applyBereitschaftsVorgabe(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,
   datum = dayjs(parentElement.querySelector<HTMLInputElement>('#bA')?.value) ?? null,
@@ -41,5 +41,5 @@ export default function BerVorgabeAEndern(
     .format('YYYY-MM-DD');
   nETInput.value = vorgabenB.endeN.zeit;
 
-  nachtAusblenden(parentElement);
+  hideBereitschaftsNachtfelder(parentElement);
 }

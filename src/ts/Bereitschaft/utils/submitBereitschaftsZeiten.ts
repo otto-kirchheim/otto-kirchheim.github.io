@@ -1,22 +1,22 @@
 import type { Dayjs } from 'dayjs';
-import { BerZeitenBerechnen, DataBZ } from '.';
+import { calculateBereitschaftsZeiten } from '.';
 import { aktualisiereBerechnung } from '../../Berechnung';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import type {
   CustomHTMLDivElement,
   CustomHTMLTableElement,
   IDatenBZ,
-  IDatenBZJahr,
   IMonatsDaten,
   IVorgabenU,
   ReturnTypeSaveData,
   UserDatenServer,
 } from '../../interfaces';
-import { Storage, clearLoading, setLoading, tableToArray } from '../../utilities';
+import { normalizeResourceRows, Storage, clearLoading, setLoading, tableToArray } from '../../utilities';
 import { FetchRetry } from '../../utilities/FetchRetry';
 import dayjs from '../../utilities/configDayjs';
+import { getMonatFromBZ } from '../../utilities/getMonatFromItem';
 
-export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDatenBZ>): Promise<void> {
+export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElement<IDatenBZ>): Promise<void> {
   setLoading('btnESZ');
 
   const bAInput = modal.querySelector<HTMLInputElement>('#bA');
@@ -28,13 +28,18 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
   const nATInput = modal.querySelector<HTMLInputElement>('#nAT');
   const nEInput = modal.querySelector<HTMLInputElement>('#nE');
   const nETInput = modal.querySelector<HTMLInputElement>('#nET');
-  const MonatInput = document.querySelector<HTMLInputElement>('#Monat');
-  const JahrInput = document.querySelector<HTMLInputElement>('#Jahr');
+  const monatInput = document.querySelector<HTMLInputElement>('#Monat');
+  const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
   const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
 
-  const preserveDeletedRows = (table: CustomHTMLTableElement<IDatenBZ>, reloadedRows: IDatenBZ[]): void => {
+  const preserveDeletedRows = (
+    table: CustomHTMLTableElement<IDatenBZ>,
+    reloadedRows: IDatenBZ[],
+    monatToSet: number,
+  ): void => {
     // Lade alle Zeilen (inkl. gelöschter) und lasse die Sortierung wie gewohnt laufen
     table.instance.rows.loadSmart(reloadedRows);
+    table.instance.rows.setFilter(row => getMonatFromBZ(row) === monatToSet);
     table.instance.drawRows();
   };
 
@@ -48,8 +53,8 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
     !nATInput ||
     !nEInput ||
     !nETInput ||
-    !MonatInput ||
-    !JahrInput ||
+    !monatInput ||
+    !jahrInput ||
     !tableBZ
   )
     throw new Error('Input Element nicht gefunden');
@@ -81,15 +86,22 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
     return;
   }
 
-  const monat: number = +MonatInput.value;
-  const jahr: number = +JahrInput.value;
+  const monat: number = +monatInput.value;
+  const jahr: number = +jahrInput.value;
 
-  const savedData: IDatenBZJahr = Storage.get('dataBZ', { check: true });
+  const mergeMonatRows = (allRows: IDatenBZ[], monthRows: IDatenBZ[], month: number): IDatenBZ[] => {
+    const otherMonths = allRows.filter(item => getMonatFromBZ(item) !== month);
+    return [...otherMonths, ...monthRows];
+  };
 
-  let data: IMonatsDaten['BZ'] | false = false;
-  const data1: IMonatsDaten['BZ'] = tableToArray('tableBZ');
-  let data2: IMonatsDaten['BZ'] | false = false;
-  if (!data1) throw new Error('Fehler bei Datenermittlung');
+  const getMonatRows = (rows: IDatenBZ[], month: number): IDatenBZ[] => {
+    return rows.filter(item => getMonatFromBZ(item) === month);
+  };
+
+  let monatData: IMonatsDaten['BZ'] | false = false;
+  const currentMonatRows: IMonatsDaten['BZ'] = getMonatRows(tableToArray('tableBZ'), monat);
+  let folgeMonatData: IMonatsDaten['BZ'] | false = false;
+  if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
   console.log({ bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, monat, jahr });
 
   if (
@@ -101,7 +113,14 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
       ? nachtEnde
       : bereitschaftsEnde.hour(nachtEnde.hour()).minute(nachtEnde.minute());
 
-    data = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde2, nacht, data1);
+    monatData = calculateBereitschaftsZeiten(
+      bereitschaftsAnfang,
+      bereitschaftsEnde,
+      nachtAnfang,
+      nachtEnde2,
+      nacht,
+      currentMonatRows,
+    );
   } else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, 'y') && !navigator.onLine) {
     createSnackBar({
       message: 'Bereitschaft<br/>Du bist Offline: <br/>Kein Jahreswechsel möglich!',
@@ -113,16 +132,16 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
         {
           text: 'ohne wechsel fortsetzten?',
           function: () => {
-            if (!data1) throw new Error('Fehler bei Datenermittlung');
-            data = BerZeitenBerechnen(
+            if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
+            monatData = calculateBereitschaftsZeiten(
               bereitschaftsAnfang,
               dayjs([bereitschaftsEnde.year(), bereitschaftsEnde.month()]),
               nachtAnfang,
               nachtEnde,
               nacht,
-              data1,
+              currentMonatRows,
             );
-            if (!data) {
+            if (!monatData) {
               clearLoading('btnESZ');
               createSnackBar({
                 message: 'Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!',
@@ -134,9 +153,17 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
               return;
             }
 
-            savedData[monat] = data;
-            Storage.set('dataBZ', savedData);
-            preserveDeletedRows(tableBZ, DataBZ(data, monat));
+            const mergedRows = mergeMonatRows(
+              normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+              monatData,
+              monat,
+            );
+            Storage.set('dataBZ', mergedRows);
+            preserveDeletedRows(
+              tableBZ,
+              normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+              monat,
+            );
 
             clearLoading('btnESZ');
             createSnackBar({
@@ -197,27 +224,27 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
           });
           return;
         }
-        const dataResponded = fetched2.data.BZ;
-        console.log(dataResponded);
-        const User: IVorgabenU = fetched2.data.vorgabenU;
+        const respondedBzRows = fetched2.data.BZ;
+        console.log(respondedBzRows);
+        const user: IVorgabenU = fetched2.data.vorgabenU;
 
-        data2 = BerZeitenBerechnen(
+        folgeMonatData = calculateBereitschaftsZeiten(
           bereitschaftsEndeWechsel,
           bereitschaftsEnde,
           nachtAnfang2,
           nachtEnde2,
           nacht2,
-          dataResponded[1],
+          respondedBzRows.filter(item => getMonatFromBZ(item) === 1),
         );
 
-        if (!data2) return;
+        if (!folgeMonatData) return;
 
-        dataResponded[1] = data2;
+        const mergedRespondedRows = mergeMonatRows(respondedBzRows, folgeMonatData, 1);
 
-        const dataSave: { BZ: IDatenBZJahr; User: IVorgabenU; Jahr: number } = {
-          BZ: dataResponded,
+        const dataSave: { BZ: IDatenBZ[]; User: IVorgabenU; Jahr: number } = {
+          BZ: mergedRespondedRows,
           Jahr: jahr2,
-          User,
+          User: user,
         };
 
         const fetchedSave = await FetchRetry<typeof dataSave, ReturnTypeSaveData>('saveData', dataSave, 'POST');
@@ -244,18 +271,39 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
         return;
       }
     } else {
-      data2 = Storage.get<IDatenBZJahr>('dataBZ', { check: true })[monat2 + 1] ?? [];
-      data2 = BerZeitenBerechnen(bereitschaftsEndeWechsel, bereitschaftsEnde, nachtAnfang2, nachtEnde2, nacht2, data2);
-      if (data2) savedData[monat2 + 1] = data2;
+      folgeMonatData = getMonatRows(Storage.get<IDatenBZ[]>('dataBZ', { default: [] }), monat2 + 1);
+      folgeMonatData = calculateBereitschaftsZeiten(
+        bereitschaftsEndeWechsel,
+        bereitschaftsEnde,
+        nachtAnfang2,
+        nachtEnde2,
+        nacht2,
+        folgeMonatData,
+      );
+      if (folgeMonatData) {
+        const mergedRows = mergeMonatRows(
+          normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+          folgeMonatData,
+          monat2 + 1,
+        );
+        Storage.set('dataBZ', mergedRows);
+      }
     }
 
-    data = BerZeitenBerechnen(bereitschaftsAnfang, bereitschaftsEndeWechsel, nachtAnfang, nachtEnde1, nacht, data1);
+    monatData = calculateBereitschaftsZeiten(
+      bereitschaftsAnfang,
+      bereitschaftsEndeWechsel,
+      nachtAnfang,
+      nachtEnde1,
+      nacht,
+      currentMonatRows,
+    );
 
-    console.log('Daten Monat 1', data);
-    console.log('Daten Monat 2', data2);
+    console.log('Daten Monat 1', monatData);
+    console.log('Daten Monat 2', folgeMonatData);
   }
 
-  if (!data) {
+  if (!monatData) {
     clearLoading('btnESZ');
     createSnackBar({
       message: 'Bereitschaft<br/>Bereitschaftszeitraum Bereits vorhanden!',
@@ -266,9 +314,13 @@ export default async function BerZeitenEingabe(modal: CustomHTMLDivElement<IDate
     return;
   }
 
-  savedData[monat] = data;
-  Storage.set('dataBZ', savedData);
-  preserveDeletedRows(tableBZ, DataBZ(data, monat));
+  const mergedRows = mergeMonatRows(
+    normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })),
+    monatData,
+    monat,
+  );
+  Storage.set('dataBZ', mergedRows);
+  preserveDeletedRows(tableBZ, normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })), monat);
 
   aktualisiereBerechnung(jahr);
 

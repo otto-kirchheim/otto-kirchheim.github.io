@@ -1,5 +1,5 @@
-import DataN from './DataN';
-import addNebenTag from './addNebenTag';
-import saveTableDataN from './saveTableDataN';
+import getNebengeldDaten from './getNebengeldDaten';
+import addNebengeldTag from './addNebengeldTag';
+import persistNebengeldTableData from './persistNebengeldTableData';
 
-export { DataN, addNebenTag, saveTableDataN };
+export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };

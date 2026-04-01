@@ -1,7 +1,8 @@
-import { saveTableDataN } from '.';
+import { persistNebengeldTableData } from '.';
+import { createSnackBar } from '../../class/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenN } from '../../interfaces';
 
-export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): void {
+export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement): void {
   const select = form.querySelector<HTMLSelectElement>('#tagN');
   if (!select) throw new Error("Select element with ID 'tagN' not found");
   let idN = select.selectedIndex;
@@ -33,6 +34,22 @@ export default function addNebenTag(form: HTMLDivElement | HTMLFormElement): voi
   const tableN = document.querySelector<CustomHTMLTableElement<IDatenN>>('#tableN');
   if (!tableN) throw new Error('table N nicht gefunden');
   const ftN = tableN.instance;
+
+  const hasDuplicateDay = ftN.rows.array.some(existingRow => {
+    if (existingRow._state === 'deleted') return false;
+    return existingRow.cells.tagN === daten.tagN;
+  });
+
+  if (hasDuplicateDay) {
+    createSnackBar({
+      message: 'Nebenbezug<br/>Für diesen Tag existiert bereits ein Eintrag.',
+      status: 'warning',
+      timeout: 3500,
+      fixed: true,
+    });
+    return;
+  }
+
   ftN.rows.add(daten);
-  saveTableDataN(ftN);
+  persistNebengeldTableData(ftN);
 }
