@@ -1,6 +1,7 @@
 import attachBerechnenToggleListeners from './attachBerechnenToggleListeners';
 import addEwtTag from './addEwtTag';
 import calculateEwtEintraege from './calculateEwtEintraege';
+import calculateBuchungstagEwt from './calculateBuchungstagEwt';
 import clearEwtZeiten from './clearEwtZeiten';
 import getEwtDaten from './getEwtDaten';
 import recalculateEwtMonat from './recalculateEwtMonat';
@@ -12,6 +13,7 @@ export {
   attachBerechnenToggleListeners,
   addEwtTag,
   calculateEwtEintraege,
+  calculateBuchungstagEwt,
   clearEwtZeiten,
   getEwtDaten,
   recalculateEwtMonat,

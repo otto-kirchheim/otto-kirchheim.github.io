@@ -7,7 +7,7 @@ import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, Us
 import { Storage, buttonDisable, clearLoading, updateTabVisibility } from '../../utilities';
 import { type LoadedYearData, loadAllYearData } from '../../utilities/apiService';
 import type { TStorageData } from '../../utilities/Storage';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN, normalizeResourceRows } from '../../utilities';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat, normalizeResourceRows } from '../../utilities';
 
 export default async function loadUserDaten(monat: number, jahr: number): Promise<void> {
   let userData: LoadedYearData | undefined;
@@ -157,7 +157,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     ?.instance.rows.setFilter(row => getMonatFromBE(row as IDatenBE) === monat);
   document
     .querySelector<CustomHTMLTableElement>('#tableE')
-    ?.instance.rows.setFilter(row => getMonatFromEWT(row as IDatenEWT) === monat);
+    ?.instance.rows.setFilter(row => isEwtInMonat(row as IDatenEWT, monat));
   document
     .querySelector<CustomHTMLTableElement>('#tableN')
     ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === monat && jahr >= 2024);

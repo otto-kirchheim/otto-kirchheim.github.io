@@ -22,7 +22,15 @@ import clearLoading from './clearLoading';
 import compareVersion from './compareVersion';
 import { isAdmin, getUserCookie } from './decodeAccessToken';
 import getDurationFromTime from './getDurationFromTime';
-import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from './getMonatFromItem';
+import {
+  filterByMonat,
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEWT,
+  getMonatFromEWTBuchungstag,
+  getMonatFromN,
+  isEwtInMonat,
+} from './getMonatFromItem';
 import saveDaten from './saveDaten';
 import normalizeResourceRows from './normalizeResourceRows';
 import setDisableButton from './setDisableButton';
@@ -51,12 +59,14 @@ export {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromEWT,
+  getMonatFromEWTBuchungstag,
   getMonatFromN,
   getResourceStatus,
   getServerUrl,
   getUserCookie,
   initializeColorModeToggler,
   isAdmin,
+  isEwtInMonat,
   isAutoSaveEnabled,
   markResourceSaved,
   normalizeResourceRows,

@@ -1,6 +1,7 @@
 import type { Column, Row } from '../../class/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../components';
 import type { CustomHTMLDivElement, IDatenEWT } from '../../interfaces';
+import dayjs from '../../utilities/configDayjs';
 import { persistEwtTableData } from '../utils';
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
@@ -11,14 +12,23 @@ const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> =
 
 const createTagElement = (row: Row<IDatenEWT>) => {
   const column: Column<IDatenEWT> = getColumn(row, 'tagE');
+  const tag = dayjs(row.cells.tagE);
+  const buchungstagRaw = row.cells.buchungstagE || row.cells.tagE;
+  const buchungstag = dayjs(buchungstagRaw);
+  const istAbweichend = buchungstag.isValid() && !buchungstag.isSame(tag, 'day');
+
+  const tagColumn: Column<IDatenEWT> = getColumn(row, 'tagE');
+  const buchungstagText = istAbweichend ? tagColumn.parser(buchungstagRaw) : '';
+  const tagText = `${column.parser(row.cells['tagE'])}${istAbweichend ? ` -> ${buchungstagText}` : ''}`;
+
   return (
     <MyShowElement
-      divClass="mb-1 col-6"
-      labelClass="col-5 col-form-label text-wrap fw-bold ps-2"
-      spanClass="col-2 align-middle text-break my-auto"
+      divClass="mb-1 row col-8"
+      labelClass="col-2 col-sm-3 col-form-label text-wrap fw-bold"
+      spanClass="col-10 col-sm-9 align-middle text-break text-end my-auto"
       title={`${column.title}:`}
       id="tagE"
-      text={column.parser(row.cells['tagE'])}
+      text={tagText}
     />
   );
 };
@@ -59,7 +69,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
       <MyModalBody>
         {createTagElement(row)}
         <MyCheckbox
-          className="form-check form-switch col-5"
+          className="form-check form-switch col-4"
           id={'berechnen'}
           checked={row.cells?.['berechnen'] ?? true}
           changeHandler={(e: Event) => {

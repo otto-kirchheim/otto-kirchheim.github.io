@@ -1,5 +1,5 @@
 import type { IDatenEWT, IDataQueryOptions, IMonatsDaten } from '../../interfaces';
-import { filterByMonat, getMonatFromEWT, normalizeResourceRows, Storage } from '../../utilities';
+import { isEwtInMonat, normalizeResourceRows, Storage } from '../../utilities';
 
 export default function getEwtDaten(
   data?: IMonatsDaten['EWT'],
@@ -20,5 +20,5 @@ export default function getEwtDaten(
   const activeMonat = Monat ?? (Storage.check('Monat') ? Storage.get<number>('Monat', true) : undefined);
   if (!activeMonat) return [];
 
-  return filterByMonat(rows, activeMonat, getMonatFromEWT);
+  return rows.filter(item => isEwtInMonat(item, activeMonat));
 }

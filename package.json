@@ -1,6 +1,6 @@
 {
   "name": "db_nebengeld_frontend",
-  "version": "2.0.17",
+  "version": "2.0.18",
   "description": "",
   "private": "true",
   "scripts": {
@@ -28,6 +28,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@preact/preset-vite": "^2.10.5",
     "@types/bootstrap": "^5.2.10",
     "@types/file-saver": "^2.0.7",

@@ -200,6 +200,7 @@ describe('download utility', () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
         tagE: '2026-04-19',
+        buchungstagE: '2026-04-20',
         eOrtE: 'Fulda',
         schichtE: 'Nacht',
         abWE: '07:00',
@@ -222,7 +223,7 @@ describe('download utility', () => {
         Daten: {
           EWT: [
             {
-              Tag: '19',
+              Buchungstag: '20',
               Einsatzort: 'Fulda',
               Schicht: 'Nacht',
               abWE: '07:00',

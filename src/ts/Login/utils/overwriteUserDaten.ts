@@ -4,7 +4,7 @@ import { getEwtDaten } from '../../EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../interfaces';
 import { getNebengeldDaten } from '../../Neben/utils';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN, Storage } from '../../utilities';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat, Storage } from '../../utilities';
 
 function applyDataToTable(selector: string, data: object[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);
@@ -48,7 +48,7 @@ export default function overwriteUserDaten(): void {
     applyDataToTable('#tableE', getEwtDaten(dataServer.EWT, undefined, { scope: 'all' }));
     document
       .querySelector<CustomHTMLTableElement>('#tableE')
-      ?.instance.rows.setFilter(row => getMonatFromEWT(row as IDatenEWT) === Monat);
+      ?.instance.rows.setFilter(row => isEwtInMonat(row as IDatenEWT, Monat));
     delete dataServer.EWT;
   }
   if (dataServer.N) {

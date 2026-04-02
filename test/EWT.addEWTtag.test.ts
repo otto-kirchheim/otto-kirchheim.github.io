@@ -2,16 +2,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
 
-const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock } = vi.hoisted(() => ({
-  setNaechsterEwtTagMock: vi.fn(),
-  persistEwtTableDataMock: vi.fn(),
-  calculateEwtEintraegeMock: vi.fn(),
-}));
+const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock, calculateBuchungstagEwtMock } =
+  vi.hoisted(() => ({
+    setNaechsterEwtTagMock: vi.fn(),
+    persistEwtTableDataMock: vi.fn(),
+    calculateEwtEintraegeMock: vi.fn(),
+    calculateBuchungstagEwtMock: vi.fn(),
+  }));
 
 vi.mock('../src/ts/EWT/utils', () => ({
   setNaechsterEwtTag: setNaechsterEwtTagMock,
   persistEwtTableData: persistEwtTableDataMock,
   calculateEwtEintraege: calculateEwtEintraegeMock,
+  calculateBuchungstagEwt: calculateBuchungstagEwtMock,
 }));
 
 import addEwtTag from '../src/ts/EWT/utils/addEwtTag';
@@ -53,6 +56,7 @@ describe('addEWTtag', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
+    calculateBuchungstagEwtMock.mockReturnValue('2026-03-10');
   });
 
   it('wirft Fehler wenn TagE-Input fehlt', () => {
@@ -96,7 +100,8 @@ describe('addEWTtag', () => {
     addEwtTag(modal as never, {} as IVorgabenU);
 
     expect(calculateEwtEintraegeMock).toHaveBeenCalledTimes(1);
-    expect(addMock).toHaveBeenCalledWith(calculatedData);
+    expect(calculateBuchungstagEwtMock).toHaveBeenCalledWith(calculatedData);
+    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, buchungstagE: '2026-03-10' }));
     expect(persistEwtTableDataMock).toHaveBeenCalledWith(ftE);
     expect(setNaechsterEwtTagMock).toHaveBeenCalledWith(
       10,
@@ -136,6 +141,7 @@ describe('addEWTtag', () => {
     ]);
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        buchungstagE: '2026-03-10',
         ab1E: '',
         anEE: '',
         abEE: '',

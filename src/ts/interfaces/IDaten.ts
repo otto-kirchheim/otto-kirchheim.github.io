@@ -49,6 +49,7 @@ export interface IDatenEWT<EWTType = string> {
   [key: string]: IDatenEWTValues<EWTType>;
   _id?: string;
   tagE: string;
+  buchungstagE?: string;
   eOrtE: string;
   schichtE: string;
   abWE: EWTType;

@@ -7,6 +7,7 @@ import { getEwtDaten } from '../src/ts/EWT/utils';
 function createRow(day: string): IDatenEWT {
   return {
     tagE: day,
+    buchungstagE: day,
     eOrtE: 'Fulda',
     schichtE: 'T',
     abWE: '',
@@ -78,5 +79,17 @@ describe('getEwtDaten', () => {
     Storage.set('dataE', dataE);
 
     expect(getEwtDaten(undefined, 3)).toEqual(monat3);
+  });
+
+  it('enthaelt Eintrag auch im Buchungstag-Monat', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+    Storage.set('Monat', 4);
+
+    const row = createRow('2026-03-31');
+    row.buchungstagE = '2026-04-01';
+    Storage.set('dataE', [row]);
+
+    expect(getEwtDaten(undefined, 4)).toEqual([row]);
+    expect(getEwtDaten(undefined, 3)).toEqual([row]);
   });
 });

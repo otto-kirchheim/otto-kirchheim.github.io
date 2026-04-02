@@ -21,6 +21,7 @@ import persistEwtTableData from '../src/ts/EWT/utils/persistEwtTableData';
 function createData(tagE: string): IDatenEWT {
   return {
     tagE,
+    buchungstagE: tagE,
     eOrtE: 'Fulda',
     schichtE: 'T',
     abWE: '',

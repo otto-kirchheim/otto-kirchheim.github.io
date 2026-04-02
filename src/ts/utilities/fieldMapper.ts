@@ -43,6 +43,7 @@ export interface BackendEWT {
   Monat: number;
   Jahr: number;
   Tag: string; // ISO-Date
+  Buchungstag?: string; // ISO-Date
   Einsatzort?: string;
   Schicht: string;
   abWE?: string;
@@ -153,6 +154,7 @@ export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
   return {
     _id: doc._id,
     tagE: dayjs(doc.Tag).format('YYYY-MM-DD'),
+    buchungstagE: dayjs(doc.Buchungstag ?? doc.Tag).format('YYYY-MM-DD'),
     eOrtE: doc.Einsatzort ?? '',
     schichtE: doc.Schicht,
     abWE: doc.abWE ?? '',
@@ -299,6 +301,7 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
     Monat: monat,
     Jahr: jahr,
     Tag: dayjs(item.tagE).toISOString(),
+    Buchungstag: dayjs(item.buchungstagE || item.tagE).toISOString(),
     Einsatzort: item.eOrtE || undefined,
     Schicht: item.schichtE,
     abWE: item.abWE || undefined,

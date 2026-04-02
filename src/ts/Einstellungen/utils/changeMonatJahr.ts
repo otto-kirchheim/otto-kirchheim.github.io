@@ -3,8 +3,8 @@ import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } f
 import {
   getMonatFromBE,
   getMonatFromBZ,
-  getMonatFromEWT,
   getMonatFromN,
+  isEwtInMonat,
   Storage,
   buttonDisable,
   setDisableButton,
@@ -49,7 +49,7 @@ function changeMonatTableData({ monat }: { monat?: number } = {}) {
     ?.instance.rows.setFilter(row => getMonatFromBE(row) === activeMonat);
   document
     .querySelector<CustomHTMLTableElement<IDatenEWT>>('#tableE')
-    ?.instance.rows.setFilter(row => getMonatFromEWT(row) === activeMonat);
+    ?.instance.rows.setFilter(row => isEwtInMonat(row, activeMonat));
   document
     .querySelector<CustomHTMLTableElement<IDatenN>>('#tableN')
     ?.instance.rows.setFilter(row => getMonatFromN(row) === activeMonat && jahr >= 2024);

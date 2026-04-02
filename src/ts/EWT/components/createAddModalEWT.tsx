@@ -4,7 +4,7 @@ import type { IDatenEWT } from '../../interfaces';
 import { type IVorgabenU, type IVorgabenUfZ } from '../../interfaces';
 import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { addEwtTag, setNaechsterEwtTag } from '../utils';
+import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
 export default function createAddModalEWT(): void {
   const ref = createRef<HTMLFormElement>();
@@ -20,6 +20,61 @@ export default function createAddModalEWT(): void {
   const bueroRef = createRef<HTMLInputElement>();
   const EOrtRef = createRef<HTMLSelectElement>();
   const SchichtRef = createRef<HTMLSelectElement>();
+  const buchungstagHinweisRef = createRef<HTMLDivElement>();
+  const buchungstagHinweisTextRef = createRef<HTMLInputElement>();
+
+  const updateBuchungstagAnzeige = () => {
+    const tagInput = document.querySelector<HTMLInputElement>('#tagE');
+    if (!tagInput || !EOrtRef.current || !SchichtRef.current || !berechnenRef.current || !bueroRef.current) {
+      return;
+    }
+
+    const tagE = tagInput.value;
+    if (!tagE) {
+      if (buchungstagHinweisRef.current) {
+        buchungstagHinweisRef.current.classList.add('d-none');
+      }
+      return;
+    }
+
+    let data: IDatenEWT = {
+      tagE,
+      buchungstagE: tagE,
+      eOrtE: EOrtRef.current.value,
+      schichtE: SchichtRef.current.value,
+      abWE: '',
+      ab1E: '',
+      anEE: '',
+      beginE: '',
+      endeE: '',
+      abEE: '',
+      an1E: '',
+      anWE: '',
+      berechnen: berechnenRef.current.checked,
+    };
+
+    if (bueroRef.current.checked) {
+      data.berechnen = true;
+      data = calculateEwtEintraege(vorgabenU, [data])[0];
+      data = { ...data, ...{ ab1E: '', anEE: '', abEE: '', an1E: '', berechnen: false } };
+    } else {
+      data = calculateEwtEintraege(vorgabenU, [data])[0];
+    }
+
+    const buchungstag = calculateBuchungstagEwt(data);
+    const istAbweichend = !dayjs(buchungstag).isSame(dayjs(tagE), 'day');
+
+    if (!buchungstagHinweisRef.current) return;
+    if (istAbweichend) {
+      if (buchungstagHinweisTextRef.current) {
+        buchungstagHinweisTextRef.current.value = dayjs(buchungstag).format('YYYY-MM-DD');
+      }
+      buchungstagHinweisRef.current.classList.remove('d-none');
+      return;
+    }
+
+    buchungstagHinweisRef.current.classList.add('d-none');
+  };
 
   const changeBuero = (event: Event) => {
     event.stopPropagation();
@@ -35,6 +90,7 @@ export default function createAddModalEWT(): void {
         SchichtRef.current.selectedIndex = 0;
       }
     }
+    updateBuchungstagAnzeige();
   };
 
   const modal = showModal<IDatenEWT>(
@@ -47,6 +103,7 @@ export default function createAddModalEWT(): void {
             clickHandler={(e: MouseEvent) => {
               e.preventDefault();
               setNaechsterEwtTag();
+              updateBuchungstagAnzeige();
             }}
             text="+1 Tag"
             ariaLabel="Nächster Tag"
@@ -55,6 +112,18 @@ export default function createAddModalEWT(): void {
         <MyInput required type="date" id="tagE" name="Tag" min={datum.format('YYYY-MM-DD')} max={maxDate}>
           Tag
         </MyInput>
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="form-floating col-12 d-none">
+          <MyInput
+            type="date"
+            myRef={buchungstagHinweisTextRef}
+            id="buchungstagE"
+            name="Buchungstag"
+            value={datum.format('YYYY-MM-DD')}
+            disabled
+          >
+            Buchungstag
+          </MyInput>
+        </div>
         <MySelect
           className="form-floating"
           title="Einsatzort"
@@ -109,6 +178,13 @@ export default function createAddModalEWT(): void {
   if (ref.current === null || bueroRef.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
   const bueroCheckbox = bueroRef.current;
+
+  document.querySelector<HTMLInputElement>('#tagE')?.addEventListener('change', updateBuchungstagAnzeige);
+  EOrtRef.current?.addEventListener('change', updateBuchungstagAnzeige);
+  SchichtRef.current?.addEventListener('change', updateBuchungstagAnzeige);
+  berechnenRef.current?.addEventListener('change', updateBuchungstagAnzeige);
+
+  updateBuchungstagAnzeige();
 
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {

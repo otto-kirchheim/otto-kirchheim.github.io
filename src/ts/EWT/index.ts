@@ -1,7 +1,7 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
 import type { IVorgabenU } from '../interfaces';
-import { getMonatFromEWT, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import { isEwtInMonat, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import download from '../utilities/download';
@@ -10,7 +10,7 @@ import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persi
 window.addEventListener('load', () => {
   const tagParser = (value: string) => {
       const d = dayjs(value);
-      return d.isValid() ? d.format('dd DD.') : value;
+      return d.isValid() ? d.format('dd DD.MM.') : value;
     },
     berechnenParser = (value: boolean): string => {
       return `<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"${
@@ -84,7 +84,7 @@ window.addEventListener('load', () => {
                 text: 'Ja',
                 function: () => {
                   const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-                  const monthRows = [...ftE.rows.array].filter(row => getMonatFromEWT(row.cells) === activeMonat);
+                  const monthRows = [...ftE.rows.array].filter(row => isEwtInMonat(row.cells, activeMonat));
                   monthRows.forEach(row => row.deleteRow());
                   buttonDisable(false);
                   persistEwtTableData(ftE);
@@ -117,7 +117,7 @@ window.addEventListener('load', () => {
 
                       [...ftE.rows.array].forEach(row => {
                         if (row._state === 'deleted') return;
-                        if (getMonatFromEWT(row.cells) !== activeMonat) return;
+                        if (!isEwtInMonat(row.cells, activeMonat)) return;
                         if (!row.cells.berechnen) return;
 
                         row.val({
@@ -176,5 +176,5 @@ window.addEventListener('load', () => {
   btnESEE?.addEventListener('click', createAddModalEWT);
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-  ftE.rows.setFilter(row => getMonatFromEWT(row) === monat);
+  ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 });

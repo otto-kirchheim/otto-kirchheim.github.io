@@ -17,7 +17,8 @@ import tableToArray from './tableToArray';
 import dayjs from './configDayjs';
 import { userProfileToBackend } from './fieldMapper';
 import { downloadPdf } from './apiService';
-import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from './getMonatFromItem';
+import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from './getMonatFromItem';
+import calculateBuchungstagEwt from '../EWT/utils/calculateBuchungstagEwt';
 
 export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N'): Promise<void> {
   if (button === null) return;
@@ -93,10 +94,10 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       break;
     }
     case 'E': {
-      const ewtRaw = filterByMonat(tableToArray<IDatenEWT<string>>('tableE'), Monat, getMonatFromEWT);
+      const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
       data.Daten = {
         EWT: ewtRaw.map(e => ({
-          Tag: dayjs(e.tagE).format('DD'),
+          Buchungstag: dayjs(e.buchungstagE || calculateBuchungstagEwt(e)).format('DD'),
           Einsatzort: e.eOrtE,
           Schicht: e.schichtE,
           abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,

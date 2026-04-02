@@ -23,6 +23,7 @@ type IDatenEWTByMonth = Record<number, IDatenEWT[]>;
 function createData(tagE: string): IDatenEWT {
   return {
     tagE,
+    buchungstagE: tagE,
     eOrtE: 'Fulda',
     schichtE: 'T',
     abWE: '',
