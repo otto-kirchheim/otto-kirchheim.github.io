@@ -131,6 +131,17 @@ describe('saveDaten', () => {
     expect(Storage.get('VorgabenU')).toEqual(mockUserData);
   });
 
+  it('übernimmt serverseitig normalisierte Profilwerte', async () => {
+    const normalizedProfile = {
+      pers: { Vorname: 'Test', Nachname: 'Normalisiert' },
+    };
+    mockUpdateMyProfile.mockResolvedValue({ data: normalizedProfile, updatedAt: '2026-03-07T12:00:00.000Z' });
+
+    await saveDaten(button);
+
+    expect(Storage.get('VorgabenU')).toEqual(normalizedProfile);
+  });
+
   it('zeigt Erfolgs-Snackbar bei Erfolg', async () => {
     await saveDaten(button);
     expect(mockCreateSnackBar).toHaveBeenCalledWith(

@@ -46,9 +46,11 @@ export default async function saveDaten(button: HTMLButtonElement | null, _Monat
     // 3. Profil nur bei Änderungen speichern
     const profileResult = settingsNeedsSync ? await profileApi.updateMyProfile(userData) : null;
 
-    // 4. Wrapper-Timestamp mit Server-Zeit aktualisieren
+    // 4. Server-normalisierte Profilwerte zurück in den lokalen Zustand übernehmen.
     if (profileResult?.updatedAt) {
-      Storage.setWithTimestamp('VorgabenU', userData, Date.parse(profileResult.updatedAt));
+      Storage.setWithTimestamp('VorgabenU', profileResult.data, Date.parse(profileResult.updatedAt));
+    } else if (profileResult?.data) {
+      Storage.set('VorgabenU', profileResult.data);
     }
 
     // 5. Settings-Resource als gespeichert markieren, sobald sie explizit synchronisiert wurde.

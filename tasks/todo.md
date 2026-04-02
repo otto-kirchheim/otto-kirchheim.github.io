@@ -35,3 +35,22 @@
 
 - Ergebnis: Keine TS- oder Lint-Fehler mehr im Frontend.
 - Verifikation: `get_errors` ohne Befunde, `bun run lint` erfolgreich.
+
+## Aktueller Plan: Save-Regression (Backend gespeichert, Frontend stale bis Re-Login)
+
+- [x] Save-Datenfluss und AutoSave-Sync analysieren
+- [x] Lokalen Zustand nach Save mit servernormalisierten Daten synchronisieren
+- [x] Profil-Save auf serverseitige Antwortdaten umstellen
+- [x] Regressionstests für AutoSave und saveDaten ergänzen
+- [x] Relevante Tests erfolgreich ausführen
+
+## Verifikationskriterien (Save-Regression)
+
+- Nach Save sind serverseitig korrigierte Werte direkt in Tabelle und localStorage sichtbar
+- Re-Login ist nicht mehr erforderlich, um die zuletzt gespeicherten Daten zu sehen
+- Bestehende Utilities-Tests bleiben grün
+
+## Review (Save-Regression)
+
+- Ergebnis: AutoSave spiegelt Serverantworten (inkl. Korrekturen) zurück in den Tabellenzustand; `saveDaten` übernimmt servernormalisierte Profilwerte in Storage.
+- Verifikation: `bun run test -- test/Utilities/autoSave.test.ts test/Utilities/saveDaten.test.ts` mit 47 bestanden, 0 fehlgeschlagen.

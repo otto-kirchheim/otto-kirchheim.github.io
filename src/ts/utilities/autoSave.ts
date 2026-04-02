@@ -28,9 +28,17 @@ import {
   nebengeldApi,
   profileApi,
 } from './apiService';
+import type {
+  BackendBereitschaftseinsatz,
+  BackendBereitschaftszeitraum,
+  BackendEWT,
+  BackendNebengeld,
+} from './fieldMapper';
+import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } from './fieldMapper';
 import Storage from './Storage';
 import type { TStorageData } from './Storage';
 import dayjs from './configDayjs';
+import { getMonatFromEWTBuchungstag } from './getMonatFromItem';
 
 // ─── Konfiguration ───────────────────────────────────────
 /** Mapping von TResourceKey auf Storage-Key */
@@ -87,6 +95,127 @@ function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string):
   if (status === 'saved') state.lastSaved = new Date();
   if (status === 'error') state.lastError = error ?? 'Unbekannter Fehler';
   statusListeners.forEach(fn => fn(resource, status, status === 'error' ? (state.lastError ?? undefined) : undefined));
+}
+
+function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings'>, doc: unknown): CustomTableTypes {
+  switch (resource) {
+    case 'BZ':
+      return bzFromBackend(doc as BackendBereitschaftszeitraum);
+    case 'BE':
+      return beFromBackend(doc as BackendBereitschaftseinsatz);
+    case 'EWT':
+      return ewtFromBackend(doc as BackendEWT);
+    case 'N':
+      return nebengeldFromBackend(doc as BackendNebengeld);
+  }
+}
+
+function stableSerialize(value: unknown): string {
+  if (value === null || value === undefined) return JSON.stringify(value);
+  if (typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(item => stableSerialize(item)).join(',')}]`;
+
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  const entries = keys.map(key => `${JSON.stringify(key)}:${stableSerialize(obj[key])}`);
+  return `{${entries.join(',')}}`;
+}
+
+function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTableTypes): string {
+  const source = row as Record<string, unknown>;
+  const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
+
+  // Serverseitig ergänzte/verknüpfte Felder sollen das Create-Matching nicht stören.
+  if (resource === 'BE') omitKeys.add('bereitschaftszeitraumBE');
+  if (resource === 'N') omitKeys.add('ewtRef');
+
+  const normalized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(source)) {
+    if (omitKeys.has(key)) continue;
+    if (value === undefined) continue;
+    normalized[key] = value;
+  }
+
+  return stableSerialize(normalized);
+}
+
+function mapCreatedIdsByContent(
+  resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
+  createdDocs: unknown[],
+): Map<number, string> {
+  const createdIds = new Map<number, string>();
+  if (createdDocs.length === 0) return createdIds;
+
+  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+
+  const serverRows = createdDocs
+    .map(doc => {
+      try {
+        const row = mapServerDocToFrontend(resource, doc);
+        const id = (row as { _id?: string })._id;
+        if (!id) return null;
+        return { id, signature: rowSignature(resource, row) };
+      } catch {
+        return null;
+      }
+    })
+    .filter((entry): entry is { id: string; signature: string } => entry !== null);
+
+  const idsBySignature = new Map<string, string[]>();
+  for (const entry of serverRows) {
+    const queue = idsBySignature.get(entry.signature) ?? [];
+    queue.push(entry.id);
+    idsBySignature.set(entry.signature, queue);
+  }
+
+  const unassignedDocIds = [...serverRows.map(entry => entry.id)];
+
+  pendingNewRows.forEach((row, idx) => {
+    const signature = rowSignature(resource, row.cells);
+    const queue = idsBySignature.get(signature);
+    const matchedId = queue?.shift();
+
+    if (matchedId) {
+      createdIds.set(idx, matchedId);
+      const removeIdx = unassignedDocIds.indexOf(matchedId);
+      if (removeIdx >= 0) unassignedDocIds.splice(removeIdx, 1);
+      return;
+    }
+
+    const fallbackId = unassignedDocIds.shift();
+    if (fallbackId) createdIds.set(idx, fallbackId);
+  });
+
+  return createdIds;
+}
+
+function applyServerRowsToTable(
+  resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
+  result: { created?: unknown[]; updated?: unknown[] },
+): void {
+  const serverRowsById = new Map<string, CustomTableTypes>();
+
+  [...(result.created ?? []), ...(result.updated ?? [])].forEach(doc => {
+    try {
+      const row = mapServerDocToFrontend(resource, doc);
+      const id = (row as { _id?: string })._id;
+      if (id) serverRowsById.set(id, row);
+    } catch {
+      // Bei unvollständigen Dokumenten den Sync überspringen und den lokalen Zustand behalten.
+    }
+  });
+
+  for (const row of table.rows.array) {
+    if (row._state === 'deleted' || !row._id) continue;
+    const serverRow = serverRowsById.get(row._id);
+    if (!serverRow) continue;
+    row.cells = serverRow;
+    row._originalCells = { ...serverRow };
+  }
+
+  if (typeof table.drawRows === 'function') table.drawRows();
 }
 
 function findTable<T extends CustomTableTypes>(id: string): CustomTable<T> | null {
@@ -258,19 +387,18 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   try {
     const result = await sendBulk(resource, changes, monat, jahr);
 
-    // IDs aus der Response den neuen Zeilen zuweisen
-    const createdIds = new Map<number, string>();
-    if (result?.created) {
-      result.created.forEach((doc: { _id?: string }, idx: number) => {
-        if (doc._id) createdIds.set(idx, doc._id);
-      });
-    }
+    // IDs aus der Response den neuen Zeilen zuweisen.
+    // Primär über Inhalts-Signaturen, mit sicherem Fallback auf verbleibende IDs.
+    const createdIds = mapCreatedIdsByContent(resource, table, result?.created ?? []);
 
     if (includeDeletes) table.rows.commitChanges(createdIds);
     else table.rows.commitAutoSave(createdIds);
 
+    // Nach erfolgreichem Save serverseitig normalisierte Felder in die Tabelle zurückspiegeln.
+    applyServerRowsToTable(resource, table, result);
+
     // localStorage aktualisieren
-    updateLocalStorage(resource, table, monat);
+    updateLocalStorage(resource, table);
     aktualisiereBerechnung();
 
     // Wrapper-Timestamp mit Server-Zeit aktualisieren
@@ -356,7 +484,7 @@ async function sendBulk(
       case 'BE':
         return dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY').month() + 1;
       case 'EWT':
-        return dayjs((item as IDatenEWT).tagE).month() + 1;
+        return getMonatFromEWTBuchungstag(item as IDatenEWT);
       case 'N':
         return dayjs((item as IDatenN).tagN, 'DD.MM.YYYY').month() + 1;
     }
@@ -439,11 +567,7 @@ async function sendBulk(
 /**
  * LocalStorage nach erfolgreichem Auto-Save aktualisieren.
  */
-function updateLocalStorage(
-  resource: Exclude<TResourceKey, 'settings'>,
-  table: CustomTable<CustomTableTypes>,
-  monat: number,
-): void {
+function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: CustomTable<CustomTableTypes>): void {
   const storageKeyMap: Record<typeof resource, string> = {
     BZ: 'dataBZ',
     BE: 'dataBE',
@@ -456,7 +580,6 @@ function updateLocalStorage(
   // Aktive (nicht gelöschte) Zeilen der gesamten Tabelle im localStorage speichern.
   const activeRows = table.rows.array.filter(row => row._state !== 'deleted').map(row => row.cells);
   void resource;
-  void monat;
   Storage.set(storageKey, activeRows);
 }
 

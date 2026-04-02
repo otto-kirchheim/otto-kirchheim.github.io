@@ -49,7 +49,12 @@ import {
 function createMockTable(
   id: string,
   changes: { create: unknown[]; update: unknown[]; delete: string[] } = { create: [], update: [], delete: [] },
-  rows: { _state: string; cells: unknown }[] = [],
+  rows: {
+    _state: string;
+    cells: Record<string, unknown>;
+    _id?: string;
+    _originalCells?: Record<string, unknown>;
+  }[] = [],
 ) {
   const mockCommitChanges = vi.fn();
   const mockCommitAutoSave = vi.fn();
@@ -442,6 +447,48 @@ describe('autoSave', () => {
 
       const stored = Storage.get<unknown[]>('dataBZ');
       expect(stored).toHaveLength(2); // Beide aktiven Zeilen
+    });
+
+    it('übernimmt serverseitig korrigierte Werte direkt in den lokalen Zustand', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataE', []);
+
+      const changes = {
+        create: [],
+        update: [{ _id: 'ewt-1', tagE: '2025-03-10', buchungstagE: '2025-03-10', schichtE: 'FR' }],
+        delete: [],
+      };
+      createMockTable('tableE', changes, [
+        {
+          _state: 'modified',
+          _id: 'ewt-1',
+          cells: { _id: 'ewt-1', tagE: '2025-03-10', buchungstagE: '2025-03-10', schichtE: 'FR' },
+        },
+      ]);
+
+      mockEwtBulk.mockResolvedValue({
+        created: [],
+        updated: [
+          {
+            _id: 'ewt-1',
+            Tag: '2025-03-10T00:00:00.000Z',
+            Buchungstag: '2025-03-15T00:00:00.000Z',
+            Schicht: 'FR',
+            Monat: 3,
+            Jahr: 2025,
+          },
+        ],
+        deleted: [],
+        errors: [],
+      });
+
+      scheduleAutoSave('EWT');
+      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      const stored = Storage.get<Array<{ _id: string; buchungstagE: string }>>('dataE', { check: true });
+      expect(stored).toHaveLength(1);
+      expect(stored[0]).toMatchObject({ _id: 'ewt-1', buchungstagE: '2025-03-15' });
     });
 
     it('bleibt pending bei offline und speichert nicht', async () => {
