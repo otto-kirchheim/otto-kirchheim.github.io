@@ -23,7 +23,7 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
     console.error('Token-Refresh fehlgeschlagen:', err);
     isLogoutInProgress = true;
     showErrorAndLogout();
-    throw new Error('Fehler bei Token erneuerung');
+    throw new Error('Fehler bei Token erneuerung', { cause: err });
   }
 }
 

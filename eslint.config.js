@@ -3,7 +3,6 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
 
 export default tseslint.config(
   // Basis
@@ -15,12 +14,7 @@ export default tseslint.config(
 
   // Konfiguration
   {
-    plugins: {
-      prettier: prettierPlugin,
-    },
     rules: {
-      'prettier/prettier': 'warn',
-
       // TypeScript
       '@typescript-eslint/no-unused-vars': [
         'warn',

@@ -19,7 +19,7 @@ export default function recalculateEwtMonat({ monat, jahr, daten, vorgabenU }: e
   const ftE = table.instance;
   console.log('save ', { ftE });
   ftE.rows.load(getEwtDaten(berechneteDaten, monat));
-  persistEwtTableData(ftE, monat);
+  persistEwtTableData(ftE);
 
   aktualisiereBerechnung(jahr);
 

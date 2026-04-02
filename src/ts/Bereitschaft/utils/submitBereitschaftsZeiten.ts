@@ -100,7 +100,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
 
   let monatData: IMonatsDaten['BZ'] | false = false;
   const currentMonatRows: IMonatsDaten['BZ'] = getMonatRows(tableToArray('tableBZ'), monat);
-  let folgeMonatData: IMonatsDaten['BZ'] | false = false;
+  let folgeMonatData: IMonatsDaten['BZ'] | false;
   if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
   console.log({ bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, monat, jahr });
 

@@ -171,6 +171,7 @@ export async function FetchRetry<I, T>(
     console.error('Fetch error occurred:', error);
     throw new Error(
       `Fetch-Fehler: ${(<Error>error).message || error}. URL: ${serverUrl}/${UrlPath}, Method: ${method}, Retry: ${retry}`,
+      { cause: error },
     );
   }
 }

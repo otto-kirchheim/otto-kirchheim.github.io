@@ -183,8 +183,6 @@ export default function calculateBereitschaftsZeiten(
     const aktuelleSchicht = kombinierteSchichten[i];
     const nächsteSchicht = kombinierteSchichten[i + 1];
 
-    let change: boolean = false;
-
     //Prüfen auf ruheZeit
     if (
       nacht &&
@@ -204,11 +202,12 @@ export default function calculateBereitschaftsZeiten(
       continue;
     }
 
-    [change, daten] = vorhandenCheck(daten, {
+    const [change, nextDaten] = vorhandenCheck(daten, {
       beginB: aktuelleSchicht.ende.toISOString(),
       endeB: nächsteSchicht.beginn.toISOString(),
       pauseB: aktuelleSchicht.pause,
     });
+    daten = nextDaten;
     if (!changed && change) changed = change;
   }
 

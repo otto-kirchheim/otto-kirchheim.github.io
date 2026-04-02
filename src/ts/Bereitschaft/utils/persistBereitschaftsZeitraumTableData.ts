@@ -5,9 +5,7 @@ import Storage from '../../utilities/Storage';
 import normalizeResourceRows from '../../utilities/normalizeResourceRows';
 import tableToArray from '../../utilities/tableToArray';
 
-export default function persistBereitschaftsZeitraumTableData(ft: CustomTable<IDatenBZ>, Monat?: number): IDatenBZ[] {
-  Monat ??= Storage.get<number>('Monat', { check: true });
-
+export default function persistBereitschaftsZeitraumTableData(ft: CustomTable<IDatenBZ>): IDatenBZ[] {
   const allRows = normalizeResourceRows<IDatenBZ>(tableToArray<IDatenBZ>(ft));
   Storage.set('dataBZ', allRows);
   aktualisiereBerechnung();
