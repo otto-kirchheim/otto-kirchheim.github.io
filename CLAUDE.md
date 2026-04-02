@@ -1,7 +1,19 @@
 # CLAUDE.md – Projektanweisungen für AI-Assistenten (Frontend)
 
-> **Aufbau:** Diese Datei enthält die Grundlagen. Details zu spezifischen Themen
+> **Aufbau:** Diese Datei enthält Frontend-spezifische Grundlagen. Globale Workflow- und
+> Qualitätsregeln siehe [`../CLAUDE.md`](../CLAUDE.md). Details zu spezifischen Themen
 > stehen in den verlinkten Dateien unter `.claude/`.
+
+## Navigation
+
+- Globale Workflow- und Qualitätsregeln: [`../CLAUDE.md`](../CLAUDE.md)
+- Workspace-Struktur und Repositories: [`../WORKSPACE.md`](../WORKSPACE.md)
+- Root-AI-Dokumentation: [`../.claude/README.md`](../.claude/README.md)
+- Backend-Regeln und Skills: [`../backend/CLAUDE.md`](../backend/CLAUDE.md)
+- Frontend-AI-Dokumentation: [`.claude/README.md`](.claude/README.md)
+- Frontend-Skills: [`.claude/skills/README.md`](.claude/skills/README.md)
+
+---
 
 ## Projektübersicht
 
@@ -85,23 +97,7 @@ Feature/
 
 ---
 
-## 2. Verlinkte Claude-Dateien
-
-| Datei                                                                                        | Beschreibung                                           |
-| -------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| [`.claude/README.md`](.claude/README.md)                                                     | Einstieg und Navigation für Frontend-AI-Dokumente      |
-| [`.claude/commands/`](.claude/commands/)                                                     | Slash-Command-Vorlagen (`review`, `test`, `deploy`)    |
-| [`.claude/settings.json`](.claude/settings.json)                                             | Teamweite Safety-/Permissions-Baseline                 |
-| [`.claude/settings.local.json.example`](.claude/settings.local.json.example)                 | Lokale Override-Beispiele (ohne Secrets)               |
-| [`.mcp.json.example`](.mcp.json.example)                                                     | MCP-Server-Beispielkonfiguration für das Frontend-Repo |
-| [`.claude/skills/README.md`](.claude/skills/README.md)                                       | Skill-Index mit v2-Ordnerstruktur und Legacy-Hinweisen |
-| [`.claude/skills/architektur/SKILL.md`](.claude/skills/architektur/SKILL.md)                 | v2-Skill-Einstieg: Architektur                         |
-| [`.claude/skills/coding-konventionen/SKILL.md`](.claude/skills/coding-konventionen/SKILL.md) | v2-Skill-Einstieg: Coding-Konventionen                 |
-| [`.claude/skills/tests/SKILL.md`](.claude/skills/tests/SKILL.md)                             | v2-Skill-Einstieg: Tests                               |
-
----
-
-## 3. Wichtigste Regeln (Kurzfassung)
+## 2. Frontend-spezifische Regeln
 
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `src/ts/utilities/configDayjs.ts`)
@@ -116,63 +112,12 @@ Feature/
 
 ---
 
-## Workflow-Orchestrierung (verbindlich)
+## Globale Workflow- und Qualitätsregeln
 
-### 1. Plan-First-Protokoll
+Die folgenden Abschnitte sind **global** und gelten für alle Fachbereiche (Root, Frontend, Backend).
+Siehe [`../CLAUDE.md`](../CLAUDE.md) für vollständige Details:
 
-- Für jede Aufgabe mit mehr als 3 Schritten oder mit Architekturentscheidung vor Codebeginn Plan in `tasks/todo.md` erstellen oder aktualisieren.
-- Jeder Plan enthält explizite Verifikationskriterien (z. B. Logs prüfen, konkrete Tests ausführen).
-- Bei zwei fehlgeschlagenen Implementierungsversuchen oder logischer Sackgasse: sofort stoppen, Anforderungen neu lesen, Plan aktualisieren und vor dem Weiterbau mit dem User synchronisieren.
-
-### 2. Kontext-Management (agentisches Arbeiten)
-
-- Subagenten aktiv nutzen, um den Hauptkontext schlank zu halten.
-- Recherche, Exploration und parallele Analysen auslagern; pro Subagent genau einen Fokus vergeben.
-- Denkprozess bei komplexen Aufgaben in Rollen aufteilen:
-  - `[Architect]`: Schnittstellen und Datenfluss klären
-  - `[Engineer]`: Umsetzung und Edge Cases
-  - `[QA]`: Lösung aktiv auf Bruchstellen prüfen
-- Nur notwendige Dateien laden, um Kontextverwässerung zu vermeiden.
-- Keine Code-Trunkierung mit Platzhaltern wie `// ... rest of code`; immer vollständige relevante Blöcke liefern.
-
-### 3. Selbstverbesserungs-Loop
-
-- Nach jeder User-Korrektur oder Bug-Entdeckung `tasks/lessons.md` aktualisieren.
-- Nicht nur Symptom fixen: eine Regel formulieren, die denselben Fehler künftig verhindert.
-- Zu Sitzungsbeginn relevante Learnings aus `tasks/lessons.md` prüfen.
-
----
-
-## Engineering Standards
-
-### 4. Verifikation vor "fertig"
-
-- Aufgabe nie als abgeschlossen markieren, ohne nachweisbare Funktionsprüfung.
-- Vor Übergabe prüfen: Ist das die wartbarste Lösung oder nur die schnellste?
-- Konkreten Verifikationsweg benennen oder ausführen (Befehl, Testfall, Log-Check).
-- Änderungen chirurgisch halten: nur notwendige Stellen anfassen, keine globalen Refactors ohne Auftrag.
-
-### 5. Autonomes Debugging
-
-- Bei Bugreports zuerst Logs, Stacktraces und fehlschlagende Tests auswerten.
-- Fehler eigenständig beheben statt Rückfragen zur Vorgehensweise zu stellen, außer es ist eine wesentliche Produktentscheidung nötig.
-
----
-
-## Task-Management (verbindlich)
-
-1. **Initialize:** `tasks/todo.md` zu Beginn lesen und Status synchronisieren.
-2. **Plan First:** Plan als abhakbare Punkte in `tasks/todo.md` festhalten.
-3. **Track:** Punkte während der Umsetzung laufend als erledigt markieren.
-4. **Explain:** Bei größeren Schritten den Grund der Änderung klar zusammenfassen (Warum, nicht nur Was).
-5. **Document:** Nach Meilensteinen einen kurzen Review-Abschnitt mit Ergebnis und Verifikation in `tasks/todo.md` ergänzen.
-6. **Capture Lessons:** Nach Korrekturen `tasks/lessons.md` aktualisieren.
-
----
-
-## Core Principles
-
-- **Simplicity Over Everything:** Änderungen so einfach wie möglich halten und nur minimal nötigen Code anfassen.
-- **No Laziness:** Ursachen beheben, keine temporären oder kosmetischen Band-Aid-Fixes als Endzustand akzeptieren.
-- **Minimal Impact:** Nur notwendige Bereiche ändern, Regressionen aktiv vermeiden.
-- **Proactive Elegance:** Bei nicht-trivialer Logik bewusst prüfen, ob eine elegantere Lösung möglich ist; wirkt ein Fix hacky, sauber refactoren.
+- **Workflow-Orchestrierung:** Plan-First-Protokoll, Kontext-Management, Selbstverbesserungs-Loop
+- **Engineering Standards:** Verifikation vor "fertig", autonomes Debugging
+- **Task-Management:** Initialisierung, Planning, Tracking, Dokumentation, Lessons-Capture
+- **Core Principles:** Simplicity, No-Laziness, Minimal Impact, Proactive Elegance
