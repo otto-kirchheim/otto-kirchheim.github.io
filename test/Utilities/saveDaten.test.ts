@@ -8,7 +8,9 @@ const {
   mockCreateSnackBar,
   mockFlushAll,
   mockGetResourceStatus,
+  mockMarkResourcesIdle,
   mockMarkResourceSaved,
+  mockHasPendingTableChanges,
   mockUpdateMyProfile,
   mockSaveEinstellungen,
 } = vi.hoisted(() => ({
@@ -18,7 +20,9 @@ const {
   mockCreateSnackBar: vi.fn(),
   mockFlushAll: vi.fn(),
   mockGetResourceStatus: vi.fn(),
+  mockMarkResourcesIdle: vi.fn(),
   mockMarkResourceSaved: vi.fn(),
+  mockHasPendingTableChanges: vi.fn(),
   mockUpdateMyProfile: vi.fn(),
   mockSaveEinstellungen: vi.fn(),
 }));
@@ -31,7 +35,9 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreate
 vi.mock('../../src/ts/utilities/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
+  markResourcesIdle: mockMarkResourcesIdle,
   markResourceSaved: mockMarkResourceSaved,
+  hasPendingTableChanges: mockHasPendingTableChanges,
 }));
 vi.mock('../../src/ts/utilities/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
@@ -62,6 +68,7 @@ describe('saveDaten', () => {
     mockUpdateMyProfile.mockResolvedValue({ data: mockUserData, updatedAt: '2026-03-07T12:00:00.000Z' });
     mockFlushAll.mockResolvedValue(undefined);
     mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
+    mockHasPendingTableChanges.mockReturnValue(false);
 
     // navigator.onLine standardmäßig auf true
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
@@ -96,6 +103,13 @@ describe('saveDaten', () => {
     expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockUserData);
     expect(mockFlushAll).toHaveBeenCalled();
     expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
+  });
+
+  it('setzt Ressourcenstatus beim manuellen Save auf idle zurück', async () => {
+    await saveDaten(button);
+
+    // markResourcesIdle darf nicht mehr aufgerufen werden (war der ursprüngliche Bug).
+    expect(mockMarkResourcesIdle).not.toHaveBeenCalled();
   });
 
   it('sendet Settings nicht erneut wenn lokal unverändert', async () => {

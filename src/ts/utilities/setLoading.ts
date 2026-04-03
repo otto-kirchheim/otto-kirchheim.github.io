@@ -14,5 +14,10 @@ export default function setLoading(btn: string): void {
   spinner.setAttribute('aria-hidden', 'true');
 
   btnElement.disabled = true;
-  btnElement.replaceChildren(spinner);
+  const badge = btnElement.querySelector<HTMLSpanElement>('.autosave-badge');
+  if (badge) {
+    btnElement.replaceChildren(spinner, badge);
+  } else {
+    btnElement.replaceChildren(spinner);
+  }
 }

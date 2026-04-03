@@ -94,9 +94,47 @@ function isNetworkError(msg: string): boolean {
   return NETWORK_ERROR_PATTERNS.some(p => msg.includes(p));
 }
 
+function createBadgeElement(): HTMLSpanElement {
+  const badge = document.createElement('span');
+  badge.className = 'autosave-badge position-absolute top-0 start-100 translate-middle badge rounded-pill';
+  badge.style.transition = 'opacity 0.3s ease';
+  badge.style.opacity = '0';
+
+  const iconEl = document.createElement('span');
+  iconEl.className = 'material-icons-round';
+  badge.appendChild(iconEl);
+
+  return badge;
+}
+
+function getOrCreateBadge(buttonId: string): HTMLSpanElement | null {
+  const btn = document.getElementById(buttonId);
+  if (!btn) {
+    console.warn(`[Badge ${Date.now()}ms] getOrCreateBadge: Button ${buttonId} nicht gefunden`);
+    return null;
+  }
+
+  let badge = badgeElements.get(buttonId);
+
+  if (!badge || !badge.isConnected || !btn.contains(badge)) {
+    const existing = btn.querySelector<HTMLSpanElement>('.autosave-badge');
+    if (existing) {
+      badge = existing;
+      badgeElements.set(buttonId, badge);
+    } else {
+      badge = createBadgeElement();
+      btn.classList.add('position-relative');
+      btn.appendChild(badge);
+      badgeElements.set(buttonId, badge);
+    }
+  }
+
+  return badge;
+}
+
 /** Badge eines Buttons aktualisieren */
 function updateBadge(buttonId: string, resources: TResourceKey[]): void {
-  const badge = badgeElements.get(buttonId);
+  const badge = getOrCreateBadge(buttonId);
   if (!badge) return;
 
   const status = worstStatus(resources);
@@ -152,7 +190,10 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
   // Bei "saved": nach 2 s verblassen
   if (status === 'saved') {
     const timer = setTimeout(() => {
-      badge.style.opacity = '0';
+      for (const res of resources) {
+        if (currentStatuses.get(res) === 'saved') currentStatuses.set(res, 'idle');
+      }
+      updateBadge(buttonId, resources);
       fadeTimers.delete(buttonId);
     }, 2000);
     fadeTimers.set(buttonId, timer);
@@ -175,17 +216,10 @@ export function initAutoSaveIndicator(): void {
     // Button muss position-relative haben für absolute Badge-Positionierung
     btn.classList.add('position-relative');
 
-    // Badge-Element erstellen
-    const badge = document.createElement('span');
-    badge.className = 'autosave-badge position-absolute top-0 start-100 translate-middle badge rounded-pill';
-    badge.style.transition = 'opacity 0.3s ease';
-    badge.style.opacity = '0';
-
-    const iconEl = document.createElement('span');
-    iconEl.className = 'material-icons-round';
-    badge.appendChild(iconEl);
-
-    btn.appendChild(badge);
+    // Badge-Element erstellen (oder bestehendes übernehmen)
+    const existing = btn.querySelector<HTMLSpanElement>('.autosave-badge');
+    const badge = existing ?? createBadgeElement();
+    if (!existing) btn.appendChild(badge);
     badgeElements.set(buttonId, badge);
 
     // Initialen Status setzen

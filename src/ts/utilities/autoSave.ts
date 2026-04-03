@@ -275,15 +275,19 @@ export function getResourceStatus(resource: TResourceKey): ResourceState {
 
 /**
  * Alle ausstehenden Timer abbrechen.
+ * @param resetStatus - false wenn der Status nicht auf idle gesetzt werden soll
+ *   (z.B. bei flushAll, wo saveResourceNow direkt danach saving setzt).
  */
-export function cancelAllPending(): void {
+export function cancelAllPending(resetStatus = true): void {
   for (const key of Object.keys(resourceStates) as TResourceKey[]) {
     const state = resourceStates[key];
     if (state.timer) {
       clearTimeout(state.timer);
       state.timer = null;
     }
-    if (state.status === 'pending') setStatus(key, 'idle');
+    if (resetStatus && state.status !== 'idle' && state.status !== 'saving') {
+      setStatus(key, 'idle');
+    }
   }
 }
 
@@ -292,11 +296,15 @@ export function cancelAllPending(): void {
  * Inklusive Löschungen.
  */
 export async function flushAll(): Promise<void> {
-  cancelAllPending();
+  // resetStatus=false: pending-Status bleibt sichtbar bis saveResourceNow → saving setzt.
+  cancelAllPending(false);
   const promises: Promise<void>[] = [];
   for (const key of ['BZ', 'BE', 'EWT', 'N'] as const) {
     if (hasPendingResourceChanges(key, true)) {
       promises.push(saveResourceNow(key, true));
+    } else if (resourceStates[key].status === 'pending') {
+      // Keine echten Änderungen (z.B. keine Tabelle im DOM) → direkt auf idle zurücksetzen.
+      setStatus(key, 'idle');
     }
   }
   await Promise.allSettled(promises);
@@ -307,6 +315,13 @@ function hasPendingResourceChanges(resource: Exclude<TResourceKey, 'settings'>, 
   if (!table) return false;
   const changes = table.rows.getChanges(includeDeletes);
   return changes.create.length > 0 || changes.update.length > 0 || changes.delete.length > 0;
+}
+
+/**
+ * Externer Check für offene Änderungen einer Tabellen-Ressource.
+ */
+export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings'>, includeDeletes = false): boolean {
+  return hasPendingResourceChanges(resource, includeDeletes);
 }
 
 // ─── onChange-Handler (werden an CustomTable.onChange gebunden) ──
@@ -331,6 +346,29 @@ export function scheduleAutoSave(resource: TResourceKey): void {
   if (!autoSaveEnabled) return;
 
   const state = resourceStates[resource];
+
+  // Schutz: waehrend aktivem Save keine neuen Pending-Transitions starten.
+  if (state.status === 'saving') return;
+
+  // Tabellen-Ressourcen nur bei echten create/update-Änderungen vormerken.
+  // So vermeiden wir Badge-Rebound durch reine Blur/Click-Nachläufer.
+  if (resource !== 'settings') {
+    const table = findTable(TABLE_ID_MAP[resource]);
+    if (table) {
+      const changes = table.rows.getChanges(false);
+      const hasCreateOrUpdate = changes.create.length > 0 || changes.update.length > 0;
+      if (!hasCreateOrUpdate) {
+        // Stray Blur/Change nach Save: saved-Status visuell stabil lassen.
+        if (state.status === 'saved') return;
+        if (state.timer) {
+          clearTimeout(state.timer);
+          state.timer = null;
+        }
+        setStatus(resource, 'idle');
+        return;
+      }
+    }
+  }
 
   // Vorherigen Timer canceln
   if (state.timer) clearTimeout(state.timer);
@@ -613,4 +651,25 @@ function registerOnlineRetry(): void {
  */
 export function markResourceSaved(resource: TResourceKey): void {
   setStatus(resource, 'saved');
+}
+
+/**
+ * Setzt mehrere Ressourcen explizit auf idle (z. B. nach manuellem Speichern).
+ */
+export function markResourcesIdle(resources: TResourceKey[]): void {
+  resources.forEach(resource => {
+    const state = resourceStates[resource];
+    if (state.timer) {
+      clearTimeout(state.timer);
+      state.timer = null;
+    }
+    setStatus(resource, 'idle');
+  });
+}
+
+/**
+ * Setzt alle Ressourcen explizit auf idle (hard reset für manuelles Speichern).
+ */
+export function markAllResourcesIdle(): void {
+  (Object.keys(resourceStates) as TResourceKey[]).forEach(resource => setStatus(resource, 'idle'));
 }

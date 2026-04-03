@@ -207,6 +207,7 @@ describe('autoSave', () => {
       vi.advanceTimersByTime(getAutoSaveDelay() + 1000);
       expect(getResourceStatus('BZ').status).toBe('pending');
     });
+
   });
 
   // ─── cancelAllPending ────────────────────────────────

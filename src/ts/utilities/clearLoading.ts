@@ -6,9 +6,15 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
   const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
   if (!btnElement) return;
 
+  const badge = btnElement.querySelector<HTMLSpanElement>('.autosave-badge');
+
   const originalContent = takeOriginalButtonContent(btn);
   if (originalContent) {
-    btnElement.replaceChildren(...originalContent);
+    if (badge) {
+      btnElement.replaceChildren(...originalContent, badge);
+    } else {
+      btnElement.replaceChildren(...originalContent);
+    }
     btnElement.disabled = false;
     return;
   }
@@ -16,6 +22,10 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
   // Fallback prevents "undefined" labels when a button was never put into loading state.
   const fallbackText = btn === 'btnLogin' ? 'Anmelden' : btnElement.textContent?.trim() || '';
   const normalText = btnElement.dataset.normaltext?.trim() || fallbackText;
-  btnElement.textContent = normalText;
+  if (badge) {
+    btnElement.replaceChildren(document.createTextNode(normalText), badge);
+  } else {
+    btnElement.textContent = normalText;
+  }
   btnElement.disabled = false;
 }
