@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';

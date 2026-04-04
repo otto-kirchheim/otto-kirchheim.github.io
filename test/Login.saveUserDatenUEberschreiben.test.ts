@@ -1,5 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type * as UtilitiesModule from '../src/ts/utilities';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const {
   aktualisiereBerechnungMock,
@@ -44,17 +43,13 @@ vi.mock('../src/ts/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('../src/ts/utilities', async importOriginal => {
-  const actual = await importOriginal<typeof UtilitiesModule>();
-  return {
-    ...actual,
-    Storage: {
-      get: storageGetMock,
-      set: storageSetMock,
-      remove: storageRemoveMock,
-    },
-  };
-});
+vi.mock('../src/ts/utilities/Storage', () => ({
+  default: {
+    get: storageGetMock,
+    set: storageSetMock,
+    remove: storageRemoveMock,
+  },
+}));
 
 import overwriteUserDaten from '../src/ts/Login/utils/overwriteUserDaten';
 

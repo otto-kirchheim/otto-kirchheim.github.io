@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'bun:test';
 import { DatenSortieren, Storage, buttonDisable, checkMaxTag, clearLoading, setLoading } from '../../src/ts/utilities';
 import { getUserCookie, isAdmin } from '../../src/ts/utilities/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";

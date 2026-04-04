@@ -1,22 +1,28 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
 const { berVorgabeAEndernMock } = vi.hoisted(() => ({
   berVorgabeAEndernMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', async importOriginal => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    applyBereitschaftsVorgabe: berVorgabeAEndernMock,
-  };
-});
-
 import type { IVorgabenUvorgabenB } from '../src/ts/interfaces';
 import applyBereitschaftsVorgabe from '../src/ts/Bereitschaft/utils/applyBereitschaftsVorgabe';
 import updateBereitschaftsDatum from '../src/ts/Bereitschaft/utils/updateBereitschaftsDatum';
-import eigeneWerte from '../src/ts/Bereitschaft/utils/toggleBereitschaftsEigeneWerte';
 import dayjs from '../src/ts/utilities/configDayjs';
+
+type ToggleBereitschaftsEigeneWerte = (
+  parentElement: HTMLDivElement,
+  vorgabenB: IVorgabenUvorgabenB,
+  datum: dayjs.Dayjs,
+) => void;
+
+async function loadEigeneWerte(): Promise<ToggleBereitschaftsEigeneWerte> {
+  mock.module('../src/ts/Bereitschaft/utils', () => ({
+    applyBereitschaftsVorgabe: berVorgabeAEndernMock,
+  }));
+
+  const module = await import('../src/ts/Bereitschaft/utils/toggleBereitschaftsEigeneWerte');
+  return module.default;
+}
 
 function createVorgabenB(): IVorgabenUvorgabenB {
   return {
@@ -32,6 +38,7 @@ function createVorgabenB(): IVorgabenUvorgabenB {
 describe('Bereitschaft utils extra', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    mock.restore();
     vi.clearAllMocks();
   });
 
@@ -86,7 +93,9 @@ describe('Bereitschaft utils extra', () => {
     );
   });
 
-  it('eigeneWerte aktiviert Felder und ruft BerVorgabeAEndern nicht auf, wenn eigen gesetzt ist', () => {
+  it('eigeneWerte aktiviert Felder und ruft BerVorgabeAEndern nicht auf, wenn eigen gesetzt ist', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `
       <div id="root">
         <input id="bAT" />
@@ -115,7 +124,9 @@ describe('Bereitschaft utils extra', () => {
     expect(berVorgabeAEndernMock).not.toHaveBeenCalled();
   });
 
-  it('eigeneWerte deaktiviert Felder und ruft BerVorgabeAEndern auf, wenn eigen nicht gesetzt ist', () => {
+  it('eigeneWerte deaktiviert Felder und ruft BerVorgabeAEndern auf, wenn eigen nicht gesetzt ist', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `
       <div id="root">
         <input id="bAT" />
@@ -146,7 +157,9 @@ describe('Bereitschaft utils extra', () => {
     expect(berVorgabeAEndernMock).toHaveBeenCalledWith(parentElement, vorgabenB, datum);
   });
 
-  it('eigeneWerte wirft Fehler bei fehlenden Inputs', () => {
+  it('eigeneWerte wirft Fehler bei fehlenden Inputs', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `<div id="root"><input id="bAT" /></div>`;
 
     const parentElement = document.querySelector<HTMLDivElement>('#root');

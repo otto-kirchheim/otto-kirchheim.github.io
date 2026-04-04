@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createCustomTable, type CustomTableTypes } from '../../src/ts/class/CustomTable';
 
 interface TableRow extends CustomTableTypes {

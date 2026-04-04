@@ -1,6 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { createSnackBarMock, setLoadingMock, loadUserDatenMock, setMonatJahrMock } = vi.hoisted(() => ({
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
+
+const { createSnackBarMock, setLoadingMock, loadUserDatenMock, setMonatJahrMock } = viCompat.hoisted(() => ({
   createSnackBarMock: vi.fn(),
   setLoadingMock: vi.fn(),
   loadUserDatenMock: vi.fn(),
@@ -11,13 +15,9 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/utilities', async importOriginal => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return {
-    ...actual,
-    setLoading: setLoadingMock,
-  };
-});
+vi.mock('../../src/ts/utilities/setLoading', () => ({
+  default: setLoadingMock,
+}));
 
 vi.mock('../../src/ts/Login/utils', () => ({
   loadUserDaten: loadUserDatenMock,

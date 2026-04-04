@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
 import validateEwtZeitenReihenfolge from '../src/ts/EWT/utils/validateEwtZeitenReihenfolge';

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import * as Utils from '../../src/ts/utilities'; // Import all utilities to mock them
 import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchRetry';
@@ -53,6 +53,7 @@ describe('FetchRetry.ts', () => {
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks();
+    vi.spyOn(Date, 'now').mockImplementation(() => MOCK_DATE_NOW);
     sessionStorage.clear();
     (globalThis.fetch as ReturnType<typeof vi.fn>).mockReset();
     // Default fetch mock (can be overridden in specific tests)
@@ -264,11 +265,11 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should handle fetch error', async () => {
-      const fetchError = new Error('Network Failed');
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(fetchError);
+      const fetchMessage = 'Network Failed';
+      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => { throw new Error(fetchMessage); });
 
       await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow(
-        `Fetch-Fehler: ${fetchError.message}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
+        `Fetch-Fehler: ${fetchMessage}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
       );
     });
 
@@ -314,7 +315,7 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should throw error if token refresh fails during retry', async () => {
-      const refreshError = new Error('Refresh failed');
+      const refreshMessage = 'Refresh failed';
       // First call: Token expired
       (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
@@ -323,11 +324,11 @@ describe('FetchRetry.ts', () => {
         headers: new Headers(),
       });
 
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockRejectedValueOnce(refreshError);
+      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => { throw new Error(refreshMessage); });
 
       // Expect the error thrown by tokenErneuern to propagate
       await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow(
-        `Fetch-Fehler: ${refreshError.message}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
+        `Fetch-Fehler: ${refreshMessage}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
       );
 
       expect(globalThis.fetch).toHaveBeenCalledTimes(1); // Only the first call

@@ -1,5 +1,25 @@
 # Todo
 
+## Aktueller Plan: Frontend-Tests auf Bun test + happy-dom umstellen
+
+- [x] Test-Konfiguration und Abhaengigkeiten auf Bun test + happy-dom umstellen
+- [x] Setup-Dateien fuer DOM-, Fetch- und globale Mocks unter Bun neu aufsetzen
+- [x] Testdateien von Vitest-APIs auf Bun-Test-APIs migrieren
+- [x] Snapshot- und DOM-kritische Tests unter happy-dom validieren
+- [x] Frontend-Testlauf, TypeScript und Lint nach der Migration verifizieren
+
+## Verifikationskriterien (Bun Test Migration)
+
+- `frontend/package.json` nutzt `bun test` fuer Testlauf und Watch-Mode
+- `test/setupVitest.ts` und `vitest.config.ts` werden nicht mehr benoetigt
+- Tests laufen mit happy-dom ohne jsdom-Storage-Workarounds
+- Relevante Suites und Begleitchecks sind nachweisbar erfolgreich
+
+## Review (Bun Test Migration)
+
+- Ergebnis: Frontend verwendet jetzt Bun test mit happy-dom und einem sequentiellen Runner fuer stabile Modul-Mocks; direkte Vitest/jsdom-Abhaengigkeiten und die alte Vitest-Konfiguration sind entfernt.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test` sowie `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` und `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test test/Utilities/saveDaten.test.ts test/Utilities/autoSave.test.ts test/Einstellungen/SelectYear.test.ts test/Login.LadeUserDaten.test.ts test/class/CustomSnackbar.test.ts`.
+
 ## Struktur- und Doku-Organisation
 
 - [x] `.claude`-Navigation für Frontend optimieren

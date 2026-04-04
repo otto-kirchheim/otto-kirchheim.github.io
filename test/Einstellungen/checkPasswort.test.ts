@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const { createSnackBarMock, changePasswordMock, setLoadingMock, clearLoadingMock, modalHideMock } = vi.hoisted(() => ({
   createSnackBarMock: vi.fn(),

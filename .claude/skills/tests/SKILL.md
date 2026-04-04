@@ -1,5 +1,5 @@
 ---
-name: frontend-tests
+name: tests
 description: "Use when: frontend topic tests"
 ---
 

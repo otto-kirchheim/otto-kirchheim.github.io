@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { calculateEwtEintraege } from '../src/ts/EWT/utils';
 import type { IVorgabenU } from '../src/ts/interfaces/IVorgabenU';
 import { VorgabenUMock } from './mockData';
@@ -411,6 +411,6 @@ describe('berechnen', () => {
     const result = calculateEwtEintraege(vorgabenU, daten);
 
     // Überprüfen Sie die Ergebnisse
-    expect(result).to.deep.equal(expected);
+    expect(result).toEqual(expected);
   });
 });

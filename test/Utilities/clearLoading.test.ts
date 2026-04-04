@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import clearLoading from '../../src/ts/utilities/clearLoading';
 import setLoading from '../../src/ts/utilities/setLoading';
 

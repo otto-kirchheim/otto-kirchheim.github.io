@@ -1,0 +1,17 @@
+[test]
+root = "."
+preload = ["./test/setupBun.ts"]
+pathIgnorePatterns = [
+  ".github/**",
+  ".husky/**",
+  ".idea/**",
+  ".git/**",
+  ".cache/**",
+  "coverage/**",
+  "dist/**",
+  "dev-dist/**",
+  "node_modules/**",
+  "src/node_modules/**"
+]
+coverageReporter = ["text", "lcov"]
+coverageDir = "./coverage"

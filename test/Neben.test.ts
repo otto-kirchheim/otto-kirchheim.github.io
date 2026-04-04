@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'bun:test';
 import { getNebengeldDaten } from '../src/ts/Neben/utils';
 import { Storage } from '../src/ts/utilities';
 import type { IDatenN } from '../src/ts/interfaces';

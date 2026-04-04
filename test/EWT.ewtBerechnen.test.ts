@@ -1,34 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
-
-const {
-  getEwtDatenMock,
-  calculateEwtEintraegeMock,
-  persistEwtTableDataMock,
-  aktualisiereBerechnungMock,
-  createSnackBarMock,
-} = vi.hoisted(() => ({
-  getEwtDatenMock: vi.fn(),
-  calculateEwtEintraegeMock: vi.fn(),
-  persistEwtTableDataMock: vi.fn(),
-  aktualisiereBerechnungMock: vi.fn(),
-  createSnackBarMock: vi.fn(),
-}));
-
-vi.mock('../src/ts/EWT/utils', () => ({
-  getEwtDaten: getEwtDatenMock,
-  calculateEwtEintraege: calculateEwtEintraegeMock,
-  persistEwtTableData: persistEwtTableDataMock,
-}));
-
-vi.mock('../src/ts/Berechnung', () => ({
-  aktualisiereBerechnung: aktualisiereBerechnungMock,
-}));
-
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
-  createSnackBar: createSnackBarMock,
-}));
 
 import calculateEwtEintraege from '../src/ts/EWT/utils/calculateEwtEintraege';
 
@@ -52,7 +24,6 @@ function createData(day = '2026-03-10'): IDatenEWT {
 describe('calculateEwtEintraege', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    vi.clearAllMocks();
   });
 
   it('wirft Fehler wenn Pflichtdaten fehlen', () => {
@@ -64,8 +35,6 @@ describe('calculateEwtEintraege', () => {
   });
 
   it('wirft Fehler wenn Vorgaben fehlen', () => {
-    calculateEwtEintraegeMock.mockReturnValue([createData()]);
-
     expect(() => calculateEwtEintraege({} as IVorgabenU, [createData()])).toThrow('Vorgaben unvollständig');
   });
 

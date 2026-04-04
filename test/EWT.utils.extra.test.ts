@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
 import clearEwtZeiten from '../src/ts/EWT/utils/clearEwtZeiten';

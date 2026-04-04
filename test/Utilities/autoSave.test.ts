@@ -1,4 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+  advanceTimersByTimeAsync: (ms: number) => Promise<void>;
+};
 
 // --- Hoisted mocks ---
 const {
@@ -9,7 +14,7 @@ const {
   mockEwtBulk,
   mockNBulk,
   mockAktualisiereBerechnung,
-} = vi.hoisted(() => ({
+} = viCompat.hoisted(() => ({
   mockCreateSnackBar: vi.fn(),
   mockUpdateMyProfile: vi.fn(),
   mockBzBulk: vi.fn(),
@@ -207,7 +212,6 @@ describe('autoSave', () => {
       vi.advanceTimersByTime(getAutoSaveDelay() + 1000);
       expect(getResourceStatus('BZ').status).toBe('pending');
     });
-
   });
 
   // ─── cancelAllPending ────────────────────────────────
@@ -276,7 +280,7 @@ describe('autoSave', () => {
       expect(getResourceStatus('settings').status).toBe('pending');
 
       // Timer ablaufen lassen
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockUpdateMyProfile).toHaveBeenCalledWith(mockProfile);
       expect(getResourceStatus('settings').status).toBe('saved');
@@ -287,7 +291,7 @@ describe('autoSave', () => {
       mockUpdateMyProfile.mockRejectedValue(new Error('Profile save failed'));
 
       scheduleAutoSave('settings');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(getResourceStatus('settings').status).toBe('error');
       expect(mockCreateSnackBar).toHaveBeenCalledWith(
@@ -306,7 +310,7 @@ describe('autoSave', () => {
       expect(getResourceStatus('settings').status).toBe('pending');
 
       // Sollte nicht versuchen zu speichern
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
       expect(mockUpdateMyProfile).not.toHaveBeenCalled();
     });
   });
@@ -325,7 +329,7 @@ describe('autoSave', () => {
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'new-id-1' }], updated: [], deleted: [], errors: [] });
 
       scheduleAutoSave('BZ');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockBzBulk).toHaveBeenCalledWith(
         expect.objectContaining({ create: [{ beginB: '2025-03-10T10:00:00.000Z' }], delete: [], update: [] }),
@@ -347,7 +351,7 @@ describe('autoSave', () => {
       mockBeBulk.mockResolvedValue({ created: [], updated: [{ _id: 'be1' }], deleted: [], errors: [] });
 
       scheduleAutoSave('BE');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockBeBulk).toHaveBeenCalled();
       expect(getResourceStatus('BE').status).toBe('saved');
@@ -364,7 +368,7 @@ describe('autoSave', () => {
       mockEwtBulk.mockResolvedValue({ created: [{ _id: 'ewt1' }], updated: [], deleted: [], errors: [] });
 
       scheduleAutoSave('EWT');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockEwtBulk).toHaveBeenCalled();
       expect(getResourceStatus('EWT').status).toBe('saved');
@@ -381,7 +385,7 @@ describe('autoSave', () => {
       mockNBulk.mockResolvedValue({ created: [{ _id: 'n1' }], updated: [], deleted: [], errors: [] });
 
       scheduleAutoSave('N');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockNBulk).toHaveBeenCalled();
       expect(getResourceStatus('N').status).toBe('saved');
@@ -394,7 +398,7 @@ describe('autoSave', () => {
       createMockTable('tableBZ', { create: [], update: [], delete: [] });
 
       scheduleAutoSave('BZ');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockBzBulk).not.toHaveBeenCalled();
       expect(getResourceStatus('BZ').status).toBe('idle');
@@ -403,7 +407,7 @@ describe('autoSave', () => {
     it('gibt zurück wenn keine Tabelle gefunden wird', async () => {
       // Kein table im DOM
       scheduleAutoSave('BZ');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockBzBulk).not.toHaveBeenCalled();
     });
@@ -418,7 +422,7 @@ describe('autoSave', () => {
       mockBzBulk.mockRejectedValue(new Error('Server error'));
 
       scheduleAutoSave('BZ');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(getResourceStatus('BZ').status).toBe('error');
       expect(getResourceStatus('BZ').lastError).toBe('Server error');
@@ -444,7 +448,7 @@ describe('autoSave', () => {
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'id1' }], updated: [], deleted: [], errors: [] });
 
       scheduleAutoSave('BZ');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       const stored = Storage.get<unknown[]>('dataBZ');
       expect(stored).toHaveLength(2); // Beide aktiven Zeilen
@@ -485,7 +489,7 @@ describe('autoSave', () => {
       });
 
       scheduleAutoSave('EWT');
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       const stored = Storage.get<Array<{ _id: string; buchungstagE: string }>>('dataE', { check: true });
       expect(stored).toHaveLength(1);
@@ -506,7 +510,7 @@ describe('autoSave', () => {
       Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
 
       // Wenn saveResourceNow aufgerufen wird und offline → pending
-      await vi.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       // Sollte nicht aufgerufen worden sein weil offline → pending
       expect(getResourceStatus('BZ').status).toBe('pending');

@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
 
 // --- Hoisted mocks ---
 const {
@@ -13,7 +17,7 @@ const {
   mockHasPendingTableChanges,
   mockUpdateMyProfile,
   mockSaveEinstellungen,
-} = vi.hoisted(() => ({
+} = viCompat.hoisted(() => ({
   mockSetLoading: vi.fn(),
   mockClearLoading: vi.fn(),
   mockButtonDisable: vi.fn(),
@@ -142,7 +146,7 @@ describe('saveDaten', () => {
 
   it('speichert UserData in Storage', async () => {
     await saveDaten(button);
-    expect(Storage.get('VorgabenU')).toEqual(mockUserData);
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual(mockUserData);
   });
 
   it('übernimmt serverseitig normalisierte Profilwerte', async () => {
@@ -153,7 +157,7 @@ describe('saveDaten', () => {
 
     await saveDaten(button);
 
-    expect(Storage.get('VorgabenU')).toEqual(normalizedProfile);
+    expect(Storage.get<typeof normalizedProfile>('VorgabenU')).toEqual(normalizedProfile);
   });
 
   it('zeigt Erfolgs-Snackbar bei Erfolg', async () => {

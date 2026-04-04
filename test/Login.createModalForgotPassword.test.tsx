@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { h } from 'preact';
 
 const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInstanceMock } = vi.hoisted(() => ({
@@ -9,16 +9,12 @@ const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInst
   getInstanceMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/components', async () => {
-  const actual = await vi.importActual('../src/ts/components');
-  return {
-    ...(actual as Record<string, unknown>),
-    showModal: showModalMock,
-    MyFormModal: (props: unknown) => h('div', props),
-    MyModalBody: (props: unknown) => h('div', props),
-    MyInput: (props: unknown) => h('input', props),
-  };
-});
+vi.mock('../src/ts/components', () => ({
+  showModal: showModalMock,
+  MyFormModal: (props: unknown) => h('div', props),
+  MyModalBody: (props: unknown) => h('div', props),
+  MyInput: (props: unknown) => h('input', props),
+}));
 
 vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,

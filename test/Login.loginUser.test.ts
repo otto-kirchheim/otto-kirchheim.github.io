@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock, getInstanceMock } =
   vi.hoisted(() => ({

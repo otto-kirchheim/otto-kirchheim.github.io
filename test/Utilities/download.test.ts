@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/interfaces';
 import Storage from '../../src/ts/utilities/Storage'; // Import Storage directly

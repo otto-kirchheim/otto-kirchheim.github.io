@@ -1,5 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type * as UtilitiesModule from '../src/ts/utilities';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
 
 const {
   overwriteUserDatenMock,
@@ -17,7 +20,7 @@ const {
   clearLoadingMock,
   updateTabVisibilityMock,
   loadAllYearDataMock,
-} = vi.hoisted(() => ({
+} = viCompat.hoisted(() => ({
   overwriteUserDatenMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
   generateTableBerechnungMock: vi.fn(),
@@ -55,23 +58,28 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities', async importOriginal => {
-  const actual = await importOriginal<typeof UtilitiesModule>();
-  return {
-    ...actual,
-    Storage: {
-      check: storageCheckMock,
-      get: storageGetMock,
-      set: storageSetMock,
-      remove: storageRemoveMock,
-      getTimestamp: storageGetTimestampMock,
-      setWithTimestamp: storageSetWithTimestampMock,
-    },
-    buttonDisable: buttonDisableMock,
-    clearLoading: clearLoadingMock,
-    updateTabVisibility: updateTabVisibilityMock,
-  };
-});
+vi.mock('../src/ts/utilities/Storage', () => ({
+  default: {
+    check: storageCheckMock,
+    get: storageGetMock,
+    set: storageSetMock,
+    remove: storageRemoveMock,
+    getTimestamp: storageGetTimestampMock,
+    setWithTimestamp: storageSetWithTimestampMock,
+  },
+}));
+
+vi.mock('../src/ts/utilities/buttonDisable', () => ({
+  default: buttonDisableMock,
+}));
+
+vi.mock('../src/ts/utilities/clearLoading', () => ({
+  default: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/utilities/updateTabVisibility', () => ({
+  default: updateTabVisibilityMock,
+}));
 
 vi.mock('../src/ts/utilities/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
@@ -99,7 +107,7 @@ describe('loadUserDaten', () => {
   });
 
   it('zeigt Fehler-Snackbar wenn loadAllYearData fehlschlaegt', async () => {
-    loadAllYearDataMock.mockRejectedValue(new Error('offline'));
+    loadAllYearDataMock.mockImplementation(async () => { throw new Error('offline'); });
 
     await loadUserDaten(3, 2026);
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // Hoisted mock for autoSave
 const { mockOnAutoSaveStatus } = vi.hoisted(() => {

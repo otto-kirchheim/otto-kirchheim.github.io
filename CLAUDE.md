@@ -27,7 +27,7 @@
 - **Styling:** Bootstrap 5.3 + SCSS + Material Icons
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
-- **Testing:** Vitest + jsdom + vitest-fetch-mock
+- **Testing:** Bun test + happy-dom
 - **Linting:** ESLint + Prettier + Husky (Pre-Commit Hooks)
 - **PDF-Export:** file-saver (Download von Server-generierten PDFs)
 
@@ -37,8 +37,8 @@
 bun install
 bun run start          # Entwicklung mit Vite Dev-Server (--host)
 bun run build          # Produktion Build (nach ./dist)
-bun run test           # tsc + vitest run
-bun run dev-test       # Vitest UI (Port 9527)
+bun run test           # Bun-Testlauf (sequentiell pro Datei)
+bun run dev-test       # Bun Watch-Mode
 bun run lint           # Linting prüfen
 bun run lint:fix       # Linting auto-fix
 bun run coverage       # Tests mit Coverage
@@ -67,7 +67,7 @@ src/
 │   ├── Einstellungen/     # Feature-Modul: Benutzer-Einstellungen
 │   └── Login/             # Feature-Modul: Auth (Login, Registrierung)
 test/
-├── setupVitest.ts         # Setup: vitest-fetch-mock
+├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
 ├── mockData.ts            # Gemeinsame Test-Daten
 ├── *.test.ts              # Feature-Tests
 └── Utilities/             # Utility-Tests
@@ -107,7 +107,7 @@ Feature/
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
-9. **Vitest** für alle Tests, jsdom als Environment
+9. **Bun test** für alle Tests, happy-dom als DOM-Environment
 10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht Preact)
 
 ---
