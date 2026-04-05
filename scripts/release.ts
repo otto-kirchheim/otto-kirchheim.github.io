@@ -16,7 +16,9 @@ if (remoteFlagIndex >= 0 && !remote) {
 }
 
 if (!validBumpTypes.has(bumpType)) {
-  console.error('Usage: bun ./scripts/release.ts <patch|minor|major> [--dry-run] [--commit] [--push] [--remote <name>]');
+  console.error(
+    'Usage: bun ./scripts/release.ts <patch|minor|major> [--dry-run] [--commit] [--push] [--remote <name>]',
+  );
   process.exit(1);
 }
 
