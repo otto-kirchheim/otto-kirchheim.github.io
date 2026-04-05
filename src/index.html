@@ -565,7 +565,13 @@
                   Passwort Ändern
                 </button>
               </div>
+              <div class="d-grid">
+                <button class="btn btn-outline-primary" type="button" name="PasskeyHinzufuegen" id="btnAddPasskey">
+                  Passkey hinzufügen
+                </button>
+              </div>
             </div>
+            <small id="PasskeyStatus" class="form-text text-body-secondary d-block mt-2">Noch kein Passkey registriert.</small>
           </div>
 
           <div class="container">
@@ -650,7 +656,7 @@
                           readonly
                           disabled
                         />
-                        <label for="EmailAnzeige">E-Mail (Login)</label>
+                        <label for="EmailAnzeige">E-Mail</label>
                       </div>
                       <button class="btn btn-outline-primary" type="button" id="btnResendVerificationEmail" disabled>
                         Verifizierungs-Mail senden
@@ -719,6 +725,31 @@
                           required
                         />
                         <label for="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
+                      </div>
+                    </div>
+                    <div class="input-group">
+                      <span class="input-group-text material-icons-round einstellungen-icons">flag</span>
+                      <div class="form-floating">
+                        <select id="Bundesland" class="form-select">
+                          <option value="">Bundesland wählen…</option>
+                          <option value="BW">Baden-Württemberg</option>
+                          <option value="BY">Bayern</option>
+                          <option value="BE">Berlin</option>
+                          <option value="BB">Brandenburg</option>
+                          <option value="HB">Bremen</option>
+                          <option value="HH">Hamburg</option>
+                          <option value="HE">Hessen</option>
+                          <option value="MV">Mecklenburg-Vorpommern</option>
+                          <option value="NI">Niedersachsen</option>
+                          <option value="NW">Nordrhein-Westfalen</option>
+                          <option value="RP">Rheinland-Pfalz</option>
+                          <option value="SL">Saarland</option>
+                          <option value="SN">Sachsen</option>
+                          <option value="ST">Sachsen-Anhalt</option>
+                          <option value="SH">Schleswig-Holstein</option>
+                          <option value="TH">Thüringen</option>
+                        </select>
+                        <label for="Bundesland">Bundesland (Feiertage)</label>
                       </div>
                     </div>
                     <div class="input-group">
@@ -809,6 +840,35 @@
                         <label for="TB">Tarif / Beamter</label>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item d-none" id="PasskeysAccordionItem">
+                <h2 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#collapsePasskeys"
+                  >
+                    Passkeys & Geräte
+                    <span class="badge rounded-pill text-bg-primary ms-2" id="PasskeyAccordionCount">0</span>
+                  </button>
+                </h2>
+                <div id="collapsePasskeys" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
+                  <div class="accordion-body text-start">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                      <div>
+                        <h6 class="mb-1">Registrierte Passkeys</h6>
+                        <p class="text-body-secondary small mb-0">
+                          Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
+                        </p>
+                      </div>
+                      <button class="btn btn-outline-primary" type="button" id="btnAddPasskeyInline">
+                        Weiteren Passkey hinzufügen
+                      </button>
+                    </div>
+                    <div class="list-group" id="PasskeyList"></div>
                   </div>
                 </div>
               </div>

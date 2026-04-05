@@ -1,3 +1,5 @@
+import { HOLIDAY_REGION_OPTIONS } from '../../utilities/holidayRegion';
+
 export type FahrzeitRow = { key: string; text: string; value: string };
 
 export type VorgabenBRow = {
@@ -25,7 +27,16 @@ export type TemplateContentDraft = {
   };
 };
 
-export const PERS_FIELDS: Array<{ key: string; label: string; type?: 'text' | 'number' }> = [
+type TemplateFieldOption = { value: string; label: string };
+
+type TemplateField = {
+  key: string;
+  label: string;
+  type?: 'text' | 'number' | 'select';
+  options?: TemplateFieldOption[];
+};
+
+export const PERS_FIELDS: TemplateField[] = [
   { key: 'Vorname', label: 'Vorname' },
   { key: 'Nachname', label: 'Nachname' },
   { key: 'PNummer', label: 'Personalnummer' },
@@ -34,6 +45,12 @@ export const PERS_FIELDS: Array<{ key: string; label: string; type?: 'text' | 'n
   { key: 'Adress2', label: 'Wohnsitz 2' },
   { key: 'ErsteTkgSt', label: 'Erste Tätigkeitsstätte' },
   { key: 'ErsteTkgStAdresse', label: 'Adresse Erste Tätigkeitsstätte' },
+  {
+    key: 'Bundesland',
+    label: 'Bundesland',
+    type: 'select',
+    options: [{ value: '', label: 'Bitte wählen…' }, ...HOLIDAY_REGION_OPTIONS],
+  },
   { key: 'Betrieb', label: 'Betrieb' },
   { key: 'OE', label: 'OE' },
   { key: 'Gewerk', label: 'Gewerk' },

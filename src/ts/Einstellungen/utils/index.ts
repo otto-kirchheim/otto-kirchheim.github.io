@@ -7,6 +7,7 @@ import generateEingabeTabelleEinstellungenVorgabenB from './generateEingabeTabel
 import saveEinstellungen from './saveEinstellungen';
 import saveTableDataVorgabenU from './saveTableDataVorgabenU';
 import setMonatJahr from './setMonatJahr';
+import registerPasskey from './registerPasskey';
 
 export {
   logoutUser,
@@ -18,4 +19,5 @@ export {
   saveEinstellungen,
   saveTableDataVorgabenU,
   setMonatJahr,
+  registerPasskey,
 };

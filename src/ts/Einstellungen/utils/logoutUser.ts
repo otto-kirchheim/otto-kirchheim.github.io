@@ -9,13 +9,16 @@ function toggleClassForElement(selector: string, addClass: boolean = true, class
   else element?.classList.remove(className);
 }
 
-export default function logoutUser(): void {
+export default function logoutUser({ serverLogout = true }: { serverLogout?: boolean } = {}): void {
   cancelAllPending();
   destroyAutoSaveIndicator();
   abortController.reset('Logout');
 
-  // Server-seitigen Logout auslösen (Cookies löschen)
-  authApi.logout().catch(() => {});
+  // Server-seitigen Logout nur dann auslösen, wenn der Logout bewusst vom User kommt
+  // und überhaupt noch ein Access-Token vorhanden ist.
+  if (serverLogout && Storage.check('AccessToken')) {
+    authApi.logout().catch(() => {});
+  }
 
   import('../../Admin').then(({ unmountAdminTab }) => unmountAdminTab());
 

@@ -12,7 +12,15 @@ type TModalBodyInputElementOption = {
   required?: boolean;
   disabled?: boolean;
   pattern?: string;
-  autoComplete?: 'on' | 'off' | 'username' | 'current-password' | 'new-password' | 'email' | 'tel';
+  autoComplete?:
+    | 'on'
+    | 'off'
+    | 'username'
+    | 'username webauthn'
+    | 'current-password'
+    | 'new-password'
+    | 'email'
+    | 'tel';
   popover?: {
     content: string;
     title?: string;

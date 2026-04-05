@@ -84,6 +84,7 @@ export interface BackendUserProfile {
     Adress2?: string;
     ErsteTkgSt: string;
     ErsteTkgStAdresse: string;
+    Bundesland?: string;
     Betrieb: string;
     OE: string;
     Gewerk: string;
@@ -211,6 +212,7 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       Adress2: doc.Pers.Adress2 ?? '',
       ErsteTkgSt: doc.Pers.ErsteTkgSt ?? '',
       ErsteTkgStAdresse: doc.Pers.ErsteTkgStAdresse ?? '',
+      Bundesland: doc.Pers.Bundesland ?? '',
       Betrieb: doc.Pers.Betrieb ?? '',
       OE: doc.Pers.OE ?? '',
       Gewerk: doc.Pers.Gewerk ?? '',

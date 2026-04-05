@@ -4,6 +4,16 @@ import { FetchRetry, getServerUrl } from './FetchRetry';
 import Storage from './Storage';
 import { abortController } from './abortController';
 import {
+  GERMAN_ADDRESS_FORMAT_HINT,
+  PERS_FIELD_LABELS,
+  isValidGermanAddress,
+  normalizeGermanAddress,
+  setupGermanAddressValidation,
+  setupPersValidation,
+  validateGermanAddressInput,
+  validatePersInput,
+} from './addressValidation';
+import {
   cancelAllPending,
   createOnChangeHandler,
   flushAll,
@@ -44,6 +54,8 @@ import updateTabVisibility, { hideAllFeatureTabs } from './updateTabVisibility';
 export {
   DatenSortieren,
   FetchRetry,
+  GERMAN_ADDRESS_FORMAT_HINT,
+  PERS_FIELD_LABELS,
   Storage,
   abortController,
   buttonDisable,
@@ -67,8 +79,10 @@ export {
   initializeColorModeToggler,
   isAdmin,
   isEwtInMonat,
+  isValidGermanAddress,
   isAutoSaveEnabled,
   markResourceSaved,
+  normalizeGermanAddress,
   normalizeResourceRows,
   onAutoSaveStatus,
   saveDaten,
@@ -76,11 +90,15 @@ export {
   setAutoSaveDelay,
   setAutoSaveEnabled,
   setDisableButton,
+  setupGermanAddressValidation,
+  setupPersValidation,
   setLoading,
   setOffline,
   storageAvailable,
   tableToArray,
   tokenErneuern,
   updateTabVisibility,
+  validateGermanAddressInput,
+  validatePersInput,
   hideAllFeatureTabs,
 };

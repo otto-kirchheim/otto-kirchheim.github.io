@@ -5,6 +5,12 @@
  * Nutzt fieldMapper für die Konvertierung zwischen Frontend- und Backend-Formaten.
  */
 
+import type {
+  AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+  RegistrationResponseJSON,
+} from '@simplewebauthn/browser';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../interfaces';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
@@ -38,6 +44,12 @@ interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
+}
+
+interface PasskeyLoginStartResponse {
+  options: PublicKeyCredentialRequestOptionsJSON;
+  challengeToken: string;
+  userName?: string;
 }
 
 /** Bulk-Operation Request */
@@ -93,6 +105,28 @@ export const authApi = {
     >('auth/login', { userName, password }, 'POST');
     Storage.set('AccessToken', result.accessToken);
     Storage.set('RefreshToken', result.refreshToken);
+  },
+
+  async beginPasskeyLogin(userName?: string): Promise<PasskeyLoginStartResponse> {
+    return apiFetch<{ userName?: string }, PasskeyLoginStartResponse>(
+      'auth/passkeys/login/options',
+      userName ? { userName } : undefined,
+      'POST',
+    );
+  },
+
+  async finishPasskeyLogin(
+    credential: AuthenticationResponseJSON,
+    challengeToken: string,
+    userName?: string,
+  ): Promise<{ user: unknown; accessToken: string; refreshToken: string }> {
+    const result = await apiFetch<
+      { userName?: string; challengeToken: string; credential: AuthenticationResponseJSON },
+      { user: unknown; accessToken: string; refreshToken: string }
+    >('auth/passkeys/login/verify', { userName, challengeToken, credential }, 'POST');
+    Storage.set('AccessToken', result.accessToken);
+    Storage.set('RefreshToken', result.refreshToken);
+    return result;
   },
 
   /**
@@ -183,21 +217,62 @@ export const authApi = {
     return apiFetch('auth/me');
   },
 
+  async getPasskeys(): Promise<
+    Array<{
+      credentialId: string;
+      name: string;
+      deviceType: string;
+      backedUp: boolean;
+      createdAt: string;
+      lastUsedAt?: string;
+    }>
+  > {
+    return apiFetch('auth/passkeys');
+  },
+
+  async beginPasskeyRegistration(): Promise<PublicKeyCredentialCreationOptionsJSON> {
+    return apiFetch<undefined, PublicKeyCredentialCreationOptionsJSON>(
+      'auth/passkeys/register/options',
+      undefined,
+      'POST',
+    );
+  },
+
+  async finishPasskeyRegistration(
+    credential: RegistrationResponseJSON,
+    deviceName?: string,
+  ): Promise<{ credentialId: string; name: string }> {
+    return apiFetch<
+      { credential: RegistrationResponseJSON; deviceName?: string },
+      { credentialId: string; name: string }
+    >('auth/passkeys/register/verify', { credential, deviceName }, 'POST');
+  },
+
+  async deletePasskey(credentialId: string): Promise<void> {
+    await apiFetch<undefined, unknown>(`auth/passkeys/${encodeURIComponent(credentialId)}`, undefined, 'DELETE');
+  },
+
   /**
    * logoutUser: POST /auth/logout
    * Verwendet raw fetch (nicht FetchRetry), um Re-Entry in tokenErneuern zu verhindern.
    */
   async logout(): Promise<void> {
     try {
-      const serverUrl = await getServerUrl();
       const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
-      const headers: HeadersInit = {};
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-      await fetch(`${serverUrl}/auth/logout`, {
+      if (!accessToken) return;
+
+      const serverUrl = await getServerUrl();
+      const response = await fetch(`${serverUrl}/auth/logout`, {
         method: 'POST',
         mode: 'cors',
-        headers,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
+
+      if (!response.ok && response.status !== 401) {
+        throw new Error(`Logout fehlgeschlagen (${response.status})`);
+      }
     } catch {
       // logoutUser-Fehler ignorieren – lokale Daten werden sowieso gelöscht
     }

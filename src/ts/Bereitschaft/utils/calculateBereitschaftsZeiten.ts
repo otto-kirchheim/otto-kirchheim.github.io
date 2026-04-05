@@ -1,9 +1,9 @@
 import type { Dayjs } from 'dayjs';
 import type { Duration } from 'dayjs/plugin/duration.js';
-import { isHoliday } from 'feiertagejs';
 import type { IDatenBZ, IMonatsDaten, IVorgabenU } from '../../interfaces';
 import { DatenSortieren, Storage, getDurationFromTime } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
+import { resolveHolidayRegion } from '../../utilities/holidayRegion';
 
 type Schicht = {
   beginn: Dayjs;
@@ -35,6 +35,8 @@ export default function calculateBereitschaftsZeiten(
   const datenU: IVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
   if (!datenU) throw new Error('VorgabenU nicht gefunden');
 
+  const holidayRegion = resolveHolidayRegion({ bundesland: datenU.pers.Bundesland });
+
   const datenVorher: number = daten.length;
 
   // Feste Variablen
@@ -46,11 +48,11 @@ export default function calculateBereitschaftsZeiten(
   const B_ZEITRAUM_WECHSEL: Duration = dayjs.duration(B_WECHSEL_STUNDE, 'hours');
 
   const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
-    const adjustedDatum = datum.add(zusatz, 'd');
+    const adjustedDatum = datum.add(zusatz, 'day');
     const isWeekend = adjustedDatum.isoWeekday() > 5;
-    const isHolidayHE = isHoliday(adjustedDatum.toDate(), 'HE');
+    const isHoliday = adjustedDatum.isHoliday(holidayRegion);
 
-    return !(isHolidayHE || isWeekend);
+    return !isWeekend && !isHoliday;
   };
 
   const getNachtSchichten = (anfang: Dayjs, ende: Dayjs, pausenVorgabe: number): Schicht[] => {

@@ -55,7 +55,7 @@ window.addEventListener('load', () => {
     if (compareVersion(clientVersion, currentVersion) < 0) {
       const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
       sessionStorage.clear();
-      logoutUser();
+      logoutUser({ serverLogout: false });
       createSnackBar({
         message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
         timeout: 10000,

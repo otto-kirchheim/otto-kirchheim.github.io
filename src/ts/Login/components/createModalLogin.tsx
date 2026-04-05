@@ -1,9 +1,12 @@
 import { createRef } from 'preact';
-import { loginUser } from '../utils';
+import { loginUser, loginWithPasskey } from '../utils';
 import { MyButton, MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
 import { createModalForgotPassword, createModalNewUser } from '.';
+import type { CustomHTMLDivElement } from '../../interfaces';
 
 export default function createModalLogin(): void {
+  let currentModal: CustomHTMLDivElement | null = null;
+
   const customFooterButtton = [
     <MyButton
       key="Passwort vergessen"
@@ -20,6 +23,15 @@ export default function createModalLogin(): void {
       dataBsDismiss="modal"
       text="Registrieren"
       clickHandler={() => createModalNewUser()}
+    />,
+    <MyButton
+      key="Mit Passkey"
+      className="btn btn-outline-primary"
+      type="button"
+      text="Mit Passkey"
+      clickHandler={() => {
+        if (currentModal) void loginWithPasskey(currentModal);
+      }}
     />,
   ];
 
@@ -40,7 +52,7 @@ export default function createModalLogin(): void {
           id="Benutzer"
           name="benutzer"
           pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
-          autoComplete="username"
+          autoComplete="username webauthn"
         >
           Benutzer
         </MyInput>
@@ -53,9 +65,14 @@ export default function createModalLogin(): void {
         >
           Passwort
         </MyInput>
+        <p className="small text-body-secondary mb-0">
+          Für „Mit Passkey“ kann der Benutzername leer bleiben – der Browser zeigt dann gespeicherte Passkeys an.
+        </p>
       </MyModalBody>
     </MyFormModal>,
   );
+
+  currentModal = modal;
 
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
