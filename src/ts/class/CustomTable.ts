@@ -668,6 +668,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
     function createButton(classes = ['btn', 'btn-primary'], text = 'Button', eventlistener = () => {}) {
       const button = document.createElement('button');
+      button.type = 'button';
       button.classList.add(...classes);
       button.innerText = text;
       button.title = text;
@@ -705,6 +706,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
         title = 'button',
       ): HTMLButtonElement => {
         const button = document.createElement('button');
+        button.type = 'button';
         button.classList.add(...classList);
         button.innerHTML = text;
         button.title = title;

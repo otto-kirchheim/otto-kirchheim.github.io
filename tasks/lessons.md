@@ -9,3 +9,4 @@
 - Wenn `persist*`-Utilities Daten normalisieren (z.B. `buchungstagE`), die normalisierten Werte nicht nur in `Storage`, sondern auch zurück in die Live-`CustomTable`-Zeilen schreiben; sonst bleibt die UI bis zum Reload stale.
 - Bei Bun-Tests mit Vitest-kompatiblen Helfern (`vi.hoisted`, `setSystemTime`, Mock-`fetch`) früh mit expliziten Type-Casts/Compat-Aliases arbeiten; sonst sind die Laufzeit-Helfer zwar vorhanden, aber `tsc` meldet unnötige Typfehler.
 - Download-/API-Tests sollen bei gewachsenen Config-Objekten (`VorgabenGeld`) nur fachlich relevante Teilmengen mit `expect.objectContaining(...)` prüfen statt die komplette Objektform hart zu verdrahten; sonst brechen sie bei legitimen Default-Feldern als Altlast weg.
+- Dynamisch erzeugte Frontend-Buttons in Formularen (z.B. `CustomTable`) immer explizit mit `type="button"` anlegen; sonst kann `Enter` im Accordion/Formular den ersten Tabellen-Action-Button statt des gewünschten UI-Elements auslösen.
