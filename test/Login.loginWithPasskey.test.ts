@@ -69,7 +69,7 @@ describe('loginWithPasskey', () => {
     getInstanceMock.mockReturnValue({ hide: hideMock });
   });
 
-  it('unterstützt username-losen Passkey-Login mit Browser-Autofill', async () => {
+  it('startet bei leerem Benutzernamen trotzdem die explizite Passkey-Abfrage', async () => {
     const modal = setupDom('');
     beginPasskeyLoginMock.mockResolvedValue({
       options: { challenge: 'challenge-1', rpId: 'localhost' },
@@ -84,7 +84,7 @@ describe('loginWithPasskey', () => {
     expect(beginPasskeyLoginMock).toHaveBeenCalledWith(undefined);
     expect(startAuthenticationMock).toHaveBeenCalledWith({
       optionsJSON: { challenge: 'challenge-1', rpId: 'localhost' },
-      useBrowserAutofill: true,
+      useBrowserAutofill: false,
     });
     expect(finishPasskeyLoginMock).toHaveBeenCalledWith({ id: 'passkey-cred-1' }, 'state-1', undefined);
     expect(resetTokenStateMock).toHaveBeenCalledTimes(1);

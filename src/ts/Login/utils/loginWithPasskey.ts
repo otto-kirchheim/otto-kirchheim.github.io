@@ -34,7 +34,10 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
     const { options, challengeToken, userName: resolvedUserName } = await authApi.beginPasskeyLogin(userName);
     const credential = await startAuthentication({
       optionsJSON: options,
-      useBrowserAutofill: !userName,
+      // Der Button-klick soll die native Passkey-Abfrage sofort öffnen.
+      // Conditional UI / Autofill über das Input-Feld bleibt separat möglich,
+      // darf aber den expliziten Login-Flow nicht still blockieren.
+      useBrowserAutofill: false,
     });
     await authApi.finishPasskeyLogin(credential, challengeToken, userName ?? resolvedUserName);
     resetTokenState();
