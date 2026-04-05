@@ -4,7 +4,7 @@ import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } fr
 import type { CustomHTMLDivElement, IDatenBE } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { BerEinsatzEingabe } from '../utils';
+import { submitBereitschaftsEinsatz } from '../utils';
 
 export default function createAddModalBereitschaftsEinsatz(): void {
   const formRef = createRef<HTMLFormElement>();
@@ -83,7 +83,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      const success = BerEinsatzEingabe(modal);
+      const success = submitBereitschaftsEinsatz(modal);
 
       if (success) Modal.getInstance(modal)?.hide();
     };

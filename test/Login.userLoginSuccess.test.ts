@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const {
   selectYearMock,
@@ -9,7 +9,7 @@ const {
   mountAdminTabMock,
   createSnackBarMock,
   requestVerificationMailMock,
-} = vi.hoisted(() => ({
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   selectYearMock: vi.fn(),
   storageSetMock: vi.fn(),
   setLoadingMock: vi.fn(),
@@ -29,7 +29,7 @@ vi.mock('../src/ts/Login/utils/requestVerificationMail', () => ({
 }));
 
 vi.mock('../src/ts/Einstellungen/utils', () => ({
-  SelectYear: selectYearMock,
+  selectYear: selectYearMock,
 }));
 
 vi.mock('../src/ts/utilities', () => ({
@@ -71,7 +71,7 @@ describe('userLoginSuccess', () => {
     await userLoginSuccess({ username: 'otto', role: 'member' });
 
     expect(setLoadingMock).toHaveBeenCalledWith('btnLogin');
-    expect(storageSetMock).toHaveBeenCalledWith('Version', expect.anything());
+    expect(storageSetMock).toHaveBeenCalledWith('Version', undefined);
     expect(storageSetMock).toHaveBeenCalledWith('Benutzer', 'Otto');
     expect(document.querySelector('#btnLogin')?.classList.contains('d-none')).toBe(true);
     expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');

@@ -1,5 +1,5 @@
 import { saveAs } from 'file-saver';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/interfaces';
 import Storage from '../../src/ts/utilities/Storage'; // Import Storage directly
@@ -24,7 +24,9 @@ vi.mock('../../src/ts/utilities/tableToArray', () => ({
 }));
 
 // Use vi.hoisted to ensure mock functions are available when mock factories run
-const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } = vi.hoisted(() => {
+const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => {
   return {
     mockSetLoading: vi.fn(),
     mockClearLoading: vi.fn(),
@@ -58,7 +60,7 @@ describe('download utility', () => {
     // Setup DOM elements
     document.body.innerHTML = `
             <input id="Monat" value="4" />
-            <input id="Jahr" value="2024" />
+            <input id="Jahr" value="2026" />
             <button id="btnDownloadB"></button>
         `;
     button = document.getElementById('btnDownloadB') as HTMLButtonElement;
@@ -102,7 +104,7 @@ describe('download utility', () => {
 
     await download(button, 'E');
 
-    const expectedDate = dayjs([2024, 4 - 1, 1]).format('MM_YY');
+    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY');
     const expectedFilename = `Verpfl_${expectedDate}_${mockVorgabenU.pers.Vorname} ${mockVorgabenU.pers.Nachname}_${mockVorgabenU.pers.Gewerk} ${mockVorgabenU.pers.ErsteTkgSt}.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
   });
@@ -115,7 +117,7 @@ describe('download utility', () => {
 
     await download(button, 'N');
 
-    const expectedDate = dayjs([2024, 4 - 1, 1]).format('MM_YY');
+    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY');
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expect.stringContaining(`EZ_${expectedDate}`));
   });
 
@@ -141,12 +143,12 @@ describe('download utility', () => {
   it("should perform download for mode 'B' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>)
       .mockReturnValueOnce([
-        { beginB: '08:00', endeB: '16:00', pauseB: 30 },
-        { beginB: '17:00', endeB: '22:00' },
+        { beginB: '2026-04-19T08:00:00.000Z', endeB: '2026-04-19T16:00:00.000Z', pauseB: 30 },
+        { beginB: '2026-04-19T17:00:00.000Z', endeB: '2026-04-19T22:00:00.000Z', pauseB: 0 },
       ])
       .mockReturnValueOnce([
         {
-          tagBE: '19',
+          tagBE: '19.04.2026',
           auftragsnummerBE: 'A-1',
           beginBE: '10:00',
           endeBE: '12:00',
@@ -172,12 +174,12 @@ describe('download utility', () => {
         VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
         Daten: {
           BZ: [
-            { Beginn: '08:00', Ende: '16:00', Pause: 30 },
-            { Beginn: '17:00', Ende: '22:00', Pause: 0 },
+            { Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 },
+            { Beginn: '2026-04-19T17:00:00.000Z', Ende: '2026-04-19T22:00:00.000Z', Pause: 0 },
           ],
           BE: [
             {
-              Tag: '19',
+              Tag: '19.04.2026',
               Auftragsnummer: 'A-1',
               Beginn: '10:00',
               Ende: '12:00',
@@ -187,7 +189,7 @@ describe('download utility', () => {
           ],
         },
         Monat: 4,
-        Jahr: 2024,
+        Jahr: 2026,
       }),
     );
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'test_download.pdf');
@@ -199,7 +201,8 @@ describe('download utility', () => {
   it("should perform download for mode 'E' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
-        tagE: '2024-04-19',
+        tagE: '2026-04-19',
+        buchungstagE: '2026-04-20',
         eOrtE: 'Fulda',
         schichtE: 'Nacht',
         abWE: '07:00',
@@ -222,7 +225,7 @@ describe('download utility', () => {
         Daten: {
           EWT: [
             {
-              Tag: '19',
+              Buchungstag: '20',
               Einsatzort: 'Fulda',
               Schicht: 'Nacht',
               abWE: '07:00',
@@ -237,6 +240,16 @@ describe('download utility', () => {
             },
           ],
         },
+        Jahr: 2026,
+        Monat: 4,
+        VorgabenGeld: expect.objectContaining({
+          ...mockVorgabenGeld[1],
+          ...mockVorgabenGeld[4],
+        }),
+        VorgabenU: {
+          Pers: backendVorgabenU.Pers,
+          Fahrzeit: backendVorgabenU.Fahrzeit,
+        },
       }),
     );
     expect(saveAs).toHaveBeenCalled();
@@ -245,7 +258,7 @@ describe('download utility', () => {
   it("should perform download for mode 'N' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
-        tagN: '19.04.2024',
+        tagN: '19.04.2026',
         beginN: '21:00',
         endeN: '23:00',
         anzahl040N: 2,
@@ -269,6 +282,16 @@ describe('download utility', () => {
             },
           ],
         },
+        Jahr: 2026,
+        Monat: 4,
+        VorgabenGeld: expect.objectContaining({
+          ...mockVorgabenGeld[1],
+          ...mockVorgabenGeld[4],
+        }),
+        VorgabenU: {
+          Pers: backendVorgabenU.Pers,
+          Fahrzeit: backendVorgabenU.Fahrzeit,
+        },
       }),
     );
     expect(saveAs).toHaveBeenCalled();
@@ -282,7 +305,7 @@ describe('download utility', () => {
 
     await download(button, 'B');
 
-    const expectedDate = dayjs([2024, 4 - 1, 1]).format('MM_YY'); // April 2024
+    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY'); // April 2026
     const expectedFilename = `RB_${expectedDate}_${mockVorgabenU.pers.Vorname} ${mockVorgabenU.pers.Nachname}_${mockVorgabenU.pers.Gewerk} ${mockVorgabenU.pers.ErsteTkgSt}.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
     expect(createSnackBar).not.toHaveBeenCalled();

@@ -1,12 +1,27 @@
 import { Storage, buttonDisable, clearLoading, setLoading } from '.';
 import { saveEinstellungen } from '../Einstellungen/utils';
 import { createSnackBar } from '../class/CustomSnackbar';
-import type { IVorgabenU } from '../interfaces';
-import { flushAll, getResourceStatus, markResourceSaved } from './autoSave';
+import type { IVorgabenU, TResourceKey } from '../interfaces';
+import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from './autoSave';
 import { profileApi } from './apiService';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
+}
+
+function getButtonResources(buttonId: string): TResourceKey[] {
+  switch (buttonId) {
+    case 'btnSaveB':
+      return ['BZ', 'BE'];
+    case 'btnSaveE':
+      return ['EWT'];
+    case 'btnSaveN':
+      return ['N'];
+    case 'btnSaveEinstellungen':
+      return ['settings'];
+    default:
+      return ['BZ', 'BE', 'EWT', 'N', 'settings'];
+  }
 }
 
 /**
@@ -14,7 +29,7 @@ function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU)
  * Ersetzt den alten einzelnen POST /saveData Call.
  */
 
-export default async function saveDaten(button: HTMLButtonElement | null, _Monat?: number): Promise<void> {
+export default async function saveDaten(button: HTMLButtonElement | null): Promise<void> {
   if (button === null) return;
 
   if (!navigator.onLine) {
@@ -32,6 +47,7 @@ export default async function saveDaten(button: HTMLButtonElement | null, _Monat
 
   try {
     const previousUserData = Storage.get<IVorgabenU>('VorgabenU', { check: true });
+    const buttonResources = getButtonResources(button.id);
 
     // 1. Einstellungen aus dem Formular sammeln und speichern
     const userData = saveEinstellungen();
@@ -39,16 +55,34 @@ export default async function saveDaten(button: HTMLButtonElement | null, _Monat
     const settingsChanged = hasLocalSettingsChanges(previousUserData, userData);
     const settingsStatus = getResourceStatus('settings').status;
     const settingsNeedsSync = settingsChanged || settingsStatus === 'pending' || settingsStatus === 'error';
+    const shouldMarkSavedAfterFlush: Record<TResourceKey, boolean> = {
+      BZ: buttonResources.includes('BZ') && hasPendingTableChanges('BZ', true),
+      BE: buttonResources.includes('BE') && hasPendingTableChanges('BE', true),
+      EWT: buttonResources.includes('EWT') && hasPendingTableChanges('EWT', true),
+      N: buttonResources.includes('N') && hasPendingTableChanges('N', true),
+      settings: settingsNeedsSync,
+    };
 
     // 2. Alle ausstehenden Tabellen-Änderungen sofort senden
     await flushAll();
 
+    // Bei Race-Condition: Falls ein Ressourcen-Status nach dem Flush schon wieder auf idle
+    // gesetzt wurde, obwohl vorher Änderungen vorhanden waren, saved nachholen.
+    for (const resource of buttonResources) {
+      if (!shouldMarkSavedAfterFlush[resource]) continue;
+      if (resource !== 'settings' && getResourceStatus(resource).status === 'idle') {
+        markResourceSaved(resource);
+      }
+    }
+
     // 3. Profil nur bei Änderungen speichern
     const profileResult = settingsNeedsSync ? await profileApi.updateMyProfile(userData) : null;
 
-    // 4. Wrapper-Timestamp mit Server-Zeit aktualisieren
+    // 4. Server-normalisierte Profilwerte zurück in den lokalen Zustand übernehmen.
     if (profileResult?.updatedAt) {
-      Storage.setWithTimestamp('VorgabenU', userData, Date.parse(profileResult.updatedAt));
+      Storage.setWithTimestamp('VorgabenU', profileResult.data, Date.parse(profileResult.updatedAt));
+    } else if (profileResult?.data) {
+      Storage.set('VorgabenU', profileResult.data);
     }
 
     // 5. Settings-Resource als gespeichert markieren, sobald sie explizit synchronisiert wurde.

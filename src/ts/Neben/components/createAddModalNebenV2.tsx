@@ -1,10 +1,10 @@
 import { createRef } from 'preact';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
+import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../interfaces';
-import { tableToArray } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { addNebenTag } from '../utils';
+import { addNebengeldTag, getNebengeldDaten } from '../utils';
 
 type ReturnTypeTagOptions = {
   value: string | number;
@@ -14,7 +14,7 @@ type ReturnTypeTagOptions = {
 };
 
 const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
-  const dataN: IDatenN[] = tableToArray<IDatenN>('tableN');
+  const dataN = getNebengeldDaten(undefined, undefined, { scope: 'monat' });
 
   const options = dataE
     .map(day => {
@@ -62,16 +62,16 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 export default function createAddModalNeben(): void {
   const ref = createRef<HTMLFormElement>();
 
-  const dataE = tableToArray<IDatenEWT>('tableE');
+  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat' });
   if (dataE.length === 0) {
     createSnackBar({
-      message: 'Keine Tage in EWT gefunden. </br></br>Bitte erst EWT ausfüllen! </br>oder Manuell über "Neue Zeile"',
+      message:
+        'Keine Tage im aktuellen Monat in EWT gefunden. </br></br>Bitte erst EWT ausfüllen! </br>oder Manuell über "Neue Zeile"',
       timeout: 3000,
       fixed: true,
     });
-    throw new Error("'Keine Tage in EWT gefunden.");
+    throw new Error('Keine Tage im aktuellen Monat in EWT gefunden.');
   }
-  console.log(dataE);
 
   const customFooterButton = [
     <MyButton
@@ -127,7 +127,7 @@ export default function createAddModalNeben(): void {
     return (event: Event): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
-      addNebenTag(form);
+      addNebengeldTag(form);
     };
   }
 }

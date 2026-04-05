@@ -1,16 +1,16 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
-import type { IDatenEWT, IDatenEWTJahr, IVorgabenU } from '../interfaces';
-import { Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import type { IVorgabenU } from '../interfaces';
+import { isEwtInMonat, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import download from '../utilities/download';
-import { DataE, addEventlistenerToggleBerechnen, ewtBerechnen, saveTableDataEWT } from './utils';
+import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 window.addEventListener('load', () => {
   const tagParser = (value: string) => {
       const d = dayjs(value);
-      return d.isValid() ? d.format('dd DD.') : value;
+      return d.isValid() ? d.format('dd DD.MM.') : value;
     },
     berechnenParser = (value: boolean): string => {
       return `<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"${
@@ -53,7 +53,7 @@ window.addEventListener('load', () => {
         { name: 'anWE', title: 'An Wohnung', breakpoints: 'xl', type: 'time' },
         { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xxl' },
       ],
-      rows: DataE(),
+      rows: getEwtDaten(undefined, undefined, { scope: 'all' }),
       sorting: { enabled: true },
       onChange: createOnChangeHandler('EWT'),
       editing: {
@@ -69,7 +69,7 @@ window.addEventListener('load', () => {
         },
         deleteRow: row => {
           row.deleteRow();
-          saveTableDataEWT(ftE);
+          persistEwtTableData(ftE);
         },
         deleteAllRows: () => {
           createSnackBar({
@@ -83,9 +83,11 @@ window.addEventListener('load', () => {
               {
                 text: 'Ja',
                 function: () => {
-                  ftE.rows.deleteAll();
+                  const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+                  const monthRows = [...ftE.rows.array].filter(row => isEwtInMonat(row.cells, activeMonat));
+                  monthRows.forEach(row => row.deleteRow());
                   buttonDisable(false);
-                  saveTableDataEWT(ftE);
+                  persistEwtTableData(ftE);
                 },
                 dismiss: true,
                 class: ['text-danger'],
@@ -111,22 +113,28 @@ window.addEventListener('load', () => {
                   {
                     text: 'Ja',
                     function: () => {
-                      const rows = [...ftE.rows.array];
-                      const newRows: IDatenEWT[] = [];
-                      rows.forEach(row => {
-                        if (!row.cells.berechnen) return newRows.push(row.cells);
-                        row.cells.abWE = '';
-                        row.cells.ab1E = '';
-                        row.cells.anEE = '';
-                        row.cells.beginE = '';
-                        row.cells.endeE = '';
-                        row.cells.abEE = '';
-                        row.cells.an1E = '';
-                        row.cells.anWE = '';
-                        return newRows.push(row.cells);
+                      const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+
+                      [...ftE.rows.array].forEach(row => {
+                        if (row._state === 'deleted') return;
+                        if (!isEwtInMonat(row.cells, activeMonat)) return;
+                        if (!row.cells.berechnen) return;
+
+                        row.val({
+                          ...row.cells,
+                          abWE: '',
+                          ab1E: '',
+                          anEE: '',
+                          beginE: '',
+                          endeE: '',
+                          abEE: '',
+                          an1E: '',
+                          anWE: '',
+                        });
                       });
-                      ftE.rows.load(newRows);
-                      saveTableDataEWT(ftE);
+
+                      buttonDisable(false);
+                      persistEwtTableData(ftE);
                     },
                     dismiss: true,
                     class: ['text-danger'],
@@ -139,17 +147,16 @@ window.addEventListener('load', () => {
         ],
       },
       customFunction: {
-        afterDrawRows: addEventlistenerToggleBerechnen,
+        afterDrawRows: attachBerechnenToggleListeners,
       },
     });
 
   const btnZb = document.querySelector<HTMLButtonElement>('#btnZb');
   btnZb?.addEventListener('click', () => {
     const monat = Storage.get<number>('Monat', { default: 0 });
-    ewtBerechnen({
+    recalculateEwtMonat({
       monat,
-      jahr: Storage.get<number>('Jahr', { check: true }),
-      daten: Storage.get<IDatenEWTJahr>('dataE', { check: true })[monat] ?? [],
+      daten: getEwtDaten(undefined, monat),
       vorgabenU: Storage.get<IVorgabenU>('VorgabenU', { check: true }),
     });
   });
@@ -166,4 +173,7 @@ window.addEventListener('load', () => {
 
   const btnESEE = document.querySelector<HTMLButtonElement>('#btnESEE');
   btnESEE?.addEventListener('click', createAddModalEWT);
+
+  const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 });

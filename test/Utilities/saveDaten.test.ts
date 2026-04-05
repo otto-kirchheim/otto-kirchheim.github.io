@@ -1,4 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
 
 // --- Hoisted mocks ---
 const {
@@ -8,17 +12,21 @@ const {
   mockCreateSnackBar,
   mockFlushAll,
   mockGetResourceStatus,
+  mockMarkResourcesIdle,
   mockMarkResourceSaved,
+  mockHasPendingTableChanges,
   mockUpdateMyProfile,
   mockSaveEinstellungen,
-} = vi.hoisted(() => ({
+} = viCompat.hoisted(() => ({
   mockSetLoading: vi.fn(),
   mockClearLoading: vi.fn(),
   mockButtonDisable: vi.fn(),
   mockCreateSnackBar: vi.fn(),
   mockFlushAll: vi.fn(),
   mockGetResourceStatus: vi.fn(),
+  mockMarkResourcesIdle: vi.fn(),
   mockMarkResourceSaved: vi.fn(),
+  mockHasPendingTableChanges: vi.fn(),
   mockUpdateMyProfile: vi.fn(),
   mockSaveEinstellungen: vi.fn(),
 }));
@@ -31,7 +39,9 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreate
 vi.mock('../../src/ts/utilities/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
+  markResourcesIdle: mockMarkResourcesIdle,
   markResourceSaved: mockMarkResourceSaved,
+  hasPendingTableChanges: mockHasPendingTableChanges,
 }));
 vi.mock('../../src/ts/utilities/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
@@ -62,6 +72,7 @@ describe('saveDaten', () => {
     mockUpdateMyProfile.mockResolvedValue({ data: mockUserData, updatedAt: '2026-03-07T12:00:00.000Z' });
     mockFlushAll.mockResolvedValue(undefined);
     mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
+    mockHasPendingTableChanges.mockReturnValue(false);
 
     // navigator.onLine standardmäßig auf true
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
@@ -98,6 +109,13 @@ describe('saveDaten', () => {
     expect(mockMarkResourceSaved).toHaveBeenCalledWith('settings');
   });
 
+  it('setzt Ressourcenstatus beim manuellen Save auf idle zurück', async () => {
+    await saveDaten(button);
+
+    // markResourcesIdle darf nicht mehr aufgerufen werden (war der ursprüngliche Bug).
+    expect(mockMarkResourcesIdle).not.toHaveBeenCalled();
+  });
+
   it('sendet Settings nicht erneut wenn lokal unverändert', async () => {
     Storage.set('VorgabenU', mockUserData);
     await saveDaten(button);
@@ -128,7 +146,18 @@ describe('saveDaten', () => {
 
   it('speichert UserData in Storage', async () => {
     await saveDaten(button);
-    expect(Storage.get('VorgabenU')).toEqual(mockUserData);
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual(mockUserData);
+  });
+
+  it('übernimmt serverseitig normalisierte Profilwerte', async () => {
+    const normalizedProfile = {
+      pers: { Vorname: 'Test', Nachname: 'Normalisiert' },
+    };
+    mockUpdateMyProfile.mockResolvedValue({ data: normalizedProfile, updatedAt: '2026-03-07T12:00:00.000Z' });
+
+    await saveDaten(button);
+
+    expect(Storage.get<typeof normalizedProfile>('VorgabenU')).toEqual(normalizedProfile);
   });
 
   it('zeigt Erfolgs-Snackbar bei Erfolg', async () => {

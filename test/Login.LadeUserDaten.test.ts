@@ -1,13 +1,13 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
 
 const {
-  saveUserDatenUEberschreibenMock,
+  overwriteUserDatenMock,
   aktualisiereBerechnungMock,
   generateTableBerechnungMock,
-  dataBZMock,
-  dataBEMock,
-  dataEMock,
-  dataNMock,
   generateEingabeMaskeEinstellungenMock,
   createSnackBarMock,
   storageCheckMock,
@@ -20,14 +20,10 @@ const {
   clearLoadingMock,
   updateTabVisibilityMock,
   loadAllYearDataMock,
-} = vi.hoisted(() => ({
-  saveUserDatenUEberschreibenMock: vi.fn(),
+} = viCompat.hoisted(() => ({
+  overwriteUserDatenMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
   generateTableBerechnungMock: vi.fn(),
-  dataBZMock: vi.fn(),
-  dataBEMock: vi.fn(),
-  dataEMock: vi.fn(),
-  dataNMock: vi.fn(),
   generateEingabeMaskeEinstellungenMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   storageCheckMock: vi.fn(),
@@ -43,7 +39,7 @@ const {
 }));
 
 vi.mock('../src/ts/Login/utils', () => ({
-  SaveUserDatenUEberschreiben: saveUserDatenUEberschreibenMock,
+  overwriteUserDaten: overwriteUserDatenMock,
 }));
 
 vi.mock('../src/ts/Berechnung', () => ({
@@ -54,29 +50,16 @@ vi.mock('../src/ts/Berechnung/generateTableBerechnung', () => ({
   default: generateTableBerechnungMock,
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', () => ({
-  DataBZ: dataBZMock,
-  DataBE: dataBEMock,
-}));
-
-vi.mock('../src/ts/EWT/utils', () => ({
-  DataE: dataEMock,
-}));
-
 vi.mock('../src/ts/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
-}));
-
-vi.mock('../src/ts/Neben/utils', () => ({
-  DataN: dataNMock,
 }));
 
 vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
+vi.mock('../src/ts/utilities/Storage', () => ({
+  default: {
     check: storageCheckMock,
     get: storageGetMock,
     set: storageSetMock,
@@ -84,27 +67,36 @@ vi.mock('../src/ts/utilities', () => ({
     getTimestamp: storageGetTimestampMock,
     setWithTimestamp: storageSetWithTimestampMock,
   },
-  buttonDisable: buttonDisableMock,
-  clearLoading: clearLoadingMock,
-  updateTabVisibility: updateTabVisibilityMock,
+}));
+
+vi.mock('../src/ts/utilities/buttonDisable', () => ({
+  default: buttonDisableMock,
+}));
+
+vi.mock('../src/ts/utilities/clearLoading', () => ({
+  default: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/utilities/updateTabVisibility', () => ({
+  default: updateTabVisibilityMock,
 }));
 
 vi.mock('../src/ts/utilities/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 
-import LadeUserDaten from '../src/ts/Login/utils/LadeUserDaten';
+import loadUserDaten from '../src/ts/Login/utils/loadUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
   const table = document.createElement('table') as HTMLTableElement & {
-    instance: { rows: { load: ReturnType<typeof vi.fn> } };
+    instance: { rows: { load: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> } };
   };
   table.id = id;
-  table.instance = { rows: { load: loadSpy } };
+  table.instance = { rows: { load: loadSpy, setFilter: vi.fn() } };
   document.body.appendChild(table);
 }
 
-describe('LadeUserDaten', () => {
+describe('loadUserDaten', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <h1 id="Willkommen"></h1>
@@ -115,9 +107,11 @@ describe('LadeUserDaten', () => {
   });
 
   it('zeigt Fehler-Snackbar wenn loadAllYearData fehlschlaegt', async () => {
-    loadAllYearDataMock.mockRejectedValue(new Error('offline'));
+    loadAllYearDataMock.mockImplementation(async () => {
+      throw new Error('offline');
+    });
 
-    await LadeUserDaten(3, 2026);
+    await loadUserDaten(3, 2026);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
@@ -163,13 +157,9 @@ describe('LadeUserDaten', () => {
     storageGetMock.mockReturnValue(undefined);
     storageGetTimestampMock.mockReturnValue(0);
 
-    dataBZMock.mockReturnValue([{ mapped: 'bz' }]);
-    dataBEMock.mockReturnValue([{ mapped: 'be' }]);
-    dataEMock.mockReturnValue([{ mapped: 'ewt' }]);
-    dataNMock.mockReturnValue([{ mapped: 'n' }]);
     aktualisiereBerechnungMock.mockReturnValue({ calc: true });
 
-    await LadeUserDaten(3, 2026);
+    await loadUserDaten(3, 2026);
 
     expect(storageSetWithTimestampMock).toHaveBeenCalledWith(
       'VorgabenU',
@@ -182,11 +172,11 @@ describe('LadeUserDaten', () => {
     expect(generateTableBerechnungMock).toHaveBeenCalledWith({ calc: true }, loaded.datenGeld);
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
 
-    expect(loadBZ).toHaveBeenCalled();
-    expect(loadBE).toHaveBeenCalled();
-    expect(loadE).toHaveBeenCalled();
-    expect(loadN).toHaveBeenCalled();
-    expect(loadVE).toHaveBeenCalled();
+    expect(loadBZ).toHaveBeenCalledWith([{ bz: 1 }]);
+    expect(loadBE).toHaveBeenCalledWith([{ be: 1 }]);
+    expect(loadE).toHaveBeenCalledWith([{ ewt: 1 }]);
+    expect(loadN).toHaveBeenCalledWith([{ n: 1 }]);
+    expect(loadVE).toHaveBeenCalledWith([{ Name: 'A' }]);
 
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
@@ -255,13 +245,9 @@ describe('LadeUserDaten', () => {
     // Lokaler Timestamp älter als Server → Server überschreibt
     storageGetTimestampMock.mockReturnValue(Date.parse('2026-01-01T00:00:00.000Z'));
 
-    dataBZMock.mockReturnValue([{ mapped: 'bz' }]);
-    dataBEMock.mockReturnValue([{ mapped: 'be' }]);
-    dataEMock.mockReturnValue([{ mapped: 'ewt' }]);
-    dataNMock.mockReturnValue([{ mapped: 'n' }]);
     aktualisiereBerechnungMock.mockReturnValue({ calc: true });
 
-    await LadeUserDaten(3, 2026);
+    await loadUserDaten(3, 2026);
 
     // Server ist neuer → alle Ressourcen werden via setWithTimestamp gespeichert
     const feb = Date.parse('2026-02-01T00:00:00.000Z');
@@ -274,11 +260,11 @@ describe('LadeUserDaten', () => {
     expect(storageSetMock).toHaveBeenCalledWith('VorgabenGeld', loaded.datenGeld);
 
     // Tabellen werden geladen (Server überschreibt)
-    expect(loadVE).toHaveBeenCalled();
-    expect(loadBZ).toHaveBeenCalled();
-    expect(loadBE).toHaveBeenCalled();
-    expect(loadE).toHaveBeenCalled();
-    expect(loadN).toHaveBeenCalled();
+    expect(loadVE).toHaveBeenCalledWith([{ Name: 'Server' }]);
+    expect(loadBZ).toHaveBeenCalledWith([{ bz: 'server' }]);
+    expect(loadBE).toHaveBeenCalledWith([{ be: 'server' }]);
+    expect(loadE).toHaveBeenCalledWith([{ ewt: 'server' }]);
+    expect(loadN).toHaveBeenCalledWith([{ n: 'server' }]);
 
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');

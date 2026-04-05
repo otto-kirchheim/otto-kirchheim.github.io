@@ -6,17 +6,12 @@
  */
 
 import type {
-  IDatenBE,
-  IDatenBEJahr,
-  IDatenBZ,
-  IDatenBZJahr,
-  IDatenEWT,
-  IDatenEWTJahr,
-  IDatenN,
-  IDatenNJahr,
-  IVorgabenGeld,
-  IVorgabenU,
-} from '../interfaces';
+  AuthenticationResponseJSON,
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+  RegistrationResponseJSON,
+} from '@simplewebauthn/browser';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../interfaces';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
 import Storage from './Storage';
@@ -27,14 +22,14 @@ import {
   type BackendNebengeld,
   type BackendUserProfile,
   type BackendVorgabe,
-  type GroupedByMonat,
+  type FlatMappedDocs,
   beFromBackend,
   beToBackend,
   bzFromBackend,
   bzToBackend,
   ewtFromBackend,
   ewtToBackend,
-  groupByMonat,
+  flatMapDocs,
   nebengeldFromBackend,
   nebengeldToBackend,
   userProfileFromBackend,
@@ -49,6 +44,12 @@ interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
+}
+
+interface PasskeyLoginStartResponse {
+  options: PublicKeyCredentialRequestOptionsJSON;
+  challengeToken: string;
+  userName?: string;
 }
 
 /** Bulk-Operation Request */
@@ -104,6 +105,28 @@ export const authApi = {
     >('auth/login', { userName, password }, 'POST');
     Storage.set('AccessToken', result.accessToken);
     Storage.set('RefreshToken', result.refreshToken);
+  },
+
+  async beginPasskeyLogin(userName?: string): Promise<PasskeyLoginStartResponse> {
+    return apiFetch<{ userName?: string }, PasskeyLoginStartResponse>(
+      'auth/passkeys/login/options',
+      userName ? { userName } : undefined,
+      'POST',
+    );
+  },
+
+  async finishPasskeyLogin(
+    credential: AuthenticationResponseJSON,
+    challengeToken: string,
+    userName?: string,
+  ): Promise<{ user: unknown; accessToken: string; refreshToken: string }> {
+    const result = await apiFetch<
+      { userName?: string; challengeToken: string; credential: AuthenticationResponseJSON },
+      { user: unknown; accessToken: string; refreshToken: string }
+    >('auth/passkeys/login/verify', { userName, challengeToken, credential }, 'POST');
+    Storage.set('AccessToken', result.accessToken);
+    Storage.set('RefreshToken', result.refreshToken);
+    return result;
   },
 
   /**
@@ -194,23 +217,64 @@ export const authApi = {
     return apiFetch('auth/me');
   },
 
+  async getPasskeys(): Promise<
+    Array<{
+      credentialId: string;
+      name: string;
+      deviceType: string;
+      backedUp: boolean;
+      createdAt: string;
+      lastUsedAt?: string;
+    }>
+  > {
+    return apiFetch('auth/passkeys');
+  },
+
+  async beginPasskeyRegistration(): Promise<PublicKeyCredentialCreationOptionsJSON> {
+    return apiFetch<undefined, PublicKeyCredentialCreationOptionsJSON>(
+      'auth/passkeys/register/options',
+      undefined,
+      'POST',
+    );
+  },
+
+  async finishPasskeyRegistration(
+    credential: RegistrationResponseJSON,
+    deviceName?: string,
+  ): Promise<{ credentialId: string; name: string }> {
+    return apiFetch<
+      { credential: RegistrationResponseJSON; deviceName?: string },
+      { credentialId: string; name: string }
+    >('auth/passkeys/register/verify', { credential, deviceName }, 'POST');
+  },
+
+  async deletePasskey(credentialId: string): Promise<void> {
+    await apiFetch<undefined, unknown>(`auth/passkeys/${encodeURIComponent(credentialId)}`, undefined, 'DELETE');
+  },
+
   /**
-   * Logout: POST /auth/logout
+   * logoutUser: POST /auth/logout
    * Verwendet raw fetch (nicht FetchRetry), um Re-Entry in tokenErneuern zu verhindern.
    */
   async logout(): Promise<void> {
     try {
-      const serverUrl = await getServerUrl();
       const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
-      const headers: HeadersInit = {};
-      if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-      await fetch(`${serverUrl}/auth/logout`, {
+      if (!accessToken) return;
+
+      const serverUrl = await getServerUrl();
+      const response = await fetch(`${serverUrl}/auth/logout`, {
         method: 'POST',
         mode: 'cors',
-        headers,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
+
+      if (!response.ok && response.status !== 401) {
+        throw new Error(`Logout fehlgeschlagen (${response.status})`);
+      }
     } catch {
-      // Logout-Fehler ignorieren – lokale Daten werden sowieso gelöscht
+      // logoutUser-Fehler ignorieren – lokale Daten werden sowieso gelöscht
     }
   },
 };
@@ -257,16 +321,16 @@ type ResourceName = 'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzw
 
 /**
  * Generische Funktion: Lade alle Einträge eines Jahres für eine Ressource.
- * GET /:resource/:year → Backend liefert flaches Array → gruppiert nach Monat.
+ * GET /:resource/:year → Backend liefert flaches Array.
  * Gibt Daten + max updatedAt zurück.
  */
-async function loadResourceYear<TBackend extends { Monat: number; updatedAt?: string }, TFrontend>(
+async function loadResourceYear<TBackend extends { updatedAt?: string }, TFrontend>(
   resource: ResourceName,
   year: number,
   mapper: (doc: TBackend) => TFrontend,
-): Promise<GroupedByMonat<TFrontend>> {
+): Promise<FlatMappedDocs<TFrontend>> {
   const docs = await apiFetch<undefined, TBackend[]>(`${resource}/${year}`);
-  return groupByMonat(docs, mapper);
+  return flatMapDocs(docs, mapper);
 }
 
 /**
@@ -338,13 +402,13 @@ async function smartSync<TBackend>(resource: ResourceName, bulk: BulkRequest): P
 // ─── Bereitschaftszeitraum ───────────────────────────────
 
 export const bereitschaftszeitraumApi = {
-  async loadYear(year: number): Promise<{ data: IDatenBZJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenBZ[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendBereitschaftszeitraum, IDatenBZ>(
       'bereitschaftszeitraum',
       year,
       bzFromBackend,
     );
-    return { data: result.data as IDatenBZJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -371,13 +435,13 @@ export const bereitschaftszeitraumApi = {
 // ─── Bereitschaftseinsatz ────────────────────────────────
 
 export const bereitschaftseinsatzApi = {
-  async loadYear(year: number): Promise<{ data: IDatenBEJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenBE[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendBereitschaftseinsatz, IDatenBE>(
       'bereitschaftseinsatz',
       year,
       beFromBackend,
     );
-    return { data: result.data as IDatenBEJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -404,9 +468,9 @@ export const bereitschaftseinsatzApi = {
 // ─── Einsatzwechseltätigkeit ─────────────────────────────
 
 export const ewtApi = {
-  async loadYear(year: number): Promise<{ data: IDatenEWTJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenEWT[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendEWT, IDatenEWT>('einsatzwechseltaetigkeit', year, ewtFromBackend);
-    return { data: result.data as IDatenEWTJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -433,9 +497,9 @@ export const ewtApi = {
 // ─── Nebengeld ───────────────────────────────────────────
 
 export const nebengeldApi = {
-  async loadYear(year: number): Promise<{ data: IDatenNJahr; updatedAt: string | null }> {
+  async loadYear(year: number): Promise<{ data: IDatenN[]; updatedAt: string | null }> {
     const result = await loadResourceYear<BackendNebengeld, IDatenN>('nebengeld', year, nebengeldFromBackend);
-    return { data: result.data as IDatenNJahr, updatedAt: result.maxUpdatedAt };
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
   },
 
   async bulk(
@@ -473,10 +537,10 @@ export interface SyncTimestamps {
 export interface LoadedYearData {
   vorgabenU: IVorgabenU;
   datenGeld: IVorgabenGeld;
-  BZ: IDatenBZJahr;
-  BE: IDatenBEJahr;
-  EWT: IDatenEWTJahr;
-  N: IDatenNJahr;
+  BZ: IDatenBZ[];
+  BE: IDatenBE[];
+  EWT: IDatenEWT[];
+  N: IDatenN[];
   timestamps: SyncTimestamps;
 }
 

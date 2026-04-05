@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { berechnen } from '../src/ts/EWT/utils';
+import { describe, expect, it } from 'bun:test';
+import { calculateEwtEintraege } from '../src/ts/EWT/utils';
 import type { IVorgabenU } from '../src/ts/interfaces/IVorgabenU';
 import { VorgabenUMock } from './mockData';
 import type { IMonatsDaten } from '../src/ts/interfaces';
@@ -211,6 +211,7 @@ describe('berechnen', () => {
     const expected: IMonatsDaten['EWT'] = [
       {
         tagE: '2023-04-03',
+        buchungstagE: '2023-04-03',
         eOrtE: 'Kirchheim',
         schichtE: 'T',
         abWE: '06:40',
@@ -225,6 +226,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-04',
+        buchungstagE: '2023-04-04',
         eOrtE: 'Hattenbach',
         schichtE: 'T',
         abWE: '06:40',
@@ -239,6 +241,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-05',
+        buchungstagE: '2023-04-05',
         eOrtE: 'Richthof',
         schichtE: 'T',
         abWE: '06:40',
@@ -253,6 +256,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-06',
+        buchungstagE: '2023-04-06',
         eOrtE: 'Langenschwarz',
         schichtE: 'T',
         abWE: '06:40',
@@ -267,6 +271,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-07',
+        buchungstagE: '2023-04-07',
         eOrtE: 'Wildsberg',
         schichtE: 'T',
         abWE: '06:40',
@@ -281,6 +286,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-08',
+        buchungstagE: '2023-04-08',
         eOrtE: 'Licherode',
         schichtE: 'T',
         abWE: '06:40',
@@ -295,6 +301,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-15',
+        buchungstagE: '2023-04-16',
         eOrtE: 'Licherode',
         schichtE: 'N',
         abWE: '19:25',
@@ -309,6 +316,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-16',
+        buchungstagE: '2023-04-17',
         eOrtE: 'Ersrode',
         schichtE: 'N',
         abWE: '19:25',
@@ -323,6 +331,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-17',
+        buchungstagE: '2023-04-18',
         eOrtE: 'Mühlbach',
         schichtE: 'N',
         abWE: '19:25',
@@ -337,6 +346,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-18',
+        buchungstagE: '2023-04-19',
         eOrtE: 'Kirchheim',
         schichtE: 'N',
         abWE: '19:25',
@@ -351,6 +361,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-22',
+        buchungstagE: '2023-04-23',
         eOrtE: 'Hattenbach',
         schichtE: 'BN',
         abWE: '19:10',
@@ -365,6 +376,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-23',
+        buchungstagE: '2023-04-24',
         eOrtE: 'Richthof',
         schichtE: 'BN',
         abWE: '19:10',
@@ -379,6 +391,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-24',
+        buchungstagE: '2023-04-25',
         eOrtE: 'Langenschwarz',
         schichtE: 'BN',
         abWE: '19:10',
@@ -393,6 +406,7 @@ describe('berechnen', () => {
       },
       {
         tagE: '2023-04-25',
+        buchungstagE: '2023-04-26',
         eOrtE: 'Michelsrombach',
         schichtE: 'BN',
         abWE: '19:10',
@@ -408,9 +422,9 @@ describe('berechnen', () => {
     ];
 
     // Führen Sie die berechnen-Funktion aus
-    const result = berechnen(vorgabenU, daten);
+    const result = calculateEwtEintraege(vorgabenU, daten);
 
     // Überprüfen Sie die Ergebnisse
-    expect(result).to.deep.equal(expected);
+    expect(result).toEqual(expected);
   });
 });

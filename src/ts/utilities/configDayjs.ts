@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import dayjsFeiertage from 'dayjs-feiertage';
 import 'dayjs/locale/de.js';
 import arraySupport from 'dayjs/plugin/arraySupport.js';
 import customParseFormat from 'dayjs/plugin/customParseFormat.js';
@@ -15,6 +16,7 @@ dayjs.locale('de');
 dayjs.extend(arraySupport);
 dayjs.extend(customParseFormat);
 dayjs.extend(duration);
+dayjs.extend(dayjsFeiertage);
 dayjs.extend(isBetween);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);

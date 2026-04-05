@@ -171,6 +171,7 @@ export async function FetchRetry<I, T>(
     console.error('Fetch error occurred:', error);
     throw new Error(
       `Fetch-Fehler: ${(<Error>error).message || error}. URL: ${serverUrl}/${UrlPath}, Method: ${method}, Retry: ${retry}`,
+      { cause: error },
     );
   }
 }
@@ -183,4 +184,5 @@ export const API_URL: ServerConfig[] = import.meta.env.PROD
   : [
       { url: 'http://192.168.178.56:8081/api/v2', timeout: 3000 },
       { url: 'http://localhost:8081/api/v2', timeout: 2000 },
+      { url: 'http://127.0.0.1:8081/api/v2', timeout: 2000 },
     ];

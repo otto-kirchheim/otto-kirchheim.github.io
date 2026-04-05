@@ -2,11 +2,12 @@ import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import type { Column } from '../../class/CustomTable';
 import { CustomTable, Row } from '../../class/CustomTable';
+import { createSnackBar } from '../../class/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
 import type { CustomHTMLDivElement, IDatenN } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
-import { saveTableDataN } from '../utils';
+import { persistNebengeldTableData } from '../utils';
 
 const getColumn = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string): Column<IDatenN> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -141,11 +142,28 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
         anzahl040N: Number(form.querySelector<HTMLInputElement>('#anzahl040N')?.value) || 1,
         auftragN: form.querySelector<HTMLInputElement>('#auftragN')?.value ?? '',
       };
+
+      const hasDuplicateDay = table.rows.array.some(existingRow => {
+        if (existingRow._state === 'deleted') return false;
+        if (row instanceof Row && existingRow === row) return false;
+        return existingRow.cells.tagN === values.tagN;
+      });
+
+      if (hasDuplicateDay) {
+        createSnackBar({
+          message: 'Nebenbezug<br/>Für diesen Tag existiert bereits ein Eintrag.',
+          status: 'warning',
+          timeout: 4000,
+          fixed: true,
+        });
+        return;
+      }
+
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
       Modal.getInstance(modal)?.hide();
-      saveTableDataN(table);
+      persistNebengeldTableData(table);
     };
   }
 }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '../../src/ts/Einstellungen/utils/zulagenCatalog';
 
 describe('zulagenCatalog', () => {

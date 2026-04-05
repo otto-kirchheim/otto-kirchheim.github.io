@@ -1,16 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
 
-const { saveTableDataEWTMock } = vi.hoisted(() => ({
-  saveTableDataEWTMock: vi.fn(),
+const { persistEwtTableDataMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
+  persistEwtTableDataMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/EWT/utils', () => ({
-  saveTableDataEWT: saveTableDataEWTMock,
+  persistEwtTableData: persistEwtTableDataMock,
 }));
 
-import addEventlistenerToggleBerechnen from '../src/ts/EWT/utils/addEventlistenerToggleBerechnen';
+import attachBerechnenToggleListeners from '../src/ts/EWT/utils/attachBerechnenToggleListeners';
 
 function createCells(): IDatenEWT {
   return {
@@ -29,7 +29,7 @@ function createCells(): IDatenEWT {
   };
 }
 
-describe('addEventlistenerToggleBerechnen', () => {
+describe('attachBerechnenToggleListeners', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
@@ -62,16 +62,16 @@ describe('addEventlistenerToggleBerechnen', () => {
     row2.data = { cells: createCells(), val: val2 };
 
     const tableInstance = { id: 'ftE' } as never;
-    addEventlistenerToggleBerechnen.call(tableInstance);
+    attachBerechnenToggleListeners.call(tableInstance);
 
     checkbox1.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     checkbox2.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
     expect(val1).toHaveBeenCalledWith(expect.objectContaining({ berechnen: true }));
     expect(val2).toHaveBeenCalledWith(expect.objectContaining({ berechnen: false }));
-    expect(saveTableDataEWTMock).toHaveBeenCalledTimes(2);
-    expect(saveTableDataEWTMock).toHaveBeenNthCalledWith(1, tableInstance);
-    expect(saveTableDataEWTMock).toHaveBeenNthCalledWith(2, tableInstance);
+    expect(persistEwtTableDataMock).toHaveBeenCalledTimes(2);
+    expect(persistEwtTableDataMock).toHaveBeenNthCalledWith(1, tableInstance);
+    expect(persistEwtTableDataMock).toHaveBeenNthCalledWith(2, tableInstance);
   });
 
   it('macht nichts wenn eine Checkbox keine Row-Daten hat', () => {
@@ -86,16 +86,16 @@ describe('addEventlistenerToggleBerechnen', () => {
     const checkbox = document.querySelector<HTMLInputElement>('.row-checkbox');
     if (!checkbox) throw new Error('checkbox not found');
 
-    addEventlistenerToggleBerechnen.call({} as never);
+    attachBerechnenToggleListeners.call({} as never);
 
     expect(() => checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
-    expect(saveTableDataEWTMock).not.toHaveBeenCalled();
+    expect(persistEwtTableDataMock).not.toHaveBeenCalled();
   });
 
   it('ist no-op wenn keine Checkboxen vorhanden sind', () => {
     document.body.innerHTML = `<table id="tableE"><tbody></tbody></table>`;
 
-    expect(() => addEventlistenerToggleBerechnen.call({} as never)).not.toThrow();
-    expect(saveTableDataEWTMock).not.toHaveBeenCalled();
+    expect(() => attachBerechnenToggleListeners.call({} as never)).not.toThrow();
+    expect(persistEwtTableDataMock).not.toHaveBeenCalled();
   });
 });

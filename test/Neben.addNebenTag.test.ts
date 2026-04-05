@@ -1,16 +1,21 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
 import type { IDatenN } from '../src/ts/interfaces';
 
-const { saveTableDataNMock } = vi.hoisted(() => ({
+const { saveTableDataNMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   saveTableDataNMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Neben/utils', () => ({
-  saveTableDataN: saveTableDataNMock,
-}));
+type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement) => void;
 
-import addNebenTag from '../src/ts/Neben/utils/addNebenTag';
+async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
+  mock.module('../src/ts/Neben/utils/persistNebengeldTableData', () => ({
+    default: saveTableDataNMock,
+  }));
+
+  const module = await import('../src/ts/Neben/utils/addNebengeldTag');
+  return module.default;
+}
 
 function createDataN(tagN = '2026-03-10'): IDatenN {
   return {
@@ -22,21 +27,26 @@ function createDataN(tagN = '2026-03-10'): IDatenN {
   };
 }
 
-describe('addNebenTag', () => {
+describe('addNebengeldTag', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    mock.restore();
     vi.clearAllMocks();
   });
 
-  it('wirft Fehler wenn #tagN fehlt', () => {
+  it('wirft Fehler wenn #tagN fehlt', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     document.body.innerHTML = `<form id="form"></form>`;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    expect(() => addNebenTag(form)).toThrow("Select element with ID 'tagN' not found");
+    expect(() => addNebengeldTag(form)).toThrow("Select element with ID 'tagN' not found");
   });
 
-  it('beendet ohne Aktion wenn kein Eintrag selektiert ist', () => {
+  it('beendet ohne Aktion wenn kein Eintrag selektiert ist', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     document.body.innerHTML = `
       <form id="form">
         <select id="tagN"></select>
@@ -45,11 +55,13 @@ describe('addNebenTag', () => {
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    expect(() => addNebenTag(form)).not.toThrow();
+    expect(() => addNebengeldTag(form)).not.toThrow();
     expect(saveTableDataNMock).not.toHaveBeenCalled();
   });
 
-  it('wirft Fehler wenn #anzahl040N fehlt', () => {
+  it('wirft Fehler wenn #anzahl040N fehlt', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     const data = createDataN();
     document.body.innerHTML = `
       <form id="form">
@@ -60,11 +72,16 @@ describe('addNebenTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
+    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    if (!select) throw new Error('select not found');
+    select.selectedIndex = 0;
 
-    expect(() => addNebenTag(form)).toThrow("Input element with ID 'anzahl040N' not found");
+    expect(() => addNebengeldTag(form)).toThrow("Input element with ID 'anzahl040N' not found");
   });
 
-  it('wirft Fehler wenn #AuftragN fehlt', () => {
+  it('wirft Fehler wenn #AuftragN fehlt', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     const data = createDataN();
     document.body.innerHTML = `
       <form id="form">
@@ -76,11 +93,16 @@ describe('addNebenTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
+    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    if (!select) throw new Error('select not found');
+    select.selectedIndex = 0;
 
-    expect(() => addNebenTag(form)).toThrow("Input element with ID 'AuftragN' not found");
+    expect(() => addNebengeldTag(form)).toThrow("Input element with ID 'AuftragN' not found");
   });
 
-  it('wirft Fehler wenn Tabelle #tableN fehlt', () => {
+  it('wirft Fehler wenn Tabelle #tableN fehlt', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     const data = createDataN();
     document.body.innerHTML = `
       <form id="form">
@@ -93,11 +115,16 @@ describe('addNebenTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
+    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    if (!select) throw new Error('select not found');
+    select.selectedIndex = 0;
 
-    expect(() => addNebenTag(form)).toThrow('table N nicht gefunden');
+    expect(() => addNebengeldTag(form)).toThrow('table N nicht gefunden');
   });
 
-  it('fuegt Daten hinzu, speichert Tabelle und waehlt naechsten freien Eintrag', () => {
+  it('fuegt Daten hinzu, speichert Tabelle und waehlt naechsten freien Eintrag', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
     const dataA = createDataN('2026-03-10');
     const dataB = createDataN('2026-03-11');
     const dataC = createDataN('2026-03-12');
@@ -109,7 +136,7 @@ describe('addNebenTag', () => {
           <option disabled value='${JSON.stringify(dataB)}'>B</option>
           <option value='${JSON.stringify(dataC)}'>C</option>
         </select>
-        <input id="anzahl040N" value="7" />
+        <input id="anzahl040N" value="1" />
         <input id="AuftragN" value="A-123" />
       </form>
     `;
@@ -118,6 +145,10 @@ describe('addNebenTag', () => {
     const ftN = {
       rows: {
         add: addMock,
+        array: [
+          { _state: 'clean', cells: dataB },
+          { _state: 'clean', cells: dataC },
+        ],
       },
     };
 
@@ -132,11 +163,12 @@ describe('addNebenTag', () => {
     const select = form.querySelector<HTMLSelectElement>('#tagN');
     const auftrag = form.querySelector<HTMLInputElement>('#AuftragN');
     if (!select || !auftrag) throw new Error('input not found');
+    select.selectedIndex = 0;
 
-    addNebenTag(form);
+    addNebengeldTag(form);
 
     expect(addMock).toHaveBeenCalledWith(
-      expect.objectContaining({ tagN: '2026-03-10', anzahl040N: 7, auftragN: 'A-123' }),
+      expect.objectContaining({ tagN: '2026-03-10', anzahl040N: 1, auftragN: 'A-123' }),
     );
     expect(saveTableDataNMock).toHaveBeenCalledWith(ftN);
     expect(select.options[0].disabled).toBe(true);

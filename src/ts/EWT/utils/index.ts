@@ -1,19 +1,23 @@
-import addEventlistenerToggleBerechnen from './addEventlistenerToggleBerechnen';
-import addEWTtag from './addEWTtag';
-import berechnen from './berechnen';
-import clearZeiten from './clearZeiten';
-import DataE from './DataE';
-import ewtBerechnen from './ewtBerechnen';
-import naechsterTag from './naechsterTag';
-import saveTableDataEWT from './saveTableDataEWT';
+import attachBerechnenToggleListeners from './attachBerechnenToggleListeners';
+import addEwtTag from './addEwtTag';
+import calculateEwtEintraege from './calculateEwtEintraege';
+import calculateBuchungstagEwt from './calculateBuchungstagEwt';
+import clearEwtZeiten from './clearEwtZeiten';
+import getEwtDaten from './getEwtDaten';
+import recalculateEwtMonat from './recalculateEwtMonat';
+import setNaechsterEwtTag from './setNaechsterEwtTag';
+import persistEwtTableData from './persistEwtTableData';
+import validateEwtZeitenReihenfolge from './validateEwtZeitenReihenfolge';
 
 export {
-  addEventlistenerToggleBerechnen,
-  addEWTtag,
-  berechnen,
-  clearZeiten,
-  DataE,
-  ewtBerechnen,
-  naechsterTag,
-  saveTableDataEWT,
+  attachBerechnenToggleListeners,
+  addEwtTag,
+  calculateEwtEintraege,
+  calculateBuchungstagEwt,
+  clearEwtZeiten,
+  getEwtDaten,
+  recalculateEwtMonat,
+  setNaechsterEwtTag,
+  persistEwtTableData,
+  validateEwtZeitenReihenfolge,
 };

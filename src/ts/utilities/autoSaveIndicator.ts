@@ -14,20 +14,17 @@
  */
 
 import { onAutoSaveStatus } from './autoSave';
-
-type SaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error';
-
-type ResourceKey = 'BZ' | 'BE' | 'EWT' | 'N' | 'settings';
+import type { TResourceKey, TSaveStatus } from '../interfaces';
 
 /** Mapping: Button-ID → zugehörige Ressourcen */
-const BUTTON_RESOURCE_MAP: ReadonlyArray<{ buttonId: string; resources: ResourceKey[] }> = [
+const BUTTON_RESOURCE_MAP: ReadonlyArray<{ buttonId: string; resources: TResourceKey[] }> = [
   { buttonId: 'btnSaveB', resources: ['BZ', 'BE'] },
   { buttonId: 'btnSaveE', resources: ['EWT'] },
   { buttonId: 'btnSaveN', resources: ['N'] },
   { buttonId: 'btnSaveEinstellungen', resources: ['settings'] },
 ];
 
-const ICON_MAP: Record<SaveStatus, string> = {
+const ICON_MAP: Record<TSaveStatus, string> = {
   idle: '',
   pending: 'cloud_queue',
   saving: 'cloud_sync',
@@ -35,7 +32,7 @@ const ICON_MAP: Record<SaveStatus, string> = {
   error: 'error',
 };
 
-const BG_MAP: Record<SaveStatus, string> = {
+const BG_MAP: Record<TSaveStatus, string> = {
   idle: '',
   pending: 'bg-secondary',
   saving: 'bg-info',
@@ -43,7 +40,7 @@ const BG_MAP: Record<SaveStatus, string> = {
   error: 'bg-danger',
 };
 
-const TOOLTIP_MAP: Record<SaveStatus, string> = {
+const TOOLTIP_MAP: Record<TSaveStatus, string> = {
   idle: '',
   pending: 'Änderungen warten…',
   saving: 'Wird gespeichert…',
@@ -54,7 +51,7 @@ const TOOLTIP_MAP: Record<SaveStatus, string> = {
 // ─── State ───────────────────────────────────────────────
 
 /** Aktueller Status pro Ressource */
-let currentStatuses: Map<string, SaveStatus> = new Map();
+let currentStatuses: Map<string, TSaveStatus> = new Map();
 
 /** Fehlermeldungen pro Ressource */
 const errorMessages: Map<string, string> = new Map();
@@ -74,8 +71,8 @@ let onlineOfflineHandler: (() => void) | null = null;
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
 /** Worst-Case-Status ermitteln (Priorität: error > saving > pending > saved > idle) */
-function worstStatus(resources: ResourceKey[]): SaveStatus {
-  const priority: SaveStatus[] = ['error', 'saving', 'pending', 'saved', 'idle'];
+function worstStatus(resources: TResourceKey[]): TSaveStatus {
+  const priority: TSaveStatus[] = ['error', 'saving', 'pending', 'saved', 'idle'];
   for (const prio of priority) {
     for (const res of resources) {
       if (currentStatuses.get(res) === prio) return prio;
@@ -97,9 +94,47 @@ function isNetworkError(msg: string): boolean {
   return NETWORK_ERROR_PATTERNS.some(p => msg.includes(p));
 }
 
+function createBadgeElement(): HTMLSpanElement {
+  const badge = document.createElement('span');
+  badge.className = 'autosave-badge position-absolute top-0 start-100 translate-middle badge rounded-pill';
+  badge.style.transition = 'opacity 0.3s ease';
+  badge.style.opacity = '0';
+
+  const iconEl = document.createElement('span');
+  iconEl.className = 'material-icons-round';
+  badge.appendChild(iconEl);
+
+  return badge;
+}
+
+function getOrCreateBadge(buttonId: string): HTMLSpanElement | null {
+  const btn = document.getElementById(buttonId);
+  if (!btn) {
+    console.warn(`[Badge ${Date.now()}ms] getOrCreateBadge: Button ${buttonId} nicht gefunden`);
+    return null;
+  }
+
+  let badge = badgeElements.get(buttonId);
+
+  if (!badge || !badge.isConnected || !btn.contains(badge)) {
+    const existing = btn.querySelector<HTMLSpanElement>('.autosave-badge');
+    if (existing) {
+      badge = existing;
+      badgeElements.set(buttonId, badge);
+    } else {
+      badge = createBadgeElement();
+      btn.classList.add('position-relative');
+      btn.appendChild(badge);
+      badgeElements.set(buttonId, badge);
+    }
+  }
+
+  return badge;
+}
+
 /** Badge eines Buttons aktualisieren */
-function updateBadge(buttonId: string, resources: ResourceKey[]): void {
-  const badge = badgeElements.get(buttonId);
+function updateBadge(buttonId: string, resources: TResourceKey[]): void {
+  const badge = getOrCreateBadge(buttonId);
   if (!badge) return;
 
   const status = worstStatus(resources);
@@ -155,7 +190,10 @@ function updateBadge(buttonId: string, resources: ResourceKey[]): void {
   // Bei "saved": nach 2 s verblassen
   if (status === 'saved') {
     const timer = setTimeout(() => {
-      badge.style.opacity = '0';
+      for (const res of resources) {
+        if (currentStatuses.get(res) === 'saved') currentStatuses.set(res, 'idle');
+      }
+      updateBadge(buttonId, resources);
       fadeTimers.delete(buttonId);
     }, 2000);
     fadeTimers.set(buttonId, timer);
@@ -178,17 +216,10 @@ export function initAutoSaveIndicator(): void {
     // Button muss position-relative haben für absolute Badge-Positionierung
     btn.classList.add('position-relative');
 
-    // Badge-Element erstellen
-    const badge = document.createElement('span');
-    badge.className = 'autosave-badge position-absolute top-0 start-100 translate-middle badge rounded-pill';
-    badge.style.transition = 'opacity 0.3s ease';
-    badge.style.opacity = '0';
-
-    const iconEl = document.createElement('span');
-    iconEl.className = 'material-icons-round';
-    badge.appendChild(iconEl);
-
-    btn.appendChild(badge);
+    // Badge-Element erstellen (oder bestehendes übernehmen)
+    const existing = btn.querySelector<HTMLSpanElement>('.autosave-badge');
+    const badge = existing ?? createBadgeElement();
+    if (!existing) btn.appendChild(badge);
     badgeElements.set(buttonId, badge);
 
     // Initialen Status setzen
@@ -205,7 +236,7 @@ export function initAutoSaveIndicator(): void {
     }
     // Nur die Buttons aktualisieren, die diese Ressource betreffen
     for (const { buttonId, resources } of BUTTON_RESOURCE_MAP) {
-      if (resources.includes(resource as ResourceKey)) {
+      if (resources.includes(resource as TResourceKey)) {
         updateBadge(buttonId, resources);
       }
     }
@@ -222,7 +253,7 @@ export function initAutoSaveIndicator(): void {
 }
 
 /**
- * Entfernt alle Badges (z. B. bei Logout).
+ * Entfernt alle Badges (z. B. bei logoutUser).
  */
 export function destroyAutoSaveIndicator(): void {
   // Listener abmelden

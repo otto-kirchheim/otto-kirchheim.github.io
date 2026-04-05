@@ -43,6 +43,7 @@ export interface BackendEWT {
   Monat: number;
   Jahr: number;
   Tag: string; // ISO-Date
+  Buchungstag?: string; // ISO-Date
   Einsatzort?: string;
   Schicht: string;
   abWE?: string;
@@ -83,6 +84,7 @@ export interface BackendUserProfile {
     Adress2?: string;
     ErsteTkgSt: string;
     ErsteTkgStAdresse: string;
+    Bundesland?: string;
     Betrieb: string;
     OE: string;
     Gewerk: string;
@@ -153,6 +155,7 @@ export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
   return {
     _id: doc._id,
     tagE: dayjs(doc.Tag).format('YYYY-MM-DD'),
+    buchungstagE: dayjs(doc.Buchungstag ?? doc.Tag).format('YYYY-MM-DD'),
     eOrtE: doc.Einsatzort ?? '',
     schichtE: doc.Schicht,
     abWE: doc.abWE ?? '',
@@ -209,6 +212,7 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       Adress2: doc.Pers.Adress2 ?? '',
       ErsteTkgSt: doc.Pers.ErsteTkgSt ?? '',
       ErsteTkgStAdresse: doc.Pers.ErsteTkgStAdresse ?? '',
+      Bundesland: doc.Pers.Bundesland ?? '',
       Betrieb: doc.Pers.Betrieb ?? '',
       OE: doc.Pers.OE ?? '',
       Gewerk: doc.Pers.Gewerk ?? '',
@@ -299,6 +303,7 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
     Monat: monat,
     Jahr: jahr,
     Tag: dayjs(item.tagE).toISOString(),
+    Buchungstag: dayjs(item.buchungstagE || item.tagE).toISOString(),
     Einsatzort: item.eOrtE || undefined,
     Schicht: item.schichtE,
     abWE: item.abWE || undefined,
@@ -383,6 +388,26 @@ export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
 export interface GroupedByMonat<TFrontend> {
   data: Record<number, TFrontend[]>;
   maxUpdatedAt: string | null;
+}
+
+export interface FlatMappedDocs<TFrontend> {
+  data: TFrontend[];
+  maxUpdatedAt: string | null;
+}
+
+export function flatMapDocs<TBackend extends { updatedAt?: string }, TFrontend>(
+  docs: TBackend[],
+  mapper: (doc: TBackend) => TFrontend,
+): FlatMappedDocs<TFrontend> {
+  let maxUpdatedAt: string | null = null;
+  const data = docs.map(doc => {
+    if (doc.updatedAt && (!maxUpdatedAt || doc.updatedAt > maxUpdatedAt)) {
+      maxUpdatedAt = doc.updatedAt;
+    }
+    return mapper(doc);
+  });
+
+  return { data, maxUpdatedAt };
 }
 
 /**

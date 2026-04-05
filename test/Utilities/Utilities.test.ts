@@ -1,4 +1,4 @@
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
 import { DatenSortieren, Storage, buttonDisable, checkMaxTag, clearLoading, setLoading } from '../../src/ts/utilities';
 import { getUserCookie, isAdmin } from '../../src/ts/utilities/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";
@@ -17,7 +17,7 @@ describe('#Storage', () => {
   });
 
   it('should throw Error when key does not exist', () => {
-    expect(() => Storage.get<any>('non-existing-key', { check: true })).toThrowError(
+    expect(() => Storage.get<any>('non-existing-key' as never, { check: true })).toThrowError(
       '"non-existing-key" nicht gefunden',
     );
   });
@@ -29,8 +29,8 @@ describe('#Storage', () => {
   });
 
   it('should clear all values', () => {
-    Storage.set('key1', 'value1');
-    Storage.set('key2', 'value2');
+    Storage.set('key', 'value1');
+    Storage.set('theme', 'value2');
     Storage.clear();
     expect(Storage.size()).toBe(0);
   });
@@ -222,7 +222,7 @@ describe('#checkMaxTag', () => {
 
   it('should return the current day of the month, if the current date is in the month', () => {
     const mockDate = new Date(2023, 2, 20);
-    vi.setSystemTime(mockDate);
+    setSystemTime(mockDate);
 
     const result = checkMaxTag(2023, 2);
     expect(result).toBe(20);
@@ -230,7 +230,7 @@ describe('#checkMaxTag', () => {
 
   it('should return 1 if the current date is not in the month', () => {
     const mockDate = new Date(2023, 2, 31);
-    vi.setSystemTime(mockDate);
+    setSystemTime(mockDate);
 
     const result = checkMaxTag(2023, 3);
     expect(result).toBe(1);

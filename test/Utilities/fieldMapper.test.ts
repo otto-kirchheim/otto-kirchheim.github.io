@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import dayjs from '../../src/ts/utilities/configDayjs';
 import {
   type BackendBereitschaftseinsatz,
@@ -140,6 +140,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     Monat: 4,
     Jahr: 2024,
     Tag: '2024-04-10T00:00:00.000Z',
+    Buchungstag: '2024-04-11T00:00:00.000Z',
     Einsatzort: 'Frankfurt',
     Schicht: 'Tag',
     abWE: '06:00',
@@ -157,6 +158,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     const result = ewtFromBackend(backendEWT);
     expect(result._id).toBe('ewt1');
     expect(result.tagE).toBe(dayjs('2024-04-10T00:00:00.000Z').format('YYYY-MM-DD'));
+    expect(result.buchungstagE).toBe(dayjs('2024-04-11T00:00:00.000Z').format('YYYY-MM-DD'));
     expect(result.eOrtE).toBe('Frankfurt');
     expect(result.schichtE).toBe('Tag');
     expect(result.abWE).toBe('06:00');
@@ -169,6 +171,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
       Monat: 1,
       Jahr: 2024,
       Tag: '2024-01-05T00:00:00.000Z',
+      Buchungstag: '2024-01-05T00:00:00.000Z',
       Schicht: 'Spät',
     };
     const result = ewtFromBackend(minimal);
@@ -193,6 +196,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     const frontendEWT: IDatenEWT = {
       _id: 'ewt1',
       tagE: '2024-04-10',
+      buchungstagE: '2024-04-11',
       eOrtE: 'Frankfurt',
       schichtE: 'Tag',
       abWE: '06:00',
@@ -213,11 +217,14 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     expect(result.Schicht).toBe('Tag');
     expect(result.abWE).toBe('06:00');
     expect(dayjs(result.Tag).isValid()).toBe(true);
+    expect(dayjs(result.Buchungstag).isValid()).toBe(true);
+    expect(dayjs(result.Buchungstag).date()).toBe(11);
   });
 
   it('ewtToBackend setzt leere Strings auf undefined', () => {
     const frontendEWT: IDatenEWT = {
       tagE: '2024-04-10',
+      buchungstagE: '2024-04-10',
       eOrtE: '',
       schichtE: 'Nacht',
       abWE: '',
@@ -350,6 +357,7 @@ describe('fieldMapper – UserProfile', () => {
       kmnBhf: 5,
       TB: 'Tarifkraft',
     },
+    Einstellungen: {} as BackendUserProfile['Einstellungen'],
     Fahrzeit: [{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }],
     Arbeitszeit: {
       bT: '07:00',
@@ -376,15 +384,16 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.aZ.eT).toBe('15:30');
     expect(result.aZ.rZ).toBe('00:15');
     expect(result.fZ).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
-    expect(result.vorgabenB).toEqual({ standard: { Name: 'Standard' } });
+    expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
   });
 
   it('userProfileFromBackend mit fehlenden optionalen Feldern', () => {
     const minimal: BackendUserProfile = {
       User: 'user2',
-      Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' },
+      Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' } as BackendUserProfile['Pers'],
+      Einstellungen: {} as BackendUserProfile['Einstellungen'],
       Fahrzeit: [],
-      Arbeitszeit: {},
+      Arbeitszeit: {} as BackendUserProfile['Arbeitszeit'],
       VorgabenB: [],
     };
     const result = userProfileFromBackend(minimal);
@@ -403,6 +412,7 @@ describe('fieldMapper – UserProfile', () => {
     const frontendProfile: IVorgabenU = {
       pers: backendProfile.Pers as IVorgabenU['pers'],
       aZ: backendProfile.Arbeitszeit as IVorgabenU['aZ'],
+      Einstellungen: {} as IVorgabenU['Einstellungen'],
       fZ: backendProfile.Fahrzeit,
       vorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['vorgabenB'][string] },
     };
@@ -459,6 +469,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
     const server: IVorgabenUServer = {
       pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['pers'],
       aZ: { bT: '07:00' } as IVorgabenUServer['aZ'],
+      Einstellungen: {} as IVorgabenUServer['Einstellungen'],
       fZ: [],
       vorgabenB: [
         { key: 'woche1', value: { Name: 'Woche 1' } as IVorgabenUServer['vorgabenB'][0]['value'] },
@@ -466,7 +477,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       ],
     };
     const result = vorgabenUFromServer(server);
-    expect(result.vorgabenB).toEqual({
+    expect(result.vorgabenB).toMatchObject({
       woche1: { Name: 'Woche 1' },
       woche2: { Name: 'Woche 2' },
     });

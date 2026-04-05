@@ -7,22 +7,21 @@ import {
   setActAsUser,
   type AdminUserRow,
 } from '../utils/api';
+import type { TUserRole } from '../../interfaces';
 import { getUserCookie } from '../../utilities/decodeAccessToken';
-import { LadeUserDaten } from '../../Login/utils';
+import { loadUserDaten } from '../../Login/utils';
 import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { OeTagInput } from './OeTagInput';
 
-type UserRole = 'member' | 'team-admin' | 'org-admin' | 'super-admin';
-
 type UserEditState = {
   oe: string;
-  role: UserRole;
+  role: TUserRole;
   adminForTeamOes: string[];
   adminForOrganizationOes: string[];
 };
 
-const ROLE_LABELS: Record<UserRole, { label: string; color: string }> = {
+const ROLE_LABELS: Record<TUserRole, { label: string; color: string }> = {
   member: { label: 'Mitglied', color: 'secondary' },
   'team-admin': { label: 'Team-Admin', color: 'info' },
   'org-admin': { label: 'Org-Admin', color: 'warning' },
@@ -108,7 +107,7 @@ export function AdminUserList() {
 
       const jahr = Storage.get<number>('Jahr', { default: dayjs().year() });
       const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-      await LadeUserDaten(monat, jahr);
+      await loadUserDaten(monat, jahr);
       window.location.hash = '#start';
     } finally {
       setSavingUserId(null);
@@ -308,7 +307,7 @@ export function AdminUserList() {
                         value={edit.role}
                         onInput={e =>
                           updateEdit(currentUser._id, {
-                            role: (e.target as HTMLSelectElement).value as UserRole,
+                            role: (e.target as HTMLSelectElement).value as TUserRole,
                           })
                         }
                         disabled={!canEditRole() || isSelfRow}

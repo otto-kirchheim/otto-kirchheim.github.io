@@ -1,4 +1,4 @@
-import { SelectYear } from '../../Einstellungen/utils';
+import { selectYear } from '../../Einstellungen/utils';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { Storage, setLoading } from '../../utilities';
 import { isAdmin } from '../../utilities/decodeAccessToken';
@@ -84,5 +84,5 @@ export default async function userLoginSuccess({
   }
 
   initAutoSaveIndicator();
-  SelectYear(monat, aktJahr);
+  selectYear(monat, aktJahr);
 }

@@ -1,9 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT, IDatenEWTJahr } from '../src/ts/interfaces';
+import type { IDatenEWT } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
-const { tableToArrayMock, aktualisiereBerechnungMock } = vi.hoisted(() => ({
+const { tableToArrayMock, aktualisiereBerechnungMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   tableToArrayMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
 }));
@@ -16,11 +18,12 @@ vi.mock('../src/ts/Berechnung/aktualisiereBerechnung', () => ({
   default: aktualisiereBerechnungMock,
 }));
 
-import saveTableDataEWT from '../src/ts/EWT/utils/saveTableDataEWT';
+import persistEwtTableData from '../src/ts/EWT/utils/persistEwtTableData';
 
 function createData(tagE: string): IDatenEWT {
   return {
     tagE,
+    buchungstagE: tagE,
     eOrtE: 'Fulda',
     schichtE: 'T',
     abWE: '',
@@ -35,45 +38,39 @@ function createData(tagE: string): IDatenEWT {
   };
 }
 
-describe('saveTableDataEWT', () => {
+describe('persistEwtTableData', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
   });
 
-  it('aktualisiert dataE fuer Monat aus Storage und triggert Berechnung', () => {
-    const dataE = {
-      3: [createData('2026-03-10')],
-    } as unknown as IDatenEWTJahr;
+  it('aktualisiert dataE aus dem Tabellen-FlatArray und triggert Berechnung', () => {
+    const dataE: IDatenEWT[] = [createData('2026-03-10')];
     const newRows = [createData('2026-03-11')];
 
-    Storage.set('Monat', 3);
     Storage.set('dataE', dataE);
     tableToArrayMock.mockReturnValue(newRows);
 
     const ftMock = { getRows: vi.fn() } as never;
-    const result = saveTableDataEWT(ftMock);
+    const result = persistEwtTableData(ftMock);
 
     expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
-    expect(result[3]).toEqual(newRows);
-    expect(Storage.get<IDatenEWTJahr>('dataE', { check: true })[3]).toEqual(newRows);
+    expect(result).toEqual(newRows);
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
   });
 
-  it('nutzt expliziten Monat-Parameter statt Storage-Monat', () => {
-    const dataE = {
-      3: [createData('2026-03-10')],
-      4: [createData('2026-04-10')],
-    } as unknown as IDatenEWTJahr;
+  it('persistiert die übergebenen Tabellenzeilen unabhängig vom aktuellen Storage-Monat', () => {
+    const dataE: IDatenEWT[] = [createData('2026-03-10'), createData('2026-04-10')];
     const newRows = [createData('2026-03-20')];
 
     Storage.set('Monat', 4);
     Storage.set('dataE', dataE);
     tableToArrayMock.mockReturnValue(newRows);
 
-    const result = saveTableDataEWT({} as never, 3);
+    const result = persistEwtTableData({} as never);
 
-    expect(result[3]).toEqual(newRows);
-    expect(result[4]).toEqual([createData('2026-04-10')]);
+    expect(result).toEqual(newRows);
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
   });
 });

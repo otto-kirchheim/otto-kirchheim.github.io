@@ -99,12 +99,26 @@ export function AdminProfileTemplateContentEditor({
             {PERS_FIELDS.map(field => (
               <div class="col-12 col-md-6" key={`${templateId}-pers-${field.key}`}>
                 <label class="form-label small mb-1">{field.label}</label>
-                <input
-                  type={field.type ?? 'text'}
-                  class="form-control form-control-sm"
-                  value={templateContent.Pers[field.key] ?? ''}
-                  onInput={e => onUpdatePersField(field.key, (e.target as HTMLInputElement).value)}
-                />
+                {field.type === 'select' && field.options ? (
+                  <select
+                    class="form-select form-select-sm"
+                    value={templateContent.Pers[field.key] ?? ''}
+                    onInput={e => onUpdatePersField(field.key, (e.target as HTMLSelectElement).value)}
+                  >
+                    {field.options.map(option => (
+                      <option value={option.value} key={`${templateId}-pers-${field.key}-${option.value || 'empty'}`}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.type ?? 'text'}
+                    class="form-control form-control-sm"
+                    value={templateContent.Pers[field.key] ?? ''}
+                    onInput={e => onUpdatePersField(field.key, (e.target as HTMLInputElement).value)}
+                  />
+                )}
               </div>
             ))}
           </div>

@@ -1,8 +1,7 @@
-import { beforeAll, describe, it } from 'vitest';
+import { beforeAll, describe, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from './mockData';
 import { Storage } from '../src/ts/utilities';
-import { generateTableBerechnung } from '../src/ts/Berechnung';
-import { JSDOM } from 'jsdom';
+import generateTableBerechnung from '../src/ts/Berechnung/generateTableBerechnung';
 import type { IVorgabenBerechnung } from '../src/ts/interfaces/IVorgabenBerechnungMonat';
 import type { IVorgabenGeld } from '../src/ts/interfaces/IVorgabenGeldType';
 
@@ -12,26 +11,24 @@ describe('#generateTableBerechnung', () => {
     Storage.set('datenBerechnung', datenBerechungMock);
     Storage.set('VorgabenGeld', VorgabenGeldMock);
 
-    const dom = new JSDOM(
+    document.body.innerHTML =
       '<!DOCTYPE html><table class="table table-bordered table-striped table-hover align-middle table-Berechnung" aria-describedby="titelBerechnung">' +
-        '<thead class="align-middle">' +
-        '<tr class="table-primary align-middle">' +
-        '<th></th>' +
-        '<th class="col-1">Jan</th>' +
-        '<th class="col-1">Feb</th>' +
-        '<th class="col-1">Mär</th>' +
-        '<th class="col-1">Apr</th>' +
-        '<th class="col-1">Mai</th>' +
-        '<th class="col-1">Jun</th>' +
-        '<th class="col-1">Jul</th>' +
-        '<th class="col-1">Aug</th>' +
-        '<th class="col-1">Sep</th>' +
-        '<th class="col-1">Okt</th>' +
-        '<th class="col-1">Nov</th>' +
-        '<th class="col-1">Dez</th>' +
-        '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>',
-    );
-    globalThis.document = dom.window.document;
+      '<thead class="align-middle">' +
+      '<tr class="table-primary align-middle">' +
+      '<th></th>' +
+      '<th class="col-1">Jan</th>' +
+      '<th class="col-1">Feb</th>' +
+      '<th class="col-1">Mär</th>' +
+      '<th class="col-1">Apr</th>' +
+      '<th class="col-1">Mai</th>' +
+      '<th class="col-1">Jun</th>' +
+      '<th class="col-1">Jul</th>' +
+      '<th class="col-1">Aug</th>' +
+      '<th class="col-1">Sep</th>' +
+      '<th class="col-1">Okt</th>' +
+      '<th class="col-1">Nov</th>' +
+      '<th class="col-1">Dez</th>' +
+      '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>';
   });
   it("should generate 'Berechnung' Table", () => {
     generateTableBerechnung(

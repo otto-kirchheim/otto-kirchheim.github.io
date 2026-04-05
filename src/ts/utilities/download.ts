@@ -17,6 +17,8 @@ import tableToArray from './tableToArray';
 import dayjs from './configDayjs';
 import { userProfileToBackend } from './fieldMapper';
 import { downloadPdf } from './apiService';
+import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from './getMonatFromItem';
+import calculateBuchungstagEwt from '../EWT/utils/calculateBuchungstagEwt';
 
 export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N'): Promise<void> {
   if (button === null) return;
@@ -76,8 +78,8 @@ export default async function download(button: HTMLButtonElement | null, modus: 
   // Daten: Frontend-Feldnamen → Backend-Feldnamen mappen
   switch (modus) {
     case 'B': {
-      const bzRaw = tableToArray<IDatenBZ<string>>('tableBZ');
-      const beRaw = tableToArray<IDatenBE>('tableBE');
+      const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
+      const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
       data.Daten = {
         BZ: bzRaw.map(bz => ({ Beginn: bz.beginB, Ende: bz.endeB, Pause: bz.pauseB ?? 0 })),
         BE: beRaw.map(be => ({
@@ -92,10 +94,10 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       break;
     }
     case 'E': {
-      const ewtRaw = tableToArray<IDatenEWT<string>>('tableE');
+      const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
       data.Daten = {
         EWT: ewtRaw.map(e => ({
-          Tag: dayjs(e.tagE).format('DD'),
+          Buchungstag: dayjs(e.buchungstagE || calculateBuchungstagEwt(e)).format('DD'),
           Einsatzort: e.eOrtE,
           Schicht: e.schichtE,
           abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
@@ -112,7 +114,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       break;
     }
     case 'N': {
-      const nRaw = tableToArray<IDatenN>('tableN');
+      const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
       data.Daten = {
         N: nRaw.map(n => ({
           Tag: dayjs(n.tagN, 'DD.MM.YYYY').format('DD'),

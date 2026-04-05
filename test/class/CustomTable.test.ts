@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createCustomTable, type CustomTableTypes } from '../../src/ts/class/CustomTable';
 
 interface TableRow extends CustomTableTypes {
@@ -130,5 +130,39 @@ describe('CustomTable', () => {
 
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(table.rows.hasPendingDeletes).toBe(true);
+  });
+
+  it('verwendet für Tabellenaktionen in Formularen keine impliziten Submit-Buttons', () => {
+    const form = document.createElement('form');
+    document.body.appendChild(form);
+
+    const tableElement = document.createElement('table');
+    tableElement.id = 'form-table';
+    form.appendChild(tableElement);
+
+    createCustomTable<TableRow>('form-table', {
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow: vi.fn(),
+        showRow: vi.fn(),
+        deleteRow: vi.fn(),
+        customButton: [{ text: 'Extra', classes: ['btn', 'btn-secondary'], function: vi.fn() }],
+      },
+      columns: [
+        {
+          name: 'label',
+          title: 'Label',
+        },
+      ],
+      rows: [{ _id: '1', label: 'Eintrag', value: 1 }],
+    });
+
+    const actionButtons = Array.from(form.querySelectorAll<HTMLButtonElement>('button'));
+
+    expect(actionButtons.length).toBeGreaterThan(0);
+    actionButtons.forEach(button => {
+      expect(button.type).toBe('button');
+    });
   });
 });

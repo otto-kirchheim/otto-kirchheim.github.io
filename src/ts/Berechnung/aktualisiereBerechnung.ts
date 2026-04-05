@@ -2,40 +2,42 @@ import { generateTableBerechnung } from '.';
 import type {
   IDaten,
   IDatenBE,
-  IDatenBEJahr,
   IDatenBZ,
-  IDatenBZJahr,
   IDatenEWT,
-  IDatenEWTJahr,
   IDatenN,
-  IDatenNJahr,
   IVorgabenBerechnung,
   IVorgabenBerechnungMonat,
 } from '../interfaces';
-import { Storage } from '../utilities';
+import { normalizeResourceRows, Storage } from '../utilities';
 import dayjs from '../utilities/configDayjs';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from '../utilities/getMonatFromItem';
 
-export default function aktualisiereBerechnung(Jahr?: number, daten?: Required<IDaten>): IVorgabenBerechnung {
-  Jahr = Jahr ?? Storage.get<number>('Jahr', { check: true });
-  daten = daten ?? {
-    BZ: Storage.get<IDatenBZJahr>('dataBZ', { default: {} as IDatenBZJahr }),
-    BE: Storage.get<IDatenBEJahr>('dataBE', { default: {} as IDatenBEJahr }),
-    EWT: Storage.get<IDatenEWTJahr>('dataE', { default: {} as IDatenEWTJahr }),
-    N: Storage.get<IDatenNJahr>('dataN', { default: {} as IDatenNJahr }),
+export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
+  const datenQuelle: Required<IDaten> = daten ?? {
+    BZ: Storage.get<IDatenBZ[]>('dataBZ', { default: [] }),
+    BE: Storage.get<IDatenBE[]>('dataBE', { default: [] }),
+    EWT: Storage.get<IDatenEWT[]>('dataE', { default: [] }),
+    N: Storage.get<IDatenN[]>('dataN', { default: [] }),
   };
-  if (!daten) throw new Error('Keine Daten gefunden');
 
   const Berechnung: IVorgabenBerechnung = Storage.get<IVorgabenBerechnung>('datenBerechnung', {
     check: true,
     default: {} as IVorgabenBerechnung,
   });
 
-  if (!('BZ' in daten && 'BE' in daten && 'EWT' in daten && 'N' in daten))
-    throw new Error('Daten entsprechen nicht dem Interface IDaten');
-  const { BZ, BE, EWT, N } = daten;
+  const BZ = normalizeResourceRows<IDatenBZ>(datenQuelle.BZ);
+  const BE = normalizeResourceRows<IDatenBE>(datenQuelle.BE);
+  const EWT = normalizeResourceRows<IDatenEWT>(datenQuelle.EWT);
+  const N = normalizeResourceRows<IDatenN>(datenQuelle.N);
+
+  const filterByMonat = <T>(items: T[], getMonat: (item: T) => number, monat: number): T[] =>
+    items.filter(item => getMonat(item) === monat);
 
   for (let Monat = 1; Monat <= 12; Monat++) {
-    const [BZMonat, BEMonat, EWTMonat, NMonat] = [BZ[Monat] ?? [], BE[Monat] ?? [], EWT[Monat] ?? [], N[Monat] ?? []];
+    const BZMonat = filterByMonat(BZ, getMonatFromBZ, Monat);
+    const BEMonat = filterByMonat(BE, getMonatFromBE, Monat);
+    const EWTMonat = filterByMonat(EWT, getMonatFromEWT, Monat);
+    const NMonat = filterByMonat(N, getMonatFromN, Monat);
     Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(BZMonat, BEMonat, EWTMonat, NMonat);
   }
 

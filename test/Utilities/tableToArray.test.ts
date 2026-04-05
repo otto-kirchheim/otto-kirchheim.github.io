@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import tableToArray from '../../src/ts/utilities/tableToArray';
 import type { CustomTable, Row } from '../../src/ts/class/CustomTable';
 import type { CustomHTMLTableElement } from '../../src/ts/interfaces';

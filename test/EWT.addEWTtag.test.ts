@@ -1,20 +1,24 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
 
-const { naechsterTagMock, saveTableDataEWTMock, ewtBerechnenMock } = vi.hoisted(() => ({
-  naechsterTagMock: vi.fn(),
-  saveTableDataEWTMock: vi.fn(),
-  ewtBerechnenMock: vi.fn(),
+const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock, calculateBuchungstagEwtMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
+  setNaechsterEwtTagMock: vi.fn(),
+  persistEwtTableDataMock: vi.fn(),
+  calculateEwtEintraegeMock: vi.fn(),
+  calculateBuchungstagEwtMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/EWT/utils', () => ({
-  naechsterTag: naechsterTagMock,
-  saveTableDataEWT: saveTableDataEWTMock,
-  berechnen: ewtBerechnenMock,
+  setNaechsterEwtTag: setNaechsterEwtTagMock,
+  persistEwtTableData: persistEwtTableDataMock,
+  calculateEwtEintraege: calculateEwtEintraegeMock,
+  calculateBuchungstagEwt: calculateBuchungstagEwtMock,
 }));
 
-import addEWTtag from '../src/ts/EWT/utils/addEWTtag';
+import addEwtTag from '../src/ts/EWT/utils/addEwtTag';
 
 function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
@@ -53,6 +57,7 @@ describe('addEWTtag', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
+    calculateBuchungstagEwtMock.mockReturnValue('2026-03-10');
   });
 
   it('wirft Fehler wenn TagE-Input fehlt', () => {
@@ -60,28 +65,31 @@ describe('addEWTtag', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal root not found');
 
-    expect(() => addEWTtag(modal as never, {} as IVorgabenU)).toThrow('TagE input not found');
+    expect(() => addEwtTag(modal as never, {} as IVorgabenU)).toThrow('TagE input not found');
   });
 
   it('wirft Fehler wenn Tabelle fehlt', () => {
     const modal = setupModal(true);
-    ewtBerechnenMock.mockReturnValue([createEwtData()]);
+    calculateEwtEintraegeMock.mockReturnValue([createEwtData()]);
 
-    expect(() => addEWTtag(modal as never, {} as IVorgabenU)).toThrow('TableE not found');
+    expect(() => addEwtTag(modal as never, {} as IVorgabenU)).toThrow('TableE not found');
   });
 
   it('berechnet, speichert und setzt naechsten Tag im Standardpfad', () => {
     const modal = setupModal(true);
     const calculatedData = createEwtData({ beginE: '07:00', endeE: '15:00' });
-    ewtBerechnenMock.mockReturnValue([calculatedData]);
+    calculateEwtEintraegeMock.mockReturnValue([calculatedData]);
 
     const addMock = vi.fn();
     const existingRows = [
-      { cells: createEwtData({ tagE: '2026-03-10' }) },
-      { cells: createEwtData({ tagE: '2026-03-11' }) },
+      { cells: createEwtData({ tagE: '2026-03-10' }), _state: 'unchanged' },
+      { cells: createEwtData({ tagE: '2026-03-11' }), _state: 'unchanged' },
     ];
     const ftE = {
-      rows: { add: addMock },
+      rows: {
+        add: addMock,
+        array: existingRows,
+      },
       getRows: vi.fn().mockReturnValue(existingRows),
     };
 
@@ -90,12 +98,13 @@ describe('addEWTtag', () => {
     table.instance = ftE;
     document.body.appendChild(table);
 
-    addEWTtag(modal as never, {} as IVorgabenU);
+    addEwtTag(modal as never, {} as IVorgabenU);
 
-    expect(ewtBerechnenMock).toHaveBeenCalledTimes(1);
-    expect(addMock).toHaveBeenCalledWith(calculatedData);
-    expect(saveTableDataEWTMock).toHaveBeenCalledWith(ftE);
-    expect(naechsterTagMock).toHaveBeenCalledWith(
+    expect(calculateEwtEintraegeMock).toHaveBeenCalledTimes(1);
+    expect(calculateBuchungstagEwtMock).toHaveBeenCalledWith(calculatedData);
+    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, buchungstagE: '2026-03-10' }));
+    expect(persistEwtTableDataMock).toHaveBeenCalledWith(ftE);
+    expect(setNaechsterEwtTagMock).toHaveBeenCalledWith(
       10,
       existingRows.map(row => row.cells),
     );
@@ -110,11 +119,14 @@ describe('addEWTtag', () => {
       an1E: '15:15',
       berechnen: true,
     });
-    ewtBerechnenMock.mockReturnValue([calculatedData]);
+    calculateEwtEintraegeMock.mockReturnValue([calculatedData]);
 
     const addMock = vi.fn();
     const ftE = {
-      rows: { add: addMock },
+      rows: {
+        add: addMock,
+        array: [],
+      },
       getRows: vi.fn().mockReturnValue([]),
     };
 
@@ -123,13 +135,14 @@ describe('addEWTtag', () => {
     table.instance = ftE;
     document.body.appendChild(table);
 
-    addEWTtag(modal as never, {} as IVorgabenU, true);
+    addEwtTag(modal as never, {} as IVorgabenU, true);
 
-    expect(ewtBerechnenMock).toHaveBeenCalledWith({} as IVorgabenU, [
+    expect(calculateEwtEintraegeMock).toHaveBeenCalledWith({} as IVorgabenU, [
       expect.objectContaining({ berechnen: true, tagE: '2026-03-10' }),
     ]);
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
+        buchungstagE: '2026-03-10',
         ab1E: '',
         anEE: '',
         abEE: '',

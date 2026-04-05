@@ -1,15 +1,16 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock, getInstanceMock } =
-  vi.hoisted(() => ({
-    userLoginSuccessMock: vi.fn(),
-    setLoadingMock: vi.fn(),
-    clearLoadingMock: vi.fn(),
-    loginMock: vi.fn(),
-    meMock: vi.fn(),
-    hideMock: vi.fn(),
-    getInstanceMock: vi.fn(),
-  }));
+const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock, getInstanceMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
+  userLoginSuccessMock: vi.fn(),
+  setLoadingMock: vi.fn(),
+  clearLoadingMock: vi.fn(),
+  loginMock: vi.fn(),
+  meMock: vi.fn(),
+  hideMock: vi.fn(),
+  getInstanceMock: vi.fn(),
+}));
 
 vi.mock('../src/ts/Login/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,

@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { createSnackBarMock } = vi.hoisted(() => ({
+const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),
 }));
 
@@ -36,13 +36,13 @@ describe('Storage', () => {
     it('speichert und liest ein Objekt', () => {
       const obj = { foo: 'bar', num: 42 };
       Storage.set('theme', obj);
-      expect(Storage.get('theme')).toEqual(obj);
+      expect(Storage.get<typeof obj>('theme')).toEqual(obj);
     });
 
     it('speichert und liest ein Array', () => {
       const arr = [1, 2, 3];
       Storage.set('key', arr);
-      expect(Storage.get('key')).toEqual(arr);
+      expect(Storage.get<number[]>('key')).toEqual(arr);
     });
   });
 
@@ -63,7 +63,7 @@ describe('Storage', () => {
     it('unwrappt Ressourcen-Keys automatisch beim Lesen', () => {
       const data = [{ tagN: '05.03.2026' }];
       Storage.set('dataN', data);
-      expect(Storage.get('dataN')).toEqual(data);
+      expect(Storage.get<typeof data>('dataN')).toEqual(data);
     });
 
     it('migriert Altbestände ohne Wrapper und setzt Timestamp auf 0', () => {
@@ -109,7 +109,7 @@ describe('Storage', () => {
 
     it('Wert kann via get() gelesen werden', () => {
       Storage.setWithTimestamp('dataBE', { test: true }, 999);
-      expect(Storage.get('dataBE')).toEqual({ test: true });
+      expect(Storage.get<{ test: boolean }>('dataBE')).toEqual({ test: true });
     });
   });
 
@@ -159,8 +159,8 @@ describe('Storage', () => {
     });
 
     it('gibt Wert zurück mit check: true wenn Key existiert', () => {
-      Storage.set('Monat', 'März');
-      expect(Storage.get('Monat', { check: true })).toBe('März');
+      Storage.set('Monat', 3);
+      expect(Storage.get<number>('Monat', { check: true })).toBe(3);
     });
   });
 
@@ -179,7 +179,7 @@ describe('Storage', () => {
 
     it('gibt Wert zurück wenn Key existiert', () => {
       Storage.set('Jahr', 2026);
-      expect(Storage.get('Jahr', true)).toBe(2026);
+      expect(Storage.get<number>('Jahr', true)).toBe(2026);
     });
   });
 

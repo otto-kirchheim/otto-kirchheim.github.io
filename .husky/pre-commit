@@ -1,13 +1,16 @@
+if ! command -v bun >/dev/null 2>&1; then
+  for candidate in "${HOME:-}/.bun/bin" "/home/vscode/.bun/bin" "/root/.bun/bin"; do
+    if [ -x "$candidate/bun" ]; then
+      export PATH="$candidate:$PATH"
+      break
+    fi
+  done
+fi
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "Error: bun not found in PATH for pre-commit hook" >&2
+  exit 127
+fi
+
 bun run lint-staged
 bun run test
-
-node -e "
-  const fs = require('fs');
-  const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-  const [major, minor, patch] = pkg.version.split('.').map(Number);
-  pkg.version = major + '.' + minor + '.' + (patch + 1);
-  fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-  console.log('Version bumped to ' + pkg.version);
-"
-
-git add package.json

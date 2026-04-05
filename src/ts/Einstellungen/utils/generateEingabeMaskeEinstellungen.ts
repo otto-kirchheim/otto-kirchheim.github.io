@@ -2,6 +2,7 @@ import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } 
 import { ZULAGEN_CATALOG } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
 import { CustomTable } from '../../class/CustomTable';
+import { setupBundeslandAutoFill } from '../../utilities/holidayRegion';
 import type {
   CustomHTMLTableElement,
   IVorgabenU,
@@ -9,7 +10,7 @@ import type {
   IVorgabenUaZ,
   IVorgabenUvorgabenB,
 } from '../../interfaces';
-import { Storage } from '../../utilities';
+import { Storage, setupPersValidation } from '../../utilities';
 
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
@@ -19,6 +20,8 @@ export default function generateEingabeMaskeEinstellungen(
   setElementValues<IVorgabenUPers>(VorgabenU.pers);
   setElementValues<IVorgabenUaZ>(VorgabenU.aZ);
   populateEmailField();
+  setupPersValidation();
+  setupBundeslandAutoFill();
   populateTabCheckboxes(VorgabenU.Einstellungen?.aktivierteTabs);
   populateZulagenCheckboxes(VorgabenU.Einstellungen?.benoetigteZulagen);
 
@@ -103,7 +106,7 @@ function isNumberOrString(value: unknown): value is number | string {
 
 function populateTabCheckboxes(aktivierteTabs?: string[]): void {
   const checkboxes = document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]');
-  for (const cb of checkboxes) {
+  for (const cb of Array.from(checkboxes)) {
     cb.checked = !aktivierteTabs || aktivierteTabs.length === 0 || aktivierteTabs.includes(cb.dataset.tabKey!);
   }
 }

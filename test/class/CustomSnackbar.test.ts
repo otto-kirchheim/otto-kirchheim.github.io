@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 
 describe('CustomSnackbar', () => {
@@ -28,7 +28,7 @@ describe('CustomSnackbar', () => {
       container: '#does-not-exist',
     });
 
-    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy.mock.calls[0][0]).toContain('SnackBar: Could not find target container');
 
     const container = document.querySelector('.CustomSnackbar-container');

@@ -1,7 +1,7 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import { Logout } from './Einstellungen/utils';
+import { logoutUser } from './Einstellungen/utils';
 import { createSnackBar } from './class/CustomSnackbar';
 import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from './utilities';
 import dayjs from './utilities/configDayjs';
@@ -55,7 +55,7 @@ window.addEventListener('load', () => {
     if (compareVersion(clientVersion, currentVersion) < 0) {
       const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
       sessionStorage.clear();
-      Logout();
+      logoutUser({ serverLogout: false });
       createSnackBar({
         message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
         timeout: 10000,

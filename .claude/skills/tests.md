@@ -2,18 +2,18 @@
 
 ## Test-Stack
 
-- **Runner:** Vitest (v3)
-- **Environment:** jsdom
-- **Mocking:** vitest-fetch-mock (globaler fetch-Mock)
-- **Coverage:** @vitest/coverage-v8
-- **UI:** @vitest/ui (Port 9527)
+- **Runner:** Bun test
+- **Environment:** happy-dom via `@happy-dom/global-registrator`
+- **Mocking:** `bun:test` (`vi`, `mock`, `spyOn`)
+- **Coverage:** Bun coverage (`text`, `lcov`)
+- **Ausführung:** sequentiell pro Datei über `scripts/run-bun-tests.ts`
 
 ## Befehle
 
 ```bash
-bun run test           # tsc + vitest run (einmalig)
-bun run dev-test       # Vitest UI im Browser (Port 9527)
-bun run coverage       # Tests mit Coverage-Report
+bun run test           # Bun-Testlauf über den sequentiellen Runner
+bun run dev-test       # Bun Watch-Mode
+bun run coverage       # Bun-Coverage-Lauf
 ```
 
 ---
@@ -22,7 +22,7 @@ bun run coverage       # Tests mit Coverage-Report
 
 ```
 test/
-├── setupVitest.ts          # Setup: vitest-fetch-mock (globaler Fetch-Mock)
+├── setupBun.ts             # Setup: happy-dom + Bun-Kompatibilitaet
 ├── global.d.ts             # Test-Typen
 ├── mockData.ts             # Gemeinsame Mock-Daten
 ├── mockPDFString.ts        # Mock für PDF-Tests
@@ -41,32 +41,28 @@ test/
 
 ---
 
-## Test-Setup (`setupVitest.ts`)
+## Test-Setup (`setupBun.ts`)
 
 ```ts
-import createFetchMock from "vitest-fetch-mock";
-import { vi } from "vitest";
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
-const fetchMocker = createFetchMock(vi);
-fetchMocker.enableMocks();
+GlobalRegistrator.register({
+	url: "http://localhost/",
+});
 ```
 
-- `fetch` ist global gemockt (vitest-fetch-mock)
-- Globals aktiviert (`globals: true` in vite.config.ts)
-- jsdom als DOM-Environment
+- happy-dom stellt globale Browser-APIs bereit
+- Bun liefert `vi`, `mock`, `spyOn`, Fake-Timer und Snapshots
+- Der Test-Runner startet jede Testdatei in einem frischen `bun test`-Prozess
 
 ---
 
-## Vitest-Konfiguration (in `vite.config.ts`)
+## Bun-Konfiguration (in `bunfig.toml`)
 
 ```ts
-test: {
-  root: path.resolve(__dirname),
-  globals: true,
-  environment: "jsdom",
-  setupFiles: ["./test/setupVitest.ts"],
-  exclude: [".github/*", ".husky/*", "dist", "dev-dist", ...],
-}
+[test]
+preload = ["./test/setupBun.ts"]
+coverageReporter = ["text", "lcov"]
 ```
 
 ---
@@ -76,11 +72,11 @@ test: {
 ### Grundstruktur
 
 ```ts
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "bun:test";
 
 describe("FeatureName", () => {
 	beforeEach(() => {
-		fetchMock.resetMocks();
+		vi.clearAllMocks();
 	});
 
 	it("should do something", () => {
@@ -92,17 +88,14 @@ describe("FeatureName", () => {
 ### Fetch mocken
 
 ```ts
-// Einfacher Mock
-fetchMock.mockResponseOnce(JSON.stringify({ data: "test" }));
-
-// Mit Status
-fetchMock.mockResponseOnce("", { status: 401 });
-
-// Mehrere Responses
-fetchMock.mockResponses([JSON.stringify({ data: 1 }), { status: 200 }], [JSON.stringify({ data: 2 }), { status: 200 }]);
+globalThis.fetch = vi.fn().mockResolvedValue({
+	ok: true,
+	status: 200,
+	json: async () => ({ data: "test" }),
+});
 ```
 
-### DOM testen (jsdom)
+### DOM testen (happy-dom)
 
 ```ts
 it("should render element", () => {
@@ -126,7 +119,7 @@ it("should match snapshot", () => {
 
 1. [ ] Testdatei unter `test/` oder `test/Utilities/` anlegen
 2. [ ] `describe/it`-Struktur mit klaren Beschreibungen
-3. [ ] `fetchMock.resetMocks()` im `beforeEach`
+3. [ ] Mocks im `beforeEach` per `vi.clearAllMocks()` resetten
 4. [ ] Gemeinsame Mock-Daten in `mockData.ts` wiederverwenden
 5. [ ] Tests lokal ausführen: `bun run test`
 

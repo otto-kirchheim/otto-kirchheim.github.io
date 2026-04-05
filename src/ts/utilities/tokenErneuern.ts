@@ -1,5 +1,5 @@
 import { createSnackBar } from '../class/CustomSnackbar';
-import { Logout } from '../Einstellungen/utils';
+import { logoutUser } from '../Einstellungen/utils';
 import { authApi } from './apiService';
 import Storage from './Storage';
 
@@ -23,7 +23,7 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
     console.error('Token-Refresh fehlgeschlagen:', err);
     isLogoutInProgress = true;
     showErrorAndLogout();
-    throw new Error('Fehler bei Token erneuerung');
+    throw new Error('Fehler bei Token erneuerung', { cause: err });
   }
 }
 
@@ -43,7 +43,7 @@ function incrementRefreshCounter(): void {
 }
 
 function showErrorAndLogout(): void {
-  Logout();
+  logoutUser();
   createSnackBar({
     message: `Login<br/>Fehlerhafte Anmeldung,</br> bitte Erneut anmelden!`,
     status: 'error',

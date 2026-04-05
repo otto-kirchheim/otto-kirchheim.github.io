@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import * as Utils from '../../src/ts/utilities'; // Import all utilities to mock them
 import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchRetry';
@@ -6,7 +6,7 @@ import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchR
 // --- Mocks ---
 
 // Mock fetch
-globalThis.fetch = vi.fn();
+globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
 // Mock Storage module (which uses localStorage)
 vi.mock('../../src/ts/utilities/Storage', () => ({
@@ -53,10 +53,11 @@ describe('FetchRetry.ts', () => {
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks();
+    vi.spyOn(Date, 'now').mockImplementation(() => MOCK_DATE_NOW);
     sessionStorage.clear();
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockReset();
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockReset();
     // Default fetch mock (can be overridden in specific tests)
-    (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       ok: true,
       status: 200,
       json: async () => ({ success: true }),
@@ -100,7 +101,7 @@ describe('FetchRetry.ts', () => {
       sessionStorage.setItem('lastServerContact', '0'); // Very old contact
 
       // Mock fetch to succeed only for the first server check
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
         if (url === `${primaryServerUrl}/`) {
           return { ok: true, status: 200, json: async () => ({}), headers: new Headers() };
         }
@@ -121,7 +122,7 @@ describe('FetchRetry.ts', () => {
       sessionStorage.setItem('lastServerContact', '0'); // Very old contact
 
       // Mock fetch to fail for the first server, succeed for the second
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(async (url: string) => {
         if (url === `${primaryServerUrl}/`) {
           throw new Error('Timeout or network error');
         } else if (url === `${secondaryServerUrl}/`) {
@@ -148,7 +149,7 @@ describe('FetchRetry.ts', () => {
       sessionStorage.setItem('lastServerContact', '0'); // Very old contact
 
       // Mock fetch to fail for all server checks
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'));
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Error'));
 
       await expect(getServerUrl()).rejects.toThrow('Server nicht Erreichbar');
 
@@ -172,26 +173,30 @@ describe('FetchRetry.ts', () => {
       sessionStorage.setItem('lastServerContact', '0');
 
       // Mock fetch to delay longer than the timeout for the first server
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (url: string, options: RequestInit) => {
-        if (url === `${primaryServerUrl}/`) {
-          await new Promise((resolve, reject) => {
-            const timeoutId = setTimeout(() => resolve({ ok: false }), mockServerConfigs[0].timeout + 100); // Resolve late
-            options.signal?.addEventListener('abort', () => {
-              clearTimeout(timeoutId);
-              reject(new DOMException('Aborted', 'AbortError')); // Simulate abort
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        async (url: string, options: RequestInit) => {
+          if (url === `${primaryServerUrl}/`) {
+            await new Promise((resolve, reject) => {
+              const timeoutId = setTimeout(() => resolve({ ok: false }), mockServerConfigs[0].timeout + 100); // Resolve late
+              options.signal?.addEventListener('abort', () => {
+                clearTimeout(timeoutId);
+                reject(new DOMException('Aborted', 'AbortError')); // Simulate abort
+              });
             });
-          });
-          // This part should not be reached if abort works
-          return { ok: true, status: 200, json: async () => ({}), headers: new Headers() };
-        } else if (url === `${secondaryServerUrl}/`) {
-          // Second server connects quickly
-          return { ok: true, status: 200, json: async () => ({}), headers: new Headers() };
-        }
-        throw new Error('Unexpected URL');
-      });
+            // This part should not be reached if abort works
+            return { ok: true, status: 200, json: async () => ({}), headers: new Headers() };
+          } else if (url === `${secondaryServerUrl}/`) {
+            // Second server connects quickly
+            return { ok: true, status: 200, json: async () => ({}), headers: new Headers() };
+          }
+          throw new Error('Unexpected URL');
+        },
+      );
 
       const promise = getServerUrl();
-      await vi.advanceTimersByTimeAsync(mockServerConfigs[0].timeout + 50); // Advance time past the first timeout
+      await (vi as typeof vi & { advanceTimersByTimeAsync: (ms: number) => Promise<void> }).advanceTimersByTimeAsync(
+        mockServerConfigs[0].timeout + 50,
+      ); // Advance time past the first timeout
       const url = await promise; // Let the second fetch complete
 
       expect(url).toBe(secondaryServerUrl);
@@ -221,7 +226,7 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should perform a successful GET request', async () => {
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockSuccessResponse,
@@ -239,7 +244,7 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should perform a successful POST request with data', async () => {
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockSuccessResponse,
@@ -258,22 +263,24 @@ describe('FetchRetry.ts', () => {
           headers: expect.any(Headers),
         }),
       );
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0][1].headers.get('Content-Type')).toBe(
-        'application/json',
-      );
+      expect(
+        (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1].headers.get('Content-Type'),
+      ).toBe('application/json');
     });
 
     it('should handle fetch error', async () => {
-      const fetchError = new Error('Network Failed');
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(fetchError);
+      const fetchMessage = 'Network Failed';
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+        throw new Error(fetchMessage);
+      });
 
       await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow(
-        `Fetch-Fehler: ${fetchError.message}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
+        `Fetch-Fehler: ${fetchMessage}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
       );
     });
 
     it('should handle non-ok response', async () => {
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 500,
         json: async () => mockErrorResponse, // Assume server still returns JSON on error
@@ -287,7 +294,7 @@ describe('FetchRetry.ts', () => {
 
     it('should retry with token refresh if 401 Token response', async () => {
       // First call: Token expired
-      (globalThis.fetch as ReturnType<typeof vi.fn>)
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>)
         .mockResolvedValueOnce({
           ok: false,
           status: 401,
@@ -310,24 +317,26 @@ describe('FetchRetry.ts', () => {
       expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
       expect(Utils.tokenErneuern).toHaveBeenCalledWith(0);
       // Retry-Request soll ohne credentials laufen (Bearer statt Cookie)
-      expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[1][1].method).toBe('GET');
+      expect((globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1].method).toBe('GET');
     });
 
     it('should throw error if token refresh fails during retry', async () => {
-      const refreshError = new Error('Refresh failed');
+      const refreshMessage = 'Refresh failed';
       // First call: Token expired
-      (globalThis.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 401,
         json: async () => mockTokenExpiredResponse,
         headers: new Headers(),
       });
 
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockRejectedValueOnce(refreshError);
+      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+        throw new Error(refreshMessage);
+      });
 
       // Expect the error thrown by tokenErneuern to propagate
       await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow(
-        `Fetch-Fehler: ${refreshError.message}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
+        `Fetch-Fehler: ${refreshMessage}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
       );
 
       expect(globalThis.fetch).toHaveBeenCalledTimes(1); // Only the first call

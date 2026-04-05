@@ -1,11 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
-import clearZeiten from '../src/ts/EWT/utils/clearZeiten';
-import naechsterTag from '../src/ts/EWT/utils/naechsterTag';
+import calculateBuchungstagEwt from '../src/ts/EWT/utils/calculateBuchungstagEwt';
+import clearEwtZeiten from '../src/ts/EWT/utils/clearEwtZeiten';
+import setNaechsterEwtTag from '../src/ts/EWT/utils/setNaechsterEwtTag';
 import Storage from '../src/ts/utilities/Storage';
 
-const { createSnackBarMock } = vi.hoisted(() => ({
+const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),
 }));
 
@@ -61,7 +62,7 @@ describe('EWT utils extra', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    clearZeiten(modal as never);
+    clearEwtZeiten(modal as never);
 
     expect(modal.querySelector<HTMLInputElement>('#abWE')?.value).toBe('');
     expect(modal.querySelector<HTMLInputElement>('#ab1E')?.value).toBe('');
@@ -76,17 +77,36 @@ describe('EWT utils extra', () => {
   it('naechsterTag setzt den naechsten freien Tag', () => {
     document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-01" />`;
 
-    naechsterTag(1, [createRow(2), createRow(3)]);
+    setNaechsterEwtTag(1, [createRow(2), createRow(3)]);
 
     expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-04');
   });
 
   it('naechsterTag nutzt bei leerem tag den maximal vorhandenen Tag', () => {
-    document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-01" />`;
+    document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-21" />`;
 
-    naechsterTag('', [createRow(20), createRow(21)]);
+    setNaechsterEwtTag('', [createRow(20), createRow(21)]);
 
     expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-22');
+  });
+
+  it('setzt bei N-Schichten den Buchungstag auf den Folgetag, wenn der laengere Anteil nach Mitternacht liegt', () => {
+    const result = calculateBuchungstagEwt({
+      tagE: '2026-03-20',
+      eOrtE: 'Mühlbach',
+      schichtE: 'N',
+      abWE: '19:25',
+      ab1E: '20:30',
+      anEE: '20:50',
+      beginE: '19:45',
+      endeE: '06:15',
+      abEE: '05:10',
+      an1E: '05:30',
+      anWE: '06:35',
+      berechnen: true,
+    });
+
+    expect(result).toBe('2026-03-21');
   });
 
   it('naechsterTag wirft Fehler und sperrt Speichern wenn kein freier Tag vorhanden ist', () => {
@@ -103,9 +123,9 @@ describe('EWT utils extra', () => {
       </div>
     `;
 
-    expect(() => naechsterTag(1, [createRow(1), createRow(2), createRow(3)])).toThrow(
-      'Fehler beim Finden eines Freien Tages',
-    );
+    const alleTage = Array.from({ length: 31 }, (_, index) => createRow(index + 1));
+
+    expect(() => setNaechsterEwtTag(1, alleTage)).toThrow('Fehler beim Finden eines Freien Tages');
 
     const saveButton = document.querySelector<HTMLButtonElement>(
       '#modal > div > form > div.modal-footer > button.btn.btn-primary',
@@ -115,6 +135,6 @@ describe('EWT utils extra', () => {
   });
 
   it('naechsterTag wirft Fehler wenn das Eingabefeld fehlt', () => {
-    expect(() => naechsterTag(1, [])).toThrow('Eingabefeld für Tag nicht gefunden');
+    expect(() => setNaechsterEwtTag(1, [])).toThrow('Eingabefeld für Tag nicht gefunden');
   });
 });

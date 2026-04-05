@@ -1,9 +1,9 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
-import { Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import { getMonatFromN, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
 import download from '../utilities/download';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
-import { DataN, saveTableDataN } from './utils';
+import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
 window.addEventListener('load', () => {
   const Jahr: number = Storage.get('Jahr', { default: new Date().getFullYear() });
@@ -31,7 +31,7 @@ window.addEventListener('load', () => {
       { name: 'auftragN', title: 'Auftragsnummer', breakpoints: 'md' },
     ],
     empty: () => getEmptyText(Jahr),
-    rows: DataN(),
+    rows: getNebengeldDaten(undefined, undefined, { scope: 'all' }),
     sorting: { enabled: true },
     onChange: createOnChangeHandler('N'),
     editing: {
@@ -47,7 +47,7 @@ window.addEventListener('load', () => {
       },
       deleteRow: row => {
         row.deleteRow();
-        saveTableDataN(ftN);
+        persistNebengeldTableData(ftN);
       },
       deleteAllRows: () => {
         createSnackBar({
@@ -61,9 +61,11 @@ window.addEventListener('load', () => {
             {
               text: 'Ja',
               function: () => {
-                ftN.rows.deleteAll();
+                const activeMonat = Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
+                const monthRows = [...ftN.rows.array].filter(row => getMonatFromN(row.cells) === activeMonat);
+                monthRows.forEach(row => row.deleteRow());
                 buttonDisable(false);
-                saveTableDataN(ftN);
+                persistNebengeldTableData(ftN);
               },
               dismiss: true,
               class: ['text-danger'],
@@ -89,4 +91,9 @@ window.addEventListener('load', () => {
   btnDownloadN?.addEventListener('click', () => {
     if (checkIfGreater2024(Jahr, true)) download(btnDownloadN, 'N');
   });
+
+  const monat = Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
+  ftN.rows.setFilter(
+    row => getMonatFromN(row) === monat && checkIfGreater2024(Storage.get<number>('Jahr', { default: Jahr })),
+  );
 });

@@ -1,7 +1,19 @@
 # CLAUDE.md – Projektanweisungen für AI-Assistenten (Frontend)
 
-> **Aufbau:** Diese Datei enthält die Grundlagen. Details zu spezifischen Themen
+> **Aufbau:** Diese Datei enthält Frontend-spezifische Grundlagen. Globale Workflow- und
+> Qualitätsregeln siehe [`../CLAUDE.md`](../CLAUDE.md). Details zu spezifischen Themen
 > stehen in den verlinkten Dateien unter `.claude/`.
+
+## Navigation
+
+- Globale Workflow- und Qualitätsregeln: [`../CLAUDE.md`](../CLAUDE.md)
+- Workspace-Struktur und Repositories: [`../WORKSPACE.md`](../WORKSPACE.md)
+- Root-AI-Dokumentation: [`../.claude/README.md`](../.claude/README.md)
+- Backend-Regeln und Skills: [`../backend/CLAUDE.md`](../backend/CLAUDE.md)
+- Frontend-AI-Dokumentation: [`.claude/README.md`](.claude/README.md)
+- Frontend-Skills: [`.claude/skills/README.md`](.claude/skills/README.md)
+
+---
 
 ## Projektübersicht
 
@@ -15,7 +27,7 @@
 - **Styling:** Bootstrap 5.3 + SCSS + Material Icons
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
-- **Testing:** Vitest + jsdom + vitest-fetch-mock
+- **Testing:** Bun test + happy-dom
 - **Linting:** ESLint + Prettier + Husky (Pre-Commit Hooks)
 - **PDF-Export:** file-saver (Download von Server-generierten PDFs)
 
@@ -25,8 +37,8 @@
 bun install
 bun run start          # Entwicklung mit Vite Dev-Server (--host)
 bun run build          # Produktion Build (nach ./dist)
-bun run test           # tsc + vitest run
-bun run dev-test       # Vitest UI (Port 9527)
+bun run test           # Bun-Testlauf (sequentiell pro Datei)
+bun run dev-test       # Bun Watch-Mode
 bun run lint           # Linting prüfen
 bun run lint:fix       # Linting auto-fix
 bun run coverage       # Tests mit Coverage
@@ -55,7 +67,7 @@ src/
 │   ├── Einstellungen/     # Feature-Modul: Benutzer-Einstellungen
 │   └── Login/             # Feature-Modul: Auth (Login, Registrierung)
 test/
-├── setupVitest.ts         # Setup: vitest-fetch-mock
+├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
 ├── mockData.ts            # Gemeinsame Test-Daten
 ├── *.test.ts              # Feature-Tests
 └── Utilities/             # Utility-Tests
@@ -85,17 +97,7 @@ Feature/
 
 ---
 
-## 2. Verlinkte Claude-Dateien
-
-| Datei                                                                            | Beschreibung                                      |
-| -------------------------------------------------------------------------------- | ------------------------------------------------- |
-| [`.claude/skills/architektur.md`](.claude/skills/architektur.md)                 | Architektur, Komponenten-Patterns, Feature-Module |
-| [`.claude/skills/coding-konventionen.md`](.claude/skills/coding-konventionen.md) | Namensgebung, Datum, Imports, Coding-Style        |
-| [`.claude/skills/tests.md`](.claude/skills/tests.md)                             | Test-Setup, Mocking, Struktur                     |
-
----
-
-## 3. Wichtigste Regeln (Kurzfassung)
+## 2. Frontend-spezifische Regeln
 
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `src/ts/utilities/configDayjs.ts`)
@@ -105,5 +107,17 @@ Feature/
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
-9. **Vitest** für alle Tests, jsdom als Environment
+9. **Bun test** für alle Tests, happy-dom als DOM-Environment
 10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht Preact)
+
+---
+
+## Globale Workflow- und Qualitätsregeln
+
+Die folgenden Abschnitte sind **global** und gelten für alle Fachbereiche (Root, Frontend, Backend).
+Siehe [`../CLAUDE.md`](../CLAUDE.md) für vollständige Details:
+
+- **Workflow-Orchestrierung:** Plan-First-Protokoll, Kontext-Management, Selbstverbesserungs-Loop
+- **Engineering Standards:** Verifikation vor "fertig", autonomes Debugging
+- **Task-Management:** Initialisierung, Planning, Tracking, Dokumentation, Lessons-Capture
+- **Core Principles:** Simplicity, No-Laziness, Minimal Impact, Proactive Elegance

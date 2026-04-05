@@ -1,9 +1,17 @@
 import { createSnackBar } from '../../class/CustomSnackbar';
 import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../interfaces';
-import { Storage, tableToArray, updateTabVisibility } from '../../utilities';
+import {
+  PERS_FIELD_LABELS,
+  Storage,
+  setupPersValidation,
+  tableToArray,
+  updateTabVisibility,
+  validatePersInput,
+} from '../../utilities';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
+  setupPersValidation();
 
   const updateVorgabenU = <T, K extends keyof T>(obj: T, key: K, value: T[K]): void => {
     obj[key] = value;
@@ -13,7 +21,27 @@ export default function saveEinstellungen(): IVorgabenU {
   for (const key of Object.keys(VorgabenU.pers)) {
     const input = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
     if (!input) continue;
-    const value = numberFields.has(key) ? Number(input.value) || 0 : input.value;
+
+    const isValid = validatePersInput(input);
+    if (!isValid) {
+      const label = PERS_FIELD_LABELS[key as keyof typeof PERS_FIELD_LABELS] ?? key;
+      createSnackBar({
+        message: `Einstellungen > Persönliche Daten > "${label}": ${input.validationMessage}`,
+        status: 'error',
+        timeout: 4000,
+        fixed: true,
+      });
+      input.reportValidity();
+      input.focus();
+
+      if (key === 'Adress1' || key === 'Adress2' || key === 'ErsteTkgStAdresse') {
+        throw new Error('Adressformat ungültig');
+      }
+
+      throw new Error('Persönliche Daten fehlerhaft');
+    }
+
+    const value = numberFields.has(key) ? Number(input.value) : input.value;
     updateVorgabenU(VorgabenU.pers, key as keyof IVorgabenUPers, value as IVorgabenUPers[keyof IVorgabenUPers]);
   }
 
@@ -35,14 +63,16 @@ export default function saveEinstellungen(): IVorgabenU {
   VorgabenU.fZ = table_to_array_einstellungen('TbodyTätigkeitsstätten');
 
   const aktivierteTabs: string[] = [];
-  for (const cb of document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]')) {
+  for (const cb of Array.from(document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]'))) {
     if (cb.checked) aktivierteTabs.push(cb.dataset.tabKey!);
   }
 
   const zulagenContainer = document.querySelector('#settings-zulagen-list');
   if (zulagenContainer) {
     const benoetigteZulagen: string[] = [];
-    for (const cb of document.querySelectorAll<HTMLInputElement>('#settings-zulagen-list input[data-zulage-code]')) {
+    for (const cb of Array.from(
+      document.querySelectorAll<HTMLInputElement>('#settings-zulagen-list input[data-zulage-code]'),
+    )) {
       if (cb.checked) benoetigteZulagen.push(cb.dataset.zulageCode!);
     }
     VorgabenU.Einstellungen = { ...VorgabenU.Einstellungen, aktivierteTabs, benoetigteZulagen };

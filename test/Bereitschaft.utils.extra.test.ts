@@ -1,22 +1,28 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-const { berVorgabeAEndernMock } = vi.hoisted(() => ({
+const { berVorgabeAEndernMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   berVorgabeAEndernMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', async importOriginal => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    BerVorgabeAEndern: berVorgabeAEndernMock,
-  };
-});
-
 import type { IVorgabenUvorgabenB } from '../src/ts/interfaces';
-import BerVorgabeAEndern from '../src/ts/Bereitschaft/utils/BerVorgabeAEndern';
-import datumAnpassen from '../src/ts/Bereitschaft/utils/datumAnpassen';
-import eigeneWerte from '../src/ts/Bereitschaft/utils/eigeneWerte';
+import applyBereitschaftsVorgabe from '../src/ts/Bereitschaft/utils/applyBereitschaftsVorgabe';
+import updateBereitschaftsDatum from '../src/ts/Bereitschaft/utils/updateBereitschaftsDatum';
 import dayjs from '../src/ts/utilities/configDayjs';
+
+type ToggleBereitschaftsEigeneWerte = (
+  parentElement: HTMLDivElement,
+  vorgabenB: IVorgabenUvorgabenB,
+  datum: dayjs.Dayjs,
+) => void;
+
+async function loadEigeneWerte(): Promise<ToggleBereitschaftsEigeneWerte> {
+  mock.module('../src/ts/Bereitschaft/utils', () => ({
+    applyBereitschaftsVorgabe: berVorgabeAEndernMock,
+  }));
+
+  const module = await import('../src/ts/Bereitschaft/utils/toggleBereitschaftsEigeneWerte');
+  return module.default;
+}
 
 function createVorgabenB(): IVorgabenUvorgabenB {
   return {
@@ -32,6 +38,7 @@ function createVorgabenB(): IVorgabenUvorgabenB {
 describe('Bereitschaft utils extra', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    mock.restore();
     vi.clearAllMocks();
   });
 
@@ -65,7 +72,7 @@ describe('Bereitschaft utils extra', () => {
       .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
       .format('YYYY-MM-DD');
 
-    datumAnpassen(parentElement, vorgabenB, datum);
+    updateBereitschaftsDatum(parentElement, vorgabenB, datum);
 
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.value).toBe(expectedBE);
     expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('15:00');
@@ -81,10 +88,14 @@ describe('Bereitschaft utils extra', () => {
     const parentElement = document.querySelector<HTMLDivElement>('#root');
     if (!parentElement) throw new Error('root not found');
 
-    expect(() => datumAnpassen(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow('Element not found');
+    expect(() => updateBereitschaftsDatum(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
+      'Element not found',
+    );
   });
 
-  it('eigeneWerte aktiviert Felder und ruft BerVorgabeAEndern nicht auf, wenn eigen gesetzt ist', () => {
+  it('eigeneWerte aktiviert Felder und ruft BerVorgabeAEndern nicht auf, wenn eigen gesetzt ist', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `
       <div id="root">
         <input id="bAT" />
@@ -113,7 +124,9 @@ describe('Bereitschaft utils extra', () => {
     expect(berVorgabeAEndernMock).not.toHaveBeenCalled();
   });
 
-  it('eigeneWerte deaktiviert Felder und ruft BerVorgabeAEndern auf, wenn eigen nicht gesetzt ist', () => {
+  it('eigeneWerte deaktiviert Felder und ruft BerVorgabeAEndern auf, wenn eigen nicht gesetzt ist', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `
       <div id="root">
         <input id="bAT" />
@@ -144,7 +157,9 @@ describe('Bereitschaft utils extra', () => {
     expect(berVorgabeAEndernMock).toHaveBeenCalledWith(parentElement, vorgabenB, datum);
   });
 
-  it('eigeneWerte wirft Fehler bei fehlenden Inputs', () => {
+  it('eigeneWerte wirft Fehler bei fehlenden Inputs', async () => {
+    const eigeneWerte = await loadEigeneWerte();
+
     document.body.innerHTML = `<div id="root"><input id="bAT" /></div>`;
 
     const parentElement = document.querySelector<HTMLDivElement>('#root');
@@ -176,7 +191,7 @@ describe('Bereitschaft utils extra', () => {
     const vorgabenB = { ...createVorgabenB(), nacht: true };
     const datum = dayjs('2026-03-02');
 
-    BerVorgabeAEndern(parentElement, vorgabenB, datum);
+    applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
 
     expect(parentElement.querySelector<HTMLInputElement>('#bA')?.value).toBe(
       datum.isoWeekday(vorgabenB.beginnB.tag).format('YYYY-MM-DD'),
@@ -212,7 +227,9 @@ describe('Bereitschaft utils extra', () => {
     const parentElement = document.querySelector<HTMLDivElement>('#root');
     if (!parentElement) throw new Error('root not found');
 
-    expect(() => BerVorgabeAEndern(parentElement, createVorgabenB(), null as never)).toThrow('Datum nicht gefunden');
+    expect(() => applyBereitschaftsVorgabe(parentElement, createVorgabenB(), null as never)).toThrow(
+      'Datum nicht gefunden',
+    );
   });
 
   it('BerVorgabeAEndern wirft Fehler bei fehlenden Inputs', () => {
@@ -220,7 +237,7 @@ describe('Bereitschaft utils extra', () => {
     const parentElement = document.querySelector<HTMLDivElement>('#root');
     if (!parentElement) throw new Error('root not found');
 
-    expect(() => BerVorgabeAEndern(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
+    expect(() => applyBereitschaftsVorgabe(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
       'Input Element nicht gefunden',
     );
   });

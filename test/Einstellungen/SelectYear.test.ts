@@ -1,9 +1,13 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { createSnackBarMock, setLoadingMock, LadeUserDatenMock, setMonatJahrMock } = vi.hoisted(() => ({
+const viCompat = vi as typeof vi & {
+  hoisted: <T>(factory: () => T) => T;
+};
+
+const { createSnackBarMock, setLoadingMock, loadUserDatenMock, setMonatJahrMock } = viCompat.hoisted(() => ({
   createSnackBarMock: vi.fn(),
   setLoadingMock: vi.fn(),
-  LadeUserDatenMock: vi.fn(),
+  loadUserDatenMock: vi.fn(),
   setMonatJahrMock: vi.fn(),
 }));
 
@@ -11,16 +15,12 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/utilities', async importOriginal => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return {
-    ...actual,
-    setLoading: setLoadingMock,
-  };
-});
+vi.mock('../../src/ts/utilities/setLoading', () => ({
+  default: setLoadingMock,
+}));
 
 vi.mock('../../src/ts/Login/utils', () => ({
-  LadeUserDaten: LadeUserDatenMock,
+  loadUserDaten: loadUserDatenMock,
 }));
 
 vi.mock('../../src/ts/Einstellungen/utils/setMonatJahr', () => ({
@@ -28,7 +28,7 @@ vi.mock('../../src/ts/Einstellungen/utils/setMonatJahr', () => ({
 }));
 
 import Storage from '../../src/ts/utilities/Storage';
-import SelectYear from '../../src/ts/Einstellungen/utils/SelectYear';
+import selectYear from '../../src/ts/Einstellungen/utils/selectYear';
 
 describe('SelectYear', () => {
   let container: HTMLDivElement;
@@ -54,13 +54,13 @@ describe('SelectYear', () => {
 
   it('zeigt Fehler bei fehlender Internetverbindung', () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    SelectYear();
+    selectYear();
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     expect(setLoadingMock).not.toHaveBeenCalled();
   });
 
   it('liest Monat/Jahr aus DOM-Inputs und speichert sie', () => {
-    SelectYear();
+    selectYear();
     expect(Storage.get<number>('Jahr')).toBe(2026);
     expect(Storage.get<number>('Monat')).toBe(3);
     expect(setMonatJahrMock).toHaveBeenCalledWith(2026, 3);
@@ -68,7 +68,7 @@ describe('SelectYear', () => {
   });
 
   it('verwendet übergebene Monat/Jahr statt DOM', () => {
-    SelectYear(5, 2025);
+    selectYear(5, 2025);
     expect(Storage.get<number>('Jahr')).toBe(2025);
     expect(Storage.get<number>('Monat')).toBe(5);
     expect(setMonatJahrMock).toHaveBeenCalledWith(2025, 5);
@@ -77,30 +77,30 @@ describe('SelectYear', () => {
   it('setzt Jahreswechsel-Flag bei Jahresänderung', () => {
     Storage.set('Jahr', 2025);
     Storage.set('Monat', 12);
-    SelectYear(1, 2026);
+    selectYear(1, 2026);
     expect(Storage.get<boolean>('Jahreswechsel')).toBe(true);
   });
 
   it('setzt kein Jahreswechsel-Flag wenn Jahr gleich bleibt', () => {
     Storage.set('Jahr', 2026);
     Storage.set('Monat', 2);
-    SelectYear(3, 2026);
+    selectYear(3, 2026);
     expect(Storage.get('Jahreswechsel')).toBeNull();
   });
 
-  it('ruft LadeUserDaten auf wenn Benutzer eingeloggt ist', () => {
+  it('ruft loadUserDaten auf wenn Benutzer eingeloggt ist', () => {
     Storage.set('Benutzer', 'Max');
-    SelectYear(3, 2026);
-    expect(LadeUserDatenMock).toHaveBeenCalledWith(3, 2026);
+    selectYear(3, 2026);
+    expect(loadUserDatenMock).toHaveBeenCalledWith(3, 2026);
   });
 
-  it('ruft LadeUserDaten nicht auf wenn kein Benutzer', () => {
-    SelectYear(3, 2026);
-    expect(LadeUserDatenMock).not.toHaveBeenCalled();
+  it('ruft loadUserDaten nicht auf wenn kein Benutzer', () => {
+    selectYear(3, 2026);
+    expect(loadUserDatenMock).not.toHaveBeenCalled();
   });
 
   it('wirft Fehler wenn Monats-Input fehlt (ohne Parameter)', () => {
     container.remove();
-    expect(() => SelectYear()).toThrow('Monats Input nicht gefunden');
+    expect(() => selectYear()).toThrow('Monats Input nicht gefunden');
   });
 });

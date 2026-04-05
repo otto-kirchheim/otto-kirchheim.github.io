@@ -266,6 +266,7 @@ export class Row<T extends CustomTableTypes> {
 export class Rows<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
   public array: Array<Row<T>> = [];
+  private rowFilter: ((cells: T) => boolean) | null = null;
 
   constructor(table: CustomTable<T>, rows: T[]) {
     this.array = rows.map(row => new Row(table, row, 'unchanged'));
@@ -305,6 +306,18 @@ export class Rows<T extends CustomTableTypes> {
     }
     this.CustomTable.drawRows();
     if (hasNew) this.CustomTable._notifyChange();
+  }
+
+  /** Setzt/entfernt einen unsichtbaren Zeilenfilter und zeichnet die Tabelle neu. */
+  setFilter(filter: ((cells: T) => boolean) | null): void {
+    this.rowFilter = filter;
+    this.CustomTable.drawRows();
+  }
+
+  /** Liefert die aktuell sichtbaren Zeilen unter Berücksichtigung des aktiven Filters. */
+  getFilteredRows(): Array<Row<T>> {
+    if (!this.rowFilter) return this.array;
+    return this.array.filter(row => this.rowFilter?.(row.cells) ?? true);
   }
 
   /**
@@ -655,6 +668,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
     function createButton(classes = ['btn', 'btn-primary'], text = 'Button', eventlistener = () => {}) {
       const button = document.createElement('button');
+      button.type = 'button';
       button.classList.add(...classes);
       button.innerText = text;
       button.title = text;
@@ -680,8 +694,8 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     const sortedColumn = this.columns.array.find(column => column.sorted);
     if (sortedColumn) this.sort(sortedColumn.index, sortedColumn.direction);
 
-    // Alle Zeilen (inkl. gelöschter) werden sortiert und angezeigt
-    const allVisibleRows = this.rows.array;
+    // Alle Zeilen bleiben im State erhalten, angezeigt werden nur gefilterte Zeilen.
+    const allVisibleRows = this.rows.getFilteredRows();
 
     if (allVisibleRows.length > 0) {
       const createActionButton = (
@@ -692,6 +706,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
         title = 'button',
       ): HTMLButtonElement => {
         const button = document.createElement('button');
+        button.type = 'button';
         button.classList.add(...classList);
         button.innerHTML = text;
         button.title = title;
