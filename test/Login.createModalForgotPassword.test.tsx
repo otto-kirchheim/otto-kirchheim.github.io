@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { h } from 'preact';
 
-const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInstanceMock } = vi.hoisted(() => ({
+const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInstanceMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   forgotPasswordMock: vi.fn(),
@@ -11,9 +13,9 @@ const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInst
 
 vi.mock('../src/ts/components', () => ({
   showModal: showModalMock,
-  MyFormModal: (props: unknown) => h('div', props),
-  MyModalBody: (props: unknown) => h('div', props),
-  MyInput: (props: unknown) => h('input', props),
+  MyFormModal: (props: Record<string, unknown>) => h('div', props),
+  MyModalBody: (props: Record<string, unknown>) => h('div', props),
+  MyInput: (props: Record<string, unknown>) => h('input', props),
 }));
 
 vi.mock('../src/ts/class/CustomSnackbar', () => ({

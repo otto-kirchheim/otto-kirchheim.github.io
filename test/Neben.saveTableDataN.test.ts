@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenN } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
-const { tableToArrayMock, aktualisiereBerechnungMock } = vi.hoisted(() => ({
+const { tableToArrayMock, aktualisiereBerechnungMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   tableToArrayMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
 }));
@@ -17,8 +19,6 @@ vi.mock('../src/ts/Berechnung/aktualisiereBerechnung', () => ({
 }));
 
 import persistNebengeldTableData from '../src/ts/Neben/utils/persistNebengeldTableData';
-
-type IDatenNByMonth = Record<number, IDatenN[]>;
 
 function createData(tagN: string): IDatenN {
   return {
@@ -36,30 +36,24 @@ describe('persistNebengeldTableData', () => {
     vi.clearAllMocks();
   });
 
-  it('gibt fuer Jahre < 2024 bestehende Daten unveraendert zurueck', () => {
-    const dataN = {
-      3: [createData('2023-03-10')],
-    } as IDatenNByMonth;
+  it('gibt fuer Jahre < 2024 bestehende FlatArray-Daten unveraendert zurueck', () => {
+    const dataN: IDatenN[] = [createData('2023-03-10')];
 
     Storage.set('Jahr', 2023);
-    Storage.set('Monat', 3);
     Storage.set('dataN', dataN);
 
     const result = persistNebengeldTableData({} as never);
 
-    expect(result).toEqual(dataN[3]);
+    expect(result).toEqual(dataN);
     expect(tableToArrayMock).not.toHaveBeenCalled();
     expect(aktualisiereBerechnungMock).not.toHaveBeenCalled();
   });
 
-  it('aktualisiert dataN fuer Monat aus Storage und triggert Berechnung', () => {
-    const dataN = {
-      3: [createData('2026-03-10')],
-    } as IDatenNByMonth;
+  it('aktualisiert dataN aus dem Tabellen-FlatArray und triggert Berechnung', () => {
+    const dataN: IDatenN[] = [createData('2026-03-10')];
     const newRows = [createData('2026-03-11')];
 
     Storage.set('Jahr', 2026);
-    Storage.set('Monat', 3);
     Storage.set('dataN', dataN);
     tableToArrayMock.mockReturnValue(newRows);
 
@@ -72,11 +66,8 @@ describe('persistNebengeldTableData', () => {
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
   });
 
-  it('nutzt expliziten Monat-Parameter statt Storage-Monat', () => {
-    const dataN = {
-      3: [createData('2026-03-10')],
-      4: [createData('2026-04-10')],
-    } as IDatenNByMonth;
+  it('persistiert die übergebenen Tabellenzeilen unabhängig vom aktuellen Storage-Monat', () => {
+    const dataN: IDatenN[] = [createData('2026-03-10'), createData('2026-04-10')];
     const newRows = [createData('2026-03-20')];
 
     Storage.set('Jahr', 2026);
@@ -84,8 +75,9 @@ describe('persistNebengeldTableData', () => {
     Storage.set('dataN', dataN);
     tableToArrayMock.mockReturnValue(newRows);
 
-    const result = persistNebengeldTableData({} as never, 3);
+    const result = persistNebengeldTableData({} as never);
 
     expect(result).toEqual(newRows);
+    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(newRows);
   });
 });

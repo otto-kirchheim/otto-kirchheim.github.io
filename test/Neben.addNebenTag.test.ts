@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
 import type { IDatenN } from '../src/ts/interfaces';
 
-const { saveTableDataNMock } = vi.hoisted(() => ({
+const { saveTableDataNMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   saveTableDataNMock: vi.fn(),
 }));
 

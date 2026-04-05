@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-const { berVorgabeAEndernMock } = vi.hoisted(() => ({
+const { berVorgabeAEndernMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   berVorgabeAEndernMock: vi.fn(),
 }));
 

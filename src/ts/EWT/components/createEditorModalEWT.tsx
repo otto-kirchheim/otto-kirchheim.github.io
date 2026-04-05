@@ -283,8 +283,8 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       const values: IDatenEWT = getFormValues();
 
       const zeitFehler = validateEwtZeitenReihenfolge(values);
-      console.log(JSON.stringify({ Fehler: zeitFehler, Values: values }));
       if (zeitFehler && zeitFehler.length > 0) {
+        console.log(JSON.stringify({ Fehler: zeitFehler, Values: values }));
         for (const fehler of zeitFehler) {
           const invalidInput = form.querySelector<HTMLInputElement>(`#${fehler.feld}`);
           const feedback = form.querySelector<HTMLDivElement>(`#${getZeitfehlerElementId(fehler.feld)}`);
@@ -332,6 +332,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         const existing = existingRow.cells;
         return (
           existing.tagE === values.tagE &&
+          existing.buchungstagE === values.buchungstagE &&
           existing.eOrtE === values.eOrtE &&
           existing.schichtE === values.schichtE &&
           existing.abWE === values.abWE &&

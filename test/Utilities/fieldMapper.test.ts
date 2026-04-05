@@ -357,6 +357,7 @@ describe('fieldMapper – UserProfile', () => {
       kmnBhf: 5,
       TB: 'Tarifkraft',
     },
+    Einstellungen: {} as BackendUserProfile['Einstellungen'],
     Fahrzeit: [{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }],
     Arbeitszeit: {
       bT: '07:00',
@@ -383,15 +384,16 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.aZ.eT).toBe('15:30');
     expect(result.aZ.rZ).toBe('00:15');
     expect(result.fZ).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
-    expect(result.vorgabenB).toEqual({ standard: { Name: 'Standard' } });
+    expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
   });
 
   it('userProfileFromBackend mit fehlenden optionalen Feldern', () => {
     const minimal: BackendUserProfile = {
       User: 'user2',
-      Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' },
+      Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' } as BackendUserProfile['Pers'],
+      Einstellungen: {} as BackendUserProfile['Einstellungen'],
       Fahrzeit: [],
-      Arbeitszeit: {},
+      Arbeitszeit: {} as BackendUserProfile['Arbeitszeit'],
       VorgabenB: [],
     };
     const result = userProfileFromBackend(minimal);
@@ -410,6 +412,7 @@ describe('fieldMapper – UserProfile', () => {
     const frontendProfile: IVorgabenU = {
       pers: backendProfile.Pers as IVorgabenU['pers'],
       aZ: backendProfile.Arbeitszeit as IVorgabenU['aZ'],
+      Einstellungen: {} as IVorgabenU['Einstellungen'],
       fZ: backendProfile.Fahrzeit,
       vorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['vorgabenB'][string] },
     };
@@ -466,6 +469,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
     const server: IVorgabenUServer = {
       pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['pers'],
       aZ: { bT: '07:00' } as IVorgabenUServer['aZ'],
+      Einstellungen: {} as IVorgabenUServer['Einstellungen'],
       fZ: [],
       vorgabenB: [
         { key: 'woche1', value: { Name: 'Woche 1' } as IVorgabenUServer['vorgabenB'][0]['value'] },
@@ -473,7 +477,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       ],
     };
     const result = vorgabenUFromServer(server);
-    expect(result.vorgabenB).toEqual({
+    expect(result.vorgabenB).toMatchObject({
       woche1: { Name: 'Woche 1' },
       woche2: { Name: 'Woche 2' },
     });

@@ -13,22 +13,22 @@ describe('#generateTableBerechnung', () => {
 
     document.body.innerHTML =
       '<!DOCTYPE html><table class="table table-bordered table-striped table-hover align-middle table-Berechnung" aria-describedby="titelBerechnung">' +
-        '<thead class="align-middle">' +
-        '<tr class="table-primary align-middle">' +
-        '<th></th>' +
-        '<th class="col-1">Jan</th>' +
-        '<th class="col-1">Feb</th>' +
-        '<th class="col-1">Mär</th>' +
-        '<th class="col-1">Apr</th>' +
-        '<th class="col-1">Mai</th>' +
-        '<th class="col-1">Jun</th>' +
-        '<th class="col-1">Jul</th>' +
-        '<th class="col-1">Aug</th>' +
-        '<th class="col-1">Sep</th>' +
-        '<th class="col-1">Okt</th>' +
-        '<th class="col-1">Nov</th>' +
-        '<th class="col-1">Dez</th>' +
-          '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>';
+      '<thead class="align-middle">' +
+      '<tr class="table-primary align-middle">' +
+      '<th></th>' +
+      '<th class="col-1">Jan</th>' +
+      '<th class="col-1">Feb</th>' +
+      '<th class="col-1">Mär</th>' +
+      '<th class="col-1">Apr</th>' +
+      '<th class="col-1">Mai</th>' +
+      '<th class="col-1">Jun</th>' +
+      '<th class="col-1">Jul</th>' +
+      '<th class="col-1">Aug</th>' +
+      '<th class="col-1">Sep</th>' +
+      '<th class="col-1">Okt</th>' +
+      '<th class="col-1">Nov</th>' +
+      '<th class="col-1">Dez</th>' +
+      '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>';
   });
   it("should generate 'Berechnung' Table", () => {
     generateTableBerechnung(

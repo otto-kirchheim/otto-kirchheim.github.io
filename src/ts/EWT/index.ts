@@ -156,7 +156,6 @@ window.addEventListener('load', () => {
     const monat = Storage.get<number>('Monat', { default: 0 });
     recalculateEwtMonat({
       monat,
-      jahr: Storage.get<number>('Jahr', { check: true }),
       daten: getEwtDaten(undefined, monat),
       vorgabenU: Storage.get<IVorgabenU>('VorgabenU', { check: true }),
     });

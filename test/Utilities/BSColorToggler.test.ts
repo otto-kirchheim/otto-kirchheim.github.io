@@ -43,7 +43,8 @@ describe('BSColorToggler', () => {
   it('setzt data-bs-theme auf documentElement', () => {
     initializeColorModeToggler();
     const theme = document.documentElement.getAttribute('data-bs-theme');
-    expect(['light', 'dark']).toContain(theme);
+    expect(theme).not.toBeNull();
+    expect(['light', 'dark']).toContain(theme ?? '');
   });
 
   it('setzt Theme bei Klick auf Toggler-Button', () => {
@@ -72,7 +73,8 @@ describe('BSColorToggler', () => {
 
     // In jsdom ist prefers-color-scheme nicht gesetzt, ergibt "light"
     const theme = document.documentElement.getAttribute('data-bs-theme');
-    expect(['light', 'dark']).toContain(theme);
+    expect(theme).not.toBeNull();
+    expect(['light', 'dark']).toContain(theme ?? '');
   });
 
   it('liest gespeichertes Theme aus Storage beim Initialisieren', () => {

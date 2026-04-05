@@ -107,7 +107,9 @@ describe('loadUserDaten', () => {
   });
 
   it('zeigt Fehler-Snackbar wenn loadAllYearData fehlschlaegt', async () => {
-    loadAllYearDataMock.mockImplementation(async () => { throw new Error('offline'); });
+    loadAllYearDataMock.mockImplementation(async () => {
+      throw new Error('offline');
+    });
 
     await loadUserDaten(3, 2026);
 

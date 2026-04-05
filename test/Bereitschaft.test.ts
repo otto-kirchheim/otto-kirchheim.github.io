@@ -329,13 +329,13 @@ describe('#DataBZ', () => {
     const storageData: IDaten['BZ'] = datenBZMock;
     Storage.set('dataBZ', storageData);
     const result = getBereitschaftsZeitraumDaten(undefined, 3);
-    expect(result).toEqual(storageData[3]);
+    expect(result).toEqual(storageData);
   });
 
   it('should return the provided data when data is provided', () => {
-    const inputData = datenBZMock as unknown as Record<number, NonNullable<IDaten['BZ']>>;
-    const result = getBereitschaftsZeitraumDaten(inputData[3], 3);
-    expect(result).toEqual(inputData[3]);
+    const inputData = datenBZMock;
+    const result = getBereitschaftsZeitraumDaten(inputData, 3);
+    expect(result).toEqual(inputData);
   });
 });
 
@@ -354,13 +354,13 @@ describe('#DataBE', () => {
     const storageData: Required<IDaten>['BE'] = datenBEMock;
     Storage.set('dataBE', storageData);
     const result = getBereitschaftsEinsatzDaten(undefined, 3);
-    expect(result).toEqual(storageData[3]);
+    expect(result).toEqual(storageData);
   });
 
   it('should return the provided data when data is provided', () => {
-    const inputData = datenBEMock as unknown as Record<number, NonNullable<Required<IDaten>['BE']>>;
-    const result = getBereitschaftsEinsatzDaten(inputData[3], 3);
-    expect(result).toEqual(inputData[3]);
+    const inputData = datenBEMock;
+    const result = getBereitschaftsEinsatzDaten(inputData, 3);
+    expect(result).toEqual(inputData);
   });
 });
 

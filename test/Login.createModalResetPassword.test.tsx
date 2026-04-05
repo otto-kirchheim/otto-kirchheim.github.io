@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { h } from 'preact';
 
-const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInstanceMock } = vi.hoisted(() => ({
+const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInstanceMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   resetPasswordMock: vi.fn(),

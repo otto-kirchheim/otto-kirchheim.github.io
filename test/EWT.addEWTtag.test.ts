@@ -2,13 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
 
-const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock, calculateBuchungstagEwtMock } =
-  vi.hoisted(() => ({
-    setNaechsterEwtTagMock: vi.fn(),
-    persistEwtTableDataMock: vi.fn(),
-    calculateEwtEintraegeMock: vi.fn(),
-    calculateBuchungstagEwtMock: vi.fn(),
-  }));
+const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock, calculateBuchungstagEwtMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
+  setNaechsterEwtTagMock: vi.fn(),
+  persistEwtTableDataMock: vi.fn(),
+  calculateEwtEintraegeMock: vi.fn(),
+  calculateBuchungstagEwtMock: vi.fn(),
+}));
 
 vi.mock('../src/ts/EWT/utils', () => ({
   setNaechsterEwtTag: setNaechsterEwtTagMock,

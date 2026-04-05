@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
 
-const { persistEwtTableDataMock } = vi.hoisted(() => ({
+const { persistEwtTableDataMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   persistEwtTableDataMock: vi.fn(),
 }));
 

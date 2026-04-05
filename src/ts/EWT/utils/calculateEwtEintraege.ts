@@ -2,6 +2,7 @@ import type { Duration } from 'dayjs/plugin/duration';
 import type { IDatenEWT, IVorgabenE, IVorgabenU } from '../../interfaces';
 import { getDurationFromTime } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
+import calculateBuchungstagEwt from './calculateBuchungstagEwt';
 
 type SchichtKeys = 'T' | 'N' | 'BN' | 'S';
 
@@ -34,6 +35,7 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
       TagDaten,
       calculateTimes(TagDaten, datum, schichtDaten, eOrte.includes(TagDaten.eOrtE), vorgabenE, getPascalEnde()),
     );
+    TagDaten.buchungstagE = calculateBuchungstagEwt(TagDaten);
   }
 
   return daten;

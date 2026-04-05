@@ -12,10 +12,7 @@ import { normalizeResourceRows, Storage } from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from '../utilities/getMonatFromItem';
 
-export default function aktualisiereBerechnung(Jahr?: number, daten?: Required<IDaten>): IVorgabenBerechnung {
-  const _jahr = Jahr ?? Storage.get<number>('Jahr', { check: true });
-  void _jahr;
-
+export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {
     BZ: Storage.get<IDatenBZ[]>('dataBZ', { default: [] }),
     BE: Storage.get<IDatenBE[]>('dataBE', { default: [] }),

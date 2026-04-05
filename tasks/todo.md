@@ -56,6 +56,42 @@
 - Ergebnis: Keine TS- oder Lint-Fehler mehr im Frontend.
 - Verifikation: `get_errors` ohne Befunde, `bun run lint` erfolgreich.
 
+## Aktueller Plan: Frontend-TS/Prettier-Kompatibilität bereinigen
+
+- [x] Aktuelle `tsc`-, ESLint- und Prettier-Befunde reproduzieren
+- [x] Strikte Typfehler in `Einstellungen`, Utility-Tests und Bun-Mock-Kompatibilität korrigieren
+- [x] Formatabweichungen per Prettier bereinigen
+- [x] Relevante Utility-/API-Tests sowie `tsc`, Lint und `format:check` erneut ausführen
+
+## Review (Frontend-TS/Prettier-Kompatibilität)
+
+- Ergebnis: Frontend ist wieder ohne TS-, ESLint- und Prettier-Befunde; zusätzlich laufen die betroffenen Utility-/API-Tests wieder grün.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json` ohne Output; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint && bun run format && bun run format:check && bun run test -- test/Utilities/FetchRetry.test.ts test/Utilities/apiService.test.ts test/Utilities/Storage.test.ts test/Utilities/fieldMapper.test.ts test/Utilities/Utilities.test.ts` → `5 Dateien bestanden`.
+
+## Aktueller Plan: EWT-Buchungstag fuer Nachtschichten korrigieren
+
+- [x] Repro mit einem betroffenen N-Schicht-Datensatz aufbauen
+- [x] Regressionstest fuer `calculateBuchungstagEwt()` ergänzen
+- [x] Nachtlogik in der Buchungstag-Berechnung an den echten EWT-Zeitkorridor angleichen
+- [x] Relevante EWT-Tests und Lint erneut ausführen
+
+## Review (EWT-Buchungstag Nachtschicht)
+
+- Ergebnis: N-/BN-Schichten liefern jetzt wieder den korrekten `buchungstagE` statt eines Tages zu spät; der temporäre Debug-`console.log` im Editor wurde entfernt.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.utils.extra.test.ts test/EWT.getEwtDaten.test.ts test/EWT.persistEwtTableData.test.ts test/EWT.validateZeitenReihenfolge.test.ts` → `4 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` erfolgreich.
+
+## Aktueller Plan: EWT-Buchungstag live in `CustomTable` synchronisieren
+
+- [x] Repro für stale `buchungstagE` zwischen Storage und `CustomTable` absichern
+- [x] `persistEwtTableData()` so anpassen, dass normalisierte Werte in die Live-Zeilen zurückgeschrieben werden
+- [x] EWT-Neuberechnung (`calculateEwtEintraege`) direkt mit `buchungstagE` synchronisieren
+- [x] Relevante EWT-Tests und Lint erneut ausführen
+
+## Review (EWT-CustomTable Sync)
+
+- Ergebnis: Der neu berechnete `buchungstagE` landet jetzt sofort im Live-`CustomTable` und nicht erst nach einem Reload; damit stimmen Tabelle, Monatsfilter und Storage wieder direkt überein.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.persistEwtTableData.test.ts test/EWT.utils.extra.test.ts test/EWT.getEwtDaten.test.ts test/EWT.validateZeitenReihenfolge.test.ts` → `4 Dateien bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.ewtBerechnen.test.ts test/EWT.addEventlistenerToggleBerechnen.test.ts` → `2 Dateien bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` erfolgreich.
+
 ## Aktueller Plan: Save-Regression (Backend gespeichert, Frontend stale bis Re-Login)
 
 - [x] Save-Datenfluss und AutoSave-Sync analysieren
@@ -74,3 +110,27 @@
 
 - Ergebnis: AutoSave spiegelt Serverantworten (inkl. Korrekturen) zurück in den Tabellenzustand; `saveDaten` übernimmt servernormalisierte Profilwerte in Storage.
 - Verifikation: `bun run test -- test/Utilities/autoSave.test.ts test/Utilities/saveDaten.test.ts` mit 47 bestanden, 0 fehlgeschlagen.
+
+## Passkey-UX in Einstellungen & Login
+
+- [x] Einstellungen um einen Passkey-Accordion-Eintrag mit Entfernen-Buttons erweitert
+- [x] Username-losen Passkey-Login mit Browser-Autofill im Login-Modal aktiviert
+- [x] Frontend-Tests für den neuen Passkey-Login ergänzt
+- [x] Relevante Lint-/Build-Prüfungen erneut ausgeführt
+
+## Review (Passkey-UX)
+
+- Ergebnis: Sobald Passkeys vorhanden sind, erscheint in den Einstellungen ein eigener Accordion-Bereich zur Geräteverwaltung; im Login kann der Benutzername für den Passkey-Flow leer bleiben und der Browser bietet gespeicherte Passkeys direkt an.
+- Verifikation: `bun test ./test/Login.loginWithPasskey.test.ts` mit `2 pass, 0 fail`; `bun run lint` und `bun run build` im Frontend erfolgreich.
+
+## Aktueller Plan: Frontend-Testaltlasten bereinigen
+
+- [x] Aktuell fehlschlagende Tests reproduzieren
+- [x] Veraltete EWT-Erwartungen auf `buchungstagE` anheben
+- [x] Brittle Download-Assertions und unnötige Monats-Setups in Persistenztests bereinigen
+- [x] Frontend-Vollsuite und Lint erneut ausführen
+
+## Review (Frontend-Testaltlasten)
+
+- Ergebnis: Die veralteten EWT-/Download-Tests sind jetzt auf den aktuellen Flat-Array- bzw. `buchungstagE`-Vertrag ausgerichtet; unnötige Monats-Altlasten in Persistenztests wurden entfernt.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.test.ts test/EWT.persistEwtTableData.test.ts test/EWT.saveTableDataEWT.test.ts test/Neben.saveTableDataN.test.ts test/Utilities/download.test.ts` → alle Dateien bestanden; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test && bun run lint` → `Dateien: 58 ✓ 58 bestanden`, ESLint ohne Befunde.

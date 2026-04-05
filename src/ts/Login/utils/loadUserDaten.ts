@@ -99,7 +99,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   Storage.set('VorgabenGeld', datenGeld);
 
-  const datenBerechnung = aktualisiereBerechnung(jahr, { BZ, BE, EWT, N });
+  const datenBerechnung = aktualisiereBerechnung({ BZ, BE, EWT, N });
 
   // TODO: Unterschiede auf Monat anpassen?
   if (vorhanden.length > 0) {

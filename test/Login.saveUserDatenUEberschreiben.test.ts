@@ -10,7 +10,7 @@ const {
   storageGetMock,
   storageSetMock,
   storageRemoveMock,
-} = vi.hoisted(() => ({
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   aktualisiereBerechnungMock: vi.fn(),
   getBereitschaftsZeitraumDatenMock: vi.fn(),
   getBereitschaftsEinsatzDatenMock: vi.fn(),

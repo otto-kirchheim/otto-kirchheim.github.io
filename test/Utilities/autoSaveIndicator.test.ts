@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // Hoisted mock for autoSave
-const { mockOnAutoSaveStatus } = vi.hoisted(() => {
+const { mockOnAutoSaveStatus } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => {
   const listeners: ((resource: string, status: string, error?: string) => void)[] = [];
   return {
     mockOnAutoSaveStatus: vi.fn((listener: (resource: string, status: string, error?: string) => void) => {

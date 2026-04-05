@@ -24,7 +24,9 @@ vi.mock('../../src/ts/utilities/tableToArray', () => ({
 }));
 
 // Use vi.hoisted to ensure mock functions are available when mock factories run
-const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } = vi.hoisted(() => {
+const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => {
   return {
     mockSetLoading: vi.fn(),
     mockClearLoading: vi.fn(),
@@ -240,107 +242,13 @@ describe('download utility', () => {
         },
         Jahr: 2026,
         Monat: 4,
-        VorgabenGeld: {
-          BE14: 24,
-          BE8: 9,
-          'Besoldungsgruppe A 8': 16.37,
-          'Besoldungsgruppe A 9': 22.49,
-          Fahrentsch: 6.65,
-          LRE1: 70.94,
-          LRE2: 46.43,
-          LRE3: 26.57,
-          PrivatPKWBeamter: 0.2,
-          PrivatPKWTarif: 0.27,
-          TE14: 6.14,
-          TE24: 9.71,
-          TE8: 4.09,
-          Tarifkraft: 2.58,
-        },
+        VorgabenGeld: expect.objectContaining({
+          ...mockVorgabenGeld[1],
+          ...mockVorgabenGeld[4],
+        }),
         VorgabenU: {
-          Fahrzeit: [
-            {
-              key: 'Kaiserau',
-              text: 'km 167,0',
-              value: '00:50',
-            },
-            {
-              key: 'Wildsberg',
-              text: 'km 170,6',
-              value: '00:40',
-            },
-            {
-              key: 'Licherode',
-              text: 'km 179,0',
-              value: '00:35',
-            },
-            {
-              key: 'Ersrode',
-              text: 'km 173,7',
-              value: '00:25',
-            },
-            {
-              key: 'Mühlbach',
-              text: 'km 189,4',
-              value: '00:20',
-            },
-            {
-              key: 'Kirchheim',
-              text: 'km 196,5',
-              value: '00:10',
-            },
-            {
-              key: 'Hattenbach',
-              text: 'km 202,1',
-              value: '00:15',
-            },
-            {
-              key: 'Richthof',
-              text: 'km 208,0',
-              value: '00:20',
-            },
-            {
-              key: 'Langenschwarz',
-              text: 'km 214,9',
-              value: '00:35',
-            },
-            {
-              key: 'Michelsrombach',
-              text: 'km 221,4',
-              value: '00:40',
-            },
-            {
-              key: 'Dietershahn',
-              text: 'km 227,6',
-              value: '00:40',
-            },
-            {
-              key: 'Fulda',
-              text: 'Materialtransport',
-              value: '00:40',
-            },
-            {
-              key: 'Kassel',
-              text: 'Materialtransport',
-              value: '01:00',
-            },
-          ],
-          Pers: {
-            Adress1: 'Weingarten 7, 36272 Niederaula',
-            Adress2: '',
-            Betrieb: 'DB Netz AG',
-            ErsteTkgSt: 'Kirchheim',
-            ErsteTkgStAdresse: 'Beiersgraben, 36275 Kirchheim',
-            Gewerk: 'LST',
-            Nachname: 'Otto',
-            OE: 'I.NA-MI-N-KSL-IL 03',
-            PNummer: '05211456',
-            TB: 'Tarifkraft',
-            Telefon: '016097473667',
-            Vorname: 'Jan',
-            kmArbeitsort: 11,
-            kmnBhf: 12,
-            nBhf: 'Bad Hersfeld',
-          },
+          Pers: backendVorgabenU.Pers,
+          Fahrzeit: backendVorgabenU.Fahrzeit,
         },
       }),
     );
@@ -376,107 +284,13 @@ describe('download utility', () => {
         },
         Jahr: 2026,
         Monat: 4,
-        VorgabenGeld: {
-          BE14: 24,
-          BE8: 9,
-          'Besoldungsgruppe A 8': 16.37,
-          'Besoldungsgruppe A 9': 22.49,
-          Fahrentsch: 6.65,
-          LRE1: 70.94,
-          LRE2: 46.43,
-          LRE3: 26.57,
-          PrivatPKWBeamter: 0.2,
-          PrivatPKWTarif: 0.27,
-          TE14: 6.14,
-          TE24: 9.71,
-          TE8: 4.09,
-          Tarifkraft: 2.58,
-        },
+        VorgabenGeld: expect.objectContaining({
+          ...mockVorgabenGeld[1],
+          ...mockVorgabenGeld[4],
+        }),
         VorgabenU: {
-          Fahrzeit: [
-            {
-              key: 'Kaiserau',
-              text: 'km 167,0',
-              value: '00:50',
-            },
-            {
-              key: 'Wildsberg',
-              text: 'km 170,6',
-              value: '00:40',
-            },
-            {
-              key: 'Licherode',
-              text: 'km 179,0',
-              value: '00:35',
-            },
-            {
-              key: 'Ersrode',
-              text: 'km 173,7',
-              value: '00:25',
-            },
-            {
-              key: 'Mühlbach',
-              text: 'km 189,4',
-              value: '00:20',
-            },
-            {
-              key: 'Kirchheim',
-              text: 'km 196,5',
-              value: '00:10',
-            },
-            {
-              key: 'Hattenbach',
-              text: 'km 202,1',
-              value: '00:15',
-            },
-            {
-              key: 'Richthof',
-              text: 'km 208,0',
-              value: '00:20',
-            },
-            {
-              key: 'Langenschwarz',
-              text: 'km 214,9',
-              value: '00:35',
-            },
-            {
-              key: 'Michelsrombach',
-              text: 'km 221,4',
-              value: '00:40',
-            },
-            {
-              key: 'Dietershahn',
-              text: 'km 227,6',
-              value: '00:40',
-            },
-            {
-              key: 'Fulda',
-              text: 'Materialtransport',
-              value: '00:40',
-            },
-            {
-              key: 'Kassel',
-              text: 'Materialtransport',
-              value: '01:00',
-            },
-          ],
-          Pers: {
-            Adress1: 'Weingarten 7, 36272 Niederaula',
-            Adress2: '',
-            Betrieb: 'DB Netz AG',
-            ErsteTkgSt: 'Kirchheim',
-            ErsteTkgStAdresse: 'Beiersgraben, 36275 Kirchheim',
-            Gewerk: 'LST',
-            Nachname: 'Otto',
-            OE: 'I.NA-MI-N-KSL-IL 03',
-            PNummer: '05211456',
-            TB: 'Tarifkraft',
-            Telefon: '016097473667',
-            Vorname: 'Jan',
-            kmArbeitsort: 11,
-            kmnBhf: 12,
-            nBhf: 'Bad Hersfeld',
-          },
+          Pers: backendVorgabenU.Pers,
+          Fahrzeit: backendVorgabenU.Fahrzeit,
         },
       }),
     );

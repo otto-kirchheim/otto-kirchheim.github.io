@@ -9,7 +9,7 @@ const {
   mountAdminTabMock,
   createSnackBarMock,
   requestVerificationMailMock,
-} = vi.hoisted(() => ({
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   selectYearMock: vi.fn(),
   storageSetMock: vi.fn(),
   setLoadingMock: vi.fn(),

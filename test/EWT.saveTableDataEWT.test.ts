@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenEWT } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
-const { tableToArrayMock, aktualisiereBerechnungMock } = vi.hoisted(() => ({
+const { tableToArrayMock, aktualisiereBerechnungMock } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   tableToArrayMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
 }));
@@ -17,8 +19,6 @@ vi.mock('../src/ts/Berechnung/aktualisiereBerechnung', () => ({
 }));
 
 import persistEwtTableData from '../src/ts/EWT/utils/persistEwtTableData';
-
-type IDatenEWTByMonth = Record<number, IDatenEWT[]>;
 
 function createData(tagE: string): IDatenEWT {
   return {
@@ -44,13 +44,10 @@ describe('persistEwtTableData', () => {
     vi.clearAllMocks();
   });
 
-  it('aktualisiert dataE fuer Monat aus Storage und triggert Berechnung', () => {
-    const dataE = {
-      3: [createData('2026-03-10')],
-    } as IDatenEWTByMonth;
+  it('aktualisiert dataE aus dem Tabellen-FlatArray und triggert Berechnung', () => {
+    const dataE: IDatenEWT[] = [createData('2026-03-10')];
     const newRows = [createData('2026-03-11')];
 
-    Storage.set('Monat', 3);
     Storage.set('dataE', dataE);
     tableToArrayMock.mockReturnValue(newRows);
 
@@ -63,19 +60,17 @@ describe('persistEwtTableData', () => {
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
   });
 
-  it('nutzt expliziten Monat-Parameter statt Storage-Monat', () => {
-    const dataE = {
-      3: [createData('2026-03-10')],
-      4: [createData('2026-04-10')],
-    } as IDatenEWTByMonth;
+  it('persistiert die übergebenen Tabellenzeilen unabhängig vom aktuellen Storage-Monat', () => {
+    const dataE: IDatenEWT[] = [createData('2026-03-10'), createData('2026-04-10')];
     const newRows = [createData('2026-03-20')];
 
     Storage.set('Monat', 4);
     Storage.set('dataE', dataE);
     tableToArrayMock.mockReturnValue(newRows);
 
-    const result = persistEwtTableData({} as never, 3);
+    const result = persistEwtTableData({} as never);
 
     expect(result).toEqual(newRows);
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
   });
 });

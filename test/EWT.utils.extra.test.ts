@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
+import calculateBuchungstagEwt from '../src/ts/EWT/utils/calculateBuchungstagEwt';
 import clearEwtZeiten from '../src/ts/EWT/utils/clearEwtZeiten';
 import setNaechsterEwtTag from '../src/ts/EWT/utils/setNaechsterEwtTag';
 import Storage from '../src/ts/utilities/Storage';
 
-const { createSnackBarMock } = vi.hoisted(() => ({
+const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),
 }));
 
@@ -87,6 +88,25 @@ describe('EWT utils extra', () => {
     setNaechsterEwtTag('', [createRow(20), createRow(21)]);
 
     expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-22');
+  });
+
+  it('setzt bei N-Schichten den Buchungstag auf den Folgetag, wenn der laengere Anteil nach Mitternacht liegt', () => {
+    const result = calculateBuchungstagEwt({
+      tagE: '2026-03-20',
+      eOrtE: 'Mühlbach',
+      schichtE: 'N',
+      abWE: '19:25',
+      ab1E: '20:30',
+      anEE: '20:50',
+      beginE: '19:45',
+      endeE: '06:15',
+      abEE: '05:10',
+      an1E: '05:30',
+      anWE: '06:35',
+      berechnen: true,
+    });
+
+    expect(result).toBe('2026-03-21');
   });
 
   it('naechsterTag wirft Fehler und sperrt Speichern wenn kein freier Tag vorhanden ist', () => {

@@ -322,7 +322,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
   Storage.set('dataBZ', mergedRows);
   preserveDeletedRows(tableBZ, normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })), monat);
 
-  aktualisiereBerechnung(jahr);
+  aktualisiereBerechnung();
 
   clearLoading('btnESZ');
   createSnackBar({

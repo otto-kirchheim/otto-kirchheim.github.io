@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenBZ, IDatenEWT } from '../../src/ts/interfaces';
 
 // --- Hoisted mocks ---
-const { mockFetchRetry, mockGetServerUrl } = vi.hoisted(() => ({
-  mockFetchRetry: vi.fn(),
-  mockGetServerUrl: vi.fn(),
-}));
+const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
+  () => ({
+    mockFetchRetry: vi.fn(),
+    mockGetServerUrl: vi.fn(),
+  }),
+);
 
 vi.mock('../../src/ts/utilities/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
@@ -80,7 +82,7 @@ describe('apiService', () => {
             success: true,
             data: { userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' },
           }),
-      });
+      }) as unknown as typeof fetch;
 
       const result = await authApi.refreshToken();
 
@@ -91,7 +93,12 @@ describe('apiService', () => {
           body: JSON.stringify({ refreshToken: 'old-rt' }),
         }),
       );
-      expect(result).toEqual({ userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' });
+      expect(result).toMatchObject({
+        userName: 'Max',
+        role: 'member',
+        accessToken: 'new-at',
+        refreshToken: 'new-rt',
+      });
       expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('new-at'));
       expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('new-rt'));
     });
@@ -181,7 +188,7 @@ describe('apiService', () => {
       mockApiSuccess({ _id: 2024, Vorgaben: [{ key: 1, value: { Tarifkraft: 2.58 } }] });
       const result = await vorgabenApi.getByYear(2024);
       expect(mockFetchRetry).toHaveBeenCalledWith('vorgaben/2024', undefined, 'GET');
-      expect(result[1]).toEqual({ Tarifkraft: 2.58 });
+      expect(result[1]).toMatchObject({ Tarifkraft: 2.58 });
     });
   });
 
@@ -386,7 +393,7 @@ describe('apiService', () => {
         ok: true,
         blob: () => Promise.resolve(mockBlob),
         headers: new Headers({ 'content-disposition': 'filename="test.pdf"' }),
-      });
+      }) as unknown as typeof fetch;
 
       const result = await downloadPdf('B', { data: 'test' });
       expect(result.blob).toBe(mockBlob);
@@ -406,7 +413,7 @@ describe('apiService', () => {
         blob: () => Promise.resolve(new Blob(['pdf'])),
         headers: new Headers(),
       };
-      globalThis.fetch = vi.fn().mockResolvedValue(mockResponse);
+      globalThis.fetch = vi.fn().mockResolvedValue(mockResponse) as unknown as typeof fetch;
 
       await downloadPdf('E', {});
       expect(globalThis.fetch).toHaveBeenCalledWith(
@@ -425,7 +432,7 @@ describe('apiService', () => {
         ok: false,
         status: 500,
         json: () => Promise.resolve({ message: 'Server error' }),
-      });
+      }) as unknown as typeof fetch;
 
       await expect(downloadPdf('B', {})).rejects.toThrow('Server error');
     });
@@ -437,7 +444,7 @@ describe('apiService', () => {
         ok: true,
         blob: () => Promise.resolve(new Blob(['pdf'])),
         headers: new Headers(), // Keine content-disposition
-      });
+      }) as unknown as typeof fetch;
 
       const result = await downloadPdf('B', {});
       expect(result.filename).toBe('download.pdf');

@@ -5,13 +5,12 @@ import type { CustomHTMLTableElement, IDatenEWT, IMonatsDaten, IVorgabenU } from
 
 type ewtBerechnenType = {
   monat: number;
-  jahr: number;
   daten: IMonatsDaten['EWT'];
   vorgabenU: IVorgabenU;
 };
 
-export default function recalculateEwtMonat({ monat, jahr, daten, vorgabenU }: ewtBerechnenType): void {
-  if (!monat || !jahr || !daten || !vorgabenU) throw new Error('Daten fehlen');
+export default function recalculateEwtMonat({ monat, daten, vorgabenU }: ewtBerechnenType): void {
+  if (!monat || !daten || !vorgabenU) throw new Error('Daten fehlen');
   const berechneteDaten = calculateEwtEintraege(vorgabenU, structuredClone(daten));
 
   const table = document.querySelector<CustomHTMLTableElement<IDatenEWT>>('#tableE');
@@ -21,7 +20,7 @@ export default function recalculateEwtMonat({ monat, jahr, daten, vorgabenU }: e
   ftE.rows.load(getEwtDaten(berechneteDaten, monat));
   persistEwtTableData(ftE);
 
-  aktualisiereBerechnung(jahr);
+  aktualisiereBerechnung();
 
   createSnackBar({
     message: `EWT<br/>Zeiten berechnet.`,

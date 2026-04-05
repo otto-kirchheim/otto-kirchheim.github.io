@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { tableToArrayMock } = vi.hoisted(() => ({
+const { tableToArrayMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   tableToArrayMock: vi.fn(),
 }));
 
@@ -37,7 +37,7 @@ describe('saveTableDataVorgabenU', () => {
     const result = saveTableDataVorgabenU(fakeTable);
 
     expect(tableToArrayMock).toHaveBeenCalledWith(fakeTable);
-    expect(result.vorgabenB).toEqual({ 0: tableData.get(0) });
+    expect(result.vorgabenB).toEqual({ 0: tableData.get(0)! });
     expect(result.pers.Vorname).toBe(VorgabenUMock.pers.Vorname);
 
     // Prüfe, dass der Wert in Storage geschrieben wurde

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // --- Hoisted mocks ---
-const { mockRefreshToken, mockCreateSnackBar, mocklogoutUser } = vi.hoisted(() => ({
+const { mockRefreshToken, mockCreateSnackBar, mocklogoutUser } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => ({
   mockRefreshToken: vi.fn(),
   mockCreateSnackBar: vi.fn(),
   mocklogoutUser: vi.fn(),
@@ -35,7 +37,9 @@ describe('tokenErneuern', () => {
   });
 
   it('wirft Fehler und loggt aus bei API-Fehler', async () => {
-    mockRefreshToken.mockImplementation(async () => { throw new Error('Network error'); });
+    mockRefreshToken.mockImplementation(async () => {
+      throw new Error('Network error');
+    });
 
     await expect(tokenErneuern(0)).rejects.toThrow('Fehler bei Token erneuerung');
     expect(mocklogoutUser).toHaveBeenCalled();
