@@ -110,6 +110,7 @@ fi
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
   echo "❌ Working tree is not clean. Please commit or stash your changes first." >&2
+  echo "   Tipp: Nach einem Release-Bump muss der Versions-Commit zuerst auf '${SOURCE_BRANCH}' erstellt/gepusht werden." >&2
   exit 1
 fi
 

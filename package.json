@@ -1,6 +1,6 @@
 {
   "name": "db_nebengeld_frontend",
-  "version": "2.0.22",
+  "version": "2.1.0",
   "description": "",
   "private": "true",
   "scripts": {
@@ -26,10 +26,11 @@
     "deploy": "bun run deploy:main",
     "deploy:main": "bash ./scripts/deploy.sh",
     "deploy:main:dry": "bash ./scripts/deploy.sh --dry-run",
+    "deploy:main:skip-checks": "bash ./scripts/deploy.sh --skip-checks",
     "release:deploy": "bun run release:deploy:patch",
-    "release:deploy:patch": "bun run release:patch && bun run deploy:main",
-    "release:deploy:minor": "bun run release:minor && bun run deploy:main",
-    "release:deploy:major": "bun run release:major && bun run deploy:main",
+    "release:deploy:patch": "bun run release:check && bun ./scripts/release.ts patch --commit --push && bun run deploy:main:skip-checks",
+    "release:deploy:minor": "bun run release:check && bun ./scripts/release.ts minor --commit --push && bun run deploy:main:skip-checks",
+    "release:deploy:major": "bun run release:check && bun ./scripts/release.ts major --commit --push && bun run deploy:main:skip-checks",
     "prepare": "husky"
   },
   "lint-staged": {
