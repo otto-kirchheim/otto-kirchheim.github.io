@@ -49,7 +49,8 @@ export default function createModalForgotPassword(): void {
         await authApi.forgotPassword(emailInput.value.trim());
         Modal.getInstance(modal)?.hide();
         createSnackBar({
-          message: 'Falls die E-Mail verifiziert registriert ist, wurde ein Reset-Link versendet.',
+          message:
+            'Falls die E-Mail verifiziert registriert ist, wurde ein Reset-Link versendet. Bitte auch den Junk-E-Mail-Ordner prüfen.',
           status: 'success',
           timeout: 4000,
           fixed: true,

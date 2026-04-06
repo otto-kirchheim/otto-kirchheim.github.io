@@ -75,6 +75,13 @@ export function AdminUserList() {
       const loadedUsers = await fetchAdminUsers({ name: nameFilter, role: roleFilter });
       setUsers(loadedUsers);
       setEdits(Object.fromEntries(loadedUsers.map(entry => [entry._id, buildEditState(entry)])));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/session ungültig|abgemeldet|token|erneuerung/i.test(message)) {
+        console.error('Admin-Benutzer konnten nicht geladen werden:', error);
+      }
+      setUsers([]);
+      setEdits({});
     } finally {
       setLoading(false);
     }

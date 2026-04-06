@@ -156,6 +156,7 @@ describe('#getUserCookie & isAdmin', () => {
   it('getUserCookie sollte Daten aus localStorage lesen', () => {
     localStorage.setItem('Benutzer', JSON.stringify('test'));
     localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+    localStorage.setItem('AccessToken', JSON.stringify('access-token'));
     const result = getUserCookie();
     expect(result).toEqual({ userName: 'test', role: 'member' });
   });
@@ -167,18 +168,21 @@ describe('#getUserCookie & isAdmin', () => {
   it('isAdmin sollte false zurückgeben für member', () => {
     localStorage.setItem('Benutzer', JSON.stringify('test'));
     localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+    localStorage.setItem('AccessToken', JSON.stringify('access-token'));
     expect(isAdmin()).toBe(false);
   });
 
   it('isAdmin sollte true zurückgeben für team-admin', () => {
     localStorage.setItem('Benutzer', JSON.stringify('test'));
     localStorage.setItem('BenutzerRolle', JSON.stringify('team-admin'));
+    localStorage.setItem('AccessToken', JSON.stringify('access-token'));
     expect(isAdmin()).toBe(true);
   });
 
   it('isAdmin sollte true zurückgeben für super-admin', () => {
     localStorage.setItem('Benutzer', JSON.stringify('test'));
     localStorage.setItem('BenutzerRolle', JSON.stringify('super-admin'));
+    localStorage.setItem('RefreshToken', JSON.stringify('refresh-token'));
     expect(isAdmin()).toBe(true);
   });
 });

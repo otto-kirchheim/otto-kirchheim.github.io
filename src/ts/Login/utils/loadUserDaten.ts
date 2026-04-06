@@ -9,6 +9,10 @@ import { type LoadedYearData, loadAllYearData } from '../../utilities/apiService
 import type { TStorageData } from '../../utilities/Storage';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat, normalizeResourceRows } from '../../utilities';
 
+function isSessionErrorMessage(message: string): boolean {
+  return /session ungültig|abgemeldet|token|erneuerung/i.test(message);
+}
+
 export default async function loadUserDaten(monat: number, jahr: number): Promise<void> {
   let userData: LoadedYearData | undefined;
   // jahreswechsel wird nicht mehr benötigt
@@ -16,9 +20,10 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   try {
     userData = await loadAllYearData(jahr);
   } catch (err: unknown) {
-    console.error(err);
     const message = err instanceof Error ? err.message : String(err);
-    if (message.includes('Server nicht Erreichbar')) return;
+    if (message.includes('Server nicht Erreichbar') || isSessionErrorMessage(message)) return;
+
+    console.error(err);
     createSnackBar({
       message: `Server <br/>Keine Verbindung zum Server oder Serverfehler.`,
       status: 'error',

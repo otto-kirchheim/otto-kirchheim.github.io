@@ -3,6 +3,7 @@ import { createRef } from 'preact';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { authApi } from '../../utilities/apiService';
+import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '../../utilities/passwordValidation';
 
 export default function createModalResetPassword(token: string): void {
   const ref = createRef<HTMLFormElement>();
@@ -16,7 +17,17 @@ export default function createModalResetPassword(token: string): void {
           id="PasswortNeuReset"
           name="Neues Passwort"
           pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
+          invalidFeedbackId="reset-password-new-feedback"
+          invalidFeedbackText="Das neue Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
+          popover={{
+            content: '-Mindestens 8 Zeichen <br/>-Zeichen: .-+_% <br/>',
+            placement: 'right',
+            html: true,
+            title: 'Passwort-Regeln',
+            trigger: 'focus',
+          }}
         >
           Neues Passwort
         </MyInput>
@@ -26,7 +37,10 @@ export default function createModalResetPassword(token: string): void {
           id="PasswortNeuReset2"
           name="Neues Passwort wiederholen"
           pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
+          invalidFeedbackId="reset-password-repeat-feedback"
+          invalidFeedbackText="Bitte wiederhole das neue Passwort mit mindestens 8 erlaubten Zeichen."
         >
           Neues Passwort wiederholen
         </MyInput>
@@ -40,8 +54,9 @@ export default function createModalResetPassword(token: string): void {
   function onSubmit(): (event: Event) => Promise<void> {
     return async (event: Event): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
-      if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
+      form.classList.add('was-validated');
+      if (form.checkValidity && !form.checkValidity()) return;
 
       const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
       if (!errorMessage) throw new Error('Error Nachrichtenfeld nicht gefunden');
@@ -51,8 +66,17 @@ export default function createModalResetPassword(token: string): void {
       const passwordRepeatInput = modal.querySelector<HTMLInputElement>('#PasswortNeuReset2');
       if (!passwordInput || !passwordRepeatInput) throw new Error('Passwort Inputs nicht gefunden');
 
-      if (passwordInput.value !== passwordRepeatInput.value) {
+      const newPassword = passwordInput.value.trim();
+      const repeatedPassword = passwordRepeatInput.value.trim();
+
+      if (newPassword !== repeatedPassword) {
         errorMessage.textContent = 'Passwörter stimmen nicht überein';
+        return;
+      }
+
+      const passwordError = getPasswordValidationMessage(newPassword, 'Das neue Passwort');
+      if (passwordError) {
+        errorMessage.textContent = passwordError;
         return;
       }
 
@@ -62,7 +86,7 @@ export default function createModalResetPassword(token: string): void {
       }
 
       try {
-        await authApi.resetPassword(token, passwordInput.value.trim());
+        await authApi.resetPassword(token, newPassword);
         Modal.getInstance(modal)?.hide();
         createSnackBar({
           message: 'Passwort wurde erfolgreich zurückgesetzt. Bitte melde dich erneut an.',

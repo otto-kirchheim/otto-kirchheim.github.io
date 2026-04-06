@@ -320,6 +320,35 @@ describe('FetchRetry.ts', () => {
       expect((globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1].method).toBe('GET');
     });
 
+    it('should also retry with token refresh for generic 401 session errors on protected routes', async () => {
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+          json: async () => ({
+            data: null,
+            status: false,
+            statusCode: 401,
+            message: 'Session ungültig oder abgemeldet',
+          }),
+          headers: new Headers(),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockSuccessResponse,
+          headers: new Headers(),
+        });
+
+      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
+
+      const result = await FetchRetry('auth/me', undefined, 'GET');
+
+      expect(result).toEqual({ ...mockSuccessResponse, statusCode: 200 });
+      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(Utils.tokenErneuern).toHaveBeenCalledWith(0);
+    });
+
     it('should throw error if token refresh fails during retry', async () => {
       const refreshMessage = 'Refresh failed';
       // First call: Token expired

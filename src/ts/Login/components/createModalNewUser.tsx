@@ -1,5 +1,6 @@
 import { createRef } from 'preact';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
+import { PASSWORD_MIN_LENGTH } from '../../utilities/passwordValidation';
 import { checkNeuerBenutzer } from '../utils';
 
 export default function createModalNewUser(): void {
@@ -54,9 +55,13 @@ export default function createModalNewUser(): void {
           id="Passwort"
           name="Passwort"
           pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
+          invalidFeedbackId="register-password-feedback"
+          invalidFeedbackText="Das Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
           popover={{
-            content: '-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+            content:
+              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
             placement: 'right',
             html: true,
             title: 'Erlaubte Zeichen',
@@ -71,9 +76,13 @@ export default function createModalNewUser(): void {
           id="Passwort2"
           name="Passwort wiederholen"
           pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
+          invalidFeedbackId="register-password-repeat-feedback"
+          invalidFeedbackText="Bitte wiederhole das Passwort mit mindestens 8 erlaubten Zeichen."
           popover={{
-            content: '-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+            content:
+              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
             placement: 'right',
             html: true,
             title: 'Erlaubte Zeichen',
@@ -92,8 +101,9 @@ export default function createModalNewUser(): void {
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {
       if (!(form instanceof HTMLFormElement)) return;
-      if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
+      form.classList.add('was-validated');
+      if (form.checkValidity && !form.checkValidity()) return;
       checkNeuerBenutzer(modal);
     };
   }

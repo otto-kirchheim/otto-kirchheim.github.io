@@ -1,5 +1,17 @@
 # Todo
 
+## Aktueller Plan: Frontend-401-Startlogik und Session-Handling stabilisieren
+
+- [x] 401-Fehlerkaskade beim App-Start reproduzieren und auf Stale-Session / uncaught Admin-Requests eingrenzen
+- [x] Session-Erkennung auf echte Tokens begrenzen und geschützte 401-Antworten sauber über Refresh/Logout abfangen
+- [x] Admin-Startup und Jahresdaten-Load gegen ungefangene Session-Fehler härten
+- [x] Relevante Regressionstests, Lint und Build erneut ausführen
+
+## Review (Frontend-401-Startlogik)
+
+- Ergebnis: Veraltete lokale Benutzerdaten ohne gültige Tokens werden nicht mehr als aktive Session behandelt; geschützte 401-Antworten stoßen jetzt sauber den Refresh-/Logout-Pfad an, und Admin-/Jahresdaten-Loads erzeugen keine ungefangenen Promise-Fehler mehr.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Utilities/decodeAccessToken.test.ts test/Utilities/FetchRetry.test.ts test/Login.LadeUserDaten.test.ts` → `Dateien: 3 ✓ 3 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint && bun run build` erfolgreich (nur bestehende Sass-Deprecation-Warnungen).
+
 ## Aktueller Plan: Frontend-Tests auf Bun test + happy-dom umstellen
 
 - [x] Test-Konfiguration und Abhaengigkeiten auf Bun test + happy-dom umstellen

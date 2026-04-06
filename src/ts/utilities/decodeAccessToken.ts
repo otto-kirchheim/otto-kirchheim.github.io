@@ -8,12 +8,18 @@ export type UserCookieData = {
 /** Admin-Rollen (alles außer "member") */
 const ADMIN_ROLES = new Set(['team-admin', 'org-admin', 'super-admin']);
 
+function hasStoredSessionToken(): boolean {
+  return Storage.check('AccessToken') || Storage.check('RefreshToken');
+}
+
 /**
  * Liest User-Daten (role, userName) aus localStorage.
  * Frueher wurde das `user`-Cookie gelesen, das aber bei Cross-Origin
  * nicht per `document.cookie` zugaenglich ist.
  */
 export function getUserCookie(): UserCookieData | null {
+  if (!hasStoredSessionToken()) return null;
+
   if (Storage.check('Benutzer') && Storage.check('BenutzerRolle')) {
     return {
       userName: Storage.get<string>('Benutzer', true),

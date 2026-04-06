@@ -3,6 +3,7 @@ import { createSnackBar } from '../../class/CustomSnackbar';
 import type { CustomHTMLDivElement } from '../../interfaces';
 import { clearLoading, setLoading } from '../../utilities';
 import { authApi } from '../../utilities/apiService';
+import { getPasswordValidationMessage } from '../../utilities/passwordValidation';
 
 export default async function checkPasswort(modal: CustomHTMLDivElement): Promise<void> {
   const errorMessage = modal.querySelector<HTMLDivElement>('#errorMessage');
@@ -32,6 +33,13 @@ export default async function checkPasswort(modal: CustomHTMLDivElement): Promis
     errorMessage.textContent = 'Bitte Neues Passwort wiederholen';
     return;
   }
+
+  const passwordError = getPasswordValidationMessage(PasswortNeu, 'Das neue Passwort');
+  if (passwordError) {
+    errorMessage.textContent = passwordError;
+    return;
+  }
+
   if (PasswortNeu != PasswortNeu2) {
     errorMessage.textContent = 'Passwort falsch wiederholt';
     return;
