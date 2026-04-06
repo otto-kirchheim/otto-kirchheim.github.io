@@ -90,6 +90,8 @@ describe('SelectYear', () => {
 
   it('ruft loadUserDaten auf wenn Benutzer eingeloggt ist', () => {
     Storage.set('Benutzer', 'Max');
+    Storage.set('BenutzerRolle', 'member');
+    Storage.set('AccessToken', 'access-token');
     selectYear(3, 2026);
     expect(loadUserDatenMock).toHaveBeenCalledWith(3, 2026);
   });

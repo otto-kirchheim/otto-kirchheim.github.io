@@ -118,6 +118,17 @@ describe('loadUserDaten', () => {
     expect(storageSetMock).not.toHaveBeenCalled();
   });
 
+  it('unterdrückt die generische Server-Snackbar bei ungültiger Session', async () => {
+    loadAllYearDataMock.mockImplementation(async () => {
+      throw new Error('Session ungültig oder abgemeldet');
+    });
+
+    await loadUserDaten(3, 2026);
+
+    expect(createSnackBarMock).not.toHaveBeenCalled();
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
+  });
+
   it('laedt Daten, setzt Storage und aktualisiert UI im Erfolgsfall ohne Konflikte', async () => {
     const loadBZ = vi.fn();
     const loadBE = vi.fn();

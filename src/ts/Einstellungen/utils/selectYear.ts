@@ -1,4 +1,4 @@
-import { Storage, setLoading } from '../../utilities';
+import { Storage, getUserCookie, setLoading } from '../../utilities';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { loadUserDaten } from '../../Login/utils';
 import setMonatJahr from './setMonatJahr';
@@ -36,5 +36,5 @@ export default function selectYear(monat?: number, jahr?: number): void {
 
   setMonatJahr(jahr, monat);
 
-  if (Storage.check('Benutzer')) loadUserDaten(monat, jahr);
+  if (getUserCookie()) void loadUserDaten(monat, jahr);
 }

@@ -24,8 +24,12 @@ function getActAsUserIdFromStorage(): string | null {
   }
 }
 
+function normalizeUrlPath(urlPath: string): string {
+  return urlPath.replace(/^\/+/, '').toLowerCase();
+}
+
 function shouldAttachActAsHeader(urlPath: string): boolean {
-  const normalizedPath = urlPath.replace(/^\/+/, '').toLowerCase();
+  const normalizedPath = normalizeUrlPath(urlPath);
 
   const actAsPaths = [
     'user-profiles/me',
@@ -36,6 +40,27 @@ function shouldAttachActAsHeader(urlPath: string): boolean {
   ];
 
   return actAsPaths.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
+}
+
+function shouldRetryWithRefresh(urlPath: string, status: number): boolean {
+  if (status !== 401 || !Storage.check('RefreshToken')) return false;
+
+  const normalizedPath = normalizeUrlPath(urlPath);
+  const publicAuthPaths = [
+    'auth/login',
+    'auth/register',
+    'auth/refresh-token',
+    'auth/logout',
+    'auth/forgot-password',
+    'auth/resend-verification-email',
+    'auth/passkeys/login/options',
+    'auth/passkeys/login/verify',
+    'auth/verify-email',
+  ];
+
+  if (normalizedPath.startsWith('auth/reset-password/')) return false;
+
+  return !publicAuthPaths.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
 }
 /**
  * Checks the server connection with a configurable timeout.
@@ -161,7 +186,7 @@ export async function FetchRetry<I, T>(
   try {
     const response = await fetch(`${serverUrl}/${UrlPath}`, fetchObject);
     const responded = await response.json();
-    if (response.status === 401 && responded.message?.includes('Token')) {
+    if (shouldRetryWithRefresh(UrlPath, response.status)) {
       await tokenErneuern(retry);
       return await FetchRetry(UrlPath, data, method, retry + 1);
     }

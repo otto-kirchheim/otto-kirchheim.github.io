@@ -20,13 +20,19 @@ export function AdminTab() {
 
   useEffect(() => {
     (async () => {
-      const apiBase = await getServerUrl();
-      const backendBase = apiBase.replace(/\/api\/v2\/?$/, '');
-      setAdminJsUrl(`${backendBase}/lstadmin`);
-
       try {
+        const apiBase = await getServerUrl();
+        const backendBase = apiBase.replace(/\/api\/v2\/?$/, '');
+        setAdminJsUrl(`${backendBase}/lstadmin`);
+
         const nextCapabilities = await fetchCurrentAdminCapabilities();
         setCapabilities(nextCapabilities);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (!/session ungültig|abgemeldet|token|erneuerung/i.test(message)) {
+          console.error('Admin-Berechtigungen konnten nicht geladen werden:', error);
+        }
+        setCapabilities(null);
       } finally {
         setCapabilitiesLoading(false);
       }

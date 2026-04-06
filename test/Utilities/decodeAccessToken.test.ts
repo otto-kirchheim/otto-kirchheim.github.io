@@ -15,9 +15,16 @@ describe('decodeAccessToken', () => {
       expect(getUserCookie()).toBeNull();
     });
 
-    it('liest User-Daten aus localStorage', () => {
+    it('gibt null zurück wenn Benutzer/Rolle ohne Session-Token gespeichert sind', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+      expect(getUserCookie()).toBeNull();
+    });
+
+    it('liest User-Daten aus localStorage mit vorhandenem Session-Token', () => {
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
       expect(getUserCookie()).toEqual({ userName: 'Max', role: 'member' });
     });
 
@@ -40,24 +47,28 @@ describe('decodeAccessToken', () => {
     it('gibt false zurück für member', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
       expect(isAdmin()).toBe(false);
     });
 
     it('gibt true zurück für team-admin', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('team-admin'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
       expect(isAdmin()).toBe(true);
     });
 
     it('gibt true zurück für org-admin', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('org-admin'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
       expect(isAdmin()).toBe(true);
     });
 
     it('gibt true zurück für super-admin', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('super-admin'));
+      localStorage.setItem('RefreshToken', JSON.stringify('refresh-token'));
       expect(isAdmin()).toBe(true);
     });
   });
