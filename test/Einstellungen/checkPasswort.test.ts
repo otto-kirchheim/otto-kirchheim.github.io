@@ -52,28 +52,37 @@ describe('checkPasswort', () => {
   });
 
   it('zeigt Fehler bei fehlendem altem Passwort', async () => {
-    const modal = createModal('', 'neu123', 'neu123');
+    const modal = createModal('', 'neu12345', 'neu12345');
     await checkPasswort(modal);
     expect(modal.querySelector('#errorMessage')!.textContent).toBe('Bitte Aktuelles Passwort Eingeben');
     expect(changePasswordMock).not.toHaveBeenCalled();
   });
 
   it('zeigt Fehler bei fehlendem neuem Passwort', async () => {
-    const modal = createModal('alt123', '', 'neu123');
+    const modal = createModal('alt123', '', 'neu12345');
     await checkPasswort(modal);
     expect(modal.querySelector('#errorMessage')!.textContent).toBe('Bitte Neues Passwort Eingeben');
   });
 
   it('zeigt Fehler bei fehlender Passwort-Wiederholung', async () => {
-    const modal = createModal('alt123', 'neu123', '');
+    const modal = createModal('alt123', 'neu12345', '');
     await checkPasswort(modal);
     expect(modal.querySelector('#errorMessage')!.textContent).toBe('Bitte Neues Passwort wiederholen');
   });
 
   it('zeigt Fehler bei nicht übereinstimmenden Passwörtern', async () => {
-    const modal = createModal('alt123', 'neu123', 'anders');
+    const modal = createModal('alt123', 'neu12345', 'anders');
     await checkPasswort(modal);
     expect(modal.querySelector('#errorMessage')!.textContent).toBe('Passwort falsch wiederholt');
+  });
+
+  it('zeigt Fehler bei zu kurzem neuem Passwort', async () => {
+    const modal = createModal('alt12345', 'kurz', 'kurz');
+    await checkPasswort(modal);
+    expect(modal.querySelector('#errorMessage')!.textContent).toBe(
+      'Das neue Passwort muss mindestens 8 Zeichen lang sein',
+    );
+    expect(changePasswordMock).not.toHaveBeenCalled();
   });
 
   it('zeigt Fehler wenn alt == neu', async () => {
@@ -84,17 +93,17 @@ describe('checkPasswort', () => {
 
   it('zeigt Fehler bei fehlender Internetverbindung', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    const modal = createModal('alt123', 'neu123', 'neu123');
+    const modal = createModal('alt123', 'neu12345', 'neu12345');
     await checkPasswort(modal);
     expect(modal.querySelector('#errorMessage')!.textContent).toBe('Keine Internetverbindung');
   });
 
   it('ruft API auf und schließt Modal bei Erfolg', async () => {
     changePasswordMock.mockResolvedValue(undefined);
-    const modal = createModal('alt123', 'neu123', 'neu123');
+    const modal = createModal('alt123', 'neu12345', 'neu12345');
     await checkPasswort(modal);
 
-    expect(changePasswordMock).toHaveBeenCalledWith('alt123', 'neu123');
+    expect(changePasswordMock).toHaveBeenCalledWith('alt123', 'neu12345');
     expect(modalHideMock).toHaveBeenCalled();
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
     expect(setLoadingMock).toHaveBeenCalledWith('btnChange');
@@ -103,7 +112,7 @@ describe('checkPasswort', () => {
 
   it('zeigt Fehler bei API-Fehler', async () => {
     changePasswordMock.mockRejectedValue(new Error('Unauthorized'));
-    const modal = createModal('alt123', 'neu123', 'neu123');
+    const modal = createModal('alt123', 'neu12345', 'neu12345');
     await checkPasswort(modal);
 
     expect(modal.querySelector('#errorMessage')!.innerHTML).toBe('Unauthorized');

@@ -3,6 +3,7 @@ import { createSnackBar } from '../../class/CustomSnackbar';
 import { clearLoading } from '../../utilities';
 import { authApi } from '../../utilities/apiService';
 import { registerPasskeyWithResult } from '../../utilities/passkeys';
+import { getPasswordValidationMessage } from '../../utilities/passwordValidation';
 import { resetTokenState } from '../../utilities/tokenErneuern';
 import userLoginSuccess from './userLoginSuccess';
 import type { CustomHTMLDivElement } from '../../interfaces';
@@ -67,6 +68,12 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
   }
   if (passwort1.value !== passwort2.value) {
     errorMessage.textContent = 'Passwörter falsch wiederholt';
+    return;
+  }
+
+  const passwordError = getPasswordValidationMessage(passwort1.value.trim(), 'Das Passwort');
+  if (passwordError) {
+    errorMessage.textContent = passwordError;
     return;
   }
 

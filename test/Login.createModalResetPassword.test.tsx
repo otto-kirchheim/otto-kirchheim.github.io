@@ -36,10 +36,10 @@ vi.mock('bootstrap/js/dist/modal', () => ({
 
 import createModalResetPassword from '../src/ts/Login/components/createModalResetPassword';
 
-function setupShowModalMock(password = 'pass12345', repeat = 'pass12345') {
+function setupShowModalMock(password = 'pass12345', repeat = 'pass12345', isValid = true) {
   showModalMock.mockImplementation((vnode: { props: { myRef: { current: HTMLFormElement | null } } }) => {
     const form = document.createElement('form');
-    form.checkValidity = () => true;
+    form.checkValidity = () => isValid;
     vnode.props.myRef.current = form;
 
     const modal = document.createElement('div');
@@ -95,6 +95,35 @@ describe('createModalResetPassword', () => {
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe(
       'Passwörter stimmen nicht überein',
     );
+  });
+
+  it('zeigt Fehler bei zu kurzem neuem Passwort', async () => {
+    setupShowModalMock('kurz', 'kurz');
+
+    createModalResetPassword('token-123');
+
+    const submit = showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => Promise<void>;
+    await submit({ preventDefault: vi.fn() } as unknown as Event);
+
+    expect(resetPasswordMock).not.toHaveBeenCalled();
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe(
+      'Das neue Passwort muss mindestens 8 Zeichen lang sein',
+    );
+  });
+
+  it('markiert das Formular für Bootstrap-Validierung bei ungültigen Eingaben', async () => {
+    setupShowModalMock('pass12345', 'pass12345', false);
+
+    createModalResetPassword('token-123');
+
+    const submit = showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => Promise<void>;
+    const preventDefault = vi.fn();
+    await submit({ preventDefault } as unknown as Event);
+
+    const form = showModalMock.mock.calls[0][0].props.myRef.current as HTMLFormElement;
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+    expect(form.classList.contains('was-validated')).toBe(true);
+    expect(resetPasswordMock).not.toHaveBeenCalled();
   });
 
   it('zeigt Offline-Fehler ohne API-Call', async () => {

@@ -66,8 +66,8 @@ function setupDom(): HTMLDivElement {
     <input id="Zugang" value=" code-1 " />
     <input id="Benutzer" value=" otto " />
     <input id="Email" value=" test@example.com " />
-    <input id="Passwort" value=" pass1 " />
-    <input id="Passwort2" value=" pass1 " />
+    <input id="Passwort" value=" pass12345 " />
+    <input id="Passwort2" value=" pass12345 " />
   `;
 
   const modal = document.querySelector<HTMLDivElement>('#modal-root');
@@ -123,6 +123,24 @@ describe('checkNeuerBenutzer', () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
+  it('setzt Validierungsfehler bei zu kurzem Passwort', async () => {
+    setupDom();
+    const passwort1 = document.querySelector<HTMLInputElement>('#Passwort');
+    const passwort2 = document.querySelector<HTMLInputElement>('#Passwort2');
+    if (!passwort1 || !passwort2) throw new Error('password inputs not found');
+    passwort1.value = 'kurz';
+    passwort2.value = 'kurz';
+    const modal = document.querySelector<HTMLDivElement>('#modal-root');
+    if (!modal) throw new Error('modal not found');
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe(
+      'Das Passwort muss mindestens 8 Zeichen lang sein',
+    );
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
   it('zeigt Offline-Fehler ohne Register-Call', async () => {
     const modal = setupDom();
     Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
@@ -140,7 +158,7 @@ describe('checkNeuerBenutzer', () => {
 
     await checkNeuerBenutzer(modal as never);
 
-    expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', 'pass1', 'code-1');
+    expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', 'pass12345', 'code-1');
     expect(resetTokenStateMock).toHaveBeenCalledTimes(1);
     expect(meMock).toHaveBeenCalledTimes(1);
     expect(confirmMock).toHaveBeenCalledTimes(1);
