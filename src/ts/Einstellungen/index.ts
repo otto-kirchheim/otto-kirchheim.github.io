@@ -153,16 +153,14 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
 }
 
 async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
-  const passkeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskey');
   const inlinePasskeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');
   const passkeyHint = document.querySelector<HTMLElement>('#PasskeyStatus');
   const passkeyAccordionItem = document.querySelector<HTMLElement>('#PasskeysAccordionItem');
 
-  if (!passkeyButton || !passkeyHint || !passkeyAccordionItem) return;
+  if (!inlinePasskeyButton || !passkeyHint || !passkeyAccordionItem) return;
 
   if (typeof PublicKeyCredential === 'undefined') {
-    passkeyButton.hidden = true;
-    if (inlinePasskeyButton) inlinePasskeyButton.hidden = true;
+    inlinePasskeyButton.hidden = true;
     passkeyAccordionItem.classList.add('d-none');
     renderPasskeyList([]);
     passkeyHint.hidden = false;
@@ -170,35 +168,29 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
     return;
   }
 
-  passkeyButton.disabled = false;
-  if (inlinePasskeyButton) inlinePasskeyButton.disabled = false;
+  inlinePasskeyButton.disabled = false;
+  inlinePasskeyButton.hidden = false;
+  passkeyAccordionItem.classList.remove('d-none');
 
   const passkeys = await authApi.getPasskeys().catch(() => null);
   if (passkeys === null) {
-    passkeyButton.hidden = false;
-    if (inlinePasskeyButton) inlinePasskeyButton.hidden = true;
-    passkeyAccordionItem.classList.add('d-none');
     renderPasskeyList([]);
     passkeyHint.hidden = false;
     passkeyHint.textContent = 'Passkey-Status konnte nicht geladen werden.';
+    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
     return;
   }
 
+  renderPasskeyList(passkeys);
+
   if (passkeys.length === 0) {
-    passkeyButton.hidden = false;
-    passkeyButton.textContent = 'Passkey hinzufügen';
-    if (inlinePasskeyButton) inlinePasskeyButton.hidden = true;
-    passkeyAccordionItem.classList.add('d-none');
-    renderPasskeyList([]);
+    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
     passkeyHint.hidden = false;
     passkeyHint.textContent = 'Noch kein Passkey registriert.';
     return;
   }
 
-  passkeyButton.hidden = true;
-  if (inlinePasskeyButton) inlinePasskeyButton.hidden = false;
-  passkeyAccordionItem.classList.remove('d-none');
-  renderPasskeyList(passkeys);
+  inlinePasskeyButton.textContent = 'Weiteren Passkey hinzufügen';
 
   const label = passkeys.length === 1 ? '1 Passkey registriert.' : `${passkeys.length} Passkeys registriert.`;
   passkeyHint.hidden = false;
@@ -272,11 +264,6 @@ window.addEventListener('load', () => {
   const btnResendVerificationEmail = document.querySelector<HTMLButtonElement>('#btnResendVerificationEmail');
   btnResendVerificationEmail?.addEventListener('click', () => {
     void resendVerificationEmailFromSettings();
-  });
-
-  const btnAddPasskey = document.querySelector<HTMLButtonElement>('#btnAddPasskey');
-  btnAddPasskey?.addEventListener('click', () => {
-    void handlePasskeyRegistration();
   });
 
   const btnAddPasskeyInline = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');

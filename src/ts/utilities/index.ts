@@ -43,6 +43,7 @@ import {
 } from './getMonatFromItem';
 import saveDaten from './saveDaten';
 import normalizeResourceRows from './normalizeResourceRows';
+import { getPasskeyErrorMessage, guessPasskeyDeviceName, registerPasskeyWithResult } from './passkeys';
 import setDisableButton from './setDisableButton';
 import setLoading from './setLoading';
 import setOffline from './setOffline';
@@ -73,9 +74,11 @@ export {
   getMonatFromEWT,
   getMonatFromEWTBuchungstag,
   getMonatFromN,
+  getPasskeyErrorMessage,
   getResourceStatus,
   getServerUrl,
   getUserCookie,
+  guessPasskeyDeviceName,
   initializeColorModeToggler,
   isAdmin,
   isEwtInMonat,
@@ -85,6 +88,7 @@ export {
   normalizeGermanAddress,
   normalizeResourceRows,
   onAutoSaveStatus,
+  registerPasskeyWithResult,
   saveDaten,
   scheduleAutoSave,
   setAutoSaveDelay,

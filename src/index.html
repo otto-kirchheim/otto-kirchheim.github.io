@@ -565,15 +565,7 @@
                   Passwort Ändern
                 </button>
               </div>
-              <div class="d-grid">
-                <button class="btn btn-outline-primary" type="button" name="PasskeyHinzufuegen" id="btnAddPasskey">
-                  Passkey hinzufügen
-                </button>
-              </div>
             </div>
-            <small id="PasskeyStatus" class="form-text text-body-secondary d-block mt-2"
-              >Noch kein Passkey registriert.</small
-            >
           </div>
 
           <div class="container">
@@ -854,7 +846,6 @@
                     data-bs-target="#collapsePasskeys"
                   >
                     Passkeys & Geräte
-                    <span class="badge rounded-pill text-bg-primary ms-2" id="PasskeyAccordionCount">0</span>
                   </button>
                 </h2>
                 <div id="collapsePasskeys" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
@@ -863,13 +854,19 @@
                       class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3"
                     >
                       <div>
-                        <h6 class="mb-1">Registrierte Passkeys</h6>
-                        <p class="text-body-secondary small mb-0">
+                        <h6 class="mb-1 d-flex align-items-center gap-2">
+                          Registrierte Passkeys
+                          <span class="badge text-bg-secondary" id="PasskeyAccordionCount">0</span>
+                        </h6>
+                        <p class="text-body-secondary small mb-1">
                           Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
                         </p>
+                        <small id="PasskeyStatus" class="form-text text-body-secondary d-block"
+                          >Passkey-Status wird geladen...</small
+                        >
                       </div>
                       <button class="btn btn-outline-primary" type="button" id="btnAddPasskeyInline">
-                        Weiteren Passkey hinzufügen
+                        Passkey hinzufügen
                       </button>
                     </div>
                     <div class="list-group" id="PasskeyList"></div>
