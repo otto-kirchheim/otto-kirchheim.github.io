@@ -1,15 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { createSnackBarMock, clearLoadingMock, registerMock, meMock, userLoginSuccessMock, hideMock, getInstanceMock } =
-  (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
-    createSnackBarMock: vi.fn(),
-    clearLoadingMock: vi.fn(),
-    registerMock: vi.fn(),
-    meMock: vi.fn(),
-    userLoginSuccessMock: vi.fn(),
-    hideMock: vi.fn(),
-    getInstanceMock: vi.fn(),
-  }));
+const {
+  createSnackBarMock,
+  clearLoadingMock,
+  registerMock,
+  meMock,
+  userLoginSuccessMock,
+  hideMock,
+  getInstanceMock,
+  registerPasskeyWithResultMock,
+  resetTokenStateMock,
+  confirmMock,
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
+  createSnackBarMock: vi.fn(),
+  clearLoadingMock: vi.fn(),
+  registerMock: vi.fn(),
+  meMock: vi.fn(),
+  userLoginSuccessMock: vi.fn(),
+  hideMock: vi.fn(),
+  getInstanceMock: vi.fn(),
+  registerPasskeyWithResultMock: vi.fn(),
+  resetTokenStateMock: vi.fn(),
+  confirmMock: vi.fn(),
+}));
 
 vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
@@ -28,6 +41,14 @@ vi.mock('../src/ts/utilities/apiService', () => ({
 
 vi.mock('../src/ts/Login/utils/userLoginSuccess', () => ({
   default: userLoginSuccessMock,
+}));
+
+vi.mock('../src/ts/utilities/passkeys', () => ({
+  registerPasskeyWithResult: registerPasskeyWithResultMock,
+}));
+
+vi.mock('../src/ts/utilities/tokenErneuern', () => ({
+  resetTokenState: resetTokenStateMock,
 }));
 
 vi.mock('bootstrap/js/dist/modal', () => ({
@@ -59,6 +80,13 @@ describe('checkNeuerBenutzer', () => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
     getInstanceMock.mockReturnValue({ hide: hideMock });
+    confirmMock.mockReturnValue(false);
+    window.confirm = confirmMock as typeof window.confirm;
+    Object.defineProperty(globalThis, 'PublicKeyCredential', {
+      value: class PublicKeyCredentialMock {},
+      writable: true,
+      configurable: true,
+    });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
@@ -105,7 +133,7 @@ describe('checkNeuerBenutzer', () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it('fuehrt erfolgreichen Registrierungs-Flow aus', async () => {
+  it('fuehrt erfolgreichen Registrierungs-Flow mit Skip der Passkey-Einrichtung aus', async () => {
     const modal = setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'org-admin' });
@@ -113,7 +141,10 @@ describe('checkNeuerBenutzer', () => {
     await checkNeuerBenutzer(modal as never);
 
     expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', 'pass1', 'code-1');
+    expect(resetTokenStateMock).toHaveBeenCalledTimes(1);
     expect(meMock).toHaveBeenCalledTimes(1);
+    expect(confirmMock).toHaveBeenCalledTimes(1);
+    expect(registerPasskeyWithResultMock).not.toHaveBeenCalled();
     expect(getInstanceMock).toHaveBeenCalledWith(modal);
     expect(hideMock).toHaveBeenCalledTimes(1);
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
@@ -124,6 +155,44 @@ describe('checkNeuerBenutzer', () => {
       emailVerified: undefined,
     });
     expect(clearLoadingMock).toHaveBeenCalledWith('btnNeu');
+  });
+
+  it('richtet auf Wunsch direkt einen Passkey nach dem Signup ein', async () => {
+    const modal = setupDom();
+    registerMock.mockResolvedValue(undefined);
+    meMock.mockResolvedValue({ role: 'member', email: 'test@example.com', emailVerified: false });
+    confirmMock.mockReturnValue(true);
+    registerPasskeyWithResultMock.mockResolvedValue({
+      ok: true,
+      reason: 'success',
+      message: 'Passkey erfolgreich eingerichtet',
+    });
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(1);
+    expect(userLoginSuccessMock).toHaveBeenCalledWith({
+      username: 'otto',
+      role: 'member',
+      email: 'test@example.com',
+      emailVerified: false,
+    });
+  });
+
+  it('bietet bei technischem Passkey-Fehler einen Retry an', async () => {
+    const modal = setupDom();
+    registerMock.mockResolvedValue(undefined);
+    meMock.mockResolvedValue({ role: 'member' });
+    confirmMock.mockReturnValueOnce(true).mockReturnValueOnce(true);
+    registerPasskeyWithResultMock
+      .mockResolvedValueOnce({ ok: false, reason: 'error', message: 'Passkey fehlgeschlagen' })
+      .mockResolvedValueOnce({ ok: true, reason: 'success', message: 'Passkey erfolgreich eingerichtet' });
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(2);
+    expect(confirmMock).toHaveBeenCalledTimes(2);
+    expect(hideMock).toHaveBeenCalledTimes(1);
   });
 
   it('zeigt Fehler-Snackbar und schreibt Fehlermeldung bei Fehler', async () => {

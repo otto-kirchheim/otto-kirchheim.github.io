@@ -2,8 +2,37 @@ import Modal from 'bootstrap/js/dist/modal';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { clearLoading } from '../../utilities';
 import { authApi } from '../../utilities/apiService';
+import { registerPasskeyWithResult } from '../../utilities/passkeys';
+import { resetTokenState } from '../../utilities/tokenErneuern';
 import userLoginSuccess from './userLoginSuccess';
 import type { CustomHTMLDivElement } from '../../interfaces';
+
+async function maybeSetupPasskeyAfterSignup(): Promise<void> {
+  if (typeof PublicKeyCredential === 'undefined') {
+    return;
+  }
+
+  const wantsPasskey = window.confirm(
+    'Benutzer erfolgreich angelegt. Möchtest du jetzt direkt einen Passkey für zukünftige Logins einrichten?',
+  );
+
+  if (!wantsPasskey) {
+    return;
+  }
+
+  while (true) {
+    const result = await registerPasskeyWithResult();
+
+    if (result.ok || result.reason === 'unsupported' || result.reason === 'cancelled') {
+      return;
+    }
+
+    const retry = window.confirm(`${result.message}\n\nPasskey-Einrichtung erneut versuchen?`);
+    if (!retry) {
+      return;
+    }
+  }
+}
 
 export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): Promise<void> {
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
@@ -48,12 +77,15 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
 
   try {
     await authApi.register(benutzer.value.trim(), email.value.trim(), passwort1.value.trim(), zugangscode.value.trim());
+    resetTokenState();
     const me = await authApi.me().catch(() => null);
+
+    await maybeSetupPasskeyAfterSignup();
 
     Modal.getInstance(modal)?.hide();
 
     createSnackBar({
-      message: `Benutzer erfolgreich angelegt.`,
+      message: 'Benutzer erfolgreich angelegt.',
       status: 'success',
       timeout: 3000,
       fixed: true,

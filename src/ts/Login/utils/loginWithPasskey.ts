@@ -1,16 +1,11 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { browserSupportsWebAuthn, startAuthentication, WebAuthnError } from '@simplewebauthn/browser';
+import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { userLoginSuccess } from '.';
 import { clearLoading, setLoading } from '../../utilities';
 import { authApi } from '../../utilities/apiService';
+import { getPasskeyErrorMessage } from '../../utilities/passkeys';
 import { resetTokenState } from '../../utilities/tokenErneuern';
 import type { CustomHTMLDivElement } from '../../interfaces';
-
-function getPasskeyErrorMessage(error: unknown): string {
-  if (error instanceof WebAuthnError) return error.message;
-  if (error instanceof Error) return error.message;
-  return 'Passkey-Anmeldung fehlgeschlagen';
-}
 
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');
@@ -52,7 +47,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
       emailVerified: me?.emailVerified,
     });
   } catch (error) {
-    errorMessage.textContent = getPasskeyErrorMessage(error);
+    errorMessage.textContent = getPasskeyErrorMessage(error, 'Passkey-Anmeldung fehlgeschlagen');
   } finally {
     clearLoading('btnLogin', false);
     if (btnLogin) btnLogin.disabled = false;

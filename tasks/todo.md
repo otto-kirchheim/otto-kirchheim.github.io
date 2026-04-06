@@ -134,3 +134,16 @@
 
 - Ergebnis: Die veralteten EWT-/Download-Tests sind jetzt auf den aktuellen Flat-Array- bzw. `buchungstagE`-Vertrag ausgerichtet; unnötige Monats-Altlasten in Persistenztests wurden entfernt.
 - Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.test.ts test/EWT.persistEwtTableData.test.ts test/EWT.saveTableDataEWT.test.ts test/Neben.saveTableDataN.test.ts test/Utilities/download.test.ts` → alle Dateien bestanden; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test && bun run lint` → `Dateien: 58 ✓ 58 bestanden`, ESLint ohne Befunde.
+
+## Aktueller Plan: Passkey-Signup und Login-Modal-UX
+
+- [x] Gemeinsamen Passkey-Registrierungshelper für Einstellungen und Signup zentralisieren
+- [x] Login-Modal mit klarer Gruppierung für primären Login, Passkey-Alternative und Hilfsaktionen überarbeiten
+- [x] Signup-Flow um optionalen Passkey-Schritt mit sauberem Skip-/Retry-Verhalten ergänzen
+- [x] Relevante Frontend-Tests für Signup- und Modal-Pfade ergänzen
+- [x] Lint, Build und gezielte Auth-/Passkey-Tests erneut ausführen
+
+## Review (Passkey-Signup und Login-Modal-UX)
+
+- Ergebnis: Nach erfolgreicher Registrierung kann jetzt direkt optional ein Passkey eingerichtet werden; technische Fehler bieten einen Retry an, während Skip oder Abbruch den Loginabschluss nicht blockieren. Das Login-Modal trennt die primäre Anmeldung, die Passkey-Alternative und Hilfsaktionen jetzt klarer.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Login.loginWithPasskey.test.ts test/Login.checkNeuerBenutzer.test.ts test/Login.createModalLogin.test.ts` → `Dateien: 3 ✓ 3 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint && bun run build` erfolgreich.
