@@ -63,12 +63,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
 
-  let Tag: number;
-  if (row instanceof Row) Tag = dayjs(row.cells.tagE).date();
-  else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
+  let datum: dayjs.Dayjs;
+  if (row instanceof Row) datum = dayjs(row.cells.tagE);
+  else if (row instanceof CustomTable) datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   else throw new Error('unbekannter Fehler');
-
-  const datum = dayjs([Jahr, Monat, Tag]);
   const initialBuchungstagInputValue =
     row instanceof Row ? dayjs(row.cells.buchungstagE || datum).format('YYYY-MM-DD') : datum.format('YYYY-MM-DD');
 

@@ -109,6 +109,25 @@ describe('EWT utils extra', () => {
     expect(result).toBe('2026-03-21');
   });
 
+  it('setzt Buchungstag auf den 01.04. wenn Schicht am 31.03. beginnt und laengerer Anteil nach Mitternacht liegt', () => {
+    const result = calculateBuchungstagEwt({
+      tagE: '2026-03-31',
+      eOrtE: 'Mühlbach',
+      schichtE: 'N',
+      abWE: '19:25',
+      ab1E: '20:30',
+      anEE: '20:50',
+      beginE: '19:45',
+      endeE: '06:15',
+      abEE: '05:10',
+      an1E: '05:30',
+      anWE: '06:35',
+      berechnen: true,
+    });
+
+    expect(result).toBe('2026-04-01');
+  });
+
   it('naechsterTag wirft Fehler und sperrt Speichern wenn kein freier Tag vorhanden ist', () => {
     document.body.innerHTML = `
       <input id="tagE" max="2026-03-03" value="2026-03-01" />
