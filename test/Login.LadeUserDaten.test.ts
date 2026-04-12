@@ -196,6 +196,79 @@ describe('loadUserDaten', () => {
     expect(document.querySelector('#btn-navmenu')?.classList.contains('d-none')).toBe(false);
   });
 
+  it('nutzt Serverdaten wenn lokale Ressourcen zwar neuer wirken, aber keine _id enthalten', async () => {
+    const loadBZ = vi.fn();
+    const loadBE = vi.fn();
+    const loadE = vi.fn();
+    const loadN = vi.fn();
+    const loadVE = vi.fn();
+    createTable('tableBZ', loadBZ);
+    createTable('tableBE', loadBE);
+    createTable('tableE', loadE);
+    createTable('tableN', loadN);
+    createTable('tableVE', loadVE);
+
+    const loaded = {
+      vorgabenU: {
+        pers: { Vorname: 'ServerOtto' },
+        vorgabenB: { A: { Name: 'Server' } },
+        Einstellungen: { aktivierteTabs: ['Bereitschaft', 'EWT'] },
+      },
+      datenGeld: { a: 3 },
+      BZ: { 3: [{ _id: 'bz-server', bz: 'server' }] },
+      BE: { 3: [{ _id: 'be-server', be: 'server' }] },
+      EWT: { 3: [{ _id: 'ewt-server', ewt: 'server' }] },
+      N: { 3: [{ _id: 'n-server', n: 'server' }] },
+      timestamps: {
+        VorgabenU: '2026-03-01T00:00:00.000Z',
+        dataBZ: '2026-03-01T00:00:00.000Z',
+        dataBE: '2026-03-01T00:00:00.000Z',
+        dataE: '2026-03-01T00:00:00.000Z',
+        dataN: '2026-03-01T00:00:00.000Z',
+      },
+    };
+
+    loadAllYearDataMock.mockResolvedValue(loaded);
+    storageCheckMock.mockImplementation((key: string) =>
+      ['VorgabenU', 'dataBZ', 'dataBE', 'dataE', 'dataN'].includes(key),
+    );
+    storageGetMock.mockImplementation((key: string) => {
+      if (key === 'VorgabenU') return loaded.vorgabenU;
+      if (key === 'dataBZ') return [{ bz: 'server' }];
+      if (key === 'dataBE') return [{ be: 'server' }];
+      if (key === 'dataE') return [{ ewt: 'server' }];
+      if (key === 'dataN') return [{ n: 'server' }];
+      return undefined;
+    });
+    storageGetTimestampMock.mockReturnValue(Date.parse('2026-04-01T00:00:00.000Z'));
+
+    aktualisiereBerechnungMock.mockReturnValue({ calc: true });
+
+    await loadUserDaten(3, 2026);
+
+    expect(storageSetWithTimestampMock).toHaveBeenCalledWith(
+      'dataBZ',
+      loaded.BZ,
+      Date.parse('2026-03-01T00:00:00.000Z'),
+    );
+    expect(storageSetWithTimestampMock).toHaveBeenCalledWith(
+      'dataBE',
+      loaded.BE,
+      Date.parse('2026-03-01T00:00:00.000Z'),
+    );
+    expect(storageSetWithTimestampMock).toHaveBeenCalledWith(
+      'dataE',
+      loaded.EWT,
+      Date.parse('2026-03-01T00:00:00.000Z'),
+    );
+    expect(storageSetWithTimestampMock).toHaveBeenCalledWith('dataN', loaded.N, Date.parse('2026-03-01T00:00:00.000Z'));
+
+    expect(loadBZ).toHaveBeenCalledWith([{ _id: 'bz-server', bz: 'server' }]);
+    expect(loadBE).toHaveBeenCalledWith([{ _id: 'be-server', be: 'server' }]);
+    expect(loadE).toHaveBeenCalledWith([{ _id: 'ewt-server', ewt: 'server' }]);
+    expect(loadN).toHaveBeenCalledWith([{ _id: 'n-server', n: 'server' }]);
+  });
+
   it('erkennt Konflikte bei neueren Serverdaten und verarbeitet beide Snackbar-Actions', async () => {
     const loadBZ = vi.fn();
     const loadBE = vi.fn();

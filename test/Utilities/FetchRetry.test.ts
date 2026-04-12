@@ -268,6 +268,21 @@ describe('FetchRetry.ts', () => {
       ).toBe('application/json');
     });
 
+    it('should attach the act-as header on legacy save routes', async () => {
+      localStorage.setItem('actAsUserId', JSON.stringify('user-123'));
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('saveData', { Monat: 3, Jahr: 2026 }, 'POST');
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('x-act-as-user-id')).toBe('user-123');
+    });
+
     it('should handle fetch error', async () => {
       const fetchMessage = 'Network Failed';
       (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {

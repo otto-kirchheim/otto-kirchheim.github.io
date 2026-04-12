@@ -13,7 +13,6 @@ import {
   bzToBackend,
   ewtFromBackend,
   ewtToBackend,
-  groupByMonat,
   nebengeldFromBackend,
   nebengeldToBackend,
   userProfileFromBackend,
@@ -219,6 +218,31 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     expect(dayjs(result.Tag).isValid()).toBe(true);
     expect(dayjs(result.Buchungstag).isValid()).toBe(true);
     expect(dayjs(result.Buchungstag).date()).toBe(11);
+  });
+
+  it('ewtToBackend leitet Monat beim Monatswechsel aus dem Starttag statt aus Buchungstag/UI-Filter ab', () => {
+    const frontendEWT: IDatenEWT = {
+      tagE: '2026-03-31',
+      buchungstagE: '2026-04-01',
+      eOrtE: 'Fulda',
+      schichtE: 'N',
+      abWE: '21:30',
+      ab1E: '',
+      anEE: '',
+      beginE: '22:00',
+      endeE: '02:30',
+      abEE: '',
+      an1E: '',
+      anWE: '',
+      berechnen: true,
+    };
+
+    const result = ewtToBackend(frontendEWT, 5, 2026);
+
+    expect(result.Monat).toBe(3);
+    expect(result.Jahr).toBe(2026);
+    expect(dayjs(result.Tag).format('YYYY-MM-DD')).toBe('2026-03-31');
+    expect(dayjs(result.Buchungstag).format('YYYY-MM-DD')).toBe('2026-04-01');
   });
 
   it('ewtToBackend setzt leere Strings auf undefined', () => {
@@ -484,63 +508,5 @@ describe('fieldMapper – vorgabenUFromServer', () => {
     expect(result.pers).toBe(server.pers);
     expect(result.aZ).toBe(server.aZ);
     expect(result.fZ).toBe(server.fZ);
-  });
-});
-
-// ─── groupByMonat ────────────────────────────────────────
-
-describe('fieldMapper – groupByMonat', () => {
-  it('gruppiert Dokumente korrekt nach Monat', () => {
-    const docs = [
-      { Monat: 1, value: 'a' },
-      { Monat: 1, value: 'b' },
-      { Monat: 3, value: 'c' },
-      { Monat: 12, value: 'd' },
-    ];
-    const result = groupByMonat(docs, d => d.value);
-    expect(result.data[1]).toEqual(['a', 'b']);
-    expect(result.data[2]).toEqual([]);
-    expect(result.data[3]).toEqual(['c']);
-    expect(result.data[12]).toEqual(['d']);
-    expect(result.maxUpdatedAt).toBeNull();
-  });
-
-  it('erstellt leere Arrays für alle 12 Monate', () => {
-    const result = groupByMonat([], d => d);
-    for (let m = 1; m <= 12; m++) {
-      expect(result.data[m]).toEqual([]);
-    }
-    expect(Object.keys(result.data).length).toBe(12);
-    expect(result.maxUpdatedAt).toBeNull();
-  });
-
-  it('ignoriert ungültige Monate', () => {
-    const docs = [
-      { Monat: 0, value: 'invalid' },
-      { Monat: 13, value: 'invalid' },
-      { Monat: -1, value: 'invalid' },
-      { Monat: 5, value: 'valid' },
-    ];
-    const result = groupByMonat(docs, d => d.value);
-    expect(result.data[5]).toEqual(['valid']);
-    // Monat 0 und 13 sollten nicht existieren
-    expect(result.data[0]).toBeUndefined();
-    expect(result.data[13]).toBeUndefined();
-  });
-
-  it('wendet Mapper-Funktion korrekt an', () => {
-    const docs = [{ Monat: 2, Tag: '2024-02-15', Beginn: '08:00' }];
-    const result = groupByMonat(docs, d => ({ tag: d.Tag, beginn: d.Beginn }));
-    expect(result.data[2]).toEqual([{ tag: '2024-02-15', beginn: '08:00' }]);
-  });
-
-  it('trackt maxUpdatedAt korrekt', () => {
-    const docs = [
-      { Monat: 1, value: 'a', updatedAt: '2024-06-15T12:00:00.000Z' },
-      { Monat: 2, value: 'b', updatedAt: '2024-06-15T14:00:00.000Z' },
-      { Monat: 1, value: 'c', updatedAt: '2024-06-15T10:00:00.000Z' },
-    ];
-    const result = groupByMonat(docs, d => d.value);
-    expect(result.maxUpdatedAt).toBe('2024-06-15T14:00:00.000Z');
   });
 });

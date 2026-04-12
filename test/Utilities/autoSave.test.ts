@@ -68,8 +68,11 @@ function createMockTable(
   table.id = id;
 
   (table as any).instance = {
+    getRows: () => rows,
+    drawRows: vi.fn(),
     rows: {
       getChanges: mockGetChanges,
+      getFilteredRows: vi.fn().mockReturnValue(rows),
       commitChanges: mockCommitChanges,
       commitAutoSave: mockCommitAutoSave,
       array: rows,
@@ -340,6 +343,57 @@ describe('autoSave', () => {
       expect(mockAktualisiereBerechnung).toHaveBeenCalled();
     });
 
+    it('behält andere Monate im Storage wenn nur der aktuelle Monat gespeichert wird', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', [
+        {
+          _id: 'bz-mar',
+          beginB: '2025-03-10T10:00:00.000Z',
+          endeB: '2025-03-10T18:00:00.000Z',
+          pauseB: 0,
+        },
+        {
+          _id: 'bz-apr',
+          beginB: '2025-04-12T10:00:00.000Z',
+          endeB: '2025-04-12T18:00:00.000Z',
+          pauseB: 0,
+        },
+      ]);
+
+      const marchRow = {
+        _id: 'bz-mar',
+        beginB: '2025-03-10T11:00:00.000Z',
+        endeB: '2025-03-10T19:00:00.000Z',
+        pauseB: 15,
+      };
+
+      const changes = { create: [], update: [marchRow], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'modified', _id: 'bz-mar', cells: marchRow }]);
+
+      mockBzBulk.mockResolvedValue({
+        created: [],
+        updated: [
+          {
+            _id: 'bz-mar',
+            Beginn: '2025-03-10T11:00:00.000Z',
+            Ende: '2025-03-10T19:00:00.000Z',
+            Pause: 15,
+            updatedAt: '2025-03-10T19:00:00.000Z',
+          },
+        ],
+        deleted: [],
+        errors: [],
+      });
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      const stored = Storage.get<Array<{ _id: string; beginB: string }>>('dataBZ', { check: true });
+      expect(stored.map(item => item._id).sort()).toEqual(['bz-apr', 'bz-mar']);
+      expect(stored.find(item => item._id === 'bz-mar')?.beginB).toBe('2025-03-10T11:00:00.000Z');
+    });
+
     it('speichert BE-Änderungen über bereitschaftseinsatzApi', async () => {
       Storage.set('Monat', 5);
       Storage.set('Jahr', 2025);
@@ -372,6 +426,76 @@ describe('autoSave', () => {
 
       expect(mockEwtBulk).toHaveBeenCalled();
       expect(getResourceStatus('EWT').status).toBe('saved');
+    });
+
+    it('nutzt bei EWT für AutoSave den Starttag-Monat statt den Buchungstag', async () => {
+      Storage.set('Monat', 4);
+      Storage.set('Jahr', 2026);
+      Storage.set('dataE', { 4: [] });
+
+      const changes = {
+        create: [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' }],
+        update: [],
+        delete: [],
+      };
+      createMockTable('tableE', changes, [
+        {
+          _state: 'new',
+          cells: { tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' },
+        },
+      ]);
+
+      mockEwtBulk.mockResolvedValue({ created: [{ _id: 'ewt-cross-month' }], updated: [], deleted: [], errors: [] });
+
+      scheduleAutoSave('EWT');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockEwtBulk).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' }],
+          update: [],
+          delete: [],
+        }),
+        3,
+        2026,
+      );
+    });
+
+    it('sendet EWT-Aenderungen je Starttag-Periode getrennt statt gesammelt mit einem UI-Monat', async () => {
+      Storage.set('Monat', 1);
+      Storage.set('Jahr', 2027);
+      Storage.set('dataE', { 1: [] });
+
+      const maerzRow = { tagE: '2026-12-31', buchungstagE: '2027-01-01', schichtE: 'N' };
+      const januarRow = { tagE: '2027-01-05', buchungstagE: '2027-01-05', schichtE: 'F' };
+      const changes = {
+        create: [maerzRow, januarRow],
+        update: [],
+        delete: [],
+      };
+      createMockTable('tableE', changes, [
+        { _state: 'new', cells: maerzRow },
+        { _state: 'new', cells: januarRow },
+      ]);
+
+      mockEwtBulk.mockResolvedValue({ created: [], updated: [], deleted: [], errors: [] });
+
+      scheduleAutoSave('EWT');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockEwtBulk).toHaveBeenCalledTimes(2);
+      expect(mockEwtBulk).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ create: [maerzRow], update: [], delete: [] }),
+        12,
+        2026,
+      );
+      expect(mockEwtBulk).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({ create: [januarRow], update: [], delete: [] }),
+        1,
+        2027,
+      );
     });
 
     it('speichert N-Änderungen über nebengeldApi', async () => {
