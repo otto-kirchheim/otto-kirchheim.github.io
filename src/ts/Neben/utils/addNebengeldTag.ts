@@ -1,3 +1,4 @@
+import dayjs from '../../utilities/configDayjs';
 import { persistNebengeldTableData } from '.';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenN } from '../../interfaces';
@@ -37,7 +38,7 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement):
 
   const hasDuplicateDay = ftN.rows.array.some(existingRow => {
     if (existingRow._state === 'deleted') return false;
-    return existingRow.cells.tagN === daten.tagN;
+    return dayjs(existingRow.cells.tagN, 'DD.MM.YYYY').isSame(dayjs(daten.tagN, 'DD.MM.YYYY'), 'day');
   });
 
   if (hasDuplicateDay) {

@@ -43,7 +43,8 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
     typeof table.getRows === 'function' ? table.getRows() : Array.isArray(table.rows?.array) ? table.rows.array : [];
   const rawRows = Array.isArray(rawRowsCandidate) ? rawRowsCandidate : [];
 
-  const filteredRowsCandidate = typeof table.rows?.getFilteredRows === 'function' ? table.rows.getFilteredRows() : rawRows;
+  const filteredRowsCandidate =
+    typeof table.rows?.getFilteredRows === 'function' ? table.rows.getFilteredRows() : rawRows;
   const filteredRows = Array.isArray(filteredRowsCandidate) ? filteredRowsCandidate : rawRows;
 
   const allActiveRows = rawRows.filter(row => row._state !== 'deleted').map(row => row.cells as T);

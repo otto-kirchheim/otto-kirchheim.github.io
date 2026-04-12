@@ -38,13 +38,13 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             divClass="form-floating col-12 pb-3"
             type="text"
             id={column.name}
-            name="SAP-Nr / Einsatzbeschreibung"
+            name={column.longTitle}
             required
             min={datum.startOf('M').format('YYYY-MM-DD')}
             max={datum.endOf('M').format('YYYY-MM-DD')}
             value={row instanceof Row ? row.cells[column.name] : ''}
           >
-            SAP-Nr / Einsatzbeschreibung
+            {column.longTitle}
           </MyInput>
         );
       case 'beginBE':
@@ -79,7 +79,6 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
                 { value: 'LRE 3 ohne x', text: 'LRE 3 ohne x' },
               ]}
             />
-            <div className="w-100" />
           </Fragment>
         );
       case 'privatkmBE':
@@ -88,11 +87,18 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             divClass="form-floating col-12 col-sm-6"
             type="number"
             id={column.name}
-            name={column.title}
+            name={column.longTitle}
             min={'0'}
             value={row instanceof Row ? row.cells[column.name] : ''}
+            popover={{
+              title: column.longTitle,
+              content:
+                'Nur angeben, wenn im Einsatzverlauf mit einem privaten Fahrzeug gefahren wurde. Und kein Dienstwagen zur Verfügung stand.',
+              placement: 'top',
+              trigger: 'focus',
+            }}
           >
-            {column.title}
+            {column.longTitle}
           </MyInput>
         );
       default:

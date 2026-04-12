@@ -24,6 +24,7 @@ interface CustomTableOptions<T extends CustomTableTypes> {
   columns: {
     name: string;
     title: string;
+    longTitle?: string;
     breakpoints?: Breakpoints;
     sortable?: boolean;
     sorted?: boolean;
@@ -72,6 +73,7 @@ interface CustomTableOptionsAll<T extends CustomTableTypes> {
   columns: {
     name: string;
     title: string;
+    longTitle: string;
     breakpoints: Breakpoints | null;
     sortable: boolean;
     sorted: boolean;
@@ -128,6 +130,7 @@ export class Column<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
   public name: string;
   public title: string;
+  public longTitle: string;
   public breakpoints: Breakpoints | null;
   public sortable: boolean;
   public sorted: boolean;
@@ -146,6 +149,7 @@ export class Column<T extends CustomTableTypes> {
     this.index = index;
     this.name = column.name;
     this.title = column.title;
+    this.longTitle = column.longTitle ?? column.title ?? '';
     this.breakpoints = column.breakpoints;
     this.sortable = column.sortable;
     this.sorted = column.sorted;
@@ -476,6 +480,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
         name: 'editing',
         title: '',
         type: 'editing',
+        longTitle: '',
         breakpoints: null,
         sortable: false,
         editing: this.options.editing,
@@ -515,6 +520,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
           return {
             name: column.name,
             title: column.title ?? '',
+            longTitle: column.longTitle ?? column.title ?? '',
             breakpoints: column.breakpoints ?? null,
             sortable: column.sortable ?? false,
             sorted: column.sorted ?? false,

@@ -17,15 +17,49 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
   );
 };
 
-const fixedColumns = ['Name', 'standard'];
-const dynamicColumns = ['beginnB', 'endeB', 'nacht', 'beginnN', 'endeN'];
+const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
+  return (
+    <>
+      <div className="col-12 pt-2">
+        <h6 className="mb-2">Bereitschaft</h6>
+      </div>
+      {createShowElement(row, 'beginnB', false)}
+      {createShowElement(row, 'endeB', false)}
+    </>
+  );
+};
+
+const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
+  const isNacht = Boolean(row.cells.nacht);
+
+  return (
+    <>
+      <div className="col-12 pt-2">
+        <h6 className="mb-2">Nachtschicht</h6>
+      </div>
+      {createShowElement(row, 'nacht')}
+      {isNacht ? (
+        <>
+          {createShowElement(row, 'beginnN', false)}
+          {createShowElement(row, 'endeN', false)}
+        </>
+      ) : (
+        <div className="col-12 small text-body-secondary pb-1">Keine Nachtschicht aktiviert.</div>
+      )}
+    </>
+  );
+};
 
 export default function ShowModalVE(row: Row<IVorgabenUvorgabenB>, titel: string): void {
   const modal: CustomHTMLDivElement<IVorgabenUvorgabenB> = showModal<IVorgabenUvorgabenB>(
     <MyDivModal title={titel} Footer={<MyShowFooter row={row} />}>
       <MyModalBody>
-        {fixedColumns.map(name => createShowElement(row, name))}
-        {dynamicColumns.map(name => createShowElement(row, name, false))}
+        {createShowElement(row, 'Name')}
+        {createShowElement(row, 'standard')}
+        <hr className="my-2" />
+        {createBereitschaftBlock(row)}
+        <hr className="my-2" />
+        {createNachtschichtBlock(row)}
       </MyModalBody>
     </MyDivModal>,
   );

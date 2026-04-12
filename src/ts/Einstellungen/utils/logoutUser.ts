@@ -1,5 +1,12 @@
 import Tab from 'bootstrap/js/dist/tab';
-import { Storage, abortController, cancelAllPending, clearLoading, hideAllFeatureTabs } from '../../utilities';
+import {
+  Storage,
+  abortController,
+  cancelAllPending,
+  clearLoading,
+  hideAllFeatureTabs,
+  updateActAsBanner,
+} from '../../utilities';
 import { destroyAutoSaveIndicator } from '../../utilities/autoSaveIndicator';
 import { authApi } from '../../utilities/apiService';
 
@@ -23,6 +30,7 @@ export default function logoutUser({ serverLogout = true }: { serverLogout?: boo
   import('../../Admin').then(({ unmountAdminTab }) => unmountAdminTab());
 
   Storage.clear();
+  updateActAsBanner();
 
   const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
   if (sel instanceof HTMLButtonElement) {

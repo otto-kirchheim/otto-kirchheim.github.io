@@ -24,13 +24,13 @@ const createTimeElement = (
   return (
     <MyInput
       divClass="form-floating col-6 pb-3"
-      type="time"
+      type={column.type ?? 'time'}
       id={column.name}
-      name={column.title}
+      name={column.longTitle}
       value={row instanceof Row ? row.cells[column.name] : ''}
       {...options}
     >
-      {column.title}
+      {column.longTitle}
     </MyInput>
   );
 };
@@ -40,13 +40,15 @@ const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName:
   return (
     <MyInput
       divClass="form-floating col-6 pb-3"
-      type="text"
+      type={column.type ?? 'text'}
       id={column.name}
-      name={column.title}
+      name={column.longTitle}
       value={row instanceof Row ? row.cells[column.name] : undefined}
+      minLength={9}
+      maxLength={9}
       required
     >
-      {column.title}
+      {column.longTitle}
     </MyInput>
   );
 };
@@ -56,15 +58,15 @@ const createNumberElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnNam
   return (
     <MyInput
       divClass="form-floating col-6 pb-3"
-      type="number"
+      type={column.type ?? 'number'}
       id={column.name}
-      name={column.title}
+      name={column.longTitle}
       value={row instanceof Row ? row.cells[column.name] : 1}
       required
-      min={'1'}
+      min={'0'}
       max={'1'}
     >
-      {column.title}
+      {column.longTitle}
     </MyInput>
   );
 };
@@ -75,15 +77,12 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
 
-  let Tag: number;
+  let datum: dayjs.Dayjs;
   if (row instanceof Row) {
-    const d = dayjs(row.cells.tagN as string, 'DD.MM.YYYY');
-    Tag = d.isValid() ? d.date() : Number(row.cells.tagN);
+    datum = dayjs(row.cells.tagN, 'DD.MM.YYYY');
   } else if (row instanceof CustomTable) {
-    Tag = checkMaxTag(Jahr, Monat);
+    datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
-
-  const datum = dayjs([Jahr, Monat, Tag]);
 
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
     <MyFormModal
@@ -93,7 +92,6 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       onSubmit={onSubmit()}
     >
       <MyModalBody>
-        <h4 className="text-center mb-1">Tag</h4>
         <MyInput
           divClass="form-floating col-6 pb-3"
           required
@@ -107,13 +105,11 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
           {row.columns.array.find(column => column.name === 'tagN')?.title ?? 'Tag'}
         </MyInput>
 
-        <h4 className="text-center mb-1">Auftragsnummer</h4>
         {createTextElement(row, 'auftragN')}
 
-        <h4 className="text-center mb-1">Arbeitszeit</h4>
         {['beginN', 'endeN'].map(value => createTimeElement(row, value, { required: true }))}
 
-        <h4 className="text-center mb-1">Zulagen</h4>
+        {<h4 className="text-center mb-1">Zulagen</h4>}
         {createNumberElement(row, 'anzahl040N')}
       </MyModalBody>
     </MyFormModal>,
@@ -139,8 +135,8 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
         tagN: dayjs(form.querySelector<HTMLInputElement>('#tagN')?.value ?? 0).format('DD.MM.YYYY'),
         beginN: form.querySelector<HTMLInputElement>('#beginN')?.value ?? '',
         endeN: form.querySelector<HTMLInputElement>('#endeN')?.value ?? '',
-        anzahl040N: Number(form.querySelector<HTMLInputElement>('#anzahl040N')?.value) || 1,
         auftragN: form.querySelector<HTMLInputElement>('#auftragN')?.value ?? '',
+        anzahl040N: Number(form.querySelector<HTMLInputElement>('#anzahl040N')?.value) || 1,
       };
 
       const hasDuplicateDay = table.rows.array.some(existingRow => {

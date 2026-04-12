@@ -20,14 +20,12 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
     .map(day => {
       const schicht = day.schichtE;
       const tagEDate = dayjs(day.tagE);
-      const tagENum = tagEDate.date();
-      const tagN = tagEDate.format('DD.MM.YYYY');
-      const tag = `${`0${tagENum}`.slice(-2)} | ${tagEDate.toDate().toLocaleDateString('de', { weekday: 'short' })}`;
+      const tag = tagEDate.format('DD | dd');
 
       const option: ReturnTypeTagOptions = {
         text: '',
         value: JSON.stringify({
-          tagN,
+          tagN: tagEDate.format('DD.MM.YYYY'),
           beginN: day.beginE,
           endeN: day.endeE,
           anzahl040N: 1,
@@ -36,18 +34,22 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
         }),
       };
 
-      if (schicht === 'N') {
-        option.text = `${tag} | Nacht`;
-      } else if (schicht === 'BN') {
-        option.text = `${tag} | Nacht / Bereitschaft`;
-      } else {
-        option.text = tag;
+      switch (schicht) {
+        case 'N':
+          option.text = `${tag} | Nacht`;
+          break;
+        case 'BN':
+          option.text = `${tag} | Nacht / Bereitschaft`;
+          break;
+        default:
+          option.text = tag;
+          break;
       }
 
       if (
         dataN?.some(value => {
-          const d = dayjs(value.tagN, 'DD.MM.YYYY');
-          return (d.isValid() ? d.date() : Number(value.tagN)) === tagENum;
+          const nebenTagDate = dayjs(value.tagN, 'DD.MM.YYYY');
+          return nebenTagDate.isValid() && nebenTagDate.isSame(tagEDate, 'day');
         })
       )
         option.disabled = true;
@@ -93,7 +95,6 @@ export default function createAddModalNeben(): void {
     <MyFormModal myRef={ref} title="Neuen Nebenbezug eingeben" onSubmit={onSubmit()} customButtons={customFooterButton}>
       <MyModalBody className=" ">
         <p className="text-center text-bg-warning p-1">!!! Erst EWT Eingeben und Berechnen !!!</p>
-
         <MySelect
           className="form-floating col mb-3"
           title="Tag (Aus EWT)"
@@ -101,9 +102,19 @@ export default function createAddModalNeben(): void {
           required
           options={getTagOptions(dataE)}
         />
-        <MyInput divClass="form-floating col mb-3" type="text" id="AuftragN" name="Auftragsnummer" required>
+        <MyInput
+          divClass="form-floating col mb-3"
+          type="text"
+          id="AuftragN"
+          name="Auftragsnummer"
+          minLength={9}
+          maxLength={9}
+          required
+        >
           Auftragsnummer
         </MyInput>
+        {/* TODO: Auswahl der Zulagen ja nach Einstellungen in VorgabenU anpassen, ggf. auch Sortiert nach Typ (z.B.
+        Fahrentschädigung oder Erschwerniszulage) */}
         <MyInput
           divClass="form-floating col"
           type="number"

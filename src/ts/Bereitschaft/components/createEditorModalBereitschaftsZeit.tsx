@@ -66,12 +66,12 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
           divClass="form-floating col-12 pb-3"
           type="datetime-local"
           id={column.name}
-          name={column.title}
+          name={column.longTitle}
           required
           min={min}
           max={max}
         >
-          {column.title}
+          {column.longTitle}
         </MyInput>
       );
     default:
@@ -80,11 +80,11 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
           divClass="form-floating col-12"
           type="number"
           id={column.name}
-          name={column.title}
+          name={column.longTitle}
           min={'0'}
           max={'60'}
         >
-          {column.title}
+          {column.longTitle}
         </MyInput>
       );
   }

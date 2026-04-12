@@ -1,3 +1,4 @@
+import dayjs from '../../utilities/configDayjs';
 import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '../../interfaces';
 import { filterByMonat, getMonatFromBE, normalizeResourceRows, Storage } from '../../utilities';
 
@@ -8,17 +9,11 @@ export default function getBereitschaftsEinsatzDaten(
 ): IMonatsDaten['BE'] {
   if (!Storage.check('Benutzer')) return [];
 
-  const rows =
-    data === undefined
-      ? Storage.check('dataBE')
-        ? normalizeResourceRows<IDatenBE>(Storage.get<unknown>('dataBE', true))
-        : []
-      : normalizeResourceRows<IDatenBE>(data);
+  const sourceData = data ?? Storage.get<unknown>('dataBE', { default: [] });
+  const rows = normalizeResourceRows<IDatenBE>(sourceData);
 
   if (options?.scope === 'all') return rows;
 
-  const activeMonat = Monat ?? (Storage.check('Monat') ? Storage.get<number>('Monat', true) : undefined);
-  if (!activeMonat) return [];
-
-  return filterByMonat(rows, activeMonat, getMonatFromBE);
+  const activeMonat = Monat ?? Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  return activeMonat ? filterByMonat(rows, activeMonat, getMonatFromBE) : [];
 }

@@ -78,9 +78,17 @@ window.addEventListener('load', () => {
     timeZeroParser = (value: number): number | string => (!value ? '' : value),
     ftBZ: CustomTable<IDatenBZ> = createCustomTable<IDatenBZ>('tableBZ', {
       columns: [
-        { name: 'beginB', title: 'Von', parser: datetimeParser, sortable: true, sorted: true, direction: 'ASC' },
-        { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true },
-        { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
+        {
+          name: 'beginB',
+          title: 'Von',
+          parser: datetimeParser,
+          sortable: true,
+          sorted: true,
+          direction: 'ASC',
+          type: 'DateTime',
+        },
+        { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true, type: 'DateTime' },
+        { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs', type: 'number' },
       ],
       rows: getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }),
       sorting: { enabled: true },
@@ -158,12 +166,26 @@ window.addEventListener('load', () => {
 
   const ftBE: CustomTable<IDatenBE> = createCustomTable<IDatenBE>('tableBE', {
     columns: [
-      { name: 'tagBE', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'auftragsnummerBE', title: 'Auftrags-Nr.', sortable: true, classes: ['custom-text-truncate'] },
+      { name: 'tagBE', title: 'Datum', sortable: true, sorted: true, direction: 'ASC', type: 'Date' },
+      {
+        name: 'auftragsnummerBE',
+        title: 'Auftrags-Nr.',
+        longTitle: 'SAP-Nr / Einsatzbeschreibung',
+        sortable: true,
+        classes: ['custom-text-truncate'],
+        type: 'text',
+      },
       { name: 'beginBE', title: 'Von', sortable: true, breakpoints: 'sm', type: 'time' },
       { name: 'endeBE', title: 'Bis', sortable: true, breakpoints: 'sm', type: 'time' },
       { name: 'lreBE', title: 'LRE', sortable: true },
-      { name: 'privatkmBE', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
+      {
+        name: 'privatkmBE',
+        title: 'Privat Km',
+        longTitle: 'Kilometer Privatfahrzeug',
+        parser: timeZeroParser,
+        breakpoints: 'md',
+        type: 'number',
+      },
     ],
     rows: getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }),
     sorting: { enabled: true },
