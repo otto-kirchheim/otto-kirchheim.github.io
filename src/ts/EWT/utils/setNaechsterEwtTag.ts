@@ -15,7 +15,8 @@ export default function setNaechsterEwtTag(
   const monat = Storage.get<number>('Monat', { check: true });
   const letzterTag = dayjs([jahr, monat - 1]).daysInMonth();
 
-  const vorhandeneTage = new Set(dataE.map(item => dayjs(item.tagE).date()).filter(day => day > 0));
+  const datenImAktivenMonat = dataE.filter(item => dayjs(item.tagE).isSame(dayjs([jahr, monat - 1]), 'month'));
+  const vorhandeneTage = new Set(datenImAktivenMonat.map(item => dayjs(item.tagE).date()).filter(day => day > 0));
 
   const parsedTag =
     typeof tag === 'number'
@@ -25,6 +26,18 @@ export default function setNaechsterEwtTag(
         : dayjs(eingabefeldTagE.value).date();
 
   let currentTag = Number.isFinite(parsedTag) ? parsedTag : vorhandeneTage.size > 0 ? Math.max(...vorhandeneTage) : 0;
+
+  if (currentTag < 1 || currentTag > letzterTag) {
+    currentTag = 0;
+  }
+
+  if (vorhandeneTage.size >= letzterTag) {
+    document
+      .querySelector<HTMLButtonElement>('#modal > div > form > div.modal-footer > button.btn.btn-primary')
+      ?.setAttribute('disabled', 'true');
+    showAllDaysOccupiedMessage();
+    throw new Error('Alle Tage im Monat sind bereits belegt');
+  }
 
   for (let i = 0; i < letzterTag; i++) {
     currentTag = currentTag >= letzterTag ? 1 : currentTag + 1;
@@ -37,11 +50,15 @@ export default function setNaechsterEwtTag(
   document
     .querySelector<HTMLButtonElement>('#modal > div > form > div.modal-footer > button.btn.btn-primary')
     ?.setAttribute('disabled', 'true');
+  showAllDaysOccupiedMessage();
+  throw new Error('Fehler beim Finden eines Freien Tages');
+}
+
+function showAllDaysOccupiedMessage() {
   createSnackBar({
-    message: `EWT<br/>Fehler beim Finden eines Freien Tages.`,
+    message: `EWT<br/>Alle Tage im Monat sind bereits belegt.`,
     status: 'error',
     timeout: 3000,
     fixed: true,
   });
-  throw new Error('Fehler beim Finden eines Freien Tages');
 }
