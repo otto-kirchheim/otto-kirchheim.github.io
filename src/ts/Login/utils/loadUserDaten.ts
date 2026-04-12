@@ -43,6 +43,37 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     return normalizeResourceRows<T>(rows);
   };
 
+  const hasStringId = (value: unknown): boolean =>
+    typeof value === 'object' && value !== null && typeof (value as { _id?: unknown })._id === 'string';
+
+  const serializeRowWithoutMeta = (row: unknown): string => {
+    if (row === null || row === undefined) return JSON.stringify(row);
+    if (typeof row !== 'object') return JSON.stringify(row);
+    if (Array.isArray(row)) return `[${row.map(item => serializeRowWithoutMeta(item)).join(',')}]`;
+
+    const normalized = Object.entries(row as Record<string, unknown>)
+      .filter(([key, value]) => !['_id', 'updatedAt', 'createdAt', '__v'].includes(key) && value !== undefined)
+      .sort(([left], [right]) => left.localeCompare(right));
+
+    return `{${normalized.map(([key, value]) => `${JSON.stringify(key)}:${serializeRowWithoutMeta(value)}`).join(',')}}`;
+  };
+
+  const shouldRepairMissingIds = (storageName: TStorageData, localData: unknown, serverData: unknown): boolean => {
+    if (!['dataBZ', 'dataBE', 'dataE', 'dataN'].includes(storageName)) return false;
+
+    const localRows = normalizeRows<Record<string, unknown>>(localData);
+    const serverRows = normalizeRows<Record<string, unknown>>(serverData);
+
+    if (localRows.length === 0 || localRows.length !== serverRows.length) return false;
+    if (!localRows.some(row => !hasStringId(row))) return false;
+    if (!serverRows.every(row => hasStringId(row))) return false;
+
+    const localSignatures = localRows.map(serializeRowWithoutMeta).sort();
+    const serverSignatures = serverRows.map(serializeRowWithoutMeta).sort();
+
+    return localSignatures.every((signature, index) => signature === serverSignatures[index]);
+  };
+
   const vorhanden: string[] = [];
 
   let dataServer: Partial<UserDatenServer> = {};
@@ -63,12 +94,17 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     _beschreibung: string,
   ): T => {
     const localTs = Storage.getTimestamp(storageName);
-    if (localTs === 0 || serverTimestamp > localTs) {
-      // Serverdaten übernehmen
+    const localData = Storage.check(storageName)
+      ? Storage.get<unknown>(storageName, { default: serverData })
+      : undefined;
+
+    if (localTs === 0 || serverTimestamp > localTs || shouldRepairMissingIds(storageName, localData, serverData)) {
+      // Serverdaten übernehmen oder fehlende _id-Felder aus dem Serverzustand reparieren
       Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
       return serverData;
     }
-    return Storage.get<T>(storageName, { default: serverData });
+
+    return (localData as T | undefined) ?? serverData;
   };
 
   // Ressourcen synchronisieren

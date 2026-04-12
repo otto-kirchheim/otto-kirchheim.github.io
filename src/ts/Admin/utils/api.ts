@@ -1,5 +1,5 @@
 import { FetchRetry } from '../../utilities/FetchRetry';
-import { Storage } from '../../utilities';
+import { Storage, notifyActAsStateChanged } from '../../utilities';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import type { TUserRole } from '../../interfaces';
 
@@ -193,11 +193,13 @@ export function setActAsUser(userId: string | null, userName?: string): void {
   if (!userId) {
     Storage.remove('actAsUserId');
     Storage.remove('actAsUserName');
+    notifyActAsStateChanged();
     return;
   }
 
   Storage.set('actAsUserId', userId);
   if (userName) Storage.set('actAsUserName', userName);
+  notifyActAsStateChanged();
 }
 
 export async function fetchVorgabenYears(): Promise<BackendVorgabe[]> {

@@ -217,6 +217,14 @@ body {
   white-space: normal;
 }
 
+@media (prefers-color-scheme: dark) {
+  .bg-darkmode-override {
+    background-color: #23272b !important;
+    color: #f8f9fa !important;
+    border-color: #444950 !important;
+  }
+}
+
 .admin-user-cards {
   column-count: 1;
   column-gap: 1rem;

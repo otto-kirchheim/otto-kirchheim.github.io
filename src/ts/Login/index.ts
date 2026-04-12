@@ -1,6 +1,6 @@
 import { selectYear } from '../Einstellungen/utils';
 import type { IVorgabenU } from '../interfaces';
-import { Storage, updateTabVisibility } from '../utilities';
+import { ACT_AS_STATUS_EVENT, Storage, updateActAsBanner, updateTabVisibility } from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import { getUserCookie, isAdmin } from '../utilities/decodeAccessToken';
 import { initAutoSaveIndicator } from '../utilities/autoSaveIndicator';
@@ -32,6 +32,17 @@ window.addEventListener('load', () => {
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
   const monatEl = document.querySelector<HTMLInputElement>('#Monat');
   const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
+  const actAsButtonEl = document.querySelector<HTMLButtonElement>('#actAsOwnDataButton');
+
+  const syncActAsNotice = () => {
+    const actAsState = updateActAsBanner();
+    const storedUserName = Storage.get<string | null>('Benutzer', { default: null });
+    if (!willkommenEl || !storedUserName) return;
+
+    const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
+    const displayName = actAsState.active ? storedUserName : localVorgabenU?.pers?.Vorname || storedUserName;
+    willkommenEl.innerHTML = `Hallo, ${displayName}.`;
+  };
 
   const adminEl = document.querySelector<HTMLDivElement>('#admin');
   const adminTabPaneEl = document.querySelector<HTMLDivElement>('#Admin');
@@ -43,10 +54,22 @@ window.addEventListener('load', () => {
   adminTabButtonEl?.addEventListener('click', () => {
     void ensureAdminTabMounted();
   });
+  actAsButtonEl?.addEventListener('click', () => {
+    import('../Admin/utils/actAs').then(({ loadOwnUserData }) => {
+      void loadOwnUserData();
+    });
+  });
+  window.addEventListener(ACT_AS_STATUS_EVENT, syncActAsNotice);
+  window.addEventListener('storage', syncActAsNotice);
+  syncActAsNotice();
 
   if (Storage.check('Benutzer') && getUserCookie()) {
     const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
-    const benutzer: string = localVorgabenU?.pers?.Vorname || Storage.get<string>('Benutzer', true);
+    const gespeicherterBenutzer = Storage.get<string>('Benutzer', true);
+    const actAsState = updateActAsBanner();
+    const benutzer: string = actAsState.active
+      ? gespeicherterBenutzer
+      : localVorgabenU?.pers?.Vorname || gespeicherterBenutzer;
     if (!benutzer) {
       Storage.remove('Benutzer');
       return;
@@ -74,6 +97,7 @@ window.addEventListener('load', () => {
     if (!userIsAdmin) {
       Storage.remove('actAsUserId');
       Storage.remove('actAsUserName');
+      syncActAsNotice();
     }
 
     if (userIsAdmin) {
@@ -95,5 +119,6 @@ window.addEventListener('load', () => {
   } else {
     adminEl?.classList.add('d-none');
     adminTabPaneEl?.classList.add('d-none');
+    updateActAsBanner();
   }
 });

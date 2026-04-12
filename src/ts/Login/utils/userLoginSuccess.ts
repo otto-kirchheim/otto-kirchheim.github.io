@@ -1,6 +1,6 @@
 import { selectYear } from '../../Einstellungen/utils';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import { Storage, setLoading } from '../../utilities';
+import { Storage, setLoading, updateActAsBanner } from '../../utilities';
 import { isAdmin } from '../../utilities/decodeAccessToken';
 import { initAutoSaveIndicator } from '../../utilities/autoSaveIndicator';
 import dayjs from '../../utilities/configDayjs';
@@ -52,6 +52,11 @@ export default async function userLoginSuccess({
   if (monatInput) monatInput.value = monat.toString();
 
   const userIsAdmin = role ? role !== 'member' : isAdmin();
+  if (!userIsAdmin) {
+    Storage.remove('actAsUserId');
+    Storage.remove('actAsUserName');
+  }
+
   if (userIsAdmin) {
     document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
     document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
@@ -83,6 +88,7 @@ export default async function userLoginSuccess({
     });
   }
 
+  updateActAsBanner();
   initAutoSaveIndicator();
   selectYear(monat, aktJahr);
 }
