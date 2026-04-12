@@ -1,5 +1,53 @@
 # Todo
 
+## Aktueller Plan: Anzeige-Optimierung VorgabenB (Modal + Tabelle)
+
+- [x] Show-Modal in klare Bereiche fuer Bereitschaft und Nachtschicht aufteilen
+- [x] Nachtschicht-Anzeige im Show-Modal bei deaktivierter Nacht mit Hinweis statt redundanter Detailwerte darstellen
+- [x] Tabellen-Spaltentitel und Parser fuer bessere Lesbarkeit (Wochentag + W1/W2 + Zeit) optimieren
+- [x] TypeScript und Lint erneut verifizieren
+
+## Review (VorgabenB Anzeige-Optimierung)
+
+- Ergebnis: Die VorgabenB-Anzeige ist konsistenter und besser scanbar. Im Show-Modal sind Bereitschaft und Nachtschicht klar getrennt, und bei deaktivierter Nacht wird ein eindeutiger Hinweis gezeigt. In der Tabelle wurden die Spaltentitel fachlich benannt und die Werte kompakter als Wochentag + Woche + Zeit formatiert.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json` ohne Output; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` erfolgreich.
+
+## Aktueller Plan: Zwei-Wochen-Auswahl fuer VorgabenB im Einstellungen-Modal
+
+- [x] UI- und Interaktionsbasis fuer 2-Wochen-Grid (Mo-So / Mo-So) festlegen
+- [x] Neue Auswahlkomponente in `createEditorModalVE` integrieren (Desktop Drag + Start/Ende-Tap)
+- [x] Bestehendes Datenmodell und Submit-Mapping (`beginn*Tag`, `ende*Tag`, `*Nwoche`) kompatibel halten
+- [x] TypeScript, Test und Lint verifizieren
+
+## Review (VorgabenB 2-Wochen-Auswahl)
+
+- Ergebnis: Die Tagesauswahl in der VorgabenB-Modalmaske nutzt jetzt ein festes 2-Wochen-Grid mit sichtbarer Start-/Ende-/Bereichsmarkierung; Desktop-Drag und Start/Ende-Tap sind aktiv, Mobile arbeitet per Start/Ende-Tap. Das bestehende Submit-Format bleibt unveraendert.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json` ohne Output; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Einstellungen/saveTableDataVorgabenU.test.ts` -> `2 pass`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` erfolgreich.
+
+## Aktueller Plan: EWT-Berechnen behält Jahresdaten im Tabellenzustand
+
+- [x] Regressionsursache beim Klick auf `Berechnen` in `recalculateEwtMonat()` eingrenzen
+- [x] Fokussierten Test für den Verlust anderer Monatsdaten ergänzen
+- [x] Monatsdaten nach der Neuberechnung wieder in den bereits geladenen Jahresbestand mergen
+- [x] Relevante EWT-Tests, TypeScript und Lint erneut ausführen
+
+## Review (EWT Jahresdaten nach Berechnen)
+
+- Ergebnis: `recalculateEwtMonat()` lädt nach dem Berechnen nicht mehr nur den sichtbaren Monatsausschnitt in `tableE`, sondern merged die neu berechneten Monatszeilen in den vollständigen geladenen Jahresbestand zurück. Dadurch funktionieren spätere Monatswechsel im selben Jahr weiterhin korrekt.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.recalculateEwtMonat.test.ts test/EWT.persistEwtTableData.test.ts test/EWT.getEwtDaten.test.ts` → `Dateien: 3 ✓ 3 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json && bun run lint` erfolgreich.
+
+## Aktueller Plan: Act-As Anzeige und Eigene-Daten-Button im Admin
+
+- [x] Relevante Frontend-Stellen für Act-As-Status und Admin-Menü prüfen
+- [x] Sichtbare Anzeige ergänzen, wenn Daten eines anderen Benutzers geladen sind
+- [x] Zentralen Button zum Laden der eigenen Daten im Admin ergänzen und responsive anordnen
+- [x] Relevante Frontend-Tests, TypeScript-Check, Build und Lint ausführen
+
+## Review (Act-As Anzeige / Eigene Daten)
+
+- Ergebnis: Die Oberfläche zeigt jetzt deutlich an, wenn gerade fremde Benutzerdaten aktiv sind, inklusive zentralem Rücksprung auf die eigenen Daten; die Hinweise und Buttons brechen auf kleinen Displays sauber untereinander um und bleiben auf größeren Breakpoints kompakt nebeneinander.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Utilities/actAsStatus.test.ts test/Login.userLoginSuccess.test.ts` → `Dateien: 2 ✓ 2 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json && bun run build && bun run lint` erfolgreich (nur bestehende Sass-Deprecation-Warnungen im Build).
+
 ## Aktueller Plan: Frontend-401-Startlogik und Session-Handling stabilisieren
 
 - [x] 401-Fehlerkaskade beim App-Start reproduzieren und auf Stale-Session / uncaught Admin-Requests eingrenzen

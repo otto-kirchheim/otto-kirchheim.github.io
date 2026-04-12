@@ -1,12 +1,16 @@
 # Lessons Learned
 
+- Bei `CustomTable.rows.load(...)` in Monatsansichten nie nur den aktuell sichtbaren Monatsausschnitt laden, wenn spätere Monatswechsel weiter auf derselben Tabelleninstanz filtern. Der `rows.array`-State muss den vollständigen geladenen Jahresbestand behalten; sonst verschwinden andere Monate nach `Berechnen` scheinbar aus der UI.
+- Bei Act-As-/"fremde Daten"-Flows immer eine persistente, gut sichtbare UI-Anzeige plus schnellen Rückweg zu den eigenen Daten anbieten; Statuswechsel am besten zentral per CustomEvent/Storage-Sync an Banner und Admin-UI broadcasten.
 - Frontendspezifische Regeln immer mit konkreten Datei- und Pfadangaben hinterlegen.
 - Snapshot-Tests mit Datumswerten immer in der gleichen TZ wie das Test-Script aktualisieren, um Drift zwischen Einzel- und Volllauf zu vermeiden.
 - Bei Legacy-Monatsmappings in Tests explizite `Record<number, ...>`-Typen nutzen, wenn Produktivcode auf flache Arrays umgestellt wurde.
 - Bei Save-Flows nie nur lokale Tabellen-/Formwerte weiterführen: serverseitig normalisierte Responses (z.B. stille Datums-Korrekturen) müssen zurück in UI-State und Storage gespiegelt werden, sonst entstehen Stale-Views bis zum Re-Login.
 - Bei wiederholter Formularvalidierung vor jedem `checkValidity()` alte `setCustomValidity(...)`-Fehler mit `setCustomValidity('')` zurücksetzen, sonst bleibt ein Feld nach der Korrektur fälschlich `is-invalid`.
 - Bei EWT-Nacht-/BN-Schichten `tagE` immer als Starttag der Schicht behandeln; der Buchungstag kippt erst über die Verteilung vor/nach Mitternacht auf den Folgetag. Keinen künstlichen Vortag als Startanker einführen, sonst wird `buchungstagE` falsch berechnet. Immer mit Regressionstest absichern.
+- Bei EWT-Einträgen, die über den `buchungstagE` in einem anderen Monatsfilter sichtbar sind, im Editor niemals `Jahr/Monat` aus dem aktiven Filter mit `date()` neu zusammensetzen; für bestehende Zeilen immer das vollständige `row.cells.tagE` als Referenzdatum verwenden.
 - Wenn `persist*`-Utilities Daten normalisieren (z.B. `buchungstagE`), die normalisierten Werte nicht nur in `Storage`, sondern auch zurück in die Live-`CustomTable`-Zeilen schreiben; sonst bleibt die UI bis zum Reload stale.
+- Tests für `persist*TableData()` müssen bei monatserhaltendem Merge echte Tabellenzeilen (`getRows()` plus `rows.getFilteredRows()`) mocken; ein nacktes `{}` oder nur `tableToArray()` spiegelt den aktuellen Persistenzpfad nicht mehr korrekt wider.
 - Bei Bun-Tests mit Vitest-kompatiblen Helfern (`vi.hoisted`, `setSystemTime`, Mock-`fetch`) früh mit expliziten Type-Casts/Compat-Aliases arbeiten; sonst sind die Laufzeit-Helfer zwar vorhanden, aber `tsc` meldet unnötige Typfehler.
 - Download-/API-Tests sollen bei gewachsenen Config-Objekten (`VorgabenGeld`) nur fachlich relevante Teilmengen mit `expect.objectContaining(...)` prüfen statt die komplette Objektform hart zu verdrahten; sonst brechen sie bei legitimen Default-Feldern als Altlast weg.
 - Dynamisch erzeugte Frontend-Buttons in Formularen (z.B. `CustomTable`) immer explizit mit `type="button"` anlegen; sonst kann `Enter` im Accordion/Formular den ersten Tabellen-Action-Button statt des gewünschten UI-Elements auslösen.
