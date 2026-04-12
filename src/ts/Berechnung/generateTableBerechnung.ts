@@ -25,7 +25,7 @@ export default function generateTableBerechnung(
 
   const datenGeld = new Proxy(datenGeldVorgabe, datenGeldHandler);
 
-  const tarif_beamter = Storage.get<IVorgabenU>('VorgabenU', { check: true }).pers.TB;
+  const tarifKraft = Storage.get<IVorgabenU>('VorgabenU', { check: true }).pers.TB;
   const berechnung: number[][] = Array.from<unknown, number[]>({ length: 12 }, () => []);
 
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
@@ -80,16 +80,16 @@ export default function generateTableBerechnung(
         case 1:
           if (datenBerechnungItem.B.B !== 0)
             td.textContent =
-              tarif_beamter === 'Tarifkraft'
+              tarifKraft === 'Tarifkraft'
                 ? time_convert(datenBerechnungItem.B.B)
                 : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60).toString();
           break;
         case 2:
           if (datenBerechnungItem.B.B !== 0) {
             berechnung[monatZeroIndex][0] =
-              tarif_beamter === 'Tarifkraft'
-                ? Math.round(datenBerechnungItem.B.B / 60) * datenGeld[monat][tarif_beamter]
-                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld[monat][tarif_beamter];
+              tarifKraft === 'Tarifkraft'
+                ? Math.round(datenBerechnungItem.B.B / 60) * datenGeld[monat][tarifKraft]
+                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld[monat][tarifKraft];
 
             td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
           }
@@ -116,7 +116,7 @@ export default function generateTableBerechnung(
           if (datenBerechnungItem.B.K !== 0) {
             privatPKW =
               Math.round(datenBerechnungItem.B.K) *
-              (tarif_beamter === 'Tarifkraft' ? datenGeld[monat].PrivatPKWTarif : datenGeld[monat].PrivatPKWBeamter);
+              (tarifKraft === 'Tarifkraft' ? datenGeld[monat].PrivatPKWTarif : datenGeld[monat].PrivatPKWBeamter);
 
             berechnung[monatZeroIndex][0] += privatPKW;
             td.textContent = formatCurrency(privatPKW);
@@ -127,7 +127,7 @@ export default function generateTableBerechnung(
           else if (!berechnung[monatZeroIndex][0]) berechnung[monatZeroIndex][0] = 0;
           break;
         case 8:
-          if (tarif_beamter === 'Tarifkraft') {
+          if (tarifKraft === 'Tarifkraft') {
             if (datenBerechnungItem.E.A8 !== 0)
               berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld[monat].TE8;
             if (datenBerechnungItem.E.A14 !== 0)
@@ -142,7 +142,7 @@ export default function generateTableBerechnung(
               `${nullParser(datenBerechnungItem.E.A24)}`;
           break;
         case 9:
-          if (tarif_beamter !== 'Tarifkraft') {
+          if (tarifKraft !== 'Tarifkraft') {
             if (datenBerechnungItem.E.S8 !== 0)
               berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld[monat].BE8;
             if (datenBerechnungItem.E.S14 !== 0)
@@ -162,7 +162,7 @@ export default function generateTableBerechnung(
         case 11:
           if (datenBerechnungItem.N.F === 0) berechnung[monatZeroIndex][2] = 0;
           else {
-            if (tarif_beamter !== 'Tarifkraft') berechnung[monatZeroIndex][2] = 0;
+            if (tarifKraft !== 'Tarifkraft') berechnung[monatZeroIndex][2] = 0;
             else berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld[monat].Fahrentsch;
 
             td.textContent = formatCurrency(berechnung[monatZeroIndex][2]);

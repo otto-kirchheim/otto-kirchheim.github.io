@@ -3,6 +3,7 @@ import type { CustomTable } from '../../class/CustomTable';
 import { Storage, tableToArray } from '../../utilities';
 import aktualisiereBerechnung from '../../Berechnung/aktualisiereBerechnung';
 import normalizeResourceRows from '../../utilities/normalizeResourceRows';
+import mergeVisibleResourceRows from '../../utilities/mergeVisibleResourceRows';
 import calculateBuchungstagEwt from './calculateBuchungstagEwt';
 
 export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenEWT[] {
@@ -10,7 +11,7 @@ export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenE
   const liveRows = Array.isArray(rawRows) ? rawRows.filter(row => row._state !== 'deleted') : [];
   let hasLiveSyncChanges = false;
 
-  const allRows = normalizeResourceRows<IDatenEWT>(tableToArray<IDatenEWT>(ft)).map((row, index) => {
+  normalizeResourceRows<IDatenEWT>(tableToArray<IDatenEWT>(ft)).forEach((row, index) => {
     const normalizedRow = {
       ...row,
       buchungstagE: calculateBuchungstagEwt(row),
@@ -21,15 +22,14 @@ export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenE
       liveRow.cells = normalizedRow;
       hasLiveSyncChanges = true;
     }
-
-    return normalizedRow;
   });
 
   if (hasLiveSyncChanges && typeof ft.drawRows === 'function') {
     ft.drawRows();
   }
 
-  Storage.set('dataE', allRows);
+  const mergedRows = mergeVisibleResourceRows('EWT', ft);
+  Storage.set('dataE', mergedRows);
   aktualisiereBerechnung();
-  return allRows;
+  return mergedRows;
 }

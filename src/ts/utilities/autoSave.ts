@@ -38,7 +38,7 @@ import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } fr
 import Storage from './Storage';
 import type { TStorageData } from './Storage';
 import dayjs from './configDayjs';
-import { getMonatFromEWTBuchungstag } from './getMonatFromItem';
+import mergeVisibleResourceRows from './mergeVisibleResourceRows';
 
 // ─── Konfiguration ───────────────────────────────────────
 /** Mapping von TResourceKey auf Storage-Key */
@@ -515,37 +515,60 @@ async function sendBulk(
   deleted: string[];
   errors: { operation: string; index: number; id?: string; message: string }[];
 }> {
-  const getMonth = (item: CustomTableTypes): number => {
+  type SavePeriod = { monat: number; jahr: number };
+
+  const getPeriod = (item: CustomTableTypes): SavePeriod => {
+    const fallback = { monat, jahr };
+
     switch (resource) {
-      case 'BZ':
-        return dayjs(String((item as IDatenBZ).beginB)).month() + 1;
-      case 'BE':
-        return dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY').month() + 1;
-      case 'EWT':
-        return getMonatFromEWTBuchungstag(item as IDatenEWT);
-      case 'N':
-        return dayjs((item as IDatenN).tagN, 'DD.MM.YYYY').month() + 1;
+      case 'BZ': {
+        const parsed = dayjs(String((item as IDatenBZ).beginB));
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'BE': {
+        const parsed = dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'EWT': {
+        const parsed = dayjs((item as IDatenEWT).tagE, 'YYYY-MM-DD', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'N': {
+        const parsed = dayjs((item as IDatenN).tagN, 'DD.MM.YYYY', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
     }
   };
 
-  const createByMonth = new Map<number, CustomTableTypes[]>();
-  const updateByMonth = new Map<number, (CustomTableTypes & { _id: string })[]>();
+  const createByPeriod = new Map<string, CustomTableTypes[]>();
+  const updateByPeriod = new Map<string, (CustomTableTypes & { _id: string })[]>();
+  const periods = new Map<string, SavePeriod>();
+
+  const toPeriodKey = (period: SavePeriod): string => `${period.jahr}-${period.monat}`;
 
   for (const item of changes.create) {
-    const m = getMonth(item);
-    const arr = createByMonth.get(m) ?? [];
+    const period = getPeriod(item);
+    const key = toPeriodKey(period);
+    const arr = createByPeriod.get(key) ?? [];
     arr.push(item);
-    createByMonth.set(m, arr);
+    createByPeriod.set(key, arr);
+    periods.set(key, period);
   }
 
   for (const item of changes.update as (CustomTableTypes & { _id: string })[]) {
-    const m = getMonth(item);
-    const arr = updateByMonth.get(m) ?? [];
+    const period = getPeriod(item);
+    const key = toPeriodKey(period);
+    const arr = updateByPeriod.get(key) ?? [];
     arr.push(item);
-    updateByMonth.set(m, arr);
+    updateByPeriod.set(key, arr);
+    periods.set(key, period);
   }
 
-  const months = Array.from(new Set([...createByMonth.keys(), ...updateByMonth.keys()]));
+  const sortedPeriods = Array.from(periods.values()).sort((a, b) => {
+    if (a.jahr !== b.jahr) return a.jahr - b.jahr;
+    return a.monat - b.monat;
+  });
+
   const combined: {
     created: CustomTableTypes[];
     updated: CustomTableTypes[];
@@ -553,10 +576,11 @@ async function sendBulk(
     errors: { operation: string; index: number; id?: string; message: string }[];
   } = { created: [], updated: [], deleted: [], errors: [] };
 
-  const callBulk = async (m: number, withDelete: boolean) => {
+  const callBulk = async (period: SavePeriod, withDelete: boolean) => {
+    const key = toPeriodKey(period);
     const bulk: BulkRequest = {
-      create: createByMonth.get(m) ?? [],
-      update: updateByMonth.get(m) ?? [],
+      create: createByPeriod.get(key) ?? [],
+      update: updateByPeriod.get(key) ?? [],
       delete: withDelete ? changes.delete : [],
     };
 
@@ -564,24 +588,32 @@ async function sendBulk(
       case 'BZ':
         return bereitschaftszeitraumApi.bulk(
           bulk as { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
-          m,
-          jahr,
+          period.monat,
+          period.jahr,
         );
       case 'BE':
         return bereitschaftseinsatzApi.bulk(
           bulk as { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
-          m,
-          jahr,
+          period.monat,
+          period.jahr,
         );
       case 'EWT':
-        return ewtApi.bulk(bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] }, m, jahr);
+        return ewtApi.bulk(
+          bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] },
+          period.monat,
+          period.jahr,
+        );
       case 'N':
-        return nebengeldApi.bulk(bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] }, m, jahr);
+        return nebengeldApi.bulk(
+          bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] },
+          period.monat,
+          period.jahr,
+        );
     }
   };
 
-  if (months.length === 0) {
-    const result = await callBulk(monat, true);
+  if (sortedPeriods.length === 0) {
+    const result = await callBulk({ monat, jahr }, true);
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
     combined.deleted.push(...result.deleted);
@@ -590,8 +622,8 @@ async function sendBulk(
   }
 
   let deleteSent = false;
-  for (const m of months) {
-    const result = await callBulk(m, !deleteSent);
+  for (const period of sortedPeriods) {
+    const result = await callBulk(period, !deleteSent);
     deleteSent = deleteSent || changes.delete.length > 0;
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
@@ -614,11 +646,8 @@ function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: 
   };
 
   const storageKey = storageKeyMap[resource] as TStorageData;
-
-  // Aktive (nicht gelöschte) Zeilen der gesamten Tabelle im localStorage speichern.
-  const activeRows = table.rows.array.filter(row => row._state !== 'deleted').map(row => row.cells);
-  void resource;
-  Storage.set(storageKey, activeRows);
+  const mergedRows = mergeVisibleResourceRows(resource, table);
+  Storage.set(storageKey, mergedRows);
 }
 
 // ─── Online-Retry ────────────────────────────────────────

@@ -2,12 +2,11 @@ import { aktualisiereBerechnung } from '../../Berechnung';
 import type { CustomTable } from '../../class/CustomTable';
 import type { IDatenBZ } from '../../interfaces';
 import Storage from '../../utilities/Storage';
-import normalizeResourceRows from '../../utilities/normalizeResourceRows';
-import tableToArray from '../../utilities/tableToArray';
+import mergeVisibleResourceRows from '../../utilities/mergeVisibleResourceRows';
 
 export default function persistBereitschaftsZeitraumTableData(ft: CustomTable<IDatenBZ>): IDatenBZ[] {
-  const allRows = normalizeResourceRows<IDatenBZ>(tableToArray<IDatenBZ>(ft));
-  Storage.set('dataBZ', allRows);
+  const mergedRows = mergeVisibleResourceRows('BZ', ft);
+  Storage.set('dataBZ', mergedRows);
   aktualisiereBerechnung();
-  return allRows;
+  return mergedRows;
 }
