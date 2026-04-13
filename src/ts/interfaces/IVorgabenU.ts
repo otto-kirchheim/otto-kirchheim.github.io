@@ -1,6 +1,8 @@
 export interface IVorgabenUEinstellungen {
   aktivierteTabs: string[];
   benoetigteZulagen?: string[];
+  autoSaveEnabled?: boolean;
+  autoSaveDelayMs?: number;
 }
 
 export interface IVorgabenU {

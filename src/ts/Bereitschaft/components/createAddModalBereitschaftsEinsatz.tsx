@@ -28,7 +28,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           divClass="form-floating col-12 col-sm-6 pb-3"
           required
           type={columns.find(col => col.name === 'tagBE')?.type || 'Date'}
-          id={columns.find(col => col.name === 'tagBE')?.name || 'tagBE'}
+          id="Datum"
           name={columns.find(col => col.name === 'tagBE')?.longTitle || 'Datum'}
           min={datum.startOf('M').format('YYYY-MM-DD')}
           max={datum.endOf('M').format('YYYY-MM-DD')}
@@ -40,7 +40,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           divClass="form-floating col-12 pb-3"
           required
           type={columns.find(col => col.name === 'auftragsnummerBE')?.type || 'text'}
-          id={columns.find(col => col.name === 'auftragsnummerBE')?.name || 'SAPNR'}
+          id="SAPNR"
           name={columns.find(col => col.name === 'auftragsnummerBE')?.longTitle || 'SAP-Nr / Einsatzbeschreibung'}
         >
           SAP-Nr / Einsatzbeschreibung
@@ -54,7 +54,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <MySelect
           className="form-floating col-12 col-sm-6 pb-3"
           required
-          id={columns.find(col => col.name === 'lreBE')?.name || 'LRE'}
+          id="LRE"
           title={columns.find(col => col.name === 'lreBE')?.longTitle || 'LRE'}
           options={[
             { text: 'Bitte Einsatz auswählen', disabled: true, selected: true },
@@ -68,7 +68,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <MyInput
           divClass="form-floating col-12 col-sm-6 pb-3"
           type={columns.find(col => col.name === 'privatkmBE')?.type || 'number'}
-          id={columns.find(col => col.name === 'privatkmBE')?.name || 'privatkm'}
+          id="privatkm"
           name={columns.find(col => col.name === 'privatkmBE')?.longTitle || 'Km Privatfahrzeug'}
           min={'0'}
           popover={{

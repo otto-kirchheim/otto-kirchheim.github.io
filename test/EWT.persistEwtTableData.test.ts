@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT } from '../src/ts/interfaces';
+import type { IDatenEWT, IDatenN } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
 const { tableToArrayMock, aktualisiereBerechnungMock } = (
@@ -125,5 +125,62 @@ describe('persistEwtTableData', () => {
     expect(result[0]?.buchungstagE).toBe('2026-03-21');
     expect(tableRow.cells.buchungstagE).toBe('2026-03-21');
     expect(drawRowsMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('entfernt ewtRef bei Soft-Delete noch nicht lokal (Undo-sicher)', () => {
+    const deletedId = 'ewt-delete-1';
+    const keptId = 'ewt-keep-1';
+
+    const deletedRow = {
+      cells: { ...createData('2026-04-06'), _id: deletedId },
+      _state: 'deleted' as const,
+      _id: deletedId,
+    };
+    const activeRow = {
+      cells: { ...createData('2026-04-07'), _id: keptId },
+      _state: 'unchanged' as const,
+      _id: keptId,
+    };
+
+    const ftMock = {
+      getRows: vi.fn(() => [deletedRow, activeRow]),
+      drawRows: vi.fn(),
+      rows: {
+        array: [deletedRow, activeRow],
+        getFilteredRows: vi.fn(() => [deletedRow, activeRow]),
+      },
+    } as unknown as Parameters<typeof persistEwtTableData>[0];
+
+    const dataN: IDatenN[] = [
+      {
+        _id: 'n1',
+        ewtRef: deletedId,
+        tagN: '06.04.2026',
+        beginN: '07:00',
+        endeN: '15:45',
+        anzahl040N: 1,
+        auftragN: 'A',
+      },
+      {
+        _id: 'n2',
+        ewtRef: keptId,
+        tagN: '07.04.2026',
+        beginN: '07:00',
+        endeN: '15:45',
+        anzahl040N: 1,
+        auftragN: 'B',
+      },
+    ];
+
+    Storage.set('Monat', 4);
+    Storage.set('dataE', [activeRow.cells]);
+    Storage.set('dataN', dataN);
+    tableToArrayMock.mockReturnValue([activeRow.cells]);
+
+    persistEwtTableData(ftMock);
+
+    const nextDataN = Storage.get<IDatenN[]>('dataN', { check: true });
+    expect(nextDataN[0]?.ewtRef).toBe(deletedId);
+    expect(nextDataN[1]?.ewtRef).toBe(keptId);
   });
 });

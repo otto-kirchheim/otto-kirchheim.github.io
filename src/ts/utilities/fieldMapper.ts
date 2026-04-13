@@ -109,6 +109,8 @@ export interface BackendUserProfile {
   Einstellungen: {
     aktivierteTabs: string[];
     benoetigteZulagen?: string[];
+    autoSaveEnabled?: boolean;
+    autoSaveDelayMs?: number;
   };
   updatedAt?: string;
 }
@@ -237,6 +239,8 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
     Einstellungen: {
       aktivierteTabs: doc.Einstellungen?.aktivierteTabs ?? [],
       benoetigteZulagen: doc.Einstellungen?.benoetigteZulagen ?? [],
+      autoSaveEnabled: doc.Einstellungen?.autoSaveEnabled ?? true,
+      autoSaveDelayMs: doc.Einstellungen?.autoSaveDelayMs ?? 10000,
     },
   };
 }

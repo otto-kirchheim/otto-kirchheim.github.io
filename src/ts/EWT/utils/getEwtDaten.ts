@@ -1,11 +1,11 @@
 import dayjs from '../../utilities/configDayjs';
-import type { IDatenEWT, IDataQueryOptions, IMonatsDaten } from '../../interfaces';
+import type { IDatenEWT, IEwtQueryOptions, IMonatsDaten } from '../../interfaces';
 import { isEwtInMonat, normalizeResourceRows, Storage } from '../../utilities';
 
 export default function getEwtDaten(
   data?: IMonatsDaten['EWT'],
   Monat?: number,
-  options?: IDataQueryOptions,
+  options?: IEwtQueryOptions,
 ): IMonatsDaten['EWT'] {
   if (!Storage.check('Benutzer')) return [];
 
@@ -15,5 +15,6 @@ export default function getEwtDaten(
   if (options?.scope === 'all') return rows;
 
   const activeMonat = Monat ?? Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-  return activeMonat ? rows.filter(item => isEwtInMonat(item, activeMonat)) : [];
+  const filter = options?.filter ?? 'beide';
+  return activeMonat ? rows.filter(item => isEwtInMonat(item, activeMonat, filter)) : [];
 }

@@ -13,7 +13,7 @@ type AdminCapabilities = {
   canEditOwnTeamTemplatesOnly: boolean;
 };
 
-export function AdminTab() {
+export default function AdminTab() {
   const [adminJsUrl, setAdminJsUrl] = useState<string>('/admin');
   const [capabilities, setCapabilities] = useState<AdminCapabilities | null>(null);
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
@@ -188,8 +188,6 @@ export function AdminTab() {
     </div>
   );
 }
-
-export default AdminTab;
 
 export function mountAdminTab(remountKey = 'default'): void {
   const adminRoot = document.querySelector<HTMLDivElement>('#admin-root');

@@ -223,6 +223,43 @@ function findTable<T extends CustomTableTypes>(id: string): CustomTable<T> | nul
   return el?.instance ?? null;
 }
 
+function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void {
+  if (deletedIds.length === 0) return;
+
+  const deletedIdSet = new Set(deletedIds);
+
+  const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
+  let storageChanged = false;
+  const nextDataN = currentDataN.map(item => {
+    if (!item.ewtRef || !deletedIdSet.has(item.ewtRef)) return item;
+    storageChanged = true;
+    const { ewtRef: _removed, ...withoutRef } = item;
+    return withoutRef as IDatenN;
+  });
+  if (storageChanged) {
+    Storage.set('dataN', nextDataN);
+  }
+
+  const nebenTable = findTable<IDatenN>(TABLE_ID_MAP.N);
+  if (!nebenTable) return;
+
+  let tableChanged = false;
+  for (const row of nebenTable.rows.array) {
+    if (row._state === 'deleted') continue;
+    const ref = (row.cells as IDatenN).ewtRef;
+    if (!ref || !deletedIdSet.has(ref)) continue;
+
+    const { ewtRef: _removed, ...withoutRef } = row.cells as IDatenN;
+    row.cells = withoutRef as IDatenN;
+    if (row._state === 'unchanged') {
+      row._originalCells = { ...(withoutRef as IDatenN) };
+    }
+    tableChanged = true;
+  }
+
+  if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
+}
+
 // ─── Öffentliche API ─────────────────────────────────────
 
 /**
@@ -434,6 +471,10 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
     // Nach erfolgreichem Save serverseitig normalisierte Felder in die Tabelle zurückspiegeln.
     applyServerRowsToTable(resource, table, result);
+
+    if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
+      unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
+    }
 
     // localStorage aktualisieren
     updateLocalStorage(resource, table);

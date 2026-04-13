@@ -109,6 +109,7 @@ Feature/
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
 9. **Bun test** für alle Tests, happy-dom als DOM-Environment
 10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht Preact)
+11. **Changelog pflegen:** Bei Frontend-Aenderungen `frontend/CHANGELOG.md` im selben Arbeitsgang aktualisieren.
 
 ---
 

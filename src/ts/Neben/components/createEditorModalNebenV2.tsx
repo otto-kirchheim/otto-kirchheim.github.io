@@ -3,8 +3,9 @@ import { createRef } from 'preact';
 import type { Column } from '../../class/CustomTable';
 import { CustomTable, Row } from '../../class/CustomTable';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '../../components';
-import type { CustomHTMLDivElement, IDatenN } from '../../interfaces';
+import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
+import { getEwtDaten } from '../../EWT/utils';
+import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { persistNebengeldTableData } from '../utils';
@@ -84,6 +85,49 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
 
+  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
+  const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
+
+  const currentEwtRef = row instanceof Row ? row.cells.ewtRef : undefined;
+
+  const usedEwtRefs = new Set(
+    Storage.get<IDatenN[]>('dataN', { default: [] })
+      .filter(n => n.ewtRef && n.ewtRef !== currentEwtRef)
+      .map(n => n.ewtRef as string),
+  );
+
+  const ewtOptions = [
+    { value: '', text: '— keine Zuordnung —', selected: !currentEwtRef },
+    ...dataE.map(day => {
+      const tag = dayjs(day.tagE).format('DD | dd');
+      let text = tag;
+      if (day.schichtE === 'N') text = `${tag} | Nacht`;
+      else if (day.schichtE === 'BN') text = `${tag} | Nacht / Bereitschaft`;
+      return {
+        value: day._id ?? '',
+        text,
+        selected: currentEwtRef === day._id,
+        disabled: usedEwtRefs.has(day._id ?? ''),
+      };
+    }),
+  ];
+
+  const handleEwtChange = (evt: Event): void => {
+    const select = evt.target as HTMLSelectElement;
+    const selectedId = select.value;
+    if (!selectedId) return;
+    const entry = ewtMap.get(selectedId);
+    if (!entry) return;
+    const currentForm = ref.current;
+    if (!currentForm) return;
+    const tagInput = currentForm.querySelector<HTMLInputElement>('#tagN');
+    const beginInput = currentForm.querySelector<HTMLInputElement>('#beginN');
+    const endeInput = currentForm.querySelector<HTMLInputElement>('#endeN');
+    if (tagInput) tagInput.value = dayjs(entry.tagE).format('YYYY-MM-DD');
+    if (beginInput) beginInput.value = entry.beginE as string;
+    if (endeInput) endeInput.value = entry.endeE as string;
+  };
+
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
     <MyFormModal
       myRef={ref}
@@ -92,6 +136,16 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       onSubmit={onSubmit()}
     >
       <MyModalBody>
+        {dataE.length > 0 && (
+          <MySelect
+            className="form-floating col-12 pb-3"
+            id="ewtRefSelect"
+            title="EWT-Eintrag (optional)"
+            options={ewtOptions}
+            changeHandler={handleEwtChange}
+          />
+        )}
+
         <MyInput
           divClass="form-floating col-6 pb-3"
           required
@@ -129,9 +183,11 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       if (!row) throw new Error('Row nicht gefunden');
       const table = row instanceof Row ? row.CustomTable : row;
 
+      const selectedEwtRef = form.querySelector<HTMLSelectElement>('#ewtRefSelect')?.value || undefined;
+
       const values: IDatenN = {
         _id: row instanceof Row ? row.cells._id : undefined,
-        ewtRef: row instanceof Row ? row.cells.ewtRef : undefined,
+        ewtRef: selectedEwtRef,
         tagN: dayjs(form.querySelector<HTMLInputElement>('#tagN')?.value ?? 0).format('DD.MM.YYYY'),
         beginN: form.querySelector<HTMLInputElement>('#beginN')?.value ?? '',
         endeN: form.querySelector<HTMLInputElement>('#endeN')?.value ?? '',

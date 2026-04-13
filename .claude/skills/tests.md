@@ -44,10 +44,10 @@ test/
 ## Test-Setup (`setupBun.ts`)
 
 ```ts
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { GlobalRegistrator } from '@happy-dom/global-registrator';
 
 GlobalRegistrator.register({
-	url: "http://localhost/",
+  url: 'http://localhost/',
 });
 ```
 
@@ -60,9 +60,9 @@ GlobalRegistrator.register({
 ## Bun-Konfiguration (in `bunfig.toml`)
 
 ```ts
-[test]
-preload = ["./test/setupBun.ts"]
-coverageReporter = ["text", "lcov"]
+[test];
+preload = ['./test/setupBun.ts'];
+coverageReporter = ['text', 'lcov'];
 ```
 
 ---
@@ -72,16 +72,16 @@ coverageReporter = ["text", "lcov"]
 ### Grundstruktur
 
 ```ts
-import { describe, it, expect, vi, beforeEach } from "bun:test";
+import { describe, it, expect, vi, beforeEach } from 'bun:test';
 
-describe("FeatureName", () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
+describe('FeatureName', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-	it("should do something", () => {
-		expect(result).toBe(expected);
-	});
+  it('should do something', () => {
+    expect(result).toBe(expected);
+  });
 });
 ```
 
@@ -89,27 +89,27 @@ describe("FeatureName", () => {
 
 ```ts
 globalThis.fetch = vi.fn().mockResolvedValue({
-	ok: true,
-	status: 200,
-	json: async () => ({ data: "test" }),
+  ok: true,
+  status: 200,
+  json: async () => ({ data: 'test' }),
 });
 ```
 
 ### DOM testen (happy-dom)
 
 ```ts
-it("should render element", () => {
-	document.body.innerHTML = '<div id="test"></div>';
-	const el = document.getElementById("test");
-	expect(el).not.toBeNull();
+it('should render element', () => {
+  document.body.innerHTML = '<div id="test"></div>';
+  const el = document.getElementById('test');
+  expect(el).not.toBeNull();
 });
 ```
 
 ### Snapshots
 
 ```ts
-it("should match snapshot", () => {
-	expect(result).toMatchSnapshot();
+it('should match snapshot', () => {
+  expect(result).toMatchSnapshot();
 });
 ```
 

@@ -64,7 +64,7 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 export default function createAddModalNeben(): void {
   const ref = createRef<HTMLFormElement>();
 
-  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat' });
+  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
   if (dataE.length === 0) {
     createSnackBar({
       message:

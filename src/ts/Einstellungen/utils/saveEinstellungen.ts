@@ -8,6 +8,7 @@ import {
   updateTabVisibility,
   validatePersInput,
 } from '../../utilities';
+import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
@@ -68,17 +69,30 @@ export default function saveEinstellungen(): IVorgabenU {
   }
 
   const zulagenContainer = document.querySelector('#settings-zulagen-list');
+  const benoetigteZulagen: string[] = [];
   if (zulagenContainer) {
-    const benoetigteZulagen: string[] = [];
     for (const cb of Array.from(
       document.querySelectorAll<HTMLInputElement>('#settings-zulagen-list input[data-zulage-code]'),
     )) {
       if (cb.checked) benoetigteZulagen.push(cb.dataset.zulageCode!);
     }
-    VorgabenU.Einstellungen = { ...VorgabenU.Einstellungen, aktivierteTabs, benoetigteZulagen };
-  } else {
-    VorgabenU.Einstellungen = { ...VorgabenU.Einstellungen, aktivierteTabs };
   }
+
+  // Sammle neue Einstellungsfelder: AutoSave
+  const autoSaveEnabledCheckbox = document.querySelector<HTMLInputElement>('#autoSaveEnabled');
+  const autoSaveDelayInput = document.querySelector<HTMLInputElement>('#autoSaveDelay');
+
+  const autoSaveEnabled = autoSaveEnabledCheckbox?.checked ?? VorgabenU.Einstellungen.autoSaveEnabled ?? true;
+  const autoSaveDelayMs = autoSaveDelayInput
+    ? sliderPositionToMs(Number(autoSaveDelayInput.value))
+    : (VorgabenU.Einstellungen.autoSaveDelayMs ?? 10000);
+
+  VorgabenU.Einstellungen = {
+    aktivierteTabs,
+    ...(benoetigteZulagen.length > 0 && { benoetigteZulagen }),
+    autoSaveEnabled,
+    autoSaveDelayMs,
+  };
 
   updateTabVisibility(VorgabenU.Einstellungen.aktivierteTabs);
 

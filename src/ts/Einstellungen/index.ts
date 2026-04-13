@@ -1,5 +1,6 @@
 import dayjs from '../utilities/configDayjs';
 import { Storage, saveDaten } from '../utilities';
+import { setAutoSaveEnabled, setAutoSaveDelay } from '../utilities/autoSave';
 import { authApi } from '../utilities/apiService';
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createModalChangePassword } from './components';
@@ -245,6 +246,25 @@ async function resendVerificationEmailFromSettings(): Promise<void> {
   }
 }
 
+/**
+ * Appliziert die gespeicherten Einstellungen zur Runtime.
+ * - AutoSave: Setzt den Global State
+ * - Theme: Wird über bestehende BSColorToggler-Logik von Storage gelesen
+ */
+function applyEinstellungenToRuntime(): void {
+  const VorgabenU = Storage.get<{
+    Einstellungen?: { autoSaveEnabled?: boolean; autoSaveDelayMs?: number };
+  }>('VorgabenU', { default: {} });
+
+  if (VorgabenU?.Einstellungen?.autoSaveEnabled !== undefined) {
+    setAutoSaveEnabled(VorgabenU.Einstellungen.autoSaveEnabled);
+  }
+
+  if (VorgabenU?.Einstellungen?.autoSaveDelayMs !== undefined) {
+    setAutoSaveDelay(VorgabenU.Einstellungen.autoSaveDelayMs);
+  }
+}
+
 window.addEventListener('load', () => {
   const Monat = document.querySelector<HTMLInputElement>('#Monat');
   Monat?.addEventListener('change', changeMonatJahr);
@@ -286,8 +306,10 @@ window.addEventListener('load', () => {
       saveDaten(saveButton);
     });
 
-  if (Storage.check('VorgabenU')) generateEingabeMaskeEinstellungen();
-  else generateEingabeTabelleEinstellungenVorgabenB({});
+  if (Storage.check('VorgabenU')) {
+    generateEingabeMaskeEinstellungen();
+    applyEinstellungenToRuntime();
+  } else generateEingabeTabelleEinstellungenVorgabenB({});
 
   const einstellungenTab = document.querySelector<HTMLButtonElement>('#einstellungen-tab');
   einstellungenTab?.addEventListener('click', () => {
