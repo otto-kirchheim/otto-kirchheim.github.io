@@ -472,6 +472,9 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     // Nach erfolgreichem Save serverseitig normalisierte Felder in die Tabelle zurückspiegeln.
     applyServerRowsToTable(resource, table, result);
 
+    // Fehlerhafte Einträge in der Tabelle markieren
+    const errorRows = markErrorRows(resource, table, result.errors);
+
     if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
       unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
     }
@@ -490,6 +493,11 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       const storageKey = RESOURCE_STORAGE_MAP[resource];
       const currentData = Storage.get(storageKey, { check: true });
       Storage.setWithTimestamp(storageKey, currentData, Date.parse(maxUpdatedAt));
+    }
+
+    // Zeige Fehler-Dialog wenn Fehler vorhanden
+    if (errorRows.length > 0) {
+      showErrorDialog(resource, errorRows);
     }
 
     setStatus(resource, 'saved');
@@ -673,6 +681,110 @@ async function sendBulk(
   }
 
   return combined;
+}
+
+/**
+ * Markiert fehlerhafte Rows in der Tabelle mit _state = 'error'.
+ * Gibt Array der Fehler zurück für Dialog-Anzeige.
+ */
+function markErrorRows(
+  _resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
+  errors: { operation: string; index: number; id?: string; message: string }[],
+): { operation: string; index: number; id?: string; message: string }[] {
+  if (errors.length === 0) return [];
+
+  for (const error of errors) {
+    let row: (typeof table.rows.array)[0] | undefined;
+
+    // Versuche Zeile via ID zu finden
+    if (error.id) {
+      row = table.rows.array.find(r => r._id === error.id);
+    }
+
+    // Fallback: via Index (für neue Zeilen ohne _id)
+    if (!row && error.index >= 0) {
+      row = table.rows.array[error.index];
+    }
+
+    if (row) {
+      // Markiere Zeile als Error-State
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (row as any)._state = 'error';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (row as any)._errorMessage = error.message;
+    }
+  }
+
+  // Tabelle neu zeichnen
+  if (typeof table.drawRows === 'function') {
+    table.drawRows();
+  }
+
+  return errors;
+}
+
+/**
+ * Zeigt einen Dialog mit allen Fehler-Einträgen.
+ */
+function showErrorDialog(
+  _resource: Exclude<TResourceKey, 'settings'>,
+  errors: { operation: string; index: number; id?: string; message: string }[],
+): void {
+  const errorList = errors
+    .map((err, idx) => {
+      const id = err.id ? ` [ID: ${err.id}]` : '';
+      return `${idx + 1}. ${err.operation}${id}: ${err.message}`;
+    })
+    .join('\n');
+
+  // Erstelle Dialog-Modal
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Fehler beim Speichern</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>${errors.length} Fehler gefunden:</strong></p>
+          <pre class="error-list" style="overflow-y: auto; max-height: 300px; border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">${escapeHtml(errorList)}</pre>
+          <div class="alert alert-info mt-3 mb-0">
+            <small>Die fehlerhaften Zeilen sind in der Tabelle gekennzeichnet und können erneut gespeichert werden.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bsModal = new ((window as any).bootstrap.Modal(modal))();
+  bsModal.show();
+
+  // Cleanup nach Schließen
+  modal.addEventListener('hidden.bs.modal', () => {
+    modal.remove();
+  });
+}
+
+/**
+ * Hilfsfunktion zum Escapen von HTML-Sonderzeichen.
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 /**
