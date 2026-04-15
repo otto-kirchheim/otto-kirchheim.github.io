@@ -1,5 +1,22 @@
 # Todo
 
+## Aktueller Plan: Fertigstellen (`frontend`) – Deploy-Workflow Node 24
+
+- [x] Frontend-Diff und Scope-Dateien prüfen
+- [x] Frontend-Qualitätschecks (`test`, `tsc`, `lint`, `format:check`) ausführen
+- [x] Frontend-Änderung gestaffelt committen
+
+## Verifikationskriterien (Fertigstellen `frontend`)
+
+- Der Deploy-Workflow setzt `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`
+- Frontend-Checks laufen vollständig grün
+- Commit enthält nur Frontend-Dateien dieses Scopes
+
+## Review (Fertigstellen `frontend`)
+
+- Ergebnis: In `.github/workflows/deploy.yml` wurde die Workflow-Umgebung auf Node-24-Opt-in für JavaScript-Actions gesetzt, um die Node-20-Deprecation-Warnungen zu entschärfen.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test` (Dateien: 62, 62 bestanden), `bunx tsc --noEmit -p tsconfig.json`, `bun run lint`, `bun run format:check` (`All matched files use Prettier code style!`).
+
 ## Aktueller Plan: Warnmeldung bei Array-Laengen-Mismatch
 
 ## Verifikationskriterien (Warnmeldung Array-Mismatch)
