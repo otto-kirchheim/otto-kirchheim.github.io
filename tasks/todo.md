@@ -1,5 +1,21 @@
 # Todo
 
+## Aktueller Plan: Pages-Workflow Actions-Major-Update
+
+- [x] Deploy-Workflow auf aktuelle Actions-Majors umstellen
+- [x] Frontend-Qualitätschecks (`test`, `tsc`, `lint`, `format:check`) ausführen
+- [x] Frontend-Scope mit Changelog/Todo dokumentieren
+
+## Verifikationskriterien (Actions-Major-Update)
+
+- `deploy.yml` verwendet die aktuellen Major-Tags (`checkout@v6`, `configure-pages@v6`, `upload-pages-artifact@v5`, `deploy-pages@v5`)
+- Frontend-Checks laufen vollständig grün
+
+## Review (Actions-Major-Update)
+
+- Ergebnis: Der Pages-Workflow nutzt jetzt die aktuellen Actions-Majors und benötigt kein separates Node24-Opt-in mehr als Übergang für diese Schritte.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test` (Dateien: 62, 62 bestanden), `bunx tsc --noEmit -p tsconfig.json`, `bun run lint`, `bun run format:check` (`All matched files use Prettier code style!`).
+
 ## Aktueller Plan: Fertigstellen (`frontend`) – Deploy-Workflow Node 24
 
 - [x] Frontend-Diff und Scope-Dateien prüfen
