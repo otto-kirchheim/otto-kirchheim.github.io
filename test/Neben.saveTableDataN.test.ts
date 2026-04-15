@@ -30,6 +30,19 @@ function createData(tagN: string): IDatenN {
   };
 }
 
+function createTableMock(rows: IDatenN[]) {
+  const tableRows = rows.map(row => ({ cells: row, _state: 'unchanged' as const }));
+
+  return {
+    getRows: vi.fn(() => tableRows),
+    drawRows: vi.fn(),
+    rows: {
+      array: tableRows,
+      getFilteredRows: vi.fn(() => tableRows),
+    },
+  } as unknown as Parameters<typeof persistNebengeldTableData>[0];
+}
+
 describe('persistNebengeldTableData', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -49,35 +62,35 @@ describe('persistNebengeldTableData', () => {
     expect(aktualisiereBerechnungMock).not.toHaveBeenCalled();
   });
 
-  it('aktualisiert dataN aus dem Tabellen-FlatArray und triggert Berechnung', () => {
+  it('aktualisiert dataN aus den sichtbaren Tabellenzeilen und triggert Berechnung', () => {
     const dataN: IDatenN[] = [createData('2026-03-10')];
     const newRows = [createData('2026-03-11')];
 
     Storage.set('Jahr', 2026);
+    Storage.set('Monat', 3);
     Storage.set('dataN', dataN);
-    tableToArrayMock.mockReturnValue(newRows);
 
-    const ftMock = { getRows: vi.fn() } as never;
+    const ftMock = createTableMock(newRows);
     const result = persistNebengeldTableData(ftMock);
 
-    expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
     expect(result).toEqual(newRows);
     expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(newRows);
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
   });
 
-  it('persistiert die übergebenen Tabellenzeilen unabhängig vom aktuellen Storage-Monat', () => {
-    const dataN: IDatenN[] = [createData('2026-03-10'), createData('2026-04-10')];
-    const newRows = [createData('2026-03-20')];
+  it('behält andere Monate, wenn nur der ausgewählte Monat neu persistiert wird', () => {
+    const marchEntry = createData('2026-03-10');
+    const aprilEntry = createData('2026-04-10');
+    const updatedAprilRows = [createData('2026-04-20')];
 
     Storage.set('Jahr', 2026);
     Storage.set('Monat', 4);
-    Storage.set('dataN', dataN);
-    tableToArrayMock.mockReturnValue(newRows);
+    Storage.set('dataN', [marchEntry, aprilEntry]);
 
-    const result = persistNebengeldTableData({} as never);
+    const ftMock = createTableMock(updatedAprilRows);
+    const result = persistNebengeldTableData(ftMock);
 
-    expect(result).toEqual(newRows);
-    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(newRows);
+    expect(result).toEqual([marchEntry, updatedAprilRows[0]]);
+    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual([marchEntry, updatedAprilRows[0]]);
   });
 });

@@ -5,17 +5,14 @@ import {
   updateUserOe,
   updateUserRole,
   updateUserScopes,
-  setActAsUser,
   deleteUser,
   type AdminUserRow,
 } from '../utils/api';
 import type { TUserRole } from '../../interfaces';
 import { getUserCookie } from '../../utilities/decodeAccessToken';
-import { loadUserDaten } from '../../Login/utils';
-import { Storage } from '../../utilities';
-import dayjs from '../../utilities/configDayjs';
 import { OeTagInput } from './OeTagInput';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';
+import { loadUserDataForAdminSelection } from '../utils/actAs';
 
 type UserEditState = {
   oe: string;
@@ -136,23 +133,7 @@ export function AdminUserList() {
 
     setSavingUserId(userId);
     try {
-      if (isSelfRow) setActAsUser(null);
-      else setActAsUser(row._id, row.userName);
-
-      // Ressourcen-Daten des vorherigen Users loeschen, damit loadUserDaten
-      // die Daten des neuen Users als Erstladung behandelt.
-      Storage.remove('VorgabenU');
-      Storage.remove('dataBZ');
-      Storage.remove('dataBE');
-      Storage.remove('dataE');
-      Storage.remove('dataN');
-      Storage.remove('datenBerechnung');
-      Storage.remove('dataServer');
-
-      const jahr = Storage.get<number>('Jahr', { default: dayjs().year() });
-      const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-      await loadUserDaten(monat, jahr);
-      window.location.hash = '#start';
+      await loadUserDataForAdminSelection(isSelfRow ? null : row._id, isSelfRow ? undefined : row.userName);
     } finally {
       setSavingUserId(null);
     }

@@ -13,26 +13,33 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 
   const trueParser = (value: boolean | null): string => (value ? 'Ja' : 'Nein');
 
-  const addWeekParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruchString: string): string => {
-    if (value.Nwoche === undefined || value.Nwoche === false) return `${umbruchString} - `;
-    return `${umbruchString}+1 Woche`;
-  };
   const weekdayParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruch = true): string => {
-    const umbruchString: string = umbruch ? '<br/>' : ' | ';
-    const weekdays = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-    const weekday = weekdays[value.tag % 7];
-    const week = addWeekParser(value, umbruchString);
-    return `${weekday}${week}${umbruchString}${value.zeit}`;
+    const separator = umbruch ? '<br/>' : ' | ';
+    const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const weekday = weekdays[value.tag % 7] ?? '-';
+    const week = value.tag === 0 && value.Nwoche ? 'W1' : value.Nwoche ? 'W2' : 'W1';
+    return `${weekday} ${week}${separator}${value.zeit || '-'}`;
   };
+
+  const nachtRangeParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruch = true): string => {
+    return weekdayParser(value, umbruch);
+  };
+
   const ftVE = createCustomTable('tableVE', {
     columns: [
       { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Standard', parser: trueParser, breakpoints: 'md' },
-      { name: 'beginnB', title: 'Von', parser: weekdayParser, breakpoints: 'sm' },
-      { name: 'endeB', title: 'Bis', parser: weekdayParser, breakpoints: 'sm' },
+      { name: 'standard', title: 'Std.', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
+      { name: 'beginnB', title: 'Ber Von', longTitle: 'Bereitschaft Von', parser: weekdayParser, breakpoints: 'sm' },
+      { name: 'endeB', title: 'Ber Bis', longTitle: 'Bereitschaft Bis', parser: weekdayParser, breakpoints: 'sm' },
       { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'lg' },
-      { name: 'beginnN', title: 'Von', parser: weekdayParser, breakpoints: 'lg' },
-      { name: 'endeN', title: 'Bis', parser: weekdayParser, breakpoints: 'lg' },
+      {
+        name: 'beginnN',
+        title: 'Nacht Von',
+        longTitle: 'Nachtschicht Von',
+        parser: nachtRangeParser,
+        breakpoints: 'lg',
+      },
+      { name: 'endeN', title: 'Nacht Bis', longTitle: 'Nachtschicht Bis', parser: nachtRangeParser, breakpoints: 'lg' },
     ],
     rows: [...Object.values(VorgabenB)],
     editing: {
@@ -51,7 +58,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
           row.deleteRow();
         } else {
           createSnackBar({
-            message: 'Löschen von Standard nicht möglich<br /><small>(Bitte erst neuen Standart setzten)</small>',
+            message: 'Löschen von Standard nicht möglich<br /><small>(Bitte erst neuen Standard setzen)</small>',
             icon: '!',
             status: 'info',
             timeout: 3000,
@@ -83,7 +90,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
       },
       customButton: [
         {
-          text: 'Standarteinstellungen',
+          text: 'Standardeinstellungen',
           classes: ['btn', 'btn-secondary'],
           function: () => {
             ftVE.rows.load(Object.values(BereitschaftsEinsatzZeiträume));

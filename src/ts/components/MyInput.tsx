@@ -63,9 +63,15 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { myRef, divClass, popover, children, invalidFeedbackId, invalidFeedbackText, ...inputProps } = this.props;
 
+    const normalizedInputProps = {
+      ...inputProps,
+      minLength: typeof inputProps.minLength === 'string' ? Number(inputProps.minLength) : inputProps.minLength,
+      maxLength: typeof inputProps.maxLength === 'string' ? Number(inputProps.maxLength) : inputProps.maxLength,
+    };
+
     return (
       <div className={divClass ?? 'form-floating'}>
-        <input ref={this.input} className="form-control validate" {...inputProps} />
+        <input ref={this.input} className="form-control validate" {...normalizedInputProps} />
         <label htmlFor={this.props.id}>{children}</label>
         {invalidFeedbackId ? (
           <div id={invalidFeedbackId} className="invalid-feedback">

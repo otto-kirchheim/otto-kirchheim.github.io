@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+import { createCustomTable } from '../../src/ts/class/CustomTable';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -58,6 +59,9 @@ function createMockTable(
     _state: string;
     cells: Record<string, unknown>;
     _id?: string;
+    _clientRequestId?: string;
+    _errorState?: string;
+    _errorMessage?: string | null;
     _originalCells?: Record<string, unknown>;
   }[] = [],
 ) {
@@ -68,8 +72,11 @@ function createMockTable(
   table.id = id;
 
   (table as any).instance = {
+    getRows: () => rows,
+    drawRows: vi.fn(),
     rows: {
       getChanges: mockGetChanges,
+      getFilteredRows: vi.fn().mockReturnValue(rows),
       commitChanges: mockCommitChanges,
       commitAutoSave: mockCommitAutoSave,
       array: rows,
@@ -332,12 +339,72 @@ describe('autoSave', () => {
       await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(mockBzBulk).toHaveBeenCalledWith(
-        expect.objectContaining({ create: [{ beginB: '2025-03-10T10:00:00.000Z' }], delete: [], update: [] }),
+        expect.objectContaining({
+          create: [
+            expect.objectContaining({
+              beginB: '2025-03-10T10:00:00.000Z',
+              clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
+            }),
+          ],
+          delete: [],
+          update: [],
+        }),
         3,
         2025,
       );
       expect(getResourceStatus('BZ').status).toBe('saved');
       expect(mockAktualisiereBerechnung).toHaveBeenCalled();
+    });
+
+    it('behält andere Monate im Storage wenn nur der aktuelle Monat gespeichert wird', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', [
+        {
+          _id: 'bz-mar',
+          beginB: '2025-03-10T10:00:00.000Z',
+          endeB: '2025-03-10T18:00:00.000Z',
+          pauseB: 0,
+        },
+        {
+          _id: 'bz-apr',
+          beginB: '2025-04-12T10:00:00.000Z',
+          endeB: '2025-04-12T18:00:00.000Z',
+          pauseB: 0,
+        },
+      ]);
+
+      const marchRow = {
+        _id: 'bz-mar',
+        beginB: '2025-03-10T11:00:00.000Z',
+        endeB: '2025-03-10T19:00:00.000Z',
+        pauseB: 15,
+      };
+
+      const changes = { create: [], update: [marchRow], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'modified', _id: 'bz-mar', cells: marchRow }]);
+
+      mockBzBulk.mockResolvedValue({
+        created: [],
+        updated: [
+          {
+            _id: 'bz-mar',
+            Beginn: '2025-03-10T11:00:00.000Z',
+            Ende: '2025-03-10T19:00:00.000Z',
+            Pause: 15,
+            updatedAt: '2025-03-10T19:00:00.000Z',
+          },
+        ],
+        deleted: [],
+        errors: [],
+      });
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      const stored = Storage.get<Array<{ _id: string; beginB: string }>>('dataBZ', { check: true });
+      expect(stored.map(item => item._id).sort()).toEqual(['bz-apr', 'bz-mar']);
+      expect(stored.find(item => item._id === 'bz-mar')?.beginB).toBe('2025-03-10T11:00:00.000Z');
     });
 
     it('speichert BE-Änderungen über bereitschaftseinsatzApi', async () => {
@@ -372,6 +439,101 @@ describe('autoSave', () => {
 
       expect(mockEwtBulk).toHaveBeenCalled();
       expect(getResourceStatus('EWT').status).toBe('saved');
+    });
+
+    it('nutzt bei EWT für AutoSave den Starttag-Monat statt den Buchungstag', async () => {
+      Storage.set('Monat', 4);
+      Storage.set('Jahr', 2026);
+      Storage.set('dataE', { 4: [] });
+
+      const changes = {
+        create: [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' }],
+        update: [],
+        delete: [],
+      };
+      createMockTable('tableE', changes, [
+        {
+          _state: 'new',
+          cells: { tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' },
+        },
+      ]);
+
+      mockEwtBulk.mockResolvedValue({ created: [{ _id: 'ewt-cross-month' }], updated: [], deleted: [], errors: [] });
+
+      scheduleAutoSave('EWT');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockEwtBulk).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: [
+            expect.objectContaining({
+              tagE: '2026-03-31',
+              buchungstagE: '2026-04-01',
+              schichtE: 'N',
+              clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
+            }),
+          ],
+          update: [],
+          delete: [],
+        }),
+        3,
+        2026,
+      );
+    });
+
+    it('sendet EWT-Aenderungen je Starttag-Periode getrennt statt gesammelt mit einem UI-Monat', async () => {
+      Storage.set('Monat', 1);
+      Storage.set('Jahr', 2027);
+      Storage.set('dataE', { 1: [] });
+
+      const maerzRow = { tagE: '2026-12-31', buchungstagE: '2027-01-01', schichtE: 'N' };
+      const januarRow = { tagE: '2027-01-05', buchungstagE: '2027-01-05', schichtE: 'F' };
+      const changes = {
+        create: [maerzRow, januarRow],
+        update: [],
+        delete: [],
+      };
+      createMockTable('tableE', changes, [
+        { _state: 'new', cells: maerzRow },
+        { _state: 'new', cells: januarRow },
+      ]);
+
+      mockEwtBulk.mockResolvedValue({ created: [], updated: [], deleted: [], errors: [] });
+
+      scheduleAutoSave('EWT');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockEwtBulk).toHaveBeenCalledTimes(2);
+      expect(mockEwtBulk).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          create: [
+            expect.objectContaining({
+              ...maerzRow,
+              clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
+            }),
+          ],
+          update: [],
+          delete: [],
+        }),
+        12,
+        2026,
+      );
+      expect(mockEwtBulk).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          create: [
+            expect.objectContaining({
+              ...januarRow,
+              clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
+            }),
+          ],
+          update: [],
+          delete: [],
+        }),
+        1,
+        2027,
+      );
     });
 
     it('speichert N-Änderungen über nebengeldApi', async () => {
@@ -514,6 +676,97 @@ describe('autoSave', () => {
 
       // Sollte nicht aufgerufen worden sein weil offline → pending
       expect(getResourceStatus('BZ').status).toBe('pending');
+    });
+
+    it('laesst fehlgeschlagene Create-Zeilen fuer den naechsten Retry im Change-Tracking', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', []);
+
+      const tableElement = document.createElement('table');
+      tableElement.id = 'tableBZ';
+      document.body.appendChild(tableElement);
+
+      const table = createCustomTable('tableBZ', {
+        columns: [
+          {
+            name: 'beginB',
+            title: 'Beginn',
+          },
+        ],
+        rows: [{ beginB: '2025-03-10T10:00:00.000Z' }],
+      });
+
+      const row = table.getRows()[0];
+      row._state = 'new';
+
+      mockBzBulk.mockImplementation(async bulk => ({
+        created: [],
+        updated: [],
+        deleted: [],
+        createdReferences: [],
+        errors: [
+          {
+            operation: 'create',
+            clientRequestId: bulk.create?.[0]?.clientRequestId,
+            message: 'Server lehnt den Datensatz ab',
+          },
+        ],
+      }));
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(row._state as string).toBe('error');
+      expect(row._errorState).toBe('new');
+      expect(row._errorMessage).toBe('Server lehnt den Datensatz ab');
+      expect(table.rows.getChanges(false).create).toHaveLength(1);
+      expect(document.querySelector('#tableBZ tbody tr')?.classList.contains('customtable-error')).toBe(true);
+    });
+
+    it('behaelt fehlgeschlagene Delete-Zeilen fuer manuellen Retry in der Tabelle', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', [{ _id: 'bz-1', beginB: '2025-03-10T10:00:00.000Z' }]);
+
+      const tableElement = document.createElement('table');
+      tableElement.id = 'tableBZ';
+      document.body.appendChild(tableElement);
+
+      const table = createCustomTable('tableBZ', {
+        columns: [
+          {
+            name: 'beginB',
+            title: 'Beginn',
+          },
+        ],
+        rows: [{ _id: 'bz-1', beginB: '2025-03-10T10:00:00.000Z' }],
+      });
+
+      const row = table.getRows()[0];
+      row.deleteRow();
+
+      mockBzBulk.mockResolvedValue({
+        created: [],
+        updated: [],
+        deleted: [],
+        createdReferences: [],
+        errors: [
+          {
+            operation: 'delete',
+            id: 'bz-1',
+            message: 'Loeschen fehlgeschlagen',
+          },
+        ],
+      });
+
+      await flushAll();
+
+      expect(table.getRows()).toHaveLength(1);
+      expect(row._state).toBe('error');
+      expect(row._errorState).toBe('deleted');
+      expect(row.isDeleted).toBe(true);
+      expect(table.rows.getChanges(true).delete).toEqual(['bz-1']);
     });
   });
 

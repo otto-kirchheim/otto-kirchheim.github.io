@@ -12,7 +12,7 @@ import type {
   IMonatsDaten,
 } from './IDaten.js';
 import type { ReturnTypeSaveData, UserDatenServer } from './IUserDatenServer.js';
-import type { IDataQueryOptions, TDataScope } from './IDataQuery.js';
+import type { IDataQueryOptions, IEwtQueryOptions, TDataScope, TEwtFilter } from './IDataQuery.js';
 import type { IVorgabenBerechnung, IVorgabenBerechnungMonat } from './IVorgabenBerechnungMonat.js';
 import type { IVorgabenE } from './IVorgabenE.js';
 import type { IVorgabenGeld, IVorgabenGeldType } from './IVorgabenGeldType.js';
@@ -32,6 +32,7 @@ export type {
   CustomHTMLTableElement,
   CustomHTMLTableRowElement,
   TDataScope,
+  TEwtFilter,
   TSaveStatus,
   IDaten,
   IDatenAllValuesWithKey,
@@ -41,6 +42,7 @@ export type {
   IDatenN,
   IMonatsDaten,
   IDataQueryOptions,
+  IEwtQueryOptions,
   TResourceKey,
   TUserRole,
   IVorgabenBerechnung,

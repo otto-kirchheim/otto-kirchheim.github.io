@@ -109,6 +109,8 @@ export interface BackendUserProfile {
   Einstellungen: {
     aktivierteTabs: string[];
     benoetigteZulagen?: string[];
+    autoSaveEnabled?: boolean;
+    autoSaveDelayMs?: number;
   };
   updatedAt?: string;
 }
@@ -237,6 +239,8 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
     Einstellungen: {
       aktivierteTabs: doc.Einstellungen?.aktivierteTabs ?? [],
       benoetigteZulagen: doc.Einstellungen?.benoetigteZulagen ?? [],
+      autoSaveEnabled: doc.Einstellungen?.autoSaveEnabled ?? true,
+      autoSaveDelayMs: doc.Einstellungen?.autoSaveDelayMs ?? 10000,
     },
   };
 }
@@ -262,14 +266,28 @@ export function vorgabenFromBackend(doc: BackendVorgabe): Record<number, Record<
 
 // ─── Frontend → Backend (Speichern) ──────────────────────
 
+function resolveYearMonth(value: string, fallbackMonat: number, fallbackJahr: number, format?: string) {
+  const parsed = format ? dayjs(value, format, true) : dayjs(value);
+  if (!parsed.isValid()) {
+    return { Monat: fallbackMonat, Jahr: fallbackJahr };
+  }
+
+  return {
+    Monat: parsed.month() + 1,
+    Jahr: parsed.year(),
+  };
+}
+
 /**
  * Konvertiert einen Frontend-BZ-Eintrag in das Backend-Format.
  */
 export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<BackendBereitschaftszeitraum, 'User'> {
+  const period = resolveYearMonth(item.beginB, monat, jahr);
+
   return {
     _id: item._id,
-    Monat: monat,
-    Jahr: jahr,
+    Monat: period.Monat,
+    Jahr: period.Jahr,
     Beginn: item.beginB,
     Ende: item.endeB,
     Pause: item.pauseB,
@@ -280,11 +298,13 @@ export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<B
  * Konvertiert einen Frontend-BE-Eintrag in das Backend-Format.
  */
 export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<BackendBereitschaftseinsatz, 'User'> {
+  const period = resolveYearMonth(item.tagBE, monat, jahr, 'DD.MM.YYYY');
+
   return {
     _id: item._id,
     Bereitschaftszeitraum: item.bereitschaftszeitraumBE,
-    Monat: monat,
-    Jahr: jahr,
+    Monat: period.Monat,
+    Jahr: period.Jahr,
     Tag: dayjs(item.tagBE, 'DD.MM.YYYY').toISOString(),
     Auftragsnummer: item.auftragsnummerBE,
     Beginn: item.beginBE,
@@ -298,12 +318,15 @@ export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<B
  * Konvertiert einen Frontend-EWT-Eintrag in das Backend-Format.
  */
 export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit<BackendEWT, 'User'> {
+  const buchungstag = item.buchungstagE || item.tagE;
+  const period = resolveYearMonth(item.tagE, monat, jahr, 'YYYY-MM-DD');
+
   return {
     _id: item._id,
-    Monat: monat,
-    Jahr: jahr,
+    Monat: period.Monat,
+    Jahr: period.Jahr,
     Tag: dayjs(item.tagE).toISOString(),
-    Buchungstag: dayjs(item.buchungstagE || item.tagE).toISOString(),
+    Buchungstag: dayjs(buchungstag).toISOString(),
     Einsatzort: item.eOrtE || undefined,
     Schicht: item.schichtE,
     abWE: item.abWE || undefined,
@@ -322,6 +345,7 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
  * Konvertiert einen Frontend-Nebengeld-Eintrag in das Backend-Format.
  */
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
+  const period = resolveYearMonth(item.tagN, monat, jahr, 'DD.MM.YYYY');
   const zulagen: BackendNebengeld['Zulagen'] = [];
   if (item.anzahl040N > 0) {
     zulagen.push({ Typ: '040', Wert: item.anzahl040N });
@@ -329,8 +353,8 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
   return {
     _id: item._id,
     EWT: item.ewtRef || undefined,
-    Monat: monat,
-    Jahr: jahr,
+    Monat: period.Monat,
+    Jahr: period.Jahr,
     Tag: dayjs(item.tagN, 'DD.MM.YYYY').toISOString(),
     Beginn: item.beginN,
     Ende: item.endeN,
@@ -382,14 +406,6 @@ export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
-/**
- * Ergebnis von groupByMonat: Daten gruppiert nach Monat + max updatedAt.
- */
-export interface GroupedByMonat<TFrontend> {
-  data: Record<number, TFrontend[]>;
-  maxUpdatedAt: string | null;
-}
-
 export interface FlatMappedDocs<TFrontend> {
   data: TFrontend[];
   maxUpdatedAt: string | null;
@@ -408,28 +424,4 @@ export function flatMapDocs<TBackend extends { updatedAt?: string }, TFrontend>(
   });
 
   return { data, maxUpdatedAt };
-}
-
-/**
- * Gruppiert ein flaches Array von Backend-Dokumenten nach Monat → Jahres-Objekt.
- * Backend liefert z.B. [{Monat: 1, ...}, {Monat: 3, ...}],
- * Frontend braucht {1: [...], 2: [], 3: [...], ...12: []}.
- * Zusätzlich wird das neueste updatedAt aller Dokumente ermittelt.
- */
-export function groupByMonat<TBackend extends { Monat: number; updatedAt?: string }, TFrontend>(
-  docs: TBackend[],
-  mapper: (doc: TBackend) => TFrontend,
-): GroupedByMonat<TFrontend> {
-  const result: Record<number, TFrontend[]> = {};
-  let maxUpdatedAt: string | null = null;
-  for (let m = 1; m <= 12; m++) result[m] = [];
-  for (const doc of docs) {
-    if (doc.Monat >= 1 && doc.Monat <= 12) {
-      result[doc.Monat].push(mapper(doc));
-    }
-    if (doc.updatedAt && (!maxUpdatedAt || doc.updatedAt > maxUpdatedAt)) {
-      maxUpdatedAt = doc.updatedAt;
-    }
-  }
-  return { data: result, maxUpdatedAt };
 }

@@ -1,13 +1,13 @@
 import path from 'path';
 import { version } from './package.json';
+import type { UserConfig } from 'vite';
 
-export default {
+const baseConfig: UserConfig = {
   root: path.resolve(__dirname, 'src'),
   resolve: {
     alias: {
       '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
       '~material-icons': path.resolve(__dirname, 'node_modules/material-icons'),
-      feiertagejs: path.resolve(__dirname, 'node_modules/feiertagejs'),
     },
   },
   base: '/',
@@ -32,4 +32,13 @@ export default {
     port: 8080,
     hmr: true,
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'if-function'],
+      },
+    },
+  },
 };
+
+export default baseConfig;

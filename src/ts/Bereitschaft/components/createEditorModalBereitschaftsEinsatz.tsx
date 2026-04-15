@@ -11,6 +11,7 @@ import dayjs from '../../utilities/configDayjs';
 import {
   getBereitschaftsEinsatzDaten,
   getBereitschaftsZeitraumDaten,
+  isSameBereitschaftsEinsatz,
   persistBereitschaftsEinsatzTableData,
 } from '../utils';
 
@@ -38,13 +39,13 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             divClass="form-floating col-12 pb-3"
             type="text"
             id={column.name}
-            name="SAP-Nr / Einsatzbeschreibung"
+            name={column.longTitle}
             required
             min={datum.startOf('M').format('YYYY-MM-DD')}
             max={datum.endOf('M').format('YYYY-MM-DD')}
             value={row instanceof Row ? row.cells[column.name] : ''}
           >
-            SAP-Nr / Einsatzbeschreibung
+            {column.longTitle}
           </MyInput>
         );
       case 'beginBE':
@@ -79,7 +80,6 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
                 { value: 'LRE 3 ohne x', text: 'LRE 3 ohne x' },
               ]}
             />
-            <div className="w-100" />
           </Fragment>
         );
       case 'privatkmBE':
@@ -88,11 +88,18 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             divClass="form-floating col-12 col-sm-6"
             type="number"
             id={column.name}
-            name={column.title}
+            name={column.longTitle}
             min={'0'}
             value={row instanceof Row ? row.cells[column.name] : ''}
+            popover={{
+              title: column.longTitle,
+              content:
+                'Nur angeben, wenn im Einsatzverlauf mit einem privaten Fahrzeug gefahren wurde. Und kein Dienstwagen zur Verfügung stand.',
+              placement: 'top',
+              trigger: 'focus',
+            }}
           >
-            {column.title}
+            {column.longTitle}
           </MyInput>
         );
       default:
@@ -137,6 +144,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       const row = modal.row;
       if (!row) throw new Error('Row nicht gefunden');
       const table: CustomTable<IDatenBE> = row instanceof Row ? row.CustomTable : row;
+      const currentBe = row instanceof Row ? row.cells : undefined;
 
       const values: IDatenBE = {
         _id: row instanceof Row ? row.cells._id : undefined,
@@ -207,7 +215,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       values.bereitschaftszeitraumBE = startBz._id;
 
       const overlapsExistingBe = getBereitschaftsEinsatzDaten().some(be => {
-        if (values._id && be._id === values._id) return false;
+        if (isSameBereitschaftsEinsatz(be, currentBe)) return false;
         const existingDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
         const existingStart = dayjs(`${existingDate}T${be.beginBE}`);
         const existingEndRaw = dayjs(`${existingDate}T${be.endeBE}`);
@@ -228,7 +236,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       if (values.lreBE === 'LRE 1') {
         const hasOtherLre1InSameBz = getBereitschaftsEinsatzDaten().some(be => {
           if (be.lreBE !== 'LRE 1') return false;
-          if (values._id && be._id === values._id) return false;
+          if (isSameBereitschaftsEinsatz(be, currentBe)) return false;
 
           const existingDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
           const existingStart = dayjs(`${existingDate}T${be.beginBE}`);

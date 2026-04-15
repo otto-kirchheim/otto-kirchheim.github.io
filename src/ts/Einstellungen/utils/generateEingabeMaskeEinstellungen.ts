@@ -24,6 +24,7 @@ export default function generateEingabeMaskeEinstellungen(
   setupBundeslandAutoFill();
   populateTabCheckboxes(VorgabenU.Einstellungen?.aktivierteTabs);
   populateZulagenCheckboxes(VorgabenU.Einstellungen?.benoetigteZulagen);
+  populateAutoSaveSettings(VorgabenU.Einstellungen?.autoSaveEnabled, VorgabenU.Einstellungen?.autoSaveDelayMs);
 
   populateTable(VorgabenU);
 
@@ -137,5 +138,86 @@ function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
     wrapper.appendChild(input);
     wrapper.appendChild(label);
     host.appendChild(wrapper);
+  }
+}
+
+/**
+ * Formatiert Millisekunden als lesbaren Zeittext (z.B. "10 s", "2 min").
+ */
+export function formatDelayLabel(ms: number): string {
+  if (ms < 1000) return `${ms} ms`;
+  if (ms < 60000) return `${Math.round(ms / 1000)} s`;
+  return `${Math.round(ms / 60000)} min`;
+}
+
+/**
+ * Mappt Slider-Position (0-24) auf Millisekunden.
+ * Diskrete Stufen:
+ * - 0-9: 1-10s (1s Schritte)
+ * - 10-19: 15-60s (5s Schritte, beginnend bei 15s)
+ * - 20-24: 60-300s (1min Schritte)
+ */
+export function sliderPositionToMs(position: number): number {
+  if (position < 0) position = 0;
+  if (position > 24) position = 24;
+
+  if (position <= 9) {
+    // 1-10s: 1s Schritte
+    return (position + 1) * 1000;
+  } else if (position <= 19) {
+    // 15-60s: 5s Schritte (Position 10 = 15s, Position 19 = 60s)
+    return 10000 + (position - 9) * 5000;
+  } else {
+    // 60-300s: 1min Schritte (Position 20 = 60s, Position 24 = 300s)
+    return 60000 + (position - 20) * 60000;
+  }
+}
+
+/**
+ * Mappt Millisekunden auf Slider-Position (0-24).
+ * Findet die nächste verfügbare Position.
+ */
+export function msToSliderPosition(ms: number): number {
+  if (ms <= 10000) {
+    // 1-10s Bereich
+    return Math.max(0, Math.min(9, Math.round(ms / 1000) - 1));
+  } else if (ms <= 60000) {
+    // 15-60s Bereich
+    return Math.max(10, Math.min(19, Math.round((ms - 10000) / 5000) + 9));
+  } else {
+    // 60-300s Bereich
+    return Math.max(20, Math.min(24, Math.round((ms - 60000) / 60000) + 20));
+  }
+}
+
+function populateAutoSaveSettings(autoSaveEnabled?: boolean, autoSaveDelayMs?: number): void {
+  const enabledCheckbox = document.querySelector<HTMLInputElement>('#autoSaveEnabled');
+  const delayInput = document.querySelector<HTMLInputElement>('#autoSaveDelay');
+  const delayLabel = document.querySelector<HTMLElement>('#autoSaveDelayLabel');
+
+  if (enabledCheckbox) {
+    enabledCheckbox.checked = autoSaveEnabled ?? true;
+  }
+
+  if (delayInput) {
+    const delay = autoSaveDelayMs ?? 10000;
+    const sliderPos = msToSliderPosition(delay);
+    delayInput.value = String(sliderPos);
+
+    if (delayLabel) {
+      const ms = sliderPositionToMs(sliderPos);
+      delayLabel.textContent = formatDelayLabel(ms);
+    }
+
+    // Event-Listener für Live-Update des Labels
+    delayInput.addEventListener('input', () => {
+      const newPos = Number(delayInput.value);
+      const newMs = sliderPositionToMs(newPos);
+      // Überschreibe den Wert, damit der tatsächliche ms-Wert gespeichert wird
+      delayInput.dataset.actualMs = String(newMs);
+      if (delayLabel) {
+        delayLabel.textContent = formatDelayLabel(newMs);
+      }
+    });
   }
 }

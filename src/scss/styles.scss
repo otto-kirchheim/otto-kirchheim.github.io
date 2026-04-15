@@ -29,6 +29,10 @@ body {
   width: 40%;
 }
 
+.u-min-w-120 {
+  min-width: 120px;
+}
+
 .small-icons {
   vertical-align: middle;
   font-size: 1.3rem;
@@ -215,6 +219,14 @@ body {
 
 #admin-tabs .nav-link {
   white-space: normal;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-darkmode-override {
+    background-color: #23272b !important;
+    color: #f8f9fa !important;
+    border-color: #444950 !important;
+  }
 }
 
 .admin-user-cards {

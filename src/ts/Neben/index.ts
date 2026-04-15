@@ -25,10 +25,15 @@ window.addEventListener('load', () => {
   const ftN = createCustomTable('tableN', {
     columns: [
       { name: 'tagN', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'beginN', title: 'Arbeit Von', type: 'time' },
-      { name: 'endeN', title: 'Arbeit Bis', type: 'time' },
-      { name: 'anzahl040N', title: '040 Fahrentschädigung', breakpoints: 'md' },
-      { name: 'auftragN', title: 'Auftragsnummer', breakpoints: 'md' },
+      { name: 'beginN', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
+      { name: 'endeN', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
+      { name: 'anzahl040N', title: '040', longTitle: '040 Fahrentschädigung', breakpoints: 'md', type: 'number' },
+      {
+        name: 'auftragN',
+        title: 'Auftragsnummer',
+        breakpoints: 'md',
+        parser: (value: string) => (value ? value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-'),
+      },
     ],
     empty: () => getEmptyText(Jahr),
     rows: getNebengeldDaten(undefined, undefined, { scope: 'all' }),

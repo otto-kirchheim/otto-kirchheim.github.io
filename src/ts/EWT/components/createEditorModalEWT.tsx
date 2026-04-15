@@ -1,40 +1,25 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { CustomTable, Row } from '../../class/CustomTable';
+import { Row } from '../../class/CustomTable';
+import type { CustomTable } from '../../class/CustomTable';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../interfaces';
-import { Storage, checkMaxTag } from '../../utilities';
+import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import {
   calculateBuchungstagEwt,
+  calculateEwtEintraege,
   clearEwtZeiten,
   getEwtDaten,
+  getEwtEditorDate,
+  getEwtWindow,
   persistEwtTableData,
   validateEwtZeitenReihenfolge,
 } from '../utils';
 
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
 const getZeitfehlerElementId = (feld: (typeof ZEITFELDER)[number]): string => `zeitfehler-${feld}`;
-
-const getEwtWindow = (entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null => {
-  if (!entry.beginE || !entry.endeE) return null;
-
-  const baseDate = dayjs(entry.tagE);
-  let start = dayjs(`${baseDate.format('YYYY-MM-DD')}T${entry.beginE}`);
-  const endBase = dayjs(`${baseDate.format('YYYY-MM-DD')}T${entry.endeE}`);
-
-  if (['N', 'BN'].includes(entry.schichtE)) {
-    start = start.subtract(1, 'day');
-  }
-
-  let end = endBase;
-  if (end.isSameOrBefore(start)) {
-    end = end.add(1, 'day');
-  }
-
-  return { start, end };
-};
 
 const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnName: string) => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -62,15 +47,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
+  const rowCells = row instanceof Row ? row.cells : undefined;
 
-  let Tag: number;
-  if (row instanceof Row) Tag = dayjs(row.cells.tagE).date();
-  else if (row instanceof CustomTable) Tag = checkMaxTag(Jahr, Monat);
-  else throw new Error('unbekannter Fehler');
-
-  const datum = dayjs([Jahr, Monat, Tag]);
-  const initialBuchungstagInputValue =
-    row instanceof Row ? dayjs(row.cells.buchungstagE || datum).format('YYYY-MM-DD') : datum.format('YYYY-MM-DD');
+  const datum = getEwtEditorDate(rowCells, Jahr, Monat);
+  const initialBuchungstagInputValue = dayjs(rowCells?.buchungstagE || datum).format('YYYY-MM-DD');
 
   const customButtons =
     row instanceof Row ? (
@@ -186,8 +166,8 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const form = ref.current;
 
   const getFormValues = (): IDatenEWT => {
-    const values: IDatenEWT = {
-      _id: row instanceof Row ? row.cells._id : undefined,
+    let values: IDatenEWT = {
+      _id: rowCells?._id,
       tagE: form.querySelector<HTMLInputElement>('#tagE')?.value ?? '',
       buchungstagE: '',
       eOrtE: form.querySelector<HTMLInputElement>('#eOrtE')?.value ?? '',
@@ -202,6 +182,12 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       anWE: form.querySelector<HTMLInputElement>('#anWE')?.value ?? '',
       berechnen: form.querySelector<HTMLInputElement>('#berechnen')?.checked ?? true,
     };
+
+    const calculatedValues = calculateEwtEintraege(vorgabenU, [{ ...values }])[0];
+    if (calculatedValues) {
+      values = { ...calculatedValues };
+    }
+
     values.buchungstagE = calculateBuchungstagEwt(values);
     return values;
   };
@@ -216,9 +202,9 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     }
 
     const values = getFormValues();
-    const istAbweichend = !dayjs(values.buchungstagE).isSame(dayjs(values.tagE), 'day');
+    const istGleich = dayjs(values.buchungstagE).isSame(dayjs(values.tagE), 'day');
 
-    if (!istAbweichend) {
+    if (istGleich) {
       buchungstagHinweisRef.current.classList.add('d-none');
       return;
     }

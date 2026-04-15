@@ -41,6 +41,7 @@ window.addEventListener('load', () => {
           direction: 'ASC',
           parser: tagParser,
         },
+        { name: 'buchungstagE', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
         { name: 'eOrtE', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
         { name: 'schichtE', title: 'Schicht', parser: schichtParser, type: 'time' },
         { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'xl', type: 'time' },

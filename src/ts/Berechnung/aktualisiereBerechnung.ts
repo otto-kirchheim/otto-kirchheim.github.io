@@ -10,7 +10,12 @@ import type {
 } from '../interfaces';
 import { normalizeResourceRows, Storage } from '../utilities';
 import dayjs from '../utilities/configDayjs';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from '../utilities/getMonatFromItem';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEWTBuchungstag,
+  getMonatFromN,
+} from '../utilities/getMonatFromItem';
 
 export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {
@@ -36,7 +41,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
   for (let Monat = 1; Monat <= 12; Monat++) {
     const BZMonat = filterByMonat(BZ, getMonatFromBZ, Monat);
     const BEMonat = filterByMonat(BE, getMonatFromBE, Monat);
-    const EWTMonat = filterByMonat(EWT, getMonatFromEWT, Monat);
+    const EWTMonat = filterByMonat(EWT, getMonatFromEWTBuchungstag, Monat);
     const NMonat = filterByMonat(N, getMonatFromN, Monat);
     Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(BZMonat, BEMonat, EWTMonat, NMonat);
   }
@@ -80,15 +85,15 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;
 
     EWTMonat.forEach(value => {
-      const datum = dayjs(value.tagE);
-      if (!datum.isValid()) return;
-      const tagAnfang = ['BN', 'N'].includes(value.schichtE) ? datum.subtract(1, 'day') : datum;
+      const tagAnfang = dayjs(value.tagE);
+      if (!tagAnfang.isValid()) return;
 
       if (value.abWE && value.anWE) {
         const [abWH, abWM] = value.abWE.split(':').map(Number);
         const [anWH, anWM] = value.anWE.split(':').map(Number);
         const von = tagAnfang.hour(abWH).minute(abWM);
-        const bis = datum.hour(anWH).minute(anWM);
+        let bis = tagAnfang.hour(anWH).minute(anWM);
+        if (bis.isBefore(von)) bis = bis.add(1, 'day');
 
         const abWohnung = bis.diff(von, 'hour', true);
 
@@ -100,7 +105,8 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
         const [ab1H, ab1M] = value.ab1E.split(':').map(Number);
         const [an1H, an1M] = value.an1E.split(':').map(Number);
         const von = tagAnfang.hour(ab1H).minute(ab1M);
-        const bis = datum.hour(an1H).minute(an1M);
+        let bis = tagAnfang.hour(an1H).minute(an1M);
+        if (bis.isBefore(von)) bis = bis.add(1, 'day');
 
         const ab1Taetigkeit = bis.diff(von, 'hour', true);
 

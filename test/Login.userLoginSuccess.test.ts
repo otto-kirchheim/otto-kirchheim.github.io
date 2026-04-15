@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 const {
   selectYearMock,
   storageSetMock,
+  storageRemoveMock,
   setLoadingMock,
   isAdminMock,
   initAutoSaveIndicatorMock,
@@ -12,6 +13,7 @@ const {
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   selectYearMock: vi.fn(),
   storageSetMock: vi.fn(),
+  storageRemoveMock: vi.fn(),
   setLoadingMock: vi.fn(),
   isAdminMock: vi.fn(),
   initAutoSaveIndicatorMock: vi.fn(),
@@ -35,6 +37,7 @@ vi.mock('../src/ts/Einstellungen/utils', () => ({
 vi.mock('../src/ts/utilities', () => ({
   Storage: {
     set: storageSetMock,
+    remove: storageRemoveMock,
   },
   setLoading: setLoadingMock,
 }));
@@ -73,6 +76,8 @@ describe('userLoginSuccess', () => {
     expect(setLoadingMock).toHaveBeenCalledWith('btnLogin');
     expect(storageSetMock).toHaveBeenCalledWith('Version', undefined);
     expect(storageSetMock).toHaveBeenCalledWith('Benutzer', 'Otto');
+    expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserId');
+    expect(storageRemoveMock).toHaveBeenCalledWith('actAsUserName');
     expect(document.querySelector('#btnLogin')?.classList.contains('d-none')).toBe(true);
     expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');
     expect(document.querySelector<HTMLInputElement>('#Monat')?.value).not.toBe('');

@@ -3,6 +3,7 @@ import DatenSortieren from './DatenSortieren';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import Storage from './Storage';
 import { abortController } from './abortController';
+import { ACT_AS_STATUS_EVENT, getActAsState, notifyActAsStateChanged, updateActAsBanner } from './actAsStatus';
 import {
   GERMAN_ADDRESS_FORMAT_HINT,
   PERS_FIELD_LABELS,
@@ -58,6 +59,7 @@ export {
   GERMAN_ADDRESS_FORMAT_HINT,
   PERS_FIELD_LABELS,
   Storage,
+  ACT_AS_STATUS_EVENT,
   abortController,
   buttonDisable,
   cancelAllPending,
@@ -67,6 +69,7 @@ export {
   createOnChangeHandler,
   flushAll,
   filterByMonat,
+  getActAsState,
   getAutoSaveDelay,
   getDurationFromTime,
   getMonatFromBE,
@@ -87,6 +90,7 @@ export {
   markResourceSaved,
   normalizeGermanAddress,
   normalizeResourceRows,
+  notifyActAsStateChanged,
   onAutoSaveStatus,
   registerPasskeyWithResult,
   saveDaten,
@@ -101,6 +105,7 @@ export {
   storageAvailable,
   tableToArray,
   tokenErneuern,
+  updateActAsBanner,
   updateTabVisibility,
   validateGermanAddressInput,
   validatePersInput,

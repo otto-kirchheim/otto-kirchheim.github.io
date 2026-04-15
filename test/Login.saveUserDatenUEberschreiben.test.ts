@@ -10,6 +10,7 @@ const {
   storageGetMock,
   storageSetMock,
   storageRemoveMock,
+  scheduleAutoSaveMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   aktualisiereBerechnungMock: vi.fn(),
   getBereitschaftsZeitraumDatenMock: vi.fn(),
@@ -20,6 +21,7 @@ const {
   storageGetMock: vi.fn(),
   storageSetMock: vi.fn(),
   storageRemoveMock: vi.fn(),
+  scheduleAutoSaveMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/Berechnung', () => ({
@@ -49,6 +51,10 @@ vi.mock('../src/ts/utilities/Storage', () => ({
     set: storageSetMock,
     remove: storageRemoveMock,
   },
+}));
+
+vi.mock('../src/ts/utilities/autoSave', () => ({
+  scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
 import overwriteUserDaten from '../src/ts/Login/utils/overwriteUserDaten';
@@ -129,6 +135,10 @@ describe('overwriteUserDaten', () => {
 
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
     expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BZ');
+    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
+    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('EWT');
+    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('N');
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 

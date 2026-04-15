@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
-import type { CustomHTMLDivElement, IDatenBE } from '../../interfaces';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { submitBereitschaftsEinsatz } from '../utils';
@@ -13,18 +13,23 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
 
+  const tableBE = document.querySelector<CustomHTMLTableElement<IDatenBE>>('#tableBE');
+  if (!tableBE?.instance) throw new Error('Tabelle nicht gefunden');
+  const columns = tableBE.instance.columns.array;
+
   const modal: CustomHTMLDivElement<IDatenBE> = showModal(
     <MyFormModal myRef={formRef} title="Neuen Bereitschaftseinsatz eingeben" onSubmit={onSubmit()}>
       <MyModalBody>
         <p className="text-bg-warning p-2 rounded small">
-          Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein.
+          Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein. <br /> Oder wähle die
+          Option: "zusätzliche Bereitschaftszeit Eingeben".
         </p>
         <MyInput
           divClass="form-floating col-12 col-sm-6 pb-3"
           required
-          type="Date"
+          type={columns.find(col => col.name === 'tagBE')?.type || 'Date'}
           id="Datum"
-          name="Datum"
+          name={columns.find(col => col.name === 'tagBE')?.longTitle || 'Datum'}
           min={datum.startOf('M').format('YYYY-MM-DD')}
           max={datum.endOf('M').format('YYYY-MM-DD')}
           value={datum.format('YYYY-MM-DD')}
@@ -34,9 +39,9 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <MyInput
           divClass="form-floating col-12 pb-3"
           required
-          type="text"
+          type={columns.find(col => col.name === 'auftragsnummerBE')?.type || 'text'}
           id="SAPNR"
-          name="SAP-Nr / Einsatzbeschreibung"
+          name={columns.find(col => col.name === 'auftragsnummerBE')?.longTitle || 'SAP-Nr / Einsatzbeschreibung'}
         >
           SAP-Nr / Einsatzbeschreibung
         </MyInput>
@@ -50,7 +55,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           className="form-floating col-12 col-sm-6 pb-3"
           required
           id="LRE"
-          title="LRE"
+          title={columns.find(col => col.name === 'lreBE')?.longTitle || 'LRE'}
           options={[
             { text: 'Bitte Einsatz auswählen', disabled: true, selected: true },
             { value: 'LRE 1', text: 'LRE 1' },
@@ -60,9 +65,21 @@ export default function createAddModalBereitschaftsEinsatz(): void {
             { value: 'LRE 3 ohne x', text: 'LRE 3 ohne x' },
           ]}
         />
-        <div className="w-100" />
-        <MyInput divClass="form-floating col-12 col-sm-6 pb-3" type="number" id="privatkm" name="Privat Km" min={'0'}>
-          Privat Km
+        <MyInput
+          divClass="form-floating col-12 col-sm-6 pb-3"
+          type={columns.find(col => col.name === 'privatkmBE')?.type || 'number'}
+          id="privatkm"
+          name={columns.find(col => col.name === 'privatkmBE')?.longTitle || 'Km Privatfahrzeug'}
+          min={'0'}
+          popover={{
+            title: 'Kilometer Privatfahrzeug',
+            content:
+              'Nur angeben, wenn im Einsatzverlauf mit einem privaten Fahrzeug gefahren wurde. Und kein Dienstwagen zur Verfügung stand.',
+            placement: 'top',
+            trigger: 'focus',
+          }}
+        >
+          Km Privatfahrzeug
         </MyInput>
         <div className="col-12">
           <MyCheckbox className="form-check form-switch bereitschaft" id="berZeit">

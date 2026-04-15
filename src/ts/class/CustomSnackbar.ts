@@ -276,8 +276,13 @@ export class SnackBar implements ISnackbar {
           }
         }
 
-        function applyIconTo(element: HTMLSpanElement): void {
+        function applyIconTo(statusElement: HTMLSpanElement): void {
           if (!_This._Options.icon) return;
+          statusElement.classList.add('CustomSnackbar__status--with-icon');
+          // Keep left padding and status strip width in sync to avoid overlap on narrow layouts.
+          const iconWidth = 'calc(var(--snackbar-icon-size) + (var(--snackbar-status-icon-padding) * 2))';
+          element.style.setProperty('--snackbar-status-width', iconWidth);
+
           const icon = document.createElement('span');
           icon.classList.add('CustomSnackbar__icon');
 
@@ -308,7 +313,7 @@ export class SnackBar implements ISnackbar {
               break;
           }
 
-          element.appendChild(icon);
+          statusElement.appendChild(icon);
         }
       }
 

@@ -5,6 +5,7 @@ import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../interfaces';
 import { getNebengeldDaten } from '../../Neben/utils';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat, Storage } from '../../utilities';
+import { scheduleAutoSave } from '../../utilities/autoSave';
 
 function applyDataToTable(selector: string, data: object[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);
@@ -31,6 +32,7 @@ export default function overwriteUserDaten(): void {
     document
       .querySelector<CustomHTMLTableElement>('#tableBZ')
       ?.instance.rows.setFilter(row => getMonatFromBZ(row as IDatenBZ) === Monat);
+    scheduleAutoSave('BZ');
     delete dataServer.BZ;
   }
   if (dataServer.BE) {
@@ -40,6 +42,7 @@ export default function overwriteUserDaten(): void {
     document
       .querySelector<CustomHTMLTableElement>('#tableBE')
       ?.instance.rows.setFilter(row => getMonatFromBE(row as IDatenBE) === Monat);
+    scheduleAutoSave('BE');
     delete dataServer.BE;
   }
   if (dataServer.EWT) {
@@ -49,6 +52,7 @@ export default function overwriteUserDaten(): void {
     document
       .querySelector<CustomHTMLTableElement>('#tableE')
       ?.instance.rows.setFilter(row => isEwtInMonat(row as IDatenEWT, Monat));
+    scheduleAutoSave('EWT');
     delete dataServer.EWT;
   }
   if (dataServer.N) {
@@ -58,6 +62,7 @@ export default function overwriteUserDaten(): void {
     document
       .querySelector<CustomHTMLTableElement>('#tableN')
       ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === Monat);
+    scheduleAutoSave('N');
     delete dataServer.N;
   }
   aktualisiereBerechnung();

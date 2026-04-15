@@ -7,6 +7,7 @@ import getBereitschaftsZeitraumDaten from './getBereitschaftsZeitraumDaten';
 import updateBereitschaftsDatum from './updateBereitschaftsDatum';
 import toggleBereitschaftsEigeneWerte from './toggleBereitschaftsEigeneWerte';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
+import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
 import persistBereitschaftsEinsatzTableData from './persistBereitschaftsEinsatzTableData';
 import persistBereitschaftsZeitraumTableData from './persistBereitschaftsZeitraumTableData';
 
@@ -20,6 +21,7 @@ export {
   updateBereitschaftsDatum,
   toggleBereitschaftsEigeneWerte,
   hideBereitschaftsNachtfelder,
+  isSameBereitschaftsEinsatz,
   persistBereitschaftsEinsatzTableData,
   persistBereitschaftsZeitraumTableData,
 };

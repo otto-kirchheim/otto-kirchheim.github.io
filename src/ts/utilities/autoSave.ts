@@ -9,7 +9,7 @@
 
 import { aktualisiereBerechnung } from '../Berechnung';
 import { createSnackBar } from '../class/CustomSnackbar';
-import type { CustomTable, CustomTableTypes, TableChanges } from '../class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../class/CustomTable';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -21,6 +21,7 @@ import type {
   TSaveStatus,
 } from '../interfaces';
 import {
+  type BulkErrorEntry,
   type BulkRequest,
   bereitschaftseinsatzApi,
   bereitschaftszeitraumApi,
@@ -38,7 +39,8 @@ import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } fr
 import Storage from './Storage';
 import type { TStorageData } from './Storage';
 import dayjs from './configDayjs';
-import { getMonatFromEWTBuchungstag } from './getMonatFromItem';
+import mergeVisibleResourceRows from './mergeVisibleResourceRows';
+import { v4 as uuidv4 } from 'uuid';
 
 // ─── Konfiguration ───────────────────────────────────────
 /** Mapping von TResourceKey auf Storage-Key */
@@ -74,6 +76,13 @@ interface ResourceState {
 }
 
 type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: string) => void;
+type ErrorSourceState = 'new' | 'modified' | 'deleted';
+
+interface RowErrorMatch {
+  row: Row<CustomTableTypes>;
+  error: BulkErrorEntry;
+  sourceState: ErrorSourceState;
+}
 
 // ─── State ───────────────────────────────────────────────
 
@@ -86,6 +95,11 @@ const resourceStates: Record<TResourceKey, ResourceState> = {
 };
 
 const statusListeners: StatusListener[] = [];
+const ERROR_OPERATION_STATE_MAP: Record<BulkErrorEntry['operation'], ErrorSourceState> = {
+  create: 'new',
+  update: 'modified',
+  delete: 'deleted',
+};
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
@@ -121,6 +135,10 @@ function stableSerialize(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
+function createClientRequestId(): string {
+  return uuidv4();
+}
+
 function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTableTypes): string {
   const source = row as Record<string, unknown>;
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
@@ -137,6 +155,49 @@ function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTa
   }
 
   return stableSerialize(normalized);
+}
+
+function buildCreatePayloadWithClientRequestId(
+  resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
+  createItems: CustomTableTypes[],
+): (CustomTableTypes & { clientRequestId: string })[] {
+  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+  const idsBySignature = new Map<string, string[]>();
+
+  for (const row of pendingNewRows) {
+    if (!row._clientRequestId) row._clientRequestId = createClientRequestId();
+    const signature = rowSignature(resource, row.cells);
+    const queue = idsBySignature.get(signature) ?? [];
+    queue.push(row._clientRequestId);
+    idsBySignature.set(signature, queue);
+  }
+
+  return createItems.map(item => {
+    const signature = rowSignature(resource, item);
+    const queue = idsBySignature.get(signature);
+    const clientRequestId = queue?.shift() ?? createClientRequestId();
+    return { ...item, clientRequestId };
+  });
+}
+
+function mapCreatedIdsByClientRequestId(
+  table: CustomTable<CustomTableTypes>,
+  createdReferences: { _id: string; clientRequestId: string }[],
+): Map<number, string> {
+  const createdIds = new Map<number, string>();
+  if (createdReferences.length === 0) return createdIds;
+
+  const idByClientRequestId = new Map(createdReferences.map(entry => [entry.clientRequestId, entry._id]));
+  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+
+  pendingNewRows.forEach((row, idx) => {
+    if (!row._clientRequestId) return;
+    const createdId = idByClientRequestId.get(row._clientRequestId);
+    if (createdId) createdIds.set(idx, createdId);
+  });
+
+  return createdIds;
 }
 
 function mapCreatedIdsByContent(
@@ -221,6 +282,64 @@ function applyServerRowsToTable(
 function findTable<T extends CustomTableTypes>(id: string): CustomTable<T> | null {
   const el = document.querySelector<CustomHTMLTableElement<T>>(`#${id}`);
   return el?.instance ?? null;
+}
+
+function collectRowErrorMatches(table: CustomTable<CustomTableTypes>, errors: BulkErrorEntry[]): RowErrorMatch[] {
+  const matches: RowErrorMatch[] = [];
+
+  for (const error of errors) {
+    let row: Row<CustomTableTypes> | undefined;
+
+    if (error.operation === 'create' && error.clientRequestId) {
+      row = table.rows.array.find(candidate => candidate._clientRequestId === error.clientRequestId);
+    }
+
+    if (!row && error.id) {
+      row = table.rows.array.find(candidate => candidate._id === error.id);
+    }
+
+    if (!row) continue;
+    matches.push({ row, error, sourceState: ERROR_OPERATION_STATE_MAP[error.operation] });
+  }
+
+  return matches;
+}
+
+function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void {
+  if (deletedIds.length === 0) return;
+
+  const deletedIdSet = new Set(deletedIds);
+
+  const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
+  let storageChanged = false;
+  const nextDataN = currentDataN.map(item => {
+    if (!item.ewtRef || !deletedIdSet.has(item.ewtRef)) return item;
+    storageChanged = true;
+    const { ewtRef: _removed, ...withoutRef } = item;
+    return withoutRef as IDatenN;
+  });
+  if (storageChanged) {
+    Storage.set('dataN', nextDataN);
+  }
+
+  const nebenTable = findTable<IDatenN>(TABLE_ID_MAP.N);
+  if (!nebenTable) return;
+
+  let tableChanged = false;
+  for (const row of nebenTable.rows.array) {
+    if (row._state === 'deleted') continue;
+    const ref = (row.cells as IDatenN).ewtRef;
+    if (!ref || !deletedIdSet.has(ref)) continue;
+
+    const { ewtRef: _removed, ...withoutRef } = row.cells as IDatenN;
+    row.cells = withoutRef as IDatenN;
+    if (row._state === 'unchanged') {
+      row._originalCells = { ...(withoutRef as IDatenN) };
+    }
+    tableChanged = true;
+  }
+
+  if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
 }
 
 // ─── Öffentliche API ─────────────────────────────────────
@@ -423,17 +542,28 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   const jahr = Storage.get<number>('Jahr', { check: true });
 
   try {
-    const result = await sendBulk(resource, changes, monat, jahr);
+    const result = await sendBulk(resource, table, changes, monat, jahr);
 
     // IDs aus der Response den neuen Zeilen zuweisen.
-    // Primär über Inhalts-Signaturen, mit sicherem Fallback auf verbleibende IDs.
-    const createdIds = mapCreatedIdsByContent(resource, table, result?.created ?? []);
+    // Primär über clientRequestId, mit Fallback auf Inhalts-Signaturen.
+    const createdIdsByClient = mapCreatedIdsByClientRequestId(table, result.createdReferences ?? []);
+    const createdIds =
+      createdIdsByClient.size > 0 ? createdIdsByClient : mapCreatedIdsByContent(resource, table, result?.created ?? []);
+    const rowErrorMatches = collectRowErrorMatches(table, result.errors);
+    const failedRows = new Set(rowErrorMatches.map(entry => entry.row));
 
-    if (includeDeletes) table.rows.commitChanges(createdIds);
-    else table.rows.commitAutoSave(createdIds);
+    if (includeDeletes) table.rows.commitChanges(createdIds, failedRows);
+    else table.rows.commitAutoSave(createdIds, failedRows);
 
     // Nach erfolgreichem Save serverseitig normalisierte Felder in die Tabelle zurückspiegeln.
     applyServerRowsToTable(resource, table, result);
+
+    // Fehlerhafte Einträge in der Tabelle markieren
+    const errorRows = markErrorRows(table, rowErrorMatches, result.errors);
+
+    if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
+      unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
+    }
 
     // localStorage aktualisieren
     updateLocalStorage(resource, table);
@@ -449,6 +579,11 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       const storageKey = RESOURCE_STORAGE_MAP[resource];
       const currentData = Storage.get(storageKey, { check: true });
       Storage.setWithTimestamp(storageKey, currentData, Date.parse(maxUpdatedAt));
+    }
+
+    // Zeige Fehler-Dialog wenn Fehler vorhanden
+    if (errorRows.length > 0) {
+      showErrorDialog(resource, errorRows);
     }
 
     setStatus(resource, 'saved');
@@ -506,6 +641,7 @@ async function saveSettingsNow(): Promise<void> {
  */
 async function sendBulk(
   resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
   changes: TableChanges<CustomTableTypes>,
   monat: number,
   jahr: number,
@@ -513,93 +649,228 @@ async function sendBulk(
   created: CustomTableTypes[];
   updated: CustomTableTypes[];
   deleted: string[];
-  errors: { operation: string; index: number; id?: string; message: string }[];
+  createdReferences?: { _id: string; clientRequestId: string }[];
+  errors: BulkErrorEntry[];
 }> {
-  const getMonth = (item: CustomTableTypes): number => {
+  type SavePeriod = { monat: number; jahr: number };
+
+  const getPeriod = (item: CustomTableTypes): SavePeriod => {
+    const fallback = { monat, jahr };
+
     switch (resource) {
-      case 'BZ':
-        return dayjs(String((item as IDatenBZ).beginB)).month() + 1;
-      case 'BE':
-        return dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY').month() + 1;
-      case 'EWT':
-        return getMonatFromEWTBuchungstag(item as IDatenEWT);
-      case 'N':
-        return dayjs((item as IDatenN).tagN, 'DD.MM.YYYY').month() + 1;
+      case 'BZ': {
+        const parsed = dayjs(String((item as IDatenBZ).beginB));
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'BE': {
+        const parsed = dayjs((item as IDatenBE).tagBE, 'DD.MM.YYYY', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'EWT': {
+        const parsed = dayjs((item as IDatenEWT).tagE, 'YYYY-MM-DD', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'N': {
+        const parsed = dayjs((item as IDatenN).tagN, 'DD.MM.YYYY', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
     }
   };
 
-  const createByMonth = new Map<number, CustomTableTypes[]>();
-  const updateByMonth = new Map<number, (CustomTableTypes & { _id: string })[]>();
+  const createItems = buildCreatePayloadWithClientRequestId(resource, table, changes.create);
 
-  for (const item of changes.create) {
-    const m = getMonth(item);
-    const arr = createByMonth.get(m) ?? [];
+  const createByPeriod = new Map<string, (CustomTableTypes & { clientRequestId: string })[]>();
+  const updateByPeriod = new Map<string, (CustomTableTypes & { _id: string })[]>();
+  const periods = new Map<string, SavePeriod>();
+
+  const toPeriodKey = (period: SavePeriod): string => `${period.jahr}-${period.monat}`;
+
+  for (const item of createItems) {
+    const period = getPeriod(item);
+    const key = toPeriodKey(period);
+    const arr = createByPeriod.get(key) ?? [];
     arr.push(item);
-    createByMonth.set(m, arr);
+    createByPeriod.set(key, arr);
+    periods.set(key, period);
   }
 
   for (const item of changes.update as (CustomTableTypes & { _id: string })[]) {
-    const m = getMonth(item);
-    const arr = updateByMonth.get(m) ?? [];
+    const period = getPeriod(item);
+    const key = toPeriodKey(period);
+    const arr = updateByPeriod.get(key) ?? [];
     arr.push(item);
-    updateByMonth.set(m, arr);
+    updateByPeriod.set(key, arr);
+    periods.set(key, period);
   }
 
-  const months = Array.from(new Set([...createByMonth.keys(), ...updateByMonth.keys()]));
+  const sortedPeriods = Array.from(periods.values()).sort((a, b) => {
+    if (a.jahr !== b.jahr) return a.jahr - b.jahr;
+    return a.monat - b.monat;
+  });
+
   const combined: {
     created: CustomTableTypes[];
     updated: CustomTableTypes[];
     deleted: string[];
-    errors: { operation: string; index: number; id?: string; message: string }[];
-  } = { created: [], updated: [], deleted: [], errors: [] };
+    createdReferences?: { _id: string; clientRequestId: string }[];
+    errors: BulkErrorEntry[];
+  } = { created: [], updated: [], deleted: [], createdReferences: [], errors: [] };
 
-  const callBulk = async (m: number, withDelete: boolean) => {
+  const callBulk = async (period: SavePeriod, withDelete: boolean) => {
+    const key = toPeriodKey(period);
     const bulk: BulkRequest = {
-      create: createByMonth.get(m) ?? [],
-      update: updateByMonth.get(m) ?? [],
+      create: createByPeriod.get(key) ?? [],
+      update: updateByPeriod.get(key) ?? [],
       delete: withDelete ? changes.delete : [],
     };
 
     switch (resource) {
       case 'BZ':
         return bereitschaftszeitraumApi.bulk(
-          bulk as { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
-          m,
-          jahr,
+          bulk as { create: (IDatenBZ & { clientRequestId: string })[]; update: IDatenBZ[]; delete: string[] },
+          period.monat,
+          period.jahr,
         );
       case 'BE':
         return bereitschaftseinsatzApi.bulk(
-          bulk as { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
-          m,
-          jahr,
+          bulk as { create: (IDatenBE & { clientRequestId: string })[]; update: IDatenBE[]; delete: string[] },
+          period.monat,
+          period.jahr,
         );
       case 'EWT':
-        return ewtApi.bulk(bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] }, m, jahr);
+        return ewtApi.bulk(
+          bulk as { create: (IDatenEWT & { clientRequestId: string })[]; update: IDatenEWT[]; delete: string[] },
+          period.monat,
+          period.jahr,
+        );
       case 'N':
-        return nebengeldApi.bulk(bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] }, m, jahr);
+        return nebengeldApi.bulk(
+          bulk as { create: (IDatenN & { clientRequestId: string })[]; update: IDatenN[]; delete: string[] },
+          period.monat,
+          period.jahr,
+        );
     }
   };
 
-  if (months.length === 0) {
-    const result = await callBulk(monat, true);
+  if (sortedPeriods.length === 0) {
+    const result = await callBulk({ monat, jahr }, true);
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
     combined.deleted.push(...result.deleted);
+    if (result.createdReferences) combined.createdReferences?.push(...result.createdReferences);
     combined.errors.push(...result.errors);
     return combined;
   }
 
   let deleteSent = false;
-  for (const m of months) {
-    const result = await callBulk(m, !deleteSent);
+  for (const period of sortedPeriods) {
+    const result = await callBulk(period, !deleteSent);
     deleteSent = deleteSent || changes.delete.length > 0;
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
     combined.deleted.push(...result.deleted);
+    if (result.createdReferences) combined.createdReferences?.push(...result.createdReferences);
     combined.errors.push(...result.errors);
   }
 
   return combined;
+}
+
+/**
+ * Markiert fehlerhafte Rows in der Tabelle mit _state = 'error'.
+ * Gibt Array der Fehler zurück für Dialog-Anzeige.
+ */
+function markErrorRows(
+  table: CustomTable<CustomTableTypes>,
+  rowErrorMatches: RowErrorMatch[],
+  errors: BulkErrorEntry[],
+): BulkErrorEntry[] {
+  if (errors.length === 0) return [];
+
+  for (const { row, error, sourceState } of rowErrorMatches) {
+    row._state = 'error';
+    row._errorState = sourceState;
+    row._errorMessage = error.message;
+  }
+
+  // Tabelle neu zeichnen
+  if (typeof table.drawRows === 'function') {
+    table.drawRows();
+  }
+
+  return errors;
+}
+
+/**
+ * Zeigt einen Dialog mit allen Fehler-Einträgen.
+ */
+function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, errors: BulkErrorEntry[]): void {
+  const errorList = errors
+    .map((err, idx) => {
+      const reference =
+        err.operation === 'create'
+          ? err.clientRequestId
+            ? ` [clientRequestId: ${err.clientRequestId}]`
+            : ''
+          : err.id
+            ? ` [_id: ${err.id}]`
+            : '';
+      return `${idx + 1}. ${err.operation}${reference}: ${err.message}`;
+    })
+    .join('\n');
+
+  // Erstelle Dialog-Modal
+  const modal = document.createElement('div');
+  modal.className = 'modal fade';
+  modal.innerHTML = `
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Fehler beim Speichern</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p><strong>${errors.length} Fehler gefunden:</strong></p>
+          <pre class="error-list" style="overflow-y: auto; max-height: 300px; border: 1px solid #ddd; padding: 10px; background: #f5f5f5;">${escapeHtml(errorList)}</pre>
+          <div class="alert alert-info mt-3 mb-0">
+            <small>Die fehlerhaften Zeilen sind in der Tabelle gekennzeichnet und können erneut gespeichert werden.</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  const bootstrapApi = (window as { bootstrap?: { Modal?: new (element: Element) => { show: () => void } } }).bootstrap;
+  if (!bootstrapApi?.Modal) {
+    modal.remove();
+    return;
+  }
+
+  const bsModal = new bootstrapApi.Modal(modal);
+  bsModal.show();
+
+  // Cleanup nach Schließen
+  modal.addEventListener('hidden.bs.modal', () => {
+    modal.remove();
+  });
+}
+
+/**
+ * Hilfsfunktion zum Escapen von HTML-Sonderzeichen.
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 /**
@@ -614,11 +885,8 @@ function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: 
   };
 
   const storageKey = storageKeyMap[resource] as TStorageData;
-
-  // Aktive (nicht gelöschte) Zeilen der gesamten Tabelle im localStorage speichern.
-  const activeRows = table.rows.array.filter(row => row._state !== 'deleted').map(row => row.cells);
-  void resource;
-  Storage.set(storageKey, activeRows);
+  const mergedRows = mergeVisibleResourceRows(resource, table);
+  Storage.set(storageKey, mergedRows);
 }
 
 // ─── Online-Retry ────────────────────────────────────────

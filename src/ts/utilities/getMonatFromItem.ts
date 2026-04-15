@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TEwtFilter } from '../interfaces';
 import dayjs from './configDayjs';
 import Storage from './Storage';
 
@@ -24,11 +24,7 @@ export function getMonatFromEWTBuchungstag(item: IDatenEWT): number {
   return dayjs(basis).month() + 1;
 }
 
-export function isEwtInMonat(
-  item: IDatenEWT,
-  monat: number,
-  mode: 'starttag' | 'buchungstag' | 'beide' = 'beide',
-): boolean {
+export function isEwtInMonat(item: IDatenEWT, monat: number, mode: TEwtFilter = 'beide'): boolean {
   if (mode === 'starttag') return getMonatFromEWT(item) === monat;
   if (mode === 'buchungstag') return getMonatFromEWTBuchungstag(item) === monat;
   return getMonatFromEWT(item) === monat || getMonatFromEWTBuchungstag(item) === monat;

@@ -1,11 +1,12 @@
 ---
-name: frontend-architektur
-description: "Use when: frontend topic architektur"
+name: architektur
+description: 'Use when: frontend topic architektur'
 ---
 
 # architektur
 
 Dieses Skill kapselt den Inhalt aus der Legacy-Datei:
+
 - ../../architektur.md
 
 ## Hinweise

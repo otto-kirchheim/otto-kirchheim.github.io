@@ -16,9 +16,9 @@ const createTagElement = (row: Row<IDatenN>) => {
       divClass="mb-2 col-12 text-center"
       labelClass="pe-3 align-middle col-form-label text-wrap fw-bold"
       spanClass="align-middle my-auto"
-      title={`${column.title}:`}
-      id="tagN"
-      text={column.parser(row.cells['tagN'])}
+      title={`${column.longTitle}:`}
+      id={column.name}
+      text={column.parser(row.cells[column.name])}
     />
   );
 };
@@ -55,11 +55,7 @@ const createShowElement2 = (
   return (
     <div className={classNameDiv}>
       <span className={column[1]} id={column1.name}>
-        {`${column1.title} x `}
-      </span>
-
-      <span className={column[1]} id={column1.name}>
-        {column1.parser(row.cells[column1.name])}
+        {`${column1.longTitle} x ${column1.parser(row.cells[column1.name])}`}
       </span>
     </div>
   );

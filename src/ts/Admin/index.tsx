@@ -3,7 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { AdminUserList } from './components/AdminUserList';
 import { AdminVorgabenEditor } from './components/AdminVorgabenEditor';
 import { AdminProfileTemplatesManager } from './components/AdminProfileTemplatesManager';
-import { getServerUrl } from '../utilities/FetchRetry';
+import { ACT_AS_STATUS_EVENT, getActAsState, getServerUrl } from '../utilities';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {
@@ -13,10 +13,11 @@ type AdminCapabilities = {
   canEditOwnTeamTemplatesOnly: boolean;
 };
 
-export function AdminTab() {
+export default function AdminTab() {
   const [adminJsUrl, setAdminJsUrl] = useState<string>('/admin');
   const [capabilities, setCapabilities] = useState<AdminCapabilities | null>(null);
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
+  const [actAsState, setActAsState] = useState(getActAsState());
 
   useEffect(() => {
     (async () => {
@@ -37,6 +38,19 @@ export function AdminTab() {
         setCapabilitiesLoading(false);
       }
     })();
+  }, []);
+
+  useEffect(() => {
+    const syncActAsState = () => setActAsState(getActAsState());
+
+    syncActAsState();
+    window.addEventListener(ACT_AS_STATUS_EVENT, syncActAsState);
+    window.addEventListener('storage', syncActAsState);
+
+    return () => {
+      window.removeEventListener(ACT_AS_STATUS_EVENT, syncActAsState);
+      window.removeEventListener('storage', syncActAsState);
+    };
   }, []);
 
   const isTeamAdminOrHigher =
@@ -133,6 +147,17 @@ export function AdminTab() {
           aria-labelledby="admin-tab-users"
           tabIndex={0}
         >
+          {!actAsState.active && (
+            <div class="alert alert-secondary border shadow-sm mb-3" role="status" aria-live="polite">
+              <div class="d-flex align-items-start gap-2">
+                <span class="material-icons-round mt-1">home</span>
+                <div>
+                  <div class="fw-semibold">Eigene Daten aktiv</div>
+                  <div class="small">Du arbeitest gerade mit deinen eigenen Daten.</div>
+                </div>
+              </div>
+            </div>
+          )}
           <AdminUserList />
         </div>
 
@@ -164,8 +189,6 @@ export function AdminTab() {
   );
 }
 
-export default AdminTab;
-
 export function mountAdminTab(remountKey = 'default'): void {
   const adminRoot = document.querySelector<HTMLDivElement>('#admin-root');
   if (!adminRoot) return;
@@ -179,15 +202,3 @@ export function unmountAdminTab(): void {
 
   render(null, adminRoot);
 }
-
-/*
- * Ergänze in deiner globalen SCSS/CSS:
- *
- * .bg-darkmode-override {
- *   @media (prefers-color-scheme: dark) {
- *     background-color: #23272b !important;
- *     color: #f8f9fa !important;
- *     border-color: #444950 !important;
- *   }
- * }
- */
