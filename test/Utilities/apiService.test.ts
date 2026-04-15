@@ -255,7 +255,12 @@ describe('apiService', () => {
 
   describe('bulk / smartSync', () => {
     it('einzelnes Create nutzt Einzel-Endpoint (POST)', async () => {
-      const newBz: IDatenBZ = { beginB: '2024-04-12', endeB: '2024-04-19', pauseB: 0 };
+      const newBz: IDatenBZ & { clientRequestId: string } = {
+        beginB: '2024-04-12',
+        endeB: '2024-04-19',
+        pauseB: 0,
+        clientRequestId: '123e4567-e89b-42d3-a456-426614174001',
+      };
       mockApiSuccess({ _id: 'new1', Monat: 4, Jahr: 2024, Beginn: '2024-04-12', Ende: '2024-04-19' });
 
       const result = await bereitschaftszeitraumApi.bulk({ create: [newBz], update: [], delete: [] }, 4, 2024);
@@ -285,7 +290,12 @@ describe('apiService', () => {
     });
 
     it('mehrere Operationen nutzen Bulk-Endpoint', async () => {
-      const newBz: IDatenBZ = { beginB: '2024-04-12', endeB: '2024-04-19', pauseB: 0 };
+      const newBz: IDatenBZ & { clientRequestId: string } = {
+        beginB: '2024-04-12',
+        endeB: '2024-04-19',
+        pauseB: 0,
+        clientRequestId: '123e4567-e89b-42d3-a456-426614174002',
+      };
       const updatedBz: IDatenBZ = { _id: 'bz1', beginB: '2024-04-14', endeB: '2024-04-20', pauseB: 15 };
       mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
 
@@ -298,7 +308,7 @@ describe('apiService', () => {
     });
 
     it('ewtApi.bulk mit einzelnem Create', async () => {
-      const newEwt: IDatenEWT = {
+      const newEwt: IDatenEWT & { clientRequestId: string } = {
         tagE: '2024-04-10',
         eOrtE: 'Frankfurt',
         schichtE: 'Tag',
@@ -311,6 +321,7 @@ describe('apiService', () => {
         an1E: '',
         anWE: '',
         berechnen: true,
+        clientRequestId: '123e4567-e89b-42d3-a456-426614174003',
       };
       mockApiSuccess({ _id: 'ewt-new', Monat: 4, Jahr: 2024, Tag: '2024-04-10', Schicht: 'Tag' });
       const result = await ewtApi.bulk({ create: [newEwt], update: [], delete: [] }, 4, 2024);

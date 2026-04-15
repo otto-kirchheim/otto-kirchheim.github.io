@@ -115,12 +115,13 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const handleEwtChange = (evt: Event): void => {
     const select = evt.target as HTMLSelectElement;
     const selectedId = select.value;
-    if (!selectedId) return;
-    const entry = ewtMap.get(selectedId);
-    if (!entry) return;
     const currentForm = ref.current;
     if (!currentForm) return;
     const tagInput = currentForm.querySelector<HTMLInputElement>('#tagN');
+    if (tagInput) tagInput.disabled = Boolean(selectedId);
+    if (!selectedId) return;
+    const entry = ewtMap.get(selectedId);
+    if (!entry) return;
     const beginInput = currentForm.querySelector<HTMLInputElement>('#beginN');
     const endeInput = currentForm.querySelector<HTMLInputElement>('#endeN');
     if (tagInput) tagInput.value = dayjs(entry.tagE).format('YYYY-MM-DD');
@@ -171,6 +172,10 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
+
+  const initialEwtRef = form.querySelector<HTMLSelectElement>('#ewtRefSelect')?.value;
+  const tagInput = form.querySelector<HTMLInputElement>('#tagN');
+  if (tagInput) tagInput.disabled = Boolean(initialEwtRef);
 
   modal.row = row;
 

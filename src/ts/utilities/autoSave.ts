@@ -9,7 +9,7 @@
 
 import { aktualisiereBerechnung } from '../Berechnung';
 import { createSnackBar } from '../class/CustomSnackbar';
-import type { CustomTable, CustomTableTypes, TableChanges } from '../class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../class/CustomTable';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -21,6 +21,7 @@ import type {
   TSaveStatus,
 } from '../interfaces';
 import {
+  type BulkErrorEntry,
   type BulkRequest,
   bereitschaftseinsatzApi,
   bereitschaftszeitraumApi,
@@ -39,6 +40,7 @@ import Storage from './Storage';
 import type { TStorageData } from './Storage';
 import dayjs from './configDayjs';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';
+import { v4 as uuidv4 } from 'uuid';
 
 // ─── Konfiguration ───────────────────────────────────────
 /** Mapping von TResourceKey auf Storage-Key */
@@ -74,6 +76,13 @@ interface ResourceState {
 }
 
 type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: string) => void;
+type ErrorSourceState = 'new' | 'modified' | 'deleted';
+
+interface RowErrorMatch {
+  row: Row<CustomTableTypes>;
+  error: BulkErrorEntry;
+  sourceState: ErrorSourceState;
+}
 
 // ─── State ───────────────────────────────────────────────
 
@@ -86,6 +95,11 @@ const resourceStates: Record<TResourceKey, ResourceState> = {
 };
 
 const statusListeners: StatusListener[] = [];
+const ERROR_OPERATION_STATE_MAP: Record<BulkErrorEntry['operation'], ErrorSourceState> = {
+  create: 'new',
+  update: 'modified',
+  delete: 'deleted',
+};
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
@@ -121,6 +135,10 @@ function stableSerialize(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
+function createClientRequestId(): string {
+  return uuidv4();
+}
+
 function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTableTypes): string {
   const source = row as Record<string, unknown>;
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
@@ -137,6 +155,49 @@ function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTa
   }
 
   return stableSerialize(normalized);
+}
+
+function buildCreatePayloadWithClientRequestId(
+  resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
+  createItems: CustomTableTypes[],
+): (CustomTableTypes & { clientRequestId: string })[] {
+  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+  const idsBySignature = new Map<string, string[]>();
+
+  for (const row of pendingNewRows) {
+    if (!row._clientRequestId) row._clientRequestId = createClientRequestId();
+    const signature = rowSignature(resource, row.cells);
+    const queue = idsBySignature.get(signature) ?? [];
+    queue.push(row._clientRequestId);
+    idsBySignature.set(signature, queue);
+  }
+
+  return createItems.map(item => {
+    const signature = rowSignature(resource, item);
+    const queue = idsBySignature.get(signature);
+    const clientRequestId = queue?.shift() ?? createClientRequestId();
+    return { ...item, clientRequestId };
+  });
+}
+
+function mapCreatedIdsByClientRequestId(
+  table: CustomTable<CustomTableTypes>,
+  createdReferences: { _id: string; clientRequestId: string }[],
+): Map<number, string> {
+  const createdIds = new Map<number, string>();
+  if (createdReferences.length === 0) return createdIds;
+
+  const idByClientRequestId = new Map(createdReferences.map(entry => [entry.clientRequestId, entry._id]));
+  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+
+  pendingNewRows.forEach((row, idx) => {
+    if (!row._clientRequestId) return;
+    const createdId = idByClientRequestId.get(row._clientRequestId);
+    if (createdId) createdIds.set(idx, createdId);
+  });
+
+  return createdIds;
 }
 
 function mapCreatedIdsByContent(
@@ -221,6 +282,27 @@ function applyServerRowsToTable(
 function findTable<T extends CustomTableTypes>(id: string): CustomTable<T> | null {
   const el = document.querySelector<CustomHTMLTableElement<T>>(`#${id}`);
   return el?.instance ?? null;
+}
+
+function collectRowErrorMatches(table: CustomTable<CustomTableTypes>, errors: BulkErrorEntry[]): RowErrorMatch[] {
+  const matches: RowErrorMatch[] = [];
+
+  for (const error of errors) {
+    let row: Row<CustomTableTypes> | undefined;
+
+    if (error.operation === 'create' && error.clientRequestId) {
+      row = table.rows.array.find(candidate => candidate._clientRequestId === error.clientRequestId);
+    }
+
+    if (!row && error.id) {
+      row = table.rows.array.find(candidate => candidate._id === error.id);
+    }
+
+    if (!row) continue;
+    matches.push({ row, error, sourceState: ERROR_OPERATION_STATE_MAP[error.operation] });
+  }
+
+  return matches;
 }
 
 function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void {
@@ -460,20 +542,24 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   const jahr = Storage.get<number>('Jahr', { check: true });
 
   try {
-    const result = await sendBulk(resource, changes, monat, jahr);
+    const result = await sendBulk(resource, table, changes, monat, jahr);
 
     // IDs aus der Response den neuen Zeilen zuweisen.
-    // Primär über Inhalts-Signaturen, mit sicherem Fallback auf verbleibende IDs.
-    const createdIds = mapCreatedIdsByContent(resource, table, result?.created ?? []);
+    // Primär über clientRequestId, mit Fallback auf Inhalts-Signaturen.
+    const createdIdsByClient = mapCreatedIdsByClientRequestId(table, result.createdReferences ?? []);
+    const createdIds =
+      createdIdsByClient.size > 0 ? createdIdsByClient : mapCreatedIdsByContent(resource, table, result?.created ?? []);
+    const rowErrorMatches = collectRowErrorMatches(table, result.errors);
+    const failedRows = new Set(rowErrorMatches.map(entry => entry.row));
 
-    if (includeDeletes) table.rows.commitChanges(createdIds);
-    else table.rows.commitAutoSave(createdIds);
+    if (includeDeletes) table.rows.commitChanges(createdIds, failedRows);
+    else table.rows.commitAutoSave(createdIds, failedRows);
 
     // Nach erfolgreichem Save serverseitig normalisierte Felder in die Tabelle zurückspiegeln.
     applyServerRowsToTable(resource, table, result);
 
     // Fehlerhafte Einträge in der Tabelle markieren
-    const errorRows = markErrorRows(resource, table, result.errors);
+    const errorRows = markErrorRows(table, rowErrorMatches, result.errors);
 
     if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
       unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
@@ -555,6 +641,7 @@ async function saveSettingsNow(): Promise<void> {
  */
 async function sendBulk(
   resource: Exclude<TResourceKey, 'settings'>,
+  table: CustomTable<CustomTableTypes>,
   changes: TableChanges<CustomTableTypes>,
   monat: number,
   jahr: number,
@@ -562,7 +649,8 @@ async function sendBulk(
   created: CustomTableTypes[];
   updated: CustomTableTypes[];
   deleted: string[];
-  errors: { operation: string; index: number; id?: string; message: string }[];
+  createdReferences?: { _id: string; clientRequestId: string }[];
+  errors: BulkErrorEntry[];
 }> {
   type SavePeriod = { monat: number; jahr: number };
 
@@ -589,13 +677,15 @@ async function sendBulk(
     }
   };
 
-  const createByPeriod = new Map<string, CustomTableTypes[]>();
+  const createItems = buildCreatePayloadWithClientRequestId(resource, table, changes.create);
+
+  const createByPeriod = new Map<string, (CustomTableTypes & { clientRequestId: string })[]>();
   const updateByPeriod = new Map<string, (CustomTableTypes & { _id: string })[]>();
   const periods = new Map<string, SavePeriod>();
 
   const toPeriodKey = (period: SavePeriod): string => `${period.jahr}-${period.monat}`;
 
-  for (const item of changes.create) {
+  for (const item of createItems) {
     const period = getPeriod(item);
     const key = toPeriodKey(period);
     const arr = createByPeriod.get(key) ?? [];
@@ -622,8 +712,9 @@ async function sendBulk(
     created: CustomTableTypes[];
     updated: CustomTableTypes[];
     deleted: string[];
-    errors: { operation: string; index: number; id?: string; message: string }[];
-  } = { created: [], updated: [], deleted: [], errors: [] };
+    createdReferences?: { _id: string; clientRequestId: string }[];
+    errors: BulkErrorEntry[];
+  } = { created: [], updated: [], deleted: [], createdReferences: [], errors: [] };
 
   const callBulk = async (period: SavePeriod, withDelete: boolean) => {
     const key = toPeriodKey(period);
@@ -636,25 +727,25 @@ async function sendBulk(
     switch (resource) {
       case 'BZ':
         return bereitschaftszeitraumApi.bulk(
-          bulk as { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
+          bulk as { create: (IDatenBZ & { clientRequestId: string })[]; update: IDatenBZ[]; delete: string[] },
           period.monat,
           period.jahr,
         );
       case 'BE':
         return bereitschaftseinsatzApi.bulk(
-          bulk as { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
+          bulk as { create: (IDatenBE & { clientRequestId: string })[]; update: IDatenBE[]; delete: string[] },
           period.monat,
           period.jahr,
         );
       case 'EWT':
         return ewtApi.bulk(
-          bulk as { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] },
+          bulk as { create: (IDatenEWT & { clientRequestId: string })[]; update: IDatenEWT[]; delete: string[] },
           period.monat,
           period.jahr,
         );
       case 'N':
         return nebengeldApi.bulk(
-          bulk as { create: IDatenN[]; update: IDatenN[]; delete: string[] },
+          bulk as { create: (IDatenN & { clientRequestId: string })[]; update: IDatenN[]; delete: string[] },
           period.monat,
           period.jahr,
         );
@@ -666,6 +757,7 @@ async function sendBulk(
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
     combined.deleted.push(...result.deleted);
+    if (result.createdReferences) combined.createdReferences?.push(...result.createdReferences);
     combined.errors.push(...result.errors);
     return combined;
   }
@@ -677,6 +769,7 @@ async function sendBulk(
     combined.created.push(...result.created);
     combined.updated.push(...result.updated);
     combined.deleted.push(...result.deleted);
+    if (result.createdReferences) combined.createdReferences?.push(...result.createdReferences);
     combined.errors.push(...result.errors);
   }
 
@@ -688,32 +781,16 @@ async function sendBulk(
  * Gibt Array der Fehler zurück für Dialog-Anzeige.
  */
 function markErrorRows(
-  _resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
-  errors: { operation: string; index: number; id?: string; message: string }[],
-): { operation: string; index: number; id?: string; message: string }[] {
+  rowErrorMatches: RowErrorMatch[],
+  errors: BulkErrorEntry[],
+): BulkErrorEntry[] {
   if (errors.length === 0) return [];
 
-  for (const error of errors) {
-    let row: (typeof table.rows.array)[0] | undefined;
-
-    // Versuche Zeile via ID zu finden
-    if (error.id) {
-      row = table.rows.array.find(r => r._id === error.id);
-    }
-
-    // Fallback: via Index (für neue Zeilen ohne _id)
-    if (!row && error.index >= 0) {
-      row = table.rows.array[error.index];
-    }
-
-    if (row) {
-      // Markiere Zeile als Error-State
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (row as any)._state = 'error';
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (row as any)._errorMessage = error.message;
-    }
+  for (const { row, error, sourceState } of rowErrorMatches) {
+    row._state = 'error';
+    row._errorState = sourceState;
+    row._errorMessage = error.message;
   }
 
   // Tabelle neu zeichnen
@@ -727,14 +804,18 @@ function markErrorRows(
 /**
  * Zeigt einen Dialog mit allen Fehler-Einträgen.
  */
-function showErrorDialog(
-  _resource: Exclude<TResourceKey, 'settings'>,
-  errors: { operation: string; index: number; id?: string; message: string }[],
-): void {
+function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, errors: BulkErrorEntry[]): void {
   const errorList = errors
     .map((err, idx) => {
-      const id = err.id ? ` [ID: ${err.id}]` : '';
-      return `${idx + 1}. ${err.operation}${id}: ${err.message}`;
+      const reference =
+        err.operation === 'create'
+          ? err.clientRequestId
+            ? ` [clientRequestId: ${err.clientRequestId}]`
+            : ''
+          : err.id
+            ? ` [_id: ${err.id}]`
+            : '';
+      return `${idx + 1}. ${err.operation}${reference}: ${err.message}`;
     })
     .join('\n');
 
@@ -763,8 +844,13 @@ function showErrorDialog(
   `;
 
   document.body.appendChild(modal);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bsModal = new ((window as any).bootstrap.Modal(modal))();
+  const bootstrapApi = (window as { bootstrap?: { Modal?: new (element: Element) => { show: () => void } } }).bootstrap;
+  if (!bootstrapApi?.Modal) {
+    modal.remove();
+    return;
+  }
+
+  const bsModal = new bootstrapApi.Modal(modal);
   bsModal.show();
 
   // Cleanup nach Schließen

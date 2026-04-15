@@ -67,6 +67,9 @@
 }
 
 .CustomSnackbar {
+  --snackbar-status-width: 12px;
+  --snackbar-icon-size: 22px;
+  --snackbar-status-icon-padding: 7px;
   display: inline-flex;
   box-sizing: border-box;
   border-radius: 3px;
@@ -77,6 +80,7 @@
   box-shadow: 0 0 4px 0 black;
   margin: 0 10px;
   flex-grow: 1;
+  align-items: stretch;
 }
 
 .CustomSnackbar__close,
@@ -95,18 +99,20 @@
 }
 
 .CustomSnackbar__status {
-  display: none;
-  min-width: 15px;
-  margin-right: 5px;
+  display: flex;
+  min-width: var(--snackbar-status-width);
+  width: var(--snackbar-status-width);
+  margin-right: 0;
   border-radius: 3px 0 0 3px;
   background-color: transparent;
+  flex: 0 0 var(--snackbar-status-width);
+  align-self: stretch;
 }
 
 .CustomSnackbar__status.CustomSnackbar--success,
 .CustomSnackbar__status.CustomSnackbar--warning,
 .CustomSnackbar__status.CustomSnackbar--danger,
 .CustomSnackbar__status.CustomSnackbar--info {
-  display: flex;
   justify-content: center;
   align-items: center;
 }
@@ -132,12 +138,19 @@
   border: 2px solid white;
   font-weight: bold;
   border-radius: 20px;
-  height: 25px;
-  width: 25px;
-  margin: 0 5px;
+  height: var(--snackbar-icon-size);
+  width: var(--snackbar-icon-size);
+  margin: 0;
   font-family: monospace;
   justify-content: center;
   align-items: center;
+  flex: 0 0 auto;
+}
+
+.CustomSnackbar__status--with-icon {
+  padding-left: var(--snackbar-status-icon-padding);
+  padding-right: var(--snackbar-status-icon-padding);
+  justify-content: center;
 }
 
 .CustomSnackbar__action {
@@ -166,4 +179,58 @@
 
 .CustomSnackbar__close:hover {
   background-color: #444;
+}
+
+@media (max-width: 576px) {
+  .CustomSnackbar-container {
+    left: 0;
+    right: 0;
+    align-items: stretch;
+    padding: 0 8px;
+  }
+
+  .CustomSnackbar__wrapper {
+    width: 100%;
+  }
+
+  .CustomSnackbar {
+    position: relative;
+    width: 100%;
+    margin: 0;
+    display: block;
+    padding-left: var(--snackbar-status-width);
+  }
+
+  .CustomSnackbar__status {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .CustomSnackbar__message-wrapper {
+    padding: 12px 14px;
+  }
+
+  .CustomSnackbar__action,
+  .CustomSnackbar__close {
+    min-height: 42px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .CustomSnackbar__action {
+    flex: none;
+    max-width: none;
+    min-width: 0;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+
+  .CustomSnackbar__close {
+    padding: 0 14px;
+  }
 }

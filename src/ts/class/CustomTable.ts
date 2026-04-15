@@ -6,12 +6,20 @@
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { CustomHTMLTableElement } from '../interfaces/index.js';
+import { v4 as uuidv4 } from 'uuid';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type CustomTableTypes = Record<string, any>;
 
 /** Status einer Tabellenzeile für Change-Tracking */
-export type RowState = 'unchanged' | 'new' | 'modified' | 'deleted';
+type DirtyRowState = 'new' | 'modified' | 'deleted';
+type NonErrorRowState = 'unchanged' | DirtyRowState;
+
+export type RowState = NonErrorRowState | 'error';
+
+function getEffectiveRowState(row: { _state: RowState; _errorState?: DirtyRowState }): NonErrorRowState {
+  return row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
+}
 
 /** Änderungen einer Tabelle für Bulk-Operationen */
 export interface TableChanges<T extends CustomTableTypes> {
@@ -126,6 +134,10 @@ interface CustomHTMLTableRowElement<T extends CustomTableTypes> extends HTMLTabl
 type Breakpoints = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
 type Directions = 'ASC' | 'DESC';
 
+function createClientRequestId(): string {
+  return uuidv4();
+}
+
 export class Column<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
   public name: string;
@@ -184,8 +196,20 @@ export class Row<T extends CustomTableTypes> {
   /** Aktueller Änderungsstatus der Zeile */
   public _state: RowState = 'unchanged';
 
+  /** Ursprünglicher Save-State einer Fehlerzeile für Retry-Operationen. */
+  public _errorState?: DirtyRowState;
+
+  /** Optionale Fehlermeldung für UI-Markierung und Tooltip. */
+  public _errorMessage: string | null = null;
+
   /** Originalzustand der Zellen (für Diff-Erkennung bei 'modified') */
   public _originalCells?: T;
+
+  /**
+   * Frontend-seitige stabile Referenz für Bulk-Create-Zuordnung.
+   * Wird nur lokal verwendet und niemals persistiert.
+   */
+  public _clientRequestId?: string;
 
   /** Vorheriger State vor dem Löschen (für Undo) */
   private _stateBeforeDelete?: RowState;
@@ -201,6 +225,14 @@ export class Row<T extends CustomTableTypes> {
       this._id = row._id;
     }
 
+    if ('clientRequestId' in row && typeof row.clientRequestId === 'string') {
+      this._clientRequestId = row.clientRequestId;
+    }
+
+    if (state === 'new' && !this._clientRequestId) {
+      this._clientRequestId = createClientRequestId();
+    }
+
     // Original speichern wenn vom Server geladen
     if (state === 'unchanged') {
       this._originalCells = { ...row };
@@ -209,12 +241,17 @@ export class Row<T extends CustomTableTypes> {
 
   /** Ist diese Zeile zum Löschen vorgemerkt? */
   get isDeleted(): boolean {
-    return this._state === 'deleted';
+    return getEffectiveRowState(this) === 'deleted';
+  }
+
+  /** Ist diese Zeile aktuell im Fehlerzustand? */
+  get isError(): boolean {
+    return this._state === 'error';
   }
 
   /** Hat diese Zeile ungespeicherte Änderungen? */
   get isDirty(): boolean {
-    return this._state !== 'unchanged';
+    return getEffectiveRowState(this) !== 'unchanged';
   }
 
   /**
@@ -222,13 +259,16 @@ export class Row<T extends CustomTableTypes> {
    * Durchgestrichen + ausgegraut im UI.
    */
   deleteRow(): void {
-    if (this._state === 'new') {
+    const effectiveState = getEffectiveRowState(this);
+    if (effectiveState === 'new') {
       // Neue (noch nicht gespeicherte) Zeilen können direkt entfernt werden
       this.CustomTable.rows.array = this.CustomTable.rows.array.filter(row => row !== this);
     } else {
       // Existierende Zeilen: Soft-Delete
-      this._stateBeforeDelete = this._state;
+      this._stateBeforeDelete = effectiveState;
       this._state = 'deleted';
+      this._errorState = undefined;
+      this._errorMessage = null;
     }
     this.CustomTable.drawRows();
     this.CustomTable._notifyChange();
@@ -238,9 +278,11 @@ export class Row<T extends CustomTableTypes> {
    * Undo: Löschen rückgängig machen.
    */
   undoDelete(): void {
-    if (this._state !== 'deleted') return;
+    if (getEffectiveRowState(this) !== 'deleted') return;
     this._state = this._stateBeforeDelete ?? 'unchanged';
     this._stateBeforeDelete = undefined;
+    this._errorState = undefined;
+    this._errorMessage = null;
     this.CustomTable.drawRows();
     this.CustomTable._notifyChange();
   }
@@ -256,7 +298,11 @@ export class Row<T extends CustomTableTypes> {
     }
     this.cells = value;
 
-    if (this._state === 'unchanged') {
+    if (this._state === 'error') {
+      this._state = this._errorState === 'new' ? 'new' : 'modified';
+      this._errorState = undefined;
+      this._errorMessage = null;
+    } else if (this._state === 'unchanged') {
       this._state = 'modified';
     }
     // 'new' bleibt 'new' (noch nicht gespeichert)
@@ -278,8 +324,8 @@ export class Rows<T extends CustomTableTypes> {
   }
 
   /** Neue Zeile hinzufügen (State: 'new') */
-  add(value: T): void {
-    this.array.push(new Row(this.CustomTable, value, 'new'));
+  add(value: T, state: RowState = 'new'): void {
+    this.array.push(new Row(this.CustomTable, value, state));
     this.CustomTable.drawRows();
     this.CustomTable._notifyChange();
   }
@@ -336,7 +382,7 @@ export class Rows<T extends CustomTableTypes> {
     const del: string[] = [];
 
     for (const row of this.array) {
-      switch (row._state) {
+      switch (getEffectiveRowState(row)) {
         case 'new':
           create.push({ ...row.cells });
           break;
@@ -354,7 +400,10 @@ export class Rows<T extends CustomTableTypes> {
 
   /** Gibt es ungespeicherte Änderungen (ohne Löschungen)? */
   get hasAutoSaveChanges(): boolean {
-    return this.array.some(row => row._state === 'new' || row._state === 'modified');
+    return this.array.some(row => {
+      const effectiveState = getEffectiveRowState(row);
+      return effectiveState === 'new' || effectiveState === 'modified';
+    });
   }
 
   /** Gibt es irgendwelche ungespeicherte Änderungen (inkl. Löschungen)? */
@@ -364,7 +413,7 @@ export class Rows<T extends CustomTableTypes> {
 
   /** Gibt es vorgemerkte Löschungen? */
   get hasPendingDeletes(): boolean {
-    return this.array.some(row => row._state === 'deleted');
+    return this.array.some(row => getEffectiveRowState(row) === 'deleted');
   }
 
   /**
@@ -376,15 +425,18 @@ export class Rows<T extends CustomTableTypes> {
     let hasRemovedRows = false;
     let hasSoftDeletes = false;
     for (const row of this.array) {
-      if (row._state === 'new') {
+      const effectiveState = getEffectiveRowState(row);
+      if (effectiveState === 'new') {
         hasRemovedRows = true;
-      } else if (row._state !== 'deleted') {
+      } else if (effectiveState !== 'deleted') {
         row._state = 'deleted';
+        row._errorState = undefined;
+        row._errorMessage = null;
         hasSoftDeletes = true;
       }
     }
     if (hasRemovedRows) {
-      this.array = this.array.filter(row => row._state !== 'new');
+      this.array = this.array.filter(row => getEffectiveRowState(row) !== 'new');
     }
     this.CustomTable.drawRows();
     if (hasRemovedRows || hasSoftDeletes) {
@@ -400,11 +452,11 @@ export class Rows<T extends CustomTableTypes> {
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
    */
-  commitChanges(createdIds?: Map<number, string>): void {
-    this._commitCreateAndUpdate(createdIds);
+  commitChanges(createdIds?: Map<number, string>, failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>()): void {
+    this._commitCreateAndUpdate(createdIds, failedRows);
 
     // Gelöschte Zeilen entfernen
-    this.array = this.array.filter(row => row._state !== 'deleted');
+    this.array = this.array.filter(row => getEffectiveRowState(row) !== 'deleted' || failedRows.has(row));
     this.CustomTable.drawRows();
   }
 
@@ -414,31 +466,51 @@ export class Rows<T extends CustomTableTypes> {
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
    */
-  commitAutoSave(createdIds?: Map<number, string>): void {
-    this._commitCreateAndUpdate(createdIds);
+  commitAutoSave(createdIds?: Map<number, string>, failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>()): void {
+    this._commitCreateAndUpdate(createdIds, failedRows);
     this.CustomTable.drawRows();
   }
 
   /** Interne Hilfsmethode: new → unchanged, modified → unchanged */
-  private _commitCreateAndUpdate(createdIds?: Map<number, string>): void {
+  private _commitCreateAndUpdate(
+    createdIds?: Map<number, string>,
+    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
+  ): void {
     let createIdx = 0;
 
     for (const row of this.array) {
-      switch (row._state) {
+      const effectiveState = getEffectiveRowState(row);
+      switch (effectiveState) {
         case 'new': {
+          const isFailedRow = failedRows.has(row);
           const newId = createdIds?.get(createIdx);
-          if (newId) {
+          if (!isFailedRow && newId) {
             row._id = newId;
             (row.cells as Record<string, unknown>)._id = newId;
           }
-          row._state = 'unchanged';
-          row._originalCells = { ...row.cells };
+          if (!isFailedRow) {
+            row._state = 'unchanged';
+            row._errorState = undefined;
+            row._errorMessage = null;
+            row._clientRequestId = undefined;
+            row._originalCells = { ...row.cells };
+          }
           createIdx++;
           break;
         }
         case 'modified':
-          row._state = 'unchanged';
-          row._originalCells = { ...row.cells };
+          if (!failedRows.has(row)) {
+            row._state = 'unchanged';
+            row._errorState = undefined;
+            row._errorMessage = null;
+            row._originalCells = { ...row.cells };
+          }
+          break;
+        case 'deleted':
+          if (!failedRows.has(row)) {
+            row._errorState = undefined;
+            row._errorMessage = null;
+          }
           break;
       }
     }
@@ -726,10 +798,19 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
       for (const row of allVisibleRows) {
         const tr: CustomHTMLTableRowElement<T> = document.createElement('tr');
+        let errorIconRendered = false;
 
         // Soft-Delete Styling: durchgestrichen + ausgegraut
         if (row.isDeleted) {
           tr.classList.add('customtable-deleted');
+        }
+        if (row.isError) {
+          tr.classList.add('customtable-error');
+          if (row._errorMessage) {
+            tr.dataset.errorMessage = row._errorMessage;
+            tr.title = row._errorMessage;
+            tr.setAttribute('aria-label', `Fehler: ${row._errorMessage}`);
+          }
         }
 
         row.columns.array.forEach(column => {
@@ -737,6 +818,14 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
             return;
           }
           const td = document.createElement('td');
+          if (row.isError && !errorIconRendered) {
+            const icon = document.createElement('span');
+            icon.classList.add('material-icons-round', 'customtable-error-icon');
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'error';
+            td.appendChild(icon);
+            errorIconRendered = true;
+          }
           if (column.editing) {
             const divBtnGroup = document.createElement('div');
             divBtnGroup.classList.add('btn-group', 'btn-group-sm');
@@ -774,7 +863,10 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
             }
             td.appendChild(divBtnGroup);
           } else {
-            td.innerHTML = column.parser(row.cells[column.name]).toString();
+            const cellContent = column.parser(row.cells[column.name]).toString();
+            const content = document.createElement('span');
+            content.innerHTML = cellContent;
+            td.appendChild(content);
           }
           if (column.breakpoints) td.dataset.breakpoints = column.breakpoints;
           if (column.classes.length > 0) td.classList.add(...column.classes);

@@ -1,5 +1,50 @@
 # Todo
 
+## Aktueller Plan: Warnmeldung bei Array-Laengen-Mismatch
+
+## Verifikationskriterien (Warnmeldung Array-Mismatch)
+
+## Aktueller Plan: Sichtbarer Error-State fuer AutoSave-Zeilen
+
+- [x] CustomTable-RowState und Change-Tracking fuer fehlerhafte Zeilen erweitern
+- [x] Error-Markierung in der Tabellen-UI sichtbar machen (Row-Styling + Fehlermeldung)
+- [x] Frontend-Regressionstests sowie `test`, `tsc`, `lint`, `format:check` ausfuehren und Ergebnis dokumentieren
+
+## Verifikationskriterien (Error-State Tabelle)
+
+- Zeilen mit `_state = 'error'` sind in der Tabelle sichtbar hervorgehoben
+- Die Fehlermeldung der Zeile ist im DOM verfuegbar, ohne auf den Fehlerdialog angewiesen zu sein
+- Fehlerhafte Create-/Update-Zeilen bleiben fuer den naechsten Save im Change-Tracking erhalten
+- Relevante Frontend-Tests und statische Checks laufen erfolgreich
+
+## Review (Error-State Tabelle)
+
+- Ergebnis: `CustomTable` unterscheidet jetzt zwischen sichtbarem Fehlerzustand und eigentlicher Save-Operation. Fehlerzeilen werden mit `customtable-error` hervorgehoben, tragen ihre Fehlermeldung als Tooltip/Data-Attribut und behalten fuer Retry den urspruenglichen State (`new`, `modified`, `deleted`). Dadurch verschwinden fehlgeschlagene Create-/Delete-Vorgaenge nicht mehr aus dem Change-Tracking.
+- Delta: Fehlerzeilen zeigen nun zusaetzlich ein rotes Error-Icon in der ersten Datenzelle (`.customtable-error-icon`) fuer bessere Scanbarkeit in langen Tabellen.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/class/CustomTable.test.ts test/Utilities/autoSave.test.ts`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run format:check`.
+
+## Review (Warnmeldung Array-Mismatch)
+
+- Ergebnis: Beim Daten-Reload wird bei jedem Array-Laengen-Mismatch pro Ressource eine Warninformation gesammelt und als Snackbar angezeigt. Die Meldung nennt Ressource sowie lokale und serverseitige Anzahl und macht die Uebernahme der Serverdaten transparent.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run format:check`.
+
+## Aktueller Plan: Daten-Reload auf Array-Laenge absichern
+
+- [x] Sync-Entscheidung in `loadUserDaten` um Array-Laengenvergleich fuer Ressourcen erweitern
+- [x] Regressionstest fuer juengeren lokalen Timestamp mit kuerzerem lokalen Array ergaenzen
+- [x] Frontend-Checks (Test, TypeScript, Lint, Format-Check) ausfuehren und Ergebnis dokumentieren
+
+## Verifikationskriterien (Array-Laenge Reload)
+
+- Bei `dataBZ`/`dataBE`/`dataE`/`dataN` werden Serverdaten uebernommen, wenn die normalisierte Array-Laenge von lokal und Server abweicht
+- Bestehender `_id`-Repair-Pfad bleibt unveraendert aktiv
+- Relevante Frontend-Checks laufen erfolgreich
+
+## Review (Array-Laenge Reload)
+
+- Ergebnis: Beim Laden wird fuer `dataBZ`, `dataBE`, `dataE` und `dataN` jetzt zusaetzlich die normalisierte Array-Laenge verglichen. Weicht die lokale Laenge vom Serverstand ab, werden die Serverdaten trotz juengerem lokalem Timestamp uebernommen.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run format:check`.
+
 ## Aktueller Plan: Anzeige-Optimierung VorgabenB (Modal + Tabelle)
 
 - [x] Show-Modal in klare Bereiche fuer Bereitschaft und Nachtschicht aufteilen

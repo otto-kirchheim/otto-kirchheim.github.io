@@ -107,6 +107,34 @@ describe('CustomTable', () => {
     expect(deleteButton).toBeNull();
   });
 
+  it('hebt Fehlerzeilen sichtbar hervor und behaelt ihr Retry-Tracking', () => {
+    createTableElement('error-table');
+
+    const table = createCustomTable<TableRow>('error-table', {
+      columns: [
+        {
+          name: 'label',
+          title: 'Label',
+        },
+      ],
+      rows: [{ _id: '1', label: 'Fehlerhaft', value: 1 }],
+    });
+
+    const row = table.getRows()[0];
+    row._state = 'error';
+    row._errorState = 'modified';
+    row._errorMessage = 'Validierung fehlgeschlagen';
+    table.drawRows();
+
+    const tr = document.querySelector<HTMLTableRowElement>('tbody tr');
+    expect(tr).not.toBeNull();
+    expect(tr?.classList.contains('customtable-error')).toBe(true);
+    expect(tr?.getAttribute('data-error-message')).toBe('Validierung fehlgeschlagen');
+    expect(tr?.title).toBe('Validierung fehlgeschlagen');
+    expect(tr?.querySelector('.customtable-error-icon')?.textContent).toBe('error');
+    expect(table.rows.getChanges(false).update).toHaveLength(1);
+  });
+
   it('rows.deleteAll benachrichtigt nur bei echten Änderungen', () => {
     createTableElement('delete-all-table');
     const onChange = vi.fn();

@@ -59,12 +59,21 @@ export interface BulkRequest<TCreate = unknown, TUpdate = unknown> {
   delete?: string[];
 }
 
+export interface BulkErrorEntry {
+  operation: 'create' | 'update' | 'delete';
+  index?: number;
+  id?: string;
+  clientRequestId?: string;
+  message: string;
+}
+
 /** Bulk-Operation Response */
 interface BulkResponse<T = unknown> {
   created: T[];
   updated: T[];
   deleted: string[];
-  errors: { operation: string; index: number; id?: string; message: string }[];
+  createdReferences?: { _id: string; clientRequestId: string }[];
+  errors: BulkErrorEntry[];
 }
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
@@ -382,21 +391,33 @@ async function smartSync<TBackend>(resource: ResourceName, bulk: BulkRequest): P
 
   // Genau 1 Create
   if (createCount === 1) {
-    const doc = await createResource<TBackend>(resource, bulk.create![0]);
-    return { created: [doc], updated: [], deleted: [], errors: [] };
+    const createItem = bulk.create![0] as Record<string, unknown>;
+    const doc = await createResource<TBackend>(resource, createItem);
+    const createdId = (doc as Record<string, unknown>)._id;
+    const clientRequestId = createItem.clientRequestId;
+    return {
+      created: [doc],
+      updated: [],
+      deleted: [],
+      createdReferences:
+        typeof createdId === 'string' && typeof clientRequestId === 'string'
+          ? [{ _id: createdId, clientRequestId }]
+          : [],
+      errors: [],
+    };
   }
 
   // Genau 1 Update
   if (updateCount === 1) {
     const { _id, ...fields } = bulk.update![0] as Record<string, unknown> & { _id: string };
     const doc = await updateResource<TBackend>(resource, _id, fields);
-    return { created: [], updated: [doc], deleted: [], errors: [] };
+    return { created: [], updated: [doc], deleted: [], createdReferences: [], errors: [] };
   }
 
   // Genau 1 Delete
   const id = bulk.delete![0];
   await deleteResource(resource, id);
-  return { created: [], updated: [], deleted: [id], errors: [] };
+  return { created: [], updated: [], deleted: [id], createdReferences: [], errors: [] };
 }
 
 // ─── Bereitschaftszeitraum ───────────────────────────────
@@ -412,7 +433,11 @@ export const bereitschaftszeitraumApi = {
   },
 
   async bulk(
-    items: { create: IDatenBZ[]; update: IDatenBZ[]; delete: string[] },
+    items: {
+      create: (IDatenBZ & { clientRequestId: string })[];
+      update: IDatenBZ[];
+      delete: string[];
+    },
     monat: number,
     jahr: number,
   ): Promise<BulkResponse<BackendBereitschaftszeitraum>> {
@@ -420,7 +445,7 @@ export const bereitschaftszeitraumApi = {
       create: items.create.map(item => {
         const data = bzToBackend(item, monat, jahr);
         delete (data as Record<string, unknown>)._id;
-        return data;
+        return { ...data, clientRequestId: item.clientRequestId };
       }),
       update: items.update.map(item => ({
         ...bzToBackend(item, monat, jahr),
@@ -445,7 +470,11 @@ export const bereitschaftseinsatzApi = {
   },
 
   async bulk(
-    items: { create: IDatenBE[]; update: IDatenBE[]; delete: string[] },
+    items: {
+      create: (IDatenBE & { clientRequestId: string })[];
+      update: IDatenBE[];
+      delete: string[];
+    },
     monat: number,
     jahr: number,
   ): Promise<BulkResponse<BackendBereitschaftseinsatz>> {
@@ -453,7 +482,7 @@ export const bereitschaftseinsatzApi = {
       create: items.create.map(item => {
         const data = beToBackend(item, monat, jahr);
         delete (data as Record<string, unknown>)._id;
-        return data;
+        return { ...data, clientRequestId: item.clientRequestId };
       }),
       update: items.update.map(item => ({
         ...beToBackend(item, monat, jahr),
@@ -474,7 +503,11 @@ export const ewtApi = {
   },
 
   async bulk(
-    items: { create: IDatenEWT[]; update: IDatenEWT[]; delete: string[] },
+    items: {
+      create: (IDatenEWT & { clientRequestId: string })[];
+      update: IDatenEWT[];
+      delete: string[];
+    },
     monat: number,
     jahr: number,
   ): Promise<BulkResponse<BackendEWT>> {
@@ -482,7 +515,7 @@ export const ewtApi = {
       create: items.create.map(item => {
         const data = ewtToBackend(item, monat, jahr);
         delete (data as Record<string, unknown>)._id;
-        return data;
+        return { ...data, clientRequestId: item.clientRequestId };
       }),
       update: items.update.map(item => ({
         ...ewtToBackend(item, monat, jahr),
@@ -503,7 +536,11 @@ export const nebengeldApi = {
   },
 
   async bulk(
-    items: { create: IDatenN[]; update: IDatenN[]; delete: string[] },
+    items: {
+      create: (IDatenN & { clientRequestId: string })[];
+      update: IDatenN[];
+      delete: string[];
+    },
     monat: number,
     jahr: number,
   ): Promise<BulkResponse<BackendNebengeld>> {
@@ -511,7 +548,7 @@ export const nebengeldApi = {
       create: items.create.map(item => {
         const data = nebengeldToBackend(item, monat, jahr);
         delete (data as Record<string, unknown>)._id;
-        return data;
+        return { ...data, clientRequestId: item.clientRequestId };
       }),
       update: items.update.map(item => ({
         ...nebengeldToBackend(item, monat, jahr),
