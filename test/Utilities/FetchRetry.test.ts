@@ -211,11 +211,11 @@ describe('FetchRetry.ts', () => {
   describe('FetchRetry', () => {
     const testPath = 'test/endpoint';
     const testData = { key: 'value' };
-    const mockSuccessResponse = { data: { result: 'ok' }, status: true, statusCode: 200, message: 'Success' };
-    const mockErrorResponse = { data: null, status: false, statusCode: 500, message: 'Internal Server Error' };
+    const mockSuccessResponse = { data: { result: 'ok' }, success: true, statusCode: 200, message: 'Success' };
+    const mockErrorResponse = { data: null, success: false, statusCode: 500, message: 'Internal Server Error' };
     const mockTokenExpiredResponse = {
       data: null,
-      status: false,
+      success: false,
       statusCode: 401,
       message: 'Token ungültig oder abgelaufen',
     };
@@ -266,6 +266,90 @@ describe('FetchRetry.ts', () => {
       expect(
         (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1].headers.get('Content-Type'),
       ).toBe('application/json');
+    });
+
+    it('should not attach Authorization header on public auth routes', async () => {
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return 'public-token';
+        return null;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry(
+        'auth/register',
+        { userName: 'u', password: 'p', email: 'u@deutschebahn.com', accessCode: 'x' },
+        'POST',
+      );
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBeNull();
+    });
+
+    it('should attach Authorization header on protected routes when token exists', async () => {
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return 'protected-token';
+        return null;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('auth/me', undefined, 'GET');
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBe('Bearer protected-token');
+    });
+
+    it('should attach Authorization header on auth/resend-verification-email', async () => {
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return 'protected-token';
+        return null;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('auth/resend-verification-email', { email: 'user@deutschebahn.com' }, 'POST');
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBe('Bearer protected-token');
+    });
+
+    it('should attach Authorization header on auth/logout', async () => {
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return 'protected-token';
+        return null;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('auth/logout', undefined, 'POST');
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBe('Bearer protected-token');
     });
 
     it('should attach the act-as header on legacy save routes', async () => {
@@ -342,7 +426,7 @@ describe('FetchRetry.ts', () => {
           status: 401,
           json: async () => ({
             data: null,
-            status: false,
+            success: false,
             statusCode: 401,
             message: 'Session ungültig oder abgemeldet',
           }),
@@ -390,6 +474,197 @@ describe('FetchRetry.ts', () => {
     it('should throw error if retry limit is exceeded', async () => {
       await expect(FetchRetry(testPath, undefined, 'GET', 3)).rejects.toThrow('Zu viele Tokenfehler');
       expect(globalThis.fetch).not.toHaveBeenCalled(); // Should throw before fetching
+    });
+
+    it('should de-duplicate parallel login requests with identical payload', async () => {
+      const deferred = Promise.withResolvers<{
+        ok: boolean;
+        status: number;
+        json: () => Promise<unknown>;
+        headers: Headers;
+      }>();
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => deferred.promise);
+
+      const loginPayload = { userName: 'test-user', password: 'secret' };
+      const requestA = FetchRetry('auth/login', loginPayload, 'POST');
+      const requestB = FetchRetry('auth/login', loginPayload, 'POST');
+
+      await Promise.resolve();
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      deferred.resolve({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      const [resultA, resultB] = await Promise.all([requestA, requestB]);
+      expect(resultA).toEqual({ ...mockSuccessResponse, statusCode: 200 });
+      expect(resultB).toEqual({ ...mockSuccessResponse, statusCode: 200 });
+    });
+
+    it('should keep login requests separate for different payloads', async () => {
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockSuccessResponse,
+          headers: new Headers(),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockSuccessResponse,
+          headers: new Headers(),
+        });
+
+      const requestA = FetchRetry('auth/login', { userName: 'user-a', password: 'pw-a' }, 'POST');
+      const requestB = FetchRetry('auth/login', { userName: 'user-b', password: 'pw-b' }, 'POST');
+
+      await Promise.all([requestA, requestB]);
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('should de-duplicate parallel forgot-password requests with identical payload', async () => {
+      const deferred = Promise.withResolvers<{
+        ok: boolean;
+        status: number;
+        json: () => Promise<unknown>;
+        headers: Headers;
+      }>();
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => deferred.promise);
+
+      const payload = { email: 'user@deutschebahn.com' };
+      const requestA = FetchRetry('auth/forgot-password', payload, 'POST');
+      const requestB = FetchRetry('auth/forgot-password', payload, 'POST');
+
+      await Promise.resolve();
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      deferred.resolve({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await Promise.all([requestA, requestB]);
+    });
+
+    it('should de-duplicate verify-email GET requests', async () => {
+      const deferred = Promise.withResolvers<{
+        ok: boolean;
+        status: number;
+        json: () => Promise<unknown>;
+        headers: Headers;
+      }>();
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => deferred.promise);
+
+      const requestA = FetchRetry('auth/verify-email/token-123', undefined, 'GET');
+      const requestB = FetchRetry('auth/verify-email/token-123', undefined, 'GET');
+
+      await Promise.resolve();
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+      deferred.resolve({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await Promise.all([requestA, requestB]);
+    });
+
+    it('should proactively refresh an expiring token before protected requests', async () => {
+      const futureExp = Math.floor((MOCK_DATE_NOW + 10_000) / 1000);
+      const initialToken = `header.${btoa(JSON.stringify({ exp: futureExp }))}.sig`;
+      const refreshedToken = `header.${btoa(JSON.stringify({ exp: Math.floor((MOCK_DATE_NOW + 300_000) / 1000) }))}.sig`;
+      let currentAccessToken = initialToken;
+
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+        key === 'AccessToken' || key === 'RefreshToken' ? true : true,
+      );
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return currentAccessToken;
+        if (key === 'RefreshToken') return 'refresh-token';
+        return null;
+      });
+      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+        currentAccessToken = refreshedToken;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('auth/me', undefined, 'GET');
+
+      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBe(`Bearer ${refreshedToken}`);
+    });
+
+    it('should share one refresh flight across parallel protected requests', async () => {
+      const expiredToken = `header.${btoa(JSON.stringify({ exp: Math.floor((MOCK_DATE_NOW - 10_000) / 1000) }))}.sig`;
+      const refreshedToken = `header.${btoa(JSON.stringify({ exp: Math.floor((MOCK_DATE_NOW + 300_000) / 1000) }))}.sig`;
+      let currentAccessToken = expiredToken;
+      const refreshDeferred = Promise.withResolvers<void>();
+
+      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+        key === 'AccessToken' || key === 'RefreshToken' ? true : true,
+      );
+      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return currentAccessToken;
+        if (key === 'RefreshToken') return 'refresh-token';
+        return null;
+      });
+      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+        await refreshDeferred.promise;
+        currentAccessToken = refreshedToken;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockSuccessResponse,
+          headers: new Headers(),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => mockSuccessResponse,
+          headers: new Headers(),
+        });
+
+      const requestA = FetchRetry('auth/me', undefined, 'GET');
+      const requestB = FetchRetry('auth/me', undefined, 'GET');
+
+      await Promise.resolve();
+      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+
+      refreshDeferred.resolve();
+      await Promise.all([requestA, requestB]);
+
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+      const firstHeaders = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1]
+        .headers as Headers;
+      const secondHeaders = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1]
+        .headers as Headers;
+      expect(firstHeaders.get('Authorization')).toBe(`Bearer ${refreshedToken}`);
+      expect(secondHeaders.get('Authorization')).toBe(`Bearer ${refreshedToken}`);
     });
   });
 });

@@ -11,6 +11,40 @@ let serverCheckCounter = 0;
 let serverProbePromise: Promise<string> | null = null;
 let serverStatusSnackBar: ReturnType<typeof createSnackBar> | null = null;
 let offlineSnackBarShown = false;
+const singleFlightRequests = new Map<string, Promise<unknown>>();
+let refreshFlightPromise: Promise<void> | null = null;
+
+const PUBLIC_AUTH_PATHS = [
+  'auth/login',
+  'auth/register',
+  'auth/refresh-token',
+  'auth/forgot-password',
+  'auth/passkeys/login/options',
+  'auth/passkeys/login/verify',
+  'auth/verify-email',
+] as const;
+
+const SINGLE_FLIGHT_AUTH_ROUTES = [
+  'auth/login',
+  'auth/register',
+  'auth/refresh-token',
+  'auth/forgot-password',
+  'auth/resend-verification-email',
+  'auth/verify-email',
+  'auth/passkeys/login/options',
+  'auth/passkeys/login/verify',
+] as const;
+
+const PROACTIVE_REFRESH_LEEWAY_MS = 30_000;
+
+type FetchRetryEnvelope<T> = {
+  data: T;
+  success: boolean;
+  statusCode: number;
+  message?: string;
+};
+
+type FetchRetryResponse<T> = FetchRetryEnvelope<T> | Error;
 
 function getActAsUserIdFromStorage(): string | null {
   const raw = localStorage.getItem('actAsUserId');
@@ -50,21 +84,79 @@ function shouldRetryWithRefresh(urlPath: string, status: number): boolean {
   if (status !== 401 || !Storage.check('RefreshToken')) return false;
 
   const normalizedPath = normalizeUrlPath(urlPath);
-  const publicAuthPaths = [
-    'auth/login',
-    'auth/register',
-    'auth/refresh-token',
-    'auth/logout',
-    'auth/forgot-password',
-    'auth/resend-verification-email',
-    'auth/passkeys/login/options',
-    'auth/passkeys/login/verify',
-    'auth/verify-email',
-  ];
 
   if (normalizedPath.startsWith('auth/reset-password/')) return false;
 
-  return !publicAuthPaths.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
+  return !isPublicAuthPath(normalizedPath);
+}
+
+function shouldAttachAuthorizationHeader(urlPath: string): boolean {
+  const normalizedPath = normalizeUrlPath(urlPath);
+
+  if (normalizedPath.startsWith('auth/reset-password/')) return false;
+
+  return !isPublicAuthPath(normalizedPath);
+}
+
+function isPublicAuthPath(normalizedPath: string): boolean {
+  return PUBLIC_AUTH_PATHS.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
+}
+
+function shouldUseSingleFlight(urlPath: string, method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'): boolean {
+  const normalizedPath = normalizeUrlPath(urlPath);
+
+  if (normalizedPath === 'auth/verify-email' || normalizedPath.startsWith('auth/verify-email/')) {
+    return method === 'GET';
+  }
+
+  if (method !== 'POST') return false;
+
+  return SINGLE_FLIGHT_AUTH_ROUTES.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
+}
+
+function buildSingleFlightKey<I>(
+  urlPath: string,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  data?: I,
+): string {
+  return `${method}:${normalizeUrlPath(urlPath)}:${JSON.stringify(data ?? null)}`;
+}
+
+function readJwtExpMillis(token: string): number | null {
+  const parts = token.split('.');
+  if (parts.length < 2) return null;
+
+  try {
+    const normalizedPayload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const paddedPayload = normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, '=');
+    const payload = JSON.parse(atob(paddedPayload)) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+function shouldRefreshBeforeRequest(urlPath: string, accessToken: string | null): boolean {
+  if (!accessToken || !Storage.check('RefreshToken')) return false;
+
+  const normalizedPath = normalizeUrlPath(urlPath);
+  if (normalizedPath.startsWith('auth/reset-password/')) return false;
+  if (isPublicAuthPath(normalizedPath)) return false;
+
+  const expMillis = readJwtExpMillis(accessToken);
+  if (expMillis === null) return false;
+
+  return expMillis - Date.now() <= PROACTIVE_REFRESH_LEEWAY_MS;
+}
+
+async function refreshAccessTokenSingleFlight(retry: number): Promise<void> {
+  if (refreshFlightPromise) return refreshFlightPromise;
+
+  refreshFlightPromise = tokenErneuern(retry).finally(() => {
+    refreshFlightPromise = null;
+  });
+
+  return refreshFlightPromise;
 }
 /**
  * Checks the server connection with a configurable timeout.
@@ -164,17 +256,48 @@ export async function FetchRetry<I, T>(
   data?: I,
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
   retry = 0,
-): Promise<{ data: T; status: boolean; statusCode: number; message: string } | Error> {
+): Promise<FetchRetryResponse<T>> {
+  const useSingleFlight = retry === 0 && shouldUseSingleFlight(UrlPath, method);
+
+  if (useSingleFlight) {
+    const requestKey = buildSingleFlightKey(UrlPath, method, data);
+    const existingRequest = singleFlightRequests.get(requestKey);
+    if (existingRequest) return existingRequest as Promise<FetchRetryResponse<T>>;
+
+    const requestPromise = executeFetchRetry<I, T>(UrlPath, data, method, retry).finally(() => {
+      singleFlightRequests.delete(requestKey);
+    });
+
+    singleFlightRequests.set(requestKey, requestPromise as Promise<unknown>);
+    return requestPromise;
+  }
+
+  return executeFetchRetry<I, T>(UrlPath, data, method, retry);
+}
+
+async function executeFetchRetry<I, T>(
+  UrlPath: string,
+  data?: I,
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
+  retry = 0,
+): Promise<FetchRetryResponse<T>> {
   if (!navigator.onLine) throw new Error('Keine Internetverbindung');
   if (retry > 2) throw new Error('Zu viele Tokenfehler');
+
+  let accessToken = Storage.get<string>('AccessToken', { default: undefined });
+  if (shouldRefreshBeforeRequest(UrlPath, accessToken)) {
+    await refreshAccessTokenSingleFlight(retry);
+    accessToken = Storage.get<string>('AccessToken', { default: undefined });
+  }
 
   const serverUrl = await getServerUrl();
 
   const headers = new Headers();
   if (method !== 'GET') headers.set('Content-Type', 'application/json');
 
-  const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
-  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  if (accessToken && shouldAttachAuthorizationHeader(UrlPath)) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
 
   const actAsUserId = getActAsUserIdFromStorage();
   if (actAsUserId && shouldAttachActAsHeader(UrlPath)) headers.set('x-act-as-user-id', actAsUserId);
@@ -189,12 +312,21 @@ export async function FetchRetry<I, T>(
   if (data) fetchObject.body = JSON.stringify(data);
   try {
     const response = await fetch(`${serverUrl}/${UrlPath}`, fetchObject);
-    const responded = await response.json();
+    const responseBody = (await response.json()) as
+      | ({ data?: T; success?: boolean; message?: string } & Record<string, unknown>)
+      | null;
     if (shouldRetryWithRefresh(UrlPath, response.status)) {
-      await tokenErneuern(retry);
+      await refreshAccessTokenSingleFlight(retry);
       return await FetchRetry(UrlPath, data, method, retry + 1);
     }
-    responded.statusCode = response.status;
+
+    const responded: FetchRetryEnvelope<T> = {
+      data: responseBody?.data as T,
+      success: responseBody?.success ?? response.ok,
+      statusCode: response.status,
+      message: responseBody?.message,
+    };
+
     return responded;
   } catch (error: unknown) {
     console.error('Fetch error occurred:', error);
