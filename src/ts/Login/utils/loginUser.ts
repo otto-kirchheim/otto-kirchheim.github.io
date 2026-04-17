@@ -22,12 +22,18 @@ export default async function loginUser(
   if (btnLogin) btnLogin.disabled = true;
   setLoading('btnLogin');
 
+  const modalSubmitButton = modal.querySelector<HTMLButtonElement>('#btnLoginModal');
+  if (modalSubmitButton) modalSubmitButton.disabled = true;
+  setLoading('btnLoginModal');
+
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
   if (!errorMessage) throw new Error('Error Nachrichtenfeld nicht gefunden');
 
   if (!navigator.onLine) {
     errorMessage.textContent = 'Keine Internetverbindung';
+    if (modalSubmitButton) modalSubmitButton.disabled = false;
     clearLoading('btnLogin', false);
+    clearLoading('btnLoginModal', false);
     return;
   }
 
@@ -46,6 +52,8 @@ export default async function loginUser(
       errorMessage.innerHTML = String(err);
     }
   } finally {
+    if (modalSubmitButton) modalSubmitButton.disabled = false;
     clearLoading('btnLogin', false);
+    clearLoading('btnLoginModal', false);
   }
 }
