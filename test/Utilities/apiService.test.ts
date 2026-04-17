@@ -72,32 +72,21 @@ describe('apiService', () => {
       expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('rt456'));
     });
 
-    it('refreshToken sendet Refresh-Token im Body und speichert neue Tokens', async () => {
+    it('refreshToken sendet Refresh-Token via FetchRetry und speichert neue Tokens', async () => {
       localStorage.setItem('RefreshToken', JSON.stringify('old-rt'));
-      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            success: true,
-            data: { userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' },
-          }),
-      }) as unknown as typeof fetch;
+      mockFetchRetry.mockResolvedValue({
+        success: true,
+        statusCode: 200,
+        message: 'ok',
+        data: { userName: 'Max', role: 'member', accessToken: 'new-at', refreshToken: 'new-rt' },
+      });
 
       const result = await authApi.refreshToken();
 
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v2/auth/refresh-token',
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ refreshToken: 'old-rt' }),
-        }),
-      );
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/refresh-token', { refreshToken: 'old-rt' }, 'POST');
       expect(result).toMatchObject({
         userName: 'Max',
         role: 'member',
-        accessToken: 'new-at',
-        refreshToken: 'new-rt',
       });
       expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('new-at'));
       expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('new-rt'));

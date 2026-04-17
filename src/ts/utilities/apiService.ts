@@ -161,23 +161,43 @@ export const authApi = {
     const refreshToken = Storage.check('RefreshToken') ? Storage.get<string>('RefreshToken', true) : null;
     if (!refreshToken) throw new Error('Kein Refresh-Token vorhanden');
 
-    const serverUrl = await getServerUrl();
-    const response = await fetch(`${serverUrl}/auth/refresh-token`, {
-      method: 'POST',
-      mode: 'cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    });
-    if (!response.ok) {
+    type RefreshResponseData = {
+      userName: string;
+      role: string;
+      accessToken: string;
+      refreshToken: string;
+    };
+
+    try {
+      const response = await FetchRetry<{ refreshToken: string }, RefreshResponseData>(
+        'auth/refresh-token',
+        { refreshToken },
+        'POST',
+      );
+
+      if (response instanceof Error) throw response;
+
+      if (
+        !response.success ||
+        response.statusCode >= 400 ||
+        !response.data?.accessToken ||
+        !response.data?.refreshToken
+      ) {
+        throw new Error(response.message ?? 'Token-Refresh fehlgeschlagen');
+      }
+
+      Storage.set('AccessToken', response.data.accessToken);
+      Storage.set('RefreshToken', response.data.refreshToken);
+
+      return {
+        userName: response.data.userName,
+        role: response.data.role,
+      };
+    } catch (error) {
       Storage.remove('AccessToken');
       Storage.remove('RefreshToken');
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.message ?? 'Token-Refresh fehlgeschlagen');
+      throw new Error(error instanceof Error ? error.message : 'Token-Refresh fehlgeschlagen', { cause: error });
     }
-    const body = await response.json().catch(() => null);
-    if (body?.data?.accessToken) Storage.set('AccessToken', body.data.accessToken);
-    if (body?.data?.refreshToken) Storage.set('RefreshToken', body.data.refreshToken);
-    return body?.data ?? null;
   },
 
   /**
