@@ -3,7 +3,14 @@ import type { CustomTable } from '../class/CustomTable';
 import { createCustomTable } from '../class/CustomTable';
 import { registerAppStartTask } from '../core';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../interfaces';
-import { buttonDisable, createOnChangeHandler, getMonatFromBE, getMonatFromBZ, saveDaten, Storage } from '../utilities';
+import {
+  confirmDeleteAllRows,
+  createOnChangeHandler,
+  getMonatFromBE,
+  getMonatFromBZ,
+  saveDaten,
+  Storage,
+} from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import download from '../utilities/download';
 import {
@@ -136,28 +143,10 @@ registerAppStartTask(() => {
             return;
           }
 
-          createSnackBar({
-            message: 'Möchtest du wirklich alle Zeilen löschen?',
-            icon: 'question',
-            status: 'error',
-            dismissible: false,
-            timeout: false,
-            fixed: true,
-            actions: [
-              {
-                text: 'Ja',
-                function: () => {
-                  const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-                  const monthRows = [...ftBZ.rows.array].filter(row => getMonatFromBZ(row.cells) === activeMonat);
-                  monthRows.forEach(row => row.deleteRow());
-                  buttonDisable(false);
-                  persistBereitschaftsZeitraumTableData(ftBZ);
-                },
-                dismiss: true,
-                class: ['text-danger'],
-              },
-              { text: 'Nein', dismiss: true, class: ['text-primary'] },
-            ],
+          confirmDeleteAllRows({
+            table: ftBZ,
+            rowFilter: (cells, m) => getMonatFromBZ(cells) === m,
+            persist: persistBereitschaftsZeitraumTableData,
           });
         },
       },
@@ -208,28 +197,10 @@ registerAppStartTask(() => {
         persistBereitschaftsEinsatzTableData(ftBE);
       },
       deleteAllRows: () => {
-        createSnackBar({
-          message: 'Möchtest du wirklich alle Zeilen löschen?',
-          icon: 'question',
-          status: 'error',
-          dismissible: false,
-          timeout: false,
-          fixed: true,
-          actions: [
-            {
-              text: 'Ja',
-              function: () => {
-                const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-                const monthRows = [...ftBE.rows.array].filter(row => getMonatFromBE(row.cells) === activeMonat);
-                monthRows.forEach(row => row.deleteRow());
-                buttonDisable(false);
-                persistBereitschaftsEinsatzTableData(ftBE);
-              },
-              dismiss: true,
-              class: ['text-danger'],
-            },
-            { text: 'Nein', dismiss: true, class: ['text-primary'] },
-          ],
+        confirmDeleteAllRows({
+          table: ftBE,
+          rowFilter: (cells, m) => getMonatFromBE(cells) === m,
+          persist: persistBereitschaftsEinsatzTableData,
         });
       },
     },

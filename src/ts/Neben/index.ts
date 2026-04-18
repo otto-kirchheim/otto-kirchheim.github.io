@@ -1,13 +1,14 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
 import { registerAppStartTask } from '../core';
-import { getMonatFromN, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import { confirmDeleteAllRows, getMonatFromN, Storage, createOnChangeHandler, saveDaten } from '../utilities';
+import dayjs from '../utilities/configDayjs';
 import download from '../utilities/download';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
 registerAppStartTask(() => {
-  const Jahr: number = Storage.get('Jahr', { default: new Date().getFullYear() });
+  const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
   const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
     const checked: boolean = Jahr >= 2024;
@@ -56,28 +57,10 @@ registerAppStartTask(() => {
         persistNebengeldTableData(ftN);
       },
       deleteAllRows: () => {
-        createSnackBar({
-          message: 'Möchtest du wirklich alle Zeilen löschen?',
-          icon: 'question',
-          status: 'error',
-          dismissible: false,
-          timeout: false,
-          fixed: true,
-          actions: [
-            {
-              text: 'Ja',
-              function: () => {
-                const activeMonat = Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
-                const monthRows = [...ftN.rows.array].filter(row => getMonatFromN(row.cells) === activeMonat);
-                monthRows.forEach(row => row.deleteRow());
-                buttonDisable(false);
-                persistNebengeldTableData(ftN);
-              },
-              dismiss: true,
-              class: ['text-danger'],
-            },
-            { text: 'Nein', dismiss: true, class: ['text-primary'] },
-          ],
+        confirmDeleteAllRows({
+          table: ftN,
+          rowFilter: (cells, m) => getMonatFromN(cells) === m,
+          persist: persistNebengeldTableData,
         });
       },
     },
@@ -98,7 +81,7 @@ registerAppStartTask(() => {
     if (checkIfGreater2024(Jahr, true)) download(btnDownloadN, 'N');
   });
 
-  const monat = Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
+  const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftN.rows.setFilter(
     row => getMonatFromN(row) === monat && checkIfGreater2024(Storage.get<number>('Jahr', { default: Jahr })),
   );

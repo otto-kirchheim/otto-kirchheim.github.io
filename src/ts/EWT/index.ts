@@ -2,7 +2,14 @@ import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
 import { registerAppStartTask } from '../core';
 import type { IVorgabenU } from '../interfaces';
-import { isEwtInMonat, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
+import {
+  buttonDisable,
+  confirmDeleteAllRows,
+  isEwtInMonat,
+  Storage,
+  createOnChangeHandler,
+  saveDaten,
+} from '../utilities';
 import dayjs from '../utilities/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import download from '../utilities/download';
@@ -74,28 +81,10 @@ registerAppStartTask(() => {
           persistEwtTableData(ftE);
         },
         deleteAllRows: () => {
-          createSnackBar({
-            message: 'Möchtest du wirklich alle Zeilen löschen?',
-            icon: 'question',
-            status: 'error',
-            dismissible: false,
-            timeout: false,
-            fixed: true,
-            actions: [
-              {
-                text: 'Ja',
-                function: () => {
-                  const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-                  const monthRows = [...ftE.rows.array].filter(row => isEwtInMonat(row.cells, activeMonat));
-                  monthRows.forEach(row => row.deleteRow());
-                  buttonDisable(false);
-                  persistEwtTableData(ftE);
-                },
-                dismiss: true,
-                class: ['text-danger'],
-              },
-              { text: 'Nein', dismiss: true, class: ['text-primary'] },
-            ],
+          confirmDeleteAllRows({
+            table: ftE,
+            rowFilter: (cells, m) => isEwtInMonat(cells, m),
+            persist: persistEwtTableData,
           });
         },
         customButton: [
