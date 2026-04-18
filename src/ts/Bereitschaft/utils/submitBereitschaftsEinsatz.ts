@@ -5,14 +5,18 @@ import {
   getBereitschaftsZeitraumDaten,
   persistBereitschaftsEinsatzTableData,
 } from '.';
-import { aktualisiereBerechnung } from '../../Berechnung';
+import { publishDataChanged } from '../../core';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../interfaces';
 import { Storage, clearLoading, setLoading } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { getMonatFromBZ } from '../../utilities/getMonatFromItem';
 
-export default function submitBereitschaftsEinsatz($modal: HTMLDivElement): boolean {
+export default function submitBereitschaftsEinsatz(
+  $modal: HTMLDivElement,
+  tableBE: CustomHTMLTableElement<IDatenBE>,
+  tableBZ: CustomHTMLTableElement<IDatenBZ>,
+): boolean {
   setLoading('btnESE');
 
   const datumInput = $modal.querySelector<HTMLInputElement>('#Datum');
@@ -22,20 +26,8 @@ export default function submitBereitschaftsEinsatz($modal: HTMLDivElement): bool
   const lreSelect = $modal.querySelector<HTMLSelectElement>('#LRE');
   const privatkmInput = $modal.querySelector<HTMLInputElement>('#privatkm');
   const berZeitInput = $modal.querySelector<HTMLInputElement>('#berZeit');
-  const tableBE = document.querySelector<CustomHTMLTableElement<IDatenBE>>('#tableBE');
-  const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
 
-  if (
-    !datumInput ||
-    !sapnrInput ||
-    !vonInput ||
-    !bisInput ||
-    !lreSelect ||
-    !privatkmInput ||
-    !berZeitInput ||
-    !tableBE ||
-    !tableBZ
-  )
+  if (!datumInput || !sapnrInput || !vonInput || !bisInput || !lreSelect || !privatkmInput || !berZeitInput)
     throw new Error('Input Element nicht gefunden');
 
   const tagBE = datumInput.value;
@@ -143,7 +135,6 @@ export default function submitBereitschaftsEinsatz($modal: HTMLDivElement): bool
     }
   }
 
-  console.log(daten);
   const ftBE = tableBE.instance;
   ftBE.rows.add(daten);
   persistBereitschaftsEinsatzTableData(ftBE);
@@ -182,7 +173,7 @@ export default function submitBereitschaftsEinsatz($modal: HTMLDivElement): bool
       tableBZ.instance.rows.loadSmart(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
       tableBZ.instance.rows.setFilter(row => getMonatFromBZ(row) === monat);
 
-      aktualisiereBerechnung();
+      publishDataChanged();
 
       createSnackBar({
         message: 'Bereitschaft<br/>Neuer Zeitraum hinzugefügt',

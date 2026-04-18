@@ -1,4 +1,5 @@
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IVorgabenU } from '../../interfaces';
+import type { CustomTable } from '../../class/CustomTable';
+import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../interfaces';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import dayjs from '../../utilities/configDayjs';
 import { calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag, persistEwtTableData } from '.';
@@ -7,6 +8,7 @@ export default function addEwtTag(
   modal: CustomHTMLDivElement<IDatenEWT>,
   vorgabenU: IVorgabenU,
   berechneBuero: boolean = false,
+  tableE: CustomTable<IDatenEWT>,
 ): void {
   // Get the input and select elements
   const tagEInput = modal.querySelector<HTMLInputElement>('#tagE');
@@ -52,10 +54,7 @@ export default function addEwtTag(
   }
   data.buchungstagE = calculateBuchungstagEwt(data);
 
-  // Get the table and its instance
-  const tableE = document.querySelector<CustomHTMLTableElement<IDatenEWT>>('#tableE');
-  if (!tableE) throw new Error('TableE not found');
-  const ftE = tableE.instance;
+  const ftE = tableE;
 
   const hasExactDuplicate = ftE.rows.array.some(existingRow => {
     if (existingRow._state === 'deleted') return false;

@@ -1,9 +1,10 @@
+import type { CustomTable } from '../../class/CustomTable';
 import dayjs from '../../utilities/configDayjs';
 import { persistNebengeldTableData } from '.';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenN } from '../../interfaces';
+import type { IDatenN } from '../../interfaces';
 
-export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement): void {
+export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, tableN: CustomTable<IDatenN>): void {
   const select = form.querySelector<HTMLSelectElement>('#tagN');
   if (!select) throw new Error("Select element with ID 'tagN' not found");
   let idN = select.selectedIndex;
@@ -18,7 +19,6 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement):
   if (!inputAuftragN) throw new Error("Input element with ID 'AuftragN' not found");
   daten.auftragN = inputAuftragN.value;
 
-  console.log(daten);
   select.options[idN].selected = false;
   select.options[idN].disabled = true;
   idN++;
@@ -32,9 +32,7 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement):
 
   inputAuftragN.value = '';
 
-  const tableN = document.querySelector<CustomHTMLTableElement<IDatenN>>('#tableN');
-  if (!tableN) throw new Error('table N nicht gefunden');
-  const ftN = tableN.instance;
+  const ftN = tableN;
 
   const hasDuplicateDay = ftN.rows.array.some(existingRow => {
     if (existingRow._state === 'deleted') return false;

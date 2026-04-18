@@ -11,6 +11,8 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from '@simplewebauthn/browser';
+import { unwrapEnvelope } from '../core';
+import type { ApiHttpResponse } from '../core';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../interfaces';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
@@ -38,13 +40,6 @@ import {
 } from './fieldMapper';
 
 // ─── Typen ───────────────────────────────────────────────
-
-/** Neues Backend-Response-Format */
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-}
 
 interface PasskeyLoginStartResponse {
   options: PublicKeyCredentialRequestOptionsJSON;
@@ -90,13 +85,7 @@ async function apiFetch<I, T>(
   const result = await FetchRetry<I, T>(path, data, method);
   if (result instanceof Error) throw result;
 
-  // Neues Format: { success, data, message }
-  const response = result as unknown as ApiResponse<T> & { statusCode: number };
-  if (!response.success && response.statusCode >= 400) {
-    throw new Error(response.message ?? `API-Fehler (${response.statusCode})`);
-  }
-
-  return response.data as T;
+  return unwrapEnvelope(result as unknown as ApiHttpResponse<T>);
 }
 
 // ─── Auth-Endpunkte ──────────────────────────────────────
@@ -169,29 +158,22 @@ export const authApi = {
     };
 
     try {
-      const response = await FetchRetry<{ refreshToken: string }, RefreshResponseData>(
+      const refreshData = await apiFetch<{ refreshToken: string }, RefreshResponseData>(
         'auth/refresh-token',
         { refreshToken },
         'POST',
       );
 
-      if (response instanceof Error) throw response;
-
-      if (
-        !response.success ||
-        response.statusCode >= 400 ||
-        !response.data?.accessToken ||
-        !response.data?.refreshToken
-      ) {
-        throw new Error(response.message ?? 'Token-Refresh fehlgeschlagen');
+      if (!refreshData.accessToken || !refreshData.refreshToken) {
+        throw new Error('Token-Refresh fehlgeschlagen');
       }
 
-      Storage.set('AccessToken', response.data.accessToken);
-      Storage.set('RefreshToken', response.data.refreshToken);
+      Storage.set('AccessToken', refreshData.accessToken);
+      Storage.set('RefreshToken', refreshData.refreshToken);
 
       return {
-        userName: response.data.userName,
-        role: response.data.role,
+        userName: refreshData.userName,
+        role: refreshData.role,
       };
     } catch (error) {
       Storage.remove('AccessToken');

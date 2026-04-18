@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE } from '../../interfaces';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../interfaces';
 import { Storage, checkMaxTag } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { submitBereitschaftsEinsatz } from '../utils';
@@ -16,6 +16,8 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   const tableBE = document.querySelector<CustomHTMLTableElement<IDatenBE>>('#tableBE');
   if (!tableBE?.instance) throw new Error('Tabelle nicht gefunden');
   const columns = tableBE.instance.columns.array;
+  const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
+  if (!tableBZ?.instance) throw new Error('tableBZ nicht gefunden');
 
   const modal: CustomHTMLDivElement<IDatenBE> = showModal(
     <MyFormModal myRef={formRef} title="Neuen Bereitschaftseinsatz eingeben" onSubmit={onSubmit()}>
@@ -100,7 +102,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      const success = submitBereitschaftsEinsatz(modal);
+      const success = submitBereitschaftsEinsatz(modal, tableBE!, tableBZ!);
 
       if (success) Modal.getInstance(modal)?.hide();
     };

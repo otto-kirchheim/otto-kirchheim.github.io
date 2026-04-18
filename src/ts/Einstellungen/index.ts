@@ -1,4 +1,5 @@
 import dayjs from '../utilities/configDayjs';
+import { registerAppStartTask } from '../core';
 import { Storage, saveDaten } from '../utilities';
 import { setAutoSaveEnabled, setAutoSaveDelay } from '../utilities/autoSave';
 import { authApi } from '../utilities/apiService';
@@ -265,7 +266,7 @@ function applyEinstellungenToRuntime(): void {
   }
 }
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   const Monat = document.querySelector<HTMLInputElement>('#Monat');
   Monat?.addEventListener('change', changeMonatJahr);
 

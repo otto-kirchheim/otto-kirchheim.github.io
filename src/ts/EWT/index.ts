@@ -1,5 +1,6 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
+import { registerAppStartTask } from '../core';
 import type { IVorgabenU } from '../interfaces';
 import { isEwtInMonat, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
 import dayjs from '../utilities/configDayjs';
@@ -7,7 +8,7 @@ import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import download from '../utilities/download';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   const tagParser = (value: string) => {
       const d = dayjs(value);
       return d.isValid() ? d.format('dd DD.MM.') : value;
@@ -159,6 +160,7 @@ window.addEventListener('load', () => {
       monat,
       daten: getEwtDaten(undefined, monat),
       vorgabenU: Storage.get<IVorgabenU>('VorgabenU', { check: true }),
+      tableE: ftE,
     });
   });
 
@@ -173,7 +175,7 @@ window.addEventListener('load', () => {
   });
 
   const btnESEE = document.querySelector<HTMLButtonElement>('#btnESEE');
-  btnESEE?.addEventListener('click', createAddModalEWT);
+  btnESEE?.addEventListener('click', () => createAddModalEWT(ftE));
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftE.rows.setFilter(row => isEwtInMonat(row, monat));

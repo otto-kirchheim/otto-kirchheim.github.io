@@ -1,6 +1,7 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import type { CustomTable } from '../class/CustomTable';
 import { createCustomTable } from '../class/CustomTable';
+import { registerAppStartTask } from '../core';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../interfaces';
 import { buttonDisable, createOnChangeHandler, getMonatFromBE, getMonatFromBZ, saveDaten, Storage } from '../utilities';
 import dayjs from '../utilities/configDayjs';
@@ -55,7 +56,7 @@ export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgaben
   },
 };
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   const isEinsatzLinkedToZeitraum = (einsatz: IDatenBE, zeitraum: IDatenBZ): boolean => {
     const einsatzDate = dayjs(einsatz.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const einsatzStart = dayjs(`${einsatzDate}T${einsatz.beginBE}`);

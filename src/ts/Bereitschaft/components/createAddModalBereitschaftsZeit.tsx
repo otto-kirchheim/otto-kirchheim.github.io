@@ -205,11 +205,11 @@ export default function createAddModalBereitschaftsZeit(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      submitBereitschaftsZeiten(modal);
-
       const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
+      if (!table) throw new Error('tableBZ nicht gefunden');
+      submitBereitschaftsZeiten(modal, table);
       Modal.getInstance(modal)?.hide();
-      if (table) persistBereitschaftsZeitraumTableData(table.instance);
+      persistBereitschaftsZeitraumTableData(table.instance);
     };
   }
 }

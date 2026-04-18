@@ -1,4 +1,4 @@
-import { aktualisiereBerechnung } from '../../Berechnung';
+import { publishDataChanged } from '../../core';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../Bereitschaft/utils';
 import { getEwtDaten } from '../../EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
@@ -65,7 +65,7 @@ export default function overwriteUserDaten(): void {
     scheduleAutoSave('N');
     delete dataServer.N;
   }
-  aktualisiereBerechnung();
+  publishDataChanged();
 
   Storage.remove('dataServer');
 }

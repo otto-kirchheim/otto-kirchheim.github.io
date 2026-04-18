@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const {
-  aktualisiereBerechnungMock,
+  publishDataChangedMock,
   getBereitschaftsZeitraumDatenMock,
   getBereitschaftsEinsatzDatenMock,
   getEwtDatenMock,
@@ -12,7 +12,7 @@ const {
   storageRemoveMock,
   scheduleAutoSaveMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
-  aktualisiereBerechnungMock: vi.fn(),
+  publishDataChangedMock: vi.fn(),
   getBereitschaftsZeitraumDatenMock: vi.fn(),
   getBereitschaftsEinsatzDatenMock: vi.fn(),
   getEwtDatenMock: vi.fn(),
@@ -24,8 +24,8 @@ const {
   scheduleAutoSaveMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Berechnung', () => ({
-  aktualisiereBerechnung: aktualisiereBerechnungMock,
+vi.mock('../src/ts/core', () => ({
+  publishDataChanged: publishDataChangedMock,
 }));
 
 vi.mock('../src/ts/Bereitschaft/utils', () => ({
@@ -134,7 +134,7 @@ describe('overwriteUserDaten', () => {
     expect(getNebengeldDatenMock).toHaveBeenCalledWith(expectedN, undefined, { scope: 'all' });
 
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BZ');
     expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
     expect(scheduleAutoSaveMock).toHaveBeenCalledWith('EWT');
@@ -152,7 +152,7 @@ describe('overwriteUserDaten', () => {
     overwriteUserDaten();
 
     expect(storageSetMock).not.toHaveBeenCalled();
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 });

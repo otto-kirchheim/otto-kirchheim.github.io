@@ -2,15 +2,21 @@ import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
 import type { IDatenN } from '../src/ts/interfaces';
 
-const { saveTableDataNMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
-  saveTableDataNMock: vi.fn(),
-}));
+const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
+  () => ({
+    saveTableDataNMock: vi.fn(),
+    createSnackBarMock: vi.fn(),
+  }),
+);
 
-type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement) => void;
+type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement, tableN: any) => void;
 
 async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
   mock.module('../src/ts/Neben/utils/persistNebengeldTableData', () => ({
     default: saveTableDataNMock,
+  }));
+  mock.module('../src/ts/class/CustomSnackbar', () => ({
+    createSnackBar: createSnackBarMock,
   }));
 
   const module = await import('../src/ts/Neben/utils/addNebengeldTag');
@@ -41,7 +47,7 @@ describe('addNebengeldTag', () => {
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    expect(() => addNebengeldTag(form)).toThrow("Select element with ID 'tagN' not found");
+    expect(() => addNebengeldTag(form, null)).toThrow("Select element with ID 'tagN' not found");
   });
 
   it('beendet ohne Aktion wenn kein Eintrag selektiert ist', async () => {
@@ -55,7 +61,7 @@ describe('addNebengeldTag', () => {
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    expect(() => addNebengeldTag(form)).not.toThrow();
+    expect(() => addNebengeldTag(form, null)).not.toThrow();
     expect(saveTableDataNMock).not.toHaveBeenCalled();
   });
 
@@ -76,7 +82,7 @@ describe('addNebengeldTag', () => {
     if (!select) throw new Error('select not found');
     select.selectedIndex = 0;
 
-    expect(() => addNebengeldTag(form)).toThrow("Input element with ID 'anzahl040N' not found");
+    expect(() => addNebengeldTag(form, null)).toThrow("Input element with ID 'anzahl040N' not found");
   });
 
   it('wirft Fehler wenn #AuftragN fehlt', async () => {
@@ -97,29 +103,7 @@ describe('addNebengeldTag', () => {
     if (!select) throw new Error('select not found');
     select.selectedIndex = 0;
 
-    expect(() => addNebengeldTag(form)).toThrow("Input element with ID 'AuftragN' not found");
-  });
-
-  it('wirft Fehler wenn Tabelle #tableN fehlt', async () => {
-    const addNebengeldTag = await loadAddNebengeldTag();
-
-    const data = createDataN();
-    document.body.innerHTML = `
-      <form id="form">
-        <select id="tagN">
-          <option selected value='${JSON.stringify(data)}'>Tag</option>
-        </select>
-        <input id="anzahl040N" value="4" />
-        <input id="AuftragN" value="A-123" />
-      </form>
-    `;
-    const form = document.querySelector<HTMLFormElement>('#form');
-    if (!form) throw new Error('form not found');
-    const select = form.querySelector<HTMLSelectElement>('#tagN');
-    if (!select) throw new Error('select not found');
-    select.selectedIndex = 0;
-
-    expect(() => addNebengeldTag(form)).toThrow('table N nicht gefunden');
+    expect(() => addNebengeldTag(form, null)).toThrow("Input element with ID 'AuftragN' not found");
   });
 
   it('fuegt Daten hinzu, speichert Tabelle und waehlt naechsten freien Eintrag', async () => {
@@ -152,11 +136,6 @@ describe('addNebengeldTag', () => {
       },
     };
 
-    const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftN };
-    table.id = 'tableN';
-    table.instance = ftN;
-    document.body.appendChild(table);
-
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
@@ -165,7 +144,7 @@ describe('addNebengeldTag', () => {
     if (!select || !auftrag) throw new Error('input not found');
     select.selectedIndex = 0;
 
-    addNebengeldTag(form);
+    addNebengeldTag(form, ftN);
 
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({ tagN: '2026-03-10', anzahl040N: 1, auftragN: 'A-123' }),
@@ -175,5 +154,40 @@ describe('addNebengeldTag', () => {
     expect(select.options[0].selected).toBe(false);
     expect(select.options[2].selected).toBe(true);
     expect(auftrag.value).toBe('');
+  });
+
+  it('zeigt Warn-Snackbar und überspringt Add bei bereits vorhandenem Tag', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
+    // tagN must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
+    const data = createDataN('10.03.2026');
+    document.body.innerHTML = `
+      <form id="form">
+        <select id="tagN">
+          <option selected value='${JSON.stringify(data)}'>Tag</option>
+        </select>
+        <input id="anzahl040N" value="0" />
+        <input id="AuftragN" value="" />
+      </form>
+    `;
+    const form = document.querySelector<HTMLFormElement>('#form');
+    if (!form) throw new Error('form not found');
+    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    if (!select) throw new Error('select not found');
+    select.selectedIndex = 0;
+
+    const addMock = vi.fn();
+    const ftN = {
+      rows: {
+        add: addMock,
+        array: [{ _state: 'unchanged', cells: createDataN('10.03.2026') }],
+      },
+    };
+
+    addNebengeldTag(form, ftN);
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'warning' }));
+    expect(addMock).not.toHaveBeenCalled();
+    expect(saveTableDataNMock).not.toHaveBeenCalled();
   });
 });

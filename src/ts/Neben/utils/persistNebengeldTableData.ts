@@ -1,7 +1,7 @@
 import type { IDatenN } from '../../interfaces';
 import type { CustomTable } from '../../class/CustomTable';
 import { Storage } from '../../utilities';
-import aktualisiereBerechnung from '../../Berechnung/aktualisiereBerechnung';
+import { publishDataChanged } from '../../core';
 import normalizeResourceRows from '../../utilities/normalizeResourceRows';
 import mergeVisibleResourceRows from '../../utilities/mergeVisibleResourceRows';
 import dayjs from '../../utilities/configDayjs';
@@ -12,6 +12,6 @@ export default function persistNebengeldTableData(ft: CustomTable<IDatenN>): IDa
 
   const mergedRows = mergeVisibleResourceRows('N', ft);
   Storage.set('dataN', mergedRows);
-  aktualisiereBerechnung();
+  publishDataChanged();
   return mergedRows;
 }

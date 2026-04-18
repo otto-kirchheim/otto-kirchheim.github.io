@@ -1,22 +1,18 @@
 import type { Dayjs } from 'dayjs';
+import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
-import { aktualisiereBerechnung } from '../../Berechnung';
+import { publishDataChanged } from '../../core';
 import { createSnackBar } from '../../class/CustomSnackbar';
-import type {
-  CustomHTMLDivElement,
-  CustomHTMLTableElement,
-  IDatenBZ,
-  IMonatsDaten,
-  IVorgabenU,
-  ReturnTypeSaveData,
-  UserDatenServer,
-} from '../../interfaces';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '../../interfaces';
 import { normalizeResourceRows, Storage, clearLoading, setLoading, tableToArray } from '../../utilities';
-import { FetchRetry } from '../../utilities/FetchRetry';
+import { bereitschaftszeitraumApi } from '../../utilities/apiService';
 import dayjs from '../../utilities/configDayjs';
 import { getMonatFromBZ } from '../../utilities/getMonatFromItem';
 
-export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElement<IDatenBZ>): Promise<void> {
+export default async function submitBereitschaftsZeiten(
+  modal: CustomHTMLDivElement<IDatenBZ>,
+  tableBZ: CustomHTMLTableElement<IDatenBZ>,
+): Promise<void> {
   setLoading('btnESZ');
 
   const bAInput = modal.querySelector<HTMLInputElement>('#bA');
@@ -28,9 +24,6 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
   const nATInput = modal.querySelector<HTMLInputElement>('#nAT');
   const nEInput = modal.querySelector<HTMLInputElement>('#nE');
   const nETInput = modal.querySelector<HTMLInputElement>('#nET');
-  const monatInput = document.querySelector<HTMLInputElement>('#Monat');
-  const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
-  const tableBZ = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
 
   const preserveDeletedRows = (
     table: CustomHTMLTableElement<IDatenBZ>,
@@ -43,20 +36,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
     table.instance.drawRows();
   };
 
-  if (
-    !bAInput ||
-    !bATInput ||
-    !bEInput ||
-    !bETInput ||
-    !nachtInput ||
-    !nAInput ||
-    !nATInput ||
-    !nEInput ||
-    !nETInput ||
-    !monatInput ||
-    !jahrInput ||
-    !tableBZ
-  )
+  if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput)
     throw new Error('Input Element nicht gefunden');
 
   const bereitschaftsAnfang: Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
@@ -86,8 +66,8 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
     return;
   }
 
-  const monat: number = +monatInput.value;
-  const jahr: number = +jahrInput.value;
+  const monat: number = Storage.get<number>('Monat', { check: true });
+  const jahr: number = Storage.get<number>('Jahr', { check: true });
 
   const mergeMonatRows = (allRows: IDatenBZ[], monthRows: IDatenBZ[], month: number): IDatenBZ[] => {
     const otherMonths = allRows.filter(item => getMonatFromBZ(item) !== month);
@@ -102,7 +82,6 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
   const currentMonatRows: IMonatsDaten['BZ'] = getMonatRows(tableToArray('tableBZ'), monat);
   let folgeMonatData: IMonatsDaten['BZ'] | false;
   if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
-  console.log({ bereitschaftsAnfang, bereitschaftsEnde, nachtAnfang, nachtEnde, nacht, monat, jahr });
 
   if (
     bereitschaftsAnfang.isSame(bereitschaftsEnde, 'month') ||
@@ -212,21 +191,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
 
     if (jahr !== jahr2) {
       try {
-        const fetched2 = await FetchRetry<null, UserDatenServer>(jahr2.toString());
-        if (fetched2 instanceof Error) throw fetched2;
-        if (fetched2.statusCode != 200) {
-          console.log('Fehler:', fetched2.message);
-          createSnackBar({
-            message: 'Bereitschaft<br/>Es ist ein Fehler beim Jahreswechsel aufgetreten',
-            status: 'error',
-            timeout: 3000,
-            fixed: true,
-          });
-          return;
-        }
-        const respondedBzRows = fetched2.data.BZ;
-        console.log(respondedBzRows);
-        const user: IVorgabenU = fetched2.data.vorgabenU;
+        const { data: respondedBzRows } = await bereitschaftszeitraumApi.loadYear(jahr2);
 
         folgeMonatData = calculateBereitschaftsZeiten(
           bereitschaftsEndeWechsel,
@@ -234,23 +199,19 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
           nachtAnfang2,
           nachtEnde2,
           nacht2,
-          respondedBzRows.filter(item => getMonatFromBZ(item) === 1),
+          respondedBzRows.filter(item => getMonatFromBZ(item) === monat2 + 1),
         );
 
         if (!folgeMonatData) return;
 
-        const mergedRespondedRows = mergeMonatRows(respondedBzRows, folgeMonatData, 1);
+        const createItems = folgeMonatData.map(row => ({ ...row, clientRequestId: uuidv4() }));
+        const bulkResult = await bereitschaftszeitraumApi.bulk(
+          { create: createItems, update: [], delete: [] },
+          monat2 + 1,
+          jahr2,
+        );
 
-        const dataSave: { BZ: IDatenBZ[]; User: IVorgabenU; Jahr: number } = {
-          BZ: mergedRespondedRows,
-          Jahr: jahr2,
-          User: user,
-        };
-
-        const fetchedSave = await FetchRetry<typeof dataSave, ReturnTypeSaveData>('saveData', dataSave, 'POST');
-        if (fetchedSave instanceof Error) throw fetchedSave;
-        if (fetchedSave.statusCode != 200) {
-          console.log('Fehler:', fetchedSave.message);
+        if (bulkResult.errors.length > 0) {
           createSnackBar({
             message: 'Bereitschaft<br/>Es ist ein Fehler beim Jahreswechsel aufgetreten',
             status: 'error',
@@ -259,7 +220,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
           });
           return;
         }
-        console.log(fetchedSave.data);
+
         createSnackBar({
           message: `Bereitschaft<br/>Daten für 01/${jahr2} gespeichert`,
           status: 'success',
@@ -267,7 +228,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
           fixed: true,
         });
       } catch (err: unknown) {
-        console.log(err);
+        console.error(err);
         return;
       }
     } else {
@@ -298,9 +259,6 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
       nacht,
       currentMonatRows,
     );
-
-    console.log('Daten Monat 1', monatData);
-    console.log('Daten Monat 2', folgeMonatData);
   }
 
   if (!monatData) {
@@ -322,7 +280,7 @@ export default async function submitBereitschaftsZeiten(modal: CustomHTMLDivElem
   Storage.set('dataBZ', mergedRows);
   preserveDeletedRows(tableBZ, normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })), monat);
 
-  aktualisiereBerechnung();
+  publishDataChanged();
 
   clearLoading('btnESZ');
   createSnackBar({

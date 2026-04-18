@@ -1,4 +1,5 @@
 import { selectYear } from '../Einstellungen/utils';
+import { registerAppStartTask } from '../core';
 import type { IVorgabenU } from '../interfaces';
 import { ACT_AS_STATUS_EVENT, Storage, updateActAsBanner, updateTabVisibility } from '../utilities';
 import dayjs from '../utilities/configDayjs';
@@ -17,7 +18,7 @@ async function ensureAdminTabMounted(): Promise<void> {
   adminTabMounted = true;
 }
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   handleAuthUrlState();
 
   if (Storage.check('VorgabenU')) {

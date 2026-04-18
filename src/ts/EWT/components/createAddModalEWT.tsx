@@ -1,4 +1,5 @@
 import { createRef } from 'preact';
+import type { CustomTable } from '../../class/CustomTable';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
 import type { IDatenEWT } from '../../interfaces';
 import { type IVorgabenU, type IVorgabenUfZ } from '../../interfaces';
@@ -6,7 +7,7 @@ import { Storage } from '../../utilities';
 import dayjs from '../../utilities/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
-export default function createAddModalEWT(): void {
+export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void {
   const ref = createRef<HTMLFormElement>();
 
   const vorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
@@ -191,7 +192,7 @@ export default function createAddModalEWT(): void {
       if (!(form instanceof HTMLFormElement)) return;
       if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      addEwtTag(modal, vorgabenU, bueroCheckbox.checked);
+      addEwtTag(modal, vorgabenU, bueroCheckbox.checked, tableE);
     };
   }
 }

@@ -1,11 +1,12 @@
 import { createSnackBar } from '../class/CustomSnackbar';
 import { createCustomTable } from '../class/CustomTable';
+import { registerAppStartTask } from '../core';
 import { getMonatFromN, Storage, buttonDisable, createOnChangeHandler, saveDaten } from '../utilities';
 import download from '../utilities/download';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   const Jahr: number = Storage.get('Jahr', { default: new Date().getFullYear() });
 
   const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
@@ -84,7 +85,7 @@ window.addEventListener('load', () => {
 
   const btnESN = document.querySelector<HTMLButtonElement>('#btnESN');
   btnESN?.addEventListener('click', () => {
-    if (checkIfGreater2024(Jahr, true)) createAddModalNeben();
+    if (checkIfGreater2024(Jahr, true)) createAddModalNeben(ftN);
   });
 
   const btnSaveN = document.querySelector<HTMLButtonElement>('#btnSaveN');

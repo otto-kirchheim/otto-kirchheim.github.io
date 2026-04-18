@@ -3,19 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenN } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
-const { tableToArrayMock, aktualisiereBerechnungMock } = (
+const { tableToArrayMock, publishDataChangedMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   tableToArrayMock: vi.fn(),
-  aktualisiereBerechnungMock: vi.fn(),
+  publishDataChangedMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/utilities/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-vi.mock('../src/ts/Berechnung/aktualisiereBerechnung', () => ({
-  default: aktualisiereBerechnungMock,
+vi.mock('../src/ts/core', () => ({
+  publishDataChanged: publishDataChangedMock,
 }));
 
 import persistNebengeldTableData from '../src/ts/Neben/utils/persistNebengeldTableData';
@@ -59,7 +59,7 @@ describe('persistNebengeldTableData', () => {
 
     expect(result).toEqual(dataN);
     expect(tableToArrayMock).not.toHaveBeenCalled();
-    expect(aktualisiereBerechnungMock).not.toHaveBeenCalled();
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
   });
 
   it('aktualisiert dataN aus den sichtbaren Tabellenzeilen und triggert Berechnung', () => {
@@ -75,7 +75,7 @@ describe('persistNebengeldTableData', () => {
 
     expect(result).toEqual(newRows);
     expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(newRows);
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
   });
 
   it('behält andere Monate, wenn nur der ausgewählte Monat neu persistiert wird', () => {

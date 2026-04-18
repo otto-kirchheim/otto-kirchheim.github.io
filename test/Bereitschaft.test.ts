@@ -267,37 +267,18 @@ describe('#bereitschaftEingabeWeb', async () => {
       <input id="nE" value="2023-04-19"/>
       <input id="nET" value="07:00"/>
     `;
-    // Benötigte Input-Elemente direkt im body erzeugen
-    const inputIdsAndValues = [
-      ['bereitschaftsAnfang', '2023-04-12'],
-      ['bereitschaftsAnfangTime', '15:45'],
-      ['bereitschaftsEnde', '2023-04-19'],
-      ['bereitschaftsEndeTime', '07:00'],
-      ['nacht', ''],
-      ['nachtAnfang', '2023-04-19'],
-      ['nachtAnfangTime', '07:00'],
-      ['nachtEnde', '2023-04-19'],
-      ['nachtEndeTime', '07:00'],
-      ['Monat', '4'],
-      ['Jahr', '2023'],
-    ];
-    const createdInputs: HTMLElement[] = [];
-    for (const [id, value] of inputIdsAndValues) {
-      const el = document.createElement('input');
-      el.id = id;
-      if (id === 'nacht') {
-        el.setAttribute('type', 'checkbox');
-      } else {
-        (el as HTMLInputElement).value = value;
-      }
-      document.body.appendChild(el);
-      createdInputs.push(el);
-    }
     // Table-Element erzeugen
-    const tableBZ = document.createElement('table');
+    const tableBZ = document.createElement('table') as HTMLTableElement & {
+      instance: {
+        rows: { loadSmart: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> };
+        drawRows: ReturnType<typeof vi.fn>;
+      };
+    };
     tableBZ.id = 'tableBZ';
+    tableBZ.instance = { rows: { loadSmart: vi.fn(), setFilter: vi.fn() }, drawRows: vi.fn() };
     document.body.appendChild(tableBZ);
-    // ...existing code...
+    Storage.set('Monat', 4);
+    Storage.set('Jahr', 2023);
     Storage.set('dataBZ', datenBZMock);
     Storage.set('dataBE', datenBEMock);
     Storage.set('dataE', datenEWTMock);
@@ -305,11 +286,10 @@ describe('#bereitschaftEingabeWeb', async () => {
     Storage.set('VorgabenGeld', VorgabenGeldMock);
     const StorageSpy = vi.spyOn(Storage, 'set');
 
-    await submitBereitschaftsZeiten($modal);
+    await submitBereitschaftsZeiten($modal, tableBZ as never);
 
     expect(StorageSpy).toMatchSnapshot();
     // Aufräumen
-    for (const el of createdInputs) el.remove();
     tableBZ.remove();
   });
 });

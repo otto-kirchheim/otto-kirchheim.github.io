@@ -1,4 +1,5 @@
 import { createRef } from 'preact';
+import type { CustomTable } from '../../class/CustomTable';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../components';
 import { getEwtDaten } from '../../EWT/utils';
@@ -61,7 +62,7 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
   return options;
 };
 
-export default function createAddModalNeben(): void {
+export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void {
   const ref = createRef<HTMLFormElement>();
 
   const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
@@ -138,7 +139,7 @@ export default function createAddModalNeben(): void {
     return (event: Event): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
-      addNebengeldTag(form);
+      addNebengeldTag(form, tableN);
     };
   }
 }

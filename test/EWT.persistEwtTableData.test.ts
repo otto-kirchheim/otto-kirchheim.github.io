@@ -3,19 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenEWT, IDatenN } from '../src/ts/interfaces';
 import Storage from '../src/ts/utilities/Storage';
 
-const { tableToArrayMock, aktualisiereBerechnungMock } = (
+const { tableToArrayMock, publishDataChangedMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   tableToArrayMock: vi.fn(),
-  aktualisiereBerechnungMock: vi.fn(),
+  publishDataChangedMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/utilities/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-vi.mock('../src/ts/Berechnung/aktualisiereBerechnung', () => ({
-  default: aktualisiereBerechnungMock,
+vi.mock('../src/ts/core', () => ({
+  publishDataChanged: publishDataChangedMock,
 }));
 
 import persistEwtTableData from '../src/ts/EWT/utils/persistEwtTableData';
@@ -71,7 +71,7 @@ describe('persistEwtTableData', () => {
     expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
     expect(result).toEqual(newRows);
     expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
   });
 
   it('behält andere Monate, wenn nur der ausgewählte Monat neu persistiert wird', () => {

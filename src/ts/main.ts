@@ -36,10 +36,11 @@ import Dropdown from 'bootstrap/js/dist/dropdown';
 import Offcanvas from 'bootstrap/js/dist/offcanvas';
 import Popover from 'bootstrap/js/dist/popover';
 import Tab from 'bootstrap/js/dist/tab';
+import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   setImpressumAndCopyright();
 
   Array.from(document.querySelectorAll('.dropdown-toggle')).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
@@ -123,10 +124,6 @@ window.addEventListener('load', () => {
   } else {
     setImpressumAndCopyright();
   }
-
-  window.addEventListener('load', () => {
-    setImpressumAndCopyright();
-  });
 });
 
 import './Berechnung';
@@ -135,5 +132,7 @@ import './EWT';
 import './Einstellungen';
 import './Login';
 import './Neben';
+
+initializeAppBootstrap();
 
 import '../scss/styles.scss';
