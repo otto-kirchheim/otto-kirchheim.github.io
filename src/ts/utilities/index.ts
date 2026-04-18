@@ -1,3 +1,5 @@
+import { confirmDeleteAllRows } from './confirmDeleteAllRows';
+import { getStoredMonatJahr } from './dateStorage';
 import initializeColorModeToggler from './BSColorToggler';
 import DatenSortieren from './DatenSortieren';
 import { FetchRetry, getServerUrl } from './FetchRetry';
@@ -54,7 +56,9 @@ import tokenErneuern from './tokenErneuern';
 import updateTabVisibility, { hideAllFeatureTabs } from './updateTabVisibility';
 
 export {
+  confirmDeleteAllRows,
   DatenSortieren,
+  getStoredMonatJahr,
   FetchRetry,
   GERMAN_ADDRESS_FORMAT_HINT,
   PERS_FIELD_LABELS,

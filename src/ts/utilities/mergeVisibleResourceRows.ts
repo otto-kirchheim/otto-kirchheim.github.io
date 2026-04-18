@@ -2,7 +2,7 @@ import type { CustomTable, CustomTableTypes } from '../class/CustomTable';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '../interfaces';
 import type { TStorageData } from './Storage';
 import Storage from './Storage';
-import dayjs from './configDayjs';
+import { getStoredMonatJahr } from './dateStorage';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from './getMonatFromItem';
 import normalizeResourceRows from './normalizeResourceRows';
 
@@ -37,7 +37,7 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
   table: CustomTable<T>,
 ): T[] {
   const storageKey = RESOURCE_STORAGE_MAP[resource];
-  const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  const activeMonat = getStoredMonatJahr().monat;
 
   const rawRowsCandidate =
     typeof table.getRows === 'function' ? table.getRows() : Array.isArray(table.rows?.array) ? table.rows.array : [];

@@ -7,6 +7,7 @@ import {
   isEwtInMonat,
   Storage,
   buttonDisable,
+  getStoredMonatJahr,
   setDisableButton,
 } from '../../utilities';
 import { setMonatJahr } from '.';
@@ -38,8 +39,8 @@ export default function changeMonatJahr(): void {
 }
 
 function changeMonatTableData({ monat }: { monat?: number } = {}) {
-  const activeMonat = monat ?? Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
-  const jahr = Storage.get<number>('Jahr', { default: new Date().getFullYear() });
+  const { monat: storedMonat, jahr } = getStoredMonatJahr();
+  const activeMonat = monat ?? storedMonat;
 
   document
     .querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ')

@@ -1,5 +1,4 @@
-import { Storage } from '../../utilities';
-import dayjs from '../../utilities/configDayjs';
+import { Storage, getStoredMonatJahr } from '../../utilities';
 import { loadUserDaten } from '../../Login/utils';
 import { setActAsUser } from './api';
 
@@ -17,8 +16,7 @@ export async function loadUserDataForAdminSelection(userId: string | null, userN
   setActAsUser(userId, userName);
   clearLoadedUserResourceCache();
 
-  const jahr = Storage.get<number>('Jahr', { default: dayjs().year() });
-  const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  const { monat, jahr } = getStoredMonatJahr();
 
   await loadUserDaten(monat, jahr);
   window.location.hash = '#start';

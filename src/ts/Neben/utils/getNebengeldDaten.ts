@@ -1,6 +1,5 @@
 import type { IDatenN, IDataQueryOptions, IMonatsDaten } from '../../interfaces';
-import { filterByMonat, getMonatFromN, normalizeResourceRows, Storage } from '../../utilities';
-import dayjs from '../../utilities/configDayjs';
+import { filterByMonat, getMonatFromN, getStoredMonatJahr, normalizeResourceRows, Storage } from '../../utilities';
 
 export default function getNebengeldDaten(
   data?: IMonatsDaten['N'],
@@ -9,7 +8,7 @@ export default function getNebengeldDaten(
 ): IMonatsDaten['N'] {
   if (!Storage.check('Benutzer')) return [];
 
-  const jahr = Storage.get<number>('Jahr', { default: dayjs().year() });
+  const { monat: storedMonat, jahr } = getStoredMonatJahr();
   if (jahr < 2024) return [];
 
   const sourceData = data ?? Storage.get<unknown>('dataN', { default: [] });
@@ -17,6 +16,6 @@ export default function getNebengeldDaten(
 
   if (options?.scope === 'all') return rows;
 
-  const activeMonat = Monat ?? Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  const activeMonat = Monat ?? storedMonat;
   return activeMonat ? filterByMonat(rows, activeMonat, getMonatFromN) : [];
 }

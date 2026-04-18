@@ -1,8 +1,7 @@
 import { selectYear } from '../Einstellungen/utils';
 import { registerAppStartTask } from '../core';
 import type { IVorgabenU } from '../interfaces';
-import { ACT_AS_STATUS_EVENT, Storage, updateActAsBanner, updateTabVisibility } from '../utilities';
-import dayjs from '../utilities/configDayjs';
+import { ACT_AS_STATUS_EVENT, getStoredMonatJahr, Storage, updateActAsBanner, updateTabVisibility } from '../utilities';
 import { getUserCookie, isAdmin } from '../utilities/decodeAccessToken';
 import { initAutoSaveIndicator } from '../utilities/autoSaveIndicator';
 import { createModalLogin } from './components';
@@ -81,8 +80,7 @@ registerAppStartTask(() => {
     if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
     if (loginDisplayEl) loginDisplayEl.classList.add('d-none');
 
-    const jahr: number = Storage.get<number>('Jahr', { default: dayjs().year() });
-    const monat: number = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+    const { monat, jahr } = getStoredMonatJahr();
 
     if (jahrEl) jahrEl.value = jahr.toString();
     if (monatEl) monatEl.value = monat.toString();
