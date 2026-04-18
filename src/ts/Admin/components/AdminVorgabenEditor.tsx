@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { createSnackBar } from '../../class/CustomSnackbar';
+import dayjs from '../../utilities/configDayjs';
 import {
   deleteVorgabeByYear,
   fetchVorgabeByYear,
@@ -89,7 +90,7 @@ export function AdminVorgabenEditor() {
   }
 
   async function handleCreateYear() {
-    const input = window.prompt('Neues Jahr fuer Vorgaben:', `${new Date().getFullYear()}`);
+    const input = window.prompt('Neues Jahr fuer Vorgaben:', `${dayjs().year()}`);
     if (!input) return;
     const year = Number.parseInt(input, 10);
     if (!Number.isInteger(year) || year < 2020) {

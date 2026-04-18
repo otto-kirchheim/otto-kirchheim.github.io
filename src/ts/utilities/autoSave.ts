@@ -578,7 +578,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     if (maxUpdatedAt) {
       const storageKey = RESOURCE_STORAGE_MAP[resource];
       const currentData = Storage.get(storageKey, { check: true });
-      Storage.setWithTimestamp(storageKey, currentData, Date.parse(maxUpdatedAt));
+      Storage.setWithTimestamp(storageKey, currentData, dayjs(maxUpdatedAt).valueOf());
     }
 
     // Zeige Fehler-Dialog wenn Fehler vorhanden
@@ -617,7 +617,7 @@ async function saveSettingsNow(): Promise<void> {
     const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
     const result = await profileApi.updateMyProfile(vorgabenU);
     if (result.updatedAt) {
-      Storage.setWithTimestamp('VorgabenU', result.data, Date.parse(result.updatedAt));
+      Storage.setWithTimestamp('VorgabenU', result.data, dayjs(result.updatedAt).valueOf());
     } else {
       Storage.set('VorgabenU', result.data);
     }

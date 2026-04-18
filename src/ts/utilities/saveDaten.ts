@@ -4,6 +4,7 @@ import { createSnackBar } from '../class/CustomSnackbar';
 import type { IVorgabenU, TResourceKey } from '../interfaces';
 import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from './autoSave';
 import { profileApi } from './apiService';
+import dayjs from './configDayjs';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
@@ -80,7 +81,7 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
 
     // 4. Server-normalisierte Profilwerte zurück in den lokalen Zustand übernehmen.
     if (profileResult?.updatedAt) {
-      Storage.setWithTimestamp('VorgabenU', profileResult.data, Date.parse(profileResult.updatedAt));
+      Storage.setWithTimestamp('VorgabenU', profileResult.data, dayjs(profileResult.updatedAt).valueOf());
     } else if (profileResult?.data) {
       Storage.set('VorgabenU', profileResult.data);
     }

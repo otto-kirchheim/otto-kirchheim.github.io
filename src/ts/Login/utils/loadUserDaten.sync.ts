@@ -1,5 +1,6 @@
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../interfaces';
 import { Storage } from '../../utilities';
+import dayjs from '../../utilities/configDayjs';
 import type { LoadedYearData } from '../../utilities/apiService';
 import type { TStorageData } from '../../utilities/Storage';
 import {
@@ -98,29 +99,34 @@ export function syncLoadedYearResources({
   const syncedVorgabenU = syncResource(
     'VorgabenU',
     vorgabenU,
-    serverTimestamps.VorgabenU ? Date.parse(serverTimestamps.VorgabenU) : 0,
+    serverTimestamps.VorgabenU ? dayjs(serverTimestamps.VorgabenU).valueOf() : 0,
     'Persönliche Daten',
   );
 
   const syncedBZ = syncResource(
     'dataBZ',
     BZ,
-    serverTimestamps.dataBZ ? Date.parse(serverTimestamps.dataBZ) : 0,
+    serverTimestamps.dataBZ ? dayjs(serverTimestamps.dataBZ).valueOf() : 0,
     'Bereitschaftszeit',
   );
 
   const syncedBE = syncResource(
     'dataBE',
     BE,
-    serverTimestamps.dataBE ? Date.parse(serverTimestamps.dataBE) : 0,
+    serverTimestamps.dataBE ? dayjs(serverTimestamps.dataBE).valueOf() : 0,
     'Bereitschaftseinsatz',
   );
 
-  const syncedEWT = syncResource('dataE', EWT, serverTimestamps.dataE ? Date.parse(serverTimestamps.dataE) : 0, 'EWT');
+  const syncedEWT = syncResource(
+    'dataE',
+    EWT,
+    serverTimestamps.dataE ? dayjs(serverTimestamps.dataE).valueOf() : 0,
+    'EWT',
+  );
   const syncedN = syncResource(
     'dataN',
     N,
-    serverTimestamps.dataN ? Date.parse(serverTimestamps.dataN) : 0,
+    serverTimestamps.dataN ? dayjs(serverTimestamps.dataN).valueOf() : 0,
     'Nebenbezüge',
   );
 

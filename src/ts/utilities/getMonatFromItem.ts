@@ -35,7 +35,7 @@ export function getMonatFromN(item: IDatenN): number {
   if (parsedDate.isValid()) return parsedDate.month() + 1;
 
   if (/^\d{1,2}$/.test(item.tagN)) {
-    return Storage.get<number>('Monat', { default: new Date().getMonth() + 1 });
+    return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   }
 
   return dayjs(item.tagN).month() + 1;
