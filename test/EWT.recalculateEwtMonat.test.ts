@@ -16,13 +16,13 @@ const {
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   calculateEwtEintraege: calculateEwtEintraegeMock,
   getEwtDaten: getEwtDatenMock,
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-vi.mock('../src/ts/Berechnung', () => ({
+vi.mock('../src/ts/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
@@ -30,7 +30,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-import recalculateEwtMonat from '../src/ts/EWT/utils/recalculateEwtMonat';
+import recalculateEwtMonat from '../src/ts/features/EWT/utils/recalculateEwtMonat';
 
 function createData(tagE: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {

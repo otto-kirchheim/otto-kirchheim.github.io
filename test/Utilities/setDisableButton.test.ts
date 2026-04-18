@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import setDisableButton from '../../src/ts/utilities/setDisableButton';
+import setDisableButton from '../../src/ts/infrastructure/ui/setDisableButton';
 
 describe('setDisableButton', () => {
   beforeEach(() => {

@@ -1,12 +1,12 @@
-import dayjs from '../src/ts/utilities/configDayjs';
+import dayjs from '../src/ts/infrastructure/date/configDayjs';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createAddModalBereitschaftsZeit } from '../src/ts/Bereitschaft/components';
+import { createAddModalBereitschaftsZeit } from '../src/ts/features/Bereitschaft/components';
 import {
   calculateBereitschaftsZeiten,
   getBereitschaftsEinsatzDaten,
   getBereitschaftsZeitraumDaten,
   submitBereitschaftsZeiten,
-} from '../src/ts/Bereitschaft/utils';
+} from '../src/ts/features/Bereitschaft/utils';
 import type { CustomHTMLDivElement } from '../src/ts/interfaces/CustomHTMLElements';
 import type { IDaten, IDatenBZ } from '../src/ts/interfaces/IDaten';
 import { Storage } from '../src/ts/utilities';

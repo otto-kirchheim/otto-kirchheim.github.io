@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
-import Storage from '../src/ts/utilities/Storage';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 const { tableToArrayMock, publishDataChangedMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -10,7 +10,7 @@ const { tableToArrayMock, publishDataChangedMock } = (
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/utilities/tableToArray', () => ({
+vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
@@ -18,7 +18,7 @@ vi.mock('../src/ts/core', () => ({
   publishDataChanged: publishDataChangedMock,
 }));
 
-import persistEwtTableData from '../src/ts/EWT/utils/persistEwtTableData';
+import persistEwtTableData from '../src/ts/features/EWT/utils/persistEwtTableData';
 
 function createData(tagE: string): IDatenEWT {
   return {

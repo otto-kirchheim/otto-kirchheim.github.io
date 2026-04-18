@@ -6,7 +6,7 @@ import {
   setupGermanAddressValidation,
   validateGermanAddressInput,
   validatePersInput,
-} from '../../src/ts/utilities/addressValidation';
+} from '../../src/ts/infrastructure/validation/addressValidation';
 
 describe('addressValidation', () => {
   it('accepts German addresses with house number', () => {

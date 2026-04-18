@@ -3,7 +3,7 @@ import {
   deriveHolidayRegionFromAddress,
   HOLIDAY_REGION_OPTIONS,
   resolveHolidayRegion,
-} from '../../src/ts/utilities/holidayRegion';
+} from '../../src/ts/infrastructure/date/holidayRegion';
 
 /** Hilfsfunktion: mockt einen erfolgreichen OpenPLZ-API-Aufruf. */
 const mockOpenPlz = (federalStateKey: string) => {

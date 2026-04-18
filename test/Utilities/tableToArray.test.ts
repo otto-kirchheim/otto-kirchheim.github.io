@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import tableToArray from '../../src/ts/utilities/tableToArray';
+import tableToArray from '../../src/ts/infrastructure/data/tableToArray';
 import type { CustomTable, Row } from '../../src/ts/class/CustomTable';
 import type { CustomHTMLTableElement } from '../../src/ts/interfaces';
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import * as Utils from '../../src/ts/utilities'; // Import all utilities to mock them
-import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchRetry';
+import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/infrastructure/api/FetchRetry';
 
 // --- Mocks ---
 
@@ -9,7 +9,7 @@ import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchR
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
 // Mock Storage module (which uses localStorage)
-vi.mock('../../src/ts/utilities/Storage', () => ({
+vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
   default: {
     get: vi.fn(),
     set: vi.fn(),
@@ -27,12 +27,12 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
 // Mock getValidAccesstoken — ENTFERNT (wird nicht mehr verwendet)
 
 // Mock tokenErneuern
-vi.mock('../../src/ts/utilities/tokenErneuern', () => ({
+vi.mock('../../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
   default: vi.fn(),
 }));
 
 // Mock abortController (if needed, though FetchRetry uses its own for timeout)
-vi.mock('../../src/ts/utilities/abortController', () => ({
+vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
   abortController: {
     signal: new AbortController().signal, // Provide a default signal
     reset: vi.fn(),

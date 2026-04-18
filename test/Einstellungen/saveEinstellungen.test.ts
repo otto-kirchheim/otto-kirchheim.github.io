@@ -1,6 +1,6 @@
 import '../setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
-import saveEinstellungen from '../../src/ts/Einstellungen/utils/saveEinstellungen';
+import saveEinstellungen from '../../src/ts/features/Einstellungen/utils/saveEinstellungen';
 import type { IVorgabenU } from '../../src/ts/interfaces';
 import { Storage } from '../../src/ts/utilities';
 

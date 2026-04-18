@@ -1,4 +1,4 @@
-import Storage, { type TStorageData } from '../../utilities/Storage';
+import Storage, { type TStorageData } from '../../infrastructure/storage/Storage';
 import type { StateStore } from './stateStore';
 
 export class StorageStateStore implements StateStore {

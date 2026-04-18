@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-import type { confirmDeleteAllRows as ConfirmDeleteAllRowsFn } from '../../src/ts/utilities/confirmDeleteAllRows';
+import type { confirmDeleteAllRows as ConfirmDeleteAllRowsFn } from '../../src/ts/infrastructure/data/confirmDeleteAllRows';
 type ConfirmDeleteAllRows = typeof ConfirmDeleteAllRowsFn;
 
 const { createSnackBarMock, buttonDisableMock, dateStorageMock } = (
@@ -15,14 +15,14 @@ async function loadConfirmDeleteAllRows(): Promise<ConfirmDeleteAllRows> {
   mock.module('../../src/ts/class/CustomSnackbar', () => ({
     createSnackBar: createSnackBarMock,
   }));
-  mock.module('../../src/ts/utilities/buttonDisable', () => ({
+  mock.module('../../src/ts/infrastructure/ui/buttonDisable', () => ({
     default: buttonDisableMock,
   }));
-  mock.module('../../src/ts/utilities/dateStorage', () => ({
+  mock.module('../../src/ts/infrastructure/date/dateStorage', () => ({
     getStoredMonatJahr: dateStorageMock.getStoredMonatJahr,
   }));
 
-  const module = await import('../../src/ts/utilities/confirmDeleteAllRows');
+  const module = await import('../../src/ts/infrastructure/data/confirmDeleteAllRows');
   return module.confirmDeleteAllRows;
 }
 

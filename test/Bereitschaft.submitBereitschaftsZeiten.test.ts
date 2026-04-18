@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenBZ } from '../src/ts/interfaces';
-import Storage from '../src/ts/utilities/Storage';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 const {
   calculateBereitschaftsZeitenMock,
@@ -18,16 +18,16 @@ const {
   clearLoadingMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', () => ({
+vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
   calculateBereitschaftsZeiten: calculateBereitschaftsZeitenMock,
 }));
-vi.mock('../src/ts/utilities/tableToArray', () => ({ default: tableToArrayMock }));
-vi.mock('../src/ts/utilities/setLoading', () => ({ default: setLoadingMock }));
-vi.mock('../src/ts/utilities/clearLoading', () => ({ default: clearLoadingMock }));
+vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({ default: tableToArrayMock }));
+vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({ default: setLoadingMock }));
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 vi.mock('../src/ts/core', () => ({ publishDataChanged: publishDataChangedMock }));
 
-import submitBereitschaftsZeiten from '../src/ts/Bereitschaft/utils/submitBereitschaftsZeiten';
+import submitBereitschaftsZeiten from '../src/ts/features/Bereitschaft/utils/submitBereitschaftsZeiten';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 

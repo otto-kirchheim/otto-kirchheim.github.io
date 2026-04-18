@@ -1,6 +1,6 @@
 import getNebengeldDaten from './getNebengeldDaten';
 import addNebengeldTag from './addNebengeldTag';
 import persistNebengeldTableData from './persistNebengeldTableData';
-import syncNebengeldTimesFromEwtRows from './syncNebengeldTimesFromEwtRows';
 
-export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData, syncNebengeldTimesFromEwtRows };
+export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
+export { default as syncNebengeldTimesFromEwtRows } from '../../orchestration/syncEwtToNeben';

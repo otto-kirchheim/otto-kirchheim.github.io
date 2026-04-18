@@ -1,117 +1,86 @@
-import { confirmDeleteAllRows } from './confirmDeleteAllRows';
-import { getStoredMonatJahr } from './dateStorage';
-import initializeColorModeToggler from './BSColorToggler';
-import DatenSortieren from './DatenSortieren';
-import { FetchRetry, getServerUrl } from './FetchRetry';
-import Storage from './Storage';
-import { abortController } from './abortController';
-import { ACT_AS_STATUS_EVENT, getActAsState, notifyActAsStateChanged, updateActAsBanner } from './actAsStatus';
-import {
-  GERMAN_ADDRESS_FORMAT_HINT,
-  PERS_FIELD_LABELS,
-  isValidGermanAddress,
-  normalizeGermanAddress,
-  setupGermanAddressValidation,
-  setupPersValidation,
-  validateGermanAddressInput,
-  validatePersInput,
-} from './addressValidation';
-import {
-  cancelAllPending,
-  createOnChangeHandler,
-  flushAll,
-  getAutoSaveDelay,
-  getResourceStatus,
-  isAutoSaveEnabled,
-  markResourceSaved,
-  onAutoSaveStatus,
-  scheduleAutoSave,
-  setAutoSaveDelay,
-  setAutoSaveEnabled,
-} from './autoSave';
-import buttonDisable from './buttonDisable';
-import checkMaxTag from './checkMaxTag';
-import clearLoading from './clearLoading';
-import compareVersion from './compareVersion';
-import { isAdmin, getUserCookie } from './decodeAccessToken';
-import getDurationFromTime from './getDurationFromTime';
-import {
-  filterByMonat,
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEWT,
-  getMonatFromEWTBuchungstag,
-  getMonatFromN,
-  isEwtInMonat,
-} from './getMonatFromItem';
-import saveDaten from './saveDaten';
-import normalizeResourceRows from './normalizeResourceRows';
-import { getPasskeyErrorMessage, guessPasskeyDeviceName, registerPasskeyWithResult } from './passkeys';
-import setDisableButton from './setDisableButton';
-import setLoading from './setLoading';
-import setOffline from './setOffline';
-import storageAvailable from './storageAvailable';
-import tableToArray from './tableToArray';
-import tokenErneuern from './tokenErneuern';
-import updateTabVisibility, { hideAllFeatureTabs } from './updateTabVisibility';
+/**
+ * Compatibility barrel – re-exports from infrastructure/ so existing
+ * `import … from '../utilities'` statements keep working.
+ */
 
+// --- data ---
+export { confirmDeleteAllRows } from '../infrastructure/data/confirmDeleteAllRows';
+export { default as DatenSortieren } from '../infrastructure/data/DatenSortieren';
+export { default as saveDaten } from '../infrastructure/data/saveDaten';
+export { default as normalizeResourceRows } from '../infrastructure/data/normalizeResourceRows';
+export { default as tableToArray } from '../infrastructure/data/tableToArray';
+
+// --- date ---
+export { getStoredMonatJahr } from '../infrastructure/date/dateStorage';
 export {
-  confirmDeleteAllRows,
-  DatenSortieren,
-  getStoredMonatJahr,
-  FetchRetry,
-  GERMAN_ADDRESS_FORMAT_HINT,
-  PERS_FIELD_LABELS,
-  Storage,
-  ACT_AS_STATUS_EVENT,
-  abortController,
-  buttonDisable,
-  cancelAllPending,
-  checkMaxTag,
-  clearLoading,
-  compareVersion,
-  createOnChangeHandler,
-  flushAll,
   filterByMonat,
-  getActAsState,
-  getAutoSaveDelay,
-  getDurationFromTime,
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromEWT,
   getMonatFromEWTBuchungstag,
   getMonatFromN,
-  getPasskeyErrorMessage,
-  getResourceStatus,
-  getServerUrl,
-  getUserCookie,
-  guessPasskeyDeviceName,
-  initializeColorModeToggler,
-  isAdmin,
   isEwtInMonat,
+} from '../infrastructure/date/getMonatFromItem';
+export { default as getDurationFromTime } from '../infrastructure/date/getDurationFromTime';
+
+// --- api ---
+export { FetchRetry, getServerUrl } from '../infrastructure/api/FetchRetry';
+export { abortController } from '../infrastructure/api/abortController';
+
+// --- storage ---
+export { default as Storage } from '../infrastructure/storage/Storage';
+export { default as storageAvailable } from '../infrastructure/storage/storageAvailable';
+
+// --- ui ---
+export {
+  ACT_AS_STATUS_EVENT,
+  getActAsState,
+  notifyActAsStateChanged,
+  updateActAsBanner,
+} from '../infrastructure/ui/actAsStatus';
+export { default as buttonDisable } from '../infrastructure/ui/buttonDisable';
+export { default as clearLoading } from '../infrastructure/ui/clearLoading';
+export { default as setLoading } from '../infrastructure/ui/setLoading';
+export { default as setDisableButton } from '../infrastructure/ui/setDisableButton';
+export { default as setOffline } from '../infrastructure/ui/setOffline';
+export { default as updateTabVisibility, hideAllFeatureTabs } from '../infrastructure/ui/updateTabVisibility';
+export { default as initializeColorModeToggler } from '../infrastructure/ui/BSColorToggler';
+export { rememberOriginalButtonContent, takeOriginalButtonContent } from '../infrastructure/ui/loadingButtonState';
+
+// --- tokenManagement ---
+export { isAdmin, getUserCookie } from '../infrastructure/tokenManagement/decodeAccessToken';
+export { default as tokenErneuern, resetTokenState } from '../infrastructure/tokenManagement/tokenErneuern';
+export {
+  getPasskeyErrorMessage,
+  guessPasskeyDeviceName,
+  registerPasskeyWithResult,
+} from '../infrastructure/tokenManagement/passkeys';
+
+// --- validation ---
+export {
+  GERMAN_ADDRESS_FORMAT_HINT,
+  PERS_FIELD_LABELS,
   isValidGermanAddress,
+  normalizeGermanAddress,
+  setupGermanAddressValidation,
+  setupPersValidation,
+  validateGermanAddressInput,
+  validatePersInput,
+} from '../infrastructure/validation/addressValidation';
+export { default as checkMaxTag } from '../infrastructure/validation/checkMaxTag';
+export { default as compareVersion } from '../infrastructure/validation/compareVersion';
+
+// --- autoSave ---
+export {
+  cancelAllPending,
+  createOnChangeHandler,
+  flushAll,
+  getAutoSaveDelay,
+  getResourceStatus,
   isAutoSaveEnabled,
   markResourceSaved,
-  normalizeGermanAddress,
-  normalizeResourceRows,
-  notifyActAsStateChanged,
   onAutoSaveStatus,
-  registerPasskeyWithResult,
-  saveDaten,
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
-  setDisableButton,
-  setupGermanAddressValidation,
-  setupPersValidation,
-  setLoading,
-  setOffline,
-  storageAvailable,
-  tableToArray,
-  tokenErneuern,
-  updateActAsBanner,
-  updateTabVisibility,
-  validateGermanAddressInput,
-  validatePersInput,
-  hideAllFeatureTabs,
-};
+} from '../infrastructure/autoSave/autoSave';

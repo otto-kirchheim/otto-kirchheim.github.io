@@ -38,19 +38,19 @@ const {
   loadAllYearDataMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Login/utils', () => ({
+vi.mock('../src/ts/features/Login/utils', () => ({
   overwriteUserDaten: overwriteUserDatenMock,
 }));
 
-vi.mock('../src/ts/Berechnung', () => ({
+vi.mock('../src/ts/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
-vi.mock('../src/ts/Berechnung/generateTableBerechnung', () => ({
+vi.mock('../src/ts/features/Berechnung/generateTableBerechnung', () => ({
   default: generateTableBerechnungMock,
 }));
 
-vi.mock('../src/ts/Einstellungen/utils', () => ({
+vi.mock('../src/ts/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
@@ -58,7 +58,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities/Storage', () => ({
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   default: {
     check: storageCheckMock,
     get: storageGetMock,
@@ -69,23 +69,23 @@ vi.mock('../src/ts/utilities/Storage', () => ({
   },
 }));
 
-vi.mock('../src/ts/utilities/buttonDisable', () => ({
+vi.mock('../src/ts/infrastructure/ui/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
-vi.mock('../src/ts/utilities/clearLoading', () => ({
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/updateTabVisibility', () => ({
+vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 
-import loadUserDaten from '../src/ts/Login/utils/loadUserDaten';
+import loadUserDaten from '../src/ts/features/Login/utils/loadUserDaten';
 
 type MockTableInstance = {
   rows: {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import type { IDatenBE, IDatenBZ } from '../src/ts/interfaces';
-import Storage from '../src/ts/utilities/Storage';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 const {
   calculateBereitschaftsZeitenMock,
@@ -18,7 +18,7 @@ const {
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', () => ({
+vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
   calculateBereitschaftsZeiten: calculateBereitschaftsZeitenMock,
   getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
@@ -33,7 +33,7 @@ vi.mock('../src/ts/core', () => ({
   publishDataChanged: publishDataChangedMock,
 }));
 
-import submitBereitschaftsEinsatz from '../src/ts/Bereitschaft/utils/submitBereitschaftsEinsatz';
+import submitBereitschaftsEinsatz from '../src/ts/features/Bereitschaft/utils/submitBereitschaftsEinsatz';
 
 function createModal(overrides: Partial<Record<string, string | boolean>> = {}): HTMLDivElement {
   const modal = document.createElement('div');

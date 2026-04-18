@@ -2,11 +2,11 @@ import { saveAs } from 'file-saver';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/interfaces';
-import Storage from '../../src/ts/utilities/Storage'; // Import Storage directly
-import dayjs from '../../src/ts/utilities/configDayjs'; // Import configured dayjs
-import download from '../../src/ts/utilities/download';
-import { userProfileToBackend } from '../../src/ts/utilities/fieldMapper';
-import tableToArray from '../../src/ts/utilities/tableToArray';
+import Storage from '../../src/ts/infrastructure/storage/Storage'; // Import Storage directly
+import dayjs from '../../src/ts/infrastructure/date/configDayjs'; // Import configured dayjs
+import download from '../../src/ts/infrastructure/data/download';
+import { userProfileToBackend } from '../../src/ts/infrastructure/data/fieldMapper';
+import tableToArray from '../../src/ts/infrastructure/data/tableToArray';
 import { VorgabenGeldMock, VorgabenUMock } from '../mockData';
 
 // --- Mocks ---
@@ -19,7 +19,7 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 
-vi.mock('../../src/ts/utilities/tableToArray', () => ({
+vi.mock('../../src/ts/infrastructure/data/tableToArray', () => ({
   default: vi.fn(),
 }));
 
@@ -36,10 +36,10 @@ const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } =
 });
 
 // Mock individual utility files directly
-vi.mock('../../src/ts/utilities/setLoading', () => ({ default: mockSetLoading }));
-vi.mock('../../src/ts/utilities/clearLoading', () => ({ default: mockClearLoading }));
-vi.mock('../../src/ts/utilities/buttonDisable', () => ({ default: mockButtonDisable }));
-vi.mock('../../src/ts/utilities/apiService', () => ({
+vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   downloadPdf: mockDownloadPdf,
 }));
 

@@ -12,14 +12,14 @@ const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted:
 type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement, tableN: any) => void;
 
 async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
-  mock.module('../src/ts/Neben/utils/persistNebengeldTableData', () => ({
+  mock.module('../src/ts/features/Neben/utils/persistNebengeldTableData', () => ({
     default: saveTableDataNMock,
   }));
   mock.module('../src/ts/class/CustomSnackbar', () => ({
     createSnackBar: createSnackBarMock,
   }));
 
-  const module = await import('../src/ts/Neben/utils/addNebengeldTag');
+  const module = await import('../src/ts/features/Neben/utils/addNebengeldTag');
   return module.default;
 }
 

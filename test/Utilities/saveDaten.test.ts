@@ -32,29 +32,23 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/utilities/setLoading', () => ({ default: mockSetLoading }));
-vi.mock('../../src/ts/utilities/clearLoading', () => ({ default: mockClearLoading }));
-vi.mock('../../src/ts/utilities/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/utilities/autoSave', () => ({
+vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
   markResourcesIdle: mockMarkResourcesIdle,
   markResourceSaved: mockMarkResourceSaved,
   hasPendingTableChanges: mockHasPendingTableChanges,
 }));
-vi.mock('../../src/ts/utilities/apiService', () => ({
+vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
-vi.mock('../../src/ts/Einstellungen/utils', () => ({
-  saveEinstellungen: mockSaveEinstellungen,
-}));
-vi.mock('../../src/ts/Einstellungen/utils/index', () => ({
-  saveEinstellungen: mockSaveEinstellungen,
-}));
 
-import Storage from '../../src/ts/utilities/Storage';
-import saveDaten from '../../src/ts/utilities/saveDaten';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import saveDaten, { setCollectSettingsHandler } from '../../src/ts/infrastructure/data/saveDaten';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;
@@ -63,6 +57,7 @@ describe('saveDaten', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    setCollectSettingsHandler(mockSaveEinstellungen);
 
     document.body.innerHTML = '<button id="btnSave"></button>';
     button = document.getElementById('btnSave') as HTMLButtonElement;

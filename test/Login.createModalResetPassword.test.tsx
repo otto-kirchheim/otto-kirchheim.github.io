@@ -22,7 +22,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     resetPassword: resetPasswordMock,
   },
@@ -34,7 +34,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import createModalResetPassword from '../src/ts/Login/components/createModalResetPassword';
+import createModalResetPassword from '../src/ts/features/Login/components/createModalResetPassword';
 
 function setupShowModalMock(password = 'pass12345', repeat = 'pass12345', isValid = true) {
   showModalMock.mockImplementation((vnode: { props: { myRef: { current: HTMLFormElement | null } } }) => {

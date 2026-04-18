@@ -1,26 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // --- Hoisted mocks ---
-const { mockRefreshToken, mockCreateSnackBar, mocklogoutUser } = (
+const { mockRefreshToken, mockCreateSnackBar, mockAuthFailureHandler } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   mockRefreshToken: vi.fn(),
   mockCreateSnackBar: vi.fn(),
-  mocklogoutUser: vi.fn(),
+  mockAuthFailureHandler: vi.fn(),
 }));
 
-vi.mock('../../src/ts/utilities/apiService', () => ({
+vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   authApi: { refreshToken: mockRefreshToken },
 }));
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/Einstellungen/utils', () => ({ logoutUser: mocklogoutUser }));
 
-import tokenErneuern, { resetTokenState } from '../../src/ts/utilities/tokenErneuern';
+import tokenErneuern, {
+  resetTokenState,
+  setAuthFailureHandler,
+} from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
 
 describe('tokenErneuern', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetTokenState();
+    setAuthFailureHandler(mockAuthFailureHandler);
   });
 
   it('ruft authApi.refreshToken() auf bei erfolgreichem Refresh', async () => {
@@ -32,7 +35,7 @@ describe('tokenErneuern', () => {
 
   it('wirft Fehler nach zu vielen Retries (retry > 2)', async () => {
     await expect(tokenErneuern(3)).rejects.toThrow('Zu viele Token-Refresh-Versuche');
-    expect(mocklogoutUser).toHaveBeenCalled();
+    expect(mockAuthFailureHandler).toHaveBeenCalled();
     expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   });
 
@@ -42,7 +45,7 @@ describe('tokenErneuern', () => {
     });
 
     await expect(tokenErneuern(0)).rejects.toThrow('Fehler bei Token erneuerung');
-    expect(mocklogoutUser).toHaveBeenCalled();
+    expect(mockAuthFailureHandler).toHaveBeenCalled();
     expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   });
 
@@ -56,6 +59,6 @@ describe('tokenErneuern', () => {
 
     // 4. Versuch sollte fehlschlagen (REFRESHED > 2)
     await expect(tokenErneuern(0)).rejects.toThrow('Zu viele Token-Refresh-Versuche');
-    expect(mocklogoutUser).toHaveBeenCalled();
+    expect(mockAuthFailureHandler).toHaveBeenCalled();
   });
 });

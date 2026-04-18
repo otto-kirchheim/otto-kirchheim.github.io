@@ -1,11 +1,20 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import { logoutUser } from './Einstellungen/utils';
+import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einstellungen/utils';
 import { createSnackBar } from './class/CustomSnackbar';
 import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from './utilities';
-import dayjs from './utilities/configDayjs';
-// import { setDisableButton } from './utilities/buttonDisable';
+import dayjs from './infrastructure/date/configDayjs';
+import { setAuthFailureHandler } from './infrastructure/tokenManagement/tokenErneuern';
+import { setOnReconnectHandler } from './infrastructure/ui/setOffline';
+import { setPostSaveHandler } from './infrastructure/autoSave/autoSave';
+import { setCollectSettingsHandler } from './infrastructure/data/saveDaten';
+import { aktualisiereBerechnung } from './features/Berechnung';
+
+setAuthFailureHandler(logoutUser);
+setOnReconnectHandler(changeMonatJahr);
+setPostSaveHandler(aktualisiereBerechnung);
+setCollectSettingsHandler(saveEinstellungen);
 
 const intervalMS = 60 * 60 * 1000;
 
@@ -126,12 +135,12 @@ registerAppStartTask(() => {
   }
 });
 
-import './Berechnung';
-import './Bereitschaft';
-import './EWT';
-import './Einstellungen';
-import './Login';
-import './Neben';
+import './features/Berechnung';
+import './features/Bereitschaft';
+import './features/EWT';
+import './features/Einstellungen';
+import './features/Login';
+import './features/Neben';
 
 initializeAppBootstrap();
 

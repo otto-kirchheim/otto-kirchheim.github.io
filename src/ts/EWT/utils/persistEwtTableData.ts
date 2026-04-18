@@ -2,10 +2,10 @@ import type { IDatenEWT } from '../../interfaces';
 import type { CustomTable } from '../../class/CustomTable';
 import { Storage, tableToArray } from '../../utilities';
 import { publishDataChanged } from '../../core';
-import normalizeResourceRows from '../../utilities/normalizeResourceRows';
-import mergeVisibleResourceRows from '../../utilities/mergeVisibleResourceRows';
+import normalizeResourceRows from '../../infrastructure/data/normalizeResourceRows';
+import mergeVisibleResourceRows from '../../infrastructure/data/mergeVisibleResourceRows';
 import calculateBuchungstagEwt from './calculateBuchungstagEwt';
-import syncNebengeldTimesFromEwtRows from '../../Neben/utils/syncNebengeldTimesFromEwtRows';
+import syncNebengeldTimesFromEwtRows from '../../orchestration/syncEwtToNeben';
 
 export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenEWT[] {
   const rawRows = typeof ft.getRows === 'function' ? ft.getRows() : [];

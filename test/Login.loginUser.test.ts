@@ -12,7 +12,7 @@ const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMoc
   getInstanceMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Login/utils', () => ({
+vi.mock('../src/ts/features/Login/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
@@ -21,7 +21,7 @@ vi.mock('../src/ts/utilities', () => ({
   clearLoading: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     login: loginMock,
     me: meMock,
@@ -34,7 +34,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import loginUser from '../src/ts/Login/utils/loginUser';
+import loginUser from '../src/ts/features/Login/utils/loginUser';
 
 function setupDom(): HTMLDivElement {
   document.body.innerHTML = `

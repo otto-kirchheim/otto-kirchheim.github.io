@@ -21,11 +21,11 @@ vi.mock('../src/ts/utilities', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
-vi.mock('../src/ts/utilities/autoSaveIndicator', () => ({
+vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
   destroyAutoSaveIndicator: destroyAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     logout: logoutMock,
   },
@@ -41,7 +41,7 @@ vi.mock('bootstrap/js/dist/tab', () => ({
   },
 }));
 
-import logoutUser from '../src/ts/Einstellungen/utils/logoutUser';
+import logoutUser from '../src/ts/features/Einstellungen/utils/logoutUser';
 import { Storage } from '../src/ts/utilities';
 
 describe('logoutUser', () => {

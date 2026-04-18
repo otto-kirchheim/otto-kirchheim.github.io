@@ -18,11 +18,14 @@ const { mockOnAutoSaveStatus } = (vi as typeof vi & { hoisted: <T>(factory: () =
   };
 });
 
-vi.mock('../../src/ts/utilities/autoSave', () => ({
+vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
   onAutoSaveStatus: mockOnAutoSaveStatus,
 }));
 
-import { destroyAutoSaveIndicator, initAutoSaveIndicator } from '../../src/ts/utilities/autoSaveIndicator';
+import {
+  destroyAutoSaveIndicator,
+  initAutoSaveIndicator,
+} from '../../src/ts/infrastructure/autoSave/autoSaveIndicator';
 
 describe('autoSaveIndicator', () => {
   beforeEach(() => {

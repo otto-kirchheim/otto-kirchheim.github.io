@@ -12,7 +12,7 @@ const browserSupportsWebAuthnMock = vi.fn();
 const hideMock = vi.fn();
 const getInstanceMock = vi.fn();
 
-vi.mock('../src/ts/Login/utils', () => ({
+vi.mock('../src/ts/features/Login/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
@@ -21,7 +21,7 @@ vi.mock('../src/ts/utilities', () => ({
   clearLoading: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     beginPasskeyLogin: beginPasskeyLoginMock,
     finishPasskeyLogin: finishPasskeyLoginMock,
@@ -29,7 +29,7 @@ vi.mock('../src/ts/utilities/apiService', () => ({
   },
 }));
 
-vi.mock('../src/ts/utilities/tokenErneuern', () => ({
+vi.mock('../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
@@ -45,7 +45,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import loginWithPasskey from '../src/ts/Login/utils/loginWithPasskey';
+import loginWithPasskey from '../src/ts/features/Login/utils/loginWithPasskey';
 
 function setupDom(userName = ''): HTMLDivElement {
   document.body.innerHTML = `

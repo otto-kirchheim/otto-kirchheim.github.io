@@ -16,7 +16,7 @@ const {
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   setNaechsterEwtTag: setNaechsterEwtTagMock,
   persistEwtTableData: persistEwtTableDataMock,
   calculateEwtEintraege: calculateEwtEintraegeMock,
@@ -24,7 +24,7 @@ vi.mock('../src/ts/EWT/utils', () => ({
 }));
 vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 
-import addEwtTag from '../src/ts/EWT/utils/addEwtTag';
+import addEwtTag from '../src/ts/features/EWT/utils/addEwtTag';
 
 function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {

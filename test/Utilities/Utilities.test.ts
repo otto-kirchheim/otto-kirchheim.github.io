@@ -1,9 +1,9 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
 import { DatenSortieren, Storage, buttonDisable, checkMaxTag, clearLoading, setLoading } from '../../src/ts/utilities';
-import { getUserCookie, isAdmin } from '../../src/ts/utilities/decodeAccessToken';
+import { getUserCookie, isAdmin } from '../../src/ts/infrastructure/tokenManagement/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
-import * as exportEinstelllungen from "../src/ts/Einstellungen/utils"; */
+import * as exportEinstelllungen from "../src/ts/features/Einstellungen/utils"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */
 describe('#Storage', () => {

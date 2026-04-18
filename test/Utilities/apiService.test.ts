@@ -9,12 +9,12 @@ const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(f
   }),
 );
 
-vi.mock('../../src/ts/utilities/FetchRetry', () => ({
+vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
   getServerUrl: mockGetServerUrl,
 }));
 
-vi.mock('../../src/ts/utilities/abortController', () => ({
+vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
   abortController: { signal: new AbortController().signal, reset: vi.fn() },
 }));
 
@@ -27,7 +27,7 @@ import {
   nebengeldApi,
   profileApi,
   vorgabenApi,
-} from '../../src/ts/utilities/apiService';
+} from '../../src/ts/infrastructure/api/apiService';
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 

@@ -15,20 +15,20 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/utilities/setLoading', () => ({
+vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../../src/ts/Login/utils', () => ({
+vi.mock('../../src/ts/features/Login/utils', () => ({
   loadUserDaten: loadUserDatenMock,
 }));
 
-vi.mock('../../src/ts/Einstellungen/utils/setMonatJahr', () => ({
+vi.mock('../../src/ts/features/Einstellungen/utils/setMonatJahr', () => ({
   default: setMonatJahrMock,
 }));
 
-import Storage from '../../src/ts/utilities/Storage';
-import selectYear from '../../src/ts/Einstellungen/utils/selectYear';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import selectYear from '../../src/ts/features/Einstellungen/utils/selectYear';
 
 describe('SelectYear', () => {
   let container: HTMLDivElement;

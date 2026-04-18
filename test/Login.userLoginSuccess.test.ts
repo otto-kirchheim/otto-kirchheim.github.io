@@ -26,11 +26,11 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/Login/utils/requestVerificationMail', () => ({
+vi.mock('../src/ts/features/Login/utils/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
-vi.mock('../src/ts/Einstellungen/utils', () => ({
+vi.mock('../src/ts/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
@@ -42,19 +42,19 @@ vi.mock('../src/ts/utilities', () => ({
   setLoading: setLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/decodeAccessToken', () => ({
+vi.mock('../src/ts/infrastructure/tokenManagement/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
-vi.mock('../src/ts/utilities/autoSaveIndicator', () => ({
+vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
   initAutoSaveIndicator: initAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/Admin', () => ({
+vi.mock('../src/ts/features/Admin', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 
-import userLoginSuccess from '../src/ts/Login/utils/userLoginSuccess';
+import userLoginSuccess from '../src/ts/features/Login/utils/userLoginSuccess';
 
 describe('userLoginSuccess', () => {
   beforeEach(() => {
