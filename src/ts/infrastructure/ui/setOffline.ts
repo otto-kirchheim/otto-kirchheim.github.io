@@ -1,12 +1,6 @@
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { setDisableButton } from './buttonDisable';
-
-let reconnectHandler: (() => void) | null = null;
-
-/** Register a handler to be called when the app comes back online. */
-export function setOnReconnectHandler(handler: () => void): void {
-  reconnectHandler = handler;
-}
+import { invokeHook } from '../../core/hooks';
 
 export default function setOffline(): void {
   setDisableButton(true);
@@ -22,7 +16,7 @@ export default function setOffline(): void {
 
   const onlineHandler = () => {
     setDisableButton(false);
-    reconnectHandler?.();
+    invokeHook('network:reconnect');
     offlineSnackbar.Close();
     createSnackBar({
       message: 'Du bist wieder online',

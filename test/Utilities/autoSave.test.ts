@@ -45,11 +45,11 @@ import {
   isAutoSaveEnabled,
   markResourceSaved,
   onAutoSaveStatus,
-  setPostSaveHandler,
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
 } from '../../src/ts/infrastructure/autoSave/autoSave';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -91,7 +91,8 @@ describe('autoSave', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     localStorage.clear();
-    setPostSaveHandler(mockAktualisiereBerechnung);
+    clearAllHooks();
+    registerHook('post-save', mockAktualisiereBerechnung);
     document.body.innerHTML = '';
 
     // Reset state

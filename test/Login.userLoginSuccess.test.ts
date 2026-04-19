@@ -55,6 +55,7 @@ vi.mock('../src/ts/features/Admin', () => ({
 }));
 
 import userLoginSuccess from '../src/ts/features/Login/utils/userLoginSuccess';
+import { featureLifecycleRegistry } from '../src/ts/core/hooks';
 
 describe('userLoginSuccess', () => {
   beforeEach(() => {
@@ -68,6 +69,18 @@ describe('userLoginSuccess', () => {
     `;
     vi.clearAllMocks();
     isAdminMock.mockReturnValue(false);
+
+    featureLifecycleRegistry.clearAll();
+    featureLifecycleRegistry.registerFeature({
+      name: 'Admin',
+      async register(ctx) {
+        if (ctx.isAdmin) {
+          document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+          document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+          mountAdminTabMock(ctx.userName);
+        }
+      },
+    });
   });
 
   it('setzt Basis-UI, Storage und startet SelectYear ohne Admin-Tab fuer member', async () => {

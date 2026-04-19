@@ -5,16 +5,30 @@ import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einst
 import { createSnackBar } from './class/CustomSnackbar';
 import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from './utilities';
 import dayjs from './infrastructure/date/configDayjs';
-import { setAuthFailureHandler } from './infrastructure/tokenManagement/tokenErneuern';
-import { setOnReconnectHandler } from './infrastructure/ui/setOffline';
-import { setPostSaveHandler } from './infrastructure/autoSave/autoSave';
-import { setCollectSettingsHandler } from './infrastructure/data/saveDaten';
 import { aktualisiereBerechnung } from './features/Berechnung';
+import { registerHook, featureLifecycleRegistry } from './core/hooks';
+import type { FeatureContext } from './core/hooks';
 
-setAuthFailureHandler(logoutUser);
-setOnReconnectHandler(changeMonatJahr);
-setPostSaveHandler(aktualisiereBerechnung);
-setCollectSettingsHandler(saveEinstellungen);
+registerHook('auth:failure', logoutUser);
+registerHook('network:reconnect', changeMonatJahr);
+registerHook('post-save', aktualisiereBerechnung);
+registerHook('pre-save:settings', saveEinstellungen);
+
+featureLifecycleRegistry.registerFeature({
+  name: 'Admin',
+  async register(ctx: FeatureContext): Promise<void> {
+    if (ctx.isAdmin) {
+      document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+      document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+      const { mountAdminTab } = await import('./features/Admin');
+      mountAdminTab(ctx.userName);
+    }
+  },
+  async unregister(): Promise<void> {
+    const { unmountAdminTab } = await import('./features/Admin');
+    unmountAdminTab();
+  },
+});
 
 const intervalMS = 60 * 60 * 1000;
 

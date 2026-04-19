@@ -8,13 +8,7 @@
  */
 
 import { createSnackBar } from '../../class/CustomSnackbar';
-
-let postSaveHandler: (() => void) | null = null;
-
-/** Register a handler to be called after every successful auto-save (e.g. recalculation). */
-export function setPostSaveHandler(handler: () => void): void {
-  postSaveHandler = handler;
-}
+import { invokeHook } from '../../core/hooks';
 import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../../class/CustomTable';
 import type {
   CustomHTMLTableElement,
@@ -573,7 +567,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
     // localStorage aktualisieren
     updateLocalStorage(resource, table);
-    postSaveHandler?.();
+    invokeHook('post-save');
 
     // Wrapper-Timestamp mit Server-Zeit aktualisieren
     const allDocs = [...(result?.created ?? []), ...(result?.updated ?? [])];

@@ -5,6 +5,7 @@ import { isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessTok
 import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
+import { featureLifecycleRegistry } from '../../../core/hooks';
 
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/[&<"']/g, function (match) {
@@ -57,12 +58,7 @@ export default async function userLoginSuccess({
     Storage.remove('actAsUserName');
   }
 
-  if (userIsAdmin) {
-    document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
-    document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
-    const { mountAdminTab } = await import('../../Admin');
-    mountAdminTab(username);
-  }
+  await featureLifecycleRegistry.initializeAll({ isAdmin: userIsAdmin, userName: username });
 
   const monatEl = document.querySelector<HTMLInputElement>('#Monat');
   monatEl?.classList.remove('d-none');

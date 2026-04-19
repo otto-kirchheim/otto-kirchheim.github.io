@@ -14,16 +14,15 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
 }));
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
-import tokenErneuern, {
-  resetTokenState,
-  setAuthFailureHandler,
-} from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
+import tokenErneuern, { resetTokenState } from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 describe('tokenErneuern', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAllHooks();
     resetTokenState();
-    setAuthFailureHandler(mockAuthFailureHandler);
+    registerHook('auth:failure', mockAuthFailureHandler);
   });
 
   it('ruft authApi.refreshToken() auf bei erfolgreichem Refresh', async () => {

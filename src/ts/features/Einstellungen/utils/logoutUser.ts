@@ -9,6 +9,7 @@ import {
 } from '../../../utilities';
 import { destroyAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
 import { authApi } from '../../../infrastructure/api/apiService';
+import { featureLifecycleRegistry } from '../../../core/hooks';
 
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
   const element = document.querySelector<HTMLElement>(selector);
@@ -27,7 +28,7 @@ export default function logoutUser({ serverLogout = true }: { serverLogout?: boo
     authApi.logout().catch(() => {});
   }
 
-  import('../../Admin').then(({ unmountAdminTab }) => unmountAdminTab());
+  void featureLifecycleRegistry.teardownAll();
 
   Storage.clear();
   updateActAsBanner();

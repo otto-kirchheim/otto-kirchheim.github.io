@@ -7,13 +7,7 @@ import type { IVorgabenU, TResourceKey } from '../../interfaces';
 import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
-
-let collectSettingsHandler: (() => IVorgabenU) | null = null;
-
-/** Register a handler that collects current settings form data. */
-export function setCollectSettingsHandler(handler: () => IVorgabenU): void {
-  collectSettingsHandler = handler;
-}
+import { invokeHook } from '../../core/hooks';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
@@ -60,8 +54,8 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     const buttonResources = getButtonResources(button.id);
 
     // 1. Einstellungen aus dem Formular sammeln und speichern
-    if (!collectSettingsHandler) throw new Error('collectSettingsHandler not registered');
-    const userData = collectSettingsHandler();
+    const userData = invokeHook('pre-save:settings');
+    if (!userData) throw new Error('pre-save:settings hook not registered');
     Storage.set('VorgabenU', userData);
     const settingsChanged = hasLocalSettingsChanges(previousUserData, userData);
     const settingsStatus = getResourceStatus('settings').status;

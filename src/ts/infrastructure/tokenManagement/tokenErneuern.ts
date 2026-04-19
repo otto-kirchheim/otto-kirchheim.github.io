@@ -1,15 +1,10 @@
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { authApi } from '../api/apiService';
 import Storage from '../storage/Storage';
+import { invokeHook } from '../../core/hooks';
 
 let REFRESHED = 0;
 let isLogoutInProgress = false;
-let authFailureHandler: (() => void) | null = null;
-
-/** Register a handler to be called when authentication fails irrecoverably. */
-export function setAuthFailureHandler(handler: () => void): void {
-  authFailureHandler = handler;
-}
 
 export default async function tokenErneuern(retry?: number): Promise<void> {
   if (isLogoutInProgress) return;
@@ -48,7 +43,7 @@ function incrementRefreshCounter(): void {
 }
 
 function showErrorAndLogout(): void {
-  authFailureHandler?.();
+  invokeHook('auth:failure');
   createSnackBar({
     message: `Login<br/>Fehlerhafte Anmeldung,</br> bitte Erneut anmelden!`,
     status: 'error',

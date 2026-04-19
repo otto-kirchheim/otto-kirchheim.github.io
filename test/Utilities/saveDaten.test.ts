@@ -48,7 +48,8 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
 }));
 
 import Storage from '../../src/ts/infrastructure/storage/Storage';
-import saveDaten, { setCollectSettingsHandler } from '../../src/ts/infrastructure/data/saveDaten';
+import saveDaten from '../../src/ts/infrastructure/data/saveDaten';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;
@@ -57,7 +58,8 @@ describe('saveDaten', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    setCollectSettingsHandler(mockSaveEinstellungen);
+    clearAllHooks();
+    registerHook('pre-save:settings', mockSaveEinstellungen);
 
     document.body.innerHTML = '<button id="btnSave"></button>';
     button = document.getElementById('btnSave') as HTMLButtonElement;

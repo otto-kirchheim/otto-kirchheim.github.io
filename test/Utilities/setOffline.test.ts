@@ -12,7 +12,8 @@ const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
-import setOffline, { setOnReconnectHandler } from '../../src/ts/infrastructure/ui/setOffline';
+import setOffline from '../../src/ts/infrastructure/ui/setOffline';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 describe('setOffline', () => {
   // Cleanup-Tracking: um registrierte Event-Listener nach jedem Test zu entfernen
@@ -21,8 +22,9 @@ describe('setOffline', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAllHooks();
     registeredListeners.length = 0;
-    setOnReconnectHandler(mockReconnectHandler);
+    registerHook('network:reconnect', mockReconnectHandler);
 
     addEventSpy = vi
       .spyOn(window, 'addEventListener')
