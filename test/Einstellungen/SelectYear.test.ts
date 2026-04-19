@@ -19,7 +19,7 @@ vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../../src/ts/features/Login/utils', () => ({
+vi.mock('../../src/ts/core/orchestration/auth/utils', () => ({
   loadUserDaten: loadUserDatenMock,
 }));
 

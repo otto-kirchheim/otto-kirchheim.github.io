@@ -34,7 +34,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import createModalResetPassword from '../src/ts/features/Login/components/createModalResetPassword';
+import createModalResetPassword from '../src/ts/core/orchestration/auth/components/createModalResetPassword';
 
 function setupShowModalMock(password = 'pass12345', repeat = 'pass12345', isValid = true) {
   showModalMock.mockImplementation((vnode: { props: { myRef: { current: HTMLFormElement | null } } }) => {

@@ -57,7 +57,7 @@ vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
   scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
-import overwriteUserDaten from '../src/ts/features/Login/utils/overwriteUserDaten';
+import overwriteUserDaten from '../src/ts/core/orchestration/auth/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
   const table = document.createElement('table') as HTMLTableElement & {

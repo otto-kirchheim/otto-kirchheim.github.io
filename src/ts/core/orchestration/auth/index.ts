@@ -1,12 +1,12 @@
-import { selectYear } from '../Einstellungen/utils';
-import { registerAppStartTask } from '../../core';
-import type { IVorgabenU } from '../../interfaces';
-import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '../../infrastructure/ui/actAsStatus';
-import { getStoredMonatJahr } from '../../infrastructure/date/dateStorage';
-import Storage from '../../infrastructure/storage/Storage';
-import { default as updateTabVisibility } from '../../infrastructure/ui/updateTabVisibility';
-import { getUserCookie, isAdmin } from '../../infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '../../infrastructure/autoSave/autoSaveIndicator';
+import { selectYear } from '../../../features/Einstellungen/utils';
+import { registerAppStartTask } from '../../';
+import type { IVorgabenU } from '../../../interfaces';
+import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
+import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
+import Storage from '../../../infrastructure/storage/Storage';
+import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
+import { getUserCookie, isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessToken';
+import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
 
@@ -14,7 +14,7 @@ let adminTabMounted = false;
 
 async function ensureAdminTabMounted(): Promise<void> {
   if (adminTabMounted || !isAdmin()) return;
-  const { mountAdminTab } = await import('../Admin');
+  const { mountAdminTab } = await import('../../../features/Admin');
   const currentUserName = getUserCookie()?.userName ?? 'admin';
   mountAdminTab(currentUserName);
   adminTabMounted = true;
@@ -58,7 +58,7 @@ registerAppStartTask(() => {
     void ensureAdminTabMounted();
   });
   actAsButtonEl?.addEventListener('click', () => {
-    import('../Admin/utils/actAs').then(({ loadOwnUserData }) => {
+    import('../../../features/Admin/utils/actAs').then(({ loadOwnUserData }) => {
       void loadOwnUserData();
     });
   });

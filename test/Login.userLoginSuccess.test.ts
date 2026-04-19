@@ -26,7 +26,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/features/Login/utils/requestVerificationMail', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
@@ -57,7 +57,7 @@ vi.mock('../src/ts/features/Admin', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 
-import userLoginSuccess from '../src/ts/features/Login/utils/userLoginSuccess';
+import userLoginSuccess from '../src/ts/core/orchestration/auth/utils/userLoginSuccess';
 import { featureLifecycleRegistry } from '../src/ts/core/hooks';
 
 describe('userLoginSuccess', () => {

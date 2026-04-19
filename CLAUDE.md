@@ -62,7 +62,10 @@ src/
 │   │   ├── types/         # API-Envelope, State-Typen
 │   │   ├── hooks/         # Hook-Registry (registerHook/invokeHook)
 │   │   ├── events/        # App-Events (publishDataChanged, EventChannels)
-│   │   └── orchestration/ # Init-Sequenz, Feature-Lifecycle-Registry
+│   │   └── orchestration/ # Init-Sequenz, Feature-Lifecycle-Registry, Auth-Lifecycle
+│   │       └── auth/      # Auth-Orchestrierung (Login, Modals, User-Daten)
+│   │           ├── components/ # Login/Register/Reset-Modals, ConflictReviewBanner
+│   │           └── utils/     # loginUser, loadUserDaten, userLoginSuccess, etc.
 │   ├── interfaces/        # TypeScript-Interfaces
 │   ├── infrastructure/    # Gemeinsame technische Bausteine
 │   │   ├── api/           # apiService, FetchRetry
@@ -80,7 +83,6 @@ src/
 │       ├── Neben/         # Nebenbezuege
 │       ├── Berechnung/    # Gesamtberechnung
 │       ├── Einstellungen/ # Benutzer-Einstellungen
-│       ├── Login/         # Auth (Login, Registrierung)
 │       └── Admin/         # Admin-Panel (Preact)
 test/
 ├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
@@ -97,10 +99,9 @@ Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
 
 **3-Schichten-Architektur:**
 
-- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry. Keine Feature-Abhängigkeiten.
+- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung. Keine Feature-Abhängigkeiten (außer lazy-imports für Admin).
 - **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities). Darf `core/` nutzen, nicht `features/`.
-- **`features/`** – Feature-Module (Bereitschaft, EWT, Neben, etc.). Dürfen `core/` und `infrastructure/` nutzen.
-- **`utilities/`** – Legacy-Barrel, re-exportiert aus `infrastructure/`. Keine eigene Logik.
+- **`features/`** – Daten-getriebene Feature-Module (Bereitschaft, EWT, Neben, etc.). Dürfen `core/` und `infrastructure/` nutzen.
 
 **Feature-Modul-Pattern:**
 Jedes Feature folgt der gleichen Struktur:

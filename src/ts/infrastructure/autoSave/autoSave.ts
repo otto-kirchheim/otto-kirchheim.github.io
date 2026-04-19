@@ -9,6 +9,7 @@
 
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { invokeHook } from '../../core/hooks';
+import { publishEvent } from '../../core';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../../class/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../interfaces';
 import { profileApi } from '../api/apiService';
@@ -181,11 +182,13 @@ export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings
 /**
  * Erstellt einen onChange-Handler für eine bestimmte Ressource.
  * Wird als `onChange` Option beim createCustomTable übergeben.
+ * Publiziert ein 'data:changed' Event für andere Subscriber.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createOnChangeHandler(resource: TResourceKey): (table: CustomTable<any>) => void {
   return () => {
     if (!autoSaveEnabled) return;
+    publishEvent('data:changed', { resource, action: 'update' });
     scheduleAutoSave(resource);
   };
 }

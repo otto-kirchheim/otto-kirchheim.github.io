@@ -1,7 +1,7 @@
-import { Row } from '../../../class/CustomTable';
-import type { CustomTableTypes } from '../../../class/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../interfaces';
-import type { TStorageData } from '../../../infrastructure/storage/Storage';
+import { Row } from '../../../../class/CustomTable';
+import type { CustomTableTypes } from '../../../../class/CustomTable';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../../interfaces';
+import type { TStorageData } from '../../../../infrastructure/storage/Storage';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';
 import type { UnterschiedNachMonat } from './loadUserDaten.sync';

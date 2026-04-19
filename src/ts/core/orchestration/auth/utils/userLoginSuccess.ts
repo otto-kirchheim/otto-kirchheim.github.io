@@ -1,13 +1,13 @@
-import { selectYear } from '../../Einstellungen/utils';
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import Storage from '../../../infrastructure/storage/Storage';
-import { default as setLoading } from '../../../infrastructure/ui/setLoading';
-import { updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
-import { isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { selectYear } from '../../../../features/Einstellungen/utils';
+import { createSnackBar } from '../../../../class/CustomSnackbar';
+import Storage from '../../../../infrastructure/storage/Storage';
+import { default as setLoading } from '../../../../infrastructure/ui/setLoading';
+import { updateActAsBanner } from '../../../../infrastructure/ui/actAsStatus';
+import { isAdmin } from '../../../../infrastructure/tokenManagement/decodeAccessToken';
+import { initAutoSaveIndicator } from '../../../../infrastructure/autoSave/autoSaveIndicator';
+import dayjs from '../../../../infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
-import { featureLifecycleRegistry } from '../../../core/hooks';
+import { featureLifecycleRegistry } from '../../../hooks';
 
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/[&<"']/g, function (match) {

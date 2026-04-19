@@ -38,7 +38,7 @@ const {
   loadAllYearDataMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/Login/utils', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
   overwriteUserDaten: overwriteUserDatenMock,
 }));
 
@@ -85,7 +85,7 @@ vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 
-import loadUserDaten from '../src/ts/features/Login/utils/loadUserDaten';
+import loadUserDaten from '../src/ts/core/orchestration/auth/utils/loadUserDaten';
 
 type MockTableInstance = {
   rows: {

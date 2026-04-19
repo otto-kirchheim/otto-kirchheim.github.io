@@ -12,7 +12,7 @@ const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMoc
   getInstanceMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/Login/utils', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
@@ -37,7 +37,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import loginUser from '../src/ts/features/Login/utils/loginUser';
+import loginUser from '../src/ts/core/orchestration/auth/utils/loginUser';
 
 function setupDom(): HTMLDivElement {
   document.body.innerHTML = `

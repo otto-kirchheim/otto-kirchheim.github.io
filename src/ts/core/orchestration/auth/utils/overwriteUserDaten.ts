@@ -1,7 +1,7 @@
-import { publishDataChanged } from '../../../core';
-import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../Bereitschaft/utils';
-import { getEwtDaten } from '../../EWT/utils';
-import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
+import { publishDataChanged } from '../../..';
+import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
+import { getEwtDaten } from '../../../../features/EWT/utils';
+import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -9,16 +9,16 @@ import type {
   IDatenEWT,
   IDatenN,
   UserDatenServer,
-} from '../../../interfaces';
-import { getNebengeldDaten } from '../../Neben/utils';
+} from '../../../../interfaces';
+import { getNebengeldDaten } from '../../../../features/Neben/utils';
 import {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromN,
   isEwtInMonat,
-} from '../../../infrastructure/date/getMonatFromItem';
-import Storage from '../../../infrastructure/storage/Storage';
-import { scheduleAutoSave } from '../../../infrastructure/autoSave/autoSave';
+} from '../../../../infrastructure/date/getMonatFromItem';
+import Storage from '../../../../infrastructure/storage/Storage';
+import { scheduleAutoSave } from '../../../../infrastructure/autoSave/autoSave';
 
 function applyDataToTable(selector: string, data: object[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);

@@ -157,7 +157,7 @@ import './features/Berechnung';
 import './features/Bereitschaft';
 import './features/EWT';
 import './features/Einstellungen';
-import './features/Login';
+import './core/orchestration/auth';
 import './features/Neben';
 
 initializeAppBootstrap();

@@ -34,7 +34,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import createModalForgotPassword from '../src/ts/features/Login/components/createModalForgotPassword';
+import createModalForgotPassword from '../src/ts/core/orchestration/auth/components/createModalForgotPassword';
 
 function setupShowModalMock() {
   showModalMock.mockImplementation((vnode: { props: { myRef: { current: HTMLFormElement | null } } }) => {

@@ -12,7 +12,7 @@ const browserSupportsWebAuthnMock = vi.fn();
 const hideMock = vi.fn();
 const getInstanceMock = vi.fn();
 
-vi.mock('../src/ts/features/Login/utils', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
@@ -48,7 +48,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import loginWithPasskey from '../src/ts/features/Login/utils/loginWithPasskey';
+import loginWithPasskey from '../src/ts/core/orchestration/auth/utils/loginWithPasskey';
 
 function setupDom(userName = ''): HTMLDivElement {
   document.body.innerHTML = `

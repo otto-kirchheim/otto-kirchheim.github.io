@@ -1,8 +1,8 @@
 import { overwriteUserDaten } from '.';
-import { aktualisiereBerechnung } from '../../Berechnung';
-import generateTableBerechnung from '../../Berechnung/generateTableBerechnung';
-import { generateEingabeMaskeEinstellungen } from '../../Einstellungen/utils';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { aktualisiereBerechnung } from '../../../../features/Berechnung';
+import generateTableBerechnung from '../../../../features/Berechnung/generateTableBerechnung';
+import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
+import { createSnackBar } from '../../../../class/CustomSnackbar';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -10,24 +10,24 @@ import type {
   IDatenEWT,
   IDatenN,
   UserDatenServer,
-} from '../../../interfaces';
+} from '../../../../interfaces';
 import {
   flushAll,
   isAutoSaveEnabled,
   scheduleAutoSave,
   setAutoSaveEnabled,
-} from '../../../infrastructure/autoSave/autoSave';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
-import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
-import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
-import { type LoadedYearData, loadAllYearData } from '../../../infrastructure/api/apiService';
+} from '../../../../infrastructure/autoSave/autoSave';
+import { default as Storage } from '../../../../infrastructure/storage/Storage';
+import { default as buttonDisable } from '../../../../infrastructure/ui/buttonDisable';
+import { default as clearLoading } from '../../../../infrastructure/ui/clearLoading';
+import { default as updateTabVisibility } from '../../../../infrastructure/ui/updateTabVisibility';
+import { type LoadedYearData, loadAllYearData } from '../../../../infrastructure/api/apiService';
 import {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromN,
   isEwtInMonat,
-} from '../../../infrastructure/date/getMonatFromItem';
+} from '../../../../infrastructure/date/getMonatFromItem';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '../components';
 import { isSessionErrorMessage } from './loadUserDaten.helpers';
 import {

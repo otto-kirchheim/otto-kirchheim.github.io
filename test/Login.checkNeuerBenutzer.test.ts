@@ -39,7 +39,7 @@ vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   },
 }));
 
-vi.mock('../src/ts/features/Login/utils/userLoginSuccess', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils/userLoginSuccess', () => ({
   default: userLoginSuccessMock,
 }));
 
@@ -57,7 +57,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import checkNeuerBenutzer from '../src/ts/features/Login/utils/checkNeuerBenutzer';
+import checkNeuerBenutzer from '../src/ts/core/orchestration/auth/utils/checkNeuerBenutzer';
 
 function setupDom(): HTMLDivElement {
   document.body.innerHTML = `

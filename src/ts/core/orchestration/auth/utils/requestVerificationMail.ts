@@ -1,6 +1,6 @@
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { authApi } from '../../../infrastructure/api/apiService';
+import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { default as Storage } from '../../../../infrastructure/storage/Storage';
+import { authApi } from '../../../../infrastructure/api/apiService';
 
 export default async function requestVerificationMail(email?: string): Promise<void> {
   const fallbackEmail = Storage.get<string>('BenutzerEmail', { default: '' });
