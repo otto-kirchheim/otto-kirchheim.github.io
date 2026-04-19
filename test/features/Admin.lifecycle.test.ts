@@ -24,8 +24,9 @@ vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
   getServerUrl: mockGetServerUrl,
 }));
 
-import { registerAdminFeature } from '../../src/ts/features/Admin';
+import { mountAdminTab, unmountAdminTab } from '../../src/ts/features/Admin';
 import { featureLifecycleRegistry } from '../../src/ts/core/hooks';
+import type { FeatureContext } from '../../src/ts/core/hooks';
 
 afterEach(() => {
   featureLifecycleRegistry.clearAll();
@@ -41,37 +42,56 @@ describe('Admin feature lifecycle registration', () => {
     `;
   });
 
-  it('register() shows admin nav elements and mounts when isAdmin=true', async () => {
-    const feature = registerAdminFeature();
-    await feature.register({ isAdmin: true, userName: 'AdminUser' });
+  it('mountAdminTab shows admin nav elements and renders', () => {
+    document.querySelector('#admin')?.classList.remove('d-none');
+    document.querySelector('#Admin')?.classList.remove('d-none');
+    mountAdminTab('AdminUser');
 
-    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(false);
-    expect(document.querySelector('#Admin')?.classList.contains('d-none')).toBe(false);
     expect(mockRender).toHaveBeenCalled();
   });
 
-  it('register() does not mount or show nav when isAdmin=false', async () => {
-    const feature = registerAdminFeature();
-    await feature.register({ isAdmin: false, userName: 'RegularUser' });
-
-    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(true);
-    expect(document.querySelector('#Admin')?.classList.contains('d-none')).toBe(true);
-    expect(mockRender).not.toHaveBeenCalled();
-  });
-
-  it('unregister() calls render(null) to unmount', async () => {
-    const feature = registerAdminFeature();
-    await feature.unregister?.();
+  it('unmountAdminTab calls render(null) to unmount', () => {
+    unmountAdminTab();
 
     expect(mockRender).toHaveBeenCalledWith(null, expect.anything());
   });
 
-  it('featureLifecycleRegistry.teardownAll() triggers unregister', async () => {
-    const feature = registerAdminFeature();
-    featureLifecycleRegistry.registerFeature(feature);
-    mockRender.mockClear();
+  it('featureLifecycleRegistry handles Admin register/unregister cycle', async () => {
+    featureLifecycleRegistry.registerFeature({
+      name: 'Admin',
+      async register(ctx: FeatureContext): Promise<void> {
+        if (ctx.isAdmin) {
+          document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+          document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+          mountAdminTab(ctx.userName);
+        }
+      },
+      async unregister(): Promise<void> {
+        unmountAdminTab();
+      },
+    });
 
+    await featureLifecycleRegistry.initializeAll({ isAdmin: true, userName: 'AdminUser' });
+    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(false);
+    expect(mockRender).toHaveBeenCalled();
+
+    mockRender.mockClear();
     await featureLifecycleRegistry.teardownAll();
     expect(mockRender).toHaveBeenCalledWith(null, expect.anything());
+  });
+
+  it('register does not mount when isAdmin=false', async () => {
+    featureLifecycleRegistry.registerFeature({
+      name: 'Admin',
+      async register(ctx: FeatureContext): Promise<void> {
+        if (ctx.isAdmin) {
+          mountAdminTab(ctx.userName);
+        }
+      },
+    });
+
+    await featureLifecycleRegistry.initializeAll({ isAdmin: false, userName: 'RegularUser' });
+    expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(true);
+    expect(mockRender).not.toHaveBeenCalled();
   });
 });

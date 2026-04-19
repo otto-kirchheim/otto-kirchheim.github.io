@@ -6,7 +6,6 @@ import { AdminProfileTemplatesManager } from './components/AdminProfileTemplates
 import { ACT_AS_STATUS_EVENT, getActAsState } from '../../infrastructure/ui/actAsStatus';
 import { getServerUrl } from '../../infrastructure/api/FetchRetry';
 import { fetchCurrentAdminCapabilities } from './utils/api';
-import { type FeatureContext, type FeatureRegistration } from '../../core/hooks';
 
 type AdminCapabilities = {
   role: 'member' | 'team-admin' | 'org-admin' | 'super-admin';
@@ -203,26 +202,4 @@ export function unmountAdminTab(): void {
   if (!adminRoot) return;
 
   render(null, adminRoot);
-}
-
-/**
- * Admin Feature Lifecycle Registration
- *
- * Registers Admin feature with the feature lifecycle system.
- * This replaces direct mount/unmount calls and enables formal feature isolation.
- */
-export function registerAdminFeature(): FeatureRegistration {
-  return {
-    name: 'Admin',
-    async register(ctx: FeatureContext): Promise<void> {
-      if (ctx.isAdmin) {
-        document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
-        document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
-        mountAdminTab(ctx.userName);
-      }
-    },
-    async unregister(): Promise<void> {
-      unmountAdminTab();
-    },
-  };
 }

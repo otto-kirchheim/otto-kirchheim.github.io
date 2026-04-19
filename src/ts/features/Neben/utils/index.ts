@@ -7,4 +7,4 @@ import persistTableData from '../../../infrastructure/data/persistTableData';
 const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData('N', ft);
 
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
-export { default as syncNebengeldTimesFromEwtRows } from '../../../orchestration/syncEwtToNeben';
+export { default as syncNebengeldTimesFromEwtRows } from './syncEwtToNeben';

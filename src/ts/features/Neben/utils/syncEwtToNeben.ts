@@ -1,6 +1,6 @@
-import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../interfaces';
-import { default as Storage } from '../infrastructure/storage/Storage';
-import { publishEvent } from '../core';
+import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../../interfaces';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { publishEvent } from '../../../core';
 
 export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[]): void {
   if (updatedEwtRows.length === 0) return;
