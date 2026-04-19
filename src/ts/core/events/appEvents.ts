@@ -7,6 +7,7 @@ const listeners: Listener[] = [];
 
 export function publishDataChanged(): void {
   listeners.forEach(fn => fn());
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
 }
 
 export function onDataChanged(listener: Listener): () => void {

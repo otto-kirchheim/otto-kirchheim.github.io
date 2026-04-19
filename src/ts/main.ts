@@ -9,13 +9,11 @@ import { default as initializeColorModeToggler } from './infrastructure/ui/BSCol
 import { default as setOffline } from './infrastructure/ui/setOffline';
 import { default as storageAvailable } from './infrastructure/storage/storageAvailable';
 import dayjs from './infrastructure/date/configDayjs';
-import { aktualisiereBerechnung } from './features/Berechnung';
 import { registerHook, featureLifecycleRegistry } from './core/hooks';
 import type { FeatureContext } from './core/hooks';
 
 registerHook('auth:failure', logoutUser);
 registerHook('network:reconnect', changeMonatJahr);
-registerHook('post-save', aktualisiereBerechnung);
 registerHook('pre-save:settings', saveEinstellungen);
 
 featureLifecycleRegistry.registerFeature({

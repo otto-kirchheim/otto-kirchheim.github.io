@@ -3,7 +3,6 @@ import type { IVorgabenU } from '../../interfaces';
 export interface HookMap {
   'auth:failure': () => void;
   'network:reconnect': () => void;
-  'post-save': () => void;
   'pre-save:settings': () => IVorgabenU;
 }
 

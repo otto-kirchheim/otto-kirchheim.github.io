@@ -26,8 +26,13 @@ storage:user
 |------|---------|--------------|
 | `auth:failure` | `logoutUser` | `main.ts` |
 | `network:reconnect` | `changeMonatJahr` | `main.ts` |
-| `post-save` | `aktualisiereBerechnung` | `main.ts` |
 | `pre-save:settings` | `saveEinstellungen` | `main.ts` |
+
+### Event Subscriptions
+
+| Event Channel | Subscriber | Registered by |
+|---------------|-----------|--------------|
+| `data:changed` | `aktualisiereBerechnung` | `features/Berechnung/index.ts` |
 
 ## Logout Teardown
 

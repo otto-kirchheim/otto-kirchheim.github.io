@@ -18,8 +18,8 @@ describe('hookRegistry', () => {
 
   it('registerHook / getHook round-trips the handler', () => {
     const handler = vi.fn();
-    registerHook('post-save', handler);
-    expect(getHook('post-save')).toBe(handler);
+    registerHook('auth:failure', handler);
+    expect(getHook('auth:failure')).toBe(handler);
   });
 
   it('invokeHook calls the registered handler', () => {
@@ -44,9 +44,9 @@ describe('hookRegistry', () => {
   it('registerHook overwrites a previously registered handler', () => {
     const first = vi.fn();
     const second = vi.fn();
-    registerHook('post-save', first);
-    registerHook('post-save', second);
-    invokeHook('post-save');
+    registerHook('network:reconnect', first);
+    registerHook('network:reconnect', second);
+    invokeHook('network:reconnect');
     expect(second).toHaveBeenCalled();
     expect(first).not.toHaveBeenCalled();
   });

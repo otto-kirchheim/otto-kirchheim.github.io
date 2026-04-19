@@ -49,7 +49,8 @@ import {
   setAutoSaveDelay,
   setAutoSaveEnabled,
 } from '../../src/ts/infrastructure/autoSave/autoSave';
-import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
+import { clearAllHooks } from '../../src/ts/core/hooks';
+import { onEvent, clearAllEventListeners } from '../../src/ts/core/events/appEvents';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -92,7 +93,8 @@ describe('autoSave', () => {
     vi.useFakeTimers();
     localStorage.clear();
     clearAllHooks();
-    registerHook('post-save', mockAktualisiereBerechnung);
+    clearAllEventListeners();
+    onEvent('data:changed', mockAktualisiereBerechnung);
     document.body.innerHTML = '';
 
     // Reset state
@@ -107,6 +109,7 @@ describe('autoSave', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    clearAllEventListeners();
   });
 
   // ─── Konfiguration ───────────────────────────────────

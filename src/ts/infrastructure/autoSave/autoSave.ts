@@ -8,7 +8,6 @@
  */
 
 import { createSnackBar } from '../../class/CustomSnackbar';
-import { invokeHook } from '../../core/hooks';
 import { publishEvent } from '../../core';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../../class/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../interfaces';
@@ -286,7 +285,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     }
 
     updateLocalStorage(resource, table);
-    invokeHook('post-save');
+    publishEvent('data:changed', { resource, action: 'update' });
 
     const allDocs = [...(result?.created ?? []), ...(result?.updated ?? [])];
     const maxUpdatedAt = allDocs.reduce<string | null>((max, doc: { updatedAt?: string }) => {
