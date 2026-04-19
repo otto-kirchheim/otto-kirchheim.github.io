@@ -4,8 +4,8 @@ import {
   getMonatFromBZ,
   getMonatFromEWT,
   getMonatFromN,
-  normalizeResourceRows,
-} from '../../../utilities';
+} from '../../../infrastructure/date/getMonatFromItem';
+import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
 import type { TStorageData } from '../../../infrastructure/storage/Storage';
 
 const MONTH_AWARE_STORAGE_NAMES: TStorageData[] = ['dataBZ', 'dataBE', 'dataE', 'dataN'];

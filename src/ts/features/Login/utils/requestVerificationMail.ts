@@ -1,5 +1,5 @@
 import { createSnackBar } from '../../../class/CustomSnackbar';
-import { Storage } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { authApi } from '../../../infrastructure/api/apiService';
 
 export default async function requestVerificationMail(email?: string): Promise<void> {

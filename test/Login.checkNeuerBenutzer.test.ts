@@ -28,8 +28,8 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  clearLoading: clearLoadingMock,
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+  default: clearLoadingMock,
 }));
 
 vi.mock('../src/ts/infrastructure/api/apiService', () => ({

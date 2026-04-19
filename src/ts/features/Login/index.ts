@@ -1,13 +1,10 @@
 import { selectYear } from '../Einstellungen/utils';
 import { registerAppStartTask } from '../../core';
 import type { IVorgabenU } from '../../interfaces';
-import {
-  ACT_AS_STATUS_EVENT,
-  getStoredMonatJahr,
-  Storage,
-  updateActAsBanner,
-  updateTabVisibility,
-} from '../../utilities';
+import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '../../infrastructure/ui/actAsStatus';
+import { getStoredMonatJahr } from '../../infrastructure/date/dateStorage';
+import Storage from '../../infrastructure/storage/Storage';
+import { default as updateTabVisibility } from '../../infrastructure/ui/updateTabVisibility';
 import { getUserCookie, isAdmin } from '../../infrastructure/tokenManagement/decodeAccessToken';
 import { initAutoSaveIndicator } from '../../infrastructure/autoSave/autoSaveIndicator';
 import { createModalLogin } from './components';

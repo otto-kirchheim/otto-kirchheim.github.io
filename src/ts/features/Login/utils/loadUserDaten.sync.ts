@@ -1,5 +1,5 @@
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../../interfaces';
-import { Storage } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import type { LoadedYearData } from '../../../infrastructure/api/apiService';
 import type { TStorageData } from '../../../infrastructure/storage/Storage';

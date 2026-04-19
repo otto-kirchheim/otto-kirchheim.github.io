@@ -15,9 +15,12 @@ vi.mock('preact/hooks', () => ({ useState: vi.fn((v: unknown) => [v, vi.fn()]), 
 vi.mock('../../../src/ts/features/Admin/utils/api', () => ({
   fetchCurrentAdminCapabilities: mockFetchCurrentAdminCapabilities,
 }));
-vi.mock('../../../src/ts/utilities', () => ({
+vi.mock('../../src/ts/infrastructure/ui/actAsStatus', () => ({
   ACT_AS_STATUS_EVENT: 'actAsStatusChanged',
   getActAsState: mockGetActAsState,
+}));
+
+vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
   getServerUrl: mockGetServerUrl,
 }));
 

@@ -4,9 +4,9 @@ import { publishDataChanged } from '../../core';
 import Storage from '../storage/Storage';
 import normalizeResourceRows from './normalizeResourceRows';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';
+import { default as tableToArray } from './tableToArray';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 import syncNebengeldTimesFromEwtRows from '../../orchestration/syncEwtToNeben';
-import { tableToArray } from '../../utilities';
 
 export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenEWT[] {
   const rawRows = typeof ft.getRows === 'function' ? ft.getRows() : [];

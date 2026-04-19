@@ -1,5 +1,10 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
-import { DatenSortieren, Storage, buttonDisable, checkMaxTag, clearLoading, setLoading } from '../../src/ts/utilities';
+import { default as DatenSortieren } from '../../src/ts/infrastructure/data/DatenSortieren';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import { default as buttonDisable } from '../../src/ts/infrastructure/ui/buttonDisable';
+import { default as checkMaxTag } from '../../src/ts/infrastructure/validation/checkMaxTag';
+import { default as clearLoading } from '../../src/ts/infrastructure/ui/clearLoading';
+import { default as setLoading } from '../../src/ts/infrastructure/ui/setLoading';
 import { getUserCookie, isAdmin } from '../../src/ts/infrastructure/tokenManagement/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";
 import * as exportSnackbar from "../src/ts/class/CustomSnackbar";

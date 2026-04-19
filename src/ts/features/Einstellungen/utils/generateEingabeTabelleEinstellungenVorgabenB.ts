@@ -3,7 +3,8 @@ import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import { createCustomTable } from '../../../class/CustomTable';
 import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../interfaces';
-import { Storage, buttonDisable } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '../components';
 
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {

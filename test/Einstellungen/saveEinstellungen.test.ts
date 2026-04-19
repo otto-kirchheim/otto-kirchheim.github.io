@@ -2,7 +2,7 @@ import '../setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import saveEinstellungen from '../../src/ts/features/Einstellungen/utils/saveEinstellungen';
 import type { IVorgabenU } from '../../src/ts/interfaces';
-import { Storage } from '../../src/ts/utilities';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
 
 function createVorgabenU(): IVorgabenU {
   return {

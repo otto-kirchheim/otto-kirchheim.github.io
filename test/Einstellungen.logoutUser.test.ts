@@ -10,14 +10,26 @@ const unmountAdminTabMock = vi.fn();
 const getOrCreateInstanceMock = vi.fn();
 const showMock = vi.fn();
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+  default: {
     clear: vi.fn(),
     check: vi.fn(),
   },
+}));
+
+vi.mock('../src/ts/infrastructure/api/abortController', () => ({
   abortController: { reset: resetAbortMock },
+}));
+
+vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
   cancelAllPending: cancelAllPendingMock,
-  clearLoading: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+  default: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
@@ -42,7 +54,7 @@ vi.mock('bootstrap/js/dist/tab', () => ({
 }));
 
 import logoutUser from '../src/ts/features/Einstellungen/utils/logoutUser';
-import { Storage } from '../src/ts/utilities';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 describe('logoutUser', () => {
   beforeEach(() => {

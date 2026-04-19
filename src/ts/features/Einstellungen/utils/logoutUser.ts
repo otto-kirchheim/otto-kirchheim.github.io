@@ -1,12 +1,10 @@
 import Tab from 'bootstrap/js/dist/tab';
-import {
-  Storage,
-  abortController,
-  cancelAllPending,
-  clearLoading,
-  hideAllFeatureTabs,
-  updateActAsBanner,
-} from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { abortController } from '../../../infrastructure/api/abortController';
+import { cancelAllPending } from '../../../infrastructure/autoSave/autoSave';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
+import { hideAllFeatureTabs } from '../../../infrastructure/ui/updateTabVisibility';
+import { updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
 import { destroyAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
 import { authApi } from '../../../infrastructure/api/apiService';
 import { featureLifecycleRegistry } from '../../../core/hooks';

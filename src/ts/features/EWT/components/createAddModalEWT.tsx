@@ -3,7 +3,7 @@ import type { CustomTable } from '../../../class/CustomTable';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import type { IDatenEWT } from '../../../interfaces';
 import { type IVorgabenU, type IVorgabenUfZ } from '../../../interfaces';
-import { Storage } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 

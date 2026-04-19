@@ -10,7 +10,7 @@ import {
 import type { TUserRole } from '../../../interfaces';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { loadUserDaten } from '../../Login/utils';
-import { Storage } from '../../../utilities';
+import Storage from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { OeTagInput } from './OeTagInput';
 

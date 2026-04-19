@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { Storage, getActAsState, updateActAsBanner } from '../../src/ts/utilities';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import { getActAsState, updateActAsBanner } from '../../src/ts/infrastructure/ui/actAsStatus';
 
 describe('actAsStatus', () => {
   beforeEach(() => {

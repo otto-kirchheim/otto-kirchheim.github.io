@@ -17,9 +17,17 @@ import {
   scheduleAutoSave,
   setAutoSaveEnabled,
 } from '../../../infrastructure/autoSave/autoSave';
-import { Storage, buttonDisable, clearLoading, updateTabVisibility } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
+import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
 import { type LoadedYearData, loadAllYearData } from '../../../infrastructure/api/apiService';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '../../../utilities';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromN,
+  isEwtInMonat,
+} from '../../../infrastructure/date/getMonatFromItem';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '../components';
 import { isSessionErrorMessage } from './loadUserDaten.helpers';
 import {

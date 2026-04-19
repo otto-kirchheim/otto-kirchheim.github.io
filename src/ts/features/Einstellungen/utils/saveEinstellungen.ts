@@ -2,12 +2,12 @@ import { createSnackBar } from '../../../class/CustomSnackbar';
 import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../../interfaces';
 import {
   PERS_FIELD_LABELS,
-  Storage,
   setupPersValidation,
-  tableToArray,
-  updateTabVisibility,
   validatePersInput,
-} from '../../../utilities';
+} from '../../../infrastructure/validation/addressValidation';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as tableToArray } from '../../../infrastructure/data/tableToArray';
+import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 
 export default function saveEinstellungen(): IVorgabenU {

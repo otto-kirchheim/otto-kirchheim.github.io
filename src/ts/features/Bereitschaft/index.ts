@@ -3,16 +3,13 @@ import type { CustomTable } from '../../class/CustomTable';
 import { createCustomTable } from '../../class/CustomTable';
 import { registerAppStartTask } from '../../core';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../../interfaces';
-import {
-  confirmDeleteAllRows,
-  createOnChangeHandler,
-  getMonatFromBE,
-  getMonatFromBZ,
-  saveDaten,
-  Storage,
-} from '../../utilities';
+import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
+import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
+import { getMonatFromBE, getMonatFromBZ } from '../../infrastructure/date/getMonatFromItem';
+import { default as saveDaten } from '../../infrastructure/data/saveDaten';
+import Storage from '../../infrastructure/storage/Storage';
 import dayjs from '../../infrastructure/date/configDayjs';
-import download from '../../infrastructure/data/download';
+import { default as download } from '../../infrastructure/data/download';
 import {
   EditorModalBE,
   EditorModalBereitschaftsZeit,

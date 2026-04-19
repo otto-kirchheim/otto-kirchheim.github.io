@@ -1,6 +1,7 @@
 import dayjs from '../../infrastructure/date/configDayjs';
 import { registerAppStartTask } from '../../core';
-import { Storage, saveDaten } from '../../utilities';
+import Storage from '../../infrastructure/storage/Storage';
+import { default as saveDaten } from '../../infrastructure/data/saveDaten';
 import { setAutoSaveEnabled, setAutoSaveDelay } from '../../infrastructure/autoSave/autoSave';
 import { authApi } from '../../infrastructure/api/apiService';
 import { confirmDialog } from '../../infrastructure/ui/confirmDialog';

@@ -6,7 +6,8 @@ import { createSnackBar } from '../../../class/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '../../../interfaces';
-import { Storage, checkMaxTag } from '../../../utilities';
+import Storage from '../../../infrastructure/storage/Storage';
+import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { persistNebengeldTableData } from '../utils';
 

@@ -10,7 +10,8 @@ import type {
   IVorgabenUaZ,
   IVorgabenUvorgabenB,
 } from '../../../interfaces';
-import { Storage, setupPersValidation } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { setupPersValidation } from '../../../infrastructure/validation/addressValidation';
 
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),

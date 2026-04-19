@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
-import { clearLoading } from '../../../utilities';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
 import { authApi } from '../../../infrastructure/api/apiService';
 import { registerPasskeyWithResult } from '../../../infrastructure/tokenManagement/passkeys';
 import { getPasswordValidationMessage } from '../../../infrastructure/validation/passwordValidation';

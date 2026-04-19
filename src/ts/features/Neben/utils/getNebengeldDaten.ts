@@ -1,6 +1,8 @@
 import type { IDatenN, IDataQueryOptions, IMonatsDaten } from '../../../interfaces';
-import { filterByMonat, getMonatFromN, getStoredMonatJahr, normalizeResourceRows, Storage } from '../../../utilities';
-
+import { filterByMonat, getMonatFromN } from '../../../infrastructure/date/getMonatFromItem';
+import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
+import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
+import Storage from '../../../infrastructure/storage/Storage';
 export default function getNebengeldDaten(
   data?: IMonatsDaten['N'],
   Monat?: number,

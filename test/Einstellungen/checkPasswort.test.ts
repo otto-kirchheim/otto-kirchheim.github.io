@@ -18,9 +18,12 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   authApi: { changePassword: changePasswordMock },
 }));
 
-vi.mock('../../src/ts/utilities', () => ({
-  setLoading: setLoadingMock,
-  clearLoading: clearLoadingMock,
+vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({
+  default: setLoadingMock,
+}));
+
+vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({
+  default: clearLoadingMock,
 }));
 
 vi.mock('bootstrap/js/dist/modal', () => ({

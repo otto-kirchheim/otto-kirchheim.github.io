@@ -5,7 +5,7 @@ import type { CustomTable } from '../../../class/CustomTable';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../../interfaces';
-import { Storage } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import {
   calculateBuchungstagEwt,

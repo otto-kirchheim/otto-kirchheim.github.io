@@ -1,6 +1,6 @@
 import type { IVorgabenBerechnung, IVorgabenGeld } from '../../interfaces';
 import { registerAppStartTask, onDataChanged } from '../../core';
-import { Storage } from '../../utilities';
+import { default as Storage } from '../../infrastructure/storage/Storage';
 import aktualisiereBerechnung from './aktualisiereBerechnung';
 import generateTableBerechnung from './generateTableBerechnung';
 

@@ -5,10 +5,10 @@ import {
   getMonatFromBZ,
   getMonatFromN,
   isEwtInMonat,
-  Storage,
-  buttonDisable,
-  getStoredMonatJahr,
-} from '../../../utilities';
+} from '../../../infrastructure/date/getMonatFromItem';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
+import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
 import { setMonatJahr } from '.';
 
 export default function changeMonatJahr(): void {

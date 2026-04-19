@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'bun:test';
 import { getNebengeldDaten } from '../src/ts/features/Neben/utils';
-import { Storage } from '../src/ts/utilities';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 import type { IDatenN } from '../src/ts/interfaces';
 
 describe('#getNebengeldDaten function', () => {

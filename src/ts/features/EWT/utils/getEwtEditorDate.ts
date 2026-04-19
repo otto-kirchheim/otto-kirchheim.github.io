@@ -1,5 +1,5 @@
 import type { IDatenEWT } from '../../../interfaces';
-import { checkMaxTag } from '../../../utilities';
+import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';
 
 export default function getEwtEditorDate(

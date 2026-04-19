@@ -8,7 +8,9 @@ import {
 import { publishDataChanged } from '../../../core';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../../interfaces';
-import { Storage, clearLoading, setLoading } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { getMonatFromBZ } from '../../../infrastructure/date/getMonatFromItem';
 

@@ -1,4 +1,6 @@
-import { Storage, getUserCookie, setLoading } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import { loadUserDaten } from '../../Login/utils';
 import setMonatJahr from './setMonatJahr';

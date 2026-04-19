@@ -11,7 +11,13 @@ import type {
   UserDatenServer,
 } from '../../../interfaces';
 import { getNebengeldDaten } from '../../Neben/utils';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat, Storage } from '../../../utilities';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromN,
+  isEwtInMonat,
+} from '../../../infrastructure/date/getMonatFromItem';
+import Storage from '../../../infrastructure/storage/Storage';
 import { scheduleAutoSave } from '../../../infrastructure/autoSave/autoSave';
 
 function applyDataToTable(selector: string, data: object[]): void {

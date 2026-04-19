@@ -34,12 +34,15 @@ vi.mock('../src/ts/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+  default: {
     set: storageSetMock,
     remove: storageRemoveMock,
   },
-  setLoading: setLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({
+  default: setLoadingMock,
 }));
 
 vi.mock('../src/ts/infrastructure/tokenManagement/decodeAccessToken', () => ({

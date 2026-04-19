@@ -8,7 +8,8 @@ import type {
   IVorgabenBerechnung,
   IVorgabenBerechnungMonat,
 } from '../../interfaces';
-import { normalizeResourceRows, Storage } from '../../utilities';
+import { default as normalizeResourceRows } from '../../infrastructure/data/normalizeResourceRows';
+import Storage from '../../infrastructure/storage/Storage';
 import dayjs from '../../infrastructure/date/configDayjs';
 import {
   getMonatFromBE,

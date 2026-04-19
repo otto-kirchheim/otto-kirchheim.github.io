@@ -9,7 +9,8 @@ import type {
   IVorgabenU,
   IVorgabenUvorgabenB,
 } from '../../../interfaces';
-import { Storage, checkMaxTag } from '../../../utilities';
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import {
   applyBereitschaftsVorgabe,

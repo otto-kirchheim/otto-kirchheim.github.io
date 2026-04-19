@@ -1,6 +1,8 @@
 import { selectYear } from '../../Einstellungen/utils';
 import { createSnackBar } from '../../../class/CustomSnackbar';
-import { Storage, setLoading, updateActAsBanner } from '../../../utilities';
+import Storage from '../../../infrastructure/storage/Storage';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
+import { updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
 import { isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '../../../infrastructure/date/configDayjs';

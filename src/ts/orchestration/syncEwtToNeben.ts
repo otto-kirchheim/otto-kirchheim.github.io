@@ -1,5 +1,5 @@
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../interfaces';
-import { Storage } from '../utilities';
+import { default as Storage } from '../infrastructure/storage/Storage';
 import { scheduleAutoSave } from '../infrastructure/autoSave/autoSave';
 
 export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[]): void {

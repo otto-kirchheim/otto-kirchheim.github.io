@@ -1,6 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { userLoginSuccess } from '.';
-import { clearLoading, setLoading } from '../../../utilities';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
 import { authApi } from '../../../infrastructure/api/apiService';
 import { resetTokenState } from '../../../infrastructure/tokenManagement/tokenErneuern';
 import type { CustomHTMLDivElement } from '../../../interfaces';

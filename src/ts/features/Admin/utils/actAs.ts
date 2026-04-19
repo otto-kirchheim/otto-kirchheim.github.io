@@ -1,4 +1,5 @@
-import { Storage, getStoredMonatJahr } from '../../../utilities';
+import Storage from '../../../infrastructure/storage/Storage';
+import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
 import { loadUserDaten } from '../../Login/utils';
 import { setActAsUser } from './api';
 

@@ -1,7 +1,8 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { userLoginSuccess } from '.';
-import { clearLoading, setLoading } from '../../../utilities';
+import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
 import { authApi } from '../../../infrastructure/api/apiService';
 import { getPasskeyErrorMessage } from '../../../infrastructure/tokenManagement/passkeys';
 import { resetTokenState } from '../../../infrastructure/tokenManagement/tokenErneuern';
