@@ -1,4 +1,5 @@
 import { overwriteUserDaten } from '.';
+import { publishEvent } from '../../..';
 import { aktualisiereBerechnung } from '../../../../features/Berechnung';
 import generateTableBerechnung from '../../../../features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
@@ -11,12 +12,7 @@ import type {
   IDatenN,
   UserDatenServer,
 } from '../../../../interfaces';
-import {
-  flushAll,
-  isAutoSaveEnabled,
-  scheduleAutoSave,
-  setAutoSaveEnabled,
-} from '../../../../infrastructure/autoSave/autoSave';
+import { flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '../../../../infrastructure/autoSave/autoSave';
 import { default as Storage } from '../../../../infrastructure/storage/Storage';
 import { default as buttonDisable } from '../../../../infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '../../../../infrastructure/ui/clearLoading';
@@ -80,6 +76,10 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     console.log('Unterschiede Server - Client | Bereits vorhanden', dataServer);
   }
 
+  // Jahreswechsel-Flag auslesen und zurücksetzen
+  const isJahreswechsel = Storage.check('Jahreswechsel') && Storage.get<boolean>('Jahreswechsel', { default: false });
+  if (isJahreswechsel) Storage.remove('Jahreswechsel');
+
   const synced = syncLoadedYearResources({
     vorgabenU: serverVorgabenU,
     BZ: serverBZ,
@@ -88,6 +88,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     N: serverN,
     serverTimestamps,
     initialDataServer: dataServer,
+    isJahreswechsel,
   });
 
   const { vorgabenU, BZ, BE, EWT, N } = synced;
@@ -145,19 +146,19 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
             if ('BZ' in dataServer) {
               markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
-              scheduleAutoSave('BZ');
+              publishEvent('data:changed', { resource: 'BZ', action: 'sync' });
             }
             if ('BE' in dataServer) {
               markRowsForAutosave('#tableBE', 'dataBE', beMonths);
-              scheduleAutoSave('BE');
+              publishEvent('data:changed', { resource: 'BE', action: 'sync' });
             }
             if ('EWT' in dataServer) {
               markRowsForAutosave('#tableE', 'dataE', eMonths);
-              scheduleAutoSave('EWT');
+              publishEvent('data:changed', { resource: 'EWT', action: 'sync' });
             }
             if ('N' in dataServer) {
               markRowsForAutosave('#tableN', 'dataN', nMonths);
-              scheduleAutoSave('N');
+              publishEvent('data:changed', { resource: 'N', action: 'sync' });
             }
 
             Storage.remove('dataServer');

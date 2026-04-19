@@ -25,6 +25,7 @@ interface SyncLoadedYearResourcesParams {
   N: LoadedYearData['N'];
   serverTimestamps: LoadedYearData['timestamps'];
   initialDataServer?: Partial<UserDatenServer>;
+  isJahreswechsel?: boolean;
 }
 
 interface SyncLoadedYearResourcesResult {
@@ -45,6 +46,7 @@ export function syncLoadedYearResources({
   N,
   serverTimestamps,
   initialDataServer,
+  isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
   const vorhanden: UnterschiedNachMonat[] = [];
   const dataServer: Partial<UserDatenServer> = { ...(initialDataServer ?? {}) };
@@ -55,6 +57,12 @@ export function syncLoadedYearResources({
     serverTimestamp: number,
     beschreibung: string,
   ): T => {
+    // Bei Jahreswechsel: lokale Daten gehören zum alten Jahr → Server direkt übernehmen
+    if (isJahreswechsel) {
+      Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
+      return serverData;
+    }
+
     const localTs = Storage.getTimestamp(storageName);
     const localData = Storage.check(storageName)
       ? Storage.get<unknown>(storageName, { default: serverData })

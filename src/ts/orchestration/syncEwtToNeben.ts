@@ -1,6 +1,6 @@
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../interfaces';
 import { default as Storage } from '../infrastructure/storage/Storage';
-import { scheduleAutoSave } from '../infrastructure/autoSave/autoSave';
+import { publishEvent } from '../core';
 
 export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[]): void {
   if (updatedEwtRows.length === 0) return;
@@ -41,6 +41,6 @@ export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[
       tableChanged = true;
     }
     if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
-    if (tableChanged) scheduleAutoSave('N');
+    if (tableChanged) publishEvent('data:changed', { resource: 'N', action: 'update' });
   }
 }

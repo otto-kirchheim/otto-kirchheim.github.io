@@ -135,10 +135,8 @@ describe('overwriteUserDaten', () => {
 
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BZ');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('EWT');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('N');
+    // scheduleAutoSave wird nicht mehr direkt aufgerufen — AutoSave reagiert
+    // via Event-Listener auf das publishDataChanged()-Event am Ende
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 

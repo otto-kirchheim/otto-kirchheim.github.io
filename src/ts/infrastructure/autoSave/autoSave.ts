@@ -9,6 +9,7 @@
 
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { publishEvent } from '../../core';
+import { onEvent } from '../../core/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../../class/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../interfaces';
 import { profileApi } from '../api/apiService';
@@ -176,19 +177,36 @@ export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings
   return hasPendingResourceChanges(resource, includeDeletes);
 }
 
+// ─── Event-Driven AutoSave ──────────────────────────────
+
+/**
+ * Registriert den AutoSave-Listener auf das typed Event-System.
+ * Muss einmal beim App-Start aufgerufen werden, bevor Features Events feuern.
+ */
+export function initAutoSaveEventListener(): void {
+  onEvent('data:changed', ({ resource }) => {
+    if (resource === 'all') {
+      for (const key of ['BZ', 'BE', 'EWT', 'N'] as const) {
+        scheduleAutoSave(key);
+      }
+    } else if (resource !== 'settings') {
+      scheduleAutoSave(resource);
+    }
+  });
+}
+
 // ─── onChange-Handler (werden an CustomTable.onChange gebunden) ──
 
 /**
  * Erstellt einen onChange-Handler für eine bestimmte Ressource.
  * Wird als `onChange` Option beim createCustomTable übergeben.
- * Publiziert ein 'data:changed' Event für andere Subscriber.
+ * Publiziert ein 'data:changed' Event — AutoSave reagiert via initAutoSaveEventListener.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createOnChangeHandler(resource: TResourceKey): (table: CustomTable<any>) => void {
   return () => {
     if (!autoSaveEnabled) return;
     publishEvent('data:changed', { resource, action: 'update' });
-    scheduleAutoSave(resource);
   };
 }
 

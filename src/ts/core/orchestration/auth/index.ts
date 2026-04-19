@@ -7,6 +7,7 @@ import Storage from '../../../infrastructure/storage/Storage';
 import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
 import { getUserCookie, isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
+import { initAutoSaveEventListener } from '../../../infrastructure/autoSave/autoSave';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
 
@@ -115,6 +116,7 @@ registerAppStartTask(() => {
     navmenuEl?.classList.remove('d-none');
     btnNavmenuEl?.classList.remove('d-none');
 
+    initAutoSaveEventListener();
     initAutoSaveIndicator();
 
     if (navigator.onLine) selectYear(monat, jahr);

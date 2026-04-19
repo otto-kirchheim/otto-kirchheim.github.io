@@ -42,6 +42,7 @@ import {
   flushAll,
   getAutoSaveDelay,
   getResourceStatus,
+  initAutoSaveEventListener,
   isAutoSaveEnabled,
   markResourceSaved,
   onAutoSaveStatus,
@@ -94,6 +95,7 @@ describe('autoSave', () => {
     localStorage.clear();
     clearAllHooks();
     clearAllEventListeners();
+    initAutoSaveEventListener();
     onEvent('data:changed', mockAktualisiereBerechnung);
     document.body.innerHTML = '';
 
