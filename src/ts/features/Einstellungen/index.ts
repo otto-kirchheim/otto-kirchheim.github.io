@@ -3,6 +3,7 @@ import { registerAppStartTask } from '../../core';
 import { Storage, saveDaten } from '../../utilities';
 import { setAutoSaveEnabled, setAutoSaveDelay } from '../../infrastructure/autoSave/autoSave';
 import { authApi } from '../../infrastructure/api/apiService';
+import { confirmDialog } from '../../infrastructure/ui/confirmDialog';
 import { createSnackBar } from '../../class/CustomSnackbar';
 import { createModalChangePassword } from './components';
 import {
@@ -132,7 +133,7 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
 }
 
 async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void> {
-  const confirmed = window.confirm(`Passkey „${passkey.name}“ wirklich entfernen?`);
+  const confirmed = await confirmDialog(`Passkey „${passkey.name}” wirklich entfernen?`);
   if (!confirmed) return;
 
   try {

@@ -41,7 +41,6 @@ export {
 export { default as buttonDisable } from '../infrastructure/ui/buttonDisable';
 export { default as clearLoading } from '../infrastructure/ui/clearLoading';
 export { default as setLoading } from '../infrastructure/ui/setLoading';
-export { default as setDisableButton } from '../infrastructure/ui/setDisableButton';
 export { default as setOffline } from '../infrastructure/ui/setOffline';
 export { default as updateTabVisibility, hideAllFeatureTabs } from '../infrastructure/ui/updateTabVisibility';
 export { default as initializeColorModeToggler } from '../infrastructure/ui/BSColorToggler';

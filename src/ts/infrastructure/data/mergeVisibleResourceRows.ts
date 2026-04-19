@@ -1,19 +1,10 @@
 import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '../../interfaces';
-import type { TStorageData } from '../storage/Storage';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../interfaces';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';
 import normalizeResourceRows from './normalizeResourceRows';
-
-type ResourceKind = Exclude<TResourceKey, 'settings'>;
-
-const RESOURCE_STORAGE_MAP: Record<ResourceKind, TStorageData> = {
-  BZ: 'dataBZ',
-  BE: 'dataBE',
-  EWT: 'dataE',
-  N: 'dataN',
-};
+import { type ResourceKind, RESOURCE_STORAGE_MAP } from './resourceConfig';
 
 function isRowInActiveMonat(resource: ResourceKind, row: CustomTableTypes, monat: number): boolean {
   switch (resource) {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import Tooltip from 'bootstrap/js/dist/tooltip';
+import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
 import {
   fetchAdminUsers,
   updateUserOe,
@@ -190,7 +191,7 @@ export function AdminUserList() {
     const isSelfRow = user?.userName === row.userName;
     if (isSelfRow) return;
 
-    const confirmed = window.confirm(
+    const confirmed = await confirmDialog(
       `Benutzer "${row.userName}" wirklich löschen?\nDieser Vorgang kann nicht rückgängig gemacht werden.`,
     );
     if (!confirmed) return;

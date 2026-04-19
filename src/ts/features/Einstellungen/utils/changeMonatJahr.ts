@@ -8,7 +8,6 @@ import {
   Storage,
   buttonDisable,
   getStoredMonatJahr,
-  setDisableButton,
 } from '../../../utilities';
 import { setMonatJahr } from '.';
 
@@ -19,7 +18,7 @@ export default function changeMonatJahr(): void {
 
   if (Storage.compare<number>('Jahr', Number(jahrInput.value))) {
     buttonDisable(false);
-    if (!navigator.onLine) setDisableButton(true);
+    if (!navigator.onLine) buttonDisable(true);
 
     if (!Storage.compare<number>('Monat', Number(monatInput.value))) {
       const jahr = Number(jahrInput.value);

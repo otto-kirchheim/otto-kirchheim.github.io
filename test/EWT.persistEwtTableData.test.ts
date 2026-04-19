@@ -18,7 +18,7 @@ vi.mock('../src/ts/core', () => ({
   publishDataChanged: publishDataChangedMock,
 }));
 
-import persistEwtTableData from '../src/ts/features/EWT/utils/persistEwtTableData';
+import persistEwtTableData from '../src/ts/infrastructure/data/persistEwtTableData';
 
 function createData(tagE: string): IDatenEWT {
   return {

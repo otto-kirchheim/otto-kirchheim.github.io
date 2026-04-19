@@ -8,8 +8,12 @@ import updateBereitschaftsDatum from './updateBereitschaftsDatum';
 import toggleBereitschaftsEigeneWerte from './toggleBereitschaftsEigeneWerte';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
-import persistBereitschaftsEinsatzTableData from './persistBereitschaftsEinsatzTableData';
-import persistBereitschaftsZeitraumTableData from './persistBereitschaftsZeitraumTableData';
+import type { CustomTable } from '../../../class/CustomTable';
+import type { IDatenBE, IDatenBZ } from '../../../interfaces';
+import persistTableData from '../../../infrastructure/data/persistTableData';
+
+const persistBereitschaftsZeitraumTableData = (ft: CustomTable<IDatenBZ>) => persistTableData('BZ', ft);
+const persistBereitschaftsEinsatzTableData = (ft: CustomTable<IDatenBE>) => persistTableData('BE', ft);
 
 export {
   submitBereitschaftsEinsatz,

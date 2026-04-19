@@ -23,7 +23,7 @@
 
 - **Framework:** Preact (v10) – leichtgewichtige React-Alternative
 - **Build Tool:** Vite (v8) mit Preact-Plugin
-- **Sprache:** TypeScript (strict mode)
+- **Sprache:** TypeScript (strict mode; kein any)
 - **Styling:** Bootstrap 5.3 + SCSS + Material Icons
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
@@ -58,14 +58,30 @@ src/
 │   ├── main.ts            # App-Init (PWA, Version-Check, Bootstrap-Module)
 │   ├── class/             # Vanilla-JS Klassen (CustomTable, CustomSnackbar)
 │   ├── components/        # Preact UI-Bausteine (Modals, Buttons, Inputs)
+│   ├── core/              # Zentrale Contracts und Events
+│   │   ├── types/         # API-Envelope, State-Typen
+│   │   ├── hooks/         # Hook-Registry (registerHook/invokeHook)
+│   │   ├── events/        # App-Events (publishDataChanged, EventChannels)
+│   │   └── orchestration/ # Init-Sequenz, Feature-Lifecycle-Registry
 │   ├── interfaces/        # TypeScript-Interfaces
-│   ├── utilities/         # Hilfsfunktionen (FetchRetry, Storage, dayjs, etc.)
-│   ├── Bereitschaft/      # Feature-Modul: Bereitschaftsdienst
-│   ├── EWT/               # Feature-Modul: Einsatzwechseltätigkeit
-│   ├── Neben/             # Feature-Modul: Nebenbezüge
-│   ├── Berechnung/        # Feature-Modul: Gesamtberechnung
-│   ├── Einstellungen/     # Feature-Modul: Benutzer-Einstellungen
-│   └── Login/             # Feature-Modul: Auth (Login, Registrierung)
+│   ├── infrastructure/    # Gemeinsame technische Bausteine
+│   │   ├── api/           # apiService, FetchRetry
+│   │   ├── autoSave/      # AutoSave-Manager (autoSave, changeTracking, savePipeline, errorHandling)
+│   │   ├── data/          # resourceConfig, persistTableData, mergeVisibleResourceRows, fieldMapper
+│   │   ├── date/          # dayjs-Konfiguration
+│   │   ├── storage/       # Storage-Singleton
+│   │   ├── tokenManagement/ # JWT, Passkeys, Token-Refresh
+│   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, etc.
+│   │   └── validation/    # Passwort-Validierung
+│   ├── utilities/         # Legacy-Barrel (re-exportiert aus infrastructure/)
+│   └── features/          # Feature-Module
+│       ├── Bereitschaft/  # Bereitschaftsdienst (index, components/, utils/)
+│       ├── EWT/           # Einsatzwechseltaetigkeit
+│       ├── Neben/         # Nebenbezuege
+│       ├── Berechnung/    # Gesamtberechnung
+│       ├── Einstellungen/ # Benutzer-Einstellungen
+│       ├── Login/         # Auth (Login, Registrierung)
+│       └── Admin/         # Admin-Panel (Preact)
 test/
 ├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
 ├── mockData.ts            # Gemeinsame Test-Daten
@@ -79,11 +95,18 @@ test/
 Die Navigation erfolgt über Bootstrap-Tabs (`data-bs-toggle="pill"`), nicht über einen Client-Side-Router.
 Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
 
+**3-Schichten-Architektur:**
+
+- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry. Keine Feature-Abhängigkeiten.
+- **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities). Darf `core/` nutzen, nicht `features/`.
+- **`features/`** – Feature-Module (Bereitschaft, EWT, Neben, etc.). Dürfen `core/` und `infrastructure/` nutzen.
+- **`utilities/`** – Legacy-Barrel, re-exportiert aus `infrastructure/`. Keine eigene Logik.
+
 **Feature-Modul-Pattern:**
 Jedes Feature folgt der gleichen Struktur:
 
 ```
-Feature/
+features/Feature/
 ├── index.ts          # window.load → CustomTable Init + Event Binding
 ├── components/       # Preact TSX: Add/Edit/Show Modals
 └── utils/            # Business-Logik, Berechnungen, Daten-Handling
@@ -100,7 +123,7 @@ Feature/
 ## 2. Frontend-spezifische Regeln
 
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
-2. **dayjs** für alle Datumsoperationen (aus `src/ts/utilities/configDayjs.ts`)
+2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
 4. **Preact** für Modals/Dialoge, **nicht** für die Hauptseiten-Struktur
 5. **Bootstrap-Tabs** für Navigation, kein Router
@@ -109,7 +132,10 @@ Feature/
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
 9. **Bun test** für alle Tests, happy-dom als DOM-Environment
 10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht Preact)
-11. **Changelog pflegen:** Bei Frontend-Aenderungen `frontend/CHANGELOG.md` im selben Arbeitsgang aktualisieren.
+11. **`confirmDialog`** statt `window.confirm()` (aus `infrastructure/ui/confirmDialog.ts`)
+12. **`resourceConfig.ts`** als zentrale Resource-Konfiguration (Storage-Keys, Table-IDs)
+13. **Schichtentrennung:** `features/` → `infrastructure/` → `core/`, nie umgekehrt
+14. **Changelog pflegen:** Bei Frontend-Aenderungen `frontend/CHANGELOG.md` im selben Arbeitsgang aktualisieren.
 
 ---
 

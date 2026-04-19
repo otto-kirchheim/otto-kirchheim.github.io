@@ -1,11 +1,12 @@
-import type { IDatenEWT } from '../../../interfaces';
-import type { CustomTable } from '../../../class/CustomTable';
-import { Storage, tableToArray } from '../../../utilities';
-import { publishDataChanged } from '../../../core';
-import normalizeResourceRows from '../../../infrastructure/data/normalizeResourceRows';
-import mergeVisibleResourceRows from '../../../infrastructure/data/mergeVisibleResourceRows';
-import calculateBuchungstagEwt from '../../../infrastructure/date/calculateBuchungstagEwt';
-import syncNebengeldTimesFromEwtRows from '../../../orchestration/syncEwtToNeben';
+import type { IDatenEWT } from '../../interfaces';
+import type { CustomTable } from '../../class/CustomTable';
+import { publishDataChanged } from '../../core';
+import Storage from '../storage/Storage';
+import normalizeResourceRows from './normalizeResourceRows';
+import mergeVisibleResourceRows from './mergeVisibleResourceRows';
+import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
+import syncNebengeldTimesFromEwtRows from '../../orchestration/syncEwtToNeben';
+import { tableToArray } from '../../utilities';
 
 export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenEWT[] {
   const rawRows = typeof ft.getRows === 'function' ? ft.getRows() : [];

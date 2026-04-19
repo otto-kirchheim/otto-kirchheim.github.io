@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createSnackBar } from '../../../class/CustomSnackbar';
+import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
 import { clearLoading } from '../../../utilities';
 import { authApi } from '../../../infrastructure/api/apiService';
 import { registerPasskeyWithResult } from '../../../infrastructure/tokenManagement/passkeys';
@@ -13,8 +14,9 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
     return;
   }
 
-  const wantsPasskey = window.confirm(
+  const wantsPasskey = await confirmDialog(
     'Benutzer erfolgreich angelegt. Möchtest du jetzt direkt einen Passkey für zukünftige Logins einrichten?',
+    { title: 'Passkey einrichten', confirmLabel: 'Ja', cancelLabel: 'Nein', confirmClass: 'btn-primary' },
   );
 
   if (!wantsPasskey) {
@@ -28,7 +30,11 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
       return;
     }
 
-    const retry = window.confirm(`${result.message}\n\nPasskey-Einrichtung erneut versuchen?`);
+    const retry = await confirmDialog(`${result.message}\n\nPasskey-Einrichtung erneut versuchen?`, {
+      title: 'Passkey-Fehler',
+      confirmLabel: 'Erneut versuchen',
+      confirmClass: 'btn-primary',
+    });
     if (!retry) {
       return;
     }

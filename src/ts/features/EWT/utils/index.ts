@@ -8,7 +8,7 @@ import getEwtEditorDate from './getEwtEditorDate';
 import getEwtWindow from './getEwtWindow';
 import recalculateEwtMonat from './recalculateEwtMonat';
 import setNaechsterEwtTag from './setNaechsterEwtTag';
-import persistEwtTableData from './persistEwtTableData';
+import persistEwtTableData from '../../../infrastructure/data/persistEwtTableData';
 import validateEwtZeitenReihenfolge from './validateEwtZeitenReihenfolge';
 
 export {

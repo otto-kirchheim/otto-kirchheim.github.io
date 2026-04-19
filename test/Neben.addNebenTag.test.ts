@@ -12,7 +12,7 @@ const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted:
 type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement, tableN: any) => void;
 
 async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
-  mock.module('../src/ts/features/Neben/utils/persistNebengeldTableData', () => ({
+  mock.module('../src/ts/infrastructure/data/persistTableData', () => ({
     default: saveTableDataNMock,
   }));
   mock.module('../src/ts/class/CustomSnackbar', () => ({
@@ -149,7 +149,7 @@ describe('addNebengeldTag', () => {
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({ tagN: '2026-03-10', anzahl040N: 1, auftragN: 'A-123' }),
     );
-    expect(saveTableDataNMock).toHaveBeenCalledWith(ftN);
+    expect(saveTableDataNMock).toHaveBeenCalledWith('N', ftN);
     expect(select.options[0].disabled).toBe(true);
     expect(select.options[0].selected).toBe(false);
     expect(select.options[2].selected).toBe(true);

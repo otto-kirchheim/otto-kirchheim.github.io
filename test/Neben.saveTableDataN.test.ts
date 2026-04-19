@@ -18,7 +18,7 @@ vi.mock('../src/ts/core', () => ({
   publishDataChanged: publishDataChangedMock,
 }));
 
-import persistNebengeldTableData from '../src/ts/features/Neben/utils/persistNebengeldTableData';
+import { persistNebengeldTableData } from '../src/ts/features/Neben/utils';
 
 function createData(tagN: string): IDatenN {
   return {

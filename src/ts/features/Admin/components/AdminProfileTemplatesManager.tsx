@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { createSnackBar } from '../../../class/CustomSnackbar';
+import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import {
   createProfileTemplate,
@@ -500,7 +501,7 @@ export function AdminProfileTemplatesManager() {
       createSnackBar({ message: 'Löschen nur als Super-Admin erlaubt', status: 'error', timeout: 2500 });
       return;
     }
-    if (!window.confirm(`Template ${template.code} wirklich löschen?`)) return;
+    if (!(await confirmDialog(`Template ${template.code} wirklich löschen?`))) return;
 
     setSavingId(template._id);
     try {

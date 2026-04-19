@@ -36,7 +36,6 @@ export * from './ui/actAsStatus';
 export { default as buttonDisable } from './ui/buttonDisable';
 export { default as clearLoading } from './ui/clearLoading';
 export { default as setLoading } from './ui/setLoading';
-export { default as setDisableButton } from './ui/setDisableButton';
 export { default as setOffline } from './ui/setOffline';
 export { default as updateTabVisibility, hideAllFeatureTabs } from './ui/updateTabVisibility';
 export { default as initializeColorModeToggler } from './ui/BSColorToggler';

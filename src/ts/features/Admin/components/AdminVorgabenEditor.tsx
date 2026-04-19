@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { createSnackBar } from '../../../class/CustomSnackbar';
+import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import {
   deleteVorgabeByYear,
@@ -175,7 +176,7 @@ export function AdminVorgabenEditor() {
 
   async function handleDelete() {
     if (!selectedYear) return;
-    if (!window.confirm(`Vorgaben für ${selectedYear} wirklich löschen?`)) return;
+    if (!(await confirmDialog(`Vorgaben für ${selectedYear} wirklich löschen?`))) return;
     setSaving(true);
     try {
       await deleteVorgabeByYear(selectedYear);
