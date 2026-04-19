@@ -4,6 +4,8 @@ import {
   rowSignature,
   mapCreatedIdsByClientRequestId,
   mapCreatedIdsByContent,
+  buildCreatePayloadWithClientRequestId,
+  mapServerDocToFrontend,
 } from '../../src/ts/infrastructure/autoSave/changeTracking';
 import type { CustomTable, CustomTableTypes } from '../../src/ts/class/CustomTable';
 
@@ -156,6 +158,90 @@ describe('changeTracking', () => {
       const result = mapCreatedIdsByContent('BZ', table, createdDocs);
       expect(result.size).toBe(1);
       expect(result.get(0)).toBe('fallback-id');
+    });
+  });
+
+  describe('buildCreatePayloadWithClientRequestId', () => {
+    function mockTable(
+      rows: { _state: string; _clientRequestId?: string; cells: Record<string, unknown> }[],
+    ): CustomTable<CustomTableTypes> {
+      return { rows: { array: rows } } as unknown as CustomTable<CustomTableTypes>;
+    }
+
+    it('assigns clientRequestId to pending new rows and create items', () => {
+      const row: Record<string, unknown> = { _state: 'new', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } };
+      const table = mockTable([row as any]);
+      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+
+      const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
+      expect(result).toHaveLength(1);
+      expect(result[0].clientRequestId).toBeDefined();
+      expect(typeof result[0].clientRequestId).toBe('string');
+      expect(row._clientRequestId).toBeDefined();
+    });
+
+    it('reuses existing clientRequestId from row', () => {
+      const row = { _state: 'new', _clientRequestId: 'existing-crid', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } };
+      const table = mockTable([row]);
+      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+
+      const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
+      expect(result[0].clientRequestId).toBe('existing-crid');
+    });
+
+    it('generates new clientRequestId when no signature match in pending rows', () => {
+      const table = mockTable([{ _state: 'new', cells: { beginB: 'x', endeB: 'y', pauseB: 99 } }]);
+      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+
+      const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
+      expect(result[0].clientRequestId).toBeDefined();
+    });
+  });
+
+  describe('mapServerDocToFrontend', () => {
+    it('maps BZ backend doc to frontend format', () => {
+      const doc = {
+        _id: 'bz1',
+        Beginn: '2026-03-10T10:00:00.000Z',
+        Ende: '2026-03-10T18:00:00.000Z',
+        Pause: 30,
+        Monat: 3,
+        Jahr: 2026,
+      };
+      const result = mapServerDocToFrontend('BZ', doc) as Record<string, unknown>;
+      expect(result._id).toBe('bz1');
+      expect(result.beginB).toBe('2026-03-10T10:00:00.000Z');
+      expect(result.pauseB).toBe(30);
+    });
+
+    it('maps BE backend doc to frontend format', () => {
+      const doc = {
+        _id: 'be1',
+        Tag: '2026-03-10',
+        Beginn: '14:00',
+        Ende: '16:00',
+        Monat: 3,
+        Jahr: 2026,
+        LRE: 'LRE 1',
+        PrivatKm: 0,
+      };
+      const result = mapServerDocToFrontend('BE', doc) as Record<string, unknown>;
+      expect(result._id).toBe('be1');
+      expect(result.tagBE).toBe('10.03.2026');
+    });
+
+    it('maps EWT backend doc to frontend format', () => {
+      const doc = { _id: 'ewt1', Tag: '2026-03-01', Monat: 3, Jahr: 2026 };
+      const result = mapServerDocToFrontend('EWT', doc) as Record<string, unknown>;
+      expect(result._id).toBe('ewt1');
+      expect(result.tagE).toBe('2026-03-01');
+    });
+
+    it('maps N backend doc to frontend format', () => {
+      const doc = { _id: 'n1', Tag: '2026-03-01', Monat: 3, Jahr: 2026, Zulagen: [{ Typ: '040', Wert: 2 }] };
+      const result = mapServerDocToFrontend('N', doc) as Record<string, unknown>;
+      expect(result._id).toBe('n1');
+      expect(result.tagN).toBe('01.03.2026');
     });
   });
 });
