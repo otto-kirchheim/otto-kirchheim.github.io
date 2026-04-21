@@ -183,4 +183,80 @@ describe('saveEinstellungen address validation', () => {
     expect(pNummerInput.validationMessage).toContain('genau 8-stellig');
     expect(pNummerInput.classList.contains('is-invalid')).toBe(true);
   });
+
+  it('throws when a required aZ field is empty', () => {
+    const bBNInput = document.querySelector<HTMLInputElement>('#bBN');
+    if (!bBNInput) throw new Error('bBN fehlt');
+    bBNInput.value = '';
+
+    expect(() => saveEinstellungen()).toThrow('Persönliche Daten fehlerhaft fehlt');
+  });
+});
+
+describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    const vorgabenU = createVorgabenU();
+    Storage.set('VorgabenU', vorgabenU);
+    renderSettingsForm(vorgabenU);
+  });
+
+  it('sammelt aktivierteTabs aus checkboxes', () => {
+    // ewt-Checkbox anklicken
+    const ewtCb = document.querySelector<HTMLInputElement>('[data-tab-key="ewt"]')!;
+    ewtCb.checked = true;
+
+    const result = saveEinstellungen();
+
+    expect(result.Einstellungen.aktivierteTabs).toContain('bereitschaft');
+    expect(result.Einstellungen.aktivierteTabs).toContain('ewt');
+    expect(result.Einstellungen.aktivierteTabs).not.toContain('neben');
+  });
+
+  it('sammelt benoetigteZulagen wenn #settings-zulagen-list vorhanden', () => {
+    const list = document.createElement('div');
+    list.id = 'settings-zulagen-list';
+    list.innerHTML = `
+      <input type="checkbox" data-zulage-code="ZL1" checked />
+      <input type="checkbox" data-zulage-code="ZL2" />
+    `;
+    document.body.appendChild(list);
+
+    const result = saveEinstellungen();
+
+    expect(result.Einstellungen.benoetigteZulagen).toContain('ZL1');
+    expect(result.Einstellungen.benoetigteZulagen).not.toContain('ZL2');
+  });
+
+  it('liest autoSaveEnabled aus #autoSaveEnabled-Checkbox', () => {
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.id = 'autoSaveEnabled';
+    cb.checked = false;
+    document.body.appendChild(cb);
+
+    const result = saveEinstellungen();
+
+    expect(result.Einstellungen.autoSaveEnabled).toBe(false);
+  });
+
+  it('faellt auf VorgabenU.autoSaveDelayMs zurueck wenn kein Slider vorhanden', () => {
+    const vorgabenU = Storage.get<ReturnType<typeof createVorgabenU>>('VorgabenU', { check: true });
+    vorgabenU.Einstellungen.autoSaveDelayMs = 30000;
+    Storage.set('VorgabenU', vorgabenU);
+
+    const result = saveEinstellungen();
+
+    expect(result.Einstellungen.autoSaveDelayMs).toBe(30000);
+  });
+
+  it('liefert leeres fZ-Array wenn keine Taetigkeitsstaetten eingetragen', () => {
+    // TODO: happy-dom implementiert HTMLTableSectionElement.rows nicht (Stand @happy-dom/global-registrator ^20.x).
+    //       Sobald ein Update das liefert, diesen Test durch drei vollständige Fälle ersetzen:
+    //       1. Zeile mit key/text/value → result.fZ enthält Eintrag
+    //       2. Zeile mit leerem key → wird übersprungen, result.fZ = []
+    //       3. Zeile mit leerem text oder value → wirft 'Beschreibung / Fahrzeit fehlt'
+    const result = saveEinstellungen();
+    expect(result.fZ).toEqual([]);
+  });
 });

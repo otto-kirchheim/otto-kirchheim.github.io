@@ -1,7 +1,41 @@
-import { describe, expect, it, vi } from 'bun:test';
-import { collectRowErrorMatches, applyServerRowsToTable } from '../../src/ts/infrastructure/autoSave/savePipeline';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import {
+  applyServerRowsToTable,
+  collectRowErrorMatches,
+  unlinkNebengeldRefsForDeletedEwtIds,
+} from '../../src/ts/infrastructure/autoSave/savePipeline';
 import type { CustomTable, CustomTableTypes, Row } from '../../src/ts/class/CustomTable';
 import type { BulkErrorEntry } from '../../src/ts/infrastructure/api/apiService';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import type { IDatenN } from '../../src/ts/interfaces';
+
+function makeNRow(
+  overrides: Partial<{ _state: string; _id: string; ewtRef: string }> = {},
+): Row<CustomTableTypes> & { cells: IDatenN } {
+  return {
+    _state: overrides._state ?? 'unchanged',
+    _id: overrides._id,
+    _clientRequestId: undefined,
+    _originalCells: {} as IDatenN,
+    cells: {
+      tagN: '2026-03-01',
+      beginN: '06:00',
+      endeN: '14:00',
+      anzahl040N: 0,
+      auftragN: '',
+      ...(overrides.ewtRef ? { ewtRef: overrides.ewtRef } : {}),
+    } as IDatenN,
+  } as Row<CustomTableTypes> & { cells: IDatenN };
+}
+
+function mountTableN(rows: (Row<CustomTableTypes> & { cells: IDatenN })[]) {
+  const el = document.createElement('table');
+  el.id = 'tableN';
+  const instance = { rows: { array: rows as Row<CustomTableTypes>[] }, drawRows: vi.fn() };
+  (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
+  document.body.appendChild(el);
+  return instance;
+}
 
 function makeRow(overrides: Partial<Row<CustomTableTypes>> & { cells?: CustomTableTypes }): Row<CustomTableTypes> {
   return {
@@ -20,6 +54,90 @@ function makeTable(rows: Row<CustomTableTypes>[]): CustomTable<CustomTableTypes>
     drawRows: vi.fn(),
   } as unknown as CustomTable<CustomTableTypes>;
 }
+
+describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns immediately when deletedIds is empty', () => {
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    const setSpied = vi.spyOn(Storage, 'set');
+
+    unlinkNebengeldRefsForDeletedEwtIds([]);
+
+    expect(setSpied).not.toHaveBeenCalled();
+  });
+
+  it('removes ewtRef from matching Storage items', () => {
+    Storage.set('dataN', [
+      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
+      { tagN: '02', beginN: '09:00', endeN: '17:00', anzahl040N: 0, auftragN: '', ewtRef: 'e2' },
+    ]);
+
+    unlinkNebengeldRefsForDeletedEwtIds(['e1']);
+
+    const stored = Storage.get<IDatenN[]>('dataN', { default: [] });
+    expect(stored[0].ewtRef).toBeUndefined();
+    expect(stored[1].ewtRef).toBe('e2');
+  });
+
+  it('does not write Storage when no refs match', () => {
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '' }]);
+    const setSpied = vi.spyOn(Storage, 'set');
+
+    unlinkNebengeldRefsForDeletedEwtIds(['unknown-id']);
+
+    expect(setSpied).not.toHaveBeenCalled();
+  });
+
+  it('cleans ewtRef from live table rows and calls drawRows', () => {
+    Storage.set('dataN', [
+      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
+    ]);
+    const row = makeNRow({ ewtRef: 'e1' });
+    const instance = mountTableN([row]);
+
+    unlinkNebengeldRefsForDeletedEwtIds(['e1']);
+
+    expect((row.cells as IDatenN).ewtRef).toBeUndefined();
+    expect(instance.drawRows).toHaveBeenCalled();
+  });
+
+  it('also updates _originalCells for unchanged rows', () => {
+    Storage.set('dataN', [
+      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
+    ]);
+    const row = makeNRow({ ewtRef: 'e1' });
+    const instance = mountTableN([row]);
+
+    unlinkNebengeldRefsForDeletedEwtIds(['e1']);
+
+    expect(instance.rows.array[0]._originalCells).toBeDefined();
+    expect((instance.rows.array[0]._originalCells as IDatenN).ewtRef).toBeUndefined();
+  });
+
+  it('skips deleted table rows', () => {
+    Storage.set('dataN', [
+      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
+    ]);
+    const row = makeNRow({ _state: 'deleted', ewtRef: 'e1' });
+    const instance = mountTableN([row]);
+
+    unlinkNebengeldRefsForDeletedEwtIds(['e1']);
+
+    expect((row.cells as IDatenN).ewtRef).toBe('e1'); // untouched
+    expect(instance.drawRows).not.toHaveBeenCalled();
+  });
+
+  it('does not crash when #tableN is absent', () => {
+    Storage.set('dataN', [
+      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
+    ]);
+    // No DOM element mounted
+    expect(() => unlinkNebengeldRefsForDeletedEwtIds(['e1'])).not.toThrow();
+  });
+});
 
 describe('savePipeline', () => {
   describe('collectRowErrorMatches', () => {

@@ -1,5 +1,78 @@
 # Todo
 
+## Aktueller Plan: Test-Coverage-Erweiterung
+
+Ausgangszustand (2026-04-21): 643 Tests, 76 Dateien, Coverage-Baseline aus `bun run coverage`.
+
+### Nicht abdeckenswert (explizit ausgeschlossen)
+
+- **Preact-Komponenten** (`Admin/components/`, `Bereitschaft/components/`, `Einstellungen/components/`, `core/auth/components/createModalNewUser.tsx`) – Render-Tests erfordern ein vollständiges Preact-Test-Setup; Aufwand > Nutzen.
+- **`passkeys.ts` / `registerPasskey.ts`** – WebAuthn-Browser-API nicht sinnvoll mockbar.
+- **Feature-`index.ts`-Dateien** (`Bereitschaft/index.ts`, `Berechnung/index.ts`, `Admin/index.tsx`) – reiner Boot-/Glue-Code, der `window.load` bindet.
+- **`bootstrap.ts`** – App-Init, zu eng mit DOM und Login-Orchestrierung verwoben.
+- **`changeMonatJahr.ts`** – reine DOM-Seiteneffekte ohne isolierbare Rückgabewerte.
+
+### Phase T.1 – Reine Logik (kein oder minimaler DOM)
+
+Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
+
+- [ ] `syncEwtToNeben.ts` (0% / 6 % branch) → `test/Neben.syncEwtToNeben.test.ts`
+  - Storage-Mock + CustomTable-Stub; Fälle: leeres Array, kein `ewtRef`, beginN/endeN unverändert (no-op), Update schlägt durch zu Storage + Table, `drawRows` + Event-Emit bei tableChanged.
+- [ ] `storageStateStore.ts` (0% / 54 % branch) → `test/core/storageStateStore.test.ts`
+  - `get` (vorhanden / fehlt), `set`, `remove`, `has` – alles via existierendem Storage-Singleton; keine Mocks nötig.
+- [ ] `actAsStatus.ts` – fehlende Branches (31 % branch) → in bestehendem `test/Utilities/actAsStatus.test.ts` ergänzen
+  - `notifyActAsStateChanged` – dispatcht `CustomEvent` mit korrektem Detail.
+  - `updateActAsBanner` – alle DOM-Pfade: kein Element, `!state.active`, `state.active` mit/ohne `currentUserName`, Button-Text-Setzung.
+- [ ] `normalizeResourceRows.ts` (75 % branch) → in bestehendem Test ergänzen
+  - Lücke Zeilen 7–8: Edge Case leeres Array / nicht-Array-Eingabe.
+- [ ] `savePipeline.ts` – `unlinkNebengeldRefsForDeletedEwtIds` (Zeilen 87–120, Branch 81 %) → in bestehendem `test/Utilities/savePipeline.test.ts` ergänzen
+  - Fälle: leeres `deletedIds`-Array (early return), Referenz in Storage entfernt, Table-Rows bereinigt, `drawRows` aufgerufen.
+
+### Phase T.2 – Leicht gemockter DOM
+
+- [ ] `confirmDialog.ts` (40 % / 67 % branch) → `test/Utilities/confirmDialog.test.ts`
+  - Fallback ohne `window.bootstrap` → `window.confirm` delegiert.
+  - Mit `bootstrap.Modal`-Mock: Confirm-Klick → `true`, `hidden.bs.modal`-Event → `false`, doppelter `finish`-Aufruf ignoriert.
+  - Optionen (`title`, `confirmLabel`, `cancelLabel`, `confirmClass`) landen im DOM.
+- [ ] `autoSaveIndicator.ts` (75 % / 89 % branch) → `test/Utilities/autoSaveIndicator.test.ts`
+  - `initAutoSaveIndicator`: Buttons fehlen (kein Crash), Badge-Erstellung, Idempotenz (zweiter Aufruf no-op).
+  - Status-Callback-Pfade: `error` + Netzwerkfehler → `cloud_off`-Icon, `pending` + offline → `bg-warning`, `saved` → Fade nach 2 s.
+  - `destroyAutoSaveIndicator`: Badges entfernt, Timer gestoppt, online/offline-Handler abgemeldet.
+- [ ] `saveEinstellungen.ts` (66 % branch) → fehlende Branches in `test/Einstellungen/saveEinstellungen.test.ts` ergänzen
+  - Fehlende Branches Zeilen 53–60, 74–78, 109–115, 117–132: `aZ`-Feld fehlt + `required` → wirft; `fZ`-Tabelle leer; `aktivierteTabs` aus Checkboxen; `benoetigteZulagen` aus Liste; `autoSaveEnabled`/`autoSaveDelay`-Fallback auf VorgabenU-Defaults.
+
+### Phase T.3 – apiService-Lücken
+
+- [ ] `apiService.ts` (78 % stmt / 66 % branch) → fehlende Gruppen in `test/Utilities/apiService.test.ts` ergänzen
+  - **Passkey-Auth** (Zeilen 108–128): `beginPasskeyLogin` (mit/ohne userName), `finishPasskeyLogin` (Token-Speicherung).
+  - **`profileApi`** (Zeilen 168, 178–180): `get` und `update` mit Storage-Sideeffect.
+  - **`vorgabenApi`** (Zeilen 196–262): `getAll`, `create`, `update`, `delete` – Success + Error-Pfade.
+  - **`loadAllYearData`** (Zeilen 275–286): Aufbau des zusammengesetzten Jahresobjekts, `fromBackend`-Mapping.
+  - **`downloadPdf`** (Zeilen 471–494): blob-Response + `saveAs`-Aufruf gemockt.
+  - **Admin-Api-Aufrufe** (Zeilen 522–557): `getUsers`, `updateUser` (Stub-Level reicht).
+
+### Phase T.4 – Auth/Load-Flows
+
+- [ ] `loadUserDaten.ts` (50 % / 76 % branch) → fehlende Pfade in `test/Login.LadeUserDaten.test.ts` ergänzen
+  - Zeilen 44–46: Session-Abbruch bei fehlendem Token vor API-Call.
+  - Zeilen 131–133: Offline-Pfad (Netzwerkfehler → Snackbar, kein Logout).
+  - Zeilen 141–165: `syncLoadedYearResources` Konflikt-Review-Flow nach Bestätigung / Ablehnung.
+  - Zeilen 192–216: `isLoggingOut`-Guard schützt gegen Race Condition bei parallelem Logout.
+- [ ] `submitBereitschaftsZeiten.ts` (50 % / 59 % branch) → fehlende Pfade in `test/Bereitschaft.submitBereitschaftsZeiten.test.ts` ergänzen
+  - Zeilen 108–158: API-Call-Pfad mit erfolgreicher Antwort; normalisierter Storage-Write; `preserveDeletedRows` aufgerufen.
+  - Zeilen 160–236: Fehler-Pfade (API-Error, `nachtAnfang > bereitschaftsEnde`, bereits vorhandener Zeitraum).
+- [ ] `submitBereitschaftsEinsatz.ts` (44 % stmt / 86 % branch) → fehlende Zeilen in `test/Bereitschaft.submitBereitschaftsEinsatz.test.ts` ergänzen
+  - Zeilen 120–136: Duplicate-Check-Pfad (bereits vorhandener Einsatz → Snackbar, kein Save).
+  - Zeilen 162–169: API-Fehler-Handling (Snackbar + clearLoading).
+
+## Verifikationskriterien (Test-Coverage-Erweiterung)
+
+- `bun run coverage` zeigt nach jeder Phase Coverage-Fortschritt für die Zieldateien.
+- Kein neuer Test darf bestehende Suites destabilisieren (`bun run test` bleibt grün).
+- Kein Produktionscode wird für die Tests verändert (Tests passen sich an, nicht der Code).
+
+---
+
 ## Aktueller Plan: Pages-Workflow Actions-Major-Update
 
 - [x] Deploy-Workflow auf aktuelle Actions-Majors umstellen

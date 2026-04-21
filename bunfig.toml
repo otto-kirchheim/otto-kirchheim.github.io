@@ -11,7 +11,7 @@ pathIgnorePatterns = [
   "dist/**",
   "dev-dist/**",
   "node_modules/**",
-  "src/node_modules/**"
+  "src/node_modules/**",
 ]
 coverageReporter = ["text", "lcov"]
 coverageDir = "./coverage"

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import Storage from '../../src/ts/infrastructure/storage/Storage';
-import { getActAsState, updateActAsBanner } from '../../src/ts/infrastructure/ui/actAsStatus';
+import { ACT_AS_STATUS_EVENT, getActAsState, notifyActAsStateChanged, updateActAsBanner } from '../../src/ts/infrastructure/ui/actAsStatus';
 
 describe('actAsStatus', () => {
   beforeEach(() => {
@@ -36,5 +36,55 @@ describe('actAsStatus', () => {
 
     expect(state.active).toBe(false);
     expect(document.querySelector('#actAsNotice')?.classList.contains('d-none')).toBe(true);
+  });
+
+  it('resets text and button label when inactive', () => {
+    Storage.set('AccessToken', 'tok');
+
+    updateActAsBanner();
+
+    expect(document.querySelector('#actAsNoticeText')?.textContent).toBe('');
+    expect(document.querySelector<HTMLButtonElement>('#actAsOwnDataButton')?.textContent).toBe('Eigene Daten laden');
+  });
+
+  it('omits currentUser suffix when currentUserName is absent', () => {
+    Storage.set('AccessToken', 'tok');
+    Storage.set('actAsUserId', 'u-99');
+    Storage.set('actAsUserName', 'petra');
+    // Benutzer deliberately not set
+
+    const state = updateActAsBanner();
+
+    expect(state.active).toBe(true);
+    expect(document.querySelector('#actAsNoticeText')?.textContent).toContain('petra');
+    expect(document.querySelector('#actAsNoticeText')?.textContent).not.toContain('Angemeldet');
+  });
+
+  it('returns early without crashing when notice elements are absent', () => {
+    document.body.innerHTML = ''; // no #actAsNotice or #actAsNoticeText
+    Storage.set('AccessToken', 'tok');
+    Storage.set('actAsUserId', 'u-1');
+    Storage.set('actAsUserName', 'ghost');
+
+    expect(() => updateActAsBanner()).not.toThrow();
+  });
+
+  it('notifyActAsStateChanged dispatches CustomEvent with correct detail', () => {
+    Storage.set('AccessToken', 'tok');
+    Storage.set('actAsUserId', 'u-5');
+    Storage.set('actAsUserName', 'max');
+    Storage.set('Benutzer', 'admin');
+
+    let received: CustomEvent | null = null;
+    window.addEventListener(ACT_AS_STATUS_EVENT, e => {
+      received = e as CustomEvent;
+    });
+
+    const state = notifyActAsStateChanged();
+
+    expect(received).not.toBeNull();
+    expect((received as unknown as CustomEvent).detail).toEqual(state);
+    expect(state.active).toBe(true);
+    expect(state.userId).toBe('u-5');
   });
 });
