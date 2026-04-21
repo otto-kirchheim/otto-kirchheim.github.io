@@ -12,7 +12,7 @@ Ausgangszustand (2026-04-21): 643 Tests, 76 Dateien, Coverage-Baseline aus `bun 
 - **`bootstrap.ts`** – App-Init, zu eng mit DOM und Login-Orchestrierung verwoben.
 - **`changeMonatJahr.ts`** – reine DOM-Seiteneffekte ohne isolierbare Rückgabewerte.
 
-### Phase T.1 – Reine Logik (kein oder minimaler DOM)
+### Phase T.1 – Reine Logik (kein oder minimaler DOM) ✅ abgeschlossen
 
 Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 
@@ -28,42 +28,18 @@ Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 - [ ] `savePipeline.ts` – `unlinkNebengeldRefsForDeletedEwtIds` (Zeilen 87–120, Branch 81 %) → in bestehendem `test/Utilities/savePipeline.test.ts` ergänzen
   - Fälle: leeres `deletedIds`-Array (early return), Referenz in Storage entfernt, Table-Rows bereinigt, `drawRows` aufgerufen.
 
-### Phase T.2 – Leicht gemockter DOM
+### Phase T.2 – Leicht gemockter DOM ✅ abgeschlossen
 
-- [ ] `confirmDialog.ts` (40 % / 67 % branch) → `test/Utilities/confirmDialog.test.ts`
-  - Fallback ohne `window.bootstrap` → `window.confirm` delegiert.
-  - Mit `bootstrap.Modal`-Mock: Confirm-Klick → `true`, `hidden.bs.modal`-Event → `false`, doppelter `finish`-Aufruf ignoriert.
-  - Optionen (`title`, `confirmLabel`, `cancelLabel`, `confirmClass`) landen im DOM.
-- [ ] `autoSaveIndicator.ts` (75 % / 89 % branch) → `test/Utilities/autoSaveIndicator.test.ts`
-  - `initAutoSaveIndicator`: Buttons fehlen (kein Crash), Badge-Erstellung, Idempotenz (zweiter Aufruf no-op).
-  - Status-Callback-Pfade: `error` + Netzwerkfehler → `cloud_off`-Icon, `pending` + offline → `bg-warning`, `saved` → Fade nach 2 s.
-  - `destroyAutoSaveIndicator`: Badges entfernt, Timer gestoppt, online/offline-Handler abgemeldet.
-- [ ] `saveEinstellungen.ts` (66 % branch) → fehlende Branches in `test/Einstellungen/saveEinstellungen.test.ts` ergänzen
-  - Fehlende Branches Zeilen 53–60, 74–78, 109–115, 117–132: `aZ`-Feld fehlt + `required` → wirft; `fZ`-Tabelle leer; `aktivierteTabs` aus Checkboxen; `benoetigteZulagen` aus Liste; `autoSaveEnabled`/`autoSaveDelay`-Fallback auf VorgabenU-Defaults.
+### Phase T.3 – apiService-Lücken ✅ abgeschlossen
 
-### Phase T.3 – apiService-Lücken
+- apiService: alle Passkey-Auth-Methoden + forgotPassword/resetPassword/resendVerificationEmail (10 Tests)
+- Admin-API (neu): fetchAdminUsers, updateUserScopes, fetchCurrentAdminCapabilities (4 Rollen-Branches), updateUserRole/Oe/Password, deleteUser, setActAsUser, Vorgaben-API, Profile-Templates-API (23 Tests)
 
-- [ ] `apiService.ts` (78 % stmt / 66 % branch) → fehlende Gruppen in `test/Utilities/apiService.test.ts` ergänzen
-  - **Passkey-Auth** (Zeilen 108–128): `beginPasskeyLogin` (mit/ohne userName), `finishPasskeyLogin` (Token-Speicherung).
-  - **`profileApi`** (Zeilen 168, 178–180): `get` und `update` mit Storage-Sideeffect.
-  - **`vorgabenApi`** (Zeilen 196–262): `getAll`, `create`, `update`, `delete` – Success + Error-Pfade.
-  - **`loadAllYearData`** (Zeilen 275–286): Aufbau des zusammengesetzten Jahresobjekts, `fromBackend`-Mapping.
-  - **`downloadPdf`** (Zeilen 471–494): blob-Response + `saveAs`-Aufruf gemockt.
-  - **Admin-Api-Aufrufe** (Zeilen 522–557): `getUsers`, `updateUser` (Stub-Level reicht).
+### Phase T.4 – Auth/Load-Flows ✅ abgeschlossen
 
-### Phase T.4 – Auth/Load-Flows
-
-- [ ] `loadUserDaten.ts` (50 % / 76 % branch) → fehlende Pfade in `test/Login.LadeUserDaten.test.ts` ergänzen
-  - Zeilen 44–46: Session-Abbruch bei fehlendem Token vor API-Call.
-  - Zeilen 131–133: Offline-Pfad (Netzwerkfehler → Snackbar, kein Logout).
-  - Zeilen 141–165: `syncLoadedYearResources` Konflikt-Review-Flow nach Bestätigung / Ablehnung.
-  - Zeilen 192–216: `isLoggingOut`-Guard schützt gegen Race Condition bei parallelem Logout.
-- [ ] `submitBereitschaftsZeiten.ts` (50 % / 59 % branch) → fehlende Pfade in `test/Bereitschaft.submitBereitschaftsZeiten.test.ts` ergänzen
-  - Zeilen 108–158: API-Call-Pfad mit erfolgreicher Antwort; normalisierter Storage-Write; `preserveDeletedRows` aufgerufen.
-  - Zeilen 160–236: Fehler-Pfade (API-Error, `nachtAnfang > bereitschaftsEnde`, bereits vorhandener Zeitraum).
-- [ ] `submitBereitschaftsEinsatz.ts` (44 % stmt / 86 % branch) → fehlende Zeilen in `test/Bereitschaft.submitBereitschaftsEinsatz.test.ts` ergänzen
-  - Zeilen 120–136: Duplicate-Check-Pfad (bereits vorhandener Einsatz → Snackbar, kein Save).
-  - Zeilen 162–169: API-Fehler-Handling (Snackbar + clearLoading).
+- loadUserDaten: "Serverdaten übernehmen"-Action (overwriteUserDaten), "Lokale Daten behalten"-Action (publishEvent + dataServer-Remove)
+- submitBereitschaftsZeiten: Offline-Jahreswechsel-Snackbar, Online-Jahreswechsel API-Call (Erfolg + Bulk-Fehler)
+- submitBereitschaftsEinsatz: LRE-1-Duplikat-Warnung (addiert trotzdem), berZeit mit bereits vorhandenem BZ
 
 ## Verifikationskriterien (Test-Coverage-Erweiterung)
 

@@ -4,6 +4,14 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-04-21
 
+### test
+
+- **Phase T.1** (51 Tests): storageStateStore, normalizeResourceRows, syncEwtToNeben, savePipeline.unlinkNebengeldRefsForDeletedEwtIds, actAsStatus-Branches (pure logic, kein DOM).
+- **Phase T.2** (19 Tests): confirmDialog (Bootstrap-Fallback + Modal-Lifecycle), autoSaveIndicator (Badge-Lifecycle, Status-Übergänge, online/offline, destroy), saveEinstellungen (Tabs, Zulagen, AutoSave, fZ-TODO).
+- **Phase T.3** (33 Tests): apiService – alle Passkey-Auth-Methoden + forgotPassword/resetPassword/resendVerificationEmail. Neues `test/Admin/adminApi.test.ts`: fetchAdminUsers, fetchCurrentAdminCapabilities (4 Rollen-Branches), Vorgaben-API, Profile-Templates-API.
+- **Phase T.4** (7 Tests): loadUserDaten – "Serverdaten übernehmen"- und "Lokale Daten behalten"-Actions. submitBereitschaftsZeiten – Offline-Jahreswechsel-Snackbar + Online-Jahreswechsel (API + Bulk-Fehler). submitBereitschaftsEinsatz – LRE-1-Duplikat-Warnung + berZeit-bereits-vorhanden-Pfad.
+- Gesamtstand: 734 Tests, 81 Dateien (Ausgangspunkt: 643 Tests, 76 Dateien).
+
 ### chore
 
 - Test-Runner auf natives `bun test --isolate` umgestellt (Bun v1.3.13). `scripts/run-bun-tests.ts` (custom Hybrid-Runner) entfernt. `package.json`: `test`, `dev-test`, `coverage` nutzen jetzt `--isolate`; `test:serial-reset` und `test:concurrent` entfernt. `test/setupBun.ts`: redundante Top-Level-Resets entfernt (frisches Global pro Datei via `--isolate`).
