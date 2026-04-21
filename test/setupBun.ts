@@ -42,12 +42,6 @@ document.addEventListener = ((
   originalDocumentAddEventListener(type, listener, options);
 }) as typeof document.addEventListener;
 
-mock.restore();
-vi.restoreAllMocks();
-document.body.innerHTML = '';
-localStorage.clear();
-sessionStorage.clear();
-
 const bunVi = vi as ViCompat;
 
 if (typeof bunVi.hoisted !== 'function') {
