@@ -203,4 +203,54 @@ describe('submitBereitschaftsEinsatz', () => {
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     expect(loadSmartMock).toHaveBeenCalledTimes(1);
   });
+
+  it('zeigt Hinweis-Warnung wenn bereits ein LRE 1 im Bereitschaftszeitraum existiert, fügt aber trotzdem hinzu', () => {
+    const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
+
+    // beginBE/endeBE are local times; BZ is UTC. 10:00 CEST = 08:00 UTC, within bz (07:00–23:00 UTC)
+    const existingLre1: Partial<IDatenBE> = {
+      tagBE: '12.04.2023',
+      beginBE: '10:00',
+      endeBE: '11:30',
+      lreBE: 'LRE 1',
+    };
+    getBereitschaftsEinsatzDatenMock.mockReturnValue([existingLre1]);
+
+    // New einsatz at 12:00–14:00 (no overlap with existing 10:00–11:30)
+    const modal = createModal({ ZeitVon: '12:00', ZeitBis: '14:00', LRE: 'LRE 1' });
+    const { table: tableBE, addMock } = createTableBEMock();
+    const { table: tableBZ } = createTableBZMock();
+
+    const result = submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+    // LRE-1-Duplikat nur Warnung, kein Abbruch
+    expect(result).toBe(true);
+    expect(addMock).toHaveBeenCalled();
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'warning', message: expect.stringContaining('LRE 1') }),
+    );
+  });
+
+  it('zeigt Warn-Snackbar bei berZeit wenn Zeitraum bereits vorhanden (gleiche Anzahl nach Berechnung)', () => {
+    const existingBZ = { beginB: '2023-04-12T09:00:00.000Z', endeB: '2023-04-12T12:00:00.000Z', pauseB: 0 };
+    Storage.set('dataBZ', [existingBZ]);
+
+    const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
+    // calculateBereitschaftsZeiten returns same count as existing → "already present"
+    calculateBereitschaftsZeitenMock.mockReturnValue([existingBZ]);
+
+    const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00', berZeit: true });
+    const { table: tableBE } = createTableBEMock();
+    const { table: tableBZ } = createTableBZMock();
+
+    const result = submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+    expect(result).toBe(true);
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'warning', message: expect.stringContaining('bereits vorhanden') }),
+    );
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
+  });
 });

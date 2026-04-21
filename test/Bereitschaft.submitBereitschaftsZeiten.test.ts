@@ -9,6 +9,8 @@ const {
   publishDataChangedMock,
   setLoadingMock,
   clearLoadingMock,
+  apiLoadYearMock,
+  apiBulkMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   calculateBereitschaftsZeitenMock: vi.fn(),
   tableToArrayMock: vi.fn(),
@@ -16,6 +18,8 @@ const {
   publishDataChangedMock: vi.fn(),
   setLoadingMock: vi.fn(),
   clearLoadingMock: vi.fn(),
+  apiLoadYearMock: vi.fn(),
+  apiBulkMock: vi.fn(),
 }));
 
 vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
@@ -26,6 +30,9 @@ vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({ default: setLoadingMo
 vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 vi.mock('../src/ts/core', () => ({ publishDataChanged: publishDataChangedMock }));
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+  bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },
+}));
 
 import submitBereitschaftsZeiten from '../src/ts/features/Bereitschaft/utils/submitBereitschaftsZeiten';
 
@@ -213,5 +220,87 @@ describe('submitBereitschaftsZeiten', () => {
 
     expect(calculateBereitschaftsZeitenMock).toHaveBeenCalledTimes(2);
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('zeigt Offline-Snackbar bei Jahreswechsel ohne Internetverbindung', async () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', message: expect.stringContaining('Offline') }),
+    );
+    expect(apiLoadYearMock).not.toHaveBeenCalled();
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
+
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('ruft API für Jahreswechsel auf und speichert Daten für beide Jahre bei Erfolg', async () => {
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+
+    const janRow = createBZ('2024-01-01T00:00', '2024-01-05T07:00', 'jan');
+    const dezRow = createBZ('2023-12-28T15:45', '2024-01-01T00:00', 'dez');
+
+    apiLoadYearMock.mockResolvedValue({ data: [] });
+    apiBulkMock.mockResolvedValue({ errors: [], created: [janRow], updated: [], deleted: [] });
+    // first call: folgeMonatData (January), second call: monatData (December)
+    calculateBereitschaftsZeitenMock.mockReturnValueOnce([janRow]).mockReturnValueOnce([dezRow]);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    expect(apiLoadYearMock).toHaveBeenCalledWith(2024);
+    expect(apiBulkMock).toHaveBeenCalledWith(
+      expect.objectContaining({ create: expect.any(Array) }),
+      expect.any(Number),
+      2024,
+    );
+    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('zeigt Fehler-Snackbar wenn Jahreswechsel-Bulk Fehler zurückgibt', async () => {
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+
+    const janRow = createBZ('2024-01-01T00:00', '2024-01-05T07:00', 'jan');
+    apiLoadYearMock.mockResolvedValue({ data: [] });
+    apiBulkMock.mockResolvedValue({ errors: [{ message: 'conflict' }], created: [], updated: [], deleted: [] });
+    calculateBereitschaftsZeitenMock.mockReturnValueOnce([janRow]);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
   });
 });
