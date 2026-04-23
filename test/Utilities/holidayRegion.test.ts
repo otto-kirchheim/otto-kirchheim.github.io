@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it, vi } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import {
   deriveHolidayRegionFromAddress,
   HOLIDAY_REGION_OPTIONS,
   resolveHolidayRegion,
-} from '../../src/ts/utilities/holidayRegion';
+  setupBundeslandAutoFill,
+} from '../../src/ts/infrastructure/date/holidayRegion';
 
 /** Hilfsfunktion: mockt einen erfolgreichen OpenPLZ-API-Aufruf. */
 const mockOpenPlz = (federalStateKey: string) => {
@@ -60,5 +61,159 @@ describe('holidayRegion utility', () => {
       value: 'NW',
       label: 'Nordrhein-Westfalen',
     });
+  });
+});
+
+describe('setupBundeslandAutoFill', () => {
+  function buildDOM() {
+    const addressInput = document.createElement('input');
+    addressInput.id = 'ErsteTkgStAdresse';
+    const bundeslandSelect = document.createElement('select');
+    bundeslandSelect.id = 'Bundesland';
+    // Leere Option first so value starts as '' (no auto-select of real values)
+    const empty = document.createElement('option');
+    empty.value = '';
+    bundeslandSelect.appendChild(empty);
+    for (const v of ['BE', 'BY', 'HE', 'NW', 'SH']) {
+      const opt = document.createElement('option');
+      opt.value = v;
+      bundeslandSelect.appendChild(opt);
+    }
+    document.body.appendChild(addressInput);
+    document.body.appendChild(bundeslandSelect);
+    return { addressInput, bundeslandSelect };
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('gibt sofort zurück wenn addressInput fehlt', () => {
+    const bundeslandSelect = document.createElement('select');
+    bundeslandSelect.id = 'Bundesland';
+    document.body.appendChild(bundeslandSelect);
+    expect(() => setupBundeslandAutoFill()).not.toThrow();
+  });
+
+  it('gibt sofort zurück wenn bundeslandSelect fehlt', () => {
+    const addressInput = document.createElement('input');
+    addressInput.id = 'ErsteTkgStAdresse';
+    document.body.appendChild(addressInput);
+    expect(() => setupBundeslandAutoFill()).not.toThrow();
+  });
+
+  it('setzt bundeslandAutoFillBound auf addressInput nach erstem Aufruf', () => {
+    const { addressInput } = buildDOM();
+    setupBundeslandAutoFill();
+    expect(addressInput.dataset.bundeslandAutoFillBound).toBe('true');
+  });
+
+  it('verhindert Doppelbindung bei mehrmaligem Aufruf', () => {
+    const { addressInput } = buildDOM();
+    const spy = vi.spyOn(addressInput, 'addEventListener');
+    setupBundeslandAutoFill();
+    setupBundeslandAutoFill();
+    const blurCalls = spy.mock.calls.filter(([event]) => event === 'blur');
+    expect(blurCalls.length).toBe(1);
+  });
+
+  it('blur-Event aktualisiert bundesland aus gültiger Adresse', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ federalState: { key: '06' } }],
+    } as Response);
+
+    setupBundeslandAutoFill();
+    addressInput.value = 'Hauptstraße 1, 36275 Kirchheim';
+    addressInput.dispatchEvent(new Event('blur'));
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('HE');
+    expect(bundeslandSelect.dataset.autoFilledValue).toBe('HE');
+  });
+
+  it('change-Event aktualisiert bundesland aus gültiger Adresse', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ federalState: { key: '11' } }],
+    } as Response);
+
+    setupBundeslandAutoFill();
+    addressInput.value = 'Alexanderplatz 1, 10178 Berlin';
+    addressInput.dispatchEvent(new Event('change'));
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('BE');
+  });
+
+  it('überschreibt manuelle Auswahl nicht', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    bundeslandSelect.innerHTML = '<option value="BY">Bayern</option><option value="HE">Hessen</option>';
+    bundeslandSelect.value = 'BY';
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ federalState: { key: '06' } }],
+    } as Response);
+
+    setupBundeslandAutoFill();
+    addressInput.value = 'Hauptstraße 1, 36275 Kirchheim';
+    addressInput.dispatchEvent(new Event('blur'));
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('BY');
+  });
+
+  it('überschreibt auto-gesetzten Wert durch neuen auto-Wert', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    bundeslandSelect.innerHTML = '<option value="BE">Berlin</option><option value="HE">Hessen</option>';
+    bundeslandSelect.value = 'BE';
+    bundeslandSelect.dataset.autoFilledValue = 'BE';
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ federalState: { key: '06' } }],
+    } as Response);
+
+    setupBundeslandAutoFill();
+    addressInput.value = 'Hauptstraße 1, 36275 Kirchheim';
+    addressInput.dispatchEvent(new Event('blur'));
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('HE');
+  });
+
+  it('aktualisiert bundesland sofort wenn kein Wert gesetzt und Adresse gültig', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    addressInput.value = 'Hauptstraße 1, 36275 Kirchheim';
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ federalState: { key: '06' } }],
+    } as Response);
+
+    setupBundeslandAutoFill();
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('HE');
+  });
+
+  it('aktualisiert bundesland nicht bei ungültiger Adresse', async () => {
+    const { addressInput, bundeslandSelect } = buildDOM();
+    setupBundeslandAutoFill();
+
+    addressInput.value = 'Keine gültige Adresse';
+    addressInput.dispatchEvent(new Event('blur'));
+
+    await new Promise(resolve => setTimeout(resolve, 10));
+    expect(bundeslandSelect.value).toBe('');
   });
 });

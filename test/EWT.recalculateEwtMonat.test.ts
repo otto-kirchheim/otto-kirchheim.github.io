@@ -16,13 +16,13 @@ const {
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   calculateEwtEintraege: calculateEwtEintraegeMock,
   getEwtDaten: getEwtDatenMock,
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-vi.mock('../src/ts/Berechnung', () => ({
+vi.mock('../src/ts/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
@@ -30,7 +30,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-import recalculateEwtMonat from '../src/ts/EWT/utils/recalculateEwtMonat';
+import recalculateEwtMonat from '../src/ts/features/EWT/utils/recalculateEwtMonat';
 
 function createData(tagE: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
@@ -53,17 +53,7 @@ function createData(tagE: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT
 
 describe('recalculateEwtMonat', () => {
   beforeEach(() => {
-    document.body.innerHTML = '<table id="tableE"></table>';
     vi.clearAllMocks();
-
-    const table = document.querySelector('#tableE') as HTMLTableElement & {
-      instance: { rows: { load: ReturnType<typeof vi.fn> } };
-    };
-    table.instance = {
-      rows: {
-        load: vi.fn(),
-      },
-    };
   });
 
   it('behält beim Berechnen die restlichen Jahresdaten im Table-State', () => {
@@ -79,17 +69,16 @@ describe('recalculateEwtMonat', () => {
     });
     calculateEwtEintraegeMock.mockReturnValue([recalculatedAprilEntry]);
 
+    const tableE = { rows: { load: vi.fn() } };
+
     recalculateEwtMonat({
       monat: 4,
       daten: [aprilEntry],
       vorgabenU: { aZ: {}, fZ: [], pers: {} } as never,
+      tableE: tableE as never,
     });
 
-    const table = document.querySelector('#tableE') as HTMLTableElement & {
-      instance: { rows: { load: ReturnType<typeof vi.fn> } };
-    };
-
-    expect(table.instance.rows.load).toHaveBeenCalledWith([marchEntry, recalculatedAprilEntry]);
+    expect(tableE.rows.load).toHaveBeenCalledWith([marchEntry, recalculatedAprilEntry]);
     expect(persistEwtTableDataMock).toHaveBeenCalledTimes(1);
   });
 });

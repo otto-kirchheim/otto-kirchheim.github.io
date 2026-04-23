@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { calculateEwtEintraege } from '../src/ts/EWT/utils';
+import { calculateEwtEintraege } from '../src/ts/features/EWT/utils';
 import type { IVorgabenU } from '../src/ts/interfaces/IVorgabenU';
 import { VorgabenUMock } from './mockData';
 import type { IMonatsDaten } from '../src/ts/interfaces';

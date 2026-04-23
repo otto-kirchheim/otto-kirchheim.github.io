@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
 import type { IDatenEWT } from '../src/ts/interfaces';
-import Storage from '../src/ts/utilities/Storage';
-import { getEwtDaten } from '../src/ts/EWT/utils';
+import Storage from '../src/ts/infrastructure/storage/Storage';
+import { getEwtDaten } from '../src/ts/features/EWT/utils';
 
 function createRow(day: string): IDatenEWT {
   return {

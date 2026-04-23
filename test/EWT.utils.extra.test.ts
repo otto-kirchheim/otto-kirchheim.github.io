@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import { CustomTable } from '../src/ts/class/CustomTable';
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
-import EditorModalEWT from '../src/ts/EWT/components/createEditorModalEWT';
-import calculateBuchungstagEwt from '../src/ts/EWT/utils/calculateBuchungstagEwt';
-import clearEwtZeiten from '../src/ts/EWT/utils/clearEwtZeiten';
-import getEwtEditorDate from '../src/ts/EWT/utils/getEwtEditorDate';
-import getEwtWindow from '../src/ts/EWT/utils/getEwtWindow';
-import setNaechsterEwtTag from '../src/ts/EWT/utils/setNaechsterEwtTag';
-import Storage from '../src/ts/utilities/Storage';
+import EditorModalEWT from '../src/ts/features/EWT/components/createEditorModalEWT';
+import calculateBuchungstagEwt from '../src/ts/infrastructure/date/calculateBuchungstagEwt';
+import clearEwtZeiten from '../src/ts/features/EWT/utils/clearEwtZeiten';
+import getEwtEditorDate from '../src/ts/features/EWT/utils/getEwtEditorDate';
+import getEwtWindow from '../src/ts/features/EWT/utils/getEwtWindow';
+import setNaechsterEwtTag from '../src/ts/features/EWT/utils/setNaechsterEwtTag';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),
@@ -146,6 +146,16 @@ describe('EWT utils extra', () => {
     setNaechsterEwtTag('', [createRow(20), createRow(21)]);
 
     expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-22');
+  });
+
+  it('naechsterTag klemmt tag=0 auf 0 und setzt den ersten freien Tag', () => {
+    // tag=0 → Number.isFinite(0)=true → currentTag=0 → 0<1 → currentTag=0 (line 31 coverage)
+    // Loop: currentTag becomes 1 (0+1), day 1 is free → tagE.value = 2026-03-01
+    document.body.innerHTML = `<input id="tagE" value="2026-03-01" />`;
+
+    setNaechsterEwtTag(0, []);
+
+    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-01');
   });
 
   it('setzt bei N-Schichten den Buchungstag auf den Folgetag, wenn der laengere Anteil nach Mitternacht liegt', () => {

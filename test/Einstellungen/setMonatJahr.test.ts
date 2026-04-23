@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import setMonatJahr from '../../src/ts/Einstellungen/utils/setMonatJahr';
+import setMonatJahr from '../../src/ts/features/Einstellungen/utils/setMonatJahr';
 
 describe('setMonatJahr', () => {
   let container: HTMLDivElement;

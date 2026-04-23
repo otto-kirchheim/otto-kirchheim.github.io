@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
-import * as Utils from '../../src/ts/utilities'; // Import all utilities to mock them
-import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchRetry';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import tokenErneuern from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
+import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/infrastructure/api/FetchRetry';
 
 // --- Mocks ---
 
@@ -9,7 +10,7 @@ import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/utilities/FetchR
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
 // Mock Storage module (which uses localStorage)
-vi.mock('../../src/ts/utilities/Storage', () => ({
+vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
   default: {
     get: vi.fn(),
     set: vi.fn(),
@@ -27,12 +28,12 @@ vi.mock('../../src/ts/class/CustomSnackbar', () => ({
 // Mock getValidAccesstoken — ENTFERNT (wird nicht mehr verwendet)
 
 // Mock tokenErneuern
-vi.mock('../../src/ts/utilities/tokenErneuern', () => ({
+vi.mock('../../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
   default: vi.fn(),
 }));
 
 // Mock abortController (if needed, though FetchRetry uses its own for timeout)
-vi.mock('../../src/ts/utilities/abortController', () => ({
+vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
   abortController: {
     signal: new AbortController().signal, // Provide a default signal
     reset: vi.fn(),
@@ -65,10 +66,10 @@ describe('FetchRetry.ts', () => {
       headers: new Headers(),
     });
     // Default Storage mocks
-    (Utils.Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true);
-    (Utils.Storage.get as ReturnType<typeof vi.fn>).mockReturnValue(null);
+    (Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (Storage.get as ReturnType<typeof vi.fn>).mockReturnValue(null);
     // Default token mocks
-    (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    (tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
   });
 
   // --- getServerUrl Tests ---
@@ -269,8 +270,8 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should not attach Authorization header on public auth routes', async () => {
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return 'public-token';
         return null;
       });
@@ -293,8 +294,8 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should attach Authorization header on protected routes when token exists', async () => {
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return 'protected-token';
         return null;
       });
@@ -313,8 +314,8 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should attach Authorization header on auth/resend-verification-email', async () => {
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return 'protected-token';
         return null;
       });
@@ -333,8 +334,8 @@ describe('FetchRetry.ts', () => {
     });
 
     it('should attach Authorization header on auth/logout', async () => {
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) => key === 'AccessToken');
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return 'protected-token';
         return null;
       });
@@ -407,14 +408,14 @@ describe('FetchRetry.ts', () => {
           headers: new Headers(),
         });
 
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
+      (tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
 
       const result = await FetchRetry(testPath, undefined, 'GET');
 
       expect(result).toEqual({ ...mockSuccessResponse, statusCode: 200 });
       expect(globalThis.fetch).toHaveBeenCalledTimes(2);
-      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
-      expect(Utils.tokenErneuern).toHaveBeenCalledWith(0);
+      expect(tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(tokenErneuern).toHaveBeenCalledWith(0);
       // Retry-Request soll ohne credentials laufen (Bearer statt Cookie)
       expect((globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[1][1].method).toBe('GET');
     });
@@ -439,13 +440,13 @@ describe('FetchRetry.ts', () => {
           headers: new Headers(),
         });
 
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
+      (tokenErneuern as ReturnType<typeof vi.fn>).mockResolvedValueOnce(undefined);
 
       const result = await FetchRetry('auth/me', undefined, 'GET');
 
       expect(result).toEqual({ ...mockSuccessResponse, statusCode: 200 });
-      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
-      expect(Utils.tokenErneuern).toHaveBeenCalledWith(0);
+      expect(tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(tokenErneuern).toHaveBeenCalledWith(0);
     });
 
     it('should throw error if token refresh fails during retry', async () => {
@@ -458,7 +459,7 @@ describe('FetchRetry.ts', () => {
         headers: new Headers(),
       });
 
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
+      (tokenErneuern as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
         throw new Error(refreshMessage);
       });
 
@@ -468,7 +469,7 @@ describe('FetchRetry.ts', () => {
       );
 
       expect(globalThis.fetch).toHaveBeenCalledTimes(1); // Only the first call
-      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(tokenErneuern).toHaveBeenCalledTimes(1);
     });
 
     it('should throw error if retry limit is exceeded', async () => {
@@ -590,15 +591,15 @@ describe('FetchRetry.ts', () => {
       const refreshedToken = `header.${btoa(JSON.stringify({ exp: Math.floor((MOCK_DATE_NOW + 300_000) / 1000) }))}.sig`;
       let currentAccessToken = initialToken;
 
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
         key === 'AccessToken' || key === 'RefreshToken' ? true : true,
       );
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return currentAccessToken;
         if (key === 'RefreshToken') return 'refresh-token';
         return null;
       });
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      (tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
         currentAccessToken = refreshedToken;
       });
 
@@ -611,7 +612,7 @@ describe('FetchRetry.ts', () => {
 
       await FetchRetry('auth/me', undefined, 'GET');
 
-      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(tokenErneuern).toHaveBeenCalledTimes(1);
       const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
       expect((requestInit.headers as Headers).get('Authorization')).toBe(`Bearer ${refreshedToken}`);
     });
@@ -622,15 +623,15 @@ describe('FetchRetry.ts', () => {
       let currentAccessToken = expiredToken;
       const refreshDeferred = Promise.withResolvers<void>();
 
-      (Utils.Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
+      (Storage.check as ReturnType<typeof vi.fn>).mockImplementation((key: string) =>
         key === 'AccessToken' || key === 'RefreshToken' ? true : true,
       );
-      (Utils.Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
         if (key === 'AccessToken') return currentAccessToken;
         if (key === 'RefreshToken') return 'refresh-token';
         return null;
       });
-      (Utils.tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+      (tokenErneuern as ReturnType<typeof vi.fn>).mockImplementation(async () => {
         await refreshDeferred.promise;
         currentAccessToken = refreshedToken;
       });
@@ -653,7 +654,7 @@ describe('FetchRetry.ts', () => {
       const requestB = FetchRetry('auth/me', undefined, 'GET');
 
       await Promise.resolve();
-      expect(Utils.tokenErneuern).toHaveBeenCalledTimes(1);
+      expect(tokenErneuern).toHaveBeenCalledTimes(1);
 
       refreshDeferred.resolve();
       await Promise.all([requestA, requestB]);

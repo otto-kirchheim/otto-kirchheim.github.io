@@ -32,29 +32,24 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/utilities/setLoading', () => ({ default: mockSetLoading }));
-vi.mock('../../src/ts/utilities/clearLoading', () => ({ default: mockClearLoading }));
-vi.mock('../../src/ts/utilities/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/utilities/autoSave', () => ({
+vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
   markResourcesIdle: mockMarkResourcesIdle,
   markResourceSaved: mockMarkResourceSaved,
   hasPendingTableChanges: mockHasPendingTableChanges,
 }));
-vi.mock('../../src/ts/utilities/apiService', () => ({
+vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
-vi.mock('../../src/ts/Einstellungen/utils', () => ({
-  saveEinstellungen: mockSaveEinstellungen,
-}));
-vi.mock('../../src/ts/Einstellungen/utils/index', () => ({
-  saveEinstellungen: mockSaveEinstellungen,
-}));
 
-import Storage from '../../src/ts/utilities/Storage';
-import saveDaten from '../../src/ts/utilities/saveDaten';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
+import saveDaten from '../../src/ts/infrastructure/data/saveDaten';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;
@@ -63,6 +58,8 @@ describe('saveDaten', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    clearAllHooks();
+    registerHook('pre-save:settings', mockSaveEinstellungen);
 
     document.body.innerHTML = '<button id="btnSave"></button>';
     button = document.getElementById('btnSave') as HTMLButtonElement;
@@ -208,5 +205,66 @@ describe('saveDaten', () => {
         status: 'error',
       }),
     );
+  });
+
+  it('btnSaveB nutzt nur BZ und BE als Ressourcen', async () => {
+    document.body.innerHTML = '<button id="btnSaveB"></button>';
+    const btnSaveB = document.getElementById('btnSaveB') as HTMLButtonElement;
+
+    await saveDaten(btnSaveB);
+
+    // btnSaveB schließt EWT, N, settings aus → kein EWT/N-hasPendingTableChanges
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('BE', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('btnSaveE nutzt nur EWT als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveE"></button>';
+    const btnSaveE = document.getElementById('btnSaveE') as HTMLButtonElement;
+
+    await saveDaten(btnSaveE);
+
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('btnSaveN nutzt nur N als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveN"></button>';
+    const btnSaveN = document.getElementById('btnSaveN') as HTMLButtonElement;
+
+    await saveDaten(btnSaveN);
+
+    expect(mockHasPendingTableChanges).toHaveBeenCalledWith('N', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+  });
+
+  it('btnSaveEinstellungen nutzt nur settings als Ressource', async () => {
+    document.body.innerHTML = '<button id="btnSaveEinstellungen"></button>';
+    const btnSaveEinstellungen = document.getElementById('btnSaveEinstellungen') as HTMLButtonElement;
+
+    await saveDaten(btnSaveEinstellungen);
+
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('BZ', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('EWT', true);
+    expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
+  });
+
+  it('race-condition: markResourceSaved wird für idle BZ nach flush aufgerufen', async () => {
+    document.body.innerHTML = '<button id="btnSaveB"></button>';
+    const btnSaveB = document.getElementById('btnSaveB') as HTMLButtonElement;
+
+    // hasPendingTableChanges gibt true zurück (vor flush gab es Änderungen)
+    mockHasPendingTableChanges.mockReturnValue(true);
+    // Nach flush ist der Status idle (Race-Condition: AutoSave hat sich selbst gesaved)
+    mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
+
+    await saveDaten(btnSaveB);
+
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('BZ');
+    expect(mockMarkResourceSaved).toHaveBeenCalledWith('BE');
   });
 });

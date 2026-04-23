@@ -10,22 +10,34 @@ const unmountAdminTabMock = vi.fn();
 const getOrCreateInstanceMock = vi.fn();
 const showMock = vi.fn();
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+  default: {
     clear: vi.fn(),
     check: vi.fn(),
   },
+}));
+
+vi.mock('../src/ts/infrastructure/api/abortController', () => ({
   abortController: { reset: resetAbortMock },
+}));
+
+vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
   cancelAllPending: cancelAllPendingMock,
-  clearLoading: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+  default: clearLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
-vi.mock('../src/ts/utilities/autoSaveIndicator', () => ({
+vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
   destroyAutoSaveIndicator: destroyAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     logout: logoutMock,
   },
@@ -41,8 +53,8 @@ vi.mock('bootstrap/js/dist/tab', () => ({
   },
 }));
 
-import logoutUser from '../src/ts/Einstellungen/utils/logoutUser';
-import { Storage } from '../src/ts/utilities';
+import logoutUser from '../src/ts/features/Einstellungen/utils/logoutUser';
+import Storage from '../src/ts/infrastructure/storage/Storage';
 
 describe('logoutUser', () => {
   beforeEach(() => {
@@ -84,5 +96,26 @@ describe('logoutUser', () => {
     await Promise.resolve();
 
     expect(logoutMock).not.toHaveBeenCalled();
+  });
+
+  it('zeigt Tab nicht wenn #start-tab kein HTMLButtonElement ist', () => {
+    document.body.innerHTML = `
+      <div id="start-tab"></div>
+      <button id="btnLogin" class="d-none"></button>
+    `;
+
+    logoutUser({ serverLogout: false });
+
+    expect(getOrCreateInstanceMock).not.toHaveBeenCalled();
+  });
+
+  it('setzt Willkommen-Text auch wenn Element fehlt (kein Fehler)', () => {
+    document.body.innerHTML = `
+      <button id="start-tab"></button>
+      <button id="btnLogin" class="d-none"></button>
+    `;
+    getOrCreateInstanceMock.mockReturnValue({ show: showMock });
+
+    expect(() => logoutUser({ serverLogout: false })).not.toThrow();
   });
 });

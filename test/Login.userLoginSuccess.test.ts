@@ -26,35 +26,39 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/Login/utils/requestVerificationMail', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
-vi.mock('../src/ts/Einstellungen/utils', () => ({
+vi.mock('../src/ts/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  Storage: {
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+  default: {
     set: storageSetMock,
     remove: storageRemoveMock,
   },
-  setLoading: setLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/decodeAccessToken', () => ({
+vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({
+  default: setLoadingMock,
+}));
+
+vi.mock('../src/ts/infrastructure/tokenManagement/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
-vi.mock('../src/ts/utilities/autoSaveIndicator', () => ({
+vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
   initAutoSaveIndicator: initAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/Admin', () => ({
+vi.mock('../src/ts/features/Admin', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 
-import userLoginSuccess from '../src/ts/Login/utils/userLoginSuccess';
+import userLoginSuccess from '../src/ts/core/orchestration/auth/utils/userLoginSuccess';
+import { featureLifecycleRegistry } from '../src/ts/core/hooks';
 
 describe('userLoginSuccess', () => {
   beforeEach(() => {
@@ -68,6 +72,18 @@ describe('userLoginSuccess', () => {
     `;
     vi.clearAllMocks();
     isAdminMock.mockReturnValue(false);
+
+    featureLifecycleRegistry.clearAll();
+    featureLifecycleRegistry.registerFeature({
+      name: 'Admin',
+      async register(ctx) {
+        if (ctx.isAdmin) {
+          document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+          document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+          mountAdminTabMock(ctx.userName);
+        }
+      },
+    });
   });
 
   it('setzt Basis-UI, Storage und startet SelectYear ohne Admin-Tab fuer member', async () => {

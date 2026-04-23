@@ -27,8 +27,7 @@ const {
 
 // --- Mocks ---
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/Berechnung', () => ({ aktualisiereBerechnung: mockAktualisiereBerechnung }));
-vi.mock('../../src/ts/utilities/apiService', () => ({
+vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },
   bereitschaftseinsatzApi: { bulk: mockBeBulk },
@@ -36,20 +35,23 @@ vi.mock('../../src/ts/utilities/apiService', () => ({
   nebengeldApi: { bulk: mockNBulk },
 }));
 
-import Storage from '../../src/ts/utilities/Storage';
+import Storage from '../../src/ts/infrastructure/storage/Storage';
 import {
   cancelAllPending,
   createOnChangeHandler,
   flushAll,
   getAutoSaveDelay,
   getResourceStatus,
+  initAutoSaveEventListener,
   isAutoSaveEnabled,
   markResourceSaved,
   onAutoSaveStatus,
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
-} from '../../src/ts/utilities/autoSave';
+} from '../../src/ts/infrastructure/autoSave/autoSave';
+import { clearAllHooks } from '../../src/ts/core/hooks';
+import { onEvent, clearAllEventListeners } from '../../src/ts/core/events/appEvents';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -91,6 +93,10 @@ describe('autoSave', () => {
     vi.clearAllMocks();
     vi.useFakeTimers();
     localStorage.clear();
+    clearAllHooks();
+    clearAllEventListeners();
+    initAutoSaveEventListener();
+    onEvent('data:changed', mockAktualisiereBerechnung);
     document.body.innerHTML = '';
 
     // Reset state
@@ -105,6 +111,7 @@ describe('autoSave', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    clearAllEventListeners();
   });
 
   // ─── Konfiguration ───────────────────────────────────

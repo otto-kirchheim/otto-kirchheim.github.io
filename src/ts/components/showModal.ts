@@ -1,6 +1,5 @@
 import Modal from 'bootstrap/js/dist/modal';
-import type { ComponentChild } from 'preact';
-import { render } from 'preact';
+import { render, type ComponentChild } from 'preact';
 import type { CustomHTMLDivElement } from '../interfaces';
 import type { CustomTableTypes } from '../class/CustomTable';
 
@@ -14,11 +13,20 @@ export default function showModal<T extends CustomTableTypes>(children: Componen
   const modal = document.querySelector<CustomHTMLDivElement<T>>('#modal');
   if (!modal) throw new Error('Element nicht gefunden');
 
-  resetModalProperties(modal);
+  if (modal.row !== null) resetModalProperties(modal);
 
-  render(null, modal);
   render(children, modal);
 
   Modal.getOrCreateInstance(modal).show();
+
+  modal.addEventListener(
+    'hide.bs.modal',
+    () => {
+      render(null, modal);
+      resetModalProperties(modal);
+    },
+    { once: true },
+  );
+
   return modal;
 }

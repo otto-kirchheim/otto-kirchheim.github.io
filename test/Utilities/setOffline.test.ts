@@ -1,19 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // --- Hoisted mocks ---
-const { mockCreateSnackBar, mockSetDisableButton, mockChangeMonatJahr } = (
+const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   mockCreateSnackBar: vi.fn(() => ({ Close: vi.fn() })),
   mockSetDisableButton: vi.fn(),
-  mockChangeMonatJahr: vi.fn(),
+  mockReconnectHandler: vi.fn(),
 }));
 
 vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/utilities', () => ({ setDisableButton: mockSetDisableButton }));
-vi.mock('../../src/ts/Einstellungen/utils', () => ({ changeMonatJahr: mockChangeMonatJahr }));
+vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
-import setOffline from '../../src/ts/utilities/setOffline';
+import setOffline from '../../src/ts/infrastructure/ui/setOffline';
+import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
 
 describe('setOffline', () => {
   // Cleanup-Tracking: um registrierte Event-Listener nach jedem Test zu entfernen
@@ -22,7 +22,9 @@ describe('setOffline', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearAllHooks();
     registeredListeners.length = 0;
+    registerHook('network:reconnect', mockReconnectHandler);
 
     addEventSpy = vi
       .spyOn(window, 'addEventListener')
@@ -71,7 +73,7 @@ describe('setOffline', () => {
     (onlineHandler as EventListener)(new Event('online'));
 
     expect(mockSetDisableButton).toHaveBeenCalledWith(false);
-    expect(mockChangeMonatJahr).toHaveBeenCalled();
+    expect(mockReconnectHandler).toHaveBeenCalled();
     expect(closeFn).toHaveBeenCalled();
     // Zweiter Snackbar-Call für "Du bist wieder online"
     expect(mockCreateSnackBar).toHaveBeenCalledTimes(2);

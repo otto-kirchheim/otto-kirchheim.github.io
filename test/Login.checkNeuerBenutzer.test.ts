@@ -28,26 +28,26 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/utilities', () => ({
-  clearLoading: clearLoadingMock,
+vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+  default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/utilities/apiService', () => ({
+vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   authApi: {
     register: registerMock,
     me: meMock,
   },
 }));
 
-vi.mock('../src/ts/Login/utils/userLoginSuccess', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils/userLoginSuccess', () => ({
   default: userLoginSuccessMock,
 }));
 
-vi.mock('../src/ts/utilities/passkeys', () => ({
+vi.mock('../src/ts/infrastructure/tokenManagement/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,
 }));
 
-vi.mock('../src/ts/utilities/tokenErneuern', () => ({
+vi.mock('../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
@@ -57,7 +57,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import checkNeuerBenutzer from '../src/ts/Login/utils/checkNeuerBenutzer';
+import checkNeuerBenutzer from '../src/ts/core/orchestration/auth/utils/checkNeuerBenutzer';
 
 function setupDom(): HTMLDivElement {
   document.body.innerHTML = `

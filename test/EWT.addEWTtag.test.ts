@@ -2,23 +2,29 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
 
-const { setNaechsterEwtTagMock, persistEwtTableDataMock, calculateEwtEintraegeMock, calculateBuchungstagEwtMock } = (
-  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
-).hoisted(() => ({
+const {
+  setNaechsterEwtTagMock,
+  persistEwtTableDataMock,
+  calculateEwtEintraegeMock,
+  calculateBuchungstagEwtMock,
+  createSnackBarMock,
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   setNaechsterEwtTagMock: vi.fn(),
   persistEwtTableDataMock: vi.fn(),
   calculateEwtEintraegeMock: vi.fn(),
   calculateBuchungstagEwtMock: vi.fn(),
+  createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   setNaechsterEwtTag: setNaechsterEwtTagMock,
   persistEwtTableData: persistEwtTableDataMock,
   calculateEwtEintraege: calculateEwtEintraegeMock,
   calculateBuchungstagEwt: calculateBuchungstagEwtMock,
 }));
+vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 
-import addEwtTag from '../src/ts/EWT/utils/addEwtTag';
+import addEwtTag from '../src/ts/features/EWT/utils/addEwtTag';
 
 function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
@@ -65,14 +71,7 @@ describe('addEWTtag', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal root not found');
 
-    expect(() => addEwtTag(modal as never, {} as IVorgabenU)).toThrow('TagE input not found');
-  });
-
-  it('wirft Fehler wenn Tabelle fehlt', () => {
-    const modal = setupModal(true);
-    calculateEwtEintraegeMock.mockReturnValue([createEwtData()]);
-
-    expect(() => addEwtTag(modal as never, {} as IVorgabenU)).toThrow('TableE not found');
+    expect(() => addEwtTag(modal as never, {} as IVorgabenU, false, null as never)).toThrow('TagE input not found');
   });
 
   it('berechnet, speichert und setzt naechsten Tag im Standardpfad', () => {
@@ -93,12 +92,7 @@ describe('addEWTtag', () => {
       getRows: vi.fn().mockReturnValue(existingRows),
     };
 
-    const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftE };
-    table.id = 'tableE';
-    table.instance = ftE;
-    document.body.appendChild(table);
-
-    addEwtTag(modal as never, {} as IVorgabenU);
+    addEwtTag(modal as never, {} as IVorgabenU, false, ftE as never);
 
     expect(calculateEwtEintraegeMock).toHaveBeenCalledTimes(1);
     expect(calculateBuchungstagEwtMock).toHaveBeenCalledWith(calculatedData);
@@ -108,6 +102,25 @@ describe('addEWTtag', () => {
       10,
       existingRows.map(row => row.cells),
     );
+  });
+
+  it('zeigt Warn-Snackbar und überspringt Add bei identischem Duplikat', () => {
+    const modal = setupModal(true);
+    const existingData = createEwtData({ tagE: '2026-03-10', schichtE: 'T', eOrtE: 'Fulda', berechnen: true });
+    calculateEwtEintraegeMock.mockReturnValue([existingData]);
+
+    const addMock = vi.fn();
+    const existingRow = { cells: existingData, _state: 'unchanged' as const };
+    const ftE = {
+      rows: { add: addMock, array: [existingRow] },
+      getRows: vi.fn().mockReturnValue([existingRow]),
+    };
+
+    addEwtTag(modal as never, {} as IVorgabenU, false, ftE as never);
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'warning' }));
+    expect(addMock).not.toHaveBeenCalled();
+    expect(persistEwtTableDataMock).not.toHaveBeenCalled();
   });
 
   it('setzt im berechneBuero-Pfad bestimmte Felder zurueck', () => {
@@ -130,12 +143,7 @@ describe('addEWTtag', () => {
       getRows: vi.fn().mockReturnValue([]),
     };
 
-    const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftE };
-    table.id = 'tableE';
-    table.instance = ftE;
-    document.body.appendChild(table);
-
-    addEwtTag(modal as never, {} as IVorgabenU, true);
+    addEwtTag(modal as never, {} as IVorgabenU, true, ftE as never);
 
     expect(calculateEwtEintraegeMock).toHaveBeenCalledWith({} as IVorgabenU, [
       expect.objectContaining({ berechnen: true, tagE: '2026-03-10' }),
