@@ -1,23 +1,5 @@
 import type { EventChannel, EventChannels } from './types';
 
-// --- Legacy untyped event system (kept for compatibility) ---
-type Listener = () => void;
-
-const listeners: Listener[] = [];
-
-export function publishDataChanged(): void {
-  listeners.forEach(fn => fn());
-  publishEvent('data:changed', { resource: 'all', action: 'sync' });
-}
-
-export function onDataChanged(listener: Listener): () => void {
-  listeners.push(listener);
-  return () => {
-    const idx = listeners.indexOf(listener);
-    if (idx !== -1) listeners.splice(idx, 1);
-  };
-}
-
 // --- Typed event channel system ---
 type ChannelListener<K extends EventChannel> = (data: EventChannels[K]) => void;
 

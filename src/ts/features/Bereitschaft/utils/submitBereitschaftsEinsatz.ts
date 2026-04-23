@@ -5,7 +5,7 @@ import {
   getBereitschaftsZeitraumDaten,
   persistBereitschaftsEinsatzTableData,
 } from '.';
-import { publishDataChanged } from '../../../core';
+import { publishEvent } from '../../../core';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../../interfaces';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
@@ -175,7 +175,7 @@ export default function submitBereitschaftsEinsatz(
       tableBZ.instance.rows.loadSmart(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
       tableBZ.instance.rows.setFilter(row => getMonatFromBZ(row) === monat);
 
-      publishDataChanged();
+      publishEvent('data:changed', { resource: 'all', action: 'sync' });
 
       createSnackBar({
         message: 'Bereitschaft<br/>Neuer Zeitraum hinzugefügt',

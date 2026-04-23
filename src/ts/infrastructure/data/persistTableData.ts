@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
 import type { TResourceKey } from '../../interfaces';
-import { publishDataChanged } from '../../core';
+import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';
 import dayjs from '../date/configDayjs';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';
@@ -21,6 +21,6 @@ export default function persistTableData<T extends CustomTableTypes>(
   const storageKey = RESOURCE_STORAGE_MAP[resource];
   const mergedRows = mergeVisibleResourceRows(resource, ft);
   Storage.set(storageKey, mergedRows);
-  publishDataChanged();
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
   return mergedRows;
 }

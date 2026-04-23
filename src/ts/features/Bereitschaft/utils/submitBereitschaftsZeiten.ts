@@ -1,7 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
-import { publishDataChanged } from '../../../core';
+import { publishEvent } from '../../../core';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '../../../interfaces';
 import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
@@ -284,7 +284,7 @@ export default async function submitBereitschaftsZeiten(
   Storage.set('dataBZ', mergedRows);
   preserveDeletedRows(tableBZ, normalizeResourceRows<IDatenBZ>(Storage.get<unknown>('dataBZ', { default: [] })), monat);
 
-  publishDataChanged();
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
 
   clearLoading('btnESZ');
   createSnackBar({

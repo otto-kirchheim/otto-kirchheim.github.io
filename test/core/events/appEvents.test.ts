@@ -55,16 +55,6 @@ describe('E2E: data:changed event flow', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 
-  it('publishDataChanged bridges to typed event system', async () => {
-    const { publishDataChanged } = await import('../../../src/ts/core/events/appEvents');
-    const typedListener = vi.fn();
-    onEvent('data:changed', typedListener);
-
-    publishDataChanged();
-
-    expect(typedListener).toHaveBeenCalledWith({ resource: 'all', action: 'sync' });
-  });
-
   it('events on different channels do not interfere', () => {
     const dataListener = vi.fn();
     const logoutListener = vi.fn();

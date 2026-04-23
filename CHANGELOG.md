@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-04-23
+
+### refactor
+
+- Legacy `publishDataChanged()` und `onDataChanged()` vollständig entfernt. Alle 6 Produktionsdateien (`persistTableData`, `persistEwtTableData`, `submitBereitschaftsEinsatz`, `submitBereitschaftsZeiten`, `recalculateEwtMonat`, `overwriteUserDaten`) rufen jetzt direkt `publishEvent('data:changed', ...)` auf. `publishDataChanged`/`onDataChanged` aus `appEvents.ts` und dem Core-Barrel gelöscht.
+
+### test
+
+- **CustomSnackbar.test.ts**: Von 4 auf 51 Tests erweitert — alle Switch-Branches (9 Status-Farben via `it.each`, 8 Positionen, 8 benannte Icons + Sonderzeichen), Action-Handling (Funktion + dismiss, nur Funktion, mehrere Actions), dismissible, fixed, speed, innerHTML-Message, Timeout-Auto-Close, Container-Reuse.
+- Neue Testdateien: `test/core/auth/requestVerificationMail.test.ts` (3 Tests: explizite E-Mail, Storage-Fallback, leere E-Mail → undefined), `test/core/auth/loadUserDaten.helpers.test.ts` (13 Tests: `rowMatchesMonth` für alle 4 Ressourcen, Monat 0, unbekannter Name, null-Zeile).
+- `featureLifecycle.test.ts`: 5 neue Tests — `getFeature` (vorhanden/unbekannt), `initializeAll` wirft weiter, `teardownAll` schluckt Fehler, `invokeOnError` fängt Handler-Fehler ab, `invokeOnError` ohne Hook.
+- `logoutUser.test.ts`: 2 neue Branches — `#start-tab` ist kein Button → kein Tab-Call; fehlendes `#Willkommen` → kein Wurf.
+- `holidayRegion.test.ts`: 8 neue Tests für `setupBundeslandAutoFill` — Auto-Fill wird blockiert wenn Wert bereits gesetzt, reagiert korrekt auf Select-Change-Events.
+- **Migration**: Mock-Keys in 9 Testdateien von `publishDataChanged` auf `publishEvent` umgestellt (`EWT.persistEwtTableData`, `EWT.saveTableDataEWT`, `Login.saveUserDatenUEberschreiben`, `Login.LadeUserDaten`, `Neben.saveTableDataN`, `Bereitschaft.submitBereitschaftsEinsatz`, `Bereitschaft.submitBereitschaftsZeiten`). Doppelter `publishEvent`-Key-Bug in `Login.LadeUserDaten.test.ts` behoben.
+- Gesamt: 814 Tests / 83 Dateien (Ausgangspunkt: 734 Tests / 81 Dateien, +80 Tests, +2 Dateien).
+
 ## 2026-04-21
 
 ### test

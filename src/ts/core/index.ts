@@ -3,5 +3,5 @@ export { unwrapEnvelope, ok, err } from './types/api';
 export type { StateStore } from './state/stateStore';
 export { StorageStateStore } from './state/storageStateStore';
 export { registerAppStartTask, initializeAppBootstrap } from './bootstrap';
-export { publishDataChanged, onDataChanged, publishEvent, onEvent, clearAllEventListeners } from './events/appEvents';
+export { publishEvent, onEvent, clearAllEventListeners } from './events/appEvents';
 export type { EventChannel, EventChannels } from './events/types';

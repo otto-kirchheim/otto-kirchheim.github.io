@@ -97,4 +97,25 @@ describe('logoutUser', () => {
 
     expect(logoutMock).not.toHaveBeenCalled();
   });
+
+  it('zeigt Tab nicht wenn #start-tab kein HTMLButtonElement ist', () => {
+    document.body.innerHTML = `
+      <div id="start-tab"></div>
+      <button id="btnLogin" class="d-none"></button>
+    `;
+
+    logoutUser({ serverLogout: false });
+
+    expect(getOrCreateInstanceMock).not.toHaveBeenCalled();
+  });
+
+  it('setzt Willkommen-Text auch wenn Element fehlt (kein Fehler)', () => {
+    document.body.innerHTML = `
+      <button id="start-tab"></button>
+      <button id="btnLogin" class="d-none"></button>
+    `;
+    getOrCreateInstanceMock.mockReturnValue({ show: showMock });
+
+    expect(() => logoutUser({ serverLogout: false })).not.toThrow();
+  });
 });

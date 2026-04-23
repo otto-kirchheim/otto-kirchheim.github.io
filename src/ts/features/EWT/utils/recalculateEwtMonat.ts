@@ -1,6 +1,6 @@
 import type { CustomTable } from '../../../class/CustomTable';
 import { calculateEwtEintraege, getEwtDaten, persistEwtTableData } from '.';
-import { publishDataChanged } from '../../../core';
+import { publishEvent } from '../../../core';
 import { createSnackBar } from '../../../class/CustomSnackbar';
 import type { IDatenEWT, IMonatsDaten, IVorgabenU } from '../../../interfaces';
 import { isEwtInMonat } from '../../../infrastructure/date/getMonatFromItem';
@@ -24,7 +24,7 @@ export default function recalculateEwtMonat({ monat, daten, vorgabenU, tableE }:
   tableE.rows.load([...restlicheJahresDaten, ...berechneteMonatsDaten]);
   persistEwtTableData(tableE);
 
-  publishDataChanged();
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
 
   createSnackBar({
     message: `EWT<br/>Zeiten berechnet.`,

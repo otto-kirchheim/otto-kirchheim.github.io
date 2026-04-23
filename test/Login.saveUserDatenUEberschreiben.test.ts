@@ -25,7 +25,7 @@ const {
 }));
 
 vi.mock('../src/ts/core', () => ({
-  publishDataChanged: publishDataChangedMock,
+  publishEvent: publishDataChangedMock,
 }));
 
 vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
@@ -136,7 +136,7 @@ describe('overwriteUserDaten', () => {
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     // scheduleAutoSave wird nicht mehr direkt aufgerufen — AutoSave reagiert
-    // via Event-Listener auf das publishDataChanged()-Event am Ende
+    // via Event-Listener auf das publishEvent('data:changed', ...)-Event am Ende
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 

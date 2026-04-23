@@ -89,7 +89,6 @@ vi.mock('../src/ts/infrastructure/api/apiService', () => ({
 
 vi.mock('../src/ts/core', () => ({
   publishEvent: publishEventMock,
-  publishDataChanged: vi.fn(),
   unwrapEnvelope: vi.fn(),
 }));
 

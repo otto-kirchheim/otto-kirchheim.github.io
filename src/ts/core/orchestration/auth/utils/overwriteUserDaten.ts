@@ -1,4 +1,4 @@
-import { publishDataChanged } from '../../..';
+import { publishEvent } from '../../..';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
 import { getEwtDaten } from '../../../../features/EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
@@ -73,7 +73,7 @@ export default function overwriteUserDaten(): void {
       ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === Monat);
     delete dataServer.N;
   }
-  publishDataChanged();
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
 
   Storage.remove('dataServer');
 }

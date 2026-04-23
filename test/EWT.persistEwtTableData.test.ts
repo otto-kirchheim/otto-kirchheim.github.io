@@ -15,7 +15,7 @@ vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({
 }));
 
 vi.mock('../src/ts/core', () => ({
-  publishDataChanged: publishDataChangedMock,
+  publishEvent: publishDataChangedMock,
 }));
 
 import persistEwtTableData from '../src/ts/infrastructure/data/persistEwtTableData';
@@ -71,7 +71,7 @@ describe('persistEwtTableData', () => {
     expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
     expect(result).toEqual(newRows);
     expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
-    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(2);
   });
 
   it('behält andere Monate, wenn nur der ausgewählte Monat neu persistiert wird', () => {

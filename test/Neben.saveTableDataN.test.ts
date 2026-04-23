@@ -15,7 +15,7 @@ vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({
 }));
 
 vi.mock('../src/ts/core', () => ({
-  publishDataChanged: publishDataChangedMock,
+  publishEvent: publishDataChangedMock,
 }));
 
 import { persistNebengeldTableData } from '../src/ts/features/Neben/utils';

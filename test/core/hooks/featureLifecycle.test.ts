@@ -104,4 +104,62 @@ describe('featureLifecycleRegistry', () => {
     expect(featureLifecycleRegistry.isFeatureRegistered('Present')).toBe(true);
     expect(featureLifecycleRegistry.isFeatureRegistered('Absent')).toBe(false);
   });
+
+  it('getFeature gibt registriertes Feature zurück, undefined für unbekanntes', () => {
+    const feature = { name: 'Known', register: vi.fn() };
+    featureLifecycleRegistry.registerFeature(feature);
+    expect(featureLifecycleRegistry.getFeature('Known')).toBe(feature);
+    expect(featureLifecycleRegistry.getFeature('Unknown')).toBeUndefined();
+  });
+
+  it('initializeAll wirft weiter wenn register fehlschlägt', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    featureLifecycleRegistry.registerFeature({
+      name: 'Broken',
+      register: vi.fn().mockRejectedValue(new Error('init failed')),
+    });
+
+    await expect(featureLifecycleRegistry.initializeAll(ctx)).rejects.toThrow('init failed');
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Feature 'Broken'"), expect.any(Error));
+    errorSpy.mockRestore();
+  });
+
+  it('teardownAll wirft nicht weiter wenn unregister fehlschlägt', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    featureLifecycleRegistry.registerFeature({
+      name: 'BrokenTeardown',
+      register: vi.fn(),
+      unregister: async () => {
+        throw new Error('teardown failed');
+      },
+    });
+
+    await expect(featureLifecycleRegistry.teardownAll()).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Feature 'BrokenTeardown'"), expect.any(Error));
+    errorSpy.mockRestore();
+  });
+
+  it('invokeOnError fängt Fehler im onError-Handler ab', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    featureLifecycleRegistry.registerFeature({
+      name: 'ErrorHandler',
+      register: vi.fn(),
+      lifecycle: {
+        onError: async () => {
+          throw new Error('handler failed');
+        },
+      },
+    });
+
+    await expect(
+      featureLifecycleRegistry.invokeOnError('ErrorHandler', new Error('original')),
+    ).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("Feature 'ErrorHandler'"), expect.any(Error));
+    errorSpy.mockRestore();
+  });
+
+  it('invokeOnError gibt sofort zurück wenn kein onError-Hook vorhanden', async () => {
+    featureLifecycleRegistry.registerFeature({ name: 'NoOnError', register: vi.fn() });
+    await expect(featureLifecycleRegistry.invokeOnError('NoOnError', new Error('x'))).resolves.toBeUndefined();
+  });
 });

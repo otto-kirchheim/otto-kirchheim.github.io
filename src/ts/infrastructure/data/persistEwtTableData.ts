@@ -1,6 +1,6 @@
 import type { IDatenEWT } from '../../interfaces';
 import type { CustomTable } from '../../class/CustomTable';
-import { publishDataChanged, publishEvent } from '../../core';
+import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';
 import normalizeResourceRows from './normalizeResourceRows';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';
@@ -32,6 +32,6 @@ export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenE
   const mergedRows = mergeVisibleResourceRows('EWT', ft);
   Storage.set('dataE', mergedRows);
   publishEvent('ewt:persisted', { rows: mergedRows });
-  publishDataChanged();
+  publishEvent('data:changed', { resource: 'all', action: 'sync' });
   return mergedRows;
 }

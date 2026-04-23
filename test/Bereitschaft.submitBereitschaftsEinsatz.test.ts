@@ -30,7 +30,7 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
 }));
 
 vi.mock('../src/ts/core', () => ({
-  publishDataChanged: publishDataChangedMock,
+  publishEvent: publishDataChangedMock,
 }));
 
 import submitBereitschaftsEinsatz from '../src/ts/features/Bereitschaft/utils/submitBereitschaftsEinsatz';

@@ -29,7 +29,7 @@ vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({ default: tableToA
 vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({ default: setLoadingMock }));
 vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({ default: clearLoadingMock }));
 vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
-vi.mock('../src/ts/core', () => ({ publishDataChanged: publishDataChangedMock }));
+vi.mock('../src/ts/core', () => ({ publishEvent: publishDataChangedMock }));
 vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },
 }));
