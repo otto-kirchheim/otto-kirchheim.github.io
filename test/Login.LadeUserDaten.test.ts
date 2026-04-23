@@ -741,13 +741,9 @@ describe('loadUserDaten', () => {
 
   it('setzt vorhandenen conflictReviewBanner zurück bevor neue Daten geladen werden', async () => {
     const bannerMount = document.getElementById('conflictReviewBannerMount')!;
-    showConflictReviewBanner(
-      bannerMount,
-      [{ name: 'BZ', months: [3] }],
-      async () => {
-        return;
-      },
-    );
+    showConflictReviewBanner(bannerMount, [{ name: 'BZ', months: [3] }], async () => {
+      return;
+    });
 
     expect(bannerMount.hasChildNodes()).toBe(true); // Precondition
 
