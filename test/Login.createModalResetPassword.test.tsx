@@ -137,4 +137,18 @@ describe('createModalResetPassword', () => {
     expect(resetPasswordMock).not.toHaveBeenCalled();
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Keine Internetverbindung');
   });
+
+  it('zeigt API-Fehler als Text und interpretiert kein HTML', async () => {
+    resetPasswordMock.mockRejectedValue(new Error('<svg onload=alert(1)>'));
+
+    createModalResetPassword('token-123');
+
+    const submit = showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => Promise<void>;
+    await submit({ preventDefault: vi.fn() } as unknown as Event);
+
+    const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+    expect(errorMessage?.textContent).toBe('<svg onload=alert(1)>');
+    expect(errorMessage?.querySelector('svg')).toBeNull();
+    expect(createSnackBarMock).not.toHaveBeenCalled();
+  });
 });

@@ -114,11 +114,13 @@ describe('checkPasswort', () => {
   });
 
   it('zeigt Fehler bei API-Fehler', async () => {
-    changePasswordMock.mockRejectedValue(new Error('Unauthorized'));
+    changePasswordMock.mockRejectedValue(new Error('<img src=x onerror=alert(1)>'));
     const modal = createModal('alt123', 'neu12345', 'neu12345');
     await checkPasswort(modal);
 
-    expect(modal.querySelector('#errorMessage')!.innerHTML).toBe('Unauthorized');
+    const errorMessage = modal.querySelector<HTMLDivElement>('#errorMessage');
+    expect(errorMessage?.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(errorMessage?.querySelector('img')).toBeNull();
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     expect(clearLoadingMock).toHaveBeenCalledWith('btnChange');
   });

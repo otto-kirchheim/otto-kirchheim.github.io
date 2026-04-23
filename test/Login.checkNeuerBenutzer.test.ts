@@ -215,14 +215,17 @@ describe('checkNeuerBenutzer', () => {
 
   it('zeigt Fehler-Snackbar und schreibt Fehlermeldung bei Fehler', async () => {
     const modal = setupDom();
-    registerMock.mockRejectedValue(new Error('register failed'));
+    registerMock.mockRejectedValue(new Error('<img src=x onerror=alert(1)>'));
 
     await checkNeuerBenutzer(modal as never);
 
-    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.innerHTML).toBe('register failed');
+    const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+    expect(errorMessage?.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(errorMessage?.querySelector('img')).toBeNull();
     expect(createSnackBarMock).toHaveBeenCalledWith(
       expect.objectContaining({
         status: 'error',
+        message: 'Fehler bei Benutzerstellung.',
       }),
     );
     expect(clearLoadingMock).toHaveBeenCalledWith('btnNeu');
