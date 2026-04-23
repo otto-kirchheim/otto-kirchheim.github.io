@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { PERS_FIELDS } from '../src/ts/Admin/components/profileTemplates.shared';
+import { PERS_FIELDS } from '../src/ts/features/Admin/components/profileTemplates.shared';
 
 describe('profileTemplates.shared', () => {
   it('exposes Bundesland as editable select field for profile templates', () => {

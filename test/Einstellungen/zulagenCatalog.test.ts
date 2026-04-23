@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '../../src/ts/Einstellungen/utils/zulagenCatalog';
+import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '../../src/ts/features/Einstellungen/utils/zulagenCatalog';
 
 describe('zulagenCatalog', () => {
   it('enthält die erwartete Anzahl an Einträgen', () => {

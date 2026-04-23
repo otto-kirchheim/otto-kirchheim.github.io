@@ -5,9 +5,9 @@ const { berVorgabeAEndernMock } = (vi as typeof vi & { hoisted: <T>(factory: () 
 }));
 
 import type { IVorgabenUvorgabenB } from '../src/ts/interfaces';
-import applyBereitschaftsVorgabe from '../src/ts/Bereitschaft/utils/applyBereitschaftsVorgabe';
-import updateBereitschaftsDatum from '../src/ts/Bereitschaft/utils/updateBereitschaftsDatum';
-import dayjs from '../src/ts/utilities/configDayjs';
+import applyBereitschaftsVorgabe from '../src/ts/features/Bereitschaft/utils/applyBereitschaftsVorgabe';
+import updateBereitschaftsDatum from '../src/ts/features/Bereitschaft/utils/updateBereitschaftsDatum';
+import dayjs from '../src/ts/infrastructure/date/configDayjs';
 
 type ToggleBereitschaftsEigeneWerte = (
   parentElement: HTMLDivElement,
@@ -16,11 +16,11 @@ type ToggleBereitschaftsEigeneWerte = (
 ) => void;
 
 async function loadEigeneWerte(): Promise<ToggleBereitschaftsEigeneWerte> {
-  mock.module('../src/ts/Bereitschaft/utils', () => ({
+  mock.module('../src/ts/features/Bereitschaft/utils', () => ({
     applyBereitschaftsVorgabe: berVorgabeAEndernMock,
   }));
 
-  const module = await import('../src/ts/Bereitschaft/utils/toggleBereitschaftsEigeneWerte');
+  const module = await import('../src/ts/features/Bereitschaft/utils/toggleBereitschaftsEigeneWerte');
   return module.default;
 }
 

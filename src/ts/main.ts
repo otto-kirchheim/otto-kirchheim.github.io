@@ -1,11 +1,36 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import { logoutUser } from './Einstellungen/utils';
+import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einstellungen/utils';
 import { createSnackBar } from './class/CustomSnackbar';
-import { Storage, compareVersion, initializeColorModeToggler, setOffline, storageAvailable } from './utilities';
-import dayjs from './utilities/configDayjs';
-// import { setDisableButton } from './utilities/buttonDisable';
+import { default as Storage } from './infrastructure/storage/Storage';
+import { default as compareVersion } from './infrastructure/validation/compareVersion';
+import { default as initializeColorModeToggler } from './infrastructure/ui/BSColorToggler';
+import { default as setOffline } from './infrastructure/ui/setOffline';
+import { default as storageAvailable } from './infrastructure/storage/storageAvailable';
+import dayjs from './infrastructure/date/configDayjs';
+import { registerHook, featureLifecycleRegistry } from './core/hooks';
+import type { FeatureContext } from './core/hooks';
+
+registerHook('auth:failure', logoutUser);
+registerHook('network:reconnect', changeMonatJahr);
+registerHook('pre-save:settings', saveEinstellungen);
+
+featureLifecycleRegistry.registerFeature({
+  name: 'Admin',
+  async register(ctx: FeatureContext): Promise<void> {
+    if (ctx.isAdmin) {
+      document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+      document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
+      const { mountAdminTab } = await import('./features/Admin');
+      mountAdminTab(ctx.userName);
+    }
+  },
+  async unregister(): Promise<void> {
+    const { unmountAdminTab } = await import('./features/Admin');
+    unmountAdminTab();
+  },
+});
 
 const intervalMS = 60 * 60 * 1000;
 
@@ -36,10 +61,11 @@ import Dropdown from 'bootstrap/js/dist/dropdown';
 import Offcanvas from 'bootstrap/js/dist/offcanvas';
 import Popover from 'bootstrap/js/dist/popover';
 import Tab from 'bootstrap/js/dist/tab';
+import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
-window.addEventListener('load', () => {
+registerAppStartTask(() => {
   setImpressumAndCopyright();
 
   Array.from(document.querySelectorAll('.dropdown-toggle')).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
@@ -123,17 +149,15 @@ window.addEventListener('load', () => {
   } else {
     setImpressumAndCopyright();
   }
-
-  window.addEventListener('load', () => {
-    setImpressumAndCopyright();
-  });
 });
 
-import './Berechnung';
-import './Bereitschaft';
-import './EWT';
-import './Einstellungen';
-import './Login';
-import './Neben';
+import './features/Berechnung';
+import './features/Bereitschaft';
+import './features/EWT';
+import './features/Einstellungen';
+import './core/orchestration/auth';
+import './features/Neben';
+
+initializeAppBootstrap();
 
 import '../scss/styles.scss';

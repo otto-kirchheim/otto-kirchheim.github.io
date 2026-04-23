@@ -11,11 +11,11 @@ vi.mock('../src/ts/class/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/Login/components', () => ({
+vi.mock('../src/ts/core/orchestration/auth/components', () => ({
   createModalResetPassword: createModalResetPasswordMock,
 }));
 
-import handleAuthUrlState from '../src/ts/Login/utils/handleAuthUrlState';
+import handleAuthUrlState from '../src/ts/core/orchestration/auth/utils/handleAuthUrlState';
 
 describe('handleAuthUrlState', () => {
   beforeEach(() => {

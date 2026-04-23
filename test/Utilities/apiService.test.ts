@@ -9,12 +9,12 @@ const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(f
   }),
 );
 
-vi.mock('../../src/ts/utilities/FetchRetry', () => ({
+vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
   getServerUrl: mockGetServerUrl,
 }));
 
-vi.mock('../../src/ts/utilities/abortController', () => ({
+vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
   abortController: { signal: new AbortController().signal, reset: vi.fn() },
 }));
 
@@ -27,7 +27,7 @@ import {
   nebengeldApi,
   profileApi,
   vorgabenApi,
-} from '../../src/ts/utilities/apiService';
+} from '../../src/ts/infrastructure/api/apiService';
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
@@ -123,6 +123,89 @@ describe('apiService', () => {
     it('wirft bei FetchRetry Error-Instanz', async () => {
       mockFetchRetry.mockResolvedValue(new Error('Connection timeout'));
       await expect(authApi.login('u', 'p')).rejects.toThrow('Connection timeout');
+    });
+
+    it('beginPasskeyLogin ohne userName sendet keinen Body', async () => {
+      mockApiSuccess({ options: {}, challengeToken: 'ct123' });
+      await authApi.beginPasskeyLogin();
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys/login/options', undefined, 'POST');
+    });
+
+    it('beginPasskeyLogin mit userName sendet userName im Body', async () => {
+      mockApiSuccess({ options: {}, challengeToken: 'ct456', userName: 'max' });
+      await authApi.beginPasskeyLogin('max');
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys/login/options', { userName: 'max' }, 'POST');
+    });
+
+    it('finishPasskeyLogin speichert Tokens und gibt Ergebnis zurück', async () => {
+      mockApiSuccess({ user: {}, accessToken: 'pk-at', refreshToken: 'pk-rt' });
+      const cred = { id: 'cid' } as never;
+      const result = await authApi.finishPasskeyLogin(cred, 'ct-abc');
+      expect(localStorage.getItem('AccessToken')).toBe(JSON.stringify('pk-at'));
+      expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('pk-rt'));
+      expect(result.accessToken).toBe('pk-at');
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'auth/passkeys/login/verify',
+        expect.objectContaining({ challengeToken: 'ct-abc', credential: cred }),
+        'POST',
+      );
+    });
+
+    it('getPasskeys ruft GET auth/passkeys auf', async () => {
+      mockApiSuccess([{ credentialId: 'c1', name: 'Laptop', deviceType: 'platform', backedUp: false, createdAt: '2025-01-01' }]);
+      const result = await authApi.getPasskeys();
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys', undefined, 'GET');
+      expect(result).toHaveLength(1);
+    });
+
+    it('beginPasskeyRegistration sendet POST ohne Body', async () => {
+      mockApiSuccess({ challenge: 'ch', rp: { name: 'test' } });
+      await authApi.beginPasskeyRegistration();
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys/register/options', undefined, 'POST');
+    });
+
+    it('finishPasskeyRegistration sendet Credential und deviceName', async () => {
+      mockApiSuccess({ credentialId: 'cid', name: 'MyDevice' });
+      const cred = { id: 'cid' } as never;
+      const result = await authApi.finishPasskeyRegistration(cred, 'Laptop');
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'auth/passkeys/register/verify',
+        { credential: cred, deviceName: 'Laptop' },
+        'POST',
+      );
+      expect(result.credentialId).toBe('cid');
+    });
+
+    it('deletePasskey sendet DELETE mit URL-encodierter credentialId', async () => {
+      mockApiSuccess(undefined);
+      await authApi.deletePasskey('cred/123');
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys/cred%2F123', undefined, 'DELETE');
+    });
+
+    it('forgotPassword sendet E-Mail-Adresse', async () => {
+      mockApiSuccess({});
+      await authApi.forgotPassword('user@test.de');
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/forgot-password', { email: 'user@test.de' }, 'POST');
+    });
+
+    it('resetPassword sendet Token (URL-encoded) und neues Passwort', async () => {
+      mockApiSuccess({});
+      await authApi.resetPassword('tok/en', 'newPass');
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'auth/reset-password/tok%2Fen',
+        { newPassword: 'newPass' },
+        'POST',
+      );
+    });
+
+    it('resendVerificationEmail sendet optionale E-Mail', async () => {
+      mockApiSuccess({});
+      await authApi.resendVerificationEmail('user@test.de');
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'auth/resend-verification-email',
+        { email: 'user@test.de' },
+        'POST',
+      );
     });
   });
 

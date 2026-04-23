@@ -17,7 +17,7 @@ const baseConfig: UserConfig = {
   build: {
     outDir: '../dist',
     emptyOutDir: true,
-    sourcemap: true,
+    sourcemap: 'hidden',
   },
   preview: {
     port: 8082,

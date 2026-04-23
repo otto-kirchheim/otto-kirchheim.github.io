@@ -1,0 +1,42 @@
+import { default as Storage } from '../../../infrastructure/storage/Storage';
+import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
+import { default as setLoading } from '../../../infrastructure/ui/setLoading';
+import { createSnackBar } from '../../../class/CustomSnackbar';
+import { loadUserDaten } from '../../../core/orchestration/auth/utils';
+import setMonatJahr from './setMonatJahr';
+
+export default function selectYear(monat?: number, jahr?: number): void {
+  if (!navigator.onLine) {
+    createSnackBar({
+      message: 'Daten laden nicht möglich – keine Internetverbindung',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+
+  if (!monat) {
+    const monatInput = document.querySelector<HTMLInputElement>('#Monat');
+    if (!monatInput) throw new Error('Monats Input nicht gefunden');
+    monat = +monatInput.value;
+  }
+
+  if (!jahr) {
+    const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
+    if (!jahrInput) throw new Error('Jahres Input nicht gefunden');
+    jahr = +jahrInput.value;
+  }
+
+  setLoading('btnAuswaehlen');
+
+  if (Storage.check('Jahr') && Storage.check('Monat'))
+    if (!Storage.compare<number>('Jahr', jahr)) Storage.set('Jahreswechsel', true);
+
+  Storage.set('Jahr', jahr);
+  Storage.set('Monat', monat);
+
+  setMonatJahr(jahr, monat);
+
+  if (getUserCookie()) void loadUserDaten(monat, jahr);
+}

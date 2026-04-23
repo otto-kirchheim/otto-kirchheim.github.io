@@ -1,7 +1,7 @@
 import { beforeAll, describe, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from './mockData';
-import { Storage } from '../src/ts/utilities';
-import generateTableBerechnung from '../src/ts/Berechnung/generateTableBerechnung';
+import Storage from '../src/ts/infrastructure/storage/Storage';
+import generateTableBerechnung from '../src/ts/features/Berechnung/generateTableBerechnung';
 import type { IVorgabenBerechnung } from '../src/ts/interfaces/IVorgabenBerechnungMonat';
 import type { IVorgabenGeld } from '../src/ts/interfaces/IVorgabenGeldType';
 

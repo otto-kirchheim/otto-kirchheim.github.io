@@ -18,11 +18,14 @@ const { mockOnAutoSaveStatus } = (vi as typeof vi & { hoisted: <T>(factory: () =
   };
 });
 
-vi.mock('../../src/ts/utilities/autoSave', () => ({
+vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
   onAutoSaveStatus: mockOnAutoSaveStatus,
 }));
 
-import { destroyAutoSaveIndicator, initAutoSaveIndicator } from '../../src/ts/utilities/autoSaveIndicator';
+import {
+  destroyAutoSaveIndicator,
+  initAutoSaveIndicator,
+} from '../../src/ts/infrastructure/autoSave/autoSaveIndicator';
 
 describe('autoSaveIndicator', () => {
   beforeEach(() => {
@@ -154,5 +157,66 @@ describe('autoSaveIndicator', () => {
 
     listener('BZ', 'idle');
     expect(badge.style.opacity).toBe('0');
+  });
+
+  it('should show cloud_off with bg-warning when pending and offline', () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+
+    listener('N', 'pending');
+
+    const badge = document.querySelector('#btnSaveN .autosave-badge') as HTMLSpanElement;
+    const icon = badge.querySelector('.material-icons-round') as HTMLSpanElement;
+    expect(icon.textContent).toBe('cloud_off');
+    expect(badge.classList.contains('bg-warning')).toBe(true);
+
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('clears error message when resource transitions from error to non-error status', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+
+    listener('EWT', 'error', 'Validierungsfehler');
+    let badge = document.querySelector('#btnSaveE .autosave-badge') as HTMLSpanElement;
+    expect(badge.classList.contains('bg-danger')).toBe(true);
+
+    listener('EWT', 'saving');
+    badge = document.querySelector('#btnSaveE .autosave-badge') as HTMLSpanElement;
+    // Nach dem Übergang auf saving: kein error-Icon mehr
+    expect(badge.querySelector('.material-icons-round')?.textContent).toBe('cloud_sync');
+    expect(badge.classList.contains('bg-danger')).toBe(false);
+  });
+
+  it('triggers badge re-render on window online event', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+    listener('BZ', 'saving');
+
+    window.dispatchEvent(new Event('online'));
+
+    // Badge bleibt sichtbar nach online-Event (kein Crash)
+    const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
+    expect(badge.style.opacity).toBe('1');
+  });
+
+  it('triggers badge re-render on window offline event', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+    listener('N', 'pending');
+
+    window.dispatchEvent(new Event('offline'));
+
+    // Kein Crash, Badge noch vorhanden
+    expect(document.querySelector('#btnSaveN .autosave-badge')).not.toBeNull();
+  });
+
+  it('removes online/offline listeners on destroy', () => {
+    initAutoSaveIndicator();
+    destroyAutoSaveIndicator();
+
+    // Nach destroy kein Crash beim Dispatchen
+    expect(() => window.dispatchEvent(new Event('online'))).not.toThrow();
   });
 });

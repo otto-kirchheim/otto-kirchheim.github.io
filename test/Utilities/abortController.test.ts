@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { abortController } from '../../src/ts/utilities/abortController';
+import { abortController } from '../../src/ts/infrastructure/api/abortController';
 
 describe('AbortControllerWrapper', () => {
   it('should initialize with an AbortController and its signal', () => {

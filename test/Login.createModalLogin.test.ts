@@ -10,7 +10,7 @@ const { loginUserMock, loginWithPasskeyMock, showMock, getOrCreateInstanceMock, 
   browserSupportsWebAuthnMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Login/utils', () => ({
+vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
   loginUser: loginUserMock,
   loginWithPasskey: loginWithPasskeyMock,
 }));
@@ -25,7 +25,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import createModalLogin from '../src/ts/Login/components/createModalLogin';
+import createModalLogin from '../src/ts/core/orchestration/auth/components/createModalLogin';
 
 describe('createModalLogin', () => {
   beforeEach(() => {

@@ -11,7 +11,12 @@ pathIgnorePatterns = [
   "dist/**",
   "dev-dist/**",
   "node_modules/**",
-  "src/node_modules/**"
+  "src/node_modules/**",
+]
+coveragePathIgnorePatterns = [
+  "test/mockData.ts",
+  "test/setupBun.ts",
 ]
 coverageReporter = ["text", "lcov"]
 coverageDir = "./coverage"
+coverageSkipTestFiles = true

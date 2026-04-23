@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import DatenSortieren from '../../src/ts/utilities/DatenSortieren';
+import DatenSortieren from '../../src/ts/infrastructure/data/DatenSortieren';
 
 describe('DatenSortieren', () => {
   it('sortiert numerisch (Standard)', () => {

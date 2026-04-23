@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const {
-  aktualisiereBerechnungMock,
+  publishDataChangedMock,
   getBereitschaftsZeitraumDatenMock,
   getBereitschaftsEinsatzDatenMock,
   getEwtDatenMock,
@@ -12,7 +12,7 @@ const {
   storageRemoveMock,
   scheduleAutoSaveMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
-  aktualisiereBerechnungMock: vi.fn(),
+  publishDataChangedMock: vi.fn(),
   getBereitschaftsZeitraumDatenMock: vi.fn(),
   getBereitschaftsEinsatzDatenMock: vi.fn(),
   getEwtDatenMock: vi.fn(),
@@ -24,28 +24,28 @@ const {
   scheduleAutoSaveMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/Berechnung', () => ({
-  aktualisiereBerechnung: aktualisiereBerechnungMock,
+vi.mock('../src/ts/core', () => ({
+  publishEvent: publishDataChangedMock,
 }));
 
-vi.mock('../src/ts/Bereitschaft/utils', () => ({
+vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
   getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   getEwtDaten: getEwtDatenMock,
 }));
 
-vi.mock('../src/ts/Neben/utils', () => ({
+vi.mock('../src/ts/features/Neben/utils', () => ({
   getNebengeldDaten: getNebengeldDatenMock,
 }));
 
-vi.mock('../src/ts/Einstellungen/utils', () => ({
+vi.mock('../src/ts/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('../src/ts/utilities/Storage', () => ({
+vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   default: {
     get: storageGetMock,
     set: storageSetMock,
@@ -53,11 +53,11 @@ vi.mock('../src/ts/utilities/Storage', () => ({
   },
 }));
 
-vi.mock('../src/ts/utilities/autoSave', () => ({
+vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
   scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
-import overwriteUserDaten from '../src/ts/Login/utils/overwriteUserDaten';
+import overwriteUserDaten from '../src/ts/core/orchestration/auth/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
   const table = document.createElement('table') as HTMLTableElement & {
@@ -134,11 +134,9 @@ describe('overwriteUserDaten', () => {
     expect(getNebengeldDatenMock).toHaveBeenCalledWith(expectedN, undefined, { scope: 'all' });
 
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BZ');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('EWT');
-    expect(scheduleAutoSaveMock).toHaveBeenCalledWith('N');
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
+    // scheduleAutoSave wird nicht mehr direkt aufgerufen — AutoSave reagiert
+    // via Event-Listener auf das publishEvent('data:changed', ...)-Event am Ende
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 
@@ -152,7 +150,70 @@ describe('overwriteUserDaten', () => {
     overwriteUserDaten();
 
     expect(storageSetMock).not.toHaveBeenCalled();
-    expect(aktualisiereBerechnungMock).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
+  });
+
+  it('setFilter-Callbacks filtern korrekt nach Monat (BZ, BE, EWT, N)', () => {
+    const setFilterBZ = vi.fn();
+    const setFilterBE = vi.fn();
+    const setFilterE = vi.fn();
+    const setFilterN = vi.fn();
+
+    function createTableWithFilter(
+      id: string,
+      loadSpy: ReturnType<typeof vi.fn>,
+      setFilterSpy: ReturnType<typeof vi.fn>,
+    ): void {
+      const table = document.createElement('table') as HTMLTableElement & {
+        instance: { rows: { load: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> } };
+      };
+      table.id = id;
+      table.instance = { rows: { load: loadSpy, setFilter: setFilterSpy } };
+      document.body.appendChild(table);
+    }
+
+    createTableWithFilter('tableVE', vi.fn(), vi.fn());
+    createTableWithFilter('tableBZ', vi.fn(), setFilterBZ);
+    createTableWithFilter('tableBE', vi.fn(), setFilterBE);
+    createTableWithFilter('tableE', vi.fn(), setFilterE);
+    createTableWithFilter('tableN', vi.fn(), setFilterN);
+
+    storageGetMock.mockImplementation((key: string) => {
+      if (key === 'dataServer')
+        return {
+          vorgabenU: { pers: { Vorname: 'Test' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
+          BZ: { 3: [{ bz: 1 }] },
+          BE: { 3: [{ be: 1 }] },
+          EWT: { 3: [{ ewt: 1 }] },
+          N: { 3: [{ n: 1 }] },
+        };
+      if (key === 'Monat') return 3;
+      return undefined;
+    });
+
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
+    getBereitschaftsEinsatzDatenMock.mockReturnValue([]);
+    getEwtDatenMock.mockReturnValue([]);
+    getNebengeldDatenMock.mockReturnValue([]);
+
+    overwriteUserDaten();
+
+    // setFilter-Callbacks aufrufen, um die Arrow-Functions zu covern
+    const bzFilter = setFilterBZ.mock.calls[0]?.[0] as (row: unknown) => boolean;
+    const beFilter = setFilterBE.mock.calls[0]?.[0] as (row: unknown) => boolean;
+    const eFilter = setFilterE.mock.calls[0]?.[0] as (row: unknown) => boolean;
+    const nFilter = setFilterN.mock.calls[0]?.[0] as (row: unknown) => boolean;
+
+    expect(bzFilter).toBeDefined();
+    expect(beFilter).toBeDefined();
+    expect(eFilter).toBeDefined();
+    expect(nFilter).toBeDefined();
+
+    // Callbacks mit März-Daten aufrufen → geben true zurück (Monat 3)
+    expect(bzFilter({ beginB: '2023-03-15T08:00', endeB: '2023-03-16T08:00', pauseB: 0 })).toBe(true);
+    expect(beFilter({ tagBE: '15.03.2023', von: '08:00', bis: '16:00' })).toBe(true);
+    expect(eFilter({ tagE: '2023-03-15', buchungstagE: '2023-03-15' })).toBe(true);
+    expect(nFilter({ tagN: '15.03.2023', von: '08:00', bis: '16:00' })).toBe(true);
   });
 });

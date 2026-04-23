@@ -6,11 +6,11 @@ const { persistEwtTableDataMock } = (vi as typeof vi & { hoisted: <T>(factory: (
   persistEwtTableDataMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/EWT/utils', () => ({
+vi.mock('../src/ts/features/EWT/utils', () => ({
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-import attachBerechnenToggleListeners from '../src/ts/EWT/utils/attachBerechnenToggleListeners';
+import attachBerechnenToggleListeners from '../src/ts/features/EWT/utils/attachBerechnenToggleListeners';
 
 function createCells(): IDatenEWT {
   return {

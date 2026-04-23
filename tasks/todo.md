@@ -1,5 +1,54 @@
 # Todo
 
+## Aktueller Plan: Test-Coverage-Erweiterung
+
+Ausgangszustand (2026-04-21): 643 Tests, 76 Dateien, Coverage-Baseline aus `bun run coverage`.
+
+### Nicht abdeckenswert (explizit ausgeschlossen)
+
+- **Preact-Komponenten** (`Admin/components/`, `Bereitschaft/components/`, `Einstellungen/components/`, `core/auth/components/createModalNewUser.tsx`) – Render-Tests erfordern ein vollständiges Preact-Test-Setup; Aufwand > Nutzen.
+- **`passkeys.ts` / `registerPasskey.ts`** – WebAuthn-Browser-API nicht sinnvoll mockbar.
+- **Feature-`index.ts`-Dateien** (`Bereitschaft/index.ts`, `Berechnung/index.ts`, `Admin/index.tsx`) – reiner Boot-/Glue-Code, der `window.load` bindet.
+- **`bootstrap.ts`** – App-Init, zu eng mit DOM und Login-Orchestrierung verwoben.
+- **`changeMonatJahr.ts`** – reine DOM-Seiteneffekte ohne isolierbare Rückgabewerte.
+
+### Phase T.1 – Reine Logik (kein oder minimaler DOM) ✅ abgeschlossen
+
+Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
+
+- [ ] `syncEwtToNeben.ts` (0% / 6 % branch) → `test/Neben.syncEwtToNeben.test.ts`
+  - Storage-Mock + CustomTable-Stub; Fälle: leeres Array, kein `ewtRef`, beginN/endeN unverändert (no-op), Update schlägt durch zu Storage + Table, `drawRows` + Event-Emit bei tableChanged.
+- [ ] `storageStateStore.ts` (0% / 54 % branch) → `test/core/storageStateStore.test.ts`
+  - `get` (vorhanden / fehlt), `set`, `remove`, `has` – alles via existierendem Storage-Singleton; keine Mocks nötig.
+- [ ] `actAsStatus.ts` – fehlende Branches (31 % branch) → in bestehendem `test/Utilities/actAsStatus.test.ts` ergänzen
+  - `notifyActAsStateChanged` – dispatcht `CustomEvent` mit korrektem Detail.
+  - `updateActAsBanner` – alle DOM-Pfade: kein Element, `!state.active`, `state.active` mit/ohne `currentUserName`, Button-Text-Setzung.
+- [ ] `normalizeResourceRows.ts` (75 % branch) → in bestehendem Test ergänzen
+  - Lücke Zeilen 7–8: Edge Case leeres Array / nicht-Array-Eingabe.
+- [ ] `savePipeline.ts` – `unlinkNebengeldRefsForDeletedEwtIds` (Zeilen 87–120, Branch 81 %) → in bestehendem `test/Utilities/savePipeline.test.ts` ergänzen
+  - Fälle: leeres `deletedIds`-Array (early return), Referenz in Storage entfernt, Table-Rows bereinigt, `drawRows` aufgerufen.
+
+### Phase T.2 – Leicht gemockter DOM ✅ abgeschlossen
+
+### Phase T.3 – apiService-Lücken ✅ abgeschlossen
+
+- apiService: alle Passkey-Auth-Methoden + forgotPassword/resetPassword/resendVerificationEmail (10 Tests)
+- Admin-API (neu): fetchAdminUsers, updateUserScopes, fetchCurrentAdminCapabilities (4 Rollen-Branches), updateUserRole/Oe/Password, deleteUser, setActAsUser, Vorgaben-API, Profile-Templates-API (23 Tests)
+
+### Phase T.4 – Auth/Load-Flows ✅ abgeschlossen
+
+- loadUserDaten: "Serverdaten übernehmen"-Action (overwriteUserDaten), "Lokale Daten behalten"-Action (publishEvent + dataServer-Remove)
+- submitBereitschaftsZeiten: Offline-Jahreswechsel-Snackbar, Online-Jahreswechsel API-Call (Erfolg + Bulk-Fehler)
+- submitBereitschaftsEinsatz: LRE-1-Duplikat-Warnung (addiert trotzdem), berZeit mit bereits vorhandenem BZ
+
+## Verifikationskriterien (Test-Coverage-Erweiterung)
+
+- `bun run coverage` zeigt nach jeder Phase Coverage-Fortschritt für die Zieldateien.
+- Kein neuer Test darf bestehende Suites destabilisieren (`bun run test` bleibt grün).
+- Kein Produktionscode wird für die Tests verändert (Tests passen sich an, nicht der Code).
+
+---
+
 ## Aktueller Plan: Pages-Workflow Actions-Major-Update
 
 - [x] Deploy-Workflow auf aktuelle Actions-Majors umstellen

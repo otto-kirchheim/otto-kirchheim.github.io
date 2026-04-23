@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import initializeColorModeToggler from '../../src/ts/utilities/BSColorToggler';
+import initializeColorModeToggler from '../../src/ts/infrastructure/ui/BSColorToggler';
 
 describe('BSColorToggler', () => {
   let mediaListeners: ((e: { matches: boolean }) => void)[];

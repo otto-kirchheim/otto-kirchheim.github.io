@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import storageAvailable from '../../src/ts/utilities/storageAvailable';
+import storageAvailable from '../../src/ts/infrastructure/storage/storageAvailable';
 
 describe('storageAvailable', () => {
   let originalLocalStorage: Storage;
