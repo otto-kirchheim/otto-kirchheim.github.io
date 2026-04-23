@@ -251,6 +251,28 @@ describe('validateZeitenReihenfolge', () => {
     });
   });
 
+  describe('Teilweise befüllte Felder – Edge-Cases', () => {
+    it('gibt Fehlermeldung mit "Muss nach" zurück wenn rollover.curr das letzte Feld ohne Nachbarn ist', () => {
+      // Nur beginE und endeE gesetzt. endeE < beginE → rollover.curr=endeE ist letztes resolved-Feld (kein nextFeld).
+      // getZwischenMessage(endeE) → prevFeld=beginE, nextFeld=null → "Muss nach" statt "Muss zwischen"
+      // getVorherigesFeldMessage(beginE) → beginE an Index 0 → leftBound=null → Fallback-Return
+      const result = validateEwtZeitenReihenfolge(createEWT({ beginE: '10:00', endeE: '09:00' }));
+      expect(result).not.toBeNull();
+      expect(result?.map(f => f.feld)).toContain('endeE');
+      expect(result?.find(f => f.feld === 'endeE')?.message).toBe('Muss nach "Arbeitszeit Von" liegen.');
+      expect(result?.find(f => f.feld === 'beginE')?.message).toBe('Muss vor "Arbeitszeit Bis" liegen.');
+    });
+
+    it('löst MAX_SPAN_GUARD aus wenn Zeitspanne > 20h ohne Rollover (T-Schicht)', () => {
+      // abWE=00:00, anWE=21:30 → Spanne 21.5h > 20h, keine Rollover → MAX_SPAN_MINUTES-Guard
+      const result = validateEwtZeitenReihenfolge(createEWT({ abWE: '00:00', anWE: '21:30' }));
+      expect(result).not.toBeNull();
+      expect(result).toHaveLength(1);
+      expect(result?.[0]?.feld).toBe('anWE');
+      expect(result?.[0]?.message).toContain('Muss nach "Ab Wohnung" liegen.');
+    });
+  });
+
   describe('Bereitschaft + Nacht (BN)', () => {
     it('gibt null zurück bei korrekter BN-Schicht mit Tageswechsel', () => {
       expect(

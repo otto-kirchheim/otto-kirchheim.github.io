@@ -642,7 +642,9 @@ describe('loadUserDaten', () => {
         { _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
         { _id: 'bz-2', beginB: '2026-03-15T08:00:00.000Z', bz: 'server-2' },
       ],
-      BE: { 3: [] }, EWT: { 3: [] }, N: { 3: [] },
+      BE: { 3: [] },
+      EWT: { 3: [] },
+      N: { 3: [] },
       timestamps: {
         VorgabenU: '2026-03-01T00:00:00.000Z',
         dataBZ: '2026-03-01T00:00:00.000Z',
@@ -691,7 +693,9 @@ describe('loadUserDaten', () => {
       vorgabenU: { pers: { Vorname: 'S' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
       BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
-      BE: { 3: [] }, EWT: { 3: [] }, N: { 3: [] },
+      BE: { 3: [] },
+      EWT: { 3: [] },
+      N: { 3: [] },
       timestamps: {
         VorgabenU: '2026-03-01T00:00:00.000Z',
         dataBZ: '2026-03-01T00:00:00.000Z',
@@ -706,7 +710,11 @@ describe('loadUserDaten', () => {
       ['dataBZ', 'VorgabenU', 'dataBE', 'dataE', 'dataN'].includes(key),
     );
     storageGetMock.mockImplementation((key: string) => {
-      if (key === 'dataBZ') return [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' }, { beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' }];
+      if (key === 'dataBZ')
+        return [
+          { beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' },
+          { beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' },
+        ];
       if (key === 'VorgabenU') return loaded.vorgabenU;
       return [];
     });
@@ -728,5 +736,24 @@ describe('loadUserDaten', () => {
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
+  });
+
+  it('setzt vorhandenen conflictReviewBanner zurück bevor neue Daten geladen werden', async () => {
+    // Preact-gerendertes Element in das Mount setzen (dann kann render(null, mount) es entfernen)
+    const { render, h } = await import('preact');
+    const bannerMount = document.getElementById('conflictReviewBannerMount')!;
+    render(h('div', { className: 'alter-banner' }, 'Alter Banner Content'), bannerMount);
+
+    expect(bannerMount.hasChildNodes()).toBe(true); // Precondition
+
+    loadAllYearDataMock.mockImplementation(async () => {
+      throw new Error('offline');
+    });
+
+    await loadUserDaten(3, 2026);
+
+    // hideConflictReviewBanner hat render(null, mount) aufgerufen → Banner ist leer
+    expect(bannerMount.hasChildNodes()).toBe(false);
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
   });
 });

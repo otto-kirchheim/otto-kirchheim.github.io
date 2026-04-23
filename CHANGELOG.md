@@ -2,7 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-04-26
+
+### test
+
+- **Coverage > 80 %** — Gesamt-Funktions-Coverage von 79.68 % auf **80.97 %** (84.67 % Zeilen) gehoben; 909 Tests / 90 Dateien, 0 Fehler.
+- `test/core/bootstrap.test.ts` (NEU, 2 Tests): `registerAppStartTask` + `initializeAppBootstrap` (Sofort-Ausführung bei `readyState=complete`) und Idempotenz-Guard.
+- `Login.saveUserDatenUEberschreiben.test.ts` (+1 Test): setFilter-Callbacks in `overwriteUserDaten.ts` direkt aufgerufen → Datei jetzt 100 % Funcs / 100 % Lines.
+- `changeMonatJahr.test.ts` (+2 Tests): setFilter-Callbacks für Monatwechsel- und Jahreswechsel-Pfad aufgerufen → Datei jetzt 100 % Funcs / 100 % Lines.
+- `Login.LadeUserDaten.test.ts` (+1 Test): `conflictReviewBannerMount`-Reset-Zweig (Zeilen 44–46 in `loadUserDaten.ts`) abgedeckt; Preact-`render(null, mount)` in happy-dom verifiziert.
+
 ## 2026-04-23
+
+### fix
+
+- **showModal**: Reihenfolge in `showModal.ts` korrigiert — `render(null, modal)` wird jetzt vor `modal.innerHTML = ''` aufgerufen. Vorher: `innerHTML = ''` löschte DOM-Nodes, bevor Preact seinen VNode-Baum aufräumen konnte, was dazu führte, dass jedes Öffnen eines Modals eine zusätzliche Function Component in den Preact DevTools akkumulierte (Unmount schlug still fehl, da DOM-Nodes bereits entfernt waren).
 
 ### refactor
 
@@ -17,6 +31,7 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - `holidayRegion.test.ts`: 8 neue Tests für `setupBundeslandAutoFill` — Auto-Fill wird blockiert wenn Wert bereits gesetzt, reagiert korrekt auf Select-Change-Events.
 - **Migration**: Mock-Keys in 9 Testdateien von `publishDataChanged` auf `publishEvent` umgestellt (`EWT.persistEwtTableData`, `EWT.saveTableDataEWT`, `Login.saveUserDatenUEberschreiben`, `Login.LadeUserDaten`, `Neben.saveTableDataN`, `Bereitschaft.submitBereitschaftsEinsatz`, `Bereitschaft.submitBereitschaftsZeiten`). Doppelter `publishEvent`-Key-Bug in `Login.LadeUserDaten.test.ts` behoben.
 - Gesamt: 814 Tests / 83 Dateien (Ausgangspunkt: 734 Tests / 81 Dateien, +80 Tests, +2 Dateien).
+- **Phase T.11** — 5 neue Testdateien für bisher ungetestete `.ts`-Dateien mit 0 % Function-Coverage: `profileTemplates.shared.test.ts` (17 Tests: `normalizeVorgabenBRows` Renummerierung/Standard-Logik/Bounds, Konstanten), `passkeys.test.ts` (13 Tests: `getPasskeyErrorMessage`, `guessPasskeyDeviceName`, `registerPasskeyWithResult` Full-Flow), `registerPasskey.test.ts` (4 Tests: Wrapper-ok/cancelled/unsupported/error), `generateEingabeMaskeEinstellungen.test.ts` (21 Tests: `formatDelayLabel`, `sliderPositionToMs`, `msToSliderPosition`, Roundtrip), `changeMonatJahr.test.ts` (20 Tests: DOM-Pflichtfelder, Jahr/Monat-Änderungslogik, Tabellen-Filter-Calls, Online/Offline-Branches). Gesamt: 889 Tests / 88 Dateien (+75 Tests, +5 Dateien).
 
 ## 2026-04-21
 

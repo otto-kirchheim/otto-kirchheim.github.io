@@ -148,6 +148,16 @@ describe('EWT utils extra', () => {
     expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-22');
   });
 
+  it('naechsterTag klemmt tag=0 auf 0 und setzt den ersten freien Tag', () => {
+    // tag=0 → Number.isFinite(0)=true → currentTag=0 → 0<1 → currentTag=0 (line 31 coverage)
+    // Loop: currentTag becomes 1 (0+1), day 1 is free → tagE.value = 2026-03-01
+    document.body.innerHTML = `<input id="tagE" value="2026-03-01" />`;
+
+    setNaechsterEwtTag(0, []);
+
+    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-01');
+  });
+
   it('setzt bei N-Schichten den Buchungstag auf den Folgetag, wenn der laengere Anteil nach Mitternacht liegt', () => {
     const result = calculateBuchungstagEwt({
       tagE: '2026-03-20',
