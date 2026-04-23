@@ -70,7 +70,7 @@ export default async function checkPasswort(modal: CustomHTMLDivElement): Promis
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(msg);
-    errorMessage.innerHTML = msg;
+    errorMessage.textContent = msg;
     createSnackBar({
       message: `Passwort konnte nicht geändert werden.`,
       status: 'error',

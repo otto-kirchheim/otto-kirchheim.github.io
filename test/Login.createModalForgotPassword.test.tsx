@@ -90,15 +90,17 @@ describe('createModalForgotPassword', () => {
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Keine Internetverbindung');
   });
 
-  it('zeigt API-Fehler im errorMessage Feld', async () => {
-    forgotPasswordMock.mockRejectedValue(new Error('kaputt'));
+  it('zeigt API-Fehler als Text und interpretiert kein HTML', async () => {
+    forgotPasswordMock.mockRejectedValue(new Error('<img src=x onerror=alert(1)>'));
 
     createModalForgotPassword();
 
     const submit = showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => Promise<void>;
     await submit({ preventDefault: vi.fn() } as unknown as Event);
 
-    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.innerHTML).toBe('kaputt');
+    const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
+    expect(errorMessage?.textContent).toBe('<img src=x onerror=alert(1)>');
+    expect(errorMessage?.querySelector('img')).toBeNull();
     expect(createSnackBarMock).not.toHaveBeenCalled();
   });
 });

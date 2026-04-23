@@ -113,9 +113,9 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(msg);
-    errorMessage.innerHTML = msg;
+    errorMessage.textContent = msg;
     createSnackBar({
-      message: `Fehler bei Benutzerstellung: </br>${msg}`,
+      message: 'Fehler bei Benutzerstellung.',
       status: 'error',
       timeout: 3000,
       fixed: true,

@@ -57,7 +57,7 @@ export default function createModalForgotPassword(): void {
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        errorMessage.innerHTML = msg;
+        errorMessage.textContent = msg;
       }
     };
   }
