@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { FunctionalComponent, JSX, RefObject } from 'preact';
+import type { FunctionalComponent, GenericEventHandler, RefObject } from 'preact';
 
 type TMySelect = {
   myRef?: RefObject<HTMLSelectElement>;
@@ -8,7 +8,7 @@ type TMySelect = {
   value?: string | number | Dayjs;
   className: string;
   required?: boolean;
-  changeHandler?: JSX.GenericEventHandler<HTMLSelectElement>;
+  changeHandler?: GenericEventHandler<HTMLSelectElement>;
   options: {
     value?: string | number;
     text: string;

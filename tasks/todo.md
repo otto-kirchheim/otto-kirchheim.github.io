@@ -1,5 +1,37 @@
 # Todo
 
+## Aktueller Plan: Letzten no-deprecated-Fehler beheben
+
+- [x] Verbleibenden `@typescript-eslint/no-deprecated` Treffer in `test/Login.LadeUserDaten.test.ts` lokalisieren
+- [x] Deprecated `preact.render()`-Aufruf im Test entfernen
+- [x] Datei und kompletten Frontend-Lintlauf verifizieren
+
+## Verifikationskriterien (letzter no-deprecated)
+
+- `test/Login.LadeUserDaten.test.ts` enthält keinen deprecated `render`-Aufruf mehr
+- `bun run lint` läuft ohne `@typescript-eslint/no-deprecated`-Fehler durch
+
+## Review (letzter no-deprecated)
+
+- Ergebnis: Im Test wurde die Vorbelegung des Banner-Mounts von `preact.render(...)` auf eine reine DOM-Vorbelegung (`innerHTML`) umgestellt. Der zugehörige Deprecation-Treffer ist entfernt.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun eslint test/Login.LadeUserDaten.test.ts` sowie `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` ohne Findings.
+
+## Aktueller Plan: ESLint no-deprecated typed linting
+
+- [x] Ursache des Absturzes in der Flat-Config validieren (`no-deprecated` ohne Type-Information)
+- [x] Typed-Linting fuer TypeScript-Dateien in `eslint.config.js` aktivieren
+- [x] `no-deprecated` gezielt auf TypeScript-Dateien anwenden und Lint verifizieren
+
+## Verifikationskriterien (ESLint no-deprecated)
+
+- ESLint wirft keinen ParserOptions-TypeInfo-Fehler mehr beim Laden von `@typescript-eslint/no-deprecated`
+- `bun run lint` meldet Regelverstoeße als normale Lint-Funde statt Konfigurationsabbruch
+
+## Review (ESLint no-deprecated)
+
+- Ergebnis: Die Flat-Config aktiviert jetzt `parserOptions.projectService` fuer `**/*.ts`/`**/*.tsx` und scoped `@typescript-eslint/no-deprecated` auf diese Dateien. Der vorherige Laufzeitfehler beim Regel-Load ist behoben.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint` laeuft durch die Analyse und liefert normale Findings (aktuell 4x `@typescript-eslint/no-deprecated`) statt ParserServices-Abbruch.
+
 ## Aktueller Plan: Test-Coverage-Erweiterung
 
 Ausgangszustand (2026-04-21): 643 Tests, 76 Dateien, Coverage-Baseline aus `bun run coverage`.

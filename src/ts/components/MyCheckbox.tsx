@@ -1,4 +1,4 @@
-import type { ComponentChild, FunctionalComponent, JSX, Ref } from 'preact';
+import type { ComponentChild, FunctionalComponent, GenericEventHandler, Ref } from 'preact';
 
 type TMyCheckbox = {
   className: string;
@@ -7,7 +7,7 @@ type TMyCheckbox = {
   checked?: boolean;
   disabled?: boolean;
   myRef?: Ref<HTMLInputElement>;
-  changeHandler?: JSX.GenericEventHandler<HTMLInputElement>;
+  changeHandler?: GenericEventHandler<HTMLInputElement>;
 };
 
 const MyCheckbox: FunctionalComponent<TMyCheckbox> = ({
