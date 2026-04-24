@@ -13,8 +13,9 @@ vi.mock('../src/ts/core', () => ({
 import syncNebengeldTimesFromEwtRows from '../src/ts/features/Neben/utils/syncEwtToNeben';
 
 function makeEwt(overrides: Partial<IDatenEWT> & { _id: string }): IDatenEWT {
+  const { _id, ...rest } = overrides;
   return {
-    _id: overrides._id,
+    _id,
     tagE: '2026-03-01',
     eOrtE: '',
     schichtE: 'T',
@@ -27,7 +28,7 @@ function makeEwt(overrides: Partial<IDatenEWT> & { _id: string }): IDatenEWT {
     an1E: '14:00',
     anWE: '14:00',
     berechnen: false,
-    ...overrides,
+    ...rest,
   };
 }
 
