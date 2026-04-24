@@ -1,5 +1,40 @@
 # Todo
 
+## Aktueller Plan: MyInput Ref-Handling optimieren
+
+- [x] Ref- und Popover-Pfad in `MyInput` lokal pruefen
+- [x] Feldinitializer mit Props-Snapshot durch stabilen Fallback-Ref plus Getter ersetzen
+- [x] Popover-Sync fuer Mount/Update/Unmount absichern und TypeScript/Lint/Prettier verifizieren
+
+## Verifikationskriterien (MyInput)
+
+- `MyInput` nutzt keinen Props-basierten Ref-Snapshot mehr im Feldinitializer
+- Popover bleibt bei geaenderten `popover`- oder `myRef`-Props konsistent
+- `bunx tsc --noEmit -p tsconfig.json`, ESLint und Prettier laufen fuer die Aenderung sauber
+
+## Review (MyInput)
+
+- Ergebnis: `MyInput` verwendet jetzt einen internen Fallback-Ref und leitet ueber einen Getter immer den aktuellen effektiven Ref ab. Dadurch entfaellt die implizite Bindung an den initialen `myRef`, und Bootstrap-Popover werden bei Prop-Wechseln sauber neu synchronisiert.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun eslint src/ts/components/MyInput.tsx`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx prettier --check src/ts/components/MyInput.tsx`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`.
+
+## Aktueller Plan: TS-, Lint- und Prettier-Fehler beheben
+
+- [x] Frontend-Qualitaetsstatus fuer TypeScript, ESLint und Prettier ermitteln
+- [x] Gemeldete TypeScript-Fehler in den betroffenen Testdateien beheben
+- [x] Prettier-Abweichungen in den gemeldeten Testdateien bereinigen
+- [x] `bunx tsc --noEmit`, `bun run lint` und `bun run format:check` erneut erfolgreich verifizieren
+
+## Verifikationskriterien (TS/Lint/Prettier)
+
+- Frontend-TypeScript-Check endet ohne Fehler
+- Frontend-Lintlauf endet ohne Findings
+- Frontend-Prettier-Check bestaetigt konsistenten Stil
+
+## Review (TS/Lint/Prettier)
+
+- Ergebnis: Alle gemeldeten Frontend-Qualitaetsfehler sind behoben. TypeScript war in drei Testdateien fehlerhaft; zusaetzlich wurden die sieben von Prettier gemeldeten Testdateien formatiert.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run format:check`.
+
 ## Aktueller Plan: Letzten no-deprecated-Fehler beheben
 
 - [x] Verbleibenden `@typescript-eslint/no-deprecated` Treffer in `test/Login.LadeUserDaten.test.ts` lokalisieren
