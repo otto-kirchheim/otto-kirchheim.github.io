@@ -128,8 +128,8 @@ export async function sendBulk(
   monat: number,
   jahr: number,
 ): Promise<{
-  created: CustomTableTypes[];
-  updated: CustomTableTypes[];
+  created: unknown[];
+  updated: unknown[];
   deleted: string[];
   createdReferences?: { _id: string; clientRequestId: string }[];
   errors: BulkErrorEntry[];
@@ -191,8 +191,8 @@ export async function sendBulk(
   });
 
   const combined: {
-    created: CustomTableTypes[];
-    updated: CustomTableTypes[];
+    created: unknown[];
+    updated: unknown[];
     deleted: string[];
     createdReferences?: { _id: string; clientRequestId: string }[];
     errors: BulkErrorEntry[];

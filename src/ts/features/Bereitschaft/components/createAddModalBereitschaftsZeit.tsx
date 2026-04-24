@@ -119,7 +119,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
         value={datum.format('YYYY-MM-DD')}
-        onChange={changeHandler}
+        onInput={changeHandler}
       >
         Datum
       </MyInput>

@@ -1,4 +1,4 @@
-import type { JSX, FunctionalComponent } from 'preact';
+import type { FunctionalComponent, MouseEventHandler } from 'preact';
 
 type TMyButton = {
   id?: string;
@@ -6,9 +6,9 @@ type TMyButton = {
   className?: string;
   ariaLabel?: string;
   dataBsDismiss?: string;
-  dataBSTarget?: string;
+  dataBsTarget?: string;
   text: string;
-  clickHandler?: JSX.MouseEventHandler<HTMLButtonElement>;
+  clickHandler?: MouseEventHandler<HTMLButtonElement>;
 };
 
 const MyButton: FunctionalComponent<TMyButton> = ({
@@ -17,7 +17,7 @@ const MyButton: FunctionalComponent<TMyButton> = ({
   className = 'btn btn-primary',
   ariaLabel,
   dataBsDismiss,
-  dataBSTarget,
+  dataBsTarget,
   text,
   clickHandler,
 }: TMyButton) => {
@@ -28,7 +28,7 @@ const MyButton: FunctionalComponent<TMyButton> = ({
       aria-label={ariaLabel ?? text}
       type={type}
       data-bs-dismiss={dataBsDismiss}
-      data-bs-target={dataBSTarget}
+      data-bs-target={dataBsTarget}
       onClick={clickHandler}
     >
       {text}

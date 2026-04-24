@@ -8,8 +8,7 @@ import dayjs from 'dayjs';
 import type { CustomHTMLTableElement } from '../interfaces/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type CustomTableTypes = Record<string, any>;
+export type CustomTableTypes = Record<string, unknown>;
 
 /** Status einer Tabellenzeile für Change-Tracking */
 type DirtyRowState = 'new' | 'modified' | 'deleted';
@@ -39,8 +38,7 @@ interface CustomTableOptions<T extends CustomTableTypes> {
     direction?: Directions;
     type?: string;
     visible?: boolean;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    parser?: (this: Column<T>, value: any, option?: any) => string | number;
+    parser?: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
     classes?: string[];
     editing?: CustomTableOptions<T>['editing'];
   }[];
@@ -87,8 +85,7 @@ interface CustomTableOptionsAll<T extends CustomTableTypes> {
     sorted: boolean;
     direction: Directions | null;
     type: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    parser: (this: Column<T>, value: any, option?: any) => string | number;
+    parser: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
     classes: string[];
     visible: boolean;
     editing?: CustomTableOptionsAll<T>['editing'];
@@ -148,8 +145,7 @@ export class Column<T extends CustomTableTypes> {
   public sorted: boolean;
   public direction: Directions | null;
   public type: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public parser: (this: Column<T>, value: any, option?: any) => string | number;
+  public parser: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
   public classes: string[];
   public visible: boolean;
   public editing?: CustomTableOptionsAll<T>['editing'] | null;
@@ -336,7 +332,17 @@ export class Rows<T extends CustomTableTypes> {
    */
   load(array: T[], add = false): void {
     if (!add) this.array.length = 0;
-    array.forEach(row => this.array.push(new Row(this.CustomTable, row, 'unchanged')));
+    array.forEach(row => {
+      const storedState = (row as Record<string, unknown>).__localState;
+      const state: RowState = storedState === 'deleted' ? 'deleted' : 'unchanged';
+      if (storedState !== undefined) {
+        const cells = { ...row } as T;
+        delete (cells as Record<string, unknown>).__localState;
+        this.array.push(new Row(this.CustomTable, cells, state));
+      } else {
+        this.array.push(new Row(this.CustomTable, row, 'unchanged'));
+      }
+    });
     this.CustomTable.drawRows();
   }
 
@@ -650,16 +656,16 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
       };
     }
 
-    function _parser(this: Column<T>, value: string | number): string {
-      if (typeof value === 'number') value = value.toString();
+    function _parser(this: Column<T>, value: unknown): string {
+      const s = typeof value === 'number' ? value.toString() : ((value as string) ?? '');
       switch (this.type) {
         case 'text':
         case 'number':
-          return value;
+          return s;
         case 'time':
-          return value.length > 0 ? value : '--:--';
+          return s.length > 0 ? s : '--:--';
         default:
-          return value;
+          return s;
       }
     }
 
@@ -863,7 +869,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
             }
             td.appendChild(divBtnGroup);
           } else {
-            const cellContent = column.parser(row.cells[column.name]).toString();
+            const cellContent = column.parser(row.cells[column.name] as T[keyof T]).toString();
             const content = document.createElement('span');
             content.innerHTML = cellContent;
             td.appendChild(content);
@@ -953,6 +959,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
   /** Benachrichtigt den onChange-Callback (für Auto-Save-Integration) */
   public _notifyChange(): void {
+    console.log('Table changed', this.rows.getChanges());
     if (this.options.onChange) this.options.onChange(this);
   }
 
@@ -969,10 +976,10 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
     const Sorter = (a: Row<T>, b: Row<T>): number => {
       const aColumn = a.columns.array[columnIndex].name;
-      const aValue: ValueType = a.cells[aColumn];
+      const aValue = a.cells[aColumn] as ValueType;
 
       const bColumn = b.columns.array[columnIndex].name;
-      const bValue: ValueType = b.cells[bColumn];
+      const bValue = b.cells[bColumn] as ValueType;
 
       // Leere Werte ans Ende sortieren, statt bei 0/false/'' einen Fehler zu werfen.
       const aEmpty = aValue === null || aValue === undefined || aValue === '';

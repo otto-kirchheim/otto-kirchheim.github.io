@@ -16,7 +16,7 @@ const MyShowElement: FunctionalComponent<TMyShowElement> = ({
   spanClass = 'col-9 align-middle text-break my-auto',
   title,
   id,
-  text = '\u00A0', //"&nbsp;",
+  text = '\u00A0',
 }) => {
   return (
     <div className={divClass}>
@@ -24,7 +24,7 @@ const MyShowElement: FunctionalComponent<TMyShowElement> = ({
         {title}
       </label>
       <span className={spanClass} id={id}>
-        {text.toString()}
+        {text?.toString() ?? '\u00A0'}
       </span>
     </div>
   );

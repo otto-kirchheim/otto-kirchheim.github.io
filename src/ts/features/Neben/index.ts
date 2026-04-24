@@ -40,7 +40,7 @@ registerAppStartTask(() => {
         name: 'auftragN',
         title: 'Auftragsnummer',
         breakpoints: 'md',
-        parser: (value: string) => (value ? value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-'),
+        parser: (value: unknown) => { const s = value as string; return s ? s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-'; },
       },
     ],
     empty: () => getEmptyText(Jahr),

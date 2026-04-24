@@ -25,7 +25,7 @@ function makeNRow(
       auftragN: '',
       ...(overrides.ewtRef ? { ewtRef: overrides.ewtRef } : {}),
     } as IDatenN,
-  } as Row<CustomTableTypes> & { cells: IDatenN };
+  } as unknown as Row<CustomTableTypes> & { cells: IDatenN };
 }
 
 function mountTableN(rows: (Row<CustomTableTypes> & { cells: IDatenN })[]) {
@@ -92,9 +92,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('cleans ewtRef from live table rows and calls drawRows', () => {
-    Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
-    ]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -105,9 +103,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('also updates _originalCells for unchanged rows', () => {
-    Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
-    ]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -118,9 +114,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('skips deleted table rows', () => {
-    Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
-    ]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ _state: 'deleted', ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -131,9 +125,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('does not crash when #tableN is absent', () => {
-    Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
-    ]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
     // No DOM element mounted
     expect(() => unlinkNebengeldRefsForDeletedEwtIds(['e1'])).not.toThrow();
   });

@@ -28,7 +28,9 @@ function serializeRowWithoutMeta(row: unknown): string {
   if (Array.isArray(row)) return `[${row.map(item => serializeRowWithoutMeta(item)).join(',')}]`;
 
   const normalized = Object.entries(row as Record<string, unknown>)
-    .filter(([key, value]) => !['_id', 'updatedAt', 'createdAt', '__v'].includes(key) && value !== undefined)
+    .filter(
+      ([key, value]) => !['_id', 'updatedAt', 'createdAt', '__v', '__localState'].includes(key) && value !== undefined,
+    )
     .sort(([left], [right]) => left.localeCompare(right));
 
   return `{${normalized.map(([key, value]) => `${JSON.stringify(key)}:${serializeRowWithoutMeta(value)}`).join(',')}}`;

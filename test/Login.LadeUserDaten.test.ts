@@ -93,6 +93,7 @@ vi.mock('../src/ts/core', () => ({
 }));
 
 import loadUserDaten from '../src/ts/core/orchestration/auth/utils/loadUserDaten';
+import { showConflictReviewBanner } from '../src/ts/core/orchestration/auth/components';
 
 type MockTableInstance = {
   rows: {
@@ -739,10 +740,10 @@ describe('loadUserDaten', () => {
   });
 
   it('setzt vorhandenen conflictReviewBanner zurück bevor neue Daten geladen werden', async () => {
-    // Preact-gerendertes Element in das Mount setzen (dann kann render(null, mount) es entfernen)
-    const { render, h } = await import('preact');
     const bannerMount = document.getElementById('conflictReviewBannerMount')!;
-    render(h('div', { className: 'alter-banner' }, 'Alter Banner Content'), bannerMount);
+    showConflictReviewBanner(bannerMount, [{ name: 'BZ', months: [3] }], async () => {
+      return;
+    });
 
     expect(bannerMount.hasChildNodes()).toBe(true); // Precondition
 

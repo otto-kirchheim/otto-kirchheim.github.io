@@ -2,6 +2,7 @@ import { publishEvent } from '../../..';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
 import { getEwtDaten } from '../../../../features/EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
+import type { CustomTableTypes } from '../../../../class/CustomTable';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -19,7 +20,7 @@ import {
 } from '../../../../infrastructure/date/getMonatFromItem';
 import Storage from '../../../../infrastructure/storage/Storage';
 
-function applyDataToTable(selector: string, data: object[]): void {
+function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);
   table?.instance.rows.load(data);
 }

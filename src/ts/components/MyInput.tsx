@@ -40,18 +40,26 @@ type TModalBodyInputElementOption = {
   max?: string;
   minLength?: number | string;
   maxLength?: number | string;
-  onChange?: (this: HTMLInputElement, ev: Event) => void;
+  onInput?: (this: HTMLInputElement, ev: Event) => void;
   invalidFeedbackId?: string;
   invalidFeedbackText?: string;
 };
 
 export default class MyInput extends Component<TModalBodyInputElementOption> {
-  input = this.props.myRef ?? createRef<HTMLInputElement>();
+  fallbackInputRef = createRef<HTMLInputElement>();
   popoverInstance: Popover | null = null;
 
+  get inputRef(): RefObject<HTMLInputElement> {
+    return this.props.myRef ?? this.fallbackInputRef;
+  }
+
   componentDidMount(): void {
-    if (this.props.popover && this.input.current) {
-      this.popoverInstance = new Popover(this.input.current, this.props.popover);
+    this.syncPopover();
+  }
+
+  componentDidUpdate(previousProps: Readonly<TModalBodyInputElementOption>): void {
+    if (previousProps.popover !== this.props.popover || previousProps.myRef !== this.props.myRef) {
+      this.syncPopover();
     }
   }
 
@@ -59,9 +67,25 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
     this.popoverInstance?.dispose();
   }
 
+  syncPopover(): void {
+    this.popoverInstance?.dispose();
+    this.popoverInstance = null;
+
+    if (this.props.popover && this.inputRef.current) {
+      this.popoverInstance = new Popover(this.inputRef.current, this.props.popover);
+    }
+  }
+
   render() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { myRef, divClass, popover, children, invalidFeedbackId, invalidFeedbackText, ...inputProps } = this.props;
+    const {
+      myRef: _myRef,
+      divClass,
+      popover: _popover,
+      children,
+      invalidFeedbackId,
+      invalidFeedbackText,
+      ...inputProps
+    } = this.props;
 
     const normalizedInputProps = {
       ...inputProps,
@@ -71,7 +95,7 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
 
     return (
       <div className={divClass ?? 'form-floating'}>
-        <input ref={this.input} className="form-control validate" {...normalizedInputProps} />
+        <input ref={this.inputRef} className="form-control validate" {...normalizedInputProps} />
         <label htmlFor={this.props.id}>{children}</label>
         {invalidFeedbackId ? (
           <div id={invalidFeedbackId} className="invalid-feedback">

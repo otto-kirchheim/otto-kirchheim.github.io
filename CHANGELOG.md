@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-04-24
+
+### fix
+
+- Bug behoben: Undo-Delete hat wiederhergestellte Zeilen nicht in localStorage persistiert. `scheduleAutoSave` schrieb localStorage nur bei tatsaechlichen Backend-Aenderungen (create/update). Jetzt wird localStorage auch im No-Change-Pfad synchronisiert, sodass Zeilen nach Undo-Delete beim naechsten F5 nicht mehr als geloescht erscheinen.
+
+## 2026-04-24
+
+### refactor
+
+- Alle `any`-Typen aus dem TypeScript-Code entfernt: `CustomTableTypes` von `Record<string, any>` auf `Record<string, unknown>` umgestellt, Parser-Signaturen auf `T[keyof T]`/`unknown` typisiert, Parser-Implementierungen mit internen Type-Assertions aktualisiert. `createOnChangeHandler` generisch gemacht, `MyShowFooter` als generische Funktionskomponente umgeschrieben, `sendBulk`-Rückgabetyp auf `unknown[]` präzisiert.
+
+## 2026-04-24
+
+### refactor
+
+- `MyInput` verwendet jetzt keinen props-basierten Ref-Snapshot mehr im Klassenfeld, sondern einen stabilen Fallback-Ref mit Getter auf den jeweils aktuellen effektiven Ref. Zusaetzlich werden Bootstrap-Popover bei `popover`- oder `myRef`-Aenderungen sauber neu synchronisiert.
+
+## 2026-04-24
+
+### fix
+
+- TypeScript-Fehler in drei Testdateien behoben: doppelte `_id`-Zuweisung in `Neben.syncEwtToNeben.test.ts` entfernt, unsicherer Row-Cast in `savePipeline.test.ts` auf `unknown`-Zwischencast angepasst und generischer `get<T>`-Aufruf in `storageStateStore.test.ts` typisiert.
+
+### chore
+
+- Prettier-Abweichungen in betroffenen Testdateien bereinigt (`adminApi`, `CustomSnackbar`, `generateEingabeMaskeEinstellungen`, `actAsStatus`, `apiService`, `passkeys`, `savePipeline`), sodass `format:check` wieder ohne Findings laeuft.
+
 ## 2026-04-26
 
 ### test
@@ -15,6 +43,9 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 ## 2026-04-23
 
 ### fix
+
+- **Letzter `no-deprecated`-Treffer im Test entfernt**: In `test/Login.LadeUserDaten.test.ts` wurde der deprecated `preact.render(...)`-Aufruf durch eine reine DOM-Vorbelegung des Mount-Containers ersetzt. Dadurch meldet ESLint keinen `@typescript-eslint/no-deprecated`-Fehler mehr fuer diesen Test.
+- **ESLint no-deprecated stabilisiert**: In `eslint.config.js` wurde typed linting fuer TypeScript-Dateien aktiviert (`parserOptions.projectService`, `tsconfigRootDir`), und `@typescript-eslint/no-deprecated` wird nur noch fuer `**/*.ts`/`**/*.tsx` angewendet. Dadurch tritt der bisherige Laufzeitfehler "requires type information" nicht mehr auf; verbleibende Treffer werden als regulaere Lint-Fehler ausgewiesen.
 
 - **XSS-Härtung bei Fehlerausgaben**: In `createModalForgotPassword.tsx`, `createModalResetPassword.tsx`, `checkNeuerBenutzer.ts` und `checkPasswort.ts` wurde `errorMessage.innerHTML = msg` durch `errorMessage.textContent = msg` ersetzt, damit Fehlermeldungen nicht als HTML interpretiert werden. In `checkNeuerBenutzer.ts` wurde außerdem die Snackbar-Fehlernachricht auf einen statischen Text umgestellt, statt rohe Exception-Texte zu interpolieren.
 - **showModal**: Reihenfolge in `showModal.ts` korrigiert — `render(null, modal)` wird jetzt vor `modal.innerHTML = ''` aufgerufen. Vorher: `innerHTML = ''` löschte DOM-Nodes, bevor Preact seinen VNode-Baum aufräumen konnte, was dazu führte, dass jedes Öffnen eines Modals eine zusätzliche Function Component in den Preact DevTools akkumulierte (Unmount schlug still fehl, da DOM-Nodes bereits entfernt waren).

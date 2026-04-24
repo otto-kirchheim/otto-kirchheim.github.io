@@ -573,6 +573,38 @@ describe('autoSave', () => {
       expect(getResourceStatus('BZ').status).toBe('idle');
     });
 
+    it('schreibt wiederhergestellte Zeilen (undo-delete) sofort in localStorage', () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      // localStorage hat die Zeile nicht (wurde beim vorherigen AutoSave als 'deleted' ausgeschlossen)
+      Storage.set('dataBZ', []);
+
+      createMockTable(
+        'tableBZ',
+        { create: [], update: [], delete: [] },
+        [
+          {
+            _state: 'unchanged',
+            _id: 'bz-restored',
+            cells: {
+              _id: 'bz-restored',
+              beginB: '2025-03-10T10:00:00.000Z',
+              endeB: '2025-03-10T18:00:00.000Z',
+              pauseB: 0,
+            },
+          },
+        ],
+      );
+
+      scheduleAutoSave('BZ');
+
+      const stored = Storage.get<Array<{ _id: string }>>('dataBZ', { check: true });
+      expect(stored).toHaveLength(1);
+      expect(stored[0]._id).toBe('bz-restored');
+      expect(getResourceStatus('BZ').status).toBe('idle');
+      expect(mockBzBulk).not.toHaveBeenCalled();
+    });
+
     it('gibt zurück wenn keine Tabelle gefunden wird', async () => {
       // Kein table im DOM
       scheduleAutoSave('BZ');

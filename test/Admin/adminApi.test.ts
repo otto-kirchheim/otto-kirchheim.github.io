@@ -110,7 +110,14 @@ describe('Admin API', () => {
 
   describe('fetchCurrentAdminCapabilities', () => {
     it('super-admin erhält volle Berechtigungen', async () => {
-      mockSuccess({ _id: 'u1', userName: 'admin', role: 'super-admin', canEditVorgabenGeld: false, canEditProfileTemplates: false, canEditOwnTeamTemplatesOnly: true });
+      mockSuccess({
+        _id: 'u1',
+        userName: 'admin',
+        role: 'super-admin',
+        canEditVorgabenGeld: false,
+        canEditProfileTemplates: false,
+        canEditOwnTeamTemplatesOnly: true,
+      });
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(true);
       expect(result.canEditProfileTemplates).toBe(true);
@@ -118,7 +125,14 @@ describe('Admin API', () => {
     });
 
     it('team-admin mit gewährten Berechtigungen', async () => {
-      mockSuccess({ _id: 'u1', userName: 'ta', role: 'team-admin', canEditVorgabenGeld: true, canEditProfileTemplates: true, canEditOwnTeamTemplatesOnly: true });
+      mockSuccess({
+        _id: 'u1',
+        userName: 'ta',
+        role: 'team-admin',
+        canEditVorgabenGeld: true,
+        canEditProfileTemplates: true,
+        canEditOwnTeamTemplatesOnly: true,
+      });
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(true);
       expect(result.canEditProfileTemplates).toBe(true);
@@ -126,14 +140,28 @@ describe('Admin API', () => {
     });
 
     it('org-admin mit canEditProfileTemplates=false', async () => {
-      mockSuccess({ _id: 'u1', userName: 'oa', role: 'org-admin', canEditVorgabenGeld: true, canEditProfileTemplates: false, canEditOwnTeamTemplatesOnly: false });
+      mockSuccess({
+        _id: 'u1',
+        userName: 'oa',
+        role: 'org-admin',
+        canEditVorgabenGeld: true,
+        canEditProfileTemplates: false,
+        canEditOwnTeamTemplatesOnly: false,
+      });
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(true);
       expect(result.canEditProfileTemplates).toBe(false);
     });
 
     it('normaler Member erhält keine Berechtigungen', async () => {
-      mockSuccess({ _id: 'u1', userName: 'user', role: 'member', canEditVorgabenGeld: false, canEditProfileTemplates: false, canEditOwnTeamTemplatesOnly: false });
+      mockSuccess({
+        _id: 'u1',
+        userName: 'user',
+        role: 'member',
+        canEditVorgabenGeld: false,
+        canEditProfileTemplates: false,
+        canEditOwnTeamTemplatesOnly: false,
+      });
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(false);
       expect(result.canEditProfileTemplates).toBe(false);
@@ -251,11 +279,7 @@ describe('Admin API', () => {
     it('updateProfileTemplate sendet PUT und zeigt Snackbar', async () => {
       mockSuccess({ _id: 'tpl1', code: 'LST', name: 'Updated', active: false });
       await updateProfileTemplate('tpl1', { name: 'Updated', active: false });
-      expect(mockFetchRetry).toHaveBeenCalledWith(
-        'profile-templates/tpl1',
-        { name: 'Updated', active: false },
-        'PUT',
-      );
+      expect(mockFetchRetry).toHaveBeenCalledWith('profile-templates/tpl1', { name: 'Updated', active: false }, 'PUT');
       expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
     });
 

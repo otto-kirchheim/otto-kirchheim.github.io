@@ -79,8 +79,8 @@ registerAppStartTask(() => {
     ).length;
   };
 
-  const datetimeParser = (value: string): string => dayjs(value).format('DD.MM.YYYY, LT'),
-    timeZeroParser = (value: number): number | string => (!value ? '' : value),
+  const datetimeParser = (value: unknown): string => dayjs(value as string).format('DD.MM.YYYY, LT'),
+    timeZeroParser = (value: unknown): number | string => (!value ? '' : (value as number)),
     ftBZ: CustomTable<IDatenBZ> = createCustomTable<IDatenBZ>('tableBZ', {
       columns: [
         {

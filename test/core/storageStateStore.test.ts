@@ -37,6 +37,6 @@ describe('StorageStateStore', () => {
   it('stores and retrieves complex objects', () => {
     const data = { name: 'otto', value: 42 };
     store.set('VorgabenU', data as never);
-    expect(store.get('VorgabenU')).toEqual(data);
+    expect(store.get<typeof data>('VorgabenU')).toEqual(data);
   });
 });

@@ -100,7 +100,6 @@ describe('CustomSnackbar', () => {
       createSnackBar({ message: 'Test', timeout: false, status: '' });
       expect(document.querySelector('.CustomSnackbar__status')).toBeNull();
     });
-
   });
 
   // ─── Positionsklassen ────────────────────────────────────────────────────────
