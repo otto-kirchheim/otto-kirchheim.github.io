@@ -202,8 +202,9 @@ export function initAutoSaveEventListener(): void {
  * Wird als `onChange` Option beim createCustomTable übergeben.
  * Publiziert ein 'data:changed' Event — AutoSave reagiert via initAutoSaveEventListener.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function createOnChangeHandler(resource: TResourceKey): (table: CustomTable<any>) => void {
+export function createOnChangeHandler<T extends CustomTableTypes>(
+  resource: TResourceKey,
+): (table: CustomTable<T>) => void {
   return () => {
     if (!autoSaveEnabled) return;
     publishEvent('data:changed', { resource, action: 'update' });
@@ -227,11 +228,13 @@ export function scheduleAutoSave(resource: TResourceKey): void {
       const changes = table.rows.getChanges(false);
       const hasCreateOrUpdate = changes.create.length > 0 || changes.update.length > 0;
       if (!hasCreateOrUpdate) {
-        if (state.status === 'saved') return;
         if (state.timer) {
           clearTimeout(state.timer);
           state.timer = null;
         }
+        // Always sync localStorage even when no backend call is needed — e.g. after undo-delete
+        // restores an 'unchanged' row that was absent from storage due to a prior auto-save while deleted.
+        updateLocalStorage(resource, table);
         setStatus(resource, 'idle');
         return;
       }
@@ -306,9 +309,10 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     publishEvent('data:changed', { resource, action: 'update' });
 
     const allDocs = [...(result?.created ?? []), ...(result?.updated ?? [])];
-    const maxUpdatedAt = allDocs.reduce<string | null>((max, doc: { updatedAt?: string }) => {
-      if (!doc.updatedAt) return max;
-      return !max || doc.updatedAt > max ? doc.updatedAt : max;
+    const maxUpdatedAt = allDocs.reduce<string | null>((max, doc) => {
+      const d = doc as { updatedAt?: string };
+      if (!d.updatedAt) return max;
+      return !max || d.updatedAt > max ? d.updatedAt : max;
     }, null);
     if (maxUpdatedAt) {
       const storageKey = RESOURCE_STORAGE_MAP[resource];

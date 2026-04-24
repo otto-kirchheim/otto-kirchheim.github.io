@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../../class/CustomTable';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../interfaces';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
@@ -38,16 +38,19 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
     typeof table.rows?.getFilteredRows === 'function' ? table.rows.getFilteredRows() : rawRows;
   const filteredRows = Array.isArray(filteredRowsCandidate) ? filteredRowsCandidate : rawRows;
 
-  const allActiveRows = rawRows.filter(row => row._state !== 'deleted').map(row => row.cells as T);
-  const visibleRows = filteredRows.filter(row => row._state !== 'deleted').map(row => row.cells as T);
+  const toStorage = (row: Row<T>): T =>
+    row._state === 'deleted' ? { ...(row.cells as T), __localState: 'deleted' } : (row.cells as T);
+
+  const allRows = rawRows.map(toStorage);
+  const visibleRows = filteredRows.map(toStorage);
 
   const shouldMergeWithStoredYear =
     filteredRows.length < rawRows.length ||
-    allActiveRows.length === 0 ||
-    allActiveRows.every(row => isRowInActiveMonat(resource, row as CustomTableTypes, activeMonat));
+    allRows.length === 0 ||
+    allRows.every(row => isRowInActiveMonat(resource, row as CustomTableTypes, activeMonat));
 
   if (!shouldMergeWithStoredYear) {
-    return allActiveRows;
+    return allRows;
   }
 
   const existingRows = normalizeResourceRows<T>(Storage.get<unknown>(storageKey, { default: [] }));
