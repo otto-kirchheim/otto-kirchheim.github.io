@@ -35,7 +35,11 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   authApi: authApiMock,
 }));
 
-import { getPasskeyErrorMessage, guessPasskeyDeviceName, registerPasskeyWithResult } from '../../src/ts/infrastructure/tokenManagement/passkeys';
+import {
+  getPasskeyErrorMessage,
+  guessPasskeyDeviceName,
+  registerPasskeyWithResult,
+} from '../../src/ts/infrastructure/tokenManagement/passkeys';
 
 // ─── getPasskeyErrorMessage ──────────────────────────────────────────────────
 

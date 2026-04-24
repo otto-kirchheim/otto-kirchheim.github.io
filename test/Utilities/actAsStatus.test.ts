@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import Storage from '../../src/ts/infrastructure/storage/Storage';
-import { ACT_AS_STATUS_EVENT, getActAsState, notifyActAsStateChanged, updateActAsBanner } from '../../src/ts/infrastructure/ui/actAsStatus';
+import {
+  ACT_AS_STATUS_EVENT,
+  getActAsState,
+  notifyActAsStateChanged,
+  updateActAsBanner,
+} from '../../src/ts/infrastructure/ui/actAsStatus';
 
 describe('actAsStatus', () => {
   beforeEach(() => {

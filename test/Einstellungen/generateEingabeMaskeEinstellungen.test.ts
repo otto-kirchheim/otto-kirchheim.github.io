@@ -74,11 +74,8 @@ describe('msToSliderPosition', () => {
 // ─── Roundtrip ───────────────────────────────────────────────────────────────
 
 describe('sliderPositionToMs / msToSliderPosition Roundtrip', () => {
-  it.each([0, 5, 9, 10, 15, 19, 22, 24] as const)(
-    'Position %i bleibt nach Roundtrip gleich',
-    (pos: number) => {
-      const ms = sliderPositionToMs(pos);
-      expect(msToSliderPosition(ms)).toBe(pos);
-    },
-  );
+  it.each([0, 5, 9, 10, 15, 19, 22, 24] as const)('Position %i bleibt nach Roundtrip gleich', (pos: number) => {
+    const ms = sliderPositionToMs(pos);
+    expect(msToSliderPosition(ms)).toBe(pos);
+  });
 });

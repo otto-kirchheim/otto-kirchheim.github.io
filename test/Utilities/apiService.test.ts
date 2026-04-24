@@ -152,7 +152,9 @@ describe('apiService', () => {
     });
 
     it('getPasskeys ruft GET auth/passkeys auf', async () => {
-      mockApiSuccess([{ credentialId: 'c1', name: 'Laptop', deviceType: 'platform', backedUp: false, createdAt: '2025-01-01' }]);
+      mockApiSuccess([
+        { credentialId: 'c1', name: 'Laptop', deviceType: 'platform', backedUp: false, createdAt: '2025-01-01' },
+      ]);
       const result = await authApi.getPasskeys();
       expect(mockFetchRetry).toHaveBeenCalledWith('auth/passkeys', undefined, 'GET');
       expect(result).toHaveLength(1);
@@ -191,21 +193,13 @@ describe('apiService', () => {
     it('resetPassword sendet Token (URL-encoded) und neues Passwort', async () => {
       mockApiSuccess({});
       await authApi.resetPassword('tok/en', 'newPass');
-      expect(mockFetchRetry).toHaveBeenCalledWith(
-        'auth/reset-password/tok%2Fen',
-        { newPassword: 'newPass' },
-        'POST',
-      );
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/reset-password/tok%2Fen', { newPassword: 'newPass' }, 'POST');
     });
 
     it('resendVerificationEmail sendet optionale E-Mail', async () => {
       mockApiSuccess({});
       await authApi.resendVerificationEmail('user@test.de');
-      expect(mockFetchRetry).toHaveBeenCalledWith(
-        'auth/resend-verification-email',
-        { email: 'user@test.de' },
-        'POST',
-      );
+      expect(mockFetchRetry).toHaveBeenCalledWith('auth/resend-verification-email', { email: 'user@test.de' }, 'POST');
     });
   });
 
