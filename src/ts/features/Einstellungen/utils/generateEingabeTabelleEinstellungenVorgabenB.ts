@@ -12,18 +12,20 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
 }) {
   VorgabenB ??= Storage.check('VorgabenU') ? Storage.get<IVorgabenU>('VorgabenU', true).vorgabenB : {};
 
-  const trueParser = (value: boolean | null): string => (value ? 'Ja' : 'Nein');
+  const trueParser = (value: unknown): string => (value ? 'Ja' : 'Nein');
 
-  const weekdayParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruch = true): string => {
+  const weekdayParser = (value: unknown, option: unknown = true): string => {
+    const v = value as { tag: number; zeit: string; Nwoche?: boolean };
+    const umbruch = option !== false;
     const separator = umbruch ? '<br/>' : ' | ';
     const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    const weekday = weekdays[value.tag % 7] ?? '-';
-    const week = value.tag === 0 && value.Nwoche ? 'W1' : value.Nwoche ? 'W2' : 'W1';
-    return `${weekday} ${week}${separator}${value.zeit || '-'}`;
+    const weekday = weekdays[v.tag % 7] ?? '-';
+    const week = v.tag === 0 && v.Nwoche ? 'W1' : v.Nwoche ? 'W2' : 'W1';
+    return `${weekday} ${week}${separator}${v.zeit || '-'}`;
   };
 
-  const nachtRangeParser = (value: { tag: number; zeit: string; Nwoche?: boolean }, umbruch = true): string => {
-    return weekdayParser(value, umbruch);
+  const nachtRangeParser = (value: unknown, option: unknown = true): string => {
+    return weekdayParser(value, option);
   };
 
   const ftVE = createCustomTable('tableVE', {

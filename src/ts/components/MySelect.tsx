@@ -36,7 +36,7 @@ const MySelect: FunctionalComponent<TMySelect> = ({
         ref={myRef}
         id={id}
         className="form-select validate"
-        onChange={changeHandler}
+        onInput={changeHandler}
         value={value}
         {...selectProps}
       >

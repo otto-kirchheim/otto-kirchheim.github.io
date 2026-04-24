@@ -1,9 +1,7 @@
-import type { FunctionalComponent } from 'preact';
 import { MyButton } from '.';
-import type { Row } from '../class/CustomTable';
+import type { CustomTableTypes, Row } from '../class/CustomTable';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MyShowFooter: FunctionalComponent<{ row: Row<any> }> = ({ row }) => {
+function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
   const editClickHandler = () => {
     row.CustomTable.options.editing.editRow(row);
   };
@@ -19,5 +17,5 @@ const MyShowFooter: FunctionalComponent<{ row: Row<any> }> = ({ row }) => {
       <MyButton className="btn btn-secondary" text="Schließen" dataBsDismiss="modal" />
     </div>
   );
-};
+}
 export default MyShowFooter;

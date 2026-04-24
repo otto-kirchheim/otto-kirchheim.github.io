@@ -14,17 +14,18 @@ import download from '../../infrastructure/data/download';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 registerAppStartTask(() => {
-  const tagParser = (value: string) => {
-      const d = dayjs(value);
-      return d.isValid() ? d.format('dd DD.MM.') : value;
+  const tagParser = (value: unknown) => {
+      const s = value as string;
+      const d = dayjs(s);
+      return d.isValid() ? d.format('dd DD.MM.') : s;
     },
-    berechnenParser = (value: boolean): string => {
+    berechnenParser = (value: unknown): string => {
       return `<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"${
         value ? ' checked' : ''
       }></div>`;
     },
-    schichtParser = (value: string): string => {
-      switch (value) {
+    schichtParser = (value: unknown): string => {
+      switch (value as string) {
         case 'T':
           return 'Tag';
         case 'N':

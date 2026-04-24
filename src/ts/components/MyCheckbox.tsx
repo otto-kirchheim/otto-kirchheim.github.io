@@ -20,14 +20,7 @@ const MyCheckbox: FunctionalComponent<TMyCheckbox> = ({
 }) => {
   return (
     <div className={className}>
-      <input
-        type="checkbox"
-        className="form-check-input"
-        id={id}
-        onChange={changeHandler}
-        ref={myRef}
-        {...inputProps}
-      />
+      <input type="checkbox" className="form-check-input" id={id} onInput={changeHandler} ref={myRef} {...inputProps} />
       <label className="form-check-label" htmlFor={id}>
         {children}
       </label>
