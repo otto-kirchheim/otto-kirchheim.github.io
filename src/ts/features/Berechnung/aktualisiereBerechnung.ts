@@ -7,7 +7,7 @@ import type {
   IDatenN,
   IVorgabenBerechnung,
   IVorgabenBerechnungMonat,
-} from '../../interfaces';
+} from '../../core/types';
 import { default as normalizeResourceRows } from '../../infrastructure/data/normalizeResourceRows';
 import Storage from '../../infrastructure/storage/Storage';
 import dayjs from '../../infrastructure/date/configDayjs';

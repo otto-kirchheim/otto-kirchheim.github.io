@@ -1,6 +1,6 @@
 import type { Column, CustomTableTypes, Row } from '../../../infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '../../../core/types';
 
 const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(column: Column<T>, row: Row<T>) => {
   if (column.editing) return;

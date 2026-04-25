@@ -1,4 +1,4 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '../../../types';
 import { default as Storage } from '../../../../infrastructure/storage/Storage';
 import dayjs from '../../../../infrastructure/date/configDayjs';
 import type { LoadedYearData } from '../../../../infrastructure/api/apiService';

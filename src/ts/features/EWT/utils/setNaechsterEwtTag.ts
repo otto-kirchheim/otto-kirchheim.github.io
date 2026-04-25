@@ -1,5 +1,5 @@
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { IMonatsDaten } from '../../../interfaces';
+import type { IMonatsDaten } from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import getEwtDaten from './getEwtDaten';

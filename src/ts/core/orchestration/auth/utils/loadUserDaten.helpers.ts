@@ -1,4 +1,4 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../types';
 import {
   getMonatFromBE,
   getMonatFromBZ,

@@ -9,7 +9,7 @@ import toggleBereitschaftsEigeneWerte from './toggleBereitschaftsEigeneWerte';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
 import type { CustomTable } from '../../../infrastructure/table/CustomTable';
-import type { IDatenBE, IDatenBZ } from '../../../interfaces';
+import type { IDatenBE, IDatenBZ } from '../../../core/types';
 import persistTableData from '../../../infrastructure/data/persistTableData';
 
 const persistBereitschaftsZeitraumTableData = (ft: CustomTable<IDatenBZ>) => persistTableData('BZ', ft);

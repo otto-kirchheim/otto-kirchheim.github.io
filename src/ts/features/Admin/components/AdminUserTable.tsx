@@ -7,7 +7,7 @@ import {
   setActAsUser,
   type AdminUserRow,
 } from '../utils/api';
-import type { TUserRole } from '../../../interfaces';
+import type { TUserRole } from '../../../core/types';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { loadUserDaten } from '../../../core/orchestration/auth/utils';
 import Storage from '../../../infrastructure/storage/Storage';

@@ -1,7 +1,7 @@
 import type { JSX } from 'preact';
 import type { Column, Row } from '../../../infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenN } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenN } from '../../../core/types';
 
 const getColumn = (row: Row<IDatenN>, columnName: string): Column<IDatenN> => {
   const column = row.columns.array.find(column => column.name === columnName);

@@ -5,7 +5,7 @@ import { CustomTable, Row } from '../../../infrastructure/table/CustomTable';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import { getEwtDaten } from '../../EWT/utils';
-import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '../../../core/types';
 import Storage from '../../../infrastructure/storage/Storage';
 import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';

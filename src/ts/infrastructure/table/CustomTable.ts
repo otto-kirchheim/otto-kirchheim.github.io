@@ -6,7 +6,7 @@
 import './customtable.css';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import type { CustomHTMLTableElement } from '../../interfaces/index.js';
+import type { CustomHTMLTableElement } from '../../core/types/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CustomTableTypes = Record<string, unknown>;

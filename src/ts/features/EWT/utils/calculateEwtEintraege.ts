@@ -1,5 +1,5 @@
 import type { Duration } from 'dayjs/plugin/duration';
-import type { IDatenEWT, IVorgabenE, IVorgabenU } from '../../../interfaces';
+import type { IDatenEWT, IVorgabenE, IVorgabenU } from '../../../core/types';
 import { default as getDurationFromTime } from '../../../infrastructure/date/getDurationFromTime';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import calculateBuchungstagEwt from '../../../infrastructure/date/calculateBuchungstagEwt';

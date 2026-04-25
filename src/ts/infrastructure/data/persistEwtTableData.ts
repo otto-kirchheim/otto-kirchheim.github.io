@@ -1,4 +1,4 @@
-import type { IDatenEWT } from '../../interfaces';
+import type { IDatenEWT } from '../../core/types';
 import type { CustomTable } from '../table/CustomTable';
 import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';

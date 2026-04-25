@@ -1,6 +1,6 @@
 import { Row } from '../../../../infrastructure/table/CustomTable';
 import type { CustomTableTypes } from '../../../../infrastructure/table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../../interfaces';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../types';
 import type { TStorageData } from '../../../../infrastructure/storage/Storage';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';

@@ -1,5 +1,5 @@
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../interfaces';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../core/types';
 import {
   getMonatFromBE,
   getMonatFromBZ,

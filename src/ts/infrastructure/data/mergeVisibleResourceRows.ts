@@ -1,5 +1,5 @@
 import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../core/types';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
 import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';

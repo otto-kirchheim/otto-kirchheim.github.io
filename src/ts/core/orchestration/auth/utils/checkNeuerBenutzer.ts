@@ -7,7 +7,7 @@ import { registerPasskeyWithResult } from '../../../../infrastructure/tokenManag
 import { getPasswordValidationMessage } from '../../../../infrastructure/validation/passwordValidation';
 import { resetTokenState } from '../../../../infrastructure/tokenManagement/tokenErneuern';
 import userLoginSuccess from './userLoginSuccess';
-import type { CustomHTMLDivElement } from '../../../../interfaces';
+import type { CustomHTMLDivElement } from '../../../types';
 
 async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   if (typeof PublicKeyCredential === 'undefined') {

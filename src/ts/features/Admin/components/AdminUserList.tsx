@@ -9,7 +9,7 @@ import {
   deleteUser,
   type AdminUserRow,
 } from '../utils/api';
-import type { TUserRole } from '../../../interfaces';
+import type { TUserRole } from '../../../core/types';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { OeTagInput } from './OeTagInput';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';

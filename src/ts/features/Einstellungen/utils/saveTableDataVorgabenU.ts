@@ -1,4 +1,4 @@
-import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../interfaces';
+import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../core/types';
 import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { default as tableToArray } from '../../../infrastructure/data/tableToArray';

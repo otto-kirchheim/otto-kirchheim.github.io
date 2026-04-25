@@ -1,6 +1,6 @@
 import type { Row } from '../../../infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '../../../interfaces';
+import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '../../../core/types';
 
 const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, falseparser?: false) => {
   const column = row.columns.array.find(column => column.name === columnName);

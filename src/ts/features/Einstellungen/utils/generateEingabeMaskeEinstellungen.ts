@@ -9,7 +9,7 @@ import type {
   IVorgabenUPers,
   IVorgabenUaZ,
   IVorgabenUvorgabenB,
-} from '../../../interfaces';
+} from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { setupPersValidation } from '../../../infrastructure/validation/addressValidation';
 

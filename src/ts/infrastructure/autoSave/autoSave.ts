@@ -11,7 +11,7 @@ import { createSnackBar } from '../ui/CustomSnackbar';
 import { publishEvent } from '../../core';
 import { onEvent } from '../../core/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
-import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../interfaces';
+import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../core/types';
 import { profileApi } from '../api/apiService';
 import Storage from '../storage/Storage';
 import type { TStorageData } from '../storage/Storage';

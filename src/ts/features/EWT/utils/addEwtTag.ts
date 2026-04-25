@@ -1,5 +1,5 @@
 import type { CustomTable } from '../../../infrastructure/table/CustomTable';
-import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../../core/types';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag, persistEwtTableData } from '.';

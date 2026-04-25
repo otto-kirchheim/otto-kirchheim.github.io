@@ -1,7 +1,7 @@
 import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '../../infrastructure/table/CustomTable';
 import { registerAppStartTask } from '../../core';
-import type { IVorgabenU } from '../../interfaces';
+import type { IVorgabenU } from '../../core/types';
 import { default as buttonDisable } from '../../infrastructure/ui/buttonDisable';
 import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
 import { isEwtInMonat } from '../../infrastructure/date/getMonatFromItem';

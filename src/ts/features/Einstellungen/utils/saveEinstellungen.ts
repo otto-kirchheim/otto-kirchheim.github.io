@@ -1,5 +1,5 @@
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../../interfaces';
+import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../../core/types';
 import {
   PERS_FIELD_LABELS,
   setupPersValidation,

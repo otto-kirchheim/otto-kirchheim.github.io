@@ -13,7 +13,7 @@ import type {
 } from '@simplewebauthn/browser';
 import { unwrapEnvelope } from '../../core';
 import type { ApiHttpResponse } from '../../core';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../../core/types';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
 import Storage from '../storage/Storage';

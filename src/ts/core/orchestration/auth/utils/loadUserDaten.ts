@@ -11,7 +11,7 @@ import type {
   IDatenEWT,
   IDatenN,
   UserDatenServer,
-} from '../../../../interfaces';
+} from '../../../types';
 import { flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '../../../../infrastructure/autoSave/autoSave';
 import { default as Storage } from '../../../../infrastructure/storage/Storage';
 import { default as buttonDisable } from '../../../../infrastructure/ui/buttonDisable';

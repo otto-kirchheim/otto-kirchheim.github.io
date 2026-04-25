@@ -1,4 +1,4 @@
-import type { IDatenEWT } from '../../../interfaces';
+import type { IDatenEWT } from '../../../core/types';
 import dayjs from '../../../infrastructure/date/configDayjs';
 
 export default function getEwtWindow(entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null {

@@ -1,4 +1,4 @@
-import type { IDatenEWT, TResourceKey } from '../../interfaces';
+import type { IDatenEWT, TResourceKey } from '../types';
 
 /**
  * Typed event channel definitions.

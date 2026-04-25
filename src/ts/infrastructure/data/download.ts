@@ -12,7 +12,7 @@ import type {
   IVorgabenGeld,
   IVorgabenGeldType,
   IVorgabenU,
-} from '../../interfaces';
+} from '../../core/types';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';

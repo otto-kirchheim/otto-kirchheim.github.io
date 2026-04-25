@@ -2,7 +2,7 @@ import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
 import type { CustomTable } from '../../infrastructure/table/CustomTable';
 import { createCustomTable } from '../../infrastructure/table/CustomTable';
 import { registerAppStartTask } from '../../core';
-import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../../interfaces';
+import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../../core/types';
 import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
 import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
 import { getMonatFromBE, getMonatFromBZ } from '../../infrastructure/date/getMonatFromItem';

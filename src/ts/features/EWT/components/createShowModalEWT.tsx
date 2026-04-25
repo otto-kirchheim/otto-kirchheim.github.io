@@ -1,6 +1,6 @@
 import type { Column, Row } from '../../../infrastructure/table/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenEWT } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenEWT } from '../../../core/types';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { persistEwtTableData } from '../utils';
 

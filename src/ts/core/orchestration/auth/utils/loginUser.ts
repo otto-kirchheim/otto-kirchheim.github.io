@@ -4,7 +4,7 @@ import { default as clearLoading } from '../../../../infrastructure/ui/clearLoad
 import { default as setLoading } from '../../../../infrastructure/ui/setLoading';
 import { authApi } from '../../../../infrastructure/api/apiService';
 import { resetTokenState } from '../../../../infrastructure/tokenManagement/tokenErneuern';
-import type { CustomHTMLDivElement } from '../../../../interfaces';
+import type { CustomHTMLDivElement } from '../../../types';
 
 export default async function loginUser(
   modal: CustomHTMLDivElement,

@@ -8,7 +8,7 @@ import type {
   IDatenBZ,
   IVorgabenU,
   IVorgabenUvorgabenB,
-} from '../../../interfaces';
+} from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';

@@ -5,8 +5,8 @@
  * Die Konvertierung passiert nur an der API-Grenze (beim Laden und Speichern).
  */
 
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../interfaces';
-import type { IVorgabenU, IVorgabenUServer } from '../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../core/types';
+import type { IVorgabenU, IVorgabenUServer } from '../../core/types';
 import dayjs from '../date/configDayjs';
 
 // ─── Typen für Backend-Dokumente ─────────────────────────

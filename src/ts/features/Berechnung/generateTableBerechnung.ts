@@ -1,4 +1,4 @@
-import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '../../interfaces';
+import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '../../core/types';
 import { default as Storage } from '../../infrastructure/storage/Storage';
 import { default as clearLoading } from '../../infrastructure/ui/clearLoading';
 export default function generateTableBerechnung(

@@ -1,5 +1,5 @@
 import type { FunctionalComponent } from 'preact';
-import type { TMyModal } from '../interfaces';
+import type { TMyModal } from '../core/types';
 import { MyModalHeader, MyEditorFooter } from '.';
 
 const MyDivModal: FunctionalComponent<Omit<TMyModal<HTMLDivElement>, 'myRef' | 'onSubmit'>> = ({

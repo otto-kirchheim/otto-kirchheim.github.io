@@ -1,4 +1,4 @@
-import type { IDatenEWT, IEwtQueryOptions, IMonatsDaten } from '../../../interfaces';
+import type { IDatenEWT, IEwtQueryOptions, IMonatsDaten } from '../../../core/types';
 import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
 import { isEwtInMonat } from '../../../infrastructure/date/getMonatFromItem';
 import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';

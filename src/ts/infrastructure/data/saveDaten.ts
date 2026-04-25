@@ -3,7 +3,7 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type { IVorgabenU, TResourceKey } from '../../interfaces';
+import type { IVorgabenU, TResourceKey } from '../../core/types';
 import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';

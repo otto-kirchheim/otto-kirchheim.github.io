@@ -1,5 +1,5 @@
 import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
-import type { TResourceKey } from '../../interfaces';
+import type { TResourceKey } from '../../core/types';
 import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';
 import dayjs from '../date/configDayjs';

@@ -5,7 +5,7 @@ import type { Column } from '../../../infrastructure/table/CustomTable';
 import { CustomTable, Row } from '../../../infrastructure/table/CustomTable';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenBZ } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenBZ } from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';

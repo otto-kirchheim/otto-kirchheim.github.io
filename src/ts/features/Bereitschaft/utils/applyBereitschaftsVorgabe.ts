@@ -1,4 +1,4 @@
-import type { IVorgabenUvorgabenB } from '../../../interfaces';
+import type { IVorgabenUvorgabenB } from '../../../core/types';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 

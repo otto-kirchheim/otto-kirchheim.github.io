@@ -1,6 +1,6 @@
 import { selectYear } from '../../../features/Einstellungen/utils';
 import { registerAppStartTask } from '../../';
-import type { IVorgabenU } from '../../../interfaces';
+import type { IVorgabenU } from '../../types';
 import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
 import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
 import Storage from '../../../infrastructure/storage/Storage';

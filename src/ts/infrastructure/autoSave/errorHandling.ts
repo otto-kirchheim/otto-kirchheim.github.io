@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import type { BulkErrorEntry } from '../api/apiService';
-import type { TResourceKey } from '../../interfaces';
+import type { TResourceKey } from '../../core/types';
 import type { RowErrorMatch } from './savePipeline';
 
 export function markErrorRows(

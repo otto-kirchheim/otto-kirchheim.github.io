@@ -2,7 +2,7 @@ import { FetchRetry } from '../../../infrastructure/api/FetchRetry';
 import Storage from '../../../infrastructure/storage/Storage';
 import { notifyActAsStateChanged } from '../../../infrastructure/ui/actAsStatus';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { TUserRole } from '../../../interfaces';
+import type { TUserRole } from '../../../core/types';
 
 type ApiResponse<T> = {
   success: boolean;

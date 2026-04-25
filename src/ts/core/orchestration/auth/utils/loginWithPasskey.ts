@@ -6,7 +6,7 @@ import { default as setLoading } from '../../../../infrastructure/ui/setLoading'
 import { authApi } from '../../../../infrastructure/api/apiService';
 import { getPasskeyErrorMessage } from '../../../../infrastructure/tokenManagement/passkeys';
 import { resetTokenState } from '../../../../infrastructure/tokenManagement/tokenErneuern';
-import type { CustomHTMLDivElement } from '../../../../interfaces';
+import type { CustomHTMLDivElement } from '../../../types';
 
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');

@@ -10,7 +10,7 @@ import type {
   IDatenEWT,
   IDatenN,
   UserDatenServer,
-} from '../../../../interfaces';
+} from '../../../types';
 import { getNebengeldDaten } from '../../../../features/Neben/utils';
 import {
   getMonatFromBE,

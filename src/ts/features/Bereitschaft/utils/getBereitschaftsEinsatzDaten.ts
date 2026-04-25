@@ -1,4 +1,4 @@
-import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '../../../interfaces';
+import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '../../../core/types';
 import { filterByMonat, getMonatFromBE } from '../../../infrastructure/date/getMonatFromItem';
 import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
 import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';

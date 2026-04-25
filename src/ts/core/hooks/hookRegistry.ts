@@ -1,4 +1,4 @@
-import type { IVorgabenU } from '../../interfaces';
+import type { IVorgabenU } from '../types';
 
 export interface HookMap {
   'auth:failure': () => void;

@@ -1,4 +1,4 @@
-import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../../interfaces';
+import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { publishEvent } from '../../../core';
 

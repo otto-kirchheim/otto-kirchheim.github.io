@@ -1,8 +1,8 @@
 import { createRef } from 'preact';
 import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
-import type { IDatenEWT } from '../../../interfaces';
-import { type IVorgabenU, type IVorgabenUfZ } from '../../../interfaces';
+import type { IDatenEWT } from '../../../core/types';
+import { type IVorgabenU, type IVorgabenUfZ } from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';

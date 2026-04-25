@@ -2,7 +2,7 @@ import { saveEinstellungen } from '.';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '../../../infrastructure/table/CustomTable';
-import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../interfaces';
+import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../core/types';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '../components';

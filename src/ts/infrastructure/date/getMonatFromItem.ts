@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TEwtFilter } from '../../interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TEwtFilter } from '../../core/types';
 import dayjs from './configDayjs';
 import Storage from '../storage/Storage';
 

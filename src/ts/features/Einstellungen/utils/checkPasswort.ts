@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLDivElement } from '../../../interfaces';
+import type { CustomHTMLDivElement } from '../../../core/types';
 import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
 import { default as setLoading } from '../../../infrastructure/ui/setLoading';
 import { authApi } from '../../../infrastructure/api/apiService';

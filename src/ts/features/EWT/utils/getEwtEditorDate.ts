@@ -1,4 +1,4 @@
-import type { IDatenEWT } from '../../../interfaces';
+import type { IDatenEWT } from '../../../core/types';
 import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
 import dayjs from '../../../infrastructure/date/configDayjs';
 
