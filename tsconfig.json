@@ -1,41 +1,40 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"useDefineForClassFields": true,
-		"module": "ESNext",
-		"lib": ["ESNext", "DOM"],
-		"skipLibCheck": true,
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "skipLibCheck": true,
 
-		"moduleResolution": "bundler",
-		"allowImportingTsExtensions": true,
-		"resolveJsonModule": true,
-		"isolatedModules": true,
-		"esModuleInterop": true,
-		"types": ["bun-types"],
-		"noEmit": true,
-		"jsx": "react-jsx",
-		"jsxImportSource": "preact",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "types": ["bun-types"],
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
 
-		"strict": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
-		"noImplicitReturns": true,
-		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
 
-		"baseUrl": ".",
-		"paths": {
-			"@/components": ["src/ts/components/index.ts"],
-			"@/components/*": ["src/ts/components/*"],
-			"@/core": ["src/ts/core/index.ts"],
-			"@/core/*": ["src/ts/core/*"],
-			"@/types": ["src/ts/core/types/index.ts"],
-			"@/types/*": ["src/ts/core/types/*"],
-			"@/infrastructure": ["src/ts/infrastructure/index.ts"],
-			"@/infrastructure/*": ["src/ts/infrastructure/*"]
-		}
-	},
-	"include": ["src", "test", "scripts"],
-	"exclude": ["src/public-src"],
-	"references": [{ "path": "./tsconfig.node.json" }]
+    "paths": {
+      "@/components": ["./src/ts/components/index.ts"],
+      "@/components/*": ["./src/ts/components/*"],
+      "@/core": ["./src/ts/core/index.ts"],
+      "@/core/*": ["./src/ts/core/*"],
+      "@/types": ["./src/ts/core/types/index.ts"],
+      "@/types/*": ["./src/ts/core/types/*"],
+      "@/infrastructure": ["./src/ts/infrastructure/index.ts"],
+      "@/infrastructure/*": ["./src/ts/infrastructure/*"]
+    }
+  },
+  "include": ["src", "test", "scripts"],
+  "exclude": ["src/public-src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }
