@@ -9,7 +9,7 @@ const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
   mockReconnectHandler: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
 import setOffline from '../../src/ts/infrastructure/ui/setOffline';

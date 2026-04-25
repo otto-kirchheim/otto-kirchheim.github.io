@@ -13,7 +13,7 @@ vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
   getServerUrl: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: mockCreateSnackBar,
 }));
 

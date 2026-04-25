@@ -1,5 +1,5 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import { createCustomTable } from '../../class/CustomTable';
+import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '../../infrastructure/table/CustomTable';
 import { registerAppStartTask } from '../../core';
 import type { IVorgabenU } from '../../interfaces';
 import { default as buttonDisable } from '../../infrastructure/ui/buttonDisable';

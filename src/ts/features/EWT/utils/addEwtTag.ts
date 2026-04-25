@@ -1,6 +1,6 @@
-import type { CustomTable } from '../../../class/CustomTable';
+import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../../interfaces';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import dayjs from '../../../infrastructure/date/configDayjs';
 import { calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag, persistEwtTableData } from '.';
 

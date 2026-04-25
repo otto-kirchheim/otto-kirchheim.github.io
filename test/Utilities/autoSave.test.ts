@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createCustomTable } from '../../src/ts/class/CustomTable';
+import { createCustomTable } from '../../src/ts/infrastructure/table/CustomTable';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -26,7 +26,7 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },

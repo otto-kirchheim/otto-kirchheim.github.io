@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { createCustomTable } from '../src/ts/class/CustomTable';
+import { createCustomTable } from '../src/ts/infrastructure/table/CustomTable';
 import type { IDaten } from '../src/ts/interfaces/IDaten';
 import type { IVorgabenBerechnung } from '../src/ts/interfaces/IVorgabenBerechnungMonat';
 import type { IVorgabenGeld } from '../src/ts/interfaces/IVorgabenGeldType';

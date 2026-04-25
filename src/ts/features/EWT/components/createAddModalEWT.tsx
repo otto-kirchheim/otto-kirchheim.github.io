@@ -1,5 +1,5 @@
 import { createRef } from 'preact';
-import type { CustomTable } from '../../../class/CustomTable';
+import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import type { IDatenEWT } from '../../../interfaces';
 import { type IVorgabenU, type IVorgabenUfZ } from '../../../interfaces';

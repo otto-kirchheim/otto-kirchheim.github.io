@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createSnackBar } from '../../src/ts/class/CustomSnackbar';
+import { createSnackBar } from '../../src/ts/infrastructure/ui/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/interfaces';
 import Storage from '../../src/ts/infrastructure/storage/Storage'; // Import Storage directly
 import dayjs from '../../src/ts/infrastructure/date/configDayjs'; // Import configured dayjs
@@ -15,7 +15,7 @@ vi.mock('file-saver', () => ({
   saveAs: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 

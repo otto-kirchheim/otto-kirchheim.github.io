@@ -7,10 +7,10 @@
  * - Einstellungen (UserProfile) werden ebenfalls automatisch gespeichert
  */
 
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import { publishEvent } from '../../core';
 import { onEvent } from '../../core/events/appEvents';
-import type { CustomTable, CustomTableTypes, TableChanges } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '../../interfaces';
 import { profileApi } from '../api/apiService';
 import Storage from '../storage/Storage';

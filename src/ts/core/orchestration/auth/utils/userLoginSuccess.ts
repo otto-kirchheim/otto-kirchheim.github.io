@@ -1,5 +1,5 @@
 import { selectYear } from '../../../../features/Einstellungen/utils';
-import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
 import Storage from '../../../../infrastructure/storage/Storage';
 import { default as setLoading } from '../../../../infrastructure/ui/setLoading';
 import { updateActAsBanner } from '../../../../infrastructure/ui/actAsStatus';

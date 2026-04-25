@@ -1,6 +1,6 @@
 import { createRef } from 'preact';
-import type { CustomTable } from '../../../class/CustomTable';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import type { CustomTable } from '../../../infrastructure/table/CustomTable';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../../interfaces';

@@ -1,5 +1,5 @@
 import type { JSX } from 'preact';
-import type { Column, Row } from '../../../class/CustomTable';
+import type { Column, Row } from '../../../infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
 import type { CustomHTMLDivElement, IDatenN } from '../../../interfaces';
 

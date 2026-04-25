@@ -35,7 +35,7 @@ const {
 vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
 vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
 vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,

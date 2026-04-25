@@ -1,5 +1,5 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '../../../../infrastructure/ui/confirmDialog';
 import { default as clearLoading } from '../../../../infrastructure/ui/clearLoading';
 import { authApi } from '../../../../infrastructure/api/apiService';

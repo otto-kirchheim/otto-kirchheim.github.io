@@ -3,7 +3,7 @@ import { publishEvent } from '../../..';
 import { aktualisiereBerechnung } from '../../../../features/Berechnung';
 import generateTableBerechnung from '../../../../features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
-import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
 import type {
   CustomHTMLTableElement,
   IDatenBE,

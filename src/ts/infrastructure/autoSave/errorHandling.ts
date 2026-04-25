@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import type { BulkErrorEntry } from '../api/apiService';
 import type { TResourceKey } from '../../interfaces';
 import type { RowErrorMatch } from './savePipeline';

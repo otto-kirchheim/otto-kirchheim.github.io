@@ -5,7 +5,7 @@ import { default as saveDaten } from '../../infrastructure/data/saveDaten';
 import { setAutoSaveEnabled, setAutoSaveDelay } from '../../infrastructure/autoSave/autoSave';
 import { authApi } from '../../infrastructure/api/apiService';
 import { confirmDialog } from '../../infrastructure/ui/confirmDialog';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
 import { createModalChangePassword } from './components';
 import {
   logoutUser,

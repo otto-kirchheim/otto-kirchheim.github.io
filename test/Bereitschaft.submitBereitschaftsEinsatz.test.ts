@@ -25,7 +25,7 @@ vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
   persistBereitschaftsEinsatzTableData: persistBereitschaftsEinsatzTableDataMock,
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

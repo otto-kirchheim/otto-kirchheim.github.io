@@ -4,7 +4,7 @@ const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => 
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

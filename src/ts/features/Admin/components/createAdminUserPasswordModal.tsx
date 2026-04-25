@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../../components';
 import { updateUserPassword } from '../utils/api';
 

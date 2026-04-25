@@ -1,5 +1,5 @@
-import type { CustomTableTypes, Row } from '../../class/CustomTable';
-import { CustomTable } from '../../class/CustomTable';
+import type { CustomTableTypes, Row } from '../table/CustomTable';
+import { CustomTable } from '../table/CustomTable';
 import type { CustomHTMLTableElement } from '../../interfaces';
 
 export default function tableToArray<T extends CustomTableTypes>(ft: CustomTable<T> | string): T[] {

@@ -12,7 +12,7 @@ const { createSnackBarMock, buttonDisableMock, dateStorageMock } = (
 }));
 
 async function loadConfirmDeleteAllRows(): Promise<ConfirmDeleteAllRows> {
-  mock.module('../../src/ts/class/CustomSnackbar', () => ({
+  mock.module('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
     createSnackBar: createSnackBarMock,
   }));
   mock.module('../../src/ts/infrastructure/ui/buttonDisable', () => ({

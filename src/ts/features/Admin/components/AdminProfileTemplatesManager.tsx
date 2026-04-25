@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import {

@@ -1,6 +1,6 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomTable } from '../../class/CustomTable';
-import { createCustomTable } from '../../class/CustomTable';
+import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
+import type { CustomTable } from '../../infrastructure/table/CustomTable';
+import { createCustomTable } from '../../infrastructure/table/CustomTable';
 import { registerAppStartTask } from '../../core';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../../interfaces';
 import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';

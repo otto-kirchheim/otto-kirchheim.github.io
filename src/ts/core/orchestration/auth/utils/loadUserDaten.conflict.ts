@@ -1,5 +1,5 @@
-import { Row } from '../../../../class/CustomTable';
-import type { CustomTableTypes } from '../../../../class/CustomTable';
+import { Row } from '../../../../infrastructure/table/CustomTable';
+import type { CustomTableTypes } from '../../../../infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../../interfaces';
 import type { TStorageData } from '../../../../infrastructure/storage/Storage';
 import dayjs from 'dayjs';

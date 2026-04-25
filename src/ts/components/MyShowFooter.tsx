@@ -1,5 +1,5 @@
 import { MyButton } from '.';
-import type { CustomTableTypes, Row } from '../class/CustomTable';
+import type { CustomTableTypes, Row } from '../infrastructure/table/CustomTable';
 
 function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
   const editClickHandler = () => {

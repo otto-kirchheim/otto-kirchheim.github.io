@@ -1,7 +1,7 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
 import { ZULAGEN_CATALOG } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
-import { CustomTable } from '../../../class/CustomTable';
+import { CustomTable } from '../../../infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '../../../infrastructure/date/holidayRegion';
 import type {
   CustomHTMLTableElement,

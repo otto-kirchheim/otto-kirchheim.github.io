@@ -12,7 +12,7 @@ vi.mock('../../../src/ts/infrastructure/api/apiService', () => ({
   authApi: { resendVerificationEmail: resendVerificationEmailMock },
 }));
 
-vi.mock('../../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

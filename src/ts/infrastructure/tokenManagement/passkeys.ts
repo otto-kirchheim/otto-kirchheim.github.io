@@ -1,5 +1,5 @@
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from '@simplewebauthn/browser';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import { authApi } from '../api/apiService';
 
 export type PasskeyRegistrationResult = {

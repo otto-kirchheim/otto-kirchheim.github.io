@@ -18,7 +18,7 @@ vi.mock('../src/ts/components', () => ({
   MyInput: (props: Record<string, unknown>) => h('input', props),
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

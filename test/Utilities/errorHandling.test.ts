@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'bun:test';
 import { escapeHtml, markErrorRows, showErrorDialog } from '../../src/ts/infrastructure/autoSave/errorHandling';
-import type { CustomTable, CustomTableTypes } from '../../src/ts/class/CustomTable';
+import type { CustomTable, CustomTableTypes } from '../../src/ts/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '../../src/ts/infrastructure/api/apiService';
 import type { RowErrorMatch } from '../../src/ts/infrastructure/autoSave/savePipeline';
 

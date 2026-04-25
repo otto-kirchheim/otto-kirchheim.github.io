@@ -2,7 +2,7 @@ import type { Dayjs } from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
 import { publishEvent } from '../../../core';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '../../../interfaces';
 import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
 import { default as Storage } from '../../../infrastructure/storage/Storage';

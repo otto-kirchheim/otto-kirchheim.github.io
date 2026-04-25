@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import type { TResourceKey } from '../../interfaces';
 import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';

@@ -1,6 +1,6 @@
 import { abortController } from './abortController';
 import tokenErneuern from '../tokenManagement/tokenErneuern';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import Storage from '../storage/Storage';
 
 interface ServerConfig {

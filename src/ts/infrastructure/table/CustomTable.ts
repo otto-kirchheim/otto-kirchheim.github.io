@@ -1,11 +1,12 @@
 /*!
  * Customtable
  *
- * Copyright 2022-2023 Jan Otto
+ * Copyright 2022-2026 Jan Otto
  */
+import './customtable.css';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import type { CustomHTMLTableElement } from '../interfaces/index.js';
+import type { CustomHTMLTableElement } from '../../interfaces/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CustomTableTypes = Record<string, unknown>;

@@ -1,9 +1,9 @@
 import Modal from 'bootstrap/js/dist/modal';
 import type { ComponentChild, ComponentChildren } from 'preact';
 import { createRef } from 'preact';
-import type { Column } from '../../../class/CustomTable';
-import { CustomTable, Row } from '../../../class/CustomTable';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import type { Column } from '../../../infrastructure/table/CustomTable';
+import { CustomTable, Row } from '../../../infrastructure/table/CustomTable';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '../../../components';
 import type { CustomHTMLDivElement, IDatenBZ } from '../../../interfaces';
 import { default as Storage } from '../../../infrastructure/storage/Storage';

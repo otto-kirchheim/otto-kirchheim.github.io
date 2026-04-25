@@ -1,8 +1,8 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import type { Column } from '../../../class/CustomTable';
-import { CustomTable, Row } from '../../../class/CustomTable';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import type { Column } from '../../../infrastructure/table/CustomTable';
+import { CustomTable, Row } from '../../../infrastructure/table/CustomTable';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '../../../interfaces';

@@ -7,7 +7,7 @@ import { default as clearLoading } from '../../src/ts/infrastructure/ui/clearLoa
 import { default as setLoading } from '../../src/ts/infrastructure/ui/setLoading';
 import { getUserCookie, isAdmin } from '../../src/ts/infrastructure/tokenManagement/decodeAccessToken';
 /* import * as exportBerechnung from "../src/ts/Berechnung";
-import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
+import * as exportSnackbar from "../src/ts/infrastructure/ui/CustomSnackbar";
 import * as exportEinstelllungen from "../src/ts/features/Einstellungen/utils"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */

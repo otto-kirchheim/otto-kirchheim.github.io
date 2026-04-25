@@ -22,7 +22,7 @@ vi.mock('../src/ts/features/EWT/utils', () => ({
   calculateEwtEintraege: calculateEwtEintraegeMock,
   calculateBuchungstagEwt: calculateBuchungstagEwtMock,
 }));
-vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
+vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 
 import addEwtTag from '../src/ts/features/EWT/utils/addEwtTag';
 

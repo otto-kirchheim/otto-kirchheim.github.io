@@ -24,7 +24,7 @@ const {
   confirmMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

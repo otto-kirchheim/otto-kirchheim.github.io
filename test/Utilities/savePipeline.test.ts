@@ -4,7 +4,7 @@ import {
   collectRowErrorMatches,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from '../../src/ts/infrastructure/autoSave/savePipeline';
-import type { CustomTable, CustomTableTypes, Row } from '../../src/ts/class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../../src/ts/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '../../src/ts/infrastructure/api/apiService';
 import Storage from '../../src/ts/infrastructure/storage/Storage';
 import type { IDatenN } from '../../src/ts/interfaces';

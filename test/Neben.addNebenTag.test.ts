@@ -15,7 +15,7 @@ async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
   mock.module('../src/ts/infrastructure/data/persistTableData', () => ({
     default: saveTableDataNMock,
   }));
-  mock.module('../src/ts/class/CustomSnackbar', () => ({
+  mock.module('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
     createSnackBar: createSnackBarMock,
   }));
 

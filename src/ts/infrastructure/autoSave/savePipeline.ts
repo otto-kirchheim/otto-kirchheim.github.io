@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../table/CustomTable';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '../../interfaces';
 import {
   type BulkErrorEntry,

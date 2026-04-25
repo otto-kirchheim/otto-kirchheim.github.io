@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import type {
   BackendBereitschaftseinsatz,
   BackendBereitschaftszeitraum,

@@ -1,7 +1,7 @@
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
 import { default as setLoading } from '../../../infrastructure/ui/setLoading';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import { loadUserDaten } from '../../../core/orchestration/auth/utils';
 import setMonatJahr from './setMonatJahr';
 

@@ -1,4 +1,4 @@
-import type { CustomTableTypes } from '../class/CustomTable';
+import type { CustomTableTypes } from '../infrastructure/table/CustomTable';
 
 export interface IMonatsDaten<EWTType = string> {
   BZ: IDatenBZ[];

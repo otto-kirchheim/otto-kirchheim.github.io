@@ -8,7 +8,7 @@ import updateBereitschaftsDatum from './updateBereitschaftsDatum';
 import toggleBereitschaftsEigeneWerte from './toggleBereitschaftsEigeneWerte';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 import isSameBereitschaftsEinsatz from './isSameBereitschaftsEinsatz';
-import type { CustomTable } from '../../../class/CustomTable';
+import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import type { IDatenBE, IDatenBZ } from '../../../interfaces';
 import persistTableData from '../../../infrastructure/data/persistTableData';
 

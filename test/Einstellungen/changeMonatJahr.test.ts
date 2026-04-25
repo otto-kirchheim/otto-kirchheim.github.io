@@ -31,7 +31,7 @@ vi.mock('../../src/ts/features/Einstellungen/utils', () => ({
   setMonatJahr: setMonatJahrMock,
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

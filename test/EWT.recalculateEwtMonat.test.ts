@@ -26,7 +26,7 @@ vi.mock('../src/ts/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

@@ -1,5 +1,5 @@
 import type { IDatenEWT } from '../../interfaces';
-import type { CustomTable } from '../../class/CustomTable';
+import type { CustomTable } from '../table/CustomTable';
 import { publishEvent } from '../../core';
 import Storage from '../storage/Storage';
 import normalizeResourceRows from './normalizeResourceRows';

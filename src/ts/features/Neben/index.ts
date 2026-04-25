@@ -1,5 +1,5 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import { createCustomTable } from '../../class/CustomTable';
+import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '../../infrastructure/table/CustomTable';
 import { onEvent, registerAppStartTask } from '../../core';
 import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
 import { getMonatFromN } from '../../infrastructure/date/getMonatFromItem';

@@ -1,4 +1,4 @@
-import type { Column, Row } from '../../../class/CustomTable';
+import type { Column, Row } from '../../../infrastructure/table/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
 import type { CustomHTMLDivElement, IDatenEWT } from '../../../interfaces';
 import dayjs from '../../../infrastructure/date/configDayjs';

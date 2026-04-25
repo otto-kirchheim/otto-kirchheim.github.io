@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../interfaces';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';

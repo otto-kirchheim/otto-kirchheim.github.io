@@ -6,7 +6,7 @@ import {
   persistBereitschaftsEinsatzTableData,
 } from '.';
 import { publishEvent } from '../../../core';
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../../interfaces';
 import { default as Storage } from '../../../infrastructure/storage/Storage';
 import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';

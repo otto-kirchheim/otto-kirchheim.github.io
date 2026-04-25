@@ -1,5 +1,5 @@
 import { persistEwtTableData } from '.';
-import type { CustomTable } from '../../../class/CustomTable';
+import type { CustomTable } from '../../../infrastructure/table/CustomTable';
 import type { CustomHTMLTableRowElement, IDatenEWT } from '../../../interfaces';
 
 export default function attachBerechnenToggleListeners(this: CustomTable<IDatenEWT>): void {

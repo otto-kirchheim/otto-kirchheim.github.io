@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
 import { default as Storage } from '../../../../infrastructure/storage/Storage';
 import { authApi } from '../../../../infrastructure/api/apiService';
 

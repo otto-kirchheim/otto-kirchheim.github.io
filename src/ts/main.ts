@@ -4,7 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import 'preact/debug';
 
 import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einstellungen/utils';
-import { createSnackBar } from './class/CustomSnackbar';
+import { createSnackBar } from './infrastructure/ui/CustomSnackbar';
 import { default as Storage } from './infrastructure/storage/Storage';
 import { default as compareVersion } from './infrastructure/validation/compareVersion';
 import { default as initializeColorModeToggler } from './infrastructure/ui/BSColorToggler';

@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { Fragment, createRef, type FunctionalComponent } from 'preact';
 import { useState } from 'preact/hooks';
-import { CustomTable, Row } from '../../../class/CustomTable';
+import { CustomTable, Row } from '../../../infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, showModal } from '../../../components';
 import type { IVorgabenUvorgabenB } from '../../../interfaces';
 import { saveTableDataVorgabenU } from '../utils';

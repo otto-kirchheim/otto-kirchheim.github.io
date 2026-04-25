@@ -1,4 +1,4 @@
-import type { Row } from '../../../class/CustomTable';
+import type { Row } from '../../../infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '../../../interfaces';
 

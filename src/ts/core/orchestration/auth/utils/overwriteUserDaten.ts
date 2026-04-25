@@ -2,7 +2,7 @@ import { publishEvent } from '../../..';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
 import { getEwtDaten } from '../../../../features/EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
-import type { CustomTableTypes } from '../../../../class/CustomTable';
+import type { CustomTableTypes } from '../../../../infrastructure/table/CustomTable';
 import type {
   CustomHTMLTableElement,
   IDatenBE,

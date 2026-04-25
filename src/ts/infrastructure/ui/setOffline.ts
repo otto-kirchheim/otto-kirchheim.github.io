@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import { setDisableButton } from './buttonDisable';
 import { invokeHook } from '../../core/hooks';
 

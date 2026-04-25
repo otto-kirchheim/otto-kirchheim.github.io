@@ -12,7 +12,7 @@ const { mockRefreshToken, mockCreateSnackBar, mockAuthFailureHandler } = (
 vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   authApi: { refreshToken: mockRefreshToken },
 }));
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
 import tokenErneuern, { resetTokenState } from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
 import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';

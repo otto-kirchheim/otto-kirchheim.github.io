@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../../class/CustomSnackbar';
+import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
 import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../../interfaces';
 import {
   PERS_FIELD_LABELS,
