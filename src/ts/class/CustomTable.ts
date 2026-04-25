@@ -959,7 +959,6 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
   /** Benachrichtigt den onChange-Callback (für Auto-Save-Integration) */
   public _notifyChange(): void {
-    console.log('Table changed', this.rows.getChanges());
     if (this.options.onChange) this.options.onChange(this);
   }
 
