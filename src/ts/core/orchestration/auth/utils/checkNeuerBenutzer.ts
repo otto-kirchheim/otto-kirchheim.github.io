@@ -1,13 +1,13 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
-import { confirmDialog } from '../../../../infrastructure/ui/confirmDialog';
-import { default as clearLoading } from '../../../../infrastructure/ui/clearLoading';
-import { authApi } from '../../../../infrastructure/api/apiService';
-import { registerPasskeyWithResult } from '../../../../infrastructure/tokenManagement/passkeys';
-import { getPasswordValidationMessage } from '../../../../infrastructure/validation/passwordValidation';
-import { resetTokenState } from '../../../../infrastructure/tokenManagement/tokenErneuern';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { authApi } from '@/infrastructure/api/apiService';
+import { registerPasskeyWithResult } from '@/infrastructure/tokenManagement/passkeys';
+import { getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
+import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
 import userLoginSuccess from './userLoginSuccess';
-import type { CustomHTMLDivElement } from '../../../types';
+import type { CustomHTMLDivElement } from '@/types';
 
 async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   if (typeof PublicKeyCredential === 'undefined') {

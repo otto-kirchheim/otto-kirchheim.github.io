@@ -1,6 +1,6 @@
 import { applyBereitschaftsVorgabe } from '.';
-import type { IVorgabenUvorgabenB } from '../../../core/types';
-import type dayjs from '../../../infrastructure/date/configDayjs';
+import type { IVorgabenUvorgabenB } from '@/types';
+import type dayjs from '@/infrastructure/date/configDayjs';
 
 export default function toggleBereitschaftsEigeneWerte(
   parentElement: HTMLDivElement,

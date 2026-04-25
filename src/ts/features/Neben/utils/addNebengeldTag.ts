@@ -1,8 +1,8 @@
-import type { CustomTable } from '../../../infrastructure/table/CustomTable';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { persistNebengeldTableData } from '.';
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { IDatenN } from '../../../core/types';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { IDatenN } from '@/types';
 
 export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, tableN: CustomTable<IDatenN>): void {
   const select = form.querySelector<HTMLSelectElement>('#tagN');

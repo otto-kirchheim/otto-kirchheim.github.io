@@ -1,7 +1,7 @@
-import type { Column, Row } from '../../../infrastructure/table/CustomTable';
-import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenEWT } from '../../../core/types';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { Column, Row } from '@/infrastructure/table/CustomTable';
+import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
+import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { persistEwtTableData } from '../utils';
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {

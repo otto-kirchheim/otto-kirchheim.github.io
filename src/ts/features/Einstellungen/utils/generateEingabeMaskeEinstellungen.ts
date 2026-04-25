@@ -1,17 +1,17 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
 import { ZULAGEN_CATALOG } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
-import { CustomTable } from '../../../infrastructure/table/CustomTable';
-import { setupBundeslandAutoFill } from '../../../infrastructure/date/holidayRegion';
+import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
 import type {
   CustomHTMLTableElement,
   IVorgabenU,
   IVorgabenUPers,
   IVorgabenUaZ,
   IVorgabenUvorgabenB,
-} from '../../../core/types';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { setupPersValidation } from '../../../infrastructure/validation/addressValidation';
+} from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { setupPersValidation } from '@/infrastructure/validation/addressValidation';
 
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),

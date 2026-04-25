@@ -14,7 +14,7 @@
  */
 
 import { onAutoSaveStatus } from './autoSave';
-import type { TResourceKey, TSaveStatus } from '../../core/types';
+import type { TResourceKey, TSaveStatus } from '@/types';
 
 /** Mapping: Button-ID → zugehörige Ressourcen */
 const BUTTON_RESOURCE_MAP: ReadonlyArray<{ buttonId: string; resources: TResourceKey[] }> = [

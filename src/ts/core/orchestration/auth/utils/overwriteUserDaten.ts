@@ -2,7 +2,7 @@ import { publishEvent } from '../../..';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
 import { getEwtDaten } from '../../../../features/EWT/utils';
 import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
-import type { CustomTableTypes } from '../../../../infrastructure/table/CustomTable';
+import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import type {
   CustomHTMLTableElement,
   IDatenBE,
@@ -10,15 +10,15 @@ import type {
   IDatenEWT,
   IDatenN,
   UserDatenServer,
-} from '../../../types';
+} from '@/types';
 import { getNebengeldDaten } from '../../../../features/Neben/utils';
 import {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromN,
   isEwtInMonat,
-} from '../../../../infrastructure/date/getMonatFromItem';
-import Storage from '../../../../infrastructure/storage/Storage';
+} from '@/infrastructure/date/getMonatFromItem';
+import Storage from '@/infrastructure/storage/Storage';
 
 function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);

@@ -1,4 +1,4 @@
-import type { IDatenBE } from '../../../core/types';
+import type { IDatenBE } from '@/types';
 
 function getBereitschaftsEinsatzSignature(row: IDatenBE): string {
   return JSON.stringify({

@@ -11,9 +11,9 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
 } from '@simplewebauthn/browser';
-import { unwrapEnvelope } from '../../core';
-import type { ApiHttpResponse } from '../../core';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '../../core/types';
+import { unwrapEnvelope } from '@/core';
+import type { ApiHttpResponse } from '@/core';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '@/types';
 import { FetchRetry, getServerUrl } from './FetchRetry';
 import { abortController } from './abortController';
 import Storage from '../storage/Storage';

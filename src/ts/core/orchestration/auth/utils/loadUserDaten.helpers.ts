@@ -1,12 +1,12 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '../../../types';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
 import {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromEWT,
   getMonatFromN,
-} from '../../../../infrastructure/date/getMonatFromItem';
-import { default as normalizeResourceRows } from '../../../../infrastructure/data/normalizeResourceRows';
-import type { TStorageData } from '../../../../infrastructure/storage/Storage';
+} from '@/infrastructure/date/getMonatFromItem';
+import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import type { TStorageData } from '@/infrastructure/storage/Storage';
 
 const MONTH_AWARE_STORAGE_NAMES: TStorageData[] = ['dataBZ', 'dataBE', 'dataE', 'dataN'];
 

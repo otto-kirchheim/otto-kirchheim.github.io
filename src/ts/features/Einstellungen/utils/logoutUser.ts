@@ -1,13 +1,13 @@
 import Tab from 'bootstrap/js/dist/tab';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { abortController } from '../../../infrastructure/api/abortController';
-import { cancelAllPending } from '../../../infrastructure/autoSave/autoSave';
-import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
-import { hideAllFeatureTabs } from '../../../infrastructure/ui/updateTabVisibility';
-import { updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
-import { destroyAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
-import { authApi } from '../../../infrastructure/api/apiService';
-import { featureLifecycleRegistry } from '../../../core/hooks';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { abortController } from '@/infrastructure/api/abortController';
+import { cancelAllPending } from '@/infrastructure/autoSave/autoSave';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
+import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
+import { destroyAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { authApi } from '@/infrastructure/api/apiService';
+import { featureLifecycleRegistry } from '@/core/hooks';
 
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
   const element = document.querySelector<HTMLElement>(selector);

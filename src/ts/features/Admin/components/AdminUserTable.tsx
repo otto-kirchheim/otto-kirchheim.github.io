@@ -7,11 +7,11 @@ import {
   setActAsUser,
   type AdminUserRow,
 } from '../utils/api';
-import type { TUserRole } from '../../../core/types';
-import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
-import { loadUserDaten } from '../../../core/orchestration/auth/utils';
-import Storage from '../../../infrastructure/storage/Storage';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { TUserRole } from '@/types';
+import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { loadUserDaten } from '@/core/orchestration/auth/utils';
+import Storage from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { OeTagInput } from './OeTagInput';
 
 type UserEditState = {

@@ -3,11 +3,11 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type { IVorgabenU, TResourceKey } from '../../core/types';
+import type { IVorgabenU, TResourceKey } from '@/types';
 import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
-import { invokeHook } from '../../core/hooks';
+import { invokeHook } from '@/core/hooks';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);

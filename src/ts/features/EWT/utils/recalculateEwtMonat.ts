@@ -1,9 +1,9 @@
-import type { CustomTable } from '../../../infrastructure/table/CustomTable';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { calculateEwtEintraege, getEwtDaten, persistEwtTableData } from '.';
-import { publishEvent } from '../../../core';
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { IDatenEWT, IMonatsDaten, IVorgabenU } from '../../../core/types';
-import { isEwtInMonat } from '../../../infrastructure/date/getMonatFromItem';
+import { publishEvent } from '@/core';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { IDatenEWT, IMonatsDaten, IVorgabenU } from '@/types';
+import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
 
 type ewtBerechnenType = {
   monat: number;

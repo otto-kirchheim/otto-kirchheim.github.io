@@ -1,13 +1,13 @@
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '../../../core/types';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import {
   PERS_FIELD_LABELS,
   setupPersValidation,
   validatePersInput,
-} from '../../../infrastructure/validation/addressValidation';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as tableToArray } from '../../../infrastructure/data/tableToArray';
-import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
+} from '@/infrastructure/validation/addressValidation';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as tableToArray } from '@/infrastructure/data/tableToArray';
+import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 
 export default function saveEinstellungen(): IVorgabenU {

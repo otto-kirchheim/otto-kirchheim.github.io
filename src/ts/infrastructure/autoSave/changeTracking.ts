@@ -6,7 +6,7 @@ import type {
   BackendNebengeld,
 } from '../data/fieldMapper';
 import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } from '../data/fieldMapper';
-import type { TResourceKey } from '../../core/types';
+import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings'>, doc: unknown): CustomTableTypes {

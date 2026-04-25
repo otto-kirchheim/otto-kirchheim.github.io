@@ -1,12 +1,12 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { Row } from '../../../infrastructure/table/CustomTable';
-import type { CustomTable } from '../../../infrastructure/table/CustomTable';
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '../../../core/types';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { Row } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   calculateBuchungstagEwt,
   calculateEwtEintraege,

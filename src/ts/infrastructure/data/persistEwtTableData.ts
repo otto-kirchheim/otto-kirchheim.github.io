@@ -1,6 +1,6 @@
-import type { IDatenEWT } from '../../core/types';
+import type { IDatenEWT } from '@/types';
 import type { CustomTable } from '../table/CustomTable';
-import { publishEvent } from '../../core';
+import { publishEvent } from '@/core';
 import Storage from '../storage/Storage';
 import normalizeResourceRows from './normalizeResourceRows';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';

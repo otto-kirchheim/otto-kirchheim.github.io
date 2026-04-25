@@ -4,13 +4,13 @@ import { registerSW } from 'virtual:pwa-register';
 import 'preact/debug';
 
 import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einstellungen/utils';
-import { createSnackBar } from './infrastructure/ui/CustomSnackbar';
-import { default as Storage } from './infrastructure/storage/Storage';
-import { default as compareVersion } from './infrastructure/validation/compareVersion';
-import { default as initializeColorModeToggler } from './infrastructure/ui/BSColorToggler';
-import { default as setOffline } from './infrastructure/ui/setOffline';
-import { default as storageAvailable } from './infrastructure/storage/storageAvailable';
-import dayjs from './infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
+import { default as initializeColorModeToggler } from '@/infrastructure/ui/BSColorToggler';
+import { default as setOffline } from '@/infrastructure/ui/setOffline';
+import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { registerHook, featureLifecycleRegistry } from './core/hooks';
 import type { FeatureContext } from './core/hooks';
 

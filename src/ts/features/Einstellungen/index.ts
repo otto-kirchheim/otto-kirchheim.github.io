@@ -1,11 +1,11 @@
-import dayjs from '../../infrastructure/date/configDayjs';
-import { registerAppStartTask } from '../../core';
-import Storage from '../../infrastructure/storage/Storage';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import { setAutoSaveEnabled, setAutoSaveDelay } from '../../infrastructure/autoSave/autoSave';
-import { authApi } from '../../infrastructure/api/apiService';
-import { confirmDialog } from '../../infrastructure/ui/confirmDialog';
-import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
+import dayjs from '@/infrastructure/date/configDayjs';
+import { registerAppStartTask } from '@/core';
+import Storage from '@/infrastructure/storage/Storage';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import { setAutoSaveEnabled, setAutoSaveDelay } from '@/infrastructure/autoSave/autoSave';
+import { authApi } from '@/infrastructure/api/apiService';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createModalChangePassword } from './components';
 import {
   logoutUser,

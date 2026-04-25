@@ -1,4 +1,4 @@
-import type { TResourceKey } from '../../core/types';
+import type { TResourceKey } from '@/types';
 import type { TStorageData } from '../storage/Storage';
 
 export type ResourceKind = Exclude<TResourceKey, 'settings'>;

@@ -21,7 +21,19 @@
 		"noUnusedParameters": true,
 		"noImplicitReturns": true,
 		"allowSyntheticDefaultImports": true,
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+
+		"baseUrl": ".",
+		"paths": {
+			"@/components": ["src/ts/components/index.ts"],
+			"@/components/*": ["src/ts/components/*"],
+			"@/core": ["src/ts/core/index.ts"],
+			"@/core/*": ["src/ts/core/*"],
+			"@/types": ["src/ts/core/types/index.ts"],
+			"@/types/*": ["src/ts/core/types/*"],
+			"@/infrastructure": ["src/ts/infrastructure/index.ts"],
+			"@/infrastructure/*": ["src/ts/infrastructure/*"]
+		}
 	},
 	"include": ["src", "test", "scripts"],
 	"exclude": ["src/public-src"],

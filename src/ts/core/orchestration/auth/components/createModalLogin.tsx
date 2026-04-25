@@ -1,9 +1,9 @@
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef } from 'preact';
 import { loginUser, loginWithPasskey } from '../utils';
-import { MyButton, MyFormModal, MyInput, MyModalBody, showModal } from '../../../../components';
+import { MyButton, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
 import { createModalForgotPassword, createModalNewUser } from '.';
-import type { CustomHTMLDivElement } from '../../../types';
+import type { CustomHTMLDivElement } from '@/types';
 
 export default function createModalLogin(): void {
   let currentModal: CustomHTMLDivElement | null = null;

@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { render, type ComponentChild } from 'preact';
-import type { CustomHTMLDivElement } from '../core/types';
-import type { CustomTableTypes } from '../infrastructure/table/CustomTable';
+import type { CustomHTMLDivElement } from '@/types';
+import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 
 function resetModalProperties<T extends CustomTableTypes>(modal: CustomHTMLDivElement<T>): void {
   modal.row = null;

@@ -1,4 +1,4 @@
-import { HOLIDAY_REGION_OPTIONS } from '../../../infrastructure/date/holidayRegion';
+import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
 
 export type FahrzeitRow = { key: string; text: string; value: string };
 

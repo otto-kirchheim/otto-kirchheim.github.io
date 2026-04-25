@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '../../../components';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
 
 const PASSWORD_PATTERN = new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source;

@@ -1,6 +1,6 @@
 import { createSnackBar } from '../ui/CustomSnackbar';
 import { setDisableButton } from './buttonDisable';
-import { invokeHook } from '../../core/hooks';
+import { invokeHook } from '@/core/hooks';
 
 export default function setOffline(): void {
   setDisableButton(true);

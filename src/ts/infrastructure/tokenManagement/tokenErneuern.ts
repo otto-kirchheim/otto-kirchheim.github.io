@@ -1,7 +1,7 @@
 import { createSnackBar } from '../ui/CustomSnackbar';
 import { authApi } from '../api/apiService';
 import Storage from '../storage/Storage';
-import { invokeHook } from '../../core/hooks';
+import { invokeHook } from '@/core/hooks';
 
 let REFRESHED = 0;
 let isLogoutInProgress = false;

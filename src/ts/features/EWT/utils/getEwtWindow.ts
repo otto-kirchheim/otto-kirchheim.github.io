@@ -1,5 +1,5 @@
-import type { IDatenEWT } from '../../../core/types';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { IDatenEWT } from '@/types';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 export default function getEwtWindow(entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null {
   if (!entry.beginE || !entry.endeE) return null;

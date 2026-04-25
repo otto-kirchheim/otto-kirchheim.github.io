@@ -1,11 +1,11 @@
 import type { Dayjs } from 'dayjs';
 import type { Duration } from 'dayjs/plugin/duration.js';
-import type { IDatenBZ, IMonatsDaten, IVorgabenU } from '../../../core/types';
-import { default as DatenSortieren } from '../../../infrastructure/data/DatenSortieren';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as getDurationFromTime } from '../../../infrastructure/date/getDurationFromTime';
-import dayjs from '../../../infrastructure/date/configDayjs';
-import { resolveHolidayRegion } from '../../../infrastructure/date/holidayRegion';
+import type { IDatenBZ, IMonatsDaten, IVorgabenU } from '@/types';
+import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as getDurationFromTime } from '@/infrastructure/date/getDurationFromTime';
+import dayjs from '@/infrastructure/date/configDayjs';
+import { resolveHolidayRegion } from '@/infrastructure/date/holidayRegion';
 
 type Schicht = {
   beginn: Dayjs;

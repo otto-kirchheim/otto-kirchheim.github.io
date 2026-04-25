@@ -1,14 +1,14 @@
 import attachBerechnenToggleListeners from './attachBerechnenToggleListeners';
 import addEwtTag from './addEwtTag';
 import calculateEwtEintraege from './calculateEwtEintraege';
-import calculateBuchungstagEwt from '../../../infrastructure/date/calculateBuchungstagEwt';
+import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
 import clearEwtZeiten from './clearEwtZeiten';
 import getEwtDaten from './getEwtDaten';
 import getEwtEditorDate from './getEwtEditorDate';
 import getEwtWindow from './getEwtWindow';
 import recalculateEwtMonat from './recalculateEwtMonat';
 import setNaechsterEwtTag from './setNaechsterEwtTag';
-import persistEwtTableData from '../../../infrastructure/data/persistEwtTableData';
+import persistEwtTableData from '@/infrastructure/data/persistEwtTableData';
 import validateEwtZeitenReihenfolge from './validateEwtZeitenReihenfolge';
 
 export {

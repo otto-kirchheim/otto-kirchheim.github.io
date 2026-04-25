@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row } from '../infrastructure/table/CustomTable.js';
+import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable.js';
 
 export interface CustomHTMLDivElement<T extends CustomTableTypes = CustomTableTypes> extends HTMLDivElement {
   row: Row<T> | CustomTable<T> | null;

@@ -1,6 +1,6 @@
-import Storage from '../../../infrastructure/storage/Storage';
-import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
-import { loadUserDaten } from '../../../core/orchestration/auth/utils';
+import Storage from '@/infrastructure/storage/Storage';
+import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import { setActAsUser } from './api';
 
 export function clearLoadedUserResourceCache(): void {

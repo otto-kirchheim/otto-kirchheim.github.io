@@ -1,10 +1,10 @@
 import { createRef } from 'preact';
-import type { CustomTable } from '../../../infrastructure/table/CustomTable';
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
-import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
-import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '../../../core/types';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { addNebengeldTag, getNebengeldDaten } from '../utils';
 
 type ReturnTypeTagOptions = {

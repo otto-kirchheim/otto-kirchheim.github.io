@@ -1,13 +1,13 @@
-import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '../../infrastructure/table/CustomTable';
-import { onEvent, registerAppStartTask } from '../../core';
-import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
-import { getMonatFromN } from '../../infrastructure/date/getMonatFromItem';
-import Storage from '../../infrastructure/storage/Storage';
-import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import dayjs from '../../infrastructure/date/configDayjs';
-import download from '../../infrastructure/data/download';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { onEvent, registerAppStartTask } from '@/core';
+import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import Storage from '@/infrastructure/storage/Storage';
+import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import dayjs from '@/infrastructure/date/configDayjs';
+import download from '@/infrastructure/data/download';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
 import { getNebengeldDaten, persistNebengeldTableData, syncNebengeldTimesFromEwtRows } from './utils';
 

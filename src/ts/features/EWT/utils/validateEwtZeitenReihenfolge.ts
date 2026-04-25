@@ -1,5 +1,5 @@
-import type { IDatenEWT } from '../../../core/types';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { IDatenEWT } from '@/types';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
 type Zeitfeld = (typeof ZEITFELDER)[number];

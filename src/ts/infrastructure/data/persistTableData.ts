@@ -1,6 +1,6 @@
 import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
-import type { TResourceKey } from '../../core/types';
-import { publishEvent } from '../../core';
+import type { TResourceKey } from '@/types';
+import { publishEvent } from '@/core';
 import Storage from '../storage/Storage';
 import dayjs from '../date/configDayjs';
 import mergeVisibleResourceRows from './mergeVisibleResourceRows';

@@ -1,6 +1,6 @@
 import type { CustomTableTypes, Row } from '../table/CustomTable';
 import { CustomTable } from '../table/CustomTable';
-import type { CustomHTMLTableElement } from '../../core/types';
+import type { CustomHTMLTableElement } from '@/types';
 
 export default function tableToArray<T extends CustomTableTypes>(ft: CustomTable<T> | string): T[] {
   if (!(ft instanceof CustomTable)) {

@@ -1,11 +1,11 @@
 import { selectYear } from '../../../../features/Einstellungen/utils';
-import { createSnackBar } from '../../../../infrastructure/ui/CustomSnackbar';
-import Storage from '../../../../infrastructure/storage/Storage';
-import { default as setLoading } from '../../../../infrastructure/ui/setLoading';
-import { updateActAsBanner } from '../../../../infrastructure/ui/actAsStatus';
-import { isAdmin } from '../../../../infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '../../../../infrastructure/autoSave/autoSaveIndicator';
-import dayjs from '../../../../infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import Storage from '@/infrastructure/storage/Storage';
+import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
+import { isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
+import dayjs from '@/infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
 import { featureLifecycleRegistry } from '../../../hooks';
 

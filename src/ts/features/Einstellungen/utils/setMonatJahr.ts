@@ -1,4 +1,4 @@
-import dayjs from '../../../infrastructure/date/configDayjs';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 export default function setMonatJahr(jahr: number, monat: number): void {
   const inputMonat = document.querySelector<HTMLInputElement>('#Monat');

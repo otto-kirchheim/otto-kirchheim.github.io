@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import Tooltip from 'bootstrap/js/dist/tooltip';
-import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import {
   fetchAdminUsers,
   updateUserOe,
@@ -9,8 +9,8 @@ import {
   deleteUser,
   type AdminUserRow,
 } from '../utils/api';
-import type { TUserRole } from '../../../core/types';
-import { getUserCookie } from '../../../infrastructure/tokenManagement/decodeAccessToken';
+import type { TUserRole } from '@/types';
+import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { OeTagInput } from './OeTagInput';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import { loadUserDataForAdminSelection } from '../utils/actAs';

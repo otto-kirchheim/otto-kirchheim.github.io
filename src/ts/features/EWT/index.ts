@@ -1,16 +1,16 @@
-import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '../../infrastructure/table/CustomTable';
-import { registerAppStartTask } from '../../core';
-import type { IVorgabenU } from '../../core/types';
-import { default as buttonDisable } from '../../infrastructure/ui/buttonDisable';
-import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
-import { isEwtInMonat } from '../../infrastructure/date/getMonatFromItem';
-import Storage from '../../infrastructure/storage/Storage';
-import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import dayjs from '../../infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { registerAppStartTask } from '@/core';
+import type { IVorgabenU } from '@/types';
+import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
+import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import Storage from '@/infrastructure/storage/Storage';
+import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
-import download from '../../infrastructure/data/download';
+import download from '@/infrastructure/data/download';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 registerAppStartTask(() => {
