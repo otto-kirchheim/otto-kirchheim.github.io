@@ -11,7 +11,7 @@ vi.mock('../../src/ts/infrastructure/data/tableToArray', () => ({
 import Storage from '../../src/ts/infrastructure/storage/Storage';
 import saveTableDataVorgabenU from '../../src/ts/features/Einstellungen/utils/saveTableDataVorgabenU';
 import type { CustomTable } from '../../src/ts/infrastructure/table/CustomTable';
-import type { IVorgabenUvorgabenB } from '../../src/ts/interfaces';
+import type { IVorgabenUvorgabenB } from '../../src/ts/core/types';
 import { VorgabenUMock } from '../mockData';
 
 vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({

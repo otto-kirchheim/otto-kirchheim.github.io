@@ -20,7 +20,7 @@ import {
   vorgabenFromBackend,
   vorgabenUFromServer,
 } from '../../src/ts/infrastructure/data/fieldMapper';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '../../src/ts/interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '../../src/ts/core/types';
 
 // ─── bzFromBackend / bzToBackend ─────────────────────────
 

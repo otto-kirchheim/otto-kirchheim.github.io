@@ -4,7 +4,7 @@ const { berVorgabeAEndernMock } = (vi as typeof vi & { hoisted: <T>(factory: () 
   berVorgabeAEndernMock: vi.fn(),
 }));
 
-import type { IVorgabenUvorgabenB } from '../src/ts/interfaces';
+import type { IVorgabenUvorgabenB } from '../src/ts/core/types';
 import applyBereitschaftsVorgabe from '../src/ts/features/Bereitschaft/utils/applyBereitschaftsVorgabe';
 import updateBereitschaftsDatum from '../src/ts/features/Bereitschaft/utils/updateBereitschaftsDatum';
 import dayjs from '../src/ts/infrastructure/date/configDayjs';

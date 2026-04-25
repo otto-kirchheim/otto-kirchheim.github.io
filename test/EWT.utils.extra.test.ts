@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import { CustomTable } from '../src/ts/infrastructure/table/CustomTable';
-import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
+import type { IDatenEWT, IVorgabenU } from '../src/ts/core/types';
 import EditorModalEWT from '../src/ts/features/EWT/components/createEditorModalEWT';
 import calculateBuchungstagEwt from '../src/ts/infrastructure/date/calculateBuchungstagEwt';
 import clearEwtZeiten from '../src/ts/features/EWT/utils/clearEwtZeiten';

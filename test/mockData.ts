@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import { createCustomTable } from '../src/ts/infrastructure/table/CustomTable';
-import type { IDaten } from '../src/ts/interfaces/IDaten';
-import type { IVorgabenBerechnung } from '../src/ts/interfaces/IVorgabenBerechnungMonat';
-import type { IVorgabenGeld } from '../src/ts/interfaces/IVorgabenGeldType';
-import type { IVorgabenU } from '../src/ts/interfaces/IVorgabenU';
+import type { IDaten } from '../src/ts/core/types/IDaten';
+import type { IVorgabenBerechnung } from '../src/ts/core/types/IVorgabenBerechnungMonat';
+import type { IVorgabenGeld } from '../src/ts/core/types/IVorgabenGeldType';
+import type { IVorgabenU } from '../src/ts/core/types/IVorgabenU';
 
 export const VorgabenGeldMock: IVorgabenGeld = {
   1: {

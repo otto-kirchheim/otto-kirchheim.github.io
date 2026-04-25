@@ -31,7 +31,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
 }));
 
 import checkPasswort from '../../src/ts/features/Einstellungen/utils/checkPasswort';
-import type { CustomHTMLDivElement } from '../../src/ts/interfaces';
+import type { CustomHTMLDivElement } from '../../src/ts/core/types';
 
 function createModal(alt: string, neu: string, neu2: string): CustomHTMLDivElement {
   const modal = document.createElement('div') as CustomHTMLDivElement;

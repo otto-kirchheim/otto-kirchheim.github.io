@@ -7,7 +7,7 @@ import {
 import type { CustomTable, CustomTableTypes, Row } from '../../src/ts/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '../../src/ts/infrastructure/api/apiService';
 import Storage from '../../src/ts/infrastructure/storage/Storage';
-import type { IDatenN } from '../../src/ts/interfaces';
+import type { IDatenN } from '../../src/ts/core/types';
 
 function makeNRow(
   overrides: Partial<{ _state: string; _id: string; ewtRef: string }> = {},

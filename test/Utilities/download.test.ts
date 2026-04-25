@@ -1,7 +1,7 @@
 import { saveAs } from 'file-saver';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '../../src/ts/infrastructure/ui/CustomSnackbar';
-import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/interfaces';
+import type { IVorgabenGeld, IVorgabenU } from '../../src/ts/core/types';
 import Storage from '../../src/ts/infrastructure/storage/Storage'; // Import Storage directly
 import dayjs from '../../src/ts/infrastructure/date/configDayjs'; // Import configured dayjs
 import download from '../../src/ts/infrastructure/data/download';

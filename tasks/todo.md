@@ -1,5 +1,21 @@
 # Todo
 
+## Aktueller Plan: Frontend TypeScript-Fehler beheben
+
+- [x] Aktuelle TypeScript-Fehler erfassen und auf Root-Causes gruppieren
+- [x] Veraltete Test-Importpfade auf die aktuellen `core/types`-Barrels migrieren
+- [x] Verbleibende typspezifische Testfehler beheben und Typecheck erneut verifizieren
+
+## Verifikationskriterien (Frontend TS-Fehler)
+
+- `bunx tsc --noEmit -p tsconfig.json` läuft im Frontend ohne Fehler
+- Test-Importe referenzieren keine veralteten `src/ts/interfaces`-Pfadsegmente mehr
+
+## Review (Frontend TS-Fehler)
+
+- Ergebnis: Die gemeldeten TypeScript-Fehler wurden vollständig behoben. Ursache waren veraltete Typ-Importe in Tests (`src/ts/interfaces`), die auf die aktuelle Typ-Struktur (`src/ts/core/types`) migriert wurden.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json` sowie `cd /home/jan/Dokumente/DB-Nebengeld/frontend && rg -n "src/ts/interfaces" test || true`.
+
 ## Aktueller Plan: MyInput Ref-Handling optimieren
 
 - [x] Ref- und Popover-Pfad in `MyInput` lokal pruefen

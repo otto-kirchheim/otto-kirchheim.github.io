@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
+import type { IDatenEWT, IVorgabenU } from '../src/ts/core/types';
 
 const {
   setNaechsterEwtTagMock,

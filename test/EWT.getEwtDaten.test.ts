@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT } from '../src/ts/interfaces';
+import type { IDatenEWT } from '../src/ts/core/types';
 import Storage from '../src/ts/infrastructure/storage/Storage';
 import { getEwtDaten } from '../src/ts/features/EWT/utils';
 

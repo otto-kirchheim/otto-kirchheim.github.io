@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenN } from '../src/ts/interfaces';
+import type { IDatenN } from '../src/ts/core/types';
 import Storage from '../src/ts/infrastructure/storage/Storage';
 
 const { tableToArrayMock, publishDataChangedMock } = (

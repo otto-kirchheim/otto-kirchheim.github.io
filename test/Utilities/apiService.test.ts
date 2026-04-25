@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenBZ, IDatenEWT } from '../../src/ts/interfaces';
+import type { IDatenBZ, IDatenEWT } from '../../src/ts/core/types';
 
 // --- Hoisted mocks ---
 const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(

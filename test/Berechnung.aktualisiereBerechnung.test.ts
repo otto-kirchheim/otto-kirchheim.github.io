@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import Storage from '../src/ts/infrastructure/storage/Storage';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenBerechnung } from '../src/ts/interfaces';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenBerechnung } from '../src/ts/core/types';
 
 // Mock generateTableBerechnung to avoid DOM dependency
 vi.mock('../src/ts/features/Berechnung/generateTableBerechnung', () => ({

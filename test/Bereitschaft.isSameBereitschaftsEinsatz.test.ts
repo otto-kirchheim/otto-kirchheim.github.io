@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { IDatenBE } from '../src/ts/interfaces';
+import type { IDatenBE } from '../src/ts/core/types';
 import isSameBereitschaftsEinsatz from '../src/ts/features/Bereitschaft/utils/isSameBereitschaftsEinsatz';
 
 function createBereitschaftsEinsatz(overrides: Partial<IDatenBE> = {}): IDatenBE {

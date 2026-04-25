@@ -8,7 +8,7 @@ import {
   getMonatFromN,
   filterByMonat,
 } from '../../src/ts/infrastructure/date/getMonatFromItem';
-import type { IDatenBZ, IDatenBE, IDatenEWT, IDatenN } from '../../src/ts/interfaces';
+import type { IDatenBZ, IDatenBE, IDatenEWT, IDatenN } from '../../src/ts/core/types';
 import Storage from '../../src/ts/infrastructure/storage/Storage';
 
 describe('getMonatFromItem', () => {

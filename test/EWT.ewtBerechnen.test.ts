@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
+import type { IDatenEWT, IVorgabenU } from '../src/ts/core/types';
 
 import calculateEwtEintraege from '../src/ts/features/EWT/utils/calculateEwtEintraege';
 

@@ -7,8 +7,8 @@ import {
   getBereitschaftsZeitraumDaten,
   submitBereitschaftsZeiten,
 } from '../src/ts/features/Bereitschaft/utils';
-import type { CustomHTMLDivElement } from '../src/ts/interfaces/CustomHTMLElements';
-import type { IDaten, IDatenBZ } from '../src/ts/interfaces/IDaten';
+import type { CustomHTMLDivElement } from '../src/ts/core/types/CustomHTMLElements';
+import type { IDaten, IDatenBZ } from '../src/ts/core/types/IDaten';
 import Storage from '../src/ts/infrastructure/storage/Storage';
 import {
   VorgabenGeldMock,
