@@ -5,10 +5,12 @@ import UnpluginInjectPreload from 'unplugin-inject-preload/vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   ...base,
   plugins: [
-    preact(),
+    preact({
+      devtools: command === 'serve',
+    }),
     compression({
       exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
       skipIfLargerOrEqual: true,
@@ -316,4 +318,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));
