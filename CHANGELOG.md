@@ -38,6 +38,12 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-04-26
 
+### refactor
+
+- Zyklus 11 abgeschlossen: Ordnerstruktur bereinigt (`class/` + `interfaces/` + `utilities/` gelöscht, CSS co-located), TypeScript Path Aliases (`@/types`, `@/core`, `@/components`, `@/infrastructure`) eingerichtet und 324 Importstellen migriert, `apiService.ts` in `apiFetchHelper.ts` + `authApi.ts` + `dataApi.ts` aufgeteilt (Barrel bleibt), `VorgabenBWeekRangeEditor` und `adminUserListHelpers` aus Admin-Komponenten extrahiert.
+
+
+
 ### test
 
 - **Coverage > 80 %** — Gesamt-Funktions-Coverage von 79.68 % auf **80.97 %** (84.67 % Zeilen) gehoben; 909 Tests / 90 Dateien, 0 Fehler.
