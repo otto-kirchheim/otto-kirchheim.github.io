@@ -12,6 +12,7 @@ const baseConfig: UserConfig = {
       '@/core': path.resolve(__dirname, 'src/ts/core'),
       '@/types': path.resolve(__dirname, 'src/ts/core/types'),
       '@/infrastructure': path.resolve(__dirname, 'src/ts/infrastructure'),
+      '@/features': path.resolve(__dirname, 'src/ts/features'),
     },
   },
   base: '/',

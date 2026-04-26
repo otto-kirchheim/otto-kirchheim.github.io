@@ -1,6 +1,7 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
 import type { IVorgabenU } from '@/types';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
@@ -167,4 +168,5 @@ registerAppStartTask(() => {
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftE.rows.setFilter(row => isEwtInMonat(row, monat));
+  markStep('boot', 'boot:ewt');
 });

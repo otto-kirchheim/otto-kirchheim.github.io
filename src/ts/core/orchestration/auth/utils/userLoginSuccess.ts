@@ -1,4 +1,4 @@
-import { selectYear } from '../../../../features/Einstellungen/utils';
+import { selectYear } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
@@ -7,7 +7,8 @@ import { isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '@/infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
-import { featureLifecycleRegistry } from '../../../hooks';
+import { featureLifecycleRegistry } from '@/core/hooks';
+import { markStep } from '../../initSequence';
 
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/[&<"']/g, function (match) {
@@ -41,6 +42,8 @@ export default async function userLoginSuccess({
   Storage.set('Benutzer', username);
   if (role) Storage.set('BenutzerRolle', role);
   if (email) Storage.set('BenutzerEmail', email);
+  markStep('login', 'storage:user');
+
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) willkommen.innerHTML = `Hallo, ${escapeHtml(username)}.`;
 
@@ -53,6 +56,7 @@ export default async function userLoginSuccess({
   const monat = dayjs().month() + 1;
   const monatInput = document.querySelector<HTMLInputElement>('#Monat');
   if (monatInput) monatInput.value = monat.toString();
+  markStep('login', 'ui:year-month');
 
   const userIsAdmin = role ? role !== 'member' : isAdmin();
   if (!userIsAdmin) {
@@ -61,6 +65,7 @@ export default async function userLoginSuccess({
   }
 
   await featureLifecycleRegistry.initializeAll({ isAdmin: userIsAdmin, userName: username });
+  markStep('login', 'feature:lifecycle');
 
   const monatEl = document.querySelector<HTMLInputElement>('#Monat');
   monatEl?.classList.remove('d-none');
@@ -88,5 +93,8 @@ export default async function userLoginSuccess({
 
   updateActAsBanner();
   initAutoSaveIndicator();
+  markStep('login', 'ui:autoSaveIndicator');
+
   selectYear(monat, aktJahr);
+  markStep('login', 'data:selectYear');
 }

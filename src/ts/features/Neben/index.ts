@@ -1,6 +1,7 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import { onEvent, registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
@@ -91,4 +92,5 @@ registerAppStartTask(() => {
   ftN.rows.setFilter(
     row => getMonatFromN(row) === monat && checkIfGreater2024(Storage.get<number>('Jahr', { default: Jahr })),
   );
+  markStep('boot', 'boot:neben');
 });

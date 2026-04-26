@@ -9,6 +9,7 @@ const logoutMock = vi.fn().mockResolvedValue(undefined);
 const unmountAdminTabMock = vi.fn();
 const getOrCreateInstanceMock = vi.fn();
 const showMock = vi.fn();
+const publishEventMock = vi.fn();
 
 vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   default: {
@@ -47,6 +48,10 @@ vi.mock('../src/ts/Admin', () => ({
   unmountAdminTab: unmountAdminTabMock,
 }));
 
+vi.mock('../src/ts/core/events/appEvents', () => ({
+  publishEvent: publishEventMock,
+}));
+
 vi.mock('bootstrap/js/dist/tab', () => ({
   default: {
     getOrCreateInstance: getOrCreateInstanceMock,
@@ -80,6 +85,7 @@ describe('logoutUser', () => {
     expect(logoutMock).not.toHaveBeenCalled();
     expect(Storage.clear).toHaveBeenCalledTimes(1);
     expect(showMock).toHaveBeenCalledTimes(1);
+    expect(publishEventMock).toHaveBeenCalledWith('user:logout', { reason: 'manual' });
   });
 
   it('führt beim normalen Logout den Server-Logout aus', async () => {
@@ -107,6 +113,12 @@ describe('logoutUser', () => {
     logoutUser({ serverLogout: false });
 
     expect(getOrCreateInstanceMock).not.toHaveBeenCalled();
+  });
+
+  it('published version-mismatch reason when provided', () => {
+    logoutUser({ serverLogout: false, reason: 'version-mismatch' });
+
+    expect(publishEventMock).toHaveBeenCalledWith('user:logout', { reason: 'version-mismatch' });
   });
 
   it('setzt Willkommen-Text auch wenn Element fehlt (kein Fehler)', () => {

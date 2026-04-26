@@ -38,11 +38,15 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-04-26
 
+### fix
+
+- Die bisher nur deklarierte Event-Channel-Nachricht `user:logout` ist jetzt aktiv verdrahtet: `logoutUser` publiziert zentral `publishEvent('user:logout', { reason })` und unterscheidet die Gruende `manual`, `token-expired` und `version-mismatch`.
+- `auth:failure` in `main.ts` mapped nun explizit auf `logoutUser({ reason: 'token-expired' })`; der Versionskonfliktpfad beim App-Update mapped auf `reason: 'version-mismatch'`.
+- Init-Orchestrierung korrigiert: Der Cookie-/Storage-Check ist jetzt als eigener Gate-Step (`cookie:check` in `auth-gate`) modelliert und verzweigt fachlich korrekt entweder in `SESSION_RESTORE_SEQUENCE` oder `LOGIN_INIT_SEQUENCE`.
+
 ### refactor
 
 - Zyklus 11 abgeschlossen: Ordnerstruktur bereinigt (`class/` + `interfaces/` + `utilities/` gelöscht, CSS co-located), TypeScript Path Aliases (`@/types`, `@/core`, `@/components`, `@/infrastructure`) eingerichtet und 324 Importstellen migriert, `apiService.ts` in `apiFetchHelper.ts` + `authApi.ts` + `dataApi.ts` aufgeteilt (Barrel bleibt), `VorgabenBWeekRangeEditor` und `adminUserListHelpers` aus Admin-Komponenten extrahiert.
-
-
 
 ### test
 

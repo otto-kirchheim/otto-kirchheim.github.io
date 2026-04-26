@@ -28,6 +28,8 @@
       "@/components/*": ["./src/ts/components/*"],
       "@/core": ["./src/ts/core/index.ts"],
       "@/core/*": ["./src/ts/core/*"],
+      "@/features": ["./src/ts/features/index.ts"],
+      "@/features/*": ["./src/ts/features/*"],
       "@/types": ["./src/ts/core/types/index.ts"],
       "@/types/*": ["./src/ts/core/types/*"],
       "@/infrastructure": ["./src/ts/infrastructure/index.ts"],

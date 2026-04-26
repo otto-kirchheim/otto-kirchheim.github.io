@@ -9,6 +9,10 @@ export interface HookMap {
 const hooks = new Map<keyof HookMap, HookMap[keyof HookMap]>();
 
 export function registerHook<K extends keyof HookMap>(name: K, handler: HookMap[K]): void {
+  if (hooks.has(name)) {
+    console.warn(`Hook '${name}' already registered, skipping duplicate`);
+    return;
+  }
   hooks.set(name, handler);
 }
 

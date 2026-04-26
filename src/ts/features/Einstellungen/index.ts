@@ -1,5 +1,6 @@
 import dayjs from '@/infrastructure/date/configDayjs';
 import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { setAutoSaveEnabled, setAutoSaveDelay } from '@/infrastructure/autoSave/autoSave';
@@ -296,7 +297,7 @@ registerAppStartTask(() => {
 
   const btnLogout = document.querySelector<HTMLButtonElement>('#btnLogout');
   btnLogout?.addEventListener('click', () => {
-    logoutUser();
+    logoutUser({ reason: 'manual' });
   });
 
   const form = document.querySelector<HTMLFormElement>('#formEinstellungen');
@@ -326,4 +327,5 @@ registerAppStartTask(() => {
     void ensureEmailAnzeigeLoaded();
     void ensurePasskeyAnzeigeLoaded();
   }
+  markStep('boot', 'boot:einstellungen');
 });

@@ -2,6 +2,7 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
 import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '@/types';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
@@ -221,4 +222,5 @@ registerAppStartTask(() => {
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftBZ.rows.setFilter(row => getMonatFromBZ(row) === monat);
   ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
+  markStep('boot', 'boot:bereitschaft');
 });
