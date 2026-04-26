@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'bun:test';
-import { clearAllHooks, getHook, invokeHook, registerHook } from '../../../src/ts/core/hooks';
-import type { IVorgabenU } from '../../../src/ts/core/types';
+import { clearAllHooks, getHook, invokeHook, registerHook } from '@/core/hooks';
+import type { IVorgabenU } from '@/types';
 
 const makeUserData = (): IVorgabenU =>
   ({

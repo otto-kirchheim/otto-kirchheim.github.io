@@ -7,15 +7,15 @@ const { createSnackBarMock, createModalResetPasswordMock } = (
   createModalResetPasswordMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/components', () => ({
+vi.mock('@/core/orchestration/auth/components', () => ({
   createModalResetPassword: createModalResetPasswordMock,
 }));
 
-import handleAuthUrlState from '../src/ts/core/orchestration/auth/utils/handleAuthUrlState';
+import handleAuthUrlState from '@/core/orchestration/auth/utils/handleAuthUrlState';
 
 describe('handleAuthUrlState', () => {
   beforeEach(() => {

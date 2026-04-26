@@ -12,19 +12,19 @@ const browserSupportsWebAuthnMock = vi.fn();
 const hideMock = vi.fn();
 const getInstanceMock = vi.fn();
 
-vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
+vi.mock('@/core/orchestration/auth/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({
+vi.mock('@/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     beginPasskeyLogin: beginPasskeyLoginMock,
     finishPasskeyLogin: finishPasskeyLoginMock,
@@ -32,7 +32,7 @@ vi.mock('../src/ts/infrastructure/api/apiService', () => ({
   },
 }));
 
-vi.mock('../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
@@ -48,7 +48,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import loginWithPasskey from '../src/ts/core/orchestration/auth/utils/loginWithPasskey';
+import loginWithPasskey from '@/core/orchestration/auth/utils/loginWithPasskey';
 
 function setupDom(userName = ''): HTMLDivElement {
   document.body.innerHTML = `

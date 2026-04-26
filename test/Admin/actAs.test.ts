@@ -8,22 +8,22 @@ const { mockSetActAsUser, mockLoadUserDaten, mockGetStoredMonatJahr } = (
   mockGetStoredMonatJahr: vi.fn(() => ({ monat: 3, jahr: 2026 })),
 }));
 
-vi.mock('../../src/ts/features/Admin/utils/api', () => ({
+vi.mock('@/features/Admin/utils/api', () => ({
   setActAsUser: mockSetActAsUser,
 }));
-vi.mock('../../src/ts/core/orchestration/auth/utils', () => ({
+vi.mock('@/core/orchestration/auth/utils', () => ({
   loadUserDaten: mockLoadUserDaten,
 }));
-vi.mock('../../src/ts/infrastructure/date/dateStorage', () => ({
+vi.mock('@/infrastructure/date/dateStorage', () => ({
   getStoredMonatJahr: mockGetStoredMonatJahr,
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+import Storage from '@/infrastructure/storage/Storage';
 import {
   clearLoadedUserResourceCache,
   loadUserDataForAdminSelection,
   loadOwnUserData,
-} from '../../src/ts/features/Admin/utils/actAs';
+} from '@/features/Admin/utils/actAs';
 
 describe('actAs utilities', () => {
   beforeEach(() => {

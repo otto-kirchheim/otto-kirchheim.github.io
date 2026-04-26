@@ -1,20 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import { CustomTable } from '../src/ts/infrastructure/table/CustomTable';
-import type { IDatenEWT, IVorgabenU } from '../src/ts/core/types';
-import EditorModalEWT from '../src/ts/features/EWT/components/createEditorModalEWT';
-import calculateBuchungstagEwt from '../src/ts/infrastructure/date/calculateBuchungstagEwt';
-import clearEwtZeiten from '../src/ts/features/EWT/utils/clearEwtZeiten';
-import getEwtEditorDate from '../src/ts/features/EWT/utils/getEwtEditorDate';
-import getEwtWindow from '../src/ts/features/EWT/utils/getEwtWindow';
-import setNaechsterEwtTag from '../src/ts/features/EWT/utils/setNaechsterEwtTag';
-import Storage from '../src/ts/infrastructure/storage/Storage';
+import { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { IDatenEWT, IVorgabenU } from '@/core/types';
+import EditorModalEWT from '@/features/EWT/components/createEditorModalEWT';
+import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
+import clearEwtZeiten from '@/features/EWT/utils/clearEwtZeiten';
+import getEwtEditorDate from '@/features/EWT/utils/getEwtEditorDate';
+import getEwtWindow from '@/features/EWT/utils/getEwtWindow';
+import setNaechsterEwtTag from '@/features/EWT/utils/setNaechsterEwtTag';
+import Storage from '@/infrastructure/storage/Storage';
 
 const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

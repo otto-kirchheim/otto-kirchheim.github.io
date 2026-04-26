@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import Storage from '../src/ts/infrastructure/storage/Storage';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenBerechnung } from '../src/ts/core/types';
+import Storage from '@/infrastructure/storage/Storage';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenBerechnung } from '@/core/types';
 
 // Mock generateTableBerechnung to avoid DOM dependency
-vi.mock('../src/ts/features/Berechnung/generateTableBerechnung', () => ({
+vi.mock('@/features/Berechnung/generateTableBerechnung', () => ({
   default: vi.fn(),
 }));
 
-import aktualisiereBerechnung from '../src/ts/features/Berechnung/aktualisiereBerechnung';
+import aktualisiereBerechnung from '@/features/Berechnung/aktualisiereBerechnung';
 
 describe('aktualisiereBerechnung', () => {
   beforeEach(() => {

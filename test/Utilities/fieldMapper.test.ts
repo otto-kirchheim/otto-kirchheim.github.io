@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import dayjs from '../../src/ts/infrastructure/date/configDayjs';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
@@ -19,8 +19,8 @@ import {
   userProfileToBackend,
   vorgabenFromBackend,
   vorgabenUFromServer,
-} from '../../src/ts/infrastructure/data/fieldMapper';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '../../src/ts/core/types';
+} from '@/infrastructure/data/fieldMapper';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenU, IVorgabenUServer } from '@/core/types';
 
 // ─── bzFromBackend / bzToBackend ─────────────────────────
 

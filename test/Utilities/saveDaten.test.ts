@@ -32,24 +32,24 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
-vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
-vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('@/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   flushAll: mockFlushAll,
   getResourceStatus: mockGetResourceStatus,
   markResourcesIdle: mockMarkResourcesIdle,
   markResourceSaved: mockMarkResourceSaved,
   hasPendingTableChanges: mockHasPendingTableChanges,
 }));
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
-import saveDaten from '../../src/ts/infrastructure/data/saveDaten';
-import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
+import Storage from '@/infrastructure/storage/Storage';
+import saveDaten from '@/infrastructure/data/saveDaten';
+import { registerHook, clearAllHooks } from '@/core/hooks';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;

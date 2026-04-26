@@ -24,30 +24,30 @@ const {
   confirmMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     register: registerMock,
     me: meMock,
   },
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/utils/userLoginSuccess', () => ({
+vi.mock('@/core/orchestration/auth/utils/userLoginSuccess', () => ({
   default: userLoginSuccessMock,
 }));
 
-vi.mock('../src/ts/infrastructure/tokenManagement/passkeys', () => ({
+vi.mock('@/infrastructure/tokenManagement/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,
 }));
 
-vi.mock('../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
@@ -57,7 +57,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import checkNeuerBenutzer from '../src/ts/core/orchestration/auth/utils/checkNeuerBenutzer';
+import checkNeuerBenutzer from '@/core/orchestration/auth/utils/checkNeuerBenutzer';
 
 function setupDom(): HTMLDivElement {
   document.body.innerHTML = `

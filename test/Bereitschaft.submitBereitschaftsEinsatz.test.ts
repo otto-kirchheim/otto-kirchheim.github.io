@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenBE, IDatenBZ } from '../src/ts/core/types';
-import Storage from '../src/ts/infrastructure/storage/Storage';
+import type { IDatenBE, IDatenBZ } from '@/core/types';
+import Storage from '@/infrastructure/storage/Storage';
 
 const {
   calculateBereitschaftsZeitenMock,
@@ -18,22 +18,22 @@ const {
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
+vi.mock('@/features/Bereitschaft/utils', () => ({
   calculateBereitschaftsZeiten: calculateBereitschaftsZeitenMock,
   getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
   persistBereitschaftsEinsatzTableData: persistBereitschaftsEinsatzTableDataMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/core', () => ({
+vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-import submitBereitschaftsEinsatz from '../src/ts/features/Bereitschaft/utils/submitBereitschaftsEinsatz';
+import submitBereitschaftsEinsatz from '@/features/Bereitschaft/utils/submitBereitschaftsEinsatz';
 
 function createModal(overrides: Partial<Record<string, string | boolean>> = {}): HTMLDivElement {
   const modal = document.createElement('div');

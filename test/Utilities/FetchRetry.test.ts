@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createSnackBar } from '../../src/ts/infrastructure/ui/CustomSnackbar';
-import Storage from '../../src/ts/infrastructure/storage/Storage';
-import tokenErneuern from '../../src/ts/infrastructure/tokenManagement/tokenErneuern';
-import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/infrastructure/api/FetchRetry';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import Storage from '@/infrastructure/storage/Storage';
+import tokenErneuern from '@/infrastructure/tokenManagement/tokenErneuern';
+import { API_URL, FetchRetry, getServerUrl } from '@/infrastructure/api/FetchRetry';
 
 // --- Mocks ---
 
@@ -10,7 +10,7 @@ import { API_URL, FetchRetry, getServerUrl } from '../../src/ts/infrastructure/a
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
 // Mock Storage module (which uses localStorage)
-vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     get: vi.fn(),
     set: vi.fn(),
@@ -21,19 +21,19 @@ vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
 }));
 
 // Mock createSnackBar
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: vi.fn(() => ({ Close: vi.fn() })), // Mock Close method as well
 }));
 
 // Mock getValidAccesstoken — ENTFERNT (wird nicht mehr verwendet)
 
 // Mock tokenErneuern
-vi.mock('../../src/ts/infrastructure/tokenManagement/tokenErneuern', () => ({
+vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
   default: vi.fn(),
 }));
 
 // Mock abortController (if needed, though FetchRetry uses its own for timeout)
-vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
+vi.mock('@/infrastructure/api/abortController', () => ({
   abortController: {
     signal: new AbortController().signal, // Provide a default signal
     reset: vi.fn(),

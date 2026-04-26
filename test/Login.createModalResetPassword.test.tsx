@@ -11,18 +11,18 @@ const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInsta
   getInstanceMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/components', () => ({
+vi.mock('@/components', () => ({
   showModal: showModalMock,
   MyFormModal: (props: Record<string, unknown>) => h('div', props),
   MyModalBody: (props: Record<string, unknown>) => h('div', props),
   MyInput: (props: Record<string, unknown>) => h('input', props),
 }));
 
-vi.mock('../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     resetPassword: resetPasswordMock,
   },
@@ -34,7 +34,7 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   },
 }));
 
-import createModalResetPassword from '../src/ts/core/orchestration/auth/components/createModalResetPassword';
+import createModalResetPassword from '@/core/orchestration/auth/components/createModalResetPassword';
 
 function setupShowModalMock(password = 'pass12345', repeat = 'pass12345', isValid = true) {
   showModalMock.mockImplementation((vnode: { props: { myRef: { current: HTMLFormElement | null } } }) => {

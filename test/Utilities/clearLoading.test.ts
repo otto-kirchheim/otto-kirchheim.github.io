@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import clearLoading from '../../src/ts/infrastructure/ui/clearLoading';
-import setLoading from '../../src/ts/infrastructure/ui/setLoading';
+import clearLoading from '@/infrastructure/ui/clearLoading';
+import setLoading from '@/infrastructure/ui/setLoading';
 
 describe('clearLoading', () => {
   let container: HTMLDivElement;

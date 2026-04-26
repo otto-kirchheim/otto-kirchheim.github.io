@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createSnackBar } from '../../src/ts/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 
 describe('CustomSnackbar', () => {
   beforeEach(() => {

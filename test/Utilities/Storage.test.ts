@@ -4,11 +4,11 @@ const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => 
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+import Storage from '@/infrastructure/storage/Storage';
 
 describe('Storage', () => {
   beforeEach(() => {
@@ -296,8 +296,8 @@ describe('Storage', () => {
 
   describe('Singleton', () => {
     it('gibt immer dieselbe Instanz zurück', async () => {
-      const { default: Storage1 } = await import('../../src/ts/infrastructure/storage/Storage');
-      const { default: Storage2 } = await import('../../src/ts/infrastructure/storage/Storage');
+      const { default: Storage1 } = await import('@/infrastructure/storage/Storage');
+      const { default: Storage2 } = await import('@/infrastructure/storage/Storage');
       expect(Storage1).toBe(Storage2);
     });
   });

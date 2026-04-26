@@ -27,11 +27,11 @@ vi.mock('@simplewebauthn/browser', () => ({
   startRegistration: startRegistrationMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: authApiMock,
 }));
 
@@ -39,7 +39,7 @@ import {
   getPasskeyErrorMessage,
   guessPasskeyDeviceName,
   registerPasskeyWithResult,
-} from '../../src/ts/infrastructure/tokenManagement/passkeys';
+} from '@/infrastructure/tokenManagement/passkeys';
 
 // ─── getPasskeyErrorMessage ──────────────────────────────────────────────────
 

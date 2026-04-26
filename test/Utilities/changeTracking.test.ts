@@ -6,8 +6,8 @@ import {
   mapCreatedIdsByContent,
   buildCreatePayloadWithClientRequestId,
   mapServerDocToFrontend,
-} from '../../src/ts/infrastructure/autoSave/changeTracking';
-import type { CustomTable, CustomTableTypes } from '../../src/ts/infrastructure/table/CustomTable';
+} from '@/infrastructure/autoSave/changeTracking';
+import type { CustomTable, CustomTableTypes } from '@/infrastructure/table/CustomTable';
 
 describe('changeTracking', () => {
   describe('stableSerialize', () => {

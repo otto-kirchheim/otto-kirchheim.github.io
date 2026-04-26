@@ -8,16 +8,16 @@ const { mockFetchRetry, mockCreateSnackBar, mockNotifyActAsStateChanged } = (
   mockNotifyActAsStateChanged: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/infrastructure/api/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
   getServerUrl: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: mockCreateSnackBar,
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/actAsStatus', () => ({
+vi.mock('@/infrastructure/ui/actAsStatus', () => ({
   notifyActAsStateChanged: mockNotifyActAsStateChanged,
 }));
 
@@ -38,8 +38,8 @@ import {
   updateUserRole,
   updateUserScopes,
   upsertVorgabeByYear,
-} from '../../src/ts/features/Admin/utils/api';
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+} from '@/features/Admin/utils/api';
+import Storage from '@/infrastructure/storage/Storage';
 
 function mockSuccess<T>(data: T) {
   mockFetchRetry.mockResolvedValueOnce({ success: true, data });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import compareVersion from '../../src/ts/infrastructure/validation/compareVersion';
+import compareVersion from '@/infrastructure/validation/compareVersion';
 
 describe('compareVersion', () => {
   it('should return a positive number if version1 > version2 (major)', () => {

@@ -11,44 +11,44 @@ const getOrCreateInstanceMock = vi.fn();
 const showMock = vi.fn();
 const publishEventMock = vi.fn();
 
-vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     clear: vi.fn(),
     check: vi.fn(),
   },
 }));
 
-vi.mock('../src/ts/infrastructure/api/abortController', () => ({
+vi.mock('@/infrastructure/api/abortController', () => ({
   abortController: { reset: resetAbortMock },
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   cancelAllPending: cancelAllPendingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
+vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
   destroyAutoSaveIndicator: destroyAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     logout: logoutMock,
   },
 }));
 
-vi.mock('../src/ts/Admin', () => ({
+vi.mock('@/Admin', () => ({
   unmountAdminTab: unmountAdminTabMock,
 }));
 
-vi.mock('../src/ts/core/events/appEvents', () => ({
+vi.mock('@/core/events/appEvents', () => ({
   publishEvent: publishEventMock,
 }));
 
@@ -58,8 +58,8 @@ vi.mock('bootstrap/js/dist/tab', () => ({
   },
 }));
 
-import logoutUser from '../src/ts/features/Einstellungen/utils/logoutUser';
-import Storage from '../src/ts/infrastructure/storage/Storage';
+import logoutUser from '@/features/Einstellungen/utils/logoutUser';
+import Storage from '@/infrastructure/storage/Storage';
 
 describe('logoutUser', () => {
   beforeEach(() => {

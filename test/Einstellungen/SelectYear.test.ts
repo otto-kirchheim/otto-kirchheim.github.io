@@ -11,24 +11,24 @@ const { createSnackBarMock, setLoadingMock, loadUserDatenMock, setMonatJahrMock 
   setMonatJahrMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({
+vi.mock('@/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../../src/ts/core/orchestration/auth/utils', () => ({
+vi.mock('@/core/orchestration/auth/utils', () => ({
   loadUserDaten: loadUserDatenMock,
 }));
 
-vi.mock('../../src/ts/features/Einstellungen/utils/setMonatJahr', () => ({
+vi.mock('@/features/Einstellungen/utils/setMonatJahr', () => ({
   default: setMonatJahrMock,
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
-import selectYear from '../../src/ts/features/Einstellungen/utils/selectYear';
+import Storage from '@/infrastructure/storage/Storage';
+import selectYear from '@/features/Einstellungen/utils/selectYear';
 
 describe('SelectYear', () => {
   let container: HTMLDivElement;

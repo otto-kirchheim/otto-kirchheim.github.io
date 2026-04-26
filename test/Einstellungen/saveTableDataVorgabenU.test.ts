@@ -4,17 +4,17 @@ const { tableToArrayMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T)
   tableToArrayMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/data/tableToArray', () => ({
+vi.mock('@/infrastructure/data/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
-import saveTableDataVorgabenU from '../../src/ts/features/Einstellungen/utils/saveTableDataVorgabenU';
-import type { CustomTable } from '../../src/ts/infrastructure/table/CustomTable';
-import type { IVorgabenUvorgabenB } from '../../src/ts/core/types';
+import Storage from '@/infrastructure/storage/Storage';
+import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { IVorgabenUvorgabenB } from '@/core/types';
 import { VorgabenUMock } from '../mockData';
 
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 

@@ -3,7 +3,7 @@ import {
   LOGIN_INIT_SEQUENCE,
   validateAllSequences,
   validateInitSequence,
-} from '../../src/ts/core/orchestration/initSequence';
+} from '@/core/orchestration/initSequence';
 
 describe('initSequence', () => {
   it('LOGIN_INIT_SEQUENCE has no dangling dependencies', () => {

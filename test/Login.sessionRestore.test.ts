@@ -39,20 +39,20 @@ vi.mock('@/core/bootstrap', () => ({
   initializeAppBootstrap: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/actAsStatus', () => ({
+vi.mock('@/infrastructure/ui/actAsStatus', () => ({
   ACT_AS_STATUS_EVENT: 'actAsStatus',
   updateActAsBanner: updateActAsBannerMock,
 }));
 
-vi.mock('../src/ts/infrastructure/date/dateStorage', () => ({
+vi.mock('@/infrastructure/date/dateStorage', () => ({
   getStoredMonatJahr: getStoredMonatJahrMock,
 }));
 
-vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     check: storageCheckMock,
     get: storageGetMock,
@@ -60,42 +60,42 @@ vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   },
 }));
 
-vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
-vi.mock('../src/ts/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
   getUserCookie: getUserCookieMock,
   isAdmin: isAdminMock,
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
+vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
   initAutoSaveIndicator: initAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   initAutoSaveEventListener: initAutoSaveEventListenerMock,
   createOnChangeHandler: vi.fn(),
   setAutoSaveEnabled: vi.fn(),
   setAutoSaveDelay: vi.fn(),
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/components', () => ({
+vi.mock('@/core/orchestration/auth/components', () => ({
   createModalLogin: createModalLoginMock,
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
+vi.mock('@/core/orchestration/auth/utils', () => ({
   handleAuthUrlState: handleAuthUrlStateMock,
 }));
 
-import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '../src/ts/core/orchestration/initSequence';
+import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
 
 let authModuleLoaded = false;
 
 describe('auth/index.ts — session restore', () => {
   beforeEach(async () => {
     if (!authModuleLoaded) {
-      await import('../src/ts/core/orchestration/auth/index');
+      await import('@/core/orchestration/auth/index');
       authModuleLoaded = true;
     }
 

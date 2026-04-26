@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { StorageStateStore } from '../../src/ts/core/state/storageStateStore';
+import { StorageStateStore } from '@/core/state/storageStateStore';
 
 describe('StorageStateStore', () => {
   let store: StorageStateStore;

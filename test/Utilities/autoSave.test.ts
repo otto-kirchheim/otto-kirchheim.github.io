@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createCustomTable } from '../../src/ts/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -26,8 +26,8 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },
   bereitschaftseinsatzApi: { bulk: mockBeBulk },
@@ -35,7 +35,7 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   nebengeldApi: { bulk: mockNBulk },
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+import Storage from '@/infrastructure/storage/Storage';
 import {
   cancelAllPending,
   createOnChangeHandler,
@@ -49,9 +49,9 @@ import {
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
-} from '../../src/ts/infrastructure/autoSave/autoSave';
-import { clearAllHooks } from '../../src/ts/core/hooks';
-import { onEvent, clearAllEventListeners } from '../../src/ts/core/events/appEvents';
+} from '@/infrastructure/autoSave/autoSave';
+import { clearAllHooks } from '@/core/hooks';
+import { onEvent, clearAllEventListeners } from '@/core/events/appEvents';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(

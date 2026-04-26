@@ -1,9 +1,9 @@
 import { beforeAll, describe, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from './mockData';
-import Storage from '../src/ts/infrastructure/storage/Storage';
-import generateTableBerechnung from '../src/ts/features/Berechnung/generateTableBerechnung';
-import type { IVorgabenBerechnung } from '../src/ts/core/types/IVorgabenBerechnungMonat';
-import type { IVorgabenGeld } from '../src/ts/core/types/IVorgabenGeldType';
+import Storage from '@/infrastructure/storage/Storage';
+import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
+import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
+import type { IVorgabenGeld } from '@/core/types/IVorgabenGeldType';
 
 describe('#generateTableBerechnung', () => {
   beforeAll(() => {

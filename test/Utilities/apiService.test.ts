@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenBZ, IDatenEWT } from '../../src/ts/core/types';
+import type { IDatenBZ, IDatenEWT } from '@/core/types';
 
 // --- Hoisted mocks ---
 const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
@@ -9,12 +9,12 @@ const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(f
   }),
 );
 
-vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/infrastructure/api/FetchRetry', () => ({
   FetchRetry: mockFetchRetry,
   getServerUrl: mockGetServerUrl,
 }));
 
-vi.mock('../../src/ts/infrastructure/api/abortController', () => ({
+vi.mock('@/infrastructure/api/abortController', () => ({
   abortController: { signal: new AbortController().signal, reset: vi.fn() },
 }));
 
@@ -27,7 +27,7 @@ import {
   nebengeldApi,
   profileApi,
   vorgabenApi,
-} from '../../src/ts/infrastructure/api/apiService';
+} from '@/infrastructure/api/apiService';
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
