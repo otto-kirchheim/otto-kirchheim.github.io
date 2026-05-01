@@ -8,6 +8,7 @@ import { authApi } from '@/infrastructure/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createModalChangePassword } from './components';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import {
   logoutUser,
   selectYear,
@@ -160,22 +161,11 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
 async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   const inlinePasskeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');
   const passkeyHint = document.querySelector<HTMLElement>('#PasskeyStatus');
-  const passkeyAccordionItem = document.querySelector<HTMLElement>('#PasskeysAccordionItem');
 
-  if (!inlinePasskeyButton || !passkeyHint || !passkeyAccordionItem) return;
+  if (!inlinePasskeyButton || !passkeyHint) return;
 
-  if (typeof PublicKeyCredential === 'undefined') {
-    inlinePasskeyButton.hidden = true;
-    passkeyAccordionItem.classList.add('d-none');
-    renderPasskeyList([]);
-    passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Biometrie-Anmeldung (Passkey) wird von diesem Browser nicht unterstützt.';
-    return;
-  }
-
-  inlinePasskeyButton.disabled = false;
-  inlinePasskeyButton.hidden = false;
-  passkeyAccordionItem.classList.remove('d-none');
+  const webAuthnSupported = browserSupportsWebAuthn();
+  inlinePasskeyButton.disabled = !webAuthnSupported;
 
   const passkeys = await authApi.getPasskeys().catch(() => null);
   if (passkeys === null) {
@@ -187,22 +177,26 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   }
 
   renderPasskeyList(passkeys);
+  passkeyHint.hidden = false;
+
+  if (!webAuthnSupported) {
+    passkeyHint.textContent =
+      passkeys.length > 0
+        ? `${passkeys.length === 1 ? '1 Biometrie-Anmeldung' : `${passkeys.length} Biometrie-Anmeldungen`} auf anderen Geräten vorhanden. Einrichtung auf diesem Gerät nicht möglich.`
+        : 'Biometrie-Anmeldung wird von diesem Browser nicht unterstützt.';
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
+    return;
+  }
 
   if (passkeys.length === 0) {
     inlinePasskeyButton.textContent = 'Biometrie einrichten';
-    passkeyHint.hidden = false;
     passkeyHint.textContent = 'Noch keine Biometrie eingerichtet.';
     return;
   }
 
   inlinePasskeyButton.textContent = 'Weitere Biometrie einrichten';
-
-  const label =
-    passkeys.length === 1
-      ? '1 Biometrie-Anmeldung eingerichtet.'
-      : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
-  passkeyHint.hidden = false;
-  passkeyHint.textContent = label;
+  passkeyHint.textContent =
+    passkeys.length === 1 ? '1 Biometrie-Anmeldung eingerichtet.' : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
 }
 
 async function handlePasskeyRegistration(): Promise<void> {

@@ -4,6 +4,13 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-05-01
 
+### feat
+
+- Biometrie-Accordion wird jetzt fuer eingeloggte Nutzer immer angezeigt, unabhaengig vom WebAuthn-Support des aktuellen Browsers. Sichtbarkeit und Nutzbarkeit sind damit getrennt: Der Einrichten-Button ist deaktiviert, wenn der Browser kein WebAuthn unterstuetzt; vorhandene Passkeys (von anderen Geraeten) werden trotzdem geladen und readonly angezeigt. Statustext erklaert die jeweilige Einschraenkung kontextsensitiv.
+- WebAuthn-Capability-Pruefung in `Einstellungen/index.ts` auf `browserSupportsWebAuthn()` aus `@simplewebauthn/browser` vereinheitlicht (war zuvor `typeof PublicKeyCredential === 'undefined'`).
+
+## 2026-05-01
+
 ### fix
 
 - AutoSave-Race-Condition behoben: Wenn waehrend eines laufenden Saves neue oder geaenderte Zeilen entstehen, werden diese jetzt als nachlaufende Aenderungen vorgemerkt und nach Abschluss des aktuellen Saves automatisch in einem Folge-Save uebertragen.
