@@ -9,6 +9,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - AutoSave-Race-Condition behoben: Wenn waehrend eines laufenden Saves neue oder geaenderte Zeilen entstehen, werden diese jetzt als nachlaufende Aenderungen vorgemerkt und nach Abschluss des aktuellen Saves automatisch in einem Folge-Save uebertragen.
 - Regressionstest in `test/Utilities/autoSave.test.ts` ergaenzt, der den Save-while-saving-Ablauf absichert.
 
+### refactor
+
+- `storageAvailable` in `src/ts/infrastructure/storage/storageAvailable.ts` vereinfacht: Quota-Error-Erkennung zentralisiert und redundante Bedingungen in der Catch-Logik entfernt, ohne Verhaltensaenderung.
+
 ## 2026-04-25
 
 ### fix
