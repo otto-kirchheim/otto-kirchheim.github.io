@@ -19,7 +19,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
   const userName = usernameInput.value.trim() || undefined;
 
   if (!browserSupportsWebAuthn()) {
-    errorMessage.textContent = 'Dieser Browser unterstützt keine Passkeys.';
+    errorMessage.textContent = 'Dieser Browser unterstützt keine Biometrie-Anmeldung.';
     return;
   }
 
@@ -48,7 +48,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
       emailVerified: me?.emailVerified,
     });
   } catch (error) {
-    errorMessage.textContent = getPasskeyErrorMessage(error, 'Passkey-Anmeldung fehlgeschlagen');
+    errorMessage.textContent = getPasskeyErrorMessage(error, 'Biometrie-Anmeldung fehlgeschlagen');
   } finally {
     clearLoading('btnLogin', false);
     if (btnLogin) btnLogin.disabled = false;

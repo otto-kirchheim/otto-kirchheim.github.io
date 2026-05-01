@@ -21,14 +21,14 @@ type PasskeyListItem = Awaited<ReturnType<typeof authApi.getPasskeys>>[number];
 
 function getPasskeyDeviceLabel(passkey: PasskeyListItem): string {
   if (passkey.deviceType === 'multiDevice') {
-    return passkey.backedUp ? 'Synchronisierter Passkey' : 'Mehrgeräte-Passkey';
+    return passkey.backedUp ? 'Synchronisierte Biometrie' : 'Mehrgeräte-Biometrie';
   }
 
   if (passkey.deviceType === 'singleDevice') {
-    return 'Gerätegebundener Passkey';
+    return 'Gerätegebundene Biometrie';
   }
 
-  return 'Passkey';
+  return 'Biometrie';
 }
 
 function formatPasskeyTimestamp(value?: string): string {
@@ -135,13 +135,13 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
 }
 
 async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void> {
-  const confirmed = await confirmDialog(`Passkey „${passkey.name}” wirklich entfernen?`);
+  const confirmed = await confirmDialog(`Biometrie-Anmeldung „${passkey.name}“ wirklich entfernen?`);
   if (!confirmed) return;
 
   try {
     await authApi.deletePasskey(passkey.credentialId);
     createSnackBar({
-      message: `Passkey „${passkey.name}“ wurde entfernt.`,
+      message: `Biometrie-Anmeldung „${passkey.name}“ wurde entfernt.`,
       status: 'success',
       timeout: 4000,
       fixed: true,
@@ -149,7 +149,7 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
     await ensurePasskeyAnzeigeLoaded();
   } catch (error) {
     createSnackBar({
-      message: error instanceof Error ? error.message : 'Passkey konnte nicht entfernt werden.',
+      message: error instanceof Error ? error.message : 'Biometrie-Anmeldung konnte nicht entfernt werden.',
       status: 'danger',
       timeout: 5000,
       fixed: true,
@@ -169,7 +169,7 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
     passkeyAccordionItem.classList.add('d-none');
     renderPasskeyList([]);
     passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Passkeys werden von diesem Browser nicht unterstützt.';
+    passkeyHint.textContent = 'Biometrie-Anmeldung (Passkey) wird von diesem Browser nicht unterstützt.';
     return;
   }
 
@@ -181,23 +181,26 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   if (passkeys === null) {
     renderPasskeyList([]);
     passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Passkey-Status konnte nicht geladen werden.';
-    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
+    passkeyHint.textContent = 'Biometrie-Status konnte nicht geladen werden.';
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
     return;
   }
 
   renderPasskeyList(passkeys);
 
   if (passkeys.length === 0) {
-    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
     passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Noch kein Passkey registriert.';
+    passkeyHint.textContent = 'Noch keine Biometrie eingerichtet.';
     return;
   }
 
-  inlinePasskeyButton.textContent = 'Weiteren Passkey hinzufügen';
+  inlinePasskeyButton.textContent = 'Weitere Biometrie einrichten';
 
-  const label = passkeys.length === 1 ? '1 Passkey registriert.' : `${passkeys.length} Passkeys registriert.`;
+  const label =
+    passkeys.length === 1
+      ? '1 Biometrie-Anmeldung eingerichtet.'
+      : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
   passkeyHint.hidden = false;
   passkeyHint.textContent = label;
 }
