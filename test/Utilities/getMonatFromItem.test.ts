@@ -7,9 +7,9 @@ import {
   isEwtInMonat,
   getMonatFromN,
   filterByMonat,
-} from '../../src/ts/infrastructure/date/getMonatFromItem';
-import type { IDatenBZ, IDatenBE, IDatenEWT, IDatenN } from '../../src/ts/interfaces';
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+} from '@/infrastructure/date/getMonatFromItem';
+import type { IDatenBZ, IDatenBE, IDatenEWT, IDatenN } from '@/core/types';
+import Storage from '@/infrastructure/storage/Storage';
 
 describe('getMonatFromItem', () => {
   beforeEach(() => {

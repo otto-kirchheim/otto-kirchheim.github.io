@@ -4,11 +4,11 @@ const { registerPasskeyWithResultMock } = (vi as typeof vi & { hoisted: <T>(fact
   registerPasskeyWithResultMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/tokenManagement/passkeys', () => ({
+vi.mock('@/infrastructure/tokenManagement/passkeys', () => ({
   registerPasskeyWithResult: registerPasskeyWithResultMock,
 }));
 
-import registerPasskey from '../../src/ts/features/Einstellungen/utils/registerPasskey';
+import registerPasskey from '@/features/Einstellungen/utils/registerPasskey';
 
 describe('registerPasskey', () => {
   beforeEach(() => {

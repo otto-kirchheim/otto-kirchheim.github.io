@@ -1,17 +1,17 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import { BereitschaftsEinsatzZeiträume } from '..';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type {
   CustomHTMLDivElement,
   CustomHTMLTableElement,
   IDatenBZ,
   IVorgabenU,
   IVorgabenUvorgabenB,
-} from '../../../interfaces';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
-import dayjs from '../../../infrastructure/date/configDayjs';
+} from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   applyBereitschaftsVorgabe,
   submitBereitschaftsZeiten,

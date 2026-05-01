@@ -1,6 +1,6 @@
-import type { IDatenEWT } from '../../../interfaces';
-import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { IDatenEWT } from '@/types';
+import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 export default function getEwtEditorDate(
   row: Pick<IDatenEWT, 'tagE'> | null | undefined,

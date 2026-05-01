@@ -1,6 +1,6 @@
 import '../setupBun';
 import { afterEach, describe, expect, it, vi } from 'bun:test';
-import { setupBundeslandAutoFill } from '../../src/ts/infrastructure/date/holidayRegion';
+import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
 
 function renderForm(address = 'Beiersgraben, 36275 Kirchheim', bundesland = ''): void {
   document.body.innerHTML = `

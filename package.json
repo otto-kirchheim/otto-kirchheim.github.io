@@ -1,6 +1,6 @@
 {
   "name": "db_nebengeld_frontend",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "description": "",
   "private": "true",
   "scripts": {
@@ -54,7 +54,7 @@
     "prettier": "^3.8.3",
     "sass": "^1.99.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.59.0",
+    "typescript-eslint": "^8.59.1",
     "unplugin-inject-preload": "^3.0.0",
     "vite": "^8.0.10",
     "vite-plugin-compression2": "^2.5.3",

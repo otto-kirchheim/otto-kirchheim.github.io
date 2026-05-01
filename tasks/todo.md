@@ -1,5 +1,39 @@
 # Todo
 
+## Aktueller Plan: AutoSave-Race bei nachlaufenden neuen Datensaetzen
+
+- [x] AutoSave-Pfad fuer `saving`-Status auf Race-Condition pruefen
+- [x] Queue-Mechanismus fuer waehrend `saving` eintreffende Aenderungen implementieren
+- [x] Regressionstest fuer nachlaufende `create`-Aenderungen waehrend laufendem Save ergaenzen
+- [x] Betroffene Frontend-Tests ausfuehren und Ergebnis dokumentieren
+
+## Verifikationskriterien (AutoSave-Race)
+
+- Neue oder geaenderte Zeilen, die waehrend eines laufenden Auto-Save entstehen, werden nicht verworfen
+- Nach Abschluss des laufenden Saves wird automatisch ein weiterer Save-Lauf eingeplant
+- `test/Utilities/autoSave.test.ts` enthaelt einen Regressionstest fuer diesen Ablauf
+
+## Review (AutoSave-Race)
+
+- Ergebnis: `scheduleAutoSave` markiert Aenderungen im Status `saving` jetzt als queued und startet nach Abschluss des Saves automatisch einen Folge-Save. Dadurch gehen direkt nachlaufende neue Datensaetze nicht mehr verloren.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Utilities/autoSave.test.ts` -> `40 pass, 0 fail`.
+
+## Aktueller Plan: Frontend TypeScript-Fehler beheben
+
+- [x] Aktuelle TypeScript-Fehler erfassen und auf Root-Causes gruppieren
+- [x] Veraltete Test-Importpfade auf die aktuellen `core/types`-Barrels migrieren
+- [x] Verbleibende typspezifische Testfehler beheben und Typecheck erneut verifizieren
+
+## Verifikationskriterien (Frontend TS-Fehler)
+
+- `bunx tsc --noEmit -p tsconfig.json` läuft im Frontend ohne Fehler
+- Test-Importe referenzieren keine veralteten `src/ts/interfaces`-Pfadsegmente mehr
+
+## Review (Frontend TS-Fehler)
+
+- Ergebnis: Die gemeldeten TypeScript-Fehler wurden vollständig behoben. Ursache waren veraltete Typ-Importe in Tests (`src/ts/interfaces`), die auf die aktuelle Typ-Struktur (`src/ts/core/types`) migriert wurden.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json` sowie `cd /home/jan/Dokumente/DB-Nebengeld/frontend && rg -n "src/ts/interfaces" test || true`.
+
 ## Aktueller Plan: MyInput Ref-Handling optimieren
 
 - [x] Ref- und Popover-Pfad in `MyInput` lokal pruefen
@@ -401,3 +435,39 @@ Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 
 - Ergebnis: Nach erfolgreicher Registrierung kann jetzt direkt optional ein Passkey eingerichtet werden; technische Fehler bieten einen Retry an, während Skip oder Abbruch den Loginabschluss nicht blockieren. Das Login-Modal trennt die primäre Anmeldung, die Passkey-Alternative und Hilfsaktionen jetzt klarer.
 - Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Login.loginWithPasskey.test.ts test/Login.checkNeuerBenutzer.test.ts test/Login.createModalLogin.test.ts` → `Dateien: 3 ✓ 3 bestanden`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint && bun run build` erfolgreich.
+
+## Aktueller Plan: Logout-Events verdrahten
+
+- [x] `logoutUser` um typisierten Logout-Grund erweitern und `user:logout` publizieren
+- [x] Logout-Aufrufstellen fuer `manual`, `token-expired` und `version-mismatch` auf den neuen Grund migrieren
+- [x] Logout-Tests um Event-Assertions erweitern und relevante Frontend-Checks ausfuehren
+
+## Verifikationskriterien (Logout-Events)
+
+- `logoutUser` publiziert bei jedem Logout `publishEvent('user:logout', { reason })`
+- `auth:failure` triggert `logoutUser` mit `reason: 'token-expired'`
+- Versionsmismatch in `main.ts` triggert `logoutUser` mit `reason: 'version-mismatch'`
+- Relevanter Logout-Test, TypeScript-Check und Lint laufen fehlerfrei
+
+## Review (Logout-Events)
+
+- Ergebnis: Die Event-Deklaration `user:logout` ist jetzt zur Laufzeit verdrahtet. `logoutUser` publiziert den Logout-Grund zentral, und die drei Kernpfade (manuell, token-expired, version-mismatch) setzen den Grund explizit.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Einstellungen.logoutUser.test.ts`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`.
+
+## Aktueller Plan: Cookie-Check als Gate-Sequenz modellieren
+
+- [x] `cookie-check` aus `SESSION_RESTORE_SEQUENCE` herausloesen und als eigenen Decision-Step modellieren
+- [x] Abhaengigkeiten so setzen, dass `cookie-check` nach `boot:auth` entweder zu Session-Restore oder Login fuehrt
+- [x] Session-Restore-/InitSequence-Tests sowie TypeScript-Check auf die neue Gate-Logik anpassen
+
+## Verifikationskriterien (Cookie-Gate)
+
+- `SESSION_RESTORE_SEQUENCE` startet nach `cookie-check` statt den Check selbst zu enthalten
+- `LOGIN_INIT_SEQUENCE` haengt ebenfalls am `cookie-check`
+- Runtime markiert den Check im Auth-Startpfad als eigenen Step (`auth-gate`)
+- Relevante Tests und `bunx tsc --noEmit -p tsconfig.json` laufen erfolgreich
+
+## Review (Cookie-Gate)
+
+- Ergebnis: Der Cookie-/Storage-Check ist jetzt ein expliziter Gate-Schritt (`cookie:check`), der fachlich vor der Verzweigung liegt. Dadurch ist das Modell korrekt: `cookie-check -> SESSION_RESTORE_SEQUENCE` (bei vorhandener Session) oder `cookie-check -> LOGIN_INIT_SEQUENCE` (Idle/Login-Pfad).
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Login.sessionRestore.test.ts test/orchestration/initSequence.test.ts`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`.

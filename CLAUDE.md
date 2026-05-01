@@ -56,27 +56,25 @@ src/
 ├── scss/                  # Bootstrap + Custom Styles
 ├── ts/
 │   ├── main.ts            # App-Init (PWA, Version-Check, Bootstrap-Module)
-│   ├── class/             # Vanilla-JS Klassen (CustomTable, CustomSnackbar)
 │   ├── components/        # Preact UI-Bausteine (Modals, Buttons, Inputs)
 │   ├── core/              # Zentrale Contracts und Events
-│   │   ├── types/         # API-Envelope, State-Typen
+│   │   ├── types/         # Alle TS-Interfaces + API-Envelope-Typen
 │   │   ├── hooks/         # Hook-Registry (registerHook/invokeHook)
 │   │   ├── events/        # App-Events (publishDataChanged, EventChannels)
 │   │   └── orchestration/ # Init-Sequenz, Feature-Lifecycle-Registry, Auth-Lifecycle
 │   │       └── auth/      # Auth-Orchestrierung (Login, Modals, User-Daten)
 │   │           ├── components/ # Login/Register/Reset-Modals, ConflictReviewBanner
 │   │           └── utils/     # loginUser, loadUserDaten, userLoginSuccess, etc.
-│   ├── interfaces/        # TypeScript-Interfaces
 │   ├── infrastructure/    # Gemeinsame technische Bausteine
 │   │   ├── api/           # apiService, FetchRetry
 │   │   ├── autoSave/      # AutoSave-Manager (autoSave, changeTracking, savePipeline, errorHandling)
 │   │   ├── data/          # resourceConfig, persistTableData, mergeVisibleResourceRows, fieldMapper
 │   │   ├── date/          # dayjs-Konfiguration
 │   │   ├── storage/       # Storage-Singleton
+│   │   ├── table/         # CustomTable (Vanilla-DOM, kein Preact) + customtable.css
 │   │   ├── tokenManagement/ # JWT, Passkeys, Token-Refresh
-│   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, etc.
+│   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, CustomSnackbar
 │   │   └── validation/    # Passwort-Validierung
-│   ├── utilities/         # Legacy-Barrel (re-exportiert aus infrastructure/)
 │   └── features/          # Feature-Module
 │       ├── Bereitschaft/  # Bereitschaftsdienst (index, components/, utils/)
 │       ├── EWT/           # Einsatzwechseltaetigkeit
@@ -99,8 +97,8 @@ Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
 
 **3-Schichten-Architektur:**
 
-- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung. Keine Feature-Abhängigkeiten (außer lazy-imports für Admin).
-- **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities). Darf `core/` nutzen, nicht `features/`.
+- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung. `core/types/` enthält alle geteilten Interfaces. Keine Feature-Abhängigkeiten (außer lazy-imports für Admin).
+- **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities, CustomTable). Darf `core/` nutzen, nicht `features/`.
 - **`features/`** – Daten-getriebene Feature-Module (Bereitschaft, EWT, Neben, etc.). Dürfen `core/` und `infrastructure/` nutzen.
 
 **Feature-Modul-Pattern:**
@@ -117,7 +115,7 @@ features/Feature/
 
 - **Hauptseite:** Statisches HTML + Bootstrap
 - **Modale/Dialoge:** Preact-Komponenten, gerendert via `showModal()` in Bootstrap-Modals
-- **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein Preact)
+- **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein Preact) – liegt in `infrastructure/table/`
 
 ---
 

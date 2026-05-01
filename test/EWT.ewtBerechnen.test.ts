@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
+import type { IDatenEWT, IVorgabenU } from '@/core/types';
 
-import calculateEwtEintraege from '../src/ts/features/EWT/utils/calculateEwtEintraege';
+import calculateEwtEintraege from '@/features/EWT/utils/calculateEwtEintraege';
 
 function createData(day = '2026-03-10'): IDatenEWT {
   return {

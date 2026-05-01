@@ -1,7 +1,7 @@
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import type { IMonatsDaten } from '../../../interfaces';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { IMonatsDaten } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
 import getEwtDaten from './getEwtDaten';
 
 export default function setNaechsterEwtTag(

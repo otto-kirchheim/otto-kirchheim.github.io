@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import normalizeResourceRows from '../../src/ts/infrastructure/data/normalizeResourceRows';
+import normalizeResourceRows from '@/infrastructure/data/normalizeResourceRows';
 
 describe('normalizeResourceRows', () => {
   it('returns an array as-is', () => {

@@ -2,13 +2,13 @@ import Modal from 'bootstrap/js/dist/modal';
 import type { Dayjs } from 'dayjs';
 import type { ComponentChildren } from 'preact';
 import { Fragment, createRef } from 'preact';
-import { CustomTable, Row } from '../../../class/CustomTable';
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
-import type { CustomHTMLDivElement, IDatenBE } from '../../../interfaces';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import type { CustomHTMLDivElement, IDatenBE } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   getBereitschaftsEinsatzDaten,
   getBereitschaftsZeitraumDaten,

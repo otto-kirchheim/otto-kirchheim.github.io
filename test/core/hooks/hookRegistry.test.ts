@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'bun:test';
-import { clearAllHooks, getHook, invokeHook, registerHook } from '../../../src/ts/core/hooks';
-import type { IVorgabenU } from '../../../src/ts/interfaces';
+import { clearAllHooks, getHook, invokeHook, registerHook } from '@/core/hooks';
+import type { IVorgabenU } from '@/types';
 
 const makeUserData = (): IVorgabenU =>
   ({
@@ -41,14 +41,17 @@ describe('hookRegistry', () => {
     expect(result).toBe(userData);
   });
 
-  it('registerHook overwrites a previously registered handler', () => {
+  it('registerHook keeps the first handler and skips duplicates', () => {
     const first = vi.fn();
     const second = vi.fn();
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     registerHook('network:reconnect', first);
     registerHook('network:reconnect', second);
     invokeHook('network:reconnect');
-    expect(second).toHaveBeenCalled();
-    expect(first).not.toHaveBeenCalled();
+    expect(first).toHaveBeenCalled();
+    expect(second).not.toHaveBeenCalled();
+    expect(warnSpy).toHaveBeenCalledWith("Hook 'network:reconnect' already registered, skipping duplicate");
+    warnSpy.mockRestore();
   });
 
   it('clearAllHooks removes all handlers', () => {

@@ -4,9 +4,9 @@ const { storageMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T
   storageMock: { get: vi.fn() },
 }));
 
-vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({ default: storageMock }));
+vi.mock('@/infrastructure/storage/Storage', () => ({ default: storageMock }));
 
-import { getStoredMonatJahr } from '../../src/ts/infrastructure/date/dateStorage';
+import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
 
 describe('getStoredMonatJahr', () => {
   beforeEach(() => {

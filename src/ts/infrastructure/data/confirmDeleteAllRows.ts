@@ -1,5 +1,5 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import { createSnackBar } from '../ui/CustomSnackbar';
+import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import buttonDisable from '../ui/buttonDisable';
 import { getStoredMonatJahr } from '../date/dateStorage';
 

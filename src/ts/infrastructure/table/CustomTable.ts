@@ -1,11 +1,12 @@
 /*!
  * Customtable
  *
- * Copyright 2022-2023 Jan Otto
+ * Copyright 2022-2026 Jan Otto
  */
+import './customtable.css';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import type { CustomHTMLTableElement } from '../interfaces/index.js';
+import type { CustomHTMLTableElement } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export type CustomTableTypes = Record<string, unknown>;
@@ -959,7 +960,6 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
 
   /** Benachrichtigt den onChange-Callback (für Auto-Save-Integration) */
   public _notifyChange(): void {
-    console.log('Table changed', this.rows.getChanges());
     if (this.options.onChange) this.options.onChange(this);
   }
 

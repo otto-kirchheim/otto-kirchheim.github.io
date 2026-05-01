@@ -1,6 +1,6 @@
 import { persistEwtTableData } from '.';
-import type { CustomTable } from '../../../class/CustomTable';
-import type { CustomHTMLTableRowElement, IDatenEWT } from '../../../interfaces';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomHTMLTableRowElement, IDatenEWT } from '@/types';
 
 export default function attachBerechnenToggleListeners(this: CustomTable<IDatenEWT>): void {
   const checkboxes = document.querySelectorAll<HTMLInputElement>('#tableE .row-checkbox');

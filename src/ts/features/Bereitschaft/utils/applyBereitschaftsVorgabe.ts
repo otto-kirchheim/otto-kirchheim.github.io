@@ -1,5 +1,5 @@
-import type { IVorgabenUvorgabenB } from '../../../interfaces';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import type { IVorgabenUvorgabenB } from '@/types';
+import dayjs from '@/infrastructure/date/configDayjs';
 import hideBereitschaftsNachtfelder from './hideBereitschaftsNachtfelder';
 
 export default function applyBereitschaftsVorgabe(

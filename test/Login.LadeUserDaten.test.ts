@@ -40,27 +40,27 @@ const {
   publishEventMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/utils', () => ({
+vi.mock('@/core/orchestration/auth/utils', () => ({
   overwriteUserDaten: overwriteUserDatenMock,
 }));
 
-vi.mock('../src/ts/features/Berechnung', () => ({
+vi.mock('@/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
-vi.mock('../src/ts/features/Berechnung/generateTableBerechnung', () => ({
+vi.mock('@/features/Berechnung/generateTableBerechnung', () => ({
   default: generateTableBerechnungMock,
 }));
 
-vi.mock('../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     check: storageCheckMock,
     get: storageGetMock,
@@ -71,29 +71,29 @@ vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   },
 }));
 
-vi.mock('../src/ts/infrastructure/ui/buttonDisable', () => ({
+vi.mock('@/infrastructure/ui/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/ui/updateTabVisibility', () => ({
+vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   default: updateTabVisibilityMock,
 }));
 
-vi.mock('../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   loadAllYearData: loadAllYearDataMock,
 }));
 
-vi.mock('../src/ts/core', () => ({
+vi.mock('@/core', () => ({
   publishEvent: publishEventMock,
   unwrapEnvelope: vi.fn(),
 }));
 
-import loadUserDaten from '../src/ts/core/orchestration/auth/utils/loadUserDaten';
-import { showConflictReviewBanner } from '../src/ts/core/orchestration/auth/components';
+import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
+import { showConflictReviewBanner } from '@/core/orchestration/auth/components';
 
 type MockTableInstance = {
   rows: {

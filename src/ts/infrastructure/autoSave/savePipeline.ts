@@ -1,5 +1,5 @@
-import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../../class/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '../../interfaces';
+import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../table/CustomTable';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '@/types';
 import {
   type BulkErrorEntry,
   type BulkRequest,

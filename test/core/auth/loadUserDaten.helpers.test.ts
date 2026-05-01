@@ -9,18 +9,18 @@ const { getMonatFromBZMock, getMonatFromBEMock, getMonatFromEWTMock, getMonatFro
   getMonatFromNMock: vi.fn(),
 }));
 
-vi.mock('../../../src/ts/infrastructure/date/getMonatFromItem', () => ({
+vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
   getMonatFromBZ: getMonatFromBZMock,
   getMonatFromBE: getMonatFromBEMock,
   getMonatFromEWT: getMonatFromEWTMock,
   getMonatFromN: getMonatFromNMock,
 }));
 
-vi.mock('../../../src/ts/infrastructure/data/normalizeResourceRows', () => ({
+vi.mock('@/infrastructure/data/normalizeResourceRows', () => ({
   default: (rows: unknown) => (Array.isArray(rows) ? rows : []),
 }));
 
-import { rowMatchesMonth } from '../../../src/ts/core/orchestration/auth/utils/loadUserDaten.helpers';
+import { rowMatchesMonth } from '@/core/orchestration/auth/utils/loadUserDaten.helpers';
 
 const ROW = { _id: 'x' };
 

@@ -10,19 +10,19 @@ const { createSnackBarMock, changePasswordMock, setLoadingMock, clearLoadingMock
   modalHideMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: { changePassword: changePasswordMock },
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/setLoading', () => ({
+vi.mock('@/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
@@ -30,8 +30,8 @@ vi.mock('bootstrap/js/dist/modal', () => ({
   default: { getInstance: () => ({ hide: modalHideMock }) },
 }));
 
-import checkPasswort from '../../src/ts/features/Einstellungen/utils/checkPasswort';
-import type { CustomHTMLDivElement } from '../../src/ts/interfaces';
+import checkPasswort from '@/features/Einstellungen/utils/checkPasswort';
+import type { CustomHTMLDivElement } from '@/core/types';
 
 function createModal(alt: string, neu: string, neu2: string): CustomHTMLDivElement {
   const modal = document.createElement('div') as CustomHTMLDivElement;

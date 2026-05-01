@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'bun:test';
 
-vi.mock('../../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeTabelleEinstellungenVorgabenB: vi.fn(),
   saveTableDataVorgabenU: vi.fn(),
   setMonatJahr: vi.fn(),
 }));
 
-vi.mock('../../src/ts/features/Bereitschaft', () => ({
+vi.mock('@/features/Bereitschaft', () => ({
   BereitschaftsEinsatzZeiträume: {},
 }));
 
-vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: { get: vi.fn(), set: vi.fn(), check: vi.fn() },
 }));
 
@@ -18,7 +18,7 @@ import {
   formatDelayLabel,
   msToSliderPosition,
   sliderPositionToMs,
-} from '../../src/ts/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
+} from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
 
 // ─── formatDelayLabel ────────────────────────────────────────────────────────
 

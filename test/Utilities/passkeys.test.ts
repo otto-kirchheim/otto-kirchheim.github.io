@@ -27,11 +27,11 @@ vi.mock('@simplewebauthn/browser', () => ({
   startRegistration: startRegistrationMock,
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: authApiMock,
 }));
 
@@ -39,20 +39,20 @@ import {
   getPasskeyErrorMessage,
   guessPasskeyDeviceName,
   registerPasskeyWithResult,
-} from '../../src/ts/infrastructure/tokenManagement/passkeys';
+} from '@/infrastructure/tokenManagement/passkeys';
 
 // ─── getPasskeyErrorMessage ──────────────────────────────────────────────────
 
 describe('getPasskeyErrorMessage', () => {
   it('gibt Abbruch-Meldung für DOMException AbortError zurück', () => {
     const err = new DOMException('', 'AbortError');
-    expect(getPasskeyErrorMessage(err)).toBe('Passkey-Vorgang wurde abgebrochen.');
+    expect(getPasskeyErrorMessage(err)).toBe('Vorgang wurde abgebrochen.');
   });
 
   it('gibt Abbruch-Meldung für Error mit name AbortError zurück', () => {
     const err = new Error('abort');
     err.name = 'AbortError';
-    expect(getPasskeyErrorMessage(err)).toBe('Passkey-Vorgang wurde abgebrochen.');
+    expect(getPasskeyErrorMessage(err)).toBe('Vorgang wurde abgebrochen.');
   });
 
   it('gibt error.message für WebAuthnError zurück', () => {
@@ -66,7 +66,7 @@ describe('getPasskeyErrorMessage', () => {
   });
 
   it('gibt Standard-Fallback für unbekannte Fehler zurück', () => {
-    expect(getPasskeyErrorMessage('kein Error-Objekt')).toBe('Passkey konnte nicht eingerichtet werden');
+    expect(getPasskeyErrorMessage('kein Error-Objekt')).toBe('Biometrie-Anmeldung konnte nicht eingerichtet werden');
   });
 
   it('gibt benutzerdefinierten Fallback zurück', () => {

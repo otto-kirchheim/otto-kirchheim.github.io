@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { confirmDialog } from '../../src/ts/infrastructure/ui/confirmDialog';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 
 function makeMockBootstrap() {
   const bsModal = { show: vi.fn(), hide: vi.fn(), dispose: vi.fn() };

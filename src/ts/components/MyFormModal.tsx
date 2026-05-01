@@ -1,5 +1,5 @@
 import type { FunctionalComponent } from 'preact';
-import type { TMyModal } from '../interfaces';
+import type { TMyModal } from '@/types';
 import { MyEditorFooter, MyModalHeader } from '.';
 
 const MyFormModal: FunctionalComponent<TMyModal<HTMLFormElement>> = ({

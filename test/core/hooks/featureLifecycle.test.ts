@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'bun:test';
-import { featureLifecycleRegistry } from '../../../src/ts/core/hooks';
+import { featureLifecycleRegistry } from '@/core/hooks';
 
 const ctx = { isAdmin: false, userName: 'TestUser' };
 

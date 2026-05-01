@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 
 interface IStorage {
   set<T>(key: TStorageData, value: T): void;

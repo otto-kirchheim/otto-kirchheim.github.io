@@ -12,21 +12,21 @@ const { mockRender, mockFetchCurrentAdminCapabilities, mockGetActAsState, mockGe
 
 vi.mock('preact', () => ({ render: mockRender, h: vi.fn(() => null) }));
 vi.mock('preact/hooks', () => ({ useState: vi.fn((v: unknown) => [v, vi.fn()]), useEffect: vi.fn() }));
-vi.mock('../../../src/ts/features/Admin/utils/api', () => ({
+vi.mock('@/features/Admin/utils/api', () => ({
   fetchCurrentAdminCapabilities: mockFetchCurrentAdminCapabilities,
 }));
-vi.mock('../../src/ts/infrastructure/ui/actAsStatus', () => ({
+vi.mock('@/infrastructure/ui/actAsStatus', () => ({
   ACT_AS_STATUS_EVENT: 'actAsStatusChanged',
   getActAsState: mockGetActAsState,
 }));
 
-vi.mock('../../src/ts/infrastructure/api/FetchRetry', () => ({
+vi.mock('@/infrastructure/api/FetchRetry', () => ({
   getServerUrl: mockGetServerUrl,
 }));
 
-import { mountAdminTab, unmountAdminTab } from '../../src/ts/features/Admin';
-import { featureLifecycleRegistry } from '../../src/ts/core/hooks';
-import type { FeatureContext } from '../../src/ts/core/hooks';
+import { mountAdminTab, unmountAdminTab } from '@/features/Admin';
+import { featureLifecycleRegistry } from '@/core/hooks';
+import type { FeatureContext } from '@/core/hooks';
 
 afterEach(() => {
   featureLifecycleRegistry.clearAll();

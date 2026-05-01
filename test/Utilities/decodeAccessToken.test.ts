@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { getUserCookie, isAdmin } from '../../src/ts/infrastructure/tokenManagement/decodeAccessToken';
+import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
 
 describe('decodeAccessToken', () => {
   beforeEach(() => {

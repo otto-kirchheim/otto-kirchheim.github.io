@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'bun:test';
-import { clearAllEventListeners, onEvent, publishEvent } from '../../src/ts/core';
+import { clearAllEventListeners, onEvent, publishEvent } from '@/core';
 
 describe('Typed Event System', () => {
   afterEach(() => {

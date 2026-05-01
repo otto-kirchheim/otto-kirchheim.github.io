@@ -1,8 +1,8 @@
-import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '../../../interfaces';
-import { filterByMonat, getMonatFromBE } from '../../../infrastructure/date/getMonatFromItem';
-import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
-import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
+import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '@/types';
+import { filterByMonat, getMonatFromBE } from '@/infrastructure/date/getMonatFromItem';
+import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import { default as Storage } from '@/infrastructure/storage/Storage';
 
 export default function getBereitschaftsEinsatzDaten(
   data?: IMonatsDaten['BE'],

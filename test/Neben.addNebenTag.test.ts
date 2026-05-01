@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
 
-import type { IDatenN } from '../src/ts/interfaces';
+import type { IDatenN } from '@/core/types';
 
 const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
   () => ({
@@ -12,14 +12,14 @@ const { saveTableDataNMock, createSnackBarMock } = (vi as typeof vi & { hoisted:
 type AddNebengeldTag = (form: HTMLDivElement | HTMLFormElement, tableN: any) => void;
 
 async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
-  mock.module('../src/ts/infrastructure/data/persistTableData', () => ({
+  mock.module('@/infrastructure/data/persistTableData', () => ({
     default: saveTableDataNMock,
   }));
-  mock.module('../src/ts/class/CustomSnackbar', () => ({
+  mock.module('@/infrastructure/ui/CustomSnackbar', () => ({
     createSnackBar: createSnackBarMock,
   }));
 
-  const module = await import('../src/ts/features/Neben/utils/addNebengeldTag');
+  const module = await import('@/features/Neben/utils/addNebengeldTag');
   return module.default;
 }
 

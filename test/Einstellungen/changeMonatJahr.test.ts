@@ -16,30 +16,30 @@ const {
   getStoredMonatJahrMock: vi.fn(),
 }));
 
-vi.mock('../../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     compare: storageCompareMock,
     set: storageSetMock,
   },
 }));
 
-vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({
+vi.mock('@/infrastructure/ui/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
-vi.mock('../../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   setMonatJahr: setMonatJahrMock,
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../src/ts/infrastructure/date/dateStorage', () => ({
+vi.mock('@/infrastructure/date/dateStorage', () => ({
   getStoredMonatJahr: getStoredMonatJahrMock,
 }));
 
-import changeMonatJahr from '../../src/ts/features/Einstellungen/utils/changeMonatJahr';
+import changeMonatJahr from '@/features/Einstellungen/utils/changeMonatJahr';
 
 function createInputs(monat: number, jahr: number): void {
   const monatInput = document.createElement('input');

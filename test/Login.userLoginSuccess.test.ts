@@ -22,43 +22,44 @@ const {
   requestVerificationMailMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../src/ts/core/orchestration/auth/utils/requestVerificationMail', () => ({
+vi.mock('@/core/orchestration/auth/utils/requestVerificationMail', () => ({
   default: requestVerificationMailMock,
 }));
 
-vi.mock('../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   selectYear: selectYearMock,
 }));
 
-vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     set: storageSetMock,
     remove: storageRemoveMock,
   },
 }));
 
-vi.mock('../src/ts/infrastructure/ui/setLoading', () => ({
+vi.mock('@/infrastructure/ui/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('../src/ts/infrastructure/tokenManagement/decodeAccessToken', () => ({
+vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSaveIndicator', () => ({
+vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
   initAutoSaveIndicator: initAutoSaveIndicatorMock,
 }));
 
-vi.mock('../src/ts/features/Admin', () => ({
+vi.mock('@/features/Admin', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 
-import userLoginSuccess from '../src/ts/core/orchestration/auth/utils/userLoginSuccess';
-import { featureLifecycleRegistry } from '../src/ts/core/hooks';
+import userLoginSuccess from '@/core/orchestration/auth/utils/userLoginSuccess';
+import { featureLifecycleRegistry } from '@/core/hooks';
+import { LOGIN_INIT_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
 
 describe('userLoginSuccess', () => {
   beforeEach(() => {
@@ -72,6 +73,7 @@ describe('userLoginSuccess', () => {
     `;
     vi.clearAllMocks();
     isAdminMock.mockReturnValue(false);
+    resetSteps('login');
 
     featureLifecycleRegistry.clearAll();
     featureLifecycleRegistry.registerFeature({
@@ -125,6 +127,13 @@ describe('userLoginSuccess', () => {
 
     expect(document.querySelector<HTMLHeadingElement>('#Willkommen')?.innerHTML).toContain('&lt;otto&gt;');
     expect(document.querySelector<HTMLHeadingElement>('#Willkommen')?.innerHTML).not.toContain('<otto>');
+  });
+
+  it('fuehrt InitSteps in der deklarierten Reihenfolge aus', async () => {
+    await userLoginSuccess({ username: 'otto', role: 'member' });
+
+    const expected = LOGIN_INIT_SEQUENCE.map(s => s.name);
+    expect(getSteps('login')).toEqual(expected);
   });
 
   it('zeigt Warnung und Resend-Aktion wenn email nicht verifiziert ist', async () => {

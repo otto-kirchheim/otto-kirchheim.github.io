@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT } from '../src/ts/interfaces';
+import type { IDatenEWT } from '@/core/types';
 
 const { persistEwtTableDataMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   persistEwtTableDataMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/EWT/utils', () => ({
+vi.mock('@/features/EWT/utils', () => ({
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-import attachBerechnenToggleListeners from '../src/ts/features/EWT/utils/attachBerechnenToggleListeners';
+import attachBerechnenToggleListeners from '@/features/EWT/utils/attachBerechnenToggleListeners';
 
 function createCells(): IDatenEWT {
   return {

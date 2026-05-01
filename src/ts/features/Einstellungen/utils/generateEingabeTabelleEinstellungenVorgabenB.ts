@@ -1,10 +1,10 @@
 import { saveEinstellungen } from '.';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import { createCustomTable } from '../../../class/CustomTable';
-import type { IVorgabenU, IVorgabenUvorgabenB } from '../../../interfaces';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as buttonDisable } from '../../../infrastructure/ui/buttonDisable';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '../components';
 
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenN } from '../src/ts/interfaces';
-import Storage from '../src/ts/infrastructure/storage/Storage';
+import type { IDatenN } from '@/core/types';
+import Storage from '@/infrastructure/storage/Storage';
 
 const { tableToArrayMock, publishDataChangedMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -10,15 +10,15 @@ const { tableToArrayMock, publishDataChangedMock } = (
   publishDataChangedMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/infrastructure/data/tableToArray', () => ({
+vi.mock('@/infrastructure/data/tableToArray', () => ({
   default: tableToArrayMock,
 }));
 
-vi.mock('../src/ts/core', () => ({
+vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-import { persistNebengeldTableData } from '../src/ts/features/Neben/utils';
+import { persistNebengeldTableData } from '@/features/Neben/utils';
 
 function createData(tagN: string): IDatenN {
   return {

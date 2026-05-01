@@ -1,12 +1,14 @@
-import dayjs from '../../infrastructure/date/configDayjs';
-import { registerAppStartTask } from '../../core';
-import Storage from '../../infrastructure/storage/Storage';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import { setAutoSaveEnabled, setAutoSaveDelay } from '../../infrastructure/autoSave/autoSave';
-import { authApi } from '../../infrastructure/api/apiService';
-import { confirmDialog } from '../../infrastructure/ui/confirmDialog';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import dayjs from '@/infrastructure/date/configDayjs';
+import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
+import Storage from '@/infrastructure/storage/Storage';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import { setAutoSaveEnabled, setAutoSaveDelay } from '@/infrastructure/autoSave/autoSave';
+import { authApi } from '@/infrastructure/api/apiService';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createModalChangePassword } from './components';
+import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import {
   logoutUser,
   selectYear,
@@ -20,14 +22,14 @@ type PasskeyListItem = Awaited<ReturnType<typeof authApi.getPasskeys>>[number];
 
 function getPasskeyDeviceLabel(passkey: PasskeyListItem): string {
   if (passkey.deviceType === 'multiDevice') {
-    return passkey.backedUp ? 'Synchronisierter Passkey' : 'Mehrgeräte-Passkey';
+    return passkey.backedUp ? 'Synchronisierte Biometrie' : 'Mehrgeräte-Biometrie';
   }
 
   if (passkey.deviceType === 'singleDevice') {
-    return 'Gerätegebundener Passkey';
+    return 'Gerätegebundene Biometrie';
   }
 
-  return 'Passkey';
+  return 'Biometrie';
 }
 
 function formatPasskeyTimestamp(value?: string): string {
@@ -134,13 +136,13 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
 }
 
 async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void> {
-  const confirmed = await confirmDialog(`Passkey „${passkey.name}” wirklich entfernen?`);
+  const confirmed = await confirmDialog(`Biometrie-Anmeldung „${passkey.name}“ wirklich entfernen?`);
   if (!confirmed) return;
 
   try {
     await authApi.deletePasskey(passkey.credentialId);
     createSnackBar({
-      message: `Passkey „${passkey.name}“ wurde entfernt.`,
+      message: `Biometrie-Anmeldung „${passkey.name}“ wurde entfernt.`,
       status: 'success',
       timeout: 4000,
       fixed: true,
@@ -148,7 +150,7 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
     await ensurePasskeyAnzeigeLoaded();
   } catch (error) {
     createSnackBar({
-      message: error instanceof Error ? error.message : 'Passkey konnte nicht entfernt werden.',
+      message: error instanceof Error ? error.message : 'Biometrie-Anmeldung konnte nicht entfernt werden.',
       status: 'danger',
       timeout: 5000,
       fixed: true,
@@ -159,46 +161,42 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
 async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   const inlinePasskeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');
   const passkeyHint = document.querySelector<HTMLElement>('#PasskeyStatus');
-  const passkeyAccordionItem = document.querySelector<HTMLElement>('#PasskeysAccordionItem');
 
-  if (!inlinePasskeyButton || !passkeyHint || !passkeyAccordionItem) return;
+  if (!inlinePasskeyButton || !passkeyHint) return;
 
-  if (typeof PublicKeyCredential === 'undefined') {
-    inlinePasskeyButton.hidden = true;
-    passkeyAccordionItem.classList.add('d-none');
-    renderPasskeyList([]);
-    passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Passkeys werden von diesem Browser nicht unterstützt.';
-    return;
-  }
-
-  inlinePasskeyButton.disabled = false;
-  inlinePasskeyButton.hidden = false;
-  passkeyAccordionItem.classList.remove('d-none');
+  const webAuthnSupported = browserSupportsWebAuthn();
+  inlinePasskeyButton.disabled = !webAuthnSupported;
 
   const passkeys = await authApi.getPasskeys().catch(() => null);
   if (passkeys === null) {
     renderPasskeyList([]);
     passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Passkey-Status konnte nicht geladen werden.';
-    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
+    passkeyHint.textContent = 'Biometrie-Status konnte nicht geladen werden.';
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
     return;
   }
 
   renderPasskeyList(passkeys);
+  passkeyHint.hidden = false;
 
-  if (passkeys.length === 0) {
-    inlinePasskeyButton.textContent = 'Passkey hinzufügen';
-    passkeyHint.hidden = false;
-    passkeyHint.textContent = 'Noch kein Passkey registriert.';
+  if (!webAuthnSupported) {
+    passkeyHint.textContent =
+      passkeys.length > 0
+        ? `${passkeys.length === 1 ? '1 Biometrie-Anmeldung' : `${passkeys.length} Biometrie-Anmeldungen`} auf anderen Geräten vorhanden. Einrichtung auf diesem Gerät nicht möglich.`
+        : 'Biometrie-Anmeldung wird von diesem Browser nicht unterstützt.';
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
     return;
   }
 
-  inlinePasskeyButton.textContent = 'Weiteren Passkey hinzufügen';
+  if (passkeys.length === 0) {
+    inlinePasskeyButton.textContent = 'Biometrie einrichten';
+    passkeyHint.textContent = 'Noch keine Biometrie eingerichtet.';
+    return;
+  }
 
-  const label = passkeys.length === 1 ? '1 Passkey registriert.' : `${passkeys.length} Passkeys registriert.`;
-  passkeyHint.hidden = false;
-  passkeyHint.textContent = label;
+  inlinePasskeyButton.textContent = 'Weitere Biometrie einrichten';
+  passkeyHint.textContent =
+    passkeys.length === 1 ? '1 Biometrie-Anmeldung eingerichtet.' : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
 }
 
 async function handlePasskeyRegistration(): Promise<void> {
@@ -296,7 +294,7 @@ registerAppStartTask(() => {
 
   const btnLogout = document.querySelector<HTMLButtonElement>('#btnLogout');
   btnLogout?.addEventListener('click', () => {
-    logoutUser();
+    logoutUser({ reason: 'manual' });
   });
 
   const form = document.querySelector<HTMLFormElement>('#formEinstellungen');
@@ -326,4 +324,5 @@ registerAppStartTask(() => {
     void ensureEmailAnzeigeLoaded();
     void ensurePasskeyAnzeigeLoaded();
   }
+  markStep('boot', 'boot:einstellungen');
 });

@@ -1,4 +1,4 @@
-import { registerPasskeyWithResult } from '../../../infrastructure/tokenManagement/passkeys';
+import { registerPasskeyWithResult } from '@/infrastructure/tokenManagement/passkeys';
 
 export default async function registerPasskey(): Promise<boolean> {
   const result = await registerPasskeyWithResult();

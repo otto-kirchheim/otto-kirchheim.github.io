@@ -1,13 +1,16 @@
 import Tab from 'bootstrap/js/dist/tab';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { abortController } from '../../../infrastructure/api/abortController';
-import { cancelAllPending } from '../../../infrastructure/autoSave/autoSave';
-import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
-import { hideAllFeatureTabs } from '../../../infrastructure/ui/updateTabVisibility';
-import { updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
-import { destroyAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
-import { authApi } from '../../../infrastructure/api/apiService';
-import { featureLifecycleRegistry } from '../../../core/hooks';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { abortController } from '@/infrastructure/api/abortController';
+import { cancelAllPending } from '@/infrastructure/autoSave/autoSave';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
+import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
+import { destroyAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { authApi } from '@/infrastructure/api/apiService';
+import { featureLifecycleRegistry } from '@/core/hooks';
+import { publishEvent } from '@/core/events/appEvents';
+
+type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';
 
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
   const element = document.querySelector<HTMLElement>(selector);
@@ -15,7 +18,13 @@ function toggleClassForElement(selector: string, addClass: boolean = true, class
   else element?.classList.remove(className);
 }
 
-export default function logoutUser({ serverLogout = true }: { serverLogout?: boolean } = {}): void {
+export default function logoutUser({
+  serverLogout = true,
+  reason = 'manual',
+}: {
+  serverLogout?: boolean;
+  reason?: LogoutReason;
+} = {}): void {
   cancelAllPending();
   destroyAutoSaveIndicator();
   abortController.reset('Logout');
@@ -27,6 +36,8 @@ export default function logoutUser({ serverLogout = true }: { serverLogout?: boo
   }
 
   void featureLifecycleRegistry.teardownAll();
+
+  publishEvent('user:logout', { reason });
 
   Storage.clear();
   updateActAsBanner();

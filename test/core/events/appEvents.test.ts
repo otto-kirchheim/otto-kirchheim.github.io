@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import { publishEvent } from '../../../src/ts/core/events/appEvents';
-import { clearAllEventListeners, onEvent } from '../../../src/ts/core/events/appEvents';
+import { publishEvent } from '@/core/events/appEvents';
+import { clearAllEventListeners, onEvent } from '@/core/events/appEvents';
 
 describe('E2E: data:changed event flow', () => {
   beforeEach(() => {

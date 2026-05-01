@@ -24,28 +24,28 @@ const {
   scheduleAutoSaveMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/core', () => ({
+vi.mock('@/core', () => ({
   publishEvent: publishDataChangedMock,
 }));
 
-vi.mock('../src/ts/features/Bereitschaft/utils', () => ({
+vi.mock('@/features/Bereitschaft/utils', () => ({
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
   getBereitschaftsEinsatzDaten: getBereitschaftsEinsatzDatenMock,
 }));
 
-vi.mock('../src/ts/features/EWT/utils', () => ({
+vi.mock('@/features/EWT/utils', () => ({
   getEwtDaten: getEwtDatenMock,
 }));
 
-vi.mock('../src/ts/features/Neben/utils', () => ({
+vi.mock('@/features/Neben/utils', () => ({
   getNebengeldDaten: getNebengeldDatenMock,
 }));
 
-vi.mock('../src/ts/features/Einstellungen/utils', () => ({
+vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     get: storageGetMock,
     set: storageSetMock,
@@ -53,11 +53,11 @@ vi.mock('../src/ts/infrastructure/storage/Storage', () => ({
   },
 }));
 
-vi.mock('../src/ts/infrastructure/autoSave/autoSave', () => ({
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
-import overwriteUserDaten from '../src/ts/core/orchestration/auth/utils/overwriteUserDaten';
+import overwriteUserDaten from '@/core/orchestration/auth/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
   const table = document.createElement('table') as HTMLTableElement & {

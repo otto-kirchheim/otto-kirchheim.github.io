@@ -3,6 +3,7 @@
  *
  * Copyright 2022-2026 Jan Otto
  */
+import './CustomSnackbar.css';
 
 interface ISnackbar {
   Open: () => SnackBar;

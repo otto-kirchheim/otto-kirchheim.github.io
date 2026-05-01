@@ -1,5 +1,5 @@
 import { browserSupportsWebAuthn, startRegistration, WebAuthnError } from '@simplewebauthn/browser';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import { authApi } from '../api/apiService';
 
 export type PasskeyRegistrationResult = {
@@ -26,9 +26,12 @@ function isAbortError(error: unknown): boolean {
   );
 }
 
-export function getPasskeyErrorMessage(error: unknown, fallback = 'Passkey konnte nicht eingerichtet werden'): string {
+export function getPasskeyErrorMessage(
+  error: unknown,
+  fallback = 'Biometrie-Anmeldung konnte nicht eingerichtet werden',
+): string {
   if (isAbortError(error)) {
-    return 'Passkey-Vorgang wurde abgebrochen.';
+    return 'Vorgang wurde abgebrochen.';
   }
 
   if (error instanceof WebAuthnError) return error.message;
@@ -51,10 +54,10 @@ export async function registerPasskeyWithResult(
   options: RegisterPasskeyOptions = {},
 ): Promise<PasskeyRegistrationResult> {
   const {
-    successMessage = 'Passkey erfolgreich registriert. Fingerprint, Face ID oder Geräte-PIN kann jetzt für den Login genutzt werden.',
-    unsupportedMessage = 'Dieser Browser unterstützt keine Passkeys.',
-    cancelledMessage = 'Passkey-Einrichtung wurde abgebrochen. Du kannst sie später in den Einstellungen nachholen.',
-    errorFallbackMessage = 'Passkey konnte nicht eingerichtet werden',
+    successMessage = 'Biometrie-Anmeldung erfolgreich eingerichtet. Fingerprint, Face ID oder Geräte-PIN kann jetzt für den Login genutzt werden.',
+    unsupportedMessage = 'Dieser Browser unterstützt keine Biometrie-Anmeldung (Passkey).',
+    cancelledMessage = 'Einrichtung wurde abgebrochen. Du kannst sie später in den Einstellungen nachholen.',
+    errorFallbackMessage = 'Biometrie-Anmeldung konnte nicht eingerichtet werden',
     showSuccessToast = true,
     showFailureToast = true,
     showCancelledToast = true,

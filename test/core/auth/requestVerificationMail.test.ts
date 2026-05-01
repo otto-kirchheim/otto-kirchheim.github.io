@@ -8,19 +8,19 @@ const { resendVerificationEmailMock, createSnackBarMock, storageGetMock } = (
   storageGetMock: vi.fn(),
 }));
 
-vi.mock('../../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: { resendVerificationEmail: resendVerificationEmailMock },
 }));
 
-vi.mock('../../../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('../../../src/ts/infrastructure/storage/Storage', () => ({
+vi.mock('@/infrastructure/storage/Storage', () => ({
   default: { get: storageGetMock },
 }));
 
-import requestVerificationMail from '../../../src/ts/core/orchestration/auth/utils/requestVerificationMail';
+import requestVerificationMail from '@/core/orchestration/auth/utils/requestVerificationMail';
 
 describe('requestVerificationMail', () => {
   beforeEach(() => {

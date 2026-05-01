@@ -1,8 +1,8 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '../../../../components';
-import { createSnackBar } from '../../../../class/CustomSnackbar';
-import { authApi } from '../../../../infrastructure/api/apiService';
+import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { authApi } from '@/infrastructure/api/apiService';
 
 export default function createModalForgotPassword(): void {
   const ref = createRef<HTMLFormElement>();

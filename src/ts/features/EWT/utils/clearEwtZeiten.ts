@@ -1,4 +1,4 @@
-import type { CustomHTMLDivElement, IDatenEWT } from '../../../interfaces';
+import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
 
 export default function clearEwtZeiten(modal: CustomHTMLDivElement<IDatenEWT>): void {
   const inputIds = ['abWE', 'ab1E', 'anEE', 'beginE', 'endeE', 'abEE', 'an1E', 'anWE'];

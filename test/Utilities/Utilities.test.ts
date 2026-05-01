@@ -1,14 +1,14 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
-import { default as DatenSortieren } from '../../src/ts/infrastructure/data/DatenSortieren';
-import Storage from '../../src/ts/infrastructure/storage/Storage';
-import { default as buttonDisable } from '../../src/ts/infrastructure/ui/buttonDisable';
-import { default as checkMaxTag } from '../../src/ts/infrastructure/validation/checkMaxTag';
-import { default as clearLoading } from '../../src/ts/infrastructure/ui/clearLoading';
-import { default as setLoading } from '../../src/ts/infrastructure/ui/setLoading';
-import { getUserCookie, isAdmin } from '../../src/ts/infrastructure/tokenManagement/decodeAccessToken';
-/* import * as exportBerechnung from "../src/ts/Berechnung";
-import * as exportSnackbar from "../src/ts/class/CustomSnackbar";
-import * as exportEinstelllungen from "../src/ts/features/Einstellungen/utils"; */
+import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
+import Storage from '@/infrastructure/storage/Storage';
+import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
+import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
+/* import * as exportBerechnung from "@/Berechnung";
+import * as exportSnackbar from "@/infrastructure/ui/CustomSnackbar";
+import * as exportEinstelllungen from "@/features/Einstellungen/utils"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */
 describe('#Storage', () => {

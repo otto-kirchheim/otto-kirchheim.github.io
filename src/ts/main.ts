@@ -3,18 +3,21 @@ import { registerSW } from 'virtual:pwa-register';
 
 import 'preact/debug';
 
-import { logoutUser, changeMonatJahr, saveEinstellungen } from './features/Einstellungen/utils';
-import { createSnackBar } from './class/CustomSnackbar';
-import { default as Storage } from './infrastructure/storage/Storage';
-import { default as compareVersion } from './infrastructure/validation/compareVersion';
-import { default as initializeColorModeToggler } from './infrastructure/ui/BSColorToggler';
-import { default as setOffline } from './infrastructure/ui/setOffline';
-import { default as storageAvailable } from './infrastructure/storage/storageAvailable';
-import dayjs from './infrastructure/date/configDayjs';
+import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
+import { default as initializeColorModeToggler } from '@/infrastructure/ui/BSColorToggler';
+import { default as setOffline } from '@/infrastructure/ui/setOffline';
+import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { registerHook, featureLifecycleRegistry } from './core/hooks';
 import type { FeatureContext } from './core/hooks';
+import { validateAllSequences, markStep } from './core/orchestration/initSequence';
 
-registerHook('auth:failure', logoutUser);
+validateAllSequences();
+
+registerHook('auth:failure', () => logoutUser({ reason: 'token-expired' }));
 registerHook('network:reconnect', changeMonatJahr);
 registerHook('pre-save:settings', saveEinstellungen);
 
@@ -24,12 +27,12 @@ featureLifecycleRegistry.registerFeature({
     if (ctx.isAdmin) {
       document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
       document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
-      const { mountAdminTab } = await import('./features/Admin');
+      const { mountAdminTab } = await import('@/features/Admin');
       mountAdminTab(ctx.userName);
     }
   },
   async unregister(): Promise<void> {
-    const { unmountAdminTab } = await import('./features/Admin');
+    const { unmountAdminTab } = await import('@/features/Admin');
     unmountAdminTab();
   },
 });
@@ -83,7 +86,7 @@ registerAppStartTask(() => {
     if (compareVersion(clientVersion, currentVersion) < 0) {
       const benutzer = Storage.get<string>('Benutzer', { check: true, default: '' });
       sessionStorage.clear();
-      logoutUser({ serverLogout: false });
+      logoutUser({ serverLogout: false, reason: 'version-mismatch' });
       createSnackBar({
         message: `Hallo ${benutzer},<br/>die App hat ein Update erhalten.<br/>Bitte melde dich neu an, um<br/>die neuen Funktionen zu nutzen.`,
         timeout: 10000,
@@ -151,14 +154,15 @@ registerAppStartTask(() => {
   } else {
     setImpressumAndCopyright();
   }
+  markStep('boot', 'boot:main-ui');
 });
 
-import './features/Berechnung';
-import './features/Bereitschaft';
-import './features/EWT';
-import './features/Einstellungen';
+import '@/features/Berechnung';
+import '@/features/Bereitschaft';
+import '@/features/EWT';
+import '@/features/Einstellungen';
 import './core/orchestration/auth';
-import './features/Neben';
+import '@/features/Neben';
 
 initializeAppBootstrap();
 

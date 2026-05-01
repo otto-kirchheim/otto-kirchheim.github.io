@@ -9,11 +9,11 @@ const { mockCreateSnackBar, mockSetDisableButton, mockReconnectHandler } = (
   mockReconnectHandler: vi.fn(),
 }));
 
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/infrastructure/ui/buttonDisable', () => ({ setDisableButton: mockSetDisableButton }));
 
-import setOffline from '../../src/ts/infrastructure/ui/setOffline';
-import { registerHook, clearAllHooks } from '../../src/ts/core/hooks';
+import setOffline from '@/infrastructure/ui/setOffline';
+import { registerHook, clearAllHooks } from '@/core/hooks';
 
 describe('setOffline', () => {
   // Cleanup-Tracking: um registrierte Event-Listener nach jedem Test zu entfernen

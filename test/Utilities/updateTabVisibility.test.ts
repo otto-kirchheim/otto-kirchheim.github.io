@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import updateTabVisibility, { hideAllFeatureTabs } from '../../src/ts/infrastructure/ui/updateTabVisibility';
+import updateTabVisibility, { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
 
 describe('updateTabVisibility', () => {
   let container: HTMLDivElement;

@@ -1,6 +1,6 @@
-import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '../../interfaces';
-import { default as Storage } from '../../infrastructure/storage/Storage';
-import { default as clearLoading } from '../../infrastructure/ui/clearLoading';
+import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),

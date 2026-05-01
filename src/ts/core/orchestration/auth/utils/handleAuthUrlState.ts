@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../../../class/CustomSnackbar';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createModalResetPassword } from '../components';
 
 function mapVerifyReason(reason: string | null): string {

@@ -1,7 +1,7 @@
 import type { FunctionalComponent } from 'preact';
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
-import dayjs from '../../../../infrastructure/date/configDayjs';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 type Resource = { name: string; months: number[] };
 

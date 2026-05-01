@@ -1,21 +1,22 @@
-import { selectYear } from '../../../features/Einstellungen/utils';
-import { registerAppStartTask } from '../../';
-import type { IVorgabenU } from '../../../interfaces';
-import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '../../../infrastructure/ui/actAsStatus';
-import { getStoredMonatJahr } from '../../../infrastructure/date/dateStorage';
-import Storage from '../../../infrastructure/storage/Storage';
-import { default as updateTabVisibility } from '../../../infrastructure/ui/updateTabVisibility';
-import { getUserCookie, isAdmin } from '../../../infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '../../../infrastructure/autoSave/autoSaveIndicator';
-import { initAutoSaveEventListener } from '../../../infrastructure/autoSave/autoSave';
+import { selectYear } from '@/features/Einstellungen/utils';
+import { registerAppStartTask } from '@/core/bootstrap';
+import type { IVorgabenU } from '@/types';
+import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
+import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import Storage from '@/infrastructure/storage/Storage';
+import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
+import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
+import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { initAutoSaveEventListener } from '@/infrastructure/autoSave/autoSave';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
+import { markStep } from '../initSequence';
 
 let adminTabMounted = false;
 
 async function ensureAdminTabMounted(): Promise<void> {
   if (adminTabMounted || !isAdmin()) return;
-  const { mountAdminTab } = await import('../../../features/Admin');
+  const { mountAdminTab } = await import('@/features/Admin');
   const currentUserName = getUserCookie()?.userName ?? 'admin';
   mountAdminTab(currentUserName);
   adminTabMounted = true;
@@ -59,7 +60,7 @@ registerAppStartTask(() => {
     void ensureAdminTabMounted();
   });
   actAsButtonEl?.addEventListener('click', () => {
-    import('../../../features/Admin/utils/actAs').then(({ loadOwnUserData }) => {
+    import('@/features/Admin/utils/actAs').then(({ loadOwnUserData }) => {
       void loadOwnUserData();
     });
   });
@@ -67,7 +68,10 @@ registerAppStartTask(() => {
   window.addEventListener('storage', syncActAsNotice);
   syncActAsNotice();
 
-  if (Storage.check('Benutzer') && getUserCookie()) {
+  const hasRestorableSession = Storage.check('Benutzer') && getUserCookie();
+  markStep('auth-gate', 'cookie:check');
+
+  if (hasRestorableSession) {
     const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
     const gespeicherterBenutzer = Storage.get<string>('Benutzer', true);
     const actAsState = updateActAsBanner();
@@ -90,8 +94,10 @@ registerAppStartTask(() => {
     if (monatEl) monatEl.value = monat.toString();
 
     console.log('Benutzer gefunden');
+    markStep('session-restore', 'sr:ui-welcome');
 
     updateTabVisibility(localVorgabenU?.Einstellungen?.aktivierteTabs);
+    markStep('session-restore', 'sr:tab-visibility');
 
     const userIsAdmin = isAdmin();
     adminEl?.classList.toggle('d-none', !userIsAdmin);
@@ -111,18 +117,25 @@ registerAppStartTask(() => {
       brandStartTabEl?.click();
       window.location.hash = '#start';
     }
+    markStep('session-restore', 'sr:admin-toggle');
 
     monatEl?.classList.remove('d-none');
     navmenuEl?.classList.remove('d-none');
     btnNavmenuEl?.classList.remove('d-none');
+    markStep('session-restore', 'sr:nav-visible');
 
     initAutoSaveEventListener();
+    markStep('session-restore', 'sr:autosave-listener');
+
     initAutoSaveIndicator();
+    markStep('session-restore', 'sr:autosave-indicator');
 
     if (navigator.onLine) selectYear(monat, jahr);
+    markStep('session-restore', 'sr:select-year');
   } else {
     adminEl?.classList.add('d-none');
     adminTabPaneEl?.classList.add('d-none');
     updateActAsBanner();
   }
+  markStep('boot', 'boot:auth');
 });

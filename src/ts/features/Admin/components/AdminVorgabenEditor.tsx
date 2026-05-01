@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import { confirmDialog } from '../../../infrastructure/ui/confirmDialog';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   deleteVorgabeByYear,
   fetchVorgabeByYear,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT, IVorgabenU } from '../src/ts/interfaces';
+import type { IDatenEWT, IVorgabenU } from '@/core/types';
 
 const {
   setNaechsterEwtTagMock,
@@ -16,15 +16,15 @@ const {
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/EWT/utils', () => ({
+vi.mock('@/features/EWT/utils', () => ({
   setNaechsterEwtTag: setNaechsterEwtTagMock,
   persistEwtTableData: persistEwtTableDataMock,
   calculateEwtEintraege: calculateEwtEintraegeMock,
   calculateBuchungstagEwt: calculateBuchungstagEwtMock,
 }));
-vi.mock('../src/ts/class/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 
-import addEwtTag from '../src/ts/features/EWT/utils/addEwtTag';
+import addEwtTag from '@/features/EWT/utils/addEwtTag';
 
 function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {

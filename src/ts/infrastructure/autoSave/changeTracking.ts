@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../../class/CustomTable';
+import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import type {
   BackendBereitschaftseinsatz,
   BackendBereitschaftszeitraum,
@@ -6,7 +6,7 @@ import type {
   BackendNebengeld,
 } from '../data/fieldMapper';
 import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } from '../data/fieldMapper';
-import type { TResourceKey } from '../../interfaces';
+import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings'>, doc: unknown): CustomTableTypes {

@@ -1,24 +1,12 @@
 import { publishEvent } from '../../..';
-import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '../../../../features/Bereitschaft/utils';
-import { getEwtDaten } from '../../../../features/EWT/utils';
-import { generateEingabeMaskeEinstellungen } from '../../../../features/Einstellungen/utils';
-import type { CustomTableTypes } from '../../../../class/CustomTable';
-import type {
-  CustomHTMLTableElement,
-  IDatenBE,
-  IDatenBZ,
-  IDatenEWT,
-  IDatenN,
-  UserDatenServer,
-} from '../../../../interfaces';
-import { getNebengeldDaten } from '../../../../features/Neben/utils';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromN,
-  isEwtInMonat,
-} from '../../../../infrastructure/date/getMonatFromItem';
-import Storage from '../../../../infrastructure/storage/Storage';
+import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '@/features/Bereitschaft/utils';
+import { getEwtDaten } from '@/features/EWT/utils';
+import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
+import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
+import { getNebengeldDaten } from '@/features/Neben/utils';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import Storage from '@/infrastructure/storage/Storage';
 
 function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);

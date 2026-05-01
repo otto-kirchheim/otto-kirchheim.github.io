@@ -1,17 +1,17 @@
 import type { Dayjs } from 'dayjs';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
-import { publishEvent } from '../../../core';
-import { createSnackBar } from '../../../class/CustomSnackbar';
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '../../../interfaces';
-import { default as normalizeResourceRows } from '../../../infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as clearLoading } from '../../../infrastructure/ui/clearLoading';
-import { default as setLoading } from '../../../infrastructure/ui/setLoading';
-import { default as tableToArray } from '../../../infrastructure/data/tableToArray';
-import { bereitschaftszeitraumApi } from '../../../infrastructure/api/apiService';
-import dayjs from '../../../infrastructure/date/configDayjs';
-import { getMonatFromBZ } from '../../../infrastructure/date/getMonatFromItem';
+import { publishEvent } from '@/core';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '@/types';
+import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { default as tableToArray } from '@/infrastructure/data/tableToArray';
+import { bereitschaftszeitraumApi } from '@/infrastructure/api/apiService';
+import dayjs from '@/infrastructure/date/configDayjs';
+import { getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 
 export default async function submitBereitschaftsZeiten(
   modal: CustomHTMLDivElement<IDatenBZ>,

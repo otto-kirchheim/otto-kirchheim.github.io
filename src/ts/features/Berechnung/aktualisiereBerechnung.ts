@@ -7,16 +7,16 @@ import type {
   IDatenN,
   IVorgabenBerechnung,
   IVorgabenBerechnungMonat,
-} from '../../interfaces';
-import { default as normalizeResourceRows } from '../../infrastructure/data/normalizeResourceRows';
-import Storage from '../../infrastructure/storage/Storage';
-import dayjs from '../../infrastructure/date/configDayjs';
+} from '@/types';
+import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import Storage from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   getMonatFromBE,
   getMonatFromBZ,
   getMonatFromEWTBuchungstag,
   getMonatFromN,
-} from '../../infrastructure/date/getMonatFromItem';
+} from '@/infrastructure/date/getMonatFromItem';
 
 export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {

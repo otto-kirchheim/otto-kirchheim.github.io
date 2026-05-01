@@ -1,16 +1,17 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import { createCustomTable } from '../../class/CustomTable';
-import { registerAppStartTask } from '../../core';
-import type { IVorgabenU } from '../../interfaces';
-import { default as buttonDisable } from '../../infrastructure/ui/buttonDisable';
-import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
-import { isEwtInMonat } from '../../infrastructure/date/getMonatFromItem';
-import Storage from '../../infrastructure/storage/Storage';
-import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import dayjs from '../../infrastructure/date/configDayjs';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
+import type { IVorgabenU } from '@/types';
+import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
+import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import Storage from '@/infrastructure/storage/Storage';
+import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
-import download from '../../infrastructure/data/download';
+import download from '@/infrastructure/data/download';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 registerAppStartTask(() => {
@@ -167,4 +168,5 @@ registerAppStartTask(() => {
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftE.rows.setFilter(row => isEwtInMonat(row, monat));
+  markStep('boot', 'boot:ewt');
 });

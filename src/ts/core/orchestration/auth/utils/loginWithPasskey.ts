@@ -1,12 +1,12 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { userLoginSuccess } from '.';
-import { default as clearLoading } from '../../../../infrastructure/ui/clearLoading';
-import { default as setLoading } from '../../../../infrastructure/ui/setLoading';
-import { authApi } from '../../../../infrastructure/api/apiService';
-import { getPasskeyErrorMessage } from '../../../../infrastructure/tokenManagement/passkeys';
-import { resetTokenState } from '../../../../infrastructure/tokenManagement/tokenErneuern';
-import type { CustomHTMLDivElement } from '../../../../interfaces';
+import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { authApi } from '@/infrastructure/api/apiService';
+import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
+import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
+import type { CustomHTMLDivElement } from '@/types';
 
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');
@@ -19,7 +19,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
   const userName = usernameInput.value.trim() || undefined;
 
   if (!browserSupportsWebAuthn()) {
-    errorMessage.textContent = 'Dieser Browser unterstützt keine Passkeys.';
+    errorMessage.textContent = 'Dieser Browser unterstützt keine Biometrie-Anmeldung.';
     return;
   }
 
@@ -48,7 +48,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
       emailVerified: me?.emailVerified,
     });
   } catch (error) {
-    errorMessage.textContent = getPasskeyErrorMessage(error, 'Passkey-Anmeldung fehlgeschlagen');
+    errorMessage.textContent = getPasskeyErrorMessage(error, 'Biometrie-Anmeldung fehlgeschlagen');
   } finally {
     clearLoading('btnLogin', false);
     if (btnLogin) btnLogin.disabled = false;

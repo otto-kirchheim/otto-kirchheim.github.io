@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import type { IDatenEWT } from '../src/ts/interfaces';
+import type { IDatenEWT } from '@/core/types';
 
 const {
   calculateEwtEintraegeMock,
@@ -16,21 +16,21 @@ const {
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('../src/ts/features/EWT/utils', () => ({
+vi.mock('@/features/EWT/utils', () => ({
   calculateEwtEintraege: calculateEwtEintraegeMock,
   getEwtDaten: getEwtDatenMock,
   persistEwtTableData: persistEwtTableDataMock,
 }));
 
-vi.mock('../src/ts/features/Berechnung', () => ({
+vi.mock('@/features/Berechnung', () => ({
   aktualisiereBerechnung: aktualisiereBerechnungMock,
 }));
 
-vi.mock('../src/ts/class/CustomSnackbar', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-import recalculateEwtMonat from '../src/ts/features/EWT/utils/recalculateEwtMonat';
+import recalculateEwtMonat from '@/features/EWT/utils/recalculateEwtMonat';
 
 function createData(tagE: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {

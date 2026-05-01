@@ -6,8 +6,8 @@ import {
   PERS_FIELDS,
   TAB_OPTIONS,
   WEEKDAY_OPTIONS,
-} from '../../src/ts/features/Admin/components/profileTemplates.shared';
-import type { VorgabenBRow } from '../../src/ts/features/Admin/components/profileTemplates.shared';
+} from '@/features/Admin/components/profileTemplates.shared';
+import type { VorgabenBRow } from '@/features/Admin/components/profileTemplates.shared';
 
 function makeRow(name: string, standard: boolean): VorgabenBRow {
   return {

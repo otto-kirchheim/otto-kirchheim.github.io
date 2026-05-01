@@ -1,12 +1,24 @@
 import { abortController } from './abortController';
 import tokenErneuern from '../tokenManagement/tokenErneuern';
-import { createSnackBar } from '../../class/CustomSnackbar';
+import { createSnackBar } from '../ui/CustomSnackbar';
 import Storage from '../storage/Storage';
+import dayjs from 'dayjs';
 
 interface ServerConfig {
   url: string;
   timeout: number;
 }
+
+export const API_URL: ServerConfig[] = import.meta.env.PROD
+  ? [
+      { url: 'https://lst.otto.home64.de/api/v2', timeout: 3000 },
+      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 8000 },
+    ]
+  : [
+      { url: 'http://192.168.178.56:8081/api/v2', timeout: 3000 },
+      { url: 'http://localhost:8081/api/v2', timeout: 2000 },
+      { url: 'http://127.0.0.1:8081/api/v2', timeout: 2000 },
+    ];
 
 let serverCheckCounter = 0;
 let serverProbePromise: Promise<string> | null = null;
@@ -159,6 +171,12 @@ async function refreshAccessTokenSingleFlight(retry: number): Promise<void> {
 
   return refreshFlightPromise;
 }
+
+function invalidateServerCache(): void {
+  sessionStorage.removeItem('lastServerContact');
+  sessionStorage.removeItem('currentServerUrl');
+}
+
 /**
  * Checks the server connection with a configurable timeout.
  * @param serverUrl - The URL of the server to check.
@@ -281,6 +299,7 @@ async function executeFetchRetry<I, T>(
   data?: I,
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
   retry = 0,
+  serverRetry = 0,
 ): Promise<FetchRetryResponse<T>> {
   if (!navigator.onLine) throw new Error('Keine Internetverbindung');
   if (retry > 2) throw new Error('Zu viele Tokenfehler');
@@ -290,8 +309,6 @@ async function executeFetchRetry<I, T>(
     await refreshAccessTokenSingleFlight(retry);
     accessToken = Storage.get<string>('AccessToken', { default: undefined });
   }
-
-  const serverUrl = await getServerUrl();
 
   const headers = new Headers();
   if (method !== 'GET') headers.set('Content-Type', 'application/json');
@@ -311,8 +328,13 @@ async function executeFetchRetry<I, T>(
     cache: 'no-cache',
   };
   if (data) fetchObject.body = JSON.stringify(data);
+
+  let serverUrl: string | undefined;
+  let serverReachable = false;
   try {
+    serverUrl = await getServerUrl();
     const response = await fetch(`${serverUrl}/${UrlPath}`, fetchObject);
+    serverReachable = true;
     const responseBody = (await response.json()) as
       | ({ data?: T; success?: boolean; message?: string } & Record<string, unknown>)
       | null;
@@ -320,6 +342,8 @@ async function executeFetchRetry<I, T>(
       await refreshAccessTokenSingleFlight(retry);
       return await FetchRetry(UrlPath, data, method, retry + 1);
     }
+
+    sessionStorage.setItem('lastServerContact', dayjs().valueOf().toString());
 
     const responded: FetchRetryEnvelope<T> = {
       data: responseBody?.data as T,
@@ -330,21 +354,14 @@ async function executeFetchRetry<I, T>(
 
     return responded;
   } catch (error: unknown) {
+    if (!serverReachable && serverRetry < 3) {
+      if (serverRetry === 2) invalidateServerCache();
+      return executeFetchRetry(UrlPath, data, method, retry, serverRetry + 1);
+    }
     console.error('Fetch error occurred:', error);
     throw new Error(
-      `Fetch-Fehler: ${(<Error>error).message || error}. URL: ${serverUrl}/${UrlPath}, Method: ${method}, Retry: ${retry}`,
+      `Fetch-Fehler: ${(<Error>error).message || error}. URL: ${serverUrl ? `${serverUrl}/${UrlPath}` : UrlPath}, Method: ${method}, Retry: ${retry}`,
       { cause: error },
     );
   }
 }
-
-export const API_URL: ServerConfig[] = import.meta.env.PROD
-  ? [
-      { url: 'https://lst.otto.home64.de/api/v2', timeout: 3000 },
-      { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 8000 },
-    ]
-  : [
-      { url: 'http://192.168.178.56:8081/api/v2', timeout: 3000 },
-      { url: 'http://localhost:8081/api/v2', timeout: 2000 },
-      { url: 'http://127.0.0.1:8081/api/v2', timeout: 2000 },
-    ];

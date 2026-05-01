@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createCustomTable } from '../../src/ts/class/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -26,8 +26,8 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('../../src/ts/class/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
-vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
+vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },
   bereitschaftseinsatzApi: { bulk: mockBeBulk },
@@ -35,7 +35,7 @@ vi.mock('../../src/ts/infrastructure/api/apiService', () => ({
   nebengeldApi: { bulk: mockNBulk },
 }));
 
-import Storage from '../../src/ts/infrastructure/storage/Storage';
+import Storage from '@/infrastructure/storage/Storage';
 import {
   cancelAllPending,
   createOnChangeHandler,
@@ -49,9 +49,9 @@ import {
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
-} from '../../src/ts/infrastructure/autoSave/autoSave';
-import { clearAllHooks } from '../../src/ts/core/hooks';
-import { onEvent, clearAllEventListeners } from '../../src/ts/core/events/appEvents';
+} from '@/infrastructure/autoSave/autoSave';
+import { clearAllHooks } from '@/core/hooks';
+import { onEvent, clearAllEventListeners } from '@/core/events/appEvents';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -196,7 +196,8 @@ describe('autoSave', () => {
       markResourceSaved('N');
       const status = getResourceStatus('N');
       expect(status.status).toBe('saved');
-      expect(status.lastSaved).toBeInstanceOf(Date);
+      expect(typeof status.lastSaved).toBe('number');
+      expect(status.lastSaved).toBeGreaterThan(0);
     });
   });
 
@@ -332,6 +333,53 @@ describe('autoSave', () => {
   // ─── saveResourceNow (via scheduleAutoSave + Timer) ──
 
   describe('saveResourceNow (Ressourcen-Speicherung)', () => {
+    it('speichert nachlaufende Aenderungen, die waehrend eines laufenden Saves entstehen', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', []);
+
+      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      const { mockGetChanges } = createMockTable('tableBZ', changes, [
+        {
+          _state: 'new',
+          cells: { beginB: '2025-03-10T10:00:00.000Z' },
+        },
+      ]);
+
+      setAutoSaveDelay(10);
+
+      let resolveFirstBulk: ((value: unknown) => void) | null = null;
+      mockBzBulk
+        .mockImplementationOnce(
+          () =>
+            new Promise<unknown>(resolve => {
+              resolveFirstBulk = resolve;
+            }),
+        )
+        .mockResolvedValue({ created: [{ _id: 'new-id-2' }], updated: [], deleted: [], errors: [] });
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(15);
+      expect(getResourceStatus('BZ').status).toBe('saving');
+      expect(mockBzBulk).toHaveBeenCalledTimes(1);
+
+      changes.create.push({ beginB: '2025-03-10T11:00:00.000Z' });
+      mockGetChanges.mockReturnValue(changes);
+      scheduleAutoSave('BZ');
+
+      const resolveBulk = resolveFirstBulk as ((value: unknown) => void) | null;
+      resolveBulk?.({ created: [{ _id: 'new-id-1' }], updated: [], deleted: [], errors: [] });
+      await Promise.resolve();
+      await Promise.resolve();
+
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(mockBzBulk).toHaveBeenCalledTimes(2);
+      expect(['saved', 'idle', 'saving']).toContain(getResourceStatus('BZ').status);
+    });
+
     it('speichert BZ-Änderungen nach Timer-Ablauf', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
@@ -579,22 +627,18 @@ describe('autoSave', () => {
       // localStorage hat die Zeile nicht (wurde beim vorherigen AutoSave als 'deleted' ausgeschlossen)
       Storage.set('dataBZ', []);
 
-      createMockTable(
-        'tableBZ',
-        { create: [], update: [], delete: [] },
-        [
-          {
-            _state: 'unchanged',
+      createMockTable('tableBZ', { create: [], update: [], delete: [] }, [
+        {
+          _state: 'unchanged',
+          _id: 'bz-restored',
+          cells: {
             _id: 'bz-restored',
-            cells: {
-              _id: 'bz-restored',
-              beginB: '2025-03-10T10:00:00.000Z',
-              endeB: '2025-03-10T18:00:00.000Z',
-              pauseB: 0,
-            },
+            beginB: '2025-03-10T10:00:00.000Z',
+            endeB: '2025-03-10T18:00:00.000Z',
+            pauseB: 0,
           },
-        ],
-      );
+        },
+      ]);
 
       scheduleAutoSave('BZ');
 

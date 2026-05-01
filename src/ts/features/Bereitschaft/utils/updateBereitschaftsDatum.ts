@@ -1,5 +1,5 @@
-import type { IVorgabenUvorgabenB } from '../../../interfaces';
-import type dayjs from '../../../infrastructure/date/configDayjs';
+import type { IVorgabenUvorgabenB } from '@/types';
+import type dayjs from '@/infrastructure/date/configDayjs';
 
 export default function updateBereitschaftsDatum(
   parentElement: HTMLDivElement,

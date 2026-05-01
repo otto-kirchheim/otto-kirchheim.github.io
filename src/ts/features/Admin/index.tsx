@@ -3,8 +3,8 @@ import { useEffect, useState } from 'preact/hooks';
 import { AdminUserList } from './components/AdminUserList';
 import { AdminVorgabenEditor } from './components/AdminVorgabenEditor';
 import { AdminProfileTemplatesManager } from './components/AdminProfileTemplatesManager';
-import { ACT_AS_STATUS_EVENT, getActAsState } from '../../infrastructure/ui/actAsStatus';
-import { getServerUrl } from '../../infrastructure/api/FetchRetry';
+import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
+import { getServerUrl } from '@/infrastructure/api/FetchRetry';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {

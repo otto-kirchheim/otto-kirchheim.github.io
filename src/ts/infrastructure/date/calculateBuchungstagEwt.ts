@@ -1,4 +1,4 @@
-import type { IDatenEWT } from '../../interfaces';
+import type { IDatenEWT } from '@/types';
 import type { Dayjs } from 'dayjs';
 import dayjs from './configDayjs';
 

@@ -1,10 +1,10 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '../../../components';
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '../../../interfaces';
-import { default as Storage } from '../../../infrastructure/storage/Storage';
-import { default as checkMaxTag } from '../../../infrastructure/validation/checkMaxTag';
-import dayjs from '../../../infrastructure/date/configDayjs';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { submitBereitschaftsEinsatz } from '../utils';
 
 export default function createAddModalBereitschaftsEinsatz(): void {

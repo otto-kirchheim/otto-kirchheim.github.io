@@ -4,7 +4,7 @@ import {
   HOLIDAY_REGION_OPTIONS,
   resolveHolidayRegion,
   setupBundeslandAutoFill,
-} from '../../src/ts/infrastructure/date/holidayRegion';
+} from '@/infrastructure/date/holidayRegion';
 
 /** Hilfsfunktion: mockt einen erfolgreichen OpenPLZ-API-Aufruf. */
 const mockOpenPlz = (federalStateKey: string) => {

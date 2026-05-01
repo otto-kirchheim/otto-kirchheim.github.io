@@ -49,13 +49,16 @@ class FeatureLifecycleRegistry {
 
   /** Initialize all registered features. */
   async initializeAll(ctx: FeatureContext): Promise<void> {
-    const names = Array.from(this.features.keys());
-    for (const name of names) {
-      const feature = this.features.get(name);
+    const features = Array.from(this.features.values());
+    if (features.length === 0) {
+      console.warn('No features registered to initialize');
+      return;
+    }
+    for (const feature of features) {
       try {
-        await feature?.register(ctx);
+        await feature.register(ctx);
       } catch (error) {
-        console.error(`Feature '${name}' initialization failed:`, error);
+        console.error(`Feature '${feature.name}' initialization failed:`, error);
         throw error;
       }
     }
@@ -63,13 +66,16 @@ class FeatureLifecycleRegistry {
 
   /** Teardown all registered features in reverse order. */
   async teardownAll(): Promise<void> {
-    const names = Array.from(this.features.keys()).reverse();
-    for (const name of names) {
-      const feature = this.features.get(name);
+    const features = Array.from(this.features.values()).reverse();
+    if (features.length === 0) {
+      console.warn('No features registered to teardown');
+      return;
+    }
+    for (const feature of features) {
       try {
-        await feature?.unregister?.();
+        await feature.unregister?.();
       } catch (error) {
-        console.error(`Feature '${name}' teardown failed:`, error);
+        console.error(`Feature '${feature.name}' teardown failed:`, error);
       }
     }
   }
@@ -80,15 +86,19 @@ class FeatureLifecycleRegistry {
    * prevent other features from running.
    */
   async invokeLifecycle(stage: Exclude<LifecycleStage, 'onError'>): Promise<void> {
-    const names = Array.from(this.features.keys());
-    for (const name of names) {
-      const hook = this.features.get(name)?.lifecycle?.[stage] as (() => Promise<void> | void) | undefined;
+    const features = Array.from(this.features.values());
+    if (features.length === 0) {
+      console.warn(`No features registered to invoke lifecycle stage '${stage}'`);
+      return;
+    }
+    for (const feature of features) {
+      const hook = feature.lifecycle?.[stage];
       if (!hook) continue;
       try {
         await hook();
       } catch (error) {
-        console.error(`Feature '${name}' lifecycle '${stage}' failed:`, error);
-        await this.invokeOnError(name, error instanceof Error ? error : new Error(String(error)));
+        console.error(`Feature '${feature.name}' lifecycle '${stage}' failed:`, error);
+        await this.invokeOnError(feature.name, error instanceof Error ? error : new Error(String(error)));
       }
     }
   }

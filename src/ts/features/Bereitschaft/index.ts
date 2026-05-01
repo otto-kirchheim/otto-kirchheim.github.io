@@ -1,15 +1,16 @@
-import { createSnackBar } from '../../class/CustomSnackbar';
-import type { CustomTable } from '../../class/CustomTable';
-import { createCustomTable } from '../../class/CustomTable';
-import { registerAppStartTask } from '../../core';
-import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '../../interfaces';
-import { confirmDeleteAllRows } from '../../infrastructure/data/confirmDeleteAllRows';
-import { createOnChangeHandler } from '../../infrastructure/autoSave/autoSave';
-import { getMonatFromBE, getMonatFromBZ } from '../../infrastructure/date/getMonatFromItem';
-import { default as saveDaten } from '../../infrastructure/data/saveDaten';
-import Storage from '../../infrastructure/storage/Storage';
-import dayjs from '../../infrastructure/date/configDayjs';
-import { default as download } from '../../infrastructure/data/download';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { registerAppStartTask } from '@/core';
+import { markStep } from '@/core/orchestration/initSequence';
+import type { IDatenBE, IDatenBZ, IVorgabenUvorgabenB } from '@/types';
+import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
+import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
+import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
+import { default as saveDaten } from '@/infrastructure/data/saveDaten';
+import Storage from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
+import { default as download } from '@/infrastructure/data/download';
 import {
   EditorModalBE,
   EditorModalBereitschaftsZeit,
@@ -221,4 +222,5 @@ registerAppStartTask(() => {
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftBZ.rows.setFilter(row => getMonatFromBZ(row) === monat);
   ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
+  markStep('boot', 'boot:bereitschaft');
 });

@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenEWT, IDatenN } from '../src/ts/interfaces';
-import Storage from '../src/ts/infrastructure/storage/Storage';
+import type { IDatenEWT, IDatenN } from '@/core/types';
+import Storage from '@/infrastructure/storage/Storage';
 
 const { mockPublishEvent } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   mockPublishEvent: vi.fn(),
 }));
 
-vi.mock('../src/ts/core', () => ({
+vi.mock('@/core', () => ({
   publishEvent: mockPublishEvent,
 }));
 
-import syncNebengeldTimesFromEwtRows from '../src/ts/features/Neben/utils/syncEwtToNeben';
+import syncNebengeldTimesFromEwtRows from '@/features/Neben/utils/syncEwtToNeben';
 
 function makeEwt(overrides: Partial<IDatenEWT> & { _id: string }): IDatenEWT {
   const { _id, ...rest } = overrides;
