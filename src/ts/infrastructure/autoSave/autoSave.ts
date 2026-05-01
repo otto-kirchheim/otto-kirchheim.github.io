@@ -46,6 +46,8 @@ interface ResourceState {
   status: TSaveStatus;
   lastSaved: Date | null;
   lastError: string | null;
+  queuedDuringSave: boolean;
+  skipNextSavingSchedule: boolean;
 }
 
 type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: string) => void;
@@ -53,11 +55,46 @@ type StatusListener = (resource: TResourceKey, status: TSaveStatus, error?: stri
 // ─── State ───────────────────────────────────────────────
 
 const resourceStates: Record<TResourceKey, ResourceState> = {
-  BZ: { timer: null, status: 'idle', lastSaved: null, lastError: null },
-  BE: { timer: null, status: 'idle', lastSaved: null, lastError: null },
-  EWT: { timer: null, status: 'idle', lastSaved: null, lastError: null },
-  N: { timer: null, status: 'idle', lastSaved: null, lastError: null },
-  settings: { timer: null, status: 'idle', lastSaved: null, lastError: null },
+  BZ: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
+  BE: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
+  EWT: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
+  N: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
+  settings: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
 };
 
 const statusListeners: StatusListener[] = [];
@@ -140,6 +177,8 @@ export function cancelAllPending(resetStatus = true): void {
       clearTimeout(state.timer);
       state.timer = null;
     }
+    state.queuedDuringSave = false;
+    state.skipNextSavingSchedule = false;
     if (resetStatus && state.status !== 'idle' && state.status !== 'saving') {
       setStatus(key, 'idle');
     }
@@ -220,7 +259,14 @@ export function scheduleAutoSave(resource: TResourceKey): void {
 
   const state = resourceStates[resource];
 
-  if (state.status === 'saving') return;
+  if (state.status === 'saving') {
+    if (state.skipNextSavingSchedule) {
+      state.skipNextSavingSchedule = false;
+      return;
+    }
+    state.queuedDuringSave = true;
+    return;
+  }
 
   if (resource !== 'settings') {
     const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
@@ -259,6 +305,8 @@ export function scheduleAutoSave(resource: TResourceKey): void {
 // ─── Eigentliche Save-Logik ──────────────────────────────
 
 async function saveResourceNow(resource: TResourceKey, includeDeletes = false): Promise<void> {
+  const state = resourceStates[resource];
+
   if (!navigator.onLine) {
     setStatus(resource, 'pending');
     registerOnlineRetry();
@@ -306,6 +354,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     }
 
     updateLocalStorage(resource, table);
+    state.skipNextSavingSchedule = true;
     publishEvent('data:changed', { resource, action: 'update' });
 
     const allDocs = [...(result?.created ?? []), ...(result?.updated ?? [])];
@@ -336,10 +385,18 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       timeout: 5000,
       fixed: true,
     });
+  } finally {
+    const hasQueuedChanges = state.queuedDuringSave;
+    state.queuedDuringSave = false;
+    if (hasQueuedChanges) {
+      void saveResourceNow(resource, includeDeletes);
+    }
   }
 }
 
 async function saveSettingsNow(): Promise<void> {
+  const state = resourceStates.settings;
+
   if (!navigator.onLine) {
     setStatus('settings', 'pending');
     registerOnlineRetry();
@@ -368,6 +425,12 @@ async function saveSettingsNow(): Promise<void> {
       timeout: 5000,
       fixed: true,
     });
+  } finally {
+    const hasQueuedChanges = state.queuedDuringSave;
+    state.queuedDuringSave = false;
+    if (hasQueuedChanges) {
+      void saveSettingsNow();
+    }
   }
 }
 
