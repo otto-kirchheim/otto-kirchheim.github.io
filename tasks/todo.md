@@ -1,5 +1,23 @@
 # Todo
 
+## Aktueller Plan: AutoSave-Race bei nachlaufenden neuen Datensaetzen
+
+- [x] AutoSave-Pfad fuer `saving`-Status auf Race-Condition pruefen
+- [x] Queue-Mechanismus fuer waehrend `saving` eintreffende Aenderungen implementieren
+- [x] Regressionstest fuer nachlaufende `create`-Aenderungen waehrend laufendem Save ergaenzen
+- [x] Betroffene Frontend-Tests ausfuehren und Ergebnis dokumentieren
+
+## Verifikationskriterien (AutoSave-Race)
+
+- Neue oder geaenderte Zeilen, die waehrend eines laufenden Auto-Save entstehen, werden nicht verworfen
+- Nach Abschluss des laufenden Saves wird automatisch ein weiterer Save-Lauf eingeplant
+- `test/Utilities/autoSave.test.ts` enthaelt einen Regressionstest fuer diesen Ablauf
+
+## Review (AutoSave-Race)
+
+- Ergebnis: `scheduleAutoSave` markiert Aenderungen im Status `saving` jetzt als queued und startet nach Abschluss des Saves automatisch einen Folge-Save. Dadurch gehen direkt nachlaufende neue Datensaetze nicht mehr verloren.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Utilities/autoSave.test.ts` -> `40 pass, 0 fail`.
+
 ## Aktueller Plan: Frontend TypeScript-Fehler beheben
 
 - [x] Aktuelle TypeScript-Fehler erfassen und auf Root-Causes gruppieren

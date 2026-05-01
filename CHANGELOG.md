@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-05-01
+
+### fix
+
+- AutoSave-Race-Condition behoben: Wenn waehrend eines laufenden Saves neue oder geaenderte Zeilen entstehen, werden diese jetzt als nachlaufende Aenderungen vorgemerkt und nach Abschluss des aktuellen Saves automatisch in einem Folge-Save uebertragen.
+- Regressionstest in `test/Utilities/autoSave.test.ts` ergaenzt, der den Save-while-saving-Ablauf absichert.
+
 ## 2026-04-25
 
 ### fix
