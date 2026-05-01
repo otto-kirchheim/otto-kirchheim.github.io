@@ -149,7 +149,9 @@ const executedStepsMap = new Map<SequenceName, string[]>();
 
 export function markStep<S extends SequenceName>(sequence: S, step: StepNameFor<S>): void {
   const existing = executedStepsMap.get(sequence);
-  console.info(step);
+  if (import.meta.env.DEV) {
+    console.info(step);
+  }
   if (existing) {
     existing.push(step as string);
   } else {
