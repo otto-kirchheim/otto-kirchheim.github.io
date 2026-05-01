@@ -196,7 +196,8 @@ describe('autoSave', () => {
       markResourceSaved('N');
       const status = getResourceStatus('N');
       expect(status.status).toBe('saved');
-      expect(status.lastSaved).toBeInstanceOf(Date);
+      expect(typeof status.lastSaved).toBe('number');
+      expect(status.lastSaved).toBeGreaterThan(0);
     });
   });
 

@@ -368,15 +368,39 @@ describe('FetchRetry.ts', () => {
       expect((requestInit.headers as Headers).get('x-act-as-user-id')).toBe('user-123');
     });
 
-    it('should handle fetch error', async () => {
-      const fetchMessage = 'Network Failed';
-      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => {
-        throw new Error(fetchMessage);
-      });
+    it('should retry same server twice on network error, then succeed', async () => {
+      // First request fails, second attempt (same cached server) succeeds
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Network Failed'));
 
-      await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow(
-        `Fetch-Fehler: ${fetchMessage}. URL: ${primaryServerUrl}/${testPath}, Method: GET, Retry: 0`,
-      );
+      const result = await FetchRetry(testPath, undefined, 'GET');
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      // 1 failed request + 1 successful same-server retry (no probe yet)
+      expect(globalThis.fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('should probe backup server only after 3 same-server failures', async () => {
+      // 3 api-request failures trigger backup probe; primary probe succeeds, 4th request succeeds
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>)
+        .mockRejectedValueOnce(new Error('Network Failed')) // serverRetry 0
+        .mockRejectedValueOnce(new Error('Network Failed')) // serverRetry 1
+        .mockRejectedValueOnce(new Error('Network Failed')); // serverRetry 2 → invalidate
+      // remaining default mock: probe primary succeeds, then api request succeeds
+
+      const result = await FetchRetry(testPath, undefined, 'GET');
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      // 3 failed api calls + 1 probe call (primary responds) + 1 successful api retry
+      expect(globalThis.fetch).toHaveBeenCalledTimes(5);
+    });
+
+    it('should throw when all servers are unreachable after 3 retries and backup probe', async () => {
+      // All fetch calls fail: 3 api retries + probe for each configured server → throw
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network Failed'));
+
+      await expect(FetchRetry(testPath, undefined, 'GET')).rejects.toThrow('Fetch-Fehler: Server nicht Erreichbar');
+      // 3 same-server api attempts + probe for each configured server
+      expect(globalThis.fetch).toHaveBeenCalledTimes(3 + mockServerConfigs.length);
     });
 
     it('should handle non-ok response', async () => {

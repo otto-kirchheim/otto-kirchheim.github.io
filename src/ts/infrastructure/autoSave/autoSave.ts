@@ -44,7 +44,7 @@ let onlineListenerRegistered = false;
 interface ResourceState {
   timer: ReturnType<typeof setTimeout> | null;
   status: TSaveStatus;
-  lastSaved: Date | null;
+  lastSaved: number | null;
   lastError: string | null;
   queuedDuringSave: boolean;
   skipNextSavingSchedule: boolean;
@@ -104,7 +104,7 @@ const statusListeners: StatusListener[] = [];
 function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string): void {
   const state = resourceStates[resource];
   state.status = status;
-  if (status === 'saved') state.lastSaved = new Date();
+  if (status === 'saved') state.lastSaved = Date.now();
   if (status === 'error') state.lastError = error ?? 'Unbekannter Fehler';
   statusListeners.forEach(fn => fn(resource, status, status === 'error' ? (state.lastError ?? undefined) : undefined));
 }
