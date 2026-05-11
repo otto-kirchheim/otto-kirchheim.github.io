@@ -2,11 +2,7 @@ import { unwrapEnvelope } from '@/core';
 import type { ApiHttpResponse } from '@/core';
 import { FetchRetry } from './FetchRetry';
 
-export type ResourceName =
-  | 'bereitschaftszeitraum'
-  | 'bereitschaftseinsatz'
-  | 'einsatzwechseltaetigkeit'
-  | 'nebengeld';
+export type ResourceName = 'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzwechseltaetigkeit' | 'nebengeld';
 
 /** Bulk-Operation Request */
 export interface BulkRequest<TCreate = unknown, TUpdate = unknown> {
@@ -73,10 +69,7 @@ async function deleteResource(resource: ResourceName, id: string): Promise<void>
   await apiFetch<undefined, unknown>(`${resource}/${id}`, undefined, 'DELETE');
 }
 
-export async function smartSync<TBackend>(
-  resource: ResourceName,
-  bulk: BulkRequest,
-): Promise<BulkResponse<TBackend>> {
+export async function smartSync<TBackend>(resource: ResourceName, bulk: BulkRequest): Promise<BulkResponse<TBackend>> {
   const createCount = bulk.create?.length ?? 0;
   const updateCount = bulk.update?.length ?? 0;
   const deleteCount = bulk.delete?.length ?? 0;

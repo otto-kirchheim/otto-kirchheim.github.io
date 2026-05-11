@@ -3,10 +3,7 @@ import { createRef } from 'preact';
 import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
-import {
-  getPasswordValidationMessage,
-  PASSWORD_MIN_LENGTH,
-} from '@/infrastructure/validation/passwordValidation';
+import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 
 export default function createModalResetPassword(token: string): void {
   const ref = createRef<HTMLFormElement>();

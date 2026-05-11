@@ -4,15 +4,7 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type {
-  IDatenBE,
-  IDatenBZ,
-  IDatenEWT,
-  IDatenN,
-  IVorgabenGeld,
-  IVorgabenGeldType,
-  IVorgabenU,
-} from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';

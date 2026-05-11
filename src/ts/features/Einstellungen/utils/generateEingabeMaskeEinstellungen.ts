@@ -3,13 +3,7 @@ import { ZULAGEN_CATALOG } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
-import type {
-  CustomHTMLTableElement,
-  IVorgabenU,
-  IVorgabenUPers,
-  IVorgabenUaZ,
-  IVorgabenUvorgabenB,
-} from '@/types';
+import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { setupPersValidation } from '@/infrastructure/validation/addressValidation';
 
