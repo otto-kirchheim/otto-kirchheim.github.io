@@ -261,7 +261,7 @@ describe('download utility', () => {
         tagN: '19.04.2026',
         beginN: '21:00',
         endeN: '23:00',
-        anzahl040N: 2,
+        zulagenN: [{ code: '040', value: 2 }],
         auftragN: 'N-77',
       },
     ]);
@@ -274,11 +274,11 @@ describe('download utility', () => {
         Daten: {
           N: [
             {
-              Tag: '19',
+              Tag: '19.04.2026',
               Beginn: '21:00',
               Ende: '23:00',
-              Anzahl040: '2',
               Auftragsnummer: 'N-77',
+              Zulagen: [{ Typ: '040', Wert: 2 }],
             },
           ],
         },

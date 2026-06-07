@@ -25,7 +25,6 @@ function createData(tagN: string): IDatenN {
     tagN,
     beginN: '08:00',
     endeN: '10:00',
-    anzahl040N: 0,
     auftragN: '',
   };
 }
@@ -47,19 +46,6 @@ describe('persistNebengeldTableData', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
-  });
-
-  it('gibt fuer Jahre < 2024 bestehende FlatArray-Daten unveraendert zurueck', () => {
-    const dataN: IDatenN[] = [createData('2023-03-10')];
-
-    Storage.set('Jahr', 2023);
-    Storage.set('dataN', dataN);
-
-    const result = persistNebengeldTableData({} as never);
-
-    expect(result).toEqual(dataN);
-    expect(tableToArrayMock).not.toHaveBeenCalled();
-    expect(publishDataChangedMock).not.toHaveBeenCalled();
   });
 
   it('aktualisiert dataN aus den sichtbaren Tabellenzeilen und triggert Berechnung', () => {

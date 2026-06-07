@@ -5,7 +5,7 @@ import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { addNebengeldTag, getNebengeldDaten } from '../utils';
+import { addNebengeldTag, getConfiguredNebenZulagen, getNebengeldDaten } from '../utils';
 
 type ReturnTypeTagOptions = {
   value: string | number;
@@ -29,7 +29,6 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
           tagN: tagEDate.format('DD.MM.YYYY'),
           beginN: day.beginE,
           endeN: day.endeE,
-          anzahl040N: 1,
           auftragN: '',
           ewtRef: day._id,
         }),
@@ -92,19 +91,23 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
     />,
   ];
 
+  const configuredZulagen = getConfiguredNebenZulagen();
+
   showModal(
     <MyFormModal myRef={ref} title="Neuen Nebenbezug eingeben" onSubmit={onSubmit()} customButtons={customFooterButton}>
-      <MyModalBody className=" ">
-        <p className="text-center text-bg-warning p-1">!!! Erst EWT Eingeben und Berechnen !!!</p>
+      <MyModalBody>
+        <div className="col-12">
+          <p className="text-center text-bg-warning p-1 rounded mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
+        </div>
         <MySelect
-          className="form-floating col mb-3"
+          className="form-floating col-12 col-sm-6"
           title="Tag (Aus EWT)"
           id="tagN"
           required
           options={getTagOptions(dataE)}
         />
         <MyInput
-          divClass="form-floating col mb-3"
+          divClass="form-floating col-12 col-sm-6"
           type="text"
           id="AuftragN"
           name="Auftragsnummer"
@@ -114,20 +117,28 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
         >
           Auftragsnummer
         </MyInput>
-        {/* TODO: Auswahl der Zulagen ja nach Einstellungen in VorgabenU anpassen, ggf. auch Sortiert nach Typ (z.B.
-        Fahrentschädigung oder Erschwerniszulage) */}
-        <MyInput
-          divClass="form-floating col"
-          type="number"
-          id="anzahl040N"
-          name="040 Fahrentschädigung"
-          required
-          value={1}
-          min={'1'}
-          max={'1'}
-        >
-          040 Fahrentschädigung
-        </MyInput>
+        <div className="col-12 border rounded p-2">
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
+          <div className="row g-2">
+            {configuredZulagen.map(zulage => (
+              <MyInput
+                key={zulage.code}
+                divClass="form-floating col-12 col-sm-6"
+                type="number"
+                id={`zulage-${zulage.code}`}
+                name={`${zulage.code} ${zulage.label}`}
+                value={zulage.code === '040' ? 1 : 0}
+                min={'0'}
+                max={zulage.entryRule.maxEntriesPerDay ? String(zulage.entryRule.maxEntriesPerDay) : '600'}
+                required={false}
+                step={'1'}
+                dataZulageInputCode={zulage.code}
+              >
+                {`${zulage.code} ${zulage.shortLabel}`}
+              </MyInput>
+            ))}
+          </div>
+        </div>
       </MyModalBody>
     </MyFormModal>,
   );

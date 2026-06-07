@@ -1,6 +1,18 @@
 import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+
+type NFields = { F: number; A: number; B: number; C: number; CA: number; CB: number; C9: number; SIPO: number };
+const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
+  (n, g) => n.F * g.Fahrentsch,
+  (n, g) => Math.round(n.A / 60) * g.A,
+  (n, g) => Math.round(n.B / 60) * g.B,
+  (n, g) => Math.round(n.C / 60) * g.C,
+  (n, g) => Math.round(n.CA / 60) * (g.C + g.A),
+  (n, g) => Math.round(n.CB / 60) * (g.C + g.B),
+  (n, g) => n.C9 * g.C * 9,
+  (n, g) => Math.round(n.SIPO / 60) * g.SIPO,
+];
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
@@ -159,27 +171,23 @@ export default function generateTableBerechnung(
           else if (!berechnung[monatZeroIndex][1]) berechnung[monatZeroIndex][1] = 0;
 
           break;
-        case 11:
-          if (datenBerechnungItem.N.F === 0) berechnung[monatZeroIndex][2] = 0;
-          else {
-            if (tarifKraft !== 'Tarifkraft') berechnung[monatZeroIndex][2] = 0;
-            else berechnung[monatZeroIndex][2] = datenBerechnungItem.N.F * datenGeld[monat].Fahrentsch;
-
-            td.textContent = formatCurrency(berechnung[monatZeroIndex][2]);
+        case 11: {
+          const nTotal = N_ZULAGEN_CALC.reduce((sum, fn) => sum + fn(datenBerechnungItem.N, datenGeld[monat]), 0);
+          if (nTotal > 0) {
+            berechnung[monatZeroIndex][2] = nTotal;
+            td.textContent = formatCurrency(nTotal);
+          } else {
+            berechnung[monatZeroIndex][2] = 0;
           }
           break;
-        case 12:
-          if (
-            berechnung[monatZeroIndex].length !== 0 &&
-            (berechnung[monatZeroIndex][0] || berechnung[monatZeroIndex][1] || berechnung[monatZeroIndex][2])
-          ) {
-            const sum =
-              Number(berechnung[monatZeroIndex][0]) +
-              Number(berechnung[monatZeroIndex][1]) +
-              Number(berechnung[monatZeroIndex][2]);
-            td.textContent = formatCurrency(sum);
+        }
+        case 12: {
+          const b = berechnung[monatZeroIndex];
+          if (b.length !== 0 && (b[0] || b[1] || b[2])) {
+            td.textContent = formatCurrency((b[0] ?? 0) + (b[1] ?? 0) + (b[2] ?? 0));
           }
           break;
+        }
       }
       row.appendChild(td);
     }

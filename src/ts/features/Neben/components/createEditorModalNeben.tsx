@@ -9,7 +9,14 @@ import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '@/types';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { persistNebengeldTableData } from '../utils';
+import {
+  formatNebengeldZulagen,
+  getConfiguredNebenZulagen,
+  normalizeNebengeldZulagen,
+  persistNebengeldTableData,
+  readNebengeldZulagenFromForm,
+  validateNebengeldZulagen,
+} from '../utils';
 
 const getColumn = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string): Column<IDatenN> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -25,11 +32,11 @@ const createTimeElement = (
   const column = getColumn(row, columnName);
   return (
     <MyInput
-      divClass="form-floating col-6 pb-3"
+      divClass="form-floating col-6"
       type={column.type ?? 'time'}
       id={column.name}
       name={column.longTitle}
-      value={row instanceof Row ? row.cells[column.name] : ''}
+      value={row instanceof Row ? String(row.cells[column.name] ?? '') : ''}
       {...options}
     >
       {column.longTitle}
@@ -41,32 +48,14 @@ const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName:
   const column = getColumn(row, columnName);
   return (
     <MyInput
-      divClass="form-floating col-6 pb-3"
+      divClass="form-floating col-6"
       type={column.type ?? 'text'}
       id={column.name}
       name={column.longTitle}
-      value={row instanceof Row ? row.cells[column.name] : undefined}
+      value={row instanceof Row ? String(row.cells[column.name] ?? '') : undefined}
       minLength={9}
       maxLength={9}
       required
-    >
-      {column.longTitle}
-    </MyInput>
-  );
-};
-
-const createNumberElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string) => {
-  const column = getColumn(row, columnName);
-  return (
-    <MyInput
-      divClass="form-floating col-6 pb-3"
-      type={column.type ?? 'number'}
-      id={column.name}
-      name={column.longTitle}
-      value={row instanceof Row ? row.cells[column.name] : 1}
-      required
-      min={'0'}
-      max={'1'}
     >
       {column.longTitle}
     </MyInput>
@@ -88,6 +77,8 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
   const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
   const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
+  const existingZulagen = row instanceof Row ? normalizeNebengeldZulagen(row.cells) : [];
+  const configuredZulagen = getConfiguredNebenZulagen(existingZulagen.map(zulage => zulage.code));
 
   const currentEwtRef = row instanceof Row ? row.cells.ewtRef : undefined;
 
@@ -135,12 +126,13 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       myRef={ref}
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >
       <MyModalBody>
         {dataE.length > 0 && (
           <MySelect
-            className="form-floating col-12 pb-3"
+            className="form-floating col-12"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={ewtOptions}
@@ -149,7 +141,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
         )}
 
         <MyInput
-          divClass="form-floating col-6 pb-3"
+          divClass="form-floating col-6"
           required
           type="date"
           id="tagN"
@@ -165,8 +157,31 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
         {['beginN', 'endeN'].map(value => createTimeElement(row, value, { required: true }))}
 
-        {<h4 className="text-center mb-1">Zulagen</h4>}
-        {createNumberElement(row, 'anzahl040N')}
+        <div className="col-12 border rounded p-2">
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
+          <div className="row g-2">
+            {configuredZulagen.map(zulage => {
+              const currentValue = existingZulagen.find(item => item.code === zulage.code)?.value ?? 0;
+              return (
+                <MyInput
+                  key={zulage.code}
+                  divClass="form-floating col-6"
+                  type="number"
+                  id={`zulage-${zulage.code}`}
+                  name={`${zulage.code} ${zulage.label}`}
+                  value={currentValue}
+                  min={'0'}
+                  max={zulage.entryRule.maxEntriesPerDay ? String(zulage.entryRule.maxEntriesPerDay) : '600'}
+                  required={false}
+                  step={'1'}
+                  dataZulageInputCode={zulage.code}
+                >
+                  {`${zulage.code} ${zulage.shortLabel}`}
+                </MyInput>
+              );
+            })}
+          </div>
+        </div>
       </MyModalBody>
     </MyFormModal>,
   );
@@ -190,6 +205,17 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       const table = row instanceof Row ? row.CustomTable : row;
 
       const selectedEwtRef = form.querySelector<HTMLSelectElement>('#ewtRefSelect')?.value || undefined;
+      const zulagenN = readNebengeldZulagenFromForm(form);
+      const validationErrors = validateNebengeldZulagen(zulagenN);
+      if (validationErrors.length > 0) {
+        createSnackBar({
+          message: validationErrors.join('<br/>'),
+          status: 'warning',
+          timeout: 5000,
+          fixed: true,
+        });
+        return;
+      }
 
       const values: IDatenN = {
         _id: row instanceof Row ? row.cells._id : undefined,
@@ -198,7 +224,8 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
         beginN: form.querySelector<HTMLInputElement>('#beginN')?.value ?? '',
         endeN: form.querySelector<HTMLInputElement>('#endeN')?.value ?? '',
         auftragN: form.querySelector<HTMLInputElement>('#auftragN')?.value ?? '',
-        anzahl040N: Number(form.querySelector<HTMLInputElement>('#anzahl040N')?.value) || 1,
+        zulagenN,
+        zulagenAnzeigeN: formatNebengeldZulagen(zulagenN),
       };
 
       const hasDuplicateDay = table.rows.array.some(existingRow => {

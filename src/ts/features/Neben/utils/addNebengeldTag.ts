@@ -3,6 +3,7 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { persistNebengeldTableData } from '.';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IDatenN } from '@/types';
+import { formatNebengeldZulagen, readNebengeldZulagenFromForm, validateNebengeldZulagen } from './nebengeldZulagen';
 
 export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, tableN: CustomTable<IDatenN>): void {
   const select = form.querySelector<HTMLSelectElement>('#tagN');
@@ -10,10 +11,20 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, 
   let idN = select.selectedIndex;
   if (idN < 0) return;
   const daten = JSON.parse(select.value) as IDatenN;
+  const zulagenN = readNebengeldZulagenFromForm(form);
+  const validationErrors = validateNebengeldZulagen(zulagenN);
+  if (validationErrors.length > 0) {
+    createSnackBar({
+      message: validationErrors.join('<br/>'),
+      status: 'warning',
+      timeout: 5000,
+      fixed: true,
+    });
+    return;
+  }
 
-  const inputAnzahl040N = form.querySelector<HTMLInputElement>('#anzahl040N');
-  if (!inputAnzahl040N) throw new Error("Input element with ID 'anzahl040N' not found");
-  daten.anzahl040N = +inputAnzahl040N.value;
+  daten.zulagenN = zulagenN;
+  daten.zulagenAnzeigeN = formatNebengeldZulagen(zulagenN);
 
   const inputAuftragN = form.querySelector<HTMLInputElement>('#AuftragN');
   if (!inputAuftragN) throw new Error("Input element with ID 'AuftragN' not found");

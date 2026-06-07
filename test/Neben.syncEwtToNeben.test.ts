@@ -37,7 +37,6 @@ function makeN(overrides: Partial<IDatenN>): IDatenN {
     tagN: '2026-03-01',
     beginN: '06:00',
     endeN: '14:00',
-    anzahl040N: 0,
     auftragN: '',
     ...overrides,
   };

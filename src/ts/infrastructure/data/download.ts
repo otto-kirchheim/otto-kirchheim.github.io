@@ -109,11 +109,11 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
       data.Daten = {
         N: nRaw.map(n => ({
-          Tag: dayjs(n.tagN, 'DD.MM.YYYY').format('DD'),
+          Tag: n.tagN,
           Beginn: n.beginN,
           Ende: n.endeN,
-          Anzahl040: String(n.anzahl040N ?? ''),
           Auftragsnummer: n.auftragN,
+          Zulagen: (n.zulagenN ?? []).map(z => ({ Typ: z.code, Wert: z.value })),
         })),
       };
       break;

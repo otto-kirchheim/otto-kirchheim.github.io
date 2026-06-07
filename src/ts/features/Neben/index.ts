@@ -36,7 +36,14 @@ registerAppStartTask(() => {
       { name: 'tagN', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
       { name: 'beginN', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
       { name: 'endeN', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
-      { name: 'anzahl040N', title: '040', longTitle: '040 Fahrentschädigung', breakpoints: 'md', type: 'number' },
+      {
+        name: 'zulagenAnzeigeN',
+        title: 'Zulagen',
+        longTitle: 'Zulagen',
+        breakpoints: 'md',
+        parser: (value: unknown) =>
+          typeof value === 'string' && value.length > 0 ? value.replace(/\n/g, '<br>') : '-',
+      },
       {
         name: 'auftragN',
         title: 'Auftragsnummer',

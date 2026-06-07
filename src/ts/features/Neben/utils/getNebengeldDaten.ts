@@ -3,6 +3,7 @@ import { filterByMonat, getMonatFromN } from '@/infrastructure/date/getMonatFrom
 import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
 import Storage from '@/infrastructure/storage/Storage';
+import { hydrateNebengeldRows } from './nebengeldZulagen';
 export default function getNebengeldDaten(
   data?: IMonatsDaten['N'],
   Monat?: number,
@@ -14,7 +15,7 @@ export default function getNebengeldDaten(
   if (jahr < 2024) return [];
 
   const sourceData = data ?? Storage.get<unknown>('dataN', { default: [] });
-  const rows = normalizeResourceRows<IDatenN>(sourceData);
+  const rows = hydrateNebengeldRows(normalizeResourceRows<IDatenN>(sourceData));
 
   if (options?.scope === 'all') return rows;
 
