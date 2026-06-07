@@ -222,6 +222,7 @@ export async function downloadPdf(
 
   const serverUrl = await getServerUrl();
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  headers['x-client-version'] = import.meta.env.APP_VERSION;
   const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
 

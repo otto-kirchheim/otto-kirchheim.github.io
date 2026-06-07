@@ -161,7 +161,10 @@ export const authApi = {
       const response = await fetch(`${serverUrl}/auth/logout`, {
         method: 'POST',
         mode: 'cors',
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'x-client-version': import.meta.env.APP_VERSION,
+        },
       });
 
       if (!response.ok && response.status !== 401) {
