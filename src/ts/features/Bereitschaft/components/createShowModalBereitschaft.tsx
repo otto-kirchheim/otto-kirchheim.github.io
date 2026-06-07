@@ -21,7 +21,7 @@ export default function ShowModalBereitschaft<T extends CustomTableTypes = IDate
   titel: string,
 ): void {
   const modal: CustomHTMLDivElement<T> = showModal<T>(
-    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />}>
+    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />} errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}>
       <MyModalBody>{row.columns.array.map(column => createShowElement<T>(column, row))}</MyModalBody>
     </MyDivModal>,
   );

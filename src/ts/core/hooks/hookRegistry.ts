@@ -4,6 +4,7 @@ export interface HookMap {
   'auth:failure': () => void;
   'network:reconnect': () => void;
   'pre-save:settings': () => IVorgabenU;
+  'app:version-outdated': () => void;
 }
 
 const hooks = new Map<keyof HookMap, HookMap[keyof HookMap]>();

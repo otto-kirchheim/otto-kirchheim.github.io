@@ -22,10 +22,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   onAutoSaveStatus: mockOnAutoSaveStatus,
 }));
 
-import {
-  destroyAutoSaveIndicator,
-  initAutoSaveIndicator,
-} from '@/infrastructure/autoSave/autoSaveIndicator';
+import { destroyAutoSaveIndicator, initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 
 describe('autoSaveIndicator', () => {
   beforeEach(() => {

@@ -4,15 +4,7 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type {
-  IDatenBE,
-  IDatenBZ,
-  IDatenEWT,
-  IDatenN,
-  IVorgabenGeld,
-  IVorgabenGeldType,
-  IVorgabenU,
-} from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -117,11 +109,11 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
       data.Daten = {
         N: nRaw.map(n => ({
-          Tag: dayjs(n.tagN, 'DD.MM.YYYY').format('DD'),
+          Tag: n.tagN,
           Beginn: n.beginN,
           Ende: n.endeN,
-          Anzahl040: String(n.anzahl040N ?? ''),
           Auftragsnummer: n.auftragN,
+          Zulagen: (n.zulagenN ?? []).map(z => ({ Typ: z.code, Wert: z.value })),
         })),
       };
       break;

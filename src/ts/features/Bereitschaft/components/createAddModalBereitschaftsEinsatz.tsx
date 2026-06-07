@@ -25,10 +25,10 @@ export default function createAddModalBereitschaftsEinsatz(): void {
       <MyModalBody>
         <p className="text-bg-warning p-2 rounded small">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein. <br /> Oder wähle die
-          Option: "zusätzliche Bereitschaftszeit Eingeben".
+          Option: "Bereitschaftszeitraum für diesen Einsatz anlegen?".
         </p>
         <MyInput
-          divClass="form-floating col-12 col-sm-6 pb-3"
+          divClass="form-floating col-12 col-sm-6"
           required
           type={columns.find(col => col.name === 'tagBE')?.type || 'Date'}
           id="Datum"
@@ -40,7 +40,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           Datum
         </MyInput>
         <MyInput
-          divClass="form-floating col-12 pb-3"
+          divClass="form-floating col-12"
           required
           type={columns.find(col => col.name === 'auftragsnummerBE')?.type || 'text'}
           id="SAPNR"
@@ -48,14 +48,14 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         >
           SAP-Nr / Einsatzbeschreibung
         </MyInput>
-        <MyInput divClass="form-floating col-12 col-sm-6 pb-3" required type="time" id="ZeitVon" name="Von">
+        <MyInput divClass="form-floating col-12 col-sm-6" required type="time" id="ZeitVon" name="Von">
           Von
         </MyInput>
-        <MyInput divClass="form-floating col-12 col-sm-6 pb-3" required type="time" id="ZeitBis" name="Bis">
+        <MyInput divClass="form-floating col-12 col-sm-6" required type="time" id="ZeitBis" name="Bis">
           Bis
         </MyInput>
         <MySelect
-          className="form-floating col-12 col-sm-6 pb-3"
+          className="form-floating col-12 col-sm-6"
           required
           id="LRE"
           title={columns.find(col => col.name === 'lreBE')?.longTitle || 'LRE'}
@@ -86,9 +86,9 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         </MyInput>
         <div className="col-12">
           <MyCheckbox className="form-check form-switch bereitschaft" id="berZeit">
-            zusätzliche Bereitschaftszeit Eingeben?
+            Bereitschaftszeitraum für diesen Einsatz anlegen?
             <br />
-            <small>(z.B. LRE3 Außerhalb der Bereitschaft.)</small>
+            <small>(z.B. LRE3 außerhalb der Bereitschaft oder Einsatz über Bereitschaftszeitraum-Grenzen hinaus)</small>
           </MyCheckbox>
         </div>
       </MyModalBody>
@@ -99,11 +99,11 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   const form = formRef.current;
 
   function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+    return async (event: Event): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
-      const success = submitBereitschaftsEinsatz(modal, tableBE!, tableBZ!);
+      const success = await submitBereitschaftsEinsatz(modal, tableBE!, tableBZ!);
 
       if (success) Modal.getInstance(modal)?.hide();
     };

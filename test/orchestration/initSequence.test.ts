@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  LOGIN_INIT_SEQUENCE,
-  validateAllSequences,
-  validateInitSequence,
-} from '@/core/orchestration/initSequence';
+import { LOGIN_INIT_SEQUENCE, validateAllSequences, validateInitSequence } from '@/core/orchestration/initSequence';
 
 describe('initSequence', () => {
   it('LOGIN_INIT_SEQUENCE has no dangling dependencies', () => {

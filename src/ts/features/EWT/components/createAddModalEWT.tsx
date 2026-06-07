@@ -97,9 +97,9 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const modal = showModal<IDatenEWT>(
     <MyFormModal myRef={ref} size="sm" title="Neue Anwesenheit eingeben" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div>
+        <div className="col-12">
           <MyButton
-            className="btn btn-secondary btn-lg text-start col-12"
+            className="btn btn-secondary btn-lg text-start w-100"
             id="btnNaechsterTag"
             clickHandler={(e: MouseEvent) => {
               e.preventDefault();
@@ -110,10 +110,10 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
             ariaLabel="Nächster Tag"
           />
         </div>
-        <MyInput required type="date" id="tagE" name="Tag" min={datum.format('YYYY-MM-DD')} max={maxDate}>
+        <MyInput divClass="form-floating col-12" required type="date" id="tagE" name="Tag" min={datum.format('YYYY-MM-DD')} max={maxDate}>
           Tag
         </MyInput>
-        <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="form-floating col-12 d-none">
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="col-12 d-none">
           <MyInput
             type="date"
             myRef={buchungstagHinweisTextRef}
@@ -126,7 +126,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           </MyInput>
         </div>
         <MySelect
-          className="form-floating"
+          className="form-floating col-12"
           title="Einsatzort"
           id="EOrt"
           myRef={EOrtRef}
@@ -141,7 +141,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           ]}
         />
         <MySelect
-          className="form-floating"
+          className="form-floating col-12"
           title="Schicht"
           id="Schicht"
           required
@@ -157,19 +157,23 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
             { value: 'S', text: `Sonder | ${vorgabenU.aZ.bS.toString()}-${vorgabenU.aZ.eS.toString()}` },
           ]}
         />
-        <MyCheckbox className="form-check form-switch mt-3" id="berechnen1" myRef={berechnenRef} checked>
-          Berechnen
-        </MyCheckbox>
-        <MyCheckbox
-          className="form-check form-switch mt-3"
-          id="berechnen2"
-          changeHandler={changeBuero}
-          myRef={bueroRef}
-        >
-          Büro
-          <br />
-          <small>(Keine Fahrt zu einem Einsatzort)</small>
-        </MyCheckbox>
+        <div className="col-12">
+          <MyCheckbox className="form-check form-switch" id="berechnen1" myRef={berechnenRef} checked>
+            Berechnen
+          </MyCheckbox>
+        </div>
+        <div className="col-12">
+          <MyCheckbox
+            className="form-check form-switch"
+            id="berechnen2"
+            changeHandler={changeBuero}
+            myRef={bueroRef}
+          >
+            Büro
+            <br />
+            <small>(Keine Fahrt zu einem Einsatzort)</small>
+          </MyCheckbox>
+        </div>
       </MyModalBody>
     </MyFormModal>,
   );

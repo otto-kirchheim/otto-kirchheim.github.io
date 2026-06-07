@@ -2,6 +2,96 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-07
+
+### feat
+
+- **BZ-Referenz als Array (`bereitschaftszeitraumBE: string[]`):** `IDatenBE.bereitschaftszeitraumBE` ist jetzt ein Array aller beteiligten BZ-IDs (1 oder 2 Elemente wenn ein Einsatz die 08:00- oder Monatsgrenze kreuzt). `fieldMapper.ts` liest/schreibt das Array korrekt; `changeTracking.ts` nimmt das Feld in die Signatur auf.
+- **`resolveGap` in `submitBereitschaftsEinsatz.ts`:** Neue Logik zur Lückenauflösung: Enthält die Lücke keine 08:00- oder Monatsgrenze → Merge (eine BZ bleibt). Enthält sie eine Grenze → Boundary-Split (beide BZs werden auf die Grenze angepasst).
+- **Monatsgrenze als Split-Punkt in `calculateBereitschaftsZeiten.ts`:** `vorhandenCheck` splittet neue Zeiträume jetzt auch an Monatsgrenzen (00:00 am 1.). `MAX_DEPTH` von 3 auf 5 erhöht.
+- **Async Submit + Force-Save:** `submitBereitschaftsEinsatz` ist jetzt `async`. Nach BZ-Anlage/-Anpassung wird `flushResource('BZ')` abgewartet, damit echte MongoDB-IDs vor dem BE-Speichern verfügbar sind. `flushResource` aus `autoSave.ts` exportiert.
+- **UUID/Reconciliation entfernt:** `reconcilePendingBzRefsInBE` aus `autoSave.ts` entfernt. UUID-Filterblock in `savePipeline.ts` entfernt. `omitKeys`-Zeile für `bereitschaftszeitraumBE` in `changeTracking.ts` entfernt. `isSameBereitschaftsEinsatz` ohne BZ-Ref-Vergleich.
+- **`createEditorModalBereitschaftsEinsatz.tsx`:** BZ-Ref-Zuweisung auf Array umgestellt; prüft ob beide BZs eine gespeicherte `_id` haben.
+- **Nebengeld-Zulagen in Berechnung:** Monatsaggregation zaehlt jetzt Zulagen nach Payment-Hints (`F`, `A`, `B`, `C`, `C+A`, `C+B`, `C*9`, `SIPO`) und `generateTableBerechnung.ts` berechnet den Auszahlungsanteil ueber alle Kategorien statt nur `040`.
+- **Einstellungen-Zulagen-UI aktiviert:** Das Zulagen-Accordion in `index.html` ist nicht mehr auskommentiert und wird wieder angezeigt.
+- **Modal-Basis um Fehlerbanner erweitert:** `MyFormModal`/`MyDivModal` unterstuetzen `errorMessage` (via `TMyModal`) fuer konsistente, sichtbare Formularfehler innerhalb des Modals.
+
+### test
+
+- `Bereitschaft.submitBereitschaftsEinsatz.test.ts`: Alle Calls auf `await` umgestellt; `bereitschaftszeitraumBE`-Assertions auf `string[]`. Neue Tests: zwei-BZ-Coverage (Array mit 2 IDs), Gap-Merge, Gap-Boundary at 08:00, LRE1-Fenster. Storage-Kontaminierung durch eigenes in-memory `storageStore`-Map-Mock behoben. Timezone-korrekte BZ-Ranges für TZ=Europe/Berlin-Testumgebung.
+- `changeTracking.test.ts`: Test für `bereitschaftszeitraumBE` von „omits" auf „includes" geändert (Feld nicht mehr ausgeblendet).
+- `Berechnung.aktualisiereBerechnung.test.ts` erweitert, damit die neue Zulagen-Kategorienaggregation in der Monatsberechnung abgesichert ist.
+
+### refactor
+
+- `confirmDialog.ts` nutzt jetzt einen direkten Bootstrap-`Modal`-Import statt Laufzeit-Fallback ueber `window.bootstrap`.
+- `MyInput.tsx` erweitert um `step` sowie `data-zulage-input-code` fuer die dynamischen Zulagen-Inputs.
+
+### fix
+
+- `CustomSnackbar.css`: Layout auf kleinen Viewports verbessert (flex-wrap, saubere Action/Close-Anordnung), damit lange Meldungen und Actions nicht ueberlappen.
+
+## 2026-06-06
+
+### feat
+
+- **BZ-BE-Race-Condition-Schutz (berZeit-Button):** Neue BZs, die über den berZeit-Button angelegt werden, erhalten sofort eine lokale UUID als `_id`. Die BE-Verknüpfung (`bereitschaftszeitraumBE`) wird auf diese UUID gesetzt. Nach dem BZ-AutoSave reconciliert `reconcilePendingBzRefsInBE` in `autoSave.ts` die UUID zur echten MongoDB-`_id` und löst einen nachgelagerten BE-AutoSave aus. BE-Creates mit noch nicht aufgelöster UUID-Referenz werden in `savePipeline.ts` zurückgehalten, bis die Reconciliation abgeschlossen ist. Verhindert die Race Condition, bei der ein BE ohne gültige BZ-Referenz gespeichert wurde.
+- `submitBereitschaftsEinsatz.ts`: `berZeit`-Block weist neuen BZ-Rows vor dem AutoSave `_clientRequestId = lokalUUID` vor, damit AutoSave dieselbe UUID als `clientRequestId` ans Backend sendet und die Reconciliation eindeutig matchen kann.
+- `createAddModalBereitschaftsEinsatz.tsx` / `createEditorModalBereitschaftsEinsatz.tsx`: Checkbox-Label auf „Bereitschaftszeitraum für diesen Einsatz anlegen?" aktualisiert (Hinweis auf LRE3-Außerhalb/Einsatz über BZ-Grenzen).
+
+### fix
+
+- `submitBereitschaftsEinsatz.ts`: Auto-Extension der BZ beim BE-Submit entfernt. BEs, die über BZ-Grenzen hinausgehen, werden nun mit einer klaren Warn-Snackbar abgelehnt statt die BZ still zu erweitern. Erweiterung erfolgt ausschließlich über den berZeit-Button.
+
+- `errorHandling.ts`: Bestehendes Error-Modal wird erweitert statt ein zweites gestapeltes Modal zu erzeugen. `showErrorDialog` prüft via `[data-error-dialog].show`, ob bereits ein sichtbarer Dialog offen ist, und hängt neue Einträge mit aktualisiertem Zähler daran – kein zweites Bootstrap-Modal.
+
+### fix
+
+- `savePipeline.ts`: `collectRowErrorMatches` schloss Zeilen mit `_state='error'` fälschlicherweise aus der Index-basierten Zuordnung aus. Error-Rows mit `_errorState='new'` bzw. `_errorState='modified'` werden jetzt korrekt in `newRows`/`modifiedRows` mitgezählt. Dadurch bleibt die Fehlermarkierung bei einem wiederholten AutoSave (z.B. nach Löschen einer anderen Fehlerzeile) erhalten.
+- `errorHandling.ts`: `aria-hidden`-Warnung beim Schließen des Error-Modals behoben. Fokus wird im `hide.bs.modal`-Event aus dem Modal herausbewegt, bevor Bootstrap `aria-hidden="true"` setzt.
+
+### test
+
+- `test/Utilities/savePipeline.test.ts`: Zwei neue Testfälle für `collectRowErrorMatches` – Index-Matching für `_state='new'`-Rows sowie für Error-Rows mit `_errorState='new'` (Re-Save-Szenario).
+
+## 2026-05-31
+
+### feat
+
+- `FetchRetry.ts`: sendet `x-client-version`-Header mit der aktuellen App-Version. Liest beim Server-Probe `min_frontend_version` aus der `/api/v2/`-Antwort und setzt bei veralteter Version ein globales `versionOutdated`-Flag. Alle weiteren API-Requests werden sofort ohne Netzwerkzugriff blockiert. 426-Antworten setzen das Flag ebenfalls (Fallback). Der Hook `app:version-outdated` wird in beiden Fällen genau einmal ausgelöst.
+- `hookRegistry.ts`: `HookMap` um `app:version-outdated` erweitert.
+- `setVersionOutdated.ts` (neu): Persistente Warning-Snackbar mit „Jetzt aktualisieren"-Button (löst SW-Update + Reload aus), deaktiviert alle `[data-disabler]`-Buttons – analog zu `setOffline`.
+- `main.ts`: Hook `app:version-outdated` ruft `setVersionOutdated(updateSW)` auf; `updateSW` wird aus `registerSW` gespeichert.
+
+### refactor
+
+- Download-Assembly (`infrastructure/data/download.ts`): Nebengeld-Modus sendet jetzt `Zulagen: [{ Typ, Wert }]` statt `Anzahl040`, passend zum neuen Backend-Format.
+- `persistTableData.ts`: Jahr < 2024 Fallback-Block für Nebengeld entfernt; nur noch ab 2024 relevante Daten werden persistiert.
+- Tests in `test/Utilities/download.test.ts` und `test/Neben.saveTableDataN.test.ts` auf neues Format angepasst.
+
+### fix (Tests)
+
+- `calculateBereitschaftsZeiten.ts`: DST-sichere Iteratoren (`.add(1,'day').startOf('day')`), LRE1-Blockierung, 08:00-Fensterfixe via `B_WECHSEL_STUNDE/MINUTE`.
+- `test/Bereitschaft.test.ts`: Snapshot-Dateien mit `TZ=Europe/Berlin` neu generiert; `daten` für Duplikat-Check auf CEST-basierte UTC-Timestamps korrigiert.
+- `test/Bereitschaft.utils.extra.test.ts`: Assertion für `#nachtschicht`-Sichtbarkeit auf `.not.toBe('none')` aktualisiert (Quelle: `''` statt `'flex'` nach Zyklus-10-Änderung).
+- `test/Einstellungen/zulagenCatalog.test.ts`: `ZulageEntryUnit.Unklar`-Referenz auf `ZulageEntryUnit.Stueck` umgestellt (Enum-Umbenennung in Quelle).
+- `test/Utilities/fieldMapper.test.ts`: `zulagenAnzeigeN`-Erwartung auf neues Format `'040 Fahrentsch. × 3'` aktualisiert (Quelle: `shortLabel` statt `label`, `×` statt `x`).
+
+## 2026-05-12
+
+### refactor
+
+- `ZULAGEN_CATALOG` in `src/ts/features/Einstellungen/utils/zulagenCatalog.ts` um fachliche Kategorien erweitert: `Erschwerniszulage` (Codes 811-846), `LeistungspramieUndFahrentschaedigung` (aktuell nur Code 040) und `Ganzkoerperreinigung` (Code 218).
+- Kategorie-Limits zentral als `ZULAGEN_CATEGORY_MAX_SELECTIONS` eingefuehrt: max 7, 3 bzw. 1 gleichzeitige Auswahl je Kategorie.
+- Katalog um Code 218 (Ganzkoerperreinigung) erweitert; zuvor ergänzte Leistungsprämien-Codes 871-884 wieder entfernt.
+- Tests in `test/Einstellungen/zulagenCatalog.test.ts` auf neue Struktur und Kategorie-Limits angepasst.
+- Fachliche Eingaberegeln fuer Zulagen jetzt zentral im Katalog hinterlegt (Einheit, max. pro Tag, Mindestdauer, Exklusivregel fuer 839, offener Status fuer 218) und nur fuer Validierung/Berechnung vorgesehen, nicht fuer die Anzeige in der Einstellungen-UI.
+- Nebenbezuege von 040-only auf generisches Zulagenmodell erweitert: `IDatenN` enthaelt jetzt zusaetzlich `zulagenN` (persistierte Werte pro Tag) und `zulagenAnzeigeN` (formatierte Tabellenanzeige), inklusive Legacy-Hydration aus `anzahl040N`.
+- Neben-Add/Edit/Show nutzt jetzt dynamische Zulagenfelder auf Basis der konfigurierten Zulagen in den Einstellungen; Eingaben werden ueber zentrale Regeln validiert (u.a. Mindestdauer, Kategorie-Exklusivregel fuer 839).
+- Neben-Tabelle zeigt statt fixer 040-Spalte nun eine generische Zulagen-Zusammenfassung.
+- Field-Mapping fuer Nebengeld auf generische Backend-Zulagenlisten umgestellt (`Zulagen[]` <-> `zulagenN`), inklusive Rueckwaertskompatibilitaet fuer bestehende lokale 040-Daten.
+- Tests erweitert/angepasst in `test/Utilities/fieldMapper.test.ts`, `test/Neben.addNebenTag.test.ts`, `test/Neben.test.ts` sowie neue Datei `test/Neben.zulagen.test.ts`.
+
 ## 2026-05-01
 
 ### feat

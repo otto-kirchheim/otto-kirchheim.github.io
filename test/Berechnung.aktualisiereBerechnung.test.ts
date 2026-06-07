@@ -38,6 +38,13 @@ describe('aktualisiereBerechnung', () => {
       expect(month.E.S8).toBe(0);
       expect(month.E.S14).toBe(0);
       expect(month.N.F).toBe(0);
+      expect(month.N.A).toBe(0);
+      expect(month.N.B).toBe(0);
+      expect(month.N.C).toBe(0);
+      expect(month.N.CA).toBe(0);
+      expect(month.N.CB).toBe(0);
+      expect(month.N.C9).toBe(0);
+      expect(month.N.SIPO).toBe(0);
     }
   });
 
@@ -129,16 +136,54 @@ describe('aktualisiereBerechnung', () => {
     expect(monat3.E.S14).toBe(0);
   });
 
-  it('counts N entries per month as N.F', () => {
+  it('sums Zulage-040-Werte je Monat als N.F', () => {
     const N: IDatenN[] = [
-      { tagN: '01.03.2026' } as IDatenN,
-      { tagN: '15.03.2026' } as IDatenN,
-      { tagN: '01.04.2026' } as IDatenN,
+      { tagN: '01.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
+      { tagN: '15.03.2026', zulagenN: [{ code: '040', value: 1 }, { code: '811', value: 120 }] } as IDatenN,
+      { tagN: '01.04.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
     expect(result[3 as keyof IVorgabenBerechnung].N.F).toBe(2);
     expect(result[4 as keyof IVorgabenBerechnung].N.F).toBe(1);
+  });
+
+  it('ignoriert Einträge ohne Zulage 040 in N.F', () => {
+    const N: IDatenN[] = [
+      { tagN: '01.03.2026', zulagenN: [{ code: '811', value: 120 }] } as IDatenN,
+      { tagN: '15.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
+    ];
+
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
+    expect(result[3 as keyof IVorgabenBerechnung].N.F).toBe(1);
+  });
+
+  it('aggregiert alle Zulagen-Typen in die richtigen N-Felder', () => {
+    const N: IDatenN[] = [
+      {
+        tagN: '01.03.2026',
+        zulagenN: [
+          { code: '040', value: 1 },   // → N.F
+          { code: '811', value: 120 },  // → N.B (Minuten)
+          { code: '841', value: 90 },   // → N.A (Minuten)
+          { code: '831', value: 60 },   // → N.C (Minuten)
+          { code: '837', value: 60 },   // → N.CA (Minuten)
+          { code: '838', value: 60 },   // → N.CB (Minuten)
+          { code: '839', value: 1 },    // → N.C9 (Stück)
+          { code: '846', value: 60 },   // → N.SIPO (Minuten)
+        ],
+      } as IDatenN,
+    ];
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
+    const m3 = result[3 as keyof IVorgabenBerechnung].N;
+    expect(m3.F).toBe(1);
+    expect(m3.B).toBe(120);
+    expect(m3.A).toBe(90);
+    expect(m3.C).toBe(60);
+    expect(m3.CA).toBe(60);
+    expect(m3.CB).toBe(60);
+    expect(m3.C9).toBe(1);
+    expect(m3.SIPO).toBe(60);
   });
 
   it('stores result in Storage', () => {
@@ -152,7 +197,7 @@ describe('aktualisiereBerechnung', () => {
     Storage.set('dataBZ', []);
     Storage.set('dataBE', []);
     Storage.set('dataE', []);
-    Storage.set('dataN', [{ tagN: '05.06.2026' } as IDatenN]);
+    Storage.set('dataN', [{ tagN: '05.06.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN]);
     Storage.set('datenBerechnung', {});
 
     const result = aktualisiereBerechnung();

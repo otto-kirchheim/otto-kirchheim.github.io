@@ -29,5 +29,9 @@ export default function toggleBereitschaftsEigeneWerte(
   nEInput.disabled = disable;
   nETInput.disabled = disable;
 
+  parentElement.querySelectorAll<HTMLElement>('.berechnet-badge').forEach(badge => {
+    badge.style.display = disable ? '' : 'none';
+  });
+
   if (disable) applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
 }

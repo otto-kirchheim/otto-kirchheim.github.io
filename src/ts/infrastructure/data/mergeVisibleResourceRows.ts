@@ -38,8 +38,12 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
     typeof table.rows?.getFilteredRows === 'function' ? table.rows.getFilteredRows() : rawRows;
   const filteredRows = Array.isArray(filteredRowsCandidate) ? filteredRowsCandidate : rawRows;
 
-  const toStorage = (row: Row<T>): T =>
-    row._state === 'deleted' ? { ...(row.cells as T), __localState: 'deleted' } : (row.cells as T);
+  const toStorage = (row: Row<T>): T => {
+    if (row._state === 'deleted') return { ...(row.cells as T), __localState: 'deleted' };
+    if (row._state === 'error' && row._errorMessage)
+      return { ...(row.cells as T), __errorMessage: row._errorMessage, __errorState: row._errorState ?? 'new' };
+    return row.cells as T;
+  };
 
   const allRows = rawRows.map(toStorage);
   const visibleRows = filteredRows.map(toStorage);

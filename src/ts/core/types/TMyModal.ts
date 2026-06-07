@@ -18,4 +18,5 @@ export type TMyModal<T> = {
   onSubmit: (this: T, event: Event) => void;
   Footer?: React.ComponentChild;
   Header?: React.ComponentChild;
+  errorMessage?: string;
 };

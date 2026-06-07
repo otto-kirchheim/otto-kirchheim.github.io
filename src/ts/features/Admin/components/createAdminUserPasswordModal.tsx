@@ -18,11 +18,14 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
       onSubmit={onSubmit()}
     >
       <MyModalBody>
-        <p className="small text-body-secondary mb-1">
-          Das Passwort wird direkt für diesen Benutzer gesetzt. Der Benutzer muss sich danach mit dem neuen Passwort
-          anmelden.
-        </p>
+        <div className="col-12">
+          <p className="small text-body-secondary mb-0">
+            Das Passwort wird direkt für diesen Benutzer gesetzt. Der Benutzer muss sich danach mit dem neuen Passwort
+            anmelden.
+          </p>
+        </div>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="password"
           id="adminUserPasswordNew"
@@ -41,6 +44,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
           Neues Passwort
         </MyInput>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="password"
           id="adminUserPasswordRepeat"

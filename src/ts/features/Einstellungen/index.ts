@@ -196,7 +196,9 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
 
   inlinePasskeyButton.textContent = 'Weitere Biometrie einrichten';
   passkeyHint.textContent =
-    passkeys.length === 1 ? '1 Biometrie-Anmeldung eingerichtet.' : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
+    passkeys.length === 1
+      ? '1 Biometrie-Anmeldung eingerichtet.'
+      : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
 }
 
 async function handlePasskeyRegistration(): Promise<void> {

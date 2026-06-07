@@ -8,6 +8,7 @@
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
 import type { IVorgabenU, IVorgabenUServer } from '@/types';
 import dayjs from '../date/configDayjs';
+import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Neben/utils';
 
 // ─── Typen für Backend-Dokumente ─────────────────────────
 
@@ -25,7 +26,7 @@ export interface BackendBereitschaftszeitraum {
 export interface BackendBereitschaftseinsatz {
   _id?: string;
   User?: string;
-  Bereitschaftszeitraum?: string;
+  Bereitschaftszeitraum?: string[];
   Monat: number;
   Jahr: number;
   Tag: string; // ISO-Date
@@ -140,7 +141,11 @@ export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
 export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
   return {
     _id: doc._id,
-    bereitschaftszeitraumBE: doc.Bereitschaftszeitraum,
+    bereitschaftszeitraumBE: Array.isArray(doc.Bereitschaftszeitraum)
+      ? doc.Bereitschaftszeitraum
+      : doc.Bereitschaftszeitraum
+        ? [doc.Bereitschaftszeitraum as unknown as string]
+        : undefined,
     tagBE: dayjs(doc.Tag).format('DD.MM.YYYY'),
     auftragsnummerBE: doc.Auftragsnummer,
     beginBE: doc.Beginn,
@@ -177,15 +182,15 @@ export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
  * Die Zulagen-Array-Struktur wird auf das flache Frontend-Format gemappt.
  */
 export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
-  // Suche nach Zulage "040" für die anzahl040N
-  const zulage040 = doc.Zulagen.find(z => z.Typ === '040');
+  const zulagenN = doc.Zulagen.map(zulage => ({ code: zulage.Typ, value: zulage.Wert })).filter(z => z.value > 0);
   return {
     _id: doc._id,
     ewtRef: doc.EWT,
     tagN: dayjs(doc.Tag).format('DD.MM.YYYY'),
     beginN: doc.Beginn,
     endeN: doc.Ende,
-    anzahl040N: zulage040?.Wert ?? 0,
+    zulagenN,
+    zulagenAnzeigeN: formatNebengeldZulagen(zulagenN),
     auftragN: doc.Auftragsnummer ?? '',
   };
 }
@@ -346,10 +351,8 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
  */
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
   const period = resolveYearMonth(item.tagN, monat, jahr, 'DD.MM.YYYY');
-  const zulagen: BackendNebengeld['Zulagen'] = [];
-  if (item.anzahl040N > 0) {
-    zulagen.push({ Typ: '040', Wert: item.anzahl040N });
-  }
+  const normalizedZulagen = normalizeNebengeldZulagen(item);
+  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({ Typ: zulage.code, Wert: zulage.value }));
   return {
     _id: item._id,
     EWT: item.ewtRef || undefined,
@@ -359,7 +362,7 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
     Beginn: item.beginN,
     Ende: item.endeN,
     Auftragsnummer: item.auftragN || undefined,
-    Zulagen: zulagen.length > 0 ? zulagen : [{ Typ: '040', Wert: 0 }],
+    Zulagen: zulagen,
   };
 }
 

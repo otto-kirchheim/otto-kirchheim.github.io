@@ -17,6 +17,9 @@ import {
   getMonatFromEWTBuchungstag,
   getMonatFromN,
 } from '@/infrastructure/date/getMonatFromItem';
+import { ZULAGEN_CATALOG } from '@/features/Einstellungen/utils/zulagenCatalog';
+
+const CATALOG_BY_CODE = new Map(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
 export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {
@@ -61,7 +64,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     const Berechnung: IVorgabenBerechnungMonat = {
       B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
       E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
-      N: { F: 0 },
+      N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
     };
 
     BZMonat.forEach(value => {
@@ -116,7 +119,39 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
       }
     });
 
-    Berechnung.N.F = NMonat.length;
+    NMonat.forEach(entry => {
+      for (const zulage of entry.zulagenN ?? []) {
+        const item = CATALOG_BY_CODE.get(zulage.code);
+        if (!item) continue;
+        switch (item.paymentHint) {
+          case 'Fahrentschaedigung':
+            Berechnung.N.F += zulage.value;
+            break;
+          case 'A':
+            Berechnung.N.A += zulage.value;
+            break;
+          case 'B':
+            Berechnung.N.B += zulage.value;
+            break;
+          case 'C':
+            Berechnung.N.C += zulage.value;
+            break;
+          case 'C+A':
+            Berechnung.N.CA += zulage.value;
+            break;
+          case 'C+B':
+            Berechnung.N.CB += zulage.value;
+            break;
+          case 'C*9':
+            Berechnung.N.C9 += zulage.value;
+            break;
+          case 'SIPO':
+            Berechnung.N.SIPO += zulage.value;
+            break;
+          // Ganzkoerperreinigung: noch nicht berechnet
+        }
+      }
+    });
 
     return Berechnung;
   }

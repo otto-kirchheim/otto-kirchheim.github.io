@@ -1,45 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 
-function makeMockBootstrap() {
-  const bsModal = { show: vi.fn(), hide: vi.fn(), dispose: vi.fn() };
-  const ModalConstructor = vi.fn(() => bsModal);
-  Object.assign(window, { bootstrap: { Modal: ModalConstructor } });
-  return { bsModal, ModalConstructor };
-}
+const showMock = vi.fn();
+const hideMock = vi.fn();
+const disposeMock = vi.fn();
+const ModalConstructor = vi.fn(() => ({ show: showMock, hide: hideMock, dispose: disposeMock }));
+vi.mock('bootstrap/js/dist/modal', () => ({ default: ModalConstructor }));
+
+import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 
 function getModalEl() {
   return document.body.querySelector<HTMLElement>('.modal');
 }
 
-describe('confirmDialog – bootstrap fallback', () => {
-  beforeEach(() => {
-    (window as unknown as Record<string, unknown>).bootstrap = undefined;
-    document.body.innerHTML = '';
-  });
-
-  it('falls back to window.confirm when bootstrap is absent (true)', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
-    const result = await confirmDialog('Sicher?');
-    expect(result).toBe(true);
-    expect(getModalEl()).toBeNull();
-  });
-
-  it('falls back to window.confirm when bootstrap is absent (false)', async () => {
-    vi.spyOn(window, 'confirm').mockReturnValueOnce(false);
-    const result = await confirmDialog('Sicher?');
-    expect(result).toBe(false);
-  });
-});
-
-describe('confirmDialog – mit Bootstrap', () => {
+describe('confirmDialog', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    makeMockBootstrap();
+    vi.clearAllMocks();
   });
 
   it('resolves true when confirm button is clicked', async () => {
-    const { bsModal } = makeMockBootstrap();
     const promise = confirmDialog('Wirklich löschen?');
 
     const confirmBtn = document.body.querySelector<HTMLButtonElement>('[data-confirm="true"]');
@@ -48,7 +27,7 @@ describe('confirmDialog – mit Bootstrap', () => {
 
     const result = await promise;
     expect(result).toBe(true);
-    expect(bsModal.hide).toHaveBeenCalled();
+    expect(hideMock).toHaveBeenCalled();
   });
 
   it('resolves false when hidden.bs.modal fires (cancel / close)', async () => {
@@ -58,14 +37,13 @@ describe('confirmDialog – mit Bootstrap', () => {
   });
 
   it('second finish call after confirm is ignored (resolved only once)', async () => {
-    const { bsModal } = makeMockBootstrap();
     const promise = confirmDialog('Doppelt?');
 
     document.body.querySelector<HTMLButtonElement>('[data-confirm="true"]')!.click();
     getModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
 
     expect(await promise).toBe(true);
-    expect(bsModal.hide).toHaveBeenCalledTimes(1);
+    expect(hideMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders custom title, labels and class', async () => {

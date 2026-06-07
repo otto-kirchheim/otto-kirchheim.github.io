@@ -294,14 +294,15 @@ describe('fieldMapper – Nebengeld', () => {
     expect(result.tagN).toBe(dayjs('2024-03-20T00:00:00.000Z').format('DD.MM.YYYY'));
     expect(result.beginN).toBe('18:00');
     expect(result.endeN).toBe('06:00');
-    expect(result.anzahl040N).toBe(3);
+    expect(result.zulagenN).toEqual([{ code: '040', value: 3 }]);
+    expect(result.zulagenAnzeigeN).toBe('040 Fahrentsch. × 3');
     expect(result.auftragN).toBe('NB-456');
   });
 
   it('nebengeldFromBackend ohne Zulage 040', () => {
     const withoutZulage = { ...backendN, Zulagen: [{ Typ: '050', Wert: 1 }] };
     const result = nebengeldFromBackend(withoutZulage);
-    expect(result.anzahl040N).toBe(0);
+    expect(result.zulagenN).toEqual([{ code: '050', value: 1 }]);
   });
 
   it('nebengeldFromBackend ohne Auftragsnummer', () => {
@@ -316,7 +317,10 @@ describe('fieldMapper – Nebengeld', () => {
       tagN: '20.03.2024',
       beginN: '18:00',
       endeN: '06:00',
-      anzahl040N: 3,
+      zulagenN: [
+        { code: '040', value: 3 },
+        { code: '811', value: 120 },
+      ],
       auftragN: 'NB-456',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
@@ -326,7 +330,10 @@ describe('fieldMapper – Nebengeld', () => {
     expect(result.Beginn).toBe('18:00');
     expect(result.Ende).toBe('06:00');
     expect(result.Auftragsnummer).toBe('NB-456');
-    expect(result.Zulagen).toEqual([{ Typ: '040', Wert: 3 }]);
+    expect(result.Zulagen).toEqual([
+      { Typ: '040', Wert: 3 },
+      { Typ: '811', Wert: 120 },
+    ]);
     expect(dayjs(result.Tag).isValid()).toBe(true);
     expect(dayjs(result.Tag).date()).toBe(20);
     expect(dayjs(result.Tag).month()).toBe(2); // 0-indexed
@@ -338,23 +345,21 @@ describe('fieldMapper – Nebengeld', () => {
       tagN: '15.03.2024',
       beginN: '20:00',
       endeN: '04:00',
-      anzahl040N: 0,
       auftragN: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result.Auftragsnummer).toBeUndefined();
   });
 
-  it('nebengeldToBackend mit anzahl040N = 0 setzt Fallback-Zulage', () => {
+  it('nebengeldToBackend ohne Zulagen erzeugt ein leeres Zulagen-Array', () => {
     const frontendN: IDatenN = {
       tagN: '10.03.2024',
       beginN: '19:00',
       endeN: '05:00',
-      anzahl040N: 0,
       auftragN: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
-    expect(result.Zulagen).toEqual([{ Typ: '040', Wert: 0 }]);
+    expect(result.Zulagen).toEqual([]);
   });
 });
 

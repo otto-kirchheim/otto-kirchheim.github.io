@@ -11,6 +11,7 @@ export default function createModalForgotPassword(): void {
     <MyFormModal myRef={ref} title="Passwort vergessen" submitText="Reset-Link senden" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="email"
           id="EmailReset"

@@ -6,6 +6,24 @@ import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '../components';
+import { apiFetch } from '@/infrastructure/api/apiFetchHelper';
+
+type ProfileTemplateVorgabenBResponse = {
+  template?: { VorgabenB?: Array<{ key: string; value: Record<string, unknown> }> };
+};
+
+async function fetchTemplateVorgabenB(code: string): Promise<IVorgabenUvorgabenB[] | null> {
+  try {
+    const result = await apiFetch<undefined, ProfileTemplateVorgabenBResponse>(
+      `profile-templates/code/${code.toLowerCase()}`,
+    );
+    const entries = result?.template?.VorgabenB;
+    if (entries && entries.length > 0) return entries.map(e => e.value as IVorgabenUvorgabenB);
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
   [key: string]: IVorgabenUvorgabenB;
@@ -18,9 +36,9 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
     const v = value as { tag: number; zeit: string; Nwoche?: boolean };
     const umbruch = option !== false;
     const separator = umbruch ? '<br/>' : ' | ';
-    const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    const weekday = weekdays[v.tag % 7] ?? '-';
-    const week = v.tag === 0 && v.Nwoche ? 'W1' : v.Nwoche ? 'W2' : 'W1';
+    const weekdays: Record<number, string> = { 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa', 7: 'So', 0: 'So' };
+    const weekday = weekdays[v.tag] ?? '-';
+    const week = v.Nwoche ? 'W2' : 'W1';
     return `${weekday} ${week}${separator}${v.zeit || '-'}`;
   };
 
@@ -95,8 +113,13 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
         {
           text: 'Standardeinstellungen',
           classes: ['btn', 'btn-secondary'],
-          function: () => {
-            ftVE.rows.load(Object.values(BereitschaftsEinsatzZeiträume));
+          function: async () => {
+            const code = Storage.check('VorgabenU')
+              ? Storage.get<IVorgabenU>('VorgabenU', true).pers.ErsteTkgSt.toLowerCase()
+              : '';
+            let vorgabenB = code ? await fetchTemplateVorgabenB(code) : null;
+            if (!vorgabenB) vorgabenB = await fetchTemplateVorgabenB('muster');
+            ftVE.rows.load(vorgabenB ?? Object.values(BereitschaftsEinsatzZeiträume));
             saveEinstellungen();
           },
         },

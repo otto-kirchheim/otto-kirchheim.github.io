@@ -3,6 +3,10 @@ import tokenErneuern from '../tokenManagement/tokenErneuern';
 import { createSnackBar } from '../ui/CustomSnackbar';
 import Storage from '../storage/Storage';
 import dayjs from 'dayjs';
+import compareVersion from '../validation/compareVersion';
+import { invokeHook } from '@/core/hooks';
+
+let versionOutdated = false;
 
 interface ServerConfig {
   url: string;
@@ -193,8 +197,18 @@ async function checkServerConnection(serverUrl: string, timeout: number): Promis
 
   try {
     console.time(timerLabel);
-    await fetch(`${serverUrl}/`, { method: 'GET', signal: controller.signal });
+    const response = await fetch(`${serverUrl}/`, { method: 'GET', signal: controller.signal });
     sessionStorage.setItem('lastServerContact', Date.now().toString());
+    try {
+      const json = (await response.json()) as Record<string, unknown>;
+      const minVersion = json?.min_frontend_version;
+      if (!versionOutdated && typeof minVersion === 'string' && compareVersion(import.meta.env.APP_VERSION, minVersion) < 0) {
+        versionOutdated = true;
+        invokeHook('app:version-outdated');
+      }
+    } catch {
+      // non-JSON response – version check skipped
+    }
     return true;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError')
@@ -276,6 +290,8 @@ export async function FetchRetry<I, T>(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
   retry = 0,
 ): Promise<FetchRetryResponse<T>> {
+  if (versionOutdated) throw new Error('Version veraltet – bitte App aktualisieren');
+
   const useSingleFlight = retry === 0 && shouldUseSingleFlight(UrlPath, method);
 
   if (useSingleFlight) {
@@ -320,6 +336,8 @@ async function executeFetchRetry<I, T>(
   const actAsUserId = getActAsUserIdFromStorage();
   if (actAsUserId && shouldAttachActAsHeader(UrlPath)) headers.set('x-act-as-user-id', actAsUserId);
 
+  headers.set('x-client-version', import.meta.env.APP_VERSION);
+
   const fetchObject: RequestInit = {
     mode: 'cors',
     headers,
@@ -338,6 +356,11 @@ async function executeFetchRetry<I, T>(
     const responseBody = (await response.json()) as
       | ({ data?: T; success?: boolean; message?: string } & Record<string, unknown>)
       | null;
+    if (response.status === 426 && !versionOutdated) {
+      versionOutdated = true;
+      invokeHook('app:version-outdated');
+    }
+
     if (shouldRetryWithRefresh(UrlPath, response.status)) {
       await refreshAccessTokenSingleFlight(retry);
       return await FetchRetry(UrlPath, data, method, retry + 1);

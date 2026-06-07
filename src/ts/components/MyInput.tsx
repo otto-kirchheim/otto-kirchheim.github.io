@@ -8,9 +8,11 @@ type TModalBodyInputElementOption = {
   id: string;
   name: string;
   value?: string | number;
+  step?: string;
   divClass?: string;
   required?: boolean;
   disabled?: boolean;
+  dataZulageInputCode?: string;
   pattern?: string;
   autoComplete?:
     | 'on'
@@ -89,6 +91,7 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
 
     const normalizedInputProps = {
       ...inputProps,
+      'data-zulage-input-code': inputProps.dataZulageInputCode,
       minLength: typeof inputProps.minLength === 'string' ? Number(inputProps.minLength) : inputProps.minLength,
       maxLength: typeof inputProps.maxLength === 'string' ? Number(inputProps.maxLength) : inputProps.maxLength,
     };

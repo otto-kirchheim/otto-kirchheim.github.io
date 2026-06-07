@@ -22,21 +22,21 @@ export default function applyBereitschaftsVorgabe(
   if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput)
     throw new Error('Input Element nicht gefunden');
 
-  bAInput.value = datum.isoWeekday(vorgabenB.beginnB.tag).format('YYYY-MM-DD');
+  bAInput.value = datum.isoWeekday(vorgabenB.beginnB.tag === 0 ? 7 : vorgabenB.beginnB.tag).format('YYYY-MM-DD');
   bATInput.value = vorgabenB.beginnB.zeit;
   bEInput.value = datum
-    .isoWeekday(vorgabenB.endeB.tag)
+    .isoWeekday(vorgabenB.endeB.tag === 0 ? 7 : vorgabenB.endeB.tag)
     .add(vorgabenB.endeB.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   bETInput.value = vorgabenB.endeB.zeit;
   nachtInput.checked = vorgabenB.nacht;
   nAInput.value = datum
-    .isoWeekday(vorgabenB.beginnN.tag)
+    .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
     .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   nATInput.value = vorgabenB.beginnN.zeit;
   nEInput.value = datum
-    .isoWeekday(vorgabenB.endeN.tag)
+    .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
     .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   nETInput.value = vorgabenB.endeN.zeit;

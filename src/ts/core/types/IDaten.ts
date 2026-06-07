@@ -30,12 +30,12 @@ export interface IDatenBZ<BZType = string> extends CustomTableTypes {
   pauseB: number;
 }
 
-type IDatenBEValues = string | number | undefined;
+type IDatenBEValues = string | number | string[] | undefined;
 
 export interface IDatenBE extends CustomTableTypes {
   [key: string]: IDatenBEValues;
   _id?: string;
-  bereitschaftszeitraumBE?: string;
+  bereitschaftszeitraumBE?: string[];
   tagBE: string;
   auftragsnummerBE: string;
   beginBE: string;
@@ -63,7 +63,12 @@ export interface IDatenEWT<EWTType = string> {
   berechnen: boolean;
 }
 
-type IDatenNValues = string | number | undefined;
+export interface INebenZulage {
+  code: string;
+  value: number;
+}
+
+type IDatenNValues = string | number | INebenZulage[] | undefined;
 export interface IDatenN {
   [key: string]: IDatenNValues;
   _id?: string;
@@ -71,6 +76,7 @@ export interface IDatenN {
   tagN: string;
   beginN: string;
   endeN: string;
-  anzahl040N: number;
+  zulagenN?: INebenZulage[];
+  zulagenAnzeigeN?: string;
   auftragN: string;
 }

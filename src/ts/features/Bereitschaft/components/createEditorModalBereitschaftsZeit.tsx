@@ -23,7 +23,7 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): Compone
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
       return (
         <MyInput
-          divClass="form-floating col-12 pb-3"
+          divClass="form-floating col-12"
           type="datetime-local"
           id={column.name}
           name={column.title}
@@ -64,7 +64,7 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
       return (
         <MyInput
-          divClass="form-floating col-12 pb-3"
+          divClass="form-floating col-12"
           type="datetime-local"
           id={column.name}
           name={column.longTitle}
@@ -110,6 +110,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
       size="sm"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >
       <MyModalBody>{createElements(row)}</MyModalBody>

@@ -14,7 +14,14 @@ export interface IVorgabenBerechnungMonat {
     S14: number;
   };
   N: {
-    F: number;
+    F: number;    // 040 Fahrentschädigung (Stück)
+    A: number;    // Minuten, Hint A (841, 842, 843)
+    B: number;    // Minuten, Hint B (811–828)
+    C: number;    // Minuten, Hint C (831–835)
+    CA: number;   // Minuten, Hint C+A (837)
+    CB: number;   // Minuten, Hint C+B (838)
+    C9: number;   // Stück, Hint C*9 (839)
+    SIPO: number; // Minuten, Hint SIPO (846)
   };
 }
 

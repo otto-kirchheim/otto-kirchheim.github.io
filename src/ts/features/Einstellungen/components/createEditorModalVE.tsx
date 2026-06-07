@@ -15,7 +15,7 @@ const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
   { tag: 4, short: 'Do' },
   { tag: 5, short: 'Fr' },
   { tag: 6, short: 'Sa' },
-  { tag: 0, short: 'So' },
+  { tag: 7, short: 'So' },
 ];
 
 const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
@@ -25,7 +25,7 @@ const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
   4: 3,
   5: 4,
   6: 5,
-  0: 6,
+  7: 6,
 };
 
 const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): number => {
@@ -188,7 +188,7 @@ const createNameElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgaben
 
   return (
     <MyInput
-      divClass="form-floating col-12 pb-3"
+      divClass="form-floating col-12"
       required
       type={column.type}
       id={column.name}
@@ -209,9 +209,11 @@ const createcheckboxElement = (
   const isChecked: boolean = row instanceof Row ? (row.cells?.[column.name] as boolean) : false;
 
   return (
-    <MyCheckbox className="form-check form-switch col-12 pb-3" id={column.name} checked={isChecked}>
-      {column.title}
-    </MyCheckbox>
+    <div className="col-12">
+      <MyCheckbox className="form-check form-switch" id={column.name} checked={isChecked}>
+        {column.title}
+      </MyCheckbox>
+    </div>
   );
 };
 
@@ -261,7 +263,7 @@ const createRangeElement = (
         initialStart={startValue}
         initialEnd={endValue}
       />
-      <div className="row g-2 mt-2 pb-3">
+      <div className="row g-2 mt-2">
         {createTimeElement(row, startColumnName)}
         {createTimeElement(row, endColumnName)}
       </div>
@@ -286,9 +288,9 @@ export default function EditorModalVE(
       <MyModalBody>
         {createNameElement(row)}
         {createcheckboxElement(row, 'standard')}
-        <hr />
+        <div className="col-12"><hr className="my-0" /></div>
         {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
-        <hr />
+        <div className="col-12"><hr className="my-0" /></div>
         {createcheckboxElement(row, 'nacht')}
         <div id="nachtRangeSection" className={isNachtInitiallyChecked ? '' : 'd-none'}>
           {createRangeElement(row, 'beginnN', 'endeN', true, 'Nachtschicht')}

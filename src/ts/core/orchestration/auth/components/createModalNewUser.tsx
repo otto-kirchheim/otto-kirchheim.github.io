@@ -10,6 +10,7 @@ export default function createModalNewUser(): void {
     <MyFormModal myRef={ref} title="Neuen Benutzer Erstellen" submitText="Erstellen" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="text"
           id="Zugang"
@@ -20,6 +21,7 @@ export default function createModalNewUser(): void {
           Zugangscode
         </MyInput>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="text"
           id="Benutzer"
@@ -35,6 +37,7 @@ export default function createModalNewUser(): void {
           Benutzer
         </MyInput>
         <MyInput
+          divClass="form-floating col-12"
           required
           type="email"
           id="Email"
@@ -49,48 +52,55 @@ export default function createModalNewUser(): void {
         >
           E-Mail (@deutschebahn.com)
         </MyInput>
-        <MyInput
-          required
-          type="password"
-          id="Passwort"
-          name="Passwort"
-          pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
-          minLength={PASSWORD_MIN_LENGTH}
-          autoComplete="new-password"
-          invalidFeedbackId="register-password-feedback"
-          invalidFeedbackText="Das Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
-          popover={{
-            content:
-              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
-            placement: 'right',
-            html: true,
-            title: 'Erlaubte Zeichen',
-            trigger: 'focus',
-          }}
-        >
-          Passwort
-        </MyInput>
-        <MyInput
-          required
-          type="password"
-          id="Passwort2"
-          name="Passwort wiederholen"
-          pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
-          minLength={PASSWORD_MIN_LENGTH}
-          autoComplete="new-password"
-          invalidFeedbackId="register-password-repeat-feedback"
-          invalidFeedbackText="Bitte wiederhole das Passwort mit mindestens 8 erlaubten Zeichen."
-          popover={{
-            content:
-              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
-            placement: 'right',
-            html: true,
-            title: 'Erlaubte Zeichen',
-            trigger: 'focus',
-          }}
-        >
-          Passwort wiederholen
-        </MyInput>
+        <div className="col-12 border rounded p-2">
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Passwort</p>
+          <div className="row g-2">
+            <MyInput
+              divClass="form-floating col-12"
+              required
+              type="password"
+              id="Passwort"
+              name="Passwort"
+              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+              minLength={PASSWORD_MIN_LENGTH}
+              autoComplete="new-password"
+              invalidFeedbackId="register-password-feedback"
+              invalidFeedbackText="Das Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
+              popover={{
+                content:
+                  '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+                placement: 'right',
+                html: true,
+                title: 'Erlaubte Zeichen',
+                trigger: 'focus',
+              }}
+            >
+              Passwort
+            </MyInput>
+            <MyInput
+              divClass="form-floating col-12"
+              required
+              type="password"
+              id="Passwort2"
+              name="Passwort wiederholen"
+              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
+              minLength={PASSWORD_MIN_LENGTH}
+              autoComplete="new-password"
+              invalidFeedbackId="register-password-repeat-feedback"
+              invalidFeedbackText="Bitte wiederhole das Passwort mit mindestens 8 erlaubten Zeichen."
+              popover={{
+                content:
+                  '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+                placement: 'right',
+                html: true,
+                title: 'Erlaubte Zeichen',
+                trigger: 'focus',
+              }}
+            >
+              Passwort wiederholen
+            </MyInput>
+          </div>
+        </div>
       </MyModalBody>
     </MyFormModal>,
   );

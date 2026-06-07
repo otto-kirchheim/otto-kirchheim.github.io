@@ -2,6 +2,7 @@ import type { JSX } from 'preact';
 import type { Column, Row } from '@/infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenN } from '@/types';
+import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '../utils';
 
 const getColumn = (row: Row<IDatenN>, columnName: string): Column<IDatenN> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -45,18 +46,13 @@ const createShowElement = (
   );
 };
 
-const createShowElement2 = (
-  row: Row<IDatenN>,
-  column: [columnName: string, className?: string],
-  classNameDiv: string = 'mb-2 col-12 text-center',
-) => {
-  const column1: Column<IDatenN> = getColumn(row, column[0]);
-
+const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 col-12 text-center') => {
+  const lines = formatNebengeldZulagen(normalizeNebengeldZulagen(row.cells)).split('\n');
   return (
     <div className={classNameDiv}>
-      <span className={column[1]} id={column1.name}>
-        {`${column1.longTitle} x ${column1.parser(row.cells[column1.name])}`}
-      </span>
+      {lines.map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
     </div>
   );
 };
@@ -79,7 +75,7 @@ const createShowElement3 = (
 
 export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
-    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />}>
+    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />} errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}>
       <MyModalBody className="p-3">
         {createTagElement(row)}
 
@@ -89,8 +85,8 @@ export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
         <h4 className="text-center mb-0">Arbeitszeit</h4>
         {createShowElement(row, ['beginN'], ['endeN'])}
 
-        <h4 className="text-center mb-0">Zulage</h4>
-        {createShowElement2(row, ['anzahl040N', 'col-6 align-middle text-break my-auto'])}
+        <h4 className="text-center mb-0">Zulagen</h4>
+        {createZulagenElement(row)}
       </MyModalBody>
     </MyDivModal>,
   );

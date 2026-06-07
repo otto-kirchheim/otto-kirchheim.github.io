@@ -158,7 +158,7 @@ describe('persistEwtTableData', () => {
         tagN: '06.04.2026',
         beginN: '07:00',
         endeN: '15:45',
-        anzahl040N: 1,
+        zulagenN: [{ code: '040', value: 1 }],
         auftragN: 'A',
       },
       {
@@ -167,7 +167,7 @@ describe('persistEwtTableData', () => {
         tagN: '07.04.2026',
         beginN: '07:00',
         endeN: '15:45',
-        anzahl040N: 1,
+        zulagenN: [{ code: '040', value: 1 }],
         auftragN: 'B',
       },
     ];
