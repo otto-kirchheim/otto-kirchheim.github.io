@@ -312,7 +312,7 @@ describe('apiService', () => {
       ]);
       const result = await nebengeldApi.loadYear(2024);
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].anzahl040N).toBe(2);
+      expect(result.data[0].zulagenN).toEqual([{ code: '040', value: 2 }]);
       expect(result.updatedAt).toBe('2024-06-15T14:00:00.000Z');
     });
   });

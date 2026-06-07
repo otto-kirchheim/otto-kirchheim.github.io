@@ -17,6 +17,8 @@ export interface BulkErrorEntry {
   id?: string;
   clientRequestId?: string;
   message: string;
+  /** Frontend-only: menschenlesbare Zeilenbeschreibung für den Fehlerdialog. */
+  label?: string;
 }
 
 /** Bulk-Operation Response */

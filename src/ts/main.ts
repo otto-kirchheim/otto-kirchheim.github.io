@@ -4,7 +4,7 @@ import { registerSW } from 'virtual:pwa-register';
 import 'preact/debug';
 
 import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
 import { default as initializeColorModeToggler } from '@/infrastructure/ui/BSColorToggler';
@@ -20,6 +20,7 @@ validateAllSequences();
 registerHook('auth:failure', () => logoutUser({ reason: 'token-expired' }));
 registerHook('network:reconnect', changeMonatJahr);
 registerHook('pre-save:settings', saveEinstellungen);
+registerHook('app:version-outdated', () => setVersionOutdated(updateSW));
 
 featureLifecycleRegistry.registerFeature({
   name: 'Admin',
@@ -39,7 +40,7 @@ featureLifecycleRegistry.registerFeature({
 
 const intervalMS = 60 * 60 * 1000;
 
-registerSW({
+const updateSW = registerSW({
   onRegisteredSW(swUrl, r) {
     if (r)
       setInterval(async () => {
