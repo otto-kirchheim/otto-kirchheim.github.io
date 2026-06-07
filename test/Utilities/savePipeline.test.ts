@@ -21,7 +21,6 @@ function makeNRow(
       tagN: '2026-03-01',
       beginN: '06:00',
       endeN: '14:00',
-      anzahl040N: 0,
       auftragN: '',
       ...(overrides.ewtRef ? { ewtRef: overrides.ewtRef } : {}),
     } as IDatenN,
@@ -61,7 +60,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('returns immediately when deletedIds is empty', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     unlinkNebengeldRefsForDeletedEwtIds([]);
@@ -71,8 +70,8 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
 
   it('removes ewtRef from matching Storage items', () => {
     Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' },
-      { tagN: '02', beginN: '09:00', endeN: '17:00', anzahl040N: 0, auftragN: '', ewtRef: 'e2' },
+      { tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' },
+      { tagN: '02', beginN: '09:00', endeN: '17:00', auftragN: '', ewtRef: 'e2' },
     ]);
 
     unlinkNebengeldRefsForDeletedEwtIds(['e1']);
@@ -83,7 +82,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('does not write Storage when no refs match', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '' }]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     unlinkNebengeldRefsForDeletedEwtIds(['unknown-id']);
@@ -92,7 +91,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('cleans ewtRef from live table rows and calls drawRows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -103,7 +102,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('also updates _originalCells for unchanged rows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -114,7 +113,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('skips deleted table rows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
     const row = makeNRow({ _state: 'deleted', ewtRef: 'e1' });
     const instance = mountTableN([row]);
 
@@ -125,7 +124,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('does not crash when #tableN is absent', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', anzahl040N: 0, auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
     // No DOM element mounted
     expect(() => unlinkNebengeldRefsForDeletedEwtIds(['e1'])).not.toThrow();
   });
@@ -203,6 +202,38 @@ describe('savePipeline', () => {
 
       const result = collectRowErrorMatches(table, errors);
       expect(result).toHaveLength(2);
+    });
+
+    it('matches create error by index when _state is "new"', () => {
+      const row0 = makeRow({ _state: 'new' });
+      const row1 = makeRow({ _state: 'new' });
+      const table = makeTable([row0, row1]);
+      const errors: BulkErrorEntry[] = [
+        { operation: 'create', message: 'err0', index: 0 },
+        { operation: 'create', message: 'err1', index: 1 },
+      ];
+
+      const result = collectRowErrorMatches(table, errors);
+      expect(result).toHaveLength(2);
+      expect(result[0].row).toBe(row0);
+      expect(result[1].row).toBe(row1);
+    });
+
+    it('matches error rows (_state="error", _errorState="new") by index on re-save', () => {
+      // Rows that failed a previous bulk save are in 'error' state with _errorState='new'.
+      // On the next auto-save attempt those rows must still be matched by index.
+      const row0 = makeRow({ _state: 'error', _errorState: 'new' } as Partial<Row<CustomTableTypes>>);
+      const row1 = makeRow({ _state: 'error', _errorState: 'new' } as Partial<Row<CustomTableTypes>>);
+      const table = makeTable([row0, row1]);
+      const errors: BulkErrorEntry[] = [
+        { operation: 'create', message: 'err0', index: 0 },
+        { operation: 'create', message: 'err1', index: 1 },
+      ];
+
+      const result = collectRowErrorMatches(table, errors);
+      expect(result).toHaveLength(2);
+      expect(result[0].row).toBe(row0);
+      expect(result[1].row).toBe(row1);
     });
   });
 

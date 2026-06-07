@@ -4,6 +4,7 @@
  * Copyright 2022-2026 Jan Otto
  */
 import './customtable.css';
+import Tooltip from 'bootstrap/js/dist/tooltip';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { CustomHTMLTableElement } from '@/types';
@@ -334,15 +335,38 @@ export class Rows<T extends CustomTableTypes> {
   load(array: T[], add = false): void {
     if (!add) this.array.length = 0;
     array.forEach(row => {
-      const storedState = (row as Record<string, unknown>).__localState;
-      const state: RowState = storedState === 'deleted' ? 'deleted' : 'unchanged';
-      if (storedState !== undefined) {
-        const cells = { ...row } as T;
+      const r = row as Record<string, unknown>;
+      const storedLocalState = r.__localState as string | undefined;
+      const storedErrorMsg = r.__errorMessage as string | undefined;
+      const storedErrorState = r.__errorState as string | undefined;
+      const hasMeta = storedLocalState !== undefined || storedErrorMsg !== undefined;
+
+      let cells: T;
+      if (hasMeta) {
+        cells = { ...row } as T;
         delete (cells as Record<string, unknown>).__localState;
-        this.array.push(new Row(this.CustomTable, cells, state));
+        delete (cells as Record<string, unknown>).__errorMessage;
+        delete (cells as Record<string, unknown>).__errorState;
       } else {
-        this.array.push(new Row(this.CustomTable, row, 'unchanged'));
+        cells = row;
       }
+
+      const baseState: RowState = storedLocalState === 'deleted' ? 'deleted' : 'unchanged';
+      const newRow = new Row(this.CustomTable, cells, baseState);
+
+      if (storedErrorMsg) {
+        newRow._state = 'error';
+        newRow._errorState =
+          storedErrorState === 'new' || storedErrorState === 'modified' || storedErrorState === 'deleted'
+            ? storedErrorState
+            : '_id' in (cells as Record<string, unknown>) &&
+                typeof (cells as Record<string, unknown>)._id === 'string'
+              ? 'modified'
+              : 'new';
+        newRow._errorMessage = storedErrorMsg;
+      }
+
+      this.array.push(newRow);
     });
     this.CustomTable.drawRows();
   }
@@ -775,6 +799,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     const thead = this.$el.tHead as HTMLTableSectionElement;
     const tbody = this.$el.tBodies[0];
     const tfoot = this.$el.tFoot as HTMLTableSectionElement;
+    tbody.querySelectorAll<HTMLElement>('[data-bs-toggle="tooltip"]').forEach(el => Tooltip.getInstance(el)?.dispose());
     tbody.innerHTML = '';
     const sortedColumn = this.columns.array.find(column => column.sorted);
     if (sortedColumn) this.sort(sortedColumn.index, sortedColumn.direction);
@@ -825,6 +850,11 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
             return;
           }
           const td = document.createElement('td');
+          if (row.isError && row._errorMessage) {
+            td.setAttribute('data-bs-toggle', 'tooltip');
+            td.setAttribute('data-bs-title', row._errorMessage);
+            new Tooltip(td, { placement: 'auto', trigger: 'hover focus' });
+          }
           if (row.isError && !errorIconRendered) {
             const icon = document.createElement('span');
             icon.classList.add('material-icons-round', 'customtable-error-icon');

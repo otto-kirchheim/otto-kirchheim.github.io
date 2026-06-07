@@ -243,7 +243,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '2': {
@@ -262,7 +262,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '3': {
@@ -281,7 +281,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '4': {
@@ -300,7 +300,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '5': {
@@ -319,7 +319,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '6': {
@@ -338,7 +338,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '7': {
@@ -357,7 +357,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '8': {
@@ -376,7 +376,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '9': {
@@ -395,7 +395,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '10': {
@@ -414,7 +414,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '11': {
@@ -433,7 +433,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
   '12': {
@@ -452,7 +452,7 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2,
+      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
     },
   },
 };
@@ -792,21 +792,21 @@ export const datenNMock: Required<IDaten>['N'] = [
     tagN: '12.03.2023',
     beginN: '19:30',
     endeN: '06:15',
-    anzahl040N: 1,
+    zulagenN: [{ code: '040', value: 1 }],
     auftragN: '123456789',
   },
   {
     tagN: '13.03.2023',
     beginN: '19:30',
     endeN: '06:15',
-    anzahl040N: 1,
+    zulagenN: [{ code: '040', value: 1 }],
     auftragN: '223456789',
   },
   {
     tagN: '14.03.2023',
     beginN: '19:30',
     endeN: '06:15',
-    anzahl040N: 1,
+    zulagenN: [{ code: '040', value: 1 }],
     auftragN: '323456789',
   },
 ];

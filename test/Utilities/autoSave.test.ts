@@ -657,12 +657,13 @@ describe('autoSave', () => {
       expect(mockBzBulk).not.toHaveBeenCalled();
     });
 
-    it('zeigt Fehler-Snackbar bei Speicher-Fehler', async () => {
+    it('setzt Fehlerstatus und markiert Zeilen bei Speicher-Fehler', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
 
+      const rowObj: { _state: string; cells: Record<string, string>; _id: string | undefined; _errorState: string | undefined; _errorMessage: string | null } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
       const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
-      createMockTable('tableBZ', changes);
+      createMockTable('tableBZ', changes, [rowObj]);
 
       mockBzBulk.mockRejectedValue(new Error('Server error'));
 
@@ -671,12 +672,10 @@ describe('autoSave', () => {
 
       expect(getResourceStatus('BZ').status).toBe('error');
       expect(getResourceStatus('BZ').lastError).toBe('Server error');
-      expect(mockCreateSnackBar).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining('Server error'),
-          status: 'error',
-        }),
-      );
+      expect(rowObj._state).toBe('error');
+      expect(rowObj._errorState).toBe('new');
+      expect(rowObj._errorMessage).toContain('Server error');
+      expect(mockCreateSnackBar).not.toHaveBeenCalled();
     });
 
     it('aktualisiert localStorage nach erfolgreichem Save', async () => {

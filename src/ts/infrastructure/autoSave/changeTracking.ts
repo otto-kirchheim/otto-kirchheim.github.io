@@ -42,7 +42,6 @@ export function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: C
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
 
   // Serverseitig ergänzte/verknüpfte Felder sollen das Create-Matching nicht stören.
-  if (resource === 'BE') omitKeys.add('bereitschaftszeitraumBE');
   if (resource === 'N') omitKeys.add('ewtRef');
 
   const normalized: Record<string, unknown> = {};

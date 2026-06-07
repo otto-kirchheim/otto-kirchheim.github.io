@@ -29,8 +29,8 @@ describe('isSameBereitschaftsEinsatz', () => {
   });
 
   it('erkennt dieselbe Zeile bei lokaler Duplikatkopie ohne _id ueber den Datensatzinhalt', () => {
-    const current = createBereitschaftsEinsatz({ _id: 'be-1', bereitschaftszeitraumBE: 'bz-1' });
-    const candidate = createBereitschaftsEinsatz({ bereitschaftszeitraumBE: 'bz-1' });
+    const current = createBereitschaftsEinsatz({ _id: 'be-1', bereitschaftszeitraumBE: ['bz-1'] });
+    const candidate = createBereitschaftsEinsatz({ bereitschaftszeitraumBE: ['bz-1'] });
 
     expect(isSameBereitschaftsEinsatz(candidate, current)).toBe(true);
   });

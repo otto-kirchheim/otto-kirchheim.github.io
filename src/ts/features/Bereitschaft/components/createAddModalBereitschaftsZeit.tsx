@@ -17,7 +17,7 @@ import {
 
 const createDateInputElement = (id: string, name: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
   <MyInput
-    divClass="form-floating col-7 col-sm-6 pb-3"
+    divClass="form-floating col-7 col-sm-6"
     required
     disabled
     type="Date"
@@ -32,7 +32,7 @@ const createDateInputElement = (id: string, name: string, date: dayjs.Dayjs, min
 );
 
 const createTimeInputElement = (id: string, name: string, time: string) => (
-  <MyInput divClass="form-floating col-5 col-sm-6 pb-3" required disabled type="time" id={id} name={name} value={time}>
+  <MyInput divClass="form-floating col-5 col-sm-6" required disabled type="time" id={id} name={name} value={time}>
     {name}
   </MyInput>
 );
@@ -73,10 +73,10 @@ export default function createAddModalBereitschaftsZeit(): void {
             html: false,
             text:
               `${value[1].Name} | ` +
-              `${dayjs().day(value[1].beginnB.tag).format('ddd')} - ${dayjs().day(value[1].endeB.tag).format('ddd')} | ` +
+              `${dayjs().isoWeekday(value[1].beginnB.tag === 0 ? 7 : value[1].beginnB.tag).format('ddd')} - ${dayjs().isoWeekday(value[1].endeB.tag === 0 ? 7 : value[1].endeB.tag).format('ddd')} | ` +
               `${
                 value[1].nacht
-                  ? `${dayjs().day(value[1].beginnN.tag).format('ddd')} - ${dayjs().day(value[1].endeN.tag).format('ddd')}`
+                  ? `${dayjs().isoWeekday(value[1].beginnN.tag === 0 ? 7 : value[1].beginnN.tag).format('ddd')} - ${dayjs().isoWeekday(value[1].endeN.tag === 0 ? 7 : value[1].endeN.tag).format('ddd')}`
                   : '-----'
               }` +
               (value[1].standard ? ' | Standard' : ''),
@@ -87,7 +87,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     );
   };
 
-  let datum: dayjs.Dayjs = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]).isoWeekday(vorgabenB[auswahl].beginnB.tag);
+  let datum: dayjs.Dayjs = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]).isoWeekday(vorgabenB[auswahl].beginnB.tag === 0 ? 7 : vorgabenB[auswahl].beginnB.tag);
 
   if (datum.isSameOrBefore(dayjs([Jahr, Monat]).startOf('M'))) {
     datum = datum.add(1, 'w');
@@ -105,7 +105,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     return (
       <MyInput
         myRef={ref}
-        divClass="form-floating col-7 col-sm-6 pb-3"
+        divClass="form-floating col-7 col-sm-6"
         required
         type="Date"
         id="bA"
@@ -124,70 +124,86 @@ export default function createAddModalBereitschaftsZeit(): void {
     <MyFormModal myRef={formRef} title="Neue Bereitschaft eingeben" onSubmit={onSubmit()}>
       <MyModalBody>
         {vorgabenB_Select()}
-        <hr />
-        <h4 className="text-center mb-1">Bereitschafts Anfang</h4>
-        {datumInput()}
-        {createTimeInputElement('bAT', 'Von', vorgabenB[auswahl].beginnB.zeit)}
 
-        <h4 className="text-center mb-1">Bereitschafts Ende</h4>
-        {createDateInputElement(
-          'bE',
-          'Datum',
-          datum.isoWeekday(vorgabenB[auswahl].endeB.tag).add(vorgabenB[auswahl].endeB.Nwoche ? 7 : 0, 'd'),
-          datum.startOf('M'),
-          datum.add(1, 'M').endOf('M'),
-        )}
-        {createTimeInputElement('bET', 'Bis', vorgabenB[auswahl].endeB.zeit)}
+        <div className="col-12">
+          <MyCheckbox
+            className="form-check form-switch bereitschaft"
+            id="eigen"
+            changeHandler={() => {
+              toggleBereitschaftsEigeneWerte(modal, vorgabenB[auswahl], datum);
+            }}
+          >
+            Zeiten manuell anpassen
+          </MyCheckbox>
+        </div>
 
-        <hr />
+        <div className="col-12 border rounded p-2">
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Bereitschaftszeitraum</p>
+          <div className="row g-2">
+            <small className="col-12 text-body fw-medium ps-1 mb-0">Anfang</small>
+            {datumInput()}
+            {createTimeInputElement('bAT', 'Von', vorgabenB[auswahl].beginnB.zeit)}
+            <small className="col-12 text-muted ps-1 mb-0 mt-1 d-flex align-items-center gap-2">
+              Ende
+              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>berechnet</span>
+            </small>
+            {createDateInputElement(
+              'bE',
+              'Datum',
+              datum.isoWeekday(vorgabenB[auswahl].endeB.tag === 0 ? 7 : vorgabenB[auswahl].endeB.tag).add(vorgabenB[auswahl].endeB.Nwoche ? 7 : 0, 'd'),
+              datum.startOf('M'),
+              datum.add(1, 'M').endOf('M'),
+            )}
+            {createTimeInputElement('bET', 'Bis', vorgabenB[auswahl].endeB.zeit)}
+          </div>
+        </div>
 
-        <MyCheckbox
-          className="form-check form-switch bereitschaft"
-          id="nacht"
-          checked={vorgabenB[auswahl].nacht}
-          changeHandler={() => {
-            hideBereitschaftsNachtfelder(modal);
-          }}
-        >
-          Nachtschicht
-        </MyCheckbox>
+        <div className="col-12">
+          <MyCheckbox
+            className="form-check form-switch bereitschaft"
+            id="nacht"
+            checked={vorgabenB[auswahl].nacht}
+            changeHandler={() => {
+              hideBereitschaftsNachtfelder(modal);
+            }}
+          >
+            Nachtschicht
+          </MyCheckbox>
+        </div>
 
         <div
-          className="row m-0 p-0"
+          className="col-12 border rounded p-2"
           id="nachtschicht"
           style={{ display: !vorgabenB[auswahl].nacht ? 'none' : undefined }}
         >
-          <h4 className="text-center mb-1">Nacht Anfang</h4>
-          {createDateInputElement(
-            'nA',
-            'Datum',
-            datum.isoWeekday(vorgabenB[auswahl].beginnN.tag).add(vorgabenB[auswahl].beginnN.Nwoche ? 7 : 0, 'd'),
-            datum.subtract(1, 'month').endOf('M'),
-            datum.add(1, 'M').endOf('M'),
-          )}
-          {createTimeInputElement('nAT', 'Von', vorgabenB[auswahl].beginnN.zeit)}
-
-          <h4 className="text-center mb-1">Nacht Ende</h4>
-          {createDateInputElement(
-            'nE',
-            'Datum',
-            datum.isoWeekday(vorgabenB[auswahl].endeN.tag).add(vorgabenB[auswahl].endeN.Nwoche ? 7 : 0, 'd'),
-            datum.startOf('M'),
-            datum.add(1, 'M').endOf('M'),
-          )}
-          {createTimeInputElement('nET', 'Bis', vorgabenB[auswahl].endeN.zeit)}
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht</p>
+          <div className="row g-2">
+            <small className="col-12 text-muted ps-1 mb-0 d-flex align-items-center gap-2">
+              Anfang
+              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>berechnet</span>
+            </small>
+            {createDateInputElement(
+              'nA',
+              'Datum',
+              datum.isoWeekday(vorgabenB[auswahl].beginnN.tag === 0 ? 7 : vorgabenB[auswahl].beginnN.tag).add(vorgabenB[auswahl].beginnN.Nwoche ? 7 : 0, 'd'),
+              datum.subtract(1, 'month').endOf('M'),
+              datum.add(1, 'M').endOf('M'),
+            )}
+            {createTimeInputElement('nAT', 'Von', vorgabenB[auswahl].beginnN.zeit)}
+            <small className="col-12 text-muted ps-1 mb-0 mt-1 d-flex align-items-center gap-2">
+              Ende
+              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>berechnet</span>
+            </small>
+            {createDateInputElement(
+              'nE',
+              'Datum',
+              datum.isoWeekday(vorgabenB[auswahl].endeN.tag === 0 ? 7 : vorgabenB[auswahl].endeN.tag).add(vorgabenB[auswahl].endeN.Nwoche ? 7 : 0, 'd'),
+              datum.startOf('M'),
+              datum.add(1, 'M').endOf('M'),
+            )}
+            {createTimeInputElement('nET', 'Bis', vorgabenB[auswahl].endeN.zeit)}
+          </div>
         </div>
-        <hr className="mt-3" />
-
-        <MyCheckbox
-          className="form-check form-switch bereitschaft"
-          id="eigen"
-          changeHandler={() => {
-            toggleBereitschaftsEigeneWerte(modal, vorgabenB[auswahl], datum);
-          }}
-        >
-          Eingabe Eigene Werte?
-        </MyCheckbox>
       </MyModalBody>
     </MyFormModal>,
   );

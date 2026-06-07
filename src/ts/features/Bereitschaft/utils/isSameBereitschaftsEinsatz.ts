@@ -2,7 +2,6 @@ import type { IDatenBE } from '@/types';
 
 function getBereitschaftsEinsatzSignature(row: IDatenBE): string {
   return JSON.stringify({
-    bereitschaftszeitraumBE: row.bereitschaftszeitraumBE ?? '',
     tagBE: row.tagBE,
     auftragsnummerBE: row.auftragsnummerBE,
     beginBE: row.beginBE,

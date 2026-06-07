@@ -10,9 +10,10 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
 import dayjs from '@/infrastructure/date/configDayjs';
 import {
-  getBereitschaftsEinsatzDaten,
+  classifyBzCoverage,
   getBereitschaftsZeitraumDaten,
-  isSameBereitschaftsEinsatz,
+  hasConflictingLre1,
+  hasOverlap,
   persistBereitschaftsEinsatzTableData,
 } from '../utils';
 
@@ -22,7 +23,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'tagBE':
         return (
           <MyInput
-            divClass="form-floating col-12 col-sm-6 pb-3"
+            divClass="form-floating col-12 col-sm-6"
             type="date"
             id={column.name}
             name={column.title}
@@ -37,7 +38,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'auftragsnummerBE':
         return (
           <MyInput
-            divClass="form-floating col-12 pb-3"
+            divClass="form-floating col-12"
             type="text"
             id={column.name}
             name={column.longTitle}
@@ -53,7 +54,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'endeBE':
         return (
           <MyInput
-            divClass="form-floating col-12 col-sm-6 pb-3"
+            divClass="form-floating col-12 col-sm-6"
             type="time"
             id={column.name}
             name={column.title}
@@ -67,7 +68,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
         return (
           <Fragment>
             <MySelect
-              className="form-floating col-12 col-sm-6 pb-3"
+              className="form-floating col-12 col-sm-6"
               id={column.name}
               title={column.title}
               required
@@ -126,9 +127,15 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       myRef={ref}
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >
-      <MyModalBody>{createElements(row, datum)}</MyModalBody>
+      <MyModalBody>
+        <p className="text-bg-warning p-2 rounded small">
+          Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein.
+        </p>
+        {createElements(row, datum)}
+      </MyModalBody>
     </MyFormModal>,
   );
 
@@ -163,23 +170,22 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       const einsatzEndRaw = dayjs(`${einsatzDate}T${values.endeBE}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-      const bzData = getBereitschaftsZeitraumDaten();
-      const startBz = bzData.find(bz => {
-        const bzStart = dayjs(String(bz.beginB));
-        const bzEnd = dayjs(String(bz.endeB));
-        return einsatzStart.isSameOrAfter(bzStart) && einsatzStart.isSameOrBefore(bzEnd);
-      });
+      const coverage = classifyBzCoverage(getBereitschaftsZeitraumDaten(), einsatzStart, einsatzEnd);
+      if (coverage.kind !== 'complete') {
+        const message =
+          coverage.kind === 'gap'
+            ? 'Bereitschaft<br/>Der Einsatz liegt in einer Lücke zwischen zwei Bereitschaftszeiträumen.<br/>Bitte Zeiträume anpassen.'
+            : 'Bereitschaft<br/>Kein passender Bereitschaftszeitraum für den geänderten Einsatz gefunden.<br/>Bitte Zeitraum anpassen oder neu anlegen.';
+        createSnackBar({ message, status: 'warning', timeout: 4500, fixed: true });
+        return;
+      }
 
-      const endBz = bzData.find(bz => {
-        const bzStart = dayjs(String(bz.beginB));
-        const bzEnd = dayjs(String(bz.endeB));
-        return einsatzEnd.isSameOrAfter(bzStart) && einsatzEnd.isSameOrBefore(bzEnd);
-      });
+      const { startBz, endBz } = coverage;
+      const bzIdsForEdit = [startBz._id, startBz !== endBz ? endBz._id : undefined].filter(Boolean) as string[];
 
-      if (!startBz || !endBz) {
+      if (!bzIdsForEdit.length || (startBz !== endBz && bzIdsForEdit.length < 2)) {
         createSnackBar({
-          message:
-            'Bereitschaft<br/>Kein passender Bereitschaftszeitraum für den geänderten Einsatz gefunden.<br/>Bitte Zeitraum anpassen oder neu anlegen.',
+          message: 'Bereitschaft<br/>Der passende Bereitschaftszeitraum ist noch nicht gespeichert.<br/>Bitte zuerst Zeiträume speichern.',
           status: 'warning',
           timeout: 4500,
           fixed: true,
@@ -187,76 +193,16 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      if (startBz !== endBz) {
-        const endOfStartBz = dayjs(String(startBz.endeB));
-        const startOfEndBz = dayjs(String(endBz.beginB));
-        if (!endOfStartBz.isSame(startOfEndBz)) {
-          createSnackBar({
-            message:
-              'Bereitschaft<br/>Der Einsatz liegt in einer Lücke zwischen zwei Bereitschaftszeiträumen.<br/>Bitte Zeiträume anpassen.',
-            status: 'warning',
-            timeout: 4500,
-            fixed: true,
-          });
-          return;
-        }
-      }
+      values.bereitschaftszeitraumBE = bzIdsForEdit;
 
-      if (!startBz._id) {
-        createSnackBar({
-          message:
-            'Bereitschaft<br/>Der passende Bereitschaftszeitraum ist noch nicht gespeichert.<br/>Bitte zuerst Zeiträume speichern.',
-          status: 'warning',
-          timeout: 4500,
-          fixed: true,
-        });
+      if (hasOverlap(einsatzStart, einsatzEnd, currentBe)) {
+        createSnackBar({ message: 'Bereitschaft<br/>Bereitschaftseinsätze dürfen sich nicht überschneiden.', status: 'warning', timeout: 4000, fixed: true });
         return;
       }
 
-      values.bereitschaftszeitraumBE = startBz._id;
-
-      const overlapsExistingBe = getBereitschaftsEinsatzDaten().some(be => {
-        if (isSameBereitschaftsEinsatz(be, currentBe)) return false;
-        const existingDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-        const existingStart = dayjs(`${existingDate}T${be.beginBE}`);
-        const existingEndRaw = dayjs(`${existingDate}T${be.endeBE}`);
-        const existingEnd = existingEndRaw.isAfter(existingStart) ? existingEndRaw : existingEndRaw.add(1, 'day');
-        return einsatzStart.isBefore(existingEnd) && existingStart.isBefore(einsatzEnd);
-      });
-
-      if (overlapsExistingBe) {
-        createSnackBar({
-          message: 'Bereitschaft<br/>Bereitschaftseinsätze dürfen sich nicht überschneiden.',
-          status: 'warning',
-          timeout: 4000,
-          fixed: true,
-        });
+      if (values.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
+        createSnackBar({ message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.', status: 'warning', timeout: 4000, fixed: true });
         return;
-      }
-
-      if (values.lreBE === 'LRE 1') {
-        const hasOtherLre1InSameBz = getBereitschaftsEinsatzDaten().some(be => {
-          if (be.lreBE !== 'LRE 1') return false;
-          if (isSameBereitschaftsEinsatz(be, currentBe)) return false;
-
-          const existingDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-          const existingStart = dayjs(`${existingDate}T${be.beginBE}`);
-          const existingEndRaw = dayjs(`${existingDate}T${be.endeBE}`);
-          const existingEnd = existingEndRaw.isAfter(existingStart) ? existingEndRaw : existingEndRaw.add(1, 'day');
-
-          const bzStart = dayjs(String(startBz.beginB));
-          const bzEnd = dayjs(String(startBz.endeB));
-          return existingStart.isSameOrAfter(bzStart) && existingEnd.isSameOrBefore(bzEnd);
-        });
-
-        if (hasOtherLre1InSameBz) {
-          createSnackBar({
-            message: 'Bereitschaft<br/>Hinweis: Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.',
-            status: 'warning',
-            timeout: 4000,
-            fixed: true,
-          });
-        }
       }
 
       if (row instanceof Row) row.val(values);

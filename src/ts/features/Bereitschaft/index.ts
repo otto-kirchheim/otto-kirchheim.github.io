@@ -190,7 +190,6 @@ registerAppStartTask(() => {
         ShowModalBereitschaft(row, 'Einsatz anzeigen');
       },
       deleteRow: row => {
-        // Neue Logik: Bereitschaftseinsatz kann immer gelöscht werden
         row.deleteRow();
         persistBereitschaftsEinsatzTableData(ftBE);
       },

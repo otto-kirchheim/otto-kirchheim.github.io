@@ -66,6 +66,14 @@ export function collectRowErrorMatches(
 ): RowErrorMatch[] {
   const matches: RowErrorMatch[] = [];
 
+  // Error-Rows mit _errorState beachten: effektiver Zustand bestimmt die Position im Create/Update-Array
+  const newRows = table.rows.array.filter(
+    r => r._state === 'new' || (r._state === 'error' && r._errorState === 'new'),
+  );
+  const modifiedRows = table.rows.array.filter(
+    r => r._state === 'modified' || (r._state === 'error' && r._errorState === 'modified'),
+  );
+
   for (const error of errors) {
     let row: Row<CustomTableTypes> | undefined;
 
@@ -75,6 +83,12 @@ export function collectRowErrorMatches(
 
     if (!row && error.id) {
       row = table.rows.array.find(candidate => candidate._id === error.id);
+    }
+
+    // Fallback: Backend liefert index (Position im create/update-Array)
+    if (!row && typeof error.index === 'number') {
+      if (error.operation === 'create') row = newRows[error.index];
+      else if (error.operation === 'update') row = modifiedRows[error.index];
     }
 
     if (!row) continue;
@@ -159,7 +173,13 @@ export async function sendBulk(
     }
   };
 
-  const createItems = buildCreatePayloadWithClientRequestId(resource, table, changes.create);
+  const allCreateItems = buildCreatePayloadWithClientRequestId(resource, table, changes.create);
+
+  const createItems = allCreateItems;
+
+  if (createItems.length === 0 && changes.update.length === 0 && changes.delete.length === 0) {
+    return { created: [], updated: [], deleted: [], createdReferences: [], errors: [] };
+  }
 
   const createByPeriod = new Map<string, (CustomTableTypes & { clientRequestId: string })[]>();
   const updateByPeriod = new Map<string, (CustomTableTypes & { _id: string })[]>();

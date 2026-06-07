@@ -16,17 +16,17 @@ export default function updateBereitschaftsDatum(
   if (!bE || !bET || !nA || !nAT || !nE || !nET) throw new Error('Element not found');
 
   bE.value = datum
-    .isoWeekday(vorgabenB.endeB.tag)
+    .isoWeekday(vorgabenB.endeB.tag === 0 ? 7 : vorgabenB.endeB.tag)
     .add(vorgabenB.endeB.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   bET.value = vorgabenB.endeB.zeit;
   nA.value = datum
-    .isoWeekday(vorgabenB.beginnN.tag)
+    .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
     .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   nAT.value = vorgabenB.beginnN.zeit;
   nE.value = datum
-    .isoWeekday(vorgabenB.endeN.tag)
+    .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
     .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
     .format('YYYY-MM-DD');
   nET.value = vorgabenB.endeN.zeit;

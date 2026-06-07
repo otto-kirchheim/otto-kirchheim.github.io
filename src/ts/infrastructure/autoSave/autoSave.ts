@@ -26,7 +26,8 @@ import {
   sendBulk,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from './savePipeline';
-import { markErrorRows, showErrorDialog } from './errorHandling';
+import { buildRowLabel, markErrorRows, markFetchErrorRows, showErrorDialog } from './errorHandling';
+import type { BulkErrorEntry } from '../api/apiFetchHelper';
 
 // ─── Konfiguration ───────────────────────────────────────
 
@@ -304,6 +305,10 @@ export function scheduleAutoSave(resource: TResourceKey): void {
 
 // ─── Eigentliche Save-Logik ──────────────────────────────
 
+export async function flushResource(resource: TResourceKey): Promise<void> {
+  await saveResourceNow(resource, true);
+}
+
 async function saveResourceNow(resource: TResourceKey, includeDeletes = false): Promise<void> {
   const state = resourceStates[resource];
 
@@ -347,7 +352,20 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
     applyServerRowsToTable(resource, table, result);
 
-    const errorRows = markErrorRows(table, rowErrorMatches, result.errors);
+    markErrorRows(table, rowErrorMatches, result.errors);
+
+    // Fallback: wenn Backend Fehler ohne Zeilennummer liefert (keine clientRequestId/id),
+    // uncommittete Zeilen als Fehler markieren
+    if (result.errors.length > 0 && rowErrorMatches.length === 0) {
+      const uncommitted = table.rows.array.filter(r => r._state === 'new' || r._state === 'modified');
+      const msg = result.errors.map(e => e.message).join(' · ');
+      uncommitted.forEach(row => {
+        row._errorState = row._state === 'new' ? 'new' : 'modified';
+        row._state = 'error';
+        row._errorMessage = msg;
+      });
+      if (uncommitted.length > 0 && typeof table.drawRows === 'function') table.drawRows();
+    }
 
     if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
       unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
@@ -369,8 +387,14 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       Storage.setWithTimestamp(storageKey, currentData, dayjs(maxUpdatedAt).valueOf());
     }
 
-    if (errorRows.length > 0) {
-      showErrorDialog(resource, errorRows);
+    if (result.errors.length > 0) {
+      const errorRows = table.rows.array.filter(r => r._state === 'error');
+      showErrorDialog(
+        resource,
+        rowErrorMatches.length > 0
+          ? rowErrorMatches.map(({ row, error }) => ({ ...error, label: buildRowLabel(row) }))
+          : result.errors.map((error, i) => ({ ...error, label: errorRows[i] ? buildRowLabel(errorRows[i]) : undefined })),
+      );
     }
 
     setStatus(resource, 'saved');
@@ -379,12 +403,13 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     console.error(`AutoSave ${resource} fehlgeschlagen:`, msg);
     setStatus(resource, 'error', msg);
 
-    createSnackBar({
-      message: `Auto-Save (${resource}): ${msg}`,
-      status: 'error',
-      timeout: 5000,
-      fixed: true,
-    });
+    markFetchErrorRows(table, changes, msg);
+
+    const operation: BulkErrorEntry['operation'] = changes.create.length > 0 ? 'create' : changes.update.length > 0 ? 'update' : 'delete';
+    const errorItems = table.rows.array
+      .filter(r => r._state === 'error')
+      .map(r => ({ operation, message: msg, label: buildRowLabel(r) }));
+    showErrorDialog(resource, errorItems.length > 0 ? errorItems : [{ operation, message: msg }]);
   } finally {
     const hasQueuedChanges = state.queuedDuringSave;
     state.queuedDuringSave = false;

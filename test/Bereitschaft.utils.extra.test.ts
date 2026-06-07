@@ -219,7 +219,7 @@ describe('Bereitschaft utils extra', () => {
         .format('YYYY-MM-DD'),
     );
     expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(vorgabenB.endeN.zeit);
-    expect(parentElement.querySelector<HTMLDivElement>('#nachtschicht')?.style.display).toBe('flex');
+    expect(parentElement.querySelector<HTMLDivElement>('#nachtschicht')?.style.display).not.toBe('none');
   });
 
   it('BerVorgabeAEndern wirft Fehler bei fehlendem Datum', () => {

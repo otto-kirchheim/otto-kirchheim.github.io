@@ -1,8 +1,13 @@
-import { describe, expect, it, vi } from 'bun:test';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { escapeHtml, markErrorRows, showErrorDialog } from '@/infrastructure/autoSave/errorHandling';
 import type { CustomTable, CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import type { RowErrorMatch } from '@/infrastructure/autoSave/savePipeline';
+
+const showMock = vi.fn();
+const disposeMock = vi.fn();
+const MockModal = vi.fn(() => ({ show: showMock, hide: vi.fn(), dispose: disposeMock }));
+vi.mock('bootstrap/js/dist/modal', () => ({ default: MockModal }));
 
 describe('errorHandling', () => {
   describe('escapeHtml', () => {
@@ -76,34 +81,38 @@ describe('errorHandling', () => {
   });
 
   describe('showErrorDialog', () => {
-    it('creates modal in DOM when bootstrap is available', () => {
-      const mockShow = vi.fn();
-      (window as any).bootstrap = {
-        Modal: class {
-          show = mockShow;
-        },
-      };
+    beforeEach(() => {
+      document.body.innerHTML = '';
+      vi.clearAllMocks();
+    });
 
+    it('creates modal in DOM with correct content', () => {
       showErrorDialog('BZ', [{ operation: 'create', message: 'Failed to create', clientRequestId: 'crid-1' }]);
 
-      const modal = document.querySelector('.modal');
+      const modal = document.querySelector('[data-error-dialog]');
       expect(modal).toBeTruthy();
       expect(modal?.innerHTML).toContain('Fehler beim Speichern');
       expect(modal?.innerHTML).toContain('Failed to create');
-      expect(mockShow).toHaveBeenCalled();
+      expect(showMock).toHaveBeenCalledTimes(1);
 
-      // Cleanup
       modal?.remove();
-      delete (window as any).bootstrap;
     });
 
-    it('removes modal when bootstrap is not available', () => {
-      delete (window as any).bootstrap;
+    it('extends existing visible dialog instead of creating a new one', () => {
+      showErrorDialog('BZ', [{ operation: 'create', message: 'Erster Fehler', clientRequestId: 'crid-1' }]);
 
-      showErrorDialog('BE', [{ operation: 'update', message: 'Server error', id: '123' }]);
+      const modal = document.querySelector<HTMLElement>('[data-error-dialog]');
+      expect(modal).toBeTruthy();
+      modal?.classList.add('show');
 
-      const modal = document.querySelector('.modal');
-      expect(modal).toBeFalsy();
+      showErrorDialog('BE', [{ operation: 'update', message: 'Zweiter Fehler', id: 'abc' }]);
+
+      expect(document.querySelectorAll('[data-error-dialog]').length).toBe(1);
+      expect(modal?.innerHTML).toContain('Erster Fehler');
+      expect(modal?.innerHTML).toContain('Zweiter Fehler');
+      expect(modal?.querySelector('[data-error-count]')?.textContent).toContain('2 Fehler');
+
+      modal?.remove();
     });
   });
 });

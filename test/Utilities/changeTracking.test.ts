@@ -61,10 +61,10 @@ describe('changeTracking', () => {
       expect(sig).toContain('beginB');
     });
 
-    it('omits bereitschaftszeitraumBE for BE resource', () => {
-      const row = { beginBE: '10:00', endeBE: '12:00', bereitschaftszeitraumBE: '456' };
+    it('includes bereitschaftszeitraumBE for BE resource', () => {
+      const row = { beginBE: '10:00', endeBE: '12:00', bereitschaftszeitraumBE: ['456'] };
       const sig = rowSignature('BE', row as unknown as CustomTableTypes);
-      expect(sig).not.toContain('bereitschaftszeitraumBE');
+      expect(sig).toContain('bereitschaftszeitraumBE');
     });
 
     it('omits ewtRef for N resource', () => {

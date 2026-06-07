@@ -7,6 +7,9 @@ import { default as getDurationFromTime } from '@/infrastructure/date/getDuratio
 import dayjs from '@/infrastructure/date/configDayjs';
 import { resolveHolidayRegion } from '@/infrastructure/date/holidayRegion';
 
+export const B_WECHSEL_STUNDE = 8;
+export const B_WECHSEL_MINUTE = 0;
+
 type Schicht = {
   beginn: Dayjs;
   ende: Dayjs;
@@ -45,8 +48,6 @@ export default function calculateBereitschaftsZeiten(
   const RUHE_ZEIT: number = 10;
   const TAG_PAUSEN_VORGABE: number = 30;
   const NACHT_PAUSEN_VORGABE: number = 45;
-  const B_WECHSEL_STUNDE: number = 8;
-  const B_WECHSEL_MINUTE: number = 0;
   const B_ZEITRAUM_WECHSEL: Duration = dayjs.duration(B_WECHSEL_STUNDE, 'hours');
 
   const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
@@ -77,7 +78,7 @@ export default function calculateBereitschaftsZeiten(
         ende: tagAnfang.add(nachtEndeZeit),
         pause: pausenVorgabe,
       });
-      tagAnfang = tagAnfang.add(1, 'day');
+      tagAnfang = tagAnfang.add(1, 'day').startOf('day');
     }
 
     return schichten;
@@ -128,7 +129,7 @@ export default function calculateBereitschaftsZeiten(
               pause: 0,
             },
       );
-      tagAnfang = tagAnfang.add(1, 'day');
+      tagAnfang = tagAnfang.add(1, 'day').startOf('day');
     }
 
     return schichten;
@@ -194,8 +195,9 @@ export default function calculateBereitschaftsZeiten(
       aktuelleSchicht.ende.hour() === nachtEnde.hour() &&
       aktuelleSchicht.ende.minute() === nachtEnde.minute() &&
       (
-        (nächsteSchicht.beginn.hour() === 8 ? kombinierteSchichten[i + 2]?.beginn : nächsteSchicht.beginn) ??
-        nächsteSchicht.beginn
+        (nächsteSchicht.beginn.hour() === B_WECHSEL_STUNDE
+          ? kombinierteSchichten[i + 2]?.beginn
+          : nächsteSchicht.beginn) ?? nächsteSchicht.beginn
       ).diff(aktuelleSchicht.ende, 'hour') > 1
     ) {
       kombinierteSchichten[i + 1].beginn = kombinierteSchichten[i + 1].ende = aktuelleSchicht.ende.add(
@@ -229,11 +231,8 @@ export default function calculateBereitschaftsZeiten(
 }
 
 function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1): [boolean, IDatenBZ[]] {
-  const MAX_DEPTH = 3;
+  const MAX_DEPTH = 5;
   if (depth > MAX_DEPTH) throw new Error('Fehler bei vorhandenCheck - Recurse Funktion');
-
-  const B_WECHSEL_STUNDE = 8;
-  const B_WECHSEL_MINUTE = 0;
 
   const updatedDaten: IDatenBZ[] = [...daten];
   const newBegin: Dayjs = dayjs(newDaten.beginB);
@@ -266,7 +265,11 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
       return [true, daten];
     }
 
-    const endeBDate: Dayjs = rowEnd.set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE);
+    const endeBDate: Dayjs = rowEnd
+      .set('hour', B_WECHSEL_STUNDE)
+      .set('minute', B_WECHSEL_MINUTE)
+      .set('second', 0)
+      .set('millisecond', 0);
     if (newBegin.isBetween(rowBegin, rowEnd, null, '[)') && !rowEnd.isSame(endeBDate) && newEnd.isAfter(row.endeB)) {
       // Überlappung, wobei das neue Ende nach dem vorhandenen Ende und dem Bereitschaftszeitraumwechsel liegt
       if (newEnd.isAfter(endeBDate)) {
@@ -288,7 +291,11 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
       }
     }
 
-    const beginBDate: Dayjs = rowBegin.set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE);
+    const beginBDate: Dayjs = rowBegin
+      .set('hour', B_WECHSEL_STUNDE)
+      .set('minute', B_WECHSEL_MINUTE)
+      .set('second', 0)
+      .set('millisecond', 0);
     if (
       newEnd.isBetween(rowBegin, rowEnd, null, '(]') &&
       !rowBegin.isSame(beginBDate) &&
@@ -315,7 +322,12 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
       }
     }
   }
-  // Wenn keine Überlappung gefunden wurde, fügen Sie den neuen Zeitraum hinzu
+  // Wenn keine Überlappung gefunden wurde, den neuen Zeitraum hinzufügen – ggf. an Monatsgrenze splitten
+  const monthBoundary = newBegin.startOf('month').add(1, 'month');
+  if (monthBoundary.isAfter(newBegin) && monthBoundary.isBefore(newEnd)) {
+    updatedDaten.push({ beginB: newDaten.beginB, endeB: monthBoundary.toISOString(), pauseB: newDaten.pauseB });
+    return vorhandenCheck(updatedDaten, { beginB: monthBoundary.toISOString(), endeB: newDaten.endeB, pauseB: 0 }, depth + 1);
+  }
   updatedDaten.push(newDaten);
   return [true, updatedDaten];
 }
