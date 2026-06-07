@@ -29,6 +29,7 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ### fix
 
+- Download-POSTs (`bereitschaftszeitraum/download`, `einsatzwechseltaetigkeit/download`, `nebengeld/download`) senden jetzt ebenfalls den Header `x-client-version`. Damit greifen Version-Gate-Checks konsistent wie bei regulären API-Calls und vermeiden falsche `426 Upgrade Required`-Antworten trotz aktueller App-Version.
 - `CustomSnackbar.css`: Layout auf kleinen Viewports verbessert (flex-wrap, saubere Action/Close-Anordnung), damit lange Meldungen und Actions nicht ueberlappen.
 
 ## 2026-06-06
