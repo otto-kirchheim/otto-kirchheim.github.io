@@ -1,3 +1,5 @@
+import Modal from 'bootstrap/js/dist/modal';
+
 /**
  * Async Bootstrap-Modal-Ersatz für window.confirm().
  * Gibt ein Promise<boolean> zurück (true = bestätigt, false = abgebrochen).
@@ -47,18 +49,7 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
 
     document.body.appendChild(modal);
 
-    const bootstrapApi = (
-      window as {
-        bootstrap?: { Modal?: new (el: Element) => { show: () => void; hide: () => void; dispose: () => void } };
-      }
-    ).bootstrap;
-    if (!bootstrapApi?.Modal) {
-      modal.remove();
-      resolve(window.confirm(message));
-      return;
-    }
-
-    const bsModal = new bootstrapApi.Modal(modal);
+    const bsModal = new Modal(modal);
     let resolved = false;
 
     const finish = (result: boolean) => {
@@ -71,6 +62,7 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
     modal.querySelector('[data-confirm="true"]')?.addEventListener('click', () => finish(true));
     modal.addEventListener('hidden.bs.modal', () => {
       finish(false);
+      bsModal.dispose();
       modal.remove();
     });
 

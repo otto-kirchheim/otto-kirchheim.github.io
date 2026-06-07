@@ -70,6 +70,8 @@ function normalizeSettings(input: unknown): TemplateContentDraft['Einstellungen'
   return { aktivierteTabs, benoetigteZulagen };
 }
 
+const normalizeTagValue = (n: number): number => (n === 0 ? 7 : Math.min(7, Math.max(1, n)));
+
 function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
   if (!Array.isArray(input)) return [];
 
@@ -88,22 +90,22 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
         value: {
           Name: toString(rawValue.Name),
           beginnB: {
-            tag: Math.min(7, Math.max(1, toNumber(beginnB?.tag, 1))),
+            tag: normalizeTagValue(toNumber(beginnB?.tag, 1)),
             zeit: toString(beginnB?.zeit),
           },
           endeB: {
-            tag: Math.min(7, Math.max(1, toNumber(endeB?.tag, 1))),
+            tag: normalizeTagValue(toNumber(endeB?.tag, 1)),
             zeit: toString(endeB?.zeit),
             Nwoche: toBoolean(endeB?.Nwoche),
           },
           nacht: toBoolean(rawValue.nacht),
           beginnN: {
-            tag: Math.min(7, Math.max(1, toNumber(beginnN?.tag, 1))),
+            tag: normalizeTagValue(toNumber(beginnN?.tag, 1)),
             zeit: toString(beginnN?.zeit),
             Nwoche: toBoolean(beginnN?.Nwoche),
           },
           endeN: {
-            tag: Math.min(7, Math.max(1, toNumber(endeN?.tag, 1))),
+            tag: normalizeTagValue(toNumber(endeN?.tag, 1)),
             zeit: toString(endeN?.zeit),
             Nwoche: toBoolean(endeN?.Nwoche),
           },

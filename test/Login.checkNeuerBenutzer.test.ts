@@ -52,9 +52,16 @@ vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
 }));
 
 vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: getInstanceMock,
+  default: class MockModal {
+    static getInstance = getInstanceMock;
+    show = vi.fn();
+    hide = vi.fn();
+    dispose = vi.fn();
   },
+}));
+
+vi.mock('@/infrastructure/ui/confirmDialog', () => ({
+  confirmDialog: confirmMock,
 }));
 
 import checkNeuerBenutzer from '@/core/orchestration/auth/utils/checkNeuerBenutzer';
@@ -80,8 +87,7 @@ describe('checkNeuerBenutzer', () => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
     getInstanceMock.mockReturnValue({ hide: hideMock });
-    confirmMock.mockReturnValue(false);
-    window.confirm = confirmMock as typeof window.confirm;
+    confirmMock.mockResolvedValue(false);
     Object.defineProperty(globalThis, 'PublicKeyCredential', {
       value: class PublicKeyCredentialMock {},
       writable: true,
@@ -179,7 +185,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member', email: 'test@example.com', emailVerified: false });
-    confirmMock.mockReturnValue(true);
+    confirmMock.mockResolvedValue(true);
     registerPasskeyWithResultMock.mockResolvedValue({
       ok: true,
       reason: 'success',
@@ -201,7 +207,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member' });
-    confirmMock.mockReturnValueOnce(true).mockReturnValueOnce(true);
+    confirmMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
     registerPasskeyWithResultMock
       .mockResolvedValueOnce({ ok: false, reason: 'error', message: 'Passkey fehlgeschlagen' })
       .mockResolvedValueOnce({ ok: true, reason: 'success', message: 'Passkey erfolgreich eingerichtet' });

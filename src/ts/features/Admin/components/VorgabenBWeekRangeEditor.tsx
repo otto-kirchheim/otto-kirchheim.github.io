@@ -18,6 +18,7 @@ const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
   5: 4,
   6: 5,
   7: 6,
+  0: 6, // legacy: data saved before migration used 0 for Sunday
 };
 
 const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): number => {
@@ -70,7 +71,7 @@ export function VorgabenBWeekRangeEditor({
     if (awaitingEndSelection) return;
 
     const initialStartSlot =
-      startHasNwoche && start.Nwoche && start.tag === 7
+      startHasNwoche && start.Nwoche && start.tag === 0
         ? getSlotFromTag(start.tag, false, true)
         : getSlotFromTag(start.tag, start.Nwoche, startHasNwoche);
     const initialEndSlot = Math.max(getSlotFromTag(end.tag, end.Nwoche, true), initialStartSlot);

@@ -26,7 +26,7 @@ const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnN
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return (
     <MyInput
-      divClass="form-floating col-6 pb-3"
+      divClass="form-floating col-6"
       type="time"
       id={column.name}
       name={column.title}
@@ -68,12 +68,13 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       size="fullscreen-sm-down"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       customButtons={[customButtons]}
       onSubmit={onSubmit()}
     >
       <MyModalBody>
         <MyInput
-          divClass="form-floating col-12 col-sm-5 pb-3"
+          divClass="form-floating col-12 col-sm-5"
           required
           type="date"
           id="tagE"
@@ -85,9 +86,8 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           {row.columns.array.find(column => column.name === 'tagE')?.title ?? 'Tag'}
         </MyInput>
 
-        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="form-floating col-12 col-sm-6 d-none">
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="col-12 col-sm-6 d-none">
           <MyInput
-            divClass="form-floating pb-3"
             myRef={buchungstagHinweisTextRef}
             disabled
             type="date"
@@ -99,7 +99,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           </MyInput>
         </div>
         <MySelect
-          className="form-floating col-12 col-sm-7 pb-3"
+          className="form-floating col-12 col-sm-7"
           id="eOrtE"
           title={row.columns.array.find(column => column.name === 'eOrtE')?.title ?? 'Einsatzort'}
           value={row instanceof Row ? row.cells['eOrtE'].toString() : undefined}
@@ -114,7 +114,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           ]}
         />
         <MySelect
-          className="form-floating col-12 col-sm-7 pb-3"
+          className="form-floating col-12 col-sm-7"
           required
           id={'schichtE'}
           title={row.columns.array.find(column => column.name === 'schichtE')?.title ?? 'Schicht'}
@@ -130,34 +130,48 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
             { value: 'S', text: `Sonder | ${vorgabenU.aZ.bS.toString()}-${vorgabenU.aZ.eS.toString()}` },
           ]}
         />
-        <MyCheckbox
-          className="form-check form-switch col-12 col-sm-4 pb-3"
-          id={'berechnen'}
-          checked={row instanceof Row ? row.cells['berechnen'] : true}
-        >
-          {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
-        </MyCheckbox>
+        <div className="col-12 col-sm-4">
+          <MyCheckbox
+            className="form-check form-switch"
+            id={'berechnen'}
+            checked={row instanceof Row ? row.cells['berechnen'] : true}
+          >
+            {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
+          </MyCheckbox>
+        </div>
 
-        <hr />
-        <div className="icon-ewt">
-          <span className="material-icons-round big-icons">arrow_downward</span>
-          <h4 className="text-center mb-1">Wohnung</h4>
-          <span className="material-icons-round big-icons">arrow_upward</span>
+        <div className="col-12 position-relative d-flex text-muted">
+          <div className="w-50 text-center">
+            <span className="material-icons-round small-icons">arrow_downward</span>
+          </div>
+          <div className="w-50 text-center">
+            <span className="material-icons-round small-icons">arrow_upward</span>
+          </div>
+          <span className="fw-semibold text-uppercase position-absolute top-50 start-50 translate-middle">Wohnung</span>
         </div>
         {createTimeElement(row, 'abWE')}
         {createTimeElement(row, 'anWE')}
 
-        <h4 className="text-center mb-1">Arbeitszeit</h4>
+        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">Arbeitszeit</p>
         {createTimeElement(row, 'beginE')}
         {createTimeElement(row, 'endeE')}
 
-        <h4 className="text-center mb-1">1. Tätigkeitsstätte</h4>
+        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">1. Tätigkeitsstätte</p>
         {createTimeElement(row, 'ab1E')}
         {createTimeElement(row, 'an1E')}
 
-        <h4 className="text-center mb-1">Einsatzort</h4>
+        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">Einsatzort</p>
         {createTimeElement(row, 'anEE')}
         {createTimeElement(row, 'abEE')}
+
+        <div className="col-12 position-relative d-flex text-muted">
+          <div className="w-50 text-center">
+            <span className="material-icons-round small-icons">arrow_downward</span>
+          </div>
+          <div className="w-50 text-center">
+            <span className="material-icons-round small-icons">arrow_upward</span>
+          </div>
+        </div>
       </MyModalBody>
     </MyFormModal>,
   );

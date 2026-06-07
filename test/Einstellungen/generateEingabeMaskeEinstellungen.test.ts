@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'bun:test';
+import { afterEach, describe, expect, it, vi } from 'bun:test';
 
 vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeTabelleEinstellungenVorgabenB: vi.fn(),
@@ -15,10 +15,17 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 }));
 
 import {
+  default as generateEingabeMaskeEinstellungen,
   formatDelayLabel,
   msToSliderPosition,
   sliderPositionToMs,
 } from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
+import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
+import type { IVorgabenU } from '@/types';
+
+afterEach(() => {
+  document.body.innerHTML = '';
+});
 
 // ─── formatDelayLabel ────────────────────────────────────────────────────────
 
@@ -77,5 +84,139 @@ describe('sliderPositionToMs / msToSliderPosition Roundtrip', () => {
   it.each([0, 5, 9, 10, 15, 19, 22, 24] as const)('Position %i bleibt nach Roundtrip gleich', (pos: number) => {
     const ms = sliderPositionToMs(pos);
     expect(msToSliderPosition(ms)).toBe(pos);
+  });
+});
+
+// ─── Zulagen-Limits in der Einstellungen-Maske ─────────────────────────────
+
+describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
+  function buildVorgabenU(benoetigteZulagen: string[] = []): IVorgabenU {
+    return {
+      pers: {
+        Vorname: '',
+        Nachname: '',
+        PNummer: '',
+        Telefon: '',
+        Adress1: '',
+        Adress2: '',
+        ErsteTkgSt: '',
+        ErsteTkgStAdresse: '',
+        Bundesland: 'HE',
+        Betrieb: '',
+        OE: '',
+        Gewerk: '',
+        kmArbeitsort: 0,
+        nBhf: '',
+        kmnBhf: 0,
+        TB: 'Tarifkraft',
+      },
+      aZ: {
+        bBN: '00:00',
+        bN: '00:00',
+        bS: '00:00',
+        bT: '00:00',
+        eN: '00:00',
+        eS: '00:00',
+        eT: '00:00',
+        eTF: '00:00',
+        rZ: '00:00',
+      },
+      fZ: [],
+      vorgabenB: {},
+      Einstellungen: {
+        aktivierteTabs: [],
+        benoetigteZulagen,
+      },
+    };
+  }
+
+  function setupDomShell(): void {
+    const tbody = document.createElement('tbody');
+    tbody.id = 'TbodyTätigkeitsstätten';
+    document.body.appendChild(tbody);
+
+    const collapse = document.createElement('div');
+    collapse.id = 'collapseFive';
+    document.body.appendChild(collapse);
+
+    const list = document.createElement('div');
+    list.id = 'settings-zulagen-list';
+    document.body.appendChild(list);
+
+    const table = document.createElement('table');
+    table.id = 'tableVE';
+    document.body.appendChild(table);
+  }
+
+  it('begrenzt Erschwerniszulagen auf max. 7 bei Initialwerten', () => {
+    setupDomShell();
+
+    const erschwernisCodes = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
+      .slice(0, 8)
+      .map(item => item.code);
+
+    generateEingabeMaskeEinstellungen(buildVorgabenU(erschwernisCodes));
+
+    const checkedErschwernis = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
+      .map(item =>
+        document.querySelector<HTMLInputElement>(`#settings-zulagen-list input[data-zulage-code="${item.code}"]`),
+      )
+      .filter((input): input is HTMLInputElement => Boolean(input?.checked));
+
+    expect(checkedErschwernis.length).toBe(7);
+  });
+
+  it('deaktiviert weitere Erschwerniszulagen nach 7 Selektionen und aktiviert bei Abwahl wieder', () => {
+    setupDomShell();
+    generateEingabeMaskeEinstellungen(buildVorgabenU());
+
+    const erschwernisInputs = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
+      .slice(0, 8)
+      .map(item =>
+        document.querySelector<HTMLInputElement>(`#settings-zulagen-list input[data-zulage-code="${item.code}"]`),
+      )
+      .filter((input): input is HTMLInputElement => Boolean(input));
+
+    expect(erschwernisInputs.length).toBe(8);
+
+    for (const input of erschwernisInputs.slice(0, 7)) {
+      input.checked = true;
+      input.dispatchEvent(new Event('change'));
+    }
+
+    const eighth = erschwernisInputs[7];
+    expect(eighth.disabled).toBe(true);
+
+    const first = erschwernisInputs[0];
+    first.checked = false;
+    first.dispatchEvent(new Event('change'));
+
+    expect(eighth.disabled).toBe(false);
+  });
+
+  it('rendert Zulagen in sichtbaren Kategorie-Sektionen mit Limit-Hinweis', () => {
+    setupDomShell();
+    generateEingabeMaskeEinstellungen(buildVorgabenU());
+
+    const sections = document.querySelectorAll<HTMLElement>('#settings-zulagen-list [data-zulage-category-section]');
+    expect(sections.length).toBe(3);
+    expect(sections[0]?.dataset.zulageCategorySection).toBe('erschwerniszulage');
+
+    const erschwernisSection = document.querySelector<HTMLElement>(
+      '#settings-zulagen-list [data-zulage-category-section="erschwerniszulage"]',
+    );
+    const leistungSection = document.querySelector<HTMLElement>(
+      '#settings-zulagen-list [data-zulage-category-section="leistungspramie-und-fahrentschaedigung"]',
+    );
+    const reinigungSection = document.querySelector<HTMLElement>(
+      '#settings-zulagen-list [data-zulage-category-section="ganzkoerperreinigung"]',
+    );
+
+    expect(erschwernisSection?.textContent).toContain('Erschwerniszulagen');
+    expect(erschwernisSection?.textContent).toContain('Max. 7 gleichzeitig');
+    expect(leistungSection?.textContent).toContain('Leistungsprämie u. Fahrentschädigung');
+    expect(leistungSection?.textContent).toContain('Max. 3 gleichzeitig');
+    expect(reinigungSection?.textContent).toContain('Ganzkörperreinigung');
+    expect(reinigungSection?.textContent).toContain('Max. 1 gleichzeitig');
   });
 });

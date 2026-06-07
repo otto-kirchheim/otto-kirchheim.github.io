@@ -197,7 +197,8 @@
     position: relative;
     width: 100%;
     margin: 0;
-    display: block;
+    display: flex;
+    flex-wrap: wrap;
     padding-left: var(--snackbar-status-width);
   }
 
@@ -210,17 +211,22 @@
   }
 
   .CustomSnackbar__message-wrapper {
+    flex: 1 1 0;
+    min-width: 0;
     padding: 12px 14px;
   }
 
-  .CustomSnackbar__action,
   .CustomSnackbar__close {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    padding: 0 14px;
     min-height: 42px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .CustomSnackbar__action {
-    flex: none;
+    flex: 1 1 100%;
+    min-height: 42px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
     max-width: none;
     min-width: 0;
     justify-content: flex-start;
@@ -228,9 +234,5 @@
     padding: 10px 12px;
     font-size: 0.95rem;
     line-height: 1.25;
-  }
-
-  .CustomSnackbar__close {
-    padding: 0 14px;
   }
 }
