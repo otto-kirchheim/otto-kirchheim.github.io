@@ -1,5 +1,5 @@
 import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
-import type { IVorgabenUaZ } from '@/types';
+import type { BereitschaftSchichtTyp, IVorgabenUaZ } from '@/types';
 
 export type FahrzeitRow = { key: string; text: string; value: string };
 
@@ -10,6 +10,7 @@ export type VorgabenBRow = {
     Name: string;
     beginnB: { tag: number; zeit: string };
     endeB: { tag: number; zeit: string; Nwoche: boolean };
+    schichten: BereitschaftSchichtTyp[];
     nacht: boolean;
     beginnN: { tag: number; zeit: string; Nwoche: boolean };
     endeN: { tag: number; zeit: string; Nwoche: boolean };

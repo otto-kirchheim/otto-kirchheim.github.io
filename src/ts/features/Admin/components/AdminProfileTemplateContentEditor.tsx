@@ -9,8 +9,16 @@ import {
   type VorgabenBRow,
 } from './profileTemplates.shared';
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
+import type { BereitschaftSchichtTyp } from '@/types';
 
 type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
+
+const SCHICHT_OPTIONEN: { typ: BereitschaftSchichtTyp; label: string }[] = [
+  { typ: 'frueh', label: 'Früh' },
+  { typ: 'spaet', label: 'Spät' },
+  { typ: 'nacht', label: 'Nacht' },
+  { typ: 'sonder', label: 'Sonder' },
+];
 
 type Props = {
   templateId: string;
@@ -402,43 +410,57 @@ export function AdminProfileTemplateContentEditor({
                       </div>
                     </div>
 
-                    <div class="d-flex flex-wrap gap-3 mb-2">
-                      <label class="form-check m-0">
-                        <input
-                          class="form-check-input me-1"
-                          type="checkbox"
-                          checked={row.value.nacht}
-                          onInput={e =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                nacht: (e.target as HTMLInputElement).checked,
-                                ...((e.target as HTMLInputElement).checked
-                                  ? {}
-                                  : {
-                                      beginnN: {
-                                        ...current.value.beginnN,
-                                        tag: current.value.beginnB.tag,
-                                        zeit: current.value.beginnB.zeit,
-                                        Nwoche: false,
-                                      },
-                                      endeN: {
-                                        ...current.value.endeN,
-                                        tag: current.value.endeB.tag,
-                                        zeit: current.value.endeB.zeit,
-                                        Nwoche: current.value.endeB.Nwoche,
-                                      },
-                                    }),
-                              },
-                            }))
-                          }
-                        />
-                        <span class="form-check-label">Nachtschicht aktiv</span>
-                      </label>
+                    <div class="mb-2">
+                      <label class="form-label small mb-1">Aktive Schichten</label>
+                      <div class="d-flex flex-wrap gap-3">
+                        {SCHICHT_OPTIONEN.map(({ typ, label }) => (
+                          <label key={typ} class="form-check m-0">
+                            <input
+                              class="form-check-input me-1"
+                              type="checkbox"
+                              checked={row.value.schichten.includes(typ)}
+                              disabled={typ === 'frueh' || isSaving}
+                              onInput={e => {
+                                const checked = (e.target as HTMLInputElement).checked;
+                                onUpdateVorgabenBRow(currentIndex, current => {
+                                  const schichten = checked
+                                    ? [...current.value.schichten.filter(s => s !== typ), typ]
+                                    : current.value.schichten.filter(s => s !== typ);
+                                  const nacht = schichten.includes('nacht');
+                                  return {
+                                    ...current,
+                                    value: {
+                                      ...current.value,
+                                      schichten,
+                                      nacht,
+                                      ...(nacht
+                                        ? {}
+                                        : {
+                                            beginnN: {
+                                              ...current.value.beginnN,
+                                              tag: current.value.beginnB.tag,
+                                              zeit: current.value.beginnB.zeit,
+                                              Nwoche: false,
+                                            },
+                                            endeN: {
+                                              ...current.value.endeN,
+                                              tag: current.value.endeB.tag,
+                                              zeit: current.value.endeB.zeit,
+                                              Nwoche: current.value.endeB.Nwoche,
+                                            },
+                                          }),
+                                    },
+                                  };
+                                });
+                              }}
+                            />
+                            <span class="form-check-label">{label}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
-                    {row.value.nacht ? (
+                    {row.value.schichten.includes('nacht') ? (
                       <>
                         <VorgabenBWeekRangeEditor
                           selectorKey={`${templateId}-vb-n-${currentIndex}`}

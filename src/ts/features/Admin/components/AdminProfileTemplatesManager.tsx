@@ -10,6 +10,7 @@ import {
   type BackendProfileTemplate,
 } from '../utils/api';
 import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
+import type { BereitschaftSchichtTyp } from '@/types';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
 import {
   normalizeVorgabenBRows,
@@ -37,6 +38,17 @@ function toString(value: unknown, fallback = ''): string {
 
 function toBoolean(value: unknown, fallback = false): boolean {
   return typeof value === 'boolean' ? value : fallback;
+}
+
+const SCHICHT_TYPEN: BereitschaftSchichtTyp[] = ['frueh', 'spaet', 'nacht', 'sonder'];
+
+// Liest das neue schichten-Array, fällt für Legacy-Einträge auf nacht zurück; frueh ist immer aktiv.
+function normalizeSchichten(value: unknown, legacyNacht: boolean): BereitschaftSchichtTyp[] {
+  const fromArray = Array.isArray(value)
+    ? SCHICHT_TYPEN.filter(typ => (value as unknown[]).includes(typ))
+    : [];
+  const schichten = fromArray.length > 0 ? fromArray : legacyNacht ? ['frueh', 'nacht'] : ['frueh'];
+  return SCHICHT_TYPEN.filter(typ => typ === 'frueh' || schichten.includes(typ));
 }
 
 function normalizePrimitiveRecord(input: unknown): Record<string, string> {
@@ -84,6 +96,7 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
       const endeB = rawValue.endeB as Record<string, unknown> | undefined;
       const beginnN = rawValue.beginnN as Record<string, unknown> | undefined;
       const endeN = rawValue.endeN as Record<string, unknown> | undefined;
+      const schichten = normalizeSchichten(rawValue.schichten, toBoolean(rawValue.nacht));
 
       return {
         key: toString(row.key, `vorlage-${index + 1}`),
@@ -99,7 +112,8 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
             zeit: toString(endeB?.zeit),
             Nwoche: toBoolean(endeB?.Nwoche),
           },
-          nacht: toBoolean(rawValue.nacht),
+          schichten,
+          nacht: schichten.includes('nacht'),
           beginnN: {
             tag: normalizeTagValue(toNumber(beginnN?.tag, 1)),
             zeit: toString(beginnN?.zeit),
@@ -184,7 +198,8 @@ function buildTemplatePayload(
       Name: row.value.Name,
       beginnB: row.value.beginnB,
       endeB: row.value.endeB,
-      nacht: row.value.nacht,
+      schichten: row.value.schichten,
+      nacht: row.value.schichten.includes('nacht'),
       beginnN: row.value.beginnN,
       endeN: row.value.endeN,
       ...(row.value.standard ? { standard: true } : { standard: undefined }),
@@ -342,6 +357,7 @@ export function AdminProfileTemplatesManager() {
         Name: '',
         beginnB: { tag: 1, zeit: '' },
         endeB: { tag: 1, zeit: '', Nwoche: false },
+        schichten: ['frueh'],
         nacht: false,
         beginnN: { tag: 1, zeit: '', Nwoche: false },
         endeN: { tag: 1, zeit: '', Nwoche: false },

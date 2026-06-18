@@ -16,6 +16,7 @@ function makeRow(name: string, standard: boolean): VorgabenBRow {
       Name: name,
       beginnB: { tag: 1, zeit: '08:00' },
       endeB: { tag: 1, zeit: '16:00', Nwoche: false },
+      schichten: ['frueh'],
       nacht: false,
       beginnN: { tag: 1, zeit: '20:00', Nwoche: false },
       endeN: { tag: 1, zeit: '06:00', Nwoche: false },

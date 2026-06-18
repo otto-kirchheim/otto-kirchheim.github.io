@@ -4,6 +4,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-06-18
 
+### feat
+
+- **Admin-Tab Profilvorlagen-VorgabenB auf Schichtmodell umgestellt:** Der VorgabenB-Editor im Admin-Tab bot bisher nur die Legacy-Checkbox `nacht`. Er zeigt jetzt die Mehrfachauswahl `Aktive Schichten` (`frueh` fix aktiv, `spaet`/`nacht`/`sonder` waehlbar) analog zum Benutzer-Editor; `nacht` wird daraus synchron gehalten, `schichtenOverrides` bleiben ueber `rawValue` erhalten. Parsing/Serialisierung mappen Legacy-Eintraege (`nacht: true` → `['frueh','nacht']`).
+
 ### fix
 
 - **`rows.load` vereinheitlicht (Bug 1b):** Rows ohne `_id` werden jetzt als `_state: 'new'` geladen statt als `'unchanged'`. Nach dem Laden mit neuen Rows wird `_notifyChange()` aufgerufen → AutoSave-Timer startet. `loadSmart` ist damit funktional identisch zu `load` und bleibt als Deprecated-Alias erhalten.
