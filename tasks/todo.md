@@ -1,5 +1,72 @@
 # Todo
 
+## Aktueller Plan: Unterbrechungspunkt Admin-Tab Profile-Template Arbeitszeit - 2026-06-08
+
+### Bereits umgesetzt (Zwischenstand)
+
+- [x] `ArbeitszeiteingabePanel` um optionales `onChange` erweitert, damit es auch im Admin-Editor als Eingabekomponente nutzbar ist
+- [x] Typmodell im Admin-Template-Editor vorbereitet: `TemplateContentDraft.Arbeitszeit` von legacy Record auf `IVorgabenUaZ | null` umgestellt
+- [x] `AdminProfileTemplateContentEditor` von legacy Arbeitszeit-Feldliste auf `ArbeitszeiteingabePanel` umgestellt (inkl. Aktivieren-Button)
+
+### Offene TODOs (beim Fortsetzen)
+
+- [x] `AdminProfileTemplatesManager` auf neues Arbeitszeitmodell fertig migrieren:
+  - `normalizeTemplateContent` fuer `Arbeitszeit` mit `isLegacyArbeitszeit`/`migrateArbeitszeit` auf `IVorgabenUaZ | null`
+  - `serializeDraft` fuer neues Arbeitszeitobjekt stabilisieren
+  - `buildTemplatePayload` so anpassen, dass `Arbeitszeit` als neues Objekt gespeichert wird und `null` den Block entfernt
+  - Handler `updateArbeitszeitField` durch `updateArbeitszeit`/`enableArbeitszeit` ersetzen
+  - Prop-Wiring in `AdminProfileTemplateContentEditor` an neue Handler anpassen
+- [x] `AdminProfileTemplateContentEditor` auf verbleibende Legacy-Referenzen pruefen (insb. alte Arbeitszeit-Propnamen) und bereinigen
+- [x] Frontend-Typecheck ausfuehren: `bunx tsc --noEmit -p tsconfig.json`
+- [x] Relevanten Testlauf ausfuehren: `bun run test -- test/Admin.profileTemplates.shared.test.ts` (und ggf. weitere betroffene Admin-Tests)
+- [x] `frontend/CHANGELOG.md` um den Admin-Tab/Profile-Template-Arbeitszeitumbau ergaenzen
+
+### Verifikationskriterien (Fortsetzung)
+
+- Admin-Tab -> Profile-Template -> Arbeitszeit zeigt denselben Schichteditor wie Einstellungen (Frueh/Spaet/Nacht/Sonder inkl. Tages-Overrides)
+- Profile-Template speichert/lädt Arbeitszeit im neuen `IVorgabenUaZ`-Format (Legacy-Input wird weiterhin migriert)
+- Frontend-TypeScript und relevante Tests laufen ohne neue Fehler
+
+### Arbeitsnotizen
+
+- Zuletzt bearbeitete Dateien:
+  - `frontend/src/ts/features/Einstellungen/components/ArbeitszeiteingabePanel.tsx`
+  - `frontend/src/ts/features/Admin/components/profileTemplates.shared.ts`
+  - `frontend/src/ts/features/Admin/components/AdminProfileTemplateContentEditor.tsx`
+
+## Review (Unterbrechungspunkt Admin-Tab Profile-Template Arbeitszeit)
+
+- Ergebnis: `AdminProfileTemplatesManager` nutzt jetzt das neue Arbeitszeitmodell (`IVorgabenUaZ | null`) durchgaengig. Legacy-Arbeitszeit wird beim Laden migriert (`isLegacyArbeitszeit`/`migrateArbeitszeit`), die Change-Detection serialisiert Arbeitszeitobjekte stabil, und der Save-Payload schreibt `template.Arbeitszeit` als neues Objekt bzw. entfernt es bei `null`.
+- Ergebnis: Das Prop-Wiring ist auf `onUpdateArbeitszeit` und `onEnableArbeitszeit` umgestellt; alte `onUpdateArbeitszeitField`-Pfade sind entfernt.
+- Ergebnis: Der veraltete Shared-Test wurde auf den aktuellen Export-Stand angepasst (kein `ARBEITSZEIT_FIELDS`-Import mehr).
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Admin.profileTemplates.shared.test.ts test/Admin/profileTemplates.shared.test.ts`.
+
+## Aktueller Plan: Zyklus 10 Restpunkte (EWT/Bereitschaft/Admin)
+
+- [x] Bereitschafts-Berechnung fuer ueberlappende Frueh-/Spaetschicht robust machen (Merge statt negativer Gap)
+- [x] EWT-Schichtlogik vervollstaendigen: explizite Spaetschicht-Option und konsistente Legacy-Normalisierung (SP/BN)
+- [x] EWT-Download normalisieren: Schicht `SP` vor Export auf `T` abbilden
+- [x] Modal "Neue Bereitschaft eingeben" um aZ-basierte Schichtinfos mit Tages-Overrides erweitern
+- [x] Admin/ProfileTemplate (AdminJS) auf neues Arbeitszeit-/VorgabenB-Modell aktualisieren
+- [x] Relevante Frontend-/Backend-Tests ausfuehren und Ergebnisse dokumentieren
+
+## Verifikationskriterien (Zyklus 10 Restpunkte)
+
+- Bei Frueh+Spaet-Ueberlappungen entstehen keine negativen Intervalle und keine falschen Bereitschafts-Luecken.
+- EWT erlaubt explizit Spaet und berechnet dafuer korrekte Zeiten; Legacy-Keys bleiben kompatibel.
+- Download-Payload fuer EWT enthaelt keine `SP`-Schichtwerte mehr.
+- Bereitschafts-Modal zeigt fuer das gewaehte Datum die effektiven Schichtzeiten inkl. Overrides an.
+- AdminJS zeigt/editiert Arbeitszeit ohne Legacy-Felder (`bT/eT/...`) und VorgabenB inkl. Schichtauswahl.
+
+## Review (Zyklus 10 Restpunkte)
+
+- Ergebnis: Ueberlappende Frueh-/Spaetschichten werden in `calculateBereitschaftsZeiten` pro Tag vorab zusammengefuehrt; dadurch entstehen keine negativen Gaps mehr.
+- Ergebnis: EWT hat jetzt eine explizite `SP`-Option im Add-/Edit-Modal. Die Berechnung nutzt fuer `SP` bevorzugt `aZ.spaet` mit Fallback auf Frueh.
+- Ergebnis: EWT-Download normalisiert Schichtcodes konsistent (`SP -> T`, `BN -> N`).
+- Ergebnis: Das Bereitschafts-Add-Modal zeigt fuer das aktuell gewaehlte Datum die effektiven Schichtzeiten aus `VorgabenU.aZ` inkl. Overrides an.
+- Ergebnis: Admin/ProfileTemplate wurden auf das neue Arbeitszeit-/VorgabenB-Modell angehoben (ohne Legacy-Arbeitszeitfelder in den Admin-Properties).
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/backend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.test.ts test/Bereitschaft.submitBereitschaftsZeiten.test.ts`; `cd /home/jan/Dokumente/DB-Nebengeld/backend && PASSKEY_ORIGIN='http://localhost:8080' PASSKEY_RP_ID='localhost' JWT_SECRET='test-secret-1234567890123456789012345678901234567890' REFRESH_SECRET='test-refresh-secret-123456789012345678901234567890' MONGO_URI='mongodb://localhost:27017/test' bun test tests/admin/adminjs.compatibility.test.ts`.
+
 ## Aktueller Plan: AutoSave-Race bei nachlaufenden neuen Datensaetzen
 
 - [x] AutoSave-Pfad fuer `saving`-Status auf Race-Condition pruefen

@@ -48,15 +48,16 @@ export const VorgabenUMock: IVorgabenU = {
     TB: 'Tarifkraft',
   },
   aZ: {
-    bBN: '19:30',
-    bN: '19:45',
-    bS: '20:15',
-    bT: '07:00',
-    eN: '06:15',
-    eS: '07:00',
-    eT: '15:45',
-    eTF: '13:00',
-    rZ: '00:20',
+    frueh: {
+      default: { beginn: '07:00', ende: '15:45', pause: 30 },
+      overrides: { 5: { ende: '13:00', pause: 0 } },
+    },
+    nacht: {
+      default: { beginn: '19:45', ende: '06:15', pause: 45 },
+      regelarbeitstage: [7, 1, 2, 3],
+    },
+    sonder: { beginn: '20:15', ende: '07:00', pause: 20 },
+    fahrzeit: '00:20',
   },
   fZ: [
     {

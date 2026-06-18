@@ -2,6 +2,55 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-13
+
+### fix
+
+- **Konfliktauflösung "Lokale Daten behalten":** Beim Wählen von "Lokale Daten behalten & speichern" werden nun zuerst Server-only-Rows der betroffenen Monate als `deleted` markiert (`reconcileRowsAsDeleted`), bevor die lokalen Rows für den AutoSave vorgemerkt werden. `flushAll()` (mit `includeDeletes=true`) ersetzt `publishEvent('data:changed')`, damit die Löschungen den Server auch tatsächlich erreichen.
+- **`hasLre12TooClose` 08:00-Fenstergrenzen:** Die 10-Minuten-Sperre zwischen LRE 1/2-Einsätzen gilt jetzt nur noch innerhalb desselben 08:00–08:00-Bereitschaftsfensters. Ein LRE 1 vor 08:00 blockiert nicht mehr einen LRE 1 im nächsten Fenster (z. B. 08:16), wenn das vorherige LRE 1 um 07:45 startete.
+
+### feat
+
+- Admin-Tab Profile-Templates: Arbeitszeit im Manager-Ende-zu-Ende auf das neue Modell (`IVorgabenUaZ`) angehoben. Beim Laden wird Legacy-Format weiterhin migriert (`isLegacyArbeitszeit`/`migrateArbeitszeit`), beim Speichern wird das neue Objekt direkt in `template.Arbeitszeit` persistiert und bei deaktivierter Arbeitszeit der Block entfernt.
+- Admin-Template-Editor/Manager-Wiring auf neue Arbeitszeit-Callbacks vereinheitlicht (`onUpdateArbeitszeit`, `onEnableArbeitszeit`), inklusive Aktivieren-Pfad fuer leere Arbeitszeit.
+- Change-Detection fuer Profile-Template-Drafts stabilisiert: Arbeitszeitobjekte werden fuer den Vergleich deterministisch serialisiert.
+
+### test
+
+- `Login.LadeUserDaten.test.ts`: "Lokale Daten behalten"-Test auf async-Handler + `flushAllMock` umgestellt (statt `publishEventMock`).
+- `test/Admin/profileTemplates.shared.test.ts` an den aktuellen Shared-Export angepasst (Legacy-`ARBEITSZEIT_FIELDS`-Annahme entfernt).
+- Verifiziert mit: `bunx tsc --noEmit -p tsconfig.json` sowie `bun run test -- test/Admin.profileTemplates.shared.test.ts test/Admin/profileTemplates.shared.test.ts`.
+
+## 2026-06-08
+
+### feat
+
+- **Per-Wochentag-Schichtmodell (`IVorgabenUaZ`):** 9 flache Zeitstrings (`bT`, `eT`, `eTF`, `bN`, `bBN`, `eN`, `bS`, `eS`, `rZ`) durch strukturiertes Modell ersetzt. `IPerWeekdaySchicht` fasst `default`, optionale `regelarbeitstage` und `overrides` pro ISO-Wochentag zusammen. `ISchichtZeiten` für Sonderschicht (flat). `BN`-Schicht nutzt jetzt `nacht`-Zeiten (`bBN` entfällt).
+- **`resolveSchichtDay` + `groupBySchedule`:** Neue Resolver-Utilities in `core/types`. `resolveSchichtDay(schicht, isoWeekday)` liefert `SchichtBase | null` (null = arbeitsfrei). `groupBySchedule` fasst Tage mit identischem resolved config zusammen (Google-Maps-Stil).
+- **`ArbeitszeiteingabePanel.tsx`:** Neue Preact-Komponente in `features/Einstellungen/components`. Ersetzt 9 statische DOM-Inputs in `#collapseTwo`. Sections für Früh-, Spät-, Nacht-, Sonderschicht mit Wochentag-Chips und per-Gruppe-Editierung. `+1 Tag`-Badge für overnight Schichten. Panel-State wird via `getArbeitszeitPanelState()` von `saveEinstellungen` gelesen.
+- **`fieldMapper.ts` Migration:** `isLegacyArbeitszeit()` erkennt altes Flat-Format; `migrateArbeitszeit()` konvertiert inkl. `??''`-Fallback für fehlende Felder; `arbeitszeitToFlat()` konvertiert zurück für Backend-Kompatibilität.
+- **EWT Modal-Optionen dynamisch:** `buildSchichtOptionen(vorgabenU)` in `createAddModalEWT.tsx` und `createEditorModalEWT.tsx` baut Schichtoptionen aus neuem `aZ`-Format (Früh/Nacht/BN/Sonder) dynamisch auf.
+- **`calculateEwtEintraege`:** `resolveSchichtDay` für Früh- und Nachtschicht; bei EWT-Einträgen auf Nicht-Regelarbeitstagen (z. B. Sa/So) Fallback auf `default`-Config.
+- **`calculateBereitschaftsZeiten`:** Hardcodierte Pausen durch `resolveSchichtDay(aZ.frueh, isoWeekday)` für Tagschichten ersetzt; Nachtpause via `aZ.nacht?.default.pause`.
+- **Bereitschaft Frueh+Spaet Merge:** `calculateBereitschaftsZeiten` merged nun ueberlappende Tagesschichten pro Tag vor der Gap-Berechnung. Dadurch entstehen keine negativen Intervalle mehr bei Kombinationen wie `07:00-15:45` und `14:00-22:00`.
+- **EWT explizite Spaetschicht:** Add-/Edit-Modal bieten bei konfigurierter `aZ.spaet` jetzt eine eigene Schichtoption `SP` (Spät). `calculateEwtEintraege` berechnet `SP` ueber `aZ.spaet` (mit Fallback).
+- **Bereitschafts-Modal mit Override-Hinweis:** "Neue Bereitschaft eingeben" zeigt fuer das gewaehlte Datum die effektiven Schichtzeiten aus `VorgabenU.aZ` (inkl. Tages-Overrides) an.
+- **Bereitschaft `schichtenOverrides` aktiv:** `submitBereitschaftsZeiten` uebergibt jetzt `vorgabenB[...].schichtenOverrides` an `calculateBereitschaftsZeiten`; die Aufloesung fuer Frueh/Spaet/Nacht nutzt gemergte Schichtkonfigurationen pro Wochentag. Zusaetzlich werden Schichtzeitpunkte DST-robust per `.set(hour/minute)` statt `add(Duration)` aufgebaut.
+- **Spät/Nacht: aZ-first mit Modal-Override:** In "Neue Bereitschaft eingeben" werden Spät-/Nachtschichtzeiten primaer aus `VorgabenU.aZ` (inkl. `VorgabenB.schichtenOverrides`) geladen. Fuer Spät gibt es zusaetzliche Override-Felder im Modal; Nacht-Zeiten im Modal werden als Laufzeit-Override in die Berechnung uebernommen.
+- **Override-Tag im Bereitschafts-Modal:** Spät- und Nacht-Overrides lassen sich jetzt explizit pro Wochentag (Mo-So) setzen (`overrides[isoWeekday]`), z. B. "Montag Nacht ab 21:00".
+
+### fix
+
+- **EWT-Download Schichtnormalisierung:** `download.ts` mappt `SP -> T` und `BN -> N` in der Download-Payload, damit der Export konsistente Backend-kompatible Schichtcodes verwendet.
+
+### test
+
+- `mockData.ts`, `EWT.ewtBerechnen.test.ts`, `EWT.utils.extra.test.ts`: `aZ` auf neues Format migriert.
+- `EWT.test.ts`: BN-Einträge auf neue Nacht-Zeiten aktualisiert (BN nutzt nun `nacht.default.beginn` statt separatem `bBN`).
+- `saveEinstellungen.test.ts`: DOM-Input-Loop für `aZ` entfernt; Panel-State-Fallback-Test statt Pflichtfeld-Wurf.
+- `fieldMapper.test.ts`: Assertions auf neues `IVorgabenUaZ`-Format; `migrateArbeitszeit`-Fallback für leere Felder abgedeckt.
+- `apiService.test.ts`: `aZ` auf neues Format aktualisiert.
+
 ## 2026-06-07
 
 ### feat

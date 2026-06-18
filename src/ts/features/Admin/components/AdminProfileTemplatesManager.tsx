@@ -9,6 +9,7 @@ import {
   updateProfileTemplate,
   type BackendProfileTemplate,
 } from '../utils/api';
+import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
 import {
   normalizeVorgabenBRows,
@@ -118,10 +119,27 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
   return normalizeVorgabenBRows(rows);
 }
 
+function normalizeArbeitszeit(input: unknown): TemplateContentDraft['Arbeitszeit'] {
+  if (!input || typeof input !== 'object') return null;
+  if (isLegacyArbeitszeit(input)) return migrateArbeitszeit(input);
+  return input as TemplateContentDraft['Arbeitszeit'];
+}
+
+function sortObjectKeysDeep(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortObjectKeysDeep);
+  if (!value || typeof value !== 'object') return value;
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, entryValue]) => [key, sortObjectKeysDeep(entryValue)] as const);
+
+  return Object.fromEntries(entries);
+}
+
 function normalizeTemplateContent(template: BackendProfileTemplate['template']): TemplateContentDraft {
   return {
     Pers: normalizePrimitiveRecord(template?.Pers),
-    Arbeitszeit: normalizePrimitiveRecord(template?.Arbeitszeit),
+    Arbeitszeit: normalizeArbeitszeit(template?.Arbeitszeit),
     Fahrzeit: normalizeFahrzeit(template?.Fahrzeit),
     VorgabenB: normalizeVorgabenB(template?.VorgabenB),
     Einstellungen: normalizeSettings(template?.Einstellungen),
@@ -131,7 +149,7 @@ function normalizeTemplateContent(template: BackendProfileTemplate['template']):
 function serializeDraft(draft: TemplateContentDraft): string {
   return JSON.stringify({
     Pers: Object.fromEntries(Object.entries(draft.Pers).sort(([a], [b]) => a.localeCompare(b))),
-    Arbeitszeit: Object.fromEntries(Object.entries(draft.Arbeitszeit).sort(([a], [b]) => a.localeCompare(b))),
+    Arbeitszeit: draft.Arbeitszeit ? sortObjectKeysDeep(draft.Arbeitszeit) : null,
     Fahrzeit: draft.Fahrzeit,
     VorgabenB: draft.VorgabenB,
     Einstellungen: {
@@ -145,6 +163,12 @@ function removeEmptyValues(record: Record<string, string>): Record<string, strin
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value.trim() !== ''));
 }
 
+const DEFAULT_ARBEITSZEIT: NonNullable<TemplateContentDraft['Arbeitszeit']> = {
+  frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 }, regelarbeitstage: [1, 2, 3, 4, 5] },
+  nacht: { default: { beginn: '19:45', ende: '06:15', pause: 45 }, regelarbeitstage: [7, 1, 2, 3] },
+  fahrzeit: '00:30',
+};
+
 function buildTemplatePayload(
   original: BackendProfileTemplate['template'] | undefined,
   draft: TemplateContentDraft,
@@ -152,7 +176,6 @@ function buildTemplatePayload(
   const result: Record<string, unknown> = { ...(original ?? {}) };
 
   const pers = removeEmptyValues(draft.Pers);
-  const arbeitszeit = removeEmptyValues(draft.Arbeitszeit);
   const fahrzeit = draft.Fahrzeit.filter(row => row.key.trim() && row.text.trim() && row.value.trim());
   const vorgabenB = draft.VorgabenB.filter(row => row.key.trim() !== '').map(row => ({
     key: row.key.trim(),
@@ -175,7 +198,7 @@ function buildTemplatePayload(
   if (Object.keys(pers).length > 0) result.Pers = pers;
   else delete result.Pers;
 
-  if (Object.keys(arbeitszeit).length > 0) result.Arbeitszeit = arbeitszeit;
+  if (draft.Arbeitszeit) result.Arbeitszeit = draft.Arbeitszeit;
   else delete result.Arbeitszeit;
 
   if (fahrzeit.length > 0) result.Fahrzeit = fahrzeit;
@@ -269,14 +292,19 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
-  function updateArbeitszeitField(id: string, key: string, value: string) {
+  function updateArbeitszeit(id: string, value: NonNullable<TemplateContentDraft['Arbeitszeit']>) {
     const state = edits[id];
     if (!state) return;
     updateTemplateContent(id, {
-      Arbeitszeit: {
-        ...state.templateContent.Arbeitszeit,
-        [key]: value,
-      },
+      Arbeitszeit: value,
+    });
+  }
+
+  function enableArbeitszeit(id: string) {
+    const state = edits[id];
+    if (!state || state.templateContent.Arbeitszeit) return;
+    updateTemplateContent(id, {
+      Arbeitszeit: structuredClone(DEFAULT_ARBEITSZEIT),
     });
   }
 
@@ -591,7 +619,8 @@ export function AdminProfileTemplatesManager() {
                       isSaving={isSaving}
                       activeVorgabenBIndex={activeVorgabenBIndex[template._id] ?? 0}
                       onUpdatePersField={(key, value) => updatePersField(template._id, key, value)}
-                      onUpdateArbeitszeitField={(key, value) => updateArbeitszeitField(template._id, key, value)}
+                      onUpdateArbeitszeit={value => updateArbeitszeit(template._id, value)}
+                      onEnableArbeitszeit={() => enableArbeitszeit(template._id)}
                       onAddFahrzeitRow={() => addFahrzeitRow(template._id)}
                       onUpdateFahrzeitRow={(index, field, value) =>
                         updateFahrzeitRow(template._id, index, field, value)

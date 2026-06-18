@@ -7,6 +7,21 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
+function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: string; selected?: boolean }[] {
+  const { aZ } = vorgabenU;
+  const freitagEnde = aZ.frueh.overrides?.[5]?.ende;
+  const fruehLabel = freitagEnde
+    ? `Früh | ${aZ.frueh.default.beginn}–${aZ.frueh.default.ende} / Fr: ${freitagEnde}`
+    : `Früh | ${aZ.frueh.default.beginn}–${aZ.frueh.default.ende}`;
+
+  return [
+    { value: 'T', text: fruehLabel, selected: true },
+    ...(aZ.spaet ? [{ value: 'SP', text: `Spät | ${aZ.spaet.default.beginn}–${aZ.spaet.default.ende}` }] : []),
+    ...(aZ.nacht ? [{ value: 'N', text: `Nacht | ${aZ.nacht.default.beginn}–${aZ.nacht.default.ende}` }] : []),
+    ...(aZ.sonder ? [{ value: 'S', text: `Sonder | ${aZ.sonder.beginn}–${aZ.sonder.ende}` }] : []),
+  ];
+}
+
 export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -146,16 +161,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           id="Schicht"
           required
           myRef={SchichtRef}
-          options={[
-            {
-              value: 'T',
-              text: `Tag | ${vorgabenU.aZ.bT.toString()}-${vorgabenU.aZ.eT.toString()}/${vorgabenU.aZ.eTF.toString()}`,
-              selected: true,
-            },
-            { value: 'N', text: `Nacht | ${vorgabenU.aZ.bN.toString()}-${vorgabenU.aZ.eN.toString()}` },
-            { value: 'BN', text: `Nacht (Ber) | ${vorgabenU.aZ.bBN.toString()}-${vorgabenU.aZ.eN.toString()}` },
-            { value: 'S', text: `Sonder | ${vorgabenU.aZ.bS.toString()}-${vorgabenU.aZ.eS.toString()}` },
-          ]}
+          options={buildSchichtOptionen(vorgabenU)}
         />
         <div className="col-12">
           <MyCheckbox className="form-check form-switch" id="berechnen1" myRef={berechnenRef} checked>

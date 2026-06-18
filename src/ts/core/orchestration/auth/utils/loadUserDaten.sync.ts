@@ -9,6 +9,7 @@ import {
   normalizeRows,
   shouldRepairMissingIds,
 } from './loadUserDaten.helpers';
+import { hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
 
 export interface UnterschiedNachMonat {
   beschreibung: string;
@@ -69,8 +70,13 @@ export function syncLoadedYearResources({
       : undefined;
 
     if (localTs === 0 || serverTimestamp > localTs || shouldRepairMissingIds(storageName, localData, serverData)) {
-      Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
-      return serverData;
+      // Ungesyncte lokale Änderungen (__localState, __errorMessage) nicht überschreiben —
+      // Conflict-Review greift über countByMonth, das pending-deleted Rows exkludiert.
+      const localRows = localData !== undefined ? normalizeRows<unknown>(localData) : [];
+      if (!hasPendingLocalChanges(localRows)) {
+        Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
+        return serverData;
+      }
     }
 
     if (localData !== undefined && MONTH_AWARE_STORAGE_NAMES.includes(storageName)) {

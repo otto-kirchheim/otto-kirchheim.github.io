@@ -21,6 +21,9 @@ const {
   updateTabVisibilityMock,
   loadAllYearDataMock,
   publishEventMock,
+  flushAllMock,
+  isAutoSaveEnabledMock,
+  setAutoSaveEnabledMock,
 } = viCompat.hoisted(() => ({
   overwriteUserDatenMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
@@ -38,6 +41,9 @@ const {
   updateTabVisibilityMock: vi.fn(),
   loadAllYearDataMock: vi.fn(),
   publishEventMock: vi.fn(),
+  flushAllMock: vi.fn().mockResolvedValue(undefined),
+  isAutoSaveEnabledMock: vi.fn().mockReturnValue(true),
+  setAutoSaveEnabledMock: vi.fn(),
 }));
 
 vi.mock('@/core/orchestration/auth/utils', () => ({
@@ -90,6 +96,12 @@ vi.mock('@/infrastructure/api/apiService', () => ({
 vi.mock('@/core', () => ({
   publishEvent: publishEventMock,
   unwrapEnvelope: vi.fn(),
+}));
+
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
+  flushAll: flushAllMock,
+  isAutoSaveEnabled: isAutoSaveEnabledMock,
+  setAutoSaveEnabled: setAutoSaveEnabledMock,
 }));
 
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
@@ -731,9 +743,9 @@ describe('loadUserDaten', () => {
     const keepLocalAction = actions?.find(a => a.text.includes('Lokale Daten behalten'));
     expect(keepLocalAction).toBeDefined();
 
-    keepLocalAction!.function();
+    await keepLocalAction!.function();
 
-    expect(publishEventMock).toHaveBeenCalledWith('data:changed', expect.objectContaining({ resource: 'BZ' }));
+    expect(flushAllMock).toHaveBeenCalled();
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
     expect(buttonDisableMock).toHaveBeenCalledWith(false);

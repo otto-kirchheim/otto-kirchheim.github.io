@@ -13,6 +13,7 @@ import {
   classifyBzCoverage,
   getBereitschaftsZeitraumDaten,
   hasConflictingLre1,
+  hasLre12TooClose,
   hasOverlap,
   persistBereitschaftsEinsatzTableData,
 } from '../utils';
@@ -202,6 +203,11 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
       if (values.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
         createSnackBar({ message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.', status: 'warning', timeout: 4000, fixed: true });
+        return;
+      }
+
+      if ((values.lreBE === 'LRE 1' || values.lreBE === 'LRE 2') && hasLre12TooClose(einsatzStart, currentBe)) {
+        createSnackBar({ message: 'Bereitschaft<br/>Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.', status: 'warning', timeout: 4000, fixed: true });
         return;
       }
 

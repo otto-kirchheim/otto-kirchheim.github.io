@@ -224,14 +224,18 @@ describe('apiService', () => {
     it('updateMyProfile konvertiert hin und zurück', async () => {
       const profileData = {
         pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '456' },
-        aZ: { bT: '08:00' },
+        aZ: {
+          frueh: { default: { beginn: '08:00', ende: '16:00', pause: 30 } },
+          fahrzeit: '00:30',
+        },
         fZ: [],
         vorgabenB: {},
+        Einstellungen: {},
       };
       mockApiSuccess({
         User: 'u1',
         Pers: profileData.pers,
-        Arbeitszeit: profileData.aZ,
+        Arbeitszeit: { bT: '08:00', eT: '16:00', eTF: '16:00', bN: '', eN: '', bBN: '', bS: '', eS: '', rZ: '00:30' },
         Fahrzeit: [],
         VorgabenB: [],
         updatedAt: '2024-06-15T13:00:00.000Z',

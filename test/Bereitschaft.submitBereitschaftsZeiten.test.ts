@@ -98,7 +98,7 @@ function createTableBZMock() {
   return {
     instance: {
       rows: {
-        loadSmart: vi.fn(),
+        load: vi.fn(),
         setFilter: vi.fn(),
       },
       drawRows: vi.fn(),
@@ -190,7 +190,7 @@ describe('submitBereitschaftsZeiten', () => {
     await submitBereitschaftsZeiten(modal as never, tableBZ as never);
 
     expect(calculateBereitschaftsZeitenMock).toHaveBeenCalledTimes(1);
-    expect(tableBZ.instance.rows.loadSmart).toHaveBeenCalled();
+    expect(tableBZ.instance.rows.load).toHaveBeenCalled();
     expect(tableBZ.instance.rows.setFilter).toHaveBeenCalled();
     expect(tableBZ.instance.drawRows).toHaveBeenCalled();
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);

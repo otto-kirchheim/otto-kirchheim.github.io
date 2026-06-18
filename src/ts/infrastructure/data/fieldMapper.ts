@@ -6,7 +6,13 @@
  */
 
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
-import type { IVorgabenU, IVorgabenUServer } from '@/types';
+import type {
+  BereitschaftSchichtTyp,
+  IVorgabenU,
+  IVorgabenUaZ,
+  IVorgabenUServer,
+  IVorgabenUvorgabenB,
+} from '@/types';
 import dayjs from '../date/configDayjs';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Neben/utils';
 
@@ -95,17 +101,7 @@ export interface BackendUserProfile {
     TB: string;
   };
   Fahrzeit: { key: string; text: string; value: string }[];
-  Arbeitszeit: {
-    bT: string;
-    eT: string;
-    eTF: string;
-    bS: string;
-    eS: string;
-    bN: string;
-    eN: string;
-    bBN: string;
-    rZ: string;
-  };
+  Arbeitszeit?: IVorgabenUaZ;
   VorgabenB: { key: string; value: Record<string, unknown> }[];
   Einstellungen: {
     aktivierteTabs: string[];
@@ -119,6 +115,50 @@ export interface BackendUserProfile {
 export interface BackendVorgabe {
   _id: number; // Jahr
   Vorgaben: { key: number; value: Record<string, number | undefined> }[];
+}
+
+// ─── Arbeitszeit Migration (altes Flat-Format → neues Modell) ───
+
+/** Altes Flat-Format mit 9 Strings — entspricht dem aktuellen Backend-Schema */
+interface LegacyArbeitszeit {
+  bT: string;
+  eT: string;
+  eTF: string;
+  bS?: string;
+  eS?: string;
+  bN?: string;
+  eN?: string;
+  bBN?: string;
+  rZ: string;
+}
+
+export function isLegacyArbeitszeit(raw: unknown): raw is LegacyArbeitszeit {
+  return typeof raw === 'object' && raw !== null && 'bT' in raw && typeof (raw as Record<string, unknown>).bT === 'string';
+}
+
+export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
+  const bT = raw.bT ?? '';
+  const eT = raw.eT ?? '';
+  const eTF = raw.eTF ?? eT;
+  const freitag = eTF !== eT ? { 5: { ende: eTF, pause: 0 } as const } : undefined;
+  return {
+    frueh: {
+      default: { beginn: bT, ende: eT, pause: 30 },
+      overrides: freitag,
+    },
+    ...(raw.bN ? { nacht: { default: { beginn: raw.bN, ende: raw.eN ?? '', pause: 45 } } } : {}),
+    ...(raw.bS ? { sonder: { beginn: raw.bS, ende: raw.eS ?? '', pause: 20 } } : {}),
+    fahrzeit: raw.rZ ?? '',
+  };
+}
+
+/** Migriert ein VorgabenB-Objekt: nacht: boolean → schichten: ['nacht'] */
+function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgabenB {
+  const result = { ...entry } as IVorgabenUvorgabenB;
+  if (!result.schichten && result.nacht === true) {
+    result.schichten = ['nacht'] as BereitschaftSchichtTyp[];
+  }
+  return result;
 }
 
 // ─── Backend → Frontend (Laden) ──────────────────────────
@@ -209,6 +249,11 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
     }
   }
 
+  // Migriere VorgabenB: nacht: boolean → schichten: ['nacht']
+  for (const key of Object.keys(vorgabenB)) {
+    vorgabenB[key] = migrateVorgabenBEntry(vorgabenB[key] as Record<string, unknown>);
+  }
+
   return {
     pers: {
       Vorname: doc.Pers.Vorname ?? '',
@@ -228,17 +273,9 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       kmnBhf: doc.Pers.kmnBhf ?? 0,
       TB: (doc.Pers.TB as IVorgabenU['pers']['TB']) ?? 'Tarifkraft',
     },
-    aZ: {
-      bBN: doc.Arbeitszeit?.bBN ?? '',
-      bN: doc.Arbeitszeit?.bN ?? '',
-      bS: doc.Arbeitszeit?.bS ?? '',
-      bT: doc.Arbeitszeit?.bT ?? '',
-      eN: doc.Arbeitszeit?.eN ?? '',
-      eS: doc.Arbeitszeit?.eS ?? '',
-      eT: doc.Arbeitszeit?.eT ?? '',
-      eTF: doc.Arbeitszeit?.eTF ?? '',
-      rZ: doc.Arbeitszeit?.rZ ?? '',
-    },
+    aZ: isLegacyArbeitszeit(doc.Arbeitszeit)
+      ? migrateArbeitszeit(doc.Arbeitszeit)
+      : (doc.Arbeitszeit ?? { frueh: { default: { beginn: '', ende: '', pause: 30 } }, fahrzeit: '' }),
     fZ: doc.Fahrzeit ?? [],
     vorgabenB,
     Einstellungen: {
@@ -396,11 +433,12 @@ export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile,
 export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
   const vorgabenB: IVorgabenU['vorgabenB'] = {};
   for (const entry of server.vorgabenB) {
-    vorgabenB[entry.key] = entry.value;
+    vorgabenB[entry.key] = migrateVorgabenBEntry(entry.value as Record<string, unknown>);
   }
+  const aZ = isLegacyArbeitszeit(server.aZ) ? migrateArbeitszeit(server.aZ) : server.aZ;
   return {
     pers: server.pers,
-    aZ: server.aZ,
+    aZ,
     fZ: server.fZ,
     vorgabenB,
     Einstellungen: server.Einstellungen,

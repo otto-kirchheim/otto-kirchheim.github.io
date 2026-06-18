@@ -1,9 +1,8 @@
 import type { Dayjs } from 'dayjs';
-import type { Duration } from 'dayjs/plugin/duration.js';
-import type { IDatenBZ, IMonatsDaten, IVorgabenU } from '@/types';
+import type { IDatenBZ, IMonatsDaten, IPerWeekdaySchicht, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
+import { resolveSchichtDay } from '@/types';
 import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
 import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as getDurationFromTime } from '@/infrastructure/date/getDurationFromTime';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { resolveHolidayRegion } from '@/infrastructure/date/holidayRegion';
 
@@ -16,18 +15,50 @@ type Schicht = {
   pause: number;
 };
 
+function setTimeFromHHMM(baseDate: Dayjs, time: string): Dayjs {
+  const [hours, minutes] = time.split(':').map(Number);
+  return baseDate
+    .set('hour', hours)
+    .set('minute', minutes)
+    .set('second', 0)
+    .set('millisecond', 0);
+}
+
+function mergePerWeekdaySchicht(
+  base: IPerWeekdaySchicht,
+  override?: Partial<IPerWeekdaySchicht>,
+): IPerWeekdaySchicht {
+  if (!override) return base;
+
+  return {
+    ...base,
+    ...override,
+    default: {
+      ...base.default,
+      ...(override.default ?? {}),
+    },
+    overrides: {
+      ...(base.overrides ?? {}),
+      ...(override.overrides ?? {}),
+    },
+  };
+}
+
 export default function calculateBereitschaftsZeiten(
   bereitschaftsAnfang: Dayjs,
   bereitschaftsEnde: Dayjs,
   nachtAnfang: Dayjs,
   nachtEnde: Dayjs,
   nacht: boolean,
+  spaet: boolean,
   daten: IMonatsDaten['BZ'],
+  schichtenOverrides?: IVorgabenUvorgabenB['schichtenOverrides'],
 ): IMonatsDaten['BZ'] | false {
   console.time('Generiere Bereitschaft');
 
   console.groupCollapsed('Vorgaben');
   console.log('nacht: ' + nacht);
+  console.log('spaet: ' + spaet);
   console.log('Bereitschafts Anfang: ' + bereitschaftsAnfang.toDate());
   console.log('Bereitschafts Ende: ' + bereitschaftsEnde.toDate());
   console.log('Nacht Anfang: ' + nachtAnfang.toDate());
@@ -46,9 +77,7 @@ export default function calculateBereitschaftsZeiten(
 
   // Feste Variablen
   const RUHE_ZEIT: number = 10;
-  const TAG_PAUSEN_VORGABE: number = 30;
   const NACHT_PAUSEN_VORGABE: number = 45;
-  const B_ZEITRAUM_WECHSEL: Duration = dayjs.duration(B_WECHSEL_STUNDE, 'hours');
 
   const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
     const adjustedDatum = datum.add(zusatz, 'day');
@@ -60,22 +89,25 @@ export default function calculateBereitschaftsZeiten(
 
   const getNachtSchichten = (anfang: Dayjs, ende: Dayjs, pausenVorgabe: number): Schicht[] => {
     const schichten: Schicht[] = [];
-    const nachtAnfangsZeit: Duration = dayjs.duration({
-      hours: anfang.hour(),
-      minutes: anfang.minute(),
-    });
-    const nachtEndeZeit: Duration = dayjs.duration({
-      days: ende.hour() < anfang.hour() ? 1 : undefined,
-      hours: ende.hour(),
-      minutes: ende.minute(),
-    });
 
     let tagAnfang: Dayjs = anfang.startOf('day');
 
     while (tagAnfang.isBefore(ende, 'day')) {
+      const beginn = tagAnfang
+        .set('hour', anfang.hour())
+        .set('minute', anfang.minute())
+        .set('second', 0)
+        .set('millisecond', 0);
+      const endBase = tagAnfang
+        .set('hour', ende.hour())
+        .set('minute', ende.minute())
+        .set('second', 0)
+        .set('millisecond', 0);
+      const endeZeit = ende.hour() < anfang.hour() ? endBase.add(1, 'day') : endBase;
+
       schichten.push({
-        beginn: tagAnfang.add(nachtAnfangsZeit),
-        ende: tagAnfang.add(nachtEndeZeit),
+        beginn,
+        ende: endeZeit,
         pause: pausenVorgabe,
       });
       tagAnfang = tagAnfang.add(1, 'day').startOf('day');
@@ -84,59 +116,90 @@ export default function calculateBereitschaftsZeiten(
     return schichten;
   };
 
-  const getTagSchichten = (anfang: Dayjs, ende: Dayjs, pausenVorgabe: number): Schicht[] => {
+  const getTagSchichten = (anfang: Dayjs, ende: Dayjs, includeSpaet: boolean): Schicht[] => {
     const maxEnde: Dayjs = anfang.add(1, 'month').startOf('month');
 
-    const TagEndeZeitMoDo: Duration = getDurationFromTime(datenU.aZ.eT);
-    const TagEndeZeitFr: Duration = getDurationFromTime(datenU.aZ.eTF);
-
-    const tagAnfangZeit: Duration = getDurationFromTime(datenU.aZ.bT);
-    const TagEndeZeit = (tagAnfang: Dayjs): Duration => {
-      if (tagAnfang.isoWeekday() > 0 && tagAnfang.isoWeekday() < 5) return TagEndeZeitMoDo;
-      if (tagAnfang.isoWeekday() === 5) return TagEndeZeitFr;
-      return B_ZEITRAUM_WECHSEL;
-    };
-
-    const getPause = (anfang: Dayjs): number => {
-      if (nacht && anfang.isBetween(nachtAnfang, nachtEnde)) return 0;
-      if (anfang.isoWeekday() < 5) return pausenVorgabe;
-      return 0;
-    };
-
     let tagAnfang: Dayjs = anfang.startOf('day');
-
     const schichten: Schicht[] = [];
 
     while (tagAnfang.isSameOrBefore(ende, 'day') && tagAnfang.isBefore(maxEnde)) {
-      schichten.push(
-        Arbeitstag(tagAnfang)
-          ? {
-              beginn: tagAnfang.add(tagAnfangZeit),
-              ende: tagAnfang.add(TagEndeZeit(tagAnfang)),
-              pause: getPause(tagAnfang.add(tagAnfangZeit)),
-            }
-          : {
-              beginn: tagAnfang
-                .set('hour', B_WECHSEL_STUNDE)
-                .set('minute', B_WECHSEL_MINUTE)
-                .set('second', 0)
-                .set('millisecond', 0),
-              ende: tagAnfang
-                .set('hour', B_WECHSEL_STUNDE)
-                .set('minute', B_WECHSEL_MINUTE)
-                .set('second', 0)
-                .set('millisecond', 0),
-              pause: 0,
-            },
-      );
+      const fruehSchicht = mergePerWeekdaySchicht(datenU.aZ.frueh, schichtenOverrides?.frueh);
+      const fruehConfig = resolveSchichtDay(fruehSchicht, tagAnfang.isoWeekday());
+      const spaetConfig = includeSpaet && datenU.aZ.spaet
+        ? resolveSchichtDay(mergePerWeekdaySchicht(datenU.aZ.spaet, schichtenOverrides?.spaet), tagAnfang.isoWeekday())
+        : null;
+
+      const tagSchichten: Schicht[] = [];
+      if (Arbeitstag(tagAnfang)) {
+        if (fruehConfig) {
+          const beginn = setTimeFromHHMM(tagAnfang, fruehConfig.beginn);
+          const fruehEndeBase = setTimeFromHHMM(tagAnfang, fruehConfig.ende);
+          const fruehEnde = fruehEndeBase.isBefore(beginn) ? fruehEndeBase.add(1, 'day') : fruehEndeBase;
+          const pause = nacht && beginn.isBetween(nachtAnfang, nachtEnde) ? 0 : fruehConfig.pause;
+          tagSchichten.push({
+            beginn,
+            ende: fruehEnde,
+            pause,
+          });
+        }
+        if (spaetConfig) {
+          const spaetBeginn = setTimeFromHHMM(tagAnfang, spaetConfig.beginn);
+          const spaetEndeBase = setTimeFromHHMM(tagAnfang, spaetConfig.ende);
+          const spaetEnde = spaetEndeBase.isBefore(spaetBeginn) ? spaetEndeBase.add(1, 'day') : spaetEndeBase;
+          tagSchichten.push({
+            beginn: spaetBeginn,
+            ende: spaetEnde,
+            pause: spaetConfig.pause,
+          });
+        }
+      }
+
+      if (tagSchichten.length === 0) {
+        schichten.push({
+          beginn: tagAnfang
+            .set('hour', B_WECHSEL_STUNDE)
+            .set('minute', B_WECHSEL_MINUTE)
+            .set('second', 0)
+            .set('millisecond', 0),
+          ende: tagAnfang
+            .set('hour', B_WECHSEL_STUNDE)
+            .set('minute', B_WECHSEL_MINUTE)
+            .set('second', 0)
+            .set('millisecond', 0),
+          pause: 0,
+        });
+      } else {
+        DatenSortieren<Schicht>(tagSchichten, 'beginn');
+        const mergedTagSchichten: Schicht[] = [];
+        for (const candidate of tagSchichten) {
+          const prev = mergedTagSchichten[mergedTagSchichten.length - 1];
+          if (!prev || candidate.beginn.isAfter(prev.ende)) {
+            mergedTagSchichten.push({ ...candidate });
+            continue;
+          }
+
+          if (candidate.ende.isAfter(prev.ende)) {
+            prev.ende = candidate.ende;
+            prev.pause = candidate.pause;
+          }
+        }
+
+        schichten.push(...mergedTagSchichten);
+      }
       tagAnfang = tagAnfang.add(1, 'day').startOf('day');
     }
 
     return schichten;
   };
 
-  const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, NACHT_PAUSEN_VORGABE) : [];
-  const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, TAG_PAUSEN_VORGABE);
+  const nachtPause = (() => {
+    if (!datenU.aZ.nacht) return NACHT_PAUSEN_VORGABE;
+    const nachtSchicht = mergePerWeekdaySchicht(datenU.aZ.nacht, schichtenOverrides?.nacht);
+    const resolved = resolveSchichtDay(nachtSchicht, nachtAnfang.isoWeekday());
+    return resolved?.pause ?? nachtSchicht.default.pause ?? NACHT_PAUSEN_VORGABE;
+  })();
+  const nachtSchichten: Schicht[] = nacht ? getNachtSchichten(nachtAnfang, nachtEnde, nachtPause) : [];
+  const tagSchichten: Schicht[] = getTagSchichten(bereitschaftsAnfang, bereitschaftsEnde, spaet);
 
   const kombinierteSchichten: Schicht[] = [...tagSchichten, ...nachtSchichten];
   DatenSortieren<Schicht>(kombinierteSchichten, 'beginn');
@@ -326,7 +389,11 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
   const monthBoundary = newBegin.startOf('month').add(1, 'month');
   if (monthBoundary.isAfter(newBegin) && monthBoundary.isBefore(newEnd)) {
     updatedDaten.push({ beginB: newDaten.beginB, endeB: monthBoundary.toISOString(), pauseB: newDaten.pauseB });
-    return vorhandenCheck(updatedDaten, { beginB: monthBoundary.toISOString(), endeB: newDaten.endeB, pauseB: 0 }, depth + 1);
+    return vorhandenCheck(
+      updatedDaten,
+      { beginB: monthBoundary.toISOString(), endeB: newDaten.endeB, pauseB: 0 },
+      depth + 1,
+    );
   }
   updatedDaten.push(newDaten);
   return [true, updatedDaten];

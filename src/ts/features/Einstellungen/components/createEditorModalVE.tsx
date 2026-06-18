@@ -3,8 +3,16 @@ import { Fragment, createRef, type FunctionalComponent } from 'preact';
 import { useState } from 'preact/hooks';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
-import type { IVorgabenUvorgabenB } from '@/types';
+import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
+import { default as Storage } from '@/infrastructure/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
+
+const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
+  frueh: 'Früh',
+  spaet: 'Spät',
+  nacht: 'Nacht',
+  sonder: 'Sonder',
+};
 
 type vorgabenBElement = { tag: number; zeit: string; Nwoche?: boolean };
 
@@ -101,6 +109,8 @@ const WeekdayRangeSelector: FunctionalComponent<WeekdayRangeSelectorProps> = ({
       if (startHasNwoche) setStartNwocheState(normalizedAnchor >= 7);
       setDragAnchor(normalizedAnchor);
       setAwaitingEndSelection(true);
+      // Impliziten Pointer-Capture aufheben, damit onPointerEnter auf anderen Buttons feuert
+      (event.currentTarget as Element).releasePointerCapture(event.pointerId);
       return;
     }
 
@@ -276,7 +286,24 @@ export default function EditorModalVE(
   titel: string,
 ): void {
   const ref = createRef<HTMLFormElement>();
-  const isNachtInitiallyChecked: boolean = row instanceof Row ? Boolean(row.cells?.nacht) : false;
+
+  const aZ = Storage.get<IVorgabenU>('VorgabenU')?.aZ;
+  const availableSchichten: BereitschaftSchichtTyp[] = [
+    'frueh',
+    ...(aZ?.spaet ? (['spaet'] as BereitschaftSchichtTyp[]) : []),
+    ...(aZ?.nacht ? (['nacht'] as BereitschaftSchichtTyp[]) : []),
+    ...(aZ?.sonder ? (['sonder'] as BereitschaftSchichtTyp[]) : []),
+  ];
+
+  const initialSchichten: BereitschaftSchichtTyp[] =
+    row instanceof Row
+      ? ((row.cells.schichten as BereitschaftSchichtTyp[] | undefined) ??
+          (row.cells.nacht
+            ? (['frueh', 'nacht'] as BereitschaftSchichtTyp[])
+            : (['frueh'] as BereitschaftSchichtTyp[])))
+      : (['frueh'] as BereitschaftSchichtTyp[]);
+
+  const isNachtInitiallyChecked = initialSchichten.includes('nacht');
 
   const modal = showModal<IVorgabenUvorgabenB>(
     <MyFormModal
@@ -291,7 +318,25 @@ export default function EditorModalVE(
         <div className="col-12"><hr className="my-0" /></div>
         {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
         <div className="col-12"><hr className="my-0" /></div>
-        {createcheckboxElement(row, 'nacht')}
+        <div className="col-12">
+          <label className="form-label fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</label>
+          <div className="d-flex flex-wrap gap-3">
+            {availableSchichten.map(schicht => (
+              <div key={schicht} className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id={`schicht-${schicht}`}
+                  defaultChecked={initialSchichten.includes(schicht)}
+                  disabled={schicht === 'frueh'}
+                />
+                <label className="form-check-label" htmlFor={`schicht-${schicht}`}>
+                  {SCHICHT_LABELS[schicht]}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
         <div id="nachtRangeSection" className={isNachtInitiallyChecked ? '' : 'd-none'}>
           {createRangeElement(row, 'beginnN', 'endeN', true, 'Nachtschicht')}
         </div>
@@ -304,7 +349,7 @@ export default function EditorModalVE(
 
   modal.row = row;
 
-  const nachtCheckbox = form.querySelector<HTMLInputElement>('#nacht');
+  const nachtCheckbox = form.querySelector<HTMLInputElement>('#schicht-nacht');
   const nachtRangeSection = form.querySelector<HTMLDivElement>('#nachtRangeSection');
   const toggleNachtSection = (): void => {
     if (!nachtRangeSection || !nachtCheckbox) return;
@@ -342,14 +387,20 @@ export default function EditorModalVE(
       const beginnNZeit = form.querySelector<HTMLInputElement>('#beginnNZeit')?.value ?? '';
       const endeNZeit = form.querySelector<HTMLInputElement>('#endeNZeit')?.value ?? '';
       const nameN = form.querySelector<HTMLInputElement>('#Name')?.value ?? '';
-      const nacht = form.querySelector<HTMLInputElement>('#nacht')?.checked ?? false;
       const standard = form.querySelector<HTMLInputElement>('#standard')?.checked ?? false;
+
+      const schichten: BereitschaftSchichtTyp[] = ['frueh'];
+      for (const typ of ['spaet', 'nacht', 'sonder'] as BereitschaftSchichtTyp[]) {
+        if (form.querySelector<HTMLInputElement>(`#schicht-${typ}`)?.checked) schichten.push(typ);
+      }
+      const nacht = schichten.includes('nacht');
 
       const values: IVorgabenUvorgabenB = {
         Name: nameN,
         beginnB: { tag: beginnBTag, zeit: beginnBZeit },
         endeB: { tag: endeBTag, zeit: endeBZeit, Nwoche: endeBNwoche },
-        nacht: nacht,
+        schichten,
+        nacht,
         beginnN: nacht
           ? { tag: beginnNTag, zeit: beginnNZeit, Nwoche: beginnNNwoche }
           : { tag: beginnBTag, zeit: beginnBZeit, Nwoche: false },

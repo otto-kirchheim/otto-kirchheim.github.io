@@ -9,4 +9,5 @@ export * from './IVorgabenBerechnungMonat.js';
 export * from './IVorgabenE.js';
 export * from './IVorgabenGeldType.js';
 export * from './IVorgabenU.js';
+export * from './resolveSchichtDay.js';
 export * from './TMyModal.js';

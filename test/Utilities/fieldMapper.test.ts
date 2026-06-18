@@ -398,7 +398,7 @@ describe('fieldMapper – UserProfile', () => {
       eN: '06:00',
       bBN: '19:30',
       rZ: '00:15',
-    },
+    } as unknown as BackendUserProfile['Arbeitszeit'],
     VorgabenB: [{ key: 'standard', value: { Name: 'Standard' } as Record<string, unknown> }],
   };
 
@@ -409,9 +409,13 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.pers.PNummer).toBe('12345');
     expect(result.pers.TB).toBe('Tarifkraft');
     expect(result.pers.kmArbeitsort).toBe(15);
-    expect(result.aZ.bT).toBe('07:00');
-    expect(result.aZ.eT).toBe('15:30');
-    expect(result.aZ.rZ).toBe('00:15');
+    // Legacy aZ migrated to new format
+    expect(result.aZ.frueh.default.beginn).toBe('07:00');
+    expect(result.aZ.frueh.default.ende).toBe('15:30');
+    expect(result.aZ.frueh.overrides?.[5]?.ende).toBe('15:00'); // eTF !== eT
+    expect(result.aZ.fahrzeit).toBe('00:15');
+    expect(result.aZ.nacht?.default.beginn).toBe('22:00');
+    expect(result.aZ.sonder?.beginn).toBe('14:00');
     expect(result.fZ).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
     expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
   });
@@ -422,7 +426,7 @@ describe('fieldMapper – UserProfile', () => {
       Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' } as BackendUserProfile['Pers'],
       Einstellungen: {} as BackendUserProfile['Einstellungen'],
       Fahrzeit: [],
-      Arbeitszeit: {} as BackendUserProfile['Arbeitszeit'],
+      Arbeitszeit: undefined,
       VorgabenB: [],
     };
     const result = userProfileFromBackend(minimal);
@@ -431,8 +435,9 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.pers.kmArbeitsort).toBe(0);
     expect(result.pers.kmnBhf).toBe(0);
     expect(result.pers.TB).toBe('Tarifkraft');
-    expect(result.aZ.bT).toBe('');
-    expect(result.aZ.eT).toBe('');
+    // Empty legacy → migrated to new format with empty strings
+    expect(result.aZ.frueh.default.beginn).toBe('');
+    expect(result.aZ.frueh.default.ende).toBe('');
     expect(result.fZ).toEqual([]);
     expect(result.vorgabenB).toEqual({});
   });
@@ -440,14 +445,23 @@ describe('fieldMapper – UserProfile', () => {
   it('userProfileToBackend konvertiert vorgabenB Map zu Array', () => {
     const frontendProfile: IVorgabenU = {
       pers: backendProfile.Pers as IVorgabenU['pers'],
-      aZ: backendProfile.Arbeitszeit as IVorgabenU['aZ'],
+      aZ: {
+        frueh: { default: { beginn: '07:00', ende: '15:30', pause: 30 }, overrides: { 5: { ende: '15:00', pause: 0 } } },
+        nacht: { default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { beginn: '14:00', ende: '22:00', pause: 20 },
+        fahrzeit: '00:15',
+      },
       Einstellungen: {} as IVorgabenU['Einstellungen'],
       fZ: backendProfile.Fahrzeit,
       vorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['vorgabenB'][string] },
     };
     const result = userProfileToBackend(frontendProfile);
     expect(result.Pers).toEqual(frontendProfile.pers);
-    expect(result.Arbeitszeit).toEqual(frontendProfile.aZ);
+    // aZ is passed through directly to backend
+    expect(result.Arbeitszeit?.frueh.default.beginn).toBe('07:00');
+    expect(result.Arbeitszeit?.frueh.default.ende).toBe('15:30');
+    expect(result.Arbeitszeit?.frueh.overrides?.[5]?.ende).toBe('15:00');
+    expect(result.Arbeitszeit?.fahrzeit).toBe('00:15');
     expect(result.Fahrzeit).toEqual(frontendProfile.fZ);
     expect(result.VorgabenB).toEqual([{ key: 'standard', value: { Name: 'Standard' } }]);
   });
@@ -457,7 +471,10 @@ describe('fieldMapper – UserProfile', () => {
     const backend = userProfileToBackend(original);
     expect(backend.Pers.Vorname).toBe(original.pers.Vorname);
     expect(backend.Pers.Nachname).toBe(original.pers.Nachname);
-    expect(backend.Arbeitszeit).toEqual(original.aZ);
+    // Backend Arbeitszeit is new format, verify key fields round-tripped
+    expect(backend.Arbeitszeit?.frueh.default.beginn).toBe(original.aZ.frueh.default.beginn);
+    expect(backend.Arbeitszeit?.frueh.default.ende).toBe(original.aZ.frueh.default.ende);
+    expect(backend.Arbeitszeit?.fahrzeit).toBe(original.aZ.fahrzeit);
   });
 });
 
@@ -495,9 +512,13 @@ describe('fieldMapper – Vorgaben', () => {
 
 describe('fieldMapper – vorgabenUFromServer', () => {
   it('konvertiert Array-Format zu Map-Format', () => {
+    const newAz: IVorgabenUServer['aZ'] = {
+      frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+      fahrzeit: '00:15',
+    };
     const server: IVorgabenUServer = {
       pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['pers'],
-      aZ: { bT: '07:00' } as IVorgabenUServer['aZ'],
+      aZ: newAz,
       Einstellungen: {} as IVorgabenUServer['Einstellungen'],
       fZ: [],
       vorgabenB: [
@@ -511,7 +532,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       woche2: { Name: 'Woche 2' },
     });
     expect(result.pers).toBe(server.pers);
-    expect(result.aZ).toBe(server.aZ);
+    expect(result.aZ).toBe(server.aZ); // new format: no migration, same reference
     expect(result.fZ).toBe(server.fZ);
   });
 });

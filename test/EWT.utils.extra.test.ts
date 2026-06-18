@@ -40,15 +40,10 @@ function createRow(day: number): IDatenEWT {
 function createVorgabenU(): IVorgabenU {
   return {
     aZ: {
-      bT: '07:00',
-      eT: '15:00',
-      eTF: '14:00',
-      bN: '22:00',
-      eN: '06:00',
-      bBN: '20:00',
-      bS: '08:00',
-      eS: '12:00',
-      rZ: '00:30',
+      frueh: { default: { beginn: '07:00', ende: '15:00', pause: 30 }, overrides: { 5: { ende: '14:00', pause: 0 } } },
+      nacht: { default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+      sonder: { beginn: '08:00', ende: '12:00', pause: 20 },
+      fahrzeit: '00:30',
     },
     fZ: [
       { key: 'Ort', value: '00:10' },

@@ -24,7 +24,7 @@ function serializeRowWithoutMeta(row: unknown): string {
 
   const normalized = Object.entries(row as Record<string, unknown>)
     .filter(
-      ([key, value]) => !['_id', 'updatedAt', 'createdAt', '__v', '__localState'].includes(key) && value !== undefined,
+      ([key, value]) => !key.startsWith('__') && !['_id', 'updatedAt', 'createdAt', '__v'].includes(key) && value !== undefined,
     )
     .sort(([left], [right]) => left.localeCompare(right));
 
@@ -53,6 +53,8 @@ export function countByMonth(rows: unknown, storageName: TStorageData): Map<numb
 
   normalized.forEach(row => {
     if (!row || typeof row !== 'object') return;
+    // Pending-Delete-Rows nicht mitzählen — sie existieren noch auf dem Server
+    if ((row as Record<string, unknown>).__localState === 'deleted') return;
     let m = -1;
     if (storageName === 'dataBZ') m = getMonatFromBZ(row as IDatenBZ);
     else if (storageName === 'dataBE') m = getMonatFromBE(row as IDatenBE);

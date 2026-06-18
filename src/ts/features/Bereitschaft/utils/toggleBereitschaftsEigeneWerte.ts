@@ -14,6 +14,9 @@ export default function toggleBereitschaftsEigeneWerte(
   const nATInput = parentElement.querySelector<HTMLInputElement>('#nAT');
   const nEInput = parentElement.querySelector<HTMLInputElement>('#nE');
   const nETInput = parentElement.querySelector<HTMLInputElement>('#nET');
+  const spaetATInput = parentElement.querySelector<HTMLInputElement>('#spaetAT');
+  const spaetETInput = parentElement.querySelector<HTMLInputElement>('#spaetET');
+  const spaetInput = parentElement.querySelector<HTMLInputElement>('#spaet');
   const eigenCheckbox = parentElement.querySelector<HTMLInputElement>('#eigen');
 
   if (!bATInput || !bEInput || !bETInput || !nAInput || !nATInput || !nEInput || !nETInput || !eigenCheckbox)
@@ -28,6 +31,9 @@ export default function toggleBereitschaftsEigeneWerte(
   nATInput.disabled = disable;
   nEInput.disabled = disable;
   nETInput.disabled = disable;
+  const spaetChecked = spaetInput?.checked ?? false;
+  if (spaetATInput) spaetATInput.disabled = disable || !spaetChecked;
+  if (spaetETInput) spaetETInput.disabled = disable || !spaetChecked;
 
   parentElement.querySelectorAll<HTMLElement>('.berechnet-badge').forEach(badge => {
     badge.style.display = disable ? '' : 'none';

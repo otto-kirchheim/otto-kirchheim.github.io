@@ -131,14 +131,14 @@ function createTableBEMock() {
 }
 
 function createTableBZMock() {
-  const loadSmartMock = vi.fn();
+  const loadMock = vi.fn();
   const setFilterMock = vi.fn();
   const rowsArray: { _id?: string; _state: string }[] = [];
-  const ftBZ = { rows: { loadSmart: loadSmartMock, setFilter: setFilterMock, array: rowsArray } };
+  const ftBZ = { rows: { load: loadMock, setFilter: setFilterMock, array: rowsArray } };
   const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftBZ };
   table.id = 'tableBZ';
   table.instance = ftBZ;
-  return { table: table as never, loadSmartMock, setFilterMock, rowsArray };
+  return { table: table as never, loadMock, setFilterMock, rowsArray };
 }
 
 describe('submitBereitschaftsEinsatz', () => {
@@ -257,7 +257,7 @@ describe('submitBereitschaftsEinsatz', () => {
     storageStore.set('dataBZ', []);
     const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00', berZeit: true });
     const { table: tableBE, addMock } = createTableBEMock();
-    const { table: tableBZ, loadSmartMock } = createTableBZMock();
+    const { table: tableBZ, loadMock } = createTableBZMock();
 
     const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
     getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([]).mockReturnValue([bz]);
@@ -268,7 +268,7 @@ describe('submitBereitschaftsEinsatz', () => {
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
     expect(result).toBe(true);
-    expect(loadSmartMock).toHaveBeenCalledTimes(1);
+    expect(loadMock).toHaveBeenCalledTimes(1);
     expect(flushResourceMock).toHaveBeenCalledWith('BZ');
     expect(addMock).toHaveBeenCalledTimes(1);
   });
@@ -329,12 +329,12 @@ describe('submitBereitschaftsEinsatz', () => {
 
     const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00', berZeit: true });
     const { table: tableBE, addMock } = createTableBEMock();
-    const { table: tableBZ, loadSmartMock } = createTableBZMock();
+    const { table: tableBZ, loadMock } = createTableBZMock();
 
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
     expect(result).toBe(true);
-    expect(loadSmartMock).not.toHaveBeenCalled();
+    expect(loadMock).not.toHaveBeenCalled();
     expect(calculateBereitschaftsZeitenMock).not.toHaveBeenCalled();
     expect(addMock).toHaveBeenCalledTimes(1);
     expect(createSnackBarMock).not.toHaveBeenCalled();
@@ -349,7 +349,7 @@ describe('submitBereitschaftsEinsatz', () => {
 
       const modal = createModal({ ZeitVon: '09:00', ZeitBis: '16:00', berZeit: true });
       const { table: tableBE } = createTableBEMock();
-      const { table: tableBZ, loadSmartMock } = createTableBZMock();
+      const { table: tableBZ, loadMock } = createTableBZMock();
 
       const merged = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T22:00:00.000Z', 'bz1');
       getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([bz1, bz2]).mockReturnValue([merged]);
@@ -357,7 +357,7 @@ describe('submitBereitschaftsEinsatz', () => {
       const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
       expect(result).toBe(true);
-      expect(loadSmartMock).toHaveBeenCalledTimes(1);
+      expect(loadMock).toHaveBeenCalledTimes(1);
       // Merged BZ should be in Storage (bz2 removed, bz1 extended to bz2.endeB)
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
       expect(storedBzs).toHaveLength(1);
@@ -382,7 +382,7 @@ describe('submitBereitschaftsEinsatz', () => {
       // ZeitBis='10:00' Berlin = 08:00Z → in bz2 [07:00Z–18:00Z]
       const modal = createModal({ ZeitVon: '06:00', ZeitBis: '10:00', berZeit: true });
       const { table: tableBE } = createTableBEMock();
-      const { table: tableBZ, loadSmartMock } = createTableBZMock();
+      const { table: tableBZ, loadMock } = createTableBZMock();
 
       // After boundary split: bz1 ends at 06:00Z (= 08:00 Berlin), bz2 starts at 06:00Z
       const updatedBz1 = createBZ('2023-04-12T03:00:00.000Z', '2023-04-12T06:00:00.000Z', 'bz1');
@@ -394,7 +394,7 @@ describe('submitBereitschaftsEinsatz', () => {
       const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
       expect(result).toBe(true);
-      expect(loadSmartMock).toHaveBeenCalledTimes(1);
+      expect(loadMock).toHaveBeenCalledTimes(1);
       expect(flushResourceMock).toHaveBeenCalledWith('BZ');
       // Storage should have both BZs adjusted to meet at 06:00Z (= 08:00 Berlin)
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];

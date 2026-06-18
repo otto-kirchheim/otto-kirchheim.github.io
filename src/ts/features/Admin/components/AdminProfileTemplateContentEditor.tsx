@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { ZULAGEN_CATALOG } from '../../Einstellungen/utils/zulagenCatalog';
+import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
 import {
-  ARBEITSZEIT_FIELDS,
   PERS_FIELDS,
   TAB_OPTIONS,
   type FahrzeitRow,
@@ -18,7 +18,8 @@ type Props = {
   isSaving: boolean;
   activeVorgabenBIndex: number;
   onUpdatePersField: (key: string, value: string) => void;
-  onUpdateArbeitszeitField: (key: string, value: string) => void;
+  onUpdateArbeitszeit: (value: NonNullable<TemplateContentDraft['Arbeitszeit']>) => void;
+  onEnableArbeitszeit: () => void;
   onAddFahrzeitRow: () => void;
   onUpdateFahrzeitRow: (index: number, field: keyof FahrzeitRow, value: string) => void;
   onRemoveFahrzeitRow: (index: number) => void;
@@ -38,7 +39,8 @@ export function AdminProfileTemplateContentEditor({
   isSaving,
   activeVorgabenBIndex,
   onUpdatePersField,
-  onUpdateArbeitszeitField,
+  onUpdateArbeitszeit,
+  onEnableArbeitszeit,
   onAddFahrzeitRow,
   onUpdateFahrzeitRow,
   onRemoveFahrzeitRow,
@@ -56,7 +58,7 @@ export function AdminProfileTemplateContentEditor({
   const badgeState = useMemo(
     () => ({
       Pers: Object.keys(templateContent.Pers).length > 0,
-      Arbeitszeit: Object.keys(templateContent.Arbeitszeit).length > 0,
+      Arbeitszeit: templateContent.Arbeitszeit !== null,
       Fahrzeit: templateContent.Fahrzeit.length > 0,
       VorgabenB: templateContent.VorgabenB.length > 0,
       Einstellungen:
@@ -127,18 +129,20 @@ export function AdminProfileTemplateContentEditor({
 
       {activeSection === 'Arbeitszeit' && (
         <div class="border rounded p-2 mb-2">
-          <div class="row g-2">
-            {ARBEITSZEIT_FIELDS.map(field => (
-              <div class="col-12 col-md-6 col-xl-4" key={`${templateId}-az-${field.key}`}>
-                <label class="form-label small mb-1">{field.label}</label>
-                <input
-                  class="form-control form-control-sm"
-                  value={templateContent.Arbeitszeit[field.key] ?? ''}
-                  onInput={e => onUpdateArbeitszeitField(field.key, (e.target as HTMLInputElement).value)}
-                />
-              </div>
-            ))}
-          </div>
+          {templateContent.Arbeitszeit ? (
+            <ArbeitszeiteingabePanel
+              key={`${templateId}-arbeitszeit`}
+              initialValues={templateContent.Arbeitszeit}
+              onChange={onUpdateArbeitszeit}
+            />
+          ) : (
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
+              <button class="btn btn-sm btn-outline-secondary" onClick={onEnableArbeitszeit} disabled={isSaving}>
+                Arbeitszeit aktivieren
+              </button>
+            </div>
+          )}
         </div>
       )}
 

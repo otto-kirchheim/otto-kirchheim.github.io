@@ -127,6 +127,22 @@ export function hasOverlap(
   });
 }
 
+export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude?: IDatenBE): boolean {
+  const cutoff = einsatzStart.startOf('day').hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).second(0).millisecond(0);
+  const windowStart = einsatzStart.isBefore(cutoff) ? cutoff.subtract(1, 'day') : cutoff;
+  return getBereitschaftsEinsatzDaten().some(be => {
+    if (be.lreBE !== 'LRE 1' && be.lreBE !== 'LRE 2') return false;
+    if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
+    const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
+    const beStartRaw = dayjs(`${beDate}T${be.beginBE}`);
+    if (beStartRaw.isBefore(windowStart)) return false;
+    const beEndRaw = dayjs(`${beDate}T${be.endeBE}`);
+    const beEnd = beEndRaw.isAfter(beStartRaw) ? beEndRaw : beEndRaw.add(1, 'day');
+    const gap = einsatzStart.diff(beEnd, 'minute');
+    return gap >= 0 && gap < 10;
+  });
+}
+
 export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, tagBE: string, exclude?: IDatenBE): boolean {
   const cutoff = dayjs(tagBE)
     .set('hour', B_WECHSEL_STUNDE)
@@ -168,7 +184,7 @@ const COVERAGE_FINAL_WARNING: Record<'gap' | 'partial' | 'none', string> = {
 };
 
 function reloadBzTable(tableBZ: CustomHTMLTableElement<IDatenBZ>, monat: number): void {
-  tableBZ.instance.rows.loadSmart(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
+  tableBZ.instance.rows.load(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
   tableBZ.instance.rows.setFilter(row => getMonatFromBZ(row) === monat);
 }
 
@@ -284,7 +300,7 @@ function handleNone(
   monthBzs: IDatenBZ[],
   otherMonths: IDatenBZ[],
 ): void {
-  const data = calculateBereitschaftsZeiten(einsatzStart, einsatzEnd, einsatzEnd, einsatzEnd, false, monthBzs);
+  const data = calculateBereitschaftsZeiten(einsatzStart, einsatzEnd, einsatzEnd, einsatzEnd, false, false, monthBzs);
   if (!data) return;
   Storage.set('dataBZ', [...otherMonths, ...data]);
   reloadBzTable(tableBZ, monat);
@@ -362,7 +378,7 @@ export default async function submitBereitschaftsEinsatz(
       Storage.set('dataBZ', savedData);
       Storage.set('dataBE', savedBeData);
       reloadBzTable(tableBZ, monat);
-      tableBE.instance.rows.loadSmart(getBereitschaftsEinsatzDaten());
+      tableBE.instance.rows.load(getBereitschaftsEinsatzDaten());
       return failWith(
         `Fehler beim Anlegen des Zeitraums: ${error instanceof Error ? error.message : String(error)}`,
         'error',
@@ -380,6 +396,9 @@ export default async function submitBereitschaftsEinsatz(
 
   if (daten.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, tagBE))
     return failWith('Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.');
+
+  if ((daten.lreBE === 'LRE 1' || daten.lreBE === 'LRE 2') && hasLre12TooClose(einsatzStart))
+    return failWith('Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.');
 
   tableBE.instance.rows.add(daten);
   persistBereitschaftsEinsatzTableData(tableBE.instance);

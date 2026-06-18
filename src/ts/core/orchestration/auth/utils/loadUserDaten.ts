@@ -1,5 +1,4 @@
 import { overwriteUserDaten } from '.';
-import { publishEvent } from '../../..';
 import { aktualisiereBerechnung } from '@/features/Berechnung';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
@@ -126,30 +125,32 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
         },
         {
           text: 'Lokale Daten behalten & speichern',
-          function: () => {
+          function: async () => {
             const bzMonths = changedMonthsByStorage.get('dataBZ') ?? new Set<number>();
             const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
             const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
             const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
 
+            // Zuerst Server-only-Rows als gelöscht markieren, dann lokale Rows für Speichern vorbereiten
             if ('BZ' in dataServer) {
+              reconcileRowsAsDeleted('#tableBZ', 'dataBZ', normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ), bzMonths);
               markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
-              publishEvent('data:changed', { resource: 'BZ', action: 'sync' });
             }
             if ('BE' in dataServer) {
+              reconcileRowsAsDeleted('#tableBE', 'dataBE', normalizeServerRowsForConflict<IDatenBE>(dataServer.BE), beMonths);
               markRowsForAutosave('#tableBE', 'dataBE', beMonths);
-              publishEvent('data:changed', { resource: 'BE', action: 'sync' });
             }
             if ('EWT' in dataServer) {
+              reconcileRowsAsDeleted('#tableE', 'dataE', normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT), eMonths);
               markRowsForAutosave('#tableE', 'dataE', eMonths);
-              publishEvent('data:changed', { resource: 'EWT', action: 'sync' });
             }
             if ('N' in dataServer) {
+              reconcileRowsAsDeleted('#tableN', 'dataN', normalizeServerRowsForConflict<IDatenN>(dataServer.N), nMonths);
               markRowsForAutosave('#tableN', 'dataN', nMonths);
-              publishEvent('data:changed', { resource: 'N', action: 'sync' });
             }
 
             Storage.remove('dataServer');
+            await flushAll();
             clearLoading('btnAuswaehlen');
             buttonDisable(false);
           },
