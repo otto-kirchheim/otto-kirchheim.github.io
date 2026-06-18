@@ -3,8 +3,8 @@ import { aktualisiereBerechnung } from '@/features/Berechnung';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
-import { flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -57,12 +57,6 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   const { datenGeld, timestamps: serverTimestamps } = userData;
   const { vorgabenU: serverVorgabenU, BZ: serverBZ, BE: serverBE, EWT: serverEWT, N: serverN } = userData;
 
-  let dataServer: Partial<UserDatenServer> = {};
-  if (Storage.check('dataServer')) {
-    dataServer = Storage.get('dataServer', { check: true });
-    console.log('Unterschiede Server - Client | Bereits vorhanden', dataServer);
-  }
-
   // Jahreswechsel-Flag auslesen und zurücksetzen
   const isJahreswechsel = Storage.check('Jahreswechsel') && Storage.get<boolean>('Jahreswechsel', { default: false });
   if (isJahreswechsel) Storage.remove('Jahreswechsel');
@@ -74,13 +68,12 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     EWT: serverEWT,
     N: serverN,
     serverTimestamps,
-    initialDataServer: dataServer,
     isJahreswechsel,
   });
 
   const { vorgabenU, BZ, BE, EWT, N } = synced;
   const { vorhanden } = synced;
-  dataServer = synced.dataServer;
+  const dataServer = synced.dataServer;
 
   // Review-Banner unterhalb der Navbar anzeigen.
   const showReviewBanner = (resources: { name: string; months: number[] }[], onSave: () => Promise<void>): void => {
@@ -223,6 +216,10 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     clearLoading('btnAuswaehlen');
     buttonDisable(false);
   }
+
+  // Pending AutoSave-Timer abbrechen, bevor neu geladen wird — sonst zeigt der Status-Indicator
+  // nach dem Reload bis zu 10s fälschlich 'pending', obwohl alle Rows 'unchanged' sind (Bug 3).
+  cancelAllPending();
 
   // Immer laden: Bei Längenmismatch mit lokalen Daten, sonst mit Server-Daten
   document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(BZ);

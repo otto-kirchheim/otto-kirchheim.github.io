@@ -25,7 +25,6 @@ interface SyncLoadedYearResourcesParams {
   EWT: LoadedYearData['EWT'];
   N: LoadedYearData['N'];
   serverTimestamps: LoadedYearData['timestamps'];
-  initialDataServer?: Partial<UserDatenServer>;
   isJahreswechsel?: boolean;
 }
 
@@ -46,11 +45,12 @@ export function syncLoadedYearResources({
   EWT,
   N,
   serverTimestamps,
-  initialDataServer,
   isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
   const vorhanden: UnterschiedNachMonat[] = [];
-  const dataServer: Partial<UserDatenServer> = { ...(initialDataServer ?? {}) };
+  // Immer frisch starten — Konflikte werden je Load aus aktuellen Server+Local-Daten berechnet.
+  // Altdaten aus einem vorigen Jahres-Load dürfen nicht in einen anderen Load durchsickern (Bug 2).
+  const dataServer: Partial<UserDatenServer> = {};
 
   const syncResource = <T>(
     storageName: TStorageData,

@@ -24,6 +24,7 @@ const {
   flushAllMock,
   isAutoSaveEnabledMock,
   setAutoSaveEnabledMock,
+  cancelAllPendingMock,
 } = viCompat.hoisted(() => ({
   overwriteUserDatenMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
@@ -44,6 +45,7 @@ const {
   flushAllMock: vi.fn().mockResolvedValue(undefined),
   isAutoSaveEnabledMock: vi.fn().mockReturnValue(true),
   setAutoSaveEnabledMock: vi.fn(),
+  cancelAllPendingMock: vi.fn(),
 }));
 
 vi.mock('@/core/orchestration/auth/utils', () => ({
@@ -102,6 +104,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   flushAll: flushAllMock,
   isAutoSaveEnabled: isAutoSaveEnabledMock,
   setAutoSaveEnabled: setAutoSaveEnabledMock,
+  cancelAllPending: cancelAllPendingMock,
 }));
 
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
@@ -223,6 +226,9 @@ describe('loadUserDaten', () => {
 
     expect(generateTableBerechnungMock).toHaveBeenCalledWith({ calc: true }, loaded.datenGeld);
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
+
+    // Bug 3: Pending AutoSave-Timer müssen vor dem Laden abgebrochen werden.
+    expect(cancelAllPendingMock).toHaveBeenCalled();
 
     expect(loadBZ).toHaveBeenCalledWith([{ bz: 1 }]);
     expect(loadBE).toHaveBeenCalledWith([{ be: 1 }]);

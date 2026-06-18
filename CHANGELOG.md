@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-18
+
+### fix
+
+- **`rows.load` vereinheitlicht (Bug 1b):** Rows ohne `_id` werden jetzt als `_state: 'new'` geladen statt als `'unchanged'`. Nach dem Laden mit neuen Rows wird `_notifyChange()` aufgerufen → AutoSave-Timer startet. `loadSmart` ist damit funktional identisch zu `load` und bleibt als Deprecated-Alias erhalten.
+- **AutoSave-Fehler persistiert (Bug 1a):** `saveResourceNow` ruft `updateLocalStorage()` jetzt auch im catch-Block auf. Error-Rows werden mit `__errorMessage`-Meta-Feld im localStorage gespeichert und überleben einen Jahreswechsel korrekt als `'error'`-State.
+- **Stale `dataServer` bei Jahreswechsel beseitigt (Bug 2):** `syncLoadedYearResources` startet `dataServer` nicht mehr mit `initialDataServer` — das Objekt wird immer frisch als `{}` initialisiert. Konfliktdaten aus einem vorigen Jahres-Load können nicht mehr fälschlich in einen anderen Jahres-Load eingetragen werden.
+- **AutoSave-Status nach Jahreswechsel sofort korrekt (Bug 3):** `loadUserDaten` ruft vor `rows.load` jetzt `cancelAllPending()` auf. Der Status-Indicator zeigt nach einem Reload nicht mehr fälschlich `'pending'`.
+
+### test
+
+- Unit-Tests für `rows.load`: `_state: 'new'` für Rows ohne `_id`, Regression für `'error'`- und `'deleted'`-Restauration, `_notifyChange`-Aufruf bei neuen Rows.
+- Unit-Test für `syncLoadedYearResources`: kein stale `dataServer.X` nach Jahreswechsel ohne Konflikt für die jeweilige Ressource.
+- `Login.LadeUserDaten.test.ts`: Assertion ergänzt, dass `cancelAllPending` vor dem Laden aufgerufen wird.
+
 ## 2026-06-13
 
 ### fix
