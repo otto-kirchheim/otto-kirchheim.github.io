@@ -1,20 +1,12 @@
 # Frontend Skill-Index
 
-## v2 Skill-Struktur
+## Skill-Struktur
 
-Jedes Skill liegt als Ordner vor:
+Jedes Skill ist self-contained als Ordner mit `SKILL.md` (Inhalt direkt darin):
 
 - `architektur/SKILL.md`
 - `coding-konventionen/SKILL.md`
 - `tests/SKILL.md`
-
-## Legacy-Kompatibilität
-
-Die bisherigen Dateien bleiben bestehen und sind weiterhin die fachliche Primärquelle:
-
-- `architektur.md`
-- `coding-konventionen.md`
-- `tests.md`
 
 ## Empfohlene Reihenfolge bei Änderungen
 
