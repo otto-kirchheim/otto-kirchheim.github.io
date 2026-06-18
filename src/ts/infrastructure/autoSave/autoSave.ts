@@ -404,6 +404,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     setStatus(resource, 'error', msg);
 
     markFetchErrorRows(table, changes, msg);
+    updateLocalStorage(resource, table);
 
     const operation: BulkErrorEntry['operation'] = changes.create.length > 0 ? 'create' : changes.update.length > 0 ? 'update' : 'delete';
     const errorItems = table.rows.array
