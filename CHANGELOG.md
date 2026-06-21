@@ -2,6 +2,42 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-21
+
+### feat
+
+- **Bereitschafts-Modal um aktive Overrides und Sonder-Block erweitert:** Der Bereitschafts-Dialog zeigt nur Overrides fuer aktive Wochenschichten und fuehrt Sonderschicht als eigenen Arbeitszeit-Block. Die Vorbelegung (`applyBereitschaftsVorgabe` / `updateBereitschaftsDatum`) und die Berechnung (`submitBereitschaftsZeiten` / `calculateBereitschaftsZeiten`) behandeln Sonder nur innerhalb des gewaehlten Bereichs; `BereitschaftOverridePanel` bietet Sonderschicht jetzt separat an.
+
+## 2026-06-19
+
+### feat
+
+- **Bereitschaft-Modal „Neue Bereitschaft eingeben" auf aZ-Arbeitszeitmodell umgestellt:** Die Zeiten „Von"/„Bis" des Bereitschaftszeitraums werden nicht mehr aus statischen Vorgabe-Werten gesetzt, sondern aus `vorgabenU.aZ` je Wochentag abgeleitet: **Von** = Frühschicht-Ende des Anfangstags (bei aktiver Spätschicht: Spätschicht-Ende), **Bis** = Frühschicht-Beginn des End-Wochentags. Arbeitsfreie Tage ohne hinterlegte Schicht ergeben `08:00`. Der Spätschicht-Schalter berechnet die Von-Zeit sofort neu. Neuer Helper `resolveBereitschaftsGrenze.ts` (`resolveBzVon`/`resolveBzBis`); `mergePerWeekdaySchicht` nach `core/types` zentralisiert.
+- **VorgabenB-Editor (Einstellungen) auf das neue Modell umgebaut:** Die abgeleiteten Zeit-Eingabefelder (Bereitschaft/Nacht) entfallen — es bleibt die Tag-/Wochenauswahl. Neue stateful Komponente `SchichtenConfigSection` mit optionaler **per-Wochentag-Überschreibung** je aktiver Schicht (Früh/Spät/Nacht) über `schichtenOverrides`; die `SchichtSection` aus dem Arbeitszeit-Panel wird dafür wiederverwendet. Übersteuerte Zeiten sind ein bewusster Snapshot (folgen späteren globalen aZ-Änderungen nicht).
+- **Arbeitszeit-Overrides im Modal „Neue Bereitschaft eingeben":** Über den Schalter „Andere Arbeitszeiten hinterlegen" lässt sich derselbe per-Wochentag-Override-Editor (`SchichtOverrideEditor`, aus dem VorgabenB-Editor extrahiert und geteilt) für genau diesen Eintrag nutzen. Änderungen aktualisieren die abgeleiteten Von/Bis-Zeiten live und fließen via gemergte `schichtenOverrides` in die Berechnung ein (Variante < Modal-Override). Bridge über `get/setBereitschaftRuntimeOverrides`; gemeinsames Merge-Util `mergeSchichtenOverrides` (ersetzt die lokale Kopie in `submitBereitschaftsZeiten`).
+- **Abgeleitete Zeiten im Modal sind read-only Text:** Die Zeitfelder (Von/Bis, Spät, Nacht) werden nicht mehr als bearbeitbare Inputs gezeigt, sondern als reiner Text – der Wert kommt aus `aZ`/Override. Zeitänderungen laufen ausschließlich über „Andere Arbeitszeiten hinterlegen". Der bisherige Schalter „Zeiten manuell anpassen" heißt jetzt **„Datum manuell anpassen"** und entsperrt nur noch die berechneten **Datumsfelder** (`bE`/`nA`/`nE`); `bA` bleibt frei editierbar.
+- **Modal-Layout aufgeräumt (kompakt/tabellarisch):** Jeder Zeitpunkt (Anfang/Ende) ist eine einzeilige Zeile (`punktZeile`): schmales Label · kompaktes Datumsfeld (`form-control-sm`, füllt) · prominente Zeit · optional „berechnet"-Badge — alles auf einer Höhe ausgerichtet (statt schwerer form-floating-Box neben schwebendem Text). Einheitliches Padding (`p-3`); Spätschicht auf Von/Bis reduziert.
+
+### fix
+
+- **Nacht-Override wird in der Berechnung genutzt:** `getNachtSchichten` löst Beginn/Ende **und** Pause jetzt je Wochentag aus `aZ.nacht` + `schichtenOverrides.nacht` auf (statt einheitlicher Fensterzeiten/Pause). Ohne Override bleibt das Verhalten unverändert (Fallback auf die Fensterzeiten).
+- **Keine Schein-Overrides mehr aus Zeitfeldern:** Die frühere Logik, aus den (vorbelegten) Spät-/Nacht-Zeitfeldern im Submit Einzeltag-Overrides zu erzeugen, ist entfernt – sie verankerte Nacht-Overrides am falschen Tag (BZ-Anfangstag statt Nacht-Tag) und konnte über Mitternacht gehende Beginn/Ende nicht korrekt halten. `submitBereitschaftsZeiten` reicht jetzt nur noch Variante- + Editor-Overrides durch; Zeitänderungen erfolgen über den Arbeitszeiten-Editor.
+
+### change
+
+- **Typ `IVorgabenUvorgabenB`:** `zeit` in `beginnB`/`endeB`/`beginnN`/`endeN` ist optional (`zeit?`), da die Zeiten aus `aZ` abgeleitet werden (abwärtskompatibel; Backend-Mongoose-Schema entsprechend angepasst).
+
+### test
+
+- Neue Unit-Tests `Bereitschaft.resolveBereitschaftsGrenze.test.ts` (Früh/Spät/Override/arbeitsfrei→08:00). `Bereitschaft.utils.extra.test.ts` auf aZ-Ableitung umgestellt (injiziertes `aZ`).
+
+## 2026-06-21
+
+### fix
+
+- **Arbeitszeit-Schalter speichert `inaktiv` wieder korrekt:** Im `ArbeitszeiteingabePanel` wird der von den Schalter-Komponenten gelieferte Status jetzt unveraendert in den Panel-State uebernommen. Zuvor wurde `aktiv` beim Parent-Update nochmals invertiert, wodurch Spaet-, Nacht- und Sonderschicht beim Speichern in `VorgabenU.aZ` und damit im localStorage auf `aktiv` zuruecksprangen.
+- **Schneller Toggle→Speichern-Race im Arbeitszeit-Panel behoben:** Der globale Panel-State fuer `saveEinstellungen()` wird jetzt sofort beim lokalen State-Update synchronisiert und nicht erst im nachgelagerten `useEffect`. Dadurch wird ein frisch auf `inaktiv` umgeschalteter Status auch dann korrekt in `VorgabenU` und spaeter aus der Serverresponse in den localStorage uebernommen, wenn direkt danach gespeichert wird.
+
 ## 2026-06-18
 
 ### feat
