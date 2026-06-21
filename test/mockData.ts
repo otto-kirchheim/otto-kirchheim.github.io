@@ -49,14 +49,20 @@ export const VorgabenUMock: IVorgabenU = {
   },
   aZ: {
     frueh: {
+      aktiv: true,
       default: { beginn: '07:00', ende: '15:45', pause: 30 },
       overrides: { 5: { ende: '13:00', pause: 0 } },
     },
+    spaet: {
+      aktiv: false,
+      default: { beginn: '14:00', ende: '22:00', pause: 30 },
+    },
     nacht: {
+      aktiv: true,
       default: { beginn: '19:45', ende: '06:15', pause: 45 },
       regelarbeitstage: [7, 1, 2, 3],
     },
-    sonder: { beginn: '20:15', ende: '07:00', pause: 20 },
+    sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
     fahrzeit: '00:20',
   },
   fZ: [
@@ -244,7 +250,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '2': {
@@ -263,7 +276,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '3': {
@@ -282,7 +302,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '4': {
@@ -301,7 +328,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '5': {
@@ -320,7 +354,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '6': {
@@ -339,7 +380,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '7': {
@@ -358,7 +406,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '8': {
@@ -377,7 +432,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '9': {
@@ -396,7 +458,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '10': {
@@ -415,7 +484,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '11': {
@@ -434,7 +510,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
   '12': {
@@ -453,7 +536,14 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       S14: 1,
     },
     N: {
-      F: 2, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0,
+      F: 2,
+      A: 0,
+      B: 0,
+      C: 0,
+      CA: 0,
+      CB: 0,
+      C9: 0,
+      SIPO: 0,
     },
   },
 };

@@ -446,9 +446,14 @@ describe('fieldMapper – UserProfile', () => {
     const frontendProfile: IVorgabenU = {
       pers: backendProfile.Pers as IVorgabenU['pers'],
       aZ: {
-        frueh: { default: { beginn: '07:00', ende: '15:30', pause: 30 }, overrides: { 5: { ende: '15:00', pause: 0 } } },
-        nacht: { default: { beginn: '22:00', ende: '06:00', pause: 45 } },
-        sonder: { beginn: '14:00', ende: '22:00', pause: 20 },
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:30', pause: 30 },
+          overrides: { 5: { ende: '15:00', pause: 0 } },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '14:00', ende: '22:00', pause: 20 },
         fahrzeit: '00:15',
       },
       Einstellungen: {} as IVorgabenU['Einstellungen'],
@@ -513,7 +518,10 @@ describe('fieldMapper – Vorgaben', () => {
 describe('fieldMapper – vorgabenUFromServer', () => {
   it('konvertiert Array-Format zu Map-Format', () => {
     const newAz: IVorgabenUServer['aZ'] = {
-      frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+      frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
       fahrzeit: '00:15',
     };
     const server: IVorgabenUServer = {
@@ -532,7 +540,7 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       woche2: { Name: 'Woche 2' },
     });
     expect(result.pers).toBe(server.pers);
-    expect(result.aZ).toBe(server.aZ); // new format: no migration, same reference
+    expect(result.aZ).toEqual(server.aZ);
     expect(result.fZ).toBe(server.fZ);
   });
 });

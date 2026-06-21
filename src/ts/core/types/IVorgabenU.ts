@@ -56,6 +56,7 @@ export type SchichtOverride = Partial<SchichtBase>;
 export type SchichtOverrides = Partial<Record<1 | 2 | 3 | 4 | 5 | 6 | 7, SchichtOverride>>;
 
 export interface IPerWeekdaySchicht {
+  aktiv: boolean;               // false = inaktiv (Zeiten bleiben gespeichert)
   default: SchichtBase;
   regelarbeitstage?: number[];  // isoWeekday 1–7; Default [1,2,3,4,5]; rest → arbeitsfrei
   overrides?: SchichtOverrides; // Differenzen von default für einzelne Tage
@@ -63,17 +64,18 @@ export interface IPerWeekdaySchicht {
 
 // Globales Zeitpaar (für Schichten ohne Wochentag-Variation, z.B. Sonderschicht)
 export interface ISchichtZeiten {
+  aktiv: boolean;               // false = inaktiv (Zeiten bleiben gespeichert)
   beginn: string;
   ende: string;
   pause: number;
 }
 
 export interface IVorgabenUaZ {
-  frueh: IPerWeekdaySchicht;   // Frühschicht (= bisherige Tagschicht) — immer vorhanden
-  spaet?: IPerWeekdaySchicht;  // Spätschicht — optional, per Wochentag
-  nacht?: IPerWeekdaySchicht;  // Nachtschicht — optional, per Wochentag
-  sonder?: ISchichtZeiten;     // Sonderschicht — optional, globale Zeiten
-  fahrzeit: string;            // HH:mm Dauer Wohnung ↔ Arbeit
+  frueh: IPerWeekdaySchicht;  // immer vorhanden und aktiv
+  spaet: IPerWeekdaySchicht;  // immer vorhanden, aktiv steuert ob genutzt
+  nacht: IPerWeekdaySchicht;  // immer vorhanden, aktiv steuert ob genutzt
+  sonder: ISchichtZeiten;     // immer vorhanden, aktiv steuert ob genutzt
+  fahrzeit: string;           // HH:mm Dauer Wohnung ↔ Arbeit
 }
 
 export interface IVorgabenUfZ {
@@ -90,11 +92,11 @@ export interface IVorgabenUvorgabenB {
   Name: string;
   beginnB: {
     tag: number;
-    zeit: string;
+    zeit?: string;
   };
   endeB: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
   // NEU: Schichtauswahl für Bereitschaftszeitraum
@@ -106,12 +108,12 @@ export interface IVorgabenUvorgabenB {
   nacht: boolean;
   beginnN: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
   endeN: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
   standard?: true;

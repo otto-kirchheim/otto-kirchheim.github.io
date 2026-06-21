@@ -7,7 +7,7 @@ const DEFAULT_REGELARBEITSTAGE: readonly number[] = [1, 2, 3, 4, 5];
  * Gibt null zurück wenn der Tag arbeitsfrei ist (nicht in regelarbeitstage).
  */
 export function resolveSchichtDay(schicht: IPerWeekdaySchicht, isoWeekday: number): SchichtBase | null {
-  const regelarbeitstage = schicht.regelarbeitstage ?? DEFAULT_REGELARBEITSTAGE;
+  const regelarbeitstage = schicht.regelarbeitstage?.length ? schicht.regelarbeitstage : DEFAULT_REGELARBEITSTAGE;
 
   if (!regelarbeitstage.includes(isoWeekday)) return null;
 
@@ -15,6 +15,23 @@ export function resolveSchichtDay(schicht: IPerWeekdaySchicht, isoWeekday: numbe
   if (!override) return schicht.default;
 
   return { ...schicht.default, ...override };
+}
+
+/**
+ * Merged eine globale Schicht mit den per-Variante hinterlegten (Teil-)Overrides.
+ * `default` und `overrides` werden feldweise zusammengeführt, der Override gewinnt.
+ */
+export function mergePerWeekdaySchicht(
+  base: IPerWeekdaySchicht,
+  override?: Partial<IPerWeekdaySchicht>,
+): IPerWeekdaySchicht {
+  if (!override) return base;
+  return {
+    ...base,
+    ...override,
+    default: { ...base.default, ...(override.default ?? {}) },
+    overrides: { ...(base.overrides ?? {}), ...(override.overrides ?? {}) },
+  };
 }
 
 export type ScheduleGroup = {

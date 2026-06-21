@@ -8,6 +8,8 @@
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
 import type {
   BereitschaftSchichtTyp,
+  IPerWeekdaySchicht,
+  ISchichtZeiten,
   IVorgabenU,
   IVorgabenUaZ,
   IVorgabenUServer,
@@ -133,7 +135,11 @@ interface LegacyArbeitszeit {
 }
 
 export function isLegacyArbeitszeit(raw: unknown): raw is LegacyArbeitszeit {
-  return typeof raw === 'object' && raw !== null && 'bT' in raw && typeof (raw as Record<string, unknown>).bT === 'string';
+  if (typeof raw !== 'object' || raw === null) return false;
+  const r = raw as Record<string, unknown>;
+  // If the new structured 'frueh' field is present, treat as already migrated
+  if (typeof r.frueh === 'object' && r.frueh !== null) return false;
+  return 'bT' in r && typeof r.bT === 'string';
 }
 
 export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
@@ -143,12 +149,77 @@ export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
   const freitag = eTF !== eT ? { 5: { ende: eTF, pause: 0 } as const } : undefined;
   return {
     frueh: {
+      aktiv: true,
       default: { beginn: bT, ende: eT, pause: 30 },
       overrides: freitag,
     },
-    ...(raw.bN ? { nacht: { default: { beginn: raw.bN, ende: raw.eN ?? '', pause: 45 } } } : {}),
-    ...(raw.bS ? { sonder: { beginn: raw.bS, ende: raw.eS ?? '', pause: 20 } } : {}),
+    spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+    nacht: {
+      aktiv: !!raw.bN,
+      default: { beginn: raw.bN ?? '19:45', ende: raw.eN ?? '06:15', pause: 45 },
+    },
+    sonder: {
+      aktiv: !!raw.bS,
+      beginn: raw.bS ?? '06:00',
+      ende: raw.eS ?? '14:30',
+      pause: 20,
+    },
     fahrzeit: raw.rZ ?? '',
+  };
+}
+
+function normalizePerWeekdaySchicht(
+  raw: unknown,
+  defaultBase: { beginn: string; ende: string; pause: number },
+): IPerWeekdaySchicht {
+  if (!raw || typeof raw !== 'object') {
+    return { aktiv: false, default: defaultBase };
+  }
+  const r = raw as Record<string, unknown>;
+  return {
+    aktiv: typeof r.aktiv === 'boolean' ? r.aktiv : true,
+    default: (r.default as IVorgabenUaZ['frueh']['default']) ?? defaultBase,
+    regelarbeitstage: Array.isArray(r.regelarbeitstage) ? (r.regelarbeitstage as number[]) : undefined,
+    overrides: r.overrides as IPerWeekdaySchicht['overrides'] | undefined,
+  };
+}
+
+function normalizeSchichtZeiten(raw: unknown): ISchichtZeiten {
+  const defaults = { beginn: '06:00', ende: '14:30', pause: 20 };
+  if (!raw || typeof raw !== 'object') {
+    return { aktiv: false, ...defaults };
+  }
+  const r = raw as Record<string, unknown>;
+  return {
+    aktiv: typeof r.aktiv === 'boolean' ? r.aktiv : true,
+    beginn: typeof r.beginn === 'string' ? r.beginn : defaults.beginn,
+    ende: typeof r.ende === 'string' ? r.ende : defaults.ende,
+    pause: typeof r.pause === 'number' ? r.pause : defaults.pause,
+  };
+}
+
+/**
+ * Normalisiert beliebige Arbeitszeit-Daten (Legacy, altes Strukturformat ohne aktiv, neues Format)
+ * zu einem vollständigen IVorgabenUaZ mit aktiv-Flag auf allen Schichten.
+ */
+export function normalizeAZ(raw: unknown): IVorgabenUaZ {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      frueh: { aktiv: true, default: { beginn: '', ende: '', pause: 30 } },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '06:00', ende: '14:30', pause: 20 },
+      fahrzeit: '',
+    };
+  }
+  if (isLegacyArbeitszeit(raw)) return migrateArbeitszeit(raw);
+  const r = raw as Record<string, unknown>;
+  return {
+    frueh: normalizePerWeekdaySchicht(r.frueh, { beginn: '', ende: '', pause: 30 }),
+    spaet: normalizePerWeekdaySchicht(r.spaet, { beginn: '14:00', ende: '22:00', pause: 30 }),
+    nacht: normalizePerWeekdaySchicht(r.nacht, { beginn: '19:45', ende: '06:15', pause: 45 }),
+    sonder: normalizeSchichtZeiten(r.sonder),
+    fahrzeit: typeof r.fahrzeit === 'string' ? r.fahrzeit : '',
   };
 }
 
@@ -273,9 +344,7 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       kmnBhf: doc.Pers.kmnBhf ?? 0,
       TB: (doc.Pers.TB as IVorgabenU['pers']['TB']) ?? 'Tarifkraft',
     },
-    aZ: isLegacyArbeitszeit(doc.Arbeitszeit)
-      ? migrateArbeitszeit(doc.Arbeitszeit)
-      : (doc.Arbeitszeit ?? { frueh: { default: { beginn: '', ende: '', pause: 30 } }, fahrzeit: '' }),
+    aZ: normalizeAZ(doc.Arbeitszeit ?? null),
     fZ: doc.Fahrzeit ?? [],
     vorgabenB,
     Einstellungen: {
@@ -435,10 +504,9 @@ export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
   for (const entry of server.vorgabenB) {
     vorgabenB[entry.key] = migrateVorgabenBEntry(entry.value as Record<string, unknown>);
   }
-  const aZ = isLegacyArbeitszeit(server.aZ) ? migrateArbeitszeit(server.aZ) : server.aZ;
   return {
     pers: server.pers,
-    aZ,
+    aZ: normalizeAZ(server.aZ),
     fZ: server.fZ,
     vorgabenB,
     Einstellungen: server.Einstellungen,
