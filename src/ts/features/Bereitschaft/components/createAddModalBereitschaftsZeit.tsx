@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type VNode } from 'preact';
 import { BereitschaftsEinsatzZeiträume } from '..';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyCheckbox, MyFormModal, MyModalBody, MySelect, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -13,38 +13,78 @@ import {
   toggleBereitschaftsEigeneWerte,
   hideBereitschaftsNachtfelder,
   persistBereitschaftsZeitraumTableData,
+  mergeSchichtenOverrides,
+  setBereitschaftRuntimeOverrides,
 } from '../utils';
+import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeOverrides';
+import { BereitschaftOverridePanel } from './BereitschaftOverridePanel';
 
-const createDateInputElement = (id: string, name: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
-  <MyInput
-    divClass="form-floating col-7 col-sm-6"
+// Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum manuell anpassen" editierbar.
+const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
+  <input
+    type="date"
+    id={id}
     required
     disabled
-    type="Date"
-    id={id}
-    name={name}
+    className="form-control form-control-sm flex-grow-1"
+    style={{ minWidth: 0, maxWidth: '10rem' }}
     min={min.format('YYYY-MM-DD')}
     max={max.format('YYYY-MM-DD')}
     value={date.format('YYYY-MM-DD')}
-  >
-    {name}
-  </MyInput>
+  />
 );
 
-const createTimeInputElement = (id: string, name: string, time: string) => (
-  <MyInput divClass="form-floating col-5 col-sm-6" required disabled type="time" id={id} name={name} value={time}>
-    {name}
-  </MyInput>
+// Abgeleitete Zeit – read-only als Text (prominent). Wert kommt aus aZ/Override, wird von
+// applyBereitschaftsVorgabe/updateBereitschaftsDatum gesetzt und von submitBereitschaftsZeiten gelesen.
+const createTimeInputElement = (id: string, name: string, time = '') => (
+  <input
+    type="text"
+    id={id}
+    name={name}
+    aria-label={name}
+    value={time}
+    readOnly
+    tabIndex={-1}
+    className="form-control-plaintext fs-5 fw-semibold lh-1 p-0 m-0 flex-shrink-0"
+    style={{ width: '3.5rem' }}
+  />
+);
+
+const createSonderDateInputElement = (id: string, value: string) => (
+  <input
+    type="date"
+    id={id}
+    className="form-control form-control-sm flex-grow-1"
+    style={{ minWidth: 0, maxWidth: '10rem' }}
+    value={value}
+  />
+);
+
+// Ein „Zeitpunkt" (Anfang/Ende) als kompakte Zeile: Label · Datum (füllt) · Zeit · optional „berechnet"-Badge.
+const punktZeile = (label: string, berechnet: boolean, dateEl: VNode, timeEl: VNode) => (
+  <div className="d-flex align-items-center gap-2 py-1">
+    <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+      {label}
+    </span>
+    {dateEl}
+    {timeEl}
+    {berechnet ? (
+      <span className="badge text-bg-light border berechnet-badge flex-shrink-0" style={{ fontSize: '0.6rem' }}>
+        berechnet
+      </span>
+    ) : null}
+  </div>
 );
 
 export default function createAddModalBereitschaftsZeit(): void {
   const formRef = createRef<HTMLFormElement>();
 
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU') ?? { vorgabenB: BereitschaftsEinsatzZeiträume };
+  const aZ = (vorgabenU as IVorgabenU).aZ;
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
   const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
-  const spaetVerfuegbar: boolean = !!(vorgabenU as IVorgabenU).aZ?.spaet;
+  const spaetVerfuegbar: boolean = !!(vorgabenU as IVorgabenU).aZ?.spaet?.aktiv;
 
   let vorgabenBStandardIndex = '2';
   for (const key in vorgabenB)
@@ -54,12 +94,20 @@ export default function createAddModalBereitschaftsZeit(): void {
     }
   let auswahl: string = vorgabenBStandardIndex;
 
+  // Interaktiv im Modal gesetzte Arbeitszeit-Overrides (BereitschaftOverridePanel) für diesen Eintrag.
+  let runtimeOverrides: BereitschaftRuntimeOverrides | undefined;
+  setBereitschaftRuntimeOverrides(undefined);
+  const effektiveVorgabe = (): IVorgabenUvorgabenB => ({
+    ...vorgabenB[auswahl],
+    schichtenOverrides: mergeSchichtenOverrides(vorgabenB[auswahl].schichtenOverrides, runtimeOverrides),
+  });
+
   const vorgabenB_Select = () => {
     const ref = createRef<HTMLSelectElement>();
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       auswahl = ref.current.value;
-      applyBereitschaftsVorgabe(modal, vorgabenB[auswahl], datum);
+      applyBereitschaftsVorgabe(modal, effektiveVorgabe(), datum);
     };
     return (
       <MySelect
@@ -88,6 +136,7 @@ export default function createAddModalBereitschaftsZeit(): void {
                       .format('ddd')}`
                   : '-----'
               }` +
+              `${value[1].schichten?.includes('sonder') ? ` | Sonder ${aZ?.sonder.beginn ?? ''}–${aZ?.sonder.ende ?? ''}` : ''}` +
               (value[1].standard ? ' | Standard' : ''),
           };
         })}
@@ -111,23 +160,21 @@ export default function createAddModalBereitschaftsZeit(): void {
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       datum = dayjs(ref.current.value);
-      updateBereitschaftsDatum(modal, vorgabenB[auswahl], datum);
+      updateBereitschaftsDatum(modal, effektiveVorgabe(), datum);
     };
     return (
-      <MyInput
-        myRef={ref}
-        divClass="form-floating col-7 col-sm-6"
-        required
-        type="Date"
+      <input
+        ref={ref}
+        type="date"
         id="bA"
-        name="Datum"
+        required
+        className="form-control form-control-sm flex-grow-1"
+        style={{ minWidth: 0, maxWidth: '10rem' }}
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
         value={datum.format('YYYY-MM-DD')}
         onInput={changeHandler}
-      >
-        Datum
-      </MyInput>
+      />
     );
   };
 
@@ -141,38 +188,32 @@ export default function createAddModalBereitschaftsZeit(): void {
             className="form-check form-switch bereitschaft"
             id="eigen"
             changeHandler={() => {
-              toggleBereitschaftsEigeneWerte(modal, vorgabenB[auswahl], datum);
+              toggleBereitschaftsEigeneWerte(modal, effektiveVorgabe(), datum);
             }}
           >
-            Zeiten manuell anpassen
+            Datum manuell anpassen
           </MyCheckbox>
         </div>
 
         <small className="col-12 text-muted" id="schichtHinweisText" />
 
-        <div className="col-12 border rounded p-2">
+        <div className="col-12 border rounded p-3">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Bereitschaftszeitraum</p>
-          <div className="row g-2">
-            <small className="col-12 text-body fw-medium ps-1 mb-0">Anfang</small>
-            {datumInput()}
-            {createTimeInputElement('bAT', 'Von', vorgabenB[auswahl].beginnB.zeit)}
-            <small className="col-12 text-muted ps-1 mb-0 mt-1 d-flex align-items-center gap-2">
-              Ende
-              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>
-                berechnet
-              </span>
-            </small>
-            {createDateInputElement(
+          {/* Zeit-Platzhalter werden unmittelbar von applyBereitschaftsVorgabe aus aZ je Wochentag gesetzt. */}
+          {punktZeile('Anfang', false, datumInput(), createTimeInputElement('bAT', 'Von'))}
+          {punktZeile(
+            'Ende',
+            true,
+            createDateInputElement(
               'bE',
-              'Datum',
               datum
                 .isoWeekday(vorgabenB[auswahl].endeB.tag === 0 ? 7 : vorgabenB[auswahl].endeB.tag)
                 .add(vorgabenB[auswahl].endeB.Nwoche ? 7 : 0, 'd'),
               datum.startOf('M'),
               datum.add(1, 'M').endOf('M'),
-            )}
-            {createTimeInputElement('bET', 'Bis', vorgabenB[auswahl].endeB.zeit)}
-          </div>
+            ),
+            createTimeInputElement('bET', 'Bis'),
+          )}
         </div>
 
         {spaetVerfuegbar && (
@@ -189,29 +230,59 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         {spaetVerfuegbar && (
           <div
-            className="col-12 border rounded p-2"
+            className="col-12 border rounded p-3"
             id="spaetschicht"
             style={{
               display: !(vorgabenB[auswahl].schichten?.includes('spaet') ?? false) ? 'none' : undefined,
             }}
           >
             <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Spätschicht</p>
-            <div className="row g-2">
-              <small className="col-12 text-muted ps-1 mb-0 d-flex align-items-center gap-2">
-                Anfang
-                <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>
-                  berechnet
-                </span>
-              </small>
-              {createTimeInputElement('spaetAT', 'Von', '')}
-              <small className="col-12 text-muted ps-1 mb-0 mt-1 d-flex align-items-center gap-2">
-                Ende
-                <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>
-                  berechnet
-                </span>
-              </small>
-              {createTimeInputElement('spaetET', 'Bis', '')}
+            <div className="d-flex align-items-center gap-2 py-1">
+              <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+                Von
+              </span>
+              {createTimeInputElement('spaetAT', 'Von')}
+              <span className="small fw-medium text-body flex-shrink-0 ms-auto pe-2">Bis</span>
+              {createTimeInputElement('spaetET', 'Bis')}
             </div>
+          </div>
+        )}
+
+        {(vorgabenU as IVorgabenU).aZ?.sonder?.aktiv && (
+          <div className="col-12">
+            <MyCheckbox
+              className="form-check form-switch bereitschaft"
+              id="sonder"
+              checked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
+              changeHandler={() => {
+                const sonderChecked = modal.querySelector<HTMLInputElement>('#sonder')?.checked ?? false;
+                const sonderContainer = modal.querySelector<HTMLElement>('#sonderschicht');
+                if (sonderContainer) sonderContainer.style.display = sonderChecked ? '' : 'none';
+              }}
+            >
+              Sonderschicht
+            </MyCheckbox>
+          </div>
+        )}
+
+        {(vorgabenU as IVorgabenU).aZ?.sonder?.aktiv && (
+          <div
+            className="col-12 border rounded p-3"
+            id="sonderschicht"
+            style={{ display: (vorgabenB[auswahl].schichten?.includes('sonder') ?? false) ? '' : 'none' }}
+          >
+            <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Sonderschicht Zeitraum</p>
+            <div className="d-flex align-items-center gap-2 flex-wrap">
+              <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
+                Von
+              </span>
+              {createSonderDateInputElement('sonderVon', datum.format('YYYY-MM-DD'))}
+              <span className="small fw-medium text-body flex-shrink-0 ms-auto pe-2">Bis</span>
+              {createSonderDateInputElement('sonderBis', datum.format('YYYY-MM-DD'))}
+            </div>
+            <small className="text-muted d-block mt-2">
+              Gleiches Datum ist erlaubt und bedeutet einen einzelnen Tag.
+            </small>
           </div>
         )}
 
@@ -231,7 +302,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         </div>
 
         <div
-          className="col-12 border rounded p-2"
+          className="col-12 border rounded p-3"
           id="nachtschicht"
           style={{
             display: !(vorgabenB[auswahl].schichten?.includes('nacht') ?? vorgabenB[auswahl].nacht)
@@ -240,41 +311,43 @@ export default function createAddModalBereitschaftsZeit(): void {
           }}
         >
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht</p>
-          <div className="row g-2">
-            <small className="col-12 text-muted ps-1 mb-0 d-flex align-items-center gap-2">
-              Anfang
-              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>
-                berechnet
-              </span>
-            </small>
-            {createDateInputElement(
+          {punktZeile(
+            'Anfang',
+            true,
+            createDateInputElement(
               'nA',
-              'Datum',
               datum
                 .isoWeekday(vorgabenB[auswahl].beginnN.tag === 0 ? 7 : vorgabenB[auswahl].beginnN.tag)
                 .add(vorgabenB[auswahl].beginnN.Nwoche ? 7 : 0, 'd'),
               datum.subtract(1, 'month').endOf('M'),
               datum.add(1, 'M').endOf('M'),
-            )}
-            {createTimeInputElement('nAT', 'Von', vorgabenB[auswahl].beginnN.zeit)}
-            <small className="col-12 text-muted ps-1 mb-0 mt-1 d-flex align-items-center gap-2">
-              Ende
-              <span className="badge text-bg-light border berechnet-badge" style={{ fontSize: '0.65rem' }}>
-                berechnet
-              </span>
-            </small>
-            {createDateInputElement(
+            ),
+            createTimeInputElement('nAT', 'Von'),
+          )}
+          {punktZeile(
+            'Ende',
+            true,
+            createDateInputElement(
               'nE',
-              'Datum',
               datum
                 .isoWeekday(vorgabenB[auswahl].endeN.tag === 0 ? 7 : vorgabenB[auswahl].endeN.tag)
                 .add(vorgabenB[auswahl].endeN.Nwoche ? 7 : 0, 'd'),
               datum.startOf('M'),
               datum.add(1, 'M').endOf('M'),
-            )}
-            {createTimeInputElement('nET', 'Bis', vorgabenB[auswahl].endeN.zeit)}
-          </div>
+            ),
+            createTimeInputElement('nET', 'Bis'),
+          )}
         </div>
+
+        <BereitschaftOverridePanel
+          aZ={aZ}
+          onChange={ov => {
+            runtimeOverrides = ov;
+            setBereitschaftRuntimeOverrides(ov);
+            // Abgeleitete Zeiten neu setzen; Datumsfelder bleiben im Handbetrieb unangetastet.
+            updateBereitschaftsDatum(modal, effektiveVorgabe(), datum);
+          }}
+        />
       </MyModalBody>
     </MyFormModal>,
   );
@@ -282,34 +355,29 @@ export default function createAddModalBereitschaftsZeit(): void {
   if (formRef.current === null) throw new Error('referenz nicht gesetzt');
   const form = formRef.current;
 
-  applyBereitschaftsVorgabe(modal, vorgabenB[auswahl], datum);
+  applyBereitschaftsVorgabe(modal, effektiveVorgabe(), datum);
 
+  // Spät-Zeiten sind read-only Text → nur noch Sichtbarkeit des Spät-Blocks steuern.
   const refreshSpaetFelder = (): void => {
     const spaetChecked = modal.querySelector<HTMLInputElement>('#spaet')?.checked ?? false;
     const spaetContainer = modal.querySelector<HTMLElement>('#spaetschicht');
-    const spaetAT = modal.querySelector<HTMLInputElement>('#spaetAT');
-    const spaetET = modal.querySelector<HTMLInputElement>('#spaetET');
-    const eigen = modal.querySelector<HTMLInputElement>('#eigen')?.checked ?? false;
-
     if (spaetContainer) spaetContainer.style.display = spaetChecked ? '' : 'none';
-    if (spaetAT) spaetAT.disabled = !spaetChecked || !eigen;
-    if (spaetET) spaetET.disabled = !spaetChecked || !eigen;
   };
 
   modal.querySelector<HTMLInputElement>('#bA')?.addEventListener('change', () => {
     const dateValue = modal.querySelector<HTMLInputElement>('#bA')?.value;
     if (dateValue) datum = dayjs(dateValue);
-    const weekdayValue = String(datum.isoWeekday());
-    const spaetDaySelect = modal.querySelector<HTMLSelectElement>('#spaetOverrideDay');
-    const nachtDaySelect = modal.querySelector<HTMLSelectElement>('#nachtOverrideDay');
-    if (spaetDaySelect) spaetDaySelect.value = weekdayValue;
-    if (nachtDaySelect) nachtDaySelect.value = weekdayValue;
     refreshSpaetFelder();
+  });
+  // Manuell geändertes Ende-Datum → bET (BZ-Bis-Zeit) neu aus dem neuen Wochentag ableiten.
+  modal.querySelector<HTMLInputElement>('#bE')?.addEventListener('change', () => {
+    updateBereitschaftsDatum(modal, effektiveVorgabe(), datum);
   });
   modal.querySelector<HTMLInputElement>('#spaet')?.addEventListener('change', () => {
+    // Spätschicht verschiebt die BZ-Von-Zeit (frueh.Ende → spaet.Ende) – Zeiten werden neu abgeleitet.
+    updateBereitschaftsDatum(modal, effektiveVorgabe(), datum);
     refreshSpaetFelder();
   });
-  modal.querySelector<HTMLInputElement>('#eigen')?.addEventListener('change', refreshSpaetFelder);
   modal.querySelector<HTMLSelectElement>('#vorgabeB')?.addEventListener('change', () => {
     refreshSpaetFelder();
   });

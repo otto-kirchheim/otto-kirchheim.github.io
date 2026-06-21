@@ -300,7 +300,16 @@ function handleNone(
   monthBzs: IDatenBZ[],
   otherMonths: IDatenBZ[],
 ): void {
-  const data = calculateBereitschaftsZeiten(einsatzStart, einsatzEnd, einsatzEnd, einsatzEnd, false, false, monthBzs);
+  const data = calculateBereitschaftsZeiten(
+    einsatzStart,
+    einsatzEnd,
+    einsatzEnd,
+    einsatzEnd,
+    false,
+    false,
+    false,
+    monthBzs,
+  );
   if (!data) return;
   Storage.set('dataBZ', [...otherMonths, ...data]);
   reloadBzTable(tableBZ, monat);
@@ -366,7 +375,8 @@ export default async function submitBereitschaftsEinsatz(
 
     try {
       let needsBeFlush = false;
-      if (coverage.kind === 'gap') ({ needsBeFlush } = handleGap(coverage, tableBZ, tableBE, monat, monthBzs, otherMonths));
+      if (coverage.kind === 'gap')
+        ({ needsBeFlush } = handleGap(coverage, tableBZ, tableBE, monat, monthBzs, otherMonths));
       else if (coverage.kind === 'partial')
         handlePartial(coverage, einsatzStart, einsatzEnd, tableBZ, monat, savedData);
       else handleNone(einsatzStart, einsatzEnd, tableBZ, monat, monthBzs, otherMonths);

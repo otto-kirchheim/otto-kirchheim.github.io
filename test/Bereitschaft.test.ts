@@ -37,6 +37,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtEnde,
       nacht,
       false,
+      false,
       daten,
     );
     expect(result).not.toBeFalsy();
@@ -65,6 +66,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtEnde,
       nacht,
       false,
+      false,
       daten,
     );
     expect(result).not.toBeFalsy();
@@ -86,6 +88,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtEnde,
       nacht,
       false,
+      false,
       daten,
     );
     if (result === false) return;
@@ -104,6 +107,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
       false,
       daten,
     );
@@ -125,6 +129,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtEnde,
       nacht,
       false,
+      false,
       daten,
     );
     if (result === false) return;
@@ -144,6 +149,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
       false,
       daten,
     );
@@ -176,6 +182,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
       false,
       daten,
     );
@@ -235,6 +242,7 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
       false,
       daten,
     );

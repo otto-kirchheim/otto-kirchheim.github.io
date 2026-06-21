@@ -35,6 +35,7 @@ vi.mock('@/infrastructure/api/apiService', () => ({
 }));
 
 import submitBereitschaftsZeiten from '@/features/Bereitschaft/utils/submitBereitschaftsZeiten';
+import { setBereitschaftRuntimeOverrides } from '@/features/Bereitschaft/utils/bereitschaftRuntimeOverrides';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -117,6 +118,7 @@ describe('submitBereitschaftsZeiten', () => {
     localStorage.clear();
     vi.clearAllMocks();
     tableToArrayMock.mockReturnValue([]);
+    setBereitschaftRuntimeOverrides(undefined);
   });
 
   it('wirft Fehler wenn Eingabe-Inputs fehlen', async () => {
@@ -302,5 +304,68 @@ describe('submitBereitschaftsZeiten', () => {
 
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
     expect(publishDataChangedMock).not.toHaveBeenCalled();
+  });
+
+  // ─── Overrides nur aus Variante + Arbeitszeiten-Editor (read-only Zeitfelder erzeugen keine) ───
+
+  function setupNachtStorage(): void {
+    Storage.set('Monat', 4);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+    Storage.set('VorgabenU', {
+      aZ: {
+        frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+        nacht: { default: { beginn: '19:45', ende: '06:15', pause: 45 }, regelarbeitstage: [7, 1, 2, 3] },
+        fahrzeit: '',
+      },
+      pers: { Bundesland: 'HE' },
+    } as never);
+  }
+
+  it('reicht den Editor-Override an die Berechnung durch', async () => {
+    setupNachtStorage();
+    setBereitschaftRuntimeOverrides({ nacht: { default: { beginn: '19:45', ende: '05:00', pause: 45 } } });
+    const modal = createFullModal({
+      bA: '2023-04-06',
+      bAT: '15:45',
+      bE: '2023-04-13',
+      bET: '07:00',
+      nacht: true,
+      nA: '2023-04-09',
+      nAT: '19:45',
+      nE: '2023-04-13',
+      nET: '06:15',
+    });
+    const tableBZ = createTableBZMock();
+    calculateBereitschaftsZeitenMock.mockReturnValue([createBZ('2023-04-06T13:45', '2023-04-13T05:00')]);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    const overrides = calculateBereitschaftsZeitenMock.mock.calls[0]?.[9] as
+      | { nacht?: { default?: { ende: string } } }
+      | undefined;
+    expect(overrides?.nacht?.default?.ende).toBe('05:00');
+  });
+
+  it('erzeugt KEINEN Override aus den (read-only) Zeitfeldern, auch wenn sie abweichen', async () => {
+    setupNachtStorage();
+    const modal = createFullModal({
+      bA: '2023-04-06',
+      bAT: '15:45',
+      bE: '2023-04-13',
+      bET: '07:00',
+      nacht: true,
+      nA: '2023-04-09',
+      nAT: '20:00', // weicht ab – wird aber nicht mehr als Override erfasst
+      nE: '2023-04-13',
+      nET: '05:00',
+    });
+    const tableBZ = createTableBZMock();
+    calculateBereitschaftsZeitenMock.mockReturnValue([createBZ('2023-04-06T13:45', '2023-04-13T05:00')]);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    const overrides = calculateBereitschaftsZeitenMock.mock.calls[0]?.[7] as { nacht?: unknown } | undefined;
+    expect(overrides?.nacht).toBeUndefined();
   });
 });
