@@ -42,9 +42,14 @@ describe('calculateEwtEintraege', () => {
     const daten = [createData('2026-03-10')];
     const mockVorgabenU = {
       aZ: {
-        frueh: { default: { beginn: '07:00', ende: '15:00', pause: 30 }, overrides: { 5: { ende: '14:00', pause: 0 } } },
-        nacht: { default: { beginn: '22:00', ende: '06:00', pause: 45 } },
-        sonder: { beginn: '08:00', ende: '12:00', pause: 20 },
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+          overrides: { 5: { ende: '14:00', pause: 0 } },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
       fZ: [{ key: 'Fulda', value: '00:10' }],

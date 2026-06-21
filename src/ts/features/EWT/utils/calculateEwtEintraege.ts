@@ -58,7 +58,7 @@ function createHelpers(userSettings: IVorgabenU) {
     switch (key) {
       case 'T': {
         const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
-        const spaetConfig = aZ.spaet ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
         const config = fruehConfig ?? spaetConfig ?? aZ.frueh.default;
         return {
           beginn: getDurationFromTime(config.beginn),
@@ -69,7 +69,7 @@ function createHelpers(userSettings: IVorgabenU) {
         };
       }
       case 'SP': {
-        const spaetConfig = aZ.spaet ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
         const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
         const config = spaetConfig ?? fruehConfig ?? aZ.frueh.default;
         return {
@@ -81,7 +81,7 @@ function createHelpers(userSettings: IVorgabenU) {
         };
       }
       case 'N': {
-        if (!aZ.nacht) throw new Error('Nachtschicht nicht konfiguriert');
+        if (!aZ.nacht.aktiv) throw new Error('Nachtschicht nicht konfiguriert');
         const config = resolveSchichtDay(aZ.nacht, isoWeekday) ?? aZ.nacht.default;
         return {
           beginn: getDurationFromTime(config.beginn),
@@ -92,7 +92,7 @@ function createHelpers(userSettings: IVorgabenU) {
         };
       }
       case 'S': {
-        if (!aZ.sonder) throw new Error('Sonderschicht nicht konfiguriert');
+        if (!aZ.sonder.aktiv) throw new Error('Sonderschicht nicht konfiguriert');
         return {
           beginn: getDurationFromTime(aZ.sonder.beginn),
           ende: getDurationFromTime(aZ.sonder.ende),

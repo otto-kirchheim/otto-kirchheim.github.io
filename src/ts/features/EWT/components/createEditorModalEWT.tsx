@@ -17,9 +17,9 @@ function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: str
 
   return [
     { value: 'T', text: fruehLabel, selected: true },
-    ...(aZ.spaet ? [{ value: 'SP', text: `Spät | ${aZ.spaet.default.beginn}–${aZ.spaet.default.ende}` }] : []),
-    ...(aZ.nacht ? [{ value: 'N', text: `Nacht | ${aZ.nacht.default.beginn}–${aZ.nacht.default.ende}` }] : []),
-    ...(aZ.sonder ? [{ value: 'S', text: `Sonder | ${aZ.sonder.beginn}–${aZ.sonder.ende}` }] : []),
+    ...(aZ.spaet.aktiv ? [{ value: 'SP', text: `Spät | ${aZ.spaet.default.beginn}–${aZ.spaet.default.ende}` }] : []),
+    ...(aZ.nacht.aktiv ? [{ value: 'N', text: `Nacht | ${aZ.nacht.default.beginn}–${aZ.nacht.default.ende}` }] : []),
+    ...(aZ.sonder.aktiv ? [{ value: 'S', text: `Sonder | ${aZ.sonder.beginn}–${aZ.sonder.ende}` }] : []),
   ];
 }
 import {
