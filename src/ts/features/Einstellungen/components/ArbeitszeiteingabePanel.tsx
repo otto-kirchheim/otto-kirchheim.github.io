@@ -15,6 +15,8 @@ interface PanelProps {
 export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps): JSX.Element {
   const [aZ, setAZ] = useState<IVorgabenUaZ>(initialValues);
   const panelStateRef = useRef<IVorgabenUaZ>(initialValues);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
 
   const updatePanelState = (updater: (current: IVorgabenUaZ) => IVorgabenUaZ): void => {
     const next = updater(panelStateRef.current);
@@ -23,17 +25,15 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
     setAZ(next);
   };
 
-  useEffect(() => {
-    panelStateRef.current = initialValues;
-    setArbeitszeitPanelState(initialValues);
-    setAZ(initialValues);
-  }, [initialValues]);
+  // Kein Effect für initialValues: der key-Prop im Parent sorgt bei Template-Wechsel
+  // für einen vollständigen Remount. Ein Effect hier würde bei jedem Parent-Re-Render
+  // (z.B. nach onChange) aZ zurücksetzen und eine Endlosschleife auslösen.
 
   useEffect(() => {
     panelStateRef.current = aZ;
     setArbeitszeitPanelState(aZ);
-    onChange?.(aZ);
-  }, [aZ, onChange]);
+    onChangeRef.current?.(aZ);
+  }, [aZ]);
 
   const updateFrueh = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, frueh: schicht }));
   const updateSpaet = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, spaet: schicht }));
