@@ -8,6 +8,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 - **Bereitschafts-Modal um aktive Overrides und Sonder-Block erweitert:** Der Bereitschafts-Dialog zeigt nur Overrides fuer aktive Wochenschichten und fuehrt Sonderschicht als eigenen Arbeitszeit-Block. Die Vorbelegung (`applyBereitschaftsVorgabe` / `updateBereitschaftsDatum`) und die Berechnung (`submitBereitschaftsZeiten` / `calculateBereitschaftsZeiten`) behandeln Sonder nur innerhalb des gewaehlten Bereichs; `BereitschaftOverridePanel` bietet Sonderschicht jetzt separat an.
 
+### test
+
+- **Bereitschafts-Testmatrix erweitert:** Neue Testdatei `test/Bereitschaft.schichtzusammensetzungen.overrides.test.ts` mit allen 8 Schicht-Zusammensetzungen (Frueh, Spaet, Nacht, Sonder in allen Kombinationen) sowie mehreren Override-Varianten (Frueh, Spaet, Nacht, Sonder-Runtime und kombinierte Overrides). Fuer die Matrix wurden stabile Snapshots ergänzt.
+
 ## 2026-06-19
 
 ### feat
