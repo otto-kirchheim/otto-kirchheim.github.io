@@ -111,7 +111,10 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
         TB: 'Tarifkraft',
       },
       aZ: {
-        frueh: { default: { beginn: '00:00', ende: '00:00', pause: 30 } },
+        frueh: { aktiv: true, default: { beginn: '00:00', ende: '00:00', pause: 30 } },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+        sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
       fZ: [],

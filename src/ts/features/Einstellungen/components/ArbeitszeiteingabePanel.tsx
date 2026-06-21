@@ -1,10 +1,8 @@
 import { type JSX } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
-
-let _panelState: IVorgabenUaZ | null = null;
-export const getArbeitszeitPanelState = (): IVorgabenUaZ | null => _panelState;
+import { setArbeitszeitPanelState } from './arbeitszeitPanelState';
 
 const DAY_LABELS = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'] as const;
 const DEFAULT_REGELARBEITSTAGE = [1, 2, 3, 4, 5];
@@ -16,21 +14,32 @@ interface PanelProps {
 
 export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps): JSX.Element {
   const [aZ, setAZ] = useState<IVorgabenUaZ>(initialValues);
+  const panelStateRef = useRef<IVorgabenUaZ>(initialValues);
+
+  const updatePanelState = (updater: (current: IVorgabenUaZ) => IVorgabenUaZ): void => {
+    const next = updater(panelStateRef.current);
+    panelStateRef.current = next;
+    setArbeitszeitPanelState(next);
+    setAZ(next);
+  };
 
   useEffect(() => {
+    panelStateRef.current = initialValues;
+    setArbeitszeitPanelState(initialValues);
     setAZ(initialValues);
   }, [initialValues]);
 
   useEffect(() => {
-    _panelState = aZ;
+    panelStateRef.current = aZ;
+    setArbeitszeitPanelState(aZ);
     onChange?.(aZ);
   }, [aZ, onChange]);
 
-  const updateFrueh = (schicht: IPerWeekdaySchicht) => setAZ(prev => ({ ...prev, frueh: schicht }));
-  const updateSpaet = (schicht: IPerWeekdaySchicht) => setAZ(prev => ({ ...prev, spaet: schicht }));
-  const updateNacht = (schicht: IPerWeekdaySchicht) => setAZ(prev => ({ ...prev, nacht: schicht }));
-  const updateSonder = (sonder: ISchichtZeiten | undefined) => setAZ(prev => ({ ...prev, sonder }));
-  const updateFahrzeit = (v: string) => setAZ(prev => ({ ...prev, fahrzeit: v }));
+  const updateFrueh = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, frueh: schicht }));
+  const updateSpaet = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, spaet: schicht }));
+  const updateNacht = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, nacht: schicht }));
+  const updateSonder = (sonder: ISchichtZeiten) => updatePanelState(current => ({ ...current, sonder }));
+  const updateFahrzeit = (v: string) => updatePanelState(current => ({ ...current, fahrzeit: v }));
 
   return (
     <div>
@@ -43,12 +52,6 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
         schicht={aZ.spaet}
         defaultTemplate={{ beginn: '14:00', ende: '22:00', pause: 30 }}
         onChange={updateSpaet}
-        onDisable={() =>
-          setAZ(prev => {
-            const { spaet: _s, ...rest } = prev;
-            return rest as IVorgabenUaZ;
-          })
-        }
       />
       <hr className="my-3" />
       <OptionalSchichtSection
@@ -57,12 +60,6 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
         defaultTemplate={{ beginn: '19:45', ende: '06:15', pause: 45 }}
         defaultRegelarbeitstage={[1, 2, 3, 4, 5]}
         onChange={updateNacht}
-        onDisable={() =>
-          setAZ(prev => {
-            const { nacht: _n, ...rest } = prev;
-            return rest as IVorgabenUaZ;
-          })
-        }
       />
       <hr className="my-3" />
       <SonderSection sonder={aZ.sonder} onChange={updateSonder} />
@@ -83,7 +80,7 @@ function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: strin
           onInput={e => onChange((e.target as HTMLInputElement).value)}
           required
         />
-        <label htmlFor="fahrzeit">Fahrzeit Wohnung / Ao</label>
+        <label htmlFor="fahrzeit">Fahrzeit Wohnung / Arbeitsort</label>
       </div>
     </div>
   );
@@ -95,22 +92,25 @@ function OptionalSchichtSection({
   defaultTemplate,
   defaultRegelarbeitstage,
   onChange,
-  onDisable,
 }: {
   title: string;
-  schicht: IPerWeekdaySchicht | undefined;
+  schicht: IPerWeekdaySchicht;
   defaultTemplate: SchichtBase;
   defaultRegelarbeitstage?: number[];
   onChange: (s: IPerWeekdaySchicht) => void;
-  onDisable: () => void;
 }): JSX.Element {
-  const enabled = schicht !== undefined;
+  const enabled = schicht.aktiv;
 
   const handleToggle = () => {
     if (enabled) {
-      onDisable();
+      onChange({ ...schicht, aktiv: false });
     } else {
-      onChange({ default: defaultTemplate, regelarbeitstage: defaultRegelarbeitstage });
+      const hasConfig = schicht.default.beginn !== '';
+      onChange(
+        hasConfig
+          ? { ...schicht, aktiv: true }
+          : { aktiv: true, default: defaultTemplate, regelarbeitstage: defaultRegelarbeitstage },
+      );
     }
   };
 
@@ -131,12 +131,12 @@ function OptionalSchichtSection({
           </label>
         </div>
       </div>
-      {enabled && schicht && <SchichtSection title="" schicht={schicht} onChange={onChange} />}
+      {enabled && <SchichtSection title="" schicht={schicht} onChange={onChange} />}
     </div>
   );
 }
 
-function SchichtSection({
+export function SchichtSection({
   title,
   schicht,
   onChange,
@@ -145,7 +145,7 @@ function SchichtSection({
   schicht: IPerWeekdaySchicht;
   onChange: (s: IPerWeekdaySchicht) => void;
 }): JSX.Element {
-  const regelarbeitstage = schicht.regelarbeitstage ?? DEFAULT_REGELARBEITSTAGE;
+  const regelarbeitstage = schicht.regelarbeitstage?.length ? schicht.regelarbeitstage : DEFAULT_REGELARBEITSTAGE;
   const groups = groupBySchedule(schicht);
 
   const [addingOverride, setAddingOverride] = useState(false);
@@ -153,7 +153,7 @@ function SchichtSection({
   const [newConfig, setNewConfig] = useState<SchichtBase>(schicht.default);
 
   const toggleDay = (day: number): void => {
-    const rat = schicht.regelarbeitstage ?? DEFAULT_REGELARBEITSTAGE;
+    const rat = schicht.regelarbeitstage?.length ? schicht.regelarbeitstage : DEFAULT_REGELARBEITSTAGE;
     const newRat = rat.includes(day) ? rat.filter(d => d !== day) : [...rat, day].sort((a, b) => a - b);
     onChange({
       ...schicht,
@@ -289,7 +289,9 @@ function SchichtSection({
                 onInput={e => setNewConfig(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
               />
               {isOvernightSchicht(newConfig) && (
-                <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>+1 Tag</span>
+                <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
+                  +1 Tag
+                </span>
               )}
               <div className="d-flex align-items-center gap-1">
                 <input
@@ -299,15 +301,33 @@ function SchichtSection({
                   value={newConfig.pause}
                   min={0}
                   step={5}
-                  onInput={e => setNewConfig(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))}
+                  onInput={e =>
+                    setNewConfig(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))
+                  }
                 />
                 <span className="text-muted small">min</span>
               </div>
-              <button type="button" className="btn btn-sm btn-success ms-auto" onClick={saveNewOverride} disabled={newDays.length === 0}>
-                <span className="material-icons-round" style={{ fontSize: '1rem' }}>check</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-success ms-auto"
+                onClick={saveNewOverride}
+                disabled={newDays.length === 0}
+              >
+                <span className="material-icons-round" style={{ fontSize: '1rem' }}>
+                  check
+                </span>
               </button>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => { setAddingOverride(false); setNewDays([]); }}>
-                <span className="material-icons-round" style={{ fontSize: '1rem' }}>close</span>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => {
+                  setAddingOverride(false);
+                  setNewDays([]);
+                }}
+              >
+                <span className="material-icons-round" style={{ fontSize: '1rem' }}>
+                  close
+                </span>
               </button>
             </div>
           </div>
@@ -315,9 +335,14 @@ function SchichtSection({
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary mt-2 d-flex align-items-center gap-1"
-            onClick={() => { setAddingOverride(true); setNewConfig(schicht.default); }}
+            onClick={() => {
+              setAddingOverride(true);
+              setNewConfig(schicht.default);
+            }}
           >
-            <span className="material-icons-round" style={{ fontSize: '1rem' }}>add</span>
+            <span className="material-icons-round" style={{ fontSize: '1rem' }}>
+              add
+            </span>
             Zeitvariante
           </button>
         )}
@@ -468,10 +493,10 @@ function ScheduleGroupRow({
           </span>
         )}
         <span className="text-muted small ms-1">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
-          <span className="material-icons-round text-muted" style={{ fontSize: '1rem' }}>
-            edit
-          </span>
-        </button>
+        <span className="material-icons-round text-muted" style={{ fontSize: '1rem' }}>
+          edit
+        </span>
+      </button>
       {onDelete && (
         <button
           type="button"
@@ -479,7 +504,9 @@ function ScheduleGroupRow({
           onClick={onDelete}
           title="Zeitvariante löschen"
         >
-          <span className="material-icons-round" style={{ fontSize: '1rem' }}>delete</span>
+          <span className="material-icons-round" style={{ fontSize: '1rem' }}>
+            delete
+          </span>
         </button>
       )}
     </div>
@@ -490,25 +517,12 @@ function SonderSection({
   sonder,
   onChange,
 }: {
-  sonder: ISchichtZeiten | undefined;
-  onChange: (s: ISchichtZeiten | undefined) => void;
+  sonder: ISchichtZeiten;
+  onChange: (s: ISchichtZeiten) => void;
 }): JSX.Element {
-  const enabled = sonder !== undefined;
-  const [local, setLocal] = useState<ISchichtZeiten>(sonder ?? { beginn: '06:00', ende: '14:30', pause: 20 });
+  const enabled = sonder.aktiv;
 
-  const handleToggle = () => {
-    if (enabled) {
-      onChange(undefined);
-    } else {
-      onChange(local);
-    }
-  };
-
-  const update = (partial: Partial<ISchichtZeiten>) => {
-    const updated = { ...local, ...partial };
-    setLocal(updated);
-    if (enabled) onChange(updated);
-  };
+  const update = (partial: Partial<ISchichtZeiten>) => onChange({ ...sonder, ...partial });
 
   return (
     <div>
@@ -519,7 +533,7 @@ function SonderSection({
             className="form-check-input"
             type="checkbox"
             checked={enabled}
-            onChange={handleToggle}
+            onChange={() => onChange({ ...sonder, aktiv: !enabled })}
             id="toggle-sonder"
           />
           <label className="form-check-label" htmlFor="toggle-sonder">
@@ -533,7 +547,7 @@ function SonderSection({
             type="time"
             className="form-control form-control-sm"
             style={{ width: '7rem' }}
-            value={local.beginn}
+            value={sonder.beginn}
             onInput={e => update({ beginn: (e.target as HTMLInputElement).value })}
           />
           <span>–</span>
@@ -541,7 +555,7 @@ function SonderSection({
             type="time"
             className="form-control form-control-sm"
             style={{ width: '7rem' }}
-            value={local.ende}
+            value={sonder.ende}
             onInput={e => update({ ende: (e.target as HTMLInputElement).value })}
           />
           <div className="d-flex align-items-center gap-1">
@@ -549,7 +563,7 @@ function SonderSection({
               type="number"
               className="form-control form-control-sm text-center"
               style={{ width: '4rem' }}
-              value={local.pause}
+              value={sonder.pause}
               min={0}
               step={5}
               onInput={e => update({ pause: Number((e.target as HTMLInputElement).value) })}

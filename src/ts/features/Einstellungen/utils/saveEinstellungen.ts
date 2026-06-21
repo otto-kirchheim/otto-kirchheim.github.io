@@ -9,7 +9,7 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
-import { getArbeitszeitPanelState } from '../components';
+import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });

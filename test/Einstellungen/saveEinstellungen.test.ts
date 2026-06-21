@@ -1,6 +1,7 @@
 import '../setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import saveEinstellungen from '@/features/Einstellungen/utils/saveEinstellungen';
+import { setArbeitszeitPanelState } from '@/features/Einstellungen/components/arbeitszeitPanelState';
 import type { IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage';
 
@@ -25,9 +26,14 @@ function createVorgabenU(): IVorgabenU {
       TB: 'Tarifkraft',
     },
     aZ: {
-      frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 }, overrides: { 5: { ende: '13:00', pause: 0 } } },
-      nacht: { default: { beginn: '19:45', ende: '06:15', pause: 45 } },
-      sonder: { beginn: '20:15', ende: '07:00', pause: 20 },
+      frueh: {
+        aktiv: true,
+        default: { beginn: '07:00', ende: '15:45', pause: 30 },
+        overrides: { 5: { ende: '13:00', pause: 0 } },
+      },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
       fahrzeit: '00:20',
     },
     fZ: [],
@@ -74,6 +80,7 @@ function renderSettingsForm(vorgabenU: IVorgabenU): void {
 describe('saveEinstellungen address validation', () => {
   beforeEach(() => {
     localStorage.clear();
+    setArbeitszeitPanelState(null);
     const vorgabenU = createVorgabenU();
     Storage.set('VorgabenU', vorgabenU);
     renderSettingsForm(vorgabenU);
@@ -178,6 +185,23 @@ describe('saveEinstellungen address validation', () => {
     const result = saveEinstellungen();
     expect(result.aZ.frueh.default.beginn).toBe('07:00');
     expect(result.aZ.fahrzeit).toBe('00:20');
+  });
+
+  it('uebernimmt einen gerade auf inaktiv umgeschalteten Schalter sofort in den Save-State', () => {
+    const vorgabenU = createVorgabenU();
+    vorgabenU.aZ.spaet.aktiv = true;
+    Storage.set('VorgabenU', vorgabenU);
+    renderSettingsForm(vorgabenU);
+
+    setArbeitszeitPanelState({
+      ...vorgabenU.aZ,
+      spaet: { ...vorgabenU.aZ.spaet, aktiv: false },
+    });
+
+    const result = saveEinstellungen();
+
+    expect(result.aZ.spaet.aktiv).toBe(false);
+    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).aZ.spaet.aktiv).toBe(false);
   });
 });
 

@@ -1,11 +1,12 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { Fragment, createRef, type FunctionalComponent } from 'preact';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
-import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
+import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
+import { SchichtOverrideEditor } from './SchichtOverrideEditor';
 
 const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
   frueh: 'Früh',
@@ -14,7 +15,7 @@ const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
   sonder: 'Sonder',
 };
 
-type vorgabenBElement = { tag: number; zeit: string; Nwoche?: boolean };
+type vorgabenBElement = { tag: number; zeit?: string; Nwoche?: boolean };
 
 const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
   { tag: 1, short: 'Mo' },
@@ -227,26 +228,6 @@ const createcheckboxElement = (
   );
 };
 
-const createTimeElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>, columnName: string) => {
-  const column = row.columns.array.find(column => column.name === columnName);
-  if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
-
-  const inputValue: string = row instanceof Row ? (row.cells?.[column.name] as vorgabenBElement).zeit : '';
-
-  return (
-    <MyInput
-      divClass="form-floating col-6"
-      required
-      type="time"
-      id={`${column.name}Zeit`}
-      name={column.title}
-      value={inputValue}
-    >
-      {column.title}
-    </MyInput>
-  );
-};
-
 const createRangeElement = (
   row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>,
   startColumnName: string,
@@ -259,24 +240,122 @@ const createRangeElement = (
   if (!startColumn || !endColumn) throw Error(`Spalten ${startColumnName}/${endColumnName} nicht gefunden`);
 
   const startValue: vorgabenBElement =
-    row instanceof Row ? (row.cells?.[startColumn.name] as vorgabenBElement) : { tag: 1, zeit: '' };
+    row instanceof Row ? (row.cells?.[startColumn.name] as vorgabenBElement) : { tag: 1 };
   const endValue: vorgabenBElement =
-    row instanceof Row ? (row.cells?.[endColumn.name] as vorgabenBElement) : { tag: 5, zeit: '', Nwoche: false };
+    row instanceof Row ? (row.cells?.[endColumn.name] as vorgabenBElement) : { tag: 5, Nwoche: false };
+
+  return (
+    <WeekdayRangeSelector
+      startId={startColumn.name}
+      endId={endColumn.name}
+      label={label}
+      startHasNwoche={startHasNwoche}
+      initialStart={startValue}
+      initialEnd={endValue}
+    />
+  );
+};
+
+// ─── Schichten-Konfiguration (aktive Schichten + optionale per-Wochentag-Overrides) ───
+
+type SchichtenConfigState = {
+  schichten: BereitschaftSchichtTyp[];
+  schichtenOverrides: IVorgabenUvorgabenB['schichtenOverrides'];
+};
+
+let _veSchichtenState: SchichtenConfigState | null = null;
+export const getVorgabenBSchichtenState = (): SchichtenConfigState | null => _veSchichtenState;
+
+type SchichtenConfigSectionProps = {
+  aZ: IVorgabenUaZ | undefined;
+  initialSchichten: BereitschaftSchichtTyp[];
+  initialOverrides: IVorgabenUvorgabenB['schichtenOverrides'];
+  nachtStart: vorgabenBElement;
+  nachtEnde: vorgabenBElement;
+};
+
+const SchichtenConfigSection: FunctionalComponent<SchichtenConfigSectionProps> = ({
+  aZ,
+  initialSchichten,
+  initialOverrides,
+  nachtStart,
+  nachtEnde,
+}: SchichtenConfigSectionProps) => {
+  const [schichten, setSchichten] = useState<BereitschaftSchichtTyp[]>(initialSchichten);
+  const [overrides, setOverrides] = useState<NonNullable<IVorgabenUvorgabenB['schichtenOverrides']>>(
+    initialOverrides ?? {},
+  );
+
+  useEffect(() => {
+    const cleaned = Object.fromEntries(Object.entries(overrides).filter(([, value]) => value !== undefined));
+    _veSchichtenState = {
+      schichten,
+      schichtenOverrides: Object.keys(cleaned).length > 0 ? cleaned : undefined,
+    };
+  }, [schichten, overrides]);
+
+  const optionalSchichten: BereitschaftSchichtTyp[] = [
+    ...(aZ?.spaet?.aktiv ? (['spaet'] as BereitschaftSchichtTyp[]) : []),
+    ...(aZ?.nacht?.aktiv ? (['nacht'] as BereitschaftSchichtTyp[]) : []),
+    ...(aZ?.sonder?.aktiv ? (['sonder'] as BereitschaftSchichtTyp[]) : []),
+  ];
+
+  const toggleSchicht = (typ: BereitschaftSchichtTyp, checked: boolean): void => {
+    setSchichten(prev => (checked ? [...prev.filter(s => s !== typ), typ] : prev.filter(s => s !== typ)));
+  };
+
+  const nachtAktiv = schichten.includes('nacht');
 
   return (
     <Fragment>
-      <WeekdayRangeSelector
-        startId={startColumn.name}
-        endId={endColumn.name}
-        label={label}
-        startHasNwoche={startHasNwoche}
-        initialStart={startValue}
-        initialEnd={endValue}
-      />
-      <div className="row g-2 mt-2">
-        {createTimeElement(row, startColumnName)}
-        {createTimeElement(row, endColumnName)}
+      <div className="col-12">
+        <label className="form-label fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</label>
+        <div className="d-flex flex-wrap gap-3">
+          <div className="form-check">
+            <input className="form-check-input" type="checkbox" id="schicht-frueh" checked disabled />
+            <label className="form-check-label" htmlFor="schicht-frueh">
+              {SCHICHT_LABELS.frueh}
+            </label>
+          </div>
+          {optionalSchichten.map(typ => (
+            <div key={typ} className="form-check">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id={`schicht-${typ}`}
+                checked={schichten.includes(typ)}
+                onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
+              />
+              <label className="form-check-label" htmlFor={`schicht-${typ}`}>
+                {SCHICHT_LABELS[typ]}
+              </label>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {nachtAktiv && (
+        <div className="col-12 border rounded p-2">
+          <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht-Zeitraum</p>
+          <div className="row g-2">
+            <WeekdayRangeSelector
+              startId="beginnN"
+              endId="endeN"
+              label="Nachtschicht"
+              startHasNwoche={true}
+              initialStart={nachtStart}
+              initialEnd={nachtEnde}
+            />
+          </div>
+        </div>
+      )}
+
+      <SchichtOverrideEditor
+        aZ={aZ}
+        schichten={schichten}
+        overrides={overrides}
+        onChange={ov => setOverrides(ov ?? {})}
+      />
     </Fragment>
   );
 };
@@ -288,22 +367,23 @@ export default function EditorModalVE(
   const ref = createRef<HTMLFormElement>();
 
   const aZ = Storage.get<IVorgabenU>('VorgabenU')?.aZ;
-  const availableSchichten: BereitschaftSchichtTyp[] = [
-    'frueh',
-    ...(aZ?.spaet ? (['spaet'] as BereitschaftSchichtTyp[]) : []),
-    ...(aZ?.nacht ? (['nacht'] as BereitschaftSchichtTyp[]) : []),
-    ...(aZ?.sonder ? (['sonder'] as BereitschaftSchichtTyp[]) : []),
-  ];
 
   const initialSchichten: BereitschaftSchichtTyp[] =
     row instanceof Row
       ? ((row.cells.schichten as BereitschaftSchichtTyp[] | undefined) ??
-          (row.cells.nacht
-            ? (['frueh', 'nacht'] as BereitschaftSchichtTyp[])
-            : (['frueh'] as BereitschaftSchichtTyp[])))
+        (row.cells.nacht ? (['frueh', 'nacht'] as BereitschaftSchichtTyp[]) : (['frueh'] as BereitschaftSchichtTyp[])))
       : (['frueh'] as BereitschaftSchichtTyp[]);
 
-  const isNachtInitiallyChecked = initialSchichten.includes('nacht');
+  const initialOverrides: IVorgabenUvorgabenB['schichtenOverrides'] =
+    row instanceof Row ? (row.cells.schichtenOverrides as IVorgabenUvorgabenB['schichtenOverrides']) : undefined;
+
+  const nachtStart: vorgabenBElement =
+    row instanceof Row ? (row.cells.beginnN as vorgabenBElement) : { tag: 7, Nwoche: false };
+  const nachtEnde: vorgabenBElement =
+    row instanceof Row ? (row.cells.endeN as vorgabenBElement) : { tag: 4, Nwoche: false };
+
+  // Modul-State vorab setzen, falls Submit vor dem ersten Render-Effekt ausgelöst wird.
+  _veSchichtenState = { schichten: initialSchichten, schichtenOverrides: initialOverrides };
 
   const modal = showModal<IVorgabenUvorgabenB>(
     <MyFormModal
@@ -315,31 +395,20 @@ export default function EditorModalVE(
       <MyModalBody>
         {createNameElement(row)}
         {createcheckboxElement(row, 'standard')}
-        <div className="col-12"><hr className="my-0" /></div>
-        {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
-        <div className="col-12"><hr className="my-0" /></div>
         <div className="col-12">
-          <label className="form-label fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</label>
-          <div className="d-flex flex-wrap gap-3">
-            {availableSchichten.map(schicht => (
-              <div key={schicht} className="form-check">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`schicht-${schicht}`}
-                  defaultChecked={initialSchichten.includes(schicht)}
-                  disabled={schicht === 'frueh'}
-                />
-                <label className="form-check-label" htmlFor={`schicht-${schicht}`}>
-                  {SCHICHT_LABELS[schicht]}
-                </label>
-              </div>
-            ))}
-          </div>
+          <hr className="my-0" />
         </div>
-        <div id="nachtRangeSection" className={isNachtInitiallyChecked ? '' : 'd-none'}>
-          {createRangeElement(row, 'beginnN', 'endeN', true, 'Nachtschicht')}
+        {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
+        <div className="col-12">
+          <hr className="my-0" />
         </div>
+        <SchichtenConfigSection
+          aZ={aZ}
+          initialSchichten={initialSchichten}
+          initialOverrides={initialOverrides}
+          nachtStart={nachtStart}
+          nachtEnde={nachtEnde}
+        />
       </MyModalBody>
     </MyFormModal>,
   );
@@ -348,22 +417,6 @@ export default function EditorModalVE(
   const form = ref.current;
 
   modal.row = row;
-
-  const nachtCheckbox = form.querySelector<HTMLInputElement>('#schicht-nacht');
-  const nachtRangeSection = form.querySelector<HTMLDivElement>('#nachtRangeSection');
-  const toggleNachtSection = (): void => {
-    if (!nachtRangeSection || !nachtCheckbox) return;
-    const isNachtEnabled = nachtCheckbox.checked;
-    nachtRangeSection.classList.toggle('d-none', !isNachtEnabled);
-
-    const nachtZeitInputs = nachtRangeSection.querySelectorAll<HTMLInputElement>('input[type="time"]');
-    nachtZeitInputs.forEach(input => {
-      input.disabled = !isNachtEnabled;
-      input.required = isNachtEnabled;
-    });
-  };
-  toggleNachtSection();
-  nachtCheckbox?.addEventListener('change', toggleNachtSection);
 
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {
@@ -377,36 +430,35 @@ export default function EditorModalVE(
 
       const beginnBTag = Number(form.querySelector<HTMLInputElement>('#beginnBTag')?.value ?? NaN);
       const endeBTag = Number(form.querySelector<HTMLInputElement>('#endeBTag')?.value ?? NaN);
-      const beginnNTag = Number(form.querySelector<HTMLInputElement>('#beginnNTag')?.value ?? NaN);
-      const endeNTag = Number(form.querySelector<HTMLInputElement>('#endeNTag')?.value ?? NaN);
       const endeBNwoche = form.querySelector<HTMLInputElement>('#endeBNwoche')?.checked ?? false;
-      const beginnNNwoche = form.querySelector<HTMLInputElement>('#beginnNNwoche')?.checked ?? false;
-      const endeNNwoche = form.querySelector<HTMLInputElement>('#endeNNwoche')?.checked ?? false;
-      const beginnBZeit = form.querySelector<HTMLInputElement>('#beginnBZeit')?.value ?? '';
-      const endeBZeit = form.querySelector<HTMLInputElement>('#endeBZeit')?.value ?? '';
-      const beginnNZeit = form.querySelector<HTMLInputElement>('#beginnNZeit')?.value ?? '';
-      const endeNZeit = form.querySelector<HTMLInputElement>('#endeNZeit')?.value ?? '';
       const nameN = form.querySelector<HTMLInputElement>('#Name')?.value ?? '';
       const standard = form.querySelector<HTMLInputElement>('#standard')?.checked ?? false;
 
-      const schichten: BereitschaftSchichtTyp[] = ['frueh'];
-      for (const typ of ['spaet', 'nacht', 'sonder'] as BereitschaftSchichtTyp[]) {
-        if (form.querySelector<HTMLInputElement>(`#schicht-${typ}`)?.checked) schichten.push(typ);
-      }
+      const configState = getVorgabenBSchichtenState();
+      const schichten: BereitschaftSchichtTyp[] = configState?.schichten ?? ['frueh'];
+      const schichtenOverrides = configState?.schichtenOverrides;
       const nacht = schichten.includes('nacht');
+
+      const beginnNTag = Number(form.querySelector<HTMLInputElement>('#beginnNTag')?.value ?? NaN);
+      const endeNTag = Number(form.querySelector<HTMLInputElement>('#endeNTag')?.value ?? NaN);
+      const beginnNNwoche = form.querySelector<HTMLInputElement>('#beginnNNwoche')?.checked ?? false;
+      const endeNNwoche = form.querySelector<HTMLInputElement>('#endeNNwoche')?.checked ?? false;
 
       const values: IVorgabenUvorgabenB = {
         Name: nameN,
-        beginnB: { tag: beginnBTag, zeit: beginnBZeit },
-        endeB: { tag: endeBTag, zeit: endeBZeit, Nwoche: endeBNwoche },
+        beginnB: { tag: beginnBTag },
+        endeB: { tag: endeBTag, Nwoche: endeBNwoche },
         schichten,
+        ...(schichtenOverrides ? { schichtenOverrides } : {}),
         nacht,
-        beginnN: nacht
-          ? { tag: beginnNTag, zeit: beginnNZeit, Nwoche: beginnNNwoche }
-          : { tag: beginnBTag, zeit: beginnBZeit, Nwoche: false },
-        endeN: nacht
-          ? { tag: endeNTag, zeit: endeNZeit, Nwoche: endeNNwoche }
-          : { tag: endeBTag, zeit: endeBZeit, Nwoche: endeBNwoche },
+        beginnN:
+          nacht && !Number.isNaN(beginnNTag)
+            ? { tag: beginnNTag, Nwoche: beginnNNwoche }
+            : { tag: beginnBTag, Nwoche: false },
+        endeN:
+          nacht && !Number.isNaN(endeNTag)
+            ? { tag: endeNTag, Nwoche: endeNNwoche }
+            : { tag: endeBTag, Nwoche: endeBNwoche },
         standard: standard ? true : undefined,
       };
       if (standard) {
