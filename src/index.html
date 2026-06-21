@@ -637,227 +637,261 @@
                   </button>
                 </h2>
                 <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
-                  <div class="accordion-body row g-3">
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">person</span>
-                      <div class="form-floating">
-                        <input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required />
-                        <label for="Vorname">Vorname</label>
+                  <div class="accordion-body row g-3 text-start">
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">person</span>
+                        <div class="form-floating">
+                          <input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required />
+                          <label for="Vorname">Vorname</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">person</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Mustermann"
-                          id="Nachname"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="Nachname">Nachname</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">person</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Mustermann"
+                            id="Nachname"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="Nachname">Nachname</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">badge</span>
-                      <div class="form-floating">
-                        <input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required />
-                        <label for="PNummer">Personalnummer</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">badge</span>
+                        <div class="form-floating">
+                          <input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required />
+                          <label for="PNummer">Personalnummer</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">mail</span>
-                      <div class="form-floating">
-                        <input
-                          type="email"
-                          id="EmailAnzeige"
-                          class="form-control"
-                          placeholder="user@deutschebahn.com"
-                          readonly
-                          disabled
-                        />
-                        <label for="EmailAnzeige">E-Mail</label>
-                      </div>
-                      <button class="btn btn-outline-primary" type="button" id="btnResendVerificationEmail" disabled>
-                        Verifizierungs-Mail senden
-                      </button>
-                    </div>
-                    <small id="EmailVerificationHint" class="form-text text-body-secondary d-block ps-1"></small>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">phone</span>
-                      <div class="form-floating">
-                        <input
-                          type="tel"
-                          id="Telefon"
-                          placeholder="0123/45678910"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="Telefon">Telefon</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">phone</span>
+                        <div class="form-floating">
+                          <input
+                            type="tel"
+                            id="Telefon"
+                            placeholder="0123/45678910"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="Telefon">Telefon</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">home</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Musterstraße 17, 12345 Musterstadt"
-                          id="Adress1"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="Adress1">Wohnsitz 1</label>
+                    <div class="col-12">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">mail</span>
+                        <div class="form-floating">
+                          <input
+                            type="email"
+                            id="EmailAnzeige"
+                            class="form-control"
+                            placeholder="user@deutschebahn.com"
+                            readonly
+                            disabled
+                          />
+                          <label for="EmailAnzeige">E-Mail</label>
+                        </div>
+                        <button class="btn btn-outline-primary" type="button" id="btnResendVerificationEmail" disabled>
+                          Verifizierungs-Mail senden
+                        </button>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">home_work</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Musterstraße 17, 12345 Musterstadt"
-                          id="Adress2"
-                          class="form-control validate"
-                        />
-                        <label for="Adress2">Wohnsitz 2</label>
+                    <small id="EmailVerificationHint" class="col-12 form-text text-body-secondary d-block ps-1"></small>
+                    <div class="col-12">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">home</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Musterstraße 17, 12345 Musterstadt"
+                            id="Adress1"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="Adress1">Wohnsitz 1</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Kirchheim"
-                          id="ErsteTkgSt"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
+                    <div class="col-12">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">home_work</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Musterstraße 17, 12345 Musterstadt"
+                            id="Adress2"
+                            class="form-control validate"
+                          />
+                          <label for="Adress2">Wohnsitz 2</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Musterstraße 17, 12345 Musterstadt"
-                          id="ErsteTkgStAdresse"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Kirchheim"
+                            id="ErsteTkgSt"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">flag</span>
-                      <div class="form-floating">
-                        <select id="Bundesland" class="form-select">
-                          <option value="">Bundesland wählen…</option>
-                          <option value="BW">Baden-Württemberg</option>
-                          <option value="BY">Bayern</option>
-                          <option value="BE">Berlin</option>
-                          <option value="BB">Brandenburg</option>
-                          <option value="HB">Bremen</option>
-                          <option value="HH">Hamburg</option>
-                          <option value="HE">Hessen</option>
-                          <option value="MV">Mecklenburg-Vorpommern</option>
-                          <option value="NI">Niedersachsen</option>
-                          <option value="NW">Nordrhein-Westfalen</option>
-                          <option value="RP">Rheinland-Pfalz</option>
-                          <option value="SL">Saarland</option>
-                          <option value="SN">Sachsen</option>
-                          <option value="ST">Sachsen-Anhalt</option>
-                          <option value="SH">Schleswig-Holstein</option>
-                          <option value="TH">Thüringen</option>
-                        </select>
-                        <label for="Bundesland">Bundesland (Feiertage)</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Musterstraße 17, 12345 Musterstadt"
+                            id="ErsteTkgStAdresse"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="DB Netz AG"
-                          id="Betrieb"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="Betrieb">Betrieb</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">flag</span>
+                        <div class="form-floating">
+                          <select id="Bundesland" class="form-select">
+                            <option value="">Bundesland wählen…</option>
+                            <option value="BW">Baden-Württemberg</option>
+                            <option value="BY">Bayern</option>
+                            <option value="BE">Berlin</option>
+                            <option value="BB">Brandenburg</option>
+                            <option value="HB">Bremen</option>
+                            <option value="HH">Hamburg</option>
+                            <option value="HE">Hessen</option>
+                            <option value="MV">Mecklenburg-Vorpommern</option>
+                            <option value="NI">Niedersachsen</option>
+                            <option value="NW">Nordrhein-Westfalen</option>
+                            <option value="RP">Rheinland-Pfalz</option>
+                            <option value="SL">Saarland</option>
+                            <option value="SN">Sachsen</option>
+                            <option value="ST">Sachsen-Anhalt</option>
+                            <option value="SH">Schleswig-Holstein</option>
+                            <option value="TH">Thüringen</option>
+                          </select>
+                          <label for="Bundesland">Bundesland (Feiertage)</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="I.NA-MI-N-KSL-IL 03"
-                          id="OE"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="OE">OE</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">group</span>
+                        <div class="form-floating">
+                          <select class="form-select validate" id="TB" name="TB" required>
+                            <option value="" disabled selected>Bitte Wählen</option>
+                            <option value="Tarifkraft">Tarifkraft</option>
+                            <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
+                            <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
+                          </select>
+                          <label for="TB">Tarif / Beamter</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required />
-                        <label for="Gewerk">Gewerk</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="DB Netz AG"
+                            id="Betrieb"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="Betrieb">Betrieb</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">business</span>
-                      <div class="form-floating">
-                        <input
-                          type="Number"
-                          placeholder="12"
-                          id="kmArbeitsort"
-                          class="form-control validate"
-                          min="1"
-                          max="100"
-                          required
-                        />
-                        <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="I.NA-MI-N-KSL-IL 03"
+                            id="OE"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="OE">OE</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">train</span>
-                      <div class="form-floating">
-                        <input
-                          type="Text"
-                          placeholder="Bad Hersfeld"
-                          id="nBhf"
-                          class="form-control validate"
-                          required
-                        />
-                        <label for="nBhf">nächster Bahnhof</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required />
+                          <label for="Gewerk">Gewerk</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">train</span>
-                      <div class="form-floating">
-                        <input
-                          type="Number"
-                          placeholder="12"
-                          id="kmnBhf"
-                          class="form-control validate"
-                          min="1"
-                          max="100"
-                          required
-                        />
-                        <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <div class="form-floating">
+                          <input
+                            type="Number"
+                            placeholder="12"
+                            id="kmArbeitsort"
+                            class="form-control validate"
+                            min="1"
+                            max="100"
+                            required
+                          />
+                          <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
+                        </div>
                       </div>
                     </div>
-                    <div class="input-group">
-                      <span class="input-group-text material-icons-round einstellungen-icons">group</span>
-                      <div class="form-floating">
-                        <select class="form-select validate" id="TB" name="TB" required>
-                          <option value="" disabled selected>Bitte Wählen</option>
-                          <option value="Tarifkraft">Tarifkraft</option>
-                          <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
-                          <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
-                        </select>
-                        <label for="TB">Tarif / Beamter</label>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">train</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Bad Hersfeld"
+                            id="nBhf"
+                            class="form-control validate"
+                            required
+                          />
+                          <label for="nBhf">nächster Bahnhof</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">train</span>
+                        <div class="form-floating">
+                          <input
+                            type="Number"
+                            placeholder="12"
+                            id="kmnBhf"
+                            class="form-control validate"
+                            min="1"
+                            max="100"
+                            required
+                          />
+                          <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
+                        </div>
                       </div>
                     </div>
                   </div>

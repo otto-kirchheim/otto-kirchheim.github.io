@@ -44,25 +44,31 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
   return (
     <div>
       <FahrzeitInput value={aZ.fahrzeit} onChange={updateFahrzeit} />
-      <hr className="my-3" />
-      <SchichtSection title="Frühschicht" schicht={aZ.frueh} onChange={updateFrueh} />
-      <hr className="my-3" />
-      <OptionalSchichtSection
-        title="Spätschicht"
-        schicht={aZ.spaet}
-        defaultTemplate={{ beginn: '14:00', ende: '22:00', pause: 30 }}
-        onChange={updateSpaet}
-      />
-      <hr className="my-3" />
-      <OptionalSchichtSection
-        title="Nachtschicht"
-        schicht={aZ.nacht}
-        defaultTemplate={{ beginn: '19:45', ende: '06:15', pause: 45 }}
-        defaultRegelarbeitstage={[1, 2, 3, 4, 5]}
-        onChange={updateNacht}
-      />
-      <hr className="my-3" />
-      <SonderSection sonder={aZ.sonder} onChange={updateSonder} />
+      <div className="row g-0">
+        <div className="col-12 col-lg-6 arbeitszeit-col-left">
+          <hr className="my-3" />
+          <SchichtSection title="Frühschicht" schicht={aZ.frueh} onChange={updateFrueh} />
+          <hr className="my-3" />
+          <OptionalSchichtSection
+            title="Spätschicht"
+            schicht={aZ.spaet}
+            defaultTemplate={{ beginn: '14:00', ende: '22:00', pause: 30 }}
+            onChange={updateSpaet}
+          />
+        </div>
+        <div className="col-12 col-lg-6 arbeitszeit-col-right">
+          <hr className="my-3" />
+          <OptionalSchichtSection
+            title="Nachtschicht"
+            schicht={aZ.nacht}
+            defaultTemplate={{ beginn: '19:45', ende: '06:15', pause: 45 }}
+            defaultRegelarbeitstage={[1, 2, 3, 4, 5]}
+            onChange={updateNacht}
+          />
+          <hr className="my-3" />
+          <SonderSection sonder={aZ.sonder} onChange={updateSonder} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -116,7 +122,7 @@ function OptionalSchichtSection({
 
   return (
     <div>
-      <div className="d-flex align-items-center gap-2 mb-2">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">{title}</h5>
         <div className="form-check form-switch ms-2 mb-0">
           <input
@@ -359,7 +365,7 @@ function WeekdayChips({
   onToggle: (day: number) => void;
 }): JSX.Element {
   return (
-    <div className="d-flex gap-1">
+    <div className="d-flex flex-wrap gap-1">
       {[1, 2, 3, 4, 5, 6, 7].map(day => (
         <button
           key={day}
@@ -475,16 +481,16 @@ function ScheduleGroupRow({
     <div className="d-flex align-items-center py-1">
       <button
         type="button"
-        className="d-flex align-items-center gap-3 flex-grow-1 text-start btn btn-link text-decoration-none text-body px-0"
+        className="d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start btn btn-link text-decoration-none text-body px-0"
         onClick={() => {
           setLocal(config);
           setEditing(true);
         }}
       >
-        <span className="fw-medium" style={{ minWidth: '7rem' }}>
+        <span className="fw-medium" style={{ minWidth: '5rem' }}>
           {dayLabel}
         </span>
-        <span>
+        <span className="text-nowrap">
           {config.beginn} – {config.ende}
         </span>
         {overnight && (
@@ -492,7 +498,7 @@ function ScheduleGroupRow({
             +1 Tag
           </span>
         )}
-        <span className="text-muted small ms-1">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
+        <span className="text-muted small">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
         <span className="material-icons-round text-muted" style={{ fontSize: '1rem' }}>
           edit
         </span>
@@ -526,7 +532,7 @@ function SonderSection({
 
   return (
     <div>
-      <div className="d-flex align-items-center gap-2 mb-2">
+      <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">Sonderschicht</h5>
         <div className="form-check form-switch ms-2 mb-0">
           <input
