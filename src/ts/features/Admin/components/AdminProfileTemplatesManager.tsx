@@ -9,7 +9,7 @@ import {
   updateProfileTemplate,
   type BackendProfileTemplate,
 } from '../utils/api';
-import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
+import { normalizeAZ } from '@/infrastructure/data/fieldMapper';
 import type { BereitschaftSchichtTyp } from '@/types';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
 import {
@@ -135,8 +135,7 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
 
 function normalizeArbeitszeit(input: unknown): TemplateContentDraft['Arbeitszeit'] {
   if (!input || typeof input !== 'object') return null;
-  if (isLegacyArbeitszeit(input)) return migrateArbeitszeit(input);
-  return input as TemplateContentDraft['Arbeitszeit'];
+  return normalizeAZ(input);
 }
 
 function sortObjectKeysDeep(value: unknown): unknown {
@@ -178,8 +177,10 @@ function removeEmptyValues(record: Record<string, string>): Record<string, strin
 }
 
 const DEFAULT_ARBEITSZEIT: NonNullable<TemplateContentDraft['Arbeitszeit']> = {
-  frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 }, regelarbeitstage: [1, 2, 3, 4, 5] },
-  nacht: { default: { beginn: '19:45', ende: '06:15', pause: 45 }, regelarbeitstage: [7, 1, 2, 3] },
+  frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 }, regelarbeitstage: [1, 2, 3, 4, 5] },
+  spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+  nacht: { aktiv: true, default: { beginn: '19:45', ende: '06:15', pause: 45 }, regelarbeitstage: [7, 1, 2, 3] },
+  sonder: { aktiv: false, beginn: '06:00', ende: '14:30', pause: 20 },
   fahrzeit: '00:30',
 };
 
