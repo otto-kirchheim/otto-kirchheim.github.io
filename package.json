@@ -54,9 +54,9 @@
     "prettier": "^3.8.4",
     "sass": "^1.101.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.1",
+    "typescript-eslint": "^8.62.0",
     "unplugin-inject-preload": "^3.0.0",
-    "vite": "^8.0.16",
+    "vite": "^8.1.0",
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-pwa": "^1.3.0"
   },
@@ -68,7 +68,7 @@
     "dayjs-feiertage": "^0.1.0",
     "file-saver": "^2.0.5",
     "material-icons": "^1.13.14",
-    "preact": "^10.29.2",
+    "preact": "^10.29.3",
     "uuid": "^14.0.1"
   }
 }
