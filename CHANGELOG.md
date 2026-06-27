@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-27
+
+### feat (Custom Admin – Phase 2)
+
+- **Admin-Dashboard-Tab:** Neuer `AdminDashboard.tsx`-Tab für Super-Admins. Zeigt vier Stat-Karten (Benutzer gesamt/aktiv-30d, Profile, Templates aktiv/inaktiv, Admin-Logs letzte 7 Tage) sowie Rollenverteilung und Ressourcenbestand als übersichtliche Cards. API: `GET /api/v2/admin/stats`.
+- **Ressourcen-Browser-Tab:** Neuer `AdminResourceBrowser.tsx`-Tab. Interner Tab-Switch zwischen vier Ressourcen (Bereitschaftseinsatz, Bereitschaftszeitraum, Einsatzwechseltätigkeit, Nebengeld). Paginierte Tabelle mit Bearbeiten- und Löschen-Aktionen. Edit-Modal zeigt alle Felder generisch: Systemfelder readonly, Boolean als Checkbox, Objekte/Arrays als JSON-Textarea mit Inline-Fehleranzeige, Zahlen als `number`-Input. Löschung mit `confirmDialog`. Mobile-tauglich (`modal-fullscreen-sm-down`, `table-responsive`).
+- **UserProfile-Editor-Tab:** Neuer `AdminUserProfileEditor.tsx`-Tab. Paginierbarer Liste aller UserProfile-Dokumente mit Namens-/OE-Filterung. Edit-Modal: `Pers`-Felder als strukturierte Formularfelder, komplexe Felder (`Fahrzeit`, `Arbeitszeit`, `VorgabenB`, `Einstellungen`) als JSON-Textareas. Zusätzlich `emailVerified`-Toggle und Passkey-Verwaltung (Liste + Löschen) für den zugehörigen User.
+- **Admin-API-Erweiterungen (`utils/api.ts`):** `AdminStats`, `AdminPage`, `AdminPasskey`-Typen. Neue Funktionen für alle Admin-Endpunkte (`fetchAdminStats`, `fetchAdminResource`, `updateAdminDoc`, `deleteAdminDoc`, `fetchAdminUserProfiles`, `updateAdminUserProfileDoc`, `setAdminEmailVerified`, `fetchAdminPasskeys`, `deleteAdminPasskey`).
+- **Drei neue Tabs in `features/Admin/index.tsx`:** Dashboard, Ressourcen, Profile – alle nur für `role === 'super-admin'` sichtbar. AdminJS-Link bleibt bis Phase 3 erhalten.
+
 ## 2026-06-21
 
 ### feat
