@@ -301,12 +301,14 @@ export async function fetchAdminStats(): Promise<AdminStats> {
 
 export async function fetchAdminResource(
   endpoint: string,
-  params?: { page?: number; limit?: number; userId?: string },
+  params?: { page?: number; limit?: number; userId?: string; jahr?: number; monat?: number },
 ): Promise<AdminPage> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.limit) p.set('limit', String(params.limit));
   if (params?.userId) p.set('userId', params.userId);
+  if (params?.jahr) p.set('Jahr', String(params.jahr));
+  if (params?.monat) p.set('Monat', String(params.monat));
   const query = p.toString();
   const path = query ? `admin/${endpoint}?${query}` : `admin/${endpoint}`;
   const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
@@ -334,10 +336,15 @@ export async function deleteAdminDoc(endpoint: string, id: string): Promise<void
   createSnackBar({ message: 'Gelöscht', status: 'success', timeout: 2000 });
 }
 
-export async function fetchAdminUserProfiles(params?: { page?: number; limit?: number }): Promise<AdminPage> {
+export async function fetchAdminUserProfiles(params?: {
+  page?: number;
+  limit?: number;
+  userId?: string;
+}): Promise<AdminPage> {
   const p = new URLSearchParams();
   if (params?.page) p.set('page', String(params.page));
   if (params?.limit) p.set('limit', String(params.limit));
+  if (params?.userId) p.set('userId', params.userId);
   const query = p.toString();
   const path = query ? `admin/user-profiles?${query}` : 'admin/user-profiles';
   const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
@@ -385,4 +392,81 @@ export async function deleteAdminPasskey(userId: string, credentialId: string): 
   );
   unwrapResponse<unknown>(response);
   createSnackBar({ message: 'Passkey gelöscht', status: 'success', timeout: 2000 });
+}
+
+/** Baut eine Map userId→Name aus UserProfile-Dokumenten (max. 200 Profile). */
+export async function fetchAdminUserNameMap(): Promise<Record<string, string>> {
+  const page = await fetchAdminUserProfiles({ limit: 200 });
+  const map: Record<string, string> = {};
+  for (const doc of page.data) {
+    const userId = String(doc['User'] ?? '');
+    if (!userId) continue;
+    const pers = (doc['Pers'] ?? {}) as Record<string, unknown>;
+    const name = [String(pers['Vorname'] ?? ''), String(pers['Nachname'] ?? '')].filter(Boolean).join(' ');
+    map[userId] = name || `…${userId.slice(-8)}`;
+  }
+  return map;
+}
+
+export type AdminLogEntry = {
+  _id: string;
+  adminId: string;
+  action: string;
+  targetUserId?: string;
+  targetResourceId?: string;
+  params?: Record<string, unknown>;
+  timestamp: string;
+};
+
+export async function fetchAdminResourceYears(endpoint: string): Promise<number[]> {
+  const response = await FetchRetry<undefined, number[]>(
+    `admin/${endpoint}?distinctJahr=1`,
+    undefined,
+    'GET',
+  );
+  return unwrapResponse<number[]>(response);
+}
+
+export async function fetchAdminUserEmailVerified(
+  userId: string,
+): Promise<{ emailVerified: boolean }> {
+  const response = await FetchRetry<undefined, { emailVerified: boolean }>(
+    `admin/users/${userId}`,
+    undefined,
+    'GET',
+  );
+  return unwrapResponse<{ emailVerified: boolean }>(response);
+}
+
+export async function fetchAdminResourceById(
+  endpoint: string,
+  id: string,
+): Promise<Record<string, unknown>> {
+  const response = await FetchRetry<undefined, Record<string, unknown>>(
+    `admin/${endpoint}/${id}`,
+    undefined,
+    'GET',
+  );
+  return unwrapResponse<Record<string, unknown>>(response);
+}
+
+export async function fetchAdminLogs(params?: {
+  page?: number;
+  limit?: number;
+  adminId?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+}): Promise<AdminPage> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.limit) p.set('limit', String(params.limit));
+  if (params?.adminId) p.set('adminId', params.adminId);
+  if (params?.action) p.set('action', params.action);
+  if (params?.from) p.set('from', params.from);
+  if (params?.to) p.set('to', params.to);
+  const query = p.toString();
+  const path = query ? `admin/logs?${query}` : 'admin/logs';
+  const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
+  return unwrapResponse<AdminPage>(response);
 }

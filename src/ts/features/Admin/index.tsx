@@ -6,6 +6,7 @@ import { AdminProfileTemplatesManager } from './components/AdminProfileTemplates
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminResourceBrowser } from './components/AdminResourceBrowser';
 import { AdminUserProfileEditor } from './components/AdminUserProfileEditor';
+import { AdminLogBrowser } from './components/AdminLogBrowser';
 import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
 import { getServerUrl } from '@/infrastructure/api/FetchRetry';
 import { fetchCurrentAdminCapabilities } from './utils/api';
@@ -57,11 +58,20 @@ export default function AdminTab() {
     };
   }, []);
 
+  const [profileSearch, setProfileSearch] = useState('');
+  const [profileSearchKey, setProfileSearchKey] = useState(0);
+
   const isTeamAdminOrHigher =
     capabilities?.role === 'team-admin' || capabilities?.role === 'org-admin' || capabilities?.role === 'super-admin';
   const canSeeVorgabenTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditVorgabenGeld);
   const canSeeTemplatesTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditProfileTemplates);
   const isSuperAdmin = capabilities?.role === 'super-admin';
+
+  function navigateToProfile(userId: string) {
+    setProfileSearch(userId);
+    setProfileSearchKey(k => k + 1);
+    document.getElementById('admin-tab-profiles')?.click();
+  }
 
   return (
     <div class="admin-tab-bg py-4 px-2 px-md-4">
@@ -171,6 +181,22 @@ export default function AdminTab() {
             </li>
           )}
           {isSuperAdmin && (
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-logs"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-logs"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-logs"
+                aria-selected="false"
+              >
+                Admin-Logs
+              </button>
+            </li>
+          )}
+          {isSuperAdmin && (
             <li class="nav-item ms-md-auto" role="presentation">
               <a href={adminJsUrl} target="_blank" rel="noreferrer" class="nav-link d-flex align-items-center">
                 <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
@@ -257,7 +283,7 @@ export default function AdminTab() {
             aria-labelledby="admin-tab-resources"
             tabIndex={0}
           >
-            <AdminResourceBrowser />
+            <AdminResourceBrowser onNavigateToUser={navigateToProfile} />
           </div>
         )}
 
@@ -269,7 +295,19 @@ export default function AdminTab() {
             aria-labelledby="admin-tab-profiles"
             tabIndex={0}
           >
-            <AdminUserProfileEditor />
+            <AdminUserProfileEditor initialSearch={profileSearch} searchKey={profileSearchKey} />
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-secondary-subtle"
+            id="admin-pane-logs"
+            role="tabpanel"
+            aria-labelledby="admin-tab-logs"
+            tabIndex={0}
+          >
+            <AdminLogBrowser />
           </div>
         )}
       </div>

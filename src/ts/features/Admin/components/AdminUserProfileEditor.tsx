@@ -1,14 +1,44 @@
+import { createPortal } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { JsonEditor } from './JsonEditor';
 import {
   fetchAdminUserProfiles,
   updateAdminUserProfileDoc,
   setAdminEmailVerified,
   fetchAdminPasskeys,
   deleteAdminPasskey,
+  fetchAdminUserEmailVerified,
   type AdminPage,
   type AdminPasskey,
 } from '../utils/api';
+
+const BUNDESLAND_OPTIONS = [
+  { value: 'BW', label: 'Baden-Württemberg' },
+  { value: 'BY', label: 'Bayern' },
+  { value: 'BE', label: 'Berlin' },
+  { value: 'BB', label: 'Brandenburg' },
+  { value: 'HB', label: 'Bremen' },
+  { value: 'HH', label: 'Hamburg' },
+  { value: 'HE', label: 'Hessen' },
+  { value: 'MV', label: 'Mecklenburg-Vorpommern' },
+  { value: 'NI', label: 'Niedersachsen' },
+  { value: 'NW', label: 'Nordrhein-Westfalen' },
+  { value: 'RP', label: 'Rheinland-Pfalz' },
+  { value: 'SL', label: 'Saarland' },
+  { value: 'SN', label: 'Sachsen' },
+  { value: 'ST', label: 'Sachsen-Anhalt' },
+  { value: 'SH', label: 'Schleswig-Holstein' },
+  { value: 'TH', label: 'Thüringen' },
+];
+
+const TB_OPTIONS = ['Besoldungsgruppe A 8', 'Besoldungsgruppe A 9', 'Tarifkraft'];
+
+// Felder in Pers die als Dropdown gerendert werden
+const PERS_SELECT_FIELDS: Record<string, { value: string; label: string }[] | string[]> = {
+  Bundesland: BUNDESLAND_OPTIONS,
+  TB: TB_OPTIONS,
+};
 
 const PERS_NUMBER_FIELDS = new Set(['kmArbeitsort', 'kmnBhf']);
 const ITEMS_PER_PAGE = 20;
@@ -95,7 +125,11 @@ function buildEditState(doc: Record<string, unknown>): EditState {
   };
 }
 
-export function AdminUserProfileEditor() {
+function isUserId(s: string): boolean {
+  return /^[0-9a-f]{24}$/i.test(s);
+}
+
+export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { initialSearch?: string; searchKey?: number }) {
   const [page, setPage] = useState<AdminPage | null>(null);
   const [rows, setRows] = useState<ProfileRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -121,15 +155,32 @@ export function AdminUserProfileEditor() {
     loadPage(1);
   }, []);
 
+  // Navigation von ResourceBrowser: userId direkt laden und Edit-Modal öffnen
+  useEffect(() => {
+    if (!initialSearch) return;
+    if (isUserId(initialSearch)) {
+      fetchAdminUserProfiles({ userId: initialSearch })
+        .then(result => {
+          const doc = result.data[0];
+          if (doc) void openEdit(extractRow(doc));
+        })
+        .catch(() => {});
+    } else {
+      setSearch(initialSearch);
+    }
+  }, [initialSearch, searchKey]);
+
   async function openEdit(row: ProfileRow) {
     const state = buildEditState(row.doc);
-    setEdit(state);
-
-    // Load passkeys for the user
     setEdit({ ...state, passkeysLoading: true });
     try {
-      const passkeys = await fetchAdminPasskeys(state.userId);
-      setEdit(prev => (prev ? { ...prev, passkeys, passkeysLoading: false } : prev));
+      const [passkeys, userInfo] = await Promise.all([
+        fetchAdminPasskeys(state.userId),
+        fetchAdminUserEmailVerified(state.userId),
+      ]);
+      setEdit(prev =>
+        prev ? { ...prev, passkeys, passkeysLoading: false, emailVerified: userInfo.emailVerified } : prev,
+      );
     } catch {
       setEdit(prev => (prev ? { ...prev, passkeysLoading: false } : prev));
     }
@@ -348,8 +399,8 @@ export function AdminUserProfileEditor() {
         </button>
       </div>
 
-      {/* Edit Modal */}
-      {edit && (
+      {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
+      {edit && createPortal(
         <>
           <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
             <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
@@ -371,19 +422,45 @@ export function AdminUserProfileEditor() {
                     {/* Pers Fields */}
                     <div class="col-md-6">
                       <h6 class="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
-                      {Object.entries(edit.pers).map(([key, val]) => (
-                        <div key={key} class="mb-2">
-                          <label class="form-label small fw-semibold mb-1">
-                            {PERS_FIELD_LABELS[key] ?? key}
-                          </label>
-                          <input
-                            type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                            class="form-control form-control-sm"
-                            value={String(val ?? '')}
-                            onChange={(e) => handlePersChange(key, (e.target as HTMLInputElement).value)}
-                          />
-                        </div>
-                      ))}
+                      {Object.entries(edit.pers).map(([key, val]) => {
+                        const selectOpts = PERS_SELECT_FIELDS[key];
+                        return (
+                          <div key={key} class="mb-2">
+                            <label class="form-label small fw-semibold mb-1">
+                              {PERS_FIELD_LABELS[key] ?? key}
+                            </label>
+                            {selectOpts ? (
+                              <select
+                                class="form-select form-select-sm"
+                                value={String(val ?? '')}
+                                onChange={e =>
+                                  handlePersChange(key, (e.target as HTMLSelectElement).value)
+                                }
+                              >
+                                <option value="">(keine Auswahl)</option>
+                                {typeof selectOpts[0] === 'string'
+                                  ? (selectOpts as string[]).map(opt => (
+                                      <option key={opt} value={opt}>{opt}</option>
+                                    ))
+                                  : (selectOpts as { value: string; label: string }[]).map(opt => (
+                                      <option key={opt.value} value={opt.value}>
+                                        {opt.label} ({opt.value})
+                                      </option>
+                                    ))}
+                              </select>
+                            ) : (
+                              <input
+                                type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
+                                class="form-control form-control-sm"
+                                value={String(val ?? '')}
+                                onChange={e =>
+                                  handlePersChange(key, (e.target as HTMLInputElement).value)
+                                }
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
 
                     {/* JSON Sections */}
@@ -392,17 +469,11 @@ export function AdminUserProfileEditor() {
                       {JSON_SECTIONS.map(section => (
                         <div key={section} class="mb-3">
                           <label class="form-label small fw-semibold mb-1">{section}</label>
-                          <textarea
-                            class={`form-control form-control-sm font-monospace${edit.jsonErrors[section] ? ' is-invalid' : ''}`}
-                            rows={5}
+                          <JsonEditor
                             value={edit.jsonRaw[section] ?? ''}
-                            onChange={(e) =>
-                              handleJsonChange(section, (e.target as HTMLTextAreaElement).value)
-                            }
+                            onChange={raw => handleJsonChange(section, raw)}
+                            error={edit.jsonErrors[section]}
                           />
-                          {edit.jsonErrors[section] && (
-                            <div class="invalid-feedback">{edit.jsonErrors[section]}</div>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -487,7 +558,8 @@ export function AdminUserProfileEditor() {
             </div>
           </div>
           <div class="modal-backdrop fade show" style="z-index:1054" />
-        </>
+        </>,
+        document.body,
       )}
     </div>
   );

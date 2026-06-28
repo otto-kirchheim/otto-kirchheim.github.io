@@ -82,19 +82,21 @@ export function AdminDashboard() {
   return (
     <div>
       <div class="row g-3 mb-4">
-        <StatCard
-          title="Benutzer gesamt"
-          value={stats.users.total}
-          sub={`Aktiv (30 Tage): ${stats.users.active30d}`}
-          icon="group"
-          colorClass="text-primary"
-        />
-        <StatCard
-          title="Profile"
-          value={stats.profiles.total}
-          icon="person_pin"
-          colorClass="text-success"
-        />
+        {(() => {
+          const gap = stats.users.total - stats.profiles.total;
+          const sub = gap === 0
+            ? `Aktiv (30T): ${stats.users.active30d} · Profile vollständig ✓`
+            : `Aktiv (30T): ${stats.users.active30d} · ${gap} Profile fehlen!`;
+          return (
+            <StatCard
+              title="Benutzer"
+              value={stats.users.total}
+              sub={sub}
+              icon={gap === 0 ? 'group' : 'warning'}
+              colorClass={gap === 0 ? 'text-primary' : 'text-danger'}
+            />
+          );
+        })()}
         <StatCard
           title="Profile-Templates"
           value={stats.templates.total}
