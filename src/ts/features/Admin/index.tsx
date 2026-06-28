@@ -8,7 +8,6 @@ import { AdminResourceBrowser } from './components/AdminResourceBrowser';
 import { AdminUserProfileEditor } from './components/AdminUserProfileEditor';
 import { AdminLogBrowser } from './components/AdminLogBrowser';
 import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
-import { getServerUrl } from '@/infrastructure/api/FetchRetry';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {
@@ -19,7 +18,6 @@ type AdminCapabilities = {
 };
 
 export default function AdminTab() {
-  const [adminJsUrl, setAdminJsUrl] = useState<string>('/admin');
   const [capabilities, setCapabilities] = useState<AdminCapabilities | null>(null);
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
   const [actAsState, setActAsState] = useState(getActAsState());
@@ -27,10 +25,6 @@ export default function AdminTab() {
   useEffect(() => {
     (async () => {
       try {
-        const apiBase = await getServerUrl();
-        const backendBase = apiBase.replace(/\/api\/v2\/?$/, '');
-        setAdminJsUrl(`${backendBase}/lstadmin`);
-
         const nextCapabilities = await fetchCurrentAdminCapabilities();
         setCapabilities(nextCapabilities);
       } catch (error: unknown) {
@@ -194,16 +188,6 @@ export default function AdminTab() {
               >
                 Admin-Logs
               </button>
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li class="nav-item ms-md-auto" role="presentation">
-              <a href={adminJsUrl} target="_blank" rel="noreferrer" class="nav-link d-flex align-items-center">
-                <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
-                  open_in_new
-                </span>
-                AdminJS
-              </a>
             </li>
           )}
         </ul>

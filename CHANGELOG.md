@@ -4,6 +4,11 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-06-28
 
+### chore (Phase 3 – AdminJS-Link entfernt)
+
+- **AdminJS-Link aus Admin-Tab entfernt:** Nav-Tab „AdminJS (extern)" und der zugehörige `adminJsUrl`-State sind gelöscht. Das Backend bietet keine AdminJS-Route mehr an.
+- **`getServerUrl`-Import entfernt:** War nur für die AdminJS-URL-Konstruktion nötig.
+
 ### feat (Custom Admin – Datums-/Dropdown-Fixes, EWT-Felder, Jahresfilter, Benutzer-Suche)
 
 - **Datum-Korrektheit (Zeitzone):** Datumsfelder ohne Zeitanteil (`Tag`, `Buchungstag`) werden jetzt mit UTC-Komponenten (`getUTCDate()` etc.) formatiert, um Verschiebungen durch Lokale Zeitzone zu vermeiden. Datetime-Felder (`Beginn`, `Ende` bei BZ) nutzen weiterhin die lokale Zeitzone.
