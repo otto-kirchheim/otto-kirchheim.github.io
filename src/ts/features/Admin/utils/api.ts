@@ -276,6 +276,13 @@ export type AdminStats = {
     nebengeld: number;
   };
   adminActivity: { logsLast7d: number };
+  auth: { newUsersLast7d: number; emailVerified: number; passkeyUsers: number };
+  growth: {
+    bereitschaftseinsaetzeLast7d: number;
+    bereitschaftszaetraumeLast7d: number;
+    ewtLast7d: number;
+    nebengeldLast7d: number;
+  };
 };
 
 export type AdminPage = {
@@ -448,6 +455,32 @@ export async function fetchAdminResourceById(
     'GET',
   );
   return unwrapResponse<Record<string, unknown>>(response);
+}
+
+export type MetricPoint = {
+  timestamp: string;
+  event: 'startup' | 'periodic' | 'manual' | 'shutdown';
+  uptime: number;
+  rss: number;
+  heapUsed: number;
+  heapTotal: number;
+  external: number;
+  eventLoopDelay: number;
+};
+
+export type HeapData = {
+  current: { uptime: number; rss: number; heapUsed: number; heapTotal: number; external: number };
+  history: MetricPoint[];
+};
+
+export async function fetchAdminHeap(): Promise<HeapData> {
+  const response = await FetchRetry<undefined, HeapData>('admin/heap', undefined, 'GET');
+  return unwrapResponse<HeapData>(response);
+}
+
+export async function triggerAdminHeapSnapshot(): Promise<MetricPoint> {
+  const response = await FetchRetry<undefined, MetricPoint>('admin/heap', undefined, 'POST');
+  return unwrapResponse<MetricPoint>(response);
 }
 
 export async function fetchAdminLogs(params?: {

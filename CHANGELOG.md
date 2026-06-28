@@ -4,6 +4,20 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-06-28
 
+### feat (AdminDashboard – Memory-Verlauf, Auth-Aktivität, Datenwachstum)
+
+- **MemoryCard:** SVG-Sparkline (Heap used blau, RSS orange) mit vertikalen Dashed-Markern für Non-Periodic-Events. Höhe responsiv (`clamp(80px, 15vw, 160px)`). Kompakte Stat-Zeile: Heap/RSS/Extern/EventLoop/Uptime in einer Zeile.
+- **Manueller Heap-Snapshot-Button:** POST-Button (grün, mit Spinner) löst `POST /api/v2/admin/heap` aus und aktualisiert die Karte.
+- **Ereignis-Liste:** 2-Zeilen-Layout pro Eintrag (Zeile 1: Icon + Label, Zeile 2 eingerückt: Datum + RSS + Heap). Funktioniert auf allen Breakpoints ohne Umbruchprobleme.
+- **Legende:** Kompakt, Array-gemappt, Font-Size `.72rem`.
+- **Stat-Cards (Top-Reihe):** Benutzer (gesamt + aktiv 30d) · Profile-Templates (aktiv/gesamt) · Admin-Aktivität (Logs 7d) · Serverlaufzeit (Uptime aus letztem Snapshot, formatiert in Min./Std./Tage).
+- **Rollenverteilung:** Zeigt User-Counts nach Rolle.
+- **Ressourcenbestand + Wachstums-Badges:** `+N` (letzte 7d) inline hinter dem Label; Count-Badge mit `flex-shrink-0` – kein Layout-Bruch bei langen Labels wie „Einsatzwechseltätigkeiten".
+- **Auth-Aktivität:** Neue User 7d · E-Mail-verifiziert · Passkey-Nutzer.
+- **API (`utils/api.ts`):** Neue Typen `MetricPoint`, `HeapData`; Funktionen `fetchAdminHeap()`, `triggerAdminHeapSnapshot()`; `AdminStats` um `auth`- und `growth`-Sektionen erweitert.
+
+
+
 ### chore (Phase 3 – AdminJS-Link entfernt)
 
 - **AdminJS-Link aus Admin-Tab entfernt:** Nav-Tab „AdminJS (extern)" und der zugehörige `adminJsUrl`-State sind gelöscht. Das Backend bietet keine AdminJS-Route mehr an.
