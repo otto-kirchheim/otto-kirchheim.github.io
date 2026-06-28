@@ -4,6 +4,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-06-28
 
+### feat (AdminDashboard – Ereignisse-Pagination)
+
+- **`MemoryCard` / Ereignisse-Liste:** Pagination mit 10 Einträgen pro Seite (Prev/Next-Buttons, Seitenanzeige). Neueste Ereignisse werden zuerst angezeigt (absteigende Sortierung nach Timestamp). Gesamtanzahl im Header sichtbar. Pagination-Controls nur sichtbar wenn mehr als eine Seite vorhanden.
+
 ### feat (AdminDashboard – Memory-Verlauf, Auth-Aktivität, Datenwachstum)
 
 - **MemoryCard:** SVG-Sparkline (Heap used blau, RSS orange) mit vertikalen Dashed-Markern für Non-Periodic-Events. Höhe responsiv (`clamp(80px, 15vw, 160px)`). Kompakte Stat-Zeile: Heap/RSS/Extern/EventLoop/Uptime in einer Zeile.
@@ -15,8 +19,6 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - **Ressourcenbestand + Wachstums-Badges:** `+N` (letzte 7d) inline hinter dem Label; Count-Badge mit `flex-shrink-0` – kein Layout-Bruch bei langen Labels wie „Einsatzwechseltätigkeiten".
 - **Auth-Aktivität:** Neue User 7d · E-Mail-verifiziert · Passkey-Nutzer.
 - **API (`utils/api.ts`):** Neue Typen `MetricPoint`, `HeapData`; Funktionen `fetchAdminHeap()`, `triggerAdminHeapSnapshot()`; `AdminStats` um `auth`- und `growth`-Sektionen erweitert.
-
-
 
 ### chore (Phase 3 – AdminJS-Link entfernt)
 
