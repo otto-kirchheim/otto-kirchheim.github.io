@@ -2,6 +2,61 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-06-28
+
+### chore (Phase 3 – AdminJS-Link entfernt)
+
+- **AdminJS-Link aus Admin-Tab entfernt:** Nav-Tab „AdminJS (extern)" und der zugehörige `adminJsUrl`-State sind gelöscht. Das Backend bietet keine AdminJS-Route mehr an.
+- **`getServerUrl`-Import entfernt:** War nur für die AdminJS-URL-Konstruktion nötig.
+
+### feat (Custom Admin – Datums-/Dropdown-Fixes, EWT-Felder, Jahresfilter, Benutzer-Suche)
+
+- **Datum-Korrektheit (Zeitzone):** Datumsfelder ohne Zeitanteil (`Tag`, `Buchungstag`) werden jetzt mit UTC-Komponenten (`getUTCDate()` etc.) formatiert, um Verschiebungen durch Lokale Zeitzone zu vermeiden. Datetime-Felder (`Beginn`, `Ende` bei BZ) nutzen weiterhin die lokale Zeitzone.
+- **date-only vs. datetime-Eingabe:** `Tag`/`Buchungstag` im Edit-Modal werden als `type="date"`-Input gespeichert (`YYYY-MM-DDT00:00:00.000Z`). Datetime-Felder nutzen `type="datetime-local"` und konvertieren korrekt nach ISO.
+- **Schicht-Dropdown:** `Schicht`-Feld in EWT-Einträgen rendert jetzt ein Dropdown mit den Werten `T`, `SP`, `N`, `S`, `BN` (war bisher Freitext).
+- **EWT-Optionale-Felder:** Alle optionalen EWT-Felder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`, `Einsatzort`, `berechnen`) werden im Edit-Modal auch dann angezeigt, wenn sie im Dokument nicht vorhanden sind (Augmentierung über `SCHEMA_FIELDS` mit `null` als Platzhalter + „leer"-Badge).
+- **Jahresfilter: nur vorhandene Jahre (Backend-Query):** Jahr-Dropdown im Ressourcen-Browser lädt jetzt die tatsächlich in der DB vorhandenen Jahre per `GET /admin/{endpoint}?distinctJahr=1`. Kein hardcodierter Jahres-Range mehr.
+- **Benutzer-Filter als Suche:** Benutzer-Filter ist jetzt ein Text-Input mit Browser-`<datalist>` (alle Benutzernamen). Tipp-Suche filtert die Vorschlagsliste; bei Auswahl wird intern die `userId` gesetzt. X-Button löscht die Auswahl.
+- **Schema-Felder-Reihenfolge:** Edit-Modal zeigt Felder jetzt in der Schema-definierten Reihenfolge (Business-Felder zuerst, dann System-Felder wie `_id`, `__v`, `createdAt`, `updatedAt`).
+- **Zeitfelder als `type="time"`-Input:** `Beginn`/`Ende` in Bereitschaftseinsatz und Nebengeld sowie alle EWT-Zeitfelder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`) sind als `String "HH:mm"` gespeichert und werden jetzt korrekt als Zeitfeld dargestellt – kein Freitext-Input mehr.
+- **JSON-Editor-Komponente (`JsonEditor.tsx`):** Neue wiederverwendbare Komponente für alle JSON/Array-Felder im Admin-Panel. Eingeklappt mit Summary-Badge (z. B. `Array [5]`, `Objekt {12}`) und Vorschau-Snippet; aufgeklappt als monospaced Textarea mit Auto-Höhe und „Format"-Button zum Prettify. Fehleranzeige in Kopfzeile und unter der Textarea. Genutzt in `AdminResourceBrowser` und `AdminUserProfileEditor`.
+
+### feat (Custom Admin – Cross-Links, Portal-Fix, UX-Optimierungen)
+
+- **Ressourcen-Browser: Cross-Resource-Navigation:** Alle `_id`-Referenzfelder verlinken jetzt zum jeweiligen Eintrag im Browser. `Nebengeld.EWT` → EWT-Tab, `Bereitschaftseinsatz.Bereitschaftszeitraum` (Array) → BZ-Tab (jeweils mit direktem Edit-Modal). Navigation öffnet Ziel-Ressource via `GET /admin/{endpoint}/:id` und zeigt Edit-Modal ohne Seiten-Reload.
+- **Portal-Fix für Edit-Modals:** Modals in `AdminResourceBrowser` und `AdminUserProfileEditor` rendern jetzt via `createPortal` auf `document.body`-Ebene. Damit sind sie auch sichtbar, wenn der übergeordnete Bootstrap-Tab-Pane `display:none` hat (war der Grund, warum "Zum Profil"-Navigation keine Wirkung hatte).
+- **Navigations-Fix Profile-Tab:** `navigateToProfile(userId)` inkrementiert jetzt einen `searchKey`-Counter, sodass der `useEffect` in `AdminUserProfileEditor` auch bei wiederholter Navigation zur selben User-ID erneut feuert. `requestAnimationFrame`-Workaround entfernt.
+- **Jahresfilter: nur vorhandene Jahre:** Dropdown zeigt jetzt 2020 bis aktuelles Jahr (kein 2027/2028/2029 mehr). Werte basieren auf dem Schema-Minimum.
+- **LRE-Dropdown:** `LRE`-Feld in Bereitschaftseinsatz-Edit-Modal nutzt jetzt ein Dropdown mit allen gültigen Werten (`LRE 1`, `LRE 2`, `LRE 1/2 ohne x`, `LRE 3`, `LRE 3 ohne x`).
+- **Datums-Inputs:** ISO-Datumsfelder (`Tag`, `Buchungstag`, `Beginn`, `Ende`) werden im Edit-Modal als `datetime-local`-Input dargestellt (lokale Zeitzone). Tabellen-Anzeige zeigt jetzt Datum + Uhrzeit mit Locale `de-DE`.
+- **Null-Felder:** Felder mit Wert `null` sind im Edit-Modal jetzt sichtbar und editierbar. Label zeigt „leer"-Badge, Input hat orangefarbenen Rand als visuellen Hinweis.
+- **Dashboard: Benutzer + Profile zusammengeführt:** Stat-Karte zeigt Benutzeranzahl und bestätigt im Sub-Text ob alle Profile vollständig sind (`Profile vollständig ✓`) oder wie viele fehlen.
+- **API: `fetchAdminResourceById`:** Neue Hilfsfunktion für `GET /admin/{endpoint}/:id` – wird von der Cross-Resource-Navigation genutzt.
+
+### feat (Custom Admin – Filter & UX-Verbesserungen)
+
+- **Ressourcen-Browser: Filter-Panel** (Benutzer/Jahr/Monat): Alle vier Ressourcen unterstützen jetzt server-seitige Filterung. Aktive Filter werden als Badges angezeigt; "Zurücksetzen" löscht alle Filter. Benutzer-Select befüllt sich aus `userNameMap`.
+- **Ressourcen-Browser: Klickbare `_id`-Spalte:** ID-Zelle öffnet beim Klick direkt das Edit-Modal (zusätzlich zum Edit-Button). Cursor und Farbe signalisieren Klickbarkeit.
+- **Dashboard: "Profil-Sync"-Karte** ersetzt redundante "UserProfile-Dokumente"-Karte. Zeigt die Differenz zwischen User- und UserProfile-Dokumenten (0 = grünes Häkchen, >0 = rote Warnung).
+
+### feat (Custom Admin – Phase 2 Optimierungen)
+
+- **Ressourcen-Browser: Benutzername statt ID:** User-Spalte zeigt jetzt Vor-/Nachname aus dem UserProfile (via `fetchAdminUserNameMap`). Klick auf Person-Icon navigiert direkt zum Profil im Profile-Tab.
+- **Ressourcen-Browser: ObjectId-Erkennung im Edit-Modal:** User-Felder zeigen Name + „Zum Profil"-Button (nicht editierbar – Referenz-Integrität). Andere ObjectId-Felder zeigen volle ID + Kopieren-Button.
+- **Ressourcen-Browser: Mehr Breakpoints:** Zwei Extra-Spalten (Erstellt, Geändert) ab `lg`-Breakpoint sichtbar (`d-none d-lg-table-cell`). Datumswerte werden deutschsprachig formatiert.
+- **Admin-Dashboard: Benutzer vs. Profile erklärt:** Profile-Karte zeigt Sub-Text „Alle Benutzer vollständig" oder „X Benutzer ohne Profil" wenn User- und Profil-Anzahl abweichen.
+- **Neuer AdminLog-Tab:** `AdminLogBrowser.tsx` zeigt alle Admin-Aktionen paginiert (Zeitstempel, Aktion, Admin-Name, Ziel-User, Ressource-ID). Filter nach Aktion-String. Admin- und Ziel-User-IDs werden per `userNameMap` in Namen aufgelöst. Spalten ab md/lg progressiv sichtbar.
+- **Navigation Ressourcen → Profile:** Klick auf User-Icon im Ressourcen-Browser aktiviert Profile-Tab und öffnet direkt das Edit-Modal des Benutzers (server-seitiger `userId`-Filter, kein Client-seitiges Paginierproblem).
+- **Admin-API-Erweiterungen:** `fetchAdminUserNameMap`, `fetchAdminUserProfiles` (mit optionalem `userId`-Filter), `fetchAdminLogs`, `AdminLogEntry`-Typ.
+
+### feat (Custom Admin – Phase 2)
+
+- **Admin-Dashboard-Tab:** Neuer `AdminDashboard.tsx`-Tab für Super-Admins. Zeigt vier Stat-Karten (Benutzer gesamt/aktiv-30d, Profile, Templates aktiv/inaktiv, Admin-Logs letzte 7 Tage) sowie Rollenverteilung und Ressourcenbestand als übersichtliche Cards. API: `GET /api/v2/admin/stats`.
+- **Ressourcen-Browser-Tab:** Neuer `AdminResourceBrowser.tsx`-Tab. Interner Tab-Switch zwischen vier Ressourcen (Bereitschaftseinsatz, Bereitschaftszeitraum, Einsatzwechseltätigkeit, Nebengeld). Paginierte Tabelle mit Bearbeiten- und Löschen-Aktionen. Edit-Modal zeigt alle Felder generisch: Systemfelder readonly, Boolean als Checkbox, Objekte/Arrays als JSON-Textarea mit Inline-Fehleranzeige, Zahlen als `number`-Input. Löschung mit `confirmDialog`. Mobile-tauglich (`modal-fullscreen-sm-down`, `table-responsive`).
+- **UserProfile-Editor-Tab:** Neuer `AdminUserProfileEditor.tsx`-Tab. Paginierbarer Liste aller UserProfile-Dokumente mit Namens-/OE-Filterung. Edit-Modal: `Pers`-Felder als strukturierte Formularfelder, komplexe Felder (`Fahrzeit`, `Arbeitszeit`, `VorgabenB`, `Einstellungen`) als JSON-Textareas. Zusätzlich `emailVerified`-Toggle und Passkey-Verwaltung (Liste + Löschen) für den zugehörigen User.
+- **Admin-API-Erweiterungen (`utils/api.ts`):** `AdminStats`, `AdminPage`, `AdminPasskey`-Typen. Neue Funktionen für alle Admin-Endpunkte (`fetchAdminStats`, `fetchAdminResource`, `updateAdminDoc`, `deleteAdminDoc`, `fetchAdminUserProfiles`, `updateAdminUserProfileDoc`, `setAdminEmailVerified`, `fetchAdminPasskeys`, `deleteAdminPasskey`).
+- **Drei neue Tabs in `features/Admin/index.tsx`:** Dashboard, Ressourcen, Profile – alle nur für `role === 'super-admin'` sichtbar. AdminJS-Link bleibt bis Phase 3 erhalten.
+
 ## 2026-06-21
 
 ### feat
