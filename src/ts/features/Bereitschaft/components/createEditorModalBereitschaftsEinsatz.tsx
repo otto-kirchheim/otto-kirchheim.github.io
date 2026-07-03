@@ -186,7 +186,8 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
       if (!bzIdsForEdit.length || (startBz !== endBz && bzIdsForEdit.length < 2)) {
         createSnackBar({
-          message: 'Bereitschaft<br/>Der passende Bereitschaftszeitraum ist noch nicht gespeichert.<br/>Bitte zuerst Zeiträume speichern.',
+          message:
+            'Bereitschaft<br/>Der passende Bereitschaftszeitraum ist noch nicht gespeichert.<br/>Bitte zuerst Zeiträume speichern.',
           status: 'warning',
           timeout: 4500,
           fixed: true,
@@ -197,17 +198,33 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       values.bereitschaftszeitraumBE = bzIdsForEdit;
 
       if (hasOverlap(einsatzStart, einsatzEnd, currentBe)) {
-        createSnackBar({ message: 'Bereitschaft<br/>Bereitschaftseinsätze dürfen sich nicht überschneiden.', status: 'warning', timeout: 4000, fixed: true });
+        createSnackBar({
+          message: 'Bereitschaft<br/>Bereitschaftseinsätze dürfen sich nicht überschneiden.',
+          status: 'warning',
+          timeout: 4000,
+          fixed: true,
+        });
         return;
       }
 
       if (values.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
-        createSnackBar({ message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.', status: 'warning', timeout: 4000, fixed: true });
+        createSnackBar({
+          message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.',
+          status: 'warning',
+          timeout: 4000,
+          fixed: true,
+        });
         return;
       }
 
       if ((values.lreBE === 'LRE 1' || values.lreBE === 'LRE 2') && hasLre12TooClose(einsatzStart, currentBe)) {
-        createSnackBar({ message: 'Bereitschaft<br/>Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.', status: 'warning', timeout: 4000, fixed: true });
+        createSnackBar({
+          message:
+            'Bereitschaft<br/>Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.',
+          status: 'warning',
+          timeout: 4000,
+          fixed: true,
+        });
         return;
       }
 

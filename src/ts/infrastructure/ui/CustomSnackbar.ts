@@ -39,17 +39,7 @@ type SnackBarOptionsAll = {
 };
 
 type Tstatus =
-  | 'green'
-  | 'success'
-  | 'warning'
-  | 'alert'
-  | 'orange'
-  | 'danger'
-  | 'error'
-  | 'red'
-  | 'info'
-  | ''
-  | undefined;
+  'green' | 'success' | 'warning' | 'alert' | 'orange' | 'danger' | 'error' | 'red' | 'info' | '' | undefined;
 type Tposition = 'br' | 'tr' | 'tc' | 'tm' | 'bc' | 'bm' | 'tl' | 'bl';
 type Ticon =
   | 'exclamation'

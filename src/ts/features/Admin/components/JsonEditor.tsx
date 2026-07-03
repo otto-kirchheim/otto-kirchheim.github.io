@@ -48,11 +48,15 @@ export function JsonEditor({ value, onChange, error }: Props) {
   function handleFormat() {
     try {
       onChange(JSON.stringify(JSON.parse(value), null, 2));
-    } catch { /* ungültig – kein Format */ }
+    } catch {
+      /* ungültig – kein Format */
+    }
   }
 
   return (
-    <div class={`border rounded ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}>
+    <div
+      class={`border rounded ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
+    >
       {/* Kopfzeile / Summary – immer sichtbar, zum Auf-/Zuklappen */}
       <div
         class={`d-flex align-items-center gap-2 px-2 py-1 ${hasError ? 'bg-danger-subtle' : 'bg-body-secondary'} ${open ? 'border-bottom' : ''}`}
@@ -63,9 +67,7 @@ export function JsonEditor({ value, onChange, error }: Props) {
           {open ? 'expand_less' : 'expand_more'}
         </span>
 
-        <span class={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>
-          {label}
-        </span>
+        <span class={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>{label}</span>
 
         {!open && hint && (
           <span class="text-muted text-truncate" style="font-size:0.7rem;font-family:monospace;min-width:0">

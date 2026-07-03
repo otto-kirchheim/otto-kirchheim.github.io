@@ -458,7 +458,10 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
   const period = resolveYearMonth(item.tagN, monat, jahr, 'DD.MM.YYYY');
   const normalizedZulagen = normalizeNebengeldZulagen(item);
-  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({ Typ: zulage.code, Wert: zulage.value }));
+  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({
+    Typ: zulage.code,
+    Wert: zulage.value,
+  }));
   return {
     _id: item._id,
     EWT: item.ewtRef || undefined,

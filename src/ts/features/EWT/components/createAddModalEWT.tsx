@@ -125,7 +125,15 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
             ariaLabel="Nächster Tag"
           />
         </div>
-        <MyInput divClass="form-floating col-12" required type="date" id="tagE" name="Tag" min={datum.format('YYYY-MM-DD')} max={maxDate}>
+        <MyInput
+          divClass="form-floating col-12"
+          required
+          type="date"
+          id="tagE"
+          name="Tag"
+          min={datum.format('YYYY-MM-DD')}
+          max={maxDate}
+        >
           Tag
         </MyInput>
         <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="col-12 d-none">
@@ -169,12 +177,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           </MyCheckbox>
         </div>
         <div className="col-12">
-          <MyCheckbox
-            className="form-check form-switch"
-            id="berechnen2"
-            changeHandler={changeBuero}
-            myRef={bueroRef}
-          >
+          <MyCheckbox className="form-check form-switch" id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
             Büro
             <br />
             <small>(Keine Fahrt zu einem Einsatzort)</small>

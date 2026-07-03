@@ -24,7 +24,8 @@ function serializeRowWithoutMeta(row: unknown): string {
 
   const normalized = Object.entries(row as Record<string, unknown>)
     .filter(
-      ([key, value]) => !key.startsWith('__') && !['_id', 'updatedAt', 'createdAt', '__v'].includes(key) && value !== undefined,
+      ([key, value]) =>
+        !key.startsWith('__') && !['_id', 'updatedAt', 'createdAt', '__v'].includes(key) && value !== undefined,
     )
     .sort(([left], [right]) => left.localeCompare(right));
 

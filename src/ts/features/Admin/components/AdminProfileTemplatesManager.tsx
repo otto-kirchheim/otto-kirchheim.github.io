@@ -44,9 +44,7 @@ const SCHICHT_TYPEN: BereitschaftSchichtTyp[] = ['frueh', 'spaet', 'nacht', 'son
 
 // Liest das neue schichten-Array, fällt für Legacy-Einträge auf nacht zurück; frueh ist immer aktiv.
 function normalizeSchichten(value: unknown, legacyNacht: boolean): BereitschaftSchichtTyp[] {
-  const fromArray = Array.isArray(value)
-    ? SCHICHT_TYPEN.filter(typ => (value as unknown[]).includes(typ))
-    : [];
+  const fromArray = Array.isArray(value) ? SCHICHT_TYPEN.filter(typ => (value as unknown[]).includes(typ)) : [];
   const schichten = fromArray.length > 0 ? fromArray : legacyNacht ? ['frueh', 'nacht'] : ['frueh'];
   return SCHICHT_TYPEN.filter(typ => typ === 'frueh' || schichten.includes(typ));
 }

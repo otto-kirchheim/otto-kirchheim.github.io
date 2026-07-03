@@ -39,7 +39,9 @@ export function AdminLogBrowser() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAdminUserNameMap().then(setUserNameMap).catch(() => {});
+    fetchAdminUserNameMap()
+      .then(setUserNameMap)
+      .catch(() => {});
     loadPage(1, '');
   }, []);
 
@@ -89,10 +91,7 @@ export function AdminLogBrowser() {
             Zurücksetzen
           </button>
         )}
-        <button
-          class="btn btn-sm btn-outline-secondary ms-auto"
-          onClick={() => loadPage(currentPage, actionFilter)}
-        >
+        <button class="btn btn-sm btn-outline-secondary ms-auto" onClick={() => loadPage(currentPage, actionFilter)}>
           <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
             refresh
           </span>
@@ -132,9 +131,7 @@ export function AdminLogBrowser() {
               logs?.data.map(entry => {
                 const adminId = String(entry['adminId'] ?? '');
                 const targetUserId = entry['targetUserId'] ? String(entry['targetUserId']) : null;
-                const targetResourceId = entry['targetResourceId']
-                  ? String(entry['targetResourceId'])
-                  : null;
+                const targetResourceId = entry['targetResourceId'] ? String(entry['targetResourceId']) : null;
                 return (
                   <tr key={String(entry['_id'])}>
                     <td class="small text-nowrap">{formatTs(entry['timestamp'])}</td>
@@ -144,11 +141,7 @@ export function AdminLogBrowser() {
                     <td class="small">{userName(userNameMap, adminId)}</td>
                     <td class="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
                     <td class="small d-none d-lg-table-cell">
-                      {targetResourceId ? (
-                        <code class="text-muted">{truncateId(targetResourceId)}</code>
-                      ) : (
-                        '—'
-                      )}
+                      {targetResourceId ? <code class="text-muted">{truncateId(targetResourceId)}</code> : '—'}
                     </td>
                   </tr>
                 );

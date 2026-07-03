@@ -356,8 +356,7 @@ export class Rows<T extends CustomTableTypes> {
         newRow._errorState =
           storedErrorState === 'new' || storedErrorState === 'modified' || storedErrorState === 'deleted'
             ? storedErrorState
-            : '_id' in (cells as Record<string, unknown>) &&
-                typeof (cells as Record<string, unknown>)._id === 'string'
+            : '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string'
               ? 'modified'
               : 'new';
         newRow._errorMessage = storedErrorMsg;
@@ -365,8 +364,7 @@ export class Rows<T extends CustomTableTypes> {
 
       if (newRow._state === 'unchanged') {
         const hasId =
-          '_id' in (cells as Record<string, unknown>) &&
-          typeof (cells as Record<string, unknown>)._id === 'string';
+          '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
         if (!hasId) {
           newRow._state = 'new';
           if (!newRow._clientRequestId) newRow._clientRequestId = createClientRequestId();

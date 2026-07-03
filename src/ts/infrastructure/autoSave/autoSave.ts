@@ -393,7 +393,10 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
         resource,
         rowErrorMatches.length > 0
           ? rowErrorMatches.map(({ row, error }) => ({ ...error, label: buildRowLabel(row) }))
-          : result.errors.map((error, i) => ({ ...error, label: errorRows[i] ? buildRowLabel(errorRows[i]) : undefined })),
+          : result.errors.map((error, i) => ({
+              ...error,
+              label: errorRows[i] ? buildRowLabel(errorRows[i]) : undefined,
+            })),
       );
     }
 
@@ -406,7 +409,8 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     markFetchErrorRows(table, changes, msg);
     updateLocalStorage(resource, table);
 
-    const operation: BulkErrorEntry['operation'] = changes.create.length > 0 ? 'create' : changes.update.length > 0 ? 'update' : 'delete';
+    const operation: BulkErrorEntry['operation'] =
+      changes.create.length > 0 ? 'create' : changes.update.length > 0 ? 'update' : 'delete';
     const errorItems = table.rows.array
       .filter(r => r._state === 'error')
       .map(r => ({ operation, message: msg, label: buildRowLabel(r) }));

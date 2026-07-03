@@ -75,7 +75,12 @@ const createShowElement3 = (
 
 export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
-    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />} errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}>
+    <MyDivModal
+      size="sm"
+      title={titel}
+      Footer={<MyShowFooter row={row} />}
+      errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
+    >
       <MyModalBody className="p-3">
         {createTagElement(row)}
 

@@ -202,7 +202,11 @@ async function checkServerConnection(serverUrl: string, timeout: number): Promis
     try {
       const json = (await response.json()) as Record<string, unknown>;
       const minVersion = json?.min_frontend_version;
-      if (!versionOutdated && typeof minVersion === 'string' && compareVersion(import.meta.env.APP_VERSION, minVersion) < 0) {
+      if (
+        !versionOutdated &&
+        typeof minVersion === 'string' &&
+        compareVersion(import.meta.env.APP_VERSION, minVersion) < 0
+      ) {
         versionOutdated = true;
         invokeHook('app:version-outdated');
       }
@@ -354,8 +358,7 @@ async function executeFetchRetry<I, T>(
     const response = await fetch(`${serverUrl}/${UrlPath}`, fetchObject);
     serverReachable = true;
     const responseBody = (await response.json()) as
-      | ({ data?: T; success?: boolean; message?: string } & Record<string, unknown>)
-      | null;
+      ({ data?: T; success?: boolean; message?: string } & Record<string, unknown>) | null;
     if (response.status === 426 && !versionOutdated) {
       versionOutdated = true;
       invokeHook('app:version-outdated');

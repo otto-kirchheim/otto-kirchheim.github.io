@@ -126,19 +126,39 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
             // Zuerst Server-only-Rows als gelöscht markieren, dann lokale Rows für Speichern vorbereiten
             if ('BZ' in dataServer) {
-              reconcileRowsAsDeleted('#tableBZ', 'dataBZ', normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ), bzMonths);
+              reconcileRowsAsDeleted(
+                '#tableBZ',
+                'dataBZ',
+                normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ),
+                bzMonths,
+              );
               markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
             }
             if ('BE' in dataServer) {
-              reconcileRowsAsDeleted('#tableBE', 'dataBE', normalizeServerRowsForConflict<IDatenBE>(dataServer.BE), beMonths);
+              reconcileRowsAsDeleted(
+                '#tableBE',
+                'dataBE',
+                normalizeServerRowsForConflict<IDatenBE>(dataServer.BE),
+                beMonths,
+              );
               markRowsForAutosave('#tableBE', 'dataBE', beMonths);
             }
             if ('EWT' in dataServer) {
-              reconcileRowsAsDeleted('#tableE', 'dataE', normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT), eMonths);
+              reconcileRowsAsDeleted(
+                '#tableE',
+                'dataE',
+                normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT),
+                eMonths,
+              );
               markRowsForAutosave('#tableE', 'dataE', eMonths);
             }
             if ('N' in dataServer) {
-              reconcileRowsAsDeleted('#tableN', 'dataN', normalizeServerRowsForConflict<IDatenN>(dataServer.N), nMonths);
+              reconcileRowsAsDeleted(
+                '#tableN',
+                'dataN',
+                normalizeServerRowsForConflict<IDatenN>(dataServer.N),
+                nMonths,
+              );
               markRowsForAutosave('#tableN', 'dataN', nMonths);
             }
 

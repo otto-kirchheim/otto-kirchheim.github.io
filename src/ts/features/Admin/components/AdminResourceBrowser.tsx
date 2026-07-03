@@ -32,13 +32,35 @@ const CROSS_REFS: Record<string, CrossRef> = {
 // Schema-Felder je Ressource (für Darstellung optionaler null-Felder)
 const SCHEMA_FIELDS: Record<string, string[]> = {
   bereitschaftseinsaetze: [
-    'User', 'Bereitschaftszeitraum', 'Jahr', 'Monat', 'Tag',
-    'Auftragsnummer', 'Beginn', 'Ende', 'LRE', 'PrivatKm',
+    'User',
+    'Bereitschaftszeitraum',
+    'Jahr',
+    'Monat',
+    'Tag',
+    'Auftragsnummer',
+    'Beginn',
+    'Ende',
+    'LRE',
+    'PrivatKm',
   ],
   bereitschaftszeitraeume: ['User', 'Jahr', 'Monat', 'Beginn', 'Ende', 'Pause'],
   einsatzwechseltaetigkeiten: [
-    'User', 'Jahr', 'Monat', 'Tag', 'Buchungstag', 'Einsatzort', 'Schicht',
-    'abWE', 'ab1E', 'anEE', 'beginE', 'endeE', 'abEE', 'an1E', 'anWE', 'berechnen',
+    'User',
+    'Jahr',
+    'Monat',
+    'Tag',
+    'Buchungstag',
+    'Einsatzort',
+    'Schicht',
+    'abWE',
+    'ab1E',
+    'anEE',
+    'beginE',
+    'endeE',
+    'abEE',
+    'an1E',
+    'anWE',
+    'berechnen',
   ],
   nebengeld: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Beginn', 'Ende', 'Auftragsnummer', 'Zulagen'],
 };
@@ -49,8 +71,16 @@ const DATE_ONLY_FIELDS = new Set(['Tag', 'Buchungstag']);
 // Zeitfelder die als "HH:mm"-String gespeichert sind (kein ISO-Datum, kein looksLikeIso-Match)
 // BZ.Beginn/Ende sind Date-Typ und greifen über looksLikeIso; diese hier sind String-Typ
 const TIME_STRING_FIELDS = new Set([
-  'Beginn', 'Ende',                                        // BE + NG
-  'abWE', 'ab1E', 'anEE', 'beginE', 'endeE', 'abEE', 'an1E', 'anWE', // EWT
+  'Beginn',
+  'Ende', // BE + NG
+  'abWE',
+  'ab1E',
+  'anEE',
+  'beginE',
+  'endeE',
+  'abEE',
+  'an1E',
+  'anWE', // EWT
 ]);
 
 type ResourceConfig = {
@@ -93,8 +123,18 @@ const RESOURCES: ResourceConfig[] = [
 ];
 
 const MONATE = [
-  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
 ];
 
 function isObjectId(val: unknown): val is string {
@@ -117,17 +157,24 @@ function formatDateOnly(isoStr: string): string {
     const day = String(d.getUTCDate()).padStart(2, '0');
     const mon = String(d.getUTCMonth() + 1).padStart(2, '0');
     return `${day}.${mon}.${d.getUTCFullYear()}`;
-  } catch { return isoStr; }
+  } catch {
+    return isoStr;
+  }
 }
 
 // Datetime-Felder: lokale Zeitzone anzeigen
 function formatDateTime(isoStr: string): string {
   try {
     return new Date(isoStr).toLocaleString('de-DE', {
-      day: '2-digit', month: '2-digit', year: '2-digit',
-      hour: '2-digit', minute: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
     });
-  } catch { return isoStr; }
+  } catch {
+    return isoStr;
+  }
 }
 
 // ISO → "YYYY-MM-DD" (UTC-Datum für type="date" input)
@@ -138,7 +185,9 @@ function toDateInput(isoStr: string): string {
     const m = String(d.getUTCMonth() + 1).padStart(2, '0');
     const dd = String(d.getUTCDate()).padStart(2, '0');
     return `${y}-${m}-${dd}`;
-  } catch { return ''; }
+  } catch {
+    return '';
+  }
 }
 
 // ISO → "YYYY-MM-DDTHH:mm" (lokale Zeit für type="datetime-local" input)
@@ -147,7 +196,9 @@ function toDatetimeLocal(isoStr: string): string {
     const d = new Date(isoStr);
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch { return ''; }
+  } catch {
+    return '';
+  }
 }
 
 function formatCell(fieldName: string, val: unknown): string {
@@ -220,7 +271,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   const resource = RESOURCES[activeIdx];
 
   useEffect(() => {
-    fetchAdminUserNameMap().then(setUserNameMap).catch(() => {});
+    fetchAdminUserNameMap()
+      .then(setUserNameMap)
+      .catch(() => {});
   }, []);
 
   function loadPageWith(pageNum: number, filter: FilterParams, endpointOverride?: string) {
@@ -282,7 +335,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     const empty: FilterParams = {};
     setActiveFilter(empty);
     loadPageWith(1, empty, ep);
-    fetchAdminResourceYears(ep).then(setAvailableYears).catch(() => {});
+    fetchAdminResourceYears(ep)
+      .then(setAvailableYears)
+      .catch(() => {});
   }, [activeIdx]);
 
   function openEdit(doc: Record<string, unknown>) {
@@ -341,16 +396,12 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     try {
       const updated = await updateAdminDoc(resource.endpoint, String(edit.doc['_id']), payload);
       setPage(prev =>
-        prev
-          ? { ...prev, data: prev.data.map(d => (d['_id'] === updated['_id'] ? updated : d)) }
-          : prev,
+        prev ? { ...prev, data: prev.data.map(d => (d['_id'] === updated['_id'] ? updated : d)) } : prev,
       );
       closeEdit();
     } catch (err: unknown) {
       setEdit(prev =>
-        prev
-          ? { ...prev, saving: false, saveError: err instanceof Error ? err.message : 'Speicherfehler' }
-          : prev,
+        prev ? { ...prev, saving: false, saveError: err instanceof Error ? err.message : 'Speicherfehler' } : prev,
       );
     }
   }
@@ -364,9 +415,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     try {
       await deleteAdminDoc(resource.endpoint, String(doc['_id']));
       setPage(prev =>
-        prev
-          ? { ...prev, data: prev.data.filter(d => d['_id'] !== doc['_id']), total: prev.total - 1 }
-          : prev,
+        prev ? { ...prev, data: prev.data.filter(d => d['_id'] !== doc['_id']), total: prev.total - 1 } : prev,
       );
     } catch (err: unknown) {
       setLoadError(err instanceof Error ? err.message : 'Löschfehler');
@@ -384,11 +433,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       <ul class="nav nav-tabs mb-3 flex-wrap" role="tablist">
         {RESOURCES.map((r, i) => (
           <li key={r.endpoint} class="nav-item" role="presentation">
-            <button
-              class={`nav-link ${i === activeIdx ? 'active' : ''}`}
-              onClick={() => setActiveIdx(i)}
-              type="button"
-            >
+            <button class={`nav-link ${i === activeIdx ? 'active' : ''}`} onClick={() => setActiveIdx(i)} type="button">
               <span class="d-none d-md-inline">{r.label}</span>
               <span class="d-md-none">{r.shortLabel}</span>
             </button>
@@ -400,7 +445,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       <div class="card bg-body-secondary border-0 mb-3">
         <div class="card-body py-2 px-3">
           <div class="d-flex flex-wrap gap-2 align-items-end">
-
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
             <div class="flex-grow-1" style="min-width:180px;max-width:300px">
               <label class="form-label small mb-1">Benutzer</label>
@@ -422,7 +466,10 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   <button
                     class="btn btn-sm btn-link position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
                     style="line-height:1"
-                    onClick={() => { setFilterUserId(''); setUserSearchText(''); }}
+                    onClick={() => {
+                      setFilterUserId('');
+                      setUserSearchText('');
+                    }}
                     title="Benutzer-Filter löschen"
                   >
                     ×
@@ -430,7 +477,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 )}
               </div>
               <datalist id={`user-datalist-${activeIdx}`}>
-                {sortedUsers.map(([id, name]) => <option key={id} value={name} />)}
+                {sortedUsers.map(([id, name]) => (
+                  <option key={id} value={name} />
+                ))}
               </datalist>
             </div>
 
@@ -444,7 +493,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               >
                 <option value="">Alle</option>
                 {availableYears.map(y => (
-                  <option key={y} value={y}>{y}</option>
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </div>
@@ -459,7 +510,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               >
                 <option value="">Alle</option>
                 {MONATE.map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
+                  <option key={i + 1} value={i + 1}>
+                    {m}
+                  </option>
                 ))}
               </select>
             </div>
@@ -486,13 +539,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   User: {userNameMap[activeFilter.userId] ?? truncateId(activeFilter.userId)}
                 </span>
               )}
-              {activeFilter.jahr && (
-                <span class="badge bg-secondary rounded-pill">Jahr: {activeFilter.jahr}</span>
-              )}
+              {activeFilter.jahr && <span class="badge bg-secondary rounded-pill">Jahr: {activeFilter.jahr}</span>}
               {activeFilter.monat && (
-                <span class="badge bg-secondary rounded-pill">
-                  Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}
-                </span>
+                <span class="badge bg-secondary rounded-pill">Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}</span>
               )}
             </div>
           )}
@@ -519,9 +568,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 <th key={f}>{f === 'User' ? 'Benutzer' : f}</th>
               ))}
               {resource.extraFields?.map(f => (
-                <th key={f} class="d-none d-lg-table-cell">{f === 'createdAt' ? 'Erstellt' : f}</th>
+                <th key={f} class="d-none d-lg-table-cell">
+                  {f === 'createdAt' ? 'Erstellt' : f}
+                </th>
               ))}
-              <th style="width:7rem" class="text-end">Aktionen</th>
+              <th style="width:7rem" class="text-end">
+                Aktionen
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -539,336 +592,359 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 </td>
               </tr>
             )}
-            {!loading && page?.data.map(doc => (
-              <tr key={String(doc['_id'])}>
-                <td style="cursor:pointer" title="Klicken zum Bearbeiten" onClick={() => openEdit(doc)}>
-                  <code class="small text-primary-emphasis">{truncateId(doc['_id'])}</code>
-                </td>
-                {resource.tableFields.map(f => {
-                  if (f === 'User') {
-                    const userId = String(doc[f] ?? '');
-                    const name = userNameMap[userId];
+            {!loading &&
+              page?.data.map(doc => (
+                <tr key={String(doc['_id'])}>
+                  <td style="cursor:pointer" title="Klicken zum Bearbeiten" onClick={() => openEdit(doc)}>
+                    <code class="small text-primary-emphasis">{truncateId(doc['_id'])}</code>
+                  </td>
+                  {resource.tableFields.map(f => {
+                    if (f === 'User') {
+                      const userId = String(doc[f] ?? '');
+                      const name = userNameMap[userId];
+                      return (
+                        <td key={f} class="small">
+                          <div class="d-flex align-items-center gap-1 flex-nowrap">
+                            <span>{name ?? <code class="text-muted">{truncateId(userId)}</code>}</span>
+                            {onNavigateToUser && (
+                              <button
+                                class="btn btn-link btn-sm p-0 text-info flex-shrink-0"
+                                style="line-height:1"
+                                onClick={e => {
+                                  (e as MouseEvent).stopPropagation();
+                                  onNavigateToUser(userId);
+                                }}
+                                title="Zum Profil"
+                              >
+                                <span class="material-icons-round" style="font-size:0.85rem">
+                                  person_search
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    }
                     return (
                       <td key={f} class="small">
-                        <div class="d-flex align-items-center gap-1 flex-nowrap">
-                          <span>{name ?? <code class="text-muted">{truncateId(userId)}</code>}</span>
-                          {onNavigateToUser && (
-                            <button
-                              class="btn btn-link btn-sm p-0 text-info flex-shrink-0"
-                              style="line-height:1"
-                              onClick={e => {
-                                (e as MouseEvent).stopPropagation();
-                                onNavigateToUser(userId);
-                              }}
-                              title="Zum Profil"
-                            >
-                              <span class="material-icons-round" style="font-size:0.85rem">
-                                person_search
-                              </span>
-                            </button>
-                          )}
-                        </div>
+                        {formatCell(f, doc[f])}
                       </td>
                     );
-                  }
-                  return (
-                    <td key={f} class="small">{formatCell(f, doc[f])}</td>
-                  );
-                })}
-                {resource.extraFields?.map(f => (
-                  <td key={f} class="small d-none d-lg-table-cell">{formatCell(f, doc[f])}</td>
-                ))}
-                <td class="text-end">
-                  <button
-                    class="btn btn-sm btn-outline-primary me-1 py-0"
-                    onClick={() => openEdit(doc)}
-                    title="Bearbeiten"
-                  >
-                    <span class="material-icons-round" style="font-size:1rem">edit</span>
-                  </button>
-                  <button
-                    class="btn btn-sm btn-outline-danger py-0"
-                    onClick={() => handleDelete(doc)}
-                    title="Löschen"
-                  >
-                    <span class="material-icons-round" style="font-size:1rem">delete</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
+                  })}
+                  {resource.extraFields?.map(f => (
+                    <td key={f} class="small d-none d-lg-table-cell">
+                      {formatCell(f, doc[f])}
+                    </td>
+                  ))}
+                  <td class="text-end">
+                    <button
+                      class="btn btn-sm btn-outline-primary me-1 py-0"
+                      onClick={() => openEdit(doc)}
+                      title="Bearbeiten"
+                    >
+                      <span class="material-icons-round" style="font-size:1rem">
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      class="btn btn-sm btn-outline-danger py-0"
+                      onClick={() => handleDelete(doc)}
+                      title="Löschen"
+                    >
+                      <span class="material-icons-round" style="font-size:1rem">
+                        delete
+                      </span>
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
 
       {/* Pagination */}
       <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-        <small class="text-muted">
-          {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
-        </small>
+        <small class="text-muted">{page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}</small>
         {totalPages > 1 && (
           <div class="btn-group btn-group-sm">
             <button
               class="btn btn-outline-secondary"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
-            >‹</button>
+            >
+              ‹
+            </button>
             <button
               class="btn btn-outline-secondary"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
-            >›</button>
+            >
+              ›
+            </button>
           </div>
         )}
         <button class="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
-          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">refresh</span>
+          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+            refresh
+          </span>
           Aktualisieren
         </button>
       </div>
 
       {/* Edit Modal – Portal: sichtbar auch in versteckten Bootstrap-Tab-Panes */}
-      {edit && createPortal(
-        <>
-          <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
-            <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">
-                    {resource.label} bearbeiten
-                    <code class="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
-                  </h5>
-                  <button type="button" class="btn-close" onClick={closeEdit} />
-                </div>
+      {edit &&
+        createPortal(
+          <>
+            <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
+              <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">
+                      {resource.label} bearbeiten
+                      <code class="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
+                    </h5>
+                    <button type="button" class="btn-close" onClick={closeEdit} />
+                  </div>
 
-                <div class="modal-body" style="max-height:65vh;overflow-y:auto">
-                  {edit.saveError && (
-                    <div class="alert alert-danger py-2 small">{edit.saveError}</div>
-                  )}
+                  <div class="modal-body" style="max-height:65vh;overflow-y:auto">
+                    {edit.saveError && <div class="alert alert-danger py-2 small">{edit.saveError}</div>}
 
-                  {Object.entries(edit.values).map(([key, val]) => {
-                    const immutable = IMMUTABLE_FIELDS.has(key);
-                    const readonly = READONLY_FIELDS.has(key);
-                    const isUserRef = key === 'User';
-                    const crossRef = CROSS_REFS[key];
-                    const disabled = immutable || readonly;
-                    const isNull = val === null;
-                    const fieldEnum = FIELD_ENUMS[key];
-                    const isDateOnly = typeof val === 'string' && looksLikeIso(val) && DATE_ONLY_FIELDS.has(key);
-                    const isDateTime = typeof val === 'string' && looksLikeIso(val) && !DATE_ONLY_FIELDS.has(key);
-                    // String-Zeitfelder: "HH:mm" (kein ISO) → type="time"
-                    const isTimeString = typeof val === 'string' && !looksLikeIso(val) && TIME_STRING_FIELDS.has(key);
+                    {Object.entries(edit.values).map(([key, val]) => {
+                      const immutable = IMMUTABLE_FIELDS.has(key);
+                      const readonly = READONLY_FIELDS.has(key);
+                      const isUserRef = key === 'User';
+                      const crossRef = CROSS_REFS[key];
+                      const disabled = immutable || readonly;
+                      const isNull = val === null;
+                      const fieldEnum = FIELD_ENUMS[key];
+                      const isDateOnly = typeof val === 'string' && looksLikeIso(val) && DATE_ONLY_FIELDS.has(key);
+                      const isDateTime = typeof val === 'string' && looksLikeIso(val) && !DATE_ONLY_FIELDS.has(key);
+                      // String-Zeitfelder: "HH:mm" (kein ISO) → type="time"
+                      const isTimeString = typeof val === 'string' && !looksLikeIso(val) && TIME_STRING_FIELDS.has(key);
 
-                    return (
-                      <div key={key} class="mb-3">
-                        <label class="form-label fw-semibold small mb-1">
-                          {key}
-                          {immutable && <span class="fw-normal text-muted ms-1">(nicht änderbar)</span>}
-                          {readonly && <span class="fw-normal text-muted ms-1">(nur lesen)</span>}
-                          {isUserRef && <span class="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
-                          {crossRef && (
-                            <span class="fw-normal text-info ms-1">
-                              → {RESOURCES[crossRef.resourceIdx].label}
-                            </span>
-                          )}
-                          {isNull && !disabled && !isUserRef && (
-                            <span class="badge bg-warning text-dark ms-1" style="font-size:0.65em">
-                              leer
-                            </span>
-                          )}
-                        </label>
-
-                        {isUserRef ? (
-                          <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <code class="small bg-body-secondary rounded px-2 py-1">
-                              {String(val ?? '')}
-                            </code>
-                            {userNameMap[String(val)] && (
-                              <span class="small fw-semibold">{userNameMap[String(val)]}</span>
+                      return (
+                        <div key={key} class="mb-3">
+                          <label class="form-label fw-semibold small mb-1">
+                            {key}
+                            {immutable && <span class="fw-normal text-muted ms-1">(nicht änderbar)</span>}
+                            {readonly && <span class="fw-normal text-muted ms-1">(nur lesen)</span>}
+                            {isUserRef && <span class="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
+                            {crossRef && (
+                              <span class="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
                             )}
-                            {onNavigateToUser && (
-                              <button
-                                class="btn btn-sm btn-outline-info ms-auto"
-                                onClick={() => { closeEdit(); onNavigateToUser(String(val)); }}
-                              >
-                                <span class="material-icons-round me-1" style="font-size:0.85rem;vertical-align:middle">
-                                  person_search
-                                </span>
-                                Zum Profil
-                              </button>
+                            {isNull && !disabled && !isUserRef && (
+                              <span class="badge bg-warning text-dark ms-1" style="font-size:0.65em">
+                                leer
+                              </span>
                             )}
-                          </div>
+                          </label>
 
-                        ) : disabled ? (
-                          <input
-                            class="form-control form-control-sm bg-body-secondary text-muted font-monospace"
-                            readOnly
-                            value={
-                              isDateOnly ? formatDateOnly(String(val)) :
-                              isDateTime ? formatDateTime(String(val)) :
-                              isTimeString ? String(val) :
-                              String(val ?? '')
-                            }
-                          />
-
-                        ) : crossRef ? (
-                          crossRef.isArray && Array.isArray(val) ? (
-                            <div class="d-flex flex-column gap-1">
-                              {(val as string[]).length === 0 && (
-                                <em class="text-muted small">Keine Verknüpfungen</em>
+                          {isUserRef ? (
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                              <code class="small bg-body-secondary rounded px-2 py-1">{String(val ?? '')}</code>
+                              {userNameMap[String(val)] && (
+                                <span class="small fw-semibold">{userNameMap[String(val)]}</span>
                               )}
-                              {(val as string[]).map((id, i) => (
-                                <div key={i} class="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1">
-                                  <code class="small flex-grow-1">{truncateId(id)}</code>
-                                  <button
-                                    class="btn btn-sm btn-outline-info py-0"
-                                    onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
+                              {onNavigateToUser && (
+                                <button
+                                  class="btn btn-sm btn-outline-info ms-auto"
+                                  onClick={() => {
+                                    closeEdit();
+                                    onNavigateToUser(String(val));
+                                  }}
+                                >
+                                  <span
+                                    class="material-icons-round me-1"
+                                    style="font-size:0.85rem;vertical-align:middle"
                                   >
-                                    <span class="material-icons-round" style="font-size:0.85rem">open_in_new</span>
-                                    <span class="ms-1 d-none d-sm-inline">{RESOURCES[crossRef.resourceIdx].shortLabel}</span>
-                                  </button>
-                                </div>
-                              ))}
+                                    person_search
+                                  </span>
+                                  Zum Profil
+                                </button>
+                              )}
+                            </div>
+                          ) : disabled ? (
+                            <input
+                              class="form-control form-control-sm bg-body-secondary text-muted font-monospace"
+                              readOnly
+                              value={
+                                isDateOnly
+                                  ? formatDateOnly(String(val))
+                                  : isDateTime
+                                    ? formatDateTime(String(val))
+                                    : isTimeString
+                                      ? String(val)
+                                      : String(val ?? '')
+                              }
+                            />
+                          ) : crossRef ? (
+                            crossRef.isArray && Array.isArray(val) ? (
+                              <div class="d-flex flex-column gap-1">
+                                {(val as string[]).length === 0 && (
+                                  <em class="text-muted small">Keine Verknüpfungen</em>
+                                )}
+                                {(val as string[]).map((id, i) => (
+                                  <div
+                                    key={i}
+                                    class="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1"
+                                  >
+                                    <code class="small flex-grow-1">{truncateId(id)}</code>
+                                    <button
+                                      class="btn btn-sm btn-outline-info py-0"
+                                      onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
+                                    >
+                                      <span class="material-icons-round" style="font-size:0.85rem">
+                                        open_in_new
+                                      </span>
+                                      <span class="ms-1 d-none d-sm-inline">
+                                        {RESOURCES[crossRef.resourceIdx].shortLabel}
+                                      </span>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : isNull ? (
+                              <em class="text-muted small">Keine Verknüpfung (null)</em>
+                            ) : (
+                              <div class="d-flex align-items-center gap-2">
+                                <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">
+                                  {truncateId(val)}
+                                </code>
+                                <button
+                                  class="btn btn-sm btn-outline-info"
+                                  onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
+                                >
+                                  <span
+                                    class="material-icons-round me-1"
+                                    style="font-size:0.85rem;vertical-align:middle"
+                                  >
+                                    open_in_new
+                                  </span>
+                                  {RESOURCES[crossRef.resourceIdx].label}
+                                </button>
+                              </div>
+                            )
+                          ) : typeof val === 'boolean' ? (
+                            <div class="form-check mt-1">
+                              <input
+                                type="checkbox"
+                                class="form-check-input"
+                                checked={val}
+                                onChange={e => handleValueChange(key, (e.target as HTMLInputElement).checked)}
+                              />
                             </div>
                           ) : isNull ? (
-                            <em class="text-muted small">Keine Verknüpfung (null)</em>
-                          ) : (
+                            <input
+                              type="text"
+                              class="form-control form-control-sm border-warning"
+                              placeholder="(leer – Wert eingeben oder leer lassen)"
+                              onChange={e => {
+                                const v = (e.target as HTMLInputElement).value;
+                                handleValueChange(key, v || null);
+                              }}
+                            />
+                          ) : val !== null && typeof val === 'object' ? (
+                            <JsonEditor
+                              value={edit.rawStrings[key] ?? ''}
+                              onChange={raw => handleTextareaChange(key, raw)}
+                              error={edit.jsonErrors[key]}
+                            />
+                          ) : isTimeString ? (
+                            <input
+                              type="time"
+                              class="form-control form-control-sm"
+                              value={String(val)}
+                              onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
+                            />
+                          ) : isDateOnly ? (
+                            <input
+                              type="date"
+                              class="form-control form-control-sm"
+                              value={toDateInput(String(val))}
+                              onChange={e => {
+                                const v = (e.target as HTMLInputElement).value;
+                                handleValueChange(key, v ? `${v}T00:00:00.000Z` : null);
+                              }}
+                            />
+                          ) : isDateTime ? (
+                            <input
+                              type="datetime-local"
+                              class="form-control form-control-sm"
+                              value={toDatetimeLocal(String(val))}
+                              onChange={e => {
+                                const v = (e.target as HTMLInputElement).value;
+                                handleValueChange(key, v ? new Date(v).toISOString() : null);
+                              }}
+                            />
+                          ) : fieldEnum ? (
+                            <select
+                              class="form-select form-select-sm"
+                              value={String(val ?? '')}
+                              onChange={e => handleValueChange(key, (e.target as HTMLSelectElement).value)}
+                            >
+                              {fieldEnum.map(v => (
+                                <option key={v} value={v}>
+                                  {v}
+                                </option>
+                              ))}
+                            </select>
+                          ) : typeof val === 'number' ? (
+                            <input
+                              type="number"
+                              class="form-control form-control-sm"
+                              value={val}
+                              onChange={e =>
+                                handleValueChange(key, parseFloat((e.target as HTMLInputElement).value) || 0)
+                              }
+                            />
+                          ) : isObjectId(val) ? (
                             <div class="d-flex align-items-center gap-2">
-                              <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">
-                                {truncateId(val)}
-                              </code>
+                              <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
                               <button
-                                class="btn btn-sm btn-outline-info"
-                                onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
+                                class="btn btn-sm btn-outline-secondary"
+                                title="Kopieren"
+                                onClick={() => void navigator.clipboard?.writeText(val)}
                               >
-                                <span class="material-icons-round me-1" style="font-size:0.85rem;vertical-align:middle">
-                                  open_in_new
+                                <span class="material-icons-round" style="font-size:0.85rem">
+                                  content_copy
                                 </span>
-                                {RESOURCES[crossRef.resourceIdx].label}
                               </button>
                             </div>
-                          )
-
-                        ) : typeof val === 'boolean' ? (
-                          <div class="form-check mt-1">
+                          ) : (
                             <input
-                              type="checkbox"
-                              class="form-check-input"
-                              checked={val}
-                              onChange={e => handleValueChange(key, (e.target as HTMLInputElement).checked)}
+                              type="text"
+                              class="form-control form-control-sm"
+                              value={String(val ?? '')}
+                              onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
                             />
-                          </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
 
-                        ) : isNull ? (
-                          <input
-                            type="text"
-                            class="form-control form-control-sm border-warning"
-                            placeholder="(leer – Wert eingeben oder leer lassen)"
-                            onChange={e => {
-                              const v = (e.target as HTMLInputElement).value;
-                              handleValueChange(key, v || null);
-                            }}
-                          />
-
-                        ) : val !== null && typeof val === 'object' ? (
-                          <JsonEditor
-                            value={edit.rawStrings[key] ?? ''}
-                            onChange={raw => handleTextareaChange(key, raw)}
-                            error={edit.jsonErrors[key]}
-                          />
-
-                        ) : isTimeString ? (
-                          <input
-                            type="time"
-                            class="form-control form-control-sm"
-                            value={String(val)}
-                            onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
-                          />
-
-                        ) : isDateOnly ? (
-                          <input
-                            type="date"
-                            class="form-control form-control-sm"
-                            value={toDateInput(String(val))}
-                            onChange={e => {
-                              const v = (e.target as HTMLInputElement).value;
-                              handleValueChange(key, v ? `${v}T00:00:00.000Z` : null);
-                            }}
-                          />
-
-                        ) : isDateTime ? (
-                          <input
-                            type="datetime-local"
-                            class="form-control form-control-sm"
-                            value={toDatetimeLocal(String(val))}
-                            onChange={e => {
-                              const v = (e.target as HTMLInputElement).value;
-                              handleValueChange(key, v ? new Date(v).toISOString() : null);
-                            }}
-                          />
-
-                        ) : fieldEnum ? (
-                          <select
-                            class="form-select form-select-sm"
-                            value={String(val ?? '')}
-                            onChange={e => handleValueChange(key, (e.target as HTMLSelectElement).value)}
-                          >
-                            {fieldEnum.map(v => <option key={v} value={v}>{v}</option>)}
-                          </select>
-
-                        ) : typeof val === 'number' ? (
-                          <input
-                            type="number"
-                            class="form-control form-control-sm"
-                            value={val}
-                            onChange={e =>
-                              handleValueChange(key, parseFloat((e.target as HTMLInputElement).value) || 0)
-                            }
-                          />
-
-                        ) : isObjectId(val) ? (
-                          <div class="d-flex align-items-center gap-2">
-                            <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
-                            <button
-                              class="btn btn-sm btn-outline-secondary"
-                              title="Kopieren"
-                              onClick={() => void navigator.clipboard?.writeText(val)}
-                            >
-                              <span class="material-icons-round" style="font-size:0.85rem">content_copy</span>
-                            </button>
-                          </div>
-
-                        ) : (
-                          <input
-                            type="text"
-                            class="form-control form-control-sm"
-                            value={String(val ?? '')}
-                            onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div class="modal-footer">
-                  <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
-                    Abbrechen
-                  </button>
-                  <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
-                    {edit.saving ? (
-                      <>
-                        <span class="spinner-border spinner-border-sm me-1" role="status" />
-                        Speichern…
-                      </>
-                    ) : 'Speichern'}
-                  </button>
+                  <div class="modal-footer">
+                    <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+                      Abbrechen
+                    </button>
+                    <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+                      {edit.saving ? (
+                        <>
+                          <span class="spinner-border spinner-border-sm me-1" role="status" />
+                          Speichern…
+                        </>
+                      ) : (
+                        'Speichern'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="modal-backdrop fade show" style="z-index:1054" />
-        </>,
-        document.body,
-      )}
+            <div class="modal-backdrop fade show" style="z-index:1054" />
+          </>,
+          document.body,
+        )}
     </div>
   );
 }

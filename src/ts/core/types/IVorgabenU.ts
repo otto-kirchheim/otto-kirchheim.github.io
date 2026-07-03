@@ -44,9 +44,9 @@ export interface IVorgabenUPers {
 // --- Arbeitszeiten (neues per-Wochentag-Modell) ---
 
 export type SchichtBase = {
-  beginn: string;  // HH:mm
-  ende: string;    // HH:mm; Tageswechsel wird erkannt wenn ende < beginn
-  pause: number;   // Minuten
+  beginn: string; // HH:mm
+  ende: string; // HH:mm; Tageswechsel wird erkannt wenn ende < beginn
+  pause: number; // Minuten
 };
 
 // Nur geänderte Felder zum default; arbeitsfrei ergibt sich ausschließlich über regelarbeitstage
@@ -56,26 +56,26 @@ export type SchichtOverride = Partial<SchichtBase>;
 export type SchichtOverrides = Partial<Record<1 | 2 | 3 | 4 | 5 | 6 | 7, SchichtOverride>>;
 
 export interface IPerWeekdaySchicht {
-  aktiv: boolean;               // false = inaktiv (Zeiten bleiben gespeichert)
+  aktiv: boolean; // false = inaktiv (Zeiten bleiben gespeichert)
   default: SchichtBase;
-  regelarbeitstage?: number[];  // isoWeekday 1–7; Default [1,2,3,4,5]; rest → arbeitsfrei
+  regelarbeitstage?: number[]; // isoWeekday 1–7; Default [1,2,3,4,5]; rest → arbeitsfrei
   overrides?: SchichtOverrides; // Differenzen von default für einzelne Tage
 }
 
 // Globales Zeitpaar (für Schichten ohne Wochentag-Variation, z.B. Sonderschicht)
 export interface ISchichtZeiten {
-  aktiv: boolean;               // false = inaktiv (Zeiten bleiben gespeichert)
+  aktiv: boolean; // false = inaktiv (Zeiten bleiben gespeichert)
   beginn: string;
   ende: string;
   pause: number;
 }
 
 export interface IVorgabenUaZ {
-  frueh: IPerWeekdaySchicht;  // immer vorhanden und aktiv
-  spaet: IPerWeekdaySchicht;  // immer vorhanden, aktiv steuert ob genutzt
-  nacht: IPerWeekdaySchicht;  // immer vorhanden, aktiv steuert ob genutzt
-  sonder: ISchichtZeiten;     // immer vorhanden, aktiv steuert ob genutzt
-  fahrzeit: string;           // HH:mm Dauer Wohnung ↔ Arbeit
+  frueh: IPerWeekdaySchicht; // immer vorhanden und aktiv
+  spaet: IPerWeekdaySchicht; // immer vorhanden, aktiv steuert ob genutzt
+  nacht: IPerWeekdaySchicht; // immer vorhanden, aktiv steuert ob genutzt
+  sonder: ISchichtZeiten; // immer vorhanden, aktiv steuert ob genutzt
+  fahrzeit: string; // HH:mm Dauer Wohnung ↔ Arbeit
 }
 
 export interface IVorgabenUfZ {

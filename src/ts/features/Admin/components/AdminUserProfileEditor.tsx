@@ -129,7 +129,13 @@ function isUserId(s: string): boolean {
   return /^[0-9a-f]{24}$/i.test(s);
 }
 
-export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { initialSearch?: string; searchKey?: number }) {
+export function AdminUserProfileEditor({
+  initialSearch = '',
+  searchKey = 0,
+}: {
+  initialSearch?: string;
+  searchKey?: number;
+}) {
   const [page, setPage] = useState<AdminPage | null>(null);
   const [rows, setRows] = useState<ProfileRow[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -233,9 +239,7 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
       closeEdit();
     } catch (err: unknown) {
       setEdit(prev =>
-        prev
-          ? { ...prev, saving: false, saveError: err instanceof Error ? err.message : 'Speicherfehler' }
-          : prev,
+        prev ? { ...prev, saving: false, saveError: err instanceof Error ? err.message : 'Speicherfehler' } : prev,
       );
     }
   }
@@ -253,11 +257,7 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
       await setAdminEmailVerified(edit.userId, newVal);
       setEdit(prev => (prev ? { ...prev, emailVerified: newVal } : prev));
     } catch (err: unknown) {
-      setEdit(prev =>
-        prev
-          ? { ...prev, saveError: err instanceof Error ? err.message : 'Fehler' }
-          : prev,
-      );
+      setEdit(prev => (prev ? { ...prev, saveError: err instanceof Error ? err.message : 'Fehler' } : prev));
     }
   }
 
@@ -271,14 +271,10 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
     try {
       await deleteAdminPasskey(edit.userId, credentialId);
       setEdit(prev =>
-        prev
-          ? { ...prev, passkeys: prev.passkeys.filter(pk => pk.credentialId !== credentialId) }
-          : prev,
+        prev ? { ...prev, passkeys: prev.passkeys.filter(pk => pk.credentialId !== credentialId) } : prev,
       );
     } catch (err: unknown) {
-      setEdit(prev =>
-        prev ? { ...prev, saveError: err instanceof Error ? err.message : 'Löschfehler' } : prev,
-      );
+      setEdit(prev => (prev ? { ...prev, saveError: err instanceof Error ? err.message : 'Löschfehler' } : prev));
     }
   }
 
@@ -302,13 +298,11 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
           class="form-control form-control-sm"
           placeholder="Name oder OE suchen…"
           value={search}
-          onInput={(e) => setSearch((e.target as HTMLInputElement).value)}
+          onInput={e => setSearch((e.target as HTMLInputElement).value)}
         />
       </div>
 
-      {loadError && (
-        <div class="alert alert-danger py-2 small">{loadError}</div>
-      )}
+      {loadError && <div class="alert alert-danger py-2 small">{loadError}</div>}
 
       {/* Table */}
       <div class="table-responsive">
@@ -342,9 +336,11 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
               filteredRows.map(row => (
                 <tr key={row._id}>
                   <td class="small">
-                    {row.vorname || row.nachname
-                      ? `${row.vorname} ${row.nachname}`.trim()
-                      : <em class="text-muted">kein Name</em>}
+                    {row.vorname || row.nachname ? (
+                      `${row.vorname} ${row.nachname}`.trim()
+                    ) : (
+                      <em class="text-muted">kein Name</em>
+                    )}
                   </td>
                   <td class="small">{row.oe || <em class="text-muted">—</em>}</td>
                   <td>
@@ -356,7 +352,9 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
                       onClick={() => openEdit(row)}
                       title="Bearbeiten"
                     >
-                      <span class="material-icons-round" style="font-size:1rem">edit</span>
+                      <span class="material-icons-round" style="font-size:1rem">
+                        edit
+                      </span>
                     </button>
                   </td>
                 </tr>
@@ -400,167 +398,155 @@ export function AdminUserProfileEditor({ initialSearch = '', searchKey = 0 }: { 
       </div>
 
       {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
-      {edit && createPortal(
-        <>
-          <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
-            <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">
-                    UserProfile: {edit.pers['Vorname'] as string ?? ''}{' '}
-                    {edit.pers['Nachname'] as string ?? ''}
-                  </h5>
-                  <button type="button" class="btn-close" onClick={closeEdit} />
-                </div>
-
-                <div class="modal-body" style="max-height:70vh;overflow-y:auto">
-                  {edit.saveError && (
-                    <div class="alert alert-danger py-2 small">{edit.saveError}</div>
-                  )}
-
-                  <div class="row g-4">
-                    {/* Pers Fields */}
-                    <div class="col-md-6">
-                      <h6 class="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
-                      {Object.entries(edit.pers).map(([key, val]) => {
-                        const selectOpts = PERS_SELECT_FIELDS[key];
-                        return (
-                          <div key={key} class="mb-2">
-                            <label class="form-label small fw-semibold mb-1">
-                              {PERS_FIELD_LABELS[key] ?? key}
-                            </label>
-                            {selectOpts ? (
-                              <select
-                                class="form-select form-select-sm"
-                                value={String(val ?? '')}
-                                onChange={e =>
-                                  handlePersChange(key, (e.target as HTMLSelectElement).value)
-                                }
-                              >
-                                <option value="">(keine Auswahl)</option>
-                                {typeof selectOpts[0] === 'string'
-                                  ? (selectOpts as string[]).map(opt => (
-                                      <option key={opt} value={opt}>{opt}</option>
-                                    ))
-                                  : (selectOpts as { value: string; label: string }[]).map(opt => (
-                                      <option key={opt.value} value={opt.value}>
-                                        {opt.label} ({opt.value})
-                                      </option>
-                                    ))}
-                              </select>
-                            ) : (
-                              <input
-                                type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                                class="form-control form-control-sm"
-                                value={String(val ?? '')}
-                                onChange={e =>
-                                  handlePersChange(key, (e.target as HTMLInputElement).value)
-                                }
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* JSON Sections */}
-                    <div class="col-md-6">
-                      <h6 class="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
-                      {JSON_SECTIONS.map(section => (
-                        <div key={section} class="mb-3">
-                          <label class="form-label small fw-semibold mb-1">{section}</label>
-                          <JsonEditor
-                            value={edit.jsonRaw[section] ?? ''}
-                            onChange={raw => handleJsonChange(section, raw)}
-                            error={edit.jsonErrors[section]}
-                          />
-                        </div>
-                      ))}
-                    </div>
+      {edit &&
+        createPortal(
+          <>
+            <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
+              <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">
+                      UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
+                    </h5>
+                    <button type="button" class="btn-close" onClick={closeEdit} />
                   </div>
 
-                  {/* User Actions */}
-                  <div class="border-top mt-4 pt-3">
-                    <h6 class="fw-semibold mb-3">Benutzer-Aktionen</h6>
-                    <div class="d-flex flex-wrap gap-3 align-items-start">
-                      {/* emailVerified */}
-                      <div>
-                        <div class="small text-muted mb-1">emailVerified</div>
-                        <button
-                          class={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
-                          onClick={handleToggleEmailVerified}
-                        >
-                          {edit.emailVerified === null
-                            ? 'unbekannt'
-                            : edit.emailVerified
-                              ? 'true ✓'
-                              : 'false – umschalten'}
-                        </button>
-                        {edit.emailVerified === null && (
-                          <div class="small text-muted mt-1">
-                            Klicken zum Setzen auf true
-                          </div>
-                        )}
+                  <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+                    {edit.saveError && <div class="alert alert-danger py-2 small">{edit.saveError}</div>}
+
+                    <div class="row g-4">
+                      {/* Pers Fields */}
+                      <div class="col-md-6">
+                        <h6 class="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
+                        {Object.entries(edit.pers).map(([key, val]) => {
+                          const selectOpts = PERS_SELECT_FIELDS[key];
+                          return (
+                            <div key={key} class="mb-2">
+                              <label class="form-label small fw-semibold mb-1">{PERS_FIELD_LABELS[key] ?? key}</label>
+                              {selectOpts ? (
+                                <select
+                                  class="form-select form-select-sm"
+                                  value={String(val ?? '')}
+                                  onChange={e => handlePersChange(key, (e.target as HTMLSelectElement).value)}
+                                >
+                                  <option value="">(keine Auswahl)</option>
+                                  {typeof selectOpts[0] === 'string'
+                                    ? (selectOpts as string[]).map(opt => (
+                                        <option key={opt} value={opt}>
+                                          {opt}
+                                        </option>
+                                      ))
+                                    : (selectOpts as { value: string; label: string }[]).map(opt => (
+                                        <option key={opt.value} value={opt.value}>
+                                          {opt.label} ({opt.value})
+                                        </option>
+                                      ))}
+                                </select>
+                              ) : (
+                                <input
+                                  type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
+                                  class="form-control form-control-sm"
+                                  value={String(val ?? '')}
+                                  onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      {/* Passkeys */}
-                      <div class="flex-grow-1">
-                        <div class="small text-muted mb-1">
-                          Passkeys
-                          {edit.passkeysLoading && (
-                            <span class="spinner-border spinner-border-sm ms-2" role="status" />
-                          )}
-                        </div>
-                        {edit.passkeys.length === 0 && !edit.passkeysLoading && (
-                          <div class="small text-muted">Keine Passkeys</div>
-                        )}
-                        {edit.passkeys.map(pk => (
-                          <div
-                            key={pk.credentialId}
-                            class="d-flex align-items-center gap-2 mb-1"
-                          >
-                            <span class="small">
-                              {pk.name ?? 'Passkey'}{' '}
-                              <code class="text-muted">…{pk.credentialId.slice(-8)}</code>
-                            </span>
-                            <button
-                              class="btn btn-sm btn-outline-danger py-0"
-                              onClick={() => handleDeletePasskey(pk.credentialId)}
-                              title="Passkey löschen"
-                            >
-                              <span class="material-icons-round" style="font-size:0.9rem">
-                                delete
-                              </span>
-                            </button>
+                      {/* JSON Sections */}
+                      <div class="col-md-6">
+                        <h6 class="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
+                        {JSON_SECTIONS.map(section => (
+                          <div key={section} class="mb-3">
+                            <label class="form-label small fw-semibold mb-1">{section}</label>
+                            <JsonEditor
+                              value={edit.jsonRaw[section] ?? ''}
+                              onChange={raw => handleJsonChange(section, raw)}
+                              error={edit.jsonErrors[section]}
+                            />
                           </div>
                         ))}
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <div class="modal-footer">
-                  <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
-                    Schließen
-                  </button>
-                  <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
-                    {edit.saving ? (
-                      <>
-                        <span class="spinner-border spinner-border-sm me-1" role="status" />
-                        Speichern…
-                      </>
-                    ) : (
-                      'Profil speichern'
-                    )}
-                  </button>
+                    {/* User Actions */}
+                    <div class="border-top mt-4 pt-3">
+                      <h6 class="fw-semibold mb-3">Benutzer-Aktionen</h6>
+                      <div class="d-flex flex-wrap gap-3 align-items-start">
+                        {/* emailVerified */}
+                        <div>
+                          <div class="small text-muted mb-1">emailVerified</div>
+                          <button
+                            class={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
+                            onClick={handleToggleEmailVerified}
+                          >
+                            {edit.emailVerified === null
+                              ? 'unbekannt'
+                              : edit.emailVerified
+                                ? 'true ✓'
+                                : 'false – umschalten'}
+                          </button>
+                          {edit.emailVerified === null && (
+                            <div class="small text-muted mt-1">Klicken zum Setzen auf true</div>
+                          )}
+                        </div>
+
+                        {/* Passkeys */}
+                        <div class="flex-grow-1">
+                          <div class="small text-muted mb-1">
+                            Passkeys
+                            {edit.passkeysLoading && (
+                              <span class="spinner-border spinner-border-sm ms-2" role="status" />
+                            )}
+                          </div>
+                          {edit.passkeys.length === 0 && !edit.passkeysLoading && (
+                            <div class="small text-muted">Keine Passkeys</div>
+                          )}
+                          {edit.passkeys.map(pk => (
+                            <div key={pk.credentialId} class="d-flex align-items-center gap-2 mb-1">
+                              <span class="small">
+                                {pk.name ?? 'Passkey'} <code class="text-muted">…{pk.credentialId.slice(-8)}</code>
+                              </span>
+                              <button
+                                class="btn btn-sm btn-outline-danger py-0"
+                                onClick={() => handleDeletePasskey(pk.credentialId)}
+                                title="Passkey löschen"
+                              >
+                                <span class="material-icons-round" style="font-size:0.9rem">
+                                  delete
+                                </span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="modal-footer">
+                    <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+                      Schließen
+                    </button>
+                    <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+                      {edit.saving ? (
+                        <>
+                          <span class="spinner-border spinner-border-sm me-1" role="status" />
+                          Speichern…
+                        </>
+                      ) : (
+                        'Profil speichern'
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="modal-backdrop fade show" style="z-index:1054" />
-        </>,
-        document.body,
-      )}
+            <div class="modal-backdrop fade show" style="z-index:1054" />
+          </>,
+          document.body,
+        )}
     </div>
   );
 }

@@ -9,11 +9,11 @@ const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
 export { default as syncNebengeldTimesFromEwtRows } from './syncEwtToNeben';
 export {
-	formatNebengeldZulagen,
-	getConfiguredNebenZulagen,
-	hydrateNebengeldRow,
-	hydrateNebengeldRows,
-	normalizeNebengeldZulagen,
-	readNebengeldZulagenFromForm,
-	validateNebengeldZulagen,
+  formatNebengeldZulagen,
+  getConfiguredNebenZulagen,
+  hydrateNebengeldRow,
+  hydrateNebengeldRows,
+  normalizeNebengeldZulagen,
+  readNebengeldZulagenFromForm,
+  validateNebengeldZulagen,
 } from './nebengeldZulagen';
