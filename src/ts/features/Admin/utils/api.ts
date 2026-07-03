@@ -383,11 +383,7 @@ export async function setAdminEmailVerified(userId: string, emailVerified: boole
 }
 
 export async function fetchAdminPasskeys(userId: string): Promise<AdminPasskey[]> {
-  const response = await FetchRetry<undefined, AdminPasskey[]>(
-    `admin/users/${userId}/passkeys`,
-    undefined,
-    'GET',
-  );
+  const response = await FetchRetry<undefined, AdminPasskey[]>(`admin/users/${userId}/passkeys`, undefined, 'GET');
   return unwrapResponse<AdminPasskey[]>(response);
 }
 
@@ -426,39 +422,23 @@ export type AdminLogEntry = {
 };
 
 export async function fetchAdminResourceYears(endpoint: string): Promise<number[]> {
-  const response = await FetchRetry<undefined, number[]>(
-    `admin/${endpoint}?distinctJahr=1`,
-    undefined,
-    'GET',
-  );
+  const response = await FetchRetry<undefined, number[]>(`admin/${endpoint}?distinctJahr=1`, undefined, 'GET');
   return unwrapResponse<number[]>(response);
 }
 
-export async function fetchAdminUserEmailVerified(
-  userId: string,
-): Promise<{ emailVerified: boolean }> {
-  const response = await FetchRetry<undefined, { emailVerified: boolean }>(
-    `admin/users/${userId}`,
-    undefined,
-    'GET',
-  );
+export async function fetchAdminUserEmailVerified(userId: string): Promise<{ emailVerified: boolean }> {
+  const response = await FetchRetry<undefined, { emailVerified: boolean }>(`admin/users/${userId}`, undefined, 'GET');
   return unwrapResponse<{ emailVerified: boolean }>(response);
 }
 
-export async function fetchAdminResourceById(
-  endpoint: string,
-  id: string,
-): Promise<Record<string, unknown>> {
-  const response = await FetchRetry<undefined, Record<string, unknown>>(
-    `admin/${endpoint}/${id}`,
-    undefined,
-    'GET',
-  );
+export async function fetchAdminResourceById(endpoint: string, id: string): Promise<Record<string, unknown>> {
+  const response = await FetchRetry<undefined, Record<string, unknown>>(`admin/${endpoint}/${id}`, undefined, 'GET');
   return unwrapResponse<Record<string, unknown>>(response);
 }
 
 export type MetricPoint = {
   timestamp: string;
+  environment?: 'gcp' | 'homeserver';
   event: 'startup' | 'periodic' | 'manual' | 'shutdown';
   uptime: number;
   rss: number;
@@ -469,7 +449,14 @@ export type MetricPoint = {
 };
 
 export type HeapData = {
-  current: { uptime: number; rss: number; heapUsed: number; heapTotal: number; external: number };
+  current: {
+    environment?: 'gcp' | 'homeserver';
+    uptime: number;
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+  };
   history: MetricPoint[];
 };
 

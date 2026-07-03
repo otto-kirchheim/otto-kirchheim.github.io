@@ -73,43 +73,99 @@ const EVENT_COLORS: Record<string, string> = {
   periodic: 'var(--bs-secondary)',
 };
 
-function MemorySparkline({ history }: { history: MetricPoint[] }) {
-  if (history.length < 2) {
+const ENV_LABELS: Record<string, string> = {
+  gcp: 'GCP Cloud Run',
+  homeserver: 'HomeServer',
+};
+
+const ENV_COLORS: Record<string, string> = {
+  gcp: '#4285F4',
+  homeserver: '#34A853',
+};
+
+function MemorySparkline({
+  history,
+  visibleEnvironments,
+}: {
+  history: MetricPoint[];
+  visibleEnvironments: Set<'gcp' | 'homeserver'>;
+}) {
+  const filtered = history.filter(p => p.environment && visibleEnvironments.has(p.environment));
+
+  if (filtered.length < 2) {
     return <div class="text-body-secondary small py-3 text-center">Noch keine Verlaufsdaten</div>;
   }
 
   const W = 400,
-    H = 80,
-    PAD = 6;
-  const cW = W - 2 * PAD,
-    cH = H - 2 * PAD;
+    H = 98,
+    PX = 6,
+    PT = 6,
+    PB = 18;
+  const cW = W - 2 * PX,
+    cH = H - PT - PB;
 
-  const times = history.map(p => new Date(p.timestamp).getTime());
+  const times = filtered.map(p => new Date(p.timestamp).getTime());
   const tMin = Math.min(...times);
-  const tRange = Math.max(...times) - tMin || 1;
-  const vMax = Math.max(...history.flatMap(p => [p.heapUsed, p.rss]));
+  const tMax = Math.max(...times);
+  const tRange = tMax - tMin || 1;
+  const vMax = Math.max(...filtered.flatMap(p => [p.heapUsed, p.rss]));
   const vRange = vMax || 1;
 
-  const toX = (t: number) => PAD + ((t - tMin) / tRange) * cW;
-  const toY = (v: number) => PAD + (1 - v / vRange) * cH;
+  const toX = (t: number) => PX + ((t - tMin) / tRange) * cW;
+  const toY = (v: number) => PT + (1 - v / vRange) * cH;
 
-  const heapPts = history.map((p, i) => `${toX(times[i]).toFixed(1)},${toY(p.heapUsed).toFixed(1)}`).join(' ');
-  const rssPts = history.map((p, i) => `${toX(times[i]).toFixed(1)},${toY(p.rss).toFixed(1)}`).join(' ');
-  const nonPeriodic = history.filter(p => p.event !== 'periodic');
+  const pts = (items: MetricPoint[], field: 'heapUsed' | 'rss') =>
+    items.map(p => `${toX(new Date(p.timestamp).getTime()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
+
+  // X-Achsen-Ticks: Intervall abhängig vom Zeitbereich
+  const rangeH = tRange / 3_600_000;
+  const tickH = rangeH <= 12 ? 2 : rangeH <= 48 ? 6 : rangeH <= 168 ? 24 : 48;
+  const tickMs = tickH * 3_600_000;
+  const firstTick = Math.ceil(tMin / tickMs) * tickMs;
+  const ticks: number[] = [];
+  for (let t = firstTick; t <= tMax; t += tickMs) ticks.push(t);
+
+  const fmtTick = (t: number) => {
+    const d = new Date(t);
+    const hh = d.getHours().toString().padStart(2, '0');
+    return tickH < 24
+      ? `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${hh}:00`
+      : `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+  };
+
+  const gcp = filtered.filter(p => p.environment === 'gcp');
+  const home = filtered.filter(p => p.environment === 'homeserver');
+  const nonPeriodic = filtered.filter(p => p.event !== 'periodic');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style="width:100%;height:clamp(80px,15vw,160px);display:block" aria-hidden="true">
-      <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="var(--bs-border-color)" strokeWidth="0.5" />
-      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="var(--bs-border-color)" strokeWidth="0.5" />
+    <svg viewBox={`0 0 ${W} ${H}`} style="width:100%;height:clamp(90px,16vw,180px);display:block" aria-hidden="true">
+      {/* Achsen */}
+      <line x1={PX} y1={PT} x2={PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
+      <line x1={PX} y1={H - PB} x2={W - PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
+
+      {/* X-Achsen-Beschriftung */}
+      {ticks.map((t, i) => {
+        const x = toX(t);
+        return (
+          <g key={i}>
+            <line x1={x} y1={H - PB} x2={x} y2={H - PB + 3} stroke="var(--bs-border-color)" strokeWidth="0.5" />
+            <text x={x} y={H - 2} fontSize="6" fill="var(--bs-body-color)" opacity="0.5" textAnchor="middle">
+              {fmtTick(t)}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Ereignismarker */}
       {nonPeriodic.map((p, i) => {
         const x = toX(new Date(p.timestamp).getTime());
         return (
           <line
             key={i}
             x1={x}
-            y1={PAD}
+            y1={PT}
             x2={x}
-            y2={H - PAD}
+            y2={H - PB}
             stroke={EVENT_COLORS[p.event]}
             strokeWidth="1.5"
             strokeDasharray="4,3"
@@ -117,9 +173,44 @@ function MemorySparkline({ history }: { history: MetricPoint[] }) {
           />
         );
       })}
-      <polyline points={rssPts} fill="none" stroke="var(--bs-orange)" strokeWidth="1.5" opacity="0.6" />
-      <polyline points={heapPts} fill="none" stroke="var(--bs-primary)" strokeWidth="2" />
-      <text x={PAD + 2} y={PAD + 8} fontSize="7" fill="var(--bs-body-color)" opacity="0.5">
+
+      {/* GCP – blau */}
+      {visibleEnvironments.has('gcp') && gcp.length > 0 && (
+        <>
+          <polyline points={pts(gcp, 'rss')} fill="none" stroke="#4285F4" strokeWidth="1" opacity="0.4" />
+          <polyline points={pts(gcp, 'heapUsed')} fill="none" stroke="#4285F4" strokeWidth="2" opacity="0.9" />
+          {gcp.map((p, i) => (
+            <circle
+              key={i}
+              cx={toX(new Date(p.timestamp).getTime())}
+              cy={toY(p.heapUsed)}
+              r="2.5"
+              fill="#4285F4"
+              opacity="0.9"
+            />
+          ))}
+        </>
+      )}
+
+      {/* HomeServer – grün */}
+      {visibleEnvironments.has('homeserver') && home.length > 0 && (
+        <>
+          <polyline points={pts(home, 'rss')} fill="none" stroke="#34A853" strokeWidth="1" opacity="0.4" />
+          <polyline points={pts(home, 'heapUsed')} fill="none" stroke="#34A853" strokeWidth="2" opacity="0.9" />
+          {home.map((p, i) => (
+            <circle
+              key={i}
+              cx={toX(new Date(p.timestamp).getTime())}
+              cy={toY(p.heapUsed)}
+              r="2.5"
+              fill="#34A853"
+              opacity="0.9"
+            />
+          ))}
+        </>
+      )}
+
+      <text x={PX + 2} y={PT + 8} fontSize="7" fill="var(--bs-body-color)" opacity="0.5">
         {vMax} MB
       </text>
     </svg>
@@ -131,10 +222,23 @@ const EVENTS_PAGE_SIZE = 10;
 function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loading: boolean; onRefresh: () => void }) {
   const [snapping, setSnapping] = useState(false);
   const [eventsPage, setEventsPage] = useState(0);
+  const [visibleEnvironments, setVisibleEnvironments] = useState<Set<'gcp' | 'homeserver'>>(
+    new Set(['gcp', 'homeserver']),
+  );
 
   useEffect(() => {
     setEventsPage(0);
   }, [heap]);
+
+  function toggleEnvironment(env: 'gcp' | 'homeserver') {
+    const newSet = new Set(visibleEnvironments);
+    if (newSet.has(env)) {
+      newSet.delete(env);
+    } else {
+      newSet.add(env);
+    }
+    setVisibleEnvironments(newSet);
+  }
 
   async function takeSnapshot() {
     setSnapping(true);
@@ -192,6 +296,38 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
           </div>
         </div>
 
+        {/* ── Environment Toggles ── */}
+        <div class="mb-2 d-flex gap-2" style="font-size:.85rem">
+          <label class="form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              checked={visibleEnvironments.has('gcp')}
+              onChange={() => toggleEnvironment('gcp')}
+            />
+            <span class="form-check-label">
+              <span
+                style={`display:inline-block;width:8px;height:8px;background:#4285F4;border-radius:2px;margin-right:4px`}
+              />
+              GCP
+            </span>
+          </label>
+          <label class="form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              checked={visibleEnvironments.has('homeserver')}
+              onChange={() => toggleEnvironment('homeserver')}
+            />
+            <span class="form-check-label">
+              <span
+                style={`display:inline-block;width:8px;height:8px;background:#34A853;border-radius:2px;margin-right:4px`}
+              />
+              HomeServer
+            </span>
+          </label>
+        </div>
+
         {loading && !heap ? (
           <div class="text-center py-3">
             <span class="spinner-border spinner-border-sm text-primary" />
@@ -200,40 +336,51 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
           <>
             {/* ── Aktuelle Werte – eine kompakte Zeile ── */}
             {cur && (
-              <p class="small text-body-secondary mb-1">
-                <span class="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
-                {' · '}
-                <span class="fw-semibold" style="color:var(--bs-orange)">
-                  RSS
-                </span>{' '}
-                {cur.rss} MB
-                {' · '}Extern {cur.external} MB
-                {lastSnap && (
-                  <>
-                    {' · '}Loop {lastSnap.eventLoopDelay} ms · Uptime {formatUptime(lastSnap.uptime).value}{' '}
-                    {formatUptime(lastSnap.uptime).unit}
-                  </>
-                )}
-              </p>
+              <div class="small text-body-secondary mb-2">
+                <div class="mb-1">
+                  {cur.environment && (
+                    <span class="badge" style={`background-color: ${ENV_COLORS[cur.environment]}`}>
+                      {ENV_LABELS[cur.environment]}
+                    </span>
+                  )}
+                </div>
+                <p class="mb-0">
+                  <span class="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
+                  {' · '}
+                  <span class="fw-semibold" style="color:var(--bs-orange)">
+                    RSS
+                  </span>{' '}
+                  {cur.rss} MB
+                  {' · '}Extern {cur.external} MB
+                  {lastSnap && (
+                    <>
+                      {' · '}Loop {lastSnap.eventLoopDelay} ms · Uptime {formatUptime(lastSnap.uptime).value}{' '}
+                      {formatUptime(lastSnap.uptime).unit}
+                    </>
+                  )}
+                </p>
+              </div>
             )}
 
             {/* ── Chart ── */}
-            <MemorySparkline history={heap?.history ?? []} />
+            <MemorySparkline history={heap?.history ?? []} visibleEnvironments={visibleEnvironments} />
 
             {/* ── Legende ── */}
             <div class="d-flex gap-2 mt-1 flex-wrap" style="font-size:.72rem;color:var(--bs-secondary-color)">
               {(
                 [
-                  ['var(--bs-primary)', false, 'Heap'],
-                  ['var(--bs-orange)', false, 'RSS'],
+                  ['#34A853', false, 'HomeServer Heap'],
+                  ['#34A853', false, 'HomeServer RSS', true],
+                  ['#4285F4', false, 'GCP Heap'],
+                  ['#4285F4', false, 'GCP RSS', true],
                   ['var(--bs-warning)', true, 'Serverstart'],
                   ['var(--bs-success)', true, 'Manuell'],
                   ['var(--bs-danger)', true, 'Shutdown'],
-                ] as [string, boolean, string][]
-              ).map(([color, dashed, label]) => (
+                ] as [string, boolean, string, boolean?][]
+              ).map(([color, dashed, label, reduced]) => (
                 <span key={label} class="d-flex align-items-center gap-1">
                   <span
-                    style={`width:14px;height:${dashed ? '0' : '2px'};background:${dashed ? 'none' : color};border-top:${dashed ? `2px dashed ${color}` : 'none'};opacity:.85;display:inline-block;flex-shrink:0`}
+                    style={`width:14px;height:${dashed ? '0' : '2px'};background:${dashed ? 'none' : color};border-top:${dashed ? `2px dashed ${color}` : 'none'};opacity:${reduced ? '.5' : '.85'};display:inline-block;flex-shrink:0`}
                   />
                   {label}
                 </span>
@@ -266,6 +413,14 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
                           <span class="small fw-medium" style={`color:${EVENT_COLORS[p.event]}`}>
                             {EVENT_LABELS[p.event]}
                           </span>
+                          {p.environment && (
+                            <span
+                              class="badge ms-auto"
+                              style={`background-color: ${ENV_COLORS[p.environment]};font-size:.7rem`}
+                            >
+                              {ENV_LABELS[p.environment].split(' ')[0]}
+                            </span>
+                          )}
                         </div>
                         <div class="text-body-secondary" style="font-size:.72rem;padding-left:1.6rem">
                           {ts} · {p.rss} MB RSS · {p.heapUsed} MB Heap
