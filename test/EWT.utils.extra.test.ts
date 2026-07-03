@@ -260,4 +260,244 @@ describe('EWT utils extra', () => {
   it('naechsterTag wirft Fehler wenn das Eingabefeld fehlt', () => {
     expect(() => setNaechsterEwtTag(1, [])).toThrow('Eingabefeld für Tag nicht gefunden');
   });
+
+  it('versteckt den Buchungstag-Hinweis wenn das Tag-Feld im Editor geleert wird', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+
+    const table = createEditorTable([
+      {
+        ...createRow(10),
+        tagE: '2026-03-10',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        berechnen: true,
+      },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+    const tagInput = form.querySelector<HTMLInputElement>('#tagE');
+    if (!tagInput) throw new Error('tagE nicht gefunden');
+
+    tagInput.value = '';
+    tagInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+    const hinweis = document.querySelector<HTMLDivElement>('#buchungstagHinweisEdit');
+    expect(hinweis?.classList.contains('d-none')).toBe(true);
+  });
+
+  it('zeigt den abweichenden Buchungstag bei einer Nachtschicht mit Tagesübertrag an', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+
+    const table = createEditorTable([
+      {
+        ...createRow(20),
+        tagE: '2026-03-20',
+        eOrtE: 'Mühlbach',
+        schichtE: 'N',
+        abWE: '19:25',
+        ab1E: '20:30',
+        anEE: '20:50',
+        beginE: '19:45',
+        endeE: '06:15',
+        abEE: '05:10',
+        an1E: '05:30',
+        anWE: '06:35',
+        berechnen: false,
+      },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const hinweis = document.querySelector<HTMLDivElement>('#buchungstagHinweisEdit');
+    const hinweisInput = document.querySelector<HTMLInputElement>('#buchungstagE');
+
+    expect(hinweis?.classList.contains('d-none')).toBe(false);
+    expect(hinweisInput?.value).toBe('2026-03-21');
+  });
+
+  it('zeigt die Validierungsmeldung erneut an wenn ein fehlerhaftes Zeitfeld fokussiert wird', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+
+    const table = createEditorTable([
+      {
+        ...createRow(10),
+        tagE: '2026-03-10',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        berechnen: true,
+      },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+    const abWEInput = form.querySelector<HTMLInputElement>('#abWE');
+    if (!abWEInput) throw new Error('abWE nicht gefunden');
+
+    // Kein Fehlerzustand -> Guard bricht sofort ab (kein Fehler, kein Aufruf von reportValidity).
+    expect(() => abWEInput.dispatchEvent(new Event('focus', { bubbles: true }))).not.toThrow();
+
+    // is-invalid gesetzt, aber keine Validierungsmeldung -> Guard bricht ebenfalls ab.
+    abWEInput.classList.add('is-invalid');
+    expect(() => abWEInput.dispatchEvent(new Event('click', { bubbles: true }))).not.toThrow();
+
+    // is-invalid mit Meldung -> reportValidity() wird aufgerufen.
+    abWEInput.setCustomValidity('Fehlerhafte Zeit');
+    const reportValiditySpy = vi.spyOn(abWEInput, 'reportValidity');
+    abWEInput.dispatchEvent(new Event('focus', { bubbles: true }));
+
+    expect(reportValiditySpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('markiert fehlerhafte Zeitfelder beim Speichern und bricht den Submit ab', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+
+    const table = createEditorTable([
+      {
+        ...createRow(15),
+        tagE: '2026-03-15',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        beginE: '10:00',
+        endeE: '09:00',
+        berechnen: false,
+      },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    const beginEInput = form.querySelector<HTMLInputElement>('#beginE');
+    const endeEInput = form.querySelector<HTMLInputElement>('#endeE');
+    const endeEFeedback = form.querySelector<HTMLDivElement>('#zeitfehler-endeE');
+
+    expect(beginEInput?.classList.contains('is-invalid')).toBe(true);
+    expect(endeEInput?.classList.contains('is-invalid')).toBe(true);
+    expect(endeEFeedback?.textContent).toContain('Muss nach "Arbeitszeit Von" liegen.');
+    // Speichern wurde verhindert: der ursprüngliche Tag im Datensatz ist unverändert.
+    expect(existingRow.cells.tagE).toBe('2026-03-15');
+  });
+
+  it('zeigt eine Warnung bei Zeitüberschneidung mit einem anderen EWT-Eintrag und bricht den Submit ab', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+    Storage.set('Benutzer', { id: 'user-1' } as never);
+    Storage.set('dataE', [
+      {
+        _id: 'other-entry',
+        tagE: '2026-03-12',
+        buchungstagE: '2026-03-12',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        abWE: '06:30',
+        ab1E: '07:10',
+        anEE: '07:20',
+        beginE: '08:00',
+        endeE: '16:00',
+        abEE: '15:00',
+        an1E: '15:10',
+        anWE: '16:30',
+        berechnen: false,
+      },
+    ] as never);
+
+    const table = createEditorTable([
+      {
+        ...createRow(12),
+        tagE: '2026-03-12',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        abWE: '06:30',
+        ab1E: '07:10',
+        anEE: '07:20',
+        beginE: '07:00',
+        endeE: '15:00',
+        abEE: '14:40',
+        an1E: '14:50',
+        anWE: '15:30',
+        berechnen: false,
+        _id: 'row-editing',
+      },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('Zeitüberschneidung'),
+        status: 'warning',
+      }),
+    );
+    expect(existingRow.cells.tagE).toBe('2026-03-12');
+  });
+
+  it('erkennt einen identischen Eintrag beim Speichern und verhindert das Duplizieren', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+
+    const sharedValues = {
+      tagE: '2026-03-12',
+      buchungstagE: '2026-03-12',
+      eOrtE: 'Fulda',
+      schichtE: 'T',
+      abWE: '06:30',
+      ab1E: '07:10',
+      anEE: '07:20',
+      beginE: '07:00',
+      endeE: '15:00',
+      abEE: '14:40',
+      an1E: '14:50',
+      anWE: '15:30',
+      berechnen: false,
+    };
+
+    const table = createEditorTable([
+      { ...sharedValues, _id: 'row-a' },
+      { ...sharedValues, _id: 'row-b' },
+    ]);
+    const existingRow = table.rows.array[0];
+    if (!existingRow) throw new Error('row not found');
+
+    EditorModalEWT(existingRow, 'EWT bearbeiten');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining('identischer Eintrag'),
+        status: 'warning',
+      }),
+    );
+    expect(existingRow.cells.tagE).toBe('2026-03-12');
+  });
 });

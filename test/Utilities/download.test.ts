@@ -344,6 +344,26 @@ describe('download utility', () => {
     );
   });
 
+  it('should merge multiple VorgabenGeld monat entries when Monat spans several keys', async () => {
+    const multiKeyGeld: IVorgabenGeld = {
+      1: mockVorgabenGeld[1],
+      2: { ...mockVorgabenGeld[1], LRE1: 99 },
+      3: { ...mockVorgabenGeld[1], LRE2: 77 },
+    };
+    Storage.set('VorgabenGeld', multiKeyGeld);
+
+    document.querySelector<HTMLInputElement>('#Monat')!.value = '3';
+    await download(button, 'B');
+
+    expect(mockDownloadPdf).toHaveBeenCalledWith(
+      'B',
+      expect.objectContaining({
+        VorgabenGeld: { ...multiKeyGeld[1], ...multiKeyGeld[2], ...multiKeyGeld[3] },
+        Monat: 3,
+      }),
+    );
+  });
+
   it('should handle non-ok server response error', async () => {
     const errorMessage = 'Server Error 500';
     mockDownloadPdf.mockRejectedValueOnce(new Error(errorMessage));

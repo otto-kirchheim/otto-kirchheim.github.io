@@ -13,6 +13,7 @@ import {
   bzToBackend,
   ewtFromBackend,
   ewtToBackend,
+  flatMapDocs,
   nebengeldFromBackend,
   nebengeldToBackend,
   userProfileFromBackend,
@@ -66,6 +67,18 @@ describe('fieldMapper – BZ (Bereitschaftszeitraum)', () => {
       Ende: '2024-04-19T05:00:00.000Z',
       Pause: 30,
     });
+  });
+
+  it('bzToBackend fällt bei ungültigem Datum auf Monat/Jahr-Parameter zurück', () => {
+    const frontendBZ: IDatenBZ = {
+      _id: 'bz-invalid',
+      beginB: 'not-a-valid-date',
+      endeB: '2024-04-19T05:00:00.000Z',
+      pauseB: 0,
+    };
+    const result = bzToBackend(frontendBZ, 7, 2025);
+    expect(result.Monat).toBe(7);
+    expect(result.Jahr).toBe(2025);
   });
 
   it('bzToBackend → bzFromBackend Roundtrip', () => {
@@ -420,6 +433,24 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
   });
 
+  it('userProfileFromBackend migriert VorgabenB-Eintrag mit nacht=true ohne schichten', () => {
+    const withNachtFlag: BackendUserProfile = {
+      ...backendProfile,
+      VorgabenB: [{ key: 'nachtwoche', value: { Name: 'Nachtwoche', nacht: true } as Record<string, unknown> }],
+    };
+    const result = userProfileFromBackend(withNachtFlag);
+    expect(result.vorgabenB.nachtwoche).toMatchObject({ schichten: ['nacht'] });
+  });
+
+  it('userProfileFromBackend lässt VorgabenB-Eintrag ohne nacht=true unverändert', () => {
+    const withoutNachtFlag: BackendUserProfile = {
+      ...backendProfile,
+      VorgabenB: [{ key: 'tagwoche', value: { Name: 'Tagwoche' } as Record<string, unknown> }],
+    };
+    const result = userProfileFromBackend(withoutNachtFlag);
+    expect(result.vorgabenB.tagwoche).not.toHaveProperty('schichten');
+  });
+
   it('userProfileFromBackend mit fehlenden optionalen Feldern', () => {
     const minimal: BackendUserProfile = {
       User: 'user2',
@@ -542,5 +573,33 @@ describe('fieldMapper – vorgabenUFromServer', () => {
     expect(result.pers).toBe(server.pers);
     expect(result.aZ).toEqual(server.aZ);
     expect(result.fZ).toBe(server.fZ);
+  });
+});
+
+// ─── flatMapDocs ──────────────────────────────────────────
+
+describe('fieldMapper – flatMapDocs', () => {
+  it('mappt Dokumente und ermittelt das späteste updatedAt', () => {
+    const docs = [
+      { id: 1, updatedAt: '2024-01-01T00:00:00.000Z' },
+      { id: 2, updatedAt: '2024-03-01T00:00:00.000Z' },
+      { id: 3, updatedAt: '2024-02-01T00:00:00.000Z' },
+    ];
+    const result = flatMapDocs(docs, doc => ({ mappedId: doc.id }));
+    expect(result.data).toEqual([{ mappedId: 1 }, { mappedId: 2 }, { mappedId: 3 }]);
+    expect(result.maxUpdatedAt).toBe('2024-03-01T00:00:00.000Z');
+  });
+
+  it('liefert maxUpdatedAt=null, wenn kein Dokument updatedAt hat', () => {
+    const docs: { id: number; updatedAt?: string }[] = [{ id: 1 }, { id: 2 }];
+    const result = flatMapDocs(docs, doc => ({ mappedId: doc.id }));
+    expect(result.data).toEqual([{ mappedId: 1 }, { mappedId: 2 }]);
+    expect(result.maxUpdatedAt).toBeNull();
+  });
+
+  it('liefert leeres data-Array und maxUpdatedAt=null bei leerer Eingabe', () => {
+    const result = flatMapDocs([] as { updatedAt?: string }[], doc => doc);
+    expect(result.data).toEqual([]);
+    expect(result.maxUpdatedAt).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import type { IDatenBZ, IDatenEWT } from '@/core/types';
+import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/core/types';
 
 // --- Hoisted mocks ---
 const { mockFetchRetry, mockGetServerUrl } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(
@@ -20,6 +20,7 @@ vi.mock('@/infrastructure/api/abortController', () => ({
 
 import {
   authApi,
+  bereitschaftseinsatzApi,
   bereitschaftszeitraumApi,
   downloadPdf,
   ewtApi,
@@ -92,6 +93,29 @@ describe('apiService', () => {
       expect(localStorage.getItem('RefreshToken')).toBe(JSON.stringify('new-rt'));
     });
 
+    it('refreshToken wirft, wenn die Antwort kein accessToken oder refreshToken enthält', async () => {
+      localStorage.setItem('RefreshToken', JSON.stringify('old-rt'));
+      mockFetchRetry.mockResolvedValue({
+        success: true,
+        statusCode: 200,
+        message: 'ok',
+        data: { userName: 'Max', role: 'member', accessToken: '', refreshToken: '' },
+      });
+
+      await expect(authApi.refreshToken()).rejects.toThrow('Token-Refresh fehlgeschlagen');
+    });
+
+    it('refreshToken entfernt gespeicherte Tokens und wirft weiter, wenn der Request fehlschlägt', async () => {
+      localStorage.setItem('RefreshToken', JSON.stringify('old-rt'));
+      localStorage.setItem('AccessToken', JSON.stringify('stale-at'));
+      mockFetchRetry.mockRejectedValue(new Error('Netzwerkfehler beim Refresh'));
+
+      await expect(authApi.refreshToken()).rejects.toThrow('Netzwerkfehler beim Refresh');
+
+      expect(localStorage.getItem('AccessToken')).toBeNull();
+      expect(localStorage.getItem('RefreshToken')).toBeNull();
+    });
+
     it('changePassword sendet alte und neue Passwörter', async () => {
       mockApiSuccess({});
       const result = await authApi.changePassword('old', 'new');
@@ -112,6 +136,40 @@ describe('apiService', () => {
 
     it('logout ignoriert Fehler', async () => {
       mockFetchRetry.mockRejectedValue(new Error('network fail'));
+      await expect(authApi.logout()).resolves.toBeUndefined();
+    });
+
+    it('logout sendet Bearer-Token an auth/logout, wenn ein AccessToken vorhanden ist', async () => {
+      localStorage.setItem('AccessToken', JSON.stringify('logout-at'));
+      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: true, status: 200 }) as unknown as typeof fetch;
+
+      await authApi.logout();
+
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        'http://localhost:3000/api/v2/auth/logout',
+        expect.objectContaining({
+          method: 'POST',
+          mode: 'cors',
+          headers: expect.objectContaining({ Authorization: 'Bearer logout-at' }),
+        }),
+      );
+    });
+
+    it('logout ignoriert eine nicht-ok, nicht-401 Antwort still', async () => {
+      localStorage.setItem('AccessToken', JSON.stringify('logout-at'));
+      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 }) as unknown as typeof fetch;
+
+      await expect(authApi.logout()).resolves.toBeUndefined();
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('logout behandelt eine 401-Antwort nicht als Fehler', async () => {
+      localStorage.setItem('AccessToken', JSON.stringify('logout-at'));
+      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
+      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 }) as unknown as typeof fetch;
+
       await expect(authApi.logout()).resolves.toBeUndefined();
     });
 
@@ -407,6 +465,77 @@ describe('apiService', () => {
       mockApiSuccess(undefined);
       const result = await nebengeldApi.bulk({ create: [], update: [], delete: ['n-del1'] }, 3, 2024);
       expect(result.deleted).toEqual(['n-del1']);
+    });
+
+    it('nebengeldApi.bulk mit Create und Update nutzt Bulk-Endpoint', async () => {
+      const newN: IDatenN & { clientRequestId: string } = {
+        tagN: '10.04.2024',
+        beginN: '',
+        endeN: '',
+        auftragN: 'Auftrag-1',
+        clientRequestId: '123e4567-e89b-42d3-a456-426614174005',
+      };
+      const updatedN: IDatenN = { _id: 'n1', tagN: '11.04.2024', beginN: '', endeN: '', auftragN: 'Auftrag-2' };
+      mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
+
+      await nebengeldApi.bulk({ create: [newN], update: [updatedN], delete: [] }, 4, 2024);
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'nebengeld/bulk',
+        expect.objectContaining({ create: expect.any(Array), update: expect.any(Array) }),
+        'POST',
+      );
+    });
+
+    it('bereitschaftseinsatzApi.bulk mit Create und Update nutzt Bulk-Endpoint', async () => {
+      const newBe: IDatenBE & { clientRequestId: string } = {
+        tagBE: '10.04.2024',
+        auftragsnummerBE: 'A-1',
+        beginBE: '08:00',
+        endeBE: '10:00',
+        lreBE: 'LRE 1',
+        privatkmBE: 0,
+        clientRequestId: '123e4567-e89b-42d3-a456-426614174006',
+      };
+      const updatedBe: IDatenBE = {
+        _id: 'be1',
+        tagBE: '11.04.2024',
+        auftragsnummerBE: 'A-2',
+        beginBE: '09:00',
+        endeBE: '11:00',
+        lreBE: 'LRE 2',
+        privatkmBE: 5,
+      };
+      mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
+
+      const result = await bereitschaftseinsatzApi.bulk({ create: [newBe], update: [updatedBe], delete: [] }, 4, 2024);
+      expect(mockFetchRetry).toHaveBeenCalledWith(
+        'bereitschaftseinsatz/bulk',
+        expect.objectContaining({ create: expect.any(Array), update: expect.any(Array) }),
+        'POST',
+      );
+      expect(result).toEqual({ created: [], updated: [], deleted: [], errors: [] });
+    });
+
+    it('bereitschaftseinsatzApi.loadYear liefert flache Liste mit updatedAt', async () => {
+      mockApiSuccess([
+        {
+          _id: 'be1',
+          Monat: 4,
+          Jahr: 2024,
+          Tag: '2024-04-10T00:00:00.000Z',
+          Auftragsnummer: 'A-1',
+          Beginn: '08:00',
+          Ende: '10:00',
+          LRE: 'LRE 1',
+          PrivatKm: 0,
+          updatedAt: '2024-04-15T00:00:00.000Z',
+        },
+      ]);
+
+      const result = await bereitschaftseinsatzApi.loadYear(2024);
+      expect(mockFetchRetry).toHaveBeenCalledWith('bereitschaftseinsatz/2024', undefined, 'GET');
+      expect(result.data).toHaveLength(1);
+      expect(result.updatedAt).toBe('2024-04-15T00:00:00.000Z');
     });
 
     it('leere Bulk-Operation sendet trotzdem', async () => {

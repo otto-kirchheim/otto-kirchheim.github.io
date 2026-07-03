@@ -290,6 +290,26 @@ describe('Storage', () => {
       localStorage.setItem('Benutzer', 'Max');
       expect(Storage.compare('Benutzer', 'Max')).toBe(true);
     });
+
+    it('vergleicht verschachtelte Arrays aus Objekten unabhängig von Key-Reihenfolge', () => {
+      Storage.set('key', [
+        { b: 2, a: 1 },
+        { d: 4, c: 3 },
+      ]);
+      expect(
+        Storage.compare('key', [
+          { a: 1, b: 2 },
+          { c: 3, d: 4 },
+        ]),
+      ).toBe(true);
+    });
+
+    it('gibt false zurück wenn der Vergleichswert zirkulär ist und die Normalisierung wirft', () => {
+      Storage.set('key', { a: 1 });
+      const circular: Record<string, unknown> = { a: 1 };
+      circular.self = circular;
+      expect(Storage.compare('key', circular)).toBe(false);
+    });
   });
 
   // ─── Singleton ──────────────────────────────────────────────

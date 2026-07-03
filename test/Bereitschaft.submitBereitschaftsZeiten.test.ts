@@ -166,6 +166,33 @@ describe('submitBereitschaftsZeiten', () => {
     expect(publishDataChangedMock).not.toHaveBeenCalled();
   });
 
+  it('zeigt Fehler-Snackbar wenn Sonderschicht Ende vor Sonderschicht Beginn liegt', async () => {
+    const modal = createFullModal({ nacht: false });
+    const sonderCb = document.createElement('input') as HTMLInputElement;
+    sonderCb.id = 'sonder';
+    sonderCb.type = 'checkbox';
+    sonderCb.checked = true;
+    modal.appendChild(sonderCb);
+    const sonderVon = document.createElement('input') as HTMLInputElement;
+    sonderVon.id = 'sonderVon';
+    sonderVon.value = '2023-04-10';
+    modal.appendChild(sonderVon);
+    const sonderBis = document.createElement('input') as HTMLInputElement;
+    sonderBis.id = 'sonderBis';
+    sonderBis.value = '2023-04-08';
+    modal.appendChild(sonderBis);
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 4);
+    Storage.set('Jahr', 2023);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', message: expect.stringContaining('Sonderschicht') }),
+    );
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
+  });
+
   it('zeigt Warn-Snackbar wenn Bereitschaftszeitraum bereits vorhanden (calculateBZ gibt false zurück)', async () => {
     const modal = createFullModal();
     const tableBZ = createTableBZMock();
@@ -247,6 +274,136 @@ describe('submitBereitschaftsZeiten', () => {
     expect(publishDataChangedMock).not.toHaveBeenCalled();
 
     Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('speichert ohne Jahreswechsel wenn die Offline-Snackbar-Aktion "ohne wechsel fortsetzen" gewählt wird', async () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+
+    const continuedRow = createBZ('2023-12-28T15:45', '2023-12-31T23:59', 'dez-only');
+    calculateBereitschaftsZeitenMock.mockReturnValue([continuedRow]);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    const call = createSnackBarMock.mock.calls.find(c => (c[0] as { message: string }).message.includes('Offline'));
+    const action = (call?.[0] as { actions: { text: string; function: () => void }[] }).actions.find(a =>
+      a.text.includes('fortsetzten'),
+    );
+    expect(action).toBeDefined();
+
+    createSnackBarMock.mockClear();
+    action!.function();
+
+    expect(calculateBereitschaftsZeitenMock).toHaveBeenCalledTimes(1);
+    expect(tableBZ.instance.rows.load).toHaveBeenCalled();
+    const storedBzs = Storage.get<IDatenBZ[]>('dataBZ', { default: [] });
+    expect(storedBzs).toContainEqual(continuedRow);
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnESZ');
+    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
+
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('zeigt Warnung wenn "ohne wechsel fortsetzen" Zeitraum bereits vorhanden ist', async () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+
+    calculateBereitschaftsZeitenMock.mockReturnValue(false);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    const call = createSnackBarMock.mock.calls.find(c => (c[0] as { message: string }).message.includes('Offline'));
+    const action = (call?.[0] as { actions: { text: string; function: () => void }[] }).actions.find(a =>
+      a.text.includes('fortsetzten'),
+    );
+
+    createSnackBarMock.mockClear();
+    action!.function();
+
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'warning', message: expect.stringContaining('Bereits vorhanden') }),
+    );
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnESZ');
+
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('bricht ohne Speichern ab wenn die Offline-Snackbar-Aktion "Abbrechen" gewählt wird', async () => {
+    Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    const call = createSnackBarMock.mock.calls.find(c => (c[0] as { message: string }).message.includes('Offline'));
+    const action = (call?.[0] as { actions: { text: string; function: () => void }[] }).actions.find(
+      a => a.text === 'Abbrechen',
+    );
+    expect(action).toBeDefined();
+
+    clearLoadingMock.mockClear();
+    action!.function();
+
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnESZ');
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
+
+    Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+  });
+
+  it('bricht Jahreswechsel-API-Aufruf bei Fehler still ab (catch)', async () => {
+    const modal = createFullModal({
+      bA: '2023-12-28',
+      bAT: '15:45',
+      bE: '2024-01-05',
+      bET: '07:00',
+      nacht: false,
+    });
+    const tableBZ = createTableBZMock();
+    Storage.set('Monat', 12);
+    Storage.set('Jahr', 2023);
+    Storage.set('dataBZ', []);
+
+    apiLoadYearMock.mockRejectedValue(new Error('Netzwerkfehler'));
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    await submitBereitschaftsZeiten(modal as never, tableBZ as never);
+
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    expect(publishDataChangedMock).not.toHaveBeenCalled();
+    expect(apiBulkMock).not.toHaveBeenCalled();
+
+    consoleErrorSpy.mockRestore();
   });
 
   it('ruft API für Jahreswechsel auf und speichert Daten für beide Jahre bei Erfolg', async () => {

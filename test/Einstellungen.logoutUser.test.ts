@@ -130,4 +130,14 @@ describe('logoutUser', () => {
 
     expect(() => logoutUser({ serverLogout: false })).not.toThrow();
   });
+
+  it('fängt einen fehlschlagenden Server-Logout still ab', async () => {
+    logoutMock.mockRejectedValueOnce(new Error('Netzwerkfehler'));
+
+    expect(() => logoutUser()).not.toThrow();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(logoutMock).toHaveBeenCalledTimes(1);
+  });
 });

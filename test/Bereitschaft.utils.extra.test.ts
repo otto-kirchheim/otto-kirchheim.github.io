@@ -5,6 +5,7 @@ import type { IVorgabenU, IVorgabenUvorgabenB } from '@/core/types';
 import applyBereitschaftsVorgabe from '@/features/Bereitschaft/utils/applyBereitschaftsVorgabe';
 import toggleBereitschaftsEigeneWerte from '@/features/Bereitschaft/utils/toggleBereitschaftsEigeneWerte';
 import updateBereitschaftsDatum from '@/features/Bereitschaft/utils/updateBereitschaftsDatum';
+import { B_WECHSEL_ZEIT } from '@/features/Bereitschaft/utils/constants';
 import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 
@@ -261,5 +262,123 @@ describe('Bereitschaft utils extra', () => {
     expect(() => applyBereitschaftsVorgabe(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
       'Input Element nicht gefunden',
     );
+  });
+
+  it('BerVorgabeAEndern nutzt beginnN/endeN-Fallback, wenn az.nacht inaktiv ist', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" />
+        <input id="bAT" />
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nacht" type="checkbox" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+        <div id="nachtschicht"></div>
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    Storage.set('VorgabenU', {
+      ...createVorgabenU(),
+      aZ: {
+        ...createVorgabenU().aZ,
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      },
+    });
+
+    const vorgabenB = { ...createVorgabenB(), nacht: true };
+    const datum = dayjs('2026-03-02'); // Montag
+
+    applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
+
+    const expectedNA = datum
+      .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
+      .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+    const expectedNE = datum
+      .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
+      .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+
+    // Ohne aktive Nachtschicht werden Datum/Zeit aus den (deprecated) beginnN/endeN-Feldern abgeleitet
+    // und die Zeiten fallen auf den Bereitschaftszeitraumwechsel (B_WECHSEL_ZEIT) zurück.
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(expectedNA);
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(expectedNE);
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe(B_WECHSEL_ZEIT);
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(B_WECHSEL_ZEIT);
+  });
+
+  it('datumAnpassen nutzt beginnN/endeN-Fallback, wenn az.nacht inaktiv ist', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    Storage.set('VorgabenU', {
+      ...createVorgabenU(),
+      aZ: {
+        ...createVorgabenU().aZ,
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      },
+    });
+
+    const vorgabenB = createVorgabenB();
+    const datum = dayjs('2026-03-02');
+
+    updateBereitschaftsDatum(parentElement, vorgabenB, datum);
+
+    const expectedNA = datum
+      .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
+      .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+    const expectedNE = datum
+      .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
+      .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(expectedNA);
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(expectedNE);
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe(B_WECHSEL_ZEIT);
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(B_WECHSEL_ZEIT);
+  });
+
+  it('eigeneWerte blendet berechnet-badges basierend auf dem Schalter ein/aus', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" />
+        <input id="bAT" />
+        <input id="nacht" type="checkbox" />
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+        <input id="eigen" type="checkbox" checked />
+        <span class="berechnet-badge"></span>
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    toggleBereitschaftsEigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'));
+
+    // eigen=checked → disable=false → Badge wird ausgeblendet (display:'none')
+    expect(parentElement.querySelector<HTMLElement>('.berechnet-badge')?.style.display).toBe('none');
   });
 });

@@ -22,6 +22,10 @@ import {
 } from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
 import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IVorgabenU } from '@/types';
+import { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { IVorgabenUvorgabenB } from '@/core/types';
+import { saveTableDataVorgabenU } from '@/features/Einstellungen/utils';
+import Storage from '@/infrastructure/storage/Storage';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -214,5 +218,131 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
     expect(leistungSection?.textContent).toContain('Max. 3 gleichzeitig');
     expect(reinigungSection?.textContent).toContain('Ganzkörperreinigung');
     expect(reinigungSection?.textContent).toContain('Max. 1 gleichzeitig');
+  });
+});
+
+// ─── Vollständige Maske: Tätigkeitsstätten-Tabelle, Arbeitszeit-Panel, ─────────
+// ─── persönliche Felder, Tab-Checkboxen, AutoSave, CustomTable-Instanz ─────────
+
+describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
+  function buildFullVorgabenU(): IVorgabenU {
+    return {
+      pers: {
+        Vorname: 'Erika',
+        Nachname: 'Musterfrau',
+        PNummer: '',
+        Telefon: '',
+        Adress1: '',
+        Adress2: '',
+        ErsteTkgSt: '',
+        ErsteTkgStAdresse: '',
+        Bundesland: 'HE',
+        Betrieb: '',
+        OE: '',
+        Gewerk: '',
+        kmArbeitsort: 0,
+        nBhf: '',
+        kmnBhf: 0,
+        TB: 'Tarifkraft',
+      },
+      aZ: {
+        frueh: { aktiv: true, default: { beginn: '00:00', ende: '00:00', pause: 30 } },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+        sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
+        fahrzeit: '00:00',
+      },
+      fZ: [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }],
+      vorgabenB: {},
+      Einstellungen: {
+        aktivierteTabs: ['ewt'],
+        benoetigteZulagen: [],
+        autoSaveEnabled: false,
+        autoSaveDelayMs: 15000,
+      },
+    };
+  }
+
+  function setupFullDomShell(): void {
+    document.body.innerHTML = `
+      <input id="Vorname" />
+      <input id="Nachname" />
+      <input id="EmailAnzeige" />
+      <div id="arbeitszeit-panel"></div>
+      <div id="collapseFive">
+        <input type="checkbox" data-tab-key="bereitschaft" />
+        <input type="checkbox" data-tab-key="ewt" />
+      </div>
+      <input type="checkbox" id="autoSaveEnabled" />
+      <input id="autoSaveDelay" />
+      <span id="autoSaveDelayLabel"></span>
+    `;
+
+    const tbody = document.createElement('tbody');
+    tbody.id = 'TbodyTätigkeitsstätten';
+    document.body.appendChild(tbody);
+
+    const list = document.createElement('div');
+    list.id = 'settings-zulagen-list';
+    document.body.appendChild(list);
+
+    const table = document.createElement('table');
+    table.id = 'tableVE';
+    document.body.appendChild(table);
+  }
+
+  it('befüllt Tätigkeitsstätten-Tabelle, persönliche Felder, Tabs, AutoSave-Einstellungen und nutzt eine echte CustomTable-Instanz', () => {
+    setupFullDomShell();
+    (Storage.get as ReturnType<typeof vi.fn>).mockReturnValue('erika@example.com');
+
+    // Reale CustomTable-Instanz an #tableVE binden, damit der `ftVE instanceof CustomTable`-Zweig greift.
+    new CustomTable<IVorgabenUvorgabenB>('tableVE', {
+      columns: [{ name: 'Name', title: 'Name' }],
+      rows: [],
+      sorting: { enabled: false },
+    });
+
+    generateEingabeMaskeEinstellungen(buildFullVorgabenU());
+
+    // populateTable: Tätigkeitsstätten-Zeile aus fZ + 3 Leerzeilen.
+    // Hinweis: happy-dom implementiert HTMLTableSectionElement.rows nicht, daher .children statt .rows.
+    const tbody = document.querySelector<HTMLTableElement>('#TbodyTätigkeitsstätten');
+    expect(tbody?.children.length).toBe(4);
+    const firstRowInputs = tbody?.children[0]?.querySelectorAll<HTMLInputElement>('input');
+    expect(firstRowInputs?.[0]?.value).toBe('Kaiserau');
+
+    // renderArbeitszeiteingabePanel: Preact-Panel wurde ins Ziel-Div gerendert.
+    const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
+    expect(panel?.innerHTML.length).toBeGreaterThan(0);
+
+    // setElementValues / isNumberOrString: persönliche Felder wurden befüllt.
+    expect(document.querySelector<HTMLInputElement>('#Vorname')?.value).toBe('Erika');
+    expect(document.querySelector<HTMLInputElement>('#Nachname')?.value).toBe('Musterfrau');
+
+    // populateEmailField
+    expect(document.querySelector<HTMLInputElement>('#EmailAnzeige')?.value).toBe('erika@example.com');
+
+    // populateTabCheckboxes
+    const tabCheckboxes = document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]');
+    expect(tabCheckboxes[0]?.checked).toBe(false);
+    expect(tabCheckboxes[1]?.checked).toBe(true);
+
+    // populateAutoSaveSettings: Initialzustand aus VorgabenU.Einstellungen.
+    const enabledCheckbox = document.querySelector<HTMLInputElement>('#autoSaveEnabled');
+    const delayInput = document.querySelector<HTMLInputElement>('#autoSaveDelay');
+    const delayLabel = document.querySelector<HTMLElement>('#autoSaveDelayLabel');
+    expect(enabledCheckbox?.checked).toBe(false);
+    expect(delayInput?.value).toBe(String(msToSliderPosition(15000)));
+    expect(delayLabel?.textContent).toBe(formatDelayLabel(sliderPositionToMs(msToSliderPosition(15000))));
+
+    // Live-Update-Listener des Sliders (Zeilen 309-317).
+    if (!delayInput) throw new Error('delayInput fehlt');
+    delayInput.value = '20';
+    delayInput.dispatchEvent(new Event('input'));
+    expect(delayInput.dataset.actualMs).toBe(String(sliderPositionToMs(20)));
+    expect(delayLabel?.textContent).toBe(formatDelayLabel(sliderPositionToMs(20)));
+
+    // CustomTable-Zweig: rows.load + saveTableDataVorgabenU wurden aufgerufen.
+    expect(saveTableDataVorgabenU).toHaveBeenCalled();
   });
 });

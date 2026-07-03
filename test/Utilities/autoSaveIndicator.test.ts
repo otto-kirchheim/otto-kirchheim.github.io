@@ -85,6 +85,33 @@ describe('autoSaveIndicator', () => {
     }
   });
 
+  it('should warn and skip when the target button is missing from the DOM', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    document.getElementById('btnSaveB')?.remove();
+
+    listener('BZ', 'saving');
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('btnSaveB'));
+    warnSpy.mockRestore();
+  });
+
+  it('should recreate a detached badge element instead of reusing a stale reference', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+    const btn = document.getElementById('btnSaveB')!;
+    const staleBadge = btn.querySelector('.autosave-badge')!;
+    staleBadge.remove();
+    expect(btn.querySelector('.autosave-badge')).toBeNull();
+
+    listener('BZ', 'saving');
+
+    const newBadge = btn.querySelector('.autosave-badge');
+    expect(newBadge).not.toBeNull();
+    expect(newBadge).not.toBe(staleBadge);
+  });
+
   it('should show saving badge on Bereitschaft button when BZ is saving', () => {
     initAutoSaveIndicator();
     const listener = mockOnAutoSaveStatus.mock.calls[0][0];

@@ -76,4 +76,109 @@ describe('calculateEwtEintraege', () => {
       }),
     );
   });
+
+  it('berechnet eine Spätschicht (SP) anhand der Spät-Vorgaben', () => {
+    const mockVorgabenU = {
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+        },
+        spaet: { aktiv: true, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
+        fahrzeit: '00:30',
+      },
+      fZ: [{ key: 'Fulda', value: '00:10' }],
+      pers: {},
+    } as unknown as IVorgabenU;
+
+    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'SP' }]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        beginE: '14:00',
+        endeE: '22:00',
+      }),
+    );
+  });
+
+  it('berechnet eine Sonderschicht (S) anhand der Sonder-Vorgaben', () => {
+    const mockVorgabenU = {
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: true, beginn: '08:00', ende: '12:00', pause: 20 },
+        fahrzeit: '00:30',
+      },
+      fZ: [{ key: 'Fulda', value: '00:10' }],
+      pers: {},
+    } as unknown as IVorgabenU;
+
+    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'S' }]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        beginE: '08:00',
+        endeE: '12:00',
+      }),
+    );
+  });
+
+  it('wirft Fehler bei Sonderschicht wenn diese nicht konfiguriert ist', () => {
+    const mockVorgabenU = {
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
+        fahrzeit: '00:30',
+      },
+      fZ: [{ key: 'Fulda', value: '00:10' }],
+      pers: {},
+    } as unknown as IVorgabenU;
+
+    expect(() => calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'S' }])).toThrow(
+      'Sonderschicht nicht konfiguriert',
+    );
+  });
+
+  it('übernimmt manuell eingetragene Uhrzeiten (beginE/endeE) statt Schicht-Vorgaben zu berechnen', () => {
+    const mockVorgabenU = {
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
+        fahrzeit: '00:30',
+      },
+      fZ: [{ key: 'Fulda', value: '00:10' }],
+      pers: {},
+    } as unknown as IVorgabenU;
+
+    const eintrag = { ...createData('2026-03-10'), beginE: '07:15', endeE: '15:15' };
+
+    const result = calculateEwtEintraege(mockVorgabenU, [eintrag]);
+
+    expect(result).toHaveLength(1);
+    // convertToDayjs() wird für explizit gesetzte beginE/endeE-Werte durchlaufen (statt Schicht-Default).
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        beginE: '07:15',
+        endeE: '15:15',
+      }),
+    );
+  });
 });

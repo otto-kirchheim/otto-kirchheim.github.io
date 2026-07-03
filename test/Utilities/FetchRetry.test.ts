@@ -691,5 +691,71 @@ describe('FetchRetry.ts', () => {
       expect(firstHeaders.get('Authorization')).toBe(`Bearer ${refreshedToken}`);
       expect(secondHeaders.get('Authorization')).toBe(`Bearer ${refreshedToken}`);
     });
+
+    it('should fall back to the raw trimmed value when actAsUserId is not valid JSON', async () => {
+      localStorage.setItem('actAsUserId', 'plain-string-not-json');
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('saveData', { Monat: 3, Jahr: 2026 }, 'POST');
+
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('x-act-as-user-id')).toBe('plain-string-not-json');
+    });
+
+    it('should treat an access token with an undecodable JWT payload as non-expiring (readJwtExpMillis catch branch)', async () => {
+      const malformedToken = `header.${btoa('not valid json')}.sig`;
+      (Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true); // RefreshToken present too
+      (Storage.get as ReturnType<typeof vi.fn>).mockImplementation((key: string) => {
+        if (key === 'AccessToken') return malformedToken;
+        return null;
+      });
+
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => mockSuccessResponse,
+        headers: new Headers(),
+      });
+
+      await FetchRetry('auth/me', undefined, 'GET');
+
+      // readJwtExpMillis() catches the JSON.parse failure and returns null, so
+      // shouldRefreshBeforeRequest() short-circuits to false: no proactive refresh happens.
+      expect(tokenErneuern).not.toHaveBeenCalled();
+      const requestInit = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as RequestInit;
+      expect((requestInit.headers as Headers).get('Authorization')).toBe(`Bearer ${malformedToken}`);
+    });
+  });
+
+  // --- Version-outdated branch (must run LAST) ---
+  // `versionOutdated` is a module-level flag with no reset hook. Once set, the exported
+  // `FetchRetry()` short-circuits every subsequent call with "Version veraltet" (see the
+  // guard at the top of `FetchRetry`). This test therefore has to be the very last one in
+  // the file so it doesn't affect any of the tests above.
+  describe('version outdated handling (must stay last)', () => {
+    it('should mark the version outdated and invoke the hook on a 426 response', async () => {
+      sessionStorage.setItem('lastServerContact', (Date.now() - 1000).toString());
+      (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 426,
+        json: async () => ({ data: null, success: false, message: 'Upgrade Required' }),
+        headers: new Headers(),
+      });
+
+      const result = await FetchRetry('test/endpoint', undefined, 'GET');
+
+      expect(result).toEqual(expect.objectContaining({ success: false, statusCode: 426 }));
+
+      // The module-level flag is now permanently set; any further call short-circuits
+      // with the "Version veraltet" error instead of reaching the network.
+      await expect(FetchRetry('test/endpoint', undefined, 'GET')).rejects.toThrow(
+        'Version veraltet – bitte App aktualisieren',
+      );
+    });
   });
 });

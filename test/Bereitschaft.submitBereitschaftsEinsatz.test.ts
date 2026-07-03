@@ -126,12 +126,13 @@ function createBZ(beginB: string, endeB: string, id?: string): IDatenBZ {
 
 function createTableBEMock() {
   const addMock = vi.fn();
+  const loadMock = vi.fn();
   const rowsArray: { cells: IDatenBE; _state: string }[] = [];
-  const ftBE = { rows: { add: addMock, array: rowsArray } };
+  const ftBE = { rows: { add: addMock, load: loadMock, array: rowsArray } };
   const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftBE };
   table.id = 'tableBE';
   table.instance = ftBE;
-  return { table: table as never, addMock, rowsArray };
+  return { table: table as never, addMock, loadMock, rowsArray };
 }
 
 function createTableBZMock() {
@@ -399,6 +400,126 @@ describe('submitBereitschaftsEinsatz', () => {
       expect(storedBzs).toHaveLength(2);
       expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz1')?.endeB).toBe('2023-04-12T06:00:00.000Z');
       expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz2')?.beginB).toBe('2023-04-12T06:00:00.000Z');
+    });
+
+    it('aktualisiert verknüpfte Bereitschaftseinsätze wenn ein gemergter BZ gelöscht wird', async () => {
+      vi.clearAllMocks();
+      flushResourceMock.mockResolvedValue(undefined);
+      getBereitschaftsEinsatzDatenMock.mockReturnValue([]);
+
+      const bz1 = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T10:00:00.000Z', 'bz1');
+      const bz2 = createBZ('2023-04-12T12:00:00.000Z', '2023-04-12T22:00:00.000Z', 'bz2');
+      storageStore.set('dataBZ', [bz1, bz2]);
+      storageStore.set('dataBE', [
+        { tagBE: '11.04.2023', beginBE: '13:00', endeBE: '14:00', lreBE: 'LRE 2', bereitschaftszeitraumBE: ['bz2'] },
+      ]);
+
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '16:00', berZeit: true });
+      const { table: tableBE, rowsArray } = createTableBEMock();
+      rowsArray.push({
+        cells: { bereitschaftszeitraumBE: ['bz2'] } as unknown as IDatenBE,
+        _state: 'unchanged',
+      });
+      const { table: tableBZ, loadMock } = createTableBZMock();
+
+      const merged = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T22:00:00.000Z', 'bz1');
+      getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([bz1, bz2]).mockReturnValue([merged]);
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(result).toBe(true);
+      expect(loadMock).toHaveBeenCalledTimes(1);
+      expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
+      expect(flushResourceMock).toHaveBeenCalledWith('BE');
+      const storedBes = (storageStore.get('dataBE') as { bereitschaftszeitraumBE?: string[] }[]) ?? [];
+      expect(storedBes[0]?.bereitschaftszeitraumBE).toEqual(['bz1']);
+      expect(rowsArray[0]?.cells.bereitschaftszeitraumBE).toEqual(['bz1']);
+      expect(rowsArray[0]?._state).toBe('modified');
+    });
+  });
+
+  describe('Partial-Auflösung (berZeit)', () => {
+    it('erweitert vorhandenen BZ ans Ende wenn nur der Start abgedeckt ist', async () => {
+      vi.clearAllMocks();
+      flushResourceMock.mockResolvedValue(undefined);
+      getBereitschaftsEinsatzDatenMock.mockReturnValue([]);
+
+      const bz1 = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T10:00:00.000Z', 'bz1');
+      storageStore.set('dataBZ', [bz1]);
+
+      // ZeitVon=11:00 (inside bz1 UTC 09Z-...wait keep in local Berlin like other tests) -> use explicit UTC-friendly values below
+      const modal = createModal({ ZeitVon: '11:00', ZeitBis: '14:00', berZeit: true });
+      const { table: tableBE } = createTableBEMock();
+      const { table: tableBZ, loadMock } = createTableBZMock();
+
+      const updatedBz1 = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T12:00:00.000Z', 'bz1');
+      getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([bz1]).mockReturnValue([updatedBz1]);
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(result).toBe(true);
+      expect(loadMock).toHaveBeenCalledTimes(1);
+      expect(flushResourceMock).toHaveBeenCalledWith('BZ');
+      const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
+      expect(storedBzs).toHaveLength(1);
+      expect(storedBzs[0]._id).toBe('bz1');
+      expect(storedBzs[0].endeB).not.toBe(bz1.endeB);
+    });
+
+    it('erweitert vorhandenen BZ an den Anfang wenn nur das Ende abgedeckt ist', async () => {
+      vi.clearAllMocks();
+      flushResourceMock.mockResolvedValue(undefined);
+      getBereitschaftsEinsatzDatenMock.mockReturnValue([]);
+
+      const bz1 = createBZ('2023-04-12T12:00:00.000Z', '2023-04-12T20:00:00.000Z', 'bz1');
+      storageStore.set('dataBZ', [bz1]);
+
+      // Berlin local -> UTC (CEST +2): ZeitVon 09:00 -> 07:00Z (outside bz1), ZeitBis 15:00 -> 13:00Z (inside bz1 12-20Z)
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '15:00', berZeit: true });
+      const { table: tableBE } = createTableBEMock();
+      const { table: tableBZ, loadMock } = createTableBZMock();
+
+      const updatedBz1 = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T20:00:00.000Z', 'bz1');
+      getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([bz1]).mockReturnValue([updatedBz1]);
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(result).toBe(true);
+      expect(loadMock).toHaveBeenCalledTimes(1);
+      const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
+      expect(storedBzs).toHaveLength(1);
+      expect(storedBzs[0].beginB).not.toBe(bz1.beginB);
+    });
+  });
+
+  describe('Fehlerbehandlung beim Anlegen des Zeitraums', () => {
+    it('stellt vorherigen Storage-Zustand wieder her wenn flushResource fehlschlägt', async () => {
+      vi.clearAllMocks();
+      getBereitschaftsEinsatzDatenMock.mockReturnValue([]);
+      getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
+
+      const previousBzs = [createBZ('2023-03-01T07:00:00.000Z', '2023-03-01T10:00:00.000Z', 'old')];
+      const previousBes = [{ tagBE: '01.03.2023', beginBE: '08:00', endeBE: '09:00', lreBE: 'LRE 3' }];
+      storageStore.set('dataBZ', previousBzs);
+      storageStore.set('dataBE', previousBes);
+
+      calculateBereitschaftsZeitenMock.mockReturnValue([
+        { beginB: '2023-04-12T09:00:00.000Z', endeB: '2023-04-12T12:00:00.000Z', pauseB: 0 },
+      ]);
+      flushResourceMock.mockRejectedValueOnce(new Error('Netzwerk down'));
+
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00', berZeit: true });
+      const { table: tableBE } = createTableBEMock();
+      const { table: tableBZ } = createTableBZMock();
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(result).toBe(false);
+      expect(createSnackBarMock).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'error', message: expect.stringContaining('Netzwerk down') }),
+      );
+      expect(storageStore.get('dataBZ')).toEqual(previousBzs);
+      expect(storageStore.get('dataBE')).toEqual(previousBes);
     });
   });
 });

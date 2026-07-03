@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-03
+
+### test (Testcoverage erhöht)
+
+- **Coverage:** 78.26 % → 83.55 % Funcs, 81.77 % → 86.37 % Lines. Testanzahl 989 → 1156 (0 Fehlschläge).
+- **Schwerpunkte:** Bereitschaft (`submitBereitschaftsEinsatz`, `submitBereitschaftsZeiten`, `BereitschaftOverridePanel` neu auf 100 %), Auth-Orchestrierung (`core/orchestration/auth/*`), AutoSave-Infrastruktur (`autoSaveIndicator`, `changeTracking`, `errorHandling`, `autoSave.ts`), diverse Utility-Lücken (`MyInput`, `bootstrap`, `core/types/api`, `FetchRetry`, `download.ts`).
+- **Verbleibend offen:** Große Admin-/Modal-Komponenten (`AdminUserList.tsx`, `AdminResourceBrowser.tsx`, `AdminProfileTemplatesManager.tsx`, `ArbeitszeiteingabePanel.tsx`, `createEditorModalVE.tsx` u. a.) sind weiterhin bei ~0 % Coverage; bewusst zurückgestellt, da jede Datei eigene Test-Infrastruktur benötigt (separates Vorhaben).
+
 ## 2026-06-28
 
 ### feat (AdminDashboard – Ereignisse-Pagination)

@@ -71,5 +71,19 @@ describe('decodeAccessToken', () => {
       localStorage.setItem('RefreshToken', JSON.stringify('refresh-token'));
       expect(isAdmin()).toBe(true);
     });
+
+    it('gibt false zurück für eine unbekannte Rolle', () => {
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('guest'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
+      expect(isAdmin()).toBe(false);
+    });
+
+    it('vergleicht Rollen case-sensitiv (kein Match bei abweichender Schreibweise)', () => {
+      localStorage.setItem('Benutzer', JSON.stringify('Max'));
+      localStorage.setItem('BenutzerRolle', JSON.stringify('Team-Admin'));
+      localStorage.setItem('AccessToken', JSON.stringify('access-token'));
+      expect(isAdmin()).toBe(false);
+    });
   });
 });

@@ -99,6 +99,19 @@ describe('loginWithPasskey', () => {
     });
   });
 
+  it('zeigt einen Hinweis wenn der Browser WebAuthn nicht unterstuetzt', async () => {
+    const modal = setupDom('otto');
+    browserSupportsWebAuthnMock.mockReturnValue(false);
+
+    await loginWithPasskey(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe(
+      'Dieser Browser unterstützt keine Biometrie-Anmeldung.',
+    );
+    expect(beginPasskeyLoginMock).not.toHaveBeenCalled();
+    expect(setLoadingMock).not.toHaveBeenCalled();
+  });
+
   it('verwendet bei vorhandenem Benutzernamen den klassischen Passkey-Flow', async () => {
     const modal = setupDom('otto');
     beginPasskeyLoginMock.mockResolvedValue({
