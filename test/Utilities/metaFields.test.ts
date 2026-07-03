@@ -57,7 +57,10 @@ describe('hasPendingLocalChanges', () => {
   });
 
   it('gibt false zurück wenn keine pending changes', () => {
-    const rows = [{ a: 1, _id: 'x' }, { a: 2, _id: 'y' }];
+    const rows = [
+      { a: 1, _id: 'x' },
+      { a: 2, _id: 'y' },
+    ];
     expect(hasPendingLocalChanges(rows)).toBe(false);
   });
 

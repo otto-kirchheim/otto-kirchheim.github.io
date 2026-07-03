@@ -661,7 +661,13 @@ describe('autoSave', () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
 
-      const rowObj: { _state: string; cells: Record<string, string>; _id: string | undefined; _errorState: string | undefined; _errorMessage: string | null } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
+      const rowObj: {
+        _state: string;
+        cells: Record<string, string>;
+        _id: string | undefined;
+        _errorState: string | undefined;
+        _errorMessage: string | null;
+      } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
       const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [rowObj]);
 

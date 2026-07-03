@@ -62,9 +62,13 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
   default: {
     get: <T>(key: string, options?: { default?: T }): T =>
       (storageStore.has(key) ? storageStore.get(key) : options?.default) as T,
-    set: (key: string, value: unknown): void => { storageStore.set(key, value); },
+    set: (key: string, value: unknown): void => {
+      storageStore.set(key, value);
+    },
     check: (key: string): boolean => storageStore.has(key),
-    remove: (key: string): void => { storageStore.delete(key); },
+    remove: (key: string): void => {
+      storageStore.delete(key);
+    },
   },
 }));
 
@@ -156,9 +160,7 @@ describe('submitBereitschaftsEinsatz', () => {
     const modal = document.createElement('div');
     const { table: tableBE } = createTableBEMock();
     const { table: tableBZ } = createTableBZMock();
-    await expect(submitBereitschaftsEinsatz(modal, tableBE, tableBZ)).rejects.toThrow(
-      'Input Element nicht gefunden',
-    );
+    await expect(submitBereitschaftsEinsatz(modal, tableBE, tableBZ)).rejects.toThrow('Input Element nicht gefunden');
   });
 
   it('wirft Fehler bei unbekanntem LRE', async () => {
@@ -248,9 +250,7 @@ describe('submitBereitschaftsEinsatz', () => {
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
     expect(result).toBe(true);
-    expect(addMock).toHaveBeenCalledWith(
-      expect.objectContaining({ bereitschaftszeitraumBE: ['bz1', 'bz2'] }),
-    );
+    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ bereitschaftszeitraumBE: ['bz1', 'bz2'] }));
   });
 
   it('speichert zusätzlichen Bereitschaftszeitraum wenn berZeit aktiviert und Coverage unvollständig', async () => {
@@ -387,9 +387,7 @@ describe('submitBereitschaftsEinsatz', () => {
       // After boundary split: bz1 ends at 06:00Z (= 08:00 Berlin), bz2 starts at 06:00Z
       const updatedBz1 = createBZ('2023-04-12T03:00:00.000Z', '2023-04-12T06:00:00.000Z', 'bz1');
       const updatedBz2 = createBZ('2023-04-12T06:00:00.000Z', '2023-04-12T18:00:00.000Z', 'bz2');
-      getBereitschaftsZeitraumDatenMock
-        .mockReturnValueOnce([bz1, bz2])
-        .mockReturnValue([updatedBz1, updatedBz2]);
+      getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([bz1, bz2]).mockReturnValue([updatedBz1, updatedBz2]);
 
       const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 

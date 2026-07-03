@@ -342,8 +342,7 @@ describe('submitBereitschaftsZeiten', () => {
     await submitBereitschaftsZeiten(modal as never, tableBZ as never);
 
     const overrides = calculateBereitschaftsZeitenMock.mock.calls[0]?.[9] as
-      | { nacht?: { default?: { ende: string } } }
-      | undefined;
+      { nacht?: { default?: { ende: string } } } | undefined;
     expect(overrides?.nacht?.default?.ende).toBe('05:00');
   });
 

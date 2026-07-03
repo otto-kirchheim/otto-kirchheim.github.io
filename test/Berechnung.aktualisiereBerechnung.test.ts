@@ -139,7 +139,13 @@ describe('aktualisiereBerechnung', () => {
   it('sums Zulage-040-Werte je Monat als N.F', () => {
     const N: IDatenN[] = [
       { tagN: '01.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
-      { tagN: '15.03.2026', zulagenN: [{ code: '040', value: 1 }, { code: '811', value: 120 }] } as IDatenN,
+      {
+        tagN: '15.03.2026',
+        zulagenN: [
+          { code: '040', value: 1 },
+          { code: '811', value: 120 },
+        ],
+      } as IDatenN,
       { tagN: '01.04.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
     ];
 
@@ -163,14 +169,14 @@ describe('aktualisiereBerechnung', () => {
       {
         tagN: '01.03.2026',
         zulagenN: [
-          { code: '040', value: 1 },   // → N.F
-          { code: '811', value: 120 },  // → N.B (Minuten)
-          { code: '841', value: 90 },   // → N.A (Minuten)
-          { code: '831', value: 60 },   // → N.C (Minuten)
-          { code: '837', value: 60 },   // → N.CA (Minuten)
-          { code: '838', value: 60 },   // → N.CB (Minuten)
-          { code: '839', value: 1 },    // → N.C9 (Stück)
-          { code: '846', value: 60 },   // → N.SIPO (Minuten)
+          { code: '040', value: 1 }, // → N.F
+          { code: '811', value: 120 }, // → N.B (Minuten)
+          { code: '841', value: 90 }, // → N.A (Minuten)
+          { code: '831', value: 60 }, // → N.C (Minuten)
+          { code: '837', value: 60 }, // → N.CA (Minuten)
+          { code: '838', value: 60 }, // → N.CB (Minuten)
+          { code: '839', value: 1 }, // → N.C9 (Stück)
+          { code: '846', value: 60 }, // → N.SIPO (Minuten)
         ],
       } as IDatenN,
     ];

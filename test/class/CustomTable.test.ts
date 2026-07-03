@@ -213,7 +213,9 @@ describe('CustomTable', () => {
       onChange,
     });
 
-    table.rows.load([{ _id: '2', label: 'Gelöschte Zeile', value: 2, __localState: 'deleted' }] as unknown as TableRow[]);
+    table.rows.load([
+      { _id: '2', label: 'Gelöschte Zeile', value: 2, __localState: 'deleted' },
+    ] as unknown as TableRow[]);
 
     const rows = table.getRows();
     expect(rows).toHaveLength(1);
