@@ -531,15 +531,39 @@
 
       <!-- Tab Berechnung -->
       <div class="tab-pane fade" id="Berechnung" role="tabpanel">
-        <div class="container-lg text-center mb-3">
+        <!-- container-xl: unterhalb 1200px volle Breite für das Monats-Fenster, ab 1200px wie gehabt -->
+        <div class="container-xl text-center mb-3">
           <div>
             <h1 id="titelBerechnung">Berechnung</h1>
             <h4 id="MonatBerechnung"></h4>
           </div>
 
-          <div id="berechnungMobileCards" class="d-md-none text-start" aria-describedby="titelBerechnung"></div>
+          <div id="berechnungMobileCards" class="d-sm-none text-start" aria-describedby="titelBerechnung"></div>
 
-          <div class="table-responsive d-none d-md-block">
+          <div
+            class="d-none d-sm-flex d-xl-none justify-content-center align-items-center gap-3 mb-2"
+            id="berechnungMonatsNav"
+          >
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              id="btnBerechnungMonatePrev"
+              type="button"
+              aria-label="Frühere Monate anzeigen"
+            >
+              &lsaquo;
+            </button>
+            <span id="berechnungMonatsFensterLabel" class="small"></span>
+            <button
+              class="btn btn-outline-secondary btn-sm"
+              id="btnBerechnungMonateNext"
+              type="button"
+              aria-label="Spätere Monate anzeigen"
+            >
+              &rsaquo;
+            </button>
+          </div>
+
+          <div class="table-responsive d-none d-sm-block">
             <table
               class="table table-bordered table-striped table-hover align-middle table-Berechnung"
               aria-describedby="titelBerechnung"
@@ -547,18 +571,18 @@
               <thead class="align-middle">
                 <tr class="table-primary align-middle">
                   <th></th>
-                  <th class="col-1">Jan</th>
-                  <th class="col-1">Feb</th>
-                  <th class="col-1">Mär</th>
-                  <th class="col-1">Apr</th>
-                  <th class="col-1">Mai</th>
-                  <th class="col-1">Jun</th>
-                  <th class="col-1">Jul</th>
-                  <th class="col-1">Aug</th>
-                  <th class="col-1">Sep</th>
-                  <th class="col-1">Okt</th>
-                  <th class="col-1">Nov</th>
-                  <th class="col-1">Dez</th>
+                  <th class="col-1" data-monat="1">Jan</th>
+                  <th class="col-1" data-monat="2">Feb</th>
+                  <th class="col-1" data-monat="3">Mär</th>
+                  <th class="col-1" data-monat="4">Apr</th>
+                  <th class="col-1" data-monat="5">Mai</th>
+                  <th class="col-1" data-monat="6">Jun</th>
+                  <th class="col-1" data-monat="7">Jul</th>
+                  <th class="col-1" data-monat="8">Aug</th>
+                  <th class="col-1" data-monat="9">Sep</th>
+                  <th class="col-1" data-monat="10">Okt</th>
+                  <th class="col-1" data-monat="11">Nov</th>
+                  <th class="col-1" data-monat="12">Dez</th>
                 </tr>
               </thead>
               <tbody id="tbodyBerechnung"></tbody>

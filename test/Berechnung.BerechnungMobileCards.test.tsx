@@ -130,7 +130,22 @@ describe('#BerechnungMobileCards', () => {
     expect(container.textContent).toContain('Abwesenheiten >8 Std.');
     expect(container.textContent).not.toContain('>14 Std.');
     expect(container.textContent).not.toContain('>24 Std.');
-    expect(container.textContent).toContain('steuerfrei § 9 EStG >8 Std.');
+    expect(container.textContent).toContain('steuerfrei >8 Std.');
+  });
+
+  it('klappt den aktuellen Monat standardmäßig auf', async () => {
+    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    Storage.set('Monat', 2);
+
+    const monatsErgebnisse = [leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)];
+    mountBerechnungMobileCards(monatsErgebnisse, []);
+
+    const container = document.querySelector('#berechnungMobileCards')!;
+    expect(container.querySelector('#berechnungMonatCollapse2')?.classList.contains('show')).toBe(true);
+    expect(container.querySelector('#berechnungMonatCollapse1')?.classList.contains('show')).toBe(false);
+    expect(
+      container.querySelector('[data-bs-target="#berechnungMonatCollapse2"]')?.classList.contains('collapsed'),
+    ).toBe(false);
   });
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {

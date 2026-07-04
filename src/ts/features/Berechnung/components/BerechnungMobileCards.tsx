@@ -1,4 +1,6 @@
 import { render } from 'preact';
+import { default as Storage } from '@/infrastructure/storage/Storage';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { formatCurrency, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
@@ -9,6 +11,8 @@ interface IBerechnungMobileCardsProps {
   monatsErgebnisse: IBerechnungMonatsErgebnis[];
   aktivierteTabs?: string[];
   zulagenBreakdown?: IZulagenBreakdown;
+  /** Dieser Monat (1-12) ist beim Rendern aufgeklappt */
+  offenerMonat?: number;
 }
 
 const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
@@ -29,10 +33,12 @@ function MonatsKarte({
   ergebnis,
   aktivierteTabs,
   zulagenBreakdown,
+  offen = false,
 }: {
   ergebnis: IBerechnungMonatsErgebnis;
   aktivierteTabs?: string[];
   zulagenBreakdown?: IZulagenBreakdown;
+  offen?: boolean;
 }) {
   const monatsName = MONATSNAMEN[ergebnis.monat - 1] ?? String(ergebnis.monat);
   const collapseId = `berechnungMonatCollapse${ergebnis.monat}`;
@@ -68,7 +74,7 @@ function MonatsKarte({
     <div class="accordion-item">
       <h2 class="accordion-header">
         <button
-          class="accordion-button collapsed"
+          class={`accordion-button${offen ? '' : ' collapsed'}`}
           type="button"
           data-bs-toggle="collapse"
           data-bs-target={`#${collapseId}`}
@@ -79,7 +85,11 @@ function MonatsKarte({
           </span>
         </button>
       </h2>
-      <div id={collapseId} class="accordion-collapse collapse" data-bs-parent="#accordionBerechnung">
+      <div
+        id={collapseId}
+        class={`accordion-collapse collapse${offen ? ' show' : ''}`}
+        data-bs-parent="#accordionBerechnung"
+      >
         <div class="accordion-body py-2">
           {zeigeGruppe('bereitschaft') && (
             <>
@@ -111,7 +121,7 @@ function MonatsKarte({
                   ['>24', ergebnis.abwesenheiten.a24],
                 ])}
               {ergebnis.steuerfreieAbwesenheiten !== null &&
-                schwellenZeilen('steuerfrei § 9 EStG', [
+                schwellenZeilen('steuerfrei', [
                   ['>8', ergebnis.steuerfreieAbwesenheiten.s8],
                   ['>14', ergebnis.steuerfreieAbwesenheiten.s14],
                 ])}
@@ -130,7 +140,12 @@ function MonatsKarte({
   );
 }
 
-const BerechnungMobileCards = ({ monatsErgebnisse, aktivierteTabs, zulagenBreakdown }: IBerechnungMobileCardsProps) => (
+const BerechnungMobileCards = ({
+  monatsErgebnisse,
+  aktivierteTabs,
+  zulagenBreakdown,
+  offenerMonat,
+}: IBerechnungMobileCardsProps) => (
   <div class="accordion" id="accordionBerechnung">
     {monatsErgebnisse.map(ergebnis => (
       <MonatsKarte
@@ -138,6 +153,7 @@ const BerechnungMobileCards = ({ monatsErgebnisse, aktivierteTabs, zulagenBreakd
         ergebnis={ergebnis}
         aktivierteTabs={aktivierteTabs}
         zulagenBreakdown={zulagenBreakdown}
+        offen={ergebnis.monat === offenerMonat}
       />
     ))}
   </div>
@@ -151,11 +167,14 @@ export function mountBerechnungMobileCards(
   const container = document.querySelector<HTMLDivElement>('#berechnungMobileCards');
   if (!container) return;
 
+  const aktuellerMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+
   render(
     <BerechnungMobileCards
       monatsErgebnisse={monatsErgebnisse}
       aktivierteTabs={aktivierteTabs}
       zulagenBreakdown={zulagenBreakdown}
+      offenerMonat={aktuellerMonat}
     />,
     container,
   );

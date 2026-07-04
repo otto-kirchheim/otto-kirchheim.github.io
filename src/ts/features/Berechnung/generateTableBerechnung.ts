@@ -9,6 +9,7 @@ import calculateBerechnungRows, {
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from './berechnungGroupVisibility';
 import calculateZulagenBreakdown, { zulagenEinheitKurz, type IZulagenBreakdown } from './calculateZulagenBreakdown';
 import { mountBerechnungMobileCards } from './components/BerechnungMobileCards';
+import { wendeMonatsFensterAn } from './berechnungMonatsFenster';
 
 type ZellInhalt = string | { html: string };
 
@@ -47,8 +48,8 @@ const ZEILEN: IZeilenDefinition[] = [
     rowHtml:
       '<tr><th><table class="table table-borderless m-0"><tbody>' +
       '<tr><td class="py-0">Anzahl der</td><td class="py-0">>8</td></tr>' +
-      '<tr><td class="py-0">Abwesenheiten nach</td><td class="py-0">>14</td></tr>' +
-      '<tr><td class="py-0">FGr-TV / LfTV / RVB</td><td class="py-0">>24</td></tr>' +
+      '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
+      '<tr><td class="py-0"></td><td class="py-0">>24</td></tr>' +
       '</tbody></table></th></tr>',
     inhalt: m =>
       m.abwesenheiten === null
@@ -64,8 +65,8 @@ const ZEILEN: IZeilenDefinition[] = [
     gruppe: 'ewt',
     rowHtml:
       '<tr><th><table class="table table-borderless m-0"><tbody>' +
-      '<tr><td class="py-0">steuerfreie Abwesen-</td><td class="py-0">>8</td></tr>' +
-      '<tr><td class="py-0">heiten § 9 EStG</td><td class="py-0">>14</td></tr>' +
+      '<tr><td class="py-0">steuerfreie</td><td class="py-0">>8</td></tr>' +
+      '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
       '</tbody></table></th></tr>',
     inhalt: m =>
       m.steuerfreieAbwesenheiten === null
@@ -147,6 +148,7 @@ export default function generateTableBerechnung(
   Array.from(tbody.children).forEach((row, index) => {
     for (const monatsErgebnis of monatsErgebnisse) {
       const td = document.createElement('td');
+      td.dataset.monat = String(monatsErgebnis.monat);
       const inhalt = sichtbareZeilen[index].inhalt(monatsErgebnis);
       if (typeof inhalt === 'string') {
         if (inhalt !== '') td.textContent = inhalt;
@@ -156,4 +158,6 @@ export default function generateTableBerechnung(
       row.appendChild(td);
     }
   });
+
+  wendeMonatsFensterAn();
 }
