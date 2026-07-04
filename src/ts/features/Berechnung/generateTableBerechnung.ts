@@ -7,6 +7,7 @@ import calculateBerechnungRows, {
   type IBerechnungMonatsErgebnis,
 } from './calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from './berechnungGroupVisibility';
+import { mountBerechnungMobileCards } from './components/BerechnungMobileCards';
 
 type ZellInhalt = string | { html: string };
 
@@ -87,10 +88,11 @@ export default function generateTableBerechnung(
   const tarifKraft = vorgabenU.pers.TB;
   const aktivierteTabs = vorgabenU.Einstellungen?.aktivierteTabs;
 
+  const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);
+  mountBerechnungMobileCards(monatsErgebnisse, aktivierteTabs);
+
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
   if (!tbody) return;
-
-  const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);
 
   // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten
   const sichtbareZeilen = ZEILEN.filter(

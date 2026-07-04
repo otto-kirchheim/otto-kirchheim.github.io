@@ -1,3 +1,4 @@
 import TableComponent from './createBerechnungTableBody';
+import BerechnungMobileCards, { mountBerechnungMobileCards } from './BerechnungMobileCards';
 
-export { TableComponent };
+export { TableComponent, BerechnungMobileCards, mountBerechnungMobileCards };
