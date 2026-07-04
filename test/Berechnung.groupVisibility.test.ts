@@ -82,6 +82,25 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     expect(tbody?.children.length).toBe(13);
   });
 
+  it('fügt bei mehreren Jahres-Zulagen eine Aufschlüsselungszeile vor Summe Nebenbezüge ein', () => {
+    setVorgabenU([]);
+    Storage.set('Benutzer', 'testuser');
+    Storage.set('Jahr', 2026);
+    Storage.set('dataN', [
+      { tagN: '05.01.2026', beginN: '08:00', endeN: '16:00', auftragN: 'A1', zulagenN: [{ code: '040', value: 2 }] },
+      { tagN: '10.03.2026', beginN: '08:00', endeN: '16:00', auftragN: 'A1', zulagenN: [{ code: '846', value: 120 }] },
+    ]);
+
+    generateTableBerechnung({ 1: monatMitNeben } as unknown as IVorgabenBerechnung);
+
+    const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
+    expect(tbody?.children.length).toBe(14);
+    expect(tbody?.textContent).toContain('040 Fahrentsch.');
+    expect(tbody?.textContent).toContain('846 kein SiPo');
+
+    Storage.set('dataN', []);
+  });
+
   it('entfernt mehrere deaktivierte Gruppen ohne Daten gemeinsam', () => {
     setVorgabenU(['bereitschaft']);
 

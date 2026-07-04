@@ -1,12 +1,14 @@
 import { render } from 'preact';
 import { formatCurrency, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
+import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
 
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] as const;
 
 interface IBerechnungMobileCardsProps {
   monatsErgebnisse: IBerechnungMonatsErgebnis[];
   aktivierteTabs?: string[];
+  zulagenBreakdown?: IZulagenBreakdown;
 }
 
 const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
@@ -20,13 +22,24 @@ const GruppenTitel = ({ titel }: { titel: string }) => (
   <div class="fw-bold text-start pt-2 pb-1 berechnung-card-gruppe">{titel}</div>
 );
 
-function MonatsKarte({ ergebnis, aktivierteTabs }: { ergebnis: IBerechnungMonatsErgebnis; aktivierteTabs?: string[] }) {
+function MonatsKarte({
+  ergebnis,
+  aktivierteTabs,
+  zulagenBreakdown,
+}: {
+  ergebnis: IBerechnungMonatsErgebnis;
+  aktivierteTabs?: string[];
+  zulagenBreakdown?: IZulagenBreakdown;
+}) {
   const monatsName = MONATSNAMEN[ergebnis.monat - 1] ?? String(ergebnis.monat);
   const collapseId = `berechnungMonatCollapse${ergebnis.monat}`;
 
+  const monatHatZulagen =
+    zulagenBreakdown?.codes.some(c => zulagenBreakdown.values[c.code][ergebnis.monat - 1] > 0) ?? false;
+
   // Mobil-Scope = einzelner Monat: deaktivierte Gruppen nur zeigen, wenn dieser Monat Daten hat
   const zeigeGruppe = (gruppe: BerechnungGruppe): boolean =>
-    isGroupVisible(gruppe, aktivierteTabs, gruppeHatDaten(gruppe, ergebnis));
+    isGroupVisible(gruppe, aktivierteTabs, gruppeHatDaten(gruppe, ergebnis) || (gruppe === 'neben' && monatHatZulagen));
 
   const schwellenWerte = (werte: Array<[string, number | null]>): string =>
     werte.map(([schwelle, wert]) => `${schwelle}: ${wert ?? '–'}`).join(' · ');
@@ -99,6 +112,14 @@ function MonatsKarte({ ergebnis, aktivierteTabs }: { ergebnis: IBerechnungMonats
           {zeigeGruppe('neben') && (
             <>
               <GruppenTitel titel="Nebenbezüge" />
+              {zulagenBreakdown?.showBreakdown &&
+                zulagenBreakdown.codes.map(c => (
+                  <DetailZeile
+                    key={c.code}
+                    label={c.label}
+                    wert={`${zulagenBreakdown.values[c.code][ergebnis.monat - 1]} ${zulagenEinheitKurz(c.unit)}`}
+                  />
+                ))}
               {ergebnis.summeNebenbezuege !== null && (
                 <DetailZeile label="Summe Nebenbezüge" wert={formatCurrency(ergebnis.summeNebenbezuege)} />
               )}
@@ -115,10 +136,15 @@ function MonatsKarte({ ergebnis, aktivierteTabs }: { ergebnis: IBerechnungMonats
   );
 }
 
-const BerechnungMobileCards = ({ monatsErgebnisse, aktivierteTabs }: IBerechnungMobileCardsProps) => (
+const BerechnungMobileCards = ({ monatsErgebnisse, aktivierteTabs, zulagenBreakdown }: IBerechnungMobileCardsProps) => (
   <div class="accordion" id="accordionBerechnung">
     {monatsErgebnisse.map(ergebnis => (
-      <MonatsKarte key={ergebnis.monat} ergebnis={ergebnis} aktivierteTabs={aktivierteTabs} />
+      <MonatsKarte
+        key={ergebnis.monat}
+        ergebnis={ergebnis}
+        aktivierteTabs={aktivierteTabs}
+        zulagenBreakdown={zulagenBreakdown}
+      />
     ))}
   </div>
 );
@@ -126,11 +152,19 @@ const BerechnungMobileCards = ({ monatsErgebnisse, aktivierteTabs }: IBerechnung
 export function mountBerechnungMobileCards(
   monatsErgebnisse: IBerechnungMonatsErgebnis[],
   aktivierteTabs?: string[],
+  zulagenBreakdown?: IZulagenBreakdown,
 ): void {
   const container = document.querySelector<HTMLDivElement>('#berechnungMobileCards');
   if (!container) return;
 
-  render(<BerechnungMobileCards monatsErgebnisse={monatsErgebnisse} aktivierteTabs={aktivierteTabs} />, container);
+  render(
+    <BerechnungMobileCards
+      monatsErgebnisse={monatsErgebnisse}
+      aktivierteTabs={aktivierteTabs}
+      zulagenBreakdown={zulagenBreakdown}
+    />,
+    container,
+  );
 }
 
 export default BerechnungMobileCards;

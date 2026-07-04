@@ -7,6 +7,7 @@ import calculateBerechnungRows, {
   type IBerechnungMonatsErgebnis,
 } from './calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from './berechnungGroupVisibility';
+import calculateZulagenBreakdown, { zulagenEinheitKurz, type IZulagenBreakdown } from './calculateZulagenBreakdown';
 import { mountBerechnungMobileCards } from './components/BerechnungMobileCards';
 
 type ZellInhalt = string | { html: string };
@@ -78,6 +79,27 @@ const ZEILEN: IZeilenDefinition[] = [
   { gruppe: null, rowHtml: '<tr><th>Summe Gesamt</th></tr>', inhalt: m => currency(m.summeGesamt) },
 ];
 
+const escapeHtml = (text: string): string =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeilenDefinition {
+  const labelRows = breakdown.codes
+    .map(
+      c =>
+        `<tr><td class="py-0">${escapeHtml(c.label)}</td>` +
+        `<td class="py-0">${zulagenEinheitKurz(c.unit)}</td></tr>`,
+    )
+    .join('');
+
+  return {
+    gruppe: 'neben',
+    rowHtml: `<tr><th><table class="table table-borderless m-0"><tbody>${labelRows}</tbody></table></th></tr>`,
+    inhalt: m => ({
+      html: breakdown.codes.map(c => breakdown.values[c.code][m.monat - 1]).join(' <br />'),
+    }),
+  };
+}
+
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
@@ -89,20 +111,26 @@ export default function generateTableBerechnung(
   const aktivierteTabs = vorgabenU.Einstellungen?.aktivierteTabs;
 
   const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);
-  mountBerechnungMobileCards(monatsErgebnisse, aktivierteTabs);
+  const zulagenBreakdown = calculateZulagenBreakdown();
+  mountBerechnungMobileCards(monatsErgebnisse, aktivierteTabs, zulagenBreakdown);
 
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
   if (!tbody) return;
 
-  // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten
-  const sichtbareZeilen = ZEILEN.filter(
-    zeile =>
-      zeile.gruppe === null ||
-      isGroupVisible(
-        zeile.gruppe,
-        aktivierteTabs,
-        monatsErgebnisse.some(m => gruppeHatDaten(zeile.gruppe as BerechnungGruppe, m)),
-      ),
+  const zeilen = [...ZEILEN];
+  if (zulagenBreakdown.showBreakdown) {
+    const nebenIndex = zeilen.findIndex(zeile => zeile.rowHtml.includes('Summe Nebenbezüge'));
+    zeilen.splice(nebenIndex, 0, buildZulagenBreakdownZeile(zulagenBreakdown));
+  }
+
+  // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten.
+  // Roh-Zulagen zählen für 'neben' auch dann als Daten, wenn keine Euro-Summe berechnet wurde.
+  const hatGruppenDaten = (gruppe: BerechnungGruppe): boolean =>
+    monatsErgebnisse.some(m => gruppeHatDaten(gruppe, m)) ||
+    (gruppe === 'neben' && zulagenBreakdown.codes.length > 0);
+
+  const sichtbareZeilen = zeilen.filter(
+    zeile => zeile.gruppe === null || isGroupVisible(zeile.gruppe, aktivierteTabs, hatGruppenDaten(zeile.gruppe)),
   );
 
   tbody.innerHTML = sichtbareZeilen.map(zeile => zeile.rowHtml).join('\n');
