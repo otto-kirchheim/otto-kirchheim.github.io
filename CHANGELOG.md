@@ -14,6 +14,7 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - **EWT-Zählfehler behoben:** Abwesenheiten unter 8 Stunden landeten über eine `else`-Falle in der `>24`-Spalte; sie zählen jetzt in keinem Schwellen-Bucket.
 - **Dreistufige Breakpoints mit Monats-Fenster:** Mobil-Akkordeon bis <576px (`d-sm-none`), volle Tabelle ab 1200px; dazwischen Tabelle mit dynamischem Monats-Fenster (`berechnungMonatsFenster.ts`): sichtbare Monatsanzahl wird aus verfügbarer Breite berechnet (feste Label-Spalte 11.5rem, ~95px pro Monatsspalte), Prev/Next-Buttons verschieben das Fenster, Start um den aktuellen Monat zentriert; Neuberechnung bei Resize/Tab-Öffnung.
 - **Weitere UI-Verbesserungen:** EWT-Zeilenlabels ohne Tarifvertrags-/Paragraph-Zusätze („Anzahl der Abwesenheiten", „steuerfreie Abwesenheiten"); Mobil-Akkordeon öffnet den aktuellen Monat automatisch; Gruppensummen in den Mobil-Zwischenüberschriften mit kräftigen Trennlinien (auch in der Desktop-Tabelle).
+- **Monats-Navigation bei vollem Jahres-Fit zuverlässig versteckt:** Wenn alle 12 Monate in die verfügbare Breite passen (u. a. ab ~1183px), wird die Prev/Next-Leiste jetzt per `display: none !important` ausgeblendet. Dadurch kann sie nicht mehr von Breakpoint-Utility-Klassen (`d-sm-flex`) sichtbar gehalten werden.
 - **Aufräumen:** Nie eingebundener `createBerechnungTableBody.tsx` (`TableComponent`) entfernt.
 - **Tests:** Neue Suites `Berechnung.calculateBerechnungRows`, `Berechnung.groupVisibility`, `Berechnung.BerechnungMobileCards`, `Berechnung.calculateZulagenBreakdown` (1156 → 1176 Tests, 0 Fehlschläge).
 

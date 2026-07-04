@@ -80,15 +80,13 @@ const ZEILEN: IZeilenDefinition[] = [
   { gruppe: null, rowHtml: '<tr><th>Summe Gesamt</th></tr>', inhalt: m => currency(m.summeGesamt) },
 ];
 
-const escapeHtml = (text: string): string =>
-  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const escapeHtml = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeilenDefinition {
   const labelRows = breakdown.codes
     .map(
       c =>
-        `<tr><td class="py-0">${escapeHtml(c.label)}</td>` +
-        `<td class="py-0">${zulagenEinheitKurz(c.unit)}</td></tr>`,
+        `<tr><td class="py-0">${escapeHtml(c.label)}</td>` + `<td class="py-0">${zulagenEinheitKurz(c.unit)}</td></tr>`,
     )
     .join('');
 
@@ -129,8 +127,7 @@ export default function generateTableBerechnung(
   // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten.
   // Roh-Zulagen zählen für 'neben' auch dann als Daten, wenn keine Euro-Summe berechnet wurde.
   const hatGruppenDaten = (gruppe: BerechnungGruppe): boolean =>
-    monatsErgebnisse.some(m => gruppeHatDaten(gruppe, m)) ||
-    (gruppe === 'neben' && zulagenBreakdown.codes.length > 0);
+    monatsErgebnisse.some(m => gruppeHatDaten(gruppe, m)) || (gruppe === 'neben' && zulagenBreakdown.codes.length > 0);
 
   const sichtbareZeilen = zeilen.filter(
     zeile => zeile.gruppe === null || isGroupVisible(zeile.gruppe, aktivierteTabs, hatGruppenDaten(zeile.gruppe)),

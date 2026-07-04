@@ -2,10 +2,7 @@ import { beforeAll, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from './mockData';
 import Storage from '@/infrastructure/storage/Storage';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
-import {
-  ermittleFensterGroesse,
-  initBerechnungMonatsFensterNav,
-} from '@/features/Berechnung/berechnungMonatsFenster';
+import { ermittleFensterGroesse, initBerechnungMonatsFensterNav } from '@/features/Berechnung/berechnungMonatsFenster';
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
 
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -19,6 +16,7 @@ describe('#berechnungMonatsFenster', () => {
     Storage.set('Monat', 1); // Fenster startet bei Jan
 
     document.body.innerHTML =
+      '<div id="berechnungMonatsNav" class="d-none d-sm-flex d-xl-none"></div>' +
       '<button id="btnBerechnungMonatePrev"></button>' +
       '<span id="berechnungMonatsFensterLabel"></span>' +
       '<button id="btnBerechnungMonateNext"></button>' +
@@ -68,9 +66,7 @@ describe('#berechnungMonatsFenster', () => {
 
     expect(kopfzelle(1).classList.contains('d-none')).toBe(true);
     expect(kopfzelle(groesse + 1).classList.contains('d-none')).toBe(false);
-    expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(
-      `Feb – ${MONATSNAMEN[groesse]}`,
-    );
+    expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(`Feb – ${MONATSNAMEN[groesse]}`);
     expect(document.querySelector<HTMLButtonElement>('#btnBerechnungMonatePrev')?.disabled).toBe(false);
   });
 
@@ -83,5 +79,18 @@ describe('#berechnungMonatsFenster', () => {
     expect(document.querySelector('#berechnungMonatsFensterLabel')?.textContent).toBe(
       `${MONATSNAMEN[12 - groesse]} – Dez`,
     );
+  });
+
+  it('blendet die Navigation aus, wenn alle 12 Monate sichtbar sind', () => {
+    const nav = document.querySelector<HTMLElement>('#berechnungMonatsNav');
+    expect(nav).not.toBeNull();
+
+    if (groesse >= 12) {
+      expect(nav?.style.getPropertyValue('display')).toBe('none');
+      expect(nav?.style.getPropertyPriority('display')).toBe('important');
+      return;
+    }
+
+    expect(nav?.style.getPropertyValue('display')).toBe('');
   });
 });

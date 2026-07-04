@@ -78,7 +78,10 @@ export function wendeMonatsFensterAn(): void {
   // Passen alle 12 Monate, ist nichts zu verschieben — Navigation ausblenden
   // (inline display, damit die Breakpoint-Klassen der Leiste unangetastet bleiben)
   const nav = document.querySelector<HTMLDivElement>('#berechnungMonatsNav');
-  if (nav) nav.style.display = fensterGroesse >= 12 ? 'none' : '';
+  if (nav) {
+    if (fensterGroesse >= 12) nav.style.setProperty('display', 'none', 'important');
+    else nav.style.removeProperty('display');
+  }
 }
 
 export function initBerechnungMonatsFensterNav(): void {
