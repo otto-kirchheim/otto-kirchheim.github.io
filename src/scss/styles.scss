@@ -105,6 +105,25 @@ td:has(.SchichtBereitschaft) {
   background-color: var(--bs-body-bg);
 }
 
+#berechnungMobileCards {
+  .accordion-button {
+    font-size: 0.95rem;
+    padding-block: 0.65rem;
+  }
+
+  .berechnung-card-gruppe {
+    font-size: 0.9rem;
+  }
+
+  .berechnung-card-zeile {
+    font-size: 0.875rem;
+
+    &:last-child {
+      border-bottom: 0 !important;
+    }
+  }
+}
+
 .vertical-center {
   min-height: 85%;
   min-height: 85vh;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import calculateZulagenBreakdown from '@/features/Berechnung/calculateZulagenBreakdown';
+import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IDatenN } from '@/types';
 
 const tag = (tagN: string, zulagenN: Array<{ code: string; value: number }>): IDatenN =>
@@ -62,10 +63,10 @@ describe('#calculateZulagenBreakdown', () => {
 
     const byCode = new Map(breakdown.codes.map(c => [c.code, c]));
     expect(byCode.get('040')?.label).toBe('040 Fahrentsch.');
-    expect(byCode.get('040')?.unit).toBe('stück');
-    expect(byCode.get('846')?.unit).toBe('minuten');
+    expect(byCode.get('040')?.unit).toBe(ZulageEntryUnit.Stueck);
+    expect(byCode.get('846')?.unit).toBe(ZulageEntryUnit.Minuten);
     expect(byCode.get('XX9')?.label).toBe('XX9');
-    expect(byCode.get('XX9')?.unit).toBe('stück');
+    expect(byCode.get('XX9')?.unit).toBe(ZulageEntryUnit.Stueck);
   });
 
   it('unterstützt Legacy-Einträge mit anzahl040N', () => {
