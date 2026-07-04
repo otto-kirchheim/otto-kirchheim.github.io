@@ -91,12 +91,19 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
       { tagN: '10.03.2026', beginN: '08:00', endeN: '16:00', auftragN: 'A1', zulagenN: [{ code: '846', value: 120 }] },
     ]);
 
-    generateTableBerechnung({ 1: monatMitNeben } as unknown as IVorgabenBerechnung);
+    generateTableBerechnung({ 1: monatMitNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.children.length).toBe(14);
     expect(tbody?.textContent).toContain('040 Fahrentsch.');
     expect(tbody?.textContent).toContain('846 kein SiPo');
+
+    // Breakdown-Zeile = vorletzte Zeile (vor Summe Nebenbezüge ... Summe Gesamt)
+    const breakdownRow = Array.from(tbody!.children).find(row => row.textContent?.includes('040 Fahrentsch.'))!;
+    const zellen = breakdownRow.querySelectorAll(':scope > td');
+    // Januar hat Zulagen (040: 2) → gestapelte Werte; Februar ohne Zulagen → leere Zelle
+    expect(zellen[0].innerHTML).toContain('2');
+    expect(zellen[1].innerHTML).toBe('');
 
     Storage.set('dataN', []);
   });

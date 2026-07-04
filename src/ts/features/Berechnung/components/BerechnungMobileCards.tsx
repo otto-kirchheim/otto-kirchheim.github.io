@@ -41,8 +41,25 @@ function MonatsKarte({
   const zeigeGruppe = (gruppe: BerechnungGruppe): boolean =>
     isGroupVisible(gruppe, aktivierteTabs, gruppeHatDaten(gruppe, ergebnis) || (gruppe === 'neben' && monatHatZulagen));
 
-  const schwellenWerte = (werte: Array<[string, number | null]>): string =>
-    werte.map(([schwelle, wert]) => `${schwelle}: ${wert ?? '–'}`).join(' · ');
+  // Kompakt: pro Schwelle eine eigene Zeile, Nullwerte werden weggelassen
+  const schwellenZeilen = (praefix: string, eintraege: Array<[string, number | null]>) =>
+    eintraege
+      .filter(([, wert]) => (wert ?? 0) > 0)
+      .map(([schwelle, wert]) => (
+        <DetailZeile key={`${praefix}${schwelle}`} label={`${praefix} ${schwelle} Std.`} wert={String(wert)} />
+      ));
+
+  // Zulagen des Monats: unabhängig von showBreakdown, nur Codes mit Wert im Monat
+  const zulagenZeilen =
+    zulagenBreakdown?.codes
+      .filter(c => zulagenBreakdown.values[c.code][ergebnis.monat - 1] > 0)
+      .map(c => (
+        <DetailZeile
+          key={c.code}
+          label={c.label}
+          wert={`${zulagenBreakdown.values[c.code][ergebnis.monat - 1]} ${zulagenEinheitKurz(c.unit)}`}
+        />
+      )) ?? [];
 
   return (
     <div class="accordion-item">
@@ -87,39 +104,24 @@ function MonatsKarte({
           {zeigeGruppe('ewt') && (
             <>
               <GruppenTitel titel="EWT" />
-              {ergebnis.abwesenheiten !== null && (
-                <DetailZeile
-                  label="Abwesenheiten FGr-TV / LfTV / RVB"
-                  wert={schwellenWerte([
-                    ['>8', ergebnis.abwesenheiten.a8],
-                    ['>14', ergebnis.abwesenheiten.a14],
-                    ['>24', ergebnis.abwesenheiten.a24],
-                  ])}
-                />
-              )}
-              {ergebnis.steuerfreieAbwesenheiten !== null && (
-                <DetailZeile
-                  label="steuerfreie Abwesenheiten § 9 EStG"
-                  wert={schwellenWerte([
-                    ['>8', ergebnis.steuerfreieAbwesenheiten.s8],
-                    ['>14', ergebnis.steuerfreieAbwesenheiten.s14],
-                  ])}
-                />
-              )}
+              {ergebnis.abwesenheiten !== null &&
+                schwellenZeilen('Abwesenheiten', [
+                  ['>8', ergebnis.abwesenheiten.a8],
+                  ['>14', ergebnis.abwesenheiten.a14],
+                  ['>24', ergebnis.abwesenheiten.a24],
+                ])}
+              {ergebnis.steuerfreieAbwesenheiten !== null &&
+                schwellenZeilen('steuerfrei § 9 EStG', [
+                  ['>8', ergebnis.steuerfreieAbwesenheiten.s8],
+                  ['>14', ergebnis.steuerfreieAbwesenheiten.s14],
+                ])}
               {ergebnis.summeEwt !== null && <DetailZeile label="Summe EWT" wert={formatCurrency(ergebnis.summeEwt)} />}
             </>
           )}
           {zeigeGruppe('neben') && (
             <>
               <GruppenTitel titel="Nebenbezüge" />
-              {zulagenBreakdown?.showBreakdown &&
-                zulagenBreakdown.codes.map(c => (
-                  <DetailZeile
-                    key={c.code}
-                    label={c.label}
-                    wert={`${zulagenBreakdown.values[c.code][ergebnis.monat - 1]} ${zulagenEinheitKurz(c.unit)}`}
-                  />
-                ))}
+              {zulagenZeilen}
               {ergebnis.summeNebenbezuege !== null && (
                 <DetailZeile label="Summe Nebenbezüge" wert={formatCurrency(ergebnis.summeNebenbezuege)} />
               )}

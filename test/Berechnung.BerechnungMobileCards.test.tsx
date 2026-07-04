@@ -4,6 +4,7 @@ import BerechnungMobileCards, {
   mountBerechnungMobileCards,
 } from '@/features/Berechnung/components/BerechnungMobileCards';
 import calculateBerechnungRows, { type IBerechnungMonatsErgebnis } from '@/features/Berechnung/calculateBerechnungRows';
+import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import { VorgabenGeldMock, datenBerechungMock } from './mockData';
 import type { IVorgabenBerechnung } from '@/types';
 
@@ -79,6 +80,54 @@ describe('#BerechnungMobileCards', () => {
     expect(items[0].querySelector('.accordion-body')!.textContent).toContain('Nebenbezüge');
     // Februar: neben deaktiviert, keine Daten → Block ausgeblendet
     expect(items[1].querySelector('.accordion-body')!.textContent).not.toContain('Nebenbezüge');
+  });
+
+  it('zeigt Zulagen des Monats auch bei nur einem Code im Jahr, lässt 0-Zeilen weg', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const ergebnis = { ...leeresErgebnis(1), summeNebenbezuege: 19.95, summeGesamt: 19.95 };
+    const zulagenBreakdown = {
+      codes: [{ code: '040', label: '040 Fahrentsch.', unit: ZulageEntryUnit.Stueck }],
+      values: { '040': [3, ...Array.from({ length: 11 }, () => 0)] },
+      showBreakdown: false,
+    };
+
+    render(
+      <BerechnungMobileCards
+        monatsErgebnisse={[ergebnis, { ...leeresErgebnis(2), summeGesamt: 0 }]}
+        aktivierteTabs={[]}
+        zulagenBreakdown={zulagenBreakdown}
+      />,
+      container,
+    );
+
+    const items = container.querySelectorAll('.accordion-item');
+    // Januar: Code mit Wert 3 → Zeile sichtbar trotz showBreakdown === false
+    expect(items[0].textContent).toContain('040 Fahrentsch.');
+    expect(items[0].textContent).toContain('3 Stk.');
+    // Februar: Wert 0 → keine Zulagen-Zeile
+    expect(items[1].textContent).not.toContain('040 Fahrentsch.');
+  });
+
+  it('rendert EWT-Schwellen als eigene Zeilen und lässt Nullwerte weg', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const ergebnis = {
+      ...leeresErgebnis(1),
+      abwesenheiten: { a8: 9, a14: 0, a24: 0 },
+      steuerfreieAbwesenheiten: { s8: 2, s14: 0 },
+      summeEwt: 36.81,
+      summeGesamt: 36.81,
+    };
+
+    render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} />, container);
+
+    expect(container.textContent).toContain('Abwesenheiten >8 Std.');
+    expect(container.textContent).not.toContain('>14 Std.');
+    expect(container.textContent).not.toContain('>24 Std.');
+    expect(container.textContent).toContain('steuerfrei § 9 EStG >8 Std.');
   });
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {

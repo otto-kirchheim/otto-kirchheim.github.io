@@ -94,9 +94,11 @@ function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeilenDefini
   return {
     gruppe: 'neben',
     rowHtml: `<tr><th><table class="table table-borderless m-0"><tbody>${labelRows}</tbody></table></th></tr>`,
-    inhalt: m => ({
-      html: breakdown.codes.map(c => breakdown.values[c.code][m.monat - 1]).join(' <br />'),
-    }),
+    // Wie bei den EWT-Zeilen: Monate ohne jegliche Zulagen bekommen eine leere Zelle
+    inhalt: m =>
+      breakdown.codes.some(c => breakdown.values[c.code][m.monat - 1] > 0)
+        ? { html: breakdown.codes.map(c => breakdown.values[c.code][m.monat - 1]).join(' <br />') }
+        : '',
   };
 }
 
