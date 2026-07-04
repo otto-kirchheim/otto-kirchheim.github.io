@@ -1,44 +1,19 @@
-import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
+import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import calculateBerechnungRows, {
+  formatCurrency,
+  nullParser,
+  type IBerechnungMonatsErgebnis,
+} from './calculateBerechnungRows';
 
-type NFields = { F: number; A: number; B: number; C: number; CA: number; CB: number; C9: number; SIPO: number };
-const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
-  (n, g) => n.F * g.Fahrentsch,
-  (n, g) => Math.round(n.A / 60) * g.A,
-  (n, g) => Math.round(n.B / 60) * g.B,
-  (n, g) => Math.round(n.C / 60) * g.C,
-  (n, g) => Math.round(n.CA / 60) * (g.C + g.A),
-  (n, g) => Math.round(n.CB / 60) * (g.C + g.B),
-  (n, g) => n.C9 * g.C * 9,
-  (n, g) => Math.round(n.SIPO / 60) * g.SIPO,
-];
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
 ): void {
   if (datenBerechnung === true) return clearLoading('btnNeuBerech');
 
-  const datenGeldHandler: ProxyHandler<IVorgabenGeld> = {
-    get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
-      const maxMonat: number = Number(prop);
-      let returnObjekt = target[1];
-      const keys = Object.keys(target).map(Number);
-      if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
-        for (let monat = 2; monat <= maxMonat; monat++)
-          if (typeof target[monat] !== 'undefined') returnObjekt = { ...returnObjekt, ...target[monat] };
-      return returnObjekt;
-    },
-    set: (_target: IVorgabenGeld, prop: string, newValue) => {
-      console.log('veränderung von datenGeld nicht erlaubt:', prop, newValue);
-      return false;
-    },
-  };
-
-  const datenGeld = new Proxy(datenGeldVorgabe, datenGeldHandler);
-
   const tarifKraft = Storage.get<IVorgabenU>('VorgabenU', { check: true }).pers.TB;
-  const berechnung: number[][] = Array.from<unknown, number[]>({ length: 12 }, () => []);
 
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
   if (!tbody) return;
@@ -66,128 +41,48 @@ export default function generateTableBerechnung(
 		<tr><th>Summe Gesamt</th></tr>
 		`;
 
-  const nullParser = (value: null | string | number) => value ?? '&nbsp;';
-  const time_convert = (num: number): string => {
-    const hours = Math.floor(num / 60);
-    const minutes = Math.round(num % 60);
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
-  };
-  const formatCurrency = (value: number): string =>
-    value.toLocaleString('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    });
+  const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);
+
+  const currency = (wert: number | null): string => (wert === null ? '' : formatCurrency(wert));
+
+  // Zellinhalt pro Zeilenindex (0-12); [text, html] — html nur für die Abwesenheiten-Zeilen
+  const zellInhalte = (m: IBerechnungMonatsErgebnis): Array<string | { html: string }> => [
+    m.bereitschaftMinuten === null ? '' : m.bereitschaftMinuten.toString(),
+    m.bereitschaftAnzeige ?? '',
+    currency(m.bereitschaftszulage),
+    currency(m.lre1),
+    currency(m.lre2),
+    currency(m.lre3),
+    currency(m.privatPkw),
+    currency(m.summeBereitschaft),
+    m.abwesenheiten === null
+      ? ''
+      : {
+          html:
+            `${nullParser(m.abwesenheiten.a8)} <br />` +
+            `${nullParser(m.abwesenheiten.a14)} <br />` +
+            `${nullParser(m.abwesenheiten.a24)}`,
+        },
+    m.steuerfreieAbwesenheiten === null
+      ? ''
+      : {
+          html: `${nullParser(m.steuerfreieAbwesenheiten.s8)} <br /> ${nullParser(m.steuerfreieAbwesenheiten.s14)}`,
+        },
+    currency(m.summeEwt),
+    currency(m.summeNebenbezuege),
+    currency(m.summeGesamt),
+  ];
+
+  const inhalteProMonat = monatsErgebnisse.map(zellInhalte);
 
   Array.from(tbody.children).forEach((row, index) => {
-    for (const [Monat, datenBerechnungItem] of Object.entries(datenBerechnung)) {
-      const monat = +Monat;
-      const monatZeroIndex = monat - 1;
+    for (const monatsInhalte of inhalteProMonat) {
       const td = document.createElement('td');
-      let privatPKW: number;
-
-      switch (index) {
-        case 0:
-          if (datenBerechnungItem.B.B !== 0) td.textContent = datenBerechnungItem.B.B.toString();
-          break;
-        case 1:
-          if (datenBerechnungItem.B.B !== 0)
-            td.textContent =
-              tarifKraft === 'Tarifkraft'
-                ? time_convert(datenBerechnungItem.B.B)
-                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60).toString();
-          break;
-        case 2:
-          if (datenBerechnungItem.B.B !== 0) {
-            berechnung[monatZeroIndex][0] =
-              tarifKraft === 'Tarifkraft'
-                ? Math.round(datenBerechnungItem.B.B / 60) * datenGeld[monat][tarifKraft]
-                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld[monat][tarifKraft];
-
-            td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
-          }
-          break;
-        case 3:
-          if (datenBerechnungItem.B.L1 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1);
-          }
-          break;
-        case 4:
-          if (datenBerechnungItem.B.L2 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2);
-          }
-          break;
-        case 5:
-          if (datenBerechnungItem.B.L3 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3);
-          }
-          break;
-        case 6:
-          if (datenBerechnungItem.B.K !== 0) {
-            privatPKW =
-              Math.round(datenBerechnungItem.B.K) *
-              (tarifKraft === 'Tarifkraft' ? datenGeld[monat].PrivatPKWTarif : datenGeld[monat].PrivatPKWBeamter);
-
-            berechnung[monatZeroIndex][0] += privatPKW;
-            td.textContent = formatCurrency(privatPKW);
-          }
-          break;
-        case 7:
-          if (berechnung[monatZeroIndex].length !== 0) td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
-          else if (!berechnung[monatZeroIndex][0]) berechnung[monatZeroIndex][0] = 0;
-          break;
-        case 8:
-          if (tarifKraft === 'Tarifkraft') {
-            if (datenBerechnungItem.E.A8 !== 0)
-              berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld[monat].TE8;
-            if (datenBerechnungItem.E.A14 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A14 * datenGeld[monat].TE14;
-            if (datenBerechnungItem.E.A24 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld[monat].TE24;
-          }
-          if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0)
-            td.innerHTML =
-              `${nullParser(datenBerechnungItem.E.A8)} <br />` +
-              `${nullParser(datenBerechnungItem.E.A14)} <br />` +
-              `${nullParser(datenBerechnungItem.E.A24)}`;
-          break;
-        case 9:
-          if (tarifKraft !== 'Tarifkraft') {
-            if (datenBerechnungItem.E.S8 !== 0)
-              berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld[monat].BE8;
-            if (datenBerechnungItem.E.S14 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld[monat].BE14;
-          }
-          if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0)
-            td.innerHTML = `${nullParser(datenBerechnungItem.E.S8)} <br /> ${nullParser(datenBerechnungItem.E.S14)}`;
-
-          row.appendChild(td);
-          break;
-
-        case 10:
-          if (berechnung[monatZeroIndex].length > 1) td.textContent = formatCurrency(berechnung[monatZeroIndex][1]);
-          else if (!berechnung[monatZeroIndex][1]) berechnung[monatZeroIndex][1] = 0;
-
-          break;
-        case 11: {
-          const nTotal = N_ZULAGEN_CALC.reduce((sum, fn) => sum + fn(datenBerechnungItem.N, datenGeld[monat]), 0);
-          if (nTotal > 0) {
-            berechnung[monatZeroIndex][2] = nTotal;
-            td.textContent = formatCurrency(nTotal);
-          } else {
-            berechnung[monatZeroIndex][2] = 0;
-          }
-          break;
-        }
-        case 12: {
-          const b = berechnung[monatZeroIndex];
-          if (b.length !== 0 && (b[0] || b[1] || b[2])) {
-            td.textContent = formatCurrency((b[0] ?? 0) + (b[1] ?? 0) + (b[2] ?? 0));
-          }
-          break;
-        }
+      const inhalt = monatsInhalte[index];
+      if (typeof inhalt === 'string') {
+        if (inhalt !== '') td.textContent = inhalt;
+      } else {
+        td.innerHTML = inhalt.html;
       }
       row.appendChild(td);
     }
