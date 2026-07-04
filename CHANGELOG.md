@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-04
+
+### feat (Berechnung – Mobil-Akkordeon, Gruppen-Sichtbarkeit, Zulagen-Aufschlüsselung)
+
+- **Mobil-Ansicht (<768px):** Die horizontal gescrollte Berechnungstabelle wird auf kleinen Breakpoints durch eine Preact-Akkordeon-Ansicht ersetzt (`BerechnungMobileCards.tsx`, umgeschaltet per `d-none d-md-block` / `d-md-none`). Ein Accordion-Item pro Monat mit „Summe Gesamt" im Header; aufgeklappt Details gruppiert nach Bereitschaft / EWT / Nebenbezüge. Alle 12 Monatssummen sind damit ohne Scrollen vergleichbar.
+- **Rechenlogik extrahiert:** Der DOM-gekoppelte `switch`-Block aus `generateTableBerechnung.ts` ist in die reine Funktion `calculateBerechnungRows.ts` überführt (strukturierte Monatsergebnisse); Tabelle und Mobil-Karten konsumieren dieselbe Quelle. Zellwerte unverändert (bestehende Tests grün).
+- **Gruppen-Sichtbarkeit nach `aktivierteTabs`:** Global deaktivierte Bereiche (bereitschaft/ewt/neben) werden ausgeblendet – außer es existieren Daten (Desktop-Scope: ganzes Jahr, Zeilen entfallen komplett; Mobil-Scope: einzelner Monat). Gemeinsamer Helper `berechnungGroupVisibility.ts`.
+- **Zulagen-Aufschlüsselung:** Kommen im Jahr mehrere Zulagen-Codes vor (z. B. 040, 839), zeigen Tabelle (Sub-Tabelle vor „Summe Nebenbezüge") und Mobil-Karten je Code die Monats-Rohsumme in Minuten/Stück (0 in leeren Monaten). Aggregation direkt aus `dataN`/`zulagenN` (`calculateZulagenBreakdown.ts`), unabhängig von der Euro-Berechnung. Bei nur einem Code im Jahr entfällt die Aufschlüsselung.
+- **Aufräumen:** Nie eingebundener `createBerechnungTableBody.tsx` (`TableComponent`) entfernt.
+- **Tests:** Neue Suites `Berechnung.calculateBerechnungRows`, `Berechnung.groupVisibility`, `Berechnung.BerechnungMobileCards`, `Berechnung.calculateZulagenBreakdown` (1156 → 1176 Tests, 0 Fehlschläge).
+
 ## 2026-07-03
 
 ### test (Testcoverage erhöht)
