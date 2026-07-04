@@ -120,7 +120,7 @@ export default function generateTableBerechnung(
   if (!tbody) return;
 
   const zeilen = [...ZEILEN];
-  if (zulagenBreakdown.showBreakdown) {
+  if (zulagenBreakdown.codes.length > 0) {
     const nebenIndex = zeilen.findIndex(zeile => zeile.rowHtml.includes('Summe Nebenbezüge'));
     zeilen.splice(nebenIndex, 0, buildZulagenBreakdownZeile(zulagenBreakdown));
   }
@@ -135,7 +135,14 @@ export default function generateTableBerechnung(
     zeile => zeile.gruppe === null || isGroupVisible(zeile.gruppe, aktivierteTabs, hatGruppenDaten(zeile.gruppe)),
   );
 
-  tbody.innerHTML = sichtbareZeilen.map(zeile => zeile.rowHtml).join('\n');
+  // Gruppenwechsel (Bereitschaft/EWT/Nebenbezüge/Gesamt) mit kräftiger Trennlinie markieren
+  tbody.innerHTML = sichtbareZeilen
+    .map((zeile, i) =>
+      i > 0 && zeile.gruppe !== sichtbareZeilen[i - 1].gruppe
+        ? zeile.rowHtml.replace('<tr>', '<tr class="berechnung-gruppen-start">')
+        : zeile.rowHtml,
+    )
+    .join('\n');
 
   Array.from(tbody.children).forEach((row, index) => {
     for (const monatsErgebnis of monatsErgebnisse) {

@@ -15,8 +15,6 @@ export interface IZulagenBreakdown {
   codes: IZulagenBreakdownCode[];
   /** Je Code 12 Monats-Rohsummen (Index 0 = Januar; Minuten oder Stück je nach unit) */
   values: Record<string, number[]>;
-  /** Aufschlüsselung nur bei mehr als einem vorkommenden Code anzeigen */
-  showBreakdown: boolean;
 }
 
 const zulagenCatalogByCode = new Map(ZULAGEN_CATALOG.map(item => [item.code, item]));
@@ -56,5 +54,5 @@ export default function calculateZulagenBreakdown(
       };
     });
 
-  return { codes, values, showBreakdown: codes.length > 1 };
+  return { codes, values };
 }

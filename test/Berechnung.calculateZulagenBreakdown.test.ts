@@ -17,7 +17,6 @@ describe('#calculateZulagenBreakdown', () => {
     const breakdown = calculateZulagenBreakdown([tag('05.01.2026', [])]);
 
     expect(breakdown.codes).toEqual([]);
-    expect(breakdown.showBreakdown).toBe(false);
   });
 
   it('liefert keinen Breakdown bei nur einem Code im Jahr', () => {
@@ -27,7 +26,6 @@ describe('#calculateZulagenBreakdown', () => {
     ]);
 
     expect(breakdown.codes.map(c => c.code)).toEqual(['040']);
-    expect(breakdown.showBreakdown).toBe(false);
     expect(breakdown.values['040'][0]).toBe(1);
     expect(breakdown.values['040'][2]).toBe(2);
   });
@@ -41,8 +39,6 @@ describe('#calculateZulagenBreakdown', () => {
       tag('06.01.2026', [{ code: '040', value: 1 }]),
       tag('10.05.2026', [{ code: '846', value: 120 }]),
     ]);
-
-    expect(breakdown.showBreakdown).toBe(true);
     expect(breakdown.codes.map(c => c.code)).toEqual(['040', '839', '846']);
 
     expect(breakdown.values['040'][0]).toBe(2); // Januar: 1 + 1
@@ -79,8 +75,6 @@ describe('#calculateZulagenBreakdown', () => {
     } as unknown as IDatenN;
 
     const breakdown = calculateZulagenBreakdown([legacyTag, tag('05.03.2026', [{ code: '839', value: 1 }])]);
-
-    expect(breakdown.showBreakdown).toBe(true);
     expect(breakdown.values['040'][1]).toBe(2);
     expect(breakdown.values['839'][2]).toBe(1);
   });

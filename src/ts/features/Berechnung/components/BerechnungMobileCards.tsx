@@ -12,14 +12,17 @@ interface IBerechnungMobileCardsProps {
 }
 
 const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
-  <div class="d-flex justify-content-between gap-2 py-1 border-bottom berechnung-card-zeile">
+  <div class="d-flex justify-content-between gap-2 py-1 ps-3 berechnung-card-zeile">
     <span class="text-start">{label}</span>
     <span class="text-end text-nowrap">{wert}</span>
   </div>
 );
 
-const GruppenTitel = ({ titel }: { titel: string }) => (
-  <div class="fw-bold text-start pt-2 pb-1 berechnung-card-gruppe">{titel}</div>
+const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null }) => (
+  <div class="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
+    <span class="text-start">{titel}</span>
+    <span class="text-end text-nowrap">{summe === null ? '' : formatCurrency(summe)}</span>
+  </div>
 );
 
 function MonatsKarte({
@@ -49,7 +52,7 @@ function MonatsKarte({
         <DetailZeile key={`${praefix}${schwelle}`} label={`${praefix} ${schwelle} Std.`} wert={String(wert)} />
       ));
 
-  // Zulagen des Monats: unabhängig von showBreakdown, nur Codes mit Wert im Monat
+  // Zulagen des Monats: nur Codes mit Wert > 0 im jeweiligen Monat
   const zulagenZeilen =
     zulagenBreakdown?.codes
       .filter(c => zulagenBreakdown.values[c.code][ergebnis.monat - 1] > 0)
@@ -80,7 +83,7 @@ function MonatsKarte({
         <div class="accordion-body py-2">
           {zeigeGruppe('bereitschaft') && (
             <>
-              <GruppenTitel titel="Bereitschaft" />
+              <GruppenTitel titel="Bereitschaft" summe={ergebnis.summeBereitschaft} />
               {ergebnis.bereitschaftMinuten !== null && (
                 <DetailZeile
                   label="Bereitschaftszeiten"
@@ -96,14 +99,11 @@ function MonatsKarte({
               {ergebnis.privatPkw !== null && (
                 <DetailZeile label="Privat-PKW" wert={formatCurrency(ergebnis.privatPkw)} />
               )}
-              {ergebnis.summeBereitschaft !== null && (
-                <DetailZeile label="Summe Bereitschaft" wert={formatCurrency(ergebnis.summeBereitschaft)} />
-              )}
             </>
           )}
           {zeigeGruppe('ewt') && (
             <>
-              <GruppenTitel titel="EWT" />
+              <GruppenTitel titel="EWT" summe={ergebnis.summeEwt} />
               {ergebnis.abwesenheiten !== null &&
                 schwellenZeilen('Abwesenheiten', [
                   ['>8', ergebnis.abwesenheiten.a8],
@@ -115,23 +115,15 @@ function MonatsKarte({
                   ['>8', ergebnis.steuerfreieAbwesenheiten.s8],
                   ['>14', ergebnis.steuerfreieAbwesenheiten.s14],
                 ])}
-              {ergebnis.summeEwt !== null && <DetailZeile label="Summe EWT" wert={formatCurrency(ergebnis.summeEwt)} />}
             </>
           )}
           {zeigeGruppe('neben') && (
             <>
-              <GruppenTitel titel="Nebenbezüge" />
+              <GruppenTitel titel="Nebenbezüge" summe={ergebnis.summeNebenbezuege} />
               {zulagenZeilen}
-              {ergebnis.summeNebenbezuege !== null && (
-                <DetailZeile label="Summe Nebenbezüge" wert={formatCurrency(ergebnis.summeNebenbezuege)} />
-              )}
             </>
           )}
-          <GruppenTitel titel="Gesamt" />
-          <DetailZeile
-            label="Summe Gesamt"
-            wert={ergebnis.summeGesamt === null ? '–' : formatCurrency(ergebnis.summeGesamt)}
-          />
+          <GruppenTitel titel="Gesamt" summe={ergebnis.summeGesamt} />
         </div>
       </div>
     </div>

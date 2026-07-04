@@ -45,9 +45,12 @@ describe('#BerechnungMobileCards', () => {
     const ersterBody = items[0].querySelector('.accordion-body')!;
     expect(ersterBody.textContent).toContain('Bereitschaftszulage');
     expect(ersterBody.textContent).toContain('258,00');
-    expect(ersterBody.textContent).toContain('Summe EWT');
-    expect(ersterBody.textContent).toContain('Summe Nebenbezüge');
-    expect(ersterBody.textContent).toContain('Summe Gesamt');
+    // Gruppensummen stehen in den Zwischenüberschriften
+    expect(ersterBody.textContent).toContain('EWT');
+    expect(ersterBody.textContent).toContain('77,20');
+    expect(ersterBody.textContent).toContain('Nebenbezüge');
+    expect(ersterBody.textContent).toContain('13,30');
+    expect(ersterBody.textContent).toContain('Gesamt');
   });
 
   it('lässt leere Einzelzeilen innerhalb sichtbarer Gruppen weg', () => {
@@ -56,7 +59,8 @@ describe('#BerechnungMobileCards', () => {
     const ergebnis = { ...leeresErgebnis(1), summeNebenbezuege: 13.3, summeGesamt: 13.3 };
     render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} />, container);
 
-    expect(container.textContent).toContain('Summe Nebenbezüge');
+    expect(container.textContent).toContain('Nebenbezüge');
+    expect(container.textContent).toContain('13,30');
     expect(container.textContent).not.toContain('LRE 1');
     expect(container.textContent).not.toContain('Bereitschaftszulage');
   });
@@ -90,7 +94,6 @@ describe('#BerechnungMobileCards', () => {
     const zulagenBreakdown = {
       codes: [{ code: '040', label: '040 Fahrentsch.', unit: ZulageEntryUnit.Stueck }],
       values: { '040': [3, ...Array.from({ length: 11 }, () => 0)] },
-      showBreakdown: false,
     };
 
     render(
@@ -103,7 +106,7 @@ describe('#BerechnungMobileCards', () => {
     );
 
     const items = container.querySelectorAll('.accordion-item');
-    // Januar: Code mit Wert 3 → Zeile sichtbar trotz showBreakdown === false
+    // Januar: Code mit Wert 3 → Zeile sichtbar (auch bei nur einem Code im Jahr)
     expect(items[0].textContent).toContain('040 Fahrentsch.');
     expect(items[0].textContent).toContain('3 Stk.');
     // Februar: Wert 0 → keine Zulagen-Zeile

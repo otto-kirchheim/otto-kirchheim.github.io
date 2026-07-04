@@ -105,6 +105,11 @@ td:has(.SchichtBereitschaft) {
   background-color: var(--bs-body-bg);
 }
 
+.table-Berechnung > tbody > tr.berechnung-gruppen-start > th,
+.table-Berechnung > tbody > tr.berechnung-gruppen-start > td {
+  border-top: 2px solid var(--bs-secondary-color);
+}
+
 #berechnungMobileCards {
   .accordion-button {
     font-size: 0.95rem;
@@ -115,12 +120,19 @@ td:has(.SchichtBereitschaft) {
     font-size: 0.9rem;
   }
 
+  .accordion-body > .berechnung-card-gruppe:not(:first-child) {
+    border-top: 2px solid var(--bs-secondary-color);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
   .berechnung-card-zeile {
     font-size: 0.875rem;
+  }
 
-    &:last-child {
-      border-bottom: 0 !important;
-    }
+  // Dünne Linien nur zwischen aufeinanderfolgenden Zeilen, keine am Gruppenende
+  .berechnung-card-zeile + .berechnung-card-zeile {
+    border-top: 1px solid var(--bs-border-color);
   }
 }
 

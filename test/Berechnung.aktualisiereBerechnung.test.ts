@@ -113,6 +113,8 @@ describe('aktualisiereBerechnung', () => {
       { tagE: '2026-03-02', buchungstagE: '2026-03-02', abWE: '06:00', anWE: '21:00' } as IDatenEWT,
       // 23 hours (overnight, anWE < abWE) → A14 (>= 14 and < 24)
       { tagE: '2026-03-03', buchungstagE: '2026-03-03', abWE: '06:00', anWE: '05:00' } as IDatenEWT,
+      // 5 hours → zählt in KEINEM Bucket (früherer Bug: landete via else in A24)
+      { tagE: '2026-03-04', buchungstagE: '2026-03-04', abWE: '08:00', anWE: '13:00' } as IDatenEWT,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });
