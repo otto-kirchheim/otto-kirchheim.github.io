@@ -51,6 +51,16 @@ describe('hasPendingLocalChanges', () => {
     expect(hasPendingLocalChanges(rows)).toBe(true);
   });
 
+  it('erkennt pending-new Rows', () => {
+    const rows = [{ a: 1 }, { a: 2, __localState: 'new' }];
+    expect(hasPendingLocalChanges(rows)).toBe(true);
+  });
+
+  it('erkennt pending-modified Rows', () => {
+    const rows = [{ a: 1 }, { a: 2, __localState: 'modified' }];
+    expect(hasPendingLocalChanges(rows)).toBe(true);
+  });
+
   it('erkennt Rows mit errorMessage', () => {
     const rows = [{ a: 1, __errorMessage: 'Backend-Fehler' }];
     expect(hasPendingLocalChanges(rows)).toBe(true);

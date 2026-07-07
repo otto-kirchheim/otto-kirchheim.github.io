@@ -18,11 +18,16 @@ export function extractMetaFields(obj: Record<string, unknown>): Record<string, 
   return meta;
 }
 
-/** Prüft ob Rows ungesyncte lokale Änderungen haben (Pending-Delete oder Error-State). */
+/** Prüft ob Rows ungesyncte lokale Änderungen haben (Pending-New/Modified/Delete oder Error-State). */
 export function hasPendingLocalChanges(rows: unknown[]): boolean {
   return rows.some(row => {
     if (typeof row !== 'object' || row === null) return false;
     const r = row as Record<string, unknown>;
-    return r.__localState === 'deleted' || Boolean(r.__errorMessage);
+    return (
+      r.__localState === 'deleted' ||
+      r.__localState === 'new' ||
+      r.__localState === 'modified' ||
+      Boolean(r.__errorMessage)
+    );
   });
 }

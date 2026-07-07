@@ -224,6 +224,66 @@ describe('CustomTable', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('rows.load restauriert _state modified aus __localState und löst onChange aus', () => {
+    createTableElement('load-modified-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-modified-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: '3', label: 'Geänderte Zeile', value: 3, __localState: 'modified' },
+    ] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('modified');
+    expect((rows[0].cells as Record<string, unknown>).__localState).toBeUndefined();
+    expect(table.rows.getChanges(false).update).toHaveLength(1);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.load restauriert _state new aus explizitem __localState und löst onChange aus', () => {
+    createTableElement('load-new-marker-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-new-marker-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([{ label: 'Neue Zeile (Marker)', value: 4, __localState: 'new' }] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('new');
+    expect(rows[0]._clientRequestId).toBeDefined();
+    expect((rows[0].cells as Record<string, unknown>).__localState).toBeUndefined();
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.load restauriert _state unchanged aus explizitem __localState ohne onChange', () => {
+    createTableElement('load-unchanged-marker-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-unchanged-marker-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: 'xyz', label: 'Unveränderte Zeile', value: 5, __localState: 'unchanged' },
+    ] as unknown as TableRow[]);
+
+    expect(table.getRows()[0]._state).toBe('unchanged');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('rows.load löst kein onChange aus wenn alle Rows _id haben', () => {
     createTableElement('load-unchanged-table');
     const onChange = vi.fn();

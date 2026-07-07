@@ -336,8 +336,8 @@ describe('loadUserDaten', () => {
       },
       datenGeld: { a: 4 },
       BZ: [
-        { beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
-        { beginB: '2026-04-01T08:00:00.000Z', bz: 'server-2' },
+        { _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
+        { _id: 'bz-2', beginB: '2026-04-01T08:00:00.000Z', bz: 'server-2' },
       ],
       BE: { 3: [{ be: 'server' }] },
       EWT: { 3: [{ ewt: 'server' }] },
@@ -357,7 +357,7 @@ describe('loadUserDaten', () => {
     );
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'VorgabenU') return loaded.vorgabenU;
-      if (key === 'dataBZ') return [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }];
+      if (key === 'dataBZ') return [{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }];
       if (key === 'dataBE') return loaded.BE;
       if (key === 'dataE') return loaded.EWT;
       if (key === 'dataN') return loaded.N;
@@ -381,7 +381,7 @@ describe('loadUserDaten', () => {
       }),
     );
     // Bei Längenmismatch sollte die Tabelle mit lokalen Daten geladen werden
-    expect(loadBZ).toHaveBeenCalledWith([{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }]);
+    expect(loadBZ).toHaveBeenCalledWith([{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }]);
 
     const infoCall = createSnackBarMock.mock.calls.find(([config]) => config?.status === 'info');
     expect(infoCall).toBeDefined();
@@ -411,8 +411,8 @@ describe('loadUserDaten', () => {
       BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: [{ tagBE: '01.03.2026', be: 'server' }],
       EWT: [
-        { tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
-        { tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
+        { _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
+        { _id: 'e-2', tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
       ],
       N: [{ tagN: '01.03.2026', n: 'server' }],
       timestamps: {
@@ -432,7 +432,7 @@ describe('loadUserDaten', () => {
       if (key === 'VorgabenU') return loaded.vorgabenU;
       if (key === 'dataBZ') return loaded.BZ;
       if (key === 'dataBE') return loaded.BE;
-      if (key === 'dataE') return [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'local-1' }];
+      if (key === 'dataE') return [{ _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'local-1' }];
       if (key === 'dataN') return loaded.N;
       return undefined;
     });
@@ -711,7 +711,7 @@ describe('loadUserDaten', () => {
     const loaded = {
       vorgabenU: { pers: { Vorname: 'S' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
-      BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
+      BZ: [{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: { 3: [] },
       EWT: { 3: [] },
       N: { 3: [] },
@@ -731,8 +731,8 @@ describe('loadUserDaten', () => {
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'dataBZ')
         return [
-          { beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' },
-          { beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' },
+          { _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' },
+          { _id: 'bz-2', beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' },
         ];
       if (key === 'VorgabenU') return loaded.vorgabenU;
       return [];

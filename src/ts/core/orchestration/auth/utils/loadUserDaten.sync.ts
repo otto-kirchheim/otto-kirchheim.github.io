@@ -83,6 +83,7 @@ export function syncLoadedYearResources({
       const localRows = normalizeRows<unknown>(localData);
       const serverRows = normalizeRows<unknown>(serverData);
       if (localRows.length !== serverRows.length) {
+        const vorhandenBefore = vorhanden.length;
         const localByMonth = countByMonth(localData as unknown[], storageName);
         const serverByMonth = countByMonth(serverData as unknown[], storageName);
         const allMonths = new Set([...localByMonth.keys(), ...serverByMonth.keys()]);
@@ -100,10 +101,14 @@ export function syncLoadedYearResources({
           }
         });
 
-        if (storageName === 'dataBZ') dataServer.BZ = serverData as UserDatenServer['BZ'];
-        if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
-        if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
-        if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
+        // dataServer nur setzen wenn die Zählung echte Unterschiede ergab — ein reiner
+        // Längenunterschied durch Pending-New-Rows (ohne _id) ist kein Konflikt.
+        if (vorhanden.length > vorhandenBefore) {
+          if (storageName === 'dataBZ') dataServer.BZ = serverData as UserDatenServer['BZ'];
+          if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
+          if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
+          if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
+        }
       }
     }
 

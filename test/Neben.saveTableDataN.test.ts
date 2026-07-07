@@ -59,8 +59,10 @@ describe('persistNebengeldTableData', () => {
     const ftMock = createTableMock(newRows);
     const result = persistNebengeldTableData(ftMock);
 
-    expect(result).toEqual(newRows);
-    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(newRows);
+    expect(result).toEqual(newRows.map(row => ({ ...row, __localState: 'unchanged' })));
+    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(
+      newRows.map(row => ({ ...row, __localState: 'unchanged' })),
+    );
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
   });
 
@@ -76,7 +78,10 @@ describe('persistNebengeldTableData', () => {
     const ftMock = createTableMock(updatedAprilRows);
     const result = persistNebengeldTableData(ftMock);
 
-    expect(result).toEqual([marchEntry, updatedAprilRows[0]]);
-    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual([marchEntry, updatedAprilRows[0]]);
+    // marchEntry ist eine bereits gespeicherte, unveränderte Zeile aus einem anderen Monat (preservedRows) —
+    // wird unverändert übernommen, während die aktive April-Zeile frisch über toStorage serialisiert wird.
+    const expected = [marchEntry, { ...updatedAprilRows[0], __localState: 'unchanged' }];
+    expect(result).toEqual(expected);
+    expect(Storage.get<IDatenN[]>('dataN', { check: true })).toEqual(expected);
   });
 });

@@ -4,6 +4,19 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-07
 
+### feat (AutoSave – expliziter `__localState`-Marker für alle Row-States)
+
+- **`mergeVisibleResourceRows.ts` + `CustomTable.ts` (`Rows.load`):** `__localState` wird jetzt für **jede** Zeile explizit persistiert (`'unchanged' | 'new' | 'modified' | 'deleted'`) statt `new` nur über die fehlende `_id` zu erschließen. Schließt die Lücke bei **geänderten** Zeilen: wurde das Fenster vor Ablauf des AutoSave-Timers geschlossen, wird die Änderung nach dem nächsten Laden dank des Markers zuverlässig nachgesendet statt still verloren zu gehen. Rückwärtskompatibel: Zeilen ohne Marker (Alt-Daten) fallen weiterhin auf die bisherige `_id`-Inferenz zurück.
+- **`metaFields.ts` (`hasPendingLocalChanges`) + `loadUserDaten.helpers.ts` (`countByMonth`):** Um `'new'`/`'modified'` erweitert, damit `syncLoadedYearResources` pending-lokale Neuanlagen/Änderungen nicht mit einem neueren/gleich-alten Server-Stand überschreibt, und Pending-New-Zeilen weiterhin keinen falschen Konflikt-Dialog auslösen.
+- **Tests:** Neue Datei `mergeVisibleResourceRows.test.ts` (Marker-Persistierung je State); `CustomTable.test.ts`, `metaFields.test.ts`, `loadUserDaten.sync.test.ts`, `loadUserDaten.helpers.test.ts` um die neuen Marker-Werte ergänzt.
+- **Verworfen:** Ein Page-Hide-Flush (`pagehide`/`visibilitychange:hidden` per `fetch(..., { keepalive: true })`) wurde prototypisch umgesetzt, dann aber wieder verworfen: `keepalive` garantiert nur, dass der Request den Server erreicht, nicht dass danach noch JavaScript zur Antwort-Verarbeitung läuft. Bei echtem Tab-Schließen wurde `commitAutoSave`/`updateLocalStorage` nie ausgeführt, sodass neu angelegte Zeilen beim nächsten Laden erneut als „neu" gesendet und vom Server als Duplikat abgelehnt wurden (das Backend verwirft `clientRequestId` vor dem Speichern, es gibt keine serverseitige Idempotenzprüfung). Der `__localState`-Marker bleibt als alleiniges Sicherheitsnetz bestehen.
+
+### fix (Sync – kein „Unterschiede erkannt"-Dialog für ungesendete AutoSave-Zeilen)
+
+- **`loadUserDaten.helpers.ts` (`countByMonth`):** Lokale Pending-New-Rows (ohne `_id`) werden beim Lokal/Server-Vergleich nicht mehr mitgezählt — symmetrisch zur bestehenden Pending-Delete-Exklusion. Wurde das Fenster geschlossen, bevor der AutoSave-Timer (10s) feuerte, erschien beim erneuten Öffnen fälschlich der Konflikt-Dialog, obwohl die Zeile nach dem Tabellen-Load ohnehin automatisch nachgespeichert wird (`Rows.load` restauriert Zeilen ohne `_id` als `'new'` → AutoSave).
+- **`loadUserDaten.sync.ts`:** `dataServer.X` wird nur noch gesetzt, wenn die Monatszählung echte Unterschiede ergab — ein reiner Längenunterschied durch Pending-New-Rows ist kein Konflikt (konsistent mit dem Bug-2-Regression-Guard).
+- **Tests:** Neuer Helper-Test (Pending-New-Exklusion), neuer Sync-Test (Pending-New-Zeile erzeugt keinen `vorhanden`-Eintrag und kein `dataServer`), Fixtures in `Login.LadeUserDaten.test.ts` auf realistische Server-Rows mit `_id` umgestellt (Mongo-Dokumente haben immer eine `_id`).
+
 ### fix (EWT – getPascalEnde Namensreihenfolge)
 
 - **`calculateEwtEintraege.ts`:** Vertauschte Zuordnung korrigiert – zuvor prüfte `getPascalEnde()` `Vorname === 'Ackermann' && Nachname === 'Pascal'`, jetzt korrekt `Vorname === 'Pascal' && Nachname === 'Ackermann'`. Ohne diesen Fix griff der Sonderfall (5 Minuten Aufschlag auf `anWE`) nie.

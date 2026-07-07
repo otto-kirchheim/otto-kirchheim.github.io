@@ -56,6 +56,11 @@ export function countByMonth(rows: unknown, storageName: TStorageData): Map<numb
     if (!row || typeof row !== 'object') return;
     // Pending-Delete-Rows nicht mitzählen — sie existieren noch auf dem Server
     if ((row as Record<string, unknown>).__localState === 'deleted') return;
+    // Pending-New-Rows nicht mitzählen — sie existieren noch nicht auf dem Server und werden
+    // nach dem Tabellen-Load automatisch nachgespeichert (Rows.load → 'new' → AutoSave).
+    // Fallback ohne _id zusätzlich für Alt-Daten ohne __localState-Marker.
+    if ((row as Record<string, unknown>).__localState === 'new') return;
+    if (!hasStringId(row)) return;
     let m = -1;
     if (storageName === 'dataBZ') m = getMonatFromBZ(row as IDatenBZ);
     else if (storageName === 'dataBE') m = getMonatFromBE(row as IDatenBE);

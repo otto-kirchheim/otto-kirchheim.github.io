@@ -332,13 +332,12 @@ export class Rows<T extends CustomTableTypes> {
   /**
    * Zeilen laden mit vollständiger State-Restauration aus Meta-Feldern:
    * - __errorMessage → 'error' (inkl. _errorState und _errorMessage)
-   * - __localState === 'deleted' → 'deleted'
-   * - kein _id (und kein error/deleted) → 'new' (löst _notifyChange aus)
-   * - sonst → 'unchanged'
+   * - __localState (explizit 'unchanged'|'new'|'modified'|'deleted') → direkt übernommen
+   * - kein __localState (Alt-Daten vor diesem Marker-Schema) → Fallback: kein _id → 'new', sonst 'unchanged'
    */
   load(array: T[], add = false): void {
     if (!add) this.array.length = 0;
-    let hasNew = false;
+    let hasPendingChanges = false;
     array.forEach(row => {
       const r = row as Record<string, unknown>;
       const storedLocalState = r.__localState as string | undefined;
@@ -347,8 +346,18 @@ export class Rows<T extends CustomTableTypes> {
 
       // Alle __-Felder generisch aus Cells entfernen (erweiterbar für zukünftige Meta-Felder)
       const cells = stripMetaFields({ ...row }) as T;
+      const hasId =
+        '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
 
-      const baseState: RowState = storedLocalState === 'deleted' ? 'deleted' : 'unchanged';
+      const baseState: RowState =
+        storedLocalState === 'unchanged' ||
+        storedLocalState === 'new' ||
+        storedLocalState === 'modified' ||
+        storedLocalState === 'deleted'
+          ? storedLocalState
+          : hasId
+            ? 'unchanged'
+            : 'new'; // Fallback für Alt-Daten ohne __localState-Marker
       const newRow = new Row(this.CustomTable, cells, baseState);
 
       if (storedErrorMsg) {
@@ -356,26 +365,18 @@ export class Rows<T extends CustomTableTypes> {
         newRow._errorState =
           storedErrorState === 'new' || storedErrorState === 'modified' || storedErrorState === 'deleted'
             ? storedErrorState
-            : '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string'
+            : hasId
               ? 'modified'
               : 'new';
         newRow._errorMessage = storedErrorMsg;
-      }
-
-      if (newRow._state === 'unchanged') {
-        const hasId =
-          '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
-        if (!hasId) {
-          newRow._state = 'new';
-          if (!newRow._clientRequestId) newRow._clientRequestId = createClientRequestId();
-          hasNew = true;
-        }
+      } else if (baseState === 'new' || baseState === 'modified') {
+        hasPendingChanges = true;
       }
 
       this.array.push(newRow);
     });
     this.CustomTable.drawRows();
-    if (hasNew) this.CustomTable._notifyChange();
+    if (hasPendingChanges) this.CustomTable._notifyChange();
   }
 
   /** @deprecated Identisches Verhalten wie rows.load() seit Vereinheitlichung */
