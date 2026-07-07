@@ -49,7 +49,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
   const ftVE = createCustomTable('tableVE', {
     columns: [
       { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Std.', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
+      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
       { name: 'beginnB', title: 'Ber Von', longTitle: 'Bereitschaft Von', parser: weekdayParser, breakpoints: 'sm' },
       { name: 'endeB', title: 'Ber Bis', longTitle: 'Bereitschaft Bis', parser: weekdayParser, breakpoints: 'sm' },
       { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'lg' },
