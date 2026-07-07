@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-07
+
+### fix (EWT – getPascalEnde Namensreihenfolge)
+
+- **`calculateEwtEintraege.ts`:** Vertauschte Zuordnung korrigiert – zuvor prüfte `getPascalEnde()` `Vorname === 'Ackermann' && Nachname === 'Pascal'`, jetzt korrekt `Vorname === 'Pascal' && Nachname === 'Ackermann'`. Ohne diesen Fix griff der Sonderfall (5 Minuten Aufschlag auf `anWE`) nie.
+
+### feat (EWT – Spätschicht-Label)
+
+- **`features/EWT/index.ts`:** Schicht-Kürzel `SP` wird in der Anzeige jetzt als „Spät" aufgelöst (zuvor kein eigener Fall, fiel durch den `switch`).
+
+### test (EWT – Sonderfall Pascal Ackermann)
+
+- **`EWT.ewtBerechnen.test.ts`:** Neuer Test für `getPascalEnde()` – bei `pers.Vorname === 'Pascal'` und `pers.Nachname === 'Ackermann'` wird `anWE` um 5 Minuten später berechnet (15:30 → 15:35) als im Standardfall. Der Sonderfall war bisher ungetestet, da alle bestehenden Mocks `pers: {}` verwenden.
+
 ## 2026-07-04
 
 ### feat (Berechnung – Mobil-Akkordeon, Gruppen-Sichtbarkeit, Zulagen-Aufschlüsselung)

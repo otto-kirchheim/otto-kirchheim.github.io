@@ -77,6 +77,34 @@ describe('calculateEwtEintraege', () => {
     );
   });
 
+  it('addiert 5 Minuten auf anWE bei Sonderfall Pascal Ackermann', () => {
+    const daten = [createData('2026-03-10')];
+    const mockVorgabenU = {
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:00', pause: 30 },
+          overrides: { 5: { ende: '14:00', pause: 0 } },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
+        fahrzeit: '00:30',
+      },
+      fZ: [{ key: 'Fulda', value: '00:10' }],
+      pers: { Vorname: 'Pascal', Nachname: 'Ackermann' },
+    } as unknown as IVorgabenU;
+
+    const result = calculateEwtEintraege(
+      mockVorgabenU,
+      daten.map(entry => ({ ...entry })),
+    );
+
+    expect(result).toHaveLength(1);
+    // Ohne Sonderfall wäre anWE '15:30' (siehe Test oben) -> mit Pascal Ackermann +5 Minuten.
+    expect(result[0]).toEqual(expect.objectContaining({ anWE: '15:35' }));
+  });
+
   it('berechnet eine Spätschicht (SP) anhand der Spät-Vorgaben', () => {
     const mockVorgabenU = {
       aZ: {
