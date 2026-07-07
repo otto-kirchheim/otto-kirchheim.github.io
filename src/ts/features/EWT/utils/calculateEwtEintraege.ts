@@ -47,7 +47,7 @@ function createHelpers(userSettings: IVorgabenU) {
   const { aZ } = userSettings;
 
   const getPascalEnde = (): Duration =>
-    userSettings.pers.Vorname === 'Ackermann' && userSettings.pers.Nachname === 'Pascal'
+    userSettings.pers.Vorname === 'Pascal' && userSettings.pers.Nachname === 'Ackermann'
       ? dayjs.duration(5, 'm')
       : dayjs.duration(0, 'm');
 
