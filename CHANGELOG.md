@@ -4,6 +4,22 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-07
 
+### fix (Neben – Entfernen der EWT-Verknüpfung wird jetzt serverseitig persistiert)
+
+- **`fieldMapper.ts` (`nebengeldToBackend`):** Eine fehlende `ewtRef` wird jetzt als `EWT: null` gesendet statt als `undefined` (das bei `JSON.stringify` wegfällt). Wählte der User im Neben-Editor „— keine Zuordnung —", kam das Entfernen der Verknüpfung nie am Server an: das Dokument behielt die alte EWT-Referenz, die Zuordnung war nach dem nächsten Laden wieder da und die EWT blieb für andere Einträge blockiert (Unique-Index). Das Backend übersetzt `null` in ein `$unset` (siehe Backend-Changelog). `nebengeldFromBackend` normalisiert `EWT: null` zu `ewtRef: undefined`.
+- **Tests:** Drei neue Mapper-Tests (gesetzte Ref, fehlende Ref → `null`, `null` vom Server → `undefined`).
+
+### fix (EWT/Neben – gelöschte Zeiten/Auftragsnummer werden beim Update jetzt serverseitig geleert)
+
+- **`fieldMapper.ts` (`ewtToBackend`):** Leere Zeitfelder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`) und `Einsatzort` werden jetzt als Leerstring explizit mitgesendet statt auf `undefined` gesetzt. `undefined`-Felder fallen bei `JSON.stringify` aus dem Payload, wodurch ein Update gelöschte Zeiten nie am Server ankommen ließ — der alte Wert blieb im Dokument erhalten (Mongoose-`$set` überschreibt nur mitgesendete Felder). Backend-Zod (`z.string().optional()`) und Mongoose-Schema akzeptieren Leerstrings; alle Konsumenten (Überschneidungsprüfung, `computeBuchungstag`, PDF-Export, `ewtFromBackend`) behandeln `''` und fehlend identisch. Nebeneffekt korrigiert: Die serverseitige Überschneidungsprüfung beim Update nutzte über `patch.beginE ?? current.beginE` bisher die alte Zeit, wenn das Feld fehlte.
+- **`fieldMapper.ts` (`nebengeldToBackend`):** Gleiches Muster für `Auftragsnummer` — eine geleerte Auftragsnummer wird jetzt beim Update serverseitig geleert.
+- **Tests:** Zwei bestehende Mapper-Tests von „setzt auf undefined" auf „sendet Leerstring explizit" umgestellt.
+
+### fix (EWT/Neben – Reaktivierung statt Duplikat-Fehler bei Add nach Delete am selben Tag)
+
+- **`addEwtTag.ts` / `addNebengeldTag.ts`:** Beim Anlegen eines neuen Eintrags wird jetzt zusätzlich geprüft, ob unter den zum Löschen vorgemerkten Zeilen (`_state === 'deleted'`) bereits eine Zeile für denselben Tag existiert. Falls ja, wird diese per `undoDelete()` + `val()` reaktiviert und mit den neuen Werten überschrieben, statt eine zusätzliche neue Zeile anzulegen. Behebt einen False-Positive: löschte man einen EWT-Eintrag und legte im selben Speichervorgang einen neuen für denselben Tag an, wurde der Create serverseitig als Überschneidung abgelehnt („EWT-Einträge dürfen sich nicht überschneiden"), weil der Bulk-Endpunkt Creates vor Deletes verarbeitet. Durch die Reaktivierung bleibt die ursprüngliche `_id` (und damit z. B. eine verknüpfte Nebengeld-Referenz) erhalten, es wird als Update statt Delete+Create gesendet.
+- **Tests:** Je ein neuer Testfall in `EWT.addEWTtag.test.ts` und `Neben.addNebenTag.test.ts` für die Reaktivierung eines zum Löschen vorgemerkten Eintrags.
+
 ### feat (AutoSave – expliziter `__localState`-Marker für alle Row-States)
 
 - **`mergeVisibleResourceRows.ts` + `CustomTable.ts` (`Rows.load`):** `__localState` wird jetzt für **jede** Zeile explizit persistiert (`'unchanged' | 'new' | 'modified' | 'deleted'`) statt `new` nur über die fehlende `_id` zu erschließen. Schließt die Lücke bei **geänderten** Zeilen: wurde das Fenster vor Ablauf des AutoSave-Timers geschlossen, wird die Änderung nach dem nächsten Laden dank des Markers zuverlässig nachgesendet statt still verloren zu gehen. Rückwärtskompatibel: Zeilen ohne Marker (Alt-Daten) fallen weiterhin auf die bisherige `_id`-Inferenz zurück.

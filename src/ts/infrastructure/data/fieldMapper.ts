@@ -70,7 +70,8 @@ export interface BackendEWT {
 export interface BackendNebengeld {
   _id?: string;
   User?: string;
-  EWT?: string;
+  /** null = EWT-Verknüpfung explizit entfernen (Backend übersetzt zu $unset) */
+  EWT?: string | null;
   Monat: number;
   Jahr: number;
   Tag: string; // ISO-Date
@@ -296,7 +297,7 @@ export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
   const zulagenN = doc.Zulagen.map(zulage => ({ code: zulage.Typ, value: zulage.Wert })).filter(z => z.value > 0);
   return {
     _id: doc._id,
-    ewtRef: doc.EWT,
+    ewtRef: doc.EWT ?? undefined,
     tagN: dayjs(doc.Tag).format('DD.MM.YYYY'),
     beginN: doc.Beginn,
     endeN: doc.Ende,
@@ -438,16 +439,18 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
     Jahr: period.Jahr,
     Tag: dayjs(item.tagE).toISOString(),
     Buchungstag: dayjs(buchungstag).toISOString(),
-    Einsatzort: item.eOrtE || undefined,
+    // Leere Strings explizit mitsenden: `undefined` fällt bei JSON.stringify weg,
+    // wodurch ein Update gelöschte Zeiten nicht überschreiben würde (alter Wert bliebe erhalten).
+    Einsatzort: item.eOrtE,
     Schicht: item.schichtE,
-    abWE: item.abWE || undefined,
-    ab1E: item.ab1E || undefined,
-    anEE: item.anEE || undefined,
-    beginE: item.beginE || undefined,
-    endeE: item.endeE || undefined,
-    abEE: item.abEE || undefined,
-    an1E: item.an1E || undefined,
-    anWE: item.anWE || undefined,
+    abWE: item.abWE,
+    ab1E: item.ab1E,
+    anEE: item.anEE,
+    beginE: item.beginE,
+    endeE: item.endeE,
+    abEE: item.abEE,
+    an1E: item.an1E,
+    anWE: item.anWE,
     berechnen: item.berechnen,
   };
 }
@@ -464,13 +467,16 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
   }));
   return {
     _id: item._id,
-    EWT: item.ewtRef || undefined,
+    // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
+    // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
+    EWT: item.ewtRef || null,
     Monat: period.Monat,
     Jahr: period.Jahr,
     Tag: dayjs(item.tagN, 'DD.MM.YYYY').toISOString(),
     Beginn: item.beginN,
     Ende: item.endeN,
-    Auftragsnummer: item.auftragN || undefined,
+    // Leerstring explizit mitsenden, damit eine gelöschte Auftragsnummer beim Update auch serverseitig geleert wird.
+    Auftragsnummer: item.auftragN,
     Zulagen: zulagen,
   };
 }

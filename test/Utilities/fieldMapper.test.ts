@@ -258,7 +258,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     expect(dayjs(result.Buchungstag).format('YYYY-MM-DD')).toBe('2026-04-01');
   });
 
-  it('ewtToBackend setzt leere Strings auf undefined', () => {
+  it('ewtToBackend sendet leere Strings explizit mit (damit Updates gelöschte Zeiten überschreiben)', () => {
     const frontendEWT: IDatenEWT = {
       tagE: '2024-04-10',
       buchungstagE: '2024-04-10',
@@ -275,15 +275,15 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
       berechnen: true,
     };
     const result = ewtToBackend(frontendEWT, 4, 2024);
-    expect(result.Einsatzort).toBeUndefined();
-    expect(result.abWE).toBeUndefined();
-    expect(result.ab1E).toBeUndefined();
-    expect(result.anEE).toBeUndefined();
-    expect(result.beginE).toBeUndefined();
-    expect(result.endeE).toBeUndefined();
-    expect(result.abEE).toBeUndefined();
-    expect(result.an1E).toBeUndefined();
-    expect(result.anWE).toBeUndefined();
+    expect(result.Einsatzort).toBe('');
+    expect(result.abWE).toBe('');
+    expect(result.ab1E).toBe('');
+    expect(result.anEE).toBe('');
+    expect(result.beginE).toBe('');
+    expect(result.endeE).toBe('');
+    expect(result.abEE).toBe('');
+    expect(result.an1E).toBe('');
+    expect(result.anWE).toBe('');
   });
 });
 
@@ -353,7 +353,25 @@ describe('fieldMapper – Nebengeld', () => {
     expect(dayjs(result.Tag).year()).toBe(2024);
   });
 
-  it('nebengeldToBackend setzt leere Auftragsnummer auf undefined', () => {
+  it('nebengeldFromBackend mit EWT null liefert ewtRef undefined', () => {
+    const withNullEwt = { ...backendN, EWT: null };
+    const result = nebengeldFromBackend(withNullEwt);
+    expect(result.ewtRef).toBeUndefined();
+  });
+
+  it('nebengeldToBackend sendet gesetzte ewtRef als EWT', () => {
+    const frontendN: IDatenN = {
+      tagN: '15.03.2024',
+      beginN: '20:00',
+      endeN: '04:00',
+      auftragN: '',
+      ewtRef: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+    };
+    const result = nebengeldToBackend(frontendN, 3, 2024);
+    expect(result.EWT).toBe('aaaaaaaaaaaaaaaaaaaaaaaa');
+  });
+
+  it('nebengeldToBackend sendet fehlende ewtRef als EWT null (Unlink-Signal für den Server)', () => {
     const frontendN: IDatenN = {
       tagN: '15.03.2024',
       beginN: '20:00',
@@ -361,7 +379,18 @@ describe('fieldMapper – Nebengeld', () => {
       auftragN: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
-    expect(result.Auftragsnummer).toBeUndefined();
+    expect(result.EWT).toBeNull();
+  });
+
+  it('nebengeldToBackend sendet leere Auftragsnummer explizit mit (damit Updates sie serverseitig leeren)', () => {
+    const frontendN: IDatenN = {
+      tagN: '15.03.2024',
+      beginN: '20:00',
+      endeN: '04:00',
+      auftragN: '',
+    };
+    const result = nebengeldToBackend(frontendN, 3, 2024);
+    expect(result.Auftragsnummer).toBe('');
   });
 
   it('nebengeldToBackend ohne Zulagen erzeugt ein leeres Zulagen-Array', () => {
