@@ -88,11 +88,15 @@ function populateTable(VorgabenU: IVorgabenU): void {
   }
 }
 
+// Zählt jeden Aufruf hoch, damit `key` sich ändert und Preact das Panel neu mounted statt
+// den bestehenden Component-State (inkl. veralteter Arbeitszeit nach Act-as-Wechsel) zu behalten.
+let arbeitszeitPanelRenderCount = 0;
+
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
   if (!panel) return;
   const aZ = isLegacyArbeitszeit(VorgabenU.aZ) ? migrateArbeitszeit(VorgabenU.aZ) : VorgabenU.aZ;
-  render(h(ArbeitszeiteingabePanel, { initialValues: aZ }), panel);
+  render(h(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }), panel);
 }
 
 function setElementValues<T>(values: T): void {
