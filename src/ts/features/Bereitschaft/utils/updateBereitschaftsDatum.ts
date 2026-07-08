@@ -13,7 +13,9 @@ export default function updateBereitschaftsDatum(
 ): void {
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
   const az = vorgabenU.aZ;
-  // Handbetrieb ("Datum manuell anpassen"): berechnete Datumsfelder (bE/nA/nE) nicht überschreiben.
+  // Handbetrieb ("Datum & Zeiten manuell anpassen"): berechnete Datumsfelder (bE/nA/nE) nicht
+  // überschreiben. Zeiten werden immer zum jeweiligen Wochentag neu abgeleitet — sie dienen im
+  // Handbetrieb als Startwert und werden erst danach vom User feinjustiert.
   const eigen = parentElement.querySelector<HTMLInputElement>('#eigen')?.checked ?? false;
   const bAT = parentElement.querySelector<HTMLInputElement>('#bAT');
   const spaetCheckbox = parentElement.querySelector<HTMLInputElement>('#spaet');

@@ -141,9 +141,9 @@ describe('Bereitschaft utils extra', () => {
         <input id="bE" />
         <input id="bET" />
         <input id="nA" />
-        <input id="nAT" />
+        <input id="nAT" disabled />
         <input id="nE" />
-        <input id="nET" />
+        <input id="nET" disabled />
         <input id="eigen" type="checkbox" checked />
       </div>
     `;
@@ -153,10 +153,15 @@ describe('Bereitschaft utils extra', () => {
 
     toggleBereitschaftsEigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'));
 
-    // Nur die Datumsfelder werden entsperrt (Zeiten sind generell read-only).
+    // Datumsfelder und BZ-Grenzzeiten werden entsperrt (z. B. stundenweise Übernahme).
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.disabled).toBe(false);
     expect(parentElement.querySelector<HTMLInputElement>('#nA')?.disabled).toBe(false);
     expect(parentElement.querySelector<HTMLInputElement>('#nE')?.disabled).toBe(false);
+    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.disabled).toBe(false);
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.disabled).toBe(false);
+    // Nacht-Zeiten bleiben gesperrt: sie folgen immer der Arbeitszeit Nacht (auch in der Berechnung).
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.disabled).toBe(true);
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.disabled).toBe(true);
   });
 
   it('eigeneWerte deaktiviert Felder, wenn eigen nicht gesetzt ist', () => {
@@ -182,10 +187,63 @@ describe('Bereitschaft utils extra', () => {
 
     toggleBereitschaftsEigeneWerte(parentElement, vorgabenB, datum);
 
-    // Nur die Datumsfelder werden gesperrt; Zeiten bleiben unangetastet (read-only Text).
+    // Datumsfelder und BZ-Grenzzeiten werden gesperrt und aus der Vorgabe neu abgeleitet.
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.disabled).toBe(true);
     expect(parentElement.querySelector<HTMLInputElement>('#nA')?.disabled).toBe(true);
     expect(parentElement.querySelector<HTMLInputElement>('#nE')?.disabled).toBe(true);
+    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.disabled).toBe(true);
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.disabled).toBe(true);
+  });
+
+  it('datumAnpassen leitet Zeiten im Handbetrieb (eigen) je Wochentag neu ab, lässt Datumsfelder stehen', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" value="2026-07-24" />
+        <input id="bAT" value="11:11" />
+        <input id="nacht" type="checkbox" />
+        <input id="bE" value="2026-07-25" />
+        <input id="bET" value="22:22" />
+        <input id="nA" value="2026-07-24" />
+        <input id="nAT" value="20:00" />
+        <input id="nE" value="2026-07-25" />
+        <input id="nET" value="05:00" />
+        <input id="eigen" type="checkbox" checked />
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    // Arbeitszeiten: Fr 07:00–13:00, Sa 09:00–14:00 (stundenweise Übernahme-Szenario).
+    const vorgabenU = createVorgabenU();
+    Storage.set('VorgabenU', {
+      ...vorgabenU,
+      aZ: {
+        ...vorgabenU.aZ,
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:45', pause: 30 },
+          regelarbeitstage: [1, 2, 3, 4, 5, 6],
+          overrides: {
+            5: { ende: '13:00', pause: 0 },
+            6: { beginn: '09:00', ende: '14:00', pause: 0 },
+          },
+        },
+      },
+    });
+
+    // Anfang Fr 24.07., manuell gesetztes Ende Sa 25.07.
+    updateBereitschaftsDatum(parentElement, createVorgabenB(), dayjs('2026-07-24'));
+
+    // Zeiten folgen immer dem jeweiligen Wochentag: bAT = frueh.Ende Fr, bET = frueh.Beginn Sa.
+    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.value).toBe('13:00');
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('09:00');
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe('19:45');
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe('06:15');
+    // Manuell gesetzte Datumsfelder bleiben unangetastet.
+    expect(parentElement.querySelector<HTMLInputElement>('#bE')?.value).toBe('2026-07-25');
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe('2026-07-24');
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe('2026-07-25');
   });
 
   it('eigeneWerte wirft Fehler bei fehlenden Inputs', () => {

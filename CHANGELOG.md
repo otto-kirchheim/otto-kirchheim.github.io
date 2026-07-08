@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-08
+
+### fix (Bereitschaft – Von-/Bis-Zeiten wieder manuell setzbar, z. B. bei stundenweiser Übernahme)
+
+- **`createAddModalBereitschaftsZeit.tsx`:** Die beim aZ-Umbau eingeführten rein abgeleiteten, read-only Zeitanzeigen sind jetzt `type="time"`-Inputs (standardmäßig disabled/berechnet). Der Schalter „Datum manuell anpassen" heißt jetzt **„Datum & Zeiten manuell anpassen"** und entsperrt zusätzlich die BZ-Grenzzeiten `bAT`/`bET`. Damit ist die stundenweise Übernahme einer Bereitschaft wieder eingebbar (z. B. Anfang 13:00 nach Feierabend, Ende 12:00 am Folgetag bei Übergabe an den Kollegen). Nacht-/Spät-Zeiten bleiben immer abgeleitet — die Berechnung zieht die Nacht-Blöcke ohnehin aus der Arbeitszeit Nacht, manuelle Werte würden ihr widersprechen; Abweichungen gehören ins Panel „Andere Arbeitszeiten hinterlegen" (Hinweis dazu jetzt direkt im Nachtschicht-Block).
+- **`toggleBereitschaftsEigeneWerte.ts`:** Ent-/sperrt neben den Datumsfeldern (`bE`/`nA`/`nE`) jetzt auch `bAT`/`bET`; beim Zurückschalten werden alle Felder wieder aus der Vorgabe/aZ abgeleitet.
+- **`updateBereitschaftsDatum.ts`:** Auch im Handbetrieb werden die Zeiten bei jeder Datumsänderung weiterhin zum jeweiligen Wochentag neu abgeleitet (z. B. Anfang Fr → `bAT` = frueh.Ende Fr 13:00, Ende Sa → `bET` = frueh.Beginn Sa 09:00) — sie dienen als Startwert und werden danach vom User feinjustiert. Nur die Datumsfelder bleiben im Handbetrieb unangetastet (wie bisher).
+- **Tests:** Toggle-Tests um die Zeitfelder erweitert; neuer Test, dass `updateBereitschaftsDatum` im Handbetrieb die Zeiten je Wochentag neu ableitet (Fr 13:00 / Sa 09:00-Szenario) und die manuell gesetzten Datumsfelder stehen lässt.
+
 ## 2026-07-07
 
 ### fix (Neben – Entfernen der EWT-Verknüpfung wird jetzt serverseitig persistiert)

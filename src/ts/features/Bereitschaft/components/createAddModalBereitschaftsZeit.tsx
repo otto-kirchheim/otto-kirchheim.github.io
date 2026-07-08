@@ -34,19 +34,20 @@ const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs,
   />
 );
 
-// Abgeleitete Zeit – read-only als Text (prominent). Wert kommt aus aZ/Override, wird von
+// Abgeleitete Zeit – standardmäßig berechnet (disabled), per „Datum & Zeiten manuell anpassen"
+// editierbar (nur die BZ-Grenzen bAT/bET; Nacht/Spät folgen immer der Arbeitszeit bzw. dem
+// Override-Panel, da auch die Berechnung die Nacht-Blöcke daraus ableitet). Wert wird von
 // applyBereitschaftsVorgabe/updateBereitschaftsDatum gesetzt und von submitBereitschaftsZeiten gelesen.
-const createTimeInputElement = (id: string, name: string, time = '') => (
+const createTimeInputElement = (id: string, name: string, required = false) => (
   <input
-    type="text"
+    type="time"
     id={id}
     name={name}
     aria-label={name}
-    value={time}
-    readOnly
-    tabIndex={-1}
-    className="form-control-plaintext fs-5 fw-semibold lh-1 p-0 m-0 flex-shrink-0"
-    style={{ width: '3.5rem' }}
+    required={required}
+    disabled
+    className="form-control form-control-sm flex-shrink-0"
+    style={{ width: '6.5rem' }}
   />
 );
 
@@ -191,7 +192,9 @@ export default function createAddModalBereitschaftsZeit(): void {
               toggleBereitschaftsEigeneWerte(modal, effektiveVorgabe(), datum);
             }}
           >
-            Datum manuell anpassen
+            Datum & Zeiten manuell anpassen
+            <br />
+            <small>(z.B. bei stundenweiser Übernahme der Bereitschaft)</small>
           </MyCheckbox>
         </div>
 
@@ -200,7 +203,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         <div className="col-12 border rounded p-3">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Bereitschaftszeitraum</p>
           {/* Zeit-Platzhalter werden unmittelbar von applyBereitschaftsVorgabe aus aZ je Wochentag gesetzt. */}
-          {punktZeile('Anfang', false, datumInput(), createTimeInputElement('bAT', 'Von'))}
+          {punktZeile('Anfang', false, datumInput(), createTimeInputElement('bAT', 'Von', true))}
           {punktZeile(
             'Ende',
             true,
@@ -212,7 +215,7 @@ export default function createAddModalBereitschaftsZeit(): void {
               datum.startOf('M'),
               datum.add(1, 'M').endOf('M'),
             ),
-            createTimeInputElement('bET', 'Bis'),
+            createTimeInputElement('bET', 'Bis', true),
           )}
         </div>
 
@@ -337,6 +340,9 @@ export default function createAddModalBereitschaftsZeit(): void {
             ),
             createTimeInputElement('nET', 'Bis'),
           )}
+          <small className="text-muted d-block mt-2">
+            Die Zeiten folgen der Arbeitszeit Nacht und lassen sich über „Andere Arbeitszeiten hinterlegen" ändern.
+          </small>
         </div>
 
         <BereitschaftOverridePanel
@@ -357,7 +363,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
   applyBereitschaftsVorgabe(modal, effektiveVorgabe(), datum);
 
-  // Spät-Zeiten sind read-only Text → nur noch Sichtbarkeit des Spät-Blocks steuern.
+  // Spät-Zeiten bleiben abgeleitet (Override-Panel) → nur Sichtbarkeit des Spät-Blocks steuern.
   const refreshSpaetFelder = (): void => {
     const spaetChecked = modal.querySelector<HTMLInputElement>('#spaet')?.checked ?? false;
     const spaetContainer = modal.querySelector<HTMLElement>('#spaetschicht');
