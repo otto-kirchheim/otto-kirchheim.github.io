@@ -1,15 +1,9 @@
 {
+  "includeCoAuthoredBy": false,
+  "autoCompactEnabled": true,
+  "autoMemoryEnabled": true,
   "permissions": {
-    "allow": [
-      "Bash(rg *)",
-      "Bash(bun *)",
-      "Bash(git status*)",
-      "Bash(git diff*)"
-    ],
-    "deny": [
-      "Bash(git reset --hard*)",
-      "Bash(git checkout -- *)",
-      "Bash(rm -rf /*)"
-    ]
+    "allow": ["Bash(rg *)", "Bash(bun *)", "Bash(git status*)", "Bash(git diff*)"],
+    "deny": ["Bash(git reset --hard*)", "Bash(git checkout -- *)", "Bash(rm -rf /*)"]
   }
 }

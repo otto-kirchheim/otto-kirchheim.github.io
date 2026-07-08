@@ -67,9 +67,7 @@ export function collectRowErrorMatches(
   const matches: RowErrorMatch[] = [];
 
   // Error-Rows mit _errorState beachten: effektiver Zustand bestimmt die Position im Create/Update-Array
-  const newRows = table.rows.array.filter(
-    r => r._state === 'new' || (r._state === 'error' && r._errorState === 'new'),
-  );
+  const newRows = table.rows.array.filter(r => r._state === 'new' || (r._state === 'error' && r._errorState === 'new'));
   const modifiedRows = table.rows.array.filter(
     r => r._state === 'modified' || (r._state === 'error' && r._errorState === 'modified'),
   );

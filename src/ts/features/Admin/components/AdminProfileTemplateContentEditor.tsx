@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'preact/hooks';
 import { ZULAGEN_CATALOG } from '../../Einstellungen/utils/zulagenCatalog';
+import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
 import {
-  ARBEITSZEIT_FIELDS,
   PERS_FIELDS,
   TAB_OPTIONS,
   type FahrzeitRow,
@@ -9,8 +9,16 @@ import {
   type VorgabenBRow,
 } from './profileTemplates.shared';
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
+import type { BereitschaftSchichtTyp } from '@/types';
 
 type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
+
+const SCHICHT_OPTIONEN: { typ: BereitschaftSchichtTyp; label: string }[] = [
+  { typ: 'frueh', label: 'Früh' },
+  { typ: 'spaet', label: 'Spät' },
+  { typ: 'nacht', label: 'Nacht' },
+  { typ: 'sonder', label: 'Sonder' },
+];
 
 type Props = {
   templateId: string;
@@ -18,7 +26,8 @@ type Props = {
   isSaving: boolean;
   activeVorgabenBIndex: number;
   onUpdatePersField: (key: string, value: string) => void;
-  onUpdateArbeitszeitField: (key: string, value: string) => void;
+  onUpdateArbeitszeit: (value: NonNullable<TemplateContentDraft['Arbeitszeit']>) => void;
+  onEnableArbeitszeit: () => void;
   onAddFahrzeitRow: () => void;
   onUpdateFahrzeitRow: (index: number, field: keyof FahrzeitRow, value: string) => void;
   onRemoveFahrzeitRow: (index: number) => void;
@@ -38,7 +47,8 @@ export function AdminProfileTemplateContentEditor({
   isSaving,
   activeVorgabenBIndex,
   onUpdatePersField,
-  onUpdateArbeitszeitField,
+  onUpdateArbeitszeit,
+  onEnableArbeitszeit,
   onAddFahrzeitRow,
   onUpdateFahrzeitRow,
   onRemoveFahrzeitRow,
@@ -56,7 +66,7 @@ export function AdminProfileTemplateContentEditor({
   const badgeState = useMemo(
     () => ({
       Pers: Object.keys(templateContent.Pers).length > 0,
-      Arbeitszeit: Object.keys(templateContent.Arbeitszeit).length > 0,
+      Arbeitszeit: templateContent.Arbeitszeit !== null,
       Fahrzeit: templateContent.Fahrzeit.length > 0,
       VorgabenB: templateContent.VorgabenB.length > 0,
       Einstellungen:
@@ -127,18 +137,20 @@ export function AdminProfileTemplateContentEditor({
 
       {activeSection === 'Arbeitszeit' && (
         <div class="border rounded p-2 mb-2">
-          <div class="row g-2">
-            {ARBEITSZEIT_FIELDS.map(field => (
-              <div class="col-12 col-md-6 col-xl-4" key={`${templateId}-az-${field.key}`}>
-                <label class="form-label small mb-1">{field.label}</label>
-                <input
-                  class="form-control form-control-sm"
-                  value={templateContent.Arbeitszeit[field.key] ?? ''}
-                  onInput={e => onUpdateArbeitszeitField(field.key, (e.target as HTMLInputElement).value)}
-                />
-              </div>
-            ))}
-          </div>
+          {templateContent.Arbeitszeit ? (
+            <ArbeitszeiteingabePanel
+              key={`${templateId}-arbeitszeit`}
+              initialValues={templateContent.Arbeitszeit}
+              onChange={onUpdateArbeitszeit}
+            />
+          ) : (
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
+              <button class="btn btn-sm btn-outline-secondary" onClick={onEnableArbeitszeit} disabled={isSaving}>
+                Arbeitszeit aktivieren
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -398,43 +410,57 @@ export function AdminProfileTemplateContentEditor({
                       </div>
                     </div>
 
-                    <div class="d-flex flex-wrap gap-3 mb-2">
-                      <label class="form-check m-0">
-                        <input
-                          class="form-check-input me-1"
-                          type="checkbox"
-                          checked={row.value.nacht}
-                          onInput={e =>
-                            onUpdateVorgabenBRow(currentIndex, current => ({
-                              ...current,
-                              value: {
-                                ...current.value,
-                                nacht: (e.target as HTMLInputElement).checked,
-                                ...((e.target as HTMLInputElement).checked
-                                  ? {}
-                                  : {
-                                      beginnN: {
-                                        ...current.value.beginnN,
-                                        tag: current.value.beginnB.tag,
-                                        zeit: current.value.beginnB.zeit,
-                                        Nwoche: false,
-                                      },
-                                      endeN: {
-                                        ...current.value.endeN,
-                                        tag: current.value.endeB.tag,
-                                        zeit: current.value.endeB.zeit,
-                                        Nwoche: current.value.endeB.Nwoche,
-                                      },
-                                    }),
-                              },
-                            }))
-                          }
-                        />
-                        <span class="form-check-label">Nachtschicht aktiv</span>
-                      </label>
+                    <div class="mb-2">
+                      <label class="form-label small mb-1">Aktive Schichten</label>
+                      <div class="d-flex flex-wrap gap-3">
+                        {SCHICHT_OPTIONEN.map(({ typ, label }) => (
+                          <label key={typ} class="form-check m-0">
+                            <input
+                              class="form-check-input me-1"
+                              type="checkbox"
+                              checked={row.value.schichten.includes(typ)}
+                              disabled={typ === 'frueh' || isSaving}
+                              onInput={e => {
+                                const checked = (e.target as HTMLInputElement).checked;
+                                onUpdateVorgabenBRow(currentIndex, current => {
+                                  const schichten = checked
+                                    ? [...current.value.schichten.filter(s => s !== typ), typ]
+                                    : current.value.schichten.filter(s => s !== typ);
+                                  const nacht = schichten.includes('nacht');
+                                  return {
+                                    ...current,
+                                    value: {
+                                      ...current.value,
+                                      schichten,
+                                      nacht,
+                                      ...(nacht
+                                        ? {}
+                                        : {
+                                            beginnN: {
+                                              ...current.value.beginnN,
+                                              tag: current.value.beginnB.tag,
+                                              zeit: current.value.beginnB.zeit,
+                                              Nwoche: false,
+                                            },
+                                            endeN: {
+                                              ...current.value.endeN,
+                                              tag: current.value.endeB.tag,
+                                              zeit: current.value.endeB.zeit,
+                                              Nwoche: current.value.endeB.Nwoche,
+                                            },
+                                          }),
+                                    },
+                                  };
+                                });
+                              }}
+                            />
+                            <span class="form-check-label">{label}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
 
-                    {row.value.nacht ? (
+                    {row.value.schichten.includes('nacht') ? (
                       <>
                         <VorgabenBWeekRangeEditor
                           selectorKey={`${templateId}-vb-n-${currentIndex}`}

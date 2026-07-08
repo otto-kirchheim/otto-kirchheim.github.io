@@ -123,6 +123,34 @@ describe('addEWTtag', () => {
     expect(persistEwtTableDataMock).not.toHaveBeenCalled();
   });
 
+  it('reaktiviert einen zum Löschen vorgemerkten Eintrag für denselben Tag statt einen neuen zu erstellen', () => {
+    const modal = setupModal(true);
+    const calculatedData = createEwtData({ tagE: '2026-03-10', beginE: '07:00', endeE: '15:00' });
+    calculateEwtEintraegeMock.mockReturnValue([calculatedData]);
+
+    const addMock = vi.fn();
+    const undoDeleteMock = vi.fn();
+    const valMock = vi.fn();
+    const deletedRow = {
+      cells: createEwtData({ tagE: '2026-03-10', beginE: '06:00', endeE: '14:00' }),
+      _state: 'deleted' as const,
+      undoDelete: undoDeleteMock,
+      val: valMock,
+    };
+    const otherRow = { cells: createEwtData({ tagE: '2026-03-11' }), _state: 'unchanged' as const };
+    const ftE = {
+      rows: { add: addMock, array: [deletedRow, otherRow] },
+      getRows: vi.fn().mockReturnValue([deletedRow, otherRow]),
+    };
+
+    addEwtTag(modal as never, {} as IVorgabenU, false, ftE as never);
+
+    expect(undoDeleteMock).toHaveBeenCalledTimes(1);
+    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, buchungstagE: '2026-03-10' }));
+    expect(addMock).not.toHaveBeenCalled();
+    expect(persistEwtTableDataMock).toHaveBeenCalledWith(ftE);
+  });
+
   it('setzt im berechneBuero-Pfad bestimmte Felder zurueck', () => {
     const modal = setupModal(false);
     const calculatedData = createEwtData({

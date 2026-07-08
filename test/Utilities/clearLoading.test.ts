@@ -69,4 +69,32 @@ describe('clearLoading', () => {
     document.querySelector('#ladeAnzeige')!.remove();
     expect(() => clearLoading('btnTest')).not.toThrow();
   });
+
+  it('stellt Original-Inhalt wieder her und behält den autosave-badge bei', () => {
+    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
+    btn.innerHTML = 'Speichern <span class="autosave-badge">●</span>';
+
+    setLoading('btnTest');
+    // setLoading behält den Badge neben dem Spinner
+    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
+
+    clearLoading('btnTest');
+
+    expect(btn.textContent?.trim()).toBe('Speichern ●');
+    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
+    expect(btn.disabled).toBe(false);
+  });
+
+  it('nutzt Fallback-Text mit autosave-badge, wenn kein Original-Inhalt gemerkt wurde', () => {
+    const btn = document.querySelector<HTMLButtonElement>('#btnTest')!;
+    btn.dataset.normaltext = 'Aktualisieren';
+    btn.innerHTML = 'Laden… <span class="autosave-badge">●</span>';
+
+    // clearLoading ohne vorheriges setLoading: takeOriginalButtonContent() liefert null
+    clearLoading('btnTest');
+
+    expect(btn.textContent?.trim()).toBe('Aktualisieren●');
+    expect(btn.querySelector('.autosave-badge')).not.toBeNull();
+    expect(btn.disabled).toBe(false);
+  });
 });

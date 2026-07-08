@@ -69,8 +69,10 @@ describe('persistEwtTableData', () => {
     const result = persistEwtTableData(ftMock);
 
     expect(tableToArrayMock).toHaveBeenCalledWith(ftMock);
-    expect(result).toEqual(newRows);
-    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(newRows);
+    expect(result).toEqual(newRows.map(row => ({ ...row, __localState: 'unchanged' })));
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(
+      newRows.map(row => ({ ...row, __localState: 'unchanged' })),
+    );
     expect(publishDataChangedMock).toHaveBeenCalledTimes(2);
   });
 
@@ -86,8 +88,11 @@ describe('persistEwtTableData', () => {
     const ftMock = createTableMock(updatedAprilRows);
     const result = persistEwtTableData(ftMock);
 
-    expect(result).toEqual([marchEntry, updatedAprilRows[0]]);
-    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual([marchEntry, updatedAprilRows[0]]);
+    // marchEntry ist eine bereits gespeicherte, unveränderte Zeile aus einem anderen Monat (preservedRows) —
+    // wird unverändert übernommen, während die aktive April-Zeile frisch über toStorage serialisiert wird.
+    const expected = [marchEntry, { ...updatedAprilRows[0], __localState: 'unchanged' }];
+    expect(result).toEqual(expected);
+    expect(Storage.get<IDatenEWT[]>('dataE', { check: true })).toEqual(expected);
   });
 
   it('synchronisiert einen neu berechneten Buchungstag zurück in die Tabellenzeile', () => {

@@ -1,10 +1,12 @@
 import type { Duration } from 'dayjs/plugin/duration';
 import type { IDatenEWT, IVorgabenE, IVorgabenU } from '@/types';
+import { resolveSchichtDay } from '@/types';
 import { default as getDurationFromTime } from '@/infrastructure/date/getDurationFromTime';
 import dayjs from '@/infrastructure/date/configDayjs';
 import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
 
-type SchichtKeys = 'T' | 'N' | 'BN' | 'S';
+// BN ist Legacy-Alias für N (svzA identisch); SP wird als explizite Spätschicht unterstützt
+type SchichtKeys = 'T' | 'SP' | 'N' | 'S';
 
 export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDatenEWT[]): IDatenEWT[] {
   if (vorgabenU == null || daten == null || !Array.isArray(daten)) {
@@ -29,7 +31,7 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
   for (const TagDaten of daten) {
     if (!TagDaten.berechnen) continue;
     const datum = dayjs(TagDaten.tagE);
-    const schichtDaten = getSchichtDaten(TagDaten.schichtE as SchichtKeys, datum, vorgabenE);
+    const schichtDaten = getSchichtDaten(TagDaten.schichtE as SchichtKeys, datum);
 
     Object.assign(
       TagDaten,
@@ -42,55 +44,77 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
 }
 
 function createHelpers(userSettings: IVorgabenU) {
+  const { aZ } = userSettings;
+
   const getPascalEnde = (): Duration =>
-    userSettings.pers.Vorname === 'Ackermann' && userSettings.pers.Nachname === 'Pascal'
+    userSettings.pers.Vorname === 'Pascal' && userSettings.pers.Nachname === 'Ackermann'
       ? dayjs.duration(5, 'm')
       : dayjs.duration(0, 'm');
 
-  const getSchichtDaten = (schicht: SchichtKeys, datum: dayjs.Dayjs, vorgabenE: IVorgabenE) => {
-    const schichten: Record<SchichtKeys, { beginn: Duration; ende: Duration; svzA: Duration; svzE: Duration }> = {
-      T: {
-        beginn: vorgabenE.bT,
-        ende: datum.isoWeekday() === 5 ? vorgabenE.eTF : vorgabenE.eT,
-        svzA: dayjs.duration(20, 'm'),
-        svzE: dayjs.duration(20, 'm'),
-      },
-      N: {
-        beginn: vorgabenE.bN,
-        ende: vorgabenE.eN.add(1, 'd'),
-        svzA: dayjs.duration(45, 'm'),
-        svzE: dayjs.duration(45, 'm'),
-      },
-      BN: {
-        beginn: vorgabenE.bBN,
-        ende: vorgabenE.eN.add(1, 'd'),
-        svzA: dayjs.duration(60, 'm'),
-        svzE: dayjs.duration(45, 'm'),
-      },
-      S: {
-        beginn: vorgabenE.bS,
-        ende: vorgabenE.eS,
-        svzA: dayjs.duration(20, 'm'),
-        svzE: dayjs.duration(20, 'm'),
-      },
-    };
+  const getSchichtDaten = (schicht: string, datum: dayjs.Dayjs) => {
+    const isoWeekday = datum.isoWeekday();
+    const key: SchichtKeys = schicht === 'BN' ? 'N' : (schicht as SchichtKeys);
 
-    if (!(schicht in schichten)) throw new Error('Schicht unbekannt');
-    return schichten[schicht];
+    switch (key) {
+      case 'T': {
+        const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const config = fruehConfig ?? spaetConfig ?? aZ.frueh.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      case 'SP': {
+        const spaetConfig = aZ.spaet.aktiv ? resolveSchichtDay(aZ.spaet, isoWeekday) : null;
+        const fruehConfig = resolveSchichtDay(aZ.frueh, isoWeekday);
+        const config = spaetConfig ?? fruehConfig ?? aZ.frueh.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      case 'N': {
+        if (!aZ.nacht.aktiv) throw new Error('Nachtschicht nicht konfiguriert');
+        const config = resolveSchichtDay(aZ.nacht, isoWeekday) ?? aZ.nacht.default;
+        return {
+          beginn: getDurationFromTime(config.beginn),
+          ende: getDurationFromTime(config.ende).add(1, 'd'),
+          svzA: dayjs.duration(45, 'm'),
+          svzE: dayjs.duration(45, 'm'),
+          overnight: true,
+        };
+      }
+      case 'S': {
+        if (!aZ.sonder.aktiv) throw new Error('Sonderschicht nicht konfiguriert');
+        return {
+          beginn: getDurationFromTime(aZ.sonder.beginn),
+          ende: getDurationFromTime(aZ.sonder.ende),
+          svzA: dayjs.duration(20, 'm'),
+          svzE: dayjs.duration(20, 'm'),
+          overnight: false,
+        };
+      }
+      default:
+        throw new Error('Schicht unbekannt');
+    }
   };
 
-  const initializeVorgabenE = () => {
-    const vorgabenE = { fZ: {} } as IVorgabenE;
-
-    Object.entries(userSettings.aZ).forEach(([key, value]) => {
-      vorgabenE[key] = getDurationFromTime(value);
-    });
-
+  const initializeVorgabenE = (): IVorgabenE => {
+    const fZ: IVorgabenE['fZ'] = {};
     userSettings.fZ.forEach(place => {
-      vorgabenE.fZ[place.key] = getDurationFromTime(place.value);
+      fZ[place.key] = getDurationFromTime(place.value);
     });
-
-    return vorgabenE;
+    return {
+      rZ: getDurationFromTime(aZ.fahrzeit),
+      fZ,
+    };
   };
 
   const calculateTimes = (
@@ -104,7 +128,7 @@ function createHelpers(userSettings: IVorgabenU) {
     const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
       const [stunden, minuten] = value.split(':');
       let tag = dayjs(Tag.tagE).date();
-      if (addTag && ['BN', 'N'].includes(Tag.schichtE)) tag -= 1;
+      if (addTag && ['BN', 'N'].includes(Tag.schichtE ?? '')) tag -= 1;
       return dayjs([datum.year(), datum.month(), tag, +stunden, +minuten, 0, 0]);
     };
 

@@ -151,6 +151,22 @@ describe('changeTracking', () => {
       expect(result.get(0)).toBe('new-id');
     });
 
+    it('matches by signature rather than position when the response order differs', () => {
+      const table = mockTable([
+        { _state: 'new', cells: { beginB: 'row0-begin', endeB: 'row0-end', pauseB: 0 } },
+        { _state: 'new', cells: { beginB: 'row1-begin', endeB: 'row1-end', pauseB: 0 } },
+      ]);
+      // Server responds in reversed order relative to the pending rows.
+      // Backend docs use the capitalized field names that bzFromBackend maps from.
+      const createdDocs = [
+        { _id: 'id-for-row1', Beginn: 'row1-begin', Ende: 'row1-end', Pause: 0 },
+        { _id: 'id-for-row0', Beginn: 'row0-begin', Ende: 'row0-end', Pause: 0 },
+      ];
+      const result = mapCreatedIdsByContent('BZ', table, createdDocs);
+      expect(result.get(0)).toBe('id-for-row0');
+      expect(result.get(1)).toBe('id-for-row1');
+    });
+
     it('falls back to positional matching for unmatched signatures', () => {
       const table = mockTable([{ _state: 'new', cells: { beginB: 'x', endeB: 'y', pauseB: 99 } }]);
       // Doc has different content — no signature match

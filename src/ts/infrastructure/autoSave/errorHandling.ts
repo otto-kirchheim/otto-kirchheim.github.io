@@ -112,7 +112,7 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
   bsModal.show();
 
   modal.addEventListener('hide.bs.modal', () => {
-    (modal.querySelector<HTMLElement>(':focus') ?? document.activeElement as HTMLElement)?.blur();
+    (modal.querySelector<HTMLElement>(':focus') ?? (document.activeElement as HTMLElement))?.blur();
   });
   modal.addEventListener('hidden.bs.modal', () => {
     bsModal.dispose();

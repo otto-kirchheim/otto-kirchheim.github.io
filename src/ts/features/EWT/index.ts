@@ -31,6 +31,8 @@ registerAppStartTask(() => {
           return 'Tag';
         case 'N':
           return 'Nacht';
+        case 'SP':
+          return 'Spät';
         case 'BN':
           return "<span class='SchichtBereitschaft'>Bereitschaft<br>+ Nacht</span>";
         case 'S':

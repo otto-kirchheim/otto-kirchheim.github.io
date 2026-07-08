@@ -1,11 +1,14 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
+import { ArbeitszeiteingabePanel } from '../components';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
-import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
+import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { setupPersValidation } from '@/infrastructure/validation/addressValidation';
+import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
+import { h, render } from 'preact';
 
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
@@ -13,7 +16,7 @@ export default function generateEingabeMaskeEinstellungen(
   const VorgabenB = VorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
 
   setElementValues<IVorgabenUPers>(VorgabenU.pers);
-  setElementValues<IVorgabenUaZ>(VorgabenU.aZ);
+  renderArbeitszeiteingabePanel(VorgabenU);
   populateEmailField();
   setupPersValidation();
   setupBundeslandAutoFill();
@@ -83,6 +86,13 @@ function populateTable(VorgabenU: IVorgabenU): void {
     group.appendChild(input);
     td.appendChild(group);
   }
+}
+
+function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
+  const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
+  if (!panel) return;
+  const aZ = isLegacyArbeitszeit(VorgabenU.aZ) ? migrateArbeitszeit(VorgabenU.aZ) : VorgabenU.aZ;
+  render(h(ArbeitszeiteingabePanel, { initialValues: aZ }), panel);
 }
 
 function setElementValues<T>(values: T): void {

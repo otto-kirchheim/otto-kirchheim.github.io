@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
@@ -39,10 +39,9 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
   const filteredRows = Array.isArray(filteredRowsCandidate) ? filteredRowsCandidate : rawRows;
 
   const toStorage = (row: Row<T>): T => {
-    if (row._state === 'deleted') return { ...(row.cells as T), __localState: 'deleted' };
     if (row._state === 'error' && row._errorMessage)
       return { ...(row.cells as T), __errorMessage: row._errorMessage, __errorState: row._errorState ?? 'new' };
-    return row.cells as T;
+    return { ...(row.cells as T), __localState: row._state as Exclude<RowState, 'error'> };
   };
 
   const allRows = rawRows.map(toStorage);

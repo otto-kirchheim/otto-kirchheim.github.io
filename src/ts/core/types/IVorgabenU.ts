@@ -40,18 +40,44 @@ export interface IVorgabenUPers {
   kmnBhf: number;
   TB: 'Besoldungsgruppe A 8' | 'Besoldungsgruppe A 9' | 'Tarifkraft';
 }
-export interface IVorgabenUaZ {
-  [key: string]: string;
-  bBN: string;
-  bN: string;
-  bS: string;
-  bT: string;
-  eN: string;
-  eS: string;
-  eT: string;
-  eTF: string;
-  rZ: string;
+
+// --- Arbeitszeiten (neues per-Wochentag-Modell) ---
+
+export type SchichtBase = {
+  beginn: string; // HH:mm
+  ende: string; // HH:mm; Tageswechsel wird erkannt wenn ende < beginn
+  pause: number; // Minuten
+};
+
+// Nur geänderte Felder zum default; arbeitsfrei ergibt sich ausschließlich über regelarbeitstage
+export type SchichtOverride = Partial<SchichtBase>;
+
+// isoWeekday 1–7 als Keys (JSON: { "5": { "ende": "13:00" } }); kein Array
+export type SchichtOverrides = Partial<Record<1 | 2 | 3 | 4 | 5 | 6 | 7, SchichtOverride>>;
+
+export interface IPerWeekdaySchicht {
+  aktiv: boolean; // false = inaktiv (Zeiten bleiben gespeichert)
+  default: SchichtBase;
+  regelarbeitstage?: number[]; // isoWeekday 1–7; Default [1,2,3,4,5]; rest → arbeitsfrei
+  overrides?: SchichtOverrides; // Differenzen von default für einzelne Tage
 }
+
+// Globales Zeitpaar (für Schichten ohne Wochentag-Variation, z.B. Sonderschicht)
+export interface ISchichtZeiten {
+  aktiv: boolean; // false = inaktiv (Zeiten bleiben gespeichert)
+  beginn: string;
+  ende: string;
+  pause: number;
+}
+
+export interface IVorgabenUaZ {
+  frueh: IPerWeekdaySchicht; // immer vorhanden und aktiv
+  spaet: IPerWeekdaySchicht; // immer vorhanden, aktiv steuert ob genutzt
+  nacht: IPerWeekdaySchicht; // immer vorhanden, aktiv steuert ob genutzt
+  sonder: ISchichtZeiten; // immer vorhanden, aktiv steuert ob genutzt
+  fahrzeit: string; // HH:mm Dauer Wohnung ↔ Arbeit
+}
+
 export interface IVorgabenUfZ {
   [key: string]: string;
   key: string;
@@ -59,27 +85,35 @@ export interface IVorgabenUfZ {
   value: string;
 }
 
+export type BereitschaftSchichtTyp = 'frueh' | 'spaet' | 'nacht' | 'sonder';
+
 export interface IVorgabenUvorgabenB {
   [k: string]: unknown;
   Name: string;
   beginnB: {
     tag: number;
-    zeit: string;
+    zeit?: string;
   };
   endeB: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
+  // NEU: Schichtauswahl für Bereitschaftszeitraum
+  schichten?: BereitschaftSchichtTyp[];
+  schichtenOverrides?: {
+    [K in BereitschaftSchichtTyp]?: Partial<IPerWeekdaySchicht>;
+  };
+  // DEPRECATED — Fallback für alte Einträge; wird bei Migration auf schichten: ['nacht'] gemappt
   nacht: boolean;
   beginnN: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
   endeN: {
     tag: number;
-    zeit: string;
+    zeit?: string;
     Nwoche: boolean;
   };
   standard?: true;

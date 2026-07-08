@@ -6,7 +6,15 @@
  */
 
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
-import type { IVorgabenU, IVorgabenUServer } from '@/types';
+import type {
+  BereitschaftSchichtTyp,
+  IPerWeekdaySchicht,
+  ISchichtZeiten,
+  IVorgabenU,
+  IVorgabenUaZ,
+  IVorgabenUServer,
+  IVorgabenUvorgabenB,
+} from '@/types';
 import dayjs from '../date/configDayjs';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Neben/utils';
 
@@ -62,7 +70,8 @@ export interface BackendEWT {
 export interface BackendNebengeld {
   _id?: string;
   User?: string;
-  EWT?: string;
+  /** null = EWT-Verknüpfung explizit entfernen (Backend übersetzt zu $unset) */
+  EWT?: string | null;
   Monat: number;
   Jahr: number;
   Tag: string; // ISO-Date
@@ -95,17 +104,7 @@ export interface BackendUserProfile {
     TB: string;
   };
   Fahrzeit: { key: string; text: string; value: string }[];
-  Arbeitszeit: {
-    bT: string;
-    eT: string;
-    eTF: string;
-    bS: string;
-    eS: string;
-    bN: string;
-    eN: string;
-    bBN: string;
-    rZ: string;
-  };
+  Arbeitszeit?: IVorgabenUaZ;
   VorgabenB: { key: string; value: Record<string, unknown> }[];
   Einstellungen: {
     aktivierteTabs: string[];
@@ -119,6 +118,119 @@ export interface BackendUserProfile {
 export interface BackendVorgabe {
   _id: number; // Jahr
   Vorgaben: { key: number; value: Record<string, number | undefined> }[];
+}
+
+// ─── Arbeitszeit Migration (altes Flat-Format → neues Modell) ───
+
+/** Altes Flat-Format mit 9 Strings — entspricht dem aktuellen Backend-Schema */
+interface LegacyArbeitszeit {
+  bT: string;
+  eT: string;
+  eTF: string;
+  bS?: string;
+  eS?: string;
+  bN?: string;
+  eN?: string;
+  bBN?: string;
+  rZ: string;
+}
+
+export function isLegacyArbeitszeit(raw: unknown): raw is LegacyArbeitszeit {
+  if (typeof raw !== 'object' || raw === null) return false;
+  const r = raw as Record<string, unknown>;
+  // If the new structured 'frueh' field is present, treat as already migrated
+  if (typeof r.frueh === 'object' && r.frueh !== null) return false;
+  return 'bT' in r && typeof r.bT === 'string';
+}
+
+export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
+  const bT = raw.bT ?? '';
+  const eT = raw.eT ?? '';
+  const eTF = raw.eTF ?? eT;
+  const freitag = eTF !== eT ? { 5: { ende: eTF, pause: 0 } as const } : undefined;
+  return {
+    frueh: {
+      aktiv: true,
+      default: { beginn: bT, ende: eT, pause: 30 },
+      overrides: freitag,
+    },
+    spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+    nacht: {
+      aktiv: !!raw.bN,
+      default: { beginn: raw.bN ?? '19:45', ende: raw.eN ?? '06:15', pause: 45 },
+    },
+    sonder: {
+      aktiv: !!raw.bS,
+      beginn: raw.bS ?? '06:00',
+      ende: raw.eS ?? '14:30',
+      pause: 20,
+    },
+    fahrzeit: raw.rZ ?? '',
+  };
+}
+
+function normalizePerWeekdaySchicht(
+  raw: unknown,
+  defaultBase: { beginn: string; ende: string; pause: number },
+): IPerWeekdaySchicht {
+  if (!raw || typeof raw !== 'object') {
+    return { aktiv: false, default: defaultBase };
+  }
+  const r = raw as Record<string, unknown>;
+  return {
+    aktiv: typeof r.aktiv === 'boolean' ? r.aktiv : true,
+    default: (r.default as IVorgabenUaZ['frueh']['default']) ?? defaultBase,
+    regelarbeitstage: Array.isArray(r.regelarbeitstage) ? (r.regelarbeitstage as number[]) : undefined,
+    overrides: r.overrides as IPerWeekdaySchicht['overrides'] | undefined,
+  };
+}
+
+function normalizeSchichtZeiten(raw: unknown): ISchichtZeiten {
+  const defaults = { beginn: '06:00', ende: '14:30', pause: 20 };
+  if (!raw || typeof raw !== 'object') {
+    return { aktiv: false, ...defaults };
+  }
+  const r = raw as Record<string, unknown>;
+  return {
+    aktiv: typeof r.aktiv === 'boolean' ? r.aktiv : true,
+    beginn: typeof r.beginn === 'string' ? r.beginn : defaults.beginn,
+    ende: typeof r.ende === 'string' ? r.ende : defaults.ende,
+    pause: typeof r.pause === 'number' ? r.pause : defaults.pause,
+  };
+}
+
+/**
+ * Normalisiert beliebige Arbeitszeit-Daten (Legacy, altes Strukturformat ohne aktiv, neues Format)
+ * zu einem vollständigen IVorgabenUaZ mit aktiv-Flag auf allen Schichten.
+ */
+export function normalizeAZ(raw: unknown): IVorgabenUaZ {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      frueh: { aktiv: true, default: { beginn: '', ende: '', pause: 30 } },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '06:00', ende: '14:30', pause: 20 },
+      fahrzeit: '',
+    };
+  }
+  if (isLegacyArbeitszeit(raw)) return migrateArbeitszeit(raw);
+  const r = raw as Record<string, unknown>;
+  return {
+    frueh: normalizePerWeekdaySchicht(r.frueh, { beginn: '', ende: '', pause: 30 }),
+    spaet: normalizePerWeekdaySchicht(r.spaet, { beginn: '14:00', ende: '22:00', pause: 30 }),
+    nacht: normalizePerWeekdaySchicht(r.nacht, { beginn: '19:45', ende: '06:15', pause: 45 }),
+    sonder: normalizeSchichtZeiten(r.sonder),
+    fahrzeit: typeof r.fahrzeit === 'string' ? r.fahrzeit : '',
+  };
+}
+
+/** Migriert ein VorgabenB-Objekt: nacht: boolean → schichten: ['nacht'] */
+function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgabenB {
+  const result = { ...entry } as IVorgabenUvorgabenB;
+  if (!result.schichten && result.nacht === true) {
+    result.schichten = ['nacht'] as BereitschaftSchichtTyp[];
+  }
+  return result;
 }
 
 // ─── Backend → Frontend (Laden) ──────────────────────────
@@ -185,7 +297,7 @@ export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
   const zulagenN = doc.Zulagen.map(zulage => ({ code: zulage.Typ, value: zulage.Wert })).filter(z => z.value > 0);
   return {
     _id: doc._id,
-    ewtRef: doc.EWT,
+    ewtRef: doc.EWT ?? undefined,
     tagN: dayjs(doc.Tag).format('DD.MM.YYYY'),
     beginN: doc.Beginn,
     endeN: doc.Ende,
@@ -209,6 +321,11 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
     }
   }
 
+  // Migriere VorgabenB: nacht: boolean → schichten: ['nacht']
+  for (const key of Object.keys(vorgabenB)) {
+    vorgabenB[key] = migrateVorgabenBEntry(vorgabenB[key] as Record<string, unknown>);
+  }
+
   return {
     pers: {
       Vorname: doc.Pers.Vorname ?? '',
@@ -228,17 +345,7 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       kmnBhf: doc.Pers.kmnBhf ?? 0,
       TB: (doc.Pers.TB as IVorgabenU['pers']['TB']) ?? 'Tarifkraft',
     },
-    aZ: {
-      bBN: doc.Arbeitszeit?.bBN ?? '',
-      bN: doc.Arbeitszeit?.bN ?? '',
-      bS: doc.Arbeitszeit?.bS ?? '',
-      bT: doc.Arbeitszeit?.bT ?? '',
-      eN: doc.Arbeitszeit?.eN ?? '',
-      eS: doc.Arbeitszeit?.eS ?? '',
-      eT: doc.Arbeitszeit?.eT ?? '',
-      eTF: doc.Arbeitszeit?.eTF ?? '',
-      rZ: doc.Arbeitszeit?.rZ ?? '',
-    },
+    aZ: normalizeAZ(doc.Arbeitszeit ?? null),
     fZ: doc.Fahrzeit ?? [],
     vorgabenB,
     Einstellungen: {
@@ -332,16 +439,18 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
     Jahr: period.Jahr,
     Tag: dayjs(item.tagE).toISOString(),
     Buchungstag: dayjs(buchungstag).toISOString(),
-    Einsatzort: item.eOrtE || undefined,
+    // Leere Strings explizit mitsenden: `undefined` fällt bei JSON.stringify weg,
+    // wodurch ein Update gelöschte Zeiten nicht überschreiben würde (alter Wert bliebe erhalten).
+    Einsatzort: item.eOrtE,
     Schicht: item.schichtE,
-    abWE: item.abWE || undefined,
-    ab1E: item.ab1E || undefined,
-    anEE: item.anEE || undefined,
-    beginE: item.beginE || undefined,
-    endeE: item.endeE || undefined,
-    abEE: item.abEE || undefined,
-    an1E: item.an1E || undefined,
-    anWE: item.anWE || undefined,
+    abWE: item.abWE,
+    ab1E: item.ab1E,
+    anEE: item.anEE,
+    beginE: item.beginE,
+    endeE: item.endeE,
+    abEE: item.abEE,
+    an1E: item.an1E,
+    anWE: item.anWE,
     berechnen: item.berechnen,
   };
 }
@@ -352,16 +461,22 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
   const period = resolveYearMonth(item.tagN, monat, jahr, 'DD.MM.YYYY');
   const normalizedZulagen = normalizeNebengeldZulagen(item);
-  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({ Typ: zulage.code, Wert: zulage.value }));
+  const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({
+    Typ: zulage.code,
+    Wert: zulage.value,
+  }));
   return {
     _id: item._id,
-    EWT: item.ewtRef || undefined,
+    // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
+    // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
+    EWT: item.ewtRef || null,
     Monat: period.Monat,
     Jahr: period.Jahr,
     Tag: dayjs(item.tagN, 'DD.MM.YYYY').toISOString(),
     Beginn: item.beginN,
     Ende: item.endeN,
-    Auftragsnummer: item.auftragN || undefined,
+    // Leerstring explizit mitsenden, damit eine gelöschte Auftragsnummer beim Update auch serverseitig geleert wird.
+    Auftragsnummer: item.auftragN,
     Zulagen: zulagen,
   };
 }
@@ -396,11 +511,11 @@ export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile,
 export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
   const vorgabenB: IVorgabenU['vorgabenB'] = {};
   for (const entry of server.vorgabenB) {
-    vorgabenB[entry.key] = entry.value;
+    vorgabenB[entry.key] = migrateVorgabenBEntry(entry.value as Record<string, unknown>);
   }
   return {
     pers: server.pers,
-    aZ: server.aZ,
+    aZ: normalizeAZ(server.aZ),
     fZ: server.fZ,
     vorgabenB,
     Einstellungen: server.Einstellungen,

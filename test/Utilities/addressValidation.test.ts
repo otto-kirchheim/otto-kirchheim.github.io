@@ -161,6 +161,17 @@ describe('addressValidation', () => {
     expect(validateGermanAddressInput(input)).toBe(true);
   });
 
+  it('falls back to native browser validation when the switch-case leaves no custom error but checkValidity() fails', () => {
+    document.body.innerHTML = '<div class="mb-3"><input id="OE" required pattern="^[0-9]+$" value="ABC" /></div>';
+    const input = document.querySelector<HTMLInputElement>('#OE')!;
+
+    // 'OE' hat im switch nur eine required-Prüfung; ein nicht-leerer Wert erzeugt dort keine
+    // validationMessage. Das native `pattern`-Attribut lässt checkValidity() dennoch fehlschlagen.
+    expect(input.checkValidity()).toBe(false);
+    expect(validatePersInput(input)).toBe(false);
+    expect(input.validationMessage).not.toBe('');
+  });
+
   it('clears a previous custom validation error after a personal field is corrected', () => {
     document.body.innerHTML = `
       <div class="mb-3">

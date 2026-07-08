@@ -3,8 +3,11 @@ import { useEffect, useState } from 'preact/hooks';
 import { AdminUserList } from './components/AdminUserList';
 import { AdminVorgabenEditor } from './components/AdminVorgabenEditor';
 import { AdminProfileTemplatesManager } from './components/AdminProfileTemplatesManager';
+import { AdminDashboard } from './components/AdminDashboard';
+import { AdminResourceBrowser } from './components/AdminResourceBrowser';
+import { AdminUserProfileEditor } from './components/AdminUserProfileEditor';
+import { AdminLogBrowser } from './components/AdminLogBrowser';
 import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
-import { getServerUrl } from '@/infrastructure/api/FetchRetry';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {
@@ -15,7 +18,6 @@ type AdminCapabilities = {
 };
 
 export default function AdminTab() {
-  const [adminJsUrl, setAdminJsUrl] = useState<string>('/admin');
   const [capabilities, setCapabilities] = useState<AdminCapabilities | null>(null);
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
   const [actAsState, setActAsState] = useState(getActAsState());
@@ -23,10 +25,6 @@ export default function AdminTab() {
   useEffect(() => {
     (async () => {
       try {
-        const apiBase = await getServerUrl();
-        const backendBase = apiBase.replace(/\/api\/v2\/?$/, '');
-        setAdminJsUrl(`${backendBase}/lstadmin`);
-
         const nextCapabilities = await fetchCurrentAdminCapabilities();
         setCapabilities(nextCapabilities);
       } catch (error: unknown) {
@@ -54,11 +52,20 @@ export default function AdminTab() {
     };
   }, []);
 
+  const [profileSearch, setProfileSearch] = useState('');
+  const [profileSearchKey, setProfileSearchKey] = useState(0);
+
   const isTeamAdminOrHigher =
     capabilities?.role === 'team-admin' || capabilities?.role === 'org-admin' || capabilities?.role === 'super-admin';
   const canSeeVorgabenTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditVorgabenGeld);
   const canSeeTemplatesTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditProfileTemplates);
   const isSuperAdmin = capabilities?.role === 'super-admin';
+
+  function navigateToProfile(userId: string) {
+    setProfileSearch(userId);
+    setProfileSearchKey(k => k + 1);
+    document.getElementById('admin-tab-profiles')?.click();
+  }
 
   return (
     <div class="admin-tab-bg py-4 px-2 px-md-4">
@@ -120,13 +127,67 @@ export default function AdminTab() {
             </li>
           )}
           {isSuperAdmin && (
-            <li class="nav-item ms-md-auto" role="presentation">
-              <a href={adminJsUrl} target="_blank" rel="noreferrer" class="nav-link d-flex align-items-center">
-                <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
-                  open_in_new
-                </span>
-                AdminJS
-              </a>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-dashboard"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-dashboard"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-dashboard"
+                aria-selected="false"
+              >
+                Dashboard
+              </button>
+            </li>
+          )}
+          {isSuperAdmin && (
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-resources"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-resources"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-resources"
+                aria-selected="false"
+              >
+                Ressourcen
+              </button>
+            </li>
+          )}
+          {isSuperAdmin && (
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-profiles"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-profiles"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-profiles"
+                aria-selected="false"
+              >
+                Profile
+              </button>
+            </li>
+          )}
+          {isSuperAdmin && (
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-logs"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-logs"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-logs"
+                aria-selected="false"
+              >
+                Admin-Logs
+              </button>
             </li>
           )}
         </ul>
@@ -183,6 +244,54 @@ export default function AdminTab() {
             tabIndex={0}
           >
             <AdminProfileTemplatesManager />
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle"
+            id="admin-pane-dashboard"
+            role="tabpanel"
+            aria-labelledby="admin-tab-dashboard"
+            tabIndex={0}
+          >
+            <AdminDashboard />
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-danger-subtle"
+            id="admin-pane-resources"
+            role="tabpanel"
+            aria-labelledby="admin-tab-resources"
+            tabIndex={0}
+          >
+            <AdminResourceBrowser onNavigateToUser={navigateToProfile} />
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-success-subtle"
+            id="admin-pane-profiles"
+            role="tabpanel"
+            aria-labelledby="admin-tab-profiles"
+            tabIndex={0}
+          >
+            <AdminUserProfileEditor initialSearch={profileSearch} searchKey={profileSearchKey} />
+          </div>
+        )}
+
+        {isSuperAdmin && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-secondary-subtle"
+            id="admin-pane-logs"
+            role="tabpanel"
+            aria-labelledby="admin-tab-logs"
+            tabIndex={0}
+          >
+            <AdminLogBrowser />
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { CustomHTMLTableElement } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
+import { stripMetaFields } from '../data/metaFields';
 
 export type CustomTableTypes = Record<string, unknown>;
 
@@ -329,29 +330,34 @@ export class Rows<T extends CustomTableTypes> {
   }
 
   /**
-   * Zeilen laden (vom Server oder bei Monatswechsel).
-   * Alle geladenen Zeilen starten mit State 'unchanged'.
+   * Zeilen laden mit vollständiger State-Restauration aus Meta-Feldern:
+   * - __errorMessage → 'error' (inkl. _errorState und _errorMessage)
+   * - __localState (explizit 'unchanged'|'new'|'modified'|'deleted') → direkt übernommen
+   * - kein __localState (Alt-Daten vor diesem Marker-Schema) → Fallback: kein _id → 'new', sonst 'unchanged'
    */
   load(array: T[], add = false): void {
     if (!add) this.array.length = 0;
+    let hasPendingChanges = false;
     array.forEach(row => {
       const r = row as Record<string, unknown>;
       const storedLocalState = r.__localState as string | undefined;
       const storedErrorMsg = r.__errorMessage as string | undefined;
       const storedErrorState = r.__errorState as string | undefined;
-      const hasMeta = storedLocalState !== undefined || storedErrorMsg !== undefined;
 
-      let cells: T;
-      if (hasMeta) {
-        cells = { ...row } as T;
-        delete (cells as Record<string, unknown>).__localState;
-        delete (cells as Record<string, unknown>).__errorMessage;
-        delete (cells as Record<string, unknown>).__errorState;
-      } else {
-        cells = row;
-      }
+      // Alle __-Felder generisch aus Cells entfernen (erweiterbar für zukünftige Meta-Felder)
+      const cells = stripMetaFields({ ...row }) as T;
+      const hasId =
+        '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
 
-      const baseState: RowState = storedLocalState === 'deleted' ? 'deleted' : 'unchanged';
+      const baseState: RowState =
+        storedLocalState === 'unchanged' ||
+        storedLocalState === 'new' ||
+        storedLocalState === 'modified' ||
+        storedLocalState === 'deleted'
+          ? storedLocalState
+          : hasId
+            ? 'unchanged'
+            : 'new'; // Fallback für Alt-Daten ohne __localState-Marker
       const newRow = new Row(this.CustomTable, cells, baseState);
 
       if (storedErrorMsg) {
@@ -359,34 +365,23 @@ export class Rows<T extends CustomTableTypes> {
         newRow._errorState =
           storedErrorState === 'new' || storedErrorState === 'modified' || storedErrorState === 'deleted'
             ? storedErrorState
-            : '_id' in (cells as Record<string, unknown>) &&
-                typeof (cells as Record<string, unknown>)._id === 'string'
+            : hasId
               ? 'modified'
               : 'new';
         newRow._errorMessage = storedErrorMsg;
+      } else if (baseState === 'new' || baseState === 'modified') {
+        hasPendingChanges = true;
       }
 
       this.array.push(newRow);
     });
     this.CustomTable.drawRows();
+    if (hasPendingChanges) this.CustomTable._notifyChange();
   }
 
-  /**
-   * Zeilen laden mit automatischer State-Erkennung:
-   * - Zeilen mit _id → 'unchanged' (vom Server bekannt)
-   * - Zeilen ohne _id → 'new' (lokal erstellt, muss gespeichert werden)
-   * Löst onChange aus falls neue Zeilen erkannt werden.
-   */
+  /** @deprecated Identisches Verhalten wie rows.load() seit Vereinheitlichung */
   loadSmart(array: T[]): void {
-    this.array.length = 0;
-    let hasNew = false;
-    for (const row of array) {
-      const hasId = '_id' in row && typeof (row as Record<string, unknown>)._id === 'string';
-      this.array.push(new Row(this.CustomTable, row, hasId ? 'unchanged' : 'new'));
-      if (!hasId) hasNew = true;
-    }
-    this.CustomTable.drawRows();
-    if (hasNew) this.CustomTable._notifyChange();
+    this.load(array);
   }
 
   /** Setzt/entfernt einen unsichtbaren Zeilenfilter und zeichnet die Tabelle neu. */

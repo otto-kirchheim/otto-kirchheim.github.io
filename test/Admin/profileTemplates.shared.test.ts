@@ -2,7 +2,6 @@ import { describe, expect, it } from 'bun:test';
 
 import {
   normalizeVorgabenBRows,
-  ARBEITSZEIT_FIELDS,
   PERS_FIELDS,
   TAB_OPTIONS,
   WEEKDAY_OPTIONS,
@@ -17,6 +16,7 @@ function makeRow(name: string, standard: boolean): VorgabenBRow {
       Name: name,
       beginnB: { tag: 1, zeit: '08:00' },
       endeB: { tag: 1, zeit: '16:00', Nwoche: false },
+      schichten: ['frueh'],
       nacht: false,
       beginnN: { tag: 1, zeit: '20:00', Nwoche: false },
       endeN: { tag: 1, zeit: '06:00', Nwoche: false },
@@ -98,16 +98,6 @@ describe('PERS_FIELDS', () => {
     expect(keys).toContain('Vorname');
     expect(keys).toContain('Nachname');
     expect(keys).toContain('PNummer');
-  });
-});
-
-describe('ARBEITSZEIT_FIELDS', () => {
-  it('enthält bT (Beginn Tag), eT (Ende Tag), bN, eN', () => {
-    const keys = ARBEITSZEIT_FIELDS.map(f => f.key);
-    expect(keys).toContain('bT');
-    expect(keys).toContain('eT');
-    expect(keys).toContain('bN');
-    expect(keys).toContain('eN');
   });
 });
 

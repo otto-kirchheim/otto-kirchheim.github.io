@@ -113,6 +113,8 @@ describe('aktualisiereBerechnung', () => {
       { tagE: '2026-03-02', buchungstagE: '2026-03-02', abWE: '06:00', anWE: '21:00' } as IDatenEWT,
       // 23 hours (overnight, anWE < abWE) → A14 (>= 14 and < 24)
       { tagE: '2026-03-03', buchungstagE: '2026-03-03', abWE: '06:00', anWE: '05:00' } as IDatenEWT,
+      // 5 hours → zählt in KEINEM Bucket (früherer Bug: landete via else in A24)
+      { tagE: '2026-03-04', buchungstagE: '2026-03-04', abWE: '08:00', anWE: '13:00' } as IDatenEWT,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });
@@ -139,7 +141,13 @@ describe('aktualisiereBerechnung', () => {
   it('sums Zulage-040-Werte je Monat als N.F', () => {
     const N: IDatenN[] = [
       { tagN: '01.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
-      { tagN: '15.03.2026', zulagenN: [{ code: '040', value: 1 }, { code: '811', value: 120 }] } as IDatenN,
+      {
+        tagN: '15.03.2026',
+        zulagenN: [
+          { code: '040', value: 1 },
+          { code: '811', value: 120 },
+        ],
+      } as IDatenN,
       { tagN: '01.04.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
     ];
 
@@ -163,14 +171,14 @@ describe('aktualisiereBerechnung', () => {
       {
         tagN: '01.03.2026',
         zulagenN: [
-          { code: '040', value: 1 },   // → N.F
-          { code: '811', value: 120 },  // → N.B (Minuten)
-          { code: '841', value: 90 },   // → N.A (Minuten)
-          { code: '831', value: 60 },   // → N.C (Minuten)
-          { code: '837', value: 60 },   // → N.CA (Minuten)
-          { code: '838', value: 60 },   // → N.CB (Minuten)
-          { code: '839', value: 1 },    // → N.C9 (Stück)
-          { code: '846', value: 60 },   // → N.SIPO (Minuten)
+          { code: '040', value: 1 }, // → N.F
+          { code: '811', value: 120 }, // → N.B (Minuten)
+          { code: '841', value: 90 }, // → N.A (Minuten)
+          { code: '831', value: 60 }, // → N.C (Minuten)
+          { code: '837', value: 60 }, // → N.CA (Minuten)
+          { code: '838', value: 60 }, // → N.CB (Minuten)
+          { code: '839', value: 1 }, // → N.C9 (Stück)
+          { code: '846', value: 60 }, // → N.SIPO (Minuten)
         ],
       } as IDatenN,
     ];

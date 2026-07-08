@@ -3,7 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { calculateBereitschaftsZeiten } from '.';
 import { publishEvent } from '@/core';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten } from '@/types';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IMonatsDaten, IVorgabenU } from '@/types';
+import mergeSchichtenOverrides from './mergeSchichtenOverrides';
+import { getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -28,6 +30,16 @@ export default async function submitBereitschaftsZeiten(
   const nATInput = modal.querySelector<HTMLInputElement>('#nAT');
   const nEInput = modal.querySelector<HTMLInputElement>('#nE');
   const nETInput = modal.querySelector<HTMLInputElement>('#nET');
+  const spaetInput = modal.querySelector<HTMLInputElement>('#spaet');
+  const sonderInput = modal.querySelector<HTMLInputElement>('#sonder');
+  const sonderVonInput = modal.querySelector<HTMLInputElement>('#sonderVon');
+  const sonderBisInput = modal.querySelector<HTMLInputElement>('#sonderBis');
+  const vorgabeSelect = modal.querySelector<HTMLSelectElement>('#vorgabeB');
+  const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
+  const az = vorgabenU.aZ;
+  const activeSchichtenOverrides = vorgabeSelect
+    ? vorgabenU.vorgabenB?.[vorgabeSelect.value]?.schichtenOverrides
+    : undefined;
 
   const preserveDeletedRows = (
     table: CustomHTMLTableElement<IDatenBZ>,
@@ -35,19 +47,39 @@ export default async function submitBereitschaftsZeiten(
     monatToSet: number,
   ): void => {
     // Lade alle Zeilen (inkl. gelöschter) und lasse die Sortierung wie gewohnt laufen
-    table.instance.rows.loadSmart(reloadedRows);
+    table.instance.rows.load(reloadedRows);
     table.instance.rows.setFilter(row => getMonatFromBZ(row) === monatToSet);
     table.instance.drawRows();
   };
 
-  if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput || !nAInput || !nATInput || !nEInput || !nETInput)
-    throw new Error('Input Element nicht gefunden');
+  // Nur BZ-Kernfelder sind zwingend; Nacht/Spät-Felder existieren nur wenn az.nacht/az.spaet konfiguriert.
+  if (!bAInput || !bATInput || !bEInput || !bETInput || !nachtInput) throw new Error('Input Element nicht gefunden');
 
   const bereitschaftsAnfang: Dayjs = dayjs(`${bAInput.value}T${bATInput.value}`);
   const bereitschaftsEnde: Dayjs = dayjs(`${bEInput.value}T${bETInput.value}`);
-  let nacht: boolean = nachtInput.checked;
-  const nachtAnfang: Dayjs = nacht === true ? dayjs(`${nAInput.value}T${nATInput.value}`) : bereitschaftsEnde;
-  const nachtEnde: Dayjs = nacht === true ? dayjs(`${nEInput.value}T${nETInput.value}`) : bereitschaftsEnde;
+  let nacht: boolean = nachtInput.checked ?? false;
+  const spaet: boolean = spaetInput?.checked ?? false;
+  const sonder: boolean = sonderInput?.checked ?? false;
+  const sonderRange =
+    sonder && sonderVonInput?.value && sonderBisInput?.value
+      ? { von: dayjs(sonderVonInput.value), bis: dayjs(sonderBisInput.value) }
+      : undefined;
+
+  // Nacht: Datum+Zeit nur auslesen wenn aktiv; sonst leer lassen.
+  const nachtAnfangZeit = nacht ? nATInput?.value || az?.nacht?.default.beginn || '' : '';
+  const nachtEndeZeit = nacht ? nETInput?.value || az?.nacht?.default.ende || '' : '';
+  const nachtAnfang: Dayjs =
+    nacht && nachtAnfangZeit
+      ? dayjs(`${nAInput?.value || bereitschaftsAnfang.format('YYYY-MM-DD')}T${nachtAnfangZeit}`)
+      : bereitschaftsEnde;
+  const nachtEnde: Dayjs =
+    nacht && nachtEndeZeit
+      ? dayjs(`${nEInput?.value || bereitschaftsEnde.format('YYYY-MM-DD')}T${nachtEndeZeit}`)
+      : bereitschaftsEnde;
+
+  const runtimeOverrides = getBereitschaftRuntimeOverrides();
+  const effectiveSchichtenOverrides = mergeSchichtenOverrides(activeSchichtenOverrides, runtimeOverrides);
+  const effectiveSonder = runtimeOverrides?.sonderOverride ?? az?.sonder;
 
   if (nachtAnfang.isBefore(bereitschaftsAnfang)) {
     clearLoading('btnESZ');
@@ -63,6 +95,16 @@ export default async function submitBereitschaftsZeiten(
     clearLoading('btnESZ');
     createSnackBar({
       message: 'Nacht Ende darf nicht nach Bereitschafts Ende liegen',
+      status: 'error',
+      timeout: 3000,
+      fixed: true,
+    });
+    return;
+  }
+  if (sonderRange && sonderRange.bis.isBefore(sonderRange.von, 'day')) {
+    clearLoading('btnESZ');
+    createSnackBar({
+      message: 'Sonderschicht Ende darf nicht vor Sonderschicht Beginn liegen',
       status: 'error',
       timeout: 3000,
       fixed: true,
@@ -102,7 +144,12 @@ export default async function submitBereitschaftsZeiten(
       nachtAnfang,
       nachtEnde2,
       nacht,
+      spaet,
+      sonder,
+      sonderRange,
       currentMonatRows,
+      effectiveSchichtenOverrides,
+      effectiveSonder,
     );
   } else if (!bereitschaftsAnfang.isSame(bereitschaftsEnde, 'y') && !navigator.onLine) {
     createSnackBar({
@@ -122,7 +169,12 @@ export default async function submitBereitschaftsZeiten(
               nachtAnfang,
               nachtEnde,
               nacht,
+              spaet,
+              sonder,
+              sonderRange,
               currentMonatRows,
+              effectiveSchichtenOverrides,
+              effectiveSonder,
             );
             if (!monatData) {
               clearLoading('btnESZ');
@@ -203,7 +255,12 @@ export default async function submitBereitschaftsZeiten(
           nachtAnfang2,
           nachtEnde2,
           nacht2,
+          spaet,
+          sonder,
+          sonderRange,
           respondedBzRows.filter(item => getMonatFromBZ(item) === monat2 + 1),
+          effectiveSchichtenOverrides,
+          effectiveSonder,
         );
 
         if (!folgeMonatData) return;
@@ -243,7 +300,12 @@ export default async function submitBereitschaftsZeiten(
         nachtAnfang2,
         nachtEnde2,
         nacht2,
+        spaet,
+        sonder,
+        sonderRange,
         folgeMonatData,
+        effectiveSchichtenOverrides,
+        effectiveSonder,
       );
       if (folgeMonatData) {
         const mergedRows = mergeMonatRows(
@@ -261,7 +323,12 @@ export default async function submitBereitschaftsZeiten(
       nachtAnfang,
       nachtEnde1,
       nacht,
+      spaet,
+      sonder,
+      sonderRange,
       currentMonatRows,
+      effectiveSchichtenOverrides,
+      effectiveSonder,
     );
   }
 

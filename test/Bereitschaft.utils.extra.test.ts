@@ -1,50 +1,56 @@
-import { beforeEach, describe, expect, it, mock, vi } from 'bun:test';
+import './setupBun';
+import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { berVorgabeAEndernMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
-  berVorgabeAEndernMock: vi.fn(),
-}));
-
-import type { IVorgabenUvorgabenB } from '@/core/types';
+import type { IVorgabenU, IVorgabenUvorgabenB } from '@/core/types';
 import applyBereitschaftsVorgabe from '@/features/Bereitschaft/utils/applyBereitschaftsVorgabe';
+import toggleBereitschaftsEigeneWerte from '@/features/Bereitschaft/utils/toggleBereitschaftsEigeneWerte';
 import updateBereitschaftsDatum from '@/features/Bereitschaft/utils/updateBereitschaftsDatum';
+import { B_WECHSEL_ZEIT } from '@/features/Bereitschaft/utils/constants';
+import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
-
-type ToggleBereitschaftsEigeneWerte = (
-  parentElement: HTMLDivElement,
-  vorgabenB: IVorgabenUvorgabenB,
-  datum: dayjs.Dayjs,
-) => void;
-
-async function loadEigeneWerte(): Promise<ToggleBereitschaftsEigeneWerte> {
-  mock.module('@/features/Bereitschaft/utils', () => ({
-    applyBereitschaftsVorgabe: berVorgabeAEndernMock,
-  }));
-
-  const module = await import('@/features/Bereitschaft/utils/toggleBereitschaftsEigeneWerte');
-  return module.default;
-}
 
 function createVorgabenB(): IVorgabenUvorgabenB {
   return {
     Name: 'Test',
-    beginnB: { tag: 1, zeit: '07:00' },
-    endeB: { tag: 3, zeit: '15:00', Nwoche: true },
+    beginnB: { tag: 1 },
+    endeB: { tag: 3, Nwoche: true },
     nacht: false,
-    beginnN: { tag: 4, zeit: '20:00', Nwoche: false },
-    endeN: { tag: 5, zeit: '06:00', Nwoche: true },
+    beginnN: { tag: 4, Nwoche: false },
+    endeN: { tag: 5, Nwoche: true },
   };
+}
+
+// Zeiten werden aus aZ je Wochentag abgeleitet (frueh/spaet/nacht).
+function createVorgabenU(): IVorgabenU {
+  return {
+    aZ: {
+      frueh: {
+        aktiv: true,
+        default: { beginn: '07:00', ende: '15:45', pause: 30 },
+        overrides: { 5: { ende: '13:00', pause: 0 } },
+      },
+      spaet: { aktiv: false, default: { beginn: '13:45', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: true, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
+      fahrzeit: '00:20',
+    },
+  } as unknown as IVorgabenU;
 }
 
 describe('Bereitschaft utils extra', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    mock.restore();
     vi.clearAllMocks();
+    localStorage.clear();
+    Storage.set('VorgabenU', createVorgabenU());
   });
 
   it('datumAnpassen setzt alle Datums- und Zeitfelder', () => {
     document.body.innerHTML = `
       <div id="root">
+        <input id="sonder" type="checkbox" checked />
+        <input id="sonderVon" />
+        <input id="sonderBis" />
         <input id="bE" />
         <input id="bET" />
         <input id="nA" />
@@ -63,23 +69,56 @@ describe('Bereitschaft utils extra', () => {
       .isoWeekday(vorgabenB.endeB.tag)
       .add(vorgabenB.endeB.Nwoche ? 7 : 0, 'd')
       .format('YYYY-MM-DD');
-    const expectedNA = datum
-      .isoWeekday(vorgabenB.beginnN.tag)
-      .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
-      .format('YYYY-MM-DD');
-    const expectedNE = datum
-      .isoWeekday(vorgabenB.endeN.tag)
-      .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
-      .format('YYYY-MM-DD');
+    // Nacht aus aZ.nacht: Anfang = datum (00:00), Ende = +1 Tag (über Mitternacht).
+    const expectedNA = datum.format('YYYY-MM-DD');
+    const expectedNE = datum.add(1, 'day').format('YYYY-MM-DD');
 
     updateBereitschaftsDatum(parentElement, vorgabenB, datum);
 
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.value).toBe(expectedBE);
-    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('15:00');
+    // bET = frueh.Beginn des End-Wochentags (Mi → 07:00)
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('07:00');
     expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(expectedNA);
-    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe('20:00');
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe('19:45');
     expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(expectedNE);
-    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe('06:00');
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe('06:15');
+  });
+
+  it('datumAnpassen ignoriert Sonderschicht als globale Grenzlogik', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" />
+        <input id="bAT" />
+        <input id="nacht" type="checkbox" />
+        <input id="sonder" type="checkbox" checked />
+        <input id="sonderVon" value="2026-03-03" />
+        <input id="sonderBis" value="2026-03-03" />
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    Storage.set('VorgabenU', {
+      ...createVorgabenU(),
+      aZ: {
+        ...createVorgabenU().aZ,
+        sonder: { aktiv: true, beginn: '20:15', ende: '07:00', pause: 20 },
+      },
+    });
+
+    const vorgabenB = createVorgabenB();
+    const datum = dayjs('2026-03-02');
+
+    updateBereitschaftsDatum(parentElement, vorgabenB, datum);
+
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('07:00');
   });
 
   it('datumAnpassen wirft Fehler bei fehlenden Inputs', () => {
@@ -93,12 +132,12 @@ describe('Bereitschaft utils extra', () => {
     );
   });
 
-  it('eigeneWerte aktiviert Felder und ruft BerVorgabeAEndern nicht auf, wenn eigen gesetzt ist', async () => {
-    const eigeneWerte = await loadEigeneWerte();
-
+  it('eigeneWerte aktiviert Felder, wenn eigen gesetzt ist', () => {
     document.body.innerHTML = `
       <div id="root">
+        <input id="bA" />
         <input id="bAT" />
+        <input id="nacht" type="checkbox" />
         <input id="bE" />
         <input id="bET" />
         <input id="nA" />
@@ -112,24 +151,20 @@ describe('Bereitschaft utils extra', () => {
     const parentElement = document.querySelector<HTMLDivElement>('#root');
     if (!parentElement) throw new Error('root not found');
 
-    eigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'));
+    toggleBereitschaftsEigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'));
 
-    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.disabled).toBe(false);
+    // Nur die Datumsfelder werden entsperrt (Zeiten sind generell read-only).
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.disabled).toBe(false);
-    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.disabled).toBe(false);
     expect(parentElement.querySelector<HTMLInputElement>('#nA')?.disabled).toBe(false);
-    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.disabled).toBe(false);
     expect(parentElement.querySelector<HTMLInputElement>('#nE')?.disabled).toBe(false);
-    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.disabled).toBe(false);
-    expect(berVorgabeAEndernMock).not.toHaveBeenCalled();
   });
 
-  it('eigeneWerte deaktiviert Felder und ruft BerVorgabeAEndern auf, wenn eigen nicht gesetzt ist', async () => {
-    const eigeneWerte = await loadEigeneWerte();
-
+  it('eigeneWerte deaktiviert Felder, wenn eigen nicht gesetzt ist', () => {
     document.body.innerHTML = `
       <div id="root">
+        <input id="bA" />
         <input id="bAT" />
+        <input id="nacht" type="checkbox" />
         <input id="bE" />
         <input id="bET" />
         <input id="nA" />
@@ -145,27 +180,21 @@ describe('Bereitschaft utils extra', () => {
     const vorgabenB = createVorgabenB();
     const datum = dayjs('2026-03-02');
 
-    eigeneWerte(parentElement, vorgabenB, datum);
+    toggleBereitschaftsEigeneWerte(parentElement, vorgabenB, datum);
 
-    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.disabled).toBe(true);
+    // Nur die Datumsfelder werden gesperrt; Zeiten bleiben unangetastet (read-only Text).
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.disabled).toBe(true);
-    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.disabled).toBe(true);
     expect(parentElement.querySelector<HTMLInputElement>('#nA')?.disabled).toBe(true);
-    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.disabled).toBe(true);
     expect(parentElement.querySelector<HTMLInputElement>('#nE')?.disabled).toBe(true);
-    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.disabled).toBe(true);
-    expect(berVorgabeAEndernMock).toHaveBeenCalledWith(parentElement, vorgabenB, datum);
   });
 
-  it('eigeneWerte wirft Fehler bei fehlenden Inputs', async () => {
-    const eigeneWerte = await loadEigeneWerte();
-
+  it('eigeneWerte wirft Fehler bei fehlenden Inputs', () => {
     document.body.innerHTML = `<div id="root"><input id="bAT" /></div>`;
 
     const parentElement = document.querySelector<HTMLDivElement>('#root');
     if (!parentElement) throw new Error('root not found');
 
-    expect(() => eigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
+    expect(() => toggleBereitschaftsEigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
       'Input Element nicht gefunden',
     );
   });
@@ -196,29 +225,22 @@ describe('Bereitschaft utils extra', () => {
     expect(parentElement.querySelector<HTMLInputElement>('#bA')?.value).toBe(
       datum.isoWeekday(vorgabenB.beginnB.tag).format('YYYY-MM-DD'),
     );
-    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.value).toBe(vorgabenB.beginnB.zeit);
+    // bAT = frueh.Ende des Anfangs-Wochentags (Mo → 15:45)
+    expect(parentElement.querySelector<HTMLInputElement>('#bAT')?.value).toBe('15:45');
     expect(parentElement.querySelector<HTMLInputElement>('#bE')?.value).toBe(
       datum
         .isoWeekday(vorgabenB.endeB.tag)
         .add(vorgabenB.endeB.Nwoche ? 7 : 0, 'd')
         .format('YYYY-MM-DD'),
     );
-    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe(vorgabenB.endeB.zeit);
+    // bET = frueh.Beginn des End-Wochentags (Mi → 07:00)
+    expect(parentElement.querySelector<HTMLInputElement>('#bET')?.value).toBe('07:00');
     expect(parentElement.querySelector<HTMLInputElement>('#nacht')?.checked).toBe(true);
-    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(
-      datum
-        .isoWeekday(vorgabenB.beginnN.tag)
-        .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
-        .format('YYYY-MM-DD'),
-    );
-    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe(vorgabenB.beginnN.zeit);
-    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(
-      datum
-        .isoWeekday(vorgabenB.endeN.tag)
-        .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
-        .format('YYYY-MM-DD'),
-    );
-    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(vorgabenB.endeN.zeit);
+    // Nacht aus aZ.nacht: Anfang = datum (00:00), Ende = +1 Tag.
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(datum.format('YYYY-MM-DD'));
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe('19:45');
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(datum.add(1, 'day').format('YYYY-MM-DD'));
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe('06:15');
     expect(parentElement.querySelector<HTMLDivElement>('#nachtschicht')?.style.display).not.toBe('none');
   });
 
@@ -240,5 +262,123 @@ describe('Bereitschaft utils extra', () => {
     expect(() => applyBereitschaftsVorgabe(parentElement, createVorgabenB(), dayjs('2026-03-02'))).toThrow(
       'Input Element nicht gefunden',
     );
+  });
+
+  it('BerVorgabeAEndern nutzt beginnN/endeN-Fallback, wenn az.nacht inaktiv ist', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" />
+        <input id="bAT" />
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nacht" type="checkbox" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+        <div id="nachtschicht"></div>
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    Storage.set('VorgabenU', {
+      ...createVorgabenU(),
+      aZ: {
+        ...createVorgabenU().aZ,
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      },
+    });
+
+    const vorgabenB = { ...createVorgabenB(), nacht: true };
+    const datum = dayjs('2026-03-02'); // Montag
+
+    applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
+
+    const expectedNA = datum
+      .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
+      .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+    const expectedNE = datum
+      .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
+      .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+
+    // Ohne aktive Nachtschicht werden Datum/Zeit aus den (deprecated) beginnN/endeN-Feldern abgeleitet
+    // und die Zeiten fallen auf den Bereitschaftszeitraumwechsel (B_WECHSEL_ZEIT) zurück.
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(expectedNA);
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(expectedNE);
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe(B_WECHSEL_ZEIT);
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(B_WECHSEL_ZEIT);
+  });
+
+  it('datumAnpassen nutzt beginnN/endeN-Fallback, wenn az.nacht inaktiv ist', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    Storage.set('VorgabenU', {
+      ...createVorgabenU(),
+      aZ: {
+        ...createVorgabenU().aZ,
+        nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      },
+    });
+
+    const vorgabenB = createVorgabenB();
+    const datum = dayjs('2026-03-02');
+
+    updateBereitschaftsDatum(parentElement, vorgabenB, datum);
+
+    const expectedNA = datum
+      .isoWeekday(vorgabenB.beginnN.tag === 0 ? 7 : vorgabenB.beginnN.tag)
+      .add(vorgabenB.beginnN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+    const expectedNE = datum
+      .isoWeekday(vorgabenB.endeN.tag === 0 ? 7 : vorgabenB.endeN.tag)
+      .add(vorgabenB.endeN.Nwoche ? 7 : 0, 'd')
+      .format('YYYY-MM-DD');
+
+    expect(parentElement.querySelector<HTMLInputElement>('#nA')?.value).toBe(expectedNA);
+    expect(parentElement.querySelector<HTMLInputElement>('#nE')?.value).toBe(expectedNE);
+    expect(parentElement.querySelector<HTMLInputElement>('#nAT')?.value).toBe(B_WECHSEL_ZEIT);
+    expect(parentElement.querySelector<HTMLInputElement>('#nET')?.value).toBe(B_WECHSEL_ZEIT);
+  });
+
+  it('eigeneWerte blendet berechnet-badges basierend auf dem Schalter ein/aus', () => {
+    document.body.innerHTML = `
+      <div id="root">
+        <input id="bA" />
+        <input id="bAT" />
+        <input id="nacht" type="checkbox" />
+        <input id="bE" />
+        <input id="bET" />
+        <input id="nA" />
+        <input id="nAT" />
+        <input id="nE" />
+        <input id="nET" />
+        <input id="eigen" type="checkbox" checked />
+        <span class="berechnet-badge"></span>
+      </div>
+    `;
+
+    const parentElement = document.querySelector<HTMLDivElement>('#root');
+    if (!parentElement) throw new Error('root not found');
+
+    toggleBereitschaftsEigeneWerte(parentElement, createVorgabenB(), dayjs('2026-03-02'));
+
+    // eigen=checked → disable=false → Badge wird ausgeblendet (display:'none')
+    expect(parentElement.querySelector<HTMLElement>('.berechnet-badge')?.style.display).toBe('none');
   });
 });

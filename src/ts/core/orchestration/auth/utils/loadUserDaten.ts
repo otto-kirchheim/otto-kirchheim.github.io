@@ -1,11 +1,10 @@
 import { overwriteUserDaten } from '.';
-import { publishEvent } from '../../..';
 import { aktualisiereBerechnung } from '@/features/Berechnung';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
-import { flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -58,12 +57,6 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   const { datenGeld, timestamps: serverTimestamps } = userData;
   const { vorgabenU: serverVorgabenU, BZ: serverBZ, BE: serverBE, EWT: serverEWT, N: serverN } = userData;
 
-  let dataServer: Partial<UserDatenServer> = {};
-  if (Storage.check('dataServer')) {
-    dataServer = Storage.get('dataServer', { check: true });
-    console.log('Unterschiede Server - Client | Bereits vorhanden', dataServer);
-  }
-
   // Jahreswechsel-Flag auslesen und zurücksetzen
   const isJahreswechsel = Storage.check('Jahreswechsel') && Storage.get<boolean>('Jahreswechsel', { default: false });
   if (isJahreswechsel) Storage.remove('Jahreswechsel');
@@ -75,13 +68,12 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     EWT: serverEWT,
     N: serverN,
     serverTimestamps,
-    initialDataServer: dataServer,
     isJahreswechsel,
   });
 
   const { vorgabenU, BZ, BE, EWT, N } = synced;
   const { vorhanden } = synced;
-  dataServer = synced.dataServer;
+  const dataServer = synced.dataServer;
 
   // Review-Banner unterhalb der Navbar anzeigen.
   const showReviewBanner = (resources: { name: string; months: number[] }[], onSave: () => Promise<void>): void => {
@@ -126,30 +118,52 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
         },
         {
           text: 'Lokale Daten behalten & speichern',
-          function: () => {
+          function: async () => {
             const bzMonths = changedMonthsByStorage.get('dataBZ') ?? new Set<number>();
             const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
             const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
             const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
 
+            // Zuerst Server-only-Rows als gelöscht markieren, dann lokale Rows für Speichern vorbereiten
             if ('BZ' in dataServer) {
+              reconcileRowsAsDeleted(
+                '#tableBZ',
+                'dataBZ',
+                normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ),
+                bzMonths,
+              );
               markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
-              publishEvent('data:changed', { resource: 'BZ', action: 'sync' });
             }
             if ('BE' in dataServer) {
+              reconcileRowsAsDeleted(
+                '#tableBE',
+                'dataBE',
+                normalizeServerRowsForConflict<IDatenBE>(dataServer.BE),
+                beMonths,
+              );
               markRowsForAutosave('#tableBE', 'dataBE', beMonths);
-              publishEvent('data:changed', { resource: 'BE', action: 'sync' });
             }
             if ('EWT' in dataServer) {
+              reconcileRowsAsDeleted(
+                '#tableE',
+                'dataE',
+                normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT),
+                eMonths,
+              );
               markRowsForAutosave('#tableE', 'dataE', eMonths);
-              publishEvent('data:changed', { resource: 'EWT', action: 'sync' });
             }
             if ('N' in dataServer) {
+              reconcileRowsAsDeleted(
+                '#tableN',
+                'dataN',
+                normalizeServerRowsForConflict<IDatenN>(dataServer.N),
+                nMonths,
+              );
               markRowsForAutosave('#tableN', 'dataN', nMonths);
-              publishEvent('data:changed', { resource: 'N', action: 'sync' });
             }
 
             Storage.remove('dataServer');
+            await flushAll();
             clearLoading('btnAuswaehlen');
             buttonDisable(false);
           },
@@ -222,6 +236,10 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     clearLoading('btnAuswaehlen');
     buttonDisable(false);
   }
+
+  // Pending AutoSave-Timer abbrechen, bevor neu geladen wird — sonst zeigt der Status-Indicator
+  // nach dem Reload bis zu 10s fälschlich 'pending', obwohl alle Rows 'unchanged' sind (Bug 3).
+  cancelAllPending();
 
   // Immer laden: Bei Längenmismatch mit lokalen Daten, sonst mit Server-Daten
   document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(BZ);

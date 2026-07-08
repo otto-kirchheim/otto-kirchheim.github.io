@@ -9,6 +9,7 @@ import {
   normalizeRows,
   shouldRepairMissingIds,
 } from './loadUserDaten.helpers';
+import { hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
 
 export interface UnterschiedNachMonat {
   beschreibung: string;
@@ -24,7 +25,6 @@ interface SyncLoadedYearResourcesParams {
   EWT: LoadedYearData['EWT'];
   N: LoadedYearData['N'];
   serverTimestamps: LoadedYearData['timestamps'];
-  initialDataServer?: Partial<UserDatenServer>;
   isJahreswechsel?: boolean;
 }
 
@@ -45,11 +45,12 @@ export function syncLoadedYearResources({
   EWT,
   N,
   serverTimestamps,
-  initialDataServer,
   isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
   const vorhanden: UnterschiedNachMonat[] = [];
-  const dataServer: Partial<UserDatenServer> = { ...(initialDataServer ?? {}) };
+  // Immer frisch starten — Konflikte werden je Load aus aktuellen Server+Local-Daten berechnet.
+  // Altdaten aus einem vorigen Jahres-Load dürfen nicht in einen anderen Load durchsickern (Bug 2).
+  const dataServer: Partial<UserDatenServer> = {};
 
   const syncResource = <T>(
     storageName: TStorageData,
@@ -69,14 +70,20 @@ export function syncLoadedYearResources({
       : undefined;
 
     if (localTs === 0 || serverTimestamp > localTs || shouldRepairMissingIds(storageName, localData, serverData)) {
-      Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
-      return serverData;
+      // Ungesyncte lokale Änderungen (__localState, __errorMessage) nicht überschreiben —
+      // Conflict-Review greift über countByMonth, das pending-deleted Rows exkludiert.
+      const localRows = localData !== undefined ? normalizeRows<unknown>(localData) : [];
+      if (!hasPendingLocalChanges(localRows)) {
+        Storage.setWithTimestamp(storageName, serverData, serverTimestamp);
+        return serverData;
+      }
     }
 
     if (localData !== undefined && MONTH_AWARE_STORAGE_NAMES.includes(storageName)) {
       const localRows = normalizeRows<unknown>(localData);
       const serverRows = normalizeRows<unknown>(serverData);
       if (localRows.length !== serverRows.length) {
+        const vorhandenBefore = vorhanden.length;
         const localByMonth = countByMonth(localData as unknown[], storageName);
         const serverByMonth = countByMonth(serverData as unknown[], storageName);
         const allMonths = new Set([...localByMonth.keys(), ...serverByMonth.keys()]);
@@ -94,10 +101,14 @@ export function syncLoadedYearResources({
           }
         });
 
-        if (storageName === 'dataBZ') dataServer.BZ = serverData as UserDatenServer['BZ'];
-        if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
-        if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
-        if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
+        // dataServer nur setzen wenn die Zählung echte Unterschiede ergab — ein reiner
+        // Längenunterschied durch Pending-New-Rows (ohne _id) ist kein Konflikt.
+        if (vorhanden.length > vorhandenBefore) {
+          if (storageName === 'dataBZ') dataServer.BZ = serverData as UserDatenServer['BZ'];
+          if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
+          if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
+          if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
+        }
       }
     }
 

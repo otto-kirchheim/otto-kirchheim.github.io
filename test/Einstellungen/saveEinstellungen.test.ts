@@ -1,6 +1,7 @@
 import '../setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import saveEinstellungen from '@/features/Einstellungen/utils/saveEinstellungen';
+import { setArbeitszeitPanelState } from '@/features/Einstellungen/components/arbeitszeitPanelState';
 import type { IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage';
 
@@ -25,15 +26,15 @@ function createVorgabenU(): IVorgabenU {
       TB: 'Tarifkraft',
     },
     aZ: {
-      bBN: '19:30',
-      bN: '19:45',
-      bS: '20:15',
-      bT: '07:00',
-      eN: '06:15',
-      eS: '07:00',
-      eT: '15:45',
-      eTF: '13:00',
-      rZ: '00:20',
+      frueh: {
+        aktiv: true,
+        default: { beginn: '07:00', ende: '15:45', pause: 30 },
+        overrides: { 5: { ende: '13:00', pause: 0 } },
+      },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
+      fahrzeit: '00:20',
     },
     fZ: [],
     vorgabenB: {},
@@ -67,13 +68,7 @@ function renderSettingsForm(vorgabenU: IVorgabenU): void {
     document.body.appendChild(input);
   }
 
-  for (const [key, value] of Object.entries(vorgabenU.aZ)) {
-    const input = document.createElement('input');
-    input.id = key;
-    input.required = true;
-    input.value = value;
-    document.body.appendChild(input);
-  }
+  // aZ is now handled via ArbeitszeiteingabePanel (panel state), not DOM inputs
 
   const table = document.querySelector<HTMLTableElement>('#tableVE');
   if (!table) throw new Error('tableVE fehlt');
@@ -85,6 +80,7 @@ function renderSettingsForm(vorgabenU: IVorgabenU): void {
 describe('saveEinstellungen address validation', () => {
   beforeEach(() => {
     localStorage.clear();
+    setArbeitszeitPanelState(null);
     const vorgabenU = createVorgabenU();
     Storage.set('VorgabenU', vorgabenU);
     renderSettingsForm(vorgabenU);
@@ -184,12 +180,28 @@ describe('saveEinstellungen address validation', () => {
     expect(pNummerInput.classList.contains('is-invalid')).toBe(true);
   });
 
-  it('throws when a required aZ field is empty', () => {
-    const bBNInput = document.querySelector<HTMLInputElement>('#bBN');
-    if (!bBNInput) throw new Error('bBN fehlt');
-    bBNInput.value = '';
+  it('speichert aZ aus Storage wenn kein Panel-State gesetzt', () => {
+    // Panel not rendered in this test → saveEinstellungen falls back to existing VorgabenU.aZ
+    const result = saveEinstellungen();
+    expect(result.aZ.frueh.default.beginn).toBe('07:00');
+    expect(result.aZ.fahrzeit).toBe('00:20');
+  });
 
-    expect(() => saveEinstellungen()).toThrow('Persönliche Daten fehlerhaft fehlt');
+  it('uebernimmt einen gerade auf inaktiv umgeschalteten Schalter sofort in den Save-State', () => {
+    const vorgabenU = createVorgabenU();
+    vorgabenU.aZ.spaet.aktiv = true;
+    Storage.set('VorgabenU', vorgabenU);
+    renderSettingsForm(vorgabenU);
+
+    setArbeitszeitPanelState({
+      ...vorgabenU.aZ,
+      spaet: { ...vorgabenU.aZ.spaet, aktiv: false },
+    });
+
+    const result = saveEinstellungen();
+
+    expect(result.aZ.spaet.aktiv).toBe(false);
+    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).aZ.spaet.aktiv).toBe(false);
   });
 });
 

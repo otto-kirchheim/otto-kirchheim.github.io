@@ -40,18 +40,21 @@ import {
   cancelAllPending,
   createOnChangeHandler,
   flushAll,
+  flushResource,
   getAutoSaveDelay,
   getResourceStatus,
+  hasPendingTableChanges,
   initAutoSaveEventListener,
   isAutoSaveEnabled,
   markResourceSaved,
+  markResourcesIdle,
   onAutoSaveStatus,
   scheduleAutoSave,
   setAutoSaveDelay,
   setAutoSaveEnabled,
 } from '@/infrastructure/autoSave/autoSave';
 import { clearAllHooks } from '@/core/hooks';
-import { onEvent, clearAllEventListeners } from '@/core/events/appEvents';
+import { onEvent, clearAllEventListeners, publishEvent } from '@/core/events/appEvents';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -227,6 +230,27 @@ describe('autoSave', () => {
       vi.advanceTimersByTime(getAutoSaveDelay() + 1000);
       expect(getResourceStatus('BZ').status).toBe('pending');
     });
+
+    it('bricht einen laufenden Timer ab, wenn die Aenderungen zwischenzeitlich verschwunden sind', () => {
+      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      const { mockGetChanges } = createMockTable('tableBZ', changes, [
+        { _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } },
+      ]);
+
+      // Erster Aufruf: Aenderungen vorhanden → Timer wird gesetzt
+      scheduleAutoSave('BZ');
+      expect(getResourceStatus('BZ').status).toBe('pending');
+
+      // Aenderungen wurden inzwischen rueckgaengig gemacht (z.B. Undo) → keine create/update mehr
+      mockGetChanges.mockReturnValue({ create: [], update: [], delete: [] });
+      scheduleAutoSave('BZ');
+
+      expect(getResourceStatus('BZ').status).toBe('idle');
+
+      // Der zuvor gesetzte Timer darf nicht mehr feuern
+      vi.advanceTimersByTime(getAutoSaveDelay() + 1000);
+      expect(mockBzBulk).not.toHaveBeenCalled();
+    });
   });
 
   // ─── cancelAllPending ────────────────────────────────
@@ -241,6 +265,57 @@ describe('autoSave', () => {
       cancelAllPending();
       expect(getResourceStatus('BZ').status).toBe('idle');
       expect(getResourceStatus('EWT').status).toBe('idle');
+    });
+  });
+
+  // ─── hasPendingTableChanges ──────────────────────────
+
+  describe('hasPendingTableChanges', () => {
+    it('gibt true zurueck wenn die Tabelle offene Aenderungen hat', () => {
+      createMockTable('tableBZ', { create: [{ a: 1 }], update: [], delete: [] });
+      expect(hasPendingTableChanges('BZ')).toBe(true);
+    });
+
+    it('gibt false zurueck wenn keine Tabelle gefunden wird', () => {
+      expect(hasPendingTableChanges('BZ')).toBe(false);
+    });
+
+    it('gibt false zurueck wenn die Tabelle keine Aenderungen hat', () => {
+      createMockTable('tableBZ', { create: [], update: [], delete: [] });
+      expect(hasPendingTableChanges('BZ')).toBe(false);
+    });
+  });
+
+  // ─── markResourcesIdle ───────────────────────────────
+
+  describe('markResourcesIdle', () => {
+    it('setzt mehrere Ressourcen auf idle und loescht laufende Timer', () => {
+      scheduleAutoSave('BZ');
+      scheduleAutoSave('EWT');
+      expect(getResourceStatus('BZ').status).toBe('pending');
+      expect(getResourceStatus('EWT').status).toBe('pending');
+
+      markResourcesIdle(['BZ', 'EWT']);
+
+      expect(getResourceStatus('BZ').status).toBe('idle');
+      expect(getResourceStatus('EWT').status).toBe('idle');
+
+      // Timer wurde geloescht, ein Ablauf darf keinen Save mehr auslösen
+      vi.advanceTimersByTime(getAutoSaveDelay() + 1000);
+      expect(mockBzBulk).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── initAutoSaveEventListener ('all') ───────────────
+
+  describe('initAutoSaveEventListener', () => {
+    it('plant AutoSave fuer alle Tabellen-Ressourcen bei resource "all"', () => {
+      publishEvent('data:changed', { resource: 'all', action: 'update' });
+
+      expect(getResourceStatus('BZ').status).toBe('pending');
+      expect(getResourceStatus('BE').status).toBe('pending');
+      expect(getResourceStatus('EWT').status).toBe('pending');
+      expect(getResourceStatus('N').status).toBe('pending');
     });
   });
 
@@ -327,6 +402,52 @@ describe('autoSave', () => {
       // Sollte nicht versuchen zu speichern
       await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
       expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    });
+
+    it('speichert mit Server-Timestamp wenn updatedAt vorhanden ist', async () => {
+      const updatedAt = '2025-03-10T10:00:00.000Z';
+      Storage.set('VorgabenU', { test: true });
+      mockUpdateMyProfile.mockResolvedValue({ data: { test: true, fromServer: true }, updatedAt });
+
+      scheduleAutoSave('settings');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(getResourceStatus('settings').status).toBe('saved');
+      expect(Storage.get<{ test: boolean; fromServer: boolean }>('VorgabenU')).toEqual({
+        test: true,
+        fromServer: true,
+      });
+    });
+
+    it('geht offline während ein nachgereichter Settings-Save wartet und bleibt danach pending', async () => {
+      Storage.set('VorgabenU', { test: true });
+      let resolveSave!: (value: { data: unknown; updatedAt?: string }) => void;
+      mockUpdateMyProfile.mockImplementationOnce(
+        () =>
+          new Promise(resolve => {
+            resolveSave = resolve;
+          }),
+      );
+
+      scheduleAutoSave('settings');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 10);
+      expect(getResourceStatus('settings').status).toBe('saving');
+
+      // Während des laufenden Saves erneut geändert → wird als "queued" vorgemerkt
+      scheduleAutoSave('settings');
+
+      // Verbindung bricht ab, bevor der nachgereichte Save starten kann
+      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+      mockUpdateMyProfile.mockResolvedValue({ data: { test: true } });
+
+      resolveSave({ data: { test: true } });
+      await viCompat.advanceTimersByTimeAsync(10);
+
+      // Der rekursive Retry sieht offline und bleibt pending statt erneut zu speichern
+      expect(getResourceStatus('settings').status).toBe('pending');
+      expect(mockUpdateMyProfile).toHaveBeenCalledTimes(1);
+
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
     });
   });
 
@@ -661,7 +782,13 @@ describe('autoSave', () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
 
-      const rowObj: { _state: string; cells: Record<string, string>; _id: string | undefined; _errorState: string | undefined; _errorMessage: string | null } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
+      const rowObj: {
+        _state: string;
+        cells: Record<string, string>;
+        _id: string | undefined;
+        _errorState: string | undefined;
+        _errorMessage: string | null;
+      } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
       const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [rowObj]);
 
@@ -758,6 +885,77 @@ describe('autoSave', () => {
 
       // Sollte nicht aufgerufen worden sein weil offline → pending
       expect(getResourceStatus('BZ').status).toBe('pending');
+    });
+
+    it('flushResource speichert eine Ressource sofort ohne Timer', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', []);
+
+      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } }]);
+
+      mockBzBulk.mockResolvedValue({ created: [{ _id: 'flush-id' }], updated: [], deleted: [], errors: [] });
+
+      await flushResource('BZ');
+
+      expect(mockBzBulk).toHaveBeenCalled();
+      expect(getResourceStatus('BZ').status).toBe('saved');
+    });
+
+    it('flushResource setzt Status auf idle wenn die Tabelle keine Aenderungen hat', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+
+      createMockTable('tableBZ', { create: [], update: [], delete: [] });
+
+      await flushResource('BZ');
+
+      expect(mockBzBulk).not.toHaveBeenCalled();
+      expect(getResourceStatus('BZ').status).toBe('idle');
+    });
+
+    it('markiert unzugeordnete Zeilen als Fehler, wenn das Backend Fehler ohne Zeilenreferenz liefert', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', []);
+
+      const rowObj = { _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } };
+      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      createMockTable('tableBZ', changes, [rowObj]);
+
+      // Fehler ohne clientRequestId/id/index → collectRowErrorMatches findet keine Zeile
+      mockBzBulk.mockResolvedValue({
+        created: [],
+        updated: [],
+        deleted: [],
+        errors: [{ operation: 'create', message: 'Unbekannter Serverfehler' }],
+      });
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(rowObj._state).toBe('error');
+      expect((rowObj as { _errorMessage?: string })._errorMessage).toBe('Unbekannter Serverfehler');
+      // Status bleibt trotz Fehlermarkierung "saved", da sendBulk selbst nicht geworfen hat
+      expect(getResourceStatus('BZ').status).toBe('saved');
+    });
+
+    it('entfernt Nebengeld-Referenzen wenn EWT-Zeilen inklusive Loeschungen gespeichert werden', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataE', []);
+      Storage.set('dataN', [{ _id: 'n1', ewtRef: 'ewt-del-1', tagN: '10.03.2025' }]);
+
+      createMockTable('tableE', { create: [], update: [], delete: ['ewt-del-1'] });
+
+      mockEwtBulk.mockResolvedValue({ created: [], updated: [], deleted: ['ewt-del-1'], errors: [] });
+
+      await flushResource('EWT');
+
+      expect(mockEwtBulk).toHaveBeenCalled();
+      const storedN = Storage.get<Array<{ _id: string; ewtRef?: string }>>('dataN', { check: true });
+      expect(storedN[0].ewtRef).toBeUndefined();
     });
 
     it('laesst fehlgeschlagene Create-Zeilen fuer den naechsten Retry im Change-Tracking', async () => {
@@ -887,6 +1085,28 @@ describe('autoSave', () => {
       scheduleAutoSave('BZ');
 
       expect(addEventSpy).toHaveBeenCalledWith('online', expect.any(Function), { once: true });
+      addEventSpy.mockRestore();
+    });
+
+    it('reicht pending Ressourcen erneut ein sobald das online-Event feuert', async () => {
+      const addEventSpy = vi.spyOn(window, 'addEventListener');
+      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
+      Storage.set('VorgabenU', { test: true });
+      mockUpdateMyProfile.mockResolvedValue({ data: { test: true } });
+
+      scheduleAutoSave('settings');
+      expect(getResourceStatus('settings').status).toBe('pending');
+
+      const onlineCallback = addEventSpy.mock.calls.find(call => call[0] === 'online')?.[1] as () => void;
+      expect(onlineCallback).toBeInstanceOf(Function);
+
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+      onlineCallback();
+
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockUpdateMyProfile).toHaveBeenCalled();
+      expect(getResourceStatus('settings').status).toBe('saved');
       addEventSpy.mockRestore();
     });
   });

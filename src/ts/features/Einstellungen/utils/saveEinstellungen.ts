@@ -1,5 +1,5 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { IVorgabenU, IVorgabenUPers, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
+import type { IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
 import {
   PERS_FIELD_LABELS,
   setupPersValidation,
@@ -9,6 +9,7 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
+import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
@@ -46,19 +47,9 @@ export default function saveEinstellungen(): IVorgabenU {
     updateVorgabenU(VorgabenU.pers, key as keyof IVorgabenUPers, value as IVorgabenUPers[keyof IVorgabenUPers]);
   }
 
-  for (const key of Object.keys(VorgabenU.aZ)) {
-    const input = document.querySelector<HTMLInputElement>(`#${key}`);
-    if (!input) continue;
-    if (input.value) updateVorgabenU(VorgabenU.aZ, key as keyof IVorgabenUaZ, input.value);
-    else if (input.required) {
-      createSnackBar({
-        message: `Einstellungen > Persönliche Daten > "${key}" fehlt`,
-        status: 'error',
-        timeout: 3000,
-        fixed: true,
-      });
-      throw new Error('Persönliche Daten fehlerhaft fehlt');
-    }
+  const panelState = getArbeitszeitPanelState();
+  if (panelState) {
+    VorgabenU.aZ = panelState;
   }
 
   VorgabenU.fZ = table_to_array_einstellungen('TbodyTätigkeitsstätten');

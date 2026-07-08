@@ -262,3 +262,231 @@ export async function deleteProfileTemplate(id: string): Promise<void> {
   unwrapResponse<unknown>(response);
   createSnackBar({ message: 'Template gelöscht', status: 'success', timeout: 2000 });
 }
+
+// ─── Admin Raw-Edit API ───────────────────────────────────
+
+export type AdminStats = {
+  users: { total: number; active30d: number; byRole: Record<string, number> };
+  profiles: { total: number };
+  templates: { total: number; active: number; inactive: number };
+  resources: {
+    bereitschaftseinsaetze: number;
+    bereitschaftszeitraeume: number;
+    einsatzwechseltaetigkeiten: number;
+    nebengeld: number;
+  };
+  adminActivity: { logsLast7d: number };
+  auth: { newUsersLast7d: number; emailVerified: number; passkeyUsers: number };
+  growth: {
+    bereitschaftseinsaetzeLast7d: number;
+    bereitschaftszaetraumeLast7d: number;
+    ewtLast7d: number;
+    nebengeldLast7d: number;
+  };
+};
+
+export type AdminPage = {
+  data: Record<string, unknown>[];
+  total: number;
+  limit: number;
+  skip: number;
+};
+
+export type AdminPasskey = {
+  index: number;
+  name?: string;
+  credentialId: string;
+  deviceType?: string;
+  createdAt?: string;
+  lastUsedAt?: string;
+};
+
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const response = await FetchRetry<undefined, AdminStats>('admin/stats', undefined, 'GET');
+  return unwrapResponse<AdminStats>(response);
+}
+
+export async function fetchAdminResource(
+  endpoint: string,
+  params?: { page?: number; limit?: number; userId?: string; jahr?: number; monat?: number },
+): Promise<AdminPage> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.limit) p.set('limit', String(params.limit));
+  if (params?.userId) p.set('userId', params.userId);
+  if (params?.jahr) p.set('Jahr', String(params.jahr));
+  if (params?.monat) p.set('Monat', String(params.monat));
+  const query = p.toString();
+  const path = query ? `admin/${endpoint}?${query}` : `admin/${endpoint}`;
+  const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
+  return unwrapResponse<AdminPage>(response);
+}
+
+export async function updateAdminDoc(
+  endpoint: string,
+  id: string,
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const response = await FetchRetry<Record<string, unknown>, Record<string, unknown>>(
+    `admin/${endpoint}/${id}`,
+    data,
+    'PUT',
+  );
+  const updated = unwrapResponse<Record<string, unknown>>(response);
+  createSnackBar({ message: 'Gespeichert', status: 'success', timeout: 2000 });
+  return updated;
+}
+
+export async function deleteAdminDoc(endpoint: string, id: string): Promise<void> {
+  const response = await FetchRetry<undefined, unknown>(`admin/${endpoint}/${id}`, undefined, 'DELETE');
+  unwrapResponse<unknown>(response);
+  createSnackBar({ message: 'Gelöscht', status: 'success', timeout: 2000 });
+}
+
+export async function fetchAdminUserProfiles(params?: {
+  page?: number;
+  limit?: number;
+  userId?: string;
+}): Promise<AdminPage> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.limit) p.set('limit', String(params.limit));
+  if (params?.userId) p.set('userId', params.userId);
+  const query = p.toString();
+  const path = query ? `admin/user-profiles?${query}` : 'admin/user-profiles';
+  const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
+  return unwrapResponse<AdminPage>(response);
+}
+
+export async function updateAdminUserProfileDoc(
+  id: string,
+  data: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const response = await FetchRetry<Record<string, unknown>, Record<string, unknown>>(
+    `admin/user-profiles/${id}`,
+    data,
+    'PUT',
+  );
+  const updated = unwrapResponse<Record<string, unknown>>(response);
+  createSnackBar({ message: 'UserProfile gespeichert', status: 'success', timeout: 2000 });
+  return updated;
+}
+
+export async function setAdminEmailVerified(userId: string, emailVerified: boolean): Promise<void> {
+  const response = await FetchRetry<{ emailVerified: boolean }, unknown>(
+    `admin/users/${userId}/email-verified`,
+    { emailVerified },
+    'PATCH',
+  );
+  unwrapResponse<unknown>(response);
+  createSnackBar({ message: `emailVerified → ${emailVerified}`, status: 'success', timeout: 2000 });
+}
+
+export async function fetchAdminPasskeys(userId: string): Promise<AdminPasskey[]> {
+  const response = await FetchRetry<undefined, AdminPasskey[]>(`admin/users/${userId}/passkeys`, undefined, 'GET');
+  return unwrapResponse<AdminPasskey[]>(response);
+}
+
+export async function deleteAdminPasskey(userId: string, credentialId: string): Promise<void> {
+  const response = await FetchRetry<undefined, unknown>(
+    `admin/users/${userId}/passkeys/${credentialId}`,
+    undefined,
+    'DELETE',
+  );
+  unwrapResponse<unknown>(response);
+  createSnackBar({ message: 'Passkey gelöscht', status: 'success', timeout: 2000 });
+}
+
+/** Baut eine Map userId→Name aus UserProfile-Dokumenten (max. 200 Profile). */
+export async function fetchAdminUserNameMap(): Promise<Record<string, string>> {
+  const page = await fetchAdminUserProfiles({ limit: 200 });
+  const map: Record<string, string> = {};
+  for (const doc of page.data) {
+    const userId = String(doc['User'] ?? '');
+    if (!userId) continue;
+    const pers = (doc['Pers'] ?? {}) as Record<string, unknown>;
+    const name = [String(pers['Vorname'] ?? ''), String(pers['Nachname'] ?? '')].filter(Boolean).join(' ');
+    map[userId] = name || `…${userId.slice(-8)}`;
+  }
+  return map;
+}
+
+export type AdminLogEntry = {
+  _id: string;
+  adminId: string;
+  action: string;
+  targetUserId?: string;
+  targetResourceId?: string;
+  params?: Record<string, unknown>;
+  timestamp: string;
+};
+
+export async function fetchAdminResourceYears(endpoint: string): Promise<number[]> {
+  const response = await FetchRetry<undefined, number[]>(`admin/${endpoint}?distinctJahr=1`, undefined, 'GET');
+  return unwrapResponse<number[]>(response);
+}
+
+export async function fetchAdminUserEmailVerified(userId: string): Promise<{ emailVerified: boolean }> {
+  const response = await FetchRetry<undefined, { emailVerified: boolean }>(`admin/users/${userId}`, undefined, 'GET');
+  return unwrapResponse<{ emailVerified: boolean }>(response);
+}
+
+export async function fetchAdminResourceById(endpoint: string, id: string): Promise<Record<string, unknown>> {
+  const response = await FetchRetry<undefined, Record<string, unknown>>(`admin/${endpoint}/${id}`, undefined, 'GET');
+  return unwrapResponse<Record<string, unknown>>(response);
+}
+
+export type MetricPoint = {
+  timestamp: string;
+  environment?: 'gcp' | 'homeserver';
+  event: 'startup' | 'periodic' | 'manual' | 'shutdown';
+  uptime: number;
+  rss: number;
+  heapUsed: number;
+  heapTotal: number;
+  external: number;
+  eventLoopDelay: number;
+};
+
+export type HeapData = {
+  current: {
+    environment?: 'gcp' | 'homeserver';
+    uptime: number;
+    rss: number;
+    heapUsed: number;
+    heapTotal: number;
+    external: number;
+  };
+  history: MetricPoint[];
+};
+
+export async function fetchAdminHeap(): Promise<HeapData> {
+  const response = await FetchRetry<undefined, HeapData>('admin/heap', undefined, 'GET');
+  return unwrapResponse<HeapData>(response);
+}
+
+export async function triggerAdminHeapSnapshot(): Promise<MetricPoint> {
+  const response = await FetchRetry<undefined, MetricPoint>('admin/heap', undefined, 'POST');
+  return unwrapResponse<MetricPoint>(response);
+}
+
+export async function fetchAdminLogs(params?: {
+  page?: number;
+  limit?: number;
+  adminId?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+}): Promise<AdminPage> {
+  const p = new URLSearchParams();
+  if (params?.page) p.set('page', String(params.page));
+  if (params?.limit) p.set('limit', String(params.limit));
+  if (params?.adminId) p.set('adminId', params.adminId);
+  if (params?.action) p.set('action', params.action);
+  if (params?.from) p.set('from', params.from);
+  if (params?.to) p.set('to', params.to);
+  const query = p.toString();
+  const path = query ? `admin/logs?${query}` : 'admin/logs';
+  const response = await FetchRetry<undefined, AdminPage>(path, undefined, 'GET');
+  return unwrapResponse<AdminPage>(response);
+}

@@ -25,39 +25,40 @@ import {
   persistBereitschaftsZeitraumTableData,
 } from './utils';
 
+// Zeiten werden je Wochentag aus vorgabenU.aZ abgeleitet; die Vorgaben definieren nur Tag-/Wochen-Bereich + Schichten.
 export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgabenB } = {
   0: {
     Name: 'B1',
-    beginnB: { tag: 4, zeit: '15:45' },
-    endeB: { tag: 4, zeit: '07:00', Nwoche: true },
+    beginnB: { tag: 4 },
+    endeB: { tag: 4, Nwoche: true },
     nacht: false,
-    beginnN: { tag: 0, zeit: '19:45', Nwoche: true },
-    endeN: { tag: 4, zeit: '06:15', Nwoche: true },
+    beginnN: { tag: 0, Nwoche: true },
+    endeN: { tag: 4, Nwoche: true },
   },
   1: {
     Name: 'B2',
-    beginnB: { tag: 4, zeit: '15:45' },
-    endeB: { tag: 0, zeit: '19:45', Nwoche: false },
+    beginnB: { tag: 4 },
+    endeB: { tag: 0, Nwoche: false },
     nacht: false,
-    beginnN: { tag: 0, zeit: '19:45', Nwoche: false },
-    endeN: { tag: 4, zeit: '06:15', Nwoche: true },
+    beginnN: { tag: 0, Nwoche: false },
+    endeN: { tag: 4, Nwoche: true },
   },
   2: {
     Name: 'B1 + Nacht',
-    beginnB: { tag: 4, zeit: '15:45' },
-    endeB: { tag: 4, zeit: '07:00', Nwoche: true },
+    beginnB: { tag: 4 },
+    endeB: { tag: 4, Nwoche: true },
     nacht: true,
-    beginnN: { tag: 0, zeit: '19:45', Nwoche: true },
-    endeN: { tag: 4, zeit: '06:15', Nwoche: true },
+    beginnN: { tag: 0, Nwoche: true },
+    endeN: { tag: 4, Nwoche: true },
     standard: true,
   },
   3: {
     Name: 'B1 + Nacht (ab Sa)',
-    beginnB: { tag: 4, zeit: '15:45' },
-    endeB: { tag: 4, zeit: '07:00', Nwoche: true },
+    beginnB: { tag: 4 },
+    endeB: { tag: 4, Nwoche: true },
     nacht: true,
-    beginnN: { tag: 6, zeit: '19:45', Nwoche: false },
-    endeN: { tag: 3, zeit: '06:15', Nwoche: true },
+    beginnN: { tag: 6, Nwoche: false },
+    endeN: { tag: 3, Nwoche: true },
   },
 };
 

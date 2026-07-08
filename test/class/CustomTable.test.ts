@@ -160,6 +160,146 @@ describe('CustomTable', () => {
     expect(table.rows.hasPendingDeletes).toBe(true);
   });
 
+  it('rows.load setzt _state new für Rows ohne _id und löst onChange aus', () => {
+    createTableElement('load-new-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-new-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([{ label: 'Neue Zeile', value: 1 }] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('new');
+    expect(rows[0]._clientRequestId).toBeDefined();
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.load restauriert _state error aus __errorMessage (Regression)', () => {
+    createTableElement('load-error-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-error-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: '1', label: 'Fehlerzeile', value: 1, __errorMessage: 'Verbindungsfehler', __errorState: 'modified' },
+    ] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('error');
+    expect(rows[0]._errorMessage).toBe('Verbindungsfehler');
+    expect(rows[0]._errorState).toBe('modified');
+    expect(rows[0].cells._id).toBe('1');
+    expect((rows[0].cells as Record<string, unknown>).__errorMessage).toBeUndefined();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('rows.load restauriert _state deleted aus __localState (Regression)', () => {
+    createTableElement('load-deleted-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-deleted-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: '2', label: 'Gelöschte Zeile', value: 2, __localState: 'deleted' },
+    ] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('deleted');
+    expect((rows[0].cells as Record<string, unknown>).__localState).toBeUndefined();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('rows.load restauriert _state modified aus __localState und löst onChange aus', () => {
+    createTableElement('load-modified-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-modified-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: '3', label: 'Geänderte Zeile', value: 3, __localState: 'modified' },
+    ] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('modified');
+    expect((rows[0].cells as Record<string, unknown>).__localState).toBeUndefined();
+    expect(table.rows.getChanges(false).update).toHaveLength(1);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.load restauriert _state new aus explizitem __localState und löst onChange aus', () => {
+    createTableElement('load-new-marker-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-new-marker-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([{ label: 'Neue Zeile (Marker)', value: 4, __localState: 'new' }] as unknown as TableRow[]);
+
+    const rows = table.getRows();
+    expect(rows).toHaveLength(1);
+    expect(rows[0]._state).toBe('new');
+    expect(rows[0]._clientRequestId).toBeDefined();
+    expect((rows[0].cells as Record<string, unknown>).__localState).toBeUndefined();
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.load restauriert _state unchanged aus explizitem __localState ohne onChange', () => {
+    createTableElement('load-unchanged-marker-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-unchanged-marker-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([
+      { _id: 'xyz', label: 'Unveränderte Zeile', value: 5, __localState: 'unchanged' },
+    ] as unknown as TableRow[]);
+
+    expect(table.getRows()[0]._state).toBe('unchanged');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('rows.load löst kein onChange aus wenn alle Rows _id haben', () => {
+    createTableElement('load-unchanged-table');
+    const onChange = vi.fn();
+
+    const table = createCustomTable<TableRow>('load-unchanged-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.load([{ _id: 'abc', label: 'Bekannte Zeile', value: 99 }]);
+
+    expect(table.getRows()[0]._state).toBe('unchanged');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
   it('verwendet für Tabellenaktionen in Formularen keine impliziten Submit-Buttons', () => {
     const form = document.createElement('form');
     document.body.appendChild(form);
@@ -192,5 +332,346 @@ describe('CustomTable', () => {
     actionButtons.forEach(button => {
       expect(button.type).toBe('button');
     });
+  });
+
+  // ─── Row: isError / isDirty / undoDelete ───────────────────
+
+  it('row.isError und row.isDirty spiegeln den State korrekt wider', () => {
+    createTableElement('row-state-table');
+    const table = createCustomTable<TableRow>('row-state-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const row = table.getRows()[0];
+    expect(row.isError).toBe(false);
+    expect(row.isDirty).toBe(false);
+
+    row._state = 'error';
+    expect(row.isError).toBe(true);
+
+    row._state = 'modified';
+    expect(row.isDirty).toBe(true);
+  });
+
+  it('row.undoDelete macht das Soft-Delete rückgängig', () => {
+    createTableElement('undo-delete-table');
+    const table = createCustomTable<TableRow>('undo-delete-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const row = table.getRows()[0];
+    row.deleteRow();
+    expect(row.isDeleted).toBe(true);
+
+    row.undoDelete();
+    expect(row.isDeleted).toBe(false);
+    expect(row._state).toBe('unchanged');
+  });
+
+  it('row.undoDelete ist ein No-Op wenn die Zeile nicht gelöscht ist', () => {
+    createTableElement('undo-delete-noop-table');
+    const table = createCustomTable<TableRow>('undo-delete-noop-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const row = table.getRows()[0];
+    row.undoDelete();
+    expect(row._state).toBe('unchanged');
+  });
+
+  // ─── Rows: add / loadSmart / setFilter / hasChanges ────────
+
+  it('rows.add fügt eine neue Zeile hinzu und benachrichtigt onChange', () => {
+    createTableElement('rows-add-table');
+    const onChange = vi.fn();
+    const table = createCustomTable<TableRow>('rows-add-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+      onChange,
+    });
+
+    table.rows.add({ label: 'Neu', value: 1 });
+
+    expect(table.getRows()).toHaveLength(1);
+    expect(table.getRows()[0]._state).toBe('new');
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('rows.loadSmart verhält sich identisch zu rows.load', () => {
+    createTableElement('rows-loadsmart-table');
+    const table = createCustomTable<TableRow>('rows-loadsmart-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- testet bewusst die deprecated API für Regressionsschutz
+    table.rows.loadSmart([{ _id: 'x1', label: 'Smart', value: 1 }]);
+
+    expect(table.getRows()).toHaveLength(1);
+    expect(table.getRows()[0]._state).toBe('unchanged');
+    expect(table.getRows()[0]._id).toBe('x1');
+  });
+
+  it('rows.setFilter blendet Zeilen aus ohne sie aus dem State zu entfernen', () => {
+    createTableElement('rows-filter-table');
+    const table = createCustomTable<TableRow>('rows-filter-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [
+        { _id: '1', label: 'Sichtbar', value: 1 },
+        { _id: '2', label: 'Versteckt', value: 2 },
+      ],
+    });
+
+    table.rows.setFilter(cells => cells.label === 'Sichtbar');
+
+    expect(table.rows.getFilteredRows()).toHaveLength(1);
+    expect(table.getRows()).toHaveLength(2);
+    expect(document.querySelectorAll('tbody tr').length).toBe(1);
+
+    table.rows.setFilter(null);
+    expect(table.rows.getFilteredRows()).toHaveLength(2);
+  });
+
+  it('hasAutoSaveChanges und hasChanges spiegeln den Zeilenstatus wider', () => {
+    createTableElement('rows-changes-table');
+    const table = createCustomTable<TableRow>('rows-changes-table', {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    expect(table.rows.hasAutoSaveChanges).toBe(false);
+    expect(table.rows.hasChanges).toBe(false);
+
+    table.rows.add({ label: 'Neu', value: 2 });
+
+    expect(table.rows.hasAutoSaveChanges).toBe(true);
+    expect(table.rows.hasChanges).toBe(true);
+  });
+
+  // ─── CustomTable: getArray ──────────────────────────────────
+
+  it('getArray liefert die Zellwerte aller Zeilen als Array', () => {
+    createTableElement('get-array-table');
+    const table = createCustomTable<TableRow>('get-array-table', {
+      columns: [
+        { name: 'label', title: 'Label' },
+        { name: 'value', title: 'Wert' },
+      ],
+      rows: [
+        { _id: '1', label: 'A', value: 1 },
+        { _id: '2', label: 'B', value: 2 },
+      ],
+    });
+
+    const array = table.getArray();
+    expect(array).toHaveLength(2);
+    expect(array[0]).toEqual(Object.values(table.getRows()[0].cells));
+  });
+
+  // ─── Footer-Buttons: Add / Custom-Button ────────────────────
+
+  it('löst addRow- und Custom-Button-Handler beim Klick im Footer aus', () => {
+    createTableElement('footer-click-table');
+    const addRow = vi.fn();
+    const customFn = vi.fn();
+
+    createCustomTable<TableRow>('footer-click-table', {
+      editing: {
+        enabled: true,
+        addRow,
+        editRow: vi.fn(),
+        showRow: vi.fn(),
+        deleteRow: vi.fn(),
+        deleteAllRows: vi.fn(),
+        customButton: [{ text: 'Extra', classes: ['btn', 'btn-secondary'], function: customFn }],
+      },
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [],
+    });
+
+    const addButton = document.querySelector<HTMLButtonElement>('tfoot .btn-primary');
+    const customButton = document.querySelector<HTMLButtonElement>('tfoot .btn-secondary');
+    expect(addButton).not.toBeNull();
+    expect(customButton).not.toBeNull();
+
+    addButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    customButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(addRow).toHaveBeenCalledTimes(1);
+    expect(customFn).toHaveBeenCalledTimes(1);
+  });
+
+  // ─── Zeilen-Buttons: editRow / deleteRow ─────────────────────
+
+  it('löst editRow und deleteRow beim Klick auf die Zeilen-Buttons aus', () => {
+    createTableElement('row-actions-table');
+    const editRow = vi.fn();
+    const deleteRow = vi.fn();
+
+    const table = createCustomTable<TableRow>('row-actions-table', {
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow,
+        showRow: vi.fn(),
+        deleteRow,
+      },
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const editButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-primary');
+    const deleteButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-danger');
+    expect(editButton).not.toBeNull();
+    expect(deleteButton).not.toBeNull();
+
+    editButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    deleteButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(editRow).toHaveBeenCalledWith(table.getRows()[0]);
+    expect(deleteRow).toHaveBeenCalledWith(table.getRows()[0]);
+  });
+
+  // ─── Zeilen-Klick (mobiler Breakpoint) → showRow ─────────────
+
+  it('ruft showRow beim Klick auf eine Zeile im mobilen Breakpoint-Bereich auf', () => {
+    createTableElement('row-click-table');
+    const showRow = vi.fn();
+
+    const table = createCustomTable<TableRow>('row-click-table', {
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow: vi.fn(),
+        showRow,
+        deleteRow: vi.fn(),
+      },
+      columns: [{ name: 'label', title: 'Label', breakpoints: 'xs' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const tr = document.querySelector<HTMLTableRowElement>('tbody tr');
+    expect(tr).not.toBeNull();
+    tr?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(showRow).toHaveBeenCalledWith(table.getRows()[0]);
+  });
+
+  it('ignoriert Klicks auf bereits gelöschte Zeilen', () => {
+    createTableElement('row-click-deleted-table');
+    const showRow = vi.fn();
+
+    const table = createCustomTable<TableRow>('row-click-deleted-table', {
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow: vi.fn(),
+        showRow,
+        deleteRow: row => row.deleteRow(),
+      },
+      columns: [{ name: 'label', title: 'Label', breakpoints: 'xs' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    table.getRows()[0].deleteRow();
+    const tr = document.querySelector<HTMLTableRowElement>('tbody tr');
+    tr?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(showRow).not.toHaveBeenCalled();
+  });
+
+  // ─── Standard-No-Op-Handler wenn keine Callbacks übergeben werden ──
+
+  it('nutzt Standard-No-Op-Handler für addRow/editRow/showRow/deleteRow wenn keine Callbacks übergeben werden', () => {
+    createTableElement('default-noop-table');
+
+    const table = createCustomTable<TableRow>('default-noop-table', {
+      // Absichtlich ohne addRow/editRow/showRow/deleteRow, um Default-No-Ops zu testen
+      editing: { enabled: true, deleteAllRows: vi.fn() } as any,
+      columns: [{ name: 'label', title: 'Label', breakpoints: 'xs' }],
+      rows: [{ _id: '1', label: 'A', value: 1 }],
+    });
+
+    const addButton = document.querySelector<HTMLButtonElement>('tfoot .btn-primary');
+    const editButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-primary');
+    const deleteButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-danger');
+    const tr = document.querySelector<HTMLTableRowElement>('tbody tr');
+
+    expect(() => addButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
+    expect(() => editButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
+    expect(() => deleteButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
+    expect(() => tr?.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
+
+    // Standard-Handler sind No-Ops: Zeilenstatus bleibt unverändert
+    expect(table.getRows()).toHaveLength(1);
+    expect(table.getRows()[0]._state).toBe('unchanged');
+  });
+
+  // ─── Standard-deleteAllRows (private Methode) ────────────────
+
+  it('deleteAllRows (private Methode) leert alle Zeilen und rendert neu', () => {
+    createTableElement('default-delete-all-table');
+
+    const table = createCustomTable<TableRow>('default-delete-all-table', {
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow: vi.fn(),
+        showRow: vi.fn(),
+        deleteRow: vi.fn(),
+      },
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [
+        { _id: '1', label: 'A', value: 1 },
+        { _id: '2', label: 'B', value: 2 },
+      ],
+    });
+
+    expect(table.getRows()).toHaveLength(2);
+
+    // Private Methode direkt mit korrektem `this`-Kontext aufrufen
+    // (der Options-Default `this.deleteAllRows` wird als unbound Referenz gespeichert
+    // und ist daher nur über einen an die Instanz gebundenen Aufruf sicher testbar).
+    (table as unknown as { deleteAllRows: () => void }).deleteAllRows();
+
+    expect(table.getRows()).toHaveLength(0);
+  });
+
+  // ─── Sortierbarer Spaltenkopf: Klick → onSortClicked ─────────
+
+  it('sortiert nach Klick auf den Spaltenkopf und wechselt die Richtung bei erneutem Klick', () => {
+    createTableElement('header-sort-table');
+
+    const table = createCustomTable<TableRow>('header-sort-table', {
+      sorting: { enabled: true },
+      editing: {
+        enabled: true,
+        addRow: vi.fn(),
+        editRow: vi.fn(),
+        showRow: vi.fn(),
+        deleteRow: vi.fn(),
+      },
+      columns: [{ name: 'value', title: 'Wert', sortable: true }],
+      rows: [
+        { _id: 'a', label: 'A', value: 3 },
+        { _id: 'b', label: 'B', value: 1 },
+        { _id: 'c', label: 'C', value: 2 },
+      ],
+    });
+
+    const th = document.querySelector<HTMLTableCellElement>('thead th.customtable-sortable');
+    expect(th).not.toBeNull();
+    th?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    const column = table.columns.array.find(c => c.name === 'value');
+    expect(column?.sorted).toBe(true);
+    expect(column?.direction).toBe('ASC');
+
+    const thAfterFirstSort = document.querySelector<HTMLTableCellElement>('thead th.customtable-sortable');
+    thAfterFirstSort?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(column?.direction).toBe('DESC');
   });
 });

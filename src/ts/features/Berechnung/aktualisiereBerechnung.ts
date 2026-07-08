@@ -103,7 +103,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
 
         if (isInRange(abWohnung, 8, 14)) Berechnung.E.A8++;
         else if (isInRange(abWohnung, 14, 24)) Berechnung.E.A14++;
-        else Berechnung.E.A24++;
+        else if (abWohnung >= 24) Berechnung.E.A24++;
       }
       if (value.ab1E && value.an1E) {
         const [ab1H, ab1M] = value.ab1E.split(':').map(Number);

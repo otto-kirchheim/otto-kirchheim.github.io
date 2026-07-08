@@ -115,6 +115,72 @@ describe('checkNeuerBenutzer', () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
+  it('setzt Validierungsfehler wenn Benutzername fehlt', async () => {
+    document.body.innerHTML = `
+      <div id="modal-root"></div>
+      <div id="errorMessage"></div>
+      <input id="Zugang" value="code-1" />
+    `;
+    const modal = document.querySelector<HTMLDivElement>('#modal-root');
+    if (!modal) throw new Error('modal not found');
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Benutzername Eingeben');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
+  it('setzt Validierungsfehler wenn Email fehlt', async () => {
+    document.body.innerHTML = `
+      <div id="modal-root"></div>
+      <div id="errorMessage"></div>
+      <input id="Zugang" value="code-1" />
+      <input id="Benutzer" value="otto" />
+    `;
+    const modal = document.querySelector<HTMLDivElement>('#modal-root');
+    if (!modal) throw new Error('modal not found');
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte E-Mail Eingeben');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
+  it('setzt Validierungsfehler wenn Passwort fehlt', async () => {
+    document.body.innerHTML = `
+      <div id="modal-root"></div>
+      <div id="errorMessage"></div>
+      <input id="Zugang" value="code-1" />
+      <input id="Benutzer" value="otto" />
+      <input id="Email" value="test@example.com" />
+    `;
+    const modal = document.querySelector<HTMLDivElement>('#modal-root');
+    if (!modal) throw new Error('modal not found');
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Passwort Eingeben');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
+  it('setzt Validierungsfehler wenn Passwort-Wiederholung fehlt', async () => {
+    document.body.innerHTML = `
+      <div id="modal-root"></div>
+      <div id="errorMessage"></div>
+      <input id="Zugang" value="code-1" />
+      <input id="Benutzer" value="otto" />
+      <input id="Email" value="test@example.com" />
+      <input id="Passwort" value="pass12345" />
+    `;
+    const modal = document.querySelector<HTMLDivElement>('#modal-root');
+    if (!modal) throw new Error('modal not found');
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Passwort wiederholen');
+    expect(registerMock).not.toHaveBeenCalled();
+  });
+
   it('setzt Validierungsfehler bei ungleichen Passwoertern', async () => {
     setupDom();
     const passwort2 = document.querySelector<HTMLInputElement>('#Passwort2');
@@ -217,6 +283,50 @@ describe('checkNeuerBenutzer', () => {
     expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(2);
     expect(confirmMock).toHaveBeenCalledTimes(2);
     expect(hideMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('ueberspringt die Passkey-Einrichtung wenn der Browser PublicKeyCredential nicht unterstuetzt', async () => {
+    const modal = setupDom();
+    registerMock.mockResolvedValue(undefined);
+    meMock.mockResolvedValue({ role: 'member' });
+    // @ts-expect-error – Browser ohne WebAuthn-Unterstuetzung simulieren
+    delete globalThis.PublicKeyCredential;
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(confirmMock).not.toHaveBeenCalled();
+    expect(registerPasskeyWithResultMock).not.toHaveBeenCalled();
+    expect(hideMock).toHaveBeenCalledTimes(1);
+    expect(userLoginSuccessMock).toHaveBeenCalledWith({
+      username: 'otto',
+      role: 'member',
+      email: undefined,
+      emailVerified: undefined,
+    });
+  });
+
+  it('bricht die Passkey-Einrichtung ab wenn der Retry nach einem Fehler abgelehnt wird', async () => {
+    const modal = setupDom();
+    registerMock.mockResolvedValue(undefined);
+    meMock.mockResolvedValue({ role: 'member' });
+    confirmMock.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    registerPasskeyWithResultMock.mockResolvedValueOnce({
+      ok: false,
+      reason: 'error',
+      message: 'Passkey fehlgeschlagen',
+    });
+
+    await checkNeuerBenutzer(modal as never);
+
+    expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(1);
+    expect(confirmMock).toHaveBeenCalledTimes(2);
+    expect(hideMock).toHaveBeenCalledTimes(1);
+    expect(userLoginSuccessMock).toHaveBeenCalledWith({
+      username: 'otto',
+      role: 'member',
+      email: undefined,
+      emailVerified: undefined,
+    });
   });
 
   it('zeigt Fehler-Snackbar und schreibt Fehlermeldung bei Fehler', async () => {

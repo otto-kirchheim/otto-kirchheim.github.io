@@ -13,6 +13,7 @@ import {
   bzToBackend,
   ewtFromBackend,
   ewtToBackend,
+  flatMapDocs,
   nebengeldFromBackend,
   nebengeldToBackend,
   userProfileFromBackend,
@@ -66,6 +67,18 @@ describe('fieldMapper – BZ (Bereitschaftszeitraum)', () => {
       Ende: '2024-04-19T05:00:00.000Z',
       Pause: 30,
     });
+  });
+
+  it('bzToBackend fällt bei ungültigem Datum auf Monat/Jahr-Parameter zurück', () => {
+    const frontendBZ: IDatenBZ = {
+      _id: 'bz-invalid',
+      beginB: 'not-a-valid-date',
+      endeB: '2024-04-19T05:00:00.000Z',
+      pauseB: 0,
+    };
+    const result = bzToBackend(frontendBZ, 7, 2025);
+    expect(result.Monat).toBe(7);
+    expect(result.Jahr).toBe(2025);
   });
 
   it('bzToBackend → bzFromBackend Roundtrip', () => {
@@ -245,7 +258,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
     expect(dayjs(result.Buchungstag).format('YYYY-MM-DD')).toBe('2026-04-01');
   });
 
-  it('ewtToBackend setzt leere Strings auf undefined', () => {
+  it('ewtToBackend sendet leere Strings explizit mit (damit Updates gelöschte Zeiten überschreiben)', () => {
     const frontendEWT: IDatenEWT = {
       tagE: '2024-04-10',
       buchungstagE: '2024-04-10',
@@ -262,15 +275,15 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
       berechnen: true,
     };
     const result = ewtToBackend(frontendEWT, 4, 2024);
-    expect(result.Einsatzort).toBeUndefined();
-    expect(result.abWE).toBeUndefined();
-    expect(result.ab1E).toBeUndefined();
-    expect(result.anEE).toBeUndefined();
-    expect(result.beginE).toBeUndefined();
-    expect(result.endeE).toBeUndefined();
-    expect(result.abEE).toBeUndefined();
-    expect(result.an1E).toBeUndefined();
-    expect(result.anWE).toBeUndefined();
+    expect(result.Einsatzort).toBe('');
+    expect(result.abWE).toBe('');
+    expect(result.ab1E).toBe('');
+    expect(result.anEE).toBe('');
+    expect(result.beginE).toBe('');
+    expect(result.endeE).toBe('');
+    expect(result.abEE).toBe('');
+    expect(result.an1E).toBe('');
+    expect(result.anWE).toBe('');
   });
 });
 
@@ -340,7 +353,25 @@ describe('fieldMapper – Nebengeld', () => {
     expect(dayjs(result.Tag).year()).toBe(2024);
   });
 
-  it('nebengeldToBackend setzt leere Auftragsnummer auf undefined', () => {
+  it('nebengeldFromBackend mit EWT null liefert ewtRef undefined', () => {
+    const withNullEwt = { ...backendN, EWT: null };
+    const result = nebengeldFromBackend(withNullEwt);
+    expect(result.ewtRef).toBeUndefined();
+  });
+
+  it('nebengeldToBackend sendet gesetzte ewtRef als EWT', () => {
+    const frontendN: IDatenN = {
+      tagN: '15.03.2024',
+      beginN: '20:00',
+      endeN: '04:00',
+      auftragN: '',
+      ewtRef: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+    };
+    const result = nebengeldToBackend(frontendN, 3, 2024);
+    expect(result.EWT).toBe('aaaaaaaaaaaaaaaaaaaaaaaa');
+  });
+
+  it('nebengeldToBackend sendet fehlende ewtRef als EWT null (Unlink-Signal für den Server)', () => {
     const frontendN: IDatenN = {
       tagN: '15.03.2024',
       beginN: '20:00',
@@ -348,7 +379,18 @@ describe('fieldMapper – Nebengeld', () => {
       auftragN: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
-    expect(result.Auftragsnummer).toBeUndefined();
+    expect(result.EWT).toBeNull();
+  });
+
+  it('nebengeldToBackend sendet leere Auftragsnummer explizit mit (damit Updates sie serverseitig leeren)', () => {
+    const frontendN: IDatenN = {
+      tagN: '15.03.2024',
+      beginN: '20:00',
+      endeN: '04:00',
+      auftragN: '',
+    };
+    const result = nebengeldToBackend(frontendN, 3, 2024);
+    expect(result.Auftragsnummer).toBe('');
   });
 
   it('nebengeldToBackend ohne Zulagen erzeugt ein leeres Zulagen-Array', () => {
@@ -398,7 +440,7 @@ describe('fieldMapper – UserProfile', () => {
       eN: '06:00',
       bBN: '19:30',
       rZ: '00:15',
-    },
+    } as unknown as BackendUserProfile['Arbeitszeit'],
     VorgabenB: [{ key: 'standard', value: { Name: 'Standard' } as Record<string, unknown> }],
   };
 
@@ -409,11 +451,33 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.pers.PNummer).toBe('12345');
     expect(result.pers.TB).toBe('Tarifkraft');
     expect(result.pers.kmArbeitsort).toBe(15);
-    expect(result.aZ.bT).toBe('07:00');
-    expect(result.aZ.eT).toBe('15:30');
-    expect(result.aZ.rZ).toBe('00:15');
+    // Legacy aZ migrated to new format
+    expect(result.aZ.frueh.default.beginn).toBe('07:00');
+    expect(result.aZ.frueh.default.ende).toBe('15:30');
+    expect(result.aZ.frueh.overrides?.[5]?.ende).toBe('15:00'); // eTF !== eT
+    expect(result.aZ.fahrzeit).toBe('00:15');
+    expect(result.aZ.nacht?.default.beginn).toBe('22:00');
+    expect(result.aZ.sonder?.beginn).toBe('14:00');
     expect(result.fZ).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
     expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
+  });
+
+  it('userProfileFromBackend migriert VorgabenB-Eintrag mit nacht=true ohne schichten', () => {
+    const withNachtFlag: BackendUserProfile = {
+      ...backendProfile,
+      VorgabenB: [{ key: 'nachtwoche', value: { Name: 'Nachtwoche', nacht: true } as Record<string, unknown> }],
+    };
+    const result = userProfileFromBackend(withNachtFlag);
+    expect(result.vorgabenB.nachtwoche).toMatchObject({ schichten: ['nacht'] });
+  });
+
+  it('userProfileFromBackend lässt VorgabenB-Eintrag ohne nacht=true unverändert', () => {
+    const withoutNachtFlag: BackendUserProfile = {
+      ...backendProfile,
+      VorgabenB: [{ key: 'tagwoche', value: { Name: 'Tagwoche' } as Record<string, unknown> }],
+    };
+    const result = userProfileFromBackend(withoutNachtFlag);
+    expect(result.vorgabenB.tagwoche).not.toHaveProperty('schichten');
   });
 
   it('userProfileFromBackend mit fehlenden optionalen Feldern', () => {
@@ -422,7 +486,7 @@ describe('fieldMapper – UserProfile', () => {
       Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '999' } as BackendUserProfile['Pers'],
       Einstellungen: {} as BackendUserProfile['Einstellungen'],
       Fahrzeit: [],
-      Arbeitszeit: {} as BackendUserProfile['Arbeitszeit'],
+      Arbeitszeit: undefined,
       VorgabenB: [],
     };
     const result = userProfileFromBackend(minimal);
@@ -431,8 +495,9 @@ describe('fieldMapper – UserProfile', () => {
     expect(result.pers.kmArbeitsort).toBe(0);
     expect(result.pers.kmnBhf).toBe(0);
     expect(result.pers.TB).toBe('Tarifkraft');
-    expect(result.aZ.bT).toBe('');
-    expect(result.aZ.eT).toBe('');
+    // Empty legacy → migrated to new format with empty strings
+    expect(result.aZ.frueh.default.beginn).toBe('');
+    expect(result.aZ.frueh.default.ende).toBe('');
     expect(result.fZ).toEqual([]);
     expect(result.vorgabenB).toEqual({});
   });
@@ -440,14 +505,28 @@ describe('fieldMapper – UserProfile', () => {
   it('userProfileToBackend konvertiert vorgabenB Map zu Array', () => {
     const frontendProfile: IVorgabenU = {
       pers: backendProfile.Pers as IVorgabenU['pers'],
-      aZ: backendProfile.Arbeitszeit as IVorgabenU['aZ'],
+      aZ: {
+        frueh: {
+          aktiv: true,
+          default: { beginn: '07:00', ende: '15:30', pause: 30 },
+          overrides: { 5: { ende: '15:00', pause: 0 } },
+        },
+        spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+        nacht: { aktiv: false, default: { beginn: '22:00', ende: '06:00', pause: 45 } },
+        sonder: { aktiv: false, beginn: '14:00', ende: '22:00', pause: 20 },
+        fahrzeit: '00:15',
+      },
       Einstellungen: {} as IVorgabenU['Einstellungen'],
       fZ: backendProfile.Fahrzeit,
       vorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['vorgabenB'][string] },
     };
     const result = userProfileToBackend(frontendProfile);
     expect(result.Pers).toEqual(frontendProfile.pers);
-    expect(result.Arbeitszeit).toEqual(frontendProfile.aZ);
+    // aZ is passed through directly to backend
+    expect(result.Arbeitszeit?.frueh.default.beginn).toBe('07:00');
+    expect(result.Arbeitszeit?.frueh.default.ende).toBe('15:30');
+    expect(result.Arbeitszeit?.frueh.overrides?.[5]?.ende).toBe('15:00');
+    expect(result.Arbeitszeit?.fahrzeit).toBe('00:15');
     expect(result.Fahrzeit).toEqual(frontendProfile.fZ);
     expect(result.VorgabenB).toEqual([{ key: 'standard', value: { Name: 'Standard' } }]);
   });
@@ -457,7 +536,10 @@ describe('fieldMapper – UserProfile', () => {
     const backend = userProfileToBackend(original);
     expect(backend.Pers.Vorname).toBe(original.pers.Vorname);
     expect(backend.Pers.Nachname).toBe(original.pers.Nachname);
-    expect(backend.Arbeitszeit).toEqual(original.aZ);
+    // Backend Arbeitszeit is new format, verify key fields round-tripped
+    expect(backend.Arbeitszeit?.frueh.default.beginn).toBe(original.aZ.frueh.default.beginn);
+    expect(backend.Arbeitszeit?.frueh.default.ende).toBe(original.aZ.frueh.default.ende);
+    expect(backend.Arbeitszeit?.fahrzeit).toBe(original.aZ.fahrzeit);
   });
 });
 
@@ -495,9 +577,16 @@ describe('fieldMapper – Vorgaben', () => {
 
 describe('fieldMapper – vorgabenUFromServer', () => {
   it('konvertiert Array-Format zu Map-Format', () => {
+    const newAz: IVorgabenUServer['aZ'] = {
+      frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
+      spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
+      nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
+      sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
+      fahrzeit: '00:15',
+    };
     const server: IVorgabenUServer = {
       pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['pers'],
-      aZ: { bT: '07:00' } as IVorgabenUServer['aZ'],
+      aZ: newAz,
       Einstellungen: {} as IVorgabenUServer['Einstellungen'],
       fZ: [],
       vorgabenB: [
@@ -511,7 +600,35 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       woche2: { Name: 'Woche 2' },
     });
     expect(result.pers).toBe(server.pers);
-    expect(result.aZ).toBe(server.aZ);
+    expect(result.aZ).toEqual(server.aZ);
     expect(result.fZ).toBe(server.fZ);
+  });
+});
+
+// ─── flatMapDocs ──────────────────────────────────────────
+
+describe('fieldMapper – flatMapDocs', () => {
+  it('mappt Dokumente und ermittelt das späteste updatedAt', () => {
+    const docs = [
+      { id: 1, updatedAt: '2024-01-01T00:00:00.000Z' },
+      { id: 2, updatedAt: '2024-03-01T00:00:00.000Z' },
+      { id: 3, updatedAt: '2024-02-01T00:00:00.000Z' },
+    ];
+    const result = flatMapDocs(docs, doc => ({ mappedId: doc.id }));
+    expect(result.data).toEqual([{ mappedId: 1 }, { mappedId: 2 }, { mappedId: 3 }]);
+    expect(result.maxUpdatedAt).toBe('2024-03-01T00:00:00.000Z');
+  });
+
+  it('liefert maxUpdatedAt=null, wenn kein Dokument updatedAt hat', () => {
+    const docs: { id: number; updatedAt?: string }[] = [{ id: 1 }, { id: 2 }];
+    const result = flatMapDocs(docs, doc => ({ mappedId: doc.id }));
+    expect(result.data).toEqual([{ mappedId: 1 }, { mappedId: 2 }]);
+    expect(result.maxUpdatedAt).toBeNull();
+  });
+
+  it('liefert leeres data-Array und maxUpdatedAt=null bei leerer Eingabe', () => {
+    const result = flatMapDocs([] as { updatedAt?: string }[], doc => doc);
+    expect(result.data).toEqual([]);
+    expect(result.maxUpdatedAt).toBeNull();
   });
 });

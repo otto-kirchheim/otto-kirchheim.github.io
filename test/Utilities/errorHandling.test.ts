@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { escapeHtml, markErrorRows, showErrorDialog } from '@/infrastructure/autoSave/errorHandling';
-import type { CustomTable, CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import {
+  escapeHtml,
+  markErrorRows,
+  markFetchErrorRows,
+  showErrorDialog,
+} from '@/infrastructure/autoSave/errorHandling';
+import type { CustomTable, CustomTableTypes, TableChanges } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import type { RowErrorMatch } from '@/infrastructure/autoSave/savePipeline';
 
@@ -113,6 +118,70 @@ describe('errorHandling', () => {
       expect(modal?.querySelector('[data-error-count]')?.textContent).toContain('2 Fehler');
 
       modal?.remove();
+    });
+
+    it('blurs the focused element and disposes the modal on dismiss', () => {
+      showErrorDialog('BZ', [{ operation: 'create', message: 'Fehler', clientRequestId: 'crid-1' }]);
+      const modal = document.querySelector<HTMLElement>('[data-error-dialog]')!;
+
+      const focusable = document.createElement('button');
+      modal.appendChild(focusable);
+      focusable.focus();
+      const blurSpy = vi.spyOn(focusable, 'blur');
+
+      modal.dispatchEvent(new Event('hide.bs.modal'));
+      expect(blurSpy).toHaveBeenCalledTimes(1);
+
+      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      expect(disposeMock).toHaveBeenCalledTimes(1);
+      expect(document.querySelector('[data-error-dialog]')).toBeNull();
+    });
+  });
+
+  describe('markFetchErrorRows', () => {
+    function makeRow(overrides: Record<string, unknown>): Record<string, unknown> {
+      return { _state: 'unchanged', _errorState: undefined, _errorMessage: undefined, _id: undefined, ...overrides };
+    }
+
+    it('marks new, modified and deleted rows affected by the failed request', () => {
+      const newRow = makeRow({ _state: 'new' });
+      const modifiedRow = makeRow({ _state: 'modified', _id: 'mod-1' });
+      const deletedRow = makeRow({ _state: 'deleted', _id: 'del-1' });
+      const untouchedModified = makeRow({ _state: 'modified', _id: 'mod-untouched' });
+      const drawRows = vi.fn();
+      const table = {
+        rows: { array: [newRow, modifiedRow, deletedRow, untouchedModified] },
+        drawRows,
+      } as unknown as CustomTable<CustomTableTypes>;
+      const changes: TableChanges<CustomTableTypes> = {
+        create: [{} as CustomTableTypes],
+        update: [{ _id: 'mod-1' } as unknown as CustomTableTypes],
+        delete: ['del-1'],
+      };
+
+      markFetchErrorRows(table, changes, 'Netzwerkfehler');
+
+      expect(newRow._state).toBe('error');
+      expect(newRow._errorState).toBe('new');
+      expect(modifiedRow._state).toBe('error');
+      expect(modifiedRow._errorState).toBe('modified');
+      expect(deletedRow._state).toBe('error');
+      expect(deletedRow._errorState).toBe('deleted');
+      expect(untouchedModified._state).toBe('modified');
+      expect(drawRows).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not redraw when no row matches the failed request', () => {
+      const drawRows = vi.fn();
+      const table = {
+        rows: { array: [makeRow({ _state: 'unchanged' })] },
+        drawRows,
+      } as unknown as CustomTable<CustomTableTypes>;
+      const changes: TableChanges<CustomTableTypes> = { create: [], update: [], delete: [] };
+
+      markFetchErrorRows(table, changes, 'Netzwerkfehler');
+
+      expect(drawRows).not.toHaveBeenCalled();
     });
   });
 });

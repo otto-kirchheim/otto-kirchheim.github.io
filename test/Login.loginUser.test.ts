@@ -111,4 +111,15 @@ describe('loginUser', () => {
     expect(clearLoadingMock).toHaveBeenCalledWith('btnLogin', false);
     expect(userLoginSuccessMock).not.toHaveBeenCalled();
   });
+
+  it('zeigt den String-Wert des Fehlers wenn kein Error-Objekt geworfen wird', async () => {
+    const modal = setupDom();
+    loginMock.mockRejectedValue('kaputt-string');
+
+    await loginUser(modal as never);
+
+    expect(document.querySelector<HTMLDivElement>('#errorMessage')?.innerHTML).toBe('kaputt-string');
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnLogin', false);
+    expect(userLoginSuccessMock).not.toHaveBeenCalled();
+  });
 });

@@ -15,26 +15,12 @@ type TModalBodyInputElementOption = {
   dataZulageInputCode?: string;
   pattern?: string;
   autoComplete?:
-    | 'on'
-    | 'off'
-    | 'username'
-    | 'username webauthn'
-    | 'current-password'
-    | 'new-password'
-    | 'email'
-    | 'tel';
+    'on' | 'off' | 'username' | 'username webauthn' | 'current-password' | 'new-password' | 'email' | 'tel';
   popover?: {
     content: string;
     title?: string;
     trigger?:
-      | 'click'
-      | 'hover'
-      | 'focus'
-      | 'manual'
-      | 'click hover'
-      | 'click focus'
-      | 'hover focus'
-      | 'click hover focus';
+      'click' | 'hover' | 'focus' | 'manual' | 'click hover' | 'click focus' | 'hover focus' | 'click hover focus';
     placement?: 'top' | 'right' | 'left' | 'bottom';
     html?: boolean;
   };

@@ -1,4 +1,112 @@
+# Aktueller Plan: Bereitschafts-Modal um aktive Overrides und Sonder-Block erweitert - 2026-06-21
+
+### Plan
+
+- [x] Nur aktive Wochenschicht-Overrides anzeigen und Sonderschicht als eigenen Arbeitszeit-Block einbinden
+- [x] Bereitschaftsberechnung und Vorbelegung auf den Sonder-Zeitraum umstellen
+- [x] Betroffene Bereitschafts-Tests, Typecheck, Lint und Format der geänderten Dateien gegenprüfen
+
+### Verifikationskriterien
+
+- Das Bereitschafts-Modal bietet nur Overrides fuer aktive Wochenschichten und einen separaten Sonder-Arbeitszeit-Block
+- `calculateBereitschaftsZeiten`, `applyBereitschaftsVorgabe`, `updateBereitschaftsDatum` und `submitBereitschaftsZeiten` behandeln Sonder nur innerhalb des gewaehlten Bereichs
+- Die betroffenen Bereitschafts-Tests und der Frontend-Typecheck laufen sauber; formatierte Bereitschaftsdateien bestehen den Prettier-Check
+
+### Review
+
+- Ergebnis: Die Sonderschicht ist jetzt als zeitlich begrenzter Sonderfall umgesetzt. Das Modal zeigt nur aktive Wochenschicht-Overrides und bietet fuer Sonder einen eigenen Arbeitszeit-Block; die Berechnung nutzt den Sonderpfad nur innerhalb dieses Bereichs.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Bereitschaft.calculateBereitschaftsZeiten.overrides.test.ts test/Bereitschaft.resolveBereitschaftsGrenze.test.ts test/Bereitschaft.utils.extra.test.ts`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx prettier --check src/ts/features/Bereitschaft/components/BereitschaftOverridePanel.tsx src/ts/features/Bereitschaft/components/createAddModalBereitschaftsZeit.tsx src/ts/features/Bereitschaft/utils/applyBereitschaftsVorgabe.ts src/ts/features/Bereitschaft/utils/calculateBereitschaftsZeiten.ts src/ts/features/Bereitschaft/utils/resolveBereitschaftsGrenze.ts src/ts/features/Bereitschaft/utils/submitBereitschaftsZeiten.ts src/ts/features/Bereitschaft/utils/updateBereitschaftsDatum.ts test/Bereitschaft.calculateBereitschaftsZeiten.overrides.test.ts test/Bereitschaft.resolveBereitschaftsGrenze.test.ts test/Bereitschaft.utils.extra.test.ts`.
+- Hinweis: Der komplette `bun run format:check` meldet weiterhin vorbestehende Abweichungen in anderen, unberuhrten Frontend-Dateien; die von dieser Aufgabe beruhrten Bereitschafts-Dateien sind sauber formatiert.
+
 # Todo
+
+## Aktueller Plan: Arbeitszeit-Status wird im localStorage nicht auf inaktiv gespeichert - 2026-06-21
+
+### Plan
+
+- [x] Fehlerpfad zwischen Arbeitszeit-Panel, Panel-State und localStorage-Persistenz eingrenzen
+- [x] Toggle-Update im Arbeitszeit-Panel auf den tatsaechlich gewaehlten Status korrigieren
+- [x] Frontend-Checks fuer die betroffene Aenderung ausfuehren und Ergebnis dokumentieren
+
+### Verifikationskriterien
+
+- Das Umschalten von aktiv auf inaktiv bleibt im Panel-State erhalten und wird via `Storage.set('VorgabenU', ...)` unveraendert in den localStorage geschrieben
+- `bunx tsc --noEmit -p tsconfig.json`, `bun run lint`, `bun run format:check` laufen fuer das Frontend ohne neue Fehler
+
+### Review
+
+- Ergebnis: Die Parent-Update-Handler im `ArbeitszeiteingabePanel` uebernehmen fuer `frueh`, `spaet`, `nacht` und `sonder` jetzt den vom Child gelieferten Zustand unveraendert. Damit wird `aktiv: false` beim Umschalten nicht mehr direkt wieder invertiert und anschliessend falsch nach `VorgabenU.aZ` in den localStorage geschrieben.
+- Ergebnis: Der vom User gelieferte Payload/Response bestaetigt, dass `spaet.aktiv = false` korrekt zum Server gesendet und korrekt vom Server zurueckgegeben wird. Die verbleibende Ursache lag damit im Frontend-State-Zugriff: `saveEinstellungen()` las einen globalen Panel-State, der bislang nur asynchron im `useEffect` nachgezogen wurde.
+- Fix: Der Arbeitszeit-Panel-State wurde in die neue Datei `components/arbeitszeitPanelState.ts` entkoppelt. `ArbeitszeiteingabePanel` synchronisiert diesen Store jetzt sofort beim lokalen Update, und `saveEinstellungen()` liest ihn direkt von dort statt ueber das Komponenten-Barrel. Damit wird ein frischer Toggle auch bei schnellem Speichern konsistent in `VorgabenU` und spaeter via Serverresponse im localStorage gehalten.
+- Begleitend: Ein Regressionstest in `test/Einstellungen/saveEinstellungen.test.ts` deckt den Fall „gerade auf inaktiv umgeschaltet und sofort gespeichert“ ab.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run lint`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Einstellungen/saveEinstellungen.test.ts`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test` → **974 pass / 0 fail**; zusaetzlich `bunx prettier --check` fuer die geaenderten Dateien inkl. `arbeitszeitPanelState.ts`.
+
+## Aktueller Plan: Unterbrechungspunkt Admin-Tab Profile-Template Arbeitszeit - 2026-06-08
+
+### Bereits umgesetzt (Zwischenstand)
+
+- [x] `ArbeitszeiteingabePanel` um optionales `onChange` erweitert, damit es auch im Admin-Editor als Eingabekomponente nutzbar ist
+- [x] Typmodell im Admin-Template-Editor vorbereitet: `TemplateContentDraft.Arbeitszeit` von legacy Record auf `IVorgabenUaZ | null` umgestellt
+- [x] `AdminProfileTemplateContentEditor` von legacy Arbeitszeit-Feldliste auf `ArbeitszeiteingabePanel` umgestellt (inkl. Aktivieren-Button)
+
+### Offene TODOs (beim Fortsetzen)
+
+- [x] `AdminProfileTemplatesManager` auf neues Arbeitszeitmodell fertig migrieren:
+  - `normalizeTemplateContent` fuer `Arbeitszeit` mit `isLegacyArbeitszeit`/`migrateArbeitszeit` auf `IVorgabenUaZ | null`
+  - `serializeDraft` fuer neues Arbeitszeitobjekt stabilisieren
+  - `buildTemplatePayload` so anpassen, dass `Arbeitszeit` als neues Objekt gespeichert wird und `null` den Block entfernt
+  - Handler `updateArbeitszeitField` durch `updateArbeitszeit`/`enableArbeitszeit` ersetzen
+  - Prop-Wiring in `AdminProfileTemplateContentEditor` an neue Handler anpassen
+- [x] `AdminProfileTemplateContentEditor` auf verbleibende Legacy-Referenzen pruefen (insb. alte Arbeitszeit-Propnamen) und bereinigen
+- [x] Frontend-Typecheck ausfuehren: `bunx tsc --noEmit -p tsconfig.json`
+- [x] Relevanten Testlauf ausfuehren: `bun run test -- test/Admin.profileTemplates.shared.test.ts` (und ggf. weitere betroffene Admin-Tests)
+- [x] `frontend/CHANGELOG.md` um den Admin-Tab/Profile-Template-Arbeitszeitumbau ergaenzen
+
+### Verifikationskriterien (Fortsetzung)
+
+- Admin-Tab -> Profile-Template -> Arbeitszeit zeigt denselben Schichteditor wie Einstellungen (Frueh/Spaet/Nacht/Sonder inkl. Tages-Overrides)
+- Profile-Template speichert/lädt Arbeitszeit im neuen `IVorgabenUaZ`-Format (Legacy-Input wird weiterhin migriert)
+- Frontend-TypeScript und relevante Tests laufen ohne neue Fehler
+
+### Arbeitsnotizen
+
+- Zuletzt bearbeitete Dateien:
+  - `frontend/src/ts/features/Einstellungen/components/ArbeitszeiteingabePanel.tsx`
+  - `frontend/src/ts/features/Admin/components/profileTemplates.shared.ts`
+  - `frontend/src/ts/features/Admin/components/AdminProfileTemplateContentEditor.tsx`
+
+## Review (Unterbrechungspunkt Admin-Tab Profile-Template Arbeitszeit)
+
+- Ergebnis: `AdminProfileTemplatesManager` nutzt jetzt das neue Arbeitszeitmodell (`IVorgabenUaZ | null`) durchgaengig. Legacy-Arbeitszeit wird beim Laden migriert (`isLegacyArbeitszeit`/`migrateArbeitszeit`), die Change-Detection serialisiert Arbeitszeitobjekte stabil, und der Save-Payload schreibt `template.Arbeitszeit` als neues Objekt bzw. entfernt es bei `null`.
+- Ergebnis: Das Prop-Wiring ist auf `onUpdateArbeitszeit` und `onEnableArbeitszeit` umgestellt; alte `onUpdateArbeitszeitField`-Pfade sind entfernt.
+- Ergebnis: Der veraltete Shared-Test wurde auf den aktuellen Export-Stand angepasst (kein `ARBEITSZEIT_FIELDS`-Import mehr).
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Admin.profileTemplates.shared.test.ts test/Admin/profileTemplates.shared.test.ts`.
+
+## Aktueller Plan: Zyklus 10 Restpunkte (EWT/Bereitschaft/Admin)
+
+- [x] Bereitschafts-Berechnung fuer ueberlappende Frueh-/Spaetschicht robust machen (Merge statt negativer Gap)
+- [x] EWT-Schichtlogik vervollstaendigen: explizite Spaetschicht-Option und konsistente Legacy-Normalisierung (SP/BN)
+- [x] EWT-Download normalisieren: Schicht `SP` vor Export auf `T` abbilden
+- [x] Modal "Neue Bereitschaft eingeben" um aZ-basierte Schichtinfos mit Tages-Overrides erweitern
+- [x] Admin/ProfileTemplate (AdminJS) auf neues Arbeitszeit-/VorgabenB-Modell aktualisieren
+- [x] Relevante Frontend-/Backend-Tests ausfuehren und Ergebnisse dokumentieren
+
+## Verifikationskriterien (Zyklus 10 Restpunkte)
+
+- Bei Frueh+Spaet-Ueberlappungen entstehen keine negativen Intervalle und keine falschen Bereitschafts-Luecken.
+- EWT erlaubt explizit Spaet und berechnet dafuer korrekte Zeiten; Legacy-Keys bleiben kompatibel.
+- Download-Payload fuer EWT enthaelt keine `SP`-Schichtwerte mehr.
+- Bereitschafts-Modal zeigt fuer das gewaehte Datum die effektiven Schichtzeiten inkl. Overrides an.
+- AdminJS zeigt/editiert Arbeitszeit ohne Legacy-Felder (`bT/eT/...`) und VorgabenB inkl. Schichtauswahl.
+
+## Review (Zyklus 10 Restpunkte)
+
+- Ergebnis: Ueberlappende Frueh-/Spaetschichten werden in `calculateBereitschaftsZeiten` pro Tag vorab zusammengefuehrt; dadurch entstehen keine negativen Gaps mehr.
+- Ergebnis: EWT hat jetzt eine explizite `SP`-Option im Add-/Edit-Modal. Die Berechnung nutzt fuer `SP` bevorzugt `aZ.spaet` mit Fallback auf Frueh.
+- Ergebnis: EWT-Download normalisiert Schichtcodes konsistent (`SP -> T`, `BN -> N`).
+- Ergebnis: Das Bereitschafts-Add-Modal zeigt fuer das aktuell gewaehlte Datum die effektiven Schichtzeiten aus `VorgabenU.aZ` inkl. Overrides an.
+- Ergebnis: Admin/ProfileTemplate wurden auf das neue Arbeitszeit-/VorgabenB-Modell angehoben (ohne Legacy-Arbeitszeitfelder in den Admin-Properties).
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/backend && bunx tsc --noEmit -p tsconfig.json`; `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/EWT.test.ts test/Bereitschaft.submitBereitschaftsZeiten.test.ts`; `cd /home/jan/Dokumente/DB-Nebengeld/backend && PASSKEY_ORIGIN='http://localhost:8080' PASSKEY_RP_ID='localhost' JWT_SECRET='test-secret-1234567890123456789012345678901234567890' REFRESH_SECRET='test-refresh-secret-123456789012345678901234567890' MONGO_URI='mongodb://localhost:27017/test' bun test tests/admin/adminjs.compatibility.test.ts`.
 
 ## Aktueller Plan: AutoSave-Race bei nachlaufenden neuen Datensaetzen
 

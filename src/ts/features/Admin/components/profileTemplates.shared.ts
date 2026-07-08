@@ -1,4 +1,5 @@
 import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
+import type { BereitschaftSchichtTyp, IVorgabenUaZ } from '@/types';
 
 export type FahrzeitRow = { key: string; text: string; value: string };
 
@@ -9,6 +10,7 @@ export type VorgabenBRow = {
     Name: string;
     beginnB: { tag: number; zeit: string };
     endeB: { tag: number; zeit: string; Nwoche: boolean };
+    schichten: BereitschaftSchichtTyp[];
     nacht: boolean;
     beginnN: { tag: number; zeit: string; Nwoche: boolean };
     endeN: { tag: number; zeit: string; Nwoche: boolean };
@@ -18,7 +20,7 @@ export type VorgabenBRow = {
 
 export type TemplateContentDraft = {
   Pers: Record<string, string>;
-  Arbeitszeit: Record<string, string>;
+  Arbeitszeit: IVorgabenUaZ | null;
   Fahrzeit: FahrzeitRow[];
   VorgabenB: VorgabenBRow[];
   Einstellungen: {
@@ -58,18 +60,6 @@ export const PERS_FIELDS: TemplateField[] = [
   { key: 'nBhf', label: 'Nächster Bahnhof' },
   { key: 'kmnBhf', label: 'Entfernung Bahnhof (km)', type: 'number' },
   { key: 'TB', label: 'Tarif / Beamter' },
-];
-
-export const ARBEITSZEIT_FIELDS: Array<{ key: string; label: string }> = [
-  { key: 'bT', label: 'Beginn Tag' },
-  { key: 'eT', label: 'Ende Tag Mo-Do' },
-  { key: 'eTF', label: 'Ende Tag Fr' },
-  { key: 'bS', label: 'Beginn Sonderschicht' },
-  { key: 'eS', label: 'Ende Sonderschicht' },
-  { key: 'bN', label: 'Beginn Nacht' },
-  { key: 'eN', label: 'Ende Nacht' },
-  { key: 'bBN', label: 'Beginn Nacht Bereitschaft' },
-  { key: 'rZ', label: 'Fahrzeit Wo/Ao' },
 ];
 
 export const TAB_OPTIONS = [

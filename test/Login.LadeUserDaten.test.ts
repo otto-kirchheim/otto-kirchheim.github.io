@@ -21,6 +21,10 @@ const {
   updateTabVisibilityMock,
   loadAllYearDataMock,
   publishEventMock,
+  flushAllMock,
+  isAutoSaveEnabledMock,
+  setAutoSaveEnabledMock,
+  cancelAllPendingMock,
 } = viCompat.hoisted(() => ({
   overwriteUserDatenMock: vi.fn(),
   aktualisiereBerechnungMock: vi.fn(),
@@ -38,6 +42,10 @@ const {
   updateTabVisibilityMock: vi.fn(),
   loadAllYearDataMock: vi.fn(),
   publishEventMock: vi.fn(),
+  flushAllMock: vi.fn().mockResolvedValue(undefined),
+  isAutoSaveEnabledMock: vi.fn().mockReturnValue(true),
+  setAutoSaveEnabledMock: vi.fn(),
+  cancelAllPendingMock: vi.fn(),
 }));
 
 vi.mock('@/core/orchestration/auth/utils', () => ({
@@ -90,6 +98,13 @@ vi.mock('@/infrastructure/api/apiService', () => ({
 vi.mock('@/core', () => ({
   publishEvent: publishEventMock,
   unwrapEnvelope: vi.fn(),
+}));
+
+vi.mock('@/infrastructure/autoSave/autoSave', () => ({
+  flushAll: flushAllMock,
+  isAutoSaveEnabled: isAutoSaveEnabledMock,
+  setAutoSaveEnabled: setAutoSaveEnabledMock,
+  cancelAllPending: cancelAllPendingMock,
 }));
 
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
@@ -212,6 +227,9 @@ describe('loadUserDaten', () => {
     expect(generateTableBerechnungMock).toHaveBeenCalledWith({ calc: true }, loaded.datenGeld);
     expect(generateEingabeMaskeEinstellungenMock).toHaveBeenCalledWith(vorgabenU);
 
+    // Bug 3: Pending AutoSave-Timer müssen vor dem Laden abgebrochen werden.
+    expect(cancelAllPendingMock).toHaveBeenCalled();
+
     expect(loadBZ).toHaveBeenCalledWith([{ bz: 1 }]);
     expect(loadBE).toHaveBeenCalledWith([{ be: 1 }]);
     expect(loadE).toHaveBeenCalledWith([{ ewt: 1 }]);
@@ -318,8 +336,8 @@ describe('loadUserDaten', () => {
       },
       datenGeld: { a: 4 },
       BZ: [
-        { beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
-        { beginB: '2026-04-01T08:00:00.000Z', bz: 'server-2' },
+        { _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
+        { _id: 'bz-2', beginB: '2026-04-01T08:00:00.000Z', bz: 'server-2' },
       ],
       BE: { 3: [{ be: 'server' }] },
       EWT: { 3: [{ ewt: 'server' }] },
@@ -339,7 +357,7 @@ describe('loadUserDaten', () => {
     );
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'VorgabenU') return loaded.vorgabenU;
-      if (key === 'dataBZ') return [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }];
+      if (key === 'dataBZ') return [{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }];
       if (key === 'dataBE') return loaded.BE;
       if (key === 'dataE') return loaded.EWT;
       if (key === 'dataN') return loaded.N;
@@ -363,7 +381,7 @@ describe('loadUserDaten', () => {
       }),
     );
     // Bei Längenmismatch sollte die Tabelle mit lokalen Daten geladen werden
-    expect(loadBZ).toHaveBeenCalledWith([{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }]);
+    expect(loadBZ).toHaveBeenCalledWith([{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }]);
 
     const infoCall = createSnackBarMock.mock.calls.find(([config]) => config?.status === 'info');
     expect(infoCall).toBeDefined();
@@ -393,8 +411,8 @@ describe('loadUserDaten', () => {
       BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: [{ tagBE: '01.03.2026', be: 'server' }],
       EWT: [
-        { tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
-        { tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
+        { _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
+        { _id: 'e-2', tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
       ],
       N: [{ tagN: '01.03.2026', n: 'server' }],
       timestamps: {
@@ -414,7 +432,7 @@ describe('loadUserDaten', () => {
       if (key === 'VorgabenU') return loaded.vorgabenU;
       if (key === 'dataBZ') return loaded.BZ;
       if (key === 'dataBE') return loaded.BE;
-      if (key === 'dataE') return [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'local-1' }];
+      if (key === 'dataE') return [{ _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'local-1' }];
       if (key === 'dataN') return loaded.N;
       return undefined;
     });
@@ -693,7 +711,7 @@ describe('loadUserDaten', () => {
     const loaded = {
       vorgabenU: { pers: { Vorname: 'S' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
-      BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
+      BZ: [{ _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: { 3: [] },
       EWT: { 3: [] },
       N: { 3: [] },
@@ -713,8 +731,8 @@ describe('loadUserDaten', () => {
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'dataBZ')
         return [
-          { beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' },
-          { beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' },
+          { _id: 'bz-1', beginB: '2026-03-01T08:00:00.000Z', bz: 'local-1' },
+          { _id: 'bz-2', beginB: '2026-03-10T08:00:00.000Z', bz: 'local-2' },
         ];
       if (key === 'VorgabenU') return loaded.vorgabenU;
       return [];
@@ -731,9 +749,9 @@ describe('loadUserDaten', () => {
     const keepLocalAction = actions?.find(a => a.text.includes('Lokale Daten behalten'));
     expect(keepLocalAction).toBeDefined();
 
-    keepLocalAction!.function();
+    await keepLocalAction!.function();
 
-    expect(publishEventMock).toHaveBeenCalledWith('data:changed', expect.objectContaining({ resource: 'BZ' }));
+    expect(flushAllMock).toHaveBeenCalled();
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
@@ -755,6 +773,221 @@ describe('loadUserDaten', () => {
 
     // hideConflictReviewBanner hat render(null, mount) aufgerufen → Banner ist leer
     expect(bannerMount.hasChildNodes()).toBe(false);
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
+  });
+
+  it('verarbeitet Konflikte für BE, EWT und N bei "Lokale Daten behalten"', async () => {
+    createTable('tableBZ', vi.fn());
+    const beInstance = createTable('tableBE', vi.fn());
+    const eInstance = createTable('tableE', vi.fn());
+    const nInstance = createTable('tableN', vi.fn());
+    createTable('tableVE', vi.fn());
+
+    const localBE = [{ _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' }];
+    const serverBE = [
+      { _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' },
+      { _id: 'be-server-extra', tagBE: '20.03.2026', be: 'server-extra' },
+    ];
+
+    const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];
+    const serverEWT = [
+      { _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' },
+      { _id: 'e-server-extra', tagE: '2026-03-20', ewt: 'server-extra' },
+    ];
+
+    const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];
+    const serverN = [
+      { _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' },
+      { _id: 'n-server-extra', tagN: '20.03.2026', n: 'server-extra' },
+    ];
+
+    const loaded = {
+      vorgabenU: { pers: { Vorname: 'Otto' }, vorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
+      datenGeld: {},
+      BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
+      BE: serverBE,
+      EWT: serverEWT,
+      N: serverN,
+      timestamps: {
+        VorgabenU: '2026-03-01T00:00:00.000Z',
+        dataBZ: '2026-03-01T00:00:00.000Z',
+        dataBE: '2026-03-01T00:00:00.000Z',
+        dataE: '2026-03-01T00:00:00.000Z',
+        dataN: '2026-03-01T00:00:00.000Z',
+      },
+    };
+
+    loadAllYearDataMock.mockResolvedValue(loaded);
+    storageCheckMock.mockImplementation((key: string) =>
+      ['VorgabenU', 'dataBZ', 'dataBE', 'dataE', 'dataN'].includes(key),
+    );
+    storageGetMock.mockImplementation((key: string) => {
+      if (key === 'VorgabenU') return loaded.vorgabenU;
+      if (key === 'dataBZ') return loaded.BZ;
+      if (key === 'dataBE') return localBE;
+      if (key === 'dataE') return localEWT;
+      if (key === 'dataN') return localN;
+      return undefined;
+    });
+    storageGetTimestampMock.mockReturnValue(Date.parse('2026-04-01T00:00:00.000Z'));
+    aktualisiereBerechnungMock.mockReturnValue({});
+
+    await loadUserDaten(3, 2026);
+
+    const infoCall = createSnackBarMock.mock.calls.find(([c]) => c?.status === 'info');
+    expect(infoCall).toBeDefined();
+    const actions = infoCall?.[0]?.actions as Array<{ text: string; function: () => void | Promise<void> }>;
+    const keepLocalAction = actions?.find(a => a.text.includes('Lokale Daten behalten'));
+    expect(keepLocalAction).toBeDefined();
+
+    // Mock-Tabellenzustand wie nach rows.load(local*)
+    beInstance.rows.array = localBE.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: beInstance,
+      columns: beInstance.columns,
+    }));
+    eInstance.rows.array = localEWT.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: eInstance,
+      columns: eInstance.columns,
+    }));
+    nInstance.rows.array = localN.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: nInstance,
+      columns: nInstance.columns,
+    }));
+
+    await keepLocalAction!.function();
+
+    expect(flushAllMock).toHaveBeenCalled();
+    expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
+
+    const beDeleted = beInstance.rows.array.find(r => r._id === 'be-server-extra');
+    expect(beDeleted).toBeDefined();
+    expect(beDeleted?._state).toBe('deleted');
+
+    const eDeleted = eInstance.rows.array.find(r => r._id === 'e-server-extra');
+    expect(eDeleted).toBeDefined();
+    expect(eDeleted?._state).toBe('deleted');
+
+    const nDeleted = nInstance.rows.array.find(r => r._id === 'n-server-extra');
+    expect(nDeleted).toBeDefined();
+    expect(nDeleted?._state).toBe('deleted');
+
+    expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
+    expect(buttonDisableMock).toHaveBeenCalledWith(false);
+  });
+
+  it('verarbeitet Konflikte für BE, EWT und N bei "Vergleichen & manuell speichern"', async () => {
+    createTable('tableBZ', vi.fn());
+    const beInstance = createTable('tableBE', vi.fn());
+    const eInstance = createTable('tableE', vi.fn());
+    const nInstance = createTable('tableN', vi.fn());
+    createTable('tableVE', vi.fn());
+
+    const localBE = [{ _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' }];
+    const serverBE = [
+      { _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' },
+      { _id: 'be-server-extra', tagBE: '20.03.2026', be: 'server-extra' },
+    ];
+
+    const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];
+    const serverEWT = [
+      { _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' },
+      { _id: 'e-server-extra', tagE: '2026-03-20', ewt: 'server-extra' },
+    ];
+
+    const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];
+    const serverN = [
+      { _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' },
+      { _id: 'n-server-extra', tagN: '20.03.2026', n: 'server-extra' },
+    ];
+
+    const loaded = {
+      vorgabenU: { pers: { Vorname: 'Otto' }, vorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
+      datenGeld: {},
+      BZ: [{ beginB: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
+      BE: serverBE,
+      EWT: serverEWT,
+      N: serverN,
+      timestamps: {
+        VorgabenU: '2026-03-01T00:00:00.000Z',
+        dataBZ: '2026-03-01T00:00:00.000Z',
+        dataBE: '2026-03-01T00:00:00.000Z',
+        dataE: '2026-03-01T00:00:00.000Z',
+        dataN: '2026-03-01T00:00:00.000Z',
+      },
+    };
+
+    loadAllYearDataMock.mockResolvedValue(loaded);
+    storageCheckMock.mockImplementation((key: string) =>
+      ['VorgabenU', 'dataBZ', 'dataBE', 'dataE', 'dataN'].includes(key),
+    );
+    storageGetMock.mockImplementation((key: string) => {
+      if (key === 'VorgabenU') return loaded.vorgabenU;
+      if (key === 'dataBZ') return loaded.BZ;
+      if (key === 'dataBE') return localBE;
+      if (key === 'dataE') return localEWT;
+      if (key === 'dataN') return localN;
+      return undefined;
+    });
+    storageGetTimestampMock.mockReturnValue(Date.parse('2026-04-01T00:00:00.000Z'));
+    aktualisiereBerechnungMock.mockReturnValue({});
+
+    await loadUserDaten(3, 2026);
+
+    const infoCall = createSnackBarMock.mock.calls.find(([c]) => c?.status === 'info');
+    expect(infoCall).toBeDefined();
+    const actions = infoCall?.[0]?.actions as Array<{ text: string; function: () => void | Promise<void> }>;
+    const compareAction = actions?.find(a => a.text.includes('Vergleichen & manuell speichern'));
+    expect(compareAction).toBeDefined();
+
+    beInstance.rows.array = localBE.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: beInstance,
+      columns: beInstance.columns,
+    }));
+    eInstance.rows.array = localEWT.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: eInstance,
+      columns: eInstance.columns,
+    }));
+    nInstance.rows.array = localN.map(row => ({
+      _id: row._id,
+      _state: 'unchanged',
+      cells: row,
+      CustomTable: nInstance,
+      columns: nInstance.columns,
+    }));
+
+    compareAction!.function();
+
+    expect(setAutoSaveEnabledMock).toHaveBeenCalledWith(false);
+    expect(buttonDisableMock).toHaveBeenCalledWith(true);
+
+    const beDeleted = beInstance.rows.array.find(r => r._id === 'be-server-extra');
+    expect(beDeleted).toBeDefined();
+    expect(beDeleted?._state).toBe('deleted');
+
+    const eDeleted = eInstance.rows.array.find(r => r._id === 'e-server-extra');
+    expect(eDeleted).toBeDefined();
+    expect(eDeleted?._state).toBe('deleted');
+
+    const nDeleted = nInstance.rows.array.find(r => r._id === 'n-server-extra');
+    expect(nDeleted).toBeDefined();
+    expect(nDeleted?._state).toBe('deleted');
+
+    expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
   });
 });

@@ -85,8 +85,18 @@ export default function addEwtTag(
     return;
   }
 
-  // Add the new row to the table and save the data
-  ftE.rows.add(data);
+  // Statt eines neuen Datensatzes einen bereits zum Löschen vorgemerkten Eintrag
+  // für denselben Tag reaktivieren (bleibt als Update statt Delete+Create erhalten).
+  const deletedRowSameTag = ftE.rows.array.find(
+    existingRow => existingRow._state === 'deleted' && existingRow.cells.tagE === data.tagE,
+  );
+
+  if (deletedRowSameTag) {
+    deletedRowSameTag.undoDelete();
+    deletedRowSameTag.val(data);
+  } else {
+    ftE.rows.add(data);
+  }
   persistEwtTableData(ftE);
 
   // Calculate and set the next tag value

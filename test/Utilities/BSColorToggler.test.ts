@@ -102,4 +102,28 @@ describe('BSColorToggler', () => {
     document.body.innerHTML = '';
     expect(() => initializeColorModeToggler()).not.toThrow();
   });
+
+  it('reagiert auf prefers-color-scheme-Änderungen wenn kein explizites Theme gespeichert ist (auto)', () => {
+    initializeColorModeToggler();
+    expect(mediaListeners.length).toBeGreaterThan(0);
+
+    // Kein 'light'/'dark' in Storage gespeichert (Default 'auto') → Listener soll Theme neu setzen
+    mediaListeners.forEach(cb => cb({ matches: true }));
+
+    const theme = document.documentElement.getAttribute('data-bs-theme');
+    expect(['light', 'dark']).toContain(theme ?? '');
+  });
+
+  it('ignoriert prefers-color-scheme-Änderungen wenn bereits explizit "light" gespeichert ist (kein erneutes setTheme)', () => {
+    localStorage.setItem('theme', JSON.stringify('light'));
+    initializeColorModeToggler();
+    expect(mediaListeners.length).toBeGreaterThan(0);
+
+    const themeBeforeChange = document.documentElement.getAttribute('data-bs-theme');
+    mediaListeners.forEach(cb => cb({ matches: true }));
+    const themeAfterChange = document.documentElement.getAttribute('data-bs-theme');
+
+    // Der Change-Listener greift bei explizit gespeichertem 'light'/'dark' nicht erneut ein
+    expect(themeAfterChange).toBe(themeBeforeChange);
+  });
 });

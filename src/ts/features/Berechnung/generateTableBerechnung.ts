@@ -1,195 +1,160 @@
-import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
+import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import calculateBerechnungRows, {
+  formatCurrency,
+  nullParser,
+  type IBerechnungMonatsErgebnis,
+} from './calculateBerechnungRows';
+import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from './berechnungGroupVisibility';
+import calculateZulagenBreakdown, { zulagenEinheitKurz, type IZulagenBreakdown } from './calculateZulagenBreakdown';
+import { mountBerechnungMobileCards } from './components/BerechnungMobileCards';
+import { wendeMonatsFensterAn } from './berechnungMonatsFenster';
 
-type NFields = { F: number; A: number; B: number; C: number; CA: number; CB: number; C9: number; SIPO: number };
-const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
-  (n, g) => n.F * g.Fahrentsch,
-  (n, g) => Math.round(n.A / 60) * g.A,
-  (n, g) => Math.round(n.B / 60) * g.B,
-  (n, g) => Math.round(n.C / 60) * g.C,
-  (n, g) => Math.round(n.CA / 60) * (g.C + g.A),
-  (n, g) => Math.round(n.CB / 60) * (g.C + g.B),
-  (n, g) => n.C9 * g.C * 9,
-  (n, g) => Math.round(n.SIPO / 60) * g.SIPO,
+type ZellInhalt = string | { html: string };
+
+interface IZeilenDefinition {
+  /** null = immer sichtbar (z. B. Summe Gesamt) */
+  gruppe: BerechnungGruppe | null;
+  rowHtml: string;
+  inhalt: (m: IBerechnungMonatsErgebnis) => ZellInhalt;
+}
+
+const currency = (wert: number | null): string => (wert === null ? '' : formatCurrency(wert));
+
+const ZEILEN: IZeilenDefinition[] = [
+  {
+    gruppe: 'bereitschaft',
+    rowHtml: '<tr><th rowspan="2">Bereitschaftszeiten</th></tr>',
+    inhalt: m => (m.bereitschaftMinuten === null ? '' : m.bereitschaftMinuten.toString()),
+  },
+  { gruppe: 'bereitschaft', rowHtml: '<tr></tr>', inhalt: m => m.bereitschaftAnzeige ?? '' },
+  {
+    gruppe: 'bereitschaft',
+    rowHtml: '<tr><th>Bereitschaftszulage</th></tr>',
+    inhalt: m => currency(m.bereitschaftszulage),
+  },
+  { gruppe: 'bereitschaft', rowHtml: '<tr><th>LRE 1</th></tr>', inhalt: m => currency(m.lre1) },
+  { gruppe: 'bereitschaft', rowHtml: '<tr><th>LRE 2</th></tr>', inhalt: m => currency(m.lre2) },
+  { gruppe: 'bereitschaft', rowHtml: '<tr><th>LRE 3</th></tr>', inhalt: m => currency(m.lre3) },
+  { gruppe: 'bereitschaft', rowHtml: '<tr><th>Privat-PKW</th></tr>', inhalt: m => currency(m.privatPkw) },
+  {
+    gruppe: 'bereitschaft',
+    rowHtml: '<tr><th>Summe Bereitschaft</th></tr>',
+    inhalt: m => currency(m.summeBereitschaft),
+  },
+  {
+    gruppe: 'ewt',
+    rowHtml:
+      '<tr><th><table class="table table-borderless m-0"><tbody>' +
+      '<tr><td class="py-0">Anzahl der</td><td class="py-0">>8</td></tr>' +
+      '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
+      '<tr><td class="py-0"></td><td class="py-0">>24</td></tr>' +
+      '</tbody></table></th></tr>',
+    inhalt: m =>
+      m.abwesenheiten === null
+        ? ''
+        : {
+            html:
+              `${nullParser(m.abwesenheiten.a8)} <br />` +
+              `${nullParser(m.abwesenheiten.a14)} <br />` +
+              `${nullParser(m.abwesenheiten.a24)}`,
+          },
+  },
+  {
+    gruppe: 'ewt',
+    rowHtml:
+      '<tr><th><table class="table table-borderless m-0"><tbody>' +
+      '<tr><td class="py-0">steuerfreie</td><td class="py-0">>8</td></tr>' +
+      '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
+      '</tbody></table></th></tr>',
+    inhalt: m =>
+      m.steuerfreieAbwesenheiten === null
+        ? ''
+        : {
+            html: `${nullParser(m.steuerfreieAbwesenheiten.s8)} <br /> ${nullParser(m.steuerfreieAbwesenheiten.s14)}`,
+          },
+  },
+  { gruppe: 'ewt', rowHtml: '<tr><th>Summe EWT</th></tr>', inhalt: m => currency(m.summeEwt) },
+  { gruppe: 'neben', rowHtml: '<tr><th>Summe Nebenbezüge</th></tr>', inhalt: m => currency(m.summeNebenbezuege) },
+  { gruppe: null, rowHtml: '<tr><th>Summe Gesamt</th></tr>', inhalt: m => currency(m.summeGesamt) },
 ];
+
+const escapeHtml = (text: string): string => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeilenDefinition {
+  const labelRows = breakdown.codes
+    .map(
+      c =>
+        `<tr><td class="py-0">${escapeHtml(c.label)}</td>` + `<td class="py-0">${zulagenEinheitKurz(c.unit)}</td></tr>`,
+    )
+    .join('');
+
+  return {
+    gruppe: 'neben',
+    rowHtml: `<tr><th><table class="table table-borderless m-0"><tbody>${labelRows}</tbody></table></th></tr>`,
+    // Wie bei den EWT-Zeilen: Monate ohne jegliche Zulagen bekommen eine leere Zelle
+    inhalt: m =>
+      breakdown.codes.some(c => breakdown.values[c.code][m.monat - 1] > 0)
+        ? { html: breakdown.codes.map(c => breakdown.values[c.code][m.monat - 1]).join(' <br />') }
+        : '',
+  };
+}
+
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
 ): void {
   if (datenBerechnung === true) return clearLoading('btnNeuBerech');
 
-  const datenGeldHandler: ProxyHandler<IVorgabenGeld> = {
-    get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
-      const maxMonat: number = Number(prop);
-      let returnObjekt = target[1];
-      const keys = Object.keys(target).map(Number);
-      if (keys.length > 1 && maxMonat > 1 && Math.max(...keys.filter(key => key <= maxMonat)) > 1)
-        for (let monat = 2; monat <= maxMonat; monat++)
-          if (typeof target[monat] !== 'undefined') returnObjekt = { ...returnObjekt, ...target[monat] };
-      return returnObjekt;
-    },
-    set: (_target: IVorgabenGeld, prop: string, newValue) => {
-      console.log('veränderung von datenGeld nicht erlaubt:', prop, newValue);
-      return false;
-    },
-  };
+  const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
+  const tarifKraft = vorgabenU.pers.TB;
+  const aktivierteTabs = vorgabenU.Einstellungen?.aktivierteTabs;
 
-  const datenGeld = new Proxy(datenGeldVorgabe, datenGeldHandler);
-
-  const tarifKraft = Storage.get<IVorgabenU>('VorgabenU', { check: true }).pers.TB;
-  const berechnung: number[][] = Array.from<unknown, number[]>({ length: 12 }, () => []);
+  const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);
+  const zulagenBreakdown = calculateZulagenBreakdown();
+  mountBerechnungMobileCards(monatsErgebnisse, aktivierteTabs, zulagenBreakdown);
 
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
   if (!tbody) return;
 
-  tbody.innerHTML = `
-		<tr><th rowspan="2">Bereitschaftszeiten</th></tr>
-		<tr></tr>
-		<tr><th>Bereitschaftszulage</th></tr>
-		<tr><th>LRE 1</th></tr>
-		<tr><th>LRE 2</th></tr>
-		<tr><th>LRE 3</th></tr>
-		<tr><th>Privat-PKW</th></tr>
-		<tr><th>Summe Bereitschaft</th></tr>
-		<tr><th><table class="table table-borderless m-0"><tbody>
-			<tr><td class="py-0">Anzahl der</td><td class="py-0">>8</td></tr>
-			<tr><td class="py-0">Abwesenheiten nach</td><td class="py-0">>14</td></tr>
-			<tr><td class="py-0">FGr-TV / LfTV / RVB</td><td class="py-0">>24</td></tr>
-		</tbody></table></th></tr>
-		<tr><th><table class="table table-borderless m-0"><tbody>
-			<tr><td class="py-0">steuerfreie Abwesen-</td><td class="py-0">>8</td></tr>
-			<tr><td class="py-0">heiten § 9 EStG</td><td class="py-0">>14</td></tr>
-		</tbody></table></th></tr>
-		<tr><th>Summe EWT</th></tr>
-		<tr><th>Summe Nebenbezüge</th></tr>
-		<tr><th>Summe Gesamt</th></tr>
-		`;
+  const zeilen = [...ZEILEN];
+  if (zulagenBreakdown.codes.length > 0) {
+    const nebenIndex = zeilen.findIndex(zeile => zeile.rowHtml.includes('Summe Nebenbezüge'));
+    zeilen.splice(nebenIndex, 0, buildZulagenBreakdownZeile(zulagenBreakdown));
+  }
 
-  const nullParser = (value: null | string | number) => value ?? '&nbsp;';
-  const time_convert = (num: number): string => {
-    const hours = Math.floor(num / 60);
-    const minutes = Math.round(num % 60);
-    return `${hours}:${minutes.toString().padStart(2, '0')}`;
-  };
-  const formatCurrency = (value: number): string =>
-    value.toLocaleString('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    });
+  // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten.
+  // Roh-Zulagen zählen für 'neben' auch dann als Daten, wenn keine Euro-Summe berechnet wurde.
+  const hatGruppenDaten = (gruppe: BerechnungGruppe): boolean =>
+    monatsErgebnisse.some(m => gruppeHatDaten(gruppe, m)) || (gruppe === 'neben' && zulagenBreakdown.codes.length > 0);
+
+  const sichtbareZeilen = zeilen.filter(
+    zeile => zeile.gruppe === null || isGroupVisible(zeile.gruppe, aktivierteTabs, hatGruppenDaten(zeile.gruppe)),
+  );
+
+  // Gruppenwechsel (Bereitschaft/EWT/Nebenbezüge/Gesamt) mit kräftiger Trennlinie markieren
+  tbody.innerHTML = sichtbareZeilen
+    .map((zeile, i) =>
+      i > 0 && zeile.gruppe !== sichtbareZeilen[i - 1].gruppe
+        ? zeile.rowHtml.replace('<tr>', '<tr class="berechnung-gruppen-start">')
+        : zeile.rowHtml,
+    )
+    .join('\n');
 
   Array.from(tbody.children).forEach((row, index) => {
-    for (const [Monat, datenBerechnungItem] of Object.entries(datenBerechnung)) {
-      const monat = +Monat;
-      const monatZeroIndex = monat - 1;
+    for (const monatsErgebnis of monatsErgebnisse) {
       const td = document.createElement('td');
-      let privatPKW: number;
-
-      switch (index) {
-        case 0:
-          if (datenBerechnungItem.B.B !== 0) td.textContent = datenBerechnungItem.B.B.toString();
-          break;
-        case 1:
-          if (datenBerechnungItem.B.B !== 0)
-            td.textContent =
-              tarifKraft === 'Tarifkraft'
-                ? time_convert(datenBerechnungItem.B.B)
-                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60).toString();
-          break;
-        case 2:
-          if (datenBerechnungItem.B.B !== 0) {
-            berechnung[monatZeroIndex][0] =
-              tarifKraft === 'Tarifkraft'
-                ? Math.round(datenBerechnungItem.B.B / 60) * datenGeld[monat][tarifKraft]
-                : Math.round((datenBerechnungItem.B.B - 600) / 8 / 60) * datenGeld[monat][tarifKraft];
-
-            td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
-          }
-          break;
-        case 3:
-          if (datenBerechnungItem.B.L1 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L1) * datenGeld[monat].LRE1);
-          }
-          break;
-        case 4:
-          if (datenBerechnungItem.B.L2 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L2) * datenGeld[monat].LRE2);
-          }
-          break;
-        case 5:
-          if (datenBerechnungItem.B.L3 !== 0) {
-            berechnung[monatZeroIndex][0] += Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3;
-            td.textContent = formatCurrency(Math.round(datenBerechnungItem.B.L3) * datenGeld[monat].LRE3);
-          }
-          break;
-        case 6:
-          if (datenBerechnungItem.B.K !== 0) {
-            privatPKW =
-              Math.round(datenBerechnungItem.B.K) *
-              (tarifKraft === 'Tarifkraft' ? datenGeld[monat].PrivatPKWTarif : datenGeld[monat].PrivatPKWBeamter);
-
-            berechnung[monatZeroIndex][0] += privatPKW;
-            td.textContent = formatCurrency(privatPKW);
-          }
-          break;
-        case 7:
-          if (berechnung[monatZeroIndex].length !== 0) td.textContent = formatCurrency(berechnung[monatZeroIndex][0]);
-          else if (!berechnung[monatZeroIndex][0]) berechnung[monatZeroIndex][0] = 0;
-          break;
-        case 8:
-          if (tarifKraft === 'Tarifkraft') {
-            if (datenBerechnungItem.E.A8 !== 0)
-              berechnung[monatZeroIndex][1] = datenBerechnungItem.E.A8 * datenGeld[monat].TE8;
-            if (datenBerechnungItem.E.A14 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A14 * datenGeld[monat].TE14;
-            if (datenBerechnungItem.E.A24 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.A24 * datenGeld[monat].TE24;
-          }
-          if (datenBerechnungItem.E.A8 > 0 || datenBerechnungItem.E.A14 > 0 || datenBerechnungItem.E.A24 > 0)
-            td.innerHTML =
-              `${nullParser(datenBerechnungItem.E.A8)} <br />` +
-              `${nullParser(datenBerechnungItem.E.A14)} <br />` +
-              `${nullParser(datenBerechnungItem.E.A24)}`;
-          break;
-        case 9:
-          if (tarifKraft !== 'Tarifkraft') {
-            if (datenBerechnungItem.E.S8 !== 0)
-              berechnung[monatZeroIndex][1] = datenBerechnungItem.E.S8 * datenGeld[monat].BE8;
-            if (datenBerechnungItem.E.S14 !== 0)
-              berechnung[monatZeroIndex][1] += datenBerechnungItem.E.S14 * datenGeld[monat].BE14;
-          }
-          if (datenBerechnungItem.E.S8 > 0 || datenBerechnungItem.E.S14 > 0)
-            td.innerHTML = `${nullParser(datenBerechnungItem.E.S8)} <br /> ${nullParser(datenBerechnungItem.E.S14)}`;
-
-          row.appendChild(td);
-          break;
-
-        case 10:
-          if (berechnung[monatZeroIndex].length > 1) td.textContent = formatCurrency(berechnung[monatZeroIndex][1]);
-          else if (!berechnung[monatZeroIndex][1]) berechnung[monatZeroIndex][1] = 0;
-
-          break;
-        case 11: {
-          const nTotal = N_ZULAGEN_CALC.reduce((sum, fn) => sum + fn(datenBerechnungItem.N, datenGeld[monat]), 0);
-          if (nTotal > 0) {
-            berechnung[monatZeroIndex][2] = nTotal;
-            td.textContent = formatCurrency(nTotal);
-          } else {
-            berechnung[monatZeroIndex][2] = 0;
-          }
-          break;
-        }
-        case 12: {
-          const b = berechnung[monatZeroIndex];
-          if (b.length !== 0 && (b[0] || b[1] || b[2])) {
-            td.textContent = formatCurrency((b[0] ?? 0) + (b[1] ?? 0) + (b[2] ?? 0));
-          }
-          break;
-        }
+      td.dataset.monat = String(monatsErgebnis.monat);
+      const inhalt = sichtbareZeilen[index].inhalt(monatsErgebnis);
+      if (typeof inhalt === 'string') {
+        if (inhalt !== '') td.textContent = inhalt;
+      } else {
+        td.innerHTML = inhalt.html;
       }
       row.appendChild(td);
     }
   });
+
+  wendeMonatsFensterAn();
 }

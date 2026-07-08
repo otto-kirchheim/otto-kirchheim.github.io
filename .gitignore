@@ -4,3 +4,8 @@ dist/
 dev-dist/
 .vscode/
 plan/
+
+# ruflo / MCP (lokale Agenten-Tooling-Artefakte, nicht Teil des Projekts)
+ruvector.db
+agentdb.rvf
+agentdb.rvf.lock

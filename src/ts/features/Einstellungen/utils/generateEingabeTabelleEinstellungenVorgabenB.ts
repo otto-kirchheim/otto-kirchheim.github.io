@@ -33,7 +33,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
   const trueParser = (value: unknown): string => (value ? 'Ja' : 'Nein');
 
   const weekdayParser = (value: unknown, option: unknown = true): string => {
-    const v = value as { tag: number; zeit: string; Nwoche?: boolean };
+    const v = value as { tag: number; zeit?: string; Nwoche?: boolean };
     const umbruch = option !== false;
     const separator = umbruch ? '<br/>' : ' | ';
     const weekdays: Record<number, string> = { 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa', 7: 'So', 0: 'So' };
@@ -49,7 +49,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
   const ftVE = createCustomTable('tableVE', {
     columns: [
       { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Std.', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
+      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
       { name: 'beginnB', title: 'Ber Von', longTitle: 'Bereitschaft Von', parser: weekdayParser, breakpoints: 'sm' },
       { name: 'endeB', title: 'Ber Bis', longTitle: 'Bereitschaft Bis', parser: weekdayParser, breakpoints: 'sm' },
       { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'lg' },

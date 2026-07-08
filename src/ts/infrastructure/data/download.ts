@@ -67,6 +67,12 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     Jahr,
   };
 
+  const normalizeEwtSchichtForDownload = (schicht: string): string => {
+    if (schicht === 'SP') return 'T';
+    if (schicht === 'BN') return 'N';
+    return schicht;
+  };
+
   // Daten: Frontend-Feldnamen → Backend-Feldnamen mappen
   switch (modus) {
     case 'B': {
@@ -91,7 +97,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
         EWT: ewtRaw.map(e => ({
           Buchungstag: dayjs(e.buchungstagE || calculateBuchungstagEwt(e)).format('DD'),
           Einsatzort: e.eOrtE,
-          Schicht: e.schichtE,
+          Schicht: normalizeEwtSchichtForDownload(e.schichtE),
           abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
           ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
           anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,

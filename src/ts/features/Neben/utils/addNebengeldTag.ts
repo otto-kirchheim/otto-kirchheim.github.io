@@ -60,6 +60,19 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, 
     return;
   }
 
-  ftN.rows.add(daten);
+  // Statt eines neuen Datensatzes einen bereits zum Löschen vorgemerkten Eintrag
+  // für denselben Tag reaktivieren (bleibt als Update statt Delete+Create erhalten).
+  const deletedRowSameTag = ftN.rows.array.find(
+    existingRow =>
+      existingRow._state === 'deleted' &&
+      dayjs(existingRow.cells.tagN, 'DD.MM.YYYY').isSame(dayjs(daten.tagN, 'DD.MM.YYYY'), 'day'),
+  );
+
+  if (deletedRowSameTag) {
+    deletedRowSameTag.undoDelete();
+    deletedRowSameTag.val(daten);
+  } else {
+    ftN.rows.add(daten);
+  }
   persistNebengeldTableData(ftN);
 }

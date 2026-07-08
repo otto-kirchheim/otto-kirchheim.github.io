@@ -65,7 +65,12 @@ const createShowElement = (row: Row<IDatenEWT>, columnName: string) => {
 
 export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenEWT> = showModal(
-    <MyDivModal size="sm" title={titel} Footer={<MyShowFooter row={row} />} errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}>
+    <MyDivModal
+      size="sm"
+      title={titel}
+      Footer={<MyShowFooter row={row} />}
+      errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
+    >
       <MyModalBody>
         {createTagElement(row)}
         <MyCheckbox

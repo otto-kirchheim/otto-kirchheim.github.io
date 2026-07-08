@@ -36,6 +36,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     expect(result).not.toBeFalsy();
@@ -63,6 +65,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     expect(result).not.toBeFalsy();
@@ -83,6 +87,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     if (result === false) return;
@@ -101,6 +107,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     if (result === false) return;
@@ -120,6 +128,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     if (result === false) return;
@@ -139,6 +149,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     expect(result).not.toBeFalsy();
@@ -170,6 +182,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     expect(result).toBeDefined();
@@ -228,6 +242,8 @@ describe('#Bereitschaftseingabe', () => {
       nachtAnfang,
       nachtEnde,
       nacht,
+      false,
+      false,
       daten,
     );
     expect(result).toBe(false);
@@ -270,12 +286,12 @@ describe('#bereitschaftEingabeWeb', async () => {
     // Table-Element erzeugen
     const tableBZ = document.createElement('table') as HTMLTableElement & {
       instance: {
-        rows: { loadSmart: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> };
+        rows: { load: ReturnType<typeof vi.fn>; setFilter: ReturnType<typeof vi.fn> };
         drawRows: ReturnType<typeof vi.fn>;
       };
     };
     tableBZ.id = 'tableBZ';
-    tableBZ.instance = { rows: { loadSmart: vi.fn(), setFilter: vi.fn() }, drawRows: vi.fn() };
+    tableBZ.instance = { rows: { load: vi.fn(), setFilter: vi.fn() }, drawRows: vi.fn() };
     document.body.appendChild(tableBZ);
     Storage.set('Monat', 4);
     Storage.set('Jahr', 2023);

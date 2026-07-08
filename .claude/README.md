@@ -13,4 +13,5 @@ Zentrale Navigation für Frontend-spezifische AI-Hinweise und Skills.
 - `skills/`: ordnerbasierte Skills mit `SKILL.md` plus `scripts/`, `references/`, `assets/`
 - `settings.json`: Teamweite Sicherheitseinstellungen
 - `settings.local.json.example`: lokales Beispiel fuer optionale Overrides
-- Legacy-Skills bleiben als `*.md` in `skills/` erhalten und werden von den neuen `SKILL.md` referenziert.
+
+Jedes Skill ist self-contained: der fachliche Inhalt steht direkt in der `SKILL.md`.

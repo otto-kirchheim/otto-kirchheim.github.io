@@ -2,6 +2,252 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-07
+
+### fix (Neben – Entfernen der EWT-Verknüpfung wird jetzt serverseitig persistiert)
+
+- **`fieldMapper.ts` (`nebengeldToBackend`):** Eine fehlende `ewtRef` wird jetzt als `EWT: null` gesendet statt als `undefined` (das bei `JSON.stringify` wegfällt). Wählte der User im Neben-Editor „— keine Zuordnung —", kam das Entfernen der Verknüpfung nie am Server an: das Dokument behielt die alte EWT-Referenz, die Zuordnung war nach dem nächsten Laden wieder da und die EWT blieb für andere Einträge blockiert (Unique-Index). Das Backend übersetzt `null` in ein `$unset` (siehe Backend-Changelog). `nebengeldFromBackend` normalisiert `EWT: null` zu `ewtRef: undefined`.
+- **Tests:** Drei neue Mapper-Tests (gesetzte Ref, fehlende Ref → `null`, `null` vom Server → `undefined`).
+
+### fix (EWT/Neben – gelöschte Zeiten/Auftragsnummer werden beim Update jetzt serverseitig geleert)
+
+- **`fieldMapper.ts` (`ewtToBackend`):** Leere Zeitfelder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`) und `Einsatzort` werden jetzt als Leerstring explizit mitgesendet statt auf `undefined` gesetzt. `undefined`-Felder fallen bei `JSON.stringify` aus dem Payload, wodurch ein Update gelöschte Zeiten nie am Server ankommen ließ — der alte Wert blieb im Dokument erhalten (Mongoose-`$set` überschreibt nur mitgesendete Felder). Backend-Zod (`z.string().optional()`) und Mongoose-Schema akzeptieren Leerstrings; alle Konsumenten (Überschneidungsprüfung, `computeBuchungstag`, PDF-Export, `ewtFromBackend`) behandeln `''` und fehlend identisch. Nebeneffekt korrigiert: Die serverseitige Überschneidungsprüfung beim Update nutzte über `patch.beginE ?? current.beginE` bisher die alte Zeit, wenn das Feld fehlte.
+- **`fieldMapper.ts` (`nebengeldToBackend`):** Gleiches Muster für `Auftragsnummer` — eine geleerte Auftragsnummer wird jetzt beim Update serverseitig geleert.
+- **Tests:** Zwei bestehende Mapper-Tests von „setzt auf undefined" auf „sendet Leerstring explizit" umgestellt.
+
+### fix (EWT/Neben – Reaktivierung statt Duplikat-Fehler bei Add nach Delete am selben Tag)
+
+- **`addEwtTag.ts` / `addNebengeldTag.ts`:** Beim Anlegen eines neuen Eintrags wird jetzt zusätzlich geprüft, ob unter den zum Löschen vorgemerkten Zeilen (`_state === 'deleted'`) bereits eine Zeile für denselben Tag existiert. Falls ja, wird diese per `undoDelete()` + `val()` reaktiviert und mit den neuen Werten überschrieben, statt eine zusätzliche neue Zeile anzulegen. Behebt einen False-Positive: löschte man einen EWT-Eintrag und legte im selben Speichervorgang einen neuen für denselben Tag an, wurde der Create serverseitig als Überschneidung abgelehnt („EWT-Einträge dürfen sich nicht überschneiden"), weil der Bulk-Endpunkt Creates vor Deletes verarbeitet. Durch die Reaktivierung bleibt die ursprüngliche `_id` (und damit z. B. eine verknüpfte Nebengeld-Referenz) erhalten, es wird als Update statt Delete+Create gesendet.
+- **Tests:** Je ein neuer Testfall in `EWT.addEWTtag.test.ts` und `Neben.addNebenTag.test.ts` für die Reaktivierung eines zum Löschen vorgemerkten Eintrags.
+
+### feat (AutoSave – expliziter `__localState`-Marker für alle Row-States)
+
+- **`mergeVisibleResourceRows.ts` + `CustomTable.ts` (`Rows.load`):** `__localState` wird jetzt für **jede** Zeile explizit persistiert (`'unchanged' | 'new' | 'modified' | 'deleted'`) statt `new` nur über die fehlende `_id` zu erschließen. Schließt die Lücke bei **geänderten** Zeilen: wurde das Fenster vor Ablauf des AutoSave-Timers geschlossen, wird die Änderung nach dem nächsten Laden dank des Markers zuverlässig nachgesendet statt still verloren zu gehen. Rückwärtskompatibel: Zeilen ohne Marker (Alt-Daten) fallen weiterhin auf die bisherige `_id`-Inferenz zurück.
+- **`metaFields.ts` (`hasPendingLocalChanges`) + `loadUserDaten.helpers.ts` (`countByMonth`):** Um `'new'`/`'modified'` erweitert, damit `syncLoadedYearResources` pending-lokale Neuanlagen/Änderungen nicht mit einem neueren/gleich-alten Server-Stand überschreibt, und Pending-New-Zeilen weiterhin keinen falschen Konflikt-Dialog auslösen.
+- **Tests:** Neue Datei `mergeVisibleResourceRows.test.ts` (Marker-Persistierung je State); `CustomTable.test.ts`, `metaFields.test.ts`, `loadUserDaten.sync.test.ts`, `loadUserDaten.helpers.test.ts` um die neuen Marker-Werte ergänzt.
+- **Verworfen:** Ein Page-Hide-Flush (`pagehide`/`visibilitychange:hidden` per `fetch(..., { keepalive: true })`) wurde prototypisch umgesetzt, dann aber wieder verworfen: `keepalive` garantiert nur, dass der Request den Server erreicht, nicht dass danach noch JavaScript zur Antwort-Verarbeitung läuft. Bei echtem Tab-Schließen wurde `commitAutoSave`/`updateLocalStorage` nie ausgeführt, sodass neu angelegte Zeilen beim nächsten Laden erneut als „neu" gesendet und vom Server als Duplikat abgelehnt wurden (das Backend verwirft `clientRequestId` vor dem Speichern, es gibt keine serverseitige Idempotenzprüfung). Der `__localState`-Marker bleibt als alleiniges Sicherheitsnetz bestehen.
+
+### fix (Sync – kein „Unterschiede erkannt"-Dialog für ungesendete AutoSave-Zeilen)
+
+- **`loadUserDaten.helpers.ts` (`countByMonth`):** Lokale Pending-New-Rows (ohne `_id`) werden beim Lokal/Server-Vergleich nicht mehr mitgezählt — symmetrisch zur bestehenden Pending-Delete-Exklusion. Wurde das Fenster geschlossen, bevor der AutoSave-Timer (10s) feuerte, erschien beim erneuten Öffnen fälschlich der Konflikt-Dialog, obwohl die Zeile nach dem Tabellen-Load ohnehin automatisch nachgespeichert wird (`Rows.load` restauriert Zeilen ohne `_id` als `'new'` → AutoSave).
+- **`loadUserDaten.sync.ts`:** `dataServer.X` wird nur noch gesetzt, wenn die Monatszählung echte Unterschiede ergab — ein reiner Längenunterschied durch Pending-New-Rows ist kein Konflikt (konsistent mit dem Bug-2-Regression-Guard).
+- **Tests:** Neuer Helper-Test (Pending-New-Exklusion), neuer Sync-Test (Pending-New-Zeile erzeugt keinen `vorhanden`-Eintrag und kein `dataServer`), Fixtures in `Login.LadeUserDaten.test.ts` auf realistische Server-Rows mit `_id` umgestellt (Mongo-Dokumente haben immer eine `_id`).
+
+### fix (EWT – getPascalEnde Namensreihenfolge)
+
+- **`calculateEwtEintraege.ts`:** Vertauschte Zuordnung korrigiert – zuvor prüfte `getPascalEnde()` `Vorname === 'Ackermann' && Nachname === 'Pascal'`, jetzt korrekt `Vorname === 'Pascal' && Nachname === 'Ackermann'`. Ohne diesen Fix griff der Sonderfall (5 Minuten Aufschlag auf `anWE`) nie.
+
+### feat (EWT – Spätschicht-Label)
+
+- **`features/EWT/index.ts`:** Schicht-Kürzel `SP` wird in der Anzeige jetzt als „Spät" aufgelöst (zuvor kein eigener Fall, fiel durch den `switch`).
+
+### test (EWT – Sonderfall Pascal Ackermann)
+
+- **`EWT.ewtBerechnen.test.ts`:** Neuer Test für `getPascalEnde()` – bei `pers.Vorname === 'Pascal'` und `pers.Nachname === 'Ackermann'` wird `anWE` um 5 Minuten später berechnet (15:30 → 15:35) als im Standardfall. Der Sonderfall war bisher ungetestet, da alle bestehenden Mocks `pers: {}` verwenden.
+
+## 2026-07-04
+
+### feat (Berechnung – Mobil-Akkordeon, Gruppen-Sichtbarkeit, Zulagen-Aufschlüsselung)
+
+- **Mobil-Ansicht (<768px):** Die horizontal gescrollte Berechnungstabelle wird auf kleinen Breakpoints durch eine Preact-Akkordeon-Ansicht ersetzt (`BerechnungMobileCards.tsx`, umgeschaltet per `d-none d-md-block` / `d-md-none`). Ein Accordion-Item pro Monat mit „Summe Gesamt" im Header; aufgeklappt Details gruppiert nach Bereitschaft / EWT / Nebenbezüge. Alle 12 Monatssummen sind damit ohne Scrollen vergleichbar.
+- **Rechenlogik extrahiert:** Der DOM-gekoppelte `switch`-Block aus `generateTableBerechnung.ts` ist in die reine Funktion `calculateBerechnungRows.ts` überführt (strukturierte Monatsergebnisse); Tabelle und Mobil-Karten konsumieren dieselbe Quelle. Zellwerte unverändert (bestehende Tests grün).
+- **Gruppen-Sichtbarkeit nach `aktivierteTabs`:** Global deaktivierte Bereiche (bereitschaft/ewt/neben) werden ausgeblendet – außer es existieren Daten (Desktop-Scope: ganzes Jahr, Zeilen entfallen komplett; Mobil-Scope: einzelner Monat). Gemeinsamer Helper `berechnungGroupVisibility.ts`.
+- **Zulagen-Aufschlüsselung:** Alle im Jahr vorkommenden Zulagen-Codes (z. B. 040, 839) erscheinen in Tabelle (Sub-Tabelle vor „Summe Nebenbezüge") und Mobil-Karten je Code mit der Monats-Rohsumme in Minuten/Stück. Aggregation direkt aus `dataN`/`zulagenN` (`calculateZulagenBreakdown.ts`), unabhängig von der Euro-Berechnung.
+- **Feinschliff nach Praxistest:** Desktop-Breakdown-Zellen bleiben in Monaten ohne Zulagen leer (wie EWT-Zeilen); Mobil erscheinen nur Codes mit Monatswert > 0 (keine Zeilen, wenn alle 0). EWT-Schwellen mobil als kompakte Einzelzeilen (`Abwesenheiten >8 Std.`) ohne Nullwerte. Mobil-Gruppenüberschriften tragen die Gruppensumme rechts (Bereitschaft/EWT/Nebenbezüge/Gesamt), Detailzeilen eingerückt, kräftige Trennlinien zwischen den Gruppen.
+- **EWT-Zählfehler behoben:** Abwesenheiten unter 8 Stunden landeten über eine `else`-Falle in der `>24`-Spalte; sie zählen jetzt in keinem Schwellen-Bucket.
+- **Dreistufige Breakpoints mit Monats-Fenster:** Mobil-Akkordeon bis <576px (`d-sm-none`), volle Tabelle ab 1200px; dazwischen Tabelle mit dynamischem Monats-Fenster (`berechnungMonatsFenster.ts`): sichtbare Monatsanzahl wird aus verfügbarer Breite berechnet (feste Label-Spalte 11.5rem, ~95px pro Monatsspalte), Prev/Next-Buttons verschieben das Fenster, Start um den aktuellen Monat zentriert; Neuberechnung bei Resize/Tab-Öffnung.
+- **Weitere UI-Verbesserungen:** EWT-Zeilenlabels ohne Tarifvertrags-/Paragraph-Zusätze („Anzahl der Abwesenheiten", „steuerfreie Abwesenheiten"); Mobil-Akkordeon öffnet den aktuellen Monat automatisch; Gruppensummen in den Mobil-Zwischenüberschriften mit kräftigen Trennlinien (auch in der Desktop-Tabelle).
+- **Monats-Navigation bei vollem Jahres-Fit zuverlässig versteckt:** Wenn alle 12 Monate in die verfügbare Breite passen (u. a. ab ~1183px), wird die Prev/Next-Leiste jetzt per `display: none !important` ausgeblendet. Dadurch kann sie nicht mehr von Breakpoint-Utility-Klassen (`d-sm-flex`) sichtbar gehalten werden.
+- **Aufräumen:** Nie eingebundener `createBerechnungTableBody.tsx` (`TableComponent`) entfernt.
+- **Tests:** Neue Suites `Berechnung.calculateBerechnungRows`, `Berechnung.groupVisibility`, `Berechnung.BerechnungMobileCards`, `Berechnung.calculateZulagenBreakdown` (1156 → 1176 Tests, 0 Fehlschläge).
+
+## 2026-07-03
+
+### test (Testcoverage erhöht)
+
+- **Coverage:** 78.26 % → 83.55 % Funcs, 81.77 % → 86.37 % Lines. Testanzahl 989 → 1156 (0 Fehlschläge).
+- **Schwerpunkte:** Bereitschaft (`submitBereitschaftsEinsatz`, `submitBereitschaftsZeiten`, `BereitschaftOverridePanel` neu auf 100 %), Auth-Orchestrierung (`core/orchestration/auth/*`), AutoSave-Infrastruktur (`autoSaveIndicator`, `changeTracking`, `errorHandling`, `autoSave.ts`), diverse Utility-Lücken (`MyInput`, `bootstrap`, `core/types/api`, `FetchRetry`, `download.ts`).
+- **Verbleibend offen:** Große Admin-/Modal-Komponenten (`AdminUserList.tsx`, `AdminResourceBrowser.tsx`, `AdminProfileTemplatesManager.tsx`, `ArbeitszeiteingabePanel.tsx`, `createEditorModalVE.tsx` u. a.) sind weiterhin bei ~0 % Coverage; bewusst zurückgestellt, da jede Datei eigene Test-Infrastruktur benötigt (separates Vorhaben).
+
+## 2026-06-28
+
+### feat (AdminDashboard – Ereignisse-Pagination)
+
+- **`MemoryCard` / Ereignisse-Liste:** Pagination mit 10 Einträgen pro Seite (Prev/Next-Buttons, Seitenanzeige). Neueste Ereignisse werden zuerst angezeigt (absteigende Sortierung nach Timestamp). Gesamtanzahl im Header sichtbar. Pagination-Controls nur sichtbar wenn mehr als eine Seite vorhanden.
+
+### feat (AdminDashboard – Memory-Verlauf, Auth-Aktivität, Datenwachstum)
+
+- **MemoryCard:** SVG-Sparkline (Heap used blau, RSS orange) mit vertikalen Dashed-Markern für Non-Periodic-Events. Höhe responsiv (`clamp(80px, 15vw, 160px)`). Kompakte Stat-Zeile: Heap/RSS/Extern/EventLoop/Uptime in einer Zeile.
+- **Manueller Heap-Snapshot-Button:** POST-Button (grün, mit Spinner) löst `POST /api/v2/admin/heap` aus und aktualisiert die Karte.
+- **Ereignis-Liste:** 2-Zeilen-Layout pro Eintrag (Zeile 1: Icon + Label, Zeile 2 eingerückt: Datum + RSS + Heap). Funktioniert auf allen Breakpoints ohne Umbruchprobleme.
+- **Legende:** Kompakt, Array-gemappt, Font-Size `.72rem`.
+- **Stat-Cards (Top-Reihe):** Benutzer (gesamt + aktiv 30d) · Profile-Templates (aktiv/gesamt) · Admin-Aktivität (Logs 7d) · Serverlaufzeit (Uptime aus letztem Snapshot, formatiert in Min./Std./Tage).
+- **Rollenverteilung:** Zeigt User-Counts nach Rolle.
+- **Ressourcenbestand + Wachstums-Badges:** `+N` (letzte 7d) inline hinter dem Label; Count-Badge mit `flex-shrink-0` – kein Layout-Bruch bei langen Labels wie „Einsatzwechseltätigkeiten".
+- **Auth-Aktivität:** Neue User 7d · E-Mail-verifiziert · Passkey-Nutzer.
+- **API (`utils/api.ts`):** Neue Typen `MetricPoint`, `HeapData`; Funktionen `fetchAdminHeap()`, `triggerAdminHeapSnapshot()`; `AdminStats` um `auth`- und `growth`-Sektionen erweitert.
+
+### chore (Phase 3 – AdminJS-Link entfernt)
+
+- **AdminJS-Link aus Admin-Tab entfernt:** Nav-Tab „AdminJS (extern)" und der zugehörige `adminJsUrl`-State sind gelöscht. Das Backend bietet keine AdminJS-Route mehr an.
+- **`getServerUrl`-Import entfernt:** War nur für die AdminJS-URL-Konstruktion nötig.
+
+### feat (Custom Admin – Datums-/Dropdown-Fixes, EWT-Felder, Jahresfilter, Benutzer-Suche)
+
+- **Datum-Korrektheit (Zeitzone):** Datumsfelder ohne Zeitanteil (`Tag`, `Buchungstag`) werden jetzt mit UTC-Komponenten (`getUTCDate()` etc.) formatiert, um Verschiebungen durch Lokale Zeitzone zu vermeiden. Datetime-Felder (`Beginn`, `Ende` bei BZ) nutzen weiterhin die lokale Zeitzone.
+- **date-only vs. datetime-Eingabe:** `Tag`/`Buchungstag` im Edit-Modal werden als `type="date"`-Input gespeichert (`YYYY-MM-DDT00:00:00.000Z`). Datetime-Felder nutzen `type="datetime-local"` und konvertieren korrekt nach ISO.
+- **Schicht-Dropdown:** `Schicht`-Feld in EWT-Einträgen rendert jetzt ein Dropdown mit den Werten `T`, `SP`, `N`, `S`, `BN` (war bisher Freitext).
+- **EWT-Optionale-Felder:** Alle optionalen EWT-Felder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`, `Einsatzort`, `berechnen`) werden im Edit-Modal auch dann angezeigt, wenn sie im Dokument nicht vorhanden sind (Augmentierung über `SCHEMA_FIELDS` mit `null` als Platzhalter + „leer"-Badge).
+- **Jahresfilter: nur vorhandene Jahre (Backend-Query):** Jahr-Dropdown im Ressourcen-Browser lädt jetzt die tatsächlich in der DB vorhandenen Jahre per `GET /admin/{endpoint}?distinctJahr=1`. Kein hardcodierter Jahres-Range mehr.
+- **Benutzer-Filter als Suche:** Benutzer-Filter ist jetzt ein Text-Input mit Browser-`<datalist>` (alle Benutzernamen). Tipp-Suche filtert die Vorschlagsliste; bei Auswahl wird intern die `userId` gesetzt. X-Button löscht die Auswahl.
+- **Schema-Felder-Reihenfolge:** Edit-Modal zeigt Felder jetzt in der Schema-definierten Reihenfolge (Business-Felder zuerst, dann System-Felder wie `_id`, `__v`, `createdAt`, `updatedAt`).
+- **Zeitfelder als `type="time"`-Input:** `Beginn`/`Ende` in Bereitschaftseinsatz und Nebengeld sowie alle EWT-Zeitfelder (`abWE`, `ab1E`, `anEE`, `beginE`, `endeE`, `abEE`, `an1E`, `anWE`) sind als `String "HH:mm"` gespeichert und werden jetzt korrekt als Zeitfeld dargestellt – kein Freitext-Input mehr.
+- **JSON-Editor-Komponente (`JsonEditor.tsx`):** Neue wiederverwendbare Komponente für alle JSON/Array-Felder im Admin-Panel. Eingeklappt mit Summary-Badge (z. B. `Array [5]`, `Objekt {12}`) und Vorschau-Snippet; aufgeklappt als monospaced Textarea mit Auto-Höhe und „Format"-Button zum Prettify. Fehleranzeige in Kopfzeile und unter der Textarea. Genutzt in `AdminResourceBrowser` und `AdminUserProfileEditor`.
+
+### feat (Custom Admin – Cross-Links, Portal-Fix, UX-Optimierungen)
+
+- **Ressourcen-Browser: Cross-Resource-Navigation:** Alle `_id`-Referenzfelder verlinken jetzt zum jeweiligen Eintrag im Browser. `Nebengeld.EWT` → EWT-Tab, `Bereitschaftseinsatz.Bereitschaftszeitraum` (Array) → BZ-Tab (jeweils mit direktem Edit-Modal). Navigation öffnet Ziel-Ressource via `GET /admin/{endpoint}/:id` und zeigt Edit-Modal ohne Seiten-Reload.
+- **Portal-Fix für Edit-Modals:** Modals in `AdminResourceBrowser` und `AdminUserProfileEditor` rendern jetzt via `createPortal` auf `document.body`-Ebene. Damit sind sie auch sichtbar, wenn der übergeordnete Bootstrap-Tab-Pane `display:none` hat (war der Grund, warum "Zum Profil"-Navigation keine Wirkung hatte).
+- **Navigations-Fix Profile-Tab:** `navigateToProfile(userId)` inkrementiert jetzt einen `searchKey`-Counter, sodass der `useEffect` in `AdminUserProfileEditor` auch bei wiederholter Navigation zur selben User-ID erneut feuert. `requestAnimationFrame`-Workaround entfernt.
+- **Jahresfilter: nur vorhandene Jahre:** Dropdown zeigt jetzt 2020 bis aktuelles Jahr (kein 2027/2028/2029 mehr). Werte basieren auf dem Schema-Minimum.
+- **LRE-Dropdown:** `LRE`-Feld in Bereitschaftseinsatz-Edit-Modal nutzt jetzt ein Dropdown mit allen gültigen Werten (`LRE 1`, `LRE 2`, `LRE 1/2 ohne x`, `LRE 3`, `LRE 3 ohne x`).
+- **Datums-Inputs:** ISO-Datumsfelder (`Tag`, `Buchungstag`, `Beginn`, `Ende`) werden im Edit-Modal als `datetime-local`-Input dargestellt (lokale Zeitzone). Tabellen-Anzeige zeigt jetzt Datum + Uhrzeit mit Locale `de-DE`.
+- **Null-Felder:** Felder mit Wert `null` sind im Edit-Modal jetzt sichtbar und editierbar. Label zeigt „leer"-Badge, Input hat orangefarbenen Rand als visuellen Hinweis.
+- **Dashboard: Benutzer + Profile zusammengeführt:** Stat-Karte zeigt Benutzeranzahl und bestätigt im Sub-Text ob alle Profile vollständig sind (`Profile vollständig ✓`) oder wie viele fehlen.
+- **API: `fetchAdminResourceById`:** Neue Hilfsfunktion für `GET /admin/{endpoint}/:id` – wird von der Cross-Resource-Navigation genutzt.
+
+### feat (Custom Admin – Filter & UX-Verbesserungen)
+
+- **Ressourcen-Browser: Filter-Panel** (Benutzer/Jahr/Monat): Alle vier Ressourcen unterstützen jetzt server-seitige Filterung. Aktive Filter werden als Badges angezeigt; "Zurücksetzen" löscht alle Filter. Benutzer-Select befüllt sich aus `userNameMap`.
+- **Ressourcen-Browser: Klickbare `_id`-Spalte:** ID-Zelle öffnet beim Klick direkt das Edit-Modal (zusätzlich zum Edit-Button). Cursor und Farbe signalisieren Klickbarkeit.
+- **Dashboard: "Profil-Sync"-Karte** ersetzt redundante "UserProfile-Dokumente"-Karte. Zeigt die Differenz zwischen User- und UserProfile-Dokumenten (0 = grünes Häkchen, >0 = rote Warnung).
+
+### feat (Custom Admin – Phase 2 Optimierungen)
+
+- **Ressourcen-Browser: Benutzername statt ID:** User-Spalte zeigt jetzt Vor-/Nachname aus dem UserProfile (via `fetchAdminUserNameMap`). Klick auf Person-Icon navigiert direkt zum Profil im Profile-Tab.
+- **Ressourcen-Browser: ObjectId-Erkennung im Edit-Modal:** User-Felder zeigen Name + „Zum Profil"-Button (nicht editierbar – Referenz-Integrität). Andere ObjectId-Felder zeigen volle ID + Kopieren-Button.
+- **Ressourcen-Browser: Mehr Breakpoints:** Zwei Extra-Spalten (Erstellt, Geändert) ab `lg`-Breakpoint sichtbar (`d-none d-lg-table-cell`). Datumswerte werden deutschsprachig formatiert.
+- **Admin-Dashboard: Benutzer vs. Profile erklärt:** Profile-Karte zeigt Sub-Text „Alle Benutzer vollständig" oder „X Benutzer ohne Profil" wenn User- und Profil-Anzahl abweichen.
+- **Neuer AdminLog-Tab:** `AdminLogBrowser.tsx` zeigt alle Admin-Aktionen paginiert (Zeitstempel, Aktion, Admin-Name, Ziel-User, Ressource-ID). Filter nach Aktion-String. Admin- und Ziel-User-IDs werden per `userNameMap` in Namen aufgelöst. Spalten ab md/lg progressiv sichtbar.
+- **Navigation Ressourcen → Profile:** Klick auf User-Icon im Ressourcen-Browser aktiviert Profile-Tab und öffnet direkt das Edit-Modal des Benutzers (server-seitiger `userId`-Filter, kein Client-seitiges Paginierproblem).
+- **Admin-API-Erweiterungen:** `fetchAdminUserNameMap`, `fetchAdminUserProfiles` (mit optionalem `userId`-Filter), `fetchAdminLogs`, `AdminLogEntry`-Typ.
+
+### feat (Custom Admin – Phase 2)
+
+- **Admin-Dashboard-Tab:** Neuer `AdminDashboard.tsx`-Tab für Super-Admins. Zeigt vier Stat-Karten (Benutzer gesamt/aktiv-30d, Profile, Templates aktiv/inaktiv, Admin-Logs letzte 7 Tage) sowie Rollenverteilung und Ressourcenbestand als übersichtliche Cards. API: `GET /api/v2/admin/stats`.
+- **Ressourcen-Browser-Tab:** Neuer `AdminResourceBrowser.tsx`-Tab. Interner Tab-Switch zwischen vier Ressourcen (Bereitschaftseinsatz, Bereitschaftszeitraum, Einsatzwechseltätigkeit, Nebengeld). Paginierte Tabelle mit Bearbeiten- und Löschen-Aktionen. Edit-Modal zeigt alle Felder generisch: Systemfelder readonly, Boolean als Checkbox, Objekte/Arrays als JSON-Textarea mit Inline-Fehleranzeige, Zahlen als `number`-Input. Löschung mit `confirmDialog`. Mobile-tauglich (`modal-fullscreen-sm-down`, `table-responsive`).
+- **UserProfile-Editor-Tab:** Neuer `AdminUserProfileEditor.tsx`-Tab. Paginierbarer Liste aller UserProfile-Dokumente mit Namens-/OE-Filterung. Edit-Modal: `Pers`-Felder als strukturierte Formularfelder, komplexe Felder (`Fahrzeit`, `Arbeitszeit`, `VorgabenB`, `Einstellungen`) als JSON-Textareas. Zusätzlich `emailVerified`-Toggle und Passkey-Verwaltung (Liste + Löschen) für den zugehörigen User.
+- **Admin-API-Erweiterungen (`utils/api.ts`):** `AdminStats`, `AdminPage`, `AdminPasskey`-Typen. Neue Funktionen für alle Admin-Endpunkte (`fetchAdminStats`, `fetchAdminResource`, `updateAdminDoc`, `deleteAdminDoc`, `fetchAdminUserProfiles`, `updateAdminUserProfileDoc`, `setAdminEmailVerified`, `fetchAdminPasskeys`, `deleteAdminPasskey`).
+- **Drei neue Tabs in `features/Admin/index.tsx`:** Dashboard, Ressourcen, Profile – alle nur für `role === 'super-admin'` sichtbar. AdminJS-Link bleibt bis Phase 3 erhalten.
+
+## 2026-06-21
+
+### feat
+
+- **Bereitschafts-Modal um aktive Overrides und Sonder-Block erweitert:** Der Bereitschafts-Dialog zeigt nur Overrides fuer aktive Wochenschichten und fuehrt Sonderschicht als eigenen Arbeitszeit-Block. Die Vorbelegung (`applyBereitschaftsVorgabe` / `updateBereitschaftsDatum`) und die Berechnung (`submitBereitschaftsZeiten` / `calculateBereitschaftsZeiten`) behandeln Sonder nur innerhalb des gewaehlten Bereichs; `BereitschaftOverridePanel` bietet Sonderschicht jetzt separat an.
+
+### test
+
+- **Bereitschafts-Testmatrix erweitert:** Neue Testdatei `test/Bereitschaft.schichtzusammensetzungen.overrides.test.ts` mit allen 8 Schicht-Zusammensetzungen (Frueh, Spaet, Nacht, Sonder in allen Kombinationen) sowie mehreren Override-Varianten (Frueh, Spaet, Nacht, Sonder-Runtime und kombinierte Overrides). Fuer die Matrix wurden stabile Snapshots ergänzt.
+
+## 2026-06-19
+
+### feat
+
+- **Bereitschaft-Modal „Neue Bereitschaft eingeben" auf aZ-Arbeitszeitmodell umgestellt:** Die Zeiten „Von"/„Bis" des Bereitschaftszeitraums werden nicht mehr aus statischen Vorgabe-Werten gesetzt, sondern aus `vorgabenU.aZ` je Wochentag abgeleitet: **Von** = Frühschicht-Ende des Anfangstags (bei aktiver Spätschicht: Spätschicht-Ende), **Bis** = Frühschicht-Beginn des End-Wochentags. Arbeitsfreie Tage ohne hinterlegte Schicht ergeben `08:00`. Der Spätschicht-Schalter berechnet die Von-Zeit sofort neu. Neuer Helper `resolveBereitschaftsGrenze.ts` (`resolveBzVon`/`resolveBzBis`); `mergePerWeekdaySchicht` nach `core/types` zentralisiert.
+- **VorgabenB-Editor (Einstellungen) auf das neue Modell umgebaut:** Die abgeleiteten Zeit-Eingabefelder (Bereitschaft/Nacht) entfallen — es bleibt die Tag-/Wochenauswahl. Neue stateful Komponente `SchichtenConfigSection` mit optionaler **per-Wochentag-Überschreibung** je aktiver Schicht (Früh/Spät/Nacht) über `schichtenOverrides`; die `SchichtSection` aus dem Arbeitszeit-Panel wird dafür wiederverwendet. Übersteuerte Zeiten sind ein bewusster Snapshot (folgen späteren globalen aZ-Änderungen nicht).
+- **Arbeitszeit-Overrides im Modal „Neue Bereitschaft eingeben":** Über den Schalter „Andere Arbeitszeiten hinterlegen" lässt sich derselbe per-Wochentag-Override-Editor (`SchichtOverrideEditor`, aus dem VorgabenB-Editor extrahiert und geteilt) für genau diesen Eintrag nutzen. Änderungen aktualisieren die abgeleiteten Von/Bis-Zeiten live und fließen via gemergte `schichtenOverrides` in die Berechnung ein (Variante < Modal-Override). Bridge über `get/setBereitschaftRuntimeOverrides`; gemeinsames Merge-Util `mergeSchichtenOverrides` (ersetzt die lokale Kopie in `submitBereitschaftsZeiten`).
+- **Abgeleitete Zeiten im Modal sind read-only Text:** Die Zeitfelder (Von/Bis, Spät, Nacht) werden nicht mehr als bearbeitbare Inputs gezeigt, sondern als reiner Text – der Wert kommt aus `aZ`/Override. Zeitänderungen laufen ausschließlich über „Andere Arbeitszeiten hinterlegen". Der bisherige Schalter „Zeiten manuell anpassen" heißt jetzt **„Datum manuell anpassen"** und entsperrt nur noch die berechneten **Datumsfelder** (`bE`/`nA`/`nE`); `bA` bleibt frei editierbar.
+- **Modal-Layout aufgeräumt (kompakt/tabellarisch):** Jeder Zeitpunkt (Anfang/Ende) ist eine einzeilige Zeile (`punktZeile`): schmales Label · kompaktes Datumsfeld (`form-control-sm`, füllt) · prominente Zeit · optional „berechnet"-Badge — alles auf einer Höhe ausgerichtet (statt schwerer form-floating-Box neben schwebendem Text). Einheitliches Padding (`p-3`); Spätschicht auf Von/Bis reduziert.
+
+### fix
+
+- **Nacht-Override wird in der Berechnung genutzt:** `getNachtSchichten` löst Beginn/Ende **und** Pause jetzt je Wochentag aus `aZ.nacht` + `schichtenOverrides.nacht` auf (statt einheitlicher Fensterzeiten/Pause). Ohne Override bleibt das Verhalten unverändert (Fallback auf die Fensterzeiten).
+- **Keine Schein-Overrides mehr aus Zeitfeldern:** Die frühere Logik, aus den (vorbelegten) Spät-/Nacht-Zeitfeldern im Submit Einzeltag-Overrides zu erzeugen, ist entfernt – sie verankerte Nacht-Overrides am falschen Tag (BZ-Anfangstag statt Nacht-Tag) und konnte über Mitternacht gehende Beginn/Ende nicht korrekt halten. `submitBereitschaftsZeiten` reicht jetzt nur noch Variante- + Editor-Overrides durch; Zeitänderungen erfolgen über den Arbeitszeiten-Editor.
+
+### change
+
+- **Typ `IVorgabenUvorgabenB`:** `zeit` in `beginnB`/`endeB`/`beginnN`/`endeN` ist optional (`zeit?`), da die Zeiten aus `aZ` abgeleitet werden (abwärtskompatibel; Backend-Mongoose-Schema entsprechend angepasst).
+
+### test
+
+- Neue Unit-Tests `Bereitschaft.resolveBereitschaftsGrenze.test.ts` (Früh/Spät/Override/arbeitsfrei→08:00). `Bereitschaft.utils.extra.test.ts` auf aZ-Ableitung umgestellt (injiziertes `aZ`).
+
+## 2026-06-21
+
+### fix
+
+- **Arbeitszeit-Schalter speichert `inaktiv` wieder korrekt:** Im `ArbeitszeiteingabePanel` wird der von den Schalter-Komponenten gelieferte Status jetzt unveraendert in den Panel-State uebernommen. Zuvor wurde `aktiv` beim Parent-Update nochmals invertiert, wodurch Spaet-, Nacht- und Sonderschicht beim Speichern in `VorgabenU.aZ` und damit im localStorage auf `aktiv` zuruecksprangen.
+- **Schneller Toggle→Speichern-Race im Arbeitszeit-Panel behoben:** Der globale Panel-State fuer `saveEinstellungen()` wird jetzt sofort beim lokalen State-Update synchronisiert und nicht erst im nachgelagerten `useEffect`. Dadurch wird ein frisch auf `inaktiv` umgeschalteter Status auch dann korrekt in `VorgabenU` und spaeter aus der Serverresponse in den localStorage uebernommen, wenn direkt danach gespeichert wird.
+
+## 2026-06-18
+
+### feat
+
+- **Admin-Tab Profilvorlagen-VorgabenB auf Schichtmodell umgestellt:** Der VorgabenB-Editor im Admin-Tab bot bisher nur die Legacy-Checkbox `nacht`. Er zeigt jetzt die Mehrfachauswahl `Aktive Schichten` (`frueh` fix aktiv, `spaet`/`nacht`/`sonder` waehlbar) analog zum Benutzer-Editor; `nacht` wird daraus synchron gehalten, `schichtenOverrides` bleiben ueber `rawValue` erhalten. Parsing/Serialisierung mappen Legacy-Eintraege (`nacht: true` → `['frueh','nacht']`).
+
+### fix
+
+- **`rows.load` vereinheitlicht (Bug 1b):** Rows ohne `_id` werden jetzt als `_state: 'new'` geladen statt als `'unchanged'`. Nach dem Laden mit neuen Rows wird `_notifyChange()` aufgerufen → AutoSave-Timer startet. `loadSmart` ist damit funktional identisch zu `load` und bleibt als Deprecated-Alias erhalten.
+- **AutoSave-Fehler persistiert (Bug 1a):** `saveResourceNow` ruft `updateLocalStorage()` jetzt auch im catch-Block auf. Error-Rows werden mit `__errorMessage`-Meta-Feld im localStorage gespeichert und überleben einen Jahreswechsel korrekt als `'error'`-State.
+- **Stale `dataServer` bei Jahreswechsel beseitigt (Bug 2):** `syncLoadedYearResources` startet `dataServer` nicht mehr mit `initialDataServer` — das Objekt wird immer frisch als `{}` initialisiert. Konfliktdaten aus einem vorigen Jahres-Load können nicht mehr fälschlich in einen anderen Jahres-Load eingetragen werden.
+- **AutoSave-Status nach Jahreswechsel sofort korrekt (Bug 3):** `loadUserDaten` ruft vor `rows.load` jetzt `cancelAllPending()` auf. Der Status-Indicator zeigt nach einem Reload nicht mehr fälschlich `'pending'`.
+
+### test
+
+- Unit-Tests für `rows.load`: `_state: 'new'` für Rows ohne `_id`, Regression für `'error'`- und `'deleted'`-Restauration, `_notifyChange`-Aufruf bei neuen Rows.
+- Unit-Test für `syncLoadedYearResources`: kein stale `dataServer.X` nach Jahreswechsel ohne Konflikt für die jeweilige Ressource.
+- `Login.LadeUserDaten.test.ts`: Assertion ergänzt, dass `cancelAllPending` vor dem Laden aufgerufen wird.
+
+## 2026-06-13
+
+### fix
+
+- **Konfliktauflösung "Lokale Daten behalten":** Beim Wählen von "Lokale Daten behalten & speichern" werden nun zuerst Server-only-Rows der betroffenen Monate als `deleted` markiert (`reconcileRowsAsDeleted`), bevor die lokalen Rows für den AutoSave vorgemerkt werden. `flushAll()` (mit `includeDeletes=true`) ersetzt `publishEvent('data:changed')`, damit die Löschungen den Server auch tatsächlich erreichen.
+- **`hasLre12TooClose` 08:00-Fenstergrenzen:** Die 10-Minuten-Sperre zwischen LRE 1/2-Einsätzen gilt jetzt nur noch innerhalb desselben 08:00–08:00-Bereitschaftsfensters. Ein LRE 1 vor 08:00 blockiert nicht mehr einen LRE 1 im nächsten Fenster (z. B. 08:16), wenn das vorherige LRE 1 um 07:45 startete.
+
+### feat
+
+- Admin-Tab Profile-Templates: Arbeitszeit im Manager-Ende-zu-Ende auf das neue Modell (`IVorgabenUaZ`) angehoben. Beim Laden wird Legacy-Format weiterhin migriert (`isLegacyArbeitszeit`/`migrateArbeitszeit`), beim Speichern wird das neue Objekt direkt in `template.Arbeitszeit` persistiert und bei deaktivierter Arbeitszeit der Block entfernt.
+- Admin-Template-Editor/Manager-Wiring auf neue Arbeitszeit-Callbacks vereinheitlicht (`onUpdateArbeitszeit`, `onEnableArbeitszeit`), inklusive Aktivieren-Pfad fuer leere Arbeitszeit.
+- Change-Detection fuer Profile-Template-Drafts stabilisiert: Arbeitszeitobjekte werden fuer den Vergleich deterministisch serialisiert.
+
+### test
+
+- `Login.LadeUserDaten.test.ts`: "Lokale Daten behalten"-Test auf async-Handler + `flushAllMock` umgestellt (statt `publishEventMock`).
+- `test/Admin/profileTemplates.shared.test.ts` an den aktuellen Shared-Export angepasst (Legacy-`ARBEITSZEIT_FIELDS`-Annahme entfernt).
+- Verifiziert mit: `bunx tsc --noEmit -p tsconfig.json` sowie `bun run test -- test/Admin.profileTemplates.shared.test.ts test/Admin/profileTemplates.shared.test.ts`.
+
+## 2026-06-08
+
+### feat
+
+- **Per-Wochentag-Schichtmodell (`IVorgabenUaZ`):** 9 flache Zeitstrings (`bT`, `eT`, `eTF`, `bN`, `bBN`, `eN`, `bS`, `eS`, `rZ`) durch strukturiertes Modell ersetzt. `IPerWeekdaySchicht` fasst `default`, optionale `regelarbeitstage` und `overrides` pro ISO-Wochentag zusammen. `ISchichtZeiten` für Sonderschicht (flat). `BN`-Schicht nutzt jetzt `nacht`-Zeiten (`bBN` entfällt).
+- **`resolveSchichtDay` + `groupBySchedule`:** Neue Resolver-Utilities in `core/types`. `resolveSchichtDay(schicht, isoWeekday)` liefert `SchichtBase | null` (null = arbeitsfrei). `groupBySchedule` fasst Tage mit identischem resolved config zusammen (Google-Maps-Stil).
+- **`ArbeitszeiteingabePanel.tsx`:** Neue Preact-Komponente in `features/Einstellungen/components`. Ersetzt 9 statische DOM-Inputs in `#collapseTwo`. Sections für Früh-, Spät-, Nacht-, Sonderschicht mit Wochentag-Chips und per-Gruppe-Editierung. `+1 Tag`-Badge für overnight Schichten. Panel-State wird via `getArbeitszeitPanelState()` von `saveEinstellungen` gelesen.
+- **`fieldMapper.ts` Migration:** `isLegacyArbeitszeit()` erkennt altes Flat-Format; `migrateArbeitszeit()` konvertiert inkl. `??''`-Fallback für fehlende Felder; `arbeitszeitToFlat()` konvertiert zurück für Backend-Kompatibilität.
+- **EWT Modal-Optionen dynamisch:** `buildSchichtOptionen(vorgabenU)` in `createAddModalEWT.tsx` und `createEditorModalEWT.tsx` baut Schichtoptionen aus neuem `aZ`-Format (Früh/Nacht/BN/Sonder) dynamisch auf.
+- **`calculateEwtEintraege`:** `resolveSchichtDay` für Früh- und Nachtschicht; bei EWT-Einträgen auf Nicht-Regelarbeitstagen (z. B. Sa/So) Fallback auf `default`-Config.
+- **`calculateBereitschaftsZeiten`:** Hardcodierte Pausen durch `resolveSchichtDay(aZ.frueh, isoWeekday)` für Tagschichten ersetzt; Nachtpause via `aZ.nacht?.default.pause`.
+- **Bereitschaft Frueh+Spaet Merge:** `calculateBereitschaftsZeiten` merged nun ueberlappende Tagesschichten pro Tag vor der Gap-Berechnung. Dadurch entstehen keine negativen Intervalle mehr bei Kombinationen wie `07:00-15:45` und `14:00-22:00`.
+- **EWT explizite Spaetschicht:** Add-/Edit-Modal bieten bei konfigurierter `aZ.spaet` jetzt eine eigene Schichtoption `SP` (Spät). `calculateEwtEintraege` berechnet `SP` ueber `aZ.spaet` (mit Fallback).
+- **Bereitschafts-Modal mit Override-Hinweis:** "Neue Bereitschaft eingeben" zeigt fuer das gewaehlte Datum die effektiven Schichtzeiten aus `VorgabenU.aZ` (inkl. Tages-Overrides) an.
+- **Bereitschaft `schichtenOverrides` aktiv:** `submitBereitschaftsZeiten` uebergibt jetzt `vorgabenB[...].schichtenOverrides` an `calculateBereitschaftsZeiten`; die Aufloesung fuer Frueh/Spaet/Nacht nutzt gemergte Schichtkonfigurationen pro Wochentag. Zusaetzlich werden Schichtzeitpunkte DST-robust per `.set(hour/minute)` statt `add(Duration)` aufgebaut.
+- **Spät/Nacht: aZ-first mit Modal-Override:** In "Neue Bereitschaft eingeben" werden Spät-/Nachtschichtzeiten primaer aus `VorgabenU.aZ` (inkl. `VorgabenB.schichtenOverrides`) geladen. Fuer Spät gibt es zusaetzliche Override-Felder im Modal; Nacht-Zeiten im Modal werden als Laufzeit-Override in die Berechnung uebernommen.
+- **Override-Tag im Bereitschafts-Modal:** Spät- und Nacht-Overrides lassen sich jetzt explizit pro Wochentag (Mo-So) setzen (`overrides[isoWeekday]`), z. B. "Montag Nacht ab 21:00".
+
+### fix
+
+- **EWT-Download Schichtnormalisierung:** `download.ts` mappt `SP -> T` und `BN -> N` in der Download-Payload, damit der Export konsistente Backend-kompatible Schichtcodes verwendet.
+
+### test
+
+- `mockData.ts`, `EWT.ewtBerechnen.test.ts`, `EWT.utils.extra.test.ts`: `aZ` auf neues Format migriert.
+- `EWT.test.ts`: BN-Einträge auf neue Nacht-Zeiten aktualisiert (BN nutzt nun `nacht.default.beginn` statt separatem `bBN`).
+- `saveEinstellungen.test.ts`: DOM-Input-Loop für `aZ` entfernt; Panel-State-Fallback-Test statt Pflichtfeld-Wurf.
+- `fieldMapper.test.ts`: Assertions auf neues `IVorgabenUaZ`-Format; `migrateArbeitszeit`-Fallback für leere Felder abgedeckt.
+- `apiService.test.ts`: `aZ` auf neues Format aktualisiert.
+
 ## 2026-06-07
 
 ### feat

@@ -5,11 +5,13 @@ import { onEvent } from '@/core/events/appEvents';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import aktualisiereBerechnung from './aktualisiereBerechnung';
 import generateTableBerechnung from './generateTableBerechnung';
+import { initBerechnungMonatsFensterNav } from './berechnungMonatsFenster';
 
 export { generateTableBerechnung, aktualisiereBerechnung };
 
 registerAppStartTask(() => {
   onEvent('data:changed', () => aktualisiereBerechnung());
+  initBerechnungMonatsFensterNav();
 
   if (Storage.check('VorgabenU') && Storage.check('datenBerechnung') && Storage.check('VorgabenGeld')) {
     generateTableBerechnung(

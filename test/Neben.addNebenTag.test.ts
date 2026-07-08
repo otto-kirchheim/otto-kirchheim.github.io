@@ -179,6 +179,50 @@ describe('addNebengeldTag', () => {
     expect(saveTableDataNMock).not.toHaveBeenCalled();
   });
 
+  it('reaktiviert einen zum Löschen vorgemerkten Eintrag für denselben Tag statt einen neuen zu erstellen', async () => {
+    const addNebengeldTag = await loadAddNebengeldTag();
+
+    // tagN must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
+    const data = createDataN('10.03.2026');
+    document.body.innerHTML = `
+      <form id="form">
+        <select id="tagN">
+          <option selected value='${JSON.stringify(data)}'>Tag</option>
+        </select>
+        <input data-zulage-input-code="040" value="1" />
+        <input id="AuftragN" value="A-123" />
+      </form>
+    `;
+    const form = document.querySelector<HTMLFormElement>('#form');
+    if (!form) throw new Error('form not found');
+    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    if (!select) throw new Error('select not found');
+    select.selectedIndex = 0;
+
+    const addMock = vi.fn();
+    const undoDeleteMock = vi.fn();
+    const valMock = vi.fn();
+    const deletedRow = {
+      _state: 'deleted',
+      cells: createDataN('10.03.2026'),
+      undoDelete: undoDeleteMock,
+      val: valMock,
+    };
+    const ftN = {
+      rows: {
+        add: addMock,
+        array: [deletedRow, { _state: 'unchanged', cells: createDataN('11.03.2026') }],
+      },
+    };
+
+    addNebengeldTag(form, ftN);
+
+    expect(undoDeleteMock).toHaveBeenCalledTimes(1);
+    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ tagN: '10.03.2026', auftragN: 'A-123' }));
+    expect(addMock).not.toHaveBeenCalled();
+    expect(saveTableDataNMock).toHaveBeenCalledWith('N', ftN);
+  });
+
   it('zeigt Warn-Snackbar und speichert nicht bei ungueltiger Zulagenkombination', async () => {
     const addNebengeldTag = await loadAddNebengeldTag();
 
