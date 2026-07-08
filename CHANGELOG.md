@@ -4,6 +4,11 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-08
 
+### fix (Act-as – Arbeitszeit-Panel zeigt nach User-Wechsel wieder die geladenen Daten)
+
+- **`generateEingabeMaskeEinstellungen.ts` (`renderArbeitszeiteingabePanel`):** Beim erneuten Laden der Einstellungen (insbesondere nach Admin-Act-as-Wechsel) wird das `ArbeitszeiteingabePanel` jetzt mit einem monotonen `key` neu gemountet. Hintergrund: Die Komponente hält `aZ` intern per `useState(initialValues)` und synchronisiert Prop-Änderungen bewusst nicht per `useEffect`; ohne wechselnden `key` hat Preact die bestehende Instanz wiederverwendet und den alten Zustand (vorheriger User) behalten.
+- **Wirkung:** Nach Act-as-Wechsel springt das Arbeitszeit-Panel auf die tatsächlich neu geladenen User-Werte um (statt auf den vorherigen Stand zu bleiben). Der Fix wirkt ebenso bei normalem Reload und beim Server-Überschreiben nach Konfliktprüfung.
+
 ### fix (Bereitschaft – Von-/Bis-Zeiten wieder manuell setzbar, z. B. bei stundenweiser Übernahme)
 
 - **`createAddModalBereitschaftsZeit.tsx`:** Die beim aZ-Umbau eingeführten rein abgeleiteten, read-only Zeitanzeigen sind jetzt `type="time"`-Inputs (standardmäßig disabled/berechnet). Der Schalter „Datum manuell anpassen" heißt jetzt **„Datum & Zeiten manuell anpassen"** und entsperrt zusätzlich die BZ-Grenzzeiten `bAT`/`bET`. Damit ist die stundenweise Übernahme einer Bereitschaft wieder eingebbar (z. B. Anfang 13:00 nach Feierabend, Ende 12:00 am Folgetag bei Übergabe an den Kollegen). Nacht-/Spät-Zeiten bleiben immer abgeleitet — die Berechnung zieht die Nacht-Blöcke ohnehin aus der Arbeitszeit Nacht, manuelle Werte würden ihr widersprechen; Abweichungen gehören ins Panel „Andere Arbeitszeiten hinterlegen" (Hinweis dazu jetzt direkt im Nachtschicht-Block).
