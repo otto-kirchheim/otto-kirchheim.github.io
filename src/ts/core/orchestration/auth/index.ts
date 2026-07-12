@@ -1,5 +1,6 @@
 import { selectYear } from '@/features/Einstellungen/utils';
 import { registerAppStartTask } from '@/core/bootstrap';
+import { openHelpModal } from '@/core/help/openHelpModal';
 import type { IVorgabenU } from '@/types';
 import { ACT_AS_STATUS_EVENT, updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
 import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
@@ -32,6 +33,10 @@ registerAppStartTask(() => {
 
   const btnLogin = document.querySelector<HTMLButtonElement>('#btnLogin');
   btnLogin?.addEventListener('click', () => createModalLogin());
+
+  document
+    .querySelector<HTMLButtonElement>('#btnHelpStart')
+    ?.addEventListener('click', () => openHelpModal('tab.start'));
 
   const willkommenEl = document.querySelector<HTMLHeadingElement>('#Willkommen');
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');

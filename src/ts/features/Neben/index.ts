@@ -1,6 +1,6 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import { onEvent, registerAppStartTask } from '@/core';
+import { onEvent, openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
@@ -97,6 +97,10 @@ registerAppStartTask(() => {
   btnDownloadN?.addEventListener('click', () => {
     if (checkIfGreater2024(Jahr, true)) download(btnDownloadN, 'N');
   });
+
+  document
+    .querySelector<HTMLButtonElement>('#btnHelpNeben')
+    ?.addEventListener('click', () => openHelpModal('tab.neben'));
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftN.rows.setFilter(

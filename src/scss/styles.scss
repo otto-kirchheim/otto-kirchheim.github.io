@@ -467,3 +467,21 @@ body {
     max-width: 650px;
   }
 }
+
+// Ersteinrichtungs-Panel: volle Breite auf xs/sm, feste Breite ab md (schwebt unten rechts)
+.onboarding-panel {
+  width: 100%;
+}
+
+@media screen and (min-width: 768px) {
+  .onboarding-panel {
+    width: 26rem;
+  }
+}
+
+// Hebt während der Ersteinrichtung den gerade zu prüfenden Einstellungen-Bereich hervor
+.onboarding-focus {
+  outline: 2px solid var(--bs-primary);
+  outline-offset: 2px;
+  border-radius: var(--bs-border-radius);
+}

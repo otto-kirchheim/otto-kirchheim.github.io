@@ -83,6 +83,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       size="fullscreen-sm-down"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      helpContext={row instanceof Row ? 'modal.ewtEintrag.edit' : 'modal.ewtEintrag.add'}
       errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       customButtons={[customButtons]}
       onSubmit={onSubmit()}

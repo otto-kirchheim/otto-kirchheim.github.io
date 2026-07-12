@@ -1,5 +1,5 @@
 import dayjs from '@/infrastructure/date/configDayjs';
-import { registerAppStartTask } from '@/core';
+import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
@@ -326,5 +326,10 @@ registerAppStartTask(() => {
     void ensureEmailAnzeigeLoaded();
     void ensurePasskeyAnzeigeLoaded();
   }
+
+  document
+    .querySelector<HTMLButtonElement>('#btnHelpEinstellungen')
+    ?.addEventListener('click', () => openHelpModal('tab.einstellungen'));
+
   markStep('boot', 'boot:einstellungen');
 });

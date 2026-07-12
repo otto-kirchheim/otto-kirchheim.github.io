@@ -7,6 +7,7 @@ const MyFormModal: FunctionalComponent<TMyModal<HTMLFormElement>> = ({
   myRef,
   onSubmit,
   title,
+  helpContext,
   Header,
   children,
   Footer,
@@ -16,7 +17,7 @@ const MyFormModal: FunctionalComponent<TMyModal<HTMLFormElement>> = ({
 }) => (
   <div className={size ? `modal-dialog modal-${size}` : 'modal-dialog'}>
     <form ref={myRef} onSubmit={onSubmit} className="modal-content">
-      {Header ?? <MyModalHeader title={title} />}
+      {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
       {errorMessage && (
         <div className="alert alert-danger mx-3 mt-3 mb-0 py-2" role="alert">
           <span className="material-icons-round align-middle me-1" style="font-size:1rem">

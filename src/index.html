@@ -310,7 +310,12 @@
       <div class="tab-pane fade show active" id="start" role="tabpanel">
         <div class="container py-4 py-md-5">
           <div class="text-center mb-4 mb-md-5">
-            <h1 class="mt-2" id="Willkommen">Willkommen</h1>
+            <div class="d-inline-flex align-items-center justify-content-center gap-2">
+              <h1 class="mt-2 mb-0" id="Willkommen">Willkommen</h1>
+              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpStart" aria-label="Hilfe anzeigen">
+                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+              </button>
+            </div>
             <p class="text-body-secondary mb-0">Nebengeld digital erfassen, berechnen und als PDF exportieren.</p>
           </div>
 
@@ -384,7 +389,17 @@
       <div class="tab-pane fade" id="Bereitschaft" role="tabpanel">
         <div class="container text-center">
           <div class="row justify-content-center">
-            <h1>Bereitschaft</h1>
+            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+              Bereitschaft
+              <button
+                type="button"
+                class="btn btn-sm btn-link p-0"
+                id="btnHelpBereitschaft"
+                aria-label="Hilfe anzeigen"
+              >
+                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+              </button>
+            </h1>
             <h4 id="MonatB"></h4>
           </div>
 
@@ -441,7 +456,12 @@
       <div class="tab-pane fade" id="EWT" role="tabpanel">
         <div class="container-lg text-center">
           <div class="row justify-content-center">
-            <h1>EWT</h1>
+            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+              EWT
+              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
+                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+              </button>
+            </h1>
             <h4 id="MonatE"></h4>
           </div>
 
@@ -489,7 +509,12 @@
       <div class="tab-pane fade" id="Neben" role="tabpanel">
         <div class="container-lg text-center">
           <div class="row justify-content-center">
-            <h1>Nebenbezüge</h1>
+            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+              Nebenbezüge
+              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpNeben" aria-label="Hilfe anzeigen">
+                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+              </button>
+            </h1>
             <h4 id="MonatN"></h4>
           </div>
 
@@ -602,7 +627,17 @@
       <div class="tab-pane fade" id="Einstellungen" role="tabpanel">
         <div class="container text-center mb-3">
           <div>
-            <h1>Einstellungen</h1>
+            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+              Einstellungen
+              <button
+                type="button"
+                class="btn btn-sm btn-link p-0"
+                id="btnHelpEinstellungen"
+                aria-label="Hilfe anzeigen"
+              >
+                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+              </button>
+            </h1>
           </div>
 
           <div class="container">
@@ -692,7 +727,13 @@
                       <div class="input-group">
                         <span class="input-group-text material-icons-round einstellungen-icons">badge</span>
                         <div class="form-floating">
-                          <input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required />
+                          <input
+                            type="Text"
+                            placeholder="01234567"
+                            id="PNummer"
+                            class="form-control validate"
+                            required
+                          />
                           <label for="PNummer">Personalnummer</label>
                         </div>
                       </div>

@@ -390,6 +390,7 @@ export default function EditorModalVE(
       myRef={ref}
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      helpContext="modal.einstellungen.ve"
       onSubmit={onSubmit()}
     >
       <MyModalBody>

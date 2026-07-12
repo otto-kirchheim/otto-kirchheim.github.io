@@ -21,7 +21,12 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   if (!tableBZ?.instance) throw new Error('tableBZ nicht gefunden');
 
   const modal: CustomHTMLDivElement<IDatenBE> = showModal(
-    <MyFormModal myRef={formRef} title="Neuen Bereitschaftseinsatz eingeben" onSubmit={onSubmit()}>
+    <MyFormModal
+      myRef={formRef}
+      title="Neuen Bereitschaftseinsatz eingeben"
+      helpContext="modal.bereitschaftEinsatz.add"
+      onSubmit={onSubmit()}
+    >
       <MyModalBody>
         <p className="text-bg-warning p-2 rounded small">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein. <br /> Oder wähle die
