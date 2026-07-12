@@ -1,8 +1,10 @@
 import type React from 'preact';
+import type { HelpContextKey } from '@/core/help/helpContent';
 
 export type TMyModal<T> = {
   myRef: React.RefObject<T>;
   title: string;
+  helpContext?: HelpContextKey;
   size?:
     | 'sm'
     | 'lg'

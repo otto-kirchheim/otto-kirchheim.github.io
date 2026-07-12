@@ -180,7 +180,12 @@ export default function createAddModalBereitschaftsZeit(): void {
   };
 
   const modal: CustomHTMLDivElement<IDatenBZ> = showModal(
-    <MyFormModal myRef={formRef} title="Neue Bereitschaft eingeben" onSubmit={onSubmit()}>
+    <MyFormModal
+      myRef={formRef}
+      title="Neue Bereitschaft eingeben"
+      helpContext="modal.bereitschaft.add"
+      onSubmit={onSubmit()}
+    >
       <MyModalBody>
         {vorgabenB_Select()}
 

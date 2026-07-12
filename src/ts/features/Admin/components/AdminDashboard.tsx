@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   fetchAdminStats,
   fetchAdminHeap,
@@ -104,7 +105,7 @@ function MemorySparkline({
   const cW = W - 2 * PX,
     cH = H - PT - PB;
 
-  const times = filtered.map(p => new Date(p.timestamp).getTime());
+  const times = filtered.map(p => dayjs(p.timestamp).valueOf());
   const tMin = Math.min(...times);
   const tMax = Math.max(...times);
   const tRange = tMax - tMin || 1;
@@ -115,7 +116,7 @@ function MemorySparkline({
   const toY = (v: number) => PT + (1 - v / vRange) * cH;
 
   const pts = (items: MetricPoint[], field: 'heapUsed' | 'rss') =>
-    items.map(p => `${toX(new Date(p.timestamp).getTime()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
+    items.map(p => `${toX(dayjs(p.timestamp).valueOf()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
 
   // X-Achsen-Ticks: Intervall abhängig vom Zeitbereich
   const rangeH = tRange / 3_600_000;
@@ -125,13 +126,7 @@ function MemorySparkline({
   const ticks: number[] = [];
   for (let t = firstTick; t <= tMax; t += tickMs) ticks.push(t);
 
-  const fmtTick = (t: number) => {
-    const d = new Date(t);
-    const hh = d.getHours().toString().padStart(2, '0');
-    return tickH < 24
-      ? `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${hh}:00`
-      : `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-  };
+  const fmtTick = (t: number) => dayjs(t).format(tickH < 24 ? 'DD.MM HH:[00]' : 'DD.MM');
 
   const gcp = filtered.filter(p => p.environment === 'gcp');
   const home = filtered.filter(p => p.environment === 'homeserver');
@@ -158,7 +153,7 @@ function MemorySparkline({
 
       {/* Ereignismarker */}
       {nonPeriodic.map((p, i) => {
-        const x = toX(new Date(p.timestamp).getTime());
+        const x = toX(dayjs(p.timestamp).valueOf());
         return (
           <line
             key={i}
@@ -182,7 +177,7 @@ function MemorySparkline({
           {gcp.map((p, i) => (
             <circle
               key={i}
-              cx={toX(new Date(p.timestamp).getTime())}
+              cx={toX(dayjs(p.timestamp).valueOf())}
               cy={toY(p.heapUsed)}
               r="2.5"
               fill="#4285F4"
@@ -200,7 +195,7 @@ function MemorySparkline({
           {home.map((p, i) => (
             <circle
               key={i}
-              cx={toX(new Date(p.timestamp).getTime())}
+              cx={toX(dayjs(p.timestamp).valueOf())}
               cy={toY(p.heapUsed)}
               r="2.5"
               fill="#34A853"
@@ -250,11 +245,11 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
     }
   }
 
-  const nonPeriodic = (heap?.history.filter(p => p.event !== 'periodic') ?? [])
+  const history = (heap?.history ?? [])
     .slice()
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  const eventPageCount = Math.ceil(nonPeriodic.length / EVENTS_PAGE_SIZE);
-  const pagedEvents = nonPeriodic.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
+    .sort((a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf());
+  const eventPageCount = Math.ceil(history.length / EVENTS_PAGE_SIZE);
+  const pagedEvents = history.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
   const cur = heap?.current;
 
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
@@ -388,19 +383,14 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
             </div>
 
             {/* ── Ereignisse ── */}
-            {nonPeriodic.length > 0 && (
+            {history.length > 0 && (
               <div class="mt-2 pt-2 border-top">
-                <div class="small text-body-secondary mb-1">Ereignisse ({nonPeriodic.length}):</div>
+                <div class="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
                 <ul class="list-unstyled mb-0">
                   {pagedEvents.map((p, i) => {
                     const icon =
                       p.event === 'startup' ? 'power_settings_new' : p.event === 'shutdown' ? 'power_off' : 'add_chart';
-                    const ts = new Date(p.timestamp).toLocaleString('de-DE', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    });
+                    const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
                     return (
                       <li key={i} class="py-1 border-bottom">
                         <div class="d-flex align-items-center gap-2">

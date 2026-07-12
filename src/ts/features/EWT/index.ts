@@ -1,6 +1,6 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import { registerAppStartTask } from '@/core';
+import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import type { IVorgabenU } from '@/types';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
@@ -167,6 +167,8 @@ registerAppStartTask(() => {
 
   const btnESEE = document.querySelector<HTMLButtonElement>('#btnESEE');
   btnESEE?.addEventListener('click', () => createAddModalEWT(ftE));
+
+  document.querySelector<HTMLButtonElement>('#btnHelpEWT')?.addEventListener('click', () => openHelpModal('tab.ewt'));
 
   const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   ftE.rows.setFilter(row => isEwtInMonat(row, monat));

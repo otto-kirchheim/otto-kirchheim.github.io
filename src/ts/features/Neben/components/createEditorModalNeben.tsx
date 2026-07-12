@@ -126,6 +126,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       myRef={ref}
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      helpContext={row instanceof Row ? 'modal.nebenEintrag.edit' : 'modal.nebenEintrag.add'}
       errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >

@@ -94,7 +94,13 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
   const configuredZulagen = getConfiguredNebenZulagen();
 
   showModal(
-    <MyFormModal myRef={ref} title="Neuen Nebenbezug eingeben" onSubmit={onSubmit()} customButtons={customFooterButton}>
+    <MyFormModal
+      myRef={ref}
+      title="Neuen Nebenbezug eingeben"
+      helpContext="modal.neben.add"
+      onSubmit={onSubmit()}
+      customButtons={customFooterButton}
+    >
       <MyModalBody>
         <div className="col-12">
           <p className="text-center text-bg-warning p-1 rounded mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
