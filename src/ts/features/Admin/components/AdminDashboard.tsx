@@ -250,11 +250,11 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
     }
   }
 
-  const nonPeriodic = (heap?.history.filter(p => p.event !== 'periodic') ?? [])
+  const history = (heap?.history ?? [])
     .slice()
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  const eventPageCount = Math.ceil(nonPeriodic.length / EVENTS_PAGE_SIZE);
-  const pagedEvents = nonPeriodic.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
+  const eventPageCount = Math.ceil(history.length / EVENTS_PAGE_SIZE);
+  const pagedEvents = history.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
   const cur = heap?.current;
 
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
@@ -388,9 +388,9 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
             </div>
 
             {/* ── Ereignisse ── */}
-            {nonPeriodic.length > 0 && (
+            {history.length > 0 && (
               <div class="mt-2 pt-2 border-top">
-                <div class="small text-body-secondary mb-1">Ereignisse ({nonPeriodic.length}):</div>
+                <div class="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
                 <ul class="list-unstyled mb-0">
                   {pagedEvents.map((p, i) => {
                     const icon =
