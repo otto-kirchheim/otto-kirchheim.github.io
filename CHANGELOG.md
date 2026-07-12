@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-12
+
+### refactor (Datumskonvention: dayjs statt nativer Date-API in den Admin-Komponenten)
+
+- **`AdminDashboard.tsx`, `AdminLogBrowser.tsx`, `AdminResourceBrowser.tsx`:** Alle `new Date(...)`-Verwendungen (Chart-Zeitachsen via `getTime()`, Zeitstempel-Anzeige via `toLocaleString('de-DE', ...)`, UTC-Getter für Datum-only-Felder) durch `dayjs` aus `@/infrastructure/date/configDayjs` ersetzt (`valueOf()`, `format()`, `dayjs.utc()`); Anzeigeformate unverändert. Ungültige Werte werden jetzt per `isValid()`-Guard statt wirkungsloser `try/catch`-Blöcke abgefangen.
+- **`configDayjs.ts`:** utc-Plugin ergänzt, damit Datum-only-Felder im Ressourcen-Browser weiterhin ohne Timezone-Versatz angezeigt/editiert werden (`dayjs.utc()` statt `getUTC*()`-Getter).
+
+### fix (Admin-Dashboard: Ereignisliste zeigt alle Heap-Snapshots)
+
+- **`AdminDashboard.tsx` (MemoryCard):** Die Ereignisliste zeigt jetzt alle History-Punkte inklusive periodischer Snapshots statt nur Startup/Shutdown/Snapshot-Ereignisse.
+
 ## 2026-07-11
 
 ### fix (Onboarding-Startschritt fokussiert persoenliche Daten wieder sofort)
