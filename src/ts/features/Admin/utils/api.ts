@@ -14,6 +14,8 @@ type ApiResponse<T> = {
 type BackendUser = {
   _id: string;
   userName: string;
+  email?: string;
+  emailVerified?: boolean;
   role: TUserRole;
   adminForTeamOes?: string[];
   adminForOrganizationOes?: string[];
@@ -64,6 +66,8 @@ export type BackendProfileTemplate = {
 export type AdminUserRow = {
   _id: string;
   userName: string;
+  email: string;
+  emailVerified: boolean;
   fullName: string;
   role: TUserRole;
   oe: string;
@@ -114,6 +118,8 @@ export async function fetchAdminUsers(filter: { name?: string; role?: string }):
       return {
         _id: user._id,
         userName: user.userName,
+        email: user.email ?? '',
+        emailVerified: Boolean(user.emailVerified),
         fullName: profileSummary.fullName,
         role: user.role,
         oe: profileSummary.oe,
@@ -182,6 +188,27 @@ export async function updateUserPassword(userId: string, newPassword: string): P
   );
   unwrapResponse<unknown>(response);
   createSnackBar({ message: 'Passwort wurde gesetzt', status: 'success', timeout: 2000 });
+}
+
+/** Vom Backend genau einmal ausgelieferter Verifizierungs-/Reset-Link (wird nie persistiert). */
+export type AdminIssuedLink = {
+  url: string;
+  expiresAt: string;
+  mailSent: boolean;
+};
+
+export async function issueVerificationLink(userId: string): Promise<AdminIssuedLink> {
+  const response = await FetchRetry<undefined, AdminIssuedLink>(`users/${userId}/verification-link`, undefined, 'POST');
+  return unwrapResponse<AdminIssuedLink>(response);
+}
+
+export async function issuePasswordResetLink(userId: string): Promise<AdminIssuedLink> {
+  const response = await FetchRetry<undefined, AdminIssuedLink>(
+    `users/${userId}/password-reset-link`,
+    undefined,
+    'POST',
+  );
+  return unwrapResponse<AdminIssuedLink>(response);
 }
 
 export async function deleteUser(userId: string): Promise<void> {

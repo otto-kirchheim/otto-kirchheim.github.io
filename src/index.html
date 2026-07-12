@@ -992,9 +992,14 @@
                           >Biometrie-Status wird geladen...</small
                         >
                       </div>
-                      <button class="btn btn-outline-primary" type="button" id="btnAddPasskeyInline" disabled>
-                        Biometrie einrichten
-                      </button>
+                      <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-outline-primary" type="button" id="btnAddPasskeyInline" disabled>
+                          Biometrie einrichten
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" id="btnPasswortPerPasskey" hidden>
+                          Passwort per Passkey neu setzen
+                        </button>
+                      </div>
                     </div>
                     <div class="list-group" id="PasskeyList"></div>
                   </div>

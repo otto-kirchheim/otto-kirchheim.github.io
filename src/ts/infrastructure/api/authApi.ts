@@ -46,6 +46,20 @@ export const authApi = {
     return result;
   },
 
+  /** Setzt nach frischer Passkey-Assertion ein neues Passwort (ohne altes Passwort). */
+  async setPasswordWithPasskey(
+    credential: AuthenticationResponseJSON,
+    challengeToken: string,
+    newPassword: string,
+  ): Promise<void> {
+    const result = await apiFetch<
+      { credential: AuthenticationResponseJSON; challengeToken: string; newPassword: string },
+      { accessToken: string; refreshToken: string }
+    >('auth/passkeys/set-password', { credential, challengeToken, newPassword }, 'POST');
+    Storage.set('AccessToken', result.accessToken);
+    Storage.set('RefreshToken', result.refreshToken);
+  },
+
   async register(userName: string, email: string, password: string, accessCode: string): Promise<void> {
     const result = await apiFetch<
       { userName: string; email: string; password: string; accessCode: string },

@@ -4,6 +4,19 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-12
 
+### fix (deps: TypeScript 7.0.2 → 6.0.3 — ESLint/Pre-Commit-Hook war komplett defekt)
+
+- **`package.json`:** TypeScript von 7.0.2 auf 6.0.3 zurückgestuft (analog Backend). TS 7 hat noch keine stabile Programmier-API; `typescript-eslint` crashte beim Start und der Husky-Pre-Commit-Hook (lint-staged) blockierte damit jeden Commit. Re-Upgrade auf TS 7, sobald `typescript-eslint` die 7.1-API unterstützt.
+
+### feat (E-Mail-unabhängige Verifikation & Passwort-Reset — Admin-Login-Hilfe + Passwort per Passkey)
+
+Hintergrund: Der DB-Konzernfilter stuft die Verifikations-/Reset-Mails als Spam ein; beide Flows funktionieren jetzt auch ohne zugestellte Mail.
+
+- **`createAdminUserLinksModal.tsx` (neu):** „Login-Hilfe"-Modal im Admin-Bereich — erzeugt pro Benutzer einen Verifikations- und/oder Passwort-Reset-Link (`issueVerificationLink`/`issuePasswordResetLink` in `Admin/utils/api.ts`). Neben „Link kopieren" gibt es „Text kopieren": ein fertiger deutscher Nachrichtentext (Anrede, Erklärung, Link, Gültigkeit 48h/2h) zum direkten Einfügen in DB-Outlook/Teams. Hinweise: Link wird nur einmal angezeigt; bei `mailSent === false` Warnung, dass der Mailversand fehlgeschlagen/deaktiviert ist. Bei bereits verifizierter E-Mail wird kein Verifikations-Link angeboten.
+- **`AdminUserList.tsx`:** Neuer Link-Button (Icon `link`) neben dem Passwort-Button öffnet das Modal; in der Kompakt-Info zeigt ein Badge „E-Mail verifiziert / nicht verifiziert" (Tooltip: E-Mail-Adresse), damit Team-Admins sehen, wann ein Verifikations-Link nötig ist. `AdminUserRow` um `email`/`emailVerified` erweitert.
+- **`createModalPasskeySetPassword.tsx` (neu) + `authApi.setPasswordWithPasskey()`:** „Passwort per Passkey neu setzen" in Einstellungen → Biometrie & Geräte — setzt ein neues Passwort ohne altes Passwort, bestätigt durch eine frische Passkey-Assertion (`POST auth/passkeys/set-password`). Andere Sitzungen werden abgemeldet, die aktuelle Session erhält frische Tokens. Der Button (`#btnPasswortPerPasskey` in `index.html`) ist nur sichtbar, wenn WebAuthn unterstützt wird und mindestens ein Passkey existiert.
+- **Tests:** `adminApi.test.ts` um Link-Endpunkte und `email`/`emailVerified`-Mapping erweitert (27 Tests grün; Gesamtsuite 1263 Tests grün).
+
 ### refactor (Datumskonvention: dayjs statt nativer Date-API in den Admin-Komponenten)
 
 - **`AdminDashboard.tsx`, `AdminLogBrowser.tsx`, `AdminResourceBrowser.tsx`:** Alle `new Date(...)`-Verwendungen (Chart-Zeitachsen via `getTime()`, Zeitstempel-Anzeige via `toLocaleString('de-DE', ...)`, UTC-Getter für Datum-only-Felder) durch `dayjs` aus `@/infrastructure/date/configDayjs` ersetzt (`valueOf()`, `format()`, `dayjs.utc()`); Anzeigeformate unverändert. Ungültige Werte werden jetzt per `isValid()`-Guard statt wirkungsloser `try/catch`-Blöcke abgefangen.
