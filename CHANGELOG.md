@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-14
+
+### feat (Admin-Dashboard: Memory-Chart mit Session-Lücken + wählbarem Zeitraum)
+
+- **`AdminDashboard.tsx` (MemorySparkline):** Linien verbinden nur noch Datenpunkte derselben Server-Session (`sessionId`, neu vom Backend pro Prozessstart vergeben) — über Downtime-Phasen wird keine Linie mehr gezogen. Fallback für Alt-Daten ohne `sessionId`: Segment-Break bei jedem `startup`-Event. Punkte-Marker bleiben unverändert, einzelne Punkte (Session mit nur einem Snapshot) bleiben sichtbar.
+- **`AdminDashboard.tsx` (MemoryCard):** Zeitraum des Memory-Verlaufs wählbar (24 Std. / 3 / 7 / 14 / 30 Tage, Select im Karten-Header) statt fix 7 Tage; Auswahl lädt den Verlauf neu (`GET admin/heap?days=N`). X-Achsen-Ticks passen sich wie bisher automatisch an.
+- **`Admin/utils/api.ts`:** `MetricPoint`/`HeapData.current` um `sessionId?` erweitert, `fetchAdminHeap(days = 7)` mit Query-Parameter.
+
 ## 2026-07-12
 
 ### fix (deps: TypeScript 7.0.2 → 6.0.3 — ESLint/Pre-Commit-Hook war komplett defekt)

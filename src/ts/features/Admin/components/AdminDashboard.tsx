@@ -118,6 +118,19 @@ function MemorySparkline({
   const pts = (items: MetricPoint[], field: 'heapUsed' | 'rss') =>
     items.map(p => `${toX(dayjs(p.timestamp).valueOf()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
 
+  // Nur Punkte derselben Server-Session verbinden – kein Strich über Downtime hinweg.
+  // Fallback für Alt-Daten ohne sessionId: neues Segment bei jedem Startup-Event.
+  const toSegments = (items: MetricPoint[]): MetricPoint[][] => {
+    const segments: MetricPoint[][] = [];
+    for (const p of items) {
+      const current = segments[segments.length - 1];
+      const prev = current?.[current.length - 1];
+      if (!prev || p.sessionId !== prev.sessionId || p.event === 'startup') segments.push([p]);
+      else current.push(p);
+    }
+    return segments;
+  };
+
   // X-Achsen-Ticks: Intervall abhängig vom Zeitbereich
   const rangeH = tRange / 3_600_000;
   const tickH = rangeH <= 12 ? 2 : rangeH <= 48 ? 6 : rangeH <= 168 ? 24 : 48;
@@ -130,6 +143,8 @@ function MemorySparkline({
 
   const gcp = filtered.filter(p => p.environment === 'gcp');
   const home = filtered.filter(p => p.environment === 'homeserver');
+  const gcpSegments = toSegments(gcp);
+  const homeSegments = toSegments(home);
   const nonPeriodic = filtered.filter(p => p.event !== 'periodic');
 
   return (
@@ -172,8 +187,12 @@ function MemorySparkline({
       {/* GCP – blau */}
       {visibleEnvironments.has('gcp') && gcp.length > 0 && (
         <>
-          <polyline points={pts(gcp, 'rss')} fill="none" stroke="#4285F4" strokeWidth="1" opacity="0.4" />
-          <polyline points={pts(gcp, 'heapUsed')} fill="none" stroke="#4285F4" strokeWidth="2" opacity="0.9" />
+          {gcpSegments.map((seg, i) => (
+            <g key={i}>
+              <polyline points={pts(seg, 'rss')} fill="none" stroke="#4285F4" strokeWidth="1" opacity="0.4" />
+              <polyline points={pts(seg, 'heapUsed')} fill="none" stroke="#4285F4" strokeWidth="2" opacity="0.9" />
+            </g>
+          ))}
           {gcp.map((p, i) => (
             <circle
               key={i}
@@ -190,8 +209,12 @@ function MemorySparkline({
       {/* HomeServer – grün */}
       {visibleEnvironments.has('homeserver') && home.length > 0 && (
         <>
-          <polyline points={pts(home, 'rss')} fill="none" stroke="#34A853" strokeWidth="1" opacity="0.4" />
-          <polyline points={pts(home, 'heapUsed')} fill="none" stroke="#34A853" strokeWidth="2" opacity="0.9" />
+          {homeSegments.map((seg, i) => (
+            <g key={i}>
+              <polyline points={pts(seg, 'rss')} fill="none" stroke="#34A853" strokeWidth="1" opacity="0.4" />
+              <polyline points={pts(seg, 'heapUsed')} fill="none" stroke="#34A853" strokeWidth="2" opacity="0.9" />
+            </g>
+          ))}
           {home.map((p, i) => (
             <circle
               key={i}
@@ -214,7 +237,21 @@ function MemorySparkline({
 
 const EVENTS_PAGE_SIZE = 10;
 
-function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loading: boolean; onRefresh: () => void }) {
+const HEAP_RANGE_OPTIONS = [1, 3, 7, 14, 30] as const;
+
+function MemoryCard({
+  heap,
+  loading,
+  days,
+  onDaysChange,
+  onRefresh,
+}: {
+  heap: HeapData | null;
+  loading: boolean;
+  days: number;
+  onDaysChange: (days: number) => void;
+  onRefresh: () => void;
+}) {
   const [snapping, setSnapping] = useState(false);
   const [eventsPage, setEventsPage] = useState(0);
   const [visibleEnvironments, setVisibleEnvironments] = useState<Set<'gcp' | 'homeserver'>>(
@@ -264,11 +301,21 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
               memory
             </span>
             Memory-Verlauf
-            <span class="text-body-secondary fw-normal ms-1" style="font-size:.75rem">
-              (7 Tage)
-            </span>
           </h6>
           <div class="d-flex gap-2 flex-shrink-0">
+            <select
+              class="form-select form-select-sm w-auto"
+              value={days}
+              disabled={loading}
+              title="Zeitraum des Memory-Verlaufs"
+              onChange={e => onDaysChange(Number((e.target as HTMLSelectElement).value))}
+            >
+              {HEAP_RANGE_OPTIONS.map(d => (
+                <option key={d} value={d}>
+                  {d === 1 ? '24 Std.' : `${d} Tage`}
+                </option>
+              ))}
+            </select>
             <button
               class="btn btn-sm btn-outline-success"
               onClick={takeSnapshot}
@@ -458,20 +505,26 @@ export function AdminDashboard() {
   const [heap, setHeap] = useState<HeapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [heapLoading, setHeapLoading] = useState(false);
+  const [heapDays, setHeapDays] = useState(7);
   const [error, setError] = useState<string | null>(null);
 
-  function loadHeap() {
+  function loadHeap(days = heapDays) {
     setHeapLoading(true);
-    return fetchAdminHeap()
+    return fetchAdminHeap(days)
       .then(setHeap)
       .catch(() => {})
       .finally(() => setHeapLoading(false));
   }
 
+  function changeHeapDays(days: number) {
+    setHeapDays(days);
+    void loadHeap(days);
+  }
+
   function load() {
     setLoading(true);
     setError(null);
-    Promise.all([fetchAdminStats(), fetchAdminHeap()])
+    Promise.all([fetchAdminStats(), fetchAdminHeap(heapDays)])
       .then(([s, h]) => {
         setStats(s);
         setHeap(h);
@@ -637,7 +690,13 @@ export function AdminDashboard() {
 
       <div class="row g-3 mt-0">
         <div class="col-12">
-          <MemoryCard heap={heap} loading={heapLoading} onRefresh={loadHeap} />
+          <MemoryCard
+            heap={heap}
+            loading={heapLoading}
+            days={heapDays}
+            onDaysChange={changeHeapDays}
+            onRefresh={() => void loadHeap()}
+          />
         </div>
       </div>
 

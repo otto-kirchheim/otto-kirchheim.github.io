@@ -467,6 +467,8 @@ export type MetricPoint = {
   timestamp: string;
   environment?: 'gcp' | 'homeserver';
   event: 'startup' | 'periodic' | 'manual' | 'shutdown';
+  /** Eindeutig pro Server-Prozessstart – fehlt bei Alt-Daten */
+  sessionId?: string;
   uptime: number;
   rss: number;
   heapUsed: number;
@@ -478,6 +480,7 @@ export type MetricPoint = {
 export type HeapData = {
   current: {
     environment?: 'gcp' | 'homeserver';
+    sessionId?: string;
     uptime: number;
     rss: number;
     heapUsed: number;
@@ -487,8 +490,8 @@ export type HeapData = {
   history: MetricPoint[];
 };
 
-export async function fetchAdminHeap(): Promise<HeapData> {
-  const response = await FetchRetry<undefined, HeapData>('admin/heap', undefined, 'GET');
+export async function fetchAdminHeap(days = 7): Promise<HeapData> {
+  const response = await FetchRetry<undefined, HeapData>(`admin/heap?days=${days}`, undefined, 'GET');
   return unwrapResponse<HeapData>(response);
 }
 
