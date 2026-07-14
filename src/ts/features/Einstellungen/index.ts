@@ -1,5 +1,5 @@
 import dayjs from '@/infrastructure/date/configDayjs';
-import { registerAppStartTask } from '@/core';
+import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
@@ -7,7 +7,7 @@ import { setAutoSaveEnabled, setAutoSaveDelay } from '@/infrastructure/autoSave/
 import { authApi } from '@/infrastructure/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { createModalChangePassword } from './components';
+import { createModalChangePassword, createModalPasskeySetPassword } from './components';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import {
   logoutUser,
@@ -160,6 +160,7 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
 
 async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   const inlinePasskeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');
+  const passkeySetPasswordButton = document.querySelector<HTMLButtonElement>('#btnPasswortPerPasskey');
   const passkeyHint = document.querySelector<HTMLElement>('#PasskeyStatus');
 
   if (!inlinePasskeyButton || !passkeyHint) return;
@@ -168,6 +169,12 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   inlinePasskeyButton.disabled = !webAuthnSupported;
 
   const passkeys = await authApi.getPasskeys().catch(() => null);
+
+  // Passwort-Neusetzen per Passkey nur anbieten, wenn mindestens ein Passkey nutzbar ist
+  if (passkeySetPasswordButton) {
+    passkeySetPasswordButton.hidden = !webAuthnSupported || !passkeys || passkeys.length === 0;
+  }
+
   if (passkeys === null) {
     renderPasskeyList([]);
     passkeyHint.hidden = false;
@@ -284,6 +291,9 @@ registerAppStartTask(() => {
   const btnPasswortAEndern = document.querySelector<HTMLButtonElement>('#btnPasswortAEndern');
   btnPasswortAEndern?.addEventListener('click', createModalChangePassword);
 
+  const btnPasswortPerPasskey = document.querySelector<HTMLButtonElement>('#btnPasswortPerPasskey');
+  btnPasswortPerPasskey?.addEventListener('click', createModalPasskeySetPassword);
+
   const btnResendVerificationEmail = document.querySelector<HTMLButtonElement>('#btnResendVerificationEmail');
   btnResendVerificationEmail?.addEventListener('click', () => {
     void resendVerificationEmailFromSettings();
@@ -326,5 +336,10 @@ registerAppStartTask(() => {
     void ensureEmailAnzeigeLoaded();
     void ensurePasskeyAnzeigeLoaded();
   }
+
+  document
+    .querySelector<HTMLButtonElement>('#btnHelpEinstellungen')
+    ?.addEventListener('click', () => openHelpModal('tab.einstellungen'));
+
   markStep('boot', 'boot:einstellungen');
 });

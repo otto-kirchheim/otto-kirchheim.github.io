@@ -13,6 +13,7 @@ import type { TUserRole } from '@/types';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { OeTagInput } from './OeTagInput';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';
+import createAdminUserLinksModal from './createAdminUserLinksModal';
 import { loadUserDataForAdminSelection } from '../utils/actAs';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 
@@ -392,6 +393,17 @@ export function AdminUserList() {
                     <span class="text-body-secondary">OE:</span>
                     <span class="fw-medium">{currentUser.oe || '–'}</span>
 
+                    <span
+                      class={`badge ${
+                        currentUser.emailVerified
+                          ? 'bg-success-subtle text-success-emphasis'
+                          : 'bg-danger-subtle text-danger-emphasis'
+                      }`}
+                      title={currentUser.email || undefined}
+                    >
+                      {currentUser.emailVerified ? 'E-Mail verifiziert' : 'E-Mail nicht verifiziert'}
+                    </span>
+
                     {currentUser.adminForTeamOes.length > 0 && (
                       <>
                         <span class="text-body-secondary ms-2">Team:</span>
@@ -592,6 +604,21 @@ export function AdminUserList() {
                         >
                           <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle">
                             password
+                          </span>
+                        </button>
+                      )}
+                      {editable && (
+                        <button
+                          class="btn btn-outline-info btn-sm"
+                          onClick={() =>
+                            createAdminUserLinksModal(currentUser._id, currentUser.userName, currentUser.emailVerified)
+                          }
+                          disabled={isSaving}
+                          title="Verifizierungs-/Passwort-Reset-Link erzeugen"
+                          data-disabler
+                        >
+                          <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle">
+                            link
                           </span>
                         </button>
                       )}

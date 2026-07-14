@@ -110,6 +110,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
       size="sm"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      helpContext={row instanceof Row ? 'modal.bereitschaftEintrag.edit' : 'modal.bereitschaftEintrag.add'}
       errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >

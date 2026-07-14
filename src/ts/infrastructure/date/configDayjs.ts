@@ -10,6 +10,7 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore.js';
 import isoWeek from 'dayjs/plugin/isoWeek.js';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat.js';
 import minMax from 'dayjs/plugin/minMax.js';
+import utc from 'dayjs/plugin/utc.js';
 import weekday from 'dayjs/plugin/weekday.js';
 
 dayjs.locale('de');
@@ -23,6 +24,7 @@ dayjs.extend(isSameOrBefore);
 dayjs.extend(isoWeek);
 dayjs.extend(LocalizedFormat);
 dayjs.extend(minMax);
+dayjs.extend(utc);
 dayjs.extend(weekday);
 
 export default dayjs;

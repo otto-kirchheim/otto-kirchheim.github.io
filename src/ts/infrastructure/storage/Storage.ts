@@ -36,6 +36,8 @@ enum StorageData {
   AccessToken = 'Access Token',
   RefreshToken = 'Refresh Token',
   key = 'Test Daten',
+  OnboardingAbgeschlossen = 'Onboarding abgeschlossen',
+  OnboardingPersSnapshot = 'Onboarding Pers-Snapshot',
 }
 
 export type TStorageData = keyof typeof StorageData;

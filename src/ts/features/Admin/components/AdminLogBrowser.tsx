@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
 
 const ITEMS_PER_PAGE = 25;
 
 function formatTs(val: unknown): string {
   if (!val) return '—';
-  try {
-    return new Date(String(val)).toLocaleString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return String(val);
-  }
+  const d = dayjs(String(val));
+  return d.isValid() ? d.format('DD.MM.YY, HH:mm') : String(val);
 }
 
 function truncateId(val: unknown): string {

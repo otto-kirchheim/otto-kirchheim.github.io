@@ -1,5 +1,6 @@
 import { createPortal } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
+import dayjs from '@/infrastructure/date/configDayjs';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { JsonEditor } from './JsonEditor';
 import {
@@ -150,55 +151,28 @@ function looksLikeIso(val: unknown): boolean {
   return typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(val);
 }
 
-// Datumsfelder die nur Datum (kein Zeit) enthalten: UTC-Teile nutzen (kein Timezone-Versatz)
+// Datumsfelder die nur Datum (kein Zeit) enthalten: UTC nutzen (kein Timezone-Versatz)
 function formatDateOnly(isoStr: string): string {
-  try {
-    const d = new Date(isoStr);
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    const mon = String(d.getUTCMonth() + 1).padStart(2, '0');
-    return `${day}.${mon}.${d.getUTCFullYear()}`;
-  } catch {
-    return isoStr;
-  }
+  const d = dayjs.utc(isoStr);
+  return d.isValid() ? d.format('DD.MM.YYYY') : isoStr;
 }
 
 // Datetime-Felder: lokale Zeitzone anzeigen
 function formatDateTime(isoStr: string): string {
-  try {
-    return new Date(isoStr).toLocaleString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return isoStr;
-  }
+  const d = dayjs(isoStr);
+  return d.isValid() ? d.format('DD.MM.YY, HH:mm') : isoStr;
 }
 
 // ISO → "YYYY-MM-DD" (UTC-Datum für type="date" input)
 function toDateInput(isoStr: string): string {
-  try {
-    const d = new Date(isoStr);
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${dd}`;
-  } catch {
-    return '';
-  }
+  const d = dayjs.utc(isoStr);
+  return d.isValid() ? d.format('YYYY-MM-DD') : '';
 }
 
 // ISO → "YYYY-MM-DDTHH:mm" (lokale Zeit für type="datetime-local" input)
 function toDatetimeLocal(isoStr: string): string {
-  try {
-    const d = new Date(isoStr);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch {
-    return '';
-  }
+  const d = dayjs(isoStr);
+  return d.isValid() ? d.format('YYYY-MM-DDTHH:mm') : '';
 }
 
 function formatCell(fieldName: string, val: unknown): string {
@@ -873,7 +847,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                               value={toDatetimeLocal(String(val))}
                               onChange={e => {
                                 const v = (e.target as HTMLInputElement).value;
-                                handleValueChange(key, v ? new Date(v).toISOString() : null);
+                                handleValueChange(key, v ? dayjs(v).toISOString() : null);
                               }}
                             />
                           ) : fieldEnum ? (

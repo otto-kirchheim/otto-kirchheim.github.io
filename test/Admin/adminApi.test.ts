@@ -31,6 +31,8 @@ import {
   fetchProfileTemplates,
   fetchVorgabeByYear,
   fetchVorgabenYears,
+  issuePasswordResetLink,
+  issueVerificationLink,
   setActAsUser,
   updateProfileTemplate,
   updateUserOe,
@@ -93,6 +95,52 @@ describe('Admin API', () => {
       const result = await fetchAdminUsers({});
       expect(result[0].fullName).toBe('');
       expect(result[0].oe).toBe('');
+    });
+
+    it('mappt email und emailVerified aus der Backend-Antwort', async () => {
+      mockFetchRetry
+        .mockResolvedValueOnce({
+          success: true,
+          data: [
+            {
+              _id: 'u3',
+              userName: 'vera',
+              email: 'vera@deutschebahn.com',
+              emailVerified: true,
+              role: 'member',
+              adminForTeamOes: [],
+              adminForOrganizationOes: [],
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ success: true, data: {} });
+
+      const result = await fetchAdminUsers({});
+      expect(result[0].email).toBe('vera@deutschebahn.com');
+      expect(result[0].emailVerified).toBe(true);
+    });
+  });
+
+  describe('Admin-Fallback-Links', () => {
+    it('issueVerificationLink sendet POST und gibt Link-Daten zurück', async () => {
+      mockSuccess({ url: 'https://api.example/auth/verify-email/abc', expiresAt: '2026-07-14', mailSent: false });
+      const result = await issueVerificationLink('u1');
+      expect(mockFetchRetry).toHaveBeenCalledWith('users/u1/verification-link', undefined, 'POST');
+      expect(result.url).toContain('verify-email');
+      expect(result.mailSent).toBe(false);
+    });
+
+    it('issuePasswordResetLink sendet POST und gibt Link-Daten zurück', async () => {
+      mockSuccess({ url: 'https://app.example/?resetPasswordToken=abc', expiresAt: '2026-07-12', mailSent: true });
+      const result = await issuePasswordResetLink('u1');
+      expect(mockFetchRetry).toHaveBeenCalledWith('users/u1/password-reset-link', undefined, 'POST');
+      expect(result.url).toContain('resetPasswordToken');
+      expect(result.mailSent).toBe(true);
+    });
+
+    it('wirft bei API-Fehler', async () => {
+      mockError('E-Mail ist bereits verifiziert');
+      await expect(issueVerificationLink('u1')).rejects.toThrow('E-Mail ist bereits verifiziert');
     });
   });
 

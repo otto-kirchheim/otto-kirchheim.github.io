@@ -36,6 +36,12 @@ describe('MyDivModal', () => {
     expect(alert?.querySelector('.material-icons-round')?.textContent).toBe('error');
   });
 
+  it('should pass helpContext through to the default MyModalHeader', () => {
+    const container = renderMyDivModal({ title: 'Titel', helpContext: 'tab.start' });
+
+    expect(container.querySelector('[aria-label="Hilfe anzeigen"]')).not.toBeNull();
+  });
+
   it('should render a custom Header instead of the default MyModalHeader', () => {
     const container = renderMyDivModal({
       title: 'Titel',

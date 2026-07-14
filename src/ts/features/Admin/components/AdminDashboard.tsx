@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import dayjs from '@/infrastructure/date/configDayjs';
 import {
   fetchAdminStats,
   fetchAdminHeap,
@@ -104,7 +105,7 @@ function MemorySparkline({
   const cW = W - 2 * PX,
     cH = H - PT - PB;
 
-  const times = filtered.map(p => new Date(p.timestamp).getTime());
+  const times = filtered.map(p => dayjs(p.timestamp).valueOf());
   const tMin = Math.min(...times);
   const tMax = Math.max(...times);
   const tRange = tMax - tMin || 1;
@@ -115,7 +116,20 @@ function MemorySparkline({
   const toY = (v: number) => PT + (1 - v / vRange) * cH;
 
   const pts = (items: MetricPoint[], field: 'heapUsed' | 'rss') =>
-    items.map(p => `${toX(new Date(p.timestamp).getTime()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
+    items.map(p => `${toX(dayjs(p.timestamp).valueOf()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
+
+  // Nur Punkte derselben Server-Session verbinden – kein Strich über Downtime hinweg.
+  // Fallback für Alt-Daten ohne sessionId: neues Segment bei jedem Startup-Event.
+  const toSegments = (items: MetricPoint[]): MetricPoint[][] => {
+    const segments: MetricPoint[][] = [];
+    for (const p of items) {
+      const current = segments[segments.length - 1];
+      const prev = current?.[current.length - 1];
+      if (!prev || p.sessionId !== prev.sessionId || p.event === 'startup') segments.push([p]);
+      else current.push(p);
+    }
+    return segments;
+  };
 
   // X-Achsen-Ticks: Intervall abhängig vom Zeitbereich
   const rangeH = tRange / 3_600_000;
@@ -125,16 +139,12 @@ function MemorySparkline({
   const ticks: number[] = [];
   for (let t = firstTick; t <= tMax; t += tickMs) ticks.push(t);
 
-  const fmtTick = (t: number) => {
-    const d = new Date(t);
-    const hh = d.getHours().toString().padStart(2, '0');
-    return tickH < 24
-      ? `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${hh}:00`
-      : `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}`;
-  };
+  const fmtTick = (t: number) => dayjs(t).format(tickH < 24 ? 'DD.MM HH:[00]' : 'DD.MM');
 
   const gcp = filtered.filter(p => p.environment === 'gcp');
   const home = filtered.filter(p => p.environment === 'homeserver');
+  const gcpSegments = toSegments(gcp);
+  const homeSegments = toSegments(home);
   const nonPeriodic = filtered.filter(p => p.event !== 'periodic');
 
   return (
@@ -158,7 +168,7 @@ function MemorySparkline({
 
       {/* Ereignismarker */}
       {nonPeriodic.map((p, i) => {
-        const x = toX(new Date(p.timestamp).getTime());
+        const x = toX(dayjs(p.timestamp).valueOf());
         return (
           <line
             key={i}
@@ -177,12 +187,16 @@ function MemorySparkline({
       {/* GCP – blau */}
       {visibleEnvironments.has('gcp') && gcp.length > 0 && (
         <>
-          <polyline points={pts(gcp, 'rss')} fill="none" stroke="#4285F4" strokeWidth="1" opacity="0.4" />
-          <polyline points={pts(gcp, 'heapUsed')} fill="none" stroke="#4285F4" strokeWidth="2" opacity="0.9" />
+          {gcpSegments.map((seg, i) => (
+            <g key={i}>
+              <polyline points={pts(seg, 'rss')} fill="none" stroke="#4285F4" strokeWidth="1" opacity="0.4" />
+              <polyline points={pts(seg, 'heapUsed')} fill="none" stroke="#4285F4" strokeWidth="2" opacity="0.9" />
+            </g>
+          ))}
           {gcp.map((p, i) => (
             <circle
               key={i}
-              cx={toX(new Date(p.timestamp).getTime())}
+              cx={toX(dayjs(p.timestamp).valueOf())}
               cy={toY(p.heapUsed)}
               r="2.5"
               fill="#4285F4"
@@ -195,12 +209,16 @@ function MemorySparkline({
       {/* HomeServer – grün */}
       {visibleEnvironments.has('homeserver') && home.length > 0 && (
         <>
-          <polyline points={pts(home, 'rss')} fill="none" stroke="#34A853" strokeWidth="1" opacity="0.4" />
-          <polyline points={pts(home, 'heapUsed')} fill="none" stroke="#34A853" strokeWidth="2" opacity="0.9" />
+          {homeSegments.map((seg, i) => (
+            <g key={i}>
+              <polyline points={pts(seg, 'rss')} fill="none" stroke="#34A853" strokeWidth="1" opacity="0.4" />
+              <polyline points={pts(seg, 'heapUsed')} fill="none" stroke="#34A853" strokeWidth="2" opacity="0.9" />
+            </g>
+          ))}
           {home.map((p, i) => (
             <circle
               key={i}
-              cx={toX(new Date(p.timestamp).getTime())}
+              cx={toX(dayjs(p.timestamp).valueOf())}
               cy={toY(p.heapUsed)}
               r="2.5"
               fill="#34A853"
@@ -219,7 +237,21 @@ function MemorySparkline({
 
 const EVENTS_PAGE_SIZE = 10;
 
-function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loading: boolean; onRefresh: () => void }) {
+const HEAP_RANGE_OPTIONS = [1, 3, 7, 14, 30] as const;
+
+function MemoryCard({
+  heap,
+  loading,
+  days,
+  onDaysChange,
+  onRefresh,
+}: {
+  heap: HeapData | null;
+  loading: boolean;
+  days: number;
+  onDaysChange: (days: number) => void;
+  onRefresh: () => void;
+}) {
   const [snapping, setSnapping] = useState(false);
   const [eventsPage, setEventsPage] = useState(0);
   const [visibleEnvironments, setVisibleEnvironments] = useState<Set<'gcp' | 'homeserver'>>(
@@ -250,11 +282,11 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
     }
   }
 
-  const nonPeriodic = (heap?.history.filter(p => p.event !== 'periodic') ?? [])
+  const history = (heap?.history ?? [])
     .slice()
-    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  const eventPageCount = Math.ceil(nonPeriodic.length / EVENTS_PAGE_SIZE);
-  const pagedEvents = nonPeriodic.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
+    .sort((a, b) => dayjs(b.timestamp).valueOf() - dayjs(a.timestamp).valueOf());
+  const eventPageCount = Math.ceil(history.length / EVENTS_PAGE_SIZE);
+  const pagedEvents = history.slice(eventsPage * EVENTS_PAGE_SIZE, (eventsPage + 1) * EVENTS_PAGE_SIZE);
   const cur = heap?.current;
 
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
@@ -269,11 +301,21 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
               memory
             </span>
             Memory-Verlauf
-            <span class="text-body-secondary fw-normal ms-1" style="font-size:.75rem">
-              (7 Tage)
-            </span>
           </h6>
           <div class="d-flex gap-2 flex-shrink-0">
+            <select
+              class="form-select form-select-sm w-auto"
+              value={days}
+              disabled={loading}
+              title="Zeitraum des Memory-Verlaufs"
+              onChange={e => onDaysChange(Number((e.target as HTMLSelectElement).value))}
+            >
+              {HEAP_RANGE_OPTIONS.map(d => (
+                <option key={d} value={d}>
+                  {d === 1 ? '24 Std.' : `${d} Tage`}
+                </option>
+              ))}
+            </select>
             <button
               class="btn btn-sm btn-outline-success"
               onClick={takeSnapshot}
@@ -388,19 +430,14 @@ function MemoryCard({ heap, loading, onRefresh }: { heap: HeapData | null; loadi
             </div>
 
             {/* ── Ereignisse ── */}
-            {nonPeriodic.length > 0 && (
+            {history.length > 0 && (
               <div class="mt-2 pt-2 border-top">
-                <div class="small text-body-secondary mb-1">Ereignisse ({nonPeriodic.length}):</div>
+                <div class="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
                 <ul class="list-unstyled mb-0">
                   {pagedEvents.map((p, i) => {
                     const icon =
                       p.event === 'startup' ? 'power_settings_new' : p.event === 'shutdown' ? 'power_off' : 'add_chart';
-                    const ts = new Date(p.timestamp).toLocaleString('de-DE', {
-                      day: '2-digit',
-                      month: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    });
+                    const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
                     return (
                       <li key={i} class="py-1 border-bottom">
                         <div class="d-flex align-items-center gap-2">
@@ -468,20 +505,26 @@ export function AdminDashboard() {
   const [heap, setHeap] = useState<HeapData | null>(null);
   const [loading, setLoading] = useState(true);
   const [heapLoading, setHeapLoading] = useState(false);
+  const [heapDays, setHeapDays] = useState(7);
   const [error, setError] = useState<string | null>(null);
 
-  function loadHeap() {
+  function loadHeap(days = heapDays) {
     setHeapLoading(true);
-    return fetchAdminHeap()
+    return fetchAdminHeap(days)
       .then(setHeap)
       .catch(() => {})
       .finally(() => setHeapLoading(false));
   }
 
+  function changeHeapDays(days: number) {
+    setHeapDays(days);
+    void loadHeap(days);
+  }
+
   function load() {
     setLoading(true);
     setError(null);
-    Promise.all([fetchAdminStats(), fetchAdminHeap()])
+    Promise.all([fetchAdminStats(), fetchAdminHeap(heapDays)])
       .then(([s, h]) => {
         setStats(s);
         setHeap(h);
@@ -647,7 +690,13 @@ export function AdminDashboard() {
 
       <div class="row g-3 mt-0">
         <div class="col-12">
-          <MemoryCard heap={heap} loading={heapLoading} onRefresh={loadHeap} />
+          <MemoryCard
+            heap={heap}
+            loading={heapLoading}
+            days={heapDays}
+            onDaysChange={changeHeapDays}
+            onRefresh={() => void loadHeap()}
+          />
         </div>
       </div>
 

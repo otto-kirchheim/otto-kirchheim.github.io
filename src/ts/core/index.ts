@@ -5,3 +5,6 @@ export { StorageStateStore } from './state/storageStateStore';
 export { registerAppStartTask, initializeAppBootstrap } from './bootstrap';
 export { publishEvent, onEvent, clearAllEventListeners } from './events/appEvents';
 export type { EventChannel, EventChannels } from './events/types';
+export { getHelpContent } from './help/helpContent';
+export type { HelpContextKey, HelpContent } from './help/helpContent';
+export { openHelpModal } from './help/openHelpModal';

@@ -128,6 +128,9 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       myRef={ref}
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
+      helpContext={
+        row instanceof Row ? 'modal.bereitschaftEinsatzEintrag.edit' : 'modal.bereitschaftEinsatzEintrag.add'
+      }
       errorMessage={row instanceof Row && row.isError ? (row._errorMessage ?? undefined) : undefined}
       onSubmit={onSubmit()}
     >

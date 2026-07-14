@@ -6,6 +6,7 @@ import { authApi } from '@/infrastructure/api/apiService';
 import { registerPasskeyWithResult } from '@/infrastructure/tokenManagement/passkeys';
 import { getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
 import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
+import { openOnboardingGuideOnce } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
 import userLoginSuccess from './userLoginSuccess';
 import type { CustomHTMLDivElement } from '@/types';
 
@@ -110,6 +111,8 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
       email: me?.email,
       emailVerified: me?.emailVerified,
     });
+
+    openOnboardingGuideOnce();
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(msg);

@@ -3,6 +3,7 @@ import MyCheckbox from './MyCheckbox';
 import MyDivModal from './MyDivModal';
 import MyEditorFooter from './MyEditorFooter';
 import MyFormModal from './MyFormModal';
+import MyHelpModal from './MyHelpModal';
 import MyInput from './MyInput';
 import MyModalBody from './MyModalBody';
 import MyModalHeader from './MyModalHeader';
@@ -17,6 +18,7 @@ export {
   MyDivModal,
   MyEditorFooter,
   MyFormModal,
+  MyHelpModal,
   MyInput,
   MyModalBody,
   MyModalHeader,

@@ -110,7 +110,13 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   };
 
   const modal = showModal<IDatenEWT>(
-    <MyFormModal myRef={ref} size="sm" title="Neue Anwesenheit eingeben" onSubmit={onSubmit()}>
+    <MyFormModal
+      myRef={ref}
+      size="sm"
+      title="Neue Anwesenheit eingeben"
+      helpContext="modal.ewt.add"
+      onSubmit={onSubmit()}
+    >
       <MyModalBody>
         <div className="col-12">
           <MyButton

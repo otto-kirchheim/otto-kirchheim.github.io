@@ -2,6 +2,72 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-14
+
+### feat (Admin-Dashboard: Memory-Chart mit Session-Lücken + wählbarem Zeitraum)
+
+- **`AdminDashboard.tsx` (MemorySparkline):** Linien verbinden nur noch Datenpunkte derselben Server-Session (`sessionId`, neu vom Backend pro Prozessstart vergeben) — über Downtime-Phasen wird keine Linie mehr gezogen. Fallback für Alt-Daten ohne `sessionId`: Segment-Break bei jedem `startup`-Event. Punkte-Marker bleiben unverändert, einzelne Punkte (Session mit nur einem Snapshot) bleiben sichtbar.
+- **`AdminDashboard.tsx` (MemoryCard):** Zeitraum des Memory-Verlaufs wählbar (24 Std. / 3 / 7 / 14 / 30 Tage, Select im Karten-Header) statt fix 7 Tage; Auswahl lädt den Verlauf neu (`GET admin/heap?days=N`). X-Achsen-Ticks passen sich wie bisher automatisch an.
+- **`Admin/utils/api.ts`:** `MetricPoint`/`HeapData.current` um `sessionId?` erweitert, `fetchAdminHeap(days = 7)` mit Query-Parameter.
+
+## 2026-07-12
+
+### fix (deps: TypeScript 7.0.2 → 6.0.3 — ESLint/Pre-Commit-Hook war komplett defekt)
+
+- **`package.json`:** TypeScript von 7.0.2 auf 6.0.3 zurückgestuft (analog Backend). TS 7 hat noch keine stabile Programmier-API; `typescript-eslint` crashte beim Start und der Husky-Pre-Commit-Hook (lint-staged) blockierte damit jeden Commit. Re-Upgrade auf TS 7, sobald `typescript-eslint` die 7.1-API unterstützt.
+
+### feat (E-Mail-unabhängige Verifikation & Passwort-Reset — Admin-Login-Hilfe + Passwort per Passkey)
+
+Hintergrund: Der DB-Konzernfilter stuft die Verifikations-/Reset-Mails als Spam ein; beide Flows funktionieren jetzt auch ohne zugestellte Mail.
+
+- **`createAdminUserLinksModal.tsx` (neu):** „Login-Hilfe"-Modal im Admin-Bereich — erzeugt pro Benutzer einen Verifikations- und/oder Passwort-Reset-Link (`issueVerificationLink`/`issuePasswordResetLink` in `Admin/utils/api.ts`). Neben „Link kopieren" gibt es „Text kopieren": ein fertiger deutscher Nachrichtentext (Anrede, Erklärung, Link, Gültigkeit 48h/2h) zum direkten Einfügen in DB-Outlook/Teams. Hinweise: Link wird nur einmal angezeigt; bei `mailSent === false` Warnung, dass der Mailversand fehlgeschlagen/deaktiviert ist. Bei bereits verifizierter E-Mail wird kein Verifikations-Link angeboten.
+- **`AdminUserList.tsx`:** Neuer Link-Button (Icon `link`) neben dem Passwort-Button öffnet das Modal; in der Kompakt-Info zeigt ein Badge „E-Mail verifiziert / nicht verifiziert" (Tooltip: E-Mail-Adresse), damit Team-Admins sehen, wann ein Verifikations-Link nötig ist. `AdminUserRow` um `email`/`emailVerified` erweitert.
+- **`createModalPasskeySetPassword.tsx` (neu) + `authApi.setPasswordWithPasskey()`:** „Passwort per Passkey neu setzen" in Einstellungen → Biometrie & Geräte — setzt ein neues Passwort ohne altes Passwort, bestätigt durch eine frische Passkey-Assertion (`POST auth/passkeys/set-password`). Andere Sitzungen werden abgemeldet, die aktuelle Session erhält frische Tokens. Der Button (`#btnPasswortPerPasskey` in `index.html`) ist nur sichtbar, wenn WebAuthn unterstützt wird und mindestens ein Passkey existiert.
+- **Tests:** `adminApi.test.ts` um Link-Endpunkte und `email`/`emailVerified`-Mapping erweitert (27 Tests grün; Gesamtsuite 1263 Tests grün).
+
+### refactor (Datumskonvention: dayjs statt nativer Date-API in den Admin-Komponenten)
+
+- **`AdminDashboard.tsx`, `AdminLogBrowser.tsx`, `AdminResourceBrowser.tsx`:** Alle `new Date(...)`-Verwendungen (Chart-Zeitachsen via `getTime()`, Zeitstempel-Anzeige via `toLocaleString('de-DE', ...)`, UTC-Getter für Datum-only-Felder) durch `dayjs` aus `@/infrastructure/date/configDayjs` ersetzt (`valueOf()`, `format()`, `dayjs.utc()`); Anzeigeformate unverändert. Ungültige Werte werden jetzt per `isValid()`-Guard statt wirkungsloser `try/catch`-Blöcke abgefangen.
+- **`configDayjs.ts`:** utc-Plugin ergänzt, damit Datum-only-Felder im Ressourcen-Browser weiterhin ohne Timezone-Versatz angezeigt/editiert werden (`dayjs.utc()` statt `getUTC*()`-Getter).
+
+### fix (Admin-Dashboard: Ereignisliste zeigt alle Heap-Snapshots)
+
+- **`AdminDashboard.tsx` (MemoryCard):** Die Ereignisliste zeigt jetzt alle History-Punkte inklusive periodischer Snapshots statt nur Startup/Shutdown/Snapshot-Ereignisse.
+
+## 2026-07-11
+
+### fix (Onboarding-Startschritt fokussiert persoenliche Daten wieder sofort)
+
+- **`createOnboardingGuideModal.tsx`:** Der Startschritt (`intro`) oeffnet jetzt wieder direkt den Einstellungen-Tab und den Pers-Accordion-Bereich (`#collapseOne`). Damit bleibt das erwartete Verhalten stabil: Guide offen, gleichzeitig direkter Fokus auf die persoenlichen Daten.
+- **`onboardingValidation.ts`:** `springeZu(...)` nutzt direkte Bootstrap-Imports (`Tab`, `Collapse`) statt asynchronem Dynamic-Import. Dadurch ist der Tab-/Accordion-Sprung im Onboarding-Effekt deterministischer und race-frei.
+- **`onboarding.createOnboardingGuideModal.test.ts`:** Mock-Call-Pruefungen TS-sicher auf `.at(0)` umgestellt, damit der Frontend-Typecheck keine Tuple-Indexierungsfehler mehr meldet.
+
+### feat (Ersteinrichtung als schwebendes Panel mit Validierung + Eingaberegeln in Tab-Hilfen)
+
+- **`createOnboardingGuideModal.tsx` (Umbau):** Der Ersteinrichtungs-Guide ist kein Bootstrap-Modal mehr, sondern ein **schwebendes Panel** (`position: fixed`, Card-Optik, `z-index: 1040` unter Bootstrap-Modals, kein Backdrop/Scroll-Lock) — die App bleibt während der Ersteinrichtung voll bedienbar, Add/Edit-Modale öffnen über dem Panel, das geteilte `#modal`-Element bleibt frei. Ab 768px schwebt es unten rechts (26rem, neue SCSS-Klasse `.onboarding-panel`), auf xs/sm dockt es in voller Breite unten an; minimierbar über den Panel-Header.
+- **Neue Schritt-Struktur:** Jeder Einstellungs-Schritt öffnet beim Aufrufen automatisch den zugehörigen Einstellungen-Bereich (Accordion) und hebt ihn visuell hervor (`.onboarding-focus`), sodass der Nutzer direkt dort vergleicht — keine separaten „Bereich öffnen"-Buttons. (1) _Persönliche Daten_ mit Hard-Gate — „Weiter" erst, wenn Vorname, Nachname, Personalnummer, Telefon und Wohnsitz 1 eingetragen sind; (2–4) _Arbeitszeit/Bereitschaft/Fahrzeiten_ werden direkt über den Weiter-Button bestätigt („Passt, weiter", kein separater „Ja, passt"-Klick); (5+) _Tab-Tour_ durch alle sichtbaren Tabs (Inhalte aus `getHelpContent`, keine Duplikate) ohne Gate; Abschluss mit Zusammenfassung. „Überspringen" beendet jederzeit. Keine E-Mail-Verifizierungs- oder Monatsdaten-Pflicht (DB-interne Mail-Restriktionen; Datenerfassung ist nicht Teil der Ersteinrichtung).
+- **Textkorrekturen in der Tour:** Die Prüfschritte 2–4 sind jetzt kürzer formuliert, die Tab-Tour wechselt beim Schrittwechsel automatisch auf die jeweiligen Tabs und der überflüssige Button „Tab ansehen" entfällt. Im Berechnungsschritt wurde der falsche PDF-Hinweis entfernt; dort geht es jetzt nur noch um das Prüfen und Vergleichen der Monatswerte. Schritt 1 nutzt jetzt denselben Weiter-Mechanismus ohne separaten „Erneut prüfen"-Button, und die Pflichtfeldprüfung blockiert keine legitimen Werte mehr wie einen Vornamen „Max". Der letzte Tour-Schritt springt beim Weiterklick zurück auf den Start-Tab.
+- **Onboarding-Prüfung live gegen Formularzustand:** Schritt 1 bewertet jetzt direkt die sichtbaren Eingabefelder der persönlichen Daten (statt eines gespeicherten Snapshot-/Template-Vergleichs). Damit spiegeln Panel-Status und Weiter-Button den tatsächlichen Formularzustand wider, inklusive Browser-Validierungsfehlern wie leeren Pflichtfeldern oder einer fehlenden Personalnummer.
+- **`onboardingValidation.ts` (neu):** „Eigene Daten eingetragen" wird per **Snapshot-Vergleich** geprüft statt gegen hartkodierte Platzhalter — die Template-Werte sind je Zugangscode unterschiedlich. `capturePersSnapshot()` legt im Registrierungs-Flow einmalig einen Snapshot der 5 Felder an (neuer `Storage`-Key `OnboardingPersSnapshot`); „bearbeitet" = nicht leer und ungleich Snapshot; ohne Snapshot (Bestandsnutzer) nur Nicht-leer-Prüfung. `springeZu(tabButtonId, collapseId?)` wechselt den Tab und öffnet das passende Einstellungen-Accordion (`#collapseOne`–`#collapseFour`) mit Scroll.
+- **Live-Aktualisierung:** Panel revalidiert bei `data:changed`-Events und per „Erneut prüfen".
+- **Tab-Hilfen (`helpContent.ts`, `MyHelpModal.tsx`):** Neue Sektion **„Eingaberegeln"** je Tab — Bereitschaft (Zeitraumwechsel spätestens 08:00, keine Überlappung, Einsatz im Zeitraum, LRE-1-Regeln), EWT (chronologische Zeitfolge, keine Tages-Überschneidung, Buchungstag-Abweichung), Nebenbezüge (ein Eintrag/Tag, 9-stellige Auftragsnummer, EWT-Voraussetzung für Schnellauswahl), Einstellungen (Nacht-Zeitraum, Standard-Exklusivität). `haeufigeFehler` bei EWT/Neben um konkrete Punkte ergänzt.
+- **Tests:** Neue `onboardingValidation.test.ts` (Snapshot-Anlage/-Schutz, Feld-genaue Offen-Liste, Bestandsnutzer-Fallback); Guide-Tests auf Panel umgestellt (eigenes Element, `#modal` unangetastet, Hard-Gate nur Schritt 1, Bestätigungs-Gates, Tab-Tour nur sichtbare Tabs, Accordion-Sprung, Cleanup, Doppelt-Öffnen-Schutz).
+- **Test-Fix:** Die Accordion-Prüfung im Guide-Test hängt nicht mehr an einer strikten DOM-Objektidentität, sondern prüft stabil auf die erwarteten Button-/Collapse-IDs. Das verhindert falsche Negativtreffer im Bun/happy-dom-Umfeld, ohne das Verhalten zu ändern.
+
+## 2026-07-09
+
+### feat (Kontextsensitive Hilfe für Tabs/Modals + Ersteinrichtungs-Guide nach Registrierung)
+
+- **`core/help/helpContent.ts`, `core/help/openHelpModal.tsx`:** Neue zentrale Hilfe-Architektur. `getHelpContent(key)` liefert strukturierte Kurzmodus-Inhalte (Kurzbeschreibung, Was kann ich hier machen, Buttons, Schritte, häufige Fehler, Tipp) je `HelpContextKey`. `openHelpModal(key)` öffnet die Hilfe in einem eigenständigen, gestapelten Bootstrap-Modal (dynamisch erzeugtes Element, analog zu `confirmDialog.ts`) statt im geteilten `#modal`-Element — dadurch bleibt ein bereits geöffnetes Add/Edit-Modal (oder der Ersteinrichtungs-Guide) beim Öffnen/Schließen der Hilfe vollständig erhalten.
+- **`MyModalHeader.tsx`, `MyFormModal.tsx`, `MyDivModal.tsx`, `TMyModal.ts`:** Neuer optionaler `helpContext`-Prop, der einen Hilfe-Button (Material Icon `help_outline`) neben dem Schließen-Button rendert.
+- **Tab-Hilfe:** Hilfe-Trigger in Start, Bereitschaft, EWT, Nebenbezüge und Einstellungen (Desktop-Navbar und mobiles Offcanvas teilen sich dieselbe DOM, daher automatisch konsistent erreichbar).
+- **Modal-Hilfe:** `helpContext` an allen 9 Add/Edit-Modalen ergänzt (Bereitschaftszeit, Bereitschaftseinsatz, EWT, Nebenbezug, Arbeitszeitvorgabe); Show-Modals bewusst ausgenommen.
+- **`core/orchestration/onboarding/createOnboardingGuideModal.tsx`:** Neuer schrittbasierter Ersteinrichtungs-Guide (Konto/E-Mail → Einstellungen → Monat erfassen → PDF-Export). Öffnet automatisch genau einmal nach erfolgreicher Registrierung (`checkNeuerBenutzer.ts`, neuer `Storage`-Key `OnboardingAbgeschlossen`) und ist über die Aktion „Ersteinrichtung erneut öffnen" im Start-Tab-Hilfemodal (`reopenOnboardingAction`-Flag in `HelpContent`) jederzeit manuell erneut aufrufbar.
+- **Content-Überarbeitung Modal-Hilfe (User-Feedback):** Die Modal-Kontexte erklären nicht mehr die selbsterklärenden Hinzufügen/Speichern/Abbrechen-Buttons, sondern konkrete Eingabehilfe je Feld (`felder`-Sektion in `HelpContent`, neue Überschrift „Eingabehilfe" in `MyHelpModal`) – z. B. Auftragsnummer muss 9-stellig sein, LRE-Kategorien, wann „Büro"/Nachtschicht/Zusatzschichten aktiviert werden sollten.
+- **Überarbeitung `haeufigeFehler` (User-Feedback):** Alle „Häufige Fehler"-Einträge beschreiben jetzt echte, im Code geprüfte Stolperfallen statt vager Hinweise: Bereitschaftseinsatz-Kontexte nennen die tatsächlichen Validierungsregeln aus `submitBereitschaftsEinsatz.ts` (Einsatz-Überschneidung, nur ein LRE 1 pro Zeitraum, 10-Minuten-Abstand → „LRE 1/2 ohne x"); EWT-Editor-Kontexte den Zeitfenster-Konflikt mit anderen Tagen; `tab.start`/`tab.einstellungen` erhalten je einen Eintrag (übersprungene Ersteinrichtung, übersehene E-Mail-Verifizierung). Irreführende bzw. nicht auftretbare „Fehler" korrigiert oder entfernt (Nachtschicht-Punkt beim Wochen-Generator → falsche Vorlagen-Wahl, da die Checkbox aus der Vorlage vorbelegt wird; keine Pause-Bereichs-Warnung, da nativ per `min`/`max` validiert; VE-Eintrag von neutraler Feststellung zu versehentlicher Standard-Markierung umformuliert).
+- **Korrektur Modal-Kontexte (User-Feedback):** Bereitschaft, Bereitschaftseinsatz, EWT und Neben haben je zwei fachlich unterschiedliche Modal-Typen — ein Schnelleingabe-/Wochen-Generator-Modal (`createAddModalXxx.tsx`, globaler Button) und einen generischen, spaltengetriebenen Einzeleintrags-Editor (`createEditorModalXxx.tsx`, aus der Tabelle heraus für Hinzufügen/Bearbeiten). Beide nutzten fälschlich denselben `helpContext`, obwohl Felder/Verhalten unterschiedlich sind (z. B. zeigte die Hilfe im einfachen Bereitschaftszeitraum-Editor fälschlich Vorlagen-Auswahl und Nachtschicht-Toggles, die dort gar nicht existieren). Neue, getrennte Keys `modal.bereitschaftEintrag.add/edit`, `modal.bereitschaftEinsatzEintrag.add/edit`, `modal.ewtEintrag.add/edit`, `modal.nebenEintrag.add/edit` für die Editor-Modale ergänzt; `modal.bereitschaft.add`, `modal.bereitschaftEinsatz.add`, `modal.ewt.add`, `modal.neben.add` bleiben den jeweiligen Schnelleingabe-/Generator-Modalen vorbehalten.
+- **Tests:** Neue Tests für `getHelpContent` (alle 18 Keys liefern vollständige Pflichtsektionen, Modal-Kontexte nutzen `felder` statt `buttons`), `openHelpModal` (gestapeltes Modal, geteiltes `#modal` bleibt unangetastet, Cleanup nach `hidden.bs.modal`), `MyModalHeader`/`MyDivModal` (Hilfe-Trigger nur bei gesetztem `helpContext`), `MyHelpModal` (Reopen-Onboarding-Aktion nur im Start-Kontext) und den Onboarding-Guide (genau einmal automatisch, jederzeit manuell).
+
 ## 2026-07-08
 
 ### fix (Act-as – Arbeitszeit-Panel zeigt nach User-Wechsel wieder die geladenen Daten)

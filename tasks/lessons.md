@@ -1,5 +1,7 @@
 # Lessons Learned
 
+- Datumskonvention gilt auch für Chart-Mathematik und Anzeige-Formatierung: NIEMALS `new Date(...)`, `.getTime()`, `.toLocaleString()` oder UTC-Getter verwenden — immer `dayjs` aus `@/infrastructure/date/configDayjs` (`valueOf()` statt `getTime()`, `format()` statt `toLocaleString()`, `dayjs.utc()` statt `getUTC*()`; utc-Plugin ist in configDayjs geladen). Vor Übergabe neuer Komponenten `grep -rn "new Date" src/ts` laufen lassen — die Regel wurde in den Admin-Komponenten (Dashboard, LogBrowser, ResourceBrowser) mehrfach übersehen.
+- Bei Onboarding-Schritten, die direkt nach dem Rendern Tab-/Accordion-Navigation ausloesen, keine unnötigen Dynamic-Imports in der Sprungfunktion verwenden; fuer deterministisches Timing (und stabile Tests) Bootstrap-Module direkt importieren.
 - Bei `CustomTable.rows.load(...)` in Monatsansichten nie nur den aktuell sichtbaren Monatsausschnitt laden, wenn spätere Monatswechsel weiter auf derselben Tabelleninstanz filtern. Der `rows.array`-State muss den vollständigen geladenen Jahresbestand behalten; sonst verschwinden andere Monate nach `Berechnen` scheinbar aus der UI.
 - Bei Act-As-/"fremde Daten"-Flows immer eine persistente, gut sichtbare UI-Anzeige plus schnellen Rückweg zu den eigenen Daten anbieten; Statuswechsel am besten zentral per CustomEvent/Storage-Sync an Banner und Admin-UI broadcasten.
 - Frontendspezifische Regeln immer mit konkreten Datei- und Pfadangaben hinterlegen.
