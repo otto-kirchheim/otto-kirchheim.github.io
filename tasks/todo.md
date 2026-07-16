@@ -1,3 +1,28 @@
+# Aktueller Plan: Einstellungen → Fahrzeiten als editierbare Liste (Add/Delete/Reorder) - 2026-07-16
+
+### Plan
+
+- [x] State-Bridge `fahrzeitPanelState.ts` analog `arbeitszeitPanelState.ts` anlegen
+- [x] Preact-Island `FahrzeitenPanel.tsx` mit „Zeile hinzufügen", Löschen pro Zeile, ↑/↓-Verschieben, Live-Validierung und Empty-State erstellen (Vorlage: Admin-Fahrzeit-Editor)
+- [x] `index.html`: statische Fahrzeiten-Tabelle durch `<div id="fahrzeiten-panel">` ersetzen
+- [x] `generateEingabeMaskeEinstellungen.ts`: `populateTable` (3 fixe Leerzeilen) durch `renderFahrzeitenPanel` mit Remount-Key ersetzen
+- [x] `saveEinstellungen.ts`: DOM-Scraping (`table_to_array_einstellungen`) durch Bridge-Read ersetzen
+- [x] SCSS: Aktions-Buttons im Mobile-Karten-Layout stylen
+- [x] Tests anpassen (saveEinstellungen, generateEingabeMaske, mockData) + neuer FahrzeitenPanel-Test
+- [x] Scope-Erweiterung (User-Entscheid): Beschreibung (`text`) optional — FE (collectFahrzeiten, Panel-Validierung, Admin-Filter) + BE (Zod, Mongoose UserProfile/ProfileTemplate) + Tests
+- [x] CHANGELOG.md (FE + BE) aktualisieren
+
+### Verifikationskriterien
+
+- `bun run lint`, `bun run test`, `bun run build` laufen sauber
+- Einstellungen → Fahrzeiten: keine fixen Leerzeilen mehr; Hinzufügen/Löschen/Verschieben funktioniert; Teilzeile → `is-invalid` + Speichern bricht mit Snackbar ab; Leerzeilen werden beim Speichern gestrippt; Reihenfolge landet im PUT-Payload
+
+### Review
+
+- Ergebnis: Fahrzeiten-Editor als Preact-Island mit Add/Delete/↑↓-Reorder, Live-Validierung, „optional"-Beschreibung und Empty-State. Verhaltensverbesserung: Zeilen ohne Tätigkeitsstätte, aber mit Daten, werden nicht mehr still verworfen, sondern blockieren das Speichern mit feldgenauer Snackbar.
+- Verifikation: FE `bunx tsc --noEmit` + `bun run lint` + `bun run test` (1276 grün) + `bun run build`; BE `bunx tsc --noEmit` + `bun run lint` + `bun run test` (610 grün). End-to-end: Vite-Dev-Server + Chrome headless (puppeteer-core), 12 Checks grün — Rendern ohne Leerzeilen, Add+Fokus, Live-Validierung (Beschreibung nie rot), Move/Randpositionen, Delete, Save-Block bei Teilzeile inkl. Snackbar, Persistenz (Reihenfolge + leere Beschreibung) in localStorage, Empty-State, Mobile-Karten-Layout. Rezept in `.claude/skills/verify/SKILL.md` festgehalten.
+- Hinweis: PUT `user-profiles/me` wurde offline nicht abgesetzt (kein Backend im Test); die Persistenzsemantik ist über `Storage.set` (identischer Datenpfad vor dem PUT) abgedeckt. Backend-Zod/Mongoose akzeptieren leere Beschreibung nachweislich per Schema-Tests.
+
 # Aktueller Plan: Bereitschafts-Modal um aktive Overrides und Sonder-Block erweitert - 2026-06-21
 
 ### Plan

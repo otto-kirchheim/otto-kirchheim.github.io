@@ -131,9 +131,9 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
   }
 
   function setupDomShell(): void {
-    const tbody = document.createElement('tbody');
-    tbody.id = 'TbodyTätigkeitsstätten';
-    document.body.appendChild(tbody);
+    const fahrzeitenPanel = document.createElement('div');
+    fahrzeitenPanel.id = 'fahrzeiten-panel';
+    document.body.appendChild(fahrzeitenPanel);
 
     const collapse = document.createElement('div');
     collapse.id = 'collapseFive';
@@ -278,9 +278,9 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
       <span id="autoSaveDelayLabel"></span>
     `;
 
-    const tbody = document.createElement('tbody');
-    tbody.id = 'TbodyTätigkeitsstätten';
-    document.body.appendChild(tbody);
+    const fahrzeitenPanel = document.createElement('div');
+    fahrzeitenPanel.id = 'fahrzeiten-panel';
+    document.body.appendChild(fahrzeitenPanel);
 
     const list = document.createElement('div');
     list.id = 'settings-zulagen-list';
@@ -304,11 +304,11 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
 
     generateEingabeMaskeEinstellungen(buildFullVorgabenU());
 
-    // populateTable: Tätigkeitsstätten-Zeile aus fZ + 3 Leerzeilen.
-    // Hinweis: happy-dom implementiert HTMLTableSectionElement.rows nicht, daher .children statt .rows.
-    const tbody = document.querySelector<HTMLTableElement>('#TbodyTätigkeitsstätten');
-    expect(tbody?.children.length).toBe(4);
-    const firstRowInputs = tbody?.children[0]?.querySelectorAll<HTMLInputElement>('input');
+    // renderFahrzeitenPanel: Preact-Panel rendert genau die fZ-Zeilen (keine fixen Leerzeilen mehr).
+    const fahrzeitenPanel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
+    const fahrzeitenRows = fahrzeitenPanel?.querySelectorAll('tbody tr');
+    expect(fahrzeitenRows?.length).toBe(1);
+    const firstRowInputs = fahrzeitenRows?.[0]?.querySelectorAll<HTMLInputElement>('input');
     expect(firstRowInputs?.[0]?.value).toBe('Kaiserau');
 
     // renderArbeitszeiteingabePanel: Preact-Panel wurde ins Ziel-Div gerendert.

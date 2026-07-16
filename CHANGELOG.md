@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-16
+
+### feat (Einstellungen → Fahrzeiten: editierbare Liste mit Hinzufügen/Löschen/Verschieben)
+
+- **`FahrzeitenPanel.tsx` (neu):** Die Fahrzeiten-Tabelle ist jetzt ein Preact-Island statt statischem HTML + DOM-Befüllung. Neue Bedienung: „Zeile hinzufügen"-Button (ersetzt die 3 fixen Leerzeilen, Fokus springt in die neue Zeile), Löschen pro Zeile, ↑/↓-Verschieben (Randpositionen deaktiviert; Reihenfolge wird end-to-end persistiert), Live-Validierung (leere Pflichtfelder teilgefüllter Zeilen werden als `is-invalid` markiert) und Empty-State „Keine Fahrzeiten hinterlegt.". Mobile behält das Karten-Layout mit Feld-Labels; die Aktions-Buttons laufen dort in voller Breite (`styles.scss`).
+- **`fahrzeitPanelState.ts` (neu):** State-Bridge analog `arbeitszeitPanelState` — das Panel synchronisiert Änderungen sofort (nicht erst im Effect), `saveEinstellungen()` liest den State von dort statt die Tabelle per DOM-Scraping auszulesen (`table_to_array_einstellungen` entfernt). Komplett leere Zeilen werden beim Speichern weiterhin still verworfen; teilgefüllte Zeilen blockieren mit feldgenauer Snackbar (neu: auch eine Zeile ohne Tätigkeitsstätte blockiert, statt still verworfen zu werden — kein Datenverlust mehr).
+- **Beschreibung ist jetzt optional:** `text` ist ein reines Notizfeld (wird fachlich nirgends ausgewertet; EWT nutzt nur Tätigkeitsstätte + Fahrzeit). Speichern verlangt nur noch Tätigkeitsstätte und Fahrzeit; das Eingabefeld zeigt den Platzhalter „optional". Auch der Admin-Template-Editor verwirft Zeilen ohne Beschreibung nicht mehr (`AdminProfileTemplatesManager.tsx`). Backend-Anpassung siehe `backend/CHANGELOG.md`.
+- **`index.html` / `generateEingabeMaskeEinstellungen.ts`:** Statische Tabelle durch `<div id="fahrzeiten-panel">` ersetzt; `renderFahrzeitenPanel` mounted das Panel mit Remount-Key (frische Daten bei Profil-Reload/Act-as, wie beim Arbeitszeit-Panel).
+- **Tests:** Neuer Komponententest `FahrzeitenPanel.test.tsx` (7 Tests: Rendern, Add/Fokus, Delete, Move, Bridge-Sync, Validierung, Empty-State); `saveEinstellungen.test.ts` um Bridge-basierte fZ-Fälle erweitert; Suite 1276 Tests grün. End-to-end im Browser verifiziert (Add/Move/Delete/Save/Blockier-Pfad, Desktop + Mobile).
+
 ## 2026-07-14
 
 ### feat (Admin-Dashboard: Memory-Chart mit Session-Lücken + wählbarem Zeitraum)

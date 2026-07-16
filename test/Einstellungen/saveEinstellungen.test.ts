@@ -2,6 +2,7 @@ import '../setupBun';
 import { beforeEach, describe, expect, it } from 'bun:test';
 import saveEinstellungen from '@/features/Einstellungen/utils/saveEinstellungen';
 import { setArbeitszeitPanelState } from '@/features/Einstellungen/components/arbeitszeitPanelState';
+import { setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
 import type { IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage';
 
@@ -57,7 +58,6 @@ function renderSettingsForm(vorgabenU: IVorgabenU): void {
       <li><button id="ewt-tab"></button></li>
       <li><button id="neben-tab"></button></li>
     </ul>
-    <table><tbody id="TbodyTätigkeitsstätten"></tbody></table>
     <table id="tableVE"></table>
   `;
 
@@ -81,6 +81,7 @@ describe('saveEinstellungen address validation', () => {
   beforeEach(() => {
     localStorage.clear();
     setArbeitszeitPanelState(null);
+    setFahrzeitPanelState(null);
     const vorgabenU = createVorgabenU();
     Storage.set('VorgabenU', vorgabenU);
     renderSettingsForm(vorgabenU);
@@ -208,6 +209,8 @@ describe('saveEinstellungen address validation', () => {
 describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
   beforeEach(() => {
     localStorage.clear();
+    setArbeitszeitPanelState(null);
+    setFahrzeitPanelState(null);
     const vorgabenU = createVorgabenU();
     Storage.set('VorgabenU', vorgabenU);
     renderSettingsForm(vorgabenU);
@@ -262,13 +265,60 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
     expect(result.Einstellungen.autoSaveDelayMs).toBe(30000);
   });
 
-  it('liefert leeres fZ-Array wenn keine Taetigkeitsstaetten eingetragen', () => {
-    // TODO: happy-dom implementiert HTMLTableSectionElement.rows nicht (Stand @happy-dom/global-registrator ^20.x).
-    //       Sobald ein Update das liefert, diesen Test durch drei vollständige Fälle ersetzen:
-    //       1. Zeile mit key/text/value → result.fZ enthält Eintrag
-    //       2. Zeile mit leerem key → wird übersprungen, result.fZ = []
-    //       3. Zeile mit leerem text oder value → wirft 'Beschreibung / Fahrzeit fehlt'
+  it('behaelt fZ aus Storage wenn kein Fahrzeit-Panel-State gesetzt', () => {
+    const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
+    vorgabenU.fZ = [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }];
+    Storage.set('VorgabenU', vorgabenU);
+
     const result = saveEinstellungen();
-    expect(result.fZ).toEqual([]);
+
+    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
+  });
+
+  it('speichert vollstaendige Zeilen aus dem Fahrzeit-Panel-State in Reihenfolge', () => {
+    setFahrzeitPanelState([
+      { key: 'Kirchheim', text: 'Beiersgraben', value: '00:20' },
+      { key: 'Kaiserau', text: 'km 167,0', value: '00:10' },
+    ]);
+
+    const result = saveEinstellungen();
+
+    expect(result.fZ).toEqual([
+      { key: 'Kirchheim', text: 'Beiersgraben', value: '00:20' },
+      { key: 'Kaiserau', text: 'km 167,0', value: '00:10' },
+    ]);
+    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).fZ).toEqual(result.fZ);
+  });
+
+  it('verwirft komplett leere Zeilen still', () => {
+    setFahrzeitPanelState([
+      { key: '', text: '', value: '' },
+      { key: 'Kaiserau', text: 'km 167,0', value: '00:10' },
+      { key: '', text: '', value: '' },
+    ]);
+
+    const result = saveEinstellungen();
+
+    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
+  });
+
+  it('speichert Zeilen ohne Beschreibung (optionales Notizfeld)', () => {
+    setFahrzeitPanelState([{ key: 'Kaiserau', text: '', value: '00:10' }]);
+
+    const result = saveEinstellungen();
+
+    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: '', value: '00:10' }]);
+  });
+
+  it('wirft bei teilweise gefuellter Zeile (Fahrzeit fehlt)', () => {
+    setFahrzeitPanelState([{ key: 'Kaiserau', text: '', value: '' }]);
+
+    expect(() => saveEinstellungen()).toThrow('Fahrzeit fehlt');
+  });
+
+  it('wirft bei teilweise gefuellter Zeile ohne Taetigkeitsstaette statt sie still zu verwerfen', () => {
+    setFahrzeitPanelState([{ key: '', text: 'km 167,0', value: '00:10' }]);
+
+    expect(() => saveEinstellungen()).toThrow('Tätigkeitsstätte fehlt');
   });
 });
