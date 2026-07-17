@@ -1,5 +1,5 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
+import type { IVorgabenU, IVorgabenUPers, IVorgabenUfZ, IVorgabenUvorgabenB } from '@/types';
 import {
   PERS_FIELD_LABELS,
   setupPersValidation,
@@ -10,6 +10,7 @@ import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';
+import { getFahrzeitPanelState } from '../components/fahrzeitPanelState';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
@@ -52,7 +53,10 @@ export default function saveEinstellungen(): IVorgabenU {
     VorgabenU.aZ = panelState;
   }
 
-  VorgabenU.fZ = table_to_array_einstellungen('TbodyTätigkeitsstätten');
+  const fahrzeitState = getFahrzeitPanelState();
+  if (fahrzeitState) {
+    VorgabenU.fZ = collectFahrzeiten(fahrzeitState);
+  }
 
   const aktivierteTabs: string[] = [];
   for (const cb of Array.from(document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]'))) {
@@ -94,33 +98,25 @@ export default function saveEinstellungen(): IVorgabenU {
   return VorgabenU;
 }
 
-function table_to_array_einstellungen(table_id: string): { key: string; text: string; value: string }[] | [] {
-  const myData = document.querySelector<HTMLTableElement>(`#${table_id}`)?.rows;
-  if (!myData) return [];
-  const my_liste: { key: string; text: string; value: string }[] = [];
-  for (const myDatum of Array.from(myData)) {
-    const el = myDatum.children;
-    const keyInput = el[0].querySelector<HTMLInputElement>('input');
-    const textInput = el[1].querySelector<HTMLInputElement>('input');
-    const valueInput = el[2].querySelector<HTMLInputElement>('input');
-    if (!keyInput || !textInput || !valueInput) continue;
+function collectFahrzeiten(rows: IVorgabenUfZ[]): IVorgabenUfZ[] {
+  const liste: IVorgabenUfZ[] = [];
+  for (const { key, text, value } of rows) {
+    // Komplett leere Zeilen (z.B. gerade hinzugefügt) werden still verworfen.
+    if (!key && !text && !value) continue;
 
-    const key: string = keyInput.value;
-    if (!key) continue;
-
-    const text: string = textInput.value;
-    const value: string = valueInput.value;
-    if (!text || !value) {
+    // Beschreibung (text) ist ein reines Notizfeld und darf leer bleiben.
+    if (!key || !value) {
+      const fehlend = [!key && 'Tätigkeitsstätte', !value && 'Fahrzeit'].filter(Boolean).join(' / ');
       createSnackBar({
-        message: `Einstellungen > Fahrzeiten > "${key}": Beschreibung / Fahrzeit fehlt`,
+        message: `Einstellungen > Fahrzeiten > "${key || text}": ${fehlend} fehlt`,
         status: 'error',
         timeout: 3000,
         fixed: true,
       });
-      throw new Error('Beschreibung / Fahrzeit fehlt');
+      throw new Error(`${fehlend} fehlt`);
     }
-    my_liste.push({ key, text, value });
+    liste.push({ key, text, value });
   }
 
-  return my_liste;
+  return liste;
 }

@@ -931,9 +931,6 @@ export const mockEinstellungen = (): void => {
       '<input type="time" id="bS" class="form-control validate" required /><label for="bS">Arbeitsbeginn Sonderschicht</label>' +
       '<input type="time" id="eS" class="form-control validate" required /><label for="eS">Arbeitsende Sonderschicht</label>' +
       '<table id="tableVE" class="table table-bordered table-striped table-hover align-middle"	aria-label="Voreinstellungen Bereitschaft"></table>' +
-      '<table class="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">' +
-      '<thead><tr class="table-primary align-middle text-center"><th id="titelTkgSt">Tätigkeitsstätte</th><th class="w40">Beschreibung</th><th class="w20">Fahrzeit</th></tr></thead>' +
-      '<tbody id="TbodyTätigkeitsstätten"></tbody>' +
-      '</table></form>',
+      '<div id="fahrzeiten-panel"></div></form>',
   );
 };

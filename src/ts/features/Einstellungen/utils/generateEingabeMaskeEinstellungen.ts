@@ -1,7 +1,7 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
-import { ArbeitszeiteingabePanel } from '../components';
+import { ArbeitszeiteingabePanel, FahrzeitenPanel } from '../components';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
@@ -24,7 +24,7 @@ export default function generateEingabeMaskeEinstellungen(
   populateZulagenCheckboxes(VorgabenU.Einstellungen?.benoetigteZulagen);
   populateAutoSaveSettings(VorgabenU.Einstellungen?.autoSaveEnabled, VorgabenU.Einstellungen?.autoSaveDelayMs);
 
-  populateTable(VorgabenU);
+  renderFahrzeitenPanel(VorgabenU);
 
   const table = document.querySelector<CustomHTMLTableElement<IVorgabenUvorgabenB>>(`#tableVE`);
   if (!table) throw new Error('Tabelle nicht gefunden');
@@ -43,54 +43,16 @@ function populateEmailField(): void {
   emailInput.value = Storage.get<string>('BenutzerEmail', { default: '' });
 }
 
-function populateTable(VorgabenU: IVorgabenU): void {
-  const tbody = document.querySelector<HTMLTableElement>('#TbodyTätigkeitsstätten');
-  if (tbody === null) throw new Error();
-  tbody.innerHTML = '';
-
-  for (const { key, text, value } of VorgabenU.fZ) {
-    const tr = tbody.insertRow();
-    createInput(tr, 0, 'text', key, 'Tätigkeitsstätte');
-    createInput(tr, 1, 'text', text, 'Beschreibung');
-    createInput(tr, 2, 'time', value, 'Fahrzeit');
-  }
-
-  for (let i = 0; i < 3; i++) {
-    const tr = tbody.insertRow();
-    createInput(tr, 0, 'text', '', 'Tätigkeitsstätte');
-    createInput(tr, 1, 'text', '', 'Beschreibung');
-    createInput(tr, 2, 'time', '', 'Fahrzeit');
-  }
-
-  function createInput(
-    tr: HTMLTableRowElement,
-    position: number,
-    type: 'text' | 'time',
-    value: string,
-    labelText: string,
-  ): void {
-    const td = tr.insertCell(position);
-    const group = document.createElement('div');
-    group.className = 'input-group input-group-sm input-group-mobile-fahrzeit';
-
-    const label = document.createElement('span');
-    label.className = 'input-group-text d-md-none';
-    label.textContent = labelText;
-
-    const input = document.createElement('input');
-    input.type = type;
-    input.className = 'form-control text-center';
-    input.value = value;
-
-    group.appendChild(label);
-    group.appendChild(input);
-    td.appendChild(group);
-  }
-}
-
 // Zählt jeden Aufruf hoch, damit `key` sich ändert und Preact das Panel neu mounted statt
 // den bestehenden Component-State (inkl. veralteter Arbeitszeit nach Act-as-Wechsel) zu behalten.
 let arbeitszeitPanelRenderCount = 0;
+let fahrzeitPanelRenderCount = 0;
+
+function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
+  const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
+  if (!panel) return;
+  render(h(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.fZ ?? [] }), panel);
+}
 
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');

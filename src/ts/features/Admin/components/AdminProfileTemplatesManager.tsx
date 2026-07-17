@@ -189,7 +189,8 @@ function buildTemplatePayload(
   const result: Record<string, unknown> = { ...(original ?? {}) };
 
   const pers = removeEmptyValues(draft.Pers);
-  const fahrzeit = draft.Fahrzeit.filter(row => row.key.trim() && row.text.trim() && row.value.trim());
+  // Beschreibung (text) ist optional; nur Tätigkeitsstätte und Fahrzeit sind Pflicht
+  const fahrzeit = draft.Fahrzeit.filter(row => row.key.trim() && row.value.trim());
   const vorgabenB = draft.VorgabenB.filter(row => row.key.trim() !== '').map(row => ({
     key: row.key.trim(),
     value: {

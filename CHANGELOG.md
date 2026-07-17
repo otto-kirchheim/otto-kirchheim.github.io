@@ -2,6 +2,27 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-17
+
+### fix (Speichern: Einstellungs-Validierungsfehler blockiert Tabellen-Speichern nicht mehr)
+
+- **`saveDaten.ts`:** Die Einstellungs-Sammlung (`pre-save:settings` → `saveEinstellungen`) lief bei jedem Speichern-Button vor dem Tabellen-Flush und warf bei Validierungsfehlern (z. B. „Persönliche Daten fehlerhaft") — dadurch wurde **gar nichts** gespeichert, auch gültige Bereitschafts-/EWT-/Nebengeld-Änderungen nicht. Die Sammlung ist jetzt in einen eigenen try/catch entkoppelt: `flushAll()` läuft immer, Profil-Sync und Success-Snackbar entfallen nur bei Einstellungs-Fehler. Es erscheint dann maximal eine Meldung (die feldgenaue Fehler-Snackbar aus `saveEinstellungen`); die Einstellungen selbst bleiben all-or-nothing. Die Tabellen-Ressourcen waren untereinander bereits isoliert (`Promise.allSettled` in `flushAll`).
+- **Tests:** `saveDaten.test.ts` um 4 Fälle erweitert (Flush trotz Settings-Throw, `btnSaveEinstellungen`-Fehlerpfad, finally-Cleanup, nicht registrierter Hook); Suite 1280 Tests grün.
+
+### change (Einstellungen: Speichern-Button nach oben verschoben)
+
+- **`index.html`:** Der Speichern-Button der Einstellungen steht jetzt oberhalb des Einstellungs-Accordions statt ganz unten am Formularende — er ist damit ohne Scrollen erreichbar, unabhängig davon, welche Accordion-Abschnitte aufgeklappt sind. Außerdem einen veralteten TODO-Kommentar entfernt.
+
+## 2026-07-16
+
+### feat (Einstellungen → Fahrzeiten: editierbare Liste mit Hinzufügen/Löschen/Verschieben)
+
+- **`FahrzeitenPanel.tsx` (neu):** Die Fahrzeiten-Tabelle ist jetzt ein Preact-Island statt statischem HTML + DOM-Befüllung. Neue Bedienung: „Zeile hinzufügen"-Button (ersetzt die 3 fixen Leerzeilen, Fokus springt in die neue Zeile), Löschen pro Zeile, ↑/↓-Verschieben (Randpositionen deaktiviert; Reihenfolge wird end-to-end persistiert), Live-Validierung (leere Pflichtfelder teilgefüllter Zeilen werden als `is-invalid` markiert) und Empty-State „Keine Fahrzeiten hinterlegt.". Mobile behält das Karten-Layout mit Feld-Labels; die Aktions-Buttons laufen dort in voller Breite (`styles.scss`).
+- **`fahrzeitPanelState.ts` (neu):** State-Bridge analog `arbeitszeitPanelState` — das Panel synchronisiert Änderungen sofort (nicht erst im Effect), `saveEinstellungen()` liest den State von dort statt die Tabelle per DOM-Scraping auszulesen (`table_to_array_einstellungen` entfernt). Komplett leere Zeilen werden beim Speichern weiterhin still verworfen; teilgefüllte Zeilen blockieren mit feldgenauer Snackbar (neu: auch eine Zeile ohne Tätigkeitsstätte blockiert, statt still verworfen zu werden — kein Datenverlust mehr).
+- **Beschreibung ist jetzt optional:** `text` ist ein reines Notizfeld (wird fachlich nirgends ausgewertet; EWT nutzt nur Tätigkeitsstätte + Fahrzeit). Speichern verlangt nur noch Tätigkeitsstätte und Fahrzeit; das Eingabefeld zeigt den Platzhalter „optional". Auch der Admin-Template-Editor verwirft Zeilen ohne Beschreibung nicht mehr (`AdminProfileTemplatesManager.tsx`). Backend-Anpassung siehe `backend/CHANGELOG.md`.
+- **`index.html` / `generateEingabeMaskeEinstellungen.ts`:** Statische Tabelle durch `<div id="fahrzeiten-panel">` ersetzt; `renderFahrzeitenPanel` mounted das Panel mit Remount-Key (frische Daten bei Profil-Reload/Act-as, wie beim Arbeitszeit-Panel).
+- **Tests:** Neuer Komponententest `FahrzeitenPanel.test.tsx` (7 Tests: Rendern, Add/Fokus, Delete, Move, Bridge-Sync, Validierung, Empty-State); `saveEinstellungen.test.ts` um Bridge-basierte fZ-Fälle erweitert; Suite 1276 Tests grün. End-to-end im Browser verifiziert (Add/Move/Delete/Save/Blockier-Pfad, Desktop + Mobile).
+
 ## 2026-07-14
 
 ### feat (Admin-Dashboard: Memory-Chart mit Session-Lücken + wählbarem Zeitraum)

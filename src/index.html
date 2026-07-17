@@ -685,6 +685,16 @@
           </div>
 
           <form class="text-center" id="formEinstellungen">
+            <div class="container">
+              <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
+                <div class="col d-grid">
+                  <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
+                    <span class="material-icons-round big-icons">save</span>
+                    Speichern
+                  </button>
+                </div>
+              </div>
+            </div>
             <div class="accordion" id="einstellungen">
               <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -1058,16 +1068,7 @@
                 </h2>
                 <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#einstellungen">
                   <div class="accordion-body row g-3">
-                    <table class="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">
-                      <thead>
-                        <tr class="table-primary align-middle text-center">
-                          <th id="titelTkgSt">Tätigkeitsstätte</th>
-                          <th class="w40">Beschreibung</th>
-                          <th class="w20">Fahrzeit</th>
-                        </tr>
-                      </thead>
-                      <tbody id="TbodyTätigkeitsstätten"></tbody>
-                    </table>
+                    <div id="fahrzeiten-panel"></div>
                   </div>
                 </div>
               </div>
@@ -1161,7 +1162,6 @@
                   </div>
                 </div>
               </div>
-              <!-- TODO: Zulagen anhand der Einstellungen anpassen -->
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button
@@ -1178,16 +1178,6 @@
                     <p class="text-muted mb-0">Wähle die benötigten Zulagen für die Nebengeld-Erfassung.</p>
                     <div id="settings-zulagen-list" class="w-100 d-flex flex-column gap-2"></div>
                   </div>
-                </div>
-              </div>
-            </div>
-            <div class="container">
-              <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-                <div class="col d-grid">
-                  <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
-                    <span class="material-icons-round big-icons">save</span>
-                    Speichern
-                  </button>
                 </div>
               </div>
             </div>

@@ -348,6 +348,12 @@ body {
   }
 }
 
+// Aktionen-Spalte der Fahrzeiten-Tabelle so schmal wie ihre Buttons halten
+.fahrzeiten-aktionen-spalte {
+  width: 1%;
+  white-space: nowrap;
+}
+
 @media screen and (max-width: 767.95px) {
   #collapseFour table thead {
     display: none;
@@ -384,6 +390,12 @@ body {
   #collapseFour .input-group-mobile-fahrzeit .input-group-text {
     min-width: 9.25rem;
     justify-content: flex-start;
+  }
+
+  // Zeilen-Aktionen (↑/↓/Löschen) im Karten-Layout als volle Breite für gute Tap-Ziele
+  #collapseFour .fahrzeiten-aktionen {
+    display: flex;
+    width: 100%;
   }
 
   .admin-fahrzeit-input-group > .admin-fahrzeit-key {

@@ -53,13 +53,24 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     const previousUserData = Storage.get<IVorgabenU>('VorgabenU', { check: true });
     const buttonResources = getButtonResources(button.id);
 
-    // 1. Einstellungen aus dem Formular sammeln und speichern
-    const userData = invokeHook('pre-save:settings');
-    if (!userData) throw new Error('pre-save:settings hook not registered');
-    Storage.set('VorgabenU', userData);
-    const settingsChanged = hasLocalSettingsChanges(previousUserData, userData);
+    // 1. Einstellungen aus dem Formular sammeln – entkoppelt vom Tabellen-Flush:
+    //    Ein Validierungsfehler (saveEinstellungen zeigt bereits eine feldgenaue Snackbar)
+    //    darf das Speichern der Tabellendaten nicht blockieren.
+    let userData: IVorgabenU | null = null;
+    try {
+      userData = invokeHook('pre-save:settings') ?? null;
+      if (!userData) throw new Error('pre-save:settings hook not registered');
+      Storage.set('VorgabenU', userData);
+    } catch (err: unknown) {
+      console.error('Einstellungen sammeln fehlgeschlagen:', err instanceof Error ? err.message : String(err));
+    }
+
     const settingsStatus = getResourceStatus('settings').status;
-    const settingsNeedsSync = settingsChanged || settingsStatus === 'pending' || settingsStatus === 'error';
+    const settingsNeedsSync =
+      userData !== null &&
+      (hasLocalSettingsChanges(previousUserData, userData) ||
+        settingsStatus === 'pending' ||
+        settingsStatus === 'error');
     const shouldMarkSavedAfterFlush: Record<TResourceKey, boolean> = {
       BZ: buttonResources.includes('BZ') && hasPendingTableChanges('BZ', true),
       BE: buttonResources.includes('BE') && hasPendingTableChanges('BE', true),
@@ -68,7 +79,7 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
       settings: settingsNeedsSync,
     };
 
-    // 2. Alle ausstehenden Tabellen-Änderungen sofort senden
+    // 2. Alle ausstehenden Tabellen-Änderungen sofort senden – auch bei Einstellungs-Fehler
     await flushAll();
 
     // Bei Race-Condition: Falls ein Ressourcen-Status nach dem Flush schon wieder auf idle
@@ -81,7 +92,7 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     }
 
     // 3. Profil nur bei Änderungen speichern
-    const profileResult = settingsNeedsSync ? await profileApi.updateMyProfile(userData) : null;
+    const profileResult = settingsNeedsSync && userData ? await profileApi.updateMyProfile(userData) : null;
 
     // 4. Server-normalisierte Profilwerte zurück in den lokalen Zustand übernehmen.
     if (profileResult?.updatedAt) {
@@ -93,12 +104,16 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     // 5. Settings-Resource als gespeichert markieren, sobald sie explizit synchronisiert wurde.
     if (settingsNeedsSync) markResourceSaved('settings');
 
-    createSnackBar({
-      message: `Speichern<br/>Daten gespeichert`,
-      status: 'success',
-      timeout: 3000,
-      fixed: true,
-    });
+    // 6. Erfolgsmeldung nur wenn auch die Einstellungen fehlerfrei übernommen wurden;
+    //    bei Einstellungs-Fehler bleibt die feldgenaue Snackbar aus saveEinstellungen die einzige Meldung.
+    if (userData !== null) {
+      createSnackBar({
+        message: `Speichern<br/>Daten gespeichert`,
+        status: 'success',
+        timeout: 3000,
+        fixed: true,
+      });
+    }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('Speichern fehlgeschlagen:', msg);
