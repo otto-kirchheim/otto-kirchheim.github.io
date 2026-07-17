@@ -4,6 +4,11 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-17
 
+### fix (Persönliche Daten: Leerzeichen lassen sich wieder eintippen)
+
+- **`addressValidation.ts`:** Die Live-Validierung (`input`-Event) schrieb den Feldwert bei jedem Tastendruck mit `trim()`/Whitespace-Normalisierung zurück — ein gerade getipptes Leerzeichen am Wortende wurde dadurch sofort wieder gelöscht. Doppelnamen („Müller Meier") und Adressen ließen sich so praktisch nicht eingeben. `validatePersInput`/`validateGermanAddressInput` haben jetzt eine `normalize`-Option: Beim Tippen wird nur noch validiert (gegen den normalisierten Wert), der Feldwert bleibt unangetastet; die Normalisierung greift weiterhin bei `change`/`blur` und beim Speichern/Onboarding (Default unverändert).
+- **Tests:** 2 Regressionstests ergänzt (Leerzeichen bleibt beim `input`-Event erhalten, Trim erst bei `blur`; Name- und Adressfeld).
+
 ### fix (Speichern: Einstellungs-Validierungsfehler blockiert Tabellen-Speichern nicht mehr)
 
 - **`saveDaten.ts`:** Die Einstellungs-Sammlung (`pre-save:settings` → `saveEinstellungen`) lief bei jedem Speichern-Button vor dem Tabellen-Flush und warf bei Validierungsfehlern (z. B. „Persönliche Daten fehlerhaft") — dadurch wurde **gar nichts** gespeichert, auch gültige Bereitschafts-/EWT-/Nebengeld-Änderungen nicht. Die Sammlung ist jetzt in einen eigenen try/catch entkoppelt: `flushAll()` läuft immer, Profil-Sync und Success-Snackbar entfallen nur bei Einstellungs-Fehler. Es erscheint dann maximal eine Meldung (die feldgenaue Fehler-Snackbar aus `saveEinstellungen`); die Einstellungen selbst bleiben all-or-nothing. Die Tabellen-Ressourcen waren untereinander bereits isoliert (`Promise.allSettled` in `flushAll`).

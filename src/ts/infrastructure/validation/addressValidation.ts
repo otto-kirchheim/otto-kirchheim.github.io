@@ -129,28 +129,33 @@ function validateDistanceInput(input: HTMLInputElement, label: string): string {
   return '';
 }
 
-export function validateGermanAddressInput(input: HTMLInputElement, opts: { optional?: boolean } = {}): boolean {
+export function validateGermanAddressInput(
+  input: HTMLInputElement,
+  opts: { optional?: boolean; normalize?: boolean } = {},
+): boolean {
   const normalizedValue = normalizeGermanAddress(input.value);
   const optional = opts.optional ?? (!input.required || input.id === 'Adress2');
   const isOptionalEmpty = optional && normalizedValue === '';
   const isValid = isOptionalEmpty || isValidGermanAddress(normalizedValue);
   const feedbackMessage = isValid ? '' : `${GERMAN_ADDRESS_FORMAT_HINT}. Hausnummer optional.`;
 
-  input.value = normalizedValue;
+  // normalize: false während des Tippens, sonst löscht trim() gerade eingegebene Leerzeichen.
+  if (opts.normalize ?? true) input.value = normalizedValue;
   return setValidationState(input, isValid, feedbackMessage);
 }
 
-export function validatePersInput(input: ValidatableElement): boolean {
+export function validatePersInput(input: ValidatableElement, opts: { normalize?: boolean } = {}): boolean {
   const key = input.id as keyof typeof PERS_FIELD_LABELS;
   if (!(key in PERS_FIELD_LABELS)) return true;
 
   if (input instanceof HTMLInputElement && (key === 'Adress1' || key === 'Adress2' || key === 'ErsteTkgStAdresse')) {
-    return validateGermanAddressInput(input, { optional: key === 'Adress2' });
+    return validateGermanAddressInput(input, { optional: key === 'Adress2', normalize: opts.normalize });
   }
 
   const label = PERS_FIELD_LABELS[key];
   const normalizedValue = normalizeTextValue(input.value);
-  input.value = normalizedValue;
+  // normalize: false während des Tippens, sonst löscht trim() gerade eingegebene Leerzeichen.
+  if (opts.normalize ?? true) input.value = normalizedValue;
 
   // Vorherige Custom-Fehler erst zurücksetzen, damit `checkValidity()` den aktuellen Zustand prüft.
   input.setCustomValidity('');
@@ -223,7 +228,7 @@ export function setupGermanAddressValidation(selectors: readonly string[] = DEFA
       validateGermanAddressInput(input);
     };
 
-    input.addEventListener('input', syncValidationState);
+    input.addEventListener('input', () => validateGermanAddressInput(input, { normalize: false }));
     input.addEventListener('change', syncValidationState);
     input.addEventListener('blur', syncValidationState);
   }
@@ -240,7 +245,7 @@ export function setupPersValidation(selectors: readonly string[] = DEFAULT_PERS_
       validatePersInput(input);
     };
 
-    input.addEventListener('input', syncValidationState);
+    input.addEventListener('input', () => validatePersInput(input, { normalize: false }));
     input.addEventListener('change', syncValidationState);
     input.addEventListener('blur', syncValidationState);
   }
