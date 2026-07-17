@@ -4,6 +4,11 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-17
 
+### feat (E-Mail-Verifizierung läuft jetzt über das Frontend)
+
+- **`handleAuthUrlState.ts`:** Der Verifizierungslink aus der Mail zeigt jetzt aufs Frontend (`?verifyEmailToken=<token>`, Backend-Änderung siehe `backend/CHANGELOG.md`). Die App ruft `GET auth/verify-email/:token` über `FetchRetry` auf (Version-Header + Server-Failover inklusive) und zeigt Erfolg/Fehler als Snackbar. **Update-sicher:** Der URL-Parameter wird nur bei definitivem Ergebnis entfernt (Erfolg oder „Token ungültig/abgelaufen"); bei transienten Fehlern (426 App veraltet, offline, Server nicht erreichbar) bleibt er erhalten — nach dem automatischen PWA-Update + Reload läuft die Verifizierung dann von selbst erneut. Das bisherige `?verify=success|error`-Handling bleibt als Übergangs-Fallback für Redirects eines noch nicht aktualisierten Backends bestehen.
+- **Tests:** `Login.handleAuthUrlState.test.ts` um 4 Fälle erweitert (Erfolg, definitiver Token-Fehler, 426 behält Param, Throw behält Param); Suite 1286 Tests grün.
+
 ### fix (Persönliche Daten: Leerzeichen lassen sich wieder eintippen)
 
 - **`addressValidation.ts`:** Die Live-Validierung (`input`-Event) schrieb den Feldwert bei jedem Tastendruck mit `trim()`/Whitespace-Normalisierung zurück — ein gerade getipptes Leerzeichen am Wortende wurde dadurch sofort wieder gelöscht. Doppelnamen („Müller Meier") und Adressen ließen sich so praktisch nicht eingeben. `validatePersInput`/`validateGermanAddressInput` haben jetzt eine `normalize`-Option: Beim Tippen wird nur noch validiert (gegen den normalisierten Wert), der Feldwert bleibt unangetastet; die Normalisierung greift weiterhin bei `change`/`blur` und beim Speichern/Onboarding (Default unverändert).
