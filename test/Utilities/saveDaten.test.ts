@@ -253,6 +253,58 @@ describe('saveDaten', () => {
     expect(mockHasPendingTableChanges).not.toHaveBeenCalledWith('N', true);
   });
 
+  it('flusht Tabellendaten auch wenn Einstellungen-Validierung fehlschlägt', async () => {
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+    mockHasPendingTableChanges.mockReturnValue(true);
+
+    await saveDaten(button);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockMarkResourceSaved).not.toHaveBeenCalledWith('settings');
+    // Keine Snackbar aus saveDaten – die feldgenaue Fehler-Snackbar kommt aus saveEinstellungen.
+    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+    // Kein partieller Settings-Write in Storage
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual({ pers: { Vorname: 'Alt' } });
+  });
+
+  it('btnSaveEinstellungen: Einstellungen-Fehler zeigt keine Zusatz-Snackbar', async () => {
+    document.body.innerHTML = '<button id="btnSaveEinstellungen"></button>';
+    const btnSaveEinstellungen = document.getElementById('btnSaveEinstellungen') as HTMLButtonElement;
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Adressformat ungültig');
+    });
+
+    await saveDaten(btnSaveEinstellungen);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+  });
+
+  it('räumt Loading auf wenn Einstellungen-Validierung fehlschlägt', async () => {
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+
+    await saveDaten(button);
+
+    expect(mockClearLoading).toHaveBeenCalledWith('btnSave');
+    expect(mockButtonDisable).toHaveBeenCalledWith(false);
+  });
+
+  it('flusht Tabellendaten auch wenn pre-save:settings Hook nicht registriert ist', async () => {
+    clearAllHooks();
+
+    await saveDaten(button);
+
+    expect(mockFlushAll).toHaveBeenCalled();
+    expect(mockUpdateMyProfile).not.toHaveBeenCalled();
+    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+  });
+
   it('race-condition: markResourceSaved wird für idle BZ nach flush aufgerufen', async () => {
     document.body.innerHTML = '<button id="btnSaveB"></button>';
     const btnSaveB = document.getElementById('btnSaveB') as HTMLButtonElement;

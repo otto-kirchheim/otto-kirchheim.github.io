@@ -685,6 +685,16 @@
           </div>
 
           <form class="text-center" id="formEinstellungen">
+            <div class="container">
+              <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
+                <div class="col d-grid">
+                  <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
+                    <span class="material-icons-round big-icons">save</span>
+                    Speichern
+                  </button>
+                </div>
+              </div>
+            </div>
             <div class="accordion" id="einstellungen">
               <div class="accordion-item">
                 <h2 class="accordion-header">
@@ -1152,7 +1162,6 @@
                   </div>
                 </div>
               </div>
-              <!-- TODO: Zulagen anhand der Einstellungen anpassen -->
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button
@@ -1169,16 +1178,6 @@
                     <p class="text-muted mb-0">Wähle die benötigten Zulagen für die Nebengeld-Erfassung.</p>
                     <div id="settings-zulagen-list" class="w-100 d-flex flex-column gap-2"></div>
                   </div>
-                </div>
-              </div>
-            </div>
-            <div class="container">
-              <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-                <div class="col d-grid">
-                  <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
-                    <span class="material-icons-round big-icons">save</span>
-                    Speichern
-                  </button>
                 </div>
               </div>
             </div>

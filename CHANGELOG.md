@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-17
+
+### fix (Speichern: Einstellungs-Validierungsfehler blockiert Tabellen-Speichern nicht mehr)
+
+- **`saveDaten.ts`:** Die Einstellungs-Sammlung (`pre-save:settings` → `saveEinstellungen`) lief bei jedem Speichern-Button vor dem Tabellen-Flush und warf bei Validierungsfehlern (z. B. „Persönliche Daten fehlerhaft") — dadurch wurde **gar nichts** gespeichert, auch gültige Bereitschafts-/EWT-/Nebengeld-Änderungen nicht. Die Sammlung ist jetzt in einen eigenen try/catch entkoppelt: `flushAll()` läuft immer, Profil-Sync und Success-Snackbar entfallen nur bei Einstellungs-Fehler. Es erscheint dann maximal eine Meldung (die feldgenaue Fehler-Snackbar aus `saveEinstellungen`); die Einstellungen selbst bleiben all-or-nothing. Die Tabellen-Ressourcen waren untereinander bereits isoliert (`Promise.allSettled` in `flushAll`).
+- **Tests:** `saveDaten.test.ts` um 4 Fälle erweitert (Flush trotz Settings-Throw, `btnSaveEinstellungen`-Fehlerpfad, finally-Cleanup, nicht registrierter Hook); Suite 1280 Tests grün.
+
+### change (Einstellungen: Speichern-Button nach oben verschoben)
+
+- **`index.html`:** Der Speichern-Button der Einstellungen steht jetzt oberhalb des Einstellungs-Accordions statt ganz unten am Formularende — er ist damit ohne Scrollen erreichbar, unabhängig davon, welche Accordion-Abschnitte aufgeklappt sind. Außerdem einen veralteten TODO-Kommentar entfernt.
+
 ## 2026-07-16
 
 ### feat (Einstellungen → Fahrzeiten: editierbare Liste mit Hinzufügen/Löschen/Verschieben)
