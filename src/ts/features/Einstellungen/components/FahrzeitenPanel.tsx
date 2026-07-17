@@ -1,6 +1,7 @@
 import { type JSX } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { IVorgabenUfZ } from '@/types';
+import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
 
 interface PanelProps {
@@ -10,9 +11,13 @@ interface PanelProps {
 const FIELD_LABELS = { key: 'Tätigkeitsstätte', text: 'Beschreibung', value: 'Fahrzeit' } as const;
 type FahrzeitField = keyof typeof FIELD_LABELS;
 
+// Legacy-Werte wie "0:30" auf "HH:mm" heben – ein type="time"-Input zeigt sie sonst leer an
+const normalizeInitialRows = (rows: IVorgabenUfZ[]): IVorgabenUfZ[] =>
+  rows.map(row => ({ ...row, value: normalizeTimeString(row.value) }));
+
 export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
-  const [rows, setRows] = useState<IVorgabenUfZ[]>(initialRows);
-  const rowsRef = useRef<IVorgabenUfZ[]>(initialRows);
+  const [rows, setRows] = useState<IVorgabenUfZ[]>(() => normalizeInitialRows(initialRows));
+  const rowsRef = useRef<IVorgabenUfZ[]>(rows);
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const focusRowIndex = useRef<number | null>(null);
 

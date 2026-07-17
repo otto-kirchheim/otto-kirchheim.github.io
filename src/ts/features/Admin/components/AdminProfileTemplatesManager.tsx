@@ -10,6 +10,7 @@ import {
   type BackendProfileTemplate,
 } from '../utils/api';
 import { normalizeAZ } from '@/infrastructure/data/fieldMapper';
+import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import type { BereitschaftSchichtTyp } from '@/types';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
 import {
@@ -64,7 +65,8 @@ function normalizeFahrzeit(input: unknown): FahrzeitRow[] {
     .map(entry => ({
       key: String((entry as { key?: unknown }).key ?? ''),
       text: String((entry as { text?: unknown }).text ?? ''),
-      value: String((entry as { value?: unknown }).value ?? ''),
+      // Legacy-Werte wie "0:30" auf "HH:mm" heben – ein type="time"-Input zeigt sie sonst leer an
+      value: normalizeTimeString(String((entry as { value?: unknown }).value ?? '')),
     }))
     .filter(row => row.key || row.text || row.value);
 }

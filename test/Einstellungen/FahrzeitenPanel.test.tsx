@@ -58,6 +58,17 @@ describe('FahrzeitenPanel', () => {
     expect(getFahrzeitPanelState()).toEqual(createRows());
   });
 
+  it('normalisiert Legacy-Fahrzeiten ("0:30") beim Laden auf HH:mm', async () => {
+    const container = renderPanel([{ key: 'Kaiserau', text: '', value: '0:30' }]);
+
+    const timeInput = container.querySelector<HTMLInputElement>('tbody input[type="time"]')!;
+    expect(timeInput.value).toBe('00:30');
+
+    // Auch die Bridge (Speicherpfad) erhält den normalisierten Wert.
+    await flush();
+    expect(getFahrzeitPanelState()).toEqual([{ key: 'Kaiserau', text: '', value: '00:30' }]);
+  });
+
   it('zeigt einen Empty-State bei leerer Liste', () => {
     const container = renderPanel([]);
 

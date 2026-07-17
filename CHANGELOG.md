@@ -4,6 +4,12 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-17
 
+### fix (Fahrzeit-Eingaben: Uhrzeit-Picker im Admin-Template-Editor + Legacy-Normalisierung)
+
+- **`AdminProfileTemplateContentEditor.tsx`:** Das Fahrzeit-Wert-Feld im Admin-Template-Editor (Admin → Profile-Templates → Fahrzeit) war ein freies Textfeld ohne Validierung — Eingaben wie „0:30" wurden gespeichert, sind für dayjs aber ungültig (erwartet „00:30"). Jetzt `type="time"` wie im Einstellungs-Panel.
+- **`timeString.ts` (neu, infrastructure/validation):** `normalizeTimeString` hebt Legacy-Werte („0:30", „08:15:00") auf `HH:mm`; ungültige Werte ergeben `''`. Wird beim Laden angewendet in `AdminProfileTemplatesManager.normalizeFahrzeit` **und** im `FahrzeitenPanel` (Einstellungen) — ein `type="time"`-Input zeigt nicht normalisierte Werte sonst kommentarlos als leeres Feld an, während der ungültige Wert beim Speichern erhalten bliebe.
+- **Tests:** Neuer Unit-Test `timeString.test.ts` (6 Fälle); `FahrzeitenPanel.test.tsx` +1 Fall (Legacy-Wert wird im Input und in der Save-Bridge normalisiert). Backend-Gegenstück (Zod-Validierung) siehe `backend/CHANGELOG.md`.
+
 ### feat (E-Mail-Verifizierung läuft jetzt über das Frontend)
 
 - **`handleAuthUrlState.ts`:** Der Verifizierungslink aus der Mail zeigt jetzt aufs Frontend (`?verifyEmailToken=<token>`, Backend-Änderung siehe `backend/CHANGELOG.md`). Die App ruft `GET auth/verify-email/:token` über `FetchRetry` auf (Version-Header + Server-Failover inklusive) und zeigt Erfolg/Fehler als Snackbar. **Update-sicher:** Der URL-Parameter wird nur bei definitivem Ergebnis entfernt (Erfolg oder „Token ungültig/abgelaufen"); bei transienten Fehlern (426 App veraltet, offline, Server nicht erreichbar) bleibt er erhalten — nach dem automatischen PWA-Update + Reload läuft die Verifizierung dann von selbst erneut. Das bisherige `?verify=success|error`-Handling bleibt als Übergangs-Fallback für Redirects eines noch nicht aktualisierten Backends bestehen.

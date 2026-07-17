@@ -192,6 +192,7 @@ export function AdminProfileTemplateContentEditor({
                     />
 
                     <input
+                      type="time"
                       class="form-control admin-fahrzeit-value"
                       placeholder="Wert"
                       aria-label="Wert"
