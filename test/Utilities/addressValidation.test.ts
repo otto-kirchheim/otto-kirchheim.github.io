@@ -4,6 +4,7 @@ import {
   isValidGermanAddress,
   normalizeGermanAddress,
   setupGermanAddressValidation,
+  setupPersValidation,
   validateGermanAddressInput,
   validatePersInput,
 } from '@/infrastructure/validation/addressValidation';
@@ -170,6 +171,52 @@ describe('addressValidation', () => {
     expect(input.checkValidity()).toBe(false);
     expect(validatePersInput(input)).toBe(false);
     expect(input.validationMessage).not.toBe('');
+  });
+
+  it('keeps a trailing space while typing (input event) but trims it on blur', () => {
+    document.body.innerHTML = `
+      <div class="mb-3">
+        <input id="Nachname" required value="" />
+        <label for="Nachname">Nachname</label>
+      </div>
+    `;
+    const input = document.querySelector<HTMLInputElement>('#Nachname')!;
+
+    setupPersValidation(['#Nachname']);
+
+    // Doppelname tippen: Nach "Müller " darf das Leerzeichen nicht sofort entfernt werden.
+    input.value = 'Müller ';
+    input.dispatchEvent(new Event('input'));
+    expect(input.value).toBe('Müller ');
+
+    input.value = 'Müller Meier ';
+    input.dispatchEvent(new Event('input'));
+    expect(input.value).toBe('Müller Meier ');
+
+    input.dispatchEvent(new Event('blur'));
+    expect(input.value).toBe('Müller Meier');
+    expect(input.classList.contains('is-invalid')).toBe(false);
+  });
+
+  it('keeps a trailing space in address fields while typing', () => {
+    document.body.innerHTML = `
+      <div class="form-floating">
+        <input id="Adress1" required value="" />
+        <label for="Adress1">Wohnsitz 1</label>
+      </div>
+    `;
+    const input = document.querySelector<HTMLInputElement>('#Adress1')!;
+
+    setupGermanAddressValidation();
+
+    input.value = 'Musterstraße ';
+    input.dispatchEvent(new Event('input'));
+    expect(input.value).toBe('Musterstraße ');
+
+    input.value = 'Musterstraße 17, 12345 Musterstadt ';
+    input.dispatchEvent(new Event('blur'));
+    expect(input.value).toBe('Musterstraße 17, 12345 Musterstadt');
+    expect(input.classList.contains('is-invalid')).toBe(false);
   });
 
   it('clears a previous custom validation error after a personal field is corrected', () => {

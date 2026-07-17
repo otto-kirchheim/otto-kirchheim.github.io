@@ -4,6 +4,16 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-17
 
+### feat (E-Mail-Verifizierung läuft jetzt über das Frontend)
+
+- **`handleAuthUrlState.ts`:** Der Verifizierungslink aus der Mail zeigt jetzt aufs Frontend (`?verifyEmailToken=<token>`, Backend-Änderung siehe `backend/CHANGELOG.md`). Die App ruft `GET auth/verify-email/:token` über `FetchRetry` auf (Version-Header + Server-Failover inklusive) und zeigt Erfolg/Fehler als Snackbar. **Update-sicher:** Der URL-Parameter wird nur bei definitivem Ergebnis entfernt (Erfolg oder „Token ungültig/abgelaufen"); bei transienten Fehlern (426 App veraltet, offline, Server nicht erreichbar) bleibt er erhalten — nach dem automatischen PWA-Update + Reload läuft die Verifizierung dann von selbst erneut. Das bisherige `?verify=success|error`-Handling bleibt als Übergangs-Fallback für Redirects eines noch nicht aktualisierten Backends bestehen.
+- **Tests:** `Login.handleAuthUrlState.test.ts` um 4 Fälle erweitert (Erfolg, definitiver Token-Fehler, 426 behält Param, Throw behält Param); Suite 1286 Tests grün.
+
+### fix (Persönliche Daten: Leerzeichen lassen sich wieder eintippen)
+
+- **`addressValidation.ts`:** Die Live-Validierung (`input`-Event) schrieb den Feldwert bei jedem Tastendruck mit `trim()`/Whitespace-Normalisierung zurück — ein gerade getipptes Leerzeichen am Wortende wurde dadurch sofort wieder gelöscht. Doppelnamen („Müller Meier") und Adressen ließen sich so praktisch nicht eingeben. `validatePersInput`/`validateGermanAddressInput` haben jetzt eine `normalize`-Option: Beim Tippen wird nur noch validiert (gegen den normalisierten Wert), der Feldwert bleibt unangetastet; die Normalisierung greift weiterhin bei `change`/`blur` und beim Speichern/Onboarding (Default unverändert).
+- **Tests:** 2 Regressionstests ergänzt (Leerzeichen bleibt beim `input`-Event erhalten, Trim erst bei `blur`; Name- und Adressfeld).
+
 ### fix (Speichern: Einstellungs-Validierungsfehler blockiert Tabellen-Speichern nicht mehr)
 
 - **`saveDaten.ts`:** Die Einstellungs-Sammlung (`pre-save:settings` → `saveEinstellungen`) lief bei jedem Speichern-Button vor dem Tabellen-Flush und warf bei Validierungsfehlern (z. B. „Persönliche Daten fehlerhaft") — dadurch wurde **gar nichts** gespeichert, auch gültige Bereitschafts-/EWT-/Nebengeld-Änderungen nicht. Die Sammlung ist jetzt in einen eigenen try/catch entkoppelt: `flushAll()` läuft immer, Profil-Sync und Success-Snackbar entfallen nur bei Einstellungs-Fehler. Es erscheint dann maximal eine Meldung (die feldgenaue Fehler-Snackbar aus `saveEinstellungen`); die Einstellungen selbst bleiben all-or-nothing. Die Tabellen-Ressourcen waren untereinander bereits isoliert (`Promise.allSettled` in `flushAll`).
