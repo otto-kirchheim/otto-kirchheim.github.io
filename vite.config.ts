@@ -9,8 +9,22 @@ export default defineConfig(({ command }) => ({
   ...base,
   plugins: [
     preact({
-      devtools: command === 'serve',
+      devToolsEnabled: command === 'serve',
     }),
+    // Zoraxy leitet https://dev.otto.home64.de auf diesen Dev-Server; Vite kennt den
+    // Proxy nicht und würde die URL sonst nicht anzeigen. Nur im Proxy-HMR-Modus
+    // (ohne VITE_LOCAL_HMR, siehe vite.base-config.ts) relevant.
+    !process.env.VITE_LOCAL_HMR && {
+      name: 'print-proxy-url',
+      apply: 'serve' as const,
+      configureServer(server) {
+        const printUrls = server.printUrls.bind(server);
+        server.printUrls = () => {
+          printUrls();
+          server.config.logger.info('  ➜  Proxy:   \x1b[36mhttps://dev.otto.home64.de/\x1b[0m');
+        };
+      },
+    },
     compression({
       exclude: /\.(woff|woff2|map|nojekyll|png)$/i,
       skipIfLargerOrEqual: true,
@@ -289,6 +303,7 @@ export default defineConfig(({ command }) => ({
         suppressWarnings: true,
       },
       workbox: {
+        disableDevLogs: true,
         cleanupOutdatedCaches: true,
         sourcemap: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,webmanifest}'],
@@ -296,7 +311,7 @@ export default defineConfig(({ command }) => ({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
-            urlPattern: /\/api\//,
+            urlPattern: /\/api\/v2\//,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',

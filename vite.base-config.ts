@@ -35,7 +35,14 @@ const baseConfig: UserConfig = {
   },
   server: {
     port: 8080,
-    hmr: true,
+    host: true,
+    allowedHosts: ['dev.otto.home64.de'],
+    // TLS terminiert der Zoraxy-Proxy (dev.otto.home64.de → :8080); der HMR-Client muss
+    // daher wss über Port 443 sprechen. VITE_LOCAL_HMR=1 (bun run dev) für
+    // Proxy-losen Betrieb direkt über http://localhost:8080.
+    hmr: process.env.VITE_LOCAL_HMR
+      ? true
+      : { protocol: 'wss', host: 'dev.otto.home64.de', clientPort: 443 },
   },
   css: {
     preprocessorOptions: {

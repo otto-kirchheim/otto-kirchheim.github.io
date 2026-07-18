@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-18
+
+### fix (PWA: Workbox-Dev-Logging aus, API-Cache-Pattern geschärft)
+
+- **`vite.config.ts` (Preact-Preset):** Latenter Typfehler behoben — die Option hieß `devtools`, existiert im Preset aber nicht (stiller No-op; korrekt ist `devToolsEnabled`). Verhalten jetzt wie ursprünglich beabsichtigt: Preact-Devtools nur im Dev-Serve, nicht im Build.
+
+- **`vite.config.ts` (Dev-Server-Ausgabe):** Kleines `print-proxy-url`-Plugin — im Proxy-Modus (`bun run start`) zeigt die Vite-Startausgabe jetzt zusätzlich `➜ Proxy: https://dev.otto.home64.de/` an (Vite kennt den Zoraxy nicht und listet sonst nur die lokalen Interfaces); im Lokal-Modus (`bun run dev`) entfällt die Zeile bewusst.
+- **`vite.config.ts` (Workbox):** `disableDevLogs: true` — der Dev-Service-Worker (devOptions.enabled) loggte jeden Request in die Konsole. Außerdem `runtimeCaching`-Pattern für den `api-cache` von `/\/api\//` auf `/\/api\/v2\//` geschärft: das alte Pattern traf in Dev auch Quell-Dateien unter `/ts/infrastructure/api/…` (landeten fälschlich im api-cache); echte API-Calls (`…/api/v2/…`) matchen unverändert.
+
+### feat (Dev-Server über HTTPS via Zoraxy-Proxy erreichbar)
+
+- **`vite.base-config.ts`:** Der Dev-Server ist jetzt hinter dem Zoraxy-Reverse-Proxy als `https://dev.otto.home64.de` erreichbar (echtes Wildcard-Zertifikat `*.otto.home64.de` → keine Zertifikatswarnungen, auch am Smartphone; Secure Context für Passkeys/Service Worker). Dafür: `host: true`, `allowedHosts: ['dev.otto.home64.de']` und HMR-Client auf `wss://dev.otto.home64.de:443` (der Websocket läuft über den Proxy zurück — funktioniert auch bei direktem Zugriff auf `localhost:8080`, solange der Proxy erreichbar ist). Für Proxy-losen Betrieb (offline/unterwegs): neues Skript **`bun run dev`** (`VITE_LOCAL_HMR=1`) mit klassischem lokalem HMR.
+- **`FetchRetry.ts`:** Dev-API-URLs auf `https://api-dev.otto.home64.de/api/v2` (primär) umgestellt; `http://localhost:8081` und `http://192.168.178.56:8081` bleiben als Fallback (auf der HTTPS-Seite verlieren sie als Mixed Content automatisch das Server-Rennen, im HTTP-Fallback-Betrieb gewinnen sie). Redundanter `127.0.0.1`-Eintrag entfernt.
+- **Hinweis:** `https://dev.otto.home64.de` ist ein neuer Origin — einmalig neu einloggen (localStorage wandert nicht mit); alte Service-Worker/Caches der HTTP-Origins bei Bedarf via DevTools → Application → Clear storage aufräumen. Backend-Gegenstück (CORS/Passkey-Env) siehe `backend/CHANGELOG.md`.
+
 ## 2026-07-17
 
 ### fix (Fahrzeit-Eingaben: Uhrzeit-Picker im Admin-Template-Editor + Legacy-Normalisierung)

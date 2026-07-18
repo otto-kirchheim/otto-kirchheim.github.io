@@ -9,3 +9,6 @@ plan/
 ruvector.db
 agentdb.rvf
 agentdb.rvf.lock
+
+# TypeScript inkrementeller Build-Cache
+*.tsbuildinfo

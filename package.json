@@ -4,7 +4,8 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "start": "bunx --bun vite --host",
+    "dev": "bunx --bun vite --host",
+    "dev:local": "VITE_LOCAL_HMR=1 bunx --bun vite --host",
     "test": "TZ=Europe/Berlin bun test --isolate",
     "build": "bunx --bun vite build",
     "format": "prettier --write 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",

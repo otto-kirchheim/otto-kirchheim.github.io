@@ -19,9 +19,9 @@ export const API_URL: ServerConfig[] = import.meta.env.PROD
       { url: 'https://web-app-rn6h2lgzma-ey.a.run.app/api/v2', timeout: 8000 },
     ]
   : [
-      { url: 'http://192.168.178.56:8081/api/v2', timeout: 3000 },
+      { url: 'https://api-dev.otto.home64.de/api/v2', timeout: 3000 },
       { url: 'http://localhost:8081/api/v2', timeout: 2000 },
-      { url: 'http://127.0.0.1:8081/api/v2', timeout: 2000 },
+      { url: 'http://192.168.178.56:8081/api/v2', timeout: 2000 },
     ];
 
 let serverCheckCounter = 0;
