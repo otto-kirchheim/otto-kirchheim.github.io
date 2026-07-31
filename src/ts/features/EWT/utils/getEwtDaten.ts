@@ -13,10 +13,11 @@ export default function getEwtDaten(
 
   const sourceData = data ?? Storage.get<unknown>('dataE', { default: [] });
   const rows = normalizeResourceRows<IDatenEWT>(sourceData);
+  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
 
-  if (options?.scope === 'all') return rows;
+  if (options?.scope === 'all') return filteredRows;
 
   const activeMonat = Monat ?? getStoredMonatJahr().monat;
   const filter = options?.filter ?? 'beide';
-  return activeMonat ? rows.filter(item => isEwtInMonat(item, activeMonat, filter)) : [];
+  return activeMonat ? filteredRows.filter(item => isEwtInMonat(item, activeMonat, filter)) : [];
 }

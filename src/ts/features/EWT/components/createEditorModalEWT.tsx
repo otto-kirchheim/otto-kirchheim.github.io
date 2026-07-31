@@ -310,8 +310,14 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       }
 
       const currentWindow = getEwtWindow(values);
+      // Beim Neuanlegen: Statt eines separaten Delete+Create eine bereits zum Löschen vorgemerkte,
+      // zeitlich überschneidende Zeile reaktivieren (bleibt als Update erhalten — Vorbild:
+      // `addEwtTag.ts`. Erhält dabei die ursprüngliche `_id`, sodass z. B. eine verknüpfte
+      // Nebengeld-Referenz (`ewtRef`) nicht verwaist).
+      let deletedRowToReactivate: Row<IDatenEWT> | undefined;
+
       if (currentWindow) {
-        const conflictingEntry = getEwtDaten().find(existing => {
+        const conflictingEntry = getEwtDaten(undefined, undefined, { excludeDeleted: true }).find(existing => {
           if (values._id && existing._id === values._id) return false;
           const existingWindow = getEwtWindow(existing);
           if (!existingWindow) return false;
@@ -329,6 +335,15 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
             fixed: true,
           });
           return;
+        }
+
+        if (!(row instanceof Row)) {
+          deletedRowToReactivate = table.rows.array.find(existingRow => {
+            if (existingRow._state !== 'deleted') return false;
+            const existingWindow = getEwtWindow(existingRow.cells);
+            if (!existingWindow) return false;
+            return currentWindow.start.isBefore(existingWindow.end) && existingWindow.start.isBefore(currentWindow.end);
+          });
         }
       }
 
@@ -365,7 +380,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       }
 
       if (row instanceof Row) row.val(values);
-      else row.rows.add(values);
+      else if (deletedRowToReactivate) {
+        deletedRowToReactivate.undoDelete();
+        deletedRowToReactivate.val(values);
+      } else row.rows.add(values);
 
       Modal.getInstance(modal)?.hide();
       persistEwtTableData(table);

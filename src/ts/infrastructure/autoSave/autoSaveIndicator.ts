@@ -11,6 +11,7 @@
  * - saved:           cloud_done   (grün, verblasst nach 2 s)
  * - error (Daten):   error        (rot)  – z. B. 422 Validierungsfehler
  * - error (Netzwerk): cloud_off   (rot)  – Server nicht erreichbar
+ * - blocked:         warning      (gelb) – Überschneidung mit ungespeicherter Löschung, manuell speichern
  */
 
 import { onAutoSaveStatus } from './autoSave';
@@ -30,6 +31,7 @@ const ICON_MAP: Record<TSaveStatus, string> = {
   saving: 'cloud_sync',
   saved: 'cloud_done',
   error: 'error',
+  blocked: 'warning',
 };
 
 const BG_MAP: Record<TSaveStatus, string> = {
@@ -38,6 +40,7 @@ const BG_MAP: Record<TSaveStatus, string> = {
   saving: 'bg-info',
   saved: 'bg-success',
   error: 'bg-danger',
+  blocked: 'bg-warning',
 };
 
 const TOOLTIP_MAP: Record<TSaveStatus, string> = {
@@ -46,6 +49,7 @@ const TOOLTIP_MAP: Record<TSaveStatus, string> = {
   saving: 'Wird gespeichert…',
   saved: 'Gespeichert',
   error: 'Speichern fehlgeschlagen!',
+  blocked: 'Überschneidung mit ungespeicherter Löschung – bitte manuell speichern',
 };
 
 // ─── State ───────────────────────────────────────────────
@@ -72,7 +76,7 @@ let onlineOfflineHandler: (() => void) | null = null;
 
 /** Worst-Case-Status ermitteln (Priorität: error > saving > pending > saved > idle) */
 function worstStatus(resources: TResourceKey[]): TSaveStatus {
-  const priority: TSaveStatus[] = ['error', 'saving', 'pending', 'saved', 'idle'];
+  const priority: TSaveStatus[] = ['error', 'blocked', 'saving', 'pending', 'saved', 'idle'];
   for (const prio of priority) {
     for (const res of resources) {
       if (currentStatuses.get(res) === prio) return prio;

@@ -1050,6 +1050,85 @@ describe('autoSave', () => {
     });
   });
 
+  // ─── Überschneidungs-Guard (overlapGuard) ────────────
+
+  describe('Überschneidungs-Guard: AutoSave vs. ungesyncte Löschung', () => {
+    it('blockiert AutoSave fuer eine neue BZ-Zeile, die eine ungesyncte Loeschung ueberschneidet', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }]);
+
+      const tableElement = document.createElement('table');
+      tableElement.id = 'tableBZ';
+      document.body.appendChild(tableElement);
+
+      const table = createCustomTable<{ _id?: string; beginB: string; endeB: string }>('tableBZ', {
+        columns: [
+          { name: 'beginB', title: 'Beginn' },
+          { name: 'endeB', title: 'Ende' },
+        ],
+        rows: [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }],
+      });
+
+      const oldRow = table.getRows()[0];
+      oldRow.deleteRow();
+      table.rows.add({ beginB: '2025-03-10T20:00:00.000Z', endeB: '2025-03-12T08:00:00.000Z' });
+      const newRow = table.getRows().find(r => r !== oldRow)!;
+
+      scheduleAutoSave('BZ');
+      await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
+
+      expect(mockBzBulk).not.toHaveBeenCalled();
+      expect(getResourceStatus('BZ').status).toBe('blocked');
+      expect(newRow._state as string).toBe('error');
+      expect(newRow._errorState).toBe('new');
+      expect(newRow._errorMessage).toContain('noch nicht gespeicherten Löschung');
+      // Die geloeschte Zeile selbst bleibt unangetastet (kein AutoSave-Delete, nur die neue Zeile wird markiert)
+      expect(oldRow.isDeleted).toBe(true);
+    });
+
+    it('manuelles Speichern (includeDeletes) ignoriert den Guard und sendet Delete+Create zusammen', async () => {
+      Storage.set('Monat', 3);
+      Storage.set('Jahr', 2025);
+      Storage.set('dataBZ', [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }]);
+
+      const tableElement = document.createElement('table');
+      tableElement.id = 'tableBZ';
+      document.body.appendChild(tableElement);
+
+      const table = createCustomTable<{ _id?: string; beginB: string; endeB: string }>('tableBZ', {
+        columns: [
+          { name: 'beginB', title: 'Beginn' },
+          { name: 'endeB', title: 'Ende' },
+        ],
+        rows: [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }],
+      });
+
+      table.getRows()[0].deleteRow();
+      table.rows.add({ beginB: '2025-03-10T20:00:00.000Z', endeB: '2025-03-12T08:00:00.000Z' });
+
+      mockBzBulk.mockResolvedValue({
+        created: [{ _id: 'bz-new' }],
+        updated: [],
+        deleted: ['bz-old'],
+        createdReferences: [],
+        errors: [],
+      });
+
+      await flushResource('BZ');
+
+      expect(mockBzBulk).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: [expect.objectContaining({ beginB: '2025-03-10T20:00:00.000Z' })],
+          delete: ['bz-old'],
+        }),
+        3,
+        2025,
+      );
+      expect(getResourceStatus('BZ').status).toBe('saved');
+    });
+  });
+
   // ─── flushAll (mit Tabellen) ─────────────────────────
 
   describe('flushAll mit Tabellen', () => {

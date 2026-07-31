@@ -29,7 +29,7 @@ export function zulagenEinheitKurz(unit: ZulageEntryUnit): string {
  * die Code-Informationen dort bereits zusammengefasst hat.
  */
 export default function calculateZulagenBreakdown(
-  rows: IDatenN[] = getNebengeldDaten(undefined, undefined, { scope: 'all' }),
+  rows: IDatenN[] = getNebengeldDaten(undefined, undefined, { scope: 'all', excludeDeleted: true }),
 ): IZulagenBreakdown {
   const values: Record<string, number[]> = {};
 

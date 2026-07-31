@@ -13,9 +13,10 @@ export default function getBereitschaftsZeitraumDaten(
 
   const sourceData = data ?? Storage.get<unknown>('dataBZ', { default: [] });
   const rows = normalizeResourceRows<IDatenBZ>(sourceData);
+  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
 
-  if (options?.scope === 'all') return rows;
+  if (options?.scope === 'all') return filteredRows;
 
   const activeMonat = Monat ?? getStoredMonatJahr().monat;
-  return activeMonat ? filterByMonat(rows, activeMonat, getMonatFromBZ) : [];
+  return activeMonat ? filterByMonat(filteredRows, activeMonat, getMonatFromBZ) : [];
 }

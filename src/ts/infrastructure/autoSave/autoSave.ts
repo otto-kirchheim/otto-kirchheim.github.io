@@ -26,7 +26,14 @@ import {
   sendBulk,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from './savePipeline';
-import { buildRowLabel, markErrorRows, markFetchErrorRows, showErrorDialog } from './errorHandling';
+import {
+  buildRowLabel,
+  markErrorRows,
+  markFetchErrorRows,
+  markOverlapBlockedRows,
+  showErrorDialog,
+} from './errorHandling';
+import { findOverlapBlockedRows } from './overlapGuard';
 import type { BulkErrorEntry } from '../api/apiFetchHelper';
 
 // ─── Konfiguration ───────────────────────────────────────
@@ -325,6 +332,21 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
   const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
   if (!table) return;
+
+  // AutoSave sendet Löschungen bewusst nicht mit (nur manuelles Speichern tut das). Überschneidet
+  // sich eine anstehende Neuanlage/Änderung mit einer noch nicht synchronisierten Löschung derselben
+  // Ressource, würde der Server sie ablehnen (BZ/EWT `ensureNoOverlap` sieht den alten Datensatz noch).
+  // Statt eines vermeidbaren Fehlschlags: diese Ressource für AutoSave zurückhalten, betroffene Zeilen
+  // sichtbar markieren und auf manuelles Speichern verweisen (sendet Delete+Create zusammen, Server
+  // verarbeitet Löschungen zuerst — siehe `base.controller.ts`).
+  if (!includeDeletes) {
+    const blockedRows = findOverlapBlockedRows(resource, table);
+    if (blockedRows.length > 0) {
+      markOverlapBlockedRows(table, blockedRows);
+      setStatus(resource, 'blocked');
+      return;
+    }
+  }
 
   const changes: TableChanges<CustomTableTypes> = table.rows.getChanges(includeDeletes);
 

@@ -117,7 +117,7 @@ export function hasOverlap(
   einsatzEnd: ReturnType<typeof dayjs>,
   exclude?: IDatenBE,
 ): boolean {
-  return getBereitschaftsEinsatzDaten().some(be => {
+  return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
     const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const existingStart = dayjs(`${beDate}T${be.beginBE}`);
@@ -130,7 +130,7 @@ export function hasOverlap(
 export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude?: IDatenBE): boolean {
   const cutoff = einsatzStart.startOf('day').hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).second(0).millisecond(0);
   const windowStart = einsatzStart.isBefore(cutoff) ? cutoff.subtract(1, 'day') : cutoff;
-  return getBereitschaftsEinsatzDaten().some(be => {
+  return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
     if (be.lreBE !== 'LRE 1' && be.lreBE !== 'LRE 2') return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
     const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
@@ -153,7 +153,7 @@ export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, tagBE
     ? cutoff.subtract(1, 'day').set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE)
     : cutoff;
   const windowEnd = windowStart.add(1, 'day').set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE);
-  return getBereitschaftsEinsatzDaten().some(be => {
+  return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
     if (be.lreBE !== 'LRE 1') return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
     const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
@@ -362,7 +362,11 @@ export default async function submitBereitschaftsEinsatz(
   const einsatzEndRaw = dayjs(`${tagBE}T${daten.endeBE}`);
   const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-  let coverage = classifyBzCoverage(getBereitschaftsZeitraumDaten(), einsatzStart, einsatzEnd);
+  let coverage = classifyBzCoverage(
+    getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
+    einsatzStart,
+    einsatzEnd,
+  );
 
   if (coverage.kind !== 'complete') {
     if (!berZeit) return failWith(COVERAGE_WARNING[coverage.kind], 'warning', 5000);
@@ -383,7 +387,11 @@ export default async function submitBereitschaftsEinsatz(
 
       await flushResource('BZ');
       if (needsBeFlush) await flushResource('BE');
-      coverage = classifyBzCoverage(getBereitschaftsZeitraumDaten(), einsatzStart, einsatzEnd);
+      coverage = classifyBzCoverage(
+    getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
+    einsatzStart,
+    einsatzEnd,
+  );
     } catch (error) {
       Storage.set('dataBZ', savedData);
       Storage.set('dataBE', savedBeData);

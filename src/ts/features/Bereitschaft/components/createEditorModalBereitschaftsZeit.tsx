@@ -151,7 +151,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
         return;
       }
 
-      const overlaps = getBereitschaftsZeitraumDaten().some(existing => {
+      const overlaps = getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(existing => {
         if (values._id && existing._id === values._id) return false;
         const existingStart = dayjs(String(existing.beginB));
         const existingEnd = dayjs(String(existing.endeB));

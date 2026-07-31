@@ -213,6 +213,13 @@ describe('submitBereitschaftsEinsatz', () => {
 
     expect(result).toBe(false);
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'warning' }));
+    // Regression: lokal geloeschte, ungesynchte BE-Zeilen duerfen den Overlap-Check nicht blockieren
+    // (Bug-Klasse analog zum BZ-/EWT-Fix vom 2026-07-30) – Getter wird daher mit excludeDeleted aufgerufen.
+    expect(getBereitschaftsEinsatzDatenMock).toHaveBeenCalledWith(
+      undefined,
+      undefined,
+      expect.objectContaining({ excludeDeleted: true }),
+    );
   });
 
   it('fügt Bereitschaftseinsatz hinzu und gibt true zurück', async () => {

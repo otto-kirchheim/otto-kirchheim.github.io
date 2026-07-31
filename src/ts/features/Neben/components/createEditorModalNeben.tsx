@@ -75,7 +75,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
 
-  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
+  const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
   const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
   const existingZulagen = row instanceof Row ? normalizeNebengeldZulagen(row.cells) : [];
   const configuredZulagen = getConfiguredNebenZulagen(existingZulagen.map(zulage => zulage.code));

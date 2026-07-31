@@ -158,6 +158,36 @@ describe('autoSaveIndicator', () => {
     vi.useRealTimers();
   });
 
+  it('should show blocked badge on Bereitschaft button when BZ overlap-blocked', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+
+    listener('BZ', 'blocked');
+
+    const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
+    const icon = badge.querySelector('.material-icons-round') as HTMLSpanElement;
+    expect(icon.textContent).toBe('warning');
+    expect(badge.classList.contains('bg-warning')).toBe(true);
+    expect(badge.title).toContain('manuell speichern');
+    expect(badge.style.opacity).toBe('1');
+  });
+
+  it('should prioritize blocked over saving but not over error for Bereitschaft (BZ + BE)', () => {
+    initAutoSaveIndicator();
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+
+    listener('BZ', 'saving');
+    listener('BE', 'blocked');
+
+    const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
+    const icon = badge.querySelector('.material-icons-round') as HTMLSpanElement;
+    expect(icon.textContent).toBe('warning');
+    expect(badge.classList.contains('bg-warning')).toBe(true);
+
+    listener('BZ', 'error');
+    expect((badge.querySelector('.material-icons-round') as HTMLSpanElement).textContent).toBe('error');
+  });
+
   it('should prioritize error over saving for Bereitschaft (BZ + BE)', () => {
     initAutoSaveIndicator();
     const listener = mockOnAutoSaveStatus.mock.calls[0][0];

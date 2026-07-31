@@ -92,4 +92,15 @@ describe('getEwtDaten', () => {
     expect(getEwtDaten(undefined, 4)).toEqual([row]);
     expect(getEwtDaten(undefined, 3)).toEqual([row]);
   });
+
+  it('excludeDeleted: schliesst lokal geloeschte, ungesynchte Zeilen aus', () => {
+    Storage.set('Benutzer', { id: 'u1' });
+
+    const active = createRow('2026-03-10');
+    const deleted = { ...createRow('2026-03-12'), __localState: 'deleted' } as IDatenEWT;
+    Storage.set('dataE', [active, deleted]);
+
+    expect(getEwtDaten(undefined, 3, { scope: 'all' })).toEqual([active, deleted]);
+    expect(getEwtDaten(undefined, 3, { scope: 'all', excludeDeleted: true })).toEqual([active]);
+  });
 });

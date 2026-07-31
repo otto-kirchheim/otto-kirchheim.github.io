@@ -15,7 +15,7 @@ type ReturnTypeTagOptions = {
 };
 
 const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
-  const dataN = getNebengeldDaten(undefined, undefined, { scope: 'monat' });
+  const dataN = getNebengeldDaten(undefined, undefined, { scope: 'monat', excludeDeleted: true });
 
   const options = dataE
     .map(day => {

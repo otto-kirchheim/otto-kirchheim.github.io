@@ -76,7 +76,7 @@ registerAppStartTask(() => {
   };
 
   const countLinkedEinsaetze = (zeitraum: IDatenBZ): number => {
-    return getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }).filter(einsatz =>
+    return getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all', excludeDeleted: true }).filter(einsatz =>
       isEinsatzLinkedToZeitraum(einsatz, zeitraum),
     ).length;
   };
@@ -113,9 +113,10 @@ registerAppStartTask(() => {
         },
         deleteRow: row => {
           const bzToDelete = row.cells as IDatenBZ;
-          const beImZeitraum = getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }).some(einsatz =>
-            isEinsatzLinkedToZeitraum(einsatz, bzToDelete),
-          );
+          const beImZeitraum = getBereitschaftsEinsatzDaten(undefined, undefined, {
+            scope: 'all',
+            excludeDeleted: true,
+          }).some(einsatz => isEinsatzLinkedToZeitraum(einsatz, bzToDelete));
           if (beImZeitraum) {
             createSnackBar({
               message:

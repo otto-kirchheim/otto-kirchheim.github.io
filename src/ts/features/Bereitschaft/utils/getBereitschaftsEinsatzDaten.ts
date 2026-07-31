@@ -13,9 +13,10 @@ export default function getBereitschaftsEinsatzDaten(
 
   const sourceData = data ?? Storage.get<unknown>('dataBE', { default: [] });
   const rows = normalizeResourceRows<IDatenBE>(sourceData);
+  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
 
-  if (options?.scope === 'all') return rows;
+  if (options?.scope === 'all') return filteredRows;
 
   const activeMonat = Monat ?? getStoredMonatJahr().monat;
-  return activeMonat ? filterByMonat(rows, activeMonat, getMonatFromBE) : [];
+  return activeMonat ? filterByMonat(filteredRows, activeMonat, getMonatFromBE) : [];
 }

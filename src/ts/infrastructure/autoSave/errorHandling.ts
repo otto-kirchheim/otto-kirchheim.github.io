@@ -26,6 +26,28 @@ export function markErrorRows(
   return errors;
 }
 
+export const OVERLAP_BLOCK_MESSAGE =
+  'Überschneidet sich mit einer noch nicht gespeicherten Löschung. Bitte manuell auf „Speichern" klicken, damit die Löschung mit übernommen wird.';
+
+/**
+ * Markiert Zeilen, deren AutoSave wegen Überschneidung mit einer ungesyncten Löschung derselben
+ * Ressource zurückgehalten wird (siehe `overlapGuard.ts`). Nutzt dieselbe Fehler-Darstellung wie
+ * echte Server-Fehler (rote Zeile, Tooltip, Modal-Banner), damit der Grund für den Nutzer sichtbar
+ * ist, ohne die Zeile tatsächlich an den Server zu senden.
+ */
+export function markOverlapBlockedRows(table: CustomTable<CustomTableTypes>, rows: Row<CustomTableTypes>[]): void {
+  if (rows.length === 0) return;
+
+  for (const row of rows) {
+    const dirtyState = row._state === 'error' ? (row._errorState ?? 'new') : (row._state as 'new' | 'modified');
+    row._state = 'error';
+    row._errorState = dirtyState;
+    row._errorMessage = OVERLAP_BLOCK_MESSAGE;
+  }
+
+  if (typeof table.drawRows === 'function') table.drawRows();
+}
+
 export function buildRowLabel(row: Row<CustomTableTypes>): string {
   if (!row.columns?.array) return '';
   const parts = row.columns.array

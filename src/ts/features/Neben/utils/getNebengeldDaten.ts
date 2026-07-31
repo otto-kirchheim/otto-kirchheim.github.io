@@ -16,9 +16,10 @@ export default function getNebengeldDaten(
 
   const sourceData = data ?? Storage.get<unknown>('dataN', { default: [] });
   const rows = hydrateNebengeldRows(normalizeResourceRows<IDatenN>(sourceData));
+  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
 
-  if (options?.scope === 'all') return rows;
+  if (options?.scope === 'all') return filteredRows;
 
   const activeMonat = Monat ?? storedMonat;
-  return activeMonat ? filterByMonat(rows, activeMonat, getMonatFromN) : [];
+  return activeMonat ? filterByMonat(filteredRows, activeMonat, getMonatFromN) : [];
 }

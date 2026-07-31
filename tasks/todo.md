@@ -1,3 +1,100 @@
+# Aktueller Plan: Weitere Ueberschneidungs-/Duplikat-Checks mit selbem Bug wie 2026-07-30-Fix - 2026-07-31
+
+## Kontext
+Nach dem Fix vom 2026-07-30 (BZ/EWT-Editor-Modal blockierte Ersatz-Anlage faelschlich wegen lokal
+geloeschter, ungesynchter Zeilen) gezielt geprueft, ob dieselbe Bug-Klasse noch anderswo existiert.
+Root Cause: alle 4 Resource-Getter (BZ/BE/EWT/N) sind strukturell identisch, keiner filtert
+`__localState === 'deleted'` — der 2026-07-30-Fix patchte nur 2 Call-Sites inline statt die Getter.
+
+## Plan
+- [x] Alle Konsumenten der 4 Getter systematisch durchsucht und klassifiziert: Tabellen-Init/Reload
+      (muss geloeschte Zeilen zeigen) vs. Validierung/Berechnung (muss sie ausschliessen)
+- [x] `IDataQueryOptions.excludeDeleted?: boolean` (Default false, rueckwaertskompatibel)
+- [x] Filter in allen 4 Gettern (`getBereitschaftsZeitraumDaten`, `getBereitschaftsEinsatzDaten`,
+      `getEwtDaten`, `getNebengeldDaten`) eingebaut
+- [x] Echte Bug-Stellen gefixt: BE-Konflikt-Checks (`hasOverlap`/`hasLre12TooClose`/`hasConflictingLre1`),
+      BZ-Delete-Guard (`countLinkedEinsaetze`/`beImZeitraum`), BZ-Coverage (`classifyBzCoverage`,
+      3 Stellen), N-Tag-Disable (`createAddModalNeben`), EWT-Verknuepfung (`createEditorModalNeben`),
+      naechster-freier-Tag (`setNaechsterEwtTag`), Zulagen-Jahressumme (`calculateZulagenBreakdown`)
+- [x] BZ-/EWT-Editor-Modal: Inline-Checks vom 2026-07-30-Fix auf neue Getter-Option umgestellt
+- [x] Bewusst unveraendert: Tabellen-Init (`rows:`), `recalculateEwtMonat`-Reload, `overwriteUserDaten`
+      (Server-Daten ohne `__localState`)
+- [x] Tests: `EWT.getEwtDaten.test.ts` +1 Fall, `Bereitschaft.submitBereitschaftsEinsatz.test.ts`
+      Assertion ergaenzt; `tsc`/Lint sauber, Suite 1306 gruen
+
+## Review (2026-07-31)
+- Ergebnis: 7 weitere, bislang ungetestete Stellen mit derselben Bug-Klasse gefixt (BE-Overlap/LRE-Checks,
+  BZ-Delete-Guard, BZ-Coverage, N-Tag-Disable, EWT-Verknuepfung, naechster-freier-Tag, Zulagen-Summe).
+  Fix jetzt an der Wurzel (Getter-Option) statt pro Call-Site — verhindert Wiederholung des Musters.
+- Verifikation: `bunx tsc --noEmit` sauber, `bun run lint` sauber, `bun run test` → 1306 pass / 0 fail.
+- Details siehe `CHANGELOG.md` Eintrag 2026-07-31.
+
+---
+
+# Aktueller Plan: Speichern nach Löschen – Ersatz-Zeitraum faelschlich als Ueberschneidung blockiert - 2026-07-30
+
+### Problem
+
+User-Report: Wird ein BZ-/EWT-Datensatz gelöscht und direkt danach ein überschneidender Ersatz
+angelegt, schlägt das Speichern fehl, weil die Löschung noch nicht synchronisiert ist.
+
+### Root Cause (zwei Stellen)
+
+1. **Lokaler Ueberschneidungs-Check blockiert sofort:** `createEditorModalBereitschaftsZeit.tsx`
+   / `createEditorModalEWT.tsx` vergleichen gegen `getBereitschaftsZeitraumDaten()`/`getEwtDaten()`
+   (Storage-Snapshot) — der liest auch lokal bereits geloeschte, aber noch nicht gesendete Zeilen
+   (`__localState: 'deleted'`) mit ein. Die eigene, gerade erst lokal geloeschte Zeile blockierte
+   damit den Ersatz-Eintrag direkt im Modal.
+2. **AutoSave kann denselben Konflikt serverseitig auslösen:** AutoSave sendet Löschungen bewusst
+   nie automatisch mit (nur manuelles Speichern, Kommentar in `autoSave.ts`). Ohne Guard hätte
+   AutoSave eine ueberschneidende Neuanlage trotzdem senden können, waehrend der Server die
+   (lokal bereits geloeschte) alte Zeile noch kennt → vermeidbarer 422 im Hintergrund.
+
+### Plan
+
+- [x] Teil A: `__localState === 'deleted'` in beiden lokalen Ueberschneidungs-Checks ausschließen
+- [x] Teil A (Ergänzung, User-Hinweis): EWT-Editor reaktiviert beim Neuanlegen eine zum Löschen
+      vorgemerkte, zeitlich überschneidende Zeile (`undoDelete()` + `val()`) statt eine zweite
+      anzulegen — analog `addEwtTag.ts`; erhält `_id` (Nebengeld-`ewtRef` verwaist nicht). BZ hat
+      denselben Verlinkungsfall potenziell (`Bereitschaftseinsatz.Bereitschaftszeitraum`), wurde
+      hier aber nicht mit umgesetzt (nicht angefragt) — als bekannte Anschlussmöglichkeit vermerkt.
+- [x] Teil B: `infrastructure/autoSave/overlapGuard.ts` (neu) — erkennt Zeitfenster-Ueberschneidung
+      zwischen ausstehenden Neuanlagen/Aenderungen und ausstehenden, ungesyncten Loeschungen
+      (BZ/EWT; BE/N bewusst ausgenommen, LRE-Adjazenzregeln zu riskant zum Duplizieren)
+- [x] `errorHandling.ts`: `markOverlapBlockedRows` (rote Zeile/Tooltip/Modal-Banner wie echte
+      Server-Fehler, aber ohne Server-Request)
+- [x] `autoSave.ts`: Guard vor `saveResourceNow` bei `includeDeletes=false`; neuer `'blocked'`-Status;
+      manuelles Speichern (`includeDeletes=true`) bleibt unberührt vom Guard
+- [x] `TSaveStatus` + `autoSaveIndicator.ts`: `'blocked'`-Badge (gelb, `warning`-Icon)
+- [x] Tests: `overlapGuard.test.ts` (neu, 8 Fälle), `autoSave.test.ts` (+2), `autoSaveIndicator.test.ts` (+2)
+- [x] `frontend/CHANGELOG.md` aktualisiert
+
+### Verifikationskriterien
+
+- `bun run test` (1304 grün), `bunx tsc --noEmit -p tsconfig.json`, `bun run lint`,
+  `bun run format:check` (bis auf 2 vorbestehende, nicht angefasste Dateien) alle grün
+- Gezielte Tests: AutoSave sendet bei Ueberschneidung mit ungesyncter Löschung nichts und markiert
+  die Zeile; manuelles Speichern sendet Delete+Create trotzdem zusammen (Server verarbeitet
+  Loeschungen zuerst, siehe Backend-Plan „Bulk-Reihenfolge" vom 2026-07-17)
+
+### Review
+
+- Bewusst KEINE partielle Exklusion einzelner Zeilen aus dem AutoSave-Batch: `Rows.getChanges()`/
+  `_commitCreateAndUpdate()` zählen `createIdx` über die EFFEKTIVE Zeilen-Reihenfolge (inkl.
+  Fehler-Zeilen via `_errorState`) — ein Ausschluss nur einzelner Zeilen haette die Index-Zuordnung
+  zwischen `createdIds`-Map und Commit-Loop fuer alle NACHFOLGENDEN Zeilen verschoben (stille
+  Fehlzuordnung von IDs, im schlimmsten Fall Datenverlust durch faelschliches `_state='unchanged'`
+  ohne `_id`). Stattdessen haelt der Guard bei einer Ueberschneidung die GESAMTE Ressource fuer
+  diesen AutoSave-Zyklus zurueck (kein `sendBulk`-Aufruf, keine Commit-Logik beruehrt) — grobere
+  Granularitaet, aber ohne Aenderung an der bestehenden, gut getesteten Commit-Pipeline.
+- `getEwtWindow`-Logik (Tagesuebertrag bei Nachtschichten) bewusst lokal in `overlapGuard.ts`
+  dupliziert statt aus `features/EWT/utils/` importiert: `infrastructure/` darf laut
+  Architekturregel nicht von `features/` abhaengen. Klein und stabil genug (~10 Zeilen reine
+  dayjs-Arithmetik), um das Duplikationsrisiko gegenüber einem Layer-Verstoß hinzunehmen.
+- BE (Bereitschaftseinsatz) bewusst nicht abgesichert: Overlap-Regeln dort sind LRE-typ- und
+  Adjazenz-abhängig (`bereitschaftseinsatz.service.ts`), eine Frontend-Replikation wäre riskant
+  und fehleranfällig. Bekannte Restlücke, kein blockierendes Risiko für den gemeldeten Fall.
+
 # Aktueller Plan: Einstellungen → Fahrzeiten als editierbare Liste (Add/Delete/Reorder) - 2026-07-16
 
 ### Plan

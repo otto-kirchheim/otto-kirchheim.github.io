@@ -1,5 +1,30 @@
 # Lessons Learned
 
+- Bei lokalen Ueberschneidungs-/Duplikat-/Verknuepfungs-Checks NIE gegen den rohen
+  Storage-Snapshot der vier Resource-Getter (`getBereitschaftsZeitraumDaten`,
+  `getBereitschaftsEinsatzDaten`, `getEwtDaten`, `getNebengeldDaten`) pruefen, ohne
+  `__localState === 'deleted'` auszuschließen — der Snapshot enthaelt auch lokal bereits
+  geloeschte, aber noch nicht synchronisierte Zeilen. Sonst blockiert die eigene, gerade erst
+  geloeschte Zeile z. B. das Anlegen eines ueberschneidenden Ersatzes. Der erste Fix (2026-07-30)
+  patchte das nur inline an zwei Call-Sites (BZ-/EWT-Modal) und uebersah dadurch sieben weitere
+  betroffene Stellen (BE-Overlap/LRE-Checks, BZ-Delete-Guard, BZ-Coverage, N-Tag-Disable,
+  EWT-Verknuepfung, naechster-freier-Tag, Zulagen-Jahressumme) — Folge-Fix (2026-07-31) daher an
+  der Wurzel: `IDataQueryOptions.excludeDeleted?: boolean` auf allen vier Gettern. Bei jeder
+  Validierung/Berechnung, die einen dieser Getter aufruft, IMMER `excludeDeleted: true` pruefen
+  (nur Tabellen-Init/-Reload braucht die geloeschten Zeilen, fuer Undo-Anzeige). AutoSave sendet
+  Loeschungen bewusst nie automatisch mit (nur manuelles Speichern) — ein zusätzlicher Guard
+  (`infrastructure/autoSave/overlapGuard.ts`) haelt daher auch AutoSave-Sends zurueck, die sich
+  serverseitig noch mit einer ungesyncten Loeschung ueberschneiden wuerden, statt einen
+  vermeidbaren 422 zu riskieren.
+- Bei `Rows.getChanges()`/`_commitCreateAndUpdate()` (CustomTable.ts) NIE einzelne Zeilen aus
+  einem AutoSave-Batch herausfiltern, ohne die Index-Zuordnung zu pruefen: `createIdx` zaehlt
+  ueber die EFFEKTIVE Zeilen-Reihenfolge (inkl. Fehler-Zeilen via `_errorState`-Fallback), waehrend
+  `createdIds`-Maps aus `changeTracking.ts` auf der tatsaechlich GESENDETEN Reihenfolge basieren.
+  Eine Zeile aus dem Payload zu entfernen, ohne sie auch aus dieser Zaehlung auszuschließen,
+  verschiebt die ID-Zuordnung fuer alle nachfolgenden Zeilen (stiller Datenverlust moeglich). Bei
+  einem client-seitigen Vorab-Block lieber die GANZE Ressource fuer den Zyklus zurueckhalten
+  (kein `sendBulk`-Aufruf) statt eine Zeile chirurgisch aus einem sonst unveraenderten Batch zu
+  entfernen.
 - Datumskonvention gilt auch für Chart-Mathematik und Anzeige-Formatierung: NIEMALS `new Date(...)`, `.getTime()`, `.toLocaleString()` oder UTC-Getter verwenden — immer `dayjs` aus `@/infrastructure/date/configDayjs` (`valueOf()` statt `getTime()`, `format()` statt `toLocaleString()`, `dayjs.utc()` statt `getUTC*()`; utc-Plugin ist in configDayjs geladen). Vor Übergabe neuer Komponenten `grep -rn "new Date" src/ts` laufen lassen — die Regel wurde in den Admin-Komponenten (Dashboard, LogBrowser, ResourceBrowser) mehrfach übersehen.
 - Bei Onboarding-Schritten, die direkt nach dem Rendern Tab-/Accordion-Navigation ausloesen, keine unnötigen Dynamic-Imports in der Sprungfunktion verwenden; fuer deterministisches Timing (und stabile Tests) Bootstrap-Module direkt importieren.
 - Bei `CustomTable.rows.load(...)` in Monatsansichten nie nur den aktuell sichtbaren Monatsausschnitt laden, wenn spätere Monatswechsel weiter auf derselben Tabelleninstanz filtern. Der `rows.array`-State muss den vollständigen geladenen Jahresbestand behalten; sonst verschwinden andere Monate nach `Berechnen` scheinbar aus der UI.

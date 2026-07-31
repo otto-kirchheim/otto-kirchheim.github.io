@@ -500,4 +500,63 @@ describe('EWT utils extra', () => {
     );
     expect(existingRow.cells.tagE).toBe('2026-03-12');
   });
+
+  it('reaktiviert beim Neuanlegen eine zum Löschen vorgemerkte, zeitlich überschneidende Zeile statt eine zweite anzulegen', () => {
+    Storage.set('VorgabenU', createVorgabenU());
+    Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
+    Storage.set('Benutzer', { id: 'user-1' } as never);
+    Storage.set('dataE', []);
+
+    const table = createEditorTable([
+      {
+        ...createRow(12),
+        tagE: '2026-03-12',
+        eOrtE: 'Fulda',
+        schichtE: 'T',
+        beginE: '08:00',
+        endeE: '16:00',
+        berechnen: false,
+        _id: 'old-ewt-id',
+      },
+    ]);
+
+    const oldRow = table.rows.array[0];
+    if (!oldRow) throw new Error('row not found');
+    oldRow.deleteRow();
+    expect(oldRow.isDeleted).toBe(true);
+
+    EditorModalEWT(table, 'EWT hinzufügen');
+
+    const form = document.querySelector<HTMLFormElement>('#modal form');
+    if (!form) throw new Error('form not found');
+
+    const tagInput = form.querySelector<HTMLInputElement>('#tagE');
+    const eOrtSelect = form.querySelector<HTMLSelectElement>('#eOrtE');
+    const berechnenInput = form.querySelector<HTMLInputElement>('#berechnen');
+    const beginEInput = form.querySelector<HTMLInputElement>('#beginE');
+    const endeEInput = form.querySelector<HTMLInputElement>('#endeE');
+    if (!tagInput || !eOrtSelect || !berechnenInput || !beginEInput || !endeEInput) {
+      throw new Error('input not found');
+    }
+
+    tagInput.value = '2026-03-12';
+    eOrtSelect.value = 'Fulda';
+    berechnenInput.checked = false;
+    beginEInput.value = '10:00';
+    endeEInput.value = '18:00';
+
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+
+    expect(createSnackBarMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('Zeitüberschneidung') }),
+    );
+    // Keine zweite Zeile angelegt: die geloeschte Zeile wurde reaktiviert und ueberschrieben.
+    expect(table.rows.array).toHaveLength(1);
+    const reactivated = table.rows.array[0];
+    expect(reactivated).toBe(oldRow);
+    expect(reactivated._id).toBe('old-ewt-id');
+    expect(reactivated._state as string).toBe('modified');
+    expect(reactivated.cells.beginE).toBe('10:00');
+    expect(reactivated.cells.endeE).toBe('18:00');
+  });
 });

@@ -6,7 +6,7 @@ import getEwtDaten from './getEwtDaten';
 
 export default function setNaechsterEwtTag(
   tag?: string | number | null,
-  dataE: IMonatsDaten['EWT'] = getEwtDaten(undefined, undefined, { scope: 'monat' }),
+  dataE: IMonatsDaten['EWT'] = getEwtDaten(undefined, undefined, { scope: 'monat', excludeDeleted: true }),
 ): void {
   const eingabefeldTagE = document.querySelector<HTMLInputElement>('#tagE');
   if (!eingabefeldTagE) throw new Error('Eingabefeld für Tag nicht gefunden');

@@ -3,6 +3,8 @@ type TEwtFilter = 'starttag' | 'buchungstag' | 'beide';
 
 interface IDataQueryOptions {
   scope?: TDataScope;
+  /** Lokal geloeschte, aber noch nicht synchronisierte Zeilen (`__localState === 'deleted'`) ausschliessen. */
+  excludeDeleted?: boolean;
 }
 
 interface IEwtQueryOptions extends IDataQueryOptions {

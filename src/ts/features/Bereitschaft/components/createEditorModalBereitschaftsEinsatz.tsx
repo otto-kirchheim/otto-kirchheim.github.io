@@ -174,7 +174,11 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       const einsatzEndRaw = dayjs(`${einsatzDate}T${values.endeBE}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-      const coverage = classifyBzCoverage(getBereitschaftsZeitraumDaten(), einsatzStart, einsatzEnd);
+      const coverage = classifyBzCoverage(
+        getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
+        einsatzStart,
+        einsatzEnd,
+      );
       if (coverage.kind !== 'complete') {
         const message =
           coverage.kind === 'gap'
