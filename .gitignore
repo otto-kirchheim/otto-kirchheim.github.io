@@ -4,6 +4,7 @@ dist/
 dev-dist/
 .vscode/
 plan/
+graphify-out/
 
 # ruflo / MCP (lokale Agenten-Tooling-Artefakte, nicht Teil des Projekts)
 ruvector.db
@@ -12,3 +13,4 @@ agentdb.rvf.lock
 
 # TypeScript inkrementeller Build-Cache
 *.tsbuildinfo
+

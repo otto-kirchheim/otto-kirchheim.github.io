@@ -3,7 +3,38 @@
   "autoCompactEnabled": true,
   "autoMemoryEnabled": true,
   "permissions": {
-    "allow": ["Bash(rg *)", "Bash(bun *)", "Bash(git status*)", "Bash(git diff*)"],
-    "deny": ["Bash(git reset --hard*)", "Bash(git checkout -- *)", "Bash(rm -rf /*)"]
+    "allow": [
+      "Bash(rg *)",
+      "Bash(bun *)",
+      "Bash(git status*)",
+      "Bash(git diff*)"
+    ],
+    "deny": [
+      "Bash(git reset --hard*)",
+      "Bash(git checkout -- *)",
+      "Bash(rm -rf /*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/jan/snap/code/249/.local/share/../bin/graphify hook-guard search"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/jan/snap/code/249/.local/share/../bin/graphify hook-guard read"
+          }
+        ]
+      }
+    ]
   }
 }
