@@ -17,6 +17,7 @@ const {
   mockHasPendingTableChanges,
   mockUpdateMyProfile,
   mockSaveEinstellungen,
+  mockSyncFeatureTabs,
 } = viCompat.hoisted(() => ({
   mockSetLoading: vi.fn(),
   mockClearLoading: vi.fn(),
@@ -29,6 +30,7 @@ const {
   mockHasPendingTableChanges: vi.fn(),
   mockUpdateMyProfile: vi.fn(),
   mockSaveEinstellungen: vi.fn(),
+  mockSyncFeatureTabs: vi.fn(),
 }));
 
 // --- Mocks ---
@@ -46,6 +48,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 vi.mock('@/infrastructure/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
 }));
+vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
 
 import Storage from '@/infrastructure/storage/Storage';
 import saveDaten from '@/infrastructure/data/saveDaten';
@@ -70,6 +73,7 @@ describe('saveDaten', () => {
     mockFlushAll.mockResolvedValue(undefined);
     mockGetResourceStatus.mockReturnValue({ status: 'idle', timer: null, lastSaved: null, lastError: null });
     mockHasPendingTableChanges.mockReturnValue(false);
+    mockSyncFeatureTabs.mockResolvedValue(undefined);
 
     // navigator.onLine standardmäßig auf true
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
@@ -321,5 +325,41 @@ describe('saveDaten', () => {
 
     expect(mockMarkResourceSaved).toHaveBeenCalledWith('BZ');
     expect(mockMarkResourceSaved).toHaveBeenCalledWith('BE');
+  });
+
+  it('ruft syncFeatureTabs mit den frisch gesammelten aktivierteTabs auf', async () => {
+    mockSaveEinstellungen.mockReturnValue({
+      pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['ewt'] },
+    });
+
+    await saveDaten(button);
+
+    expect(mockSyncFeatureTabs).toHaveBeenCalledWith(['ewt']);
+  });
+
+  it('ruft syncFeatureTabs mit den alten aktivierteTabs auf, wenn das Einstellungen-Sammeln fehlschlägt', async () => {
+    Storage.set('VorgabenU', { pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['neben'] } });
+    mockSaveEinstellungen.mockImplementation(() => {
+      throw new Error('Persönliche Daten fehlerhaft');
+    });
+
+    await saveDaten(button);
+
+    expect(mockSyncFeatureTabs).toHaveBeenCalledWith(['neben']);
+  });
+
+  it('ruft syncFeatureTabs erst nach flushAll auf (Daten müssen vor dem Unmount geflusht sein)', async () => {
+    const callOrder: string[] = [];
+    mockFlushAll.mockImplementation(async () => {
+      callOrder.push('flushAll');
+    });
+    mockSyncFeatureTabs.mockImplementation(async () => {
+      callOrder.push('syncFeatureTabs');
+    });
+
+    await saveDaten(button);
+
+    expect(callOrder).toEqual(['flushAll', 'syncFeatureTabs']);
   });
 });

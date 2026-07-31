@@ -4,6 +4,30 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-31
 
+### feat (Live-Mount/Unmount beim Speichern in Einstellungen)
+
+- **Aufbauend auf dem modularen Tab-Umbau (siehe unten):** Bisher wirkte eine Änderung an `aktivierteTabs`
+  erst beim nächsten Login/Jahreswechsel auf den Tab-Inhalt. Jetzt reagiert der Mount-Zustand direkt auf
+  "Speichern" in Einstellungen — ohne Datenverlust und ohne die bereits bestehende, sofort wirksame
+  Nav-Sichtbarkeit anzufassen.
+- **`saveDaten.ts`:** Ruft `syncFeatureTabs(...)` jetzt direkt nach `await flushAll()` auf (mit den frisch
+  aus dem `pre-save:settings`-Hook gesammelten `aktivierteTabs`, oder den vorherigen, falls das Sammeln
+  fehlschlug). Bewusst nicht vorher: Ein Unmount vor dem Flush hätte die Tabelle aus dem DOM entfernt,
+  bevor `flushAll`s `findTable()`-Check sie noch als "hat offene Änderungen" erkennen konnte — Änderungen
+  wären verloren gegangen, ohne dass je ein Request rausging.
+- **`syncFeatureTabs.ts`:** Prüft vor jedem Unmount, ob eine der Ressourcen des betroffenen Features noch
+  ungesynchte Änderungen hat (`hasPendingTableChanges(..., true)`) oder im `error`-Status feststeckt
+  (`getResourceStatus(...).status`). Falls ja: Unmount für diesen Durchlauf übersprungen (Feature bleibt im
+  internen Mount-Tracking als "gemountet"), Warn-Snackbar ("X konnte nicht deaktiviert werden – ungespeicherte
+  Änderungen"). Wird beim nächsten erfolgreichen Speichern oder Login automatisch nachgeholt — kein manuelles
+  Eingreifen nötig. Nav-Button ist in diesem Fall trotzdem schon versteckt (separater, unveränderter
+  Mechanismus über `updateTabVisibility.ts`).
+- **Tests:** Neue Datei `test/orchestration/syncFeatureTabs.test.ts` (9 Fälle: Mount/Unmount, Idempotenz,
+  Snackbar-Block bei offenen Änderungen/Fehlerstatus, automatisches Nachholen, `resetFeatureTabSync`,
+  leere/undefined `aktivierteTabs` = alle aktiv); `saveDaten.test.ts` +3 Fälle (`syncFeatureTabs`-Aufruf mit
+  korrekten `aktivierteTabs`, Fallback bei Einstellungen-Fehler, Aufruf-Reihenfolge nach `flushAll`). Suite
+  1319 Tests grün, `tsc`/Lint sauber.
+
 ### feat (Modulare Feature-Tabs: Bereitschaft/EWT/Neben ohne Inhalt, wenn deaktiviert)
 
 - **Root Cause/Ziel:** Ein per `Einstellungen.aktivierteTabs` deaktivierter Tab war bisher nur kosmetisch versteckt (`updateTabVisibility.ts` setzte nur `d-none` auf den Nav-Button) — Tabelle und Buttons wurden trotzdem unconditioniert beim App-Boot gebaut (`registerAppStartTask`, lief vor Login, kannte `aktivierteTabs` also gar nicht). Ziel: ein deaktivierter Tab hat jetzt wirklich keinen Inhalt (kein DOM, keine Tabelle), nicht nur ein verstecktes Nav-Item.

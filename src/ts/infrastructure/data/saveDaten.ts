@@ -8,6 +8,7 @@ import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved 
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
 import { invokeHook } from '@/core/hooks';
+import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
@@ -90,6 +91,11 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
         markResourceSaved(resource);
       }
     }
+
+    // 2b. Tab-Inhalt von Bereitschaft/EWT/Neben live an aktivierteTabs anpassen — erst jetzt, da die
+    //     Tabellen-Daten durch flushAll() (oben) bereits sicher geflusht sind (sonst würde ein Unmount vor
+    //     dem Flush die betroffene Tabelle aus dem DOM entfernen, bevor ihre Änderungen gesendet wurden).
+    await syncFeatureTabs((userData ?? previousUserData).Einstellungen?.aktivierteTabs);
 
     // 3. Profil nur bei Änderungen speichern
     const profileResult = settingsNeedsSync && userData ? await profileApi.updateMyProfile(userData) : null;
