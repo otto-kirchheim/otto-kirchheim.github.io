@@ -387,171 +387,17 @@
 
       <!-- Tab Bereitschaft -->
       <div class="tab-pane fade" id="Bereitschaft" role="tabpanel">
-        <div class="container text-center">
-          <div class="row justify-content-center">
-            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
-              Bereitschaft
-              <button
-                type="button"
-                class="btn btn-sm btn-link p-0"
-                id="btnHelpBereitschaft"
-                aria-label="Hilfe anzeigen"
-              >
-                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
-              </button>
-            </h1>
-            <h4 id="MonatB"></h4>
-          </div>
-
-          <div class="container">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-              <div class="col d-grid">
-                <button type="button" class="btn btn-primary" id="btnESZ" data-disabler>
-                  <span class="material-icons-round big-icons">add_circle_outlined</span>
-                  Bereitschaft
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button type="button" class="btn btn-primary" id="btnESE" data-disabler>
-                  <span class="material-icons-round big-icons">add_circle_outlined</span>
-                  Einsatz
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button type="button" class="btn btn-success" id="btnSaveB" data-disabler>
-                  <span class="material-icons-round big-icons">save</span>
-                  Speichern
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button type="button" class="btn btn-secondary" id="btnDownloadB" data-disabler>
-                  <span class="material-icons-round big-icons">download</span>
-                  Herunterladen (PDF)
-                </button>
-              </div>
-            </div>
-          </div>
-          <hr />
-          <div class="table-responsive">
-            <h4 id="titelBZ">Bereitschaftszeitraum</h4>
-            <table
-              id="tableBZ"
-              class="table table-bordered table-striped table-hover align-middle"
-              aria-describedby="TitelBZ"
-            ></table>
-          </div>
-          <hr />
-          <div class="table-responsive">
-            <h4 id="titelBE">Bereitschaftseinsätze</h4>
-            <table
-              id="tableBE"
-              class="table table-bordered table-striped table-hover align-middle"
-              aria-describedby="titelBE"
-            ></table>
-          </div>
-        </div>
+        <div id="bereitschaft-root"></div>
       </div>
 
       <!-- Tab EWT Anzeigen -->
       <div class="tab-pane fade" id="EWT" role="tabpanel">
-        <div class="container-lg text-center">
-          <div class="row justify-content-center">
-            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
-              EWT
-              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
-                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
-              </button>
-            </h1>
-            <h4 id="MonatE"></h4>
-          </div>
-
-          <div class="container">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-              <div class="col d-grid">
-                <button type="button" class="btn btn-primary" id="btnESEE" data-disabler>
-                  <span class="material-icons-round big-icons">add_circle_outlined</span>
-                  Anwesenheit
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button class="btn btn-primary" type="button" id="btnZb" data-disabler>
-                  <span class="material-icons-round big-icons">calculate</span>
-                  Berechnen
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button class="btn btn-success" type="button" id="btnSaveE" data-disabler>
-                  <span class="material-icons-round big-icons">save</span>
-                  Speichern
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button class="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
-                  <span class="material-icons-round big-icons">download</span>
-                  Herunterladen (PDF)
-                </button>
-              </div>
-            </div>
-          </div>
-          <hr />
-
-          <div class="table-responsive">
-            <table
-              id="tableE"
-              class="table table-bordered table-striped table-hover align-middle"
-              aria-label="EWT"
-            ></table>
-          </div>
-        </div>
+        <div id="ewt-root"></div>
       </div>
 
       <!-- Tab Nebenbezüge Anzeigen -->
       <div class="tab-pane fade" id="Neben" role="tabpanel">
-        <div class="container-lg text-center">
-          <div class="row justify-content-center">
-            <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
-              Nebenbezüge
-              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpNeben" aria-label="Hilfe anzeigen">
-                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
-              </button>
-            </h1>
-            <h4 id="MonatN"></h4>
-          </div>
-
-          <div class="container">
-            <div
-              class="row row-cols-1 row-cols-md-3 justify-content-center justify-content-sm-start justify-content-md-center g-3 my-3 w200"
-            >
-              <div class="col d-grid">
-                <button type="button" class="btn btn-primary" id="btnESN" data-disabler>
-                  <span class="material-icons-round big-icons">add_circle_outlined</span>
-                  Hinzufügen
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button class="btn btn-success" type="button" id="btnSaveN" data-disabler>
-                  <span class="material-icons-round big-icons">save</span>
-                  Speichern
-                </button>
-              </div>
-              <div class="col d-grid">
-                <button class="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
-                  <span class="material-icons-round big-icons">download</span>
-                  Herunterladen (PDF)
-                </button>
-              </div>
-            </div>
-          </div>
-          <hr />
-
-          <div class="table-responsive">
-            <table
-              id="tableN"
-              class="table table-bordered table-striped table-hover align-middle"
-              aria-label="Nebengeld"
-            ></table>
-          </div>
-        </div>
+        <div id="neben-root"></div>
       </div>
 
       <!-- Tab Berechnung -->
