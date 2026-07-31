@@ -264,8 +264,10 @@ describe('saveDaten', () => {
     expect(mockFlushAll).toHaveBeenCalled();
     expect(mockUpdateMyProfile).not.toHaveBeenCalled();
     expect(mockMarkResourceSaved).not.toHaveBeenCalledWith('settings');
-    // Keine Snackbar aus saveDaten – die feldgenaue Fehler-Snackbar kommt aus saveEinstellungen.
-    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+    // Button betrifft auch Tabellen-Ressourcen (Default-Button) – die wurden erfolgreich
+    // geflusht, daher trotzdem Erfolgs-Snackbar (die feldgenaue Fehler-Snackbar zu den
+    // Einstellungen kommt separat aus saveEinstellungen).
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
     // Kein partieller Settings-Write in Storage
     expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual({ pers: { Vorname: 'Alt' } });
   });
@@ -302,7 +304,8 @@ describe('saveDaten', () => {
 
     expect(mockFlushAll).toHaveBeenCalled();
     expect(mockUpdateMyProfile).not.toHaveBeenCalled();
-    expect(mockCreateSnackBar).not.toHaveBeenCalled();
+    // Default-Button betrifft auch Tabellen-Ressourcen – Erfolgs-Snackbar bleibt sichtbar.
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
   });
 
   it('race-condition: markResourceSaved wird für idle BZ nach flush aufgerufen', async () => {

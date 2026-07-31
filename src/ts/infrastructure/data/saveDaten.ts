@@ -104,9 +104,12 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     // 5. Settings-Resource als gespeichert markieren, sobald sie explizit synchronisiert wurde.
     if (settingsNeedsSync) markResourceSaved('settings');
 
-    // 6. Erfolgsmeldung nur wenn auch die Einstellungen fehlerfrei übernommen wurden;
-    //    bei Einstellungs-Fehler bleibt die feldgenaue Snackbar aus saveEinstellungen die einzige Meldung.
-    if (userData !== null) {
+    // 6. Erfolgsmeldung unterdrücken nur, wenn der Button ausschließlich Einstellungen betrifft
+    //    UND diese fehlgeschlagen sind. Sonst wäre bei Tabellen-Buttons (btnSaveB/E/N) die
+    //    feldgenaue Fehler-Snackbar aus saveEinstellungen die einzige Rückmeldung, obwohl die
+    //    eigentlich angeforderten Tabellendaten erfolgreich gespeichert wurden.
+    const settingsOnlyButton = buttonResources.length === 1 && buttonResources[0] === 'settings';
+    if (!(settingsOnlyButton && userData === null)) {
       createSnackBar({
         message: `Speichern<br/>Daten gespeichert`,
         status: 'success',

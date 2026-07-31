@@ -2,6 +2,13 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-07-31
+
+### fix (Speichern: Tabellen-Buttons zeigten trotz Erfolg keine Snackbar bei Einstellungs-Fehler)
+
+- **`saveDaten.ts`:** Folgefehler aus dem Fix vom 2026-07-17 (Settings-Validierungsfehler entkoppelt von `flushAll`): Die Erfolgs-Snackbar haengte an `userData !== null`, also am Erfolg der (bei jedem Speichern-Button unconditioned mitlaufenden) Einstellungs-Sammlung — nicht am tatsaechlichen Erfolg des geklickten Buttons. Klickte man z. B. `btnSaveB` (nur BZ/BE) mit gueltigen Aenderungen, waehrend irgendwo im (inaktiven) Einstellungen-Tab ein ungueltiges Feld stand, wurden BZ/BE korrekt gespeichert, aber es erschien keinerlei Erfolgsmeldung — nur die feldgenaue, thematisch unpassende Fehler-Snackbar aus `saveEinstellungen`. Fix: Erfolgs-Snackbar wird nur noch unterdrueckt, wenn der Button ausschliesslich die Ressource `settings` betrifft (`btnSaveEinstellungen`) UND diese fehlgeschlagen ist; bei allen anderen Buttons erscheint die Erfolgsmeldung wie vor dem 2026-07-17-Fix.
+- **Tests:** `saveDaten.test.ts` — 2 bestehende Faelle angepasst (Default-Button mit Tabellen- und Settings-Ressourcen erwartet jetzt Erfolgs-Snackbar trotz Settings-Fehler); Suite 1305 Tests gruen.
+
 ## 2026-07-18
 
 ### fix (PWA: Workbox-Dev-Logging aus, API-Cache-Pattern geschärft)
