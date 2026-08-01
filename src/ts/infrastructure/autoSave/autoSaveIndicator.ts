@@ -257,6 +257,27 @@ export function initAutoSaveIndicator(): void {
 }
 
 /**
+ * Registriert das Badge für einen einzelnen, nachträglich ins DOM eingefügten Button (z. B. wenn ein
+ * Feature-Tab erst nach dem Login conditional gemountet wird, also nach initAutoSaveIndicator() lief).
+ * Ohne diesen Aufruf würde sich das Badge erst beim nächsten Status-Event dieser Ressource selbst heilen
+ * (updateBadge legt es über getOrCreateBadge lazy an) — hier wird der aktuelle Status sofort angezeigt.
+ * No-op, wenn der Button (noch) nicht existiert.
+ */
+export function registerAutoSaveButton(buttonId: string, resources: TResourceKey[]): void {
+  const btn = document.getElementById(buttonId);
+  if (!btn) return;
+
+  btn.classList.add('position-relative');
+
+  const existing = btn.querySelector<HTMLSpanElement>('.autosave-badge');
+  const badge = existing ?? createBadgeElement();
+  if (!existing) btn.appendChild(badge);
+  badgeElements.set(buttonId, badge);
+
+  updateBadge(buttonId, resources);
+}
+
+/**
  * Entfernt alle Badges (z. B. bei logoutUser).
  */
 export function destroyAutoSaveIndicator(): void {

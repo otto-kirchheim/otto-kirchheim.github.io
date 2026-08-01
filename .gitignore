@@ -10,6 +10,9 @@ graphify-out/
 ruvector.db
 agentdb.rvf
 agentdb.rvf.lock
+.claude-flow/
+.claude/.proven-config-version
+.claude/proven-config.json
 
 # TypeScript inkrementeller Build-Cache
 *.tsbuildinfo

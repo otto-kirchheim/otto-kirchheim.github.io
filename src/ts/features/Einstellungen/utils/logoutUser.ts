@@ -8,6 +8,7 @@ import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
 import { destroyAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { authApi } from '@/infrastructure/api/apiService';
 import { featureLifecycleRegistry } from '@/core/hooks';
+import { resetFeatureTabSync } from '@/core/orchestration/syncFeatureTabs';
 import { publishEvent } from '@/core/events/appEvents';
 
 type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';
@@ -36,6 +37,7 @@ export default function logoutUser({
   }
 
   void featureLifecycleRegistry.teardownAll();
+  resetFeatureTabSync();
 
   publishEvent('user:logout', { reason });
 

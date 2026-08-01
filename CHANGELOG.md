@@ -4,6 +4,42 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-07-31
 
+### feat (Live-Mount/Unmount beim Speichern in Einstellungen)
+
+- **Aufbauend auf dem modularen Tab-Umbau (siehe unten):** Bisher wirkte eine Änderung an `aktivierteTabs`
+  erst beim nächsten Login/Jahreswechsel auf den Tab-Inhalt. Jetzt reagiert der Mount-Zustand direkt auf
+  "Speichern" in Einstellungen — ohne Datenverlust und ohne die bereits bestehende, sofort wirksame
+  Nav-Sichtbarkeit anzufassen.
+- **`saveDaten.ts`:** Ruft `syncFeatureTabs(...)` jetzt direkt nach `await flushAll()` auf (mit den frisch
+  aus dem `pre-save:settings`-Hook gesammelten `aktivierteTabs`, oder den vorherigen, falls das Sammeln
+  fehlschlug). Bewusst nicht vorher: Ein Unmount vor dem Flush hätte die Tabelle aus dem DOM entfernt,
+  bevor `flushAll`s `findTable()`-Check sie noch als "hat offene Änderungen" erkennen konnte — Änderungen
+  wären verloren gegangen, ohne dass je ein Request rausging.
+- **`syncFeatureTabs.ts`:** Prüft vor jedem Unmount, ob eine der Ressourcen des betroffenen Features noch
+  ungesynchte Änderungen hat (`hasPendingTableChanges(..., true)`) oder im `error`-Status feststeckt
+  (`getResourceStatus(...).status`). Falls ja: Unmount für diesen Durchlauf übersprungen (Feature bleibt im
+  internen Mount-Tracking als "gemountet"), Warn-Snackbar ("X konnte nicht deaktiviert werden – ungespeicherte
+  Änderungen"). Wird beim nächsten erfolgreichen Speichern oder Login automatisch nachgeholt — kein manuelles
+  Eingreifen nötig. Nav-Button ist in diesem Fall trotzdem schon versteckt (separater, unveränderter
+  Mechanismus über `updateTabVisibility.ts`).
+- **Tests:** Neue Datei `test/orchestration/syncFeatureTabs.test.ts` (9 Fälle: Mount/Unmount, Idempotenz,
+  Snackbar-Block bei offenen Änderungen/Fehlerstatus, automatisches Nachholen, `resetFeatureTabSync`,
+  leere/undefined `aktivierteTabs` = alle aktiv); `saveDaten.test.ts` +3 Fälle (`syncFeatureTabs`-Aufruf mit
+  korrekten `aktivierteTabs`, Fallback bei Einstellungen-Fehler, Aufruf-Reihenfolge nach `flushAll`). Suite
+  1319 Tests grün, `tsc`/Lint sauber.
+
+### feat (Modulare Feature-Tabs: Bereitschaft/EWT/Neben ohne Inhalt, wenn deaktiviert)
+
+- **Root Cause/Ziel:** Ein per `Einstellungen.aktivierteTabs` deaktivierter Tab war bisher nur kosmetisch versteckt (`updateTabVisibility.ts` setzte nur `d-none` auf den Nav-Button) — Tabelle und Buttons wurden trotzdem unconditioniert beim App-Boot gebaut (`registerAppStartTask`, lief vor Login, kannte `aktivierteTabs` also gar nicht). Ziel: ein deaktivierter Tab hat jetzt wirklich keinen Inhalt (kein DOM, keine Tabelle), nicht nur ein verstecktes Nav-Item.
+- **Neu: `BereitschaftTab.tsx` / `EwtTab.tsx` / `NebenTab.tsx`:** Je eine dünne Preact-Komponente pro Feature (Chrome als JSX + `useEffect` für `CustomTable`-Aufbau/Button-Wiring — `CustomTable` selbst bleibt Vanilla-DOM). `frontend/src/index.html` enthält für diese drei Tab-Panes nur noch einen leeren Mount-Container (`#bereitschaft-root`/`#ewt-root`/`#neben-root`), analog zu Admin (`#admin-root`).
+- **`{Bereitschaft,EWT,Neben}/index.ts`:** Registrieren sich jetzt über `featureLifecycleRegistry` (`register()`/`unregister()` mounten/unmounten die Preact-Komponente) statt über `registerAppStartTask`. `Bereitschaft/index.ts` behält den weiterhin extern genutzten Export `BereitschaftsEinsatzZeiträume` (Einstellungen-Default) unverändert auf Modulebene. `Neben/index.ts` behält den `onEvent('ewt:persisted', ...)`-Listener bewusst außerhalb des Mount-Lifecycles — er aktualisiert `Storage.dataN` unabhängig vom DOM und muss auch synchronisieren, wenn Neben gerade deaktiviert ist (sonst driften verknüpfte Nebengeld-Zeiten bei aktivem EWT unbemerkt).
+- **Neu: `core/orchestration/syncFeatureTabs.ts`:** Mountet/unmountet die drei Features passend zu `aktivierteTabs`, aufgerufen aus `loadUserDaten.ts` (Login + Jahr-/Monatswechsel) direkt neben dem bestehenden `updateTabVisibility(...)`. Bewusst nicht aus `saveEinstellungen.ts` verdrahtet — eine Einstellungsänderung wirkt sich auf den Tab-Inhalt (anders als auf die Nav-Sichtbarkeit) erst beim nächsten Login/Reload aus. `resetFeatureTabSync()` wird beim Logout aufgerufen, damit der gemerkte Mount-Zustand nicht stehen bleibt, wenn `featureLifecycleRegistry.teardownAll()` die Features unabhängig davon bereits unmounted hat.
+- **`setMonatJahr.ts`:** Warf bisher `throw`, wenn irgendeine der Monats-Headings (`#MonatB`/`#MonatE`/`#MonatN`) fehlte — das hätte bei nur einem deaktivierten Tab den Monatswechsel für die gesamte App blockiert. Jetzt Einzel-Guard pro Heading, `#MonatBerechnung` bleibt Pflicht (Berechnung ist nie deaktiviert).
+- **`autoSaveIndicator.ts`:** Neue Funktion `registerAutoSaveButton(buttonId, resources)` — die Save-Buttons von Bereitschaft/EWT/Neben existieren jetzt erst nach dem Mount (später als der einmalige `initAutoSaveIndicator()`-Lauf beim Login), rufen diese Funktion daher selbst in ihrem `useEffect` auf, statt sich auf den globalen Init-Durchlauf zu verlassen.
+- **`frontend/CLAUDE.md`:** Regel 4 um eine Ausnahme ergänzt („bei größeren Umbaus kann in Betracht gezogen werden, auf Preact zu wechseln") — Grundlage für den Wechsel von Template-String auf Preact-Shell bei diesen drei Features.
+- **Bewusst unverändert:** Datenabruf (`loadAllYearData` lädt weiterhin alle 4 Ressourcen unconditioniert) — `Berechnung/berechnungGroupVisibility.ts` zeigt bewusst Altdaten eines deaktivierten Bereichs weiter in der Gesamtberechnung an, Fetch kappen wäre ein Finanz-Risiko und keine reine DOM-Frage.
+- **Tests:** Bestehende Suite (1306 Tests, keine Feature-`index.ts` wird von Tests direkt importiert) unverändert grün; `tsc --noEmit` und `bun run lint` sauber; manuell per Headless-Chrome (Vite-Dev-Server, ohne Backend) geprüft: Mount-Container existieren nach Boot leer, keine Konsolen-Fehler; Kontrollmessung gegen den unveränderten Stand (`git stash`) bestätigt identisches Verhalten für alles, was nicht Teil dieses Umbaus ist.
+
 ### fix (Speichern: Tabellen-Buttons zeigten trotz Erfolg keine Snackbar bei Einstellungs-Fehler)
 
 - **`saveDaten.ts`:** Folgefehler aus dem Fix vom 2026-07-17 (Settings-Validierungsfehler entkoppelt von `flushAll`): Die Erfolgs-Snackbar haengte an `userData !== null`, also am Erfolg der (bei jedem Speichern-Button unconditioned mitlaufenden) Einstellungs-Sammlung — nicht am tatsaechlichen Erfolg des geklickten Buttons. Klickte man z. B. `btnSaveB` (nur BZ/BE) mit gueltigen Aenderungen, waehrend irgendwo im (inaktiven) Einstellungen-Tab ein ungueltiges Feld stand, wurden BZ/BE korrekt gespeichert, aber es erschien keinerlei Erfolgsmeldung — nur die feldgenaue, thematisch unpassende Fehler-Snackbar aus `saveEinstellungen`. Fix: Erfolgs-Snackbar wird nur noch unterdrueckt, wenn der Button ausschliesslich die Ressource `settings` betrifft (`btnSaveEinstellungen`) UND diese fehlgeschlagen ist; bei allen anderen Buttons erscheint die Erfolgsmeldung wie vor dem 2026-07-17-Fix.
