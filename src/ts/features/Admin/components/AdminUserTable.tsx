@@ -13,6 +13,7 @@ import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { OeTagInput } from './OeTagInput';
+import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 
 type UserEditState = {
   oe: string;
@@ -43,7 +44,7 @@ export function AdminUserList() {
 
   function buildEditState(entry: AdminUserRow): UserEditState {
     return {
-      oe: entry.oe,
+      oe: joinOeLevels(entry.oe),
       role: entry.role,
       adminForTeamOes: [...entry.adminForTeamOes],
       adminForOrganizationOes: [...entry.adminForOrganizationOes],
@@ -85,7 +86,7 @@ export function AdminUserList() {
     if (!row || !edit) return false;
 
     return (
-      edit.oe !== row.oe ||
+      edit.oe !== joinOeLevels(row.oe) ||
       edit.role !== row.role ||
       edit.adminForTeamOes.join('|') !== row.adminForTeamOes.join('|') ||
       edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|')
@@ -130,8 +131,8 @@ export function AdminUserList() {
         await updateUserRole(userId, edit.role);
       }
 
-      if (edit.oe !== row.oe) {
-        await updateUserOe(userId, edit.oe);
+      if (edit.oe !== joinOeLevels(row.oe)) {
+        await updateUserOe(userId, splitOeInput(edit.oe));
       }
 
       if (
@@ -157,7 +158,7 @@ export function AdminUserList() {
 
   const visibleUsers = users.filter(currentUser => {
     if (!filter.oe) return true;
-    return currentUser.oe.toLowerCase().includes(filter.oe.toLowerCase());
+    return joinOeLevels(currentUser.oe).toLowerCase().includes(filter.oe.toLowerCase());
   });
 
   return (
@@ -271,7 +272,7 @@ export function AdminUserList() {
                 <div class="card-body py-2">
                   <div class="d-flex flex-wrap gap-2 align-items-center small">
                     <span class="text-body-secondary">OE:</span>
-                    <span class="fw-medium">{currentUser.oe || '–'}</span>
+                    <span class="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
 
                     {currentUser.adminForTeamOes.length > 0 && (
                       <>

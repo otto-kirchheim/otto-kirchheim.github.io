@@ -282,7 +282,7 @@ describe('apiService', () => {
 
     it('updateMyProfile konvertiert hin und zurück', async () => {
       const profileData = {
-        Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '456' },
+        Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '456', OE: 'I.NA-N' },
         Arbeitszeit: {
           frueh: { default: { beginn: '08:00', ende: '16:00', pause: 30 } },
           fahrzeit: '00:30',
@@ -293,7 +293,8 @@ describe('apiService', () => {
       };
       mockApiSuccess({
         User: 'u1',
-        Pers: profileData.Pers,
+        // Backend-Antwort trägt die OE als Ebenen-Array.
+        Pers: { ...profileData.Pers, OE: ['I', 'NA', 'N'] },
         Arbeitszeit: { bT: '08:00', eT: '16:00', eTF: '16:00', bN: '', eN: '', bBN: '', bS: '', eS: '', rZ: '00:30' },
         Fahrzeit: [],
         VorgabenB: [],
@@ -304,7 +305,8 @@ describe('apiService', () => {
       expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
       expect(mockFetchRetry).toHaveBeenCalledWith(
         'user-profiles/me',
-        expect.objectContaining({ Pers: profileData.Pers }),
+        // OE geht als Ebenen-Array ans Backend, im Frontend ist sie ein Textfeld.
+        expect.objectContaining({ Pers: { ...profileData.Pers, OE: ['I', 'NA', 'N'] } }),
         'PUT',
       );
     });

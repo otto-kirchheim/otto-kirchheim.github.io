@@ -10,6 +10,7 @@ import {
   type BackendProfileTemplate,
 } from '../utils/api';
 import { normalizeAZ } from '@/infrastructure/data/fieldMapper';
+import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import type { BereitschaftSchichtTyp } from '@/types';
 import { AdminProfileTemplateContentEditor } from './AdminProfileTemplateContentEditor';
@@ -50,12 +51,15 @@ function normalizeSchichten(value: unknown, legacyNacht: boolean): BereitschaftS
   return SCHICHT_TYPEN.filter(typ => typ === 'frueh' || schichten.includes(typ));
 }
 
-function normalizePrimitiveRecord(input: unknown): Record<string, string> {
+export function normalizePrimitiveRecord(input: unknown): Record<string, string> {
   if (!input || typeof input !== 'object') return {};
   return Object.fromEntries(
     Object.entries(input as Record<string, unknown>)
-      .filter(([, value]) => ['string', 'number', 'boolean'].includes(typeof value))
-      .map(([key, value]) => [key, String(value)]),
+      // OE ist ein Ebenen-Array, wird aber wie die übrigen Pers-Felder als
+      // Textfeld gepflegt; ohne diesen Zweig fiele sie durch den Primitiv-Filter
+      // und ginge beim Speichern verloren.
+      .filter(([key, value]) => key === 'OE' || ['string', 'number', 'boolean'].includes(typeof value))
+      .map(([key, value]) => [key, key === 'OE' ? joinOeLevels((value as string[] | undefined) ?? []) : String(value)]),
   );
 }
 
@@ -184,7 +188,7 @@ const DEFAULT_ARBEITSZEIT: NonNullable<TemplateContentDraft['Arbeitszeit']> = {
   fahrzeit: '00:30',
 };
 
-function buildTemplatePayload(
+export function buildTemplatePayload(
   original: BackendProfileTemplate['template'] | undefined,
   draft: TemplateContentDraft,
 ): BackendProfileTemplate['template'] {
@@ -212,8 +216,10 @@ function buildTemplatePayload(
     benoetigteZulagen: draft.Einstellungen.benoetigteZulagen,
   };
 
-  if (Object.keys(pers).length > 0) result.Pers = pers;
-  else delete result.Pers;
+  if (Object.keys(pers).length > 0) {
+    // OE geht als Ebenen-Array zurück ans Backend, im Formular ist sie ein Textfeld.
+    result.Pers = pers.OE === undefined ? pers : { ...pers, OE: splitOeInput(pers.OE) };
+  } else delete result.Pers;
 
   if (draft.Arbeitszeit) result.Arbeitszeit = draft.Arbeitszeit;
   else delete result.Arbeitszeit;

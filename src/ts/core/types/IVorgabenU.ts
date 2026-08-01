@@ -1,3 +1,5 @@
+import type { TarifBesoldung } from '@otto-kirchheim/nebengeld-shared';
+
 export interface IVorgabenUEinstellungen {
   aktivierteTabs: string[];
   benoetigteZulagen?: string[];
@@ -38,7 +40,8 @@ export interface IVorgabenUPers {
   kmArbeitsort: number;
   nBhf: string;
   kmnBhf: number;
-  TB: 'Besoldungsgruppe A 8' | 'Besoldungsgruppe A 9' | 'Tarifkraft';
+  /** Schlüssel in die Geld-Vorgaben — siehe `TB_VALUES` im shared-Paket. */
+  TB: TarifBesoldung;
 }
 
 // --- Arbeitszeiten (neues per-Wochentag-Modell) ---

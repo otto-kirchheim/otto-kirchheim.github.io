@@ -29,7 +29,7 @@ type CurrentUserCapabilities = {
 
 type BackendUserProfile = {
   Pers?: {
-    OE?: string;
+    OE?: string[];
     Vorname?: string;
     Nachname?: string;
   };
@@ -66,7 +66,8 @@ export type AdminUserRow = {
   emailVerified: boolean;
   fullName: string;
   role: TUserRole;
-  oe: string;
+  /** OE als Hierarchie-Ebenen; Anzeige/Eingabe laufen über `joinOeLevels`/`splitOeInput`. */
+  oe: string[];
   adminForTeamOes: string[];
   adminForOrganizationOes: string[];
   canEditVorgabenGeld: boolean;
@@ -81,7 +82,7 @@ function unwrapResponse<T>(response: unknown): T {
   return (payload.data ?? null) as T;
 }
 
-async function fetchUserProfileSummary(userId: string): Promise<{ oe: string; fullName: string }> {
+async function fetchUserProfileSummary(userId: string): Promise<{ oe: string[]; fullName: string }> {
   try {
     const response = await FetchRetry<undefined, BackendUserProfile>(`user-profiles/user/${userId}`, undefined, 'GET');
     const profile = unwrapResponse<BackendUserProfile>(response);
@@ -90,11 +91,11 @@ async function fetchUserProfileSummary(userId: string): Promise<{ oe: string; fu
     const fullName = `${vorname} ${nachname}`.trim();
 
     return {
-      oe: profile.Pers?.OE ?? '',
+      oe: profile.Pers?.OE ?? [],
       fullName,
     };
   } catch {
-    return { oe: '', fullName: '' };
+    return { oe: [], fullName: '' };
   }
 }
 
@@ -167,8 +168,8 @@ export async function updateUserRole(userId: string, role: TUserRole): Promise<v
   unwrapResponse<BackendUser>(response);
 }
 
-export async function updateUserOe(userId: string, oe: string): Promise<void> {
-  const response = await FetchRetry<{ Pers: { OE: string } }, BackendUserProfile>(
+export async function updateUserOe(userId: string, oe: string[]): Promise<void> {
+  const response = await FetchRetry<{ Pers: { OE: string[] } }, BackendUserProfile>(
     `user-profiles/user/${userId}`,
     { Pers: { OE: oe } },
     'PUT',
@@ -284,6 +285,46 @@ export async function deleteProfileTemplate(id: string): Promise<void> {
   const response = await FetchRetry<undefined, unknown>(`profile-templates/${id}`, undefined, 'DELETE');
   unwrapResponse<unknown>(response);
   createSnackBar({ message: 'Template gelöscht', status: 'success', timeout: 2000 });
+}
+
+// ─── Massenänderung (super-admin) ─────────────────────────
+
+/** `Pers` fehlt bewusst — Identitätsfelder werden nie über mehrere Benutzer kopiert. */
+export type BulkApplyCategory = 'Fahrzeit' | 'Arbeitszeit' | 'VorgabenB' | 'Einstellungen';
+
+export type BulkUserProfileUpdatePayload = {
+  userIds: string[];
+  dryRun?: boolean;
+  /** `levelIndex` ist 0-basiert; die Oberfläche zeigt "Ebene levelIndex + 1". */
+  oe?: { levelIndex: number; newValue: string };
+  betrieb?: string;
+  applyFrom?:
+    | { type: 'template'; templateId: string; categories: BulkApplyCategory[] }
+    | { type: 'user'; sourceUserId: string; categories: BulkApplyCategory[] };
+};
+
+export type BulkApplyEntry = {
+  userId: string;
+  userName: string;
+  oe: { before: string; after: string; applicable: boolean };
+  betrieb: { before: string; after: string };
+  categoriesApplied: BulkApplyCategory[];
+  status: 'ok' | 'skipped' | 'error';
+  message?: string;
+};
+
+export type BulkApplyResult = {
+  results: BulkApplyEntry[];
+  summary: { total: number; ok: number; skipped: number; errors: number };
+};
+
+export async function bulkUpdateUserProfiles(payload: BulkUserProfileUpdatePayload): Promise<BulkApplyResult> {
+  const response = await FetchRetry<BulkUserProfileUpdatePayload, BulkApplyResult>(
+    'admin/user-profiles/bulk-update',
+    payload,
+    'POST',
+  );
+  return unwrapResponse<BulkApplyResult>(response);
 }
 
 // ─── Admin Raw-Edit API ───────────────────────────────────

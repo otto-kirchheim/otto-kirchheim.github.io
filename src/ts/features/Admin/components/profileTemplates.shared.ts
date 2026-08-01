@@ -1,5 +1,6 @@
+import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
-import type { BereitschaftSchichtTyp, IVorgabenUaZ } from '@/types';
+import type { BereitschaftSchichtTyp, IVorgabenUaZ, IVorgabenUPers } from '@/types';
 
 export type FahrzeitRow = { key: string; text: string; value: string };
 
@@ -38,6 +39,14 @@ type TemplateField = {
   options?: TemplateFieldOption[];
 };
 
+/**
+ * Zulässige Werte für `Pers.TB`, aus dem shared-Paket — dieselbe Liste prüfen
+ * Zod und Mongoose im Backend. Der Wert dient in der Berechnung als Schlüssel
+ * in die Geld-Vorgaben (`datenGeld[monat][TB]`), ein freier Text führt dort zu
+ * `undefined` und damit zu NaN-Ergebnissen.
+ */
+export const TB_OPTIONS: readonly IVorgabenUPers['TB'][] = TB_VALUES;
+
 export const PERS_FIELDS: TemplateField[] = [
   { key: 'Vorname', label: 'Vorname' },
   { key: 'Nachname', label: 'Nachname' },
@@ -59,7 +68,12 @@ export const PERS_FIELDS: TemplateField[] = [
   { key: 'kmArbeitsort', label: 'Entfernung Arbeitsstätte (km)', type: 'number' },
   { key: 'nBhf', label: 'Nächster Bahnhof' },
   { key: 'kmnBhf', label: 'Entfernung Bahnhof (km)', type: 'number' },
-  { key: 'TB', label: 'Tarif / Beamter' },
+  {
+    key: 'TB',
+    label: 'Tarif / Beamter',
+    type: 'select',
+    options: [{ value: '', label: 'Bitte wählen…' }, ...TB_OPTIONS.map(value => ({ value, label: value }))],
+  },
 ];
 
 export const TAB_OPTIONS = [

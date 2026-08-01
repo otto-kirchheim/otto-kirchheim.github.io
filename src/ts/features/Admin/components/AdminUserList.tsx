@@ -16,8 +16,11 @@ import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import createAdminUserLinksModal from './createAdminUserLinksModal';
 import { loadUserDataForAdminSelection } from '../utils/actAs';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
+import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import createAdminBulkEditModal from './createAdminBulkEditModal';
 
 type UserEditState = {
+  /** Textfeld-Form der OE; das Backend speichert sie als Ebenen-Array. */
   oe: string;
   role: TUserRole;
   adminForTeamOes: string[];
@@ -34,7 +37,7 @@ const ROLE_LABELS: Record<TUserRole, { label: string; color: string }> = {
   'super-admin': { label: 'Super-Admin', color: 'danger' },
 };
 
-export function AdminUserList() {
+export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<{ oe: string; name: string; role: string }>({
@@ -45,6 +48,7 @@ export function AdminUserList() {
   const [edits, setEdits] = useState<Record<string, UserEditState>>({});
   const [savingUserId, setSavingUserId] = useState<string | null>(null);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const user = getUserCookie();
   const debouncedNameFilter = useDebouncedValue(filter.name, 300);
 
@@ -59,7 +63,7 @@ export function AdminUserList() {
 
   function buildEditState(entry: AdminUserRow): UserEditState {
     return {
-      oe: entry.oe,
+      oe: joinOeLevels(entry.oe),
       role: entry.role,
       adminForTeamOes: [...entry.adminForTeamOes],
       adminForOrganizationOes: [...entry.adminForOrganizationOes],
@@ -91,6 +95,12 @@ export function AdminUserList() {
     void reloadUsers(debouncedNameFilter.trim(), filter.role);
   }, [debouncedNameFilter, filter.role]);
 
+  // Nach jedem Filterwechsel zeigt die Liste andere Benutzer — eine Auswahl aus
+  // der vorherigen Ansicht wäre nicht mehr sichtbar und damit nicht überprüfbar.
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [debouncedNameFilter, filter.role, filter.oe]);
+
   function canEdit() {
     if (!user) return false;
     return user.role === 'team-admin' || user.role === 'org-admin' || user.role === 'super-admin';
@@ -116,7 +126,7 @@ export function AdminUserList() {
     if (!row || !edit) return false;
 
     return (
-      edit.oe !== row.oe ||
+      edit.oe !== joinOeLevels(row.oe) ||
       edit.role !== row.role ||
       edit.adminForTeamOes.join('|') !== row.adminForTeamOes.join('|') ||
       edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|') ||
@@ -158,8 +168,8 @@ export function AdminUserList() {
         await updateUserRole(userId, edit.role);
       }
 
-      if (edit.oe !== row.oe) {
-        await updateUserOe(userId, edit.oe);
+      if (edit.oe !== joinOeLevels(row.oe)) {
+        await updateUserOe(userId, splitOeInput(edit.oe));
       }
 
       if (
@@ -222,7 +232,7 @@ export function AdminUserList() {
       const userNameMatch = currentUser.userName.toLowerCase().includes(nameQuery);
       const matchesName = !nameQuery || fullNameMatch || userNameMatch;
 
-      const oeCandidates = [currentUser.oe, ...currentUser.adminForTeamOes, ...currentUser.adminForOrganizationOes];
+      const oeCandidates = [...currentUser.oe, ...currentUser.adminForTeamOes, ...currentUser.adminForOrganizationOes];
       const matchesOe = matchesOeQuery(oeQuery, oeCandidates);
 
       return matchesName && matchesOe;
@@ -235,6 +245,40 @@ export function AdminUserList() {
 
   async function refreshUsersNow() {
     await reloadUsers(filter.name.trim(), filter.role);
+  }
+
+  // Die eigene Zeile bleibt außen vor: Rolle, OE und Rechte des handelnden
+  // Admins werden auch einzeln nicht über diese Oberfläche geändert.
+  const selectableUsers = useMemo(
+    () => visibleUsers.filter(currentUser => currentUser.userName !== user?.userName),
+    [visibleUsers, user?.userName],
+  );
+
+  const selectedUsers = useMemo(
+    () => selectableUsers.filter(currentUser => selectedIds.has(currentUser._id)),
+    [selectableUsers, selectedIds],
+  );
+
+  const allSelectableSelected = selectableUsers.length > 0 && selectedUsers.length === selectableUsers.length;
+
+  function toggleSelection(userId: string) {
+    setSelectedIds(current => {
+      const next = new Set(current);
+      if (next.has(userId)) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds(allSelectableSelected ? new Set() : new Set(selectableUsers.map(entry => entry._id)));
+  }
+
+  function openBulkEdit() {
+    createAdminBulkEditModal(selectedUsers, () => {
+      setSelectedIds(new Set());
+      void reloadUsers(debouncedNameFilter.trim(), filter.role);
+    });
   }
 
   return (
@@ -335,9 +379,41 @@ export function AdminUserList() {
         </div>
       )}
 
-      {/* Ergebnis-Anzahl */}
+      {/* Ergebnis-Anzahl + Mehrfachauswahl */}
       {!loading && visibleUsers.length > 0 && (
-        <p class="text-body-secondary small mb-2">{visibleUsers.length} Benutzer gefunden</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          {isSuperAdmin && selectableUsers.length > 0 && (
+            <div class="form-check mb-0">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="adminUserSelectAll"
+                checked={allSelectableSelected}
+                onChange={toggleSelectAll}
+              />
+              <label class="form-check-label small" for="adminUserSelectAll">
+                Alle auswählen
+              </label>
+            </div>
+          )}
+          <span class="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>
+        </div>
+      )}
+
+      {/* Aktionsleiste bei aktiver Auswahl */}
+      {isSuperAdmin && selectedUsers.length > 0 && (
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
+          <span class="fw-semibold small">{selectedUsers.length} ausgewählt</span>
+          <button class="btn btn-primary btn-sm" type="button" onClick={openBulkEdit}>
+            <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+              edit_note
+            </span>
+            Massenänderung
+          </button>
+          <button class="btn btn-outline-secondary btn-sm" type="button" onClick={() => setSelectedIds(new Set())}>
+            Auswahl aufheben
+          </button>
+        </div>
       )}
 
       {/* User-Cards */}
@@ -364,6 +440,16 @@ export function AdminUserList() {
                   data-bs-title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
                 >
                   <div class="d-flex align-items-center gap-2 text-truncate">
+                    {isSuperAdmin && !isSelfRow && (
+                      <input
+                        class="form-check-input mt-0 flex-shrink-0"
+                        type="checkbox"
+                        aria-label={`${currentUser.userName} für Massenänderung auswählen`}
+                        checked={selectedIds.has(currentUser._id)}
+                        onClick={e => e.stopPropagation()}
+                        onChange={() => toggleSelection(currentUser._id)}
+                      />
+                    )}
                     <span class="material-icons-round text-body-secondary" style="font-size: 1.25rem">
                       person
                     </span>
@@ -391,7 +477,7 @@ export function AdminUserList() {
                 <div class="card-body py-2">
                   <div class="d-flex flex-wrap gap-2 align-items-center small">
                     <span class="text-body-secondary">OE:</span>
-                    <span class="fw-medium">{currentUser.oe || '–'}</span>
+                    <span class="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
 
                     <span
                       class={`badge ${

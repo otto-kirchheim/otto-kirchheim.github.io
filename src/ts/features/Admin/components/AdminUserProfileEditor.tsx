@@ -1,7 +1,9 @@
 import { createPortal } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { JsonEditor } from './JsonEditor';
+import { TB_OPTIONS } from './profileTemplates.shared';
 import {
   fetchAdminUserProfiles,
   updateAdminUserProfileDoc,
@@ -32,10 +34,9 @@ const BUNDESLAND_OPTIONS = [
   { value: 'TH', label: 'Thüringen' },
 ];
 
-const TB_OPTIONS = ['Besoldungsgruppe A 8', 'Besoldungsgruppe A 9', 'Tarifkraft'];
 
 // Felder in Pers die als Dropdown gerendert werden
-const PERS_SELECT_FIELDS: Record<string, { value: string; label: string }[] | string[]> = {
+const PERS_SELECT_FIELDS: Record<string, { value: string; label: string }[] | readonly string[]> = {
   Bundesland: BUNDESLAND_OPTIONS,
   TB: TB_OPTIONS,
 };
@@ -94,9 +95,15 @@ function extractRow(doc: Record<string, unknown>): ProfileRow {
     User: String(doc['User'] ?? ''),
     vorname: String(pers['Vorname'] ?? ''),
     nachname: String(pers['Nachname'] ?? ''),
-    oe: String(pers['OE'] ?? ''),
+    oe: joinOeLevels((pers['OE'] as string[] | undefined) ?? []),
     doc,
   };
+}
+
+/** OE wird als Ebenen-Array gespeichert, hier aber als ein Textfeld bearbeitet. */
+function persFieldToInput(key: string, value: unknown): string {
+  if (key === 'OE') return joinOeLevels((value as string[] | undefined) ?? []);
+  return String(value ?? '');
 }
 
 function buildEditState(doc: Record<string, unknown>): EditState {
@@ -198,10 +205,14 @@ export function AdminUserProfileEditor({
 
   function handlePersChange(key: string, value: string) {
     if (!edit) return;
-    const numVal = PERS_NUMBER_FIELDS.has(key) ? parseFloat(value) || 0 : undefined;
+    const parsed: unknown = PERS_NUMBER_FIELDS.has(key)
+      ? parseFloat(value) || 0
+      : key === 'OE'
+        ? splitOeInput(value)
+        : value;
     setEdit({
       ...edit,
-      pers: { ...edit.pers, [key]: numVal !== undefined ? numVal : value },
+      pers: { ...edit.pers, [key]: parsed },
     });
   }
 
@@ -446,7 +457,7 @@ export function AdminUserProfileEditor({
                                 <input
                                   type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
                                   class="form-control form-control-sm"
-                                  value={String(val ?? '')}
+                                  value={persFieldToInput(key, val)}
                                   onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
                                 />
                               )}

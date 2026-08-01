@@ -422,7 +422,7 @@ describe('fieldMapper – UserProfile', () => {
       ErsteTkgSt: 'Berlin',
       ErsteTkgStAdresse: 'Berliner Str. 1',
       Betrieb: 'DB Netz',
-      OE: 'TEST-OE',
+      OE: ['TEST', 'OE'],
       Gewerk: 'LST',
       kmArbeitsort: 15,
       nBhf: 'Berlin Hbf',
@@ -505,7 +505,8 @@ describe('fieldMapper – UserProfile', () => {
 
   it('userProfileToBackend konvertiert vorgabenB Map zu Array', () => {
     const frontendProfile: IVorgabenU = {
-      Pers: backendProfile.Pers as IVorgabenU['Pers'],
+      // Im Frontend ist OE die Textfeld-Form, im Backend das Ebenen-Array.
+      Pers: { ...backendProfile.Pers, OE: 'TEST.OE' } as IVorgabenU['Pers'],
       Arbeitszeit: {
         frueh: {
           aktiv: true,
@@ -522,7 +523,7 @@ describe('fieldMapper – UserProfile', () => {
       VorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['VorgabenB'][string] },
     };
     const result = userProfileToBackend(frontendProfile);
-    expect(result.Pers).toEqual(frontendProfile.Pers);
+    expect(result.Pers).toEqual({ ...frontendProfile.Pers, OE: ['TEST', 'OE'] });
     // aZ is passed through directly to backend
     expect(result.Arbeitszeit?.frueh.default.beginn).toBe('07:00');
     expect(result.Arbeitszeit?.frueh.default.ende).toBe('15:30');

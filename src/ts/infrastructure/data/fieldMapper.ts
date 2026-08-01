@@ -23,6 +23,7 @@ import type {
   IVorgabenUServer,
   IVorgabenUvorgabenB,
 } from '@/types';
+import { joinOeLevels, splitOeInput } from './oeLevels';
 import dayjs from '../date/configDayjs';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Neben/utils';
 
@@ -297,7 +298,7 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       ErsteTkgStAdresse: doc.Pers.ErsteTkgStAdresse ?? '',
       Bundesland: doc.Pers.Bundesland ?? '',
       Betrieb: doc.Pers.Betrieb ?? '',
-      OE: doc.Pers.OE ?? '',
+      OE: joinOeLevels(doc.Pers.OE ?? []),
       Gewerk: doc.Pers.Gewerk ?? '',
       kmArbeitsort: doc.Pers.kmArbeitsort ?? 0,
       nBhf: doc.Pers.nBhf ?? '',
@@ -452,7 +453,8 @@ export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile,
   }));
 
   return {
-    Pers: data.Pers,
+    // OE wird als Ebenen-Array gespeichert, im Formular aber als ein Textfeld gepflegt.
+    Pers: { ...data.Pers, OE: splitOeInput(data.Pers?.OE ?? '') },
     Arbeitszeit: data.Arbeitszeit,
     Fahrzeit: data.Fahrzeit,
     VorgabenB: vorgabenBArray,

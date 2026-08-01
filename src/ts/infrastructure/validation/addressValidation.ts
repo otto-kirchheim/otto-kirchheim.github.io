@@ -1,3 +1,5 @@
+import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
+
 const GERMAN_ADDRESS_REGEX =
   /^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß0-9 .,'’()/-]*,\s*\d{5}\s+[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß .,'’()/-]*$/u;
 const NAME_REGEX = /^[A-Za-zÄÖÜäöüß][A-Za-zÄÖÜäöüß .'-]{1,49}$/u;
@@ -24,7 +26,7 @@ const VALID_BUNDESLAENDER = new Set([
   'SH',
   'TH',
 ]);
-const VALID_TB_VALUES = new Set(['Tarifkraft', 'Besoldungsgruppe A 8', 'Besoldungsgruppe A 9']);
+const VALID_TB_VALUES = new Set<string>(TB_VALUES);
 
 type ValidatableElement = HTMLInputElement | HTMLSelectElement;
 

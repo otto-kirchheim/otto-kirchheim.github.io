@@ -4,6 +4,7 @@ import {
   normalizeVorgabenBRows,
   PERS_FIELDS,
   TAB_OPTIONS,
+  TB_OPTIONS,
   WEEKDAY_OPTIONS,
 } from '@/features/Admin/components/profileTemplates.shared';
 import type { VorgabenBRow } from '@/features/Admin/components/profileTemplates.shared';
@@ -98,6 +99,21 @@ describe('PERS_FIELDS', () => {
     expect(keys).toContain('Vorname');
     expect(keys).toContain('Nachname');
     expect(keys).toContain('PNummer');
+  });
+
+  // Ein freier Text in TB landet in der Berechnung als Schlüssel in die
+  // Geld-Vorgaben und ergibt dort undefined — die Auswahl muss begrenzt sein.
+  it('bietet TB nur als Auswahl der gültigen Tarif-/Besoldungswerte an', () => {
+    const field = PERS_FIELDS.find(f => f.key === 'TB');
+
+    expect(field?.type).toBe('select');
+    expect(field?.options?.map(option => option.value)).toEqual(['', ...TB_OPTIONS]);
+  });
+});
+
+describe('TB_OPTIONS', () => {
+  it('enthält genau die drei Werte, die die Berechnung kennt', () => {
+    expect(TB_OPTIONS).toEqual(['Besoldungsgruppe A 8', 'Besoldungsgruppe A 9', 'Tarifkraft']);
   });
 });
 

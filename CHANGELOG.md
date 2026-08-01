@@ -4,6 +4,30 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### fix (Vorlagen-Editor: Tarif/Beamter war ein Freitextfeld)
+
+- `Pers.TB` wurde im Vorlagen-Editor als freies Textfeld gepflegt, im Profil-Editor dagegen als Auswahl. Der Wert dient in der Berechnung als Schlüssel in die Geld-Vorgaben (`datenGeld[monat][TB]`) — ein abweichender Text ergibt dort `undefined` und damit NaN-Beträge für jeden Benutzer, der aus dieser Vorlage angelegt wird. Das Backend prüfte den Wert bislang nicht (`z.string().max(100)`, kein Enum in Zod noch in Mongoose), die Oberfläche war also der einzige Schutz — im selben Arbeitsgang durch ein serverseitiges Enum ergänzt (siehe `backend/CHANGELOG.md`).
+- TB ist jetzt in beiden Editoren eine Auswahl; die gültigen Werte kommen als `TB_VALUES` aus `@otto-kirchheim/nebengeld-shared` (dieselbe Liste, die Zod und Mongoose im Backend durchsetzen), `profileTemplates.shared.ts` exportiert sie unter `TB_OPTIONS` weiter statt einer eigenen Kopie im Profil-Editor. `addressValidation.ts` nutzt für dieselbe Prüfung ebenfalls `TB_VALUES` statt einer dritten lokalen Liste.
+- Bestandsdaten geprüft: alle 23 Profile und 3 Vorlagen tragen `Tarifkraft`, es sind keine ungültigen Werte entstanden.
+
+### fix (OE-Anzeige in Admin-Profilverwaltung und Vorlagen-Editor)
+
+- Admin-Tab "Profile": die OE erschien nach der Umstellung auf Ebenen sowohl in der Liste als auch im Bearbeiten-Formular als `V,IW,MI,M,KSL,IL` — die generische Feldausgabe reichte das Array direkt an `String()` weiter. Beide Stellen nutzen jetzt `joinOeLevels`, die Eingabe wird über `splitOeInput` wieder zerlegt.
+- Vorlagen-Verwaltung: `normalizePrimitiveRecord` filterte beim Laden alles heraus, was kein String/Number/Boolean ist — die OE fiel damit aus dem Formular und wäre beim nächsten Speichern der Vorlage gelöscht worden, da `buildTemplatePayload` `Pers` vollständig aus dem Entwurf neu aufbaut. Beide Funktionen behandeln die OE jetzt gezielt und sind für den Rundlauf-Test exportiert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit && bun run build` grün (1346 Tests); neue Tests decken Anzeige, Rückkonvertierung und den Laden-Speichern-Rundlauf einer Vorlage ab.
+
+### feat (Admin-Massenänderung für Benutzerprofile + OE als Hierarchie-Ebenen)
+
+- **OE-Datenmodell:** `Pers.OE` ist im Wire-Format (`IPers` aus `@otto-kirchheim/nebengeld-shared`) jetzt ein Ebenen-Array. Die Eingabe bleibt bewusst ein einzelnes Textfeld: `fieldMapper.ts` fügt die Ebenen beim Laden zusammen (`userProfileFromBackend`) und zerlegt die Eingabe beim Speichern wieder (`userProfileToBackend`) — bestehende Formulare, `setElementValues` und die Adressvalidierung blieben dadurch unangetastet.
+- Neu: `infrastructure/data/oeLevels.ts` mit `joinOeLevels`/`splitOeInput`. Bewusst eine lokale Portierung der Backend-Funktionen (`oe-scope.ts`) statt eines geteilten Imports, da laut Shared-Library-Entscheidung vorerst nur Typen und Daten-Konstanten geteilt werden, keine Funktionen — wie bereits bei `overlapGuard.ts` dokumentiert. Ein Test sichert ab, dass das Anzeigeformat identisch zum Backend bleibt, sonst zeigte die Vorschau andere Werte als die gespeicherten.
+- `AdminUserRow.oe` ist ein `string[]`; der OE-Filter (`matchesOeQuery`) bekommt die Ebenen jetzt einzeln statt als einen zusammengesetzten String und trifft dadurch pro Ebene genauer.
+- **Neu: Massenänderung im Admin-Benutzer-Tab** (nur für Super-Admins sichtbar). Karten haben eine Auswahl-Checkbox plus "Alle auswählen"; bei getroffener Auswahl erscheint eine Aktionsleiste. Die eigene Zeile ist nicht auswählbar — passend dazu, dass Rolle/OE/Rechte des handelnden Admins auch einzeln nicht über diese Oberfläche änderbar sind. Jeder Filterwechsel verwirft die Auswahl, da sonst Benutzer aus einer nicht mehr sichtbaren Ansicht mitgeändert würden.
+- `createAdminBulkEditModal.tsx`: dreistufiger Dialog (Formular → Vorschau → Ergebnis). Die Vorschau ruft denselben Endpunkt mit `dryRun: true` und zeigt pro Benutzer die vollständige OE vorher/nachher — nötig, weil das Ersetzen einer Ebene den ganzen String in die kanonische Schreibweise bringt und nicht nur das eine Token austauscht. Der Absenden-Button ist während laufender Anfragen gesperrt.
+- Die Ebenen-Auswahl zeigt 1-basierte Beschriftungen ("Ebene 1"), sendet aber den 0-basierten Index; die Anzahl der Optionen ist nur eine Schätzung aus der tiefsten ausgewählten OE — ob eine Ebene wirklich existiert, entscheidet die Vorschau pro Benutzer.
+- Kategorie-Übernahme aus Vorlage oder Muster-Benutzer beschränkt sich auf Fahrzeiten, Arbeitszeiten, Bereitschafts-Vorgaben und Einstellungen; persönliche Daten sind ausgeschlossen und der Dialog weist darauf hin.
+- `AdminUserList` erhält `isSuperAdmin` als Prop — der Wert wurde in `Admin/index.tsx` bereits berechnet, aber bisher nicht an diese Komponente weitergereicht.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit && bun run build` grün (1340 Tests, 14 Snapshots), davon neu: Auswahl-Verhalten von `AdminUserList` (Sichtbarkeit nur für Super-Admins, eigene Zeile gesperrt, Übergabe an den Dialog, Reset bei Filterwechsel), `oeLevels`-Rundlauf und der Bulk-API-Aufruf.
+
 ### fix (Passwort-Zeichenrestriktion entfernt, Live-Stärkeanzeige ergänzt)
 
 - Alle Passwort-Felder (Login, Registrierung, Passwort-Ändern, Reset, Passkey-Passwort-Setzen, Admin-Passwort-Setzen) hatten ein `pattern`-Attribut, das versehentlich vom Benutzername-Feld kopiert wurde und Zeichen wie Umlaute, `$`, Leerzeichen und Emoji im Passwort verbot, obwohl das Backend nie eine Zeichen-Restriktion hatte (nur Längenprüfung). `pattern`-Prop entfernt.

@@ -23,6 +23,7 @@ vi.mock('@/infrastructure/ui/actAsStatus', () => ({
 }));
 
 import {
+  bulkUpdateUserProfiles,
   createProfileTemplate,
   deleteProfileTemplate,
   deleteUser,
@@ -67,14 +68,14 @@ describe('Admin API', () => {
         })
         .mockResolvedValueOnce({
           success: true,
-          data: { Pers: { OE: 'I.NA', Vorname: 'Max', Nachname: 'Mustermann' } },
+          data: { Pers: { OE: ['I', 'NA'], Vorname: 'Max', Nachname: 'Mustermann' } },
         });
 
       const result = await fetchAdminUsers({});
       expect(result).toHaveLength(1);
       expect(result[0].userName).toBe('max');
       expect(result[0].fullName).toBe('Max Mustermann');
-      expect(result[0].oe).toBe('I.NA');
+      expect(result[0].oe).toEqual(['I', 'NA']);
     });
 
     it('übergibt search- und role-Filter als Query-Parameter', async () => {
@@ -95,7 +96,7 @@ describe('Admin API', () => {
 
       const result = await fetchAdminUsers({});
       expect(result[0].fullName).toBe('');
-      expect(result[0].oe).toBe('');
+      expect(result[0].oe).toEqual([]);
     });
 
     it('mappt email und emailVerified aus der Backend-Antwort', async () => {
@@ -229,8 +230,33 @@ describe('Admin API', () => {
   describe('updateUserOe', () => {
     it('sendet PUT mit neuer OE', async () => {
       mockSuccess({});
-      await updateUserOe('u1', 'I.NA-New');
-      expect(mockFetchRetry).toHaveBeenCalledWith('user-profiles/user/u1', { Pers: { OE: 'I.NA-New' } }, 'PUT');
+      await updateUserOe('u1', ['I', 'NA', 'New']);
+      expect(mockFetchRetry).toHaveBeenCalledWith('user-profiles/user/u1', { Pers: { OE: ['I', 'NA', 'New'] } }, 'PUT');
+    });
+  });
+
+  describe('bulkUpdateUserProfiles', () => {
+    it('sendet POST an den Admin-Bulk-Endpunkt', async () => {
+      const result = {
+        results: [],
+        summary: { total: 0, ok: 0, skipped: 0, errors: 0 },
+      };
+      mockSuccess(result);
+
+      const payload = {
+        userIds: ['u1', 'u2'],
+        dryRun: true,
+        oe: { levelIndex: 3, newValue: 'M' },
+      };
+      const response = await bulkUpdateUserProfiles(payload);
+
+      expect(mockFetchRetry).toHaveBeenCalledWith('admin/user-profiles/bulk-update', payload, 'POST');
+      expect(response).toEqual(result);
+    });
+
+    it('wirft bei erfolgloser Antwort', async () => {
+      mockFetchRetry.mockResolvedValueOnce({ success: false, message: 'Keine Berechtigung' });
+      await expect(bulkUpdateUserProfiles({ userIds: ['u1'], betrieb: 'X' })).rejects.toThrow('Keine Berechtigung');
     });
   });
 

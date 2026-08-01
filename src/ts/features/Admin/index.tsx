@@ -220,7 +220,7 @@ export default function AdminTab() {
               </div>
             </div>
           )}
-          <AdminUserList />
+          <AdminUserList isSuperAdmin={isSuperAdmin} />
         </div>
 
         {canSeeVorgabenTab && (
