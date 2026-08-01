@@ -1,5 +1,1 @@
-type TResourceKey = 'BZ' | 'BE' | 'EWT' | 'N' | 'settings';
-
-type TSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error' | 'blocked';
-
-export type { TResourceKey, TSaveStatus };
+export type { ResourceKey as TResourceKey, SaveStatus as TSaveStatus } from '@otto-kirchheim/nebengeld-shared';

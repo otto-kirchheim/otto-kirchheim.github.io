@@ -5,6 +5,7 @@ import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
+import type { IBereitschaftszeitraumDownloadBody, INebengeldDownloadBody } from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -88,12 +89,16 @@ export default async function download(button: HTMLButtonElement | null, modus: 
           LRE: be.lreBE,
           PrivatKm: be.privatkmBE ?? 0,
         })),
-      };
+      } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
       break;
     }
     case 'E': {
       const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
       data.Daten = {
+        // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, das
+        // geteilte IEwtDownloadBody['Daten'] typisiert es (wie das bisherige Backend-Modell)
+        // als `number` -- vorbestehende Diskrepanz, unveraendert uebernommen (kein Funktions-/
+        // Logik-Fix im Rahmen dieser Typen-Migration).
         EWT: ewtRaw.map(e => ({
           Buchungstag: dayjs(e.buchungstagE || calculateBuchungstagEwt(e)).format('DD'),
           Einsatzort: e.eOrtE,
@@ -121,7 +126,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
           Auftragsnummer: n.auftragN,
           Zulagen: (n.zulagenN ?? []).map(z => ({ Typ: z.code, Wert: z.value })),
         })),
-      };
+      } satisfies INebengeldDownloadBody['Daten'];
       break;
     }
     default:

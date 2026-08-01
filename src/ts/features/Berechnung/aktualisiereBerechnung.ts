@@ -17,9 +17,9 @@ import {
   getMonatFromEWTBuchungstag,
   getMonatFromN,
 } from '@/infrastructure/date/getMonatFromItem';
-import { ZULAGEN_CATALOG } from '@/features/Einstellungen/utils/zulagenCatalog';
+import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '@/features/Einstellungen/utils/zulagenCatalog';
 
-const CATALOG_BY_CODE = new Map(ZULAGEN_CATALOG.map(item => [item.code, item]));
+const CATALOG_BY_CODE = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
 export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {

@@ -1,5 +1,5 @@
-type TDataScope = 'monat' | 'all';
-type TEwtFilter = 'starttag' | 'buchungstag' | 'beide';
+import type { DataScope as TDataScope, EwtFilter as TEwtFilter } from '@otto-kirchheim/nebengeld-shared';
+export type { DataScope as TDataScope, EwtFilter as TEwtFilter } from '@otto-kirchheim/nebengeld-shared';
 
 interface IDataQueryOptions {
   scope?: TDataScope;
@@ -12,5 +12,4 @@ interface IEwtQueryOptions extends IDataQueryOptions {
   filter?: TEwtFilter;
 }
 
-export type { TDataScope, TEwtFilter };
 export type { IDataQueryOptions, IEwtQueryOptions };

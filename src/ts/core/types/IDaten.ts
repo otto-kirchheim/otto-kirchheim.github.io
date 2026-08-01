@@ -1,4 +1,5 @@
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { LreType } from '@otto-kirchheim/nebengeld-shared';
 
 export interface IMonatsDaten<EWTType = string> {
   BZ: IDatenBZ[];
@@ -40,7 +41,7 @@ export interface IDatenBE extends CustomTableTypes {
   auftragsnummerBE: string;
   beginBE: string;
   endeBE: string;
-  lreBE: 'LRE 1' | 'LRE 2' | 'LRE 1/2 ohne x' | 'LRE 3' | 'LRE 3 ohne x';
+  lreBE: LreType;
   privatkmBE: number;
 }
 

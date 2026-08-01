@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDaten } from '@/core/types/IDaten';
 import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
@@ -716,7 +717,7 @@ export const datenBEMock: Required<IDaten>['BE'] = [
     auftragsnummerBE: 'Test',
     beginBE: '00:14',
     endeBE: '01:59',
-    lreBE: 'LRE 1',
+    lreBE: LreType.LRE_1,
     privatkmBE: 0,
   },
 ];

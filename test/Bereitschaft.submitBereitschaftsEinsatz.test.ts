@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import type { IDatenBE, IDatenBZ } from '@/core/types';
 
 // In-memory storage used by the Storage mock (shared via closure with the vi.mock factory below)
@@ -206,7 +207,12 @@ describe('submitBereitschaftsEinsatz', () => {
     const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
     getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
 
-    const existingBE: Partial<IDatenBE> = { tagBE: '12.04.2023', beginBE: '10:00', endeBE: '13:00', lreBE: 'LRE 2' };
+    const existingBE: Partial<IDatenBE> = {
+      tagBE: '12.04.2023',
+      beginBE: '10:00',
+      endeBE: '13:00',
+      lreBE: LreType.LRE_2,
+    };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingBE]);
 
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
@@ -238,7 +244,7 @@ describe('submitBereitschaftsEinsatz', () => {
         tagBE: '12.04.2023',
         beginBE: '09:00',
         endeBE: '12:00',
-        lreBE: 'LRE 1',
+        lreBE: LreType.LRE_1,
         bereitschaftszeitraumBE: ['bz1'],
       }),
     );
@@ -289,7 +295,7 @@ describe('submitBereitschaftsEinsatz', () => {
       tagBE: '12.04.2023',
       beginBE: '10:00',
       endeBE: '11:30',
-      lreBE: 'LRE 1',
+      lreBE: LreType.LRE_1,
     };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingLre1]);
 
@@ -316,7 +322,7 @@ describe('submitBereitschaftsEinsatz', () => {
       tagBE: '12.04.2023',
       beginBE: '07:45',
       endeBE: '08:15',
-      lreBE: 'LRE 1',
+      lreBE: LreType.LRE_1,
     };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingLre1]);
 

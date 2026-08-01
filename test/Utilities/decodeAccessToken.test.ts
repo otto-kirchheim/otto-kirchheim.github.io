@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
 
 describe('decodeAccessToken', () => {
@@ -25,7 +26,7 @@ describe('decodeAccessToken', () => {
       localStorage.setItem('Benutzer', JSON.stringify('Max'));
       localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
       localStorage.setItem('AccessToken', JSON.stringify('access-token'));
-      expect(getUserCookie()).toEqual({ userName: 'Max', role: 'member' });
+      expect(getUserCookie()).toEqual({ userName: 'Max', role: Role.MEMBER });
     });
 
     it('gibt null zurück wenn nur Benutzer aber keine Rolle gespeichert ist', () => {

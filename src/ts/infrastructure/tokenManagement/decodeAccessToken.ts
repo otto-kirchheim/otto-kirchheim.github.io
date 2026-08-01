@@ -1,8 +1,9 @@
 import Storage from '../storage/Storage';
+import type { Role } from '@otto-kirchheim/nebengeld-shared';
 
 export type UserCookieData = {
   userName: string;
-  role: string;
+  role: Role;
 };
 
 /** Admin-Rollen (alles außer "member") */
@@ -23,7 +24,7 @@ export function getUserCookie(): UserCookieData | null {
   if (Storage.check('Benutzer') && Storage.check('BenutzerRolle')) {
     return {
       userName: Storage.get<string>('Benutzer', true),
-      role: Storage.get<string>('BenutzerRolle', true),
+      role: Storage.get<Role>('BenutzerRolle', true),
     };
   }
   return null;

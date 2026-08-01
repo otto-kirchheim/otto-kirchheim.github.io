@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-01
+
+### feat (Gemeinsame Bibliothek @otto-kirchheim/nebengeld-shared eingebunden — Welle 1: Enums/Types/Konstanten)
+
+- Wie im Backend (siehe `backend/CHANGELOG.md`): neues privates Repo `otto-kirchheim/nebengeld-shared` als Single-Source-of-Truth. `TUserRole`, `TResourceKey`/`TSaveStatus`, `TDataScope`/`TEwtFilter`, `ZULAGEN_CATALOG` (+ `ZulageCategory`/`ZulageEntryUnit`/`IZulageCatalogItem`/`IZulageEntryRule`), das `lreBE`-Union in `IDatenBE`, `BackendEnvelope` (jetzt `ApiResponse` aus dem Paket) sowie `UserCookieData.role` (jetzt `Role`-Enum statt `string`) sind auf das Paket umgestellt — meist als Re-Export mit Alias (`Role as TUserRole` etc.), damit bestehende Imports aus `@/types` unveraendert funktionieren.
+- `infrastructure/data/download.ts`: PDF-Download-Payloads (`data.Daten`) sind jetzt gegen die geteilten Download-DTOs typgeprueft (`satisfies IBereitschaftszeitraumDownloadBody['Daten']` / `INebengeldDownloadBody['Daten']`). EWT-Zweig bewusst ausgenommen: `Buchungstag` wird als zweistelliger Tages-String gesendet, das geteilte DTO typisiert es (wie das bisherige Backend-Modell) als `number` — vorbestehende Diskrepanz, unveraendert übernommen, kein Funktions-Fix im Rahmen dieser Migration.
+- `zulagenCatalogByCode`/`CATALOG_BY_CODE`-Maps (`Berechnung`, `Neben`) explizit auf `Map<string, IZulageCatalogItem>` typisiert, da Zulagen-Codes aus gespeicherten Nebengeld-Zeilen (`string`) gegen den jetzt literal-typisierten Katalog (`ZulagenCode`-Union) nachgeschlagen werden.
+- Diverse Testdateien auf Enum-Werte (`Role.MEMBER`, `LreType.LRE_1` etc.) statt roher String-Literale umgestellt, wo TypeScript das jetzt einfordert.
+- **CI:** `deploy.yml` installiert jetzt mit `NODE_AUTH_TOKEN: secrets.PACKAGES_READ_TOKEN`, da das (oeffentliche) GitHub-Pages-Repo beim Build ein privates Package aufloesen muss.
+- Reine Typen-/Konstanten-Migration, keine Business-Logik/Funktionen veraendert (Plan: `plane-das-auslagern-von-concurrent-pearl.md`). Domain-Modell-Feldnamen-Vereinheitlichung (Welle 2) folgt als separater Umbau.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests).
+
 ## 2026-07-31
 
 ### feat (Live-Mount/Unmount beim Speichern in Einstellungen)

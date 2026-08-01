@@ -1,4 +1,5 @@
 import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi } from 'bun:test';
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
@@ -163,7 +164,7 @@ describe('#getUserCookie & isAdmin', () => {
     localStorage.setItem('BenutzerRolle', JSON.stringify('member'));
     localStorage.setItem('AccessToken', JSON.stringify('access-token'));
     const result = getUserCookie();
-    expect(result).toEqual({ userName: 'test', role: 'member' });
+    expect(result).toEqual({ userName: 'test', role: Role.MEMBER });
   });
 
   it('isAdmin sollte false zurückgeben ohne Daten', () => {

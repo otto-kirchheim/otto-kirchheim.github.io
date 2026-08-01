@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 
 const { mockFetchRetry, mockCreateSnackBar, mockNotifyActAsStateChanged } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -219,9 +220,9 @@ describe('Admin API', () => {
 
   describe('updateUserRole', () => {
     it('sendet PATCH mit neuer Rolle', async () => {
-      mockSuccess({ _id: 'u1', userName: 'max', role: 'team-admin' });
-      await updateUserRole('u1', 'team-admin');
-      expect(mockFetchRetry).toHaveBeenCalledWith('users/u1/role', { role: 'team-admin' }, 'PATCH');
+      mockSuccess({ _id: 'u1', userName: 'max', role: Role.TEAM_ADMIN });
+      await updateUserRole('u1', Role.TEAM_ADMIN);
+      expect(mockFetchRetry).toHaveBeenCalledWith('users/u1/role', { role: Role.TEAM_ADMIN }, 'PATCH');
     });
   });
 

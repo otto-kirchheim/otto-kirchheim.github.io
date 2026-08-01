@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import type { IDatenBE } from '@/core/types';
 import isSameBereitschaftsEinsatz from '@/features/Bereitschaft/utils/isSameBereitschaftsEinsatz';
 
@@ -8,7 +9,7 @@ function createBereitschaftsEinsatz(overrides: Partial<IDatenBE> = {}): IDatenBE
     auftragsnummerBE: 'A-1',
     beginBE: '08:00',
     endeBE: '10:00',
-    lreBE: 'LRE 2',
+    lreBE: LreType.LRE_2,
     privatkmBE: 0,
     ...overrides,
   };

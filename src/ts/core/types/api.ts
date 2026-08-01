@@ -1,11 +1,8 @@
-export interface BackendEnvelope<T = unknown> {
-  success: boolean;
-  data?: T;
-  message?: string;
-  statusCode?: number;
-}
+import type { ApiResponse } from '@otto-kirchheim/nebengeld-shared';
 
-export type ApiHttpResponse<T = unknown> = BackendEnvelope<T> & { statusCode: number };
+export type { ApiResponse as BackendEnvelope } from '@otto-kirchheim/nebengeld-shared';
+
+export type ApiHttpResponse<T = unknown> = ApiResponse<T> & { statusCode: number };
 
 export function unwrapEnvelope<T>(response: ApiHttpResponse<T>): T {
   if (!response.success && response.statusCode >= 400) {

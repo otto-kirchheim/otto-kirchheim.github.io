@@ -7,7 +7,7 @@ import {
   type IZulageCatalogItem,
 } from '@/features/Einstellungen/utils/zulagenCatalog';
 
-const zulagenCatalogByCode = new Map(ZULAGEN_CATALOG.map(item => [item.code, item]));
+const zulagenCatalogByCode = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
 function getSelectedZulagenCodes(): string[] {
   try {

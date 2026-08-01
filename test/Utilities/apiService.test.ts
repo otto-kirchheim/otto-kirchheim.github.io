@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/core/types';
 
 // --- Hoisted mocks ---
@@ -492,7 +493,7 @@ describe('apiService', () => {
         auftragsnummerBE: 'A-1',
         beginBE: '08:00',
         endeBE: '10:00',
-        lreBE: 'LRE 1',
+        lreBE: LreType.LRE_1,
         privatkmBE: 0,
         clientRequestId: '123e4567-e89b-42d3-a456-426614174006',
       };
@@ -502,7 +503,7 @@ describe('apiService', () => {
         auftragsnummerBE: 'A-2',
         beginBE: '09:00',
         endeBE: '11:00',
-        lreBE: 'LRE 2',
+        lreBE: LreType.LRE_2,
         privatkmBE: 5,
       };
       mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import dayjs from '@/infrastructure/date/configDayjs';
 import {
   type BackendBereitschaftseinsatz,
@@ -116,7 +117,7 @@ describe('fieldMapper – BE (Bereitschaftseinsatz)', () => {
     expect(result.auftragsnummerBE).toBe('AUF-123');
     expect(result.beginBE).toBe('08:00');
     expect(result.endeBE).toBe('16:30');
-    expect(result.lreBE).toBe('LRE 1');
+    expect(result.lreBE).toBe(LreType.LRE_1);
     expect(result.privatkmBE).toBe(25);
   });
 
@@ -127,7 +128,7 @@ describe('fieldMapper – BE (Bereitschaftseinsatz)', () => {
       auftragsnummerBE: 'AUF-123',
       beginBE: '08:00',
       endeBE: '16:30',
-      lreBE: 'LRE 1',
+      lreBE: LreType.LRE_1,
       privatkmBE: 25,
     };
     const result = beToBackend(frontendBE, 4, 2024);

@@ -3,13 +3,9 @@ import Storage from '@/infrastructure/storage/Storage';
 import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { TUserRole } from '@/types';
+import type { ApiResponse as SharedApiResponse } from '@otto-kirchheim/nebengeld-shared';
 
-type ApiResponse<T> = {
-  success: boolean;
-  data?: T;
-  message?: string;
-  statusCode?: number;
-};
+type ApiResponse<T> = SharedApiResponse<T> & { statusCode?: number };
 
 type BackendUser = {
   _id: string;

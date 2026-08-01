@@ -2,7 +2,11 @@ import type { IDatenN } from '@/types';
 import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
 import getNebengeldDaten from '@/features/Neben/utils/getNebengeldDaten';
 import { normalizeNebengeldZulagen } from '@/features/Neben/utils/nebengeldZulagen';
-import { ZULAGEN_CATALOG, ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
+import {
+  ZULAGEN_CATALOG,
+  ZulageEntryUnit,
+  type IZulageCatalogItem,
+} from '@/features/Einstellungen/utils/zulagenCatalog';
 
 export interface IZulagenBreakdownCode {
   code: string;
@@ -17,7 +21,7 @@ export interface IZulagenBreakdown {
   values: Record<string, number[]>;
 }
 
-const zulagenCatalogByCode = new Map(ZULAGEN_CATALOG.map(item => [item.code, item]));
+const zulagenCatalogByCode = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
 export function zulagenEinheitKurz(unit: ZulageEntryUnit): string {
   return unit === ZulageEntryUnit.Minuten ? 'min' : 'Stk.';
