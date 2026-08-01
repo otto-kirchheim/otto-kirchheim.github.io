@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { authApi } from '@/infrastructure/api/apiService';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
@@ -9,14 +9,13 @@ import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern'
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { PASSWORD_MIN_LENGTH, getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
 
-const PASSWORD_PATTERN = new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source;
-
 /**
  * Passwort neu setzen ohne altes Passwort: die Identität wird stattdessen
  * über eine frische Passkey-Assertion (Fingerprint/Face ID/PIN) nachgewiesen.
  */
 export default function createModalPasskeySetPassword(): void {
   const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
     <MyFormModal
@@ -34,32 +33,31 @@ export default function createModalPasskeySetPassword(): void {
           </p>
         </div>
         <MyInput
+          myRef={passwortRef}
           divClass="form-floating col-12"
           required
           type="password"
           id="PasskeyPasswortNeu"
           name="Neues Passwort"
-          pattern={PASSWORD_PATTERN}
           minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
           popover={{
-            content:
-              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+            content: '-Mindestens 8 Zeichen <br/>',
             placement: 'right',
             html: true,
-            title: 'Erlaubte Zeichen',
+            title: 'Hinweis',
             trigger: 'focus',
           }}
         >
           Neues Passwort
         </MyInput>
+        <PasswordStrengthMeter passwordInputRef={passwortRef} />
         <MyInput
           divClass="form-floating col-12"
           required
           type="password"
           id="PasskeyPasswortNeu2"
           name="Neues Passwort wiederholen"
-          pattern={PASSWORD_PATTERN}
           minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
         >
@@ -89,8 +87,8 @@ export default function createModalPasskeySetPassword(): void {
 
       errorMessage.textContent = '';
 
-      const newPassword = passwordInput.value.trim();
-      const repeatedPassword = repeatInput.value.trim();
+      const newPassword = passwordInput.value;
+      const repeatedPassword = repeatInput.value;
 
       const passwordError = getPasswordValidationMessage(newPassword, 'Das neue Passwort');
       if (passwordError) {

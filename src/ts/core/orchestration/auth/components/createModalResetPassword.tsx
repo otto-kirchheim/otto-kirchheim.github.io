@@ -1,12 +1,13 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
 import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 
 export default function createModalResetPassword(token: string): void {
   const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
     <MyFormModal myRef={ref} title="Passwort zurücksetzen" submitText="Passwort speichern" onSubmit={onSubmit()}>
@@ -15,37 +16,37 @@ export default function createModalResetPassword(token: string): void {
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Neues Passwort</p>
           <div className="row g-2">
             <MyInput
+              myRef={passwortRef}
               divClass="form-floating col-12"
               required
               type="password"
               id="PasswortNeuReset"
               name="Neues Passwort"
-              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
               minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               invalidFeedbackId="reset-password-new-feedback"
-              invalidFeedbackText="Das neue Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
+              invalidFeedbackText="Das neue Passwort muss mindestens 8 Zeichen lang sein."
               popover={{
-                content: '-Mindestens 8 Zeichen <br/>-Zeichen: .-+_% <br/>',
+                content: '-Mindestens 8 Zeichen <br/>',
                 placement: 'right',
                 html: true,
-                title: 'Passwort-Regeln',
+                title: 'Hinweis',
                 trigger: 'focus',
               }}
             >
               Neues Passwort
             </MyInput>
+            <PasswordStrengthMeter passwordInputRef={passwortRef} />
             <MyInput
               divClass="form-floating col-12"
               required
               type="password"
               id="PasswortNeuReset2"
               name="Neues Passwort wiederholen"
-              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
               minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               invalidFeedbackId="reset-password-repeat-feedback"
-              invalidFeedbackText="Bitte wiederhole das neue Passwort mit mindestens 8 erlaubten Zeichen."
+              invalidFeedbackText="Bitte wiederhole das neue Passwort mit mindestens 8 Zeichen."
             >
               Neues Passwort wiederholen
             </MyInput>
@@ -73,8 +74,8 @@ export default function createModalResetPassword(token: string): void {
       const passwordRepeatInput = modal.querySelector<HTMLInputElement>('#PasswortNeuReset2');
       if (!passwordInput || !passwordRepeatInput) throw new Error('Passwort Inputs nicht gefunden');
 
-      const newPassword = passwordInput.value.trim();
-      const repeatedPassword = passwordRepeatInput.value.trim();
+      const newPassword = passwordInput.value;
+      const repeatedPassword = passwordRepeatInput.value;
 
       if (newPassword !== repeatedPassword) {
         errorMessage.textContent = 'Passwörter stimmen nicht überein';

@@ -84,7 +84,6 @@ export default function createModalLogin(): void {
           type="password"
           id="Passwort"
           name="Passwort"
-          pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
           autoComplete="current-password"
         >
           Passwort

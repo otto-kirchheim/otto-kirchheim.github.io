@@ -1,10 +1,11 @@
 import { createRef } from 'preact';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 import { checkNeuerBenutzer } from '../utils';
 
 export default function createModalNewUser(): void {
   const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
     <MyFormModal myRef={ref} title="Neuen Benutzer Erstellen" submitText="Erstellen" onSubmit={onSubmit()}>
@@ -56,44 +57,42 @@ export default function createModalNewUser(): void {
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Passwort</p>
           <div className="row g-2">
             <MyInput
+              myRef={passwortRef}
               divClass="form-floating col-12"
               required
               type="password"
               id="Passwort"
               name="Passwort"
-              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
               minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               invalidFeedbackId="register-password-feedback"
-              invalidFeedbackText="Das Passwort muss mindestens 8 Zeichen lang sein und darf nur erlaubte Zeichen enthalten."
+              invalidFeedbackText="Das Passwort muss mindestens 8 Zeichen lang sein."
               popover={{
-                content:
-                  '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+                content: '-Mindestens 8 Zeichen <br/>',
                 placement: 'right',
                 html: true,
-                title: 'Erlaubte Zeichen',
+                title: 'Hinweis',
                 trigger: 'focus',
               }}
             >
               Passwort
             </MyInput>
+            <PasswordStrengthMeter passwordInputRef={passwortRef} />
             <MyInput
               divClass="form-floating col-12"
               required
               type="password"
               id="Passwort2"
               name="Passwort wiederholen"
-              pattern={new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source}
               minLength={PASSWORD_MIN_LENGTH}
               autoComplete="new-password"
               invalidFeedbackId="register-password-repeat-feedback"
-              invalidFeedbackText="Bitte wiederhole das Passwort mit mindestens 8 erlaubten Zeichen."
+              invalidFeedbackText="Bitte wiederhole das Passwort mit mindestens 8 Zeichen."
               popover={{
-                content:
-                  '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+                content: '-Mindestens 8 Zeichen <br/>',
                 placement: 'right',
                 html: true,
-                title: 'Erlaubte Zeichen',
+                title: 'Hinweis',
                 trigger: 'focus',
               }}
             >

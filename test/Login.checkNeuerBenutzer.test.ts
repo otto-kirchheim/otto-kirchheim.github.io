@@ -230,7 +230,7 @@ describe('checkNeuerBenutzer', () => {
 
     await checkNeuerBenutzer(modal as never);
 
-    expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', 'pass12345', 'code-1');
+    expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', ' pass12345 ', 'code-1');
     expect(resetTokenStateMock).toHaveBeenCalledTimes(1);
     expect(meMock).toHaveBeenCalledTimes(1);
     expect(confirmMock).toHaveBeenCalledTimes(1);

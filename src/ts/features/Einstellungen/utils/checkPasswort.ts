@@ -12,15 +12,15 @@ export default async function checkPasswort(modal: CustomHTMLDivElement): Promis
 
   const passwortAltInput = modal.querySelector<HTMLInputElement>('#PasswortAlt');
   if (!passwortAltInput) throw new Error('Fehler: PasswortAlt InputElement nicht gefunden!');
-  const PasswortAlt = passwortAltInput.value.trim();
+  const PasswortAlt = passwortAltInput.value;
 
   const passwortNewInput = modal.querySelector<HTMLInputElement>('#PasswortNeu');
   if (!passwortNewInput) throw new Error('Fehler: PasswortNeu InputElement nicht gefunden!');
-  const PasswortNeu = passwortNewInput.value.trim();
+  const PasswortNeu = passwortNewInput.value;
 
   const passwortNew2Input = modal.querySelector<HTMLInputElement>('#PasswortNeu2');
   if (!passwortNew2Input) throw new Error('Fehler: PasswortNeu2 InputElement nicht gefunden!');
-  const PasswortNeu2 = passwortNew2Input.value.trim();
+  const PasswortNeu2 = passwortNew2Input.value;
 
   if (!PasswortAlt) {
     errorMessage.textContent = 'Bitte Aktuelles Passwort Eingeben';

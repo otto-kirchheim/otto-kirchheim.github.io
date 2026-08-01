@@ -4,6 +4,14 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### fix (Passwort-Zeichenrestriktion entfernt, Live-Stärkeanzeige ergänzt)
+
+- Alle Passwort-Felder (Login, Registrierung, Passwort-Ändern, Reset, Passkey-Passwort-Setzen, Admin-Passwort-Setzen) hatten ein `pattern`-Attribut, das versehentlich vom Benutzername-Feld kopiert wurde und Zeichen wie Umlaute, `$`, Leerzeichen und Emoji im Passwort verbot, obwohl das Backend nie eine Zeichen-Restriktion hatte (nur Längenprüfung). `pattern`-Prop entfernt.
+- Inkonsistentes `.trim()` auf Passwort-Werten behoben: alle Passwort-*setzenden* Flows trimmten den Wert vor dem Senden, der Login-Flow nicht — hätte bei Passwörtern mit Leerzeichen zum Login-Fehlschlag geführt. Trimmen jetzt nirgends mehr angewendet (an Login angeglichen).
+- Popover-Hinweistexte und `invalidFeedbackText` auf die einzige tatsächlich geprüfte Regel (Mindestlänge) gekürzt — die bisherigen Bullet-Punkte zu Groß-/Kleinbuchstaben/Zahlen/erlaubten Zeichen waren nie durchgesetzt und damit irreführend.
+- Neu: `PasswordStrengthMeter`-Komponente (`components/PasswordStrengthMeter.tsx`, Scoring in `infrastructure/validation/passwordStrength.ts`) — eigenständige, selbst gebaute Live-Stärkeanzeige (4 Bootstrap-Progress-Segmente + Label), angehängt an das jeweilige "Neues Passwort"-Feld in Registrierung/Passwort-Ändern/Reset/Passkey-Set/Admin-Set (nicht Login, nicht Wiederholungs-/Alt-Passwort-Felder).
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` grün.
+
 ### feat (Welle 2 Schritt 6 — UserProfile-Container-Keys vereinheitlicht: pers/aZ/fZ/vorgabenB → Pers/Arbeitszeit/Fahrzeit/VorgabenB)
 
 - `IVorgabenU`/`IVorgabenUServer` (`core/types/IVorgabenU.ts`): die 4 Top-Level-Container-Schlüssel `pers`/`aZ`/`fZ`/`vorgabenB` → `Pers`/`Arbeitszeit`/`Fahrzeit`/`VorgabenB` (deckungsgleich mit dem Backend-Modell `UserProfile.ts`). Alle verschachtelten Blattfelder waren laut Vorab-Analyse bereits identisch benannt (Backend nutzt seit längerem das neue Pro-Wochentag-Arbeitszeitmodell) — dieser Schritt ist reines Umbenennen der 4 Container-Keys, keine Feld-für-Feld-Migration.

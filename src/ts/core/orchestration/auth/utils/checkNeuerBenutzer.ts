@@ -78,7 +78,7 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
     return;
   }
 
-  const passwordError = getPasswordValidationMessage(passwort1.value.trim(), 'Das Passwort');
+  const passwordError = getPasswordValidationMessage(passwort1.value, 'Das Passwort');
   if (passwordError) {
     errorMessage.textContent = passwordError;
     return;
@@ -90,7 +90,7 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
   }
 
   try {
-    await authApi.register(benutzer.value.trim(), email.value.trim(), passwort1.value.trim(), zugangscode.value.trim());
+    await authApi.register(benutzer.value.trim(), email.value.trim(), passwort1.value, zugangscode.value.trim());
     resetTokenState();
     const me = await authApi.me().catch(() => null);
 

@@ -10,6 +10,7 @@ import MyModalHeader from './MyModalHeader';
 import MySelect from './MySelect';
 import MyShowElement from './MyShowElement';
 import MyShowFooter from './MyShowFooter';
+import PasswordStrengthMeter from './PasswordStrengthMeter';
 import showModal from './showModal';
 
 export {
@@ -25,5 +26,6 @@ export {
   MySelect,
   MyShowElement,
   MyShowFooter,
+  PasswordStrengthMeter,
   showModal,
 };

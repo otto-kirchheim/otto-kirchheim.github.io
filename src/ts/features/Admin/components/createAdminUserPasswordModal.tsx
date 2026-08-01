@@ -1,13 +1,12 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef } from 'preact';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
-
-const PASSWORD_PATTERN = new RegExp(/^[A-Za-z0-9.\-+_%]*$/).source;
 
 export default function createAdminUserPasswordModal(userId: string, userName: string): void {
   const ref = createRef<HTMLFormElement>();
+  const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
     <MyFormModal
@@ -25,31 +24,30 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
           </p>
         </div>
         <MyInput
+          myRef={passwortRef}
           divClass="form-floating col-12"
           required
           type="password"
           id="adminUserPasswordNew"
           name="Neues Passwort"
-          pattern={PASSWORD_PATTERN}
           autoComplete="new-password"
           popover={{
-            content:
-              '-Mindestens 8 Zeichen <br/>-Große Buchstaben <br/>-Kleine Buchstaben <br/>-Zahlen <br/>-Zeichen: .-+_% <br/>',
+            content: '-Mindestens 8 Zeichen <br/>',
             placement: 'right',
             html: true,
-            title: 'Erlaubte Zeichen',
+            title: 'Hinweis',
             trigger: 'focus',
           }}
         >
           Neues Passwort
         </MyInput>
+        <PasswordStrengthMeter passwordInputRef={passwortRef} />
         <MyInput
           divClass="form-floating col-12"
           required
           type="password"
           id="adminUserPasswordRepeat"
           name="Neues Passwort wiederholen"
-          pattern={PASSWORD_PATTERN}
           autoComplete="new-password"
         >
           Neues Passwort wiederholen
@@ -77,8 +75,8 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
 
       errorMessage.textContent = '';
 
-      const newPassword = passwordInput.value.trim();
-      const repeatedPassword = repeatInput.value.trim();
+      const newPassword = passwordInput.value;
+      const repeatedPassword = repeatInput.value;
 
       if (newPassword.length < 8) {
         errorMessage.textContent = 'Das neue Passwort muss mindestens 8 Zeichen lang sein';
