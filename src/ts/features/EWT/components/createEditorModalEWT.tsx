@@ -65,7 +65,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const rowCells = row instanceof Row ? row.cells : undefined;
 
   const datum = getEwtEditorDate(rowCells, Jahr, Monat);
-  const initialBuchungstagInputValue = dayjs(rowCells?.buchungstagE || datum).format('YYYY-MM-DD');
+  const initialBuchungstagInputValue = dayjs(rowCells?.Buchungstag || datum).format('YYYY-MM-DD');
 
   const customButtons =
     row instanceof Row ? (
@@ -93,13 +93,13 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           divClass="form-floating col-12 col-sm-5"
           required
           type="date"
-          id="tagE"
-          name={row.columns.array.find(column => column.name === 'tagE')?.title ?? 'Tag'}
+          id="Tag"
+          name={row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
           min={datum.startOf('M').format('YYYY-MM-DD')}
           max={datum.endOf('M').format('YYYY-MM-DD')}
           value={datum.format('YYYY-MM-DD')}
         >
-          {row.columns.array.find(column => column.name === 'tagE')?.title ?? 'Tag'}
+          {row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
         </MyInput>
 
         <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="col-12 col-sm-6 d-none">
@@ -107,18 +107,18 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
             myRef={buchungstagHinweisTextRef}
             disabled
             type="date"
-            id="buchungstagE"
-            name={row.columns.array.find(column => column.name === 'buchungstagE')?.title ?? 'Buchungstag'}
+            id="Buchungstag"
+            name={row.columns.array.find(column => column.name === 'Buchungstag')?.title ?? 'Buchungstag'}
             value={initialBuchungstagInputValue}
           >
-            {row.columns.array.find(column => column.name === 'buchungstagE')?.title ?? 'Buchungstag'}
+            {row.columns.array.find(column => column.name === 'Buchungstag')?.title ?? 'Buchungstag'}
           </MyInput>
         </div>
         <MySelect
           className="form-floating col-12 col-sm-7"
-          id="eOrtE"
-          title={row.columns.array.find(column => column.name === 'eOrtE')?.title ?? 'Einsatzort'}
-          value={row instanceof Row ? row.cells['eOrtE'].toString() : undefined}
+          id="Einsatzort"
+          title={row.columns.array.find(column => column.name === 'Einsatzort')?.title ?? 'Einsatzort'}
+          value={row instanceof Row ? row.cells['Einsatzort'].toString() : undefined}
           options={[
             { text: '', selected: true },
             ...vorgabenU.fZ.map(ort => {
@@ -132,9 +132,9 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         <MySelect
           className="form-floating col-12 col-sm-7"
           required
-          id={'schichtE'}
-          title={row.columns.array.find(column => column.name === 'schichtE')?.title ?? 'Schicht'}
-          value={row instanceof Row ? row.cells['schichtE'].toString() : undefined}
+          id={'Schicht'}
+          title={row.columns.array.find(column => column.name === 'Schicht')?.title ?? 'Schicht'}
+          value={row instanceof Row ? row.cells['Schicht'].toString() : undefined}
           options={buildSchichtOptionen(vorgabenU)}
         />
         <div className="col-12 col-sm-4">
@@ -189,10 +189,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const getFormValues = (): IDatenEWT => {
     let values: IDatenEWT = {
       _id: rowCells?._id,
-      tagE: form.querySelector<HTMLInputElement>('#tagE')?.value ?? '',
-      buchungstagE: '',
-      eOrtE: form.querySelector<HTMLInputElement>('#eOrtE')?.value ?? '',
-      schichtE: form.querySelector<HTMLInputElement>('#schichtE')?.value ?? '',
+      Tag: form.querySelector<HTMLInputElement>('#Tag')?.value ?? '',
+      Buchungstag: '',
+      Einsatzort: form.querySelector<HTMLInputElement>('#Einsatzort')?.value ?? '',
+      Schicht: form.querySelector<HTMLInputElement>('#Schicht')?.value ?? '',
       abWE: form.querySelector<HTMLInputElement>('#abWE')?.value ?? '',
       ab1E: form.querySelector<HTMLInputElement>('#ab1E')?.value ?? '',
       anEE: form.querySelector<HTMLInputElement>('#anEE')?.value ?? '',
@@ -209,21 +209,21 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       values = { ...calculatedValues };
     }
 
-    values.buchungstagE = calculateBuchungstagEwt(values);
+    values.Buchungstag = calculateBuchungstagEwt(values);
     return values;
   };
 
   const updateBuchungstagAnzeige = (): void => {
     if (!buchungstagHinweisRef.current) return;
 
-    const tag = form.querySelector<HTMLInputElement>('#tagE')?.value ?? '';
+    const tag = form.querySelector<HTMLInputElement>('#Tag')?.value ?? '';
     if (!tag) {
       buchungstagHinweisRef.current.classList.add('d-none');
       return;
     }
 
     const values = getFormValues();
-    const istGleich = dayjs(values.buchungstagE).isSame(dayjs(values.tagE), 'day');
+    const istGleich = dayjs(values.Buchungstag).isSame(dayjs(values.Tag), 'day');
 
     if (istGleich) {
       buchungstagHinweisRef.current.classList.add('d-none');
@@ -231,7 +231,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     }
 
     if (buchungstagHinweisTextRef.current) {
-      buchungstagHinweisTextRef.current.value = dayjs(values.buchungstagE).format('YYYY-MM-DD');
+      buchungstagHinweisTextRef.current.value = dayjs(values.Buchungstag).format('YYYY-MM-DD');
     }
     buchungstagHinweisRef.current.classList.remove('d-none');
   };
@@ -266,7 +266,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     input.addEventListener('change', updateBuchungstagAnzeige);
   });
 
-  ['tagE', 'eOrtE', 'schichtE', 'berechnen'].forEach(fieldId => {
+  ['Tag', 'Einsatzort', 'Schicht', 'berechnen'].forEach(fieldId => {
     const input = form.querySelector<HTMLInputElement | HTMLSelectElement>(`#${fieldId}`);
     if (!input) return;
     input.addEventListener('change', updateBuchungstagAnzeige);
@@ -325,11 +325,11 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         });
 
         if (conflictingEntry) {
-          const schichtHinweis = ['N', 'BN'].includes(conflictingEntry.schichtE)
-            ? ` (${conflictingEntry.schichtE}-Schicht beginnt am Vortag)`
+          const schichtHinweis = ['N', 'BN'].includes(conflictingEntry.Schicht)
+            ? ` (${conflictingEntry.Schicht}-Schicht beginnt am Vortag)`
             : '';
           createSnackBar({
-            message: `EWT<br/>Zeitüberschneidung mit Tag ${dayjs(conflictingEntry.tagE).format('DD.MM.')}${schichtHinweis}.`,
+            message: `EWT<br/>Zeitüberschneidung mit Tag ${dayjs(conflictingEntry.Tag).format('DD.MM.')}${schichtHinweis}.`,
             status: 'warning',
             timeout: 5000,
             fixed: true,
@@ -353,10 +353,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
         const existing = existingRow.cells;
         return (
-          existing.tagE === values.tagE &&
-          existing.buchungstagE === values.buchungstagE &&
-          existing.eOrtE === values.eOrtE &&
-          existing.schichtE === values.schichtE &&
+          existing.Tag === values.Tag &&
+          existing.Buchungstag === values.Buchungstag &&
+          existing.Einsatzort === values.Einsatzort &&
+          existing.Schicht === values.Schicht &&
           existing.abWE === values.abWE &&
           existing.ab1E === values.ab1E &&
           existing.anEE === values.anEE &&

@@ -91,10 +91,10 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const ewtOptions = [
     { value: '', text: '— keine Zuordnung —', selected: !currentEwtRef },
     ...dataE.map(day => {
-      const tag = dayjs(day.tagE).format('DD | dd');
+      const tag = dayjs(day.Tag).format('DD | dd');
       let text = tag;
-      if (day.schichtE === 'N') text = `${tag} | Nacht`;
-      else if (day.schichtE === 'BN') text = `${tag} | Nacht / Bereitschaft`;
+      if (day.Schicht === 'N') text = `${tag} | Nacht`;
+      else if (day.Schicht === 'BN') text = `${tag} | Nacht / Bereitschaft`;
       return {
         value: day._id ?? '',
         text,
@@ -116,7 +116,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     if (!entry) return;
     const beginInput = currentForm.querySelector<HTMLInputElement>('#beginN');
     const endeInput = currentForm.querySelector<HTMLInputElement>('#endeN');
-    if (tagInput) tagInput.value = dayjs(entry.tagE).format('YYYY-MM-DD');
+    if (tagInput) tagInput.value = dayjs(entry.Tag).format('YYYY-MM-DD');
     if (beginInput) beginInput.value = entry.beginE as string;
     if (endeInput) endeInput.value = entry.endeE as string;
   };

@@ -10,8 +10,8 @@ function parseTime(baseDate: Dayjs, value?: string): Dayjs | null {
 }
 
 export default function calculateBuchungstagEwt(row: IDatenEWT): string {
-  const tag = dayjs(row.tagE);
-  if (!tag.isValid()) return row.tagE;
+  const tag = dayjs(row.Tag);
+  if (!tag.isValid()) return row.Tag;
 
   const start = parseTime(tag.startOf('day'), row.beginE as string | undefined);
   const endRaw = parseTime(tag.startOf('day'), row.endeE as string | undefined);

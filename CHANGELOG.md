@@ -4,6 +4,13 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### feat (Welle 2 Schritt 4 — EWT-Feldnamen vereinheitlicht: 4 von 13 Feldern auf Backend-Namen)
+
+- `IDatenEWT` (`core/types/IDaten.ts`): `tagE`/`buchungstagE`/`eOrtE`/`schichtE` → `Tag`/`Buchungstag`/`Einsatzort`/`Schicht` (deckungsgleich mit `IEinsatzwechseltaetigkeit`, siehe `@otto-kirchheim/nebengeld-shared` v0.5.0). Die restlichen 9 Felder (`abWE`/`ab1E`/`anEE`/`beginE`/`endeE`/`abEE`/`an1E`/`anWE`/`berechnen`) trugen bereits identische Namen, unverändert. Durchgängig umbenannt in 45 Dateien (EWT-Feature komplett, Neben-Modals über die EWT-Verknüpfung, `fieldMapper.ts`, `download.ts`, Business-Logik, Tests) — keine Snapshot-Datei betroffen, keine Mixed-Context-Kollision gefunden (alle 4 Feldnamen tragen das eindeutige `E`-Suffix).
+- `fieldMapper.ts`: `BackendEWT` erweitert jetzt das geteilte `IEinsatzwechseltaetigkeit` statt die Felder selbst zu deklarieren; `ewtFromBackend`/`ewtToBackend` unverändert in ihrer Logik (nur Feldnamen).
+- Keine Business-Logik verändert, insbesondere die bekannte `Buchungstag`-Formatdiskrepanz beim PDF-Download (`download.ts`, zweistelliger Tages-String statt ISO-Date) bewusst unangetastet.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.5.0.
+
 ### feat (Welle 2 Schritt 3 — Bereitschaftseinsatz-Feldnamen vereinheitlicht: 7 Felder auf Backend-Namen)
 
 - `IDatenBE` (`core/types/IDaten.ts`): `bereitschaftszeitraumBE`/`tagBE`/`auftragsnummerBE`/`beginBE`/`endeBE`/`lreBE`/`privatkmBE` → `Bereitschaftszeitraum`/`Tag`/`Auftragsnummer`/`Beginn`/`Ende`/`LRE`/`PrivatKm` (deckungsgleich mit `IBereitschaftseinsatz`, siehe `@otto-kirchheim/nebengeld-shared` v0.4.0). Durchgängig umbenannt in 25 Dateien: CustomTable-Spaltenkonfiguration, Add/Edit-Modal, `isSameBereitschaftsEinsatz.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `fieldMapper.ts`, `download.ts`, zugehörige Tests (keine Snapshot-Datei für BE betroffen).

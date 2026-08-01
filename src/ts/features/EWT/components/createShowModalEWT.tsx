@@ -11,15 +11,15 @@ const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> =
 };
 
 const createTagElement = (row: Row<IDatenEWT>) => {
-  const column: Column<IDatenEWT> = getColumn(row, 'tagE');
-  const tag = dayjs(row.cells.tagE);
-  const buchungstagRaw = row.cells.buchungstagE || row.cells.tagE;
+  const column: Column<IDatenEWT> = getColumn(row, 'Tag');
+  const tag = dayjs(row.cells.Tag);
+  const buchungstagRaw = row.cells.Buchungstag || row.cells.Tag;
   const buchungstag = dayjs(buchungstagRaw);
   const istAbweichend = buchungstag.isValid() && !buchungstag.isSame(tag, 'day');
 
-  const tagColumn: Column<IDatenEWT> = getColumn(row, 'tagE');
+  const tagColumn: Column<IDatenEWT> = getColumn(row, 'Tag');
   const buchungstagText = istAbweichend ? tagColumn.parser(buchungstagRaw) : '';
-  const tagText = `${column.parser(row.cells['tagE'])}${istAbweichend ? ` -> ${buchungstagText}` : ''}`;
+  const tagText = `${column.parser(row.cells['Tag'])}${istAbweichend ? ` -> ${buchungstagText}` : ''}`;
 
   return (
     <MyShowElement
@@ -27,7 +27,7 @@ const createTagElement = (row: Row<IDatenEWT>) => {
       labelClass="col-2 col-sm-3 col-form-label text-wrap fw-bold"
       spanClass="col-10 col-sm-9 align-middle text-break text-end my-auto"
       title={`${column.title}:`}
-      id="tagE"
+      id="Tag"
       text={tagText}
     />
   );
@@ -88,8 +88,8 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
         >
           {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
         </MyCheckbox>
-        {createOrtSchichtElement(row, 'eOrtE')}
-        {createOrtSchichtElement(row, 'schichtE')}
+        {createOrtSchichtElement(row, 'Einsatzort')}
+        {createOrtSchichtElement(row, 'Schicht')}
         <hr />
 
         <div className="icon-ewt-arrow">

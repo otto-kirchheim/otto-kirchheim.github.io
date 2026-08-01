@@ -6,7 +6,11 @@
  */
 
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
-import type { IBereitschaftseinsatz, IBereitschaftszeitraum } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  IBereitschaftseinsatz,
+  IBereitschaftszeitraum,
+  IEinsatzwechseltaetigkeit,
+} from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
   IPerWeekdaySchicht,
@@ -35,24 +39,10 @@ export interface BackendBereitschaftseinsatz extends IBereitschaftseinsatz {
   updatedAt?: string;
 }
 
-export interface BackendEWT {
-  _id?: string;
+export interface BackendEWT extends IEinsatzwechseltaetigkeit {
   User?: string;
   Monat: number;
   Jahr: number;
-  Tag: string; // ISO-Date
-  Buchungstag?: string; // ISO-Date
-  Einsatzort?: string;
-  Schicht: string;
-  abWE?: string;
-  ab1E?: string;
-  anEE?: string;
-  beginE?: string;
-  endeE?: string;
-  abEE?: string;
-  an1E?: string;
-  anWE?: string;
-  berechnen?: boolean;
   updatedAt?: string;
 }
 
@@ -262,10 +252,10 @@ export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
 export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
   return {
     _id: doc._id,
-    tagE: dayjs(doc.Tag).format('YYYY-MM-DD'),
-    buchungstagE: dayjs(doc.Buchungstag ?? doc.Tag).format('YYYY-MM-DD'),
-    eOrtE: doc.Einsatzort ?? '',
-    schichtE: doc.Schicht,
+    Tag: dayjs(doc.Tag).format('YYYY-MM-DD'),
+    Buchungstag: dayjs(doc.Buchungstag ?? doc.Tag).format('YYYY-MM-DD'),
+    Einsatzort: doc.Einsatzort ?? '',
+    Schicht: doc.Schicht,
     abWE: doc.abWE ?? '',
     ab1E: doc.ab1E ?? '',
     anEE: doc.anEE ?? '',
@@ -419,19 +409,19 @@ export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<B
  * Konvertiert einen Frontend-EWT-Eintrag in das Backend-Format.
  */
 export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit<BackendEWT, 'User'> {
-  const buchungstag = item.buchungstagE || item.tagE;
-  const period = resolveYearMonth(item.tagE, monat, jahr, 'YYYY-MM-DD');
+  const buchungstag = item.Buchungstag || item.Tag;
+  const period = resolveYearMonth(item.Tag, monat, jahr, 'YYYY-MM-DD');
 
   return {
     _id: item._id,
     Monat: period.Monat,
     Jahr: period.Jahr,
-    Tag: dayjs(item.tagE).toISOString(),
+    Tag: dayjs(item.Tag).toISOString(),
     Buchungstag: dayjs(buchungstag).toISOString(),
     // Leere Strings explizit mitsenden: `undefined` fällt bei JSON.stringify weg,
     // wodurch ein Update gelöschte Zeiten nicht überschreiben würde (alter Wert bliebe erhalten).
-    Einsatzort: item.eOrtE,
-    Schicht: item.schichtE,
+    Einsatzort: item.Einsatzort,
+    Schicht: item.Schicht,
     abWE: item.abWE,
     ab1E: item.ab1E,
     anEE: item.anEE,

@@ -17,14 +17,14 @@ function getBzWindow(cells: CustomTableTypes): OverlapWindow | null {
 
 /**
  * Spiegelt `getWindowForOverlap` aus dem Backend (`ewt.service.ts`) sowie das Frontend-Pendant
- * `features/EWT/utils/getEwtWindow.ts`: Nachtschichten duerfen ueber den Tagesbeginn rollen, `tagE`
+ * `features/EWT/utils/getEwtWindow.ts`: Nachtschichten duerfen ueber den Tagesbeginn rollen, `Tag`
  * bleibt dabei der echte Starttag. Lokal dupliziert statt importiert, da `infrastructure/` laut
  * Architektur nicht von `features/` abhaengen darf.
  */
 function getEwtWindowLocal(cells: CustomTableTypes): OverlapWindow | null {
   const ewt = cells as IDatenEWT;
   if (!ewt.beginE || !ewt.endeE) return null;
-  const baseDate = dayjs(ewt.tagE as string);
+  const baseDate = dayjs(ewt.Tag as string);
   if (!baseDate.isValid()) return null;
 
   const start = dayjs(`${baseDate.format('YYYY-MM-DD')}T${String(ewt.beginE)}`);

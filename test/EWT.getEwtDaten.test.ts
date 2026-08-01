@@ -6,10 +6,10 @@ import { getEwtDaten } from '@/features/EWT/utils';
 
 function createRow(day: string): IDatenEWT {
   return {
-    tagE: day,
-    buchungstagE: day,
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag: day,
+    Buchungstag: day,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -86,7 +86,7 @@ describe('getEwtDaten', () => {
     Storage.set('Monat', 4);
 
     const row = createRow('2026-03-31');
-    row.buchungstagE = '2026-04-01';
+    row.Buchungstag = '2026-04-01';
     Storage.set('dataE', [row]);
 
     expect(getEwtDaten(undefined, 4)).toEqual([row]);

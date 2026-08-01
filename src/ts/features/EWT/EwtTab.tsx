@@ -47,16 +47,16 @@ function EwtTab() {
       ftE = createCustomTable('tableE', {
         columns: [
           {
-            name: 'tagE',
+            name: 'Tag',
             title: 'Tag',
             sortable: true,
             sorted: true,
             direction: 'ASC',
             parser: tagParser,
           },
-          { name: 'buchungstagE', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
-          { name: 'eOrtE', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
-          { name: 'schichtE', title: 'Schicht', parser: schichtParser, type: 'time' },
+          { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
+          { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
+          { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time' },
           { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'xl', type: 'time' },
           { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'md', type: 'time' },
           { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },

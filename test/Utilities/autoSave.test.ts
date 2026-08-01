@@ -605,8 +605,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataE', { 1: [] });
 
-      const changes = { create: [{ tagE: '05' }], update: [], delete: [] };
-      createMockTable('tableE', changes, [{ _state: 'new', cells: { tagE: '05' } }]);
+      const changes = { create: [{ Tag: '05' }], update: [], delete: [] };
+      createMockTable('tableE', changes, [{ _state: 'new', cells: { Tag: '05' } }]);
 
       mockEwtBulk.mockResolvedValue({ created: [{ _id: 'ewt1' }], updated: [], deleted: [], errors: [] });
 
@@ -623,14 +623,14 @@ describe('autoSave', () => {
       Storage.set('dataE', { 4: [] });
 
       const changes = {
-        create: [{ tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' }],
+        create: [{ Tag: '2026-03-31', Buchungstag: '2026-04-01', Schicht: 'N' }],
         update: [],
         delete: [],
       };
       createMockTable('tableE', changes, [
         {
           _state: 'new',
-          cells: { tagE: '2026-03-31', buchungstagE: '2026-04-01', schichtE: 'N' },
+          cells: { Tag: '2026-03-31', Buchungstag: '2026-04-01', Schicht: 'N' },
         },
       ]);
 
@@ -643,9 +643,9 @@ describe('autoSave', () => {
         expect.objectContaining({
           create: [
             expect.objectContaining({
-              tagE: '2026-03-31',
-              buchungstagE: '2026-04-01',
-              schichtE: 'N',
+              Tag: '2026-03-31',
+              Buchungstag: '2026-04-01',
+              Schicht: 'N',
               clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
             }),
           ],
@@ -662,8 +662,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2027);
       Storage.set('dataE', { 1: [] });
 
-      const maerzRow = { tagE: '2026-12-31', buchungstagE: '2027-01-01', schichtE: 'N' };
-      const januarRow = { tagE: '2027-01-05', buchungstagE: '2027-01-05', schichtE: 'F' };
+      const maerzRow = { Tag: '2026-12-31', Buchungstag: '2027-01-01', Schicht: 'N' };
+      const januarRow = { Tag: '2027-01-05', Buchungstag: '2027-01-05', Schicht: 'F' };
       const changes = {
         create: [maerzRow, januarRow],
         update: [],
@@ -832,14 +832,14 @@ describe('autoSave', () => {
 
       const changes = {
         create: [],
-        update: [{ _id: 'ewt-1', tagE: '2025-03-10', buchungstagE: '2025-03-10', schichtE: 'FR' }],
+        update: [{ _id: 'ewt-1', Tag: '2025-03-10', Buchungstag: '2025-03-10', Schicht: 'FR' }],
         delete: [],
       };
       createMockTable('tableE', changes, [
         {
           _state: 'modified',
           _id: 'ewt-1',
-          cells: { _id: 'ewt-1', tagE: '2025-03-10', buchungstagE: '2025-03-10', schichtE: 'FR' },
+          cells: { _id: 'ewt-1', Tag: '2025-03-10', Buchungstag: '2025-03-10', Schicht: 'FR' },
         },
       ]);
 
@@ -862,9 +862,9 @@ describe('autoSave', () => {
       scheduleAutoSave('EWT');
       await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
-      const stored = Storage.get<Array<{ _id: string; buchungstagE: string }>>('dataE', { check: true });
+      const stored = Storage.get<Array<{ _id: string; Buchungstag: string }>>('dataE', { check: true });
       expect(stored).toHaveLength(1);
-      expect(stored[0]).toMatchObject({ _id: 'ewt-1', buchungstagE: '2025-03-15' });
+      expect(stored[0]).toMatchObject({ _id: 'ewt-1', Buchungstag: '2025-03-15' });
     });
 
     it('bleibt pending bei offline und speichert nicht', async () => {

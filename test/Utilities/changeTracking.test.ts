@@ -250,7 +250,7 @@ describe('changeTracking', () => {
       const doc = { _id: 'ewt1', Tag: '2026-03-01', Monat: 3, Jahr: 2026 };
       const result = mapServerDocToFrontend('EWT', doc) as Record<string, unknown>;
       expect(result._id).toBe('ewt1');
-      expect(result.tagE).toBe('2026-03-01');
+      expect(result.Tag).toBe('2026-03-01');
     });
 
     it('maps N backend doc to frontend format', () => {

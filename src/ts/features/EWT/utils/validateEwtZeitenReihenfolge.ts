@@ -38,8 +38,8 @@ const MAX_SPAN_MINUTES = 20 * 60;
  * @returns Feldbezogene Fehlermeldungen oder null bei korrekter Reihenfolge.
  */
 export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitreihenfolgeFehler[] | null {
-  const isNacht = ['N', 'BN'].includes(values.schichtE);
-  const baseDate = dayjs(values.tagE);
+  const isNacht = ['N', 'BN'].includes(values.Schicht);
+  const baseDate = dayjs(values.Tag);
 
   let dayOffset = isNacht ? -1 : 0;
   let prevMinutes: number | null = null;

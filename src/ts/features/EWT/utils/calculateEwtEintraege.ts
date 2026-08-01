@@ -30,14 +30,14 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
 
   for (const TagDaten of daten) {
     if (!TagDaten.berechnen) continue;
-    const datum = dayjs(TagDaten.tagE);
-    const schichtDaten = getSchichtDaten(TagDaten.schichtE as SchichtKeys, datum);
+    const datum = dayjs(TagDaten.Tag);
+    const schichtDaten = getSchichtDaten(TagDaten.Schicht as SchichtKeys, datum);
 
     Object.assign(
       TagDaten,
-      calculateTimes(TagDaten, datum, schichtDaten, eOrte.includes(TagDaten.eOrtE), vorgabenE, getPascalEnde()),
+      calculateTimes(TagDaten, datum, schichtDaten, eOrte.includes(TagDaten.Einsatzort), vorgabenE, getPascalEnde()),
     );
-    TagDaten.buchungstagE = calculateBuchungstagEwt(TagDaten);
+    TagDaten.Buchungstag = calculateBuchungstagEwt(TagDaten);
   }
 
   return daten;
@@ -127,8 +127,8 @@ function createHelpers(userSettings: IVorgabenU) {
   ) => {
     const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
       const [stunden, minuten] = value.split(':');
-      let tag = dayjs(Tag.tagE).date();
-      if (addTag && ['BN', 'N'].includes(Tag.schichtE ?? '')) tag -= 1;
+      let tag = dayjs(Tag.Tag).date();
+      if (addTag && ['BN', 'N'].includes(Tag.Schicht ?? '')) tag -= 1;
       return dayjs([datum.year(), datum.month(), tag, +stunden, +minuten, 0, 0]);
     };
 
@@ -154,10 +154,10 @@ function createHelpers(userSettings: IVorgabenU) {
 
     const anEE = !(eOrt && TagDaten.anEE === '')
       ? TagDaten.anEE
-      : ab1E_dayjs.add(vorgabenE.fZ[TagDaten.eOrtE]).format('LT');
+      : ab1E_dayjs.add(vorgabenE.fZ[TagDaten.Einsatzort]).format('LT');
     const abEE = !(eOrt && TagDaten.abEE === '')
       ? TagDaten.abEE
-      : an1E_dayjs.subtract(vorgabenE.fZ[TagDaten.eOrtE]).format('LT');
+      : an1E_dayjs.subtract(vorgabenE.fZ[TagDaten.Einsatzort]).format('LT');
 
     return { beginE, endeE, abWE, ab1E, an1E, anWE, anEE, abEE };
   };

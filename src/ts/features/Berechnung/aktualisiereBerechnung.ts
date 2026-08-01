@@ -89,7 +89,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;
 
     EWTMonat.forEach(value => {
-      const tagAnfang = dayjs(value.tagE);
+      const tagAnfang = dayjs(value.Tag);
       if (!tagAnfang.isValid()) return;
 
       if (value.abWE && value.anWE) {

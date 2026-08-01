@@ -28,9 +28,9 @@ import addEwtTag from '@/features/EWT/utils/addEwtTag';
 
 function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
-    tagE: '2026-03-10',
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag: '2026-03-10',
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -47,7 +47,7 @@ function createEwtData(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
 function setupModal(checked = true): HTMLDivElement {
   document.body.innerHTML = `
     <div id="modal-root">
-      <input id="tagE" value="2026-03-10" />
+      <input id="Tag" value="2026-03-10" />
       <select id="EOrt"><option value="Fulda" selected>Fulda</option></select>
       <select id="Schicht"><option value="T" selected>T</option></select>
       <input id="berechnen1" type="checkbox" ${checked ? 'checked' : ''} />
@@ -81,8 +81,8 @@ describe('addEWTtag', () => {
 
     const addMock = vi.fn();
     const existingRows = [
-      { cells: createEwtData({ tagE: '2026-03-10' }), _state: 'unchanged' },
-      { cells: createEwtData({ tagE: '2026-03-11' }), _state: 'unchanged' },
+      { cells: createEwtData({ Tag: '2026-03-10' }), _state: 'unchanged' },
+      { cells: createEwtData({ Tag: '2026-03-11' }), _state: 'unchanged' },
     ];
     const ftE = {
       rows: {
@@ -96,7 +96,7 @@ describe('addEWTtag', () => {
 
     expect(calculateEwtEintraegeMock).toHaveBeenCalledTimes(1);
     expect(calculateBuchungstagEwtMock).toHaveBeenCalledWith(calculatedData);
-    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, buchungstagE: '2026-03-10' }));
+    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, Buchungstag: '2026-03-10' }));
     expect(persistEwtTableDataMock).toHaveBeenCalledWith(ftE);
     expect(setNaechsterEwtTagMock).toHaveBeenCalledWith(
       10,
@@ -106,7 +106,7 @@ describe('addEWTtag', () => {
 
   it('zeigt Warn-Snackbar und überspringt Add bei identischem Duplikat', () => {
     const modal = setupModal(true);
-    const existingData = createEwtData({ tagE: '2026-03-10', schichtE: 'T', eOrtE: 'Fulda', berechnen: true });
+    const existingData = createEwtData({ Tag: '2026-03-10', Schicht: 'T', Einsatzort: 'Fulda', berechnen: true });
     calculateEwtEintraegeMock.mockReturnValue([existingData]);
 
     const addMock = vi.fn();
@@ -125,19 +125,19 @@ describe('addEWTtag', () => {
 
   it('reaktiviert einen zum Löschen vorgemerkten Eintrag für denselben Tag statt einen neuen zu erstellen', () => {
     const modal = setupModal(true);
-    const calculatedData = createEwtData({ tagE: '2026-03-10', beginE: '07:00', endeE: '15:00' });
+    const calculatedData = createEwtData({ Tag: '2026-03-10', beginE: '07:00', endeE: '15:00' });
     calculateEwtEintraegeMock.mockReturnValue([calculatedData]);
 
     const addMock = vi.fn();
     const undoDeleteMock = vi.fn();
     const valMock = vi.fn();
     const deletedRow = {
-      cells: createEwtData({ tagE: '2026-03-10', beginE: '06:00', endeE: '14:00' }),
+      cells: createEwtData({ Tag: '2026-03-10', beginE: '06:00', endeE: '14:00' }),
       _state: 'deleted' as const,
       undoDelete: undoDeleteMock,
       val: valMock,
     };
-    const otherRow = { cells: createEwtData({ tagE: '2026-03-11' }), _state: 'unchanged' as const };
+    const otherRow = { cells: createEwtData({ Tag: '2026-03-11' }), _state: 'unchanged' as const };
     const ftE = {
       rows: { add: addMock, array: [deletedRow, otherRow] },
       getRows: vi.fn().mockReturnValue([deletedRow, otherRow]),
@@ -146,7 +146,7 @@ describe('addEWTtag', () => {
     addEwtTag(modal as never, {} as IVorgabenU, false, ftE as never);
 
     expect(undoDeleteMock).toHaveBeenCalledTimes(1);
-    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, buchungstagE: '2026-03-10' }));
+    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ ...calculatedData, Buchungstag: '2026-03-10' }));
     expect(addMock).not.toHaveBeenCalled();
     expect(persistEwtTableDataMock).toHaveBeenCalledWith(ftE);
   });
@@ -174,11 +174,11 @@ describe('addEWTtag', () => {
     addEwtTag(modal as never, {} as IVorgabenU, true, ftE as never);
 
     expect(calculateEwtEintraegeMock).toHaveBeenCalledWith({} as IVorgabenU, [
-      expect.objectContaining({ berechnen: true, tagE: '2026-03-10' }),
+      expect.objectContaining({ berechnen: true, Tag: '2026-03-10' }),
     ]);
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        buchungstagE: '2026-03-10',
+        Buchungstag: '2026-03-10',
         ab1E: '',
         anEE: '',
         abEE: '',

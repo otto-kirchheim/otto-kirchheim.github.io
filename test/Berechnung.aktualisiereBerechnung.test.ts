@@ -108,13 +108,13 @@ describe('aktualisiereBerechnung', () => {
   it('calculates EWT absence buckets (A8/A14/A24)', () => {
     const EWT: IDatenEWT[] = [
       // 9 hours → A8
-      { tagE: '2026-03-01', buchungstagE: '2026-03-01', abWE: '08:00', anWE: '17:00' } as IDatenEWT,
+      { Tag: '2026-03-01', Buchungstag: '2026-03-01', abWE: '08:00', anWE: '17:00' } as IDatenEWT,
       // 15 hours → A14
-      { tagE: '2026-03-02', buchungstagE: '2026-03-02', abWE: '06:00', anWE: '21:00' } as IDatenEWT,
+      { Tag: '2026-03-02', Buchungstag: '2026-03-02', abWE: '06:00', anWE: '21:00' } as IDatenEWT,
       // 23 hours (overnight, anWE < abWE) → A14 (>= 14 and < 24)
-      { tagE: '2026-03-03', buchungstagE: '2026-03-03', abWE: '06:00', anWE: '05:00' } as IDatenEWT,
+      { Tag: '2026-03-03', Buchungstag: '2026-03-03', abWE: '06:00', anWE: '05:00' } as IDatenEWT,
       // 5 hours → zählt in KEINEM Bucket (früherer Bug: landete via else in A24)
-      { tagE: '2026-03-04', buchungstagE: '2026-03-04', abWE: '08:00', anWE: '13:00' } as IDatenEWT,
+      { Tag: '2026-03-04', Buchungstag: '2026-03-04', abWE: '08:00', anWE: '13:00' } as IDatenEWT,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });
@@ -127,9 +127,9 @@ describe('aktualisiereBerechnung', () => {
   it('calculates EWT Schichtarbeit buckets (S8/S14)', () => {
     const EWT: IDatenEWT[] = [
       // 10 hours → S8
-      { tagE: '2026-03-01', buchungstagE: '2026-03-01', ab1E: '08:00', an1E: '18:00' } as IDatenEWT,
+      { Tag: '2026-03-01', Buchungstag: '2026-03-01', ab1E: '08:00', an1E: '18:00' } as IDatenEWT,
       // 22 hours (overnight, an1E < ab1E → +1 day) → S14 (>= 24? 22 < 24 → S8)
-      { tagE: '2026-03-02', buchungstagE: '2026-03-02', ab1E: '06:00', an1E: '04:00' } as IDatenEWT,
+      { Tag: '2026-03-02', Buchungstag: '2026-03-02', ab1E: '06:00', an1E: '04:00' } as IDatenEWT,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });

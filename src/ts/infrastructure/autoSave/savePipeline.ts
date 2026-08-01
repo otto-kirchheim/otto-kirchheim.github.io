@@ -161,7 +161,7 @@ export async function sendBulk(
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
       case 'EWT': {
-        const parsed = dayjs((item as IDatenEWT).tagE, 'YYYY-MM-DD', true);
+        const parsed = dayjs((item as IDatenEWT).Tag, 'YYYY-MM-DD', true);
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
       case 'N': {

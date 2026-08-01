@@ -14,9 +14,9 @@ import attachBerechnenToggleListeners from '@/features/EWT/utils/attachBerechnen
 
 function createCells(): IDatenEWT {
   return {
-    tagE: '2026-03-10',
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag: '2026-03-10',
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',

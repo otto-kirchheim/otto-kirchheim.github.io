@@ -225,8 +225,8 @@ describe('changeMonatJahr', () => {
     expect(beCb({ Tag: '10.04.2026', von: '08:00', bis: '16:00' })).toBe(true);
     expect(beCb({ Tag: '10.03.2026', von: '08:00', bis: '16:00' })).toBe(false);
 
-    expect(eCb({ tagE: '2026-04-10', buchungstagE: '2026-04-10' })).toBe(true);
-    expect(eCb({ tagE: '2026-03-10', buchungstagE: '2026-03-10' })).toBe(false);
+    expect(eCb({ Tag: '2026-04-10', Buchungstag: '2026-04-10' })).toBe(true);
+    expect(eCb({ Tag: '2026-03-10', Buchungstag: '2026-03-10' })).toBe(false);
 
     // Nebengeld: Monat UND Jahr >= 2024 müssen matchen
     expect(nCb({ tagN: '10.04.2026', von: '08:00', bis: '16:00' })).toBe(true);
@@ -252,7 +252,7 @@ describe('changeMonatJahr', () => {
 
     expect(bzCb({ Beginn: '2025-03-10T08:00', Ende: '2025-03-11T08:00', Pause: 0 })).toBe(true);
     expect(beCb({ Tag: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
-    expect(eCb({ tagE: '2025-03-10', buchungstagE: '2025-03-10' })).toBe(true);
+    expect(eCb({ Tag: '2025-03-10', Buchungstag: '2025-03-10' })).toBe(true);
     expect(nCb({ tagN: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
   });
 });

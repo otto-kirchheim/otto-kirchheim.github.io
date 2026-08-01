@@ -40,13 +40,13 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const buchungstagHinweisTextRef = createRef<HTMLInputElement>();
 
   const updateBuchungstagAnzeige = () => {
-    const tagInput = document.querySelector<HTMLInputElement>('#tagE');
+    const tagInput = document.querySelector<HTMLInputElement>('#Tag');
     if (!tagInput || !EOrtRef.current || !SchichtRef.current || !berechnenRef.current || !bueroRef.current) {
       return;
     }
 
-    const tagE = tagInput.value;
-    if (!tagE) {
+    const Tag = tagInput.value;
+    if (!Tag) {
       if (buchungstagHinweisRef.current) {
         buchungstagHinweisRef.current.classList.add('d-none');
       }
@@ -54,10 +54,10 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     }
 
     let data: IDatenEWT = {
-      tagE,
-      buchungstagE: tagE,
-      eOrtE: EOrtRef.current.value,
-      schichtE: SchichtRef.current.value,
+      Tag,
+      Buchungstag: Tag,
+      Einsatzort: EOrtRef.current.value,
+      Schicht: SchichtRef.current.value,
       abWE: '',
       ab1E: '',
       anEE: '',
@@ -78,7 +78,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     }
 
     const buchungstag = calculateBuchungstagEwt(data);
-    const istAbweichend = !dayjs(buchungstag).isSame(dayjs(tagE), 'day');
+    const istAbweichend = !dayjs(buchungstag).isSame(dayjs(Tag), 'day');
 
     if (!buchungstagHinweisRef.current) return;
     if (istAbweichend) {
@@ -135,7 +135,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           divClass="form-floating col-12"
           required
           type="date"
-          id="tagE"
+          id="Tag"
           name="Tag"
           min={datum.format('YYYY-MM-DD')}
           max={maxDate}
@@ -146,7 +146,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           <MyInput
             type="date"
             myRef={buchungstagHinweisTextRef}
-            id="buchungstagE"
+            id="Buchungstag"
             name="Buchungstag"
             value={datum.format('YYYY-MM-DD')}
             disabled
@@ -199,7 +199,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const form = ref.current;
   const bueroCheckbox = bueroRef.current;
 
-  document.querySelector<HTMLInputElement>('#tagE')?.addEventListener('change', updateBuchungstagAnzeige);
+  document.querySelector<HTMLInputElement>('#Tag')?.addEventListener('change', updateBuchungstagAnzeige);
   EOrtRef.current?.addEventListener('change', updateBuchungstagAnzeige);
   SchichtRef.current?.addEventListener('change', updateBuchungstagAnzeige);
   berechnenRef.current?.addEventListener('change', updateBuchungstagAnzeige);

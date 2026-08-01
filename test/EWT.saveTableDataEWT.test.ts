@@ -20,12 +20,12 @@ vi.mock('@/core', () => ({
 
 import persistEwtTableData from '@/infrastructure/data/persistEwtTableData';
 
-function createData(tagE: string): IDatenEWT {
+function createData(Tag: string): IDatenEWT {
   return {
-    tagE,
-    buchungstagE: tagE,
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag,
+    Buchungstag: Tag,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',

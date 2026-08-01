@@ -20,12 +20,12 @@ vi.mock('@/core', () => ({
 
 import persistEwtTableData from '@/infrastructure/data/persistEwtTableData';
 
-function createData(tagE: string): IDatenEWT {
+function createData(Tag: string): IDatenEWT {
   return {
-    tagE,
-    buchungstagE: tagE,
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag,
+    Buchungstag: Tag,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -98,7 +98,7 @@ describe('persistEwtTableData', () => {
   it('synchronisiert einen neu berechneten Buchungstag zurück in die Tabellenzeile', () => {
     const row = {
       ...createData('2026-03-20'),
-      schichtE: 'N',
+      Schicht: 'N',
       abWE: '19:25',
       ab1E: '20:30',
       anEE: '20:50',
@@ -107,7 +107,7 @@ describe('persistEwtTableData', () => {
       abEE: '05:10',
       an1E: '05:30',
       anWE: '06:35',
-      buchungstagE: '2026-03-20',
+      Buchungstag: '2026-03-20',
     } satisfies IDatenEWT;
 
     const tableRow = { cells: row, _state: 'unchanged' as const };
@@ -127,8 +127,8 @@ describe('persistEwtTableData', () => {
 
     const result = persistEwtTableData(ftMock);
 
-    expect(result[0]?.buchungstagE).toBe('2026-03-21');
-    expect(tableRow.cells.buchungstagE).toBe('2026-03-21');
+    expect(result[0]?.Buchungstag).toBe('2026-03-21');
+    expect(tableRow.cells.Buchungstag).toBe('2026-03-21');
     expect(drawRowsMock).toHaveBeenCalledTimes(1);
   });
 

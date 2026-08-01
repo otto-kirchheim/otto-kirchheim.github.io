@@ -21,10 +21,10 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
 function createRow(day: number): IDatenEWT {
   const dayString = String(day).padStart(2, '0');
   return {
-    tagE: `2026-03-${dayString}`,
-    buchungstagE: `2026-03-${dayString}`,
-    eOrtE: 'Ort',
-    schichtE: 'T',
+    Tag: `2026-03-${dayString}`,
+    Buchungstag: `2026-03-${dayString}`,
+    Einsatzort: 'Ort',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -63,10 +63,10 @@ function createEditorTable(rows: IDatenEWT[]): CustomTable<IDatenEWT> {
 
   return new CustomTable<IDatenEWT>('tableE', {
     columns: [
-      { name: 'tagE', title: 'Tag' },
-      { name: 'buchungstagE', title: 'Buchungstag' },
-      { name: 'eOrtE', title: 'Einsatzort' },
-      { name: 'schichtE', title: 'Schicht' },
+      { name: 'Tag', title: 'Tag' },
+      { name: 'Buchungstag', title: 'Buchungstag' },
+      { name: 'Einsatzort', title: 'Einsatzort' },
+      { name: 'Schicht', title: 'Schicht' },
       { name: 'abWE', title: 'Ab Wohnung' },
       { name: 'ab1E', title: 'Ab 1.Tgk.-St.' },
       { name: 'anEE', title: 'An Einsatzort' },
@@ -125,44 +125,44 @@ describe('EWT utils extra', () => {
   });
 
   it('naechsterTag setzt den naechsten freien Tag', () => {
-    document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-01" />`;
+    document.body.innerHTML = `<input id="Tag" max="2026-03-31" value="2026-03-01" />`;
 
     setNaechsterEwtTag(1, [createRow(2), createRow(3)]);
 
-    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-04');
+    expect(document.querySelector<HTMLInputElement>('#Tag')?.value).toBe('2026-03-04');
   });
 
   it('naechsterTag ignoriert Eintraege aus anderen Monaten', () => {
-    document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-01" />`;
+    document.body.innerHTML = `<input id="Tag" max="2026-03-31" value="2026-03-01" />`;
 
-    setNaechsterEwtTag(1, [createRow(2), { ...createRow(3), tagE: '2026-04-03' }]);
+    setNaechsterEwtTag(1, [createRow(2), { ...createRow(3), Tag: '2026-04-03' }]);
 
-    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-03');
+    expect(document.querySelector<HTMLInputElement>('#Tag')?.value).toBe('2026-03-03');
   });
 
   it('naechsterTag nutzt bei leerem tag den maximal vorhandenen Tag', () => {
-    document.body.innerHTML = `<input id="tagE" max="2026-03-31" value="2026-03-21" />`;
+    document.body.innerHTML = `<input id="Tag" max="2026-03-31" value="2026-03-21" />`;
 
     setNaechsterEwtTag('', [createRow(20), createRow(21)]);
 
-    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-22');
+    expect(document.querySelector<HTMLInputElement>('#Tag')?.value).toBe('2026-03-22');
   });
 
   it('naechsterTag klemmt tag=0 auf 0 und setzt den ersten freien Tag', () => {
     // tag=0 → Number.isFinite(0)=true → currentTag=0 → 0<1 → currentTag=0 (line 31 coverage)
-    // Loop: currentTag becomes 1 (0+1), day 1 is free → tagE.value = 2026-03-01
-    document.body.innerHTML = `<input id="tagE" value="2026-03-01" />`;
+    // Loop: currentTag becomes 1 (0+1), day 1 is free → Tag.value = 2026-03-01
+    document.body.innerHTML = `<input id="Tag" value="2026-03-01" />`;
 
     setNaechsterEwtTag(0, []);
 
-    expect(document.querySelector<HTMLInputElement>('#tagE')?.value).toBe('2026-03-01');
+    expect(document.querySelector<HTMLInputElement>('#Tag')?.value).toBe('2026-03-01');
   });
 
   it('setzt bei N-Schichten den Buchungstag auf den Folgetag, wenn der laengere Anteil nach Mitternacht liegt', () => {
     const result = calculateBuchungstagEwt({
-      tagE: '2026-03-20',
-      eOrtE: 'Mühlbach',
-      schichtE: 'N',
+      Tag: '2026-03-20',
+      Einsatzort: 'Mühlbach',
+      Schicht: 'N',
       abWE: '19:25',
       ab1E: '20:30',
       anEE: '20:50',
@@ -177,8 +177,8 @@ describe('EWT utils extra', () => {
     expect(result).toBe('2026-03-21');
   });
 
-  it('nutzt beim Bearbeiten das echte tagE statt den aktiven Monatsfilter', () => {
-    const datum = getEwtEditorDate({ tagE: '2026-03-31' }, 2026, 3);
+  it('nutzt beim Bearbeiten das echte Tag statt den aktiven Monatsfilter', () => {
+    const datum = getEwtEditorDate({ Tag: '2026-03-31' }, 2026, 3);
 
     expect(datum.format('YYYY-MM-DD')).toBe('2026-03-31');
   });
@@ -190,9 +190,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(10),
-        tagE: '2026-03-10',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-10',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         berechnen: true,
       },
     ]);
@@ -208,15 +208,15 @@ describe('EWT utils extra', () => {
 
     expect(existingRow.cells.beginE).toBe('07:00');
     expect(existingRow.cells.endeE).toBe('15:00');
-    expect(existingRow.cells.buchungstagE).toBe('2026-03-10');
+    expect(existingRow.cells.Buchungstag).toBe('2026-03-10');
   });
 
   it('nutzt bei Nachtschichten den echten Starttag fuer das Ueberschneidungsfenster', () => {
     const window = getEwtWindow({
-      tagE: '2026-03-20',
-      buchungstagE: '2026-03-21',
-      eOrtE: 'Mühlbach',
-      schichtE: 'N',
+      Tag: '2026-03-20',
+      Buchungstag: '2026-03-21',
+      Einsatzort: 'Mühlbach',
+      Schicht: 'N',
       abWE: '19:25',
       ab1E: '20:30',
       anEE: '20:50',
@@ -234,7 +234,7 @@ describe('EWT utils extra', () => {
 
   it('naechsterTag wirft Fehler und sperrt Speichern wenn kein freier Tag vorhanden ist', () => {
     document.body.innerHTML = `
-      <input id="tagE" max="2026-03-03" value="2026-03-01" />
+      <input id="Tag" max="2026-03-03" value="2026-03-01" />
       <div id="modal">
         <div>
           <form>
@@ -268,9 +268,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(10),
-        tagE: '2026-03-10',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-10',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         berechnen: true,
       },
     ]);
@@ -281,8 +281,8 @@ describe('EWT utils extra', () => {
 
     const form = document.querySelector<HTMLFormElement>('#modal form');
     if (!form) throw new Error('form not found');
-    const tagInput = form.querySelector<HTMLInputElement>('#tagE');
-    if (!tagInput) throw new Error('tagE nicht gefunden');
+    const tagInput = form.querySelector<HTMLInputElement>('#Tag');
+    if (!tagInput) throw new Error('Tag nicht gefunden');
 
     tagInput.value = '';
     tagInput.dispatchEvent(new Event('change', { bubbles: true }));
@@ -298,9 +298,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(20),
-        tagE: '2026-03-20',
-        eOrtE: 'Mühlbach',
-        schichtE: 'N',
+        Tag: '2026-03-20',
+        Einsatzort: 'Mühlbach',
+        Schicht: 'N',
         abWE: '19:25',
         ab1E: '20:30',
         anEE: '20:50',
@@ -318,7 +318,7 @@ describe('EWT utils extra', () => {
     EditorModalEWT(existingRow, 'EWT bearbeiten');
 
     const hinweis = document.querySelector<HTMLDivElement>('#buchungstagHinweisEdit');
-    const hinweisInput = document.querySelector<HTMLInputElement>('#buchungstagE');
+    const hinweisInput = document.querySelector<HTMLInputElement>('#Buchungstag');
 
     expect(hinweis?.classList.contains('d-none')).toBe(false);
     expect(hinweisInput?.value).toBe('2026-03-21');
@@ -331,9 +331,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(10),
-        tagE: '2026-03-10',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-10',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         berechnen: true,
       },
     ]);
@@ -369,9 +369,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(15),
-        tagE: '2026-03-15',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-15',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         beginE: '10:00',
         endeE: '09:00',
         berechnen: false,
@@ -395,7 +395,7 @@ describe('EWT utils extra', () => {
     expect(endeEInput?.classList.contains('is-invalid')).toBe(true);
     expect(endeEFeedback?.textContent).toContain('Muss nach "Arbeitszeit Von" liegen.');
     // Speichern wurde verhindert: der ursprüngliche Tag im Datensatz ist unverändert.
-    expect(existingRow.cells.tagE).toBe('2026-03-15');
+    expect(existingRow.cells.Tag).toBe('2026-03-15');
   });
 
   it('zeigt eine Warnung bei Zeitüberschneidung mit einem anderen EWT-Eintrag und bricht den Submit ab', () => {
@@ -405,10 +405,10 @@ describe('EWT utils extra', () => {
     Storage.set('dataE', [
       {
         _id: 'other-entry',
-        tagE: '2026-03-12',
-        buchungstagE: '2026-03-12',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-12',
+        Buchungstag: '2026-03-12',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         abWE: '06:30',
         ab1E: '07:10',
         anEE: '07:20',
@@ -424,9 +424,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(12),
-        tagE: '2026-03-12',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-12',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         abWE: '06:30',
         ab1E: '07:10',
         anEE: '07:20',
@@ -455,7 +455,7 @@ describe('EWT utils extra', () => {
         status: 'warning',
       }),
     );
-    expect(existingRow.cells.tagE).toBe('2026-03-12');
+    expect(existingRow.cells.Tag).toBe('2026-03-12');
   });
 
   it('erkennt einen identischen Eintrag beim Speichern und verhindert das Duplizieren', () => {
@@ -463,10 +463,10 @@ describe('EWT utils extra', () => {
     Storage.set('VorgabenGeld', { 1: {}, 3: {} } as never);
 
     const sharedValues = {
-      tagE: '2026-03-12',
-      buchungstagE: '2026-03-12',
-      eOrtE: 'Fulda',
-      schichtE: 'T',
+      Tag: '2026-03-12',
+      Buchungstag: '2026-03-12',
+      Einsatzort: 'Fulda',
+      Schicht: 'T',
       abWE: '06:30',
       ab1E: '07:10',
       anEE: '07:20',
@@ -498,7 +498,7 @@ describe('EWT utils extra', () => {
         status: 'warning',
       }),
     );
-    expect(existingRow.cells.tagE).toBe('2026-03-12');
+    expect(existingRow.cells.Tag).toBe('2026-03-12');
   });
 
   it('reaktiviert beim Neuanlegen eine zum Löschen vorgemerkte, zeitlich überschneidende Zeile statt eine zweite anzulegen', () => {
@@ -510,9 +510,9 @@ describe('EWT utils extra', () => {
     const table = createEditorTable([
       {
         ...createRow(12),
-        tagE: '2026-03-12',
-        eOrtE: 'Fulda',
-        schichtE: 'T',
+        Tag: '2026-03-12',
+        Einsatzort: 'Fulda',
+        Schicht: 'T',
         beginE: '08:00',
         endeE: '16:00',
         berechnen: false,
@@ -530,8 +530,8 @@ describe('EWT utils extra', () => {
     const form = document.querySelector<HTMLFormElement>('#modal form');
     if (!form) throw new Error('form not found');
 
-    const tagInput = form.querySelector<HTMLInputElement>('#tagE');
-    const eOrtSelect = form.querySelector<HTMLSelectElement>('#eOrtE');
+    const tagInput = form.querySelector<HTMLInputElement>('#Tag');
+    const eOrtSelect = form.querySelector<HTMLSelectElement>('#Einsatzort');
     const berechnenInput = form.querySelector<HTMLInputElement>('#berechnen');
     const beginEInput = form.querySelector<HTMLInputElement>('#beginE');
     const endeEInput = form.querySelector<HTMLInputElement>('#endeE');

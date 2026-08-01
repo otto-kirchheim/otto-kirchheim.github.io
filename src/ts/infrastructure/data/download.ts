@@ -100,9 +100,9 @@ export default async function download(button: HTMLButtonElement | null, modus: 
         // als `number` -- vorbestehende Diskrepanz, unveraendert uebernommen (kein Funktions-/
         // Logik-Fix im Rahmen dieser Typen-Migration).
         EWT: ewtRaw.map(e => ({
-          Buchungstag: dayjs(e.buchungstagE || calculateBuchungstagEwt(e)).format('DD'),
-          Einsatzort: e.eOrtE,
-          Schicht: normalizeEwtSchichtForDownload(e.schichtE),
+          Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
+          Einsatzort: e.Einsatzort,
+          Schicht: normalizeEwtSchichtForDownload(e.Schicht),
           abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
           ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
           anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,

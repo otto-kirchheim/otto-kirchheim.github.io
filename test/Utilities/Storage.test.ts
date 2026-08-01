@@ -50,7 +50,7 @@ describe('Storage', () => {
 
   describe('set / get (Ressourcen-Keys)', () => {
     it('wrappt Ressourcen-Keys automatisch in { data, timestamp }', () => {
-      const data = [{ tagE: '01.01.2026' }];
+      const data = [{ Tag: '01.01.2026' }];
       Storage.set('dataE', data);
 
       const raw = JSON.parse(localStorage.getItem('dataE')!);
@@ -100,7 +100,7 @@ describe('Storage', () => {
 
   describe('setWithTimestamp', () => {
     it('speichert Wert mit explizitem Timestamp', () => {
-      const data = [{ tagE: '01.01.2026' }];
+      const data = [{ Tag: '01.01.2026' }];
       Storage.setWithTimestamp('dataE', data, 1700000000000);
 
       const raw = JSON.parse(localStorage.getItem('dataE')!);

@@ -16,9 +16,9 @@ function makeEwt(overrides: Partial<IDatenEWT> & { _id: string }): IDatenEWT {
   const { _id, ...rest } = overrides;
   return {
     _id,
-    tagE: '2026-03-01',
-    eOrtE: '',
-    schichtE: 'T',
+    Tag: '2026-03-01',
+    Einsatzort: '',
+    Schicht: 'T',
     abWE: '06:00',
     ab1E: '06:00',
     anEE: '14:00',

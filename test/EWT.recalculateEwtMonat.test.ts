@@ -32,12 +32,12 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
 
 import recalculateEwtMonat from '@/features/EWT/utils/recalculateEwtMonat';
 
-function createData(tagE: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT {
+function createData(Tag: string, overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
-    tagE,
-    buchungstagE: tagE,
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag,
+    Buchungstag: Tag,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -64,7 +64,7 @@ describe('recalculateEwtMonat', () => {
     getEwtDatenMock.mockImplementation((data?: IDatenEWT[], monat?: number, options?: { scope?: string }) => {
       if (options?.scope === 'all') return [marchEntry, aprilEntry];
       return Array.isArray(data)
-        ? data.filter(item => item.tagE.startsWith(`2026-${String(monat).padStart(2, '0')}`))
+        ? data.filter(item => item.Tag.startsWith(`2026-${String(monat).padStart(2, '0')}`))
         : [];
     });
     calculateEwtEintraegeMock.mockReturnValue([recalculatedAprilEntry]);

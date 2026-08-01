@@ -70,8 +70,8 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
   describe('EWT', () => {
     it('blockiert eine neue Zeile, deren Schichtfenster eine ungesyncte Löschung überschneidet', () => {
       const table = mockTable([
-        { _state: 'deleted', cells: { _id: 'old', tagE: '2026-07-01', beginE: '08:00', endeE: '16:00' } },
-        { _state: 'new', cells: { tagE: '2026-07-01', beginE: '15:00', endeE: '23:00' } },
+        { _state: 'deleted', cells: { _id: 'old', Tag: '2026-07-01', beginE: '08:00', endeE: '16:00' } },
+        { _state: 'new', cells: { Tag: '2026-07-01', beginE: '15:00', endeE: '23:00' } },
       ]);
 
       expect(findOverlapBlockedRows('EWT', table)).toHaveLength(1);
@@ -79,8 +79,8 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
 
     it('berücksichtigt den Tagesübertrag bei Nachtschichten wie das Backend', () => {
       const table = mockTable([
-        { _state: 'deleted', cells: { _id: 'old', tagE: '2026-07-02', beginE: '00:00', endeE: '06:00' } },
-        { _state: 'new', cells: { tagE: '2026-07-01', beginE: '22:00', endeE: '06:15' } },
+        { _state: 'deleted', cells: { _id: 'old', Tag: '2026-07-02', beginE: '00:00', endeE: '06:00' } },
+        { _state: 'new', cells: { Tag: '2026-07-01', beginE: '22:00', endeE: '06:15' } },
       ]);
 
       expect(findOverlapBlockedRows('EWT', table)).toHaveLength(1);
@@ -88,8 +88,8 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
 
     it('blockiert nicht bei unterschiedlichen Tagen ohne Überschneidung', () => {
       const table = mockTable([
-        { _state: 'deleted', cells: { _id: 'old', tagE: '2026-07-01', beginE: '08:00', endeE: '16:00' } },
-        { _state: 'new', cells: { tagE: '2026-07-05', beginE: '08:00', endeE: '16:00' } },
+        { _state: 'deleted', cells: { _id: 'old', Tag: '2026-07-01', beginE: '08:00', endeE: '16:00' } },
+        { _state: 'new', cells: { Tag: '2026-07-05', beginE: '08:00', endeE: '16:00' } },
       ]);
 
       expect(findOverlapBlockedRows('EWT', table)).toHaveLength(0);

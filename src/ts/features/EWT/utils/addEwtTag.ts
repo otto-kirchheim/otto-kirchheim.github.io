@@ -11,7 +11,7 @@ export default function addEwtTag(
   tableE: CustomTable<IDatenEWT>,
 ): void {
   // Get the input and select elements
-  const tagEInput = modal.querySelector<HTMLInputElement>('#tagE');
+  const tagEInput = modal.querySelector<HTMLInputElement>('#Tag');
   const eOrtESelect = modal.querySelector<HTMLSelectElement>('#EOrt');
   const schichtESelect = modal.querySelector<HTMLSelectElement>('#Schicht');
   const berechnenInput = modal.querySelector<HTMLInputElement>('#berechnen1');
@@ -23,17 +23,17 @@ export default function addEwtTag(
   if (!berechnenInput) throw new Error('Berechnen input not found');
 
   // Get the values of the input and select elements
-  const tagE = tagEInput.value;
-  const eOrtE = eOrtESelect.value;
-  const schichtE = schichtESelect.value;
+  const Tag = tagEInput.value;
+  const Einsatzort = eOrtESelect.value;
+  const Schicht = schichtESelect.value;
   const berechnen = berechnenInput.checked;
 
   // Create a new data object with the values
   let data: IDatenEWT = {
-    tagE,
-    buchungstagE: tagE,
-    eOrtE,
-    schichtE,
+    Tag,
+    Buchungstag: Tag,
+    Einsatzort,
+    Schicht,
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -52,7 +52,7 @@ export default function addEwtTag(
   } else {
     data = calculateEwtEintraege(vorgabenU, [data])[0];
   }
-  data.buchungstagE = calculateBuchungstagEwt(data);
+  data.Buchungstag = calculateBuchungstagEwt(data);
 
   const ftE = tableE;
 
@@ -60,9 +60,9 @@ export default function addEwtTag(
     if (existingRow._state === 'deleted') return false;
     const existing = existingRow.cells;
     return (
-      existing.tagE === data.tagE &&
-      existing.eOrtE === data.eOrtE &&
-      existing.schichtE === data.schichtE &&
+      existing.Tag === data.Tag &&
+      existing.Einsatzort === data.Einsatzort &&
+      existing.Schicht === data.Schicht &&
       existing.abWE === data.abWE &&
       existing.ab1E === data.ab1E &&
       existing.anEE === data.anEE &&
@@ -88,7 +88,7 @@ export default function addEwtTag(
   // Statt eines neuen Datensatzes einen bereits zum Löschen vorgemerkten Eintrag
   // für denselben Tag reaktivieren (bleibt als Update statt Delete+Create erhalten).
   const deletedRowSameTag = ftE.rows.array.find(
-    existingRow => existingRow._state === 'deleted' && existingRow.cells.tagE === data.tagE,
+    existingRow => existingRow._state === 'deleted' && existingRow.cells.Tag === data.Tag,
   );
 
   if (deletedRowSameTag) {
@@ -101,7 +101,7 @@ export default function addEwtTag(
 
   // Calculate and set the next tag value
   const existingRows: IDatenEWT[] = ftE.getRows().map(row => row.cells);
-  setNaechsterEwtTag(dayjs(tagE).date(), existingRows);
+  setNaechsterEwtTag(dayjs(Tag).date(), existingRows);
 
   // Trigger re-calculation in the add modal (e.g. buchungstag hint) after tag changes.
   tagEInput.dispatchEvent(new Event('change', { bubbles: true }));

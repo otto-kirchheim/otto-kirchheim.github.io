@@ -411,8 +411,8 @@ describe('loadUserDaten', () => {
       BZ: [{ Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: [{ Tag: '01.03.2026', be: 'server' }],
       EWT: [
-        { _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
-        { _id: 'e-2', tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
+        { _id: 'e-1', Tag: '2026-03-31', Buchungstag: '2026-04-01', ewt: 'server-1' },
+        { _id: 'e-2', Tag: '2026-05-02', Buchungstag: '2026-05-02', ewt: 'server-2' },
       ],
       N: [{ tagN: '01.03.2026', n: 'server' }],
       timestamps: {
@@ -432,7 +432,7 @@ describe('loadUserDaten', () => {
       if (key === 'VorgabenU') return loaded.vorgabenU;
       if (key === 'dataBZ') return loaded.BZ;
       if (key === 'dataBE') return loaded.BE;
-      if (key === 'dataE') return [{ _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'local-1' }];
+      if (key === 'dataE') return [{ _id: 'e-1', Tag: '2026-03-31', Buchungstag: '2026-04-01', ewt: 'local-1' }];
       if (key === 'dataN') return loaded.N;
       return undefined;
     });
@@ -789,10 +789,10 @@ describe('loadUserDaten', () => {
       { _id: 'be-server-extra', Tag: '20.03.2026', be: 'server-extra' },
     ];
 
-    const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];
+    const localEWT = [{ _id: 'e-local-1', Tag: '2026-03-10', ewt: 'local-1' }];
     const serverEWT = [
-      { _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' },
-      { _id: 'e-server-extra', tagE: '2026-03-20', ewt: 'server-extra' },
+      { _id: 'e-local-1', Tag: '2026-03-10', ewt: 'local-1' },
+      { _id: 'e-server-extra', Tag: '2026-03-20', ewt: 'server-extra' },
     ];
 
     const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];
@@ -897,10 +897,10 @@ describe('loadUserDaten', () => {
       { _id: 'be-server-extra', Tag: '20.03.2026', be: 'server-extra' },
     ];
 
-    const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];
+    const localEWT = [{ _id: 'e-local-1', Tag: '2026-03-10', ewt: 'local-1' }];
     const serverEWT = [
-      { _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' },
-      { _id: 'e-server-extra', tagE: '2026-03-20', ewt: 'server-extra' },
+      { _id: 'e-local-1', Tag: '2026-03-10', ewt: 'local-1' },
+      { _id: 'e-server-extra', Tag: '2026-03-20', ewt: 'server-extra' },
     ];
 
     const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];

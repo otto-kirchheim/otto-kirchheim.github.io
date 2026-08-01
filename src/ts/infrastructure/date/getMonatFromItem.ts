@@ -16,11 +16,11 @@ export function getMonatFromBE(item: IDatenBE): number {
 }
 
 export function getMonatFromEWT(item: IDatenEWT): number {
-  return dayjs(item.tagE).month() + 1;
+  return dayjs(item.Tag).month() + 1;
 }
 
 export function getMonatFromEWTBuchungstag(item: IDatenEWT): number {
-  const basis = item.buchungstagE || item.tagE;
+  const basis = item.Buchungstag || item.Tag;
   return dayjs(basis).month() + 1;
 }
 

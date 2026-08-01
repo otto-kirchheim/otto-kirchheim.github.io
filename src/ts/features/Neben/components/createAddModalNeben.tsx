@@ -19,8 +19,8 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 
   const options = dataE
     .map(day => {
-      const schicht = day.schichtE;
-      const tagEDate = dayjs(day.tagE);
+      const schicht = day.Schicht;
+      const tagEDate = dayjs(day.Tag);
       const tag = tagEDate.format('DD | dd');
 
       const option: ReturnTypeTagOptions = {

@@ -49,10 +49,10 @@ type IDatenEWTValues<EWTType = string> = string | EWTType | boolean | undefined;
 export interface IDatenEWT<EWTType = string> {
   [key: string]: IDatenEWTValues<EWTType>;
   _id?: string;
-  tagE: string;
-  buchungstagE?: string;
-  eOrtE: string;
-  schichtE: string;
+  Tag: string;
+  Buchungstag?: string;
+  Einsatzort: string;
+  Schicht: string;
   abWE: EWTType;
   ab1E: EWTType;
   anEE: EWTType;

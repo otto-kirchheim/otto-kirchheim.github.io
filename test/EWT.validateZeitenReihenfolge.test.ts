@@ -5,9 +5,9 @@ import validateEwtZeitenReihenfolge from '@/features/EWT/utils/validateEwtZeiten
 
 function createEWT(overrides: Partial<IDatenEWT> = {}): IDatenEWT {
   return {
-    tagE: '2026-03-26',
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag: '2026-03-26',
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     beginE: '',
     ab1E: '',
@@ -76,7 +76,7 @@ describe('validateZeitenReihenfolge', () => {
       expect(
         validateEwtZeitenReihenfolge(
           createEWT({
-            schichtE: 'N',
+            Schicht: 'N',
             abWE: '19:25',
             beginE: '19:45',
             ab1E: '20:15',
@@ -93,7 +93,7 @@ describe('validateZeitenReihenfolge', () => {
     it('gibt null zurück wenn N-Schicht nur Abendfelder befüllt hat (kein Tageswechsel nötig)', () => {
       expect(
         validateEwtZeitenReihenfolge(
-          createEWT({ schichtE: 'N', abWE: '19:00', beginE: '19:30', endeE: '20:00', anWE: '20:30' }),
+          createEWT({ Schicht: 'N', abWE: '19:00', beginE: '19:30', endeE: '20:00', anWE: '20:30' }),
         ),
       ).toBeNull();
     });
@@ -101,7 +101,7 @@ describe('validateZeitenReihenfolge', () => {
     it('gibt Fehlermeldung zurück wenn an1E falsch (19:40 statt ~05:40)', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          schichtE: 'N',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '19:45',
           ab1E: '20:15',
@@ -121,9 +121,9 @@ describe('validateZeitenReihenfolge', () => {
     it('erkennt an1E als zu früh wenn es vor abEE liegt', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '19:45',
           ab1E: '20:30',
@@ -143,9 +143,9 @@ describe('validateZeitenReihenfolge', () => {
     it('markiert beginE bei beginE vor abWE', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '18:45',
           ab1E: '20:30',
@@ -165,9 +165,9 @@ describe('validateZeitenReihenfolge', () => {
     it('markiert beginE bei beginE vor abWE (zweiter Repro-Fall)', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '20:25',
           beginE: '19:45',
           ab1E: '20:30',
@@ -186,9 +186,9 @@ describe('validateZeitenReihenfolge', () => {
     it('markiert beginE und ab1E wenn anEE formal zu frueh ist (ab1E vor beginE)', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '19:45',
           ab1E: '19:30',
@@ -208,9 +208,9 @@ describe('validateZeitenReihenfolge', () => {
     it('zeigt bei beginE=20:45 und ab1E=20:30 den beginE-Hinweis zwischen Ab Wohnung und An Einsatzort', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '20:45',
           ab1E: '20:30',
@@ -230,9 +230,9 @@ describe('validateZeitenReihenfolge', () => {
     it('zeigt bei anWE vor endeE den endeE-Hinweis mit zwischen-Text', () => {
       const result = validateEwtZeitenReihenfolge(
         createEWT({
-          tagE: '2026-03-20',
-          eOrtE: 'Mühlbach',
-          schichtE: 'N',
+          Tag: '2026-03-20',
+          Einsatzort: 'Mühlbach',
+          Schicht: 'N',
           abWE: '19:25',
           beginE: '19:45',
           ab1E: '20:30',
@@ -278,7 +278,7 @@ describe('validateZeitenReihenfolge', () => {
       expect(
         validateEwtZeitenReihenfolge(
           createEWT({
-            schichtE: 'BN',
+            Schicht: 'BN',
             abWE: '17:00',
             beginE: '19:00',
             endeE: '06:00',

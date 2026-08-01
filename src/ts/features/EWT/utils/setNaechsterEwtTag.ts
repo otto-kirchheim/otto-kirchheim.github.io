@@ -8,15 +8,15 @@ export default function setNaechsterEwtTag(
   tag?: string | number | null,
   dataE: IMonatsDaten['EWT'] = getEwtDaten(undefined, undefined, { scope: 'monat', excludeDeleted: true }),
 ): void {
-  const eingabefeldTagE = document.querySelector<HTMLInputElement>('#tagE');
+  const eingabefeldTagE = document.querySelector<HTMLInputElement>('#Tag');
   if (!eingabefeldTagE) throw new Error('Eingabefeld für Tag nicht gefunden');
 
   const jahr = Storage.get<number>('Jahr', { check: true });
   const monat = Storage.get<number>('Monat', { check: true });
   const letzterTag = dayjs([jahr, monat - 1]).daysInMonth();
 
-  const datenImAktivenMonat = dataE.filter(item => dayjs(item.tagE).isSame(dayjs([jahr, monat - 1]), 'month'));
-  const vorhandeneTage = new Set(datenImAktivenMonat.map(item => dayjs(item.tagE).date()).filter(day => day > 0));
+  const datenImAktivenMonat = dataE.filter(item => dayjs(item.Tag).isSame(dayjs([jahr, monat - 1]), 'month'));
+  const vorhandeneTage = new Set(datenImAktivenMonat.map(item => dayjs(item.Tag).date()).filter(day => day > 0));
 
   const parsedTag =
     typeof tag === 'number'

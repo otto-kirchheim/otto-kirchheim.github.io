@@ -201,10 +201,10 @@ describe('download utility', () => {
   it("should perform download for mode 'E' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
-        tagE: '2026-04-19',
-        buchungstagE: '2026-04-20',
-        eOrtE: 'Fulda',
-        schichtE: 'Nacht',
+        Tag: '2026-04-19',
+        Buchungstag: '2026-04-20',
+        Einsatzort: 'Fulda',
+        Schicht: 'Nacht',
         abWE: '07:00',
         ab1E: '08:00',
         anEE: '09:00',

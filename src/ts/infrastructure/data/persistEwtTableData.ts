@@ -15,11 +15,11 @@ export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenE
   normalizeResourceRows<IDatenEWT>(tableToArray<IDatenEWT>(ft)).forEach((row, index) => {
     const normalizedRow = {
       ...row,
-      buchungstagE: calculateBuchungstagEwt(row),
+      Buchungstag: calculateBuchungstagEwt(row),
     };
 
     const liveRow = liveRows[index];
-    if (liveRow && liveRow.cells.buchungstagE !== normalizedRow.buchungstagE) {
+    if (liveRow && liveRow.cells.Buchungstag !== normalizedRow.Buchungstag) {
       liveRow.cells = normalizedRow;
       hasLiveSyncChanges = true;
     }

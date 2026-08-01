@@ -356,7 +356,7 @@ describe('apiService', () => {
       ]);
       const result = await ewtApi.loadYear(2024);
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].schichtE).toBe('Tag');
+      expect(result.data[0].Schicht).toBe('Tag');
       expect(result.updatedAt).toBe('2024-06-15T12:00:00.000Z');
     });
 
@@ -438,9 +438,9 @@ describe('apiService', () => {
 
     it('ewtApi.bulk mit einzelnem Create', async () => {
       const newEwt: IDatenEWT & { clientRequestId: string } = {
-        tagE: '2024-04-10',
-        eOrtE: 'Frankfurt',
-        schichtE: 'Tag',
+        Tag: '2024-04-10',
+        Einsatzort: 'Frankfurt',
+        Schicht: 'Tag',
         abWE: '',
         ab1E: '',
         anEE: '',

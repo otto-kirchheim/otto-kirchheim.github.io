@@ -170,10 +170,10 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
   it('ewtFromBackend konvertiert korrekt', () => {
     const result = ewtFromBackend(backendEWT);
     expect(result._id).toBe('ewt1');
-    expect(result.tagE).toBe(dayjs('2024-04-10T00:00:00.000Z').format('YYYY-MM-DD'));
-    expect(result.buchungstagE).toBe(dayjs('2024-04-11T00:00:00.000Z').format('YYYY-MM-DD'));
-    expect(result.eOrtE).toBe('Frankfurt');
-    expect(result.schichtE).toBe('Tag');
+    expect(result.Tag).toBe(dayjs('2024-04-10T00:00:00.000Z').format('YYYY-MM-DD'));
+    expect(result.Buchungstag).toBe(dayjs('2024-04-11T00:00:00.000Z').format('YYYY-MM-DD'));
+    expect(result.Einsatzort).toBe('Frankfurt');
+    expect(result.Schicht).toBe('Tag');
     expect(result.abWE).toBe('06:00');
     expect(result.berechnen).toBe(true);
   });
@@ -188,7 +188,7 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
       Schicht: 'Spät',
     };
     const result = ewtFromBackend(minimal);
-    expect(result.eOrtE).toBe('');
+    expect(result.Einsatzort).toBe('');
     expect(result.abWE).toBe('');
     expect(result.ab1E).toBe('');
     expect(result.anEE).toBe('');
@@ -208,10 +208,10 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
   it('ewtToBackend konvertiert korrekt', () => {
     const frontendEWT: IDatenEWT = {
       _id: 'ewt1',
-      tagE: '2024-04-10',
-      buchungstagE: '2024-04-11',
-      eOrtE: 'Frankfurt',
-      schichtE: 'Tag',
+      Tag: '2024-04-10',
+      Buchungstag: '2024-04-11',
+      Einsatzort: 'Frankfurt',
+      Schicht: 'Tag',
       abWE: '06:00',
       ab1E: '06:30',
       anEE: '07:15',
@@ -236,10 +236,10 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
 
   it('ewtToBackend leitet Monat beim Monatswechsel aus dem Starttag statt aus Buchungstag/UI-Filter ab', () => {
     const frontendEWT: IDatenEWT = {
-      tagE: '2026-03-31',
-      buchungstagE: '2026-04-01',
-      eOrtE: 'Fulda',
-      schichtE: 'N',
+      Tag: '2026-03-31',
+      Buchungstag: '2026-04-01',
+      Einsatzort: 'Fulda',
+      Schicht: 'N',
       abWE: '21:30',
       ab1E: '',
       anEE: '',
@@ -261,10 +261,10 @@ describe('fieldMapper – EWT (Einsatzwechseltätigkeit)', () => {
 
   it('ewtToBackend sendet leere Strings explizit mit (damit Updates gelöschte Zeiten überschreiben)', () => {
     const frontendEWT: IDatenEWT = {
-      tagE: '2024-04-10',
-      buchungstagE: '2024-04-10',
-      eOrtE: '',
-      schichtE: 'Nacht',
+      Tag: '2024-04-10',
+      Buchungstag: '2024-04-10',
+      Einsatzort: '',
+      Schicht: 'Nacht',
       abWE: '',
       ab1E: '',
       anEE: '',

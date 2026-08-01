@@ -6,9 +6,9 @@ import calculateEwtEintraege from '@/features/EWT/utils/calculateEwtEintraege';
 
 function createData(day = '2026-03-10'): IDatenEWT {
   return {
-    tagE: day,
-    eOrtE: 'Fulda',
-    schichtE: 'T',
+    Tag: day,
+    Einsatzort: 'Fulda',
+    Schicht: 'T',
     abWE: '',
     ab1E: '',
     anEE: '',
@@ -64,7 +64,7 @@ describe('calculateEwtEintraege', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
       expect.objectContaining({
-        tagE: '2026-03-10',
+        Tag: '2026-03-10',
         beginE: '07:00',
         endeE: '15:00',
         abWE: '06:30',
@@ -121,7 +121,7 @@ describe('calculateEwtEintraege', () => {
       pers: {},
     } as unknown as IVorgabenU;
 
-    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'SP' }]);
+    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'SP' }]);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
@@ -148,7 +148,7 @@ describe('calculateEwtEintraege', () => {
       pers: {},
     } as unknown as IVorgabenU;
 
-    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'S' }]);
+    const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'S' }]);
 
     expect(result).toHaveLength(1);
     expect(result[0]).toEqual(
@@ -175,7 +175,7 @@ describe('calculateEwtEintraege', () => {
       pers: {},
     } as unknown as IVorgabenU;
 
-    expect(() => calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), schichtE: 'S' }])).toThrow(
+    expect(() => calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'S' }])).toThrow(
       'Sonderschicht nicht konfiguriert',
     );
   });
