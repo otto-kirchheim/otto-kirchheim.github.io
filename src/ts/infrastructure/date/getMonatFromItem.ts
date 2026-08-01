@@ -31,14 +31,14 @@ export function isEwtInMonat(item: IDatenEWT, monat: number, mode: TEwtFilter = 
 }
 
 export function getMonatFromN(item: IDatenN): number {
-  const parsedDate = dayjs(item.tagN, 'DD.MM.YYYY', true);
+  const parsedDate = dayjs(item.Tag, 'DD.MM.YYYY', true);
   if (parsedDate.isValid()) return parsedDate.month() + 1;
 
-  if (/^\d{1,2}$/.test(item.tagN)) {
+  if (/^\d{1,2}$/.test(item.Tag)) {
     return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
   }
 
-  return dayjs(item.tagN).month() + 1;
+  return dayjs(item.Tag).month() + 1;
 }
 
 export function filterByMonat<T>(items: T[], monat: number, getMonat: (item: T) => number): T[] {

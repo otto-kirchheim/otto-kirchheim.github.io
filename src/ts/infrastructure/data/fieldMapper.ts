@@ -10,6 +10,7 @@ import type {
   IBereitschaftseinsatz,
   IBereitschaftszeitraum,
   IEinsatzwechseltaetigkeit,
+  INebengeld,
 } from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
@@ -46,18 +47,10 @@ export interface BackendEWT extends IEinsatzwechseltaetigkeit {
   updatedAt?: string;
 }
 
-export interface BackendNebengeld {
-  _id?: string;
+export interface BackendNebengeld extends INebengeld {
   User?: string;
-  /** null = EWT-Verknüpfung explizit entfernen (Backend übersetzt zu $unset) */
-  EWT?: string | null;
   Monat: number;
   Jahr: number;
-  Tag: string; // ISO-Date
-  Beginn: string;
-  Ende: string;
-  Auftragsnummer?: string;
-  Zulagen: { Typ: string; Wert: number }[];
   updatedAt?: string;
 }
 
@@ -273,16 +266,16 @@ export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
  * Die Zulagen-Array-Struktur wird auf das flache Frontend-Format gemappt.
  */
 export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
-  const zulagenN = doc.Zulagen.map(zulage => ({ code: zulage.Typ, value: zulage.Wert })).filter(z => z.value > 0);
+  const Zulagen = doc.Zulagen.map(zulage => ({ Typ: zulage.Typ, Wert: zulage.Wert })).filter(z => z.Wert > 0);
   return {
     _id: doc._id,
-    ewtRef: doc.EWT ?? undefined,
-    tagN: dayjs(doc.Tag).format('DD.MM.YYYY'),
-    beginN: doc.Beginn,
-    endeN: doc.Ende,
-    zulagenN,
-    zulagenAnzeigeN: formatNebengeldZulagen(zulagenN),
-    auftragN: doc.Auftragsnummer ?? '',
+    EWT: doc.EWT ?? undefined,
+    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
+    Beginn: doc.Beginn,
+    Ende: doc.Ende,
+    Zulagen,
+    zulagenAnzeigeN: formatNebengeldZulagen(Zulagen),
+    Auftragsnummer: doc.Auftragsnummer ?? '',
   };
 }
 
@@ -438,24 +431,24 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
  * Konvertiert einen Frontend-Nebengeld-Eintrag in das Backend-Format.
  */
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
-  const period = resolveYearMonth(item.tagN, monat, jahr, 'DD.MM.YYYY');
+  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
   const normalizedZulagen = normalizeNebengeldZulagen(item);
   const zulagen: BackendNebengeld['Zulagen'] = normalizedZulagen.map(zulage => ({
-    Typ: zulage.code,
-    Wert: zulage.value,
+    Typ: zulage.Typ,
+    Wert: zulage.Wert,
   }));
   return {
     _id: item._id,
     // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
     // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
-    EWT: item.ewtRef || null,
+    EWT: item.EWT || null,
     Monat: period.Monat,
     Jahr: period.Jahr,
-    Tag: dayjs(item.tagN, 'DD.MM.YYYY').toISOString(),
-    Beginn: item.beginN,
-    Ende: item.endeN,
+    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
+    Beginn: item.Beginn,
+    Ende: item.Ende,
     // Leerstring explizit mitsenden, damit eine gelöschte Auftragsnummer beim Update auch serverseitig geleert wird.
-    Auftragsnummer: item.auftragN,
+    Auftragsnummer: item.Auftragsnummer,
     Zulagen: zulagen,
   };
 }

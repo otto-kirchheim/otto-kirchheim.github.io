@@ -10,7 +10,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import type { IDatenN } from '@/core/types';
 
 function makeNRow(
-  overrides: Partial<{ _state: string; _id: string; ewtRef: string }> = {},
+  overrides: Partial<{ _state: string; _id: string; EWT: string }> = {},
 ): Row<CustomTableTypes> & { cells: IDatenN } {
   return {
     _state: overrides._state ?? 'unchanged',
@@ -18,11 +18,11 @@ function makeNRow(
     _clientRequestId: undefined,
     _originalCells: {} as IDatenN,
     cells: {
-      tagN: '2026-03-01',
-      beginN: '06:00',
-      endeN: '14:00',
-      auftragN: '',
-      ...(overrides.ewtRef ? { ewtRef: overrides.ewtRef } : {}),
+      Tag: '2026-03-01',
+      Beginn: '06:00',
+      Ende: '14:00',
+      Auftragsnummer: '',
+      ...(overrides.EWT ? { EWT: overrides.EWT } : {}),
     } as IDatenN,
   } as unknown as Row<CustomTableTypes> & { cells: IDatenN };
 }
@@ -60,7 +60,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 
   it('returns immediately when deletedIds is empty', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     unlinkNebengeldRefsForDeletedEwtIds([]);
@@ -68,21 +68,21 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
     expect(setSpied).not.toHaveBeenCalled();
   });
 
-  it('removes ewtRef from matching Storage items', () => {
+  it('removes EWT from matching Storage items', () => {
     Storage.set('dataN', [
-      { tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' },
-      { tagN: '02', beginN: '09:00', endeN: '17:00', auftragN: '', ewtRef: 'e2' },
+      { Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' },
+      { Tag: '02', Beginn: '09:00', Ende: '17:00', Auftragsnummer: '', EWT: 'e2' },
     ]);
 
     unlinkNebengeldRefsForDeletedEwtIds(['e1']);
 
     const stored = Storage.get<IDatenN[]>('dataN', { default: [] });
-    expect(stored[0].ewtRef).toBeUndefined();
-    expect(stored[1].ewtRef).toBe('e2');
+    expect(stored[0].EWT).toBeUndefined();
+    expect(stored[1].EWT).toBe('e2');
   });
 
   it('does not write Storage when no refs match', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '' }]);
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '' }]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     unlinkNebengeldRefsForDeletedEwtIds(['unknown-id']);
@@ -90,41 +90,41 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
     expect(setSpied).not.toHaveBeenCalled();
   });
 
-  it('cleans ewtRef from live table rows and calls drawRows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
-    const row = makeNRow({ ewtRef: 'e1' });
+  it('cleans EWT from live table rows and calls drawRows', () => {
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
+    const row = makeNRow({ EWT: 'e1' });
     const instance = mountTableN([row]);
 
     unlinkNebengeldRefsForDeletedEwtIds(['e1']);
 
-    expect((row.cells as IDatenN).ewtRef).toBeUndefined();
+    expect((row.cells as IDatenN).EWT).toBeUndefined();
     expect(instance.drawRows).toHaveBeenCalled();
   });
 
   it('also updates _originalCells for unchanged rows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
-    const row = makeNRow({ ewtRef: 'e1' });
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
+    const row = makeNRow({ EWT: 'e1' });
     const instance = mountTableN([row]);
 
     unlinkNebengeldRefsForDeletedEwtIds(['e1']);
 
     expect(instance.rows.array[0]._originalCells).toBeDefined();
-    expect((instance.rows.array[0]._originalCells as IDatenN).ewtRef).toBeUndefined();
+    expect((instance.rows.array[0]._originalCells as IDatenN).EWT).toBeUndefined();
   });
 
   it('skips deleted table rows', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
-    const row = makeNRow({ _state: 'deleted', ewtRef: 'e1' });
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
+    const row = makeNRow({ _state: 'deleted', EWT: 'e1' });
     const instance = mountTableN([row]);
 
     unlinkNebengeldRefsForDeletedEwtIds(['e1']);
 
-    expect((row.cells as IDatenN).ewtRef).toBe('e1'); // untouched
+    expect((row.cells as IDatenN).EWT).toBe('e1'); // untouched
     expect(instance.drawRows).not.toHaveBeenCalled();
   });
 
   it('does not crash when #tableN is absent', () => {
-    Storage.set('dataN', [{ tagN: '01', beginN: '08:00', endeN: '16:00', auftragN: '', ewtRef: 'e1' }]);
+    Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
     // No DOM element mounted
     expect(() => unlinkNebengeldRefsForDeletedEwtIds(['e1'])).not.toThrow();
   });

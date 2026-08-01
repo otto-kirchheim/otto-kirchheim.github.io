@@ -23,12 +23,12 @@ async function loadAddNebengeldTag(): Promise<AddNebengeldTag> {
   return module.default;
 }
 
-function createDataN(tagN = '2026-03-10'): IDatenN {
+function createDataN(Tag = '2026-03-10'): IDatenN {
   return {
-    tagN,
-    beginN: '08:00',
-    endeN: '10:00',
-    auftragN: '',
+    Tag,
+    Beginn: '08:00',
+    Ende: '10:00',
+    Auftragsnummer: '',
   };
 }
 
@@ -39,14 +39,14 @@ describe('addNebengeldTag', () => {
     vi.clearAllMocks();
   });
 
-  it('wirft Fehler wenn #tagN fehlt', async () => {
+  it('wirft Fehler wenn #Tag fehlt', async () => {
     const addNebengeldTag = await loadAddNebengeldTag();
 
     document.body.innerHTML = `<form id="form"></form>`;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    expect(() => addNebengeldTag(form, null)).toThrow("Select element with ID 'tagN' not found");
+    expect(() => addNebengeldTag(form, null)).toThrow("Select element with ID 'Tag' not found");
   });
 
   it('beendet ohne Aktion wenn kein Eintrag selektiert ist', async () => {
@@ -54,7 +54,7 @@ describe('addNebengeldTag', () => {
 
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN"></select>
+        <select id="Tag"></select>
       </form>
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
@@ -70,7 +70,7 @@ describe('addNebengeldTag', () => {
     const data = createDataN();
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN">
+        <select id="Tag">
           <option selected value='${JSON.stringify(data)}'>Tag</option>
         </select>
         <input data-zulage-input-code="040" value="1" />
@@ -78,7 +78,7 @@ describe('addNebengeldTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
-    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    const select = form.querySelector<HTMLSelectElement>('#Tag');
     if (!select) throw new Error('select not found');
     select.selectedIndex = 0;
 
@@ -94,7 +94,7 @@ describe('addNebengeldTag', () => {
 
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN">
+        <select id="Tag">
           <option selected value='${JSON.stringify(dataA)}'>A</option>
           <option disabled value='${JSON.stringify(dataB)}'>B</option>
           <option value='${JSON.stringify(dataC)}'>C</option>
@@ -119,7 +119,7 @@ describe('addNebengeldTag', () => {
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
 
-    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    const select = form.querySelector<HTMLSelectElement>('#Tag');
     const auftrag = form.querySelector<HTMLInputElement>('#AuftragN');
     if (!select || !auftrag) throw new Error('input not found');
     select.selectedIndex = 0;
@@ -128,11 +128,11 @@ describe('addNebengeldTag', () => {
 
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        tagN: '2026-03-10',
-        auftragN: 'A-123',
-        zulagenN: [
-          { code: '040', value: 1 },
-          { code: '811', value: 120 },
+        Tag: '2026-03-10',
+        Auftragsnummer: 'A-123',
+        Zulagen: [
+          { Typ: '040', Wert: 1 },
+          { Typ: '811', Wert: 120 },
         ],
         zulagenAnzeigeN: expect.stringContaining('040 '),
       }),
@@ -147,11 +147,11 @@ describe('addNebengeldTag', () => {
   it('zeigt Warn-Snackbar und überspringt Add bei bereits vorhandenem Tag', async () => {
     const addNebengeldTag = await loadAddNebengeldTag();
 
-    // tagN must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
+    // Tag must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
     const data = createDataN('10.03.2026');
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN">
+        <select id="Tag">
           <option selected value='${JSON.stringify(data)}'>Tag</option>
         </select>
         <input data-zulage-input-code="040" value="0" />
@@ -160,7 +160,7 @@ describe('addNebengeldTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
-    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    const select = form.querySelector<HTMLSelectElement>('#Tag');
     if (!select) throw new Error('select not found');
     select.selectedIndex = 0;
 
@@ -182,11 +182,11 @@ describe('addNebengeldTag', () => {
   it('reaktiviert einen zum Löschen vorgemerkten Eintrag für denselben Tag statt einen neuen zu erstellen', async () => {
     const addNebengeldTag = await loadAddNebengeldTag();
 
-    // tagN must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
+    // Tag must use DD.MM.YYYY format (as stored by the modal) for isSame() to work
     const data = createDataN('10.03.2026');
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN">
+        <select id="Tag">
           <option selected value='${JSON.stringify(data)}'>Tag</option>
         </select>
         <input data-zulage-input-code="040" value="1" />
@@ -195,7 +195,7 @@ describe('addNebengeldTag', () => {
     `;
     const form = document.querySelector<HTMLFormElement>('#form');
     if (!form) throw new Error('form not found');
-    const select = form.querySelector<HTMLSelectElement>('#tagN');
+    const select = form.querySelector<HTMLSelectElement>('#Tag');
     if (!select) throw new Error('select not found');
     select.selectedIndex = 0;
 
@@ -218,7 +218,7 @@ describe('addNebengeldTag', () => {
     addNebengeldTag(form, ftN);
 
     expect(undoDeleteMock).toHaveBeenCalledTimes(1);
-    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ tagN: '10.03.2026', auftragN: 'A-123' }));
+    expect(valMock).toHaveBeenCalledWith(expect.objectContaining({ Tag: '10.03.2026', Auftragsnummer: 'A-123' }));
     expect(addMock).not.toHaveBeenCalled();
     expect(saveTableDataNMock).toHaveBeenCalledWith('N', ftN);
   });
@@ -229,7 +229,7 @@ describe('addNebengeldTag', () => {
     const data = createDataN('11.03.2026');
     document.body.innerHTML = `
       <form id="form">
-        <select id="tagN">
+        <select id="Tag">
           <option selected value='${JSON.stringify(data)}'>Tag</option>
         </select>
         <input data-zulage-input-code="839" value="120" />
@@ -242,7 +242,7 @@ describe('addNebengeldTag', () => {
     const ftN = { rows: { add: addMock, array: [] } };
 
     const form = document.querySelector<HTMLFormElement>('#form');
-    const select = form?.querySelector<HTMLSelectElement>('#tagN');
+    const select = form?.querySelector<HTMLSelectElement>('#Tag');
     if (!form || !select) throw new Error('form not found');
     select.selectedIndex = 0;
 

@@ -214,6 +214,6 @@ describe('overwriteUserDaten', () => {
     expect(bzFilter({ Beginn: '2023-03-15T08:00', Ende: '2023-03-16T08:00', Pause: 0 })).toBe(true);
     expect(beFilter({ Tag: '15.03.2023', von: '08:00', bis: '16:00' })).toBe(true);
     expect(eFilter({ Tag: '2023-03-15', Buchungstag: '2023-03-15' })).toBe(true);
-    expect(nFilter({ tagN: '15.03.2023', von: '08:00', bis: '16:00' })).toBe(true);
+    expect(nFilter({ Tag: '15.03.2023', von: '08:00', bis: '16:00' })).toBe(true);
   });
 });

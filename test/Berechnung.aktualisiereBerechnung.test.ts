@@ -140,15 +140,15 @@ describe('aktualisiereBerechnung', () => {
 
   it('sums Zulage-040-Werte je Monat als N.F', () => {
     const N: IDatenN[] = [
-      { tagN: '01.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
+      { Tag: '01.03.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN,
       {
-        tagN: '15.03.2026',
-        zulagenN: [
-          { code: '040', value: 1 },
-          { code: '811', value: 120 },
+        Tag: '15.03.2026',
+        Zulagen: [
+          { Typ: '040', Wert: 1 },
+          { Typ: '811', Wert: 120 },
         ],
       } as IDatenN,
-      { tagN: '01.04.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
+      { Tag: '01.04.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
@@ -158,8 +158,8 @@ describe('aktualisiereBerechnung', () => {
 
   it('ignoriert Einträge ohne Zulage 040 in N.F', () => {
     const N: IDatenN[] = [
-      { tagN: '01.03.2026', zulagenN: [{ code: '811', value: 120 }] } as IDatenN,
-      { tagN: '15.03.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN,
+      { Tag: '01.03.2026', Zulagen: [{ Typ: '811', Wert: 120 }] } as IDatenN,
+      { Tag: '15.03.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
@@ -169,16 +169,16 @@ describe('aktualisiereBerechnung', () => {
   it('aggregiert alle Zulagen-Typen in die richtigen N-Felder', () => {
     const N: IDatenN[] = [
       {
-        tagN: '01.03.2026',
-        zulagenN: [
-          { code: '040', value: 1 }, // → N.F
-          { code: '811', value: 120 }, // → N.B (Minuten)
-          { code: '841', value: 90 }, // → N.A (Minuten)
-          { code: '831', value: 60 }, // → N.C (Minuten)
-          { code: '837', value: 60 }, // → N.CA (Minuten)
-          { code: '838', value: 60 }, // → N.CB (Minuten)
-          { code: '839', value: 1 }, // → N.C9 (Stück)
-          { code: '846', value: 60 }, // → N.SIPO (Minuten)
+        Tag: '01.03.2026',
+        Zulagen: [
+          { Typ: '040', Wert: 1 }, // → N.F
+          { Typ: '811', Wert: 120 }, // → N.B (Minuten)
+          { Typ: '841', Wert: 90 }, // → N.A (Minuten)
+          { Typ: '831', Wert: 60 }, // → N.C (Minuten)
+          { Typ: '837', Wert: 60 }, // → N.CA (Minuten)
+          { Typ: '838', Wert: 60 }, // → N.CB (Minuten)
+          { Typ: '839', Wert: 1 }, // → N.C9 (Stück)
+          { Typ: '846', Wert: 60 }, // → N.SIPO (Minuten)
         ],
       } as IDatenN,
     ];
@@ -205,7 +205,7 @@ describe('aktualisiereBerechnung', () => {
     Storage.set('dataBZ', []);
     Storage.set('dataBE', []);
     Storage.set('dataE', []);
-    Storage.set('dataN', [{ tagN: '05.06.2026', zulagenN: [{ code: '040', value: 1 }] } as IDatenN]);
+    Storage.set('dataN', [{ Tag: '05.06.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN]);
     Storage.set('datenBerechnung', {});
 
     const result = aktualisiereBerechnung();

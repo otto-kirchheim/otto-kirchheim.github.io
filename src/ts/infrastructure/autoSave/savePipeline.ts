@@ -104,9 +104,9 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
   const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
   let storageChanged = false;
   const nextDataN = currentDataN.map(item => {
-    if (!item.ewtRef || !deletedIdSet.has(item.ewtRef)) return item;
+    if (!item.EWT || !deletedIdSet.has(item.EWT)) return item;
     storageChanged = true;
-    const { ewtRef: _removed, ...withoutRef } = item;
+    const { EWT: _removed, ...withoutRef } = item;
     return withoutRef as IDatenN;
   });
   if (storageChanged) {
@@ -119,10 +119,10 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
   let tableChanged = false;
   for (const row of nebenTable.rows.array) {
     if (row._state === 'deleted') continue;
-    const ref = (row.cells as IDatenN).ewtRef;
+    const ref = (row.cells as IDatenN).EWT;
     if (!ref || !deletedIdSet.has(ref)) continue;
 
-    const { ewtRef: _removed, ...withoutRef } = row.cells as IDatenN;
+    const { EWT: _removed, ...withoutRef } = row.cells as IDatenN;
     row.cells = withoutRef as IDatenN;
     if (row._state === 'unchanged') {
       row._originalCells = { ...(withoutRef as IDatenN) };
@@ -165,7 +165,7 @@ export async function sendBulk(
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
       case 'N': {
-        const parsed = dayjs((item as IDatenN).tagN, 'DD.MM.YYYY', true);
+        const parsed = dayjs((item as IDatenN).Tag, 'DD.MM.YYYY', true);
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
     }

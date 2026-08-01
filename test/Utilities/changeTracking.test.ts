@@ -67,10 +67,10 @@ describe('changeTracking', () => {
       expect(sig).toContain('Bereitschaftszeitraum');
     });
 
-    it('omits ewtRef for N resource', () => {
-      const row = { tagN: '01.03.2026', ewtRef: 'ewt-123' };
+    it('omits EWT for N resource', () => {
+      const row = { Tag: '01.03.2026', EWT: 'ewt-123' };
       const sig = rowSignature('N', row as unknown as CustomTableTypes);
-      expect(sig).not.toContain('ewtRef');
+      expect(sig).not.toContain('EWT');
     });
 
     it('omits undefined values', () => {
@@ -257,7 +257,7 @@ describe('changeTracking', () => {
       const doc = { _id: 'n1', Tag: '2026-03-01', Monat: 3, Jahr: 2026, Zulagen: [{ Typ: '040', Wert: 2 }] };
       const result = mapServerDocToFrontend('N', doc) as Record<string, unknown>;
       expect(result._id).toBe('n1');
-      expect(result.tagN).toBe('01.03.2026');
+      expect(result.Tag).toBe('01.03.2026');
     });
   });
 });

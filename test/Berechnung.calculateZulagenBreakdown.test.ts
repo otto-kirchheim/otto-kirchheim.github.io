@@ -3,13 +3,13 @@ import calculateZulagenBreakdown from '@/features/Berechnung/calculateZulagenBre
 import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IDatenN } from '@/types';
 
-const tag = (tagN: string, zulagenN: Array<{ code: string; value: number }>): IDatenN =>
+const tag = (Tag: string, Zulagen: Array<{ Typ: string; Wert: number }>): IDatenN =>
   ({
-    tagN,
-    beginN: '08:00',
-    endeN: '16:00',
-    auftragN: 'A1',
-    zulagenN,
+    Tag,
+    Beginn: '08:00',
+    Ende: '16:00',
+    Auftragsnummer: 'A1',
+    Zulagen,
   }) as unknown as IDatenN;
 
 describe('#calculateZulagenBreakdown', () => {
@@ -21,8 +21,8 @@ describe('#calculateZulagenBreakdown', () => {
 
   it('liefert keinen Breakdown bei nur einem Code im Jahr', () => {
     const breakdown = calculateZulagenBreakdown([
-      tag('05.01.2026', [{ code: '040', value: 1 }]),
-      tag('12.03.2026', [{ code: '040', value: 2 }]),
+      tag('05.01.2026', [{ Typ: '040', Wert: 1 }]),
+      tag('12.03.2026', [{ Typ: '040', Wert: 2 }]),
     ]);
 
     expect(breakdown.codes.map(c => c.code)).toEqual(['040']);
@@ -33,11 +33,11 @@ describe('#calculateZulagenBreakdown', () => {
   it('aggregiert mehrere Codes pro Monat mit 0 in Monaten ohne Daten', () => {
     const breakdown = calculateZulagenBreakdown([
       tag('05.01.2026', [
-        { code: '040', value: 1 },
-        { code: '839', value: 1 },
+        { Typ: '040', Wert: 1 },
+        { Typ: '839', Wert: 1 },
       ]),
-      tag('06.01.2026', [{ code: '040', value: 1 }]),
-      tag('10.05.2026', [{ code: '846', value: 120 }]),
+      tag('06.01.2026', [{ Typ: '040', Wert: 1 }]),
+      tag('10.05.2026', [{ Typ: '846', Wert: 120 }]),
     ]);
     expect(breakdown.codes.map(c => c.code)).toEqual(['040', '839', '846']);
 
@@ -51,9 +51,9 @@ describe('#calculateZulagenBreakdown', () => {
   it('nutzt Katalog-Labels und Einheiten, unbekannte Codes bleiben roh (Stück)', () => {
     const breakdown = calculateZulagenBreakdown([
       tag('05.01.2026', [
-        { code: '040', value: 1 },
-        { code: '846', value: 60 },
-        { code: 'XX9', value: 3 },
+        { Typ: '040', Wert: 1 },
+        { Typ: '846', Wert: 60 },
+        { Typ: 'XX9', Wert: 3 },
       ]),
     ]);
 
@@ -67,14 +67,14 @@ describe('#calculateZulagenBreakdown', () => {
 
   it('unterstützt Legacy-Einträge mit anzahl040N', () => {
     const legacyTag = {
-      tagN: '05.02.2026',
-      beginN: '08:00',
-      endeN: '16:00',
-      auftragN: 'A1',
+      Tag: '05.02.2026',
+      Beginn: '08:00',
+      Ende: '16:00',
+      Auftragsnummer: 'A1',
       anzahl040N: 2,
     } as unknown as IDatenN;
 
-    const breakdown = calculateZulagenBreakdown([legacyTag, tag('05.03.2026', [{ code: '839', value: 1 }])]);
+    const breakdown = calculateZulagenBreakdown([legacyTag, tag('05.03.2026', [{ Typ: '839', Wert: 1 }])]);
     expect(breakdown.values['040'][1]).toBe(2);
     expect(breakdown.values['839'][2]).toBe(1);
   });

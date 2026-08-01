@@ -6,13 +6,13 @@ import type { IDatenN } from '@/types';
 import { formatNebengeldZulagen, readNebengeldZulagenFromForm, validateNebengeldZulagen } from './nebengeldZulagen';
 
 export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, tableN: CustomTable<IDatenN>): void {
-  const select = form.querySelector<HTMLSelectElement>('#tagN');
-  if (!select) throw new Error("Select element with ID 'tagN' not found");
+  const select = form.querySelector<HTMLSelectElement>('#Tag');
+  if (!select) throw new Error("Select element with ID 'Tag' not found");
   let idN = select.selectedIndex;
   if (idN < 0) return;
   const daten = JSON.parse(select.value) as IDatenN;
-  const zulagenN = readNebengeldZulagenFromForm(form);
-  const validationErrors = validateNebengeldZulagen(zulagenN);
+  const Zulagen = readNebengeldZulagenFromForm(form);
+  const validationErrors = validateNebengeldZulagen(Zulagen);
   if (validationErrors.length > 0) {
     createSnackBar({
       message: validationErrors.join('<br/>'),
@@ -23,12 +23,12 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, 
     return;
   }
 
-  daten.zulagenN = zulagenN;
-  daten.zulagenAnzeigeN = formatNebengeldZulagen(zulagenN);
+  daten.Zulagen = Zulagen;
+  daten.zulagenAnzeigeN = formatNebengeldZulagen(Zulagen);
 
   const inputAuftragN = form.querySelector<HTMLInputElement>('#AuftragN');
   if (!inputAuftragN) throw new Error("Input element with ID 'AuftragN' not found");
-  daten.auftragN = inputAuftragN.value;
+  daten.Auftragsnummer = inputAuftragN.value;
 
   select.options[idN].selected = false;
   select.options[idN].disabled = true;
@@ -47,7 +47,7 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, 
 
   const hasDuplicateDay = ftN.rows.array.some(existingRow => {
     if (existingRow._state === 'deleted') return false;
-    return dayjs(existingRow.cells.tagN, 'DD.MM.YYYY').isSame(dayjs(daten.tagN, 'DD.MM.YYYY'), 'day');
+    return dayjs(existingRow.cells.Tag, 'DD.MM.YYYY').isSame(dayjs(daten.Tag, 'DD.MM.YYYY'), 'day');
   });
 
   if (hasDuplicateDay) {
@@ -65,7 +65,7 @@ export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, 
   const deletedRowSameTag = ftN.rows.array.find(
     existingRow =>
       existingRow._state === 'deleted' &&
-      dayjs(existingRow.cells.tagN, 'DD.MM.YYYY').isSame(dayjs(daten.tagN, 'DD.MM.YYYY'), 'day'),
+      dayjs(existingRow.cells.Tag, 'DD.MM.YYYY').isSame(dayjs(daten.Tag, 'DD.MM.YYYY'), 'day'),
   );
 
   if (deletedRowSameTag) {

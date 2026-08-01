@@ -414,7 +414,7 @@ describe('loadUserDaten', () => {
         { _id: 'e-1', Tag: '2026-03-31', Buchungstag: '2026-04-01', ewt: 'server-1' },
         { _id: 'e-2', Tag: '2026-05-02', Buchungstag: '2026-05-02', ewt: 'server-2' },
       ],
-      N: [{ tagN: '01.03.2026', n: 'server' }],
+      N: [{ Tag: '01.03.2026', n: 'server' }],
       timestamps: {
         VorgabenU: '2026-03-01T00:00:00.000Z',
         dataBZ: '2026-03-01T00:00:00.000Z',
@@ -795,10 +795,10 @@ describe('loadUserDaten', () => {
       { _id: 'e-server-extra', Tag: '2026-03-20', ewt: 'server-extra' },
     ];
 
-    const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];
+    const localN = [{ _id: 'n-local-1', Tag: '15.03.2026', n: 'local-1' }];
     const serverN = [
-      { _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' },
-      { _id: 'n-server-extra', tagN: '20.03.2026', n: 'server-extra' },
+      { _id: 'n-local-1', Tag: '15.03.2026', n: 'local-1' },
+      { _id: 'n-server-extra', Tag: '20.03.2026', n: 'server-extra' },
     ];
 
     const loaded = {
@@ -903,10 +903,10 @@ describe('loadUserDaten', () => {
       { _id: 'e-server-extra', Tag: '2026-03-20', ewt: 'server-extra' },
     ];
 
-    const localN = [{ _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' }];
+    const localN = [{ _id: 'n-local-1', Tag: '15.03.2026', n: 'local-1' }];
     const serverN = [
-      { _id: 'n-local-1', tagN: '15.03.2026', n: 'local-1' },
-      { _id: 'n-server-extra', tagN: '20.03.2026', n: 'server-extra' },
+      { _id: 'n-local-1', Tag: '15.03.2026', n: 'local-1' },
+      { _id: 'n-server-extra', Tag: '20.03.2026', n: 'server-extra' },
     ];
 
     const loaded = {

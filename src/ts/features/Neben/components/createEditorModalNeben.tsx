@@ -70,7 +70,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
   let datum: dayjs.Dayjs;
   if (row instanceof Row) {
-    datum = dayjs(row.cells.tagN, 'DD.MM.YYYY');
+    datum = dayjs(row.cells.Tag, 'DD.MM.YYYY');
   } else if (row instanceof CustomTable) {
     datum = dayjs([Jahr, Monat, checkMaxTag(Jahr, Monat)]);
   } else throw new Error('unbekannter Fehler');
@@ -78,14 +78,14 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
   const ewtMap = new Map<string, IDatenEWT>(dataE.filter(e => e._id).map(e => [e._id as string, e]));
   const existingZulagen = row instanceof Row ? normalizeNebengeldZulagen(row.cells) : [];
-  const configuredZulagen = getConfiguredNebenZulagen(existingZulagen.map(zulage => zulage.code));
+  const configuredZulagen = getConfiguredNebenZulagen(existingZulagen.map(zulage => zulage.Typ));
 
-  const currentEwtRef = row instanceof Row ? row.cells.ewtRef : undefined;
+  const currentEwtRef = row instanceof Row ? row.cells.EWT : undefined;
 
   const usedEwtRefs = new Set(
     Storage.get<IDatenN[]>('dataN', { default: [] })
-      .filter(n => n.ewtRef && n.ewtRef !== currentEwtRef)
-      .map(n => n.ewtRef as string),
+      .filter(n => n.EWT && n.EWT !== currentEwtRef)
+      .map(n => n.EWT as string),
   );
 
   const ewtOptions = [
@@ -109,13 +109,13 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
     const selectedId = select.value;
     const currentForm = ref.current;
     if (!currentForm) return;
-    const tagInput = currentForm.querySelector<HTMLInputElement>('#tagN');
+    const tagInput = currentForm.querySelector<HTMLInputElement>('#Tag');
     if (tagInput) tagInput.disabled = Boolean(selectedId);
     if (!selectedId) return;
     const entry = ewtMap.get(selectedId);
     if (!entry) return;
-    const beginInput = currentForm.querySelector<HTMLInputElement>('#beginN');
-    const endeInput = currentForm.querySelector<HTMLInputElement>('#endeN');
+    const beginInput = currentForm.querySelector<HTMLInputElement>('#Beginn');
+    const endeInput = currentForm.querySelector<HTMLInputElement>('#Ende');
     if (tagInput) tagInput.value = dayjs(entry.Tag).format('YYYY-MM-DD');
     if (beginInput) beginInput.value = entry.beginE as string;
     if (endeInput) endeInput.value = entry.endeE as string;
@@ -145,24 +145,24 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
           divClass="form-floating col-6"
           required
           type="date"
-          id="tagN"
-          name={row.columns.array.find(column => column.name === 'tagN')?.title ?? 'Tag'}
+          id="Tag"
+          name={row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
           min={datum.startOf('M').format('YYYY-MM-DD')}
           max={datum.endOf('M').format('YYYY-MM-DD')}
           value={datum.format('YYYY-MM-DD')}
         >
-          {row.columns.array.find(column => column.name === 'tagN')?.title ?? 'Tag'}
+          {row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
         </MyInput>
 
-        {createTextElement(row, 'auftragN')}
+        {createTextElement(row, 'Auftragsnummer')}
 
-        {['beginN', 'endeN'].map(value => createTimeElement(row, value, { required: true }))}
+        {['Beginn', 'Ende'].map(value => createTimeElement(row, value, { required: true }))}
 
         <div className="col-12 border rounded p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
           <div className="row g-2">
             {configuredZulagen.map(zulage => {
-              const currentValue = existingZulagen.find(item => item.code === zulage.code)?.value ?? 0;
+              const currentValue = existingZulagen.find(item => item.Typ === zulage.code)?.Wert ?? 0;
               return (
                 <MyInput
                   key={zulage.code}
@@ -191,7 +191,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   const form = ref.current;
 
   const initialEwtRef = form.querySelector<HTMLSelectElement>('#ewtRefSelect')?.value;
-  const tagInput = form.querySelector<HTMLInputElement>('#tagN');
+  const tagInput = form.querySelector<HTMLInputElement>('#Tag');
   if (tagInput) tagInput.disabled = Boolean(initialEwtRef);
 
   modal.row = row;
@@ -206,8 +206,8 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       const table = row instanceof Row ? row.CustomTable : row;
 
       const selectedEwtRef = form.querySelector<HTMLSelectElement>('#ewtRefSelect')?.value || undefined;
-      const zulagenN = readNebengeldZulagenFromForm(form);
-      const validationErrors = validateNebengeldZulagen(zulagenN);
+      const Zulagen = readNebengeldZulagenFromForm(form);
+      const validationErrors = validateNebengeldZulagen(Zulagen);
       if (validationErrors.length > 0) {
         createSnackBar({
           message: validationErrors.join('<br/>'),
@@ -220,19 +220,19 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
       const values: IDatenN = {
         _id: row instanceof Row ? row.cells._id : undefined,
-        ewtRef: selectedEwtRef,
-        tagN: dayjs(form.querySelector<HTMLInputElement>('#tagN')?.value ?? 0).format('DD.MM.YYYY'),
-        beginN: form.querySelector<HTMLInputElement>('#beginN')?.value ?? '',
-        endeN: form.querySelector<HTMLInputElement>('#endeN')?.value ?? '',
-        auftragN: form.querySelector<HTMLInputElement>('#auftragN')?.value ?? '',
-        zulagenN,
-        zulagenAnzeigeN: formatNebengeldZulagen(zulagenN),
+        EWT: selectedEwtRef,
+        Tag: dayjs(form.querySelector<HTMLInputElement>('#Tag')?.value ?? 0).format('DD.MM.YYYY'),
+        Beginn: form.querySelector<HTMLInputElement>('#Beginn')?.value ?? '',
+        Ende: form.querySelector<HTMLInputElement>('#Ende')?.value ?? '',
+        Auftragsnummer: form.querySelector<HTMLInputElement>('#Auftragsnummer')?.value ?? '',
+        Zulagen,
+        zulagenAnzeigeN: formatNebengeldZulagen(Zulagen),
       };
 
       const hasDuplicateDay = table.rows.array.some(existingRow => {
         if (existingRow._state === 'deleted') return false;
         if (row instanceof Row && existingRow === row) return false;
-        return existingRow.cells.tagN === values.tagN;
+        return existingRow.cells.Tag === values.Tag;
       });
 
       if (hasDuplicateDay) {

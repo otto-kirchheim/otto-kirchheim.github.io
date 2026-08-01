@@ -559,9 +559,9 @@ export const mockNeben = (): void => {
 
   createCustomTable('tableN', {
     columns: [
-      { name: 'tagN', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'beginN', title: 'Arbeit Von', type: 'time' },
-      { name: 'endeN', title: 'Arbeit Bis', type: 'time' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Beginn', title: 'Arbeit Von', type: 'time' },
+      { name: 'Ende', title: 'Arbeit Bis', type: 'time' },
       { name: 'beginPauseN', title: 'Pause Von', breakpoints: 'sm', type: 'time' },
       { name: 'endePauseN', title: 'Pause Bis', breakpoints: 'sm', type: 'time' },
       { name: 'dauerN', title: 'Anzahl', breakpoints: 'md' },
@@ -881,25 +881,25 @@ export const datenEWTMock: Required<IDaten>['EWT'] = [
 
 export const datenNMock: Required<IDaten>['N'] = [
   {
-    tagN: '12.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '123456789',
+    Tag: '12.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '123456789',
   },
   {
-    tagN: '13.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '223456789',
+    Tag: '13.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '223456789',
   },
   {
-    tagN: '14.03.2023',
-    beginN: '19:30',
-    endeN: '06:15',
-    zulagenN: [{ code: '040', value: 1 }],
-    auftragN: '323456789',
+    Tag: '14.03.2023',
+    Beginn: '19:30',
+    Ende: '06:15',
+    Zulagen: [{ Typ: '040', Wert: 1 }],
+    Auftragsnummer: '323456789',
   },
 ];
 

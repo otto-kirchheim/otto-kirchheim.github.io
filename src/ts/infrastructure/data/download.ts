@@ -120,11 +120,11 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
       data.Daten = {
         N: nRaw.map(n => ({
-          Tag: n.tagN,
-          Beginn: n.beginN,
-          Ende: n.endeN,
-          Auftragsnummer: n.auftragN,
-          Zulagen: (n.zulagenN ?? []).map(z => ({ Typ: z.code, Wert: z.value })),
+          Tag: n.Tag,
+          Beginn: n.Beginn,
+          Ende: n.Ende,
+          Auftragsnummer: n.Auftragsnummer,
+          Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
         })),
       } satisfies INebengeldDownloadBody['Daten'];
       break;

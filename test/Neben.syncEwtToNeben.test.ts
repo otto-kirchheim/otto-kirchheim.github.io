@@ -34,10 +34,10 @@ function makeEwt(overrides: Partial<IDatenEWT> & { _id: string }): IDatenEWT {
 
 function makeN(overrides: Partial<IDatenN>): IDatenN {
   return {
-    tagN: '2026-03-01',
-    beginN: '06:00',
-    endeN: '14:00',
-    auftragN: '',
+    Tag: '2026-03-01',
+    Beginn: '06:00',
+    Ende: '14:00',
+    Auftragsnummer: '',
     ...overrides,
   };
 }
@@ -69,8 +69,8 @@ describe('syncNebengeldTimesFromEwtRows', () => {
     expect(mockPublishEvent).not.toHaveBeenCalled();
   });
 
-  it('does nothing when no N items have an ewtRef', () => {
-    Storage.set('dataN', [makeN({ tagN: '2026-03-01' })]);
+  it('does nothing when no N items have an EWT', () => {
+    Storage.set('dataN', [makeN({ Tag: '2026-03-01' })]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     syncNebengeldTimesFromEwtRows([makeEwt({ _id: 'ewt-1', beginE: '08:00', endeE: '16:00' })]);
@@ -79,8 +79,8 @@ describe('syncNebengeldTimesFromEwtRows', () => {
     expect(mockPublishEvent).not.toHaveBeenCalled();
   });
 
-  it('does nothing when begin/endeN already match the EWT values', () => {
-    Storage.set('dataN', [makeN({ ewtRef: 'ewt-1', beginN: '08:00', endeN: '16:00' })]);
+  it('does nothing when begin/Ende already match the EWT values', () => {
+    Storage.set('dataN', [makeN({ EWT: 'ewt-1', Beginn: '08:00', Ende: '16:00' })]);
     const setSpied = vi.spyOn(Storage, 'set');
 
     syncNebengeldTimesFromEwtRows([makeEwt({ _id: 'ewt-1', beginE: '08:00', endeE: '16:00' })]);
@@ -89,37 +89,37 @@ describe('syncNebengeldTimesFromEwtRows', () => {
   });
 
   it('updates Storage when EWT times changed and #tableN is absent', () => {
-    const nItem = makeN({ _id: 'n-1', ewtRef: 'ewt-1', beginN: '06:00', endeN: '14:00' });
+    const nItem = makeN({ _id: 'n-1', EWT: 'ewt-1', Beginn: '06:00', Ende: '14:00' });
     Storage.set('dataN', [nItem]);
 
     syncNebengeldTimesFromEwtRows([makeEwt({ _id: 'ewt-1', beginE: '08:00', endeE: '16:00' })]);
 
     const stored = Storage.get<IDatenN[]>('dataN', { default: [] });
-    expect(stored[0].beginN).toBe('08:00');
-    expect(stored[0].endeN).toBe('16:00');
+    expect(stored[0].Beginn).toBe('08:00');
+    expect(stored[0].Ende).toBe('16:00');
     expect(mockPublishEvent).not.toHaveBeenCalled(); // no table → no event
   });
 
   it('updates Storage AND live table rows, calls drawRows and publishes event', () => {
-    const nItem = makeN({ _id: 'n-1', ewtRef: 'ewt-1', beginN: '06:00', endeN: '14:00' });
+    const nItem = makeN({ _id: 'n-1', EWT: 'ewt-1', Beginn: '06:00', Ende: '14:00' });
     Storage.set('dataN', [nItem]);
     const instance = mountTableN([{ ...nItem, _state: 'unchanged' } as IDatenN & { _state: string }]);
 
     syncNebengeldTimesFromEwtRows([makeEwt({ _id: 'ewt-1', beginE: '08:00', endeE: '16:00' })]);
 
     const stored = Storage.get<IDatenN[]>('dataN', { default: [] });
-    expect(stored[0].beginN).toBe('08:00');
-    expect(stored[0].endeN).toBe('16:00');
+    expect(stored[0].Beginn).toBe('08:00');
+    expect(stored[0].Ende).toBe('16:00');
 
-    expect(instance.rows.array[0].cells.beginN).toBe('08:00');
-    expect(instance.rows.array[0].cells.endeN).toBe('16:00');
+    expect(instance.rows.array[0].cells.Beginn).toBe('08:00');
+    expect(instance.rows.array[0].cells.Ende).toBe('16:00');
     expect(instance.rows.array[0]._state).toBe('modified');
     expect(instance.drawRows).toHaveBeenCalled();
     expect(mockPublishEvent).toHaveBeenCalledWith('data:changed', { resource: 'N', action: 'update' });
   });
 
   it('skips deleted table rows', () => {
-    const nItem = makeN({ _id: 'n-1', ewtRef: 'ewt-1', beginN: '06:00', endeN: '14:00' });
+    const nItem = makeN({ _id: 'n-1', EWT: 'ewt-1', Beginn: '06:00', Ende: '14:00' });
     Storage.set('dataN', [nItem]);
     const instance = mountTableN([{ ...nItem, _state: 'deleted' } as IDatenN & { _state: string }]);
 
@@ -133,7 +133,7 @@ describe('syncNebengeldTimesFromEwtRows', () => {
   });
 
   it('ignores EWT rows without _id', () => {
-    const nItem = makeN({ ewtRef: 'ewt-1', beginN: '06:00', endeN: '14:00' });
+    const nItem = makeN({ EWT: 'ewt-1', Beginn: '06:00', Ende: '14:00' });
     Storage.set('dataN', [nItem]);
     const setSpied = vi.spyOn(Storage, 'set');
 

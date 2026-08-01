@@ -120,33 +120,33 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     });
 
     NMonat.forEach(entry => {
-      for (const zulage of entry.zulagenN ?? []) {
-        const item = CATALOG_BY_CODE.get(zulage.code);
+      for (const zulage of entry.Zulagen ?? []) {
+        const item = CATALOG_BY_CODE.get(zulage.Typ);
         if (!item) continue;
         switch (item.paymentHint) {
           case 'Fahrentschaedigung':
-            Berechnung.N.F += zulage.value;
+            Berechnung.N.F += zulage.Wert;
             break;
           case 'A':
-            Berechnung.N.A += zulage.value;
+            Berechnung.N.A += zulage.Wert;
             break;
           case 'B':
-            Berechnung.N.B += zulage.value;
+            Berechnung.N.B += zulage.Wert;
             break;
           case 'C':
-            Berechnung.N.C += zulage.value;
+            Berechnung.N.C += zulage.Wert;
             break;
           case 'C+A':
-            Berechnung.N.CA += zulage.value;
+            Berechnung.N.CA += zulage.Wert;
             break;
           case 'C+B':
-            Berechnung.N.CB += zulage.value;
+            Berechnung.N.CB += zulage.Wert;
             break;
           case 'C*9':
-            Berechnung.N.C9 += zulage.value;
+            Berechnung.N.C9 += zulage.Wert;
             break;
           case 'SIPO':
-            Berechnung.N.SIPO += zulage.value;
+            Berechnung.N.SIPO += zulage.Wert;
             break;
           // Ganzkoerperreinigung: noch nicht berechnet
         }

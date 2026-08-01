@@ -20,12 +20,12 @@ vi.mock('@/core', () => ({
 
 import { persistNebengeldTableData } from '@/features/Neben/utils';
 
-function createData(tagN: string): IDatenN {
+function createData(Tag: string): IDatenN {
   return {
-    tagN,
-    beginN: '08:00',
-    endeN: '10:00',
-    auftragN: '',
+    Tag,
+    Beginn: '08:00',
+    Ende: '10:00',
+    Auftragsnummer: '',
   };
 }
 

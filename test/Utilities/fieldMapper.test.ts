@@ -305,37 +305,37 @@ describe('fieldMapper – Nebengeld', () => {
   it('nebengeldFromBackend konvertiert korrekt', () => {
     const result = nebengeldFromBackend(backendN);
     expect(result._id).toBe('n1');
-    expect(result.tagN).toBe(dayjs('2024-03-20T00:00:00.000Z').format('DD.MM.YYYY'));
-    expect(result.beginN).toBe('18:00');
-    expect(result.endeN).toBe('06:00');
-    expect(result.zulagenN).toEqual([{ code: '040', value: 3 }]);
+    expect(result.Tag).toBe(dayjs('2024-03-20T00:00:00.000Z').format('DD.MM.YYYY'));
+    expect(result.Beginn).toBe('18:00');
+    expect(result.Ende).toBe('06:00');
+    expect(result.Zulagen).toEqual([{ Typ: '040', Wert: 3 }]);
     expect(result.zulagenAnzeigeN).toBe('040 Fahrentsch. × 3');
-    expect(result.auftragN).toBe('NB-456');
+    expect(result.Auftragsnummer).toBe('NB-456');
   });
 
   it('nebengeldFromBackend ohne Zulage 040', () => {
     const withoutZulage = { ...backendN, Zulagen: [{ Typ: '050', Wert: 1 }] };
     const result = nebengeldFromBackend(withoutZulage);
-    expect(result.zulagenN).toEqual([{ code: '050', value: 1 }]);
+    expect(result.Zulagen).toEqual([{ Typ: '050', Wert: 1 }]);
   });
 
   it('nebengeldFromBackend ohne Auftragsnummer', () => {
     const withoutAuftrag = { ...backendN, Auftragsnummer: undefined };
     const result = nebengeldFromBackend(withoutAuftrag);
-    expect(result.auftragN).toBe('');
+    expect(result.Auftragsnummer).toBe('');
   });
 
   it('nebengeldToBackend konvertiert korrekt', () => {
     const frontendN: IDatenN = {
       _id: 'n1',
-      tagN: '20.03.2024',
-      beginN: '18:00',
-      endeN: '06:00',
-      zulagenN: [
-        { code: '040', value: 3 },
-        { code: '811', value: 120 },
+      Tag: '20.03.2024',
+      Beginn: '18:00',
+      Ende: '06:00',
+      Zulagen: [
+        { Typ: '040', Wert: 3 },
+        { Typ: '811', Wert: 120 },
       ],
-      auftragN: 'NB-456',
+      Auftragsnummer: 'NB-456',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result._id).toBe('n1');
@@ -354,30 +354,30 @@ describe('fieldMapper – Nebengeld', () => {
     expect(dayjs(result.Tag).year()).toBe(2024);
   });
 
-  it('nebengeldFromBackend mit EWT null liefert ewtRef undefined', () => {
+  it('nebengeldFromBackend mit EWT null liefert EWT undefined', () => {
     const withNullEwt = { ...backendN, EWT: null };
     const result = nebengeldFromBackend(withNullEwt);
-    expect(result.ewtRef).toBeUndefined();
+    expect(result.EWT).toBeUndefined();
   });
 
-  it('nebengeldToBackend sendet gesetzte ewtRef als EWT', () => {
+  it('nebengeldToBackend sendet gesetzte EWT als EWT', () => {
     const frontendN: IDatenN = {
-      tagN: '15.03.2024',
-      beginN: '20:00',
-      endeN: '04:00',
-      auftragN: '',
-      ewtRef: 'aaaaaaaaaaaaaaaaaaaaaaaa',
+      Tag: '15.03.2024',
+      Beginn: '20:00',
+      Ende: '04:00',
+      Auftragsnummer: '',
+      EWT: 'aaaaaaaaaaaaaaaaaaaaaaaa',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result.EWT).toBe('aaaaaaaaaaaaaaaaaaaaaaaa');
   });
 
-  it('nebengeldToBackend sendet fehlende ewtRef als EWT null (Unlink-Signal für den Server)', () => {
+  it('nebengeldToBackend sendet fehlende EWT als EWT null (Unlink-Signal für den Server)', () => {
     const frontendN: IDatenN = {
-      tagN: '15.03.2024',
-      beginN: '20:00',
-      endeN: '04:00',
-      auftragN: '',
+      Tag: '15.03.2024',
+      Beginn: '20:00',
+      Ende: '04:00',
+      Auftragsnummer: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result.EWT).toBeNull();
@@ -385,10 +385,10 @@ describe('fieldMapper – Nebengeld', () => {
 
   it('nebengeldToBackend sendet leere Auftragsnummer explizit mit (damit Updates sie serverseitig leeren)', () => {
     const frontendN: IDatenN = {
-      tagN: '15.03.2024',
-      beginN: '20:00',
-      endeN: '04:00',
-      auftragN: '',
+      Tag: '15.03.2024',
+      Beginn: '20:00',
+      Ende: '04:00',
+      Auftragsnummer: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result.Auftragsnummer).toBe('');
@@ -396,10 +396,10 @@ describe('fieldMapper – Nebengeld', () => {
 
   it('nebengeldToBackend ohne Zulagen erzeugt ein leeres Zulagen-Array', () => {
     const frontendN: IDatenN = {
-      tagN: '10.03.2024',
-      beginN: '19:00',
-      endeN: '05:00',
-      auftragN: '',
+      Tag: '10.03.2024',
+      Beginn: '19:00',
+      Ende: '05:00',
+      Auftragsnummer: '',
     };
     const result = nebengeldToBackend(frontendN, 3, 2024);
     expect(result.Zulagen).toEqual([]);

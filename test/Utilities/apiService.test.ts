@@ -375,7 +375,7 @@ describe('apiService', () => {
       ]);
       const result = await nebengeldApi.loadYear(2024);
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].zulagenN).toEqual([{ code: '040', value: 2 }]);
+      expect(result.data[0].Zulagen).toEqual([{ Typ: '040', Wert: 2 }]);
       expect(result.updatedAt).toBe('2024-06-15T14:00:00.000Z');
     });
   });
@@ -470,13 +470,13 @@ describe('apiService', () => {
 
     it('nebengeldApi.bulk mit Create und Update nutzt Bulk-Endpoint', async () => {
       const newN: IDatenN & { clientRequestId: string } = {
-        tagN: '10.04.2024',
-        beginN: '',
-        endeN: '',
-        auftragN: 'Auftrag-1',
+        Tag: '10.04.2024',
+        Beginn: '',
+        Ende: '',
+        Auftragsnummer: 'Auftrag-1',
         clientRequestId: '123e4567-e89b-42d3-a456-426614174005',
       };
-      const updatedN: IDatenN = { _id: 'n1', tagN: '11.04.2024', beginN: '', endeN: '', auftragN: 'Auftrag-2' };
+      const updatedN: IDatenN = { _id: 'n1', Tag: '11.04.2024', Beginn: '', Ende: '', Auftragsnummer: 'Auftrag-2' };
       mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
 
       await nebengeldApi.bulk({ create: [newN], update: [updatedN], delete: [] }, 4, 2024);

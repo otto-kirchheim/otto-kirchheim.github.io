@@ -11,7 +11,7 @@ const getColumn = (row: Row<IDatenN>, columnName: string): Column<IDatenN> => {
 };
 
 const createTagElement = (row: Row<IDatenN>) => {
-  const column: Column<IDatenN> = getColumn(row, 'tagN');
+  const column: Column<IDatenN> = getColumn(row, 'Tag');
   return (
     <MyShowElement
       divClass="mb-2 col-12 text-center"
@@ -85,10 +85,10 @@ export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
         {createTagElement(row)}
 
         <h4 className="text-center mb-0">Auftragsnummer</h4>
-        {createShowElement3(row, ['auftragN'])}
+        {createShowElement3(row, ['Auftragsnummer'])}
 
         <h4 className="text-center mb-0">Arbeitszeit</h4>
-        {createShowElement(row, ['beginN'], ['endeN'])}
+        {createShowElement(row, ['Beginn'], ['Ende'])}
 
         <h4 className="text-center mb-0">Zulagen</h4>
         {createZulagenElement(row)}

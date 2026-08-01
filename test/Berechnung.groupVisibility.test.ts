@@ -87,8 +87,8 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     Storage.set('Benutzer', 'testuser');
     Storage.set('Jahr', 2026);
     Storage.set('dataN', [
-      { tagN: '05.01.2026', beginN: '08:00', endeN: '16:00', auftragN: 'A1', zulagenN: [{ code: '040', value: 2 }] },
-      { tagN: '10.03.2026', beginN: '08:00', endeN: '16:00', auftragN: 'A1', zulagenN: [{ code: '846', value: 120 }] },
+      { Tag: '05.01.2026', Beginn: '08:00', Ende: '16:00', Auftragsnummer: 'A1', Zulagen: [{ Typ: '040', Wert: 2 }] },
+      { Tag: '10.03.2026', Beginn: '08:00', Ende: '16:00', Auftragsnummer: 'A1', Zulagen: [{ Typ: '846', Wert: 120 }] },
     ]);
 
     generateTableBerechnung({ 1: monatMitNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);

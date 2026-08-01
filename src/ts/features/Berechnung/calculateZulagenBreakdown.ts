@@ -28,7 +28,7 @@ export function zulagenEinheitKurz(unit: ZulageEntryUnit): string {
 }
 
 /**
- * Aggregiert die Roh-Zulagenwerte (zulagenN) aller Nebengeld-Tage des Jahres
+ * Aggregiert die Roh-Zulagenwerte (Zulagen) aller Nebengeld-Tage des Jahres
  * pro Zulagen-Code und Monat. Unabhängig von der Euro-Berechnung (NFields-Buckets),
  * die Code-Informationen dort bereits zusammengefasst hat.
  */
@@ -42,8 +42,8 @@ export default function calculateZulagenBreakdown(
     if (monat < 1 || monat > 12) continue;
 
     for (const zulage of normalizeNebengeldZulagen(row)) {
-      values[zulage.code] ??= Array.from({ length: 12 }, () => 0);
-      values[zulage.code][monat - 1] += zulage.value;
+      values[zulage.Typ] ??= Array.from({ length: 12 }, () => 0);
+      values[zulage.Typ][monat - 1] += zulage.Wert;
     }
   }
 

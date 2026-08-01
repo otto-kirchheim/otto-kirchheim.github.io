@@ -229,8 +229,8 @@ describe('changeMonatJahr', () => {
     expect(eCb({ Tag: '2026-03-10', Buchungstag: '2026-03-10' })).toBe(false);
 
     // Nebengeld: Monat UND Jahr >= 2024 müssen matchen
-    expect(nCb({ tagN: '10.04.2026', von: '08:00', bis: '16:00' })).toBe(true);
-    expect(nCb({ tagN: '10.03.2026', von: '08:00', bis: '16:00' })).toBe(false);
+    expect(nCb({ Tag: '10.04.2026', von: '08:00', bis: '16:00' })).toBe(true);
+    expect(nCb({ Tag: '10.03.2026', von: '08:00', bis: '16:00' })).toBe(false);
   });
 
   it('setFilter-Callbacks ohne Monatwechsel (Jahreswechsel) nutzen gespeicherten Monat', () => {
@@ -253,6 +253,6 @@ describe('changeMonatJahr', () => {
     expect(bzCb({ Beginn: '2025-03-10T08:00', Ende: '2025-03-11T08:00', Pause: 0 })).toBe(true);
     expect(beCb({ Tag: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
     expect(eCb({ Tag: '2025-03-10', Buchungstag: '2025-03-10' })).toBe(true);
-    expect(nCb({ tagN: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
+    expect(nCb({ Tag: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
   });
 });

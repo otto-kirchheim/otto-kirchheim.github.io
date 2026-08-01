@@ -24,16 +24,16 @@ export function getConfiguredNebenZulagen(existingCodes: string[] = []): IZulage
 }
 
 export function normalizeNebengeldZulagen(item: Partial<IDatenN>): INebenZulage[] {
-  if (Array.isArray(item.zulagenN) && item.zulagenN.length > 0) {
-    return item.zulagenN
-      .filter((zulage): zulage is INebenZulage => Boolean(zulage?.code) && Number.isFinite(zulage.value))
-      .filter(zulage => zulage.value > 0);
+  if (Array.isArray(item.Zulagen) && item.Zulagen.length > 0) {
+    return item.Zulagen
+      .filter((zulage): zulage is INebenZulage => Boolean(zulage?.Typ) && Number.isFinite(zulage.Wert))
+      .filter(zulage => zulage.Wert > 0);
   }
 
-  // Fallback für alte IndexedDB-Einträge vor Einführung von zulagenN
+  // Fallback für alte IndexedDB-Einträge vor Einführung von Zulagen
   const legacy040 = item['anzahl040N'];
   if (typeof legacy040 === 'number' && legacy040 > 0) {
-    return [{ code: '040', value: legacy040 }];
+    return [{ Typ: '040', Wert: legacy040 }];
   }
 
   return [];
@@ -44,21 +44,21 @@ export function formatNebengeldZulagen(zulagen: INebenZulage[]): string {
 
   return zulagen
     .map(zulage => {
-      const catalogItem = zulagenCatalogByCode.get(zulage.code);
-      const label = catalogItem ? `${zulage.code} ${catalogItem.shortLabel}` : zulage.code;
-      if (catalogItem?.entryRule.unit === ZulageEntryUnit.Minuten) return `${label} ${zulage.value} min`;
-      return `${label} × ${zulage.value}`;
+      const catalogItem = zulagenCatalogByCode.get(zulage.Typ);
+      const label = catalogItem ? `${zulage.Typ} ${catalogItem.shortLabel}` : zulage.Typ;
+      if (catalogItem?.entryRule.unit === ZulageEntryUnit.Minuten) return `${label} ${zulage.Wert} min`;
+      return `${label} × ${zulage.Wert}`;
     })
     .join('\n');
 }
 
 export function hydrateNebengeldRow(item: IDatenN): IDatenN {
-  const zulagenN = normalizeNebengeldZulagen(item);
+  const Zulagen = normalizeNebengeldZulagen(item);
 
   return {
     ...item,
-    zulagenN,
-    zulagenAnzeigeN: formatNebengeldZulagen(zulagenN),
+    Zulagen,
+    zulagenAnzeigeN: formatNebengeldZulagen(Zulagen),
   };
 }
 
@@ -68,11 +68,11 @@ export function hydrateNebengeldRows(rows: IDatenN[]): IDatenN[] {
 
 export function validateNebengeldZulagen(zulagen: INebenZulage[]): string[] {
   const errors: string[] = [];
-  const positiveZulagen = zulagen.filter(zulage => zulage.value > 0);
+  const positiveZulagen = zulagen.filter(zulage => zulage.Wert > 0);
   const positiveByCategory = new Map<ZulageCategory, INebenZulage[]>();
 
   for (const zulage of positiveZulagen) {
-    const catalogItem = zulagenCatalogByCode.get(zulage.code);
+    const catalogItem = zulagenCatalogByCode.get(zulage.Typ);
     if (!catalogItem) continue;
 
     const existing = positiveByCategory.get(catalogItem.category) ?? [];
@@ -80,23 +80,23 @@ export function validateNebengeldZulagen(zulagen: INebenZulage[]): string[] {
     positiveByCategory.set(catalogItem.category, existing);
 
     const { entryRule } = catalogItem;
-    if (entryRule.maxEntriesPerDay && zulage.value > entryRule.maxEntriesPerDay) {
-      errors.push(`${zulage.code} darf nur ${entryRule.maxEntriesPerDay}x pro Tag erfasst werden.`);
+    if (entryRule.maxEntriesPerDay && zulage.Wert > entryRule.maxEntriesPerDay) {
+      errors.push(`${zulage.Typ} darf nur ${entryRule.maxEntriesPerDay}x pro Tag erfasst werden.`);
     }
 
-    if (entryRule.minMinutesPerDay && zulage.value > 0 && zulage.value < entryRule.minMinutesPerDay) {
-      errors.push(`${zulage.code} erfordert mindestens ${entryRule.minMinutesPerDay} Minuten pro Tag.`);
+    if (entryRule.minMinutesPerDay && zulage.Wert > 0 && zulage.Wert < entryRule.minMinutesPerDay) {
+      errors.push(`${zulage.Typ} erfordert mindestens ${entryRule.minMinutesPerDay} Minuten pro Tag.`);
     }
   }
 
   for (const zulage of positiveZulagen) {
-    const catalogItem = zulagenCatalogByCode.get(zulage.code);
+    const catalogItem = zulagenCatalogByCode.get(zulage.Typ);
     if (!catalogItem?.entryRule.exclusiveWithinCategoryPerDay) continue;
 
     const sameCategory = positiveByCategory.get(catalogItem.category) ?? [];
-    if (sameCategory.some(item => item.code !== zulage.code)) {
+    if (sameCategory.some(item => item.Typ !== zulage.Typ)) {
       errors.push(
-        `${zulage.code} darf innerhalb der Kategorie an diesem Tag nicht mit anderen Zulagen kombiniert werden.`,
+        `${zulage.Typ} darf innerhalb der Kategorie an diesem Tag nicht mit anderen Zulagen kombiniert werden.`,
       );
     }
   }
@@ -108,11 +108,11 @@ export function readNebengeldZulagenFromForm(form: HTMLDivElement | HTMLFormElem
   const zulagen: INebenZulage[] = [];
 
   for (const input of Array.from(form.querySelectorAll<HTMLInputElement>('input[data-zulage-input-code]'))) {
-    const code = input.dataset.zulageInputCode;
-    if (!code) continue;
-    const value = Number(input.value || 0);
-    if (!Number.isFinite(value) || value <= 0) continue;
-    zulagen.push({ code, value });
+    const Typ = input.dataset.zulageInputCode;
+    if (!Typ) continue;
+    const Wert = Number(input.value || 0);
+    if (!Number.isFinite(Wert) || Wert <= 0) continue;
+    zulagen.push({ Typ, Wert });
   }
 
   return zulagen;

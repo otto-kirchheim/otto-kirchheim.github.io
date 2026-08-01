@@ -21,18 +21,18 @@ describe('#getNebengeldDaten function', () => {
   it('should return data from storage when no data is provided', () => {
     const storageData: IDatenN[] = [
       {
-        tagN: '12',
-        beginN: '19:30',
-        endeN: '06:15',
-        zulagenN: [{ code: '040', value: 1 }],
-        auftragN: '123456789',
+        Tag: '12',
+        Beginn: '19:30',
+        Ende: '06:15',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
+        Auftragsnummer: '123456789',
       },
       {
-        tagN: '13',
-        beginN: '19:30',
-        endeN: '06:15',
-        zulagenN: [{ code: '040', value: 1 }],
-        auftragN: '223456789',
+        Tag: '13',
+        Beginn: '19:30',
+        Ende: '06:15',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
+        Auftragsnummer: '223456789',
       },
     ];
 
@@ -47,20 +47,20 @@ describe('#getNebengeldDaten function', () => {
     const result = getNebengeldDaten(undefined, 3);
     expect(result).toEqual([
       {
-        tagN: '12',
-        beginN: '19:30',
-        endeN: '06:15',
-        zulagenN: [{ code: '040', value: 1 }],
+        Tag: '12',
+        Beginn: '19:30',
+        Ende: '06:15',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
         zulagenAnzeigeN: '040 Fahrentsch. × 1',
-        auftragN: '123456789',
+        Auftragsnummer: '123456789',
       },
       {
-        tagN: '13',
-        beginN: '19:30',
-        endeN: '06:15',
-        zulagenN: [{ code: '040', value: 1 }],
+        Tag: '13',
+        Beginn: '19:30',
+        Ende: '06:15',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
         zulagenAnzeigeN: '040 Fahrentsch. × 1',
-        auftragN: '223456789',
+        Auftragsnummer: '223456789',
       },
     ]);
 

@@ -313,7 +313,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       // Beim Neuanlegen: Statt eines separaten Delete+Create eine bereits zum Löschen vorgemerkte,
       // zeitlich überschneidende Zeile reaktivieren (bleibt als Update erhalten — Vorbild:
       // `addEwtTag.ts`. Erhält dabei die ursprüngliche `_id`, sodass z. B. eine verknüpfte
-      // Nebengeld-Referenz (`ewtRef`) nicht verwaist).
+      // Nebengeld-Referenz (`EWT`) nicht verwaist).
       let deletedRowToReactivate: Row<IDatenEWT> | undefined;
 
       if (currentWindow) {

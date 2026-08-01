@@ -4,6 +4,14 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### feat (Welle 2 Schritt 5 — Nebengeld-Feldnamen vereinheitlicht: IDatenN/INebenZulage auf Backend-Namen)
+
+- `IDatenN` (`core/types/IDaten.ts`): `ewtRef`/`tagN`/`beginN`/`endeN`/`auftragN`/`zulagenN` → `EWT`/`Tag`/`Beginn`/`Ende`/`Auftragsnummer`/`Zulagen` (deckungsgleich mit `INebengeld`, siehe `@otto-kirchheim/nebengeld-shared` v0.6.0). `INebenZulage`: `code`/`value` → `Typ`/`Wert` (deckungsgleich mit `IZulage`). `zulagenAnzeigeN` bleibt unverändert (Frontend-only, kein Backend-Gegenstück).
+- Zweistufiger Rename: 37 Dateien für die Top-Level-Felder (Sed-Rename, per `tsc` verifiziert — dabei erneut `endeN` als mehrdeutigen String erkannt: kollidiert mit dem unabhängigen UserProfile-`vorgabenB`-Nacht-Ende-Feld, 13 Dateien bewusst ausgeschlossen, `test/mockData.ts` mischt wieder beide Kontexte und wurde gezielt korrigiert). `.code`/`.value` auf `INebenZulage`-Objekten wurden NICHT blind ersetzt (zu generische Wortwahl, Kollisionsgefahr mit Zulagen-Katalog-Feldern `IZulageCatalogItem.code`, DOM-`input.value`, `IVorgabenU`-`{key,value}`-Paaren etc.) — stattdessen gezielt anhand der `tsc`-Fehlerliste jede Stelle einzeln geprüft und nur echte `INebenZulage`-Zugriffe umbenannt (`nebengeldZulagen.ts`, `createEditorModalNeben.tsx`, `calculateZulagenBreakdown.ts`, `fieldMapper.ts`, `download.ts`, mehrere Tests inkl. zwei Test-Helfer mit lokal zu lose typisierten Zulagen-Parametern, die `tsc` deshalb nicht automatisch fing).
+- `fieldMapper.ts`: `BackendNebengeld` erweitert jetzt das geteilte `INebengeld` statt die Felder selbst zu deklarieren.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.6.0.
+
 ### feat (Welle 2 Schritt 4 — EWT-Feldnamen vereinheitlicht: 4 von 13 Feldern auf Backend-Namen)
 
 - `IDatenEWT` (`core/types/IDaten.ts`): `tagE`/`buchungstagE`/`eOrtE`/`schichtE` → `Tag`/`Buchungstag`/`Einsatzort`/`Schicht` (deckungsgleich mit `IEinsatzwechseltaetigkeit`, siehe `@otto-kirchheim/nebengeld-shared` v0.5.0). Die restlichen 9 Felder (`abWE`/`ab1E`/`anEE`/`beginE`/`endeE`/`abEE`/`an1E`/`anWE`/`berechnen`) trugen bereits identische Namen, unverändert. Durchgängig umbenannt in 45 Dateien (EWT-Feature komplett, Neben-Modals über die EWT-Verknüpfung, `fieldMapper.ts`, `download.ts`, Business-Logik, Tests) — keine Snapshot-Datei betroffen, keine Mixed-Context-Kollision gefunden (alle 4 Feldnamen tragen das eindeutige `E`-Suffix).

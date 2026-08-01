@@ -258,11 +258,11 @@ describe('download utility', () => {
   it("should perform download for mode 'N' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
-        tagN: '19.04.2026',
-        beginN: '21:00',
-        endeN: '23:00',
-        zulagenN: [{ code: '040', value: 2 }],
-        auftragN: 'N-77',
+        Tag: '19.04.2026',
+        Beginn: '21:00',
+        Ende: '23:00',
+        Zulagen: [{ Typ: '040', Wert: 2 }],
+        Auftragsnummer: 'N-77',
       },
     ]);
 

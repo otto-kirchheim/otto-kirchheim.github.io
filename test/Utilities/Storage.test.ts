@@ -61,7 +61,7 @@ describe('Storage', () => {
     });
 
     it('unwrappt Ressourcen-Keys automatisch beim Lesen', () => {
-      const data = [{ tagN: '05.03.2026' }];
+      const data = [{ Tag: '05.03.2026' }];
       Storage.set('dataN', data);
       expect(Storage.get<typeof data>('dataN')).toEqual(data);
     });

@@ -34,9 +34,9 @@ function NebenTab() {
 
     const ftN = createCustomTable('tableN', {
       columns: [
-        { name: 'tagN', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-        { name: 'beginN', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
-        { name: 'endeN', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
+        { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+        { name: 'Beginn', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
+        { name: 'Ende', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
         {
           name: 'zulagenAnzeigeN',
           title: 'Zulagen',
@@ -46,7 +46,7 @@ function NebenTab() {
             typeof value === 'string' && value.length > 0 ? value.replace(/\n/g, '<br>') : '-',
         },
         {
-          name: 'auftragN',
+          name: 'Auftragsnummer',
           title: 'Auftragsnummer',
           breakpoints: 'md',
           parser: (value: unknown) => {

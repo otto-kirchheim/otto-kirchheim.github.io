@@ -717,8 +717,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataN', { 2: [] });
 
-      const changes = { create: [{ tagN: '10' }], update: [], delete: [] };
-      createMockTable('tableN', changes, [{ _state: 'new', cells: { tagN: '10' } }]);
+      const changes = { create: [{ Tag: '10' }], update: [], delete: [] };
+      createMockTable('tableN', changes, [{ _state: 'new', cells: { Tag: '10' } }]);
 
       mockNBulk.mockResolvedValue({ created: [{ _id: 'n1' }], updated: [], deleted: [], errors: [] });
 
@@ -945,7 +945,7 @@ describe('autoSave', () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
       Storage.set('dataE', []);
-      Storage.set('dataN', [{ _id: 'n1', ewtRef: 'ewt-del-1', tagN: '10.03.2025' }]);
+      Storage.set('dataN', [{ _id: 'n1', EWT: 'ewt-del-1', Tag: '10.03.2025' }]);
 
       createMockTable('tableE', { create: [], update: [], delete: ['ewt-del-1'] });
 
@@ -954,8 +954,8 @@ describe('autoSave', () => {
       await flushResource('EWT');
 
       expect(mockEwtBulk).toHaveBeenCalled();
-      const storedN = Storage.get<Array<{ _id: string; ewtRef?: string }>>('dataN', { check: true });
-      expect(storedN[0].ewtRef).toBeUndefined();
+      const storedN = Storage.get<Array<{ _id: string; EWT?: string }>>('dataN', { check: true });
+      expect(storedN[0].EWT).toBeUndefined();
     });
 
     it('laesst fehlgeschlagene Create-Zeilen fuer den naechsten Retry im Change-Tracking', async () => {

@@ -26,11 +26,11 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
       const option: ReturnTypeTagOptions = {
         text: '',
         value: JSON.stringify({
-          tagN: tagEDate.format('DD.MM.YYYY'),
-          beginN: day.beginE,
-          endeN: day.endeE,
-          auftragN: '',
-          ewtRef: day._id,
+          Tag: tagEDate.format('DD.MM.YYYY'),
+          Beginn: day.beginE,
+          Ende: day.endeE,
+          Auftragsnummer: '',
+          EWT: day._id,
         }),
       };
 
@@ -48,7 +48,7 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
 
       if (
         dataN?.some(value => {
-          const nebenTagDate = dayjs(value.tagN, 'DD.MM.YYYY');
+          const nebenTagDate = dayjs(value.Tag, 'DD.MM.YYYY');
           return nebenTagDate.isValid() && nebenTagDate.isSame(tagEDate, 'day');
         })
       )
@@ -108,7 +108,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
         <MySelect
           className="form-floating col-12 col-sm-6"
           title="Tag (Aus EWT)"
-          id="tagN"
+          id="Tag"
           required
           options={getTagOptions(dataE)}
         />

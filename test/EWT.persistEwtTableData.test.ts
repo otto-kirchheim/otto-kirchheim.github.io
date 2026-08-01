@@ -132,7 +132,7 @@ describe('persistEwtTableData', () => {
     expect(drawRowsMock).toHaveBeenCalledTimes(1);
   });
 
-  it('entfernt ewtRef bei Soft-Delete noch nicht lokal (Undo-sicher)', () => {
+  it('entfernt EWT bei Soft-Delete noch nicht lokal (Undo-sicher)', () => {
     const deletedId = 'ewt-delete-1';
     const keptId = 'ewt-keep-1';
 
@@ -159,21 +159,21 @@ describe('persistEwtTableData', () => {
     const dataN: IDatenN[] = [
       {
         _id: 'n1',
-        ewtRef: deletedId,
-        tagN: '06.04.2026',
-        beginN: '07:00',
-        endeN: '15:45',
-        zulagenN: [{ code: '040', value: 1 }],
-        auftragN: 'A',
+        EWT: deletedId,
+        Tag: '06.04.2026',
+        Beginn: '07:00',
+        Ende: '15:45',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
+        Auftragsnummer: 'A',
       },
       {
         _id: 'n2',
-        ewtRef: keptId,
-        tagN: '07.04.2026',
-        beginN: '07:00',
-        endeN: '15:45',
-        zulagenN: [{ code: '040', value: 1 }],
-        auftragN: 'B',
+        EWT: keptId,
+        Tag: '07.04.2026',
+        Beginn: '07:00',
+        Ende: '15:45',
+        Zulagen: [{ Typ: '040', Wert: 1 }],
+        Auftragsnummer: 'B',
       },
     ];
 
@@ -185,7 +185,7 @@ describe('persistEwtTableData', () => {
     persistEwtTableData(ftMock);
 
     const nextDataN = Storage.get<IDatenN[]>('dataN', { check: true });
-    expect(nextDataN[0]?.ewtRef).toBe(deletedId);
-    expect(nextDataN[1]?.ewtRef).toBe(keptId);
+    expect(nextDataN[0]?.EWT).toBe(deletedId);
+    expect(nextDataN[1]?.EWT).toBe(keptId);
   });
 });

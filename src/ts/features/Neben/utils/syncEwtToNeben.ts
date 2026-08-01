@@ -10,14 +10,14 @@ export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[
   const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
   let storageChanged = false;
   const nextDataN = currentDataN.map(item => {
-    if (!item.ewtRef) return item;
-    const ewt = ewtById.get(item.ewtRef);
+    if (!item.EWT) return item;
+    const ewt = ewtById.get(item.EWT);
     if (!ewt) return item;
     const newBegin = ewt.beginE as string;
     const newEnde = ewt.endeE as string;
-    if (item.beginN === newBegin && item.endeN === newEnde) return item;
+    if (item.Beginn === newBegin && item.Ende === newEnde) return item;
     storageChanged = true;
-    return { ...item, beginN: newBegin, endeN: newEnde };
+    return { ...item, Beginn: newBegin, Ende: newEnde };
   });
 
   if (storageChanged) {
@@ -29,14 +29,14 @@ export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[
     let tableChanged = false;
     for (const row of nebenTable.rows.array) {
       if (row._state === 'deleted') continue;
-      const ref = (row.cells as IDatenN).ewtRef;
+      const ref = (row.cells as IDatenN).EWT;
       if (!ref) continue;
       const ewt = ewtById.get(ref);
       if (!ewt) continue;
       const newBegin = ewt.beginE as string;
       const newEnde = ewt.endeE as string;
-      if (row.cells.beginN === newBegin && row.cells.endeN === newEnde) continue;
-      row.cells = { ...row.cells, beginN: newBegin, endeN: newEnde };
+      if (row.cells.Beginn === newBegin && row.cells.Ende === newEnde) continue;
+      row.cells = { ...row.cells, Beginn: newBegin, Ende: newEnde };
       if (row._state === 'unchanged') row._state = 'modified';
       tableChanged = true;
     }

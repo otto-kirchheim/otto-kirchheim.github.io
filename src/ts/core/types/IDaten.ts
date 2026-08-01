@@ -65,19 +65,19 @@ export interface IDatenEWT<EWTType = string> {
 }
 
 export interface INebenZulage {
-  code: string;
-  value: number;
+  Typ: string;
+  Wert: number;
 }
 
 type IDatenNValues = string | number | INebenZulage[] | undefined;
 export interface IDatenN {
   [key: string]: IDatenNValues;
   _id?: string;
-  ewtRef?: string;
-  tagN: string;
-  beginN: string;
-  endeN: string;
-  zulagenN?: INebenZulage[];
+  EWT?: string;
+  Tag: string;
+  Beginn: string;
+  Ende: string;
+  Zulagen?: INebenZulage[];
   zulagenAnzeigeN?: string;
-  auftragN: string;
+  Auftragsnummer: string;
 }

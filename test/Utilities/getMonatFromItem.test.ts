@@ -74,16 +74,16 @@ describe('getMonatFromItem', () => {
 
   describe('getMonatFromN', () => {
     it('parses DD.MM.YYYY format', () => {
-      expect(getMonatFromN({ tagN: '01.03.2026' } as IDatenN)).toBe(3);
+      expect(getMonatFromN({ Tag: '01.03.2026' } as IDatenN)).toBe(3);
     });
 
     it('falls back to Storage Monat for bare digit', () => {
       Storage.set('Monat', 7);
-      expect(getMonatFromN({ tagN: '15' } as IDatenN)).toBe(7);
+      expect(getMonatFromN({ Tag: '15' } as IDatenN)).toBe(7);
     });
 
     it('falls back to dayjs parse for other formats', () => {
-      expect(getMonatFromN({ tagN: '2026-08-15' } as IDatenN)).toBe(8);
+      expect(getMonatFromN({ Tag: '2026-08-15' } as IDatenN)).toBe(8);
     });
   });
 
