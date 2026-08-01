@@ -4,6 +4,20 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### feat (Welle 2 Schritt 2 — Bereitschaftszeitraum-Feldnamen vereinheitlicht: beginB/endeB/pauseB → Beginn/Ende/Pause)
+
+- `IDatenBZ` (`core/types/IDaten.ts`): Felder `beginB`/`endeB`/`pauseB` → `Beginn`/`Ende`/`Pause` (jetzt deckungsgleich mit dem Backend-Modell `IBereitschaftszeitraum`, siehe `@otto-kirchheim/nebengeld-shared` v0.3.0). Durchgängig umbenannt in 31 betroffenen Dateien: CustomTable-Spaltenkonfiguration (`BereitschaftTab.tsx`), Add/Edit-Modal, Business-Logik (`calculateBereitschaftsZeiten.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `overlapGuard.ts`, `savePipeline.ts`, `getMonatFromItem.ts`), `fieldMapper.ts`, `download.ts` sowie zugehörige Tests + 2 Snapshot-Dateien neu generiert (reiner Feldnamen-Diff, keine Werteänderung).
+- **Bewusst nicht angefasst:** Die gleichnamigen, aber fachlich unabhängigen UserProfile-Felder `beginnB`/`endeB` (Bereitschafts-Vorgabe-Zeitplan in `vorgabenB`-Einträgen, z. B. `IVorgabenU.ts`, `AdminProfileTemplatesManager.tsx`) — kollidieren nicht mit den jetzt umbenannten `IDatenBZ`-Feldern und werden erst in Ressource 6 (UserProfile/ProfileTemplate) behandelt.
+- `fieldMapper.ts`: `BackendBereitschaftszeitraum` erweitert jetzt das geteilte `IBereitschaftszeitraum` statt die Felder selbst zu deklarieren; `bzFromBackend`/`bzToBackend` sind dadurch reine Identitäts-Zuordnungen (nur noch `_id`-Auswahl + `Pause`-Default), keine Umbenennung mehr nötig.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf (inkl. Snapshot-Vergleich) verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests, 14 Snapshots) gegen die real veröffentlichte `@otto-kirchheim/nebengeld-shared` v0.3.0 (nicht nur lokal verlinkt via `bun link`).
+
+### feat (Welle 2 Schritt 1 — Vorgabe-Domain-Typ vereinheitlicht: IVorgabeValue)
+
+- `@otto-kirchheim/nebengeld-shared` v0.2.0: `core/types/IVorgabenGeldType.ts` ist jetzt `type IVorgabenGeldType = Required<IVorgabeValue>` statt einer unabhaengig gepflegten Feldliste — `IVorgabeValue` (shared) beschreibt den rohen, pro Monat nur teilweise befuellten Speicher-Eintrag (optionale Felder, wie im Backend-Mongoose-Schema), `Required<>` bildet den nach `createDatenGeldProxy`-Merge garantiert vollstaendigen Wert ab, den `calculateBerechnungRows.ts` konsumiert.
+- Keine Feldnamen-Aenderung (alle 17 Felder waren bereits deckungsgleich), keine Aenderung an der Merge-Business-Logik (`createDatenGeldProxy` bleibt Frontend-lokal, Plan: kein Verschieben von Berechnungslogik).
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) — insbesondere `calculateBerechnungRows.ts` kompiliert unveraendert trotz optionaler Basis-Felder in `IVorgabeValue`.
+
 ### feat (Gemeinsame Bibliothek @otto-kirchheim/nebengeld-shared eingebunden — Welle 1: Enums/Types/Konstanten)
 
 - Wie im Backend (siehe `backend/CHANGELOG.md`): neues privates Repo `otto-kirchheim/nebengeld-shared` als Single-Source-of-Truth. `TUserRole`, `TResourceKey`/`TSaveStatus`, `TDataScope`/`TEwtFilter`, `ZULAGEN_CATALOG` (+ `ZulageCategory`/`ZulageEntryUnit`/`IZulageCatalogItem`/`IZulageEntryRule`), das `lreBE`-Union in `IDatenBE`, `BackendEnvelope` (jetzt `ApiResponse` aus dem Paket) sowie `UserCookieData.role` (jetzt `Role`-Enum statt `string`) sind auf das Paket umgestellt — meist als Re-Export mit Alias (`Role as TUserRole` etc.), damit bestehende Imports aus `@/types` unveraendert funktionieren.

@@ -153,7 +153,7 @@ export async function sendBulk(
 
     switch (resource) {
       case 'BZ': {
-        const parsed = dayjs(String((item as IDatenBZ).beginB));
+        const parsed = dayjs(String((item as IDatenBZ).Beginn));
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
       case 'BE': {

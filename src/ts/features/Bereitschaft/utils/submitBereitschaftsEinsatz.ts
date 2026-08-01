@@ -55,18 +55,18 @@ export function classifyBzCoverage(
   einsatzEnd: ReturnType<typeof dayjs>,
 ): BzCoverage {
   const startBz = bzData.find(bz => {
-    const s = dayjs(String(bz.beginB));
-    const e = dayjs(String(bz.endeB));
+    const s = dayjs(String(bz.Beginn));
+    const e = dayjs(String(bz.Ende));
     return einsatzStart.isSameOrAfter(s) && einsatzStart.isSameOrBefore(e);
   });
   const endBz = bzData.find(bz => {
-    const s = dayjs(String(bz.beginB));
-    const e = dayjs(String(bz.endeB));
+    const s = dayjs(String(bz.Beginn));
+    const e = dayjs(String(bz.Ende));
     return einsatzEnd.isSameOrAfter(s) && einsatzEnd.isSameOrBefore(e);
   });
   if (!startBz && !endBz) return { kind: 'none' };
   if (startBz && endBz) {
-    const adjacent = startBz === endBz || dayjs(String(startBz.endeB)).isSame(dayjs(String(endBz.beginB)));
+    const adjacent = startBz === endBz || dayjs(String(startBz.Ende)).isSame(dayjs(String(endBz.Beginn)));
     return adjacent ? { kind: 'complete', startBz, endBz } : { kind: 'gap', startBz, endBz };
   }
   return { kind: 'partial', startBz, endBz };
@@ -75,14 +75,14 @@ export function classifyBzCoverage(
 // ─── Gap / Partial-Auflösung ─────────────────────────────────────────────────
 
 function resolveGap(startBz: IDatenBZ, endBz: IDatenBZ): GapResolution {
-  const boundary = findFirstBoundaryInRange(dayjs(String(startBz.endeB)), dayjs(String(endBz.beginB)));
+  const boundary = findFirstBoundaryInRange(dayjs(String(startBz.Ende)), dayjs(String(endBz.Beginn)));
   if (boundary)
     return {
       kind: 'boundary',
-      updatedStartBz: { ...startBz, endeB: boundary.toISOString() },
-      updatedEndBz: { ...endBz, beginB: boundary.toISOString() },
+      updatedStartBz: { ...startBz, Ende: boundary.toISOString() },
+      updatedEndBz: { ...endBz, Beginn: boundary.toISOString() },
     };
-  return { kind: 'merge', mergedBz: { ...startBz, endeB: endBz.endeB }, deletedBz: endBz };
+  return { kind: 'merge', mergedBz: { ...startBz, Ende: endBz.Ende }, deletedBz: endBz };
 }
 
 function resolvePartial(
@@ -91,23 +91,23 @@ function resolvePartial(
   einsatzEnd: ReturnType<typeof dayjs>,
 ): PartialResolution {
   if (coverage.startBz) {
-    const boundary = findFirstBoundaryInRange(dayjs(String(coverage.startBz.endeB)), einsatzEnd);
+    const boundary = findFirstBoundaryInRange(dayjs(String(coverage.startBz.Ende)), einsatzEnd);
     if (boundary)
       return {
         kind: 'extend-end',
-        updatedBz: { ...coverage.startBz, endeB: boundary.toISOString() },
-        newBz: { beginB: boundary.toISOString(), endeB: einsatzEnd.toISOString(), pauseB: 0 },
+        updatedBz: { ...coverage.startBz, Ende: boundary.toISOString() },
+        newBz: { Beginn: boundary.toISOString(), Ende: einsatzEnd.toISOString(), Pause: 0 },
       };
-    return { kind: 'extend-end', updatedBz: { ...coverage.startBz, endeB: einsatzEnd.toISOString() } };
+    return { kind: 'extend-end', updatedBz: { ...coverage.startBz, Ende: einsatzEnd.toISOString() } };
   }
-  const boundary = findFirstBoundaryInRange(einsatzStart, dayjs(String(coverage.endBz!.beginB)));
+  const boundary = findFirstBoundaryInRange(einsatzStart, dayjs(String(coverage.endBz!.Beginn)));
   if (boundary)
     return {
       kind: 'extend-start',
-      updatedBz: { ...coverage.endBz!, beginB: boundary.toISOString() },
-      newBz: { beginB: einsatzStart.toISOString(), endeB: boundary.toISOString(), pauseB: 0 },
+      updatedBz: { ...coverage.endBz!, Beginn: boundary.toISOString() },
+      newBz: { Beginn: einsatzStart.toISOString(), Ende: boundary.toISOString(), Pause: 0 },
     };
-  return { kind: 'extend-start', updatedBz: { ...coverage.endBz!, beginB: einsatzStart.toISOString() } };
+  return { kind: 'extend-start', updatedBz: { ...coverage.endBz!, Beginn: einsatzStart.toISOString() } };
 }
 
 // ─── Geteilte Validatoren ────────────────────────────────────────────────────

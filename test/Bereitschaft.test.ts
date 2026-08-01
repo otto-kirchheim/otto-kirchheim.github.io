@@ -43,11 +43,11 @@ describe('#Bereitschaftseingabe', () => {
     expect(result).not.toBeFalsy();
     if (!result) return;
     // Finde den Wechsel am 29.03.2026
-    const wechsel = result.find(e => dayjs(e.beginB || e.beginn).isSame('2026-03-29T08:00:00', 'minute'));
+    const wechsel = result.find(e => dayjs(e.Beginn || e.beginn).isSame('2026-03-29T08:00:00', 'minute'));
     expect(wechsel).toBeDefined();
     // Der Wechsel muss exakt um 08:00 Uhr sein (lokal, unabhängig von Zeitumstellung)
-    expect(dayjs(wechsel?.beginB || wechsel?.beginn).hour()).toBe(8);
-    expect(dayjs(wechsel?.beginB || wechsel?.beginn).minute()).toBe(0);
+    expect(dayjs(wechsel?.Beginn || wechsel?.beginn).hour()).toBe(8);
+    expect(dayjs(wechsel?.Beginn || wechsel?.beginn).minute()).toBe(0);
   });
   beforeAll(() => {
     Storage.set('VorgabenU', VorgabenUMock);
@@ -190,7 +190,7 @@ describe('#Bereitschaftseingabe', () => {
     expect(Array.isArray(result)).toBe(true);
     if (result && result.length > 0) {
       const letzterTag = result[result.length - 1];
-      expect(dayjs(letzterTag.endeB || letzterTag.ende).month()).toBe(4); // Mai = 4 (0-basiert)
+      expect(dayjs(letzterTag.Ende || letzterTag.ende).month()).toBe(4); // Mai = 4 (0-basiert)
     }
   });
   it('Return undefined, wenn Bereitschaftszeit bereits vorhanden', () => {
@@ -201,39 +201,39 @@ describe('#Bereitschaftseingabe', () => {
     const nachtEnde = bereitschaftsEnde;
     const daten = [
       {
-        beginB: '2023-04-12T13:45:00.000Z',
-        endeB: '2023-04-13T05:00:00.000Z',
-        pauseB: 30,
+        Beginn: '2023-04-12T13:45:00.000Z',
+        Ende: '2023-04-13T05:00:00.000Z',
+        Pause: 30,
       },
       {
-        beginB: '2023-04-13T13:45:00.000Z',
-        endeB: '2023-04-14T05:00:00.000Z',
-        pauseB: 30,
+        Beginn: '2023-04-13T13:45:00.000Z',
+        Ende: '2023-04-14T05:00:00.000Z',
+        Pause: 30,
       },
       {
-        beginB: '2023-04-14T11:00:00.000Z',
-        endeB: '2023-04-15T06:00:00.000Z',
-        pauseB: 0,
+        Beginn: '2023-04-14T11:00:00.000Z',
+        Ende: '2023-04-15T06:00:00.000Z',
+        Pause: 0,
       },
       {
-        beginB: '2023-04-15T06:00:00.000Z',
-        endeB: '2023-04-16T06:00:00.000Z',
-        pauseB: 0,
+        Beginn: '2023-04-15T06:00:00.000Z',
+        Ende: '2023-04-16T06:00:00.000Z',
+        Pause: 0,
       },
       {
-        beginB: '2023-04-16T06:00:00.000Z',
-        endeB: '2023-04-17T05:00:00.000Z',
-        pauseB: 0,
+        Beginn: '2023-04-16T06:00:00.000Z',
+        Ende: '2023-04-17T05:00:00.000Z',
+        Pause: 0,
       },
       {
-        beginB: '2023-04-17T13:45:00.000Z',
-        endeB: '2023-04-18T05:00:00.000Z',
-        pauseB: 30,
+        Beginn: '2023-04-17T13:45:00.000Z',
+        Ende: '2023-04-18T05:00:00.000Z',
+        Pause: 30,
       },
       {
-        beginB: '2023-04-18T13:45:00.000Z',
-        endeB: '2023-04-19T05:00:00.000Z',
-        pauseB: 30,
+        Beginn: '2023-04-18T13:45:00.000Z',
+        Ende: '2023-04-19T05:00:00.000Z',
+        Pause: 30,
       },
     ];
     const result = calculateBereitschaftsZeiten(

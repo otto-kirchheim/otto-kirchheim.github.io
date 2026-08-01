@@ -232,9 +232,9 @@ describe('autoSave', () => {
     });
 
     it('bricht einen laufenden Timer ab, wenn die Aenderungen zwischenzeitlich verschwunden sind', () => {
-      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      const changes = { create: [{ Beginn: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
       const { mockGetChanges } = createMockTable('tableBZ', changes, [
-        { _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } },
+        { _state: 'new', cells: { Beginn: '2025-03-10T10:00:00.000Z' } },
       ]);
 
       // Erster Aufruf: Aenderungen vorhanden → Timer wird gesetzt
@@ -459,11 +459,11 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataBZ', []);
 
-      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      const changes = { create: [{ Beginn: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
       const { mockGetChanges } = createMockTable('tableBZ', changes, [
         {
           _state: 'new',
-          cells: { beginB: '2025-03-10T10:00:00.000Z' },
+          cells: { Beginn: '2025-03-10T10:00:00.000Z' },
         },
       ]);
 
@@ -484,7 +484,7 @@ describe('autoSave', () => {
       expect(getResourceStatus('BZ').status).toBe('saving');
       expect(mockBzBulk).toHaveBeenCalledTimes(1);
 
-      changes.create.push({ beginB: '2025-03-10T11:00:00.000Z' });
+      changes.create.push({ Beginn: '2025-03-10T11:00:00.000Z' });
       mockGetChanges.mockReturnValue(changes);
       scheduleAutoSave('BZ');
 
@@ -506,8 +506,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataBZ', []);
 
-      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
-      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } }]);
+      const changes = { create: [{ Beginn: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { Beginn: '2025-03-10T10:00:00.000Z' } }]);
 
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'new-id-1' }], updated: [], deleted: [], errors: [] });
 
@@ -518,7 +518,7 @@ describe('autoSave', () => {
         expect.objectContaining({
           create: [
             expect.objectContaining({
-              beginB: '2025-03-10T10:00:00.000Z',
+              Beginn: '2025-03-10T10:00:00.000Z',
               clientRequestId: expect.stringMatching(/^[0-9a-f]{8}-[0-9a-f]{4}-/i),
             }),
           ],
@@ -538,23 +538,23 @@ describe('autoSave', () => {
       Storage.set('dataBZ', [
         {
           _id: 'bz-mar',
-          beginB: '2025-03-10T10:00:00.000Z',
-          endeB: '2025-03-10T18:00:00.000Z',
-          pauseB: 0,
+          Beginn: '2025-03-10T10:00:00.000Z',
+          Ende: '2025-03-10T18:00:00.000Z',
+          Pause: 0,
         },
         {
           _id: 'bz-apr',
-          beginB: '2025-04-12T10:00:00.000Z',
-          endeB: '2025-04-12T18:00:00.000Z',
-          pauseB: 0,
+          Beginn: '2025-04-12T10:00:00.000Z',
+          Ende: '2025-04-12T18:00:00.000Z',
+          Pause: 0,
         },
       ]);
 
       const marchRow = {
         _id: 'bz-mar',
-        beginB: '2025-03-10T11:00:00.000Z',
-        endeB: '2025-03-10T19:00:00.000Z',
-        pauseB: 15,
+        Beginn: '2025-03-10T11:00:00.000Z',
+        Ende: '2025-03-10T19:00:00.000Z',
+        Pause: 15,
       };
 
       const changes = { create: [], update: [marchRow], delete: [] };
@@ -578,9 +578,9 @@ describe('autoSave', () => {
       scheduleAutoSave('BZ');
       await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
-      const stored = Storage.get<Array<{ _id: string; beginB: string }>>('dataBZ', { check: true });
+      const stored = Storage.get<Array<{ _id: string; Beginn: string }>>('dataBZ', { check: true });
       expect(stored.map(item => item._id).sort()).toEqual(['bz-apr', 'bz-mar']);
-      expect(stored.find(item => item._id === 'bz-mar')?.beginB).toBe('2025-03-10T11:00:00.000Z');
+      expect(stored.find(item => item._id === 'bz-mar')?.Beginn).toBe('2025-03-10T11:00:00.000Z');
     });
 
     it('speichert BE-Änderungen über bereitschaftseinsatzApi', async () => {
@@ -754,9 +754,9 @@ describe('autoSave', () => {
           _id: 'bz-restored',
           cells: {
             _id: 'bz-restored',
-            beginB: '2025-03-10T10:00:00.000Z',
-            endeB: '2025-03-10T18:00:00.000Z',
-            pauseB: 0,
+            Beginn: '2025-03-10T10:00:00.000Z',
+            Ende: '2025-03-10T18:00:00.000Z',
+            Pause: 0,
           },
         },
       ]);
@@ -788,8 +788,8 @@ describe('autoSave', () => {
         _id: string | undefined;
         _errorState: string | undefined;
         _errorMessage: string | null;
-      } = { _state: 'new', cells: { beginB: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
-      const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
+      } = { _state: 'new', cells: { Beginn: '10:00' }, _id: undefined, _errorState: undefined, _errorMessage: null };
+      const changes = { create: [{ Beginn: '10:00' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [rowObj]);
 
       mockBzBulk.mockRejectedValue(new Error('Server error'));
@@ -808,12 +808,12 @@ describe('autoSave', () => {
     it('aktualisiert localStorage nach erfolgreichem Save', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', [{ beginB: 'old' }]);
+      Storage.set('dataBZ', [{ Beginn: 'old' }]);
 
-      const changes = { create: [{ beginB: 'new' }], update: [], delete: [] };
+      const changes = { create: [{ Beginn: 'new' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [
-        { _state: 'unchanged', cells: { beginB: 'existing' } },
-        { _state: 'new', cells: { beginB: 'new' } },
+        { _state: 'unchanged', cells: { Beginn: 'existing' } },
+        { _state: 'new', cells: { Beginn: 'new' } },
       ]);
 
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'id1' }], updated: [], deleted: [], errors: [] });
@@ -871,7 +871,7 @@ describe('autoSave', () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
 
-      const changes = { create: [{ beginB: '10:00' }], update: [], delete: [] };
+      const changes = { create: [{ Beginn: '10:00' }], update: [], delete: [] };
       createMockTable('tableBZ', changes);
 
       Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
@@ -892,8 +892,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataBZ', []);
 
-      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
-      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } }]);
+      const changes = { create: [{ Beginn: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      createMockTable('tableBZ', changes, [{ _state: 'new', cells: { Beginn: '2025-03-10T10:00:00.000Z' } }]);
 
       mockBzBulk.mockResolvedValue({ created: [{ _id: 'flush-id' }], updated: [], deleted: [], errors: [] });
 
@@ -920,8 +920,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataBZ', []);
 
-      const rowObj = { _state: 'new', cells: { beginB: '2025-03-10T10:00:00.000Z' } };
-      const changes = { create: [{ beginB: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
+      const rowObj = { _state: 'new', cells: { Beginn: '2025-03-10T10:00:00.000Z' } };
+      const changes = { create: [{ Beginn: '2025-03-10T10:00:00.000Z' }], update: [], delete: [] };
       createMockTable('tableBZ', changes, [rowObj]);
 
       // Fehler ohne clientRequestId/id/index → collectRowErrorMatches findet keine Zeile
@@ -970,11 +970,11 @@ describe('autoSave', () => {
       const table = createCustomTable('tableBZ', {
         columns: [
           {
-            name: 'beginB',
+            name: 'Beginn',
             title: 'Beginn',
           },
         ],
-        rows: [{ beginB: '2025-03-10T10:00:00.000Z' }],
+        rows: [{ Beginn: '2025-03-10T10:00:00.000Z' }],
       });
 
       const row = table.getRows()[0];
@@ -1007,7 +1007,7 @@ describe('autoSave', () => {
     it('behaelt fehlgeschlagene Delete-Zeilen fuer manuellen Retry in der Tabelle', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', [{ _id: 'bz-1', beginB: '2025-03-10T10:00:00.000Z' }]);
+      Storage.set('dataBZ', [{ _id: 'bz-1', Beginn: '2025-03-10T10:00:00.000Z' }]);
 
       const tableElement = document.createElement('table');
       tableElement.id = 'tableBZ';
@@ -1016,11 +1016,11 @@ describe('autoSave', () => {
       const table = createCustomTable('tableBZ', {
         columns: [
           {
-            name: 'beginB',
+            name: 'Beginn',
             title: 'Beginn',
           },
         ],
-        rows: [{ _id: 'bz-1', beginB: '2025-03-10T10:00:00.000Z' }],
+        rows: [{ _id: 'bz-1', Beginn: '2025-03-10T10:00:00.000Z' }],
       });
 
       const row = table.getRows()[0];
@@ -1056,23 +1056,23 @@ describe('autoSave', () => {
     it('blockiert AutoSave fuer eine neue BZ-Zeile, die eine ungesyncte Loeschung ueberschneidet', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }]);
+      Storage.set('dataBZ', [{ _id: 'bz-old', Beginn: '2025-03-10T08:00:00.000Z', Ende: '2025-03-11T08:00:00.000Z' }]);
 
       const tableElement = document.createElement('table');
       tableElement.id = 'tableBZ';
       document.body.appendChild(tableElement);
 
-      const table = createCustomTable<{ _id?: string; beginB: string; endeB: string }>('tableBZ', {
+      const table = createCustomTable<{ _id?: string; Beginn: string; Ende: string }>('tableBZ', {
         columns: [
-          { name: 'beginB', title: 'Beginn' },
-          { name: 'endeB', title: 'Ende' },
+          { name: 'Beginn', title: 'Beginn' },
+          { name: 'Ende', title: 'Ende' },
         ],
-        rows: [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }],
+        rows: [{ _id: 'bz-old', Beginn: '2025-03-10T08:00:00.000Z', Ende: '2025-03-11T08:00:00.000Z' }],
       });
 
       const oldRow = table.getRows()[0];
       oldRow.deleteRow();
-      table.rows.add({ beginB: '2025-03-10T20:00:00.000Z', endeB: '2025-03-12T08:00:00.000Z' });
+      table.rows.add({ Beginn: '2025-03-10T20:00:00.000Z', Ende: '2025-03-12T08:00:00.000Z' });
       const newRow = table.getRows().find(r => r !== oldRow)!;
 
       scheduleAutoSave('BZ');
@@ -1090,22 +1090,22 @@ describe('autoSave', () => {
     it('manuelles Speichern (includeDeletes) ignoriert den Guard und sendet Delete+Create zusammen', async () => {
       Storage.set('Monat', 3);
       Storage.set('Jahr', 2025);
-      Storage.set('dataBZ', [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }]);
+      Storage.set('dataBZ', [{ _id: 'bz-old', Beginn: '2025-03-10T08:00:00.000Z', Ende: '2025-03-11T08:00:00.000Z' }]);
 
       const tableElement = document.createElement('table');
       tableElement.id = 'tableBZ';
       document.body.appendChild(tableElement);
 
-      const table = createCustomTable<{ _id?: string; beginB: string; endeB: string }>('tableBZ', {
+      const table = createCustomTable<{ _id?: string; Beginn: string; Ende: string }>('tableBZ', {
         columns: [
-          { name: 'beginB', title: 'Beginn' },
-          { name: 'endeB', title: 'Ende' },
+          { name: 'Beginn', title: 'Beginn' },
+          { name: 'Ende', title: 'Ende' },
         ],
-        rows: [{ _id: 'bz-old', beginB: '2025-03-10T08:00:00.000Z', endeB: '2025-03-11T08:00:00.000Z' }],
+        rows: [{ _id: 'bz-old', Beginn: '2025-03-10T08:00:00.000Z', Ende: '2025-03-11T08:00:00.000Z' }],
       });
 
       table.getRows()[0].deleteRow();
-      table.rows.add({ beginB: '2025-03-10T20:00:00.000Z', endeB: '2025-03-12T08:00:00.000Z' });
+      table.rows.add({ Beginn: '2025-03-10T20:00:00.000Z', Ende: '2025-03-12T08:00:00.000Z' });
 
       mockBzBulk.mockResolvedValue({
         created: [{ _id: 'bz-new' }],
@@ -1119,7 +1119,7 @@ describe('autoSave', () => {
 
       expect(mockBzBulk).toHaveBeenCalledWith(
         expect.objectContaining({
-          create: [expect.objectContaining({ beginB: '2025-03-10T20:00:00.000Z' })],
+          create: [expect.objectContaining({ Beginn: '2025-03-10T20:00:00.000Z' })],
           delete: ['bz-old'],
         }),
         3,

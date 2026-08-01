@@ -143,8 +143,8 @@ describe('download utility', () => {
   it("should perform download for mode 'B' successfully", async () => {
     (tableToArray as ReturnType<typeof vi.fn>)
       .mockReturnValueOnce([
-        { beginB: '2026-04-19T08:00:00.000Z', endeB: '2026-04-19T16:00:00.000Z', pauseB: 30 },
-        { beginB: '2026-04-19T17:00:00.000Z', endeB: '2026-04-19T22:00:00.000Z', pauseB: 0 },
+        { Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 },
+        { Beginn: '2026-04-19T17:00:00.000Z', Ende: '2026-04-19T22:00:00.000Z', Pause: 0 },
       ])
       .mockReturnValueOnce([
         {

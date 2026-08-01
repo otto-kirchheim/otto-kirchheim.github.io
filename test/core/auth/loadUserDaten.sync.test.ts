@@ -72,7 +72,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
     const future = Date.now() + 1_000_000;
 
     // Lokal: Server-Row + neue Zeile ohne _id (Fenster wurde vor Ablauf des AutoSave-Timers geschlossen)
-    Storage.setWithTimestamp('dataBZ', [{ _id: 'bz1' }, { beginB: '2026-07-01' }], future);
+    Storage.setWithTimestamp('dataBZ', [{ _id: 'bz1' }, { Beginn: '2026-07-01' }], future);
 
     const result = syncLoadedYearResources({
       vorgabenU,
@@ -92,7 +92,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
   it('meldet keinen Konflikt für lokale Pending-New-Rows mit explizitem __localState-Marker', () => {
     const future = Date.now() + 1_000_000;
 
-    Storage.setWithTimestamp('dataBZ', [{ _id: 'bz1' }, { beginB: '2026-07-01', __localState: 'new' }], future);
+    Storage.setWithTimestamp('dataBZ', [{ _id: 'bz1' }, { Beginn: '2026-07-01', __localState: 'new' }], future);
 
     const result = syncLoadedYearResources({
       vorgabenU,

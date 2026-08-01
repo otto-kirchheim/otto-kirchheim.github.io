@@ -40,24 +40,24 @@ describe('fieldMapper – BZ (Bereitschaftszeitraum)', () => {
     const result = bzFromBackend(backendBZ);
     expect(result).toEqual({
       _id: 'bz1',
-      beginB: '2024-04-12T13:45:00.000Z',
-      endeB: '2024-04-19T05:00:00.000Z',
-      pauseB: 30,
+      Beginn: '2024-04-12T13:45:00.000Z',
+      Ende: '2024-04-19T05:00:00.000Z',
+      Pause: 30,
     });
   });
 
   it('bzFromBackend setzt Pause auf 0 wenn undefined', () => {
     const withoutPause = { ...backendBZ, Pause: undefined };
     const result = bzFromBackend(withoutPause);
-    expect(result.pauseB).toBe(0);
+    expect(result.Pause).toBe(0);
   });
 
   it('bzToBackend konvertiert korrekt', () => {
     const frontendBZ: IDatenBZ = {
       _id: 'bz1',
-      beginB: '2024-04-12T13:45:00.000Z',
-      endeB: '2024-04-19T05:00:00.000Z',
-      pauseB: 30,
+      Beginn: '2024-04-12T13:45:00.000Z',
+      Ende: '2024-04-19T05:00:00.000Z',
+      Pause: 30,
     };
     const result = bzToBackend(frontendBZ, 4, 2024);
     expect(result).toEqual({
@@ -73,9 +73,9 @@ describe('fieldMapper – BZ (Bereitschaftszeitraum)', () => {
   it('bzToBackend fällt bei ungültigem Datum auf Monat/Jahr-Parameter zurück', () => {
     const frontendBZ: IDatenBZ = {
       _id: 'bz-invalid',
-      beginB: 'not-a-valid-date',
-      endeB: '2024-04-19T05:00:00.000Z',
-      pauseB: 0,
+      Beginn: 'not-a-valid-date',
+      Ende: '2024-04-19T05:00:00.000Z',
+      Pause: 0,
     };
     const result = bzToBackend(frontendBZ, 7, 2025);
     expect(result.Monat).toBe(7);
@@ -85,9 +85,9 @@ describe('fieldMapper – BZ (Bereitschaftszeitraum)', () => {
   it('bzToBackend → bzFromBackend Roundtrip', () => {
     const original: IDatenBZ = {
       _id: 'rt1',
-      beginB: '2024-01-01T00:00:00Z',
-      endeB: '2024-01-07T12:00:00Z',
-      pauseB: 15,
+      Beginn: '2024-01-01T00:00:00Z',
+      Ende: '2024-01-07T12:00:00Z',
+      Pause: 15,
     };
     const backend = bzToBackend(original, 1, 2024);
     const roundtripped = bzFromBackend(backend);

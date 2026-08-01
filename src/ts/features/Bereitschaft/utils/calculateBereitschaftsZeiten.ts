@@ -326,15 +326,15 @@ export default function calculateBereitschaftsZeiten(
     }
 
     const [change, nextDaten] = vorhandenCheck(daten, {
-      beginB: aktuelleSchicht.ende.toISOString(),
-      endeB: nächsteSchicht.beginn.toISOString(),
-      pauseB: aktuelleSchicht.pause,
+      Beginn: aktuelleSchicht.ende.toISOString(),
+      Ende: nächsteSchicht.beginn.toISOString(),
+      Pause: aktuelleSchicht.pause,
     });
     daten = nextDaten;
     if (!changed && change) changed = change;
   }
 
-  DatenSortieren(daten, 'beginB');
+  DatenSortieren(daten, 'Beginn');
 
   console.timeEnd('Generiere Bereitschaft');
 
@@ -352,21 +352,21 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
   if (depth > MAX_DEPTH) throw new Error('Fehler bei vorhandenCheck - Recurse Funktion');
 
   const updatedDaten: IDatenBZ[] = [...daten];
-  const newBegin: Dayjs = dayjs(newDaten.beginB);
-  const newEnd: Dayjs = dayjs(newDaten.endeB);
+  const newBegin: Dayjs = dayjs(newDaten.Beginn);
+  const newEnd: Dayjs = dayjs(newDaten.Ende);
 
   const Tag1Neu: number = newBegin.date();
   const Tag2Neu: number = newEnd.date();
 
   const filteredDaten: IDatenBZ[] = daten.filter(value => {
-    const TagBeginB: number = dayjs(value.beginB).date();
-    const TagEndeB: number = dayjs(value.endeB).date();
+    const TagBeginB: number = dayjs(value.Beginn).date();
+    const TagEndeB: number = dayjs(value.Ende).date();
     return TagBeginB === Tag1Neu || TagBeginB === Tag2Neu || TagEndeB === Tag1Neu || TagEndeB === Tag2Neu;
   });
 
   for (const row of filteredDaten) {
-    const rowBegin = dayjs(row.beginB);
-    const rowEnd = dayjs(row.endeB);
+    const rowBegin = dayjs(row.Beginn);
+    const rowEnd = dayjs(row.Ende);
 
     // Prüfen, ob der neue Zeitraum bereits in einem anderen Zeitraum vorhanden ist
     if (newBegin.isBetween(rowBegin, rowEnd, null, '[]') && newEnd.isBetween(rowBegin, rowEnd, null, '[]')) {
@@ -377,8 +377,8 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
     // Prüfen, ob der neue Zeitraum einen vorhandenen Zeitraum vollständig überschneidet
     if (rowBegin.isBetween(newBegin, newEnd, null, '()') && rowEnd.isBetween(newBegin, newEnd, null, '()')) {
       console.log('Bereitschaftszeitraum überschneidet andern Zeitraum komplett');
-      row.beginB = newBegin.toISOString();
-      row.endeB = newEnd.toISOString();
+      row.Beginn = newBegin.toISOString();
+      row.Ende = newEnd.toISOString();
       return [true, daten];
     }
 
@@ -387,22 +387,22 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
       .set('minute', B_WECHSEL_MINUTE)
       .set('second', 0)
       .set('millisecond', 0);
-    if (newBegin.isBetween(rowBegin, rowEnd, null, '[)') && !rowEnd.isSame(endeBDate) && newEnd.isAfter(row.endeB)) {
+    if (newBegin.isBetween(rowBegin, rowEnd, null, '[)') && !rowEnd.isSame(endeBDate) && newEnd.isAfter(row.Ende)) {
       // Überlappung, wobei das neue Ende nach dem vorhandenen Ende und dem Bereitschaftszeitraumwechsel liegt
       if (newEnd.isAfter(endeBDate)) {
-        row.endeB = endeBDate.toISOString();
+        row.Ende = endeBDate.toISOString();
 
         const neuerZeitraum: IDatenBZ = {
-          beginB: endeBDate.toISOString(),
-          endeB: newDaten.endeB,
-          pauseB: 0,
+          Beginn: endeBDate.toISOString(),
+          Ende: newDaten.Ende,
+          Pause: 0,
         };
         console.log(
           'Überschneidung Bereitschaftszeitraum neues Ende nach vorhandenem und Bereitschaftszeitraumwechsel',
         );
         return vorhandenCheck(daten, neuerZeitraum, depth + 1);
       } else {
-        row.endeB = newDaten.endeB;
+        row.Ende = newDaten.Ende;
         console.log('Überschneidung Bereitschaftszeitraum neues Ende nach vorhandenem');
         return [true, daten];
       }
@@ -416,16 +416,16 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
     if (
       newEnd.isBetween(rowBegin, rowEnd, null, '(]') &&
       !rowBegin.isSame(beginBDate) &&
-      newBegin.isBefore(row.beginB)
+      newBegin.isBefore(row.Beginn)
     ) {
       // Überlappung, wobei der neue Beginn vor dem vorhandenen Beginn und dem Bereitschaftszeitraumwechsel liegt
       if (newBegin.isBefore(beginBDate)) {
-        row.beginB = beginBDate.toISOString();
+        row.Beginn = beginBDate.toISOString();
 
         const neuerZeitraum: IDatenBZ = {
-          beginB: newDaten.beginB,
-          endeB: beginBDate.toISOString(),
-          pauseB: 0,
+          Beginn: newDaten.Beginn,
+          Ende: beginBDate.toISOString(),
+          Pause: 0,
         };
         console.log(
           'Überschneidung Bereitschaftszeitraum neuer Begin vor vorhandenem und Bereitschaftszeitraumwechsel',
@@ -433,7 +433,7 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
 
         return vorhandenCheck(daten, neuerZeitraum, depth + 1);
       } else {
-        row.beginB = newDaten.beginB;
+        row.Beginn = newDaten.Beginn;
         console.log('Überschneidung Bereitschaftszeitraum neuer Begin vor vorhandenem');
         return [true, daten];
       }
@@ -442,10 +442,10 @@ function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1
   // Wenn keine Überlappung gefunden wurde, den neuen Zeitraum hinzufügen – ggf. an Monatsgrenze splitten
   const monthBoundary = newBegin.startOf('month').add(1, 'month');
   if (monthBoundary.isAfter(newBegin) && monthBoundary.isBefore(newEnd)) {
-    updatedDaten.push({ beginB: newDaten.beginB, endeB: monthBoundary.toISOString(), pauseB: newDaten.pauseB });
+    updatedDaten.push({ Beginn: newDaten.Beginn, Ende: monthBoundary.toISOString(), Pause: newDaten.Pause });
     return vorhandenCheck(
       updatedDaten,
-      { beginB: monthBoundary.toISOString(), endeB: newDaten.endeB, pauseB: 0 },
+      { Beginn: monthBoundary.toISOString(), Ende: newDaten.Ende, Pause: 0 },
       depth + 1,
     );
   }

@@ -18,24 +18,24 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
       const table = mockTable([
         {
           _state: 'deleted',
-          cells: { _id: 'old', beginB: '2026-07-01T08:00:00.000Z', endeB: '2026-07-02T08:00:00.000Z' },
+          cells: { _id: 'old', Beginn: '2026-07-01T08:00:00.000Z', Ende: '2026-07-02T08:00:00.000Z' },
         },
-        { _state: 'new', cells: { beginB: '2026-07-01T12:00:00.000Z', endeB: '2026-07-03T08:00:00.000Z' } },
+        { _state: 'new', cells: { Beginn: '2026-07-01T12:00:00.000Z', Ende: '2026-07-03T08:00:00.000Z' } },
       ]);
 
       const blocked = findOverlapBlockedRows('BZ', table);
 
       expect(blocked).toHaveLength(1);
-      expect((blocked[0].cells as Record<string, unknown>).beginB).toBe('2026-07-01T12:00:00.000Z');
+      expect((blocked[0].cells as Record<string, unknown>).Beginn).toBe('2026-07-01T12:00:00.000Z');
     });
 
     it('blockiert nicht, wenn sich die Zeitfenster nicht überschneiden', () => {
       const table = mockTable([
         {
           _state: 'deleted',
-          cells: { _id: 'old', beginB: '2026-07-01T08:00:00.000Z', endeB: '2026-07-02T08:00:00.000Z' },
+          cells: { _id: 'old', Beginn: '2026-07-01T08:00:00.000Z', Ende: '2026-07-02T08:00:00.000Z' },
         },
-        { _state: 'new', cells: { beginB: '2026-07-03T08:00:00.000Z', endeB: '2026-07-04T08:00:00.000Z' } },
+        { _state: 'new', cells: { Beginn: '2026-07-03T08:00:00.000Z', Ende: '2026-07-04T08:00:00.000Z' } },
       ]);
 
       expect(findOverlapBlockedRows('BZ', table)).toHaveLength(0);
@@ -43,7 +43,7 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
 
     it('blockiert nichts ohne ausstehende Löschung', () => {
       const table = mockTable([
-        { _state: 'new', cells: { beginB: '2026-07-01T08:00:00.000Z', endeB: '2026-07-02T08:00:00.000Z' } },
+        { _state: 'new', cells: { Beginn: '2026-07-01T08:00:00.000Z', Ende: '2026-07-02T08:00:00.000Z' } },
       ]);
 
       expect(findOverlapBlockedRows('BZ', table)).toHaveLength(0);
@@ -53,12 +53,12 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
       const table = mockTable([
         {
           _state: 'deleted',
-          cells: { _id: 'old', beginB: '2026-07-01T08:00:00.000Z', endeB: '2026-07-02T08:00:00.000Z' },
+          cells: { _id: 'old', Beginn: '2026-07-01T08:00:00.000Z', Ende: '2026-07-02T08:00:00.000Z' },
         },
         {
           _state: 'error',
           _errorState: 'modified',
-          cells: { _id: 'mod', beginB: '2026-07-01T20:00:00.000Z', endeB: '2026-07-03T00:00:00.000Z' },
+          cells: { _id: 'mod', Beginn: '2026-07-01T20:00:00.000Z', Ende: '2026-07-03T00:00:00.000Z' },
         },
       ]);
 

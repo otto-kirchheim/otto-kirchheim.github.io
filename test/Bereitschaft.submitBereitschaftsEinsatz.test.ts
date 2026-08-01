@@ -76,7 +76,7 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
   getMonatFromBZ: (item: IDatenBZ) => {
     // Return April (4) for our test BZs (2023-04-xx)
-    const d = new Date(String(item.beginB));
+    const d = new Date(String(item.Beginn));
     return d.getMonth() + 1;
   },
 }));
@@ -121,8 +121,8 @@ function createModal(overrides: Partial<Record<string, string | boolean>> = {}):
   return modal;
 }
 
-function createBZ(beginB: string, endeB: string, id?: string): IDatenBZ {
-  return { beginB, endeB, pauseB: 0, ...(id ? { _id: id } : {}) } as IDatenBZ;
+function createBZ(Beginn: string, Ende: string, id?: string): IDatenBZ {
+  return { Beginn, Ende, Pause: 0, ...(id ? { _id: id } : {}) } as IDatenBZ;
 }
 
 function createTableBEMock() {
@@ -276,7 +276,7 @@ describe('submitBereitschaftsEinsatz', () => {
     const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
     getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([]).mockReturnValue([bz]);
     calculateBereitschaftsZeitenMock.mockReturnValue([
-      { beginB: '2023-04-12T09:00:00.000Z', endeB: '2023-04-12T12:00:00.000Z', pauseB: 0 },
+      { Beginn: '2023-04-12T09:00:00.000Z', Ende: '2023-04-12T12:00:00.000Z', Pause: 0 },
     ]);
 
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
@@ -372,11 +372,11 @@ describe('submitBereitschaftsEinsatz', () => {
 
       expect(result).toBe(true);
       expect(loadMock).toHaveBeenCalledTimes(1);
-      // Merged BZ should be in Storage (bz2 removed, bz1 extended to bz2.endeB)
+      // Merged BZ should be in Storage (bz2 removed, bz1 extended to bz2.Ende)
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
       expect(storedBzs).toHaveLength(1);
       expect(storedBzs[0]._id).toBe('bz1');
-      expect(storedBzs[0].endeB).toBe('2023-04-12T22:00:00.000Z');
+      expect(storedBzs[0].Ende).toBe('2023-04-12T22:00:00.000Z');
     });
 
     it('passt beide BZs bei 08:00-Grenze in der Lücke an', async () => {
@@ -411,8 +411,8 @@ describe('submitBereitschaftsEinsatz', () => {
       // Storage should have both BZs adjusted to meet at 06:00Z (= 08:00 Berlin)
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
       expect(storedBzs).toHaveLength(2);
-      expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz1')?.endeB).toBe('2023-04-12T06:00:00.000Z');
-      expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz2')?.beginB).toBe('2023-04-12T06:00:00.000Z');
+      expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz1')?.Ende).toBe('2023-04-12T06:00:00.000Z');
+      expect(storedBzs.find((b: IDatenBZ) => b._id === 'bz2')?.Beginn).toBe('2023-04-12T06:00:00.000Z');
     });
 
     it('aktualisiert verknüpfte Bereitschaftseinsätze wenn ein gemergter BZ gelöscht wird', async () => {
@@ -476,7 +476,7 @@ describe('submitBereitschaftsEinsatz', () => {
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
       expect(storedBzs).toHaveLength(1);
       expect(storedBzs[0]._id).toBe('bz1');
-      expect(storedBzs[0].endeB).not.toBe(bz1.endeB);
+      expect(storedBzs[0].Ende).not.toBe(bz1.Ende);
     });
 
     it('erweitert vorhandenen BZ an den Anfang wenn nur das Ende abgedeckt ist', async () => {
@@ -501,7 +501,7 @@ describe('submitBereitschaftsEinsatz', () => {
       expect(loadMock).toHaveBeenCalledTimes(1);
       const storedBzs = (storageStore.get('dataBZ') as IDatenBZ[]) ?? [];
       expect(storedBzs).toHaveLength(1);
-      expect(storedBzs[0].beginB).not.toBe(bz1.beginB);
+      expect(storedBzs[0].Beginn).not.toBe(bz1.Beginn);
     });
   });
 
@@ -517,7 +517,7 @@ describe('submitBereitschaftsEinsatz', () => {
       storageStore.set('dataBE', previousBes);
 
       calculateBereitschaftsZeitenMock.mockReturnValue([
-        { beginB: '2023-04-12T09:00:00.000Z', endeB: '2023-04-12T12:00:00.000Z', pauseB: 0 },
+        { Beginn: '2023-04-12T09:00:00.000Z', Ende: '2023-04-12T12:00:00.000Z', Pause: 0 },
       ]);
       flushResourceMock.mockRejectedValueOnce(new Error('Netzwerk down'));
 

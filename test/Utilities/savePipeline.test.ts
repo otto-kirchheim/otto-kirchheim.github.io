@@ -248,10 +248,10 @@ describe('savePipeline', () => {
     });
 
     it('updates row cells from server response', () => {
-      const row = makeRow({ _id: 'id1', cells: { beginB: '2026-01-01T00:00:00.000Z' } as unknown as CustomTableTypes });
+      const row = makeRow({ _id: 'id1', cells: { Beginn: '2026-01-01T00:00:00.000Z' } as unknown as CustomTableTypes });
       const table = makeTable([row]);
 
-      const serverDoc = { _id: 'id1', beginB: '2026-01-01T08:00:00.000Z', endeB: '2026-01-01T16:00:00.000Z' };
+      const serverDoc = { _id: 'id1', Beginn: '2026-01-01T08:00:00.000Z', Ende: '2026-01-01T16:00:00.000Z' };
       applyServerRowsToTable('BZ', table, { updated: [serverDoc] });
 
       expect((row.cells as Record<string, unknown>)._id).toBe('id1');
@@ -260,19 +260,19 @@ describe('savePipeline', () => {
     });
 
     it('skips deleted rows', () => {
-      const row = makeRow({ _id: 'id1', _state: 'deleted', cells: { beginB: 'old' } as unknown as CustomTableTypes });
+      const row = makeRow({ _id: 'id1', _state: 'deleted', cells: { Beginn: 'old' } as unknown as CustomTableTypes });
       const table = makeTable([row]);
 
-      applyServerRowsToTable('BZ', table, { updated: [{ _id: 'id1', beginB: 'new' }] });
-      expect((row.cells as Record<string, unknown>).beginB).toBe('old');
+      applyServerRowsToTable('BZ', table, { updated: [{ _id: 'id1', Beginn: 'new' }] });
+      expect((row.cells as Record<string, unknown>).Beginn).toBe('old');
     });
 
     it('skips rows without _id', () => {
-      const row = makeRow({ cells: { beginB: 'old' } as unknown as CustomTableTypes });
+      const row = makeRow({ cells: { Beginn: 'old' } as unknown as CustomTableTypes });
       const table = makeTable([row]);
 
-      applyServerRowsToTable('BZ', table, { updated: [{ _id: 'srv1', beginB: 'new' }] });
-      expect((row.cells as Record<string, unknown>).beginB).toBe('old');
+      applyServerRowsToTable('BZ', table, { updated: [{ _id: 'srv1', Beginn: 'new' }] });
+      expect((row.cells as Record<string, unknown>).Beginn).toBe('old');
     });
   });
 });

@@ -106,8 +106,8 @@ describe('countByMonth', () => {
   it('zählt normale Rows pro Monat', () => {
     getMonatFromBZMock.mockReturnValue(3);
     const rows = [
-      { _id: 'a', beginB: '...' },
-      { _id: 'b', beginB: '...' },
+      { _id: 'a', Beginn: '...' },
+      { _id: 'b', Beginn: '...' },
     ];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(2);
@@ -116,8 +116,8 @@ describe('countByMonth', () => {
   it('exkludiert Rows mit __localState === deleted', () => {
     getMonatFromBZMock.mockReturnValue(3);
     const rows = [
-      { _id: 'a', beginB: '...' },
-      { _id: 'b', beginB: '...', __localState: 'deleted' },
+      { _id: 'a', Beginn: '...' },
+      { _id: 'b', Beginn: '...', __localState: 'deleted' },
     ];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(1);
@@ -125,14 +125,14 @@ describe('countByMonth', () => {
 
   it('zählt Rows mit anderem __localState-Wert normal', () => {
     getMonatFromBZMock.mockReturnValue(3);
-    const rows = [{ _id: 'a', beginB: '...', __localState: 'other' }];
+    const rows = [{ _id: 'a', Beginn: '...', __localState: 'other' }];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(1);
   });
 
   it('exkludiert Pending-New-Rows ohne _id (werden nach dem Load automatisch nachgespeichert)', () => {
     getMonatFromBZMock.mockReturnValue(3);
-    const rows = [{ _id: 'a', beginB: '...' }, { beginB: '...' }];
+    const rows = [{ _id: 'a', Beginn: '...' }, { Beginn: '...' }];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(1);
   });
@@ -140,8 +140,8 @@ describe('countByMonth', () => {
   it('exkludiert Rows mit explizitem __localState === new', () => {
     getMonatFromBZMock.mockReturnValue(3);
     const rows = [
-      { _id: 'a', beginB: '...', __localState: 'unchanged' },
-      { beginB: '...', __localState: 'new' },
+      { _id: 'a', Beginn: '...', __localState: 'unchanged' },
+      { Beginn: '...', __localState: 'new' },
     ];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(1);
@@ -149,7 +149,7 @@ describe('countByMonth', () => {
 
   it('zählt Rows mit __localState === modified normal (existieren auf dem Server)', () => {
     getMonatFromBZMock.mockReturnValue(3);
-    const rows = [{ _id: 'a', beginB: '...', __localState: 'modified' }];
+    const rows = [{ _id: 'a', Beginn: '...', __localState: 'modified' }];
     const result = countByMonth(rows, 'dataBZ');
     expect(result.get(3)).toBe(1);
   });

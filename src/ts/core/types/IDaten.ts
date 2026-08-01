@@ -26,9 +26,9 @@ type IDatenBZValues<BZType = string> = BZType | number | string | undefined;
 export interface IDatenBZ<BZType = string> extends CustomTableTypes {
   [key: string]: IDatenBZValues<BZType>;
   _id?: string;
-  beginB: BZType;
-  endeB: BZType;
-  pauseB: number;
+  Beginn: BZType;
+  Ende: BZType;
+  Pause: number;
 }
 
 type IDatenBEValues = string | number | string[] | undefined;

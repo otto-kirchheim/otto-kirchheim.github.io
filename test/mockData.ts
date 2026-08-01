@@ -634,9 +634,9 @@ export const mockBereitschaft = (): void => {
   const timeZeroParser = (value: number): number | string => (!value ? '' : value);
   createCustomTable('tableBZ', {
     columns: [
-      { name: 'beginB', title: 'Von', parser: datetimeParser, sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true },
-      { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
+      { name: 'Beginn', title: 'Von', parser: datetimeParser, sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Ende', title: 'Bis', parser: datetimeParser, sortable: true },
+      { name: 'Pause', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs' },
     ],
     rows: [],
   });
@@ -655,59 +655,59 @@ export const mockBereitschaft = (): void => {
 
 export const datenBZMock: Required<IDaten>['BZ'] = [
   {
-    beginB: '2023-03-02T14:45:00.000Z',
-    endeB: '2023-03-02T21:30:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-02T14:45:00.000Z',
+    Ende: '2023-03-02T21:30:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-08T14:45:00.000Z',
-    endeB: '2023-03-09T06:00:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-08T14:45:00.000Z',
+    Ende: '2023-03-09T06:00:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-09T14:45:00.000Z',
-    endeB: '2023-03-10T06:00:00.000Z',
-    pauseB: 30,
+    Beginn: '2023-03-09T14:45:00.000Z',
+    Ende: '2023-03-10T06:00:00.000Z',
+    Pause: 30,
   },
   {
-    beginB: '2023-03-10T12:00:00.000Z',
-    endeB: '2023-03-11T07:00:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-10T12:00:00.000Z',
+    Ende: '2023-03-11T07:00:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-11T07:00:00.000Z',
-    endeB: '2023-03-12T07:00:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-11T07:00:00.000Z',
+    Ende: '2023-03-12T07:00:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-12T07:00:00.000Z',
-    endeB: '2023-03-12T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-12T07:00:00.000Z',
+    Ende: '2023-03-12T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-13T05:15:00.000Z',
-    endeB: '2023-03-13T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-13T05:15:00.000Z',
+    Ende: '2023-03-13T06:00:00.000Z',
+    Pause: 45,
   },
   {
-    beginB: '2023-03-13T14:45:00.000Z',
-    endeB: '2023-03-13T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-13T14:45:00.000Z',
+    Ende: '2023-03-13T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-14T05:15:00.000Z',
-    endeB: '2023-03-14T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-14T05:15:00.000Z',
+    Ende: '2023-03-14T06:00:00.000Z',
+    Pause: 45,
   },
   {
-    beginB: '2023-03-14T14:45:00.000Z',
-    endeB: '2023-03-14T18:30:00.000Z',
-    pauseB: 0,
+    Beginn: '2023-03-14T14:45:00.000Z',
+    Ende: '2023-03-14T18:30:00.000Z',
+    Pause: 0,
   },
   {
-    beginB: '2023-03-15T05:15:00.000Z',
-    endeB: '2023-03-15T06:00:00.000Z',
-    pauseB: 45,
+    Beginn: '2023-03-15T05:15:00.000Z',
+    Ende: '2023-03-15T06:00:00.000Z',
+    Pause: 45,
   },
 ];
 

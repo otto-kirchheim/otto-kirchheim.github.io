@@ -70,14 +70,14 @@ function runCase(
 }
 
 function beginZeiten(rows: IDatenBZ[]): string[] {
-  return rows.map(row => dayjs(row.beginB).format('HH:mm'));
+  return rows.map(row => dayjs(row.Beginn).format('HH:mm'));
 }
 
-function serializeRows(rows: IDatenBZ[]): Array<{ beginB: string; endeB: string; pauseB: number }> {
+function serializeRows(rows: IDatenBZ[]): Array<{ Beginn: string; Ende: string; Pause: number }> {
   return rows.map(row => ({
-    beginB: dayjs(row.beginB).format('YYYY-MM-DD HH:mm'),
-    endeB: dayjs(row.endeB).format('YYYY-MM-DD HH:mm'),
-    pauseB: row.pauseB,
+    Beginn: dayjs(row.Beginn).format('YYYY-MM-DD HH:mm'),
+    Ende: dayjs(row.Ende).format('YYYY-MM-DD HH:mm'),
+    Pause: row.Pause,
   }));
 }
 
@@ -144,7 +144,7 @@ describe('Bereitschaftseingaben - verschiedene Overrides', () => {
 
     expect(beginZeiten(ohne)).toContain('06:15');
     expect(beginZeiten(mit)).toContain('05:00');
-    expect(mit.find(row => dayjs(row.beginB).format('HH:mm') === '05:00')?.pauseB).toBe(60);
+    expect(mit.find(row => dayjs(row.Beginn).format('HH:mm') === '05:00')?.Pause).toBe(60);
   });
 
   it('Sonder-Override (Runtime) verschiebt den Beginn von 07:00 auf 08:00', () => {

@@ -80,7 +80,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
       const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
       data.Daten = {
-        BZ: bzRaw.map(bz => ({ Beginn: bz.beginB, Ende: bz.endeB, Pause: bz.pauseB ?? 0 })),
+        BZ: bzRaw.map(bz => ({ Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 })),
         BE: beRaw.map(be => ({
           Tag: be.tagBE,
           Auftragsnummer: be.auftragsnummerBE,

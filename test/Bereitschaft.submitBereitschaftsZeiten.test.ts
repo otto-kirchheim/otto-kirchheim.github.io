@@ -107,8 +107,8 @@ function createTableBZMock() {
   };
 }
 
-function createBZ(beginB: string, endeB: string, id = '1'): IDatenBZ {
-  return { _id: id, beginB, endeB, pauseB: 0 };
+function createBZ(Beginn: string, Ende: string, id = '1'): IDatenBZ {
+  return { _id: id, Beginn, Ende, Pause: 0 };
 }
 
 // ─── tests ──────────────────────────────────────────────────────────────────

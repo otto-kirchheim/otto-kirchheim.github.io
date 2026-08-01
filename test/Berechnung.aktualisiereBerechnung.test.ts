@@ -48,12 +48,12 @@ describe('aktualisiereBerechnung', () => {
     }
   });
 
-  it('calculates BZ standby minutes (endeB - beginB + pauseB)', () => {
+  it('calculates BZ standby minutes (Ende - Beginn + Pause)', () => {
     const BZ: IDatenBZ[] = [
       {
-        beginB: '2026-03-10T10:00:00.000Z',
-        endeB: '2026-03-10T18:00:00.000Z',
-        pauseB: 30,
+        Beginn: '2026-03-10T10:00:00.000Z',
+        Ende: '2026-03-10T18:00:00.000Z',
+        Pause: 30,
       } as IDatenBZ,
     ];
 
@@ -65,9 +65,9 @@ describe('aktualisiereBerechnung', () => {
   it('subtracts BE einsatz time from standby and counts LRE', () => {
     const BZ: IDatenBZ[] = [
       {
-        beginB: '2026-03-10T10:00:00.000Z',
-        endeB: '2026-03-10T20:00:00.000Z',
-        pauseB: 0,
+        Beginn: '2026-03-10T10:00:00.000Z',
+        Ende: '2026-03-10T20:00:00.000Z',
+        Pause: 0,
       } as IDatenBZ,
     ];
 
@@ -231,7 +231,7 @@ describe('aktualisiereBerechnung', () => {
   });
 
   it('handles nested data format (month-keyed objects)', () => {
-    const BZ = { '3': [{ beginB: '2026-03-10T08:00:00.000Z', endeB: '2026-03-10T16:00:00.000Z', pauseB: 0 }] };
+    const BZ = { '3': [{ Beginn: '2026-03-10T08:00:00.000Z', Ende: '2026-03-10T16:00:00.000Z', Pause: 0 }] };
 
     const result = aktualisiereBerechnung({ BZ: BZ as unknown as IDatenBZ[], BE: [], EWT: [], N: [] });
     // normalizeResourceRows should flatten month-keyed objects

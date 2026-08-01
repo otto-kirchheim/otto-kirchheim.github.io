@@ -34,8 +34,8 @@ function BereitschaftTab() {
       const einsatzStart = dayjs(`${einsatzDate}T${einsatz.beginBE}`);
       const einsatzEndRaw = dayjs(`${einsatzDate}T${einsatz.endeBE}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
-      const bzStart = dayjs(String(zeitraum.beginB));
-      const bzEnd = dayjs(String(zeitraum.endeB));
+      const bzStart = dayjs(String(zeitraum.Beginn));
+      const bzEnd = dayjs(String(zeitraum.Ende));
 
       // Überlappung: BE-Zeitfenster überlappt mit BZ-Zeitfenster
       return einsatzStart.isBefore(bzEnd) && einsatzEnd.isAfter(bzStart);
@@ -52,7 +52,7 @@ function BereitschaftTab() {
       ftBZ: CustomTable<IDatenBZ> = createCustomTable<IDatenBZ>('tableBZ', {
         columns: [
           {
-            name: 'beginB',
+            name: 'Beginn',
             title: 'Von',
             parser: datetimeParser,
             sortable: true,
@@ -60,8 +60,8 @@ function BereitschaftTab() {
             direction: 'ASC',
             type: 'DateTime',
           },
-          { name: 'endeB', title: 'Bis', parser: datetimeParser, sortable: true, type: 'DateTime' },
-          { name: 'pauseB', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs', type: 'number' },
+          { name: 'Ende', title: 'Bis', parser: datetimeParser, sortable: true, type: 'DateTime' },
+          { name: 'Pause', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs', type: 'number' },
         ],
         rows: getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }),
         sorting: { enabled: true },

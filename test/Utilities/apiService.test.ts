@@ -385,9 +385,9 @@ describe('apiService', () => {
   describe('bulk / smartSync', () => {
     it('einzelnes Create nutzt Einzel-Endpoint (POST)', async () => {
       const newBz: IDatenBZ & { clientRequestId: string } = {
-        beginB: '2024-04-12',
-        endeB: '2024-04-19',
-        pauseB: 0,
+        Beginn: '2024-04-12',
+        Ende: '2024-04-19',
+        Pause: 0,
         clientRequestId: '123e4567-e89b-42d3-a456-426614174001',
       };
       mockApiSuccess({ _id: 'new1', Monat: 4, Jahr: 2024, Beginn: '2024-04-12', Ende: '2024-04-19' });
@@ -403,7 +403,7 @@ describe('apiService', () => {
     });
 
     it('einzelnes Update nutzt Einzel-Endpoint (PUT)', async () => {
-      const updated: IDatenBZ = { _id: 'bz1', beginB: '2024-04-14', endeB: '2024-04-20', pauseB: 15 };
+      const updated: IDatenBZ = { _id: 'bz1', Beginn: '2024-04-14', Ende: '2024-04-20', Pause: 15 };
       mockApiSuccess({ _id: 'bz1', Monat: 4, Jahr: 2024, Beginn: '2024-04-14', Ende: '2024-04-20' });
 
       const result = await bereitschaftszeitraumApi.bulk({ create: [], update: [updated], delete: [] }, 4, 2024);
@@ -420,12 +420,12 @@ describe('apiService', () => {
 
     it('mehrere Operationen nutzen Bulk-Endpoint', async () => {
       const newBz: IDatenBZ & { clientRequestId: string } = {
-        beginB: '2024-04-12',
-        endeB: '2024-04-19',
-        pauseB: 0,
+        Beginn: '2024-04-12',
+        Ende: '2024-04-19',
+        Pause: 0,
         clientRequestId: '123e4567-e89b-42d3-a456-426614174002',
       };
-      const updatedBz: IDatenBZ = { _id: 'bz1', beginB: '2024-04-14', endeB: '2024-04-20', pauseB: 15 };
+      const updatedBz: IDatenBZ = { _id: 'bz1', Beginn: '2024-04-14', Ende: '2024-04-20', Pause: 15 };
       mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
 
       await bereitschaftszeitraumApi.bulk({ create: [newBz], update: [updatedBz], delete: [] }, 4, 2024);

@@ -24,7 +24,7 @@ const anfang = dayjs('2026-03-03T06:00:00');
 const ende = dayjs('2026-03-04T17:00:00');
 
 function beginnZeiten(daten: IDatenBZ[]): string[] {
-  return daten.map(d => dayjs(d.beginB).format('HH:mm'));
+  return daten.map(d => dayjs(d.Beginn).format('HH:mm'));
 }
 
 describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', () => {
@@ -82,12 +82,12 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
     if (!ohne || !mit) throw new Error('Berechnung lieferte false');
 
     // Ohne Override endet die Nacht 06:15 → Bereitschaft beginnt dort, nie um 05:00.
-    expect(ohne.some(r => dayjs(r.beginB).format('HH:mm') === '05:00')).toBe(false);
+    expect(ohne.some(r => dayjs(r.Beginn).format('HH:mm') === '05:00')).toBe(false);
 
     // Mit Override endet die Nacht 05:00 (Bereitschafts-Beginn) und die Pause-Vorgabe ist 60.
-    const mitRow = mit.find(r => dayjs(r.beginB).format('HH:mm') === '05:00');
+    const mitRow = mit.find(r => dayjs(r.Beginn).format('HH:mm') === '05:00');
     expect(mitRow).toBeDefined();
-    expect(mitRow?.pauseB).toBe(60);
+    expect(mitRow?.Pause).toBe(60);
   });
 
   it('default-Nacht-Override gilt für alle Nächte der Spanne – inkl. der Nacht, die am Endtag endet', () => {
@@ -119,10 +119,10 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
     expect(mit).not.toBe(false);
     if (!mit) throw new Error('Berechnung lieferte false');
 
-    const zeiten = mit.map(r => dayjs(r.beginB).format('YYYY-MM-DD HH:mm'));
+    const zeiten = mit.map(r => dayjs(r.Beginn).format('YYYY-MM-DD HH:mm'));
     // Die am Do endende Nacht (= Mi-Nacht) endet 05:00 → Bereitschaft beginnt dort; keine Nacht endet 06:15.
     expect(zeiten).toContain('2026-03-05 05:00');
-    expect(mit.some(r => dayjs(r.beginB).format('HH:mm') === '06:15')).toBe(false);
+    expect(mit.some(r => dayjs(r.Beginn).format('HH:mm') === '06:15')).toBe(false);
   });
 
   it('berücksichtigt Sonderschicht-Zeiten nur im gewählten Zeitraum', () => {
@@ -161,12 +161,12 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
     expect(
       result.some(
         r =>
-          dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45' &&
-          dayjs(r.endeB).format('YYYY-MM-DD HH:mm') === '2026-03-04 20:15' &&
-          r.pauseB === 30,
+          dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45' &&
+          dayjs(r.Ende).format('YYYY-MM-DD HH:mm') === '2026-03-04 20:15' &&
+          r.Pause === 30,
       ),
     ).toBe(true);
-    expect(result.some(r => dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-03-05 07:00' && r.pauseB === 20)).toBe(
+    expect(result.some(r => dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-03-05 07:00' && r.Pause === 20)).toBe(
       true,
     );
   });
@@ -197,93 +197,93 @@ describe('calculateBereitschaftsZeiten – interne Zeitraum-Zusammenführung (vo
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
-    expect(dayjs(result[0].beginB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 16:30');
-    expect(result.some(r => dayjs(r.beginB).format('HH:mm') === '07:00')).toBe(false);
+    expect(dayjs(result[0].Beginn).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 16:30');
+    expect(result.some(r => dayjs(r.Beginn).format('HH:mm') === '07:00')).toBe(false);
   });
 
   it('überschreibt einen bestehenden Zeitraum, der vollständig innerhalb der neuen Bereitschaft liegt', () => {
-    const row: IDatenBZ = { beginB: '2026-03-03T18:00:00', endeB: '2026-03-03T20:00:00', pauseB: 15 };
+    const row: IDatenBZ = { Beginn: '2026-03-03T18:00:00', Ende: '2026-03-03T20:00:00', Pause: 15 };
 
     const result = calculateBereitschaftsZeiten(anfang, ende, ende, ende, false, false, false, [row]);
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    const modified = result.find(r => dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45');
+    const modified = result.find(r => dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45');
     expect(modified).toBeDefined();
-    expect(dayjs(modified?.endeB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 07:00');
-    // pauseB bleibt vom bestehenden Zeitraum unverändert – nur beginB/endeB werden überschrieben.
-    expect(modified?.pauseB).toBe(15);
+    expect(dayjs(modified?.Ende).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 07:00');
+    // Pause bleibt vom bestehenden Zeitraum unverändert – nur Beginn/Ende werden überschrieben.
+    expect(modified?.Pause).toBe(15);
   });
 
   it('splittet einen überlappenden Zeitraum am Bereitschaftszeitraumwechsel (08:00), wenn das neue Ende danach liegt', () => {
-    const row: IDatenBZ = { beginB: '2026-03-03T14:00:00', endeB: '2026-03-03T16:30:00', pauseB: 20 };
+    const row: IDatenBZ = { Beginn: '2026-03-03T14:00:00', Ende: '2026-03-03T16:30:00', Pause: 20 };
 
     const result = calculateBereitschaftsZeiten(anfang, ende, ende, ende, false, false, false, [row]);
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    const truncated = result.find(r => r.pauseB === 20);
+    const truncated = result.find(r => r.Pause === 20);
     expect(truncated).toBeDefined();
-    expect(dayjs(truncated?.beginB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 14:00');
-    expect(dayjs(truncated?.endeB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 08:00');
+    expect(dayjs(truncated?.Beginn).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 14:00');
+    expect(dayjs(truncated?.Ende).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 08:00');
 
     const rest = result.find(
       r =>
-        dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-03-03 08:00' &&
-        dayjs(r.endeB).format('YYYY-MM-DD HH:mm') === '2026-03-04 07:00',
+        dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-03-03 08:00' &&
+        dayjs(r.Ende).format('YYYY-MM-DD HH:mm') === '2026-03-04 07:00',
     );
     expect(rest).toBeDefined();
   });
 
   it('verlängert einen überlappenden Zeitraum einfach, wenn das neue Ende vor dem nächsten Wechsel liegt', () => {
-    const row: IDatenBZ = { beginB: '2026-03-03T14:00:00', endeB: '2026-03-04T05:00:00', pauseB: 25 };
+    const row: IDatenBZ = { Beginn: '2026-03-03T14:00:00', Ende: '2026-03-04T05:00:00', Pause: 25 };
 
     const result = calculateBereitschaftsZeiten(anfang, ende, ende, ende, false, false, false, [row]);
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    const extended = result.find(r => r.pauseB === 25);
+    const extended = result.find(r => r.Pause === 25);
     expect(extended).toBeDefined();
-    expect(dayjs(extended?.beginB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 14:00');
-    expect(dayjs(extended?.endeB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 07:00');
+    expect(dayjs(extended?.Beginn).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 14:00');
+    expect(dayjs(extended?.Ende).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 07:00');
   });
 
   it('splittet einen überlappenden Zeitraum am Wechsel, wenn der neue Beginn davor liegt', () => {
-    const row: IDatenBZ = { beginB: '2026-03-04T06:00:00', endeB: '2026-03-04T10:00:00', pauseB: 40 };
+    const row: IDatenBZ = { Beginn: '2026-03-04T06:00:00', Ende: '2026-03-04T10:00:00', Pause: 40 };
 
     const result = calculateBereitschaftsZeiten(anfang, ende, ende, ende, false, false, false, [row]);
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    const truncated = result.find(r => r.pauseB === 40);
+    const truncated = result.find(r => r.Pause === 40);
     expect(truncated).toBeDefined();
-    expect(dayjs(truncated?.beginB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 08:00');
-    expect(dayjs(truncated?.endeB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 10:00');
+    expect(dayjs(truncated?.Beginn).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 08:00');
+    expect(dayjs(truncated?.Ende).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 10:00');
 
     const front = result.find(
       r =>
-        dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45' &&
-        dayjs(r.endeB).format('YYYY-MM-DD HH:mm') === '2026-03-04 08:00',
+        dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-03-03 15:45' &&
+        dayjs(r.Ende).format('YYYY-MM-DD HH:mm') === '2026-03-04 08:00',
     );
     expect(front).toBeDefined();
   });
 
   it('verschiebt den Beginn eines überlappenden Zeitraums einfach, wenn kein Wechsel dazwischen liegt', () => {
-    const row: IDatenBZ = { beginB: '2026-03-03T20:00:00', endeB: '2026-03-04T09:00:00', pauseB: 50 };
+    const row: IDatenBZ = { Beginn: '2026-03-03T20:00:00', Ende: '2026-03-04T09:00:00', Pause: 50 };
 
     const result = calculateBereitschaftsZeiten(anfang, ende, ende, ende, false, false, false, [row]);
 
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    const extended = result.find(r => r.pauseB === 50);
+    const extended = result.find(r => r.Pause === 50);
     expect(extended).toBeDefined();
-    expect(dayjs(extended?.beginB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 15:45');
-    expect(dayjs(extended?.endeB).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 09:00');
+    expect(dayjs(extended?.Beginn).format('YYYY-MM-DD HH:mm')).toBe('2026-03-03 15:45');
+    expect(dayjs(extended?.Ende).format('YYYY-MM-DD HH:mm')).toBe('2026-03-04 09:00');
   });
 
   it('splittet einen Zeitraum an der Monatsgrenze, wenn kein bestehender Zeitraum überlappt', () => {
@@ -297,7 +297,7 @@ describe('calculateBereitschaftsZeiten – interne Zeitraum-Zusammenführung (vo
     expect(result).not.toBe(false);
     if (!result) throw new Error('Berechnung lieferte false');
 
-    expect(result.some(r => dayjs(r.endeB).format('YYYY-MM-DD HH:mm') === '2026-02-01 00:00')).toBe(true);
-    expect(result.some(r => dayjs(r.beginB).format('YYYY-MM-DD HH:mm') === '2026-02-01 00:00')).toBe(true);
+    expect(result.some(r => dayjs(r.Ende).format('YYYY-MM-DD HH:mm') === '2026-02-01 00:00')).toBe(true);
+    expect(result.some(r => dayjs(r.Beginn).format('YYYY-MM-DD HH:mm') === '2026-02-01 00:00')).toBe(true);
   });
 });

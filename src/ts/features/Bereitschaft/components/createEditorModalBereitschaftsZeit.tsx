@@ -16,8 +16,8 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): Compone
   switch (column.name) {
     case 'editing':
       return;
-    case 'beginB':
-    case 'endeB':
+    case 'Beginn':
+    case 'Ende':
       datum = dayjs(row.cells[column.name]);
       min = datum.startOf('M').format('YYYY-MM-DDTHH:mm');
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
@@ -57,8 +57,8 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
   switch (column.name) {
     case 'editing':
       return;
-    case 'beginB':
-    case 'endeB':
+    case 'Beginn':
+    case 'Ende':
       datum = dayjs([Jahr, Monat - 1, checkMaxTag(Jahr, Monat - 1)]);
       min = datum.startOf('M').format('YYYY-MM-DDTHH:mm');
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
@@ -134,13 +134,13 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 
       const values: IDatenBZ = {
         _id: row instanceof Row ? row.cells._id : undefined,
-        beginB: dayjs(form.querySelector<HTMLInputElement>('#beginB')?.value).toISOString(),
-        endeB: dayjs(form.querySelector<HTMLInputElement>('#endeB')?.value).toISOString(),
-        pauseB: Number(form.querySelector<HTMLInputElement>('#pauseB')?.value),
+        Beginn: dayjs(form.querySelector<HTMLInputElement>('#Beginn')?.value).toISOString(),
+        Ende: dayjs(form.querySelector<HTMLInputElement>('#Ende')?.value).toISOString(),
+        Pause: Number(form.querySelector<HTMLInputElement>('#Pause')?.value),
       };
 
-      const currentStart = dayjs(String(values.beginB));
-      const currentEnd = dayjs(String(values.endeB));
+      const currentStart = dayjs(String(values.Beginn));
+      const currentEnd = dayjs(String(values.Ende));
       if (!currentEnd.isAfter(currentStart)) {
         createSnackBar({
           message: 'Bereitschaft<br/>Ende muss nach Beginn liegen.',
@@ -153,8 +153,8 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 
       const overlaps = getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(existing => {
         if (values._id && existing._id === values._id) return false;
-        const existingStart = dayjs(String(existing.beginB));
-        const existingEnd = dayjs(String(existing.endeB));
+        const existingStart = dayjs(String(existing.Beginn));
+        const existingEnd = dayjs(String(existing.Ende));
         return currentStart.isBefore(existingEnd) && existingStart.isBefore(currentEnd);
       });
 

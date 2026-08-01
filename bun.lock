@@ -5,7 +5,7 @@
     "": {
       "name": "db_nebengeld_frontend",
       "dependencies": {
-        "@otto-kirchheim/nebengeld-shared": "^0.1.1",
+        "@otto-kirchheim/nebengeld-shared": "^0.3.0",
         "@popperjs/core": "^2.11.8",
         "@simplewebauthn/browser": "^13.3.0",
         "bootstrap": "^5.3.8",
@@ -279,7 +279,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.2", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || ^2.0.0-alpha.3", "@emnapi/runtime": "^1.7.1 || ^2.0.0-alpha.3" } }, "sha512-JfB4kuJQjaoHuCTseIINHtHWeJnvgEcxjwA5t/Y00ZgaOO1Crz3fjT/p8kT28zA/Caz7oiUMn3d6H2yOVCVwuw=="],
 
-    "@otto-kirchheim/nebengeld-shared": ["@otto-kirchheim/nebengeld-shared@0.1.1", "https://npm.pkg.github.com/download/@otto-kirchheim/nebengeld-shared/0.1.1/6fc5a7106b82619284f8232abe7536c122c79e0d", {}, "sha512-xNKtWpLcTBoY4CEtT9fC9hu5QxvY1XjHgoU4gsW6qDWliOnPVJLH8bcQVDap+a1ZT5cRRCqNjFKxbFHRrZvOlg=="],
+    "@otto-kirchheim/nebengeld-shared": ["@otto-kirchheim/nebengeld-shared@0.3.0", "https://npm.pkg.github.com/download/@otto-kirchheim/nebengeld-shared/0.3.0/c213ced6e1d4e31cf68651d4118776b221bbfc1e", {}, "sha512-lc/Ikf8FbxnFX4yc2ZbcW+ikAAsbVlUAxqqEx82CEhaRl67fKhPVn7kkirYwDih8PnodmtCnf0sLUhp1f8b0ZQ=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.142.0", "", {}, "sha512-7W+2q5AKQVU36fkaryontrHn3YDt1RyUYXatw9i5H8ocYe2sPKSFB6eS8WNPeRKiN1qAWWZUPm7gwFzJGrccqQ=="],
 

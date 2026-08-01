@@ -8,7 +8,7 @@ function toMonat(value: string | Dayjs): number {
 }
 
 export function getMonatFromBZ(item: IDatenBZ): number {
-  return toMonat(item.beginB as string | Dayjs);
+  return toMonat(item.Beginn as string | Dayjs);
 }
 
 export function getMonatFromBE(item: IDatenBE): number {

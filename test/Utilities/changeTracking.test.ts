@@ -52,13 +52,13 @@ describe('changeTracking', () => {
 
   describe('rowSignature', () => {
     it('omits _id, updatedAt, createdAt, __v', () => {
-      const row = { _id: '123', updatedAt: 'x', createdAt: 'y', __v: 0, beginB: 'a', endeB: 'b', pauseB: 0 };
+      const row = { _id: '123', updatedAt: 'x', createdAt: 'y', __v: 0, Beginn: 'a', Ende: 'b', Pause: 0 };
       const sig = rowSignature('BZ', row as unknown as CustomTableTypes);
       expect(sig).not.toContain('_id');
       expect(sig).not.toContain('updatedAt');
       expect(sig).not.toContain('createdAt');
       expect(sig).not.toContain('__v');
-      expect(sig).toContain('beginB');
+      expect(sig).toContain('Beginn');
     });
 
     it('includes bereitschaftszeitraumBE for BE resource', () => {
@@ -74,14 +74,14 @@ describe('changeTracking', () => {
     });
 
     it('omits undefined values', () => {
-      const row = { beginB: 'a', endeB: undefined, pauseB: 0 };
+      const row = { Beginn: 'a', Ende: undefined, Pause: 0 };
       const sig = rowSignature('BZ', row as unknown as CustomTableTypes);
-      expect(sig).not.toContain('endeB');
+      expect(sig).not.toContain('Ende');
     });
 
     it('produces same signature for same content regardless of key order', () => {
-      const row1 = { beginB: 'a', pauseB: 0 };
-      const row2 = { pauseB: 0, beginB: 'a' };
+      const row1 = { Beginn: 'a', Pause: 0 };
+      const row2 = { Pause: 0, Beginn: 'a' };
       expect(rowSignature('BZ', row1 as unknown as CustomTableTypes)).toBe(
         rowSignature('BZ', row2 as unknown as CustomTableTypes),
       );
@@ -137,15 +137,15 @@ describe('changeTracking', () => {
     }
 
     it('returns empty map for empty docs', () => {
-      const table = mockTable([{ _state: 'new', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } }]);
+      const table = mockTable([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
       const result = mapCreatedIdsByContent('BZ', table, []);
       expect(result.size).toBe(0);
     });
 
     it('matches created docs to pending rows by content signature', () => {
-      const table = mockTable([{ _state: 'new', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } }]);
+      const table = mockTable([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
       // Server returns same content with _id added
-      const createdDocs = [{ _id: 'new-id', beginB: 'a', endeB: 'b', pauseB: 0 }];
+      const createdDocs = [{ _id: 'new-id', Beginn: 'a', Ende: 'b', Pause: 0 }];
       const result = mapCreatedIdsByContent('BZ', table, createdDocs);
       expect(result.size).toBe(1);
       expect(result.get(0)).toBe('new-id');
@@ -153,8 +153,8 @@ describe('changeTracking', () => {
 
     it('matches by signature rather than position when the response order differs', () => {
       const table = mockTable([
-        { _state: 'new', cells: { beginB: 'row0-begin', endeB: 'row0-end', pauseB: 0 } },
-        { _state: 'new', cells: { beginB: 'row1-begin', endeB: 'row1-end', pauseB: 0 } },
+        { _state: 'new', cells: { Beginn: 'row0-begin', Ende: 'row0-end', Pause: 0 } },
+        { _state: 'new', cells: { Beginn: 'row1-begin', Ende: 'row1-end', Pause: 0 } },
       ]);
       // Server responds in reversed order relative to the pending rows.
       // Backend docs use the capitalized field names that bzFromBackend maps from.
@@ -168,9 +168,9 @@ describe('changeTracking', () => {
     });
 
     it('falls back to positional matching for unmatched signatures', () => {
-      const table = mockTable([{ _state: 'new', cells: { beginB: 'x', endeB: 'y', pauseB: 99 } }]);
+      const table = mockTable([{ _state: 'new', cells: { Beginn: 'x', Ende: 'y', Pause: 99 } }]);
       // Doc has different content — no signature match
-      const createdDocs = [{ _id: 'fallback-id', beginB: 'a', endeB: 'b', pauseB: 0 }];
+      const createdDocs = [{ _id: 'fallback-id', Beginn: 'a', Ende: 'b', Pause: 0 }];
       const result = mapCreatedIdsByContent('BZ', table, createdDocs);
       expect(result.size).toBe(1);
       expect(result.get(0)).toBe('fallback-id');
@@ -185,9 +185,9 @@ describe('changeTracking', () => {
     }
 
     it('assigns clientRequestId to pending new rows and create items', () => {
-      const row: Record<string, unknown> = { _state: 'new', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } };
+      const row: Record<string, unknown> = { _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } };
       const table = mockTable([row as any]);
-      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+      const createItems = [{ Beginn: 'a', Ende: 'b', Pause: 0 } as unknown as CustomTableTypes];
 
       const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
       expect(result).toHaveLength(1);
@@ -197,17 +197,17 @@ describe('changeTracking', () => {
     });
 
     it('reuses existing clientRequestId from row', () => {
-      const row = { _state: 'new', _clientRequestId: 'existing-crid', cells: { beginB: 'a', endeB: 'b', pauseB: 0 } };
+      const row = { _state: 'new', _clientRequestId: 'existing-crid', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } };
       const table = mockTable([row]);
-      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+      const createItems = [{ Beginn: 'a', Ende: 'b', Pause: 0 } as unknown as CustomTableTypes];
 
       const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
       expect(result[0].clientRequestId).toBe('existing-crid');
     });
 
     it('generates new clientRequestId when no signature match in pending rows', () => {
-      const table = mockTable([{ _state: 'new', cells: { beginB: 'x', endeB: 'y', pauseB: 99 } }]);
-      const createItems = [{ beginB: 'a', endeB: 'b', pauseB: 0 } as unknown as CustomTableTypes];
+      const table = mockTable([{ _state: 'new', cells: { Beginn: 'x', Ende: 'y', Pause: 99 } }]);
+      const createItems = [{ Beginn: 'a', Ende: 'b', Pause: 0 } as unknown as CustomTableTypes];
 
       const result = buildCreatePayloadWithClientRequestId('BZ', table, createItems);
       expect(result[0].clientRequestId).toBeDefined();
@@ -226,8 +226,8 @@ describe('changeTracking', () => {
       };
       const result = mapServerDocToFrontend('BZ', doc) as Record<string, unknown>;
       expect(result._id).toBe('bz1');
-      expect(result.beginB).toBe('2026-03-10T10:00:00.000Z');
-      expect(result.pauseB).toBe(30);
+      expect(result.Beginn).toBe('2026-03-10T10:00:00.000Z');
+      expect(result.Pause).toBe(30);
     });
 
     it('maps BE backend doc to frontend format', () => {

@@ -3,19 +3,19 @@
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination nur-frueh stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 07:00",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 07:00",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-14 15:45",
-    "endeB": "2026-04-15 07:00",
-    "pauseB": 30,
+    "Beginn": "2026-04-14 15:45",
+    "Ende": "2026-04-15 07:00",
+    "Pause": 30,
   },
   {
-    "beginB": "2026-04-15 15:45",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 30,
+    "Beginn": "2026-04-15 15:45",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 30,
   },
 ]
 `;
@@ -23,14 +23,14 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-spaet stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 07:00",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 07:00",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-14 22:00",
-    "endeB": "2026-04-15 07:00",
-    "pauseB": 30,
+    "Beginn": "2026-04-14 22:00",
+    "Ende": "2026-04-15 07:00",
+    "Pause": 30,
   },
 ]
 `;
@@ -38,24 +38,24 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-nacht stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 07:00",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 07:00",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-14 15:45",
-    "endeB": "2026-04-14 19:45",
-    "pauseB": 30,
+    "Beginn": "2026-04-14 15:45",
+    "Ende": "2026-04-14 19:45",
+    "Pause": 30,
   },
   {
-    "beginB": "2026-04-15 06:15",
-    "endeB": "2026-04-15 07:00",
-    "pauseB": 45,
+    "Beginn": "2026-04-15 06:15",
+    "Ende": "2026-04-15 07:00",
+    "Pause": 45,
   },
   {
-    "beginB": "2026-04-15 15:45",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 30,
+    "Beginn": "2026-04-15 15:45",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 30,
   },
 ]
 `;
@@ -63,19 +63,19 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-spaet-nacht stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 07:00",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 07:00",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-14 22:00",
-    "endeB": "2026-04-14 19:45",
-    "pauseB": 30,
+    "Beginn": "2026-04-14 22:00",
+    "Ende": "2026-04-14 19:45",
+    "Pause": 30,
   },
   {
-    "beginB": "2026-04-15 06:15",
-    "endeB": "2026-04-15 07:00",
-    "pauseB": 45,
+    "Beginn": "2026-04-15 06:15",
+    "Ende": "2026-04-15 07:00",
+    "Pause": 45,
   },
 ]
 `;
@@ -83,14 +83,14 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-sonder stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 20:15",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 20:15",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-15 07:00",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 20,
+    "Beginn": "2026-04-15 07:00",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 20,
   },
 ]
 `;
@@ -98,14 +98,14 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-spaet-sonder stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 20:15",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 20:15",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-15 07:00",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 20,
+    "Beginn": "2026-04-15 07:00",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 20,
   },
 ]
 `;
@@ -113,19 +113,19 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-nacht-sonder stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 19:45",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 19:45",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-15 06:15",
-    "endeB": "2026-04-14 20:15",
-    "pauseB": 45,
+    "Beginn": "2026-04-15 06:15",
+    "Ende": "2026-04-14 20:15",
+    "Pause": 45,
   },
   {
-    "beginB": "2026-04-15 07:00",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 20,
+    "Beginn": "2026-04-15 07:00",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 20,
   },
 ]
 `;
@@ -133,19 +133,19 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechnet Kombination frueh-spaet-nacht-sonder stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 19:45",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 19:45",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-15 06:15",
-    "endeB": "2026-04-14 20:15",
-    "pauseB": 45,
+    "Beginn": "2026-04-15 06:15",
+    "Ende": "2026-04-14 20:15",
+    "Pause": 45,
   },
   {
-    "beginB": "2026-04-15 07:00",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 20,
+    "Beginn": "2026-04-15 07:00",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 20,
   },
 ]
 `;
@@ -153,19 +153,19 @@ exports[`Bereitschaftseingaben - Schichtzusammensetzungen ohne Override berechne
 exports[`Bereitschaftseingaben - verschiedene Overrides kombinierte Overrides fuer Frueh/ Spaet/ Nacht/ Sonder bleiben stabil 1`] = `
 [
   {
-    "beginB": "2026-04-14 06:00",
-    "endeB": "2026-04-14 19:45",
-    "pauseB": 0,
+    "Beginn": "2026-04-14 06:00",
+    "Ende": "2026-04-14 19:45",
+    "Pause": 0,
   },
   {
-    "beginB": "2026-04-15 05:20",
-    "endeB": "2026-04-14 20:45",
-    "pauseB": 50,
+    "Beginn": "2026-04-15 05:20",
+    "Ende": "2026-04-14 20:45",
+    "Pause": 50,
   },
   {
-    "beginB": "2026-04-15 07:30",
-    "endeB": "2026-04-15 17:00",
-    "pauseB": 15,
+    "Beginn": "2026-04-15 07:30",
+    "Ende": "2026-04-15 17:00",
+    "Pause": 15,
   },
 ]
 `;

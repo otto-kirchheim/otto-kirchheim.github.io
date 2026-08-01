@@ -22,11 +22,11 @@ describe('getMonatFromItem', () => {
 
   describe('getMonatFromBZ', () => {
     it('returns month from ISO date string', () => {
-      expect(getMonatFromBZ({ beginB: '2026-03-10T10:00:00.000Z' } as IDatenBZ)).toBe(3);
+      expect(getMonatFromBZ({ Beginn: '2026-03-10T10:00:00.000Z' } as IDatenBZ)).toBe(3);
     });
 
     it('returns month from different month', () => {
-      expect(getMonatFromBZ({ beginB: '2026-12-01T00:00:00.000Z' } as IDatenBZ)).toBe(12);
+      expect(getMonatFromBZ({ Beginn: '2026-12-01T00:00:00.000Z' } as IDatenBZ)).toBe(12);
     });
   });
 

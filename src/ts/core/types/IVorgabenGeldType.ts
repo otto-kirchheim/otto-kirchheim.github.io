@@ -1,23 +1,12 @@
-export interface IVorgabenGeldType {
-  BE14: number;
-  BE8: number;
-  'Besoldungsgruppe A 8': number;
-  'Besoldungsgruppe A 9': number;
-  LRE1: number;
-  LRE2: number;
-  LRE3: number;
-  PrivatPKWTarif: number;
-  PrivatPKWBeamter: number;
-  Tarifkraft: number;
-  TE14: number;
-  TE24: number;
-  TE8: number;
-  A: number;
-  B: number;
-  C: number;
-  Fahrentsch: number;
-  SIPO: number;
-}
+import type { IVorgabeValue } from '@otto-kirchheim/nebengeld-shared';
+
+/**
+ * Vollständig gemergter Vorgaben-Wert (nach createDatenGeldProxy-Merge, siehe
+ * Berechnung/calculateBerechnungRows.ts) — alle Felder garantiert gesetzt,
+ * anders als der rohe, pro Monat teilweise befüllte Speicher-Eintrag
+ * (`IVorgabeValue` aus shared).
+ */
+export type IVorgabenGeldType = Required<IVorgabeValue>;
 
 export interface IVorgabenGeld {
   [key: number]: IVorgabenGeldType;

@@ -68,7 +68,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     };
 
     BZMonat.forEach(value => {
-      Berechnung.B.B += dayjs(value.endeB).diff(dayjs(value.beginB), 'minute') + value.pauseB;
+      Berechnung.B.B += dayjs(value.Ende).diff(dayjs(value.Beginn), 'minute') + value.Pause;
     });
 
     BEMonat.forEach(value => {

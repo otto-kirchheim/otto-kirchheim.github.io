@@ -9,8 +9,8 @@ interface OverlapWindow {
 
 function getBzWindow(cells: CustomTableTypes): OverlapWindow | null {
   const bz = cells as IDatenBZ;
-  const start = dayjs(String(bz.beginB));
-  const end = dayjs(String(bz.endeB));
+  const start = dayjs(String(bz.Beginn));
+  const end = dayjs(String(bz.Ende));
   if (!start.isValid() || !end.isValid()) return null;
   return { start: start.valueOf(), end: end.valueOf() };
 }

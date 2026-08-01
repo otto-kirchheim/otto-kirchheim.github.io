@@ -6,6 +6,7 @@
  */
 
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import type { IBereitschaftszeitraum } from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
   IPerWeekdaySchicht,
@@ -20,14 +21,10 @@ import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '@/features/Ne
 
 // ─── Typen für Backend-Dokumente ─────────────────────────
 
-export interface BackendBereitschaftszeitraum {
-  _id?: string;
+export interface BackendBereitschaftszeitraum extends IBereitschaftszeitraum {
   User?: string;
   Monat: number;
   Jahr: number;
-  Beginn: string; // ISO-Date
-  Ende: string; // ISO-Date
-  Pause?: number;
   updatedAt?: string;
 }
 
@@ -241,9 +238,9 @@ function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgab
 export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
   return {
     _id: doc._id,
-    beginB: doc.Beginn,
-    endeB: doc.Ende,
-    pauseB: doc.Pause ?? 0,
+    Beginn: doc.Beginn,
+    Ende: doc.Ende,
+    Pause: doc.Pause ?? 0,
   };
 }
 
@@ -394,15 +391,15 @@ function resolveYearMonth(value: string, fallbackMonat: number, fallbackJahr: nu
  * Konvertiert einen Frontend-BZ-Eintrag in das Backend-Format.
  */
 export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<BackendBereitschaftszeitraum, 'User'> {
-  const period = resolveYearMonth(item.beginB, monat, jahr);
+  const period = resolveYearMonth(item.Beginn, monat, jahr);
 
   return {
     _id: item._id,
     Monat: period.Monat,
     Jahr: period.Jahr,
-    Beginn: item.beginB,
-    Ende: item.endeB,
-    Pause: item.pauseB,
+    Beginn: item.Beginn,
+    Ende: item.Ende,
+    Pause: item.Pause,
   };
 }
 

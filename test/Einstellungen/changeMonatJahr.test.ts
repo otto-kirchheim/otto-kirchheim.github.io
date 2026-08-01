@@ -219,8 +219,8 @@ describe('changeMonatJahr', () => {
     expect(bzCb).toBeDefined();
 
     // April-Einträge → true; März-Einträge → false
-    expect(bzCb({ beginB: '2026-04-10T08:00', endeB: '2026-04-11T08:00', pauseB: 0 })).toBe(true);
-    expect(bzCb({ beginB: '2026-03-10T08:00', endeB: '2026-03-11T08:00', pauseB: 0 })).toBe(false);
+    expect(bzCb({ Beginn: '2026-04-10T08:00', Ende: '2026-04-11T08:00', Pause: 0 })).toBe(true);
+    expect(bzCb({ Beginn: '2026-03-10T08:00', Ende: '2026-03-11T08:00', Pause: 0 })).toBe(false);
 
     expect(beCb({ tagBE: '10.04.2026', von: '08:00', bis: '16:00' })).toBe(true);
     expect(beCb({ tagBE: '10.03.2026', von: '08:00', bis: '16:00' })).toBe(false);
@@ -250,7 +250,7 @@ describe('changeMonatJahr', () => {
     const eCb = eFilter.mock.calls[0]?.[0] as (row: unknown) => boolean;
     const nCb = nFilter.mock.calls[0]?.[0] as (row: unknown) => boolean;
 
-    expect(bzCb({ beginB: '2025-03-10T08:00', endeB: '2025-03-11T08:00', pauseB: 0 })).toBe(true);
+    expect(bzCb({ Beginn: '2025-03-10T08:00', Ende: '2025-03-11T08:00', Pause: 0 })).toBe(true);
     expect(beCb({ tagBE: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
     expect(eCb({ tagE: '2025-03-10', buchungstagE: '2025-03-10' })).toBe(true);
     expect(nCb({ tagN: '10.03.2025', von: '08:00', bis: '16:00' })).toBe(true);
