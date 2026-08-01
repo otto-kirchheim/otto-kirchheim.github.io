@@ -33,7 +33,6 @@ export default function generateEingabeMaskeEinstellungen(
   if (ftVE instanceof CustomTable) {
     ftVE.rows.load([...Object.values(VorgabenB)]);
     saveTableDataVorgabenU(ftVE);
-    console.log('saved', ftVE);
   } else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
 }
 
