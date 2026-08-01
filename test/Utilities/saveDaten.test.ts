@@ -56,7 +56,7 @@ import { registerHook, clearAllHooks } from '@/core/hooks';
 
 describe('saveDaten', () => {
   let button: HTMLButtonElement;
-  const mockUserData = { pers: { Vorname: 'Test' } };
+  const mockUserData = { Pers: { Vorname: 'Test' } };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -66,7 +66,7 @@ describe('saveDaten', () => {
 
     document.body.innerHTML = '<button id="btnSave"></button>';
     button = document.getElementById('btnSave') as HTMLButtonElement;
-    Storage.set('VorgabenU', { pers: { Vorname: 'Alt' } });
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' } });
 
     mockSaveEinstellungen.mockReturnValue(mockUserData);
     mockUpdateMyProfile.mockResolvedValue({ data: mockUserData, updatedAt: '2026-03-07T12:00:00.000Z' });
@@ -152,7 +152,7 @@ describe('saveDaten', () => {
 
   it('übernimmt serverseitig normalisierte Profilwerte', async () => {
     const normalizedProfile = {
-      pers: { Vorname: 'Test', Nachname: 'Normalisiert' },
+      Pers: { Vorname: 'Test', Nachname: 'Normalisiert' },
     };
     mockUpdateMyProfile.mockResolvedValue({ data: normalizedProfile, updatedAt: '2026-03-07T12:00:00.000Z' });
 
@@ -273,7 +273,7 @@ describe('saveDaten', () => {
     // Einstellungen kommt separat aus saveEinstellungen).
     expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
     // Kein partieller Settings-Write in Storage
-    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual({ pers: { Vorname: 'Alt' } });
+    expect(Storage.get<typeof mockUserData>('VorgabenU')).toEqual({ Pers: { Vorname: 'Alt' } });
   });
 
   it('btnSaveEinstellungen: Einstellungen-Fehler zeigt keine Zusatz-Snackbar', async () => {
@@ -329,7 +329,7 @@ describe('saveDaten', () => {
 
   it('ruft syncFeatureTabs mit den frisch gesammelten aktivierteTabs auf', async () => {
     mockSaveEinstellungen.mockReturnValue({
-      pers: { Vorname: 'Test' },
+      Pers: { Vorname: 'Test' },
       Einstellungen: { aktivierteTabs: ['ewt'] },
     });
 
@@ -339,7 +339,7 @@ describe('saveDaten', () => {
   });
 
   it('ruft syncFeatureTabs mit den alten aktivierteTabs auf, wenn das Einstellungen-Sammeln fehlschlägt', async () => {
-    Storage.set('VorgabenU', { pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['neben'] } });
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['neben'] } });
     mockSaveEinstellungen.mockImplementation(() => {
       throw new Error('Persönliche Daten fehlerhaft');
     });

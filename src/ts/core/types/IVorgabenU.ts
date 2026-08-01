@@ -6,17 +6,17 @@ export interface IVorgabenUEinstellungen {
 }
 
 export interface IVorgabenU {
-  pers: IVorgabenUPers;
-  aZ: IVorgabenUaZ;
-  fZ: IVorgabenUfZ[];
-  vorgabenB: { [key: string]: IVorgabenUvorgabenB };
+  Pers: IVorgabenUPers;
+  Arbeitszeit: IVorgabenUaZ;
+  Fahrzeit: IVorgabenUfZ[];
+  VorgabenB: { [key: string]: IVorgabenUvorgabenB };
   Einstellungen: IVorgabenUEinstellungen;
 }
 export interface IVorgabenUServer {
-  pers: IVorgabenUPers;
-  aZ: IVorgabenUaZ;
-  fZ: IVorgabenUfZ[];
-  vorgabenB: {
+  Pers: IVorgabenUPers;
+  Arbeitszeit: IVorgabenUaZ;
+  Fahrzeit: IVorgabenUfZ[];
+  VorgabenB: {
     key: string;
     value: IVorgabenUvorgabenB;
   }[];

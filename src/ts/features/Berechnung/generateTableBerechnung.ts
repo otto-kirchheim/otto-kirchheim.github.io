@@ -108,7 +108,7 @@ export default function generateTableBerechnung(
   if (datenBerechnung === true) return clearLoading('btnNeuBerech');
 
   const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
-  const tarifKraft = vorgabenU.pers.TB;
+  const tarifKraft = vorgabenU.Pers.TB;
   const aktivierteTabs = vorgabenU.Einstellungen?.aktivierteTabs;
 
   const monatsErgebnisse = calculateBerechnungRows(datenBerechnung, datenGeldVorgabe, tarifKraft);

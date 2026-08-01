@@ -21,7 +21,7 @@ export default function saveEinstellungen(): IVorgabenU {
   };
 
   const numberFields: ReadonlySet<string> = new Set(['kmArbeitsort', 'kmnBhf']);
-  for (const key of Object.keys(VorgabenU.pers)) {
+  for (const key of Object.keys(VorgabenU.Pers)) {
     const input = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
     if (!input) continue;
 
@@ -45,17 +45,17 @@ export default function saveEinstellungen(): IVorgabenU {
     }
 
     const value = numberFields.has(key) ? Number(input.value) : input.value;
-    updateVorgabenU(VorgabenU.pers, key as keyof IVorgabenUPers, value as IVorgabenUPers[keyof IVorgabenUPers]);
+    updateVorgabenU(VorgabenU.Pers, key as keyof IVorgabenUPers, value as IVorgabenUPers[keyof IVorgabenUPers]);
   }
 
   const panelState = getArbeitszeitPanelState();
   if (panelState) {
-    VorgabenU.aZ = panelState;
+    VorgabenU.Arbeitszeit = panelState;
   }
 
   const fahrzeitState = getFahrzeitPanelState();
   if (fahrzeitState) {
-    VorgabenU.fZ = collectFahrzeiten(fahrzeitState);
+    VorgabenU.Fahrzeit = collectFahrzeiten(fahrzeitState);
   }
 
   const aktivierteTabs: string[] = [];
@@ -91,7 +91,7 @@ export default function saveEinstellungen(): IVorgabenU {
 
   updateTabVisibility(VorgabenU.Einstellungen.aktivierteTabs);
 
-  VorgabenU.vorgabenB = Object.fromEntries(tableToArray('tableVE').entries()) as { [key: string]: IVorgabenUvorgabenB };
+  VorgabenU.VorgabenB = Object.fromEntries(tableToArray('tableVE').entries()) as { [key: string]: IVorgabenUvorgabenB };
 
   Storage.set('VorgabenU', VorgabenU);
 

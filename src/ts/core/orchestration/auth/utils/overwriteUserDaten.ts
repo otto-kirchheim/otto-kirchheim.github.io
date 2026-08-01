@@ -22,7 +22,7 @@ export default function overwriteUserDaten(): void {
   if (dataServer.vorgabenU) {
     console.log('VorgabenU überschreiben');
     Storage.set('VorgabenU', dataServer.vorgabenU);
-    applyDataToTable('#tableVE', [...Object.values(dataServer.vorgabenU.vorgabenB)]);
+    applyDataToTable('#tableVE', [...Object.values(dataServer.vorgabenU.VorgabenB)]);
     generateEingabeMaskeEinstellungen(dataServer.vorgabenU);
     delete dataServer.vorgabenU;
   }

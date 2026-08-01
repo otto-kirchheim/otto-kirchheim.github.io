@@ -186,8 +186,8 @@ describe('loadUserDaten', () => {
     createTable('tableVE', loadVE);
 
     const vorgabenU = {
-      pers: { Vorname: 'Otto' },
-      vorgabenB: { A: { Name: 'A' } },
+      Pers: { Vorname: 'Otto' },
+      VorgabenB: { A: { Name: 'A' } },
       Einstellungen: { aktivierteTabs: ['Bereitschaft'] },
     };
 
@@ -257,8 +257,8 @@ describe('loadUserDaten', () => {
 
     const loaded = {
       vorgabenU: {
-        pers: { Vorname: 'ServerOtto' },
-        vorgabenB: { A: { Name: 'Server' } },
+        Pers: { Vorname: 'ServerOtto' },
+        VorgabenB: { A: { Name: 'Server' } },
         Einstellungen: { aktivierteTabs: ['Bereitschaft', 'EWT'] },
       },
       datenGeld: { a: 3 },
@@ -330,8 +330,8 @@ describe('loadUserDaten', () => {
 
     const loaded = {
       vorgabenU: {
-        pers: { Vorname: 'ServerOtto' },
-        vorgabenB: { A: { Name: 'Server' } },
+        Pers: { Vorname: 'ServerOtto' },
+        VorgabenB: { A: { Name: 'Server' } },
         Einstellungen: { aktivierteTabs: ['Bereitschaft', 'EWT'] },
       },
       datenGeld: { a: 4 },
@@ -403,8 +403,8 @@ describe('loadUserDaten', () => {
 
     const loaded = {
       vorgabenU: {
-        pers: { Vorname: 'ServerOtto' },
-        vorgabenB: { A: { Name: 'Server' } },
+        Pers: { Vorname: 'ServerOtto' },
+        VorgabenB: { A: { Name: 'Server' } },
         Einstellungen: { aktivierteTabs: ['Bereitschaft', 'EWT'] },
       },
       datenGeld: { a: 5 },
@@ -461,13 +461,13 @@ describe('loadUserDaten', () => {
     createTable('tableVE', loadVE);
 
     const serverVorgabenU = {
-      pers: { Vorname: 'ServerOtto' },
-      vorgabenB: { A: { Name: 'Server' } },
+      Pers: { Vorname: 'ServerOtto' },
+      VorgabenB: { A: { Name: 'Server' } },
       Einstellungen: { aktivierteTabs: ['Bereitschaft', 'EWT'] },
     };
     const localVorgabenU = {
-      pers: { Vorname: 'LocalOtto' },
-      vorgabenB: { A: { Name: 'Local' } },
+      Pers: { Vorname: 'LocalOtto' },
+      VorgabenB: { A: { Name: 'Local' } },
       Einstellungen: { aktivierteTabs: ['Bereitschaft'] },
     };
 
@@ -560,8 +560,8 @@ describe('loadUserDaten', () => {
 
     const loaded = {
       vorgabenU: {
-        pers: { Vorname: 'Otto' },
-        vorgabenB: { A: { Name: 'A' } },
+        Pers: { Vorname: 'Otto' },
+        VorgabenB: { A: { Name: 'A' } },
         Einstellungen: { aktivierteTabs: ['Bereitschaft'] },
       },
       datenGeld: { a: 1 },
@@ -655,7 +655,7 @@ describe('loadUserDaten', () => {
 
     // 2 server items vs 1 local item → Längenmismatch → Konflikt-Snackbar
     const loaded = {
-      vorgabenU: { pers: { Vorname: 'S' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
+      vorgabenU: { Pers: { Vorname: 'S' }, VorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
       BZ: [
         { _id: 'bz-1', Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' },
@@ -709,7 +709,7 @@ describe('loadUserDaten', () => {
     createTable('tableVE', vi.fn());
 
     const loaded = {
-      vorgabenU: { pers: { Vorname: 'S' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
+      vorgabenU: { Pers: { Vorname: 'S' }, VorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
       BZ: [{ _id: 'bz-1', Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: { 3: [] },
@@ -802,7 +802,7 @@ describe('loadUserDaten', () => {
     ];
 
     const loaded = {
-      vorgabenU: { pers: { Vorname: 'Otto' }, vorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
+      vorgabenU: { Pers: { Vorname: 'Otto' }, VorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
       BZ: [{ Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: serverBE,
@@ -910,7 +910,7 @@ describe('loadUserDaten', () => {
     ];
 
     const loaded = {
-      vorgabenU: { pers: { Vorname: 'Otto' }, vorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
+      vorgabenU: { Pers: { Vorname: 'Otto' }, VorgabenB: { A: { Name: 'A' } }, Einstellungen: { aktivierteTabs: [] } },
       datenGeld: {},
       BZ: [{ Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
       BE: serverBE,

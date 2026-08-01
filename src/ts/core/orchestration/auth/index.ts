@@ -28,7 +28,7 @@ registerAppStartTask(() => {
 
   if (Storage.check('VorgabenU')) {
     const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', true);
-    if (vorgabenU?.vorgabenB?.[0]?.endeB?.Nwoche === undefined) Storage.remove('VorgabenU');
+    if (vorgabenU?.VorgabenB?.[0]?.endeB?.Nwoche === undefined) Storage.remove('VorgabenU');
   }
 
   const btnLogin = document.querySelector<HTMLButtonElement>('#btnLogin');
@@ -50,7 +50,7 @@ registerAppStartTask(() => {
     if (!willkommenEl || !storedUserName) return;
 
     const localVorgabenU = Storage.get<IVorgabenU | null>('VorgabenU', { default: null });
-    const displayName = actAsState.active ? storedUserName : localVorgabenU?.pers?.Vorname || storedUserName;
+    const displayName = actAsState.active ? storedUserName : localVorgabenU?.Pers?.Vorname || storedUserName;
     willkommenEl.innerHTML = `Hallo, ${displayName}.`;
   };
 
@@ -82,7 +82,7 @@ registerAppStartTask(() => {
     const actAsState = updateActAsBanner();
     const benutzer: string = actAsState.active
       ? gespeicherterBenutzer
-      : localVorgabenU?.pers?.Vorname || gespeicherterBenutzer;
+      : localVorgabenU?.Pers?.Vorname || gespeicherterBenutzer;
     if (!benutzer) {
       Storage.remove('Benutzer');
       return;

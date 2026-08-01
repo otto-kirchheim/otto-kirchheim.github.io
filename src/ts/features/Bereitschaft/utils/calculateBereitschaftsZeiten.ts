@@ -84,9 +84,9 @@ export default function calculateBereitschaftsZeiten(
   // Voreinstellungen Übernehmen
   const datenU: IVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
   if (!datenU) throw new Error('VorgabenU nicht gefunden');
-  const effectiveSonder = sonderOverride ?? datenU.aZ.sonder;
+  const effectiveSonder = sonderOverride ?? datenU.Arbeitszeit.sonder;
 
-  const holidayRegion = resolveHolidayRegion({ bundesland: datenU.pers.Bundesland });
+  const holidayRegion = resolveHolidayRegion({ bundesland: datenU.Pers.Bundesland });
 
   const datenVorher: number = daten.length;
 
@@ -154,12 +154,12 @@ export default function calculateBereitschaftsZeiten(
         tagAnfang.isSameOrAfter(sonderBereich.von, 'day') &&
         tagAnfang.isSameOrBefore(sonderBereich.bis, 'day');
 
-      const fruehSchicht = mergePerWeekdaySchicht(datenU.aZ.frueh, effectiveSchichtenOverrides?.frueh);
+      const fruehSchicht = mergePerWeekdaySchicht(datenU.Arbeitszeit.frueh, effectiveSchichtenOverrides?.frueh);
       const fruehConfig = sonderTag ? null : resolveSchichtDay(fruehSchicht, tagAnfang.isoWeekday());
       const spaetConfig =
-        !sonderTag && includeSpaet && datenU.aZ.spaet.aktiv
+        !sonderTag && includeSpaet && datenU.Arbeitszeit.spaet.aktiv
           ? resolveSchichtDay(
-              mergePerWeekdaySchicht(datenU.aZ.spaet, effectiveSchichtenOverrides?.spaet),
+              mergePerWeekdaySchicht(datenU.Arbeitszeit.spaet, effectiveSchichtenOverrides?.spaet),
               tagAnfang.isoWeekday(),
             )
           : null;
@@ -248,8 +248,8 @@ export default function calculateBereitschaftsZeiten(
       !!nachtOverride.regelarbeitstage ||
       Object.keys(nachtOverride.overrides ?? {}).length > 0);
   const nachtSchichtMerged: IPerWeekdaySchicht | null =
-    hasNachtOverride && datenU.aZ.nacht.aktiv ? mergePerWeekdaySchicht(datenU.aZ.nacht, nachtOverride) : null;
-  const fallbackNachtPause = datenU.aZ.nacht.aktiv ? datenU.aZ.nacht.default.pause : NACHT_PAUSEN_VORGABE;
+    hasNachtOverride && datenU.Arbeitszeit.nacht.aktiv ? mergePerWeekdaySchicht(datenU.Arbeitszeit.nacht, nachtOverride) : null;
+  const fallbackNachtPause = datenU.Arbeitszeit.nacht.aktiv ? datenU.Arbeitszeit.nacht.default.pause : NACHT_PAUSEN_VORGABE;
   const nachtSchichten: Schicht[] = nacht
     ? getNachtSchichten(nachtAnfang, nachtEnde, nachtSchichtMerged, fallbackNachtPause)
     : [];

@@ -12,7 +12,7 @@ export default function updateBereitschaftsDatum(
   datum: dayjs.Dayjs,
 ): void {
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
-  const az = vorgabenU.aZ;
+  const az = vorgabenU.Arbeitszeit;
   // Handbetrieb ("Datum & Zeiten manuell anpassen"): berechnete Datumsfelder (bE/nA/nE) nicht
   // überschreiben. Zeiten werden immer zum jeweiligen Wochentag neu abgeleitet — sie dienen im
   // Handbetrieb als Startwert und werden erst danach vom User feinjustiert.

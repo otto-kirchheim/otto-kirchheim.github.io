@@ -8,7 +8,7 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
 function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: string; selected?: boolean }[] {
-  const { aZ } = vorgabenU;
+  const { Arbeitszeit: aZ } = vorgabenU;
   const freitagEnde = aZ.frueh.overrides?.[5]?.ende;
   const fruehLabel = freitagEnde
     ? `Früh | ${aZ.frueh.default.beginn}–${aZ.frueh.default.ende} / Fr: ${freitagEnde}`
@@ -100,7 +100,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
       berechnenRef.current.checked = !target.checked;
       if (target.checked) {
         const EOrt = EOrtRef.current;
-        const index = Array.from(EOrt.options).findIndex(option => option.value === vorgabenU.pers.ErsteTkgSt);
+        const index = Array.from(EOrt.options).findIndex(option => option.value === vorgabenU.Pers.ErsteTkgSt);
         EOrt.selectedIndex = index !== -1 ? index : 0;
 
         SchichtRef.current.selectedIndex = 0;
@@ -161,7 +161,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           myRef={EOrtRef}
           options={[
             { text: '', selected: true },
-            ...vorgabenU.fZ.map((ort: IVorgabenUfZ) => {
+            ...vorgabenU.Fahrzeit.map((ort: IVorgabenUfZ) => {
               return {
                 value: ort.key,
                 text: ort.key,

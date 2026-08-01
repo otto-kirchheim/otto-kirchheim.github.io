@@ -23,7 +23,7 @@ const templatePers: IVorgabenUPers = {
 };
 
 function setVorgabenU(pers: Partial<IVorgabenUPers>): void {
-  Storage.set('VorgabenU', { pers: { ...templatePers, ...pers } } as IVorgabenU);
+  Storage.set('VorgabenU', { Pers: { ...templatePers, ...pers } } as IVorgabenU);
 }
 
 function renderPersInputs(values: Partial<Record<keyof IVorgabenUPers, string>> = {}): void {

@@ -26,7 +26,7 @@ const PERS_VALIDATION_SELECTORS = Object.keys(PERS_FIELD_LABELS).map(key => `#${
  */
 export function capturePersSnapshot(): void {
   if (Storage.check('OnboardingPersSnapshot')) return;
-  const pers = Storage.get<IVorgabenU>('VorgabenU')?.pers;
+  const pers = Storage.get<IVorgabenU>('VorgabenU')?.Pers;
   if (!pers) return;
 
   const snapshot: PersSnapshot = {};
@@ -51,7 +51,7 @@ export function validatePersoenlicheDaten(): { ok: boolean; offeneFelder: string
     return { ok: offeneFelder.length === 0, offeneFelder };
   }
 
-  const pers = Storage.get<IVorgabenU>('VorgabenU')?.pers;
+  const pers = Storage.get<IVorgabenU>('VorgabenU')?.Pers;
   if (!pers) return { ok: false, offeneFelder: PERS_FELDER.map(feld => feld.label) };
 
   const offeneFelder = PERS_FELDER.filter(feld => (pers[feld.key] ?? '').trim() === '').map(feld => feld.label);

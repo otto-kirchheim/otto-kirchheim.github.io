@@ -14,7 +14,7 @@ type SchichtFlags = {
 
 function setMatrixVorgabenU(): void {
   Storage.set('VorgabenU', {
-    aZ: {
+    Arbeitszeit: {
       frueh: {
         aktiv: true,
         default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -33,7 +33,7 @@ function setMatrixVorgabenU(): void {
       sonder: { aktiv: true, beginn: '20:15', ende: '07:00', pause: 20 },
       fahrzeit: '00:00',
     },
-    pers: { Bundesland: 'HE' },
+    Pers: { Bundesland: 'HE' },
   } as unknown as IVorgabenU);
 }
 

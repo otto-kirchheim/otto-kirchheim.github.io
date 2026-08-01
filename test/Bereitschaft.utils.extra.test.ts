@@ -23,7 +23,7 @@ function createVorgabenB(): IVorgabenUvorgabenB {
 // Zeiten werden aus aZ je Wochentag abgeleitet (frueh/spaet/nacht).
 function createVorgabenU(): IVorgabenU {
   return {
-    aZ: {
+    Arbeitszeit: {
       frueh: {
         aktiv: true,
         default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -107,8 +107,8 @@ describe('Bereitschaft utils extra', () => {
 
     Storage.set('VorgabenU', {
       ...createVorgabenU(),
-      aZ: {
-        ...createVorgabenU().aZ,
+      Arbeitszeit: {
+        ...createVorgabenU().Arbeitszeit,
         sonder: { aktiv: true, beginn: '20:15', ende: '07:00', pause: 20 },
       },
     });
@@ -218,8 +218,8 @@ describe('Bereitschaft utils extra', () => {
     const vorgabenU = createVorgabenU();
     Storage.set('VorgabenU', {
       ...vorgabenU,
-      aZ: {
-        ...vorgabenU.aZ,
+      Arbeitszeit: {
+        ...vorgabenU.Arbeitszeit,
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -343,8 +343,8 @@ describe('Bereitschaft utils extra', () => {
 
     Storage.set('VorgabenU', {
       ...createVorgabenU(),
-      aZ: {
-        ...createVorgabenU().aZ,
+      Arbeitszeit: {
+        ...createVorgabenU().Arbeitszeit,
         nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
       },
     });
@@ -388,8 +388,8 @@ describe('Bereitschaft utils extra', () => {
 
     Storage.set('VorgabenU', {
       ...createVorgabenU(),
-      aZ: {
-        ...createVorgabenU().aZ,
+      Arbeitszeit: {
+        ...createVorgabenU().Arbeitszeit,
         nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
       },
     });

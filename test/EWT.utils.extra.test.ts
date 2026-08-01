@@ -39,7 +39,7 @@ function createRow(day: number): IDatenEWT {
 
 function createVorgabenU(): IVorgabenU {
   return {
-    aZ: {
+    Arbeitszeit: {
       frueh: {
         aktiv: true,
         default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -50,11 +50,11 @@ function createVorgabenU(): IVorgabenU {
       sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
       fahrzeit: '00:30',
     },
-    fZ: [
+    Fahrzeit: [
       { key: 'Ort', value: '00:10' },
       { key: 'Fulda', value: '00:10' },
     ],
-    pers: { Vorname: 'Max', Nachname: 'Mustermann', TB: 'Beamter' },
+    Pers: { Vorname: 'Max', Nachname: 'Mustermann', TB: 'Beamter' },
   } as unknown as IVorgabenU;
 }
 

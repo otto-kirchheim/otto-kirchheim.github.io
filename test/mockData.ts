@@ -30,7 +30,7 @@ export const VorgabenGeldMock: IVorgabenGeld = {
 };
 
 export const VorgabenUMock: IVorgabenU = {
-  pers: {
+  Pers: {
     Vorname: 'Jan',
     Nachname: 'Otto',
     PNummer: '05211456',
@@ -48,7 +48,7 @@ export const VorgabenUMock: IVorgabenU = {
     kmnBhf: 12,
     TB: 'Tarifkraft',
   },
-  aZ: {
+  Arbeitszeit: {
     frueh: {
       aktiv: true,
       default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -66,7 +66,7 @@ export const VorgabenUMock: IVorgabenU = {
     sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
     fahrzeit: '00:20',
   },
-  fZ: [
+  Fahrzeit: [
     {
       key: 'Kaiserau',
       text: 'km 167,0',
@@ -133,7 +133,7 @@ export const VorgabenUMock: IVorgabenU = {
       value: '01:00',
     },
   ],
-  vorgabenB: {
+  VorgabenB: {
     0: {
       Name: 'B1 + Nacht',
       beginnB: {

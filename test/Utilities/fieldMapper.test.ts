@@ -447,20 +447,20 @@ describe('fieldMapper – UserProfile', () => {
 
   it('userProfileFromBackend konvertiert korrekt', () => {
     const result = userProfileFromBackend(backendProfile);
-    expect(result.pers.Vorname).toBe('Max');
-    expect(result.pers.Nachname).toBe('Mustermann');
-    expect(result.pers.PNummer).toBe('12345');
-    expect(result.pers.TB).toBe('Tarifkraft');
-    expect(result.pers.kmArbeitsort).toBe(15);
+    expect(result.Pers.Vorname).toBe('Max');
+    expect(result.Pers.Nachname).toBe('Mustermann');
+    expect(result.Pers.PNummer).toBe('12345');
+    expect(result.Pers.TB).toBe('Tarifkraft');
+    expect(result.Pers.kmArbeitsort).toBe(15);
     // Legacy aZ migrated to new format
-    expect(result.aZ.frueh.default.beginn).toBe('07:00');
-    expect(result.aZ.frueh.default.ende).toBe('15:30');
-    expect(result.aZ.frueh.overrides?.[5]?.ende).toBe('15:00'); // eTF !== eT
-    expect(result.aZ.fahrzeit).toBe('00:15');
-    expect(result.aZ.nacht?.default.beginn).toBe('22:00');
-    expect(result.aZ.sonder?.beginn).toBe('14:00');
-    expect(result.fZ).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
-    expect(result.vorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
+    expect(result.Arbeitszeit.frueh.default.beginn).toBe('07:00');
+    expect(result.Arbeitszeit.frueh.default.ende).toBe('15:30');
+    expect(result.Arbeitszeit.frueh.overrides?.[5]?.ende).toBe('15:00'); // eTF !== eT
+    expect(result.Arbeitszeit.fahrzeit).toBe('00:15');
+    expect(result.Arbeitszeit.nacht?.default.beginn).toBe('22:00');
+    expect(result.Arbeitszeit.sonder?.beginn).toBe('14:00');
+    expect(result.Fahrzeit).toEqual([{ key: 'fz1', text: 'Fahrzeit 1', value: '00:30' }]);
+    expect(result.VorgabenB).toMatchObject({ standard: { Name: 'Standard' } });
   });
 
   it('userProfileFromBackend migriert VorgabenB-Eintrag mit nacht=true ohne schichten', () => {
@@ -469,7 +469,7 @@ describe('fieldMapper – UserProfile', () => {
       VorgabenB: [{ key: 'nachtwoche', value: { Name: 'Nachtwoche', nacht: true } as Record<string, unknown> }],
     };
     const result = userProfileFromBackend(withNachtFlag);
-    expect(result.vorgabenB.nachtwoche).toMatchObject({ schichten: ['nacht'] });
+    expect(result.VorgabenB.nachtwoche).toMatchObject({ schichten: ['nacht'] });
   });
 
   it('userProfileFromBackend lässt VorgabenB-Eintrag ohne nacht=true unverändert', () => {
@@ -478,7 +478,7 @@ describe('fieldMapper – UserProfile', () => {
       VorgabenB: [{ key: 'tagwoche', value: { Name: 'Tagwoche' } as Record<string, unknown> }],
     };
     const result = userProfileFromBackend(withoutNachtFlag);
-    expect(result.vorgabenB.tagwoche).not.toHaveProperty('schichten');
+    expect(result.VorgabenB.tagwoche).not.toHaveProperty('schichten');
   });
 
   it('userProfileFromBackend mit fehlenden optionalen Feldern', () => {
@@ -491,22 +491,22 @@ describe('fieldMapper – UserProfile', () => {
       VorgabenB: [],
     };
     const result = userProfileFromBackend(minimal);
-    expect(result.pers.Telefon).toBe('');
-    expect(result.pers.Adress1).toBe('');
-    expect(result.pers.kmArbeitsort).toBe(0);
-    expect(result.pers.kmnBhf).toBe(0);
-    expect(result.pers.TB).toBe('Tarifkraft');
+    expect(result.Pers.Telefon).toBe('');
+    expect(result.Pers.Adress1).toBe('');
+    expect(result.Pers.kmArbeitsort).toBe(0);
+    expect(result.Pers.kmnBhf).toBe(0);
+    expect(result.Pers.TB).toBe('Tarifkraft');
     // Empty legacy → migrated to new format with empty strings
-    expect(result.aZ.frueh.default.beginn).toBe('');
-    expect(result.aZ.frueh.default.ende).toBe('');
-    expect(result.fZ).toEqual([]);
-    expect(result.vorgabenB).toEqual({});
+    expect(result.Arbeitszeit.frueh.default.beginn).toBe('');
+    expect(result.Arbeitszeit.frueh.default.ende).toBe('');
+    expect(result.Fahrzeit).toEqual([]);
+    expect(result.VorgabenB).toEqual({});
   });
 
   it('userProfileToBackend konvertiert vorgabenB Map zu Array', () => {
     const frontendProfile: IVorgabenU = {
-      pers: backendProfile.Pers as IVorgabenU['pers'],
-      aZ: {
+      Pers: backendProfile.Pers as IVorgabenU['Pers'],
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:30', pause: 30 },
@@ -518,29 +518,29 @@ describe('fieldMapper – UserProfile', () => {
         fahrzeit: '00:15',
       },
       Einstellungen: {} as IVorgabenU['Einstellungen'],
-      fZ: backendProfile.Fahrzeit,
-      vorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['vorgabenB'][string] },
+      Fahrzeit: backendProfile.Fahrzeit.map(fz => ({ ...fz })),
+      VorgabenB: { standard: { Name: 'Standard' } as IVorgabenU['VorgabenB'][string] },
     };
     const result = userProfileToBackend(frontendProfile);
-    expect(result.Pers).toEqual(frontendProfile.pers);
+    expect(result.Pers).toEqual(frontendProfile.Pers);
     // aZ is passed through directly to backend
     expect(result.Arbeitszeit?.frueh.default.beginn).toBe('07:00');
     expect(result.Arbeitszeit?.frueh.default.ende).toBe('15:30');
     expect(result.Arbeitszeit?.frueh.overrides?.[5]?.ende).toBe('15:00');
     expect(result.Arbeitszeit?.fahrzeit).toBe('00:15');
-    expect(result.Fahrzeit).toEqual(frontendProfile.fZ);
+    expect(result.Fahrzeit).toEqual(frontendProfile.Fahrzeit);
     expect(result.VorgabenB).toEqual([{ key: 'standard', value: { Name: 'Standard' } }]);
   });
 
   it('userProfileToBackend → userProfileFromBackend Roundtrip (Pers)', () => {
     const original = userProfileFromBackend(backendProfile);
     const backend = userProfileToBackend(original);
-    expect(backend.Pers.Vorname).toBe(original.pers.Vorname);
-    expect(backend.Pers.Nachname).toBe(original.pers.Nachname);
+    expect(backend.Pers.Vorname).toBe(original.Pers.Vorname);
+    expect(backend.Pers.Nachname).toBe(original.Pers.Nachname);
     // Backend Arbeitszeit is new format, verify key fields round-tripped
-    expect(backend.Arbeitszeit?.frueh.default.beginn).toBe(original.aZ.frueh.default.beginn);
-    expect(backend.Arbeitszeit?.frueh.default.ende).toBe(original.aZ.frueh.default.ende);
-    expect(backend.Arbeitszeit?.fahrzeit).toBe(original.aZ.fahrzeit);
+    expect(backend.Arbeitszeit?.frueh.default.beginn).toBe(original.Arbeitszeit.frueh.default.beginn);
+    expect(backend.Arbeitszeit?.frueh.default.ende).toBe(original.Arbeitszeit.frueh.default.ende);
+    expect(backend.Arbeitszeit?.fahrzeit).toBe(original.Arbeitszeit.fahrzeit);
   });
 });
 
@@ -578,7 +578,7 @@ describe('fieldMapper – Vorgaben', () => {
 
 describe('fieldMapper – vorgabenUFromServer', () => {
   it('konvertiert Array-Format zu Map-Format', () => {
-    const newAz: IVorgabenUServer['aZ'] = {
+    const newAz: IVorgabenUServer['Arbeitszeit'] = {
       frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
       spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
       nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
@@ -586,23 +586,23 @@ describe('fieldMapper – vorgabenUFromServer', () => {
       fahrzeit: '00:15',
     };
     const server: IVorgabenUServer = {
-      pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['pers'],
-      aZ: newAz,
+      Pers: { Vorname: 'Test', Nachname: 'User', PNummer: '1' } as IVorgabenUServer['Pers'],
+      Arbeitszeit: newAz,
       Einstellungen: {} as IVorgabenUServer['Einstellungen'],
-      fZ: [],
-      vorgabenB: [
-        { key: 'woche1', value: { Name: 'Woche 1' } as IVorgabenUServer['vorgabenB'][0]['value'] },
-        { key: 'woche2', value: { Name: 'Woche 2' } as IVorgabenUServer['vorgabenB'][0]['value'] },
+      Fahrzeit: [],
+      VorgabenB: [
+        { key: 'woche1', value: { Name: 'Woche 1' } as IVorgabenUServer['VorgabenB'][0]['value'] },
+        { key: 'woche2', value: { Name: 'Woche 2' } as IVorgabenUServer['VorgabenB'][0]['value'] },
       ],
     };
     const result = vorgabenUFromServer(server);
-    expect(result.vorgabenB).toMatchObject({
+    expect(result.VorgabenB).toMatchObject({
       woche1: { Name: 'Woche 1' },
       woche2: { Name: 'Woche 2' },
     });
-    expect(result.pers).toBe(server.pers);
-    expect(result.aZ).toEqual(server.aZ);
-    expect(result.fZ).toBe(server.fZ);
+    expect(result.Pers).toBe(server.Pers);
+    expect(result.Arbeitszeit).toEqual(server.Arbeitszeit);
+    expect(result.Fahrzeit).toBe(server.Fahrzeit);
   });
 });
 

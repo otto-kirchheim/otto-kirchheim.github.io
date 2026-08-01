@@ -145,9 +145,9 @@ export default async function download(button: HTMLButtonElement | null, modus: 
         E: 'Verpfl',
         N: 'EZ',
       };
-      dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format('MM_YY')}_${localVorgabenU.pers.Vorname} ${
-        localVorgabenU.pers.Nachname
-      }_${localVorgabenU.pers.Gewerk} ${localVorgabenU.pers.ErsteTkgSt}.pdf`;
+      dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format('MM_YY')}_${localVorgabenU.Pers.Vorname} ${
+        localVorgabenU.Pers.Nachname
+      }_${localVorgabenU.Pers.Gewerk} ${localVorgabenU.Pers.ErsteTkgSt}.pdf`;
     }
 
     saveAs(blob, dateiName);

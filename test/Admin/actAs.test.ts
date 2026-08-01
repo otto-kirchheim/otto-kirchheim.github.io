@@ -40,7 +40,7 @@ describe('actAs utilities', () => {
 
   describe('clearLoadedUserResourceCache', () => {
     it('entfernt alle Ressourcen-Keys aus dem Storage', () => {
-      Storage.set('VorgabenU', { pers: {} });
+      Storage.set('VorgabenU', { Pers: {} });
       Storage.set('dataBZ', []);
       Storage.set('dataBE', []);
       Storage.set('dataE', []);

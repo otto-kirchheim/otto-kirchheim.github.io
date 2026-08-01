@@ -28,7 +28,7 @@ async function fetchTemplateVorgabenB(code: string): Promise<IVorgabenUvorgabenB
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
   [key: string]: IVorgabenUvorgabenB;
 }) {
-  VorgabenB ??= Storage.check('VorgabenU') ? Storage.get<IVorgabenU>('VorgabenU', true).vorgabenB : {};
+  VorgabenB ??= Storage.check('VorgabenU') ? Storage.get<IVorgabenU>('VorgabenU', true).VorgabenB : {};
 
   const trueParser = (value: unknown): string => (value ? 'Ja' : 'Nein');
 
@@ -115,7 +115,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
           classes: ['btn', 'btn-secondary'],
           function: async () => {
             const code = Storage.check('VorgabenU')
-              ? Storage.get<IVorgabenU>('VorgabenU', true).pers.ErsteTkgSt.toLowerCase()
+              ? Storage.get<IVorgabenU>('VorgabenU', true).Pers.ErsteTkgSt.toLowerCase()
               : '';
             let vorgabenB = code ? await fetchTemplateVorgabenB(code) : null;
             if (!vorgabenB) vorgabenB = await fetchTemplateVorgabenB('muster');

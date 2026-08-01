@@ -26,7 +26,7 @@ export const formatCurrency = (value: number): string =>
     currency: 'EUR',
   });
 
-export type TarifKraft = IVorgabenU['pers']['TB'];
+export type TarifKraft = IVorgabenU['Pers']['TB'];
 
 export interface IBerechnungMonatsErgebnis {
   monat: number;

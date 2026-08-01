@@ -4,10 +4,10 @@ import type { IVorgabenU } from '@/types';
 
 const makeUserData = (): IVorgabenU =>
   ({
-    pers: { Vorname: 'Test', Nachname: '', Geburtsdatum: '', GeburtsdatumPartner: '' },
-    aZ: {},
-    fZ: {},
-    vorgabenB: {},
+    Pers: { Vorname: 'Test', Nachname: '', Geburtsdatum: '', GeburtsdatumPartner: '' },
+    Arbeitszeit: {},
+    Fahrzeit: {},
+    VorgabenB: {},
     Einstellungen: {},
   }) as unknown as IVorgabenU;
 

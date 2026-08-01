@@ -8,14 +8,14 @@ import dayjs from '@/infrastructure/date/configDayjs';
 
 function setVorgabenU(): void {
   Storage.set('VorgabenU', {
-    aZ: {
+    Arbeitszeit: {
       frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
       spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
       nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
       sonder: { aktiv: true, beginn: '20:15', ende: '07:00', pause: 20 },
       fahrzeit: '00:00',
     },
-    pers: { Bundesland: 'HE' },
+    Pers: { Bundesland: 'HE' },
   } as unknown as IVorgabenU);
 }
 
@@ -56,14 +56,14 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
 
   it('nutzt einen per-Wochentag-Nacht-Override (Ende + Pause) je Wochentag in getNachtSchichten', () => {
     Storage.set('VorgabenU', {
-      aZ: {
+      Arbeitszeit: {
         frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
         spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
         nacht: { aktiv: true, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
         sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
-      pers: { Bundesland: 'HE' },
+      Pers: { Bundesland: 'HE' },
     } as unknown as IVorgabenU);
 
     // Eine einzelne Mo-Nacht (Mo 19:45 → Di 06:15); Override für Mo (isoWeekday 1): Ende 05:00, Pause 60.
@@ -92,7 +92,7 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
 
   it('default-Nacht-Override gilt für alle Nächte der Spanne – inkl. der Nacht, die am Endtag endet', () => {
     Storage.set('VorgabenU', {
-      aZ: {
+      Arbeitszeit: {
         frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
         spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
         nacht: {
@@ -103,7 +103,7 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
         sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
-      pers: { Bundesland: 'HE' },
+      Pers: { Bundesland: 'HE' },
     } as unknown as IVorgabenU);
 
     // Spanne So → Do: Nächte So, Mo, Di, Mi; die Mi-Nacht endet am Do (Endtag).
@@ -127,14 +127,14 @@ describe('calculateBereitschaftsZeiten – schichtenOverrides werden genutzt', (
 
   it('berücksichtigt Sonderschicht-Zeiten nur im gewählten Zeitraum', () => {
     Storage.set('VorgabenU', {
-      aZ: {
+      Arbeitszeit: {
         frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
         spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
         nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
         sonder: { aktiv: true, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
-      pers: { Bundesland: 'HE' },
+      Pers: { Bundesland: 'HE' },
     } as unknown as IVorgabenU);
 
     const bAnf = dayjs('2026-03-03T06:00:00');

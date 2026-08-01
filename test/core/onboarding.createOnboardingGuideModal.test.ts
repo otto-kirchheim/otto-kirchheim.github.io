@@ -20,22 +20,22 @@ import {
 const tick = () => new Promise<void>(resolve => setTimeout(resolve, 0));
 
 const vorgabenU = {
-  pers: {
+  Pers: {
     Vorname: 'Jan',
     Nachname: 'Otto',
     PNummer: '76543210',
     Telefon: '0661 / 123456',
     Adress1: 'Echte Straße 5, 36251 Bad Hersfeld',
   },
-  aZ: {
+  Arbeitszeit: {
     frueh: { aktiv: true, default: { beginn: '07:00', ende: '15:45', pause: 30 } },
     spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
     nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
     sonder: { aktiv: false, beginn: '06:00', ende: '14:30', pause: 30 },
     fahrzeit: '00:20',
   },
-  fZ: [{ key: 'KS', text: 'KS', value: '01:00' }],
-  vorgabenB: {},
+  Fahrzeit: [{ key: 'KS', text: 'KS', value: '01:00' }],
+  VorgabenB: {},
   Einstellungen: { aktivierteTabs: [] },
 } as unknown as IVorgabenU;
 
@@ -83,7 +83,7 @@ describe('createOnboardingGuideModal (Panel)', () => {
     Storage.remove('OnboardingAbgeschlossen');
     Storage.remove('OnboardingPersSnapshot');
     Storage.set('VorgabenU', vorgabenU);
-    renderPersInputs(vorgabenU.pers);
+    renderPersInputs(vorgabenU.Pers);
   });
 
   afterEach(() => {

@@ -148,7 +148,7 @@ describe('auth/index.ts', () => {
     storageCheckMock.mockImplementation((key: string) => key === 'Benutzer' || key === 'VorgabenU');
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'Benutzer') return 'Otto';
-      if (key === 'VorgabenU') return { vorgabenB: [{ endeB: {} }] };
+      if (key === 'VorgabenU') return { VorgabenB: [{ endeB: {} }] };
       return null;
     });
     getUserCookieMock.mockReturnValue({ userName: 'otto' });
@@ -162,7 +162,7 @@ describe('auth/index.ts', () => {
     storageCheckMock.mockImplementation((key: string) => key === 'Benutzer' || key === 'VorgabenU');
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'Benutzer') return 'Otto';
-      if (key === 'VorgabenU') return { vorgabenB: [{ endeB: { Nwoche: 3 } }] };
+      if (key === 'VorgabenU') return { VorgabenB: [{ endeB: { Nwoche: 3 } }] };
       return null;
     });
     getUserCookieMock.mockReturnValue({ userName: 'otto' });

@@ -366,7 +366,7 @@ export default function EditorModalVE(
 ): void {
   const ref = createRef<HTMLFormElement>();
 
-  const aZ = Storage.get<IVorgabenU>('VorgabenU')?.aZ;
+  const aZ = Storage.get<IVorgabenU>('VorgabenU')?.Arbeitszeit;
 
   const initialSchichten: BereitschaftSchichtTyp[] =
     row instanceof Row

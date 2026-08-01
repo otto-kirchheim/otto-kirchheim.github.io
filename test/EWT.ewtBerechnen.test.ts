@@ -41,7 +41,7 @@ describe('calculateEwtEintraege', () => {
   it('berechnet, lädt Tabelle, speichert und zeigt Erfolgssnackbar', () => {
     const daten = [createData('2026-03-10')];
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -52,8 +52,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: {},
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: {},
     } as unknown as IVorgabenU;
 
     const result = calculateEwtEintraege(
@@ -80,7 +80,7 @@ describe('calculateEwtEintraege', () => {
   it('addiert 5 Minuten auf anWE bei Sonderfall Pascal Ackermann', () => {
     const daten = [createData('2026-03-10')];
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -91,8 +91,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: { Vorname: 'Pascal', Nachname: 'Ackermann' },
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: { Vorname: 'Pascal', Nachname: 'Ackermann' },
     } as unknown as IVorgabenU;
 
     const result = calculateEwtEintraege(
@@ -107,7 +107,7 @@ describe('calculateEwtEintraege', () => {
 
   it('berechnet eine Spätschicht (SP) anhand der Spät-Vorgaben', () => {
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -117,8 +117,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: {},
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: {},
     } as unknown as IVorgabenU;
 
     const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'SP' }]);
@@ -134,7 +134,7 @@ describe('calculateEwtEintraege', () => {
 
   it('berechnet eine Sonderschicht (S) anhand der Sonder-Vorgaben', () => {
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -144,8 +144,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: true, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: {},
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: {},
     } as unknown as IVorgabenU;
 
     const result = calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'S' }]);
@@ -161,7 +161,7 @@ describe('calculateEwtEintraege', () => {
 
   it('wirft Fehler bei Sonderschicht wenn diese nicht konfiguriert ist', () => {
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -171,8 +171,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: {},
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: {},
     } as unknown as IVorgabenU;
 
     expect(() => calculateEwtEintraege(mockVorgabenU, [{ ...createData('2026-03-10'), Schicht: 'S' }])).toThrow(
@@ -182,7 +182,7 @@ describe('calculateEwtEintraege', () => {
 
   it('übernimmt manuell eingetragene Uhrzeiten (beginE/endeE) statt Schicht-Vorgaben zu berechnen', () => {
     const mockVorgabenU = {
-      aZ: {
+      Arbeitszeit: {
         frueh: {
           aktiv: true,
           default: { beginn: '07:00', ende: '15:00', pause: 30 },
@@ -192,8 +192,8 @@ describe('calculateEwtEintraege', () => {
         sonder: { aktiv: false, beginn: '08:00', ende: '12:00', pause: 20 },
         fahrzeit: '00:30',
       },
-      fZ: [{ key: 'Fulda', value: '00:10' }],
-      pers: {},
+      Fahrzeit: [{ key: 'Fulda', value: '00:10' }],
+      Pers: {},
     } as unknown as IVorgabenU;
 
     const eintrag = { ...createData('2026-03-10'), beginE: '07:15', endeE: '15:15' };

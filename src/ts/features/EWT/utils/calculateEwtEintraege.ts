@@ -13,12 +13,12 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
     throw new Error('Daten fehlen');
   }
   if (
-    !('aZ' in vorgabenU) ||
-    !('fZ' in vorgabenU) ||
-    !vorgabenU.aZ ||
-    typeof vorgabenU.aZ !== 'object' ||
-    !vorgabenU.fZ ||
-    !Array.isArray(vorgabenU.fZ)
+    !('Arbeitszeit' in vorgabenU) ||
+    !('Fahrzeit' in vorgabenU) ||
+    !vorgabenU.Arbeitszeit ||
+    typeof vorgabenU.Arbeitszeit !== 'object' ||
+    !vorgabenU.Fahrzeit ||
+    !Array.isArray(vorgabenU.Fahrzeit)
   ) {
     throw new Error('Vorgaben unvollständig');
   }
@@ -44,10 +44,10 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
 }
 
 function createHelpers(userSettings: IVorgabenU) {
-  const { aZ } = userSettings;
+  const { Arbeitszeit: aZ } = userSettings;
 
   const getPascalEnde = (): Duration =>
-    userSettings.pers.Vorname === 'Pascal' && userSettings.pers.Nachname === 'Ackermann'
+    userSettings.Pers.Vorname === 'Pascal' && userSettings.Pers.Nachname === 'Ackermann'
       ? dayjs.duration(5, 'm')
       : dayjs.duration(0, 'm');
 
@@ -108,7 +108,7 @@ function createHelpers(userSettings: IVorgabenU) {
 
   const initializeVorgabenE = (): IVorgabenE => {
     const fZ: IVorgabenE['fZ'] = {};
-    userSettings.fZ.forEach(place => {
+    userSettings.Fahrzeit.forEach(place => {
       fZ[place.key] = getDurationFromTime(place.value);
     });
     return {

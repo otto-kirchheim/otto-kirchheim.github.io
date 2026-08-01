@@ -87,8 +87,8 @@ describe('overwriteUserDaten', () => {
     createTable('tableN', loadN);
 
     const vorgabenU = {
-      pers: { Vorname: 'Otto' },
-      vorgabenB: { A: { Name: 'A' } },
+      Pers: { Vorname: 'Otto' },
+      VorgabenB: { A: { Name: 'A' } },
       Einstellungen: { aktivierteTabs: [] },
     };
     const dataServer = {
@@ -182,7 +182,7 @@ describe('overwriteUserDaten', () => {
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'dataServer')
         return {
-          vorgabenU: { pers: { Vorname: 'Test' }, vorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
+          vorgabenU: { Pers: { Vorname: 'Test' }, VorgabenB: {}, Einstellungen: { aktivierteTabs: [] } },
           BZ: { 3: [{ bz: 1 }] },
           BE: { 3: [{ be: 1 }] },
           EWT: { 3: [{ ewt: 1 }] },

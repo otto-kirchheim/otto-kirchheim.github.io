@@ -10,7 +10,9 @@ import type {
   IBereitschaftseinsatz,
   IBereitschaftszeitraum,
   IEinsatzwechseltaetigkeit,
+  IFahrzeit,
   INebengeld,
+  IPers,
 } from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
@@ -57,25 +59,8 @@ export interface BackendNebengeld extends INebengeld {
 export interface BackendUserProfile {
   _id?: string;
   User: string;
-  Pers: {
-    Vorname: string;
-    Nachname: string;
-    PNummer: string;
-    Telefon: string;
-    Adress1: string;
-    Adress2?: string;
-    ErsteTkgSt: string;
-    ErsteTkgStAdresse: string;
-    Bundesland?: string;
-    Betrieb: string;
-    OE: string;
-    Gewerk: string;
-    kmArbeitsort: number;
-    nBhf: string;
-    kmnBhf: number;
-    TB: string;
-  };
-  Fahrzeit: { key: string; text: string; value: string }[];
+  Pers: IPers;
+  Fahrzeit: IFahrzeit[];
   Arbeitszeit?: IVorgabenUaZ;
   VorgabenB: { key: string; value: Record<string, unknown> }[];
   Einstellungen: {
@@ -281,25 +266,27 @@ export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
 
 /**
  * Konvertiert ein Backend-UserProfile in das Frontend-Format (IVorgabenU).
- * Backend: Pers, Arbeitszeit, Fahrzeit, VorgabenB (Array), Einstellungen
- * Frontend: pers, aZ, fZ, vorgabenB (Map)
+ * Backend und Frontend nutzen dieselben Container-Keys (Pers, Arbeitszeit,
+ * Fahrzeit, VorgabenB, Einstellungen) -- VorgabenB bleibt intern als Map
+ * (Array ↔ Map ist die einzige bewusst nicht vereinheitlichte Formdifferenz,
+ * siehe Kommentar bei `IPers`/`IFahrzeit` in `shared/src/domain.ts`).
  */
 export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
   // VorgabenB: Array [{key, value}] → Map {key: value}
-  const vorgabenB: IVorgabenU['vorgabenB'] = {};
+  const VorgabenB: IVorgabenU['VorgabenB'] = {};
   if (doc.VorgabenB) {
     for (const entry of doc.VorgabenB) {
-      vorgabenB[entry.key] = entry.value as IVorgabenU['vorgabenB'][string];
+      VorgabenB[entry.key] = entry.value as IVorgabenU['VorgabenB'][string];
     }
   }
 
   // Migriere VorgabenB: nacht: boolean → schichten: ['nacht']
-  for (const key of Object.keys(vorgabenB)) {
-    vorgabenB[key] = migrateVorgabenBEntry(vorgabenB[key] as Record<string, unknown>);
+  for (const key of Object.keys(VorgabenB)) {
+    VorgabenB[key] = migrateVorgabenBEntry(VorgabenB[key] as Record<string, unknown>);
   }
 
   return {
-    pers: {
+    Pers: {
       Vorname: doc.Pers.Vorname ?? '',
       Nachname: doc.Pers.Nachname ?? '',
       PNummer: doc.Pers.PNummer ?? '',
@@ -315,11 +302,11 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       kmArbeitsort: doc.Pers.kmArbeitsort ?? 0,
       nBhf: doc.Pers.nBhf ?? '',
       kmnBhf: doc.Pers.kmnBhf ?? 0,
-      TB: (doc.Pers.TB as IVorgabenU['pers']['TB']) ?? 'Tarifkraft',
+      TB: (doc.Pers.TB as IVorgabenU['Pers']['TB']) ?? 'Tarifkraft',
     },
-    aZ: normalizeAZ(doc.Arbeitszeit ?? null),
-    fZ: doc.Fahrzeit ?? [],
-    vorgabenB,
+    Arbeitszeit: normalizeAZ(doc.Arbeitszeit ?? null),
+    Fahrzeit: (doc.Fahrzeit ?? []).map(fz => ({ key: fz.key, text: fz.text, value: fz.value })),
+    VorgabenB,
     Einstellungen: {
       aktivierteTabs: doc.Einstellungen?.aktivierteTabs ?? [],
       benoetigteZulagen: doc.Einstellungen?.benoetigteZulagen ?? [],
@@ -455,20 +442,19 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
 
 /**
  * Konvertiert Frontend IVorgabenU in das Backend UserProfile-Update-Format.
- * Frontend: pers, aZ, fZ, vorgabenB (Map)
- * Backend: Pers, Arbeitszeit, Fahrzeit, VorgabenB (Array)
+ * VorgabenB: Map (Frontend-intern) ↔ Array (Backend-Wire-Format).
  */
 export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile, '_id' | 'User'> {
   // VorgabenB: Map {key: value} → Array [{key, value}]
-  const vorgabenBArray = Object.entries(data.vorgabenB).map(([key, value]) => ({
+  const vorgabenBArray = Object.entries(data.VorgabenB).map(([key, value]) => ({
     key,
     value: value as Record<string, unknown>,
   }));
 
   return {
-    Pers: data.pers,
-    Arbeitszeit: data.aZ,
-    Fahrzeit: data.fZ,
+    Pers: data.Pers,
+    Arbeitszeit: data.Arbeitszeit,
+    Fahrzeit: data.Fahrzeit,
     VorgabenB: vorgabenBArray,
     Einstellungen: data.Einstellungen,
   };
@@ -478,18 +464,18 @@ export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile,
 
 /**
  * Konvertiert IVorgabenUServer (Array-Format) → IVorgabenU (Map-Format).
- * Wird verwendet, wenn der Server das Array-Format für vorgabenB zurückgibt.
+ * Wird verwendet, wenn der Server das Array-Format für VorgabenB zurückgibt.
  */
 export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
-  const vorgabenB: IVorgabenU['vorgabenB'] = {};
-  for (const entry of server.vorgabenB) {
-    vorgabenB[entry.key] = migrateVorgabenBEntry(entry.value as Record<string, unknown>);
+  const VorgabenB: IVorgabenU['VorgabenB'] = {};
+  for (const entry of server.VorgabenB) {
+    VorgabenB[entry.key] = migrateVorgabenBEntry(entry.value as Record<string, unknown>);
   }
   return {
-    pers: server.pers,
-    aZ: normalizeAZ(server.aZ),
-    fZ: server.fZ,
-    vorgabenB,
+    Pers: server.Pers,
+    Arbeitszeit: normalizeAZ(server.Arbeitszeit),
+    Fahrzeit: server.Fahrzeit,
+    VorgabenB,
     Einstellungen: server.Einstellungen,
   };
 }

@@ -37,8 +37,8 @@ describe('saveTableDataVorgabenU', () => {
     const result = saveTableDataVorgabenU(fakeTable);
 
     expect(tableToArrayMock).toHaveBeenCalledWith(fakeTable);
-    expect(result.vorgabenB).toEqual({ 0: tableData.get(0)! });
-    expect(result.pers.Vorname).toBe(VorgabenUMock.pers.Vorname);
+    expect(result.VorgabenB).toEqual({ 0: tableData.get(0)! });
+    expect(result.Pers.Vorname).toBe(VorgabenUMock.Pers.Vorname);
 
     // Prüfe, dass der Wert in Storage geschrieben wurde
     const stored = Storage.get('VorgabenU');
@@ -56,6 +56,6 @@ describe('saveTableDataVorgabenU', () => {
 
     const result = saveTableDataVorgabenU(fakeTable);
 
-    expect(Object.keys(result.vorgabenB)).toHaveLength(2);
+    expect(Object.keys(result.VorgabenB)).toHaveLength(2);
   });
 });

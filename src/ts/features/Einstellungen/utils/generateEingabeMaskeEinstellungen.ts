@@ -13,9 +13,9 @@ import { h, render } from 'preact';
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
 ): void {
-  const VorgabenB = VorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
+  const VorgabenB = VorgabenU.VorgabenB ?? BereitschaftsEinsatzZeiträume;
 
-  setElementValues<IVorgabenUPers>(VorgabenU.pers);
+  setElementValues<IVorgabenUPers>(VorgabenU.Pers);
   renderArbeitszeiteingabePanel(VorgabenU);
   populateEmailField();
   setupPersValidation();
@@ -50,13 +50,13 @@ let fahrzeitPanelRenderCount = 0;
 function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
   if (!panel) return;
-  render(h(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.fZ ?? [] }), panel);
+  render(h(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.Fahrzeit ?? [] }), panel);
 }
 
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
   if (!panel) return;
-  const aZ = isLegacyArbeitszeit(VorgabenU.aZ) ? migrateArbeitszeit(VorgabenU.aZ) : VorgabenU.aZ;
+  const aZ = isLegacyArbeitszeit(VorgabenU.Arbeitszeit) ? migrateArbeitszeit(VorgabenU.Arbeitszeit) : VorgabenU.Arbeitszeit;
   render(h(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }), panel);
 }
 

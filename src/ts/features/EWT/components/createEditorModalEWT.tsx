@@ -9,7 +9,7 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 
 function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: string; selected?: boolean }[] {
-  const { aZ } = vorgabenU;
+  const { Arbeitszeit: aZ } = vorgabenU;
   const freitagEnde = aZ.frueh.overrides?.[5]?.ende;
   const fruehLabel = freitagEnde
     ? `Früh | ${aZ.frueh.default.beginn}–${aZ.frueh.default.ende} / Fr: ${freitagEnde}`
@@ -121,7 +121,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           value={row instanceof Row ? row.cells['Einsatzort'].toString() : undefined}
           options={[
             { text: '', selected: true },
-            ...vorgabenU.fZ.map(ort => {
+            ...vorgabenU.Fahrzeit.map(ort => {
               return {
                 value: ort.key,
                 text: ort.key,

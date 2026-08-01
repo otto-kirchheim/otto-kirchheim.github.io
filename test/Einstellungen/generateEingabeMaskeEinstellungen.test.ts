@@ -96,7 +96,7 @@ describe('sliderPositionToMs / msToSliderPosition Roundtrip', () => {
 describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
   function buildVorgabenU(benoetigteZulagen: string[] = []): IVorgabenU {
     return {
-      pers: {
+      Pers: {
         Vorname: '',
         Nachname: '',
         PNummer: '',
@@ -114,15 +114,15 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
         kmnBhf: 0,
         TB: 'Tarifkraft',
       },
-      aZ: {
+      Arbeitszeit: {
         frueh: { aktiv: true, default: { beginn: '00:00', ende: '00:00', pause: 30 } },
         spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
         nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
         sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
-      fZ: [],
-      vorgabenB: {},
+      Fahrzeit: [],
+      VorgabenB: {},
       Einstellungen: {
         aktivierteTabs: [],
         benoetigteZulagen,
@@ -227,7 +227,7 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
 describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
   function buildFullVorgabenU(): IVorgabenU {
     return {
-      pers: {
+      Pers: {
         Vorname: 'Erika',
         Nachname: 'Musterfrau',
         PNummer: '',
@@ -245,15 +245,15 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
         kmnBhf: 0,
         TB: 'Tarifkraft',
       },
-      aZ: {
+      Arbeitszeit: {
         frueh: { aktiv: true, default: { beginn: '00:00', ende: '00:00', pause: 30 } },
         spaet: { aktiv: false, default: { beginn: '14:00', ende: '22:00', pause: 30 } },
         nacht: { aktiv: false, default: { beginn: '19:45', ende: '06:15', pause: 45 } },
         sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
         fahrzeit: '00:00',
       },
-      fZ: [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }],
-      vorgabenB: {},
+      Fahrzeit: [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }],
+      VorgabenB: {},
       Einstellungen: {
         aktivierteTabs: ['ewt'],
         benoetigteZulagen: [],

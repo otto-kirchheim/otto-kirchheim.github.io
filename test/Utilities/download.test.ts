@@ -105,7 +105,7 @@ describe('download utility', () => {
     await download(button, 'E');
 
     const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY');
-    const expectedFilename = `Verpfl_${expectedDate}_${mockVorgabenU.pers.Vorname} ${mockVorgabenU.pers.Nachname}_${mockVorgabenU.pers.Gewerk} ${mockVorgabenU.pers.ErsteTkgSt}.pdf`;
+    const expectedFilename = `Verpfl_${expectedDate}_${mockVorgabenU.Pers.Vorname} ${mockVorgabenU.Pers.Nachname}_${mockVorgabenU.Pers.Gewerk} ${mockVorgabenU.Pers.ErsteTkgSt}.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
   });
 
@@ -306,7 +306,7 @@ describe('download utility', () => {
     await download(button, 'B');
 
     const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY'); // April 2026
-    const expectedFilename = `RB_${expectedDate}_${mockVorgabenU.pers.Vorname} ${mockVorgabenU.pers.Nachname}_${mockVorgabenU.pers.Gewerk} ${mockVorgabenU.pers.ErsteTkgSt}.pdf`;
+    const expectedFilename = `RB_${expectedDate}_${mockVorgabenU.Pers.Vorname} ${mockVorgabenU.Pers.Nachname}_${mockVorgabenU.Pers.Gewerk} ${mockVorgabenU.Pers.ErsteTkgSt}.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
     expect(createSnackBar).not.toHaveBeenCalled();
   });

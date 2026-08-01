@@ -74,7 +74,7 @@ describe('recalculateEwtMonat', () => {
     recalculateEwtMonat({
       monat: 4,
       daten: [aprilEntry],
-      vorgabenU: { aZ: {}, fZ: [], pers: {} } as never,
+      vorgabenU: { Arbeitszeit: {}, Fahrzeit: [], Pers: {} } as never,
       tableE: tableE as never,
     });
 

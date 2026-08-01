@@ -85,7 +85,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) {
-    willkommen.innerHTML = `Hallo, ${vorgabenU.pers.Vorname}.`;
+    willkommen.innerHTML = `Hallo, ${vorgabenU.Pers.Vorname}.`;
   }
 
   Storage.set('VorgabenGeld', datenGeld);
@@ -249,7 +249,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   document.querySelector<CustomHTMLTableElement>('#tableN')?.instance.rows.load(N);
   document
     .querySelector<CustomHTMLTableElement>('#tableVE')
-    ?.instance.rows.load([...Object.values(vorgabenU.vorgabenB)]);
+    ?.instance.rows.load([...Object.values(vorgabenU.VorgabenB)]);
 
   document
     .querySelector<CustomHTMLTableElement>('#tableBZ')

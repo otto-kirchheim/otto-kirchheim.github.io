@@ -470,12 +470,12 @@ describe('submitBereitschaftsZeiten', () => {
     Storage.set('Jahr', 2023);
     Storage.set('dataBZ', []);
     Storage.set('VorgabenU', {
-      aZ: {
+      Arbeitszeit: {
         frueh: { default: { beginn: '07:00', ende: '15:45', pause: 30 } },
         nacht: { default: { beginn: '19:45', ende: '06:15', pause: 45 }, regelarbeitstage: [7, 1, 2, 3] },
         fahrzeit: '',
       },
-      pers: { Bundesland: 'HE' },
+      Pers: { Bundesland: 'HE' },
     } as never);
   }
 

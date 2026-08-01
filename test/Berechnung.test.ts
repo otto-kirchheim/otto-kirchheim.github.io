@@ -76,7 +76,7 @@ describe('#generateTableBerechnung', () => {
     // Nicht-Tarifkraft (Besoldungsgruppe) → case 9 nutzt BE8/BE14 statt TE8/TE14 (Zeilen 158-161).
     const beamterVorgabenU: IVorgabenU = {
       ...VorgabenUMock,
-      pers: { ...VorgabenUMock.pers, TB: 'Besoldungsgruppe A 8' },
+      Pers: { ...VorgabenUMock.Pers, TB: 'Besoldungsgruppe A 8' },
     };
     Storage.set('VorgabenU', beamterVorgabenU);
 

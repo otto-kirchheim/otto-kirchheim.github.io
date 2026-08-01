@@ -275,36 +275,36 @@ describe('apiService', () => {
         updatedAt: '2024-06-15T12:00:00.000Z',
       });
       const result = await profileApi.getMyProfile();
-      expect(result.data.pers.Vorname).toBe('Max');
+      expect(result.data.Pers.Vorname).toBe('Max');
       expect(result.updatedAt).toBe('2024-06-15T12:00:00.000Z');
       expect(mockFetchRetry).toHaveBeenCalledWith('user-profiles/me', undefined, 'GET');
     });
 
     it('updateMyProfile konvertiert hin und zurück', async () => {
       const profileData = {
-        pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '456' },
-        aZ: {
+        Pers: { Vorname: 'Anna', Nachname: 'Test', PNummer: '456' },
+        Arbeitszeit: {
           frueh: { default: { beginn: '08:00', ende: '16:00', pause: 30 } },
           fahrzeit: '00:30',
         },
-        fZ: [],
-        vorgabenB: {},
+        Fahrzeit: [],
+        VorgabenB: {},
         Einstellungen: {},
       };
       mockApiSuccess({
         User: 'u1',
-        Pers: profileData.pers,
+        Pers: profileData.Pers,
         Arbeitszeit: { bT: '08:00', eT: '16:00', eTF: '16:00', bN: '', eN: '', bBN: '', bS: '', eS: '', rZ: '00:30' },
         Fahrzeit: [],
         VorgabenB: [],
         updatedAt: '2024-06-15T13:00:00.000Z',
       });
       const result = await profileApi.updateMyProfile(profileData as never);
-      expect(result.data.pers.Vorname).toBe('Anna');
+      expect(result.data.Pers.Vorname).toBe('Anna');
       expect(result.updatedAt).toBe('2024-06-15T13:00:00.000Z');
       expect(mockFetchRetry).toHaveBeenCalledWith(
         'user-profiles/me',
-        expect.objectContaining({ Pers: profileData.pers }),
+        expect.objectContaining({ Pers: profileData.Pers }),
         'PUT',
       );
     });

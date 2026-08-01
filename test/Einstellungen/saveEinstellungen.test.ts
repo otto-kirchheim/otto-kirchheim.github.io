@@ -8,7 +8,7 @@ import Storage from '@/infrastructure/storage/Storage';
 
 function createVorgabenU(): IVorgabenU {
   return {
-    pers: {
+    Pers: {
       Vorname: 'Max',
       Nachname: 'Mustermann',
       PNummer: '01234567',
@@ -26,7 +26,7 @@ function createVorgabenU(): IVorgabenU {
       kmnBhf: 8,
       TB: 'Tarifkraft',
     },
-    aZ: {
+    Arbeitszeit: {
       frueh: {
         aktiv: true,
         default: { beginn: '07:00', ende: '15:45', pause: 30 },
@@ -37,8 +37,8 @@ function createVorgabenU(): IVorgabenU {
       sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 },
       fahrzeit: '00:20',
     },
-    fZ: [],
-    vorgabenB: {},
+    Fahrzeit: [],
+    VorgabenB: {},
     Einstellungen: {
       aktivierteTabs: ['bereitschaft'],
       benoetigteZulagen: [],
@@ -61,7 +61,7 @@ function renderSettingsForm(vorgabenU: IVorgabenU): void {
     <table id="tableVE"></table>
   `;
 
-  for (const [key, value] of Object.entries(vorgabenU.pers)) {
+  for (const [key, value] of Object.entries(vorgabenU.Pers)) {
     const input = document.createElement('input');
     input.id = key;
     input.value = String(value ?? '');
@@ -97,8 +97,8 @@ describe('saveEinstellungen address validation', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.pers.Adress1).toBe('Musterstraße 17, 12345 Musterstadt');
-    expect(result.pers.ErsteTkgStAdresse).toBe('Beiersgraben, 36275 Kirchheim');
+    expect(result.Pers.Adress1).toBe('Musterstraße 17, 12345 Musterstadt');
+    expect(result.Pers.ErsteTkgStAdresse).toBe('Beiersgraben, 36275 Kirchheim');
   });
 
   it('rejects invalid address formats', () => {
@@ -118,7 +118,7 @@ describe('saveEinstellungen address validation', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.pers.Telefon).toBe('+49 171 1234567');
+    expect(result.Pers.Telefon).toBe('+49 171 1234567');
   });
 
   it('allows saving again after correcting an invalid address', () => {
@@ -134,7 +134,7 @@ describe('saveEinstellungen address validation', () => {
     const result = saveEinstellungen();
 
     expect(adress1Input.validationMessage).toBe('');
-    expect(result.pers.Adress1).toBe('Musterstraße 17, 12345 Musterstadt');
+    expect(result.Pers.Adress1).toBe('Musterstraße 17, 12345 Musterstadt');
   });
 
   it('rejects missing Bundesland as invalid personal data', () => {
@@ -167,7 +167,7 @@ describe('saveEinstellungen address validation', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.pers.PNummer).toBe('01234567');
+    expect(result.Pers.PNummer).toBe('01234567');
   });
 
   it('rejects Personalnummer when it is not exactly 8 digits', () => {
@@ -182,27 +182,27 @@ describe('saveEinstellungen address validation', () => {
   });
 
   it('speichert aZ aus Storage wenn kein Panel-State gesetzt', () => {
-    // Panel not rendered in this test → saveEinstellungen falls back to existing VorgabenU.aZ
+    // Panel not rendered in this test → saveEinstellungen falls back to existing VorgabenU.Arbeitszeit
     const result = saveEinstellungen();
-    expect(result.aZ.frueh.default.beginn).toBe('07:00');
-    expect(result.aZ.fahrzeit).toBe('00:20');
+    expect(result.Arbeitszeit.frueh.default.beginn).toBe('07:00');
+    expect(result.Arbeitszeit.fahrzeit).toBe('00:20');
   });
 
   it('uebernimmt einen gerade auf inaktiv umgeschalteten Schalter sofort in den Save-State', () => {
     const vorgabenU = createVorgabenU();
-    vorgabenU.aZ.spaet.aktiv = true;
+    vorgabenU.Arbeitszeit.spaet.aktiv = true;
     Storage.set('VorgabenU', vorgabenU);
     renderSettingsForm(vorgabenU);
 
     setArbeitszeitPanelState({
-      ...vorgabenU.aZ,
-      spaet: { ...vorgabenU.aZ.spaet, aktiv: false },
+      ...vorgabenU.Arbeitszeit,
+      spaet: { ...vorgabenU.Arbeitszeit.spaet, aktiv: false },
     });
 
     const result = saveEinstellungen();
 
-    expect(result.aZ.spaet.aktiv).toBe(false);
-    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).aZ.spaet.aktiv).toBe(false);
+    expect(result.Arbeitszeit.spaet.aktiv).toBe(false);
+    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).Arbeitszeit.spaet.aktiv).toBe(false);
   });
 });
 
@@ -267,12 +267,12 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
 
   it('behaelt fZ aus Storage wenn kein Fahrzeit-Panel-State gesetzt', () => {
     const vorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
-    vorgabenU.fZ = [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }];
+    vorgabenU.Fahrzeit = [{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }];
     Storage.set('VorgabenU', vorgabenU);
 
     const result = saveEinstellungen();
 
-    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
+    expect(result.Fahrzeit).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
   });
 
   it('speichert vollstaendige Zeilen aus dem Fahrzeit-Panel-State in Reihenfolge', () => {
@@ -283,11 +283,11 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.fZ).toEqual([
+    expect(result.Fahrzeit).toEqual([
       { key: 'Kirchheim', text: 'Beiersgraben', value: '00:20' },
       { key: 'Kaiserau', text: 'km 167,0', value: '00:10' },
     ]);
-    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).fZ).toEqual(result.fZ);
+    expect(Storage.get<IVorgabenU>('VorgabenU', { check: true }).Fahrzeit).toEqual(result.Fahrzeit);
   });
 
   it('verwirft komplett leere Zeilen still', () => {
@@ -299,7 +299,7 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
+    expect(result.Fahrzeit).toEqual([{ key: 'Kaiserau', text: 'km 167,0', value: '00:10' }]);
   });
 
   it('speichert Zeilen ohne Beschreibung (optionales Notizfeld)', () => {
@@ -307,7 +307,7 @@ describe('saveEinstellungen – Tabs, Zulagen, AutoSave und fZ', () => {
 
     const result = saveEinstellungen();
 
-    expect(result.fZ).toEqual([{ key: 'Kaiserau', text: '', value: '00:10' }]);
+    expect(result.Fahrzeit).toEqual([{ key: 'Kaiserau', text: '', value: '00:10' }]);
   });
 
   it('wirft bei teilweise gefuellter Zeile (Fahrzeit fehlt)', () => {

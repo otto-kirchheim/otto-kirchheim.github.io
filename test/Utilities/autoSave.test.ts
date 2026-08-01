@@ -362,7 +362,7 @@ describe('autoSave', () => {
 
   describe('Settings AutoSave', () => {
     it('speichert Einstellungen nach Timeout', async () => {
-      const mockProfile = { pers: { Vorname: 'Test' } };
+      const mockProfile = { Pers: { Vorname: 'Test' } };
       Storage.set('VorgabenU', mockProfile);
       mockUpdateMyProfile.mockResolvedValue(mockProfile);
 

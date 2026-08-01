@@ -14,7 +14,7 @@ export default function applyBereitschaftsVorgabe(
 ): void {
   if (!datum) throw new Error('Datum nicht gefunden');
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
-  const az = vorgabenU.aZ;
+  const az = vorgabenU.Arbeitszeit;
 
   const bAInput = parentElement.querySelector<HTMLInputElement>('#bA');
   const bATInput = parentElement.querySelector<HTMLInputElement>('#bAT');

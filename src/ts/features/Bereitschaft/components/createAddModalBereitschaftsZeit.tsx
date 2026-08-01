@@ -80,12 +80,12 @@ const punktZeile = (label: string, berechnet: boolean, dateEl: VNode, timeEl: VN
 export default function createAddModalBereitschaftsZeit(): void {
   const formRef = createRef<HTMLFormElement>();
 
-  const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU') ?? { vorgabenB: BereitschaftsEinsatzZeiträume };
-  const aZ = (vorgabenU as IVorgabenU).aZ;
+  const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU') ?? { VorgabenB: BereitschaftsEinsatzZeiträume };
+  const aZ = (vorgabenU as IVorgabenU).Arbeitszeit;
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
-  const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.vorgabenB ?? BereitschaftsEinsatzZeiträume;
-  const spaetVerfuegbar: boolean = !!(vorgabenU as IVorgabenU).aZ?.spaet?.aktiv;
+  const vorgabenB: { [key: string]: IVorgabenUvorgabenB } = vorgabenU.VorgabenB ?? BereitschaftsEinsatzZeiträume;
+  const spaetVerfuegbar: boolean = !!(vorgabenU as IVorgabenU).Arbeitszeit?.spaet?.aktiv;
 
   let vorgabenBStandardIndex = '2';
   for (const key in vorgabenB)
@@ -256,7 +256,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           </div>
         )}
 
-        {(vorgabenU as IVorgabenU).aZ?.sonder?.aktiv && (
+        {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
           <div className="col-12">
             <MyCheckbox
               className="form-check form-switch bereitschaft"
@@ -273,7 +273,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           </div>
         )}
 
-        {(vorgabenU as IVorgabenU).aZ?.sonder?.aktiv && (
+        {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
           <div
             className="col-12 border rounded p-3"
             id="sonderschicht"

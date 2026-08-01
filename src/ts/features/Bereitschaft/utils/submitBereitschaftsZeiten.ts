@@ -36,9 +36,9 @@ export default async function submitBereitschaftsZeiten(
   const sonderBisInput = modal.querySelector<HTMLInputElement>('#sonderBis');
   const vorgabeSelect = modal.querySelector<HTMLSelectElement>('#vorgabeB');
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
-  const az = vorgabenU.aZ;
+  const az = vorgabenU.Arbeitszeit;
   const activeSchichtenOverrides = vorgabeSelect
-    ? vorgabenU.vorgabenB?.[vorgabeSelect.value]?.schichtenOverrides
+    ? vorgabenU.VorgabenB?.[vorgabeSelect.value]?.schichtenOverrides
     : undefined;
 
   const preserveDeletedRows = (
