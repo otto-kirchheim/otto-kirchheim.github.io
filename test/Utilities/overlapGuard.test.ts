@@ -98,8 +98,8 @@ describe('overlapGuard.findOverlapBlockedRows', () => {
 
   it('gibt für BE/N immer eine leere Liste zurück (keine sichere Frontend-Replikation der Overlap-Regeln)', () => {
     const table = mockTable([
-      { _state: 'deleted', cells: { _id: 'old', tagBE: '01.07.2026', beginBE: '08:00', endeBE: '16:00' } },
-      { _state: 'new', cells: { tagBE: '01.07.2026', beginBE: '08:00', endeBE: '16:00' } },
+      { _state: 'deleted', cells: { _id: 'old', Tag: '01.07.2026', Beginn: '08:00', Ende: '16:00' } },
+      { _state: 'new', cells: { Tag: '01.07.2026', Beginn: '08:00', Ende: '16:00' } },
     ]);
 
     expect(findOverlapBlockedRows('BE', table)).toHaveLength(0);

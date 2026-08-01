@@ -72,18 +72,18 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     });
 
     BEMonat.forEach(value => {
-      const von = dayjs(`${value.tagBE} ${value.beginBE}`, 'DD.MM.YYYY HH:mm');
-      let bis = dayjs(`${value.tagBE} ${value.endeBE}`, 'DD.MM.YYYY HH:mm');
+      const von = dayjs(`${value.Tag} ${value.Beginn}`, 'DD.MM.YYYY HH:mm');
+      let bis = dayjs(`${value.Tag} ${value.Ende}`, 'DD.MM.YYYY HH:mm');
       if (bis.isBefore(von)) bis = bis.add(1, 'day');
       Berechnung.B.B -= bis.diff(von, 'minute');
 
-      const LREValue = value.lreBE;
+      const LREValue = value.LRE;
 
       if (LREValue === 'LRE 1') Berechnung.B.L1++;
       else if (LREValue === 'LRE 2') Berechnung.B.L2++;
       else if (LREValue === 'LRE 3') Berechnung.B.L3++;
 
-      if (value.privatkmBE) Berechnung.B.K += value.privatkmBE;
+      if (value.PrivatKm) Berechnung.B.K += value.PrivatKm;
     });
 
     const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;

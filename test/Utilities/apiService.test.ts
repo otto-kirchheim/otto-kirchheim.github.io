@@ -489,22 +489,22 @@ describe('apiService', () => {
 
     it('bereitschaftseinsatzApi.bulk mit Create und Update nutzt Bulk-Endpoint', async () => {
       const newBe: IDatenBE & { clientRequestId: string } = {
-        tagBE: '10.04.2024',
-        auftragsnummerBE: 'A-1',
-        beginBE: '08:00',
-        endeBE: '10:00',
-        lreBE: LreType.LRE_1,
-        privatkmBE: 0,
+        Tag: '10.04.2024',
+        Auftragsnummer: 'A-1',
+        Beginn: '08:00',
+        Ende: '10:00',
+        LRE: LreType.LRE_1,
+        PrivatKm: 0,
         clientRequestId: '123e4567-e89b-42d3-a456-426614174006',
       };
       const updatedBe: IDatenBE = {
         _id: 'be1',
-        tagBE: '11.04.2024',
-        auftragsnummerBE: 'A-2',
-        beginBE: '09:00',
-        endeBE: '11:00',
-        lreBE: LreType.LRE_2,
-        privatkmBE: 5,
+        Tag: '11.04.2024',
+        Auftragsnummer: 'A-2',
+        Beginn: '09:00',
+        Ende: '11:00',
+        LRE: LreType.LRE_2,
+        PrivatKm: 5,
       };
       mockApiSuccess({ created: [], updated: [], deleted: [], errors: [] });
 

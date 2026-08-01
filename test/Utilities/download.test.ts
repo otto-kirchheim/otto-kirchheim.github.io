@@ -148,12 +148,12 @@ describe('download utility', () => {
       ])
       .mockReturnValueOnce([
         {
-          tagBE: '19.04.2026',
-          auftragsnummerBE: 'A-1',
-          beginBE: '10:00',
-          endeBE: '12:00',
-          lreBE: 'LRE2',
-          privatkmBE: 12,
+          Tag: '19.04.2026',
+          Auftragsnummer: 'A-1',
+          Beginn: '10:00',
+          Ende: '12:00',
+          LRE: 'LRE2',
+          PrivatKm: 12,
         },
       ]);
 

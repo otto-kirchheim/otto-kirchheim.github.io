@@ -12,7 +12,7 @@ export function getMonatFromBZ(item: IDatenBZ): number {
 }
 
 export function getMonatFromBE(item: IDatenBE): number {
-  return dayjs(item.tagBE, 'DD.MM.YYYY').month() + 1;
+  return dayjs(item.Tag, 'DD.MM.YYYY').month() + 1;
 }
 
 export function getMonatFromEWT(item: IDatenEWT): number {

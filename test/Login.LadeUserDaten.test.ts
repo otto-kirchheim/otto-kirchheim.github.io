@@ -409,7 +409,7 @@ describe('loadUserDaten', () => {
       },
       datenGeld: { a: 5 },
       BZ: [{ Beginn: '2026-03-01T08:00:00.000Z', bz: 'server-1' }],
-      BE: [{ tagBE: '01.03.2026', be: 'server' }],
+      BE: [{ Tag: '01.03.2026', be: 'server' }],
       EWT: [
         { _id: 'e-1', tagE: '2026-03-31', buchungstagE: '2026-04-01', ewt: 'server-1' },
         { _id: 'e-2', tagE: '2026-05-02', buchungstagE: '2026-05-02', ewt: 'server-2' },
@@ -783,10 +783,10 @@ describe('loadUserDaten', () => {
     const nInstance = createTable('tableN', vi.fn());
     createTable('tableVE', vi.fn());
 
-    const localBE = [{ _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' }];
+    const localBE = [{ _id: 'be-local-1', Tag: '15.03.2026', be: 'local-1' }];
     const serverBE = [
-      { _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' },
-      { _id: 'be-server-extra', tagBE: '20.03.2026', be: 'server-extra' },
+      { _id: 'be-local-1', Tag: '15.03.2026', be: 'local-1' },
+      { _id: 'be-server-extra', Tag: '20.03.2026', be: 'server-extra' },
     ];
 
     const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];
@@ -891,10 +891,10 @@ describe('loadUserDaten', () => {
     const nInstance = createTable('tableN', vi.fn());
     createTable('tableVE', vi.fn());
 
-    const localBE = [{ _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' }];
+    const localBE = [{ _id: 'be-local-1', Tag: '15.03.2026', be: 'local-1' }];
     const serverBE = [
-      { _id: 'be-local-1', tagBE: '15.03.2026', be: 'local-1' },
-      { _id: 'be-server-extra', tagBE: '20.03.2026', be: 'server-extra' },
+      { _id: 'be-local-1', Tag: '15.03.2026', be: 'local-1' },
+      { _id: 'be-server-extra', Tag: '20.03.2026', be: 'server-extra' },
     ];
 
     const localEWT = [{ _id: 'e-local-1', tagE: '2026-03-10', ewt: 'local-1' }];

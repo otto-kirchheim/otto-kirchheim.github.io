@@ -36,13 +36,13 @@ type IDatenBEValues = string | number | string[] | undefined;
 export interface IDatenBE extends CustomTableTypes {
   [key: string]: IDatenBEValues;
   _id?: string;
-  bereitschaftszeitraumBE?: string[];
-  tagBE: string;
-  auftragsnummerBE: string;
-  beginBE: string;
-  endeBE: string;
-  lreBE: LreType;
-  privatkmBE: number;
+  Bereitschaftszeitraum?: string[];
+  Tag: string;
+  Auftragsnummer: string;
+  Beginn: string;
+  Ende: string;
+  LRE: LreType;
+  PrivatKm: number;
 }
 
 type IDatenEWTValues<EWTType = string> = string | EWTType | boolean | undefined;

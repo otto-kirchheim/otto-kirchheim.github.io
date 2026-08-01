@@ -119,9 +119,9 @@ export function hasOverlap(
 ): boolean {
   return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
-    const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-    const existingStart = dayjs(`${beDate}T${be.beginBE}`);
-    const existingEndRaw = dayjs(`${beDate}T${be.endeBE}`);
+    const beDate = dayjs(be.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
+    const existingStart = dayjs(`${beDate}T${be.Beginn}`);
+    const existingEndRaw = dayjs(`${beDate}T${be.Ende}`);
     const existingEnd = existingEndRaw.isAfter(existingStart) ? existingEndRaw : existingEndRaw.add(1, 'day');
     return einsatzStart.isBefore(existingEnd) && existingStart.isBefore(einsatzEnd);
   });
@@ -131,20 +131,20 @@ export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude
   const cutoff = einsatzStart.startOf('day').hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).second(0).millisecond(0);
   const windowStart = einsatzStart.isBefore(cutoff) ? cutoff.subtract(1, 'day') : cutoff;
   return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
-    if (be.lreBE !== 'LRE 1' && be.lreBE !== 'LRE 2') return false;
+    if (be.LRE !== 'LRE 1' && be.LRE !== 'LRE 2') return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
-    const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-    const beStartRaw = dayjs(`${beDate}T${be.beginBE}`);
+    const beDate = dayjs(be.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
+    const beStartRaw = dayjs(`${beDate}T${be.Beginn}`);
     if (beStartRaw.isBefore(windowStart)) return false;
-    const beEndRaw = dayjs(`${beDate}T${be.endeBE}`);
+    const beEndRaw = dayjs(`${beDate}T${be.Ende}`);
     const beEnd = beEndRaw.isAfter(beStartRaw) ? beEndRaw : beEndRaw.add(1, 'day');
     const gap = einsatzStart.diff(beEnd, 'minute');
     return gap >= 0 && gap < 10;
   });
 }
 
-export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, tagBE: string, exclude?: IDatenBE): boolean {
-  const cutoff = dayjs(tagBE)
+export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, Tag: string, exclude?: IDatenBE): boolean {
+  const cutoff = dayjs(Tag)
     .set('hour', B_WECHSEL_STUNDE)
     .set('minute', B_WECHSEL_MINUTE)
     .set('second', 0)
@@ -154,10 +154,10 @@ export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, tagBE
     : cutoff;
   const windowEnd = windowStart.add(1, 'day').set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE);
   return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
-    if (be.lreBE !== 'LRE 1') return false;
+    if (be.LRE !== 'LRE 1') return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
-    const beDate = dayjs(be.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-    const beStart = dayjs(`${beDate}T${be.beginBE}`);
+    const beDate = dayjs(be.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
+    const beStart = dayjs(`${beDate}T${be.Beginn}`);
     return beStart.isSameOrAfter(windowStart) && beStart.isBefore(windowEnd);
   });
 }
@@ -212,10 +212,10 @@ function handleGap(
       Storage.set(
         'dataBE',
         Storage.get<IDatenBE[]>('dataBE', { default: [] }).map(be =>
-          be.bereitschaftszeitraumBE?.includes(deletedId)
+          be.Bereitschaftszeitraum?.includes(deletedId)
             ? {
                 ...be,
-                bereitschaftszeitraumBE: be.bereitschaftszeitraumBE!.map(id =>
+                Bereitschaftszeitraum: be.Bereitschaftszeitraum!.map(id =>
                   id === deletedId ? (mergedBz._id ?? id) : id,
                 ),
               }
@@ -224,9 +224,9 @@ function handleGap(
       );
       let beChanged = false;
       for (const row of tableBE.instance.rows.array) {
-        const ref = row.cells.bereitschaftszeitraumBE;
+        const ref = row.cells.Bereitschaftszeitraum;
         if (!ref?.includes(deletedId)) continue;
-        row.cells.bereitschaftszeitraumBE = ref.map(id => (id === deletedId ? (mergedBz._id ?? id) : id));
+        row.cells.Bereitschaftszeitraum = ref.map(id => (id === deletedId ? (mergedBz._id ?? id) : id));
         if (row._state === 'unchanged') row._state = 'modified';
         beChanged = true;
       }
@@ -341,7 +341,7 @@ export default async function submitBereitschaftsEinsatz(
   if (!datumInput || !sapnrInput || !vonInput || !bisInput || !lreSelect || !privatkmInput || !berZeitInput)
     throw new Error('Input Element nicht gefunden');
 
-  const tagBE = datumInput.value;
+  const Tag = datumInput.value;
 
   if (!['LRE 1', 'LRE 2', 'LRE 1/2 ohne x', 'LRE 3', 'LRE 3 ohne x'].includes(lreSelect.value))
     throw new Error('LRE unbekannt');
@@ -349,17 +349,17 @@ export default async function submitBereitschaftsEinsatz(
   if (vonInput.value === bisInput.value) return failWith('Beginn und Ende dürfen nicht identisch sein.');
 
   const daten: IDatenBE = {
-    tagBE: dayjs(tagBE).format('DD.MM.YYYY'),
-    auftragsnummerBE: sapnrInput.value,
-    beginBE: vonInput.value,
-    endeBE: bisInput.value,
-    lreBE: lreSelect.value as IDatenBE['lreBE'],
-    privatkmBE: Number(privatkmInput.value),
+    Tag: dayjs(Tag).format('DD.MM.YYYY'),
+    Auftragsnummer: sapnrInput.value,
+    Beginn: vonInput.value,
+    Ende: bisInput.value,
+    LRE: lreSelect.value as IDatenBE['LRE'],
+    PrivatKm: Number(privatkmInput.value),
   };
 
   const berZeit = berZeitInput.checked;
-  const einsatzStart = dayjs(`${tagBE}T${daten.beginBE}`);
-  const einsatzEndRaw = dayjs(`${tagBE}T${daten.endeBE}`);
+  const einsatzStart = dayjs(`${Tag}T${daten.Beginn}`);
+  const einsatzEndRaw = dayjs(`${Tag}T${daten.Ende}`);
   const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
   let coverage = classifyBzCoverage(
@@ -408,14 +408,14 @@ export default async function submitBereitschaftsEinsatz(
 
   const { startBz, endBz } = coverage;
   const bzIds = [startBz._id, endBz._id !== startBz._id ? endBz._id : undefined].filter(Boolean) as string[];
-  if (bzIds.length) daten.bereitschaftszeitraumBE = bzIds;
+  if (bzIds.length) daten.Bereitschaftszeitraum = bzIds;
 
   if (hasOverlap(einsatzStart, einsatzEnd)) return failWith('Bereitschaftseinsätze dürfen sich nicht überschneiden.');
 
-  if (daten.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, tagBE))
+  if (daten.LRE === 'LRE 1' && hasConflictingLre1(einsatzStart, Tag))
     return failWith('Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.');
 
-  if ((daten.lreBE === 'LRE 1' || daten.lreBE === 'LRE 2') && hasLre12TooClose(einsatzStart))
+  if ((daten.LRE === 'LRE 1' || daten.LRE === 'LRE 2') && hasLre12TooClose(einsatzStart))
     return failWith('Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.');
 
   tableBE.instance.rows.add(daten);

@@ -208,10 +208,10 @@ describe('submitBereitschaftsEinsatz', () => {
     getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
 
     const existingBE: Partial<IDatenBE> = {
-      tagBE: '12.04.2023',
-      beginBE: '10:00',
-      endeBE: '13:00',
-      lreBE: LreType.LRE_2,
+      Tag: '12.04.2023',
+      Beginn: '10:00',
+      Ende: '13:00',
+      LRE: LreType.LRE_2,
     };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingBE]);
 
@@ -241,17 +241,17 @@ describe('submitBereitschaftsEinsatz', () => {
     expect(result).toBe(true);
     expect(addMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        tagBE: '12.04.2023',
-        beginBE: '09:00',
-        endeBE: '12:00',
-        lreBE: LreType.LRE_1,
-        bereitschaftszeitraumBE: ['bz1'],
+        Tag: '12.04.2023',
+        Beginn: '09:00',
+        Ende: '12:00',
+        LRE: LreType.LRE_1,
+        Bereitschaftszeitraum: ['bz1'],
       }),
     );
     expect(persistBereitschaftsEinsatzTableDataMock).toHaveBeenCalledTimes(1);
   });
 
-  it('setzt bereitschaftszeitraumBE als Array mit zwei IDs wenn Einsatz zwei BZs überspannt', async () => {
+  it('setzt Bereitschaftszeitraum als Array mit zwei IDs wenn Einsatz zwei BZs überspannt', async () => {
     // bz1 07:00Z-10:00Z, bz2 10:00Z-20:00Z (adjacent). ZeitVon=09:00 (UTC 09Z in bz1), ZeitBis=13:00 (UTC 13Z in bz2).
     const modal = createModal({ ZeitVon: '09:00', ZeitBis: '13:00' });
     const { table: tableBE, addMock } = createTableBEMock();
@@ -264,7 +264,7 @@ describe('submitBereitschaftsEinsatz', () => {
     const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
 
     expect(result).toBe(true);
-    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ bereitschaftszeitraumBE: ['bz1', 'bz2'] }));
+    expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ Bereitschaftszeitraum: ['bz1', 'bz2'] }));
   });
 
   it('speichert zusätzlichen Bereitschaftszeitraum wenn berZeit aktiviert und Coverage unvollständig', async () => {
@@ -292,10 +292,10 @@ describe('submitBereitschaftsEinsatz', () => {
     getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
 
     const existingLre1: Partial<IDatenBE> = {
-      tagBE: '12.04.2023',
-      beginBE: '10:00',
-      endeBE: '11:30',
-      lreBE: LreType.LRE_1,
+      Tag: '12.04.2023',
+      Beginn: '10:00',
+      Ende: '11:30',
+      LRE: LreType.LRE_1,
     };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingLre1]);
 
@@ -319,10 +319,10 @@ describe('submitBereitschaftsEinsatz', () => {
 
     // Existing LRE 1 started at 07:45 (before 08:00 cutoff)
     const existingLre1: Partial<IDatenBE> = {
-      tagBE: '12.04.2023',
-      beginBE: '07:45',
-      endeBE: '08:15',
-      lreBE: LreType.LRE_1,
+      Tag: '12.04.2023',
+      Beginn: '07:45',
+      Ende: '08:15',
+      LRE: LreType.LRE_1,
     };
     getBereitschaftsEinsatzDatenMock.mockReturnValue([existingLre1]);
 
@@ -424,13 +424,13 @@ describe('submitBereitschaftsEinsatz', () => {
       const bz2 = createBZ('2023-04-12T12:00:00.000Z', '2023-04-12T22:00:00.000Z', 'bz2');
       storageStore.set('dataBZ', [bz1, bz2]);
       storageStore.set('dataBE', [
-        { tagBE: '11.04.2023', beginBE: '13:00', endeBE: '14:00', lreBE: 'LRE 2', bereitschaftszeitraumBE: ['bz2'] },
+        { Tag: '11.04.2023', Beginn: '13:00', Ende: '14:00', LRE: 'LRE 2', Bereitschaftszeitraum: ['bz2'] },
       ]);
 
       const modal = createModal({ ZeitVon: '09:00', ZeitBis: '16:00', berZeit: true });
       const { table: tableBE, rowsArray } = createTableBEMock();
       rowsArray.push({
-        cells: { bereitschaftszeitraumBE: ['bz2'] } as unknown as IDatenBE,
+        cells: { Bereitschaftszeitraum: ['bz2'] } as unknown as IDatenBE,
         _state: 'unchanged',
       });
       const { table: tableBZ, loadMock } = createTableBZMock();
@@ -444,9 +444,9 @@ describe('submitBereitschaftsEinsatz', () => {
       expect(loadMock).toHaveBeenCalledTimes(1);
       expect(scheduleAutoSaveMock).toHaveBeenCalledWith('BE');
       expect(flushResourceMock).toHaveBeenCalledWith('BE');
-      const storedBes = (storageStore.get('dataBE') as { bereitschaftszeitraumBE?: string[] }[]) ?? [];
-      expect(storedBes[0]?.bereitschaftszeitraumBE).toEqual(['bz1']);
-      expect(rowsArray[0]?.cells.bereitschaftszeitraumBE).toEqual(['bz1']);
+      const storedBes = (storageStore.get('dataBE') as { Bereitschaftszeitraum?: string[] }[]) ?? [];
+      expect(storedBes[0]?.Bereitschaftszeitraum).toEqual(['bz1']);
+      expect(rowsArray[0]?.cells.Bereitschaftszeitraum).toEqual(['bz1']);
       expect(rowsArray[0]?._state).toBe('modified');
     });
   });
@@ -512,7 +512,7 @@ describe('submitBereitschaftsEinsatz', () => {
       getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
 
       const previousBzs = [createBZ('2023-03-01T07:00:00.000Z', '2023-03-01T10:00:00.000Z', 'old')];
-      const previousBes = [{ tagBE: '01.03.2023', beginBE: '08:00', endeBE: '09:00', lreBE: 'LRE 3' }];
+      const previousBes = [{ Tag: '01.03.2023', Beginn: '08:00', Ende: '09:00', LRE: 'LRE 3' }];
       storageStore.set('dataBZ', previousBzs);
       storageStore.set('dataBE', previousBes);
 

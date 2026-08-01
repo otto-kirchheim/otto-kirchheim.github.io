@@ -61,10 +61,10 @@ describe('changeTracking', () => {
       expect(sig).toContain('Beginn');
     });
 
-    it('includes bereitschaftszeitraumBE for BE resource', () => {
-      const row = { beginBE: '10:00', endeBE: '12:00', bereitschaftszeitraumBE: ['456'] };
+    it('includes Bereitschaftszeitraum for BE resource', () => {
+      const row = { Beginn: '10:00', Ende: '12:00', Bereitschaftszeitraum: ['456'] };
       const sig = rowSignature('BE', row as unknown as CustomTableTypes);
-      expect(sig).toContain('bereitschaftszeitraumBE');
+      expect(sig).toContain('Bereitschaftszeitraum');
     });
 
     it('omits ewtRef for N resource', () => {
@@ -243,7 +243,7 @@ describe('changeTracking', () => {
       };
       const result = mapServerDocToFrontend('BE', doc) as Record<string, unknown>;
       expect(result._id).toBe('be1');
-      expect(result.tagBE).toBe('10.03.2026');
+      expect(result.Tag).toBe('10.03.2026');
     });
 
     it('maps EWT backend doc to frontend format', () => {

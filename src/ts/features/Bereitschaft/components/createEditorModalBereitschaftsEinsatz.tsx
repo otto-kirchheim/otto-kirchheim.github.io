@@ -21,7 +21,7 @@ import {
 const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ComponentChildren => {
   return row.columns.array.map(column => {
     switch (column.name) {
-      case 'tagBE':
+      case 'Tag':
         return (
           <MyInput
             divClass="form-floating col-12 col-sm-6"
@@ -36,7 +36,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             {column.title}
           </MyInput>
         );
-      case 'auftragsnummerBE':
+      case 'Auftragsnummer':
         return (
           <MyInput
             divClass="form-floating col-12"
@@ -51,8 +51,8 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             {column.longTitle}
           </MyInput>
         );
-      case 'beginBE':
-      case 'endeBE':
+      case 'Beginn':
+      case 'Ende':
         return (
           <MyInput
             divClass="form-floating col-12 col-sm-6"
@@ -65,7 +65,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             {column.title}
           </MyInput>
         );
-      case 'lreBE':
+      case 'LRE':
         return (
           <Fragment>
             <MySelect
@@ -85,7 +85,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
             />
           </Fragment>
         );
-      case 'privatkmBE':
+      case 'PrivatKm':
         return (
           <MyInput
             divClass="form-floating col-12 col-sm-6"
@@ -116,7 +116,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
   let datum: dayjs.Dayjs;
   if (row instanceof Row) {
-    datum = dayjs(row.cells.tagBE, 'DD.MM.YYYY');
+    datum = dayjs(row.cells.Tag, 'DD.MM.YYYY');
   } else if (row instanceof CustomTable) {
     const Monat: number = Storage.get<number>('Monat', { check: true });
     const Jahr: number = Storage.get<number>('Jahr', { check: true });
@@ -160,18 +160,18 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
       const values: IDatenBE = {
         _id: row instanceof Row ? row.cells._id : undefined,
-        bereitschaftszeitraumBE: row instanceof Row ? row.cells.bereitschaftszeitraumBE : undefined,
-        tagBE: dayjs(form.querySelector<HTMLInputElement>('#tagBE')?.value).format('DD.MM.YYYY') ?? '',
-        auftragsnummerBE: form.querySelector<HTMLInputElement>('#auftragsnummerBE')?.value ?? '',
-        beginBE: form.querySelector<HTMLInputElement>('#beginBE')?.value ?? '',
-        endeBE: form.querySelector<HTMLInputElement>('#endeBE')?.value ?? '',
-        lreBE: (form.querySelector<HTMLSelectElement>('#lreBE')?.value as IDatenBE['lreBE']) ?? '',
-        privatkmBE: Number(form.querySelector<HTMLInputElement>('#privatkmBE')?.value ?? 0),
+        Bereitschaftszeitraum: row instanceof Row ? row.cells.Bereitschaftszeitraum : undefined,
+        Tag: dayjs(form.querySelector<HTMLInputElement>('#Tag')?.value).format('DD.MM.YYYY') ?? '',
+        Auftragsnummer: form.querySelector<HTMLInputElement>('#Auftragsnummer')?.value ?? '',
+        Beginn: form.querySelector<HTMLInputElement>('#Beginn')?.value ?? '',
+        Ende: form.querySelector<HTMLInputElement>('#Ende')?.value ?? '',
+        LRE: (form.querySelector<HTMLSelectElement>('#LRE')?.value as IDatenBE['LRE']) ?? '',
+        PrivatKm: Number(form.querySelector<HTMLInputElement>('#PrivatKm')?.value ?? 0),
       };
 
-      const einsatzDate = dayjs(values.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-      const einsatzStart = dayjs(`${einsatzDate}T${values.beginBE}`);
-      const einsatzEndRaw = dayjs(`${einsatzDate}T${values.endeBE}`);
+      const einsatzDate = dayjs(values.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
+      const einsatzStart = dayjs(`${einsatzDate}T${values.Beginn}`);
+      const einsatzEndRaw = dayjs(`${einsatzDate}T${values.Ende}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
       const coverage = classifyBzCoverage(
@@ -202,7 +202,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      values.bereitschaftszeitraumBE = bzIdsForEdit;
+      values.Bereitschaftszeitraum = bzIdsForEdit;
 
       if (hasOverlap(einsatzStart, einsatzEnd, currentBe)) {
         createSnackBar({
@@ -214,7 +214,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      if (values.lreBE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
+      if (values.LRE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
         createSnackBar({
           message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.',
           status: 'warning',
@@ -224,7 +224,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      if ((values.lreBE === 'LRE 1' || values.lreBE === 'LRE 2') && hasLre12TooClose(einsatzStart, currentBe)) {
+      if ((values.LRE === 'LRE 1' || values.LRE === 'LRE 2') && hasLre12TooClose(einsatzStart, currentBe)) {
         createSnackBar({
           message:
             'Bereitschaft<br/>Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.',

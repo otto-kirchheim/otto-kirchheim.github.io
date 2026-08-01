@@ -2,12 +2,12 @@ import type { IDatenBE } from '@/types';
 
 function getBereitschaftsEinsatzSignature(row: IDatenBE): string {
   return JSON.stringify({
-    tagBE: row.tagBE,
-    auftragsnummerBE: row.auftragsnummerBE,
-    beginBE: row.beginBE,
-    endeBE: row.endeBE,
-    lreBE: row.lreBE,
-    privatkmBE: row.privatkmBE,
+    Tag: row.Tag,
+    Auftragsnummer: row.Auftragsnummer,
+    Beginn: row.Beginn,
+    Ende: row.Ende,
+    LRE: row.LRE,
+    PrivatKm: row.PrivatKm,
   });
 }
 

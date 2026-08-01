@@ -106,30 +106,30 @@ describe('fieldMapper – BE (Bereitschaftseinsatz)', () => {
     Auftragsnummer: 'AUF-123',
     Beginn: '08:00',
     Ende: '16:30',
-    LRE: 'LRE 1',
+    LRE: LreType.LRE_1,
     PrivatKm: 25,
   };
 
   it('beFromBackend konvertiert korrekt', () => {
     const result = beFromBackend(backendBE);
     expect(result._id).toBe('be1');
-    expect(result.tagBE).toBe(dayjs('2024-04-15T00:00:00.000Z').format('DD.MM.YYYY'));
-    expect(result.auftragsnummerBE).toBe('AUF-123');
-    expect(result.beginBE).toBe('08:00');
-    expect(result.endeBE).toBe('16:30');
-    expect(result.lreBE).toBe(LreType.LRE_1);
-    expect(result.privatkmBE).toBe(25);
+    expect(result.Tag).toBe(dayjs('2024-04-15T00:00:00.000Z').format('DD.MM.YYYY'));
+    expect(result.Auftragsnummer).toBe('AUF-123');
+    expect(result.Beginn).toBe('08:00');
+    expect(result.Ende).toBe('16:30');
+    expect(result.LRE).toBe(LreType.LRE_1);
+    expect(result.PrivatKm).toBe(25);
   });
 
   it('beToBackend konvertiert Tag ins ISO-Format', () => {
     const frontendBE: IDatenBE = {
       _id: 'be1',
-      tagBE: '15.04.2024',
-      auftragsnummerBE: 'AUF-123',
-      beginBE: '08:00',
-      endeBE: '16:30',
-      lreBE: LreType.LRE_1,
-      privatkmBE: 25,
+      Tag: '15.04.2024',
+      Auftragsnummer: 'AUF-123',
+      Beginn: '08:00',
+      Ende: '16:30',
+      LRE: LreType.LRE_1,
+      PrivatKm: 25,
     };
     const result = beToBackend(frontendBE, 4, 2024);
     expect(result._id).toBe('be1');
@@ -138,7 +138,7 @@ describe('fieldMapper – BE (Bereitschaftseinsatz)', () => {
     expect(result.Auftragsnummer).toBe('AUF-123');
     expect(result.Beginn).toBe('08:00');
     expect(result.Ende).toBe('16:30');
-    expect(result.LRE).toBe('LRE 1');
+    expect(result.LRE).toBe(LreType.LRE_1);
     expect(result.PrivatKm).toBe(25);
     // Tag sollte ein ISO-String sein
     expect(dayjs(result.Tag).isValid()).toBe(true);

@@ -588,8 +588,8 @@ describe('autoSave', () => {
       Storage.set('Jahr', 2025);
       Storage.set('dataBE', { 5: [] });
 
-      const changes = { create: [], update: [{ _id: 'be1', tagBE: '15' }], delete: [] };
-      createMockTable('tableBE', changes, [{ _state: 'modified', cells: { _id: 'be1', tagBE: '15' } }]);
+      const changes = { create: [], update: [{ _id: 'be1', Tag: '15' }], delete: [] };
+      createMockTable('tableBE', changes, [{ _state: 'modified', cells: { _id: 'be1', Tag: '15' } }]);
 
       mockBeBulk.mockResolvedValue({ created: [], updated: [{ _id: 'be1' }], deleted: [], errors: [] });
 

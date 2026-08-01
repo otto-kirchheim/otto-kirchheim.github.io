@@ -32,7 +32,7 @@ describe('getMonatFromItem', () => {
 
   describe('getMonatFromBE', () => {
     it('parses DD.MM.YYYY format', () => {
-      expect(getMonatFromBE({ tagBE: '15.06.2026' } as IDatenBE)).toBe(6);
+      expect(getMonatFromBE({ Tag: '15.06.2026' } as IDatenBE)).toBe(6);
     });
   });
 

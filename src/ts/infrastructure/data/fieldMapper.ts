@@ -6,7 +6,7 @@
  */
 
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
-import type { IBereitschaftszeitraum } from '@otto-kirchheim/nebengeld-shared';
+import type { IBereitschaftseinsatz, IBereitschaftszeitraum } from '@otto-kirchheim/nebengeld-shared';
 import type {
   BereitschaftSchichtTyp,
   IPerWeekdaySchicht,
@@ -28,18 +28,10 @@ export interface BackendBereitschaftszeitraum extends IBereitschaftszeitraum {
   updatedAt?: string;
 }
 
-export interface BackendBereitschaftseinsatz {
-  _id?: string;
+export interface BackendBereitschaftseinsatz extends IBereitschaftseinsatz {
   User?: string;
-  Bereitschaftszeitraum?: string[];
   Monat: number;
   Jahr: number;
-  Tag: string; // ISO-Date
-  Auftragsnummer: string;
-  Beginn: string;
-  Ende: string;
-  LRE: string;
-  PrivatKm: number;
   updatedAt?: string;
 }
 
@@ -250,17 +242,17 @@ export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
 export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
   return {
     _id: doc._id,
-    bereitschaftszeitraumBE: Array.isArray(doc.Bereitschaftszeitraum)
+    Bereitschaftszeitraum: Array.isArray(doc.Bereitschaftszeitraum)
       ? doc.Bereitschaftszeitraum
       : doc.Bereitschaftszeitraum
         ? [doc.Bereitschaftszeitraum as unknown as string]
         : undefined,
-    tagBE: dayjs(doc.Tag).format('DD.MM.YYYY'),
-    auftragsnummerBE: doc.Auftragsnummer,
-    beginBE: doc.Beginn,
-    endeBE: doc.Ende,
-    lreBE: doc.LRE as IDatenBE['lreBE'],
-    privatkmBE: doc.PrivatKm,
+    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
+    Auftragsnummer: doc.Auftragsnummer,
+    Beginn: doc.Beginn,
+    Ende: doc.Ende,
+    LRE: doc.LRE,
+    PrivatKm: doc.PrivatKm,
   };
 }
 
@@ -407,19 +399,19 @@ export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<B
  * Konvertiert einen Frontend-BE-Eintrag in das Backend-Format.
  */
 export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<BackendBereitschaftseinsatz, 'User'> {
-  const period = resolveYearMonth(item.tagBE, monat, jahr, 'DD.MM.YYYY');
+  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
 
   return {
     _id: item._id,
-    Bereitschaftszeitraum: item.bereitschaftszeitraumBE,
+    Bereitschaftszeitraum: item.Bereitschaftszeitraum,
     Monat: period.Monat,
     Jahr: period.Jahr,
-    Tag: dayjs(item.tagBE, 'DD.MM.YYYY').toISOString(),
-    Auftragsnummer: item.auftragsnummerBE,
-    Beginn: item.beginBE,
-    Ende: item.endeBE,
-    LRE: item.lreBE,
-    PrivatKm: item.privatkmBE,
+    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
+    Auftragsnummer: item.Auftragsnummer,
+    Beginn: item.Beginn,
+    Ende: item.Ende,
+    LRE: item.LRE,
+    PrivatKm: item.PrivatKm,
   };
 }
 

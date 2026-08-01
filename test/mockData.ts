@@ -642,12 +642,12 @@ export const mockBereitschaft = (): void => {
   });
   createCustomTable('tableBE', {
     columns: [
-      { name: 'tagBE', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-      { name: 'auftragsnummerBE', title: 'Auftrags-Nr.', classes: ['custom-text-truncate'] },
-      { name: 'beginBE', title: 'Von', breakpoints: 'sm', type: 'time' },
-      { name: 'endeBE', title: 'Bis', breakpoints: 'sm', type: 'time' },
-      { name: 'lreBE', title: 'LRE' },
-      { name: 'privatkmBE', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Auftragsnummer', title: 'Auftrags-Nr.', classes: ['custom-text-truncate'] },
+      { name: 'Beginn', title: 'Von', breakpoints: 'sm', type: 'time' },
+      { name: 'Ende', title: 'Bis', breakpoints: 'sm', type: 'time' },
+      { name: 'LRE', title: 'LRE' },
+      { name: 'PrivatKm', title: 'Privat Km', parser: timeZeroParser, breakpoints: 'md' },
     ],
     rows: [],
   });
@@ -713,12 +713,12 @@ export const datenBZMock: Required<IDaten>['BZ'] = [
 
 export const datenBEMock: Required<IDaten>['BE'] = [
   {
-    tagBE: '10.03.2023',
-    auftragsnummerBE: 'Test',
-    beginBE: '00:14',
-    endeBE: '01:59',
-    lreBE: LreType.LRE_1,
-    privatkmBE: 0,
+    Tag: '10.03.2023',
+    Auftragsnummer: 'Test',
+    Beginn: '00:14',
+    Ende: '01:59',
+    LRE: LreType.LRE_1,
+    PrivatKm: 0,
   },
 ];
 

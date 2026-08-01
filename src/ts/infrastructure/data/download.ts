@@ -82,12 +82,12 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       data.Daten = {
         BZ: bzRaw.map(bz => ({ Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 })),
         BE: beRaw.map(be => ({
-          Tag: be.tagBE,
-          Auftragsnummer: be.auftragsnummerBE,
-          Beginn: be.beginBE,
-          Ende: be.endeBE,
-          LRE: be.lreBE,
-          PrivatKm: be.privatkmBE ?? 0,
+          Tag: be.Tag,
+          Auftragsnummer: be.Auftragsnummer,
+          Beginn: be.Beginn,
+          Ende: be.Ende,
+          LRE: be.LRE,
+          PrivatKm: be.PrivatKm ?? 0,
         })),
       } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
       break;

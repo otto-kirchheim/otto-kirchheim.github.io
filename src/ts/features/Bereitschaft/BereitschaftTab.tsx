@@ -30,9 +30,9 @@ import {
 function BereitschaftTab() {
   useEffect(() => {
     const isEinsatzLinkedToZeitraum = (einsatz: IDatenBE, zeitraum: IDatenBZ): boolean => {
-      const einsatzDate = dayjs(einsatz.tagBE, 'DD.MM.YYYY').format('YYYY-MM-DD');
-      const einsatzStart = dayjs(`${einsatzDate}T${einsatz.beginBE}`);
-      const einsatzEndRaw = dayjs(`${einsatzDate}T${einsatz.endeBE}`);
+      const einsatzDate = dayjs(einsatz.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
+      const einsatzStart = dayjs(`${einsatzDate}T${einsatz.Beginn}`);
+      const einsatzEndRaw = dayjs(`${einsatzDate}T${einsatz.Ende}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
       const bzStart = dayjs(String(zeitraum.Beginn));
       const bzEnd = dayjs(String(zeitraum.Ende));
@@ -122,20 +122,20 @@ function BereitschaftTab() {
 
     const ftBE: CustomTable<IDatenBE> = createCustomTable<IDatenBE>('tableBE', {
       columns: [
-        { name: 'tagBE', title: 'Datum', sortable: true, sorted: true, direction: 'ASC', type: 'Date' },
+        { name: 'Tag', title: 'Datum', sortable: true, sorted: true, direction: 'ASC', type: 'Date' },
         {
-          name: 'auftragsnummerBE',
+          name: 'Auftragsnummer',
           title: 'Auftrags-Nr.',
           longTitle: 'SAP-Nr / Einsatzbeschreibung',
           sortable: true,
           classes: ['custom-text-truncate'],
           type: 'text',
         },
-        { name: 'beginBE', title: 'Von', sortable: true, breakpoints: 'sm', type: 'time' },
-        { name: 'endeBE', title: 'Bis', sortable: true, breakpoints: 'sm', type: 'time' },
-        { name: 'lreBE', title: 'LRE', sortable: true },
+        { name: 'Beginn', title: 'Von', sortable: true, breakpoints: 'sm', type: 'time' },
+        { name: 'Ende', title: 'Bis', sortable: true, breakpoints: 'sm', type: 'time' },
+        { name: 'LRE', title: 'LRE', sortable: true },
         {
-          name: 'privatkmBE',
+          name: 'PrivatKm',
           title: 'Privat Km',
           longTitle: 'Kilometer Privatfahrzeug',
           parser: timeZeroParser,

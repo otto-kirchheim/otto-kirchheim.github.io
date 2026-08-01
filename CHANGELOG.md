@@ -4,6 +4,13 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-01
 
+### feat (Welle 2 Schritt 3 — Bereitschaftseinsatz-Feldnamen vereinheitlicht: 7 Felder auf Backend-Namen)
+
+- `IDatenBE` (`core/types/IDaten.ts`): `bereitschaftszeitraumBE`/`tagBE`/`auftragsnummerBE`/`beginBE`/`endeBE`/`lreBE`/`privatkmBE` → `Bereitschaftszeitraum`/`Tag`/`Auftragsnummer`/`Beginn`/`Ende`/`LRE`/`PrivatKm` (deckungsgleich mit `IBereitschaftseinsatz`, siehe `@otto-kirchheim/nebengeld-shared` v0.4.0). Durchgängig umbenannt in 25 Dateien: CustomTable-Spaltenkonfiguration, Add/Edit-Modal, `isSameBereitschaftsEinsatz.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `fieldMapper.ts`, `download.ts`, zugehörige Tests (keine Snapshot-Datei für BE betroffen).
+- `fieldMapper.ts`: `BackendBereitschaftseinsatz` erweitert jetzt das geteilte `IBereitschaftseinsatz` statt die Felder selbst zu deklarieren; `beFromBackend`/`beToBackend` dadurch reine Identitäts-Zuordnungen. Nebeneffekt: `LRE` ist jetzt durchgängig als `LreType`-Enum statt `string` typisiert — ein jetzt überflüssiger `as IDatenBE['LRE']`-Cast in `beFromBackend` entfernt, ein Test (`fieldMapper.test.ts`) nutzte noch den rohen String `'LRE 1'` statt `LreType.LRE_1` und wurde korrigiert.
+- Keine Business-Logik verändert — reiner Bezeichner-Rename, durch vollständigen Testlauf verifiziert.
+- **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` gruen (1319 Tests) gegen die real veröffentlichte v0.4.0.
+
 ### feat (Welle 2 Schritt 2 — Bereitschaftszeitraum-Feldnamen vereinheitlicht: beginB/endeB/pauseB → Beginn/Ende/Pause)
 
 - `IDatenBZ` (`core/types/IDaten.ts`): Felder `beginB`/`endeB`/`pauseB` → `Beginn`/`Ende`/`Pause` (jetzt deckungsgleich mit dem Backend-Modell `IBereitschaftszeitraum`, siehe `@otto-kirchheim/nebengeld-shared` v0.3.0). Durchgängig umbenannt in 31 betroffenen Dateien: CustomTable-Spaltenkonfiguration (`BereitschaftTab.tsx`), Add/Edit-Modal, Business-Logik (`calculateBereitschaftsZeiten.ts`, `submitBereitschaftsEinsatz.ts`, `aktualisiereBerechnung.ts`, `overlapGuard.ts`, `savePipeline.ts`, `getMonatFromItem.ts`), `fieldMapper.ts`, `download.ts` sowie zugehörige Tests + 2 Snapshot-Dateien neu generiert (reiner Feldnamen-Diff, keine Werteänderung).

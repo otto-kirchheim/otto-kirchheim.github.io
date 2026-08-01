@@ -35,9 +35,9 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <MyInput
           divClass="form-floating col-12 col-sm-6"
           required
-          type={columns.find(col => col.name === 'tagBE')?.type || 'Date'}
+          type={columns.find(col => col.name === 'Tag')?.type || 'Date'}
           id="Datum"
-          name={columns.find(col => col.name === 'tagBE')?.longTitle || 'Datum'}
+          name={columns.find(col => col.name === 'Tag')?.longTitle || 'Datum'}
           min={datum.startOf('M').format('YYYY-MM-DD')}
           max={datum.endOf('M').format('YYYY-MM-DD')}
           value={datum.format('YYYY-MM-DD')}
@@ -47,9 +47,9 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <MyInput
           divClass="form-floating col-12"
           required
-          type={columns.find(col => col.name === 'auftragsnummerBE')?.type || 'text'}
+          type={columns.find(col => col.name === 'Auftragsnummer')?.type || 'text'}
           id="SAPNR"
-          name={columns.find(col => col.name === 'auftragsnummerBE')?.longTitle || 'SAP-Nr / Einsatzbeschreibung'}
+          name={columns.find(col => col.name === 'Auftragsnummer')?.longTitle || 'SAP-Nr / Einsatzbeschreibung'}
         >
           SAP-Nr / Einsatzbeschreibung
         </MyInput>
@@ -63,7 +63,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           className="form-floating col-12 col-sm-6"
           required
           id="LRE"
-          title={columns.find(col => col.name === 'lreBE')?.longTitle || 'LRE'}
+          title={columns.find(col => col.name === 'LRE')?.longTitle || 'LRE'}
           options={[
             { text: 'Bitte Einsatz auswählen', disabled: true, selected: true },
             { value: 'LRE 1', text: 'LRE 1' },
@@ -75,9 +75,9 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         />
         <MyInput
           divClass="form-floating col-12 col-sm-6 pb-3"
-          type={columns.find(col => col.name === 'privatkmBE')?.type || 'number'}
+          type={columns.find(col => col.name === 'PrivatKm')?.type || 'number'}
           id="privatkm"
-          name={columns.find(col => col.name === 'privatkmBE')?.longTitle || 'Km Privatfahrzeug'}
+          name={columns.find(col => col.name === 'PrivatKm')?.longTitle || 'Km Privatfahrzeug'}
           min={'0'}
           popover={{
             title: 'Kilometer Privatfahrzeug',

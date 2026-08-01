@@ -73,11 +73,11 @@ describe('aktualisiereBerechnung', () => {
 
     const BE: IDatenBE[] = [
       {
-        tagBE: '10.03.2026',
-        beginBE: '14:00',
-        endeBE: '16:00',
-        lreBE: 'LRE 1',
-        privatkmBE: 25,
+        Tag: '10.03.2026',
+        Beginn: '14:00',
+        Ende: '16:00',
+        LRE: 'LRE 1',
+        PrivatKm: 25,
       } as IDatenBE,
     ];
 
@@ -93,9 +93,9 @@ describe('aktualisiereBerechnung', () => {
 
   it('counts LRE 2 and LRE 3 correctly', () => {
     const BE: IDatenBE[] = [
-      { tagBE: '10.03.2026', beginBE: '10:00', endeBE: '11:00', lreBE: 'LRE 2', privatkmBE: 0 } as IDatenBE,
-      { tagBE: '11.03.2026', beginBE: '10:00', endeBE: '11:00', lreBE: 'LRE 3', privatkmBE: 10 } as IDatenBE,
-      { tagBE: '12.03.2026', beginBE: '10:00', endeBE: '11:00', lreBE: 'LRE 3', privatkmBE: 5 } as IDatenBE,
+      { Tag: '10.03.2026', Beginn: '10:00', Ende: '11:00', LRE: 'LRE 2', PrivatKm: 0 } as IDatenBE,
+      { Tag: '11.03.2026', Beginn: '10:00', Ende: '11:00', LRE: 'LRE 3', PrivatKm: 10 } as IDatenBE,
+      { Tag: '12.03.2026', Beginn: '10:00', Ende: '11:00', LRE: 'LRE 3', PrivatKm: 5 } as IDatenBE,
     ];
 
     const result = aktualisiereBerechnung({ BZ: [], BE, EWT: [], N: [] });
@@ -212,14 +212,14 @@ describe('aktualisiereBerechnung', () => {
     expect(result[6 as keyof IVorgabenBerechnung].N.F).toBe(1);
   });
 
-  it('handles BE with overnight endeBE (before beginBE)', () => {
+  it('handles BE with overnight Ende (before Beginn)', () => {
     const BE: IDatenBE[] = [
       {
-        tagBE: '10.03.2026',
-        beginBE: '22:00',
-        endeBE: '02:00',
-        lreBE: 'LRE 1',
-        privatkmBE: 0,
+        Tag: '10.03.2026',
+        Beginn: '22:00',
+        Ende: '02:00',
+        LRE: 'LRE 1',
+        PrivatKm: 0,
       } as IDatenBE,
     ];
 
