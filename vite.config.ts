@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import base from './vite.base-config';
+import base from './vite.base-config.ts';
 import preact from '@preact/preset-vite';
 import UnpluginInjectPreload from 'unplugin-inject-preload/vite';
 import { compression } from 'vite-plugin-compression2';
