@@ -43,6 +43,12 @@ interface CustomTableOptions<T extends CustomTableTypes> {
     visible?: boolean;
     parser?: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
     classes?: string[];
+    /**
+     * Nur setzen, wenn der `parser` dieser Spalte nachweislich festes Markup aus
+     * dem eigenen Code erzeugt (z.B. ein Schalter). Zellwerte werden dann als
+     * HTML eingesetzt — für Spalten mit Freitext aus Benutzereingaben verboten.
+     */
+    html?: boolean;
     editing?: CustomTableOptions<T>['editing'];
   }[];
   rows: T[];
@@ -91,6 +97,7 @@ interface CustomTableOptionsAll<T extends CustomTableTypes> {
     parser: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
     classes: string[];
     visible: boolean;
+    html: boolean;
     editing?: CustomTableOptionsAll<T>['editing'];
   }[];
 
@@ -151,6 +158,7 @@ export class Column<T extends CustomTableTypes> {
   public parser: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
   public classes: string[];
   public visible: boolean;
+  public html: boolean;
   public editing?: CustomTableOptionsAll<T>['editing'] | null;
   public index: number;
   public $el: HTMLTableCellElement | null = null;
@@ -169,6 +177,7 @@ export class Column<T extends CustomTableTypes> {
     this.parser = column.parser;
     this.classes = column.classes;
     this.visible = column.visible;
+    this.html = column.html;
     if (column.editing) this.editing = column.editing;
     this.CustomTable = table;
   }
@@ -584,6 +593,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
         editing: this.options.editing,
         classes: ['customtable-editing'],
         visible: true,
+        html: false,
         sorted: false,
         direction: null,
         parser: _parser,
@@ -627,6 +637,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
             parser: column.parser ?? _parser,
             classes: column.classes ?? [],
             visible: column.visible ?? true,
+            html: column.html ?? false,
           };
         }),
         rows: options.rows ?? [],
@@ -897,7 +908,11 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
           } else {
             const cellContent = column.parser(row.cells[column.name] as T[keyof T]).toString();
             const content = document.createElement('span');
-            content.innerHTML = cellContent;
+            // Standardmäßig Text: Zellwerte enthalten Freitext aus Benutzereingaben
+            // (z.B. Einsatzort, Auftragsnummer). Nur Spalten mit `html: true`, deren
+            // Parser festes Markup aus dem eigenen Code erzeugt, werden als HTML gesetzt.
+            if (column.html) content.innerHTML = cellContent;
+            else content.textContent = cellContent;
             td.appendChild(content);
           }
           if (column.breakpoints) td.dataset.breakpoints = column.breakpoints;

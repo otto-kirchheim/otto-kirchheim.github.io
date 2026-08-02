@@ -4,6 +4,14 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 
 ## 2026-08-02
 
+### fix (CustomTable: Zellinhalte wurden als HTML interpretiert)
+
+- Aus einem Security-Scan: `CustomTable.ts` setzte Zellwerte über `innerHTML`. Der Standard-Parser reicht den Rohwert durch, betroffen sind also auch Freitextfelder aus Benutzereingaben (`Einsatzort` in EWT, `Auftragsnummer` in Nebenbezüge). Ein Eintrag wie `<img src=x onerror=…>` wurde beim Rendern ausgeführt. Der Radius ist begrenzt, weil jeder Benutzer nur eigene Zeilen sieht (Self-XSS), betrifft aber auch Daten, die ein Admin für einen Benutzer anlegt oder per Vorlagen-/Muster-Übernahme kopiert.
+- Zellinhalte werden jetzt über `textContent` gesetzt. HTML gibt es nur noch als bewusste Ausnahme je Spalte über die neue Option `html: true` — sie ist ausschließlich für Spalten gedacht, deren Parser festes Markup aus dem eigenen Code erzeugt, nie für Freitext aus Benutzereingaben.
+- Betroffen sind genau zwei Spalten in `EwtTab.tsx`: der Berechnen-Schalter (`<input type="checkbox">`, interpoliert nur einen Boolean) und die Schicht-Spalte (`switch` über feste Fälle). Alle Parser der übrigen Tabellen wurden geprüft und erzeugen kein Markup.
+- Die Zulagen-Spalte in `NebenTab.tsx` ersetzte `\n` durch `<br>`; sie liefert jetzt Rohtext, den die neue Spaltenklasse `cell-multiline` (`white-space: pre-line`) umbricht — hier ist kein HTML nötig.
+- Regressionstests: `test/Utilities/CustomTable.xss.test.ts` (Markup im Zellwert erzeugt ohne `html: true` kein Element und bleibt wörtlich als Text; mit `html: true` wird es weiterhin gerendert).
+
 ### fix (Massenänderung: Bedien-Feedback aus dem ersten Durchlauf)
 
 - **Modal-Breite wirkte nicht.** `MyDivModal` hängte die `size`-Klasse an `.modal-content`, Bootstrap erwartet sie auf `.modal-dialog` — die Massenänderung lief dadurch trotz `size="xl"` in der Standardbreite (500 px). Statt die Semantik des bestehenden `size`-Props (und damit sechs andere Modals) zu ändern, gibt es jetzt `dialogClass` für Klassen auf `.modal-dialog`; die Massenänderung nutzt `modal-xl modal-fullscreen-lg-down modal-dialog-scrollable`. Der Formular-Schritt liegt zusätzlich in einem Grid, das ab `xl` zweispaltig wird (OE-Karte neben "Weitere Felder").

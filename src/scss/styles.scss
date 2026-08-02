@@ -169,6 +169,12 @@ td:has(.SchichtBereitschaft) {
   align-content: start;
 }
 
+/* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
+   selbst, damit CustomTable die Zelle als Text (nicht als HTML) setzen kann. */
+.cell-multiline {
+  white-space: pre-line;
+}
+
 /* Platzhalter der OE-Ebenen zeigen den bisherigen Wert — klar von einer Eingabe absetzen. */
 .oe-level-input::placeholder {
   font-style: italic;

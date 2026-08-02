@@ -23,6 +23,8 @@ function EwtTab() {
         const d = dayjs(s);
         return d.isValid() ? d.format('dd DD.MM.') : s;
       },
+      // Beide Parser erzeugen festes Markup ohne Benutzereingaben (Boolean bzw.
+      // Switch über feste Fälle) — nur deshalb dürfen die Spalten `html: true` setzen.
       berechnenParser = (value: unknown): string => {
         return `<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"${
           value ? ' checked' : ''
@@ -36,7 +38,7 @@ function EwtTab() {
             return 'Nacht';
           case 'SP':
             return 'Spät';
-          case 'BN':
+          case 'BN': //legacy: BN = Bereitschaft + Nacht
             return "<span class='SchichtBereitschaft'>Bereitschaft<br>+ Nacht</span>";
           case 'S':
             return 'Sonder';
@@ -56,7 +58,7 @@ function EwtTab() {
           },
           { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
           { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
-          { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time' },
+          { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time', html: true },
           { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'xl', type: 'time' },
           { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'md', type: 'time' },
           { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
@@ -65,7 +67,7 @@ function EwtTab() {
           { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
           { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'md', type: 'time' },
           { name: 'anWE', title: 'An Wohnung', breakpoints: 'xl', type: 'time' },
-          { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xxl' },
+          { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xxl', html: true },
         ],
         rows: getEwtDaten(undefined, undefined, { scope: 'all' }),
         sorting: { enabled: true },
