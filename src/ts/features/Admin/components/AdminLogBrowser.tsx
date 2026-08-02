@@ -22,10 +22,18 @@ function userName(map: Record<string, string>, id: string | null): preact.JSX.El
   return <code class="text-muted">{truncateId(id)}</code>;
 }
 
+/** Der geloggte Payload liegt unter `params.payload` (siehe writeAdminLog im Backend). */
+function logPayload(entry: Record<string, unknown>): unknown {
+  const params = entry['params'];
+  if (!params || typeof params !== 'object') return null;
+  return (params as { payload?: unknown }).payload ?? null;
+}
+
 export function AdminLogBrowser() {
   const [logs, setLogs] = useState<AdminPage | null>(null);
   const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [openDetailsId, setOpenDetailsId] = useState<string | null>(null);
   const [actionFilter, setActionFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -102,19 +110,20 @@ export function AdminLogBrowser() {
               <th>Admin</th>
               <th class="d-none d-md-table-cell">Ziel-User</th>
               <th class="d-none d-lg-table-cell">Ressource-ID</th>
+              <th class="text-end">Details</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={5} class="text-center py-4">
+                <td colSpan={6} class="text-center py-4">
                   <div class="spinner-border spinner-border-sm" role="status" />
                 </td>
               </tr>
             )}
             {!loading && (!logs || logs.data.length === 0) && (
               <tr>
-                <td colSpan={5} class="text-center py-3 text-muted">
+                <td colSpan={6} class="text-center py-3 text-muted">
                   Keine Log-Einträge
                 </td>
               </tr>
@@ -124,18 +133,46 @@ export function AdminLogBrowser() {
                 const adminId = String(entry['adminId'] ?? '');
                 const targetUserId = entry['targetUserId'] ? String(entry['targetUserId']) : null;
                 const targetResourceId = entry['targetResourceId'] ? String(entry['targetResourceId']) : null;
+                const id = String(entry['_id']);
+                const payload = logPayload(entry);
+                const open = openDetailsId === id;
                 return (
-                  <tr key={String(entry['_id'])}>
-                    <td class="small text-nowrap">{formatTs(entry['timestamp'])}</td>
-                    <td>
-                      <code class="small text-break">{String(entry['action'] ?? '')}</code>
-                    </td>
-                    <td class="small">{userName(userNameMap, adminId)}</td>
-                    <td class="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
-                    <td class="small d-none d-lg-table-cell">
-                      {targetResourceId ? <code class="text-muted">{truncateId(targetResourceId)}</code> : '—'}
-                    </td>
-                  </tr>
+                  <>
+                    <tr key={id}>
+                      <td class="small text-nowrap">{formatTs(entry['timestamp'])}</td>
+                      <td>
+                        <code class="small text-break">{String(entry['action'] ?? '')}</code>
+                      </td>
+                      <td class="small">{userName(userNameMap, adminId)}</td>
+                      <td class="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
+                      <td class="small d-none d-lg-table-cell">
+                        {targetResourceId ? <code class="text-muted">{truncateId(targetResourceId)}</code> : '—'}
+                      </td>
+                      <td class="text-end">
+                        {payload !== null && (
+                          <button
+                            class="btn btn-sm btn-link p-0"
+                            aria-label={open ? 'Details ausblenden' : 'Details anzeigen'}
+                            aria-expanded={open}
+                            onClick={() => setOpenDetailsId(open ? null : id)}
+                          >
+                            <span class="material-icons-round" style="font-size:1.1rem;vertical-align:middle">
+                              {open ? 'expand_less' : 'expand_more'}
+                            </span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr key={`${id}-details`}>
+                        <td colSpan={6} class="bg-body-tertiary">
+                          <pre class="small mb-0 text-break" style="white-space:pre-wrap">
+                            {JSON.stringify(payload, null, 2)}
+                          </pre>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 );
               })}
           </tbody>

@@ -12,6 +12,7 @@ import {
 import type { TUserRole } from '@/types';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { OeTagInput } from './OeTagInput';
+import { OeLevelBoxes } from './OeLevelBoxes';
 import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import createAdminUserLinksModal from './createAdminUserLinksModal';
 import { loadUserDataForAdminSelection } from '../utils/actAs';
@@ -539,11 +540,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
                     {/* OE */}
                     <div class="mb-3">
                       <label class="form-label fw-semibold small mb-1">OE</label>
-                      <input
-                        type="text"
-                        class="form-control form-control-sm"
+                      <OeLevelBoxes
                         value={edit.oe}
-                        onInput={e => updateEdit(currentUser._id, { oe: (e.target as HTMLInputElement).value })}
+                        onChange={value => updateEdit(currentUser._id, { oe: value })}
                         disabled={!editable}
                       />
                     </div>
@@ -555,6 +554,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
                       onChange={values => updateEdit(currentUser._id, { adminForTeamOes: values })}
                       disabled={!editable}
                       placeholder="Team-OE hinzufügen…"
+                      defaultLevelCount={splitOeInput(edit.oe).length}
                     />
 
                     {/* Org-Admin OEs */}
@@ -564,6 +564,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
                       onChange={values => updateEdit(currentUser._id, { adminForOrganizationOes: values })}
                       disabled={!editable}
                       placeholder="Org-OE hinzufügen…"
+                      defaultLevelCount={splitOeInput(edit.oe).length}
                     />
 
                     <div class="border rounded p-2 mt-2">

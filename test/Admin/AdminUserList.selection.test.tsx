@@ -44,6 +44,7 @@ function makeUser(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     fullName: 'User Eins',
     role: Role.MEMBER,
     oe: ['V', 'IW', 'MI'],
+    betrieb: 'DB Test AG',
     adminForTeamOes: [],
     adminForOrganizationOes: [],
     canEditVorgabenGeld: false,

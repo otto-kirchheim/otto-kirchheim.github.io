@@ -9,6 +9,7 @@ import {
   type VorgabenBRow,
 } from './profileTemplates.shared';
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
+import { OeLevelBoxes } from './OeLevelBoxes';
 import type { BereitschaftSchichtTyp } from '@/types';
 
 type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
@@ -109,7 +110,12 @@ export function AdminProfileTemplateContentEditor({
             {PERS_FIELDS.map(field => (
               <div class="col-12 col-md-6" key={`${templateId}-pers-${field.key}`}>
                 <label class="form-label small mb-1">{field.label}</label>
-                {field.type === 'select' && field.options ? (
+                {field.key === 'OE' ? (
+                  <OeLevelBoxes
+                    value={templateContent.Pers[field.key] ?? ''}
+                    onChange={value => onUpdatePersField(field.key, value)}
+                  />
+                ) : field.type === 'select' && field.options ? (
                   <select
                     class="form-select form-select-sm"
                     value={templateContent.Pers[field.key] ?? ''}

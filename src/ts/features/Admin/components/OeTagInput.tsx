@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks';
+import { OeLevelBoxes } from './OeLevelBoxes';
 
 type OeTagInputProps = {
   label: string;
@@ -6,6 +7,8 @@ type OeTagInputProps = {
   onChange: (values: string[]) => void;
   disabled?: boolean;
   placeholder?: string;
+  /** Anzahl leerer Eingabefelder für einen neuen Pfad (i.d.R. Tiefe der aktuellen OE). */
+  defaultLevelCount?: number;
 };
 
 export function OeTagInput({
@@ -14,6 +17,7 @@ export function OeTagInput({
   onChange,
   disabled = false,
   placeholder = 'OE hinzufügen…',
+  defaultLevelCount = 1,
 }: OeTagInputProps) {
   const [inputValue, setInputValue] = useState('');
 
@@ -26,13 +30,6 @@ export function OeTagInput({
 
   function handleRemove(index: number) {
     onChange(values.filter((_, i) => i !== index));
-  }
-
-  function handleKeyDown(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAdd();
-    }
   }
 
   return (
@@ -56,15 +53,9 @@ export function OeTagInput({
         ))}
       </div>
       {!disabled && (
-        <div class="input-group input-group-sm">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            placeholder={placeholder}
-            value={inputValue}
-            onInput={e => setInputValue((e.target as HTMLInputElement).value)}
-            onKeyDown={handleKeyDown}
-          />
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <span class="text-body-secondary small">{placeholder}</span>
+          <OeLevelBoxes value={inputValue} onChange={setInputValue} defaultLevelCount={defaultLevelCount} />
           <button
             class="btn btn-outline-primary btn-sm"
             type="button"

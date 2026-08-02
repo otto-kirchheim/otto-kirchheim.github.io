@@ -15,6 +15,8 @@ export type TMyModal<T> = {
     | 'fullscreen-lg-down'
     | 'fullscreen-xl-down'
     | 'fullscreen-xxl-down';
+  /** Zusätzliche Klassen auf `.modal-dialog` (z.B. `modal-xl modal-fullscreen-lg-down`). */
+  dialogClass?: string;
   submitText?: string;
   customButtons?: React.ComponentChild[];
   onSubmit: (this: T, event: Event) => void;

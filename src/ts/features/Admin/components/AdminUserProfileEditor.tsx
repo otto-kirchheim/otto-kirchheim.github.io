@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { JsonEditor } from './JsonEditor';
+import { OeLevelBoxes } from './OeLevelBoxes';
 import { TB_OPTIONS } from './profileTemplates.shared';
 import {
   fetchAdminUserProfiles,
@@ -453,6 +454,11 @@ export function AdminUserProfileEditor({
                                         </option>
                                       ))}
                                 </select>
+                              ) : key === 'OE' ? (
+                                <OeLevelBoxes
+                                  value={persFieldToInput(key, val)}
+                                  onChange={value => handlePersChange(key, value)}
+                                />
                               ) : (
                                 <input
                                   type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}

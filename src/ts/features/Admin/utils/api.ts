@@ -32,6 +32,7 @@ type BackendUserProfile = {
     OE?: string[];
     Vorname?: string;
     Nachname?: string;
+    Betrieb?: string;
   };
 };
 
@@ -68,6 +69,7 @@ export type AdminUserRow = {
   role: TUserRole;
   /** OE als Hierarchie-Ebenen; Anzeige/Eingabe laufen über `joinOeLevels`/`splitOeInput`. */
   oe: string[];
+  betrieb: string;
   adminForTeamOes: string[];
   adminForOrganizationOes: string[];
   canEditVorgabenGeld: boolean;
@@ -82,7 +84,7 @@ function unwrapResponse<T>(response: unknown): T {
   return (payload.data ?? null) as T;
 }
 
-async function fetchUserProfileSummary(userId: string): Promise<{ oe: string[]; fullName: string }> {
+async function fetchUserProfileSummary(userId: string): Promise<{ oe: string[]; betrieb: string; fullName: string }> {
   try {
     const response = await FetchRetry<undefined, BackendUserProfile>(`user-profiles/user/${userId}`, undefined, 'GET');
     const profile = unwrapResponse<BackendUserProfile>(response);
@@ -92,10 +94,11 @@ async function fetchUserProfileSummary(userId: string): Promise<{ oe: string[]; 
 
     return {
       oe: profile.Pers?.OE ?? [],
+      betrieb: profile.Pers?.Betrieb ?? '',
       fullName,
     };
   } catch {
-    return { oe: [], fullName: '' };
+    return { oe: [], betrieb: '', fullName: '' };
   }
 }
 
@@ -120,6 +123,7 @@ export async function fetchAdminUsers(filter: { name?: string; role?: string }):
         fullName: profileSummary.fullName,
         role: user.role,
         oe: profileSummary.oe,
+        betrieb: profileSummary.betrieb,
         adminForTeamOes: user.adminForTeamOes ?? [],
         adminForOrganizationOes: user.adminForOrganizationOes ?? [],
         canEditVorgabenGeld: Boolean(user.canEditVorgabenGeld),
@@ -292,22 +296,38 @@ export async function deleteProfileTemplate(id: string): Promise<void> {
 /** `Pers` fehlt bewusst — Identitätsfelder werden nie über mehrere Benutzer kopiert. */
 export type BulkApplyCategory = 'Fahrzeit' | 'Arbeitszeit' | 'VorgabenB' | 'Einstellungen';
 
+export type BulkOeTargetField = 'pers' | 'teamOes' | 'organizationOes';
+
 export type BulkUserProfileUpdatePayload = {
   userIds: string[];
   dryRun?: boolean;
-  /** `levelIndex` ist 0-basiert; die Oberfläche zeigt "Ebene levelIndex + 1". */
-  oe?: { levelIndex: number; newValue: string };
+  /** 0-basiert, positionsgebunden; `null` = Ebene bleibt unangetastet. */
+  oeLevels?: (string | null)[];
+  /** Bestimmt, worauf `oeLevels` angewendet wird — Pers.OE und/oder jeder Eintrag der Admin-OE-Listen. */
+  oeLevelsApplyTo?: BulkOeTargetField[];
   betrieb?: string;
+  gewerk?: string;
+  ersteTkgSt?: string;
+  ersteTkgStAdresse?: string;
+  teamOes?: { add?: string; remove?: string };
+  organizationOes?: { add?: string; remove?: string };
   applyFrom?:
     | { type: 'template'; templateId: string; categories: BulkApplyCategory[] }
     | { type: 'user'; sourceUserId: string; categories: BulkApplyCategory[] };
 };
 
+export type BulkApplyFieldDiff = { before: string; after: string };
+
 export type BulkApplyEntry = {
   userId: string;
   userName: string;
-  oe: { before: string; after: string; applicable: boolean };
-  betrieb: { before: string; after: string };
+  oe: BulkApplyFieldDiff & { applicable: boolean };
+  betrieb: BulkApplyFieldDiff;
+  gewerk: BulkApplyFieldDiff;
+  ersteTkgSt: BulkApplyFieldDiff;
+  ersteTkgStAdresse: BulkApplyFieldDiff;
+  teamOes: BulkApplyFieldDiff;
+  organizationOes: BulkApplyFieldDiff;
   categoriesApplied: BulkApplyCategory[];
   status: 'ok' | 'skipped' | 'error';
   message?: string;

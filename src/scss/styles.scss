@@ -169,6 +169,12 @@ td:has(.SchichtBereitschaft) {
   align-content: start;
 }
 
+/* Platzhalter der OE-Ebenen zeigen den bisherigen Wert — klar von einer Eingabe absetzen. */
+.oe-level-input::placeholder {
+  font-style: italic;
+  opacity: 0.6;
+}
+
 .form-group.required .control-label:after,
 .form-floating.required label:after {
   content: '*' !important;

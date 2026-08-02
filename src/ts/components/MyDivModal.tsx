@@ -4,6 +4,7 @@ import { MyModalHeader, MyEditorFooter } from '.';
 
 const MyDivModal: FunctionalComponent<Omit<TMyModal<HTMLDivElement>, 'myRef' | 'onSubmit'>> = ({
   size,
+  dialogClass,
   title,
   helpContext,
   Header,
@@ -13,7 +14,7 @@ const MyDivModal: FunctionalComponent<Omit<TMyModal<HTMLDivElement>, 'myRef' | '
   customButtons,
   errorMessage,
 }) => (
-  <div className={'modal-dialog'}>
+  <div className={dialogClass ? `modal-dialog ${dialogClass}` : 'modal-dialog'}>
     <div className={size ? `modal-content modal-${size}` : 'modal-content'}>
       {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
       {errorMessage && (
