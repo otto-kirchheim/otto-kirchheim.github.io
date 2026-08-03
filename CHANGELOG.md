@@ -11,6 +11,12 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - **Live-Refresh:** Solange das Modal offen bleibt, hört es über `onEvent('data:changed', …)` auf abgeschlossene EWT-Saves und baut die Options neu auf (neues Util `Neben/utils/applySelectOptions.ts`), damit der Tag nutzbar wird, sobald der Sync durch ist — ohne Modal-Neuöffnen. Abmeldung über den bestehenden `hide.bs.modal`-Listener.
 - **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1386 Tests) grün.
 
+### fix (Einstellungen: AutoSave-Verzögerung/-Aktivierung griff erst nach Reload)
+
+- Eine Änderung von "AutoSave aktiviert" oder der AutoSave-Verzögerung in den Einstellungen wurde zwar korrekt gespeichert, wirkte sich auf den laufenden AutoSave aber erst nach einem vollständigen Neuladen der Seite aus: `applyEinstellungenToRuntime()` (`Einstellungen/index.ts`), das den Runtime-State in `autoSave.ts` setzt, lief ausschließlich einmalig beim App-Start; der Speichern-Button (`saveDaten.ts`) rief es nie erneut auf.
+- Die Apply-Logik liegt jetzt gebündelt als `applyAutoSaveSettings()` in `infrastructure/autoSave/autoSave.ts` (von `Einstellungen/index.ts` und `saveDaten.ts` gemeinsam genutzt) und wird zusätzlich direkt nach dem Speichern der Einstellungen aufgerufen — die Änderung greift damit sofort, ohne Reload.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1386 Tests) grün.
+
 ## 2026-08-02
 
 ### fix (CustomTable: Zellinhalte wurden als HTML interpretiert)

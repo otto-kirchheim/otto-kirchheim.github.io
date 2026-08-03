@@ -155,6 +155,16 @@ export function isAutoSaveEnabled(): boolean {
 }
 
 /**
+ * Appliziert AutoSave-Einstellungen (enabled/delay) aus dem Benutzerprofil auf den Runtime-State.
+ * Gemeinsam genutzt von App-Start (`Einstellungen/index.ts`) und direkt nach dem Speichern
+ * der Einstellungen (`saveDaten.ts`), damit eine Änderung sofort greift statt erst nach Reload.
+ */
+export function applyAutoSaveSettings(settings?: { autoSaveEnabled?: boolean; autoSaveDelayMs?: number }): void {
+  if (settings?.autoSaveEnabled !== undefined) setAutoSaveEnabled(settings.autoSaveEnabled);
+  if (settings?.autoSaveDelayMs !== undefined) setAutoSaveDelay(settings.autoSaveDelayMs);
+}
+
+/**
  * Status-Listener registrieren (z.B. für UI-Badge).
  * Gibt Unsubscribe-Funktion zurück.
  */

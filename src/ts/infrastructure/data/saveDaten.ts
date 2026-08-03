@@ -4,7 +4,13 @@ import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
 import type { IVorgabenU, TResourceKey } from '@/types';
-import { flushAll, getResourceStatus, hasPendingTableChanges, markResourceSaved } from '../autoSave/autoSave';
+import {
+  applyAutoSaveSettings,
+  flushAll,
+  getResourceStatus,
+  hasPendingTableChanges,
+  markResourceSaved,
+} from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
 import { invokeHook } from '@/core/hooks';
@@ -62,6 +68,7 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
       userData = invokeHook('pre-save:settings') ?? null;
       if (!userData) throw new Error('pre-save:settings hook not registered');
       Storage.set('VorgabenU', userData);
+      applyAutoSaveSettings(userData.Einstellungen);
     } catch (err: unknown) {
       console.error('Einstellungen sammeln fehlgeschlagen:', err instanceof Error ? err.message : String(err));
     }

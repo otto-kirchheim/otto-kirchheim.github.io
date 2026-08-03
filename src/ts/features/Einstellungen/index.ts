@@ -3,7 +3,7 @@ import { openHelpModal, registerAppStartTask } from '@/core';
 import { markStep } from '@/core/orchestration/initSequence';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
-import { setAutoSaveEnabled, setAutoSaveDelay } from '@/infrastructure/autoSave/autoSave';
+import { applyAutoSaveSettings } from '@/infrastructure/autoSave/autoSave';
 import { authApi } from '@/infrastructure/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -266,13 +266,7 @@ function applyEinstellungenToRuntime(): void {
     Einstellungen?: { autoSaveEnabled?: boolean; autoSaveDelayMs?: number };
   }>('VorgabenU', { default: {} });
 
-  if (VorgabenU?.Einstellungen?.autoSaveEnabled !== undefined) {
-    setAutoSaveEnabled(VorgabenU.Einstellungen.autoSaveEnabled);
-  }
-
-  if (VorgabenU?.Einstellungen?.autoSaveDelayMs !== undefined) {
-    setAutoSaveDelay(VorgabenU.Einstellungen.autoSaveDelayMs);
-  }
+  applyAutoSaveSettings(VorgabenU?.Einstellungen);
 }
 
 registerAppStartTask(() => {
