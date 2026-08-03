@@ -3,9 +3,10 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
-import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { addNebengeldTag, getConfiguredNebenZulagen, getNebengeldDaten } from '../utils';
+import { onEvent } from '@/core';
+import { addNebengeldTag, applySelectOptions, getConfiguredNebenZulagen, getNebengeldDaten } from '../utils';
 
 type ReturnTypeTagOptions = {
   value: string | number;
@@ -22,6 +23,7 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
       const schicht = day.Schicht;
       const tagEDate = dayjs(day.Tag);
       const tag = tagEDate.format('DD | dd');
+      const isUnsynced = !day._id || day.__localState === 'modified';
 
       const option: ReturnTypeTagOptions = {
         text: '',
@@ -46,7 +48,10 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
           break;
       }
 
-      if (
+      if (isUnsynced) {
+        option.text += ' (wird noch gespeichert)';
+        option.disabled = true;
+      } else if (
         dataN?.some(value => {
           const nebenTagDate = dayjs(value.Tag, 'DD.MM.YYYY');
           return nebenTagDate.isValid() && nebenTagDate.isSame(tagEDate, 'day');
@@ -93,7 +98,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
 
   const configuredZulagen = getConfiguredNebenZulagen();
 
-  showModal(
+  const modal: CustomHTMLDivElement<IDatenN> = showModal(
     <MyFormModal
       myRef={ref}
       title="Neuen Nebenbezug eingeben"
@@ -151,6 +156,15 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
 
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
+
+  const unsubscribeEwtSync = onEvent('data:changed', ({ resource }) => {
+    if (resource !== 'EWT' && resource !== 'all') return;
+    const select = form.querySelector<HTMLSelectElement>('#Tag');
+    if (!select) return;
+    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
+    applySelectOptions(select, getTagOptions(freshDataE));
+  });
+  modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
 
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {

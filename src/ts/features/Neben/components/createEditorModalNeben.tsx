@@ -9,7 +9,9 @@ import type { CustomHTMLDivElement, IDatenEWT, IDatenN } from '@/types';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
 import dayjs from '@/infrastructure/date/configDayjs';
+import { onEvent } from '@/core';
 import {
+  applySelectOptions,
   formatNebengeldZulagen,
   getConfiguredNebenZulagen,
   normalizeNebengeldZulagen,
@@ -88,21 +90,25 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       .map(n => n.EWT as string),
   );
 
-  const ewtOptions = [
+  const buildEwtOptions = (rows: IDatenEWT[]) => [
     { value: '', text: '— keine Zuordnung —', selected: !currentEwtRef },
-    ...dataE.map(day => {
+    ...rows.map(day => {
       const tag = dayjs(day.Tag).format('DD | dd');
       let text = tag;
       if (day.Schicht === 'N') text = `${tag} | Nacht`;
       else if (day.Schicht === 'BN') text = `${tag} | Nacht / Bereitschaft`;
+      const isUnsynced = !day._id || day.__localState === 'modified';
+      if (isUnsynced) text += ' (wird noch gespeichert)';
       return {
         value: day._id ?? '',
         text,
         selected: currentEwtRef === day._id,
-        disabled: usedEwtRefs.has(day._id ?? ''),
+        disabled: isUnsynced || usedEwtRefs.has(day._id ?? ''),
       };
     }),
   ];
+
+  const ewtOptions = buildEwtOptions(dataE);
 
   const handleEwtChange = (evt: Event): void => {
     const select = evt.target as HTMLSelectElement;
@@ -195,6 +201,15 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   if (tagInput) tagInput.disabled = Boolean(initialEwtRef);
 
   modal.row = row;
+
+  const unsubscribeEwtSync = onEvent('data:changed', ({ resource }) => {
+    if (resource !== 'EWT' && resource !== 'all') return;
+    const select = form.querySelector<HTMLSelectElement>('#ewtRefSelect');
+    if (!select) return;
+    const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
+    applySelectOptions(select, buildEwtOptions(freshDataE));
+  });
+  modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
 
   function onSubmit(): (event: Event) => void {
     return (event: Event): void => {

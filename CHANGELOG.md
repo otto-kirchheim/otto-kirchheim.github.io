@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-03
+
+### fix (Nebengeld: Race Condition zwischen EWT-AutoSave und manueller Zulagen-Anlage)
+
+- **Problem:** Legt man während der laufenden EWT-AutoSave-Verzögerung (10 s Debounce) im Neben-Tab eine Zulage für genau den noch nicht synchronisierten EWT-Tag an, listete das Tag-Dropdown (`createAddModalNeben.tsx`/`createEditorModalNeben.tsx`) diesen Tag ganz normal auf. Die EWT-Referenz im Payload (`EWT: day._id`) war zu dem Zeitpunkt aber `undefined` und wurde von `JSON.stringify` stillschweigend aus dem Wert entfernt. Landete der EWT-Eintrag danach vor dem Neben-Request in der DB, quittierte `nebengeld.service.ts` (`assertEwtRules`) das mit `422 Für diesen Tag existiert eine EWT-Schicht`. Landete er danach, entstand ein dauerhaft unverknüpfter Neben-Eintrag ohne Fehler (stille Dateninkonsistenz).
+- **Fix:** Tage mit ausstehender EWT-AutoSave — neu angelegt (`!day._id`) oder lokal geändert, aber noch nicht gespeichert (`day.__localState === 'modified'`, direkt aus dem bereits geladenen `dataE` gelesen, kein zusätzlicher State nötig) — sind im Dropdown jetzt `disabled` und tragen den Hinweis "(wird noch gespeichert)".
+- **Live-Refresh:** Solange das Modal offen bleibt, hört es über `onEvent('data:changed', …)` auf abgeschlossene EWT-Saves und baut die Options neu auf (neues Util `Neben/utils/applySelectOptions.ts`), damit der Tag nutzbar wird, sobald der Sync durch ist — ohne Modal-Neuöffnen. Abmeldung über den bestehenden `hide.bs.modal`-Listener.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1386 Tests) grün.
+
 ## 2026-08-02
 
 ### fix (CustomTable: Zellinhalte wurden als HTML interpretiert)

@@ -7,6 +7,7 @@ import persistTableData from '@/infrastructure/data/persistTableData';
 const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData('N', ft);
 
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
+export { default as applySelectOptions } from './applySelectOptions';
 export { default as syncNebengeldTimesFromEwtRows } from './syncEwtToNeben';
 export {
   formatNebengeldZulagen,
