@@ -7,7 +7,7 @@ import {
   buildCreatePayloadWithClientRequestId,
   mapServerDocToFrontend,
 } from '@/infrastructure/autoSave/changeTracking';
-import type { CustomTable, CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 
 describe('changeTracking', () => {
   describe('stableSerialize', () => {
@@ -89,70 +89,61 @@ describe('changeTracking', () => {
   });
 
   describe('mapCreatedIdsByClientRequestId', () => {
-    function mockTable(rows: { _state: string; _clientRequestId?: string }[]): CustomTable<CustomTableTypes> {
-      return {
-        rows: {
-          array: rows,
-        },
-      } as unknown as CustomTable<CustomTableTypes>;
+    function mockRows(rows: { _state: string; _clientRequestId?: string }[]): Row<CustomTableTypes>[] {
+      return rows as unknown as Row<CustomTableTypes>[];
     }
 
     it('returns empty map for empty references', () => {
-      const table = mockTable([{ _state: 'new', _clientRequestId: 'crid-1' }]);
-      const result = mapCreatedIdsByClientRequestId(table, []);
+      const rows = mockRows([{ _state: 'new', _clientRequestId: 'crid-1' }]);
+      const result = mapCreatedIdsByClientRequestId(rows, []);
       expect(result.size).toBe(0);
     });
 
     it('maps pending rows by clientRequestId', () => {
-      const table = mockTable([
+      const rows = mockRows([
         { _state: 'new', _clientRequestId: 'crid-1' },
         { _state: 'new', _clientRequestId: 'crid-2' },
-        { _state: 'existing' },
       ]);
       const refs = [
         { _id: 'server-id-1', clientRequestId: 'crid-1' },
         { _id: 'server-id-2', clientRequestId: 'crid-2' },
       ];
-      const result = mapCreatedIdsByClientRequestId(table, refs);
+      const result = mapCreatedIdsByClientRequestId(rows, refs);
       expect(result.size).toBe(2);
       expect(result.get(0)).toBe('server-id-1');
       expect(result.get(1)).toBe('server-id-2');
     });
 
     it('skips rows without clientRequestId', () => {
-      const table = mockTable([{ _state: 'new' }]);
+      const rows = mockRows([{ _state: 'new' }]);
       const refs = [{ _id: 'server-id-1', clientRequestId: 'crid-unknown' }];
-      const result = mapCreatedIdsByClientRequestId(table, refs);
+      const result = mapCreatedIdsByClientRequestId(rows, refs);
       expect(result.size).toBe(0);
     });
   });
 
   describe('mapCreatedIdsByContent', () => {
-    function mockTable(rows: { _state: string; cells: Record<string, unknown> }[]): CustomTable<CustomTableTypes> {
-      return {
-        rows: {
-          array: rows,
-        },
-      } as unknown as CustomTable<CustomTableTypes>;
+    function mockRows(rows: { _state: string; cells: Record<string, unknown> }[]): Row<CustomTableTypes>[] {
+      return rows as unknown as Row<CustomTableTypes>[];
     }
 
     it('returns empty map for empty docs', () => {
-      const table = mockTable([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
-      const result = mapCreatedIdsByContent('BZ', table, []);
+      const rows = mockRows([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
+      const result = mapCreatedIdsByContent('BZ', rows, []);
       expect(result.size).toBe(0);
     });
 
     it('matches created docs to pending rows by content signature', () => {
-      const table = mockTable([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
+      const rows = mockRows([{ _state: 'new', cells: { Beginn: 'a', Ende: 'b', Pause: 0 } }]);
       // Server returns same content with _id added
       const createdDocs = [{ _id: 'new-id', Beginn: 'a', Ende: 'b', Pause: 0 }];
-      const result = mapCreatedIdsByContent('BZ', table, createdDocs);
+      const result = mapCreatedIdsByContent('BZ', rows, createdDocs);
       expect(result.size).toBe(1);
       expect(result.get(0)).toBe('new-id');
     });
 
     it('matches by signature rather than position when the response order differs', () => {
-      const table = mockTable([
+      const rows = mockRows([
         { _state: 'new', cells: { Beginn: 'row0-begin', Ende: 'row0-end', Pause: 0 } },
         { _state: 'new', cells: { Beginn: 'row1-begin', Ende: 'row1-end', Pause: 0 } },
       ]);
@@ -162,16 +153,16 @@ describe('changeTracking', () => {
         { _id: 'id-for-row1', Beginn: 'row1-begin', Ende: 'row1-end', Pause: 0 },
         { _id: 'id-for-row0', Beginn: 'row0-begin', Ende: 'row0-end', Pause: 0 },
       ];
-      const result = mapCreatedIdsByContent('BZ', table, createdDocs);
+      const result = mapCreatedIdsByContent('BZ', rows, createdDocs);
       expect(result.get(0)).toBe('id-for-row0');
       expect(result.get(1)).toBe('id-for-row1');
     });
 
     it('falls back to positional matching for unmatched signatures', () => {
-      const table = mockTable([{ _state: 'new', cells: { Beginn: 'x', Ende: 'y', Pause: 99 } }]);
+      const rows = mockRows([{ _state: 'new', cells: { Beginn: 'x', Ende: 'y', Pause: 99 } }]);
       // Doc has different content — no signature match
       const createdDocs = [{ _id: 'fallback-id', Beginn: 'a', Ende: 'b', Pause: 0 }];
-      const result = mapCreatedIdsByContent('BZ', table, createdDocs);
+      const result = mapCreatedIdsByContent('BZ', rows, createdDocs);
       expect(result.size).toBe(1);
       expect(result.get(0)).toBe('fallback-id');
     });

@@ -5,7 +5,7 @@ import {
   markFetchErrorRows,
   showErrorDialog,
 } from '@/infrastructure/autoSave/errorHandling';
-import type { CustomTable, CustomTableTypes, TableChanges } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import type { RowErrorMatch } from '@/infrastructure/autoSave/savePipeline';
 
@@ -153,13 +153,13 @@ describe('errorHandling', () => {
         rows: { array: [newRow, modifiedRow, deletedRow, untouchedModified] },
         drawRows,
       } as unknown as CustomTable<CustomTableTypes>;
-      const changes: TableChanges<CustomTableTypes> = {
-        create: [{} as CustomTableTypes],
-        update: [{ _id: 'mod-1' } as unknown as CustomTableTypes],
-        delete: ['del-1'],
+      const changeRows = {
+        create: [newRow] as unknown as Row<CustomTableTypes>[],
+        update: [modifiedRow] as unknown as Row<CustomTableTypes>[],
+        delete: [deletedRow] as unknown as Row<CustomTableTypes>[],
       };
 
-      markFetchErrorRows(table, changes, 'Netzwerkfehler');
+      markFetchErrorRows(table, changeRows, 'Netzwerkfehler');
 
       expect(newRow._state).toBe('error');
       expect(newRow._errorState).toBe('new');
@@ -177,9 +177,9 @@ describe('errorHandling', () => {
         rows: { array: [makeRow({ _state: 'unchanged' })] },
         drawRows,
       } as unknown as CustomTable<CustomTableTypes>;
-      const changes: TableChanges<CustomTableTypes> = { create: [], update: [], delete: [] };
+      const changeRows = { create: [], update: [], delete: [] };
 
-      markFetchErrorRows(table, changes, 'Netzwerkfehler');
+      markFetchErrorRows(table, changeRows, 'Netzwerkfehler');
 
       expect(drawRows).not.toHaveBeenCalled();
     });

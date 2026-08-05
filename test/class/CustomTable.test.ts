@@ -674,4 +674,64 @@ describe('CustomTable', () => {
     thAfterFirstSort?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(column?.direction).toBe('DESC');
   });
+
+  describe('AutoSave-Commit-Race (getChangeRows + includedRows)', () => {
+    it('committet nur Zeilen aus dem Snapshot - waehrend des Requests neu angelegte Zeile bleibt "new" ohne _id', () => {
+      createTableElement('race-create-table');
+
+      const table = createCustomTable<TableRow>('race-create-table', {
+        columns: [{ name: 'label', title: 'Label' }],
+        rows: [],
+      });
+
+      table.rows.add({ label: 'zuerst' } as TableRow);
+
+      // Snapshot wie im echten AutoSave-Flow: VOR dem Request genommen.
+      const changeRows = table.rows.getChangeRows(false);
+      expect(changeRows.create).toHaveLength(1);
+      const includedRows = new Set(changeRows.create);
+
+      // Waehrend der Request "in flight" ist, legt der Nutzer eine zweite Zeile an.
+      table.rows.add({ label: 'waehrenddessen' } as TableRow);
+      expect(table.rows.array).toHaveLength(2);
+
+      const createdIds = new Map<number, string>([[0, 'server-id-1']]);
+      table.rows.commitAutoSave(createdIds, new Set(), includedRows);
+
+      const [first, second] = table.rows.array;
+      expect(first._state).toBe('unchanged');
+      expect(first._id).toBe('server-id-1');
+      // Die nachtraeglich angelegte Zeile darf NICHT als committet gelten - sonst geht sie
+      // verloren, weil sie nie eine _id bekommt und getChanges() sie danach nicht mehr findet.
+      expect(second._state).toBe('new');
+      expect(second._id).toBeUndefined();
+      expect(table.rows.getChanges(false).create).toHaveLength(1);
+    });
+
+    it('entfernt beim manuellen Speichern nur Loeschungen aus dem Snapshot - waehrend des Requests geloeschte Zeile bleibt erhalten', () => {
+      createTableElement('race-delete-table');
+
+      const table = createCustomTable<TableRow>('race-delete-table', {
+        columns: [{ name: 'label', title: 'Label' }],
+        rows: [
+          { _id: 'a', label: 'A', value: 1 },
+          { _id: 'b', label: 'B', value: 2 },
+        ],
+      });
+
+      table.getRows()[0].deleteRow();
+      const changeRows = table.rows.getChangeRows(true);
+      expect(changeRows.delete).toHaveLength(1);
+      const includedRows = new Set(changeRows.delete);
+
+      // Waehrend der Request laeuft, loescht der Nutzer eine zweite, noch nicht mitgesendete Zeile.
+      table.getRows()[1].deleteRow();
+
+      table.rows.commitChanges(new Map(), new Set(), includedRows);
+
+      expect(table.rows.array).toHaveLength(1);
+      expect(table.rows.array[0]._id).toBe('b');
+      expect(table.rows.array[0]._state).toBe('deleted');
+    });
+  });
 });

@@ -1,3 +1,50 @@
+# Aktueller Plan: AutoSave-Commit-Race - Snapshot-basiertes Commit statt Live-Filter - 2026-08-05
+
+## Kontext
+Vertiefende Race-Condition-Pruefung nach dem AutoSave-Race-Fix vom 2026-08-03 (`queuedDuringSave`).
+Der damalige Fix loeste zuverlaessig einen Folge-Save aus, aber `_commitCreateAndUpdate`
+(`CustomTable.ts`) selbst filterte beim Commit weiterhin den *aktuellen* Live-Tabellenzustand
+(`getEffectiveRowState`) statt eines Snapshots vom Request-Zeitpunkt. Zeilen, die waehrend eines
+laufenden Save-Requests neu angelegt oder geaendert wurden, wurden dadurch von der Antwort des
+VORHERIGEN Requests faelschlich mitcommittet — bei neuen Zeilen ohne `_id` (endgueltiger
+Datenverlust), bei geaenderten Zeilen mit Verlust der zuletzt eingetippten Aenderung. Zusaetzlich
+verschob eine liegen gebliebene Fehler-Zeile (`_state==='error'`, `_errorState==='new'`) die
+Index-Zuordnung zwischen `changeTracking.ts` (Live-Re-Filter) und `_commitCreateAndUpdate`
+(`getEffectiveRowState`-Filter) — beide filterten unabhaengig voneinander denselben Zustand.
+
+## Plan
+- [x] Bug-Mechanismus end-to-end nachvollzogen (`autoSave.ts` -> `changeTracking.ts` ->
+      `CustomTable.ts`), Test-Luecke bestaetigt (`autoSave.test.ts` stubbt `commitAutoSave` als
+      `vi.fn()`, deckt die echte Commit-Logik nicht ab)
+- [x] `Rows.getChangeRows()` als gemeinsame Row-Referenz-Quelle ergaenzt, `getChanges()` darauf
+      umgebaut (eine Filterlogik statt zwei unabhaengiger)
+- [x] `commitChanges`/`commitAutoSave`/`_commitCreateAndUpdate` auf optionalen `includedRows`-Snapshot
+      umgestellt — nur Zeilen aus dem Snapshot werden committet/entfernt
+- [x] `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und
+      `collectRowErrorMatches` (`savePipeline.ts`) auf denselben Snapshot statt Live-Re-Filter
+      umgestellt (Index-Verschiebung durch zwischenzeitliche Aenderungen behoben)
+- [x] `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) ebenfalls auf Snapshot umgestellt
+- [x] `saveResourceNow` (`autoSave.ts`) verdrahtet: Snapshot einmalig vor dem Request, an alle
+      Stellen durchgereicht
+- [x] Betroffene Unit-Tests (changeTracking/errorHandling/savePipeline/autoSave) an neue Signaturen
+      angepasst
+- [x] Echte Regressionstests in `CustomTable.test.ts` ergaenzt (an der realen `Rows`-Klasse, nicht
+      gemockt) — vorab gegen den alten Code verifiziert, dass sie ohne den Fix rot sind
+
+## Verifikationskriterien (AutoSave-Commit-Race)
+- Waehrend eines laufenden Saves neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`
+  (statt faelschlich `unchanged`)
+- Waehrend eines laufenden manuellen Saves geloeschte Zeile bleibt nach `commitChanges` erhalten
+- `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` laufen gruen
+
+## Review (AutoSave-Commit-Race)
+- Ergebnis: Commit nach einem Bulk-Save basiert jetzt auf einem Row-Referenz-Snapshot vom
+  Request-Zeitpunkt statt auf einem erneuten Live-Filter des aktuellen Tabellenzustands. Betrifft
+  alle 4 Ressourcen (BZ/BE/EWT/N) gleichermassen, da `_commitCreateAndUpdate` fuer alle gemeinsam
+  genutzt wird.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`,
+  `bun run lint`, `bunx prettier --check src/ test/`, `bun run test` -> `1388 pass, 0 fail`.
+
 # Aktueller Plan: Weitere Ueberschneidungs-/Duplikat-Checks mit selbem Bug wie 2026-07-30-Fix - 2026-07-31
 
 ## Kontext

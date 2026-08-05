@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-05
+
+### fix (AutoSave: Commit-Race verlor waehrend eines laufenden Saves neu angelegte/geaenderte Zeilen)
+
+- **Problem:** `_commitCreateAndUpdate` (`CustomTable.ts`) setzte nach jedem erfolgreichen Bulk-Save unconditional alle aktuell `new`/`modified`/`deleted` Zeilen zurueck, ermittelt aus dem *aktuellen* Tabellenzustand statt aus dem Zustand zum Zeitpunkt des Requests. Legte ein Nutzer waehrend eines laufenden AutoSave-Requests (Netzwerk-Roundtrip) eine neue Zeile an oder aenderte eine bestehende, wurde diese Zeile beim Commit der vorherigen Antwort ebenfalls als "gespeichert" markiert — ohne je an den Server gesendet worden zu sein. Neue Zeilen verloren dabei endgueltig ihre `_id`-Zuordnung und waren fuer `getChanges()` danach unsichtbar (stiller Datenverlust); geaenderte Zeilen verloren die zuletzt eingetippte Aenderung. Der bestehende `queuedDuringSave`-Mechanismus (siehe Eintrag vom 2026-08-03, "AutoSave-Race") loeste zwar zuverlaessig einen Folge-Save aus, kam aber zu spaet — der fehlerhafte Commit war zu dem Zeitpunkt bereits gelaufen.
+- **Fix:** Neue Methode `Rows.getChangeRows()` liefert die Row-*Referenzen* (statt Zellen-Kopien) hinter den aktuellen Aenderungen; `getChanges()` baut jetzt darauf auf (eine gemeinsame Filterquelle statt zwei unabhaengig gepflegter). `saveResourceNow` (`autoSave.ts`) nimmt vor dem Request einen Row-Referenz-Snapshot und reicht ihn als `includedRows` an `commitChanges`/`commitAutoSave` durch — nur Zeilen aus diesem Snapshot werden committet/entfernt, alles danach Angelegte/Geaenderte bleibt unangetastet und wird vom naechsten (bereits vorhandenen) Save-Lauf sauber erfasst. `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und `collectRowErrorMatches` (`savePipeline.ts`) nutzen denselben Snapshot statt den Live-Tabellenzustand erneut zu filtern, damit sich Positions-Indizes nicht mehr durch zwischenzeitliche Aenderungen verschieben koennen. `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) markiert ebenfalls nur noch Zeilen aus dem Snapshot als Fehler.
+- **Regressionstests:** `CustomTable.test.ts` ("AutoSave-Commit-Race") deckt beide Faelle direkt an der echten `Rows`-Klasse ab — waehrend des Requests neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`; waehrend des Requests geloeschte Zeile bleibt nach `commitChanges` erhalten.
+- **Verifikation:** `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` (1388 Tests) gruen.
+
 ## 2026-08-03
 
 ### fix (Nebengeld: Race Condition zwischen EWT-AutoSave und manueller Zulagen-Anlage)

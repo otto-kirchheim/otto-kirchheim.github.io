@@ -406,31 +406,48 @@ export class Rows<T extends CustomTableTypes> {
   }
 
   /**
+   * Liefert die Row-Referenzen hinter den aktuellen Änderungen (statt Zellen-Kopien).
+   * Einzige Quelle der Zustands-Filterung für `getChanges()` und für den Commit nach
+   * einem Bulk-Save: Ein Snapshot dieser Referenzen (vor dem `await` des Requests
+   * genommen) legt fest, welche Zeilen beim Commit ueberhaupt angefasst werden duerfen
+   * - Zeilen, die erst waehrend der laufenden Anfrage neu angelegt/geaendert wurden,
+   * sind darin nicht enthalten und bleiben dadurch unangetastet (siehe AutoSave-Commit-Race).
+   */
+  getChangeRows(includeDeletes = true): { create: Row<T>[]; update: Row<T>[]; delete: Row<T>[] } {
+    const create: Row<T>[] = [];
+    const update: Row<T>[] = [];
+    const del: Row<T>[] = [];
+
+    for (const row of this.array) {
+      switch (getEffectiveRowState(row)) {
+        case 'new':
+          create.push(row);
+          break;
+        case 'modified':
+          if (row._id) update.push(row);
+          break;
+        case 'deleted':
+          if (includeDeletes && row._id) del.push(row);
+          break;
+      }
+    }
+
+    return { create, update, delete: del };
+  }
+
+  /**
    * Ermittelt alle Änderungen für eine Bulk-Operation.
    * @param includeDeletes - Löschungen einbeziehen? (Default: true).
    *   Auto-Save ruft mit `false` auf, manuelles Speichern mit `true`.
    * @returns { create: T[], update: T[], delete: string[] }
    */
   getChanges(includeDeletes = true): TableChanges<T> {
-    const create: T[] = [];
-    const update: T[] = [];
-    const del: string[] = [];
-
-    for (const row of this.array) {
-      switch (getEffectiveRowState(row)) {
-        case 'new':
-          create.push({ ...row.cells });
-          break;
-        case 'modified':
-          if (row._id) update.push({ ...row.cells, _id: row._id } as T);
-          break;
-        case 'deleted':
-          if (includeDeletes && row._id) del.push(row._id);
-          break;
-      }
-    }
-
-    return { create, update, delete: del };
+    const rows = this.getChangeRows(includeDeletes);
+    return {
+      create: rows.create.map(row => ({ ...row.cells })),
+      update: rows.update.map(row => ({ ...row.cells, _id: row._id }) as T),
+      delete: rows.delete.map(row => row._id as string),
+    };
   }
 
   /** Gibt es ungespeicherte Änderungen (ohne Löschungen)? */
@@ -486,12 +503,23 @@ export class Rows<T extends CustomTableTypes> {
    * - 'deleted' → entfernt aus Array
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
+   * @param includedRows - Row-Snapshot aus `getChangeRows()` vor dem Request. Nur diese
+   *   Zeilen werden committet/entfernt - alles was danach neu hinzugekommen ist, bleibt
+   *   fuer den naechsten Save-Lauf unangetastet (AutoSave-Commit-Race, siehe oben).
    */
-  commitChanges(createdIds?: Map<number, string>, failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>()): void {
-    this._commitCreateAndUpdate(createdIds, failedRows);
+  commitChanges(
+    createdIds?: Map<number, string>,
+    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
+    includedRows?: ReadonlySet<Row<T>>,
+  ): void {
+    this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
 
-    // Gelöschte Zeilen entfernen
-    this.array = this.array.filter(row => getEffectiveRowState(row) !== 'deleted' || failedRows.has(row));
+    // Gelöschte Zeilen entfernen - nur wenn Teil dieses Batches
+    this.array = this.array.filter(row => {
+      if (getEffectiveRowState(row) !== 'deleted') return true;
+      if (failedRows.has(row)) return true;
+      return includedRows !== undefined && !includedRows.has(row);
+    });
     this.CustomTable.drawRows();
   }
 
@@ -500,9 +528,14 @@ export class Rows<T extends CustomTableTypes> {
    * Gelöschte Zeilen bleiben als 'deleted' sichtbar.
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
+   * @param includedRows - siehe `commitChanges()`
    */
-  commitAutoSave(createdIds?: Map<number, string>, failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>()): void {
-    this._commitCreateAndUpdate(createdIds, failedRows);
+  commitAutoSave(
+    createdIds?: Map<number, string>,
+    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
+    includedRows?: ReadonlySet<Row<T>>,
+  ): void {
+    this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
     this.CustomTable.drawRows();
   }
 
@@ -510,13 +543,19 @@ export class Rows<T extends CustomTableTypes> {
   private _commitCreateAndUpdate(
     createdIds?: Map<number, string>,
     failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
+    includedRows?: ReadonlySet<Row<T>>,
   ): void {
     let createIdx = 0;
 
     for (const row of this.array) {
       const effectiveState = getEffectiveRowState(row);
+      const inBatch = includedRows === undefined || includedRows.has(row);
+
       switch (effectiveState) {
         case 'new': {
+          // Zeile nicht Teil dieser Anfrage (erst waehrend des Requests angelegt) - createIdx
+          // NICHT erhoehen, sonst verschiebt sich die Zuordnung fuer alle folgenden Zeilen.
+          if (!inBatch) break;
           const isFailedRow = failedRows.has(row);
           const newId = createdIds?.get(createIdx);
           if (!isFailedRow && newId) {
@@ -534,6 +573,7 @@ export class Rows<T extends CustomTableTypes> {
           break;
         }
         case 'modified':
+          if (!inBatch) break;
           if (!failedRows.has(row)) {
             row._state = 'unchanged';
             row._errorState = undefined;
@@ -542,6 +582,7 @@ export class Rows<T extends CustomTableTypes> {
           }
           break;
         case 'deleted':
+          if (!inBatch) break;
           if (!failedRows.has(row)) {
             row._errorState = undefined;
             row._errorMessage = null;

@@ -60,33 +60,37 @@ export function applyServerRowsToTable(
   if (typeof table.drawRows === 'function') table.drawRows();
 }
 
+/**
+ * @param createRows - Row-Snapshot aus `getChangeRows()`, VOR dem Request genommen. Bestimmt
+ *   die Positionen fuer den Index-Fallback exakt so, wie sie im gesendeten Payload standen -
+ *   Zeilen, die erst waehrend der laufenden Anfrage entstanden sind, verschieben die
+ *   Positionen sonst (AutoSave-Commit-Race).
+ * @param updateRows - siehe `createRows`, fuer `update`-Fehler.
+ * @param deleteRows - siehe `createRows`, nur fuer den `_id`-Fallback bei `delete`-Fehlern.
+ */
 export function collectRowErrorMatches(
-  table: CustomTable<CustomTableTypes>,
+  createRows: Row<CustomTableTypes>[],
+  updateRows: Row<CustomTableTypes>[],
+  deleteRows: Row<CustomTableTypes>[],
   errors: BulkErrorEntry[],
 ): RowErrorMatch[] {
   const matches: RowErrorMatch[] = [];
-
-  // Error-Rows mit _errorState beachten: effektiver Zustand bestimmt die Position im Create/Update-Array
-  const newRows = table.rows.array.filter(r => r._state === 'new' || (r._state === 'error' && r._errorState === 'new'));
-  const modifiedRows = table.rows.array.filter(
-    r => r._state === 'modified' || (r._state === 'error' && r._errorState === 'modified'),
-  );
 
   for (const error of errors) {
     let row: Row<CustomTableTypes> | undefined;
 
     if (error.operation === 'create' && error.clientRequestId) {
-      row = table.rows.array.find(candidate => candidate._clientRequestId === error.clientRequestId);
+      row = createRows.find(candidate => candidate._clientRequestId === error.clientRequestId);
     }
 
     if (!row && error.id) {
-      row = table.rows.array.find(candidate => candidate._id === error.id);
+      row = [...createRows, ...updateRows, ...deleteRows].find(candidate => candidate._id === error.id);
     }
 
     // Fallback: Backend liefert index (Position im create/update-Array)
     if (!row && typeof error.index === 'number') {
-      if (error.operation === 'create') row = newRows[error.index];
-      else if (error.operation === 'update') row = modifiedRows[error.index];
+      if (error.operation === 'create') row = createRows[error.index];
+      else if (error.operation === 'update') row = updateRows[error.index];
     }
 
     if (!row) continue;

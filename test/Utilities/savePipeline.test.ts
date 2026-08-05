@@ -133,16 +133,14 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
 describe('savePipeline', () => {
   describe('collectRowErrorMatches', () => {
     it('returns empty array when no errors', () => {
-      const table = makeTable([makeRow({})]);
-      expect(collectRowErrorMatches(table, [])).toEqual([]);
+      expect(collectRowErrorMatches([], [], [], [])).toEqual([]);
     });
 
     it('matches create error by clientRequestId', () => {
       const row = makeRow({ _state: 'new', _clientRequestId: 'crid_abc' });
-      const table = makeTable([row]);
       const error: BulkErrorEntry = { operation: 'create', message: 'fail', clientRequestId: 'crid_abc' };
 
-      const result = collectRowErrorMatches(table, [error]);
+      const result = collectRowErrorMatches([row], [], [], [error]);
       expect(result).toHaveLength(1);
       expect(result[0].row).toBe(row);
       expect(result[0].sourceState).toBe('new');
@@ -150,10 +148,9 @@ describe('savePipeline', () => {
 
     it('matches update error by _id', () => {
       const row = makeRow({ _state: 'modified', _id: 'id123' });
-      const table = makeTable([row]);
       const error: BulkErrorEntry = { operation: 'update', message: 'conflict', id: 'id123' };
 
-      const result = collectRowErrorMatches(table, [error]);
+      const result = collectRowErrorMatches([], [row], [], [error]);
       expect(result).toHaveLength(1);
       expect(result[0].row).toBe(row);
       expect(result[0].sourceState).toBe('modified');
@@ -161,24 +158,22 @@ describe('savePipeline', () => {
 
     it('matches delete error by _id', () => {
       const row = makeRow({ _state: 'deleted', _id: 'id456' });
-      const table = makeTable([row]);
       const error: BulkErrorEntry = { operation: 'delete', message: 'not found', id: 'id456' };
 
-      const result = collectRowErrorMatches(table, [error]);
+      const result = collectRowErrorMatches([], [], [row], [error]);
       expect(result).toHaveLength(1);
       expect(result[0].sourceState).toBe('deleted');
     });
 
     it('skips errors with no matching row', () => {
-      const table = makeTable([makeRow({ _id: 'other' })]);
+      const row = makeRow({ _id: 'other' });
       const error: BulkErrorEntry = { operation: 'update', message: 'gone', id: 'nonexistent' };
 
-      expect(collectRowErrorMatches(table, [error])).toEqual([]);
+      expect(collectRowErrorMatches([], [row], [], [error])).toEqual([]);
     });
 
     it('falls back to _id match when clientRequestId not found', () => {
       const row = makeRow({ _state: 'new', _id: 'id789', _clientRequestId: 'crid_different' });
-      const table = makeTable([row]);
       const error: BulkErrorEntry = {
         operation: 'create',
         message: 'dup',
@@ -186,7 +181,7 @@ describe('savePipeline', () => {
         id: 'id789',
       };
 
-      const result = collectRowErrorMatches(table, [error]);
+      const result = collectRowErrorMatches([row], [], [], [error]);
       expect(result).toHaveLength(1);
       expect(result[0].row).toBe(row);
     });
@@ -194,43 +189,41 @@ describe('savePipeline', () => {
     it('handles multiple errors across rows', () => {
       const row1 = makeRow({ _state: 'new', _clientRequestId: 'crid_a' });
       const row2 = makeRow({ _state: 'modified', _id: 'id_b' });
-      const table = makeTable([row1, row2]);
       const errors: BulkErrorEntry[] = [
         { operation: 'create', message: 'fail1', clientRequestId: 'crid_a' },
         { operation: 'update', message: 'fail2', id: 'id_b' },
       ];
 
-      const result = collectRowErrorMatches(table, errors);
+      const result = collectRowErrorMatches([row1], [row2], [], errors);
       expect(result).toHaveLength(2);
     });
 
     it('matches create error by index when _state is "new"', () => {
       const row0 = makeRow({ _state: 'new' });
       const row1 = makeRow({ _state: 'new' });
-      const table = makeTable([row0, row1]);
       const errors: BulkErrorEntry[] = [
         { operation: 'create', message: 'err0', index: 0 },
         { operation: 'create', message: 'err1', index: 1 },
       ];
 
-      const result = collectRowErrorMatches(table, errors);
+      const result = collectRowErrorMatches([row0, row1], [], [], errors);
       expect(result).toHaveLength(2);
       expect(result[0].row).toBe(row0);
       expect(result[1].row).toBe(row1);
     });
 
     it('matches error rows (_state="error", _errorState="new") by index on re-save', () => {
-      // Rows that failed a previous bulk save are in 'error' state with _errorState='new'.
-      // On the next auto-save attempt those rows must still be matched by index.
+      // Rows that failed a previous bulk save sind in 'error'-State mit _errorState='new'.
+      // Der Row-Snapshot fuer den naechsten Save-Versuch (getChangeRows) nimmt sie ueber
+      // getEffectiveRowState wieder mit auf - hier direkt als createRows-Snapshot simuliert.
       const row0 = makeRow({ _state: 'error', _errorState: 'new' } as Partial<Row<CustomTableTypes>>);
       const row1 = makeRow({ _state: 'error', _errorState: 'new' } as Partial<Row<CustomTableTypes>>);
-      const table = makeTable([row0, row1]);
       const errors: BulkErrorEntry[] = [
         { operation: 'create', message: 'err0', index: 0 },
         { operation: 'create', message: 'err1', index: 1 },
       ];
 
-      const result = collectRowErrorMatches(table, errors);
+      const result = collectRowErrorMatches([row0, row1], [], [], errors);
       expect(result).toHaveLength(2);
       expect(result[0].row).toBe(row0);
       expect(result[1].row).toBe(row1);

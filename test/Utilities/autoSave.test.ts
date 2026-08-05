@@ -73,6 +73,18 @@ function createMockTable(
   const mockCommitChanges = vi.fn();
   const mockCommitAutoSave = vi.fn();
   const mockGetChanges = vi.fn().mockReturnValue(changes);
+  // Gleiche Filterlogik wie CustomTable.ts's getEffectiveRowState/getChangeRows: liefert
+  // die Row-Referenzen aus `rows` passend zum aktuellen (Mock-)Zustand, statt der separat
+  // uebergebenen `changes`-Zellenkopien - so bleibt der Snapshot fuer den Commit-Race-Schutz
+  // konsistent mit dem, was buildCreatePayloadWithClientRequestId aus `rows` liest.
+  const mockGetChangeRows = vi.fn().mockImplementation((includeDeletes = true) => {
+    const effectiveState = (row: (typeof rows)[number]): string =>
+      row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
+    const create = rows.filter(row => effectiveState(row) === 'new');
+    const update = rows.filter(row => effectiveState(row) === 'modified' && row._id);
+    const del = includeDeletes ? rows.filter(row => effectiveState(row) === 'deleted' && row._id) : [];
+    return { create, update, delete: del };
+  });
   const table = document.createElement('table');
   table.id = id;
 
@@ -81,6 +93,7 @@ function createMockTable(
     drawRows: vi.fn(),
     rows: {
       getChanges: mockGetChanges,
+      getChangeRows: mockGetChangeRows,
       getFilteredRows: vi.fn().mockReturnValue(rows),
       commitChanges: mockCommitChanges,
       commitAutoSave: mockCommitAutoSave,
@@ -88,7 +101,7 @@ function createMockTable(
     },
   };
   document.body.appendChild(table);
-  return { mockGetChanges, mockCommitChanges, mockCommitAutoSave };
+  return { mockGetChanges, mockGetChangeRows, mockCommitChanges, mockCommitAutoSave };
 }
 
 describe('autoSave', () => {

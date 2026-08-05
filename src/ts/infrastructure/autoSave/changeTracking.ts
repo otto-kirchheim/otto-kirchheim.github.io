@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
 import type {
   BackendBereitschaftseinsatz,
   BackendBereitschaftszeitraum,
@@ -79,16 +79,15 @@ export function buildCreatePayloadWithClientRequestId(
 }
 
 export function mapCreatedIdsByClientRequestId(
-  table: CustomTable<CustomTableTypes>,
+  createRows: Row<CustomTableTypes>[],
   createdReferences: { _id: string; clientRequestId: string }[],
 ): Map<number, string> {
   const createdIds = new Map<number, string>();
   if (createdReferences.length === 0) return createdIds;
 
   const idByClientRequestId = new Map(createdReferences.map(entry => [entry.clientRequestId, entry._id]));
-  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
 
-  pendingNewRows.forEach((row, idx) => {
+  createRows.forEach((row, idx) => {
     if (!row._clientRequestId) return;
     const createdId = idByClientRequestId.get(row._clientRequestId);
     if (createdId) createdIds.set(idx, createdId);
@@ -99,13 +98,13 @@ export function mapCreatedIdsByClientRequestId(
 
 export function mapCreatedIdsByContent(
   resource: Exclude<TResourceKey, 'settings'>,
-  table: CustomTable<CustomTableTypes>,
+  createRows: Row<CustomTableTypes>[],
   createdDocs: unknown[],
 ): Map<number, string> {
   const createdIds = new Map<number, string>();
   if (createdDocs.length === 0) return createdIds;
 
-  const pendingNewRows = table.rows.array.filter(row => row._state === 'new');
+  const pendingNewRows = createRows;
 
   const serverRows = createdDocs
     .map(doc => {

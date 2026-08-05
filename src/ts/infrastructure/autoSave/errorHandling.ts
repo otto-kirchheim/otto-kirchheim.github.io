@@ -1,5 +1,5 @@
 import Modal from 'bootstrap/js/dist/modal';
-import type { CustomTable, CustomTableTypes, TableChanges, Row } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
 import type { BulkErrorEntry } from '../api/apiService';
 import type { TResourceKey } from '@/types';
 import type { RowErrorMatch } from './savePipeline';
@@ -146,37 +146,36 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
  * Markiert alle Zeilen eines fehlgeschlagenen HTTP-Requests als Fehler.
  * Greift, wenn der gesamte Request (z.B. per smartSync) mit einer Exception abbricht,
  * statt Einzelfehler in result.errors zurückzugeben.
+ *
+ * @param changeRows - Row-Snapshot aus `getChangeRows()`, VOR dem Request genommen. Nur
+ *   diese Zeilen waren tatsaechlich Teil der fehlgeschlagenen Anfrage - Zeilen, die erst
+ *   waehrend des Requests neu angelegt/geaendert wurden, werden NICHT als Fehler markiert
+ *   und bleiben stattdessen fuer den naechsten Save-Lauf vorgemerkt (AutoSave-Commit-Race).
  */
 export function markFetchErrorRows(
   table: CustomTable<CustomTableTypes>,
-  changes: TableChanges<CustomTableTypes>,
+  changeRows: { create: Row<CustomTableTypes>[]; update: Row<CustomTableTypes>[]; delete: Row<CustomTableTypes>[] },
   message: string,
 ): void {
-  const updateIds = new Set(
-    (changes.update as (CustomTableTypes & { _id?: string })[]).map(u => u._id).filter((id): id is string => !!id),
-  );
-  const deleteIds = new Set(changes.delete);
-
   let marked = false;
-  for (const row of table.rows.array) {
-    const effective = row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
 
-    if (effective === 'new' && changes.create.length > 0) {
-      row._state = 'error';
-      row._errorState = 'new';
-      row._errorMessage = message;
-      marked = true;
-    } else if (effective === 'modified' && row._id != null && updateIds.has(row._id)) {
-      row._state = 'error';
-      row._errorState = 'modified';
-      row._errorMessage = message;
-      marked = true;
-    } else if (effective === 'deleted' && row._id != null && deleteIds.has(row._id)) {
-      row._state = 'error';
-      row._errorState = 'deleted';
-      row._errorMessage = message;
-      marked = true;
-    }
+  for (const row of changeRows.create) {
+    row._state = 'error';
+    row._errorState = 'new';
+    row._errorMessage = message;
+    marked = true;
+  }
+  for (const row of changeRows.update) {
+    row._state = 'error';
+    row._errorState = 'modified';
+    row._errorMessage = message;
+    marked = true;
+  }
+  for (const row of changeRows.delete) {
+    row._state = 'error';
+    row._errorState = 'deleted';
+    row._errorMessage = message;
+    marked = true;
   }
 
   if (marked && typeof table.drawRows === 'function') table.drawRows();

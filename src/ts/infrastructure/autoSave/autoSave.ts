@@ -365,6 +365,14 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     return;
   }
 
+  // Row-Referenz-Snapshot VOR dem Request: legt exakt fest, welche Zeilen zu diesem
+  // Save-Lauf gehören. Zeilen, die erst während des laufenden Requests neu angelegt oder
+  // geändert werden, sind hier nicht enthalten und bleiben dadurch beim Commit unangetastet
+  // (AutoSave-Commit-Race) — der bereits vorhandene queuedDuringSave-Mechanismus holt sie
+  // im nächsten Save-Lauf nach.
+  const changeRows = table.rows.getChangeRows(includeDeletes);
+  const includedRows = new Set([...changeRows.create, ...changeRows.update, ...changeRows.delete]);
+
   setStatus(resource, 'saving');
 
   const monat = Storage.get<number>('Monat', { check: true });
@@ -373,23 +381,31 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   try {
     const result = await sendBulk(resource, table, changes, monat, jahr);
 
-    const createdIdsByClient = mapCreatedIdsByClientRequestId(table, result.createdReferences ?? []);
+    const createdIdsByClient = mapCreatedIdsByClientRequestId(changeRows.create, result.createdReferences ?? []);
     const createdIds =
-      createdIdsByClient.size > 0 ? createdIdsByClient : mapCreatedIdsByContent(resource, table, result?.created ?? []);
-    const rowErrorMatches = collectRowErrorMatches(table, result.errors);
+      createdIdsByClient.size > 0
+        ? createdIdsByClient
+        : mapCreatedIdsByContent(resource, changeRows.create, result?.created ?? []);
+    const rowErrorMatches = collectRowErrorMatches(
+      changeRows.create,
+      changeRows.update,
+      changeRows.delete,
+      result.errors,
+    );
     const failedRows = new Set(rowErrorMatches.map(entry => entry.row));
 
-    if (includeDeletes) table.rows.commitChanges(createdIds, failedRows);
-    else table.rows.commitAutoSave(createdIds, failedRows);
+    if (includeDeletes) table.rows.commitChanges(createdIds, failedRows, includedRows);
+    else table.rows.commitAutoSave(createdIds, failedRows, includedRows);
 
     applyServerRowsToTable(resource, table, result);
 
     markErrorRows(table, rowErrorMatches, result.errors);
 
     // Fallback: wenn Backend Fehler ohne Zeilennummer liefert (keine clientRequestId/id),
-    // uncommittete Zeilen als Fehler markieren
+    // die betroffenen Batch-Zeilen als Fehler markieren (nur Zeilen aus diesem Save-Lauf -
+    // nicht den kompletten Live-Zustand, siehe AutoSave-Commit-Race).
     if (result.errors.length > 0 && rowErrorMatches.length === 0) {
-      const uncommitted = table.rows.array.filter(r => r._state === 'new' || r._state === 'modified');
+      const uncommitted = [...changeRows.create, ...changeRows.update].filter(r => r._state !== 'unchanged');
       const msg = result.errors.map(e => e.message).join(' · ');
       uncommitted.forEach(row => {
         row._errorState = row._state === 'new' ? 'new' : 'modified';
@@ -438,7 +454,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     console.error(`AutoSave ${resource} fehlgeschlagen:`, msg);
     setStatus(resource, 'error', msg);
 
-    markFetchErrorRows(table, changes, msg);
+    markFetchErrorRows(table, changeRows, msg);
     updateLocalStorage(resource, table);
 
     const operation: BulkErrorEntry['operation'] =
