@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15
+
+### feat (PDF-Vorlagen-Pipeline: Renderer-Grundgerüst, Phase 3)
+
+- **Neue Dependency `@cantoo/pdf-lib`** (aktiv gepflegter Fork des originalen `pdf-lib`, siehe Plan-Kontext für die Begründung).
+- **`infrastructure/pdf/build.ts`:** einseitiges Renderer-Grundgerüst — lädt eine PDF-Vorlage per `fetch`+`PDFDocument.load()`, kopiert die Zielseite (`copyPages`/`addPage`), zeichnet Kopf-/Zeilen-/Fuß-Felder via `page.drawText()`. Noch ohne Mehrseitigkeit (Phase 5), Unterschrift (Phase 4) und `resolve()`-Anbindung (Phase 6) — die `Version`-Konfiguration wird direkt übergeben, nicht aufgelöst.
+- **`infrastructure/pdf/wert.ts`/`zeichne.ts`:** Feld-Wertauflösung (Direktwert oder `Berechnet`-Aggregation über `$seite`/`$bisher`, via `OPS`/`FORMAT`/`get` aus `@otto-kirchheim/nebengeld-shared`) und minimale `drawText`-Zeichenfunktion mit Rechtsbündig-Unterstützung.
+- **Test-Vorlage `test/fixtures/test_1seitig.pdf`:** leeres A4-Blatt (595×842pt, kein AcroForm-Feld) — programmatisch erzeugt statt in LibreOffice, da für ein reines Koordinaten-Overlay kein visueller Inhalt nötig ist.
+- **Tests:** `test/infrastructure/pdf/build.test.ts` (neues Testmuster, erster PDF-Struktur-Test im Repo) — Seitenzahl, `Subject`-Metadaten, Template-URL-Aufruf, leere Datenliste.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich manuell: Dummy-PDF über den echten `build()`-Codepfad erzeugt und mit `qpdf --check` (fehlerfrei) sowie `pdftotext` geprüft — Titel/Name/Zeilen/Summe erscheinen exakt wie erwartet (Summenbildung über `$seite` inkl. Währungsformat bestätigt).
+
 ## 2026-08-11
 
 ### feat (Entgeltausgleich: neues Feature-Modul, spiegelt Nebengeld-Struktur)

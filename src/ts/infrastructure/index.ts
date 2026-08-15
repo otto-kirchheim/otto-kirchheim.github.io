@@ -21,6 +21,9 @@ export * from './date/dateStorage';
 export * from './date/getMonatFromItem';
 export { default as getDurationFromTime } from './date/getDurationFromTime';
 
+// --- pdf ---
+export { build } from './pdf/build';
+
 // --- storage ---
 export { default as Storage } from './storage/Storage';
 export { default as storageAvailable } from './storage/storageAvailable';
