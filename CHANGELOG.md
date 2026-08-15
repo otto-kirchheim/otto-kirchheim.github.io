@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15 (2)
+
+### feat (PDF-Vorlagen-Pipeline: Canvas-Unterschrift, optional, Phase 4)
+
+- **Neue Dependency `signature_pad`.**
+- **`infrastructure/pdf/signaturePad.ts`:** Canvas-Wrapper — `skaliereFuerDisplay()` (pure, testbar) berechnet die Canvas-Pixelgröße für scharfe Linien auf High-DPI-Displays (`devicePixelRatio`), `erstelleSignaturPad()` wendet das auf ein echtes Canvas an (transparenter Hintergrund), `holeSignaturPng()` liefert `pad.toDataURL('image/png')` oder `null` bei leerem Pad.
+- **`build()` erweitert:** neuer optionaler dritter Parameter `signaturPng?: string` — bei vorhandenem Input **und** `signaturBild`-Koordinaten auf der Seite wird die Unterschrift per `embedPng()`/`drawImage()` eingebettet, sonst bleibt die Fläche leer. Kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen.
+- **Neue Dev-Testseite `src/pdf-test.html`+`src/ts/pdf-test.ts`:** NICHT Teil der echten App (kein Link aus `index.html`, kein Produktions-Build-Eintrag — Vite bündelt standardmäßig nur `index.html`). Dummy-Formular mit "Jetzt unterschreiben?"-Dialog (wiederverwendet `confirmDialog`) → Ja: Canvas-Pad zeichnen → PDF mit Signatur; Nein: PDF direkt ohne Signatur. Vorlage wird im Browser selbst erzeugt (leeres A4-Blatt, `blob:`-URL) statt als Static-Asset abgelegt, damit nichts davon versehentlich mit ins Produktions-Build wandert.
+- **Tests:** `signaturePad.test.ts` (`skaliereFuerDisplay()` gegen Grenzfälle); `build.test.ts` erweitert um Image-XObject-Anwesenheit/Abwesenheit (mit/ohne Signatur-Input, mit/ohne `signaturBild`-Koordinaten).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Der eigentliche Canvas-Zeichentest (Schärfe/Transparenz bei echtem Pointer-Input) ist headless nicht prüfbar (`happy-dom` liefert `getContext('2d')` als `null`) — **manueller Browser-Test durch den User über die neue Testseite steht noch aus.**
+
 ## 2026-08-15
 
 ### feat (PDF-Vorlagen-Pipeline: Renderer-Grundgerüst, Phase 3)

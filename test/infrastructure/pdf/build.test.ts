@@ -1,9 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { PDFDocument } from '@cantoo/pdf-lib';
+import { PDFDict, PDFDocument, PDFName } from '@cantoo/pdf-lib';
 import type { Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 
 const vorlagePfad = `${import.meta.dir}/../../fixtures/test_1seitig.pdf`;
+
+// Minimales gültiges 1x1-transparentes PNG als Signatur-Dummy.
+const DUMMY_SIGNATUR_PNG =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+async function hatBildXObject(bytes: Uint8Array): Promise<boolean> {
+  const doc = await PDFDocument.load(bytes);
+  const resources = doc.getPage(0).node.Resources();
+  const xobjekte = resources?.lookupMaybe(PDFName.of('XObject'), PDFDict);
+  return (xobjekte?.keys().length ?? 0) > 0;
+}
 
 globalThis.fetch = vi.fn() as unknown as typeof fetch;
 
@@ -33,6 +44,7 @@ function macheCfg(): Version & { formular: string } {
               berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
             },
           },
+          signaturBild: { x: 400, y: 100, w: 120, h: 40 },
         },
       ],
     },
@@ -84,5 +96,24 @@ describe('build', () => {
     const bytes = await build(cfg, { name: 'Leer', zeilen: [] });
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(1);
+  });
+
+  it('bettet bei vorhandenem Signatur-Input ein Image-XObject an der signaturBild-Position ein', async () => {
+    const cfg = macheCfg();
+    const bytes = await build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG);
+    expect(await hatBildXObject(bytes)).toBe(true);
+  });
+
+  it('liefert ohne Signatur-Input ein valides PDF ohne Image-XObject (Pfad "Nein")', async () => {
+    const cfg = macheCfg();
+    const bytes = await build(cfg, { name: 'X', zeilen: [] });
+    expect(await hatBildXObject(bytes)).toBe(false);
+  });
+
+  it('zeichnet keine Signatur, wenn die Seite kein signaturBild definiert (auch bei vorhandenem Input)', async () => {
+    const cfg = macheCfg();
+    delete cfg.einseitig.seiten[0].signaturBild;
+    const bytes = await build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG);
+    expect(await hatBildXObject(bytes)).toBe(false);
   });
 });
