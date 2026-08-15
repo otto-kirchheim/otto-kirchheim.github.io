@@ -24,31 +24,28 @@ function macheCfg(): Version & { formular: string } {
     version: 'v1',
     gueltigVon: '2026-01-01',
     gueltigBis: null,
-    einseitig: {
+    layout: {
       template: 'test_1seitig.pdf',
-      seiten: [
-        {
-          quelle: 0,
-          maxZeilen: 20,
-          startY: 700,
-          kopf: {
-            name: { x: 50, y: 800, size: 12 },
-          },
-          fuss: {
-            summe: {
-              x: 500,
-              y: 60,
-              size: 10,
-              align: 'rechts',
-              format: 'waehrung',
-              berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
-            },
-          },
-          signaturBild: { x: 400, y: 100, w: 120, h: 40 },
+      ersteSeite: {
+        quelle: 0,
+        maxZeilen: 20,
+        startY: 700,
+        kopf: {
+          name: { x: 50, y: 800, size: 12 },
         },
-      ],
+        fuss: {
+          summe: {
+            x: 500,
+            y: 60,
+            size: 10,
+            align: 'rechts',
+            format: 'waehrung',
+            berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
+          },
+        },
+        signaturBild: { x: 400, y: 100, w: 120, h: 40 },
+      },
     },
-    mehrseitig: { template: 'test_1seitig.pdf', seiten: [] },
     zeilen: {
       quelle: 'zeilen',
       hoehe: 14,
@@ -112,7 +109,7 @@ describe('build', () => {
 
   it('zeichnet keine Signatur, wenn die Seite kein signaturBild definiert (auch bei vorhandenem Input)', async () => {
     const cfg = macheCfg();
-    delete cfg.einseitig.seiten[0].signaturBild;
+    delete cfg.layout.ersteSeite.signaturBild;
     const bytes = await build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG);
     expect(await hatBildXObject(bytes)).toBe(false);
   });

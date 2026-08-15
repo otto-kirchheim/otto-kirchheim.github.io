@@ -54,16 +54,15 @@ const seitenDefSchema = z.object({
 
 const layoutSchema = z.object({
   template: z.string(),
-  seiten: z.array(seitenDefSchema),
-  wiederholSeite: z.number().optional(),
+  ersteSeite: seitenDefSchema,
+  weitereSeite: seitenDefSchema.optional(),
 });
 
 const versionSchema = z.object({
   version: z.string(),
   gueltigVon: z.string(),
   gueltigBis: z.string().nullable(),
-  einseitig: layoutSchema,
-  mehrseitig: layoutSchema,
+  layout: layoutSchema,
   zeilen: z.object({
     quelle: z.string(),
     hoehe: z.number(),

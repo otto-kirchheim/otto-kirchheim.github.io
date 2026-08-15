@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15 (6)
+
+### refactor (PDF-Vorlagen-Pipeline: ein Layout pro Version statt einseitig/mehrseitig-Split)
+
+- **User-Review nach Phase 7** deckte auf: die Aufteilung `Version.einseitig`/`Version.mehrseitig` war nur wegen Kandidat C (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter Kandidat E — ergänzend: `SeitenDef.fuss` sollte pro-Seite datengetrieben bleiben statt hart auf "letzte Seite" verdrahtet, damit Bereitschafts abweichender Fall (Summe über alles auf Seite 1) ohne Sonderfall im Renderer funktioniert.
+- **`verteile.ts` neu:** verteilt auf `ersteSeite` (immer genau einmal) + `weitereSeite` (wiederholt nur bei tatsächlichem Überlauf) statt auf ein `seiten[]`-Array mit `wiederholSeite`-Index — keine erzwungenen leeren Folgeseiten mehr bei wenig/keinen Zeilen.
+- **`build.ts`:** keine `einseitig`/`mehrseitig`-Auswahl mehr, `verteile()` bekommt direkt `cfg.layout`. `fuss` rechnet weiterhin über ALLE Zeilen, unabhängig davon, auf welcher Seite es steht.
+- **`configSchema.ts`:** Zod-Schema folgt der neuen `Layout`-Form.
+- **`FormularUpload.tsx`:** EIN Datei-Upload statt zwei, Config-JSON als `{ersteSeite, weitereSeite?, zeilen}` in einem Editor. **Neu: Inline-Hilfe zur Feldkonfiguration** (`<details>`-Aufklapper — User-Review: "Wo ist die Hilfe zur Konfiguration der Felder?") — Koordinatensystem, Feld-Typen, `berechnet`-Syntax, kurzes Beispiel direkt auf der Seite.
+- **Tests:** `verteile.test.ts`, `build.test.ts`, `configSchema.test.ts` auf die neue Form umgeschrieben (u. a. "0 Zeilen" liefert jetzt nur 1 Seite statt 3 erzwungene leere Seiten — Verhalten bewusst geändert, nicht nur die Fixtures).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1465/1465) grün. Zusätzlich real erzeugtes Bereitschafts-PDF (Fuß/Summe auf Seite 1 statt Seite 3) über den echten `build()`-Codepfad geprüft: `qpdf --check` fehlerfrei, `pdftotext` bestätigt Summe 57,00 (alle 5 Zeilen) korrekt auf Seite 1.
+
 ## 2026-08-15 (5)
 
 ### feat (PDF-Vorlagen-Pipeline: Minimal-Admin-UI für Vorlagen-Upload, Phase 7)

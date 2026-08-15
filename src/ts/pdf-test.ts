@@ -55,8 +55,7 @@ async function ladeRegistryJson(): Promise<unknown> {
           version: 'v1',
           gueltigVon: '2025-01-01',
           gueltigBis: '2026-01-01',
-          einseitig: { template, seiten: [macheSeite()] },
-          mehrseitig: { template, seiten: [] },
+          layout: { template, ersteSeite: macheSeite() },
           zeilen: {
             quelle: 'zeilen',
             hoehe: 16,
@@ -70,8 +69,7 @@ async function ladeRegistryJson(): Promise<unknown> {
           version: 'v2',
           gueltigVon: '2026-01-01',
           gueltigBis: null,
-          einseitig: { template, seiten: [macheSeite()] },
-          mehrseitig: { template, seiten: [] },
+          layout: { template, ersteSeite: macheSeite() },
           zeilen: {
             quelle: 'zeilen',
             hoehe: 16,

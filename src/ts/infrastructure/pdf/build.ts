@@ -6,16 +6,15 @@ import { wert, type Kontext } from './wert';
 import { verteile } from './verteile';
 
 /**
- * Renderer-Grundgerüst (Phase 3-5) — noch ohne `resolve()`-Anbindung (folgt in Phase 6).
- * Wählt anhand der Zeilenzahl zwischen `einseitig`/`mehrseitig` und verteilt bei Mehrseitigkeit
- * über `verteile()` auf die Layout-Seiten (inkl. Wiederholseite und Waisenzeilen-Schutz).
- * `signaturPng` ist optional — bei fehlendem Input bleibt die Signaturfläche leer (siehe
- * Entscheidungsdialog "Jetzt unterschreiben?" im aufrufenden Code, Kandidat E: kein
- * Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen).
+ * Renderer (Phase 3-6) — verteilt Zeilen über `verteile()` auf `cfg.layout.ersteSeite`/`weitereSeite`
+ * (inkl. Wiederholung bei Überlauf und Waisenzeilen-Schutz), noch ohne `resolve()`-Anbindung im
+ * Aufrufer selbst (folgt in Phase 9). `signaturPng` ist optional — bei fehlendem Input bleibt die
+ * Signaturfläche leer (siehe Entscheidungsdialog "Jetzt unterschreiben?" im aufrufenden Code,
+ * Kandidat E: kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen).
  */
 export async function build(cfg: Version & { formular: string }, daten: Daten, signaturPng?: string): Promise<Uint8Array> {
   const alle = (get(daten, cfg.zeilen.quelle) as Zeile[] | undefined) ?? [];
-  const layout = alle.length <= cfg.einseitig.seiten[0].maxZeilen ? cfg.einseitig : cfg.mehrseitig;
+  const layout = cfg.layout;
 
   const vorlage = await PDFDocument.load(await fetch(layout.template).then(r => r.arrayBuffer()));
   const pdf = await PDFDocument.create();
@@ -44,10 +43,10 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
 
     for (const [key, f] of Object.entries(def.seitenfuss ?? {})) zeichne(seite, wert(f, key, daten, kontext), f, font);
 
-    // Fuß und Unterschrift stehen nur auf der Abschlussseite und rechnen über alle Zeilen.
-    const abschlussKontext: Kontext = { $seite: alle, $bisher: [] };
-    for (const [key, f] of Object.entries(def.fuss ?? {}))
-      zeichne(seite, wert(f, key, daten, abschlussKontext), f, font);
+    // Fuß-/Summenfelder rechnen immer über ALLE Zeilen, unabhängig davon, auf welcher Seite sie
+    // stehen (meist die letzte, bei Bereitschaft aber bewusst die erste — siehe SeitenDef.fuss).
+    const gesamtKontext: Kontext = { $seite: alle, $bisher: [] };
+    for (const [key, f] of Object.entries(def.fuss ?? {})) zeichne(seite, wert(f, key, daten, gesamtKontext), f, font);
 
     if (signaturPng && def.signaturBild) {
       const png = await pdf.embedPng(signaturPng);

@@ -6,30 +6,21 @@ export interface Block {
 }
 
 /**
- * Verteilt Zeilen auf die Seiten eines Layouts. Die `wiederholSeite`-Seite wird bei Überlauf
- * beliebig oft wiederholt, die letzte Seite (Fuß/Unterschrift) bekommt immer den Rest.
+ * Verteilt Zeilen auf `ersteSeite` (immer genau einmal) und `weitereSeite` (bei Zeilenüberlauf
+ * beliebig oft wiederholt). Wirft, wenn Zeilen übrig bleiben und keine `weitereSeite` konfiguriert ist.
  *
- * Waisenzeilen-Schutz: hätte die Abschlussseite dadurch nur 1 Zeile, wird stattdessen eine Zeile
- * von der vorletzten Seite übernommen (sofern die dort noch mehr als 1 Zeile behält und die
- * Abschlussseite Kapazität hat) — vermeidet eine fast leer wirkende letzte Seite.
+ * Waisenzeilen-Schutz: hätte die letzte Seite dadurch nur 1 Zeile, wird stattdessen eine Zeile von
+ * der vorletzten Seite übernommen (sofern die dort noch mehr als 1 Zeile behält und die letzte Seite
+ * Kapazität hat) — vermeidet eine fast leer wirkende letzte Seite.
  */
 export function verteile(zeilen: Zeile[], layout: Layout): Block[] {
   const rest = [...zeilen];
-  const bloecke: Block[] = [];
-  const letzte = layout.seiten.length - 1;
+  const bloecke: Block[] = [{ def: layout.ersteSeite, zeilen: rest.splice(0, layout.ersteSeite.maxZeilen) }];
 
-  for (let i = 0; i < letzte; i++) {
-    const def = layout.seiten[i];
-    bloecke.push({ def, zeilen: rest.splice(0, def.maxZeilen) });
-
-    if (i === layout.wiederholSeite)
-      while (rest.length > layout.seiten[letzte].maxZeilen) bloecke.push({ def, zeilen: rest.splice(0, def.maxZeilen) });
+  while (rest.length > 0) {
+    if (!layout.weitereSeite) throw new Error(`${rest.length} Zeilen passen in kein Layout`);
+    bloecke.push({ def: layout.weitereSeite, zeilen: rest.splice(0, layout.weitereSeite.maxZeilen) });
   }
-
-  const abschluss = layout.seiten[letzte];
-  bloecke.push({ def: abschluss, zeilen: rest.splice(0, abschluss.maxZeilen) });
-
-  if (rest.length) throw new Error(`${rest.length} Zeilen passen in kein Layout`);
 
   const letzterBlock = bloecke[bloecke.length - 1];
   const vorletzterBlock = bloecke[bloecke.length - 2];
