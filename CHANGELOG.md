@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15 (3)
+
+### feat (PDF-Vorlagen-Pipeline: Mehrseitigkeit, Phase 5)
+
+- **`infrastructure/pdf/verteile.ts`:** verteilt Zeilen auf die Layout-Seiten, wiederholt die `wiederholSeite` bei Überlauf beliebig oft. **Waisenzeilen-Schutz** (über den Original-Konzept-Code hinaus, explizit von der Planung gefordert): hätte die Abschlussseite dadurch nur 1 Zeile, wird stattdessen eine Zeile von der vorletzten Seite übernommen, sofern die noch mehr als 1 Zeile behält und die Abschlussseite Kapazität hat — vermeidet eine fast leer wirkende letzte Seite.
+- **`build()` erweitert:** wählt `einseitig`/`mehrseitig` anhand der Zeilenzahl, rendert alle von `verteile()` gelieferten Seiten, führt `$bisher` (kumulierte Vorseiten-Zeilen) über die Seiten fort, zeichnet `seitenfuss` auf jeder Seite (laufende Zwischensumme/Übertrag) und `fuss` nur auf der Abschlussseite (rechnet über ALLE Original-Zeilen, nicht nur die der letzten Seite). Neu: Seitenzahl-Anzeige `Seite X von Y` auf jeder Seite — generisch gebaut, fachlich erst ab Phase 11 (Bereitschaft) und Phase 12 (EA) relevant, da EZ/EWT immer einseitig bleiben.
+- **Tests:** `verteile.test.ts` (Grenzwerte 0/1/maxZeilen/maxZeilen+1/2×maxZeilen∓1, Wiederholseiten-Überlauf, Waisenzeilen-Schutz, Zeilenreihenfolge bleibt erhalten); `wert.test.ts` (neu — `$seite`/`$bisher`-Summenbildung war bisher ungetestet, jetzt inkl. `anzahl`/`max`/Datenpfad-Aggregation).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich zwei reale Mehrseiten-PDFs über den echten `build()`-Codepfad erzeugt und mit `qpdf --check`+`pdftotext` seitenweise geprüft: ein Zweiseiter (Waisenzeilen-Schutz im Zusammenspiel mit `$bisher` bestätigt) und ein echter Dreiseiter nach Konzept-Vorlage (Kopf/Kennzeile-wiederholt/Kennzeile+Fuß+Signatur) — Übertragssummen (30,00 → 45,00) und Gesamtsumme (57,00, über alle 5 Original-Zeilen) exakt wie von Hand berechnet, Signatur korrekt nur auf der Abschlussseite (via `pdfimages -list` bestätigt).
+
 ## 2026-08-15 (2)
 
 ### feat (PDF-Vorlagen-Pipeline: Canvas-Unterschrift, optional, Phase 4)
