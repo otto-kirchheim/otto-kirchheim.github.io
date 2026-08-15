@@ -22,6 +22,7 @@ const BUTTON_RESOURCE_MAP: ReadonlyArray<{ buttonId: string; resources: TResourc
   { buttonId: 'btnSaveB', resources: ['BZ', 'BE'] },
   { buttonId: 'btnSaveE', resources: ['EWT'] },
   { buttonId: 'btnSaveN', resources: ['N'] },
+  { buttonId: 'btnSaveEA', resources: ['EA'] },
   { buttonId: 'btnSaveEinstellungen', resources: ['settings'] },
 ];
 

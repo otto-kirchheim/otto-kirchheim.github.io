@@ -22,6 +22,8 @@ describe('syncFeatureTabs', () => {
   let unregisterBereitschaft: ReturnType<typeof vi.fn>;
   let registerNeben: ReturnType<typeof vi.fn>;
   let unregisterNeben: ReturnType<typeof vi.fn>;
+  let registerEA: ReturnType<typeof vi.fn>;
+  let unregisterEA: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,6 +37,8 @@ describe('syncFeatureTabs', () => {
     unregisterBereitschaft = vi.fn().mockResolvedValue(undefined);
     registerNeben = vi.fn().mockResolvedValue(undefined);
     unregisterNeben = vi.fn().mockResolvedValue(undefined);
+    registerEA = vi.fn().mockResolvedValue(undefined);
+    unregisterEA = vi.fn().mockResolvedValue(undefined);
 
     featureLifecycleRegistry.registerFeature({
       name: 'Bereitschaft',
@@ -50,6 +54,11 @@ describe('syncFeatureTabs', () => {
       name: 'Neben',
       register: registerNeben,
       unregister: unregisterNeben,
+    });
+    featureLifecycleRegistry.registerFeature({
+      name: 'EA',
+      register: registerEA,
+      unregister: unregisterEA,
     });
   });
 
@@ -72,16 +81,33 @@ describe('syncFeatureTabs', () => {
     expect(unregisterBereitschaft).toHaveBeenCalledTimes(1);
   });
 
-  it('leere/undefined aktivierteTabs bedeutet: alle drei mounten', async () => {
+  it('leere/undefined aktivierteTabs bedeutet: alle drei Legacy-Tabs mounten, EA NICHT', async () => {
     await syncFeatureTabs(undefined);
     expect(registerBereitschaft).toHaveBeenCalledTimes(1);
     expect(registerNeben).toHaveBeenCalledTimes(1);
+    expect(registerEA).not.toHaveBeenCalled();
   });
 
-  it('leeres Array verhält sich wie undefined: alle drei mounten', async () => {
+  it('leeres Array verhält sich wie undefined: alle drei Legacy-Tabs mounten, EA NICHT', async () => {
     await syncFeatureTabs([]);
     expect(registerBereitschaft).toHaveBeenCalledTimes(1);
     expect(registerNeben).toHaveBeenCalledTimes(1);
+    expect(registerEA).not.toHaveBeenCalled();
+  });
+
+  it('mountet EA nur, wenn aktivierteTabs "ea" explizit enthält', async () => {
+    await syncFeatureTabs(['ea']);
+    expect(registerEA).toHaveBeenCalledTimes(1);
+    expect(registerBereitschaft).not.toHaveBeenCalled();
+    expect(registerNeben).not.toHaveBeenCalled();
+  });
+
+  it('unmountet EA wieder, wenn "ea" aus aktivierteTabs entfernt wird', async () => {
+    await syncFeatureTabs(['ea']);
+    expect(registerEA).toHaveBeenCalledTimes(1);
+
+    await syncFeatureTabs(['__dummy__']);
+    expect(unregisterEA).toHaveBeenCalledTimes(1);
   });
 
   it('bricht Unmount ab und zeigt Warn-Snackbar, wenn Ressource noch ungesynchte Änderungen hat', async () => {

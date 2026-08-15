@@ -90,6 +90,7 @@ describe('#generateTableBerechnung', () => {
         B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
         E: { A8: 0, A14: 0, A24: 0, S8: 2, S14: 0 },
         N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+        EA: { Minuten: 0 },
       },
     } as unknown as IVorgabenBerechnung;
 

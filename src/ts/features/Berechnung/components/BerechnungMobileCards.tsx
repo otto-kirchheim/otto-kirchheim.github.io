@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { formatCurrency, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
+import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
 
@@ -132,6 +132,12 @@ function MonatsKarte({
               <GruppenTitel titel="Nebenbezüge" summe={ergebnis.summeNebenbezuege} />
               {zulagenZeilen}
             </>
+          )}
+          {zeigeGruppe('ea') && ergebnis.eaMinuten !== null && (
+            <div class="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
+              <span class="text-start">Entgeltausgleich</span>
+              <span class="text-end text-nowrap">{timeConvert(ergebnis.eaMinuten)}</span>
+            </div>
           )}
           <GruppenTitel titel="Gesamt" summe={ergebnis.summeGesamt} />
         </div>

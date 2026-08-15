@@ -3,7 +3,7 @@ import { aktualisiereBerechnung } from '@/features/Berechnung';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
@@ -11,7 +11,13 @@ import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import { type LoadedYearData, loadAllYearData } from '@/infrastructure/api/apiService';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEA,
+  getMonatFromN,
+  isEwtInMonat,
+} from '@/infrastructure/date/getMonatFromItem';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '../components';
 import { isSessionErrorMessage } from './loadUserDaten.helpers';
 import {
@@ -56,7 +62,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   console.log('Daten geladen: ', userData);
   const { datenGeld, timestamps: serverTimestamps } = userData;
-  const { vorgabenU: serverVorgabenU, BZ: serverBZ, BE: serverBE, EWT: serverEWT, N: serverN } = userData;
+  const { vorgabenU: serverVorgabenU, BZ: serverBZ, BE: serverBE, EWT: serverEWT, N: serverN, EA: serverEA } = userData;
 
   // Jahreswechsel-Flag auslesen und zurücksetzen
   const isJahreswechsel = Storage.check('Jahreswechsel') && Storage.get<boolean>('Jahreswechsel', { default: false });
@@ -68,11 +74,12 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
     BE: serverBE,
     EWT: serverEWT,
     N: serverN,
+    EA: serverEA,
     serverTimestamps,
     isJahreswechsel,
   });
 
-  const { vorgabenU, BZ, BE, EWT, N } = synced;
+  const { vorgabenU, BZ, BE, EWT, N, EA } = synced;
   const { vorhanden } = synced;
   const dataServer = synced.dataServer;
 
@@ -90,7 +97,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   Storage.set('VorgabenGeld', datenGeld);
 
-  const datenBerechnung = aktualisiereBerechnung({ BZ, BE, EWT, N });
+  const datenBerechnung = aktualisiereBerechnung({ BZ, BE, EWT, N, EA });
 
   if (vorhanden.length > 0) {
     if (Object.keys(dataServer).length > 0) console.log('Unterschiede Server - Client', dataServer);
@@ -124,6 +131,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
             const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
             const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
+            const eaMonths = changedMonthsByStorage.get('dataEA') ?? new Set<number>();
 
             // Zuerst Server-only-Rows als gelöscht markieren, dann lokale Rows für Speichern vorbereiten
             if ('BZ' in dataServer) {
@@ -162,6 +170,15 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
               );
               markRowsForAutosave('#tableN', 'dataN', nMonths);
             }
+            if ('EA' in dataServer) {
+              reconcileRowsAsDeleted(
+                '#tableEA',
+                'dataEA',
+                normalizeServerRowsForConflict<IDatenEA>(dataServer.EA),
+                eaMonths,
+              );
+              markRowsForAutosave('#tableEA', 'dataEA', eaMonths);
+            }
 
             Storage.remove('dataServer');
             await flushAll();
@@ -181,6 +198,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
             const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
             const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
+            const eaMonths = changedMonthsByStorage.get('dataEA') ?? new Set<number>();
 
             if ('BZ' in dataServer) {
               markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
@@ -218,6 +236,15 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
                 nMonths,
               );
             }
+            if ('EA' in dataServer) {
+              markRowsForAutosave('#tableEA', 'dataEA', eaMonths);
+              reconcileRowsAsDeleted(
+                '#tableEA',
+                'dataEA',
+                normalizeServerRowsForConflict<IDatenEA>(dataServer.EA),
+                eaMonths,
+              );
+            }
 
             showReviewBanner(buildReviewResources(grouped), async () => {
               setAutoSaveEnabled(true);
@@ -247,6 +274,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   document.querySelector<CustomHTMLTableElement>('#tableBE')?.instance.rows.load(BE);
   document.querySelector<CustomHTMLTableElement>('#tableE')?.instance.rows.load(EWT);
   document.querySelector<CustomHTMLTableElement>('#tableN')?.instance.rows.load(N);
+  document.querySelector<CustomHTMLTableElement>('#tableEA')?.instance.rows.load(EA);
   document
     .querySelector<CustomHTMLTableElement>('#tableVE')
     ?.instance.rows.load([...Object.values(vorgabenU.VorgabenB)]);
@@ -263,6 +291,9 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   document
     .querySelector<CustomHTMLTableElement>('#tableN')
     ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === monat && jahr >= 2024);
+  document
+    .querySelector<CustomHTMLTableElement>('#tableEA')
+    ?.instance.rows.setFilter(row => getMonatFromEA(row as IDatenEA) === monat && jahr >= 2025);
 
   generateTableBerechnung(datenBerechnung, datenGeld);
   generateEingabeMaskeEinstellungen(vorgabenU);

@@ -22,6 +22,7 @@ const leeresErgebnis = (monat: number): IBerechnungMonatsErgebnis => ({
   steuerfreieAbwesenheiten: null,
   summeEwt: null,
   summeNebenbezuege: null,
+  eaMinuten: null,
   summeGesamt: null,
 });
 

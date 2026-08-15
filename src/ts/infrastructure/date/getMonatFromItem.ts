@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TEwtFilter } from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, TEwtFilter } from '@/types';
 import dayjs from './configDayjs';
 import Storage from '../storage/Storage';
 
@@ -31,6 +31,17 @@ export function isEwtInMonat(item: IDatenEWT, monat: number, mode: TEwtFilter = 
 }
 
 export function getMonatFromN(item: IDatenN): number {
+  const parsedDate = dayjs(item.Tag, 'DD.MM.YYYY', true);
+  if (parsedDate.isValid()) return parsedDate.month() + 1;
+
+  if (/^\d{1,2}$/.test(item.Tag)) {
+    return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  }
+
+  return dayjs(item.Tag).month() + 1;
+}
+
+export function getMonatFromEA(item: IDatenEA): number {
   const parsedDate = dayjs(item.Tag, 'DD.MM.YYYY', true);
   if (parsedDate.isValid()) return parsedDate.month() + 1;
 

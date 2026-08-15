@@ -1,11 +1,26 @@
 import { publishEvent } from '../../..';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '@/features/Bereitschaft/utils';
 import { getEwtDaten } from '@/features/EWT/utils';
+import { getEaDaten } from '@/features/EA/utils';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
+import type {
+  CustomHTMLTableElement,
+  IDatenBE,
+  IDatenBZ,
+  IDatenEA,
+  IDatenEWT,
+  IDatenN,
+  UserDatenServer,
+} from '@/types';
 import { getNebengeldDaten } from '@/features/Neben/utils';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEA,
+  getMonatFromN,
+  isEwtInMonat,
+} from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
 
 function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
@@ -61,6 +76,15 @@ export default function overwriteUserDaten(): void {
       .querySelector<CustomHTMLTableElement>('#tableN')
       ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === Monat);
     delete dataServer.N;
+  }
+  if (dataServer.EA) {
+    console.log('DatenEA überschreiben');
+    Storage.set('dataEA', dataServer.EA);
+    applyDataToTable('#tableEA', getEaDaten(dataServer.EA, undefined, { scope: 'all' }));
+    document
+      .querySelector<CustomHTMLTableElement>('#tableEA')
+      ?.instance.rows.setFilter(row => getMonatFromEA(row as IDatenEA) === Monat);
+    delete dataServer.EA;
   }
   publishEvent('data:changed', { resource: 'all', action: 'sync' });
 

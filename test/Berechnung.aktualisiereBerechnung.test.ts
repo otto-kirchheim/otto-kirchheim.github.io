@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import Storage from '@/infrastructure/storage/Storage';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenBerechnung } from '@/core/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, IVorgabenBerechnung } from '@/core/types';
 
 // Mock generateTableBerechnung to avoid DOM dependency
 vi.mock('@/features/Berechnung/generateTableBerechnung', () => ({
@@ -21,7 +21,7 @@ describe('aktualisiereBerechnung', () => {
   });
 
   it('returns empty Berechnung for empty data', () => {
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [], EA: [] });
 
     expect(result).toBeDefined();
     // Every month should have zero values
@@ -57,7 +57,7 @@ describe('aktualisiereBerechnung', () => {
       } as IDatenBZ,
     ];
 
-    const result = aktualisiereBerechnung({ BZ, BE: [], EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ, BE: [], EWT: [], N: [], EA: [] });
     // 8 hours = 480 minutes + 30 pause = 510
     expect(result[3 as keyof IVorgabenBerechnung].B.B).toBe(510);
   });
@@ -81,7 +81,7 @@ describe('aktualisiereBerechnung', () => {
       } as IDatenBE,
     ];
 
-    const result = aktualisiereBerechnung({ BZ, BE, EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ, BE, EWT: [], N: [], EA: [] });
     const monat3 = result[3 as keyof IVorgabenBerechnung];
     // BZ: 600 min, BE: -120 min = 480
     expect(monat3.B.B).toBe(480);
@@ -98,7 +98,7 @@ describe('aktualisiereBerechnung', () => {
       { Tag: '12.03.2026', Beginn: '10:00', Ende: '11:00', LRE: 'LRE 3', PrivatKm: 5 } as IDatenBE,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE, EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ: [], BE, EWT: [], N: [], EA: [] });
     const monat3 = result[3 as keyof IVorgabenBerechnung];
     expect(monat3.B.L2).toBe(1);
     expect(monat3.B.L3).toBe(2);
@@ -117,7 +117,7 @@ describe('aktualisiereBerechnung', () => {
       { Tag: '2026-03-04', Buchungstag: '2026-03-04', abWE: '08:00', anWE: '13:00' } as IDatenEWT,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [], EA: [] });
     const monat3 = result[3 as keyof IVorgabenBerechnung];
     expect(monat3.E.A8).toBe(1);
     expect(monat3.E.A14).toBe(2);
@@ -132,7 +132,7 @@ describe('aktualisiereBerechnung', () => {
       { Tag: '2026-03-02', Buchungstag: '2026-03-02', ab1E: '06:00', an1E: '04:00' } as IDatenEWT,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [] });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT, N: [], EA: [] });
     const monat3 = result[3 as keyof IVorgabenBerechnung];
     expect(monat3.E.S8).toBe(2);
     expect(monat3.E.S14).toBe(0);
@@ -151,7 +151,7 @@ describe('aktualisiereBerechnung', () => {
       { Tag: '01.04.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N, EA: [] });
     expect(result[3 as keyof IVorgabenBerechnung].N.F).toBe(2);
     expect(result[4 as keyof IVorgabenBerechnung].N.F).toBe(1);
   });
@@ -162,7 +162,7 @@ describe('aktualisiereBerechnung', () => {
       { Tag: '15.03.2026', Zulagen: [{ Typ: '040', Wert: 1 }] } as IDatenN,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N, EA: [] });
     expect(result[3 as keyof IVorgabenBerechnung].N.F).toBe(1);
   });
 
@@ -182,7 +182,7 @@ describe('aktualisiereBerechnung', () => {
         ],
       } as IDatenN,
     ];
-    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N });
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N, EA: [] });
     const m3 = result[3 as keyof IVorgabenBerechnung].N;
     expect(m3.F).toBe(1);
     expect(m3.B).toBe(120);
@@ -195,7 +195,7 @@ describe('aktualisiereBerechnung', () => {
   });
 
   it('stores result in Storage', () => {
-    aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [] });
+    aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [], EA: [] });
     const stored = Storage.get<IVorgabenBerechnung>('datenBerechnung', { check: true });
     expect(stored).toBeDefined();
     expect(stored[1 as keyof IVorgabenBerechnung]).toBeDefined();
@@ -223,17 +223,36 @@ describe('aktualisiereBerechnung', () => {
       } as IDatenBE,
     ];
 
-    const result = aktualisiereBerechnung({ BZ: [], BE, EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ: [], BE, EWT: [], N: [], EA: [] });
     const monat3 = result[3 as keyof IVorgabenBerechnung];
     // 22:00 - 02:00 next day = 4 hours = 240 min subtracted
     expect(monat3.B.B).toBe(-240);
     expect(monat3.B.L1).toBe(1);
   });
 
+  it('sums EA-Dauer je Monat in Minuten (EA.Minuten)', () => {
+    const EA: IDatenEA[] = [
+      { Tag: '01.03.2026', Dauer: '02:00', Taetigkeit: 'Signalmechaniker', Entgeltgruppe: '105' } as IDatenEA,
+      { Tag: '15.03.2026', Dauer: '01:30', Taetigkeit: 'Signalmechaniker', Entgeltgruppe: '105' } as IDatenEA,
+      { Tag: '01.04.2026', Dauer: '00:45', Taetigkeit: 'Signalmechaniker', Entgeltgruppe: '105' } as IDatenEA,
+    ];
+
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [], EA });
+    expect(result[3 as keyof IVorgabenBerechnung].EA.Minuten).toBe(210); // 120 + 90
+    expect(result[4 as keyof IVorgabenBerechnung].EA.Minuten).toBe(45);
+  });
+
+  it('EA.Minuten bleibt 0 ohne EA-Daten', () => {
+    const result = aktualisiereBerechnung({ BZ: [], BE: [], EWT: [], N: [], EA: [] });
+    for (let m = 1; m <= 12; m++) {
+      expect(result[m as keyof IVorgabenBerechnung].EA.Minuten).toBe(0);
+    }
+  });
+
   it('handles nested data format (month-keyed objects)', () => {
     const BZ = { '3': [{ Beginn: '2026-03-10T08:00:00.000Z', Ende: '2026-03-10T16:00:00.000Z', Pause: 0 }] };
 
-    const result = aktualisiereBerechnung({ BZ: BZ as unknown as IDatenBZ[], BE: [], EWT: [], N: [] });
+    const result = aktualisiereBerechnung({ BZ: BZ as unknown as IDatenBZ[], BE: [], EWT: [], N: [], EA: [] });
     // normalizeResourceRows should flatten month-keyed objects
     expect(result[3 as keyof IVorgabenBerechnung].B.B).toBe(480);
   });

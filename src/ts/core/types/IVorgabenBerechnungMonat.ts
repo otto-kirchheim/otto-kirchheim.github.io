@@ -23,6 +23,9 @@ export interface IVorgabenBerechnungMonat {
     C9: number; // Stück, Hint C*9 (839)
     SIPO: number; // Minuten, Hint SIPO (846)
   };
+  EA: {
+    Minuten: number;
+  };
 }
 
 export interface IVorgabenBerechnung {

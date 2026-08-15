@@ -1,7 +1,8 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '@/types';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
+  type BackendEA,
   type BackendEWT,
   type BackendNebengeld,
   type BackendUserProfile,
@@ -10,6 +11,8 @@ import {
   beToBackend,
   bzFromBackend,
   bzToBackend,
+  eaFromBackend,
+  eaToBackend,
   ewtFromBackend,
   ewtToBackend,
   nebengeldFromBackend,
@@ -159,6 +162,32 @@ export const nebengeldApi = {
   },
 };
 
+// ─── Entgeltausgleich ────────────────────────────────────
+
+export const eaApi = {
+  async loadYear(year: number): Promise<{ data: IDatenEA[]; updatedAt: string | null }> {
+    const result = await loadResourceYear<BackendEA, IDatenEA>('ea', year, eaFromBackend);
+    return { data: result.data, updatedAt: result.maxUpdatedAt };
+  },
+
+  async bulk(
+    items: { create: (IDatenEA & { clientRequestId: string })[]; update: IDatenEA[]; delete: string[] },
+    monat: number,
+    jahr: number,
+  ): Promise<BulkResponse<BackendEA>> {
+    const bulk: BulkRequest = {
+      create: items.create.map(item => {
+        const data = eaToBackend(item, monat, jahr);
+        delete (data as Record<string, unknown>)._id;
+        return { ...data, clientRequestId: item.clientRequestId };
+      }),
+      update: items.update.map(item => ({ ...eaToBackend(item, monat, jahr), _id: item._id! })),
+      delete: items.delete,
+    };
+    return smartSync('ea', bulk);
+  },
+};
+
 // ─── Alle Daten eines Jahres laden ────────────────────────
 
 export interface SyncTimestamps {
@@ -167,6 +196,7 @@ export interface SyncTimestamps {
   dataBE: string | null;
   dataE: string | null;
   dataN: string | null;
+  dataEA: string | null;
 }
 
 export interface LoadedYearData {
@@ -176,17 +206,19 @@ export interface LoadedYearData {
   BE: IDatenBE[];
   EWT: IDatenEWT[];
   N: IDatenN[];
+  EA: IDatenEA[];
   timestamps: SyncTimestamps;
 }
 
 export async function loadAllYearData(year: number): Promise<LoadedYearData> {
-  const [profileResult, datenGeld, bzResult, beResult, ewtResult, nResult] = await Promise.all([
+  const [profileResult, datenGeld, bzResult, beResult, ewtResult, nResult, eaResult] = await Promise.all([
     profileApi.getMyProfile(),
     vorgabenApi.getByYear(year),
     bereitschaftszeitraumApi.loadYear(year),
     bereitschaftseinsatzApi.loadYear(year),
     ewtApi.loadYear(year),
     nebengeldApi.loadYear(year),
+    eaApi.loadYear(year),
   ]);
 
   return {
@@ -196,12 +228,14 @@ export async function loadAllYearData(year: number): Promise<LoadedYearData> {
     BE: beResult.data,
     EWT: ewtResult.data,
     N: nResult.data,
+    EA: eaResult.data,
     timestamps: {
       VorgabenU: profileResult.updatedAt,
       dataBZ: bzResult.updatedAt,
       dataBE: beResult.updatedAt,
       dataE: ewtResult.updatedAt,
       dataN: nResult.updatedAt,
+      dataEA: eaResult.updatedAt,
     },
   };
 }
@@ -209,7 +243,7 @@ export async function loadAllYearData(year: number): Promise<LoadedYearData> {
 // ─── Download (PDF-Export) ───────────────────────────────
 
 export async function downloadPdf(
-  modus: 'B' | 'E' | 'N',
+  modus: 'B' | 'E' | 'N' | 'EA',
   data: Record<string, unknown>,
 ): Promise<{ blob: Blob; filename: string }> {
   if (!navigator.onLine) throw new Error('Keine Internetverbindung');
@@ -218,6 +252,7 @@ export async function downloadPdf(
     B: 'bereitschaftszeitraum/download',
     E: 'einsatzwechseltaetigkeit/download',
     N: 'nebengeld/download',
+    EA: 'ea/download',
   };
 
   const serverUrl = await getServerUrl();

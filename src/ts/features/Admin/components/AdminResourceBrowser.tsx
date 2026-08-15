@@ -29,6 +29,8 @@ const CROSS_REFS: Record<string, CrossRef> = {
   EWT: { resourceIdx: 2 },
   Bereitschaftszeitraum: { resourceIdx: 1, isArray: true },
 };
+// Hinweis: EA referenziert EWT ebenfalls über das Feld `EWT` (resourceIdx: 2) — CROSS_REFS ist
+// pro Feldname, nicht pro Ressource, daher kein separater Eintrag nötig (siehe RESOURCES unten).
 
 // Schema-Felder je Ressource (für Darstellung optionaler null-Felder)
 const SCHEMA_FIELDS: Record<string, string[]> = {
@@ -64,6 +66,7 @@ const SCHEMA_FIELDS: Record<string, string[]> = {
     'berechnen',
   ],
   nebengeld: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Beginn', 'Ende', 'Auftragsnummer', 'Zulagen'],
+  entgeltausgleich: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Dauer', 'Taetigkeit', 'Entgeltgruppe'],
 };
 
 // Datumsfelder die NUR als Datum gespeichert sind (kein Zeitanteil relevant)
@@ -82,6 +85,7 @@ const TIME_STRING_FIELDS = new Set([
   'abEE',
   'an1E',
   'anWE', // EWT
+  'Dauer', // EA
 ]);
 
 type ResourceConfig = {
@@ -120,6 +124,13 @@ const RESOURCES: ResourceConfig[] = [
     endpoint: 'nebengeld',
     tableFields: ['User', 'Jahr', 'Monat', 'Tag'],
     extraFields: ['EWT', 'createdAt'],
+  },
+  {
+    label: 'Entgeltausgleich',
+    shortLabel: 'EA',
+    endpoint: 'entgeltausgleich',
+    tableFields: ['User', 'Jahr', 'Monat', 'Tag', 'Dauer'],
+    extraFields: ['EWT', 'Taetigkeit', 'Entgeltgruppe', 'createdAt'],
   },
 ];
 

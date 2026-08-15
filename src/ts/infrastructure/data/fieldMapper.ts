@@ -5,11 +5,12 @@
  * Die Konvertierung passiert nur an der API-Grenze (beim Laden und Speichern).
  */
 
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import type {
   IBereitschaftseinsatz,
   IBereitschaftszeitraum,
   IEinsatzwechseltaetigkeit,
+  IEntgeltausgleich,
   IFahrzeit,
   INebengeld,
   IPers,
@@ -51,6 +52,13 @@ export interface BackendEWT extends IEinsatzwechseltaetigkeit {
 }
 
 export interface BackendNebengeld extends INebengeld {
+  User?: string;
+  Monat: number;
+  Jahr: number;
+  updatedAt?: string;
+}
+
+export interface BackendEA extends IEntgeltausgleich {
   User?: string;
   Monat: number;
   Jahr: number;
@@ -266,6 +274,20 @@ export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
 }
 
 /**
+ * Konvertiert ein Backend-Entgeltausgleich-Dokument in das Frontend-Format.
+ */
+export function eaFromBackend(doc: BackendEA): IDatenEA {
+  return {
+    _id: doc._id,
+    EWT: doc.EWT ?? undefined,
+    Tag: dayjs(doc.Tag).format('DD.MM.YYYY'),
+    Dauer: doc.Dauer,
+    Taetigkeit: doc.Taetigkeit ?? '',
+    Entgeltgruppe: doc.Entgeltgruppe ?? '',
+  };
+}
+
+/**
  * Konvertiert ein Backend-UserProfile in das Frontend-Format (IVorgabenU).
  * Backend und Frontend nutzen dieselben Container-Keys (Pers, Arbeitszeit,
  * Fahrzeit, VorgabenB, Einstellungen) -- VorgabenB bleibt intern als Map
@@ -304,6 +326,8 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
       nBhf: doc.Pers.nBhf ?? '',
       kmnBhf: doc.Pers.kmnBhf ?? 0,
       TB: (doc.Pers.TB as IVorgabenU['Pers']['TB']) ?? 'Tarifkraft',
+      Taetigkeit: doc.Pers.Taetigkeit ?? undefined,
+      Entgeltgruppe: doc.Pers.Entgeltgruppe ?? undefined,
     },
     Arbeitszeit: normalizeAZ(doc.Arbeitszeit ?? null),
     Fahrzeit: (doc.Fahrzeit ?? []).map(fz => ({ key: fz.key, text: fz.text, value: fz.value })),
@@ -438,6 +462,26 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
     // Leerstring explizit mitsenden, damit eine gelöschte Auftragsnummer beim Update auch serverseitig geleert wird.
     Auftragsnummer: item.Auftragsnummer,
     Zulagen: zulagen,
+  };
+}
+
+/**
+ * Konvertiert einen Frontend-EA-Eintrag in das Backend-Format.
+ */
+export function eaToBackend(item: IDatenEA, monat: number, jahr: number): Omit<BackendEA, 'User'> {
+  const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
+  return {
+    _id: item._id,
+    // null statt undefined: undefined fällt bei JSON.stringify weg, das Entfernen der
+    // EWT-Verknüpfung käme nie am Server an. null wird dort zu $unset übersetzt.
+    EWT: item.EWT || null,
+    Monat: period.Monat,
+    Jahr: period.Jahr,
+    Tag: dayjs(item.Tag, 'DD.MM.YYYY').toISOString(),
+    Dauer: item.Dauer,
+    // Leerstring explizit mitsenden, damit ein gelöschtes Feld beim Update auch serverseitig geleert wird.
+    Taetigkeit: item.Taetigkeit,
+    Entgeltgruppe: item.Entgeltgruppe,
   };
 }
 

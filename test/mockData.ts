@@ -260,6 +260,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '2': {
     B: {
@@ -285,6 +288,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '3': {
@@ -312,6 +318,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '4': {
     B: {
@@ -337,6 +346,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '5': {
@@ -364,6 +376,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '6': {
     B: {
@@ -389,6 +404,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '7': {
@@ -416,6 +434,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '8': {
     B: {
@@ -441,6 +462,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '9': {
@@ -468,6 +492,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '10': {
     B: {
@@ -493,6 +520,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
   '11': {
@@ -520,6 +550,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       C9: 0,
       SIPO: 0,
     },
+    EA: {
+      Minuten: 0,
+    },
   },
   '12': {
     B: {
@@ -545,6 +578,9 @@ export const datenBerechungMock: IVorgabenBerechnung = {
       CB: 0,
       C9: 0,
       SIPO: 0,
+    },
+    EA: {
+      Minuten: 0,
     },
   },
 };
@@ -900,6 +936,40 @@ export const datenNMock: Required<IDaten>['N'] = [
     Ende: '06:15',
     Zulagen: [{ Typ: '040', Wert: 1 }],
     Auftragsnummer: '323456789',
+  },
+];
+
+export const mockEA = (): void => {
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    '<div class="table-responsive">' +
+      '<table id="tableEA" class="table table-bordered table-striped table-hover align-middle" aria-label="Entgeltausgleich"></table>' +
+      '</div>',
+  );
+
+  createCustomTable('tableEA', {
+    columns: [
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Dauer', title: 'Dauer', type: 'time' },
+      { name: 'Taetigkeit', title: 'Tätigkeit' },
+      { name: 'Entgeltgruppe', title: 'Entgeltgruppe' },
+    ],
+    rows: [],
+  });
+};
+
+export const datenEAMock: Required<IDaten>['EA'] = [
+  {
+    Tag: '12.03.2026',
+    Dauer: '02:00',
+    Taetigkeit: 'Signalmechaniker RBEG',
+    Entgeltgruppe: '105',
+  },
+  {
+    Tag: '13.03.2026',
+    Dauer: '01:30',
+    Taetigkeit: 'Signalmechaniker RBEG',
+    Entgeltgruppe: '105',
   },
 ];
 

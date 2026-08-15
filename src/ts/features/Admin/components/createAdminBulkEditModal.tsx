@@ -66,7 +66,10 @@ export function AdminBulkEditModal({
     value: '',
     levels: [],
   });
-  const existingTeamOes = useMemo(() => uniqueSorted(selectedUsers.flatMap(user => user.adminForTeamOes)), [selectedUsers]);
+  const existingTeamOes = useMemo(
+    () => uniqueSorted(selectedUsers.flatMap(user => user.adminForTeamOes)),
+    [selectedUsers],
+  );
   const existingOrganizationOes = useMemo(
     () => uniqueSorted(selectedUsers.flatMap(user => user.adminForOrganizationOes)),
     [selectedUsers],
@@ -402,9 +405,7 @@ export function AdminBulkEditModal({
                   .filter(entry => entry.status !== 'ok')
                   .map(entry => (
                     <li className="list-group-item px-0" key={entry.userId}>
-                      <span
-                        className={`badge me-2 text-bg-${entry.status === 'error' ? 'danger' : 'secondary'}`}
-                      >
+                      <span className={`badge me-2 text-bg-${entry.status === 'error' ? 'danger' : 'secondary'}`}>
                         {entry.status === 'error' ? 'Fehler' : 'Übersprungen'}
                       </span>
                       {entry.userName}

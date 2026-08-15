@@ -28,10 +28,12 @@ function getButtonResources(buttonId: string): TResourceKey[] {
       return ['EWT'];
     case 'btnSaveN':
       return ['N'];
+    case 'btnSaveEA':
+      return ['EA'];
     case 'btnSaveEinstellungen':
       return ['settings'];
     default:
-      return ['BZ', 'BE', 'EWT', 'N', 'settings'];
+      return ['BZ', 'BE', 'EWT', 'N', 'EA', 'settings'];
   }
 }
 
@@ -84,6 +86,7 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
       BE: buttonResources.includes('BE') && hasPendingTableChanges('BE', true),
       EWT: buttonResources.includes('EWT') && hasPendingTableChanges('EWT', true),
       N: buttonResources.includes('N') && hasPendingTableChanges('N', true),
+      EA: buttonResources.includes('EA') && hasPendingTableChanges('EA', true),
       settings: settingsNeedsSync,
     };
 

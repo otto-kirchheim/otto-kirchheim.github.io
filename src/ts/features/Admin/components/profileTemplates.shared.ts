@@ -74,12 +74,15 @@ export const PERS_FIELDS: TemplateField[] = [
     type: 'select',
     options: [{ value: '', label: 'Bitte wählen…' }, ...TB_OPTIONS.map(value => ({ value, label: value }))],
   },
+  { key: 'Taetigkeit', label: 'Tätigkeit (Entgeltausgleich)' },
+  { key: 'Entgeltgruppe', label: 'Entgeltgruppe (Entgeltausgleich)' },
 ];
 
 export const TAB_OPTIONS = [
   { key: 'bereitschaft', label: 'Bereitschaft' },
   { key: 'ewt', label: 'EWT' },
   { key: 'neben', label: 'Nebenbezüge' },
+  { key: 'ea', label: 'Entgeltausgleich' },
 ] as const;
 
 export const WEEKDAY_OPTIONS = [

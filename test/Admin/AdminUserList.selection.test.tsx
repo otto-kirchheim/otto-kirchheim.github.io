@@ -68,7 +68,9 @@ async function renderList(isSuperAdmin: boolean): Promise<HTMLDivElement> {
 }
 
 function selectionCheckboxes(container: HTMLDivElement): HTMLInputElement[] {
-  return Array.from(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"][aria-label*="Massenänderung"]'));
+  return Array.from(
+    container.querySelectorAll<HTMLInputElement>('input[type="checkbox"][aria-label*="Massenänderung"]'),
+  );
 }
 
 describe('AdminUserList Mehrfachauswahl', () => {

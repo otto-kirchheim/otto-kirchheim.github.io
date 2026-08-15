@@ -1,4 +1,4 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import type { LoadedYearData } from '@/infrastructure/api/apiService';
@@ -24,6 +24,7 @@ interface SyncLoadedYearResourcesParams {
   BE: LoadedYearData['BE'];
   EWT: LoadedYearData['EWT'];
   N: LoadedYearData['N'];
+  EA: LoadedYearData['EA'];
   serverTimestamps: LoadedYearData['timestamps'];
   isJahreswechsel?: boolean;
 }
@@ -34,6 +35,7 @@ interface SyncLoadedYearResourcesResult {
   BE: IDatenBE[];
   EWT: IDatenEWT[];
   N: IDatenN[];
+  EA: IDatenEA[];
   dataServer: Partial<UserDatenServer>;
   vorhanden: UnterschiedNachMonat[];
 }
@@ -44,6 +46,7 @@ export function syncLoadedYearResources({
   BE,
   EWT,
   N,
+  EA,
   serverTimestamps,
   isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
@@ -108,6 +111,7 @@ export function syncLoadedYearResources({
           if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
           if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
           if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
+          if (storageName === 'dataEA') dataServer.EA = serverData as UserDatenServer['EA'];
         }
       }
     }
@@ -149,12 +153,20 @@ export function syncLoadedYearResources({
     'Nebenbezüge',
   );
 
+  const syncedEA = syncResource(
+    'dataEA',
+    EA,
+    serverTimestamps.dataEA ? dayjs(serverTimestamps.dataEA).valueOf() : 0,
+    'Entgeltausgleich',
+  );
+
   return {
     vorgabenU: syncedVorgabenU,
     BZ: normalizeRows<IDatenBZ>(syncedBZ),
     BE: normalizeRows<IDatenBE>(syncedBE),
     EWT: normalizeRows<IDatenEWT>(syncedEWT),
     N: normalizeRows<IDatenN>(syncedN),
+    EA: normalizeRows<IDatenEA>(syncedEA),
     dataServer,
     vorhanden,
   };

@@ -36,9 +36,9 @@ async function fireInput(el: HTMLInputElement, value: string): Promise<void> {
 }
 
 function rowKeys(container: HTMLDivElement): string[] {
-  return Array.from(container.querySelectorAll<HTMLInputElement>('tbody input[type="text"][aria-label="Tätigkeitsstätte"]')).map(
-    input => input.value,
-  );
+  return Array.from(
+    container.querySelectorAll<HTMLInputElement>('tbody input[type="text"][aria-label="Tätigkeitsstätte"]'),
+  ).map(input => input.value);
 }
 
 afterEach(() => {

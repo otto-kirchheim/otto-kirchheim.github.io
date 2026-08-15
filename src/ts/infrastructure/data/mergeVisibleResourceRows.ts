@@ -1,8 +1,8 @@
 import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';
+import { getMonatFromBE, getMonatFromBZ, getMonatFromEA, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';
 import normalizeResourceRows from './normalizeResourceRows';
 import { type ResourceKind, RESOURCE_STORAGE_MAP } from './resourceConfig';
 
@@ -16,6 +16,8 @@ function isRowInActiveMonat(resource: ResourceKind, row: CustomTableTypes, monat
       return isEwtInMonat(row as IDatenEWT, monat);
     case 'N':
       return getMonatFromN(row as IDatenN) === monat;
+    case 'EA':
+      return getMonatFromEA(row as IDatenEA) === monat;
   }
 }
 

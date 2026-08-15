@@ -358,6 +358,7 @@ export type AdminStats = {
     bereitschaftszeitraeume: number;
     einsatzwechseltaetigkeiten: number;
     nebengeld: number;
+    entgeltausgleich: number;
   };
   adminActivity: { logsLast7d: number };
   auth: { newUsersLast7d: number; emailVerified: number; passkeyUsers: number };
@@ -366,6 +367,7 @@ export type AdminStats = {
     bereitschaftszaetraumeLast7d: number;
     ewtLast7d: number;
     nebengeldLast7d: number;
+    entgeltausgleichLast7d: number;
   };
 };
 

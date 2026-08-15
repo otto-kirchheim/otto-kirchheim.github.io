@@ -123,7 +123,7 @@ describe('AdminBulkEditModal', () => {
   it('verlangt eine ausgefüllte Ebene, sobald ein Ziel angehakt ist', async () => {
     const container = renderModal([makeUser({ oe: [] })]);
 
-    (container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!).click();
+    container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
     await flush();
 
     container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
@@ -208,10 +208,7 @@ describe('AdminBulkEditModal', () => {
   });
 
   it('zeigt im Entfernen-Select nur vorhandene Team-Admin-OE-Pfade der Auswahl', async () => {
-    const users = [
-      makeUser({ adminForTeamOes: ['V.IW-MI'] }),
-      makeUser({ _id: 'u2', adminForTeamOes: ['V.IW-N'] }),
-    ];
+    const users = [makeUser({ adminForTeamOes: ['V.IW-MI'] }), makeUser({ _id: 'u2', adminForTeamOes: ['V.IW-N'] })];
     const container = renderModal(users);
 
     const removeRadio = container.querySelector<HTMLInputElement>('#bulkAdminOe-teamOes-remove')!;
@@ -219,7 +216,9 @@ describe('AdminBulkEditModal', () => {
     await flush();
 
     const select = container.querySelector<HTMLSelectElement>('select[aria-label="Team-Admin-OEs entfernen"]')!;
-    const options = Array.from(select.options).map(opt => opt.value).filter(Boolean);
+    const options = Array.from(select.options)
+      .map(opt => opt.value)
+      .filter(Boolean);
     expect(options).toEqual(['V.IW-MI', 'V.IW-N']);
   });
 

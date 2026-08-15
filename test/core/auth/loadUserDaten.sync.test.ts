@@ -56,6 +56,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
       BE: [{ _id: 'be1' }, { _id: 'be2' }] as never,
       EWT: [] as never,
       N: [] as never,
+      EA: [] as never,
       serverTimestamps,
     });
 
@@ -80,6 +81,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
       BE: [] as never,
       EWT: [] as never,
       N: [] as never,
+      EA: [] as never,
       serverTimestamps,
     });
 
@@ -100,6 +102,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
       BE: [] as never,
       EWT: [] as never,
       N: [] as never,
+      EA: [] as never,
       serverTimestamps,
     });
 
@@ -119,6 +122,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
       BE: [] as never,
       EWT: [] as never,
       N: [] as never,
+      EA: [] as never,
       serverTimestamps: {
         VorgabenU: '2020-01-01T00:00:00.000Z',
         dataBZ: new Date(Date.now() + 1_000_000).toISOString(),

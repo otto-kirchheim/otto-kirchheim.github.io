@@ -4,6 +4,7 @@ import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import calculateBerechnungRows, {
   formatCurrency,
   nullParser,
+  timeConvert,
   type IBerechnungMonatsErgebnis,
 } from './calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from './berechnungGroupVisibility';
@@ -77,6 +78,11 @@ const ZEILEN: IZeilenDefinition[] = [
   },
   { gruppe: 'ewt', rowHtml: '<tr><th>Summe EWT</th></tr>', inhalt: m => currency(m.summeEwt) },
   { gruppe: 'neben', rowHtml: '<tr><th>Summe Nebenbezüge</th></tr>', inhalt: m => currency(m.summeNebenbezuege) },
+  {
+    gruppe: 'ea',
+    rowHtml: '<tr><th>Entgeltausgleich</th></tr>',
+    inhalt: m => (m.eaMinuten === null ? '' : timeConvert(m.eaMinuten)),
+  },
   { gruppe: null, rowHtml: '<tr><th>Summe Gesamt</th></tr>', inhalt: m => currency(m.summeGesamt) },
 ];
 

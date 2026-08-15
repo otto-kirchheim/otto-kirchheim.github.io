@@ -14,6 +14,10 @@ import { getFahrzeitPanelState } from '../components/fahrzeitPanelState';
 
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
+  // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
+  // Default fehlt der Object-Key komplett und die Object.keys-Schleife unten liest den Input nie ein.
+  VorgabenU.Pers.Taetigkeit ??= '';
+  VorgabenU.Pers.Entgeltgruppe ??= '';
   setupPersValidation();
 
   const updateVorgabenU = <T, K extends keyof T>(obj: T, key: K, value: T[K]): void => {

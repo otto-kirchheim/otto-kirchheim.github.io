@@ -55,7 +55,9 @@ export function computeCommonPathLevels(paths: string[], maxLevels: number): str
  * Auswahl — unabhängig davon, welches Ziel gerade angehakt ist, damit die
  * Box-Anzahl beim Umschalten der Ziel-Checkboxen nicht springt.
  */
-export function computeMaxOeLevels(users: { oe: string[]; adminForTeamOes: string[]; adminForOrganizationOes: string[] }[]): number {
+export function computeMaxOeLevels(
+  users: { oe: string[]; adminForTeamOes: string[]; adminForOrganizationOes: string[] }[],
+): number {
   const depths = users.flatMap(user => [
     user.oe.length,
     ...user.adminForTeamOes.map(path => splitOeInput(path).length),

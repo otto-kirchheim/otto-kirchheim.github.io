@@ -15,6 +15,11 @@ export default function generateEingabeMaskeEinstellungen(
 ): void {
   const VorgabenB = VorgabenU.VorgabenB ?? BereitschaftsEinsatzZeiträume;
 
+  // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
+  // Default fehlt der Object-Key komplett und setElementValues/saveEinstellungen sehen ihn nie.
+  VorgabenU.Pers.Taetigkeit ??= '';
+  VorgabenU.Pers.Entgeltgruppe ??= '';
+
   setElementValues<IVorgabenUPers>(VorgabenU.Pers);
   renderArbeitszeiteingabePanel(VorgabenU);
   populateEmailField();
@@ -56,7 +61,9 @@ function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
   if (!panel) return;
-  const aZ = isLegacyArbeitszeit(VorgabenU.Arbeitszeit) ? migrateArbeitszeit(VorgabenU.Arbeitszeit) : VorgabenU.Arbeitszeit;
+  const aZ = isLegacyArbeitszeit(VorgabenU.Arbeitszeit)
+    ? migrateArbeitszeit(VorgabenU.Arbeitszeit)
+    : VorgabenU.Arbeitszeit;
   render(h(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }), panel);
 }
 

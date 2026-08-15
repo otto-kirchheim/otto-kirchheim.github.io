@@ -11,6 +11,7 @@ describe('updateTabVisibility', () => {
         <li><button id="bereitschaft-tab"></button></li>
         <li><button id="ewt-tab"></button></li>
         <li><button id="neben-tab"></button></li>
+        <li><button id="ea-tab"></button></li>
       </ul>
     `;
     document.body.appendChild(container);
@@ -20,21 +21,29 @@ describe('updateTabVisibility', () => {
     container.remove();
   });
 
-  it('zeigt alle Tabs wenn aktivierteTabs undefined', () => {
+  it('zeigt die drei Legacy-Tabs wenn aktivierteTabs undefined, EA bleibt versteckt', () => {
     // Erst verstecken
     document.querySelectorAll('li').forEach(li => li.classList.add('d-none'));
     updateTabVisibility();
-    document.querySelectorAll('li').forEach(li => {
-      expect(li.classList.contains('d-none')).toBe(false);
-    });
+    expect(document.querySelector('#bereitschaft-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#ewt-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#neben-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#ea-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
   });
 
-  it('zeigt alle Tabs wenn aktivierteTabs leer', () => {
+  it('zeigt die drei Legacy-Tabs wenn aktivierteTabs leer, EA bleibt versteckt', () => {
     document.querySelectorAll('li').forEach(li => li.classList.add('d-none'));
     updateTabVisibility([]);
-    document.querySelectorAll('li').forEach(li => {
-      expect(li.classList.contains('d-none')).toBe(false);
-    });
+    expect(document.querySelector('#bereitschaft-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#ewt-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#neben-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#ea-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
+  });
+
+  it('zeigt EA nur, wenn "ea" explizit in aktivierteTabs enthalten ist', () => {
+    updateTabVisibility(['ea']);
+    expect(document.querySelector('#ea-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#bereitschaft-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
   });
 
   it('zeigt nur bereitschaft wenn nur bereitschaft aktiv', () => {
@@ -42,6 +51,7 @@ describe('updateTabVisibility', () => {
     expect(document.querySelector('#bereitschaft-tab')!.parentElement!.classList.contains('d-none')).toBe(false);
     expect(document.querySelector('#ewt-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
     expect(document.querySelector('#neben-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
+    expect(document.querySelector('#ea-tab')!.parentElement!.classList.contains('d-none')).toBe(true);
   });
 
   it('zeigt ewt und neben', () => {

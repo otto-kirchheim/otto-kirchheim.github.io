@@ -8,6 +8,7 @@ export const RESOURCE_STORAGE_MAP: Record<ResourceKind, TStorageData> = {
   BE: 'dataBE',
   EWT: 'dataE',
   N: 'dataN',
+  EA: 'dataEA',
 };
 
 export const RESOURCE_TABLE_ID_MAP: Record<ResourceKind, string> = {
@@ -15,4 +16,5 @@ export const RESOURCE_TABLE_ID_MAP: Record<ResourceKind, string> = {
   BE: 'tableBE',
   EWT: 'tableE',
   N: 'tableN',
+  EA: 'tableEA',
 };

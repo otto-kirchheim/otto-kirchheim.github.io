@@ -23,6 +23,7 @@ enum StorageData {
   dataBE = 'Daten Bereitschaftseinsatz',
   dataE = 'Daten EWT',
   dataN = 'Daten Nebengeld',
+  dataEA = 'Daten Entgeltausgleich',
   VorgabenU = 'Persönliche Daten',
   VorgabenGeld = 'Vorgaben Geld',
   datenBerechnung = 'Daten Berechnung',
@@ -43,7 +44,7 @@ enum StorageData {
 export type TStorageData = keyof typeof StorageData;
 
 /** Keys die intern als `{ data, timestamp }` gespeichert werden */
-const RESOURCE_KEYS: ReadonlySet<TStorageData> = new Set(['dataBZ', 'dataBE', 'dataE', 'dataN', 'VorgabenU']);
+const RESOURCE_KEYS: ReadonlySet<TStorageData> = new Set(['dataBZ', 'dataBE', 'dataE', 'dataN', 'dataEA', 'VorgabenU']);
 
 type DataWithTimestamp<T = unknown> = { data: T; timestamp: number };
 

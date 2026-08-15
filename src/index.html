@@ -128,6 +128,18 @@
                   Nebenbezüge
                 </button>
               </li>
+              <li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
+                <button
+                  class="nav-link py-2 px-0 px-lg-2"
+                  id="ea-tab"
+                  data-bs-toggle="pill"
+                  data-bs-target="#EA"
+                  type="button"
+                  role="tab"
+                >
+                  Entgeltausgleich
+                </button>
+              </li>
 
               <li class="py-lg-1 col-12 col-lg-auto">
                 <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
@@ -398,6 +410,11 @@
       <!-- Tab Nebenbezüge Anzeigen -->
       <div class="tab-pane fade" id="Neben" role="tabpanel">
         <div id="neben-root"></div>
+      </div>
+
+      <!-- Tab Entgeltausgleich Anzeigen -->
+      <div class="tab-pane fade" id="EA" role="tabpanel">
+        <div id="ea-root"></div>
       </div>
 
       <!-- Tab Berechnung -->
@@ -770,6 +787,37 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">work</span>
+                        <div class="form-floating">
+                          <input
+                            type="Text"
+                            placeholder="Signalmechaniker RBEG"
+                            id="Taetigkeit"
+                            class="form-control validate"
+                            list="taetigkeitVorschlaege"
+                          />
+                          <label for="Taetigkeit">Tätigkeit / Stellenbezeichnung</label>
+                          <datalist id="taetigkeitVorschlaege">
+                            <option value="Arbeiter"></option>
+                            <option value="Facharbeiter"></option>
+                            <option value="Signalmechaniker"></option>
+                            <option value="Signalmechaniker RBEG"></option>
+                            <option value="Meister"></option>
+                          </datalist>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
+                        <span class="input-group-text material-icons-round einstellungen-icons">work</span>
+                        <div class="form-floating">
+                          <input type="Text" placeholder="105" id="Entgeltgruppe" class="form-control validate" />
+                          <label for="Entgeltgruppe">Entgeltgruppe (Optional / Entgeltausgleich)</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                      <div class="input-group">
                         <span class="input-group-text material-icons-round einstellungen-icons">business</span>
                         <div class="form-floating">
                           <input
@@ -966,6 +1014,16 @@
                               data-tab-key="neben"
                             />
                             <label class="form-check-label ms-2" for="tab-neben">Nebenbezüge</label>
+                          </div>
+                          <div class="form-check form-switch d-flex align-items-center">
+                            <input
+                              class="form-check-input"
+                              type="checkbox"
+                              role="switch"
+                              id="tab-ea"
+                              data-tab-key="ea"
+                            />
+                            <label class="form-check-label ms-2" for="tab-ea">Entgeltausgleich</label>
                           </div>
                         </div>
                       </div>

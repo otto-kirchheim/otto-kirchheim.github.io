@@ -1,6 +1,6 @@
 import { Row } from '@/infrastructure/table/CustomTable';
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';
@@ -12,6 +12,7 @@ export function createChangedMonthsByStorage(vorhanden: UnterschiedNachMonat[]):
     Bereitschaftseinsatz: 'dataBE',
     EWT: 'dataE',
     Nebenbezüge: 'dataN',
+    Entgeltausgleich: 'dataEA',
   };
 
   const changedMonthsByStorage = new Map<TStorageData, Set<number>>();
@@ -94,12 +95,9 @@ export function markRowsForAutosave(selector: string, storageName: TStorageData,
   });
 }
 
-export function reconcileRowsAsDeleted<T extends CustomTableTypes = IDatenBE | IDatenBZ | IDatenEWT | IDatenN>(
-  selector: string,
-  storageName: TStorageData,
-  serverData: T[],
-  changedMonths: Set<number>,
-): number {
+export function reconcileRowsAsDeleted<
+  T extends CustomTableTypes = IDatenBE | IDatenBZ | IDatenEWT | IDatenN | IDatenEA,
+>(selector: string, storageName: TStorageData, serverData: T[], changedMonths: Set<number>): number {
   const tableEl = document.querySelector<CustomHTMLTableElement>(selector);
   if (!tableEl?.instance?.rows?.array) return 0;
   const table = tableEl.instance;

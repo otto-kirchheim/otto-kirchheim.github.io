@@ -2,12 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import {
   applyServerRowsToTable,
   collectRowErrorMatches,
+  unlinkEaRefsForDeletedEwtIds,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from '@/infrastructure/autoSave/savePipeline';
 import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import Storage from '@/infrastructure/storage/Storage';
-import type { IDatenN } from '@/core/types';
+import type { IDatenEA, IDatenN } from '@/core/types';
 
 function makeNRow(
   overrides: Partial<{ _state: string; _id: string; EWT: string }> = {},
@@ -30,6 +31,33 @@ function makeNRow(
 function mountTableN(rows: (Row<CustomTableTypes> & { cells: IDatenN })[]) {
   const el = document.createElement('table');
   el.id = 'tableN';
+  const instance = { rows: { array: rows as Row<CustomTableTypes>[] }, drawRows: vi.fn() };
+  (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
+  document.body.appendChild(el);
+  return instance;
+}
+
+function makeEaRow(
+  overrides: Partial<{ _state: string; _id: string; EWT: string }> = {},
+): Row<CustomTableTypes> & { cells: IDatenEA } {
+  return {
+    _state: overrides._state ?? 'unchanged',
+    _id: overrides._id,
+    _clientRequestId: undefined,
+    _originalCells: {} as IDatenEA,
+    cells: {
+      Tag: '2026-03-01',
+      Dauer: '02:00',
+      Taetigkeit: '',
+      Entgeltgruppe: '',
+      ...(overrides.EWT ? { EWT: overrides.EWT } : {}),
+    } as IDatenEA,
+  } as unknown as Row<CustomTableTypes> & { cells: IDatenEA };
+}
+
+function mountTableEA(rows: (Row<CustomTableTypes> & { cells: IDatenEA })[]) {
+  const el = document.createElement('table');
+  el.id = 'tableEA';
   const instance = { rows: { array: rows as Row<CustomTableTypes>[] }, drawRows: vi.fn() };
   (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
   document.body.appendChild(el);
@@ -127,6 +155,82 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
     Storage.set('dataN', [{ Tag: '01', Beginn: '08:00', Ende: '16:00', Auftragsnummer: '', EWT: 'e1' }]);
     // No DOM element mounted
     expect(() => unlinkNebengeldRefsForDeletedEwtIds(['e1'])).not.toThrow();
+  });
+});
+
+describe('unlinkEaRefsForDeletedEwtIds', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('returns immediately when deletedIds is empty', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' }]);
+    const setSpied = vi.spyOn(Storage, 'set');
+
+    unlinkEaRefsForDeletedEwtIds([]);
+
+    expect(setSpied).not.toHaveBeenCalled();
+  });
+
+  it('removes EWT from matching Storage items', () => {
+    Storage.set('dataEA', [
+      { Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' },
+      { Tag: '02', Dauer: '01:30', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e2' },
+    ]);
+
+    unlinkEaRefsForDeletedEwtIds(['e1']);
+
+    const stored = Storage.get<IDatenEA[]>('dataEA', { default: [] });
+    expect(stored[0].EWT).toBeUndefined();
+    expect(stored[1].EWT).toBe('e2');
+  });
+
+  it('does not write Storage when no refs match', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '' }]);
+    const setSpied = vi.spyOn(Storage, 'set');
+
+    unlinkEaRefsForDeletedEwtIds(['unknown-id']);
+
+    expect(setSpied).not.toHaveBeenCalled();
+  });
+
+  it('cleans EWT from live table rows and calls drawRows', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' }]);
+    const row = makeEaRow({ EWT: 'e1' });
+    const instance = mountTableEA([row]);
+
+    unlinkEaRefsForDeletedEwtIds(['e1']);
+
+    expect((row.cells as IDatenEA).EWT).toBeUndefined();
+    expect(instance.drawRows).toHaveBeenCalled();
+  });
+
+  it('also updates _originalCells for unchanged rows', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' }]);
+    const row = makeEaRow({ EWT: 'e1' });
+    const instance = mountTableEA([row]);
+
+    unlinkEaRefsForDeletedEwtIds(['e1']);
+
+    expect(instance.rows.array[0]._originalCells).toBeDefined();
+    expect((instance.rows.array[0]._originalCells as IDatenEA).EWT).toBeUndefined();
+  });
+
+  it('skips deleted table rows', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' }]);
+    const row = makeEaRow({ _state: 'deleted', EWT: 'e1' });
+    const instance = mountTableEA([row]);
+
+    unlinkEaRefsForDeletedEwtIds(['e1']);
+
+    expect((row.cells as IDatenEA).EWT).toBe('e1'); // untouched
+    expect(instance.drawRows).not.toHaveBeenCalled();
+  });
+
+  it('does not crash when #tableEA is absent', () => {
+    Storage.set('dataEA', [{ Tag: '01', Dauer: '02:00', Taetigkeit: '', Entgeltgruppe: '', EWT: 'e1' }]);
+    // No DOM element mounted
+    expect(() => unlinkEaRefsForDeletedEwtIds(['e1'])).not.toThrow();
   });
 });
 

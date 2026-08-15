@@ -552,7 +552,7 @@ describe('apiService', () => {
 
   describe('loadAllYearData', () => {
     it('lädt alle Daten parallel', async () => {
-      // Sechs aufeinanderfolgende API-Calls
+      // Sieben aufeinanderfolgende API-Calls
       mockFetchRetry
         .mockResolvedValueOnce({
           success: true,
@@ -569,6 +569,7 @@ describe('apiService', () => {
         .mockResolvedValueOnce({ success: true, data: [], statusCode: 200 })
         .mockResolvedValueOnce({ success: true, data: [], statusCode: 200 })
         .mockResolvedValueOnce({ success: true, data: [], statusCode: 200 })
+        .mockResolvedValueOnce({ success: true, data: [], statusCode: 200 })
         .mockResolvedValueOnce({ success: true, data: [], statusCode: 200 });
 
       const result = await loadAllYearData(2024);
@@ -578,6 +579,7 @@ describe('apiService', () => {
       expect(result).toHaveProperty('BE');
       expect(result).toHaveProperty('EWT');
       expect(result).toHaveProperty('N');
+      expect(result).toHaveProperty('EA');
       expect(result).toHaveProperty('timestamps');
       expect(result.timestamps).toEqual({
         VorgabenU: null,
@@ -585,8 +587,9 @@ describe('apiService', () => {
         dataBE: null,
         dataE: null,
         dataN: null,
+        dataEA: null,
       });
-      expect(mockFetchRetry).toHaveBeenCalledTimes(6);
+      expect(mockFetchRetry).toHaveBeenCalledTimes(7);
     });
   });
 

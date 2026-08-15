@@ -2,10 +2,11 @@ import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
 import type {
   BackendBereitschaftseinsatz,
   BackendBereitschaftszeitraum,
+  BackendEA,
   BackendEWT,
   BackendNebengeld,
 } from '../data/fieldMapper';
-import { beFromBackend, bzFromBackend, ewtFromBackend, nebengeldFromBackend } from '../data/fieldMapper';
+import { beFromBackend, bzFromBackend, eaFromBackend, ewtFromBackend, nebengeldFromBackend } from '../data/fieldMapper';
 import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -19,6 +20,8 @@ export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings
       return ewtFromBackend(doc as BackendEWT);
     case 'N':
       return nebengeldFromBackend(doc as BackendNebengeld);
+    case 'EA':
+      return eaFromBackend(doc as BackendEA);
   }
 }
 
@@ -42,7 +45,7 @@ export function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: C
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
 
   // Serverseitig ergänzte/verknüpfte Felder sollen das Create-Matching nicht stören.
-  if (resource === 'N') omitKeys.add('EWT');
+  if (resource === 'N' || resource === 'EA') omitKeys.add('EWT');
 
   const normalized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(source)) {

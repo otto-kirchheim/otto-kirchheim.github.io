@@ -25,9 +25,9 @@ export function getConfiguredNebenZulagen(existingCodes: string[] = []): IZulage
 
 export function normalizeNebengeldZulagen(item: Partial<IDatenN>): INebenZulage[] {
   if (Array.isArray(item.Zulagen) && item.Zulagen.length > 0) {
-    return item.Zulagen
-      .filter((zulage): zulage is INebenZulage => Boolean(zulage?.Typ) && Number.isFinite(zulage.Wert))
-      .filter(zulage => zulage.Wert > 0);
+    return item.Zulagen.filter(
+      (zulage): zulage is INebenZulage => Boolean(zulage?.Typ) && Number.isFinite(zulage.Wert),
+    ).filter(zulage => zulage.Wert > 0);
   }
 
   // Fallback für alte IndexedDB-Einträge vor Einführung von Zulagen

@@ -36,6 +36,7 @@ describe('#calculateBerechnungRows', () => {
         B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
         E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
         N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+        EA: { Minuten: 0 },
       },
     } as unknown as IVorgabenBerechnung;
 
@@ -50,7 +51,40 @@ describe('#calculateBerechnungRows', () => {
     expect(ergebnis.steuerfreieAbwesenheiten).toBeNull();
     expect(ergebnis.summeEwt).toBeNull();
     expect(ergebnis.summeNebenbezuege).toBeNull();
+    expect(ergebnis.eaMinuten).toBeNull();
     expect(ergebnis.summeGesamt).toBeNull();
+  });
+
+  it('zeigt eaMinuten als reine Stunden-Anzeige, ohne Einfluss auf summeGesamt', () => {
+    const datenMitEA = {
+      1: {
+        B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
+        E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
+        N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+        EA: { Minuten: 135 },
+      },
+    } as unknown as IVorgabenBerechnung;
+
+    const [ergebnis] = calculateBerechnungRows(datenMitEA, VorgabenGeldMock, 'Tarifkraft');
+
+    expect(ergebnis.eaMinuten).toBe(135);
+    // EA ist eine reine Stunden-Anzeige (kein Geldwert) — summeGesamt bleibt unberührt.
+    expect(ergebnis.summeGesamt).toBeNull();
+  });
+
+  it('eaMinuten bleibt null, wenn EA.Minuten 0 ist', () => {
+    const datenOhneEA = {
+      1: {
+        B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
+        E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
+        N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+        EA: { Minuten: 0 },
+      },
+    } as unknown as IVorgabenBerechnung;
+
+    const [ergebnis] = calculateBerechnungRows(datenOhneEA, VorgabenGeldMock, 'Tarifkraft');
+
+    expect(ergebnis.eaMinuten).toBeNull();
   });
 
   it('merged mehrmonatige VorgabenGeld-Overrides und rechnet Beamte (S8) mit BE8', () => {
@@ -63,6 +97,7 @@ describe('#calculateBerechnungRows', () => {
         B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
         E: { A8: 0, A14: 0, A24: 0, S8: 2, S14: 0 },
         N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+        EA: { Minuten: 0 },
       },
     } as unknown as IVorgabenBerechnung;
 

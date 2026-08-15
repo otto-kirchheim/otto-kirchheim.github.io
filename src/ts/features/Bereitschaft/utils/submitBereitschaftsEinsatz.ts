@@ -388,10 +388,10 @@ export default async function submitBereitschaftsEinsatz(
       await flushResource('BZ');
       if (needsBeFlush) await flushResource('BE');
       coverage = classifyBzCoverage(
-    getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
-    einsatzStart,
-    einsatzEnd,
-  );
+        getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
+        einsatzStart,
+        einsatzEnd,
+      );
     } catch (error) {
       Storage.set('dataBZ', savedData);
       Storage.set('dataBE', savedBeData);

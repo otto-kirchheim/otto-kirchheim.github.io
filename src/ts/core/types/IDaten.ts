@@ -6,10 +6,11 @@ export interface IMonatsDaten<EWTType = string> {
   BE: IDatenBE[];
   EWT: IDatenEWT<EWTType>[];
   N: IDatenN[];
+  EA: IDatenEA[];
 }
 
 export type IDatenAllValuesWithKey<BZType = string, EWTType = string> = {
-  [key: string]: IDatenBZValues<BZType> | IDatenBEValues | IDatenEWTValues<EWTType> | IDatenNValues;
+  [key: string]: IDatenBZValues<BZType> | IDatenBEValues | IDatenEWTValues<EWTType> | IDatenNValues | IDatenEAValues;
 };
 
 export type AtLeastOne<T, U = { [K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U];
@@ -19,6 +20,7 @@ export interface IDaten<BZType = string, EWTType = string> {
   BE?: IDatenBE[];
   EWT?: IDatenEWT<EWTType>[];
   N?: IDatenN[];
+  EA?: IDatenEA[];
 }
 
 type IDatenBZValues<BZType = string> = BZType | number | string | undefined;
@@ -80,4 +82,15 @@ export interface IDatenN {
   Zulagen?: INebenZulage[];
   zulagenAnzeigeN?: string;
   Auftragsnummer: string;
+}
+
+type IDatenEAValues = string | undefined;
+export interface IDatenEA {
+  [key: string]: IDatenEAValues;
+  _id?: string;
+  EWT?: string;
+  Tag: string;
+  Dauer: string;
+  Taetigkeit: string;
+  Entgeltgruppe: string;
 }

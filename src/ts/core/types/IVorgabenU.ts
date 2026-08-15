@@ -42,6 +42,10 @@ export interface IVorgabenUPers {
   kmnBhf: number;
   /** Schlüssel in die Geld-Vorgaben — siehe `TB_VALUES` im shared-Paket. */
   TB: TarifBesoldung;
+  /** Grundtätigkeit des Mitarbeiters (Kopf-Feld Entgeltausgleich-Formular), z.B. "Signalmechaniker RBEG". Optional: Bestandsnutzer ohne EA-Nutzung haben es (noch) nicht gepflegt. */
+  Taetigkeit?: string;
+  /** Entgeltgruppe der Grundtätigkeit (Kopf-Feld Entgeltausgleich-Formular), z.B. "105". Optional, siehe `Taetigkeit`. */
+  Entgeltgruppe?: string;
 }
 
 // --- Arbeitszeiten (neues per-Wochentag-Modell) ---

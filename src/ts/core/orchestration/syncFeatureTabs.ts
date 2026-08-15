@@ -11,13 +11,22 @@ const FEATURE_TAB_MAP: Record<string, string> = {
   bereitschaft: 'Bereitschaft',
   ewt: 'EWT',
   neben: 'Neben',
+  ea: 'EA',
 };
+
+/**
+ * Tabs, die bei leerem aktivierteTabs (Alt-User ohne explizite Einstellung) weiterhin automatisch
+ * an sind. 'ea' ist bewusst NICHT enthalten — der Tab mountet nur, wenn aktivierteTabs 'ea' explizit
+ * enthält, damit er für Bestands- und Neu-User nicht ungewollt standardmäßig sichtbar wird.
+ */
+const LEGACY_DEFAULT_ON_KEYS = ['bereitschaft', 'ewt', 'neben'];
 
 /** Ressourcen je Feature — vor dem Unmount geprüft, ob dort noch ungesynchte Änderungen liegen. */
 const FEATURE_RESOURCES: Record<string, TabResourceKey[]> = {
   Bereitschaft: ['BZ', 'BE'],
   EWT: ['EWT'],
   Neben: ['N'],
+  EA: ['EA'],
 };
 
 /** Anzeigename je Feature für die Warn-Snackbar. */
@@ -25,6 +34,7 @@ const FEATURE_LABELS: Record<string, string> = {
   Bereitschaft: 'Bereitschaft',
   EWT: 'EWT',
   Neben: 'Nebenbezüge',
+  EA: 'Entgeltausgleich',
 };
 
 /** Aktuell gemountete Feature-Namen — verhindert doppeltes register()/unregister() bei unverändertem Zustand. */
@@ -47,7 +57,7 @@ function hasUnsyncedChanges(name: string): boolean {
  * nächste erfolgreiche Aufruf (nächstes Speichern oder Login) holt das Unmounten automatisch nach.
  */
 export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Promise<void> {
-  const enabledKeys = !aktivierteTabs || aktivierteTabs.length === 0 ? Object.keys(FEATURE_TAB_MAP) : aktivierteTabs;
+  const enabledKeys = !aktivierteTabs || aktivierteTabs.length === 0 ? LEGACY_DEFAULT_ON_KEYS : aktivierteTabs;
 
   for (const [key, name] of Object.entries(FEATURE_TAB_MAP)) {
     const shouldBeMounted = enabledKeys.includes(key);

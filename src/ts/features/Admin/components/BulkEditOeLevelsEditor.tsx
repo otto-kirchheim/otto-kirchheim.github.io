@@ -63,8 +63,8 @@ export function BulkEditOeLevelsEditor({
             onRemoveLevel={onRemoveLevel}
           />
           <div class="small text-body-secondary mt-1">
-            Nur <span class="fw-semibold text-warning">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei
-            jedem Eintrag, der die Ebene hat.
+            Nur <span class="fw-semibold text-warning">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei jedem
+            Eintrag, der die Ebene hat.
           </div>
         </>
       )}

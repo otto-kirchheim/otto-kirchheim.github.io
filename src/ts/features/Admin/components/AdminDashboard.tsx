@@ -645,6 +645,7 @@ export function AdminDashboard() {
                   ],
                   ['Einsatzwechseltätigkeiten', stats.resources.einsatzwechseltaetigkeiten, stats.growth.ewtLast7d],
                   ['Nebengeld-Einträge', stats.resources.nebengeld, stats.growth.nebengeldLast7d],
+                  ['Entgeltausgleich-Einträge', stats.resources.entgeltausgleich, stats.growth.entgeltausgleichLast7d],
                 ] as [string, number, number][]
               ).map(([label, count, growth]) => (
                 <div key={label} class="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">

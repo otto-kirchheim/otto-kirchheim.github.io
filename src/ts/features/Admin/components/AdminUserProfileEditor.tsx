@@ -35,7 +35,6 @@ const BUNDESLAND_OPTIONS = [
   { value: 'TH', label: 'Thüringen' },
 ];
 
-
 // Felder in Pers die als Dropdown gerendert werden
 const PERS_SELECT_FIELDS: Record<string, { value: string; label: string }[] | readonly string[]> = {
   Bundesland: BUNDESLAND_OPTIONS,
@@ -62,6 +61,8 @@ const PERS_FIELD_LABELS: Record<string, string> = {
   nBhf: 'nächster Bhf',
   kmnBhf: 'km Bhf',
   TB: 'Tarif/Besoldung',
+  Taetigkeit: 'Tätigkeit (EA)',
+  Entgeltgruppe: 'Entgeltgruppe (EA)',
 };
 
 const JSON_SECTIONS = ['Fahrzeit', 'Arbeitszeit', 'VorgabenB', 'Einstellungen'] as const;
@@ -109,6 +110,10 @@ function persFieldToInput(key: string, value: unknown): string {
 
 function buildEditState(doc: Record<string, unknown>): EditState {
   const pers = { ...((doc['Pers'] ?? {}) as Record<string, unknown>) };
+  // Bestandsnutzer haben diese Felder noch nicht im Dokument (kein Schema-Default) -- ohne
+  // Default fehlt der Object-Key komplett und das Formularfeld wird gar nicht erst gerendert.
+  pers['Taetigkeit'] ??= '';
+  pers['Entgeltgruppe'] ??= '';
   const jsonValues: Record<string, unknown> = {};
   const jsonRaw: Record<string, string> = {};
 

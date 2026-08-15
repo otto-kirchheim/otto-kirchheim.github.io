@@ -48,6 +48,8 @@ export const PERS_FIELD_LABELS = {
   nBhf: 'Nächster Bahnhof',
   kmnBhf: 'Entfernung zum nächsten Bahnhof in km',
   TB: 'Tarif / Beamter',
+  Taetigkeit: 'Tätigkeit / Stellenbezeichnung',
+  Entgeltgruppe: 'Entgeltgruppe (Entgeltausgleich)',
 } as const;
 
 const DEFAULT_PERS_VALIDATION_SELECTORS = Object.keys(PERS_FIELD_LABELS).map(key => `#${key}`);
@@ -206,6 +208,14 @@ export function validatePersInput(input: ValidatableElement, opts: { normalize?:
 
     case 'TB':
       if (!VALID_TB_VALUES.has(normalizedValue)) validationMessage = `${label} bitte auswählen.`;
+      break;
+
+    // Optional (nur fuer Entgeltausgleich benoetigt) -- leer bleibt gueltig, sonst Zeichen pruefen.
+    case 'Taetigkeit':
+    case 'Entgeltgruppe':
+      if (normalizedValue !== '' && !TEXT_REGEX.test(normalizedValue)) {
+        validationMessage = `${label} enthält ungültige Zeichen.`;
+      }
       break;
 
     default:

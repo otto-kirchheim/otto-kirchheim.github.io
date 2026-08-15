@@ -4,16 +4,36 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
-import type { IBereitschaftszeitraumDownloadBody, INebengeldDownloadBody } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  IDatenBE,
+  IDatenBZ,
+  IDatenEA,
+  IDatenEWT,
+  IDatenN,
+  IVorgabenGeld,
+  IVorgabenGeldType,
+  IVorgabenU,
+} from '@/types';
+import type {
+  IBereitschaftszeitraumDownloadBody,
+  IEntgeltausgleichDownloadBody,
+  INebengeldDownloadBody,
+} from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
 import { downloadPdf } from '../api/apiService';
-import { filterByMonat, getMonatFromBE, getMonatFromBZ, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';
+import {
+  filterByMonat,
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEA,
+  getMonatFromN,
+  isEwtInMonat,
+} from '../date/getMonatFromItem';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
-export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N'): Promise<void> {
+export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N' | 'EA'): Promise<void> {
   if (button === null) return;
 
   if (!navigator.onLine) {
@@ -129,6 +149,18 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       } satisfies INebengeldDownloadBody['Daten'];
       break;
     }
+    case 'EA': {
+      const eaRaw = filterByMonat(tableToArray<IDatenEA>('tableEA'), Monat, getMonatFromEA);
+      data.Daten = {
+        EA: eaRaw.map(ea => ({
+          Tag: ea.Tag,
+          Dauer: ea.Dauer,
+          Taetigkeit: ea.Taetigkeit,
+          Entgeltgruppe: ea.Entgeltgruppe,
+        })),
+      } satisfies IEntgeltausgleichDownloadBody['Daten'];
+      break;
+    }
     default:
       throw new Error('Modus fehlt');
   }
@@ -144,6 +176,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
         B: 'RB',
         E: 'Verpfl',
         N: 'EZ',
+        EA: 'EA',
       };
       dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format('MM_YY')}_${localVorgabenU.Pers.Vorname} ${
         localVorgabenU.Pers.Nachname

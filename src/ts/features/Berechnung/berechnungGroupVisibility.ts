@@ -1,7 +1,7 @@
 import type { IBerechnungMonatsErgebnis } from './calculateBerechnungRows';
 
 /** Gruppen-Schlüssel identisch zu Einstellungen.aktivierteTabs (siehe updateTabVisibility.ts) */
-export type BerechnungGruppe = 'bereitschaft' | 'ewt' | 'neben';
+export type BerechnungGruppe = 'bereitschaft' | 'ewt' | 'neben' | 'ea';
 
 /**
  * Sichtbarkeitsregel für Berechnungs-Blöcke:
@@ -38,5 +38,7 @@ export function gruppeHatDaten(gruppe: BerechnungGruppe, ergebnis: IBerechnungMo
       );
     case 'neben':
       return ergebnis.summeNebenbezuege !== null;
+    case 'ea':
+      return ergebnis.eaMinuten !== null;
   }
 }

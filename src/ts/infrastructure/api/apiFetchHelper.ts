@@ -2,7 +2,8 @@ import { unwrapEnvelope } from '@/core';
 import type { ApiHttpResponse } from '@/core';
 import { FetchRetry } from './FetchRetry';
 
-export type ResourceName = 'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzwechseltaetigkeit' | 'nebengeld';
+export type ResourceName =
+  'bereitschaftszeitraum' | 'bereitschaftseinsatz' | 'einsatzwechseltaetigkeit' | 'nebengeld' | 'ea';
 
 /** Bulk-Operation Request */
 export interface BulkRequest<TCreate = unknown, TUpdate = unknown> {

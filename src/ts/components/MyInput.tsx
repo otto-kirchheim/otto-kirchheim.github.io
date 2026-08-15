@@ -28,6 +28,7 @@ type TModalBodyInputElementOption = {
   max?: string;
   minLength?: number | string;
   maxLength?: number | string;
+  list?: string;
   onInput?: (this: HTMLInputElement, ev: Event) => void;
   invalidFeedbackId?: string;
   invalidFeedbackText?: string;

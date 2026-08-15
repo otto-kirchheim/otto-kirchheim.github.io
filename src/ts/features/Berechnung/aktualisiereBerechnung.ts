@@ -3,6 +3,7 @@ import type {
   IDaten,
   IDatenBE,
   IDatenBZ,
+  IDatenEA,
   IDatenEWT,
   IDatenN,
   IVorgabenBerechnung,
@@ -14,10 +15,12 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import {
   getMonatFromBE,
   getMonatFromBZ,
+  getMonatFromEA,
   getMonatFromEWTBuchungstag,
   getMonatFromN,
 } from '@/infrastructure/date/getMonatFromItem';
 import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '@/features/Einstellungen/utils/zulagenCatalog';
+import { parseDauerToMinutes } from './calculateBerechnungRows';
 
 const CATALOG_BY_CODE = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
@@ -27,6 +30,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     BE: Storage.get<IDatenBE[]>('dataBE', { default: [] }),
     EWT: Storage.get<IDatenEWT[]>('dataE', { default: [] }),
     N: Storage.get<IDatenN[]>('dataN', { default: [] }),
+    EA: Storage.get<IDatenEA[]>('dataEA', { default: [] }),
   };
 
   const Berechnung: IVorgabenBerechnung = Storage.get<IVorgabenBerechnung>('datenBerechnung', {
@@ -38,6 +42,7 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
   const BE = normalizeResourceRows<IDatenBE>(datenQuelle.BE);
   const EWT = normalizeResourceRows<IDatenEWT>(datenQuelle.EWT);
   const N = normalizeResourceRows<IDatenN>(datenQuelle.N);
+  const EA = normalizeResourceRows<IDatenEA>(datenQuelle.EA);
 
   const filterByMonat = <T>(items: T[], getMonat: (item: T) => number, monat: number): T[] =>
     items.filter(item => getMonat(item) === monat);
@@ -47,7 +52,14 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     const BEMonat = filterByMonat(BE, getMonatFromBE, Monat);
     const EWTMonat = filterByMonat(EWT, getMonatFromEWTBuchungstag, Monat);
     const NMonat = filterByMonat(N, getMonatFromN, Monat);
-    Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(BZMonat, BEMonat, EWTMonat, NMonat);
+    const EAMonat = filterByMonat(EA, getMonatFromEA, Monat);
+    Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(
+      BZMonat,
+      BEMonat,
+      EWTMonat,
+      NMonat,
+      EAMonat,
+    );
   }
 
   Storage.set<IVorgabenBerechnung>('datenBerechnung', Berechnung);
@@ -60,11 +72,13 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
     BEMonat: IDatenBE[],
     EWTMonat: IDatenEWT[],
     NMonat: IDatenN[],
+    EAMonat: IDatenEA[],
   ): IVorgabenBerechnungMonat {
     const Berechnung: IVorgabenBerechnungMonat = {
       B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
       E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
       N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
+      EA: { Minuten: 0 },
     };
 
     BZMonat.forEach(value => {
@@ -151,6 +165,10 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
           // Ganzkoerperreinigung: noch nicht berechnet
         }
       }
+    });
+
+    EAMonat.forEach(entry => {
+      Berechnung.EA.Minuten += parseDauerToMinutes(entry.Dauer);
     });
 
     return Berechnung;

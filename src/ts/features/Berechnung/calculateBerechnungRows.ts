@@ -20,6 +20,13 @@ export const timeConvert = (num: number): string => {
   return `${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
+/** Kehrfunktion zu `timeConvert`: parst eine "HH:mm"-Zeitspanne in die Gesamtminuten. */
+export const parseDauerToMinutes = (value: string): number => {
+  const [stunden, minuten] = value.split(':').map(Number);
+  if (!Number.isFinite(stunden) || !Number.isFinite(minuten)) return 0;
+  return stunden * 60 + minuten;
+};
+
 export const formatCurrency = (value: number): string =>
   value.toLocaleString('de-DE', {
     style: 'currency',
@@ -43,6 +50,8 @@ export interface IBerechnungMonatsErgebnis {
   steuerfreieAbwesenheiten: { s8: number | null; s14: number | null } | null;
   summeEwt: number | null;
   summeNebenbezuege: number | null;
+  /** Reine Stunden-Anzeige (Minuten), kein Geldwert — fließt bewusst nicht in summeGesamt ein. */
+  eaMinuten: number | null;
   summeGesamt: number | null;
 }
 
@@ -97,6 +106,7 @@ export default function calculateBerechnungRows(
       steuerfreieAbwesenheiten: null,
       summeEwt: null,
       summeNebenbezuege: null,
+      eaMinuten: null,
       summeGesamt: null,
     };
 
@@ -162,6 +172,12 @@ export default function calculateBerechnungRows(
     } else {
       sums[2] = 0;
     }
+
+    // Reine Stunden-Anzeige — bewusst außerhalb von sums[], fließt nicht in summeGesamt ein.
+    // item.EA kann bei gecachtem datenBerechnung aus einer Session vor Einführung von EA fehlen
+    // (Storage-Snapshot wird beim App-Start ungeprüft gerendert, siehe Berechnung/index.ts).
+    const eaMinuten = item.EA?.Minuten ?? 0;
+    if (eaMinuten > 0) ergebnis.eaMinuten = eaMinuten;
 
     if (sums.length !== 0 && (sums[0] || sums[1] || sums[2]))
       ergebnis.summeGesamt = (sums[0] ?? 0) + (sums[1] ?? 0) + (sums[2] ?? 0);

@@ -1,10 +1,11 @@
 import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEWT, IDatenN, TResourceKey } from '@/types';
+import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, TResourceKey } from '@/types';
 import {
   type BulkErrorEntry,
   type BulkRequest,
   bereitschaftseinsatzApi,
   bereitschaftszeitraumApi,
+  eaApi,
   ewtApi,
   nebengeldApi,
 } from '../api/apiService';
@@ -137,6 +138,43 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
   if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
 }
 
+export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
+  if (deletedIds.length === 0) return;
+
+  const deletedIdSet = new Set(deletedIds);
+
+  const currentDataEA = Storage.get<IDatenEA[]>('dataEA', { default: [] });
+  let storageChanged = false;
+  const nextDataEA = currentDataEA.map(item => {
+    if (!item.EWT || !deletedIdSet.has(item.EWT)) return item;
+    storageChanged = true;
+    const { EWT: _removed, ...withoutRef } = item;
+    return withoutRef as IDatenEA;
+  });
+  if (storageChanged) {
+    Storage.set('dataEA', nextDataEA);
+  }
+
+  const eaTable = findTable<IDatenEA>(RESOURCE_TABLE_ID_MAP.EA);
+  if (!eaTable) return;
+
+  let tableChanged = false;
+  for (const row of eaTable.rows.array) {
+    if (row._state === 'deleted') continue;
+    const ref = (row.cells as IDatenEA).EWT;
+    if (!ref || !deletedIdSet.has(ref)) continue;
+
+    const { EWT: _removed, ...withoutRef } = row.cells as IDatenEA;
+    row.cells = withoutRef as IDatenEA;
+    if (row._state === 'unchanged') {
+      row._originalCells = { ...(withoutRef as IDatenEA) };
+    }
+    tableChanged = true;
+  }
+
+  if (tableChanged && typeof eaTable.drawRows === 'function') eaTable.drawRows();
+}
+
 export async function sendBulk(
   resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
@@ -170,6 +208,10 @@ export async function sendBulk(
       }
       case 'N': {
         const parsed = dayjs((item as IDatenN).Tag, 'DD.MM.YYYY', true);
+        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
+      }
+      case 'EA': {
+        const parsed = dayjs((item as IDatenEA).Tag, 'DD.MM.YYYY', true);
         return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
       }
     }
@@ -250,6 +292,12 @@ export async function sendBulk(
       case 'N':
         return nebengeldApi.bulk(
           bulk as { create: (IDatenN & { clientRequestId: string })[]; update: IDatenN[]; delete: string[] },
+          period.monat,
+          period.jahr,
+        );
+      case 'EA':
+        return eaApi.bulk(
+          bulk as { create: (IDatenEA & { clientRequestId: string })[]; update: IDatenEA[]; delete: string[] },
           period.monat,
           period.jahr,
         );

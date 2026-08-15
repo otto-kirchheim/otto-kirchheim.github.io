@@ -1,9 +1,15 @@
-import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/types';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromEWT, getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
+import {
+  getMonatFromBE,
+  getMonatFromBZ,
+  getMonatFromEA,
+  getMonatFromEWT,
+  getMonatFromN,
+} from '@/infrastructure/date/getMonatFromItem';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
 
-const MONTH_AWARE_STORAGE_NAMES: TStorageData[] = ['dataBZ', 'dataBE', 'dataE', 'dataN'];
+const MONTH_AWARE_STORAGE_NAMES: TStorageData[] = ['dataBZ', 'dataBE', 'dataE', 'dataN', 'dataEA'];
 
 export function isSessionErrorMessage(message: string): boolean {
   return /session ungültig|abgemeldet|token|erneuerung/i.test(message);
@@ -66,6 +72,7 @@ export function countByMonth(rows: unknown, storageName: TStorageData): Map<numb
     else if (storageName === 'dataBE') m = getMonatFromBE(row as IDatenBE);
     else if (storageName === 'dataE') m = getMonatFromEWT(row as IDatenEWT);
     else if (storageName === 'dataN') m = getMonatFromN(row as IDatenN);
+    else if (storageName === 'dataEA') m = getMonatFromEA(row as IDatenEA);
 
     const bucket = m > 0 ? m : 0;
     monthCount.set(bucket, (monthCount.get(bucket) ?? 0) + 1);
@@ -92,6 +99,11 @@ export function rowMatchesMonth(storageName: TStorageData, row: unknown, month: 
 
   if (storageName === 'dataN' && row) {
     const m = getMonatFromN(row as IDatenN);
+    return month === 0 ? m <= 0 : m === month;
+  }
+
+  if (storageName === 'dataEA' && row) {
+    const m = getMonatFromEA(row as IDatenEA);
     return month === 0 ? m <= 0 : m === month;
   }
 

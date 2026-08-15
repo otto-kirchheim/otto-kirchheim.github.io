@@ -248,8 +248,12 @@ export default function calculateBereitschaftsZeiten(
       !!nachtOverride.regelarbeitstage ||
       Object.keys(nachtOverride.overrides ?? {}).length > 0);
   const nachtSchichtMerged: IPerWeekdaySchicht | null =
-    hasNachtOverride && datenU.Arbeitszeit.nacht.aktiv ? mergePerWeekdaySchicht(datenU.Arbeitszeit.nacht, nachtOverride) : null;
-  const fallbackNachtPause = datenU.Arbeitszeit.nacht.aktiv ? datenU.Arbeitszeit.nacht.default.pause : NACHT_PAUSEN_VORGABE;
+    hasNachtOverride && datenU.Arbeitszeit.nacht.aktiv
+      ? mergePerWeekdaySchicht(datenU.Arbeitszeit.nacht, nachtOverride)
+      : null;
+  const fallbackNachtPause = datenU.Arbeitszeit.nacht.aktiv
+    ? datenU.Arbeitszeit.nacht.default.pause
+    : NACHT_PAUSEN_VORGABE;
   const nachtSchichten: Schicht[] = nacht
     ? getNachtSchichten(nachtAnfang, nachtEnde, nachtSchichtMerged, fallbackNachtPause)
     : [];

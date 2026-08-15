@@ -24,6 +24,7 @@ import {
   collectRowErrorMatches,
   findTable,
   sendBulk,
+  unlinkEaRefsForDeletedEwtIds,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from './savePipeline';
 import {
@@ -88,6 +89,14 @@ const resourceStates: Record<TResourceKey, ResourceState> = {
     skipNextSavingSchedule: false,
   },
   N: {
+    timer: null,
+    status: 'idle',
+    lastSaved: null,
+    lastError: null,
+    queuedDuringSave: false,
+    skipNextSavingSchedule: false,
+  },
+  EA: {
     timer: null,
     status: 'idle',
     lastSaved: null,
@@ -210,7 +219,7 @@ export function cancelAllPending(resetStatus = true): void {
 export async function flushAll(): Promise<void> {
   cancelAllPending(false);
   const promises: Promise<void>[] = [];
-  for (const key of ['BZ', 'BE', 'EWT', 'N'] as const) {
+  for (const key of ['BZ', 'BE', 'EWT', 'N', 'EA'] as const) {
     if (hasPendingResourceChanges(key, true)) {
       promises.push(saveResourceNow(key, true));
     } else if (resourceStates[key].status === 'pending') {
@@ -243,7 +252,7 @@ export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings
 export function initAutoSaveEventListener(): void {
   onEvent('data:changed', ({ resource }) => {
     if (resource === 'all') {
-      for (const key of ['BZ', 'BE', 'EWT', 'N'] as const) {
+      for (const key of ['BZ', 'BE', 'EWT', 'N', 'EA'] as const) {
         scheduleAutoSave(key);
       }
     } else if (resource !== 'settings') {
@@ -417,6 +426,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
     if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
       unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
+      unlinkEaRefsForDeletedEwtIds(result.deleted);
     }
 
     updateLocalStorage(resource, table);

@@ -160,7 +160,11 @@ function NebenTab() {
       <hr />
 
       <div class="table-responsive">
-        <table id="tableN" class="table table-bordered table-striped table-hover align-middle" aria-label="Nebengeld"></table>
+        <table
+          id="tableN"
+          class="table table-bordered table-striped table-hover align-middle"
+          aria-label="Nebengeld"
+        ></table>
       </div>
     </div>
   );
