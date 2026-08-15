@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15 (4)
+
+### feat (PDF-Vorlagen-Pipeline: Versionsauflösung verdrahten, Phase 6)
+
+- **Neue Dependency `zod`.**
+- **`infrastructure/pdf/configSchema.ts`:** spiegelt das Typsystem aus `@otto-kirchheim/nebengeld-shared` (`formular/types.ts`) als Zod-Schema. `parseRegistry(json: unknown): Registry` validiert die vom Server geladene Konfiguration (zur Laufzeit `unknown`) und wirft `ZodError` statt eines stillen Fehlverhaltens bei kaputten/unerwarteten Daten.
+- **Dev-Testseite umgestellt:** `pdf-test.ts` ruft jetzt `resolve(registry, 'ez', leistungsdatum)` statt eine feste `Version` zu verwenden — Registry mit zwei Testversionen (`v1` bis 2026-01-01, `v2` danach offen), neues Datumsfeld auf der Testseite steuert die Auflösung, Titel im PDF zeigt zur Kontrolle die getroffene Version.
+- **Tests:** `configSchema.test.ts` — valide Registry parst korrekt; kaputte Eingaben (fehlendes Pflichtfeld, falscher Feldtyp, komplett falsche Form: Array/`null`/String) werfen `ZodError` statt eines Laufzeitabsturzes; unbekannte Zusatzfelder werden toleriert (kein `.strict()`); Integrationstest bestätigt dieselben Datumsgrenzfälle wie mit Handdaten (siehe `shared`s `resolve.test.ts`) auch über den Schema-validierten Pfad.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Rein automatisiert, kein manueller Schritt nötig (reine Logik laut Plan).
+
 ## 2026-08-15 (3)
 
 ### feat (PDF-Vorlagen-Pipeline: Mehrseitigkeit, Phase 5)

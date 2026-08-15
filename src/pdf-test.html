@@ -23,9 +23,12 @@
   <body>
     <h1>PDF-Vorlagen-Pipeline – Testseite</h1>
     <p>
-      Nur für die manuelle Verifikation der Phasen 3/4 (Renderer-Grundgerüst, Canvas-Unterschrift). Kein Teil der
-      echten App, nicht im Produktions-Build enthalten.
+      Nur für die manuelle Verifikation der Phasen 3-6 (Renderer-Grundgerüst, Canvas-Unterschrift,
+      Mehrseitigkeit, Versionsauflösung). Kein Teil der echten App, nicht im Produktions-Build enthalten.
     </p>
+    <label for="leistungsdatum">Leistungsdatum (steuert die aufgelöste Version):</label>
+    <input type="date" id="leistungsdatum" value="2026-06-15" />
+    <p>Testregistry kennt zwei Versionen: <code>v1</code> bis 2026-01-01, danach <code>v2</code> (offen).</p>
     <button id="erzeugen">PDF erzeugen</button>
 
     <div id="pad-bereich" style="display: none">
