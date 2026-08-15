@@ -78,7 +78,7 @@ async function erzeugeUndLade(signaturPng?: string): Promise<void> {
 
 const padBereich = document.getElementById('pad-bereich') as HTMLDivElement;
 const canvas = document.getElementById('pad') as HTMLCanvasElement;
-const pad = erstelleSignaturPad(canvas);
+let pad: ReturnType<typeof erstelleSignaturPad> | undefined;
 
 document.getElementById('erzeugen')?.addEventListener('click', async () => {
   const ja = await confirmDialog('Jetzt unterschreiben?', {
@@ -93,14 +93,18 @@ document.getElementById('erzeugen')?.addEventListener('click', async () => {
     return;
   }
 
+  // Canvas ist bis hierher `display: none` -- offsetWidth/offsetHeight wären 0, wenn das Pad
+  // vorher erstellt würde (skaliereFuerDisplay() liest die Anzeigegröße direkt vom Element).
+  // Deshalb erst nach dem Sichtbar-Schalten erstellen.
   padBereich.style.display = 'block';
+  pad = erstelleSignaturPad(canvas);
 });
 
-document.getElementById('pad-loeschen')?.addEventListener('click', () => pad.clear());
+document.getElementById('pad-loeschen')?.addEventListener('click', () => pad?.clear());
 
 document.getElementById('pad-fertig')?.addEventListener('click', async () => {
-  const png = holeSignaturPng(pad);
+  const png = pad ? holeSignaturPng(pad) : null;
   await erzeugeUndLade(png ?? undefined);
   padBereich.style.display = 'none';
-  pad.clear();
+  pad?.clear();
 });
