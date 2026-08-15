@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-15 (5)
+
+### feat (PDF-Vorlagen-Pipeline: Minimal-Admin-UI für Vorlagen-Upload, Phase 7)
+
+- **Neue Komponente `features/Admin/components/FormularUpload.tsx`:** lädt zwei PDF-Vorlagen (einseitig + mehrseitig, "zwei Vorlagendateien je Version" laut Konzept) hoch und legt darüber eine neue Formular-Version im Backend an. Koordinaten-Config als JSON über die bestehende `JsonEditor.tsx`-Komponente (Wiederverwendung wie geplant) — bewusst schlicht, wird in Phase 13 zur vollen Drag/Resize-Oberfläche ausgebaut, JSON-Modus bleibt dann als Power-User-Fallback.
+- **`FetchRetry` kann keine Multipart-Bodies senden** (JSON-only) — Upload nutzt einen eigenen Roh-`fetch()` mit denselben Auth-Headern (`getServerUrl()`/`Storage`-Token), Versionsanlage selbst läuft über `FetchRetry` (JSON).
+- **Neuer Admin-Tab "Formular-Vorlagen"** in `features/Admin/index.tsx`, sichtbar ab Team-Admin (passend zur Backend-Rollenschwelle `authorize(Role.TEAM_ADMIN)` für die Upload-Routen) — kein neues Capability-Flag nötig, reine Rollen-Prüfung wie serverseitig.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1464/1464) grün. Kein dedizierter Komponententest — die Plan-Verifikation für Phase 7 sieht hierfür explizit den manuellen End-zu-End-Durchlauf vor (PDF hochladen, Version anlegen, beide ausgelieferten PDFs prüfen), noch nicht durchgeführt.
+
 ## 2026-08-15 (4)
 
 ### feat (PDF-Vorlagen-Pipeline: Versionsauflösung verdrahten, Phase 6)
