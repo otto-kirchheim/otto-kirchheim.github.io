@@ -1,5 +1,5 @@
-import { FORMAT, OPS, datumMitFrist, get } from '@otto-kirchheim/nebengeld-shared';
-import type { Daten, Feld, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { FORMAT, OPS, datumMitFrist, get, listenBeschriftung, schluesselAufPlatz } from '@otto-kirchheim/nebengeld-shared';
+import type { Daten, Feld, ListenAufloesung, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /** Zeilen je Tabellen-Key -- eine Version kann mehrere Datentabellen tragen. */
 export type TabellenZeilen = Record<string, Zeile[]>;
@@ -15,6 +15,9 @@ export interface Kontext {
   $alle: TabellenZeilen;
   seite: number;
   seiten: number;
+  /** Platzvergabe der dynamischen Spaltengruppen je Tabelle -- Grundlage der Spaltenüberschriften.
+   * Einmal je Dokument bestimmt, damit auf jeder Seite dieselbe Zulage über derselben Spalte steht. */
+  listen: Record<string, ListenAufloesung>;
   /** Erzeugungszeitpunkt -- als Wert im Kontext statt `new Date()` im Renderer, damit das
    * Unterschriftsdatum und der Platzhalter `{heute}` testbar bleiben. */
   heute: Date;
@@ -78,7 +81,14 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
 export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): string {
   let roh: unknown;
 
-  if (f.text !== undefined) {
+  if (f.listenKopf) {
+    // Überschrift eines dynamischen Spaltenplatzes: welcher Schlüssel dort steht, entscheiden die
+    // Daten. Unbelegte Plätze bleiben leer, damit im Formular keine Geisterspalte beschriftet wird.
+    const aufloesung = kontext.listen[f.listenKopf.tabelle];
+    const schluessel = schluesselAufPlatz(aufloesung, f.listenKopf.gruppe, f.listenKopf.index);
+    const gruppe = aufloesung?.gruppen[f.listenKopf.gruppe];
+    return schluessel === undefined || !gruppe ? '' : listenBeschriftung(gruppe, schluessel);
+  } else if (f.text !== undefined) {
     // Platzhalter-Ersetzung liefert bereits fertigen Text -- ein `format` würde ihn nur zerstören.
     return ersetzePlatzhalter(f.text, daten, kontext);
   } else if (f.quellen) {

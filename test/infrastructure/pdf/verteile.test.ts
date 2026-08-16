@@ -4,15 +4,14 @@ import type { Layout, SeitenDef, Zeile } from '@otto-kirchheim/nebengeld-shared'
 
 const MAX_ZEILEN = 2;
 
-function macheSeite(quelle: number): SeitenDef {
-  return { quelle, bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: MAX_ZEILEN }], felder: {} };
+function macheSeite(quelle: number, extra: Partial<SeitenDef> = {}): SeitenDef {
+  return { quelle, bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: MAX_ZEILEN }], felder: {}, ...extra };
 }
 
-// Ein Layout: erste Seite (Kopf+Zeilen) + weitere Seite (Kennzeile+Zeilen), wiederholt bei Bedarf.
+// Zwei Seiten: die erste einmalig (Kopf+Zeilen), die zweite bei Überlauf wiederholt.
 const layout: Layout = {
   template: 'test.pdf',
-  ersteSeite: macheSeite(0),
-  weitereSeite: macheSeite(1),
+  seiten: [macheSeite(0), macheSeite(1, { wiederholt: true })],
 };
 
 function macheZeilen(anzahl: number): Zeile[] {
@@ -62,14 +61,23 @@ describe('verteile', () => {
     }
   });
 
-  it('Überlauf wiederholt die weitereSeite beliebig oft', () => {
-    // 9 Zeilen, Kapazität pro Seite 2 -> erste(2) + weitere viermal (2+2+2+1).
+  it('Überlauf wiederholt die als wiederholt markierte Seite beliebig oft', () => {
+    // 9 Zeilen, Kapazität pro Seite 2 -> erste(2) + wiederholte viermal (2+2+2+1).
     expect(groessen(macheZeilen(9))).toEqual([2, 2, 2, 2, 1]);
+    expect(verteile({ haupt: macheZeilen(9) }, layout).map(b => b.def.quelle)).toEqual([0, 1, 1, 1, 1]);
   });
 
-  it('wirft, wenn Zeilen übrig bleiben und keine weitereSeite konfiguriert ist', () => {
-    const kleinesLayout: Layout = { template: 'x', ersteSeite: macheSeite(0) };
-    expect(() => verteile({ haupt: macheZeilen(3) }, kleinesLayout)).toThrow('1 Zeilen (haupt) passen in kein Layout');
+  it('wirft, wenn Zeilen übrig bleiben und keine Seite wiederholt wird', () => {
+    const kleinesLayout: Layout = { template: 'x', seiten: [macheSeite(0)] };
+    expect(() => verteile({ haupt: macheZeilen(3) }, kleinesLayout)).toThrow('keine Seite ist als wiederholt markiert');
+  });
+
+  it('wirft, wenn die wiederholte Seite für die Tabelle keinen Bereich hat', () => {
+    const layoutOhneBereich: Layout = {
+      template: 'x',
+      seiten: [macheSeite(0), { quelle: 1, bereiche: [{ tabelle: 'andere', startY: 700, maxZeilen: 5 }], felder: {}, wiederholt: true }],
+    };
+    expect(() => verteile({ haupt: macheZeilen(3) }, layoutOhneBereich)).toThrow('Tabelle "haupt" hat auf keiner wiederholten Seite einen Bereich');
   });
 
   it('behält die Zeilenreihenfolge über Seitenwechsel hinweg bei', () => {
@@ -77,5 +85,43 @@ describe('verteile', () => {
     const bloecke = verteile({ haupt: zeilen }, layout);
     const wiederhergestellt = bloecke.flatMap(b => b.zeilen.haupt ?? []);
     expect(wiederhergestellt).toEqual(zeilen);
+  });
+});
+
+describe('verteile – mehrere unterschiedliche Seiten (Bereitschaft)', () => {
+  // Seite 1: BZ-Zeiträume. Seite 2: Einsätze LRE 1+2. Seite 3: Einsätze LRE 3, wiederholt.
+  const bereitschaft: Layout = {
+    template: 'b.pdf',
+    seiten: [
+      { quelle: 0, bereiche: [{ tabelle: 'bz', startY: 700, maxZeilen: 3 }], felder: {} },
+      { quelle: 1, bereiche: [{ tabelle: 'be12', startY: 700, maxZeilen: 2 }], felder: {} },
+      { quelle: 2, bereiche: [{ tabelle: 'be3', startY: 700, maxZeilen: 2 }], felder: {}, wiederholt: true },
+    ],
+  };
+
+  it('lässt Seiten weg, deren Tabellen keine Zeilen haben', () => {
+    const bloecke = verteile({ bz: macheZeilen(2), be12: [], be3: [] }, bereitschaft);
+    expect(bloecke.map(b => b.def.quelle)).toEqual([0]);
+  });
+
+  it('nimmt die BE-Seite nur bei vorhandenen Einsätzen dazu', () => {
+    const bloecke = verteile({ bz: macheZeilen(1), be12: macheZeilen(1), be3: [] }, bereitschaft);
+    expect(bloecke.map(b => b.def.quelle)).toEqual([0, 1]);
+  });
+
+  it('wiederholt nur die letzte Seite, die anderen bleiben einmalig', () => {
+    const bloecke = verteile({ bz: macheZeilen(1), be12: macheZeilen(1), be3: macheZeilen(5) }, bereitschaft);
+    expect(bloecke.map(b => b.def.quelle)).toEqual([0, 1, 2, 2, 2]);
+    expect(bloecke.map(b => (b.zeilen.be3 ?? []).length)).toEqual([0, 0, 2, 2, 1]);
+  });
+
+  it('rendert eine Seite ohne Datentabelle immer (reine Text-/Unterschriftsseite)', () => {
+    const mitAbschluss: Layout = {
+      template: 'x',
+      seiten: [macheSeite(0, { wiederholt: true }), { quelle: 5, bereiche: [], felder: {} }],
+    };
+    const bloecke = verteile({ haupt: macheZeilen(3) }, mitAbschluss);
+    // Die wiederholte Seite kommt komplett VOR der Abschlussseite, nicht dazwischen.
+    expect(bloecke.map(b => b.def.quelle)).toEqual([0, 0, 5]);
   });
 });

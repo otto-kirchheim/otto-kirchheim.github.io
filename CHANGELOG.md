@@ -2,6 +2,93 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-16 (13)
+
+### fix (Bereitschaft-Datenkatalog: BZ/BE vermischt)
+
+- **User-Fund:** „BZ Beginn+Ende ist timedate, BE Beginn+Ende ist nur time. Warum sind die Werte der
+  2 Tabellen vermischt?" `datenKatalog.ts` bot `Beginn`/`Ende` als EINEN Eintrag fuer beide
+  Zeilenquellen (BZ: voller Zeitstempel, BE: reine `"HH:mm"`), und `katalogZeilenFelder()` filterte
+  nie nach Tabelle — der Editor zeigte beim Bearbeiten der BZ-Tabelle auch BE-Felder mit an und
+  umgekehrt.
+- **`datenKatalog.ts`:** neues `KatalogEintrag.quelle`, `katalogZeilenFelder()`/`beispielWert()`
+  filtern jetzt danach; `FeldPanel.tsx`/`dummyDaten.ts` reichen `tabelle.quelle` durch. BE-
+  Beispielwerte (`15:45`/`07:00`, die volle BZ-Zeitraumspanne) auf `01:15`/`02:00` korrigiert — ein
+  kurzer Anruf waehrend des Zeitraums, siehe `createAddModalBereitschaftsEinsatz.tsx`.
+
+### feat (Ankreuz-Bedingungen: Wertebereich, Berechnung, Wiederverwendung)
+
+- **User-Fund:** „Berechnen Zeitraum von Abfahrt bis Ankunft Einsatzort — wenn Wert ab 8:00 und unter
+  14:00, muss angekreuzt werden." `Spalte.wenn` konnte nur Mitgliedschaft in einer festen Werteliste
+  gegen ein rohes Zeilenfeld pruefen.
+  - `AnkreuzBedingung` (`FeldPanel.tsx`): Umschalter Feld/Berechnung (Rechnung wiederverwendet aus
+    `Spalte.berechnet`) und Werte-Liste/Wertebereich (`von`/`bis`, `von` einschliesslich, `bis`
+    ausschliesslich — Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert).
+  - **User-Nachtrag:** Bereich war zunaechst fest auf Uhrzeit/Zahl gelesen; neue `alsVergleichswert()`
+    (`shared`) erkennt den Werttyp selbst.
+  - **User-Nachtrag:** bereits angelegte berechnete/Ankreuz-Spalten derselben Tabelle sind jetzt im
+    Feld-Dropdown der Bedingung waehlbar (`andereBerechnete`), statt dieselbe Rechnung ein zweites Mal
+    aufzubauen — moeglich, weil `mitBerechnetenSpalten()` (`shared`) ihren Wert schon unter `key` in
+    die Zeile eintraegt.
+  - **User-Nachtrag:** dieselbe Wiederverwendung jetzt auch bei Summenfeldern (`Feld.berechnet` in
+    `FeldZeile`) — inklusive Ankreuz-Spalten, deren Ergebnis `mitBerechnetenSpalten()` bisher GAR NICHT
+    in die Zeile eintrug (mit einem numerischen `dann`, z.B. `'1'` statt `'X'`, zaehlt eine Summe
+    darueber jetzt die zutreffenden Zeilen — z.B. Anzahl LRE-1-Einsaetze ohne eigene gefilterte
+    Tabelle).
+- **Bugfix aus derselben Runde:** `Spalte.key` war nur im Modus „Datenfeld" editierbar, in „Berechnet"/
+  „Ankreuzen" blieb er unsichtbar eingefroren; „+ Spalte" vergab fuer jede neue Spalte denselben
+  Default-Schluessel — zwei neue Spalten ohne manuelle Umbenennung ueberschrieben sich gegenseitig in
+  Bedingungen/Summen. `SpalteZeile` zeigt jetzt ein eigenes Schluessel-Feld in diesen Modi,
+  `eindeutigerSpaltenSchluessel()` vergibt beim Anlegen einen von den bestehenden Spalten
+  unterscheidbaren Default.
+- **Verifikation:** `shared` 76/76, Frontend `tsc --noEmit`/Build gruen, gezielte Tests
+  (Formular-Editor + PDF-Infrastruktur) 124/124, `eslint` auf den geaenderten Dateien sauber. Voller
+  Frontend-Lauf (`bun test --isolate`) 1553/1560 — die 7 Fehlschlaege liegen in
+  `Bereitschaft.test.ts`/`Bereitschaft.submitBereitschaftsEinsatz.test.ts` (Zeitzonen-/DST-Artefakt
+  gegen fest codierte `2023-04-…`-Fixture-Daten), unberuehrt von dieser Aenderung.
+
+## 2026-08-16 (12)
+
+### feat (Formular-Versionen bearbeiten und loeschen, Phase 8.4)
+
+- **User-Fund:** „Formular-Vorlage sollen nicht nur hochgeladen, sondern auch geloescht und bearbeitet werden koennen (falls ein Fehler entstanden ist)."
+- **`FormularVersionenListe.tsx` (neu):** Bestandsliste der Versionen je Formular mit „Bearbeiten" und „Loeschen".
+- **`formularVersionenApi.ts` (neu):** Upload, Liste, Anlegen, Aendern, Loeschen sowie `holeVorlageAlsDatei()` — der Editor arbeitet gegen eine lokale `File`, die gespeicherte PDF wird dafuer zurueckgeholt. `ApiFehler` traegt den Statuscode, damit der Intervall-Konflikt (409) erkennbar bleibt.
+- **`FormularUpload.tsx`:** dieselbe Maske dient Anlegen und Bearbeiten. Ohne neue Datei bleibt die gespeicherte PDF stehen (kein zweiter Upload derselben Bytes); bei 409 fragt ein Dialog, ob der luckenhafte Zwischenstand trotzdem gespeichert bzw. geloescht werden soll — noetig, um die Vorgaengerversion vor dem Anlegen einer Nachfolgerin zu schliessen.
+
+### feat (Seitenfolge statt erste/weitere Seite + seitenspezifische Spalten, Phase 8.4)
+
+- **User-Fund:** „Bereitschaft sieht zwischen Seite 1, 2 und 3 unterschiedlich aus … Seite 3 und 4 sind aber gleich" und „die Spalten sind auf den Seiten nicht unbedingt gleich".
+- **`Konfig`/`Layout`:** `seiten: SeitenDef[]` ersetzt `ersteSeite`/`weitereSeite?`; eine Seite mit `wiederholt` wird bei Ueberlauf so oft gedruckt, wie Zeilen uebrig sind.
+- **`verteile.ts`:** laeuft die Seitenfolge der Reihe nach ab. Seite 1 kommt immer, jede weitere nur, wenn ihre Tabellen Zeilen haben oder sie gar keine Datentabelle traegt (reine Text-/Unterschriftsseite) — damit entfaellt die BE-Seite, wenn es keine Einsaetze gab. Wiederholungen entstehen direkt an ihrer Stelle in der Folge, nicht am Ende, damit eine nachgelagerte Abschlussseite dahinter landet.
+- **`TabellenBereich.spalten?`:** eigenes Spaltenraster je Seite (`spaltenFuer()` aus `shared` als gemeinsame Regel fuer Renderer, Editor und Vorschau). Im Editor per „eigene je Seite" umschaltbar, die vorhandenen Spalten werden dabei als Ausgangspunkt kopiert.
+- **`FormularEditor.tsx`:** Seiten-Tabs sind dynamisch (anlegen/entfernen), mit Wiederholungs-Schalter und „Einstellungen uebernehmen von <Seite>" — kopiert Felder, Tabellenbereiche und Signaturflaeche einer anderen Seite, behaelt aber die eigene Vorlagenseite.
+- **`dummyDaten.ts`:** Zeilenbedarf ueber alle Seiten summiert (plus eine Zeile, sobald eine Seite wiederholt wird); Testdaten befuellen auch Spalten, die es nur im Raster einer einzelnen Seite gibt.
+
+### feat (gedrehter Text und dynamische Spalten, Phase 8.4)
+
+- **User-Fund:** „es gibt Zettel, wo der Text um 90° gedreht ist" und „die Zulagen bei EZ funktionieren etwas anderes … das Feld Zulagen ist eine Liste, hier muss auch noch eine Überschrift mit festgelegt werden".
+- **`zeichne.ts`:** `drehung` (0/90/180/270) je Zelle. Gerechnet wird nicht mehr in x/y, sondern in Lauf- und Querachse — dieselben Formeln, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich. Ausrichtung wirkt entlang der Laufrichtung, die Zentrierung quer dazu; ohne Querkante bleibt die gesetzte Koordinate wie bisher die Grundlinie.
+- **Dynamische Spalten (`ListenGruppe`):** eine Zeile trägt unter `Zulagen` eine Liste, das Formular hat dafür feste Spaltenplätze. Welcher Schlüssel welchen Platz belegt, wird EINMAL je Dokument über alle Zeilen bestimmt (`listenBelegung`) — sonst stünde auf Seite 2 eine andere Zulage über derselben Spalte. `Spalte.listenPlatz` druckt den Wert der Zeile zu diesem Schlüssel, `Feld.listenKopf` die zugehörige Überschrift (Code oder hinterlegter Kurztext); unbelegte Plätze bleiben samt Überschrift leer.
+- **`ListenGruppen.tsx` (neu):** Gruppenverwaltung im Editor. Die EZ-Vorlagen (Erschwerniszulage 7 Plätze, Leistungsprämie/Fahrentschädigung 3, Ganzkörperreinigung 1) kommen aus dem gemeinsamen `ZULAGEN_CATALOG`, damit hier keine zweite Codeliste gepflegt wird; ein Klick legt Gruppe UND Spaltenplätze an.
+- **`dummyDaten.ts`:** erzeugt Listenwerte passend zur Zahl der konfigurierten Plätze — die erste Zeile belegt alle (sonst bliebe eine Spalte in der Vorschau unbeschriftet), spätere lassen einzelne aus, damit auch leere Zellen sichtbar werden. Nebenbefund dabei behoben: `alleSpalten()` zählte die Tabellenspalten doppelt, wenn eine Seite kein eigenes Raster hat.
+- `Zeile` trägt jetzt `unknown`-Werte statt nur Text/Zahl — Zeilen aus dem Download-Body enthalten mit `Zulagen` echtes Verschachteltes.
+
+### fix (Koordinateneingabe im Editor, Zahlenraster)
+
+- **User-Fund:** „Beim Absenden werden Werte, die nicht im 0,5-Raster liegen, nicht angenommen. Und bei Zeilen lassen sich auch 0,5 Zeilen eingeben + negative Werte."
+- **`FeldPanel.tsx`:** `ZahlFeld` nutzt `step="any"` statt `step="0.5"` — die HTML-Formularpruefung wies bisher jede gezogene Koordinate zwischen den Rasterpunkten beim Absenden ab. Zaehlwerte (`Zeilen`) sind jetzt ganzzahlig mit Untergrenze 1, `Hoehe` mindestens 0,1; die Anzeige rundet auf zwei statt eine Nachkommastelle.
+
+### feat (Format „Tag zweistellig")
+
+- Neues Format `tagZweistellig` (`05` statt `5`) fuer Formulare mit zweistelligem Tageskaestchen.
+
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` **1546/1546 gruen**.
+
+### docs (Hilfe zur Koordinaten-Config)
+
+- Ergaenzt: die Vorlage ist EINE PDF mit allen Seiten (nicht je Seite eine Datei), wie die Seitenfolge dazu angelegt wird, wann welche Seite im Ergebnis landet, wozu „bei Ueberlauf wiederholen" dient und wie Seiteneinstellungen kopiert bzw. eigene Spalten je Seite gesetzt werden.
+
 ## 2026-08-16 (11)
 
 ### feat (Startseite: Schnellzugriff-Buttons für Mobilansicht, Issue #5)

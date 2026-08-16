@@ -12,42 +12,59 @@ function kapazitaet(def: SeitenDef, tabelle: string): number {
   return def.bereiche.find(b => b.tabelle === tabelle)?.maxZeilen ?? 0;
 }
 
+/** Hat diese Seite Platz für eine Tabelle, die noch Zeilen offen hat? */
+function nimmtZeilenAuf(def: SeitenDef, rest: TabellenZeilen): boolean {
+  // `maxZeilen <= 0` zählt bewusst nicht: ein solcher Bereich nähme nie eine Zeile ab und die
+  // Wiederholung liefe endlos.
+  return def.bereiche.some(b => b.maxZeilen > 0 && (rest[b.tabelle]?.length ?? 0) > 0);
+}
+
 /**
- * Verteilt die Zeilen ALLER Tabellen auf `ersteSeite` (immer genau einmal) und `weitereSeite` (bei
- * Überlauf beliebig oft wiederholt). Jede Tabelle füllt dabei nur ihren eigenen Bereich auf der
- * Seite; eine Folgeseite entsteht, sobald irgendeine Tabelle noch Zeilen übrig hat. Wirft, wenn
- * Zeilen übrig bleiben und keine `weitereSeite` existiert oder diese für die betroffene Tabelle
- * keinen Bereich definiert.
+ * Verteilt die Zeilen aller Tabellen auf die Seitenfolge `layout.seiten`.
  *
- * Waisenzeilen-Schutz je Tabelle: hätte die letzte Seite dort nur 1 Zeile, wird eine Zeile von der
- * vorletzten Seite übernommen (sofern die dort noch mehr als 1 behält) — vermeidet eine fast leer
- * wirkende letzte Seite.
+ * Die erste Seite kommt immer, jede weitere nur, wenn sie gebraucht wird: entweder weil eine ihrer
+ * Tabellen noch Zeilen hat, oder weil sie gar keine Datentabelle trägt (reine Text-/Unterschrifts-
+ * seite). Damit ergibt sich die Seitenzahl aus den Daten — bei Bereitschaft entfällt die BE-Seite,
+ * wenn es keine Einsätze gab. Eine Seite mit `wiederholt` wird so lange erneut gerendert, wie ihre
+ * Tabellen Zeilen liefern (EA: jede weitere Seite; Bereitschaft: ab Seite 3).
+ *
+ * Wirft, wenn am Ende Zeilen übrig bleiben — dann fehlt eine wiederholte Seite oder ein Bereich für
+ * die betroffene Tabelle.
  */
 export function verteile(zeilen: TabellenZeilen, layout: Layout): Block[] {
+  if (layout.seiten.length === 0) throw new Error('Layout ohne Seiten');
+
   const rest: TabellenZeilen = Object.fromEntries(Object.entries(zeilen).map(([k, v]) => [k, [...v]]));
   const offen = () => Object.entries(rest).filter(([, v]) => v.length > 0);
 
   function nimm(def: SeitenDef): Block {
     const block: Block = { def, zeilen: {} };
     for (const bereich of def.bereiche) {
-      block.zeilen[bereich.tabelle] = (rest[bereich.tabelle] ?? []).splice(0, bereich.maxZeilen);
+      block.zeilen[bereich.tabelle] = (rest[bereich.tabelle] ?? []).splice(0, Math.max(bereich.maxZeilen, 0));
     }
     return block;
   }
 
-  const bloecke: Block[] = [nimm(layout.ersteSeite)];
+  const bloecke: Block[] = [];
+  for (const [i, def] of layout.seiten.entries()) {
+    const gebraucht = i === 0 || def.bereiche.length === 0 || nimmtZeilenAuf(def, rest);
+    if (!gebraucht) continue;
 
-  while (offen().length > 0) {
-    const weitere = layout.weitereSeite;
-    if (!weitere) {
-      throw new Error(`${offen()[0]![1].length} Zeilen (${offen()[0]![0]}) passen in kein Layout`);
+    bloecke.push(nimm(def));
+    // Wiederholung direkt hier, nicht erst am Ende der Folge: eine nachgelagerte Seite (z.B. mit
+    // Unterschrift) muss hinter den wiederholten Seiten landen, nicht zwischen ihnen.
+    if (def.wiederholt) while (nimmtZeilenAuf(def, rest)) bloecke.push(nimm(def));
+  }
+
+  const uebrig = offen();
+  if (uebrig.length > 0) {
+    const [name, zeilenRest] = uebrig[0]!;
+    const wiederholte = layout.seiten.filter(s => s.wiederholt);
+    if (wiederholte.length === 0) throw new Error(`${zeilenRest.length} Zeilen (${name}) passen in kein Layout — keine Seite ist als wiederholt markiert`);
+    if (wiederholte.every(s => kapazitaet(s, name) === 0)) {
+      throw new Error(`Tabelle "${name}" hat auf keiner wiederholten Seite einen Bereich, ${zeilenRest.length} Zeilen bleiben übrig`);
     }
-    // Ohne Bereich auf der Folgeseite käme die Tabelle nie voran -- das wäre eine Endlosschleife.
-    const ohnePlatz = offen().find(([name]) => kapazitaet(weitere, name) === 0);
-    if (ohnePlatz) {
-      throw new Error(`Tabelle "${ohnePlatz[0]}" hat auf der Folgeseite keinen Bereich, ${ohnePlatz[1].length} Zeilen bleiben übrig`);
-    }
-    bloecke.push(nimm(weitere));
+    throw new Error(`${zeilenRest.length} Zeilen (${name}) passen in kein Layout`);
   }
 
   return bloecke;

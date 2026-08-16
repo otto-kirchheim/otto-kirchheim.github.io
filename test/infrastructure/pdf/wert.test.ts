@@ -15,6 +15,7 @@ const kontext: Kontext = {
   seite: 2,
   seiten: 3,
   heute: HEUTE,
+  listen: {},
 };
 
 describe('wert', () => {
@@ -196,7 +197,7 @@ describe('wert', () => {
   });
 
   it('$bisher ist leer auf der ersten Seite -- Übertrag ist 0', () => {
-    const leererKontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: {}, $laufend: { haupt: seiteZeilen }, $alle: { haupt: seiteZeilen }, seite: 1, seiten: 1, heute: HEUTE };
+    const leererKontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: {}, $laufend: { haupt: seiteZeilen }, $alle: { haupt: seiteZeilen }, seite: 1, seiten: 1, heute: HEUTE, listen: {} };
     const f: Feld = {
       x: 0,
       y: 0,
@@ -224,5 +225,36 @@ describe('wert', () => {
     const max: Feld = { x: 0, y: 0, size: 10, berechnet: { op: 'max', ueber: '$seite', feld: 'betrag' } };
     expect(wert(anzahl, 'n', {}, kontext)).toBe('2');
     expect(wert(max, 'm', {}, kontext)).toBe('10');
+  });
+
+  describe('listenKopf (Überschrift dynamischer Spalten)', () => {
+    const gruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['811', '820'] };
+    const mitListen: Kontext = {
+      ...kontext,
+      listen: { haupt: { gruppen: { ez: gruppe }, belegung: { ez: ['811', '820'] } } },
+    };
+
+    it('zeigt den Schlüssel, der auf dem Platz gelandet ist', () => {
+      const f: Feld = { x: 0, y: 0, size: 8, listenKopf: { tabelle: 'haupt', gruppe: 'ez', index: 1 } };
+      expect(wert(f, 'kopf1', {}, mitListen)).toBe('820');
+    });
+
+    it('nimmt den hinterlegten Kurztext statt des Schlüssels', () => {
+      const mitText: Kontext = {
+        ...kontext,
+        listen: {
+          haupt: { gruppen: { ez: { ...gruppe, beschriftungen: { '811': 'Erschütterung' } } }, belegung: { ez: ['811'] } },
+        },
+      };
+      const f: Feld = { x: 0, y: 0, size: 8, listenKopf: { tabelle: 'haupt', gruppe: 'ez', index: 0 } };
+      expect(wert(f, 'kopf1', {}, mitText)).toBe('Erschütterung');
+    });
+
+    it('bleibt leer für unbelegte Plätze und unbekannte Tabellen', () => {
+      const leer: Feld = { x: 0, y: 0, size: 8, listenKopf: { tabelle: 'haupt', gruppe: 'ez', index: 5 } };
+      const fremd: Feld = { x: 0, y: 0, size: 8, listenKopf: { tabelle: 'gibtsNicht', gruppe: 'ez', index: 0 } };
+      expect(wert(leer, 'kopf6', {}, mitListen)).toBe('');
+      expect(wert(fremd, 'kopf1', {}, mitListen)).toBe('');
+    });
   });
 });

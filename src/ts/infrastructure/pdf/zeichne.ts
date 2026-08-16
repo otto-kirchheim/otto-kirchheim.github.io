@@ -1,5 +1,5 @@
-import type { PDFFont, PDFPage } from '@cantoo/pdf-lib';
-import type { Ausrichtung } from '@otto-kirchheim/nebengeld-shared';
+import { degrees, type PDFFont, type PDFPage } from '@cantoo/pdf-lib';
+import type { Ausrichtung, Drehung } from '@otto-kirchheim/nebengeld-shared';
 
 export interface Zelle {
   x: number;
@@ -10,7 +10,21 @@ export interface Zelle {
   autoGroesse?: boolean;
   umbruch?: boolean;
   align?: Ausrichtung;
+  drehung?: Drehung;
 }
+
+/**
+ * Wie eine Drehung die beiden Achsen belegt. `laengs` ist die Achse, entlang der die Schrift läuft
+ * (dort wirkt `align` und dort wird umbrochen), `quer` die Achse der Zeilenhöhe. `vor` ist die
+ * Richtung auf der jeweiligen Achse: bei 90° läuft die Schrift nach oben (+y) und die Oberlängen
+ * zeigen nach links (−x).
+ */
+const ACHSEN: Record<Drehung, { laengsX: boolean; laengsVor: 1 | -1; querVor: 1 | -1 }> = {
+  0: { laengsX: true, laengsVor: 1, querVor: 1 },
+  90: { laengsX: false, laengsVor: 1, querVor: -1 },
+  180: { laengsX: true, laengsVor: -1, querVor: -1 },
+  270: { laengsX: false, laengsVor: -1, querVor: 1 },
+};
 
 /** Faustformel: die Oberlänge einer Helvetica-Zeile liegt bei ~0.72*size über der Baseline. */
 const OBERLAENGE = 0.72;
@@ -58,43 +72,69 @@ function passendeGroesse(text: string, f: Zelle, zellBreite: number, zellHoehe: 
   return MIN_GROESSE;
 }
 
-function ankerX(text: string, links: number, rechts: number | undefined, size: number, align: Ausrichtung | undefined, font: PDFFont): number {
-  const b = breite(text, size, font);
-  if (align === 'zentriert') return rechts === undefined ? links - b / 2 : links + (rechts - links - b) / 2;
-  if (align === 'rechts') return (rechts ?? links) - b;
-  return links;
+/**
+ * Startpunkt des Textes auf der Laufachse. `vor` kehrt die Achse um (gedrehter Text läuft bei 180°
+ * und 270° zur kleineren Koordinate hin), `laenge === 0` bedeutet: keine gegenüberliegende Kante
+ * gesetzt, dann ist die Kante selbst der Anker.
+ */
+function ankerLaengs(textBreite: number, min: number, max: number, align: Ausrichtung | undefined, vor: 1 | -1): number {
+  const laenge = max - min;
+  if (align === 'zentriert') return vor === 1 ? min + (laenge - textBreite) / 2 : max - (laenge - textBreite) / 2;
+  if (align === 'rechts') return vor === 1 ? max - textBreite : min + textBreite;
+  return vor === 1 ? min : max;
 }
 
 /**
- * Zeichnet Text in eine Zelle. Ohne `x2`/`y2` verhält sich `f` wie ein reiner Ankerpunkt
- * (abwärtskompatibel zu Konfigurationen aus Phase 3–8), mit beiden Kanten wird der Text laut
- * `align` horizontal und immer vertikal mittig in der Zelle gesetzt. `umbruch` bricht an
- * Wortgrenzen um, `autoGroesse` verkleinert die Schrift, bis der Text in die Zelle passt.
+ * Zeichnet Text in eine Zelle. Ohne die gegenüberliegenden Kanten verhält sich `f` wie ein reiner
+ * Ankerpunkt (abwärtskompatibel zu Konfigurationen aus Phase 3–8), mit beiden Kanten wird der Text
+ * laut `align` längs und immer quer mittig in der Zelle gesetzt. `umbruch` bricht an Wortgrenzen um,
+ * `autoGroesse` verkleinert die Schrift, bis der Text in die Zelle passt.
+ *
+ * `drehung` dreht den Text in der Zelle (90° = von unten nach oben lesbar, wie die schmalen
+ * Namensfelder am Rand mancher Zettel). Gerechnet wird dafür nicht mit x/y, sondern mit Lauf- und
+ * Querachse: die Formeln bleiben dieselben, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich.
  */
 export function zeichne(seite: PDFPage, text: string, f: Zelle, font: PDFFont): void {
   if (!text) return;
 
-  const links = Math.min(f.x, f.x2 ?? f.x);
-  const rechts = f.x2 === undefined ? undefined : Math.max(f.x, f.x2);
-  const zellBreite = rechts === undefined ? 0 : rechts - links;
-  const zellHoehe = f.y2 === undefined ? 0 : Math.abs(f.y2 - f.y);
+  const drehung = f.drehung ?? 0;
+  const { laengsX, laengsVor, querVor } = ACHSEN[drehung];
 
-  const size = f.autoGroesse && zellBreite > 0 ? passendeGroesse(text, f, zellBreite, zellHoehe, font) : f.size;
-  const zeilen = f.umbruch && zellBreite > 0 ? umbrechen(text, zellBreite, size, font) : [text];
+  const xMin = Math.min(f.x, f.x2 ?? f.x);
+  const xMax = Math.max(f.x, f.x2 ?? f.x);
+  const yMin = Math.min(f.y, f.y2 ?? f.y);
+  const yMax = Math.max(f.y, f.y2 ?? f.y);
 
-  const blockHoehe = (zeilen.length - 1) * size * ZEILENABSTAND + size * OBERLAENGE;
-  const untenKante = f.y2 === undefined ? f.y : Math.min(f.y, f.y2);
-  // Ohne y2 bleibt `y` die Baseline der ERSTEN Zeile (altes Verhalten), sonst wird der ganze
-  // Zeilenblock vertikal in der Zelle zentriert.
-  const ersteBaseline = f.y2 === undefined ? f.y : untenKante + (zellHoehe - blockHoehe) / 2 + blockHoehe - size * OBERLAENGE;
+  const laengsMin = laengsX ? xMin : yMin;
+  const laengsMax = laengsX ? xMax : yMax;
+  const querMin = laengsX ? yMin : xMin;
+  const hatQuer = (laengsX ? f.y2 : f.x2) !== undefined;
+  // Ohne Querkante bleibt die gesetzte Koordinate die Baseline der ERSTEN Zeile (altes Verhalten).
+  const querAnker = laengsX ? f.y : f.x;
+  const laenge = laengsMax - laengsMin;
+  const querLaenge = hatQuer ? (laengsX ? yMax - yMin : xMax - xMin) : 0;
+
+  const size = f.autoGroesse && laenge > 0 ? passendeGroesse(text, f, laenge, querLaenge, font) : f.size;
+  const zeilen = f.umbruch && laenge > 0 ? umbrechen(text, laenge, size, font) : [text];
+
+  const zeilenhoehe = size * ZEILENABSTAND;
+  const oberlaenge = size * OBERLAENGE;
+  const blockHoehe = (zeilen.length - 1) * zeilenhoehe + oberlaenge;
+  // Der Zeilenblock wird quer in der Zelle zentriert; welche Blockkante dabei am Anfang liegt,
+  // hängt von der Richtung der Oberlängen ab (bei 90° zeigen sie nach links).
+  const mitte = querMin + (querLaenge - blockHoehe) / 2;
+  const ersteBaseline = !hatQuer ? querAnker : querVor === 1 ? mitte + (zeilen.length - 1) * zeilenhoehe : mitte + oberlaenge;
 
   zeilen.forEach((zeile, i) => {
     if (!zeile) return;
+    const laengs = ankerLaengs(breite(zeile, size, font), laengsMin, laengsMax, f.align, laengsVor);
+    const quer = ersteBaseline - querVor * i * zeilenhoehe;
     seite.drawText(zeile, {
-      x: ankerX(zeile, links, rechts, size, f.align, font),
-      y: ersteBaseline - i * size * ZEILENABSTAND,
+      x: laengsX ? laengs : quer,
+      y: laengsX ? quer : laengs,
       size,
       font,
+      ...(drehung === 0 ? {} : { rotate: degrees(drehung) }),
     });
   });
 }

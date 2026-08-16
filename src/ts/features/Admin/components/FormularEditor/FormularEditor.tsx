@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
+import { spaltenFuer } from '@otto-kirchheim/nebengeld-shared';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
@@ -9,7 +10,7 @@ import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten'
 import { beispielSignatur } from './beispielSignatur';
 import type { FormularCode } from './datenKatalog';
 
-export type Konfig = { ersteSeite: SeitenDef; weitereSeite?: SeitenDef; tabellen: Version['tabellen'] };
+export type Konfig = { seiten: SeitenDef[]; tabellen: Version['tabellen'] };
 
 type Props = {
   formular: FormularCode;
@@ -18,8 +19,8 @@ type Props = {
   onChange: (value: Konfig) => void;
 };
 
-export function leereSeite(): SeitenDef {
-  return { quelle: 0, bereiche: [], felder: {} };
+export function leereSeite(quelle = 0): SeitenDef {
+  return { quelle, bereiche: [], felder: {} };
 }
 
 function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
@@ -75,7 +76,8 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     const tabelle = tabellen[bereich.tabelle];
     if (!tabelle) continue;
 
-    tabelle.spalten.forEach((spalte: Spalte, index) => {
+    const spalten = spaltenFuer(bereich, tabelle);
+    spalten.forEach((spalte: Spalte, index) => {
       rechtecke.push({
         x: spalte.x,
         y: bereich.startY,
@@ -88,8 +90,8 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
 
     // Der Tabellenrahmen hat selbst keine x-Kanten: er spannt so weit wie seine Spalten, sonst über
     // die ganze Seitenbreite (x/x2 undefined) -- keine festen Werte, die bei Querformat brechen.
-    const links = tabelle.spalten.map(s => Math.min(s.x, s.x2 ?? s.x));
-    const rechts = tabelle.spalten.map(s => Math.max(s.x, s.x2 ?? s.x));
+    const links = spalten.map(s => Math.min(s.x, s.x2 ?? s.x));
+    const rechts = spalten.map(s => Math.max(s.x, s.x2 ?? s.x));
     rechtecke.push({
       x: links.length > 0 ? Math.min(...links) : undefined,
       y: bereich.startY,
@@ -116,21 +118,26 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
  * gewaehlte `datei: File`, kein Server-Roundtrip noetig.
  */
 export function FormularEditor({ formular, datei, value, onChange }: Props) {
-  const [tab, setTab] = useState<'erste' | 'weitere'>('erste');
+  const [tab, setTab] = useState(0);
   const [armed, setArmed] = useState<Armed | null>(null);
   const [vorschauLaeuft, setVorschauLaeuft] = useState<Werteart | null>(null);
 
-  const aktiveSeite = tab === 'erste' ? value.ersteSeite : value.weitereSeite;
+  // Nach dem Entfernen der letzten Seite zeigt `tab` ins Leere -- dann auf die letzte gültige.
+  const seitenIndex = Math.min(tab, value.seiten.length - 1);
+  const aktiveSeite = value.seiten[seitenIndex];
   // Beispielwerte samt Renderer-Kontext -- die Feldliste zeigt damit dieselben Zahlen wie das PDF.
   // Neu berechnet, sobald sich die Konfiguration oder der Seiten-Tab ändert.
   const vorschau = useMemo(
-    () => erzeugeVorschau(value.tabellen, value.ersteSeite, value.weitereSeite, tab, formular),
-    [value.tabellen, value.ersteSeite, value.weitereSeite, tab, formular],
+    () => erzeugeVorschau(value.tabellen, value.seiten, seitenIndex, formular),
+    [value.tabellen, value.seiten, seitenIndex, formular],
   );
 
+  function setzeSeite(index: number, seite: SeitenDef) {
+    onChange({ ...value, seiten: value.seiten.map((s, i) => (i === index ? seite : s)) });
+  }
+
   function setzeAktiveSeite(seite: SeitenDef) {
-    if (tab === 'erste') onChange({ ...value, ersteSeite: seite });
-    else onChange({ ...value, weitereSeite: seite });
+    setzeSeite(seitenIndex, seite);
   }
 
   function handleRechteck(r: { x: number; y: number; x2: number; y2: number }) {
@@ -144,8 +151,18 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       // Spalten liegen im Zeilenraster ihrer Tabelle -- nur die x-Kanten stammen aus der Markierung.
       const tabelle = value.tabellen[armed.tabelle];
       if (!tabelle) return;
-      const spalten = tabelle.spalten.map((s, i) => (i === armed.index ? { ...s, x: r.x, x2: r.x2 } : s));
-      onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten } } });
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, x: r.x, x2: r.x2 } : s);
+      // Hat die Seite ein eigenes Spaltenraster, gilt die Markierung nur dort -- sonst verschöbe
+      // das Nachjustieren auf Seite 2 auch die Spalte auf Seite 1.
+      if (bereich?.spalten) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b)),
+        });
+      } else {
+        onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } } });
+      }
     } else if (armed.bereich === 'letzteZeile') {
       // Zeilenhöhe über ALLE Zeilen gemittelt statt aus einer einzelnen Messung: eine Ungenauigkeit
       // von Bruchteilen eines Punktes summiert sich sonst über die Tabelle zu einem sichtbaren
@@ -170,7 +187,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       onChange({
         ...value,
         tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: Math.max(r.y2 - r.y, 1) } },
-        ...(tab === 'erste' ? { ersteSeite: { ...aktiveSeite, bereiche } } : { weitereSeite: { ...aktiveSeite, bereiche } }),
+        seiten: value.seiten.map((s, i) => (i === seitenIndex ? { ...aktiveSeite, bereiche } : s)),
       });
     } else {
       setzeAktiveSeite({ ...aktiveSeite, signaturBild: { x: r.x, y: r.y, w: r.x2 - r.x, h: r.y2 - r.y } });
@@ -181,13 +198,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   async function testdatenVorschau(art: Werteart) {
     setVorschauLaeuft(art);
     try {
-      const daten = erzeugeDummyDaten(value.tabellen, value.ersteSeite, value.weitereSeite, formular, art);
+      const daten = erzeugeDummyDaten(value.tabellen, value.seiten, formular, art);
       const bytes = await build(
         {
           version: 'vorschau',
           gueltigVon: '2026-01-01',
           gueltigBis: null,
-          layout: { template: URL.createObjectURL(datei), ersteSeite: value.ersteSeite, weitereSeite: value.weitereSeite },
+          layout: { template: URL.createObjectURL(datei), seiten: value.seiten },
           tabellen: value.tabellen,
           formular,
         },
@@ -212,15 +229,29 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   return (
     <div class="border rounded p-2">
       <div class="d-flex align-items-center gap-2 mb-2">
-        <ul class="nav nav-pills nav-fill flex-grow-1">
+        <ul class="nav nav-pills flex-grow-1 flex-wrap">
+          {value.seiten.map((s, i) => (
+            <li class="nav-item" key={i}>
+              <button type="button" class={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`} onClick={() => setTab(i)}>
+                Seite {i + 1}
+                {s.wiederholt ? ' ↻' : ''}
+              </button>
+            </li>
+          ))}
           <li class="nav-item">
-            <button type="button" class={`nav-link py-1 ${tab === 'erste' ? 'active' : ''}`} onClick={() => setTab('erste')}>
-              Erste Seite
-            </button>
-          </li>
-          <li class="nav-item">
-            <button type="button" class={`nav-link py-1 ${tab === 'weitere' ? 'active' : ''}`} onClick={() => setTab('weitere')}>
-              Weitere Seite {value.weitereSeite ? '' : '(nicht gesetzt)'}
+            <button
+              type="button"
+              class="nav-link py-1"
+              title="Weitere Seite anhängen — die Seitenfolge bildet das Formular ab (Bereitschaft: 1, 2, 3 unterschiedlich)"
+              onClick={() => {
+                // Quelle der letzten Seite + 1 als Vorschlag: Vorlagen-PDFs sind in der Regel in
+                // derselben Reihenfolge aufgebaut wie das Formular.
+                const letzte = value.seiten.at(-1);
+                onChange({ ...value, seiten: [...value.seiten, leereSeite((letzte?.quelle ?? -1) + 1)] });
+                setTab(value.seiten.length);
+              }}
+            >
+              + Seite
             </button>
           </li>
         </ul>
@@ -246,12 +277,50 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </div>
       </div>
 
-      {tab === 'weitere' && !value.weitereSeite && (
-        <div class="mb-2">
-          <p class="small text-body-secondary">Optional — nur nötig, wenn bei Zeilenüberlauf eine Folgeseite wiederholt werden soll.</p>
-          <button type="button" class="btn btn-sm btn-outline-primary" onClick={() => onChange({ ...value, weitereSeite: leereSeite() })}>
-            Weitere Seite hinzufügen
-          </button>
+      {aktiveSeite && (
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-2 small">
+          <div class="form-check mb-0">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              id="seite-wiederholt"
+              checked={Boolean(aktiveSeite.wiederholt)}
+              onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: (e.target as HTMLInputElement).checked || undefined })}
+            />
+            <label class="form-check-label" for="seite-wiederholt" title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind">
+              Diese Seite bei Überlauf wiederholen
+            </label>
+          </div>
+
+          {value.seiten.length > 1 && (
+            <div class="d-flex align-items-center gap-1">
+              <label class="mb-0" for="seite-kopieren">
+                Einstellungen übernehmen von
+              </label>
+              <select
+                id="seite-kopieren"
+                class="form-select form-select-sm w-auto"
+                value=""
+                onChange={e => {
+                  const quelle = value.seiten[Number((e.target as HTMLSelectElement).value)];
+                  (e.target as HTMLSelectElement).value = '';
+                  if (!quelle) return;
+                  // `quelle` (die PDF-Seite) bleibt, alles andere wird übernommen -- gemeint ist
+                  // „gleiches Layout, andere Vorlagenseite", nicht „dieselbe Seite zweimal".
+                  setzeAktiveSeite({ ...structuredClone(quelle), quelle: aktiveSeite.quelle });
+                }}
+              >
+                <option value="">— Seite wählen —</option>
+                {value.seiten.map((_, i) =>
+                  i === seitenIndex ? null : (
+                    <option key={i} value={i}>
+                      Seite {i + 1}
+                    </option>
+                  ),
+                )}
+              </select>
+            </div>
+          )}
         </div>
       )}
 
@@ -272,18 +341,18 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               }
               onRechteck={handleRechteck}
               onQuelleWaehlen={pageIndex => setzeAktiveSeite({ ...aktiveSeite, quelle: pageIndex })}
-              aktiveSeiteLabel={tab === 'erste' ? 'Erste Seite' : 'Weitere Seite'}
+              aktiveSeiteLabel={`Seite ${seitenIndex + 1}`}
             />
-            {tab === 'weitere' && (
+            {value.seiten.length > 1 && (
               <button
                 type="button"
                 class="btn btn-sm btn-outline-danger mt-2"
                 onClick={() => {
-                  onChange({ ...value, weitereSeite: undefined });
-                  setTab('erste');
+                  onChange({ ...value, seiten: value.seiten.filter((_, i) => i !== seitenIndex) });
+                  setTab(Math.max(seitenIndex - 1, 0));
                 }}
               >
-                Weitere Seite entfernen
+                Seite {seitenIndex + 1} entfernen
               </button>
             )}
           </div>

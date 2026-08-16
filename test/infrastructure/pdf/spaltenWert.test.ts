@@ -49,4 +49,32 @@ describe('spaltenWert', () => {
     });
     expect(spaltenWert(sp, bz)).toBe('62:30');
   });
+
+  describe('listenPlatz (dynamische Spalten)', () => {
+    const gruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['811', '820', '824'] };
+    const zulagenZeile: Zeile = { Zulagen: [{ Typ: '820', Wert: 4 }] };
+    // Zwei belegte Plätze: '811' kommt in einer anderen Zeile des Dokuments vor.
+    const listen = { gruppen: { ez: gruppe }, belegung: { ez: ['811', '820'] } };
+
+    it('zeigt den Wert des Schlüssels, der auf diesem Platz gelandet ist', () => {
+      expect(spaltenWert(spalte({ listenPlatz: { gruppe: 'ez', index: 1 } }), zulagenZeile, listen)).toBe('4');
+    });
+
+    it('bleibt leer, wenn die Zeile diesen Schlüssel nicht führt', () => {
+      expect(spaltenWert(spalte({ listenPlatz: { gruppe: 'ez', index: 0 } }), zulagenZeile, listen)).toBe('');
+    });
+
+    it('bleibt leer für unbelegte Plätze -- sonst stünde ein Wert unter einer Spalte ohne Überschrift', () => {
+      expect(spaltenWert(spalte({ listenPlatz: { gruppe: 'ez', index: 2 } }), zulagenZeile, listen)).toBe('');
+    });
+
+    it('bleibt leer, wenn die Auflösung ganz fehlt (unfertige Konfiguration)', () => {
+      expect(spaltenWert(spalte({ listenPlatz: { gruppe: 'ez', index: 0 } }), zulagenZeile)).toBe('');
+    });
+
+    it('formatiert den Listenwert wie jeden anderen Spaltenwert', () => {
+      const sp = spalte({ listenPlatz: { gruppe: 'ez', index: 1 }, format: 'waehrung' });
+      expect(spaltenWert(sp, zulagenZeile, listen)).toBe('4,00');
+    });
+  });
 });

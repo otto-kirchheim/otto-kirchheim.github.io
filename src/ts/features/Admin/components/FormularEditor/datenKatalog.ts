@@ -1,3 +1,6 @@
+import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
+import type { ListenGruppe } from '@otto-kirchheim/nebengeld-shared';
+
 export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
 
 /**
@@ -12,6 +15,12 @@ export interface KatalogEintrag {
   label: string;
   gruppe: string;
   format?: 'waehrung' | 'datum';
+  /**
+   * Beschränkt den Eintrag auf EINE Zeilenquelle (Wert aus `ZEILEN_QUELLEN[formular][].pfad`, z.B.
+   * `'Daten.BZ'`). Nötig, wenn ein Formular mehrere Zeilenquellen hat und ein Feldname (z.B.
+   * `Beginn`) dort je Quelle etwas anderes bedeutet. Ohne Angabe gilt der Eintrag für alle Quellen.
+   */
+  quelle?: string;
   /** Wert für die Beispieldaten-Vorschau; ohne Angabe greift der generische Platzhalter. */
   beispiel?: BeispielWert;
 }
@@ -39,18 +48,33 @@ const BASIS: KatalogEintrag[] = [
   { pfad: 'VorgabenU.Pers.Vorname', label: 'Vorname', gruppe: 'Person', beispiel: 'Max' },
   { pfad: 'VorgabenU.Pers.Nachname', label: 'Nachname', gruppe: 'Person', beispiel: 'Mustermann' },
   { pfad: 'VorgabenU.Pers.Name', label: 'Name (zusammengesetzt)', gruppe: 'Person', beispiel: 'Mustermann, Max' },
-  { pfad: 'VorgabenU.Pers.PNummer', label: 'Personalnummer', gruppe: 'Person', beispiel: '30012345' },
+  { pfad: 'VorgabenU.Pers.PNummer', label: 'Personalnummer', gruppe: 'Person', beispiel: '01234567' },
   { pfad: 'VorgabenU.Pers.Telefon', label: 'Telefon', gruppe: 'Person', beispiel: '0170 1234567' },
   { pfad: 'VorgabenU.Pers.Adress1', label: 'Adresse Zeile 1', gruppe: 'Person', beispiel: 'Bahnhofstraße 12' },
   { pfad: 'VorgabenU.Pers.Adress2', label: 'Adresse Zeile 2', gruppe: 'Person', beispiel: '12345 Musterstadt' },
-  { pfad: 'VorgabenU.Pers.Bundesland', label: 'Bundesland', gruppe: 'Person', beispiel: 'Bayern' },
-  { pfad: 'VorgabenU.Pers.Taetigkeit', label: 'Tätigkeit (Grund)', gruppe: 'Person', beispiel: 'Elektroniker/in' },
-  { pfad: 'VorgabenU.Pers.Entgeltgruppe', label: 'Entgeltgruppe (Grund)', gruppe: 'Person', beispiel: 'EG 7' },
-  { pfad: 'VorgabenU.Pers.ErsteTkgSt', label: 'Erste Tätigkeitsstätte', gruppe: 'Dienststelle', beispiel: 'Bw Musterstadt' },
-  { pfad: 'VorgabenU.Pers.ErsteTkgStAdresse', label: 'Adresse erste Tätigkeitsstätte', gruppe: 'Dienststelle', beispiel: 'Werkstraße 3, 12345 Musterstadt' },
-  { pfad: 'VorgabenU.Pers.Betrieb', label: 'Betrieb', gruppe: 'Dienststelle', beispiel: 'Instandhaltung Süd' },
-  { pfad: 'VorgabenU.Pers.OE', label: 'Organisationseinheit', gruppe: 'Dienststelle', beispiel: ['I', 'IW', 'MI'] },
-  { pfad: 'VorgabenU.Pers.Gewerk', label: 'Gewerk', gruppe: 'Dienststelle', beispiel: 'Fahrzeuginstandhaltung' },
+  { pfad: 'VorgabenU.Pers.Bundesland', label: 'Bundesland', gruppe: 'Person', beispiel: 'Hessen' },
+  { pfad: 'VorgabenU.Pers.Taetigkeit', label: 'Tätigkeit (Grund)', gruppe: 'Person', beispiel: 'Signalmechaniker' },
+  { pfad: 'VorgabenU.Pers.Entgeltgruppe', label: 'Entgeltgruppe (Grund)', gruppe: 'Person', beispiel: '105' },
+  {
+    pfad: 'VorgabenU.Pers.ErsteTkgSt',
+    label: 'Erste Tätigkeitsstätte',
+    gruppe: 'Dienststelle',
+    beispiel: 'Musterstadt',
+  },
+  {
+    pfad: 'VorgabenU.Pers.ErsteTkgStAdresse',
+    label: 'Adresse erste Tätigkeitsstätte',
+    gruppe: 'Dienststelle',
+    beispiel: 'Werkstraße 3, 12345 Musterstadt',
+  },
+  { pfad: 'VorgabenU.Pers.Betrieb', label: 'Betrieb', gruppe: 'Dienststelle', beispiel: 'DB InfraGO AG' },
+  {
+    pfad: 'VorgabenU.Pers.OE',
+    label: 'Organisationseinheit',
+    gruppe: 'Dienststelle',
+    beispiel: ['I', 'IW', 'MI', 'N', 'MUS', 'IL'],
+  },
+  { pfad: 'VorgabenU.Pers.Gewerk', label: 'Gewerk', gruppe: 'Dienststelle', beispiel: 'LST' },
   { pfad: 'VorgabenU.Pers.TB', label: 'Tarif/Besoldung', gruppe: 'Dienststelle', beispiel: 'Tarifkraft' },
   { pfad: 'VorgabenU.Pers.kmArbeitsort', label: 'km zum Arbeitsort', gruppe: 'Dienststelle', beispiel: 23 },
   { pfad: 'VorgabenU.Pers.nBhf', label: 'Nächster Bahnhof', gruppe: 'Dienststelle', beispiel: 'Musterstadt Hbf' },
@@ -61,9 +85,9 @@ const BASIS: KatalogEintrag[] = [
 const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
   ez: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
-    { pfad: 'Beginn', label: 'Beginn (HH:mm)', gruppe: 'Zeile', beispiel: '06:00' },
-    { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '14:30' },
-    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `A-100${23 + i}` },
+    { pfad: 'Beginn', label: 'Beginn (HH:mm)', gruppe: 'Zeile', beispiel: '07:00' },
+    { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
+    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
     { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', beispiel: ['NZ', 'SoZ'] },
   ],
   ewt: [
@@ -80,25 +104,27 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'anWE', label: 'Ankunft Wohnung', gruppe: 'Zeile', beispiel: '17:45' },
   ],
   bereitschaft: [
-    // Beginn/Ende tragen in beiden Quellen denselben Schluessel -- ein Eintrag genuegt. Im Zeitraum
-    // (BZ) steckt ein voller Zeitstempel dahinter, im Einsatz (BE) eine reine `"HH:mm"`-Uhrzeit.
-    // Datum und Uhrzeit stehen im Formular in getrennten Zellen, sind aber KEIN getrenntes Feld:
-    // dafuer dasselbe Feld zweimal als Spalte setzen, einmal Format „Datum kurz", einmal „Uhrzeit".
-    // Zeitstempel statt reiner Uhrzeit: Format „Uhrzeit" liest daraus die Tageszeit, Format „Datum
-    // kurz" das Datum -- ein Wert bedient damit BZ (Zeitraum) und BE (Einsatz) gleichermaßen.
-    { pfad: 'Beginn', label: 'Beginn', gruppe: 'Zeile BZ + BE', format: 'datum', beispiel: i => zeitpunkt(i, 16) },
-    { pfad: 'Ende', label: 'Ende', gruppe: 'Zeile BZ + BE', format: 'datum', beispiel: i => zeitpunkt(i, 6, 2) },
-    { pfad: 'Pause', label: 'Pause (Minuten)', gruppe: 'Zeile BZ', beispiel: 30 },
-    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile BE', format: 'datum', beispiel: i => tag(i) },
-    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile BE', beispiel: i => `B-200${11 + i}` },
-    { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', beispiel: 'LRE 1' },
-    { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', beispiel: i => 8 + i * 2 },
+    // Bereitschaft hat ZWEI Zeilenquellen (BZ, BE, siehe ZEILEN_QUELLEN), keine gemeinsame: `Beginn`/
+    // `Ende` heissen dort zwar gleich, bedeuten aber Verschiedenes und sind entsprechend GETRENNTE
+    // Eintraege mit `quelle`. Im Zeitraum (BZ) steckt ein voller Zeitstempel dahinter (siehe
+    // IBereitschaftszeitraum), im Einsatz (BE) eine reine `"HH:mm"`-Uhrzeit (IBereitschaftseinsatz).
+    { pfad: 'Beginn', label: 'Beginn (Zeitraum)', gruppe: 'Zeile BZ', format: 'datum', quelle: 'Daten.BZ', beispiel: i => zeitpunkt(i, 15.75) },
+    { pfad: 'Ende', label: 'Ende (Zeitraum)', gruppe: 'Zeile BZ', format: 'datum', quelle: 'Daten.BZ', beispiel: i => zeitpunkt(i, 7, 1) },
+    { pfad: 'Pause', label: 'Pause (Minuten)', gruppe: 'Zeile BZ', quelle: 'Daten.BZ', beispiel: 30 },
+    // Kurzer Anruf WÄHREND des Zeitraums, nicht dessen volle Spanne -- siehe
+    // createAddModalBereitschaftsEinsatz.tsx ("Von"/"Bis" als knappes Zeitfenster für einen Einsatz).
+    { pfad: 'Beginn', label: 'Beginn (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '01:15' },
+    { pfad: 'Ende', label: 'Ende (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '02:00' },
+    { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile BE', format: 'datum', quelle: 'Daten.BE', beispiel: i => tag(i) },
+    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => `B-200${11 + i}` },
+    { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: 'LRE 1' },
+    { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
   ],
   ea: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
-    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Zeile', beispiel: '02:30' },
-    { pfad: 'Taetigkeit', label: 'Tätigkeit (Tag)', gruppe: 'Zeile', beispiel: 'Lokrangierführer/in' },
-    { pfad: 'Entgeltgruppe', label: 'Entgeltgruppe (Tag)', gruppe: 'Zeile', beispiel: 'EG 8' },
+    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Zeile', beispiel: '08:15' },
+    { pfad: 'Taetigkeit', label: 'Tätigkeit (Tag)', gruppe: 'Zeile', beispiel: 'Teamleiter' },
+    { pfad: 'Entgeltgruppe', label: 'Entgeltgruppe (Tag)', gruppe: 'Zeile', beispiel: '104' },
   ],
 };
 
@@ -125,9 +151,16 @@ export function katalogFelder(formular: FormularCode): KatalogEintrag[] {
   ];
 }
 
-/** Auswahl für Tabellenspalten und für das `feld` in Summenfeldern: Felder EINER Datenzeile. */
-export function katalogZeilenFelder(formular: FormularCode): KatalogEintrag[] {
-  return ZEILEN_FELDER[formular];
+/**
+ * Auswahl für Tabellenspalten und für das `feld` in Summenfeldern: Felder EINER Datenzeile. `quelle`
+ * (Wert aus `ZEILEN_QUELLEN[formular][].pfad`, meist `tabelle.quelle`) grenzt auf EINE Zeilenquelle
+ * ein -- wichtig bei Formularen mit mehreren Quellen (Bereitschaft: BZ/BE), sonst tauchen Felder der
+ * jeweils anderen Tabelle mit an. Ohne Angabe kommen alle Einträge zurück (z.B. für Kontexte ohne
+ * feste Tabelle).
+ */
+export function katalogZeilenFelder(formular: FormularCode, quelle?: string): KatalogEintrag[] {
+  const eintraege = ZEILEN_FELDER[formular];
+  return quelle === undefined ? eintraege : eintraege.filter(e => e.quelle === undefined || e.quelle === quelle);
 }
 
 /**
@@ -151,11 +184,72 @@ export function gruppiere(eintraege: KatalogEintrag[]): [string, KatalogEintrag[
 /**
  * Realistischer Beispielwert zu einem Datenpfad, für die Beispieldaten-Vorschau. `index` ist die
  * Zeilennummer (0 für Felder außerhalb der Tabelle), damit Tage und Auftragsnummern über die Zeilen
- * variieren statt sich zu wiederholen. `undefined` heißt: kein Beispiel hinterlegt, es greift der
- * generische Platzhalter.
+ * variieren statt sich zu wiederholen. `quelle` (meist `tabelle.quelle`) trifft die richtige Wahl,
+ * wenn derselbe Pfad je Zeilenquelle etwas anderes bedeutet (Bereitschaft: `Beginn`/`Ende` in BZ vs.
+ * BE). `undefined` heißt: kein Beispiel hinterlegt, es greift der generische Platzhalter.
  */
-export function beispielWert(formular: FormularCode, pfad: string, index: number): unknown {
-  const eintrag = [...BASIS, ...ZEILEN_FELDER[formular]].find(e => e.pfad === pfad);
+export function beispielWert(formular: FormularCode, pfad: string, index: number, quelle?: string): unknown {
+  const eintrag = [...BASIS, ...katalogZeilenFelder(formular, quelle)].find(e => e.pfad === pfad);
   if (!eintrag?.beispiel) return undefined;
   return typeof eintrag.beispiel === 'function' ? eintrag.beispiel(index) : eintrag.beispiel;
 }
+
+/**
+ * Fertige Listen-Gruppen je Formular. EZ ist der Fall, für den es sie gibt: die Zulagen einer Zeile
+ * sind eine Liste, im Formular stehen dafür feste Spaltenplätze, und welcher Code über welcher
+ * Spalte steht, hängt vom Monat ab. Die Codes und ihre Zahl je Kategorie kommen aus dem
+ * gemeinsamen Zulagen-Katalog, damit hier keine zweite Liste gepflegt werden muss.
+ */
+export interface ListenVorlage {
+  /** Vorschlag für den Gruppen-Key in `TabellenDef.listen` */
+  name: string;
+  label: string;
+  /** Wie viele Spaltenplätze das Formular für diese Gruppe vorsieht */
+  plaetze: number;
+  gruppe: ListenGruppe;
+}
+
+function zulagenGruppe(kategorie: ZulageCategory): ListenGruppe {
+  const codes = ZULAGEN_CATALOG.filter(z => z.category === kategorie).map(z => z.code);
+  // Ohne `beschriftungen`: über der Spalte steht der Code selbst, wie auf dem gedruckten Zettel.
+  return { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: [...codes] };
+}
+
+export function zulagenKurztexte(kategorie: ZulageCategory): Record<string, string> {
+  return Object.fromEntries(ZULAGEN_CATALOG.filter(z => z.category === kategorie).map(z => [z.code, z.shortLabel]));
+}
+
+const EZ_LISTEN: ListenVorlage[] = [
+  {
+    name: 'erschwernis',
+    label: 'Erschwerniszulagen',
+    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.Erschwerniszulage],
+    gruppe: zulagenGruppe(ZulageCategory.Erschwerniszulage),
+  },
+  {
+    name: 'leistung',
+    label: 'Leistungsprämie / Fahrentschädigung',
+    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.LeistungspramieUndFahrentschaedigung],
+    gruppe: zulagenGruppe(ZulageCategory.LeistungspramieUndFahrentschaedigung),
+  },
+  {
+    name: 'gkr',
+    label: 'Ganzkörperreinigung',
+    plaetze: ZULAGEN_CATEGORY_MAX_SELECTIONS[ZulageCategory.Ganzkoerperreinigung],
+    gruppe: zulagenGruppe(ZulageCategory.Ganzkoerperreinigung),
+  },
+];
+
+export const LISTEN_VORLAGEN: Record<FormularCode, ListenVorlage[]> = {
+  ez: EZ_LISTEN,
+  ewt: [],
+  bereitschaft: [],
+  ea: [],
+};
+
+/** Kategorie zu einer Vorlage — nur EZ hat welche; für die Kurztext-Umschaltung im Editor. */
+export const VORLAGEN_KATEGORIE: Record<string, ZulageCategory> = {
+  erschwernis: ZulageCategory.Erschwerniszulage,
+  leistung: ZulageCategory.LeistungspramieUndFahrentschaedigung,
+  gkr: ZulageCategory.Ganzkoerperreinigung,
+};

@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { resolve } from '@otto-kirchheim/nebengeld-shared';
 import { parseRegistry } from '@/infrastructure/pdf/configSchema';
 
-const leeresLayout = { template: 'x.pdf', ersteSeite: { quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1 }], felder: {} } };
+const leeresLayout = { template: 'x.pdf', seiten: [{ quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1 }], felder: {} }] };
 
 function macheRegistryJson() {
   return {

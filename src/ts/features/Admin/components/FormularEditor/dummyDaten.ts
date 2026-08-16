@@ -1,5 +1,15 @@
-import { operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
-import type { Daten, Feld, SeitenDef, Spalte, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import { loeseListenAuf, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  Daten,
+  Feld,
+  ListenAufloesung,
+  SeitenDef,
+  Spalte,
+  TabellenDef,
+  Zeile,
+  ZeilenBerechnet,
+  ZeilenOpName,
+} from '@otto-kirchheim/nebengeld-shared';
 import { datenPlatzhalter, type Kontext, type TabellenZeilen } from '@/infrastructure/pdf/wert';
 import { beispielWert, type FormularCode } from './datenKatalog';
 import { verteile } from '@/infrastructure/pdf/verteile';
@@ -34,8 +44,8 @@ function platzhalter(feld: Feld | Spalte, index: number, name?: string): string 
 }
 
 /** Katalogwert, wenn die Beispiel-Werteart gewählt ist und für den Pfad einer hinterlegt ist. */
-function ausKatalog(art: Werteart, formular: FormularCode, pfad: string, index: number): unknown {
-  return art === 'beispiel' ? beispielWert(formular, pfad, index) : undefined;
+function ausKatalog(art: Werteart, formular: FormularCode, pfad: string, index: number, quelle?: string): unknown {
+  return art === 'beispiel' ? beispielWert(formular, pfad, index, quelle) : undefined;
 }
 
 /**
@@ -63,7 +73,8 @@ function datenpfade(seite: SeitenDef | undefined): [string, Feld][] {
  */
 function operandPlatzhalter(op: ZeilenOpName, index: number, stelle: number): string | number {
   if (op === 'zeitdifferenz') return `${Math.max(0, 20 - stelle * 3) + (index % 3)}:00`;
-  if (op === 'zeitspanne') return new Date(Date.UTC(2026, 2, 2 + index * 2 + Math.max(0, 3 - stelle), 8, 0)).toISOString();
+  if (op === 'zeitspanne')
+    return new Date(Date.UTC(2026, 2, 2 + index * 2 + Math.max(0, 3 - stelle), 8, 0)).toISOString();
   return index + 2;
 }
 
@@ -80,34 +91,85 @@ function fuelleOperanden(berechnet: ZeilenBerechnet, zeile: Zeile, index: number
   });
 }
 
-/** Wie viele Zeilen eine Tabelle braucht, damit die Vorschau ihren Seitenüberlauf zeigt. */
-function zeilenBedarf(name: string, ersteSeite: SeitenDef, weitereSeite: SeitenDef | undefined): number {
-  const platz = (seite: SeitenDef | undefined) => seite?.bereiche.find(b => b.tabelle === name)?.maxZeilen ?? 0;
-  const erste = platz(ersteSeite);
-  const weitere = platz(weitereSeite);
-  return weitere > 0 ? erste + weitere + 1 : erste;
+/**
+ * Wie viele Zeilen eine Tabelle braucht, damit die Vorschau ihren Seitenüberlauf zeigt: den Platz
+ * aller Seiten plus eine Zeile extra, sobald eine Seite wiederholt wird. Ohne wiederholte Seite
+ * bleibt es bei der Gesamtkapazität, sonst würde `verteile()` werfen.
+ */
+function zeilenBedarf(name: string, seiten: SeitenDef[]): number {
+  const platz = (seite: SeitenDef) => seite.bereiche.find(b => b.tabelle === name)?.maxZeilen ?? 0;
+  const gesamt = seiten.reduce((summe, seite) => summe + platz(seite), 0);
+  const wiederholbar = seiten.some(seite => seite.wiederholt && platz(seite) > 0);
+  return wiederholbar ? gesamt + 1 : gesamt;
 }
 
-function macheZeile(tabelle: TabellenDef, index: number, art: Werteart, formular: FormularCode): Zeile {
+/**
+ * Spalten der Tabelle plus die NUR auf einer Seite gesetzten -- sonst bliebe eine dort definierte
+ * Spalte ohne Wert. Bewusst nicht über `spaltenFuer()`: das liefert für Seiten ohne eigenes Raster
+ * erneut die Tabellenspalten, wodurch jede doppelt gezählt würde (die Anzahl bestimmt, wie viele
+ * Listen-Schlüssel die Vorschau erzeugt).
+ */
+function alleSpalten(name: string, tabelle: TabellenDef, seiten: SeitenDef[]): Spalte[] {
+  const jeSeite = seiten.flatMap(seite => seite.bereiche.find(b => b.tabelle === name)?.spalten ?? []);
+  return [...tabelle.spalten, ...jeSeite];
+}
+
+function macheZeile(
+  tabelle: TabellenDef,
+  spalten: Spalte[],
+  index: number,
+  art: Werteart,
+  formular: FormularCode,
+): Zeile {
   const zeile: Zeile = {};
-  for (const spalte of tabelle.spalten) {
+  for (const spalte of spalten) {
     if (spalte.wenn) {
-      // Jede zweite Zeile erfüllt die Bedingung, damit man in der Vorschau beide Fälle sieht.
-      if (index % 2 === 0) zeile[spalte.wenn.feld] ??= spalte.wenn.werte[0] ?? '';
+      if (spalte.wenn.berechnet) {
+        // Erst die Operanden aus dem Katalog belegen (siehe `spalte.berechnet` unten), sonst rechnet
+        // die Bedingung immer mit dem generischen Zeitwert statt dem fachlich passenden Beispiel.
+        for (const pfad of operandenFelder(spalte.wenn.berechnet)) {
+          const wert = ausKatalog(art, formular, pfad, index, tabelle.quelle);
+          if (wert !== undefined) zeile[pfad] ??= wert as string | number;
+        }
+        fuelleOperanden(spalte.wenn.berechnet, zeile, index);
+      } else if (index % 2 === 0 && spalte.wenn.feld) {
+        // Jede zweite Zeile erfüllt die Bedingung, damit man in der Vorschau beide Fälle sieht.
+        zeile[spalte.wenn.feld] ??= spalte.wenn.werte?.[0] ?? '';
+      }
     } else if (spalte.berechnet) {
       // Erst die Operanden aus dem Katalog belegen, sonst gewinnt der generische Zeitwert per `??=`.
       for (const pfad of operandenFelder(spalte.berechnet)) {
-        const wert = ausKatalog(art, formular, pfad, index);
+        const wert = ausKatalog(art, formular, pfad, index, tabelle.quelle);
         if (wert !== undefined) zeile[pfad] ??= wert as string | number;
       }
       fuelleOperanden(spalte.berechnet, zeile, index);
     } else {
-      zeile[spalte.key] = (ausKatalog(art, formular, spalte.key, index) as string | number) ?? platzhalter(spalte, index, spalte.key);
+      zeile[spalte.key] =
+        (ausKatalog(art, formular, spalte.key, index, tabelle.quelle) as string | number) ?? platzhalter(spalte, index, spalte.key);
     }
   }
   // Der Tabellenfilter muss zutreffen, sonst wäre die Tabelle in der Vorschau leer.
   if (tabelle.filter) zeile[tabelle.filter.feld] = tabelle.filter.werte[0] ?? '';
+  macheListen(tabelle, spalten, zeile, index);
   return zeile;
+}
+
+/**
+ * Füllt die Listenfelder einer Zeile (EZ: `Zulagen`), aus denen die dynamischen Spalten entstehen.
+ * Erzeugt genau so viele Schlüssel, wie Plätze konfiguriert sind — sonst bliebe eine Spalte in der
+ * Vorschau unbeschriftet, obwohl sie im Ernstfall belegt wäre. Die erste Zeile trägt alle Schlüssel
+ * (nur so ist jeder Platz vergeben), spätere Zeilen lassen einzelne aus, damit auch der Normalfall
+ * „diese Zulage gab es an dem Tag nicht" sichtbar wird.
+ */
+function macheListen(tabelle: TabellenDef, spalten: Spalte[], zeile: Zeile, index: number): void {
+  for (const [name, gruppe] of Object.entries(tabelle.listen ?? {})) {
+    const plaetze = spalten.filter(sp => sp.listenPlatz?.gruppe === name).length;
+    const anzahl = Math.max(plaetze, 1);
+    const schluessel = (gruppe.auswahl ?? Array.from({ length: anzahl }, (_, i) => `K${i + 1}`)).slice(0, anzahl);
+    zeile[gruppe.quelle] = schluessel
+      .filter((_, i) => index === 0 || (index + i) % 3 !== 0)
+      .map((k, i) => ({ [gruppe.schluessel]: k, [gruppe.wert]: 1 + ((index + i) % 4) }));
+  }
 }
 
 /**
@@ -118,14 +180,13 @@ function macheZeile(tabelle: TabellenDef, index: number, art: Werteart, formular
  */
 export function erzeugeDummyDaten(
   tabellen: Record<string, TabellenDef>,
-  ersteSeite: SeitenDef,
-  weitereSeite: SeitenDef | undefined,
+  seiten: SeitenDef[],
   formular: FormularCode,
   art: Werteart = 'platzhalter',
 ): Daten {
   const daten: Daten = {};
 
-  for (const [pfad, feld] of [...datenpfade(ersteSeite), ...datenpfade(weitereSeite)]) {
+  for (const [pfad, feld] of seiten.flatMap(seite => datenpfade(seite))) {
     setzePfad(daten, pfad, ausKatalog(art, formular, pfad, 0) ?? platzhalter(feld, 0, pfad));
   }
 
@@ -133,8 +194,9 @@ export function erzeugeDummyDaten(
   // deshalb je Quelle sammeln statt sie gegenseitig zu überschreiben.
   const jeQuelle = new Map<string, Zeile[]>();
   for (const [name, tabelle] of Object.entries(tabellen)) {
-    const anzahl = Math.max(zeilenBedarf(name, ersteSeite, weitereSeite), 1);
-    const zeilen = Array.from({ length: anzahl }, (_, i) => macheZeile(tabelle, i, art, formular));
+    const anzahl = Math.max(zeilenBedarf(name, seiten), 1);
+    const spalten = alleSpalten(name, tabelle, seiten);
+    const zeilen = Array.from({ length: anzahl }, (_, i) => macheZeile(tabelle, spalten, i, art, formular));
     jeQuelle.set(tabelle.quelle, [...(jeQuelle.get(tabelle.quelle) ?? []), ...zeilen]);
   }
   for (const [quelle, zeilen] of jeQuelle) setzePfad(daten, quelle, zeilen);
@@ -160,24 +222,47 @@ function verbinde(a: TabellenZeilen, b: TabellenZeilen): TabellenZeilen {
  */
 export function erzeugeVorschau(
   tabellen: Record<string, TabellenDef>,
-  ersteSeite: SeitenDef,
-  weitereSeite: SeitenDef | undefined,
-  tab: 'erste' | 'weitere',
+  seiten: SeitenDef[],
+  seitenIndex: number,
   formular: FormularCode,
   art: Werteart = 'beispiel',
 ): { daten: Daten; kontext: Kontext } {
-  const daten = erzeugeDummyDaten(tabellen, ersteSeite, weitereSeite, formular, art);
-  const alle: TabellenZeilen = Object.fromEntries(Object.entries(tabellen).map(([name, def]) => [name, tabellenZeilen(daten, def)]));
+  const daten = erzeugeDummyDaten(tabellen, seiten, formular, art);
+  const alle: TabellenZeilen = Object.fromEntries(
+    Object.entries(tabellen).map(([name, def]) => [name, tabellenZeilen(daten, def)]),
+  );
   const heute = new Date();
+  // Gleiche Platzvergabe wie im Renderer, damit die Werte-Vorschau dieselben Spaltenüberschriften
+  // zeigt wie das erzeugte PDF.
+  const listen: Record<string, ListenAufloesung> = {};
+  for (const [name, def] of Object.entries(tabellen)) {
+    const aufgeloest = loeseListenAuf(def, alle[name] ?? []);
+    if (aufgeloest) listen[name] = aufgeloest;
+  }
 
   try {
-    const bloecke = verteile(alle, { template: '', ersteSeite, weitereSeite });
-    const index = tab === 'weitere' ? bloecke.length - 1 : 0;
+    const bloecke = verteile(alle, { template: '', seiten });
+    // Der Editor-Tab zeigt eine KONFIGURIERTE Seite; im Ergebnis kann sie mehrfach vorkommen
+    // (wiederholte Seite) oder fehlen. Der erste Block dieser Seitendefinition ist der passende.
+    const gefunden = bloecke.findIndex(b => b.def === seiten[seitenIndex]);
+    const index = gefunden >= 0 ? gefunden : Math.min(seitenIndex, bloecke.length - 1);
     const block = bloecke[index];
     if (!block) throw new Error('keine Seite');
     const bisher = bloecke.slice(0, index).reduce<TabellenZeilen>((s, b) => verbinde(s, b.zeilen), {});
-    return { daten, kontext: { $seite: block.zeilen, $bisher: bisher, $laufend: verbinde(bisher, block.zeilen), $alle: alle, seite: index + 1, seiten: bloecke.length, heute } };
+    return {
+      daten,
+      kontext: {
+        $seite: block.zeilen,
+        $bisher: bisher,
+        $laufend: verbinde(bisher, block.zeilen),
+        $alle: alle,
+        seite: index + 1,
+        seiten: bloecke.length,
+        heute,
+        listen,
+      },
+    };
   } catch {
-    return { daten, kontext: { $seite: alle, $bisher: {}, $laufend: alle, $alle: alle, seite: 1, seiten: 1, heute } };
+    return { daten, kontext: { $seite: alle, $bisher: {}, $laufend: alle, $alle: alle, seite: 1, seiten: 1, heute, listen } };
   }
 }

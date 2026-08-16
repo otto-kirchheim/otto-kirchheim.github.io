@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { PDFDocument, StandardFonts, type PDFFont, type PDFPage } from '@cantoo/pdf-lib';
 import { zeichne, type Zelle } from '@/infrastructure/pdf/zeichne';
 
-type Gezeichnet = { text: string; x: number; y: number; size: number };
+type Gezeichnet = { text: string; x: number; y: number; size: number; rotate?: { angle: number } };
 
 async function macheFont(): Promise<PDFFont> {
   const pdf = await PDFDocument.create();
@@ -12,7 +12,8 @@ async function macheFont(): Promise<PDFFont> {
 /** Fängt die `drawText`-Aufrufe ab, statt das erzeugte PDF wieder zu parsen. */
 function macheSeite(gesammelt: Gezeichnet[]): PDFPage {
   return {
-    drawText: (text: string, opts: { x: number; y: number; size: number }) => gesammelt.push({ text, ...opts }),
+    drawText: (text: string, opts: { x: number; y: number; size: number; rotate?: { angle: number } }) =>
+      gesammelt.push({ text, ...opts }),
   } as unknown as PDFPage;
 }
 
@@ -125,5 +126,55 @@ describe('zeichne', () => {
     zeichne(macheSeite(vertauscht), 'Test', { x: 300, y: 220, x2: 100, y2: 200, size: 10, align: 'zentriert' }, font);
     expect(vertauscht[0]!.x).toBeCloseTo(normal[0]!.x, 5);
     expect(vertauscht[0]!.y).toBeCloseTo(normal[0]!.y, 5);
+  });
+
+  describe('Drehung', () => {
+    // Hochkant beschriftetes Feld: 20pt breit, 200pt hoch -- so sitzt der Name am Blattrand.
+    const HOCHKANT: Zelle = { x: 100, y: 400, x2: 120, y2: 600, size: 10 };
+
+    it('gibt den Drehwinkel an pdf-lib weiter, 0° bleibt ohne rotate', async () => {
+      const font = await macheFont();
+      const ohne: Gezeichnet[] = [];
+      const mit: Gezeichnet[] = [];
+      zeichne(macheSeite(ohne), 'Otto, Jan', ZELLE, font);
+      zeichne(macheSeite(mit), 'Otto, Jan', { ...HOCHKANT, drehung: 90 }, font);
+
+      expect(ohne[0]!.rotate).toBeUndefined();
+      expect(mit[0]!.rotate?.angle).toBe(90);
+    });
+
+    it('bei 90° läuft die Ausrichtung über die Höhe, die Zentrierung über die Breite', async () => {
+      const font = await macheFont();
+      const gesammelt: Gezeichnet[] = [];
+      zeichne(macheSeite(gesammelt), 'Otto, Jan', { ...HOCHKANT, drehung: 90, align: 'zentriert' }, font);
+
+      const textBreite = font.widthOfTextAtSize('Otto, Jan', 10);
+      // Laufrichtung ist +y: der Text startet so, dass er mittig zwischen y und y2 liegt.
+      expect(gesammelt[0]!.y).toBeCloseTo(400 + (200 - textBreite) / 2, 5);
+      // Quer wird wie sonst senkrecht zentriert -- bei 90° also zwischen x und x2.
+      expect(gesammelt[0]!.x).toBeCloseTo(100 + (20 - 10 * 0.72) / 2 + 10 * 0.72, 5);
+    });
+
+    it('align rechts endet bei 90° an der oberen Kante', async () => {
+      const font = await macheFont();
+      const gesammelt: Gezeichnet[] = [];
+      zeichne(macheSeite(gesammelt), 'Otto, Jan', { ...HOCHKANT, drehung: 90, align: 'rechts' }, font);
+      expect(gesammelt[0]!.y).toBeCloseTo(600 - font.widthOfTextAtSize('Otto, Jan', 10), 5);
+    });
+
+    it('270° dreht die Laufrichtung um: align links beginnt oben', async () => {
+      const font = await macheFont();
+      const gesammelt: Gezeichnet[] = [];
+      zeichne(macheSeite(gesammelt), 'Otto, Jan', { ...HOCHKANT, drehung: 270 }, font);
+      expect(gesammelt[0]!.rotate?.angle).toBe(270);
+      expect(gesammelt[0]!.y).toBeCloseTo(600, 5);
+    });
+
+    it('ohne Querkante bleibt die gesetzte Koordinate die Baseline (auch gedreht)', async () => {
+      const font = await macheFont();
+      const gesammelt: Gezeichnet[] = [];
+      zeichne(macheSeite(gesammelt), 'Otto, Jan', { x: 40, y: 300, y2: 500, size: 10, drehung: 90 }, font);
+      expect(gesammelt[0]!.x).toBe(40);
+    });
   });
 });

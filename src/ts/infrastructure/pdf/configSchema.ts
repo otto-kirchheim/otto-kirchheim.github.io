@@ -13,6 +13,7 @@ const formatNameSchema = z.enum([
   'datum',
   'datumKurz',
   'tag',
+  'tagZweistellig',
   'wochentag',
   'monatJahr',
   'uhrzeit',
@@ -40,11 +41,34 @@ const zeilenBerechnetSchema: z.ZodType<ZeilenBerechnet> = z.lazy(() =>
   }),
 );
 
+const bereichSchema = z.object({
+  von: z.union([z.string(), z.number()]),
+  bis: z.union([z.string(), z.number()]),
+});
+
 const bedingungSchema = z.object({
-  feld: z.string(),
-  werte: z.array(z.union([z.string(), z.number()])),
+  feld: z.string().optional(),
+  berechnet: zeilenBerechnetSchema.optional(),
+  werte: z.array(z.union([z.string(), z.number()])).optional(),
+  bereich: bereichSchema.optional(),
   dann: z.string(),
 });
+
+const listenPlatzSchema = z.object({
+  gruppe: z.string(),
+  index: z.number().int().nonnegative(),
+});
+
+/** Dynamische Spaltengruppe: welche Schlüssel welchen Platz belegen, entscheiden erst die Daten. */
+const listenGruppeSchema = z.object({
+  quelle: z.string(),
+  schluessel: z.string(),
+  wert: z.string(),
+  auswahl: z.array(z.string()).optional(),
+  beschriftungen: z.record(z.string(), z.string()).optional(),
+});
+
+const drehungSchema = z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]);
 
 const feldSchema = z.object({
   x: z.number(),
@@ -60,6 +84,8 @@ const feldSchema = z.object({
   text: z.string().optional(),
   quellen: z.array(z.string()).optional(),
   trenner: z.string().optional(),
+  listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
+  drehung: drehungSchema.optional(),
   label: z.string().optional(),
 });
 
@@ -75,6 +101,8 @@ const spalteSchema = z.object({
   maxBreite: z.number().optional(),
   berechnet: zeilenBerechnetSchema.optional(),
   wenn: bedingungSchema.optional(),
+  listenPlatz: listenPlatzSchema.optional(),
+  drehung: drehungSchema.optional(),
   label: z.string().optional(),
 });
 
@@ -88,27 +116,32 @@ const signaturBildSchema = z.object({
 const tabellenBereichSchema = z.object({
   tabelle: z.string(),
   startY: z.number(),
-  maxZeilen: z.number(),
+  // Ganzzahl und mindestens 1: eine halbe oder negative Zeilenzahl ist keine gültige Kapazität und
+  // liefe im Renderer auf eine leere oder endlos wiederholte Seite hinaus.
+  maxZeilen: z.number().int().positive(),
+  /** Seitenspezifisches Spaltenraster; ohne Angabe gelten die Spalten der Tabelle. */
+  spalten: z.array(spalteSchema).optional(),
 });
 
 const seitenDefSchema = z.object({
-  quelle: z.number(),
+  quelle: z.number().int().nonnegative(),
   bereiche: z.array(tabellenBereichSchema),
   felder: z.record(z.string(), feldSchema),
   signaturBild: signaturBildSchema.optional(),
+  wiederholt: z.boolean().optional(),
 });
 
 const tabellenDefSchema = z.object({
   quelle: z.string(),
   filter: z.object({ feld: z.string(), werte: z.array(z.union([z.string(), z.number()])) }).optional(),
-  hoehe: z.number(),
+  hoehe: z.number().positive(),
   spalten: z.array(spalteSchema),
+  listen: z.record(z.string(), listenGruppeSchema).optional(),
 });
 
 const layoutSchema = z.object({
   template: z.string(),
-  ersteSeite: seitenDefSchema,
-  weitereSeite: seitenDefSchema.optional(),
+  seiten: z.array(seitenDefSchema).min(1),
 });
 
 /**
@@ -117,8 +150,7 @@ const layoutSchema = z.object({
  * `POST /formulare/:f/versionen`.
  */
 export const konfigSchema = z.object({
-  ersteSeite: seitenDefSchema,
-  weitereSeite: seitenDefSchema.optional(),
+  seiten: z.array(seitenDefSchema).min(1),
   tabellen: z.record(z.string(), tabellenDefSchema),
 });
 
