@@ -27,7 +27,7 @@ function macheSeite(maxZeilen: number): SeitenDef {
 
 describe('erzeugeDummyDaten', () => {
   it('übernimmt alle Spalten-Keys in jeder erzeugten Zeile', () => {
-    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), undefined);
+    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), undefined, 'ez');
     const zeilen = daten.zeilen as Record<string, unknown>[];
     expect(zeilen.length).toBeGreaterThan(0);
     for (const zeile of zeilen) {
@@ -37,19 +37,19 @@ describe('erzeugeDummyDaten', () => {
   });
 
   it('setzt nicht-berechnete Kopf-/Fuß-Felder als Wert am Datenpfad (Key), lässt berechnete aus', () => {
-    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), undefined);
+    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), undefined, 'ez');
     expect(daten).toHaveProperty('name');
     expect(daten).toHaveProperty('datum');
     expect(daten).not.toHaveProperty('summe');
   });
 
   it('ohne weitereSeite genau ersteSeite.maxZeilen Zeilen (kein Überlauf ohne Ziel-Seite)', () => {
-    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(5), undefined);
+    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(5), undefined, 'ez');
     expect((daten.zeilen as unknown[]).length).toBe(5);
   });
 
   it('mit weitereSeite genug Zeilen für Überlauf auf mindestens zwei Seiten', () => {
-    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), macheSeite(2));
+    const daten = erzeugeDummyDaten(macheTabellen(), macheSeite(3), macheSeite(2), 'ez');
     expect((daten.zeilen as unknown[]).length).toBe(3 + 2 + 1);
   });
 
@@ -57,7 +57,7 @@ describe('erzeugeDummyDaten', () => {
     const tabellen = macheTabellen();
     const seite = macheSeite(2);
     seite.felder = { 'mitarbeiter.name': { x: 50, y: 800, size: 12 } };
-    const daten = erzeugeDummyDaten(tabellen, seite, undefined);
+    const daten = erzeugeDummyDaten(tabellen, seite, undefined, 'ez');
     expect(daten.mitarbeiter).toBeDefined();
     expect((daten.mitarbeiter as Record<string, unknown>).name).toBeDefined();
   });

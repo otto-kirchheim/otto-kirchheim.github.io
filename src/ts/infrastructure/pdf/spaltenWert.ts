@@ -1,4 +1,4 @@
-import { FORMAT, ZEILEN_OPS, alsMinuten } from '@otto-kirchheim/nebengeld-shared';
+import { FORMAT, berechneZeile } from '@otto-kirchheim/nebengeld-shared';
 import type { Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /**
@@ -17,9 +17,8 @@ export function spaltenWert(sp: Spalte, zeile: Zeile): string {
     return sp.format ? FORMAT[sp.format](roh) : String(roh);
   }
 
-  // Zeitrechnungen brauchen einen eigenen Parser -- `Number("07:00")` wäre NaN.
-  const zuZahl = sp.berechnet.op === 'zeitdifferenz' ? alsMinuten : Number;
-  const werte = sp.berechnet.operanden.map(op => (typeof op === 'number' ? op : zuZahl(zeile[op]) || 0));
-  const ergebnis = ZEILEN_OPS[sp.berechnet.op](werte);
+  // Auswertung liegt in `shared`, weil sie rekursiv ist (Operanden dürfen Zwischenrechnungen sein)
+  // und je Operator einen eigenen Parser braucht -- `Number("07:00")` wäre NaN.
+  const ergebnis = berechneZeile(sp.berechnet, zeile);
   return sp.format ? FORMAT[sp.format](ergebnis) : String(ergebnis);
 }

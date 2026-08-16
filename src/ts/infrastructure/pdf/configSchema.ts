@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Registry } from '@otto-kirchheim/nebengeld-shared';
+import type { Registry, ZeilenBerechnet } from '@otto-kirchheim/nebengeld-shared';
 
 // Spiegelt das Typsystem aus @otto-kirchheim/nebengeld-shared (formular/types.ts) --
 // die vom Server gelieferte Konfiguration ist zur Laufzeit `unknown` und muss vor der
@@ -20,20 +20,25 @@ const formatNameSchema = z.enum([
   'liste',
   'grossbuchstaben',
 ]);
-const opNameSchema = z.enum(['summe', 'anzahl', 'max']);
-const zeilenOpNameSchema = z.enum(['produkt', 'summe', 'differenz', 'quotient', 'zeitdifferenz']);
+const opNameSchema = z.enum(['summe', 'anzahl', 'max', 'letztesDatum']);
+const zeilenOpNameSchema = z.enum(['produkt', 'summe', 'differenz', 'quotient', 'zeitdifferenz', 'zeitspanne']);
 
 const berechnetSchema = z.object({
   op: opNameSchema,
   ueber: z.string(),
   feld: z.string().optional(),
   tabelle: z.string().optional(),
+  maxTage: z.number().optional(),
 });
 
-const zeilenBerechnetSchema = z.object({
-  op: zeilenOpNameSchema,
-  operanden: z.array(z.union([z.string(), z.number()])),
-});
+// Rekursiv: ein Operand darf selbst eine Rechnung sein (geklammerte Zwischenrechnung). Zod braucht
+// dafür `z.lazy` plus die explizite Typannotation, da der Typ sich sonst selbst referenziert.
+const zeilenBerechnetSchema: z.ZodType<ZeilenBerechnet> = z.lazy(() =>
+  z.object({
+    op: zeilenOpNameSchema,
+    operanden: z.array(z.union([z.string(), z.number(), zeilenBerechnetSchema])),
+  }),
+);
 
 const bedingungSchema = z.object({
   feld: z.string(),

@@ -5,7 +5,17 @@ import { wert, type Kontext } from '@/infrastructure/pdf/wert';
 const seiteZeilen: Zeile[] = [{ betrag: 10 }, { betrag: 5 }];
 const bisherZeilen: Zeile[] = [{ betrag: 100 }, { betrag: 50 }];
 const alleZeilen: Zeile[] = [...bisherZeilen, ...seiteZeilen];
-const kontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: { haupt: bisherZeilen }, $alle: { haupt: alleZeilen }, seite: 2, seiten: 3 };
+/** Fester Erzeugungstag, damit `{heute}` und das Unterschriftsdatum reproduzierbar sind. */
+const HEUTE = new Date(2026, 7, 16);
+const kontext: Kontext = {
+  $seite: { haupt: seiteZeilen },
+  $bisher: { haupt: bisherZeilen },
+  $laufend: { haupt: [...bisherZeilen, ...seiteZeilen] },
+  $alle: { haupt: alleZeilen },
+  seite: 2,
+  seiten: 3,
+  heute: HEUTE,
+};
 
 describe('wert', () => {
   it('liest einen Direktwert aus den Daten', () => {
@@ -35,6 +45,26 @@ describe('wert', () => {
       expect(wert(f, 'egal', {}, kontext)).toBe('Seite 2 von 3');
     });
 
+    it('{seite-1} liefert die Vorseite -- "Übertrag von Seite 1" auf Seite 2', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: 'Übertrag von Seite {seite-1}' };
+      expect(wert(f, 'egal', {}, kontext)).toBe('Übertrag von Seite 1');
+    });
+
+    it('Leerzeichen im Versatz sind erlaubt und {seite + 1} zeigt auf die Folgeseite', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: '{seite - 1} / {seite + 1}' };
+      expect(wert(f, 'egal', {}, kontext)).toBe('1 / 3');
+    });
+
+    it('der Versatz gilt auch für die Gesamtzahl ({seiten-1})', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: 'noch {seiten-1} Blatt' };
+      expect(wert(f, 'egal', {}, kontext)).toBe('noch 2 Blatt');
+    });
+
+    it('nur ganzzahliger Versatz -- alles andere bleibt ein Datenpfad und damit leer', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: 'A{seite*2}B{seite-1.5}C' };
+      expect(wert(f, 'egal', {}, kontext)).toBe('ABC');
+    });
+
     it('beliebige Datenpfade sind ebenfalls als Platzhalter nutzbar', () => {
       const f: Feld = { x: 0, y: 0, size: 10, text: 'Zulagen {Monat}/{Jahr} für {p.Vorname}' };
       expect(wert(f, 'egal', { Monat: 3, Jahr: 2026, p: { Vorname: 'Max' } }, kontext)).toBe('Zulagen 3/2026 für Max');
@@ -48,6 +78,42 @@ describe('wert', () => {
     it('Text ohne Platzhalter bleibt unverändert', () => {
       const f: Feld = { x: 0, y: 0, size: 10, text: 'Übertrag' };
       expect(wert(f, 'egal', {}, kontext)).toBe('Übertrag');
+    });
+  });
+
+  describe('Datum neben der Unterschrift (letztesDatum)', () => {
+    function mitZeilen(tage: string[]): Kontext {
+      const zeilen: Zeile[] = tage.map(Tag => ({ Tag }));
+      return { ...kontext, $alle: { haupt: zeilen } };
+    }
+
+    const feld: Feld = { x: 0, y: 0, size: 10, format: 'datum', berechnet: { op: 'letztesDatum', ueber: '$alle', feld: 'Tag', maxTage: 14 } };
+
+    it('nimmt den jüngsten Eintrag, wenn er innerhalb der Frist liegt', () => {
+      // Reihenfolge bewusst unsortiert -- es zählt der jüngste Wert, nicht der letzte der Liste.
+      expect(wert(feld, 'egal', {}, mitZeilen(['2026-08-05', '2026-08-10', '2026-08-07']))).toBe('10.08.2026');
+    });
+
+    it('fällt auf heute zurück, wenn der jüngste Eintrag älter als die Frist ist', () => {
+      expect(wert(feld, 'egal', {}, mitZeilen(['2026-03-01', '2026-03-05']))).toBe('16.08.2026');
+    });
+
+    it('Grenzfall: genau am letzten Tag der Frist zählt noch der Eintrag', () => {
+      expect(wert(feld, 'egal', {}, mitZeilen(['2026-08-02']))).toBe('02.08.2026');
+    });
+
+    it('fällt auf heute zurück, wenn es gar keine Zeilen gibt', () => {
+      expect(wert(feld, 'egal', {}, mitZeilen([]))).toBe('16.08.2026');
+    });
+
+    it('ohne Frist bleibt es immer beim letzten Eintrag, egal wie alt', () => {
+      const ohneFrist: Feld = { ...feld, berechnet: { op: 'letztesDatum', ueber: '$alle', feld: 'Tag' } };
+      expect(wert(ohneFrist, 'egal', {}, mitZeilen(['2020-01-02']))).toBe('02.01.2020');
+    });
+
+    it('{heute} im festen Text liefert denselben Erzeugungstag', () => {
+      const textFeld: Feld = { x: 0, y: 0, size: 10, text: 'Musterstadt, den {heute}' };
+      expect(wert(textFeld, 'egal', {}, kontext)).toBe('Musterstadt, den 16.08.2026');
     });
   });
 
@@ -101,6 +167,23 @@ describe('wert', () => {
     expect(wert(f, 'zwischensumme', {}, kontext)).toBe('15,00');
   });
 
+  it('summiert über $laufend (Übertrag + diese Seite) und NICHT über das ganze Dokument', () => {
+    // Eigener Kontext: `$alle` enthält zusätzlich Zeilen einer FOLGEseite. Nur so unterscheiden
+    // sich laufende Summe und Gesamtsumme -- in der gemeinsamen Fixture wären sie zufällig gleich.
+    const spaeter: Zeile[] = [{ betrag: 1000 }];
+    const mitFolgeseite: Kontext = {
+      ...kontext,
+      $laufend: { haupt: [...bisherZeilen, ...seiteZeilen] },
+      $alle: { haupt: [...bisherZeilen, ...seiteZeilen, ...spaeter] },
+    };
+    const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$laufend', feld: 'betrag' } };
+    const gesamt: Feld = { ...f, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
+
+    // Vorseiten 150,00 plus diese Seite 15,00 = 165,00; die Gesamtsumme liegt bei 1.165,00.
+    expect(wert(f, 'zwischenstand', {}, mitFolgeseite)).toBe('165,00');
+    expect(wert(gesamt, 'gesamt', {}, mitFolgeseite)).toBe('1.165,00');
+  });
+
   it('summiert über $bisher (Übertrag der vorherigen Seiten)', () => {
     const f: Feld = {
       x: 0,
@@ -113,7 +196,7 @@ describe('wert', () => {
   });
 
   it('$bisher ist leer auf der ersten Seite -- Übertrag ist 0', () => {
-    const leererKontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: {}, $alle: { haupt: seiteZeilen }, seite: 1, seiten: 1 };
+    const leererKontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: {}, $laufend: { haupt: seiteZeilen }, $alle: { haupt: seiteZeilen }, seite: 1, seiten: 1, heute: HEUTE };
     const f: Feld = {
       x: 0,
       y: 0,

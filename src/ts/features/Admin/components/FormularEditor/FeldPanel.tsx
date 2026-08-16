@@ -1,11 +1,14 @@
 import { useState } from 'preact/hooks';
-import type { Ausrichtung, Feld, FormatName, OpName, SeitenDef, Spalte, TabellenDef, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import type { Ausrichtung, Daten, Feld, FormatName, OpName, SeitenDef, Spalte, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import { wert, type Kontext } from '@/infrastructure/pdf/wert';
+import { spaltenWert } from '@/infrastructure/pdf/spaltenWert';
 import { ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
 
 export type Armed =
   | { bereich: 'feld'; key: string }
   | { bereich: 'spalte'; tabelle: string; index: number }
   | { bereich: 'tabelle'; tabelle: string }
+  | { bereich: 'letzteZeile'; tabelle: string }
   | { bereich: 'signaturBild' };
 
 type Props = {
@@ -16,7 +19,27 @@ type Props = {
   onTabellenChange: (tabellen: Record<string, TabellenDef>) => void;
   armed: Armed | null;
   onArm: (armed: Armed | null) => void;
+  vorschau: Vorschau;
 };
+
+/**
+ * Beispieldaten samt Renderer-Kontext. Damit zeigt die Feldliste denselben Wert, den das erzeugte
+ * PDF zeigen wuerde -- Summen und Uebertrag eingeschlossen, die sonst nur ueber die PDF-Vorschau
+ * pruefbar waeren.
+ */
+export interface Vorschau {
+  daten: Daten;
+  kontext: Kontext;
+}
+
+/** Gerenderter Beispielwert unter einem Eintrag; leere Werte werden als solche kenntlich gemacht. */
+function WertVorschau({ text }: { text: string }) {
+  return (
+    <div class="form-text small mb-0">
+      Vorschau: {text === '' ? <em class="text-body-secondary">(leer)</em> : <span class="font-monospace">{text}</span>}
+    </div>
+  );
+}
 
 const FORMATE: { wert: FormatName | ''; label: string }[] = [
   { wert: '', label: 'unverändert' },
@@ -89,7 +112,7 @@ function istGleich(a: Armed | null, b: Armed): boolean {
   if (!a || a.bereich !== b.bereich) return false;
   if (a.bereich === 'feld') return a.key === (b as { key: string }).key;
   if (a.bereich === 'spalte') return a.tabelle === (b as { tabelle: string }).tabelle && a.index === (b as { index: number }).index;
-  if (a.bereich === 'tabelle') return a.tabelle === (b as { tabelle: string }).tabelle;
+  if (a.bereich === 'tabelle' || a.bereich === 'letzteZeile') return a.tabelle === (b as { tabelle: string }).tabelle;
   return true;
 }
 
@@ -271,6 +294,7 @@ function FeldZeile({
   onChange,
   onRename,
   onDelete,
+  vorschau,
 }: {
   keyName: string;
   feld: Feld;
@@ -280,6 +304,7 @@ function FeldZeile({
   onChange: (feld: Feld) => void;
   onRename: (neuerKey: string) => void;
   onDelete: () => void;
+  vorschau: Vorschau;
 }) {
   const festerText = feld.text !== undefined;
   return (
@@ -335,8 +360,10 @@ function FeldZeile({
         <div class="mb-1">
           <input class="form-control form-control-sm" placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}" value={feld.text} onInput={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })} />
           <div class="form-text small">
-            Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code> oder jeder Datenpfad (z.B.{' '}
-            <code>{'{Monat}'}</code>).
+            Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
+            <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>). Seitenzahlen vertragen
+            einen Versatz — <code>{'{seite-1}'}</code> für „Übertrag von Seite …", <code>{'{seite+1}'}</code> für
+            „weiter auf Seite …".
           </div>
         </div>
       ) : feld.berechnet ? (
@@ -346,6 +373,7 @@ function FeldZeile({
               <option value="summe">Summe</option>
               <option value="anzahl">Anzahl</option>
               <option value="max">Maximum</option>
+              <option value="letztesDatum">Letztes Datum</option>
             </select>
           </div>
           <div class="col-4">
@@ -353,6 +381,7 @@ function FeldZeile({
               <option value="$alle">alle Zeilen (Gesamtsumme)</option>
               <option value="$seite">nur diese Seite</option>
               <option value="$bisher">alle Vorseiten (Übertrag)</option>
+              <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
             </select>
           </div>
           <div class="col-5">
@@ -365,6 +394,26 @@ function FeldZeile({
               ))}
             </select>
           </div>
+          {feld.berechnet.op === 'letztesDatum' && (
+            <div class="col-12 d-flex align-items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                class="form-control form-control-sm"
+                style="max-width:6rem"
+                placeholder="Tage"
+                value={feld.berechnet.maxTage ?? ''}
+                onInput={e => {
+                  const roh = (e.target as HTMLInputElement).value;
+                  onChange({ ...feld, berechnet: { ...feld.berechnet!, maxTage: roh === '' ? undefined : Number(roh) } });
+                }}
+              />
+              <span class="small text-body-secondary">
+                Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt.
+                Leer lassen: immer der letzte Eintrag.
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div class="mb-1">
@@ -374,6 +423,7 @@ function FeldZeile({
 
       <input class="form-control form-control-sm mb-1" placeholder="Anzeigename (nur für diese Liste)" value={feld.label ?? ''} onInput={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })} />
       <DarstellungsFelder wert={feld} onChange={onChange} />
+      <WertVorschau text={wert(feld, keyName, vorschau.daten, vorschau.kontext)} />
     </div>
   );
 }
@@ -391,6 +441,13 @@ const VORLAGEN: { label: string; key: string; feld: Feld }[] = [
     feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$bisher' } },
   },
   { label: '+ Seitenzahl', key: 'seitenzahl', feld: { x: 50, y: 50, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' } },
+  {
+    label: '+ Datum (Unterschrift)',
+    key: 'unterschriftsdatum',
+    // Frist 14 Tage: unterschrieben wird am Tag der letzten Leistung, sofern die noch nicht lange
+    // zurueckliegt -- sonst heute. `feld` muss der Admin noch waehlen (je Ressource anders).
+    feld: { x: 50, y: 50, size: 10, align: 'zentriert', format: 'datum', berechnet: { op: 'letztesDatum', ueber: '$alle', maxTage: 14 } },
+  },
 ];
 
 function FeldListe({
@@ -399,12 +456,14 @@ function FeldListe({
   armed,
   onArm,
   onChange,
+  vorschau,
 }: {
   felder: Record<string, Feld>;
   formular: FormularCode;
   armed: Armed | null;
   onArm: (armed: Armed | null) => void;
   onChange: (felder: Record<string, Feld>) => void;
+  vorschau: Vorschau;
 }) {
   function umbenennen(alt: string, neu: string) {
     if (!neu || neu === alt || felder[neu]) return;
@@ -435,6 +494,7 @@ function FeldListe({
           feld={feld}
           formular={formular}
           armed={armed}
+          vorschau={vorschau}
           onArm={() => onArm(istGleich(armed, { bereich: 'feld', key }) ? null : { bereich: 'feld', key })}
           onChange={next => onChange({ ...felder, [key]: next })}
           onRename={neu => umbenennen(key, neu)}
@@ -529,6 +589,7 @@ function SpalteZeile({
   onChange,
   onDelete,
   onMove,
+  beispielZeile,
 }: {
   spalte: Spalte;
   tabellenName: string;
@@ -539,6 +600,7 @@ function SpalteZeile({
   onChange: (spalte: Spalte) => void;
   onDelete: () => void;
   onMove: (richtung: -1 | 1) => void;
+  beispielZeile: Zeile;
 }) {
   const zeilenFelder = katalogZeilenFelder(formular);
   const modus = spalte.wenn ? 'wenn' : spalte.berechnet ? 'berechnet' : 'daten';
@@ -589,68 +651,7 @@ function SpalteZeile({
       {spalte.wenn ? (
         <AnkreuzBedingung spalte={spalte} zeilenFelder={zeilenFelder} onChange={onChange} />
       ) : spalte.berechnet ? (
-        <div class="mb-1">
-          <div class="row g-1 mb-1">
-            <div class="col-4">
-              <select class="form-select form-select-sm" value={spalte.berechnet.op} onChange={e => onChange({ ...spalte, berechnet: { ...spalte.berechnet!, op: (e.target as HTMLSelectElement).value as ZeilenOpName } })}>
-                <option value="produkt">Produkt (×)</option>
-                <option value="summe">Summe (+)</option>
-                <option value="differenz">Differenz (−)</option>
-                <option value="quotient">Quotient (÷)</option>
-                <option value="zeitdifferenz">Dauer (Uhrzeit − Uhrzeit)</option>
-              </select>
-            </div>
-            <div class="col-8 small text-body-secondary align-self-center">Operanden der Reihe nach verrechnet</div>
-          </div>
-          {spalte.berechnet.operanden.map((op, i) => (
-            <div key={i} class="input-group input-group-sm mb-1">
-              <select
-                class="form-select"
-                value={typeof op === 'number' ? '__zahl' : op}
-                onChange={e => {
-                  const v = (e.target as HTMLSelectElement).value;
-                  const operanden = [...spalte.berechnet!.operanden];
-                  operanden[i] = v === '__zahl' ? 0 : v;
-                  onChange({ ...spalte, berechnet: { ...spalte.berechnet!, operanden } });
-                }}
-              >
-                {zeilenFelder.map(f => (
-                  <option key={f.pfad} value={f.pfad}>
-                    {f.label}
-                  </option>
-                ))}
-                <option value="__zahl">Fester Zahlenwert…</option>
-              </select>
-              {typeof op === 'number' && (
-                <input
-                  type="number"
-                  step="any"
-                  class="form-control"
-                  value={op}
-                  onInput={e => {
-                    const operanden = [...spalte.berechnet!.operanden];
-                    operanden[i] = Number((e.target as HTMLInputElement).value);
-                    onChange({ ...spalte, berechnet: { ...spalte.berechnet!, operanden } });
-                  }}
-                />
-              )}
-              <button
-                type="button"
-                class="btn btn-outline-danger"
-                onClick={() => onChange({ ...spalte, berechnet: { ...spalte.berechnet!, operanden: spalte.berechnet!.operanden.filter((_, j) => j !== i) } })}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-secondary"
-            onClick={() => onChange({ ...spalte, berechnet: { ...spalte.berechnet!, operanden: [...spalte.berechnet!.operanden, zeilenFelder[0]?.pfad ?? ''] } })}
-          >
-            + Operand
-          </button>
-        </div>
+        <Rechnung wert={spalte.berechnet} zeilenFelder={zeilenFelder} onChange={berechnet => onChange({ ...spalte, berechnet })} />
       ) : (
         <div class="mb-1">
           <DatenpfadWahl wert={spalte.key} eintraege={zeilenFelder} onChange={key => onChange({ ...spalte, key })} />
@@ -659,6 +660,112 @@ function SpalteZeile({
 
       <input class="form-control form-control-sm mb-1" placeholder="Anzeigename (nur für diese Liste)" value={spalte.label ?? ''} onInput={e => onChange({ ...spalte, label: (e.target as HTMLInputElement).value || undefined })} />
       <DarstellungsFelder wert={spalte} onChange={onChange} />
+      <WertVorschau text={spaltenWert(spalte, beispielZeile)} />
+    </div>
+  );
+}
+
+const ZEILEN_OPS_AUSWAHL: { wert: ZeilenOpName; text: string }[] = [
+  { wert: 'produkt', text: 'Produkt (×)' },
+  { wert: 'summe', text: 'Summe (+)' },
+  { wert: 'differenz', text: 'Differenz (−)' },
+  { wert: 'quotient', text: 'Quotient (÷)' },
+  { wert: 'zeitdifferenz', text: 'Dauer aus Uhrzeiten (ein Tag, über Mitternacht)' },
+  { wert: 'zeitspanne', text: 'Zeitspanne aus Zeitstempeln (über mehrere Tage)' },
+];
+
+/**
+ * Rechnung einer berechneten Spalte. Ruft sich für geklammerte Zwischenrechnungen selbst auf —
+ * damit sind gemischte Rechnungen wie Ende − Beginn + Pause abbildbar, ohne eine Vorrangregel
+ * einzuführen: die Klammerung steht sichtbar in der Struktur.
+ */
+function Rechnung({
+  wert,
+  zeilenFelder,
+  onChange,
+  onEntfernen,
+}: {
+  wert: ZeilenBerechnet;
+  zeilenFelder: KatalogEintrag[];
+  onChange: (wert: ZeilenBerechnet) => void;
+  onEntfernen?: () => void;
+}) {
+  function setzeOperand(index: number, operand: ZeilenOperand) {
+    onChange({ ...wert, operanden: wert.operanden.map((o, j) => (j === index ? operand : o)) });
+  }
+
+  function entferneOperand(index: number) {
+    onChange({ ...wert, operanden: wert.operanden.filter((_, j) => j !== index) });
+  }
+
+  return (
+    <div class="mb-1">
+      <div class="input-group input-group-sm mb-1">
+        <select class="form-select" value={wert.op} onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as ZeilenOpName })}>
+          {ZEILEN_OPS_AUSWAHL.map(o => (
+            <option key={o.wert} value={o.wert}>
+              {o.text}
+            </option>
+          ))}
+        </select>
+        {onEntfernen && (
+          <button type="button" class="btn btn-outline-danger" title="Zwischenrechnung entfernen" onClick={onEntfernen}>
+            ×
+          </button>
+        )}
+      </div>
+      <div class="small text-body-secondary mb-1">Operanden der Reihe nach verrechnet — für gemischte Rechnungen eine Zwischenrechnung einsetzen.</div>
+
+      {wert.operanden.map((operand, i) =>
+        typeof operand === 'object' ? (
+          // Index als Key: Operanden haben keine eigene ID, ihre Reihenfolge ist Teil der Rechnung.
+          <div key={i} class="border-start border-2 ps-2 ms-1 mb-1">
+            <Rechnung wert={operand} zeilenFelder={zeilenFelder} onChange={b => setzeOperand(i, b)} onEntfernen={() => entferneOperand(i)} />
+          </div>
+        ) : (
+          // Index als Key, siehe oben.
+          <div key={i} class="input-group input-group-sm mb-1">
+            <select
+              class="form-select"
+              value={typeof operand === 'number' ? '__zahl' : operand}
+              onChange={e => {
+                const v = (e.target as HTMLSelectElement).value;
+                if (v === '__zahl') setzeOperand(i, 0);
+                else if (v === '__rechnung') setzeOperand(i, { op: 'differenz', operanden: [] });
+                else setzeOperand(i, v);
+              }}
+            >
+              {zeilenFelder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+              <option value="__zahl">Fester Zahlenwert…</option>
+              <option value="__rechnung">Zwischenrechnung (Klammer)…</option>
+            </select>
+            {typeof operand === 'number' && (
+              <input type="number" step="any" class="form-control" value={operand} onInput={e => setzeOperand(i, Number((e.target as HTMLInputElement).value))} />
+            )}
+            <button type="button" class="btn btn-outline-danger" onClick={() => entferneOperand(i)}>
+              ×
+            </button>
+          </div>
+        ),
+      )}
+
+      <div class="d-flex gap-1">
+        <button type="button" class="btn btn-sm btn-outline-secondary" onClick={() => onChange({ ...wert, operanden: [...wert.operanden, zeilenFelder[0]?.pfad ?? ''] })}>
+          + Operand
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          title="Geklammerte Zwischenrechnung als weiteren Operanden anhängen"
+          onClick={() => onChange({ ...wert, operanden: [...wert.operanden, { op: 'differenz', operanden: [] }] })}
+        >
+          + Zwischenrechnung
+        </button>
+      </div>
     </div>
   );
 }
@@ -674,6 +781,7 @@ function TabellenBlock({
   onArm,
   onChange,
   onDelete,
+  vorschau,
 }: {
   name: string;
   tabelle: TabellenDef;
@@ -684,10 +792,14 @@ function TabellenBlock({
   onArm: (armed: Armed | null) => void;
   onChange: (tabelle: TabellenDef) => void;
   onDelete: () => void;
+  vorschau: Vorschau;
 }) {
   const zeilenFelder = katalogZeilenFelder(formular);
+  // Erste Beispielzeile dieser Tabelle -- der Filter ist darin schon angewandt.
+  const beispielZeile: Zeile = vorschau.kontext.$alle[name]?.[0] ?? {};
   const bereich = seite.bereiche.find(b => b.tabelle === name);
   const aktiv = istGleich(armed, { bereich: 'tabelle', tabelle: name });
+  const letzteAktiv = istGleich(armed, { bereich: 'letzteZeile', tabelle: name });
   const filterWerte = tabelle.filter ? werteAuswahl(tabelle.filter.feld) : [];
 
   function setzeBereich(next: Partial<{ startY: number; maxZeilen: number }>) {
@@ -791,6 +903,18 @@ function TabellenBlock({
         />
         <span class="small">erste Datenzeile auf dieser Seite</span>
       </div>
+      {bereich && bereich.maxZeilen > 1 && (
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <ScharfButton
+            aktiv={letzteAktiv}
+            onClick={() => onArm(letzteAktiv ? null : { bereich: 'letzteZeile', tabelle: name })}
+            titel="Letzte Datenzeile markieren — daraus wird die Zeilenhöhe über alle Zeilen gemittelt"
+          />
+          <span class="small">
+            letzte Datenzeile <span class="text-body-secondary">— misst die Höhe genauer</span>
+          </span>
+        </div>
+      )}
       <div class="row g-1 mb-2">
         <ZahlFeld label="startY" wert={bereich?.startY} onChange={v => setzeBereich({ startY: v ?? 0 })} />
         <ZahlFeld label="Höhe" wert={tabelle.hoehe} onChange={v => onChange({ ...tabelle, hoehe: v ?? 1 })} />
@@ -807,6 +931,7 @@ function TabellenBlock({
           formular={formular}
           armed={armed}
           index={index}
+          beispielZeile={beispielZeile}
           onArm={() => onArm(istGleich(armed, { bereich: 'spalte', tabelle: name, index }) ? null : { bereich: 'spalte', tabelle: name, index })}
           onChange={next => onChange({ ...tabelle, spalten: tabelle.spalten.map((s, i) => (i === index ? next : s)) })}
           onDelete={() => onChange({ ...tabelle, spalten: tabelle.spalten.filter((_, i) => i !== index) })}
@@ -830,7 +955,7 @@ function TabellenBlock({
   );
 }
 
-export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellenChange, armed, onArm }: Props) {
+export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellenChange, armed, onArm, vorschau }: Props) {
   const [neuerName, setNeuerName] = useState('');
   const signaturAktiv = istGleich(armed, { bereich: 'signaturBild' });
 
@@ -843,7 +968,7 @@ export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellen
 
   return (
     <div>
-      <FeldListe felder={seite.felder} formular={formular} armed={armed} onArm={onArm} onChange={felder => onSeiteChange({ ...seite, felder })} />
+      <FeldListe felder={seite.felder} formular={formular} armed={armed} onArm={onArm} vorschau={vorschau} onChange={felder => onSeiteChange({ ...seite, felder })} />
 
       <div class="mb-3">
         <div class="small fw-semibold">Datentabellen</div>
@@ -861,6 +986,7 @@ export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellen
             formular={formular}
             armed={armed}
             onArm={onArm}
+            vorschau={vorschau}
             onChange={next => onTabellenChange({ ...tabellen, [name]: next })}
             onDelete={() => {
               const rest = { ...tabellen };

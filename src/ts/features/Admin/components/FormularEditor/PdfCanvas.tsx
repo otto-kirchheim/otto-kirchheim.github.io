@@ -47,12 +47,28 @@ export interface Rechteck {
  */
 export type Achse = 'beide' | 'x' | 'y';
 
+/**
+ * Spannweite eines Zeilenrasters, als Indikator am linken Seitenrand. Zeigt ohne Beschriftung, wo
+ * die Tabelle beginnt und endet, plus einen Strich je Zeile — sonst ist aus `maxZeilen` allein
+ * nicht zu sehen, ob die Zeilen noch aufs Formular passen.
+ */
+export interface RasterMarke {
+  /** Grundlinie der ersten Zeile in PDF-Punkten (`TabellenBereich.startY`). */
+  startY: number;
+  hoehe: number;
+  zeilen: number;
+  aktiv: boolean;
+}
+
 type Props = {
   datei: File;
   seiteIndex: number;
   rechtecke: Rechteck[];
+  raster?: RasterMarke[];
   scharfGeschaltet: boolean;
   achse?: Achse;
+  /** Ersetzt den aus `achse` abgeleiteten Standardhinweis, wenn die Geste etwas Bestimmtes meint. */
+  hinweis?: string;
   onRechteck: (r: { x: number; y: number; x2: number; y2: number }) => void;
   onQuelleWaehlen: (pageIndex: number) => void;
   aktiveSeiteLabel: string;
@@ -104,6 +120,38 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
   }
 }
 
+const RASTER_RAND = 5;
+const RASTER_SPUR = 9;
+const RASTER_STRICH = 6;
+
+/**
+ * Zeichnet je Tabelle einen Klammer-Indikator an den linken Seitenrand: eine durchgehende Linie
+ * über die Spannweite, ein kurzer Strich je Zeilengrenze, keine Beschriftung. Mehrere Tabellen
+ * bekommen eigene Spuren nebeneinander, damit sich ihre Bereiche nicht überdecken.
+ */
+function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster: RasterMarke[]): void {
+  raster.forEach((r, spur) => {
+    if (r.zeilen <= 0 || r.hoehe <= 0) return;
+    const x = RASTER_RAND + spur * RASTER_SPUR;
+    // `startY` ist die Grundlinie der ERSTEN Zeile; die Zeile selbst steht darüber, weitere folgen
+    // nach unten -- deshalb oben eine Zeilenhöhe zugeben und von dort abwärts zählen.
+    const oben = r.startY + r.hoehe;
+    const nachY = (pdfY: number) => viewport.convertToViewportPoint(0, pdfY)[1]!;
+
+    ctx.strokeStyle = r.aktiv ? '#dc3545' : '#0d6efd';
+    ctx.lineWidth = r.aktiv ? 2 : 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x, nachY(oben));
+    ctx.lineTo(x, nachY(oben - r.zeilen * r.hoehe));
+    for (let i = 0; i <= r.zeilen; i++) {
+      const y = nachY(oben - i * r.hoehe);
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + RASTER_STRICH, y);
+    }
+    ctx.stroke();
+  });
+}
+
 /**
  * Rendert eine lokale PDF-Datei (noch nicht hochgeladen) via `pdfjs-dist` aufs Canvas -- kein
  * Server-Roundtrip noetig. Felder werden als Rechteck aufgezogen (Maustaste druecken, ziehen,
@@ -111,7 +159,7 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
  * kleiner Darstellung praezise gesetzt werden kann. Ziehen ist nur aktiv, wenn ein Feld scharf
  * geschaltet ist (`scharfGeschaltet`).
  */
-export function PdfCanvas({ datei, seiteIndex, rechtecke, scharfGeschaltet, achse = 'beide', onRechteck, onQuelleWaehlen, aktiveSeiteLabel }: Props) {
+export function PdfCanvas({ datei, seiteIndex, rechtecke, raster = [], scharfGeschaltet, achse = 'beide', hinweis, onRechteck, onQuelleWaehlen, aktiveSeiteLabel }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const lupeRef = useRef<HTMLCanvasElement>(null);
@@ -189,6 +237,7 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, scharfGeschaltet, achs
     const viewport = viewportRef.current;
     if (!overlay || !ctx || !viewport) return;
     ctx.clearRect(0, 0, overlay.width, overlay.height);
+    zeichneRaster(ctx, viewport, raster);
     zeichneRechtecke(ctx, viewport, rechtecke);
     if (!ziehen) return;
     // Bei Spalte/Zeilenraster wird nur eine Achse uebernommen -- die Vorschau spannt deshalb ueber
@@ -204,7 +253,7 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, scharfGeschaltet, achs
     ctx.fillRect(links, oben, breite, hoehe);
     ctx.strokeRect(links, oben, breite, hoehe);
     ctx.setLineDash([]);
-  }, [rechtecke, ziehen, gerendert, achse]);
+  }, [rechtecke, raster, ziehen, gerendert, achse]);
 
   function canvasKoordinate(e: MouseEvent): { x: number; y: number } | null {
     const canvas = canvasRef.current;
@@ -278,6 +327,7 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, scharfGeschaltet, achs
   }
 
   function ziehHinweis(): string {
+    if (hinweis) return hinweis;
     if (achse === 'x') return 'Senkrechtes Band über die Spaltenbreite ziehen — nur die linke und rechte Kante werden übernommen.';
     if (achse === 'y') return 'Waagerechtes Band über die erste Datenzeile ziehen — nur Ober- und Unterkante werden übernommen.';
     return 'Rechteck über die Zelle ziehen (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten Ausschnitt).';

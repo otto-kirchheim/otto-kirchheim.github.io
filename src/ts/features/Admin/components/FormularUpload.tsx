@@ -211,14 +211,26 @@ export function FormularUpload() {
             </li>
             <li>
               <strong>Fester Text</strong> — Platzhalter in geschweiften Klammern werden ersetzt:{' '}
-              <code>{'{seite}'}</code>/<code>{'{seiten}'}</code> für die Seitenzahl, jeder andere Name als Datenpfad
-              (z.B. <code>{'Zulagen {Monat}/{Jahr}'}</code>). So wird auch die Seitenzahl gesetzt — sie ist nicht fest
-              eingebaut; ohne solches Feld erscheint keine.
+              <code>{'{seite}'}</code>/<code>{'{seiten}'}</code> für die Seitenzahl, <code>{'{heute}'}</code> für den
+              Tag der Erzeugung, jeder andere Name als Datenpfad (z.B. <code>{'Zulagen {Monat}/{Jahr}'}</code>). So
+              wird auch die Seitenzahl gesetzt — sie ist nicht fest eingebaut; ohne solches Feld erscheint keine.
+              Die beiden Seitenzahlen vertragen einen ganzzahligen Versatz, für Verweise auf die Nachbarseite:{' '}
+              <code>{'Übertrag von Seite {seite-1}'}</code> oder <code>{'weiter auf Seite {seite+1}'}</code>.
             </li>
             <li>
-              <strong>Zeilenraster</strong> — Rechteck über die erste Datenzeile ziehen: setzt Startposition und
-              Zeilenhöhe in einem Schritt. „Zeilen auf dieser Seite" als Zahl eingeben. Eine Übertragszeile belegt
-              optisch einen Slot, diese Zahl also entsprechend kleiner setzen.
+              <strong>Datum neben der Unterschrift</strong> — Summenart <em>Letztes Datum</em> über ein Datumsfeld
+              der Tabelle, dazu eine Frist in Tagen: liegt der jüngste Eintrag noch innerhalb der Frist, wird sein
+              Datum gesetzt, sonst das heutige. Ohne Frist immer der letzte Eintrag; für ein reines Tagesdatum
+              genügt <code>{'{heute}'}</code> im festen Text.
+            </li>
+            <li>
+              <strong>Zeilenraster</strong> — waagerechtes Band über die erste Datenzeile ziehen: setzt
+              Startposition und Zeilenhöhe in einem Schritt. „Zeilen auf dieser Seite" als Zahl eingeben. Eine
+              Übertragszeile belegt optisch einen Slot, diese Zahl also entsprechend kleiner setzen. Am linken
+              Seitenrand zeigt ein Indikator ohne Beschriftung, wie weit die Tabelle damit reicht — ein Strich je
+              Zeile, eine eigene Spur je Tabelle. Laufen die Striche nach unten aus den Zeilen heraus, ist die Höhe
+              minimal daneben: dann zusätzlich <em>letzte Datenzeile</em> markieren, die Höhe wird daraus über alle
+              Zeilen gemittelt statt aus einer einzelnen Messung.
             </li>
             <li>
               <strong>Spalten</strong> — Rechteck über die Spalte ziehen, davon werden nur die linke/rechte Kante
@@ -226,18 +238,30 @@ export function FormularUpload() {
               derselben Zeile (z.B. Produkt aus Dauer und Satz).
             </li>
             <li>
-              <strong>Signatur-Fläche</strong> — Rechteck für die Canvas-Unterschrift aufziehen.
+              <strong>Signatur-Fläche</strong> — Rechteck für die im Browser gezeichnete Unterschrift aufziehen. Die
+              Testdaten-Vorschau setzt dort einen Beispiel-Schriftzug ein, damit Größe und Lage prüfbar sind.
+              <br />
+              <strong>Nicht dasselbe wie eine zertifikatsbasierte Signatur:</strong> für die zwei prüfenden Personen
+              wird bewusst <em>kein</em> Signaturfeld ins PDF gelegt. Sie signieren das fertige PDF im kostenlosen
+              Adobe Reader über <em>Werkzeuge → Zertifikate → Digital signieren</em> und ziehen die Box dort selbst
+              auf. Hier ist dafür nichts zu hinterlegen — es genügt, im Formular Platz für die Unterschriften
+              freizulassen.
             </li>
           </ul>
           <p class="mb-1">
             Schriftgröße, Ausrichtung und Format gelten je Zelle; <em>Schrift automatisch verkleinern</em> passt zu
-            lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Die Koordinaten-Anzeige
-            rechts im Kopf jedes Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen
-            (z.B. gleiche Höhe wie das Feld daneben).
+            lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Senkrecht wird der Text
+            immer in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde — ein Feld ohne Ober-/Unterkante
+            sitzt dagegen mit seiner Grundlinie auf dem gesetzten y-Wert. Die Koordinaten-Anzeige rechts im Kopf
+            jedes Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen (z.B. gleiche Höhe
+            wie das Feld daneben).
           </p>
           <p class="mb-0">
-            „Testdaten-Vorschau" erzeugt mit Platzhalterwerten ein echtes PDF, um die Platzierung zu prüfen. Unter dem
-            Editor liegt die komplette Konfiguration als JSON zum Kopieren, Sichern und Wiedereinfügen.
+            Zwei Vorschauen erzeugen jeweils ein echtes PDF: <em>Beispieldaten</em> füllt fachlich passende Werte ein
+            (Name, Personalnummer, Auftragsnummern, Datum) und sieht damit aus wie ein ausgefülltes Formular;{' '}
+            <em>Platzhalter</em> setzt generische Füllwerte und zeigt vor allem, welche Zelle zu welchem Eintrag gehört.
+            Die Werte-Vorschau unter jedem Eintrag in der Liste nutzt die Beispieldaten. Unter dem Editor liegt die
+            komplette Konfiguration als JSON zum Kopieren, Sichern und Wiedereinfügen.
           </p>
         </div>
       </details>

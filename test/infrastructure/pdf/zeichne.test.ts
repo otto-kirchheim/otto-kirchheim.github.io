@@ -62,6 +62,18 @@ describe('zeichne', () => {
     expect(gesammelt[0]!.y).toBeCloseTo(206.4, 5);
   });
 
+  it('Tabellenzeile: mit der Zeilenhöhe als y2 sitzt der Text mittig in der Zeile, nicht auf der Unterkante', async () => {
+    // Genau die Zelle, die `build.ts` je Spalte baut: x-Kanten aus der Spalte, y-Kanten aus der
+    // Zeilenhöhe. Ohne y2 wäre `y` die Grundlinie -- der Text säße dann auf der Zeilenunterkante.
+    const gesammelt: Gezeichnet[] = [];
+    const startY = 700;
+    const hoehe = 14;
+    const size = 9;
+    zeichne(macheSeite(gesammelt), 'Zelle', { x: 50, x2: 120, y: startY, y2: startY + hoehe, size }, await macheFont());
+    expect(gesammelt[0]!.y).toBeCloseTo(startY + (hoehe - 0.72 * size) / 2, 5);
+    expect(gesammelt[0]!.y).toBeGreaterThan(startY);
+  });
+
   it('autoGroesse verkleinert die Schrift, bis der Text in die Zellbreite passt', async () => {
     const font = await macheFont();
     const gesammelt: Gezeichnet[] = [];

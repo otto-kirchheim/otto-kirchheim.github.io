@@ -61,6 +61,33 @@ describe('parseRegistry', () => {
     expect(() => parseRegistry('kaputt')).toThrow(ZodError);
   });
 
+  it('nimmt verschachtelte Zeilenrechnungen an (Operand ist selbst eine Rechnung)', () => {
+    const json = macheRegistryJson();
+    json.ez.versionen[0].tabellen.haupt.spalten = [
+      {
+        key: 'Dauer',
+        x: 50,
+        size: 10,
+        format: 'stunden',
+        berechnet: { op: 'summe', operanden: [{ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] }, 'Pause'] },
+      },
+    ] as never;
+
+    const registry = parseRegistry(alsUnknownVomServer(json));
+    const berechnet = registry.ez.versionen[0].tabellen.haupt.spalten[0].berechnet!;
+    expect(berechnet.op).toBe('summe');
+    expect(berechnet.operanden[0]).toEqual({ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] });
+  });
+
+  it('wirft ZodError, wenn eine Zwischenrechnung selbst kaputt ist (Rekursion validiert mit)', () => {
+    const json = macheRegistryJson();
+    json.ez.versionen[0].tabellen.haupt.spalten = [
+      { key: 'Dauer', x: 50, size: 10, berechnet: { op: 'summe', operanden: [{ op: 'gibtsNicht', operanden: [] }] } },
+    ] as never;
+
+    expect(() => parseRegistry(alsUnknownVomServer(json))).toThrow(ZodError);
+  });
+
   it('lässt unbekannte Formular-Zusatzfelder für spätere Erweiterung zu (kein strict())', () => {
     const mitZusatzfeld = macheRegistryJson();
     (mitZusatzfeld.ez as Record<string, unknown>).kommentar = 'nur intern';

@@ -40,4 +40,13 @@ describe('spaltenWert', () => {
   it('wendet das Format auf das Rechenergebnis an', () => {
     expect(spaltenWert(spalte({ format: 'waehrung', berechnet: { op: 'produkt', operanden: ['dauer', 'satz'] } }), zeile)).toBe('37,50');
   });
+
+  it('verschachtelte Rechnung: BZ-Dauer als Ende − Beginn + Pause, formatiert als Zeitspanne', () => {
+    const bz = { Beginn: '2026-03-02T16:00:00Z', Ende: '2026-03-05T06:00:00Z', Pause: 30 };
+    const sp = spalte({
+      format: 'stunden',
+      berechnet: { op: 'summe', operanden: [{ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] }, 'Pause'] },
+    });
+    expect(spaltenWert(sp, bz)).toBe('62:30');
+  });
 });

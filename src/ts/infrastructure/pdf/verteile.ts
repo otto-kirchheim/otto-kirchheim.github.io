@@ -50,17 +50,5 @@ export function verteile(zeilen: TabellenZeilen, layout: Layout): Block[] {
     bloecke.push(nimm(weitere));
   }
 
-  const letzter = bloecke.at(-1);
-  const vorletzter = bloecke.at(-2);
-  if (letzter && vorletzter) {
-    for (const [name, letzteZeilen] of Object.entries(letzter.zeilen)) {
-      const vorherige = vorletzter.zeilen[name];
-      if (letzteZeilen.length === 1 && vorherige && vorherige.length > 1 && letzteZeilen.length < kapazitaet(letzter.def, name)) {
-        const geliehen = vorherige.pop();
-        if (geliehen) letzteZeilen.unshift(geliehen);
-      }
-    }
-  }
-
   return bloecke;
 }

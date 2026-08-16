@@ -1,11 +1,12 @@
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { PdfCanvas, type Achse, type Rechteck } from './PdfCanvas';
+import { PdfCanvas, type Achse, type RasterMarke, type Rechteck } from './PdfCanvas';
 import { FeldPanel, type Armed } from './FeldPanel';
-import { erzeugeDummyDaten } from './dummyDaten';
+import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';
+import { beispielSignatur } from './beispielSignatur';
 import type { FormularCode } from './datenKatalog';
 
 export type Konfig = { ersteSeite: SeitenDef; weitereSeite?: SeitenDef; tabellen: Version['tabellen'] };
@@ -31,8 +32,36 @@ function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
  */
 function achseFuer(armed: Armed | null): Achse {
   if (armed?.bereich === 'spalte') return 'x';
-  if (armed?.bereich === 'tabelle') return 'y';
+  if (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') return 'y';
   return 'beide';
+}
+
+/**
+ * Zeilenhöhe aus erster und letzter Datenzeile, über alle Zeilen gemittelt. Eine Einzelmessung an
+ * nur einer Zeile ist zwangsläufig ungenau (freihändig gezogenes Band); der Renderer zieht je Zeile
+ * dieselbe `hoehe` ab, wodurch sich Bruchteile eines Punktes über die Tabelle zu einem sichtbaren
+ * Versatz aufsummieren. `null` bedeutet: nicht messbar (zu wenige Zeilen oder Reihenfolge vertauscht).
+ */
+export function zeilenHoeheAus(startY: number, letzteY: number, zeilen: number): number | null {
+  if (zeilen < 2) return null;
+  const hoehe = (startY - letzteY) / (zeilen - 1);
+  return hoehe > 0 ? Number(hoehe.toFixed(2)) : null;
+}
+
+/** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Indikator am linken Seitenrand. */
+function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): RasterMarke[] {
+  return seite.bereiche.flatMap(bereich => {
+    const tabelle = tabellen[bereich.tabelle];
+    if (!tabelle) return [];
+    return [
+      {
+        startY: bereich.startY,
+        hoehe: tabelle.hoehe,
+        zeilen: bereich.maxZeilen,
+        aktiv: Boolean((armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') && armed.tabelle === bereich.tabelle),
+      },
+    ];
+  });
 }
 
 function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): Rechteck[] {
@@ -89,9 +118,15 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
 export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const [tab, setTab] = useState<'erste' | 'weitere'>('erste');
   const [armed, setArmed] = useState<Armed | null>(null);
-  const [vorschauLaeuft, setVorschauLaeuft] = useState(false);
+  const [vorschauLaeuft, setVorschauLaeuft] = useState<Werteart | null>(null);
 
   const aktiveSeite = tab === 'erste' ? value.ersteSeite : value.weitereSeite;
+  // Beispielwerte samt Renderer-Kontext -- die Feldliste zeigt damit dieselben Zahlen wie das PDF.
+  // Neu berechnet, sobald sich die Konfiguration oder der Seiten-Tab ändert.
+  const vorschau = useMemo(
+    () => erzeugeVorschau(value.tabellen, value.ersteSeite, value.weitereSeite, tab, formular),
+    [value.tabellen, value.ersteSeite, value.weitereSeite, tab, formular],
+  );
 
   function setzeAktiveSeite(seite: SeitenDef) {
     if (tab === 'erste') onChange({ ...value, ersteSeite: seite });
@@ -111,6 +146,20 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       if (!tabelle) return;
       const spalten = tabelle.spalten.map((s, i) => (i === armed.index ? { ...s, x: r.x, x2: r.x2 } : s));
       onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten } } });
+    } else if (armed.bereich === 'letzteZeile') {
+      // Zeilenhöhe über ALLE Zeilen gemittelt statt aus einer einzelnen Messung: eine Ungenauigkeit
+      // von Bruchteilen eines Punktes summiert sich sonst über die Tabelle zu einem sichtbaren
+      // Versatz auf, weil der Renderer je Zeile dieselbe `hoehe` abzieht.
+      const tabelle = value.tabellen[armed.tabelle];
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      if (!tabelle || !bereich) return;
+      const gemessen = zeilenHoeheAus(bereich.startY, r.y, bereich.maxZeilen);
+      if (gemessen === null) {
+        createSnackBar({ message: 'Die letzte Zeile muss unter der ersten liegen', status: 'warning', timeout: 3000 });
+        return;
+      }
+      onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
+      createSnackBar({ message: `Zeilenhöhe: ${gemessen} pt (aus ${bereich.maxZeilen} Zeilen)`, status: 'success', timeout: 3000 });
     } else if (armed.bereich === 'tabelle') {
       // Erste Datenzeile: y liefert die Startposition, die Höhe den Zeilenabstand.
       const tabelle = value.tabellen[armed.tabelle];
@@ -129,10 +178,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     setArmed(null);
   }
 
-  async function testdatenVorschau() {
-    setVorschauLaeuft(true);
+  async function testdatenVorschau(art: Werteart) {
+    setVorschauLaeuft(art);
     try {
-      const daten = erzeugeDummyDaten(value.tabellen, value.ersteSeite, value.weitereSeite);
+      const daten = erzeugeDummyDaten(value.tabellen, value.ersteSeite, value.weitereSeite, formular, art);
       const bytes = await build(
         {
           version: 'vorschau',
@@ -143,6 +192,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           formular,
         },
         daten,
+        // Sonst bliebe die Signaturfläche als einziges Element ohne Beispielwert.
+        beispielSignatur(),
       );
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
@@ -154,7 +205,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         fixed: true,
       });
     } finally {
-      setVorschauLaeuft(false);
+      setVorschauLaeuft(null);
     }
   }
 
@@ -173,9 +224,26 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             </button>
           </li>
         </ul>
-        <button type="button" class="btn btn-sm btn-primary" disabled={vorschauLaeuft} onClick={() => void testdatenVorschau()}>
-          {vorschauLaeuft ? 'Erzeugt…' : 'Testdaten-Vorschau'}
-        </button>
+        <div class="btn-group btn-group-sm">
+          <button
+            type="button"
+            class="btn btn-primary"
+            title="Fachlich passende Werte aus dem Datenkatalog — sieht aus wie ein ausgefülltes Formular"
+            disabled={vorschauLaeuft !== null}
+            onClick={() => void testdatenVorschau('beispiel')}
+          >
+            {vorschauLaeuft === 'beispiel' ? 'Erzeugt…' : 'Beispieldaten'}
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-primary"
+            title="Generische Füllwerte — zeigt vor allem, welche Zelle zu welchem Eintrag gehört"
+            disabled={vorschauLaeuft !== null}
+            onClick={() => void testdatenVorschau('platzhalter')}
+          >
+            {vorschauLaeuft === 'platzhalter' ? 'Erzeugt…' : 'Platzhalter'}
+          </button>
+        </div>
       </div>
 
       {tab === 'weitere' && !value.weitereSeite && (
@@ -194,8 +262,14 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               datei={datei}
               seiteIndex={aktiveSeite.quelle}
               rechtecke={sammleRechtecke(aktiveSeite, value.tabellen, armed)}
+              raster={sammleRaster(aktiveSeite, value.tabellen, armed)}
               scharfGeschaltet={armed !== null}
               achse={achseFuer(armed)}
+              hinweis={
+                armed?.bereich === 'letzteZeile'
+                  ? 'Band über die LETZTE Datenzeile ziehen — die Zeilenhöhe wird daraus über alle Zeilen gemittelt.'
+                  : undefined
+              }
               onRechteck={handleRechteck}
               onQuelleWaehlen={pageIndex => setzeAktiveSeite({ ...aktiveSeite, quelle: pageIndex })}
               aktiveSeiteLabel={tab === 'erste' ? 'Erste Seite' : 'Weitere Seite'}
@@ -222,6 +296,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               onTabellenChange={t => onChange({ ...value, tabellen: t })}
               armed={armed}
               onArm={setArmed}
+              vorschau={vorschau}
             />
           </div>
         </div>

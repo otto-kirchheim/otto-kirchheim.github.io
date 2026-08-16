@@ -31,13 +31,18 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
   const font = await pdf.embedFont(StandardFonts.Helvetica);
 
   const bloecke = verteile(alle, layout);
+  // Einmal je Dokument bestimmt, nicht je Seite -- sonst könnte ein Lauf über Mitternacht zwei
+  // verschiedene Datumsangaben im selben PDF erzeugen.
+  const heute = new Date();
   let bisher: TabellenZeilen = {};
 
   for (const [i, block] of bloecke.entries()) {
     const { def } = block;
     const [seite] = await pdf.copyPages(vorlage, [def.quelle]);
     pdf.addPage(seite);
-    const kontext: Kontext = { $seite: block.zeilen, $bisher: bisher, $alle: alle, seite: i + 1, seiten: bloecke.length };
+    // `$laufend` ist die Summe bis EINSCHLIESSLICH dieser Seite -- auf der letzten Seite gleich
+    // `$alle`, davor die Zwischensumme, die eine Übertragsrechnung fortschreibt.
+    const kontext: Kontext = { $seite: block.zeilen, $bisher: bisher, $laufend: verbinde(bisher, block.zeilen), $alle: alle, seite: i + 1, seiten: bloecke.length, heute };
 
     // Ein einziger Feld-Bereich: Kopfangaben, Zwischen-/Gesamtsummen, Übertragszeile und
     // Seitenzahl unterscheiden sich nur durch Koordinaten und `berechnet`, nicht durch eine
@@ -49,7 +54,9 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
       if (!tabelle) continue;
       let y = bereich.startY;
       for (const zeile of block.zeilen[bereich.tabelle] ?? []) {
-        for (const sp of tabelle.spalten) zeichne(seite, spaltenWert(sp, zeile), { ...sp, y }, font);
+        // Die Spalte liefert nur die x-Kanten; die y-Kanten der Zelle kommen aus der Zeilenhöhe.
+        // Ohne sie wäre `y` die Grundlinie und der Text säße auf der Zeilenunterkante statt mittig.
+        for (const sp of tabelle.spalten) zeichne(seite, spaltenWert(sp, zeile), { ...sp, y, y2: y + tabelle.hoehe }, font);
         y -= tabelle.hoehe;
       }
     }
