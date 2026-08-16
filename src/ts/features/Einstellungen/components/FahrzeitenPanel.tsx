@@ -149,7 +149,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
           })}
         </tbody>
       </table>
-      <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" onClick={addRow}>
+      <button type="button" class="btn btn-sm btn-secondary d-flex align-items-center gap-1 mt-md-2" onClick={addRow}>
         <span class="material-icons-round small-icons">add</span>
         Zeile hinzufügen
       </button>

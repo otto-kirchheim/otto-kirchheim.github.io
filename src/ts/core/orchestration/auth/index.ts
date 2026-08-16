@@ -38,6 +38,12 @@ registerAppStartTask(() => {
     .querySelector<HTMLButtonElement>('#btnHelpStart')
     ?.addEventListener('click', () => openHelpModal('tab.start'));
 
+  document.querySelectorAll<HTMLButtonElement>('#startSchnellzugriff [data-jump-tab]').forEach(quickButton => {
+    quickButton.addEventListener('click', () => {
+      document.querySelector<HTMLButtonElement>(`#${quickButton.dataset.jumpTab}`)?.click();
+    });
+  });
+
   const willkommenEl = document.querySelector<HTMLHeadingElement>('#Willkommen');
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
   const monatEl = document.querySelector<HTMLInputElement>('#Monat');
@@ -127,6 +133,7 @@ registerAppStartTask(() => {
     monatEl?.classList.remove('d-none');
     navmenuEl?.classList.remove('d-none');
     btnNavmenuEl?.classList.remove('d-none');
+    document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
     markStep('session-restore', 'sr:nav-visible');
 
     initAutoSaveEventListener();

@@ -302,6 +302,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   await syncFeatureTabs(vorgabenU.Einstellungen?.aktivierteTabs);
   document.querySelector<HTMLDivElement>('#navmenu')?.classList.remove('d-none');
   document.querySelector<HTMLButtonElement>('#btn-navmenu')?.classList.remove('d-none');
+  document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
   createSnackBar({
     message: `Neue Daten geladen.`,
     status: 'success',
