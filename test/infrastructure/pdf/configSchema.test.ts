@@ -3,7 +3,7 @@ import { ZodError } from 'zod';
 import { resolve } from '@otto-kirchheim/nebengeld-shared';
 import { parseRegistry } from '@/infrastructure/pdf/configSchema';
 
-const leeresLayout = { template: 'x.pdf', ersteSeite: { quelle: 0, maxZeilen: 1, startY: 0, kopf: {} } };
+const leeresLayout = { template: 'x.pdf', ersteSeite: { quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1 }], felder: {} } };
 
 function macheRegistryJson() {
   return {
@@ -15,14 +15,14 @@ function macheRegistryJson() {
           gueltigVon: '2025-01-01',
           gueltigBis: '2026-01-01',
           layout: leeresLayout,
-          zeilen: { quelle: 'zeilen', hoehe: 12, spalten: [] },
+          tabellen: { haupt: { quelle: 'zeilen', hoehe: 12, spalten: [] } },
         },
         {
           version: 'v2',
           gueltigVon: '2026-01-01',
           gueltigBis: null,
           layout: leeresLayout,
-          zeilen: { quelle: 'zeilen', hoehe: 12, spalten: [] },
+          tabellen: { haupt: { quelle: 'zeilen', hoehe: 12, spalten: [] } },
         },
       ],
     },

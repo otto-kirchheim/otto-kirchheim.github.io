@@ -71,6 +71,7 @@
     "dayjs-feiertage": "^0.1.0",
     "file-saver": "^2.0.5",
     "material-icons": "^1.13.14",
+    "pdfjs-dist": "^6.2.108",
     "preact": "^10.29.8",
     "signature_pad": "^5.1.4",
     "uuid": "^14.0.1",

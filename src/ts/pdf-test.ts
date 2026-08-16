@@ -4,6 +4,7 @@
 import { PDFDocument } from '@cantoo/pdf-lib';
 import { saveAs } from 'file-saver';
 import { resolve } from '@otto-kirchheim/nebengeld-shared';
+import type { SeitenDef } from '@otto-kirchheim/nebengeld-shared';
 import { build } from './infrastructure/pdf/build';
 import { confirmDialog } from './infrastructure/ui/confirmDialog';
 import { erstelleSignaturPad, holeSignaturPng } from './infrastructure/pdf/signaturePad';
@@ -16,25 +17,23 @@ async function macheLeereVorlage(): Promise<string> {
   return URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }));
 }
 
-function macheSeite() {
+function macheSeite(): SeitenDef {
   return {
     quelle: 0,
-    maxZeilen: 20,
-    startY: 700,
-    kopf: {
+    bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: 20 }],
+    felder: {
       titel: { x: 50, y: 800, size: 16 },
       name: { x: 50, y: 770, size: 12 },
-    },
-    fuss: {
       summeLabel: { x: 400, y: 60, size: 10 },
       summe: {
         x: 500,
         y: 60,
         size: 10,
-        align: 'rechts' as const,
-        format: 'waehrung' as const,
-        berechnet: { op: 'summe' as const, ueber: '$seite', feld: 'betrag' },
+        align: 'rechts',
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
       },
+      seitenzahl: { x: 500, y: 30, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' },
     },
     signaturBild: { x: 50, y: 550, w: 150, h: 50 },
   };
@@ -56,13 +55,15 @@ async function ladeRegistryJson(): Promise<unknown> {
           gueltigVon: '2025-01-01',
           gueltigBis: '2026-01-01',
           layout: { template, ersteSeite: macheSeite() },
-          zeilen: {
-            quelle: 'zeilen',
-            hoehe: 16,
-            spalten: [
-              { key: 'text', x: 50, size: 10 },
-              { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
-            ],
+          tabellen: {
+            haupt: {
+              quelle: 'zeilen',
+              hoehe: 16,
+              spalten: [
+                { key: 'text', x: 50, size: 10 },
+                { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
+              ],
+            },
           },
         },
         {
@@ -70,13 +71,15 @@ async function ladeRegistryJson(): Promise<unknown> {
           gueltigVon: '2026-01-01',
           gueltigBis: null,
           layout: { template, ersteSeite: macheSeite() },
-          zeilen: {
-            quelle: 'zeilen',
-            hoehe: 16,
-            spalten: [
-              { key: 'text', x: 50, size: 10 },
-              { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
-            ],
+          tabellen: {
+            haupt: {
+              quelle: 'zeilen',
+              hoehe: 16,
+              spalten: [
+                { key: 'text', x: 50, size: 10 },
+                { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
+              ],
+            },
           },
         },
       ],

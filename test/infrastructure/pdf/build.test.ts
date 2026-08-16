@@ -28,31 +28,30 @@ function macheCfg(): Version & { formular: string } {
       template: 'test_1seitig.pdf',
       ersteSeite: {
         quelle: 0,
-        maxZeilen: 20,
-        startY: 700,
-        kopf: {
+        bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: 20 }],
+        felder: {
           name: { x: 50, y: 800, size: 12 },
-        },
-        fuss: {
           summe: {
             x: 500,
             y: 60,
             size: 10,
             align: 'rechts',
             format: 'waehrung',
-            berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
+            berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
           },
         },
         signaturBild: { x: 400, y: 100, w: 120, h: 40 },
       },
     },
-    zeilen: {
-      quelle: 'zeilen',
-      hoehe: 14,
-      spalten: [
-        { key: 'text', x: 50, size: 10 },
-        { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
-      ],
+    tabellen: {
+      haupt: {
+        quelle: 'zeilen',
+        hoehe: 14,
+        spalten: [
+          { key: 'text', x: 50, size: 10 },
+          { key: 'betrag', x: 500, size: 10, align: 'rechts', format: 'waehrung' },
+        ],
+      },
     },
   };
 }
@@ -112,5 +111,38 @@ describe('build', () => {
     delete cfg.layout.ersteSeite.signaturBild;
     const bytes = await build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG);
     expect(await hatBildXObject(bytes)).toBe(false);
+  });
+
+  it('rendert Übertragszeile und berechnete Spalten über mehrere Seiten ohne Fehler', async () => {
+    const cfg = macheCfg();
+    cfg.layout.ersteSeite.bereiche = [{ tabelle: 'haupt', startY: 700, maxZeilen: 2 }];
+    cfg.layout.weitereSeite = {
+      quelle: 0,
+      bereiche: [{ tabelle: 'haupt', startY: 680, maxZeilen: 2 }],
+      felder: {
+        beschriftung: { x: 50, y: 700, x2: 200, y2: 714, size: 10, text: 'Übertrag' },
+        uebertragSumme: {
+          x: 400,
+          y: 700,
+          x2: 500,
+          y2: 714,
+          size: 10,
+          align: 'rechts',
+          format: 'waehrung',
+          berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
+        },
+        seitenzahl: { x: 480, y: 30, x2: 545, y2: 42, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' },
+      },
+    };
+    cfg.tabellen.haupt!.spalten.push({ key: 'gesamt', x: 300, x2: 380, size: 10, align: 'zentriert', berechnet: { op: 'produkt', operanden: ['betrag', 2] } });
+
+    const daten = {
+      name: 'Max',
+      zeilen: Array.from({ length: 6 }, (_, i) => ({ text: `Zeile ${i + 1}`, betrag: i + 1 })),
+    };
+
+    const bytes = await build(cfg, daten);
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getPageCount()).toBe(3);
   });
 });

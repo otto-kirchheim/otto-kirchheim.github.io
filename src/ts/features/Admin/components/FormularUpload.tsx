@@ -2,38 +2,17 @@ import { useState } from 'preact/hooks';
 import { FetchRetry, getServerUrl } from '@/infrastructure/api/FetchRetry';
 import Storage from '@/infrastructure/storage/Storage';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { JsonEditor } from './JsonEditor';
+import { FormularEditor, leereSeite, type Konfig } from './FormularEditor/FormularEditor';
+import { ZEILEN_QUELLEN, type FormularCode } from './FormularEditor/datenKatalog';
 
 const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
-type FormularCode = (typeof FORMULAR_CODES)[number];
 
-const KONFIG_PLATZHALTER = JSON.stringify(
-  {
-    ersteSeite: {
-      quelle: 0,
-      maxZeilen: 20,
-      startY: 700,
-      kopf: { name: { x: 50, y: 800, size: 12 } },
-      fuss: {
-        summe: {
-          x: 500,
-          y: 60,
-          size: 10,
-          align: 'rechts',
-          format: 'waehrung',
-          berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
-        },
-      },
-    },
-    zeilen: {
-      quelle: 'zeilen',
-      hoehe: 14,
-      spalten: [{ key: 'text', x: 50, size: 10 }],
-    },
-  },
-  null,
-  2,
-);
+function leereKonfig(formular: FormularCode): Konfig {
+  return {
+    ersteSeite: leereSeite(),
+    tabellen: { haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', hoehe: 14, spalten: [] } },
+  };
+}
 
 /**
  * Lädt die PDF-Vorlage hoch (Bun-natives FormData-Handling im Backend, siehe
@@ -61,11 +40,11 @@ async function ladeVorlagenHoch(formular: FormularCode, datei: File): Promise<st
 }
 
 /**
- * Minimale Admin-Oberfläche zum Anlegen einer neuen Formular-Version: EINE PDF-Vorlage
- * (ein Layout pro Version -- die ursprünglich geplante Aufteilung in einseitig/mehrseitig
- * war nur wegen Kandidat C (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter
- * Kandidat E) plus die Koordinaten-Config als JSON. Wird in Phase 13 zur vollen
- * Drag/Resize-Oberfläche ausgebaut; dieser JSON-Modus bleibt dann als Power-User-Fallback bestehen.
+ * Admin-Oberfläche zum Anlegen einer neuen Formular-Version: EINE PDF-Vorlage (ein Layout pro
+ * Version -- die ursprünglich geplante Aufteilung in einseitig/mehrseitig war nur wegen
+ * Kandidat C (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter Kandidat E) plus die
+ * Koordinaten-Config, per `FormularEditor` (Phase 8) durch Klicken auf die echte PDF-Vorschau
+ * gesetzt statt per Hand ins JSON getippt.
  */
 export function FormularUpload() {
   const [formular, setFormular] = useState<FormularCode>('ez');
@@ -73,8 +52,15 @@ export function FormularUpload() {
   const [gueltigVon, setGueltigVon] = useState('');
   const [gueltigBis, setGueltigBis] = useState('');
   const [datei, setDatei] = useState<File | null>(null);
-  const [konfigJson, setKonfigJson] = useState(KONFIG_PLATZHALTER);
+  const [konfig, setKonfig] = useState<Konfig>(() => leereKonfig('ez'));
   const [speichert, setSpeichert] = useState(false);
+
+  function wechsleFormular(code: FormularCode): void {
+    setFormular(code);
+    // Zeilen-Quelle und Datenpfade sind ressourcenspezifisch -- eine für `ez` gebaute Konfiguration
+    // zeigt unter `ewt` ins Leere, deshalb bewusst zurücksetzen statt stillschweigend übernehmen.
+    setKonfig(leereKonfig(code));
+  }
 
   async function handleSubmit(e: Event): Promise<void> {
     e.preventDefault();
@@ -83,16 +69,7 @@ export function FormularUpload() {
       return;
     }
 
-    let eingabe: { zeilen: unknown; [key: string]: unknown };
-    try {
-      eingabe = JSON.parse(konfigJson) as typeof eingabe;
-    } catch {
-      createSnackBar({ message: 'Koordinaten-Config ist kein gültiges JSON', status: 'error', timeout: 3000, fixed: true });
-      return;
-    }
-    // JSON-Feld enthält ersteSeite/weitereSeite UND zeilen zusammen (leichter für den Admin zu
-    // pflegen) -- die Route erwartet konfig={ersteSeite,weitereSeite} und zeilen getrennt.
-    const { zeilen, ...konfig } = eingabe;
+    const { tabellen, ...rest } = konfig;
 
     setSpeichert(true);
     try {
@@ -100,7 +77,7 @@ export function FormularUpload() {
 
       const result = await FetchRetry<Record<string, unknown>, unknown>(
         `formulare/${formular}/versionen`,
-        { version, gueltigVon, gueltigBis: gueltigBis || null, vorlageId, konfig, zeilen },
+        { version, gueltigVon, gueltigBis: gueltigBis || null, vorlageId, konfig: rest, tabellen },
         'POST',
       );
 
@@ -112,6 +89,7 @@ export function FormularUpload() {
       setGueltigVon('');
       setGueltigBis('');
       setDatei(null);
+      setKonfig(leereKonfig(formular));
     } catch (error) {
       createSnackBar({
         message: `Fehler: ${error instanceof Error ? error.message : String(error)}`,
@@ -141,7 +119,7 @@ export function FormularUpload() {
             id="formular-upload-code"
             class="form-select"
             value={formular}
-            onChange={e => setFormular((e.target as HTMLSelectElement).value as FormularCode)}
+            onChange={e => wechsleFormular((e.target as HTMLSelectElement).value as FormularCode)}
           >
             {FORMULAR_CODES.map(code => (
               <option key={code} value={code}>
@@ -212,45 +190,63 @@ export function FormularUpload() {
             Koordinatensystem: PDF-Punkte (1pt = 1/72 Zoll), Ursprung <strong>unten links</strong>. A4 = 595×842pt.
           </p>
           <p class="mb-1">
-            <code>ersteSeite</code> wird immer genau einmal gerendert, <code>weitereSeite</code> (optional) wiederholt
-            sich bei Zeilenüberlauf. Beide haben dieselbe Form:
+            <strong>Erste Seite</strong> wird immer genau einmal gerendert, <strong>Weitere Seite</strong> (optional)
+            wiederholt sich bei Zeilenüberlauf. Eintrag in der Liste rechts <em>scharf schalten</em>, dann links auf dem
+            PDF ein <strong>Rechteck über die Zelle ziehen</strong> (Maustaste gedrückt halten — die Lupe zeigt den
+            vergrößerten Ausschnitt). Der Text wird laut Ausrichtung in dieser Zelle platziert, bei „zentriert" mittig
+            zwischen den beiden Kanten.
           </p>
           <ul class="mb-2">
             <li>
-              <code>quelle</code> — Seitenindex in der hochgeladenen PDF (0 = erste Seite).
+              <strong>Felder</strong> — alles außerhalb der Datentabelle: Kopfangaben, Summen, Übertrag, Seitenzahl.
+              Es gibt bewusst nur einen Bereich, denn die Position bestimmt allein die gezogene Zelle. Je Feld wählbar:
+              <em>Datenfeld</em> (aus der Liste der wirklich gelieferten Werte), <em>Mehrere</em> (zusammengesetzt,
+              z.B. „Nachname, Vorname" oder Adresszeilen — Trennzeichen frei wählbar, leere Teile fallen weg),
+              <em>Summe</em> oder <em>fester Text</em>.
             </li>
             <li>
-              <code>maxZeilen</code> — wie viele Datenzeilen auf diese Seite passen.
+              <strong>Summen</strong> — Summe/Anzahl/Maximum, wahlweise über <em>alle Zeilen</em> (Gesamtsumme),
+              <em>nur diese Seite</em> (Zwischensumme) oder <em>alle Vorseiten</em> (Übertrag). Das ersetzt die
+              frühere Trennung in Kopf-, Seitenfuß- und Fußbereich.
             </li>
             <li>
-              <code>startY</code> — y-Koordinate der ersten Datenzeile, jede weitere Zeile rutscht um{' '}
-              <code>zeilen.hoehe</code> nach unten.
+              <strong>Fester Text</strong> — Platzhalter in geschweiften Klammern werden ersetzt:{' '}
+              <code>{'{seite}'}</code>/<code>{'{seiten}'}</code> für die Seitenzahl, jeder andere Name als Datenpfad
+              (z.B. <code>{'Zulagen {Monat}/{Jahr}'}</code>). So wird auch die Seitenzahl gesetzt — sie ist nicht fest
+              eingebaut; ohne solches Feld erscheint keine.
             </li>
             <li>
-              <code>kopf</code>/<code>fuss</code> — Felder außerhalb der Datentabelle, je{' '}
-              <code>{'{ name: { x, y, size, align?, format?, berechnet? } }'}</code>. <code>fuss</code> wird auf
-              jeder Seite gezeichnet, die ihn definiert (meist die letzte, bei Bereitschaft bewusst die erste).
+              <strong>Zeilenraster</strong> — Rechteck über die erste Datenzeile ziehen: setzt Startposition und
+              Zeilenhöhe in einem Schritt. „Zeilen auf dieser Seite" als Zahl eingeben. Eine Übertragszeile belegt
+              optisch einen Slot, diese Zahl also entsprechend kleiner setzen.
             </li>
             <li>
-              <code>signaturBild</code> — <code>{'{ x, y, w, h }'}</code>, Platzierung der Canvas-Unterschrift.
+              <strong>Spalten</strong> — Rechteck über die Spalte ziehen, davon werden nur die linke/rechte Kante
+              übernommen (die Höhe kommt aus dem Zeilenraster). Optional <em>berechnet</em> aus anderen Feldern
+              derselben Zeile (z.B. Produkt aus Dauer und Satz).
+            </li>
+            <li>
+              <strong>Signatur-Fläche</strong> — Rechteck für die Canvas-Unterschrift aufziehen.
             </li>
           </ul>
           <p class="mb-1">
-            Feld-Optionen: <code>align</code> (<code>links</code>/<code>rechts</code>), <code>format</code> (
-            <code>waehrung</code>/<code>datum</code>), <code>berechnet</code> für Summenfelder (
-            <code>{'{ op: "summe"|"anzahl"|"max", ueber: "$seite"|"$bisher"|<Datenpfad>, feld? }'}</code>).
+            Schriftgröße, Ausrichtung und Format gelten je Zelle; <em>Schrift automatisch verkleinern</em> passt zu
+            lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Die Koordinaten-Anzeige
+            rechts im Kopf jedes Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen
+            (z.B. gleiche Höhe wie das Feld daneben).
           </p>
-          <p class="mb-1">
-            <code>zeilen</code>: <code>quelle</code> (Datenpfad zur Zeilenliste), <code>hoehe</code>, <code>spalten</code>{' '}
-            (Array von <code>{'{ key, x, size, align?, format?, maxBreite? }'}</code>).
+          <p class="mb-0">
+            „Testdaten-Vorschau" erzeugt mit Platzhalterwerten ein echtes PDF, um die Platzierung zu prüfen. Unter dem
+            Editor liegt die komplette Konfiguration als JSON zum Kopieren, Sichern und Wiedereinfügen.
           </p>
         </div>
       </details>
 
-      <div>
-        <label class="form-label">Koordinaten-Config (JSON: ersteSeite/weitereSeite/zeilen)</label>
-        <JsonEditor value={konfigJson} onChange={setKonfigJson} />
-      </div>
+      {datei ? (
+        <FormularEditor formular={formular} datei={datei} value={konfig} onChange={setKonfig} />
+      ) : (
+        <p class="text-body-secondary small">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
+      )}
 
       <button type="submit" class="btn btn-primary align-self-start" disabled={speichert}>
         {speichert ? 'Speichert…' : 'Version anlegen'}

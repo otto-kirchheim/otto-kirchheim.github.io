@@ -5,7 +5,7 @@ import type { Layout, SeitenDef, Zeile } from '@otto-kirchheim/nebengeld-shared'
 const MAX_ZEILEN = 2;
 
 function macheSeite(quelle: number): SeitenDef {
-  return { quelle, maxZeilen: MAX_ZEILEN, startY: 700, kopf: {} };
+  return { quelle, bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen: MAX_ZEILEN }], felder: {} };
 }
 
 // Ein Layout: erste Seite (Kopf+Zeilen) + weitere Seite (Kennzeile+Zeilen), wiederholt bei Bedarf.
@@ -20,7 +20,7 @@ function macheZeilen(anzahl: number): Zeile[] {
 }
 
 function groessen(zeilen: Zeile[]): number[] {
-  return verteile(zeilen, layout).map(b => b.zeilen.length);
+  return verteile({ haupt: zeilen }, layout).map(b => (b.zeilen.haupt ?? []).length);
 }
 
 describe('verteile', () => {
@@ -62,13 +62,13 @@ describe('verteile', () => {
 
   it('wirft, wenn Zeilen übrig bleiben und keine weitereSeite konfiguriert ist', () => {
     const kleinesLayout: Layout = { template: 'x', ersteSeite: macheSeite(0) };
-    expect(() => verteile(macheZeilen(3), kleinesLayout)).toThrow('1 Zeilen passen in kein Layout');
+    expect(() => verteile({ haupt: macheZeilen(3) }, kleinesLayout)).toThrow('1 Zeilen (haupt) passen in kein Layout');
   });
 
   it('behält die Zeilenreihenfolge über Seitenwechsel und Waisenzeilen-Schutz hinweg bei', () => {
     const zeilen = macheZeilen(5);
-    const bloecke = verteile(zeilen, layout);
-    const wiederhergestellt = bloecke.flatMap(b => b.zeilen);
+    const bloecke = verteile({ haupt: zeilen }, layout);
+    const wiederhergestellt = bloecke.flatMap(b => b.zeilen.haupt ?? []);
     expect(wiederhergestellt).toEqual(zeilen);
   });
 });
