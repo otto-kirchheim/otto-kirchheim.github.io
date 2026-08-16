@@ -50,7 +50,8 @@ export default function logoutUser({
     window.scrollTo(0, 1);
   }
 
-  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#Monat']) toggleClassForElement(selector);
+  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#Monat', '#startSchnellzugriff'])
+    toggleClassForElement(selector);
   hideAllFeatureTabs();
 
   clearLoading('btnLogin', false);

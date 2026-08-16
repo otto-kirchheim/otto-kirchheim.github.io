@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-16 (11)
+
+### feat (Startseite: Schnellzugriff-Buttons für Mobilansicht, Issue #5)
+
+- **User-Wunsch:** Auf dem Handy liegt die Tab-Navigation hinter dem Hamburger-Menü — zwei Taps, um z. B. EWT zu öffnen. Neuer Schnellzugriff-Block auf der Startseite (`#startSchnellzugriff`, nur `d-lg-none`) springt per einem Tap direkt in Bereitschaft, EWT, Nebenbezüge, Entgeltausgleich, Berechnung oder Einstellungen.
+- **Sichtbarkeit gespiegelt statt neu erfunden:** Die vier Feature-Buttons folgen exakt der bestehenden `aktivierteTabs`-Logik aus `updateTabVisibility.ts` (gleiche Quelle, die auch die Nav-Einträge ein-/ausblendet) — ein Nutzer ohne aktivierten EA-Tab sieht auch keinen EA-Schnellzugriff. Berechnung/Einstellungen sind ungated und erscheinen wie der Rest der Navigation erst nach Login.
+- **Layout-Falle beim ersten Wurf:** `d-none` zunächst auf den `<button>` statt auf den umgebenden `.col` gesetzt — Bootstraps `row-cols-2` zählt Grid-Slots nach DOM-Position, nicht nach Sichtbarkeit, ein versteckter Button hinterließ trotzdem eine leere Grid-Zelle mitten im Block. Korrigiert, indem `id`/`d-none` auf den `.col`-Wrapper wandern; versteckte Buttons reißen jetzt keine Lücke mehr.
+- **Klick-Verdrahtung:** Schnellzugriff-Buttons klicken per JS den zugehörigen echten Tab-Button (`document.querySelector('#'+jumpTab)?.click()`), keine doppelte `data-bs-toggle`-Verdrahtung nötig — Bootstraps Tab-State bleibt auf den echten Nav-Buttons konsistent.
+- **Verifikation:** `lint`, `build`, `test`. Zusätzlich end-to-end mit Puppeteer (Chrome headless, `frontend/.claude/skills/verify`) gegen den Dev-Server geprüft: Container erscheint nur mobil (`d-lg-none` greift ab `lg`) und nur eingeloggt; Feature-Gating korrekt (inaktive Tabs bleiben versteckt); Klick auf einen Schnellzugriff-Button aktiviert die zugehörige Tab-Pane und setzt `aria-selected`/`active` am echten Nav-Button.
+
+### fix (Fahrzeiten-Panel: "Zeile hinzufügen" wirkte deaktiviert, Issue #5)
+
+- **User-Fund:** Der Button nutzte `btn-outline-secondary` — bewusst zurückhaltender Stil, aber niedriger Kontrast genug, um mit einem deaktivierten Button verwechselt zu werden, obwohl er voll funktionsfähig war. Auf `btn-secondary` (gefüllt) umgestellt, damit die Aktion eindeutig als aktiv erkennbar bleibt.
+
 ## 2026-08-16 (10)
 
 ### feat (PDF-Vorlagen-Pipeline: laufende Summe, Beispieldaten ab dem Monatsersten, Phase 8.3)

@@ -18,40 +18,30 @@ const ALL_TAB_IDS = Object.values(TAB_MAP);
  */
 const LEGACY_DEFAULT_ON_TAB_IDS = new Set(['bereitschaft-tab', 'ewt-tab', 'neben-tab']);
 
+/** Blendet Nav-Eintrag und zugehörigen Schnellzugriff-Button (Start-Tab) gemeinsam ein/aus. */
+function toggleFeatureTab(tabId: string, visible: boolean): void {
+  document.querySelector<HTMLButtonElement>(`#${tabId}`)?.parentElement?.classList.toggle('d-none', !visible);
+  document.querySelector<HTMLButtonElement>(`#quick-${tabId}`)?.classList.toggle('d-none', !visible);
+}
+
 /**
  * Zeigt/Versteckt Feature-Tabs basierend auf `aktivierteTabs`.
  * Wenn `aktivierteTabs` leer oder nicht gesetzt ist, werden nur die Legacy-Default-Tabs angezeigt.
  */
 export default function updateTabVisibility(aktivierteTabs?: string[]): void {
   if (!aktivierteTabs || aktivierteTabs.length === 0) {
-    for (const tabId of ALL_TAB_IDS) {
-      const parentLi = document.querySelector<HTMLButtonElement>(`#${tabId}`)?.parentElement;
-      if (!parentLi) continue;
-      if (LEGACY_DEFAULT_ON_TAB_IDS.has(tabId)) parentLi.classList.remove('d-none');
-      else parentLi.classList.add('d-none');
-    }
+    for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, LEGACY_DEFAULT_ON_TAB_IDS.has(tabId));
     return;
   }
 
   const activeIds = new Set(aktivierteTabs.map(tab => TAB_MAP[tab]).filter(Boolean));
 
-  for (const tabId of ALL_TAB_IDS) {
-    const parentLi = document.querySelector<HTMLButtonElement>(`#${tabId}`)?.parentElement;
-    if (!parentLi) continue;
-
-    if (activeIds.has(tabId)) {
-      parentLi.classList.remove('d-none');
-    } else {
-      parentLi.classList.add('d-none');
-    }
-  }
+  for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, activeIds.has(tabId));
 }
 
 /**
  * Versteckt alle Feature-Tabs (z. B. beim logoutUser).
  */
 export function hideAllFeatureTabs(): void {
-  for (const tabId of ALL_TAB_IDS) {
-    document.querySelector<HTMLButtonElement>(`#${tabId}`)?.parentElement?.classList.add('d-none');
-  }
+  for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, false);
 }
