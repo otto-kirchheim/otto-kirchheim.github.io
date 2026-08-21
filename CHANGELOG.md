@@ -2,6 +2,68 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-21 (16)
+
+### fix (Unterschrift-Dialog: Box-Proportionen, Fullscreen im Querformat, Desktop-Größe)
+
+Nachtrag zu Eintrag 15 -- User meldete nach dem resize-Fix weiterhin: "Bildschirm dann deutlich
+breiter". Ursache war eine zweite, unabhängige Baustelle: Canvas-CSS war `width:100%;
+height:200px` -- die Breite skaliert mit dem Viewport, die Höhe blieb aber fix, im Querformat
+wurde die Box dadurch viel breiter bei gleicher Höhe.
+
+Mehrere CSS-only-Anläufe (`aspect-ratio`, `modal-fullscreen-*-down`, `max-height`, `modal-lg`,
+Flex-Zentrierung) scheiterten reihum an echten Bootstrap-Layout-Interaktionen -- u.a. füllte der
+Canvas als Flex-Item (`.modal-body{display:flex}`) die verfügbare Breite trotz `width:auto;
+max-width:100%` nicht zuverlässig (blieb bei ~304px unabhängig von der Dialogbreite hängen), und
+`max-height` allein verzerrte das Ratio (bis zu 4.24 statt 5/2=2.50), weil nur die Höhe gedeckelt
+wurde, nicht die Breite mit. Jede Runde live im Browser verifiziert, jeder Fehlschlag sofort am
+tatsächlichen Messwert erkannt statt spekulativ weitergeraten.
+
+**Lösung: deterministische Berechnung in JS statt weiterer CSS-Interaktionsraten, mit zwei
+Darstellungsmodi.**
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neue `berechneCanvasGroesse()` -- ermittelt aus
+  Viewport-Breite/-Höhe (abzüglich Kopf-/Fußzeile UND dem Rahmen von `.modal-content` selbst, alle
+  unabhängig von der Canvas-Größe messbar, kein Henne-Ei-Problem) die größtmögliche Fläche im
+  festen `5/2`-Verhältnis, die ohne Scrollen ins Modal passt. Zwei Modi je nachdem, welche
+  Dimension bindet:
+  - **Breiten-gebunden** (typisch Hochformat/große Screens): ruhige zentrierte Box, Rand
+    `DIALOG_RAND` (8px, fest statt Bootstraps je Breakpoint unterschiedlichem Default -- die
+    Rechnung setzt ihn selbst via `dialog.style.margin`), Breite gedeckelt auf max. 900px (auch
+    auf sehr breiten Monitoren keine unnötig gestreckte Fläche).
+  - **Höhen-gebunden** (typisch Querformat-Handy, wenig Vertikalraum -- User-Fund: "im Querformat
+    wird definitiv Fullscreen benötigt"): randloses Fullscreen (`dialog.style.margin='0'`,
+    `maxWidth:100vw`) MIT kompakter Kopf-/Fußzeile (neue `.signatur-modal-kompakt`-Klasse,
+    kleineres Padding/Titel-Schrift) -- gewinnt zusätzlichen Vertikalraum zurück statt ihn an
+    Bootstraps Standard-Chrome zu verlieren.
+  Ergebnis wird direkt als `canvas.style.width/height` (px) sowie `dialog.style.maxWidth/margin`
+  gesetzt, neu berechnet bei `shown.bs.modal` UND bei jedem `resize` (Handydrehung, Fenster
+  verschieben) -- eine einzige Formel deckt beide Fälle ab, keine CSS-Breakpoint-Klasse mehr nötig.
+- **`scss/styles.scss`:** `.signatur-canvas` auf `display:block; margin:0 auto; box-sizing:
+  border-box` reduziert (Größe kommt vollständig aus JS; `border-box` verhindert, dass der 1px-
+  Rahmen zur gesetzten Größe dazukommt statt darin enthalten zu sein); neue
+  `.signatur-modal-kompakt`-Klasse für den Fullscreen-Fall.
+
+Mehrere Korrekturrunden, jede live verifiziert: ein pauschaler 90%-Sicherheitsabschlag machte das
+Feld auf kleinen Screens spürbar kleiner als vorher (User-Fund: "zu klein, da das Fullscreen
+fehlt") -- ersetzt durch Rechnung mit dem tatsächlich verfügbaren Platz. Ein `modal-lg`-Versuch
+brach die Breiten-Füllung komplett (Canvas blieb bei ~304px hängen, unabhängig von der
+Dialogbreite) -- verworfen zugunsten der deterministischen Lösung. Ohne eigenes Fullscreen war
+Querformat trotz mehr Fläche schmäler als Hochformat (User-Fund: "aktuell ist das
+Unterschriftenfeld im Hochformat größer als im Querformat!!!!!") -- behoben durch den zweiten
+Modus oben. Ein konstanter 2px-Überlauf im Fullscreen-Fall kam vom eigenen Rahmen von
+`.modal-content` (Bootstrap-Default), der bislang nicht in die Höhen-Rechnung einging.
+
+Verifiziert live im echten Chrome (Puppeteer, `google-chrome-stable`, echter Vite-Dev-Server,
+echtes `signature_pad`/Bootstrap-Modal, kein Mock): Ratio in jedem getesteten Fall exakt 2.50,
+Content passt (bis auf sub-pixel Rundungsrauschen von <0.4px, ohne sichtbare/funktionale Wirkung)
+ohne Scrollen in den Viewport, Pixelpuffer nach echtem `resize`-Event synchron zur neuen
+CSS-Größe, Dialog horizontal zentriert. Kernvergleich (gleiches Gerät gedreht, 390×844 vs.
+844×390): Querformat-Fläche jetzt ~193.000px² gegenüber ~47.000px² im Hochformat (vorher war es
+umgekehrt kleiner). Desktop-Canvas 868×347 statt ursprünglich ~466×186 (deutlich größere,
+komfortablere Fläche, gedeckelt statt auf riesigen Monitoren unbegrenzt zu wachsen). `tsc
+--noEmit`/ESLint sauber, `signaturDialog.test.ts` 8/8 grün, voller Testlauf 1595/1595.
+
 ## 2026-08-21 (15)
 
 ### fix (Unterschrift-Dialog: verzerrt nach Handydrehung)

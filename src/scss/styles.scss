@@ -169,6 +169,40 @@ td:has(.SchichtBereitschaft) {
   align-content: start;
 }
 
+/* Unterschrift-Canvas (signaturDialog.ts): Breite/Höhe kommen als exakte Pixelwerte per
+   `berechneCanvasGroesse()` aus JS (deterministisch statt CSS-`aspect-ratio`/Flex-Interaktion,
+   die sich in Bootstraps `.modal-body`-Layout als unzuverlässig erwies) -- hier nur noch
+   Zentrierung (Block-Element mit fester Breite < 100% zentriert per `margin: 0 auto`) und Optik. */
+.signatur-canvas {
+  display: block;
+  margin: 0 auto;
+  /* border-box statt des Default content-box: sonst kommt der 1px-Rahmen zur per JS gesetzten
+     Breite/Höhe oben drauf (2px Differenz je Achse) -- in engen Fullscreen-Fällen genau der
+     Unterschied zwischen Passen und Überlaufen. */
+  box-sizing: border-box;
+  border: 1px solid var(--bs-border-color);
+  touch-action: none;
+}
+
+/* Randloser Unterschrift-Modus (signaturDialog.ts, aktiviert wenn die Höhe die bindende Dimension
+   ist -- typisch Querformat-Handy): kompaktere Kopf-/Fußzeile gewinnt zusätzlichen Vertikalraum
+   für den Canvas zurück, statt ihn an Bootstraps Standard-Padding zu verlieren. */
+.signatur-modal-kompakt .modal-header {
+  padding: 0.35rem 0.75rem;
+}
+
+.signatur-modal-kompakt .modal-title {
+  font-size: 1rem;
+}
+
+.signatur-modal-kompakt .modal-body {
+  padding: 0.5rem;
+}
+
+.signatur-modal-kompakt .modal-footer {
+  padding: 0.35rem 0.75rem;
+}
+
 /* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
    selbst, damit CustomTable die Zelle als Text (nicht als HTML) setzen kann. */
 .cell-multiline {
