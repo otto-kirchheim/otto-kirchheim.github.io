@@ -1,5 +1,5 @@
-import { FORMAT, OPS, alsVergleichswert, datumMitFrist, get, listenBeschriftung, schluesselAufPlatz } from '@otto-kirchheim/nebengeld-shared';
-import type { Berechnet, Daten, Feld, FeldBedingung, ListenAufloesung, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { FORMAT, OPS, alsVergleichswert, datumMitFrist, get, listenBeschriftung, schluesselAufPlatz, standardText } from '@otto-kirchheim/nebengeld-shared';
+import type { Berechnet, Daten, Feld, FeldBedingung, FormatName, ListenAufloesung, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /** Zeilen je Tabellen-Key -- eine Version kann mehrere Datentabellen tragen. */
 export type TabellenZeilen = Record<string, Zeile[]>;
@@ -40,30 +40,46 @@ const PLATZHALTER = /\{([^{}]+)\}/g;
 const SEITEN_PLATZHALTER = /^(seite|seiten)\s*([+-]\s*\d+)?$/;
 
 /**
+ * Trennt `{Pfad}` von optionalem `{Pfad:Format}` -- das Format muss ein bekannter `FormatName` sein
+ * (siehe `FORMAT`), sonst wird die Angabe stillschweigend ignoriert statt den Platzhalter kaputt zu
+ * machen (z.B. bei einem Tippfehler im Formatnamen).
+ */
+function zerlegePlatzhalter(name: string): { pfad: string; format?: FormatName } {
+  const trimmed = name.trim();
+  const doppelpunkt = trimmed.indexOf(':');
+  if (doppelpunkt === -1) return { pfad: trimmed };
+  const pfad = trimmed.slice(0, doppelpunkt).trim();
+  const format = trimmed.slice(doppelpunkt + 1).trim();
+  return format in FORMAT ? { pfad, format: format as FormatName } : { pfad };
+}
+
+/**
  * Alle Platzhalternamen eines festen Textes, die tatsaechlich aus den Nutzdaten kommen -- die vom
  * Kontext bedienten (`seite`, `seiten`, `heute`) fallen raus. Die Testdaten-Vorschau braucht das,
  * um genau diese Pfade mit Beispielwerten zu belegen.
  */
 export function datenPlatzhalter(text: string): string[] {
   return [...text.matchAll(PLATZHALTER)]
-    .map(treffer => treffer[1]!.trim())
+    .map(treffer => zerlegePlatzhalter(treffer[1]!).pfad)
     .filter(pfad => pfad !== 'heute' && !SEITEN_PLATZHALTER.test(pfad));
 }
 
 function formatiere(roh: unknown, f: Feld): string {
   if (roh === null || roh === undefined) return '';
-  return f.format ? FORMAT[f.format](roh) : String(roh);
+  return f.format ? FORMAT[f.format](roh) : standardText(roh);
 }
 
 /**
  * Ersetzt `{name}` in festen Texten: `{seite}`/`{seiten}` liefern die Seitenzahlen (wahlweise mit
  * Versatz, siehe `SEITEN_PLATZHALTER`), `{heute}` das Erzeugungsdatum, jeder andere Name wird als
  * Datenpfad aufgelöst. Unbekannte Pfade werden zu einem leeren String, damit kein roher Platzhalter
- * im fertigen PDF landet.
+ * im fertigen PDF landet. Optional lässt sich das Format erzwingen (`{Pfad:Format}`, z.B.
+ * `{VorgabenU.Pers.OE:liste}` oder `{heute:datumKurz}`) -- ohne Angabe greift derselbe Fallback wie
+ * bei unformatierten Feldern (`standardText`/`FORMAT.datum`).
  */
 function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): string {
   return text.replace(PLATZHALTER, (_treffer, name: string) => {
-    const pfad = name.trim();
+    const { pfad, format } = zerlegePlatzhalter(name);
     const seitenTreffer = SEITEN_PLATZHALTER.exec(pfad);
     if (seitenTreffer) {
       const basis = seitenTreffer[1] === 'seite' ? kontext.seite : kontext.seiten;
@@ -71,9 +87,10 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
       const versatz = seitenTreffer[2] ? Number(seitenTreffer[2].replace(/\s+/g, '')) : 0;
       return String(basis + versatz);
     }
-    if (pfad === 'heute') return FORMAT.datum(kontext.heute);
+    if (pfad === 'heute') return FORMAT[format ?? 'datum'](kontext.heute);
     const roh = get(daten, pfad);
-    return roh === null || roh === undefined ? '' : String(roh);
+    if (roh === null || roh === undefined) return '';
+    return format ? FORMAT[format](roh) : standardText(roh);
   });
 }
 
@@ -105,7 +122,7 @@ function trifftFeldBedingung(w: FeldBedingung, daten: Daten, kontext: Kontext): 
     const wert = alsVergleichswert(roh);
     return wert >= alsVergleichswert(w.bereich.von) && wert < alsVergleichswert(w.bereich.bis);
   }
-  return (w.werte ?? []).includes(roh as string | number);
+  return (w.werte ?? []).includes(roh as string | number | boolean);
 }
 
 /** Löst ein Feld gegen die Nutzdaten (Direktwert, Bedingung, Text oder Aggregation) auf. */

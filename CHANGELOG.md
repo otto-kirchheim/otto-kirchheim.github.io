@@ -2,6 +2,236 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-21 (15)
+
+### fix (Unterschrift-Dialog: verzerrt nach Handydrehung)
+
+**User-Fund:** Unterschriftenfeld verzerrt (Maße/Verhältnisse falsch), wenn das Handy während des
+Signierens gedreht wird. Ursache: `signaturePad.ts::erstelleSignaturPad()` setzt die Canvas-
+Pixelgröße (`canvas.width`/`canvas.height`) EINMALIG beim Öffnen aus `offsetWidth`/`offsetHeight`.
+Das Canvas selbst ist per CSS `width:100%` responsiv -- dreht sich das Handy, ändert sich die
+CSS-Breite, die interne Pixelgröße bleibt aber stehen. Der Browser streckt das alte, falsch
+proportionierte Bitmap auf die neue Boxgröße, und `signature_pad`s Touch-Koordinaten-Mapping
+(basiert auf der beim Erstellen fixierten Canvas-Größe) läuft gegenüber der neuen Anzeige aus dem
+Ruder.
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neuer `window`-`resize`-Listener (aktiv solange das
+  Modal offen ist) baut das Pad bei jeder Größenänderung neu auf (`pad.off()` erst, sonst sammeln
+  sich bei mehrfachem Drehen doppelte Pointer-Listener auf `window` an, die `signature_pad` intern
+  selbst dort registriert). Eine bereits begonnene Unterschrift geht beim Neuaufbau verloren --
+  proportionale Punkt-Umrechnung wäre fehleranfällig, die paar Striche sind schnell nachgezogen.
+  Listener wird beim Schließen (`hidden.bs.modal`) wieder entfernt.
+- **`test/infrastructure/pdf/signaturDialog.test.ts`:** 3 neue Tests (Pad-Neuaufbau bei resize,
+  No-op vor `shown.bs.modal`, Listener-Entfernung beim Schließen). Dabei einen bereits vorher
+  bestehenden Test-Hygiene-Mangel gefunden und behoben: zwei ältere Tests klickten "Fertig" über
+  das gemockte `bsModal.hide()`, ohne danach das reale `hidden.bs.modal`-Event zu simulieren --
+  harmlos, bis der neue `window`-Listener das in späteren Tests als Leak sichtbar machte (3 statt 1
+  Aufruf bei einem `resize`-Dispatch). Beide Tests lösen jetzt zusätzlich `hidden.bs.modal` aus,
+  wie es Bootstrap nach der echten Ausblend-Animation auch täte.
+
+Verifiziert: `bun run test` 1595/1595 grün, `tsc --noEmit`/ESLint sauber. Nicht im echten Browser
+mit tatsächlicher Handydrehung nachgestellt (kein Gerät/Emulator in dieser Session verfügbar) --
+Fix beruht auf Codelesung der `signature_pad`-Quelle (`.off()`-Verhalten, `window`-Listener) und
+dem bekannten Resize-Verzerrungsmuster bei Canvas-Elementen mit responsivem CSS und fixer
+Pixelgröße.
+
+## 2026-08-21 (14)
+
+### fix (OE-Format war falsch geraten) + feat (Monatsname-Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/configSchema.ts`:** `'oe'`, `'monatName'`, `'monatNameKurz'` im
+  Format-Enum ergänzt.
+- **`FormularEditor/datenKatalog.ts`:** OE-Katalogeintrag `format: 'liste'` → `format: 'oe'`.
+- **`FormularEditor/FeldPanel.tsx`:** neue Format-Optionen im Dropdown; OE-Beispiele in Hilfetext
+  und Platzhalter-Hilfe-Modal korrigiert (zeigten vorher `:liste` statt `:oe`).
+- **`FormularEditor/dummyDaten.ts`:** Vorschau-Testwert für `monatName`/`monatNameKurz` ist jetzt
+  eine Zahl 1-12 statt eines Datums.
+- **`test/infrastructure/pdf/wert.test.ts`:** OE-Tests auf `format: 'oe'` umgestellt; die
+  generischen Fallback-Tests, die vorher (irreführend) OE als Beispiel nutzten, laufen jetzt über
+  ein neutrales Feld (`zulagen`).
+
+Verifiziert: voller Testlauf 1592/1592 grün, `tsc --noEmit`/ESLint sauber.
+
+## 2026-08-21 (13)
+
+### fix (FormularEditor: Ankreuz-Spalte/-Feld bekommt keinen Titel-Vorschlag beim Feld-Wechsel)
+
+**User-Fund:** Beim Wählen des geprüften Felds in einer Ankreuz-Bedingung -- besonders bei den
+vorberechneten EWT-Booleans (`Wohnung8bis14` etc.) -- blieb der Anzeigename der Spalte/des Felds
+leer. Ursache: `spalte.label`/`feld.label` sind unabhängig von `wenn.feld`, nichts hielt sie
+synchron; der Feld-Auswahl-Dropdown in `AnkreuzBedingung`/`FeldAnkreuzBedingung` änderte bisher
+nur `wenn.feld`, nie den Titel der Spalte/des Felds selbst.
+
+- **`FormularEditor/FeldPanel.tsx`:** Feld-Auswahl in `AnkreuzBedingung` (Spalte) und
+  `FeldAnkreuzBedingung` (Dokument-Feld) übernimmt jetzt das `label` des gewählten Katalog-
+  Eintrags als Titel -- IMMER, nicht nur wenn noch keiner gesetzt ist (User-Korrektur: anders als
+  der Format-Vorschlag aus Eintrag 8, der eine bewusste Wahl nie überschreibt, beschreibt der Titel
+  hier direkt die Bedingung -- ein stehen gelassener alter Titel nach einem Feld-Wechsel zeigt sonst
+  die falsche Bedingung an). Wer einen abweichenden Titel will, tippt ihn danach im
+  Anzeigename-Feld ein.
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, voller Testlauf 1590/1590 grün (keine
+dedizierte Testdatei für `FeldPanel.tsx`, siehe frühere Notiz zu fehlender Component-Test-
+Infrastruktur).
+
+## 2026-08-21 (12)
+
+### feat (FormularEditor: echte Boolean-Auswahl statt `bereich`-Umweg für Ankreuz-Bedingungen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `trifftFeldBedingung()`-Cast auf `boolean` erweitert.
+- **`FormularEditor/datenKatalog.ts`:** `istBooleanFeld()` -- markiert die sechs EWT-Ankreuz-
+  Booleans.
+- **`FormularEditor/FeldPanel.tsx`:** `VergleichWahl` zeigt für Boolean-Felder eine Ja/Nein-
+  Auswahl; Feld-Auswahl in `AnkreuzBedingung`/`FeldAnkreuzBedingung` (inkl. der initialen
+  „Ankreuzen"-Buttons) belegt `werte: [true]` automatisch vor.
+- **`dummyDaten.ts`:** `platzhalter()`-Rückgabetyp auf `boolean` erweitert (Folge der `werte`-
+  Erweiterung).
+- **Tests:** `test/infrastructure/pdf/wert.test.ts` (Feld-Ebene), `shared/tests/formular/
+  aggregatoren.test.ts` (`trifftBedingung`), `test/features/Admin/FormularEditor/dummyDaten.test.ts`
+  (Vorschau-Zeilen mit `werte: [true]`).
+
+Verifiziert: `tsc --noEmit`/ESLint sauber, voller Testlauf 1590/1590 grün.
+
+## 2026-08-21 (11)
+
+### fix (FormularEditor: Ankreuz-Spalte mit `bereich` (z.B. Boolean-Felder) in Vorschau immer leer/falsch)
+
+**User-Fund** beim Konfigurieren einer Ankreuz-Spalte für einen der EWT-Booleans
+(`Wohnung8bis14` etc., über `Bedingung.bereich: { von: 1, bis: 2 }` wie in `abgeleiteteWerte.ts`
+dokumentiert): Feld blieb in der Editor-Vorschau für jede Zeile leer bzw. zeigte scheinbar
+zufällige Treffer.
+
+- Ursache: `dummyDaten.ts::macheZeile()` befüllte Testzeilen für eine Ankreuz-Spalte nur für den
+  `werte`-Fall (`zeile[feld] ??= wenn.werte?.[0] ?? ''`). Im `bereich`-Fall ist `werte` immer
+  `undefined`, also landete überall der Fallback `''` bzw. blieb das Feld ganz unbelegt.
+  `alsVergleichswert('')`/`alsVergleichswert(undefined)` sind beide `0` -- das liegt bei jedem
+  `bereich` mit `von >= 1` nie im Treffer-Fenster (daher „immer leer"), kann bei einem `bereich`
+  mit `von <= 0` aber spurios treffen (daher „falsch berechnet" bei anderen Wertebereichen).
+  Betraf nur die Editor-Vorschau, nicht die echte PDF-Erzeugung -- dort liefert `download.ts` für
+  EWT bereits echte gemergte `ewtAbgeleiteteWerte()`-Booleans.
+- Fix: neuer Zweig für `spalte.wenn.bereich` -- gerade Zeilen bekommen `alsVergleichswert(von)`
+  (liegt IMMER im Bereich, einschließlich), ungerade `alsVergleichswert(bis)` (liegt NIE im
+  Bereich, ausschließlich) als rohen Zeilenwert. Zeigt in der Vorschau wieder beide Fälle, wie es
+  der bestehende Kommentar „jede zweite Zeile erfüllt die Bedingung" für den `werte`-Fall schon
+  vorsah.
+- **`test/features/Admin/FormularEditor/dummyDaten.test.ts`:** Regressionstest über
+  `trifftBedingung()` (prüft echten Treffer/Nicht-Treffer, nicht nur den rohen Zellwert).
+
+Verifiziert: `bun run test` 1588/1588 grün, `tsc --noEmit` sauber, ESLint sauber. Echte
+PDF-Erzeugung (Browser mit Backend) nicht gegengeprüft -- Codelesung von `download.ts` zeigt
+korrektes Merging, aber ohne Live-Test keine 100%ige Garantie für den realen Ankreuz-Fall.
+
+## 2026-08-21 (10)
+
+### feat (FormularEditor: Hilfe-Modal für Platzhalter & Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`FormularEditor/FeldPanel.tsx`:** Link "Alle Platzhalter & Formate…" unter dem Festtext-Feld
+  öffnet ein dynamisch erzeugtes Modal (Muster wie `openHelpModal.tsx`) mit vollständiger Tabelle
+  aller Platzhalter-Varianten und aller Formatnamen (aus `FORMATE` generiert, keine zweite Quelle).
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, `bun run test` 1587/1587 grün.
+
+## 2026-08-21 (9)
+
+### feat (PDF-Rendering: Format erzwingbar in Text-Platzhaltern, `{Pfad:Format}`)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `zerlegePlatzhalter()` trennt `{Pfad:Format}` am ersten `:`,
+  unbekannte Formatnamen werden ignoriert statt die Zelle zu brechen. `datenPlatzhalter()`
+  schneidet den Format-Teil vor dem Pfad-Lookup ab (Testdaten-Vorschau).
+- **`FormularEditor/FeldPanel.tsx`:** Hilfetext ergänzt.
+- **`test/infrastructure/pdf/wert.test.ts`:** 7 neue Tests.
+
+Verifiziert: `bun run test` 1587/1587 grün, `tsc --noEmit` sauber, ESLint sauber.
+
+## 2026-08-21 (8)
+
+### fix (PDF-Rendering: weitere Formatierungs-Lücken + Auto-Vorbelegung im Editor)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `ersetzePlatzhalter()` (Festtext-Platzhalter `{Datenpfad}`)
+  hatte einen eigenen `String()`-Fallback statt den von `formatiere()` zu teilen -- auf den
+  gemeinsamen `standardText()` aus `shared` umgestellt.
+- **`infrastructure/pdf/spaltenWert.ts`:** ebenfalls auf `standardText()` umgestellt.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.format` von `'waehrung' | 'datum'` auf den
+  vollen `FormatName` erweitert; `VorgabenU.Pers.OE` und `Zulagen` mit `format: 'liste'` versehen.
+- **`FormularEditor/FeldPanel.tsx`:** `umbenennen()` (Felder) und der Spalten-`DatenpfadWahl`-
+  Handler übernehmen jetzt den Format-Vorschlag aus dem Katalog, wenn das Feld/die Spalte noch kein
+  eigenes Format hat -- verhindert die OE-Bug-Klasse strukturell statt nur den Fallback abzufedern.
+- **`test/`:** keine neuen Testdateien; Katalog-Lookup ad hoc per Skript gegen `katalogFelder()`/
+  `katalogZeilenFelder()` geprüft.
+
+Verifiziert: `bun run test` (alle betroffenen Suiten, 86/86 gruen über `shared`+`frontend`),
+`tsc --noEmit` sauber, ESLint sauber. UI-Verhalten (Format-Dropdown springt beim Pfad-Wechsel um)
+NICHT per Headless-Browser verifiziert -- Formulare-Tab ist serverseitig auf `super-admin`
+gegated, im backendlosen Verify-Rezept nicht erreichbar; manuelle Nachprüfung mit echtem Backend
+steht noch aus.
+
+## 2026-08-21 (7)
+
+### feat (PDF-Rendering: Format `jaNein` fuer Boolean-Felder)
+
+Anschluss an Eintrag (6): unformatierte Boolean-Werte fielen ebenfalls auf `String()` zurueck
+(`true`/`false` statt Deutsch). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()`-Fallback
+  nutzt bei `typeof roh === 'boolean'` jetzt `FORMAT.jaNein` statt `String()`.
+- **`FormularEditor/FeldPanel.tsx`:** `jaNein` als waehlbares Format im Editor-Dropdown.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts test/infrastructure/pdf/configSchema.test.ts` (73/73 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (6)
+
+### fix (PDF-Rendering: unformatierte Array-Felder nicht mehr roh gejoint)
+
+`VorgabenU.Pers.OE` (Organisationseinheit) erschien auf der EA-PDF als `I,IW,MI,N,MUS,IL,` --
+Feld im Formular-Editor ohne `format` konfiguriert, `formatiere()` fiel auf `String(array)`
+zurueck (JS-Array-Stringify: kommagetrennt ohne Leerzeichen, leere Endeintraege erzeugen ein
+trailing Komma). `FORMAT.liste` (`shared/src/formular/aggregatoren.ts`) existiert genau fuer
+diesen Fall, wurde aber nur bei explizit gesetztem `format: 'liste'` angewendet.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()` faellt
+  bei fehlendem `format` jetzt fuer Arrays auf `FORMAT.liste` statt `String()` zurueck --
+  unformatierte Array-Feld-Konfigurationen rendern damit nie wieder als rohes Array.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest fuer den OE-Fall ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts` (63/63 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (5)
+
+### feat (PDF-Vorlagen-Pipeline: EWT-Download auf neuen Pfad umgestellt, Phase 10)
+
+Gleiches Cutover-Muster wie EA (Phase 9). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext
+(`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'E'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('ewt', stichtag, data, signaturPng)` statt `downloadPdf('E', data)`. EWT-
+  Zeilenmapping merged pro Zeile `ewtAbgeleiteteWerte(basis, beamter)` (`beamter` aus
+  `VorgabenU.Pers.TB !== 'Tarifkraft'`) -- `build()` sieht die vorberechneten Felder als normale
+  Datenpfade (`Daten.EWT[].DauerWohnung` etc.).
+- **`FormularEditor/datenKatalog.ts`:** acht neue Eintraege in `ZEILEN_FELDER.ewt` (Gruppe
+  "Berechnet"): `DauerWohnung`/`DauerErsteTkgSt` plus sechs Zeitband-Booleans. Boolean-Felder im
+  Editor als Ankreuz-Quelle ueber `Bedingung.bereich: { von: 1, bis: 2 }` nutzen, nicht ueber
+  `werte` (siehe Kommentar in `abgeleiteteWerte.ts` fuer die Begruendung).
+- **`test/Utilities/download.test.ts`:** Bestandstests fuer `modus 'E'` auf den neuen Pfad
+  umgeschrieben. Dabei einen Mock-Queue-Versatz gefunden: ein Test rief weiterhin `download(...,
+  'E')` mit einem auf `mockDownloadPdf` gequeueten `mockResolvedValueOnce` auf, das nach dem Cutover
+  nie mehr konsumiert wurde und dadurch mehrere NACHFOLGENDE Tests (`modus 'N'`/`'B'`) mit falschen
+  Werten versorgte -- jeder Einzeltest lief isoliert grün, nur in der vollen Suite sichtbar. Fix:
+  betroffenen Test auf `modus 'B'` umgestellt (ruft weiterhin `downloadPdf` auf). Lehre in
+  `tasks/lessons.md` festgehalten.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578.
+
 ## 2026-08-21 (4)
 
 ### fix (PDF-Vorlagen-Pipeline: Summe-Button-Reset, Signatur-Zentrierung)

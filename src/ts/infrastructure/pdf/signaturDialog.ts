@@ -62,9 +62,28 @@ export async function signaturDialog(): Promise<string | undefined> {
     modal.addEventListener('shown.bs.modal', () => {
       pad = erstelleSignaturPad(canvas);
     });
+
+    /**
+     * Beim Drehen des Handys ändert sich die CSS-Breite des Canvas (`width:100%` im Modal), die
+     * interne Pixelgröße aus `erstelleSignaturPad()` bleibt aber auf dem beim Öffnen gemessenen
+     * Wert stehen -- die Anzeige verzerrt und die Touch-Koordinaten von `signature_pad` laufen
+     * gegenüber der neuen Canvas-Größe aus dem Ruder. Pad bei jeder Größenänderung neu aufziehen;
+     * `pad.off()` löst zuerst die alten Pointer-Listener (auch welche auf `window`), sonst
+     * sammeln sich bei mehrfachem Drehen doppelte Listener an. Eine bereits begonnene Unterschrift
+     * geht dabei verloren -- die Alternative (Punkte proportional zur neuen Größe umzurechnen) ist
+     * fehleranfällig, die paar Striche sind schnell nachgezogen.
+     */
+    const aufResizeReagieren = () => {
+      if (!pad) return;
+      pad.off();
+      pad = erstelleSignaturPad(canvas);
+    };
+    window.addEventListener('resize', aufResizeReagieren);
+
     modal.querySelector('[data-loeschen="true"]')?.addEventListener('click', () => pad?.clear());
     modal.querySelector('[data-fertig="true"]')?.addEventListener('click', () => finish(pad ? (holeSignaturPng(pad) ?? undefined) : undefined));
     modal.addEventListener('hidden.bs.modal', () => {
+      window.removeEventListener('resize', aufResizeReagieren);
       finish(undefined);
       bsModal.dispose();
       modal.remove();

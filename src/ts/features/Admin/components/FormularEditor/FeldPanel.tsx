@@ -1,8 +1,10 @@
+import Modal from 'bootstrap/js/dist/modal';
+import { render } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import type { Ausrichtung, Bedingung, Berechnet, Daten, Drehung, Feld, FeldBedingung, FormatName, ListenGruppe, OpName, SeitenDef, Spalte, TabellenBereich, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
 import { wert, type Kontext } from '@/infrastructure/pdf/wert';
 import { spaltenWert } from '@/infrastructure/pdf/spaltenWert';
-import { ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { istBooleanFeld, ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
 import { ListenGruppen } from './ListenGruppen';
 
 export type Armed =
@@ -53,10 +55,14 @@ const FORMATE: { wert: FormatName | ''; label: string }[] = [
   { wert: 'tagZweistellig', label: 'Tag zweistellig (05)' },
   { wert: 'wochentag', label: 'Wochentag (So)' },
   { wert: 'monatJahr', label: 'Monat/Jahr (03/2026)' },
+  { wert: 'monatName', label: 'Monatsname (März)' },
+  { wert: 'monatNameKurz', label: 'Monatsname kurz (Mär)' },
   { wert: 'uhrzeit', label: 'Uhrzeit (07:05)' },
   { wert: 'stunden', label: 'Zeitspanne (2:30)' },
   { wert: 'liste', label: 'Liste zusammenfügen (I / IW)' },
   { wert: 'grossbuchstaben', label: 'GROSSBUCHSTABEN' },
+  { wert: 'jaNein', label: 'Ja/Nein' },
+  { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
 ];
 
 const DREHUNGEN: { wert: Drehung; label: string }[] = [
@@ -298,6 +304,89 @@ function PlatzhalterPicker({
       ))}
     </select>
   );
+}
+
+const PLATZHALTER_BEISPIELE: { platzhalter: string; beschreibung: string }[] = [
+  { platzhalter: '{Datenpfad}', beschreibung: 'Beliebiger Datenpfad, z.B. {Nachname} -- ohne Format greift der Standard-Fallback (Text/Zahl unverändert, Array als Liste ` / `, Boolean als Ja/Nein). Für VorgabenU.Pers.OE reicht das NICHT -- dafür immer explizit :oe angeben (siehe unten).' },
+  { platzhalter: '{Datenpfad:Format}', beschreibung: 'Erzwingt eines der Formate unten, z.B. {VorgabenU.Pers.OE:oe} oder {Betrag:waehrung}. Unbekannter Formatname wird ignoriert, der Pfad bleibt über den Standard-Fallback nutzbar.' },
+  { platzhalter: '{seite} / {seiten}', beschreibung: 'Aktuelle Seitenzahl / Gesamtseitenzahl dieses Dokuments.' },
+  { platzhalter: '{seite-1} / {seite+1}', beschreibung: 'Seitenzahl mit ganzzahligem Versatz, z.B. "Übertrag von Seite {seite-1}". Gilt genauso für {seiten-1} etc.' },
+  { platzhalter: '{heute}', beschreibung: 'Erzeugungsdatum des PDFs, Format datum (15.03.2026).' },
+  { platzhalter: '{heute:Format}', beschreibung: 'Erzeugungsdatum mit anderem Format, z.B. {heute:datumKurz} (15.03.).' },
+  { platzhalter: '{A}, {B}', beschreibung: 'Mehrere Platzhalter gemischt im selben Text, z.B. {Nachname}, {Vorname}.' },
+];
+
+function PlatzhalterHilfeInhalt() {
+  return (
+    <>
+      <table class="table table-sm mb-3">
+        <thead>
+          <tr>
+            <th>Platzhalter</th>
+            <th>Bedeutung</th>
+          </tr>
+        </thead>
+        <tbody>
+          {PLATZHALTER_BEISPIELE.map(b => (
+            <tr key={b.platzhalter}>
+              <td class="font-monospace text-nowrap">{b.platzhalter}</td>
+              <td>{b.beschreibung}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div class="small fw-semibold mb-1">Verfügbare Formate (für das Feld-Format und {'{Pfad:Format}'})</div>
+      <table class="table table-sm mb-0">
+        <tbody>
+          {FORMATE.filter(f => f.wert !== '').map(f => (
+            <tr key={f.wert}>
+              <td class="font-monospace text-nowrap">{f.wert}</td>
+              <td>{f.label}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+}
+
+/**
+ * Eigenständiges, dynamisch erzeugtes Modal statt des geteilten `#modal`-Elements (siehe
+ * `openHelpModal.tsx`) -- der FormularEditor läuft selbst schon in einem Admin-Tab, ein zweites
+ * Modal darf ein eventuell gerade offenes nicht verdrängen.
+ */
+function openPlatzhalterHilfe(): void {
+  const container = document.createElement('div');
+  container.className = 'modal fade';
+  container.setAttribute('tabindex', '-1');
+  document.body.appendChild(container);
+
+  render(
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Platzhalter &amp; Formate</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" />
+        </div>
+        <div class="modal-body">
+          <PlatzhalterHilfeInhalt />
+        </div>
+      </div>
+    </div>,
+    container,
+  );
+
+  const bsModal = new Modal(container);
+  container.addEventListener(
+    'hidden.bs.modal',
+    () => {
+      render(null, container);
+      bsModal.dispose();
+      container.remove();
+    },
+    { once: true },
+  );
+  bsModal.show();
 }
 
 /**
@@ -561,7 +650,17 @@ function FeldZeile({
           type="button"
           class={`btn ${feld.wenn ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
-          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, quellen: undefined, listenKopf: undefined, wenn: feld.wenn ?? { feld: katalogFelder(formular)[0]?.pfad ?? '', werte: [], dann: 'X' } })}
+          onClick={() => {
+            const startPfad = katalogFelder(formular)[0]?.pfad ?? '';
+            onChange({
+              ...feld,
+              text: undefined,
+              berechnet: undefined,
+              quellen: undefined,
+              listenKopf: undefined,
+              wenn: feld.wenn ?? { feld: startPfad, werte: istBooleanFeld(startPfad) ? [true] : [], dann: 'X' },
+            });
+          }}
         >
           Ankreuzen
         </button>
@@ -657,8 +756,10 @@ function FeldZeile({
             <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die
             bei leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere"
-            nutzen. Seitenzahlen vertragen einen Versatz — <code>{'{seite-1}'}</code> für „Übertrag von Seite …",{' '}
-            <code>{'{seite+1}'}</code> für „weiter auf Seite …".
+            nutzen. Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
+            <button type="button" class="btn btn-link btn-sm p-0 align-baseline" onClick={openPlatzhalterHilfe}>
+              Alle Platzhalter &amp; Formate…
+            </button>
           </div>
         </div>
       ) : feld.berechnet ? (
@@ -717,8 +818,11 @@ function FeldListe({
 }) {
   function umbenennen(alt: string, neu: string) {
     if (!neu || neu === alt || felder[neu]) return;
+    // Format-Vorschlag aus dem Katalog übernehmen, aber nur wenn das Feld noch keins hat --
+    // verhindert Bugs wie bei OE (Array ohne `liste`-Format), ohne eine bewusste Wahl zu überschreiben.
+    const vorschlag = katalogFelder(formular).find(e => e.pfad === neu)?.format;
     const naechste: Record<string, Feld> = {};
-    for (const [k, v] of Object.entries(felder)) naechste[k === alt ? neu : k] = v;
+    for (const [k, v] of Object.entries(felder)) naechste[k === alt ? neu : k] = k === alt && !v.format && vorschlag ? { ...v, format: vorschlag } : v;
     onChange(naechste);
     if (istGleich(armed, { bereich: 'feld', key: alt })) onArm({ bereich: 'feld', key: neu });
   }
@@ -771,7 +875,7 @@ function FeldListe({
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
  * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */
 interface VergleichsTeil {
-  werte?: (string | number)[];
+  werte?: (string | number | boolean)[];
   bereich?: { von: string | number; bis: string | number };
   dann: string;
 }
@@ -779,21 +883,44 @@ interface VergleichsTeil {
 /**
  * Vergleich einer Bedingung: Werte-Liste (Mitgliedschaft, mit Checkboxen bei bekannter Auswahl aus
  * `werteAuswahl()`) ODER Wertebereich (`von` einschließlich, `bis` ausschließlich — z.B. Einsatzdauer
- * ab 8:00 bis vor 14:00), plus das anzuzeigende Zeichen. Gemeinsam genutzt von `AnkreuzBedingung`
- * (Spalte) und `FeldAnkreuzBedingung` (Feld).
+ * ab 8:00 bis vor 14:00), plus das anzuzeigende Zeichen. Bei `istBoolean` (echtes `boolean`-Feld,
+ * z.B. `Wohnung8bis14`) entfällt die Werte-Liste/Wertebereich-Wahl zugunsten einer einfachen
+ * Ja/Nein-Auswahl -- vorher musste ein Boolean über `bereich: { von: 1, bis: 2 }` erzwungen werden
+ * (`alsVergleichswert(true) === 1`), was unintuitiv war und in der Editor-Vorschau leicht als „geht
+ * nicht" missverstanden wurde. Gemeinsam genutzt von `AnkreuzBedingung` (Spalte) und
+ * `FeldAnkreuzBedingung` (Feld).
  */
 function VergleichWahl({
   wenn,
   auswahl,
+  istBoolean,
   onChange,
 }: {
   wenn: VergleichsTeil;
   auswahl: string[];
+  istBoolean?: boolean;
   onChange: (next: Partial<VergleichsTeil>) => void;
 }) {
   function schalte(wert: string, an: boolean) {
     const werte = an ? [...(wenn.werte ?? []), wert] : (wenn.werte ?? []).filter(w => w !== wert);
     onChange({ werte });
+  }
+
+  if (istBoolean) {
+    const aktuell = wenn.werte?.[0] !== false;
+    return (
+      <div class="row g-1 mb-1">
+        <div class="col-8">
+          <select class="form-select form-select-sm" value={String(aktuell)} onChange={e => onChange({ werte: [(e.target as HTMLSelectElement).value === 'true'], bereich: undefined })}>
+            <option value="true">Ja (zutreffend)</option>
+            <option value="false">Nein (nicht zutreffend)</option>
+          </select>
+        </div>
+        <div class="col-4">
+          <input class="form-control form-control-sm" placeholder="Zeichen" value={wenn.dann} onInput={e => onChange({ dann: (e.target as HTMLInputElement).value })} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -878,6 +1005,7 @@ function AnkreuzBedingung({
 }) {
   const wenn = spalte.wenn!;
   const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
+  const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
   const feldOptionen = [...zeilenFelder, ...andereBerechnete];
 
   function setzeWenn(next: Partial<Bedingung>) {
@@ -916,7 +1044,20 @@ function AnkreuzBedingung({
           <Rechnung wert={wenn.berechnet} zeilenFelder={zeilenFelder} onChange={berechnet => setzeWenn({ berechnet })} />
         </div>
       ) : (
-        <select class="form-select form-select-sm mb-1" value={wenn.feld ?? ''} onChange={e => setzeWenn({ feld: (e.target as HTMLSelectElement).value, werte: [] })}>
+        <select
+          class="form-select form-select-sm mb-1"
+          value={wenn.feld ?? ''}
+          onChange={e => {
+            const feld = (e.target as HTMLSelectElement).value;
+            // Titel folgt dem geprüften Feld -- anders als der Format-Vorschlag (der eine bewusste
+            // Wahl nie überschreibt) IST der Titel hier direkt an die Bedingung gekoppelt: wechselt
+            // das geprüfte Feld, beschreibt ein stehen gelassener alter Titel die falsche Bedingung.
+            // Diese Auswahl ist immer ein reiner Dropdown aus `feldOptionen`, `vorschlag` also immer
+            // gesetzt. Wer einen abweichenden Titel will, tippt ihn danach im Anzeigename-Feld ein.
+            const vorschlag = feldOptionen.find(o => o.pfad === feld)?.label;
+            onChange({ ...spalte, label: vorschlag ?? spalte.label, wenn: { ...wenn, feld, werte: istBooleanFeld(feld) ? [true] : [] } });
+          }}
+        >
           {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
               {felder.map(f => (
@@ -929,7 +1070,7 @@ function AnkreuzBedingung({
         </select>
       )}
 
-      <VergleichWahl wenn={wenn} auswahl={auswahl} onChange={setzeWenn} />
+      <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />
     </div>
   );
 }
@@ -953,6 +1094,7 @@ function FeldAnkreuzBedingung({
   const wenn = feld.wenn!;
   const feldOptionen = katalogFelder(formular);
   const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
+  const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
 
   function setzeWenn(next: Partial<FeldBedingung>) {
     onChange({ ...feld, wenn: { ...wenn, ...next } });
@@ -990,7 +1132,18 @@ function FeldAnkreuzBedingung({
           <AggregationEditor wert={wenn.berechnet} formular={formular} andereBerechnete={andereBerechnete} onChange={berechnet => setzeWenn({ berechnet })} />
         </div>
       ) : (
-        <select class="form-select form-select-sm mb-1" value={wenn.feld ?? ''} onChange={e => setzeWenn({ feld: (e.target as HTMLSelectElement).value, werte: [] })}>
+        <select
+          class="form-select form-select-sm mb-1"
+          value={wenn.feld ?? ''}
+          onChange={e => {
+            const pfad = (e.target as HTMLSelectElement).value;
+            // Gleicher Titel wie in `AnkreuzBedingung` -- folgt dem geprüften Feld statt nur einmal
+            // vorbelegt zu werden, sonst beschreibt ein stehen gelassener Titel nach einem
+            // Feld-Wechsel die falsche Bedingung.
+            const vorschlag = feldOptionen.find(o => o.pfad === pfad)?.label;
+            onChange({ ...feld, label: vorschlag ?? feld.label, wenn: { ...wenn, feld: pfad, werte: istBooleanFeld(pfad) ? [true] : [] } });
+          }}
+        >
           {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
               {felder.map(f => (
@@ -1003,7 +1156,7 @@ function FeldAnkreuzBedingung({
         </select>
       )}
 
-      <VergleichWahl wenn={wenn} auswahl={auswahl} onChange={setzeWenn} />
+      <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />
     </div>
   );
 }
@@ -1083,7 +1236,15 @@ function SpalteZeile({
         <button
           type="button"
           class={`btn ${modus === 'wenn' ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...spalte, berechnet: undefined, listenPlatz: undefined, wenn: spalte.wenn ?? { feld: zeilenFelder[0]?.pfad ?? '', werte: [], dann: 'X' } })}
+          onClick={() => {
+            const startPfad = zeilenFelder[0]?.pfad ?? '';
+            onChange({
+              ...spalte,
+              berechnet: undefined,
+              listenPlatz: undefined,
+              wenn: spalte.wenn ?? { feld: startPfad, werte: istBooleanFeld(startPfad) ? [true] : [], dann: 'X' },
+            });
+          }}
           title="Nur ein Kreuz setzen, wenn ein Feld einen bestimmten Wert hat"
         >
           Ankreuzen
@@ -1159,7 +1320,16 @@ function SpalteZeile({
         <Rechnung wert={spalte.berechnet} zeilenFelder={zeilenFelder} onChange={berechnet => onChange({ ...spalte, berechnet })} />
       ) : (
         <div class="mb-1">
-          <DatenpfadWahl wert={spalte.key} eintraege={zeilenFelder} onChange={key => onChange({ ...spalte, key })} />
+          <DatenpfadWahl
+            wert={spalte.key}
+            eintraege={zeilenFelder}
+            onChange={key => {
+              // Gleicher Format-Vorschlag wie bei Feldern (`umbenennen()` in `FeldListe`) -- nur
+              // übernehmen, wenn die Spalte noch kein eigenes Format hat.
+              const vorschlag = zeilenFelder.find(e => e.pfad === key)?.format;
+              onChange({ ...spalte, key, format: spalte.format ?? vorschlag });
+            }}
+          />
         </div>
       )}
 

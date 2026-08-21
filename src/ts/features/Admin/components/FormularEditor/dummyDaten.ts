@@ -1,4 +1,4 @@
-import { loeseListenAuf, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
+import { alsVergleichswert, loeseListenAuf, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
 import type {
   Daten,
   Feld,
@@ -34,12 +34,15 @@ const ZAHL_FORMATE = ['waehrung', 'zahl', 'ganzzahl'];
  */
 export type Werteart = 'platzhalter' | 'beispiel';
 
-function platzhalter(feld: Feld | Spalte, index: number, name?: string): string | number {
+function platzhalter(feld: Feld | Spalte, index: number, name?: string): string | number | boolean {
   // Feld-Bedingung: Vorschau soll `wenn.dann` zeigen, nicht zufällig leer bleiben.
   if ('wenn' in feld && feld.wenn?.werte?.length) return feld.wenn.werte[0]!;
   if (feld.format && ZAHL_FORMATE.includes(feld.format)) return 12.3 + index;
   if (feld.format && DATUMS_FORMATE.includes(feld.format)) return new Date(2026, 0, index + 1).toISOString();
   if (feld.format === 'uhrzeit' || feld.format === 'stunden') return `${8 + (index % 10)}:15`;
+  // `monatName`/`monatNameKurz` erwarten die eigenständige `Monat`-Zahl (1-12), kein Datum --
+  // sonst würde die Vorschau nur einen leeren Monatsnamen zeigen (siehe Kommentar bei FORMAT.monatName).
+  if (feld.format === 'monatName' || feld.format === 'monatNameKurz') return (index % 12) + 1;
   // Bei zusammengesetzten Feldern (Text-Platzhalter) steht `name` für den einzelnen Teil, sonst für
   // das ganze Feld.
   const bezeichnung = name?.split('.').at(-1) ?? feld.label;
@@ -138,6 +141,15 @@ function macheZeile(
           if (wert !== undefined) zeile[pfad] ??= wert as string | number;
         }
         fuelleOperanden(spalte.wenn.berechnet, zeile, index);
+      } else if (spalte.wenn.feld && spalte.wenn.bereich) {
+        // `bereich` statt `werte` (z.B. Boolean-Ankreuz-Quellen wie `Wohnung8bis14` über
+        // `{ von: 1, bis: 2 }`, siehe `abgeleiteteWerte.ts`): `von`/`bis` sind selbst kein gültiger
+        // Zeilenwert (Uhrzeit-Strings, `"1"` etc.), deshalb über `alsVergleichswert` in eine Zahl
+        // umrechnen -- diese Zahl liest `trifftBedingung` beim Vergleich unverändert zurück. `von`
+        // selbst liegt IMMER im Bereich (einschließlich), `bis` NIE (ausschließlich) -- ohne diesen
+        // Umweg blieb das Feld für jede Zeile leer/„0", weil ein rohes `''`/`undefined` nie in
+        // einem `bereich` mit `von >= 1` landet und die Vorschau nie den Treffer-Fall zeigte.
+        zeile[spalte.wenn.feld] ??= index % 2 === 0 ? alsVergleichswert(spalte.wenn.bereich.von) : alsVergleichswert(spalte.wenn.bereich.bis);
       } else if (index % 2 === 0 && spalte.wenn.feld) {
         // Jede zweite Zeile erfüllt die Bedingung, damit man in der Vorschau beide Fälle sieht.
         zeile[spalte.wenn.feld] ??= spalte.wenn.werte?.[0] ?? '';

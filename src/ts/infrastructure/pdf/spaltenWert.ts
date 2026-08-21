@@ -1,4 +1,4 @@
-import { berechneZeile, FORMAT, listenWert, schluesselAufPlatz, trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
+import { berechneZeile, FORMAT, listenWert, schluesselAufPlatz, standardText, trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
 import type { ListenAufloesung, Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /**
@@ -29,5 +29,5 @@ export function spaltenWert(sp: Spalte, zeile: Zeile, listen?: ListenAufloesung)
 
 function formatiere(roh: unknown, sp: Spalte): string {
   if (roh === null || roh === undefined) return '';
-  return sp.format ? FORMAT[sp.format](roh) : String(roh);
+  return sp.format ? FORMAT[sp.format](roh) : standardText(roh);
 }

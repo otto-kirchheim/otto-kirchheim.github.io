@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { erzeugeDummyDaten } from '@/features/Admin/components/FormularEditor/dummyDaten';
-import type { SeitenDef, Version } from '@otto-kirchheim/nebengeld-shared';
+import { trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
+import type { SeitenDef, Version, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 function macheTabellen(): Version['tabellen'] {
   return { haupt: {
@@ -100,5 +101,33 @@ describe('erzeugeDummyDaten', () => {
       const typen = (zeile.Zulagen as { Typ: string }[]).map(z => z.Typ);
       expect(typen.every(t => ['811', '818'].includes(t))).toBe(true);
     }
+  });
+
+  it('Ankreuz-Spalte mit bereich (statt werte) zeigt in der Vorschau abwechselnd Treffer und Nicht-Treffer, statt für jede Zeile leer zu bleiben (Boolean-Ankreuz-Bug, z.B. Wohnung8bis14 über {von:1,bis:2})', () => {
+    const tabellen = macheTabellen();
+    const wenn = { feld: 'aktiv', bereich: { von: 1, bis: 2 }, dann: 'X' };
+    tabellen.haupt!.spalten.push({ key: 'kreuz', x: 400, size: 10, wenn });
+
+    const daten = erzeugeDummyDaten(tabellen, [macheSeite(4)], 'ez');
+    const zeilen = daten.zeilen as Zeile[];
+    const treffer = zeilen.map(zeile => trifftBedingung(wenn, zeile));
+
+    // Vorher: `zeile.aktiv` blieb roh `''`/`undefined` -- `alsVergleichswert` macht daraus immer 0,
+    // das liegt nie in einem bereich mit `von: 1`, die Spalte war also für JEDE Zeile leer.
+    expect(treffer).toContain(true);
+    expect(treffer).toContain(false);
+  });
+
+  it('Ankreuz-Spalte mit werte: [true] (echter Boolean statt bereich-Umweg) zeigt ebenfalls beide Fälle in der Vorschau', () => {
+    const tabellen = macheTabellen();
+    const wenn = { feld: 'aktiv', werte: [true], dann: 'X' };
+    tabellen.haupt!.spalten.push({ key: 'kreuz', x: 400, size: 10, wenn });
+
+    const daten = erzeugeDummyDaten(tabellen, [macheSeite(4)], 'ez');
+    const zeilen = daten.zeilen as Zeile[];
+    const treffer = zeilen.map(zeile => trifftBedingung(wenn, zeile));
+
+    expect(treffer).toContain(true);
+    expect(treffer).toContain(false);
   });
 });

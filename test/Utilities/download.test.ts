@@ -113,10 +113,10 @@ describe('download utility', () => {
       filename: '',
     });
 
-    await download(button, 'E');
+    await download(button, 'B');
 
     const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-    const expectedFilename = `Verpf. ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
+    const expectedFilename = `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
   });
 
@@ -209,7 +209,7 @@ describe('download utility', () => {
     expect(mockClearLoading).toHaveBeenCalledWith(button.id);
   });
 
-  it("should perform download for mode 'E' successfully", async () => {
+  it("should perform download for mode 'E' successfully (Phase 10 -- neuer client-seitiger Pfad statt downloadPdf())", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
         Tag: '2026-04-19',
@@ -230,8 +230,10 @@ describe('download utility', () => {
 
     await download(button, 'E');
     expect(tableToArray).toHaveBeenCalledWith('tableE');
-    expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'E',
+    expect(mockDownloadPdf).not.toHaveBeenCalled();
+    expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+      'ewt',
+      '2026-04-01',
       expect.objectContaining({
         Daten: {
           EWT: [
@@ -248,6 +250,16 @@ describe('download utility', () => {
               an1E: '13:00',
               anWE: '14:00',
               berechnen: true,
+              // abWE 07:00 -> anWE 14:00 = 7h, ab1E 08:00 -> an1E 13:00 = 5h -- beide unter der
+              // 8h-Schwelle, also alle Zeitband-Booleans false (mockVorgabenU.Pers.TB = 'Tarifkraft').
+              DauerWohnung: '7:00',
+              DauerErsteTkgSt: '5:00',
+              Wohnung8bis14: false,
+              Wohnung14bis24: false,
+              WohnungUeber24: false,
+              BeamterUeber8Wohnung: false,
+              TkgSt8bis24: false,
+              TkgStUeber24: false,
             },
           ],
         },
@@ -262,6 +274,7 @@ describe('download utility', () => {
           Fahrzeit: backendVorgabenU.Fahrzeit,
         },
       }),
+      undefined,
     );
     expect(saveAs).toHaveBeenCalled();
   });

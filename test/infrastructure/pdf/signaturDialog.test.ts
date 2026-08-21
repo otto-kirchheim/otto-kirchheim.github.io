@@ -10,7 +10,8 @@ const confirmDialogMock = vi.fn();
 vi.mock('@/infrastructure/ui/confirmDialog', () => ({ confirmDialog: confirmDialogMock }));
 
 const clearMock = vi.fn();
-const erstelleSignaturPadMock = vi.fn(() => ({ clear: clearMock }));
+const offMock = vi.fn();
+const erstelleSignaturPadMock = vi.fn(() => ({ clear: clearMock, off: offMock }));
 const holeSignaturPngMock = vi.fn();
 vi.mock('@/infrastructure/pdf/signaturePad', () => ({
   erstelleSignaturPad: erstelleSignaturPadMock,
@@ -61,6 +62,12 @@ describe('signaturDialog', () => {
     modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
     expect(await promise).toBe('data:image/png;base64,abc');
     expect(hideMock).toHaveBeenCalled();
+
+    // `bsModal.hide()` ist hier gemockt und löst kein echtes `hidden.bs.modal` aus (das würde
+    // Bootstrap nach der Ausblend-Animation selbst tun) -- ohne diesen Event bliebe der
+    // window-resize-Listener aus dem Dialog über das Testende hinaus registriert und würde in
+    // späteren Tests unerwartet mitfeuern.
+    modal.dispatchEvent(new Event('hidden.bs.modal'));
   });
 
   it('ein leer gelassenes Pad (holeSignaturPng liefert null) resolved undefined', async () => {
@@ -75,6 +82,7 @@ describe('signaturDialog', () => {
     modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
 
     expect(await promise).toBeUndefined();
+    modal.dispatchEvent(new Event('hidden.bs.modal')); // Aufräumen, siehe Kommentar im Test darüber
   });
 
   it('"Löschen" ruft pad.clear() auf', async () => {
@@ -90,6 +98,54 @@ describe('signaturDialog', () => {
 
     modal.dispatchEvent(new Event('hidden.bs.modal'));
     await promise;
+  });
+
+  it('window-resize (z.B. Handydrehung) baut das Pad neu auf statt verzerrt weiterlaufen zu lassen', async () => {
+    confirmDialogMock.mockResolvedValueOnce(true);
+
+    const promise = signaturDialog();
+    await Promise.resolve();
+
+    const modal = getPadModalEl()!;
+    modal.dispatchEvent(new Event('shown.bs.modal'));
+    expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new Event('resize'));
+    expect(offMock).toHaveBeenCalledTimes(1); // alte Pointer-Listener zuerst lösen
+    expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(2); // Pad neu mit aktueller Canvas-Größe
+
+    modal.dispatchEvent(new Event('hidden.bs.modal'));
+    await promise;
+  });
+
+  it('resize vor shown.bs.modal (Pad existiert noch nicht) tut nichts', async () => {
+    confirmDialogMock.mockResolvedValueOnce(true);
+
+    const promise = signaturDialog();
+    await Promise.resolve();
+
+    window.dispatchEvent(new Event('resize'));
+    expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
+    expect(offMock).not.toHaveBeenCalled();
+
+    getPadModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+    await promise;
+  });
+
+  it('entfernt den resize-Listener beim Schließen -- kein Leak/Zugriff auf ein entsorgtes Pad', async () => {
+    confirmDialogMock.mockResolvedValueOnce(true);
+
+    const promise = signaturDialog();
+    await Promise.resolve();
+
+    const modal = getPadModalEl()!;
+    modal.dispatchEvent(new Event('shown.bs.modal'));
+    modal.dispatchEvent(new Event('hidden.bs.modal'));
+    await promise;
+
+    erstelleSignaturPadMock.mockClear();
+    window.dispatchEvent(new Event('resize'));
+    expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
   });
 
   it('Schließen ohne "Fertig" (hidden.bs.modal) resolved undefined', async () => {

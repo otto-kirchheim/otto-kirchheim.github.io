@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import type { Feld, Zeile } from '@otto-kirchheim/nebengeld-shared';
-import { wert, type Kontext } from '@/infrastructure/pdf/wert';
+import { datenPlatzhalter, wert, type Kontext } from '@/infrastructure/pdf/wert';
 
 const seiteZeilen: Zeile[] = [{ betrag: 10 }, { betrag: 5 }];
 const bisherZeilen: Zeile[] = [{ betrag: 100 }, { betrag: 50 }];
@@ -27,6 +27,24 @@ describe('wert', () => {
   it('formatiert einen Direktwert, wenn format gesetzt ist', () => {
     const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung' };
     expect(wert(f, 'betrag', { betrag: 1234.5 }, kontext)).toBe('1.234,50');
+  });
+
+  it('Array-Direktwert ohne format wird wie `liste` zusammengefügt statt roh gejoint (generischer Fallback)', () => {
+    // Für VorgabenU.Pers.OE reicht dieser generische Fallback NICHT -- die hat eine eigene,
+    // striktere Schreibweise, siehe FORMAT.oe in shared/tests/formular/aggregatoren.test.ts.
+    const f: Feld = { x: 0, y: 0, size: 10 };
+    expect(wert(f, 'zulagen', { zulagen: ['NZ', 'SoZ', ''] }, kontext)).toBe('NZ / SoZ');
+  });
+
+  it('OE-Direktwert mit format: oe in kanonischer Schreibweise (User-Fund)', () => {
+    const f: Feld = { x: 0, y: 0, size: 10, format: 'oe' };
+    expect(wert(f, 'oe', { oe: ['V', 'IW', 'MI', 'N', 'KSL', 'IL', '03'] }, kontext)).toBe('V.IW-MI-N-KSL-IL 03');
+  });
+
+  it('Boolean-Direktwert ohne format wird Ja/Nein statt englischem true/false', () => {
+    const f: Feld = { x: 0, y: 0, size: 10 };
+    expect(wert(f, 'aktiv', { aktiv: true }, kontext)).toBe('Ja');
+    expect(wert(f, 'aktiv', { aktiv: false }, kontext)).toBe('Nein');
   });
 
   it('liefert leeren String für fehlende/null-Werte', () => {
@@ -79,6 +97,48 @@ describe('wert', () => {
     it('Text ohne Platzhalter bleibt unverändert', () => {
       const f: Feld = { x: 0, y: 0, size: 10, text: 'Übertrag' };
       expect(wert(f, 'egal', {}, kontext)).toBe('Übertrag');
+    });
+
+    describe('optionales Format ({Pfad:Format})', () => {
+      it('erzwingt liste statt roh gejointem Array', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: 'Zulagen: {zulagen:liste}' };
+        expect(wert(f, 'egal', { zulagen: ['NZ', 'SoZ', ''] }, kontext)).toBe('Zulagen: NZ / SoZ');
+      });
+
+      it('erzwingt oe für die kanonische Organisationseinheit-Schreibweise (User-Fund: liste zerstört sie)', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{oe:oe}' };
+        expect(wert(f, 'egal', { oe: ['V', 'IW', 'MI', 'N', 'KSL', 'IL', '03'] }, kontext)).toBe('V.IW-MI-N-KSL-IL 03');
+      });
+
+      it('erzwingt ein Format, das vom Standard-Fallback abweicht (Zahl als Währung)', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{betrag:waehrung}' };
+        expect(wert(f, 'egal', { betrag: 1234.5 }, kontext)).toBe('1.234,50');
+      });
+
+      it('{heute:datumKurz} überschreibt das sonst feste FORMAT.datum', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: 'Stand: {heute:datumKurz}' };
+        expect(wert(f, 'egal', {}, kontext)).toBe('Stand: 16.08.');
+      });
+
+      it('unbekannter Formatname wird ignoriert, Pfad bleibt über den Standard-Fallback nutzbar', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{zulagen:gibtsNicht}' };
+        expect(wert(f, 'egal', { zulagen: ['NZ', 'SoZ'] }, kontext)).toBe('NZ / SoZ');
+      });
+
+      it('ohne Format bleibt das bisherige Verhalten (Standard-Fallback)', () => {
+        const f: Feld = { x: 0, y: 0, size: 10, text: '{zulagen}' };
+        expect(wert(f, 'egal', { zulagen: ['NZ', 'SoZ'] }, kontext)).toBe('NZ / SoZ');
+      });
+    });
+  });
+
+  describe('datenPlatzhalter', () => {
+    it('schneidet den :Format-Teil ab, damit die Testdaten-Vorschau den Pfad noch findet', () => {
+      expect(datenPlatzhalter('OE: {VorgabenU.Pers.OE:oe}, Stand {heute:datumKurz}')).toEqual(['VorgabenU.Pers.OE']);
+    });
+
+    it('liefert Pfade ohne Format unverändert', () => {
+      expect(datenPlatzhalter('{Nachname}, {Vorname}')).toEqual(['Nachname', 'Vorname']);
     });
   });
 
@@ -176,6 +236,12 @@ describe('wert', () => {
       const f: Feld = { x: 0, y: 0, size: 10, wenn: { feld: 'p.TB', werte: ['Beamter'], dann: 'X' } };
       expect(wert(f, 'egal', { p: { TB: 'Beamter' } }, kontext)).toBe('X');
       expect(wert(f, 'egal', { p: { TB: 'Tarifkraft' } }, kontext)).toBe('');
+    });
+
+    it('werte akzeptiert direkt boolean statt des bereich-Umwegs {von:1,bis:2} (z.B. Wohnung8bis14)', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, wenn: { feld: 'aktiv', werte: [true], dann: 'X' } };
+      expect(wert(f, 'egal', { aktiv: true }, kontext)).toBe('X');
+      expect(wert(f, 'egal', { aktiv: false }, kontext)).toBe('');
     });
 
     it('bereich prüft von einschließlich bis ausschließlich', () => {

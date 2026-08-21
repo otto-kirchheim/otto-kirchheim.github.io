@@ -19,6 +19,7 @@ import type {
   IEntgeltausgleichDownloadBody,
   INebengeldDownloadBody,
 } from '@otto-kirchheim/nebengeld-shared';
+import { ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -116,25 +117,33 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     }
     case 'E': {
       const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
+      // Beamter = TB !== 'Tarifkraft' (Konvention siehe calculateBerechnungRows.ts) -- Grundlage
+      // für `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
+      const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
       data.Daten = {
         // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, das
         // geteilte IEwtDownloadBody['Daten'] typisiert es (wie das bisherige Backend-Modell)
         // als `number` -- vorbestehende Diskrepanz, unveraendert uebernommen (kein Funktions-/
         // Logik-Fix im Rahmen dieser Typen-Migration).
-        EWT: ewtRaw.map(e => ({
-          Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
-          Einsatzort: e.Einsatzort,
-          Schicht: normalizeEwtSchichtForDownload(e.Schicht),
-          abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
-          ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
-          anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
-          beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
-          endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
-          abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
-          an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
-          anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
-          berechnen: e.berechnen,
-        })),
+        EWT: ewtRaw.map(e => {
+          const basis = {
+            Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
+            Einsatzort: e.Einsatzort,
+            Schicht: normalizeEwtSchichtForDownload(e.Schicht),
+            abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
+            ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
+            anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
+            beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
+            endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
+            abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
+            an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
+            anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
+            berechnen: e.berechnen,
+          };
+          // Vorberechnete Dauer/Zeitband-Felder (Phase 10) direkt mit ins Zeilenobjekt --
+          // `build()` sieht sie dann als normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
+          return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
+        }),
       };
       break;
     }
@@ -173,15 +182,16 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     let blob: Blob;
     let filename: string | undefined;
 
-    if (modus === 'EA') {
-      // Neuer Weg (Phase 9): Version server-seitig auflösen (`GET /formulare/ea?stichtag=`), PDF
-      // client-seitig per `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt
-      // selbst. Stichtag = erster Tag des Exportmonats (ein Formular-Wechsel mitten im Monat ist
-      // die Ausnahme, nicht der Regelfall). `data` hat hier bereits exakt die Form, die `build()`
-      // als `Daten` braucht -- dieselben Felder wie `IEntgeltausgleichDownloadBody`.
+    if (modus === 'EA' || modus === 'E') {
+      // Neuer Weg (Phase 9 EA, Phase 10 EWT): Version server-seitig auflösen
+      // (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per `build()` erzeugen -- kein
+      // Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag = erster Tag des Exportmonats
+      // (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat
+      // hier bereits exakt die Form, die `build()` als `Daten` braucht.
+      const formular = modus === 'EA' ? 'ea' : 'ewt';
       const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
       const signaturPng = await signaturDialog();
-      const bytes = await ladeUndErzeugePdf('ea', stichtag, data, signaturPng);
+      const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signaturPng);
       blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     } else {
       ({ blob, filename } = await downloadPdf(modus, data));

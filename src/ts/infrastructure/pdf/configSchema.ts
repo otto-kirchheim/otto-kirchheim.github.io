@@ -16,10 +16,14 @@ const formatNameSchema = z.enum([
   'tagZweistellig',
   'wochentag',
   'monatJahr',
+  'monatName',
+  'monatNameKurz',
   'uhrzeit',
   'stunden',
   'liste',
   'grossbuchstaben',
+  'jaNein',
+  'oe',
 ]);
 const opNameSchema = z.enum(['summe', 'anzahl', 'max', 'letztesDatum']);
 const zeilenOpNameSchema = z.enum(['produkt', 'summe', 'differenz', 'quotient', 'zeitdifferenz', 'zeitspanne']);
@@ -49,7 +53,7 @@ const bereichSchema = z.object({
 const bedingungSchema = z.object({
   feld: z.string().optional(),
   berechnet: zeilenBerechnetSchema.optional(),
-  werte: z.array(z.union([z.string(), z.number()])).optional(),
+  werte: z.array(z.union([z.string(), z.number(), z.boolean()])).optional(),
   bereich: bereichSchema.optional(),
   dann: z.string(),
 });
@@ -59,7 +63,7 @@ const bedingungSchema = z.object({
 const feldBedingungSchema = z.object({
   feld: z.string().optional(),
   berechnet: berechnetSchema.optional(),
-  werte: z.array(z.union([z.string(), z.number()])).optional(),
+  werte: z.array(z.union([z.string(), z.number(), z.boolean()])).optional(),
   bereich: bereichSchema.optional(),
   dann: z.string(),
 });

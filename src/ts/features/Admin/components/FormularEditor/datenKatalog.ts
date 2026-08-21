@@ -1,5 +1,5 @@
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
-import type { ListenGruppe } from '@otto-kirchheim/nebengeld-shared';
+import type { FormatName, ListenGruppe } from '@otto-kirchheim/nebengeld-shared';
 
 export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
 
@@ -14,7 +14,9 @@ export interface KatalogEintrag {
   pfad: string;
   label: string;
   gruppe: string;
-  format?: 'waehrung' | 'datum';
+  /** Vorschlag fürs Feld-`format`, wird beim Anlegen/Umbenennen im Editor vorbelegt (nur wenn das
+   * Feld noch kein eigenes `format` hat -- eine bewusste Wahl wird nie überschrieben). */
+  format?: FormatName;
   /**
    * Beschränkt den Eintrag auf EINE Zeilenquelle (Wert aus `ZEILEN_QUELLEN[formular][].pfad`, z.B.
    * `'Daten.BZ'`). Nötig, wenn ein Formular mehrere Zeilenquellen hat und ein Feldname (z.B.
@@ -50,8 +52,18 @@ const BASIS: KatalogEintrag[] = [
   { pfad: 'VorgabenU.Pers.Name', label: 'Name (zusammengesetzt)', gruppe: 'Person', beispiel: 'Mustermann, Max' },
   { pfad: 'VorgabenU.Pers.PNummer', label: 'Personalnummer', gruppe: 'Person', beispiel: '01234567' },
   { pfad: 'VorgabenU.Pers.Telefon', label: 'Telefon', gruppe: 'Person', beispiel: '0170 1234567' },
-  { pfad: 'VorgabenU.Pers.Adress1', label: 'Adresse Zeile 1', gruppe: 'Person', beispiel: 'Bahnhofstraße 12' },
-  { pfad: 'VorgabenU.Pers.Adress2', label: 'Adresse Zeile 2', gruppe: 'Person', beispiel: '12345 Musterstadt' },
+  {
+    pfad: 'VorgabenU.Pers.Adress1',
+    label: 'Adresse 1',
+    gruppe: 'Person',
+    beispiel: 'Bahnhofstraße 12, 12345 Musterstadt',
+  },
+  {
+    pfad: 'VorgabenU.Pers.Adress2',
+    label: 'Adresse 2',
+    gruppe: 'Person',
+    beispiel: 'Haltestelle 20, 12345 Musterstadt',
+  },
   { pfad: 'VorgabenU.Pers.Bundesland', label: 'Bundesland', gruppe: 'Person', beispiel: 'Hessen' },
   { pfad: 'VorgabenU.Pers.Taetigkeit', label: 'Tätigkeit (Grund)', gruppe: 'Person', beispiel: 'Signalmechaniker' },
   { pfad: 'VorgabenU.Pers.Entgeltgruppe', label: 'Entgeltgruppe (Grund)', gruppe: 'Person', beispiel: '105' },
@@ -72,6 +84,7 @@ const BASIS: KatalogEintrag[] = [
     pfad: 'VorgabenU.Pers.OE',
     label: 'Organisationseinheit',
     gruppe: 'Dienststelle',
+    format: 'oe',
     beispiel: ['I', 'IW', 'MI', 'N', 'MUS', 'IL'],
   },
   { pfad: 'VorgabenU.Pers.Gewerk', label: 'Gewerk', gruppe: 'Dienststelle', beispiel: 'LST' },
@@ -88,7 +101,7 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'Beginn', label: 'Beginn (HH:mm)', gruppe: 'Zeile', beispiel: '07:00' },
     { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
     { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
-    { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', beispiel: ['NZ', 'SoZ'] },
+    { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: 'liste', beispiel: ['NZ', 'SoZ'] },
   ],
   ewt: [
     { pfad: 'Buchungstag', label: 'Buchungstag', gruppe: 'Zeile', beispiel: i => String(2 + i).padStart(2, '0') },
@@ -102,21 +115,52 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'abEE', label: 'Abfahrt Einsatzort', gruppe: 'Zeile', beispiel: '16:00' },
     { pfad: 'an1E', label: 'Ankunft erste Tätigkeitsstätte', gruppe: 'Zeile', beispiel: '17:15' },
     { pfad: 'anWE', label: 'Ankunft Wohnung', gruppe: 'Zeile', beispiel: '17:45' },
+    // Vorberechnet (Phase 10, siehe shared/src/formular/abgeleiteteWerte.ts::ewtAbgeleiteteWerte) --
+    // eigene Gruppe, damit der Editor sie ohne Rechnung-Builder direkt als Spalten-/Ankreuz-Quelle
+    // anbietet statt jede Version die Zeitrechnung selbst nachbauen zu lassen.
+    { pfad: 'DauerWohnung', label: 'Dauer Wohnung (HH:mm)', gruppe: 'Berechnet', beispiel: '12:30' },
+    { pfad: 'DauerErsteTkgSt', label: 'Dauer erste Tätigkeitsstätte (HH:mm)', gruppe: 'Berechnet', beispiel: '11:30' },
+    { pfad: 'Wohnung8bis14', label: 'Wohnung: 8-14h', gruppe: 'Berechnet', beispiel: 'true' },
+    { pfad: 'Wohnung14bis24', label: 'Wohnung: 14-24h', gruppe: 'Berechnet', beispiel: 'false' },
+    { pfad: 'WohnungUeber24', label: 'Wohnung: über 24h', gruppe: 'Berechnet', beispiel: 'false' },
+    { pfad: 'BeamterUeber8Wohnung', label: 'Beamter, Wohnung über 8h', gruppe: 'Berechnet', beispiel: 'false' },
+    { pfad: 'TkgSt8bis24', label: 'Erste Tätigkeitsstätte: 8-24h', gruppe: 'Berechnet', beispiel: 'true' },
+    { pfad: 'TkgStUeber24', label: 'Erste Tätigkeitsstätte: über 24h', gruppe: 'Berechnet', beispiel: 'false' },
   ],
   bereitschaft: [
     // Bereitschaft hat ZWEI Zeilenquellen (BZ, BE, siehe ZEILEN_QUELLEN), keine gemeinsame: `Beginn`/
     // `Ende` heissen dort zwar gleich, bedeuten aber Verschiedenes und sind entsprechend GETRENNTE
     // Eintraege mit `quelle`. Im Zeitraum (BZ) steckt ein voller Zeitstempel dahinter (siehe
     // IBereitschaftszeitraum), im Einsatz (BE) eine reine `"HH:mm"`-Uhrzeit (IBereitschaftseinsatz).
-    { pfad: 'Beginn', label: 'Beginn (Zeitraum)', gruppe: 'Zeile BZ', format: 'datum', quelle: 'Daten.BZ', beispiel: i => zeitpunkt(i, 15.75) },
-    { pfad: 'Ende', label: 'Ende (Zeitraum)', gruppe: 'Zeile BZ', format: 'datum', quelle: 'Daten.BZ', beispiel: i => zeitpunkt(i, 7, 1) },
+    {
+      pfad: 'Beginn',
+      label: 'Beginn (Zeitraum)',
+      gruppe: 'Zeile BZ',
+      format: 'datum',
+      quelle: 'Daten.BZ',
+      beispiel: i => zeitpunkt(i, 15.75),
+    },
+    {
+      pfad: 'Ende',
+      label: 'Ende (Zeitraum)',
+      gruppe: 'Zeile BZ',
+      format: 'datum',
+      quelle: 'Daten.BZ',
+      beispiel: i => zeitpunkt(i, 7, 1),
+    },
     { pfad: 'Pause', label: 'Pause (Minuten)', gruppe: 'Zeile BZ', quelle: 'Daten.BZ', beispiel: 30 },
     // Kurzer Anruf WÄHREND des Zeitraums, nicht dessen volle Spanne -- siehe
     // createAddModalBereitschaftsEinsatz.tsx ("Von"/"Bis" als knappes Zeitfenster für einen Einsatz).
     { pfad: 'Beginn', label: 'Beginn (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '01:15' },
     { pfad: 'Ende', label: 'Ende (Einsatz, HH:mm)', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: '02:00' },
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile BE', format: 'datum', quelle: 'Daten.BE', beispiel: i => tag(i) },
-    { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => `B-200${11 + i}` },
+    {
+      pfad: 'Auftragsnummer',
+      label: 'Auftragsnummer',
+      gruppe: 'Zeile BE',
+      quelle: 'Daten.BE',
+      beispiel: i => `B-200${11 + i}`,
+    },
     { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: 'LRE 1' },
     { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
   ],
@@ -173,6 +217,18 @@ const WERTE: Record<string, string[]> = {
 
 export function werteAuswahl(feld: string): string[] {
   return WERTE[feld] ?? [];
+}
+
+/**
+ * Zeilenfelder mit echtem `boolean`-Wert (vorberechnete Ankreuz-Quellen, siehe
+ * `shared/src/formular/abgeleiteteWerte.ts::ewtAbgeleiteteWerte`) -- der Editor bietet für diese
+ * Felder in der Ankreuz-Bedingung eine Ja/Nein-Auswahl (`werte: [true]`/`[false]`) statt der
+ * generischen Werte-Liste/Wertebereich-Wahl an.
+ */
+const BOOLEAN_FELDER = new Set(['Wohnung8bis14', 'Wohnung14bis24', 'WohnungUeber24', 'BeamterUeber8Wohnung', 'TkgSt8bis24', 'TkgStUeber24']);
+
+export function istBooleanFeld(feld: string): boolean {
+  return BOOLEAN_FELDER.has(feld);
 }
 
 export function gruppiere(eintraege: KatalogEintrag[]): [string, KatalogEintrag[]][] {
