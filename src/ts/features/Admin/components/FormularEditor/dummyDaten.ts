@@ -35,10 +35,13 @@ const ZAHL_FORMATE = ['waehrung', 'zahl', 'ganzzahl'];
 export type Werteart = 'platzhalter' | 'beispiel';
 
 function platzhalter(feld: Feld | Spalte, index: number, name?: string): string | number {
+  // Feld-Bedingung: Vorschau soll `wenn.dann` zeigen, nicht zufällig leer bleiben.
+  if ('wenn' in feld && feld.wenn?.werte?.length) return feld.wenn.werte[0]!;
   if (feld.format && ZAHL_FORMATE.includes(feld.format)) return 12.3 + index;
   if (feld.format && DATUMS_FORMATE.includes(feld.format)) return new Date(2026, 0, index + 1).toISOString();
   if (feld.format === 'uhrzeit' || feld.format === 'stunden') return `${8 + (index % 10)}:15`;
-  // Bei zusammengesetzten Feldern steht `name` für den einzelnen Teil, sonst für das ganze Feld.
+  // Bei zusammengesetzten Feldern (Text-Platzhalter) steht `name` für den einzelnen Teil, sonst für
+  // das ganze Feld.
   const bezeichnung = name?.split('.').at(-1) ?? feld.label;
   return bezeichnung ? `${bezeichnung} (Test)` : `Testwert ${index + 1}`;
 }
@@ -55,13 +58,16 @@ function ausKatalog(art: Werteart, formular: FormularCode, pfad: string, index: 
 function datenpfade(seite: SeitenDef | undefined): [string, Feld][] {
   if (!seite) return [];
   return Object.entries(seite.felder).flatMap(([key, f]) => {
-    // Aggregationen rechnen über die Zeilen, lesen also keinen eigenen Pfad.
-    if (f.berechnet) return [];
+    // Aggregationen rechnen über die Zeilen, lesen also keinen eigenen Pfad -- gilt auch für eine
+    // per Berechnung geprüfte Bedingung.
+    if (f.berechnet || f.wenn?.berechnet) return [];
     // Der KEY eines Textfeldes ist frei gewählt und kein Datenpfad -- die Pfade stecken in den
-    // Platzhaltern des Textes. Genau die befüllen, sonst bliebe z.B. `Zulagen {Monat}/{Jahr}` in
-    // der Vorschau als "Zulagen /" stehen. `{seite}`/`{heute}` bedient der Kontext.
+    // Platzhaltern des Textes (auch zusammengesetzte Felder laufen darüber). Genau die befüllen,
+    // sonst bliebe z.B. `Zulagen {Monat}/{Jahr}` in der Vorschau als "Zulagen /" stehen. `{seite}`/
+    // `{heute}` bedient der Kontext.
     if (f.text !== undefined) return datenPlatzhalter(f.text).map(pfad => [pfad, f] as [string, Feld]);
     if (f.quellen) return f.quellen.map(pfad => [pfad, f] as [string, Feld]);
+    if (f.wenn?.feld) return [[f.wenn.feld, f] as [string, Feld]];
     return [[key, f] as [string, Feld]];
   });
 }

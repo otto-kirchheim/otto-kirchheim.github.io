@@ -1,5 +1,5 @@
-import { FORMAT, OPS, datumMitFrist, get, listenBeschriftung, schluesselAufPlatz } from '@otto-kirchheim/nebengeld-shared';
-import type { Daten, Feld, ListenAufloesung, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { FORMAT, OPS, alsVergleichswert, datumMitFrist, get, listenBeschriftung, schluesselAufPlatz } from '@otto-kirchheim/nebengeld-shared';
+import type { Berechnet, Daten, Feld, FeldBedingung, ListenAufloesung, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /** Zeilen je Tabellen-Key -- eine Version kann mehrere Datentabellen tragen. */
 export type TabellenZeilen = Record<string, Zeile[]>;
@@ -77,7 +77,38 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
   });
 }
 
-/** Löst ein Feld gegen die Nutzdaten (Direktwert, Zusammensetzung oder Aggregation) auf. */
+/**
+ * Aggregiert über Zeilen (Kopf-/Fuß-Summen) -- gemeinsam genutzt von `Feld.berechnet` (Direktwert)
+ * und `Feld.wenn.berechnet` (Bedingung, z.B. "Gesamtsumme > 0"), damit beide dieselbe `$seite`/
+ * `$bisher`/`$laufend`/`$alle`-Auflösung und Frist-Behandlung für `letztesDatum` teilen.
+ */
+function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unknown {
+  const q = b.ueber;
+  const rows = q.startsWith('$')
+    ? ausKontext(kontext[q as '$seite' | '$bisher' | '$laufend' | '$alle'], b.tabelle)
+    : (get(daten, q) as Zeile[] | undefined);
+  let roh = OPS[b.op](rows ?? [], b.feld);
+  // Das Unterschriftsdatum braucht zusätzlich den Erzeugungstag als Rückfallwert -- der steckt im
+  // Kontext, nicht in den Zeilen, und liegt deshalb außerhalb der reinen Aggregation.
+  if (b.op === 'letztesDatum') roh = datumMitFrist(roh as number, b.maxTage, kontext.heute);
+  return roh;
+}
+
+/**
+ * Prüft eine Feld-Bedingung -- das Gegenstück zu `trifftBedingung` (shared, zeilenbezogen), aber auf
+ * Dokumentebene: `feld` liest einen Datenpfad direkt aus `Daten`, `berechnet` aggregiert über Zeilen.
+ * Bleibt hier statt in `shared`, weil sie den frontend-eigenen `Kontext`-Typ braucht.
+ */
+function trifftFeldBedingung(w: FeldBedingung, daten: Daten, kontext: Kontext): boolean {
+  const roh = w.berechnet ? berechneAggregation(w.berechnet, daten, kontext) : get(daten, w.feld!);
+  if (w.bereich) {
+    const wert = alsVergleichswert(roh);
+    return wert >= alsVergleichswert(w.bereich.von) && wert < alsVergleichswert(w.bereich.bis);
+  }
+  return (w.werte ?? []).includes(roh as string | number);
+}
+
+/** Löst ein Feld gegen die Nutzdaten (Direktwert, Bedingung, Text oder Aggregation) auf. */
 export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): string {
   let roh: unknown;
 
@@ -88,6 +119,8 @@ export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): stri
     const schluessel = schluesselAufPlatz(aufloesung, f.listenKopf.gruppe, f.listenKopf.index);
     const gruppe = aufloesung?.gruppen[f.listenKopf.gruppe];
     return schluessel === undefined || !gruppe ? '' : listenBeschriftung(gruppe, schluessel);
+  } else if (f.wenn) {
+    return trifftFeldBedingung(f.wenn, daten, kontext) ? f.wenn.dann : '';
   } else if (f.text !== undefined) {
     // Platzhalter-Ersetzung liefert bereits fertigen Text -- ein `format` würde ihn nur zerstören.
     return ersetzePlatzhalter(f.text, daten, kontext);
@@ -99,14 +132,7 @@ export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): stri
       .filter(teil => teil !== '')
       .join(f.trenner ?? ' ');
   } else if (f.berechnet) {
-    const q = f.berechnet.ueber;
-    const rows = q.startsWith('$')
-      ? ausKontext(kontext[q as '$seite' | '$bisher' | '$laufend' | '$alle'], f.berechnet.tabelle)
-      : (get(daten, q) as Zeile[] | undefined);
-    roh = OPS[f.berechnet.op](rows ?? [], f.berechnet.feld);
-    // Das Unterschriftsdatum braucht zusätzlich den Erzeugungstag als Rückfallwert -- der steckt im
-    // Kontext, nicht in den Zeilen, und liegt deshalb außerhalb der reinen Aggregation.
-    if (f.berechnet.op === 'letztesDatum') roh = datumMitFrist(roh as number, f.berechnet.maxTage, kontext.heute);
+    roh = berechneAggregation(f.berechnet, daten, kontext);
   } else {
     roh = get(daten, key);
   }

@@ -54,6 +54,16 @@ const bedingungSchema = z.object({
   dann: z.string(),
 });
 
+/** Gegenstück zu `bedingungSchema` auf Feldebene -- `berechnet` ist hier eine Aggregation
+ * (`berechnetSchema`), kein Zeilenbezug wie bei einer Tabellenspalte. */
+const feldBedingungSchema = z.object({
+  feld: z.string().optional(),
+  berechnet: berechnetSchema.optional(),
+  werte: z.array(z.union([z.string(), z.number()])).optional(),
+  bereich: bereichSchema.optional(),
+  dann: z.string(),
+});
+
 const listenPlatzSchema = z.object({
   gruppe: z.string(),
   index: z.number().int().nonnegative(),
@@ -84,6 +94,7 @@ const feldSchema = z.object({
   text: z.string().optional(),
   quellen: z.array(z.string()).optional(),
   trenner: z.string().optional(),
+  wenn: feldBedingungSchema.optional(),
   listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
   drehung: drehungSchema.optional(),
   label: z.string().optional(),

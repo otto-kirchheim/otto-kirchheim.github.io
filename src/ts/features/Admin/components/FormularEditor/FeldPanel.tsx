@@ -1,5 +1,5 @@
-import { useState } from 'preact/hooks';
-import type { Ausrichtung, Bedingung, Daten, Drehung, Feld, FormatName, ListenGruppe, OpName, SeitenDef, Spalte, TabellenBereich, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import { useRef, useState } from 'preact/hooks';
+import type { Ausrichtung, Bedingung, Berechnet, Daten, Drehung, Feld, FeldBedingung, FormatName, ListenGruppe, OpName, SeitenDef, Spalte, TabellenBereich, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
 import { wert, type Kontext } from '@/infrastructure/pdf/wert';
 import { spaltenWert } from '@/infrastructure/pdf/spaltenWert';
 import { ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
@@ -199,7 +199,9 @@ const TRENNER: { wert: string; label: string }[] = [
   { wert: '\n', label: 'Neue Zeile (braucht Zeilenumbruch)' },
 ];
 
-/** Mehrere Datenpfade in eine Zelle, verbunden mit einem frei wählbaren Trennzeichen. */
+/** Mehrere Datenpfade in eine Zelle, verbunden mit einem frei wählbaren Trennzeichen -- im
+ * Unterschied zu Text+Platzhaltern (`PlatzhalterPicker`) werden leere/fehlende Teile automatisch
+ * übersprungen statt eine Trennzeichen-Lücke zu hinterlassen (z.B. optionales `Adress2`). */
 function ZusammengesetzteQuellen({ feld, formular, onChange }: { feld: Feld; formular: FormularCode; onChange: (feld: Feld) => void }) {
   const quellen = feld.quellen ?? [];
   const eintraege = katalogFelder(formular);
@@ -248,6 +250,53 @@ function ZusammengesetzteQuellen({ feld, formular, onChange }: { feld: Feld; for
         )}
       </div>
     </div>
+  );
+}
+
+/**
+ * Fügt einen Datenpfad als `{pfad}`-Platzhalter an der Cursorposition eines Textfelds ein -- per
+ * Klick statt Freihand-Tippen (tippfehleranfällig, ein falscher Pfad liefert still einen leeren
+ * Wert).
+ */
+function PlatzhalterPicker({
+  formular,
+  inputRef,
+  wert,
+  onEinfuegen,
+}: {
+  formular: FormularCode;
+  inputRef: { current: HTMLInputElement | null };
+  wert: string;
+  onEinfuegen: (neuerText: string) => void;
+}) {
+  function einfuegen(pfad: string) {
+    if (!pfad) return;
+    const einfuegung = `{${pfad}}`;
+    const el = inputRef.current;
+    const start = el?.selectionStart ?? wert.length;
+    const end = el?.selectionEnd ?? wert.length;
+    const neu = wert.slice(0, start) + einfuegung + wert.slice(end);
+    onEinfuegen(neu);
+    // Cursor hinter die Einfügung setzen, nach dem Re-Render mit dem neuen Wert.
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + einfuegung.length, start + einfuegung.length);
+    });
+  }
+
+  return (
+    <select class="form-select form-select-sm mb-1" value="" title="Datenpfad an der Cursorposition einfügen" onChange={e => { einfuegen((e.target as HTMLSelectElement).value); (e.target as HTMLSelectElement).value = ''; }}>
+      <option value="">− Datenpfad einfügen −</option>
+      {gruppiere(katalogFelder(formular)).map(([gruppe, felder]) => (
+        <optgroup key={gruppe} label={gruppe}>
+          {felder.map(f => (
+            <option key={f.pfad} value={f.pfad}>
+              {f.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
   );
 }
 
@@ -339,6 +388,97 @@ function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; y2?: nu
   );
 }
 
+/**
+ * Berechnete/Ankreuz-Spalten als Katalogeinträge -- `mitBerechnetenSpalten()` in `shared` trägt
+ * ihren Wert schon unter `key` in die Zeile ein, andere Rechnungen können sie also direkt
+ * referenzieren, statt dieselbe Rechnung ein zweites Mal aufzubauen. Gemeinsam genutzt von der
+ * Feldliste (alle Tabellen) und je einer einzelnen `TabellenBlock` (nur deren eigene Spalten).
+ */
+function berechneteEintraege(spalten: Spalte[], gruppe: string): KatalogEintrag[] {
+  return spalten.filter(sp => (sp.berechnet || sp.wenn) && sp.key).map(sp => ({ pfad: sp.key, label: sp.label ?? sp.key, gruppe }));
+}
+
+const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
+  { wert: 'summe', label: 'Summe' },
+  { wert: 'anzahl', label: 'Anzahl' },
+  { wert: 'max', label: 'Maximum' },
+  { wert: 'letztesDatum', label: 'Letztes Datum' },
+];
+
+/**
+ * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`) und
+ * das aggregierte Zeilenfeld. Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer
+ * Feld-Bedingung (z.B. "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich
+ * danach unterscheidet sich.
+ */
+function AggregationEditor({
+  wert,
+  formular,
+  andereBerechnete,
+  onChange,
+}: {
+  wert: Berechnet;
+  formular: FormularCode;
+  andereBerechnete: KatalogEintrag[];
+  onChange: (wert: Berechnet) => void;
+}) {
+  return (
+    <div class="row g-1 mb-1">
+      <div class="col-3">
+        <select class="form-select form-select-sm" value={wert.op} onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as OpName })}>
+          {AGGREGATIONS_OPS.map(o => (
+            <option key={o.wert} value={o.wert}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div class="col-4">
+        <select class="form-select form-select-sm" value={wert.ueber} onChange={e => onChange({ ...wert, ueber: (e.target as HTMLSelectElement).value })}>
+          <option value="$alle">alle Zeilen (Gesamtsumme)</option>
+          <option value="$seite">nur diese Seite</option>
+          <option value="$bisher">alle Vorseiten (Übertrag)</option>
+          <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
+        </select>
+      </div>
+      <div class="col-5">
+        <select class="form-select form-select-sm" value={wert.feld ?? ''} onChange={e => onChange({ ...wert, feld: (e.target as HTMLSelectElement).value || undefined })}>
+          <option value="">(Feld wählen)</option>
+          {gruppiere([...katalogZeilenFelder(formular), ...andereBerechnete]).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </div>
+      {wert.op === 'letztesDatum' && (
+        <div class="col-12 d-flex align-items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            class="form-control form-control-sm"
+            style="max-width:6rem"
+            placeholder="Tage"
+            value={wert.maxTage ?? ''}
+            onInput={e => {
+              const roh = (e.target as HTMLInputElement).value;
+              onChange({ ...wert, maxTage: roh === '' ? undefined : Number(roh) });
+            }}
+          />
+          <span class="small text-body-secondary">
+            Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt.
+            Leer lassen: immer der letzte Eintrag.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FeldZeile({
   keyName,
   feld,
@@ -363,13 +503,14 @@ function FeldZeile({
   vorschau: Vorschau;
 }) {
   const festerText = feld.text !== undefined;
+  const textRef = useRef<HTMLInputElement>(null);
   // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
   const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
   // Berechnete und Ankreuz-Spalten aller Tabellen -- `mitBerechnetenSpalten()` in `shared` trägt
   // ihren Wert schon unter `key` in die Zeile ein, eine Summe/Anzahl/Maximum kann sie also direkt
   // referenzieren. `Berechnet.tabelle` grenzt nicht auf eine Tabelle ein (in diesem Editor noch
   // nicht gesetzt), deshalb hier über alle Tabellen, per `pfad` dedupliziert.
-  const andereBerechnete = [...new Map(Object.values(tabellen).flatMap(t => t.spalten).filter(sp => (sp.berechnet || sp.wenn) && sp.key).map(sp => [sp.key, { pfad: sp.key, label: sp.label ?? sp.key, gruppe: 'Berechnete/Ankreuz-Spalten' } as KatalogEintrag])).values()];
+  const andereBerechnete = [...new Map(berechneteEintraege(Object.values(tabellen).flatMap(t => t.spalten), 'Berechnete/Ankreuz-Spalten').map(e => [e.pfad, e])).values()];
   return (
     <div class="border rounded p-2 mb-1">
       <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
@@ -388,32 +529,41 @@ function FeldZeile({
       <div class="btn-group btn-group-sm w-100 mb-1">
         <button
           type="button"
-          class={`btn ${!festerText && !feld.berechnet && !feld.quellen ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, quellen: undefined, listenKopf: undefined })}
+          class={`btn ${!festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, wenn: undefined, quellen: undefined, listenKopf: undefined })}
         >
           Datenfeld
         </button>
         <button
           type="button"
+          class={`btn ${festerText ? 'btn-primary' : 'btn-outline-secondary'}`}
+          title="Fester Text, wahlweise mit eingefügten Datenpfaden"
+          onClick={() => onChange({ ...feld, berechnet: undefined, wenn: undefined, quellen: undefined, listenKopf: undefined, text: feld.text ?? '' })}
+        >
+          Text
+        </button>
+        <button
+          type="button"
           class={`btn ${feld.quellen ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, listenKopf: undefined, quellen: feld.quellen ?? [keyName], trenner: feld.trenner ?? ', ' })}
-          title="Mehrere Werte in eine Zelle, z.B. Nachname, Vorname"
+          title="Mehrere Werte in eine Zelle, ohne Trennzeichen-Lücke bei leeren/optionalen Teilen (z.B. Adress2)"
+          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, wenn: undefined, listenKopf: undefined, quellen: feld.quellen ?? [keyName], trenner: feld.trenner ?? ', ' })}
         >
           Mehrere
         </button>
         <button
           type="button"
           class={`btn ${feld.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...feld, text: undefined, quellen: undefined, listenKopf: undefined, berechnet: { op: 'summe', ueber: '$seite' } })}
+          onClick={() => onChange({ ...feld, text: undefined, wenn: undefined, quellen: undefined, listenKopf: undefined, berechnet: { op: 'summe', ueber: '$seite' } })}
         >
           Summe
         </button>
         <button
           type="button"
-          class={`btn ${festerText ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...feld, berechnet: undefined, quellen: undefined, listenKopf: undefined, text: feld.text ?? '' })}
+          class={`btn ${feld.wenn ? 'btn-primary' : 'btn-outline-secondary'}`}
+          title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
+          onClick={() => onChange({ ...feld, text: undefined, berechnet: undefined, quellen: undefined, listenKopf: undefined, wenn: feld.wenn ?? { feld: katalogFelder(formular)[0]?.pfad ?? '', werte: [], dann: 'X' } })}
         >
-          Fester Text
+          Ankreuzen
         </button>
         {mitListen.length > 0 && (
           <button
@@ -425,8 +575,9 @@ function FeldZeile({
               onChange({
                 ...feld,
                 text: undefined,
-                quellen: undefined,
                 berechnet: undefined,
+                wenn: undefined,
+                quellen: undefined,
                 listenKopf: feld.listenKopf ?? { tabelle: tabellenName, gruppe: Object.keys(tabelle.listen!)[0]!, index: 0 },
               });
             }}
@@ -487,71 +638,31 @@ function FeldZeile({
             </div>
           </div>
         </div>
+      ) : feld.wenn ? (
+        <FeldAnkreuzBedingung feld={feld} formular={formular} andereBerechnete={andereBerechnete} onChange={onChange} />
       ) : feld.quellen ? (
         <ZusammengesetzteQuellen feld={feld} formular={formular} onChange={onChange} />
       ) : festerText ? (
         <div class="mb-1">
-          <input class="form-control form-control-sm" placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}" value={feld.text} onInput={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })} />
+          <PlatzhalterPicker formular={formular} inputRef={textRef} wert={feld.text ?? ''} onEinfuegen={neu => onChange({ ...feld, text: neu })} />
+          <input
+            ref={textRef}
+            class="form-control form-control-sm"
+            placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}"
+            value={feld.text}
+            onInput={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
+          />
           <div class="form-text small">
             Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
-            <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>). Seitenzahlen vertragen
-            einen Versatz — <code>{'{seite-1}'}</code> für „Übertrag von Seite …", <code>{'{seite+1}'}</code> für
-            „weiter auf Seite …".
+            <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
+            einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die
+            bei leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere"
+            nutzen. Seitenzahlen vertragen einen Versatz — <code>{'{seite-1}'}</code> für „Übertrag von Seite …",{' '}
+            <code>{'{seite+1}'}</code> für „weiter auf Seite …".
           </div>
         </div>
       ) : feld.berechnet ? (
-        <div class="row g-1 mb-1">
-          <div class="col-3">
-            <select class="form-select form-select-sm" value={feld.berechnet.op} onChange={e => onChange({ ...feld, berechnet: { ...feld.berechnet!, op: (e.target as HTMLSelectElement).value as OpName } })}>
-              <option value="summe">Summe</option>
-              <option value="anzahl">Anzahl</option>
-              <option value="max">Maximum</option>
-              <option value="letztesDatum">Letztes Datum</option>
-            </select>
-          </div>
-          <div class="col-4">
-            <select class="form-select form-select-sm" value={feld.berechnet.ueber} onChange={e => onChange({ ...feld, berechnet: { ...feld.berechnet!, ueber: (e.target as HTMLSelectElement).value } })}>
-              <option value="$alle">alle Zeilen (Gesamtsumme)</option>
-              <option value="$seite">nur diese Seite</option>
-              <option value="$bisher">alle Vorseiten (Übertrag)</option>
-              <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
-            </select>
-          </div>
-          <div class="col-5">
-            <select class="form-select form-select-sm" value={feld.berechnet.feld ?? ''} onChange={e => onChange({ ...feld, berechnet: { ...feld.berechnet!, feld: (e.target as HTMLSelectElement).value || undefined } })}>
-              <option value="">(Feld wählen)</option>
-              {gruppiere([...katalogZeilenFelder(formular), ...andereBerechnete]).map(([gruppe, felder]) => (
-                <optgroup key={gruppe} label={gruppe}>
-                  {felder.map(f => (
-                    <option key={f.pfad} value={f.pfad}>
-                      {f.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
-          </div>
-          {feld.berechnet.op === 'letztesDatum' && (
-            <div class="col-12 d-flex align-items-center gap-2">
-              <input
-                type="number"
-                min="0"
-                class="form-control form-control-sm"
-                style="max-width:6rem"
-                placeholder="Tage"
-                value={feld.berechnet.maxTage ?? ''}
-                onInput={e => {
-                  const roh = (e.target as HTMLInputElement).value;
-                  onChange({ ...feld, berechnet: { ...feld.berechnet!, maxTage: roh === '' ? undefined : Number(roh) } });
-                }}
-              />
-              <span class="small text-body-secondary">
-                Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt.
-                Leer lassen: immer der letzte Eintrag.
-              </span>
-            </div>
-          )}
-        </div>
+        <AggregationEditor wert={feld.berechnet} formular={formular} andereBerechnete={andereBerechnete} onChange={berechnet => onChange({ ...feld, berechnet })} />
       ) : (
         <div class="mb-1">
           <DatenpfadWahl wert={keyName} eintraege={katalogFelder(formular)} onChange={onRename} />
@@ -657,17 +768,102 @@ function FeldListe({
   );
 }
 
+/** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
+ * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */
+interface VergleichsTeil {
+  werte?: (string | number)[];
+  bereich?: { von: string | number; bis: string | number };
+  dann: string;
+}
+
+/**
+ * Vergleich einer Bedingung: Werte-Liste (Mitgliedschaft, mit Checkboxen bei bekannter Auswahl aus
+ * `werteAuswahl()`) ODER Wertebereich (`von` einschließlich, `bis` ausschließlich — z.B. Einsatzdauer
+ * ab 8:00 bis vor 14:00), plus das anzuzeigende Zeichen. Gemeinsam genutzt von `AnkreuzBedingung`
+ * (Spalte) und `FeldAnkreuzBedingung` (Feld).
+ */
+function VergleichWahl({
+  wenn,
+  auswahl,
+  onChange,
+}: {
+  wenn: VergleichsTeil;
+  auswahl: string[];
+  onChange: (next: Partial<VergleichsTeil>) => void;
+}) {
+  function schalte(wert: string, an: boolean) {
+    const werte = an ? [...(wenn.werte ?? []), wert] : (wenn.werte ?? []).filter(w => w !== wert);
+    onChange({ werte });
+  }
+
+  return (
+    <>
+      <div class="row g-1 mb-1">
+        <div class="col-8">
+          <div class="btn-group btn-group-sm w-100">
+            <button type="button" class={`btn ${!wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => onChange({ bereich: undefined, werte: wenn.werte ?? [] })}>
+              Werte-Liste
+            </button>
+            <button
+              type="button"
+              class={`btn ${wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
+              title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
+              onClick={() => onChange({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
+            >
+              Wertebereich
+            </button>
+          </div>
+        </div>
+        <div class="col-4">
+          <input class="form-control form-control-sm" placeholder="Zeichen" value={wenn.dann} onInput={e => onChange({ dann: (e.target as HTMLInputElement).value })} />
+        </div>
+      </div>
+
+      {wenn.bereich ? (
+        <div class="input-group input-group-sm">
+          <span class="input-group-text px-1 small">ab</span>
+          <input class="form-control" placeholder="z.B. 8:00 oder 5" value={wenn.bereich.von} onInput={e => onChange({ bereich: { ...wenn.bereich!, von: (e.target as HTMLInputElement).value } })} />
+          <span class="input-group-text px-1 small">bis vor</span>
+          <input class="form-control" placeholder="z.B. 14:00 oder 20" value={wenn.bereich.bis} onInput={e => onChange({ bereich: { ...wenn.bereich!, bis: (e.target as HTMLInputElement).value } })} />
+        </div>
+      ) : auswahl.length > 0 ? (
+        <div class="d-flex flex-wrap gap-2">
+          {auswahl.map(wert => (
+            <div key={wert} class="form-check">
+              <input class="form-check-input" type="checkbox" checked={(wenn.werte ?? []).includes(wert)} onChange={e => schalte(wert, (e.target as HTMLInputElement).checked)} />
+              <label class="form-check-label small">{wert}</label>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <input
+          class="form-control form-control-sm font-monospace"
+          placeholder="Werte, durch Komma getrennt"
+          value={(wenn.werte ?? []).join(', ')}
+          onInput={e =>
+            onChange({
+              werte: (e.target as HTMLInputElement).value
+                .split(',')
+                .map(t => t.trim())
+                .filter(Boolean),
+            })
+          }
+        />
+      )}
+    </>
+  );
+}
+
 /**
  * Ankreuz-Spalte: trägt `dann` nur ein, wenn das Feld einen der gewählten Werte hat. Bei
  * Bereitschaft je eine Spalte pro LRE-Stufe — Zeilen mit einer anderen (oder gar keiner) Stufe
  * bleiben in dieser Spalte leer.
- */
-/**
- * Ankreuz-Bedingung: geprüfter Wert kommt aus einem Feld ODER einer Rechnung (z.B. eine Dauer aus
- * zwei Uhrzeiten derselben Zeile), verglichen wird per Werte-Liste ODER Wertebereich (`von`
- * einschließlich, `bis` ausschließlich — z.B. Einsatzdauer ab 8:00 bis vor 14:00). Das Feld darf
- * auch eine bereits in dieser Tabelle angelegte berechnete Spalte sein (`andereBerechnete`) — der
- * Renderer trägt deren Wert schon in die Zeile ein, eine zweite Rechnung ist dann unnötig.
+ *
+ * Geprüfter Wert kommt aus einem Feld ODER einer Rechnung (z.B. eine Dauer aus zwei Uhrzeiten
+ * derselben Zeile) -- der Vergleich danach (`VergleichWahl`) ist identisch zu `FeldAnkreuzBedingung`.
+ * Das Feld darf auch eine bereits in dieser Tabelle angelegte berechnete Spalte sein
+ * (`andereBerechnete`) — der Renderer trägt deren Wert schon in die Zeile ein, eine zweite Rechnung
+ * ist dann unnötig.
  */
 function AnkreuzBedingung({
   spalte,
@@ -686,11 +882,6 @@ function AnkreuzBedingung({
 
   function setzeWenn(next: Partial<Bedingung>) {
     onChange({ ...spalte, wenn: { ...wenn, ...next } });
-  }
-
-  function schalte(wert: string, an: boolean) {
-    const werte = an ? [...(wenn.werte ?? []), wert] : (wenn.werte ?? []).filter(w => w !== wert);
-    setzeWenn({ werte });
   }
 
   return (
@@ -738,58 +929,81 @@ function AnkreuzBedingung({
         </select>
       )}
 
-      <div class="row g-1 mb-1">
-        <div class="col-8">
-          <div class="btn-group btn-group-sm w-100">
-            <button type="button" class={`btn ${!wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setzeWenn({ bereich: undefined, werte: wenn.werte ?? [] })}>
-              Werte-Liste
-            </button>
-            <button
-              type="button"
-              class={`btn ${wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
-              title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
-              onClick={() => setzeWenn({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
-            >
-              Wertebereich
-            </button>
-          </div>
-        </div>
-        <div class="col-4">
-          <input class="form-control form-control-sm" placeholder="Zeichen" value={wenn.dann} onInput={e => setzeWenn({ dann: (e.target as HTMLInputElement).value })} />
-        </div>
-      </div>
+      <VergleichWahl wenn={wenn} auswahl={auswahl} onChange={setzeWenn} />
+    </div>
+  );
+}
 
-      {wenn.bereich ? (
-        <div class="input-group input-group-sm">
-          <span class="input-group-text px-1 small">ab</span>
-          <input class="form-control" placeholder="z.B. 8:00 oder 5" value={wenn.bereich.von} onInput={e => setzeWenn({ bereich: { ...wenn.bereich!, von: (e.target as HTMLInputElement).value } })} />
-          <span class="input-group-text px-1 small">bis vor</span>
-          <input class="form-control" placeholder="z.B. 14:00 oder 20" value={wenn.bereich.bis} onInput={e => setzeWenn({ bereich: { ...wenn.bereich!, bis: (e.target as HTMLInputElement).value } })} />
-        </div>
-      ) : auswahl.length > 0 ? (
-        <div class="d-flex flex-wrap gap-2">
-          {auswahl.map(wert => (
-            <div key={wert} class="form-check">
-              <input class="form-check-input" type="checkbox" checked={(wenn.werte ?? []).includes(wert)} onChange={e => schalte(wert, (e.target as HTMLInputElement).checked)} />
-              <label class="form-check-label small">{wert}</label>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <input
-          class="form-control form-control-sm font-monospace"
-          placeholder="Werte, durch Komma getrennt"
-          value={(wenn.werte ?? []).join(', ')}
-          onInput={e =>
+/**
+ * Bedingter Feld-Inhalt (`FeldBedingung`): das Gegenstück zu `AnkreuzBedingung` auf Dokument- statt
+ * Zeilenebene. Geprüfter Wert kommt aus einem Datenpfad (`katalogFelder`, z.B. ein Personenfeld)
+ * ODER einer Aggregation über Zeilen (`AggregationEditor`, z.B. die Gesamtsumme).
+ */
+function FeldAnkreuzBedingung({
+  feld,
+  formular,
+  andereBerechnete,
+  onChange,
+}: {
+  feld: Feld;
+  formular: FormularCode;
+  andereBerechnete: KatalogEintrag[];
+  onChange: (feld: Feld) => void;
+}) {
+  const wenn = feld.wenn!;
+  const feldOptionen = katalogFelder(formular);
+  const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
+
+  function setzeWenn(next: Partial<FeldBedingung>) {
+    onChange({ ...feld, wenn: { ...wenn, ...next } });
+  }
+
+  return (
+    <div class="mb-1">
+      <div class="btn-group btn-group-sm w-100 mb-1">
+        <button
+          type="button"
+          class={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          onClick={() => setzeWenn({ feld: wenn.feld ?? feldOptionen[0]?.pfad ?? '', berechnet: undefined })}
+        >
+          Feld
+        </button>
+        <button
+          type="button"
+          class={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          title="Prüft eine Aggregation über Zeilen, z.B. die Gesamtsumme"
+          onClick={() =>
             setzeWenn({
-              werte: (e.target as HTMLInputElement).value
-                .split(',')
-                .map(t => t.trim())
-                .filter(Boolean),
+              berechnet: wenn.berechnet ?? { op: 'summe', ueber: '$alle' },
+              feld: undefined,
+              bereich: wenn.bereich ?? { von: '', bis: '' },
+              werte: undefined,
             })
           }
-        />
+        >
+          Berechnung
+        </button>
+      </div>
+
+      {wenn.berechnet ? (
+        <div class="border rounded p-2 mb-1">
+          <AggregationEditor wert={wenn.berechnet} formular={formular} andereBerechnete={andereBerechnete} onChange={berechnet => setzeWenn({ berechnet })} />
+        </div>
+      ) : (
+        <select class="form-select form-select-sm mb-1" value={wenn.feld ?? ''} onChange={e => setzeWenn({ feld: (e.target as HTMLSelectElement).value, werte: [] })}>
+          {gruppiere(feldOptionen).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad}>
+                  {f.label}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
       )}
+
+      <VergleichWahl wenn={wenn} auswahl={auswahl} onChange={setzeWenn} />
     </div>
   );
 }
@@ -1106,9 +1320,7 @@ function TabellenBlock({
   // zweites Mal aufzubauen. Bewusst aus `tabelle.spalten`, nicht dem seitenspezifischen `spalten`
   // unten: `mitBerechnetenSpalten()` kennt nur die Tabellen-Spalten, eine NUR auf einer Seite
   // gesetzte Spalte würde also nie befüllt.
-  const andereBerechnete: KatalogEintrag[] = tabelle.spalten
-    .filter(sp => (sp.berechnet || sp.wenn) && sp.key)
-    .map(sp => ({ pfad: sp.key, label: sp.label ?? sp.key, gruppe: 'Berechnete/Ankreuz-Spalten dieser Tabelle' }));
+  const andereBerechnete = berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten dieser Tabelle');
   // Erste Beispielzeile dieser Tabelle -- der Filter ist darin schon angewandt.
   const beispielZeile: Zeile = vorschau.kontext.$alle[name]?.[0] ?? {};
   const bereich = seite.bereiche.find(b => b.tabelle === name);

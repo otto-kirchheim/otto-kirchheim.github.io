@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-21 (2)
+
+### feat (PDF-Vorlagen-Editor: Ankreuzen bei Feld, Overlay-Wertquellen entdoppelt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Kontext ueber alle drei Submodule (Plandatei-Phase 8.5).
+
+- **`wert.ts`:** neue `Feld.wenn`-Auswertung (`trifftFeldBedingung()`), geteilte
+  `berechneAggregation()`-Funktion fuer `Feld.berechnet` UND `Feld.wenn.berechnet` (bisher nur inline in
+  `Feld.berechnet`). Bleibt in `wert.ts`, nicht `shared`, weil sie den frontend-eigenen `Kontext`-Typ
+  braucht.
+- **`FeldPanel.tsx`:** neue Wertquelle "Ankreuzen" bei Feldern (`FeldAnkreuzBedingung`, sechster Modus
+  neben Datenfeld/Text/Mehrere/Summe/Ueberschrift). Text-Modus bekommt `PlatzhalterPicker` -- Datenpfad
+  per Klick als `{pfad}` an der Cursorposition einfuegen statt Freihand-Tippen. Drei gemeinsame Bausteine
+  aus bisher dupliziertem Code gezogen: `AggregationEditor` (Feld-Summe + Feld-Ankreuzen-Berechnung),
+  `VergleichWahl` (Werte-Liste/Wertebereich-Vergleich, aus Spalten- UND Feld-Ankreuzen genutzt),
+  `berechneteEintraege()` (`andereBerechnete`-Sammlung, bisher in `FeldZeile` und `TabellenBlock` fast
+  identisch dupliziert).
+- **`dummyDaten.ts`:** Testdaten-Vorschau befuellt jetzt auch `Feld.wenn`-Datenpfade, mit Bias auf
+  `wenn.werte[0]`, damit die Bedingung in der Vorschau sichtbar zutrifft (analog zur bestehenden
+  "jede zweite Zeile"-Bias bei `Spalte.wenn`).
+- **"Mehrere" (`quellen`/`trenner`) bewusst NICHT entfernt** trotz anfaenglicher Planung -- deckt weiter
+  den Leerteile-Filter bei optionalen Feldern ab (z.B. `Adress2`), den Text-Platzhalter nicht koennen.
+  Siehe Review-Abschnitt der Plandatei.
+- Tests: `wert.test.ts` um `wenn`-Faelle (Feld/Bereich/Berechnet) ergaenzt.
+
 ## 2026-08-21
 
 ### chore (Bun 1.4: Legacy-Matcher, Version gepinnt)

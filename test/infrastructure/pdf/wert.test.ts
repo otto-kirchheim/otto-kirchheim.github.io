@@ -123,6 +123,20 @@ describe('wert', () => {
     expect(wert(f, 'gesamt', {}, kontext)).toBe('165,00');
   });
 
+  describe('zusammengesetzte Felder über Platzhalter im festen Text', () => {
+    const daten = { p: { Nachname: 'Mustermann', Vorname: 'Max' } };
+
+    it('verbindet mehrere Datenpfade -- für den einfachen Fall ohne Leerteile-Filter', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: '{p.Nachname}, {p.Vorname}' };
+      expect(wert(f, 'egal', daten, kontext)).toBe('Mustermann, Max');
+    });
+
+    it('anders als quellen bleibt bei einem leeren Platzhalter die Trennzeichen-Lücke stehen', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, text: '{p.Adress1} / {p.Ort}' };
+      expect(wert(f, 'egal', { p: { Adress1: '', Ort: '12345 Berlin' } }, kontext)).toBe(' / 12345 Berlin');
+    });
+  });
+
   describe('zusammengesetzte Felder (quellen + trenner)', () => {
     const daten = { p: { Nachname: 'Mustermann', Vorname: 'Max', Adress1: 'Bahnweg 1', Adress2: '', Ort: '12345 Berlin' } };
 
@@ -154,6 +168,26 @@ describe('wert', () => {
     it('leere Quellenliste ergibt einen leeren String, keinen Absturz', () => {
       const f: Feld = { x: 0, y: 0, size: 10, quellen: [], trenner: ', ' };
       expect(wert(f, 'egal', daten, kontext)).toBe('');
+    });
+  });
+
+  describe('wenn (bedingter Feldinhalt, Dokumentebene)', () => {
+    it('zeigt "dann", wenn ein Datenpfad einen der gewählten Werte hat', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, wenn: { feld: 'p.TB', werte: ['Beamter'], dann: 'X' } };
+      expect(wert(f, 'egal', { p: { TB: 'Beamter' } }, kontext)).toBe('X');
+      expect(wert(f, 'egal', { p: { TB: 'Tarifkraft' } }, kontext)).toBe('');
+    });
+
+    it('bereich prüft von einschließlich bis ausschließlich', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, wenn: { feld: 'km', bereich: { von: 5, bis: 20 }, dann: 'X' } };
+      expect(wert(f, 'egal', { km: 5 }, kontext)).toBe('X');
+      expect(wert(f, 'egal', { km: 20 }, kontext)).toBe('');
+      expect(wert(f, 'egal', { km: 4.9 }, kontext)).toBe('');
+    });
+
+    it('berechnet prüft eine Aggregation über Zeilen statt eines Datenpfads', () => {
+      const f: Feld = { x: 0, y: 0, size: 10, wenn: { berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' }, bereich: { von: 1, bis: 1000 }, dann: 'Nachzahlung' } };
+      expect(wert(f, 'egal', {}, kontext)).toBe('Nachzahlung');
     });
   });
 
