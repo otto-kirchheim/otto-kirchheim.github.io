@@ -553,7 +553,7 @@ function FeldZeile({
         <button
           type="button"
           class={`btn ${feld.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
-          onClick={() => onChange({ ...feld, text: undefined, wenn: undefined, quellen: undefined, listenKopf: undefined, berechnet: { op: 'summe', ueber: '$seite' } })}
+          onClick={() => onChange({ ...feld, text: undefined, wenn: undefined, quellen: undefined, listenKopf: undefined, berechnet: feld.berechnet ?? { op: 'summe', ueber: '$seite' } })}
         >
           Summe
         </button>

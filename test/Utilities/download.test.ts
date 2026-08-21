@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage'; // Import Storage directly
-import dayjs from '@/infrastructure/date/configDayjs'; // Import configured dayjs
 import download from '@/infrastructure/data/download';
 import { userProfileToBackend } from '@/infrastructure/data/fieldMapper';
 import tableToArray from '@/infrastructure/data/tableToArray';
@@ -24,7 +23,7 @@ vi.mock('@/infrastructure/data/tableToArray', () => ({
 }));
 
 // Use vi.hoisted to ensure mock functions are available when mock factories run
-const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } = (
+const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf, mockLadeUndErzeugePdf, mockSignaturDialog } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => {
   return {
@@ -32,6 +31,8 @@ const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf } =
     mockClearLoading: vi.fn(),
     mockButtonDisable: vi.fn(),
     mockDownloadPdf: vi.fn(),
+    mockLadeUndErzeugePdf: vi.fn(),
+    mockSignaturDialog: vi.fn(),
   };
 });
 
@@ -41,6 +42,13 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }
 vi.mock('@/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
 vi.mock('@/infrastructure/api/apiService', () => ({
   downloadPdf: mockDownloadPdf,
+}));
+// Phase 9: EA läuft über den neuen client-seitigen Pfad statt über `downloadPdf()`.
+vi.mock('@/infrastructure/pdf/ladeFormular', () => ({
+  ladeUndErzeugePdf: mockLadeUndErzeugePdf,
+}));
+vi.mock('@/infrastructure/pdf/signaturDialog', () => ({
+  signaturDialog: mockSignaturDialog,
 }));
 
 // --- Test Suite ---
@@ -75,6 +83,9 @@ describe('download utility', () => {
       blob: new Blob(['mock pdf content']),
       filename: 'test_download.pdf',
     });
+    // Phase 9 (EA): kein Signatur-Dialog standardmäßig, `build()`-Ergebnis als Dummy-Bytes.
+    mockSignaturDialog.mockResolvedValue(undefined);
+    mockLadeUndErzeugePdf.mockResolvedValue(new Uint8Array([1, 2, 3]));
   });
 
   it('should return early if button is null', async () => {
@@ -104,8 +115,8 @@ describe('download utility', () => {
 
     await download(button, 'E');
 
-    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY');
-    const expectedFilename = `Verpfl_${expectedDate}_${mockVorgabenU.Pers.Vorname} ${mockVorgabenU.Pers.Nachname}_${mockVorgabenU.Pers.Gewerk} ${mockVorgabenU.Pers.ErsteTkgSt}.pdf`;
+    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+    const expectedFilename = `Verpf. ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
   });
 
@@ -117,8 +128,8 @@ describe('download utility', () => {
 
     await download(button, 'N');
 
-    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY');
-    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expect.stringContaining(`EZ_${expectedDate}`));
+    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
   });
 
   it('should handle download error with non-Error object', async () => {
@@ -297,6 +308,61 @@ describe('download utility', () => {
     expect(saveAs).toHaveBeenCalled();
   });
 
+  describe("modus 'EA' (Phase 9 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
+    beforeEach(() => {
+      document.body.innerHTML = `
+        <input id="Monat" value="4" />
+        <input id="Jahr" value="2026" />
+        <button id="btnDownloadEA"></button>
+      `;
+      button = document.getElementById('btnDownloadEA') as HTMLButtonElement;
+      (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
+        { Tag: '19.04.2026', Dauer: '08:15', Taetigkeit: 'Teamleiter', Entgeltgruppe: '104' },
+      ]);
+    });
+
+    it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf', async () => {
+      await download(button, 'EA');
+
+      expect(mockDownloadPdf).not.toHaveBeenCalled();
+      expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ea',
+        '2026-04-01',
+        expect.objectContaining({
+          Jahr: 2026,
+          Monat: 4,
+          Daten: { EA: [{ Tag: '19.04.2026', Dauer: '08:15', Taetigkeit: 'Teamleiter', Entgeltgruppe: '104' }] },
+        }),
+        undefined,
+      );
+      const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `Entgeltausgleich ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+    });
+
+    it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
+      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+
+      await download(button, 'EA');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('ea', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+    });
+
+    it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
+      mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für ea am 2026-04-01'));
+
+      await download(button, 'EA');
+
+      expect(saveAs).not.toHaveBeenCalled();
+      expect(createSnackBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Keine gültige Version für ea am 2026-04-01'),
+          status: 'error',
+        }),
+      );
+    });
+  });
+
   it("should use fallback filename if downloadPdf returns 'download.pdf'", async () => {
     mockDownloadPdf.mockResolvedValueOnce({
       blob: new Blob(['mock pdf content']),
@@ -305,8 +371,8 @@ describe('download utility', () => {
 
     await download(button, 'B');
 
-    const expectedDate = dayjs([2026, 4 - 1, 1]).format('MM_YY'); // April 2026
-    const expectedFilename = `RB_${expectedDate}_${mockVorgabenU.Pers.Vorname} ${mockVorgabenU.Pers.Nachname}_${mockVorgabenU.Pers.Gewerk} ${mockVorgabenU.Pers.ErsteTkgSt}.pdf`;
+    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+    const expectedFilename = `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`; // April 2026
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
     expect(createSnackBar).not.toHaveBeenCalled();
   });

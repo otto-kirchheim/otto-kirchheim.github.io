@@ -75,7 +75,8 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
     if (signaturPng && def.signaturBild) {
       const png = await pdf.embedPng(signaturPng);
       const s = def.signaturBild;
-      seite.drawImage(png, { x: s.x, y: s.y, ...png.scaleToFit(s.w, s.h) });
+      const { width, height } = png.scaleToFit(s.w, s.h);
+      seite.drawImage(png, { x: s.x + (s.w - width) / 2, y: s.y + (s.h - height) / 2, width, height });
     }
 
     bisher = verbinde(bisher, block.zeilen);

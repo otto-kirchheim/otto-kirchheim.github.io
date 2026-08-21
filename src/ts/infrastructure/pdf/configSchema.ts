@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Registry, ZeilenBerechnet } from '@otto-kirchheim/nebengeld-shared';
+import type { Registry, Version, ZeilenBerechnet } from '@otto-kirchheim/nebengeld-shared';
 
 // Spiegelt das Typsystem aus @otto-kirchheim/nebengeld-shared (formular/types.ts) --
 // die vom Server gelieferte Konfiguration ist zur Laufzeit `unknown` und muss vor der
@@ -165,13 +165,19 @@ export const konfigSchema = z.object({
   tabellen: z.record(z.string(), tabellenDefSchema),
 });
 
-const versionSchema = z.object({
+export const versionSchema = z.object({
   version: z.string(),
   gueltigVon: z.string(),
   gueltigBis: z.string().nullable(),
   layout: layoutSchema,
   tabellen: z.record(z.string(), tabellenDefSchema),
 });
+
+/** Validiert die vom Server aufgelöste Einzel-Version (`GET /formulare/:f?stichtag=`) -- anders als
+ * `parseRegistry()`, das eine ganze Registry aus mehreren Formularen/Versionen erwartet. */
+export function parseVersion(json: unknown): Version {
+  return versionSchema.parse(json);
+}
 
 const formularSchema = z.object({
   titel: z.string(),

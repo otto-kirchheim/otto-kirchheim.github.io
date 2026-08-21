@@ -23,6 +23,8 @@ import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
 import { downloadPdf } from '../api/apiService';
+import { ladeUndErzeugePdf } from '../pdf/ladeFormular';
+import { signaturDialog } from '../pdf/signaturDialog';
 import {
   filterByMonat,
   getMonatFromBE,
@@ -168,19 +170,38 @@ export default async function download(button: HTMLButtonElement | null, modus: 
   try {
     console.time('download');
 
-    const { blob, filename } = await downloadPdf(modus, data);
+    let blob: Blob;
+    let filename: string | undefined;
+
+    if (modus === 'EA') {
+      // Neuer Weg (Phase 9): Version server-seitig auflösen (`GET /formulare/ea?stichtag=`), PDF
+      // client-seitig per `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt
+      // selbst. Stichtag = erster Tag des Exportmonats (ein Formular-Wechsel mitten im Monat ist
+      // die Ausnahme, nicht der Regelfall). `data` hat hier bereits exakt die Form, die `build()`
+      // als `Daten` braucht -- dieselben Felder wie `IEntgeltausgleichDownloadBody`.
+      const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
+      const signaturPng = await signaturDialog();
+      const bytes = await ladeUndErzeugePdf('ea', stichtag, data, signaturPng);
+      blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
+    } else {
+      ({ blob, filename } = await downloadPdf(modus, data));
+    }
 
     let dateiName = filename;
     if (!dateiName || dateiName === 'download.pdf') {
+      // Namensschema deckt sich bewusst mit dem Server (`buildBaseFileName`/`dateiName` in
+      // backend/src/utils/download.helpers.ts bzw. den einzelnen `*.service.ts::download()`) --
+      // EA liefert seit Phase 9 gar keinen Header mehr (kein Backend-Roundtrip für den PDF-Inhalt),
+      // landet also immer hier; B/E/N nur im Ausnahmefall (Header fehlt/ist `download.pdf`).
       const vorDateiName: { [key in typeof modus]: string } = {
         B: 'RB',
-        E: 'Verpfl',
+        E: 'Verpf.',
         N: 'EZ',
-        EA: 'EA',
+        EA: 'Entgeltausgleich',
       };
-      dateiName = `${vorDateiName[modus]}_${dayjs([Jahr, Monat - 1, 1]).format('MM_YY')}_${localVorgabenU.Pers.Vorname} ${
-        localVorgabenU.Pers.Nachname
-      }_${localVorgabenU.Pers.Gewerk} ${localVorgabenU.Pers.ErsteTkgSt}.pdf`;
+      const { Nachname, Vorname, Gewerk, ErsteTkgSt } = localVorgabenU.Pers;
+      const monatStr = String(Monat).padStart(2, '0');
+      dateiName = `${vorDateiName[modus]} ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} ${monatStr}.${Jahr}.pdf`;
     }
 
     saveAs(blob, dateiName);

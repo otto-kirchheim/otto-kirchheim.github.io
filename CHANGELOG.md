@@ -2,6 +2,70 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-21 (4)
+
+### fix (PDF-Vorlagen-Pipeline: Summe-Button-Reset, Signatur-Zentrierung)
+
+**User-Funde beim echten EA-Browser-Test (Phase 9), Fortsetzung von (3).**
+
+- `FeldPanel.tsx`: "Summe"-Modus-Button in `FeldZeile` setzte `berechnet` bei jedem Klick unbedingt
+  auf `{ op: 'summe', ueber: '$seite' }` zurueck statt (wie alle anderen Modus-Buttons: Text/Mehrere/
+  Ankreuzen/Ueberschrift) den bereits gesetzten Wert zu erhalten -- ein erneuter Klick auf den schon
+  aktiven Button warf z.B. `$bisher` ("alle Vorseiten") zurueck auf `$seite`. Fix:
+  `feld.berechnet ?? { op: 'summe', ueber: '$seite' }`, analog zu den anderen Modi.
+- `build.ts`: Signatur-Bild sass an der unteren linken Ecke der `signaturBild`-Box statt darin
+  zentriert -- `png.scaleToFit(w, h)` verkleinert bei abweichendem Seitenverhaeltnis nur, verschiebt
+  aber nicht. Fix: Restdifferenz zur Box-Groesse haelftig auf `x`/`y` verteilt.
+- Zugehoeriger Backend-Fix (verlorenes `$`-Praefix beim Speichern): siehe `backend/CHANGELOG.md`.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578 (kein Test deckt die konkreten UI-Interaktionen bzw. die
+Bild-Position ab -- manuelle Verifikation im Editor/PDF durch den User ausstehend).
+
+**Nachtrag (`download.ts`):** EA setzt seit Phase 9 kein `filename` mehr (kein Backend-Roundtrip fuer
+den PDF-Inhalt), lief deshalb immer in den generischen Fallback -- dessen Format
+(`EA_MM_YY_Vorname Nachname_Gewerk ErsteTkgSt.pdf`) wich vom bisherigen server-seitigen EA-Namen ab.
+Auf Vorschlag statt EA separat zu behandeln den gemeinsamen Fallback selbst auf das Server-Schema
+umgestellt: Praefix je Modus (`RB`/`Verpf.`/`EZ`/`Entgeltausgleich`) + `Nachname V. Gewerk ErsteTkgSt
+MM.JJJJ.pdf`, wie `buildBaseFileName` im Backend. Gilt jetzt einheitlich fuer alle vier Modi im
+Fallback-Fall. `download.test.ts` auf das neue Format angepasst. Verifiziert: `tsc`/Lint sauber,
+1578/1578.
+
+## 2026-08-21 (3)
+
+### feat (PDF-Vorlagen-Pipeline: EA-Download auf neuen Pfad umgestellt, Phase 9)
+
+Erster echter Cutover der PDF-Vorlagen-Pipeline (Plandatei Phase 9, EA/Entgeltausgleich als Pilot --
+mit EZ getauscht, siehe dortiger Phase-8.5/Tausch-Kontext). `build()` fetchte `layout.template`
+bisher ungeprüft ohne Auth-Header (Kommentar in `build.ts`: "Anbindung folgt in Phase 9") -- diese
+Anbindung jetzt nachgezogen.
+
+- **`infrastructure/pdf/ladeFormular.ts`** (neu): `ladeUndErzeugePdf(formular, stichtag, daten,
+  signaturPng?)` löst die gültige Version server-seitig auf (`GET /formulare/:f?stichtag=`), lädt
+  die Vorlage authentifiziert nach (`holeVorlageAlsDatei`, verschoben aus
+  `Admin/components/formularVersionenApi.ts` -- Layer-Regel verletzt, wenn `infrastructure/` aus
+  `features/` importiert) und biegt `layout.template` auf eine lokale `blob:`-URL um, bevor `build()`
+  sie fetcht (derselbe Trick wie die Testdaten-Vorschau im Admin-Editor). `formularVersionenApi.ts`
+  re-exportiert `holeVorlageAlsDatei`/`ApiFehler`, damit `FormularUpload.tsx` unverändert bleibt.
+- **`configSchema.ts`:** `versionSchema` exportiert, neue `parseVersion()` -- Gegenstück zu
+  `parseRegistry()`, validiert aber eine einzelne vom Server aufgelöste `Version` statt einer ganzen
+  Registry.
+- **`infrastructure/pdf/signaturDialog.ts`** (neu): kapselt den Ja/Nein-Entscheidungsdialog plus
+  Canvas-Signatur-Pad (bisher nur als Bruchstück in der Dev-Testseite `pdf-test.ts` vorhanden) in
+  eine wiederverwendbare, promise-basierte Funktion -- vanilla DOM wie `confirmDialog`, kein
+  Preact/`showModal` nötig. Pad wird erst nach `shown.bs.modal` erstellt, nicht beim Rendern
+  (Phase-4-Lehre: vorher erstelltes Pad auf unsichtbarem Canvas ist unbenutzbar).
+- **`infrastructure/data/download.ts`:** `modus === 'EA'` läuft jetzt über den neuen Pfad
+  (`signaturDialog()` + `ladeUndErzeugePdf()`) statt über `downloadPdf()`/den alten Backend-Sheets-
+  Export; `B`/`E`/`N` unverändert. Stichtag für `resolve()` = erster Tag des Exportmonats. Kein
+  eigenes Datenmapping nötig -- die bestehende `Daten`-Konstruktion im `case 'EA':`-Zweig hat schon
+  exakt die Form, die `build()` erwartet.
+- Tests: `ladeFormular.test.ts`, `signaturDialog.test.ts` (neu), `download.test.ts` um den
+  EA-Pfad ergänzt (Signatur-Weiterreichung, Fehlerfall "keine gültige Version").
+- **Bewusst NICHT Teil dieser Änderung:** der alte Backend-Pfad
+  (`entgeltausgleich.service.ts::download()`, Route, Test) bleibt stehen, bis eine echte EA-Vorlage
+  über den Admin-Editor angelegt und der neue Pfad im Browser verifiziert ist -- ohne echte Vorlage
+  in der DB liefert `GET /formulare/ea?stichtag=` sonst 404 und EA hätte gar keinen PDF-Export mehr.
+
 ## 2026-08-21 (2)
 
 ### feat (PDF-Vorlagen-Editor: Ankreuzen bei Feld, Overlay-Wertquellen entdoppelt)

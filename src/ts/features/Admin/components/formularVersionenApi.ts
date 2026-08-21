@@ -1,7 +1,12 @@
 import { FetchRetry, getServerUrl } from '@/infrastructure/api/FetchRetry';
-import Storage from '@/infrastructure/storage/Storage';
+import { ApiFehler, authHeader, holeVorlageAlsDatei } from '@/infrastructure/pdf/ladeFormular';
 import type { Konfig } from './FormularEditor/FormularEditor';
 import type { FormularCode } from './FormularEditor/datenKatalog';
+
+// `holeVorlageAlsDatei`/`ApiFehler` leben in `infrastructure/pdf/ladeFormular.ts` (auch vom neuen
+// Download-Pfad der Ressourcen-Tabs genutzt, siehe Phase 9) -- hier re-exportiert, damit bestehende
+// Importe (`FormularUpload.tsx`) unverändert bleiben.
+export { ApiFehler, holeVorlageAlsDatei };
 
 /** Eine gespeicherte Formular-Version, wie sie `GET /formulare/:f/versionen` liefert. */
 export interface VersionUebersicht {
@@ -21,25 +26,6 @@ export interface VersionNutzdaten {
   vorlageId: string;
   konfig: Omit<Konfig, 'tabellen'>;
   tabellen: Konfig['tabellen'];
-}
-
-/** Trägt den HTTP-Status mit, damit der Aufrufer den Intervall-Konflikt (409) erkennen kann. */
-export class ApiFehler extends Error {
-  constructor(
-    message: string,
-    readonly statusCode: number,
-  ) {
-    super(message);
-    this.name = 'ApiFehler';
-  }
-}
-
-function authHeader(): Record<string, string> {
-  const token = Storage.get<string>('AccessToken', { default: undefined });
-  return {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    'x-client-version': import.meta.env.APP_VERSION,
-  };
 }
 
 async function ruf<T>(pfad: string, daten: unknown, methode: 'GET' | 'POST' | 'PUT' | 'DELETE'): Promise<T> {
@@ -63,17 +49,6 @@ export async function ladeVorlagenHoch(formular: FormularCode, datei: File): Pro
   const body = (await res.json()) as { success: boolean; data?: { id: string }; message?: string };
   if (!res.ok || !body.success || !body.data) throw new ApiFehler(body.message ?? `Upload fehlgeschlagen (${res.status})`, res.status);
   return body.data.id;
-}
-
-/**
- * Holt eine gespeicherte Vorlage als `File` zurück — der Editor arbeitet immer gegen eine lokale
- * Datei, beim Bearbeiten muss die bereits hochgeladene PDF dafür wieder zum `File` werden.
- */
-export async function holeVorlageAlsDatei(vorlageId: string): Promise<File> {
-  const serverUrl = await getServerUrl();
-  const res = await fetch(`${serverUrl}/vorlagen/${vorlageId}`, { headers: authHeader() });
-  if (!res.ok) throw new ApiFehler(`Vorlage konnte nicht geladen werden (${res.status})`, res.status);
-  return new File([await res.blob()], `vorlage-${vorlageId}.pdf`, { type: 'application/pdf' });
 }
 
 export function holeVersionen(formular: FormularCode): Promise<VersionUebersicht[]> {
