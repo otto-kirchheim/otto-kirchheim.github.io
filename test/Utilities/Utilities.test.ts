@@ -23,7 +23,7 @@ describe('#Storage', () => {
   });
 
   it('should throw Error when key does not exist', () => {
-    expect(() => Storage.get<any>('non-existing-key' as never, { check: true })).toThrowError(
+    expect(() => Storage.get<any>('non-existing-key' as never, { check: true })).toThrow(
       '"non-existing-key" nicht gefunden',
     );
   });

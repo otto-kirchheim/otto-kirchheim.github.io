@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-21
+
+### chore (Bun 1.4: Legacy-Matcher, Version gepinnt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submodule.
+
+- `Utilities.test.ts`: `.toThrowError()` → `.toThrow()` (Bun 1.4 entfernt denselben Legacy-Alias
+  wie Jest 30). Einziger Fund im Repo, alle 1560 Tests unter Bun 1.4.0 verifiziert gruen.
+- `bunfig.toml`: `[install]` `linker = "hoisted"` ergaenzt (Verhalten unveraendert, jetzt explizit).
+- CI (`deploy.yml`): `bun-version` von `latest` auf `1.4.0` fixiert.
+
 ## 2026-08-16 (13)
 
 ### fix (Bereitschaft-Datenkatalog: BZ/BE vermischt)
