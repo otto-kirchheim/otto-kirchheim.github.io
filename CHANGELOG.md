@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (19)
+
+### refactor (download.ts: formular-Zuordnung als Mapped Type, toter Kommentar entfernt)
+
+Reine Code-Qualitaet, kein Verhaltensaenderung.
+
+- `infrastructure/data/download.ts`: die Ternary-Kette (`modus === 'EA' ? 'ea' : modus === 'E' ?
+  'ewt' : 'bereitschaft'`) durch ein `{ [key in typeof modus]: string }`-Lookup ersetzt, analog dem
+  bestehenden `vorDateiName`-Muster weiter unten in derselben Datei. `typeof modus` greift dort die
+  durch die vorausgehende `if`-Bedingung genarrowte Union (`'EA'|'E'|'B'`) ab -- kommt kuenftig ein
+  vierter Modus zur Bedingung dazu, ohne das Lookup-Objekt nachzuziehen, ist das ein Compile-Error
+  statt eines stillen Fallbacks auf den letzten Ternary-Zweig.
+- Eine versehentlich mitcommittete auskommentierte Alternativzeile (`.includes()`-Variante aus dem
+  vorherigen Review-Vergleich) entfernt.
+
+Verifiziert: `tsc`/Lint sauber, `download.test.ts` 18/18, volle Suite 1596/1596.
+
 ## 2026-08-22 (18)
 
 ### fix (PDF-Vorlagen-Pipeline: Bereitschaft-Dauer als Minuten, Labels disambiguiert)
