@@ -2,6 +2,32 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (26)
+
+### feat (Phase 12: EZ-Migration auf neuen PDF-Renderer -- Cleanup separat)
+
+Letzte der vier Ressourcen (nach EA/EWT/Bereitschaft, Phase 9-11) auf den client-seitigen
+`build()`-Renderer umgestellt. EZ hat laut Plan keine abgeleiteten Werte -- Rohdaten (`Daten.N`)
+gehen unverändert wie bisher in den Export.
+
+- **`infrastructure/data/download.ts`:** `modus === 'N'` läuft jetzt wie `'EA'`/`'E'`/`'B'` über
+  `ladeUndErzeugePdf('ez', ...)` (Version server-seitig aufgelöst, PDF client-seitig gebaut) statt
+  über den alten `downloadPdf()`-POST-Pfad. `FORMULAR_JE_MODUS` um `N: 'ez'` ergänzt.
+- Datenkatalog (`datenKatalog.ts`) hatte den `ez`-Formularcode bereits (`Daten.N` als
+  Nebengeld-Einträge) -- keine Änderung nötig.
+- **Bewusst NICHT Teil dieser Änderung (Cleanup separat, User-Vorgabe):** der alte
+  Backend-Downloadpfad für EZ (`nebengeld.routes.ts`/`.controller.ts`/`.service.ts`) und der
+  `else`-Zweig in `download.ts` (`downloadPdf()`) bleiben unangetastet stehen -- gebündelter
+  Rückbau für alle vier Ressourcen erst in der separaten Phase-12-Cleanup-Aufgabe.
+- **Tests (`test/Utilities/download.test.ts`):** neue `describe("modus 'N'")`-Gruppe analog zu
+  `'B'`/`'EA'` (Signatur-Dialog, Fehlerfall bei ungültiger Version, Fehler ohne `Error`-Objekt,
+  VorgabenGeld-Merge über mehrere Monate). Die bisherigen generischen `downloadPdf()`-Tests, die
+  zuletzt an `modus 'N'` hingen (Phase-11-Erbe), sind hinfällig, da nach dieser Migration kein Modus
+  mehr den alten Pfad durchläuft.
+
+Verifiziert: Frontend `tsc`/Lint sauber, 1622/1622, Produktionsbuild erfolgreich. `shared`/Backend
+unverändert (keine Typ-/Schema-Änderung nötig).
+
 ## 2026-08-22 (25)
 
 ### feat (FormularEditor: startY/Höhe/Zeilen als EINE Seiten-Override-Gruppe)

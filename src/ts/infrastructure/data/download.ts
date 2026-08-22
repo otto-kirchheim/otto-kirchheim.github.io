@@ -206,15 +206,15 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     let blob: Blob;
     let filename: string | undefined;
 
-    if (modus === 'EA' || modus === 'E' || modus === 'B') {
-      // Neuer Weg (Phase 9 EA, Phase 10 EWT, Phase 11 Bereitschaft): Version server-seitig auflösen
-      // (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per `build()` erzeugen -- kein
-      // Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag = erster Tag des Exportmonats
-      // (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat
-      // hier bereits exakt die Form, die `build()` als `Daten` braucht.
+    if (modus === 'EA' || modus === 'E' || modus === 'B' || modus === 'N') {
+      // Neuer Weg (Phase 9 EA, Phase 10 EWT, Phase 11 Bereitschaft, Phase 12 EZ): Version
+      // server-seitig auflösen (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per
+      // `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag =
+      // erster Tag des Exportmonats (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht
+      // der Regelfall). `data` hat hier bereits exakt die Form, die `build()` als `Daten` braucht.
       // Mapped Type statt Ternary-Kette: zwingt bei jedem hier neu aufgenommenen Modus zum
       // passenden Eintrag, statt still im letzten Zweig zu landen.
-      const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft' };
+      const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
       const formular = FORMULAR_JE_MODUS[modus];
       const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
       const signaturPng = await signaturDialog();
@@ -228,8 +228,8 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     if (!dateiName || dateiName === 'download.pdf') {
       // Namensschema deckt sich bewusst mit dem Server (`buildBaseFileName`/`dateiName` in
       // backend/src/utils/download.helpers.ts bzw. den einzelnen `*.service.ts::download()`) --
-      // EA/E/B liefern seit Phase 9-11 gar keinen Header mehr (kein Backend-Roundtrip für den
-      // PDF-Inhalt), landen also immer hier; N nur im Ausnahmefall (Header fehlt/ist `download.pdf`).
+      // EA/E/B/N liefern seit Phase 9-12 gar keinen Header mehr (kein Backend-Roundtrip für den
+      // PDF-Inhalt), landen also immer hier.
       const vorDateiName: { [key in typeof modus]: string } = {
         B: 'RB',
         E: 'Verpf.',

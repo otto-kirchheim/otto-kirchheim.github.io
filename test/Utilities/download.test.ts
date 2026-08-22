@@ -109,44 +109,6 @@ describe('download utility', () => {
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
-  it('should use fallback filename if downloadPdf returns empty filename', async () => {
-    mockDownloadPdf.mockResolvedValueOnce({
-      blob: new Blob(['mock pdf content']),
-      filename: '',
-    });
-
-    await download(button, 'N');
-
-    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-    const expectedFilename = `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
-    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
-  });
-
-  it('should use N prefix in fallback filename for modus N', async () => {
-    mockDownloadPdf.mockResolvedValueOnce({
-      blob: new Blob(['pdf']),
-      filename: 'download.pdf',
-    });
-
-    await download(button, 'N');
-
-    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
-  });
-
-  it('should handle download error with non-Error object', async () => {
-    mockDownloadPdf.mockRejectedValueOnce('string-error');
-
-    await download(button, 'N');
-
-    expect(createSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.stringContaining('string-error'),
-        status: 'error',
-      }),
-    );
-  });
-
   it('should throw if input elements are not found', async () => {
     document.body.innerHTML = '<button id="btnDownloadB"></button>'; // Remove inputs
     button = document.getElementById('btnDownloadB') as HTMLButtonElement;
@@ -330,46 +292,131 @@ describe('download utility', () => {
     expect(saveAs).toHaveBeenCalled();
   });
 
-  it("should perform download for mode 'N' successfully", async () => {
-    (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
-      {
-        Tag: '19.04.2026',
-        Beginn: '21:00',
-        Ende: '23:00',
-        Zulagen: [{ Typ: '040', Wert: 2 }],
-        Auftragsnummer: 'N-77',
-      },
-    ]);
+  describe("modus 'N' (Phase 12 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
+    beforeEach(() => {
+      (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
+        {
+          Tag: '19.04.2026',
+          Beginn: '21:00',
+          Ende: '23:00',
+          Zulagen: [{ Typ: '040', Wert: 2 }],
+          Auftragsnummer: 'N-77',
+        },
+      ]);
+    });
 
-    await download(button, 'N');
-    expect(tableToArray).toHaveBeenCalledWith('tableN');
-    expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'N',
-      expect.objectContaining({
-        Daten: {
-          N: [
-            {
-              Tag: '19.04.2026',
-              Beginn: '21:00',
-              Ende: '23:00',
-              Auftragsnummer: 'N-77',
-              Zulagen: [{ Typ: '040', Wert: 2 }],
-            },
-          ],
-        },
-        Jahr: 2026,
-        Monat: 4,
-        VorgabenGeld: expect.objectContaining({
-          ...mockVorgabenGeld[1],
-          ...mockVorgabenGeld[4],
+    it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf (keine abgeleiteten Werte bei EZ)', async () => {
+      await download(button, 'N');
+
+      expect(tableToArray).toHaveBeenCalledWith('tableN');
+      expect(mockDownloadPdf).not.toHaveBeenCalled();
+      expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ez',
+        '2026-04-01',
+        expect.objectContaining({
+          Daten: {
+            N: [
+              {
+                Tag: '19.04.2026',
+                Beginn: '21:00',
+                Ende: '23:00',
+                Auftragsnummer: 'N-77',
+                Zulagen: [{ Typ: '040', Wert: 2 }],
+              },
+            ],
+          },
+          Jahr: 2026,
+          Monat: 4,
+          VorgabenGeld: expect.objectContaining({
+            ...mockVorgabenGeld[1],
+            ...mockVorgabenGeld[4],
+          }),
+          VorgabenU: {
+            Pers: erwartetePers,
+            Fahrzeit: backendVorgabenU.Fahrzeit,
+          },
         }),
-        VorgabenU: {
-          Pers: erwartetePers,
-          Fahrzeit: backendVorgabenU.Fahrzeit,
-        },
-      }),
-    );
-    expect(saveAs).toHaveBeenCalled();
+        undefined,
+      );
+      const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+    });
+
+    it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
+      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+
+      await download(button, 'N');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('ez', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+    });
+
+    it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
+      mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für ez am 2026-04-01'));
+
+      await download(button, 'N');
+
+      expect(saveAs).not.toHaveBeenCalled();
+      expect(createSnackBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Keine gültige Version für ez am 2026-04-01'),
+          status: 'error',
+        }),
+      );
+    });
+
+    it('handhabt einen Fehler ohne Error-Objekt', async () => {
+      mockLadeUndErzeugePdf.mockRejectedValueOnce('string-error');
+
+      await download(button, 'N');
+
+      expect(createSnackBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('string-error'),
+          status: 'error',
+        }),
+      );
+    });
+
+    it('should use VorgabenGeld for Monat 1 (single key)', async () => {
+      const singleKeyGeld: IVorgabenGeld = { 1: mockVorgabenGeld[1] };
+      Storage.set('VorgabenGeld', singleKeyGeld);
+
+      document.querySelector<HTMLInputElement>('#Monat')!.value = '1';
+      await download(button, 'N');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ez',
+        '2026-01-01',
+        expect.objectContaining({
+          VorgabenGeld: singleKeyGeld[1],
+          Monat: 1,
+        }),
+        undefined,
+      );
+    });
+
+    it('should merge multiple VorgabenGeld monat entries when Monat spans several keys', async () => {
+      const multiKeyGeld: IVorgabenGeld = {
+        1: mockVorgabenGeld[1],
+        2: { ...mockVorgabenGeld[1], LRE1: 99 },
+        3: { ...mockVorgabenGeld[1], LRE2: 77 },
+      };
+      Storage.set('VorgabenGeld', multiKeyGeld);
+
+      document.querySelector<HTMLInputElement>('#Monat')!.value = '3';
+      await download(button, 'N');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ez',
+        '2026-03-01',
+        expect.objectContaining({
+          VorgabenGeld: { ...multiKeyGeld[1], ...multiKeyGeld[2], ...multiKeyGeld[3] },
+          Monat: 3,
+        }),
+        undefined,
+      );
+    });
   });
 
   describe("modus 'EA' (Phase 9 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
@@ -427,73 +474,4 @@ describe('download utility', () => {
     });
   });
 
-  it('should handle downloadPdf error', async () => {
-    const error = new Error('Network Failed');
-    mockDownloadPdf.mockRejectedValueOnce(error);
-
-    await download(button, 'N');
-
-    expect(saveAs).not.toHaveBeenCalled();
-    expect(createSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: `Download fehlerhaft:<br/>${error.message}`,
-        status: 'error',
-      }),
-    );
-    expect(mockButtonDisable).toHaveBeenCalledWith(false);
-    expect(mockClearLoading).toHaveBeenCalledWith(button.id);
-  });
-
-  it('should use VorgabenGeld for Monat 1 (single key)', async () => {
-    const singleKeyGeld: IVorgabenGeld = { 1: mockVorgabenGeld[1] };
-    Storage.set('VorgabenGeld', singleKeyGeld);
-
-    document.querySelector<HTMLInputElement>('#Monat')!.value = '1';
-    await download(button, 'N');
-
-    expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'N',
-      expect.objectContaining({
-        VorgabenGeld: singleKeyGeld[1],
-        Monat: 1,
-      }),
-    );
-  });
-
-  it('should merge multiple VorgabenGeld monat entries when Monat spans several keys', async () => {
-    const multiKeyGeld: IVorgabenGeld = {
-      1: mockVorgabenGeld[1],
-      2: { ...mockVorgabenGeld[1], LRE1: 99 },
-      3: { ...mockVorgabenGeld[1], LRE2: 77 },
-    };
-    Storage.set('VorgabenGeld', multiKeyGeld);
-
-    document.querySelector<HTMLInputElement>('#Monat')!.value = '3';
-    await download(button, 'N');
-
-    expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'N',
-      expect.objectContaining({
-        VorgabenGeld: { ...multiKeyGeld[1], ...multiKeyGeld[2], ...multiKeyGeld[3] },
-        Monat: 3,
-      }),
-    );
-  });
-
-  it('should handle non-ok server response error', async () => {
-    const errorMessage = 'Server Error 500';
-    mockDownloadPdf.mockRejectedValueOnce(new Error(errorMessage));
-
-    await download(button, 'N');
-
-    expect(saveAs).not.toHaveBeenCalled();
-    expect(createSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: `Download fehlerhaft:<br/>${errorMessage}`,
-        status: 'error',
-      }),
-    );
-    expect(mockButtonDisable).toHaveBeenCalledWith(false);
-    expect(mockClearLoading).toHaveBeenCalledWith(button.id);
-  });
 });
