@@ -48,6 +48,8 @@ function macheCfg(): Version & { formular: string } {
     tabellen: {
       haupt: {
         quelle: 'zeilen',
+        startY: 700,
+        maxZeilen: 20,
         hoehe: 14,
         spalten: [
           { key: 'text', x: 50, size: 10 },
@@ -147,5 +149,58 @@ describe('build', () => {
     const bytes = await build(cfg, daten);
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(3);
+  });
+
+  it('rendert eine Seite mit eigener bereich.hoehe (Seiten-Override) fehlerfrei, unabhängig von startY/maxZeilen der anderen Seite', async () => {
+    // Der genaue Zeilenabstand aus `hoeheFuer()` ist bereits in `shared/tests/formular/spaltenFuer.test.ts`
+    // exakt abgedeckt -- hier geht es nur um die Verdrahtung in `build.ts`: ein `bereich.hoehe`
+    // (statt `tabelle.hoehe`) darf den Renderer nicht zum Absturz bringen, und `maxZeilen`/`startY`
+    // (von `verteile.ts` unabhängig von `hoehe` verarbeitet) bleiben je Seite unangetastet.
+    const cfg = macheCfg();
+    cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt', startY: 700, maxZeilen: 2 }];
+    cfg.layout.seiten.push({
+      quelle: 0,
+      wiederholt: true,
+      bereiche: [{ tabelle: 'haupt', startY: 500, maxZeilen: 3, hoehe: 30 }],
+      felder: {},
+    });
+
+    const daten = {
+      name: 'Max',
+      zeilen: Array.from({ length: 5 }, (_, i) => ({ text: `Zeile ${i + 1}`, betrag: i + 1 })),
+    };
+
+    const bytes = await build(cfg, daten);
+    const doc = await PDFDocument.load(bytes);
+    // 2 Zeilen (Seite 1, maxZeilen: 2) + 3 Zeilen (wiederholte Seite 2, maxZeilen: 3) = alle 5
+    // Zeilen in genau 2 Seiten.
+    expect(doc.getPageCount()).toBe(2);
+  });
+
+  it('EA-artig: zwei Seiten mit bloßem { tabelle } erben startY/Höhe/Zeilen 1:1 von der Tabelle, nur Spalten weichen ab', async () => {
+    const cfg = macheCfg();
+    // Kein bereich.startY/hoehe/maxZeilen auf beiden Seiten -- beide erben komplett von
+    // cfg.tabellen.haupt. maxZeilen bewusst auf 1 gesetzt: würde der Fallback nicht greifen (z.B.
+    // 0 statt geerbter 1), risse `verteile()` schon auf Seite 1 aus ("keine Seite ist als
+    // wiederholt markiert"), statt sauber zwei Seiten zu füllen. Nur die zweite Seite trägt
+    // zusätzlich eine Übertragsspalte.
+    cfg.tabellen.haupt!.maxZeilen = 1;
+    cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt' }];
+    cfg.layout.seiten.push({
+      quelle: 0,
+      bereiche: [{ tabelle: 'haupt', spalten: [...cfg.tabellen.haupt!.spalten, { key: 'uebertrag', x: 300, size: 10, format: 'waehrung' }] }],
+      felder: {},
+    });
+
+    const daten = {
+      name: 'Max',
+      zeilen: [
+        { text: 'Zeile 1', betrag: 10 },
+        { text: 'Zeile 2', betrag: 5 },
+      ],
+    };
+    const bytes = await build(cfg, daten);
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getPageCount()).toBe(2);
   });
 });

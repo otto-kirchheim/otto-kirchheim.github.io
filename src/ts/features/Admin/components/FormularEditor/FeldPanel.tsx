@@ -1567,6 +1567,7 @@ function TabellenBlock({
   onArm,
   onChange,
   onDelete,
+  onVonSeiteEntfernen,
   vorschau,
 }: {
   name: string;
@@ -1578,6 +1579,7 @@ function TabellenBlock({
   onArm: (armed: Armed | null) => void;
   onChange: (tabelle: TabellenDef) => void;
   onDelete: () => void;
+  onVonSeiteEntfernen: () => void;
   vorschau: Vorschau;
 }) {
   const zeilenFelder = katalogZeilenFelder(formular, tabelle.quelle);
@@ -1596,8 +1598,8 @@ function TabellenBlock({
   const letzteAktiv = istGleich(armed, { bereich: 'letzteZeile', tabelle: name });
   const filterWerte = tabelle.filter ? werteAuswahl(tabelle.filter.feld) : [];
 
-  function setzeBereich(next: Partial<Pick<TabellenBereich, 'startY' | 'maxZeilen' | 'spalten'>>) {
-    const bestehend: TabellenBereich = bereich ?? { tabelle: name, startY: 700, maxZeilen: 10 };
+  function setzeBereich(next: Partial<Pick<TabellenBereich, 'startY' | 'maxZeilen' | 'spalten' | 'hoehe'>>) {
+    const bestehend: TabellenBereich = bereich ?? { tabelle: name };
     const ersetzt = { ...bestehend, ...next };
     onSeiteChange({ ...seite, bereiche: bereich ? seite.bereiche.map(b => (b.tabelle === name ? ersetzt : b)) : [...seite.bereiche, ersetzt] });
   }
@@ -1612,11 +1614,45 @@ function TabellenBlock({
     else onChange({ ...tabelle, spalten: next });
   }
 
+  // startY, Höhe und Zeilen bilden EINE Gruppe ("Datenzeile"): entweder kommen alle drei aus der
+  // Tabelle (alle Seiten identisch), oder diese Seite hat für alle drei einen eigenen Wert --
+  // signalisiert einheitlich über `startY`, da die Checkbox unten immer alle drei zusammen setzt
+  // bzw. zurücksetzt.
+  const eigenePlatzierung = bereich?.startY !== undefined;
+  const startY = bereich?.startY ?? tabelle.startY;
+  const zeilenHoehe = bereich?.hoehe ?? tabelle.hoehe;
+  const maxZeilen = bereich?.maxZeilen ?? tabelle.maxZeilen;
+
+  function setzeStartY(next: number) {
+    if (eigenePlatzierung) setzeBereich({ startY: next });
+    else onChange({ ...tabelle, startY: next });
+  }
+  function setzeZeilenHoehe(next: number) {
+    if (eigenePlatzierung) setzeBereich({ hoehe: next });
+    else onChange({ ...tabelle, hoehe: next });
+  }
+  function setzeMaxZeilen(next: number) {
+    if (eigenePlatzierung) setzeBereich({ maxZeilen: next });
+    else onChange({ ...tabelle, maxZeilen: next });
+  }
+
   return (
     <div class="border rounded p-2 mb-2 bg-body-tertiary">
       <div class="d-flex align-items-center gap-1 mb-1">
         <span class="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
-        <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Tabelle löschen">
+        {bereich && (
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary py-0"
+            onClick={onVonSeiteEntfernen}
+            title="Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)"
+          >
+            <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+              link_off
+            </span>
+          </button>
+        )}
+        <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Tabelle löschen (aus dem ganzen Dokument)">
           <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
             delete
           </span>
@@ -1707,7 +1743,7 @@ function TabellenBlock({
         />
         <span class="small">erste Datenzeile auf dieser Seite</span>
       </div>
-      {bereich && bereich.maxZeilen > 1 && (
+      {bereich && maxZeilen > 1 && (
         <div class="d-flex align-items-center gap-2 mb-1">
           <ScharfButton
             aktiv={letzteAktiv}
@@ -1719,12 +1755,42 @@ function TabellenBlock({
           </span>
         </div>
       )}
-      <div class="row g-1 mb-2">
-        <ZahlFeld label="startY" wert={bereich?.startY} onChange={v => setzeBereich({ startY: v ?? 0 })} />
-        <ZahlFeld label="Höhe" wert={tabelle.hoehe} min={0.1} onChange={v => onChange({ ...tabelle, hoehe: v ?? 1 })} />
-        <ZahlFeld label="Zeilen" wert={bereich?.maxZeilen} ganzzahl min={1} onChange={v => setzeBereich({ maxZeilen: v ?? 1 })} />
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
+        {bereich && (
+          <div class="form-check mb-0">
+            <input
+              class="form-check-input"
+              type="checkbox"
+              checked={eigenePlatzierung}
+              title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
+              onChange={e => {
+                const an = (e.target as HTMLInputElement).checked;
+                setzeBereich({ startY: an ? startY : undefined, hoehe: an ? zeilenHoehe : undefined, maxZeilen: an ? maxZeilen : undefined });
+              }}
+            />
+            <label class="form-check-label small">eigene je Seite</label>
+          </div>
+        )}
       </div>
-      {!bereich && <div class="small text-body-secondary mb-2">Auf dieser Seite noch kein Platz — Startposition setzen, um sie hier zu zeigen.</div>}
+      <div class="row g-1 mb-1 align-items-end">
+        <ZahlFeld label="startY" wert={startY} onChange={v => setzeStartY(v ?? 0)} />
+        <ZahlFeld label="Höhe" wert={zeilenHoehe} min={0.1} onChange={v => setzeZeilenHoehe(v ?? 1)} />
+        <ZahlFeld label="Zeilen" wert={maxZeilen} ganzzahl min={1} onChange={v => setzeMaxZeilen(v ?? 1)} />
+      </div>
+      {!bereich && (
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="small text-body-secondary flex-grow-1">Auf dieser Seite noch kein Platz — Startposition setzen, um sie hier zu zeigen.</div>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-secondary"
+            onClick={() => onSeiteChange({ ...seite, bereiche: [...seite.bereiche, { tabelle: name }] })}
+            title="Übernimmt Startposition, Höhe und Zeilenzahl unverändert von der Tabelle -- z.B. wenn nur die Spalten dieser Seite abweichen"
+          >
+            Mit Werten der Tabelle platzieren
+          </button>
+        </div>
+      )}
 
       <ListenGruppen
         tabelle={tabelle}
@@ -1806,7 +1872,7 @@ export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellen
   function tabelleAnlegen() {
     const name = neuerName.trim() || `tabelle${Object.keys(tabellen).length + 1}`;
     if (tabellen[name]) return;
-    onTabellenChange({ ...tabellen, [name]: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', hoehe: 14, spalten: [] } });
+    onTabellenChange({ ...tabellen, [name]: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] } });
     setNeuerName('');
   }
 
@@ -1818,7 +1884,8 @@ export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellen
         <div class="small fw-semibold">Datentabellen</div>
         <div class="small text-body-secondary mb-1">
           Mehrere Tabellen dürfen dieselbe Quelle nutzen und sich nur im Filter unterscheiden (z.B. Einsätze getrennt nach LRE).
-          Startposition und Zeilenzahl gelten je Seite, Zeilenhöhe und Spalten für die Tabelle insgesamt.
+          Startposition und Zeilenzahl gelten immer je Seite; Zeilenhöhe und Spalten gelten standardmäßig für die ganze
+          Tabelle, lassen sich aber je Seite überschreiben ("eigene je Seite").
         </div>
         {Object.entries(tabellen).map(([name, tabelle]) => (
           <TabellenBlock
@@ -1838,6 +1905,7 @@ export function FeldPanel({ formular, seite, onSeiteChange, tabellen, onTabellen
               onTabellenChange(rest);
               onSeiteChange({ ...seite, bereiche: seite.bereiche.filter(b => b.tabelle !== name) });
             }}
+            onVonSeiteEntfernen={() => onSeiteChange({ ...seite, bereiche: seite.bereiche.filter(b => b.tabelle !== name) })}
           />
         ))}
         <div class="input-group input-group-sm">

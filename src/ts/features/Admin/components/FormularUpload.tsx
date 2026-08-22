@@ -24,7 +24,7 @@ const KONFLIKT = 409;
 function leereKonfig(formular: FormularCode): Konfig {
   return {
     seiten: [leereSeite()],
-    tabellen: { haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', hoehe: 14, spalten: [] } },
+    tabellen: { haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] } },
   };
 }
 

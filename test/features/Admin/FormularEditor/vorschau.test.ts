@@ -6,6 +6,8 @@ import { wert } from '@/infrastructure/pdf/wert';
 const tabellen: Record<string, TabellenDef> = {
   haupt: {
     quelle: 'Daten.N',
+    startY: 700,
+    maxZeilen: 10,
     hoehe: 14,
     spalten: [
       { key: 'Tag', x: 50, size: 10, format: 'datum' },

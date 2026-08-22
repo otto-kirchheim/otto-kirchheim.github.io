@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { verteile } from '@/infrastructure/pdf/verteile';
-import type { Layout, SeitenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import type { Layout, SeitenDef, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 const MAX_ZEILEN = 2;
 
@@ -123,5 +123,28 @@ describe('verteile – mehrere unterschiedliche Seiten (Bereitschaft)', () => {
     const bloecke = verteile({ haupt: macheZeilen(3) }, mitAbschluss);
     // Die wiederholte Seite kommt komplett VOR der Abschlussseite, nicht dazwischen.
     expect(bloecke.map(b => b.def.quelle)).toEqual([0, 0, 5]);
+  });
+});
+
+describe('verteile – maxZeilen als Seiten-Override (EA-artig: gleiche Kapazität, andere Spalten)', () => {
+  function macheTabelle(maxZeilen: number): Record<string, TabellenDef> {
+    return { haupt: { quelle: 'zeilen', startY: 700, maxZeilen, hoehe: 14, spalten: [] } };
+  }
+
+  it('nutzt die Kapazität der Tabelle, wenn der Bereich selbst keine eigene setzt', () => {
+    const seite: SeitenDef = { quelle: 0, bereiche: [{ tabelle: 'haupt' }], felder: {} };
+    const bloecke = verteile({ haupt: macheZeilen(3) }, { template: 'x', seiten: [seite] }, macheTabelle(3));
+    expect(bloecke.map(b => (b.zeilen.haupt ?? []).length)).toEqual([3]);
+  });
+
+  it('das eigene maxZeilen des Bereichs hat Vorrang vor dem globalen Wert der Tabelle', () => {
+    const seiten: SeitenDef[] = [
+      { quelle: 0, bereiche: [{ tabelle: 'haupt', maxZeilen: 1 }], felder: {} },
+      { quelle: 1, bereiche: [{ tabelle: 'haupt' }], felder: {}, wiederholt: true },
+    ];
+    const bloecke = verteile({ haupt: macheZeilen(3) }, { template: 'x', seiten }, macheTabelle(5));
+    // Seite 1 nimmt trotz globaler Kapazität 5 nur 1 Zeile (eigener Override); die wiederholte
+    // Seite 2 erbt die globalen 5 und nimmt den Rest komplett auf.
+    expect(bloecke.map(b => (b.zeilen.haupt ?? []).length)).toEqual([1, 2]);
   });
 });

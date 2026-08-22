@@ -2,6 +2,75 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (25)
+
+### feat (FormularEditor: startY/Höhe/Zeilen als EINE Seiten-Override-Gruppe)
+
+`startY`/`maxZeilen` waren bisher Pflichtfelder je Seite ohne globalen Standard -- jede Seite musste
+sie redundant wiederholen, selbst wenn (wie bei EA) alle Seiten identisch sind und nur die Spalten
+abweichen (z.B. Übertragsspalte auf Folgeseiten). Jetzt folgen `startY`/`hoehe`/`maxZeilen` demselben
+Muster wie `spalten`: global auf der Tabelle definiert, pro Seite nur überschreiben, was abweicht.
+
+- **`shared/src/formular/types.ts`:** `TabellenDef` bekommt neue Pflichtfelder `startY`/`maxZeilen`
+  (globaler Standard). `TabellenBereich.startY`/`maxZeilen` werden optional -- `tabelle` ist jetzt
+  das einzige Pflichtfeld eines Bereichs.
+- **BREAKING CHANGE:** Bestehende Formulare brauchen einmalig einen globalen `startY`/`maxZeilen`
+  je Tabelle im Admin-Editor (z.B. von Seite 1 übernommen) -- danach bleiben alle bisherigen
+  Pro-Seiten-Werte unverändert als Override gültig, keine Vorlage muss neu kalibriert werden.
+- **`shared/src/formular/spaltenFuer.ts`:** `startYFuer()`/`maxZeilenFuer()` neu, neben `hoeheFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`): gleiche
+  Umkehr bei `tabellenDefSchema`/`tabellenBereichSchema`.
+- **`infrastructure/pdf/verteile.ts`:** neuer dritter Parameter `tabellen` -- die Zeilen-Kapazität
+  je Seite fällt jetzt auf den globalen Wert der Tabelle zurück, wenn ein Bereich keinen eigenen
+  setzt (`kapazitaetVon()`).
+- **`build.ts`, `FormularEditor.tsx`, `dummyDaten.ts`:** alle Lesestellen auf
+  `startYFuer()`/`maxZeilenFuer()` umgestellt; die Klick-Kalibrierung ("erste"/"letzte Datenzeile")
+  schreibt `startY`+`Höhe` nur noch gemeinsam in den Bereich, wenn die Seite bereits eine eigene
+  Platzierung hat, sonst weiterhin gemeinsam in die Tabelle.
+- **`FeldPanel.tsx`:** die "eigene je Seite"-Checkbox an der "Datenzeile"-Überschrift steuert jetzt
+  `startY`+`Höhe`+`Zeilen` gemeinsam (vorher nur Höhe). Neuer Button "Mit Werten der Tabelle
+  platzieren" -- legt eine Tabelle auf einer neuen Seite ohne Klick-Kalibrierung an (reines
+  `{ tabelle }`, erbt alles), deckt den EA-Fall ab (nur Spalten weichen ab).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (`startYFuer`/`maxZeilenFuer`, je 2 neue
+  Fälle), `frontend/test/infrastructure/pdf/verteile.test.ts` (2 neue Fälle für den
+  `maxZeilen`-Fallback über die Tabelle), `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer
+  EA-artiger Fall: zwei Seiten mit bloßem `{ tabelle }`, nur Spalten weichen ab).
+
+Verifiziert: `shared` 128/128, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1624/1624,
+Produktionsbuild erfolgreich.
+
+## 2026-08-22 (24)
+
+### fix (FormularEditor: Zeilenhöhe pro Seite überschreibbar + Tabelle von Seite entfernen)
+
+`TabellenBereich.hoehe` (neues optionales Feld, `shared`) macht die Zeilenhöhe seitenweise
+überschreibbar — bisher schrieb die "erste/letzte Datenzeile markieren"-Kalibrierung im Editor
+ihr Ergebnis immer in `TabellenDef.hoehe`, wodurch das Kalibrieren auf einer Seite ungewollt auch
+die Zeilenhöhe auf allen anderen Seiten derselben Tabelle änderte. Reales Bereitschaft-Formular
+braucht das: 4 Seiten mit unterschiedlicher Tabellenanordnung (Seite 1+2 alle drei Tabellen, Seite
+3 nur BE/LRE3, Seite 4 nur BZ+BE/LRE1+2), plausibel mit je eigenem Zeilenabstand.
+
+- **`shared/src/formular/types.ts`:** `TabellenBereich.hoehe?: number`, gleiches Override-Muster
+  wie `spalten?`. Neue `hoeheFuer(bereich, tabelle)` in `spaltenFuer.ts` neben `spaltenFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`):
+  `hoehe: z.number().positive().optional()` in `tabellenBereichSchema`.
+- **`infrastructure/pdf/build.ts`, `FormularEditor.tsx`:** alle Lesestellen von `tabelle.hoehe` auf
+  `hoeheFuer(bereich, tabelle)` umgestellt (Renderer, Zeilenraster-Indikator, Rechtecke). Die
+  Klick-Kalibrierung ("erste"/"letzte Datenzeile") schreibt jetzt nur noch dann in `bereich.hoehe`
+  (nur diese Seite), wenn diese Seite bereits eine eigene Höhe hat — sonst wie bisher gemeinsam in
+  `tabelle.hoehe`. `startY`/`maxZeilen` bleiben unverändert strikt pro Seite (kein Gegenstück auf
+  `TabellenDef`, ein Leck war strukturell nie möglich).
+- **`FeldPanel.tsx`:** neue "eigene je Seite"-Checkbox neben dem Höhe-Feld (gleiches UX-Muster wie
+  bei Spalten). Neuer seiten-lokaler "Von dieser Seite entfernen"-Button (`link_off`-Icon) neben
+  dem bestehenden globalen Lösch-Button — nimmt nur den `bereich` dieser Seite, Tabelle und ihre
+  Bereiche auf anderen Seiten bleiben erhalten (bisher gab es nur die globale Löschung).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (2 neue Fälle für `hoeheFuer`),
+  `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer Fall: eigene `bereich.hoehe` bricht den
+  Renderer nicht, `startY`/`maxZeilen` bleiben seitenweise unabhängig).
+
+Verifiziert: `shared` 124/124, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1621/1621,
+Produktionsbuild erfolgreich.
+
 ## 2026-08-22 (23)
 
 ### feat (Offline-Cache für Formular-Version + Vorlagen-PDF)

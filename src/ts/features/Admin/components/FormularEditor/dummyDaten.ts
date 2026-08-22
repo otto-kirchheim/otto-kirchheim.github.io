@@ -1,4 +1,4 @@
-import { alsVergleichswert, loeseListenAuf, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
+import { alsVergleichswert, loeseListenAuf, maxZeilenFuer, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
 import type {
   Daten,
   Feld,
@@ -105,8 +105,11 @@ function fuelleOperanden(berechnet: ZeilenBerechnet, zeile: Zeile, index: number
  * aller Seiten plus eine Zeile extra, sobald eine Seite wiederholt wird. Ohne wiederholte Seite
  * bleibt es bei der Gesamtkapazität, sonst würde `verteile()` werfen.
  */
-function zeilenBedarf(name: string, seiten: SeitenDef[]): number {
-  const platz = (seite: SeitenDef) => seite.bereiche.find(b => b.tabelle === name)?.maxZeilen ?? 0;
+function zeilenBedarf(name: string, seiten: SeitenDef[], tabelle: TabellenDef): number {
+  const platz = (seite: SeitenDef) => {
+    const bereich = seite.bereiche.find(b => b.tabelle === name);
+    return bereich ? maxZeilenFuer(bereich, tabelle) : 0;
+  };
   const gesamt = seiten.reduce((summe, seite) => summe + platz(seite), 0);
   const wiederholbar = seiten.some(seite => seite.wiederholt && platz(seite) > 0);
   return wiederholbar ? gesamt + 1 : gesamt;
@@ -212,7 +215,7 @@ export function erzeugeDummyDaten(
   // deshalb je Quelle sammeln statt sie gegenseitig zu überschreiben.
   const jeQuelle = new Map<string, Zeile[]>();
   for (const [name, tabelle] of Object.entries(tabellen)) {
-    const anzahl = Math.max(zeilenBedarf(name, seiten), 1);
+    const anzahl = Math.max(zeilenBedarf(name, seiten, tabelle), 1);
     const spalten = alleSpalten(name, tabelle, seiten);
     const zeilen = Array.from({ length: anzahl }, (_, i) => macheZeile(tabelle, spalten, i, art, formular));
     jeQuelle.set(tabelle.quelle, [...(jeQuelle.get(tabelle.quelle) ?? []), ...zeilen]);
@@ -259,7 +262,7 @@ export function erzeugeVorschau(
   }
 
   try {
-    const bloecke = verteile(alle, { template: '', seiten });
+    const bloecke = verteile(alle, { template: '', seiten }, tabellen);
     // Der Editor-Tab zeigt eine KONFIGURIERTE Seite; im Ergebnis kann sie mehrfach vorkommen
     // (wiederholte Seite) oder fehlen. Der erste Block dieser Seitendefinition ist der passende.
     const gefunden = bloecke.findIndex(b => b.def === seiten[seitenIndex]);

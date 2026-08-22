@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { spaltenFuer } from '@otto-kirchheim/nebengeld-shared';
+import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@otto-kirchheim/nebengeld-shared';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
@@ -61,9 +61,9 @@ function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Ar
         // Ohne eigene Spalten (leere Tabelle) bleibt der Rand als Rückfall -- 0 ist derselbe
         // Ursprung, an dem der Indikator vorher immer stand.
         x: spalten.length > 0 ? Math.min(...spalten.map(s => s.x)) : 0,
-        startY: bereich.startY,
-        hoehe: tabelle.hoehe,
-        zeilen: bereich.maxZeilen,
+        startY: startYFuer(bereich, tabelle),
+        hoehe: hoeheFuer(bereich, tabelle),
+        zeilen: maxZeilenFuer(bereich, tabelle),
         aktiv: Boolean((armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') && armed.tabelle === bereich.tabelle),
       },
     ];
@@ -82,12 +82,14 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     if (!tabelle) continue;
 
     const spalten = spaltenFuer(bereich, tabelle);
+    const hoehe = hoeheFuer(bereich, tabelle);
+    const startY = startYFuer(bereich, tabelle);
     spalten.forEach((spalte: Spalte, index) => {
       rechtecke.push({
         x: spalte.x,
-        y: bereich.startY,
+        y: startY,
         x2: spalte.x2 ?? spalte.x + 40,
-        y2: bereich.startY + tabelle.hoehe,
+        y2: startY + hoehe,
         label: spalte.label ?? spalte.key,
         aktiv: Boolean(armed?.bereich === 'spalte' && armed.tabelle === bereich.tabelle && armed.index === index),
       });
@@ -99,9 +101,9 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     const rechts = spalten.map(s => Math.max(s.x, s.x2 ?? s.x));
     rechtecke.push({
       x: links.length > 0 ? Math.min(...links) : undefined,
-      y: bereich.startY,
+      y: startY,
       x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
-      y2: bereich.startY + tabelle.hoehe,
+      y2: startY + hoehe,
       label: `${bereich.tabelle}: erste Zeile`,
       aktiv: Boolean(armed?.bereich === 'tabelle' && armed.tabelle === bereich.tabelle),
       // Linke Kante teilt sich der Rahmen mit der ersten Spalte -- Beschriftung deshalb nach rechts.
@@ -175,23 +177,39 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       const tabelle = value.tabellen[armed.tabelle];
       const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
       if (!tabelle || !bereich) return;
-      const gemessen = zeilenHoeheAus(bereich.startY, r.y, bereich.maxZeilen);
+      const effMaxZeilen = maxZeilenFuer(bereich, tabelle);
+      const gemessen = zeilenHoeheAus(startYFuer(bereich, tabelle), r.y, effMaxZeilen);
       if (gemessen === null) {
         createSnackBar({ message: 'Die letzte Zeile muss unter der ersten liegen', status: 'warning', timeout: 3000 });
         return;
       }
-      onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
-      createSnackBar({ message: `Zeilenhöhe: ${gemessen} pt (aus ${bereich.maxZeilen} Zeilen)`, status: 'success', timeout: 3000 });
+      // Hat diese Seite schon eine eigene Platzierung (startY/Höhe/Zeilen zusammen, siehe
+      // "eigene je Seite"-Checkbox), bleibt die Messung dort -- sonst wie bisher für die ganze
+      // Tabelle (gleiches Muster wie die Spalten-Markierung oben).
+      if (bereich.startY !== undefined) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, hoehe: gemessen } : b)),
+        });
+      } else {
+        onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
+      }
+      createSnackBar({ message: `Zeilenhöhe: ${gemessen} pt (aus ${effMaxZeilen} Zeilen)`, status: 'success', timeout: 3000 });
     } else if (armed.bereich === 'tabelle') {
-      // Erste Datenzeile: y liefert die Startposition, die Höhe den Zeilenabstand.
+      // Erste Datenzeile: y liefert die Startposition, die Höhe den Zeilenabstand. Beides gilt nur
+      // dann für diese Seite allein, wenn sie schon eine eigene Platzierung hat ("eigene je Seite")
+      // -- sonst bleiben sie beim gemeinsamen Tabellenwert, den JEDE Seite ohne eigenen Wert erbt.
       const tabelle = value.tabellen[armed.tabelle];
       if (!tabelle) return;
-      const bereiche = aktiveSeite.bereiche.some(b => b.tabelle === armed.tabelle)
-        ? aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, startY: r.y } : b))
-        : [...aktiveSeite.bereiche, { tabelle: armed.tabelle, startY: r.y, maxZeilen: 10 }];
+      const bestehenderBereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      const eigenePlatzierung = bestehenderBereich?.startY !== undefined;
+      const gemessen = Math.max(r.y2 - r.y, 1);
+      const bereiche = bestehenderBereich
+        ? aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle && eigenePlatzierung ? { ...b, startY: r.y, hoehe: gemessen } : b))
+        : [...aktiveSeite.bereiche, { tabelle: armed.tabelle }];
       onChange({
         ...value,
-        tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: Math.max(r.y2 - r.y, 1) } },
+        tabellen: eigenePlatzierung ? value.tabellen : { ...value.tabellen, [armed.tabelle]: { ...tabelle, startY: r.y, hoehe: gemessen } },
         seiten: value.seiten.map((s, i) => (i === seitenIndex ? { ...aktiveSeite, bereiche } : s)),
       });
     } else {

@@ -130,12 +130,16 @@ const signaturBildSchema = z.object({
 
 const tabellenBereichSchema = z.object({
   tabelle: z.string(),
-  startY: z.number(),
+  /** Seitenspezifische Startposition; ohne Angabe gilt die Startposition der Tabelle. */
+  startY: z.number().optional(),
   // Ganzzahl und mindestens 1: eine halbe oder negative Zeilenzahl ist keine gültige Kapazität und
   // liefe im Renderer auf eine leere oder endlos wiederholte Seite hinaus.
-  maxZeilen: z.number().int().positive(),
+  /** Seitenspezifische Zeilenzahl; ohne Angabe gilt die Zeilenzahl der Tabelle. */
+  maxZeilen: z.number().int().positive().optional(),
   /** Seitenspezifisches Spaltenraster; ohne Angabe gelten die Spalten der Tabelle. */
   spalten: z.array(spalteSchema).optional(),
+  /** Seitenspezifische Zeilenhöhe; ohne Angabe gilt die Höhe der Tabelle. */
+  hoehe: z.number().positive().optional(),
 });
 
 const seitenDefSchema = z.object({
@@ -149,6 +153,10 @@ const seitenDefSchema = z.object({
 const tabellenDefSchema = z.object({
   quelle: z.string(),
   filter: z.object({ feld: z.string(), werte: z.array(z.union([z.string(), z.number()])) }).optional(),
+  /** Globaler Standard für Seiten ohne eigenen Wert, siehe `tabellenBereichSchema.startY`. */
+  startY: z.number(),
+  /** Globaler Standard für Seiten ohne eigenen Wert, siehe `tabellenBereichSchema.maxZeilen`. */
+  maxZeilen: z.number().int().positive(),
   hoehe: z.number().positive(),
   spalten: z.array(spalteSchema),
   listen: z.record(z.string(), listenGruppeSchema).optional(),

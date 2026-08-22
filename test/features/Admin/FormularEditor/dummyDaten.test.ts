@@ -6,6 +6,8 @@ import type { SeitenDef, Version, Zeile } from '@otto-kirchheim/nebengeld-shared
 function macheTabellen(): Version['tabellen'] {
   return { haupt: {
     quelle: 'zeilen',
+    startY: 700,
+    maxZeilen: 10,
     hoehe: 14,
     spalten: [
       { key: 'text', x: 50, size: 10 },

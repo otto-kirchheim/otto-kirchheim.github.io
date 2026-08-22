@@ -1,5 +1,5 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
-import { loeseListenAuf, spaltenFuer, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
+import { hoeheFuer, loeseListenAuf, spaltenFuer, startYFuer, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
 import type { Daten, ListenAufloesung, Version } from '@otto-kirchheim/nebengeld-shared';
 import { zeichne } from './zeichne';
 import { wert, type Kontext, type TabellenZeilen } from './wert';
@@ -38,7 +38,7 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.Helvetica);
 
-  const bloecke = verteile(alle, layout);
+  const bloecke = verteile(alle, layout, cfg.tabellen);
   // Einmal je Dokument bestimmt, nicht je Seite -- sonst könnte ein Lauf über Mitternacht zwei
   // verschiedene Datumsangaben im selben PDF erzeugen.
   const heute = new Date();
@@ -63,12 +63,13 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
       // Spalten kommen aus dem Seitenbereich, wenn er eigene mitbringt -- eine Folgeseite darf ein
       // anderes Spaltenraster haben als die erste.
       const spalten = spaltenFuer(bereich, tabelle);
-      let y = bereich.startY;
+      const hoehe = hoeheFuer(bereich, tabelle);
+      let y = startYFuer(bereich, tabelle);
       for (const zeile of block.zeilen[bereich.tabelle] ?? []) {
         // Die Spalte liefert nur die x-Kanten; die y-Kanten der Zelle kommen aus der Zeilenhöhe.
         // Ohne sie wäre `y` die Grundlinie und der Text säße auf der Zeilenunterkante statt mittig.
-        for (const sp of spalten) zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + tabelle.hoehe }, font);
-        y -= tabelle.hoehe;
+        for (const sp of spalten) zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, font);
+        y -= hoehe;
       }
     }
 
