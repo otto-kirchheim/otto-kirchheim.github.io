@@ -191,13 +191,15 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     let filename: string | undefined;
 
     if (modus === 'EA' || modus === 'E' || modus === 'B') {
-      //if (['EA', 'E', 'B'].includes(modus)) {
       // Neuer Weg (Phase 9 EA, Phase 10 EWT, Phase 11 Bereitschaft): Version server-seitig auflösen
       // (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per `build()` erzeugen -- kein
       // Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag = erster Tag des Exportmonats
       // (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat
       // hier bereits exakt die Form, die `build()` als `Daten` braucht.
-      const formular = modus === 'EA' ? 'ea' : modus === 'E' ? 'ewt' : 'bereitschaft';
+      // Mapped Type statt Ternary-Kette: zwingt bei jedem hier neu aufgenommenen Modus zum
+      // passenden Eintrag, statt still im letzten Zweig zu landen.
+      const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft' };
+      const formular = FORMULAR_JE_MODUS[modus];
       const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
       const signaturPng = await signaturDialog();
       const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signaturPng);
