@@ -102,9 +102,16 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     case 'B': {
       const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
       const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
+      // Beamter = TB !== 'Tarifkraft' (Konvention siehe calculateBerechnungRows.ts) -- bestimmt den
+      // Privat-km-Satz aus VorgabenGeld fuer beAbgeleiteteWerte(); Tarifkraft/Beamter haben laut
+      // VorgabenGeld unterschiedliche Sollwerte.
+      const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
+      const geldMonatB = VorgabenGeld[Monat];
+      const privatKmSatz = beamter ? geldMonatB.PrivatPKWBeamter : geldMonatB.PrivatPKWTarif;
       data.Daten = {
-        // Vorberechnete `Dauer` (Phase 11) direkt mit ins Zeilenobjekt -- `build()` sieht sie dann
-        // als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer), analog EWT (Phase 10).
+        // Vorberechnete `Dauer`/`PrivatKmBetrag` (Phase 11) direkt mit ins Zeilenobjekt -- `build()`
+        // sieht sie dann als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer/PrivatKmBetrag),
+        // analog EWT (Phase 10).
         BZ: bzRaw.map(bz => {
           const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 };
           return { ...basis, ...bzAbgeleiteteWerte(basis) };
@@ -118,7 +125,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
             LRE: be.LRE,
             PrivatKm: be.PrivatKm ?? 0,
           };
-          return { ...basis, ...beAbgeleiteteWerte(basis) };
+          return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
         }),
       } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
       break;

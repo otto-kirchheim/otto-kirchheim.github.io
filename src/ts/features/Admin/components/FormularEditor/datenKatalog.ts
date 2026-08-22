@@ -173,6 +173,10 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     // Bewusst Minuten (Zahl) statt HH:mm-Text wie bei EWT -- explizite User-Vorgabe.
     { pfad: 'Dauer', label: 'Dauer Zeitraum (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BZ', beispiel: 450 },
     { pfad: 'Dauer', label: 'Dauer Einsatz (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BE', beispiel: 45 },
+    // Euro-Betrag für Privat-km, Satz aus VorgabenGeld (PrivatPKWTarif/PrivatPKWBeamter je nach
+    // Pers.TB) -- gleiche Konvention wie calculateBerechnungRows.ts. `format` als Vorschlag, damit
+    // eine neu angelegte Spalte/Feld sofort mit Währungsformat startet statt roher Zahl.
+    { pfad: 'PrivatKmBetrag', label: 'Privat-km Betrag (€)', gruppe: 'Berechnet', quelle: 'Daten.BE', format: 'waehrung', beispiel: 3.24 },
   ],
   ea: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },

@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (20)
+
+### feat (PDF-Vorlagen-Pipeline: Privat-km-Betrag für Bereitschaftseinsatz)
+
+Bereitschaftseinsatz (BE) bekam bisher nur `PrivatKm` als reine Kilometerzahl im Formular --
+fehlender €/Ct-Betrag daraus. Analog zu `PrivatKmBetrag = km * Satz` in
+`Berechnung/calculateBerechnungRows.ts` (Tarifkraft/Beamter haben unterschiedliche Sollwerte).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` bestimmt `beamter` (`TB !== 'Tarifkraft'`,
+  gleiche Konvention wie bei EWT) und liest den passenden Satz aus `VorgabenGeld[Monat]`
+  (`PrivatPKWTarif`/`PrivatPKWBeamter`), reicht ihn an `beAbgeleiteteWerte()` weiter.
+- **`FormularEditor/datenKatalog.ts`:** neuer Eintrag `PrivatKmBetrag` (Gruppe "Berechnet", Quelle
+  `Daten.BE`, Format-Vorschlag `waehrung`).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Tests um `PrivatKmBetrag` ergänzt, inkl. eigenem
+  Test für den Beamter-Satz (TB ≠ Tarifkraft).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597 -- siehe Root-`CHANGELOG.md` für die `shared`-Änderung
+(`beAbgeleiteteWerte()`).
+
 ## 2026-08-22 (19)
 
 ### refactor (download.ts: formular-Zuordnung als Mapped Type, toter Kommentar entfernt)

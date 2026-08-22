@@ -178,9 +178,11 @@ describe('download utility', () => {
           VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
           Daten: {
             // Minuten, nicht HH:mm: Pause 30 von 8h (08:00 -> 16:00) Zeitspanne = 450; Einsatz
-            // 10:00 -> 12:00 = 120.
+            // 10:00 -> 12:00 = 120. PrivatKmBetrag: TB 'Tarifkraft' -> PrivatPKWTarif 0.27 * 12 = 3.24.
             BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 450 }],
-            BE: [{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: 120 }],
+            BE: [
+              { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: 120, PrivatKmBetrag: 3.24 },
+            ],
           },
           Monat: 4,
           Jahr: 2026,
@@ -200,6 +202,24 @@ describe('download utility', () => {
       await download(button, 'B');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('bereitschaft', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+    });
+
+    it('rechnet PrivatKmBetrag mit dem Beamter-Satz, wenn TB nicht Tarifkraft ist', async () => {
+      Storage.set('VorgabenU', { ...mockVorgabenU, Pers: { ...mockVorgabenU.Pers, TB: 'Besoldungsgruppe A 8' } });
+
+      await download(button, 'B');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'bereitschaft',
+        '2026-04-01',
+        expect.objectContaining({
+          // PrivatPKWBeamter 0.2 * 12 = 2.4 statt PrivatPKWTarif 0.27 * 12 = 3.24.
+          Daten: expect.objectContaining({
+            BE: [expect.objectContaining({ PrivatKm: 12, PrivatKmBetrag: 2.4 })],
+          }),
+        }),
+        undefined,
+      );
     });
 
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
