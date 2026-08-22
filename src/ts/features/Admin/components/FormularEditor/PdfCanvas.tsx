@@ -48,11 +48,14 @@ export interface Rechteck {
 export type Achse = 'beide' | 'x' | 'y';
 
 /**
- * Spannweite eines Zeilenrasters, als Indikator am linken Seitenrand. Zeigt ohne Beschriftung, wo
- * die Tabelle beginnt und endet, plus einen Strich je Zeile — sonst ist aus `maxZeilen` allein
- * nicht zu sehen, ob die Zeilen noch aufs Formular passen.
+ * Spannweite eines Zeilenrasters, als Indikator neben der jeweils ersten Spalte der Tabelle. Zeigt
+ * ohne Beschriftung, wo die Tabelle beginnt und endet, plus einen Strich je Zeile — sonst ist aus
+ * `maxZeilen` allein nicht zu sehen, ob die Zeilen noch aufs Formular passen.
  */
 export interface RasterMarke {
+  /** Linke Kante der am weitesten links stehenden Spalte, in PDF-Punkten -- der Indikator steht
+   * mit leichtem Versatz nach links direkt daneben statt am Seitenrand. */
+  x: number;
   /** Grundlinie der ersten Zeile in PDF-Punkten (`TabellenBereich.startY`). */
   startY: number;
   hoehe: number;
@@ -120,19 +123,22 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
   }
 }
 
-const RASTER_RAND = 5;
+const RASTER_VERSATZ = 10;
 const RASTER_SPUR = 9;
 const RASTER_STRICH = 6;
 
 /**
- * Zeichnet je Tabelle einen Klammer-Indikator an den linken Seitenrand: eine durchgehende Linie
- * über die Spannweite, ein kurzer Strich je Zeilengrenze, keine Beschriftung. Mehrere Tabellen
- * bekommen eigene Spuren nebeneinander, damit sich ihre Bereiche nicht überdecken.
+ * Zeichnet je Tabelle einen Klammer-Indikator mit leichtem Versatz links neben ihrer ersten Spalte:
+ * eine durchgehende Linie über die Spannweite, ein kurzer Strich je Zeilengrenze, keine
+ * Beschriftung. Mehrere Tabellen bekommen eigene Spuren nebeneinander (nach ihrer Reihenfolge in
+ * `raster`), damit sich ihre Bereiche nicht überdecken, falls zwei zufällig bei derselben Spalten-
+ * Position beginnen.
  */
 function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster: RasterMarke[]): void {
   raster.forEach((r, spur) => {
     if (r.zeilen <= 0 || r.hoehe <= 0) return;
-    const x = RASTER_RAND + spur * RASTER_SPUR;
+    const xBasis = viewport.convertToViewportPoint(r.x, 0)[0]!;
+    const x = xBasis - RASTER_VERSATZ - spur * RASTER_SPUR;
     // `startY` ist die Grundlinie der ERSTEN Zeile; die Zeile selbst steht darüber, weitere folgen
     // nach unten -- deshalb oben eine Zeilenhöhe zugeben und von dort abwärts zählen.
     const oben = r.startY + r.hoehe;

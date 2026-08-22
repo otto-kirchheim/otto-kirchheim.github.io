@@ -23,9 +23,10 @@ export interface Kontext {
   heute: Date;
 }
 
-/** Ohne `tabelle` laufen die Zeilen aller Tabellen zusammen in die Rechnung. */
-function ausKontext(quelle: TabellenZeilen, tabelle: string | undefined): Zeile[] {
-  if (tabelle !== undefined) return quelle[tabelle] ?? [];
+/** Ohne `tabellen` (oder leeres Array) laufen die Zeilen ALLER Tabellen zusammen in die Rechnung;
+ * mit mehreren Tabellen laufen ihre Zeilen zusammen in EINE Rechnung. */
+function ausKontext(quelle: TabellenZeilen, tabellen: string[] | undefined): Zeile[] {
+  if (tabellen !== undefined && tabellen.length > 0) return tabellen.flatMap(t => quelle[t] ?? []);
   return Object.values(quelle).flat();
 }
 
@@ -102,7 +103,7 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
 function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unknown {
   const q = b.ueber;
   const rows = q.startsWith('$')
-    ? ausKontext(kontext[q as '$seite' | '$bisher' | '$laufend' | '$alle'], b.tabelle)
+    ? ausKontext(kontext[q as '$seite' | '$bisher' | '$laufend' | '$alle'], b.tabellen)
     : (get(daten, q) as Zeile[] | undefined);
   let roh = OPS[b.op](rows ?? [], b.feld);
   // Das Unterschriftsdatum braucht zusätzlich den Erzeugungstag als Rückfallwert -- der steckt im

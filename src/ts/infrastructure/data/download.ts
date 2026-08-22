@@ -81,9 +81,12 @@ export default async function download(button: HTMLButtonElement | null, modus: 
   const backendVorgabenU = userProfileToBackend(localVorgabenU);
 
   const data: Record<string, unknown> = {
-    // Backend-Download-Schema erwartet `Pers` und `Fahrzeit` im Backend-Format.
+    // Backend-Download-Schema erwartet `Pers` und `Fahrzeit` im Backend-Format. `Name` gibt es in
+    // `IPers` nicht (kein echtes Profil-Feld, nur PDF-Druckkomfort) -- deshalb hier zusammengesetzt
+    // statt in `userProfileToBackend()`, das auch fürs Profil-Speichern verwendet wird und dessen
+    // Rückgabe nicht um ein zusätzliches, vom Backend nicht erwartetes Feld ergänzt werden soll.
     VorgabenU: {
-      Pers: backendVorgabenU.Pers,
+      Pers: { ...backendVorgabenU.Pers, Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}` },
       Fahrzeit: backendVorgabenU.Fahrzeit,
     },
     VorgabenGeld: VorgabenGeld[Monat],

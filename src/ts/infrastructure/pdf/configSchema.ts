@@ -32,7 +32,7 @@ const berechnetSchema = z.object({
   op: opNameSchema,
   ueber: z.string(),
   feld: z.string().optional(),
-  tabelle: z.string().optional(),
+  tabellen: z.array(z.string()).optional(),
   maxTage: z.number().optional(),
 });
 

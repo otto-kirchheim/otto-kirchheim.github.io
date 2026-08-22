@@ -49,13 +49,18 @@ export function zeilenHoeheAus(startY: number, letzteY: number, zeilen: number):
   return hoehe > 0 ? Number(hoehe.toFixed(2)) : null;
 }
 
-/** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Indikator am linken Seitenrand. */
+/** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Zeilenraster-Indikator neben der
+ * jeweils ersten Spalte (siehe `spaltenFuer` für seitenspezifische Spalten). */
 function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): RasterMarke[] {
   return seite.bereiche.flatMap(bereich => {
     const tabelle = tabellen[bereich.tabelle];
     if (!tabelle) return [];
+    const spalten = spaltenFuer(bereich, tabelle);
     return [
       {
+        // Ohne eigene Spalten (leere Tabelle) bleibt der Rand als Rückfall -- 0 ist derselbe
+        // Ursprung, an dem der Indikator vorher immer stand.
+        x: spalten.length > 0 ? Math.min(...spalten.map(s => s.x)) : 0,
         startY: bereich.startY,
         hoehe: tabelle.hoehe,
         zeilen: bereich.maxZeilen,

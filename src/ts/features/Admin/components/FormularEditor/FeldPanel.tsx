@@ -167,30 +167,54 @@ function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClick: () =
   );
 }
 
-function DatenpfadWahl({ wert, eintraege, onChange }: { wert: string; eintraege: KatalogEintrag[]; onChange: (pfad: string) => void }) {
+/**
+ * Wählt EINEN Datenpfad -- für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel
+ * selbst der Pfad (siehe `umbenennen()` in `FeldListe`), dort kann ein Pfad also nur von EINEM
+ * Feld gleichzeitig belegt sein. `belegt` (Pfade anderer Felder, das eigene ausgenommen) markiert
+ * bereits vergebene Optionen als `disabled` -- ohne das wählt man scheinbar folgenlos einen
+ * belegten Pfad aus (`umbenennen()` bricht still ab, `felder[neu]` existiert schon), ohne zu
+ * verstehen, warum sich der Titel des Feldes nicht ändert. Denselben Wert an zwei Positionen
+ * zeigen: stattdessen "Text"-Modus mit `{Pfad}`-Platzhalter verwenden. Andere Aufrufer (Spalten-
+ * Schlüssel, `Feld.quellen`) kennen diese Einschränkung nicht -- dort bleibt `belegt` leer.
+ */
+function DatenpfadWahl({
+  wert,
+  eintraege,
+  belegt = new Set(),
+  onChange,
+}: {
+  wert: string;
+  eintraege: KatalogEintrag[];
+  belegt?: Set<string>;
+  onChange: (pfad: string) => void;
+}) {
   const bekannt = eintraege.some(e => e.pfad === wert);
   return (
-    <div class="input-group input-group-sm">
-      <select class="form-select" value={bekannt ? wert : '__frei'} onChange={e => onChange((e.target as HTMLSelectElement).value)}>
-        {gruppiere(eintraege).map(([gruppe, felder]) => (
-          <optgroup key={gruppe} label={gruppe}>
-            {felder.map(f => (
-              <option key={f.pfad} value={f.pfad}>
-                {f.label}
-              </option>
-            ))}
-          </optgroup>
-        ))}
-        <option value="__frei">Freier Datenpfad…</option>
-      </select>
-      {!bekannt && (
-        <input
-          class="form-control font-monospace"
-          placeholder="Datenpfad"
-          value={wert === '__frei' ? '' : wert}
-          onInput={e => onChange((e.target as HTMLInputElement).value)}
-        />
-      )}
+    <div>
+      <div class="input-group input-group-sm">
+        <select class="form-select" value={bekannt ? wert : '__frei'} onChange={e => onChange((e.target as HTMLSelectElement).value)}>
+          {gruppiere(eintraege).map(([gruppe, felder]) => (
+            <optgroup key={gruppe} label={gruppe}>
+              {felder.map(f => (
+                <option key={f.pfad} value={f.pfad} disabled={belegt.has(f.pfad)}>
+                  {f.label}
+                  {belegt.has(f.pfad) ? ' (bereits von einem anderen Feld verwendet)' : ''}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+          <option value="__frei">Freier Datenpfad…</option>
+        </select>
+        {!bekannt && (
+          <input
+            class={`form-control font-monospace${belegt.has(wert) ? ' is-invalid' : ''}`}
+            placeholder="Datenpfad"
+            value={wert === '__frei' ? '' : wert}
+            onInput={e => onChange((e.target as HTMLInputElement).value)}
+          />
+        )}
+      </div>
+      {!bekannt && belegt.has(wert) && <div class="small text-danger">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>}
     </div>
   );
 }
@@ -506,19 +530,26 @@ const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
   { wert: 'letztesDatum', label: 'Letztes Datum' },
 ];
 
+/** Berechnete/Zeilenfelder EINER Tabelle -- Baustein für die Feld-Auswahl in `AggregationEditor`. */
+function feldOptionenFuerTabelle(formular: FormularCode, tabelle: TabellenDef): KatalogEintrag[] {
+  return [...katalogZeilenFelder(formular, tabelle.quelle), ...berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten')];
+}
+
 /**
  * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`),
- * optionale Eingrenzung auf EINE Tabelle (`Berechnet.tabelle`) und das aggregierte Zeilenfeld.
- * Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer Feld-Bedingung (z.B.
- * "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich danach unterscheidet
- * sich.
+ * optionale Eingrenzung auf eine oder mehrere Tabellen (`Berechnet.tabellen`) und das aggregierte
+ * Zeilenfeld. Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer Feld-Bedingung
+ * (z.B. "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich danach
+ * unterscheidet sich.
  *
  * Ohne Tabellenauswahl ("alle Tabellen") laufen Zeilenfelder aller Quellen zusammen
  * (`katalogZeilenFelder(formular)` ohne `quelle`) und berechnete/Ankreuz-Spalten werden über
- * `alleBerechneteEintraege()` per `pfad` dedupliziert -- bei einer dritten Tabelle mit
- * gleichnamiger Spalte (z.B. wieder `Dauer`) verschwindet eine davon aus der Auswahl. Mit
- * Tabellenauswahl kommen NUR die Felder dieser einen Tabelle (`quelle`-gefiltert plus ihre eigenen
- * berechneten Spalten) -- löst beide Fälle: Summe über eine Teiltabelle UND Namenskollisionen.
+ * `alleBerechneteEintraege()` per `pfad` dedupliziert -- bei zwei Tabellen mit gleichnamiger Spalte
+ * (z.B. `Dauer`) verschwindet eine davon aus der Auswahl. Mit EINER ODER MEHREREN ausgewählten
+ * Tabellen kommen nur deren eigene Felder (`quelle`-gefiltert plus ihre eigenen berechneten
+ * Spalten), über alle ausgewählten Tabellen vereinigt und per `pfad` dedupliziert -- löst sowohl
+ * Namenskollisionen als auch "Summe über zwei von drei Teiltabellen" (z.B. LRE1/2 + LRE3, ohne die
+ * BZ-Haupttabelle).
  */
 function AggregationEditor({
   wert,
@@ -531,14 +562,24 @@ function AggregationEditor({
   tabellen: Record<string, TabellenDef>;
   onChange: (wert: Berechnet) => void;
 }) {
-  const tabelle = wert.tabelle ? tabellen[wert.tabelle] : undefined;
-  const feldOptionen = tabelle
-    ? [...katalogZeilenFelder(formular, tabelle.quelle), ...berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten')]
-    : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
+  const gewaehlt = wert.tabellen ?? [];
+  const feldOptionen =
+    gewaehlt.length > 0
+      ? [
+          ...new Map(
+            gewaehlt.flatMap(name => (tabellen[name] ? feldOptionenFuerTabelle(formular, tabellen[name]) : [])).map(e => [e.pfad, e]),
+          ).values(),
+        ]
+      : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
+
+  function schalteTabelle(name: string) {
+    const naechste = gewaehlt.includes(name) ? gewaehlt.filter(t => t !== name) : [...gewaehlt, name];
+    onChange({ ...wert, tabellen: naechste.length > 0 ? naechste : undefined, feld: undefined });
+  }
 
   return (
     <div class="row g-1 mb-1">
-      <div class="col-2">
+      <div class="col-3">
         <select class="form-select form-select-sm" value={wert.op} onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as OpName })}>
           {AGGREGATIONS_OPS.map(o => (
             <option key={o.wert} value={o.wert}>
@@ -547,7 +588,7 @@ function AggregationEditor({
           ))}
         </select>
       </div>
-      <div class="col-3">
+      <div class="col-4">
         <select class="form-select form-select-sm" value={wert.ueber} onChange={e => onChange({ ...wert, ueber: (e.target as HTMLSelectElement).value })}>
           <option value="$alle">alle Zeilen (Gesamtsumme)</option>
           <option value="$seite">nur diese Seite</option>
@@ -555,37 +596,33 @@ function AggregationEditor({
           <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
         </select>
       </div>
-      <div class="col-3">
-        <select
-          class="form-select form-select-sm"
-          title="Grenzt die Aggregation auf eine Teiltabelle ein -- ohne Auswahl laufen alle Tabellen zusammen"
-          value={wert.tabelle ?? ''}
-          onChange={e => {
-            const neueTabelle = (e.target as HTMLSelectElement).value || undefined;
-            onChange({ ...wert, tabelle: neueTabelle, feld: undefined });
-          }}
-        >
-          <option value="">(alle Tabellen)</option>
-          {Object.keys(tabellen).map(name => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div class="col-4">
+      <div class="col-5">
         <select class="form-select form-select-sm" value={wert.feld ?? ''} onChange={e => onChange({ ...wert, feld: (e.target as HTMLSelectElement).value || undefined })}>
           <option value="">(Feld wählen)</option>
           {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
               {felder.map(f => (
-                <option key={f.pfad} value={f.pfad}>
+                // Key aus pfad+label statt nur pfad: ohne Tabellenauswahl mischt `feldOptionen`
+                // Einträge mehrerer Zeilenquellen (z.B. "Dauer" aus Daten.BZ UND Daten.BE) --
+                // gleicher Pfad, aber unterschiedliches Label, sonst React-Key-Kollision.
+                <option key={`${f.pfad}|${f.label}`} value={f.pfad}>
                   {f.label}
                 </option>
               ))}
             </optgroup>
           ))}
         </select>
+      </div>
+      <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+        <span class="small text-body-secondary" title="Grenzt die Aggregation auf eine oder mehrere Teiltabellen ein -- ohne Auswahl laufen alle Tabellen zusammen">
+          Tabellen:
+        </span>
+        {Object.keys(tabellen).map(name => (
+          <div key={name} class="form-check form-check-inline m-0">
+            <input class="form-check-input" type="checkbox" checked={gewaehlt.includes(name)} onChange={() => schalteTabelle(name)} />
+            <label class="form-check-label small">{name}</label>
+          </div>
+        ))}
       </div>
       {wert.op === 'letztesDatum' && (
         <div class="col-12 d-flex align-items-center gap-2">
@@ -617,6 +654,7 @@ function FeldZeile({
   formular,
   armed,
   tabellen,
+  belegtePfade,
   onArm,
   onChange,
   onRename,
@@ -627,6 +665,8 @@ function FeldZeile({
   feld: Feld;
   formular: FormularCode;
   tabellen: Record<string, TabellenDef>;
+  /** Pfade ALLER Felder in dieser Liste (inkl. des eigenen) -- siehe `DatenpfadWahl`. */
+  belegtePfade: Set<string>;
   armed: Armed | null;
   onArm: () => void;
   onChange: (feld: Feld) => void;
@@ -804,7 +844,12 @@ function FeldZeile({
         <AggregationEditor wert={feld.berechnet} formular={formular} tabellen={tabellen} onChange={berechnet => onChange({ ...feld, berechnet })} />
       ) : (
         <div class="mb-1">
-          <DatenpfadWahl wert={keyName} eintraege={katalogFelder(formular)} onChange={onRename} />
+          <DatenpfadWahl
+            wert={keyName}
+            eintraege={katalogFelder(formular)}
+            belegt={new Set([...belegtePfade].filter(p => p !== keyName))}
+            onChange={onRename}
+          />
         </div>
       )}
 
@@ -872,6 +917,8 @@ function FeldListe({
     onArm({ bereich: 'feld', key });
   }
 
+  const belegtePfade = new Set(Object.keys(felder));
+
   return (
     <div class="mb-3">
       <div class="small fw-semibold">Felder</div>
@@ -886,6 +933,7 @@ function FeldListe({
           feld={feld}
           formular={formular}
           tabellen={tabellen}
+          belegtePfade={belegtePfade}
           armed={armed}
           vorschau={vorschau}
           onArm={() => onArm(istGleich(armed, { bereich: 'feld', key }) ? null : { bereich: 'feld', key })}
@@ -1314,7 +1362,19 @@ function SpalteZeile({
           >
             Schlüssel
           </span>
-          <input class="form-control font-monospace" placeholder="z.B. dauer" value={spalte.key} onInput={e => onChange({ ...spalte, key: (e.target as HTMLInputElement).value })} />
+          <input
+            class="form-control font-monospace"
+            placeholder="z.B. dauer"
+            value={spalte.key}
+            // Leerer Schlüssel macht die Spalte für berechneteEintraege() (Feld-Dropdown in
+            // Summenfeldern) unsichtbar und wird von mitBerechnetenSpalten() in `shared` unter
+            // `zeile['']` geschrieben -- niemals speichern, Eingabe bei leerem Wert verwerfen statt
+            // den Schlüssel zu löschen.
+            onInput={e => {
+              const wert = (e.target as HTMLInputElement).value;
+              if (wert !== '') onChange({ ...spalte, key: wert });
+            }}
+          />
         </div>
       )}
 
@@ -1731,7 +1791,7 @@ function TabellenBlock({
       <button
         type="button"
         class="btn btn-sm btn-outline-secondary"
-        onClick={() => setzeSpalten([...spalten, { key: eindeutigerSpaltenSchluessel(zeilenFelder[0]?.pfad ?? '', spalten), x: 50, size: 10, align: 'zentriert' }])}
+        onClick={() => setzeSpalten([...spalten, { key: eindeutigerSpaltenSchluessel(zeilenFelder[0]?.pfad || 'feld', spalten), x: 50, size: 10, align: 'zentriert' }])}
       >
         + Spalte
       </button>

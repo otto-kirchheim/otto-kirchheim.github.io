@@ -327,6 +327,34 @@ describe('wert', () => {
     expect(wert(max, 'm', {}, kontext)).toBe('10');
   });
 
+  describe('Aggregation über mehrere Tabellen (Berechnet.tabellen)', () => {
+    const mehrTabellenKontext: Kontext = {
+      ...kontext,
+      $alle: { a: [{ betrag: 1 }, { betrag: 2 }], b: [{ betrag: 10 }], c: [{ betrag: 100 }] },
+    };
+    const summeFeld = (tabellen?: string[]): Feld => ({ x: 0, y: 0, size: 10, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag', tabellen } });
+
+    it('ohne tabellen laufen die Zeilen aller Tabellen zusammen', () => {
+      expect(wert(summeFeld(undefined), 'x', {}, mehrTabellenKontext)).toBe('113');
+    });
+
+    it('mit einer Tabelle zählen nur deren Zeilen', () => {
+      expect(wert(summeFeld(['a']), 'x', {}, mehrTabellenKontext)).toBe('3');
+    });
+
+    it('mit mehreren Tabellen laufen deren Zeilen zusammen, andere bleiben außen vor', () => {
+      expect(wert(summeFeld(['a', 'c']), 'x', {}, mehrTabellenKontext)).toBe('103');
+    });
+
+    it('leeres tabellen-Array verhält sich wie keine Angabe', () => {
+      expect(wert(summeFeld([]), 'x', {}, mehrTabellenKontext)).toBe('113');
+    });
+
+    it('unbekannte Tabelle in tabellen liefert dafür 0 Zeilen, andere zählen weiter', () => {
+      expect(wert(summeFeld(['a', 'gibtsNicht']), 'x', {}, mehrTabellenKontext)).toBe('3');
+    });
+  });
+
   describe('listenKopf (Überschrift dynamischer Spalten)', () => {
     const gruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['811', '820'] };
     const mitListen: Kontext = {

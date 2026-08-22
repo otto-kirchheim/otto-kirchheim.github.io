@@ -59,6 +59,8 @@ describe('download utility', () => {
   const mockVorgabenU: IVorgabenU = VorgabenUMock;
   const mockVorgabenGeld: IVorgabenGeld = VorgabenGeldMock;
   const backendVorgabenU = userProfileToBackend(mockVorgabenU);
+  // `Name` gibt es in IPers nicht, download.ts setzt es nur fürs PDF-VorgabenU zusammen.
+  const erwartetePers = { ...backendVorgabenU.Pers, Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}` };
 
   beforeEach(() => {
     // Reset mocks
@@ -172,7 +174,7 @@ describe('download utility', () => {
         '2026-04-01',
         expect.objectContaining({
           VorgabenU: {
-            Pers: backendVorgabenU.Pers,
+            Pers: erwartetePers,
             Fahrzeit: backendVorgabenU.Fahrzeit,
           },
           VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
@@ -319,7 +321,7 @@ describe('download utility', () => {
           ...mockVorgabenGeld[4],
         }),
         VorgabenU: {
-          Pers: backendVorgabenU.Pers,
+          Pers: erwartetePers,
           Fahrzeit: backendVorgabenU.Fahrzeit,
         },
       }),
@@ -362,7 +364,7 @@ describe('download utility', () => {
           ...mockVorgabenGeld[4],
         }),
         VorgabenU: {
-          Pers: backendVorgabenU.Pers,
+          Pers: erwartetePers,
           Fahrzeit: backendVorgabenU.Fahrzeit,
         },
       }),
