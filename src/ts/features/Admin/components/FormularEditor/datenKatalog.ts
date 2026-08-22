@@ -25,6 +25,12 @@ export interface KatalogEintrag {
   quelle?: string;
   /** Wert für die Beispieldaten-Vorschau; ohne Angabe greift der generische Platzhalter. */
   beispiel?: BeispielWert;
+  /**
+   * Beschränkt einen `BASIS`-Eintrag auf bestimmte Formulare (z.B. `Bereitschaftszulage.*` gibt es
+   * nur im Bereitschaft-Download-Body). Fehlt das Feld, ist der Eintrag für alle Formulare
+   * sichtbar -- die bisherige, unveränderte Bedeutung.
+   */
+  formulare?: FormularCode[];
 }
 
 /**
@@ -92,7 +98,65 @@ const BASIS: KatalogEintrag[] = [
   { pfad: 'VorgabenU.Pers.kmArbeitsort', label: 'km zum Arbeitsort', gruppe: 'Dienststelle', beispiel: 23 },
   { pfad: 'VorgabenU.Pers.nBhf', label: 'Nächster Bahnhof', gruppe: 'Dienststelle', beispiel: 'Musterstadt Hbf' },
   { pfad: 'VorgabenU.Pers.kmnBhf', label: 'km zum nächsten Bahnhof', gruppe: 'Dienststelle', beispiel: 4 },
+  // Bereitschaftszulage-Zwischenwerte (Phase 11, Nachtrag, siehe
+  // shared/src/formular/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte) -- nur bei
+  // Bereitschaft vorhanden (`formulare`-Filter unten), sonst würde der Eintrag bei ez/ewt/ea im
+  // Datenpfad-Picker auftauchen und dort ins Leere laufen. Nur SummeBeamter3 ist ein Geldwert
+  // (`waehrung`); alles andere sind Ganzzahlen (Minuten/Stunden/Sätze).
+  {
+    pfad: 'Bereitschaftszulage.BereitschaftsMinuten',
+    label: 'Bereitschaftszeit abzgl. Einsätze (Minuten)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'ganzzahl',
+    formulare: ['bereitschaft'],
+    beispiel: 6000,
+  },
+  {
+    pfad: 'Bereitschaftszulage.SummeTarif',
+    label: 'Summe Tarif (Std.)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'ganzzahl',
+    formulare: ['bereitschaft'],
+    beispiel: 100,
+  },
+  {
+    pfad: 'Bereitschaftszulage.SummeBeamter1',
+    label: 'Summe 1 Beamter (Minuten)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'ganzzahl',
+    formulare: ['bereitschaft'],
+    beispiel: 5400,
+  },
+  {
+    pfad: 'Bereitschaftszulage.SummeBeamter2',
+    label: 'Summe 2 Beamter (Sätze)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'ganzzahl',
+    formulare: ['bereitschaft'],
+    beispiel: 11,
+  },
+  {
+    pfad: 'Bereitschaftszulage.SummeBeamter3',
+    label: 'Summe 3 Beamter (€)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'waehrung',
+    formulare: ['bereitschaft'],
+    beispiel: 180.07,
+  },
+  {
+    pfad: 'Bereitschaftszulage.GeldwertBeamter',
+    label: 'Geldwert Beamter (Besoldungsgruppe, €)',
+    gruppe: 'Bereitschaftszulage',
+    format: 'waehrung',
+    formulare: ['bereitschaft'],
+    beispiel: 16.37,
+  },
 ];
+
+/** `BASIS`-Einträge, die für `formular` sichtbar sind (kein `formulare`-Filter, oder passt). */
+function basisFuer(formular: FormularCode): KatalogEintrag[] {
+  return BASIS.filter(e => !e.formulare || e.formulare.includes(formular));
+}
 
 /** Zeilen-Felder je Ressource -- als `zeilen.spalten[].key` bzw. als `feld` in Summenfeldern nutzbar. */
 const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
@@ -204,7 +268,7 @@ export const ZEILEN_QUELLEN: Record<FormularCode, { pfad: string; label: string 
 /** Auswahl für Kopf-/Fuß-/Übertrags-Felder: alles außerhalb der Datentabelle. */
 export function katalogFelder(formular: FormularCode): KatalogEintrag[] {
   return [
-    ...BASIS,
+    ...basisFuer(formular),
     ...ZEILEN_QUELLEN[formular].map(q => ({ pfad: q.pfad, label: `${q.label} (ganze Liste)`, gruppe: 'Daten' })),
   ];
 }
@@ -259,7 +323,7 @@ export function gruppiere(eintraege: KatalogEintrag[]): [string, KatalogEintrag[
  * BE). `undefined` heißt: kein Beispiel hinterlegt, es greift der generische Platzhalter.
  */
 export function beispielWert(formular: FormularCode, pfad: string, index: number, quelle?: string): unknown {
-  const eintrag = [...BASIS, ...katalogZeilenFelder(formular, quelle)].find(e => e.pfad === pfad);
+  const eintrag = [...basisFuer(formular), ...katalogZeilenFelder(formular, quelle)].find(e => e.pfad === pfad);
   if (!eintrag?.beispiel) return undefined;
   return typeof eintrag.beispiel === 'function' ? eintrag.beispiel(index) : eintrag.beispiel;
 }

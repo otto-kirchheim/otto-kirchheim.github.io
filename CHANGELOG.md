@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (21)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaftszulage-Zwischenwerte) + fix (Pause-Vorzeichen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext (Architektur-Entscheidung, verworfene
+Zwischenstände).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` zieht das BZ-/BE-Mapping in benannte
+  Variablen (`bzMitDauer`/`beMitDauer`, statt inline in `data.Daten`), damit dieselben Zeilen für
+  `bereitschaftMinuten` (Σ `Dauer` BZ minus Σ `Dauer` BE) wiederverwendbar sind. Ergebnis geht über
+  `bereitschaftszulageAbgeleiteteWerte(bereitschaftMinuten, TB, VorgabenGeld[Monat])` in
+  `data.Bereitschaftszulage`.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.formulare?: FormularCode[]` (neu) und
+  `basisFuer(formular)`-Filter in `katalogFelder()`/`beispielWert()` -- verhindert, dass die sechs
+  neuen `Bereitschaftszulage.*`-Basis-Einträge auch bei ez/ewt/ea im Kopf-/Fuß-Datenpfad-Picker
+  auftauchen und dort ins Leere laufen.
+- **`test/Utilities/download.test.ts`:** BZ-`Dauer`-Erwartung `450 → 510` (Pause-Fix). Neuer
+  Test für den Beamter-Zweig überschreibt die `tableToArray`-Mocks mit einem größeren
+  BZ-Zeitraum (26h statt 8h), damit `bereitschaftMinuten` über der 600-Minuten-Schwelle liegt --
+  sonst wären `SummeBeamter1`/`2` negativ bzw. `-0` geworden (kein aussagekräftiger Testfall).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597, Produktionsbuild erfolgreich.
+
 ## 2026-08-22 (20)
 
 ### feat (PDF-Vorlagen-Pipeline: Privat-km-Betrag für Bereitschaftseinsatz)

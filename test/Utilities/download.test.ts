@@ -177,13 +177,17 @@ describe('download utility', () => {
           },
           VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
           Daten: {
-            // Minuten, nicht HH:mm: Pause 30 von 8h (08:00 -> 16:00) Zeitspanne = 450; Einsatz
-            // 10:00 -> 12:00 = 120. PrivatKmBetrag: TB 'Tarifkraft' -> PrivatPKWTarif 0.27 * 12 = 3.24.
-            BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 450 }],
+            // Minuten, nicht HH:mm: Pause 30 von 8h (08:00 -> 16:00) Zeitspanne PLUS Pause = 510
+            // (Pause zaehlt als Dienstzeit, wie aktualisiereBerechnung.ts); Einsatz 10:00 -> 12:00
+            // = 120. PrivatKmBetrag: TB 'Tarifkraft' -> PrivatPKWTarif 0.27 * 12 = 3.24.
+            BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 510 }],
             BE: [
               { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: 120, PrivatKmBetrag: 3.24 },
             ],
           },
+          // Bereitschaftszulage: bereitschaftMinuten = 510 - 120 = 390. Tarifkraft (Mock-TB):
+          // SummeTarif = round(390/60) = 7, keine Beamter-Felder.
+          Bereitschaftszulage: { BereitschaftsMinuten: 390, SummeTarif: 7 },
           Monat: 4,
           Jahr: 2026,
         }),
@@ -204,8 +208,15 @@ describe('download utility', () => {
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('bereitschaft', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
     });
 
-    it('rechnet PrivatKmBetrag mit dem Beamter-Satz, wenn TB nicht Tarifkraft ist', async () => {
+    it('rechnet PrivatKmBetrag und Bereitschaftszulage mit dem Beamter-Satz, wenn TB nicht Tarifkraft ist', async () => {
       Storage.set('VorgabenU', { ...mockVorgabenU, Pers: { ...mockVorgabenU.Pers, TB: 'Besoldungsgruppe A 8' } });
+      // Groesserer BZ-Zeitraum als im beforeEach (26h statt 8h), damit bereitschaftMinuten ueber
+      // der 600-Minuten-Schwelle liegt -- sonst wuerde SummeBeamter1/2 negativ bzw. -0 statt eines
+      // aussagekraeftigen Werts.
+      (tableToArray as ReturnType<typeof vi.fn>).mockReset();
+      (tableToArray as ReturnType<typeof vi.fn>)
+        .mockReturnValueOnce([{ Beginn: '2026-04-19T00:00:00.000Z', Ende: '2026-04-20T02:00:00.000Z', Pause: 0 }])
+        .mockReturnValueOnce([{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 }]);
 
       await download(button, 'B');
 
@@ -217,6 +228,16 @@ describe('download utility', () => {
           Daten: expect.objectContaining({
             BE: [expect.objectContaining({ PrivatKm: 12, PrivatKmBetrag: 2.4 })],
           }),
+          // bereitschaftMinuten = 1560 (BZ, 26h) - 120 (BE) = 1440. SummeBeamter1 = 1440-600 = 840;
+          // SummeBeamter2 = round(840/8/60) = 2; Satz 'Besoldungsgruppe A 8' = 16,37 (VorgabenGeldMock);
+          // SummeBeamter3 = 2 * 16,37 = 32,74.
+          Bereitschaftszulage: {
+            BereitschaftsMinuten: 1440,
+            SummeBeamter1: 840,
+            SummeBeamter2: 2,
+            SummeBeamter3: 32.74,
+            GeldwertBeamter: 16.37,
+          },
         }),
         undefined,
       );

@@ -19,7 +19,7 @@ import type {
   IEntgeltausgleichDownloadBody,
   INebengeldDownloadBody,
 } from '@otto-kirchheim/nebengeld-shared';
-import { beAbgeleiteteWerte, bzAbgeleiteteWerte, ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
+import { beAbgeleiteteWerte, bereitschaftszulageAbgeleiteteWerte, bzAbgeleiteteWerte, ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -108,26 +108,32 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
       const geldMonatB = VorgabenGeld[Monat];
       const privatKmSatz = beamter ? geldMonatB.PrivatPKWBeamter : geldMonatB.PrivatPKWTarif;
-      data.Daten = {
-        // Vorberechnete `Dauer`/`PrivatKmBetrag` (Phase 11) direkt mit ins Zeilenobjekt -- `build()`
-        // sieht sie dann als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer/PrivatKmBetrag),
-        // analog EWT (Phase 10).
-        BZ: bzRaw.map(bz => {
-          const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 };
-          return { ...basis, ...bzAbgeleiteteWerte(basis) };
-        }),
-        BE: beRaw.map(be => {
-          const basis = {
-            Tag: be.Tag,
-            Auftragsnummer: be.Auftragsnummer,
-            Beginn: be.Beginn,
-            Ende: be.Ende,
-            LRE: be.LRE,
-            PrivatKm: be.PrivatKm ?? 0,
-          };
-          return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
-        }),
-      } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
+      // Vorberechnete `Dauer`/`PrivatKmBetrag` (Phase 11) direkt mit ins Zeilenobjekt -- `build()`
+      // sieht sie dann als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer/PrivatKmBetrag),
+      // analog EWT (Phase 10). In benannten Variablen gehalten (statt inline in `data.Daten`), weil
+      // dieselben Zeilen gleich nochmal für die Bereitschaftszulage summiert werden.
+      const bzMitDauer = bzRaw.map(bz => {
+        const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 };
+        return { ...basis, ...bzAbgeleiteteWerte(basis) };
+      });
+      const beMitDauer = beRaw.map(be => {
+        const basis = {
+          Tag: be.Tag,
+          Auftragsnummer: be.Auftragsnummer,
+          Beginn: be.Beginn,
+          Ende: be.Ende,
+          LRE: be.LRE,
+          PrivatKm: be.PrivatKm ?? 0,
+        };
+        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
+      });
+      data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
+
+      // Bereitschaftszulage (Nachtrag Phase 11): "Differenz BZ-BE" live aus denselben Zeilen, die
+      // auch die gedruckte Dauer-Spalte füllen -- kein Storage-Cache (`datenBerechnung`), keine
+      // Staleness möglich, siehe `bereitschaftszulageAbgeleiteteWerte()`-Kommentar.
+      const bereitschaftMinuten = bzMitDauer.reduce((s, r) => s + r.Dauer, 0) - beMitDauer.reduce((s, r) => s + r.Dauer, 0);
+      data.Bereitschaftszulage = bereitschaftszulageAbgeleiteteWerte(bereitschaftMinuten, localVorgabenU.Pers.TB, geldMonatB);
       break;
     }
     case 'E': {
