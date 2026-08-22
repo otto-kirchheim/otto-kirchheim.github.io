@@ -177,9 +177,10 @@ describe('download utility', () => {
           },
           VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
           Daten: {
-            // Pause 30 von 8h (08:00 -> 16:00) Zeitspanne = 7:30; Einsatz 10:00 -> 12:00 = 2:00.
-            BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: '7:30' }],
-            BE: [{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: '2:00' }],
+            // Minuten, nicht HH:mm: Pause 30 von 8h (08:00 -> 16:00) Zeitspanne = 450; Einsatz
+            // 10:00 -> 12:00 = 120.
+            BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 450 }],
+            BE: [{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: 120 }],
           },
           Monat: 4,
           Jahr: 2026,

@@ -166,9 +166,13 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     // Vorberechnet (Phase 11, siehe shared/src/formular/abgeleiteteWerte.ts::bzAbgeleiteteWerte/
     // beAbgeleiteteWerte) -- eigene Gruppe je Quelle, damit der Editor sie ohne Rechnung-Builder
     // direkt als Spalten-/Summenquelle anbietet statt jede Version die Zeitrechnung selbst
-    // nachbauen zu lassen (wie DauerWohnung/DauerErsteTkgSt bei EWT).
-    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Berechnet', quelle: 'Daten.BZ', beispiel: '7:30' },
-    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Berechnet', quelle: 'Daten.BE', beispiel: '0:45' },
+    // nachbauen zu lassen (wie DauerWohnung/DauerErsteTkgSt bei EWT). Beide Eintraege heissen
+    // `Dauer` (derselbe Pfad wie Beginn/Ende oben, getrennt ueber `quelle`) -- Labels MÜSSEN sich
+    // unterscheiden ("Zeitraum" vs. "Einsatz", wie bei Beginn/Ende), sonst sind sie in einer
+    // Feld-Auswahl ohne Tabellen-Kontext (z.B. Kopf-/Fuß-Summenfeld) nicht auseinanderzuhalten.
+    // Bewusst Minuten (Zahl) statt HH:mm-Text wie bei EWT -- explizite User-Vorgabe.
+    { pfad: 'Dauer', label: 'Dauer Zeitraum (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BZ', beispiel: 450 },
+    { pfad: 'Dauer', label: 'Dauer Einsatz (Minuten)', gruppe: 'Berechnet', quelle: 'Daten.BE', beispiel: 45 },
   ],
   ea: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },

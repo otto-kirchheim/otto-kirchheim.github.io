@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (18)
+
+### fix (PDF-Vorlagen-Pipeline: Bereitschaft-Dauer als Minuten, Labels disambiguiert)
+
+Nachtrag zu Eintrag 17, User-Korrektur. `Dauer` (BZ/BE) ist jetzt `number` (Minuten) statt
+`"HH:mm"`-Text -- siehe Root-`CHANGELOG.md` fuer den vollen Kontext (`shared`-Aenderung).
+
+- **`FormularEditor/datenKatalog.ts`:** Labels der beiden `Dauer`-Eintraege in
+  `ZEILEN_FELDER.bereitschaft` waren identisch ("Dauer (HH:mm)", nur ueber `quelle` getrennt) und
+  in Kontexten ohne Tabellenbezug (z.B. Summenfeld-Dropdown fuer Kopf/Fuss) dadurch nicht
+  unterscheidbar -- jetzt "Dauer Zeitraum (Minuten)" (`Daten.BZ`) / "Dauer Einsatz (Minuten)"
+  (`Daten.BE`), Beispielwerte als Zahl (450/45).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Test auf numerische `Dauer`-Werte angepasst.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
 ## 2026-08-22 (17)
 
 ### feat (PDF-Vorlagen-Pipeline: Bereitschaft-Download auf neuen Pfad umgestellt, Phase 11)
