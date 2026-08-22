@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (23)
+
+### feat (Offline-Cache für Formular-Version + Vorlagen-PDF)
+
+`ladeUndErzeugePdf()` (ea/ewt/bereitschaft-Export) funktioniert jetzt auch offline, sofern ein
+Formular+Monat schon einmal erfolgreich online geladen wurde.
+
+- **Neu `infrastructure/pdf/formularCache.ts`:** cached die serverseitig aufgelöste `Version`
+  (Schlüssel `formular:stichtag`, unbegrenzt -- klein, ~12 Einträge/Jahr/Formular) und die
+  Vorlagen-PDF-Bytes als Base64 (Schlüssel `vorlagenId`, content-addressed dedupliziert, gedeckelt
+  auf 10 Einträge mit LRU-Eviction). Alles best-effort -- ein Schreibfehler (Quota, privater Modus)
+  bricht den PDF-Export nie ab. Ein strukturell kaputter Cache-Eintrag (z.B. nach künftiger
+  Typsystem-Änderung) gilt als Cache-Miss statt offline abzustürzen.
+- **`infrastructure/pdf/ladeFormular.ts`:** `holeVorlageAlsDatei()` und die neue
+  `loeseVersionAuf()` fallen bei echtem Transportfehler (offline, Server nicht erreichbar) auf den
+  Cache zurück -- ein `ApiFehler` von einem erreichbaren Server (z.B. 404 "Vorlage gelöscht", "keine
+  gültige Version für diesen Stichtag") wird dagegen NIE durch einen veralteten Cache-Eintrag
+  maskiert. Bei einem Cache-Treffer erscheint eine Snackbar ("Offline: zwischengespeicherte Vorlage
+  verwendet").
+- **Neue `TStorageData`-Keys** in `infrastructure/storage/Storage.ts`: `formularVersionCache`,
+  `vorlagenPdfCache`.
+- **Tests:** neue `test/infrastructure/pdf/formularCache.test.ts` (Round-Trip, Chunk-Grenze,
+  LRU-Eviction, Cache-Miss bei kaputtem Eintrag); `test/infrastructure/pdf/ladeFormular.test.ts`
+  um 8 Fälle erweitert (Cache schreiben/lesen, Fallback bei Netzwerkfehler, Cache wird bei
+  `ApiFehler` NICHT verwendet).
+
+Verifiziert: `tsc`/Lint sauber, 1620/1620, Produktionsbuild erfolgreich.
+
 ## 2026-08-22 (22)
 
 ### fix (FormularEditor: Name-Feld, Schlüssel, Mehrfachauswahl, Zeilenraster)
