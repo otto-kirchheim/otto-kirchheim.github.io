@@ -487,6 +487,18 @@ function berechneteEintraege(spalten: Spalte[], gruppe: string): KatalogEintrag[
   return spalten.filter(sp => (sp.berechnet || sp.wenn) && sp.key).map(sp => ({ pfad: sp.key, label: sp.label ?? sp.key, gruppe }));
 }
 
+/**
+ * Alle berechneten/Ankreuz-Spalten über SÄMTLICHE Tabellen, per `pfad` dedupliziert (bei
+ * Namensgleichheit gewinnt die zuletzt iterierte Tabelle, andere gehen verloren) -- nur der
+ * Fallback für eine NICHT auf eine Tabelle eingegrenzte Aggregation (`Berechnet.tabelle` unset).
+ * Bei Namenskollisionen zwischen Tabellen (z.B. gleicher Spalten-Key in zwei Tabellen) gezielt über
+ * die Tabellenauswahl in `AggregationEditor` eingrenzen, statt sich auf diese Dedup-Reihenfolge zu
+ * verlassen.
+ */
+function alleBerechneteEintraege(tabellen: Record<string, TabellenDef>): KatalogEintrag[] {
+  return [...new Map(Object.values(tabellen).flatMap(t => berechneteEintraege(t.spalten, 'Berechnete/Ankreuz-Spalten')).map(e => [e.pfad, e])).values()];
+}
+
 const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
   { wert: 'summe', label: 'Summe' },
   { wert: 'anzahl', label: 'Anzahl' },
@@ -495,25 +507,38 @@ const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
 ];
 
 /**
- * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`) und
- * das aggregierte Zeilenfeld. Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer
- * Feld-Bedingung (z.B. "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich
- * danach unterscheidet sich.
+ * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`),
+ * optionale Eingrenzung auf EINE Tabelle (`Berechnet.tabelle`) und das aggregierte Zeilenfeld.
+ * Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer Feld-Bedingung (z.B.
+ * "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich danach unterscheidet
+ * sich.
+ *
+ * Ohne Tabellenauswahl ("alle Tabellen") laufen Zeilenfelder aller Quellen zusammen
+ * (`katalogZeilenFelder(formular)` ohne `quelle`) und berechnete/Ankreuz-Spalten werden über
+ * `alleBerechneteEintraege()` per `pfad` dedupliziert -- bei einer dritten Tabelle mit
+ * gleichnamiger Spalte (z.B. wieder `Dauer`) verschwindet eine davon aus der Auswahl. Mit
+ * Tabellenauswahl kommen NUR die Felder dieser einen Tabelle (`quelle`-gefiltert plus ihre eigenen
+ * berechneten Spalten) -- löst beide Fälle: Summe über eine Teiltabelle UND Namenskollisionen.
  */
 function AggregationEditor({
   wert,
   formular,
-  andereBerechnete,
+  tabellen,
   onChange,
 }: {
   wert: Berechnet;
   formular: FormularCode;
-  andereBerechnete: KatalogEintrag[];
+  tabellen: Record<string, TabellenDef>;
   onChange: (wert: Berechnet) => void;
 }) {
+  const tabelle = wert.tabelle ? tabellen[wert.tabelle] : undefined;
+  const feldOptionen = tabelle
+    ? [...katalogZeilenFelder(formular, tabelle.quelle), ...berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten')]
+    : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
+
   return (
     <div class="row g-1 mb-1">
-      <div class="col-3">
+      <div class="col-2">
         <select class="form-select form-select-sm" value={wert.op} onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as OpName })}>
           {AGGREGATIONS_OPS.map(o => (
             <option key={o.wert} value={o.wert}>
@@ -522,7 +547,7 @@ function AggregationEditor({
           ))}
         </select>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <select class="form-select form-select-sm" value={wert.ueber} onChange={e => onChange({ ...wert, ueber: (e.target as HTMLSelectElement).value })}>
           <option value="$alle">alle Zeilen (Gesamtsumme)</option>
           <option value="$seite">nur diese Seite</option>
@@ -530,10 +555,28 @@ function AggregationEditor({
           <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
         </select>
       </div>
-      <div class="col-5">
+      <div class="col-3">
+        <select
+          class="form-select form-select-sm"
+          title="Grenzt die Aggregation auf eine Teiltabelle ein -- ohne Auswahl laufen alle Tabellen zusammen"
+          value={wert.tabelle ?? ''}
+          onChange={e => {
+            const neueTabelle = (e.target as HTMLSelectElement).value || undefined;
+            onChange({ ...wert, tabelle: neueTabelle, feld: undefined });
+          }}
+        >
+          <option value="">(alle Tabellen)</option>
+          {Object.keys(tabellen).map(name => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div class="col-4">
         <select class="form-select form-select-sm" value={wert.feld ?? ''} onChange={e => onChange({ ...wert, feld: (e.target as HTMLSelectElement).value || undefined })}>
           <option value="">(Feld wählen)</option>
-          {gruppiere([...katalogZeilenFelder(formular), ...andereBerechnete]).map(([gruppe, felder]) => (
+          {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
               {felder.map(f => (
                 <option key={f.pfad} value={f.pfad}>
@@ -595,11 +638,6 @@ function FeldZeile({
   const textRef = useRef<HTMLInputElement>(null);
   // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
   const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
-  // Berechnete und Ankreuz-Spalten aller Tabellen -- `mitBerechnetenSpalten()` in `shared` trägt
-  // ihren Wert schon unter `key` in die Zeile ein, eine Summe/Anzahl/Maximum kann sie also direkt
-  // referenzieren. `Berechnet.tabelle` grenzt nicht auf eine Tabelle ein (in diesem Editor noch
-  // nicht gesetzt), deshalb hier über alle Tabellen, per `pfad` dedupliziert.
-  const andereBerechnete = [...new Map(berechneteEintraege(Object.values(tabellen).flatMap(t => t.spalten), 'Berechnete/Ankreuz-Spalten').map(e => [e.pfad, e])).values()];
   return (
     <div class="border rounded p-2 mb-1">
       <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
@@ -738,7 +776,7 @@ function FeldZeile({
           </div>
         </div>
       ) : feld.wenn ? (
-        <FeldAnkreuzBedingung feld={feld} formular={formular} andereBerechnete={andereBerechnete} onChange={onChange} />
+        <FeldAnkreuzBedingung feld={feld} formular={formular} tabellen={tabellen} onChange={onChange} />
       ) : feld.quellen ? (
         <ZusammengesetzteQuellen feld={feld} formular={formular} onChange={onChange} />
       ) : festerText ? (
@@ -763,7 +801,7 @@ function FeldZeile({
           </div>
         </div>
       ) : feld.berechnet ? (
-        <AggregationEditor wert={feld.berechnet} formular={formular} andereBerechnete={andereBerechnete} onChange={berechnet => onChange({ ...feld, berechnet })} />
+        <AggregationEditor wert={feld.berechnet} formular={formular} tabellen={tabellen} onChange={berechnet => onChange({ ...feld, berechnet })} />
       ) : (
         <div class="mb-1">
           <DatenpfadWahl wert={keyName} eintraege={katalogFelder(formular)} onChange={onRename} />
@@ -1083,12 +1121,12 @@ function AnkreuzBedingung({
 function FeldAnkreuzBedingung({
   feld,
   formular,
-  andereBerechnete,
+  tabellen,
   onChange,
 }: {
   feld: Feld;
   formular: FormularCode;
-  andereBerechnete: KatalogEintrag[];
+  tabellen: Record<string, TabellenDef>;
   onChange: (feld: Feld) => void;
 }) {
   const wenn = feld.wenn!;
@@ -1129,7 +1167,7 @@ function FeldAnkreuzBedingung({
 
       {wenn.berechnet ? (
         <div class="border rounded p-2 mb-1">
-          <AggregationEditor wert={wenn.berechnet} formular={formular} andereBerechnete={andereBerechnete} onChange={berechnet => setzeWenn({ berechnet })} />
+          <AggregationEditor wert={wenn.berechnet} formular={formular} tabellen={tabellen} onChange={berechnet => setzeWenn({ berechnet })} />
         </div>
       ) : (
         <select
