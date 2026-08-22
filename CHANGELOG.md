@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (17)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaft-Download auf neuen Pfad umgestellt, Phase 11)
+
+Gleiches Cutover-Muster wie EA (Phase 9) und EWT (Phase 10). Siehe Root-`CHANGELOG.md` fuer den
+vollen Kontext (`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('bereitschaft', stichtag, data, signaturPng)` statt `downloadPdf('B', data)`.
+  BZ-Zeilenmapping merged pro Zeile `bzAbgeleiteteWerte(basis)`, BE-Zeilenmapping
+  `beAbgeleiteteWerte(basis)` -- `build()` sieht das vorberechnete `Dauer` als normalen Datenpfad
+  (`Daten.BZ[].Dauer`/`Daten.BE[].Dauer`).
+- **`FormularEditor/datenKatalog.ts`:** je ein neuer Eintrag in `ZEILEN_FELDER.bereitschaft`
+  (Gruppe "Berechnet") fuer `Dauer` auf `Daten.BZ` und auf `Daten.BE`, getrennt ueber `quelle` wie
+  die bestehenden BZ-/BE-Felder.
+- **`test/Utilities/download.test.ts`:** eigene `describe`-Gruppe fuer `modus 'B'` (Signatur-Dialog,
+  `ladeUndErzeugePdf`-Aufruf inkl. vorberechneter `Dauer`, Fehlerfall) analog EA/EWT. Die bisherigen
+  generischen `downloadPdf`-/VorgabenGeld-Tests, die `modus 'B'` nur als Vehikel nutzten, auf
+  `modus 'N'` (letzter verbleibender Alt-Pfad) umgehaengt; ein Fallback-Filename-Test war dadurch
+  ein exaktes Duplikat eines bestehenden `modus 'N'`-Tests und wurde entfernt statt umgehaengt.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
 ## 2026-08-21 (16)
 
 ### fix (Unterschrift-Dialog: Box-Proportionen, Fullscreen im Querformat, Desktop-Größe)

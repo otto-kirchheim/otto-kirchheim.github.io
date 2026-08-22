@@ -113,10 +113,10 @@ describe('download utility', () => {
       filename: '',
     });
 
-    await download(button, 'B');
+    await download(button, 'N');
 
     const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-    const expectedFilename = `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
+    const expectedFilename = `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`;
     expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
   });
 
@@ -135,7 +135,7 @@ describe('download utility', () => {
   it('should handle download error with non-Error object', async () => {
     mockDownloadPdf.mockRejectedValueOnce('string-error');
 
-    await download(button, 'B');
+    await download(button, 'N');
 
     expect(createSnackBar).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -151,62 +151,69 @@ describe('download utility', () => {
     await expect(download(button, 'B')).rejects.toThrow('Input Element nicht gefunden');
   });
 
-  it("should perform download for mode 'B' successfully", async () => {
-    (tableToArray as ReturnType<typeof vi.fn>)
-      .mockReturnValueOnce([
-        { Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 },
-        { Beginn: '2026-04-19T17:00:00.000Z', Ende: '2026-04-19T22:00:00.000Z', Pause: 0 },
-      ])
-      .mockReturnValueOnce([
-        {
-          Tag: '19.04.2026',
-          Auftragsnummer: 'A-1',
-          Beginn: '10:00',
-          Ende: '12:00',
-          LRE: 'LRE2',
-          PrivatKm: 12,
-        },
-      ]);
+  describe("modus 'B' (Phase 11 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
+    beforeEach(() => {
+      (tableToArray as ReturnType<typeof vi.fn>)
+        .mockReturnValueOnce([{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 }])
+        .mockReturnValueOnce([{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 }]);
+    });
 
-    await download(button, 'B');
+    it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf, inkl. vorberechneter Dauer', async () => {
+      await download(button, 'B');
 
-    expect(mockSetLoading).toHaveBeenCalledWith(button.id);
-    expect(mockButtonDisable).toHaveBeenCalledWith(true);
-    expect(tableToArray).toHaveBeenCalledWith('tableBZ');
-    expect(tableToArray).toHaveBeenCalledWith('tableBE');
-    expect(mockDownloadPdf).toHaveBeenCalledTimes(1);
-    expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'B',
-      expect.objectContaining({
-        VorgabenU: {
-          Pers: backendVorgabenU.Pers,
-          Fahrzeit: backendVorgabenU.Fahrzeit,
-        },
-        VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
-        Daten: {
-          BZ: [
-            { Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 },
-            { Beginn: '2026-04-19T17:00:00.000Z', Ende: '2026-04-19T22:00:00.000Z', Pause: 0 },
-          ],
-          BE: [
-            {
-              Tag: '19.04.2026',
-              Auftragsnummer: 'A-1',
-              Beginn: '10:00',
-              Ende: '12:00',
-              LRE: 'LRE2',
-              PrivatKm: 12,
-            },
-          ],
-        },
-        Monat: 4,
-        Jahr: 2026,
-      }),
-    );
-    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'test_download.pdf');
-    expect(createSnackBar).not.toHaveBeenCalled();
-    expect(mockButtonDisable).toHaveBeenCalledWith(false);
-    expect(mockClearLoading).toHaveBeenCalledWith(button.id);
+      expect(mockSetLoading).toHaveBeenCalledWith(button.id);
+      expect(mockButtonDisable).toHaveBeenCalledWith(true);
+      expect(tableToArray).toHaveBeenCalledWith('tableBZ');
+      expect(tableToArray).toHaveBeenCalledWith('tableBE');
+      expect(mockDownloadPdf).not.toHaveBeenCalled();
+      expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'bereitschaft',
+        '2026-04-01',
+        expect.objectContaining({
+          VorgabenU: {
+            Pers: backendVorgabenU.Pers,
+            Fahrzeit: backendVorgabenU.Fahrzeit,
+          },
+          VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
+          Daten: {
+            // Pause 30 von 8h (08:00 -> 16:00) Zeitspanne = 7:30; Einsatz 10:00 -> 12:00 = 2:00.
+            BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: '7:30' }],
+            BE: [{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: '2:00' }],
+          },
+          Monat: 4,
+          Jahr: 2026,
+        }),
+        undefined,
+      );
+      const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+      expect(createSnackBar).not.toHaveBeenCalled();
+      expect(mockButtonDisable).toHaveBeenCalledWith(false);
+      expect(mockClearLoading).toHaveBeenCalledWith(button.id);
+    });
+
+    it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
+      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+
+      await download(button, 'B');
+
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('bereitschaft', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+    });
+
+    it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
+      mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für bereitschaft am 2026-04-01'));
+
+      await download(button, 'B');
+
+      expect(saveAs).not.toHaveBeenCalled();
+      expect(createSnackBar).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Keine gültige Version für bereitschaft am 2026-04-01'),
+          status: 'error',
+        }),
+      );
+    });
   });
 
   it("should perform download for mode 'E' successfully (Phase 10 -- neuer client-seitiger Pfad statt downloadPdf())", async () => {
@@ -376,25 +383,11 @@ describe('download utility', () => {
     });
   });
 
-  it("should use fallback filename if downloadPdf returns 'download.pdf'", async () => {
-    mockDownloadPdf.mockResolvedValueOnce({
-      blob: new Blob(['mock pdf content']),
-      filename: 'download.pdf',
-    });
-
-    await download(button, 'B');
-
-    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-    const expectedFilename = `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`; // April 2026
-    expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), expectedFilename);
-    expect(createSnackBar).not.toHaveBeenCalled();
-  });
-
   it('should handle downloadPdf error', async () => {
     const error = new Error('Network Failed');
     mockDownloadPdf.mockRejectedValueOnce(error);
 
-    await download(button, 'B');
+    await download(button, 'N');
 
     expect(saveAs).not.toHaveBeenCalled();
     expect(createSnackBar).toHaveBeenCalledWith(
@@ -412,10 +405,10 @@ describe('download utility', () => {
     Storage.set('VorgabenGeld', singleKeyGeld);
 
     document.querySelector<HTMLInputElement>('#Monat')!.value = '1';
-    await download(button, 'B');
+    await download(button, 'N');
 
     expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'B',
+      'N',
       expect.objectContaining({
         VorgabenGeld: singleKeyGeld[1],
         Monat: 1,
@@ -432,10 +425,10 @@ describe('download utility', () => {
     Storage.set('VorgabenGeld', multiKeyGeld);
 
     document.querySelector<HTMLInputElement>('#Monat')!.value = '3';
-    await download(button, 'B');
+    await download(button, 'N');
 
     expect(mockDownloadPdf).toHaveBeenCalledWith(
-      'B',
+      'N',
       expect.objectContaining({
         VorgabenGeld: { ...multiKeyGeld[1], ...multiKeyGeld[2], ...multiKeyGeld[3] },
         Monat: 3,
@@ -447,7 +440,7 @@ describe('download utility', () => {
     const errorMessage = 'Server Error 500';
     mockDownloadPdf.mockRejectedValueOnce(new Error(errorMessage));
 
-    await download(button, 'B');
+    await download(button, 'N');
 
     expect(saveAs).not.toHaveBeenCalled();
     expect(createSnackBar).toHaveBeenCalledWith(

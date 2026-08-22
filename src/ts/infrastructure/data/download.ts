@@ -19,7 +19,7 @@ import type {
   IEntgeltausgleichDownloadBody,
   INebengeldDownloadBody,
 } from '@otto-kirchheim/nebengeld-shared';
-import { ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
+import { beAbgeleiteteWerte, bzAbgeleiteteWerte, ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -103,15 +103,23 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
       const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
       data.Daten = {
-        BZ: bzRaw.map(bz => ({ Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 })),
-        BE: beRaw.map(be => ({
-          Tag: be.Tag,
-          Auftragsnummer: be.Auftragsnummer,
-          Beginn: be.Beginn,
-          Ende: be.Ende,
-          LRE: be.LRE,
-          PrivatKm: be.PrivatKm ?? 0,
-        })),
+        // Vorberechnete `Dauer` (Phase 11) direkt mit ins Zeilenobjekt -- `build()` sieht sie dann
+        // als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer), analog EWT (Phase 10).
+        BZ: bzRaw.map(bz => {
+          const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 };
+          return { ...basis, ...bzAbgeleiteteWerte(basis) };
+        }),
+        BE: beRaw.map(be => {
+          const basis = {
+            Tag: be.Tag,
+            Auftragsnummer: be.Auftragsnummer,
+            Beginn: be.Beginn,
+            Ende: be.Ende,
+            LRE: be.LRE,
+            PrivatKm: be.PrivatKm ?? 0,
+          };
+          return { ...basis, ...beAbgeleiteteWerte(basis) };
+        }),
       } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
       break;
     }
@@ -182,13 +190,14 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     let blob: Blob;
     let filename: string | undefined;
 
-    if (modus === 'EA' || modus === 'E') {
-      // Neuer Weg (Phase 9 EA, Phase 10 EWT): Version server-seitig auflösen
+    if (modus === 'EA' || modus === 'E' || modus === 'B') {
+      //if (['EA', 'E', 'B'].includes(modus)) {
+      // Neuer Weg (Phase 9 EA, Phase 10 EWT, Phase 11 Bereitschaft): Version server-seitig auflösen
       // (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per `build()` erzeugen -- kein
       // Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag = erster Tag des Exportmonats
       // (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat
       // hier bereits exakt die Form, die `build()` als `Daten` braucht.
-      const formular = modus === 'EA' ? 'ea' : 'ewt';
+      const formular = modus === 'EA' ? 'ea' : modus === 'E' ? 'ewt' : 'bereitschaft';
       const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
       const signaturPng = await signaturDialog();
       const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signaturPng);
@@ -201,8 +210,8 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     if (!dateiName || dateiName === 'download.pdf') {
       // Namensschema deckt sich bewusst mit dem Server (`buildBaseFileName`/`dateiName` in
       // backend/src/utils/download.helpers.ts bzw. den einzelnen `*.service.ts::download()`) --
-      // EA liefert seit Phase 9 gar keinen Header mehr (kein Backend-Roundtrip für den PDF-Inhalt),
-      // landet also immer hier; B/E/N nur im Ausnahmefall (Header fehlt/ist `download.pdf`).
+      // EA/E/B liefern seit Phase 9-11 gar keinen Header mehr (kein Backend-Roundtrip für den
+      // PDF-Inhalt), landen also immer hier; N nur im Ausnahmefall (Header fehlt/ist `download.pdf`).
       const vorDateiName: { [key in typeof modus]: string } = {
         B: 'RB',
         E: 'Verpf.',

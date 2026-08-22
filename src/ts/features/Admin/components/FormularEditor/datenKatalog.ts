@@ -163,6 +163,12 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     },
     { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: 'LRE 1' },
     { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
+    // Vorberechnet (Phase 11, siehe shared/src/formular/abgeleiteteWerte.ts::bzAbgeleiteteWerte/
+    // beAbgeleiteteWerte) -- eigene Gruppe je Quelle, damit der Editor sie ohne Rechnung-Builder
+    // direkt als Spalten-/Summenquelle anbietet statt jede Version die Zeitrechnung selbst
+    // nachbauen zu lassen (wie DauerWohnung/DauerErsteTkgSt bei EWT).
+    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Berechnet', quelle: 'Daten.BZ', beispiel: '7:30' },
+    { pfad: 'Dauer', label: 'Dauer (HH:mm)', gruppe: 'Berechnet', quelle: 'Daten.BE', beispiel: '0:45' },
   ],
   ea: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
