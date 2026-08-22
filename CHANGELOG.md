@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-22 (22)
+
+### fix (FormularEditor: Name-Feld, Schlüssel, Mehrfachauswahl, Zeilenraster)
+
+Vier User-Funde aus dem echten Browser-Test der Bereitschaft-Vorlage -- siehe Root-`CHANGELOG.md`
+für den vollen Kontext (`Berechnet.tabellen`-Typänderung, Breaking Change für gespeicherte
+Versionen).
+
+- **`infrastructure/data/download.ts`:** `Name` wird nur fürs PDF als "Nachname, Vorname"
+  zusammengesetzt.
+- **`FormularEditor/FeldPanel.tsx`:** Schlüssel-Eingabe verwirft leere Werte;
+  `eindeutigerSpaltenSchluessel()`-Default fällt auf `'feld'` statt `''` zurück; `DatenpfadWahl`
+  markiert belegte Pfade als `disabled`; `AggregationEditor` bekommt eine Checkbox-Mehrfachauswahl
+  für `Berechnet.tabellen`, Feld-Dropdown-Optionen jetzt mit `pfad|label`-Key.
+- **`infrastructure/pdf/wert.ts`:** `ausKontext()` vereinigt Zeilen mehrerer gewählter Tabellen
+  statt nur einer.
+- **`infrastructure/pdf/configSchema.ts`:** Zod-Spiegel für `Berechnet.tabellen`.
+- **`FormularEditor/{FormularEditor,PdfCanvas}.tsx`:** Zeilenraster-Indikator berechnet seine
+  x-Position jetzt aus der jeweils ersten Spalte der Tabelle (`spaltenFuer()`, seitenspezifische
+  Spalten berücksichtigt) statt einem festen Seitenrand.
+- **Tests:** `test/Utilities/download.test.ts` (Name-Feld), `test/infrastructure/pdf/wert.test.ts`
+  (5 neue Tests für Mehrfachauswahl über `Berechnet.tabellen`).
+
+Verifiziert: `tsc`/Lint sauber, 1602/1602, Produktionsbuild erfolgreich.
+
 ## 2026-08-22 (21)
 
 ### feat (PDF-Vorlagen-Pipeline: Bereitschaftszulage-Zwischenwerte) + fix (Pause-Vorzeichen)
