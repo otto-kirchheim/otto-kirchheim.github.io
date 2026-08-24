@@ -95,7 +95,13 @@ function passendeGroesse(text: string, f: Zelle, zellBreite: number, zellHoehe: 
  * und 270° zur kleineren Koordinate hin), `laenge === 0` bedeutet: keine gegenüberliegende Kante
  * gesetzt, dann ist die Kante selbst der Anker.
  */
-function ankerLaengs(textBreite: number, min: number, max: number, align: Ausrichtung | undefined, vor: 1 | -1): number {
+function ankerLaengs(
+  textBreite: number,
+  min: number,
+  max: number,
+  align: Ausrichtung | undefined,
+  vor: 1 | -1,
+): number {
   const laenge = max - min;
   if (align === 'zentriert') return vor === 1 ? min + (laenge - textBreite) / 2 : max - (laenge - textBreite) / 2;
   if (align === 'rechts') return vor === 1 ? max - textBreite : min + textBreite;
@@ -142,7 +148,11 @@ export function zeichne(seite: PDFPage, text: string, f: Zelle, fonts: FontSet):
   // Der Zeilenblock wird quer in der Zelle zentriert; welche Blockkante dabei am Anfang liegt,
   // hängt von der Richtung der Oberlängen ab (bei 90° zeigen sie nach links).
   const mitte = querMin + (querLaenge - blockHoehe) / 2;
-  const ersteBaseline = !hatQuer ? querAnker : querVor === 1 ? mitte + (zeilen.length - 1) * zeilenhoehe : mitte + oberlaenge;
+  const ersteBaseline = !hatQuer
+    ? querAnker
+    : querVor === 1
+      ? mitte + (zeilen.length - 1) * zeilenhoehe
+      : mitte + oberlaenge;
 
   // Rotation um den Textanker, wie pdf-lib sie für `drawText({ rotate })` anwendet (Standard-CCW-
   // Matrix, siehe `rotateRadians()`) -- nötig, um die Unterstreichung bei gedrehtem Text (z.B. 90°
@@ -171,7 +181,10 @@ export function zeichne(seite: PDFPage, text: string, f: Zelle, fonts: FontSet):
       const breiteZeile = breite(zeile, size, font);
       seite.drawLine({
         start: { x: x + unterstreichAbstand * sinWinkel, y: y - unterstreichAbstand * cosWinkel },
-        end: { x: x + breiteZeile * cosWinkel + unterstreichAbstand * sinWinkel, y: y + breiteZeile * sinWinkel - unterstreichAbstand * cosWinkel },
+        end: {
+          x: x + breiteZeile * cosWinkel + unterstreichAbstand * sinWinkel,
+          y: y + breiteZeile * sinWinkel - unterstreichAbstand * cosWinkel,
+        },
         thickness: unterstreichDicke,
       });
     }

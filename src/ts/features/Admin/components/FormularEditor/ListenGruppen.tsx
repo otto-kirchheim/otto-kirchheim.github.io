@@ -1,5 +1,11 @@
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
-import { LISTEN_VORLAGEN, VORLAGEN_KATEGORIE, katalogZeilenFelder, zulagenKurztexte, type FormularCode } from './datenKatalog';
+import {
+  LISTEN_VORLAGEN,
+  VORLAGEN_KATEGORIE,
+  katalogZeilenFelder,
+  zulagenKurztexte,
+  type FormularCode,
+} from './datenKatalog';
 
 type Props = {
   tabelle: TabellenDef;
@@ -42,7 +48,12 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               <span class="small fw-semibold flex-grow-1">
                 {name} <span class="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
               </span>
-              <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={() => setzeGruppe(name, undefined)} title="Gruppe löschen">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger py-0"
+                onClick={() => setzeGruppe(name, undefined)}
+                title="Gruppe löschen"
+              >
                 <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
                   delete
                 </span>

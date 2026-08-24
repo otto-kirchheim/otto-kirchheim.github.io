@@ -126,6 +126,13 @@ const BASIS: KatalogEintrag[] = [
   // Datenpfad-Picker auftauchen und dort ins Leere laufen. Nur SummeBeamter3 ist ein Geldwert
   // (`waehrung`); alles andere sind Ganzzahlen (Minuten/Stunden/Sätze).
   {
+    pfad: 'Bereitschaftszulage.TarifBeamter',
+    label: 'Tarifkraft/Beamter',
+    gruppe: 'Bereitschaftszulage',
+    formulare: ['bereitschaft'],
+    beispiel: 'Tarifkraft',
+  },
+  {
     pfad: 'Bereitschaftszulage.BereitschaftsMinuten',
     label: 'Bereitschaftszeit abzgl. Einsätze (Minuten)',
     gruppe: 'Bereitschaftszulage',
@@ -266,7 +273,14 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     // Euro-Betrag für Privat-km, Satz aus VorgabenGeld (PrivatPKWTarif/PrivatPKWBeamter je nach
     // Pers.TB) -- gleiche Konvention wie calculateBerechnungRows.ts. `format` als Vorschlag, damit
     // eine neu angelegte Spalte/Feld sofort mit Währungsformat startet statt roher Zahl.
-    { pfad: 'PrivatKmBetrag', label: 'Privat-km Betrag (€)', gruppe: 'Berechnet', quelle: 'Daten.BE', format: 'waehrung', beispiel: 3.24 },
+    {
+      pfad: 'PrivatKmBetrag',
+      label: 'Privat-km Betrag (€)',
+      gruppe: 'Berechnet',
+      quelle: 'Daten.BE',
+      format: 'waehrung',
+      beispiel: 3.24,
+    },
   ],
   ea: [
     { pfad: 'Tag', label: 'Tag', gruppe: 'Zeile', format: 'datum', beispiel: i => tag(i) },
@@ -329,7 +343,14 @@ export function werteAuswahl(feld: string): string[] {
  * Felder in der Ankreuz-Bedingung eine Ja/Nein-Auswahl (`werte: [true]`/`[false]`) statt der
  * generischen Werte-Liste/Wertebereich-Wahl an.
  */
-const BOOLEAN_FELDER = new Set(['Wohnung8bis14', 'Wohnung14bis24', 'WohnungUeber24', 'BeamterUeber8Wohnung', 'TkgSt8bis24', 'TkgStUeber24']);
+const BOOLEAN_FELDER = new Set([
+  'Wohnung8bis14',
+  'Wohnung14bis24',
+  'WohnungUeber24',
+  'BeamterUeber8Wohnung',
+  'TkgSt8bis24',
+  'TkgStUeber24',
+]);
 
 export function istBooleanFeld(feld: string): boolean {
   return BOOLEAN_FELDER.has(feld);

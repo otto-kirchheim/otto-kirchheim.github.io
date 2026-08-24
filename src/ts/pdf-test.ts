@@ -105,7 +105,10 @@ async function erzeugeUndLade(signaturPng?: string): Promise<void> {
   const registry = parseRegistry(await ladeRegistryJson());
   const version = resolve(registry, 'ez', leistungsdatum);
   // Nur zur visuellen Bestätigung im Test-PDF, welche Version anhand des Leistungsdatums griff.
-  const datenFuerVersion = { ...daten, titel: `Zulagenzettel -- Version ${version.version} (Leistungsdatum ${leistungsdatum})` };
+  const datenFuerVersion = {
+    ...daten,
+    titel: `Zulagenzettel -- Version ${version.version} (Leistungsdatum ${leistungsdatum})`,
+  };
 
   const bytes = await build({ ...version, formular: 'ez' }, datenFuerVersion, signaturPng);
   saveAs(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), `phase6-test_${version.version}.pdf`);

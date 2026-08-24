@@ -75,9 +75,14 @@ describe('verteile', () => {
   it('wirft, wenn die wiederholte Seite für die Tabelle keinen Bereich hat', () => {
     const layoutOhneBereich: Layout = {
       template: 'x',
-      seiten: [macheSeite(0), { quelle: 1, bereiche: [{ tabelle: 'andere', startY: 700, maxZeilen: 5 }], felder: {}, wiederholt: true }],
+      seiten: [
+        macheSeite(0),
+        { quelle: 1, bereiche: [{ tabelle: 'andere', startY: 700, maxZeilen: 5 }], felder: {}, wiederholt: true },
+      ],
     };
-    expect(() => verteile({ haupt: macheZeilen(3) }, layoutOhneBereich)).toThrow('Tabelle "haupt" hat auf keiner wiederholten Seite einen Bereich');
+    expect(() => verteile({ haupt: macheZeilen(3) }, layoutOhneBereich)).toThrow(
+      'Tabelle "haupt" hat auf keiner wiederholten Seite einen Bereich',
+    );
   });
 
   it('behält die Zeilenreihenfolge über Seitenwechsel hinweg bei', () => {

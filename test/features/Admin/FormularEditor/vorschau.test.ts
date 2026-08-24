@@ -21,7 +21,13 @@ function ersteSeite(maxZeilen: number): SeitenDef {
     quelle: 0,
     bereiche: [{ tabelle: 'haupt', startY: 700, maxZeilen }],
     felder: {
-      gesamt: { x: 50, y: 60, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } },
+      gesamt: {
+        x: 50,
+        y: 60,
+        size: 10,
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
+      },
       seitenzahl: { x: 400, y: 30, size: 8, text: 'Seite {seite} von {seiten}' },
     },
   };
@@ -33,7 +39,13 @@ function weitereSeite(maxZeilen: number): SeitenDef {
     wiederholt: true,
     bereiche: [{ tabelle: 'haupt', startY: 680, maxZeilen }],
     felder: {
-      uebertrag: { x: 50, y: 700, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' } },
+      uebertrag: {
+        x: 50,
+        y: 700,
+        size: 10,
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
+      },
       hinweis: { x: 50, y: 720, size: 10, text: 'Übertrag von Seite {seite-1}' },
     },
   };
@@ -99,7 +111,9 @@ describe('erzeugeVorschau', () => {
 
     it('"beispiel" setzt fachlich passende Werte aus dem Datenkatalog', () => {
       const { daten, kontext } = erzeugeVorschau(tabellen, [seite], 0, 'ez', 'beispiel');
-      expect(wert(seite.felder['VorgabenU.Pers.Nachname']!, 'VorgabenU.Pers.Nachname', daten, kontext)).toBe('Mustermann');
+      expect(wert(seite.felder['VorgabenU.Pers.Nachname']!, 'VorgabenU.Pers.Nachname', daten, kontext)).toBe(
+        'Mustermann',
+      );
     });
 
     it('"platzhalter" liefert weiterhin generische Fuellwerte', () => {

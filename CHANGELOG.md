@@ -2,6 +2,148 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-24 (34)
+
+### feat (Unterschriftsdatum: an Signatur gekoppelt, druckt nur bei explizit "Digital")
+
+User-Wunsch: das Unterschriftsdatum-Feld (bisher generisches `letztesDatum`-Feld, Preset
+"+ Datum (Unterschrift)" in der allgemeinen Feldliste, druckte unabhängig davon ob überhaupt
+unterschrieben wurde) soll inhaltlich mit der Signatur verknüpft sein. **Wichtige Präzisierung nach
+Rückmeldung:** NICHT jedes Fehlen einer gezeichneten Unterschrift blendet das Datum aus, sondern NUR
+die explizite Wahl "Digital" (spätere externe Signatur zu unbekanntem Zeitpunkt macht ein jetzt
+gedrucktes Datum falsch) -- "Ohne Unterschrift" (z.B. für eine Unterschrift auf Papier) lässt das
+Datum dagegen stehen, weil es dort weiterhin sinnvoll ist.
+
+Neues optionales `Feld.nurBeiSignatur?: boolean` im **dreifach gespiegelten Typsystem**
+(`shared/src/formular/types.ts`, `frontend/.../configSchema.ts`, `backend/.../formular.schemas.ts`,
+siehe `.claude/CLAUDE.md`-Hinweis dazu). `wert()` (`infrastructure/pdf/wert.ts`) liefert für ein so
+markiertes Feld sofort `''`, wenn `Kontext.digitaleSignatur` wahr ist -- neues Kontext-Feld (Ersatz
+für ein anfängliches `hatSignatur`, das noch pauschal an `Boolean(signaturPng)` hing und damit auch
+"Ohne Unterschrift" fälschlich unterdrückt hätte), in `build.ts` aus dem neuen `digitaleSignatur`-
+Parameter gesetzt, genau wie `heute` bereits testbar statt `new Date()` inline. Alt-Konfigurationen
+ohne das `nurBeiSignatur`-Flag verhalten sich unverändert (kein Migrationsbedarf).
+
+**`signaturDialog.ts` komplett umgebaut**, um "Digital" von "Ohne Unterschrift" zu unterscheiden --
+`confirmDialog` (fest zwei Buttons) reicht dafür nicht mehr. Ein einziger, eigener Entscheidungsdialog
+(`signaturEntscheidung()`) deckt jetzt BEIDE Fälle ab: ohne Cache "Ja" / "Ohne Unterschrift" /
+"Digital", mit Cache zusätzlich "Verwenden" / "Ändern" statt nur "Ja" -- weiterhin maximal 2 Dialoge
+insgesamt (Entscheidung + optionales Pad). Rückgabetyp von `signaturDialog()` geändert von
+`Promise<string | undefined>` zu `Promise<SignaturErgebnis>` (`{ png?: string; digital: boolean }`),
+dadurch Ripple-Effekt durch die ganze Kette: `download.ts` (Aufrufer), `ladeUndErzeugePdf()`
+(`ladeFormular.ts`, neuer `digitaleSignatur`-Parameter), `build()` (`build.ts`, gibt ihn in den
+`Kontext`). `backdrop: 'static', keyboard: false` (User-Korrektur -- fehlte anfangs, war aber beim
+Pad-Dialog schon so gesetzt): Backdrop-Klick/Escape schließen den Entscheidungsdialog NICHT mehr
+kommentarlos, nur noch der explizite X-Button oben rechts -- konsistent mit dem Pad-Dialog, der aus
+demselben Grund (kein versehentliches Verwerfen einer in Arbeit befindlichen Unterschrift) schon
+immer `static` war. Schließen über den X-Button zählt weiterhin wie "Ohne Unterschrift", NICHT wie
+"Digital" -- ein Wegklicken soll nicht überraschend das Datum verschlucken. Zusätzlich kleiner
+Hinweistext im Dialog ("Die Unterschrift wird nur auf diesem Gerät verarbeitet und
+zwischengespeichert.") sowie an der "Für nächstes Mal merken"-Checkbox im Pad-Footer ergänzt --
+bewusst als sichtbarer Text statt `title`-Tooltip (User-Korrektur: Tooltip wird nicht wahrgenommen).
+
+FormularEditor (`FeldPanel.tsx`): das "+ Datum (Unterschrift)"-Preset ist aus der allgemeinen
+Feldliste (`VORLAGEN`) komplett entfernt -- ein `nurBeiSignatur`-Feld erscheint dort gar nicht mehr
+(`FeldListe` filtert es raus), sondern lebt vollständig in einer eigenen "Unterschriftsdatum"-Sektion
+innerhalb der Signatur-Fläche: Erzeugung ("+ Datum hinzufügen"), Positionierung/Löschen sowie ALLE
+inhaltlich relevanten Formatierungs- und Layout-Einstellungen an einem Ort -- Datenfeld-Auswahl
+(`berechnet.feld`, welche Zeilenspalte das Datum liefert, je Ressource anders) und Tage-Frist
+(`berechnet.maxTage`) neu für diesen Zweck gebaut, Position/Zellgröße (`x`/`x2`/`y`/`y2`) über die
+bereits bestehende `Zellkoordinaten`-Komponente und Schriftschnitt/Ausrichtung/Drehung/Format/
+Auto-Verkleinerung/Umbruch über die bereits bestehende `DarstellungsFelder`-Komponente eingebunden --
+beide sind dieselben wiederverwendbaren Bausteine, die auch der volle generische Feld-Editor nutzt
+(`FeldZeile`), hier nur ohne die für ein berechnetes Feld irrelevanten Teile (Label, `quellen`/
+`trenner`, `wenn`-Bedingung, `listenKopf`). Frei gewordene Key-Vergabe-Logik
+(`naechsterFreierSchluessel`) aus `FeldListe.hinzufuegen()` extrahiert und von beiden Stellen geteilt.
+Editor-Vorschau (`dummyDaten.ts::erzeugeVorschau`) setzt `digitaleSignatur: false`, damit das Feld
+beim Positionieren sichtbar bleibt statt immer leer zu wirken.
+
+Verifikation: `bunx tsc --noEmit` in shared/frontend/backend grün, `bun run lint`
+(frontend+backend) grün, Tests: shared 162/162, frontend 1685/1685 (neue/umgebaute Fälle in
+`wert.test.ts` für `nurBeiSignatur`/`digitaleSignatur`, komplett neu geschriebenes
+`signaturDialog.test.ts` für den umgebauten Entscheidungsdialog, angepasste Erwartungen in
+`ladeFormular.test.ts` + `Utilities/download.test.ts` wegen des neuen `SignaturErgebnis`-Rückgabetyps
+und `digitaleSignatur`-Parameters, ein Smoke-Test in `build.test.ts`), backend 947/947 (inkl.
+`tests/validation` 123/123 für den Schema-Spiegel). Manuelle FormularEditor-/Signatur-Dialog-
+Verifikation im Browser steht noch aus.
+
+## 2026-08-24 (33)
+
+### fix (Dark-Mode: btn-outline-* zu kontrastarm, disabled kaum von aktiv unterscheidbar)
+
+User-Fund: Schaltflächen mit `.btn-outline-secondary` (z.B. Hoch/Runter-Pfeile im Fahrzeiten-Panel)
+erschienen im Dark-Mode dunkelgrau auf dunklem Hintergrund -- Bootstrap 5.3 überschreibt die Farb-
+Variablen dieser Klasse in `[data-bs-theme=dark]` nicht, es bleibt beim festen `#6c757d`. Gleiches
+Muster bei `.btn-outline-primary` (z.B. PDF-Quellenauswahl im FormularEditor): festes `#0d6efd`, gegen
+dunklen Hintergrund ebenfalls zu kontrastarm. Zusätzlich unterscheidet sich bei JEDER Outline-Variante
+(secondary/primary/success/danger/warning/info) der deaktivierte Zustand nur durch 65% Opacity von der
+aktiven Farbe -- Screenshot-Vergleich zeigt aktiv und disabled bei allen sechs Varianten praktisch
+gleich hell, nicht nur bei secondary.
+
+Neue Regeln in `styles.scss` (`[data-bs-theme='dark'] .btn-outline-secondary` /
+`.btn-outline-primary`) binden Bootstraps eigene, theme-bewusste Tokens ein
+(`--bs-secondary-text-emphasis`, `--bs-primary-text-emphasis`) statt der festen Grundfarben. Für alle
+sechs Outline-Varianten zusätzlich eine gemeinsame Regel, die `--bs-btn-disabled-color`/
+`-disabled-border-color` auf `--bs-border-color` setzt -- deaktiviert wirkt jetzt unabhängig vom
+Farbton einheitlich stumpf, aktive Farben (Rot/Grün/Gelb/Cyan) bleiben unverändert. Zentraler Fix statt
+Einzeländerungen, wirkt auf alle ca. 95 Vorkommen der Klassen app-weit (Fahrzeiten-Panel,
+FormularEditor-Pfeile, Admin-Panels, Toggle-Gruppen, signaturDialog, etc.).
+
+Verifikation: Vorher/Nachher-Screenshots mit dem echten kompilierten CSS (`bun run build`) im
+Chrome-Headless-Vergleich. Secondary: Computed Color vorher `rgb(108,117,125)` für aktiv UND disabled
+identisch, nachher aktiv `rgb(167,172,177)` vs. disabled `rgb(73,80,87)`. Primary/Success/Danger:
+vorher aktiv und disabled optisch ununterscheidbar, nachher disabled klar auf Rahmenton abgedunkelt,
+aktiv unverändert farbig. `bun run lint` grün.
+
+## 2026-08-24 (32)
+
+### feat (Unterschrift: optionaler localStorage-Cache per Checkbox)
+
+User-Wunsch: die zuletzt gezeichnete Unterschrift auf Anfrage zwischenspeichern, damit sie nicht bei
+jedem PDF-Download neu gezeichnet werden muss -- aber nur wenn explizit gewünscht, nicht automatisch.
+Neue Checkbox "Für nächstes Mal merken" im `signaturDialog.ts`-Pad-Footer (gleiche Zeile wie
+Löschen/Fertig, damit der Footer genauso schmal bleibt wie bisher -- extra Inhalt im `modal-body` hätte
+die sorgfältig austarierte `berechneCanvasGroesse()`-Rechnung verfälscht). Neuer Storage-Key
+`signaturCache` in `Storage.ts`. Checkbox ist sticky vorangehakt, wenn ein Cache existiert; ist sie beim
+"Fertig"-Klick nicht angehakt, wird ein evtl. vorhandener alter Cache-Eintrag gelöscht (klares Opt-out).
+Existiert ein Cache, wird das Pad beim Öffnen automatisch damit vorbefüllt (`setzeSignaturPng()`, neuer
+Helper in `signaturePad.ts` um `SignaturePad.fromDataURL()`). Die erste Nachfrage übernimmt bei
+vorhandenem Cache direkt die Wiederverwendungs-Entscheidung statt eines dritten Dialogs -- braucht dafür
+aber drei statt zwei Ausgänge (verwenden / ändern / gar keine Unterschrift, z.B. für eine spätere
+digitale Signatur), wofür `confirmDialog` mit seinen fest zwei Buttons nicht reicht. Neuer, lokaler
+Dialog `entscheideUeberGecachteUnterschrift()` in `signaturDialog.ts` (gleiches Vanilla-DOM-Muster wie
+`confirmDialog`, aber mit drei `[data-wahl]`-Buttons): "Verwenden" liefert die gecachte PNG direkt, Pad
+wird komplett übersprungen; "Ändern" öffnet das Pad (vorbefüllt, zum Anpassen/Neuzeichnen); "Nein,
+digitale Unterschrift" (oder Schließen ohne Wahl) resolved `undefined`, kein PDF-Eintrag. Modal-Body
+erklärt die drei Buttons per Kurzliste (User-Feedback: Dialog war ohne Erklärung "zu detaillos") --
+unproblematisch für die Canvas-Größenrechnung, da dieser Dialog anders als das Pad-Modal keinen Canvas
+enthält und `berechneCanvasGroesse()` hier gar nicht läuft. Ohne Cache bleibt die ursprüngliche
+`confirmDialog`-Nachfrage ("Jetzt unterschreiben? Ja/Nein") inkl. kurzer Erklärung, was Ja/Nein
+bedeuten -- weiterhin maximal 2 Dialoge insgesamt in jedem Pfad.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` 1676/1676 grün (inkl. 7 neuer
+Fälle in `signaturDialog.test.ts` und 1 neuem Fall in `signaturePad.test.ts`).
+
+## 2026-08-24 (31)
+
+### fix (Bereitschaftszulage: eigenes Druckfeld Tarifkraft/Beamter statt roher Pers.TB-Wert)
+
+User-Fund: ein im FormularEditor an `VorgabenU.Pers.TB` gebundenes Feld druckte im PDF den rohen
+TB-Wert (z.B. "Besoldungsgruppe A 8"), sollte für die Bereitschaft aber nur "Tarifkraft"/"Beamter"
+zeigen. `Pers.TB` bleibt bewusst unverändert -- die zwei Besoldungsgruppen-Werte werden weiterhin als
+Schlüssel in die Geld-Vorgaben für die Bereitschaftszulage gebraucht (`geldMonat[tarifKraft]` in
+`bereitschaftszulageAbgeleiteteWerte()`), eine Reduktion auf zwei Werte hätte diesen Lookup zerstört
+und eine DB-Migration bestehender `UserProfile`/`ProfileTemplate`-Dokumente erzwungen. Stattdessen
+neues, zusätzliches abgeleitetes Feld `Bereitschaftszulage.TarifBeamter` (`'Tarifkraft' | 'Beamter'`),
+berechnet in `shared/src/formular/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte()` nach der
+bestehenden Konvention `Beamter = TB !== 'Tarifkraft'` -- immer gesetzt, auch bei 0
+Bereitschaftsminuten (vorher `{}`). Neu im Datenkatalog (`FormularEditor/datenKatalog.ts`, Gruppe
+"Bereitschaftszulage") für Bereitschaft-Vorlagen wählbar. Inline-Typduplikat in
+`shared/src/download.ts` (Zyklus-Vermeidung, siehe Kommentar dort) synchron nachgezogen.
+
+Verifikation: shared `tsc --noEmit` + `test` (54/54) grün, frontend `tsc --noEmit` grün,
+`test/Utilities/download.test.ts` (17/17) grün, backend `tsc --noEmit` grün (keine Backend-Datei
+geändert, keine Migration nötig).
+
 ## 2026-08-23 (30)
 
 ### feat (FormularEditor: Sonderzeilen -- Kopf-/Summenzeilen über mehrere Spalten auf einmal)

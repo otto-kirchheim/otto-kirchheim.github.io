@@ -27,7 +27,12 @@ export function spalteFuerZelle(spalten: Spalte[], zelle: SonderZeileZelle): Spa
  * `autoGroesse` von der Zelle ÜBERSCHRIEBEN, wenn gesetzt (z.B. eine fett-große Gesamtsumme bei
  * sonst kleiner Datenzeilen-Schrift) -- ohne Angabe gilt jeweils der Wert der Spalte.
  */
-export function zellGeometrie(spalte: Spalte, zelle: SonderZeileZelle, y: number, y2: number | undefined): Spalte & { y: number; y2?: number } {
+export function zellGeometrie(
+  spalte: Spalte,
+  zelle: SonderZeileZelle,
+  y: number,
+  y2: number | undefined,
+): Spalte & { y: number; y2?: number } {
   return {
     ...spalte,
     y,
@@ -47,13 +52,23 @@ export function zellGeometrie(spalte: Spalte, zelle: SonderZeileZelle, y: number
  * `resolve()`-Anbindung im Aufrufer selbst (folgt in Phase 9). `signaturPng` ist optional — bei
  * fehlendem Input bleibt die Signaturfläche leer (siehe Entscheidungsdialog "Jetzt unterschreiben?"
  * im aufrufenden Code, Kandidat E: kein Nachsignieren eines heruntergeladenen PDFs vorgesehen).
+ * `digitaleSignatur` kommt aus demselben Dialog (`SignaturErgebnis.digital`) und ist UNABHÄNGIG
+ * von `signaturPng` -- auch "Ohne Unterschrift" liefert kein `signaturPng`, unterdrückt aber (anders
+ * als "Digital") kein `Feld.nurBeiSignatur` (siehe `Kontext.digitaleSignatur`).
  *
  * Die Seitenzahl ist bewusst NICHT fest eingebaut: sie entsteht als normales Feld mit festem Text
  * und den Platzhaltern `{seite}`/`{seiten}` — Wortlaut und Position bestimmt damit die Konfiguration.
  */
-export async function build(cfg: Version & { formular: string }, daten: Daten, signaturPng?: string): Promise<Uint8Array> {
+export async function build(
+  cfg: Version & { formular: string },
+  daten: Daten,
+  signaturPng?: string,
+  digitaleSignatur?: boolean,
+): Promise<Uint8Array> {
   const layout = cfg.layout;
-  const alle: TabellenZeilen = Object.fromEntries(Object.entries(cfg.tabellen).map(([name, def]) => [name, tabellenZeilen(daten, def)]));
+  const alle: TabellenZeilen = Object.fromEntries(
+    Object.entries(cfg.tabellen).map(([name, def]) => [name, tabellenZeilen(daten, def)]),
+  );
 
   // Platzvergabe der dynamischen Spalten (EZ-Zulagen) EINMAL über alle Zeilen -- je Seite bestimmt
   // stünde auf Seite 2 womöglich eine andere Zulage über derselben Spalte.
@@ -84,7 +99,17 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
     pdf.addPage(seite);
     // `$laufend` ist die Summe bis EINSCHLIESSLICH dieser Seite -- auf der letzten Seite gleich
     // `$alle`, davor die Zwischensumme, die eine Übertragsrechnung fortschreibt.
-    const kontext: Kontext = { $seite: block.zeilen, $bisher: bisher, $laufend: verbinde(bisher, block.zeilen), $alle: alle, seite: i + 1, seiten: bloecke.length, heute, listen };
+    const kontext: Kontext = {
+      $seite: block.zeilen,
+      $bisher: bisher,
+      $laufend: verbinde(bisher, block.zeilen),
+      $alle: alle,
+      seite: i + 1,
+      seiten: bloecke.length,
+      heute,
+      listen,
+      digitaleSignatur: Boolean(digitaleSignatur),
+    };
 
     // Ein einziger Feld-Bereich: Kopfangaben, Zwischen-/Gesamtsummen, Übertragszeile und
     // Seitenzahl unterscheiden sich nur durch Koordinaten und `berechnet`, nicht durch eine
@@ -102,7 +127,8 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
       for (const zeile of block.zeilen[bereich.tabelle] ?? []) {
         // Die Spalte liefert nur die x-Kanten; die y-Kanten der Zelle kommen aus der Zeilenhöhe.
         // Ohne sie wäre `y` die Grundlinie und der Text säße auf der Zeilenunterkante statt mittig.
-        for (const sp of spalten) zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, fonts);
+        for (const sp of spalten)
+          zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, fonts);
         y -= hoehe;
       }
 
@@ -115,7 +141,12 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
         for (const zelle of sonderzeile.zellen) {
           const spalte = spalteFuerZelle(spalten, zelle);
           if (!spalte) continue;
-          zeichne(seite, sonderZeileZelleWert(zelle, spalte, bereich.tabelle, rows, daten, kontext), zellGeometrie(spalte, zelle, platz.y, platz.y2), fonts);
+          zeichne(
+            seite,
+            sonderZeileZelleWert(zelle, spalte, bereich.tabelle, rows, daten, kontext),
+            zellGeometrie(spalte, zelle, platz.y, platz.y2),
+            fonts,
+          );
         }
       }
     }

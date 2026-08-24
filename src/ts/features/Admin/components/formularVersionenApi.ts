@@ -31,7 +31,8 @@ export interface VersionNutzdaten {
 async function ruf<T>(pfad: string, daten: unknown, methode: 'GET' | 'POST' | 'PUT' | 'DELETE'): Promise<T> {
   const antwort = await FetchRetry<unknown, T>(pfad, daten, methode);
   if (antwort instanceof Error) throw antwort;
-  if (!antwort.success) throw new ApiFehler(antwort.message ?? `Anfrage fehlgeschlagen (${antwort.statusCode})`, antwort.statusCode);
+  if (!antwort.success)
+    throw new ApiFehler(antwort.message ?? `Anfrage fehlgeschlagen (${antwort.statusCode})`, antwort.statusCode);
   return antwort.data;
 }
 
@@ -47,7 +48,8 @@ export async function ladeVorlagenHoch(formular: FormularCode, datei: File): Pro
   const serverUrl = await getServerUrl();
   const res = await fetch(`${serverUrl}/vorlagen`, { method: 'POST', headers: authHeader(), body: form });
   const body = (await res.json()) as { success: boolean; data?: { id: string }; message?: string };
-  if (!res.ok || !body.success || !body.data) throw new ApiFehler(body.message ?? `Upload fehlgeschlagen (${res.status})`, res.status);
+  if (!res.ok || !body.success || !body.data)
+    throw new ApiFehler(body.message ?? `Upload fehlgeschlagen (${res.status})`, res.status);
   return body.data.id;
 }
 

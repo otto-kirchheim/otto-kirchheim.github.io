@@ -152,7 +152,7 @@ function NebenTab() {
           <div class="col d-grid">
             <button class="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

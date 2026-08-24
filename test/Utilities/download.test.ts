@@ -23,9 +23,14 @@ vi.mock('@/infrastructure/data/tableToArray', () => ({
 }));
 
 // Use vi.hoisted to ensure mock functions are available when mock factories run
-const { mockSetLoading, mockClearLoading, mockButtonDisable, mockDownloadPdf, mockLadeUndErzeugePdf, mockSignaturDialog } = (
-  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
-).hoisted(() => {
+const {
+  mockSetLoading,
+  mockClearLoading,
+  mockButtonDisable,
+  mockDownloadPdf,
+  mockLadeUndErzeugePdf,
+  mockSignaturDialog,
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => {
   return {
     mockSetLoading: vi.fn(),
     mockClearLoading: vi.fn(),
@@ -60,7 +65,10 @@ describe('download utility', () => {
   const mockVorgabenGeld: IVorgabenGeld = VorgabenGeldMock;
   const backendVorgabenU = userProfileToBackend(mockVorgabenU);
   // `Name` gibt es in IPers nicht, download.ts setzt es nur fürs PDF-VorgabenU zusammen.
-  const erwartetePers = { ...backendVorgabenU.Pers, Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}` };
+  const erwartetePers = {
+    ...backendVorgabenU.Pers,
+    Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}`,
+  };
 
   beforeEach(() => {
     // Reset mocks
@@ -86,7 +94,7 @@ describe('download utility', () => {
       filename: 'test_download.pdf',
     });
     // Phase 9 (EA): kein Signatur-Dialog standardmäßig, `build()`-Ergebnis als Dummy-Bytes.
-    mockSignaturDialog.mockResolvedValue(undefined);
+    mockSignaturDialog.mockResolvedValue({ digital: false });
     mockLadeUndErzeugePdf.mockResolvedValue(new Uint8Array([1, 2, 3]));
   });
 
@@ -119,7 +127,9 @@ describe('download utility', () => {
     beforeEach(() => {
       (tableToArray as ReturnType<typeof vi.fn>)
         .mockReturnValueOnce([{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 }])
-        .mockReturnValueOnce([{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 }]);
+        .mockReturnValueOnce([
+          { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 },
+        ]);
     });
 
     it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf, inkl. vorberechneter Dauer', async () => {
@@ -146,30 +156,49 @@ describe('download utility', () => {
             // = 120. PrivatKmBetrag: TB 'Tarifkraft' -> PrivatPKWTarif 0.27 * 12 = 3.24.
             BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 510 }],
             BE: [
-              { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12, Dauer: 120, PrivatKmBetrag: 3.24 },
+              {
+                Tag: '19.04.2026',
+                Auftragsnummer: 'A-1',
+                Beginn: '10:00',
+                Ende: '12:00',
+                LRE: 'LRE2',
+                PrivatKm: 12,
+                Dauer: 120,
+                PrivatKmBetrag: 3.24,
+              },
             ],
           },
           // Bereitschaftszulage: bereitschaftMinuten = 510 - 120 = 390. Tarifkraft (Mock-TB):
           // SummeTarif = round(390/60) = 7, keine Beamter-Felder.
-          Bereitschaftszulage: { BereitschaftsMinuten: 390, SummeTarif: 7 },
+          Bereitschaftszulage: { TarifBeamter: 'Tarifkraft', BereitschaftsMinuten: 390, SummeTarif: 7 },
           Monat: 4,
           Jahr: 2026,
         }),
         undefined,
+        false,
       );
       const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+      expect(saveAs).toHaveBeenCalledWith(
+        expect.any(Blob),
+        `RB ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`,
+      );
       expect(createSnackBar).not.toHaveBeenCalled();
       expect(mockButtonDisable).toHaveBeenCalledWith(false);
       expect(mockClearLoading).toHaveBeenCalledWith(button.id);
     });
 
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
-      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+      mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
       await download(button, 'B');
 
-      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('bereitschaft', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'bereitschaft',
+        '2026-04-01',
+        expect.anything(),
+        'data:image/png;base64,xyz',
+        false,
+      );
     });
 
     it('rechnet PrivatKmBetrag und Bereitschaftszulage mit dem Beamter-Satz, wenn TB nicht Tarifkraft ist', async () => {
@@ -180,7 +209,9 @@ describe('download utility', () => {
       (tableToArray as ReturnType<typeof vi.fn>).mockReset();
       (tableToArray as ReturnType<typeof vi.fn>)
         .mockReturnValueOnce([{ Beginn: '2026-04-19T00:00:00.000Z', Ende: '2026-04-20T02:00:00.000Z', Pause: 0 }])
-        .mockReturnValueOnce([{ Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 }]);
+        .mockReturnValueOnce([
+          { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 },
+        ]);
 
       await download(button, 'B');
 
@@ -196,6 +227,7 @@ describe('download utility', () => {
           // SummeBeamter2 = round(840/8/60) = 2; Satz 'Besoldungsgruppe A 8' = 16,37 (VorgabenGeldMock);
           // SummeBeamter3 = 2 * 16,37 = 32,74.
           Bereitschaftszulage: {
+            TarifBeamter: 'Beamter',
             BereitschaftsMinuten: 1440,
             SummeBeamter1: 840,
             SummeBeamter2: 2,
@@ -204,6 +236,7 @@ describe('download utility', () => {
           },
         }),
         undefined,
+        false,
       );
     });
 
@@ -288,6 +321,7 @@ describe('download utility', () => {
         },
       }),
       undefined,
+      false,
     );
     expect(saveAs).toHaveBeenCalled();
   });
@@ -340,17 +374,27 @@ describe('download utility', () => {
           },
         }),
         undefined,
+        false,
       );
       const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+      expect(saveAs).toHaveBeenCalledWith(
+        expect.any(Blob),
+        `EZ ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`,
+      );
     });
 
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
-      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+      mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
       await download(button, 'N');
 
-      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('ez', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ez',
+        '2026-04-01',
+        expect.anything(),
+        'data:image/png;base64,xyz',
+        false,
+      );
     });
 
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
@@ -395,6 +439,7 @@ describe('download utility', () => {
           Monat: 1,
         }),
         undefined,
+        false,
       );
     });
 
@@ -417,6 +462,7 @@ describe('download utility', () => {
           Monat: 3,
         }),
         undefined,
+        false,
       );
     });
   });
@@ -448,17 +494,27 @@ describe('download utility', () => {
           Daten: { EA: [{ Tag: '19.04.2026', Dauer: '08:15', Taetigkeit: 'Teamleiter', Entgeltgruppe: '104' }] },
         }),
         undefined,
+        false,
       );
       const { Nachname, Vorname, Gewerk, ErsteTkgSt } = mockVorgabenU.Pers;
-      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), `Entgeltausgleich ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`);
+      expect(saveAs).toHaveBeenCalledWith(
+        expect.any(Blob),
+        `Entgeltausgleich ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} 04.2026.pdf`,
+      );
     });
 
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
-      mockSignaturDialog.mockResolvedValueOnce('data:image/png;base64,xyz');
+      mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
       await download(button, 'EA');
 
-      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith('ea', '2026-04-01', expect.anything(), 'data:image/png;base64,xyz');
+      expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
+        'ea',
+        '2026-04-01',
+        expect.anything(),
+        'data:image/png;base64,xyz',
+        false,
+      );
     });
 
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
@@ -475,5 +531,4 @@ describe('download utility', () => {
       );
     });
   });
-
 });

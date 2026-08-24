@@ -137,6 +137,7 @@ const feldSchema = z.object({
   quellen: z.array(z.string()).optional(),
   trenner: z.string().optional(),
   wenn: feldBedingungSchema.optional(),
+  nurBeiSignatur: z.boolean().optional(),
   listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
   drehung: drehungSchema.optional(),
   fett: z.boolean().optional(),

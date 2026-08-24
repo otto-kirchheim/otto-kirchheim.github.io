@@ -141,8 +141,13 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       // Bereitschaftszulage (Nachtrag Phase 11): "Differenz BZ-BE" live aus denselben Zeilen, die
       // auch die gedruckte Dauer-Spalte füllen -- kein Storage-Cache (`datenBerechnung`), keine
       // Staleness möglich, siehe `bereitschaftszulageAbgeleiteteWerte()`-Kommentar.
-      const bereitschaftMinuten = bzMitDauer.reduce((s, r) => s + r.Dauer, 0) - beMitDauer.reduce((s, r) => s + r.Dauer, 0);
-      data.Bereitschaftszulage = bereitschaftszulageAbgeleiteteWerte(bereitschaftMinuten, localVorgabenU.Pers.TB, geldMonatB);
+      const bereitschaftMinuten =
+        bzMitDauer.reduce((s, r) => s + r.Dauer, 0) - beMitDauer.reduce((s, r) => s + r.Dauer, 0);
+      data.Bereitschaftszulage = bereitschaftszulageAbgeleiteteWerte(
+        bereitschaftMinuten,
+        localVorgabenU.Pers.TB,
+        geldMonatB,
+      );
       break;
     }
     case 'E': {
@@ -228,8 +233,8 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
       const formular = FORMULAR_JE_MODUS[modus];
       const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
-      const signaturPng = await signaturDialog();
-      const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signaturPng);
+      const signatur = await signaturDialog();
+      const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signatur.png, signatur.digital);
       blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
     } else {
       ({ blob, filename } = await downloadPdf(modus, data));

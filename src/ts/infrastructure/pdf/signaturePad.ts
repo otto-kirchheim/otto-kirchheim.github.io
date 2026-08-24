@@ -26,3 +26,8 @@ export function erstelleSignaturPad(canvas: HTMLCanvasElement): SignaturePad {
 export function holeSignaturPng(pad: SignaturePad): string | null {
   return pad.isEmpty() ? null : pad.toDataURL('image/png');
 }
+
+/** Lädt eine PNG-Data-URL zurück ins Pad (z.B. eine im localStorage gecachte Unterschrift). */
+export function setzeSignaturPng(pad: SignaturePad, dataUrl: string): Promise<void> {
+  return pad.fromDataURL(dataUrl);
+}

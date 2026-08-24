@@ -1,4 +1,10 @@
-import { alsVergleichswert, loeseListenAuf, maxZeilenFuer, operandenFelder, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
+import {
+  alsVergleichswert,
+  loeseListenAuf,
+  maxZeilenFuer,
+  operandenFelder,
+  tabellenZeilen,
+} from '@otto-kirchheim/nebengeld-shared';
 import type {
   Daten,
   Feld,
@@ -152,7 +158,8 @@ function macheZeile(
         // selbst liegt IMMER im Bereich (einschließlich), `bis` NIE (ausschließlich) -- ohne diesen
         // Umweg blieb das Feld für jede Zeile leer/„0", weil ein rohes `''`/`undefined` nie in
         // einem `bereich` mit `von >= 1` landet und die Vorschau nie den Treffer-Fall zeigte.
-        zeile[spalte.wenn.feld] ??= index % 2 === 0 ? alsVergleichswert(spalte.wenn.bereich.von) : alsVergleichswert(spalte.wenn.bereich.bis);
+        zeile[spalte.wenn.feld] ??=
+          index % 2 === 0 ? alsVergleichswert(spalte.wenn.bereich.von) : alsVergleichswert(spalte.wenn.bereich.bis);
       } else if (index % 2 === 0 && spalte.wenn.feld) {
         // Jede zweite Zeile erfüllt die Bedingung, damit man in der Vorschau beide Fälle sieht.
         zeile[spalte.wenn.feld] ??= spalte.wenn.werte?.[0] ?? '';
@@ -166,7 +173,8 @@ function macheZeile(
       fuelleOperanden(spalte.berechnet, zeile, index);
     } else {
       zeile[spalte.key] =
-        (ausKatalog(art, formular, spalte.key, index, tabelle.quelle) as string | number) ?? platzhalter(spalte, index, spalte.key);
+        (ausKatalog(art, formular, spalte.key, index, tabelle.quelle) as string | number) ??
+        platzhalter(spalte, index, spalte.key);
     }
   }
   // Der Tabellenfilter muss zutreffen, sonst wäre die Tabelle in der Vorschau leer.
@@ -289,9 +297,26 @@ export function erzeugeVorschau(
         seiten: bloecke.length,
         heute,
         listen,
+        // Vorschau zeigt den informativeren Fall: NICHT "Digital", sonst bliebe ein
+        // `nurBeiSignatur`-Feld (Unterschriftsdatum) im Editor immer leer und ließe sich nicht
+        // positionieren/prüfen.
+        digitaleSignatur: false,
       },
     };
   } catch {
-    return { daten, kontext: { $seite: alle, $bisher: {}, $laufend: alle, $alle: alle, seite: 1, seiten: 1, heute, listen } };
+    return {
+      daten,
+      kontext: {
+        $seite: alle,
+        $bisher: {},
+        $laufend: alle,
+        $alle: alle,
+        seite: 1,
+        seiten: 1,
+        heute,
+        listen,
+        digitaleSignatur: false,
+      },
+    };
   }
 }

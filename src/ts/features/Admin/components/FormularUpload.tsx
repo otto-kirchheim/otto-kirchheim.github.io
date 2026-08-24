@@ -18,13 +18,22 @@ import {
 
 const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
 
+const FORMULAR_LABELS: Record<(typeof FORMULAR_CODES)[number], string> = {
+  ez: 'Zulagenzettel (EZ)',
+  ewt: 'Einsatzwechseltätigkeit (EWT)',
+  bereitschaft: 'Bereitschaft (B)',
+  ea: 'Endgeltausgleich (EA)',
+};
+
 /** Intervall-Konflikt: die Kette hat danach eine Lücke oder eine nicht offene letzte Version. */
 const KONFLIKT = 409;
 
 function leereKonfig(formular: FormularCode): Konfig {
   return {
     seiten: [leereSeite()],
-    tabellen: { haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] } },
+    tabellen: {
+      haupt: { quelle: ZEILEN_QUELLEN[formular][0]?.pfad ?? '', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [] },
+    },
   };
 }
 
@@ -66,7 +75,11 @@ export function FormularUpload() {
     try {
       setVersionen(await holeVersionen(code));
     } catch (error) {
-      createSnackBar({ message: `Versionen konnten nicht geladen werden: ${fehlerText(error)}`, status: 'error', timeout: 4000 });
+      createSnackBar({
+        message: `Versionen konnten nicht geladen werden: ${fehlerText(error)}`,
+        status: 'error',
+        timeout: 4000,
+      });
       setVersionen([]);
     } finally {
       setLaedtListe(false);
@@ -108,7 +121,12 @@ export function FormularUpload() {
       setVorlageId(eintrag.vorlageId);
       setBearbeiteId(eintrag.id);
     } catch (error) {
-      createSnackBar({ message: `Version konnte nicht geladen werden: ${fehlerText(error)}`, status: 'error', timeout: 4000, fixed: true });
+      createSnackBar({
+        message: `Version konnte nicht geladen werden: ${fehlerText(error)}`,
+        status: 'error',
+        timeout: 4000,
+        fixed: true,
+      });
     } finally {
       setSpeichert(false);
     }
@@ -230,7 +248,7 @@ export function FormularUpload() {
           >
             {FORMULAR_CODES.map(code => (
               <option key={code} value={code}>
-                {code}
+                {FORMULAR_LABELS[code]}
               </option>
             ))}
           </select>
@@ -313,53 +331,53 @@ export function FormularUpload() {
           <p class="mb-1">
             Welche Seiten im Ergebnis landen, entscheiden die Daten: Seite 1 kommt immer, jede weitere nur, wenn ihre
             Tabellen Zeilen haben (oder sie gar keine Tabelle trägt). Eine Seite mit{' '}
-            <em>„Diese Seite bei Überlauf wiederholen"</em> wird so oft gedruckt, wie noch Zeilen übrig sind — bei EA ist
-            das die einzige Seite, bei Bereitschaft die letzte (Seiten 1, 2 und 3 sehen unterschiedlich aus, ab 3 wird
-            wiederholt). Ohne eine solche Seite bricht die Erzeugung ab, sobald Zeilen übrig bleiben.
+            <em>„Diese Seite bei Überlauf wiederholen"</em> wird so oft gedruckt, wie noch Zeilen übrig sind — bei EA
+            ist das die einzige Seite, bei Bereitschaft die letzte (Seiten 1, 2 und 3 sehen unterschiedlich aus, ab 3
+            wird wiederholt). Ohne eine solche Seite bricht die Erzeugung ab, sobald Zeilen übrig bleiben.
             <em>Einstellungen übernehmen von</em> kopiert eine bestehende Seite (Felder, Tabellenbereiche, Signatur) auf
             die aktuelle — die Vorlagenseite bleibt dabei, wie sie ist.
           </p>
           <p class="mb-1">
-            Eintrag in der Liste rechts <em>scharf schalten</em>, dann links auf dem
-            PDF ein <strong>Rechteck über die Zelle ziehen</strong> (Maustaste gedrückt halten — die Lupe zeigt den
-            vergrößerten Ausschnitt). Der Text wird laut Ausrichtung in dieser Zelle platziert, bei „zentriert" mittig
-            zwischen den beiden Kanten.
+            Eintrag in der Liste rechts <em>scharf schalten</em>, dann links auf dem PDF ein{' '}
+            <strong>Rechteck über die Zelle ziehen</strong> (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten
+            Ausschnitt). Der Text wird laut Ausrichtung in dieser Zelle platziert, bei „zentriert" mittig zwischen den
+            beiden Kanten.
           </p>
           <ul class="mb-2">
             <li>
-              <strong>Felder</strong> — alles außerhalb der Datentabelle: Kopfangaben, Summen, Übertrag, Seitenzahl.
-              Es gibt bewusst nur einen Bereich, denn die Position bestimmt allein die gezogene Zelle. Je Feld wählbar:
-              <em>Datenfeld</em> (aus der Liste der wirklich gelieferten Werte), <em>Mehrere</em> (zusammengesetzt,
-              z.B. „Nachname, Vorname" oder Adresszeilen — Trennzeichen frei wählbar, leere Teile fallen weg),
+              <strong>Felder</strong> — alles außerhalb der Datentabelle: Kopfangaben, Summen, Übertrag, Seitenzahl. Es
+              gibt bewusst nur einen Bereich, denn die Position bestimmt allein die gezogene Zelle. Je Feld wählbar:
+              <em>Datenfeld</em> (aus der Liste der wirklich gelieferten Werte), <em>Mehrere</em> (zusammengesetzt, z.B.
+              „Nachname, Vorname" oder Adresszeilen — Trennzeichen frei wählbar, leere Teile fallen weg),
               <em>Summe</em> oder <em>fester Text</em>.
             </li>
             <li>
               <strong>Summen</strong> — Summe/Anzahl/Maximum, wahlweise über <em>alle Zeilen</em> (Gesamtsumme),
-              <em>nur diese Seite</em> (Zwischensumme) oder <em>alle Vorseiten</em> (Übertrag). Das ersetzt die
-              frühere Trennung in Kopf-, Seitenfuß- und Fußbereich.
+              <em>nur diese Seite</em> (Zwischensumme) oder <em>alle Vorseiten</em> (Übertrag). Das ersetzt die frühere
+              Trennung in Kopf-, Seitenfuß- und Fußbereich.
             </li>
             <li>
               <strong>Fester Text</strong> — Platzhalter in geschweiften Klammern werden ersetzt:{' '}
               <code>{'{seite}'}</code>/<code>{'{seiten}'}</code> für die Seitenzahl, <code>{'{heute}'}</code> für den
-              Tag der Erzeugung, jeder andere Name als Datenpfad (z.B. <code>{'Zulagen {Monat}/{Jahr}'}</code>). So
-              wird auch die Seitenzahl gesetzt — sie ist nicht fest eingebaut; ohne solches Feld erscheint keine.
-              Die beiden Seitenzahlen vertragen einen ganzzahligen Versatz, für Verweise auf die Nachbarseite:{' '}
+              Tag der Erzeugung, jeder andere Name als Datenpfad (z.B. <code>{'Zulagen {Monat}/{Jahr}'}</code>). So wird
+              auch die Seitenzahl gesetzt — sie ist nicht fest eingebaut; ohne solches Feld erscheint keine. Die beiden
+              Seitenzahlen vertragen einen ganzzahligen Versatz, für Verweise auf die Nachbarseite:{' '}
               <code>{'Übertrag von Seite {seite-1}'}</code> oder <code>{'weiter auf Seite {seite+1}'}</code>.
             </li>
             <li>
-              <strong>Datum neben der Unterschrift</strong> — Summenart <em>Letztes Datum</em> über ein Datumsfeld
-              der Tabelle, dazu eine Frist in Tagen: liegt der jüngste Eintrag noch innerhalb der Frist, wird sein
-              Datum gesetzt, sonst das heutige. Ohne Frist immer der letzte Eintrag; für ein reines Tagesdatum
-              genügt <code>{'{heute}'}</code> im festen Text.
+              <strong>Datum neben der Unterschrift</strong> — Summenart <em>Letztes Datum</em> über ein Datumsfeld der
+              Tabelle, dazu eine Frist in Tagen: liegt der jüngste Eintrag noch innerhalb der Frist, wird sein Datum
+              gesetzt, sonst das heutige. Ohne Frist immer der letzte Eintrag; für ein reines Tagesdatum genügt{' '}
+              <code>{'{heute}'}</code> im festen Text.
             </li>
             <li>
-              <strong>Zeilenraster</strong> — waagerechtes Band über die erste Datenzeile ziehen: setzt
-              Startposition und Zeilenhöhe in einem Schritt. „Zeilen auf dieser Seite" als Zahl eingeben. Eine
-              Übertragszeile belegt optisch einen Slot, diese Zahl also entsprechend kleiner setzen. Am linken
-              Seitenrand zeigt ein Indikator ohne Beschriftung, wie weit die Tabelle damit reicht — ein Strich je
-              Zeile, eine eigene Spur je Tabelle. Laufen die Striche nach unten aus den Zeilen heraus, ist die Höhe
-              minimal daneben: dann zusätzlich <em>letzte Datenzeile</em> markieren, die Höhe wird daraus über alle
-              Zeilen gemittelt statt aus einer einzelnen Messung.
+              <strong>Zeilenraster</strong> — waagerechtes Band über die erste Datenzeile ziehen: setzt Startposition
+              und Zeilenhöhe in einem Schritt. „Zeilen auf dieser Seite" als Zahl eingeben. Eine Übertragszeile belegt
+              optisch einen Slot, diese Zahl also entsprechend kleiner setzen. Am linken Seitenrand zeigt ein Indikator
+              ohne Beschriftung, wie weit die Tabelle damit reicht — ein Strich je Zeile, eine eigene Spur je Tabelle.
+              Laufen die Striche nach unten aus den Zeilen heraus, ist die Höhe minimal daneben: dann zusätzlich{' '}
+              <em>letzte Datenzeile</em> markieren, die Höhe wird daraus über alle Zeilen gemittelt statt aus einer
+              einzelnen Messung.
             </li>
             <li>
               <strong>Spalten</strong> — Rechteck über die Spalte ziehen, davon werden nur die linke/rechte Kante
@@ -370,13 +388,13 @@ export function FormularUpload() {
               Tabelle selbst — nur so lässt sich über sie summieren.
             </li>
             <li>
-              <strong>Dynamische Spalten (nur EZ)</strong> — die Zulagen einer Zeile sind eine Liste, im Formular
-              stehen dafür feste Spaltenplätze, und welcher Code über welcher Spalte steht, hängt vom Monat ab.
-              Unter der Tabelle legt „+ Erschwerniszulagen" (bzw. Leistungsprämie / Ganzkörperreinigung) die Gruppe
-              samt der passenden Zahl von Spaltenplätzen an; jeden Platz danach wie eine normale Spalte auf dem PDF
-              markieren. Die zugehörige <em>Überschrift</em> ist ein eigenes Feld (Modus „Überschrift"): es zeigt den
-              Code, der auf diesem Platz gelandet ist — wahlweise als Kurztext. Plätze, für die es im Monat keine
-              Zulage gab, bleiben samt Überschrift leer.
+              <strong>Dynamische Spalten (nur EZ)</strong> — die Zulagen einer Zeile sind eine Liste, im Formular stehen
+              dafür feste Spaltenplätze, und welcher Code über welcher Spalte steht, hängt vom Monat ab. Unter der
+              Tabelle legt „+ Erschwerniszulagen" (bzw. Leistungsprämie / Ganzkörperreinigung) die Gruppe samt der
+              passenden Zahl von Spaltenplätzen an; jeden Platz danach wie eine normale Spalte auf dem PDF markieren.
+              Die zugehörige <em>Überschrift</em> ist ein eigenes Feld (Modus „Überschrift"): es zeigt den Code, der auf
+              diesem Platz gelandet ist — wahlweise als Kurztext. Plätze, für die es im Monat keine Zulage gab, bleiben
+              samt Überschrift leer.
             </li>
             <li>
               <strong>Gedrehter Text</strong> — je Zelle einstellbar: 90° liest von unten nach oben (die schmalen
@@ -388,19 +406,18 @@ export function FormularUpload() {
               Testdaten-Vorschau setzt dort einen Beispiel-Schriftzug ein, damit Größe und Lage prüfbar sind.
               <br />
               <strong>Nicht dasselbe wie eine zertifikatsbasierte Signatur:</strong> für die zwei prüfenden Personen
-              wird bewusst <em>kein</em> Signaturfeld ins PDF gelegt. Sie signieren das fertige PDF im kostenlosen
-              Adobe Reader über <em>Werkzeuge → Zertifikate → Digital signieren</em> und ziehen die Box dort selbst
-              auf. Hier ist dafür nichts zu hinterlegen — es genügt, im Formular Platz für die Unterschriften
-              freizulassen.
+              wird bewusst <em>kein</em> Signaturfeld ins PDF gelegt. Sie signieren das fertige PDF im kostenlosen Adobe
+              Reader über <em>Werkzeuge → Zertifikate → Digital signieren</em> und ziehen die Box dort selbst auf. Hier
+              ist dafür nichts zu hinterlegen — es genügt, im Formular Platz für die Unterschriften freizulassen.
             </li>
           </ul>
           <p class="mb-1">
             Schriftgröße, Ausrichtung und Format gelten je Zelle; <em>Schrift automatisch verkleinern</em> passt zu
-            lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Senkrecht wird der Text
-            immer in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde — ein Feld ohne Ober-/Unterkante
-            sitzt dagegen mit seiner Grundlinie auf dem gesetzten y-Wert. Die Koordinaten-Anzeige rechts im Kopf
-            jedes Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen (z.B. gleiche Höhe
-            wie das Feld daneben).
+            lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Senkrecht wird der Text immer
+            in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde — ein Feld ohne Ober-/Unterkante sitzt
+            dagegen mit seiner Grundlinie auf dem gesetzten y-Wert. Die Koordinaten-Anzeige rechts im Kopf jedes
+            Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen (z.B. gleiche Höhe wie das
+            Feld daneben).
           </p>
           <p class="mb-0">
             Zwei Vorschauen erzeugen jeweils ein echtes PDF: <em>Beispieldaten</em> füllt fachlich passende Werte ein
@@ -423,7 +440,12 @@ export function FormularUpload() {
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </button>
         {bearbeiteId && (
-          <button type="button" class="btn btn-outline-secondary" disabled={speichert} onClick={() => setzeFormularZurueck(formular)}>
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            disabled={speichert}
+            onClick={() => setzeFormularZurueck(formular)}
+          >
             Bearbeiten abbrechen
           </button>
         )}

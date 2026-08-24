@@ -16,6 +16,7 @@ const kontext: Kontext = {
   seiten: 3,
   heute: HEUTE,
   listen: {},
+  digitaleSignatur: false,
 };
 
 describe('wert', () => {
@@ -148,7 +149,13 @@ describe('wert', () => {
       return { ...kontext, $alle: { haupt: zeilen } };
     }
 
-    const feld: Feld = { x: 0, y: 0, size: 10, format: 'datum', berechnet: { op: 'letztesDatum', ueber: '$alle', feld: 'Tag', maxTage: 14 } };
+    const feld: Feld = {
+      x: 0,
+      y: 0,
+      size: 10,
+      format: 'datum',
+      berechnet: { op: 'letztesDatum', ueber: '$alle', feld: 'Tag', maxTage: 14 },
+    };
 
     it('nimmt den jüngsten Eintrag, wenn er innerhalb der Frist liegt', () => {
       // Reihenfolge bewusst unsortiert -- es zählt der jüngste Wert, nicht der letzte der Liste.
@@ -176,10 +183,36 @@ describe('wert', () => {
       const textFeld: Feld = { x: 0, y: 0, size: 10, text: 'Musterstadt, den {heute}' };
       expect(wert(textFeld, 'egal', {}, kontext)).toBe('Musterstadt, den 16.08.2026');
     });
+
+    describe('nurBeiSignatur (Unterschriftsdatum nur ohne explizite "Digital"-Wahl)', () => {
+      const nurBeiUnterschrift: Feld = { ...feld, nurBeiSignatur: true };
+
+      it('bleibt leer bei explizit gewählter digitaler Signatur', () => {
+        expect(wert(nurBeiUnterschrift, 'egal', {}, { ...kontext, digitaleSignatur: true })).toBe('');
+      });
+
+      it('zeigt den Wert normal, wenn eine Unterschrift gezeichnet wurde', () => {
+        expect(wert(nurBeiUnterschrift, 'egal', {}, { ...kontext, digitaleSignatur: false })).toBe('16.08.2026');
+      });
+
+      it('zeigt den Wert auch OHNE Unterschrift normal (z.B. für eine Unterschrift auf Papier) -- nur "Digital" unterdrückt', () => {
+        expect(wert(nurBeiUnterschrift, 'egal', {}, { ...kontext, digitaleSignatur: false })).toBe('16.08.2026');
+      });
+
+      it('ohne nurBeiSignatur bleibt das Feld von digitaleSignatur unberührt', () => {
+        expect(wert(feld, 'egal', {}, { ...kontext, digitaleSignatur: true })).toBe('16.08.2026');
+      });
+    });
   });
 
   it('summiert über $alle (Gesamtsumme des Dokuments, unabhängig von der Seite)', () => {
-    const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
+    const f: Feld = {
+      x: 0,
+      y: 0,
+      size: 10,
+      format: 'waehrung',
+      berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
+    };
     expect(wert(f, 'gesamt', {}, kontext)).toBe('165,00 €');
   });
 
@@ -230,7 +263,11 @@ describe('wert', () => {
         y: 0,
         size: 10,
         format: 'waehrung',
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'summeGeld' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'summeGeld' },
+        },
       };
       // 45 Minuten -> auf 1 Stunde gerundet, mal Satz B (2) = 2,00 €.
       expect(wert(f, 'egal', daten, listenKontext)).toBe('2,00 €');
@@ -241,7 +278,11 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'bereinigt' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'bereinigt' },
+        },
       };
       // 45 Minuten -> auf 1 Stunde gerundet.
       expect(wert(f, 'egal', daten, listenKontext)).toBe('1');
@@ -272,7 +313,12 @@ describe('wert', () => {
     // Zwei Codes derselben Gruppe (811 = Minuten/paymentHint B, 040 = Fahrentschädigung/Stück) --
     // jeder Eintrag wird mit seinem EIGENEN Code umgerechnet, nicht mit dem eines Platzes.
     const zeilen: Zeile[] = [
-      { Zulagen: [{ Typ: '811', Wert: 60 }, { Typ: '040', Wert: 3 }] },
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 60 },
+          { Typ: '040', Wert: 3 },
+        ],
+      },
       { Zulagen: [{ Typ: '811', Wert: 120 }] },
     ];
     const erschwernisGruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
@@ -289,7 +335,11 @@ describe('wert', () => {
         y: 0,
         size: 10,
         format: 'waehrung',
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' },
+        },
       };
       // 811: (Std(60)=1 + Std(120)=2) * 2 = 6,00 -- 040: 3 * 6,65 = 19,95 -- zusammen 25,95.
       expect(wert(f, 'egal', daten, listenKontext)).toBe('25,95 €');
@@ -300,7 +350,11 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'bereinigt' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'bereinigt' },
+        },
       };
       // 811: Std(60)=1 + Std(120)=2 = 3 -- 040 (Fahrentschädigung, Stück) trägt 0 bei.
       expect(wert(f, 'egal', daten, listenKontext)).toBe('3');
@@ -322,7 +376,11 @@ describe('wert', () => {
         x: 0,
         y: 0,
         size: 10,
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'gibtsNicht', gruppe: 'erschwernis', art: 'summeGeld' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'gibtsNicht', gruppe: 'erschwernis', art: 'summeGeld' },
+        },
       };
       expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
     });
@@ -348,7 +406,12 @@ describe('wert', () => {
     // Platz 0 -> Code 811 (Minuten, paymentHint B), Platz 1 -> Code 040 (Fahrentschädigung, Stück).
     const zeilen: Zeile[] = [
       { Zulagen: [{ Typ: '811', Wert: 60 }] },
-      { Zulagen: [{ Typ: '811', Wert: 30 }, { Typ: '040', Wert: 2 }] },
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 30 },
+          { Typ: '040', Wert: 2 },
+        ],
+      },
     ];
     const erschwernisGruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
     const listenKontext: Kontext = {
@@ -356,7 +419,13 @@ describe('wert', () => {
       listen: { haupt: { gruppen: { erschwernis: erschwernisGruppe }, belegung: { erschwernis: ['811', '040'] } } },
     };
     const daten = { VorgabenGeld: { B: 2, Fahrentsch: 6.65 } };
-    const spaltePlatz0: Spalte = { key: 'ez1', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 0 }, label: 'Erschwernis 1' };
+    const spaltePlatz0: Spalte = {
+      key: 'ez1',
+      x: 0,
+      size: 8,
+      listenPlatz: { gruppe: 'erschwernis', index: 0 },
+      label: 'Erschwernis 1',
+    };
     const spaltePlatz1: Spalte = { key: 'ez2', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 1 } };
     const spaltePlain: Spalte = { key: 'Datum', x: 0, size: 8, label: 'Datum' };
 
@@ -433,7 +502,9 @@ describe('wert', () => {
   });
 
   describe('zusammengesetzte Felder (quellen + trenner)', () => {
-    const daten = { p: { Nachname: 'Mustermann', Vorname: 'Max', Adress1: 'Bahnweg 1', Adress2: '', Ort: '12345 Berlin' } };
+    const daten = {
+      p: { Nachname: 'Mustermann', Vorname: 'Max', Adress1: 'Bahnweg 1', Adress2: '', Ort: '12345 Berlin' },
+    };
 
     it('verbindet mehrere Datenpfade mit dem konfigurierten Trenner', () => {
       const f: Feld = { x: 0, y: 0, size: 10, quellen: ['p.Nachname', 'p.Vorname'], trenner: ', ' };
@@ -487,7 +558,16 @@ describe('wert', () => {
     });
 
     it('berechnet prüft eine Aggregation über Zeilen statt eines Datenpfads', () => {
-      const f: Feld = { x: 0, y: 0, size: 10, wenn: { berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' }, bereich: { von: 1, bis: 1000 }, dann: 'Nachzahlung' } };
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        wenn: {
+          berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' },
+          bereich: { von: 1, bis: 1000 },
+          dann: 'Nachzahlung',
+        },
+      };
       expect(wert(f, 'egal', {}, kontext)).toBe('Nachzahlung');
     });
   });
@@ -512,7 +592,13 @@ describe('wert', () => {
       $laufend: { haupt: [...bisherZeilen, ...seiteZeilen] },
       $alle: { haupt: [...bisherZeilen, ...seiteZeilen, ...spaeter] },
     };
-    const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$laufend', feld: 'betrag' } };
+    const f: Feld = {
+      x: 0,
+      y: 0,
+      size: 10,
+      format: 'waehrung',
+      berechnet: { op: 'summe', ueber: '$laufend', feld: 'betrag' },
+    };
     const gesamt: Feld = { ...f, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
 
     // Vorseiten 150,00 plus diese Seite 15,00 = 165,00; die Gesamtsumme liegt bei 1.165,00.
@@ -532,7 +618,17 @@ describe('wert', () => {
   });
 
   it('$bisher ist leer auf der ersten Seite -- Übertrag ist 0', () => {
-    const leererKontext: Kontext = { $seite: { haupt: seiteZeilen }, $bisher: {}, $laufend: { haupt: seiteZeilen }, $alle: { haupt: seiteZeilen }, seite: 1, seiten: 1, heute: HEUTE, listen: {} };
+    const leererKontext: Kontext = {
+      $seite: { haupt: seiteZeilen },
+      $bisher: {},
+      $laufend: { haupt: seiteZeilen },
+      $alle: { haupt: seiteZeilen },
+      seite: 1,
+      seiten: 1,
+      heute: HEUTE,
+      listen: {},
+      digitaleSignatur: false,
+    };
     const f: Feld = {
       x: 0,
       y: 0,
@@ -567,7 +663,12 @@ describe('wert', () => {
       ...kontext,
       $alle: { a: [{ betrag: 1 }, { betrag: 2 }], b: [{ betrag: 10 }], c: [{ betrag: 100 }] },
     };
-    const summeFeld = (tabellen?: string[]): Feld => ({ x: 0, y: 0, size: 10, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag', tabellen } });
+    const summeFeld = (tabellen?: string[]): Feld => ({
+      x: 0,
+      y: 0,
+      size: 10,
+      berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag', tabellen },
+    });
 
     it('ohne tabellen laufen die Zeilen aller Tabellen zusammen', () => {
       expect(wert(summeFeld(undefined), 'x', {}, mehrTabellenKontext)).toBe('113');
@@ -606,7 +707,10 @@ describe('wert', () => {
       const mitText: Kontext = {
         ...kontext,
         listen: {
-          haupt: { gruppen: { ez: { ...gruppe, beschriftungen: { '811': 'Erschütterung' } } }, belegung: { ez: ['811'] } },
+          haupt: {
+            gruppen: { ez: { ...gruppe, beschriftungen: { '811': 'Erschütterung' } } },
+            belegung: { ez: ['811'] },
+          },
         },
       };
       const f: Feld = { x: 0, y: 0, size: 8, listenKopf: { tabelle: 'haupt', gruppe: 'ez', index: 0 } };

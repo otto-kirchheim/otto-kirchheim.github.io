@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'bun:test';
-import { skaliereFuerDisplay } from '@/infrastructure/pdf/signaturePad';
+import { describe, expect, it, vi } from 'bun:test';
+import { setzeSignaturPng, skaliereFuerDisplay } from '@/infrastructure/pdf/signaturePad';
+import type SignaturePad from 'signature_pad';
 
 describe('skaliereFuerDisplay', () => {
   it('skaliert Anzeigegröße mit dem devicePixelRatio hoch', () => {
@@ -13,5 +14,16 @@ describe('skaliereFuerDisplay', () => {
   it('nutzt mindestens Faktor 1, auch bei ratio < 1 oder 0', () => {
     expect(skaliereFuerDisplay({ breite: 300, hoehe: 100 }, 0.5)).toEqual({ breite: 300, hoehe: 100 });
     expect(skaliereFuerDisplay({ breite: 300, hoehe: 100 }, 0)).toEqual({ breite: 300, hoehe: 100 });
+  });
+});
+
+describe('setzeSignaturPng', () => {
+  it('reicht die Data-URL an pad.fromDataURL() durch', async () => {
+    const fromDataURL = vi.fn().mockResolvedValue(undefined);
+    const pad = { fromDataURL } as unknown as SignaturePad;
+
+    await setzeSignaturPng(pad, 'data:image/png;base64,abc');
+
+    expect(fromDataURL).toHaveBeenCalledWith('data:image/png;base64,abc');
   });
 });

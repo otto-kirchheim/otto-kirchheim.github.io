@@ -15,7 +15,18 @@ import {
   summeUeberListe,
   trifftBedingung,
 } from '@otto-kirchheim/nebengeld-shared';
-import type { Berechnet, Daten, Feld, FeldBedingung, FormatName, IVorgabeValue, ListenAufloesung, Spalte, SonderZeileZelle, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  Berechnet,
+  Daten,
+  Feld,
+  FeldBedingung,
+  FormatName,
+  IVorgabeValue,
+  ListenAufloesung,
+  Spalte,
+  SonderZeileZelle,
+  Zeile,
+} from '@otto-kirchheim/nebengeld-shared';
 
 /** Zeilen je Tabellen-Key -- eine Version kann mehrere Datentabellen tragen. */
 export type TabellenZeilen = Record<string, Zeile[]>;
@@ -37,6 +48,14 @@ export interface Kontext {
   /** Erzeugungszeitpunkt -- als Wert im Kontext statt `new Date()` im Renderer, damit das
    * Unterschriftsdatum und der Platzhalter `{heute}` testbar bleiben. */
   heute: Date;
+  /**
+   * true NUR bei explizit gewählter "Digital"-Signatur (siehe `SignaturErgebnis.digital` in
+   * `signaturDialog.ts`) -- steuert `Feld.nurBeiSignatur`. Weder eine gezeichnete Unterschrift NOCH
+   * "Ohne Unterschrift" (z.B. für eine spätere Unterschrift auf Papier) setzen dieses Flag: nur bei
+   * "Digital" ist das Unterschriftsdatum falsch, weil die echte Signatur erst später zu einem
+   * unbekannten Zeitpunkt passiert.
+   */
+  digitaleSignatur: boolean;
 }
 
 /** Ohne `tabellen` (oder leeres Array) laufen die Zeilen ALLER Tabellen zusammen in die Rechnung;
@@ -141,7 +160,15 @@ function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unkn
       // Feld.listenKopf) -- ein fest im Berechnet.liste eingetragener Code würde an der
       // Überschrift vorbeirechnen, sobald sich die monatliche Platzbelegung verschiebt.
       const code = schluesselAufPlatz(aufloesung, b.liste.gruppe, b.liste.index);
-      const wert = gruppe && code !== undefined ? summeUeberListe(rows ?? [], { quelle: gruppe.quelle, schluessel: gruppe.schluessel, wert: gruppe.wert, code }) : 0;
+      const wert =
+        gruppe && code !== undefined
+          ? summeUeberListe(rows ?? [], {
+              quelle: gruppe.quelle,
+              schluessel: gruppe.schluessel,
+              wert: gruppe.wert,
+              code,
+            })
+          : 0;
       if (code === undefined) roh = wert;
       else if (art === 'summeGeld') roh = geldwertZulagenCode(code, wert, geldMonat);
       else if (art === 'bereinigt') roh = bereinigteZulagenStunden(code, wert) ?? 0;
@@ -172,7 +199,14 @@ export function zeilenFuerUeber(ueber: string, tabelle: string, kontext: Kontext
  * x-Position kommt beim Zeichnen von der Spalte selbst (siehe `build.ts`), hier nur der Zellinhalt.
  * `rows` kommt einmal pro Sonderzeile über `zeilenFuerUeber()`, nicht neu pro Zelle.
  */
-export function sonderZeileZelleWert(zelle: SonderZeileZelle, spalte: Spalte, tabelleName: string, rows: Zeile[], daten: Daten, kontext: Kontext): string {
+export function sonderZeileZelleWert(
+  zelle: SonderZeileZelle,
+  spalte: Spalte,
+  tabelleName: string,
+  rows: Zeile[],
+  daten: Daten,
+  kontext: Kontext,
+): string {
   const format = zelle.format ?? spalte.format;
   const formatiere = (roh: unknown): string => (format ? FORMAT[format](roh) : standardText(roh));
 
@@ -201,7 +235,12 @@ export function sonderZeileZelleWert(zelle: SonderZeileZelle, spalte: Spalte, ta
   // Unbelegter Platz (dieser Monat kommt der Code nicht vor): 0 statt einer leeren Zelle -- eine
   // Summenzeile soll immer eine Zahl zeigen, nicht wie eine kaputte Konfiguration aussehen.
   if (!gruppe || code === undefined) return formatiere(0);
-  const summe = summeUeberListe(rows, { quelle: gruppe.quelle, schluessel: gruppe.schluessel, wert: gruppe.wert, code });
+  const summe = summeUeberListe(rows, {
+    quelle: gruppe.quelle,
+    schluessel: gruppe.schluessel,
+    wert: gruppe.wert,
+    code,
+  });
 
   if (zelle.art === 'summe') return formatiere(summe);
   if (zelle.art === 'bereinigt') {
@@ -229,6 +268,8 @@ function trifftFeldBedingung(w: FeldBedingung, daten: Daten, kontext: Kontext): 
 
 /** Löst ein Feld gegen die Nutzdaten (Direktwert, Bedingung, Text oder Aggregation) auf. */
 export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): string {
+  if (f.nurBeiSignatur && kontext.digitaleSignatur) return '';
+
   let roh: unknown;
 
   if (f.listenKopf) {

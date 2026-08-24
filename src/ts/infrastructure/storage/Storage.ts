@@ -41,6 +41,7 @@ enum StorageData {
   OnboardingPersSnapshot = 'Onboarding Pers-Snapshot',
   formularVersionCache = 'Formular-Version-Cache',
   vorlagenPdfCache = 'Vorlagen-PDF-Cache',
+  signaturCache = 'Unterschrift-Cache',
 }
 
 export type TStorageData = keyof typeof StorageData;

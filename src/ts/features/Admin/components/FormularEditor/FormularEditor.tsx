@@ -64,7 +64,9 @@ function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Ar
         startY: startYFuer(bereich, tabelle),
         hoehe: hoeheFuer(bereich, tabelle),
         zeilen: maxZeilenFuer(bereich, tabelle),
-        aktiv: Boolean((armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') && armed.tabelle === bereich.tabelle),
+        aktiv: Boolean(
+          (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') && armed.tabelle === bereich.tabelle,
+        ),
       },
     ];
   });
@@ -130,7 +132,14 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
 
   if (seite.signaturBild) {
     const s = seite.signaturBild;
-    rechtecke.push({ x: s.x, y: s.y, x2: s.x + s.w, y2: s.y + s.h, label: 'Signatur', aktiv: Boolean(armed?.bereich === 'signaturBild') });
+    rechtecke.push({
+      x: s.x,
+      y: s.y,
+      x2: s.x + s.w,
+      y2: s.y + s.h,
+      label: 'Signatur',
+      aktiv: Boolean(armed?.bereich === 'signaturBild'),
+    });
   }
 
   return rechtecke;
@@ -170,7 +179,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     if (armed.bereich === 'feld') {
       const feld = aktiveSeite.felder[armed.key];
       if (!feld) return;
-      setzeAktiveSeite({ ...aktiveSeite, felder: { ...aktiveSeite.felder, [armed.key]: { ...feld, x: r.x, y: r.y, x2: r.x2, y2: r.y2 } } });
+      setzeAktiveSeite({
+        ...aktiveSeite,
+        felder: { ...aktiveSeite.felder, [armed.key]: { ...feld, x: r.x, y: r.y, x2: r.x2, y2: r.y2 } },
+      });
     } else if (armed.bereich === 'spalte') {
       // Spalten liegen im Zeilenraster ihrer Tabelle -- nur die x-Kanten stammen aus der Markierung.
       const tabelle = value.tabellen[armed.tabelle];
@@ -182,10 +194,15 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       if (bereich?.spalten) {
         setzeAktiveSeite({
           ...aktiveSeite,
-          bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b)),
+          bereiche: aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b,
+          ),
         });
       } else {
-        onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } } });
+        onChange({
+          ...value,
+          tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } },
+        });
       }
     } else if (armed.bereich === 'letzteZeile') {
       // Zeilenhöhe über ALLE Zeilen gemittelt statt aus einer einzelnen Messung: eine Ungenauigkeit
@@ -211,7 +228,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       } else {
         onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
       }
-      createSnackBar({ message: `Zeilenhöhe: ${gemessen} pt (aus ${effMaxZeilen} Zeilen)`, status: 'success', timeout: 3000 });
+      createSnackBar({
+        message: `Zeilenhöhe: ${gemessen} pt (aus ${effMaxZeilen} Zeilen)`,
+        status: 'success',
+        timeout: 3000,
+      });
     } else if (armed.bereich === 'sonderzeile') {
       const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
       if (!bereich) return;
@@ -231,11 +252,15 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       const eigenePlatzierung = bestehenderBereich?.startY !== undefined;
       const gemessen = Math.max(r.y2 - r.y, 1);
       const bereiche = bestehenderBereich
-        ? aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle && eigenePlatzierung ? { ...b, startY: r.y, hoehe: gemessen } : b))
+        ? aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle && eigenePlatzierung ? { ...b, startY: r.y, hoehe: gemessen } : b,
+          )
         : [...aktiveSeite.bereiche, { tabelle: armed.tabelle }];
       onChange({
         ...value,
-        tabellen: eigenePlatzierung ? value.tabellen : { ...value.tabellen, [armed.tabelle]: { ...tabelle, startY: r.y, hoehe: gemessen } },
+        tabellen: eigenePlatzierung
+          ? value.tabellen
+          : { ...value.tabellen, [armed.tabelle]: { ...tabelle, startY: r.y, hoehe: gemessen } },
         seiten: value.seiten.map((s, i) => (i === seitenIndex ? { ...aktiveSeite, bereiche } : s)),
       });
     } else {
@@ -281,7 +306,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         <ul class="nav nav-pills flex-grow-1 flex-wrap">
           {value.seiten.map((s, i) => (
             <li class="nav-item" key={i}>
-              <button type="button" class={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`} onClick={() => setTab(i)}>
+              <button
+                type="button"
+                class={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`}
+                onClick={() => setTab(i)}
+              >
                 Seite {i + 1}
                 {s.wiederholt ? ' ↻' : ''}
               </button>
@@ -334,9 +363,15 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               type="checkbox"
               id="seite-wiederholt"
               checked={Boolean(aktiveSeite.wiederholt)}
-              onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: (e.target as HTMLInputElement).checked || undefined })}
+              onChange={e =>
+                setzeAktiveSeite({ ...aktiveSeite, wiederholt: (e.target as HTMLInputElement).checked || undefined })
+              }
             />
-            <label class="form-check-label" for="seite-wiederholt" title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind">
+            <label
+              class="form-check-label"
+              for="seite-wiederholt"
+              title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
+            >
               Diese Seite bei Überlauf wiederholen
             </label>
           </div>
@@ -466,10 +501,19 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
         <button type="button" class="btn btn-sm btn-primary" disabled={entwurf === null} onClick={uebernehmen}>
           Übernehmen
         </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary" disabled={entwurf === null} onClick={() => (setEntwurf(null), setFehler(null))}>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          disabled={entwurf === null}
+          onClick={() => (setEntwurf(null), setFehler(null))}
+        >
           Verwerfen
         </button>
-        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onClick={() => void navigator.clipboard?.writeText(angezeigt)}>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary ms-auto"
+          onClick={() => void navigator.clipboard?.writeText(angezeigt)}
+        >
           In Zwischenablage
         </button>
       </div>

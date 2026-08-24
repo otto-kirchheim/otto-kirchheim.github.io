@@ -97,7 +97,12 @@ describe('zellGeometrie (Zeichen-Geometrie einer Sonderzeilen-Zelle)', () => {
   });
 
   it('Zellen-Angaben überschreiben size/align/autoGroesse der Spalte', () => {
-    const geo = zellGeometrie(spalte, { spaltenIndex: 0, art: 'summe', size: 14, align: 'zentriert', autoGroesse: true }, 100, undefined);
+    const geo = zellGeometrie(
+      spalte,
+      { spaltenIndex: 0, art: 'summe', size: 14, align: 'zentriert', autoGroesse: true },
+      100,
+      undefined,
+    );
     expect(geo.size).toBe(14);
     expect(geo.align).toBe('zentriert');
     expect(geo.autoGroesse).toBe(true);
@@ -161,6 +166,20 @@ describe('build', () => {
     expect(await hatBildXObject(bytes)).toBe(false);
   });
 
+  it('rendert ein nurBeiSignatur-Feld fehlerfrei, mit und ohne Signatur-Input (Suppression selbst siehe wert.test.ts)', async () => {
+    const cfg = macheCfg();
+    cfg.layout.seiten[0]!.felder['unterschriftsdatum'] = {
+      x: 400,
+      y: 80,
+      size: 10,
+      format: 'datum',
+      berechnet: { op: 'letztesDatum', ueber: '$alle', maxTage: 14 },
+      nurBeiSignatur: true,
+    };
+    await expect(build(cfg, { name: 'X', zeilen: [] })).resolves.toBeDefined();
+    await expect(build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG)).resolves.toBeDefined();
+  });
+
   it('rendert Übertragszeile und berechnete Spalten über mehrere Seiten ohne Fehler', async () => {
     const cfg = macheCfg();
     cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt', startY: 700, maxZeilen: 2 }];
@@ -183,7 +202,14 @@ describe('build', () => {
         seitenzahl: { x: 480, y: 30, x2: 545, y2: 42, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' },
       },
     });
-    cfg.tabellen.haupt!.spalten.push({ key: 'gesamt', x: 300, x2: 380, size: 10, align: 'zentriert', berechnet: { op: 'produkt', operanden: ['betrag', 2] } });
+    cfg.tabellen.haupt!.spalten.push({
+      key: 'gesamt',
+      x: 300,
+      x2: 380,
+      size: 10,
+      align: 'zentriert',
+      berechnet: { op: 'produkt', operanden: ['betrag', 2] },
+    });
 
     const daten = {
       name: 'Max',
@@ -232,7 +258,12 @@ describe('build', () => {
     cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt' }];
     cfg.layout.seiten.push({
       quelle: 0,
-      bereiche: [{ tabelle: 'haupt', spalten: [...cfg.tabellen.haupt!.spalten, { key: 'uebertrag', x: 300, size: 10, format: 'waehrung' }] }],
+      bereiche: [
+        {
+          tabelle: 'haupt',
+          spalten: [...cfg.tabellen.haupt!.spalten, { key: 'uebertrag', x: 300, size: 10, format: 'waehrung' }],
+        },
+      ],
       felder: {},
     });
 

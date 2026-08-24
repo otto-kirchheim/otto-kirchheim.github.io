@@ -244,7 +244,7 @@ function BereitschaftTab() {
           <div class="col d-grid">
             <button type="button" class="btn btn-secondary" id="btnDownloadB" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

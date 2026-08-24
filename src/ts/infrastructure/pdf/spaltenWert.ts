@@ -1,4 +1,11 @@
-import { berechneZeile, FORMAT, listenWert, schluesselAufPlatz, standardText, trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
+import {
+  berechneZeile,
+  FORMAT,
+  listenWert,
+  schluesselAufPlatz,
+  standardText,
+  trifftBedingung,
+} from '@otto-kirchheim/nebengeld-shared';
 import type { ListenAufloesung, Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /**

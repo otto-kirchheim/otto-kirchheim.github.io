@@ -86,7 +86,12 @@ type Ziehen = { startX: number; startY: number; x: number; y: number };
 const LABEL_HOEHE = 12;
 
 /** Rückt eine Beschriftung so weit nach oben, bis sie keine bereits gesetzte mehr überdeckt. */
-function freieLabelPosition(x: number, y: number, breite: number, belegt: { x: number; y: number; b: number }[]): number {
+function freieLabelPosition(
+  x: number,
+  y: number,
+  breite: number,
+  belegt: { x: number; y: number; b: number }[],
+): number {
   let ypos = y;
   for (let versuch = 0; versuch < 8; versuch++) {
     const kollision = belegt.some(l => Math.abs(l.y - ypos) < LABEL_HOEHE && x < l.x + l.b && l.x < x + breite);
@@ -105,8 +110,12 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
   for (const r of rechtecke) {
     // Ohne x-Kanten über die ganze Seitenbreite -- die echte Breite kommt aus dem Viewport, damit
     // auch Querformat-Vorlagen korrekt dargestellt werden.
-    const [x1, y1] = r.x === undefined ? [0, viewport.convertToViewportPoint(0, r.y)[1]!] : viewport.convertToViewportPoint(r.x, r.y);
-    const [x2, y2] = r.x2 === undefined ? [viewport.width, viewport.convertToViewportPoint(0, r.y2)[1]!] : viewport.convertToViewportPoint(r.x2, r.y2);
+    const [x1, y1] =
+      r.x === undefined ? [0, viewport.convertToViewportPoint(0, r.y)[1]!] : viewport.convertToViewportPoint(r.x, r.y);
+    const [x2, y2] =
+      r.x2 === undefined
+        ? [viewport.width, viewport.convertToViewportPoint(0, r.y2)[1]!]
+        : viewport.convertToViewportPoint(r.x2, r.y2);
     const links = Math.min(x1!, x2!);
     const oben = Math.min(y1!, y2!);
     const breite = Math.max(Math.abs(x2! - x1!), 2);
@@ -165,7 +174,18 @@ function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster
  * kleiner Darstellung praezise gesetzt werden kann. Ziehen ist nur aktiv, wenn ein Feld scharf
  * geschaltet ist (`scharfGeschaltet`).
  */
-export function PdfCanvas({ datei, seiteIndex, rechtecke, raster = [], scharfGeschaltet, achse = 'beide', hinweis, onRechteck, onQuelleWaehlen, aktiveSeiteLabel }: Props) {
+export function PdfCanvas({
+  datei,
+  seiteIndex,
+  rechtecke,
+  raster = [],
+  scharfGeschaltet,
+  achse = 'beide',
+  hinweis,
+  onRechteck,
+  onQuelleWaehlen,
+  aktiveSeiteLabel,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const lupeRef = useRef<HTMLCanvasElement>(null);
@@ -279,7 +299,17 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, raster = [], scharfGes
     const ausschnitt = LUPE_GROESSE / LUPE_FAKTOR;
     ctx.clearRect(0, 0, LUPE_GROESSE, LUPE_GROESSE);
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(quelle, mitte.x - ausschnitt / 2, mitte.y - ausschnitt / 2, ausschnitt, ausschnitt, 0, 0, LUPE_GROESSE, LUPE_GROESSE);
+    ctx.drawImage(
+      quelle,
+      mitte.x - ausschnitt / 2,
+      mitte.y - ausschnitt / 2,
+      ausschnitt,
+      ausschnitt,
+      0,
+      0,
+      LUPE_GROESSE,
+      LUPE_GROESSE,
+    );
     ctx.strokeStyle = '#dc3545';
     ctx.beginPath();
     ctx.moveTo(LUPE_GROESSE / 2, 0);
@@ -334,8 +364,10 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, raster = [], scharfGes
 
   function ziehHinweis(): string {
     if (hinweis) return hinweis;
-    if (achse === 'x') return 'Senkrechtes Band über die Spaltenbreite ziehen — nur die linke und rechte Kante werden übernommen.';
-    if (achse === 'y') return 'Waagerechtes Band über die erste Datenzeile ziehen — nur Ober- und Unterkante werden übernommen.';
+    if (achse === 'x')
+      return 'Senkrechtes Band über die Spaltenbreite ziehen — nur die linke und rechte Kante werden übernommen.';
+    if (achse === 'y')
+      return 'Waagerechtes Band über die erste Datenzeile ziehen — nur Ober- und Unterkante werden übernommen.';
     return 'Rechteck über die Zelle ziehen (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten Ausschnitt).';
   }
 
@@ -379,12 +411,21 @@ export function PdfCanvas({ datei, seiteIndex, rechtecke, raster = [], scharfGes
         >
           ›
         </button>
-        <button type="button" class="btn btn-sm btn-outline-primary py-0" disabled={!pdf} onClick={() => onQuelleWaehlen(angezeigt)}>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary py-0"
+          disabled={!pdf}
+          onClick={() => onQuelleWaehlen(angezeigt)}
+        >
           Als Quelle für „{aktiveSeiteLabel}“ verwenden
         </button>
         <div class="ms-auto d-flex align-items-center gap-1">
           <span class="text-muted">Zoom</span>
-          <select class="form-select form-select-sm py-0 w-auto" value={String(zoom)} onChange={e => setZoom(Number((e.target as HTMLSelectElement).value))}>
+          <select
+            class="form-select form-select-sm py-0 w-auto"
+            value={String(zoom)}
+            onChange={e => setZoom(Number((e.target as HTMLSelectElement).value))}
+          >
             {ZOOM_STUFEN.map(z => (
               <option key={z} value={String(z)}>
                 {Math.round(z * 100)} %

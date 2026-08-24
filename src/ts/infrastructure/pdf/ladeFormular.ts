@@ -79,9 +79,17 @@ function vorlagenId(template: string): string {
  */
 async function loeseVersionAuf(formular: string, stichtag: string) {
   try {
-    const antwort = await FetchRetry<undefined, unknown>(`formulare/${formular}?stichtag=${stichtag}`, undefined, 'GET');
+    const antwort = await FetchRetry<undefined, unknown>(
+      `formulare/${formular}?stichtag=${stichtag}`,
+      undefined,
+      'GET',
+    );
     if (antwort instanceof Error) throw antwort;
-    if (!antwort.success) throw new ApiFehler(antwort.message ?? `Keine gültige Version für ${formular} am ${stichtag}`, antwort.statusCode);
+    if (!antwort.success)
+      throw new ApiFehler(
+        antwort.message ?? `Keine gültige Version für ${formular} am ${stichtag}`,
+        antwort.statusCode,
+      );
 
     const version = parseVersion(antwort.data);
     cacheVersion(formular, stichtag, version);
@@ -103,13 +111,24 @@ async function loeseVersionAuf(formular: string, stichtag: string) {
  * lokale `blob:`-URL umbiegen, derselbe Trick wie die Testdaten-Vorschau im Admin-Editor
  * (`FormularEditor.tsx`), nur mit einer echt hochgeladenen statt einer lokal gewählten Datei.
  */
-export async function ladeUndErzeugePdf(formular: string, stichtag: string, daten: Daten, signaturPng?: string): Promise<Uint8Array> {
+export async function ladeUndErzeugePdf(
+  formular: string,
+  stichtag: string,
+  daten: Daten,
+  signaturPng?: string,
+  digitaleSignatur?: boolean,
+): Promise<Uint8Array> {
   const version = await loeseVersionAuf(formular, stichtag);
   const vorlage = await holeVorlageAlsDatei(vorlagenId(version.layout.template));
   const templateUrl = URL.createObjectURL(vorlage);
 
   try {
-    return await build({ ...version, formular, layout: { ...version.layout, template: templateUrl } }, daten, signaturPng);
+    return await build(
+      { ...version, formular, layout: { ...version.layout, template: templateUrl } },
+      daten,
+      signaturPng,
+      digitaleSignatur,
+    );
   } finally {
     URL.revokeObjectURL(templateUrl);
   }

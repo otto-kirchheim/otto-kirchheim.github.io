@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { confirmDialog } from '../ui/confirmDialog';
-import { erstelleSignaturPad, holeSignaturPng } from './signaturePad';
+import Storage from '../storage/Storage';
+import { erstelleSignaturPad, holeSignaturPng, setzeSignaturPng } from './signaturePad';
 
 /** Breite:Höhe der Unterschriftsfläche -- feste Proportion unabhängig von der Bildschirmgröße. */
 const CANVAS_RATIO = 5 / 2;
@@ -40,7 +40,8 @@ function berechneCanvasGroesse(
   const contentRahmenY = parseFloat(contentStil.borderTopWidth) + parseFloat(contentStil.borderBottomWidth);
 
   const maxBreite = Math.min(window.innerWidth - rand * 2, maxBreiteVorgabe) - paddingX;
-  const maxHoehe = window.innerHeight - rand * 2 - header.offsetHeight - footer.offsetHeight - paddingY - contentRahmenY;
+  const maxHoehe =
+    window.innerHeight - rand * 2 - header.offsetHeight - footer.offsetHeight - paddingY - contentRahmenY;
 
   let breite = Math.max(maxBreite, 0);
   let hoehe = breite / CANVAS_RATIO;
@@ -52,11 +53,104 @@ function berechneCanvasGroesse(
   return { breite, hoehe, hoehengebunden };
 }
 
+export interface SignaturErgebnis {
+  png?: string;
+  /**
+   * true, wenn explizit "Digital" gewählt wurde. Eine spätere externe Signatur (z.B. Adobe Reader
+   * Ad-hoc) passiert zu einem noch unbekannten Zeitpunkt -- ein jetzt gedrucktes Unterschriftsdatum
+   * wäre dann falsch, deshalb unterdrückt (siehe `Feld.nurBeiSignatur`). Bei "Ohne Unterschrift"
+   * (z.B. für eine Unterschrift auf Papier) bleibt das Datum dagegen sinnvoll und sichtbar -- NUR
+   * "Digital" schließt es aus, nicht jedes Fehlen einer gezeichneten Unterschrift.
+   */
+  digital: boolean;
+}
+
+type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
+
+/**
+ * Erste Nachfrage vor dem PDF-Erzeugen: ohne Cache "Ja" / "Ohne Unterschrift" / "Digital", mit Cache
+ * zusätzlich "Verwenden" / "Ändern" statt nur "Ja" -- eigener Dialog statt `confirmDialog` (das nur
+ * zwei Buttons kennt), da echte drei/vier Ausgänge gebraucht werden: Unterschrift jetzt zeichnen/
+ * übernehmen, GAR KEINE Unterschrift (Papier-Fall, Datum bleibt) oder explizit "Digital" (Datum
+ * verschwindet, siehe `SignaturErgebnis.digital`). Gleiches Vanilla-DOM-Muster wie `confirmDialog`
+ * (eigenes `<div class="modal">`, promise-basiert). `backdrop: 'static', keyboard: false` -- Backdrop-
+ * Klick/Escape schließen NICHT, nur der explizite X-Button oben rechts (gleicher Grund wie beim
+ * Pad-Dialog: keine versehentlich verworfene Entscheidung). Schließen über X zählt wie
+ * "Ohne Unterschrift", NICHT wie "Digital" -- ein Wegklicken soll nicht überraschend das
+ * Unterschriftsdatum verschlucken.
+ */
+function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
+  return new Promise<SignaturWahl>(resolve => {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.setAttribute('tabindex', '-1');
+    modal.innerHTML = `
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Unterschrift</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            ${
+              cachedPng
+                ? `<p class="mb-2">Es liegt eine gespeicherte Unterschrift vor. Wie möchten Sie fortfahren?</p>
+                   <ul class="mb-0 ps-3">
+                     <li><strong>Verwenden:</strong> direkt für dieses PDF übernehmen.</li>
+                     <li><strong>Ändern:</strong> Pad öffnet mit der gespeicherten Unterschrift, zum Anpassen oder Neuzeichnen.</li>
+                     <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
+                     <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
+                   </ul>`
+                : `<p class="mb-2">Jetzt unterschreiben?</p>
+                   <ul class="mb-0 ps-3">
+                     <li><strong>Ja:</strong> Unterschrift wird ins PDF eingefügt.</li>
+                     <li><strong>Ohne Unterschrift:</strong> PDF ohne Unterschrift, Unterschriftsdatum bleibt (z.B. für eine Unterschrift auf Papier).</li>
+                     <li><strong>Digital:</strong> PDF ohne Unterschrift UND ohne Datum (für eine spätere digitale Signatur).</li>
+                   </ul>`
+            }
+            <p class="small text-body-secondary mt-2 mb-0">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-wahl="digital">Digital</button>
+            <button type="button" class="btn btn-outline-secondary" data-wahl="ohne">Ohne Unterschrift</button>
+            ${cachedPng ? '<button type="button" class="btn btn-outline-secondary" data-wahl="neu">Ändern</button>' : ''}
+            <button type="button" class="btn btn-primary" data-wahl="${cachedPng ? 'verwenden' : 'neu'}">${cachedPng ? 'Verwenden' : 'Ja'}</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    const bsModal = new Modal(modal, { backdrop: 'static', keyboard: false });
+    let resolved = false;
+
+    const finish = (wahl: SignaturWahl) => {
+      if (resolved) return;
+      resolved = true;
+      bsModal.hide();
+      resolve(wahl);
+    };
+
+    modal.querySelectorAll<HTMLButtonElement>('[data-wahl]').forEach(btn => {
+      btn.addEventListener('click', () => finish(btn.dataset['wahl'] as SignaturWahl));
+    });
+    modal.addEventListener('hidden.bs.modal', () => {
+      finish('ohne');
+      bsModal.dispose();
+      modal.remove();
+    });
+
+    bsModal.show();
+  });
+}
+
 /**
  * Entscheidungsdialog vor dem PDF-Erzeugen (Kandidat E, siehe Plandatei Phase 4): fragt erst
- * "Jetzt unterschreiben?", zeigt bei "Ja" ein Canvas-Pad. Liefert das PNG, `undefined` bei "Nein"
- * oder einem leer gelassenen Pad. Kein Nachsignieren eines bereits heruntergeladenen PDFs
- * vorgesehen -- der Signatur-Schritt ist für diesen Download dann endgültig übersprungen.
+ * "Jetzt unterschreiben?" (oder bei vorhandenem Cache: "verwenden/ändern/ohne/digital"), zeigt bei
+ * Bedarf ein Canvas-Pad. Liefert `{ png, digital }` -- `png` fehlt bei "Ohne Unterschrift"/"Digital"
+ * oder einem leer gelassenen Pad, `digital` ist NUR bei explizitem "Digital" true (siehe
+ * `SignaturErgebnis`). Kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen -- der
+ * Signatur-Schritt ist für diesen Download dann endgültig übersprungen.
  *
  * Vanilla DOM wie `confirmDialog` (eigenes `<div class="modal">`, nicht über `showModal()`/Preact) --
  * dieselbe einfache, promise-basierte Bedienung, kein Formular-State nötig. Das Pad wird erst nach
@@ -64,16 +158,16 @@ function berechneCanvasGroesse(
  * erstelltes Pad auf einem noch unsichtbaren Canvas (`offsetWidth`/`offsetHeight` 0) unbenutzbar
  * bleibt.
  */
-export async function signaturDialog(): Promise<string | undefined> {
-  const ja = await confirmDialog('Jetzt unterschreiben?', {
-    title: 'Unterschrift',
-    confirmLabel: 'Ja',
-    cancelLabel: 'Nein',
-    confirmClass: 'btn-primary',
-  });
-  if (!ja) return undefined;
+export async function signaturDialog(): Promise<SignaturErgebnis> {
+  const cachedPng = Storage.get<string>('signaturCache');
+  const wahl = await signaturEntscheidung(cachedPng);
 
-  return new Promise<string | undefined>(resolve => {
+  if (wahl === 'verwenden') return { png: cachedPng!, digital: false }; // Pad wird komplett übersprungen
+  if (wahl === 'ohne') return { digital: false };
+  if (wahl === 'digital') return { digital: true };
+  // wahl === 'neu' -- weiter zum Pad, ggf. vorbefüllt mit der bisherigen Unterschrift
+
+  return new Promise<SignaturErgebnis>(resolve => {
     const modal = document.createElement('div');
     modal.className = 'modal fade';
     modal.setAttribute('tabindex', '-1');
@@ -88,6 +182,10 @@ export async function signaturDialog(): Promise<string | undefined> {
             <canvas class="signatur-canvas"></canvas>
           </div>
           <div class="modal-footer">
+            <div class="form-check me-auto">
+              <input type="checkbox" class="form-check-input" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
+              <label class="form-check-label" for="signatur-speichern">Für nächstes Mal merken (nur auf diesem Gerät)</label>
+            </div>
             <button type="button" class="btn btn-outline-secondary" data-loeschen="true">Löschen</button>
             <button type="button" class="btn btn-primary" data-fertig="true">Fertig</button>
           </div>
@@ -103,7 +201,7 @@ export async function signaturDialog(): Promise<string | undefined> {
     const footer = modal.querySelector<HTMLElement>('.modal-footer')!;
     const dialog = modal.querySelector<HTMLElement>('.modal-dialog')!;
     const content = modal.querySelector<HTMLElement>('.modal-content')!;
-    const bsModal = new Modal(modal, { backdrop: 'static' });
+    const bsModal = new Modal(modal, { backdrop: 'static', keyboard: false });
     let pad: ReturnType<typeof erstelleSignaturPad> | undefined;
     let resolved = false;
 
@@ -111,7 +209,7 @@ export async function signaturDialog(): Promise<string | undefined> {
       if (resolved) return;
       resolved = true;
       bsModal.hide();
-      resolve(png);
+      resolve({ png, digital: false });
     };
 
     /**
@@ -150,6 +248,7 @@ export async function signaturDialog(): Promise<string | undefined> {
     modal.addEventListener('shown.bs.modal', () => {
       aufGroesseAnpassen();
       pad = erstelleSignaturPad(canvas);
+      if (cachedPng) void setzeSignaturPng(pad, cachedPng);
     });
 
     /**
@@ -171,9 +270,20 @@ export async function signaturDialog(): Promise<string | undefined> {
     window.addEventListener('resize', aufResizeReagieren);
 
     modal.querySelector('[data-loeschen="true"]')?.addEventListener('click', () => pad?.clear());
-    modal
-      .querySelector('[data-fertig="true"]')
-      ?.addEventListener('click', () => finish(pad ? (holeSignaturPng(pad) ?? undefined) : undefined));
+    modal.querySelector('[data-fertig="true"]')?.addEventListener('click', () => {
+      const png = pad ? (holeSignaturPng(pad) ?? undefined) : undefined;
+      const merken = modal.querySelector<HTMLInputElement>('[data-speichern="true"]')?.checked ?? false;
+      if (merken && png) {
+        try {
+          Storage.set('signaturCache', png);
+        } catch {
+          /* Storage voll/gesperrt -- Download soll trotzdem klappen */
+        }
+      } else {
+        Storage.remove('signaturCache');
+      }
+      finish(png);
+    });
     modal.addEventListener('hidden.bs.modal', () => {
       window.removeEventListener('resize', aufResizeReagieren);
       finish(undefined);

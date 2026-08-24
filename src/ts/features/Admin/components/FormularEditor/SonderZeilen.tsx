@@ -1,5 +1,12 @@
 import { useState } from 'preact/hooks';
-import type { Ausrichtung, FormatName, SonderZeile, SonderZeileArt, SonderZeileZelle, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  Ausrichtung,
+  FormatName,
+  SonderZeile,
+  SonderZeileArt,
+  SonderZeileZelle,
+  TabellenDef,
+} from '@otto-kirchheim/nebengeld-shared';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
 import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
@@ -33,7 +40,15 @@ const UEBER_OPTIONEN = [
  * neu mounten, was Fokus/Cursor-Position verliert. Der Entwurf lebt deshalb lokal und wird erst bei
  * `onBlur` übernommen -- ungültige oder leere Eingaben springen zurück auf den bisherigen Namen.
  */
-function SonderZeileName({ name, vergeben, onRename }: { name: string; vergeben: string[]; onRename: (neuerName: string) => void }) {
+function SonderZeileName({
+  name,
+  vergeben,
+  onRename,
+}: {
+  name: string;
+  vergeben: string[];
+  onRename: (neuerName: string) => void;
+}) {
   const [entwurf, setEntwurf] = useState(name);
   return (
     <input
@@ -81,10 +96,18 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
   // rutschen würde) -- die Karte springt beim Umbenennen sonst sichtbar in der Liste herum.
   function benenneUm(alterName: string, neuerName: string): void {
     const eintraege = Object.entries(tabelle.sonderzeilen ?? {});
-    onChange({ ...tabelle, sonderzeilen: Object.fromEntries(eintraege.map(([n, z]) => [n === alterName ? neuerName : n, z])) });
+    onChange({
+      ...tabelle,
+      sonderzeilen: Object.fromEntries(eintraege.map(([n, z]) => [n === alterName ? neuerName : n, z])),
+    });
   }
 
-  function setzeZelle(name: string, zeile: SonderZeile, spaltenIndex: number, zelle: SonderZeileZelle | undefined): void {
+  function setzeZelle(
+    name: string,
+    zeile: SonderZeile,
+    spaltenIndex: number,
+    zelle: SonderZeileZelle | undefined,
+  ): void {
     const restZellen = zeile.zellen.filter(z => z.spaltenIndex !== spaltenIndex);
     setzeZeile(name, { ...zeile, zellen: zelle ? [...restZellen, zelle] : restZellen });
   }
@@ -105,7 +128,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                 vergeben={zeilen.map(([n]) => n).filter(n => n !== name)}
                 onRename={neuerName => benenneUm(name, neuerName)}
               />
-              <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={() => setzeZeile(name, undefined)} title="Sonderzeile löschen">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-danger py-0"
+                onClick={() => setzeZeile(name, undefined)}
+                title="Sonderzeile löschen"
+              >
                 <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
                   delete
                 </span>
@@ -133,7 +161,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
               const zelle = zeile.zellen.find(z => z.spaltenIndex === index);
               const arten = spalte.listenPlatz ? ARTEN : ARTEN.filter(a => !a.nurListenPlatz);
               const bezeichnung = spalte.label ?? (spalte.key || `Spalte ${index + 1}`);
-              const vorschauText = zelle ? sonderZeileZelleWert(zelle, spalte, tabelleName, rows, vorschau.daten, vorschau.kontext) : undefined;
+              const vorschauText = zelle
+                ? sonderZeileZelleWert(zelle, spalte, tabelleName, rows, vorschau.daten, vorschau.kontext)
+                : undefined;
               return (
                 <div key={index} class="row g-1 mb-1 align-items-center">
                   {/* Was: welche Spalte, welcher Wert. */}
@@ -146,7 +176,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                       value={zelle?.art ?? ''}
                       onChange={e => {
                         const v = (e.target as HTMLSelectElement).value;
-                        setzeZelle(name, zeile, index, v ? { spaltenIndex: index, art: v as SonderZeileArt, format: zelle?.format } : undefined);
+                        setzeZelle(
+                          name,
+                          zeile,
+                          index,
+                          v ? { spaltenIndex: index, art: v as SonderZeileArt, format: zelle?.format } : undefined,
+                        );
                       }}
                     >
                       <option value="">kein Wert</option>
@@ -166,7 +201,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           class="form-select form-select-sm"
                           title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
                           value={zelle.format ?? ''}
-                          onChange={e => setzeZelle(name, zeile, index, { ...zelle, format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined })}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined,
+                            })
+                          }
                         >
                           {FORMATE.map(f => (
                             <option key={f.wert} value={f.wert}>
@@ -191,7 +231,17 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                       </div>
                       <div class="col-3 mt-1 form-check mb-0">
-                        <input class="form-check-input" type="checkbox" checked={Boolean(zelle.fett)} onChange={e => setzeZelle(name, zeile, index, { ...zelle, fett: (e.target as HTMLInputElement).checked || undefined })} />
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          checked={Boolean(zelle.fett)}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              fett: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
+                        />
                         <label class="form-check-label small">Fett</label>
                       </div>
                       <div class="col-3 mt-1 form-check mb-0">
@@ -199,7 +249,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           class="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.kursiv)}
-                          onChange={e => setzeZelle(name, zeile, index, { ...zelle, kursiv: (e.target as HTMLInputElement).checked || undefined })}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              kursiv: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
                         />
                         <label class="form-check-label small">Kursiv</label>
                       </div>
@@ -208,7 +263,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           class="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.unterstrichen)}
-                          onChange={e => setzeZelle(name, zeile, index, { ...zelle, unterstrichen: (e.target as HTMLInputElement).checked || undefined })}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              unterstrichen: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
                         />
                         <label class="form-check-label small">Unterstr.</label>
                       </div>
@@ -220,7 +280,10 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           title="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
                           value={zelle.align ?? ''}
                           onChange={e =>
-                            setzeZelle(name, zeile, index, { ...zelle, align: ((e.target as HTMLSelectElement).value || undefined) as Ausrichtung | undefined })
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              align: ((e.target as HTMLSelectElement).value || undefined) as Ausrichtung | undefined,
+                            })
                           }
                         >
                           <option value="">wie Spalte</option>
@@ -234,7 +297,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           class="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.autoGroesse)}
-                          onChange={e => setzeZelle(name, zeile, index, { ...zelle, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              autoGroesse: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
                         />
                         <label class="form-check-label small">auto. verkleinern</label>
                       </div>

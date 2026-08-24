@@ -4,16 +4,18 @@ import { trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
 import type { SeitenDef, Version, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 function macheTabellen(): Version['tabellen'] {
-  return { haupt: {
-    quelle: 'zeilen',
-    startY: 700,
-    maxZeilen: 10,
-    hoehe: 14,
-    spalten: [
-      { key: 'text', x: 50, size: 10 },
-      { key: 'betrag', x: 200, size: 10, format: 'waehrung' },
-    ],
-  } };
+  return {
+    haupt: {
+      quelle: 'zeilen',
+      startY: 700,
+      maxZeilen: 10,
+      hoehe: 14,
+      spalten: [
+        { key: 'text', x: 50, size: 10 },
+        { key: 'betrag', x: 200, size: 10, format: 'waehrung' },
+      ],
+    },
+  };
 }
 
 function macheSeite(maxZeilen: number, wiederholt = false): SeitenDef {

@@ -159,9 +159,14 @@ describe('ladeFormular', () => {
 
       expect(aufrufe[0]).toMatchObject({ pfad: 'formulare/ea?stichtag=2026-04-01', methode: 'GET' });
       expect(buildMock).toHaveBeenCalledWith(
-        expect.objectContaining({ formular: 'ea', version: 'v1', layout: expect.objectContaining({ template: 'blob:mock-url' }) }),
+        expect.objectContaining({
+          formular: 'ea',
+          version: 'v1',
+          layout: expect.objectContaining({ template: 'blob:mock-url' }),
+        }),
         daten,
         'sig-png',
+        undefined,
       );
       expect(bytes).toEqual(new Uint8Array([9, 9, 9]));
     });
@@ -178,7 +183,9 @@ describe('ladeFormular', () => {
     });
 
     it('wirft (via Zod), wenn der Server eine strukturell kaputte Version liefert', async () => {
-      const { modul } = await ladeModul({ fetchRetryAntwort: { success: true, statusCode: 200, data: { version: 'v1' } } });
+      const { modul } = await ladeModul({
+        fetchRetryAntwort: { success: true, statusCode: 200, data: { version: 'v1' } },
+      });
 
       await expect(modul.ladeUndErzeugePdf('ea', '2026-04-01', {})).rejects.toThrow();
     });
@@ -195,7 +202,9 @@ describe('ladeFormular', () => {
     it('nutzt die gecachte Version bei einem Netzwerkfehler', async () => {
       const { modul, buildMock } = await ladeModul({
         fetchRetryWirft: new Error('Keine Internetverbindung'),
-        storageInitial: { formularVersionCache: { 'ea:2026-04-01': { version: gueltigeVersion, timestamp: Date.now() } } },
+        storageInitial: {
+          formularVersionCache: { 'ea:2026-04-01': { version: gueltigeVersion, timestamp: Date.now() } },
+        },
       });
 
       await modul.ladeUndErzeugePdf('ea', '2026-04-01', {});
@@ -212,7 +221,9 @@ describe('ladeFormular', () => {
     it('ignoriert einen vorhandenen Cache-Eintrag, wenn der Server bewusst "keine gültige Version" antwortet', async () => {
       const { modul } = await ladeModul({
         fetchRetryAntwort: { success: false, statusCode: 404, message: 'Version für ea am 2026-04-01' },
-        storageInitial: { formularVersionCache: { 'ea:2026-04-01': { version: gueltigeVersion, timestamp: Date.now() } } },
+        storageInitial: {
+          formularVersionCache: { 'ea:2026-04-01': { version: gueltigeVersion, timestamp: Date.now() } },
+        },
       });
 
       const fehler = await modul.ladeUndErzeugePdf('ea', '2026-04-01', {}).catch((e: unknown) => e);

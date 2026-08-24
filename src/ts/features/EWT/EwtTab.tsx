@@ -232,7 +232,7 @@ function EwtTab() {
           <div class="col d-grid">
             <button class="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

@@ -3,7 +3,10 @@ import { ZodError } from 'zod';
 import { resolve } from '@otto-kirchheim/nebengeld-shared';
 import { parseRegistry } from '@/infrastructure/pdf/configSchema';
 
-const leeresLayout = { template: 'x.pdf', seiten: [{ quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1 }], felder: {} }] };
+const leeresLayout = {
+  template: 'x.pdf',
+  seiten: [{ quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1 }], felder: {} }],
+};
 
 function macheRegistryJson() {
   return {
@@ -107,7 +110,23 @@ describe('parseRegistry', () => {
       } as never;
       json.ez.versionen[0].layout = {
         ...leeresLayout,
-        seiten: [{ quelle: 0, bereiche: [{ tabelle: 'haupt', startY: 0, maxZeilen: 1, sonderzeilen: [{ name: 'kopf', y: 780 }, { name: 'kopf', y: 50 }] }], felder: {} }],
+        seiten: [
+          {
+            quelle: 0,
+            bereiche: [
+              {
+                tabelle: 'haupt',
+                startY: 0,
+                maxZeilen: 1,
+                sonderzeilen: [
+                  { name: 'kopf', y: 780 },
+                  { name: 'kopf', y: 50 },
+                ],
+              },
+            ],
+            felder: {},
+          },
+        ],
       } as never;
 
       const registry = parseRegistry(alsUnknownVomServer(json));
@@ -138,7 +157,9 @@ describe('parseRegistry', () => {
         maxZeilen: 10,
         hoehe: 12,
         spalten: [{ key: 'betrag', x: 50, size: 8 }],
-        sonderzeilen: { summe: { zellen: [{ spaltenIndex: 0, art: 'summe', size: 14, align: 'zentriert', autoGroesse: true }] } },
+        sonderzeilen: {
+          summe: { zellen: [{ spaltenIndex: 0, art: 'summe', size: 14, align: 'zentriert', autoGroesse: true }] },
+        },
       } as never;
 
       const registry = parseRegistry(alsUnknownVomServer(json));
@@ -183,16 +204,24 @@ describe('parseRegistry', () => {
     });
 
     it('akzeptiert ohne index mit art "bereinigt" oder "summeGeld"', () => {
-      expect(() => parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'bereinigt' })))).not.toThrow();
-      expect(() => parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'summeGeld' })))).not.toThrow();
+      expect(() =>
+        parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'bereinigt' }))),
+      ).not.toThrow();
+      expect(() =>
+        parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'summeGeld' }))),
+      ).not.toThrow();
     });
 
     it('wirft ZodError bei unbekannter art', () => {
-      expect(() => parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'gibtsNicht' })))).toThrow(ZodError);
+      expect(() =>
+        parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', art: 'gibtsNicht' }))),
+      ).toThrow(ZodError);
     });
 
     it('akzeptiert weiterhin die Platz-Form mit index (bestehendes Verhalten)', () => {
-      expect(() => parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', index: 0 })))).not.toThrow();
+      expect(() =>
+        parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', index: 0 }))),
+      ).not.toThrow();
     });
   });
 });

@@ -69,7 +69,9 @@ export function getCachedVorlage(vorlagenId: string): File | undefined {
     const cache = Storage.get<VorlagenCache>('vorlagenPdfCache', { default: {} });
     const eintrag = cache[vorlagenId];
     if (!eintrag) return undefined;
-    return new File([base64AlsBytes(eintrag.base64) as BlobPart], `vorlage-${vorlagenId}.pdf`, { type: 'application/pdf' });
+    return new File([base64AlsBytes(eintrag.base64) as BlobPart], `vorlage-${vorlagenId}.pdf`, {
+      type: 'application/pdf',
+    });
   } catch {
     return undefined;
   }

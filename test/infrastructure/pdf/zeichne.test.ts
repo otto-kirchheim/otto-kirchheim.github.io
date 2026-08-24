@@ -79,7 +79,12 @@ describe('zeichne', () => {
     const startY = 700;
     const hoehe = 14;
     const size = 9;
-    zeichne(macheSeite(gesammelt), 'Zelle', { x: 50, x2: 120, y: startY, y2: startY + hoehe, size }, await macheFonts());
+    zeichne(
+      macheSeite(gesammelt),
+      'Zelle',
+      { x: 50, x2: 120, y: startY, y2: startY + hoehe, size },
+      await macheFonts(),
+    );
     expect(gesammelt[0]!.y).toBeCloseTo(startY + (hoehe - 0.72 * size) / 2, 5);
     expect(gesammelt[0]!.y).toBeGreaterThan(startY);
   });
@@ -88,27 +93,47 @@ describe('zeichne', () => {
     const font = await macheFont();
     const gesammelt: Gezeichnet[] = [];
     const text = 'Etwas zu langer Text';
-    zeichne(macheSeite(gesammelt), text, { x: 100, y: 200, x2: 180, y2: 220, size: 12, autoGroesse: true }, await macheFonts(font));
+    zeichne(
+      macheSeite(gesammelt),
+      text,
+      { x: 100, y: 200, x2: 180, y2: 220, size: 12, autoGroesse: true },
+      await macheFonts(font),
+    );
     expect(gesammelt[0]!.size).toBeLessThan(12);
     expect(font.widthOfTextAtSize(text, gesammelt[0]!.size)).toBeLessThanOrEqual(80);
   });
 
   it('autoGroesse fällt bei extrem langem Text auf die Mindestgröße zurück statt endlos zu schrumpfen', async () => {
     const gesammelt: Gezeichnet[] = [];
-    zeichne(macheSeite(gesammelt), 'x'.repeat(500), { x: 100, y: 200, x2: 130, y2: 220, size: 12, autoGroesse: true }, await macheFonts());
+    zeichne(
+      macheSeite(gesammelt),
+      'x'.repeat(500),
+      { x: 100, y: 200, x2: 130, y2: 220, size: 12, autoGroesse: true },
+      await macheFonts(),
+    );
     expect(gesammelt[0]!.size).toBe(4);
   });
 
   it('autoGroesse lässt die Schrift unverändert, wenn der Text ohnehin passt', async () => {
     const gesammelt: Gezeichnet[] = [];
-    zeichne(macheSeite(gesammelt), 'kurz', { x: 100, y: 200, x2: 400, y2: 220, size: 10, autoGroesse: true }, await macheFonts());
+    zeichne(
+      macheSeite(gesammelt),
+      'kurz',
+      { x: 100, y: 200, x2: 400, y2: 220, size: 10, autoGroesse: true },
+      await macheFonts(),
+    );
     expect(gesammelt[0]!.size).toBe(10);
   });
 
   it('umbruch verteilt den Text an Wortgrenzen auf mehrere Zeilen', async () => {
     const font = await macheFont();
     const gesammelt: Gezeichnet[] = [];
-    zeichne(macheSeite(gesammelt), 'Erste Zeile und zweite Zeile', { x: 100, y: 180, x2: 180, y2: 240, size: 8, umbruch: true }, await macheFonts(font));
+    zeichne(
+      macheSeite(gesammelt),
+      'Erste Zeile und zweite Zeile',
+      { x: 100, y: 180, x2: 180, y2: 240, size: 8, umbruch: true },
+      await macheFonts(font),
+    );
     expect(gesammelt.length).toBeGreaterThan(1);
     for (const g of gesammelt) expect(font.widthOfTextAtSize(g.text, g.size)).toBeLessThanOrEqual(80);
     // Folgezeilen liegen unter der ersten
@@ -117,13 +142,23 @@ describe('zeichne', () => {
 
   it('respektiert harte Umbrüche (\\n als Trenner zusammengesetzter Felder)', async () => {
     const gesammelt: Gezeichnet[] = [];
-    zeichne(macheSeite(gesammelt), 'Zeile A\nZeile B', { x: 100, y: 180, x2: 400, y2: 240, size: 10, umbruch: true }, await macheFonts());
+    zeichne(
+      macheSeite(gesammelt),
+      'Zeile A\nZeile B',
+      { x: 100, y: 180, x2: 400, y2: 240, size: 10, umbruch: true },
+      await macheFonts(),
+    );
     expect(gesammelt.map(g => g.text)).toEqual(['Zeile A', 'Zeile B']);
   });
 
   it('umbruch behält ein einzelnes zu breites Wort als eigene Zeile (kein Endlosloop)', async () => {
     const gesammelt: Gezeichnet[] = [];
-    zeichne(macheSeite(gesammelt), 'Donaudampfschifffahrtsgesellschaft', { x: 100, y: 200, x2: 130, y2: 220, size: 10, umbruch: true }, await macheFonts());
+    zeichne(
+      macheSeite(gesammelt),
+      'Donaudampfschifffahrtsgesellschaft',
+      { x: 100, y: 200, x2: 130, y2: 220, size: 10, umbruch: true },
+      await macheFonts(),
+    );
     expect(gesammelt).toHaveLength(1);
   });
 
@@ -201,7 +236,12 @@ describe('zeichne', () => {
     it('bricht der Text um, bekommt jede Zeile ihre eigene Unterstreichung', async () => {
       const gesammelt: Gezeichnet[] = [];
       const linien: Linie[] = [];
-      zeichne(macheSeite(gesammelt, linien), 'Zeile A\nZeile B', { x: 100, y: 180, x2: 400, y2: 240, size: 10, umbruch: true, unterstrichen: true }, await macheFonts());
+      zeichne(
+        macheSeite(gesammelt, linien),
+        'Zeile A\nZeile B',
+        { x: 100, y: 180, x2: 400, y2: 240, size: 10, umbruch: true, unterstrichen: true },
+        await macheFonts(),
+      );
       expect(linien).toHaveLength(2);
     });
   });
@@ -224,7 +264,12 @@ describe('zeichne', () => {
     it('bei 90° läuft die Ausrichtung über die Höhe, die Zentrierung über die Breite', async () => {
       const font = await macheFont();
       const gesammelt: Gezeichnet[] = [];
-      zeichne(macheSeite(gesammelt), 'Otto, Jan', { ...HOCHKANT, drehung: 90, align: 'zentriert' }, await macheFonts(font));
+      zeichne(
+        macheSeite(gesammelt),
+        'Otto, Jan',
+        { ...HOCHKANT, drehung: 90, align: 'zentriert' },
+        await macheFonts(font),
+      );
 
       const textBreite = font.widthOfTextAtSize('Otto, Jan', 10);
       // Laufrichtung ist +y: der Text startet so, dass er mittig zwischen y und y2 liegt.
@@ -236,7 +281,12 @@ describe('zeichne', () => {
     it('align rechts endet bei 90° an der oberen Kante', async () => {
       const font = await macheFont();
       const gesammelt: Gezeichnet[] = [];
-      zeichne(macheSeite(gesammelt), 'Otto, Jan', { ...HOCHKANT, drehung: 90, align: 'rechts' }, await macheFonts(font));
+      zeichne(
+        macheSeite(gesammelt),
+        'Otto, Jan',
+        { ...HOCHKANT, drehung: 90, align: 'rechts' },
+        await macheFonts(font),
+      );
       expect(gesammelt[0]!.y).toBeCloseTo(600 - font.widthOfTextAtSize('Otto, Jan', 10), 5);
     });
 
@@ -249,7 +299,12 @@ describe('zeichne', () => {
 
     it('ohne Querkante bleibt die gesetzte Koordinate die Baseline (auch gedreht)', async () => {
       const gesammelt: Gezeichnet[] = [];
-      zeichne(macheSeite(gesammelt), 'Otto, Jan', { x: 40, y: 300, y2: 500, size: 10, drehung: 90 }, await macheFonts());
+      zeichne(
+        macheSeite(gesammelt),
+        'Otto, Jan',
+        { x: 40, y: 300, y2: 500, size: 10, drehung: 90 },
+        await macheFonts(),
+      );
       expect(gesammelt[0]!.x).toBe(40);
     });
 
@@ -257,7 +312,12 @@ describe('zeichne', () => {
       const font = await macheFont();
       const gesammelt: Gezeichnet[] = [];
       const linien: Linie[] = [];
-      zeichne(macheSeite(gesammelt, linien), 'Otto, Jan', { ...HOCHKANT, drehung: 90, unterstrichen: true }, await macheFonts(font));
+      zeichne(
+        macheSeite(gesammelt, linien),
+        'Otto, Jan',
+        { ...HOCHKANT, drehung: 90, unterstrichen: true },
+        await macheFonts(font),
+      );
       const breite = font.widthOfTextAtSize('Otto, Jan', 10);
       // Bei 90° zeigen die Oberlängen nach -x (siehe ACHSEN-Kommentar) -- die Unterstreichung liegt
       // auf der Gegenseite, bei +x, als senkrechte Linie entlang der Laufrichtung (+y) des Textes.

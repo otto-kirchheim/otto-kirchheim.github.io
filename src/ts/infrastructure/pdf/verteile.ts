@@ -50,7 +50,10 @@ export function verteile(zeilen: TabellenZeilen, layout: Layout, tabellen: Versi
   function nimm(def: SeitenDef): Block {
     const block: Block = { def, zeilen: {} };
     for (const bereich of def.bereiche) {
-      block.zeilen[bereich.tabelle] = (rest[bereich.tabelle] ?? []).splice(0, Math.max(kapazitaetVon(bereich, tabellen), 0));
+      block.zeilen[bereich.tabelle] = (rest[bereich.tabelle] ?? []).splice(
+        0,
+        Math.max(kapazitaetVon(bereich, tabellen), 0),
+      );
     }
     return block;
   }
@@ -70,9 +73,14 @@ export function verteile(zeilen: TabellenZeilen, layout: Layout, tabellen: Versi
   if (uebrig.length > 0) {
     const [name, zeilenRest] = uebrig[0]!;
     const wiederholte = layout.seiten.filter(s => s.wiederholt);
-    if (wiederholte.length === 0) throw new Error(`${zeilenRest.length} Zeilen (${name}) passen in kein Layout — keine Seite ist als wiederholt markiert`);
+    if (wiederholte.length === 0)
+      throw new Error(
+        `${zeilenRest.length} Zeilen (${name}) passen in kein Layout — keine Seite ist als wiederholt markiert`,
+      );
     if (wiederholte.every(s => kapazitaet(s, name, tabellen) === 0)) {
-      throw new Error(`Tabelle "${name}" hat auf keiner wiederholten Seite einen Bereich, ${zeilenRest.length} Zeilen bleiben übrig`);
+      throw new Error(
+        `Tabelle "${name}" hat auf keiner wiederholten Seite einen Bereich, ${zeilenRest.length} Zeilen bleiben übrig`,
+      );
     }
     throw new Error(`${zeilenRest.length} Zeilen (${name}) passen in kein Layout`);
   }

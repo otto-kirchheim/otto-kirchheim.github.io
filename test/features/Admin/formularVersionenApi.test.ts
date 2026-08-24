@@ -35,14 +35,16 @@ describe('formularVersionenApi', () => {
   it('wirft einen ApiFehler mit Statuscode, damit der Konflikt (409) erkennbar bleibt', async () => {
     const { modul } = await ladeApi({ success: false, statusCode: 409, message: 'Lücke oder Überlappung: ez: …' });
 
-    const fehler = await modul.aendereVersion('ez', 'a1', {
-      version: 'v1',
-      gueltigVon: '2026-01-01',
-      gueltigBis: null,
-      vorlageId: 'b2',
-      konfig: { seiten: [{ quelle: 0, bereiche: [], felder: {} }] },
-      tabellen: {},
-    }).catch((e: unknown) => e);
+    const fehler = await modul
+      .aendereVersion('ez', 'a1', {
+        version: 'v1',
+        gueltigVon: '2026-01-01',
+        gueltigBis: null,
+        vorlageId: 'b2',
+        konfig: { seiten: [{ quelle: 0, bereiche: [], felder: {} }] },
+        tabellen: {},
+      })
+      .catch((e: unknown) => e);
 
     expect(fehler).toBeInstanceOf(modul.ApiFehler);
     expect((fehler as InstanceType<typeof modul.ApiFehler>).statusCode).toBe(409);
