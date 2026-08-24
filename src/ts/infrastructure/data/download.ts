@@ -19,7 +19,13 @@ import type {
   IEntgeltausgleichDownloadBody,
   INebengeldDownloadBody,
 } from '@otto-kirchheim/nebengeld-shared';
-import { beAbgeleiteteWerte, bereitschaftszulageAbgeleiteteWerte, bzAbgeleiteteWerte, ewtAbgeleiteteWerte } from '@otto-kirchheim/nebengeld-shared';
+import {
+  beAbgeleiteteWerte,
+  bereitschaftszulageAbgeleiteteWerte,
+  bzAbgeleiteteWerte,
+  ewtAbgeleiteteWerte,
+  ezAbgeleiteteWerte,
+} from '@otto-kirchheim/nebengeld-shared';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
 import { userProfileToBackend } from './fieldMapper';
@@ -174,13 +180,18 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     case 'N': {
       const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
       data.Daten = {
-        N: nRaw.map(n => ({
-          Tag: n.Tag,
-          Beginn: n.Beginn,
-          Ende: n.Ende,
-          Auftragsnummer: n.Auftragsnummer,
-          Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
-        })),
+        N: nRaw.map(n => {
+          const basis = {
+            Tag: n.Tag,
+            Beginn: n.Beginn,
+            Ende: n.Ende,
+            Auftragsnummer: n.Auftragsnummer,
+            Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
+          };
+          // Vorberechnete Arbeitszeit-Anzeige (Phase 12) direkt mit ins Zeilenobjekt -- `build()`
+          // sieht sie dann als normalen Datenpfad (Daten.N[].Arbeitszeit), analog EWT/Bereitschaft.
+          return { ...basis, ...ezAbgeleiteteWerte(basis) };
+        }),
       } satisfies INebengeldDownloadBody['Daten'];
       break;
     }

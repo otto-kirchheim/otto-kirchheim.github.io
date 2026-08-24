@@ -12,6 +12,7 @@ export const VorgabenGeldMock: IVorgabenGeld = {
     B: 0,
     C: 0,
     SIPO: 0,
+    GKR: 0,
     BE14: 24,
     BE8: 9,
     'Besoldungsgruppe A 8': 16.37,

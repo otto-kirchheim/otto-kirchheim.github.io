@@ -1,8 +1,8 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
 import { hoeheFuer, loeseListenAuf, spaltenFuer, startYFuer, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
-import type { Daten, ListenAufloesung, Version } from '@otto-kirchheim/nebengeld-shared';
-import { zeichne } from './zeichne';
-import { wert, type Kontext, type TabellenZeilen } from './wert';
+import type { Daten, ListenAufloesung, Spalte, SonderZeileZelle, Version } from '@otto-kirchheim/nebengeld-shared';
+import { zeichne, type FontSet } from './zeichne';
+import { sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext, type TabellenZeilen } from './wert';
 import { spaltenWert } from './spaltenWert';
 import { verteile } from './verteile';
 
@@ -10,6 +10,35 @@ function verbinde(a: TabellenZeilen, b: TabellenZeilen): TabellenZeilen {
   const zusammen: TabellenZeilen = { ...a };
   for (const [name, zeilen] of Object.entries(b)) zusammen[name] = [...(zusammen[name] ?? []), ...zeilen];
   return zusammen;
+}
+
+/**
+ * Spalte, die eine Sonderzeilen-Zelle referenziert -- über die Position, nicht `key` (der bleibt bei
+ * dynamischen UND Ankreuz-Spalten regelmäßig leer, siehe `SonderZeileZelle`-Kommentar in `shared`).
+ * Nach einem Löschen/Verschieben von Spalten kann der Index ins Leere zeigen -- die Zelle wird dann
+ * beim Rendern übersprungen statt eine falsche Spalte zu treffen.
+ */
+export function spalteFuerZelle(spalten: Spalte[], zelle: SonderZeileZelle): Spalte | undefined {
+  return spalten[zelle.spaltenIndex];
+}
+
+/**
+ * Zeichen-Geometrie einer Sonderzeilen-Zelle: x/x2 immer von der Spalte, `size`/`align`/
+ * `autoGroesse` von der Zelle ÜBERSCHRIEBEN, wenn gesetzt (z.B. eine fett-große Gesamtsumme bei
+ * sonst kleiner Datenzeilen-Schrift) -- ohne Angabe gilt jeweils der Wert der Spalte.
+ */
+export function zellGeometrie(spalte: Spalte, zelle: SonderZeileZelle, y: number, y2: number | undefined): Spalte & { y: number; y2?: number } {
+  return {
+    ...spalte,
+    y,
+    y2,
+    size: zelle.size ?? spalte.size,
+    align: zelle.align ?? spalte.align,
+    autoGroesse: zelle.autoGroesse ?? spalte.autoGroesse,
+    fett: zelle.fett ?? spalte.fett,
+    kursiv: zelle.kursiv ?? spalte.kursiv,
+    unterstrichen: zelle.unterstrichen ?? spalte.unterstrichen,
+  };
 }
 
 /**
@@ -36,7 +65,12 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
 
   const vorlage = await PDFDocument.load(await fetch(layout.template).then(r => r.arrayBuffer()));
   const pdf = await PDFDocument.create();
-  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  const fonts: FontSet = {
+    normal: await pdf.embedFont(StandardFonts.Helvetica),
+    fett: await pdf.embedFont(StandardFonts.HelveticaBold),
+    kursiv: await pdf.embedFont(StandardFonts.HelveticaOblique),
+    fettKursiv: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
+  };
 
   const bloecke = verteile(alle, layout, cfg.tabellen);
   // Einmal je Dokument bestimmt, nicht je Seite -- sonst könnte ein Lauf über Mitternacht zwei
@@ -55,7 +89,7 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
     // Ein einziger Feld-Bereich: Kopfangaben, Zwischen-/Gesamtsummen, Übertragszeile und
     // Seitenzahl unterscheiden sich nur durch Koordinaten und `berechnet`, nicht durch eine
     // eigene Renderer-Phase.
-    for (const [key, f] of Object.entries(def.felder)) zeichne(seite, wert(f, key, daten, kontext), f, font);
+    for (const [key, f] of Object.entries(def.felder)) zeichne(seite, wert(f, key, daten, kontext), f, fonts);
 
     for (const bereich of def.bereiche) {
       const tabelle = cfg.tabellen[bereich.tabelle];
@@ -68,8 +102,21 @@ export async function build(cfg: Version & { formular: string }, daten: Daten, s
       for (const zeile of block.zeilen[bereich.tabelle] ?? []) {
         // Die Spalte liefert nur die x-Kanten; die y-Kanten der Zelle kommen aus der Zeilenhöhe.
         // Ohne sie wäre `y` die Grundlinie und der Text säße auf der Zeilenunterkante statt mittig.
-        for (const sp of spalten) zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, font);
+        for (const sp of spalten) zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, fonts);
         y -= hoehe;
+      }
+
+      // Sonderzeilen (Kopf-/Summenzeilen über mehrere Spalten, siehe SonderZeile): x kommt von der
+      // (seiten-aufgelösten!) Spalte, nur y kommt von der Platzierung dieser Seite.
+      for (const platz of bereich.sonderzeilen ?? []) {
+        const sonderzeile = tabelle.sonderzeilen?.[platz.name];
+        if (!sonderzeile) continue;
+        const rows = zeilenFuerUeber(sonderzeile.ueber ?? '$alle', bereich.tabelle, kontext);
+        for (const zelle of sonderzeile.zellen) {
+          const spalte = spalteFuerZelle(spalten, zelle);
+          if (!spalte) continue;
+          zeichne(seite, sonderZeileZelleWert(zelle, spalte, bereich.tabelle, rows, daten, kontext), zellGeometrie(spalte, zelle, platz.y, platz.y2), fonts);
+        }
       }
     }
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { PDFDict, PDFDocument, PDFName } from '@cantoo/pdf-lib';
-import type { Version } from '@otto-kirchheim/nebengeld-shared';
-import { build } from '@/infrastructure/pdf/build';
+import type { Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
+import { build, spalteFuerZelle, zellGeometrie } from '@/infrastructure/pdf/build';
 
 const vorlagePfad = `${import.meta.dir}/../../fixtures/test_1seitig.pdf`;
 
@@ -59,6 +59,50 @@ function macheCfg(): Version & { formular: string } {
     },
   };
 }
+
+describe('spalteFuerZelle (Spaltenbezug einer Sonderzeilen-Zelle über die Position)', () => {
+  // User-Fund: sowohl dynamische Spalten (listenPlatz) als auch Ankreuz-Spalten (wenn) haben in der
+  // Praxis ALLE denselben leeren `key` -- ein Bezug über `key` könnte sie nicht unterscheiden.
+  const platz0: Spalte = { key: '', x: 10, size: 8, listenPlatz: { gruppe: 'g', index: 0 } };
+  const ankreuz: Spalte = { key: '', x: 40, size: 8, wenn: { feld: 'x', werte: [1], dann: '1' } };
+  const normal: Spalte = { key: 'Tag', x: 70, size: 8 };
+  const spalten = [platz0, ankreuz, normal];
+
+  it('findet die Spalte an der referenzierten Position, auch bei geteiltem leerem key', () => {
+    expect(spalteFuerZelle(spalten, { spaltenIndex: 1, art: 'summe' })).toBe(ankreuz);
+    expect(spalteFuerZelle(spalten, { spaltenIndex: 2, art: 'summe' })).toBe(normal);
+  });
+
+  it('liefert undefined bei einem Index außerhalb der Spaltenliste statt der falschen Spalte', () => {
+    expect(spalteFuerZelle(spalten, { spaltenIndex: 9, art: 'summe' })).toBeUndefined();
+  });
+});
+
+describe('zellGeometrie (Zeichen-Geometrie einer Sonderzeilen-Zelle)', () => {
+  const spalte: Spalte = { key: 'betrag', x: 10, x2: 60, size: 8, align: 'links', autoGroesse: false };
+
+  it('übernimmt x/x2 immer von der Spalte, y/y2 von der Platzierung', () => {
+    const geo = zellGeometrie(spalte, { spaltenIndex: 0, art: 'summe' }, 100, 112);
+    expect(geo.x).toBe(10);
+    expect(geo.x2).toBe(60);
+    expect(geo.y).toBe(100);
+    expect(geo.y2).toBe(112);
+  });
+
+  it('ohne Angabe gelten size/align/autoGroesse der Spalte', () => {
+    const geo = zellGeometrie(spalte, { spaltenIndex: 0, art: 'summe' }, 100, undefined);
+    expect(geo.size).toBe(8);
+    expect(geo.align).toBe('links');
+    expect(geo.autoGroesse).toBe(false);
+  });
+
+  it('Zellen-Angaben überschreiben size/align/autoGroesse der Spalte', () => {
+    const geo = zellGeometrie(spalte, { spaltenIndex: 0, art: 'summe', size: 14, align: 'zentriert', autoGroesse: true }, 100, undefined);
+    expect(geo.size).toBe(14);
+    expect(geo.align).toBe('zentriert');
+    expect(geo.autoGroesse).toBe(true);
+  });
+});
 
 describe('build', () => {
   beforeEach(async () => {
@@ -202,5 +246,60 @@ describe('build', () => {
     const bytes = await build(cfg, daten);
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(2);
+  });
+
+  it('rendert Sonderzeilen (Kopf zweifach platziert + Summen) fehlerfrei -- x kommt automatisch von der Spalte', async () => {
+    const cfg = macheCfg();
+    cfg.tabellen.haupt!.listen = { gruppe: { quelle: 'zulagen', schluessel: 'Typ', wert: 'Wert' } };
+    // Über eine Vorlage angelegte dynamische Spalten (User-Fund): `key` bleibt leer, mehrere
+    // Spalten teilen sich denselben Wert -- der Zellbezug muss deshalb über die Position laufen
+    // (Index 0/1 = die beiden Basis-Spalten `text`/`betrag`, 2/3 die neuen Zulagen-Plätze).
+    cfg.tabellen.haupt!.spalten.push(
+      { key: '', x: 300, size: 8, listenPlatz: { gruppe: 'gruppe', index: 0 } },
+      { key: '', x: 340, size: 8, listenPlatz: { gruppe: 'gruppe', index: 1 } },
+    );
+    cfg.tabellen.haupt!.sonderzeilen = {
+      kopf: {
+        zellen: [
+          { spaltenIndex: 2, art: 'kopf' },
+          { spaltenIndex: 3, art: 'kopf' },
+        ],
+      },
+      summe: {
+        ueber: '$alle',
+        zellen: [
+          { spaltenIndex: 2, art: 'summe' },
+          { spaltenIndex: 2, art: 'bereinigt' },
+          { spaltenIndex: 2, art: 'summeGeld', format: 'waehrung' },
+          { spaltenIndex: 3, art: 'summe' },
+          { spaltenIndex: 1, art: 'summe', format: 'waehrung' },
+        ],
+      },
+    };
+    cfg.layout.seiten[0]!.bereiche[0]!.sonderzeilen = [
+      { name: 'kopf', y: 780 },
+      { name: 'kopf', y: 50 }, // Kopie unten -- eine Inhaltsdefinition, zweimal platziert.
+      { name: 'summe', y: 40 },
+    ];
+
+    const daten = {
+      name: 'Max',
+      VorgabenGeld: { B: 2 },
+      zeilen: [
+        {
+          text: 'Zeile 1',
+          betrag: 10,
+          zulagen: [
+            { Typ: '811', Wert: 60 },
+            { Typ: '818', Wert: 30 },
+          ],
+        },
+        { text: 'Zeile 2', betrag: 5 },
+      ],
+    };
+
+    const bytes = await build(cfg, daten);
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getPageCount()).toBe(1);
   });
 });

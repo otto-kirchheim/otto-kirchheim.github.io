@@ -33,7 +33,7 @@ function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
  */
 function achseFuer(armed: Armed | null): Achse {
   if (armed?.bereich === 'spalte') return 'x';
-  if (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile') return 'y';
+  if (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile' || armed?.bereich === 'sonderzeile') return 'y';
   return 'beide';
 }
 
@@ -108,6 +108,23 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
       aktiv: Boolean(armed?.bereich === 'tabelle' && armed.tabelle === bereich.tabelle),
       // Linke Kante teilt sich der Rahmen mit der ersten Spalte -- Beschriftung deshalb nach rechts.
       labelRechts: true,
+    });
+
+    // Sonderzeilen-Platzierungen (Kopf-/Summenzeile über mehrere Spalten, siehe SonderZeile) --
+    // span wie der Tabellenrahmen über die Spaltenbreite, `index` ist die Position im Array (ein
+    // Name kann mehrfach vorkommen, z.B. Überschrift oben + Kopie unten).
+    (bereich.sonderzeilen ?? []).forEach((platz, index) => {
+      rechtecke.push({
+        x: links.length > 0 ? Math.min(...links) : undefined,
+        y: platz.y,
+        x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
+        // Ohne eigenes y2 nur ein schmaler Platzhalter-Streifen zur Orientierung -- reine
+        // Anzeige, in die Konfiguration übernommen wird nur, was der Klick tatsächlich liefert.
+        y2: platz.y2 ?? platz.y + 12,
+        label: `${bereich.tabelle}: ${platz.name}`,
+        aktiv: Boolean(armed?.bereich === 'sonderzeile' && armed.tabelle === bereich.tabelle && armed.index === index),
+        labelRechts: true,
+      });
     });
   }
 
@@ -195,6 +212,15 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         onChange({ ...value, tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, hoehe: gemessen } } });
       }
       createSnackBar({ message: `Zeilenhöhe: ${gemessen} pt (aus ${effMaxZeilen} Zeilen)`, status: 'success', timeout: 3000 });
+    } else if (armed.bereich === 'sonderzeile') {
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      if (!bereich) return;
+      const platzierungen = bereich.sonderzeilen ?? [];
+      const naechste = platzierungen.map((p, i) => (i === armed.index ? { ...p, y: r.y, y2: r.y2 } : p));
+      setzeAktiveSeite({
+        ...aktiveSeite,
+        bereiche: aktiveSeite.bereiche.map(b => (b.tabelle === armed.tabelle ? { ...b, sonderzeilen: naechste } : b)),
+      });
     } else if (armed.bereich === 'tabelle') {
       // Erste Datenzeile: y liefert die Startposition, die Höhe den Zeilenabstand. Beides gilt nur
       // dann für diese Seite allein, wenn sie schon eine eigene Platzierung hat ("eigene je Seite")

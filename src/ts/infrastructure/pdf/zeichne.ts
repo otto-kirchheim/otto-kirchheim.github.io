@@ -11,6 +11,24 @@ export interface Zelle {
   umbruch?: boolean;
   align?: Ausrichtung;
   drehung?: Drehung;
+  fett?: boolean;
+  kursiv?: boolean;
+  unterstrichen?: boolean;
+}
+
+/** Die vier Helvetica-Schnitte, aus denen `zeichne()` je Zelle den passenden auswählt. */
+export interface FontSet {
+  normal: PDFFont;
+  fett: PDFFont;
+  kursiv: PDFFont;
+  fettKursiv: PDFFont;
+}
+
+function waehleFont(f: Zelle, fonts: FontSet): PDFFont {
+  if (f.fett && f.kursiv) return fonts.fettKursiv;
+  if (f.fett) return fonts.fett;
+  if (f.kursiv) return fonts.kursiv;
+  return fonts.normal;
 }
 
 /**
@@ -94,9 +112,10 @@ function ankerLaengs(textBreite: number, min: number, max: number, align: Ausric
  * Namensfelder am Rand mancher Zettel). Gerechnet wird dafür nicht mit x/y, sondern mit Lauf- und
  * Querachse: die Formeln bleiben dieselben, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich.
  */
-export function zeichne(seite: PDFPage, text: string, f: Zelle, font: PDFFont): void {
+export function zeichne(seite: PDFPage, text: string, f: Zelle, fonts: FontSet): void {
   if (!text) return;
 
+  const font = waehleFont(f, fonts);
   const drehung = f.drehung ?? 0;
   const { laengsX, laengsVor, querVor } = ACHSEN[drehung];
 
@@ -125,16 +144,36 @@ export function zeichne(seite: PDFPage, text: string, f: Zelle, font: PDFFont): 
   const mitte = querMin + (querLaenge - blockHoehe) / 2;
   const ersteBaseline = !hatQuer ? querAnker : querVor === 1 ? mitte + (zeilen.length - 1) * zeilenhoehe : mitte + oberlaenge;
 
+  // Rotation um den Textanker, wie pdf-lib sie für `drawText({ rotate })` anwendet (Standard-CCW-
+  // Matrix, siehe `rotateRadians()`) -- nötig, um die Unterstreichung bei gedrehtem Text (z.B. 90°
+  // Kopfspalten) am richtigen Fleck statt achsenparallel zur Seite zu zeichnen.
+  const winkel = (drehung * Math.PI) / 180;
+  const cosWinkel = Math.cos(winkel);
+  const sinWinkel = Math.sin(winkel);
+  const unterstreichAbstand = size * 0.08;
+  const unterstreichDicke = Math.max(0.4, size * 0.045);
+
   zeilen.forEach((zeile, i) => {
     if (!zeile) return;
     const laengs = ankerLaengs(breite(zeile, size, font), laengsMin, laengsMax, f.align, laengsVor);
     const quer = ersteBaseline - querVor * i * zeilenhoehe;
+    const x = laengsX ? laengs : quer;
+    const y = laengsX ? quer : laengs;
     seite.drawText(zeile, {
-      x: laengsX ? laengs : quer,
-      y: laengsX ? quer : laengs,
+      x,
+      y,
       size,
       font,
       ...(drehung === 0 ? {} : { rotate: degrees(drehung) }),
     });
+
+    if (f.unterstrichen) {
+      const breiteZeile = breite(zeile, size, font);
+      seite.drawLine({
+        start: { x: x + unterstreichAbstand * sinWinkel, y: y - unterstreichAbstand * cosWinkel },
+        end: { x: x + breiteZeile * cosWinkel + unterstreichAbstand * sinWinkel, y: y + breiteZeile * sinWinkel - unterstreichAbstand * cosWinkel },
+        thickness: unterstreichDicke,
+      });
+    }
   });
 }

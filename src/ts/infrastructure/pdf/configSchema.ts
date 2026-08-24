@@ -34,6 +34,18 @@ const berechnetSchema = z.object({
   feld: z.string().optional(),
   tabellen: z.array(z.string()).optional(),
   maxTage: z.number().optional(),
+  // Gleiche Form wie listenPlatzSchema (unten definiert, hier nicht wiederverwendbar wegen der
+  // Deklarationsreihenfolge) + tabelle (wie bei Feld.listenKopf) + art. Ohne `index`: Summe über
+  // ALLE Einträge der Gruppe (Gesamtsumme) statt über einen Platz, `art` gilt genauso.
+  liste: z
+    .object({
+      tabelle: z.string(),
+      gruppe: z.string(),
+      index: z.number().int().nonnegative().optional(),
+      // Gleiche Werte wie sonderZeileArtSchema, ohne 'kopf' -- Default 'summe' (roh).
+      art: z.enum(['summe', 'bereinigt', 'summeGeld']).optional(),
+    })
+    .optional(),
 });
 
 // Rekursiv: ein Operand darf selbst eine Rechnung sein (geklammerte Zwischenrechnung). Zod braucht
@@ -82,6 +94,32 @@ const listenGruppeSchema = z.object({
   beschriftungen: z.record(z.string(), z.string()).optional(),
 });
 
+const sonderZeileArtSchema = z.enum(['kopf', 'summe', 'bereinigt', 'summeGeld']);
+
+/**
+ * Zelle einer Sonderzeile: referenziert eine Spalte über ihre Position in `TabellenDef.spalten`,
+ * nicht über `key` -- der bleibt sowohl bei dynamischen (`listenPlatz`) als auch bei Ankreuz-Spalten
+ * (`wenn`) regelmäßig leer und mehrfach vergeben.
+ */
+const sonderZeileZelleSchema = z.object({
+  spaltenIndex: z.number().int().nonnegative(),
+  art: sonderZeileArtSchema,
+  format: formatNameSchema.optional(),
+  // Ohne Angabe gelten jeweils die Werte der referenzierten Spalte.
+  size: z.number().optional(),
+  align: ausrichtungSchema.optional(),
+  autoGroesse: z.boolean().optional(),
+  fett: z.boolean().optional(),
+  kursiv: z.boolean().optional(),
+  unterstrichen: z.boolean().optional(),
+});
+
+/** Kopf-/Fußzeilen-Inhalt einer Tabelle -- WO er erscheint, legt `tabellenBereichSchema.sonderzeilen` fest. */
+const sonderZeileSchema = z.object({
+  ueber: z.string().optional(),
+  zellen: z.array(sonderZeileZelleSchema),
+});
+
 const drehungSchema = z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]);
 
 const feldSchema = z.object({
@@ -101,6 +139,9 @@ const feldSchema = z.object({
   wenn: feldBedingungSchema.optional(),
   listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
   drehung: drehungSchema.optional(),
+  fett: z.boolean().optional(),
+  kursiv: z.boolean().optional(),
+  unterstrichen: z.boolean().optional(),
   label: z.string().optional(),
 });
 
@@ -118,6 +159,9 @@ const spalteSchema = z.object({
   wenn: bedingungSchema.optional(),
   listenPlatz: listenPlatzSchema.optional(),
   drehung: drehungSchema.optional(),
+  fett: z.boolean().optional(),
+  kursiv: z.boolean().optional(),
+  unterstrichen: z.boolean().optional(),
   label: z.string().optional(),
 });
 
@@ -140,6 +184,17 @@ const tabellenBereichSchema = z.object({
   spalten: z.array(spalteSchema).optional(),
   /** Seitenspezifische Zeilenhöhe; ohne Angabe gilt die Höhe der Tabelle. */
   hoehe: z.number().positive().optional(),
+  /** Platzierungen der Tabellen-Sonderzeilen auf dieser Seite; `name` darf mehrfach vorkommen
+   *  (z.B. Überschrift oben UND als Kopie unten). */
+  sonderzeilen: z
+    .array(
+      z.object({
+        name: z.string(),
+        y: z.number(),
+        y2: z.number().optional(),
+      }),
+    )
+    .optional(),
 });
 
 const seitenDefSchema = z.object({
@@ -160,6 +215,7 @@ const tabellenDefSchema = z.object({
   hoehe: z.number().positive(),
   spalten: z.array(spalteSchema),
   listen: z.record(z.string(), listenGruppeSchema).optional(),
+  sonderzeilen: z.record(z.string(), sonderZeileSchema).optional(),
 });
 
 const layoutSchema = z.object({

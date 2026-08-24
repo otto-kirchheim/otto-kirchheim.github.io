@@ -1,17 +1,20 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { render } from 'preact';
 import { useRef, useState } from 'preact/hooks';
-import type { Ausrichtung, Bedingung, Berechnet, Daten, Drehung, Feld, FeldBedingung, FormatName, ListenGruppe, OpName, SeitenDef, Spalte, TabellenBereich, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import type { Ausrichtung, Bedingung, Berechnet, Daten, Drehung, Feld, FeldBedingung, FormatName, ListenGruppe, ListenPlatz, OpName, SeitenDef, Spalte, TabellenBereich, TabellenDef, Zeile, ZeilenBerechnet, ZeilenOperand, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
 import { wert, type Kontext } from '@/infrastructure/pdf/wert';
 import { spaltenWert } from '@/infrastructure/pdf/spaltenWert';
-import { istBooleanFeld, ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { FORMATE, istBooleanFeld, ZEILEN_QUELLEN, gruppiere, katalogFelder, katalogZeilenFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
 import { ListenGruppen } from './ListenGruppen';
+import { SonderZeilen } from './SonderZeilen';
+import { WertVorschau } from './WertVorschau';
 
 export type Armed =
   | { bereich: 'feld'; key: string }
   | { bereich: 'spalte'; tabelle: string; index: number }
   | { bereich: 'tabelle'; tabelle: string }
   | { bereich: 'letzteZeile'; tabelle: string }
+  | { bereich: 'sonderzeile'; tabelle: string; index: number }
   | { bereich: 'signaturBild' };
 
 type Props = {
@@ -36,35 +39,6 @@ export interface Vorschau {
 }
 
 /** Gerenderter Beispielwert unter einem Eintrag; leere Werte werden als solche kenntlich gemacht. */
-function WertVorschau({ text }: { text: string }) {
-  return (
-    <div class="form-text small mb-0">
-      Vorschau: {text === '' ? <em class="text-body-secondary">(leer)</em> : <span class="font-monospace">{text}</span>}
-    </div>
-  );
-}
-
-const FORMATE: { wert: FormatName | ''; label: string }[] = [
-  { wert: '', label: 'unverändert' },
-  { wert: 'waehrung', label: 'Währung (1.234,50)' },
-  { wert: 'zahl', label: 'Zahl (1.234,57)' },
-  { wert: 'ganzzahl', label: 'Ganzzahl (1.235)' },
-  { wert: 'datum', label: 'Datum (15.03.2026)' },
-  { wert: 'datumKurz', label: 'Datum kurz (15.03.)' },
-  { wert: 'tag', label: 'Tag (15)' },
-  { wert: 'tagZweistellig', label: 'Tag zweistellig (05)' },
-  { wert: 'wochentag', label: 'Wochentag (So)' },
-  { wert: 'monatJahr', label: 'Monat/Jahr (03/2026)' },
-  { wert: 'monatName', label: 'Monatsname (März)' },
-  { wert: 'monatNameKurz', label: 'Monatsname kurz (Mär)' },
-  { wert: 'uhrzeit', label: 'Uhrzeit (07:05)' },
-  { wert: 'stunden', label: 'Zeitspanne (2:30)' },
-  { wert: 'liste', label: 'Liste zusammenfügen (I / IW)' },
-  { wert: 'grossbuchstaben', label: 'GROSSBUCHSTABEN' },
-  { wert: 'jaNein', label: 'Ja/Nein' },
-  { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
-];
-
 const DREHUNGEN: { wert: Drehung; label: string }[] = [
   { wert: 0, label: 'waagerecht' },
   { wert: 90, label: '90° (von unten nach oben)' },
@@ -72,9 +46,19 @@ const DREHUNGEN: { wert: Drehung; label: string }[] = [
   { wert: 180, label: '180° (auf dem Kopf)' },
 ];
 
-/** Schriftgröße, Auto-Verkleinerung, Umbruch, Ausrichtung, Format und Drehung -- Felder wie Spalten. */
+/** Schriftgröße, Auto-Verkleinerung, Umbruch, Ausrichtung, Format, Drehung und Schriftschnitt -- Felder wie Spalten. */
 function DarstellungsFelder<
-  T extends { size: number; autoGroesse?: boolean; umbruch?: boolean; align?: Ausrichtung; format?: FormatName; drehung?: Drehung },
+  T extends {
+    size: number;
+    autoGroesse?: boolean;
+    umbruch?: boolean;
+    align?: Ausrichtung;
+    format?: FormatName;
+    drehung?: Drehung;
+    fett?: boolean;
+    kursiv?: boolean;
+    unterstrichen?: boolean;
+  },
 >({
   wert,
   onChange,
@@ -84,7 +68,8 @@ function DarstellungsFelder<
 }) {
   return (
     <>
-      <div class="row g-1">
+      {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
+      <div class="row g-1 align-items-center">
         <div class="col-3">
           <input
             type="number"
@@ -94,25 +79,34 @@ function DarstellungsFelder<
             onInput={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
           />
         </div>
-        <div class="col-4">
+        <div class="col-3 form-check mb-0">
+          <input class="form-check-input" type="checkbox" checked={Boolean(wert.fett)} onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })} />
+          <label class="form-check-label small">Fett</label>
+        </div>
+        <div class="col-3 form-check mb-0">
+          <input class="form-check-input" type="checkbox" checked={Boolean(wert.kursiv)} onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })} />
+          <label class="form-check-label small">Kursiv</label>
+        </div>
+        <div class="col-3 form-check mb-0">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            checked={Boolean(wert.unterstrichen)}
+            onChange={e => onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })}
+          />
+          <label class="form-check-label small">Unterstr.</label>
+        </div>
+      </div>
+      {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
+      <div class="row g-1 mt-1">
+        <div class="col-5">
           <select class="form-select form-select-sm" value={wert.align ?? 'links'} onChange={e => onChange({ ...wert, align: (e.target as HTMLSelectElement).value as Ausrichtung })}>
             <option value="links">links</option>
             <option value="zentriert">zentriert</option>
             <option value="rechts">rechts</option>
           </select>
         </div>
-        <div class="col-5">
-          <select class="form-select form-select-sm" value={wert.format ?? ''} onChange={e => onChange({ ...wert, format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined })}>
-            {FORMATE.map(f => (
-              <option key={f.wert} value={f.wert}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div class="row g-1 mt-0">
-        <div class="col-12">
+        <div class="col-7">
           <select
             class="form-select form-select-sm"
             title="Textrichtung in der Zelle — 90° für schmale, hochkant beschriftete Felder"
@@ -130,6 +124,19 @@ function DarstellungsFelder<
           </select>
         </div>
       </div>
+      {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
+      <div class="row g-1 mt-1">
+        <div class="col-12">
+          <select class="form-select form-select-sm" value={wert.format ?? ''} onChange={e => onChange({ ...wert, format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined })}>
+            {FORMATE.map(f => (
+              <option key={f.wert} value={f.wert}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
       <div class="d-flex gap-3 mt-1">
         <div class="form-check">
           <input class="form-check-input" type="checkbox" checked={Boolean(wert.autoGroesse)} onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })} />
@@ -535,6 +542,47 @@ function feldOptionenFuerTabelle(formular: FormularCode, tabelle: TabellenDef): 
   return [...katalogZeilenFelder(formular, tabelle.quelle), ...berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten')];
 }
 
+type ListenOption = { key: string; label: string; liste: NonNullable<Berechnet['liste']> };
+
+/**
+ * Summenfeld-Optionen je dynamischem Spaltenplatz einer Tabelle (EZ) -- eine normale (Minuten/
+ * Stück) und eine "(€)"-Variante je konfiguriertem Platz, siehe `Berechnet.liste`. Bewusst NICHT
+ * je Code (aus `ListenGruppe.auswahl`): welcher Code an einem Platz landet, steht erst mit den
+ * Daten des Monats fest (`schluesselAufPlatz()`) -- die Summe muss demselben Platz folgen wie die
+ * Spaltenüberschrift, nicht einem beim Konfigurieren fest gewählten Code. Plätze kommen deshalb aus
+ * den TATSÄCHLICH angelegten Spalten (`Spalte.listenPlatz`), nicht aus der maximal möglichen
+ * Codezahl der Gruppe. Label übernimmt den Spalten-`label`, damit Summenfeld und Datenspalte im
+ * Dropdown erkennbar zusammengehören.
+ */
+/** Suffix je `art` -- `summe` bleibt ohne Suffix (bestehender Key-Bestand bliebe sonst mehrdeutig). */
+const LISTE_ART_SUFFIX: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = { summe: '', bereinigt: ':bereinigt', summeGeld: ':geld' };
+const LISTE_ART_LABEL: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = { summe: '', bereinigt: ' (bereinigt, Std.)', summeGeld: ' (€)' };
+
+function listenOptionenFuerTabelle(name: string, tabelle: TabellenDef): ListenOption[] {
+  const arten = ['summe', 'bereinigt', 'summeGeld'] as const;
+  const jePlatz = tabelle.spalten
+    .filter((sp): sp is Spalte & { listenPlatz: ListenPlatz } => sp.listenPlatz !== undefined)
+    .flatMap(sp => {
+      const { gruppe, index } = sp.listenPlatz;
+      const bezeichnung = sp.label ?? `${gruppe} ${index + 1}`;
+      return arten.map(art => ({
+        key: `liste:${name}:${gruppe}:${index}${LISTE_ART_SUFFIX[art]}`,
+        label: `${bezeichnung}${LISTE_ART_LABEL[art]}`,
+        liste: { tabelle: name, gruppe, index, art },
+      }));
+    });
+  // Gesamtsumme über ALLE Einträge einer Gruppe (jeder mit seinem eigenen Code, nicht an einen
+  // Platz gebunden) -- ohne `index`.
+  const gesamt = Object.keys(tabelle.listen ?? {}).flatMap(gruppe =>
+    arten.map(art => ({
+      key: `liste:${name}:${gruppe}:gesamt${LISTE_ART_SUFFIX[art]}`,
+      label: `${gruppe} — Gesamtsumme${LISTE_ART_LABEL[art] || ' (roh)'}`,
+      liste: { tabelle: name, gruppe, art },
+    })),
+  );
+  return [...jePlatz, ...gesamt];
+}
+
 /**
  * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`),
  * optionale Eingrenzung auf eine oder mehrere Tabellen (`Berechnet.tabellen`) und das aggregierte
@@ -571,10 +619,17 @@ function AggregationEditor({
           ).values(),
         ]
       : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
+  // Zulagen-Platz-Summen nur bei op "summe" -- eine Anzahl/ein Maximum "je Platz" hat hier keine
+  // eindeutige Bedeutung, siehe Berechnet.liste-Kommentar.
+  const relevanteTabellen: [string, TabellenDef][] =
+    gewaehlt.length > 0
+      ? gewaehlt.flatMap(name => (tabellen[name] ? [[name, tabellen[name]] as [string, TabellenDef]] : []))
+      : Object.entries(tabellen);
+  const listenOptionen = wert.op === 'summe' ? relevanteTabellen.flatMap(([name, t]) => listenOptionenFuerTabelle(name, t)) : [];
 
   function schalteTabelle(name: string) {
     const naechste = gewaehlt.includes(name) ? gewaehlt.filter(t => t !== name) : [...gewaehlt, name];
-    onChange({ ...wert, tabellen: naechste.length > 0 ? naechste : undefined, feld: undefined });
+    onChange({ ...wert, tabellen: naechste.length > 0 ? naechste : undefined, feld: undefined, liste: undefined });
   }
 
   return (
@@ -597,7 +652,23 @@ function AggregationEditor({
         </select>
       </div>
       <div class="col-5">
-        <select class="form-select form-select-sm" value={wert.feld ?? ''} onChange={e => onChange({ ...wert, feld: (e.target as HTMLSelectElement).value || undefined })}>
+        <select
+          class="form-select form-select-sm"
+          value={
+            wert.liste
+              ? `liste:${wert.liste.tabelle}:${wert.liste.gruppe}:${wert.liste.index ?? 'gesamt'}${LISTE_ART_SUFFIX[wert.liste.art ?? 'summe']}`
+              : (wert.feld ?? '')
+          }
+          onChange={e => {
+            const v = (e.target as HTMLSelectElement).value;
+            if (v.startsWith('liste:')) {
+              const treffer = listenOptionen.find(o => o.key === v);
+              onChange({ ...wert, feld: undefined, liste: treffer?.liste });
+            } else {
+              onChange({ ...wert, feld: v || undefined, liste: undefined });
+            }
+          }}
+        >
           <option value="">(Feld wählen)</option>
           {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
@@ -611,6 +682,28 @@ function AggregationEditor({
               ))}
             </optgroup>
           ))}
+          {listenOptionen.filter(o => o.liste.index !== undefined).length > 0 && (
+            <optgroup label="Zulagen-Spaltenplätze (Summe je Platz)">
+              {listenOptionen
+                .filter(o => o.liste.index !== undefined)
+                .map(o => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+            </optgroup>
+          )}
+          {listenOptionen.filter(o => o.liste.index === undefined).length > 0 && (
+            <optgroup label="Zulagen-Gruppen (Gesamtsumme über alle Plätze)">
+              {listenOptionen
+                .filter(o => o.liste.index === undefined)
+                .map(o => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+            </optgroup>
+          )}
         </select>
       </div>
       <div class="col-12 d-flex flex-wrap align-items-center gap-2">
@@ -873,6 +966,7 @@ const VORLAGEN: { label: string; key: string; feld: Feld }[] = [
     feld: { x: 50, y: 50, size: 10, align: 'rechts', format: 'waehrung', berechnet: { op: 'summe', ueber: '$bisher' } },
   },
   { label: '+ Seitenzahl', key: 'seitenzahl', feld: { x: 50, y: 50, size: 8, align: 'rechts', text: 'Seite {seite} von {seiten}' } },
+  { label: '+ Monat/Jahr', key: 'monatJahr', feld: { x: 50, y: 50, size: 10, align: 'zentriert', text: '{Monat}/{Jahr}', label: 'Monat/Jahr' } },
   {
     label: '+ Datum (Unterschrift)',
     key: 'unterschriftsdatum',
@@ -1598,7 +1692,7 @@ function TabellenBlock({
   const letzteAktiv = istGleich(armed, { bereich: 'letzteZeile', tabelle: name });
   const filterWerte = tabelle.filter ? werteAuswahl(tabelle.filter.feld) : [];
 
-  function setzeBereich(next: Partial<Pick<TabellenBereich, 'startY' | 'maxZeilen' | 'spalten' | 'hoehe'>>) {
+  function setzeBereich(next: Partial<Pick<TabellenBereich, 'startY' | 'maxZeilen' | 'spalten' | 'hoehe' | 'sonderzeilen'>>) {
     const bestehend: TabellenBereich = bereich ?? { tabelle: name };
     const ersetzt = { ...bestehend, ...next };
     onSeiteChange({ ...seite, bereiche: bereich ? seite.bereiche.map(b => (b.tabelle === name ? ersetzt : b)) : [...seite.bereiche, ersetzt] });
@@ -1811,6 +1905,58 @@ function TabellenBlock({
           onChange({ ...tabelle, listen: { ...(tabelle.listen ?? {}), [name]: gruppe }, spalten: [...tabelle.spalten, ...neue] });
         }}
       />
+
+      <SonderZeilen tabelle={tabelle} tabelleName={name} vorschau={vorschau} onChange={onChange} />
+
+      {bereich && Object.keys(tabelle.sonderzeilen ?? {}).length > 0 && (
+        <div class="mb-1">
+          <div class="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
+          {Object.keys(tabelle.sonderzeilen ?? {}).map(sonderName => {
+            const platzierungen = bereich.sonderzeilen ?? [];
+            const indizes = platzierungen.map((_, i) => i).filter(i => platzierungen[i]!.name === sonderName);
+            return (
+              <div key={sonderName} class="mb-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="small flex-grow-1">{sonderName}</span>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-secondary py-0"
+                    title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
+                    onClick={() => setzeBereich({ sonderzeilen: [...platzierungen, { name: sonderName, y: startY }] })}
+                  >
+                    + Platzieren
+                  </button>
+                </div>
+                {indizes.map(i => {
+                  const platz = platzierungen[i]!;
+                  const zeilenAktiv = istGleich(armed, { bereich: 'sonderzeile', tabelle: name, index: i });
+                  return (
+                    <div key={i} class="d-flex align-items-end gap-1 mb-1 flex-wrap">
+                      <ScharfButton
+                        aktiv={zeilenAktiv}
+                        onClick={() => onArm(zeilenAktiv ? null : { bereich: 'sonderzeile', tabelle: name, index: i })}
+                        titel="Band über diese Zeile auf dem PDF ziehen -- setzt y/y2"
+                      />
+                      <ZahlFeld label="y" wert={platz.y} onChange={v => setzeBereich({ sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y: v ?? 0 } : p)) })} />
+                      <ZahlFeld label="y2" wert={platz.y2} onChange={v => setzeBereich({ sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y2: v } : p)) })} />
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-danger py-0"
+                        title="Diese Platzierung entfernen"
+                        onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
+                      >
+                        <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+                          delete
+                        </span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <div class="d-flex align-items-center gap-2 mb-1">
         <span class="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>

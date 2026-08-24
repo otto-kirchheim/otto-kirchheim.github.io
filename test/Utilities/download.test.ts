@@ -305,7 +305,7 @@ describe('download utility', () => {
       ]);
     });
 
-    it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf (keine abgeleiteten Werte bei EZ)', async () => {
+    it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf, inkl. vorberechneter Arbeitszeit', async () => {
       await download(button, 'N');
 
       expect(tableToArray).toHaveBeenCalledWith('tableN');
@@ -323,6 +323,8 @@ describe('download utility', () => {
                 Ende: '23:00',
                 Auftragsnummer: 'N-77',
                 Zulagen: [{ Typ: '040', Wert: 2 }],
+                // Arbeitszeit (Phase 12): "Beginn-Ende" -- siehe ezAbgeleiteteWerte().
+                Arbeitszeit: '21:00-23:00',
               },
             ],
           },

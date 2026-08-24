@@ -2,6 +2,207 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-23 (30)
+
+### feat (FormularEditor: Sonderzeilen -- Kopf-/Summenzeilen über mehrere Spalten auf einmal)
+
+User-Anmerkung: bei EZ müssten für elf Zulagen-Spaltenplätze je Überschrift + drei Summenarten (44
+`Feld`-Einträge) einzeln mit eigener Koordinate angelegt werden, obwohl `x` bereits an der Spalte
+selbst hängt. Neues Konzept **Sonderzeile**: einmal festlegen, welche Spalte in dieser Zeile was
+zeigt (Kreuz statt Koordinate) -- x kommt beim Rendern automatisch von der Spalte, nur die y-Position
+wird je Seite eingegeben. Gilt nicht nur für EZ: jede Tabelle mit Fuß-/Kopfsummen (EA/EWT/
+Bereitschaft) kann Sonderzeilen für ihre normalen Spalten nutzen, auch ohne dynamische Listenplätze.
+Rein additiv -- bestehende, manuell gebaute Kopf-/Fuß-Felder bleiben unverändert gültig.
+
+EZ-Korrektur des Users: drei Summenarten statt einer -- rohe Summe (Minuten/Stück), bereinigte Summe
+in vollen Stunden (nur für Minuten-Zulagen, Stück-Zulagen zeigen `"-"`) und Summe in Euro. Zusätzlich
+eine Gesamtsumme über ALLE Zulagen-Spaltenplätze einer Gruppe als normales globales Feld im
+bestehenden Summenfeld-Editor -- ebenfalls in allen drei Arten (User-Nachtrag: "benötige alle 3
+Arten zusammen"), nicht nur in Euro.
+
+Rückfrage geklärt: die Euro-Umrechnung bleibt LIVE im PDF-Renderer aus `Daten.VorgabenGeld` (nicht
+wie bei Bereitschaft vorberechnet beim Download) -- der bereits bestehende `Berechnet.liste`-
+Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
+
+**Vier weitere Browser-Test-Funde (User, direkt im Anschluss):**
+1. Testdaten-Vorschau zeigte keine Beispielwerte für Sonderzeilen-Zellen -- `SonderZeilen.tsx` rief
+   `sonderZeileZelleWert()`/`zeilenFuerUeber()` bisher gar nicht auf. Fix: `SonderZeilen` bekommt
+   `tabelleName`/`vorschau` (wie andere Editor-Komponenten) und zeigt je Zelle dieselbe `WertVorschau`
+   wie Feld-/Spalten-Einträge (dafür in eine eigene `WertVorschau.tsx` verschoben, Zirkelimport-Risiko
+   gegenüber `FeldPanel.tsx` vermieden).
+2. Sonderzeile umbenennen ließ den Cursor nach jedem Zeichen aus dem Eingabefeld springen --
+   `onChange` schrieb direkt in den `tabelle.sonderzeilen`-Record-Key, dessen Änderung bei JEDEM
+   Tastendruck die als `key={name}` geschlüsselte Karte für Preact neu gemountet hat. Fix: neue
+   `SonderZeileName`-Komponente mit lokalem Entwurfsstand, Übernahme erst bei `onBlur`/Enter; Karten
+   schlüsseln jetzt über den Array-Index (stabil), `benenneUm()` baut den Record zudem
+   positionserhaltend um (kein Sprung ans Listenende beim Umbenennen).
+3. Bei EWT (sechs Ankreuz-Spalten mit `wenn`, ALLE mit leerem `key`) wurde immer nur die erste
+   Spalte berechnet -- der eben erst eingeführte `spalte`/`listenPlatz`-Bezug (Fix zu Fund 1 unten)
+   löst zwar den Konflikt zwischen dynamischen Spalten, aber Ankreuz-Spalten teilen sich ihren leeren
+   `key` GENAUSO und blieben dadurch weiterhin ununterscheidbar. Fix: `SonderZeileZelle` referenziert
+   eine Spalte jetzt über `spaltenIndex` (Position in `TabellenDef.spalten`) statt über `key`/
+   `listenPlatz` -- die einzige Referenz, die für JEDE Spaltenart eindeutig ist. Zusätzlich hatte eine
+   Ankreuz-Spalte für "Summe" ohnehin keinen sinnvollen Wert (ihr Inhalt entsteht erst je Zeile aus
+   der Bedingung, es gibt kein flaches Zeilenfeld zum Summieren) -- `sonderZeileZelleWert()` zählt
+   für `wenn`-Spalten jetzt, wie viele Zeilen die Bedingung erfüllen. Außerdem gewünschter
+   Standardwert: ein unbelegter Zulagen-Platz liefert jetzt `0` statt einer leeren Zelle.
+4. "wo kann ich die Schriftgröße/Ausrichtung/automatische Schrift verkleinern der Sonderzeile
+   festlegen?" -- bisher gar nicht, eine Zelle übernahm Schriftgröße/Ausrichtung/Auto-Verkleinerung
+   ausnahmslos von ihrer Spalte. `SonderZeileZelle` bekommt `size`/`align`/`autoGroesse` als
+   optionale Übersteuerung (wie `format` schon vorher) -- z.B. eine fett-große Gesamtsumme bei sonst
+   kleiner Datenzeilen-Schrift.
+
+- **`shared/src/formular/types.ts`:** `SonderZeileArt` (`kopf`/`summe`/`bereinigt`/`summeGeld`),
+  `SonderZeileZelle` und `SonderZeile` (`ueber` + `zellen`) neu. `TabellenDef.sonderzeilen?:
+  Record<string, SonderZeile>` (Inhalt, wie `listen`), `TabellenBereich.sonderzeilen?: {name; y;
+  y2?}[]` (Platzierung je Seite -- ein `name` darf mehrfach vorkommen, deckt "Überschrift oben +
+  Kopie unten" mit EINER Inhaltsdefinition ab). `Berechnet.liste.index` von Pflicht auf optional --
+  ohne `index` Gesamtsumme über ALLE Einträge einer Gruppe statt über einen Platz.
+  **Zwei Browser-Test-Funde (User):** (a) über eine Vorlage angelegte dynamische Spalten teilen sich
+  denselben leeren `key` -- ein Zellbezug allein über `key` konnte sie nicht unterscheiden, ein
+  Zwischenstand über `spalte`/`listenPlatz` löste das nur für dynamische Spalten; (b) Ankreuz-Spalten
+  (`wenn`) teilen sich ihren leeren `key` genauso. `SonderZeileZelle` referenziert eine Spalte deshalb
+  final über `spaltenIndex` (Position in `TabellenDef.spalten`) -- die einzige über jede Spaltenart
+  hinweg eindeutige Referenz. `size?`/`align?`/`autoGroesse?` neu -- ohne Angabe gilt jeweils der
+  Wert der Spalte, analog zu `format`.
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `bereinigteZulagenStunden()` (Minuten-Codes gerundet
+  auf volle Stunden wie in `geldwertZulagenCode()`, Stück-Codes `undefined`), `summeGeldwertGruppe()`
+  und `summeBereinigtGruppe()` (Geldwert bzw. Std.-Summe aller Einträge einer Gruppe, je Eintrag mit
+  eigenem Code) neu. **`aggregatoren.ts`:** `summeGruppe()` (rohe Gesamtsumme aller Einträge, kein
+  Code-Filter) neu.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` verzweigt bei `liste.index === undefined`
+  je nach `liste.art` auf `summeGruppe()`/`summeBereinigtGruppe()`/`summeGeldwertGruppe()`, mit
+  `index` entsprechend auf den bestehenden Platz-Pfad (`geldwertZulagenCode()`/
+  `bereinigteZulagenStunden()`/roh). `Berechnet.liste.geldwert: boolean` durch `art?:
+  'summe'|'bereinigt'|'summeGeld'` ersetzt (Default `'summe'`) -- vereinheitlicht Platz- und
+  Gesamtsumme-Fall auf dieselbe Arten-Auswahl wie `SonderZeileZelle.art`. Neue Funktionen
+  `zeilenFuerUeber()` (Zeilen einer Sonderzeile, eingegrenzt auf eine Tabelle) und
+  `sonderZeileZelleWert()` (Zellinhalt je `art`; für eine Ankreuz-Spalte (`wenn`) zählt `'summe'` die
+  Zeilen mit erfüllter Bedingung statt ein flaches Zeilenfeld zu summieren, das es dort nicht gibt;
+  unbelegter Zulagen-Platz liefert `0` statt einer leeren Zelle; Format-Override pro Zelle sonst
+  `Spalte.format`).
+- **`infrastructure/pdf/build.ts`:** neue Schleife über `bereich.sonderzeilen` je Tabellenbereich --
+  Spalte kommt aus den seiten-aufgelösten `spalten` (nicht `tabelle.spalten` direkt), damit eine
+  Seite mit eigenem Spaltenraster auch hier die richtige x-Position liefert. Neu exportierte
+  `spalteFuerZelle()` liest die Spalte an `zelle.spaltenIndex`; `zellGeometrie()` baut daraus die
+  Zeichen-Geometrie -- x/x2 immer von der Spalte, `size`/`align`/`autoGroesse` von der Zelle
+  überschrieben, wenn gesetzt.
+- **`FormularEditor/SonderZeilen.tsx`** (neu, analog `ListenGruppen.tsx`): verwaltet
+  `tabelle.sonderzeilen` -- pro Zeile Name, Zeilenbezug, und eine Zeile pro Spalte (auch ohne `key`,
+  über ihren Index referenziert) mit Art-Auswahl (`bereinigt`/`summeGeld` nur bei `listenPlatz`-
+  Spalten) plus optionalem Format-/Größe-/Ausrichtung-/Auto-Verkleinern-Override.
+- **`FeldPanel.tsx` (`TabellenBlock`):** `SonderZeilen`-Komponente nach `ListenGruppen` eingehängt,
+  darunter ein Platzierungs-Block je Sonderzeile (y/y2 als `ZahlFeld`, mehrfach platzierbar) samt
+  `ScharfButton`-Zeilenpicker -- Band auf dem PDF ziehen statt y/y2 blind einzutippen, gleicher
+  Mechanismus wie bei "erste Datenzeile"/"letzte Datenzeile". `AggregationEditor`/
+  `listenOptionenFuerTabelle`: pro Platz UND pro Gruppen-Gesamtsumme jetzt alle drei Arten
+  (Summe/bereinigte Summe/Summe €) als eigene Option, neue Optgroup "Zulagen-Gruppen (Gesamtsumme
+  über alle Plätze)" neben der bestehenden "Zulagen-Spaltenplätze"-Optgroup.
+- **`FormularEditor.tsx`:** `Armed` um `{bereich: 'sonderzeile'; tabelle; index}` erweitert,
+  `achseFuer()` sperrt dabei wie bei "erste/letzte Datenzeile" auf die y-Achse, `sammleRechtecke()`
+  zeigt jede Platzierung als Band über die Spaltenbreite, `handleRechteck()` schreibt y/y2 in den
+  passenden Eintrag von `bereich.sonderzeilen`.
+- **`datenKatalog.ts`:** `FORMATE`-Liste aus `FeldPanel.tsx` hierher verschoben (exportiert), damit
+  `SonderZeilen.tsx` sie ohne Zirkelimport mitnutzen kann. Gleiches Prinzip für `WertVorschau`
+  (eigene `WertVorschau.tsx`).
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `sonderZeileZelleSchema`/
+  `sonderZeileSchema` neu, `tabellenDefSchema.sonderzeilen`/`tabellenBereichSchema.sonderzeilen`
+  ergänzt, `berechnetSchema.liste.index` optional, `geldwert: boolean` durch `art` (Enum, s.o.)
+  ersetzt -- die `refine()`-Pflicht für `geldwert` entfällt damit (roh/bereinigt sind jetzt auch ohne
+  `index` gültige, sinnvolle Optionen).
+
+Verifiziert: `shared` `tsc`/Test 161/161 (16 neue Tests). Frontend `tsc`/Lint sauber, 1660/1660 (32
+neue Tests), Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (voller Lauf, nicht nur
+`tsc`).
+
+## 2026-08-23 (29)
+
+### feat (EZ: Summenfelder je dynamischem Zulagen-Spaltenplatz, inkl. Geldwert)
+
+User-Frage: "wie kann ich Summenfelder für die Listen machen?" -- bisher konnte `Berechnet.feld`
+nur ein flaches Zeilenfeld lesen, keinen Wert aus einer verschachtelten Liste (EZ: `Zulagen`).
+Zusätzlich meldete der User, dass eine reine Zeit-/Stückzahl-Summe nicht reicht -- gebraucht wird
+auch der Geldwert (Normale Summe × Satz der Zulage), und genau diese Formel existiert bereits im
+Berechnung-Tab (`calculateBerechnungRows.ts::N_ZULAGEN_CALC`), dort je `paymentHint`-Kategorie.
+
+**Kurskorrektur während der Umsetzung (User-Einwand):** ein erster Entwurf ließ im Editor einen
+FESTEN Zulagen-Code für das Summenfeld wählen. Der User wies zu Recht darauf hin, dass die
+Spaltenplätze nicht fest sind -- welcher Code an einem Platz landet, entscheidet erst die
+Monatsauflösung (`schluesselAufPlatz()`/`listenBelegung()`, dieselbe wie für die Spaltenüberschrift).
+Ein fest eingetragener Code hätte an der Überschrift vorbeigerechnet, sobald sich die Platzbelegung
+verschiebt. Fix: `Berechnet.liste` referenziert jetzt den PLATZ (`tabelle`+`gruppe`+`index`, wie
+`Feld.listenKopf`), der zugehörige Code wird zur Renderzeit über denselben Mechanismus aufgelöst.
+
+- **`shared/src/formular/types.ts`:** `Berechnet.liste?: ListenPlatz & { tabelle, geldwert? }` neu --
+  Alternative zu `feld` für Summen über einen dynamischen Spaltenplatz.
+- **`shared/src/formular/aggregatoren.ts`:** `summeUeberListe()` -- Summe der `wert`-Felder aller
+  Listen-Einträge mit passendem `schluessel`, über mehrere Zeilen (nimmt weiterhin einen aufgelösten
+  Code entgegen, die Platz-Auflösung passiert eine Ebene darüber in `wert.ts`).
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `geldwertZulagenCode()` -- repliziert
+  `N_ZULAGEN_CALC` je einzelnem Code (mehrere Codes teilen sich denselben `paymentHint`/Satz, z.B.
+  alle "B"-klassifizierten Erschwerniszulagen).
+- **`shared/src/domain.ts`:** `IVorgabeValue.GKR?: number` neu -- Ganzkörperreinigung hatte im
+  Berechnung-Tab bisher keine Geldformel ("noch nicht berechnet"), für die PDF-Summenfelder jetzt
+  eine eigene Rate (User-Entscheidung, größerer Eingriff statt "nur Anzahl, kein €-Feld").
+- **`AdminVorgabenEditor.tsx`:** `GKR` in `GELD_FIELDS` ergänzt -- Eingabefeld für den neuen Satz.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` löst bei gesetztem `berechnet.liste`
+  zuerst über `kontext.listen[tabelle]`/`schluesselAufPlatz()` den an diesem Platz aktiven Code auf
+  (derselbe Weg wie `Feld.listenKopf`), summiert dann per `summeUeberListe()` und rechnet bei
+  `geldwert: true` zusätzlich über `geldwertZulagenCode()` in Euro um (Satz aus `Daten.VorgabenGeld`).
+- **`FormularEditor/FeldPanel.tsx` (`AggregationEditor`):** neue Optgroup "Zulagen-Spaltenplätze
+  (Summe je Platz)" im Summenfeld-Dropdown -- eine Option je TATSÄCHLICH angelegter Spalte mit
+  `listenPlatz` (nicht je theoretisch möglichem Code), Label übernimmt den Spalten-`label` zur
+  Wiedererkennung, je zwei Varianten (normale Summe / "(€)"), nur sichtbar bei Op "Summe".
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `berechnetSchema.liste`
+  ergänzt; **Backend** (`schemas.ts`, `models/Vorgabe.ts`): `GKR` im Vorgabe-Wert-Schema/-Modell.
+
+Verifiziert: `shared` 145/145 (19 neue Tests), Frontend `tsc`/Lint sauber, 1628/1628 (5 neue Tests),
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947.
+
+## 2026-08-23 (28)
+
+### fix (Testdaten-Vorschau: mehrere Listen-Gruppen überschrieben sich gegenseitig)
+
+User-Fund beim Konfigurieren der EZ-Zulagenspalten: "Es fehlen Beispiele für die Listen
+Erschwerniszulage und Fahrentschädigung" in der Testdaten-Vorschau.
+
+- **`FormularEditor/dummyDaten.ts::macheListen()`:** schrieb `zeile[gruppe.quelle]` direkt in der
+  Schleife über `tabelle.listen` -- bei EZ teilen sich alle drei Gruppen (Erschwerniszulage,
+  Leistungsprämie/Fahrentschädigung, Ganzkörperreinigung) dasselbe Zeilenfeld `Zulagen`, jede
+  weitere Gruppe überschrieb die Beispiele der vorherigen komplett. Übrig blieb nur die zuletzt
+  verarbeitete Gruppe (i.d.R. Ganzkörperreinigung, da zuletzt angelegt). Fix: Einträge je `quelle`
+  sammeln (`Map<string, unknown[]>`) und erst nach der Schleife gebündelt in die Zeile schreiben.
+- **Test:** neuer Fall in `dummyDaten.test.ts` mit drei Gruppen, die sich dieselbe Quelle teilen --
+  prüft, dass alle drei Gruppen-Codes in der Vorschau-Zeile landen, nicht nur die letzte.
+
+Verifiziert: `tsc`/Lint sauber, 1623/1623 (1 neuer Test), Produktionsbuild erfolgreich.
+
+## 2026-08-23 (27)
+
+### feat (EZ: Arbeitszeit-Spalte "Beginn-Ende" verkettet)
+
+Nachtrag zur Phase-12-EZ-Migration -- entgegen der ursprünglichen Annahme ("keine abgeleiteten
+Werte") braucht EZ doch einen vorberechneten Wert: die Arbeitszeit-Spalte im Formular zeigt
+`Beginn` und `Ende` zusammen in einer Zelle (`"07:00-15:45"`). `Spalte` (anders als `Feld`) hat
+kein `quellen`/`trenner` zum Verketten mehrerer Datenpfade -- Lösung wie bei EWT/Bereitschaft:
+vorberechnen statt Renderer generisch erweitern.
+
+- **`shared/src/formular/abgeleiteteWerte.ts`:** neu `ezAbgeleiteteWerte()`, liefert
+  `{ Arbeitszeit: `${Beginn}-${Ende}` }`.
+- **`shared/src/download.ts`:** `IDownloadNebengeld` um optionales `Arbeitszeit?: string` ergänzt
+  (analog `IDownloadEWT`/`IDownloadBereitschaftszeitraum`).
+- **`infrastructure/data/download.ts`:** `case 'N'` merged `ezAbgeleiteteWerte()` pro Zeile mit ins
+  Zeilenobjekt, `build()` sieht `Arbeitszeit` dann als normalen Datenpfad.
+- **`datenKatalog.ts`:** neuer Katalogeintrag `Arbeitszeit` (Gruppe "Berechnet") für `ez` -- damit im
+  Editor direkt als Spalten-Datenpfad wählbar, ohne eigene Rechnung im Editor nachzubauen.
+- **Bugfix nebenbei gefunden (Backend-Integrationstests):** `backend/tests/integration/formularVorlagenPipeline.test.ts`
+  hatte zwei `TabellenDef`-Fixtures ohne die seit dem letzten `startY`/`maxZeilen`-Umbau
+  (Vortag) plichtigen Felder -- 15 von 947 Backend-Tests schlugen fehl (`bun test` war nach jenem
+  Umbau nie bis zum Ende durchgelaufen, nur `tsc --noEmit`). Beide Fixtures nachgezogen.
+
+Verifiziert: `shared` 130/130 (2 neue Tests), Frontend `tsc`/Lint sauber, 1622/1622,
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (vorher 932/947, Fixtures gefixt).
+
 ## 2026-08-22 (26)
 
 ### feat (Phase 12: EZ-Migration auf neuen PDF-Renderer -- Cleanup separat)

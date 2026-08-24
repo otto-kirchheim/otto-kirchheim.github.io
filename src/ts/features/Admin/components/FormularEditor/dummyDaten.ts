@@ -181,16 +181,24 @@ function macheZeile(
  * Vorschau unbeschriftet, obwohl sie im Ernstfall belegt wäre. Die erste Zeile trägt alle Schlüssel
  * (nur so ist jeder Platz vergeben), spätere Zeilen lassen einzelne aus, damit auch der Normalfall
  * „diese Zulage gab es an dem Tag nicht" sichtbar wird.
+ *
+ * Mehrere Gruppen dürfen sich dieselbe `quelle` teilen (bei EZ speisen Erschwerniszulage,
+ * Leistungsprämie/Fahrentschädigung UND Ganzkörperreinigung alle dasselbe Zeilenfeld `Zulagen`) --
+ * deshalb je Quelle sammeln statt direkt in `zeile` zu schreiben, sonst überschreibt die letzte
+ * verarbeitete Gruppe die Beispiele der vorherigen komplett.
  */
 function macheListen(tabelle: TabellenDef, spalten: Spalte[], zeile: Zeile, index: number): void {
+  const jeQuelle = new Map<string, unknown[]>();
   for (const [name, gruppe] of Object.entries(tabelle.listen ?? {})) {
     const plaetze = spalten.filter(sp => sp.listenPlatz?.gruppe === name).length;
     const anzahl = Math.max(plaetze, 1);
     const schluessel = (gruppe.auswahl ?? Array.from({ length: anzahl }, (_, i) => `K${i + 1}`)).slice(0, anzahl);
-    zeile[gruppe.quelle] = schluessel
+    const eintraege = schluessel
       .filter((_, i) => index === 0 || (index + i) % 3 !== 0)
       .map((k, i) => ({ [gruppe.schluessel]: k, [gruppe.wert]: 1 + ((index + i) % 4) }));
+    jeQuelle.set(gruppe.quelle, [...(jeQuelle.get(gruppe.quelle) ?? []), ...eintraege]);
   }
+  for (const [quelle, eintraege] of jeQuelle) zeile[quelle] = eintraege;
 }
 
 /**

@@ -3,6 +3,28 @@ import type { FormatName, ListenGruppe } from '@otto-kirchheim/nebengeld-shared'
 
 export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
 
+/** Format-Auswahl für Feld/Spalte/Sonderzeilen-Zelle -- `''` steht für "kein eigenes Format". */
+export const FORMATE: { wert: FormatName | ''; label: string }[] = [
+  { wert: '', label: 'unverändert' },
+  { wert: 'waehrung', label: 'Währung (1.234,50)' },
+  { wert: 'zahl', label: 'Zahl (1.234,57)' },
+  { wert: 'ganzzahl', label: 'Ganzzahl (1.235)' },
+  { wert: 'datum', label: 'Datum (15.03.2026)' },
+  { wert: 'datumKurz', label: 'Datum kurz (15.03.)' },
+  { wert: 'tag', label: 'Tag (15)' },
+  { wert: 'tagZweistellig', label: 'Tag zweistellig (05)' },
+  { wert: 'wochentag', label: 'Wochentag (So)' },
+  { wert: 'monatJahr', label: 'Monat/Jahr (03/2026)' },
+  { wert: 'monatName', label: 'Monatsname (März)' },
+  { wert: 'monatNameKurz', label: 'Monatsname kurz (Mär)' },
+  { wert: 'uhrzeit', label: 'Uhrzeit (07:05)' },
+  { wert: 'stunden', label: 'Zeitspanne (2:30)' },
+  { wert: 'liste', label: 'Liste zusammenfügen (I / IW)' },
+  { wert: 'grossbuchstaben', label: 'GROSSBUCHSTABEN' },
+  { wert: 'jaNein', label: 'Ja/Nein' },
+  { wert: 'oe', label: 'Organisationseinheit (V.IW-MI-N-KSL-IL 03)' },
+];
+
 /**
  * Ein realistischer Beispielwert für die Vorschau — als Konstante oder, wo eine Datenzeile sinnvoll
  * variieren muss (Tage, Auftragsnummern), als Funktion über den Zeilenindex.
@@ -166,6 +188,10 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
     { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
     { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: 'liste', beispiel: ['NZ', 'SoZ'] },
+    // Vorberechnet (Phase 12, siehe shared/src/formular/abgeleiteteWerte.ts::ezAbgeleiteteWerte) --
+    // `Spalte` kann Beginn/Ende nicht wie `Feld.quellen` verketten, deshalb eigene Gruppe wie
+    // DauerWohnung bei EWT.
+    { pfad: 'Arbeitszeit', label: 'Arbeitszeit (HH:mm-HH:mm)', gruppe: 'Berechnet', beispiel: '07:00-15:45' },
   ],
   ewt: [
     { pfad: 'Buchungstag', label: 'Buchungstag', gruppe: 'Zeile', beispiel: i => String(2 + i).padStart(2, '0') },

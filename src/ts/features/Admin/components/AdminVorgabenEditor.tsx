@@ -30,6 +30,7 @@ export function AdminVorgabenEditor() {
     'B',
     'C',
     'SIPO',
+    'GKR',
     'TE8',
     'TE14',
     'TE24',

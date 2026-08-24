@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import type { Feld, Zeile } from '@otto-kirchheim/nebengeld-shared';
-import { datenPlatzhalter, wert, type Kontext } from '@/infrastructure/pdf/wert';
+import type { Feld, Spalte, SonderZeileZelle, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { datenPlatzhalter, sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext } from '@/infrastructure/pdf/wert';
 
 const seiteZeilen: Zeile[] = [{ betrag: 10 }, { betrag: 5 }];
 const bisherZeilen: Zeile[] = [{ betrag: 100 }, { betrag: 50 }];
@@ -26,7 +26,7 @@ describe('wert', () => {
 
   it('formatiert einen Direktwert, wenn format gesetzt ist', () => {
     const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung' };
-    expect(wert(f, 'betrag', { betrag: 1234.5 }, kontext)).toBe('1.234,50');
+    expect(wert(f, 'betrag', { betrag: 1234.5 }, kontext)).toBe('1.234,50 €');
   });
 
   it('Array-Direktwert ohne format wird wie `liste` zusammengefügt statt roh gejoint (generischer Fallback)', () => {
@@ -112,7 +112,7 @@ describe('wert', () => {
 
       it('erzwingt ein Format, das vom Standard-Fallback abweicht (Zahl als Währung)', () => {
         const f: Feld = { x: 0, y: 0, size: 10, text: '{betrag:waehrung}' };
-        expect(wert(f, 'egal', { betrag: 1234.5 }, kontext)).toBe('1.234,50');
+        expect(wert(f, 'egal', { betrag: 1234.5 }, kontext)).toBe('1.234,50 €');
       });
 
       it('{heute:datumKurz} überschreibt das sonst feste FORMAT.datum', () => {
@@ -180,7 +180,242 @@ describe('wert', () => {
 
   it('summiert über $alle (Gesamtsumme des Dokuments, unabhängig von der Seite)', () => {
     const f: Feld = { x: 0, y: 0, size: 10, format: 'waehrung', berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
-    expect(wert(f, 'gesamt', {}, kontext)).toBe('165,00');
+    expect(wert(f, 'gesamt', {}, kontext)).toBe('165,00 €');
+  });
+
+  describe('Summe je Zulagen-Spaltenplatz (Berechnet.liste, EZ-Erschwerniszulagen)', () => {
+    // Platz 0 -> Code 811, Platz 1 -> Code 818 (Reihenfolge des ersten Vorkommens, wie
+    // listenBelegung() sie ermitteln würde) -- die Summe muss demselben Platz folgen wie die
+    // Spaltenüberschrift, nicht einem beim Konfigurieren fest gewählten Code.
+    const zeilen: Zeile[] = [
+      { Zulagen: [{ Typ: '811', Wert: 30 }] },
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 15 },
+          { Typ: '818', Wert: 999 },
+        ],
+      },
+    ];
+    const erschwernisGruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
+    const listenKontext: Kontext = {
+      ...kontext,
+      $alle: { haupt: zeilen },
+      listen: { haupt: { gruppen: { erschwernis: erschwernisGruppe }, belegung: { erschwernis: ['811', '818'] } } },
+    };
+    const daten = { VorgabenGeld: { B: 2 } };
+
+    it('summiert nur den am Platz aufgelösten Code -- andere Codes in derselben Liste bleiben außen vor', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0 } },
+      };
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('45');
+    });
+
+    it('ein anderer Platz derselben Gruppe summiert einen anderen Code (818 statt 811)', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 1 } },
+      };
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('999');
+    });
+
+    it('art: "summeGeld" rechnet über geldwertZulagenCode in Euro um (Platz 0 -> Code 811 = paymentHint B)', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'summeGeld' } },
+      };
+      // 45 Minuten -> auf 1 Stunde gerundet, mal Satz B (2) = 2,00 €.
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('2,00 €');
+    });
+
+    it('art: "bereinigt" rundet auf volle Stunden statt in Euro umzurechnen', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 0, art: 'bereinigt' } },
+      };
+      // 45 Minuten -> auf 1 Stunde gerundet.
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('1');
+    });
+
+    it('unbelegter Platz (weniger vorkommende Codes als Spalten) ergibt 0 statt eines Absturzes', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 5 } },
+      };
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
+    });
+
+    it('unbekannte Tabelle/Gruppe (keine Auflösung im Kontext) ergibt 0 statt eines Absturzes', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'gibtsNicht', gruppe: 'erschwernis', index: 0 } },
+      };
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
+    });
+  });
+
+  describe('Gesamtsumme über eine Listen-Gruppe (Berechnet.liste ohne index)', () => {
+    // Zwei Codes derselben Gruppe (811 = Minuten/paymentHint B, 040 = Fahrentschädigung/Stück) --
+    // jeder Eintrag wird mit seinem EIGENEN Code umgerechnet, nicht mit dem eines Platzes.
+    const zeilen: Zeile[] = [
+      { Zulagen: [{ Typ: '811', Wert: 60 }, { Typ: '040', Wert: 3 }] },
+      { Zulagen: [{ Typ: '811', Wert: 120 }] },
+    ];
+    const erschwernisGruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
+    const listenKontext: Kontext = {
+      ...kontext,
+      $alle: { haupt: zeilen },
+      listen: { haupt: { gruppen: { erschwernis: erschwernisGruppe }, belegung: { erschwernis: ['811'] } } },
+    };
+    const daten = { VorgabenGeld: { B: 2, Fahrentsch: 6.65 } };
+
+    it('art: "summeGeld" summiert ALLE Einträge der Gruppe, jeder mit seinem eigenen Code -- nicht auf einen Platz beschränkt', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' } },
+      };
+      // 811: (Std(60)=1 + Std(120)=2) * 2 = 6,00 -- 040: 3 * 6,65 = 19,95 -- zusammen 25,95.
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('25,95 €');
+    });
+
+    it('art: "bereinigt" summiert die Std.-Umrechnung, Stück-Codes tragen 0 statt eines Absturzes bei', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'bereinigt' } },
+      };
+      // 811: Std(60)=1 + Std(120)=2 = 3 -- 040 (Fahrentschädigung, Stück) trägt 0 bei.
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('3');
+    });
+
+    it('ohne art (Default "summe") summiert die rohen Werte aller Codes zusammen', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis' } },
+      };
+      // 60 + 3 + 120 = 183, roh -- mischt hier Minuten und Stück, liegt in der Verantwortung der Konfiguration.
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('183');
+    });
+
+    it('unbekannte Tabelle/Gruppe ergibt 0 statt eines Absturzes', () => {
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'gibtsNicht', gruppe: 'erschwernis', art: 'summeGeld' } },
+      };
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
+    });
+  });
+
+  describe('zeilenFuerUeber (Zeilen einer Sonderzeile, auf eine Tabelle eingegrenzt)', () => {
+    it('$alle liefert nur die Zeilen der angegebenen Tabelle, andere Tabellen bleiben außen vor', () => {
+      const k: Kontext = { ...kontext, $alle: { haupt: [{ betrag: 1 }, { betrag: 2 }], andere: [{ betrag: 100 }] } };
+      expect(zeilenFuerUeber('$alle', 'haupt', k)).toEqual([{ betrag: 1 }, { betrag: 2 }]);
+    });
+
+    it('$seite/$bisher/$laufend funktionieren genauso, eingegrenzt auf die Tabelle', () => {
+      const k: Kontext = { ...kontext, $seite: { haupt: [{ betrag: 9 }], andere: [{ betrag: 1 }] } };
+      expect(zeilenFuerUeber('$seite', 'haupt', k)).toEqual([{ betrag: 9 }]);
+    });
+
+    it('kein reservierter Bezug (kein "$"-Präfix) liefert leeres Array -- Sonderzeilen kennen keinen Datenpfad-Bezug', () => {
+      expect(zeilenFuerUeber('Daten.irgendwas', 'haupt', kontext)).toEqual([]);
+    });
+  });
+
+  describe('sonderZeileZelleWert (Kopf-/Summenzeile über mehrere Spalten, siehe SonderZeile)', () => {
+    // Platz 0 -> Code 811 (Minuten, paymentHint B), Platz 1 -> Code 040 (Fahrentschädigung, Stück).
+    const zeilen: Zeile[] = [
+      { Zulagen: [{ Typ: '811', Wert: 60 }] },
+      { Zulagen: [{ Typ: '811', Wert: 30 }, { Typ: '040', Wert: 2 }] },
+    ];
+    const erschwernisGruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
+    const listenKontext: Kontext = {
+      ...kontext,
+      listen: { haupt: { gruppen: { erschwernis: erschwernisGruppe }, belegung: { erschwernis: ['811', '040'] } } },
+    };
+    const daten = { VorgabenGeld: { B: 2, Fahrentsch: 6.65 } };
+    const spaltePlatz0: Spalte = { key: 'ez1', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 0 }, label: 'Erschwernis 1' };
+    const spaltePlatz1: Spalte = { key: 'ez2', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 1 } };
+    const spaltePlain: Spalte = { key: 'Datum', x: 0, size: 8, label: 'Datum' };
+
+    it('art kopf MIT listenPlatz: dynamischer Code wie Feld.listenKopf', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'kopf' };
+      expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('811');
+    });
+
+    it('art kopf OHNE listenPlatz: Spalte.label als literaler Text', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'kopf' };
+      expect(sonderZeileZelleWert(zelle, spaltePlain, 'haupt', zeilen, daten, listenKontext)).toBe('Datum');
+    });
+
+    it('art summe OHNE listenPlatz: normale Spaltensumme (OPS.summe), auch ohne Zulagen-Bezug nutzbar', () => {
+      const spalteZahl: Spalte = { key: 'Anzahl', x: 0, size: 8 };
+      const rows: Zeile[] = [{ Anzahl: 3 }, { Anzahl: 4 }];
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summe' };
+      expect(sonderZeileZelleWert(zelle, spalteZahl, 'haupt', rows, daten, listenKontext)).toBe('7');
+    });
+
+    it('art summe bei einer Ankreuz-Spalte (wenn): zählt die Zeilen, die die Bedingung erfüllen', () => {
+      const spalteAnkreuz: Spalte = { key: '', x: 0, size: 8, wenn: { feld: 'Status', werte: ['aktiv'], dann: '1' } };
+      const rows: Zeile[] = [{ Status: 'aktiv' }, { Status: 'inaktiv' }, { Status: 'aktiv' }];
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summe' };
+      expect(sonderZeileZelleWert(zelle, spalteAnkreuz, 'haupt', rows, daten, listenKontext)).toBe('2');
+    });
+
+    it('art summe MIT listenPlatz: nur der am Platz aufgelöste Code wird summiert', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summe' };
+      expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('90');
+    });
+
+    it('art bereinigt: Minuten-Code gerundet auf volle Stunden', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'bereinigt' };
+      expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('2');
+    });
+
+    it('art bereinigt: Stück-Code zeigt "-" statt einer Zahl', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 1, art: 'bereinigt' };
+      expect(sonderZeileZelleWert(zelle, spaltePlatz1, 'haupt', zeilen, daten, listenKontext)).toBe('-');
+    });
+
+    it('art summeGeld: Geldwert-Umrechnung wie Berechnet.liste.geldwert', () => {
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: 'waehrung' };
+      // Summe 90 Minuten -> auf 2 Std. gerundet, mal Satz B (2) = 4,00 €.
+      expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('4,00 €');
+    });
+
+    it('unbelegter Platz -> 0 statt einer leeren Zelle oder eines Absturzes', () => {
+      const spaltePlatz9: Spalte = { key: 'ez9', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 9 } };
+      const zelle: SonderZeileZelle = { spaltenIndex: 9, art: 'summe' };
+      expect(sonderZeileZelleWert(zelle, spaltePlatz9, 'haupt', zeilen, daten, listenKontext)).toBe('0');
+    });
+
+    it('Format-Override pro Zelle schlägt Spalte.format', () => {
+      const spalteMitFormat: Spalte = { ...spaltePlatz0, format: 'ganzzahl' };
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summeGeld', format: 'waehrung' };
+      expect(sonderZeileZelleWert(zelle, spalteMitFormat, 'haupt', zeilen, daten, listenKontext)).toBe('4,00 €');
+    });
   });
 
   describe('zusammengesetzte Felder über Platzhalter im festen Text', () => {
@@ -265,7 +500,7 @@ describe('wert', () => {
       format: 'waehrung',
       berechnet: { op: 'summe', ueber: '$seite', feld: 'betrag' },
     };
-    expect(wert(f, 'zwischensumme', {}, kontext)).toBe('15,00');
+    expect(wert(f, 'zwischensumme', {}, kontext)).toBe('15,00 €');
   });
 
   it('summiert über $laufend (Übertrag + diese Seite) und NICHT über das ganze Dokument', () => {
@@ -281,8 +516,8 @@ describe('wert', () => {
     const gesamt: Feld = { ...f, berechnet: { op: 'summe', ueber: '$alle', feld: 'betrag' } };
 
     // Vorseiten 150,00 plus diese Seite 15,00 = 165,00; die Gesamtsumme liegt bei 1.165,00.
-    expect(wert(f, 'zwischenstand', {}, mitFolgeseite)).toBe('165,00');
-    expect(wert(gesamt, 'gesamt', {}, mitFolgeseite)).toBe('1.165,00');
+    expect(wert(f, 'zwischenstand', {}, mitFolgeseite)).toBe('165,00 €');
+    expect(wert(gesamt, 'gesamt', {}, mitFolgeseite)).toBe('1.165,00 €');
   });
 
   it('summiert über $bisher (Übertrag der vorherigen Seiten)', () => {
@@ -293,7 +528,7 @@ describe('wert', () => {
       format: 'waehrung',
       berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
     };
-    expect(wert(f, 'uebertrag', {}, kontext)).toBe('150,00');
+    expect(wert(f, 'uebertrag', {}, kontext)).toBe('150,00 €');
   });
 
   it('$bisher ist leer auf der ersten Seite -- Übertrag ist 0', () => {
@@ -305,7 +540,7 @@ describe('wert', () => {
       format: 'waehrung',
       berechnet: { op: 'summe', ueber: '$bisher', feld: 'betrag' },
     };
-    expect(wert(f, 'uebertrag', {}, leererKontext)).toBe('0,00');
+    expect(wert(f, 'uebertrag', {}, leererKontext)).toBe('0,00 €');
   });
 
   it('summiert über einen Datenpfad (nicht $seite/$bisher)', () => {
@@ -317,7 +552,7 @@ describe('wert', () => {
       berechnet: { op: 'summe', ueber: 'zeilen', feld: 'betrag' },
     };
     const daten = { zeilen: [{ betrag: 7 }, { betrag: 3 }] };
-    expect(wert(f, 'gesamt', daten, kontext)).toBe('10,00');
+    expect(wert(f, 'gesamt', daten, kontext)).toBe('10,00 €');
   });
 
   it('anzahl und max funktionieren über $seite', () => {

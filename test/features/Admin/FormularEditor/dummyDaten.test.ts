@@ -105,6 +105,28 @@ describe('erzeugeDummyDaten', () => {
     }
   });
 
+  it('mehrere Listen-Gruppen mit derselber Quelle (EZ: Erschwernis + Leistung/Fahrentschädigung + GKR teilen sich "Zulagen") mergen statt sich zu überschreiben', () => {
+    const tabellen = macheTabellen();
+    tabellen.haupt!.listen = {
+      erschwernis: { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['811', '818'] },
+      leistung: { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['040'] },
+      gkr: { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert', auswahl: ['218'] },
+    };
+    tabellen.haupt!.spalten.push(
+      { key: '', x: 300, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 0 } },
+      { key: '', x: 330, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 1 } },
+      { key: '', x: 360, size: 8, listenPlatz: { gruppe: 'leistung', index: 0 } },
+      { key: '', x: 390, size: 8, listenPlatz: { gruppe: 'gkr', index: 0 } },
+    );
+
+    const daten = erzeugeDummyDaten(tabellen, [macheSeite(3)], 'ez');
+    const zeilen = daten.zeilen as Record<string, unknown>[];
+    const erste = zeilen[0]!.Zulagen as { Typ: string }[];
+
+    // Ohne Merge würde nur die zuletzt verarbeitete Gruppe (gkr) überleben -- 811/818/040 fehlten.
+    expect(erste.map(z => z.Typ).sort()).toEqual(['040', '811', '818', '218'].sort());
+  });
+
   it('Ankreuz-Spalte mit bereich (statt werte) zeigt in der Vorschau abwechselnd Treffer und Nicht-Treffer, statt für jede Zeile leer zu bleiben (Boolean-Ankreuz-Bug, z.B. Wohnung8bis14 über {von:1,bis:2})', () => {
     const tabellen = macheTabellen();
     const wenn = { feld: 'aktiv', bereich: { von: 1, bis: 2 }, dann: 'X' };

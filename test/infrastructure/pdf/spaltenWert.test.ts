@@ -38,7 +38,7 @@ describe('spaltenWert', () => {
   });
 
   it('wendet das Format auf das Rechenergebnis an', () => {
-    expect(spaltenWert(spalte({ format: 'waehrung', berechnet: { op: 'produkt', operanden: ['dauer', 'satz'] } }), zeile)).toBe('37,50');
+    expect(spaltenWert(spalte({ format: 'waehrung', berechnet: { op: 'produkt', operanden: ['dauer', 'satz'] } }), zeile)).toBe('37,50 €');
   });
 
   it('verschachtelte Rechnung: BZ-Dauer als Ende − Beginn + Pause, formatiert als Zeitspanne', () => {
@@ -74,7 +74,7 @@ describe('spaltenWert', () => {
 
     it('formatiert den Listenwert wie jeden anderen Spaltenwert', () => {
       const sp = spalte({ listenPlatz: { gruppe: 'ez', index: 1 }, format: 'waehrung' });
-      expect(spaltenWert(sp, zulagenZeile, listen)).toBe('4,00');
+      expect(spaltenWert(sp, zulagenZeile, listen)).toBe('4,00 €');
     });
   });
 });
