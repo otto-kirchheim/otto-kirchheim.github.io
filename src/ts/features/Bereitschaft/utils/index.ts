@@ -1,5 +1,12 @@
 import submitBereitschaftsEinsatz from './submitBereitschaftsEinsatz';
-import { classifyBzCoverage, hasOverlap, hasConflictingLre1, hasLre12TooClose } from './submitBereitschaftsEinsatz';
+import {
+  classifyBzCoverage,
+  isBzUnsynced,
+  ensureCompleteBzSynced,
+  hasOverlap,
+  hasConflictingLre1,
+  hasLre12TooClose,
+} from './submitBereitschaftsEinsatz';
 import type { BzCoverage } from './submitBereitschaftsEinsatz';
 import applyBereitschaftsVorgabe from './applyBereitschaftsVorgabe';
 import calculateBereitschaftsZeiten from './calculateBereitschaftsZeiten';
@@ -26,6 +33,8 @@ export type { BzCoverage };
 export {
   submitBereitschaftsEinsatz,
   classifyBzCoverage,
+  isBzUnsynced,
+  ensureCompleteBzSynced,
   hasOverlap,
   hasConflictingLre1,
   hasLre12TooClose,

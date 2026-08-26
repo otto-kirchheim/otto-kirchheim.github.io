@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { h, render, type ComponentChildren } from 'preact';
 
-const { showModalMock, submitBereitschaftsEinsatzMock, storageGetMock, hideMock, getInstanceMock } = (
-  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
-).hoisted(() => ({
+const {
+  showModalMock,
+  submitBereitschaftsEinsatzMock,
+  getBereitschaftsZeitraumDatenMock,
+  onEventMock,
+  storageGetMock,
+  hideMock,
+  getInstanceMock,
+} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
   submitBereitschaftsEinsatzMock: vi.fn(),
+  getBereitschaftsZeitraumDatenMock: vi.fn(),
+  onEventMock: vi.fn(),
   storageGetMock: vi.fn(),
   hideMock: vi.fn(),
   getInstanceMock: vi.fn(),
@@ -35,6 +43,12 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 
 vi.mock('@/features/Bereitschaft/utils', () => ({
   submitBereitschaftsEinsatz: submitBereitschaftsEinsatzMock,
+  getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
+  isBzUnsynced: (bz: { _id?: string; __localState?: string }) => !bz._id || bz.__localState === 'modified',
+}));
+
+vi.mock('@/core', () => ({
+  onEvent: onEventMock,
 }));
 
 vi.mock('bootstrap/js/dist/modal', () => ({
@@ -75,6 +89,8 @@ describe('createAddModalBereitschaftsEinsatz', () => {
     vi.clearAllMocks();
     storageGetMock.mockImplementation((key: string) => (key === 'Jahr' ? 2025 : 4));
     getInstanceMock.mockReturnValue({ hide: hideMock });
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
+    onEventMock.mockReturnValue(vi.fn());
   });
 
   it('wirft, wenn #tableBE nicht existiert', () => {
@@ -137,6 +153,29 @@ describe('createAddModalBereitschaftsEinsatz', () => {
     await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(hideMock).not.toHaveBeenCalled();
+  });
+
+  it('zeigt Hinweis wenn ein Bereitschaftszeitraum noch nicht gespeichert ist, und blendet ihn nach Sync wieder aus', () => {
+    makeColumnTable('tableBE', []);
+    makeColumnTable('tableBZ', []);
+    setupShowModalMock();
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([
+      { Beginn: '2025-04-01T07:00:00.000Z', Ende: '2025-04-01T23:00:00.000Z', Pause: 0 },
+    ]);
+
+    createAddModalBereitschaftsEinsatz();
+    const container = renderCapturedVnode();
+    const hint = Array.from(container.querySelectorAll('p')).find(p => p.textContent?.includes('Achtung'));
+    expect(hint).toBeDefined();
+    expect(hint!.style.display).not.toBe('none');
+
+    getBereitschaftsZeitraumDatenMock.mockReturnValue([
+      { _id: 'bz1', Beginn: '2025-04-01T07:00:00.000Z', Ende: '2025-04-01T23:00:00.000Z', Pause: 0 },
+    ]);
+    const dataChangedListener = onEventMock.mock.calls[0][1] as (payload: { resource: string }) => void;
+    dataChangedListener({ resource: 'BZ' });
+
+    expect(hint!.style.display).toBe('none');
   });
 
   it('bricht ab, wenn das Formular ungültig ist', async () => {

@@ -9,8 +9,11 @@ import type { CustomHTMLDivElement, IDatenBE } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
 import dayjs from '@/infrastructure/date/configDayjs';
+import { onEvent } from '@/core';
 import {
   classifyBzCoverage,
+  isBzUnsynced,
+  ensureCompleteBzSynced,
   getBereitschaftsZeitraumDaten,
   hasConflictingLre1,
   hasLre12TooClose,
@@ -111,8 +114,12 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
   });
 };
 
+const hasUnsyncedBz = (): boolean =>
+  getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(isBzUnsynced);
+
 export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
+  const bzSyncHintRef = createRef<HTMLParagraphElement>();
 
   let datum: dayjs.Dayjs;
   if (row instanceof Row) {
@@ -138,6 +145,14 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         <p className="text-bg-warning p-2 rounded small">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein.
         </p>
+        <p
+          ref={bzSyncHintRef}
+          className="text-bg-warning p-2 rounded small"
+          style={{ display: hasUnsyncedBz() ? '' : 'none' }}
+        >
+          Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
+          zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
+        </p>
         {createElements(row, datum)}
       </MyModalBody>
     </MyFormModal>,
@@ -148,8 +163,16 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
 
   modal.row = row;
 
+  const unsubscribeBzSyncHint = onEvent('data:changed', ({ resource }) => {
+    if (resource !== 'BZ' && resource !== 'all') return;
+    const el = bzSyncHintRef.current;
+    if (!el) return;
+    el.style.display = hasUnsyncedBz() ? '' : 'none';
+  });
+  modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
+
   function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+    return async (event: Event): Promise<void> => {
       if (!form.checkValidity()) return;
       event.preventDefault();
 
@@ -174,11 +197,13 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       const einsatzEndRaw = dayjs(`${einsatzDate}T${values.Ende}`);
       const einsatzEnd = einsatzEndRaw.isAfter(einsatzStart) ? einsatzEndRaw : einsatzEndRaw.add(1, 'day');
 
-      const coverage = classifyBzCoverage(
+      let coverage = classifyBzCoverage(
         getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
         einsatzStart,
         einsatzEnd,
       );
+      coverage = await ensureCompleteBzSynced(coverage, einsatzStart, einsatzEnd);
+
       if (coverage.kind !== 'complete') {
         const message =
           coverage.kind === 'gap'

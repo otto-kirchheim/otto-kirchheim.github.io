@@ -748,3 +748,42 @@ Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 
 - Ergebnis: Der Cookie-/Storage-Check ist jetzt ein expliziter Gate-Schritt (`cookie:check`), der fachlich vor der Verzweigung liegt. Dadurch ist das Modell korrekt: `cookie-check -> SESSION_RESTORE_SEQUENCE` (bei vorhandener Session) oder `cookie-check -> LOGIN_INIT_SEQUENCE` (Idle/Login-Pfad).
 - Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bun run test -- test/Login.sessionRestore.test.ts test/orchestration/initSequence.test.ts`, `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx tsc --noEmit -p tsconfig.json`.
+
+## Aktueller Plan: Hinweis auf noch nicht gespeicherten Bereitschaftszeitraum (BE/BZ)
+
+- [x] Recherche: BE↔BZ-Verknüpfung (`submitBereitschaftsEinsatz.ts`), Sync-Status-Muster von EA/Neben↔EWT (`isUnsynced`/`disabled`-Option) via Explore-Subagent
+- [x] Erster Ansatz (auto-flush + hartes Blockieren bei Submit) verworfen, nachdem User klarstellte: Speichern darf nicht fehlschlagen/blockieren, nur ein Hinweis im Modal
+- [x] `isBzUnsynced()` in `submitBereitschaftsEinsatz.ts` exportiert (Prädikat, analog EA/Neben-Muster), Kern-Submit-Logik unverändert gelassen (BE mit bereits vollständig gespeichertem BZ nicht beeinflusst)
+- [x] Reaktiver Warnhinweis in `createAddModalBereitschaftsEinsatz.tsx` und `createEditorModalBereitschaftsEinsatz.tsx`: sichtbar wenn ein BZ im Monat unsynced ist, blendet sich via `data:changed`-Subscription automatisch wieder aus
+- [x] Tests: Mocks in beiden Component-Tests um `getBereitschaftsZeitraumDaten`/`isBzUnsynced`/`onEvent` ergänzt, neuer Sichtbarkeits-Test für AddModal
+
+## Verifikationskriterien (BZ-Sync-Hinweis)
+
+- Submit-Verhalten von `submitBereitschaftsEinsatz.ts`/Editor-Modal bleibt exakt unverändert (keine neue Fehl-/Blockier-Logik)
+- Hinweis erscheint nur wenn ein Bereitschaftszeitraum im aktuellen Monat kein `_id` hat oder `__localState === 'modified'` ist
+- Hinweis verschwindet automatisch nach `data:changed`-Event für Ressource `BZ`, sobald kein unsynced BZ mehr existiert
+- `tsc --noEmit`, `lint`, komplette Testsuite laufen fehlerfrei
+
+## Review (BZ-Sync-Hinweis)
+
+- Ergebnis: EA/Neben↔EWT hatten die Absicherung bereits (disabled Option + "(wird noch gespeichert)"). Für BE↔BZ gab es keine, weil die Verknüpfung dort implizit über Zeitfenster läuft statt über ein Auswahlfeld. Jetzt zeigen beide BE-Modals einen zusätzlichen, rein informativen Hinweis, wenn ein Bereitschaftszeitraum im Monat noch nicht synchronisiert ist -- ohne Submit-Verhalten zu verändern.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun tsc --noEmit`, `bunx --bun eslint src/ test/`, `TZ=Europe/Berlin bun test --isolate` → 2020/2020 bestanden.
+
+## Nachtrag: Speicherreihenfolge BZ-vor-BE doch aktiv erzwingen
+
+- [x] `ensureCompleteBzSynced()` wieder eingeführt (ohne try/catch/Blockier-Guard aus dem verworfenen ersten Versuch): bei 'complete' Coverage mit unsynced Grenz-BZ wird `flushResource('BZ')` angestossen und danach neu klassifiziert
+- [x] Bestätigt dass `flushResource`/`saveResourceNow` intern nie wirft (eigener try/catch in `autoSave.ts`) -- Aufruf ohne try/catch ist sicher, kein neuer Fehlerpfad
+- [x] In `submitBereitschaftsEinsatz.ts` und Editor-Modal eingehängt; Editor-Modal-`onSubmit` dafür (wieder) async
+- [x] Editor-Modal-Testdatei mockte `@/features/Bereitschaft/utils` komplett -- `ensureCompleteBzSynced` dort als Pass-Through-Mock ergänzt (sonst `undefined(...)`-Crash bzw. echter AutoSave-Aufruf in Unit-Tests); alle `getSubmit()`-Aufrufe in dieser Datei auf `await` umgestellt (12 Stellen)
+- [x] Neue Tests in `Bereitschaft.submitBereitschaftsEinsatz.test.ts`: Sync-vor-Speichern bei unsynced BZ, "speichert trotzdem ohne Referenz falls Sync nicht klappt" (Beleg dass nichts fehlschlägt), kein Flush wenn bereits synced
+
+### Verifikationskriterien
+
+- `flushResource('BZ')` wird nur aufgerufen wenn `coverage.kind === 'complete'` UND mindestens eine Grenz-BZ unsynced ist; bereits vollständig synchronisierte Coverage bleibt unangetastet (kein Flush-Aufruf)
+- Schlägt der Sync fehl/bleibt aus: BE wird trotzdem gespeichert (ohne BZ-Referenz), kein `failWith`/Block
+- `tsc --noEmit`, `lint`, komplette Testsuite laufen fehlerfrei
+
+### Review
+
+- Ergebnis: Anders als beim ersten (verworfenen) Versuch gibt es jetzt eine echte Order-Garantie im Erfolgsfall, ohne die "nichts darf fehlschlagen"-Vorgabe zu verletzen -- möglich, weil `flushResource` selbst nie wirft (Fehlerbehandlung passiert vollständig innerhalb von AutoSave). Der Hinweis aus dem vorherigen Schritt bleibt als zusätzliches, unabhängiges Signal bestehen für den (seltenen) Fall, dass der Sync nicht rechtzeitig durchläuft.
+- Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun tsc --noEmit`, `bunx --bun eslint src/ test/`, `TZ=Europe/Berlin bun test --isolate` → 2023/2023 bestanden.

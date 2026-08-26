@@ -5,10 +5,15 @@ import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ }
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { submitBereitschaftsEinsatz } from '../utils';
+import { onEvent } from '@/core';
+import { getBereitschaftsZeitraumDaten, isBzUnsynced, submitBereitschaftsEinsatz } from '../utils';
+
+const hasUnsyncedBz = (): boolean =>
+  getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(isBzUnsynced);
 
 export default function createAddModalBereitschaftsEinsatz(): void {
   const formRef = createRef<HTMLFormElement>();
+  const bzSyncHintRef = createRef<HTMLParagraphElement>();
 
   const Jahr: number = Storage.get<number>('Jahr', { check: true });
   const Monat: number = Storage.get<number>('Monat', { check: true }) - 1;
@@ -31,6 +36,14 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         <p className="text-bg-warning p-2 rounded small">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein. <br /> Oder wähle die
           Option: "Bereitschaftszeitraum für diesen Einsatz anlegen?".
+        </p>
+        <p
+          ref={bzSyncHintRef}
+          className="text-bg-warning p-2 rounded small"
+          style={{ display: hasUnsyncedBz() ? '' : 'none' }}
+        >
+          Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
+          zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
         </p>
         <MyInput
           divClass="form-floating col-12 col-sm-6"
@@ -102,6 +115,14 @@ export default function createAddModalBereitschaftsEinsatz(): void {
 
   if (formRef.current === null) throw new Error('referenz nicht gesetzt');
   const form = formRef.current;
+
+  const unsubscribeBzSyncHint = onEvent('data:changed', ({ resource }) => {
+    if (resource !== 'BZ' && resource !== 'all') return;
+    const el = bzSyncHintRef.current;
+    if (!el) return;
+    el.style.display = hasUnsyncedBz() ? '' : 'none';
+  });
+  modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
 
   function onSubmit(): (event: Event) => void {
     return async (event: Event): Promise<void> => {

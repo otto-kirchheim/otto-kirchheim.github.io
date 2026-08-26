@@ -354,6 +354,56 @@ describe('submitBereitschaftsEinsatz', () => {
     expect(createSnackBarMock).not.toHaveBeenCalled();
   });
 
+  describe('Erzwungene Reihenfolge bei ungesynctem BZ (direkt nacheinander BZ dann BE angelegt)', () => {
+    it('synct passenden Bereitschaftszeitraum zuerst wenn er lokal noch keine ID hat', async () => {
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00' });
+      const { table: tableBE, addMock } = createTableBEMock();
+      const { table: tableBZ } = createTableBZMock();
+
+      const unsyncedBz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z');
+      const syncedBz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
+      getBereitschaftsZeitraumDatenMock.mockReturnValueOnce([unsyncedBz]).mockReturnValue([syncedBz]);
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(flushResourceMock).toHaveBeenCalledWith('BZ');
+      expect(result).toBe(true);
+      expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ Bereitschaftszeitraum: ['bz1'] }));
+    });
+
+    it('speichert BE trotzdem (ohne BZ-Referenz), wenn der Zeitraum auch nach dem Sync-Versuch keine ID hat -- Speichern darf nie fehlschlagen', async () => {
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00' });
+      const { table: tableBE, addMock } = createTableBEMock();
+      const { table: tableBZ } = createTableBZMock();
+
+      const stillUnsyncedBz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z');
+      getBereitschaftsZeitraumDatenMock.mockReturnValue([stillUnsyncedBz]);
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(flushResourceMock).toHaveBeenCalledWith('BZ');
+      expect(result).toBe(true);
+      expect(addMock).toHaveBeenCalledTimes(1);
+      const addedDaten = addMock.mock.calls[0]?.[0] as { Bereitschaftszeitraum?: string[] };
+      expect(addedDaten.Bereitschaftszeitraum).toBeUndefined();
+    });
+
+    it('flusht NICHT wenn Bereitschaftszeitraum bereits vollständig synchronisiert ist (bestehendes Verhalten unverändert)', async () => {
+      const bz = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T23:00:00.000Z', 'bz1');
+      getBereitschaftsZeitraumDatenMock.mockReturnValue([bz]);
+
+      const modal = createModal({ ZeitVon: '09:00', ZeitBis: '12:00' });
+      const { table: tableBE, addMock } = createTableBEMock();
+      const { table: tableBZ } = createTableBZMock();
+
+      const result = await submitBereitschaftsEinsatz(modal, tableBE, tableBZ);
+
+      expect(result).toBe(true);
+      expect(flushResourceMock).not.toHaveBeenCalled();
+      expect(addMock).toHaveBeenCalledWith(expect.objectContaining({ Bereitschaftszeitraum: ['bz1'] }));
+    });
+  });
+
   describe('Gap-Auflösung (berZeit)', () => {
     it('mergt zwei BZs wenn Lücke keine Grenze enthält', async () => {
       // Gap 10:00Z–12:00Z has no 08:00 or month boundary (UTC: 08:00Z already before the gap start)

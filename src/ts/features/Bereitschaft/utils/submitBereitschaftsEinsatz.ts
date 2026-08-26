@@ -47,6 +47,36 @@ type GapResolution =
   | { kind: 'merge'; mergedBz: IDatenBZ; deletedBz: IDatenBZ }
   | { kind: 'boundary'; updatedStartBz: IDatenBZ; updatedEndBz: IDatenBZ };
 
+// ─── Sync-Absicherung ────────────────────────────────────────────────────────
+
+/** Lokal angelegte/geänderte Zeile, die den Server noch nicht erreicht hat (kein `_id` bzw. `__localState`). */
+export function isBzUnsynced(bz: IDatenBZ): boolean {
+  return !bz._id || bz.__localState === 'modified';
+}
+
+/**
+ * Erzwingt die Speicherreihenfolge "erst BZ, dann BE" auch für den bisher ungeprüften Fall einer
+ * bereits 'complete' Coverage: Ist eine der beiden Grenz-BZ noch nicht synchronisiert (z.B. direkt
+ * nacheinander angelegt: BZ, dann BE), wird sie zuerst gespeichert. `flushResource` wirft nie (Fehler
+ * werden intern von AutoSave behandelt/angezeigt, siehe `saveResourceNow`) -- schlägt der Sync
+ * dennoch fehl, bleibt die Coverage unverändert und das bestehende Verhalten (BE ohne BZ-Referenz)
+ * greift wie bisher. Das Speichern selbst wird dadurch nie blockiert oder fehlschlagen gelassen.
+ */
+export async function ensureCompleteBzSynced(
+  coverage: BzCoverage,
+  einsatzStart: ReturnType<typeof dayjs>,
+  einsatzEnd: ReturnType<typeof dayjs>,
+): Promise<BzCoverage> {
+  if (coverage.kind !== 'complete') return coverage;
+  if (!isBzUnsynced(coverage.startBz) && !isBzUnsynced(coverage.endBz)) return coverage;
+  await flushResource('BZ');
+  return classifyBzCoverage(
+    getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }),
+    einsatzStart,
+    einsatzEnd,
+  );
+}
+
 // ─── Coverage-Klassifikation ─────────────────────────────────────────────────
 
 export function classifyBzCoverage(
@@ -367,6 +397,7 @@ export default async function submitBereitschaftsEinsatz(
     einsatzStart,
     einsatzEnd,
   );
+  coverage = await ensureCompleteBzSynced(coverage, einsatzStart, einsatzEnd);
 
   if (coverage.kind !== 'complete') {
     if (!berZeit) return failWith(COVERAGE_WARNING[coverage.kind], 'warning', 5000);

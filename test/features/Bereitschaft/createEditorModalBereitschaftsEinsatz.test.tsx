@@ -7,6 +7,7 @@ const {
   showModalMock,
   createSnackBarMock,
   classifyBzCoverageMock,
+  ensureCompleteBzSyncedMock,
   getBereitschaftsZeitraumDatenMock,
   hasConflictingLre1Mock,
   hasLre12TooCloseMock,
@@ -15,10 +16,12 @@ const {
   storageGetMock,
   hideMock,
   getInstanceMock,
+  onEventMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   classifyBzCoverageMock: vi.fn(),
+  ensureCompleteBzSyncedMock: vi.fn(),
   getBereitschaftsZeitraumDatenMock: vi.fn(),
   hasConflictingLre1Mock: vi.fn(),
   hasLre12TooCloseMock: vi.fn(),
@@ -27,6 +30,7 @@ const {
   storageGetMock: vi.fn(),
   hideMock: vi.fn(),
   getInstanceMock: vi.fn(),
+  onEventMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
@@ -47,11 +51,17 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 
 vi.mock('@/features/Bereitschaft/utils', () => ({
   classifyBzCoverage: classifyBzCoverageMock,
+  ensureCompleteBzSynced: ensureCompleteBzSyncedMock,
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
+  isBzUnsynced: (bz: { _id?: string; __localState?: string }) => !bz._id || bz.__localState === 'modified',
   hasConflictingLre1: hasConflictingLre1Mock,
   hasLre12TooClose: hasLre12TooCloseMock,
   hasOverlap: hasOverlapMock,
   persistBereitschaftsEinsatzTableData: persistBereitschaftsEinsatzTableDataMock,
+}));
+
+vi.mock('@/core', () => ({
+  onEvent: onEventMock,
 }));
 
 vi.mock('bootstrap/js/dist/modal', () => ({
@@ -94,8 +104,8 @@ function getForm(): HTMLFormElement {
   return vnode.props.myRef.current as HTMLFormElement;
 }
 
-function getSubmit(): (event: Event) => void {
-  return showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => void;
+function getSubmit(): (event: Event) => Promise<void> {
+  return showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => Promise<void>;
 }
 
 function setFormValues(
@@ -128,7 +138,9 @@ describe('EditorModalBE', () => {
     storageGetMock.mockImplementation((key: string) => (key === 'Jahr' ? 2025 : 6));
     getInstanceMock.mockReturnValue({ hide: hideMock });
     getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
+    onEventMock.mockReturnValue(vi.fn());
     classifyBzCoverageMock.mockReturnValue({ kind: 'complete', startBz: START_BZ, endBz: START_BZ });
+    ensureCompleteBzSyncedMock.mockImplementation(coverage => Promise.resolve(coverage));
     hasOverlapMock.mockReturnValue(false);
     hasConflictingLre1Mock.mockReturnValue(false);
     hasLre12TooCloseMock.mockReturnValue(false);
@@ -144,20 +156,20 @@ describe('EditorModalBE', () => {
     expect(modal.row).toBe(table);
   });
 
-  it('speichert eine neue Zeile per rows.add(), wenn die Deckung vollständig ist', () => {
+  it('speichert eine neue Zeile per rows.add(), wenn die Deckung vollständig ist', async () => {
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), VALID_VALUES);
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(table.rows.array.length).toBe(1);
     expect(hideMock).toHaveBeenCalledTimes(1);
     expect(persistBereitschaftsEinsatzTableDataMock).toHaveBeenCalledWith(table);
   });
 
-  it('aktualisiert eine bestehende Zeile per row.val()', () => {
+  it('aktualisiert eine bestehende Zeile per row.val()', async () => {
     const table = makeTable([{ _id: 'be1', ...VALID_VALUES, PrivatKm: 0 } as unknown as IDatenBE]);
     const row = table.rows.array[0];
     const originalCells = row.cells;
@@ -165,40 +177,40 @@ describe('EditorModalBE', () => {
     EditorModalBE(row, 'Bearbeiten');
     setFormValues(getForm(), { ...VALID_VALUES, PrivatKm: '5' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(row.cells.PrivatKm).toBe(5);
     expect(hasOverlapMock).toHaveBeenCalledWith(expect.anything(), expect.anything(), originalCells);
   });
 
-  it('bricht mit Lücken-Hinweis ab, wenn die Deckung eine Lücke ist', () => {
+  it('bricht mit Lücken-Hinweis ab, wenn die Deckung eine Lücke ist', async () => {
     classifyBzCoverageMock.mockReturnValue({ kind: 'gap', startBz: START_BZ, endBz: START_BZ });
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), VALID_VALUES);
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Lücke') }));
     expect(table.rows.array.length).toBe(0);
   });
 
-  it('bricht mit generischem Hinweis ab, wenn kein passender Zeitraum existiert (partial)', () => {
+  it('bricht mit generischem Hinweis ab, wenn kein passender Zeitraum existiert (partial)', async () => {
     classifyBzCoverageMock.mockReturnValue({ kind: 'partial', startBz: undefined, endBz: undefined });
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), VALID_VALUES);
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(
       expect.objectContaining({ message: expect.stringContaining('Kein passender Bereitschaftszeitraum') }),
     );
   });
 
-  it('bricht ab, wenn der Bereitschaftszeitraum noch keine gespeicherte ID hat', () => {
+  it('bricht ab, wenn der Bereitschaftszeitraum noch keine gespeicherte ID hat', async () => {
     classifyBzCoverageMock.mockReturnValue({
       kind: 'complete',
       startBz: { ...START_BZ, _id: undefined },
@@ -209,7 +221,7 @@ describe('EditorModalBE', () => {
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), VALID_VALUES);
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(
       expect.objectContaining({ message: expect.stringContaining('noch nicht gespeichert') }),
@@ -217,14 +229,14 @@ describe('EditorModalBE', () => {
     expect(table.rows.array.length).toBe(0);
   });
 
-  it('bricht bei überschneidenden Einsätzen ab', () => {
+  it('bricht bei überschneidenden Einsätzen ab', async () => {
     hasOverlapMock.mockReturnValue(true);
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), VALID_VALUES);
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(
       expect.objectContaining({ message: expect.stringContaining('nicht überschneiden') }),
@@ -232,75 +244,75 @@ describe('EditorModalBE', () => {
     expect(table.rows.array.length).toBe(0);
   });
 
-  it('bricht ab, wenn bereits ein LRE 1 im Zeitraum existiert', () => {
+  it('bricht ab, wenn bereits ein LRE 1 im Zeitraum existiert', async () => {
     hasConflictingLre1Mock.mockReturnValue(true);
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), { ...VALID_VALUES, LRE: 'LRE 1' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('bereits ein LRE 1') }));
     expect(table.rows.array.length).toBe(0);
   });
 
-  it('prüft LRE1-Konflikt nicht, wenn LRE ungleich "LRE 1" ist', () => {
+  it('prüft LRE1-Konflikt nicht, wenn LRE ungleich "LRE 1" ist', async () => {
     hasConflictingLre1Mock.mockReturnValue(true);
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), { ...VALID_VALUES, LRE: 'LRE 2' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(table.rows.array.length).toBe(1);
   });
 
-  it('bricht ab, wenn LRE 1/2 zu dicht an einem vorherigen Einsatz liegt', () => {
+  it('bricht ab, wenn LRE 1/2 zu dicht an einem vorherigen Einsatz liegt', async () => {
     hasLre12TooCloseMock.mockReturnValue(true);
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), { ...VALID_VALUES, LRE: 'LRE 2' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('ohne x') }));
     expect(table.rows.array.length).toBe(0);
   });
 
-  it('prüft die 10-Minuten-Regel nicht für LRE 3', () => {
+  it('prüft die 10-Minuten-Regel nicht für LRE 3', async () => {
     hasLre12TooCloseMock.mockReturnValue(true);
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), { ...VALID_VALUES, LRE: 'LRE 3' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(table.rows.array.length).toBe(1);
   });
 
-  it('bricht ohne Aktion ab, wenn das Formular ungültig ist', () => {
+  it('bricht ohne Aktion ab, wenn das Formular ungültig ist', async () => {
     const table = makeTable([]);
     setupShowModalMock(false);
     EditorModalBE(table, 'Hinzufügen');
 
     const preventDefault = vi.fn();
-    getSubmit()({ preventDefault } as unknown as Event);
+    await getSubmit()({ preventDefault } as unknown as Event);
 
     expect(preventDefault).not.toHaveBeenCalled();
     expect(persistBereitschaftsEinsatzTableDataMock).not.toHaveBeenCalled();
   });
 
-  it('behandelt einen über Mitternacht laufenden Einsatz (Ende vor Beginn -> +1 Tag)', () => {
+  it('behandelt einen über Mitternacht laufenden Einsatz (Ende vor Beginn -> +1 Tag)', async () => {
     const table = makeTable([]);
     setupShowModalMock();
     EditorModalBE(table, 'Hinzufügen');
     setFormValues(getForm(), { ...VALID_VALUES, Beginn: '22:00', Ende: '02:00' });
 
-    getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
+    await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
     expect(classifyBzCoverageMock).toHaveBeenCalled();
     const [, start, end] = classifyBzCoverageMock.mock.calls[0];

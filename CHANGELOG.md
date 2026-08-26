@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (46)
+
+### feat (Bereitschaft: Speicherreihenfolge BZ-vor-BE erzwingen + Hinweis auf noch nicht gespeicherten Bereitschaftszeitraum)
+
+Legt man direkt nacheinander erst einen Bereitschaftszeitraum (BZ) und dann einen Bereitschaftseinsatz
+(BE) an, kann die BZ zum Zeitpunkt der BE-Eingabe noch im AutoSave haengen (kein `_id` bzw.
+`__localState: 'modified'`) -- die bisherige `classifyBzCoverage`-Pruefung erkannte diesen Fall als
+'complete', ohne die BZ vorher zu synchronisieren. Neue Funktion `ensureCompleteBzSynced()` erzwingt
+jetzt fuer genau diesen Fall die Reihenfolge "erst BZ, dann BE": ist eine der beiden Grenz-BZ noch
+unsynced, wird `flushResource('BZ')` angestossen und die Coverage danach neu klassifiziert, bevor der
+BE-Datensatz die BZ-Referenz erhaelt. `flushResource` wirft nie (Fehler werden intern von AutoSave
+behandelt) -- schlaegt der Sync dennoch fehl, greift unveraendert das bisherige Verhalten (BE wird
+ohne BZ-Referenz gespeichert). Das Speichern selbst wird dadurch nie blockiert oder fehlschlagen
+gelassen, nur cleverer sequenziert.
+
+Zusaetzlich zeigen `createAddModalBereitschaftsEinsatz.tsx` und `createEditorModalBereitschaftsEinsatz.tsx`
+jetzt einen rein informativen Warnhinweis, wenn ein Bereitschaftszeitraum im aktuellen Monat noch
+nicht synchronisiert ist -- analog zum bereits bestehenden Muster bei EWT-Referenzen in EA/Neben
+(dort per `disabled`-Option + "(wird noch gespeichert)"-Suffix geloest). Der Hinweis reagiert live auf
+`data:changed` (Ressource `BZ`) und blendet sich automatisch wieder aus, sobald synchronisiert ist.
+
+Neu exportiert aus `features/Bereitschaft/utils`: `isBzUnsynced()` (Praedikat `!_id || __localState
+=== 'modified'`, analog zum bestehenden Muster in `createAddModalEA.tsx`/`createAddModalNeben.tsx`)
+und `ensureCompleteBzSynced()`.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2023/2023 (inkl. neuer Tests für
+Sichtbarkeits-Toggle des Hinweises) gruen.
+
 ## 2026-08-26 (45)
 
 ### fix (Navbar-Umbruch zwischen 992px und 1118px)
