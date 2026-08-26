@@ -6,7 +6,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   setMonatJahr: vi.fn(),
 }));
 
-vi.mock('@/features/Bereitschaft', () => ({
+vi.mock('@/features/Bereitschaft/utils/constants', () => ({
   BereitschaftsEinsatzZeiträume: {},
 }));
 

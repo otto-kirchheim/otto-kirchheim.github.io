@@ -258,7 +258,7 @@ export function renderHeader<T extends CustomTableTypes>(self: CustomTable<T>): 
   }
 }
 
-export function sortRows<T extends CustomTableTypes>(
+function sortRows<T extends CustomTableTypes>(
   self: CustomTable<T>,
   columnIndex: number,
   direction: Directions | null,
@@ -319,7 +319,7 @@ export function sortRows<T extends CustomTableTypes>(
   }
 }
 
-export function handleSortClick<T extends CustomTableTypes>(
+function handleSortClick<T extends CustomTableTypes>(
   self: CustomTable<T>,
   element: HTMLTableCellElement,
 ): void {

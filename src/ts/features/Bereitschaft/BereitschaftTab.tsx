@@ -10,6 +10,7 @@ import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
@@ -171,26 +172,13 @@ function BereitschaftTab() {
       },
     });
 
-    // "click"-Eventlistener
-    const btnESZ = document.querySelector<HTMLButtonElement>('#btnESZ');
-    const btnESE = document.querySelector<HTMLButtonElement>('#btnESE');
-    const btnSaveB = document.querySelector<HTMLButtonElement>('#btnSaveB');
-    const btnDownloadB = document.querySelector<HTMLButtonElement>('#btnDownloadB');
-    const btnHelpBereitschaft = document.querySelector<HTMLButtonElement>('#btnHelpBereitschaft');
-
-    const onClickSaveB = () => {
-      saveDaten(btnSaveB);
-    };
-    const onClickDownloadB = () => {
-      generatePDF(btnDownloadB, 'B');
-    };
-    const onClickHelpBereitschaft = () => openHelpModal('tab.bereitschaft');
-
-    btnESZ?.addEventListener('click', createAddModalBereitschaftsZeit);
-    btnESE?.addEventListener('click', createAddModalBereitschaftsEinsatz);
-    btnSaveB?.addEventListener('click', onClickSaveB);
-    btnDownloadB?.addEventListener('click', onClickDownloadB);
-    btnHelpBereitschaft?.addEventListener('click', onClickHelpBereitschaft);
+    const unbindButtons = bindClickHandlers([
+      ['btnESZ', createAddModalBereitschaftsZeit],
+      ['btnESE', createAddModalBereitschaftsEinsatz],
+      ['btnSaveB', btn => saveDaten(btn)],
+      ['btnDownloadB', btn => generatePDF(btn, 'B')],
+      ['btnHelpBereitschaft', () => openHelpModal('tab.bereitschaft')],
+    ]);
 
     registerAutoSaveButton('btnSaveB', ['BZ', 'BE']);
 
@@ -198,13 +186,7 @@ function BereitschaftTab() {
     ftBZ.rows.setFilter(row => getMonatFromBZ(row) === monat);
     ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
 
-    return () => {
-      btnESZ?.removeEventListener('click', createAddModalBereitschaftsZeit);
-      btnESE?.removeEventListener('click', createAddModalBereitschaftsEinsatz);
-      btnSaveB?.removeEventListener('click', onClickSaveB);
-      btnDownloadB?.removeEventListener('click', onClickDownloadB);
-      btnHelpBereitschaft?.removeEventListener('click', onClickHelpBereitschaft);
-    };
+    return unbindButtons;
   }, []);
 
   return (

@@ -1,22 +1,8 @@
-import type { IDatenBE, IDataQueryOptions, IMonatsDaten } from '@/types';
+import type { IDatenBE } from '@/types';
 import { filterByMonat, getMonatFromBE } from '@/infrastructure/date/getMonatFromItem';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
-import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
 
-export default function getBereitschaftsEinsatzDaten(
-  data?: IMonatsDaten['BE'],
-  Monat?: number,
-  options?: IDataQueryOptions,
-): IMonatsDaten['BE'] {
-  if (!Storage.check('Benutzer')) return [];
-
-  const sourceData = data ?? Storage.get<unknown>('dataBE', { default: [] });
-  const rows = normalizeResourceRows<IDatenBE>(sourceData);
-  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
-
-  if (options?.scope === 'all') return filteredRows;
-
-  const activeMonat = Monat ?? getStoredMonatJahr().monat;
-  return activeMonat ? filterByMonat(filteredRows, activeMonat, getMonatFromBE) : [];
-}
+export default createDatenGetter<IDatenBE>({
+  storageKey: 'dataBE',
+  filterRows: (rows, activeMonat) => filterByMonat(rows, activeMonat, getMonatFromBE),
+});

@@ -1,23 +1,9 @@
-import type { IDatenEWT, IEwtQueryOptions, IMonatsDaten } from '@/types';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import type { IDatenEWT, IEwtQueryOptions } from '@/types';
 import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
-import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import { default as Storage } from '@/infrastructure/storage/Storage';
+import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
 
-export default function getEwtDaten(
-  data?: IMonatsDaten['EWT'],
-  Monat?: number,
-  options?: IEwtQueryOptions,
-): IMonatsDaten['EWT'] {
-  if (!Storage.check('Benutzer')) return [];
-
-  const sourceData = data ?? Storage.get<unknown>('dataE', { default: [] });
-  const rows = normalizeResourceRows<IDatenEWT>(sourceData);
-  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
-
-  if (options?.scope === 'all') return filteredRows;
-
-  const activeMonat = Monat ?? getStoredMonatJahr().monat;
-  const filter = options?.filter ?? 'beide';
-  return activeMonat ? filteredRows.filter(item => isEwtInMonat(item, activeMonat, filter)) : [];
-}
+export default createDatenGetter<IDatenEWT, IEwtQueryOptions>({
+  storageKey: 'dataE',
+  filterRows: (rows, activeMonat, options) =>
+    rows.filter(item => isEwtInMonat(item, activeMonat, options?.filter ?? 'beide')),
+});

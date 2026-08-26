@@ -1,25 +1,11 @@
-import type { IDatenN, IDataQueryOptions, IMonatsDaten } from '@/types';
+import type { IDatenN } from '@/types';
 import { filterByMonat, getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
-import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
-import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
-import Storage from '@/infrastructure/storage/Storage';
+import { createDatenGetter } from '@/infrastructure/data/createDatenGetter';
 import { hydrateNebengeldRows } from './nebengeldZulagen';
-export default function getNebengeldDaten(
-  data?: IMonatsDaten['N'],
-  Monat?: number,
-  options?: IDataQueryOptions,
-): IMonatsDaten['N'] {
-  if (!Storage.check('Benutzer')) return [];
 
-  const { monat: storedMonat, jahr } = getStoredMonatJahr();
-  if (jahr < 2024) return [];
-
-  const sourceData = data ?? Storage.get<unknown>('dataN', { default: [] });
-  const rows = hydrateNebengeldRows(normalizeResourceRows<IDatenN>(sourceData));
-  const filteredRows = options?.excludeDeleted ? rows.filter(row => row.__localState !== 'deleted') : rows;
-
-  if (options?.scope === 'all') return filteredRows;
-
-  const activeMonat = Monat ?? storedMonat;
-  return activeMonat ? filterByMonat(filteredRows, activeMonat, getMonatFromN) : [];
-}
+export default createDatenGetter<IDatenN>({
+  storageKey: 'dataN',
+  minYear: 2024,
+  normalize: hydrateNebengeldRows,
+  filterRows: (rows, activeMonat) => filterByMonat(rows, activeMonat, getMonatFromN),
+});

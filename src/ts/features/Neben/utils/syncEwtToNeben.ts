@@ -1,46 +1,11 @@
-import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { publishEvent } from '@/core';
+import type { IDatenEWT, IDatenN } from '@/types';
+import { syncFieldsFromEwtRows } from '@/infrastructure/data/syncFieldsFromEwtRows';
 
 export default function syncNebengeldTimesFromEwtRows(updatedEwtRows: IDatenEWT[]): void {
-  if (updatedEwtRows.length === 0) return;
-
-  const ewtById = new Map<string, IDatenEWT>(updatedEwtRows.filter(e => e._id).map(e => [e._id as string, e]));
-
-  const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
-  let storageChanged = false;
-  const nextDataN = currentDataN.map(item => {
-    if (!item.EWT) return item;
-    const ewt = ewtById.get(item.EWT);
-    if (!ewt) return item;
-    const newBegin = ewt.beginE as string;
-    const newEnde = ewt.endeE as string;
-    if (item.Beginn === newBegin && item.Ende === newEnde) return item;
-    storageChanged = true;
-    return { ...item, Beginn: newBegin, Ende: newEnde };
+  syncFieldsFromEwtRows<IDatenN>(updatedEwtRows, {
+    storageKey: 'dataN',
+    tableId: 'tableN',
+    resource: 'N',
+    deriveFields: ewt => ({ Beginn: ewt.beginE as string, Ende: ewt.endeE as string }),
   });
-
-  if (storageChanged) {
-    Storage.set('dataN', nextDataN);
-
-    const el = document.querySelector<CustomHTMLTableElement<IDatenN>>('#tableN');
-    const nebenTable = el?.instance ?? null;
-    if (!nebenTable) return;
-    let tableChanged = false;
-    for (const row of nebenTable.rows.array) {
-      if (row._state === 'deleted') continue;
-      const ref = (row.cells as IDatenN).EWT;
-      if (!ref) continue;
-      const ewt = ewtById.get(ref);
-      if (!ewt) continue;
-      const newBegin = ewt.beginE as string;
-      const newEnde = ewt.endeE as string;
-      if (row.cells.Beginn === newBegin && row.cells.Ende === newEnde) continue;
-      row.cells = { ...row.cells, Beginn: newBegin, Ende: newEnde };
-      if (row._state === 'unchanged') row._state = 'modified';
-      tableChanged = true;
-    }
-    if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
-    if (tableChanged) publishEvent('data:changed', { resource: 'N', action: 'update' });
-  }
 }

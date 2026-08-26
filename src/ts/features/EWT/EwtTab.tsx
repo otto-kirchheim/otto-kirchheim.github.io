@@ -11,6 +11,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import generatePDF from '@/infrastructure/data/generatePDF';
@@ -149,50 +150,31 @@ function EwtTab() {
         },
       });
 
-    const btnZb = document.querySelector<HTMLButtonElement>('#btnZb');
-    const onClickZb = () => {
-      const monat = Storage.get<number>('Monat', { default: 0 });
-      recalculateEwtMonat({
-        monat,
-        daten: getEwtDaten(undefined, monat),
-        vorgabenU: Storage.get<IVorgabenU>('VorgabenU', { check: true }),
-        tableE: ftE,
-      });
-    };
-    btnZb?.addEventListener('click', onClickZb);
-
-    const btnSaveE = document.querySelector<HTMLButtonElement>('#btnSaveE');
-    const onClickSaveE = () => {
-      saveDaten(btnSaveE);
-    };
-    btnSaveE?.addEventListener('click', onClickSaveE);
-
-    const btnDownloadE = document.querySelector<HTMLButtonElement>('#btnDownloadE');
-    const onClickDownloadE = () => {
-      generatePDF(btnDownloadE, 'E');
-    };
-    btnDownloadE?.addEventListener('click', onClickDownloadE);
-
-    const btnESEE = document.querySelector<HTMLButtonElement>('#btnESEE');
-    const onClickESEE = () => createAddModalEWT(ftE);
-    btnESEE?.addEventListener('click', onClickESEE);
-
-    const btnHelpEWT = document.querySelector<HTMLButtonElement>('#btnHelpEWT');
-    const onClickHelpEWT = () => openHelpModal('tab.ewt');
-    btnHelpEWT?.addEventListener('click', onClickHelpEWT);
+    const unbindButtons = bindClickHandlers([
+      [
+        'btnZb',
+        () => {
+          const monat = Storage.get<number>('Monat', { default: 0 });
+          recalculateEwtMonat({
+            monat,
+            daten: getEwtDaten(undefined, monat),
+            vorgabenU: Storage.get<IVorgabenU>('VorgabenU', { check: true }),
+            tableE: ftE,
+          });
+        },
+      ],
+      ['btnSaveE', btn => saveDaten(btn)],
+      ['btnDownloadE', btn => generatePDF(btn, 'E')],
+      ['btnESEE', () => createAddModalEWT(ftE)],
+      ['btnHelpEWT', () => openHelpModal('tab.ewt')],
+    ]);
 
     registerAutoSaveButton('btnSaveE', ['EWT']);
 
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
     ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 
-    return () => {
-      btnZb?.removeEventListener('click', onClickZb);
-      btnSaveE?.removeEventListener('click', onClickSaveE);
-      btnDownloadE?.removeEventListener('click', onClickDownloadE);
-      btnESEE?.removeEventListener('click', onClickESEE);
-      btnHelpEWT?.removeEventListener('click', onClickHelpEWT);
-    };
+    return unbindButtons;
   }, []);
 
   return (

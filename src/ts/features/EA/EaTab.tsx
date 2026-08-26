@@ -9,6 +9,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
@@ -68,27 +69,22 @@ function EaTab() {
       },
     });
 
-    const btnESEA = document.querySelector<HTMLButtonElement>('#btnESEA');
-    const onClickESEA = () => {
-      if (checkIfGreater2025(Jahr, true)) createAddModalEA(ftEA);
-    };
-    btnESEA?.addEventListener('click', onClickESEA);
-
-    const btnSaveEA = document.querySelector<HTMLButtonElement>('#btnSaveEA');
-    const onClickSaveEA = () => {
-      saveDaten(btnSaveEA);
-    };
-    btnSaveEA?.addEventListener('click', onClickSaveEA);
-
-    const btnDownloadEA = document.querySelector<HTMLButtonElement>('#btnDownloadEA');
-    const onClickDownloadEA = () => {
-      if (checkIfGreater2025(Jahr, true)) generatePDF(btnDownloadEA, 'EA');
-    };
-    btnDownloadEA?.addEventListener('click', onClickDownloadEA);
-
-    const btnHelpEA = document.querySelector<HTMLButtonElement>('#btnHelpEA');
-    const onClickHelpEA = () => openHelpModal('tab.ea');
-    btnHelpEA?.addEventListener('click', onClickHelpEA);
+    const unbindButtons = bindClickHandlers([
+      [
+        'btnESEA',
+        () => {
+          if (checkIfGreater2025(Jahr, true)) createAddModalEA(ftEA);
+        },
+      ],
+      ['btnSaveEA', btn => saveDaten(btn)],
+      [
+        'btnDownloadEA',
+        btn => {
+          if (checkIfGreater2025(Jahr, true)) generatePDF(btn, 'EA');
+        },
+      ],
+      ['btnHelpEA', () => openHelpModal('tab.ea')],
+    ]);
 
     registerAutoSaveButton('btnSaveEA', ['EA']);
 
@@ -97,12 +93,7 @@ function EaTab() {
       row => getMonatFromEA(row) === monat && checkIfGreater2025(Storage.get<number>('Jahr', { default: Jahr })),
     );
 
-    return () => {
-      btnESEA?.removeEventListener('click', onClickESEA);
-      btnSaveEA?.removeEventListener('click', onClickSaveEA);
-      btnDownloadEA?.removeEventListener('click', onClickDownloadEA);
-      btnHelpEA?.removeEventListener('click', onClickHelpEA);
-    };
+    return unbindButtons;
   }, []);
 
   return (

@@ -9,6 +9,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
@@ -84,27 +85,22 @@ function NebenTab() {
       },
     });
 
-    const btnESN = document.querySelector<HTMLButtonElement>('#btnESN');
-    const onClickESN = () => {
-      if (checkIfGreater2024(Jahr, true)) createAddModalNeben(ftN);
-    };
-    btnESN?.addEventListener('click', onClickESN);
-
-    const btnSaveN = document.querySelector<HTMLButtonElement>('#btnSaveN');
-    const onClickSaveN = () => {
-      saveDaten(btnSaveN);
-    };
-    btnSaveN?.addEventListener('click', onClickSaveN);
-
-    const btnDownloadN = document.querySelector<HTMLButtonElement>('#btnDownloadN');
-    const onClickDownloadN = () => {
-      if (checkIfGreater2024(Jahr, true)) generatePDF(btnDownloadN, 'N');
-    };
-    btnDownloadN?.addEventListener('click', onClickDownloadN);
-
-    const btnHelpNeben = document.querySelector<HTMLButtonElement>('#btnHelpNeben');
-    const onClickHelpNeben = () => openHelpModal('tab.neben');
-    btnHelpNeben?.addEventListener('click', onClickHelpNeben);
+    const unbindButtons = bindClickHandlers([
+      [
+        'btnESN',
+        () => {
+          if (checkIfGreater2024(Jahr, true)) createAddModalNeben(ftN);
+        },
+      ],
+      ['btnSaveN', btn => saveDaten(btn)],
+      [
+        'btnDownloadN',
+        btn => {
+          if (checkIfGreater2024(Jahr, true)) generatePDF(btn, 'N');
+        },
+      ],
+      ['btnHelpNeben', () => openHelpModal('tab.neben')],
+    ]);
 
     registerAutoSaveButton('btnSaveN', ['N']);
 
@@ -113,12 +109,7 @@ function NebenTab() {
       row => getMonatFromN(row) === monat && checkIfGreater2024(Storage.get<number>('Jahr', { default: Jahr })),
     );
 
-    return () => {
-      btnESN?.removeEventListener('click', onClickESN);
-      btnSaveN?.removeEventListener('click', onClickSaveN);
-      btnDownloadN?.removeEventListener('click', onClickDownloadN);
-      btnHelpNeben?.removeEventListener('click', onClickHelpNeben);
-    };
+    return unbindButtons;
   }, []);
 
   return (

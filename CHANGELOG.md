@@ -2,6 +2,41 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (44)
+
+### refactor (Duplikate in Feature-Tabs beseitigt, nach graphify-Analyse)
+
+Ein graphify-gestuetzter Refactoring-Pass (God Nodes, Import-Zyklen, Explore-Scan) deckte
+mehrere Duplikate in den vier strukturell aehnlichen Feature-Tabs (Bereitschaft/EWT/Neben/EA)
+auf. Alle Aenderungen sind reine Extraktionen ohne Verhaltensaenderung:
+
+- `Bereitschaft/index.ts`s `BereitschaftsEinsatzZeiträume`-Konstante nach
+  `Bereitschaft/utils/constants.ts` verschoben -- löst den
+  `BereitschaftTab.tsx <-> components/index.ts <-> createAddModalBereitschaftsZeit.tsx <->
+  Bereitschaft/index.ts`-Importzyklus vollständig auf (per `graphify update .` bestätigt).
+  Nebeneffekt: Vite konnte dadurch einen zusätzlichen `utils`-Chunk abspalten, Gesamtgröße
+  unverändert, nur anders verteilt.
+- `customTableRender.ts`: `sortRows`/`handleSortClick` waren nur innerhalb der eigenen Datei
+  genutzt -- unnötiges `export` entfernt.
+- Neuer `bindClickHandlers()`-Helper (`infrastructure/ui/`) übernimmt die in allen vier
+  Feature-Tabs wiederholte `querySelector`/`addEventListener`/`removeEventListener`-Zeremonie für
+  Save/Download/Help/Add-Buttons; die Handler-Logik selbst (Jahres-Gates etc.) bleibt unverändert
+  in den Tabs.
+- Neue `createDatenGetter()`-Factory (`infrastructure/data/`) für die vier fast identischen
+  `getXDaten()`-Funktionen (Storage-Check, Normalisierung, `excludeDeleted`-Filter,
+  `scope:'all'`-Kurzschluss, Monats-Filter) -- jede Feature-Funktion jetzt eine
+  Ein-Zeilen-Instanziierung; EA/Neben behalten ihre Jahres-Untergrenze, Neben seine
+  Zulagen-Hydration, EWT seinen abweichenden `isEwtInMonat`-Filtermodus als jeweilige Config.
+- Neue `syncFieldsFromEwtRows()`-Funktion (`infrastructure/data/`) ersetzt die copy-paste-gleiche
+  Sync-Logik in `syncEwtToNeben.ts`/`syncEwtToEa.ts` (Storage- und Live-Table-Patch, Redraw,
+  Event) -- nur die abgeleiteten Felder unterscheiden sich pro Aufrufer.
+- Neue `components/showModalHelpers.tsx` (`getColumn`/`createTagElement`/`createShowElement3`,
+  generisch über `CustomTableTypes` wie bereits `createShowModalBereitschaft.tsx`) ersetzt die
+  byte-identischen Kopien in `createShowModalEA.tsx`/`createShowModalNeben.tsx`.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2019/2019 unveraendert gruen,
+`bun run build` erfolgreich.
+
 ## 2026-08-26 (43)
 
 ### feat (Admin: individuelle Berechtigung fuer Formular-Vorlagen + Tab-Reorganisation)

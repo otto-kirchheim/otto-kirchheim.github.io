@@ -1,6 +1,6 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from './zulagenCatalog';
-import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
+import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
 import { ArbeitszeiteingabePanel, FahrzeitenPanel } from '../components';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';

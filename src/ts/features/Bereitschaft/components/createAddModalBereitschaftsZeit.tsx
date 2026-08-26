@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type VNode } from 'preact';
-import { BereitschaftsEinsatzZeiträume } from '..';
+import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
 import { MyCheckbox, MyFormModal, MyModalBody, MySelect, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';

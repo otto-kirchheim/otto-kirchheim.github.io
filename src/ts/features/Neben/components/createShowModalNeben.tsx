@@ -1,28 +1,9 @@
 import type { JSX } from 'preact';
 import type { Column, Row } from '@/infrastructure/table/CustomTable';
-import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
+import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
+import { createShowElement3, createTagElement, getColumn } from '@/components/showModalHelpers';
 import type { CustomHTMLDivElement, IDatenN } from '@/types';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '../utils';
-
-const getColumn = (row: Row<IDatenN>, columnName: string): Column<IDatenN> => {
-  const column = row.columns.array.find(column => column.name === columnName);
-  if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
-  return column;
-};
-
-const createTagElement = (row: Row<IDatenN>) => {
-  const column: Column<IDatenN> = getColumn(row, 'Tag');
-  return (
-    <MyShowElement
-      divClass="mb-2 col-12 text-center"
-      labelClass="pe-3 align-middle col-form-label text-wrap fw-bold"
-      spanClass="align-middle my-auto"
-      title={`${column.longTitle}:`}
-      id={column.name}
-      text={column.parser(row.cells[column.name])}
-    />
-  );
-};
 
 const createShowElement = (
   row: Row<IDatenN>,
@@ -53,22 +34,6 @@ const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 co
       {lines.map((line, i) => (
         <div key={i}>{line}</div>
       ))}
-    </div>
-  );
-};
-
-const createShowElement3 = (
-  row: Row<IDatenN>,
-  column: [columnName: string, className?: string],
-  classNameDiv: string = 'mb-2 col-12 text-center',
-) => {
-  const column1: Column<IDatenN> = getColumn(row, column[0]);
-
-  return (
-    <div className={classNameDiv}>
-      <span className={column[1]} id={column1.name}>
-        {column1.parser(row.cells[column1.name])}
-      </span>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { saveEinstellungen } from '.';
-import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft';
+import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
