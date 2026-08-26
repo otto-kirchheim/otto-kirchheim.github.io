@@ -2,6 +2,16 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (45)
+
+### fix (Navbar-Umbruch zwischen 992px und 1118px)
+
+`#navmenu` (Bootstrap-Offcanvas) erhält ab `lg` (992px) über `navbar-expand-lg` `flex-grow:1`,
+die Tab-Liste blieb aber wegen der `.flex-wrap`-Klasse umbruchfähig -- im Fenster 992--1118px
+brach `Berechnung` zweizeilig um, der Monat-Select wirkte gequetscht. Fix in `scss/styles.scss`:
+`flex-nowrap` ab 992px erzwungen, plus im Engpass 992--1199px Padding/Margin der Tabs gestrafft.
+Per Headless-Chrome über 992--1400px verifiziert (konstant einzeilig, 58px Header-Höhe).
+
 ## 2026-08-26 (44)
 
 ### refactor (Duplikate in Feature-Tabs beseitigt, nach graphify-Analyse)

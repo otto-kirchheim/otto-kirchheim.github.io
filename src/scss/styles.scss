@@ -571,3 +571,25 @@ body {
   outline-offset: 2px;
   border-radius: var(--bs-border-radius);
 }
+
+// Navbar bricht zwischen 992px und ~1118px zweizeilig um: #navmenu erhält ab lg zwar
+// flex-grow:1 (Bootstrap navbar-offcanvas-Pattern), die Tab-Liste bleibt aber per
+// .flex-wrap umbruchfähig, statt in einer Zeile zu bleiben.
+@media screen and (min-width: 992px) {
+  #navmenu .navbar-nav.flex-wrap {
+    flex-wrap: nowrap !important;
+  }
+}
+
+// Im engsten Bereich (992–1199px) zusätzlich Abstände straffen, damit der Monat-Select
+// nicht auf ein paar Buchstaben zusammengequetscht wird.
+@media screen and (min-width: 992px) and (max-width: 1199.95px) {
+  #ewt-tab {
+    margin-right: 0.75rem !important;
+  }
+
+  #navmenu .nav-link {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
