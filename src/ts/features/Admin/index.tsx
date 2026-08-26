@@ -7,6 +7,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { AdminResourceBrowser } from './components/AdminResourceBrowser';
 import { AdminUserProfileEditor } from './components/AdminUserProfileEditor';
 import { AdminLogBrowser } from './components/AdminLogBrowser';
+import { FormularUpload } from './components/FormularUpload';
 import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsStatus';
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
@@ -123,6 +124,22 @@ export default function AdminTab() {
                 aria-selected="false"
               >
                 Profile-Templates
+              </button>
+            </li>
+          )}
+          {isTeamAdminOrHigher && (
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link"
+                id="admin-tab-formulare"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-formulare"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-formulare"
+                aria-selected="false"
+              >
+                Formular-Vorlagen
               </button>
             </li>
           )}
@@ -244,6 +261,18 @@ export default function AdminTab() {
             tabIndex={0}
           >
             <AdminProfileTemplatesManager />
+          </div>
+        )}
+
+        {isTeamAdminOrHigher && (
+          <div
+            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-info-subtle"
+            id="admin-pane-formulare"
+            role="tabpanel"
+            aria-labelledby="admin-tab-formulare"
+            tabIndex={0}
+          >
+            <FormularUpload />
           </div>
         )}
 

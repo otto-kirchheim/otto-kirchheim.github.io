@@ -169,6 +169,40 @@ td:has(.SchichtBereitschaft) {
   align-content: start;
 }
 
+/* Unterschrift-Canvas (signaturDialog.ts): Breite/Höhe kommen als exakte Pixelwerte per
+   `berechneCanvasGroesse()` aus JS (deterministisch statt CSS-`aspect-ratio`/Flex-Interaktion,
+   die sich in Bootstraps `.modal-body`-Layout als unzuverlässig erwies) -- hier nur noch
+   Zentrierung (Block-Element mit fester Breite < 100% zentriert per `margin: 0 auto`) und Optik. */
+.signatur-canvas {
+  display: block;
+  margin: 0 auto;
+  /* border-box statt des Default content-box: sonst kommt der 1px-Rahmen zur per JS gesetzten
+     Breite/Höhe oben drauf (2px Differenz je Achse) -- in engen Fullscreen-Fällen genau der
+     Unterschied zwischen Passen und Überlaufen. */
+  box-sizing: border-box;
+  border: 1px solid var(--bs-border-color);
+  touch-action: none;
+}
+
+/* Randloser Unterschrift-Modus (signaturDialog.ts, aktiviert wenn die Höhe die bindende Dimension
+   ist -- typisch Querformat-Handy): kompaktere Kopf-/Fußzeile gewinnt zusätzlichen Vertikalraum
+   für den Canvas zurück, statt ihn an Bootstraps Standard-Padding zu verlieren. */
+.signatur-modal-kompakt .modal-header {
+  padding: 0.35rem 0.75rem;
+}
+
+.signatur-modal-kompakt .modal-title {
+  font-size: 1rem;
+}
+
+.signatur-modal-kompakt .modal-body {
+  padding: 0.5rem;
+}
+
+.signatur-modal-kompakt .modal-footer {
+  padding: 0.35rem 0.75rem;
+}
+
 /* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
    selbst, damit CustomTable die Zelle als Text (nicht als HTML) setzen kann. */
 .cell-multiline {
@@ -284,6 +318,34 @@ body {
     color: #f8f9fa !important;
     border-color: #444950 !important;
   }
+}
+
+// Bootstrap überschreibt die Farb-Variablen von .btn-outline-* im Dark-Theme nicht -- die festen
+// Grundfarben (Rahmen/Text) haben auf dunklem Hintergrund zu wenig Kontrast (secondary/primary am
+// stärksten betroffen, da Grau/Blau gegen den neutralen Dark-Hintergrund kaum Eigenfarbe hergeben).
+// Zusätzlich unterscheidet sich der deaktivierte Zustand bei JEDER Outline-Variante nur durch 65%
+// Opacity von der aktiven Farbe -- kaum auseinanderzuhalten. Wir binden stattdessen die
+// theme-eigenen Tokens ein, die Bootstrap für genau diesen Zweck bereits mitliefert.
+[data-bs-theme='dark'] .btn-outline-secondary {
+  --bs-btn-color: var(--bs-secondary-text-emphasis);
+  --bs-btn-border-color: var(--bs-secondary-text-emphasis);
+}
+
+[data-bs-theme='dark'] .btn-outline-primary {
+  --bs-btn-color: var(--bs-primary-text-emphasis);
+  --bs-btn-border-color: var(--bs-primary-text-emphasis);
+}
+
+// Deaktivierte Outline-Buttons einheitlich auf den Dark-Theme-Rahmenton -- deutlich stumpfer als
+// jede aktive Farbe, damit "deaktiviert" auf den ersten Blick erkennbar bleibt.
+[data-bs-theme='dark'] .btn-outline-secondary,
+[data-bs-theme='dark'] .btn-outline-primary,
+[data-bs-theme='dark'] .btn-outline-success,
+[data-bs-theme='dark'] .btn-outline-danger,
+[data-bs-theme='dark'] .btn-outline-warning,
+[data-bs-theme='dark'] .btn-outline-info {
+  --bs-btn-disabled-color: var(--bs-border-color);
+  --bs-btn-disabled-border-color: var(--bs-border-color);
 }
 
 .admin-user-cards {

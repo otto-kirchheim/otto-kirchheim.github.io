@@ -10,7 +10,7 @@ import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '@/infrastructure/date/configDayjs';
-import download from '@/infrastructure/data/download';
+import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
 import { getEaDaten, persistEaTableData } from './utils';
 
@@ -82,7 +82,7 @@ function EaTab() {
 
     const btnDownloadEA = document.querySelector<HTMLButtonElement>('#btnDownloadEA');
     const onClickDownloadEA = () => {
-      if (checkIfGreater2025(Jahr, true)) download(btnDownloadEA, 'EA');
+      if (checkIfGreater2025(Jahr, true)) generatePDF(btnDownloadEA, 'EA');
     };
     btnDownloadEA?.addEventListener('click', onClickDownloadEA);
 
@@ -136,7 +136,7 @@ function EaTab() {
           <div class="col d-grid">
             <button class="btn btn-secondary" type="button" id="btnDownloadEA" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

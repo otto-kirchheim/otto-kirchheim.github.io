@@ -42,7 +42,7 @@ const HELP_CONTENT: Record<HelpContextKey, HelpContent> = {
       'Überblick über die empfohlene Reihenfolge erhalten',
       'Ersteinrichtungs-Guide erneut öffnen',
     ],
-    schritte: ['Einstellungen prüfen', 'Monat erfassen', 'Speichern', 'PDF exportieren'],
+    schritte: ['Einstellungen prüfen', 'Monat erfassen', 'Speichern', 'PDF erzeugen'],
     haeufigeFehler: ['Ersteinrichtung wird übersprungen, wodurch Einstellungen und Verifizierung ungeprüft bleiben.'],
     tipp: 'Die Ersteinrichtung lässt sich hier jederzeit erneut öffnen, falls du sie nochmal durchgehen möchtest.',
     reopenOnboardingAction: true,
@@ -55,7 +55,7 @@ const HELP_CONTENT: Record<HelpContextKey, HelpContent> = {
       { label: 'Bereitschaft hinzufügen', description: 'Neuen Bereitschaftszeitraum anlegen' },
       { label: 'Einsatz hinzufügen', description: 'Einen Einsatz zu einem bestehenden Bereitschaftszeitraum erfassen' },
       { label: 'Speichern', description: 'Erfasste Zeilen dauerhaft sichern' },
-      { label: 'Herunterladen PDF', description: 'Monatsübersicht als PDF exportieren' },
+      { label: 'PDF erzeugen', description: 'Monatsübersicht als PDF exportieren' },
     ],
     schritte: ['Erfassen', 'Prüfen', 'Speichern', 'Export'],
     eingaberegeln: [
@@ -111,7 +111,7 @@ const HELP_CONTENT: Record<HelpContextKey, HelpContent> = {
     buttons: [
       { label: 'Hinzufügen', description: 'Neuen Entgeltausgleich-Eintrag für einen Tag anlegen' },
       { label: 'Speichern', description: 'Erfasste Einträge dauerhaft sichern' },
-      { label: 'Herunterladen PDF', description: 'Monatsübersicht als PDF exportieren' },
+      { label: 'PDF erzeugen', description: 'Monatsübersicht als PDF exportieren' },
     ],
     eingaberegeln: [
       'Pro Kalendertag nur ein Eintrag.',

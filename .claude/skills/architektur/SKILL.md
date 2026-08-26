@@ -5,17 +5,38 @@ description: 'Use when: frontend topic architektur'
 
 # Architektur & Komponenten-Patterns
 
+## 3-Schichten-Architektur
+
+```
+src/ts/
+├── components/      # Generische Preact-Bausteine (MyButton, MyInput, MyFormModal, showModal, ...)
+├── core/            # Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung
+│   ├── types/       # Alle geteilten TS-Interfaces
+│   ├── hooks/       # registerHook/invokeHook, featureLifecycleRegistry
+│   ├── events/      # publishEvent/onEvent, EventChannels
+│   └── orchestration/
+│       ├── auth/           # Login/Register/Reset-Modals + Auth-Lifecycle (kein Feature-Modul!)
+│       ├── onboarding/
+│       └── syncFeatureTabs.ts  # Tab-übergreifende Synchronisation
+├── infrastructure/  # api/, autoSave/, data/, date/, pdf/, storage/, table/, tokenManagement/, ui/, validation/
+└── features/        # Admin, Berechnung, Bereitschaft, EA, Einstellungen, EWT, Neben
+```
+
+`features/` darf `core/` + `infrastructure/` nutzen, `infrastructure/` darf `core/` nutzen, nie
+umgekehrt. Details siehe `frontend/CLAUDE.md`.
+
 ## App-Einstiegspunkte
 
 ### `src/index.html`
 
-- Einzige HTML-Datei (SPA), ~840 Zeilen
+- Einzige HTML-Datei (SPA), >1000 Zeilen
 - Bootstrap-basierte Tabs als Navigation (Pills)
-- Bereiche: Login, Bereitschaft, EWT, Nebenbezüge, Berechnung, Einstellungen
 
 ### `src/ts/main.ts`
 
-- Import aller Feature-Module
+- Import der Feature-Module (statisch: Berechnung, Bereitschaft, EWT, Einstellungen, Neben, EA,
+  `core/orchestration/auth`; Admin läuft separat über einen Lazy-Import)
+- `initializeAppBootstrap()`/`registerAppStartTask()` (`core/`) für die Init-Reihenfolge
 - PWA Service Worker Registrierung
 - Version-Check (API vs. lokal)
 - Bootstrap JS-Module einzeln importieren (Collapse, Dropdown, Offcanvas, Popover, Tab, Modal)
@@ -24,10 +45,10 @@ description: 'Use when: frontend topic architektur'
 
 ## Feature-Modul-Pattern
 
-Jedes Feature-Modul folgt dieser Struktur:
+Jedes Feature-Modul unter `features/` folgt dieser Struktur:
 
 ```
-Feature/
+features/Feature/
 ├── index.ts          # window.addEventListener("load", ...) → Init
 ├── components/       # Preact TSX-Komponenten (Modals)
 │   └── index.ts      # Re-Exports
@@ -35,16 +56,20 @@ Feature/
     └── index.ts      # Re-Exports
 ```
 
+Login/Register/Reset ist **kein** Feature-Modul, sondern Teil der Auth-Orchestrierung unter
+`core/orchestration/auth/`.
+
 ### Vorhandene Feature-Module
 
 | Modul            | Beschreibung                                         |
 | ---------------- | ---------------------------------------------------- |
+| `Admin/`         | Admin-Panel (Preact), separat lazy-geladen           |
 | `Bereitschaft/`  | Bereitschaftsdienst-Verwaltung (Zeiträume, Einsätze) |
 | `EWT/`           | Einsatzwechseltätigkeit                              |
 | `Neben/`         | Nebenbezüge (Zulagen, Zuschüsse)                     |
+| `EA/`            | Entgeltausgleich                                     |
 | `Berechnung/`    | Gesamtberechnung & Zusammenfassung                   |
 | `Einstellungen/` | Benutzerprofil, Vorgaben, Templates                  |
-| `Login/`         | Authentifizierung (Login, Registrierung)             |
 
 ---
 
@@ -95,13 +120,13 @@ Eigene Tabellen-Klasse, **nicht** Preact-basiert:
 
 - Sorting, Editing, Responsive Breakpoints
 - Event-Handling über DOM-Events
-- Definiert in `src/ts/class/CustomTable.ts`
+- Definiert in `src/ts/infrastructure/table/CustomTable.ts`
 
 ### 5. CustomSnackbar (Vanilla-DOM)
 
 Toast/Snackbar-System, ebenfalls Vanilla-DOM:
 
-- Definiert in `src/ts/class/CustomSnackbar.ts`
+- Definiert in `src/ts/infrastructure/ui/CustomSnackbar.ts`
 
 ---
 
@@ -112,14 +137,14 @@ Toast/Snackbar-System, ebenfalls Vanilla-DOM:
 Es gibt **kein reaktives State Management** (keine Signals, kein Context, keinen Store).
 
 ```ts
-import { Storage } from "../utilities";
+import Storage from "@/infrastructure/storage/Storage";
 
 // Typsicherer Zugriff
-const daten = Storage.get("Daten");
-Storage.set("Daten", neuerWert);
+const daten = Storage.get("dataN");
+Storage.set("dataN", neuerWert);
 ```
 
-- Keys definiert via `TStorageData` Enum
+- Keys definiert via `TStorageData` (`keyof typeof StorageData`, `infrastructure/storage/Storage.ts`)
 - Überladene `get<T>()` mit Default-Werten
 - Daten werden bei Monatswechsel vom Server geladen und in localStorage gepersistet
 
@@ -143,15 +168,17 @@ Tab-Wechsel werden von Bootstrap selbst gehandelt. Feature-Module registrieren s
 ### `FetchRetry` (Custom Fetch-Wrapper)
 
 ```ts
-import { FetchRetry } from "../utilities";
+import { FetchRetry } from "@/infrastructure/api/FetchRetry";
 
-const response = await FetchRetry(url, options);
+const response = await FetchRetry<RequestBody, ResponseData>(urlPath, data, "POST");
 ```
 
 Features:
 
 - Automatische Server-Erkennung (mehrere URLs mit Timeout-Fallback)
 - JWT `Bearer` Token automatisch gesetzt
-- Auto-Token-Refresh bei 401 (bis 3 Retries)
+- Auto-Token-Refresh bei 401 über einen geteilten Single-Flight-Refresh
+  (`refreshAccessTokenSingleFlight`) statt pro Request separat — verhindert eine
+  401-/Logout-Kaskade, wenn viele Requests gleichzeitig mit abgelaufenem Token laufen
 - Server-URL gecacht in `sessionStorage`
 - `AbortController` für Request-Cancellation

@@ -13,7 +13,7 @@ import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
-import download from '@/infrastructure/data/download';
+import generatePDF from '@/infrastructure/data/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 function EwtTab() {
@@ -169,7 +169,7 @@ function EwtTab() {
 
     const btnDownloadE = document.querySelector<HTMLButtonElement>('#btnDownloadE');
     const onClickDownloadE = () => {
-      download(btnDownloadE, 'E');
+      generatePDF(btnDownloadE, 'E');
     };
     btnDownloadE?.addEventListener('click', onClickDownloadE);
 
@@ -232,7 +232,7 @@ function EwtTab() {
           <div class="col d-grid">
             <button class="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

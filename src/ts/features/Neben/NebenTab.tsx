@@ -10,7 +10,7 @@ import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '@/infrastructure/date/configDayjs';
-import download from '@/infrastructure/data/download';
+import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
@@ -98,7 +98,7 @@ function NebenTab() {
 
     const btnDownloadN = document.querySelector<HTMLButtonElement>('#btnDownloadN');
     const onClickDownloadN = () => {
-      if (checkIfGreater2024(Jahr, true)) download(btnDownloadN, 'N');
+      if (checkIfGreater2024(Jahr, true)) generatePDF(btnDownloadN, 'N');
     };
     btnDownloadN?.addEventListener('click', onClickDownloadN);
 
@@ -152,7 +152,7 @@ function NebenTab() {
           <div class="col d-grid">
             <button class="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

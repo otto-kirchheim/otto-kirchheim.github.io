@@ -2,7 +2,1186 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
-## 2026-08-16
+## 2026-08-25 (38)
+
+### refactor (PDF-Render-Engine aus shared nach frontend verschoben)
+
+User-Review-Fund nach (37): `shared/src/download.ts` + `shared/src/formular/abgeleiteteWerte.ts`
+hatten null Verbraucher in `backend` oder sonst irgendwo in `shared` -- einziger Verbraucher war
+`frontend`. Nachprüfung ergab: derselbe Befund gilt für den kompletten Rest der Render-Engine
+(`aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`) -- `backend`
+nutzt aus `shared/formular/` ausschließlich `types.ts` (Zod-Spiegel-Quelle) und
+`resolve.ts`/`pruefeIntervalle.ts` (Versions-Auflösung).
+
+- 6 Module + 5 Tests von `shared/src/(formular/)*` nach `frontend/src/ts/infrastructure/pdf/`
+  bzw. `frontend/test/infrastructure/pdf/` verschoben: `download.ts`, `abgeleiteteWerte.ts`,
+  `aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`.
+- Betroffene Frontend-Consumer auf lokale Imports umgestellt: `wert.ts`, `build.ts`,
+  `spaltenWert.ts`, `verteile.ts`, `generatePDF.ts`, `FormularEditor.tsx`, `dummyDaten.ts`.
+- `IEwtDownloadBody` (einziger ungenutzter Typ der verschobenen Module) ersatzlos entfernt; 3
+  Kommentare, die noch vom gelöschten Backend-Downloadpfad sprachen, korrigiert.
+- `shared/src/index.ts`/`formular/index.ts` bereinigt, `shared/package.json` auf `0.8.0` (Marker,
+  noch nicht published/getaggt).
+- Stale Pfad-Referenzen (`shared/src/formular/abgeleiteteWerte.ts` etc.) in Kommentaren
+  (`datenKatalog.ts`, `backend/.claude/skills/ressourcen/SKILL.md`) korrigiert.
+
+**Wichtiger Nebenfund:** die real publizierte `@otto-kirchheim/nebengeld-shared@0.7.0` ist älter
+als die gesamte `formular/`-Pipeline (fehlt dort komplett) -- `node_modules` in `backend` UND
+`frontend` zeigen deshalb schon vorher dauerhaft per Symlink auf das lokale `shared/`, nicht auf
+eine Registry-Version. Kein Publish nötig/sinnvoll, solange dieser Zustand (Feature-Branch
+`feature/formular-typsystem`) andauert -- ein versehentliches `bun install` ohne den Symlink bricht
+den Build (fehlende Exporte), Symlink nach jedem `bun install` prüfen.
+
+Verifiziert: `shared` `tsc`/`bun test` sauber (108→11 Tests, Rest zu frontend gewandert), Frontend
+`tsc`/Lint sauber, `bun run test` 1832/1833 (1 bekannter, unabhängiger Flake --
+`bootstrap.test.ts`, isoliert grün), `bun run build` erfolgreich, Backend (via Symlink live
+betroffen) `tsc`/Lint/`bun test --isolate` 812/812 unverändert grün.
+
+## 2026-08-25 (37)
+
+### refactor (download.ts → generatePDF.ts: vollständig frontend-nativ)
+
+User-Review-Fund nach (35)/(36): auch nach dem Entfernen des toten Server-Downloadpfads trug die
+Funktion noch Reste aus der Backend-Ära -- der Name `download` beschrieb nicht mehr, was passiert
+(PDF wird client-seitig erzeugt, nicht von einem Server geladen), und `VorgabenU.Pers`/`.Fahrzeit`
+liefen durch `userProfileToBackend()`, eine für den Profil-Speichern-Endpunkt (`PUT
+/user-profiles/me`) gebaute Funktion.
+
+Analyse ergab: von `userProfileToBackend()` wird hier nur EIN Transform wirklich gebraucht --
+`Pers.OE` vom Freitext-String (Profil-UI) ins Array-Format (`IPers.OE: string[]`, von der
+PDF-Vorlagen-Pipeline über `FORMAT.oe` erwartet). `Fahrzeit` ist strukturell identisch
+(`IFahrzeit` shared vs. `IVorgabenUfZ` frontend) und braucht gar kein Mapping;
+`Arbeitszeit`/`VorgabenB`/`Einstellungen` wurden nur mitberechnet und nie verwendet.
+
+- `infrastructure/data/download.ts` → `generatePDF.ts`, Funktion `download` → `generatePDF`
+  (Signatur unverändert).
+- `userProfileToBackend()`-Aufruf entfernt; `Pers.OE` wird jetzt direkt mit dem bereits
+  öffentlichen `splitOeInput()` (`infrastructure/data/oeLevels.ts`) konvertiert, `Fahrzeit`
+  unverändert aus `VorgabenU` durchgereicht. `userProfileToBackend()` selbst bleibt unverändert
+  (weiterhin genutzt für `PUT /user-profiles/me` in `dataApi.ts`).
+  Kommentare, die noch von "Backend-Format"/"Backend-Feldnamen" sprachen, korrigiert.
+- 4 Call-Sites (`BereitschaftTab.tsx`, `EwtTab.tsx`, `NebenTab.tsx`, `EaTab.tsx`) sowie
+  `test/Utilities/download.test.ts` → `generatePDF.test.ts` entsprechend umgestellt.
+- Bewusst unverändert: nutzer-sichtbare Texte ("Download nicht möglich…", Dateiname-Präfixe) und
+  HTML-Button-IDs (`btnDownloadB` etc.) -- aus Nutzersicht bleibt es ein Download, das ist
+  weiterhin korrekt; die per-`modus`-Zeilen-Mappings im `switch` (CustomTable-Zeile → kanonisches
+  PDF-`Daten`-Format) sind kein Backend-Relikt und blieben strukturell unverändert.
+
+Verifikation: `bunx tsc --noEmit` sauber, `bun run lint` sauber, `bun run test` (`--isolate`)
+1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (36)
+
+### fix (download.ts: Monat/Jahr aus Storage statt DOM-Input)
+
+User-Einwand nach Review von (35): `download()` las `Monat`/`Jahr` bisher direkt aus den
+`#Monat`/`#Jahr`-Input-Feldern (`+MonatInput.value`), obwohl `changeMonatJahr.ts` genau diese
+Felder ausliest und synchron in `Storage` schreibt -- der DOM-Umweg war unnötig, sobald `Storage`
+bereits die aktuelle Auswahl hält. `download.ts` liest jetzt `Storage.get<number>('Monat'/'Jahr',
+{ check: true })`, die beiden `document.querySelector('#Monat'/'#Jahr')`-Lookups samt
+Existenz-Check entfallen ersatzlos. Dabei auch einen stale gewordenen Kommentar korrigiert
+(sprach noch vom nicht mehr existierenden "Backend-Download-Schema" -- `data` geht seit (35) an
+keinen Backend-Endpunkt mehr, sondern direkt an `ladeUndErzeugePdf()`; `Pers`/`Fahrzeit` müssen
+trotzdem im Backend-Format vorliegen, weil `userProfileToBackend()` -- auch für `PUT
+/user-profiles/me` genutzt -- dieselbe Form liefert).
+
+Tests (`download.test.ts`): `Storage.set('Monat'/'Jahr', ...)` statt `<input>`-Elemente in
+`beforeEach` geseedet; zwei Tests, die `Monat` per direkter DOM-Manipulation
+(`document.querySelector('#Monat')!.value = ...`) umgestellt hatten, jetzt über `Storage.set`
+(die alte DOM-Manipulation griff seit dem Entfernen der `<input>`-Elemente ohnehin ins Leere und
+warf eine `TypeError`, die unbemerkt in nachfolgende Tests derselben Datei durchschlug). Verifiziert:
+`tsc`/Lint sauber, `bun run test` (`--isolate`) 1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (35)
+
+### chore (Rückbau: toter Server-Downloadpfad in download.ts)
+
+Gegenstück zu `backend/CHANGELOG.md` (12): `download.ts`s `if (modus === 'EA' || 'E' || 'B' || 'N')`
+deckte bereits den kompletten `modus`-Typ ab, der `else`-Zweig (`downloadPdf()`-Aufruf gegen den
+alten Backend-Roundtrip) war seit Phase 12 unerreichbarer Totcode.
+
+- `download.ts`: toten `else`-Zweig entfernt, `if`-Bedingung entfällt (immer der client-seitige
+  Renderer-Pfad).
+- `downloadPdf()` aus `infrastructure/api/dataApi.ts` entfernt (einziger Aufrufer war der jetzt
+  entfernte Zweig); `abortController`/`getServerUrl`/`Storage`-Imports dort mitentfernt, soweit nur
+  dafür gebraucht.
+- Tests: `apiService.test.ts`s `describe('downloadPdf', ...)`-Block entfernt; `download.test.ts`s
+  `downloadPdf`-Mock-Plumbing (Modul-Mock, `mockDownloadPdf`, Default-Resolve, alle
+  `expect(mockDownloadPdf).not.toHaveBeenCalled()`-Assertions) entfernt, da der Vergleichspfad nicht
+  mehr existiert.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` (`--isolate`) 1680/1680
+grün, `bun run build` erfolgreich.
+
+## 2026-08-24 (34)
+
+### feat (Unterschriftsdatum: an Signatur gekoppelt, druckt nur bei explizit "Digital")
+
+User-Wunsch: das Unterschriftsdatum-Feld (bisher generisches `letztesDatum`-Feld, Preset
+"+ Datum (Unterschrift)" in der allgemeinen Feldliste, druckte unabhängig davon ob überhaupt
+unterschrieben wurde) soll inhaltlich mit der Signatur verknüpft sein. **Wichtige Präzisierung nach
+Rückmeldung:** NICHT jedes Fehlen einer gezeichneten Unterschrift blendet das Datum aus, sondern NUR
+die explizite Wahl "Digital" (spätere externe Signatur zu unbekanntem Zeitpunkt macht ein jetzt
+gedrucktes Datum falsch) -- "Ohne Unterschrift" (z.B. für eine Unterschrift auf Papier) lässt das
+Datum dagegen stehen, weil es dort weiterhin sinnvoll ist.
+
+Neues optionales `Feld.nurBeiSignatur?: boolean` im **dreifach gespiegelten Typsystem**
+(`shared/src/formular/types.ts`, `frontend/.../configSchema.ts`, `backend/.../formular.schemas.ts`,
+siehe `.claude/CLAUDE.md`-Hinweis dazu). `wert()` (`infrastructure/pdf/wert.ts`) liefert für ein so
+markiertes Feld sofort `''`, wenn `Kontext.digitaleSignatur` wahr ist -- neues Kontext-Feld (Ersatz
+für ein anfängliches `hatSignatur`, das noch pauschal an `Boolean(signaturPng)` hing und damit auch
+"Ohne Unterschrift" fälschlich unterdrückt hätte), in `build.ts` aus dem neuen `digitaleSignatur`-
+Parameter gesetzt, genau wie `heute` bereits testbar statt `new Date()` inline. Alt-Konfigurationen
+ohne das `nurBeiSignatur`-Flag verhalten sich unverändert (kein Migrationsbedarf).
+
+**`signaturDialog.ts` komplett umgebaut**, um "Digital" von "Ohne Unterschrift" zu unterscheiden --
+`confirmDialog` (fest zwei Buttons) reicht dafür nicht mehr. Ein einziger, eigener Entscheidungsdialog
+(`signaturEntscheidung()`) deckt jetzt BEIDE Fälle ab: ohne Cache "Ja" / "Ohne Unterschrift" /
+"Digital", mit Cache zusätzlich "Verwenden" / "Ändern" statt nur "Ja" -- weiterhin maximal 2 Dialoge
+insgesamt (Entscheidung + optionales Pad). Rückgabetyp von `signaturDialog()` geändert von
+`Promise<string | undefined>` zu `Promise<SignaturErgebnis>` (`{ png?: string; digital: boolean }`),
+dadurch Ripple-Effekt durch die ganze Kette: `download.ts` (Aufrufer), `ladeUndErzeugePdf()`
+(`ladeFormular.ts`, neuer `digitaleSignatur`-Parameter), `build()` (`build.ts`, gibt ihn in den
+`Kontext`). `backdrop: 'static', keyboard: false` (User-Korrektur -- fehlte anfangs, war aber beim
+Pad-Dialog schon so gesetzt): Backdrop-Klick/Escape schließen den Entscheidungsdialog NICHT mehr
+kommentarlos, nur noch der explizite X-Button oben rechts -- konsistent mit dem Pad-Dialog, der aus
+demselben Grund (kein versehentliches Verwerfen einer in Arbeit befindlichen Unterschrift) schon
+immer `static` war. Schließen über den X-Button zählt weiterhin wie "Ohne Unterschrift", NICHT wie
+"Digital" -- ein Wegklicken soll nicht überraschend das Datum verschlucken. Zusätzlich kleiner
+Hinweistext im Dialog ("Die Unterschrift wird nur auf diesem Gerät verarbeitet und
+zwischengespeichert.") sowie an der "Für nächstes Mal merken"-Checkbox im Pad-Footer ergänzt --
+bewusst als sichtbarer Text statt `title`-Tooltip (User-Korrektur: Tooltip wird nicht wahrgenommen).
+
+FormularEditor (`FeldPanel.tsx`): das "+ Datum (Unterschrift)"-Preset ist aus der allgemeinen
+Feldliste (`VORLAGEN`) komplett entfernt -- ein `nurBeiSignatur`-Feld erscheint dort gar nicht mehr
+(`FeldListe` filtert es raus), sondern lebt vollständig in einer eigenen "Unterschriftsdatum"-Sektion
+innerhalb der Signatur-Fläche: Erzeugung ("+ Datum hinzufügen"), Positionierung/Löschen sowie ALLE
+inhaltlich relevanten Formatierungs- und Layout-Einstellungen an einem Ort -- Datenfeld-Auswahl
+(`berechnet.feld`, welche Zeilenspalte das Datum liefert, je Ressource anders) und Tage-Frist
+(`berechnet.maxTage`) neu für diesen Zweck gebaut, Position/Zellgröße (`x`/`x2`/`y`/`y2`) über die
+bereits bestehende `Zellkoordinaten`-Komponente und Schriftschnitt/Ausrichtung/Drehung/Format/
+Auto-Verkleinerung/Umbruch über die bereits bestehende `DarstellungsFelder`-Komponente eingebunden --
+beide sind dieselben wiederverwendbaren Bausteine, die auch der volle generische Feld-Editor nutzt
+(`FeldZeile`), hier nur ohne die für ein berechnetes Feld irrelevanten Teile (Label, `quellen`/
+`trenner`, `wenn`-Bedingung, `listenKopf`). Frei gewordene Key-Vergabe-Logik
+(`naechsterFreierSchluessel`) aus `FeldListe.hinzufuegen()` extrahiert und von beiden Stellen geteilt.
+Editor-Vorschau (`dummyDaten.ts::erzeugeVorschau`) setzt `digitaleSignatur: false`, damit das Feld
+beim Positionieren sichtbar bleibt statt immer leer zu wirken.
+
+Verifikation: `bunx tsc --noEmit` in shared/frontend/backend grün, `bun run lint`
+(frontend+backend) grün, Tests: shared 162/162, frontend 1685/1685 (neue/umgebaute Fälle in
+`wert.test.ts` für `nurBeiSignatur`/`digitaleSignatur`, komplett neu geschriebenes
+`signaturDialog.test.ts` für den umgebauten Entscheidungsdialog, angepasste Erwartungen in
+`ladeFormular.test.ts` + `Utilities/download.test.ts` wegen des neuen `SignaturErgebnis`-Rückgabetyps
+und `digitaleSignatur`-Parameters, ein Smoke-Test in `build.test.ts`), backend 947/947 (inkl.
+`tests/validation` 123/123 für den Schema-Spiegel). Manuelle FormularEditor-/Signatur-Dialog-
+Verifikation im Browser steht noch aus.
+
+## 2026-08-24 (33)
+
+### fix (Dark-Mode: btn-outline-* zu kontrastarm, disabled kaum von aktiv unterscheidbar)
+
+User-Fund: Schaltflächen mit `.btn-outline-secondary` (z.B. Hoch/Runter-Pfeile im Fahrzeiten-Panel)
+erschienen im Dark-Mode dunkelgrau auf dunklem Hintergrund -- Bootstrap 5.3 überschreibt die Farb-
+Variablen dieser Klasse in `[data-bs-theme=dark]` nicht, es bleibt beim festen `#6c757d`. Gleiches
+Muster bei `.btn-outline-primary` (z.B. PDF-Quellenauswahl im FormularEditor): festes `#0d6efd`, gegen
+dunklen Hintergrund ebenfalls zu kontrastarm. Zusätzlich unterscheidet sich bei JEDER Outline-Variante
+(secondary/primary/success/danger/warning/info) der deaktivierte Zustand nur durch 65% Opacity von der
+aktiven Farbe -- Screenshot-Vergleich zeigt aktiv und disabled bei allen sechs Varianten praktisch
+gleich hell, nicht nur bei secondary.
+
+Neue Regeln in `styles.scss` (`[data-bs-theme='dark'] .btn-outline-secondary` /
+`.btn-outline-primary`) binden Bootstraps eigene, theme-bewusste Tokens ein
+(`--bs-secondary-text-emphasis`, `--bs-primary-text-emphasis`) statt der festen Grundfarben. Für alle
+sechs Outline-Varianten zusätzlich eine gemeinsame Regel, die `--bs-btn-disabled-color`/
+`-disabled-border-color` auf `--bs-border-color` setzt -- deaktiviert wirkt jetzt unabhängig vom
+Farbton einheitlich stumpf, aktive Farben (Rot/Grün/Gelb/Cyan) bleiben unverändert. Zentraler Fix statt
+Einzeländerungen, wirkt auf alle ca. 95 Vorkommen der Klassen app-weit (Fahrzeiten-Panel,
+FormularEditor-Pfeile, Admin-Panels, Toggle-Gruppen, signaturDialog, etc.).
+
+Verifikation: Vorher/Nachher-Screenshots mit dem echten kompilierten CSS (`bun run build`) im
+Chrome-Headless-Vergleich. Secondary: Computed Color vorher `rgb(108,117,125)` für aktiv UND disabled
+identisch, nachher aktiv `rgb(167,172,177)` vs. disabled `rgb(73,80,87)`. Primary/Success/Danger:
+vorher aktiv und disabled optisch ununterscheidbar, nachher disabled klar auf Rahmenton abgedunkelt,
+aktiv unverändert farbig. `bun run lint` grün.
+
+## 2026-08-24 (32)
+
+### feat (Unterschrift: optionaler localStorage-Cache per Checkbox)
+
+User-Wunsch: die zuletzt gezeichnete Unterschrift auf Anfrage zwischenspeichern, damit sie nicht bei
+jedem PDF-Download neu gezeichnet werden muss -- aber nur wenn explizit gewünscht, nicht automatisch.
+Neue Checkbox "Für nächstes Mal merken" im `signaturDialog.ts`-Pad-Footer (gleiche Zeile wie
+Löschen/Fertig, damit der Footer genauso schmal bleibt wie bisher -- extra Inhalt im `modal-body` hätte
+die sorgfältig austarierte `berechneCanvasGroesse()`-Rechnung verfälscht). Neuer Storage-Key
+`signaturCache` in `Storage.ts`. Checkbox ist sticky vorangehakt, wenn ein Cache existiert; ist sie beim
+"Fertig"-Klick nicht angehakt, wird ein evtl. vorhandener alter Cache-Eintrag gelöscht (klares Opt-out).
+Existiert ein Cache, wird das Pad beim Öffnen automatisch damit vorbefüllt (`setzeSignaturPng()`, neuer
+Helper in `signaturePad.ts` um `SignaturePad.fromDataURL()`). Die erste Nachfrage übernimmt bei
+vorhandenem Cache direkt die Wiederverwendungs-Entscheidung statt eines dritten Dialogs -- braucht dafür
+aber drei statt zwei Ausgänge (verwenden / ändern / gar keine Unterschrift, z.B. für eine spätere
+digitale Signatur), wofür `confirmDialog` mit seinen fest zwei Buttons nicht reicht. Neuer, lokaler
+Dialog `entscheideUeberGecachteUnterschrift()` in `signaturDialog.ts` (gleiches Vanilla-DOM-Muster wie
+`confirmDialog`, aber mit drei `[data-wahl]`-Buttons): "Verwenden" liefert die gecachte PNG direkt, Pad
+wird komplett übersprungen; "Ändern" öffnet das Pad (vorbefüllt, zum Anpassen/Neuzeichnen); "Nein,
+digitale Unterschrift" (oder Schließen ohne Wahl) resolved `undefined`, kein PDF-Eintrag. Modal-Body
+erklärt die drei Buttons per Kurzliste (User-Feedback: Dialog war ohne Erklärung "zu detaillos") --
+unproblematisch für die Canvas-Größenrechnung, da dieser Dialog anders als das Pad-Modal keinen Canvas
+enthält und `berechneCanvasGroesse()` hier gar nicht läuft. Ohne Cache bleibt die ursprüngliche
+`confirmDialog`-Nachfrage ("Jetzt unterschreiben? Ja/Nein") inkl. kurzer Erklärung, was Ja/Nein
+bedeuten -- weiterhin maximal 2 Dialoge insgesamt in jedem Pfad.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` 1676/1676 grün (inkl. 7 neuer
+Fälle in `signaturDialog.test.ts` und 1 neuem Fall in `signaturePad.test.ts`).
+
+## 2026-08-24 (31)
+
+### fix (Bereitschaftszulage: eigenes Druckfeld Tarifkraft/Beamter statt roher Pers.TB-Wert)
+
+User-Fund: ein im FormularEditor an `VorgabenU.Pers.TB` gebundenes Feld druckte im PDF den rohen
+TB-Wert (z.B. "Besoldungsgruppe A 8"), sollte für die Bereitschaft aber nur "Tarifkraft"/"Beamter"
+zeigen. `Pers.TB` bleibt bewusst unverändert -- die zwei Besoldungsgruppen-Werte werden weiterhin als
+Schlüssel in die Geld-Vorgaben für die Bereitschaftszulage gebraucht (`geldMonat[tarifKraft]` in
+`bereitschaftszulageAbgeleiteteWerte()`), eine Reduktion auf zwei Werte hätte diesen Lookup zerstört
+und eine DB-Migration bestehender `UserProfile`/`ProfileTemplate`-Dokumente erzwungen. Stattdessen
+neues, zusätzliches abgeleitetes Feld `Bereitschaftszulage.TarifBeamter` (`'Tarifkraft' | 'Beamter'`),
+berechnet in `shared/src/formular/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte()` nach der
+bestehenden Konvention `Beamter = TB !== 'Tarifkraft'` -- immer gesetzt, auch bei 0
+Bereitschaftsminuten (vorher `{}`). Neu im Datenkatalog (`FormularEditor/datenKatalog.ts`, Gruppe
+"Bereitschaftszulage") für Bereitschaft-Vorlagen wählbar. Inline-Typduplikat in
+`shared/src/download.ts` (Zyklus-Vermeidung, siehe Kommentar dort) synchron nachgezogen.
+
+Verifikation: shared `tsc --noEmit` + `test` (54/54) grün, frontend `tsc --noEmit` grün,
+`test/Utilities/download.test.ts` (17/17) grün, backend `tsc --noEmit` grün (keine Backend-Datei
+geändert, keine Migration nötig).
+
+## 2026-08-23 (30)
+
+### feat (FormularEditor: Sonderzeilen -- Kopf-/Summenzeilen über mehrere Spalten auf einmal)
+
+User-Anmerkung: bei EZ müssten für elf Zulagen-Spaltenplätze je Überschrift + drei Summenarten (44
+`Feld`-Einträge) einzeln mit eigener Koordinate angelegt werden, obwohl `x` bereits an der Spalte
+selbst hängt. Neues Konzept **Sonderzeile**: einmal festlegen, welche Spalte in dieser Zeile was
+zeigt (Kreuz statt Koordinate) -- x kommt beim Rendern automatisch von der Spalte, nur die y-Position
+wird je Seite eingegeben. Gilt nicht nur für EZ: jede Tabelle mit Fuß-/Kopfsummen (EA/EWT/
+Bereitschaft) kann Sonderzeilen für ihre normalen Spalten nutzen, auch ohne dynamische Listenplätze.
+Rein additiv -- bestehende, manuell gebaute Kopf-/Fuß-Felder bleiben unverändert gültig.
+
+EZ-Korrektur des Users: drei Summenarten statt einer -- rohe Summe (Minuten/Stück), bereinigte Summe
+in vollen Stunden (nur für Minuten-Zulagen, Stück-Zulagen zeigen `"-"`) und Summe in Euro. Zusätzlich
+eine Gesamtsumme über ALLE Zulagen-Spaltenplätze einer Gruppe als normales globales Feld im
+bestehenden Summenfeld-Editor -- ebenfalls in allen drei Arten (User-Nachtrag: "benötige alle 3
+Arten zusammen"), nicht nur in Euro.
+
+Rückfrage geklärt: die Euro-Umrechnung bleibt LIVE im PDF-Renderer aus `Daten.VorgabenGeld` (nicht
+wie bei Bereitschaft vorberechnet beim Download) -- der bereits bestehende `Berechnet.liste`-
+Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
+
+**Vier weitere Browser-Test-Funde (User, direkt im Anschluss):**
+1. Testdaten-Vorschau zeigte keine Beispielwerte für Sonderzeilen-Zellen -- `SonderZeilen.tsx` rief
+   `sonderZeileZelleWert()`/`zeilenFuerUeber()` bisher gar nicht auf. Fix: `SonderZeilen` bekommt
+   `tabelleName`/`vorschau` (wie andere Editor-Komponenten) und zeigt je Zelle dieselbe `WertVorschau`
+   wie Feld-/Spalten-Einträge (dafür in eine eigene `WertVorschau.tsx` verschoben, Zirkelimport-Risiko
+   gegenüber `FeldPanel.tsx` vermieden).
+2. Sonderzeile umbenennen ließ den Cursor nach jedem Zeichen aus dem Eingabefeld springen --
+   `onChange` schrieb direkt in den `tabelle.sonderzeilen`-Record-Key, dessen Änderung bei JEDEM
+   Tastendruck die als `key={name}` geschlüsselte Karte für Preact neu gemountet hat. Fix: neue
+   `SonderZeileName`-Komponente mit lokalem Entwurfsstand, Übernahme erst bei `onBlur`/Enter; Karten
+   schlüsseln jetzt über den Array-Index (stabil), `benenneUm()` baut den Record zudem
+   positionserhaltend um (kein Sprung ans Listenende beim Umbenennen).
+3. Bei EWT (sechs Ankreuz-Spalten mit `wenn`, ALLE mit leerem `key`) wurde immer nur die erste
+   Spalte berechnet -- der eben erst eingeführte `spalte`/`listenPlatz`-Bezug (Fix zu Fund 1 unten)
+   löst zwar den Konflikt zwischen dynamischen Spalten, aber Ankreuz-Spalten teilen sich ihren leeren
+   `key` GENAUSO und blieben dadurch weiterhin ununterscheidbar. Fix: `SonderZeileZelle` referenziert
+   eine Spalte jetzt über `spaltenIndex` (Position in `TabellenDef.spalten`) statt über `key`/
+   `listenPlatz` -- die einzige Referenz, die für JEDE Spaltenart eindeutig ist. Zusätzlich hatte eine
+   Ankreuz-Spalte für "Summe" ohnehin keinen sinnvollen Wert (ihr Inhalt entsteht erst je Zeile aus
+   der Bedingung, es gibt kein flaches Zeilenfeld zum Summieren) -- `sonderZeileZelleWert()` zählt
+   für `wenn`-Spalten jetzt, wie viele Zeilen die Bedingung erfüllen. Außerdem gewünschter
+   Standardwert: ein unbelegter Zulagen-Platz liefert jetzt `0` statt einer leeren Zelle.
+4. "wo kann ich die Schriftgröße/Ausrichtung/automatische Schrift verkleinern der Sonderzeile
+   festlegen?" -- bisher gar nicht, eine Zelle übernahm Schriftgröße/Ausrichtung/Auto-Verkleinerung
+   ausnahmslos von ihrer Spalte. `SonderZeileZelle` bekommt `size`/`align`/`autoGroesse` als
+   optionale Übersteuerung (wie `format` schon vorher) -- z.B. eine fett-große Gesamtsumme bei sonst
+   kleiner Datenzeilen-Schrift.
+
+- **`shared/src/formular/types.ts`:** `SonderZeileArt` (`kopf`/`summe`/`bereinigt`/`summeGeld`),
+  `SonderZeileZelle` und `SonderZeile` (`ueber` + `zellen`) neu. `TabellenDef.sonderzeilen?:
+  Record<string, SonderZeile>` (Inhalt, wie `listen`), `TabellenBereich.sonderzeilen?: {name; y;
+  y2?}[]` (Platzierung je Seite -- ein `name` darf mehrfach vorkommen, deckt "Überschrift oben +
+  Kopie unten" mit EINER Inhaltsdefinition ab). `Berechnet.liste.index` von Pflicht auf optional --
+  ohne `index` Gesamtsumme über ALLE Einträge einer Gruppe statt über einen Platz.
+  **Zwei Browser-Test-Funde (User):** (a) über eine Vorlage angelegte dynamische Spalten teilen sich
+  denselben leeren `key` -- ein Zellbezug allein über `key` konnte sie nicht unterscheiden, ein
+  Zwischenstand über `spalte`/`listenPlatz` löste das nur für dynamische Spalten; (b) Ankreuz-Spalten
+  (`wenn`) teilen sich ihren leeren `key` genauso. `SonderZeileZelle` referenziert eine Spalte deshalb
+  final über `spaltenIndex` (Position in `TabellenDef.spalten`) -- die einzige über jede Spaltenart
+  hinweg eindeutige Referenz. `size?`/`align?`/`autoGroesse?` neu -- ohne Angabe gilt jeweils der
+  Wert der Spalte, analog zu `format`.
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `bereinigteZulagenStunden()` (Minuten-Codes gerundet
+  auf volle Stunden wie in `geldwertZulagenCode()`, Stück-Codes `undefined`), `summeGeldwertGruppe()`
+  und `summeBereinigtGruppe()` (Geldwert bzw. Std.-Summe aller Einträge einer Gruppe, je Eintrag mit
+  eigenem Code) neu. **`aggregatoren.ts`:** `summeGruppe()` (rohe Gesamtsumme aller Einträge, kein
+  Code-Filter) neu.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` verzweigt bei `liste.index === undefined`
+  je nach `liste.art` auf `summeGruppe()`/`summeBereinigtGruppe()`/`summeGeldwertGruppe()`, mit
+  `index` entsprechend auf den bestehenden Platz-Pfad (`geldwertZulagenCode()`/
+  `bereinigteZulagenStunden()`/roh). `Berechnet.liste.geldwert: boolean` durch `art?:
+  'summe'|'bereinigt'|'summeGeld'` ersetzt (Default `'summe'`) -- vereinheitlicht Platz- und
+  Gesamtsumme-Fall auf dieselbe Arten-Auswahl wie `SonderZeileZelle.art`. Neue Funktionen
+  `zeilenFuerUeber()` (Zeilen einer Sonderzeile, eingegrenzt auf eine Tabelle) und
+  `sonderZeileZelleWert()` (Zellinhalt je `art`; für eine Ankreuz-Spalte (`wenn`) zählt `'summe'` die
+  Zeilen mit erfüllter Bedingung statt ein flaches Zeilenfeld zu summieren, das es dort nicht gibt;
+  unbelegter Zulagen-Platz liefert `0` statt einer leeren Zelle; Format-Override pro Zelle sonst
+  `Spalte.format`).
+- **`infrastructure/pdf/build.ts`:** neue Schleife über `bereich.sonderzeilen` je Tabellenbereich --
+  Spalte kommt aus den seiten-aufgelösten `spalten` (nicht `tabelle.spalten` direkt), damit eine
+  Seite mit eigenem Spaltenraster auch hier die richtige x-Position liefert. Neu exportierte
+  `spalteFuerZelle()` liest die Spalte an `zelle.spaltenIndex`; `zellGeometrie()` baut daraus die
+  Zeichen-Geometrie -- x/x2 immer von der Spalte, `size`/`align`/`autoGroesse` von der Zelle
+  überschrieben, wenn gesetzt.
+- **`FormularEditor/SonderZeilen.tsx`** (neu, analog `ListenGruppen.tsx`): verwaltet
+  `tabelle.sonderzeilen` -- pro Zeile Name, Zeilenbezug, und eine Zeile pro Spalte (auch ohne `key`,
+  über ihren Index referenziert) mit Art-Auswahl (`bereinigt`/`summeGeld` nur bei `listenPlatz`-
+  Spalten) plus optionalem Format-/Größe-/Ausrichtung-/Auto-Verkleinern-Override.
+- **`FeldPanel.tsx` (`TabellenBlock`):** `SonderZeilen`-Komponente nach `ListenGruppen` eingehängt,
+  darunter ein Platzierungs-Block je Sonderzeile (y/y2 als `ZahlFeld`, mehrfach platzierbar) samt
+  `ScharfButton`-Zeilenpicker -- Band auf dem PDF ziehen statt y/y2 blind einzutippen, gleicher
+  Mechanismus wie bei "erste Datenzeile"/"letzte Datenzeile". `AggregationEditor`/
+  `listenOptionenFuerTabelle`: pro Platz UND pro Gruppen-Gesamtsumme jetzt alle drei Arten
+  (Summe/bereinigte Summe/Summe €) als eigene Option, neue Optgroup "Zulagen-Gruppen (Gesamtsumme
+  über alle Plätze)" neben der bestehenden "Zulagen-Spaltenplätze"-Optgroup.
+- **`FormularEditor.tsx`:** `Armed` um `{bereich: 'sonderzeile'; tabelle; index}` erweitert,
+  `achseFuer()` sperrt dabei wie bei "erste/letzte Datenzeile" auf die y-Achse, `sammleRechtecke()`
+  zeigt jede Platzierung als Band über die Spaltenbreite, `handleRechteck()` schreibt y/y2 in den
+  passenden Eintrag von `bereich.sonderzeilen`.
+- **`datenKatalog.ts`:** `FORMATE`-Liste aus `FeldPanel.tsx` hierher verschoben (exportiert), damit
+  `SonderZeilen.tsx` sie ohne Zirkelimport mitnutzen kann. Gleiches Prinzip für `WertVorschau`
+  (eigene `WertVorschau.tsx`).
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `sonderZeileZelleSchema`/
+  `sonderZeileSchema` neu, `tabellenDefSchema.sonderzeilen`/`tabellenBereichSchema.sonderzeilen`
+  ergänzt, `berechnetSchema.liste.index` optional, `geldwert: boolean` durch `art` (Enum, s.o.)
+  ersetzt -- die `refine()`-Pflicht für `geldwert` entfällt damit (roh/bereinigt sind jetzt auch ohne
+  `index` gültige, sinnvolle Optionen).
+
+Verifiziert: `shared` `tsc`/Test 161/161 (16 neue Tests). Frontend `tsc`/Lint sauber, 1660/1660 (32
+neue Tests), Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (voller Lauf, nicht nur
+`tsc`).
+
+## 2026-08-23 (29)
+
+### feat (EZ: Summenfelder je dynamischem Zulagen-Spaltenplatz, inkl. Geldwert)
+
+User-Frage: "wie kann ich Summenfelder für die Listen machen?" -- bisher konnte `Berechnet.feld`
+nur ein flaches Zeilenfeld lesen, keinen Wert aus einer verschachtelten Liste (EZ: `Zulagen`).
+Zusätzlich meldete der User, dass eine reine Zeit-/Stückzahl-Summe nicht reicht -- gebraucht wird
+auch der Geldwert (Normale Summe × Satz der Zulage), und genau diese Formel existiert bereits im
+Berechnung-Tab (`calculateBerechnungRows.ts::N_ZULAGEN_CALC`), dort je `paymentHint`-Kategorie.
+
+**Kurskorrektur während der Umsetzung (User-Einwand):** ein erster Entwurf ließ im Editor einen
+FESTEN Zulagen-Code für das Summenfeld wählen. Der User wies zu Recht darauf hin, dass die
+Spaltenplätze nicht fest sind -- welcher Code an einem Platz landet, entscheidet erst die
+Monatsauflösung (`schluesselAufPlatz()`/`listenBelegung()`, dieselbe wie für die Spaltenüberschrift).
+Ein fest eingetragener Code hätte an der Überschrift vorbeigerechnet, sobald sich die Platzbelegung
+verschiebt. Fix: `Berechnet.liste` referenziert jetzt den PLATZ (`tabelle`+`gruppe`+`index`, wie
+`Feld.listenKopf`), der zugehörige Code wird zur Renderzeit über denselben Mechanismus aufgelöst.
+
+- **`shared/src/formular/types.ts`:** `Berechnet.liste?: ListenPlatz & { tabelle, geldwert? }` neu --
+  Alternative zu `feld` für Summen über einen dynamischen Spaltenplatz.
+- **`shared/src/formular/aggregatoren.ts`:** `summeUeberListe()` -- Summe der `wert`-Felder aller
+  Listen-Einträge mit passendem `schluessel`, über mehrere Zeilen (nimmt weiterhin einen aufgelösten
+  Code entgegen, die Platz-Auflösung passiert eine Ebene darüber in `wert.ts`).
+- **`shared/src/formular/abgeleiteteWerte.ts`:** `geldwertZulagenCode()` -- repliziert
+  `N_ZULAGEN_CALC` je einzelnem Code (mehrere Codes teilen sich denselben `paymentHint`/Satz, z.B.
+  alle "B"-klassifizierten Erschwerniszulagen).
+- **`shared/src/domain.ts`:** `IVorgabeValue.GKR?: number` neu -- Ganzkörperreinigung hatte im
+  Berechnung-Tab bisher keine Geldformel ("noch nicht berechnet"), für die PDF-Summenfelder jetzt
+  eine eigene Rate (User-Entscheidung, größerer Eingriff statt "nur Anzahl, kein €-Feld").
+- **`AdminVorgabenEditor.tsx`:** `GKR` in `GELD_FIELDS` ergänzt -- Eingabefeld für den neuen Satz.
+- **`infrastructure/pdf/wert.ts`:** `berechneAggregation()` löst bei gesetztem `berechnet.liste`
+  zuerst über `kontext.listen[tabelle]`/`schluesselAufPlatz()` den an diesem Platz aktiven Code auf
+  (derselbe Weg wie `Feld.listenKopf`), summiert dann per `summeUeberListe()` und rechnet bei
+  `geldwert: true` zusätzlich über `geldwertZulagenCode()` in Euro um (Satz aus `Daten.VorgabenGeld`).
+- **`FormularEditor/FeldPanel.tsx` (`AggregationEditor`):** neue Optgroup "Zulagen-Spaltenplätze
+  (Summe je Platz)" im Summenfeld-Dropdown -- eine Option je TATSÄCHLICH angelegter Spalte mit
+  `listenPlatz` (nicht je theoretisch möglichem Code), Label übernimmt den Spalten-`label` zur
+  Wiedererkennung, je zwei Varianten (normale Summe / "(€)"), nur sichtbar bei Op "Summe".
+- **Zod-Spiegel** (`configSchema.ts`, `backend/formular.schemas.ts`): `berechnetSchema.liste`
+  ergänzt; **Backend** (`schemas.ts`, `models/Vorgabe.ts`): `GKR` im Vorgabe-Wert-Schema/-Modell.
+
+Verifiziert: `shared` 145/145 (19 neue Tests), Frontend `tsc`/Lint sauber, 1628/1628 (5 neue Tests),
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947.
+
+## 2026-08-23 (28)
+
+### fix (Testdaten-Vorschau: mehrere Listen-Gruppen überschrieben sich gegenseitig)
+
+User-Fund beim Konfigurieren der EZ-Zulagenspalten: "Es fehlen Beispiele für die Listen
+Erschwerniszulage und Fahrentschädigung" in der Testdaten-Vorschau.
+
+- **`FormularEditor/dummyDaten.ts::macheListen()`:** schrieb `zeile[gruppe.quelle]` direkt in der
+  Schleife über `tabelle.listen` -- bei EZ teilen sich alle drei Gruppen (Erschwerniszulage,
+  Leistungsprämie/Fahrentschädigung, Ganzkörperreinigung) dasselbe Zeilenfeld `Zulagen`, jede
+  weitere Gruppe überschrieb die Beispiele der vorherigen komplett. Übrig blieb nur die zuletzt
+  verarbeitete Gruppe (i.d.R. Ganzkörperreinigung, da zuletzt angelegt). Fix: Einträge je `quelle`
+  sammeln (`Map<string, unknown[]>`) und erst nach der Schleife gebündelt in die Zeile schreiben.
+- **Test:** neuer Fall in `dummyDaten.test.ts` mit drei Gruppen, die sich dieselbe Quelle teilen --
+  prüft, dass alle drei Gruppen-Codes in der Vorschau-Zeile landen, nicht nur die letzte.
+
+Verifiziert: `tsc`/Lint sauber, 1623/1623 (1 neuer Test), Produktionsbuild erfolgreich.
+
+## 2026-08-23 (27)
+
+### feat (EZ: Arbeitszeit-Spalte "Beginn-Ende" verkettet)
+
+Nachtrag zur Phase-12-EZ-Migration -- entgegen der ursprünglichen Annahme ("keine abgeleiteten
+Werte") braucht EZ doch einen vorberechneten Wert: die Arbeitszeit-Spalte im Formular zeigt
+`Beginn` und `Ende` zusammen in einer Zelle (`"07:00-15:45"`). `Spalte` (anders als `Feld`) hat
+kein `quellen`/`trenner` zum Verketten mehrerer Datenpfade -- Lösung wie bei EWT/Bereitschaft:
+vorberechnen statt Renderer generisch erweitern.
+
+- **`shared/src/formular/abgeleiteteWerte.ts`:** neu `ezAbgeleiteteWerte()`, liefert
+  `{ Arbeitszeit: `${Beginn}-${Ende}` }`.
+- **`shared/src/download.ts`:** `IDownloadNebengeld` um optionales `Arbeitszeit?: string` ergänzt
+  (analog `IDownloadEWT`/`IDownloadBereitschaftszeitraum`).
+- **`infrastructure/data/download.ts`:** `case 'N'` merged `ezAbgeleiteteWerte()` pro Zeile mit ins
+  Zeilenobjekt, `build()` sieht `Arbeitszeit` dann als normalen Datenpfad.
+- **`datenKatalog.ts`:** neuer Katalogeintrag `Arbeitszeit` (Gruppe "Berechnet") für `ez` -- damit im
+  Editor direkt als Spalten-Datenpfad wählbar, ohne eigene Rechnung im Editor nachzubauen.
+- **Bugfix nebenbei gefunden (Backend-Integrationstests):** `backend/tests/integration/formularVorlagenPipeline.test.ts`
+  hatte zwei `TabellenDef`-Fixtures ohne die seit dem letzten `startY`/`maxZeilen`-Umbau
+  (Vortag) plichtigen Felder -- 15 von 947 Backend-Tests schlugen fehl (`bun test` war nach jenem
+  Umbau nie bis zum Ende durchgelaufen, nur `tsc --noEmit`). Beide Fixtures nachgezogen.
+
+Verifiziert: `shared` 130/130 (2 neue Tests), Frontend `tsc`/Lint sauber, 1622/1622,
+Produktionsbuild erfolgreich. Backend `tsc`/Lint sauber, 947/947 (vorher 932/947, Fixtures gefixt).
+
+## 2026-08-22 (26)
+
+### feat (Phase 12: EZ-Migration auf neuen PDF-Renderer -- Cleanup separat)
+
+Letzte der vier Ressourcen (nach EA/EWT/Bereitschaft, Phase 9-11) auf den client-seitigen
+`build()`-Renderer umgestellt. EZ hat laut Plan keine abgeleiteten Werte -- Rohdaten (`Daten.N`)
+gehen unverändert wie bisher in den Export.
+
+- **`infrastructure/data/download.ts`:** `modus === 'N'` läuft jetzt wie `'EA'`/`'E'`/`'B'` über
+  `ladeUndErzeugePdf('ez', ...)` (Version server-seitig aufgelöst, PDF client-seitig gebaut) statt
+  über den alten `downloadPdf()`-POST-Pfad. `FORMULAR_JE_MODUS` um `N: 'ez'` ergänzt.
+- Datenkatalog (`datenKatalog.ts`) hatte den `ez`-Formularcode bereits (`Daten.N` als
+  Nebengeld-Einträge) -- keine Änderung nötig.
+- **Bewusst NICHT Teil dieser Änderung (Cleanup separat, User-Vorgabe):** der alte
+  Backend-Downloadpfad für EZ (`nebengeld.routes.ts`/`.controller.ts`/`.service.ts`) und der
+  `else`-Zweig in `download.ts` (`downloadPdf()`) bleiben unangetastet stehen -- gebündelter
+  Rückbau für alle vier Ressourcen erst in der separaten Phase-12-Cleanup-Aufgabe.
+- **Tests (`test/Utilities/download.test.ts`):** neue `describe("modus 'N'")`-Gruppe analog zu
+  `'B'`/`'EA'` (Signatur-Dialog, Fehlerfall bei ungültiger Version, Fehler ohne `Error`-Objekt,
+  VorgabenGeld-Merge über mehrere Monate). Die bisherigen generischen `downloadPdf()`-Tests, die
+  zuletzt an `modus 'N'` hingen (Phase-11-Erbe), sind hinfällig, da nach dieser Migration kein Modus
+  mehr den alten Pfad durchläuft.
+
+Verifiziert: Frontend `tsc`/Lint sauber, 1622/1622, Produktionsbuild erfolgreich. `shared`/Backend
+unverändert (keine Typ-/Schema-Änderung nötig).
+
+## 2026-08-22 (25)
+
+### feat (FormularEditor: startY/Höhe/Zeilen als EINE Seiten-Override-Gruppe)
+
+`startY`/`maxZeilen` waren bisher Pflichtfelder je Seite ohne globalen Standard -- jede Seite musste
+sie redundant wiederholen, selbst wenn (wie bei EA) alle Seiten identisch sind und nur die Spalten
+abweichen (z.B. Übertragsspalte auf Folgeseiten). Jetzt folgen `startY`/`hoehe`/`maxZeilen` demselben
+Muster wie `spalten`: global auf der Tabelle definiert, pro Seite nur überschreiben, was abweicht.
+
+- **`shared/src/formular/types.ts`:** `TabellenDef` bekommt neue Pflichtfelder `startY`/`maxZeilen`
+  (globaler Standard). `TabellenBereich.startY`/`maxZeilen` werden optional -- `tabelle` ist jetzt
+  das einzige Pflichtfeld eines Bereichs.
+- **BREAKING CHANGE:** Bestehende Formulare brauchen einmalig einen globalen `startY`/`maxZeilen`
+  je Tabelle im Admin-Editor (z.B. von Seite 1 übernommen) -- danach bleiben alle bisherigen
+  Pro-Seiten-Werte unverändert als Override gültig, keine Vorlage muss neu kalibriert werden.
+- **`shared/src/formular/spaltenFuer.ts`:** `startYFuer()`/`maxZeilenFuer()` neu, neben `hoeheFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`): gleiche
+  Umkehr bei `tabellenDefSchema`/`tabellenBereichSchema`.
+- **`infrastructure/pdf/verteile.ts`:** neuer dritter Parameter `tabellen` -- die Zeilen-Kapazität
+  je Seite fällt jetzt auf den globalen Wert der Tabelle zurück, wenn ein Bereich keinen eigenen
+  setzt (`kapazitaetVon()`).
+- **`build.ts`, `FormularEditor.tsx`, `dummyDaten.ts`:** alle Lesestellen auf
+  `startYFuer()`/`maxZeilenFuer()` umgestellt; die Klick-Kalibrierung ("erste"/"letzte Datenzeile")
+  schreibt `startY`+`Höhe` nur noch gemeinsam in den Bereich, wenn die Seite bereits eine eigene
+  Platzierung hat, sonst weiterhin gemeinsam in die Tabelle.
+- **`FeldPanel.tsx`:** die "eigene je Seite"-Checkbox an der "Datenzeile"-Überschrift steuert jetzt
+  `startY`+`Höhe`+`Zeilen` gemeinsam (vorher nur Höhe). Neuer Button "Mit Werten der Tabelle
+  platzieren" -- legt eine Tabelle auf einer neuen Seite ohne Klick-Kalibrierung an (reines
+  `{ tabelle }`, erbt alles), deckt den EA-Fall ab (nur Spalten weichen ab).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (`startYFuer`/`maxZeilenFuer`, je 2 neue
+  Fälle), `frontend/test/infrastructure/pdf/verteile.test.ts` (2 neue Fälle für den
+  `maxZeilen`-Fallback über die Tabelle), `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer
+  EA-artiger Fall: zwei Seiten mit bloßem `{ tabelle }`, nur Spalten weichen ab).
+
+Verifiziert: `shared` 128/128, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1624/1624,
+Produktionsbuild erfolgreich.
+
+## 2026-08-22 (24)
+
+### fix (FormularEditor: Zeilenhöhe pro Seite überschreibbar + Tabelle von Seite entfernen)
+
+`TabellenBereich.hoehe` (neues optionales Feld, `shared`) macht die Zeilenhöhe seitenweise
+überschreibbar — bisher schrieb die "erste/letzte Datenzeile markieren"-Kalibrierung im Editor
+ihr Ergebnis immer in `TabellenDef.hoehe`, wodurch das Kalibrieren auf einer Seite ungewollt auch
+die Zeilenhöhe auf allen anderen Seiten derselben Tabelle änderte. Reales Bereitschaft-Formular
+braucht das: 4 Seiten mit unterschiedlicher Tabellenanordnung (Seite 1+2 alle drei Tabellen, Seite
+3 nur BE/LRE3, Seite 4 nur BZ+BE/LRE1+2), plausibel mit je eigenem Zeilenabstand.
+
+- **`shared/src/formular/types.ts`:** `TabellenBereich.hoehe?: number`, gleiches Override-Muster
+  wie `spalten?`. Neue `hoeheFuer(bereich, tabelle)` in `spaltenFuer.ts` neben `spaltenFuer()`.
+- **Zod-Spiegel** (`frontend/.../pdf/configSchema.ts`, `backend/.../formular.schemas.ts`):
+  `hoehe: z.number().positive().optional()` in `tabellenBereichSchema`.
+- **`infrastructure/pdf/build.ts`, `FormularEditor.tsx`:** alle Lesestellen von `tabelle.hoehe` auf
+  `hoeheFuer(bereich, tabelle)` umgestellt (Renderer, Zeilenraster-Indikator, Rechtecke). Die
+  Klick-Kalibrierung ("erste"/"letzte Datenzeile") schreibt jetzt nur noch dann in `bereich.hoehe`
+  (nur diese Seite), wenn diese Seite bereits eine eigene Höhe hat — sonst wie bisher gemeinsam in
+  `tabelle.hoehe`. `startY`/`maxZeilen` bleiben unverändert strikt pro Seite (kein Gegenstück auf
+  `TabellenDef`, ein Leck war strukturell nie möglich).
+- **`FeldPanel.tsx`:** neue "eigene je Seite"-Checkbox neben dem Höhe-Feld (gleiches UX-Muster wie
+  bei Spalten). Neuer seiten-lokaler "Von dieser Seite entfernen"-Button (`link_off`-Icon) neben
+  dem bestehenden globalen Lösch-Button — nimmt nur den `bereich` dieser Seite, Tabelle und ihre
+  Bereiche auf anderen Seiten bleiben erhalten (bisher gab es nur die globale Löschung).
+- **Tests:** `shared/tests/formular/spaltenFuer.test.ts` (2 neue Fälle für `hoeheFuer`),
+  `frontend/test/infrastructure/pdf/build.test.ts` (1 neuer Fall: eigene `bereich.hoehe` bricht den
+  Renderer nicht, `startY`/`maxZeilen` bleiben seitenweise unabhängig).
+
+Verifiziert: `shared` 124/124, Backend `tsc` sauber, Frontend `tsc`/Lint sauber, 1621/1621,
+Produktionsbuild erfolgreich.
+
+## 2026-08-22 (23)
+
+### feat (Offline-Cache für Formular-Version + Vorlagen-PDF)
+
+`ladeUndErzeugePdf()` (ea/ewt/bereitschaft-Export) funktioniert jetzt auch offline, sofern ein
+Formular+Monat schon einmal erfolgreich online geladen wurde.
+
+- **Neu `infrastructure/pdf/formularCache.ts`:** cached die serverseitig aufgelöste `Version`
+  (Schlüssel `formular:stichtag`, unbegrenzt -- klein, ~12 Einträge/Jahr/Formular) und die
+  Vorlagen-PDF-Bytes als Base64 (Schlüssel `vorlagenId`, content-addressed dedupliziert, gedeckelt
+  auf 10 Einträge mit LRU-Eviction). Alles best-effort -- ein Schreibfehler (Quota, privater Modus)
+  bricht den PDF-Export nie ab. Ein strukturell kaputter Cache-Eintrag (z.B. nach künftiger
+  Typsystem-Änderung) gilt als Cache-Miss statt offline abzustürzen.
+- **`infrastructure/pdf/ladeFormular.ts`:** `holeVorlageAlsDatei()` und die neue
+  `loeseVersionAuf()` fallen bei echtem Transportfehler (offline, Server nicht erreichbar) auf den
+  Cache zurück -- ein `ApiFehler` von einem erreichbaren Server (z.B. 404 "Vorlage gelöscht", "keine
+  gültige Version für diesen Stichtag") wird dagegen NIE durch einen veralteten Cache-Eintrag
+  maskiert. Bei einem Cache-Treffer erscheint eine Snackbar ("Offline: zwischengespeicherte Vorlage
+  verwendet").
+- **Neue `TStorageData`-Keys** in `infrastructure/storage/Storage.ts`: `formularVersionCache`,
+  `vorlagenPdfCache`.
+- **Tests:** neue `test/infrastructure/pdf/formularCache.test.ts` (Round-Trip, Chunk-Grenze,
+  LRU-Eviction, Cache-Miss bei kaputtem Eintrag); `test/infrastructure/pdf/ladeFormular.test.ts`
+  um 8 Fälle erweitert (Cache schreiben/lesen, Fallback bei Netzwerkfehler, Cache wird bei
+  `ApiFehler` NICHT verwendet).
+
+Verifiziert: `tsc`/Lint sauber, 1620/1620, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (22)
+
+### fix (FormularEditor: Name-Feld, Schlüssel, Mehrfachauswahl, Zeilenraster)
+
+Vier User-Funde aus dem echten Browser-Test der Bereitschaft-Vorlage -- siehe Root-`CHANGELOG.md`
+für den vollen Kontext (`Berechnet.tabellen`-Typänderung, Breaking Change für gespeicherte
+Versionen).
+
+- **`infrastructure/data/download.ts`:** `Name` wird nur fürs PDF als "Nachname, Vorname"
+  zusammengesetzt.
+- **`FormularEditor/FeldPanel.tsx`:** Schlüssel-Eingabe verwirft leere Werte;
+  `eindeutigerSpaltenSchluessel()`-Default fällt auf `'feld'` statt `''` zurück; `DatenpfadWahl`
+  markiert belegte Pfade als `disabled`; `AggregationEditor` bekommt eine Checkbox-Mehrfachauswahl
+  für `Berechnet.tabellen`, Feld-Dropdown-Optionen jetzt mit `pfad|label`-Key.
+- **`infrastructure/pdf/wert.ts`:** `ausKontext()` vereinigt Zeilen mehrerer gewählter Tabellen
+  statt nur einer.
+- **`infrastructure/pdf/configSchema.ts`:** Zod-Spiegel für `Berechnet.tabellen`.
+- **`FormularEditor/{FormularEditor,PdfCanvas}.tsx`:** Zeilenraster-Indikator berechnet seine
+  x-Position jetzt aus der jeweils ersten Spalte der Tabelle (`spaltenFuer()`, seitenspezifische
+  Spalten berücksichtigt) statt einem festen Seitenrand.
+- **Tests:** `test/Utilities/download.test.ts` (Name-Feld), `test/infrastructure/pdf/wert.test.ts`
+  (5 neue Tests für Mehrfachauswahl über `Berechnet.tabellen`).
+
+Verifiziert: `tsc`/Lint sauber, 1602/1602, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (21)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaftszulage-Zwischenwerte) + fix (Pause-Vorzeichen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext (Architektur-Entscheidung, verworfene
+Zwischenstände).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` zieht das BZ-/BE-Mapping in benannte
+  Variablen (`bzMitDauer`/`beMitDauer`, statt inline in `data.Daten`), damit dieselben Zeilen für
+  `bereitschaftMinuten` (Σ `Dauer` BZ minus Σ `Dauer` BE) wiederverwendbar sind. Ergebnis geht über
+  `bereitschaftszulageAbgeleiteteWerte(bereitschaftMinuten, TB, VorgabenGeld[Monat])` in
+  `data.Bereitschaftszulage`.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.formulare?: FormularCode[]` (neu) und
+  `basisFuer(formular)`-Filter in `katalogFelder()`/`beispielWert()` -- verhindert, dass die sechs
+  neuen `Bereitschaftszulage.*`-Basis-Einträge auch bei ez/ewt/ea im Kopf-/Fuß-Datenpfad-Picker
+  auftauchen und dort ins Leere laufen.
+- **`test/Utilities/download.test.ts`:** BZ-`Dauer`-Erwartung `450 → 510` (Pause-Fix). Neuer
+  Test für den Beamter-Zweig überschreibt die `tableToArray`-Mocks mit einem größeren
+  BZ-Zeitraum (26h statt 8h), damit `bereitschaftMinuten` über der 600-Minuten-Schwelle liegt --
+  sonst wären `SummeBeamter1`/`2` negativ bzw. `-0` geworden (kein aussagekräftiger Testfall).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597, Produktionsbuild erfolgreich.
+
+## 2026-08-22 (20)
+
+### feat (PDF-Vorlagen-Pipeline: Privat-km-Betrag für Bereitschaftseinsatz)
+
+Bereitschaftseinsatz (BE) bekam bisher nur `PrivatKm` als reine Kilometerzahl im Formular --
+fehlender €/Ct-Betrag daraus. Analog zu `PrivatKmBetrag = km * Satz` in
+`Berechnung/calculateBerechnungRows.ts` (Tarifkraft/Beamter haben unterschiedliche Sollwerte).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` bestimmt `beamter` (`TB !== 'Tarifkraft'`,
+  gleiche Konvention wie bei EWT) und liest den passenden Satz aus `VorgabenGeld[Monat]`
+  (`PrivatPKWTarif`/`PrivatPKWBeamter`), reicht ihn an `beAbgeleiteteWerte()` weiter.
+- **`FormularEditor/datenKatalog.ts`:** neuer Eintrag `PrivatKmBetrag` (Gruppe "Berechnet", Quelle
+  `Daten.BE`, Format-Vorschlag `waehrung`).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Tests um `PrivatKmBetrag` ergänzt, inkl. eigenem
+  Test für den Beamter-Satz (TB ≠ Tarifkraft).
+
+Verifiziert: `tsc`/Lint sauber, 1597/1597 -- siehe Root-`CHANGELOG.md` für die `shared`-Änderung
+(`beAbgeleiteteWerte()`).
+
+## 2026-08-22 (19)
+
+### refactor (download.ts: formular-Zuordnung als Mapped Type, toter Kommentar entfernt)
+
+Reine Code-Qualitaet, kein Verhaltensaenderung.
+
+- `infrastructure/data/download.ts`: die Ternary-Kette (`modus === 'EA' ? 'ea' : modus === 'E' ?
+  'ewt' : 'bereitschaft'`) durch ein `{ [key in typeof modus]: string }`-Lookup ersetzt, analog dem
+  bestehenden `vorDateiName`-Muster weiter unten in derselben Datei. `typeof modus` greift dort die
+  durch die vorausgehende `if`-Bedingung genarrowte Union (`'EA'|'E'|'B'`) ab -- kommt kuenftig ein
+  vierter Modus zur Bedingung dazu, ohne das Lookup-Objekt nachzuziehen, ist das ein Compile-Error
+  statt eines stillen Fallbacks auf den letzten Ternary-Zweig.
+- Eine versehentlich mitcommittete auskommentierte Alternativzeile (`.includes()`-Variante aus dem
+  vorherigen Review-Vergleich) entfernt.
+
+Verifiziert: `tsc`/Lint sauber, `download.test.ts` 18/18, volle Suite 1596/1596.
+
+## 2026-08-22 (18)
+
+### fix (PDF-Vorlagen-Pipeline: Bereitschaft-Dauer als Minuten, Labels disambiguiert)
+
+Nachtrag zu Eintrag 17, User-Korrektur. `Dauer` (BZ/BE) ist jetzt `number` (Minuten) statt
+`"HH:mm"`-Text -- siehe Root-`CHANGELOG.md` fuer den vollen Kontext (`shared`-Aenderung).
+
+- **`FormularEditor/datenKatalog.ts`:** Labels der beiden `Dauer`-Eintraege in
+  `ZEILEN_FELDER.bereitschaft` waren identisch ("Dauer (HH:mm)", nur ueber `quelle` getrennt) und
+  in Kontexten ohne Tabellenbezug (z.B. Summenfeld-Dropdown fuer Kopf/Fuss) dadurch nicht
+  unterscheidbar -- jetzt "Dauer Zeitraum (Minuten)" (`Daten.BZ`) / "Dauer Einsatz (Minuten)"
+  (`Daten.BE`), Beispielwerte als Zahl (450/45).
+- **`test/Utilities/download.test.ts`:** `modus 'B'`-Test auf numerische `Dauer`-Werte angepasst.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
+## 2026-08-22 (17)
+
+### feat (PDF-Vorlagen-Pipeline: Bereitschaft-Download auf neuen Pfad umgestellt, Phase 11)
+
+Gleiches Cutover-Muster wie EA (Phase 9) und EWT (Phase 10). Siehe Root-`CHANGELOG.md` fuer den
+vollen Kontext (`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'B'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('bereitschaft', stichtag, data, signaturPng)` statt `downloadPdf('B', data)`.
+  BZ-Zeilenmapping merged pro Zeile `bzAbgeleiteteWerte(basis)`, BE-Zeilenmapping
+  `beAbgeleiteteWerte(basis)` -- `build()` sieht das vorberechnete `Dauer` als normalen Datenpfad
+  (`Daten.BZ[].Dauer`/`Daten.BE[].Dauer`).
+- **`FormularEditor/datenKatalog.ts`:** je ein neuer Eintrag in `ZEILEN_FELDER.bereitschaft`
+  (Gruppe "Berechnet") fuer `Dauer` auf `Daten.BZ` und auf `Daten.BE`, getrennt ueber `quelle` wie
+  die bestehenden BZ-/BE-Felder.
+- **`test/Utilities/download.test.ts`:** eigene `describe`-Gruppe fuer `modus 'B'` (Signatur-Dialog,
+  `ladeUndErzeugePdf`-Aufruf inkl. vorberechneter `Dauer`, Fehlerfall) analog EA/EWT. Die bisherigen
+  generischen `downloadPdf`-/VorgabenGeld-Tests, die `modus 'B'` nur als Vehikel nutzten, auf
+  `modus 'N'` (letzter verbleibender Alt-Pfad) umgehaengt; ein Fallback-Filename-Test war dadurch
+  ein exaktes Duplikat eines bestehenden `modus 'N'`-Tests und wurde entfernt statt umgehaengt.
+
+Verifiziert: `tsc`/Lint sauber, 1596/1596.
+
+## 2026-08-21 (16)
+
+### fix (Unterschrift-Dialog: Box-Proportionen, Fullscreen im Querformat, Desktop-Größe)
+
+Nachtrag zu Eintrag 15 -- User meldete nach dem resize-Fix weiterhin: "Bildschirm dann deutlich
+breiter". Ursache war eine zweite, unabhängige Baustelle: Canvas-CSS war `width:100%;
+height:200px` -- die Breite skaliert mit dem Viewport, die Höhe blieb aber fix, im Querformat
+wurde die Box dadurch viel breiter bei gleicher Höhe.
+
+Mehrere CSS-only-Anläufe (`aspect-ratio`, `modal-fullscreen-*-down`, `max-height`, `modal-lg`,
+Flex-Zentrierung) scheiterten reihum an echten Bootstrap-Layout-Interaktionen -- u.a. füllte der
+Canvas als Flex-Item (`.modal-body{display:flex}`) die verfügbare Breite trotz `width:auto;
+max-width:100%` nicht zuverlässig (blieb bei ~304px unabhängig von der Dialogbreite hängen), und
+`max-height` allein verzerrte das Ratio (bis zu 4.24 statt 5/2=2.50), weil nur die Höhe gedeckelt
+wurde, nicht die Breite mit. Jede Runde live im Browser verifiziert, jeder Fehlschlag sofort am
+tatsächlichen Messwert erkannt statt spekulativ weitergeraten.
+
+**Lösung: deterministische Berechnung in JS statt weiterer CSS-Interaktionsraten, mit zwei
+Darstellungsmodi.**
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neue `berechneCanvasGroesse()` -- ermittelt aus
+  Viewport-Breite/-Höhe (abzüglich Kopf-/Fußzeile UND dem Rahmen von `.modal-content` selbst, alle
+  unabhängig von der Canvas-Größe messbar, kein Henne-Ei-Problem) die größtmögliche Fläche im
+  festen `5/2`-Verhältnis, die ohne Scrollen ins Modal passt. Zwei Modi je nachdem, welche
+  Dimension bindet:
+  - **Breiten-gebunden** (typisch Hochformat/große Screens): ruhige zentrierte Box, Rand
+    `DIALOG_RAND` (8px, fest statt Bootstraps je Breakpoint unterschiedlichem Default -- die
+    Rechnung setzt ihn selbst via `dialog.style.margin`), Breite gedeckelt auf max. 900px (auch
+    auf sehr breiten Monitoren keine unnötig gestreckte Fläche).
+  - **Höhen-gebunden** (typisch Querformat-Handy, wenig Vertikalraum -- User-Fund: "im Querformat
+    wird definitiv Fullscreen benötigt"): randloses Fullscreen (`dialog.style.margin='0'`,
+    `maxWidth:100vw`) MIT kompakter Kopf-/Fußzeile (neue `.signatur-modal-kompakt`-Klasse,
+    kleineres Padding/Titel-Schrift) -- gewinnt zusätzlichen Vertikalraum zurück statt ihn an
+    Bootstraps Standard-Chrome zu verlieren.
+  Ergebnis wird direkt als `canvas.style.width/height` (px) sowie `dialog.style.maxWidth/margin`
+  gesetzt, neu berechnet bei `shown.bs.modal` UND bei jedem `resize` (Handydrehung, Fenster
+  verschieben) -- eine einzige Formel deckt beide Fälle ab, keine CSS-Breakpoint-Klasse mehr nötig.
+- **`scss/styles.scss`:** `.signatur-canvas` auf `display:block; margin:0 auto; box-sizing:
+  border-box` reduziert (Größe kommt vollständig aus JS; `border-box` verhindert, dass der 1px-
+  Rahmen zur gesetzten Größe dazukommt statt darin enthalten zu sein); neue
+  `.signatur-modal-kompakt`-Klasse für den Fullscreen-Fall.
+
+Mehrere Korrekturrunden, jede live verifiziert: ein pauschaler 90%-Sicherheitsabschlag machte das
+Feld auf kleinen Screens spürbar kleiner als vorher (User-Fund: "zu klein, da das Fullscreen
+fehlt") -- ersetzt durch Rechnung mit dem tatsächlich verfügbaren Platz. Ein `modal-lg`-Versuch
+brach die Breiten-Füllung komplett (Canvas blieb bei ~304px hängen, unabhängig von der
+Dialogbreite) -- verworfen zugunsten der deterministischen Lösung. Ohne eigenes Fullscreen war
+Querformat trotz mehr Fläche schmäler als Hochformat (User-Fund: "aktuell ist das
+Unterschriftenfeld im Hochformat größer als im Querformat!!!!!") -- behoben durch den zweiten
+Modus oben. Ein konstanter 2px-Überlauf im Fullscreen-Fall kam vom eigenen Rahmen von
+`.modal-content` (Bootstrap-Default), der bislang nicht in die Höhen-Rechnung einging.
+
+Verifiziert live im echten Chrome (Puppeteer, `google-chrome-stable`, echter Vite-Dev-Server,
+echtes `signature_pad`/Bootstrap-Modal, kein Mock): Ratio in jedem getesteten Fall exakt 2.50,
+Content passt (bis auf sub-pixel Rundungsrauschen von <0.4px, ohne sichtbare/funktionale Wirkung)
+ohne Scrollen in den Viewport, Pixelpuffer nach echtem `resize`-Event synchron zur neuen
+CSS-Größe, Dialog horizontal zentriert. Kernvergleich (gleiches Gerät gedreht, 390×844 vs.
+844×390): Querformat-Fläche jetzt ~193.000px² gegenüber ~47.000px² im Hochformat (vorher war es
+umgekehrt kleiner). Desktop-Canvas 868×347 statt ursprünglich ~466×186 (deutlich größere,
+komfortablere Fläche, gedeckelt statt auf riesigen Monitoren unbegrenzt zu wachsen). `tsc
+--noEmit`/ESLint sauber, `signaturDialog.test.ts` 8/8 grün, voller Testlauf 1595/1595.
+
+## 2026-08-21 (15)
+
+### fix (Unterschrift-Dialog: verzerrt nach Handydrehung)
+
+**User-Fund:** Unterschriftenfeld verzerrt (Maße/Verhältnisse falsch), wenn das Handy während des
+Signierens gedreht wird. Ursache: `signaturePad.ts::erstelleSignaturPad()` setzt die Canvas-
+Pixelgröße (`canvas.width`/`canvas.height`) EINMALIG beim Öffnen aus `offsetWidth`/`offsetHeight`.
+Das Canvas selbst ist per CSS `width:100%` responsiv -- dreht sich das Handy, ändert sich die
+CSS-Breite, die interne Pixelgröße bleibt aber stehen. Der Browser streckt das alte, falsch
+proportionierte Bitmap auf die neue Boxgröße, und `signature_pad`s Touch-Koordinaten-Mapping
+(basiert auf der beim Erstellen fixierten Canvas-Größe) läuft gegenüber der neuen Anzeige aus dem
+Ruder.
+
+- **`infrastructure/pdf/signaturDialog.ts`:** neuer `window`-`resize`-Listener (aktiv solange das
+  Modal offen ist) baut das Pad bei jeder Größenänderung neu auf (`pad.off()` erst, sonst sammeln
+  sich bei mehrfachem Drehen doppelte Pointer-Listener auf `window` an, die `signature_pad` intern
+  selbst dort registriert). Eine bereits begonnene Unterschrift geht beim Neuaufbau verloren --
+  proportionale Punkt-Umrechnung wäre fehleranfällig, die paar Striche sind schnell nachgezogen.
+  Listener wird beim Schließen (`hidden.bs.modal`) wieder entfernt.
+- **`test/infrastructure/pdf/signaturDialog.test.ts`:** 3 neue Tests (Pad-Neuaufbau bei resize,
+  No-op vor `shown.bs.modal`, Listener-Entfernung beim Schließen). Dabei einen bereits vorher
+  bestehenden Test-Hygiene-Mangel gefunden und behoben: zwei ältere Tests klickten "Fertig" über
+  das gemockte `bsModal.hide()`, ohne danach das reale `hidden.bs.modal`-Event zu simulieren --
+  harmlos, bis der neue `window`-Listener das in späteren Tests als Leak sichtbar machte (3 statt 1
+  Aufruf bei einem `resize`-Dispatch). Beide Tests lösen jetzt zusätzlich `hidden.bs.modal` aus,
+  wie es Bootstrap nach der echten Ausblend-Animation auch täte.
+
+Verifiziert: `bun run test` 1595/1595 grün, `tsc --noEmit`/ESLint sauber. Nicht im echten Browser
+mit tatsächlicher Handydrehung nachgestellt (kein Gerät/Emulator in dieser Session verfügbar) --
+Fix beruht auf Codelesung der `signature_pad`-Quelle (`.off()`-Verhalten, `window`-Listener) und
+dem bekannten Resize-Verzerrungsmuster bei Canvas-Elementen mit responsivem CSS und fixer
+Pixelgröße.
+
+## 2026-08-21 (14)
+
+### fix (OE-Format war falsch geraten) + feat (Monatsname-Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/configSchema.ts`:** `'oe'`, `'monatName'`, `'monatNameKurz'` im
+  Format-Enum ergänzt.
+- **`FormularEditor/datenKatalog.ts`:** OE-Katalogeintrag `format: 'liste'` → `format: 'oe'`.
+- **`FormularEditor/FeldPanel.tsx`:** neue Format-Optionen im Dropdown; OE-Beispiele in Hilfetext
+  und Platzhalter-Hilfe-Modal korrigiert (zeigten vorher `:liste` statt `:oe`).
+- **`FormularEditor/dummyDaten.ts`:** Vorschau-Testwert für `monatName`/`monatNameKurz` ist jetzt
+  eine Zahl 1-12 statt eines Datums.
+- **`test/infrastructure/pdf/wert.test.ts`:** OE-Tests auf `format: 'oe'` umgestellt; die
+  generischen Fallback-Tests, die vorher (irreführend) OE als Beispiel nutzten, laufen jetzt über
+  ein neutrales Feld (`zulagen`).
+
+Verifiziert: voller Testlauf 1592/1592 grün, `tsc --noEmit`/ESLint sauber.
+
+## 2026-08-21 (13)
+
+### fix (FormularEditor: Ankreuz-Spalte/-Feld bekommt keinen Titel-Vorschlag beim Feld-Wechsel)
+
+**User-Fund:** Beim Wählen des geprüften Felds in einer Ankreuz-Bedingung -- besonders bei den
+vorberechneten EWT-Booleans (`Wohnung8bis14` etc.) -- blieb der Anzeigename der Spalte/des Felds
+leer. Ursache: `spalte.label`/`feld.label` sind unabhängig von `wenn.feld`, nichts hielt sie
+synchron; der Feld-Auswahl-Dropdown in `AnkreuzBedingung`/`FeldAnkreuzBedingung` änderte bisher
+nur `wenn.feld`, nie den Titel der Spalte/des Felds selbst.
+
+- **`FormularEditor/FeldPanel.tsx`:** Feld-Auswahl in `AnkreuzBedingung` (Spalte) und
+  `FeldAnkreuzBedingung` (Dokument-Feld) übernimmt jetzt das `label` des gewählten Katalog-
+  Eintrags als Titel -- IMMER, nicht nur wenn noch keiner gesetzt ist (User-Korrektur: anders als
+  der Format-Vorschlag aus Eintrag 8, der eine bewusste Wahl nie überschreibt, beschreibt der Titel
+  hier direkt die Bedingung -- ein stehen gelassener alter Titel nach einem Feld-Wechsel zeigt sonst
+  die falsche Bedingung an). Wer einen abweichenden Titel will, tippt ihn danach im
+  Anzeigename-Feld ein.
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, voller Testlauf 1590/1590 grün (keine
+dedizierte Testdatei für `FeldPanel.tsx`, siehe frühere Notiz zu fehlender Component-Test-
+Infrastruktur).
+
+## 2026-08-21 (12)
+
+### feat (FormularEditor: echte Boolean-Auswahl statt `bereich`-Umweg für Ankreuz-Bedingungen)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `trifftFeldBedingung()`-Cast auf `boolean` erweitert.
+- **`FormularEditor/datenKatalog.ts`:** `istBooleanFeld()` -- markiert die sechs EWT-Ankreuz-
+  Booleans.
+- **`FormularEditor/FeldPanel.tsx`:** `VergleichWahl` zeigt für Boolean-Felder eine Ja/Nein-
+  Auswahl; Feld-Auswahl in `AnkreuzBedingung`/`FeldAnkreuzBedingung` (inkl. der initialen
+  „Ankreuzen"-Buttons) belegt `werte: [true]` automatisch vor.
+- **`dummyDaten.ts`:** `platzhalter()`-Rückgabetyp auf `boolean` erweitert (Folge der `werte`-
+  Erweiterung).
+- **Tests:** `test/infrastructure/pdf/wert.test.ts` (Feld-Ebene), `shared/tests/formular/
+  aggregatoren.test.ts` (`trifftBedingung`), `test/features/Admin/FormularEditor/dummyDaten.test.ts`
+  (Vorschau-Zeilen mit `werte: [true]`).
+
+Verifiziert: `tsc --noEmit`/ESLint sauber, voller Testlauf 1590/1590 grün.
+
+## 2026-08-21 (11)
+
+### fix (FormularEditor: Ankreuz-Spalte mit `bereich` (z.B. Boolean-Felder) in Vorschau immer leer/falsch)
+
+**User-Fund** beim Konfigurieren einer Ankreuz-Spalte für einen der EWT-Booleans
+(`Wohnung8bis14` etc., über `Bedingung.bereich: { von: 1, bis: 2 }` wie in `abgeleiteteWerte.ts`
+dokumentiert): Feld blieb in der Editor-Vorschau für jede Zeile leer bzw. zeigte scheinbar
+zufällige Treffer.
+
+- Ursache: `dummyDaten.ts::macheZeile()` befüllte Testzeilen für eine Ankreuz-Spalte nur für den
+  `werte`-Fall (`zeile[feld] ??= wenn.werte?.[0] ?? ''`). Im `bereich`-Fall ist `werte` immer
+  `undefined`, also landete überall der Fallback `''` bzw. blieb das Feld ganz unbelegt.
+  `alsVergleichswert('')`/`alsVergleichswert(undefined)` sind beide `0` -- das liegt bei jedem
+  `bereich` mit `von >= 1` nie im Treffer-Fenster (daher „immer leer"), kann bei einem `bereich`
+  mit `von <= 0` aber spurios treffen (daher „falsch berechnet" bei anderen Wertebereichen).
+  Betraf nur die Editor-Vorschau, nicht die echte PDF-Erzeugung -- dort liefert `download.ts` für
+  EWT bereits echte gemergte `ewtAbgeleiteteWerte()`-Booleans.
+- Fix: neuer Zweig für `spalte.wenn.bereich` -- gerade Zeilen bekommen `alsVergleichswert(von)`
+  (liegt IMMER im Bereich, einschließlich), ungerade `alsVergleichswert(bis)` (liegt NIE im
+  Bereich, ausschließlich) als rohen Zeilenwert. Zeigt in der Vorschau wieder beide Fälle, wie es
+  der bestehende Kommentar „jede zweite Zeile erfüllt die Bedingung" für den `werte`-Fall schon
+  vorsah.
+- **`test/features/Admin/FormularEditor/dummyDaten.test.ts`:** Regressionstest über
+  `trifftBedingung()` (prüft echten Treffer/Nicht-Treffer, nicht nur den rohen Zellwert).
+
+Verifiziert: `bun run test` 1588/1588 grün, `tsc --noEmit` sauber, ESLint sauber. Echte
+PDF-Erzeugung (Browser mit Backend) nicht gegengeprüft -- Codelesung von `download.ts` zeigt
+korrektes Merging, aber ohne Live-Test keine 100%ige Garantie für den realen Ankreuz-Fall.
+
+## 2026-08-21 (10)
+
+### feat (FormularEditor: Hilfe-Modal für Platzhalter & Formate)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`FormularEditor/FeldPanel.tsx`:** Link "Alle Platzhalter & Formate…" unter dem Festtext-Feld
+  öffnet ein dynamisch erzeugtes Modal (Muster wie `openHelpModal.tsx`) mit vollständiger Tabelle
+  aller Platzhalter-Varianten und aller Formatnamen (aus `FORMATE` generiert, keine zweite Quelle).
+
+Verifiziert: `tsc --noEmit` sauber, ESLint sauber, `bun run test` 1587/1587 grün.
+
+## 2026-08-21 (9)
+
+### feat (PDF-Rendering: Format erzwingbar in Text-Platzhaltern, `{Pfad:Format}`)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `zerlegePlatzhalter()` trennt `{Pfad:Format}` am ersten `:`,
+  unbekannte Formatnamen werden ignoriert statt die Zelle zu brechen. `datenPlatzhalter()`
+  schneidet den Format-Teil vor dem Pfad-Lookup ab (Testdaten-Vorschau).
+- **`FormularEditor/FeldPanel.tsx`:** Hilfetext ergänzt.
+- **`test/infrastructure/pdf/wert.test.ts`:** 7 neue Tests.
+
+Verifiziert: `bun run test` 1587/1587 grün, `tsc --noEmit` sauber, ESLint sauber.
+
+## 2026-08-21 (8)
+
+### fix (PDF-Rendering: weitere Formatierungs-Lücken + Auto-Vorbelegung im Editor)
+
+Siehe Root-`CHANGELOG.md` für den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`:** `ersetzePlatzhalter()` (Festtext-Platzhalter `{Datenpfad}`)
+  hatte einen eigenen `String()`-Fallback statt den von `formatiere()` zu teilen -- auf den
+  gemeinsamen `standardText()` aus `shared` umgestellt.
+- **`infrastructure/pdf/spaltenWert.ts`:** ebenfalls auf `standardText()` umgestellt.
+- **`FormularEditor/datenKatalog.ts`:** `KatalogEintrag.format` von `'waehrung' | 'datum'` auf den
+  vollen `FormatName` erweitert; `VorgabenU.Pers.OE` und `Zulagen` mit `format: 'liste'` versehen.
+- **`FormularEditor/FeldPanel.tsx`:** `umbenennen()` (Felder) und der Spalten-`DatenpfadWahl`-
+  Handler übernehmen jetzt den Format-Vorschlag aus dem Katalog, wenn das Feld/die Spalte noch kein
+  eigenes Format hat -- verhindert die OE-Bug-Klasse strukturell statt nur den Fallback abzufedern.
+- **`test/`:** keine neuen Testdateien; Katalog-Lookup ad hoc per Skript gegen `katalogFelder()`/
+  `katalogZeilenFelder()` geprüft.
+
+Verifiziert: `bun run test` (alle betroffenen Suiten, 86/86 gruen über `shared`+`frontend`),
+`tsc --noEmit` sauber, ESLint sauber. UI-Verhalten (Format-Dropdown springt beim Pfad-Wechsel um)
+NICHT per Headless-Browser verifiziert -- Formulare-Tab ist serverseitig auf `super-admin`
+gegated, im backendlosen Verify-Rezept nicht erreichbar; manuelle Nachprüfung mit echtem Backend
+steht noch aus.
+
+## 2026-08-21 (7)
+
+### feat (PDF-Rendering: Format `jaNein` fuer Boolean-Felder)
+
+Anschluss an Eintrag (6): unformatierte Boolean-Werte fielen ebenfalls auf `String()` zurueck
+(`true`/`false` statt Deutsch). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()`-Fallback
+  nutzt bei `typeof roh === 'boolean'` jetzt `FORMAT.jaNein` statt `String()`.
+- **`FormularEditor/FeldPanel.tsx`:** `jaNein` als waehlbares Format im Editor-Dropdown.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts test/infrastructure/pdf/configSchema.test.ts` (73/73 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (6)
+
+### fix (PDF-Rendering: unformatierte Array-Felder nicht mehr roh gejoint)
+
+`VorgabenU.Pers.OE` (Organisationseinheit) erschien auf der EA-PDF als `I,IW,MI,N,MUS,IL,` --
+Feld im Formular-Editor ohne `format` konfiguriert, `formatiere()` fiel auf `String(array)`
+zurueck (JS-Array-Stringify: kommagetrennt ohne Leerzeichen, leere Endeintraege erzeugen ein
+trailing Komma). `FORMAT.liste` (`shared/src/formular/aggregatoren.ts`) existiert genau fuer
+diesen Fall, wurde aber nur bei explizit gesetztem `format: 'liste'` angewendet.
+
+- **`infrastructure/pdf/wert.ts`, `infrastructure/pdf/spaltenWert.ts`:** `formatiere()` faellt
+  bei fehlendem `format` jetzt fuer Arrays auf `FORMAT.liste` statt `String()` zurueck --
+  unformatierte Array-Feld-Konfigurationen rendern damit nie wieder als rohes Array.
+- **`test/infrastructure/pdf/wert.test.ts`:** Regressionstest fuer den OE-Fall ergaenzt.
+
+Verifiziert: `bun test test/infrastructure/pdf/wert.test.ts test/infrastructure/pdf/spaltenWert.test.ts test/features/Admin/FormularEditor/vorschau.test.ts` (63/63 gruen), `tsc --noEmit` sauber.
+
+## 2026-08-21 (5)
+
+### feat (PDF-Vorlagen-Pipeline: EWT-Download auf neuen Pfad umgestellt, Phase 10)
+
+Gleiches Cutover-Muster wie EA (Phase 9). Siehe Root-`CHANGELOG.md` fuer den vollen Kontext
+(`shared/src/formular/abgeleiteteWerte.ts`, Cleanup-Entscheidung).
+
+- **`infrastructure/data/download.ts`:** `modus === 'E'` laeuft jetzt ueber
+  `ladeUndErzeugePdf('ewt', stichtag, data, signaturPng)` statt `downloadPdf('E', data)`. EWT-
+  Zeilenmapping merged pro Zeile `ewtAbgeleiteteWerte(basis, beamter)` (`beamter` aus
+  `VorgabenU.Pers.TB !== 'Tarifkraft'`) -- `build()` sieht die vorberechneten Felder als normale
+  Datenpfade (`Daten.EWT[].DauerWohnung` etc.).
+- **`FormularEditor/datenKatalog.ts`:** acht neue Eintraege in `ZEILEN_FELDER.ewt` (Gruppe
+  "Berechnet"): `DauerWohnung`/`DauerErsteTkgSt` plus sechs Zeitband-Booleans. Boolean-Felder im
+  Editor als Ankreuz-Quelle ueber `Bedingung.bereich: { von: 1, bis: 2 }` nutzen, nicht ueber
+  `werte` (siehe Kommentar in `abgeleiteteWerte.ts` fuer die Begruendung).
+- **`test/Utilities/download.test.ts`:** Bestandstests fuer `modus 'E'` auf den neuen Pfad
+  umgeschrieben. Dabei einen Mock-Queue-Versatz gefunden: ein Test rief weiterhin `download(...,
+  'E')` mit einem auf `mockDownloadPdf` gequeueten `mockResolvedValueOnce` auf, das nach dem Cutover
+  nie mehr konsumiert wurde und dadurch mehrere NACHFOLGENDE Tests (`modus 'N'`/`'B'`) mit falschen
+  Werten versorgte -- jeder Einzeltest lief isoliert grün, nur in der vollen Suite sichtbar. Fix:
+  betroffenen Test auf `modus 'B'` umgestellt (ruft weiterhin `downloadPdf` auf). Lehre in
+  `tasks/lessons.md` festgehalten.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578.
+
+## 2026-08-21 (4)
+
+### fix (PDF-Vorlagen-Pipeline: Summe-Button-Reset, Signatur-Zentrierung)
+
+**User-Funde beim echten EA-Browser-Test (Phase 9), Fortsetzung von (3).**
+
+- `FeldPanel.tsx`: "Summe"-Modus-Button in `FeldZeile` setzte `berechnet` bei jedem Klick unbedingt
+  auf `{ op: 'summe', ueber: '$seite' }` zurueck statt (wie alle anderen Modus-Buttons: Text/Mehrere/
+  Ankreuzen/Ueberschrift) den bereits gesetzten Wert zu erhalten -- ein erneuter Klick auf den schon
+  aktiven Button warf z.B. `$bisher` ("alle Vorseiten") zurueck auf `$seite`. Fix:
+  `feld.berechnet ?? { op: 'summe', ueber: '$seite' }`, analog zu den anderen Modi.
+- `build.ts`: Signatur-Bild sass an der unteren linken Ecke der `signaturBild`-Box statt darin
+  zentriert -- `png.scaleToFit(w, h)` verkleinert bei abweichendem Seitenverhaeltnis nur, verschiebt
+  aber nicht. Fix: Restdifferenz zur Box-Groesse haelftig auf `x`/`y` verteilt.
+- Zugehoeriger Backend-Fix (verlorenes `$`-Praefix beim Speichern): siehe `backend/CHANGELOG.md`.
+
+Verifiziert: `tsc`/Lint sauber, 1578/1578 (kein Test deckt die konkreten UI-Interaktionen bzw. die
+Bild-Position ab -- manuelle Verifikation im Editor/PDF durch den User ausstehend).
+
+**Nachtrag (`download.ts`):** EA setzt seit Phase 9 kein `filename` mehr (kein Backend-Roundtrip fuer
+den PDF-Inhalt), lief deshalb immer in den generischen Fallback -- dessen Format
+(`EA_MM_YY_Vorname Nachname_Gewerk ErsteTkgSt.pdf`) wich vom bisherigen server-seitigen EA-Namen ab.
+Auf Vorschlag statt EA separat zu behandeln den gemeinsamen Fallback selbst auf das Server-Schema
+umgestellt: Praefix je Modus (`RB`/`Verpf.`/`EZ`/`Entgeltausgleich`) + `Nachname V. Gewerk ErsteTkgSt
+MM.JJJJ.pdf`, wie `buildBaseFileName` im Backend. Gilt jetzt einheitlich fuer alle vier Modi im
+Fallback-Fall. `download.test.ts` auf das neue Format angepasst. Verifiziert: `tsc`/Lint sauber,
+1578/1578.
+
+## 2026-08-21 (3)
+
+### feat (PDF-Vorlagen-Pipeline: EA-Download auf neuen Pfad umgestellt, Phase 9)
+
+Erster echter Cutover der PDF-Vorlagen-Pipeline (Plandatei Phase 9, EA/Entgeltausgleich als Pilot --
+mit EZ getauscht, siehe dortiger Phase-8.5/Tausch-Kontext). `build()` fetchte `layout.template`
+bisher ungeprüft ohne Auth-Header (Kommentar in `build.ts`: "Anbindung folgt in Phase 9") -- diese
+Anbindung jetzt nachgezogen.
+
+- **`infrastructure/pdf/ladeFormular.ts`** (neu): `ladeUndErzeugePdf(formular, stichtag, daten,
+  signaturPng?)` löst die gültige Version server-seitig auf (`GET /formulare/:f?stichtag=`), lädt
+  die Vorlage authentifiziert nach (`holeVorlageAlsDatei`, verschoben aus
+  `Admin/components/formularVersionenApi.ts` -- Layer-Regel verletzt, wenn `infrastructure/` aus
+  `features/` importiert) und biegt `layout.template` auf eine lokale `blob:`-URL um, bevor `build()`
+  sie fetcht (derselbe Trick wie die Testdaten-Vorschau im Admin-Editor). `formularVersionenApi.ts`
+  re-exportiert `holeVorlageAlsDatei`/`ApiFehler`, damit `FormularUpload.tsx` unverändert bleibt.
+- **`configSchema.ts`:** `versionSchema` exportiert, neue `parseVersion()` -- Gegenstück zu
+  `parseRegistry()`, validiert aber eine einzelne vom Server aufgelöste `Version` statt einer ganzen
+  Registry.
+- **`infrastructure/pdf/signaturDialog.ts`** (neu): kapselt den Ja/Nein-Entscheidungsdialog plus
+  Canvas-Signatur-Pad (bisher nur als Bruchstück in der Dev-Testseite `pdf-test.ts` vorhanden) in
+  eine wiederverwendbare, promise-basierte Funktion -- vanilla DOM wie `confirmDialog`, kein
+  Preact/`showModal` nötig. Pad wird erst nach `shown.bs.modal` erstellt, nicht beim Rendern
+  (Phase-4-Lehre: vorher erstelltes Pad auf unsichtbarem Canvas ist unbenutzbar).
+- **`infrastructure/data/download.ts`:** `modus === 'EA'` läuft jetzt über den neuen Pfad
+  (`signaturDialog()` + `ladeUndErzeugePdf()`) statt über `downloadPdf()`/den alten Backend-Sheets-
+  Export; `B`/`E`/`N` unverändert. Stichtag für `resolve()` = erster Tag des Exportmonats. Kein
+  eigenes Datenmapping nötig -- die bestehende `Daten`-Konstruktion im `case 'EA':`-Zweig hat schon
+  exakt die Form, die `build()` erwartet.
+- Tests: `ladeFormular.test.ts`, `signaturDialog.test.ts` (neu), `download.test.ts` um den
+  EA-Pfad ergänzt (Signatur-Weiterreichung, Fehlerfall "keine gültige Version").
+- **Bewusst NICHT Teil dieser Änderung:** der alte Backend-Pfad
+  (`entgeltausgleich.service.ts::download()`, Route, Test) bleibt stehen, bis eine echte EA-Vorlage
+  über den Admin-Editor angelegt und der neue Pfad im Browser verifiziert ist -- ohne echte Vorlage
+  in der DB liefert `GET /formulare/ea?stichtag=` sonst 404 und EA hätte gar keinen PDF-Export mehr.
+
+## 2026-08-21 (2)
+
+### feat (PDF-Vorlagen-Editor: Ankreuzen bei Feld, Overlay-Wertquellen entdoppelt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Kontext ueber alle drei Submodule (Plandatei-Phase 8.5).
+
+- **`wert.ts`:** neue `Feld.wenn`-Auswertung (`trifftFeldBedingung()`), geteilte
+  `berechneAggregation()`-Funktion fuer `Feld.berechnet` UND `Feld.wenn.berechnet` (bisher nur inline in
+  `Feld.berechnet`). Bleibt in `wert.ts`, nicht `shared`, weil sie den frontend-eigenen `Kontext`-Typ
+  braucht.
+- **`FeldPanel.tsx`:** neue Wertquelle "Ankreuzen" bei Feldern (`FeldAnkreuzBedingung`, sechster Modus
+  neben Datenfeld/Text/Mehrere/Summe/Ueberschrift). Text-Modus bekommt `PlatzhalterPicker` -- Datenpfad
+  per Klick als `{pfad}` an der Cursorposition einfuegen statt Freihand-Tippen. Drei gemeinsame Bausteine
+  aus bisher dupliziertem Code gezogen: `AggregationEditor` (Feld-Summe + Feld-Ankreuzen-Berechnung),
+  `VergleichWahl` (Werte-Liste/Wertebereich-Vergleich, aus Spalten- UND Feld-Ankreuzen genutzt),
+  `berechneteEintraege()` (`andereBerechnete`-Sammlung, bisher in `FeldZeile` und `TabellenBlock` fast
+  identisch dupliziert).
+- **`dummyDaten.ts`:** Testdaten-Vorschau befuellt jetzt auch `Feld.wenn`-Datenpfade, mit Bias auf
+  `wenn.werte[0]`, damit die Bedingung in der Vorschau sichtbar zutrifft (analog zur bestehenden
+  "jede zweite Zeile"-Bias bei `Spalte.wenn`).
+- **"Mehrere" (`quellen`/`trenner`) bewusst NICHT entfernt** trotz anfaenglicher Planung -- deckt weiter
+  den Leerteile-Filter bei optionalen Feldern ab (z.B. `Adress2`), den Text-Platzhalter nicht koennen.
+  Siehe Review-Abschnitt der Plandatei.
+- Tests: `wert.test.ts` um `wenn`-Faelle (Feld/Bereich/Berechnet) ergaenzt.
+
+## 2026-08-21
+
+### chore (Bun 1.4: Legacy-Matcher, Version gepinnt)
+
+Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submodule.
+
+- `Utilities.test.ts`: `.toThrowError()` → `.toThrow()` (Bun 1.4 entfernt denselben Legacy-Alias
+  wie Jest 30). Einziger Fund im Repo, alle 1560 Tests unter Bun 1.4.0 verifiziert gruen.
+- `bunfig.toml`: `[install]` `linker = "hoisted"` ergaenzt (Verhalten unveraendert, jetzt explizit).
+- CI (`deploy.yml`): `bun-version` von `latest` auf `1.4.0` fixiert.
+
+## 2026-08-16 (13)
+
+### fix (Bereitschaft-Datenkatalog: BZ/BE vermischt)
+
+- **User-Fund:** „BZ Beginn+Ende ist timedate, BE Beginn+Ende ist nur time. Warum sind die Werte der
+  2 Tabellen vermischt?" `datenKatalog.ts` bot `Beginn`/`Ende` als EINEN Eintrag fuer beide
+  Zeilenquellen (BZ: voller Zeitstempel, BE: reine `"HH:mm"`), und `katalogZeilenFelder()` filterte
+  nie nach Tabelle — der Editor zeigte beim Bearbeiten der BZ-Tabelle auch BE-Felder mit an und
+  umgekehrt.
+- **`datenKatalog.ts`:** neues `KatalogEintrag.quelle`, `katalogZeilenFelder()`/`beispielWert()`
+  filtern jetzt danach; `FeldPanel.tsx`/`dummyDaten.ts` reichen `tabelle.quelle` durch. BE-
+  Beispielwerte (`15:45`/`07:00`, die volle BZ-Zeitraumspanne) auf `01:15`/`02:00` korrigiert — ein
+  kurzer Anruf waehrend des Zeitraums, siehe `createAddModalBereitschaftsEinsatz.tsx`.
+
+### feat (Ankreuz-Bedingungen: Wertebereich, Berechnung, Wiederverwendung)
+
+- **User-Fund:** „Berechnen Zeitraum von Abfahrt bis Ankunft Einsatzort — wenn Wert ab 8:00 und unter
+  14:00, muss angekreuzt werden." `Spalte.wenn` konnte nur Mitgliedschaft in einer festen Werteliste
+  gegen ein rohes Zeilenfeld pruefen.
+  - `AnkreuzBedingung` (`FeldPanel.tsx`): Umschalter Feld/Berechnung (Rechnung wiederverwendet aus
+    `Spalte.berechnet`) und Werte-Liste/Wertebereich (`von`/`bis`, `von` einschliesslich, `bis`
+    ausschliesslich — Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert).
+  - **User-Nachtrag:** Bereich war zunaechst fest auf Uhrzeit/Zahl gelesen; neue `alsVergleichswert()`
+    (`shared`) erkennt den Werttyp selbst.
+  - **User-Nachtrag:** bereits angelegte berechnete/Ankreuz-Spalten derselben Tabelle sind jetzt im
+    Feld-Dropdown der Bedingung waehlbar (`andereBerechnete`), statt dieselbe Rechnung ein zweites Mal
+    aufzubauen — moeglich, weil `mitBerechnetenSpalten()` (`shared`) ihren Wert schon unter `key` in
+    die Zeile eintraegt.
+  - **User-Nachtrag:** dieselbe Wiederverwendung jetzt auch bei Summenfeldern (`Feld.berechnet` in
+    `FeldZeile`) — inklusive Ankreuz-Spalten, deren Ergebnis `mitBerechnetenSpalten()` bisher GAR NICHT
+    in die Zeile eintrug (mit einem numerischen `dann`, z.B. `'1'` statt `'X'`, zaehlt eine Summe
+    darueber jetzt die zutreffenden Zeilen — z.B. Anzahl LRE-1-Einsaetze ohne eigene gefilterte
+    Tabelle).
+- **Bugfix aus derselben Runde:** `Spalte.key` war nur im Modus „Datenfeld" editierbar, in „Berechnet"/
+  „Ankreuzen" blieb er unsichtbar eingefroren; „+ Spalte" vergab fuer jede neue Spalte denselben
+  Default-Schluessel — zwei neue Spalten ohne manuelle Umbenennung ueberschrieben sich gegenseitig in
+  Bedingungen/Summen. `SpalteZeile` zeigt jetzt ein eigenes Schluessel-Feld in diesen Modi,
+  `eindeutigerSpaltenSchluessel()` vergibt beim Anlegen einen von den bestehenden Spalten
+  unterscheidbaren Default.
+- **Verifikation:** `shared` 76/76, Frontend `tsc --noEmit`/Build gruen, gezielte Tests
+  (Formular-Editor + PDF-Infrastruktur) 124/124, `eslint` auf den geaenderten Dateien sauber. Voller
+  Frontend-Lauf (`bun test --isolate`) 1553/1560 — die 7 Fehlschlaege liegen in
+  `Bereitschaft.test.ts`/`Bereitschaft.submitBereitschaftsEinsatz.test.ts` (Zeitzonen-/DST-Artefakt
+  gegen fest codierte `2023-04-…`-Fixture-Daten), unberuehrt von dieser Aenderung.
+
+## 2026-08-16 (12)
+
+### feat (Formular-Versionen bearbeiten und loeschen, Phase 8.4)
+
+- **User-Fund:** „Formular-Vorlage sollen nicht nur hochgeladen, sondern auch geloescht und bearbeitet werden koennen (falls ein Fehler entstanden ist)."
+- **`FormularVersionenListe.tsx` (neu):** Bestandsliste der Versionen je Formular mit „Bearbeiten" und „Loeschen".
+- **`formularVersionenApi.ts` (neu):** Upload, Liste, Anlegen, Aendern, Loeschen sowie `holeVorlageAlsDatei()` — der Editor arbeitet gegen eine lokale `File`, die gespeicherte PDF wird dafuer zurueckgeholt. `ApiFehler` traegt den Statuscode, damit der Intervall-Konflikt (409) erkennbar bleibt.
+- **`FormularUpload.tsx`:** dieselbe Maske dient Anlegen und Bearbeiten. Ohne neue Datei bleibt die gespeicherte PDF stehen (kein zweiter Upload derselben Bytes); bei 409 fragt ein Dialog, ob der luckenhafte Zwischenstand trotzdem gespeichert bzw. geloescht werden soll — noetig, um die Vorgaengerversion vor dem Anlegen einer Nachfolgerin zu schliessen.
+
+### feat (Seitenfolge statt erste/weitere Seite + seitenspezifische Spalten, Phase 8.4)
+
+- **User-Fund:** „Bereitschaft sieht zwischen Seite 1, 2 und 3 unterschiedlich aus … Seite 3 und 4 sind aber gleich" und „die Spalten sind auf den Seiten nicht unbedingt gleich".
+- **`Konfig`/`Layout`:** `seiten: SeitenDef[]` ersetzt `ersteSeite`/`weitereSeite?`; eine Seite mit `wiederholt` wird bei Ueberlauf so oft gedruckt, wie Zeilen uebrig sind.
+- **`verteile.ts`:** laeuft die Seitenfolge der Reihe nach ab. Seite 1 kommt immer, jede weitere nur, wenn ihre Tabellen Zeilen haben oder sie gar keine Datentabelle traegt (reine Text-/Unterschriftsseite) — damit entfaellt die BE-Seite, wenn es keine Einsaetze gab. Wiederholungen entstehen direkt an ihrer Stelle in der Folge, nicht am Ende, damit eine nachgelagerte Abschlussseite dahinter landet.
+- **`TabellenBereich.spalten?`:** eigenes Spaltenraster je Seite (`spaltenFuer()` aus `shared` als gemeinsame Regel fuer Renderer, Editor und Vorschau). Im Editor per „eigene je Seite" umschaltbar, die vorhandenen Spalten werden dabei als Ausgangspunkt kopiert.
+- **`FormularEditor.tsx`:** Seiten-Tabs sind dynamisch (anlegen/entfernen), mit Wiederholungs-Schalter und „Einstellungen uebernehmen von <Seite>" — kopiert Felder, Tabellenbereiche und Signaturflaeche einer anderen Seite, behaelt aber die eigene Vorlagenseite.
+- **`dummyDaten.ts`:** Zeilenbedarf ueber alle Seiten summiert (plus eine Zeile, sobald eine Seite wiederholt wird); Testdaten befuellen auch Spalten, die es nur im Raster einer einzelnen Seite gibt.
+
+### feat (gedrehter Text und dynamische Spalten, Phase 8.4)
+
+- **User-Fund:** „es gibt Zettel, wo der Text um 90° gedreht ist" und „die Zulagen bei EZ funktionieren etwas anderes … das Feld Zulagen ist eine Liste, hier muss auch noch eine Überschrift mit festgelegt werden".
+- **`zeichne.ts`:** `drehung` (0/90/180/270) je Zelle. Gerechnet wird nicht mehr in x/y, sondern in Lauf- und Querachse — dieselben Formeln, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich. Ausrichtung wirkt entlang der Laufrichtung, die Zentrierung quer dazu; ohne Querkante bleibt die gesetzte Koordinate wie bisher die Grundlinie.
+- **Dynamische Spalten (`ListenGruppe`):** eine Zeile trägt unter `Zulagen` eine Liste, das Formular hat dafür feste Spaltenplätze. Welcher Schlüssel welchen Platz belegt, wird EINMAL je Dokument über alle Zeilen bestimmt (`listenBelegung`) — sonst stünde auf Seite 2 eine andere Zulage über derselben Spalte. `Spalte.listenPlatz` druckt den Wert der Zeile zu diesem Schlüssel, `Feld.listenKopf` die zugehörige Überschrift (Code oder hinterlegter Kurztext); unbelegte Plätze bleiben samt Überschrift leer.
+- **`ListenGruppen.tsx` (neu):** Gruppenverwaltung im Editor. Die EZ-Vorlagen (Erschwerniszulage 7 Plätze, Leistungsprämie/Fahrentschädigung 3, Ganzkörperreinigung 1) kommen aus dem gemeinsamen `ZULAGEN_CATALOG`, damit hier keine zweite Codeliste gepflegt wird; ein Klick legt Gruppe UND Spaltenplätze an.
+- **`dummyDaten.ts`:** erzeugt Listenwerte passend zur Zahl der konfigurierten Plätze — die erste Zeile belegt alle (sonst bliebe eine Spalte in der Vorschau unbeschriftet), spätere lassen einzelne aus, damit auch leere Zellen sichtbar werden. Nebenbefund dabei behoben: `alleSpalten()` zählte die Tabellenspalten doppelt, wenn eine Seite kein eigenes Raster hat.
+- `Zeile` trägt jetzt `unknown`-Werte statt nur Text/Zahl — Zeilen aus dem Download-Body enthalten mit `Zulagen` echtes Verschachteltes.
+
+### fix (Koordinateneingabe im Editor, Zahlenraster)
+
+- **User-Fund:** „Beim Absenden werden Werte, die nicht im 0,5-Raster liegen, nicht angenommen. Und bei Zeilen lassen sich auch 0,5 Zeilen eingeben + negative Werte."
+- **`FeldPanel.tsx`:** `ZahlFeld` nutzt `step="any"` statt `step="0.5"` — die HTML-Formularpruefung wies bisher jede gezogene Koordinate zwischen den Rasterpunkten beim Absenden ab. Zaehlwerte (`Zeilen`) sind jetzt ganzzahlig mit Untergrenze 1, `Hoehe` mindestens 0,1; die Anzeige rundet auf zwei statt eine Nachkommastelle.
+
+### feat (Format „Tag zweistellig")
+
+- Neues Format `tagZweistellig` (`05` statt `5`) fuer Formulare mit zweistelligem Tageskaestchen.
+
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` **1546/1546 gruen**.
+
+### docs (Hilfe zur Koordinaten-Config)
+
+- Ergaenzt: die Vorlage ist EINE PDF mit allen Seiten (nicht je Seite eine Datei), wie die Seitenfolge dazu angelegt wird, wann welche Seite im Ergebnis landet, wozu „bei Ueberlauf wiederholen" dient und wie Seiteneinstellungen kopiert bzw. eigene Spalten je Seite gesetzt werden.
+
+## 2026-08-16 (11)
 
 ### feat (Startseite: Schnellzugriff-Buttons für Mobilansicht, Issue #5)
 
@@ -15,6 +1194,204 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 ### fix (Fahrzeiten-Panel: "Zeile hinzufügen" wirkte deaktiviert, Issue #5)
 
 - **User-Fund:** Der Button nutzte `btn-outline-secondary` — bewusst zurückhaltender Stil, aber niedriger Kontrast genug, um mit einem deaktivierten Button verwechselt zu werden, obwohl er voll funktionsfähig war. Auf `btn-secondary` (gefüllt) umgestellt, damit die Aktion eindeutig als aktiv erkennbar bleibt.
+
+## 2026-08-16 (10)
+
+### feat (PDF-Vorlagen-Pipeline: laufende Summe, Beispieldaten ab dem Monatsersten, Phase 8.3)
+
+- **Bugfix Beispieldaten (User-Fund: „Tag 1 fällt komplett weg"):** die Datums-Beispielwerte begannen am **2.** des Monats — in der Tages-Spalte sah das wie ein verlorener Datensatz aus. Beginnen jetzt am 1.
+- **Neuer Summenbezug `$laufend`** („bis hierher: Übertrag + diese Seite"). Bisher gab es nur `$bisher` (nur Vorseiten), `$seite` (nur diese) und `$alle` (ganzes Dokument) — die fortgeschriebene Zwischensumme, die ein Übertragsformular eigentlich braucht, war damit **nicht** ausdrückbar. Wer sie über `$alle` nachbaute, bekam auf jeder Seite die Gesamtsumme und nur auf der letzten zufällig den richtigen Wert.
+- **Waisenzeilen-Schutz entfernt** (User-Fund „Seite 2 hat 11 Zeilen, es werden aber nur 10 eingetragen", danach User-Entscheidung). Der Schutz aus Phase 5 zog eine Zeile von der Vorseite nach, wenn die letzte Seite sonst nur eine einzige Zeile getragen hätte. Auf einem Formular mit vorgedruckten Zeilen hinterlässt das mitten im Dokument einen freien Platz, der wie ein vergessener Eintrag aussieht — und ein Prüfer kann nicht erkennen, ob dort etwas fehlt. Seiten füllen sich jetzt streng der Reihe nach; eine letzte Seite mit einer einzigen Zeile ist ausdrücklich in Ordnung. Neuer Test hält fest, dass **nur** die letzte Seite angebrochen sein darf.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1534/1534; der `$laufend`-Test nutzt einen eigenen Kontext mit Zeilen einer Folgeseite, sonst wären laufende Summe und Gesamtsumme in der Fixture zufällig gleich). Am real erzeugten dreiseitigen PDF nachgerechnet — 24 Zeilen à 2:30, Tage 1 bis 24 lückenlos:
+
+  | Seite | Zeilen | Übertrag | diese Seite | bis hierher | gesamt |
+  | --- | --- | --- | --- | --- | --- |
+  | 1 von 3 | 12 von 12 | 0:00 | 30:00 | 30:00 | 60:00 |
+  | 2 von 3 | 11 von 11 | 30:00 | 27:30 | 57:30 | 60:00 |
+  | 3 von 3 | 1 von 11 | 57:30 | 2:30 | 60:00 | 60:00 |
+
+## 2026-08-16 (9)
+
+### fix (PDF-Vorlagen-Pipeline: Summen über Zeit- und Rechenspalten, Phase 8.3)
+
+- **User-Fund:** „bei den Beispieldaten werden die Summen nicht berechnet" — 12 EA-Zeilen à `02:30` müssten 30:00 ergeben. Zwei unabhängige Ursachen, beide führten still zu falschen Zahlen statt zu einem Fehler:
+- **(1) Aggregationen konnten keine Zeitwerte lesen.** `OPS.summe`/`max` rechneten mit `Number(...) || 0`, und `Number("02:30")` ist `NaN` — jede Summe über eine gespeicherte Dauer war damit exakt 0. Neue `alsZahl()` liest `"HH:mm"` als Minuten und alles andere wie bisher; sie wird jetzt in `summe`, `max` und als Standard-Operandenleser in Zeilenrechnungen benutzt. Da `Number("02:30")` vorher ohnehin `NaN` ergab, ändert sich für bisher funktionierende Konfigurationen nichts.
+- **(2) Summen über berechnete Spalten fanden gar keinen Wert.** Das Ergebnis einer berechneten Spalte (z.B. Bereitschafts-Dauer aus Ende − Beginn) entstand nur beim Zeichnen und stand nirgends in den Daten — eine Fußsumme darüber lief ins Leere. `tabellenZeilen()` legt den berechneten Wert jetzt unter dem Spalten-Key in eine **Kopie** der Zeile (Nutzdaten bleiben unangetastet), womit jede Aggregation ihn findet. Ein gleichnamiges gespeichertes Feld wird dabei überschrieben, damit die Summe zu dem passt, was in der Spalte gedruckt steht. Ankreuz-Spalten (`wenn`) bleiben außen vor — ihr Inhalt ist Text, keine Zahl.
+- **Verifikation:** `shared` 53/53 (13 neue Tests: `alsZahl`, Summe/Maximum über Dauer-Spalten, berechnete Spalten in `tabellenZeilen`, Unversehrtheit der Nutzdaten), Frontend `lint`/`tsc --noEmit`/`test` (1533/1533), Backend `tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge). Der gemeldete Fall am real erzeugten PDF nachgerechnet: 12 Zeilen à 2:30 ergeben Seiten- **und** Gesamtsumme `30:00`, das Maximum `2:30`.
+
+## 2026-08-16 (8)
+
+### feat (PDF-Vorlagen-Pipeline: Werte-Vorschau je Eintrag im Editor, Phase 8.3)
+
+- **User-Wunsch:** die Beispielwerte direkt im Editor sehen, „so dass ich z.B. auch die Summen richtig sehe". Bisher war jeder Wert nur über die Testdaten-Vorschau als PDF prüfbar — für einen Tippfehler im Datenpfad oder einen falschen Summenbezug ein unverhältnismäßig langer Weg.
+- **Jedes Feld und jede Spalte zeigt jetzt ihren gerenderten Beispielwert** unter den Einstellungen, leere Werte als `(leer)` gekennzeichnet. Berechnet wird er über denselben `wert()`/`spaltenWert()`-Pfad wie im PDF, es kann also nicht auseinanderlaufen.
+- **Die Vorschau bekommt den echten Renderer-Kontext** (`erzeugeVorschau()`): die Beispielzeilen werden über `verteile()` auf Seiten aufgeteilt und die zum aktiven Tab passende Seite ausgewählt. Dadurch stimmen `$alle`-Gesamtsummen, `$seite`-Zwischensummen **und** der `$bisher`-Übertrag — letzterer wäre mit einem Behelfskontext immer 0 geblieben, also genau bei dem Feld nutzlos, das am schwersten zu prüfen ist. Auch `{seite}`/`{seite-1}` zeigen die Nummern der gewählten Seite. Wirft `verteile()` bei halbfertiger Konfiguration, fällt die Vorschau auf eine Einzelseite zurück, statt die Feldliste unbrauchbar zu machen.
+- **Bugfix Testdaten-Vorschau:** Datenpfade **innerhalb** von Text-Platzhaltern wurden nie mit Beispielwerten belegt — `Zulagen {Monat}/{Jahr}` erschien im Vorschau-PDF als „Zulagen /". Ursache war eine zu grobe Regel („feste Texte lesen nichts aus den Daten"): der Feld-*Key* ist bei einem Textfeld tatsächlich kein Datenpfad, die Pfade stecken aber in den Platzhaltern. Neue `datenPlatzhalter()` zieht genau diese heraus (ohne die vom Kontext bedienten `seite`/`seiten`/`heute`), sie werden jetzt mitbefüllt.
+- **Zweite Werteart „Beispieldaten"** (User-Nachtrag: „ich möchte nicht »Testwert 1« stehen haben, sondern einen passenden Wert"). Der Datenkatalog trägt jetzt je Feld einen fachlich passenden Beispielwert — konstant (Nachname „Mustermann", Betrieb, Entgeltgruppe) oder als Funktion über den Zeilenindex, wo Wiederholung stören würde (Tage, Auftragsnummern). Beide Vorschauen bleiben nebeneinander bestehen: `Beispieldaten` sieht aus wie ein ausgefülltes Formular, `Platzhalter` zeigt weiterhin, welche Zelle zu welchem Eintrag gehört. Die Werte-Vorschau in der Feldliste nutzt die Beispieldaten. Pfade ohne hinterlegtes Beispiel fallen auf den generischen Platzhalter zurück.
+  - Für Bereitschaft liegt hinter `Beginn`/`Ende` bewusst ein **Zeitstempel**, kein `"HH:mm"`: Format „Uhrzeit" liest daraus die Tageszeit, „Datum kurz" das Datum — ein Wert bedient damit BZ (Zeitraum über Tage) und BE (Einsatz-Uhrzeit) gleichermaßen.
+  - Bei berechneten Spalten werden die Operanden zuerst aus dem Katalog belegt, sonst gewinnt der generische Zeitwert über das `??=` in `fuelleOperanden()`.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1533/1533, 10 neue Tests für `erzeugeVorschau` — Gesamtsumme ungleich 0, gefülltes `$bisher` auf der Folgeseite, Seitenzahlen passend zum Tab, befüllte Text-Platzhalter, der Rückfall bei unfertiger Konfiguration sowie beide Wertearten). Beide Vorschauen zusätzlich als echtes PDF gegenübergestellt: `Mustermann, Max` / `30012345` / `I / IW / MI` / `Zulagen 3/2026` / `02.03.2026 06:00 14:30 A-10023` gegenüber `Name (Test)` / `PNummer (Test)` / `Zulagen Monat (Test)/Jahr (Test)`.
+
+## 2026-08-16 (7)
+
+### feat (PDF-Vorlagen-Pipeline: Seitenzahl-Platzhalter mit Versatz, Phase 8.3)
+
+- **User-Frage:** wie kommt die Nummer in „Übertrag von Seite ##" — `{seite - 1}`? Genau so ging es bisher nicht: alles außer `{seite}`/`{seiten}`/`{heute}` wurde als Datenpfad gelesen, `{seite - 1}` lief also ins Leere.
+- **`{seite}` und `{seiten}` vertragen jetzt einen ganzzahligen Versatz:** `{seite-1}`, `{seite + 1}`, `{seiten-1}`; Leerzeichen sind erlaubt, damit die naheliegende Schreibweise funktioniert. Bewusst nur Plus/Minus auf den beiden Seitenzahlen und keine allgemeine Formel — gebraucht wird der Verweis auf die Nachbarseite, alles darüber hinaus wäre eine Ausdruckssprache im Fließtext. Andere Muster (`{seite*2}`, `{seite-1.5}`) bleiben Datenpfade und damit leer, statt still etwas Falsches zu rechnen.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1523/1523, 4 neue Tests inkl. der abgelehnten Muster). Am real erzeugten zweiseitigen PDF gegengeprüft: Seite 2 trägt „Übertrag von Seite 1" neben „Seite 2 von 2".
+
+## 2026-08-16 (6)
+
+### feat (PDF-Vorlagen-Pipeline: Datum neben der Unterschrift, Phase 8.3)
+
+- **User-Anforderung:** ein Datumsfeld neben der Unterschrift — „heute, oder wenn der letzte Eintrag innerhalb der letzten 14 Tage liegt, dann das letzte Datum aus den Einträgen".
+- **Neue Summenart `letztesDatum`** (`OpName`): jüngster Datumswert eines Feldes über `$alle`/`$seite`/`$bisher`, wahlweise auf eine Tabelle eingegrenzt. Liefert bewusst einen Zeitstempel in Millisekunden statt eines Datums-Strings — dadurch bleibt der `OPS`-Rückgabetyp einheitlich und jedes Datumsformat (`datum`, `datumKurz`, `monatJahr`, …) greift unverändert. Das vorhandene `max` taugt dafür nicht: es rechnet `Number("2026-03-20")` und bekäme `NaN`.
+- **Neues `Berechnet.maxTage`** als Frist in Tagen: ist der jüngste Eintrag älter — oder gibt es gar keine Zeilen —, wird das heutige Datum gesetzt. Ohne Angabe bleibt es immer beim letzten Eintrag. Ein Eintrag in der Zukunft zählt als aktuell, damit vorausgefüllte Termine nicht überraschend auf heute zurückfallen.
+- **Neuer Platzhalter `{heute}`** im festen Text für den einfachen Fall („Musterstadt, den {heute}") — wie bei der Seitenzahl kein eigener Feldtyp nötig.
+- **Der Erzeugungstag steckt im `Kontext`**, nicht in einem `new Date()` mitten im Renderer: einmal je Dokument bestimmt (ein Lauf über Mitternacht ergäbe sonst zwei verschiedene Datumsangaben im selben PDF) und in Tests injizierbar.
+- **Editor:** „Letztes Datum" in der Summenart-Auswahl mit Eingabefeld für die Frist, plus Schnellanlage-Knopf „+ Datum (Unterschrift)" mit 14 Tagen und Format `datum` vorbelegt; das Datumsfeld der Tabelle wählt der Admin, es ist je Ressource ein anderes.
+- **Verifikation:** `shared` 41/41 (9 neue Tests für `OPS.letztesDatum` und `datumMitFrist`, inkl. Fristgrenze, fehlender Zeilen und des `max`-Gegenbeispiels), Frontend `lint`/`tsc --noEmit`/`test` (1519/1519, 6 neue Tests in `wert.test.ts`), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge). Beide Zweige zusätzlich am real erzeugten PDF geprüft: mit altem letzten Eintrag steht dort `16.08.2026` (heute), mit einem Eintrag vom 10.08. steht `10.08.2026` — während `{heute}` in derselben Datei unverändert `16.08.2026` bleibt.
+
+## 2026-08-16 (5)
+
+### feat (PDF-Vorlagen-Pipeline: Raster-Indikator am Seitenrand und Beispiel-Unterschrift, Phase 8.3)
+
+- **Indikator am linken Seitenrand** (User-Wunsch): je Tabelle eine Klammer über die Spannweite des Zeilenrasters, mit einem Strich je Zeile und ohne Beschriftung. Bisher zeigte das Overlay nur die erste Datenzeile — ob `maxZeilen` noch aufs Formular passt, war daraus nicht zu sehen. Mehrere Tabellen bekommen nebeneinanderliegende Spuren, die scharf geschaltete ist hervorgehoben.
+- **Beispiel-Unterschrift in der Testdaten-Vorschau** (User-Fund: „es gibt kein Beispiel für die Unterschrift"): die Signaturfläche blieb als einziges Element ohne Beispielwert, obwohl gerade dort Größe und Überdeckung schwer einzuschätzen sind. Neue `beispielSignatur.ts` zeichnet einen Schriftzug auf ein Canvas — bewusst gezeichnet statt als Bild eingebettet, damit das Ergebnis dieselbe Beschaffenheit hat wie die echte Unterschrift aus `signaturePad.ts` (transparenter Hintergrund, gleiche Kantenglättung). Ohne 2D-Kontext liefert sie `undefined`, die Vorschau läuft dann wie bisher ohne Unterschrift weiter.
+- **Inline-Hilfe** beantwortet zwei wiederkehrende Fragen direkt: senkrecht wird der Text immer in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde (ohne Ober-/Unterkante bleibt `y` die Grundlinie); und für die zertifikatsbasierte Signatur der zwei Prüfenden ist **nichts** zu hinterlegen — sie ziehen die Box im Adobe Reader selbst auf, im Formular muss nur Platz frei bleiben.
+- **Zeilenhöhe aus zwei Zeilen messen** (Folge aus dem Indikator: dessen Striche liefen unten aus den Zeilen heraus). Ursache ist nicht die Vorlage, sondern die Messung — `hoehe` wurde freihändig über EINE Zeile gezogen, und der Renderer zieht je Zeile dieselbe `hoehe` ab, wodurch sich Bruchteile eines Punktes aufsummieren (0,5 pt × 11 Zeilen = 5,5 pt Versatz unten). Neuer Scharf-Modus „letzte Datenzeile": Band über die letzte Zeile ziehen, `zeilenHoeheAus()` mittelt `(startY − y) / (Zeilen − 1)` und trägt das Ergebnis mit zwei Nachkommastellen ein. Das ist bei 12 Zeilen rund 11× genauer als die Einzelmessung; die Snackbar nennt den gemessenen Wert.
+- **Bugfix vertikale Zentrierung in Tabellenzeilen (User-Fund: „alles am unteren Rand gerendert"):** `build.ts` übergab je Spalte nur `y`, kein `y2` — ohne Oberkante ist `y` laut `zeichne()` die **Grundlinie**, der Text saß also auf der Zeilenunterkante statt mittig. Die Zentrierung war nie kaputt, sie griff für Spalten nur nicht, weil `Spalte` von sich aus keine y-Kanten hat. Diese kommen jetzt aus der Zeilenhöhe (`y2: y + tabelle.hoehe`) — also aus genau dem Band, das im Editor über die erste Datenzeile gezogen wurde. **Verhaltensänderung:** bestehende Konfigurationen rücken um `(hoehe − 0,72·size)/2` nach oben; bei Zeilenhöhe 14 und Schriftgröße 9 sind das 3,76 pt. `startY` bleibt unverändert die Grundlinie der ersten Zeile.
+- **Verifikation:** `lint`, `tsc --noEmit`, `test` (1513/1513, 5 neue Tests für `zeilenHoeheAus` inkl. des Fehlerbildes selbst, plus ein Test für die Zeilenzelle). Die Zentrierung zusätzlich am real erzeugten PDF per `pdftotext -bbox` nachgemessen: Text 3,76 pt höher als vorher, Zeilenabstand unverändert bei exakt 14 pt — deckt sich mit der Formel. Die vertikale Zentrierung ist bereits durch `zeichne.test.ts` abgedeckt („mit y2 liegt die Baseline vertikal mittig in der Zelle"). Indikator und Beispiel-Unterschrift sind headless nicht prüfbar (`happy-dom` liefert keinen Canvas-2D-Kontext) und brauchen den Blick im Browser.
+
+## 2026-08-16 (4)
+
+### feat (PDF-Vorlagen-Pipeline: verschachtelte Zeilenrechnungen und Zeitspannen über Tage, Phase 8.3)
+
+- **User-Fund:** „Es gibt auch mehrere Berechnungen: z.B. Bereitschaft Ende − Beginn + Pause". `ZeilenBerechnet` hatte genau **einen** Operator über N Operanden — gemischte Operatoren waren nicht darstellbar.
+- **Operanden dürfen jetzt selbst Rechnungen sein** (`ZeilenOperand = string | number | ZeilenBerechnet`). Die Klammerung steht damit explizit in der Struktur; bewusst **keine** implizite Punkt-vor-Strich-Regel, die man beim Konfigurieren falsch erwarten könnte. Beispiel: `{op:'summe', operanden:[{op:'zeitspanne', operanden:['Ende','Beginn']}, 'Pause']}`. Ob die Pause addiert oder abgezogen wird, ist damit reine Konfiguration (`summe` statt `differenz`), nicht im Code festgelegt.
+- **Bugfix `zeitdifferenz` bei Bereitschaftszeiträumen:** `alsMinuten()` liest nur Stunde und Minute **des Tages** — ein Zeitraum vom 02.03. 16:00 bis 05.03. 06:00 kam als 14:00 heraus statt 62:00, ohne Fehler oder Warnung. Neue Rechenart **`zeitspanne`** mit `alsZeitstempelMinuten()` rechnet über vollständige Zeitstempel und darf über Tage laufen. `zeitdifferenz` bleibt für Uhrzeiten eines Tages (Einsätze, mit Mitternachts-Ergänzung) — die Doku am Typ benennt jetzt beide Bezüge und die Folge des falschen Operators.
+- **Auswertung liegt jetzt in `shared`** (`berechneZeile()`), weil sie rekursiv ist und je Operator einen eigenen Operanden-Parser braucht: Zeit-Operatoren lesen `"HH:mm"` bzw. Zeitstempel, alles andere `Number`. Jeder Knoten liest **seine eigenen** Blatt-Operanden — so bleibt `Pause` im äußeren `summe`-Knoten eine schlichte Minutenzahl, während der innere Knoten Zeitstempel parst. `spaltenWert.ts` ruft nur noch auf.
+- **Editor:** die berechnete Spalte ist eine eigene, rekursive `Rechnung`-Komponente. Jeder Operand lässt sich auf „Zwischenrechnung (Klammer)…" umstellen oder direkt als solche anhängen; verschachtelte Rechnungen sind eingerückt und einzeln entfernbar. Operator-Auswahl benennt den Unterschied im Klartext („Dauer aus Uhrzeiten (ein Tag, über Mitternacht)" vs. „Zeitspanne aus Zeitstempeln (über mehrere Tage)").
+- **Testdaten-Vorschau** füllt Operanden jetzt rekursiv und **positionsabhängig**: Zeit-Operatoren rechnen `erster − folgende`, also bekommt die erste Stelle den späteren Zeitpunkt. Vorher erhielten alle Operanden denselben Wert, wodurch jede Zeit-Rechnung in der Vorschau 0 ergab.
+- **Datenkatalog Bereitschaft:** `Beginn`/`Ende` sind **ein** Eintrag unter „Zeile BZ + BE" (User: „einfach BZ Beginn oder Ende reicht"). Datum und Uhrzeit sind im Formular zwei Zellen, aber kein zweites Datenfeld — dafür dasselbe Feld zweimal als Spalte setzen, einmal mit Format „Datum kurz", einmal mit „Uhrzeit".
+- **Verifikation:** `shared` 32/32 (10 neue Tests für `berechneZeile`, `alsZeitstempelMinuten`, `operandenFelder`), Frontend `lint`/`tsc --noEmit`/`test` (1507/1507, u.a. rekursive Zod-Validierung inkl. kaputter Zwischenrechnung), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Fehlschläge; ein Zwischenlauf zeigte zusätzlich wechselnde 5000-ms-Timeouts in Integrationstests, die im Wiederholungslauf verschwanden — flaky, unabhängig von dieser Änderung). Real erzeugtes Bereitschafts-PDF bestätigt die BZ-Dauer `62:30` (62 h Zeitraum + 30 min Pause) und `62:00` ohne Pause, bei unveränderten Einsatz-Dauern über `zeitdifferenz`.
+
+## 2026-08-16 (3)
+
+### feat (PDF-Vorlagen-Pipeline: mehrere Datentabellen je Version, Phase 8.3)
+
+- **User-Fund:** „bei Bereitschaft gibt es 3 Datentabellen" — BZ (Zeiträume), BE gefiltert auf LRE 1+2, BE gefiltert auf LRE 3. Das bisherige Modell kannte genau **eine** Tabelle pro Version und **ein** Zeilenraster pro Seite; Bereitschaft war damit nicht abbildbar.
+- **`Version.tabellen: Record<string, TabellenDef>`** ersetzt `Version.zeilen`, **`SeitenDef.bereiche: TabellenBereich[]`** (`{tabelle, startY, maxZeilen}`) ersetzt `startY`/`maxZeilen`. Eine Seite trägt beliebig viele Tabellen, jede mit eigenem Platz.
+- **`TabellenDef.filter`** ist der Kern des Falls: dieselbe Quelle (`Daten.BE`) speist zwei Tabellen, getrennt über `LRE` — keine künstliche zweite Datenquelle nötig. **`Berechnet.tabelle`** grenzt Summen auf eine Tabelle ein (ohne Angabe wird weiterhin über alle gerechnet).
+- **`Spalte.wenn`** (neu) macht eine Spalte zur Ankreuz-Spalte: trägt einen festen Text („X"/„1") nur ein, wenn das Zeilenfeld einen der gewählten Werte hat. Deckt die LRE-Spalten ab — inklusive „bei keiner LRE bleibt die Zelle leer" (`LRE 1/2 ohne x` fällt in den Tabellenfilter, kreuzt aber nirgends an). Die bekannten LRE-Werte stehen im Editor als Checkboxen, nichts abzutippen.
+- **Rechenart `zeitdifferenz`** (neu) mit `alsMinuten()`: die Einsatz-Dauer ist kein gespeichertes Feld, sondern `Ende − Beginn` — `Number("07:00")` wäre `NaN`. Rechnet über Mitternacht korrekt weiter (22:00→01:15 = 3:15) und ergibt mit Format `stunden` eine Zeitspanne.
+- **Renderer:** `verteile()` verteilt pro Tabelle in deren eigenen Seitenbereich und öffnet eine Folgeseite, sobald **irgendeine** Tabelle überläuft; Waisenzeilen-Schutz greift pro Tabelle. Wirft mit klarer Meldung, wenn Zeilen übrig bleiben und `weitereSeite` fehlt **oder** die Folgeseite für die betroffene Tabelle keinen Bereich definiert (verhindert eine Endlosschleife). `build.ts` zeichnet je Seite alle Bereiche, `Kontext.$seite`/`$bisher`/`$alle` sind nach Tabellenname aufgeschlüsselt.
+- **Editor:** Tabellenliste (anlegen/löschen/umbenennen, Quelle + Filter mit Werte-Checkboxen), je Seite die Zuordnung Tabelle → Bereich mit eigenem `startY`/`maxZeilen`.
+- **Achsen-Bänder statt Rechteck (User-Rückfrage: „ist ein Quadrat bei nur x- oder nur y-Werten sinnvoll?"):** Beim Zeilenraster wurden die x-Kanten verworfen, bei Spalten die y-Kanten — ein Rechteck zu ziehen, von dem die Hälfte weggeworfen wird, war irreführend. Jetzt zeigt die Vorschau nur die genutzte Achse als Band (Raster = waagerecht über die Seitenbreite, Spalte = senkrecht über die Seitenhöhe), Hinweistext und Live-Koordinaten nennen ebenfalls nur diese Achse.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`test` (1504/1504), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Real erzeugtes Bereitschafts-PDF mit allen drei Tabellen, `qpdf --check` fehlerfrei, per `pdftotext` gegengerechnet: BZ mit Datum (`02.03.`) und Uhrzeit (`16:00`) als getrennte Spalten aus demselben Feld, `be12` = 3 gefilterte Zeilen mit Ankreuzern nur bei `LRE 1`/`LRE 2`, `be3` = 2 Zeilen, Dauer 2:30/3:15 (über Mitternacht)/2:45, `anzahl` über `be12` = 3 und `summe` der Privat-km nur über `be3` = 50. Zweiter Lauf mit Überlauf einer von drei Tabellen: nur `be12` bricht um (2+2 statt 3+1 wegen Waisenschutz), BZ und `be3` bleiben vollständig auf Seite 1.
+
+## 2026-08-16 (2)
+
+### refactor (PDF-Vorlagen-Pipeline: ein Feldbereich statt drei, Seitenzahl konfigurierbar, Phase 8.1)
+
+- **User-Frage deckte auf:** `kopf` und `seitenfuss` waren im Renderer **exakt identisch** (beide mit seitenbezogenem Kontext), nur `fuss` unterschied sich (Summen über alle Zeilen statt über die aktuelle Seite). Drei Bereiche, aber nur zwei Verhalten — und die Namen suggerierten eine Position, die in Wahrheit allein aus den Koordinaten kommt.
+- **`SeitenDef.felder` ersetzt `kopf`/`seitenfuss`/`fuss`/`uebertrag`.** Der einzige echte Unterschied steckt jetzt dort, wo er hingehört: in `Berechnet.ueber`, das neben `$seite` und `$bisher` nun auch **`$alle`** kennt (Gesamtsumme des Dokuments). `build.ts` braucht dadurch keine vier Renderphasen und keinen zweiten Kontext mehr.
+- **Seitenzahl war fest verdrahtet** (`x:500, y:30, size:8`) und damit weder positionier- noch abschaltbar. Jetzt entsteht sie als normales Feld über **Platzhalter im festen Text**: `{seite}`/`{seiten}` — und, auf Wunsch des Users allgemein gehalten, **jeder Datenpfad** als `{name}` (z.B. `"Zulagen {Monat}/{Jahr} — Seite {seite} von {seiten}"`). Unbekannte Platzhalter werden zu leerem Text, damit nie ein roher `{…}`-Rest im PDF landet.
+- **Editor:** eine Feldliste statt vier, mit Schnellanlage-Knöpfen (`+ Feld`, `+ Gesamtsumme`, `+ Übertrag`, `+ Seitenzahl`), die die passende Vorkonfiguration mitbringen. Der Summen-Bezug ist als Klartext wählbar („alle Zeilen (Gesamtsumme)" / „nur diese Seite" / „alle Vorseiten (Übertrag)").
+- **JSON-Ansicht der Konfiguration** (User-Wunsch: „alles auf einmal kopieren/einfügen") unter dem Editor: zeigt den kompletten Stand, nimmt eingefügtes JSON aber erst auf Knopfdruck an und validiert es dabei gegen das neue, aus `configSchema.ts` exportierte `konfigSchema` — halbfertiges Tippen setzt den Editor also nicht laufend zurück, und kaputtes JSON landet nie im State.
+- **Bugfix Overlay-Beschriftungen (User-Fund):** Das Rechteck des Zeilenrasters teilt sich die linke Kante mit der ersten Spalte, wodurch beide Beschriftungen exakt übereinander lagen und unlesbar wurden. Das Raster beschriftet sich jetzt an der rechten Kante (`Rechteck.labelRechts`), zusätzlich weichen kollidierende Beschriftungen generell nach oben aus — das greift auch bei mehreren Feldern auf gleicher Höhe, nicht nur in diesem Fall.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`build`/`test` (1504/1504), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Real erzeugtes zweiseitiges PDF bestätigt `Seite 1 von 2 — 3/2026` (Seiten- **und** Datenpfad-Platzhalter zusammen), Gesamtsumme 150,00 über `$alle` und Übertrag 60,00 über `$bisher`. Dabei fingen die Tests erneut zwei nicht typgeprüfte Fixtures (`pdf-test.ts`, `configSchema.test.ts`) ab, die `tsc` wegen untypisierter Objektliterale durchgelassen hatte — dieselbe Falle wie beim Layout-Redesign. Die Overlay-Beschriftung selbst ist headless nicht prüfbar (`happy-dom` liefert kein Canvas-`2d`-Kontext) und braucht den Blick im Browser.
+
+## 2026-08-16 (1)
+
+### feat (PDF-Vorlagen-Pipeline: Editor-Nachbesserungen aus dem User-Review, Phase 8.1)
+
+- **Zellen statt Punkte:** Felder und Spalten werden als Rechteck aufgezogen (Maustaste gedrückt halten, ziehen, loslassen) statt per Einzelklick gesetzt. `Feld` hat dafür optionale `x2`/`y2` (rechte/obere Kante), `Spalte` ein `x2`. `zeichne.ts` platziert den Text laut `align` in dieser Zelle und immer vertikal mittig; ohne `x2`/`y2` bleibt das alte Ankerpunkt-Verhalten erhalten (abwärtskompatibel zu Konfigurationen aus Phase 3–8).
+- **Ausrichtung `zentriert`** — laut User sind die meisten Formularzellen zentriert; der Text wird zwischen den beiden gezogenen Kanten mittig gesetzt.
+- **Lupe** beim Positionieren: sobald ein Eintrag scharf geschaltet ist, zeigt eine Lupe (3-fach) den Ausschnitt unter dem Cursor — **schon beim Hover, nicht erst beim Ziehen**, sonst wäre der Startpunkt gesetzt, bevor man ihn vergrößert sieht. Zusätzlich Zoom-Auswahl (100–300 %).
+- **Datenzuordnung statt Freitext:** neuer `datenKatalog.ts` mit den tatsächlich vom Download-Body gelieferten Feldern je Ressource (abgeleitet aus `shared/src/download.ts`), gruppiert als Dropdown. Freier Datenpfad bleibt als Escape-Hatch. Formularwechsel setzt die Konfiguration zurück, da Zeilen-Quelle und Datenpfade ressourcenspezifisch sind.
+- **Berechnete Spalten** (`Spalte.berechnet`): Produkt/Summe/Differenz/Quotient über Felder **derselben** Datenzeile (z.B. Betrag = Dauer × Satz), Operanden sind Zeilenfelder oder feste Zahlen — neue `spaltenWert.ts`, abgegrenzt von `wert.ts` (das über mehrere Zeilen aggregiert).
+- **Übertragszeile** (`SeitenDef.uebertrag`): eigene Zellen im Datenbereich der Folgeseiten, je Zelle fester `text` (Beschriftung) oder Summe über `$bisher`. `Feld.text` neu für feste Beschriftungen.
+- **Mehr Formate** (User: „die Formate sind zu wenige"): zusätzlich `zahl`, `ganzzahl`, `datumKurz`, `tag`, `wochentag`, `monatJahr`, `uhrzeit`, `stunden`, `liste`, `grossbuchstaben`. `liste` fügt Arrays zusammen (z.B. `Pers.OE` als Hierarchie-Ebenen), `uhrzeit`/`stunden` verstehen sowohl `"HH:mm"` als auch ISO-Zeitstempel. **Verhaltensänderung:** `datum` liefert jetzt `15.03.2026` statt `15.3.2026` (Formularzellen erwarten zweistellig).
+- **`autoGroesse`/`umbruch`** je Feld und Spalte: Schrift wird verkleinert, bis der Text in die Zelle passt (Untergrenze 4pt), und/oder an Wortgrenzen umgebrochen; mehrzeilige Blöcke werden vertikal in der Zelle zentriert. Harte Umbrüche (`\n`) werden dabei immer respektiert.
+- **Zusammengesetzte Felder** (`Feld.quellen` + `Feld.trenner`): mehrere Datenpfade in einer Zelle, verbunden mit frei wählbarem Trennzeichen (`", "`, `" / "`, `"; "`, `" - "`, `" | "`, Zeilenumbruch oder eigenes). Leere/fehlende Teile fallen weg, damit optionale Werte wie `Adress2` keine doppelten Trennzeichen hinterlassen; ein gesetztes Format gilt für jeden Teil einzeln (z.B. zwei Datumswerte als Zeitraum).
+- **Koordinaten nachjustierbar:** die Koordinaten-Anzeige im Kopf jedes Eintrags klappt zu Zahlenfeldern für alle vier Kanten auf — freihändig gezogene Rechtecke treffen selten exakt dieselbe Höhe wie das Feld daneben. Zeilenraster und Signaturfläche ebenfalls direkt eingebbar.
+- **Live-Koordinaten** beim Positionieren: während des Ziehens zeigt eine Anzeige die PDF-Punkte, die beim Loslassen gesetzt würden (inkl. Breite × Höhe), beim reinen Hover die Cursorposition.
+- **Bugfix Overlay:** die Rechteck-Vorschau liegt jetzt auf einem eigenen Canvas über dem PDF — vorher löste jede Mausbewegung beim Ziehen einen kompletten `pdfjs`-Seitenrender aus (Ruckeln, parallele `render()`-Aufrufe auf demselben Canvas).
+- **Bugfix Querformat (User-Fund):** das Zeilenraster-Rechteck war auf feste x-Werte (40–555) verdrahtet und deckte bei Querformat-Vorlagen nur einen Teil der markierten Zeile ab. Es spannt jetzt über die konfigurierten Spalten bzw. die echte Seitenbreite aus dem Viewport.
+- **Verifikation:** `shared` 22/22, Frontend `lint`/`tsc --noEmit`/`build`/`test` (1499/1499), Backend `lint`/`tsc --noEmit`/`test` (929/931, dieselben 2 vorbestehenden EA-Download-Fehlschläge). Zusätzlich real erzeugtes zweiseitiges PDF über den echten `build()`-Pfad, mit `qpdf --check` (fehlerfrei) und `pdftotext` gegengerechnet: zentrierte Kopfzellen, `liste`-Format (`I / IW / MI`), umgebrochener Text über zwei Zeilen, `uhrzeit` aus `"7:05"` **und** ISO-Zeitstempel je `07:05`/`08:30`, berechnete Spalte (×2), Fußsumme 150,00 über alle fünf Zeilen, Übertrag 60,00 auf Seite 2 = Summe der drei Zeilen von Seite 1. Zusammengesetzte Felder ebenfalls im echten PDF bestätigt: `Mustermann, Max`, `Bahnweg 1 / 12345 Berlin` (fehlendes `Adress2` sauber übersprungen) und `01.03.2026 - 05.03.2026` (Format je Teil).
+
+## 2026-08-15 (7)
+
+### feat (PDF-Vorlagen-Pipeline: visueller Koordinaten-Editor, Phase 8)
+
+- **JSON-Textarea aus Phase 7 vollständig ersetzt** — User-Review verwarf den Rohtext-Modus ("Wo ist die Hilfe zur Konfiguration der Felder?"), Nachfolge-Anforderung: Koordinaten per Klick auf die echte PDF-Vorschau setzen statt Hand-JSON.
+- **Neue Komponenten unter `features/Admin/components/FormularEditor/`:** `PdfCanvas.tsx` (rendert die lokal gewählte PDF-Datei via `pdfjs-dist`, kein Server-Roundtrip; Seiten-Navigator; zeichnet Feld-/Spalten-/Signatur-Marker; Klick auf Canvas nur bei scharf geschaltetem Feld aktiv), `FeldPanel.tsx` (volles CRUD für Kopf/Seitenfuß/Fuß/Spalten/Zeilenraster/Signatur — Interaktionsmodell: Feld in Liste "scharf schalten", dann Klick auf dem PDF setzt die Koordinate), `dummyDaten.ts` (Testdaten-Generator für die Vorschau), `FormularEditor.tsx` (Tabs Erste/Weitere Seite, Testdaten-Vorschau ruft das bestehende `build()` unverändert mit `layout.template = URL.createObjectURL(datei)` auf).
+- **Neue Dependency `pdfjs-dist`.** Worker-Setup (`pdf.worker.mjs?url`, Vite-Konvention) bewusst per dynamischem Import statt statisch geladen — Bun (Testlauf) kennt das `?url`-Suffix nicht und würde beim statischen Modulgraph-Aufbau abbrechen, auch wenn kein Test die Komponente rendert.
+- **`FormularUpload.tsx`:** `konfigJson`/`KONFIG_PLATZHALTER`/`JsonEditor`-Nutzung entfernt, ersetzt durch `<FormularEditor>` (aktiv sobald eine PDF-Datei gewählt ist). Inline-Hilfe auf das neue Interaktionsmodell umgeschrieben.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run build` (bestätigt korrektes Worker-Chunk-Bundling durch Vite) und `bun run test` (1470/1470) grün. Neuer Test `dummyDaten.test.ts`. **Offen:** manueller PC-Durchlauf (Felder setzen, Testdaten-Vorschau, echter Upload-Flow) steht beim User noch aus — reines Canvas-Zeichnen/Klick-Verhalten ist headless nicht sinnvoll testbar (siehe Phase-4-Lesson zu `happy-dom`).
+
+## 2026-08-15 (6)
+
+### refactor (PDF-Vorlagen-Pipeline: ein Layout pro Version statt einseitig/mehrseitig-Split)
+
+- **User-Review nach Phase 7** deckte auf: die Aufteilung `Version.einseitig`/`Version.mehrseitig` war nur wegen Kandidat C (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter Kandidat E — ergänzend: `SeitenDef.fuss` sollte pro-Seite datengetrieben bleiben statt hart auf "letzte Seite" verdrahtet, damit Bereitschafts abweichender Fall (Summe über alles auf Seite 1) ohne Sonderfall im Renderer funktioniert.
+- **`verteile.ts` neu:** verteilt auf `ersteSeite` (immer genau einmal) + `weitereSeite` (wiederholt nur bei tatsächlichem Überlauf) statt auf ein `seiten[]`-Array mit `wiederholSeite`-Index — keine erzwungenen leeren Folgeseiten mehr bei wenig/keinen Zeilen.
+- **`build.ts`:** keine `einseitig`/`mehrseitig`-Auswahl mehr, `verteile()` bekommt direkt `cfg.layout`. `fuss` rechnet weiterhin über ALLE Zeilen, unabhängig davon, auf welcher Seite es steht.
+- **`configSchema.ts`:** Zod-Schema folgt der neuen `Layout`-Form.
+- **`FormularUpload.tsx`:** EIN Datei-Upload statt zwei, Config-JSON als `{ersteSeite, weitereSeite?, zeilen}` in einem Editor. **Neu: Inline-Hilfe zur Feldkonfiguration** (`<details>`-Aufklapper — User-Review: "Wo ist die Hilfe zur Konfiguration der Felder?") — Koordinatensystem, Feld-Typen, `berechnet`-Syntax, kurzes Beispiel direkt auf der Seite.
+- **Tests:** `verteile.test.ts`, `build.test.ts`, `configSchema.test.ts` auf die neue Form umgeschrieben (u. a. "0 Zeilen" liefert jetzt nur 1 Seite statt 3 erzwungene leere Seiten — Verhalten bewusst geändert, nicht nur die Fixtures).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1465/1465) grün. Zusätzlich real erzeugtes Bereitschafts-PDF (Fuß/Summe auf Seite 1 statt Seite 3) über den echten `build()`-Codepfad geprüft: `qpdf --check` fehlerfrei, `pdftotext` bestätigt Summe 57,00 (alle 5 Zeilen) korrekt auf Seite 1.
+
+## 2026-08-15 (5)
+
+### feat (PDF-Vorlagen-Pipeline: Minimal-Admin-UI für Vorlagen-Upload, Phase 7)
+
+- **Neue Komponente `features/Admin/components/FormularUpload.tsx`:** lädt zwei PDF-Vorlagen (einseitig + mehrseitig, "zwei Vorlagendateien je Version" laut Konzept) hoch und legt darüber eine neue Formular-Version im Backend an. Koordinaten-Config als JSON über die bestehende `JsonEditor.tsx`-Komponente (Wiederverwendung wie geplant) — bewusst schlicht, wird in Phase 13 zur vollen Drag/Resize-Oberfläche ausgebaut, JSON-Modus bleibt dann als Power-User-Fallback.
+- **`FetchRetry` kann keine Multipart-Bodies senden** (JSON-only) — Upload nutzt einen eigenen Roh-`fetch()` mit denselben Auth-Headern (`getServerUrl()`/`Storage`-Token), Versionsanlage selbst läuft über `FetchRetry` (JSON).
+- **Neuer Admin-Tab "Formular-Vorlagen"** in `features/Admin/index.tsx`, sichtbar ab Team-Admin (passend zur Backend-Rollenschwelle `authorize(Role.TEAM_ADMIN)` für die Upload-Routen) — kein neues Capability-Flag nötig, reine Rollen-Prüfung wie serverseitig.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` (1464/1464) grün. Kein dedizierter Komponententest — die Plan-Verifikation für Phase 7 sieht hierfür explizit den manuellen End-zu-End-Durchlauf vor (PDF hochladen, Version anlegen, beide ausgelieferten PDFs prüfen), noch nicht durchgeführt.
+
+## 2026-08-15 (4)
+
+### feat (PDF-Vorlagen-Pipeline: Versionsauflösung verdrahten, Phase 6)
+
+- **Neue Dependency `zod`.**
+- **`infrastructure/pdf/configSchema.ts`:** spiegelt das Typsystem aus `@otto-kirchheim/nebengeld-shared` (`formular/types.ts`) als Zod-Schema. `parseRegistry(json: unknown): Registry` validiert die vom Server geladene Konfiguration (zur Laufzeit `unknown`) und wirft `ZodError` statt eines stillen Fehlverhaltens bei kaputten/unerwarteten Daten.
+- **Dev-Testseite umgestellt:** `pdf-test.ts` ruft jetzt `resolve(registry, 'ez', leistungsdatum)` statt eine feste `Version` zu verwenden — Registry mit zwei Testversionen (`v1` bis 2026-01-01, `v2` danach offen), neues Datumsfeld auf der Testseite steuert die Auflösung, Titel im PDF zeigt zur Kontrolle die getroffene Version.
+- **Tests:** `configSchema.test.ts` — valide Registry parst korrekt; kaputte Eingaben (fehlendes Pflichtfeld, falscher Feldtyp, komplett falsche Form: Array/`null`/String) werfen `ZodError` statt eines Laufzeitabsturzes; unbekannte Zusatzfelder werden toleriert (kein `.strict()`); Integrationstest bestätigt dieselben Datumsgrenzfälle wie mit Handdaten (siehe `shared`s `resolve.test.ts`) auch über den Schema-validierten Pfad.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Rein automatisiert, kein manueller Schritt nötig (reine Logik laut Plan).
+
+## 2026-08-15 (3)
+
+### feat (PDF-Vorlagen-Pipeline: Mehrseitigkeit, Phase 5)
+
+- **`infrastructure/pdf/verteile.ts`:** verteilt Zeilen auf die Layout-Seiten, wiederholt die `wiederholSeite` bei Überlauf beliebig oft. **Waisenzeilen-Schutz** (über den Original-Konzept-Code hinaus, explizit von der Planung gefordert): hätte die Abschlussseite dadurch nur 1 Zeile, wird stattdessen eine Zeile von der vorletzten Seite übernommen, sofern die noch mehr als 1 Zeile behält und die Abschlussseite Kapazität hat — vermeidet eine fast leer wirkende letzte Seite.
+- **`build()` erweitert:** wählt `einseitig`/`mehrseitig` anhand der Zeilenzahl, rendert alle von `verteile()` gelieferten Seiten, führt `$bisher` (kumulierte Vorseiten-Zeilen) über die Seiten fort, zeichnet `seitenfuss` auf jeder Seite (laufende Zwischensumme/Übertrag) und `fuss` nur auf der Abschlussseite (rechnet über ALLE Original-Zeilen, nicht nur die der letzten Seite). Neu: Seitenzahl-Anzeige `Seite X von Y` auf jeder Seite — generisch gebaut, fachlich erst ab Phase 11 (Bereitschaft) und Phase 12 (EA) relevant, da EZ/EWT immer einseitig bleiben.
+- **Tests:** `verteile.test.ts` (Grenzwerte 0/1/maxZeilen/maxZeilen+1/2×maxZeilen∓1, Wiederholseiten-Überlauf, Waisenzeilen-Schutz, Zeilenreihenfolge bleibt erhalten); `wert.test.ts` (neu — `$seite`/`$bisher`-Summenbildung war bisher ungetestet, jetzt inkl. `anzahl`/`max`/Datenpfad-Aggregation).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich zwei reale Mehrseiten-PDFs über den echten `build()`-Codepfad erzeugt und mit `qpdf --check`+`pdftotext` seitenweise geprüft: ein Zweiseiter (Waisenzeilen-Schutz im Zusammenspiel mit `$bisher` bestätigt) und ein echter Dreiseiter nach Konzept-Vorlage (Kopf/Kennzeile-wiederholt/Kennzeile+Fuß+Signatur) — Übertragssummen (30,00 → 45,00) und Gesamtsumme (57,00, über alle 5 Original-Zeilen) exakt wie von Hand berechnet, Signatur korrekt nur auf der Abschlussseite (via `pdfimages -list` bestätigt).
+
+## 2026-08-15 (2)
+
+### feat (PDF-Vorlagen-Pipeline: Canvas-Unterschrift, optional, Phase 4)
+
+- **Neue Dependency `signature_pad`.**
+- **`infrastructure/pdf/signaturePad.ts`:** Canvas-Wrapper — `skaliereFuerDisplay()` (pure, testbar) berechnet die Canvas-Pixelgröße für scharfe Linien auf High-DPI-Displays (`devicePixelRatio`), `erstelleSignaturPad()` wendet das auf ein echtes Canvas an (transparenter Hintergrund), `holeSignaturPng()` liefert `pad.toDataURL('image/png')` oder `null` bei leerem Pad.
+- **`build()` erweitert:** neuer optionaler dritter Parameter `signaturPng?: string` — bei vorhandenem Input **und** `signaturBild`-Koordinaten auf der Seite wird die Unterschrift per `embedPng()`/`drawImage()` eingebettet, sonst bleibt die Fläche leer. Kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen.
+- **Neue Dev-Testseite `src/pdf-test.html`+`src/ts/pdf-test.ts`:** NICHT Teil der echten App (kein Link aus `index.html`, kein Produktions-Build-Eintrag — Vite bündelt standardmäßig nur `index.html`). Dummy-Formular mit "Jetzt unterschreiben?"-Dialog (wiederverwendet `confirmDialog`) → Ja: Canvas-Pad zeichnen → PDF mit Signatur; Nein: PDF direkt ohne Signatur. Vorlage wird im Browser selbst erzeugt (leeres A4-Blatt, `blob:`-URL) statt als Static-Asset abgelegt, damit nichts davon versehentlich mit ins Produktions-Build wandert.
+- **Tests:** `signaturePad.test.ts` (`skaliereFuerDisplay()` gegen Grenzfälle); `build.test.ts` erweitert um Image-XObject-Anwesenheit/Abwesenheit (mit/ohne Signatur-Input, mit/ohne `signaturBild`-Koordinaten).
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Der eigentliche Canvas-Zeichentest (Schärfe/Transparenz bei echtem Pointer-Input) ist headless nicht prüfbar (`happy-dom` liefert `getContext('2d')` als `null`) — **manueller Browser-Test durch den User über die neue Testseite steht noch aus.**
+
+## 2026-08-15
+
+### feat (PDF-Vorlagen-Pipeline: Renderer-Grundgerüst, Phase 3)
+
+- **Neue Dependency `@cantoo/pdf-lib`** (aktiv gepflegter Fork des originalen `pdf-lib`, siehe Plan-Kontext für die Begründung).
+- **`infrastructure/pdf/build.ts`:** einseitiges Renderer-Grundgerüst — lädt eine PDF-Vorlage per `fetch`+`PDFDocument.load()`, kopiert die Zielseite (`copyPages`/`addPage`), zeichnet Kopf-/Zeilen-/Fuß-Felder via `page.drawText()`. Noch ohne Mehrseitigkeit (Phase 5), Unterschrift (Phase 4) und `resolve()`-Anbindung (Phase 6) — die `Version`-Konfiguration wird direkt übergeben, nicht aufgelöst.
+- **`infrastructure/pdf/wert.ts`/`zeichne.ts`:** Feld-Wertauflösung (Direktwert oder `Berechnet`-Aggregation über `$seite`/`$bisher`, via `OPS`/`FORMAT`/`get` aus `@otto-kirchheim/nebengeld-shared`) und minimale `drawText`-Zeichenfunktion mit Rechtsbündig-Unterstützung.
+- **Test-Vorlage `test/fixtures/test_1seitig.pdf`:** leeres A4-Blatt (595×842pt, kein AcroForm-Feld) — programmatisch erzeugt statt in LibreOffice, da für ein reines Koordinaten-Overlay kein visueller Inhalt nötig ist.
+- **Tests:** `test/infrastructure/pdf/build.test.ts` (neues Testmuster, erster PDF-Struktur-Test im Repo) — Seitenzahl, `Subject`-Metadaten, Template-URL-Aufruf, leere Datenliste.
+- **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run test` grün. Zusätzlich manuell: Dummy-PDF über den echten `build()`-Codepfad erzeugt und mit `qpdf --check` (fehlerfrei) sowie `pdftotext` geprüft — Titel/Name/Zeilen/Summe erscheinen exakt wie erwartet (Summenbildung über `$seite` inkl. Währungsformat bestätigt).
 
 ## 2026-08-11
 

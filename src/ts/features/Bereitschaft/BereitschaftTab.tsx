@@ -12,7 +12,7 @@ import { default as saveDaten } from '@/infrastructure/data/saveDaten';
 import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
-import { default as download } from '@/infrastructure/data/download';
+import generatePDF from '@/infrastructure/data/generatePDF';
 import {
   EditorModalBE,
   EditorModalBereitschaftsZeit,
@@ -182,7 +182,7 @@ function BereitschaftTab() {
       saveDaten(btnSaveB);
     };
     const onClickDownloadB = () => {
-      download(btnDownloadB, 'B');
+      generatePDF(btnDownloadB, 'B');
     };
     const onClickHelpBereitschaft = () => openHelpModal('tab.bereitschaft');
 
@@ -244,7 +244,7 @@ function BereitschaftTab() {
           <div class="col d-grid">
             <button type="button" class="btn btn-secondary" id="btnDownloadB" data-disabler>
               <span class="material-icons-round big-icons">download</span>
-              Herunterladen (PDF)
+              PDF erzeugen
             </button>
           </div>
         </div>

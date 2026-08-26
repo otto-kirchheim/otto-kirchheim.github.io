@@ -21,9 +21,6 @@ import {
   userProfileToBackend,
   vorgabenFromBackend,
 } from '../data/fieldMapper';
-import Storage from '../storage/Storage';
-import { getServerUrl } from './FetchRetry';
-import { abortController } from './abortController';
 import { type BulkRequest, type BulkResponse, apiFetch, loadResourceYear, smartSync } from './apiFetchHelper';
 
 // ─── Profile ─────────────────────────────────────────────
@@ -238,50 +235,4 @@ export async function loadAllYearData(year: number): Promise<LoadedYearData> {
       dataEA: eaResult.updatedAt,
     },
   };
-}
-
-// ─── Download (PDF-Export) ───────────────────────────────
-
-export async function downloadPdf(
-  modus: 'B' | 'E' | 'N' | 'EA',
-  data: Record<string, unknown>,
-): Promise<{ blob: Blob; filename: string }> {
-  if (!navigator.onLine) throw new Error('Keine Internetverbindung');
-
-  const endpointMap: Record<string, string> = {
-    B: 'bereitschaftszeitraum/download',
-    E: 'einsatzwechseltaetigkeit/download',
-    N: 'nebengeld/download',
-    EA: 'ea/download',
-  };
-
-  const serverUrl = await getServerUrl();
-  const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  headers['x-client-version'] = import.meta.env.APP_VERSION;
-  const accessToken = Storage.check('AccessToken') ? Storage.get<string>('AccessToken', true) : null;
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`;
-
-  const response = await fetch(`${serverUrl}/${endpointMap[modus]}`, {
-    mode: 'cors',
-    method: 'POST',
-    headers,
-    signal: abortController.signal,
-    body: JSON.stringify(data),
-    cache: 'no-cache',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message ?? `Download-Fehler (${response.status})`);
-  }
-
-  const blob = await response.blob();
-  const contentDisposition = response.headers.get('content-disposition');
-  let filename = 'download.pdf';
-  if (contentDisposition) {
-    const matches = /filename="([^"]+)"/.exec(contentDisposition);
-    if (matches?.[1]) filename = matches[1];
-  }
-
-  return { blob, filename };
 }

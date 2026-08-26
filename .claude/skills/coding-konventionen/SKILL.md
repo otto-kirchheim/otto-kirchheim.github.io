@@ -36,7 +36,7 @@ description: 'Use when: frontend topic coding-konventionen'
 **IMMER** `dayjs` verwenden, **NIEMALS** native `Date`-Methoden oder moment.js.
 
 ```ts
-import dayjs from "../utilities/configDayjs";
+import dayjs from "@/infrastructure/date/configDayjs";
 ```
 
 Die zentrale Konfiguration (`configDayjs.ts`) lädt:
@@ -62,7 +62,7 @@ export { default as MyFormModal } from "./MyFormModal";
 ### Import-Reihenfolge
 
 1. Externe Pakete (`preact`, `dayjs`, `bootstrap`)
-2. Utilities (`../utilities`)
+2. `core`/`infrastructure` (per `@/`-Alias, z.B. `@/infrastructure/api/FetchRetry`)
 3. Komponenten (`../components`)
 4. Lokale Dateien (`./utils`)
 
@@ -102,8 +102,8 @@ render(<MyComponent {...props} />, document.getElementById("modal-body"));
 ### Module einzeln importieren
 
 ```ts
-import { Collapse } from "bootstrap";
-import { Modal } from "bootstrap";
+import Collapse from "bootstrap/js/dist/collapse";
+import Modal from "bootstrap/js/dist/modal";
 ```
 
 ### CSS via SCSS
@@ -120,16 +120,13 @@ import { Modal } from "bootstrap";
 Alle Server-Anfragen über `FetchRetry`:
 
 ```ts
-import { FetchRetry } from "../utilities";
+import { FetchRetry } from "@/infrastructure/api/FetchRetry";
 
-const response = await FetchRetry("/api/resource", {
-	method: "POST",
-	body: JSON.stringify(data),
-});
+const response = await FetchRetry<RequestBody, ResponseData>("resource", data, "POST");
 ```
 
 - Token wird automatisch im Header gesetzt
-- Auto-Retry bei 401 mit Token-Refresh
+- Auto-Refresh bei 401 über einen geteilten Single-Flight-Refresh (kein Retry pro Request einzeln)
 - Kein manuelles Error-Handling für Auth nötig
 
 ---
@@ -139,7 +136,7 @@ const response = await FetchRetry("/api/resource", {
 Typsicherer Zugriff über `Storage`-Singleton:
 
 ```ts
-import { Storage } from "../utilities";
+import Storage from "@/infrastructure/storage/Storage";
 
 // Lesen mit Typ
 const monat = Storage.get<number>("Monat");
@@ -147,8 +144,8 @@ const monat = Storage.get<number>("Monat");
 // Schreiben
 Storage.set("Monat", 3);
 
-// Mit Default-Wert
-const daten = Storage.get("Daten", defaultDaten);
+// Mit Default-Wert (Options-Objekt, kein roher 2. Positionsparameter)
+const daten = Storage.get("dataN", { default: defaultDaten });
 ```
 
 ---

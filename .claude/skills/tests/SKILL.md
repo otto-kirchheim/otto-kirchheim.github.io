@@ -7,23 +7,32 @@ description: "Use when: frontend topic tests"
 
 ## Test-Stack
 
-- **Runner:** Bun test
+- **Runner:** Bun test, mit `--isolate` (eigener Modul-Cache je Testdatei, siehe `package.json`)
 - **Environment:** happy-dom via `@happy-dom/global-registrator`
 - **Mocking:** `bun:test` (`vi`, `mock`, `spyOn`)
 - **Coverage:** Bun coverage (`text`, `lcov`)
-- **Ausführung:** sequentiell pro Datei über `scripts/run-bun-tests.ts`
+
+**Wichtig:** `bun run test` läuft mit `--isolate`. Ein manuelles Teilausführen per rohem
+`bun test <dateien>` (ohne `--isolate`) teilt den Modul-Cache über Dateien hinweg und kann falsche
+Fehlschläge erzeugen (gemockte Barrels/`Storage` leaken zwischen Dateien) — bei "isoliert grün,
+gemeinsam rot" zuerst an dieses Isolations-Problem denken, nicht an einen echten Regressionsfehler.
 
 ## Befehle
 
 ```bash
-bun run test           # Bun-Testlauf über den sequentiellen Runner
-bun run dev-test       # Bun Watch-Mode
-bun run coverage       # Bun-Coverage-Lauf
+bun run test           # TZ=Europe/Berlin bun test --isolate
+bun run dev-test       # Bun Watch-Mode (--isolate --watch)
+bun run coverage       # Bun-Coverage-Lauf (--isolate --coverage)
 ```
 
 ---
 
 ## Verzeichnisstruktur
+
+`test/` spiegelt grob `src/ts/` (`core/`, `infrastructure/`, `features/`, `Admin/`), daneben ein
+großer, flacher Bestand an `Feature.spezifischesThema.test.ts`-Dateien pro Domain-Feature
+(`Bereitschaft.*`, `EWT.*`, `Neben.*`, `EA.*`, `Berechnung.*`, `Login.*`, `Einstellungen/*`).
+Ein Blick in `test/` selbst ist zuverlässiger als eine hier gepflegte Liste (wächst laufend).
 
 ```
 test/
@@ -31,17 +40,12 @@ test/
 ├── global.d.ts             # Test-Typen
 ├── mockData.ts             # Gemeinsame Mock-Daten
 ├── mockPDFString.ts        # Mock für PDF-Tests
-├── Berechnung.test.ts      # Feature-Tests
-├── Bereitschaft.test.ts
-├── EWT.test.ts
-├── Neben.test.ts
-├── __snapshots__/          # Vitest Snapshots
-└── Utilities/              # Utility-Tests
-    ├── abortController.test.ts
-    ├── compareVersion.test.ts
-    ├── download.test.ts
-    ├── FetchRetry.test.ts
-    └── Utilities.test.ts
+├── __snapshots__/
+├── core/, infrastructure/, features/, Admin/, Einstellungen/, orchestration/, fixtures/
+├── class/                  # Legacy-Ordnername (testet u.a. infrastructure/table/CustomTable.ts,
+│                           #  infrastructure/ui/CustomSnackbar.ts — nie umbenannt)
+├── components/             # Preact-Komponenten-Tests
+└── Utilities/              # Utility-Tests (abortController, FetchRetry, download, ...)
 ```
 
 ---
@@ -64,11 +68,14 @@ GlobalRegistrator.register({
 
 ## Bun-Konfiguration (in `bunfig.toml`)
 
-```ts
-[test];
-preload = ['./test/setupBun.ts'];
-coverageReporter = ['text', 'lcov'];
+```toml
+[test]
+preload = ["./test/setupBun.ts"]
+coverageReporter = ["text", "lcov"]
 ```
+
+`preload` gilt nur für `bun run`/`bun test` — nicht für `bun build --compile`. Ein Runtime-Shim, der
+auch im kompilierten Artefakt greifen muss, gehört zusätzlich in den echten Entrypoint.
 
 ---
 
