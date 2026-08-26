@@ -209,7 +209,7 @@ export function FeldPanel({
               {gruppiere(katalogZeilenFelder(formular)).map(([gruppeName, felder]) => (
                 <optgroup key={gruppeName} label={gruppeName}>
                   {felder.map(f => (
-                    <option key={f.pfad} value={f.pfad}>
+                    <option key={`${f.pfad}-${f.quelle ?? ''}`} value={f.pfad}>
                       {f.label}
                     </option>
                   ))}
