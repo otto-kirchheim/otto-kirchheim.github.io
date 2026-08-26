@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import {
   normalizePrimitiveRecord,
   buildTemplatePayload,
-} from '@/features/Admin/components/AdminProfileTemplatesManager';
+} from '@/features/Admin/components/adminProfileTemplatesManagerGemeinsam';
 import type { TemplateContentDraft } from '@/features/Admin/components/profileTemplates.shared';
 
 function draftWith(pers: Record<string, string>): TemplateContentDraft {
