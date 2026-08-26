@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (41)
+
+### refactor (CustomTable.ts in 6 Module aufgeteilt)
+
+Fortsetzung der 500-Zeilen-Regel-Aufraeumung: `infrastructure/table/CustomTable.ts` (1147 Zeilen,
+die groesste Datei im Projekt) war in der letzten Runde bewusst ausgenommen ("erstmal customtable
+weglassen", Kern-Engine mit `instanceof`-Checks in mehreren Feature-Komponenten). Rein mechanisch
+aufgeteilt, keine Verhaltensaenderung:
+
+- `customTableTypes.ts` -- `CustomTableTypes`, `RowState`, `TableChanges`, `CustomTableOptions(All)`,
+  `getEffectiveRowState()`.
+- `Column.ts` -- `Column`/`Columns`.
+- `Row.ts` -- `Row`-Klasse.
+- `Rows.ts` -- `Rows`-Collection-Klasse (Mutation/Filter/Diffing/Commit).
+- `customTableRender.ts` -- die Render-/Sortier-Methoden (`drawFooter`/`drawRows`/`drawHeader`/
+  `sort`/`onSortClicked`) als freie Funktionen mit explizitem `self`-Parameter statt `this`
+  (nutzt dasselbe Muster, das der Konstruktor fuer `ApplyOptions`/`_parser`/`setState` bereits
+  hatte); Konstruktor selbst bewusst unangetastet gelassen.
+- `CustomTable.ts` (1147→269 Zeilen) bleibt der stabile Importpfad: re-exportiert `Column`/
+  `Columns`/`Row`/`Rows`/Typen unveraendert, sodass alle ~54 externen Importstellen (inkl.
+  `instanceof CustomTable`/`instanceof Row` in mehreren Feature-Editor-Modals) unveraendert bleiben.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2016/2016 (inkl. `CustomTable.test.ts`
+und `CustomTable.xss.test.ts`), `bun run build` erfolgreich, Bundle-Groesse unveraendert.
+
 ## 2026-08-26 (40)
 
 ### refactor (500-Zeilen-Regel fuer Admin-UI-Komponenten)
