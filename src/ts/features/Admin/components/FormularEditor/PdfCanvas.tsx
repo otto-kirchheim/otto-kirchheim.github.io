@@ -133,21 +133,18 @@ function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rec
 }
 
 const RASTER_VERSATZ = 10;
-const RASTER_SPUR = 9;
 const RASTER_STRICH = 6;
 
 /**
  * Zeichnet je Tabelle einen Klammer-Indikator mit leichtem Versatz links neben ihrer ersten Spalte:
  * eine durchgehende Linie über die Spannweite, ein kurzer Strich je Zeilengrenze, keine
- * Beschriftung. Mehrere Tabellen bekommen eigene Spuren nebeneinander (nach ihrer Reihenfolge in
- * `raster`), damit sich ihre Bereiche nicht überdecken, falls zwei zufällig bei derselben Spalten-
- * Position beginnen.
+ * Beschriftung.
  */
 function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster: RasterMarke[]): void {
   raster.forEach((r, spur) => {
     if (r.zeilen <= 0 || r.hoehe <= 0) return;
     const xBasis = viewport.convertToViewportPoint(r.x, 0)[0]!;
-    const x = xBasis - RASTER_VERSATZ - spur * RASTER_SPUR;
+    const x = xBasis - RASTER_VERSATZ;
     // `startY` ist die Grundlinie der ERSTEN Zeile; die Zeile selbst steht darüber, weitere folgen
     // nach unten -- deshalb oben eine Zeilenhöhe zugeben und von dort abwärts zählen.
     const oben = r.startY + r.hoehe;
