@@ -1,20 +1,8 @@
-import {
-  bereinigteZulagenStunden,
-  FORMAT,
-  OPS,
-  alsVergleichswert,
-  datumMitFrist,
-  geldwertZulagenCode,
-  get,
-  listenBeschriftung,
-  schluesselAufPlatz,
-  standardText,
-  summeBereinigtGruppe,
-  summeGeldwertGruppe,
-  summeGruppe,
-  summeUeberListe,
-  trifftBedingung,
-} from '@otto-kirchheim/nebengeld-shared';
+import { FORMAT, OPS, alsVergleichswert, datumMitFrist, standardText, summeGruppe, summeUeberListe, trifftBedingung } from './aggregatoren';
+import { get } from './get';
+import { listenBeschriftung, schluesselAufPlatz } from './listen';
+import type { ListenAufloesung } from './listen';
+import { bereinigteZulagenStunden, geldwertZulagenCode, summeBereinigtGruppe, summeGeldwertGruppe } from './abgeleiteteWerte';
 import type {
   Berechnet,
   Daten,
@@ -22,7 +10,6 @@ import type {
   FeldBedingung,
   FormatName,
   IVorgabeValue,
-  ListenAufloesung,
   Spalte,
   SonderZeileZelle,
   Zeile,
@@ -144,7 +131,7 @@ function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unkn
   if (b.liste) {
     const aufloesung = kontext.listen[b.liste.tabelle];
     const gruppe = aufloesung?.gruppen[b.liste.gruppe];
-    // VorgabenGeld liegt einmal pro Dokument unter Daten.VorgabenGeld (siehe IDownloadBase) --
+    // VorgabenGeld liegt einmal pro Dokument unter Daten.VorgabenGeld (siehe IPdfBase) --
     // derselbe Weg wie jeder andere Datenpfad, kein eigener Kontext-Eintrag nötig.
     const geldMonat = (get(daten, 'VorgabenGeld') as IVorgabeValue | undefined) ?? {};
     const art = b.liste.art ?? 'summe';

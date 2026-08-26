@@ -15,21 +15,20 @@ import type {
   IVorgabenU,
 } from '@/types';
 import type {
-  IBereitschaftszeitraumDownloadBody,
-  IEntgeltausgleichDownloadBody,
-  INebengeldDownloadBody,
-} from '@otto-kirchheim/nebengeld-shared';
+  IBereitschaftszeitraumPdfBody,
+  IEntgeltausgleichPdfBody,
+  INebengeldPdfBody,
+} from '../pdf/pdfDaten';
 import {
   beAbgeleiteteWerte,
   bereitschaftszulageAbgeleiteteWerte,
   bzAbgeleiteteWerte,
   ewtAbgeleiteteWerte,
   ezAbgeleiteteWerte,
-} from '@otto-kirchheim/nebengeld-shared';
+} from '../pdf/abgeleiteteWerte';
 import tableToArray from './tableToArray';
 import dayjs from '../date/configDayjs';
-import { userProfileToBackend } from './fieldMapper';
-import { downloadPdf } from '../api/apiService';
+import { splitOeInput } from './oeLevels';
 import { ladeUndErzeugePdf } from '../pdf/ladeFormular';
 import { signaturDialog } from '../pdf/signaturDialog';
 import {
@@ -42,7 +41,7 @@ import {
 } from '../date/getMonatFromItem';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
-export default async function download(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N' | 'EA'): Promise<void> {
+export default async function generatePDF(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N' | 'EA'): Promise<void> {
   if (button === null) return;
 
   if (!navigator.onLine) {
@@ -57,11 +56,6 @@ export default async function download(button: HTMLButtonElement | null, modus: 
 
   setLoading(button.id);
   buttonDisable(true);
-
-  const MonatInput = document.querySelector<HTMLInputElement>('#Monat');
-  const JahrInput = document.querySelector<HTMLInputElement>('#Jahr');
-
-  if (!MonatInput || !JahrInput) throw new Error('Input Element nicht gefunden');
 
   const VorgabenGeldDaten: IVorgabenGeld = Storage.get('VorgabenGeld', { check: true });
   const VorgabenGeldHandler: ProxyHandler<IVorgabenGeld> = {
@@ -81,19 +75,20 @@ export default async function download(button: HTMLButtonElement | null, modus: 
   };
   const VorgabenGeld = new Proxy(VorgabenGeldDaten, VorgabenGeldHandler);
 
-  const Monat = +MonatInput.value;
-  const Jahr = +JahrInput.value;
+  const Monat = Storage.get<number>('Monat', { check: true });
+  const Jahr = Storage.get<number>('Jahr', { check: true });
   const localVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
-  const backendVorgabenU = userProfileToBackend(localVorgabenU);
+  // `Pers.OE` ist im Profil ein einzelnes Freitextfeld (`"V.IW-MI-N-KSL-IL 03"`), die
+  // PDF-Vorlagen-Pipeline (`datenKatalog.ts`/`wert.ts`, `FORMAT.oe`) erwartet die Ebenen als
+  // Array -- einziger Transform, den `Pers` hier braucht.
+  const pers = { ...localVorgabenU.Pers, OE: splitOeInput(localVorgabenU.Pers.OE) };
 
   const data: Record<string, unknown> = {
-    // Backend-Download-Schema erwartet `Pers` und `Fahrzeit` im Backend-Format. `Name` gibt es in
-    // `IPers` nicht (kein echtes Profil-Feld, nur PDF-Druckkomfort) -- deshalb hier zusammengesetzt
-    // statt in `userProfileToBackend()`, das auch fürs Profil-Speichern verwendet wird und dessen
-    // Rückgabe nicht um ein zusätzliches, vom Backend nicht erwartetes Feld ergänzt werden soll.
+    // `Name` gibt es in `IPers` nicht (kein echtes Profil-Feld, nur PDF-Druckkomfort) -- deshalb
+    // hier zusammengesetzt statt im Profil selbst gepflegt.
     VorgabenU: {
-      Pers: { ...backendVorgabenU.Pers, Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}` },
-      Fahrzeit: backendVorgabenU.Fahrzeit,
+      Pers: { ...pers, Name: `${pers.Nachname}, ${pers.Vorname}` },
+      Fahrzeit: localVorgabenU.Fahrzeit,
     },
     VorgabenGeld: VorgabenGeld[Monat],
     Monat,
@@ -106,7 +101,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
     return schicht;
   };
 
-  // Daten: Frontend-Feldnamen → Backend-Feldnamen mappen
+  // Daten: CustomTable-Zeilen → kanonisches PDF-Daten-Format (datenKatalog.ts/wert.ts)
   switch (modus) {
     case 'B': {
       const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
@@ -134,9 +129,9 @@ export default async function download(button: HTMLButtonElement | null, modus: 
           LRE: be.LRE,
           PrivatKm: be.PrivatKm ?? 0,
         };
-        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
+        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz, beamter) };
       });
-      data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumDownloadBody['Daten'];
+      data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumPdfBody['Daten'];
 
       // Bereitschaftszulage (Nachtrag Phase 11): "Differenz BZ-BE" live aus denselben Zeilen, die
       // auch die gedruckte Dauer-Spalte füllen -- kein Storage-Cache (`datenBerechnung`), keine
@@ -156,10 +151,10 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       // für `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
       const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
       data.Daten = {
-        // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, das
-        // geteilte IEwtDownloadBody['Daten'] typisiert es (wie das bisherige Backend-Modell)
-        // als `number` -- vorbestehende Diskrepanz, unveraendert uebernommen (kein Funktions-/
-        // Logik-Fix im Rahmen dieser Typen-Migration).
+        // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, `IPdfEWT`
+        // typisiert es (wie das bisherige Backend-Modell) als `number` -- vorbestehende
+        // Diskrepanz, unveraendert uebernommen (kein Funktions-/Logik-Fix im Rahmen dieser
+        // Typen-Migration).
         EWT: ewtRaw.map(e => {
           const basis = {
             Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
@@ -197,7 +192,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
           // sieht sie dann als normalen Datenpfad (Daten.N[].Arbeitszeit), analog EWT/Bereitschaft.
           return { ...basis, ...ezAbgeleiteteWerte(basis) };
         }),
-      } satisfies INebengeldDownloadBody['Daten'];
+      } satisfies INebengeldPdfBody['Daten'];
       break;
     }
     case 'EA': {
@@ -209,7 +204,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
           Taetigkeit: ea.Taetigkeit,
           Entgeltgruppe: ea.Entgeltgruppe,
         })),
-      } satisfies IEntgeltausgleichDownloadBody['Daten'];
+      } satisfies IEntgeltausgleichPdfBody['Daten'];
       break;
     }
     default:
@@ -217,45 +212,31 @@ export default async function download(button: HTMLButtonElement | null, modus: 
   }
 
   try {
-    console.time('download');
+    console.time('generatePDF');
 
-    let blob: Blob;
-    let filename: string | undefined;
+    // Version server-seitig auflösen (`GET /formulare/<formular>?stichtag=`), PDF client-seitig
+    // per `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt selbst (seit
+    // Phase 9-12 gilt das für alle vier Modi). Stichtag = erster Tag des Exportmonats (ein
+    // Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat hier
+    // bereits exakt die Form, die `build()` als `Daten` braucht.
+    const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
+    const formular = FORMULAR_JE_MODUS[modus];
+    const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
+    const signatur = await signaturDialog();
+    const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signatur.png, signatur.digital);
+    const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
 
-    if (modus === 'EA' || modus === 'E' || modus === 'B' || modus === 'N') {
-      // Neuer Weg (Phase 9 EA, Phase 10 EWT, Phase 11 Bereitschaft, Phase 12 EZ): Version
-      // server-seitig auflösen (`GET /formulare/<formular>?stichtag=`), PDF client-seitig per
-      // `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt selbst. Stichtag =
-      // erster Tag des Exportmonats (ein Formular-Wechsel mitten im Monat ist die Ausnahme, nicht
-      // der Regelfall). `data` hat hier bereits exakt die Form, die `build()` als `Daten` braucht.
-      // Mapped Type statt Ternary-Kette: zwingt bei jedem hier neu aufgenommenen Modus zum
-      // passenden Eintrag, statt still im letzten Zweig zu landen.
-      const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
-      const formular = FORMULAR_JE_MODUS[modus];
-      const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
-      const signatur = await signaturDialog();
-      const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signatur.png, signatur.digital);
-      blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
-    } else {
-      ({ blob, filename } = await downloadPdf(modus, data));
-    }
-
-    let dateiName = filename;
-    if (!dateiName || dateiName === 'download.pdf') {
-      // Namensschema deckt sich bewusst mit dem Server (`buildBaseFileName`/`dateiName` in
-      // backend/src/utils/download.helpers.ts bzw. den einzelnen `*.service.ts::download()`) --
-      // EA/E/B/N liefern seit Phase 9-12 gar keinen Header mehr (kein Backend-Roundtrip für den
-      // PDF-Inhalt), landen also immer hier.
-      const vorDateiName: { [key in typeof modus]: string } = {
-        B: 'RB',
-        E: 'Verpf.',
-        N: 'EZ',
-        EA: 'Entgeltausgleich',
-      };
-      const { Nachname, Vorname, Gewerk, ErsteTkgSt } = localVorgabenU.Pers;
-      const monatStr = String(Monat).padStart(2, '0');
-      dateiName = `${vorDateiName[modus]} ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} ${monatStr}.${Jahr}.pdf`;
-    }
+    // Namensschema deckt sich bewusst mit dem früheren Server-Schema (Backend liefert seit
+    // Phase 9-12 keinen Download-Header mehr, kein Backend-Roundtrip für den PDF-Inhalt).
+    const vorDateiName: { [key in typeof modus]: string } = {
+      B: 'RB',
+      E: 'Verpf.',
+      N: 'EZ',
+      EA: 'Entgeltausgleich',
+    };
+    const { Nachname, Vorname, Gewerk, ErsteTkgSt } = localVorgabenU.Pers;
+    const monatStr = String(Monat).padStart(2, '0');
+    const dateiName = `${vorDateiName[modus]} ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} ${monatStr}.${Jahr}.pdf`;
 
     saveAs(blob, dateiName);
   } catch (error: unknown) {
@@ -267,7 +248,7 @@ export default async function download(button: HTMLButtonElement | null, modus: 
       fixed: true,
     });
   } finally {
-    console.timeEnd('download');
+    console.timeEnd('generatePDF');
     buttonDisable(false);
     clearLoading(button.id);
   }

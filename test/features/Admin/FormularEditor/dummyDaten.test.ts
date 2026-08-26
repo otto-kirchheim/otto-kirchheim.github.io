@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { erzeugeDummyDaten } from '@/features/Admin/components/FormularEditor/dummyDaten';
-import { trifftBedingung } from '@otto-kirchheim/nebengeld-shared';
+import { trifftBedingung } from '@/infrastructure/pdf/aggregatoren';
 import type { SeitenDef, Version, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 function macheTabellen(): Version['tabellen'] {

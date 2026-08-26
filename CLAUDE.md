@@ -29,7 +29,7 @@
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
 - **Linting:** ESLint + Prettier + Husky (Pre-Commit Hooks)
-- **PDF-Export:** file-saver (Download von Server-generierten PDFs)
+- **PDF-Export:** client-seitig über die Formular-Vorlagen-Pipeline (`infrastructure/pdf/`, `shared/src/formular/build.ts`); `file-saver` löst nur den Browser-Download des fertigen Blobs aus
 
 ### Starten
 

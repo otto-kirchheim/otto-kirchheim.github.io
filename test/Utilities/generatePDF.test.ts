@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage'; // Import Storage directly
-import download from '@/infrastructure/data/download';
-import { userProfileToBackend } from '@/infrastructure/data/fieldMapper';
+import generatePDF from '@/infrastructure/data/generatePDF';
+import { splitOeInput } from '@/infrastructure/data/oeLevels';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { VorgabenGeldMock, VorgabenUMock } from '../mockData';
 
@@ -23,19 +23,13 @@ vi.mock('@/infrastructure/data/tableToArray', () => ({
 }));
 
 // Use vi.hoisted to ensure mock functions are available when mock factories run
-const {
-  mockSetLoading,
-  mockClearLoading,
-  mockButtonDisable,
-  mockDownloadPdf,
-  mockLadeUndErzeugePdf,
-  mockSignaturDialog,
-} = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => {
+const { mockSetLoading, mockClearLoading, mockButtonDisable, mockLadeUndErzeugePdf, mockSignaturDialog } = (
+  vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
+).hoisted(() => {
   return {
     mockSetLoading: vi.fn(),
     mockClearLoading: vi.fn(),
     mockButtonDisable: vi.fn(),
-    mockDownloadPdf: vi.fn(),
     mockLadeUndErzeugePdf: vi.fn(),
     mockSignaturDialog: vi.fn(),
   };
@@ -45,10 +39,6 @@ const {
 vi.mock('@/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
 vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
 vi.mock('@/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
-vi.mock('@/infrastructure/api/apiService', () => ({
-  downloadPdf: mockDownloadPdf,
-}));
-// Phase 9: EA läuft über den neuen client-seitigen Pfad statt über `downloadPdf()`.
 vi.mock('@/infrastructure/pdf/ladeFormular', () => ({
   ladeUndErzeugePdf: mockLadeUndErzeugePdf,
 }));
@@ -58,16 +48,17 @@ vi.mock('@/infrastructure/pdf/signaturDialog', () => ({
 
 // --- Test Suite ---
 
-describe('download utility', () => {
+describe('generatePDF utility', () => {
   let button: HTMLButtonElement;
 
   const mockVorgabenU: IVorgabenU = VorgabenUMock;
   const mockVorgabenGeld: IVorgabenGeld = VorgabenGeldMock;
-  const backendVorgabenU = userProfileToBackend(mockVorgabenU);
-  // `Name` gibt es in IPers nicht, download.ts setzt es nur fürs PDF-VorgabenU zusammen.
+  // `Name` gibt es in IPers nicht, generatePDF.ts setzt es nur fürs PDF-VorgabenU zusammen; `OE`
+  // wandelt generatePDF.ts vom Freitext-Profilfeld in das Array-Format der PDF-Pipeline um.
   const erwartetePers = {
-    ...backendVorgabenU.Pers,
-    Name: `${backendVorgabenU.Pers.Nachname}, ${backendVorgabenU.Pers.Vorname}`,
+    ...mockVorgabenU.Pers,
+    OE: splitOeInput(mockVorgabenU.Pers.OE),
+    Name: `${mockVorgabenU.Pers.Nachname}, ${mockVorgabenU.Pers.Vorname}`,
   };
 
   beforeEach(() => {
@@ -77,36 +68,30 @@ describe('download utility', () => {
 
     // Setup DOM elements
     document.body.innerHTML = `
-            <input id="Monat" value="4" />
-            <input id="Jahr" value="2026" />
             <button id="btnDownloadB"></button>
         `;
     button = document.getElementById('btnDownloadB') as HTMLButtonElement;
 
     // Setup default mock returns
+    Storage.set('Monat', 4);
+    Storage.set('Jahr', 2026);
     Storage.set('VorgabenGeld', mockVorgabenGeld);
     Storage.set('VorgabenU', mockVorgabenU);
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValue([]);
 
-    // Default successful downloadPdf mock
-    mockDownloadPdf.mockResolvedValue({
-      blob: new Blob(['mock pdf content']),
-      filename: 'test_download.pdf',
-    });
     // Phase 9 (EA): kein Signatur-Dialog standardmäßig, `build()`-Ergebnis als Dummy-Bytes.
     mockSignaturDialog.mockResolvedValue({ digital: false });
     mockLadeUndErzeugePdf.mockResolvedValue(new Uint8Array([1, 2, 3]));
   });
 
   it('should return early if button is null', async () => {
-    await download(null, 'B');
+    await generatePDF(null, 'B');
     expect(mockSetLoading).not.toHaveBeenCalled();
-    expect(mockDownloadPdf).not.toHaveBeenCalled();
   });
 
   it('should show error snackbar when offline', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
-    await download(button, 'B');
+    await generatePDF(button, 'B');
     expect(createSnackBar).toHaveBeenCalledWith(
       expect.objectContaining({
         message: expect.stringContaining('keine Internetverbindung'),
@@ -117,10 +102,10 @@ describe('download utility', () => {
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
-  it('should throw if input elements are not found', async () => {
-    document.body.innerHTML = '<button id="btnDownloadB"></button>'; // Remove inputs
-    button = document.getElementById('btnDownloadB') as HTMLButtonElement;
-    await expect(download(button, 'B')).rejects.toThrow('Input Element nicht gefunden');
+  it('should throw if Monat/Jahr not found in storage', async () => {
+    Storage.remove('Monat');
+    Storage.remove('Jahr');
+    await expect(generatePDF(button, 'B')).rejects.toThrow('nicht gefunden');
   });
 
   describe("modus 'B' (Phase 11 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
@@ -133,13 +118,12 @@ describe('download utility', () => {
     });
 
     it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf, inkl. vorberechneter Dauer', async () => {
-      await download(button, 'B');
+      await generatePDF(button, 'B');
 
       expect(mockSetLoading).toHaveBeenCalledWith(button.id);
       expect(mockButtonDisable).toHaveBeenCalledWith(true);
       expect(tableToArray).toHaveBeenCalledWith('tableBZ');
       expect(tableToArray).toHaveBeenCalledWith('tableBE');
-      expect(mockDownloadPdf).not.toHaveBeenCalled();
       expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'bereitschaft',
@@ -147,7 +131,7 @@ describe('download utility', () => {
         expect.objectContaining({
           VorgabenU: {
             Pers: erwartetePers,
-            Fahrzeit: backendVorgabenU.Fahrzeit,
+            Fahrzeit: mockVorgabenU.Fahrzeit,
           },
           VorgabenGeld: { ...mockVorgabenGeld[1], ...mockVorgabenGeld[4] },
           Daten: {
@@ -164,7 +148,7 @@ describe('download utility', () => {
                 LRE: 'LRE2',
                 PrivatKm: 12,
                 Dauer: 120,
-                PrivatKmBetrag: 3.24,
+                PrivatKmBetrag: undefined,
               },
             ],
           },
@@ -190,7 +174,7 @@ describe('download utility', () => {
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
       mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
-      await download(button, 'B');
+      await generatePDF(button, 'B');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'bereitschaft',
@@ -213,15 +197,16 @@ describe('download utility', () => {
           { Tag: '19.04.2026', Auftragsnummer: 'A-1', Beginn: '10:00', Ende: '12:00', LRE: 'LRE2', PrivatKm: 12 },
         ]);
 
-      await download(button, 'B');
+      await generatePDF(button, 'B');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'bereitschaft',
         '2026-04-01',
         expect.objectContaining({
-          // PrivatPKWBeamter 0.2 * 12 = 2.4 statt PrivatPKWTarif 0.27 * 12 = 3.24.
+          // PrivatPKWBeamter 0.2 * 12 = 2.4 statt PrivatPKWTarif 0.27 * 12 = 3.24. Beamter: rohe km
+          // bleiben undefined, nur der Euro-Betrag ist gesetzt.
           Daten: expect.objectContaining({
-            BE: [expect.objectContaining({ PrivatKm: 12, PrivatKmBetrag: 2.4 })],
+            BE: [expect.objectContaining({ PrivatKm: undefined, PrivatKmBetrag: 2.4 })],
           }),
           // bereitschaftMinuten = 1560 (BZ, 26h) - 120 (BE) = 1440. SummeBeamter1 = 1440-600 = 840;
           // SummeBeamter2 = round(840/8/60) = 2; Satz 'Besoldungsgruppe A 8' = 16,37 (VorgabenGeldMock);
@@ -243,7 +228,7 @@ describe('download utility', () => {
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
       mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für bereitschaft am 2026-04-01'));
 
-      await download(button, 'B');
+      await generatePDF(button, 'B');
 
       expect(saveAs).not.toHaveBeenCalled();
       expect(createSnackBar).toHaveBeenCalledWith(
@@ -255,7 +240,7 @@ describe('download utility', () => {
     });
   });
 
-  it("should perform download for mode 'E' successfully (Phase 10 -- neuer client-seitiger Pfad statt downloadPdf())", async () => {
+  it("should generate PDF for mode 'E' successfully (Phase 10 -- neuer client-seitiger Pfad statt downloadPdf())", async () => {
     (tableToArray as ReturnType<typeof vi.fn>).mockReturnValueOnce([
       {
         Tag: '2026-04-19',
@@ -274,9 +259,8 @@ describe('download utility', () => {
       },
     ]);
 
-    await download(button, 'E');
+    await generatePDF(button, 'E');
     expect(tableToArray).toHaveBeenCalledWith('tableE');
-    expect(mockDownloadPdf).not.toHaveBeenCalled();
     expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
       'ewt',
       '2026-04-01',
@@ -317,7 +301,7 @@ describe('download utility', () => {
         }),
         VorgabenU: {
           Pers: erwartetePers,
-          Fahrzeit: backendVorgabenU.Fahrzeit,
+          Fahrzeit: mockVorgabenU.Fahrzeit,
         },
       }),
       undefined,
@@ -340,10 +324,9 @@ describe('download utility', () => {
     });
 
     it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf, inkl. vorberechneter Arbeitszeit', async () => {
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(tableToArray).toHaveBeenCalledWith('tableN');
-      expect(mockDownloadPdf).not.toHaveBeenCalled();
       expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ez',
@@ -370,7 +353,7 @@ describe('download utility', () => {
           }),
           VorgabenU: {
             Pers: erwartetePers,
-            Fahrzeit: backendVorgabenU.Fahrzeit,
+            Fahrzeit: mockVorgabenU.Fahrzeit,
           },
         }),
         undefined,
@@ -386,7 +369,7 @@ describe('download utility', () => {
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
       mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ez',
@@ -400,7 +383,7 @@ describe('download utility', () => {
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
       mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für ez am 2026-04-01'));
 
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(saveAs).not.toHaveBeenCalled();
       expect(createSnackBar).toHaveBeenCalledWith(
@@ -414,7 +397,7 @@ describe('download utility', () => {
     it('handhabt einen Fehler ohne Error-Objekt', async () => {
       mockLadeUndErzeugePdf.mockRejectedValueOnce('string-error');
 
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(createSnackBar).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -427,9 +410,9 @@ describe('download utility', () => {
     it('should use VorgabenGeld for Monat 1 (single key)', async () => {
       const singleKeyGeld: IVorgabenGeld = { 1: mockVorgabenGeld[1] };
       Storage.set('VorgabenGeld', singleKeyGeld);
+      Storage.set('Monat', 1);
 
-      document.querySelector<HTMLInputElement>('#Monat')!.value = '1';
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ez',
@@ -450,9 +433,9 @@ describe('download utility', () => {
         3: { ...mockVorgabenGeld[1], LRE2: 77 },
       };
       Storage.set('VorgabenGeld', multiKeyGeld);
+      Storage.set('Monat', 3);
 
-      document.querySelector<HTMLInputElement>('#Monat')!.value = '3';
-      await download(button, 'N');
+      await generatePDF(button, 'N');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ez',
@@ -470,8 +453,6 @@ describe('download utility', () => {
   describe("modus 'EA' (Phase 9 -- neuer client-seitiger Pfad statt downloadPdf())", () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <input id="Monat" value="4" />
-        <input id="Jahr" value="2026" />
         <button id="btnDownloadEA"></button>
       `;
       button = document.getElementById('btnDownloadEA') as HTMLButtonElement;
@@ -481,9 +462,8 @@ describe('download utility', () => {
     });
 
     it('fragt den Signatur-Dialog und erzeugt das PDF über ladeUndErzeugePdf statt downloadPdf', async () => {
-      await download(button, 'EA');
+      await generatePDF(button, 'EA');
 
-      expect(mockDownloadPdf).not.toHaveBeenCalled();
       expect(mockSignaturDialog).toHaveBeenCalledTimes(1);
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ea',
@@ -506,7 +486,7 @@ describe('download utility', () => {
     it('reicht die Signatur aus dem Dialog an ladeUndErzeugePdf weiter', async () => {
       mockSignaturDialog.mockResolvedValueOnce({ png: 'data:image/png;base64,xyz', digital: false });
 
-      await download(button, 'EA');
+      await generatePDF(button, 'EA');
 
       expect(mockLadeUndErzeugePdf).toHaveBeenCalledWith(
         'ea',
@@ -520,7 +500,7 @@ describe('download utility', () => {
     it('zeigt einen Fehler-Snackbar, wenn keine gültige Version aufgelöst werden kann', async () => {
       mockLadeUndErzeugePdf.mockRejectedValueOnce(new Error('Keine gültige Version für ea am 2026-04-01'));
 
-      await download(button, 'EA');
+      await generatePDF(button, 'EA');
 
       expect(saveAs).not.toHaveBeenCalled();
       expect(createSnackBar).toHaveBeenCalledWith(

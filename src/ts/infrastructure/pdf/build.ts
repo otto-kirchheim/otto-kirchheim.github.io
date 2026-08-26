@@ -1,6 +1,9 @@
 import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
-import { hoeheFuer, loeseListenAuf, spaltenFuer, startYFuer, tabellenZeilen } from '@otto-kirchheim/nebengeld-shared';
-import type { Daten, ListenAufloesung, Spalte, SonderZeileZelle, Version } from '@otto-kirchheim/nebengeld-shared';
+import { hoeheFuer, spaltenFuer, startYFuer } from './spaltenFuer';
+import { loeseListenAuf } from './listen';
+import type { ListenAufloesung } from './listen';
+import { tabellenZeilen } from './tabellenZeilen';
+import type { Daten, Spalte, SonderZeileZelle, Version } from '@otto-kirchheim/nebengeld-shared';
 import { zeichne, type FontSet } from './zeichne';
 import { sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext, type TabellenZeilen } from './wert';
 import { spaltenWert } from './spaltenWert';

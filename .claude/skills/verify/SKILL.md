@@ -13,7 +13,7 @@ Die Einstellungen-/Hauptseite rendert komplett aus localStorage — ein laufende
 2. Browser: `puppeteer-core` (ad hoc in Scratchpad installieren) mit `executablePath: '/usr/bin/google-chrome-stable'`, `headless: true`, `args: ['--no-sandbox']`.
 3. Session seeden via `page.evaluateOnNewDocument` (läuft bei jeder Navigation erneut):
    - `localStorage`-Keys sind die **Enum-Keys** aus `Storage.ts` (`VorgabenU`, `Benutzer`, `BenutzerRolle`, `RefreshToken`, `Version`, `Monat`, `Jahr`) — nicht die deutschen Enum-Werte.
-   - Werte JSON-stringifien; Ressourcen-Keys (`VorgabenU`, `dataBZ`, `dataBE`, `dataE`, `dataN`) als `{ data, timestamp }` wrappen.
+   - Werte JSON-stringifien; Ressourcen-Keys (`VorgabenU`, `dataBZ`, `dataBE`, `dataE`, `dataN`, `dataEA`) als `{ data, timestamp }` wrappen.
    - **`Version` mit seeden** (z.B. `"9.9.9"`), sonst loggt der Versions-Check (`main.ts`) sofort aus („App hat ein Update erhalten").
    - **`localStorage.clear`/`removeItem` zu No-Ops stubben**: ohne erreichbares Backend schlägt der Token-Refresh fehl → Auto-Logout leert sonst den Seed nach wenigen Sekunden.
 4. Navigation: Desktop-Viewport → `page.click('#einstellungen-tab')` u.ä. Bei Mobile-Viewport (<768px) liegt die Tab-Navigation hinter der eingeklappten Navbar → `page.$eval(sel, el => el.click())` statt Hit-Test-Klick.

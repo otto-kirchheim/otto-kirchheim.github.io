@@ -1,4 +1,4 @@
-import { maxZeilenFuer } from '@otto-kirchheim/nebengeld-shared';
+import { maxZeilenFuer } from './spaltenFuer';
 import type { Layout, SeitenDef, TabellenBereich, Version, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /** Zeilen je Tabellen-Key. */

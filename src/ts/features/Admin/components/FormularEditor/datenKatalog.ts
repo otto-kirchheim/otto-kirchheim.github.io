@@ -69,8 +69,8 @@ function zeitpunkt(index: number, stunde: number, plusTage = 0): string {
   return new Date(2026, 2, 1 + index + plusTage, stunde).toISOString();
 }
 
-// Abgeleitet aus shared/src/download.ts -- die TS-Typen sind zur Laufzeit weg, deshalb hier als
-// Datenstruktur gepflegt. Bei Änderungen an den IDownload*-Typen diesen Katalog mitziehen.
+// Abgeleitet aus infrastructure/pdf/pdfDaten.ts -- die TS-Typen sind zur Laufzeit weg, deshalb hier als
+// Datenstruktur gepflegt. Bei Änderungen an den IPdf*-Typen diesen Katalog mitziehen.
 
 const BASIS: KatalogEintrag[] = [
   { pfad: 'Jahr', label: 'Jahr', gruppe: 'Zeitraum', beispiel: 2026 },
@@ -121,7 +121,7 @@ const BASIS: KatalogEintrag[] = [
   { pfad: 'VorgabenU.Pers.nBhf', label: 'Nächster Bahnhof', gruppe: 'Dienststelle', beispiel: 'Musterstadt Hbf' },
   { pfad: 'VorgabenU.Pers.kmnBhf', label: 'km zum nächsten Bahnhof', gruppe: 'Dienststelle', beispiel: 4 },
   // Bereitschaftszulage-Zwischenwerte (Phase 11, Nachtrag, siehe
-  // shared/src/formular/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte) -- nur bei
+  // infrastructure/pdf/abgeleiteteWerte.ts::bereitschaftszulageAbgeleiteteWerte) -- nur bei
   // Bereitschaft vorhanden (`formulare`-Filter unten), sonst würde der Eintrag bei ez/ewt/ea im
   // Datenpfad-Picker auftauchen und dort ins Leere laufen. Nur SummeBeamter3 ist ein Geldwert
   // (`waehrung`); alles andere sind Ganzzahlen (Minuten/Stunden/Sätze).
@@ -195,7 +195,7 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'Ende', label: 'Ende (HH:mm)', gruppe: 'Zeile', beispiel: '15:45' },
     { pfad: 'Auftragsnummer', label: 'Auftragsnummer', gruppe: 'Zeile', beispiel: i => `1234567${23 + i}` },
     { pfad: 'Zulagen', label: 'Zulagen (Liste)', gruppe: 'Zeile', format: 'liste', beispiel: ['NZ', 'SoZ'] },
-    // Vorberechnet (Phase 12, siehe shared/src/formular/abgeleiteteWerte.ts::ezAbgeleiteteWerte) --
+    // Vorberechnet (Phase 12, siehe infrastructure/pdf/abgeleiteteWerte.ts::ezAbgeleiteteWerte) --
     // `Spalte` kann Beginn/Ende nicht wie `Feld.quellen` verketten, deshalb eigene Gruppe wie
     // DauerWohnung bei EWT.
     { pfad: 'Arbeitszeit', label: 'Arbeitszeit (HH:mm-HH:mm)', gruppe: 'Berechnet', beispiel: '07:00-15:45' },
@@ -212,7 +212,7 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     { pfad: 'abEE', label: 'Abfahrt Einsatzort', gruppe: 'Zeile', beispiel: '16:00' },
     { pfad: 'an1E', label: 'Ankunft erste Tätigkeitsstätte', gruppe: 'Zeile', beispiel: '17:15' },
     { pfad: 'anWE', label: 'Ankunft Wohnung', gruppe: 'Zeile', beispiel: '17:45' },
-    // Vorberechnet (Phase 10, siehe shared/src/formular/abgeleiteteWerte.ts::ewtAbgeleiteteWerte) --
+    // Vorberechnet (Phase 10, siehe infrastructure/pdf/abgeleiteteWerte.ts::ewtAbgeleiteteWerte) --
     // eigene Gruppe, damit der Editor sie ohne Rechnung-Builder direkt als Spalten-/Ankreuz-Quelle
     // anbietet statt jede Version die Zeitrechnung selbst nachbauen zu lassen.
     { pfad: 'DauerWohnung', label: 'Dauer Wohnung (HH:mm)', gruppe: 'Berechnet', beispiel: '12:30' },
@@ -260,7 +260,7 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
     },
     { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: 'LRE 1' },
     { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
-    // Vorberechnet (Phase 11, siehe shared/src/formular/abgeleiteteWerte.ts::bzAbgeleiteteWerte/
+    // Vorberechnet (Phase 11, siehe infrastructure/pdf/abgeleiteteWerte.ts::bzAbgeleiteteWerte/
     // beAbgeleiteteWerte) -- eigene Gruppe je Quelle, damit der Editor sie ohne Rechnung-Builder
     // direkt als Spalten-/Summenquelle anbietet statt jede Version die Zeitrechnung selbst
     // nachbauen zu lassen (wie DauerWohnung/DauerErsteTkgSt bei EWT). Beide Eintraege heissen
@@ -339,7 +339,7 @@ export function werteAuswahl(feld: string): string[] {
 
 /**
  * Zeilenfelder mit echtem `boolean`-Wert (vorberechnete Ankreuz-Quellen, siehe
- * `shared/src/formular/abgeleiteteWerte.ts::ewtAbgeleiteteWerte`) -- der Editor bietet für diese
+ * `infrastructure/pdf/abgeleiteteWerte.ts::ewtAbgeleiteteWerte`) -- der Editor bietet für diese
  * Felder in der Ankreuz-Bedingung eine Ja/Nein-Auswahl (`werte: [true]`/`[false]`) statt der
  * generischen Werte-Liste/Wertebereich-Wahl an.
  */

@@ -2,6 +2,117 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-25 (38)
+
+### refactor (PDF-Render-Engine aus shared nach frontend verschoben)
+
+User-Review-Fund nach (37): `shared/src/download.ts` + `shared/src/formular/abgeleiteteWerte.ts`
+hatten null Verbraucher in `backend` oder sonst irgendwo in `shared` -- einziger Verbraucher war
+`frontend`. Nachprüfung ergab: derselbe Befund gilt für den kompletten Rest der Render-Engine
+(`aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`) -- `backend`
+nutzt aus `shared/formular/` ausschließlich `types.ts` (Zod-Spiegel-Quelle) und
+`resolve.ts`/`pruefeIntervalle.ts` (Versions-Auflösung).
+
+- 6 Module + 5 Tests von `shared/src/(formular/)*` nach `frontend/src/ts/infrastructure/pdf/`
+  bzw. `frontend/test/infrastructure/pdf/` verschoben: `download.ts`, `abgeleiteteWerte.ts`,
+  `aggregatoren.ts`, `get.ts`, `listen.ts`, `spaltenFuer.ts`, `tabellenZeilen.ts`.
+- Betroffene Frontend-Consumer auf lokale Imports umgestellt: `wert.ts`, `build.ts`,
+  `spaltenWert.ts`, `verteile.ts`, `generatePDF.ts`, `FormularEditor.tsx`, `dummyDaten.ts`.
+- `IEwtDownloadBody` (einziger ungenutzter Typ der verschobenen Module) ersatzlos entfernt; 3
+  Kommentare, die noch vom gelöschten Backend-Downloadpfad sprachen, korrigiert.
+- `shared/src/index.ts`/`formular/index.ts` bereinigt, `shared/package.json` auf `0.8.0` (Marker,
+  noch nicht published/getaggt).
+- Stale Pfad-Referenzen (`shared/src/formular/abgeleiteteWerte.ts` etc.) in Kommentaren
+  (`datenKatalog.ts`, `backend/.claude/skills/ressourcen/SKILL.md`) korrigiert.
+
+**Wichtiger Nebenfund:** die real publizierte `@otto-kirchheim/nebengeld-shared@0.7.0` ist älter
+als die gesamte `formular/`-Pipeline (fehlt dort komplett) -- `node_modules` in `backend` UND
+`frontend` zeigen deshalb schon vorher dauerhaft per Symlink auf das lokale `shared/`, nicht auf
+eine Registry-Version. Kein Publish nötig/sinnvoll, solange dieser Zustand (Feature-Branch
+`feature/formular-typsystem`) andauert -- ein versehentliches `bun install` ohne den Symlink bricht
+den Build (fehlende Exporte), Symlink nach jedem `bun install` prüfen.
+
+Verifiziert: `shared` `tsc`/`bun test` sauber (108→11 Tests, Rest zu frontend gewandert), Frontend
+`tsc`/Lint sauber, `bun run test` 1832/1833 (1 bekannter, unabhängiger Flake --
+`bootstrap.test.ts`, isoliert grün), `bun run build` erfolgreich, Backend (via Symlink live
+betroffen) `tsc`/Lint/`bun test --isolate` 812/812 unverändert grün.
+
+## 2026-08-25 (37)
+
+### refactor (download.ts → generatePDF.ts: vollständig frontend-nativ)
+
+User-Review-Fund nach (35)/(36): auch nach dem Entfernen des toten Server-Downloadpfads trug die
+Funktion noch Reste aus der Backend-Ära -- der Name `download` beschrieb nicht mehr, was passiert
+(PDF wird client-seitig erzeugt, nicht von einem Server geladen), und `VorgabenU.Pers`/`.Fahrzeit`
+liefen durch `userProfileToBackend()`, eine für den Profil-Speichern-Endpunkt (`PUT
+/user-profiles/me`) gebaute Funktion.
+
+Analyse ergab: von `userProfileToBackend()` wird hier nur EIN Transform wirklich gebraucht --
+`Pers.OE` vom Freitext-String (Profil-UI) ins Array-Format (`IPers.OE: string[]`, von der
+PDF-Vorlagen-Pipeline über `FORMAT.oe` erwartet). `Fahrzeit` ist strukturell identisch
+(`IFahrzeit` shared vs. `IVorgabenUfZ` frontend) und braucht gar kein Mapping;
+`Arbeitszeit`/`VorgabenB`/`Einstellungen` wurden nur mitberechnet und nie verwendet.
+
+- `infrastructure/data/download.ts` → `generatePDF.ts`, Funktion `download` → `generatePDF`
+  (Signatur unverändert).
+- `userProfileToBackend()`-Aufruf entfernt; `Pers.OE` wird jetzt direkt mit dem bereits
+  öffentlichen `splitOeInput()` (`infrastructure/data/oeLevels.ts`) konvertiert, `Fahrzeit`
+  unverändert aus `VorgabenU` durchgereicht. `userProfileToBackend()` selbst bleibt unverändert
+  (weiterhin genutzt für `PUT /user-profiles/me` in `dataApi.ts`).
+  Kommentare, die noch von "Backend-Format"/"Backend-Feldnamen" sprachen, korrigiert.
+- 4 Call-Sites (`BereitschaftTab.tsx`, `EwtTab.tsx`, `NebenTab.tsx`, `EaTab.tsx`) sowie
+  `test/Utilities/download.test.ts` → `generatePDF.test.ts` entsprechend umgestellt.
+- Bewusst unverändert: nutzer-sichtbare Texte ("Download nicht möglich…", Dateiname-Präfixe) und
+  HTML-Button-IDs (`btnDownloadB` etc.) -- aus Nutzersicht bleibt es ein Download, das ist
+  weiterhin korrekt; die per-`modus`-Zeilen-Mappings im `switch` (CustomTable-Zeile → kanonisches
+  PDF-`Daten`-Format) sind kein Backend-Relikt und blieben strukturell unverändert.
+
+Verifikation: `bunx tsc --noEmit` sauber, `bun run lint` sauber, `bun run test` (`--isolate`)
+1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (36)
+
+### fix (download.ts: Monat/Jahr aus Storage statt DOM-Input)
+
+User-Einwand nach Review von (35): `download()` las `Monat`/`Jahr` bisher direkt aus den
+`#Monat`/`#Jahr`-Input-Feldern (`+MonatInput.value`), obwohl `changeMonatJahr.ts` genau diese
+Felder ausliest und synchron in `Storage` schreibt -- der DOM-Umweg war unnötig, sobald `Storage`
+bereits die aktuelle Auswahl hält. `download.ts` liest jetzt `Storage.get<number>('Monat'/'Jahr',
+{ check: true })`, die beiden `document.querySelector('#Monat'/'#Jahr')`-Lookups samt
+Existenz-Check entfallen ersatzlos. Dabei auch einen stale gewordenen Kommentar korrigiert
+(sprach noch vom nicht mehr existierenden "Backend-Download-Schema" -- `data` geht seit (35) an
+keinen Backend-Endpunkt mehr, sondern direkt an `ladeUndErzeugePdf()`; `Pers`/`Fahrzeit` müssen
+trotzdem im Backend-Format vorliegen, weil `userProfileToBackend()` -- auch für `PUT
+/user-profiles/me` genutzt -- dieselbe Form liefert).
+
+Tests (`download.test.ts`): `Storage.set('Monat'/'Jahr', ...)` statt `<input>`-Elemente in
+`beforeEach` geseedet; zwei Tests, die `Monat` per direkter DOM-Manipulation
+(`document.querySelector('#Monat')!.value = ...`) umgestellt hatten, jetzt über `Storage.set`
+(die alte DOM-Manipulation griff seit dem Entfernen der `<input>`-Elemente ohnehin ins Leere und
+warf eine `TypeError`, die unbemerkt in nachfolgende Tests derselben Datei durchschlug). Verifiziert:
+`tsc`/Lint sauber, `bun run test` (`--isolate`) 1680/1680, `bun run build` erfolgreich.
+
+## 2026-08-25 (35)
+
+### chore (Rückbau: toter Server-Downloadpfad in download.ts)
+
+Gegenstück zu `backend/CHANGELOG.md` (12): `download.ts`s `if (modus === 'EA' || 'E' || 'B' || 'N')`
+deckte bereits den kompletten `modus`-Typ ab, der `else`-Zweig (`downloadPdf()`-Aufruf gegen den
+alten Backend-Roundtrip) war seit Phase 12 unerreichbarer Totcode.
+
+- `download.ts`: toten `else`-Zweig entfernt, `if`-Bedingung entfällt (immer der client-seitige
+  Renderer-Pfad).
+- `downloadPdf()` aus `infrastructure/api/dataApi.ts` entfernt (einziger Aufrufer war der jetzt
+  entfernte Zweig); `abortController`/`getServerUrl`/`Storage`-Imports dort mitentfernt, soweit nur
+  dafür gebraucht.
+- Tests: `apiService.test.ts`s `describe('downloadPdf', ...)`-Block entfernt; `download.test.ts`s
+  `downloadPdf`-Mock-Plumbing (Modul-Mock, `mockDownloadPdf`, Default-Resolve, alle
+  `expect(mockDownloadPdf).not.toHaveBeenCalled()`-Assertions) entfernt, da der Vergleichspfad nicht
+  mehr existiert.
+
+Verifikation: `bunx tsc --noEmit` grün, `bun run lint` grün, `bun run test` (`--isolate`) 1680/1680
+grün, `bun run build` erfolgreich.
+
 ## 2026-08-24 (34)
 
 ### feat (Unterschriftsdatum: an Signatur gekoppelt, druckt nur bei explizit "Digital")

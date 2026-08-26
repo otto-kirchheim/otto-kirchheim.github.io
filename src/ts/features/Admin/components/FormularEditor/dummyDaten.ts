@@ -1,14 +1,11 @@
-import {
-  alsVergleichswert,
-  loeseListenAuf,
-  maxZeilenFuer,
-  operandenFelder,
-  tabellenZeilen,
-} from '@otto-kirchheim/nebengeld-shared';
+import { alsVergleichswert, operandenFelder } from '@/infrastructure/pdf/aggregatoren';
+import { loeseListenAuf } from '@/infrastructure/pdf/listen';
+import type { ListenAufloesung } from '@/infrastructure/pdf/listen';
+import { maxZeilenFuer } from '@/infrastructure/pdf/spaltenFuer';
+import { tabellenZeilen } from '@/infrastructure/pdf/tabellenZeilen';
 import type {
   Daten,
   Feld,
-  ListenAufloesung,
   SeitenDef,
   Spalte,
   TabellenDef,

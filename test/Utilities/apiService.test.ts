@@ -23,7 +23,6 @@ import {
   authApi,
   bereitschaftseinsatzApi,
   bereitschaftszeitraumApi,
-  downloadPdf,
   ewtApi,
   loadAllYearData,
   nebengeldApi,
@@ -590,80 +589,6 @@ describe('apiService', () => {
         dataEA: null,
       });
       expect(mockFetchRetry).toHaveBeenCalledTimes(7);
-    });
-  });
-
-  // ─── downloadPdf ─────────────────────────────────
-
-  describe('downloadPdf', () => {
-    it('wirft wenn offline', async () => {
-      Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-      await expect(downloadPdf('B', {})).rejects.toThrow('Keine Internetverbindung');
-    });
-
-    it('sendet korrekten Request', async () => {
-      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-
-      const mockBlob = new Blob(['pdf']);
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        blob: () => Promise.resolve(mockBlob),
-        headers: new Headers({ 'content-disposition': 'filename="test.pdf"' }),
-      }) as unknown as typeof fetch;
-
-      const result = await downloadPdf('B', { data: 'test' });
-      expect(result.blob).toBe(mockBlob);
-      expect(result.filename).toBe('test.pdf');
-
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        'http://localhost:3000/api/v2/bereitschaftszeitraum/download',
-        expect.objectContaining({ method: 'POST' }),
-      );
-    });
-
-    it('nutzt korrekten Endpoint pro Modus', async () => {
-      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-
-      const mockResponse = {
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['pdf'])),
-        headers: new Headers(),
-      };
-      globalThis.fetch = vi.fn().mockResolvedValue(mockResponse) as unknown as typeof fetch;
-
-      await downloadPdf('E', {});
-      expect(globalThis.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('einsatzwechseltaetigkeit/download'),
-        expect.anything(),
-      );
-
-      await downloadPdf('N', {});
-      expect(globalThis.fetch).toHaveBeenCalledWith(expect.stringContaining('nebengeld/download'), expect.anything());
-    });
-
-    it('wirft bei nicht-ok Response', async () => {
-      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        json: () => Promise.resolve({ message: 'Server error' }),
-      }) as unknown as typeof fetch;
-
-      await expect(downloadPdf('B', {})).rejects.toThrow('Server error');
-    });
-
-    it('nutzt Fallback-Filename wenn keine Content-Disposition', async () => {
-      mockGetServerUrl.mockResolvedValue('http://localhost:3000/api/v2');
-
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        blob: () => Promise.resolve(new Blob(['pdf'])),
-        headers: new Headers(), // Keine content-disposition
-      }) as unknown as typeof fetch;
-
-      const result = await downloadPdf('B', {});
-      expect(result.filename).toBe('download.pdf');
     });
   });
 });

@@ -1,12 +1,7 @@
-import {
-  berechneZeile,
-  FORMAT,
-  listenWert,
-  schluesselAufPlatz,
-  standardText,
-  trifftBedingung,
-} from '@otto-kirchheim/nebengeld-shared';
-import type { ListenAufloesung, Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
+import { berechneZeile, FORMAT, standardText, trifftBedingung } from './aggregatoren';
+import { listenWert, schluesselAufPlatz } from './listen';
+import type { ListenAufloesung } from './listen';
+import type { Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 /**
  * Löst eine Tabellenspalte gegen EINE Datenzeile auf. `berechnet` rechnet über Werte derselben

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@otto-kirchheim/nebengeld-shared';
+import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
