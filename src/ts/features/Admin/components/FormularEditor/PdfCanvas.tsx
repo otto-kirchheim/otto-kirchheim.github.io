@@ -77,7 +77,7 @@ type Props = {
   aktiveSeiteLabel: string;
 };
 
-const ZOOM_STUFEN = [1, 1.3, 1.6, 2, 2.5, 3];
+const ZOOM_STUFEN = [1, 1.3, 1.6, 2, 2.5, 3, 4];
 const LUPE_GROESSE = 180;
 const LUPE_FAKTOR = 3;
 

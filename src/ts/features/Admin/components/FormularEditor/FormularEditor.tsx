@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useRef, useState } from 'preact/hooks';
 import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
@@ -154,6 +154,26 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const [tab, setTab] = useState(0);
   const [armed, setArmed] = useState<Armed | null>(null);
   const [vorschauLaeuft, setVorschauLaeuft] = useState<Werteart | null>(null);
+  // Anteil des Canvas an der Splitbreite in Prozent -- entspricht dem vorherigen col-lg-7 (~58%).
+  const [splitAnteil, setSplitAnteil] = useState(58);
+  const splitRef = useRef<HTMLDivElement>(null);
+
+  function starteSplitZiehen(e: MouseEvent) {
+    e.preventDefault();
+    const container = splitRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    function onMove(ev: MouseEvent) {
+      const anteil = ((ev.clientX - rect.left) / rect.width) * 100;
+      setSplitAnteil(Math.min(75, Math.max(25, anteil)));
+    }
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }
 
   // Nach dem Entfernen der letzten Seite zeigt `tab` ins Leere -- dann auf die letzte gültige.
   const seitenIndex = Math.min(tab, value.seiten.length - 1);
@@ -409,8 +429,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       {aktiveSeite && (
-        <div class="row g-2">
-          <div class="col-lg-7">
+        <div class="d-lg-flex gap-2" ref={splitRef}>
+          <div class="mb-2 mb-lg-0" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
             <PdfCanvas
               datei={datei}
               seiteIndex={aktiveSeite.quelle}
@@ -440,7 +460,15 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               </button>
             )}
           </div>
-          <div class="col-lg-5" style="max-height:70vh;overflow-y:auto">
+          <div
+            class="d-none d-lg-flex align-items-stretch"
+            style="width:10px;cursor:col-resize;touch-action:none"
+            onMouseDown={starteSplitZiehen}
+            title="Breite ziehen"
+          >
+            <div class="mx-auto" style="width:2px;background:var(--bs-border-color)" />
+          </div>
+          <div style={{ flex: `1 1 ${100 - splitAnteil}%`, minWidth: 0, maxHeight: '70vh', overflowY: 'auto' }}>
             <FeldPanel
               formular={formular}
               seite={aktiveSeite}
