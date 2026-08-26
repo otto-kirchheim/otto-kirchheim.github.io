@@ -141,7 +141,7 @@ const RASTER_STRICH = 6;
  * Beschriftung.
  */
 function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster: RasterMarke[]): void {
-  raster.forEach((r, spur) => {
+  raster.forEach(r => {
     if (r.zeilen <= 0 || r.hoehe <= 0) return;
     const xBasis = viewport.convertToViewportPoint(r.x, 0)[0]!;
     const x = xBasis - RASTER_VERSATZ;
