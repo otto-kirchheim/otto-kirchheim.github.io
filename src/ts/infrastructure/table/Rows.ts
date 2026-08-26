@@ -1,8 +1,11 @@
 import { stripMetaFields } from '../data/metaFields';
 import type { CustomTable } from './CustomTable';
 import { getEffectiveRowState } from './customTableTypes';
-import type { CustomTableTypes, RowState, TableChanges } from './customTableTypes';
+import type { CustomTableTypes, DirtyRowState, RowState, TableChanges } from './customTableTypes';
 import { Row } from './Row';
+
+const NON_ERROR_ROW_STATES: readonly RowState[] = ['unchanged', 'new', 'modified', 'deleted'];
+const DIRTY_ROW_STATES: readonly DirtyRowState[] = ['new', 'modified', 'deleted'];
 
 export class Rows<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
@@ -41,25 +44,20 @@ export class Rows<T extends CustomTableTypes> {
       const hasId =
         '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
 
-      const baseState: RowState =
-        storedLocalState === 'unchanged' ||
-        storedLocalState === 'new' ||
-        storedLocalState === 'modified' ||
-        storedLocalState === 'deleted'
-          ? storedLocalState
-          : hasId
-            ? 'unchanged'
-            : 'new'; // Fallback für Alt-Daten ohne __localState-Marker
+      const baseState: RowState = NON_ERROR_ROW_STATES.includes(storedLocalState as RowState)
+        ? (storedLocalState as RowState)
+        : hasId
+          ? 'unchanged'
+          : 'new'; // Fallback für Alt-Daten ohne __localState-Marker
       const newRow = new Row(this.CustomTable, cells, baseState);
 
       if (storedErrorMsg) {
         newRow._state = 'error';
-        newRow._errorState =
-          storedErrorState === 'new' || storedErrorState === 'modified' || storedErrorState === 'deleted'
-            ? storedErrorState
-            : hasId
-              ? 'modified'
-              : 'new';
+        newRow._errorState = DIRTY_ROW_STATES.includes(storedErrorState as DirtyRowState)
+          ? (storedErrorState as DirtyRowState)
+          : hasId
+            ? 'modified'
+            : 'new';
         newRow._errorMessage = storedErrorMsg;
       } else if (baseState === 'new' || baseState === 'modified') {
         hasPendingChanges = true;

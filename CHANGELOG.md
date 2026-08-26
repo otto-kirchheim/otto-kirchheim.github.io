@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (42)
+
+### refactor (Rows.ts: Zustandspruefung ueber benannte Konstanten statt `||`-Kette)
+
+In `infrastructure/table/Rows.ts`s `load()` prueften zwei nahezu identische `||`-Ketten, ob ein
+Roh-State-String zu `RowState`/`DirtyRowState` gehoert. Durch `NON_ERROR_ROW_STATES`/
+`DIRTY_ROW_STATES`-Konstanten + `Array.includes()` ersetzt -- selbsterklärend, dedupliziert das
+Muster, keine Verhaltensaenderung.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` (inkl. `CustomTable.test.ts`) grün.
+
 ## 2026-08-26 (41)
 
 ### refactor (CustomTable.ts in 6 Module aufgeteilt)
