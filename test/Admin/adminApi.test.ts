@@ -167,11 +167,54 @@ describe('Admin API', () => {
         canEditVorgabenGeld: false,
         canEditProfileTemplates: false,
         canEditOwnTeamTemplatesOnly: true,
+        canCreateFormularVorlagen: false,
+        canEditFormularVorlagen: false,
       });
       const result = await fetchCurrentAdminCapabilities();
       expect(result.canEditVorgabenGeld).toBe(true);
       expect(result.canEditProfileTemplates).toBe(true);
       expect(result.canEditOwnTeamTemplatesOnly).toBe(false);
+      expect(result.canCreateFormularVorlagen).toBe(true);
+      expect(result.canEditFormularVorlagen).toBe(true);
+    });
+
+    it('team-admin mit canCreateFormularVorlagen erhält auch canEditFormularVorlagen (Implikation)', async () => {
+      mockSuccess({
+        _id: 'u1',
+        userName: 'ta',
+        role: 'team-admin',
+        canCreateFormularVorlagen: true,
+        canEditFormularVorlagen: false,
+      });
+      const result = await fetchCurrentAdminCapabilities();
+      expect(result.canCreateFormularVorlagen).toBe(true);
+      expect(result.canEditFormularVorlagen).toBe(true);
+    });
+
+    it('team-admin mit nur canEditFormularVorlagen erhält kein canCreateFormularVorlagen', async () => {
+      mockSuccess({
+        _id: 'u1',
+        userName: 'ta',
+        role: 'team-admin',
+        canCreateFormularVorlagen: false,
+        canEditFormularVorlagen: true,
+      });
+      const result = await fetchCurrentAdminCapabilities();
+      expect(result.canCreateFormularVorlagen).toBe(false);
+      expect(result.canEditFormularVorlagen).toBe(true);
+    });
+
+    it('member erhält trotz gesetzter Flags keine Formular-Vorlagen-Berechtigung', async () => {
+      mockSuccess({
+        _id: 'u1',
+        userName: 'user',
+        role: 'member',
+        canCreateFormularVorlagen: true,
+        canEditFormularVorlagen: true,
+      });
+      const result = await fetchCurrentAdminCapabilities();
+      expect(result.canCreateFormularVorlagen).toBe(false);
+      expect(result.canEditFormularVorlagen).toBe(false);
     });
 
     it('team-admin mit gewährten Berechtigungen', async () => {

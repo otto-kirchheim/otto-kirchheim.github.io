@@ -9,6 +9,8 @@ export type UserEditState = {
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
+  canCreateFormularVorlagen: boolean;
+  canEditFormularVorlagen: boolean;
 };
 
 export const ROLE_LABELS: Record<TUserRole, { label: string; color: string }> = {

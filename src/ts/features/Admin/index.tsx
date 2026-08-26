@@ -16,6 +16,8 @@ type AdminCapabilities = {
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
+  canCreateFormularVorlagen: boolean;
+  canEditFormularVorlagen: boolean;
 };
 
 export default function AdminTab() {
@@ -60,6 +62,7 @@ export default function AdminTab() {
     capabilities?.role === 'team-admin' || capabilities?.role === 'org-admin' || capabilities?.role === 'super-admin';
   const canSeeVorgabenTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditVorgabenGeld);
   const canSeeTemplatesTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditProfileTemplates);
+  const canSeeFormulareTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditFormularVorlagen);
   const isSuperAdmin = capabilities?.role === 'super-admin';
 
   function navigateToProfile(userId: string) {
@@ -80,17 +83,38 @@ export default function AdminTab() {
       </div>
 
       <div class="mb-3">
-        <ul class="nav nav-pills flex-wrap gap-2 bg-dark-subtle rounded-3 p-2" id="admin-tabs" role="tablist">
+        <ul class="nav nav-pills flex-wrap align-items-center gap-2 bg-dark-subtle rounded-3 p-2" id="admin-tabs" role="tablist">
+          {isSuperAdmin && (
+            <li class="nav-item" role="presentation">
+              <button
+                class={`nav-link ${isSuperAdmin ? 'active' : ''}`}
+                id="admin-tab-dashboard"
+                data-bs-toggle="pill"
+                data-bs-target="#admin-pane-dashboard"
+                type="button"
+                role="tab"
+                aria-controls="admin-pane-dashboard"
+                aria-selected={isSuperAdmin ? 'true' : 'false'}
+              >
+                Dashboard
+              </button>
+            </li>
+          )}
+          {isSuperAdmin && (
+            <li class="nav-item d-flex align-items-center" aria-hidden="true">
+              <div class="vr" style="height: 1.5rem" />
+            </li>
+          )}
           <li class="nav-item" role="presentation">
             <button
-              class="nav-link active"
+              class={`nav-link ${!isSuperAdmin ? 'active' : ''}`}
               id="admin-tab-users"
               data-bs-toggle="pill"
               data-bs-target="#admin-pane-users"
               type="button"
               role="tab"
               aria-controls="admin-pane-users"
-              aria-selected="true"
+              aria-selected={!isSuperAdmin ? 'true' : 'false'}
             >
               Benutzerverwaltung
             </button>
@@ -127,7 +151,7 @@ export default function AdminTab() {
               </button>
             </li>
           )}
-          {isTeamAdminOrHigher && (
+          {canSeeFormulareTab && (
             <li class="nav-item" role="presentation">
               <button
                 class="nav-link"
@@ -144,19 +168,8 @@ export default function AdminTab() {
             </li>
           )}
           {isSuperAdmin && (
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link"
-                id="admin-tab-dashboard"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-dashboard"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-dashboard"
-                aria-selected="false"
-              >
-                Dashboard
-              </button>
+            <li class="nav-item d-flex align-items-center" aria-hidden="true">
+              <div class="vr" style="height: 1.5rem" />
             </li>
           )}
           {isSuperAdmin && (
@@ -212,15 +225,28 @@ export default function AdminTab() {
 
       {capabilitiesLoading && <div class="small text-body-secondary mb-3">Berechtigungen werden geladen...</div>}
 
-      {!capabilitiesLoading && !canSeeVorgabenTab && !canSeeTemplatesTab && (
+      {!capabilitiesLoading && !canSeeVorgabenTab && !canSeeTemplatesTab && !canSeeFormulareTab && (
         <div class="alert alert-secondary mb-3" role="alert">
-          Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld oder Profile-Templates vergeben.
+          Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder
+          Formular-Vorlagen vergeben.
         </div>
       )}
 
       <div class="tab-content" id="admin-tab-content">
+        {isSuperAdmin && (
+          <div
+            class={`tab-pane fade ${isSuperAdmin ? 'show active' : ''} bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
+            id="admin-pane-dashboard"
+            role="tabpanel"
+            aria-labelledby="admin-tab-dashboard"
+            tabIndex={0}
+          >
+            <AdminDashboard />
+          </div>
+        )}
+
         <div
-          class="tab-pane fade show active bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle"
+          class={`tab-pane fade ${!isSuperAdmin ? 'show active' : ''} bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
           id="admin-pane-users"
           role="tabpanel"
           aria-labelledby="admin-tab-users"
@@ -264,7 +290,7 @@ export default function AdminTab() {
           </div>
         )}
 
-        {isTeamAdminOrHigher && (
+        {canSeeFormulareTab && (
           <div
             class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-info-subtle"
             id="admin-pane-formulare"
@@ -273,18 +299,6 @@ export default function AdminTab() {
             tabIndex={0}
           >
             <FormularUpload />
-          </div>
-        )}
-
-        {isSuperAdmin && (
-          <div
-            class="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle"
-            id="admin-pane-dashboard"
-            role="tabpanel"
-            aria-labelledby="admin-tab-dashboard"
-            tabIndex={0}
-          >
-            <AdminDashboard />
           </div>
         )}
 

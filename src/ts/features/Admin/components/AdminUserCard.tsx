@@ -213,7 +213,7 @@ export function AdminUserCard({
                 </label>
               </div>
 
-              <div class="form-check">
+              <div class="form-check mb-1">
                 <input
                   class="form-check-input"
                   type="checkbox"
@@ -224,6 +224,35 @@ export function AdminUserCard({
                 />
                 <label class="form-check-label" for={`perm-teamonly-${currentUser._id}`}>
                   Profile-Templates nur im eigenen Team/OE-Scope
+                </label>
+              </div>
+
+              <div class="form-check mb-1">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id={`perm-formulare-erstellen-${currentUser._id}`}
+                  checked={edit.canCreateFormularVorlagen}
+                  onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                  disabled={!permissionEditable}
+                />
+                <label class="form-check-label" for={`perm-formulare-erstellen-${currentUser._id}`}>
+                  Darf Formular-Vorlagen erstellen
+                </label>
+                <div class="small text-body-secondary">Erstellen beinhaltet automatisch Bearbeiten.</div>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id={`perm-formulare-bearbeiten-${currentUser._id}`}
+                  checked={edit.canEditFormularVorlagen}
+                  onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                  disabled={!permissionEditable}
+                />
+                <label class="form-check-label" for={`perm-formulare-bearbeiten-${currentUser._id}`}>
+                  Darf Formular-Vorlagen bearbeiten
                 </label>
               </div>
 

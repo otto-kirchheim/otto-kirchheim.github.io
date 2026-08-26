@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (43)
+
+### feat (Admin: individuelle Berechtigung fuer Formular-Vorlagen + Tab-Reorganisation)
+
+Der Admin-Tab "Formular-Vorlagen" war bisher nur rollenbasiert sichtbar (`isTeamAdminOrHigher`),
+inkonsistent zu "VorgabenGeld"/"Profile-Templates", die beide ein individuelles, vom Org-/Super-Admin
+vergebenes Capability-Flag verlangen. Backend-Gegenstueck: siehe `backend/CHANGELOG.md` (14).
+
+- Zwei neue Checkboxen unter "Spezielle Admin-Berechtigungen" in `AdminUserCard.tsx`: "Darf
+  Formular-Vorlagen erstellen" (`canCreateFormularVorlagen`) und "... bearbeiten"
+  (`canEditFormularVorlagen`) -- unabhaengig voneinander verwaltet, die Erstellen-impliziert-
+  Bearbeiten-Logik lebt ausschliesslich in `fetchCurrentAdminCapabilities()`.
+- Tab-Sichtbarkeit auf `canSeeFormulareTab` umgestellt (statt reiner Rollen-Pruefung).
+- **Tab-Reorganisation:** Dashboard fuehrt jetzt als eigene Gruppe (nur Super-Admin), danach die
+  Team-Admin-Gruppe (Benutzerverwaltung/VorgabenGeld/Profile-Templates/Formular-Vorlagen -- alle
+  drei Capability-Tabs jetzt ohne Trenner in einer Gruppe, da alle demselben Berechtigungsprinzip
+  folgen), danach Ressourcen/Profile/Admin-Logs (Super-Admin). Default-aktiver Tab: Dashboard fuer
+  Super-Admin, Benutzerverwaltung fuer alle anderen.
+- Empty-State-Banner ("keine zusaetzlichen Admin-Rechte...") erwaehnt jetzt auch Formular-Vorlagen.
+
+Verifiziert: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2019/2019 (vorher 2016, +3 neue
+Tests), `bun run build` erfolgreich.
+
 ## 2026-08-26 (42)
 
 ### refactor (Rows.ts: Zustandspruefung ueber benannte Konstanten statt `||`-Kette)

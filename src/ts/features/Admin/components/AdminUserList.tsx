@@ -50,6 +50,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       canEditVorgabenGeld: entry.canEditVorgabenGeld,
       canEditProfileTemplates: entry.canEditProfileTemplates,
       canEditOwnTeamTemplatesOnly: entry.canEditOwnTeamTemplatesOnly,
+      canCreateFormularVorlagen: entry.canCreateFormularVorlagen,
+      canEditFormularVorlagen: entry.canEditFormularVorlagen,
     };
   }
 
@@ -112,7 +114,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|') ||
       edit.canEditVorgabenGeld !== row.canEditVorgabenGeld ||
       edit.canEditProfileTemplates !== row.canEditProfileTemplates ||
-      edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly
+      edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly ||
+      edit.canCreateFormularVorlagen !== row.canCreateFormularVorlagen ||
+      edit.canEditFormularVorlagen !== row.canEditFormularVorlagen
     );
   }
 
@@ -157,7 +161,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         edit.adminForOrganizationOes.join('|') !== row.adminForOrganizationOes.join('|') ||
         edit.canEditVorgabenGeld !== row.canEditVorgabenGeld ||
         edit.canEditProfileTemplates !== row.canEditProfileTemplates ||
-        edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly
+        edit.canEditOwnTeamTemplatesOnly !== row.canEditOwnTeamTemplatesOnly ||
+        edit.canCreateFormularVorlagen !== row.canCreateFormularVorlagen ||
+        edit.canEditFormularVorlagen !== row.canEditFormularVorlagen
       ) {
         await updateUserScopes(userId, {
           adminForTeamOes: edit.adminForTeamOes,
@@ -165,6 +171,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           canEditVorgabenGeld: edit.canEditVorgabenGeld,
           canEditProfileTemplates: edit.canEditProfileTemplates,
           canEditOwnTeamTemplatesOnly: edit.canEditOwnTeamTemplatesOnly,
+          canCreateFormularVorlagen: edit.canCreateFormularVorlagen,
+          canEditFormularVorlagen: edit.canEditFormularVorlagen,
         });
       }
 

@@ -50,6 +50,8 @@ function makeUser(overrides: Partial<AdminUserRow> = {}): AdminUserRow {
     canEditVorgabenGeld: false,
     canEditProfileTemplates: false,
     canEditOwnTeamTemplatesOnly: false,
+    canCreateFormularVorlagen: false,
+    canEditFormularVorlagen: false,
     ...overrides,
   };
 }

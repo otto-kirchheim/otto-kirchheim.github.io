@@ -18,6 +18,8 @@ type BackendUser = {
   canEditVorgabenGeld?: boolean;
   canEditProfileTemplates?: boolean;
   canEditOwnTeamTemplatesOnly?: boolean;
+  canCreateFormularVorlagen?: boolean;
+  canEditFormularVorlagen?: boolean;
 };
 
 type CurrentUserCapabilities = {
@@ -25,6 +27,8 @@ type CurrentUserCapabilities = {
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
+  canCreateFormularVorlagen: boolean;
+  canEditFormularVorlagen: boolean;
 };
 
 type BackendUserProfile = {
@@ -75,6 +79,8 @@ export type AdminUserRow = {
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
+  canCreateFormularVorlagen: boolean;
+  canEditFormularVorlagen: boolean;
 };
 
 function unwrapResponse<T>(response: unknown): T {
@@ -129,6 +135,8 @@ export async function fetchAdminUsers(filter: { name?: string; role?: string }):
         canEditVorgabenGeld: Boolean(user.canEditVorgabenGeld),
         canEditProfileTemplates: Boolean(user.canEditProfileTemplates),
         canEditOwnTeamTemplatesOnly: Boolean(user.canEditOwnTeamTemplatesOnly),
+        canCreateFormularVorlagen: Boolean(user.canCreateFormularVorlagen),
+        canEditFormularVorlagen: Boolean(user.canEditFormularVorlagen),
       };
     }),
   );
@@ -144,6 +152,8 @@ export async function updateUserScopes(
     canEditVorgabenGeld?: boolean;
     canEditProfileTemplates?: boolean;
     canEditOwnTeamTemplatesOnly?: boolean;
+    canCreateFormularVorlagen?: boolean;
+    canEditFormularVorlagen?: boolean;
   },
 ): Promise<void> {
   const response = await FetchRetry<typeof data, BackendUser>(`users/${userId}`, data, 'PUT');
@@ -157,6 +167,12 @@ export async function fetchCurrentAdminCapabilities(): Promise<CurrentUserCapabi
   const isTeamAdminOrHigher = user.role === 'team-admin' || user.role === 'org-admin' || user.role === 'super-admin';
   const canEditProfileTemplates =
     user.role === 'super-admin' || (isTeamAdminOrHigher && Boolean(user.canEditProfileTemplates));
+  const canCreateFormularVorlagen =
+    user.role === 'super-admin' || (isTeamAdminOrHigher && Boolean(user.canCreateFormularVorlagen));
+  // Erstellen impliziert Bearbeiten, nicht umgekehrt.
+  const canEditFormularVorlagen =
+    user.role === 'super-admin' ||
+    (isTeamAdminOrHigher && (Boolean(user.canEditFormularVorlagen) || Boolean(user.canCreateFormularVorlagen)));
 
   return {
     role: user.role,
@@ -164,6 +180,8 @@ export async function fetchCurrentAdminCapabilities(): Promise<CurrentUserCapabi
     canEditProfileTemplates,
     canEditOwnTeamTemplatesOnly:
       user.role === 'super-admin' ? false : canEditProfileTemplates && Boolean(user.canEditOwnTeamTemplatesOnly),
+    canCreateFormularVorlagen,
+    canEditFormularVorlagen,
   };
 }
 
