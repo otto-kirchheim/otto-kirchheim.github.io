@@ -319,10 +319,7 @@ function sortRows<T extends CustomTableTypes>(
   }
 }
 
-function handleSortClick<T extends CustomTableTypes>(
-  self: CustomTable<T>,
-  element: HTMLTableCellElement,
-): void {
+function handleSortClick<T extends CustomTableTypes>(self: CustomTable<T>, element: HTMLTableCellElement): void {
   const column = self.columns.array.find(column => column.$el == element);
   if (!column) throw new Error('Spalte nicht gefunden');
   const direction = column.direction === 'ASC' ? 'DESC' : 'ASC';

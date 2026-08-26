@@ -183,7 +183,9 @@ describe('berechneZeile', () => {
   });
 
   it('zeitdifferenz liest Uhrzeiten und ergänzt über Mitternacht', () => {
-    expect(berechneZeile({ op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] }, { Beginn: '22:00', Ende: '01:15' })).toBe(195);
+    expect(
+      berechneZeile({ op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] }, { Beginn: '22:00', Ende: '01:15' }),
+    ).toBe(195);
   });
 
   it('zeitspanne behält den Tag -- mehrtägiger Bereitschaftszeitraum', () => {
@@ -195,13 +197,19 @@ describe('berechneZeile', () => {
 
   it('verschachtelt: Ende − Beginn + Pause', () => {
     const zeile = { Beginn: '2026-03-02T16:00:00Z', Ende: '2026-03-05T06:00:00Z', Pause: 30 };
-    const rechnung = { op: 'summe' as const, operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause'] };
+    const rechnung = {
+      op: 'summe' as const,
+      operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause'],
+    };
     expect(berechneZeile(rechnung, zeile)).toBe(62 * 60 + 30);
   });
 
   it('verschachtelt mit Minus: dieselbe Rechnung zieht die Pause ab', () => {
     const zeile = { Beginn: '2026-03-02T16:00:00Z', Ende: '2026-03-05T06:00:00Z', Pause: 30 };
-    const rechnung = { op: 'differenz' as const, operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause'] };
+    const rechnung = {
+      op: 'differenz' as const,
+      operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause'],
+    };
     expect(berechneZeile(rechnung, zeile)).toBe(62 * 60 - 30);
   });
 
@@ -209,7 +217,9 @@ describe('berechneZeile', () => {
     // Läge die Konvertierung global beim äußeren Operator, würde `Number("30")` hier zwar passen,
     // die Zeitstempel im inneren Knoten aber als NaN durchfallen.
     const zeile = { Beginn: '2026-03-02T16:00:00Z', Ende: '2026-03-02T18:00:00Z', Pause: 15 };
-    expect(berechneZeile({ op: 'summe', operanden: [{ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] }, 'Pause'] }, zeile)).toBe(135);
+    expect(
+      berechneZeile({ op: 'summe', operanden: [{ op: 'zeitspanne', operanden: ['Ende', 'Beginn'] }, 'Pause'] }, zeile),
+    ).toBe(135);
   });
 
   it('fehlende Felder rechnen als 0 statt NaN', () => {
@@ -231,7 +241,10 @@ describe('alsZeitstempelMinuten', () => {
 
 describe('operandenFelder', () => {
   it('sammelt Feldnamen auch aus Zwischenrechnungen, ohne Konstanten', () => {
-    const rechnung = { op: 'summe' as const, operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause', 60] };
+    const rechnung = {
+      op: 'summe' as const,
+      operanden: [{ op: 'zeitspanne' as const, operanden: ['Ende', 'Beginn'] }, 'Pause', 60],
+    };
     expect(operandenFelder(rechnung)).toEqual(['Ende', 'Beginn', 'Pause']);
   });
 });
@@ -323,7 +336,9 @@ describe('alsVergleichswert (Bedingung.bereich, feldunabhängig)', () => {
   });
 
   it('liest einen vollen Zeitstempel als Minuten seit Epoche -- Datums-Bereiche', () => {
-    expect(alsVergleichswert('2026-03-15T00:00:00Z')).toBe(Math.round(new Date('2026-03-15T00:00:00Z').getTime() / 60_000));
+    expect(alsVergleichswert('2026-03-15T00:00:00Z')).toBe(
+      Math.round(new Date('2026-03-15T00:00:00Z').getTime() / 60_000),
+    );
   });
 
   it('laesst echte Zahlen unveraendert, statt sie als Zeitstempel in ms zu deuten', () => {
@@ -370,7 +385,12 @@ describe('summeUeberListe (EZ: Summe je einzelnem Zulagen-Code über verschachte
 
   it('summiert nur die Einträge mit passendem Schlüssel, andere Codes in derselben Liste bleiben außen vor', () => {
     const rows: Zeile[] = [
-      { Zulagen: [{ Typ: '811', Wert: 30 }, { Typ: '818', Wert: 99 }] },
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 30 },
+          { Typ: '818', Wert: 99 },
+        ],
+      },
       { Zulagen: [{ Typ: '811', Wert: 15 }] },
     ];
     expect(summeUeberListe(rows, liste)).toBe(45);
@@ -396,7 +416,12 @@ describe('summeGruppe (rohe Gesamtsumme ALLER Einträge einer Listen-Gruppe, una
 
   it('summiert alle Einträge zusammen, unabhängig vom Code', () => {
     const rows: Zeile[] = [
-      { Zulagen: [{ Typ: '811', Wert: 30 }, { Typ: '040', Wert: 3 }] },
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 30 },
+          { Typ: '040', Wert: 3 },
+        ],
+      },
       { Zulagen: [{ Typ: '811', Wert: 15 }] },
     ];
     expect(summeGruppe(rows, gruppe)).toBe(48);

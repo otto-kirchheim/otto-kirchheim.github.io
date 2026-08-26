@@ -31,7 +31,11 @@ vi.mock('@/components', () => ({
     h('form', { ref: props.myRef }, props.children),
   MyModalBody: (props: { children?: ComponentChildren }) => h('div', {}, props.children),
   MyInput: (props: { id: string; [key: string]: unknown }) => h('input', props),
-  MySelect: (props: { id: string; changeHandler?: (e: Event) => void; options: Array<{ value?: string; text: string; selected?: boolean; disabled?: boolean }> }) =>
+  MySelect: (props: {
+    id: string;
+    changeHandler?: (e: Event) => void;
+    options: Array<{ value?: string; text: string; selected?: boolean; disabled?: boolean }>;
+  }) =>
     h(
       'select',
       { id: props.id, onChange: props.changeHandler },
@@ -64,9 +68,8 @@ vi.mock('@/features/EA/utils', () => ({
   calculateEaDauerFromEwt: calculateEaDauerFromEwtMock,
 }));
 
-const { default: createAddModalEA, suggestNextEntgeltgruppe } = await import(
-  '@/features/EA/components/createAddModalEA'
-);
+const { default: createAddModalEA, suggestNextEntgeltgruppe } =
+  await import('@/features/EA/components/createAddModalEA');
 
 const VORGABEN_U = { Pers: { Entgeltgruppe: '9' } } as unknown as IVorgabenU;
 

@@ -85,7 +85,10 @@ export function AdminUserCard({
           </div>
           <div class="d-flex align-items-center gap-2">
             <span class={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
-            <span class="material-icons-round text-body-secondary" style="font-size: 1.25rem; transition: transform 0.2s">
+            <span
+              class="material-icons-round text-body-secondary"
+              style="font-size: 1.25rem; transition: transform 0.2s"
+            >
               {isExpanded ? 'expand_less' : 'expand_more'}
             </span>
           </div>

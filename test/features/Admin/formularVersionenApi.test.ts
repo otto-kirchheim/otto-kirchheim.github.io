@@ -56,7 +56,14 @@ describe('formularVersionenApi', () => {
 
     it('legeVersionAn ruft POST mit den Daten auf', async () => {
       fetchRetryMock.mockResolvedValue({ success: true, data: { id: 'v2' } });
-      const daten = { version: '1', gueltigVon: '2025-01-01', gueltigBis: null, vorlageId: 'x', konfig: {}, tabellen: {} };
+      const daten = {
+        version: '1',
+        gueltigVon: '2025-01-01',
+        gueltigBis: null,
+        vorlageId: 'x',
+        konfig: {},
+        tabellen: {},
+      };
 
       await legeVersionAn('ez', daten as never);
 
@@ -65,7 +72,14 @@ describe('formularVersionenApi', () => {
 
     it('aendereVersion haengt erzwingen an die Daten an', async () => {
       fetchRetryMock.mockResolvedValue({ success: true, data: {} });
-      const daten = { version: '1', gueltigVon: '2025-01-01', gueltigBis: null, vorlageId: 'x', konfig: {}, tabellen: {} };
+      const daten = {
+        version: '1',
+        gueltigVon: '2025-01-01',
+        gueltigBis: null,
+        vorlageId: 'x',
+        konfig: {},
+        tabellen: {},
+      };
 
       await aendereVersion('ez', 'v1', daten as never, true);
 
@@ -74,7 +88,14 @@ describe('formularVersionenApi', () => {
 
     it('aendereVersion setzt erzwingen standardmäßig auf false', async () => {
       fetchRetryMock.mockResolvedValue({ success: true, data: {} });
-      const daten = { version: '1', gueltigVon: '2025-01-01', gueltigBis: null, vorlageId: 'x', konfig: {}, tabellen: {} };
+      const daten = {
+        version: '1',
+        gueltigVon: '2025-01-01',
+        gueltigBis: null,
+        vorlageId: 'x',
+        konfig: {},
+        tabellen: {},
+      };
 
       await aendereVersion('ez', 'v1', daten as never);
 

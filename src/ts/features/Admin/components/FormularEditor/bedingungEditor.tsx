@@ -1,6 +1,13 @@
 import type { Bedingung, Feld, FeldBedingung, Spalte, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { AggregationEditor, Rechnung } from './aggregationUndRechnung';
-import { gruppiere, istBooleanFeld, katalogFelder, werteAuswahl, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import {
+  gruppiere,
+  istBooleanFeld,
+  katalogFelder,
+  werteAuswahl,
+  type FormularCode,
+  type KatalogEintrag,
+} from './datenKatalog';
 
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
  * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */

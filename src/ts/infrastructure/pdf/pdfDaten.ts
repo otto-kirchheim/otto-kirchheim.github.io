@@ -1,4 +1,10 @@
-import type { IBereitschaftseinsatz, IBereitschaftszeitraum, IEntgeltausgleich, INebengeld, IVorgabeValue } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  IBereitschaftseinsatz,
+  IBereitschaftszeitraum,
+  IEntgeltausgleich,
+  INebengeld,
+  IVorgabeValue,
+} from '@otto-kirchheim/nebengeld-shared';
 
 // ─── Abgeleitete Typen ────────────────────────────────────
 export interface IPdfPers {
@@ -55,7 +61,9 @@ export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_
 // `PrivatKm` selbst ebenfalls optional (statt wie sonst hier über `Required` erzwungen): gedruckt
 // wird je Person nur eine der beiden Spalten (Tarifkraft: rohe km / Beamter: Euro-Betrag), siehe
 // `beAbgeleiteteWerte()`.
-export type IPdfBereitschaftseinsatz = Required<Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'PrivatKm'>> & {
+export type IPdfBereitschaftseinsatz = Required<
+  Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'PrivatKm'>
+> & {
   Dauer?: number;
   PrivatKm?: number;
   PrivatKmBetrag?: number;

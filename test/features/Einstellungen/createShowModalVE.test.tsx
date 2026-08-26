@@ -59,7 +59,15 @@ describe('ShowModalVE', () => {
   });
 
   it('zeigt den Nachtschicht-Block mit Zeiten, wenn nacht=true', () => {
-    const row = fakeRow({ Name: 'Standard', standard: true, beginnB: 'Mo 06:00', endeB: 'Mo 14:00', nacht: true, beginnN: 'Mo 22:00', endeN: 'Di 06:00' });
+    const row = fakeRow({
+      Name: 'Standard',
+      standard: true,
+      beginnB: 'Mo 06:00',
+      endeB: 'Mo 14:00',
+      nacht: true,
+      beginnN: 'Mo 22:00',
+      endeN: 'Di 06:00',
+    });
 
     ShowModalVE(row, 'Voreinstellung anzeigen');
     const container = renderCapturedVnode();

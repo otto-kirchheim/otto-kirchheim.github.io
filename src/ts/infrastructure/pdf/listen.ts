@@ -16,7 +16,11 @@ export function loeseListenAuf(tabelle: TabellenDef, zeilen: Zeile[]): ListenAuf
 }
 
 /** Schlüssel auf einem Platz, `undefined` wenn der Platz leer bleibt (weniger Schlüssel als Plätze). */
-export function schluesselAufPlatz(aufloesung: ListenAufloesung | undefined, gruppe: string, index: number): string | undefined {
+export function schluesselAufPlatz(
+  aufloesung: ListenAufloesung | undefined,
+  gruppe: string,
+  index: number,
+): string | undefined {
   return aufloesung?.belegung[gruppe]?.[index];
 }
 

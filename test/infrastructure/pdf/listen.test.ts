@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { listenBelegung, listenBeschriftung, listenWert, loeseListenAuf, schluesselAufPlatz } from '@/infrastructure/pdf/listen';
+import {
+  listenBelegung,
+  listenBeschriftung,
+  listenWert,
+  loeseListenAuf,
+  schluesselAufPlatz,
+} from '@/infrastructure/pdf/listen';
 import type { ListenGruppe, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
 
 const gruppe: ListenGruppe = {

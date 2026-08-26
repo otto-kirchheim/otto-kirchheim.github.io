@@ -28,9 +28,7 @@ vi.mock('@/features/Admin/utils/api', () => ({
 // `LINK_CONFIG` im SUT kopiert `issueVerificationLink`/`issuePasswordResetLink` in ein Objekt-
 // Property BEIM MODUL-LOAD (nicht erst beim Aufruf) -- ein statischer Import würde vor den
 // vi.mock()-Aufrufen gehoistet und damit die echten, ungemockten Funktionen einfangen.
-const { default: createAdminUserLinksModal } = await import(
-  '@/features/Admin/components/createAdminUserLinksModal'
-);
+const { default: createAdminUserLinksModal } = await import('@/features/Admin/components/createAdminUserLinksModal');
 
 async function flush(times = 5): Promise<void> {
   for (let i = 0; i < times; i++) await new Promise(resolve => setTimeout(resolve, 0));
@@ -81,7 +79,11 @@ describe('createAdminUserLinksModal', () => {
   });
 
   it('erzeugt einen Link und zeigt ihn nach dem Laden an', async () => {
-    issueVerificationLinkMock.mockResolvedValue({ url: 'https://x/verify/tok', expiresAt: '2025-01-01', mailSent: true });
+    issueVerificationLinkMock.mockResolvedValue({
+      url: 'https://x/verify/tok',
+      expiresAt: '2025-01-01',
+      mailSent: true,
+    });
     const container = renderModal();
 
     const button = container.querySelectorAll('button')[0] as HTMLButtonElement;
@@ -94,7 +96,11 @@ describe('createAdminUserLinksModal', () => {
   });
 
   it('zeigt einen Hinweis, wenn der Mailversand fehlgeschlagen ist', async () => {
-    issueVerificationLinkMock.mockResolvedValue({ url: 'https://x/verify/tok', expiresAt: '2025-01-01', mailSent: false });
+    issueVerificationLinkMock.mockResolvedValue({
+      url: 'https://x/verify/tok',
+      expiresAt: '2025-01-01',
+      mailSent: false,
+    });
     const container = renderModal();
 
     (container.querySelectorAll('button')[0] as HTMLButtonElement).click();
@@ -116,7 +122,11 @@ describe('createAdminUserLinksModal', () => {
   });
 
   it('kopiert den reinen Link und zeigt eine Erfolgsmeldung', async () => {
-    issueVerificationLinkMock.mockResolvedValue({ url: 'https://x/verify/tok', expiresAt: '2025-01-01', mailSent: true });
+    issueVerificationLinkMock.mockResolvedValue({
+      url: 'https://x/verify/tok',
+      expiresAt: '2025-01-01',
+      mailSent: true,
+    });
     writeTextMock.mockResolvedValue(undefined);
     const container = renderModal();
     (container.querySelectorAll('button')[0] as HTMLButtonElement).click();
@@ -130,11 +140,17 @@ describe('createAdminUserLinksModal', () => {
     await flush();
 
     expect(writeTextMock).toHaveBeenCalledWith('https://x/verify/tok');
-    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: 'Link kopiert', status: 'success' }));
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Link kopiert', status: 'success' }),
+    );
   });
 
   it('kopiert den formatierten Text mit Begrüßung und Gültigkeit', async () => {
-    issuePasswordResetLinkMock.mockResolvedValue({ url: 'https://x/reset/tok', expiresAt: '2025-01-01', mailSent: true });
+    issuePasswordResetLinkMock.mockResolvedValue({
+      url: 'https://x/reset/tok',
+      expiresAt: '2025-01-01',
+      mailSent: true,
+    });
     writeTextMock.mockResolvedValue(undefined);
     const container = renderModal('u1', 'Erika Musterfrau');
     const resetButton = container.querySelectorAll('.border.rounded')[1].querySelector('button') as HTMLButtonElement;
@@ -155,7 +171,11 @@ describe('createAdminUserLinksModal', () => {
   });
 
   it('zeigt einen Fehler-Snackbar, wenn das Kopieren fehlschlägt', async () => {
-    issueVerificationLinkMock.mockResolvedValue({ url: 'https://x/verify/tok', expiresAt: '2025-01-01', mailSent: true });
+    issueVerificationLinkMock.mockResolvedValue({
+      url: 'https://x/verify/tok',
+      expiresAt: '2025-01-01',
+      mailSent: true,
+    });
     writeTextMock.mockRejectedValue(new Error('denied'));
     const container = renderModal();
     (container.querySelectorAll('button')[0] as HTMLButtonElement).click();

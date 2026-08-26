@@ -18,7 +18,12 @@ function mitBerechnetenSpalten(zeile: Zeile, tabelle: TabellenDef): Zeile {
   const ergaenzte = tabelle.spalten.filter(sp => sp.berechnet || sp.wenn);
   if (ergaenzte.length === 0) return zeile;
   const kopie = { ...zeile };
-  for (const sp of ergaenzte) kopie[sp.key] = sp.wenn ? (trifftBedingung(sp.wenn, zeile) ? sp.wenn.dann : '') : berechneZeile(sp.berechnet!, zeile);
+  for (const sp of ergaenzte)
+    kopie[sp.key] = sp.wenn
+      ? trifftBedingung(sp.wenn, zeile)
+        ? sp.wenn.dann
+        : ''
+      : berechneZeile(sp.berechnet!, zeile);
   return kopie;
 }
 

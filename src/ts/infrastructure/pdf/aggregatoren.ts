@@ -1,4 +1,11 @@
-import type { Bedingung, FormatName, OpName, Zeile, ZeilenBerechnet, ZeilenOpName } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  Bedingung,
+  FormatName,
+  OpName,
+  Zeile,
+  ZeilenBerechnet,
+  ZeilenOpName,
+} from '@otto-kirchheim/nebengeld-shared';
 
 type Aggregator = (rows: Zeile[], feld?: string) => number;
 
@@ -19,7 +26,10 @@ export function alsZahl(v: unknown): number {
  * einem nicht-Array-Wert dort tragen 0 bei, statt zu werfen -- eine Tabelle ohne diese Spaltengruppe
  * soll die Summe nicht abbrechen lassen.
  */
-export function summeUeberListe(rows: Zeile[], liste: { quelle: string; schluessel: string; wert: string; code: string }): number {
+export function summeUeberListe(
+  rows: Zeile[],
+  liste: { quelle: string; schluessel: string; wert: string; code: string },
+): number {
   return rows.reduce((summe, zeile) => {
     const eintraege = zeile[liste.quelle];
     if (!Array.isArray(eintraege)) return summe;
@@ -115,7 +125,8 @@ export function alsVergleichswert(v: unknown): number {
   return Number(v) || 0;
 }
 
-const differenz = (werte: number[]): number => (werte.length === 0 ? 0 : werte.slice(1).reduce((a, b) => a - b, werte[0]!));
+const differenz = (werte: number[]): number =>
+  werte.length === 0 ? 0 : werte.slice(1).reduce((a, b) => a - b, werte[0]!);
 
 /** Rechnet über die Operanden EINER Datenzeile (berechnete Spalten), nicht über mehrere Zeilen. */
 export const ZEILEN_OPS: Record<ZeilenOpName, (werte: number[]) => number> = {
@@ -215,7 +226,20 @@ function zweistellig(n: number): string {
   return String(n).padStart(2, '0');
 }
 
-const MONATSNAMEN = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+const MONATSNAMEN = [
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
+];
 
 export const FORMAT: Record<FormatName, (v: unknown) => string> = {
   waehrung: v => `${Number(v).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
@@ -276,7 +300,8 @@ export const FORMAT: Record<FormatName, (v: unknown) => string> = {
 
   /** Arrays generisch zu einer Zelle zusammenfügen (Trenner ` / `). Für `Pers.OE` NICHT verwenden --
    * das hat eine eigene, striktere Schreibweise, siehe `oe` unten. */
-  liste: v => (Array.isArray(v) ? v.filter(t => t !== null && t !== undefined && t !== '').join(' / ') : String(v ?? '')),
+  liste: v =>
+    Array.isArray(v) ? v.filter(t => t !== null && t !== undefined && t !== '').join(' / ') : String(v ?? ''),
   grossbuchstaben: v => String(v ?? '').toUpperCase(),
   /** Boolean (echt oder als `"true"`/`"false"`-String) als deutsches Wort statt `true`/`false`. */
   jaNein: v => (v === true || v === 'true' ? 'Ja' : 'Nein'),

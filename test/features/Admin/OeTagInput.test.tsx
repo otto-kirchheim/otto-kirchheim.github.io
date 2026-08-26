@@ -10,7 +10,12 @@ function renderInput(props: Partial<Parameters<typeof OeTagInput>[0]> = {}): HTM
   const container = document.createElement('div');
   document.body.appendChild(container);
   render(
-    <OeTagInput label="Organisationseinheiten" values={props.values ?? []} onChange={props.onChange ?? (() => {})} {...props} />,
+    <OeTagInput
+      label="Organisationseinheiten"
+      values={props.values ?? []}
+      onChange={props.onChange ?? (() => {})}
+      {...props}
+    />,
     container,
   );
   return container;
@@ -28,8 +33,7 @@ async function setValue(input: HTMLInputElement, value: string): Promise<void> {
 
 function addButton(container: HTMLDivElement): HTMLButtonElement | undefined {
   return Array.from(container.querySelectorAll('button')).find(b => !b.hasAttribute('aria-label')) as
-    | HTMLButtonElement
-    | undefined;
+    HTMLButtonElement | undefined;
 }
 
 describe('OeTagInput', () => {

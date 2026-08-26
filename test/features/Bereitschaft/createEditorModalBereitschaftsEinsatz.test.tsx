@@ -128,7 +128,14 @@ function setFormValues(
   }
 }
 
-const VALID_VALUES = { Tag: '2025-06-10', Auftragsnummer: 'AUF-1', Beginn: '08:00', Ende: '10:00', LRE: 'LRE 1', PrivatKm: '0' };
+const VALID_VALUES = {
+  Tag: '2025-06-10',
+  Auftragsnummer: 'AUF-1',
+  Beginn: '08:00',
+  Ende: '10:00',
+  LRE: 'LRE 1',
+  PrivatKm: '0',
+};
 const START_BZ = { _id: 'bz-start', Beginn: '2025-06-10T00:00:00.000Z', Ende: '2025-06-20T00:00:00.000Z', Pause: 0 };
 
 describe('EditorModalBE', () => {
@@ -192,7 +199,9 @@ describe('EditorModalBE', () => {
 
     await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
-    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Lücke') }));
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('Lücke') }),
+    );
     expect(table.rows.array.length).toBe(0);
   });
 
@@ -253,7 +262,9 @@ describe('EditorModalBE', () => {
 
     await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
-    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('bereits ein LRE 1') }));
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('bereits ein LRE 1') }),
+    );
     expect(table.rows.array.length).toBe(0);
   });
 
@@ -278,7 +289,9 @@ describe('EditorModalBE', () => {
 
     await getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
-    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('ohne x') }));
+    expect(createSnackBarMock).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('ohne x') }),
+    );
     expect(table.rows.array.length).toBe(0);
   });
 

@@ -2,7 +2,14 @@ import { useState } from 'preact/hooks';
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FeldListe } from './FeldZeile';
 import { gruppiere, katalogZeilenFelder, ZEILEN_QUELLEN } from './datenKatalog';
-import { DarstellungsFelder, ScharfButton, ZahlFeld, Zellkoordinaten, istGleich, naechsterFreierSchluessel } from './feldPanelGemeinsam';
+import {
+  DarstellungsFelder,
+  ScharfButton,
+  ZahlFeld,
+  Zellkoordinaten,
+  istGleich,
+  naechsterFreierSchluessel,
+} from './feldPanelGemeinsam';
 import type { Props } from './feldPanelTypen';
 import { TabellenBlock } from './TabellenBlock';
 

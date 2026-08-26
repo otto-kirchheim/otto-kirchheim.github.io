@@ -1,7 +1,10 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { render } from 'preact';
 import { useState } from 'preact/hooks';
-import { VorgabenBWeekRangeEditor, type WeekRangeEditorProps } from '@/features/Admin/components/VorgabenBWeekRangeEditor';
+import {
+  VorgabenBWeekRangeEditor,
+  type WeekRangeEditorProps,
+} from '@/features/Admin/components/VorgabenBWeekRangeEditor';
 
 async function flush(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 0));

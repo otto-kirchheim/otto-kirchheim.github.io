@@ -48,8 +48,20 @@ vi.mock('bootstrap/js/dist/modal', () => ({
 import EditorModalBereitschaftsZeit from '@/features/Bereitschaft/components/createEditorModalBereitschaftsZeit';
 
 const BZ_COLUMNS = [
-  { name: 'Beginn', title: 'Von', longTitle: 'Beginn der Bereitschaft', type: 'DateTime', parser: (v: unknown) => String(v) },
-  { name: 'Ende', title: 'Bis', longTitle: 'Ende der Bereitschaft', type: 'DateTime', parser: (v: unknown) => String(v) },
+  {
+    name: 'Beginn',
+    title: 'Von',
+    longTitle: 'Beginn der Bereitschaft',
+    type: 'DateTime',
+    parser: (v: unknown) => String(v),
+  },
+  {
+    name: 'Ende',
+    title: 'Bis',
+    longTitle: 'Ende der Bereitschaft',
+    type: 'DateTime',
+    parser: (v: unknown) => String(v),
+  },
   { name: 'Pause', title: 'Pause', longTitle: 'Pause (Minuten)', type: 'number', parser: (v: unknown) => String(v) },
 ];
 
@@ -196,7 +208,9 @@ describe('EditorModalBereitschaftsZeit', () => {
 
       getSubmit()({ preventDefault: vi.fn() } as unknown as Event);
 
-      expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ message: expect.stringContaining('Ende muss nach Beginn liegen') }));
+      expect(createSnackBarMock).toHaveBeenCalledWith(
+        expect.objectContaining({ message: expect.stringContaining('Ende muss nach Beginn liegen') }),
+      );
       expect(table.rows.array.length).toBe(0);
       expect(hideMock).not.toHaveBeenCalled();
     });

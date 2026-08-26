@@ -27,7 +27,14 @@ vi.mock('@/components', () => ({
   MyFormModal: (props: { children?: ComponentChildren }) => h('div', { class: 'modal-stub' }, props.children),
   MyModalBody: (props: { children?: ComponentChildren }) => h('div', { class: 'modal-body-stub' }, props.children),
   MyInput: (props: InputProps) =>
-    h('input', { id: props.id, name: props.name, type: props.type, min: props.min, max: props.max, value: props.value }),
+    h('input', {
+      id: props.id,
+      name: props.name,
+      type: props.type,
+      min: props.min,
+      max: props.max,
+      value: props.value,
+    }),
   MySelect: (props: SelectProps) =>
     h(
       'select',

@@ -1,8 +1,22 @@
-import { FORMAT, OPS, alsVergleichswert, datumMitFrist, standardText, summeGruppe, summeUeberListe, trifftBedingung } from './aggregatoren';
+import {
+  FORMAT,
+  OPS,
+  alsVergleichswert,
+  datumMitFrist,
+  standardText,
+  summeGruppe,
+  summeUeberListe,
+  trifftBedingung,
+} from './aggregatoren';
 import { get } from './get';
 import { listenBeschriftung, schluesselAufPlatz } from './listen';
 import type { ListenAufloesung } from './listen';
-import { bereinigteZulagenStunden, geldwertZulagenCode, summeBereinigtGruppe, summeGeldwertGruppe } from './abgeleiteteWerte';
+import {
+  bereinigteZulagenStunden,
+  geldwertZulagenCode,
+  summeBereinigtGruppe,
+  summeGeldwertGruppe,
+} from './abgeleiteteWerte';
 import type {
   Berechnet,
   Daten,

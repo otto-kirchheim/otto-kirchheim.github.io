@@ -24,13 +24,25 @@ function renderListe(props: Parameters<typeof FormularVersionenListe>[0]): HTMLD
 
 describe('FormularVersionenListe', () => {
   it('zeigt einen Ladehinweis, solange laedt=true ist', () => {
-    const container = renderListe({ versionen: [], bearbeiteId: null, laedt: true, onBearbeiten: mock(), onLoeschen: mock() });
+    const container = renderListe({
+      versionen: [],
+      bearbeiteId: null,
+      laedt: true,
+      onBearbeiten: mock(),
+      onLoeschen: mock(),
+    });
     expect(container.textContent).toContain('Versionen werden geladen');
     expect(container.querySelector('table')).toBeNull();
   });
 
   it('zeigt einen Leer-Hinweis, wenn es noch keine Version gibt', () => {
-    const container = renderListe({ versionen: [], bearbeiteId: null, laedt: false, onBearbeiten: mock(), onLoeschen: mock() });
+    const container = renderListe({
+      versionen: [],
+      bearbeiteId: null,
+      laedt: false,
+      onBearbeiten: mock(),
+      onLoeschen: mock(),
+    });
     expect(container.textContent).toContain('noch keine Version');
   });
 

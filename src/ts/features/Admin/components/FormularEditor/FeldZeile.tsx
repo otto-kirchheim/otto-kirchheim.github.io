@@ -5,7 +5,13 @@ import { AggregationEditor } from './aggregationUndRechnung';
 import { FeldAnkreuzBedingung } from './bedingungEditor';
 import { istBooleanFeld, katalogFelder, type FormularCode } from './datenKatalog';
 import { DatenpfadWahl, PlatzhalterPicker, openPlatzhalterHilfe, ZusammengesetzteQuellen } from './datenpfadUndFormeln';
-import { DarstellungsFelder, ScharfButton, Zellkoordinaten, istGleich, naechsterFreierSchluessel } from './feldPanelGemeinsam';
+import {
+  DarstellungsFelder,
+  ScharfButton,
+  Zellkoordinaten,
+  istGleich,
+  naechsterFreierSchluessel,
+} from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
 

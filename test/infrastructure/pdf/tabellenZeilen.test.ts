@@ -20,7 +20,13 @@ const mitDauer: TabellenDef = {
   hoehe: 14,
   spalten: [
     { key: 'Tag', x: 50, size: 9 },
-    { key: 'Dauer', x: 200, size: 9, format: 'stunden', berechnet: { op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] } },
+    {
+      key: 'Dauer',
+      x: 200,
+      size: 9,
+      format: 'stunden',
+      berechnet: { op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] },
+    },
   ],
 };
 
@@ -48,7 +54,13 @@ describe('tabellenZeilen', () => {
   });
 
   it('ohne berechnete Spalten bleiben die Originalzeilen erhalten (keine unnoetige Kopie)', () => {
-    const schlicht: TabellenDef = { quelle: 'Daten.BE', startY: 700, maxZeilen: 10, hoehe: 14, spalten: [{ key: 'Tag', x: 50, size: 9 }] };
+    const schlicht: TabellenDef = {
+      quelle: 'Daten.BE',
+      startY: 700,
+      maxZeilen: 10,
+      hoehe: 14,
+      spalten: [{ key: 'Tag', x: 50, size: 9 }],
+    };
     const roh = (daten.Daten as { BE: Record<string, unknown>[] }).BE[0]!;
     expect(tabellenZeilen(daten, schlicht)[0]).toBe(roh as never);
   });
@@ -84,7 +96,18 @@ describe('tabellenZeilen', () => {
       startY: 700,
       maxZeilen: 10,
       hoehe: 14,
-      spalten: [{ key: 'lang', x: 50, size: 9, wenn: { berechnet: { op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] }, bereich: { von: 150, bis: 200 }, dann: '1' } }],
+      spalten: [
+        {
+          key: 'lang',
+          x: 50,
+          size: 9,
+          wenn: {
+            berechnet: { op: 'zeitdifferenz', operanden: ['Ende', 'Beginn'] },
+            bereich: { von: 150, bis: 200 },
+            dann: '1',
+          },
+        },
+      ],
     };
     const zeilen = tabellenZeilen(daten, ankreuzBereich);
     // Dauern: 150, 195, 165 -- alle drei liegen in [150, 200).

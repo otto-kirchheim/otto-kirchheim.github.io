@@ -14,11 +14,7 @@ import type {
   IVorgabenGeldType,
   IVorgabenU,
 } from '@/types';
-import type {
-  IBereitschaftszeitraumPdfBody,
-  IEntgeltausgleichPdfBody,
-  INebengeldPdfBody,
-} from '../pdf/pdfDaten';
+import type { IBereitschaftszeitraumPdfBody, IEntgeltausgleichPdfBody, INebengeldPdfBody } from '../pdf/pdfDaten';
 import {
   beAbgeleiteteWerte,
   bereitschaftszulageAbgeleiteteWerte,
@@ -41,7 +37,10 @@ import {
 } from '../date/getMonatFromItem';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
-export default async function generatePDF(button: HTMLButtonElement | null, modus: 'B' | 'E' | 'N' | 'EA'): Promise<void> {
+export default async function generatePDF(
+  button: HTMLButtonElement | null,
+  modus: 'B' | 'E' | 'N' | 'EA',
+): Promise<void> {
   if (button === null) return;
 
   if (!navigator.onLine) {

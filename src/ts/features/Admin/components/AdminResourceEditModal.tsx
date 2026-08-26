@@ -95,9 +95,7 @@ export function AdminResourceEditModal({
                     {isUserRef ? (
                       <div class="d-flex align-items-center gap-2 flex-wrap">
                         <code class="small bg-body-secondary rounded px-2 py-1">{String(val ?? '')}</code>
-                        {userNameMap[String(val)] && (
-                          <span class="small fw-semibold">{userNameMap[String(val)]}</span>
-                        )}
+                        {userNameMap[String(val)] && <span class="small fw-semibold">{userNameMap[String(val)]}</span>}
                         {onNavigateToUser && (
                           <button
                             class="btn btn-sm btn-outline-info ms-auto"

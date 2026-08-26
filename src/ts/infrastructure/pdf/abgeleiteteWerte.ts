@@ -44,7 +44,10 @@ export interface EwtAbgeleiteteWerte {
 // auf 20h. Bewusst trotzdem exakt wie spezifiziert gebaut (User-Rückfrage 2026-08-21) -- symmetrisch
 // zu den anderen Bändern, kein Sonderfall im Code, greift automatisch, falls die Zeitfelder später
 // echte mehrtägige Spannen abbilden.
-export function ewtAbgeleiteteWerte(zeile: Pick<IPdfEWT, 'abWE' | 'anWE' | 'ab1E' | 'an1E'>, beamter: boolean): EwtAbgeleiteteWerte {
+export function ewtAbgeleiteteWerte(
+  zeile: Pick<IPdfEWT, 'abWE' | 'anWE' | 'ab1E' | 'an1E'>,
+  beamter: boolean,
+): EwtAbgeleiteteWerte {
   const dauerWohnung = dauerMinuten(zeile.anWE, zeile.abWE);
   const dauerErsteTkgSt = dauerMinuten(zeile.an1E, zeile.ab1E);
 
@@ -74,8 +77,11 @@ export interface BzAbgeleiteteWerte {
  * Subtraktions-Fix war falsch (widersprach der produktiv genutzten Bereitschaftszulage-Berechnung)
  * und wurde korrigiert.
  */
-export function bzAbgeleiteteWerte(zeile: Pick<IPdfBereitschaftszeitraum, 'Beginn' | 'Ende' | 'Pause'>): BzAbgeleiteteWerte {
-  const minuten = ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) + zeile.Pause;
+export function bzAbgeleiteteWerte(
+  zeile: Pick<IPdfBereitschaftszeitraum, 'Beginn' | 'Ende' | 'Pause'>,
+): BzAbgeleiteteWerte {
+  const minuten =
+    ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) + zeile.Pause;
   return { Dauer: minuten };
 }
 
@@ -189,7 +195,11 @@ export function bereinigteZulagenStunden(code: string, wert: number): number | u
  * Platz steht. Ein Eintrag ohne (String-)Code oder mit unbekanntem Code trägt `0` bei, statt die
  * gesamte Summe zu verwerfen.
  */
-export function summeGeldwertGruppe(rows: Zeile[], gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>, geldMonat: ZulagenGeldSatz): number {
+export function summeGeldwertGruppe(
+  rows: Zeile[],
+  gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>,
+  geldMonat: ZulagenGeldSatz,
+): number {
   return rows.reduce((summe, zeile) => {
     const eintraege = zeile[gruppe.quelle];
     if (!Array.isArray(eintraege)) return summe;
@@ -211,7 +221,10 @@ export function summeGeldwertGruppe(rows: Zeile[], gruppe: Pick<ListenGruppe, 'q
  * einer einzelnen Zelle (dort `"-"`, siehe `sonderZeileZelleWert()`) ist eine Gesamtsumme ohne den
  * nicht umrechenbaren Anteil weiterhin eine sinnvolle Zahl.
  */
-export function summeBereinigtGruppe(rows: Zeile[], gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>): number {
+export function summeBereinigtGruppe(
+  rows: Zeile[],
+  gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>,
+): number {
   return rows.reduce((summe, zeile) => {
     const eintraege = zeile[gruppe.quelle];
     if (!Array.isArray(eintraege)) return summe;
@@ -264,7 +277,11 @@ export function bereitschaftszulageAbgeleiteteWerte(
   const tarifBeamter = tarifKraft === 'Tarifkraft' ? 'Tarifkraft' : 'Beamter';
   if (bereitschaftMinuten === 0) return { TarifBeamter: tarifBeamter };
   if (tarifKraft === 'Tarifkraft') {
-    return { TarifBeamter: tarifBeamter, BereitschaftsMinuten: bereitschaftMinuten, SummeTarif: Math.round(bereitschaftMinuten / 60) };
+    return {
+      TarifBeamter: tarifBeamter,
+      BereitschaftsMinuten: bereitschaftMinuten,
+      SummeTarif: Math.round(bereitschaftMinuten / 60),
+    };
   }
   const summeBeamter1 = bereitschaftMinuten - 600;
   const summeBeamter2 = Math.round(summeBeamter1 / 8 / 60);

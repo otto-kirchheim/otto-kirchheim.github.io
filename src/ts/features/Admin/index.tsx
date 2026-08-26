@@ -83,7 +83,11 @@ export default function AdminTab() {
       </div>
 
       <div class="mb-3">
-        <ul class="nav nav-pills flex-wrap align-items-center gap-2 bg-dark-subtle rounded-3 p-2" id="admin-tabs" role="tablist">
+        <ul
+          class="nav nav-pills flex-wrap align-items-center gap-2 bg-dark-subtle rounded-3 p-2"
+          id="admin-tabs"
+          role="tablist"
+        >
           {isSuperAdmin && (
             <li class="nav-item" role="presentation">
               <button
@@ -227,8 +231,8 @@ export default function AdminTab() {
 
       {!capabilitiesLoading && !canSeeVorgabenTab && !canSeeTemplatesTab && !canSeeFormulareTab && (
         <div class="alert alert-secondary mb-3" role="alert">
-          Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder
-          Formular-Vorlagen vergeben.
+          Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder Formular-Vorlagen
+          vergeben.
         </div>
       )}
 

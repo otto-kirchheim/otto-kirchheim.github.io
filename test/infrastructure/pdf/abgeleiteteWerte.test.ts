@@ -35,7 +35,8 @@ describe('ewtAbgeleiteteWerte', () => {
   });
 
   describe('Wohnung-Zeitbänder (untere Grenze exklusiv, obere Grenze inklusiv)', () => {
-    const werteFuer = (dauer: string) => ewtAbgeleiteteWerte({ abWE: '00:00', anWE: dauer, ab1E: undefined, an1E: undefined }, false);
+    const werteFuer = (dauer: string) =>
+      ewtAbgeleiteteWerte({ abWE: '00:00', anWE: dauer, ab1E: undefined, an1E: undefined }, false);
 
     it('genau 8h liegt in KEINEM Band (untere Grenze exklusiv)', () => {
       const w = werteFuer('08:00');
@@ -66,14 +67,24 @@ describe('ewtAbgeleiteteWerte', () => {
 
   describe('BeamterUeber8Wohnung', () => {
     it('nur wahr, wenn Beamter UND Dauer > 8h', () => {
-      expect(ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:01', ab1E: undefined, an1E: undefined }, true).BeamterUeber8Wohnung).toBe(true);
-      expect(ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:01', ab1E: undefined, an1E: undefined }, false).BeamterUeber8Wohnung).toBe(false);
-      expect(ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:00', ab1E: undefined, an1E: undefined }, true).BeamterUeber8Wohnung).toBe(false);
+      expect(
+        ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:01', ab1E: undefined, an1E: undefined }, true)
+          .BeamterUeber8Wohnung,
+      ).toBe(true);
+      expect(
+        ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:01', ab1E: undefined, an1E: undefined }, false)
+          .BeamterUeber8Wohnung,
+      ).toBe(false);
+      expect(
+        ewtAbgeleiteteWerte({ abWE: '00:00', anWE: '08:00', ab1E: undefined, an1E: undefined }, true)
+          .BeamterUeber8Wohnung,
+      ).toBe(false);
     });
   });
 
   describe('TkgSt-Zeitbänder', () => {
-    const werteFuer = (dauer: string) => ewtAbgeleiteteWerte({ abWE: undefined, anWE: undefined, ab1E: '00:00', an1E: dauer }, false);
+    const werteFuer = (dauer: string) =>
+      ewtAbgeleiteteWerte({ abWE: undefined, anWE: undefined, ab1E: '00:00', an1E: dauer }, false);
 
     it('genau 8h liegt in keinem Band, 23:59 (obere Grenze inklusiv) noch im 8-24h-Band', () => {
       expect(werteFuer('08:00').TkgSt8bis24).toBe(false);
@@ -89,17 +100,29 @@ describe('ewtAbgeleiteteWerte', () => {
 
 describe('bzAbgeleiteteWerte', () => {
   it('berechnet Dauer in Minuten über Ende minus Beginn plus Pause', () => {
-    const werte = bzAbgeleiteteWerte({ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30 });
+    const werte = bzAbgeleiteteWerte({
+      Beginn: '2026-04-19T08:00:00.000Z',
+      Ende: '2026-04-19T16:00:00.000Z',
+      Pause: 30,
+    });
     expect(werte.Dauer).toBe(510);
   });
 
   it('läuft über Tage, ohne Mitternachts-Korrektur', () => {
-    const werte = bzAbgeleiteteWerte({ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-22T08:00:00.000Z', Pause: 0 });
+    const werte = bzAbgeleiteteWerte({
+      Beginn: '2026-04-19T08:00:00.000Z',
+      Ende: '2026-04-22T08:00:00.000Z',
+      Pause: 0,
+    });
     expect(werte.Dauer).toBe(4320);
   });
 
   it('addiert Pause auch bei kurzem Zeitraum, ohne zu deckeln', () => {
-    const werte = bzAbgeleiteteWerte({ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T09:00:00.000Z', Pause: 90 });
+    const werte = bzAbgeleiteteWerte({
+      Beginn: '2026-04-19T08:00:00.000Z',
+      Ende: '2026-04-19T09:00:00.000Z',
+      Pause: 90,
+    });
     expect(werte.Dauer).toBe(150);
   });
 });
@@ -219,15 +242,19 @@ describe('summeGeldwertGruppe (Gesamtsumme über alle Einträge einer Listen-Gru
   const geld = { B: 2, Fahrentsch: 6.65 };
 
   it('summiert mehrere unterschiedliche Codes über mehrere Zeilen zusammen', () => {
-    const rows: Zeile[] = [
-      { Zulagen: [{ Typ: '811', Wert: 60 }] },
-      { Zulagen: [{ Typ: '040', Wert: 2 }] },
-    ];
+    const rows: Zeile[] = [{ Zulagen: [{ Typ: '811', Wert: 60 }] }, { Zulagen: [{ Typ: '040', Wert: 2 }] }];
     expect(summeGeldwertGruppe(rows, gruppe, geld)).toBeCloseTo(Math.round(60 / 60) * 2 + 2 * 6.65);
   });
 
   it('mehrere Einträge in derselben Zeile summieren sich', () => {
-    const rows: Zeile[] = [{ Zulagen: [{ Typ: '811', Wert: 60 }, { Typ: '811', Wert: 120 }] }];
+    const rows: Zeile[] = [
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 60 },
+          { Typ: '811', Wert: 120 },
+        ],
+      },
+    ];
     expect(summeGeldwertGruppe(rows, gruppe, geld)).toBe((Math.round(60 / 60) + Math.round(120 / 60)) * 2);
   });
 
@@ -250,12 +277,26 @@ describe('summeBereinigtGruppe (Std.-Gesamtsumme über alle Einträge einer List
   const gruppe = { quelle: 'Zulagen', schluessel: 'Typ', wert: 'Wert' };
 
   it('summiert die Std.-Umrechnung mehrerer Minuten-Codes zusammen', () => {
-    const rows: Zeile[] = [{ Zulagen: [{ Typ: '811', Wert: 60 }, { Typ: '811', Wert: 120 }] }];
+    const rows: Zeile[] = [
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 60 },
+          { Typ: '811', Wert: 120 },
+        ],
+      },
+    ];
     expect(summeBereinigtGruppe(rows, gruppe)).toBe(1 + 2);
   });
 
   it('Stück-Codes (keine Std.-Umrechnung) tragen 0 bei statt die Summe zu verwerfen', () => {
-    const rows: Zeile[] = [{ Zulagen: [{ Typ: '811', Wert: 60 }, { Typ: '040', Wert: 3 }] }];
+    const rows: Zeile[] = [
+      {
+        Zulagen: [
+          { Typ: '811', Wert: 60 },
+          { Typ: '040', Wert: 3 },
+        ],
+      },
+    ];
     expect(summeBereinigtGruppe(rows, gruppe)).toBe(1);
   });
 
@@ -306,7 +347,9 @@ describe('bereitschaftszulageAbgeleiteteWerte', () => {
 
   describe('Beamter-Zweig', () => {
     it('Besoldungsgruppe A 8: Minus 600, geteilt durch 8 und 60, mal Satz', () => {
-      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 8', { 'Besoldungsgruppe A 8': 16.37 });
+      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 8', {
+        'Besoldungsgruppe A 8': 16.37,
+      });
       // 6000 - 600 = 5400; 5400 / 8 / 60 = 11,25 -> 11; 11 * 16,37 = 180,07.
       expect(werte).toEqual({
         TarifBeamter: 'Beamter',
@@ -319,7 +362,9 @@ describe('bereitschaftszulageAbgeleiteteWerte', () => {
     });
 
     it('Besoldungsgruppe A 9: eigener Satz, dynamische Schlüssel-Auswahl', () => {
-      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 9', { 'Besoldungsgruppe A 9': 22.49 });
+      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 9', {
+        'Besoldungsgruppe A 9': 22.49,
+      });
       expect(werte).toEqual({
         TarifBeamter: 'Beamter',
         BereitschaftsMinuten: 6000,
@@ -331,7 +376,9 @@ describe('bereitschaftszulageAbgeleiteteWerte', () => {
     });
 
     it('befüllt kein SummeTarif', () => {
-      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 8', { 'Besoldungsgruppe A 8': 16.37 });
+      const werte = bereitschaftszulageAbgeleiteteWerte(6000, 'Besoldungsgruppe A 8', {
+        'Besoldungsgruppe A 8': 16.37,
+      });
       expect(werte.SummeTarif).toBeUndefined();
     });
 

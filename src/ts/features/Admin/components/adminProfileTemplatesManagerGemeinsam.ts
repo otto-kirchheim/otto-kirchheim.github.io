@@ -3,7 +3,12 @@ import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import type { BereitschaftSchichtTyp } from '@/types';
 import type { BackendProfileTemplate } from '../utils/api';
-import { normalizeVorgabenBRows, type FahrzeitRow, type TemplateContentDraft, type VorgabenBRow } from './profileTemplates.shared';
+import {
+  normalizeVorgabenBRows,
+  type FahrzeitRow,
+  type TemplateContentDraft,
+  type VorgabenBRow,
+} from './profileTemplates.shared';
 
 export type TemplateEditState = {
   code: string;
