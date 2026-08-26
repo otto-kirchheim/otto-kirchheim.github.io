@@ -2,6 +2,45 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-26 (40)
+
+### refactor (500-Zeilen-Regel fuer Admin-UI-Komponenten)
+
+User-Wunsch nach Abschluss der Testcoverage-Arbeit: CLAUDE.md-Regel "Keep files under 500 lines"
+umsetzen, mit Toleranz und auf Admin-UI-Komponenten (`autoSave.ts`/`auth.service.ts`/`CustomTable.ts`
+bleiben ausgenommen) eingegrenzt. Fuenf Dateien rein mechanisch aufgeteilt (Helfer/Typen/
+Unterkomponenten in eigene Dateien, Hauptkomponente importiert zurueck), keine Verhaltensaenderung:
+
+- `FeldPanel.tsx` (2652→244 Zeilen) in 9 Module: `feldPanelTypen.ts`, `feldPanelGemeinsam.tsx`,
+  `datenpfadUndFormeln.tsx`, `aggregationUndRechnung.tsx`, `bedingungEditor.tsx`, `FeldZeile.tsx`,
+  `SpalteZeile.tsx`, `TabellenBlock.tsx`.
+- `AdminResourceBrowser.tsx` (935→485 Zeilen) in `adminResourceBrowserGemeinsam.ts` (Konstanten/Typen/
+  Helfer) + `AdminResourceEditModal.tsx` (Edit-Modal als eigene Komponente).
+- `AdminUserList.tsx` (735→432 Zeilen) in `adminUserListTypen.ts` + `AdminUserCard.tsx`
+  (Benutzer-Karte als eigene Komponente).
+- `AdminDashboard.tsx` (714→260 Zeilen) in `adminDashboardCharts.tsx` (Memory-Sparkline/-Card,
+  `formatUptime`).
+- `AdminProfileTemplatesManager.tsx` (709→483 Zeilen) in `adminProfileTemplatesManagerGemeinsam.ts`
+  (Normalisierungs-/Serialisierungs-Helfer wie `normalizePrimitiveRecord`/`buildTemplatePayload`).
+
+Verifiziert je Datei: `tsc --noEmit`/`lint` sauber, `bun test --isolate` 2016/2016, `bun run build`
+erfolgreich, Admin-Bundle-Groesse unveraendert.
+
+## 2026-08-26 (39)
+
+### test (Testcoverage Admin-/Einstellungen-Komponenten)
+
+Fortsetzung von "erhoehe die coverage der tests" nach Abschluss des Backend-Teils. 23 neue/erweiterte
+Testdateien fuer bisher ungetestete Admin-Preact-Modals und Utilities: `applySelectOptions`,
+`beispielSignatur`, `WertVorschau`, `FormularVersionenListe`, `OeTagInput`, `createShowModalVE`,
+`createAdminUserPasswordModal`, `createModalNewUser`, `JsonEditor`, `createModalPasskeySetPassword`,
+`ListenGruppen`, `AdminLogBrowser`, `Berechnung/index`, `createShowModalBereitschaft`,
+`PasswordStrengthMeter`, `formularVersionenApi`, `createAddModalBereitschaftsEinsatz`,
+`createEditorModalBereitschaftsZeit`, `VorgabenBWeekRangeEditor`, `createAdminUserLinksModal`,
+`createEditorModalBereitschaftsEinsatz`, `createAddModalEA`.
+
+Coverage: 80.40 %/84.61 % → 88.76 %/92.42 % (Funcs/Lines), 2016/2016 Tests.
+
 ## 2026-08-25 (38)
 
 ### refactor (PDF-Render-Engine aus shared nach frontend verschoben)
