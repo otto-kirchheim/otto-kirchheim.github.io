@@ -1,11 +1,12 @@
 import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from '@otto-kirchheim/nebengeld-shared';
-import type { FormatName, ListenGruppe, Schriftart } from '@otto-kirchheim/nebengeld-shared';
+import type { FormatName, ListenGruppe, Schriftfamilie } from '@otto-kirchheim/nebengeld-shared';
 
 export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
 
-/** Auswahl der Standard-14-Schriftfamilien für Feld/Spalte/Sonderzeilen-Zelle. Eingebettete
- *  Vorlagen-Fonts (`vorlage:*`) werden im Editor zur Laufzeit angehängt. */
-export const SCHRIFTARTEN: { wert: Schriftart; label: string }[] = [
+/** Standard-14-Schriftfamilien für die formularweite Schriftart (`Layout.schriftart`, je Schnitt
+ *  wählbar). In der Vorlage eingebettete Familien (`vorlage:*`) hängt der Editor zur Laufzeit an
+ *  (siehe `vorlageFonts.ts` / `SchriftartWahl.tsx`). */
+export const SCHRIFTARTEN: { wert: Schriftfamilie; label: string }[] = [
   { wert: 'helvetica', label: 'Helvetica (Standard)' },
   { wert: 'times', label: 'Times' },
   { wert: 'courier', label: 'Courier' },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { skaliereKonfig } from '@/features/Admin/components/FormularEditor/skaliereKonfig';
+import { dreheKonfig, skaliereKonfig } from '@/features/Admin/components/FormularEditor/skaliereKonfig';
 import type { Konfig } from '@/features/Admin/components/FormularEditor/FormularEditor';
 
 function beispielKonfig(): Konfig {
@@ -88,5 +88,54 @@ describe('skaliereKonfig', () => {
   it('schreibt die neue Seitengröße in jede Seite', () => {
     const s = skaliereKonfig(beispielKonfig(), { x: 1.03, y: 0.94, dx: 0, dy: 0 }, { w: 612, h: 792 }).seiten[0]!;
     expect(s.groesse).toEqual({ w: 612, h: 792 });
+  });
+});
+
+const A4 = { w: 595, h: 842 };
+
+describe('dreheKonfig', () => {
+  it('lässt bei 0° alles unverändert (tiefe Kopie)', () => {
+    const k = beispielKonfig();
+    expect(dreheKonfig(k, 0, A4)).toEqual(k);
+  });
+
+  it('lässt die Eingabe unberührt (reine Funktion)', () => {
+    const k = beispielKonfig();
+    const vorher = structuredClone(k);
+    dreheKonfig(k, 90, A4);
+    expect(k).toEqual(vorher);
+  });
+
+  it('dreht Felder und Signatur um 90° um den Seitenmittelpunkt und tauscht die Referenzgröße', () => {
+    const s = dreheKonfig(beispielKonfig(), 90, A4).seiten[0]!;
+    expect(s.felder.name).toEqual({ x: 142, y: 100, x2: 122, y2: 300, size: 10, drehung: 90 });
+    expect(s.felder.punkt).toEqual({ x: 792, y: 50, size: 8, drehung: 90 });
+    expect(s.signaturBild).toEqual({ x: 742, y: 400, w: 40, h: 120 });
+    expect(s.groesse).toEqual({ w: 842, h: 595 });
+  });
+
+  it('dreht bei 180° ohne Breite/Höhe-Tausch', () => {
+    const s = dreheKonfig(beispielKonfig(), 180, A4).seiten[0]!;
+    expect(s.felder.name).toEqual({ x: 495, y: 142, x2: 295, y2: 122, size: 10, drehung: 180 });
+    expect(s.signaturBild).toEqual({ x: 75, y: 742, w: 120, h: 40 });
+    expect(s.groesse).toEqual({ w: 595, h: 842 });
+  });
+
+  it('setzt nur TabellenDef.drehung -- startY/hoehe/spalten bleiben aufrecht', () => {
+    const vorher = beispielKonfig();
+    const k = dreheKonfig(vorher, 90, A4);
+    expect(k.tabellen.haupt!.drehung).toBe(90);
+    expect(k.tabellen.haupt!.startY).toBe(vorher.tabellen.haupt!.startY);
+    expect(k.tabellen.haupt!.hoehe).toBe(vorher.tabellen.haupt!.hoehe);
+    expect(k.tabellen.haupt!.spalten).toEqual(vorher.tabellen.haupt!.spalten);
+  });
+
+  it('zählt eine bestehende drehung mit und entfernt sie beim vollen Umlauf', () => {
+    const k = beispielKonfig();
+    k.seiten[0]!.felder.name!.drehung = 270;
+    k.tabellen.haupt!.drehung = 270;
+    const gedreht = dreheKonfig(k, 90, A4).seiten[0]!;
+    expect(gedreht.felder.name!.drehung).toBeUndefined();
+    // 270 + 90 = 360 -> 0 -> undefined
   });
 });

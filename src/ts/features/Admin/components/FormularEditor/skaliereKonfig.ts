@@ -1,3 +1,4 @@
+import type { Drehung } from '@otto-kirchheim/nebengeld-shared';
 import type { Konfig } from './FormularEditor';
 
 /**
@@ -72,6 +73,68 @@ export function skaliereKonfig(k: Konfig, f: SkalierFaktoren, neueGroesse?: { w:
         if (zelle.size !== undefined) zelle.size = r(zelle.size * f.y);
       }
     }
+  }
+
+  return kopie;
+}
+
+export type Drehwinkel = 0 | 90 | 180 | 270;
+
+/**
+ * Dreht das gesamte Formular-Layout um `grad` (gegen den Uhrzeigersinn) -- für den Fall, dass die
+ * neue Vorlage dasselbe Formular um 90°/180°/270° gedreht zeigt.
+ *
+ * `felder` und `signaturBild` werden konkret umgerechnet (feste x/y), die `drehung` jeder Zelle
+ * mitgezählt, die Referenzgröße (`groesse`) getauscht. Für Datentabellen bleibt die Konfiguration
+ * aufrecht -- nur `TabellenDef.drehung` (bzw. `TabellenBereich.drehung`) wird gesetzt; Renderer und
+ * Editor-Vorschau drehen jede fertige Tabellenzelle um den Seitenmittelpunkt (siehe
+ * `infrastructure/pdf/tabellenDrehung.ts`). Reine Funktion (tiefe Kopie). `alt` sind die Punkt-Maße
+ * der Seite VOR der Drehung.
+ */
+export function dreheKonfig(k: Konfig, grad: Drehwinkel, alt: { w: number; h: number }): Konfig {
+  const kopie: Konfig = structuredClone(k);
+  if (grad === 0) return kopie;
+
+  const dreh = (x: number, y: number): [number, number] => {
+    if (grad === 90) return [r(alt.h - y), r(x)];
+    if (grad === 180) return [r(alt.w - x), r(alt.h - y)];
+    return [r(y), r(alt.w - x)]; // 270
+  };
+  const neueGroesse = grad === 180 ? { w: alt.w, h: alt.h } : { w: alt.h, h: alt.w };
+  const plusDrehung = (d?: Drehung): Drehung | undefined => {
+    const summe = (((d ?? 0) + grad) % 360) as Drehung;
+    return summe === 0 ? undefined : summe;
+  };
+
+  for (const seite of kopie.seiten) {
+    seite.groesse = { w: r(neueGroesse.w), h: r(neueGroesse.h) };
+
+    for (const feld of Object.values(seite.felder)) {
+      const [nx, ny] = dreh(feld.x, feld.y);
+      const [nx2, ny2] = dreh(feld.x2 ?? feld.x, feld.y2 ?? feld.y);
+      feld.x = nx;
+      feld.y = ny;
+      feld.x2 = nx2 === nx ? undefined : nx2;
+      feld.y2 = ny2 === ny ? undefined : ny2;
+      feld.drehung = plusDrehung(feld.drehung);
+    }
+
+    if (seite.signaturBild) {
+      const s = seite.signaturBild;
+      const [ax, ay] = dreh(s.x, s.y);
+      const [bx, by] = dreh(s.x + s.w, s.y + s.h);
+      s.x = r(Math.min(ax, bx));
+      s.y = r(Math.min(ay, by));
+      if (grad !== 180) [s.w, s.h] = [s.h, s.w];
+    }
+
+    for (const bereich of seite.bereiche) {
+      if (bereich.drehung !== undefined) bereich.drehung = plusDrehung(bereich.drehung);
+    }
+  }
+
+  for (const tabelle of Object.values(kopie.tabellen)) {
+    tabelle.drehung = plusDrehung(tabelle.drehung);
   }
 
   return kopie;

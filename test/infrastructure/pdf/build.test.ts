@@ -147,6 +147,49 @@ describe('build', () => {
     expect(doc.getPageCount()).toBe(1);
   });
 
+  it('rendert mit je Schnitt eigener Standard-Familie fehlerfrei (Layout.schriftart als Objekt)', async () => {
+    const cfg = macheCfg();
+    cfg.layout.schriftart = { normal: 'times', fett: 'times', kursiv: 'helvetica', fettKursiv: 'courier' };
+    cfg.layout.seiten[0]!.felder['kursiv'] = { x: 50, y: 500, size: 10, text: 'kursiv', kursiv: true };
+    await expect(build(cfg, { name: 'X', zeilen: [] })).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  it('rendert eine um 90° gedrehte Tabelle fehlerfrei (TabellenDef.drehung)', async () => {
+    const cfg = macheCfg();
+    cfg.tabellen.haupt!.drehung = 90;
+    cfg.tabellen.haupt!.sonderzeilen = { summe: { ueber: '$alle', zellen: [{ spaltenIndex: 1, art: 'summe' }] } };
+    cfg.layout.seiten[0]!.bereiche = [
+      { tabelle: 'haupt', startY: 700, maxZeilen: 20, sonderzeilen: [{ name: 'summe', y: 60 }] },
+    ];
+    const daten = {
+      name: 'Max',
+      zeilen: [
+        { text: 'Zeile 1', betrag: 10 },
+        { text: 'Zeile 2', betrag: 5 },
+      ],
+    };
+    const doc = await PDFDocument.load(await build(cfg, daten));
+    expect(doc.getPageCount()).toBe(1);
+  });
+
+  it('erlaubt eine seitenspezifische Tabellen-Drehung (TabellenBereich.drehung)', async () => {
+    const cfg = macheCfg();
+    cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt', startY: 700, maxZeilen: 20, drehung: 270 }];
+    await expect(build(cfg, { name: 'X', zeilen: [{ text: 'a', betrag: 1 }] })).resolves.toBeInstanceOf(Uint8Array);
+  });
+
+  it('fällt bei einer vorlage:*-Familie ohne Font-Daten auf Helvetica zurück (Download-Pfad)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const cfg = macheCfg();
+      cfg.layout.schriftart = 'vorlage:Fehlt';
+      await expect(build(cfg, { name: 'X', zeilen: [] })).resolves.toBeInstanceOf(Uint8Array);
+      expect(warn).toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
   it('bettet bei vorhandenem Signatur-Input ein Image-XObject an der signaturBild-Position ein', async () => {
     const cfg = macheCfg();
     const bytes = await build(cfg, { name: 'X', zeilen: [] }, DUMMY_SIGNATUR_PNG);

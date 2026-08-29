@@ -185,6 +185,8 @@ const tabellenBereichSchema = z.object({
   spalten: z.array(spalteSchema).optional(),
   /** Seitenspezifische Zeilenhöhe; ohne Angabe gilt die Höhe der Tabelle. */
   hoehe: z.number().positive().optional(),
+  /** Seitenspezifische Drehung; ohne Angabe gilt `tabellenDefSchema.drehung`. */
+  drehung: drehungSchema.optional(),
   /** Platzierungen der Tabellen-Sonderzeilen auf dieser Seite; `name` darf mehrfach vorkommen
    *  (z.B. Überschrift oben UND als Kopie unten). */
   sonderzeilen: z
@@ -218,14 +220,29 @@ const tabellenDefSchema = z.object({
   maxZeilen: z.number().int().positive(),
   hoehe: z.number().positive(),
   spalten: z.array(spalteSchema),
+  /** Druckt die Tabelle gedreht (siehe `TabellenDef.drehung` in shared); Konfig-Werte bleiben aufrecht. */
+  drehung: drehungSchema.optional(),
   listen: z.record(z.string(), listenGruppeSchema).optional(),
   sonderzeilen: z.record(z.string(), sonderZeileSchema).optional(),
 });
 
+/** Schrift fürs ganze Formular: eine Familie für alles oder je Schnitt eine eigene (siehe
+ *  `Schriftart` in shared). Familien-Werte: `'helvetica'|'times'|'courier'|'vorlage:<Name>'`. */
+const schriftartSchema = z.union([
+  z.string(),
+  z
+    .object({
+      normal: z.string().optional(),
+      fett: z.string().optional(),
+      kursiv: z.string().optional(),
+      fettKursiv: z.string().optional(),
+    })
+    .strict(),
+]);
+
 const layoutSchema = z.object({
   template: z.string(),
-  /** Schriftfamilie fürs ganze Formular; ohne Angabe `'helvetica'` (siehe `Schriftart`). */
-  schriftart: z.string().optional(),
+  schriftart: schriftartSchema.optional(),
   seiten: z.array(seitenDefSchema).min(1),
 });
 
@@ -235,7 +252,7 @@ const layoutSchema = z.object({
  * `POST /formulare/:f/versionen`.
  */
 export const konfigSchema = z.object({
-  schriftart: z.string().optional(),
+  schriftart: schriftartSchema.optional(),
   seiten: z.array(seitenDefSchema).min(1),
   tabellen: z.record(z.string(), tabellenDefSchema),
 });

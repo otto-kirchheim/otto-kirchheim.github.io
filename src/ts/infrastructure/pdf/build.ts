@@ -1,12 +1,13 @@
-import { PDFDocument, StandardFonts } from '@cantoo/pdf-lib';
+import { PDFDocument, StandardFonts, type PDFFont } from '@cantoo/pdf-lib';
 import { hoeheFuer, spaltenFuer, startYFuer } from './spaltenFuer';
 import { loeseListenAuf } from './listen';
 import type { ListenAufloesung } from './listen';
 import { tabellenZeilen } from './tabellenZeilen';
-import type { Daten, Spalte, SonderZeileZelle, Version } from '@otto-kirchheim/nebengeld-shared';
+import type { Daten, Schriftart, Spalte, SonderZeileZelle, Version } from '@otto-kirchheim/nebengeld-shared';
 import { zeichne, type FontSet } from './zeichne';
 import { sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext, type TabellenZeilen } from './wert';
 import { spaltenWert } from './spaltenWert';
+import { dreheTabellenZelle } from './tabellenDrehung';
 import { verteile } from './verteile';
 
 /** Standard-14-Schnitte je wählbarer Familie (`Layout.schriftart`). Einbetten kostet nichts --
@@ -32,14 +33,67 @@ const STANDARD_FAMILIEN: Record<string, [StandardFonts, StandardFonts, StandardF
   ],
 };
 
-async function ladeFontSet(pdf: PDFDocument, schriftart: string | undefined): Promise<FontSet> {
-  const [normal, fett, kursiv, fettKursiv] =
-    STANDARD_FAMILIEN[schriftart ?? 'helvetica'] ?? STANDARD_FAMILIEN.helvetica!;
+const SCHNITTE = ['normal', 'fett', 'kursiv', 'fettKursiv'] as const;
+type Schnitt = (typeof SCHNITTE)[number];
+
+/** Font-Bytes je Schnitt einer in der Vorlage eingebetteten Familie, unter dem Familien-Wert
+ *  (`vorlage:<Name>`). Nur die Editor-Vorschau reicht sie durch -- der Download-Pfad ruft `build()`
+ *  ohne diesen Parameter, `vorlage:*` fällt dort auf Helvetica zurück. */
+export type EingebetteteFonts = Map<string, Partial<Record<Schnitt, Uint8Array>>>;
+
+/** Familie eines Schnitts: `schriftart` ist entweder eine Familie für alle vier oder ein Objekt je
+ *  Schnitt (fehlt ein Schnitt, gilt `normal`, sonst `'helvetica'`). */
+function familieFuerSchnitt(schriftart: Schriftart | undefined, schnitt: Schnitt): string {
+  if (!schriftart) return 'helvetica';
+  if (typeof schriftart === 'string') return schriftart;
+  return schriftart[schnitt] ?? schriftart.normal ?? 'helvetica';
+}
+
+async function ladeSchnitt(
+  pdf: PDFDocument,
+  familie: string,
+  schnitt: Schnitt,
+  eingebettet: EingebetteteFonts | undefined,
+): Promise<PDFFont> {
+  const index = SCHNITTE.indexOf(schnitt);
+  if (familie.startsWith('vorlage:')) {
+    // Nur die Bytes GENAU dieses Schnitts -- eine eingebettete Familie ohne z.B. Kursiv soll dort
+    // nicht den aufrechten Normal-Schnitt zeigen, sondern Helvetica im passenden Schnitt.
+    const bytes = eingebettet?.get(familie)?.[schnitt];
+    if (bytes) {
+      try {
+        return await pdf.embedFont(bytes);
+      } catch (fehler) {
+        console.warn(`Vorlagen-Schrift "${familie}" (${schnitt}) nicht einbettbar -- Helvetica:`, fehler);
+      }
+    } else {
+      console.warn(`Vorlagen-Schrift "${familie}" hat keinen ${schnitt}-Schnitt -- Helvetica-${schnitt}.`);
+    }
+    return pdf.embedFont(STANDARD_FAMILIEN.helvetica![index]!);
+  }
+  const fam = STANDARD_FAMILIEN[familie] ?? STANDARD_FAMILIEN.helvetica!;
+  return pdf.embedFont(fam[index]!);
+}
+
+async function ladeFontSet(
+  pdf: PDFDocument,
+  schriftart: Schriftart | undefined,
+  eingebettet?: EingebetteteFonts,
+): Promise<FontSet> {
+  const familien = Object.fromEntries(SCHNITTE.map(s => [s, familieFuerSchnitt(schriftart, s)])) as Record<
+    Schnitt,
+    string
+  >;
+  // fontkit nur laden, wenn wirklich eine eingebettete Familie im Spiel ist -- bleibt sonst aus dem
+  // Haupt-Bundle des Download-Pfads.
+  if (Object.values(familien).some(f => f.startsWith('vorlage:'))) {
+    pdf.registerFontkit((await import('@pdf-lib/fontkit')).default);
+  }
   return {
-    normal: await pdf.embedFont(normal),
-    fett: await pdf.embedFont(fett),
-    kursiv: await pdf.embedFont(kursiv),
-    fettKursiv: await pdf.embedFont(fettKursiv),
+    normal: await ladeSchnitt(pdf, familien.normal, 'normal', eingebettet),
+    fett: await ladeSchnitt(pdf, familien.fett, 'fett', eingebettet),
+    kursiv: await ladeSchnitt(pdf, familien.kursiv, 'kursiv', eingebettet),
+    fettKursiv: await ladeSchnitt(pdf, familien.fettKursiv, 'fettKursiv', eingebettet),
   };
 }
 
@@ -101,6 +155,7 @@ export async function build(
   daten: Daten,
   signaturPng?: string,
   digitaleSignatur?: boolean,
+  eingebetteteFonts?: EingebetteteFonts,
 ): Promise<Uint8Array> {
   const layout = cfg.layout;
   const alle: TabellenZeilen = Object.fromEntries(
@@ -117,7 +172,7 @@ export async function build(
 
   const vorlage = await PDFDocument.load(await fetch(layout.template).then(r => r.arrayBuffer()));
   const pdf = await PDFDocument.create();
-  const fonts = await ladeFontSet(pdf, layout.schriftart);
+  const fonts = await ladeFontSet(pdf, layout.schriftart, eingebetteteFonts);
 
   const bloecke = verteile(alle, layout, cfg.tabellen);
   // Einmal je Dokument bestimmt, nicht je Seite -- sonst könnte ein Lauf über Mitternacht zwei
@@ -148,6 +203,8 @@ export async function build(
     // eigene Renderer-Phase.
     for (const [key, f] of Object.entries(def.felder)) zeichne(seite, wert(f, key, daten, kontext), f, fonts);
 
+    const { width: seiteW, height: seiteH } = seite.getSize();
+
     for (const bereich of def.bereiche) {
       const tabelle = cfg.tabellen[bereich.tabelle];
       if (!tabelle) continue;
@@ -155,12 +212,20 @@ export async function build(
       // anderes Spaltenraster haben als die erste.
       const spalten = spaltenFuer(bereich, tabelle);
       const hoehe = hoeheFuer(bereich, tabelle);
+      // Bei gedrehter Vorlage bleibt die Tabellen-Konfiguration aufrecht -- die fertige Zelle wird
+      // um den Seitenmittelpunkt gedreht (siehe `TabellenDef.drehung`).
+      const drehung = bereich.drehung ?? tabelle.drehung ?? 0;
       let y = startYFuer(bereich, tabelle);
       for (const zeile of block.zeilen[bereich.tabelle] ?? []) {
         // Die Spalte liefert nur die x-Kanten; die y-Kanten der Zelle kommen aus der Zeilenhöhe.
         // Ohne sie wäre `y` die Grundlinie und der Text säße auf der Zeilenunterkante statt mittig.
         for (const sp of spalten)
-          zeichne(seite, spaltenWert(sp, zeile, listen[bereich.tabelle]), { ...sp, y, y2: y + hoehe }, fonts);
+          zeichne(
+            seite,
+            spaltenWert(sp, zeile, listen[bereich.tabelle]),
+            dreheTabellenZelle({ ...sp, y, y2: y + hoehe }, drehung, seiteW, seiteH),
+            fonts,
+          );
         y -= hoehe;
       }
 
@@ -176,7 +241,7 @@ export async function build(
           zeichne(
             seite,
             sonderZeileZelleWert(zelle, spalte, bereich.tabelle, rows, daten, kontext),
-            zellGeometrie(spalte, zelle, platz.y, platz.y2),
+            dreheTabellenZelle(zellGeometrie(spalte, zelle, platz.y, platz.y2), drehung, seiteW, seiteH),
             fonts,
           );
         }

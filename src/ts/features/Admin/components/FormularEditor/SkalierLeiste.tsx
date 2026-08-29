@@ -1,4 +1,4 @@
-import type { SkalierFaktoren } from './skaliereKonfig';
+import type { Drehwinkel, SkalierFaktoren } from './skaliereKonfig';
 
 type Masse = { w: number; h: number };
 
@@ -9,7 +9,9 @@ type Props = {
   neu: Masse | null;
   faktoren: SkalierFaktoren;
   gekoppelt: boolean;
-  onChange: (next: { faktoren: SkalierFaktoren; gekoppelt: boolean }) => void;
+  /** Gesamtes Layout (Felder, Signatur, Tabellen) zusätzlich um diesen Winkel drehen. */
+  drehung: Drehwinkel;
+  onChange: (next: { faktoren?: SkalierFaktoren; gekoppelt?: boolean; drehung?: Drehwinkel }) => void;
   onAnwenden: () => void;
   onAbbrechen: () => void;
 };
@@ -48,7 +50,7 @@ function ZahlEingabe({
  * bleibt). Jede Koordinate wird `wert * faktor + versatz`. Beim „Anwenden" landen die neuen Zahlen
  * in der Konfiguration; danach wird die Leiste geschlossen.
  */
-export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, onChange, onAnwenden, onAbbrechen }: Props) {
+export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange, onAnwenden, onAbbrechen }: Props) {
   const setze = (teil: Partial<SkalierFaktoren>, g = gekoppelt) =>
     onChange({ faktoren: { ...faktoren, ...teil }, gekoppelt: g });
 
@@ -85,8 +87,22 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, onChange, onAnwen
             <ZahlEingabe label="Faktor Y" schritt="0.001" wert={faktoren.y} onChange={v => setze({ y: v })} />
           </>
         )}
-        <ZahlEingabe label="Versatz X" schritt="0.01" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
-        <ZahlEingabe label="Versatz Y" schritt="0.01" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
+        <ZahlEingabe label="Versatz X" schritt="0.1" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
+        <ZahlEingabe label="Versatz Y" schritt="0.1" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
+        <div class="input-group input-group-sm w-auto">
+          <span class="input-group-text px-2">Drehen</span>
+          <select
+            class="form-select px-1"
+            style="max-width:5rem"
+            value={String(drehung)}
+            onChange={e => onChange({ drehung: Number((e.target as HTMLSelectElement).value) as Drehwinkel })}
+          >
+            <option value="0">0°</option>
+            <option value="90">90°</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+          </select>
+        </div>
         <div class="btn-group btn-group-sm ms-auto">
           <button type="button" class="btn btn-primary" onClick={onAnwenden}>
             Anwenden
@@ -99,6 +115,13 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, onChange, onAnwen
       <div class="text-body-secondary mt-1">
         Jede Koordinate wird <code>Wert × Faktor + Versatz</code> (Versatz in PDF-Punkten). Schriftgröße und
         Tabellen-Zeilenhöhe folgen dem Y-Faktor. Die Vorschau zeigt das Ergebnis live.
+        {drehung !== 0 && (
+          <>
+            {' '}
+            <strong>Drehen</strong> dreht das ganze Layout (Felder, Signatur, Datentabellen) um {drehung}° um den
+            Seitenmittelpunkt.
+          </>
+        )}
       </div>
     </div>
   );

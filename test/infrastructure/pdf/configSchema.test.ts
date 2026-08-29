@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { ZodError } from 'zod';
 import { resolve } from '@otto-kirchheim/nebengeld-shared';
-import { parseRegistry } from '@/infrastructure/pdf/configSchema';
+import { konfigSchema, parseRegistry } from '@/infrastructure/pdf/configSchema';
 
 const leeresLayout = {
   template: 'x.pdf',
@@ -223,6 +223,35 @@ describe('parseRegistry', () => {
         parseRegistry(alsUnknownVomServer(mitBerechnet({ tabelle: 'haupt', gruppe: 'g', index: 0 }))),
       ).not.toThrow();
     });
+  });
+});
+
+describe('konfigSchema – schriftart', () => {
+  const basis = {
+    seiten: [{ quelle: 0, bereiche: [], felder: {} }],
+    tabellen: {},
+  };
+
+  it('akzeptiert fehlende schriftart', () => {
+    expect(konfigSchema.parse(alsUnknownVomServer(basis)).schriftart).toBeUndefined();
+  });
+
+  it('akzeptiert eine einzelne Familie als String', () => {
+    const geparst = konfigSchema.parse(alsUnknownVomServer({ ...basis, schriftart: 'times' }));
+    expect(geparst.schriftart).toBe('times');
+  });
+
+  it('akzeptiert je Schnitt eine eigene Familie', () => {
+    const schriftart = { normal: 'vorlage:DBOffice', fett: 'vorlage:DBOffice', kursiv: 'helvetica' };
+    const geparst = konfigSchema.parse(alsUnknownVomServer({ ...basis, schriftart }));
+    expect(geparst.schriftart).toEqual(schriftart);
+  });
+
+  it('lehnt unbekannte Schnitt-Schlüssel und nicht-string Werte ab', () => {
+    expect(() => konfigSchema.parse(alsUnknownVomServer({ ...basis, schriftart: { fettkursiv: 'x' } }))).toThrow(
+      ZodError,
+    );
+    expect(() => konfigSchema.parse(alsUnknownVomServer({ ...basis, schriftart: { normal: 1 } }))).toThrow(ZodError);
   });
 });
 

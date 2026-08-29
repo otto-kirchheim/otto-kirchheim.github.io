@@ -9,12 +9,22 @@ import { FeldPanel, type Armed } from './FeldPanel';
 import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';
 import { beispielSignatur } from './beispielSignatur';
 import { seitenMasse } from './pdfjsLoader';
-import { skaliereKonfig, type SkalierFaktoren } from './skaliereKonfig';
+import { dreheKonfig, skaliereKonfig, type Drehwinkel, type SkalierFaktoren } from './skaliereKonfig';
+import { dreheTabellenZelle, entdrehePunkt } from '@/infrastructure/pdf/tabellenDrehung';
 import { SkalierLeiste } from './SkalierLeiste';
-import { SCHRIFTARTEN, type FormularCode } from './datenKatalog';
+import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
+import { schriftKurz } from './SchriftartWahl';
+import { SchriftartDialog } from './SchriftartDialog';
+import type { FormularCode } from './datenKatalog';
 
 type Masse = { w: number; h: number };
-type SkalierState = { alt: Masse | null; neu: Masse | null; faktoren: SkalierFaktoren; gekoppelt: boolean };
+type SkalierState = {
+  alt: Masse | null;
+  neu: Masse | null;
+  faktoren: SkalierFaktoren;
+  gekoppelt: boolean;
+  drehung: Drehwinkel;
+};
 
 export type Konfig = { schriftart?: Schriftart; seiten: SeitenDef[]; tabellen: Version['tabellen'] };
 
@@ -56,11 +66,13 @@ export function zeilenHoeheAus(startY: number, letzteY: number, zeilen: number):
 }
 
 /** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Zeilenraster-Indikator neben der
- * jeweils ersten Spalte (siehe `spaltenFuer` für seitenspezifische Spalten). */
+ * jeweils ersten Spalte (siehe `spaltenFuer` für seitenspezifische Spalten). Für gedrehte Tabellen
+ * gibt es keinen (vertikalen) Raster-Indikator -- die Zell-Rechtecke zeigen die Lage. */
 function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): RasterMarke[] {
   return seite.bereiche.flatMap(bereich => {
     const tabelle = tabellen[bereich.tabelle];
     if (!tabelle) return [];
+    if ((bereich.drehung ?? tabelle.drehung ?? 0) !== 0) return [];
     const spalten = spaltenFuer(bereich, tabelle);
     return [
       {
@@ -78,7 +90,12 @@ function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Ar
   });
 }
 
-function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): Rechteck[] {
+function sammleRechtecke(
+  seite: SeitenDef,
+  tabellen: Version['tabellen'],
+  armed: Armed | null,
+  seiteGroesse?: Masse,
+): Rechteck[] {
   const rechtecke: Rechteck[] = [];
 
   for (const [key, feld] of Object.entries(seite.felder) as [string, Feld][]) {
@@ -92,8 +109,18 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     const spalten = spaltenFuer(bereich, tabelle);
     const hoehe = hoeheFuer(bereich, tabelle);
     const startY = startYFuer(bereich, tabelle);
+    // Tabellen-Konfiguration ist aufrecht gedacht; ist die Vorlage gedreht, dreht diese Funktion die
+    // fertigen Rechtecke wie der Renderer (siehe `tabellenDrehung.ts`).
+    const drehung = bereich.drehung ?? tabelle.drehung ?? 0;
+    const dreheRect = (rr: Rechteck): Rechteck => {
+      if (drehung === 0 || !seiteGroesse || rr.x === undefined || rr.x2 === undefined) return rr;
+      const g = dreheTabellenZelle({ x: rr.x, x2: rr.x2, y: rr.y, y2: rr.y2 }, drehung, seiteGroesse.w, seiteGroesse.h);
+      return { ...rr, x: g.x, x2: g.x2, y: g.y, y2: g.y2 };
+    };
+    const tabellenRechtecke: Rechteck[] = [];
+
     spalten.forEach((spalte: Spalte, index) => {
-      rechtecke.push({
+      tabellenRechtecke.push({
         x: spalte.x,
         y: startY,
         x2: spalte.x2 ?? spalte.x + 40,
@@ -107,7 +134,7 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     // die ganze Seitenbreite (x/x2 undefined) -- keine festen Werte, die bei Querformat brechen.
     const links = spalten.map(s => Math.min(s.x, s.x2 ?? s.x));
     const rechts = spalten.map(s => Math.max(s.x, s.x2 ?? s.x));
-    rechtecke.push({
+    tabellenRechtecke.push({
       x: links.length > 0 ? Math.min(...links) : undefined,
       y: startY,
       x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
@@ -122,7 +149,7 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
     // span wie der Tabellenrahmen über die Spaltenbreite, `index` ist die Position im Array (ein
     // Name kann mehrfach vorkommen, z.B. Überschrift oben + Kopie unten).
     (bereich.sonderzeilen ?? []).forEach((platz, index) => {
-      rechtecke.push({
+      tabellenRechtecke.push({
         x: links.length > 0 ? Math.min(...links) : undefined,
         y: platz.y,
         x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
@@ -134,6 +161,8 @@ function sammleRechtecke(seite: SeitenDef, tabellen: Version['tabellen'], armed:
         labelRechts: true,
       });
     });
+
+    for (const rr of tabellenRechtecke) rechtecke.push(dreheRect(rr));
   }
 
   if (seite.signaturBild) {
@@ -229,7 +258,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       if (Math.abs(alt.w - neu.w) < 1 && Math.abs(alt.h - neu.h) < 1) return;
       const fx = Number((neu.w / alt.w).toFixed(4));
       const fy = Number((neu.h / alt.h).toFixed(4));
-      setSkalier({ alt, neu, faktoren: { x: fx, y: fy, dx: 0, dy: 0 }, gekoppelt: Math.abs(fx - fy) < 0.002 });
+      setSkalier({
+        alt,
+        neu,
+        faktoren: { x: fx, y: fy, dx: 0, dy: 0 },
+        gekoppelt: Math.abs(fx - fy) < 0.002,
+        drehung: 0,
+      });
     })();
     return () => {
       abbruch = true;
@@ -237,21 +272,64 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     // Bewusst nur an `datei` gehängt: der Vorschlag entsteht genau beim Wechsel der Datei.
   }, [datei]);
 
-  const anzeigeKonfig = useMemo(() => (skalier ? skaliereKonfig(value, skalier.faktoren) : value), [value, skalier]);
+  const skalierAlt = skalier?.alt ?? aktiveSeite?.groesse ?? null;
+
+  /**
+   * Skalieren + Drehen in EINEM Bezugssystem: erst im aufrechten Layout skalieren (`x` mit `f.x`,
+   * `y` mit `f.y` -- Felder UND Tabellen gleich), dann drehen, damit erst danach die Achsen tauschen.
+   * `alt` für die Drehung ist die mitskalierte Seitengröße. `mitGroesse` nur beim „Anwenden": nur
+   * dann wird die Referenzgröße in die Konfiguration geschrieben.
+   */
+  function skalierenUndDrehen(k: Konfig, mitGroesse: boolean): Konfig {
+    if (!skalier) return k;
+    if (skalier.drehung === 0) {
+      return skaliereKonfig(k, skalier.faktoren, mitGroesse ? (skalier.neu ?? undefined) : undefined);
+    }
+    const skaliert = skaliereKonfig(k, skalier.faktoren);
+    const alt = skalierAlt ?? { w: 0, h: 0 };
+    return dreheKonfig(skaliert, skalier.drehung, {
+      w: alt.w * skalier.faktoren.x,
+      h: alt.h * skalier.faktoren.y,
+    });
+  }
+
+  // Hängt bewusst an value/skalier/skalierAlt -- `skalierenUndDrehen` liest nur diese.
+  const anzeigeKonfig = useMemo(
+    () => (skalier ? skalierenUndDrehen(value, false) : value),
+    [value, skalier, skalierAlt],
+  );
   const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];
 
   async function oeffneSkalierenManuell() {
     const masse = aktiveSeite?.groesse ?? (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null));
-    setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true });
+    setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true, drehung: 0 });
   }
 
   function skalierAnwenden() {
     if (!skalier) return;
-    onChange(skaliereKonfig(value, skalier.faktoren, skalier.neu ?? undefined));
+    onChange(skalierenUndDrehen(value, true));
     setSkalier(null);
   }
 
   const [messModus, setMessModus] = useState(false);
+
+  // In der Vorlage eingebettete Schriftfamilien -- Testschritt, nur für die Vorschau (siehe
+  // `vorlageFonts.ts`). Einmal je Datei gelesen.
+  const [vorlageFonts, setVorlageFonts] = useState<VorlageFontFamilie[]>([]);
+  const [unbrauchbareFonts, setUnbrauchbareFonts] = useState<string[]>([]);
+  useEffect(() => {
+    let abbruch = false;
+    void vorlageFontFamilien(datei).then(r => {
+      if (abbruch) return;
+      setVorlageFonts(r.familien);
+      setUnbrauchbareFonts(r.unbrauchbar);
+    });
+    return () => {
+      abbruch = true;
+    };
+  }, [datei]);
+  const eingebetteteFonts = useMemo(() => new Map(vorlageFonts.map(f => [f.id, f.schnitte])), [vorlageFonts]);
+  const [schriftDialogOffen, setSchriftDialogOffen] = useState(false);
 
   /** Setzt nur die Schriftgröße des scharfgeschalteten Feldes/der Spalte -- für den Messmodus. */
   function setzeGroesseAmArmed(size: number): boolean {
@@ -310,8 +388,23 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     setzeSeite(seitenIndex, seite);
   }
 
-  function handleRechteck(r: { x: number; y: number; x2: number; y2: number }) {
+  function handleRechteck(r0: { x: number; y: number; x2: number; y2: number }) {
     if (!armed || !aktiveSeite) return;
+
+    // Für ein Tabellen-Element einer gedrehten Tabelle: die auf der (gedrehten) Vorschau gezogene
+    // Fläche zurück in aufrechte Tabellen-Koordinaten rechnen -- die Konfiguration bleibt aufrecht.
+    let r = r0;
+    if ('tabelle' in armed) {
+      const t = value.tabellen[armed.tabelle];
+      const b = aktiveSeite.bereiche.find(x => x.tabelle === armed.tabelle);
+      const grad = b?.drehung ?? t?.drehung ?? 0;
+      const g = aktiveSeite.groesse;
+      if (grad !== 0 && g) {
+        const [ax, ay] = entdrehePunkt(r0.x, r0.y, grad, g.w, g.h);
+        const [bx, by] = entdrehePunkt(r0.x2, r0.y2, grad, g.w, g.h);
+        r = { x: Math.min(ax, bx), y: Math.min(ay, by), x2: Math.max(ax, bx), y2: Math.max(ay, by) };
+      }
+    }
 
     if (armed.bereich === 'feld') {
       const feld = aktiveSeite.felder[armed.key];
@@ -422,6 +515,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         daten,
         // Sonst bliebe die Signaturfläche als einziges Element ohne Beispielwert.
         beispielSignatur(),
+        undefined,
+        // Eingebettete Vorlagen-Schriften nur hier durchreichen -- der Download-Pfad hat sie nicht.
+        eingebetteteFonts,
       );
       const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
@@ -481,27 +577,20 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </button>
         <button
           type="button"
+          class="btn btn-sm btn-outline-secondary"
+          title="Formularweite Schriftfamilie je Schnitt wählen — mit Live-Vorschau"
+          onClick={() => setSchriftDialogOffen(true)}
+        >
+          Schrift: {schriftKurz(value.schriftart)}
+        </button>
+        <button
+          type="button"
           class={`btn btn-sm ${messModus ? 'btn-warning' : 'btn-outline-secondary'}`}
           title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
           onClick={() => setMessModus(m => !m)}
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
         </button>
-        <select
-          class="form-select form-select-sm w-auto"
-          title="Schriftart für den gesamten Fließtext des Formulars"
-          value={value.schriftart ?? 'helvetica'}
-          onChange={e => {
-            const v = (e.target as HTMLSelectElement).value as Schriftart;
-            onChange({ ...value, schriftart: v === 'helvetica' ? undefined : v });
-          }}
-        >
-          {SCHRIFTARTEN.map(s => (
-            <option key={s.wert} value={s.wert}>
-              {s.label}
-            </option>
-          ))}
-        </select>
         <div class="btn-group btn-group-sm">
           <button
             type="button"
@@ -523,6 +612,16 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           </button>
         </div>
       </div>
+
+      {schriftDialogOffen && (
+        <SchriftartDialog
+          value={value.schriftart}
+          vorlageFonts={vorlageFonts}
+          unbrauchbareFonts={unbrauchbareFonts}
+          onChange={schriftart => onChange({ ...value, schriftart })}
+          onClose={() => setSchriftDialogOffen(false)}
+        />
+      )}
 
       {aktiveSeite && (
         <div class="d-flex flex-wrap align-items-center gap-3 mb-2 small">
@@ -583,7 +682,24 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           neu={skalier.neu}
           faktoren={skalier.faktoren}
           gekoppelt={skalier.gekoppelt}
-          onChange={next => setSkalier(s => (s ? { ...s, ...next } : s))}
+          drehung={skalier.drehung}
+          onChange={next =>
+            setSkalier(s => {
+              if (!s) return s;
+              const naechste = { ...s, ...next };
+              // Drehung geändert und beide Seitenmaße bekannt: Faktoren so vorschlagen, dass das im
+              // AUFRECHTEN Layout skalierte Formular nach dem Drehen genau auf die neue Seite passt
+              // (bei 90/270 tauscht die Drehung anschließend x↔y, deshalb hier über Kreuz).
+              if (next.drehung !== undefined && next.drehung !== s.drehung && s.alt && s.neu) {
+                const quer = next.drehung === 90 || next.drehung === 270;
+                const fx = Number(((quer ? s.neu.h : s.neu.w) / s.alt.w).toFixed(4));
+                const fy = Number(((quer ? s.neu.w : s.neu.h) / s.alt.h).toFixed(4));
+                naechste.faktoren = { ...naechste.faktoren, x: fx, y: fy };
+                naechste.gekoppelt = Math.abs(fx - fy) < 0.002;
+              }
+              return naechste;
+            })
+          }
           onAnwenden={skalierAnwenden}
           onAbbrechen={() => setSkalier(null)}
         />
@@ -595,7 +711,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             <PdfCanvas
               datei={datei}
               seiteIndex={anzeigeSeite.quelle}
-              rechtecke={sammleRechtecke(anzeigeSeite, anzeigeKonfig.tabellen, armed)}
+              rechtecke={sammleRechtecke(anzeigeSeite, anzeigeKonfig.tabellen, armed, anzeigeSeite.groesse)}
               raster={sammleRaster(anzeigeSeite, anzeigeKonfig.tabellen, armed)}
               scharfGeschaltet={armed !== null && !messModus && !skalier}
               messModus={messModus}

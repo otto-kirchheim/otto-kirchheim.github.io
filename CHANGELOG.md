@@ -2,6 +2,100 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-29 (51)
+
+### feat (FormularEditor: Schriftwahl im Modal mit Live-Vorschau)
+
+Die Schriftauswahl (Grundschrift + Abweichung je Schnitt aus 49) lag als breiter Block unter der
+Editor-Toolbar. Sie sitzt jetzt hinter einem Toolbar-Button **„Schrift: <aktuelle Familie>"**, der
+ein eigenstaendiges Portal-Modal (`SchriftartDialog.tsx`, nicht das geteilte `#modal`) oeffnet:
+
+- `SchriftartWahl` unveraendert, dazu die Info-Zeile „Eingebettet: …" (unbrauchbare Fonts weiter
+  durchgestrichen + rot) und der Vorschau-only-Hinweis -- alles aus `FormularEditor.tsx` ins Modal
+  verschoben.
+- **Live-Vorschau je Schnitt** (Normal/Fett/Kursiv/Fett+Kursiv): ein Probetext in der Familie, die
+  der Renderer fuer diesen Schnitt nehmen wuerde. Standard-14 ueber CSS-Familien; eingebettete
+  `vorlage:`-Schnitte werden aus den bereits vorliegenden Font-Bytes als `FontFace` registriert
+  (reine Browser-Registrierung, kein Netzugriff, `FontFace` fehlt -> Helvetica). Fehlt der Familie
+  ein Schnitt, zeigt die Zeile Helvetica und ist als „Helvetica-Ersatz" markiert -- deckungsgleich
+  mit `fehlendeVorlagenSchnitte` / dem Renderer-Rueckfall.
+- Der Button-Text spiegelt die aktuelle Wahl (`schriftKurz`, z.B. „Times +1" bei einer
+  Schnitt-Abweichung).
+
+Kein Schema-Wechsel -- reine UI-Umstellung. Verifiziert: `tsc`/`eslint` sauber; `bun test` 2069
+gruen (neu: `schriftKurz` 3); `bun run build` gruen; Headless-Chrome-Smoke: Button oeffnet Modal
+(Titel, 4 Selects, 4 Vorschau-Zeilen, Backdrop, „Fertig"), Grundschrift -> Times faerbt Vorschau
+und Button um, „Fertig" schliesst; mit eingebetteter Font-Fixture erscheint die `vorlage:`-Familie
+im Select und die Vorschau nutzt die `FontFace` (`vfp-…`), 0 neue Konsolenfehler.
+
+## 2026-08-29 (50)
+
+### feat (FormularEditor: gedrehte Vorlagen -- Feld- und Tabellen-Geometrie um 90/180/270 drehen)
+
+Zeigt eine neue Vorlage dasselbe Formular gedreht (Hoch- statt Querformat o.ae.), reicht Skalieren
++ Versatz nicht -- die Skalier-Leiste hat jetzt zusaetzlich **„Drehen" (0/90/180/270°)**:
+
+- **Felder und Signaturflaeche** werden konkret um den Seitenmittelpunkt umgerechnet
+  (`skaliereKonfig.ts::dreheKonfig`, `alt`-Seitenmasse als Referenz), die `drehung` jeder Zelle
+  mitgezaehlt, die Referenzgroesse (`SeitenDef.groesse`) getauscht.
+- **Datentabellen** bleiben in der Konfiguration aufrecht (`startY`, `spalten[].x`, `hoehe`
+  unveraendert) -- neu ist nur `TabellenDef.drehung` bzw. `TabellenBereich.drehung`. Renderer
+  (`build.ts`) und Editor-Vorschau (`sammleRechtecke`) drehen jede fertige Tabellenzelle ueber
+  `infrastructure/pdf/tabellenDrehung.ts` um den Seitenmittelpunkt; der Editor-Drag auf einer
+  gedrehten Tabelle rechnet die gezogene Flaeche per `entdrehePunkt` zurueck. `verteile.ts`
+  (Paginierung ueber `maxZeilen`) bleibt unberuehrt.
+- Reihenfolge: **erst im aufrechten Layout skalieren, dann drehen** (`FormularEditor.skalierenUndDrehen`).
+  So bekommen Felder UND Tabellen `f.x` auf x und `f.y` auf y, bevor die Drehung die Achsen
+  tauscht -- vorher liefen die Faktoren bei gedrehten Tabellen ueber Kreuz (Feld-x-Faktor wirkte
+  auf die Tabellen-y-Position). Beim Setzen des Winkels schlaegt die Leiste die Faktoren so vor,
+  dass das skalierte Layout nach der Drehung genau auf die neue Seite passt (bei 90/270 ueber Kreuz).
+
+**Typsystem-Spiegel (3 Stellen):** `TabellenDef.drehung` + `TabellenBereich.drehung`
+(`shared/formular/types.ts`, `configSchema.ts`, `backend/formular.schemas.ts`).
+
+Verifiziert: `tsc`/`eslint` (FE/BE/Shared) sauber; `bun test` -- neue `tabellenDrehung`- (6) und
+erweiterte `skaliereKonfig`-/`build`-Suiten gruen (2055 gesamt); Headless-Chrome-Smoke: Drehen 90°
++ Anwenden schreibt Feld `{x50,y700}->{x142,y50}`, `tabellen.haupt.drehung=90`, `groesse` getauscht,
+keine neuen Konsolenfehler. Drag auf gedrehter Tabelle nicht headless simuliert -- manuell pruefen.
+
+## 2026-08-29 (49)
+
+### feat (FormularEditor: eingebettete Vorlagen-Schriften + Schrift je Schnitt waehlbar)
+
+Zwei Ergaenzungen zur Schriftart-Auswahl (47/48):
+
+- **Eingebettete Vorlagen-Schriften (Testschritt):** der Editor liest die in der hochgeladenen
+  Vorlagen-PDF eingebetteten Schriftfamilien aus (`vorlageFonts.ts` -- `FontDescriptor` ->
+  `FontFile2`/`FontFile3` via `@cantoo/pdf-lib`, gruppiert nach Familie/Schnitt anhand des
+  PostScript-Namens). Eine Familie wird nur angeboten, wenn fontkit sie öffnen kann UND ihre
+  Unicode-cmap den Großteil von Ziffern + Latein-Buchstaben trifft -- Subset-Fonts aus virtuellen
+  Druckern (PDF24) mit kaputter/unvollständiger Zeichenzuordnung erscheinen in der Info-Zeile
+  „Eingebettet: …" nur **durchgestrichen + rot** (Tooltip erklärt warum) statt Zeichensalat in der
+  Vorschau zu erzeugen. `build()` bekommt den optionalen Parameter `eingebetteteFonts` -- **nur** die
+  Beispieldaten-/Platzhalter-Vorschau reicht die Font-Bytes durch (`registerFontkit` + `embedFont`,
+  neue Dependency `@pdf-lib/fontkit`, per `import()` erst geladen wenn wirklich eine `vorlage:`-
+  Familie im Spiel ist -- eigener Bundle-Chunk). Der Download-Pfad ruft `build()` ohne den
+  Parameter; `vorlage:*` faellt dort auf Helvetica zurueck (Konsolen-Warnung). LibreOffice/Word
+  betten regelmaessig nur einen Teilzeichensatz ein -- fehlende Glyphen erscheinen als leere
+  Kaestchen; genau das soll der Schritt vor einer Entscheidung ueber einen Font-Upload zeigen.
+- **Schrift je Schnitt:** `Layout.schriftart` ist jetzt entweder eine Familie fuer alle vier
+  Schnitte **oder** ein Objekt `{ normal, fett, kursiv, fettKursiv }` -- noetig, weil eine
+  eingebettete Vorlagen-Schrift oft nicht alle Schnitte mitbringt (z.B. nur Regular + Bold). UI
+  (`SchriftartWahl.tsx`) unter der Toolbar: ein **„Schrift"**-Dropdown (Grundschrift) plus je
+  Schnitt (Fett/Kursiv/Fett+Kursiv) ein Dropdown mit Vorgabe **„(wie Schrift)"** -- eine
+  Abweichung waehlt man nur dort, wo die Grundschrift den Schnitt nicht hat. `build.ts::ladeSchnitt`
+  nimmt nur die Bytes GENAU dieses Schnitts; fehlt er in einer `vorlage:`-Familie, faellt er auf
+  **Helvetica im passenden Schnitt** zurueck (nicht mehr auf den aufrechten Normal-Schnitt der
+  Vorlage). Warnung im Editor, welche Schnitte die gewaehlte Schrift nicht mitbringt. Konfig
+  verdichtet sich auf einen String, wenn keine echte Abweichung bleibt.
+
+**Typsystem-Spiegel:** `Schriftart` wird `Schriftfamilie | { normal?, fett?, kursiv?, fettKursiv? }`
+(`shared`), `schriftartSchema` als `z.union` in beiden Zod-Spiegeln.
+
+Verifiziert: `tsc`/`eslint` (FE/BE/Shared) sauber; neue `vorlageFonts`- (6) und
+`configSchema`/`formular.schemas`-Schriftart-Tests gruen; Headless-Chrome-Smoke (4 Schnitt-Selects,
+keine neuen Konsolenfehler); Extraktion + Mehrschnitt-Gruppierung als Spike gegen System-Fonts.
+
 ## 2026-08-29 (48)
 
 ### refactor (FormularEditor: Schriftart global statt pro Zelle, Skalier-Versatz mit Kommazahlen)
