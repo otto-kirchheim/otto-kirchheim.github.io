@@ -132,6 +132,23 @@ export function FormularUpload() {
     }
   }
 
+  /**
+   * Aus der gerade bearbeiteten Version eine eigenständige neue anlegen: Konfiguration, PDF und
+   * „gültig bis" bleiben, aber die Maske wechselt in den Anlege-Modus (`bearbeiteId` zurück auf
+   * `null` ⇒ `POST` statt `PUT`), und Versionsname wie „gültig ab" müssen neu vergeben werden.
+   * Nichts wird gespeichert, bevor „Version anlegen" gedrückt wird.
+   */
+  function neueVersionAusBearbeitung(): void {
+    setBearbeiteId(null);
+    setVersion('');
+    setGueltigVon('');
+    createSnackBar({
+      message: 'Neue Version aus der bearbeiteten Vorlage — Version und „gültig ab" neu vergeben.',
+      status: 'info',
+      timeout: 4000,
+    });
+  }
+
   async function handleLoeschen(eintrag: VersionUebersicht): Promise<void> {
     const bestaetigt = await confirmDialog(
       `Version "${eintrag.version}" (ab ${eintrag.gueltigVon}) endgültig löschen?\nDie zugehörige PDF-Vorlage wird mit entfernt, sofern keine andere Version sie nutzt.`,
@@ -440,14 +457,25 @@ export function FormularUpload() {
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </button>
         {bearbeiteId && (
-          <button
-            type="button"
-            class="btn btn-outline-secondary"
-            disabled={speichert}
-            onClick={() => setzeFormularZurueck(formular)}
-          >
-            Bearbeiten abbrechen
-          </button>
+          <>
+            <button
+              type="button"
+              class="btn btn-outline-primary"
+              disabled={speichert}
+              onClick={neueVersionAusBearbeitung}
+              title="Konfiguration und PDF übernehmen, aber als neue Version speichern statt die bestehende zu überschreiben"
+            >
+              Als neue Version anlegen
+            </button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              disabled={speichert}
+              onClick={() => setzeFormularZurueck(formular)}
+            >
+              Bearbeiten abbrechen
+            </button>
+          </>
         )}
       </div>
     </form>

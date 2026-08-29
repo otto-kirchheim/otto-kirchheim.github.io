@@ -109,6 +109,7 @@ const sonderZeileZelleSchema = z.object({
   size: z.number().optional(),
   align: ausrichtungSchema.optional(),
   autoGroesse: z.boolean().optional(),
+  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -140,6 +141,7 @@ const feldSchema = z.object({
   nurBeiSignatur: z.boolean().optional(),
   listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
   drehung: drehungSchema.optional(),
+  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -160,6 +162,7 @@ const spalteSchema = z.object({
   wenn: bedingungSchema.optional(),
   listenPlatz: listenPlatzSchema.optional(),
   drehung: drehungSchema.optional(),
+  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -200,6 +203,9 @@ const tabellenBereichSchema = z.object({
 
 const seitenDefSchema = z.object({
   quelle: z.number().int().nonnegative(),
+  /** Punkt-Maße der Vorlagenseite, gegen die die Koordinaten gesetzt wurden -- vom Editor gefüllt,
+   *  Referenz für die Skalierung beim Vorlagen-Wechsel. Der Renderer nutzt sie nicht. */
+  groesse: z.object({ w: z.number(), h: z.number() }).optional(),
   bereiche: z.array(tabellenBereichSchema),
   felder: z.record(z.string(), feldSchema),
   signaturBild: signaturBildSchema.optional(),

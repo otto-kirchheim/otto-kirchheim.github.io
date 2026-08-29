@@ -1,14 +1,20 @@
-import { useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
 import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { PdfCanvas, type Achse, type RasterMarke, type Rechteck } from './PdfCanvas';
+import { PdfCanvas, type Achse, type Messung, type RasterMarke, type Rechteck } from './PdfCanvas';
 import { FeldPanel, type Armed } from './FeldPanel';
 import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';
 import { beispielSignatur } from './beispielSignatur';
+import { seitenMasse } from './pdfjsLoader';
+import { skaliereKonfig, type SkalierFaktoren } from './skaliereKonfig';
+import { SkalierLeiste } from './SkalierLeiste';
 import type { FormularCode } from './datenKatalog';
+
+type Masse = { w: number; h: number };
+type SkalierState = { alt: Masse | null; neu: Masse | null; faktoren: SkalierFaktoren; gekoppelt: boolean };
 
 export type Konfig = { seiten: SeitenDef[]; tabellen: Version['tabellen'] };
 
@@ -185,6 +191,117 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     [value.tabellen, value.seiten, seitenIndex, formular],
   );
 
+  const [skalier, setSkalier] = useState<SkalierState | null>(null);
+  const prevDateiRef = useRef(datei);
+
+  // Referenzgröße je Seite nachtragen (alte Konfigurationen ohne `groesse`), einmal je Datei.
+  useEffect(() => {
+    let abbruch = false;
+    void (async () => {
+      const seiten = await Promise.all(
+        value.seiten.map(async s => {
+          if (s.groesse) return s;
+          const m = await seitenMasse(datei, s.quelle).catch(() => null);
+          return m ? { ...s, groesse: m } : s;
+        }),
+      );
+      if (!abbruch && seiten.some((s, i) => s !== value.seiten[i])) onChange({ ...value, seiten });
+    })();
+    return () => {
+      abbruch = true;
+    };
+    // Bewusst nur an `datei` gehängt: läuft beim Laden und bei jedem Vorlagen-Wechsel.
+  }, [datei]);
+
+  // Vorlagen-Wechsel: Skalierfaktor aus alter (Config) und neuer (gemessener) Seitengröße vorschlagen.
+  useEffect(() => {
+    const prev = prevDateiRef.current;
+    prevDateiRef.current = datei;
+    if (!prev || prev === datei) return;
+    const hatInhalt = value.seiten.some(s => Object.keys(s.felder).length > 0 || s.bereiche.length > 0);
+    if (!hatInhalt) return;
+    let abbruch = false;
+    void (async () => {
+      const quelle = value.seiten[seitenIndex]?.quelle ?? 0;
+      const alt = value.seiten[seitenIndex]?.groesse ?? (await seitenMasse(prev, quelle).catch(() => null));
+      const neu = await seitenMasse(datei, quelle).catch(() => null);
+      if (abbruch || !alt || !neu) return;
+      if (Math.abs(alt.w - neu.w) < 1 && Math.abs(alt.h - neu.h) < 1) return;
+      const fx = Number((neu.w / alt.w).toFixed(4));
+      const fy = Number((neu.h / alt.h).toFixed(4));
+      setSkalier({ alt, neu, faktoren: { x: fx, y: fy, dx: 0, dy: 0 }, gekoppelt: Math.abs(fx - fy) < 0.002 });
+    })();
+    return () => {
+      abbruch = true;
+    };
+    // Bewusst nur an `datei` gehängt: der Vorschlag entsteht genau beim Wechsel der Datei.
+  }, [datei]);
+
+  const anzeigeKonfig = useMemo(() => (skalier ? skaliereKonfig(value, skalier.faktoren) : value), [value, skalier]);
+  const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];
+
+  async function oeffneSkalierenManuell() {
+    const masse = aktiveSeite?.groesse ?? (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null));
+    setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true });
+  }
+
+  function skalierAnwenden() {
+    if (!skalier) return;
+    onChange(skaliereKonfig(value, skalier.faktoren, skalier.neu ?? undefined));
+    setSkalier(null);
+  }
+
+  const [messModus, setMessModus] = useState(false);
+
+  /** Setzt nur die Schriftgröße des scharfgeschalteten Feldes/der Spalte -- für den Messmodus. */
+  function setzeGroesseAmArmed(size: number): boolean {
+    if (!armed || !aktiveSeite) return false;
+    if (armed.bereich === 'feld') {
+      const feld = aktiveSeite.felder[armed.key];
+      if (!feld) return false;
+      setzeAktiveSeite({ ...aktiveSeite, felder: { ...aktiveSeite.felder, [armed.key]: { ...feld, size } } });
+      return true;
+    }
+    if (armed.bereich === 'spalte') {
+      const tabelle = value.tabellen[armed.tabelle];
+      if (!tabelle) return false;
+      const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, size } : s);
+      if (bereich?.spalten) {
+        setzeAktiveSeite({
+          ...aktiveSeite,
+          bereiche: aktiveSeite.bereiche.map(b =>
+            b.tabelle === armed.tabelle ? { ...b, spalten: b.spalten!.map(gesetzt) } : b,
+          ),
+        });
+      } else {
+        onChange({
+          ...value,
+          tabellen: { ...value.tabellen, [armed.tabelle]: { ...tabelle, spalten: tabelle.spalten.map(gesetzt) } },
+        });
+      }
+      return true;
+    }
+    return false;
+  }
+
+  function handleGemessen(m: Messung) {
+    if (setzeGroesseAmArmed(m.size)) {
+      createSnackBar({
+        message: `Schriftgröße ${m.size} pt übernommen (${m.fontFamily})`,
+        status: 'success',
+        timeout: 3000,
+      });
+      return;
+    }
+    void navigator.clipboard?.writeText(String(m.size));
+    createSnackBar({
+      message: `Gemessen: ${m.size} pt · ${m.fontFamily} — in die Zwischenablage kopiert`,
+      status: 'info',
+      timeout: 3500,
+    });
+  }
+
   function setzeSeite(index: number, seite: SeitenDef) {
     onChange({ ...value, seiten: value.seiten.map((s, i) => (i === index ? seite : s)) });
   }
@@ -353,6 +470,23 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             </button>
           </li>
         </ul>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-secondary"
+          title="Alle Koordinaten proportional umrechnen — z.B. nach dem Wechsel auf eine Vorlage mit anderer Seitengröße"
+          disabled={skalier !== null}
+          onClick={() => void oeffneSkalierenManuell()}
+        >
+          Skalieren…
+        </button>
+        <button
+          type="button"
+          class={`btn btn-sm ${messModus ? 'btn-warning' : 'btn-outline-secondary'}`}
+          title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
+          onClick={() => setMessModus(m => !m)}
+        >
+          {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
+        </button>
         <div class="btn-group btn-group-sm">
           <button
             type="button"
@@ -428,15 +562,29 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </div>
       )}
 
-      {aktiveSeite && (
+      {skalier && anzeigeSeite && (
+        <SkalierLeiste
+          alt={skalier.alt}
+          neu={skalier.neu}
+          faktoren={skalier.faktoren}
+          gekoppelt={skalier.gekoppelt}
+          onChange={next => setSkalier(s => (s ? { ...s, ...next } : s))}
+          onAnwenden={skalierAnwenden}
+          onAbbrechen={() => setSkalier(null)}
+        />
+      )}
+
+      {aktiveSeite && anzeigeSeite && (
         <div class="d-lg-flex gap-2" ref={splitRef}>
           <div class="mb-2 mb-lg-0" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
             <PdfCanvas
               datei={datei}
-              seiteIndex={aktiveSeite.quelle}
-              rechtecke={sammleRechtecke(aktiveSeite, value.tabellen, armed)}
-              raster={sammleRaster(aktiveSeite, value.tabellen, armed)}
-              scharfGeschaltet={armed !== null}
+              seiteIndex={anzeigeSeite.quelle}
+              rechtecke={sammleRechtecke(anzeigeSeite, anzeigeKonfig.tabellen, armed)}
+              raster={sammleRaster(anzeigeSeite, anzeigeKonfig.tabellen, armed)}
+              scharfGeschaltet={armed !== null && !messModus && !skalier}
+              messModus={messModus}
+              onGemessen={handleGemessen}
               achse={achseFuer(armed)}
               hinweis={
                 armed?.bereich === 'letzteZeile'

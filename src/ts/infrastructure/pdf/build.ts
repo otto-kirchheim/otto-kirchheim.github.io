@@ -43,6 +43,7 @@ export function zellGeometrie(
     size: zelle.size ?? spalte.size,
     align: zelle.align ?? spalte.align,
     autoGroesse: zelle.autoGroesse ?? spalte.autoGroesse,
+    schriftart: zelle.schriftart ?? spalte.schriftart,
     fett: zelle.fett ?? spalte.fett,
     kursiv: zelle.kursiv ?? spalte.kursiv,
     unterstrichen: zelle.unterstrichen ?? spalte.unterstrichen,
@@ -83,11 +84,27 @@ export async function build(
 
   const vorlage = await PDFDocument.load(await fetch(layout.template).then(r => r.arrayBuffer()));
   const pdf = await PDFDocument.create();
+  // Standard-14-Familien: `embedFont` bettet für sie keine Bytes ein, alle drei einbinden kostet
+  // also nichts. `Zelle.schriftart` wählt die Familie, `waehleFont()` den Schnitt.
   const fonts: FontSet = {
-    normal: await pdf.embedFont(StandardFonts.Helvetica),
-    fett: await pdf.embedFont(StandardFonts.HelveticaBold),
-    kursiv: await pdf.embedFont(StandardFonts.HelveticaOblique),
-    fettKursiv: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
+    helvetica: {
+      normal: await pdf.embedFont(StandardFonts.Helvetica),
+      fett: await pdf.embedFont(StandardFonts.HelveticaBold),
+      kursiv: await pdf.embedFont(StandardFonts.HelveticaOblique),
+      fettKursiv: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
+    },
+    times: {
+      normal: await pdf.embedFont(StandardFonts.TimesRoman),
+      fett: await pdf.embedFont(StandardFonts.TimesRomanBold),
+      kursiv: await pdf.embedFont(StandardFonts.TimesRomanItalic),
+      fettKursiv: await pdf.embedFont(StandardFonts.TimesRomanBoldItalic),
+    },
+    courier: {
+      normal: await pdf.embedFont(StandardFonts.Courier),
+      fett: await pdf.embedFont(StandardFonts.CourierBold),
+      kursiv: await pdf.embedFont(StandardFonts.CourierOblique),
+      fettKursiv: await pdf.embedFont(StandardFonts.CourierBoldOblique),
+    },
   };
 
   const bloecke = verteile(alle, layout, cfg.tabellen);

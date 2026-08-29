@@ -1,21 +1,6 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
-
-// Dynamischer Import statt statischem `import ... from 'pdfjs-dist'` -- Bun (Testlauf) kennt Vites
-// `?url`-Import-Suffix nicht und würde beim statischen Aufloesen des Modulgraphen abbrechen, auch
-// wenn kein Test PdfCanvas tatsaechlich rendert. Per dynamischem Import wird der Worker-Pfad erst
-// beim tatsaechlichen Einsatz im Browser aufgeloest.
-let workerKonfiguriert = false;
-
-async function ladePdfjs() {
-  const pdfjsLib = await import('pdfjs-dist');
-  if (!workerKonfiguriert) {
-    const { default: workerUrl } = await import('pdfjs-dist/build/pdf.worker.mjs?url');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl;
-    workerKonfiguriert = true;
-  }
-  return pdfjsLib;
-}
+import { ladePdfjs } from './pdfjsLoader';
 
 // pdfjs liefert `convertToPdfPoint`/`convertToViewportPoint` nicht typisiert genug fuer unsere
 // Zwecke -- eigenes, minimales Interface statt des vollen `PageViewport`-Typs.
@@ -63,6 +48,17 @@ export interface RasterMarke {
   aktiv: boolean;
 }
 
+/** Gemessenes Textstück beim Schriftgrößen-Messmodus (Position in PDF-Punkten). */
+export interface Messung {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  size: number;
+  fontFamily: string;
+  text: string;
+}
+
 type Props = {
   datei: File;
   seiteIndex: number;
@@ -75,9 +71,12 @@ type Props = {
   onRechteck: (r: { x: number; y: number; x2: number; y2: number }) => void;
   onQuelleWaehlen: (pageIndex: number) => void;
   aktiveSeiteLabel: string;
+  /** Schriftgrößen-Messmodus: Klick auf ein Textstück der PDF liefert dessen Schriftgröße. */
+  messModus?: boolean;
+  onGemessen?: (m: Messung) => void;
 };
 
-const ZOOM_STUFEN = [1, 1.3, 1.6, 2, 2.5, 3, 4];
+const ZOOM_STUFEN = [0.1, 0.5, 0.7, 1, 1.3, 1.6, 2, 2.5, 3, 4];
 const LUPE_GROESSE = 180;
 const LUPE_FAKTOR = 3;
 
@@ -182,6 +181,8 @@ export function PdfCanvas({
   onRechteck,
   onQuelleWaehlen,
   aktiveSeiteLabel,
+  messModus = false,
+  onGemessen,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
@@ -199,6 +200,8 @@ export function PdfCanvas({
   /** Live-Anzeige in PDF-Punkten, damit man beim Ziehen sieht, welche Werte gesetzt werden. */
   const [cursorPdf, setCursorPdf] = useState<{ x: number; y: number } | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
+  /** Textstücke der aktuellen Seite (nur im Schriftgrößen-Messmodus geladen). */
+  const [messBoxen, setMessBoxen] = useState<Messung[]>([]);
 
   useEffect(() => {
     let abgebrochen = false;
@@ -254,6 +257,46 @@ export function PdfCanvas({
     };
   }, [pdf, angezeigt, zoom]);
 
+  // Schriftgrößen-Messmodus: Textstücke der Seite einsammeln (Position + Größe in PDF-Punkten).
+  useEffect(() => {
+    if (!pdf || !messModus) {
+      setMessBoxen([]);
+      return;
+    }
+    let abgebrochen = false;
+    const seitenNr = Math.min(Math.max(angezeigt, 0), pdf.numPages - 1) + 1;
+    void (async () => {
+      try {
+        const page = await pdf.getPage(seitenNr);
+        const inhalt = await page.getTextContent();
+        if (abgebrochen) return;
+        const stile = inhalt.styles as Record<string, { fontFamily?: string }>;
+        const boxen: Messung[] = [];
+        for (const item of inhalt.items) {
+          if (!('str' in item) || !item.str.trim()) continue;
+          const t = item.transform as number[];
+          const size = Math.hypot(t[2]!, t[3]!);
+          if (size <= 0) continue;
+          boxen.push({
+            x: t[4]!,
+            y: t[5]!,
+            w: item.width,
+            h: item.height || size,
+            size: Number(size.toFixed(1)),
+            fontFamily: stile[item.fontName]?.fontFamily ?? item.fontName,
+            text: item.str,
+          });
+        }
+        setMessBoxen(boxen);
+      } catch {
+        if (!abgebrochen) setMessBoxen([]);
+      }
+    })();
+    return () => {
+      abgebrochen = true;
+    };
+  }, [pdf, angezeigt, messModus]);
+
   useEffect(() => {
     const overlay = overlayRef.current;
     const ctx = overlay?.getContext('2d');
@@ -262,6 +305,19 @@ export function PdfCanvas({
     ctx.clearRect(0, 0, overlay.width, overlay.height);
     zeichneRaster(ctx, viewport, raster);
     zeichneRechtecke(ctx, viewport, rechtecke);
+    if (messModus) {
+      ctx.strokeStyle = 'rgba(13,110,253,0.5)';
+      ctx.fillStyle = 'rgba(13,110,253,0.07)';
+      ctx.lineWidth = 1;
+      for (const b of messBoxen) {
+        const [x1, y1] = viewport.convertToViewportPoint(b.x, b.y);
+        const [x2, y2] = viewport.convertToViewportPoint(b.x + b.w, b.y + b.h);
+        const links = Math.min(x1!, x2!);
+        const oben = Math.min(y1!, y2!);
+        ctx.fillRect(links, oben, Math.abs(x2! - x1!), Math.abs(y2! - y1!));
+        ctx.strokeRect(links, oben, Math.abs(x2! - x1!), Math.abs(y2! - y1!));
+      }
+    }
     if (!ziehen) return;
     // Bei Spalte/Zeilenraster wird nur eine Achse uebernommen -- die Vorschau spannt deshalb ueber
     // die ganze andere Achse (Band), statt ein Rechteck zu zeigen, dessen Haelfte verworfen wird.
@@ -276,7 +332,7 @@ export function PdfCanvas({
     ctx.fillRect(links, oben, breite, hoehe);
     ctx.strokeRect(links, oben, breite, hoehe);
     ctx.setLineDash([]);
-  }, [rechtecke, raster, ziehen, gerendert, achse]);
+  }, [rechtecke, raster, ziehen, gerendert, achse, messModus, messBoxen]);
 
   function canvasKoordinate(e: MouseEvent): { x: number; y: number } | null {
     const canvas = canvasRef.current;
@@ -368,6 +424,20 @@ export function PdfCanvas({
     return 'Rechteck über die Zelle ziehen (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten Ausschnitt).';
   }
 
+  function handleMessKlick(e: MouseEvent): void {
+    if (!messModus || !onGemessen) return;
+    const viewport = viewportRef.current;
+    const p = canvasKoordinate(e);
+    if (!viewport || !p) return;
+    const [px, py] = viewport.convertToPdfPoint(p.x, p.y);
+    let treffer: Messung | null = null;
+    for (const b of messBoxen) {
+      const drin = px! >= b.x && px! <= b.x + b.w && py! >= b.y - b.h * 0.3 && py! <= b.y + b.h;
+      if (drin && (!treffer || b.w * b.h < treffer.w * treffer.h)) treffer = b;
+    }
+    if (treffer) onGemessen(treffer);
+  }
+
   function handleUp(): void {
     const viewport = viewportRef.current;
     if (!ziehen || !viewport) return;
@@ -438,15 +508,22 @@ export function PdfCanvas({
           {liveAnzeige() && <span class="badge text-bg-primary font-monospace">{liveAnzeige()}</span>}
         </div>
       )}
+      {messModus && (
+        <div class="small text-primary mb-1">
+          Ein Textstück der PDF anklicken — die gemessene Schriftgröße wird übernommen (mit scharfgeschaltetem Feld
+          direkt in dessen Größe).
+        </div>
+      )}
       <div class="position-relative">
         <div class="border rounded overflow-auto" style="max-height:70vh">
           <div
             class="position-relative"
-            style={`width:max-content;cursor:${scharfGeschaltet ? 'crosshair' : 'default'}`}
+            style={`width:max-content;cursor:${messModus ? 'help' : scharfGeschaltet ? 'crosshair' : 'default'}`}
             onMouseDown={handleDown}
             onMouseMove={handleMove}
             onMouseUp={handleUp}
             onMouseLeave={handleLeave}
+            onClick={handleMessKlick}
           >
             <canvas ref={canvasRef} style="display:block" />
             <canvas ref={overlayRef} class="position-absolute top-0 start-0" style="pointer-events:none" />

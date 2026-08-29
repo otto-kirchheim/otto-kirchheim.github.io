@@ -2,13 +2,14 @@ import { useState } from 'preact/hooks';
 import type {
   Ausrichtung,
   FormatName,
+  Schriftart,
   SonderZeile,
   SonderZeileArt,
   SonderZeileZelle,
   TabellenDef,
 } from '@otto-kirchheim/nebengeld-shared';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
-import { FORMATE } from './datenKatalog';
+import { FORMATE, SCHRIFTARTEN } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
 
@@ -195,8 +196,8 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
 
                   {zelle && (
                     <>
-                      {/* Format: wie der Wert dieser Zelle angezeigt wird. */}
-                      <div class="col-12 mt-1">
+                      {/* Format und Schriftart: wie der Wert dieser Zelle angezeigt wird. */}
+                      <div class="col-7 mt-1">
                         <select
                           class="form-select form-select-sm"
                           title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
@@ -211,6 +212,27 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           {FORMATE.map(f => (
                             <option key={f.wert} value={f.wert}>
                               {f.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div class="col-5 mt-1">
+                        <select
+                          class="form-select form-select-sm"
+                          title="Schriftart dieser Zelle -- ohne Auswahl gilt die der Spalte"
+                          value={zelle.schriftart ?? ''}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              schriftart: ((e.target as HTMLSelectElement).value || undefined) as
+                                Schriftart | undefined,
+                            })
+                          }
+                        >
+                          <option value="">wie Spalte</option>
+                          {SCHRIFTARTEN.map(s => (
+                            <option key={s.wert} value={s.wert}>
+                              {s.label}
                             </option>
                           ))}
                         </select>

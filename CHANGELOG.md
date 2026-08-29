@@ -2,6 +2,47 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-29 (47)
+
+### feat (FormularEditor: Skalierung beim Vorlagen-Wechsel, Schriftgroessen-Messmodus, Schriftart-Auswahl, "Als neue Version anlegen")
+
+Vier Erweiterungen am PDF-Vorlagen-Editor (`features/Admin/components/FormularEditor/`):
+
+- **Skalierung + Versatz beim Vorlagen-Wechsel.** Wird im Editor eine andere PDF-Vorlage geladen
+  (andere Seitengroesse/Aufloesung/Raender), erscheint eine Inline-Leiste (`SkalierLeiste.tsx`):
+  X-/Y-Faktor aus den gemessenen Seitenmassen (`neu ÷ alt`) vorbelegt (Umschalter "X=Y"), plus
+  Versatz X/Y in PDF-Punkten. Jede Koordinate wird `Wert × Faktor + Versatz`. Die
+  Rechteck-Vorschau auf dem Canvas aktualisiert sich live; "Anwenden" schreibt die neuen
+  `x/x2/y/y2/size`-Werte, Tabellen-`startY/hoehe`, Sonderzeilen und die Signaturflaeche einmalig
+  in die Konfiguration (`skaliereKonfig.ts`, reine Funktion, kein gespeicherter Faktor).
+  Schriftgroesse und Tabellen-Zeilenhoehe (Skalare) folgen dem Y-Faktor, ohne Versatz. Auch
+  manuell ueber einen Toolbar-Button. Neu: `SeitenDef.groesse` (Punkt-Masse der Vorlagenseite)
+  wird vom Editor beim Laden nachgetragen und dient als Referenz.
+- **Schriftgroessen-Messmodus** auf dem bestehenden `PdfCanvas`: laedt man die *ausgefuellte*
+  Vorlage, blendet der Toolbar-Toggle "Schriftgroesse messen" die Textstuecke der PDF
+  (`page.getTextContent()`) als klickbare Kaestchen ein; ein Klick liefert die Schriftgroesse
+  (`hypot(transform[2], transform[3])`) und die Font-Familie -- in die Zwischenablage oder, mit
+  scharfgeschaltetem Feld, direkt in dessen `size`.
+- **Schriftart-Auswahl.** Neues optionales `schriftart` (Standard-14: `helvetica`/`times`/
+  `courier`) auf `Feld`/`Spalte`/`SonderZeileZelle`; `<select>` in `DarstellungsFelder` und den
+  Sonderzeilen-Overrides. Der Renderer (`build.ts`/`zeichne.ts`) bettet jetzt alle drei Familien
+  (je 4 Schnitte) ein; `waehleFont()` waehlt erst Familie, dann Schnitt. Ohne Angabe unveraendert
+  Helvetica.
+- **"Als neue Version anlegen"** im Bearbeiten-Modus von `FormularUpload.tsx`: uebernimmt
+  Konfiguration und PDF der bearbeiteten Version in den Anlege-Modus (`POST` statt `PUT`),
+  Versionsname und "gueltig ab" muessen neu vergeben werden. Reiner Frontend-State bis zum
+  Speichern.
+
+`ladePdfjs()` aus `PdfCanvas.tsx` nach `FormularEditor/pdfjsLoader.ts` gezogen (dort auch
+`seitenMasse()`), von beiden genutzt.
+
+Verifiziert: `tsc --noEmit` (Frontend/Backend/Shared) + `eslint` sauber; `bun run build` gruen;
+`bun test` fuer `skaliereKonfig` (neu, 7), `zeichne` (neu: Familien-Auswahl) und die
+PDF-/Admin-Suiten gruen; Headless-Chrome-Smoke des Editors (Vorlage laden, Skalier-Leiste mit
+Faktor 1,5 + Versatz 20/-10 -> Feld `x50→95, y50→65, x2 200→320, y2 70→95, size 10→15` korrekt,
+Messmodus, Schriftart-Select `Helvetica/Times/Courier`, keine Render-Schleife/Konsolenfehler aus
+dem Editor).
+
 ## 2026-08-26 (46)
 
 ### feat (Bereitschaft: Speicherreihenfolge BZ-vor-BE erzwingen + Hinweis auf noch nicht gespeicherten Bereitschaftszeitraum)
