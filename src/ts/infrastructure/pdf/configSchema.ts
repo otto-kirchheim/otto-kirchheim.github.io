@@ -109,7 +109,6 @@ const sonderZeileZelleSchema = z.object({
   size: z.number().optional(),
   align: ausrichtungSchema.optional(),
   autoGroesse: z.boolean().optional(),
-  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -141,7 +140,6 @@ const feldSchema = z.object({
   nurBeiSignatur: z.boolean().optional(),
   listenKopf: listenPlatzSchema.extend({ tabelle: z.string() }).optional(),
   drehung: drehungSchema.optional(),
-  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -162,7 +160,6 @@ const spalteSchema = z.object({
   wenn: bedingungSchema.optional(),
   listenPlatz: listenPlatzSchema.optional(),
   drehung: drehungSchema.optional(),
-  schriftart: z.string().optional(),
   fett: z.boolean().optional(),
   kursiv: z.boolean().optional(),
   unterstrichen: z.boolean().optional(),
@@ -227,6 +224,8 @@ const tabellenDefSchema = z.object({
 
 const layoutSchema = z.object({
   template: z.string(),
+  /** Schriftfamilie fürs ganze Formular; ohne Angabe `'helvetica'` (siehe `Schriftart`). */
+  schriftart: z.string().optional(),
   seiten: z.array(seitenDefSchema).min(1),
 });
 
@@ -236,6 +235,7 @@ const layoutSchema = z.object({
  * `POST /formulare/:f/versionen`.
  */
 export const konfigSchema = z.object({
+  schriftart: z.string().optional(),
   seiten: z.array(seitenDefSchema).min(1),
   tabellen: z.record(z.string(), tabellenDefSchema),
 });

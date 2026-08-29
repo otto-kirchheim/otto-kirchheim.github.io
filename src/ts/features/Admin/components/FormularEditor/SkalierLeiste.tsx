@@ -85,8 +85,8 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, onChange, onAnwen
             <ZahlEingabe label="Faktor Y" schritt="0.001" wert={faktoren.y} onChange={v => setze({ y: v })} />
           </>
         )}
-        <ZahlEingabe label="Versatz X" schritt="1" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
-        <ZahlEingabe label="Versatz Y" schritt="1" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
+        <ZahlEingabe label="Versatz X" schritt="0.01" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
+        <ZahlEingabe label="Versatz Y" schritt="0.01" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
         <div class="btn-group btn-group-sm ms-auto">
           <button type="button" class="btn btn-primary" onClick={onAnwenden}>
             Anwenden

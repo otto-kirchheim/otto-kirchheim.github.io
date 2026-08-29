@@ -1,5 +1,5 @@
 import { degrees, type PDFFont, type PDFPage } from '@cantoo/pdf-lib';
-import type { Ausrichtung, Drehung, Schriftart } from '@otto-kirchheim/nebengeld-shared';
+import type { Ausrichtung, Drehung } from '@otto-kirchheim/nebengeld-shared';
 
 export interface Zelle {
   x: number;
@@ -11,29 +11,27 @@ export interface Zelle {
   umbruch?: boolean;
   align?: Ausrichtung;
   drehung?: Drehung;
-  schriftart?: Schriftart;
   fett?: boolean;
   kursiv?: boolean;
   unterstrichen?: boolean;
 }
 
-/** Die vier Schnitte einer Schriftfamilie, aus denen `zeichne()` je Zelle den passenden auswählt. */
-export interface Schnitte {
+/**
+ * Die vier Schnitte der Formular-Schriftfamilie (global gewählt, siehe `Layout.schriftart`), aus
+ * denen `zeichne()` je Zelle nach `fett`/`kursiv` den passenden auswählt.
+ */
+export interface FontSet {
   normal: PDFFont;
   fett: PDFFont;
   kursiv: PDFFont;
   fettKursiv: PDFFont;
 }
 
-/** Schriftfamilien, adressiert über `Zelle.schriftart` (ohne Angabe / unbekannt: `helvetica`). */
-export type FontSet = Record<string, Schnitte>;
-
 function waehleFont(f: Zelle, fonts: FontSet): PDFFont {
-  const s = fonts[f.schriftart ?? 'helvetica'] ?? fonts.helvetica!;
-  if (f.fett && f.kursiv) return s.fettKursiv;
-  if (f.fett) return s.fett;
-  if (f.kursiv) return s.kursiv;
-  return s.normal;
+  if (f.fett && f.kursiv) return fonts.fettKursiv;
+  if (f.fett) return fonts.fett;
+  if (f.kursiv) return fonts.kursiv;
+  return fonts.normal;
 }
 
 /**

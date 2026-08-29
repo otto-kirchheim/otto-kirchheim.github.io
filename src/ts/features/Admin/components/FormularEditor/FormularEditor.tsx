@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
-import type { Feld, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
+import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -11,12 +11,12 @@ import { beispielSignatur } from './beispielSignatur';
 import { seitenMasse } from './pdfjsLoader';
 import { skaliereKonfig, type SkalierFaktoren } from './skaliereKonfig';
 import { SkalierLeiste } from './SkalierLeiste';
-import type { FormularCode } from './datenKatalog';
+import { SCHRIFTARTEN, type FormularCode } from './datenKatalog';
 
 type Masse = { w: number; h: number };
 type SkalierState = { alt: Masse | null; neu: Masse | null; faktoren: SkalierFaktoren; gekoppelt: boolean };
 
-export type Konfig = { seiten: SeitenDef[]; tabellen: Version['tabellen'] };
+export type Konfig = { schriftart?: Schriftart; seiten: SeitenDef[]; tabellen: Version['tabellen'] };
 
 type Props = {
   formular: FormularCode;
@@ -415,7 +415,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           version: 'vorschau',
           gueltigVon: '2026-01-01',
           gueltigBis: null,
-          layout: { template: URL.createObjectURL(datei), seiten: value.seiten },
+          layout: { template: URL.createObjectURL(datei), schriftart: value.schriftart, seiten: value.seiten },
           tabellen: value.tabellen,
           formular,
         },
@@ -487,6 +487,21 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
         </button>
+        <select
+          class="form-select form-select-sm w-auto"
+          title="Schriftart für den gesamten Fließtext des Formulars"
+          value={value.schriftart ?? 'helvetica'}
+          onChange={e => {
+            const v = (e.target as HTMLSelectElement).value as Schriftart;
+            onChange({ ...value, schriftart: v === 'helvetica' ? undefined : v });
+          }}
+        >
+          {SCHRIFTARTEN.map(s => (
+            <option key={s.wert} value={s.wert}>
+              {s.label}
+            </option>
+          ))}
+        </select>
         <div class="btn-group btn-group-sm">
           <button
             type="button"

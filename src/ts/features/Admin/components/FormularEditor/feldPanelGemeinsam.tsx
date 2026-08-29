@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import type { Ausrichtung, Drehung, Feld, FormatName, Schriftart } from '@otto-kirchheim/nebengeld-shared';
-import { FORMATE, SCHRIFTARTEN } from './datenKatalog';
+import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
+import { FORMATE } from './datenKatalog';
 import type { Armed } from './feldPanelTypen';
 
 export function istGleich(a: Armed | null, b: Armed): boolean {
@@ -136,21 +136,11 @@ export function DarstellungsFelder<
     align?: Ausrichtung;
     format?: FormatName;
     drehung?: Drehung;
-    schriftart?: Schriftart;
     fett?: boolean;
     kursiv?: boolean;
     unterstrichen?: boolean;
   },
->({
-  wert,
-  onChange,
-  vorlageFonts = [],
-}: {
-  wert: T;
-  onChange: (next: T) => void;
-  /** Zusätzliche, in der Template-PDF eingebettete Schriften (`wert` = `vorlage:<Name>`). */
-  vorlageFonts?: { wert: Schriftart; label: string }[];
-}) {
+>({ wert, onChange }: { wert: T; onChange: (next: T) => void }) {
   return (
     <>
       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
@@ -223,9 +213,9 @@ export function DarstellungsFelder<
           </select>
         </div>
       </div>
-      {/* Format und Schriftart: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
+      {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
       <div class="row g-1 mt-1">
-        <div class="col-7">
+        <div class="col-12">
           <select
             class="form-select form-select-sm"
             value={wert.format ?? ''}
@@ -239,23 +229,6 @@ export function DarstellungsFelder<
             {FORMATE.map(f => (
               <option key={f.wert} value={f.wert}>
                 {f.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div class="col-5">
-          <select
-            class="form-select form-select-sm"
-            title="Schriftart der Zelle (Standard: Helvetica)"
-            value={wert.schriftart ?? 'helvetica'}
-            onChange={e => {
-              const v = (e.target as HTMLSelectElement).value as Schriftart;
-              onChange({ ...wert, schriftart: v === 'helvetica' ? undefined : v });
-            }}
-          >
-            {[...SCHRIFTARTEN, ...vorlageFonts].map(s => (
-              <option key={s.wert} value={s.wert}>
-                {s.label}
               </option>
             ))}
           </select>

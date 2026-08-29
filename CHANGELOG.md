@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-08-29 (48)
+
+### refactor (FormularEditor: Schriftart global statt pro Zelle, Skalier-Versatz mit Kommazahlen)
+
+Zwei User-Nachtraege zur Editor-Erweiterung (47):
+
+- **Schriftart ist jetzt eine Einstellung des ganzen Formulars** (`Layout.schriftart`) statt
+  eines Feldes pro Feld/Spalte/Sonderzeile. Ein einziges `<select>` in der Editor-Toolbar; der
+  Renderer (`build.ts` `ladeFontSet()`) bettet genau die gewaehlte Standard-14-Familie ein,
+  `zeichne()`s `FontSet` ist wieder die flache Vierergruppe (`normal/fett/kursiv/fettKursiv`).
+  Fett/Kursiv bleiben pro Zelle. Die per-Zelle-`schriftart`-Felder aus (47) sind aus allen drei
+  Typ-Spiegeln und der UI entfernt.
+- **Skalier-Versatz akzeptiert Kommazahlen** (`step="0.01"` statt `"1"`).
+
+Verifiziert: `tsc`/`eslint` sauber (FE/BE/Shared), `bun test` skaliereKonfig (7) + PDF-/Admin-Suiten
+gruen, Headless-Chrome-Smoke (Skalierung+Versatz, globale Schriftart-Auswahl).
+
 ## 2026-08-29 (47)
 
 ### feat (FormularEditor: Skalierung beim Vorlagen-Wechsel, Schriftgroessen-Messmodus, Schriftart-Auswahl, "Als neue Version anlegen")

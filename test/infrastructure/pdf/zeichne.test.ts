@@ -13,7 +13,7 @@ async function macheFont(): Promise<PDFFont> {
 /** FontSet für Tests, die keine Schriftschnitt-Auswahl prüfen -- alle Slots derselbe Schrift. */
 async function macheFonts(font?: PDFFont): Promise<FontSet> {
   const basis = font ?? (await macheFont());
-  return { helvetica: { normal: basis, fett: basis, kursiv: basis, fettKursiv: basis } };
+  return { normal: basis, fett: basis, kursiv: basis, fettKursiv: basis };
 }
 
 /** Fängt `drawText`/`drawLine`-Aufrufe ab, statt das erzeugte PDF wieder zu parsen. */
@@ -176,18 +176,10 @@ describe('zeichne', () => {
     async function macheUnterscheidbareFonts(): Promise<FontSet> {
       const pdf = await PDFDocument.create();
       return {
-        helvetica: {
-          normal: await pdf.embedFont(StandardFonts.Helvetica),
-          fett: await pdf.embedFont(StandardFonts.HelveticaBold),
-          kursiv: await pdf.embedFont(StandardFonts.HelveticaOblique),
-          fettKursiv: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
-        },
-        times: {
-          normal: await pdf.embedFont(StandardFonts.TimesRoman),
-          fett: await pdf.embedFont(StandardFonts.TimesRomanBold),
-          kursiv: await pdf.embedFont(StandardFonts.TimesRomanItalic),
-          fettKursiv: await pdf.embedFont(StandardFonts.TimesRomanBoldItalic),
-        },
+        normal: await pdf.embedFont(StandardFonts.Helvetica),
+        fett: await pdf.embedFont(StandardFonts.HelveticaBold),
+        kursiv: await pdf.embedFont(StandardFonts.HelveticaOblique),
+        fettKursiv: await pdf.embedFont(StandardFonts.HelveticaBoldOblique),
       };
     }
 
@@ -195,42 +187,28 @@ describe('zeichne', () => {
       const fonts = await macheUnterscheidbareFonts();
       const gesammelt: Gezeichnet[] = [];
       zeichne(macheSeite(gesammelt), 'Test', ZELLE, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.helvetica!.normal);
+      expect(gesammelt[0]!.font).toBe(fonts.normal);
     });
 
     it('fett wählt HelveticaBold', async () => {
       const fonts = await macheUnterscheidbareFonts();
       const gesammelt: Gezeichnet[] = [];
       zeichne(macheSeite(gesammelt), 'Test', { ...ZELLE, fett: true }, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.helvetica!.fett);
+      expect(gesammelt[0]!.font).toBe(fonts.fett);
     });
 
     it('kursiv wählt HelveticaOblique', async () => {
       const fonts = await macheUnterscheidbareFonts();
       const gesammelt: Gezeichnet[] = [];
       zeichne(macheSeite(gesammelt), 'Test', { ...ZELLE, kursiv: true }, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.helvetica!.kursiv);
+      expect(gesammelt[0]!.font).toBe(fonts.kursiv);
     });
 
     it('fett UND kursiv wählt HelveticaBoldOblique', async () => {
       const fonts = await macheUnterscheidbareFonts();
       const gesammelt: Gezeichnet[] = [];
       zeichne(macheSeite(gesammelt), 'Test', { ...ZELLE, fett: true, kursiv: true }, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.helvetica!.fettKursiv);
-    });
-
-    it('schriftart wählt die Familie, dann den Schnitt', async () => {
-      const fonts = await macheUnterscheidbareFonts();
-      const gesammelt: Gezeichnet[] = [];
-      zeichne(macheSeite(gesammelt), 'Test', { ...ZELLE, schriftart: 'times', fett: true }, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.times!.fett);
-    });
-
-    it('unbekannte schriftart fällt auf helvetica zurück', async () => {
-      const fonts = await macheUnterscheidbareFonts();
-      const gesammelt: Gezeichnet[] = [];
-      zeichne(macheSeite(gesammelt), 'Test', { ...ZELLE, schriftart: 'vorlage:Unbekannt' }, fonts);
-      expect(gesammelt[0]!.font).toBe(fonts.helvetica!.normal);
+      expect(gesammelt[0]!.font).toBe(fonts.fettKursiv);
     });
   });
 
