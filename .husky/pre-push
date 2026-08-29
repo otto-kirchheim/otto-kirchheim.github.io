@@ -1,0 +1,27 @@
+if ! command -v bun >/dev/null 2>&1; then
+  for candidate in "${HOME:-}/.bun/bin" "/home/vscode/.bun/bin" "/root/.bun/bin"; do
+    if [ -x "$candidate/bun" ]; then
+      export PATH="$candidate:$PATH"
+      break
+    fi
+  done
+fi
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "Error: bun not found in PATH for pre-push hook" >&2
+  exit 127
+fi
+
+# Volles Gate (lint + test + build) nur beim Push nach dev/main; Feature-Branches nur lint + test.
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    refs/heads/dev | refs/heads/main)
+      echo "husky pre-push: volles Gate fuer $remote_ref -- lint + test + build"
+      bun run lint && bun run test && bun run build || exit 1
+      ;;
+    refs/heads/*)
+      echo "husky pre-push: $remote_ref -- lint + test"
+      bun run lint && bun run test || exit 1
+      ;;
+  esac
+done

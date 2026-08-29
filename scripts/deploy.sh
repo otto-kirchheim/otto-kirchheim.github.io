@@ -18,7 +18,7 @@
 set -euo pipefail
 
 REMOTE="${REMOTE:-origin}"
-SOURCE_BRANCH="${SOURCE_BRANCH:-test}"
+SOURCE_BRANCH="${SOURCE_BRANCH:-dev}"
 TARGET_BRANCH="${TARGET_BRANCH:-main}"
 RUN_CHECKS=true
 PUSH_CHANGES=true
@@ -121,6 +121,18 @@ echo "🚀 Deploying frontend from '$SOURCE_BRANCH' to '$TARGET_BRANCH' via '$RE
 run_cmd git fetch "$REMOTE"
 run_cmd git checkout "$SOURCE_BRANCH"
 run_cmd git pull --ff-only "$REMOTE" "$SOURCE_BRANCH"
+
+# shared (@otto-kirchheim/nebengeld-shared) haengt als Git-Branch-Dependency an #dev.
+# Vor dem Merge nach main den aktuellen shared-Commit in bun.lock einfrieren, damit
+# der Pages-Build reproduzierbar gegen exakt diesen Stand baut (Reihenfolge-Regel:
+# shared wird immer zuerst nach main deployt, ist zu diesem Zeitpunkt also == freigegeben).
+run_cmd bun update @otto-kirchheim/nebengeld-shared
+if ! git diff --quiet -- bun.lock; then
+  run_cmd git commit -am "chore: pin shared auf aktuellen ${SOURCE_BRANCH}-Stand"
+  if [[ "$PUSH_CHANGES" == true ]]; then
+    run_cmd git push "$REMOTE" "$SOURCE_BRANCH"
+  fi
+fi
 
 if [[ "$RUN_CHECKS" == true ]]; then
   run_cmd bun run release:check
