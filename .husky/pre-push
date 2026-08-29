@@ -12,16 +12,20 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 127
 fi
 
-# Volles Gate (lint + test + build) nur beim Push nach dev/main; Feature-Branches nur lint + test.
-while read -r _local_ref _local_sha remote_ref _remote_sha; do
+# Volles Gate (lint + test + build) nur beim Push nach dev/main.
+# Feature-Branches: nur lint (schnell) -- die inhaltliche Pruefung laeuft beim
+# dev/main-Push bzw. beim deploy.sh-Merge.
+while read -r _local_ref local_sha remote_ref _remote_sha; do
+  # Branch-Loeschung (local_sha = 40 Nullen) -> nichts zu pruefen
+  [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue
   case "$remote_ref" in
     refs/heads/dev | refs/heads/main)
       echo "husky pre-push: volles Gate fuer $remote_ref -- lint + test + build"
       bun run lint && bun run test && bun run build || exit 1
       ;;
     refs/heads/*)
-      echo "husky pre-push: $remote_ref -- lint + test"
-      bun run lint && bun run test || exit 1
+      echo "husky pre-push: $remote_ref -- lint"
+      bun run lint || exit 1
       ;;
   esac
 done
