@@ -144,8 +144,10 @@ describe('beAbgeleiteteWerte', () => {
     expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 13 }, 0.27, true).PrivatKmBetrag).toBe(3.51);
   });
 
-  it('liefert 0 ohne Privat-km', () => {
-    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 0 }, 0.27, true).PrivatKmBetrag).toBe(0);
+  it('liefert undefined ohne Privat-km', () => {
+    expect(
+      beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 0 }, 0.27, true).PrivatKmBetrag,
+    ).toBeUndefined();
   });
 
   it('Tarifkraft: rohe km gesetzt, PrivatKmBetrag undefined', () => {
