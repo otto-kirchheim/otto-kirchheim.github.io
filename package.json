@@ -43,19 +43,19 @@
   "license": "ISC",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@happy-dom/global-registrator": "^20.11.15",
+    "@happy-dom/global-registrator": "^20.14.0",
     "@preact/preset-vite": "^2.10.6",
     "@types/bootstrap": "^5.2.11",
-    "@types/bun": "^1.4.0",
+    "@types/bun": "^1.4.1",
     "@types/file-saver": "^2.0.7",
-    "eslint": "^10.9.1",
+    "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
-    "lint-staged": "^17.4.1",
+    "lint-staged": "^17.5.0",
     "prettier": "^3.9.6",
-    "sass": "^1.103.1",
+    "sass": "^1.104.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.68.0",
+    "typescript-eslint": "^8.69.0",
     "unplugin-inject-preload": "^3.0.0",
     "vite": "^8.2.2",
     "vite-plugin-compression2": "^2.5.3",
@@ -66,7 +66,7 @@
     "@otto-kirchheim/nebengeld-shared": "github:otto-kirchheim/nebengeld-shared#dev",
     "@pdf-lib/fontkit": "^1.1.1",
     "@popperjs/core": "^2.11.8",
-    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/browser": "^14.0.0",
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.23",
     "dayjs-feiertage": "^0.1.0",
@@ -76,6 +76,6 @@
     "preact": "^10.29.8",
     "signature_pad": "^5.1.4",
     "uuid": "^14.0.2",
-    "zod": "^4.5.2"
+    "zod": "^4.5.4"
   }
 }

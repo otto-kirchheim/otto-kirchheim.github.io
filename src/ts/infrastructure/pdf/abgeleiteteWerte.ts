@@ -118,8 +118,8 @@ export function beAbgeleiteteWerte(
   const privatKmBetrag = Math.round(zeile.PrivatKm * privatKmSatz * 100) / 100;
   return {
     Dauer: ZEILEN_OPS.zeitdifferenz([alsMinuten(zeile.Ende), alsMinuten(zeile.Beginn)]),
-    PrivatKm: beamter ? undefined : zeile.PrivatKm,
-    PrivatKmBetrag: beamter ? privatKmBetrag : undefined,
+    PrivatKm: beamter ? undefined : zeile.PrivatKm || undefined,
+    PrivatKmBetrag: beamter ? privatKmBetrag || undefined : undefined,
   };
 }
 
