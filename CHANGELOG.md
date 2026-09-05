@@ -2,6 +2,40 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-05 (53)
+
+### chore (DB-UX-Migration: Wegwerf-Spike-Ergebnisse in den Plan eingearbeitet)
+
+Letzter offener Phase-0-Punkt. Minimales Vite-8-Projekt **ausserhalb des Repos** (nicht
+gemergt, keine Dependency-Aenderung hier): React 19.2.8 + `@db-ux/*` 5.3.0 +
+`@db-ux/db-theme` 6.2.0 mit den echten `ASSET_*`-Credentials, Bundle gemessen.
+Vier Plan-Annahmen korrigiert, eine bestaetigt:
+
+- **`trustedDependencies` (Bun):** `@db-ux/db-theme` allein reicht nicht -- Fonts und Icons
+  sind drei eigene transitive Pakete mit je eigenem `postinstall`
+  (`db-theme-fonts`, `db-theme-icons`, `db-theme-illustrative-icons`), dazu `@swc/core`.
+  Ohne Eintrag meldet Bun nur "Blocked N postinstalls" und baut ohne Markenassets.
+- **Vite 8 = Rolldown:** `manualChunks` wird **nur als Funktion** akzeptiert; die
+  Rollup-Objektform bricht den Build (`TypeError: manualChunks is not a function`).
+- **`cssMinify: 'esbuild'`** braucht `esbuild` als explizite devDependency -- Vite 8
+  bringt es nicht mehr mit.
+- **`light-dark()`-Falle bestaetigt:** der Default-Minifier reduziert 867 Vorkommen auf 3
+  und definiert die Ersatzvariablen nur unter `[data-mode=light|dark]`, womit der
+  OS-Automatik-Modus bricht. Mit `cssMinify: 'esbuild'` bleiben 870 erhalten.
+- **Bundle:** React-Runtime real **59,6 KB gz** (Plan schaetzte +40 KB), DB-UX-CSS
+  **84 KB gz** (heutige App-CSS 35 KB gz), Fonts 32 woff2 / ~1,8 MB, dazu 12 ungewollte
+  Marken-Logo-SVG (~91 KB). PWA-`globPatterns` in Phase B/I entsprechend eingrenzen.
+- **`DBDrawer`** baut auf nativem `<dialog>`: `header`/`footer` sind Props-Slots,
+  `position: 'fixed'` (Default) nutzt `showModal()` inkl. echtem Fokus-Trap. Die
+  Phase-E-Verifikationspunkte (Escape/Backdrop/Fokus-Trap/Scroll-Lock) sind damit
+  grossteils nativ abgedeckt.
+
+Entschluesselung verifiziert (18 woff2, 3345 Icon-SVG, 247 illustrative SVG, 49 Bilder);
+`tsc --noEmit` mit dem projekt-gepinnten TS 6.0.3 sauber, also kein TS-7-Zwang durch DB UX.
+
+Nur Dokumentation geaendert (`tasks/plan-db-ux-migration.md`, `tasks/todo.md`) -- kein
+Produktionscode, keine Dependencies.
+
 ## 2026-09-05 (52)
 
 ### chore (DB-UX-Migration Phase 0: typecheck-Gate + Testreihenfolge-Flake behoben)

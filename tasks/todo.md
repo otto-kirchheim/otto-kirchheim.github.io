@@ -24,12 +24,31 @@ Phase 0 selbst: reines Toolchain-Gate, keine Verhaltensaenderung, kein React-/DB
       `document.readyState='complete'` (wie die Schwester-Dateien). Vorher 2068/1 auf
       `origin/dev`, jetzt 2069/0 reihenfolge-unabhaengig.
 - [x] `CHANGELOG.md` Eintrag (52).
+- [x] `feat/db-ux` gepusht; Parent-`main`-Divergenz per Rebase aufgeloest und gepusht
+      (`6470ce8`), `feat/db-ux-migration` auf `main` rebased + force-gepusht (`f69eefe`).
+- [x] **Wegwerf-Spike** durchgefuehrt (ausserhalb des Repos, nicht gemergt): React 19.2.8 +
+      `@db-ux/*` 5.3.0 + `db-theme` 6.2.0 mit echten Credentials, Bundle gemessen.
+      Ergebnisse in `tasks/plan-db-ux-migration.md`, Abschnitt "Spike-Ergebnisse".
 - [ ] `.env.example` -- im Sandbox durch Deny-Rule blockiert, in Phase B mit `scripts/install.sh`.
-- [ ] Wegwerf-Spike (`@db-ux/react-core-components` + React 19 + `db-theme`-postinstall,
-      Bundle messen) -- offen, nicht blockierend.
-- [ ] Parent-Repo `feat/db-ux-migration` (= `origin/main` + db-ux-MCP-Commit) als
-      Arbeitsbranch; lokaler `main` divergiert von `origin/main` (Rueckfrage an User offen).
-- [ ] Push `feat/db-ux` + Frontend-Gitlink-Bump -- erst nach ausdruecklicher User-Freigabe.
+- [ ] Parent-Submodul-Gitlink-Bumps (backend/shared/frontend) -- haengen am naechsten
+      dev->main-Release je Submodul, bewusst separat.
+
+## Spike-Kernbefunde (2026-09-05)
+
+1. `trustedDependencies` braucht **alle vier** db-theme-Pakete + `@swc/core` -- `@db-ux/db-theme`
+   allein reicht nicht (Fonts/Icons sind transitive Pakete mit eigenem `postinstall`).
+2. Entschluesselung funktioniert: 18 woff2, 3345 Icon-SVG, 247 illustrative SVG, 49 Theme-Bilder.
+   `.enc`-Dateien bleiben daneben liegen (kein Fehler).
+3. **Vite 8 = Rolldown: `manualChunks` nur als Funktion** -- Objektform bricht den Build.
+4. `cssMinify: 'esbuild'` braucht `esbuild` als explizite devDependency (Vite 8 liefert es nicht mit).
+5. **`light-dark()`-Falle bestaetigt:** Default-Minifier reduziert 867 -> 3 Vorkommen und
+   definiert die Ersatzvariablen nur unter `[data-mode=...]`; mit `cssMinify:'esbuild'` bleiben 870.
+6. Bundle: React-Runtime **59,6 KB gz** (Plan schaetzte +40), DB-UX-CSS **84 KB gz** (heute 35),
+   Fonts 32 woff2 / 1,8 MB, dazu 12 Marken-Logo-SVG (~91 KB) ungewollt.
+7. `DBDrawer` = natives `<dialog>`: `header`/`footer` als Props-Slots, `position:'fixed'` liefert
+   `showModal()` mit echtem Fokus-Trap -- Phase-E-Verifikationspunkte grossteils nativ abgedeckt.
+8. `npm ls react` im Minimalfall sauber dedupet trotz fehlender peerDeps; TS 6.0.3 typecheckt
+   React 19 + DB-Komponenten fehlerfrei (kein TS-7-Zwang).
 
 ## Verifikationskriterien (Phase 0)
 
@@ -42,12 +61,13 @@ Phase 0 selbst: reines Toolchain-Gate, keine Verhaltensaenderung, kein React-/DB
 
 ## Review (Phase 0)
 
-- Erledigt: Branch, `typecheck`-Gate, Plan-Korrekturen, Flake-Fix, Changelog. `release:check`
-  gruen verifiziert (typecheck 0 / lint 0 / test 2069-0 / build ok).
-- Offen (nicht blockierend): `.env.example`, Spike, Parent-Repo-Sync (User-Rueckfrage),
-  Push/Gitlink-Bump (User-Freigabe).
-- Nebenbefund: Vite 8 nutzt Rolldown -- Build-Log empfiehlt `build.rolldownOptions.output`
-  statt `rollupOptions`; in Phase A1 pruefen (Plan-Doku-Hinweis ergaenzt).
+- Erledigt: Branch, `typecheck`-Gate, Plan-Korrekturen, Flake-Fix, Changelog, Push,
+  Parent-Repo-Reconcile, Wegwerf-Spike. `release:check` gruen verifiziert
+  (typecheck 0 / lint 0 / test 2069-0 / build ok).
+- Offen (nicht blockierend): `.env.example`, Parent-Gitlink-Bumps (haengen am dev->main-Release).
+- Der Spike hat vier Plan-Annahmen korrigiert (Punkte 1, 3, 4, 6 oben) und eine bestaetigt
+  (Punkt 5, `light-dark()`). Phase A1, B und E in der Plan-Doku entsprechend nachgezogen.
+- Phase 0 ist damit abgeschlossen; naechster Schritt ist Phase A1.
 
 ---
 

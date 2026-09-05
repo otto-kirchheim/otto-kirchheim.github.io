@@ -13,12 +13,14 @@
   - Vorgefundener Testreihenfolge-Flake behoben (`test/core/bootstrap.test.ts`).
   - **Baseline verifiziert:** `bun run release:check` grün – `typecheck` exit 0, `lint` exit 0,
     `bun test` **2069 pass / 0 fail** (183 Dateien), `build` grün.
+  - **Wegwerf-Spike durchgeführt** (außerhalb des Repos, nicht gemergt) – Ergebnisse im
+    Abschnitt „Spike-Ergebnisse" unter Phase 0; korrigieren Phase A1, B und E.
 - **Phase 0 (Parent)** – Branch `feat/db-ux-migration` = `origin/main` (`16e7406`) + Commit
   `a70ca1f`: `.mcp.json` + `.mcp.json.example` mit db-ux-MCP-Eintrag (claude-flow + graphify
   + db-ux, dort bewusst versioniert – **nicht** auf `origin/main` selbst). Lokaler Parent-`main`
   divergiert von `origin/main` – Sync + Arbeitsbranch-Wechsel offen (User-Rückfrage).
-- **Noch offen in Phase 0:** `.env.example` (Sandbox-Deny → Phase B), Wegwerf-Spike,
-  Push `feat/db-ux` + Frontend-Gitlink-Bump (nach User-Freigabe).
+- **Noch offen in Phase 0:** `.env.example` (Sandbox-Deny → Phase B), Frontend-Gitlink-Bump
+  im Parent (bewusst erst später).
 - **Phase A–I** – offen.
 
 Für Phase B werden die DB-Markentheme-Secrets gebraucht: `frontend/.env` (gitignored)
@@ -114,11 +116,87 @@ Keine Verhaltensänderung, nur Infrastruktur.
       `feat/db-ux-migration`** (= `origin/main` + `a70ca1f`), nicht auf `origin/main` selbst.
 - [ ] `.env.example` – im Sandbox durch Deny-Rule blockiert; Anlage in Phase B zusammen mit
       `scripts/install.sh` (beide existieren noch nicht).
-- [ ] Wegwerf-Spike (nicht mergen): `@db-ux/react-core-components` + React 19 + `db-theme`-
-      postinstall mit echten Credentials einmal durchspielen, Bundle messen.
+- [x] Wegwerf-Spike durchgeführt (2026-09-05, außerhalb des Repos, nicht gemergt):
+      `@db-ux/react-core-components` + React 19 + `db-theme`-postinstall mit echten
+      Credentials, Bundle gemessen. Ergebnisse siehe „Spike-Ergebnisse" unten.
 
 **Verifikation:** `bun run release:check` grün (`typecheck` / `lint` / `test` / `build`);
 CI (`bun run build`) unverändert grün. ✓ 2026-09-05: 2069 pass / 0 fail.
+
+### Spike-Ergebnisse (2026-09-05) — verbindlich für Phase A/B
+
+Minimales Vite-8-Projekt außerhalb des Repos: React 19.2.8, `@db-ux/*` 5.3.0,
+`db-theme` 6.2.0, Querschnitt der später gebrauchten Komponenten. `tsc --noEmit` mit dem
+projekt-gepinnten **TS 6.0.3 sauber** — kein TS-7-Zwang durch DB UX.
+
+**1. `trustedDependencies` (Bun) — die Entschlüsselung hängt an den transitiven Paketen:**
+```json
+"trustedDependencies": [
+  "@db-ux/db-theme",
+  "@db-ux/db-theme-fonts",
+  "@db-ux/db-theme-icons",
+  "@db-ux/db-theme-illustrative-icons",
+  "@swc/core"
+]
+```
+`@db-ux/db-theme` allein reicht **nicht** — Fonts/Icons liegen in drei eigenen Paketen mit
+je eigenem `postinstall`. `@swc/core` kommt über `@vitejs/plugin-react-swc` dazu. Ohne
+Eintrag meldet Bun stumm „Blocked N postinstalls"; der Build läuft, aber ohne Markenassets.
+
+**2. Entschlüsselung funktioniert** mit `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` aus `frontend/.env`
+(als echte Prozess-Env während `bun install`): 18 woff2 (DB Neo Screen Sans), 3345 Icon-SVG,
+247 illustrative SVG, 49 Theme-Bilder. Die `.enc`-Dateien bleiben **neben** den entschlüsselten
+liegen — kein Fehlerzeichen.
+
+**3. Vite 8 = Rolldown: `manualChunks` nur als FUNKTION.** Die Rollup-Objektform
+`{ react: ['react','react-dom'] }` bricht den Build hart ab
+(`TypeError: manualChunks is not a function`). Korrigiert Phase A1.
+
+**4. `cssMinify: 'esbuild'` braucht `esbuild` als explizite devDependency** — Vite 8 bringt
+es nicht mehr mit (`Cannot find package 'esbuild'`).
+
+**5. `light-dark()`-Falle bestätigt** (Quelle `core-components/bundle.css`: 867 Vorkommen):
+
+| Build | `light-dark()` im Output | CSS |
+|---|---|---|
+| Vite-8-Default (LightningCSS) | **3** | 1.545 KB roh / 87,8 KB gz |
+| `cssMinify: 'esbuild'` | **870** ✓ | 1.319 KB roh / 84,0 KB gz |
+
+LightningCSS schreibt auf `var(--lightningcss-light, …) var(--lightningcss-dark, …)` um,
+definiert diese Variablen aber **nur** unter `[data-mode=light]` / `[data-mode=dark]`
+(2 Definitionen für 869 Verwendungen). Ohne explizites `data-mode` — also im
+OS-Automatik-Fall — sind sie undefiniert. `cssMinify: 'esbuild'` ist damit **Pflicht**,
+nicht optional.
+
+**6. Bundle-Messung** (Spike-Minimal-App gegen heutigen `dist/`-Stand):
+
+| | heute | Spike (DB UX + React 19) |
+|---|---|---|
+| Framework-Runtime | Preact (~5 KB gz im Bundle) | **59,6 KB gz** (189,6 KB roh) |
+| CSS | 35,0 KB gz (242 KB roh) | **84,0 KB gz** (1.319 KB roh) |
+| Fonts | material-icons woff2 | **32 woff2 / 1.779 KB** |
+| sonstiges | — | 12 Marken-Logo-SVG (~91 KB), von `db-theme`-CSS automatisch gezogen |
+
+→ Der Plan-Ansatz „Zuwachs ~ +40 KB gz" für React ist zu niedrig: real **~+55 KB gz**.
+CSS wächst um ~+49 KB gz, ersetzt am Ende aber Bootstrap. **PWA-Relevanz:** 1,8 MB Fonts
+treffen `globPatterns` (heute 42 Einträge / 3.191 KB Precache) — in Phase B/I bewusst
+eingrenzen, nicht blind alles precachen. Die 12 Marken-Logos sind für eine Ein-Marken-App
+Ballast → `data-color`/Brand-Eingrenzung in Phase I.
+
+**7. `DBDrawer`-API (Phase E)** — baut auf nativem `<dialog>`:
+`open`, `onClose`, `header`/`footer` als **Props-Slots** (nicht `drawerHeader`),
+`direction` (`to-left|to-right|up|down`), `backdrop` (`none|strong|weak|invisible`;
+`none` nutzt `dialog.show()` statt `showModal()`), `variant` (`modal|inside`),
+`position` (`fixed` = `showModal()` **mit echtem Fokus-Trap**, `absolute` = `show()` **ohne**),
+`containerSize`, `rounded`, `showSpacing`. Escape/Backdrop/Fokus-Trap kommen damit vom
+Browser — die Phase-E-Verifikationspunkte sind großteils nativ abgedeckt.
+
+**8. React-Single-Instance** trotz fehlender peerDeps im Minimalfall ok
+(`npm ls react` → eine `react@19.2.8`, dedupet). Das CI-Gate bleibt trotzdem sinnvoll,
+weil der echte Baum deutlich mehr Pakete hat.
+
+**9. DB-UX-Theme-Attribute** in `bundle.css`: `data-density` (43), `data-color` (34),
+`data-mode` (6). Für Phase B/I relevant.
 
 ---
 
@@ -169,10 +247,17 @@ DB-UX-Code.
   fehlt heute). `react/no-unknown-property` temporär als `error`.
 - **Bundle/PWA:** heute existiert **kein** `rollupOptions`/`manualChunks` (`build` =
   `{ outDir, emptyOutDir, sourcemap:'hidden' }` in `vite.base-config.ts`) – der `manualChunks`-
-  Block muss **neu** angelegt werden (`react`-Vendor-Chunk). Vite 8 nutzt Rolldown; das Build-Log
-  empfiehlt `build.rolldownOptions.output` – API-Namen (`rollupOptions` vs. `rolldownOptions`,
-  `manualChunks` vs. `output.codeSplitting`) gegen die Vite-8-Doku prüfen.
-  Zuwachs ~ +40 KB gz akzeptieren, im Bundle-Report dokumentieren.
+  Block muss **neu** angelegt werden (`react`-Vendor-Chunk). **Spike-verifiziert:** Vite 8
+  nutzt Rolldown, `manualChunks` wird **nur als Funktion** akzeptiert – die Rollup-Objektform
+  `{ react: ['react','react-dom'] }` bricht den Build (`TypeError: manualChunks is not a
+  function`). Funktionierende Form:
+  ```ts
+  build: { rollupOptions: { output: { manualChunks(id: string) {
+    if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) return 'react';
+  } } } }
+  ```
+  Zuwachs: **~+55 KB gz** (React-19-Runtime real 59,6 KB gz, nicht die ursprünglich
+  geschätzten +40 KB), im Bundle-Report dokumentieren.
 
 **Verifikation:** `bun run typecheck` + `bun run build` grün; `verify`-Skill kompletter
 Klickpfad (alle Tabs, je ein Add/Edit/Show-Modal pro Feature, Admin-Panel,
@@ -205,7 +290,13 @@ alte „2067"-Behauptung), `bun run coverage` ohne Regression, `bun run lint` gr
 - **Deps:** `@db-ux/core-foundations`, `@db-ux/core-components` (5.3.0), `@db-ux/db-theme@6.2.0`
   – alle als normale `dependencies`. db-theme-postinstall über Bun: `"trustedDependencies"` in
   `package.json` (Bun-Mechanismus, **nicht** npm-`allowScripts`); `bunfig.toml` hat heute nur
-  `[install] linker = "hoisted"` + `[test]`.
+  `[install] linker = "hoisted"` + `[test]`. **Spike-verifiziert — genau diese Liste, `db-theme`
+  allein reicht nicht** (Fonts/Icons sind eigene transitive Pakete mit je eigenem `postinstall`):
+  ```json
+  "trustedDependencies": ["@db-ux/db-theme", "@db-ux/db-theme-fonts",
+    "@db-ux/db-theme-icons", "@db-ux/db-theme-illustrative-icons", "@swc/core"]
+  ```
+  Ohne Eintrag meldet Bun nur „Blocked N postinstalls" – der Build läuft, aber ohne Markenassets.
 - **`scripts/install.sh`** anlegen – `bun install` mit `.env`-Secrets für db-theme-postinstall.
 - **`deploy.yml`:** hat heute **keinen** typecheck/lint/test-Step (nur `bun install
   --frozen-lockfile` + `bun run build`, Trigger nur `push` → `main`). `ASSET_PASSWORD` /
@@ -215,8 +306,12 @@ alte „2067"-Behauptung), `bun run coverage` ohne Regression, `bun run lint` gr
   `@layer bootstrap, db-ux, bridge, app;`
 - **`styles.scss` umbauen:** `@import '~bootstrap/scss/bootstrap'` in `@layer bootstrap { … }`
   kapseln. App-Overrides + Material-Icons-Import vorerst unlayered.
-- **Neu `src/scss/db-ux.css`:** `@import '@db-ux/db-theme/.../<brand-theme>.css' layer(db-ux);`
-  plus `@import '@db-ux/core-components/build/styles/bundle.css' layer(db-ux);` (Rollup-/Vite-Variante).
+- **Neu `src/scss/db-ux.css`** (Pfade Spike-verifiziert; die `rollup`-Variante nutzt Bare-Specifier
+  in `url()`, die Vite auflöst – `relative`/`absolute`/`webpack` sind die falschen Varianten):
+  ```css
+  @import '@db-ux/db-theme/build/styles/rollup.css' layer(db-ux);
+  @import '@db-ux/core-components/build/styles/bundle.css' layer(db-ux);
+  ```
 - **`main.ts`:** `layers.scss` ganz oben, `db-ux.css` vor `styles.scss`.
 - **Token-Bridge `src/scss/bridge.css` (`@layer bridge`):** genutzte `--bs-*` (`--bs-primary`,
   `--bs-body-bg`, `--bs-border-color`, `--bs-secondary`, `--bs-success`, `--bs-danger`,
@@ -226,12 +321,20 @@ alte „2067"-Behauptung), `bun run coverage` ohne Regression, `bun run lint` gr
 - **`BSColorToggler.ts` erweitern** (nicht ersetzen): schreibt weiter `data-bs-theme` UND
   zusätzlich `color-scheme` am `<html>`; Storage-Key `theme` bleibt. `<html>` bekommt
   `data-density="regular"`.
-- **Vite-8-CSS-Falle:** `build.cssMinify: 'esbuild'` setzen (LightningCSS zerbricht
-  `light-dark()`). Alternative: `css.transformer: 'postcss'` + `@db-ux/core-postcss-plugin`.
+- **Vite-8-CSS-Falle — Spike-bestätigt, `build.cssMinify: 'esbuild'` ist Pflicht:** der Default
+  (LightningCSS) reduziert `light-dark()` von 867 auf 3 Vorkommen und schreibt auf
+  `var(--lightningcss-light, …) var(--lightningcss-dark, …)` um, definiert diese Variablen aber
+  nur unter `[data-mode=light]`/`[data-mode=dark]` → OS-Automatik-Modus kaputt. Mit
+  `cssMinify: 'esbuild'` bleiben 870 erhalten. **`esbuild` dabei als explizite devDependency
+  aufnehmen** – Vite 8 bringt es nicht mehr mit (`Cannot find package 'esbuild'`).
+  Alternative: `css.transformer: 'postcss'` + `@db-ux/core-postcss-plugin`.
 - **Fonts:** DB Screen Sans aus Foundations/db-theme in Build + Precache (`globPatterns`) +
-  Preload (`unplugin-inject-preload`).
+  Preload (`unplugin-inject-preload`). **Achtung (Spike):** 32 woff2 / ~1,8 MB – heutiger
+  Precache ist 42 Einträge / 3,2 MB. `globPatterns` gezielt eingrenzen statt alles precachen.
 
-**Verifikation:** `bun run build` grün, generiertes CSS mit aufgelöstem `light-dark()`;
+**Verifikation:** `bun run build` grün, generiertes CSS enthält `light-dark()` unverändert
+(Gegenprobe: `grep -o 'light-dark(' dist/assets/*.css | wc -l` ≫ 800, **nicht** `grep -c` –
+minifiziertes CSS ist eine Zeile);
 `verify`-Skill: Bootstrap-Screens optisch unverändert bis auf Markenfarbton; Dark/Light auf
 beide Systeme; DevTools zeigt `--db-*` am `:root`.
 
@@ -330,13 +433,30 @@ Skill-Selektoren im selben PR mitziehen.
 
 ## Phase E — Modal-Infrastruktur → DB-Drawer (L, nach C)
 
-DB UX v5 hat kein dediziertes Modal; `DBDrawer` ist das Pendant.
+DB UX v5 hat kein dediziertes Modal; `DBDrawer` ist das Pendant. **Spike-verifizierte API** —
+`DBDrawer` baut auf nativem `<dialog>`:
+
+| Prop | Werte / Bedeutung |
+|---|---|
+| `open` | boolean, gesteuerter Zustand |
+| `onClose` | Klick auf Close-Button, Escape, Backdrop |
+| `header` / `footer` | **Props-Slots** (JSX), nicht `drawerHeader` |
+| `direction` | `to-left` \| `to-right` \| `up` \| `down` |
+| `backdrop` | `none` \| `strong` \| `weak` \| `invisible` — `none` nutzt `dialog.show()` statt `showModal()` |
+| `variant` | `modal` (Default) \| `inside` |
+| `position` | `fixed` (Default) = `showModal()` **mit echtem Fokus-Trap**; `absolute` = `show()` **ohne** |
+| `containerSize` | `small` \| `medium` \| `large` \| `full` |
+| `rounded`, `showSpacing` | boolean |
+
+→ Escape-/Backdrop-Close, Fokus-Trap und Scroll-Lock liefert der Browser über `<dialog>`;
+die Phase-E-Verifikationspunkte sind damit großteils nativ abgedeckt. **`position`/`backdrop`
+nicht versehentlich auf `absolute`/`none` setzen** — sonst geht der Fokus-Trap verloren.
 
 - `showModal.ts` neu: statt `Modal.getOrCreateInstance(...).show()` einen `DBDrawer`-Baum via
   `mount(#modal, <DrawerHost>{children}</DrawerHost>)`; `open`-State im Host, `onClose` →
   `unmount(#modal)`. Signatur `showModal(children) → Element` beibehalten; `.row`/`.role`-
-  Properties am `#modal` bleiben Übergangs-Kontrakt (28 Aufrufstellen).
-- `showModalHelpers.tsx` + alle Modal-Bausteine final auf Drawer-Slots (header/content/footer).
+  Properties am `#modal` bleiben Übergangs-Kontrakt (21 Calls / 26 Importer).
+- `showModalHelpers.tsx` + alle Modal-Bausteine final auf Drawer-Slots (`header`/children/`footer`).
 - `confirmDialog.ts` → DB-Drawer/DB-Notification mit Actions; `CustomSnackbar` →
   DB-Notification-Styling (`.CustomSnackbar-container` im `verify`-Skill ggf. mitziehen).
 - **Sonderfall `infrastructure/pdf/signaturDialog.ts`:** an DB-Drawer-Geometrie neu rechnen
@@ -375,7 +495,12 @@ Screen-für-Screen mergen, nicht Big-Bang.
 ## Phase I — Cleanup, Token-Finalisierung, Doku (M)
 
 - Layer-Modell konsolidieren: `@layer db-ux, app;`; `customtable.css` in `@layer app`.
-- `data-density`/`data-color` final mit Design abstimmen.
+- `data-density`/`data-color` final mit Design abstimmen (`bundle.css` nutzt `data-density` 43×,
+  `data-color` 34×, `data-mode` 6×). **Spike-Befund:** das `db-theme`-CSS zieht **12 Marken-Logo-SVG
+  (~91 KB)** in den Build – für eine Ein-Marken-App Ballast; Brand/`data-color` eingrenzen oder
+  die nicht genutzten Logos aus dem Build halten.
+- Bundle-Budget gegen die Spike-Zahlen prüfen (React-Runtime ~60 KB gz, DB-UX-CSS ~84 KB gz,
+  Fonts ~1,8 MB) und `globPatterns` des Precache entsprechend eingrenzen.
 - Dark-Mode-QA end-to-end; `manifest.theme_color` + `<meta name="theme-color">` (heute `#212529`)
   und `manifest.background_color` (heute `#000000`) auf DB-Brand-Werte.
 - Bundle-/PWA-Review; `@db-ux/core-stylelint` optional; ESLint-Config aufräumen.
