@@ -15,12 +15,13 @@ export default function initializeColorModeToggler() {
   const preferredTheme = getPreferredTheme();
 
   const setTheme = (theme: Theme) => {
-    if (theme === 'auto')
-      document.documentElement.setAttribute(
-        'data-bs-theme',
-        window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
-      );
-    else document.documentElement.setAttribute('data-bs-theme', theme);
+    const effektiv =
+      theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+
+    document.documentElement.setAttribute('data-bs-theme', effektiv);
+    // DB UX arbeitet mit `light-dark()`; das loest nur auf, wenn `color-scheme` gesetzt ist.
+    // Bei 'auto' bleibt die OS-Automatik erhalten, statt sie auf den Momentanwert einzufrieren.
+    document.documentElement.style.colorScheme = theme === 'auto' ? 'light dark' : effektiv;
   };
 
   setTheme(preferredTheme);

@@ -32,7 +32,14 @@ jobs:
           bun-version: 1.4.0
       - name: Install dependencies
         # @otto-kirchheim/nebengeld-shared ist eine public Git-Branch-Dependency -- kein Token noetig.
+        # ASSET_* entschluesseln im Postinstall von @db-ux/db-theme die Markenassets (Schriften,
+        # Icons). Fehlen die Repo-Secrets, laeuft der Build durch -- aber ohne DB-Schriften.
         run: bun install --frozen-lockfile
+        env:
+          ASSET_PASSWORD: ${{ secrets.ASSET_PASSWORD }}
+          ASSET_INIT_VECTOR: ${{ secrets.ASSET_INIT_VECTOR }}
+      - name: Typecheck
+        run: bun run typecheck
       - name: Build
         run: bun run build
       - name: Setup Pages

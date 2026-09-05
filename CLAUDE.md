@@ -24,7 +24,7 @@
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
 - **Build Tool:** Vite (v8) mit `@vitejs/plugin-react-swc`
 - **Sprache:** TypeScript (strict mode; kein any)
-- **Styling:** Bootstrap 5.3 + SCSS + Material Icons
+- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) neben Bootstrap 5.3 + SCSS + Material Icons; Cascade Layers `bootstrap < db-ux < bridge < app` (`src/scss/layers.scss`)
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
@@ -34,7 +34,8 @@
 ### Starten
 
 ```bash
-bun install
+./scripts/install.sh   # bun install MIT den ASSET_*-Secrets aus .env (DB-UX-Markenassets)
+bun install            # ohne Secrets -- Build laeuft, aber ohne DB-Schriften/-Icons
 bun run start          # Entwicklung mit Vite Dev-Server (--host)
 bun run build          # Produktion Build (nach ./dist)
 bun run test           # Bun-Testlauf (sequentiell pro Datei)

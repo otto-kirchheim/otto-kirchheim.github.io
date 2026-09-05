@@ -1,6 +1,17 @@
 $material-icons-font-path: '~material-icons/iconfont/';
 
-@import '~bootstrap/scss/bootstrap';
+// Compile-Time-Gegenstueck zur Token-Bridge: Bootstrap backt seine Komponentenfarben
+// (`--bs-btn-bg`, Links, Focus-Ringe) beim Kompilieren aus `$primary` ein, dort hilft ein
+// Laufzeit-`var()` nicht. #ec0016 ist `--db-brand-origin-default` -- in Hell und Dunkel
+// derselbe Wert, deshalb ist die statische Farbe hier korrekt. Faellt mit Bootstrap (Phase H).
+$primary: #ec0016;
+
+// Bootstrap in den untersten Layer, damit DB-UX-Tokens und die Bridge dagegen gewinnen.
+@layer bootstrap {
+  @import '~bootstrap/scss/bootstrap';
+}
+
+// Material-Icons bleiben vorerst unlayered (Phase G ersetzt sie durch DB-Icons).
 @import '~material-icons/iconfont/round.scss';
 
 .dropdown-menu .active .bi {

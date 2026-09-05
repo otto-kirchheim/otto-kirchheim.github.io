@@ -166,4 +166,8 @@ import '@/features/EA';
 
 initializeAppBootstrap();
 
+// Reihenfolge ist bedeutsam: erst die Layer-Deklaration, dann DB UX, dann die App-Styles.
+import '../scss/layers.scss';
+import '../scss/db-ux.css';
+import '../scss/bridge.css';
 import '../scss/styles.scss';

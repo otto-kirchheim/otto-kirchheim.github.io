@@ -1,0 +1,34 @@
+/* Token-Bridge: Bootstrap-Variablen, die der App-eigene Code tatsaechlich liest, zeigen auf
+   DB-UX-Tokens. So bekommt die noch unveraenderte Bootstrap-UI den DB-Farbton, ohne dass
+   eine einzige Komponente ausgetauscht werden muss (das ist Phase C).
+
+   Bewusst NICHT gemappt:
+   - `--bs-btn-*`: Bootstrap setzt sie je Button-Variante lokal; ein :root-Override wuerde
+     alle Varianten gleich einfaerben.
+   - `--bs-body-color-rgb`: RGB-Tripel ohne DB-Entsprechung (wird fuer rgba() gebraucht).
+   - `--bs-border-radius*`: DB nutzt eine andere Radius-Skala -- kommt mit den Komponenten
+     in Phase C/H, sonst springt das Layout jetzt schon sichtbar.
+   Die Fallbacks sind die heutigen Bootstrap-Werte: faellt db-theme aus (fehlende
+   Markenassets im CI), bleibt die App im bisherigen Look statt farblos. */
+@layer bridge {
+  :root {
+    --bs-body-bg: var(--db-adaptive-bg-basic-level-1-default, #fff);
+    --bs-body-color: var(--db-adaptive-on-bg-basic-emphasis-100-default, #212529);
+    --bs-emphasis-color: var(--db-adaptive-on-bg-basic-emphasis-100-default, #000);
+    --bs-secondary-color: var(--db-adaptive-on-bg-basic-emphasis-70-default, rgba(33, 37, 41, 0.75));
+
+    --bs-border-color: var(--db-divider-bg-color, #dee2e6);
+    --bs-border-color-translucent: var(--db-divider-bg-color, rgba(0, 0, 0, 0.175));
+
+    --bs-primary: var(--db-brand-origin-default, #0d6efd);
+    --bs-primary-text-emphasis: var(--db-brand-on-bg-basic-emphasis-100-default, #052c65);
+    --bs-secondary: var(--db-neutral-origin-default, #6c757d);
+    --bs-secondary-text-emphasis: var(--db-neutral-on-bg-basic-emphasis-100-default, #2b2f32);
+
+    --bs-success: var(--db-successful-origin-default, #198754);
+    --bs-danger: var(--db-critical-origin-default, #dc3545);
+    --bs-danger-bg-subtle: var(--db-critical-bg-basic-level-1-default, #f8d7da);
+    --bs-warning: var(--db-warning-origin-default, #ffc107);
+    --bs-warning-bg-subtle: var(--db-warning-bg-basic-level-1-default, #fff3cd);
+  }
+}

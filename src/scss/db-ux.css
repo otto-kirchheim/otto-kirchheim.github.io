@@ -1,0 +1,5 @@
+/* DB UX Design System. `rollup` ist die Variante mit Bare-Specifier-URLs, die Vite aufloest --
+   `relative`/`absolute`/`webpack` zeigen ins Leere. Beide Dateien in den db-ux-Layer, damit
+   App-Regeln und die Bridge sie ueberschreiben koennen. */
+@import '@db-ux/db-theme/build/styles/rollup.css' layer(db-ux);
+@import '@db-ux/core-components/build/styles/bundle.css' layer(db-ux);

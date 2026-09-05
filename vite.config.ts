@@ -35,6 +35,14 @@ export default defineConfig(() => ({
             crossOrigin: 'anonymous',
           },
         },
+        {
+          // Fliesstext-Schnitt der DB-Screen-Sans; die uebrigen Schnitte laedt der Browser
+          // erst, wenn sie wirklich gebraucht werden.
+          outputMatch: /dbneoscreensans-regular-[A-Za-z-0-9_]*\.woff2$/,
+          attributes: {
+            crossOrigin: 'anonymous',
+          },
+        },
       ],
     }),
     VitePWA({
@@ -305,7 +313,18 @@ export default defineConfig(() => ({
         cleanupOutdatedCaches: true,
         sourcemap: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,webmanifest}'],
-        globIgnores: ['icons/*'],
+        globIgnores: [
+          'icons/*',
+          // Nur die drei Fliesstext-Schnitte der DB-Screen-Sans vorab cachen. Kursive,
+          // Black-, Digital- und Head-Schnitte sowie die DB-Icon-Fonts (db-*.woff2) haengen
+          // sonst ~1,7 MB an den Precache; sie kommen ueber das CacheFirst-Runtime-Caching
+          // beim ersten echten Gebrauch.
+          'assets/dbneoscreenhead-*.woff2',
+          'assets/dbneoscreensans-*italic*.woff2',
+          'assets/dbneoscreensans-black*.woff2',
+          'assets/dbneoscreensans-digital*.woff2',
+          'assets/db-*.woff2',
+        ],
         navigateFallback: '/index.html',
         runtimeCaching: [
           {

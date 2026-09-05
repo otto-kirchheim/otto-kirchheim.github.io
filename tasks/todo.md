@@ -1,3 +1,79 @@
+# Aktueller Plan: DB-UX-Migration -- Phase B (DB-UX-CSS-Layer + db-theme + Token-Bridge) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase B. Ziel: DB-UX-CSS und `db-theme` liegen
+neben Bootstrap im Build, ohne dass sich das Aussehen ausser dem Markenfarbton aendert.
+Cascade Layers halten die Reihenfolge fest, eine Bridge mappt die real genutzten `--bs-*`-
+Variablen auf DB-Tokens. Keine Komponente wird in dieser Phase ausgetauscht (das ist Phase C).
+
+Voraussetzung erfuellt: `frontend/.env` enthaelt `ASSET_PASSWORD` + `ASSET_INIT_VECTOR`
+(Install-Zeit-Env fuer das `db-theme`-Postinstall, **nicht** `VITE_`-Praefix).
+`build.cssMinify: 'esbuild'` + `esbuild`-devDependency sind bereits aus A1.9 vorhanden.
+
+## Plan
+
+- [x] **B.1 Deps + `trustedDependencies`.** `@db-ux/core-foundations`, `@db-ux/core-components`
+      (5.3.0), `@db-ux/db-theme` (6.2.0) als `dependencies`. `trustedDependencies` um
+      `@db-ux/db-theme`, `-fonts`, `-icons`, `-illustrative-icons` ergaenzen (Spike: `db-theme`
+      allein reicht nicht, die drei Asset-Pakete haben eigene Postinstalls).
+- [x] **B.2 `scripts/install.sh`** (neu): laedt `.env` und ruft `bun install` mit den
+      `ASSET_*`-Variablen als echter Prozess-Env auf.
+- [x] **B.3 `.github/workflows/deploy.yml`:** `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` als `env:`
+      am Install-Step, neuer `typecheck`-Step vor dem Build. **Repo-Secrets muss der User
+      selbst anlegen** -- ohne sie baut CI ohne Markenassets.
+- [x] **B.4 `src/scss/layers.scss`** (neu): `@layer bootstrap, db-ux, bridge, app;` als
+      allererster Import; `styles.scss` kapselt den Bootstrap-Import in `@layer bootstrap`.
+- [x] **B.5 `src/scss/db-ux.css`** (neu): `db-theme/build/styles/rollup.css` und
+      `core-components/build/styles/bundle.css`, beide `layer(db-ux)`.
+- [x] **B.6 `main.ts`:** Importreihenfolge `layers.scss` -> `db-ux.css` -> `styles.scss`.
+- [x] **B.7 `src/scss/bridge.css`** (`@layer bridge`): die real genutzten `--bs-*` auf
+      DB-Tokens mappen (inkl. der Subtle-/Emphasis-Varianten aus `customtable.css`).
+- [x] **B.8 `BSColorToggler.ts`** erweitern (nicht ersetzen): zusaetzlich `color-scheme` am
+      `<html>`; `data-density="regular"` in `index.html`.
+- [x] **B.9 Fonts:** DB Screen Sans in Preload (`unplugin-inject-preload`) und Precache;
+      `globPatterns` eingrenzen (Spike: 32 woff2 / ~1,8 MB kaemen sonst zum heutigen
+      3,2-MB-Precache dazu).
+
+## Verifikationskriterien (B)
+
+- `bun run build` gruen; `grep -o 'light-dark(' dist/assets/*.css | wc -l` deutlich > 800
+  (nicht `grep -c` -- minifiziertes CSS ist eine Zeile).
+- `bun run typecheck`, `bun run lint`, `bun run test` weiter gruen.
+- Precache-Groesse bewusst gepruefte Zahl (Ausgabe von `vite-plugin-pwa`).
+- `verify`-Skill: Screens optisch unveraendert bis auf Markenfarbton, Dark/Light in beiden
+  Modi (Toggle + OS-Automatik), `--db-*`-Tokens am `:root` vorhanden.
+
+## Review (B)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`test` (2070/0)/`build` gruen. Gebautes CSS
+1,56 MB roh / 118 KB gz (vorher 35 KB gz -- die 84 KB gz aus dem Spike bestaetigt).
+`grep -o 'light-dark(' dist/assets/*.css | wc -l` = **870**, der Minifier-Fall aus Phase 0
+tritt mit `cssMinify: 'esbuild'` also nicht ein. Precache 59 Eintraege / 4,9 MB (ohne die
+Font-Ausnahmen waeren es 87 / 6,5 MB; Ausgangswert vor Phase B: 43 / 3,4 MB -- der Rest ist
+das DB-CSS selbst).
+
+**Browser (Chrome headless):** Layer-Reihenfolge im CSSOM `bootstrap, db-ux, bridge, app`;
+`--db-adaptive-bg-basic-level-1-default` und `--db-brand-origin-default` loesen am `:root` auf;
+Body-Hintergrund/-Text wechseln in Hell (`#fff`/`#16181b`) und Dunkel (`#16181b`/`#edeef0`),
+Auto-Modus behaelt `color-scheme: light dark`; Schrift ist "DB Neo Screen Sans";
+`.btn-primary` ist DB-Rot `rgb(236, 0, 22)`. Die A1-Smokes (Feature-Tabs, Modal-Pfad) laufen
+unveraendert 17/17 gruen, 0 Konsolenfehler.
+
+**Nachtrag zum Plan:** Die Bridge allein faerbt die Bootstrap-Komponenten nicht um -- Bootstrap
+kompiliert `--bs-btn-bg` & Co. aus der SCSS-Variablen `$primary`, ein `var()`-Override am
+`:root` erreicht sie nie. Deshalb zusaetzlich `$primary: #ec0016` (= `--db-brand-origin-default`,
+in beiden Modi identisch) vor dem Bootstrap-Import. Ohne das waere "optisch unveraendert bis
+auf Markenfarbton" nicht erfuellt gewesen, weil alle Buttons Bootstrap-Blau geblieben waeren.
+
+**Offen / bewusst nicht in B:** `--bs-btn-*` und die Radius-Variablen bleiben Bootstrap
+(Phase C/H). Die GitHub-Repo-Secrets `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` sind **noch nicht
+angelegt** -- bis dahin baut CI ohne Markenassets (Build gruen, aber Systemschrift statt
+DB Neo Screen Sans). Das DB-CSS ist als Ganzes im Bundle; Ausduennen erst in Phase I, wenn
+feststeht, welche Komponenten wirklich genutzt werden.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase A1 (Preact -> React 19) - 2026-09-05
 
 ## Kontext

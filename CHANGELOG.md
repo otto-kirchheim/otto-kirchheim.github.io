@@ -2,6 +2,44 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (55)
+
+### feat (DB-UX-Migration Phase B: DB-UX-CSS-Layer, db-theme und Token-Bridge)
+
+DB UX liegt jetzt neben Bootstrap im Build. Es wurde noch keine Komponente ausgetauscht
+(das ist Phase C) -- sichtbar ist der Markenauftritt: DB-Rot, DB Neo Screen Sans, DB-Farbwerte
+fuer Hintergrund/Text in Hell und Dunkel.
+
+- **Deps:** `@db-ux/core-foundations`, `@db-ux/core-components` (5.3.0), `@db-ux/db-theme`
+  (6.2.0). `trustedDependencies` um `db-theme` und die drei Asset-Pakete (`-fonts`, `-icons`,
+  `-illustrative-icons`) ergaenzt -- ohne sie blockiert Bun deren Postinstall und die
+  Markenassets fehlen.
+- **`scripts/install.sh`** (neu): `bun install` mit `ASSET_PASSWORD`/`ASSET_INIT_VECTOR` aus
+  `.env` als echte Prozess-Env (kein `VITE_`-Praefix, Vite sieht sie nie).
+- **Cascade Layers** `bootstrap < db-ux < bridge < app` (`src/scss/layers.scss`); der
+  Bootstrap-Import in `styles.scss` liegt in `@layer bootstrap`, `src/scss/db-ux.css` holt
+  `db-theme/rollup.css` und `core-components/bundle.css` in `@layer db-ux`.
+- **Token-Bridge `src/scss/bridge.css`:** die vom App-Code real gelesenen `--bs-*` zeigen auf
+  DB-Tokens (Body-Hintergrund/-Text, Border, Primary/Secondary, Success/Danger/Warning inkl.
+  Subtle-Varianten), jeweils mit dem bisherigen Bootstrap-Wert als Fallback. `--bs-btn-*`,
+  `--bs-body-color-rgb` und die Radius-Variablen bleiben bewusst unangetastet.
+- **`$primary: #ec0016`** vor dem Bootstrap-Import: Bootstrap backt Komponentenfarben beim
+  Kompilieren ein, ein Laufzeit-`var()` erreicht `--bs-btn-bg` nicht. Der Wert ist
+  `--db-brand-origin-default` und in beiden Modi identisch.
+- **`BSColorToggler`** setzt zusaetzlich `color-scheme` am `<html>` (`light dark` im
+  Auto-Modus), sonst loest `light-dark()` im DB-CSS nicht auf; `<html>` traegt
+  `data-density="regular"`.
+- **CI (`deploy.yml`):** `ASSET_*` als `env:` am Install-Step, neuer `typecheck`-Step vor dem
+  Build. **Die Repo-Secrets muessen noch angelegt werden**, sonst baut CI ohne Markenassets.
+- **PWA:** DB-Screen-Sans-Regular wird vorgeladen; kursive, Black-, Digital- und Head-Schnitte
+  sowie die DB-Icon-Fonts sind aus dem Precache ausgenommen (59 statt 87 Eintraege,
+  4,9 statt 6,5 MB) und kommen ueber das bestehende CacheFirst-Runtime-Caching.
+
+Verifikation: `typecheck`, `lint`, `test` (2070/0) und `build` gruen; `light-dark()` bleibt mit
+870 Vorkommen erhalten (LightningCSS haette auf 3 reduziert); Browser-Smoke: Layer-Reihenfolge
+korrekt, `--db-*` am `:root`, Body-Farben und Buttons in DB-Rot, Schrift DB Neo Screen Sans,
+Hell/Dunkel/Auto sauber, 0 Konsolenfehler.
+
 ## 2026-09-06 (54)
 
 ### feat (DB-UX-Migration Phase A1+A2: Preact 10 -> React 19)

@@ -6,6 +6,9 @@
       "name": "db_nebengeld_frontend",
       "dependencies": {
         "@cantoo/pdf-lib": "2.9.1",
+        "@db-ux/core-components": "5.3.0",
+        "@db-ux/core-foundations": "5.3.0",
+        "@db-ux/db-theme": "6.2.0",
         "@otto-kirchheim/nebengeld-shared": "github:otto-kirchheim/nebengeld-shared#dev",
         "@pdf-lib/fontkit": "^1.1.1",
         "@popperjs/core": "^2.11.8",
@@ -50,6 +53,10 @@
     },
   },
   "trustedDependencies": [
+    "@db-ux/db-theme-icons",
+    "@db-ux/db-theme-illustrative-icons",
+    "@db-ux/db-theme",
+    "@db-ux/db-theme-fonts",
     "@swc/core",
   ],
   "packages": {
@@ -242,6 +249,18 @@
     "@cacheable/utils": ["@cacheable/utils@2.5.0", "", { "dependencies": { "hashery": "^1.5.1", "keyv": "^5.6.0" } }, "sha512-buipgOVDkkPXNR5+xBpDw7Zk2n1EvU7qBJCNUcL7rhQ//kfpOXPAvQ511Os0vpLYJ1pZnvudNytkQt2hst3wqA=="],
 
     "@cantoo/pdf-lib": ["@cantoo/pdf-lib@2.9.1", "", { "dependencies": { "@pdf-lib/standard-fonts": "^1.0.0", "@pdf-lib/upng": "^1.0.1", "color": "^4.2.3", "html-entities": "^2.3.2", "node-html-better-parser": ">=1.5.9", "pako": "^2.2.0", "tslib": ">=2" } }, "sha512-wAKXXDjp5lO0wS6d+k0FRpmWsULb95WhHKYx2fonTbv4zIfuIdCBz2nyTVVDGJpNDLl6o4w9aSTxQisBvvd60A=="],
+
+    "@db-ux/core-components": ["@db-ux/core-components@5.3.0", "", { "dependencies": { "@db-ux/core-foundations": "5.3.0" } }, "sha512-ngWAnhY1PdMj9UFh6m5BIDXbOR8m8nwj9jpTETdrTus1o2aShR0t/pmZhxSBwh0Hj79+K5db7yKeyLkOxKw1HA=="],
+
+    "@db-ux/core-foundations": ["@db-ux/core-foundations@5.3.0", "", {}, "sha512-Gv0EYUTxd1hqXweeceTL6iaOU1WeJeSG0GegGcYVzGevzao7AxP9Nl0DeHMIXp6RdbtplmcRGHa3NRc9UgFTFQ=="],
+
+    "@db-ux/db-theme": ["@db-ux/db-theme@6.2.0", "", { "dependencies": { "@db-ux/db-theme-fonts": "2.0.5", "@db-ux/db-theme-icons": "4.2.0", "@db-ux/db-theme-illustrative-icons": "3.3.1" } }, "sha512-yNNop6R3KPLs3Mj3Hl9cQnOBulAYkb1ikXJZJ5wNM8Efl8NapYk2I2Skd7qyhz6SnxkiPkRZl+7fAvWO4vQI2A=="],
+
+    "@db-ux/db-theme-fonts": ["@db-ux/db-theme-fonts@2.0.5", "", {}, "sha512-wtYxHGApW6tmjt/dOoNQL0MzlQ6w6YLHy0fIBQm3Ao6gQJ4DbTpInArzQI1/ctYm/nhCBwvPUIe14vhxqmnz4Q=="],
+
+    "@db-ux/db-theme-icons": ["@db-ux/db-theme-icons@4.2.0", "", {}, "sha512-x6GhTcYxS99jAcmQg8hRMJLLeuaHhb7WWJw/ctHlBVDiBkjztOkWQ4MyufDFVelGbQx0LWrelu6XLkG5rOZjCw=="],
+
+    "@db-ux/db-theme-illustrative-icons": ["@db-ux/db-theme-illustrative-icons@3.3.1", "", {}, "sha512-pMpNIqp5EzxxMrSPe7NzA//P1uyaZ1dfZMFar2u7tWBhvCXzNSQ/fdrgNaLRLzlXQtARVzihfzxyqAI+v+vqvg=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.28.2", "", { "os": "aix", "cpu": "ppc64" }, "sha512-XExcO+dvLKvVtNTibSTBej1NCAbaGhWn9Ww1ZPx80qsahhPFe/8jgWP0IchNe0F3HwkU7n8ejhH8bjonqht8mQ=="],
 
