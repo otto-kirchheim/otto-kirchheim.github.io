@@ -7,6 +7,10 @@ import { initializeAppBootstrap, registerAppStartTask } from '@/core/bootstrap';
 
 describe('bootstrap', () => {
   it('registerAppStartTask registriert Tasks, die bei initializeAppBootstrap ausgeführt werden', async () => {
+    // readyState explizit pinnen: bun test --isolate teilt das happy-dom-`document`
+    // zwischen Dateien, und bootstrap.notReady/-loadEvent setzen es zwischenzeitlich auf
+    // 'loading'. Ohne dieses Pinning ist der Test von der Dateireihenfolge abhängig.
+    Object.defineProperty(document, 'readyState', { value: 'complete', configurable: true });
     const task = vi.fn();
     registerAppStartTask(task);
     initializeAppBootstrap();

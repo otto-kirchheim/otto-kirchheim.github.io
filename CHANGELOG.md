@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-05 (52)
+
+### chore (DB-UX-Migration Phase 0: typecheck-Gate + Testreihenfolge-Flake behoben)
+
+Vorarbeit fuer die UI/UX-Migration auf das DB UX Design System (`tasks/plan-db-ux-migration.md`),
+Branch `feat/db-ux` von `origin/dev`:
+
+- **`typecheck`-Script** (`bunx --bun tsc --noEmit`) in `package.json`, `release:check` davor
+  gehaengt (`typecheck && lint && test && build`) -- Husky `pre-push` und `scripts/deploy.sh`
+  ziehen es damit automatisch mit. CI (`deploy.yml`) bleibt vorerst unveraendert (nur `build`).
+- **`test/core/bootstrap.test.ts`:** `document.readyState` explizit auf `'complete'` gepinnt.
+  `bun test --isolate` teilt das happy-dom-`document` zwischen Dateien; `bootstrap.notReady`/
+  `-loadEvent` setzen es zwischenzeitlich auf `'loading'`, wodurch der Test reihenfolgeabhaengig
+  fehlschlug (`registerAppStartTask` 0 statt 1 Aufruf, sobald eine `@/core`-importierende Datei
+  wie `typedEvents.test.ts` davor lief). Gleiche Technik wie in den beiden Schwester-Dateien.
+- **Plan-Doku korrigiert:** `Status`-Block auf Realitaet gesetzt; Scope-Zahlen in Phase A/F/H
+  (render-Stellen 12 statt 6 Dateien, `class=`-Codemod ~1330, Testdateien 183 gesamt / ~33 mit
+  Preact-Render, `preact/compat` 3 Dateien, kein `manualChunks` vorhanden, Bootstrap-`Tooltip`
+  als 7. JS-Komponente, `DBGrid` existiert nicht, `background_color` `#000000`); DB-UX-Doku-URLs
+  (v5.3.0) ergaenzt.
+
+Verifiziert: `bun run release:check` gruen -- `typecheck` exit 0, `lint` exit 0, `bun test`
+**2069 pass / 0 fail** (183 Dateien), `bun run build` gruen. Voller Testlauf jetzt
+reihenfolge-unabhaengig gruen (vorher 2068/1 auf `origin/dev`).
+
 ## 2026-08-29 (51)
 
 ### feat (FormularEditor: Schriftwahl im Modal mit Live-Vorschau)

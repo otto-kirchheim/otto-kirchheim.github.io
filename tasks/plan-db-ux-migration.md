@@ -3,25 +3,23 @@
 > Genehmigter Gesamtplan. Fortschritt und Phasen-Logs: `tasks/todo.md`.
 > Branch: `feat/db-ux` (Frontend, von `origin/dev`) · `feat/db-ux-migration` (Parent-Repo).
 
-## Status (2026-09-03)
+## Status (2026-09-05)
 
-- **Phase 0** – teilweise erledigt. `typecheck`-Script + `release:check`-Gate, `.gitignore`
-  `.env`-Block, `.mcp.json` DB-UX-Server (Parent). Baseline auf `origin/dev` grün
-  (`typecheck` exit 0, `build` ok, `test` 2067 pass / 0 fail).
+- **Phase 0 (Frontend)** – erledigt auf Branch `feat/db-ux` (von `origin/dev`), noch nicht
+  gepusht. Phasen-Log: `tasks/todo.md`.
+  - `.gitignore` `.env`-Block (Commit `f668d5e`; Muster `.env` / `.env.*` / `.env.local` /
+    `.env.local.*`).
+  - `typecheck`-Script + `release:check`-Voranstellung (`typecheck && lint && test && build`).
+  - Vorgefundener Testreihenfolge-Flake behoben (`test/core/bootstrap.test.ts`).
+  - **Baseline verifiziert:** `bun run release:check` grün – `typecheck` exit 0, `lint` exit 0,
+    `bun test` **2069 pass / 0 fail** (183 Dateien), `build` grün.
+- **Phase 0 (Parent)** – Branch `feat/db-ux-migration` = `origin/main` (`16e7406`) + Commit
+  `a70ca1f`: `.mcp.json` + `.mcp.json.example` mit db-ux-MCP-Eintrag (claude-flow + graphify
+  + db-ux, dort bewusst versioniert – **nicht** auf `origin/main` selbst). Lokaler Parent-`main`
+  divergiert von `origin/main` – Sync + Arbeitsbranch-Wechsel offen (User-Rückfrage).
+- **Noch offen in Phase 0:** `.env.example` (Sandbox-Deny → Phase B), Wegwerf-Spike,
+  Push `feat/db-ux` + Frontend-Gitlink-Bump (nach User-Freigabe).
 - **Phase A–I** – offen.
-
-### Lokal fortsetzen
-
-```bash
-# Parent
-git clone <parent> && cd DB-Nebengeld
-git checkout feat/db-ux-migration
-git submodule update --init --recursive
-# Frontend-Submodul steht dann auf feat/db-ux
-cd frontend
-bun install            # zieht shared via github:otto-kirchheim/nebengeld-shared#dev
-bun run typecheck && bun run test && bun run build   # Baseline muss grün sein
-```
 
 Für Phase B werden die DB-Markentheme-Secrets gebraucht: `frontend/.env` (gitignored)
 mit `ASSET_PASSWORD` / `ASSET_INIT_VECTOR` aus dem DB-Marketingportal; `bun install`
@@ -34,8 +32,10 @@ Material-Icons-Webfont, Tab-SPA komplett in `src/index.html`, `CustomTable` als 
 Modals als Preact via `showModal()`). Kein Design-Token-System außer den Bootstrap-`--bs-*`-
 Custom-Properties, kein DB-Branding.
 
-Ziel: Angleichung an das **DB UX Design System v3** (`core-web` 5.3.0,
-<https://github.com/db-ux-design-system/core-web>). Getroffene Entscheidungen:
+Ziel: Angleichung an das **DB UX Design System** (System-Generation „v3"; die npm-Pakete
+`@db-ux/core-*` sind unabhängig davon bei **5.3.0**, `@db-ux/db-theme` bei 6.2.0 – „v3" und
+„5.3.0"/„v5-Markup" im weiteren Text meinen dieselbe aktuelle Generation).
+Monorepo: <https://github.com/db-ux-design-system/core-web>. Getroffene Entscheidungen:
 
 1. **Schrittweise Migration** – DB UX parallel via CSS Cascade Layers einziehen, Screen für
    Screen umstellen, Bootstrap zuletzt entfernen. Jede Phase einzeln deploybar.
@@ -86,23 +86,39 @@ Backend komplett.
 - **`@db-ux/agent-cli`** (`npx @db-ux/agent-cli`) – erzeugt `.github/copilot-instructions.md`
   aus den installierten `@db-ux`-Paketen. Einmal nach Phase B/C ausführen und committen;
   danach bei Paket-Updates neu generieren.
+- **Doku-Websites** (version-gepinnt auf `v5.3.0`; SPA – im Browser öffnen, für Auszüge den
+  MCP-Server nutzen):
+  - IDE-/AI-Tooling-Setup: <https://design-system.deutschebahn.com/core-web/version/v5.3.0/foundations/ide>
+  - Foundations (Tokens, Farben, Dichte, Fonts, Icons): <https://design-system.deutschebahn.com/core-web/version/v5.3.0/foundations/readme>
+  - Komponenten (Props/Slots/CSS-Klassen + Migrations-Hinweis je Komponente): <https://design-system.deutschebahn.com/core-web/version/v5.3.0/components/readme>
+  - Monorepo (Quellcode, Releases, `MIGRATION*.md`, Status-Board): <https://github.com/db-ux-design-system/core-web>
+  - Paket-Versionen/Tarball gegenprüfen: `npm view @db-ux/<pkg>` bzw. `npm pack` + `tar tzf`
+    (npm-Website liefert im Sandbox 403).
 
 ## Phase 0 — Toolchain-Gate (S)
 
 Keine Verhaltensänderung, nur Infrastruktur.
 
-- [x] Branch `feat/db-ux` von `origin/dev`; Baseline grün verifiziert.
+- [x] Branch `feat/db-ux` von `origin/dev`; Baseline grün verifiziert (`release:check`:
+      `typecheck` 0 / `lint` 0 / `bun test` 2069-0 / `build` ok).
 - [x] `typecheck`-Script in `package.json` (`bunx --bun tsc --noEmit`), in `release:check`
-      vorangestellt. (CI-Step folgt in Phase B zusammen mit der ASSET-env.)
-- [x] `.gitignore`: expliziter `.env` / `.env.local` / `.env.*.local`-Block (die Branch-
-      `.gitignore` hatte keinen).
-- [x] `db-ux`-MCP-Server in `.mcp.json` + `.mcp.json.example` (Parent).
-- [ ] `.env.example` – im Sandbox durch Deny-Rule blockiert; Anleitung liegt in
-      `scripts/install.sh` (Phase B).
+      vorangestellt. (CI hat heute **keinen** typecheck/lint/test-Step – `deploy.yml` macht
+      nur `bun install` + `bun run build`; der CI-Step wird in Phase B **neu** ergänzt,
+      zusammen mit der ASSET-env.) Husky `pre-push` + `scripts/deploy.sh` ziehen `typecheck`
+      automatisch mit.
+- [x] Vorgefundener Testreihenfolge-Flake behoben (`test/core/bootstrap.test.ts` pinnt
+      `document.readyState='complete'` wie die Schwester-Dateien) – vorher 2068/1 auf `origin/dev`.
+- [x] `.gitignore`: expliziter `.env`-Block (Commit `f668d5e`; real: `.env` / `.env.*` /
+      `.env.local` / `.env.local.*` – die Branch-`.gitignore` hatte keinen).
+- [x] `db-ux`-MCP-Server in `.mcp.json` + `.mcp.json.example` **auf Parent-Branch
+      `feat/db-ux-migration`** (= `origin/main` + `a70ca1f`), nicht auf `origin/main` selbst.
+- [ ] `.env.example` – im Sandbox durch Deny-Rule blockiert; Anlage in Phase B zusammen mit
+      `scripts/install.sh` (beide existieren noch nicht).
 - [ ] Wegwerf-Spike (nicht mergen): `@db-ux/react-core-components` + React 19 + `db-theme`-
       postinstall mit echten Credentials einmal durchspielen, Bundle messen.
 
-**Verifikation:** `bun run typecheck` grün; CI unverändert grün.
+**Verifikation:** `bun run release:check` grün (`typecheck` / `lint` / `test` / `build`);
+CI (`bun run build`) unverändert grün. ✓ 2026-09-05: 2069 pass / 0 fail.
 
 ---
 
@@ -119,25 +135,43 @@ DB-UX-Code.
 - **`tsconfig.json`:** `jsxImportSource: "preact"` → `"react"` (`jsx: "react-jsx"` bleibt);
   `types: ["bun-types"]` → `["bun-types", "react", "react-dom"]`.
 - **Neu `src/ts/infrastructure/ui/reactRoot.ts`:** `WeakMap<Element, Root>`-Cache,
-  `mount(el, node)` / `unmount(el)`. Ersetzt alle **28 `render(...)`-Aufrufstellen**
-  (`showModal.ts`, `mount*Tab`/`unmount*Tab` in `EwtTab.tsx`, `BereitschaftTab.tsx`,
-  `NebenTab.tsx`, `EaTab.tsx`, `features/Admin/index.tsx`).
+  `mount(el, node)` / `unmount(el)`. Ersetzt alle **~24 Preact-`render()`-Aufrufe in
+  12 Dateien**: `components/showModal.ts`, `features/EWT/EwtTab.tsx`,
+  `features/Bereitschaft/BereitschaftTab.tsx`, `features/Neben/NebenTab.tsx`,
+  `features/EA/EaTab.tsx`, `features/Admin/index.tsx`, `core/help/openHelpModal.tsx`,
+  `core/orchestration/onboarding/createOnboardingGuideModal.tsx`,
+  `core/orchestration/auth/components/ConflictReviewBanner.tsx`,
+  `features/Berechnung/components/BerechnungMobileCards.tsx`,
+  `features/Admin/components/FormularEditor/datenpfadUndFormeln.tsx`,
+  `features/Einstellungen/utils/generateEingabeMaskeEinstellungen.ts` (`h()` + `render()` in `.ts`).
+  (`showModal(` selbst: ~21 Calls / 26 Importer.)
 - **Import-Codemod (skriptgestützt + Review):** `preact` / `preact/hooks` / `preact/compat`
-  (2 Admin-Dateien: `createPortal` → `react-dom`) → `react`; `FunctionalComponent`→`FC`,
+  → `react`; `preact/compat`-`createPortal` → `react-dom` in **3 Dateien**
+  (`features/Admin/components/AdminResourceEditModal.tsx`, `.../AdminUserProfileEditor.tsx`,
+  `.../FormularEditor/SchriftartDialog.tsx`); `FunctionalComponent`→`FC`,
   `ComponentChild(ren)`→`ReactNode`, `VNode`→`ReactElement`. `import 'preact/debug'` in
-  `main.ts` entfernen.
-- **JSX-Attribut-Codemod:** `class=`→`className=`, `for=`→`htmlFor=` (~1200 Vorkommen in
-  `.tsx`, **nicht** in DOM-String-Templates der Tabellen-Parser wie `berechnenParser` /
-  `schichtParser`). String-`style="a: b"` (~121) → Objekt-`style={{ a: 'b' }}`. Event-Review
-  (~47 Handler-Dateien): `onChange`-Semantik bei Textinputs feuert in React früher;
-  `onFocusIn/Out`→`onFocus/onBlur`.
+  `main.ts` (`main.ts:4`) entfernen.
+- **JSX-Attribut-Codemod:** `class=`→`className=`, `for=`→`htmlFor=` (**~1330 Vorkommen**:
+  `class=` ~1304 + `for=` ~25). Codebase hat bereits ~369 `className=` / ~12 `htmlFor=` gemischt
+  → Codemod **muss idempotent** sein, kein blindes Ersetzen. **Nicht** in DOM-String-Templates
+  (`.tsx`: `berechnenParser` / `schichtParser` in `EWT/EwtTab.tsx`; `.ts`: `signaturDialog.ts`,
+  `autoSave/errorHandling.ts`, `ui/confirmDialog.ts`, `table/CustomTable.ts`,
+  `Berechnung/generateTableBerechnung.ts`, `auth/utils/loadUserDaten.conflict.ts`).
+  String-`style="a: b"` (**~128**) → Objekt-`style={{ a: 'b' }}`. Event-Review
+  (~72 `.tsx` mit JSX-Handlern + ~20 `.ts` mit `addEventListener`): `onChange`-Semantik bei
+  Textinputs feuert in React früher (~160 `onChange`-Stellen; Code nutzt heute großteils
+  `onInput`, ~79 – Rest prüfen). (`onFocusIn/Out` kommt im Code **nicht** vor.)
 - **`RefObject`-Typänderung React 19:** `createRef<T>()` liefert `RefObject<T | null>` –
   `MyInput.tsx` + alle `createRef`/`useRef`-Stellen mit `.current`-Guards prüfen.
 - **Class-Components** (`MyInput.tsx` + 1 weitere): Preact-`Component`-Lifecycle ≈ React,
   `children` explizit typisieren. Bootstrap-`Popover` in `componentDidMount` bleibt bis Phase C.
 - **ESLint:** `eslint-plugin-react`, `eslint-plugin-react-hooks` ergänzen (Rules-of-Hooks
   fehlt heute). `react/no-unknown-property` temporär als `error`.
-- **Bundle/PWA:** `build.rollupOptions.output.manualChunks` → `react`-Vendor-Chunk.
+- **Bundle/PWA:** heute existiert **kein** `rollupOptions`/`manualChunks` (`build` =
+  `{ outDir, emptyOutDir, sourcemap:'hidden' }` in `vite.base-config.ts`) – der `manualChunks`-
+  Block muss **neu** angelegt werden (`react`-Vendor-Chunk). Vite 8 nutzt Rolldown; das Build-Log
+  empfiehlt `build.rolldownOptions.output` – API-Namen (`rollupOptions` vs. `rolldownOptions`,
+  `manualChunks` vs. `output.codeSplitting`) gegen die Vite-8-Doku prüfen.
   Zuwachs ~ +40 KB gz akzeptieren, im Bundle-Report dokumentieren.
 
 **Verifikation:** `bun run typecheck` + `bun run build` grün; `verify`-Skill kompletter
@@ -151,11 +185,15 @@ Login/Register/Reset-Modals, Signatur-Dialog), Dark/Light, Mobile-Viewport, Deep
 - Render-Harness `test/helpers/renderComponent.tsx` mit `createRoot` + `act` (aus `react`;
   `react-dom/test-utils` ist in 19 entfernt). Alternativ `@testing-library/react` +
   `@testing-library/dom` (empfohlen, `cleanup()` in `afterEach`).
-- ~33 Test-Dateien: Preact-Render → Harness; `preact/hooks`-Mocks → `react`. Direkt-nach-
-  Render-Assertions mit `await act(...)`. `--isolate` behalten.
+- Gesamtsuite ~183 Test-Dateien; **nur ~33 rendern Preact** (32 `.test.tsx` +
+  `test/features/Admin.lifecycle.test.ts`) und brauchen die Harness-Umstellung – die ~150
+  reinen Logik-`.test.ts` bleiben unberührt. Render-Weg heute: manuelles
+  `import { render } from 'preact'` in ein lokal gebautes `container`-`div`, Cleanup
+  `render(null, container)`; **kein** `@testing-library/preact`, **kein** `preact-render-to-string`.
+  `preact/hooks`-Mocks → `react`. Direkt-nach-Render-Assertions mit `await act(...)`. `--isolate` behalten.
 
-**Verifikation:** `bun run test` (~2067 Tests) grün, `bun run coverage` ohne Regression,
-`bun run lint` grün.
+**Verifikation:** `bun run test` grün (reale Testzahl aus Phase 0 als Referenz, nicht die
+alte „2067"-Behauptung), `bun run coverage` ohne Regression, `bun run lint` grün.
 
 **Doku (Ende Phase A):** `frontend/CLAUDE.md` (Tech-Stack Preact→React), `.claude/skills/architektur`,
 `.claude/skills/verify` (Effekt-Timing/`act`), `frontend/CHANGELOG.md`; Root `../CLAUDE.md`.
@@ -165,20 +203,26 @@ Login/Register/Reset-Modals, Signatur-Dialog), Dark/Light, Mobile-Viewport, Deep
 ## Phase B — DB-UX-CSS-Layer + db-theme + Token-Bridge (M)
 
 - **Deps:** `@db-ux/core-foundations`, `@db-ux/core-components` (5.3.0), `@db-ux/db-theme@6.2.0`
-  – alle als normale `dependencies` + `allowScripts` (db-theme-postinstall).
+  – alle als normale `dependencies`. db-theme-postinstall über Bun: `"trustedDependencies"` in
+  `package.json` (Bun-Mechanismus, **nicht** npm-`allowScripts`); `bunfig.toml` hat heute nur
+  `[install] linker = "hoisted"` + `[test]`.
 - **`scripts/install.sh`** anlegen – `bun install` mit `.env`-Secrets für db-theme-postinstall.
-- **`deploy.yml`:** `ASSET_PASSWORD` / `ASSET_INIT_VECTOR` als `env:` am Install-Step; danach
-  `typecheck`-Step wieder aktivierbar.
+- **`deploy.yml`:** hat heute **keinen** typecheck/lint/test-Step (nur `bun install
+  --frozen-lockfile` + `bun run build`, Trigger nur `push` → `main`). `ASSET_PASSWORD` /
+  `ASSET_INIT_VECTOR` als `env:` am Install-Step ergänzen; `typecheck`-Step **neu** hinzufügen
+  (nicht „reaktivieren"). Bestehendes Gate: `scripts/deploy.sh` → `release:check` + Husky `pre-push`.
 - **Neu `src/scss/layers.scss`** (als allererstes importiert):
   `@layer bootstrap, db-ux, bridge, app;`
 - **`styles.scss` umbauen:** `@import '~bootstrap/scss/bootstrap'` in `@layer bootstrap { … }`
   kapseln. App-Overrides + Material-Icons-Import vorerst unlayered.
 - **Neu `src/scss/db-ux.css`:** `@import '@db-ux/db-theme/.../<brand-theme>.css' layer(db-ux);`
-  + `@import '@db-ux/core-components/.../bundle.css' layer(db-ux);` (Rollup-/Vite-Variante).
+  plus `@import '@db-ux/core-components/build/styles/bundle.css' layer(db-ux);` (Rollup-/Vite-Variante).
 - **`main.ts`:** `layers.scss` ganz oben, `db-ux.css` vor `styles.scss`.
 - **Token-Bridge `src/scss/bridge.css` (`@layer bridge`):** genutzte `--bs-*` (`--bs-primary`,
   `--bs-body-bg`, `--bs-border-color`, `--bs-secondary`, `--bs-success`, `--bs-danger`,
-  `--bs-body-color` + Emphasis-Varianten) auf DB-Tokens mappen.
+  `--bs-body-color` + Emphasis-/Subtle-Varianten – `customtable.css` nutzt real
+  `--bs-danger-bg-subtle`, `--bs-secondary-color`, `--bs-warning-bg-subtle`, `--bs-danger`,
+  `--bs-emphasis-color`) auf DB-Tokens mappen.
 - **`BSColorToggler.ts` erweitern** (nicht ersetzen): schreibt weiter `data-bs-theme` UND
   zusätzlich `color-scheme` am `<html>`; Storage-Key `theme` bleibt. `<html>` bekommt
   `data-density="regular"`.
@@ -228,12 +272,19 @@ Inline-Edit-/Soft-Delete-Logik der `CustomTable`-Klasse bleibt vollständig erha
 
 - `customTableRender.ts`: Bootstrap-Table-Klassen (`table table-bordered table-striped
   table-hover align-middle` in `*Tab.tsx` + `index.html`) → DB-Table-CSS-Klassen/`data-*`.
-- `CustomTable.ts`: Default-Edit/Delete/Undo-Markup (`<span class="material-icons-round">…`
-  + `btn btn-secondary`) → DB-Icon + DB-Button-Markup; `customButton.classes`-Konvention
-  anpassen.
-- `customtable.css` gegen DB-Tokens neu schreiben; Responsive-Breakpoints
-  (`customtable-toggle-*`) bleiben JS-seitig unverändert.
-- `.form-check.form-switch`-Parser (`berechnenParser` in `EwtTab` u.a.) → DB-Switch-Markup.
+- `CustomTable.ts`: Default-Edit/Delete/Undo-Markup (`<span class="material-icons-round">…` +
+  `btn btn-secondary`) → DB-Icon + DB-Button-Markup; `customButton.classes`-Konvention anpassen.
+- **Bootstrap-`Tooltip`-JS:** `customTableRender.ts` importiert + instanziiert
+  `bootstrap/js/dist/tooltip` (`new Tooltip(td, …)` für Fehler-Zeilen, `data-bs-toggle="tooltip"`
+  / `data-bs-title`) → `DBTooltip`. Ebenso `features/Admin/components/AdminUserList.tsx`.
+  (Damit ist `Tooltip` die 7. Bootstrap-JS-Komponente – Popover/Modal/Tab/Collapse/Dropdown/Offcanvas
+  sind die anderen 6.)
+- `customtable.css` gegen DB-Tokens neu schreiben (nutzt heute `--bs-danger-bg-subtle`,
+  `--bs-secondary-color`, `--bs-warning-bg-subtle`, `--bs-danger`, `--bs-emphasis-color` +
+  `[data-bs-theme='light']`-Selektoren); Responsive-Breakpoints (`customtable-toggle-*`)
+  bleiben JS-seitig unverändert.
+- `.form-check.form-switch`-Parser (`berechnenParser` + `schichtParser` in `EWT/EwtTab.tsx`,
+  DOM-Strings mit `html: true`) → DB-Switch-Markup.
 
 **Verifikation:** Sortierung, Inline-Editing, Add/Delete/Delete-All, `onChange`→AutoSave,
 Responsive-Umbruch je Breakpoint; `verify`-Skill je Feature-Tabelle; `bun run test`.
@@ -264,7 +315,7 @@ Responsive-Umbruch je Breakpoint; `verify`-Skill je Feature-Tabelle; `bun run te
   `location.hash`, dispatcht `tab:shown`-CustomEvent.
 - `src/index.html`: `<header class="navbar …">` + `.offcanvas#navmenu` + `.nav-pills` →
   DB-Header/Navigation-Markup; `data-bs-toggle="pill"` / `data-bs-target` → `data-tab-target`
-  + Controller; `role`/`aria-*` behalten.
+  plus Controller; `role`/`aria-*` behalten.
 - `main.ts`: `Dropdown`/`Offcanvas`/`Collapse`/`Tab`-Init entfernen; Hash-Handling →
   `tabController.showByHash()`. Feature-Lifecycle-Registry von Bootstrap-Pill-Events auf
   `tab:shown` umstellen. Admin-`d-none`-Toggling → Controller-API.
@@ -303,10 +354,11 @@ Dialog (inkl. Fullscreen/Querformat); Escape/Backdrop-Close, Fokus-Trap, Scroll-
 
 - **Utility-Klassen-Sweep (Hauptaufwand):** `d-*`, `container(-fluid/-lg)`, `row`, `col-*`,
   `g-*`/`gap-*`, `m*`/`p*`/`me-1`, `text-*`, `align-*`, `justify-content-*`, `bg-*`, `border-*`,
-  `sticky-top`, `btn-close`, custom `w200`/`w20`/`w40` in `index.html` + ~90 `.tsx` +
-  DOM-String-Templates. Strategie: `DBStack`/`DBSection`/`DBGrid` wo React; für den Rest kleine
-  App-Utility-CSS (`@layer app`, ~20 Helfer). Zwischenschritt möglich: nur
-  `bootstrap/scss/utilities` behalten, `-components` früher raus.
+  `sticky-top`, `btn-close`, custom `w200`/`w20`/`w40` in `index.html` + ~86 von 93 `.tsx`
+  (+ ~4 `.ts` DOM-String-Dateien). Strategie: `DBStack`/`DBSection` wo React (`DBGrid`
+  existiert **nicht** in `react-core-components` 5.3.0 – nur `stack` + `section`); für den Rest
+  kleine App-Utility-CSS inkl. Grid-Helfer (`@layer app`, ~20 Helfer). Zwischenschritt möglich:
+  nur `bootstrap/scss/utilities` behalten, `-components` früher raus.
 - `styles.scss`: `@layer bootstrap`-Import entfernen; `var(--bs-*)`-Overrides auf DB-Tokens
   umschreiben oder löschen; `bridge.css` reduzieren/entfernen.
 - `BSColorToggler` → `DBColorToggler` (nur `color-scheme`/DB-Attribut); `<html data-bs-theme>`
@@ -324,8 +376,8 @@ Screen-für-Screen mergen, nicht Big-Bang.
 
 - Layer-Modell konsolidieren: `@layer db-ux, app;`; `customtable.css` in `@layer app`.
 - `data-density`/`data-color` final mit Design abstimmen.
-- Dark-Mode-QA end-to-end; `manifest.theme_color` / `<meta name="theme-color">` /
-  `background_color` (`#212529`) auf DB-Brand-Werte.
+- Dark-Mode-QA end-to-end; `manifest.theme_color` + `<meta name="theme-color">` (heute `#212529`)
+  und `manifest.background_color` (heute `#000000`) auf DB-Brand-Werte.
 - Bundle-/PWA-Review; `@db-ux/core-stylelint` optional; ESLint-Config aufräumen.
 - `npx @db-ux/agent-cli` final neu ausführen, `.github/copilot-instructions.md` committen.
 - **Doku (Done-Kriterium):** `frontend/CLAUDE.md`, `.claude/skills/architektur`,
@@ -357,6 +409,6 @@ Screen-für-Screen mergen, nicht Big-Bang.
 
 `bun run typecheck` · `bun run lint` · `bun run test` (sequentiell) · `bun run build` ·
 `verify`-Skill (Puppeteer + `/usr/bin/google-chrome-stable`, Port 8080, localStorage-Seed
-inkl. `Version`, `localStorage.clear` stubben) für die berührten Screens · manuell Dark/Light
-+ Mobile-Viewport (<768 px) + Deep-Link. CI-Gate `npm ls react` (Single-Instance).
+inkl. `Version`, `localStorage.clear` stubben) für die berührten Screens · manuell Dark/Light ·
+Mobile-Viewport (<768 px) + Deep-Link · CI-Gate `npm ls react` (Single-Instance).
 Grep-Gates in H: `bootstrap` / `data-bs-` / `--bs-` / `material-icons` = 0.

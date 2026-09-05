@@ -1,3 +1,56 @@
+# Aktueller Plan: DB-UX-Migration -- Phase 0 (Toolchain-Gate) - 2026-09-05
+
+## Kontext
+
+Gesamtplan: `tasks/plan-db-ux-migration.md` (Preact 10 -> React 19, Bootstrap 5.3 -> DB UX
+Design System v5.3.0, mehrmonatig). Diese Sektion ist das Phasen-Log dazu.
+
+Prueflauf des Gesamtplans (2026-09-05): Ansatz solide, externe DB-UX-Annahmen verifiziert
+(Pakete 5.3.0 / db-theme 6.2.0, React-19.2-Ziel, keine peerDeps, `DBDrawer` statt Modal,
+keine DataTable). Der alte `Status (2026-09-03)`-Block war falsch -- markierte Phase-0-Arbeit
+als erledigt, die auf `dev` nicht existierte. Mehrere Scope-Zahlen zu niedrig. Alles in der
+Plan-Doku korrigiert.
+
+Phase 0 selbst: reines Toolchain-Gate, keine Verhaltensaenderung, kein React-/DB-UX-Code.
+
+## Plan
+
+- [x] Branch `feat/db-ux` von `origin/dev` (Frontend-Submodul).
+- [x] `typecheck`-Script (`bunx --bun tsc --noEmit`) in `package.json`, `release:check`
+      vorangestellt (`typecheck && lint && test && build`).
+- [x] Plan-Doku `tasks/plan-db-ux-migration.md` korrigiert (Status, Scope-Zahlen A/F/H,
+      Phantom-Angaben, DB-UX-Doku-URLs v5.3.0).
+- [x] Vorgefundenen Testreihenfolge-Flake behoben: `test/core/bootstrap.test.ts` pinnt
+      `document.readyState='complete'` (wie die Schwester-Dateien). Vorher 2068/1 auf
+      `origin/dev`, jetzt 2069/0 reihenfolge-unabhaengig.
+- [x] `CHANGELOG.md` Eintrag (52).
+- [ ] `.env.example` -- im Sandbox durch Deny-Rule blockiert, in Phase B mit `scripts/install.sh`.
+- [ ] Wegwerf-Spike (`@db-ux/react-core-components` + React 19 + `db-theme`-postinstall,
+      Bundle messen) -- offen, nicht blockierend.
+- [ ] Parent-Repo `feat/db-ux-migration` (= `origin/main` + db-ux-MCP-Commit) als
+      Arbeitsbranch; lokaler `main` divergiert von `origin/main` (Rueckfrage an User offen).
+- [ ] Push `feat/db-ux` + Frontend-Gitlink-Bump -- erst nach ausdruecklicher User-Freigabe.
+
+## Verifikationskriterien (Phase 0)
+
+- `bun run typecheck` exit 0 (Script existiert).
+- `bun run release:check` als Ganzes gruen: `lint` 0, `bun test` **2069 pass / 0 fail** (183
+  Dateien), `bun run build` gruen.
+- Voller `bun test`-Lauf reihenfolge-unabhaengig gruen (mehrfach + einzeln `test/core/`).
+- `git diff` beruehrt nur: `package.json`, `tasks/plan-db-ux-migration.md`, `tasks/todo.md`,
+  `CHANGELOG.md`, `test/core/bootstrap.test.ts`. Kein `src/**`, kein `vite.config.ts`.
+
+## Review (Phase 0)
+
+- Erledigt: Branch, `typecheck`-Gate, Plan-Korrekturen, Flake-Fix, Changelog. `release:check`
+  gruen verifiziert (typecheck 0 / lint 0 / test 2069-0 / build ok).
+- Offen (nicht blockierend): `.env.example`, Spike, Parent-Repo-Sync (User-Rueckfrage),
+  Push/Gitlink-Bump (User-Freigabe).
+- Nebenbefund: Vite 8 nutzt Rolldown -- Build-Log empfiehlt `build.rolldownOptions.output`
+  statt `rollupOptions`; in Phase A1 pruefen (Plan-Doku-Hinweis ergaenzt).
+
+---
+
 # Aktueller Plan: AutoSave-Commit-Race - Snapshot-basiertes Commit statt Live-Filter - 2026-08-05
 
 ## Kontext
