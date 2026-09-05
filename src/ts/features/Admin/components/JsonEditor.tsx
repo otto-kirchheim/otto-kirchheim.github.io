@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
 
 type Props = {
   value: string;
@@ -55,47 +55,50 @@ export function JsonEditor({ value, onChange, error }: Props) {
 
   return (
     <div
-      class={`border rounded ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
+      className={`border rounded ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
     >
       {/* Kopfzeile / Summary – immer sichtbar, zum Auf-/Zuklappen */}
       <div
-        class={`d-flex align-items-center gap-2 px-2 py-1 ${hasError ? 'bg-danger-subtle' : 'bg-body-secondary'} ${open ? 'border-bottom' : ''}`}
-        style="cursor:pointer;user-select:none;border-radius:inherit"
+        className={`d-flex align-items-center gap-2 px-2 py-1 ${hasError ? 'bg-danger-subtle' : 'bg-body-secondary'} ${open ? 'border-bottom' : ''}`}
+        style={{ cursor: 'pointer', userSelect: 'none', borderRadius: 'inherit' }}
         onClick={() => setOpen(o => !o)}
       >
-        <span class="material-icons-round text-muted flex-shrink-0" style="font-size:0.95rem">
+        <span className="material-icons-round text-muted flex-shrink-0" style={{ fontSize: '0.95rem' }}>
           {open ? 'expand_less' : 'expand_more'}
         </span>
 
-        <span class={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>{label}</span>
+        <span className={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>{label}</span>
 
         {!open && hint && (
-          <span class="text-muted text-truncate" style="font-size:0.7rem;font-family:monospace;min-width:0">
+          <span
+            className="text-muted text-truncate"
+            style={{ fontSize: '0.7rem', fontFamily: 'monospace', minWidth: '0' }}
+          >
             {hint}
           </span>
         )}
 
-        <div class="ms-auto d-flex gap-1 flex-shrink-0" onClick={e => (e as MouseEvent).stopPropagation()}>
+        <div className="ms-auto d-flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
           {open && (
             <button
-              class="btn btn-sm btn-outline-secondary py-0"
-              style="font-size:0.75rem"
+              className="btn btn-sm btn-outline-secondary py-0"
+              style={{ fontSize: '0.75rem' }}
               onClick={handleFormat}
               title="JSON formatieren"
             >
-              <span class="material-icons-round" style="font-size:0.8rem;vertical-align:middle">
+              <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
                 format_align_left
               </span>
-              <span class="ms-1 d-none d-sm-inline">Format</span>
+              <span className="ms-1 d-none d-sm-inline">Format</span>
             </button>
           )}
           <button
-            class="btn btn-sm btn-outline-secondary py-0"
-            style="font-size:0.75rem"
+            className="btn btn-sm btn-outline-secondary py-0"
+            style={{ fontSize: '0.75rem' }}
             onClick={() => setOpen(o => !o)}
             title={open ? 'Einklappen' : 'Bearbeiten'}
           >
-            <span class="material-icons-round" style="font-size:0.8rem;vertical-align:middle">
+            <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
               {open ? 'close' : 'edit'}
             </span>
           </button>
@@ -104,20 +107,20 @@ export function JsonEditor({ value, onChange, error }: Props) {
 
       {/* Editor */}
       {open && (
-        <div class="p-2">
+        <div className="p-2">
           <textarea
-            class={`form-control form-control-sm font-monospace w-100${hasError ? ' is-invalid' : ''}`}
+            className={`form-control form-control-sm font-monospace w-100${hasError ? ' is-invalid' : ''}`}
             rows={autoRows(value)}
-            style="font-size:0.72rem;resize:vertical;min-height:80px;line-height:1.45"
+            style={{ fontSize: '0.72rem', resize: 'vertical', minHeight: '80px', lineHeight: '1.45' }}
             value={value}
-            onInput={e => onChange((e.target as HTMLTextAreaElement).value)}
-            spellcheck={false}
-            autocomplete="off"
-            autocorrect="off"
+            onChange={e => onChange((e.target as HTMLTextAreaElement).value)}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
           />
           {hasError && (
-            <div class="small mt-1 text-danger">
-              <span class="material-icons-round me-1" style="font-size:0.85rem;vertical-align:middle">
+            <div className="small mt-1 text-danger">
+              <span className="material-icons-round me-1" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
                 error_outline
               </span>
               {error ?? 'Ungültiges JSON'}

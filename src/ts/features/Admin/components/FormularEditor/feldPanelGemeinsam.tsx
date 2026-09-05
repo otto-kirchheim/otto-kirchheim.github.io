@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+
 import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
 import type { Armed } from './feldPanelTypen';
@@ -16,11 +17,11 @@ export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClic
   return (
     <button
       type="button"
-      class={`btn btn-sm py-0 ${aktiv ? 'btn-danger' : 'btn-outline-primary'}`}
+      className={`btn btn-sm py-0 ${aktiv ? 'btn-danger' : 'btn-outline-primary'}`}
       onClick={onClick}
       title={titel ?? 'Rechteck auf dem PDF aufziehen, um Position und Zellbreite zu setzen'}
     >
-      <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+      <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
         {aktiv ? 'highlight_alt' : 'crop_free'}
       </span>
     </button>
@@ -52,16 +53,16 @@ export function ZahlFeld({
   };
 
   return (
-    <div class="col">
-      <div class="input-group input-group-sm">
-        <span class="input-group-text px-1 small">{label}</span>
+    <div className="col">
+      <div className="input-group input-group-sm">
+        <span className="input-group-text px-1 small">{label}</span>
         <input
           type="number"
           step={ganzzahl ? 1 : 'any'}
           min={min}
-          class="form-control px-1"
+          className="form-control px-1"
           value={wert === undefined ? '' : Number(wert.toFixed(2))}
-          onInput={e => {
+          onChange={e => {
             const v = (e.target as HTMLInputElement).value;
             onChange(v === '' ? undefined : begrenzt(Number(v)));
           }}
@@ -93,19 +94,19 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
     <>
       <button
         type="button"
-        class="btn btn-sm btn-link p-0 small text-muted text-nowrap text-decoration-none"
+        className="btn btn-sm btn-link p-0 small text-muted text-nowrap text-decoration-none"
         onClick={() => setOffen(o => !o)}
         title="Koordinaten bearbeiten"
       >
         x={wert.x.toFixed(0)}
         {wert.y !== undefined && `, y=${wert.y.toFixed(0)}`}
         {breite !== null && `, ${breite.toFixed(0)}${hoehe === null ? ' br.' : `×${hoehe.toFixed(0)}`}`}
-        <span class="material-icons-round" style="font-size:0.8rem;vertical-align:middle">
+        <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
           {offen ? 'expand_less' : 'expand_more'}
         </span>
       </button>
       {offen && (
-        <div class="row g-1 w-100 mt-1">
+        <div className="row g-1 w-100 mt-1">
           <ZahlFeld label="x" wert={wert.x} onChange={v => onChange({ ...wert, x: v ?? 0 })} />
           <ZahlFeld label="x2" wert={wert.x2} onChange={v => onChange({ ...wert, x2: v })} />
           {!nurX && (
@@ -144,49 +145,49 @@ export function DarstellungsFelder<
   return (
     <>
       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
-      <div class="row g-1 align-items-center">
-        <div class="col-3">
+      <div className="row g-1 align-items-center">
+        <div className="col-3">
           <input
             type="number"
-            class="form-control form-control-sm"
+            className="form-control form-control-sm"
             title={wert.autoGroesse ? 'Maximale Schriftgröße' : 'Schriftgröße'}
             value={wert.size}
-            onInput={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
+            onChange={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
           />
         </div>
-        <div class="col-3 form-check mb-0">
+        <div className="col-3 form-check mb-0">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             checked={Boolean(wert.fett)}
             onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
           />
-          <label class="form-check-label small">Fett</label>
+          <label className="form-check-label small">Fett</label>
         </div>
-        <div class="col-3 form-check mb-0">
+        <div className="col-3 form-check mb-0">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             checked={Boolean(wert.kursiv)}
             onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
           />
-          <label class="form-check-label small">Kursiv</label>
+          <label className="form-check-label small">Kursiv</label>
         </div>
-        <div class="col-3 form-check mb-0">
+        <div className="col-3 form-check mb-0">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             checked={Boolean(wert.unterstrichen)}
             onChange={e => onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })}
           />
-          <label class="form-check-label small">Unterstr.</label>
+          <label className="form-check-label small">Unterstr.</label>
         </div>
       </div>
       {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
-      <div class="row g-1 mt-1">
-        <div class="col-5">
+      <div className="row g-1 mt-1">
+        <div className="col-5">
           <select
-            class="form-select form-select-sm"
+            className="form-select form-select-sm"
             value={wert.align ?? 'links'}
             onChange={e => onChange({ ...wert, align: (e.target as HTMLSelectElement).value as Ausrichtung })}
           >
@@ -195,9 +196,9 @@ export function DarstellungsFelder<
             <option value="rechts">rechts</option>
           </select>
         </div>
-        <div class="col-7">
+        <div className="col-7">
           <select
-            class="form-select form-select-sm"
+            className="form-select form-select-sm"
             title="Textrichtung in der Zelle — 90° für schmale, hochkant beschriftete Felder"
             value={String(wert.drehung ?? 0)}
             onChange={e => {
@@ -214,10 +215,10 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
-      <div class="row g-1 mt-1">
-        <div class="col-12">
+      <div className="row g-1 mt-1">
+        <div className="col-12">
           <select
-            class="form-select form-select-sm"
+            className="form-select form-select-sm"
             value={wert.format ?? ''}
             onChange={e =>
               onChange({
@@ -235,24 +236,24 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
-      <div class="d-flex gap-3 mt-1">
-        <div class="form-check">
+      <div className="d-flex gap-3 mt-1">
+        <div className="form-check">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             checked={Boolean(wert.autoGroesse)}
             onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
           />
-          <label class="form-check-label small">Schrift automatisch verkleinern</label>
+          <label className="form-check-label small">Schrift automatisch verkleinern</label>
         </div>
-        <div class="form-check">
+        <div className="form-check">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             checked={Boolean(wert.umbruch)}
             onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
           />
-          <label class="form-check-label small">Zeilenumbruch</label>
+          <label className="form-check-label small">Zeilenumbruch</label>
         </div>
       </div>
     </>

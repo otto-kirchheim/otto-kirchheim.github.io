@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render } from './reactRender';
+
 import BerechnungMobileCards, {
   mountBerechnungMobileCards,
 } from '@/features/Berechnung/components/BerechnungMobileCards';

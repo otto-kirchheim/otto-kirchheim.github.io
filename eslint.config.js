@@ -4,6 +4,8 @@ import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
+import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default defineConfig(
   // Basis
@@ -18,6 +20,39 @@ export default defineConfig(
         projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
+    },
+  },
+
+  // React: Rules of Hooks fehlten unter Preact komplett; JSX-Runtime ist automatisch,
+  // deshalb ohne die `react-in-jsx-scope`-Altlasten aus `react/recommended`.
+  {
+    files: ['**/*.tsx'],
+    ...react.configs.flat.recommended,
+    ...react.configs.flat['jsx-runtime'],
+    // Version fest: `detect` laesst eslint-plugin-react 7.37 unter ESLint 10 abstuerzen
+    // (`context.getFilename` gibt es dort nicht mehr).
+    settings: { react: { version: '19.2' } },
+    rules: {
+      ...react.configs.flat.recommended.rules,
+      ...react.configs.flat['jsx-runtime'].rules,
+      // Props werden ueber TypeScript typisiert, nicht ueber propTypes.
+      'react/prop-types': 'off',
+      // Deutsche Anfuehrungszeichen im JSX-Text sind gewollt.
+      'react/no-unescaped-entities': 'off',
+      // Waehrend der Migration hart, damit Preact-Attribute (class=, for=) auffallen.
+      'react/no-unknown-property': 'error',
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      // Die Compiler-Regeln aus Plugin v7 treffen Muster, die unter Preact korrekt waren
+      // (State im Effect setzen, Ref waehrend des Renders schreiben). Aufraeumen passiert
+      // in einer spaeteren Phase -- waehrend des Framework-Wechsels nur als Hinweis.
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
     },
   },
 

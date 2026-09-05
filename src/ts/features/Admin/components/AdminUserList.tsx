@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'react';
+
 import Tooltip from 'bootstrap/js/dist/tooltip';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import {
@@ -272,41 +273,41 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
   return (
     <div>
       {/* Filter-Leiste */}
-      <div class="row g-2 mb-3">
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+      <div className="row g-2 mb-3">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               id="adminFilterName"
               placeholder="Name"
               data-bs-toggle="tooltip"
               data-bs-title="Suche nach vollständigem Namen oder Benutzername"
               value={filter.name}
-              onInput={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
             />
-            <label for="adminFilterName">Name / Benutzer</label>
+            <label htmlFor="adminFilterName">Name / Benutzer</label>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               id="adminFilterOe"
               placeholder="OE (z.B. IL 03, IL04, KSL)"
               data-bs-toggle="tooltip"
               data-bs-title="OE-Suche: tolerant für IL03/IL 03. Mehrere OEs mit Komma trennen"
               value={filter.oe}
-              onInput={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
-            <label for="adminFilterOe">OE</label>
+            <label htmlFor="adminFilterOe">OE</label>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <select
-              class="form-select"
+              className="form-select"
               id="adminFilterRole"
               data-bs-toggle="tooltip"
               data-bs-title="Filtert Benutzer nach Rolle"
@@ -319,31 +320,31 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               <option value="org-admin">Org-Admin</option>
               <option value="super-admin">Super-Admin</option>
             </select>
-            <label for="adminFilterRole">Rolle</label>
+            <label htmlFor="adminFilterRole">Rolle</label>
           </div>
         </div>
-        <div class="col-12 d-flex justify-content-end gap-2">
+        <div className="col-12 d-flex justify-content-end gap-2">
           <button
-            class="btn btn-outline-primary btn-sm"
+            className="btn btn-outline-primary btn-sm"
             type="button"
             onClick={() => void refreshUsersNow()}
             data-bs-toggle="tooltip"
             data-bs-title="Lädt die Benutzerliste sofort neu"
           >
-            <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
               refresh
             </span>
             Aktualisieren
           </button>
           <button
-            class="btn btn-outline-secondary btn-sm"
+            className="btn btn-outline-secondary btn-sm"
             type="button"
             onClick={resetFilters}
             disabled={!filter.name && !filter.oe && !filter.role}
             data-bs-toggle="tooltip"
             data-bs-title="Setzt Name-, OE- und Rollenfilter zurück"
           >
-            <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
               filter_alt_off
             </span>
             Filter zurücksetzen
@@ -353,59 +354,59 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
       {/* Ladeanzeige */}
       {loading && (
-        <div class="text-center py-4">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Laden…</span>
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Laden…</span>
           </div>
         </div>
       )}
 
       {/* Keine Ergebnisse */}
       {!loading && visibleUsers.length === 0 && (
-        <div class="alert alert-secondary text-center" role="alert">
+        <div className="alert alert-secondary text-center" role="alert">
           Keine Benutzer gefunden.
         </div>
       )}
 
       {/* Ergebnis-Anzahl + Mehrfachauswahl */}
       {!loading && visibleUsers.length > 0 && (
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
           {isSuperAdmin && selectableUsers.length > 0 && (
-            <div class="form-check mb-0">
+            <div className="form-check mb-0">
               <input
-                class="form-check-input"
+                className="form-check-input"
                 type="checkbox"
                 id="adminUserSelectAll"
                 checked={allSelectableSelected}
                 onChange={toggleSelectAll}
               />
-              <label class="form-check-label small" for="adminUserSelectAll">
+              <label className="form-check-label small" htmlFor="adminUserSelectAll">
                 Alle auswählen
               </label>
             </div>
           )}
-          <span class="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>
+          <span className="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>
         </div>
       )}
 
       {/* Aktionsleiste bei aktiver Auswahl */}
       {isSuperAdmin && selectedUsers.length > 0 && (
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
-          <span class="fw-semibold small">{selectedUsers.length} ausgewählt</span>
-          <button class="btn btn-primary btn-sm" type="button" onClick={openBulkEdit}>
-            <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
+          <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
+          <button className="btn btn-primary btn-sm" type="button" onClick={openBulkEdit}>
+            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
               edit_note
             </span>
             Massenänderung
           </button>
-          <button class="btn btn-outline-secondary btn-sm" type="button" onClick={() => setSelectedIds(new Set())}>
+          <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setSelectedIds(new Set())}>
             Auswahl aufheben
           </button>
         </div>
       )}
 
       {/* User-Cards */}
-      <div class="admin-user-cards">
+      <div className="admin-user-cards">
         {visibleUsers.map(currentUser => {
           const isSelfRow = user?.userName === currentUser.userName;
           const edit = edits[currentUser._id] ?? buildEditState(currentUser);

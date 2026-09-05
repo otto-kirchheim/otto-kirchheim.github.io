@@ -1,5 +1,6 @@
-import { render } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect } from 'react';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
@@ -190,12 +191,17 @@ function BereitschaftTab() {
   }, []);
 
   return (
-    <div class="container text-center">
-      <div class="row justify-content-center">
-        <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+    <div className="container text-center">
+      <div className="row justify-content-center">
+        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Bereitschaft
-          <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpBereitschaft" aria-label="Hilfe anzeigen">
-            <span class="material-icons-round align-middle" style="font-size: 1.25rem">
+          <button
+            type="button"
+            className="btn btn-sm btn-link p-0"
+            id="btnHelpBereitschaft"
+            aria-label="Hilfe anzeigen"
+          >
+            <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
               help_outline
             </span>
           </button>
@@ -203,49 +209,49 @@ function BereitschaftTab() {
         <h4 id="MonatB"></h4>
       </div>
 
-      <div class="container">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-          <div class="col d-grid">
-            <button type="button" class="btn btn-primary" id="btnESZ" data-disabler>
-              <span class="material-icons-round big-icons">add_circle_outlined</span>
+      <div className="container">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
+          <div className="col d-grid">
+            <button type="button" className="btn btn-primary" id="btnESZ" data-disabler>
+              <span className="material-icons-round big-icons">add_circle_outlined</span>
               Bereitschaft
             </button>
           </div>
-          <div class="col d-grid">
-            <button type="button" class="btn btn-primary" id="btnESE" data-disabler>
-              <span class="material-icons-round big-icons">add_circle_outlined</span>
+          <div className="col d-grid">
+            <button type="button" className="btn btn-primary" id="btnESE" data-disabler>
+              <span className="material-icons-round big-icons">add_circle_outlined</span>
               Einsatz
             </button>
           </div>
-          <div class="col d-grid">
-            <button type="button" class="btn btn-success" id="btnSaveB" data-disabler>
-              <span class="material-icons-round big-icons">save</span>
+          <div className="col d-grid">
+            <button type="button" className="btn btn-success" id="btnSaveB" data-disabler>
+              <span className="material-icons-round big-icons">save</span>
               Speichern
             </button>
           </div>
-          <div class="col d-grid">
-            <button type="button" class="btn btn-secondary" id="btnDownloadB" data-disabler>
-              <span class="material-icons-round big-icons">download</span>
+          <div className="col d-grid">
+            <button type="button" className="btn btn-secondary" id="btnDownloadB" data-disabler>
+              <span className="material-icons-round big-icons">download</span>
               PDF erzeugen
             </button>
           </div>
         </div>
       </div>
       <hr />
-      <div class="table-responsive">
+      <div className="table-responsive">
         <h4 id="titelBZ">Bereitschaftszeitraum</h4>
         <table
           id="tableBZ"
-          class="table table-bordered table-striped table-hover align-middle"
+          className="table table-bordered table-striped table-hover align-middle"
           aria-describedby="TitelBZ"
         ></table>
       </div>
       <hr />
-      <div class="table-responsive">
+      <div className="table-responsive">
         <h4 id="titelBE">Bereitschaftseinsätze</h4>
         <table
           id="tableBE"
-          class="table table-bordered table-striped table-hover align-middle"
+          className="table table-bordered table-striped table-hover align-middle"
           aria-describedby="titelBE"
         ></table>
       </div>
@@ -257,12 +263,12 @@ export function mountBereitschaftTab(): void {
   const container = document.querySelector<HTMLDivElement>('#bereitschaft-root');
   if (!container) return;
 
-  render(<BereitschaftTab />, container);
+  mount(container, <BereitschaftTab />);
 }
 
 export function unmountBereitschaftTab(): void {
   const container = document.querySelector<HTMLDivElement>('#bereitschaft-root');
   if (!container) return;
 
-  render(null, container);
+  unmount(container);
 }

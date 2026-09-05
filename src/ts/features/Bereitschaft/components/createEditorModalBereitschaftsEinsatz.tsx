@@ -1,7 +1,7 @@
 import Modal from 'bootstrap/js/dist/modal';
 import type { Dayjs } from 'dayjs';
-import type { ComponentChildren } from 'preact';
-import { Fragment, createRef } from 'preact';
+import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
+
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
@@ -21,7 +21,7 @@ import {
   persistBereitschaftsEinsatzTableData,
 } from '../utils';
 
-const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ComponentChildren => {
+const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ReactNode => {
   return row.columns.array.map(column => {
     switch (column.name) {
       case 'Tag':
@@ -171,8 +171,8 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
   });
   modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
 
-  function onSubmit(): (event: Event) => void {
-    return async (event: Event): Promise<void> => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!form.checkValidity()) return;
       event.preventDefault();
 

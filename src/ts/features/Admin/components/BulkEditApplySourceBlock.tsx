@@ -40,30 +40,30 @@ export function BulkEditApplySourceBlock({
   onToggleCategory,
 }: Props) {
   return (
-    <div class="border rounded p-3">
-      <div class="fw-semibold mb-2">Daten übernehmen von</div>
+    <div className="border rounded p-3">
+      <div className="fw-semibold mb-2">Daten übernehmen von</div>
 
-      <div class="d-flex flex-column gap-2">
+      <div className="d-flex flex-column gap-2">
         {SOURCE_OPTIONS.map(([value, label]) => (
           <div key={value}>
-            <div class="form-check">
+            <div className="form-check">
               <input
-                class="form-check-input"
+                className="form-check-input"
                 type="radio"
                 name="bulkApplySource"
                 id={`bulkApplySource-${value}`}
                 checked={applySource === value}
                 onChange={() => onApplySourceChange(value)}
               />
-              <label class="form-check-label" for={`bulkApplySource-${value}`}>
+              <label className="form-check-label" htmlFor={`bulkApplySource-${value}`}>
                 {label}
               </label>
             </div>
 
             {value === 'template' && applySource === 'template' && (
-              <div class="mt-1 ms-4">
+              <div className="mt-1 ms-4">
                 <select
-                  class="form-select form-select-sm"
+                  className="form-select form-select-sm"
                   aria-label="Vorlage"
                   value={templateId}
                   onChange={e => onTemplateIdChange((e.target as HTMLSelectElement).value)}
@@ -79,9 +79,9 @@ export function BulkEditApplySourceBlock({
             )}
 
             {value === 'user' && applySource === 'user' && (
-              <div class="mt-1 ms-4">
+              <div className="mt-1 ms-4">
                 <select
-                  class="form-select form-select-sm"
+                  className="form-select form-select-sm"
                   aria-label="Muster-Benutzer"
                   value={sourceUserId}
                   onChange={e => onSourceUserIdChange((e.target as HTMLSelectElement).value)}
@@ -100,21 +100,21 @@ export function BulkEditApplySourceBlock({
       </div>
 
       {applySource !== 'none' && (
-        <div class="mt-3">
-          <div class="small text-body-secondary mb-1">
+        <div className="mt-3">
+          <div className="small text-body-secondary mb-1">
             Persönliche Daten (Name, Personalnummer, Adresse) werden nie übernommen.
           </div>
-          <div class="d-flex gap-3 flex-wrap">
+          <div className="d-flex gap-3 flex-wrap">
             {(Object.keys(CATEGORY_LABELS) as BulkApplyCategory[]).map(category => (
-              <div class="form-check" key={category}>
+              <div className="form-check" key={category}>
                 <input
-                  class="form-check-input"
+                  className="form-check-input"
                   type="checkbox"
                   id={`bulkCategory-${category}`}
                   checked={categories.includes(category)}
                   onChange={() => onToggleCategory(category)}
                 />
-                <label class="form-check-label" for={`bulkCategory-${category}`}>
+                <label className="form-check-label" htmlFor={`bulkCategory-${category}`}>
                   {CATEGORY_LABELS[category]}
                 </label>
               </div>

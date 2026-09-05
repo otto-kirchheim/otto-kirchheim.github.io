@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+
 import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastructure/pdf/spaltenFuer';
 import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
@@ -193,7 +194,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const [splitAnteil, setSplitAnteil] = useState(58);
   const splitRef = useRef<HTMLDivElement>(null);
 
-  function starteSplitZiehen(e: MouseEvent) {
+  function starteSplitZiehen(e: ReactMouseEvent<HTMLDivElement>) {
     e.preventDefault();
     const container = splitRef.current;
     if (!container) return;
@@ -534,14 +535,14 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   }
 
   return (
-    <div class="border rounded p-2">
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <ul class="nav nav-pills flex-grow-1 flex-wrap">
+    <div className="border rounded p-2">
+      <div className="d-flex align-items-center gap-2 mb-2">
+        <ul className="nav nav-pills flex-grow-1 flex-wrap">
           {value.seiten.map((s, i) => (
-            <li class="nav-item" key={i}>
+            <li className="nav-item" key={i}>
               <button
                 type="button"
-                class={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`}
+                className={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`}
                 onClick={() => setTab(i)}
               >
                 Seite {i + 1}
@@ -549,10 +550,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               </button>
             </li>
           ))}
-          <li class="nav-item">
+          <li className="nav-item">
             <button
               type="button"
-              class="nav-link py-1"
+              className="nav-link py-1"
               title="Weitere Seite anhängen — die Seitenfolge bildet das Formular ab (Bereitschaft: 1, 2, 3 unterschiedlich)"
               onClick={() => {
                 // Quelle der letzten Seite + 1 als Vorschlag: Vorlagen-PDFs sind in der Regel in
@@ -568,7 +569,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </ul>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           title="Alle Koordinaten proportional umrechnen — z.B. nach dem Wechsel auf eine Vorlage mit anderer Seitengröße"
           disabled={skalier !== null}
           onClick={() => void oeffneSkalierenManuell()}
@@ -577,7 +578,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           title="Formularweite Schriftfamilie je Schnitt wählen — mit Live-Vorschau"
           onClick={() => setSchriftDialogOffen(true)}
         >
@@ -585,16 +586,16 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </button>
         <button
           type="button"
-          class={`btn btn-sm ${messModus ? 'btn-warning' : 'btn-outline-secondary'}`}
+          className={`btn btn-sm ${messModus ? 'btn-warning' : 'btn-outline-secondary'}`}
           title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
           onClick={() => setMessModus(m => !m)}
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
         </button>
-        <div class="btn-group btn-group-sm">
+        <div className="btn-group btn-group-sm">
           <button
             type="button"
-            class="btn btn-primary"
+            className="btn btn-primary"
             title="Fachlich passende Werte aus dem Datenkatalog — sieht aus wie ein ausgefülltes Formular"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('beispiel')}
@@ -603,7 +604,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           </button>
           <button
             type="button"
-            class="btn btn-outline-primary"
+            className="btn btn-outline-primary"
             title="Generische Füllwerte — zeigt vor allem, welche Zelle zu welchem Eintrag gehört"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('platzhalter')}
@@ -624,10 +625,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       {aktiveSeite && (
-        <div class="d-flex flex-wrap align-items-center gap-3 mb-2 small">
-          <div class="form-check mb-0">
+        <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
+          <div className="form-check mb-0">
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               id="seite-wiederholt"
               checked={Boolean(aktiveSeite.wiederholt)}
@@ -636,8 +637,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               }
             />
             <label
-              class="form-check-label"
-              for="seite-wiederholt"
+              className="form-check-label"
+              htmlFor="seite-wiederholt"
               title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
             >
               Diese Seite bei Überlauf wiederholen
@@ -645,13 +646,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           </div>
 
           {value.seiten.length > 1 && (
-            <div class="d-flex align-items-center gap-1">
-              <label class="mb-0" for="seite-kopieren">
+            <div className="d-flex align-items-center gap-1">
+              <label className="mb-0" htmlFor="seite-kopieren">
                 Einstellungen übernehmen von
               </label>
               <select
                 id="seite-kopieren"
-                class="form-select form-select-sm w-auto"
+                className="form-select form-select-sm w-auto"
                 value=""
                 onChange={e => {
                   const quelle = value.seiten[Number((e.target as HTMLSelectElement).value)];
@@ -706,8 +707,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       )}
 
       {aktiveSeite && anzeigeSeite && (
-        <div class="d-lg-flex gap-2" ref={splitRef}>
-          <div class="mb-2 mb-lg-0" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
+        <div className="d-lg-flex gap-2" ref={splitRef}>
+          <div className="mb-2 mb-lg-0" style={{ flex: `1 1 ${splitAnteil}%`, minWidth: 0 }}>
             <PdfCanvas
               datei={datei}
               seiteIndex={anzeigeSeite.quelle}
@@ -729,7 +730,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             {value.seiten.length > 1 && (
               <button
                 type="button"
-                class="btn btn-sm btn-outline-danger mt-2"
+                className="btn btn-sm btn-outline-danger mt-2"
                 onClick={() => {
                   onChange({ ...value, seiten: value.seiten.filter((_, i) => i !== seitenIndex) });
                   setTab(Math.max(seitenIndex - 1, 0));
@@ -740,12 +741,12 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             )}
           </div>
           <div
-            class="d-none d-lg-flex align-items-stretch"
-            style="width:10px;cursor:col-resize;touch-action:none"
+            className="d-none d-lg-flex align-items-stretch"
+            style={{ width: '10px', cursor: 'col-resize', touchAction: 'none' }}
             onMouseDown={starteSplitZiehen}
             title="Breite ziehen"
           >
-            <div class="mx-auto" style="width:2px;background:var(--bs-border-color)" />
+            <div className="mx-auto" style={{ width: '2px', background: 'var(--bs-border-color)' }} />
           </div>
           <div style={{ flex: `1 1 ${100 - splitAnteil}%`, minWidth: 0, maxHeight: '70vh', overflowY: 'auto' }}>
             <FeldPanel
@@ -789,28 +790,28 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
   }
 
   return (
-    <details class="mt-2">
-      <summary class="small fw-semibold" style="cursor:pointer">
+    <details className="mt-2">
+      <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
         Konfiguration als JSON (kopieren / einfügen)
       </summary>
       <textarea
-        class={`form-control form-control-sm font-monospace mt-1${fehler ? ' is-invalid' : ''}`}
-        style="font-size:0.7rem;min-height:12rem"
-        spellcheck={false}
+        className={`form-control form-control-sm font-monospace mt-1${fehler ? ' is-invalid' : ''}`}
+        style={{ fontSize: '0.7rem', minHeight: '12rem' }}
+        spellCheck={false}
         value={angezeigt}
-        onInput={e => {
+        onChange={e => {
           setEntwurf((e.target as HTMLTextAreaElement).value);
           setFehler(null);
         }}
       />
-      {fehler && <div class="small text-danger mt-1">{fehler}</div>}
-      <div class="d-flex gap-1 mt-1">
-        <button type="button" class="btn btn-sm btn-primary" disabled={entwurf === null} onClick={uebernehmen}>
+      {fehler && <div className="small text-danger mt-1">{fehler}</div>}
+      <div className="d-flex gap-1 mt-1">
+        <button type="button" className="btn btn-sm btn-primary" disabled={entwurf === null} onClick={uebernehmen}>
           Übernehmen
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           disabled={entwurf === null}
           onClick={() => (setEntwurf(null), setFehler(null))}
         >
@@ -818,7 +819,7 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary ms-auto"
+          className="btn btn-sm btn-outline-secondary ms-auto"
           onClick={() => void navigator.clipboard?.writeText(angezeigt)}
         >
           In Zwischenablage

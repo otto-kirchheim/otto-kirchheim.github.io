@@ -17,12 +17,12 @@
 
 ## Projektübersicht
 
-**DB-Nebengeld Frontend** – TypeScript SPA mit Preact, Bootstrap 5, Vite und PWA-Support.
+**DB-Nebengeld Frontend** – TypeScript SPA mit React 19, Bootstrap 5, Vite und PWA-Support.
 
 ### Tech-Stack
 
-- **Framework:** Preact (v10) – leichtgewichtige React-Alternative
-- **Build Tool:** Vite (v8) mit Preact-Plugin
+- **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
+- **Build Tool:** Vite (v8) mit `@vitejs/plugin-react-swc`
 - **Sprache:** TypeScript (strict mode; kein any)
 - **Styling:** Bootstrap 5.3 + SCSS + Material Icons
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
@@ -56,7 +56,7 @@ src/
 ├── scss/                  # Bootstrap + Custom Styles
 ├── ts/
 │   ├── main.ts            # App-Init (PWA, Version-Check, Bootstrap-Module)
-│   ├── components/        # Preact UI-Bausteine (Modals, Buttons, Inputs)
+│   ├── components/        # React UI-Bausteine (Modals, Buttons, Inputs)
 │   ├── core/              # Zentrale Contracts und Events
 │   │   ├── types/         # Alle TS-Interfaces + API-Envelope-Typen
 │   │   ├── hooks/         # Hook-Registry (registerHook/invokeHook)
@@ -71,7 +71,7 @@ src/
 │   │   ├── data/          # resourceConfig, persistTableData, mergeVisibleResourceRows, fieldMapper
 │   │   ├── date/          # dayjs-Konfiguration
 │   │   ├── storage/       # Storage-Singleton
-│   │   ├── table/         # CustomTable (Vanilla-DOM, kein Preact) + customtable.css
+│   │   ├── table/         # CustomTable (Vanilla-DOM, kein React) + customtable.css
 │   │   ├── tokenManagement/ # JWT, Passkeys, Token-Refresh
 │   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, CustomSnackbar
 │   │   └── validation/    # Passwort-Validierung
@@ -81,7 +81,7 @@ src/
 │       ├── Neben/         # Nebenbezuege
 │       ├── Berechnung/    # Gesamtberechnung
 │       ├── Einstellungen/ # Benutzer-Einstellungen
-│       └── Admin/         # Admin-Panel (Preact)
+│       └── Admin/         # Admin-Panel (React)
 test/
 ├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
 ├── mockData.ts            # Gemeinsame Test-Daten
@@ -107,15 +107,15 @@ Jedes Feature folgt der gleichen Struktur:
 ```
 features/Feature/
 ├── index.ts          # window.load → CustomTable Init + Event Binding
-├── components/       # Preact TSX: Add/Edit/Show Modals
+├── components/       # React TSX: Add/Edit/Show Modals
 └── utils/            # Business-Logik, Berechnungen, Daten-Handling
 ```
 
 **Hybrid-Rendering:**
 
 - **Hauptseite:** Statisches HTML + Bootstrap
-- **Modale/Dialoge:** Preact-Komponenten, gerendert via `showModal()` in Bootstrap-Modals
-- **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein Preact) – liegt in `infrastructure/table/`
+- **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in Bootstrap-Modals (intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`)
+- **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein React) – liegt in `infrastructure/table/`
 
 ---
 
@@ -124,13 +124,13 @@ features/Feature/
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
-4. **Preact** für Modals/Dialoge, **nicht** für die Hauptseiten-Struktur, **Ausnahme** bei größeren Umbaus kann es in bedacht gezogen werden, auf Preact zu wechseln.
+4. **React** für Modals/Dialoge und die Feature-Tabs, **nicht** für die statische Hauptseiten-Struktur (`index.html`)
 5. **Bootstrap-Tabs** für Navigation, kein Router
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
 9. **Bun test** für alle Tests, happy-dom als DOM-Environment
-10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht Preact)
+10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht React)
 11. **`confirmDialog`** statt `window.confirm()` (aus `infrastructure/ui/confirmDialog.ts`)
 12. **`resourceConfig.ts`** als zentrale Resource-Konfiguration (Storage-Keys, Table-IDs)
 13. **Schichtentrennung:** `features/` → `infrastructure/` → `core/`, nie umgekehrt

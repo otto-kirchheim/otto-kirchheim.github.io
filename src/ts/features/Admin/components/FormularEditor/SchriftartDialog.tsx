@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
-import { createPortal } from 'preact/compat';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import {
   familieFuerSchnitt,
@@ -109,19 +110,23 @@ function SchnittZeile({
   const fett = schnitt === 'fett' || schnitt === 'fettKursiv';
   const kursiv = schnitt === 'kursiv' || schnitt === 'fettKursiv';
   return (
-    <div class="d-flex align-items-baseline gap-2 py-1">
-      <span class="text-muted small flex-shrink-0" style="width:6rem">
+    <div className="d-flex align-items-baseline gap-2 py-1">
+      <span className="text-muted small flex-shrink-0" style={{ width: '6rem' }}>
         {label}
       </span>
       <span
-        class="text-truncate"
-        style={`font-family:${cssFamilie(familie, ersatz, geladen)};font-weight:${fett ? 700 : 400};font-style:${
-          kursiv ? 'italic' : 'normal'
-        };font-size:1.15rem;line-height:1.3`}
+        className="text-truncate"
+        style={{
+          fontFamily: cssFamilie(familie, ersatz, geladen),
+          fontWeight: fett ? 700 : 400,
+          fontStyle: kursiv ? 'italic' : 'normal',
+          fontSize: '1.15rem',
+          lineHeight: 1.3,
+        }}
       >
         {PROBE}
       </span>
-      {ersatz && <span class="small text-warning-emphasis flex-shrink-0">Helvetica-Ersatz</span>}
+      {ersatz && <span className="small text-warning-emphasis flex-shrink-0">Helvetica-Ersatz</span>}
     </div>
   );
 }
@@ -130,7 +135,7 @@ function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorl
   const geladen = useVorlagenFaces(vorlageFonts);
   const fehlt = new Set(fehlendeVorlagenSchnitte(value, vorlageFonts));
   return (
-    <div class="border rounded p-2 bg-body-tertiary">
+    <div className="border rounded p-2 bg-body-tertiary">
       {SCHNITTE.map(s => (
         <SchnittZeile
           key={s.key}
@@ -163,21 +168,21 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
 
   return createPortal(
     <>
-      <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Schriftart</h5>
-              <button type="button" class="btn-close" aria-label="Schließen" onClick={onClose} />
+      <div className="modal fade show d-block" tabIndex={-1} style={{ zIndex: '1055' }}>
+        <div className="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Schriftart</h5>
+              <button type="button" className="btn-close" aria-label="Schließen" onClick={onClose} />
             </div>
 
-            <div class="modal-body d-flex flex-column gap-3" style="max-height:70vh;overflow-y:auto">
+            <div className="modal-body d-flex flex-column gap-3" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
               <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
 
               <Vorschau value={value} vorlageFonts={vorlageFonts} />
 
               {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
-                <div class="small text-muted">
+                <div className="small text-muted">
                   Eingebettet:{' '}
                   {[
                     ...vorlageFonts.map(f => (
@@ -188,7 +193,7 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
                     ...unbrauchbareFonts.map(n => (
                       <span
                         key={n}
-                        class="text-danger text-decoration-line-through"
+                        className="text-danger text-decoration-line-through"
                         title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
                       >
                         {n}
@@ -200,22 +205,22 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
               )}
 
               {istVorlagenSchrift && (
-                <div class="small text-warning-emphasis">
+                <div className="small text-warning-emphasis">
                   Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres
                   Helvetica. Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
                 </div>
               )}
             </div>
 
-            <div class="modal-footer">
-              <button type="button" class="btn btn-primary" onClick={onClose}>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-primary" onClick={onClose}>
                 Fertig
               </button>
             </div>
           </div>
         </div>
       </div>
-      <div class="modal-backdrop fade show" style="z-index:1054" />
+      <div className="modal-backdrop fade show" style={{ zIndex: '1054' }} />
     </>,
     document.body,
   );

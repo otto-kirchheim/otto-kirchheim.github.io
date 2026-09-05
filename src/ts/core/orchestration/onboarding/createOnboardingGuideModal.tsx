@@ -1,7 +1,6 @@
-/** @jsxImportSource preact */
-import type { FunctionalComponent } from 'preact';
-import { render } from 'preact';
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { type FC, useEffect, useMemo, useState } from 'react';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import Storage from '@/infrastructure/storage/Storage';
 // Direktimporte statt Barrel (@/core, @/components), um den Zyklus
 // createOnboardingGuideModal → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
@@ -78,10 +77,7 @@ function getStepTitle(step: GuideStep): string {
   }
 }
 
-const OnboardingGuidePanel: FunctionalComponent<{ captureSnapshot: boolean; onClose: () => void }> = ({
-  captureSnapshot,
-  onClose,
-}) => {
+const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }> = ({ captureSnapshot, onClose }) => {
   const [stepIndex, setStepIndex] = useState(0);
   const [minimiert, setMinimiert] = useState(false);
   const [, setVersion] = useState(0);
@@ -189,14 +185,14 @@ const OnboardingGuidePanel: FunctionalComponent<{ captureSnapshot: boolean; onCl
           aria-label={minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}
           onClick={() => setMinimiert(m => !m)}
         >
-          <span className="material-icons-round align-middle" style="font-size:1.25rem">
+          <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
             {minimiert ? 'expand_less' : 'expand_more'}
           </span>
         </button>
       </div>
 
       {!minimiert && (
-        <div className="card-body d-flex flex-column gap-2 overflow-auto" style="max-height: 45vh">
+        <div className="card-body d-flex flex-column gap-2 overflow-auto" style={{ maxHeight: '45vh' }}>
           <h6 className="mb-0">{titel}</h6>
 
           {step.art === 'intro' && (
@@ -297,11 +293,11 @@ function openGuidePanel(captureSnapshot: boolean): void {
   document.body.appendChild(container);
 
   const close = () => {
-    render(null, container);
+    unmount(container);
     container.remove();
   };
 
-  render(<OnboardingGuidePanel captureSnapshot={captureSnapshot} onClose={close} />, container);
+  mount(container, <OnboardingGuidePanel captureSnapshot={captureSnapshot} onClose={close} />);
 }
 
 export function openOnboardingGuide(): void {

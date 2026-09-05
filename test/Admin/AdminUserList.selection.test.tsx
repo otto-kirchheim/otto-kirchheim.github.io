@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../reactRender';
+
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminUserRow } from '@/features/Admin/utils/api';
 
@@ -137,8 +138,7 @@ describe('AdminUserList Mehrfachauswahl', () => {
     expect(container.textContent).toContain('1 ausgewählt');
 
     const oeInput = container.querySelector<HTMLInputElement>('#filterOe') ?? container.querySelector('input')!;
-    oeInput.value = 'V';
-    oeInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(oeInput, 'V');
     await flush();
 
     expect(container.textContent).not.toContain('1 ausgewählt');

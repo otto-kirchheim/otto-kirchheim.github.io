@@ -1,3 +1,4 @@
+import type { ChangeEvent } from 'react';
 import type { Column, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
@@ -77,7 +78,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
           className="form-check form-switch col-4"
           id={'berechnen'}
           checked={row.cells?.['berechnen'] ?? true}
-          changeHandler={(e: Event) => {
+          changeHandler={(e: ChangeEvent<HTMLInputElement>) => {
             const row = ((e.target as HTMLInputElement).closest('.modal') as CustomHTMLDivElement<IDatenEWT>)
               .row as Row<IDatenEWT>;
             row.cells.berechnen = (e.target as HTMLInputElement).checked;

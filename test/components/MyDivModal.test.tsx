@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../reactRender';
+
 import MyDivModal from '@/components/MyDivModal';
 
 function renderMyDivModal(props: Parameters<typeof MyDivModal>[0]): HTMLDivElement {
@@ -66,7 +67,11 @@ describe('MyDivModal', () => {
     const container = renderMyDivModal({
       title: 'Titel',
       submitText: 'Speichern',
-      customButtons: [<button className="extra-btn">Extra</button>],
+      customButtons: [
+        <button key="extra" className="extra-btn">
+          Extra
+        </button>,
+      ],
     });
 
     expect(container.querySelector('.modal-footer button[type="submit"]')?.textContent).toBe('Speichern');

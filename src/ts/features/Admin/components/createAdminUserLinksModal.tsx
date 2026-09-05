@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyModalHeader, showModal } from '@/components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../utils/api';
@@ -93,26 +94,26 @@ function LinkSection({
   }
 
   return (
-    <div class="border rounded p-2 mb-2">
-      <p class="fw-semibold mb-1">{config.heading}</p>
-      <p class="small text-body-secondary mb-2">
+    <div className="border rounded p-2 mb-2">
+      <p className="fw-semibold mb-1">{config.heading}</p>
+      <p className="small text-body-secondary mb-2">
         {config.description} Gültigkeit: {config.validity}.
       </p>
 
       {disabledHint ? (
-        <p class="small text-success mb-0">{disabledHint}</p>
+        <p className="small text-success mb-0">{disabledHint}</p>
       ) : (
         <>
           {!link && (
             <button
-              class="btn btn-outline-primary btn-sm"
+              className="btn btn-outline-primary btn-sm"
               type="button"
               disabled={loading}
               onClick={() => void handleIssue()}
             >
               {loading ? (
                 <>
-                  <span class="spinner-border spinner-border-sm me-1" role="status" />
+                  <span className="spinner-border spinner-border-sm me-1" role="status" />
                   Erzeugen…
                 </>
               ) : (
@@ -124,43 +125,43 @@ function LinkSection({
           {link && (
             <>
               <input
-                class="form-control form-control-sm font-monospace mb-2"
+                className="form-control form-control-sm font-monospace mb-2"
                 type="text"
                 readOnly
                 value={link.url}
                 onFocus={e => (e.target as HTMLInputElement).select()}
               />
-              <div class="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2">
                 <button
-                  class="btn btn-outline-secondary btn-sm"
+                  className="btn btn-outline-secondary btn-sm"
                   type="button"
                   onClick={() => void copyToClipboard(link.url, 'Link kopiert')}
                 >
-                  <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+                  <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                     link
                   </span>
                   Link kopieren
                 </button>
                 <button
-                  class="btn btn-outline-secondary btn-sm"
+                  className="btn btn-outline-secondary btn-sm"
                   type="button"
                   onClick={() => void copyToClipboard(buildShareText(kind, userName, link.url), 'Text kopiert')}
                 >
-                  <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+                  <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                     content_copy
                   </span>
                   Text kopieren
                 </button>
               </div>
               {!link.mailSent && (
-                <p class="small text-warning-emphasis mt-2 mb-0">
+                <p className="small text-warning-emphasis mt-2 mb-0">
                   E-Mail-Versand fehlgeschlagen oder deaktiviert – bitte den Link manuell weitergeben.
                 </p>
               )}
             </>
           )}
 
-          {error && <p class="small text-danger mt-2 mb-0">{error}</p>}
+          {error && <p className="small text-danger mt-2 mb-0">{error}</p>}
         </>
       )}
     </div>
@@ -177,11 +178,11 @@ function AdminUserLinksModal({
   emailVerified: boolean;
 }) {
   return (
-    <div class="modal-dialog">
-      <div class="modal-content">
+    <div className="modal-dialog">
+      <div className="modal-content">
         <MyModalHeader title={`Login-Hilfe: ${userName}`} />
-        <div class="modal-body">
-          <p class="small text-body-secondary">
+        <div className="modal-body">
+          <p className="small text-body-secondary">
             Die Links werden nur einmal angezeigt und nicht gespeichert. Bitte per DB-Mail oder Teams an den Benutzer
             weitergeben – so umgehst du den Konzern-Spamfilter.
           </p>
@@ -193,8 +194,8 @@ function AdminUserLinksModal({
           />
           <LinkSection kind="reset" userId={userId} userName={userName} />
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
+        <div className="modal-footer">
+          <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">
             Schließen
           </button>
         </div>

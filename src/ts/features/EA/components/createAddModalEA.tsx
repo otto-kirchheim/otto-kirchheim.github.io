@@ -1,4 +1,5 @@
-import { createRef } from 'preact';
+import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
+
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { IDatenEA, IDatenEWT, IVorgabenU } from '@/types';
@@ -104,7 +105,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     dauerInput.value = calculateEaDauerFromEwt(entry);
   };
 
-  const handleEwtChange = (evt: Event): void => {
+  const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
     const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applyEwtSelection(dataE, select.value);
@@ -256,8 +257,8 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     }
   }
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
       const added = addEaTag(modal, tableEA);

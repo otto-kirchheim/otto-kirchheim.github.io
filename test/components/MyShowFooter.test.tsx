@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../reactRender';
+
 import type { CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 
 // MyShowFooter's Buttons tragen data-bs-dismiss="modal". Der reale Bootstrap-Modal-Import

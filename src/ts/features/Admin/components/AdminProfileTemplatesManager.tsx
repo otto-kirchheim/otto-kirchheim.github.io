@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'react';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
@@ -346,19 +347,19 @@ export function AdminProfileTemplatesManager() {
 
   return (
     <div>
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Profile-Templates</h5>
-        <button class="btn btn-sm btn-outline-primary" onClick={handleCreate} data-disabler>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">Profile-Templates</h5>
+        <button className="btn btn-sm btn-outline-primary" onClick={handleCreate} data-disabler>
           Hinzufügen
         </button>
       </div>
 
-      {loading && <div class="text-body-secondary">Lädt Templates...</div>}
+      {loading && <div className="text-body-secondary">Lädt Templates...</div>}
       {!loading && sortedTemplates.length === 0 && (
-        <div class="alert alert-secondary mb-0">Keine Templates vorhanden.</div>
+        <div className="alert alert-secondary mb-0">Keine Templates vorhanden.</div>
       )}
 
-      <div class="d-flex flex-column gap-2">
+      <div className="d-flex flex-column gap-2">
         {sortedTemplates.map(template => {
           const edit = edits[template._id] ?? toEditState(template);
           const expanded = expandedId === template._id;
@@ -367,50 +368,53 @@ export function AdminProfileTemplatesManager() {
           const templateContent = edit.templateContent;
 
           return (
-            <div key={template._id} class={`border rounded ${changed ? 'border-warning' : 'border-secondary-subtle'}`}>
+            <div
+              key={template._id}
+              className={`border rounded ${changed ? 'border-warning' : 'border-secondary-subtle'}`}
+            >
               <button
-                class="btn w-100 text-start d-flex justify-content-between align-items-center"
+                className="btn w-100 text-start d-flex justify-content-between align-items-center"
                 onClick={() => setExpandedId(expanded ? null : template._id)}
               >
                 <span>
                   <strong>{template.code}</strong> - {template.name}
                 </span>
-                <span class={`badge ${template.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                <span className={`badge ${template.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
                   {template.active ? 'aktiv' : 'inaktiv'}
                 </span>
               </button>
 
               {expanded && (
-                <div class="p-3 border-top">
-                  <div class="row g-2 mb-2">
-                    <div class="col-12 col-md-4">
-                      <label class="form-label small fw-semibold mb-1">Code</label>
+                <div className="p-3 border-top">
+                  <div className="row g-2 mb-2">
+                    <div className="col-12 col-md-4">
+                      <label className="form-label small fw-semibold mb-1">Code</label>
                       <input
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={edit.code}
-                        onInput={e => updateEdit(template._id, { code: (e.target as HTMLInputElement).value })}
+                        onChange={e => updateEdit(template._id, { code: (e.target as HTMLInputElement).value })}
                       />
                     </div>
-                    <div class="col-12 col-md-8">
-                      <label class="form-label small fw-semibold mb-1">Name</label>
+                    <div className="col-12 col-md-8">
+                      <label className="form-label small fw-semibold mb-1">Name</label>
                       <input
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={edit.name}
-                        onInput={e => updateEdit(template._id, { name: (e.target as HTMLInputElement).value })}
+                        onChange={e => updateEdit(template._id, { name: (e.target as HTMLInputElement).value })}
                       />
                     </div>
                   </div>
 
-                  <div class="mb-2">
-                    <label class="form-label small fw-semibold mb-1">Beschreibung</label>
+                  <div className="mb-2">
+                    <label className="form-label small fw-semibold mb-1">Beschreibung</label>
                     <input
-                      class="form-control form-control-sm"
+                      className="form-control form-control-sm"
                       value={edit.description}
-                      onInput={e => updateEdit(template._id, { description: (e.target as HTMLInputElement).value })}
+                      onChange={e => updateEdit(template._id, { description: (e.target as HTMLInputElement).value })}
                     />
                   </div>
 
-                  <div class="mb-2">
+                  <div className="mb-2">
                     <AdminProfileTemplateContentEditor
                       templateId={template._id}
                       templateContent={templateContent}
@@ -435,37 +439,37 @@ export function AdminProfileTemplatesManager() {
                     />
                   </div>
 
-                  <div class="d-flex flex-wrap gap-2 mt-2">
+                  <div className="d-flex flex-wrap gap-2 mt-2">
                     <button
-                      class="btn btn-primary btn-sm"
+                      className="btn btn-primary btn-sm"
                       onClick={() => handleSave(template)}
                       disabled={!changed || isSaving}
                     >
                       {isSaving ? 'Speichert...' : 'Speichern'}
                     </button>
                     <button
-                      class="btn btn-outline-secondary btn-sm"
+                      className="btn btn-outline-secondary btn-sm"
                       onClick={() => handleCopy(template)}
                       disabled={isSaving}
                     >
                       Kopieren
                     </button>
                     <button
-                      class="btn btn-outline-secondary btn-sm"
+                      className="btn btn-outline-secondary btn-sm"
                       onClick={() => handleAdoptTemplateContent(template)}
                       disabled={isSaving}
                     >
                       Inhalt uebernehmen
                     </button>
                     <button
-                      class={`btn btn-outline-${template.active ? 'warning' : 'success'} btn-sm`}
+                      className={`btn btn-outline-${template.active ? 'warning' : 'success'} btn-sm`}
                       onClick={() => handleToggleActive(template)}
                       disabled={isSaving}
                     >
                       {template.active ? 'Deaktivieren' : 'Aktivieren'}
                     </button>
                     <button
-                      class="btn btn-outline-danger btn-sm"
+                      className="btn btn-outline-danger btn-sm"
                       onClick={() => handleDelete(template)}
                       disabled={isSaving}
                     >

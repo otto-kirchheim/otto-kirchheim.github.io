@@ -1,3 +1,157 @@
+# Aktueller Plan: DB-UX-Migration -- Phase A1 (Preact -> React 19) - 2026-09-05
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase A1. Groesste Risikophase: Framework-Wechsel
+**ohne** DB-UX-Code, damit React-19-Umstellung und Design-System-Umstellung getrennt
+verifizierbar bleiben. Branch `feat/db-ux`.
+
+**Wichtig:** A1 stellt nur die *App* auf React um; die 33 Preact-rendernden Testdateien
+gehoerten zu **A2**. Geplant war ein roter `bun run test` zwischen beiden Phasen --
+tatsaechlich lief A2 in derselben Sitzung direkt hinterher, der rote Zwischenstand wurde also
+nie committet. Verifikationsanker fuer A1 sind `typecheck` + `build` + `verify`-Skill.
+
+Inventur (2026-09-05, gemessen): 48 Dateien importieren aus `preact`, 37 aus `preact/hooks`,
+3 aus `preact/compat`. Symbole: `createRef` 19x, `render` 12x, `FunctionalComponent` 12x,
+`RefObject`/`ComponentChild` je 3x, `Fragment`/`ComponentChildren`/`Component`/
+`GenericEventHandler` je 2x, `VNode`/`Ref`/`MouseEventHandler`/`JSX`/`h` je 1x.
+Hooks: `useState` 32x, `useEffect` 25x, `useMemo` 7x, `useRef` 6x.
+
+## Plan -- FERTIG (2026-09-06)
+
+- [x] **A1.1 Deps + Config.** Rein: `react@19.2.8`, `react-dom@19.2.8`, `@types/react`,
+      `@types/react-dom`, `@vitejs/plugin-react-swc@4.3.3`, `esbuild@0.28.2`. Raus: `preact`,
+      `@preact/preset-vite`. `trustedDependencies: ["@swc/core"]`. `vite.config.ts`:
+      `preact({...})` -> `react()`. `tsconfig.json`: `jsxImportSource: "react"`,
+      `types: ["bun-types","react","react-dom"]`.
+- [x] **A1.2 `infrastructure/ui/reactRoot.ts`** (neu): `WeakMap<Element, Root>`-Cache,
+      `mount(el, node)` / `unmount(el)`, Rendern per `flushSync`. Der bestehende Code liest
+      direkt nach dem Rendern aus dem DOM (Bootstrap-Modals, CustomTable, Signatur-Dialog) --
+      Preacts `render` war synchron, `root.render` ist es nicht. Barrel `ui/index.ts` mitgezogen.
+- [x] **A1.3 Import-Codemod** (74 Dateien): `preact`/`preact/hooks` -> `react`,
+      `preact/compat`-`createPortal` -> `react-dom`, `FunctionalComponent`->`FC`,
+      `ComponentChild(ren)`->`ReactNode`, `VNode`->`ReactElement`; `import 'preact/debug'` und
+      der `@jsxImportSource preact`-Pragma raus. Grep-Gate: 0 Treffer fuer `preact` in `src/`.
+- [x] **A1.4 Handverlesen:** `h()` -> `createElement` (`generateEingabeMaskeEinstellungen.ts`),
+      `GenericEventHandler` -> React-Handler, `preact.JSX.Element` -> `React.JSX.Element`,
+      DOM-`MouseEvent`/`PointerEvent`-Parameter auf die React-Typen (alias-importiert, wo der
+      DOM-Typ im selben Modul weiterlebt), `canvasKoordinate` nimmt nur noch `{clientX, clientY}`.
+- [x] **A1.5 JSX-Attribut-Codemod:** 1301x `class=`->`className=`, 25x `for=`->`htmlFor=`,
+      128x String-`style="a: b"` -> `style={{ a: 'b' }}`. Der Codemod maskiert String- und
+      Template-Literale, damit die DOM-String-Templates (`EwtTab.tsx`) unberuehrt bleiben --
+      drei Dateien mussten wegen deutscher Anfuehrungszeichen (`„X"`) im JSX-Text nachgezogen
+      werden, weil das lose `"` die Maskierung verschob.
+- [x] **A1.6 `render()`-Aufrufstellen** (12 Dateien) auf `mount`/`unmount`. In
+      `ConflictReviewBanner.tsx` hiess der Parameter selbst `mount` -> `container`.
+- [x] **A1.7 Refs, Events, Controlled Inputs.** `RefObject<T>` -> `RefObject<T | null>`
+      (React-19-`createRef`). `onSubmit` als `SubmitEventHandler`, Handler-Fabriken auf
+      `SubmitEvent<HTMLFormElement>`. Alle 79 JSX-`onInput=` -> `onChange=` (React fuehrt
+      `onChange` ueber das Value-Tracking; `value` ohne `onChange` waere ein Read-only-Feld).
+      `MyInput`/`MyCheckbox`/`MySelect` schalten ohne Handler auf `defaultValue`/`defaultChecked`
+      um -- das ist die Preact-Semantik "Vorbelegung, Endwert per Ref aus dem DOM".
+      `<option selected>` -> `defaultValue` am `<select>`; die zwei Hidden-Inputs in
+      `createEditorModalVE.tsx` sind jetzt `readOnly`. Fehlende `key`s in `AdminLogBrowser`
+      (Fragment statt `<>`) und `createShowModalBereitschaft` ergaenzt.
+- [x] **A1.8 ESLint:** `eslint-plugin-react` (flat + `jsx-runtime`) und
+      `eslint-plugin-react-hooks@7` ergaenzt. `settings.react.version` fest auf `19.2` --
+      `detect` laesst Plugin 7.37 unter ESLint 10 abstuerzen (`context.getFilename` fehlt).
+      `react/no-unescaped-entities` aus (deutsche Anfuehrungszeichen sind gewollt),
+      `react/prop-types` aus (TypeScript). Die neuen Compiler-Regeln
+      `react-hooks/set-state-in-effect` (13x) und `react-hooks/refs` (5x) stehen bewusst auf
+      `warn` -- sie treffen Muster, die unter Preact korrekt waren.
+- [x] **A1.9 Bundle:** `manualChunks` als Funktion (Rolldown), `react`-Vendor-Chunk =
+      **189,6 KB / 59,6 KB gz**; `build.cssMinify: 'esbuild'` gesetzt.
+
+## Verifikationskriterien (A1)
+
+- `bun run typecheck` exit 0 (Fortschrittsmetrik waehrend der Umstellung: Fehlerzahl).
+- `bun run lint` exit 0 (mit den neuen react/react-hooks-Regeln).
+- `bun run build` exit 0; `react`-Vendor-Chunk vorhanden; Zuwachs ~+55 KB gz erwartet.
+- `verify`-Skill: kompletter Klickpfad -- alle Tabs, je ein Add/Edit/Show-Modal pro Feature,
+  Admin-Panel, Login/Register/Reset-Modals, Signatur-Dialog; Dark/Light; Mobile-Viewport;
+  Deep-Link `#EWT`.
+- Grep-Gate: `from 'preact` = 0 in `src/`.
+- **Bewusst NICHT gruen in A1:** `bun run test` (Testsuite folgt in A2).
+
+## Review (A1)
+
+**Ergebnis 2026-09-06:** `bun run typecheck` 0 Fehler (src **und** test), `bun run lint`
+0 Fehler / 26 Warnungen (die bewusst weichgestellten Compiler-Regeln + `exhaustive-deps`),
+`bun run build` gruen mit `react`-Chunk, `bun run test` **2070/0**. A2 ist mitgelaufen
+(eigener Abschnitt unten), `release:check` ist also komplett gruen -- der geplante rote
+Zwischenzustand hat sich auf diese eine Sitzung beschraenkt.
+
+**Browser-Verifikation** (Vite-Dev + Chrome headless, `verify`-Skill, ohne Backend):
+Ohne erreichbares Backend laeuft der Auth-Lifecycle nicht an, die Feature-Tabs mounten also
+nicht von selbst; die Smokes importieren die Module deshalb direkt im Seitenkontext.
+
+- `mount`/`unmount`/Remount je Feature-Tab (Bereitschaft 70 Knoten, EWT 52, Neben 40, EA 39),
+  nach `unmount` jeweils 0 Knoten, zweites `mount` auf demselben Container funktioniert
+  (Root-Cache).
+- `showModal`: Titel, Body und Submit-Button stehen **direkt nach dem Aufruf** im DOM und
+  `myRef.current` ist gesetzt (Beleg fuer `flushSync`); Submit feuert; Schliessen raeumt den
+  Container leer (`innerHTML.length === 0`), keine offenen Modals.
+- Hilfe-Modal, Konflikt-Banner, Einstellungen-Panels (`createElement`-Pfad), Theme-Wechsel
+  dunkel/hell, Mobile-Viewport: alle gruen.
+- Vorbelegte Felder bleiben editierbar: `value="vorbelegt"` + Tippen -> `vorbelegtX`,
+  Checkbox-Klick schaltet um, `<select>` wechselt die Auswahl. Keine React-Warnung im Log.
+- Grep-Gate `class=`/`for=` im gerenderten DOM: nur die 54 `label[for]` aus dem statischen
+  `index.html`, 0 leere `class`-Attribute.
+- Konsolenfehler ausschliesslich Netzwerk (CORS/`ERR_CONNECTION_REFUSED` gegen die Dev-API),
+  0 React-Fehler oder -Warnungen.
+
+**Offen / bewusst verschoben:** die 26 Lint-Warnungen (`set-state-in-effect`, `refs`,
+`exhaustive-deps`) sind echte React-19-Hinweise auf Preact-Muster und gehoeren in eine eigene
+Aufraeum-Phase. Der Klickpfad mit echtem Backend (Login, Speichern, PDF) ist nicht abgedeckt.
+
+---
+
+# Aktueller Plan: DB-UX-Migration -- Phase A2 (Testsuite auf React) - 2026-09-06
+
+## Plan -- FERTIG
+
+- [x] **A2.1 Render-Helfer** `test/reactRender.ts`: `render(node, container)` in
+      Preact-Signatur auf Basis der echten `mount`/`unmount`, dazu `setzeWert`,
+      `klickeCheckbox`, `inputMock`, `huelleMock`.
+- [x] **A2.2 Import-Codemod** ueber 32 Testdateien: `preact`-Importe auf `react` bzw. den
+      Render-Helfer, `h` -> `createElement as h`, `ComponentChild(ren)` -> `ReactNode`.
+- [x] **A2.3 Event-Simulation an React angepasst.** Drei Klassen von Faellen:
+      - Checkbox: `el.checked = x` + `change`-Event erreicht React nicht (React haengt an
+        `click`) -> `klickeCheckbox`.
+      - Textfeld: `el.value = x` aktualisiert Reacts Value-Tracker mit, das folgende
+        `input`-Event gilt dann als "keine Aenderung" -> `setzeWert` schreibt ueber den
+        nativen Prototyp-Setter.
+      - `pointerenter` bubbelt nicht; React leitet `onPointerEnter` aus `pointerover` ab.
+- [x] **A2.4 Test-Doubles React-tauglich:** `h('input', props)` reichte `children` an ein
+      Void-Element durch (React wirft), Props wie `myRef`/`submitText` landeten als
+      DOM-Attribute, Array-Kinder ohne `key`. Ersetzt durch `inputMock`/`huelleMock`,
+      `class:` -> `className:`.
+- [x] **A2.5 `Admin.lifecycle`-Test** mockt statt `preact.render` jetzt
+      `@/infrastructure/ui/reactRoot`.
+
+## Verifikationskriterien (A2)
+
+- `bun run test` gruen: **2070 pass / 0 fail** (vorher 2069 -- ein zusaetzlicher Test fuer
+  den gesteuerten `MyInput`-Fall).
+- **0 React-Warnungen** im Testlauf (Start: 115 -- 102x `value` ohne `onChange`, dazu
+  fehlende `key`s, `Invalid DOM property class`, unbekannte DOM-Props).
+- `bun run typecheck` und `bun run lint` gruen, `bun run release:check` damit komplett gruen.
+
+## Review (A2)
+
+Der Testlauf war der eigentliche Fund der Phase: die 102 `value`-ohne-`onChange`-Warnungen
+haben gezeigt, dass die Modals ihre Felder als **Vorbelegung** nutzen und den Endwert per Ref
+aus dem DOM lesen. In React waere das ein schreibgeschuetztes Feld gewesen -- die Umstellung
+auf `defaultValue`/`defaultChecked` in `MyInput`/`MyCheckbox`/`MySelect` ist deshalb kein
+Kosmetik-Fix, sondern verhindert eine echte Regression (nicht mehr editierbare Modalfelder).
+Der Browser-Test oben belegt das Verhalten.
+
+`test/components/MyInput.test.tsx` erwartete Preact-Semantik (`value`-Prop schreibt beim
+Re-Render ins DOM). Der Test prueft jetzt beide Faelle getrennt: ohne Handler bleibt der
+getippte Wert stehen, mit `onChange` folgt das Feld dem Prop.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase 0 (Toolchain-Gate) - 2026-09-05
 
 ## Kontext

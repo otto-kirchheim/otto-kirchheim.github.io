@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../reactRender';
+
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminUserRow, BulkApplyResult, BulkUserProfileUpdatePayload } from '@/features/Admin/utils/api';
 
@@ -91,8 +92,7 @@ describe('AdminBulkEditModal', () => {
     await flush();
 
     const secondLevelInput = container.querySelector<HTMLInputElement>('input[aria-label="Ebene 2 ersetzen"]')!;
-    secondLevelInput.value = 'NEU';
-    secondLevelInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(secondLevelInput, 'NEU');
     await flush();
 
     const highlighted = Array.from(
@@ -144,8 +144,7 @@ describe('AdminBulkEditModal', () => {
     await flush();
 
     const firstLevelInput = container.querySelector<HTMLInputElement>('input[aria-label="Ebene 1 ersetzen"]')!;
-    firstLevelInput.value = 'X';
-    firstLevelInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(firstLevelInput, 'X');
     await flush();
 
     container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
@@ -168,8 +167,7 @@ describe('AdminBulkEditModal', () => {
     await flush();
 
     const gewerkInputAfter = container.querySelector<HTMLInputElement>('input[aria-label="Gewerk"]')!;
-    gewerkInputAfter.value = 'Fahrweg';
-    gewerkInputAfter.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(gewerkInputAfter, 'Fahrweg');
     await flush();
 
     container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
@@ -196,8 +194,7 @@ describe('AdminBulkEditModal', () => {
     );
     expect(levelInputs.map(input => input.placeholder)).toEqual(['V', 'IW', 'MI', '']);
 
-    levelInputs[3].value = 'IL';
-    levelInputs[3].dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(levelInputs[3], 'IL');
     await flush();
 
     expect(container.textContent).toContain('Wird hinzugefügt: V.IW-MI-IL');
@@ -248,8 +245,7 @@ describe('AdminBulkEditModal', () => {
     container.querySelector<HTMLInputElement>('#bulkSimple-betrieb')!.click();
     await flush();
     const betriebInput = container.querySelector<HTMLInputElement>('input[aria-label="Betrieb"]')!;
-    betriebInput.value = 'Neu';
-    betriebInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(betriebInput, 'Neu');
     await flush();
 
     container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();

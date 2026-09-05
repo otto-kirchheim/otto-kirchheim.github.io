@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../reactRender';
+
 import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
 import { getFahrzeitPanelState, setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
 import type { IVorgabenUfZ } from '@/core/types';
@@ -30,8 +31,7 @@ async function click(button: HTMLButtonElement): Promise<void> {
 }
 
 async function fireInput(el: HTMLInputElement, value: string): Promise<void> {
-  el.value = value;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
+  setzeWert(el, value);
   await flush();
 }
 

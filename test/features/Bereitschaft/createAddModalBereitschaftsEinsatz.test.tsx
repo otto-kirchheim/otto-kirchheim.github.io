@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h, render, type ComponentChildren } from 'preact';
+import { createElement as h, type ReactNode } from 'react';
+import { render } from '../../reactRender';
 
 const {
   showModalMock,
@@ -24,8 +25,8 @@ type SelectProps = { id: string; options: Array<{ value?: string; text: string }
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
-  MyFormModal: (props: { children?: ComponentChildren }) => h('div', { class: 'modal-stub' }, props.children),
-  MyModalBody: (props: { children?: ComponentChildren }) => h('div', { class: 'modal-body-stub' }, props.children),
+  MyFormModal: (props: { children?: ReactNode }) => h('div', { className: 'modal-stub' }, props.children),
+  MyModalBody: (props: { children?: ReactNode }) => h('div', { className: 'modal-body-stub' }, props.children),
   MyInput: (props: InputProps) =>
     h('input', {
       id: props.id,
@@ -33,15 +34,15 @@ vi.mock('@/components', () => ({
       type: props.type,
       min: props.min,
       max: props.max,
-      value: props.value,
+      defaultValue: props.value,
     }),
   MySelect: (props: SelectProps) =>
     h(
       'select',
       { id: props.id },
-      props.options.map(o => h('option', { value: o.value }, o.text)),
+      props.options.map(o => h('option', { key: o.text, value: o.value }, o.text)),
     ),
-  MyCheckbox: (props: { id: string; children?: ComponentChildren }) => h('input', { type: 'checkbox', id: props.id }),
+  MyCheckbox: (props: { id: string; children?: ReactNode }) => h('input', { type: 'checkbox', id: props.id }),
 }));
 
 vi.mock('@/infrastructure/storage/Storage', () => ({

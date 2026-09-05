@@ -1,4 +1,5 @@
-import { useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'react';
+
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { MAX_OE_LEVELS, OeLevelInputs } from './OeLevelInputs';
 

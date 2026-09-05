@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+
 import {
   fetchAdminUsers,
   updateUserOe,
@@ -164,37 +165,37 @@ export function AdminUserList() {
   return (
     <div>
       {/* Filter-Leiste */}
-      <div class="row g-2 mb-3">
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+      <div className="row g-2 mb-3">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               id="adminFilterName"
               placeholder="Name"
               value={filter.name}
-              onInput={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
             />
-            <label for="adminFilterName">Name</label>
+            <label htmlFor="adminFilterName">Name</label>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <input
               type="text"
-              class="form-control"
+              className="form-control"
               id="adminFilterOe"
               placeholder="OE"
               value={filter.oe}
-              onInput={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
-            <label for="adminFilterOe">OE</label>
+            <label htmlFor="adminFilterOe">OE</label>
           </div>
         </div>
-        <div class="col-12 col-sm-4">
-          <div class="form-floating">
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
             <select
-              class="form-select"
+              className="form-select"
               id="adminFilterRole"
               value={filter.role}
               onChange={e => setFilter(f => ({ ...f, role: (e.target as HTMLSelectElement).value }))}
@@ -205,34 +206,34 @@ export function AdminUserList() {
               <option value="org-admin">Org-Admin</option>
               <option value="super-admin">Super-Admin</option>
             </select>
-            <label for="adminFilterRole">Rolle</label>
+            <label htmlFor="adminFilterRole">Rolle</label>
           </div>
         </div>
       </div>
 
       {/* Ladeanzeige */}
       {loading && (
-        <div class="text-center py-4">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Laden…</span>
+        <div className="text-center py-4">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Laden…</span>
           </div>
         </div>
       )}
 
       {/* Keine Ergebnisse */}
       {!loading && visibleUsers.length === 0 && (
-        <div class="alert alert-secondary text-center" role="alert">
+        <div className="alert alert-secondary text-center" role="alert">
           Keine Benutzer gefunden.
         </div>
       )}
 
       {/* Ergebnis-Anzahl */}
       {!loading && visibleUsers.length > 0 && (
-        <p class="text-body-secondary small mb-2">{visibleUsers.length} Benutzer gefunden</p>
+        <p className="text-body-secondary small mb-2">{visibleUsers.length} Benutzer gefunden</p>
       )}
 
       {/* User-Cards */}
-      <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+      <div className="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
         {visibleUsers.map(currentUser => {
           const isSelfRow = user?.userName === currentUser.userName;
           const edit = edits[currentUser._id] ?? buildEditState(currentUser);
@@ -243,25 +244,25 @@ export function AdminUserList() {
           const editable = canEdit() && !isSelfRow;
 
           return (
-            <div key={currentUser._id} class="col">
-              <div class={`card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
+            <div key={currentUser._id} className="col">
+              <div className={`card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
                 {/* Card Header */}
                 <div
-                  class="card-header d-flex justify-content-between align-items-center py-2"
-                  style="cursor: pointer"
+                  className="card-header d-flex justify-content-between align-items-center py-2"
+                  style={{ cursor: 'pointer' }}
                   onClick={() => setExpandedUserId(isExpanded ? null : currentUser._id)}
                 >
-                  <div class="d-flex align-items-center gap-2 text-truncate">
-                    <span class="material-icons-round text-body-secondary" style="font-size: 1.25rem">
+                  <div className="d-flex align-items-center gap-2 text-truncate">
+                    <span className="material-icons-round text-body-secondary" style={{ fontSize: '1.25rem' }}>
                       person
                     </span>
-                    <span class="fw-semibold text-truncate">{currentUser.userName}</span>
+                    <span className="fw-semibold text-truncate">{currentUser.userName}</span>
                   </div>
-                  <div class="d-flex align-items-center gap-2">
-                    <span class={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
                     <span
-                      class="material-icons-round text-body-secondary"
-                      style="font-size: 1.25rem; transition: transform 0.2s"
+                      className="material-icons-round text-body-secondary"
+                      style={{ fontSize: '1.25rem', transition: 'transform 0.2s' }}
                     >
                       {isExpanded ? 'expand_less' : 'expand_more'}
                     </span>
@@ -269,16 +270,16 @@ export function AdminUserList() {
                 </div>
 
                 {/* Kompakt-Info (immer sichtbar) */}
-                <div class="card-body py-2">
-                  <div class="d-flex flex-wrap gap-2 align-items-center small">
-                    <span class="text-body-secondary">OE:</span>
-                    <span class="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
+                <div className="card-body py-2">
+                  <div className="d-flex flex-wrap gap-2 align-items-center small">
+                    <span className="text-body-secondary">OE:</span>
+                    <span className="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
 
                     {currentUser.adminForTeamOes.length > 0 && (
                       <>
-                        <span class="text-body-secondary ms-2">Team:</span>
+                        <span className="text-body-secondary ms-2">Team:</span>
                         {currentUser.adminForTeamOes.map(oe => (
-                          <span key={oe} class="badge bg-info-subtle text-info-emphasis">
+                          <span key={oe} className="badge bg-info-subtle text-info-emphasis">
                             {oe}
                           </span>
                         ))}
@@ -286,9 +287,9 @@ export function AdminUserList() {
                     )}
                     {currentUser.adminForOrganizationOes.length > 0 && (
                       <>
-                        <span class="text-body-secondary ms-2">Org:</span>
+                        <span className="text-body-secondary ms-2">Org:</span>
                         {currentUser.adminForOrganizationOes.map(oe => (
-                          <span key={oe} class="badge bg-warning-subtle text-warning-emphasis">
+                          <span key={oe} className="badge bg-warning-subtle text-warning-emphasis">
                             {oe}
                           </span>
                         ))}
@@ -299,14 +300,14 @@ export function AdminUserList() {
 
                 {/* Erweiterte Bearbeitung (aufklappbar) */}
                 {isExpanded && (
-                  <div class="card-body border-top pt-3">
+                  <div className="card-body border-top pt-3">
                     {/* Rolle */}
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold small mb-1">Rolle</label>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold small mb-1">Rolle</label>
                       <select
-                        class="form-select form-select-sm"
+                        className="form-select form-select-sm"
                         value={edit.role}
-                        onInput={e =>
+                        onChange={e =>
                           updateEdit(currentUser._id, {
                             role: (e.target as HTMLSelectElement).value as TUserRole,
                           })
@@ -321,13 +322,13 @@ export function AdminUserList() {
                     </div>
 
                     {/* OE */}
-                    <div class="mb-3">
-                      <label class="form-label fw-semibold small mb-1">OE</label>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold small mb-1">OE</label>
                       <input
                         type="text"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={edit.oe}
-                        onInput={e => updateEdit(currentUser._id, { oe: (e.target as HTMLInputElement).value })}
+                        onChange={e => updateEdit(currentUser._id, { oe: (e.target as HTMLInputElement).value })}
                         disabled={!editable}
                       />
                     </div>
@@ -351,22 +352,25 @@ export function AdminUserList() {
                     />
 
                     {/* Aktionsbuttons */}
-                    <div class="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
+                    <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
                       {editable && (
                         <>
                           <button
-                            class="btn btn-primary btn-sm flex-grow-1"
+                            className="btn btn-primary btn-sm flex-grow-1"
                             onClick={() => handleSave(currentUser._id)}
                             disabled={!changed || isSaving}
                           >
                             {isSaving ? (
                               <>
-                                <span class="spinner-border spinner-border-sm me-1" role="status" />
+                                <span className="spinner-border spinner-border-sm me-1" role="status" />
                                 Speichern…
                               </>
                             ) : (
                               <>
-                                <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+                                <span
+                                  className="material-icons-round me-1"
+                                  style={{ fontSize: '1rem', verticalAlign: 'middle' }}
+                                >
                                   save
                                 </span>
                                 Speichern
@@ -375,12 +379,15 @@ export function AdminUserList() {
                           </button>
                           {changed && (
                             <button
-                              class="btn btn-outline-secondary btn-sm"
+                              className="btn btn-outline-secondary btn-sm"
                               onClick={() => handleResetEdit(currentUser._id)}
                               disabled={isSaving}
                               title="Änderungen verwerfen"
                             >
-                              <span class="material-icons-round" style="font-size: 1rem; vertical-align: middle">
+                              <span
+                                className="material-icons-round"
+                                style={{ fontSize: '1rem', verticalAlign: 'middle' }}
+                              >
                                 undo
                               </span>
                             </button>
@@ -388,11 +395,14 @@ export function AdminUserList() {
                         </>
                       )}
                       <button
-                        class="btn btn-outline-secondary btn-sm flex-grow-1"
+                        className="btn btn-outline-secondary btn-sm flex-grow-1"
                         onClick={() => handleLoadAsUser(currentUser._id)}
                         disabled={isSaving}
                       >
-                        <span class="material-icons-round me-1" style="font-size: 1rem; vertical-align: middle">
+                        <span
+                          className="material-icons-round me-1"
+                          style={{ fontSize: '1rem', verticalAlign: 'middle' }}
+                        >
                           {isSelfRow ? 'home' : 'visibility'}
                         </span>
                         {isSelfRow ? 'Eigene Daten' : 'Daten laden'}

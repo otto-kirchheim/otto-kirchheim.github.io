@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { render } from 'preact';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import { MyHelpModal } from '@/components';
 import { getHelpContent, type HelpContextKey } from './helpContent';
 
@@ -14,13 +15,13 @@ export function openHelpModal(key: HelpContextKey): void {
   container.setAttribute('tabindex', '-1');
   document.body.appendChild(container);
 
-  render(<MyHelpModal content={getHelpContent(key)} />, container);
+  mount(container, <MyHelpModal content={getHelpContent(key)} />);
 
   const bsModal = new Modal(container);
   container.addEventListener(
     'hidden.bs.modal',
     () => {
-      render(null, container);
+      unmount(container);
       bsModal.dispose();
       container.remove();
     },

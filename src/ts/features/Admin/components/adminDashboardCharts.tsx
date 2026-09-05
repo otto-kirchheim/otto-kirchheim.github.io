@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+
 import dayjs from '@/infrastructure/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
 
@@ -43,7 +44,7 @@ function MemorySparkline({
   const filtered = history.filter(p => p.environment && visibleEnvironments.has(p.environment));
 
   if (filtered.length < 2) {
-    return <div class="text-body-secondary small py-3 text-center">Noch keine Verlaufsdaten</div>;
+    return <div className="text-body-secondary small py-3 text-center">Noch keine Verlaufsdaten</div>;
   }
 
   const W = 400,
@@ -97,7 +98,11 @@ function MemorySparkline({
   const nonPeriodic = filtered.filter(p => p.event !== 'periodic');
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} style="width:100%;height:clamp(90px,16vw,180px);display:block" aria-hidden="true">
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ width: '100%', height: 'clamp(90px,16vw,180px)', display: 'block' }}
+      aria-hidden="true"
+    >
       {/* Achsen */}
       <line x1={PX} y1={PT} x2={PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
       <line x1={PX} y1={H - PB} x2={W - PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
@@ -241,19 +246,19 @@ export function MemoryCard({
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
 
   return (
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
+    <div className="card border-0 shadow-sm">
+      <div className="card-body">
         {/* ── Header ── */}
-        <div class="d-flex align-items-center justify-content-between mb-2 gap-2">
-          <h6 class="card-title fw-semibold mb-0 text-nowrap">
-            <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+        <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
+          <h6 className="card-title fw-semibold mb-0 text-nowrap">
+            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
               memory
             </span>
             Memory-Verlauf
           </h6>
-          <div class="d-flex gap-2 flex-shrink-0">
+          <div className="d-flex gap-2 flex-shrink-0">
             <select
-              class="form-select form-select-sm w-auto"
+              className="form-select form-select-sm w-auto"
               value={days}
               disabled={loading}
               title="Zeitraum des Memory-Verlaufs"
@@ -266,21 +271,21 @@ export function MemoryCard({
               ))}
             </select>
             <button
-              class="btn btn-sm btn-outline-success"
+              className="btn btn-sm btn-outline-success"
               onClick={takeSnapshot}
               disabled={snapping || loading}
               title="Manuellen Heap-Snapshot jetzt speichern"
             >
               {snapping ? (
-                <span class="spinner-border spinner-border-sm" />
+                <span className="spinner-border spinner-border-sm" />
               ) : (
-                <span class="material-icons-round" style="font-size:1rem;vertical-align:middle">
+                <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                   add_chart
                 </span>
               )}
             </button>
-            <button class="btn btn-sm btn-outline-secondary" onClick={onRefresh} disabled={loading}>
-              <span class="material-icons-round" style="font-size:1rem;vertical-align:middle">
+            <button className="btn btn-sm btn-outline-secondary" onClick={onRefresh} disabled={loading}>
+              <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                 refresh
               </span>
             </button>
@@ -288,31 +293,45 @@ export function MemoryCard({
         </div>
 
         {/* ── Environment Toggles ── */}
-        <div class="mb-2 d-flex gap-2" style="font-size:.85rem">
-          <label class="form-check">
+        <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
+          <label className="form-check">
             <input
               type="checkbox"
-              class="form-check-input"
+              className="form-check-input"
               checked={visibleEnvironments.has('gcp')}
               onChange={() => toggleEnvironment('gcp')}
             />
-            <span class="form-check-label">
+            <span className="form-check-label">
               <span
-                style={`display:inline-block;width:8px;height:8px;background:#4285F4;border-radius:2px;margin-right:4px`}
+                style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  background: '#4285F4',
+                  borderRadius: '2px',
+                  marginRight: '4px',
+                }}
               />
               GCP
             </span>
           </label>
-          <label class="form-check">
+          <label className="form-check">
             <input
               type="checkbox"
-              class="form-check-input"
+              className="form-check-input"
               checked={visibleEnvironments.has('homeserver')}
               onChange={() => toggleEnvironment('homeserver')}
             />
-            <span class="form-check-label">
+            <span className="form-check-label">
               <span
-                style={`display:inline-block;width:8px;height:8px;background:#34A853;border-radius:2px;margin-right:4px`}
+                style={{
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  background: '#34A853',
+                  borderRadius: '2px',
+                  marginRight: '4px',
+                }}
               />
               HomeServer
             </span>
@@ -320,25 +339,25 @@ export function MemoryCard({
         </div>
 
         {loading && !heap ? (
-          <div class="text-center py-3">
-            <span class="spinner-border spinner-border-sm text-primary" />
+          <div className="text-center py-3">
+            <span className="spinner-border spinner-border-sm text-primary" />
           </div>
         ) : (
           <>
             {/* ── Aktuelle Werte – eine kompakte Zeile ── */}
             {cur && (
-              <div class="small text-body-secondary mb-2">
-                <div class="mb-1">
+              <div className="small text-body-secondary mb-2">
+                <div className="mb-1">
                   {cur.environment && (
-                    <span class="badge" style={`background-color: ${ENV_COLORS[cur.environment]}`}>
+                    <span className="badge" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
                       {ENV_LABELS[cur.environment]}
                     </span>
                   )}
                 </div>
-                <p class="mb-0">
-                  <span class="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
+                <p className="mb-0">
+                  <span className="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
                   {' · '}
-                  <span class="fw-semibold" style="color:var(--bs-orange)">
+                  <span className="fw-semibold" style={{ color: 'var(--bs-orange)' }}>
                     RSS
                   </span>{' '}
                   {cur.rss} MB
@@ -357,7 +376,10 @@ export function MemoryCard({
             <MemorySparkline history={heap?.history ?? []} visibleEnvironments={visibleEnvironments} />
 
             {/* ── Legende ── */}
-            <div class="d-flex gap-2 mt-1 flex-wrap" style="font-size:.72rem;color:var(--bs-secondary-color)">
+            <div
+              className="d-flex gap-2 mt-1 flex-wrap"
+              style={{ fontSize: '.72rem', color: 'var(--bs-secondary-color)' }}
+            >
               {(
                 [
                   ['#34A853', false, 'HomeServer Heap'],
@@ -369,9 +391,17 @@ export function MemoryCard({
                   ['var(--bs-danger)', true, 'Shutdown'],
                 ] as [string, boolean, string, boolean?][]
               ).map(([color, dashed, label, reduced]) => (
-                <span key={label} class="d-flex align-items-center gap-1">
+                <span key={label} className="d-flex align-items-center gap-1">
                   <span
-                    style={`width:14px;height:${dashed ? '0' : '2px'};background:${dashed ? 'none' : color};border-top:${dashed ? `2px dashed ${color}` : 'none'};opacity:${reduced ? '.5' : '.85'};display:inline-block;flex-shrink:0`}
+                    style={{
+                      width: '14px',
+                      height: dashed ? '0' : '2px',
+                      background: dashed ? 'none' : color,
+                      borderTop: dashed ? `2px dashed ${color}` : 'none',
+                      opacity: reduced ? '.5' : '.85',
+                      display: 'inline-block',
+                      flexShrink: 0,
+                    }}
                   />
                   {label}
                 </span>
@@ -380,35 +410,35 @@ export function MemoryCard({
 
             {/* ── Ereignisse ── */}
             {history.length > 0 && (
-              <div class="mt-2 pt-2 border-top">
-                <div class="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
-                <ul class="list-unstyled mb-0">
+              <div className="mt-2 pt-2 border-top">
+                <div className="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
+                <ul className="list-unstyled mb-0">
                   {pagedEvents.map((p, i) => {
                     const icon =
                       p.event === 'startup' ? 'power_settings_new' : p.event === 'shutdown' ? 'power_off' : 'add_chart';
                     const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
                     return (
-                      <li key={i} class="py-1 border-bottom">
-                        <div class="d-flex align-items-center gap-2">
+                      <li key={i} className="py-1 border-bottom">
+                        <div className="d-flex align-items-center gap-2">
                           <span
-                            class="material-icons-round flex-shrink-0"
-                            style={`font-size:.85rem;color:${EVENT_COLORS[p.event]}`}
+                            className="material-icons-round flex-shrink-0"
+                            style={{ fontSize: '.85rem', color: EVENT_COLORS[p.event] }}
                           >
                             {icon}
                           </span>
-                          <span class="small fw-medium" style={`color:${EVENT_COLORS[p.event]}`}>
+                          <span className="small fw-medium" style={{ color: EVENT_COLORS[p.event] }}>
                             {EVENT_LABELS[p.event]}
                           </span>
                           {p.environment && (
                             <span
-                              class="badge ms-auto"
-                              style={`background-color: ${ENV_COLORS[p.environment]};font-size:.7rem`}
+                              className="badge ms-auto"
+                              style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
                             >
                               {ENV_LABELS[p.environment].split(' ')[0]}
                             </span>
                           )}
                         </div>
-                        <div class="text-body-secondary" style="font-size:.72rem;padding-left:1.6rem">
+                        <div className="text-body-secondary" style={{ fontSize: '.72rem', paddingLeft: '1.6rem' }}>
                           {ts} · {p.rss} MB RSS · {p.heapUsed} MB Heap
                         </div>
                       </li>
@@ -416,25 +446,28 @@ export function MemoryCard({
                   })}
                 </ul>
                 {eventPageCount > 1 && (
-                  <div class="d-flex align-items-center justify-content-between mt-2" style="font-size:.75rem">
+                  <div
+                    className="d-flex align-items-center justify-content-between mt-2"
+                    style={{ fontSize: '.75rem' }}
+                  >
                     <button
-                      class="btn btn-sm btn-link p-0 text-body-secondary"
+                      className="btn btn-sm btn-link p-0 text-body-secondary"
                       onClick={() => setEventsPage(p => Math.max(0, p - 1))}
                       disabled={eventsPage === 0}
                     >
-                      <span class="material-icons-round" style="font-size:1rem;vertical-align:middle">
+                      <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                         chevron_left
                       </span>
                     </button>
-                    <span class="text-body-secondary">
+                    <span className="text-body-secondary">
                       {eventsPage + 1} / {eventPageCount}
                     </span>
                     <button
-                      class="btn btn-sm btn-link p-0 text-body-secondary"
+                      className="btn btn-sm btn-link p-0 text-body-secondary"
                       onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
                       disabled={eventsPage === eventPageCount - 1}
                     >
-                      <span class="material-icons-round" style="font-size:1rem;vertical-align:middle">
+                      <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
                         chevron_right
                       </span>
                     </button>

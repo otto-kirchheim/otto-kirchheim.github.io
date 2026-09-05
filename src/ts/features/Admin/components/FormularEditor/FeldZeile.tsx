@@ -1,4 +1,5 @@
-import { useRef } from 'preact/hooks';
+import { useRef } from 'react';
+
 import type { Feld, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { wert } from '@/infrastructure/pdf/wert';
 import { AggregationEditor } from './aggregationUndRechnung';
@@ -46,24 +47,24 @@ function FeldZeile({
   // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
   const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
   return (
-    <div class="border rounded p-2 mb-1">
-      <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
+    <div className="border rounded p-2 mb-1">
+      <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
         <ScharfButton aktiv={istGleich(armed, { bereich: 'feld', key: keyName })} onClick={onArm} />
-        <span class="font-monospace small text-truncate flex-grow-1" title={keyName}>
+        <span className="font-monospace small text-truncate flex-grow-1" title={keyName}>
           {feld.label ?? keyName}
         </span>
         <Zellkoordinaten wert={feld} onChange={onChange} />
-        <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Feld löschen">
-          <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+        <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Feld löschen">
+          <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
             delete
           </span>
         </button>
       </div>
 
-      <div class="btn-group btn-group-sm w-100 mb-1">
+      <div className="btn-group btn-group-sm w-100 mb-1">
         <button
           type="button"
-          class={`btn ${!festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${!festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() =>
             onChange({
               ...feld,
@@ -79,7 +80,7 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          class={`btn ${festerText ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${festerText ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Fester Text, wahlweise mit eingefügten Datenpfaden"
           onClick={() =>
             onChange({
@@ -96,7 +97,7 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          class={`btn ${feld.quellen ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${feld.quellen ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Mehrere Werte in eine Zelle, ohne Trennzeichen-Lücke bei leeren/optionalen Teilen (z.B. Adress2)"
           onClick={() =>
             onChange({
@@ -114,7 +115,7 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          class={`btn ${feld.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${feld.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() =>
             onChange({
               ...feld,
@@ -130,7 +131,7 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          class={`btn ${feld.wenn ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${feld.wenn ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
           onClick={() => {
             const startPfad = katalogFelder(formular)[0]?.pfad ?? '';
@@ -149,7 +150,7 @@ function FeldZeile({
         {mitListen.length > 0 && (
           <button
             type="button"
-            class={`btn ${feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className={`btn ${feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
             title="Überschrift über einem dynamischen Spaltenplatz — zeigt den Schlüssel, der dort gelandet ist"
             onClick={() => {
               const [tabellenName, tabelle] = mitListen[0]!;
@@ -173,10 +174,10 @@ function FeldZeile({
       </div>
 
       {feld.listenKopf ? (
-        <div class="row g-1 mb-1">
-          <div class="col-4">
+        <div className="row g-1 mb-1">
+          <div className="col-4">
             <select
-              class="form-select form-select-sm"
+              className="form-select form-select-sm"
               value={feld.listenKopf.tabelle}
               onChange={e => {
                 const tabellenName = (e.target as HTMLSelectElement).value;
@@ -191,9 +192,9 @@ function FeldZeile({
               ))}
             </select>
           </div>
-          <div class="col-5">
+          <div className="col-5">
             <select
-              class="form-select form-select-sm"
+              className="form-select form-select-sm"
               value={feld.listenKopf.gruppe}
               onChange={e =>
                 onChange({
@@ -209,16 +210,16 @@ function FeldZeile({
               ))}
             </select>
           </div>
-          <div class="col-3">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text px-1 small">Platz</span>
+          <div className="col-3">
+            <div className="input-group input-group-sm">
+              <span className="input-group-text px-1 small">Platz</span>
               <input
                 type="number"
                 min={1}
                 step={1}
-                class="form-control"
+                className="form-control"
                 value={feld.listenKopf.index + 1}
-                onInput={e =>
+                onChange={e =>
                   onChange({
                     ...feld,
                     listenKopf: {
@@ -236,7 +237,7 @@ function FeldZeile({
       ) : feld.quellen ? (
         <ZusammengesetzteQuellen feld={feld} formular={formular} onChange={onChange} />
       ) : festerText ? (
-        <div class="mb-1">
+        <div className="mb-1">
           <PlatzhalterPicker
             formular={formular}
             inputRef={textRef}
@@ -245,18 +246,18 @@ function FeldZeile({
           />
           <input
             ref={textRef}
-            class="form-control form-control-sm"
+            className="form-control form-control-sm"
             placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}"
             value={feld.text}
-            onInput={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
+            onChange={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
           />
-          <div class="form-text small">
+          <div className="form-text small">
             Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
             <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
             leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere" nutzen.
             Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
-            <button type="button" class="btn btn-link btn-sm p-0 align-baseline" onClick={openPlatzhalterHilfe}>
+            <button type="button" className="btn btn-link btn-sm p-0 align-baseline" onClick={openPlatzhalterHilfe}>
               Alle Platzhalter &amp; Formate…
             </button>
           </div>
@@ -269,7 +270,7 @@ function FeldZeile({
           onChange={berechnet => onChange({ ...feld, berechnet })}
         />
       ) : (
-        <div class="mb-1">
+        <div className="mb-1">
           <DatenpfadWahl
             wert={keyName}
             eintraege={katalogFelder(formular)}
@@ -280,10 +281,10 @@ function FeldZeile({
       )}
 
       <input
-        class="form-control form-control-sm mb-1"
+        className="form-control form-control-sm mb-1"
         placeholder="Anzeigename (nur für diese Liste)"
         value={feld.label ?? ''}
-        onInput={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })}
+        onChange={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })}
       />
       <DarstellungsFelder wert={feld} onChange={onChange} />
       <WertVorschau text={wert(feld, keyName, vorschau.daten, vorschau.kontext)} />
@@ -353,9 +354,9 @@ export function FeldListe({
   const belegtePfade = new Set(Object.keys(felder));
 
   return (
-    <div class="mb-3">
-      <div class="small fw-semibold">Felder</div>
-      <div class="small text-body-secondary mb-1">
+    <div className="mb-3">
+      <div className="small fw-semibold">Felder</div>
+      <div className="small text-body-secondary mb-1">
         Alles außerhalb der Datentabelle — Kopfangaben, Summen, Übertrag, Seitenzahl. Die Position bestimmt allein die
         Zelle, bei Summen der gewählte Bezug (diese Seite / Vorseiten / alle Zeilen).
       </div>
@@ -384,12 +385,12 @@ export function FeldListe({
             }}
           />
         ))}
-      <div class="d-flex flex-wrap gap-1">
+      <div className="d-flex flex-wrap gap-1">
         {VORLAGEN.map(v => (
           <button
             key={v.key}
             type="button"
-            class="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-outline-secondary"
             onClick={() => hinzufuegen(v.key, { ...v.feld })}
           >
             {v.label}

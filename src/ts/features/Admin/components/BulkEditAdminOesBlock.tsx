@@ -50,19 +50,19 @@ export function BulkEditAdminOesBlock({
 
   return (
     <div>
-      <div class="fw-semibold small mb-1">{label}</div>
-      <div class="d-flex gap-3 mb-1 flex-wrap">
+      <div className="fw-semibold small mb-1">{label}</div>
+      <div className="d-flex gap-3 mb-1 flex-wrap">
         {MODE_OPTIONS.map(([mode, modeLabel]) => (
-          <div class="form-check" key={mode}>
+          <div className="form-check" key={mode}>
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="radio"
               name={`bulkAdminOe-${field}`}
               id={`bulkAdminOe-${field}-${mode}`}
               checked={action.mode === mode}
               onChange={() => selectMode(mode)}
             />
-            <label class="form-check-label" for={`bulkAdminOe-${field}-${mode}`}>
+            <label className="form-check-label" htmlFor={`bulkAdminOe-${field}-${mode}`}>
               {modeLabel}
             </label>
           </div>
@@ -82,10 +82,10 @@ export function BulkEditAdminOesBlock({
             onAddLevel={() => updateLevels([...action.levels, ''])}
             onRemoveLevel={() => updateLevels(action.levels.slice(0, -1))}
           />
-          <div class="small text-body-secondary mt-1">
+          <div className="small text-body-secondary mt-1">
             {action.value ? (
               <>
-                Wird hinzugefügt: <span class="fw-semibold">{action.value}</span>
+                Wird hinzugefügt: <span className="fw-semibold">{action.value}</span>
               </>
             ) : (
               'Leere Ebenen werden aus dem Platzhalter übernommen.'
@@ -96,7 +96,7 @@ export function BulkEditAdminOesBlock({
 
       {action.mode === 'remove' && (
         <select
-          class="form-select form-select-sm"
+          className="form-select form-select-sm"
           aria-label={`${label} entfernen`}
           value={action.value}
           onChange={e => onChange({ value: (e.target as HTMLSelectElement).value })}

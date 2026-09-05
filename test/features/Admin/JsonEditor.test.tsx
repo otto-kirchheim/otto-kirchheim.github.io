@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../../reactRender';
+
 import { JsonEditor } from '@/features/Admin/components/JsonEditor';
 
 async function flush(): Promise<void> {
@@ -159,8 +160,7 @@ describe('JsonEditor', () => {
       await click(header(container));
 
       const textarea = container.querySelector('textarea') as HTMLTextAreaElement;
-      textarea.value = '{"neu": true}';
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      setzeWert(textarea, '{"neu": true}');
 
       expect(current).toBe('{"neu": true}');
     });

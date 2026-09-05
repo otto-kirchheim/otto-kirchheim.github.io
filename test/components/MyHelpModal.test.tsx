@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../reactRender';
 
 const openOnboardingGuideMock = vi.fn();
 vi.mock('@/core/orchestration/onboarding/createOnboardingGuideModal', () => ({

@@ -46,10 +46,10 @@ function VergleichWahl({
   if (istBoolean) {
     const aktuell = wenn.werte?.[0] !== false;
     return (
-      <div class="row g-1 mb-1">
-        <div class="col-8">
+      <div className="row g-1 mb-1">
+        <div className="col-8">
           <select
-            class="form-select form-select-sm"
+            className="form-select form-select-sm"
             value={String(aktuell)}
             onChange={e => onChange({ werte: [(e.target as HTMLSelectElement).value === 'true'], bereich: undefined })}
           >
@@ -57,12 +57,12 @@ function VergleichWahl({
             <option value="false">Nein (nicht zutreffend)</option>
           </select>
         </div>
-        <div class="col-4">
+        <div className="col-4">
           <input
-            class="form-control form-control-sm"
+            className="form-control form-control-sm"
             placeholder="Zeichen"
             value={wenn.dann}
-            onInput={e => onChange({ dann: (e.target as HTMLInputElement).value })}
+            onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
           />
         </div>
       </div>
@@ -71,19 +71,19 @@ function VergleichWahl({
 
   return (
     <>
-      <div class="row g-1 mb-1">
-        <div class="col-8">
-          <div class="btn-group btn-group-sm w-100">
+      <div className="row g-1 mb-1">
+        <div className="col-8">
+          <div className="btn-group btn-group-sm w-100">
             <button
               type="button"
-              class={`btn ${!wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${!wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
               onClick={() => onChange({ bereich: undefined, werte: wenn.werte ?? [] })}
             >
               Werte-Liste
             </button>
             <button
               type="button"
-              class={`btn ${wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
               title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
               onClick={() => onChange({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
             >
@@ -91,53 +91,53 @@ function VergleichWahl({
             </button>
           </div>
         </div>
-        <div class="col-4">
+        <div className="col-4">
           <input
-            class="form-control form-control-sm"
+            className="form-control form-control-sm"
             placeholder="Zeichen"
             value={wenn.dann}
-            onInput={e => onChange({ dann: (e.target as HTMLInputElement).value })}
+            onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
           />
         </div>
       </div>
 
       {wenn.bereich ? (
-        <div class="input-group input-group-sm">
-          <span class="input-group-text px-1 small">ab</span>
+        <div className="input-group input-group-sm">
+          <span className="input-group-text px-1 small">ab</span>
           <input
-            class="form-control"
+            className="form-control"
             placeholder="z.B. 8:00 oder 5"
             value={wenn.bereich.von}
-            onInput={e => onChange({ bereich: { ...wenn.bereich!, von: (e.target as HTMLInputElement).value } })}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, von: (e.target as HTMLInputElement).value } })}
           />
-          <span class="input-group-text px-1 small">bis vor</span>
+          <span className="input-group-text px-1 small">bis vor</span>
           <input
-            class="form-control"
+            className="form-control"
             placeholder="z.B. 14:00 oder 20"
             value={wenn.bereich.bis}
-            onInput={e => onChange({ bereich: { ...wenn.bereich!, bis: (e.target as HTMLInputElement).value } })}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, bis: (e.target as HTMLInputElement).value } })}
           />
         </div>
       ) : auswahl.length > 0 ? (
-        <div class="d-flex flex-wrap gap-2">
+        <div className="d-flex flex-wrap gap-2">
           {auswahl.map(wert => (
-            <div key={wert} class="form-check">
+            <div key={wert} className="form-check">
               <input
-                class="form-check-input"
+                className="form-check-input"
                 type="checkbox"
                 checked={(wenn.werte ?? []).includes(wert)}
                 onChange={e => schalte(wert, (e.target as HTMLInputElement).checked)}
               />
-              <label class="form-check-label small">{wert}</label>
+              <label className="form-check-label small">{wert}</label>
             </div>
           ))}
         </div>
       ) : (
         <input
-          class="form-control form-control-sm font-monospace"
+          className="form-control form-control-sm font-monospace"
           placeholder="Werte, durch Komma getrennt"
           value={(wenn.werte ?? []).join(', ')}
-          onInput={e =>
+          onChange={e =>
             onChange({
               werte: (e.target as HTMLInputElement).value
                 .split(',')
@@ -183,18 +183,18 @@ export function AnkreuzBedingung({
   }
 
   return (
-    <div class="mb-1">
-      <div class="btn-group btn-group-sm w-100 mb-1">
+    <div className="mb-1">
+      <div className="btn-group btn-group-sm w-100 mb-1">
         <button
           type="button"
-          class={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() => setzeWenn({ feld: wenn.feld ?? zeilenFelder[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
         </button>
         <button
           type="button"
-          class={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Prüft einen berechneten Wert dieser Zeile, z.B. eine Dauer aus Beginn/Ende"
           onClick={() =>
             setzeWenn({
@@ -210,7 +210,7 @@ export function AnkreuzBedingung({
       </div>
 
       {wenn.berechnet ? (
-        <div class="border rounded p-2 mb-1">
+        <div className="border rounded p-2 mb-1">
           <Rechnung
             wert={wenn.berechnet}
             zeilenFelder={zeilenFelder}
@@ -219,7 +219,7 @@ export function AnkreuzBedingung({
         </div>
       ) : (
         <select
-          class="form-select form-select-sm mb-1"
+          className="form-select form-select-sm mb-1"
           value={wenn.feld ?? ''}
           onChange={e => {
             const feld = (e.target as HTMLSelectElement).value;
@@ -279,18 +279,18 @@ export function FeldAnkreuzBedingung({
   }
 
   return (
-    <div class="mb-1">
-      <div class="btn-group btn-group-sm w-100 mb-1">
+    <div className="mb-1">
+      <div className="btn-group btn-group-sm w-100 mb-1">
         <button
           type="button"
-          class={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() => setzeWenn({ feld: wenn.feld ?? feldOptionen[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
         </button>
         <button
           type="button"
-          class={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
           title="Prüft eine Aggregation über Zeilen, z.B. die Gesamtsumme"
           onClick={() =>
             setzeWenn({
@@ -306,7 +306,7 @@ export function FeldAnkreuzBedingung({
       </div>
 
       {wenn.berechnet ? (
-        <div class="border rounded p-2 mb-1">
+        <div className="border rounded p-2 mb-1">
           <AggregationEditor
             wert={wenn.berechnet}
             formular={formular}
@@ -316,7 +316,7 @@ export function FeldAnkreuzBedingung({
         </div>
       ) : (
         <select
-          class="form-select form-select-sm mb-1"
+          className="form-select form-select-sm mb-1"
           value={wenn.feld ?? ''}
           onChange={e => {
             const pfad = (e.target as HTMLSelectElement).value;

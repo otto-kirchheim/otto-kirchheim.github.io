@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../reactRender';
+
 import dayjs from '@/infrastructure/date/configDayjs';
 import MyShowElement from '@/components/MyShowElement';
 

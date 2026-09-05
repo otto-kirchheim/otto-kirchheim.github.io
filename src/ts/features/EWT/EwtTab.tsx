@@ -1,5 +1,6 @@
-import { render } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect } from 'react';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import { openHelpModal } from '@/core';
@@ -178,12 +179,12 @@ function EwtTab() {
   }, []);
 
   return (
-    <div class="container-lg text-center">
-      <div class="row justify-content-center">
-        <h1 class="d-inline-flex align-items-center justify-content-center gap-2">
+    <div className="container-lg text-center">
+      <div className="row justify-content-center">
+        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           EWT
-          <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
-            <span class="material-icons-round align-middle" style="font-size: 1.25rem">
+          <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
+            <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
               help_outline
             </span>
           </button>
@@ -191,29 +192,29 @@ function EwtTab() {
         <h4 id="MonatE"></h4>
       </div>
 
-      <div class="container">
-        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-          <div class="col d-grid">
-            <button type="button" class="btn btn-primary" id="btnESEE" data-disabler>
-              <span class="material-icons-round big-icons">add_circle_outlined</span>
+      <div className="container">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
+          <div className="col d-grid">
+            <button type="button" className="btn btn-primary" id="btnESEE" data-disabler>
+              <span className="material-icons-round big-icons">add_circle_outlined</span>
               Anwesenheit
             </button>
           </div>
-          <div class="col d-grid">
-            <button class="btn btn-primary" type="button" id="btnZb" data-disabler>
-              <span class="material-icons-round big-icons">calculate</span>
+          <div className="col d-grid">
+            <button className="btn btn-primary" type="button" id="btnZb" data-disabler>
+              <span className="material-icons-round big-icons">calculate</span>
               Berechnen
             </button>
           </div>
-          <div class="col d-grid">
-            <button class="btn btn-success" type="button" id="btnSaveE" data-disabler>
-              <span class="material-icons-round big-icons">save</span>
+          <div className="col d-grid">
+            <button className="btn btn-success" type="button" id="btnSaveE" data-disabler>
+              <span className="material-icons-round big-icons">save</span>
               Speichern
             </button>
           </div>
-          <div class="col d-grid">
-            <button class="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
-              <span class="material-icons-round big-icons">download</span>
+          <div className="col d-grid">
+            <button className="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
+              <span className="material-icons-round big-icons">download</span>
               PDF erzeugen
             </button>
           </div>
@@ -221,8 +222,12 @@ function EwtTab() {
       </div>
       <hr />
 
-      <div class="table-responsive">
-        <table id="tableE" class="table table-bordered table-striped table-hover align-middle" aria-label="EWT"></table>
+      <div className="table-responsive">
+        <table
+          id="tableE"
+          className="table table-bordered table-striped table-hover align-middle"
+          aria-label="EWT"
+        ></table>
       </div>
     </div>
   );
@@ -232,12 +237,12 @@ export function mountEwtTab(): void {
   const container = document.querySelector<HTMLDivElement>('#ewt-root');
   if (!container) return;
 
-  render(<EwtTab />, container);
+  mount(container, <EwtTab />);
 }
 
 export function unmountEwtTab(): void {
   const container = document.querySelector<HTMLDivElement>('#ewt-root');
   if (!container) return;
 
-  render(null, container);
+  unmount(container);
 }

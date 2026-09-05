@@ -9,7 +9,7 @@ description: 'Use when: frontend topic architektur'
 
 ```
 src/ts/
-├── components/      # Generische Preact-Bausteine (MyButton, MyInput, MyFormModal, showModal, ...)
+├── components/      # Generische React-Bausteine (MyButton, MyInput, MyFormModal, showModal, ...)
 ├── core/            # Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung
 │   ├── types/       # Alle geteilten TS-Interfaces
 │   ├── hooks/       # registerHook/invokeHook, featureLifecycleRegistry
@@ -50,7 +50,7 @@ Jedes Feature-Modul unter `features/` folgt dieser Struktur:
 ```
 features/Feature/
 ├── index.ts          # window.addEventListener("load", ...) → Init
-├── components/       # Preact TSX-Komponenten (Modals)
+├── components/       # React TSX-Komponenten (Modals)
 │   └── index.ts      # Re-Exports
 └── utils/            # Business-Logik & Daten-Handling
     └── index.ts      # Re-Exports
@@ -63,7 +63,7 @@ Login/Register/Reset ist **kein** Feature-Modul, sondern Teil der Auth-Orchestri
 
 | Modul            | Beschreibung                                         |
 | ---------------- | ---------------------------------------------------- |
-| `Admin/`         | Admin-Panel (Preact), separat lazy-geladen           |
+| `Admin/`         | Admin-Panel (React), separat lazy-geladen            |
 | `Bereitschaft/`  | Bereitschaftsdienst-Verwaltung (Zeiträume, Einsätze) |
 | `EWT/`           | Einsatzwechseltätigkeit                              |
 | `Neben/`         | Nebenbezüge (Zulagen, Zuschüsse)                     |
@@ -75,24 +75,24 @@ Login/Register/Reset ist **kein** Feature-Modul, sondern Teil der Auth-Orchestri
 
 ## Komponenten-Patterns
 
-### 1. Preact Functional Components
+### 1. React Functional Components
 
 Einfache UI-Bausteine wie Buttons, Selects, Modals:
 
 ```tsx
-import { type FunctionalComponent } from "preact";
+import { type FC } from "react";
 
 const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => {
 	return <button onClick={onClick}>{label}</button>;
 };
 ```
 
-### 2. Preact Class Components
+### 2. React Class Components
 
 Komplexere Widgets mit Lifecycle (z.B. Popover-Integration):
 
 ```tsx
-import { Component } from "preact";
+import { Component } from "react";
 
 class MyInput extends Component<Props, State> {
 	componentDidMount() {
@@ -104,19 +104,19 @@ class MyInput extends Component<Props, State> {
 }
 ```
 
-### 3. `showModal()` – Preact in Bootstrap-Modals
+### 3. `showModal()` – React in Bootstrap-Modals
 
-Preact wird primär als Template-Engine für Bootstrap-Modals verwendet:
+React wird primär als Template-Engine für Bootstrap-Modals und die Feature-Tabs verwendet:
 
 ```ts
-import { render } from "preact";
-// Rendern einer Preact-Komponente in ein Bootstrap-Modal DOM-Element
+import { mount } from "@/infrastructure/ui";
+// Rendern einer React-Komponente in ein Bootstrap-Modal DOM-Element
 render(<MyFormModal {...props} />, modalElement);
 ```
 
 ### 4. CustomTable (Vanilla-DOM)
 
-Eigene Tabellen-Klasse, **nicht** Preact-basiert:
+Eigene Tabellen-Klasse, **nicht** React-basiert:
 
 - Sorting, Editing, Responsive Breakpoints
 - Event-Handling über DOM-Events

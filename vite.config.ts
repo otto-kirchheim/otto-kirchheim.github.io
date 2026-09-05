@@ -1,16 +1,14 @@
 import { defineConfig } from 'vite';
 import base from './vite.base-config.ts';
-import preact from '@preact/preset-vite';
+import react from '@vitejs/plugin-react-swc';
 import UnpluginInjectPreload from 'unplugin-inject-preload/vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig(({ command }) => ({
+export default defineConfig(() => ({
   ...base,
   plugins: [
-    preact({
-      devToolsEnabled: command === 'serve',
-    }),
+    react(),
     // Zoraxy leitet https://dev.otto.home64.de auf diesen Dev-Server; Vite kennt den
     // Proxy nicht und würde die URL sonst nicht anzeigen. Nur im Proxy-HMR-Modus
     // (ohne VITE_LOCAL_HMR, siehe vite.base-config.ts) relevant.

@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+import { render } from '../../reactRender';
+
 import {
   VorgabenBWeekRangeEditor,
   type WeekRangeEditorProps,
@@ -76,7 +77,9 @@ function pointerDown(button: HTMLButtonElement, pointerType: 'mouse' | 'touch' =
 }
 
 function pointerEnter(button: HTMLButtonElement): void {
-  button.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
+  // React leitet `onPointerEnter` aus `pointerover` ab (EnterLeave-Plugin); ein natives
+  // `pointerenter` bubbelt nicht und erreicht den Root-Listener daher nie.
+  button.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, relatedTarget: document.body }));
 }
 
 function pointerUp(grid: HTMLElement): void {

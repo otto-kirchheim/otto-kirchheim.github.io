@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FeldListe } from './FeldZeile';
 import { gruppiere, katalogZeilenFelder, ZEILEN_QUELLEN } from './datenKatalog';
@@ -93,9 +94,9 @@ export function FeldPanel({
         onChange={felder => onSeiteChange({ ...seite, felder })}
       />
 
-      <div class="mb-3">
-        <div class="small fw-semibold">Datentabellen</div>
-        <div class="small text-body-secondary mb-1">
+      <div className="mb-3">
+        <div className="small fw-semibold">Datentabellen</div>
+        <div className="small text-body-secondary mb-1">
           Mehrere Tabellen dürfen dieselbe Quelle nutzen und sich nur im Filter unterscheiden (z.B. Einsätze getrennt
           nach LRE). Startposition und Zeilenzahl gelten immer je Seite; Zeilenhöhe und Spalten gelten standardmäßig für
           die ganze Tabelle, lassen sich aber je Seite überschreiben ("eigene je Seite").
@@ -123,31 +124,31 @@ export function FeldPanel({
             }
           />
         ))}
-        <div class="input-group input-group-sm">
+        <div className="input-group input-group-sm">
           <input
-            class="form-control"
+            className="form-control"
             placeholder="Name der neuen Tabelle"
             value={neuerName}
-            onInput={e => setNeuerName((e.target as HTMLInputElement).value)}
+            onChange={e => setNeuerName((e.target as HTMLInputElement).value)}
           />
-          <button type="button" class="btn btn-outline-secondary" onClick={tabelleAnlegen}>
+          <button type="button" className="btn btn-outline-secondary" onClick={tabelleAnlegen}>
             + Tabelle
           </button>
         </div>
       </div>
 
-      <div class="mb-3">
-        <div class="small fw-semibold mb-1">Signatur-Fläche</div>
-        <div class="d-flex align-items-center gap-2">
+      <div className="mb-3">
+        <div className="small fw-semibold mb-1">Signatur-Fläche</div>
+        <div className="d-flex align-items-center gap-2">
           <ScharfButton
             aktiv={signaturAktiv}
             onClick={() => onArm(signaturAktiv ? null : { bereich: 'signaturBild' })}
           />
-          <span class="small flex-grow-1">{seite.signaturBild ? 'Fläche gesetzt' : 'nicht gesetzt'}</span>
+          <span className="small flex-grow-1">{seite.signaturBild ? 'Fläche gesetzt' : 'nicht gesetzt'}</span>
           {seite.signaturBild && (
             <button
               type="button"
-              class="btn btn-sm btn-outline-danger py-0"
+              className="btn btn-sm btn-outline-danger py-0"
               onClick={() => onSeiteChange({ ...seite, signaturBild: undefined })}
             >
               Löschen
@@ -155,7 +156,7 @@ export function FeldPanel({
           )}
         </div>
         {seite.signaturBild && (
-          <div class="row g-1 mt-1">
+          <div className="row g-1 mt-1">
             <ZahlFeld
               label="x"
               wert={seite.signaturBild.x}
@@ -179,25 +180,25 @@ export function FeldPanel({
           </div>
         )}
 
-        <div class="small fw-semibold mt-3 mb-1">Unterschriftsdatum</div>
-        <div class="small text-body-secondary mb-1">
+        <div className="small fw-semibold mt-3 mb-1">Unterschriftsdatum</div>
+        <div className="small text-body-secondary mb-1">
           Druckt nur, wenn tatsächlich eine (nicht-digitale) Unterschrift vorliegt.
         </div>
         {datumKey && datumFeld ? (
           <>
-            <div class="d-flex align-items-center gap-2">
+            <div className="d-flex align-items-center gap-2">
               <ScharfButton
                 aktiv={datumArmed}
                 onClick={() => onArm(datumArmed ? null : { bereich: 'feld', key: datumKey })}
                 titel="Position auf dem PDF aufziehen"
               />
-              <span class="small flex-grow-1">Feld gesetzt</span>
-              <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={datumLoeschen}>
+              <span className="small flex-grow-1">Feld gesetzt</span>
+              <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={datumLoeschen}>
                 Löschen
               </button>
             </div>
             <select
-              class="form-select form-select-sm mt-1"
+              className="form-select form-select-sm mt-1"
               value={datumFeld.berechnet?.feld ?? ''}
               onChange={e =>
                 datumAendern({
@@ -216,32 +217,32 @@ export function FeldPanel({
                 </optgroup>
               ))}
             </select>
-            <div class="mt-1">
+            <div className="mt-1">
               <Zellkoordinaten wert={datumFeld} onChange={datumAendern} />
             </div>
-            <div class="mt-1">
+            <div className="mt-1">
               <DarstellungsFelder wert={datumFeld} onChange={datumAendern} />
             </div>
-            <div class="d-flex align-items-center gap-2 mt-1">
+            <div className="d-flex align-items-center gap-2 mt-1">
               <input
                 type="number"
                 min="0"
-                class="form-control form-control-sm"
-                style="max-width:6rem"
+                className="form-control form-control-sm"
+                style={{ maxWidth: '6rem' }}
                 placeholder="Tage"
                 value={datumFeld.berechnet?.maxTage ?? ''}
-                onInput={e => {
+                onChange={e => {
                   const roh = (e.target as HTMLInputElement).value;
                   datumAendern({
                     berechnet: { ...datumFeld.berechnet!, maxTage: roh === '' ? undefined : Number(roh) },
                   });
                 }}
               />
-              <span class="small text-body-secondary">Tage Frist — sonst gilt das heutige Datum.</span>
+              <span className="small text-body-secondary">Tage Frist — sonst gilt das heutige Datum.</span>
             </div>
           </>
         ) : (
-          <button type="button" class="btn btn-sm btn-outline-secondary" onClick={datumHinzufuegen}>
+          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={datumHinzufuegen}>
             + Datum hinzufügen
           </button>
         )}

@@ -23,6 +23,16 @@ const baseConfig: UserConfig = {
     outDir: '../dist',
     emptyOutDir: true,
     sourcemap: 'hidden',
+    // Rolldown (Vite 8) bringt lightningcss nicht mit; esbuild ist der unterstuetzte Minifier.
+    cssMinify: 'esbuild',
+    rollupOptions: {
+      output: {
+        // Rolldown akzeptiert manualChunks nur als Funktion, nicht als Objekt-Map.
+        manualChunks(id: string) {
+          if (/node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'react';
+        },
+      },
+    },
   },
   preview: {
     port: 8082,

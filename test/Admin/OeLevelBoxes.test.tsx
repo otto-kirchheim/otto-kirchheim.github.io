@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+import { render, setzeWert } from '../reactRender';
+
 import { OeLevelBoxes } from '@/features/Admin/components/OeLevelBoxes';
 
 async function flush(): Promise<void> {
@@ -19,8 +20,7 @@ function boxes(container: HTMLDivElement): HTMLInputElement[] {
 }
 
 function setValue(input: HTMLInputElement, value: string): void {
-  input.value = value;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  setzeWert(input, value);
 }
 
 describe('OeLevelBoxes', () => {

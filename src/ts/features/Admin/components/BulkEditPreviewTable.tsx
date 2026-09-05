@@ -14,8 +14,8 @@ function DiffCell({ before, after }: { before: string; after: string }) {
   if (before === after) return <>{before || '–'}</>;
   return (
     <>
-      <span class="text-body-secondary text-decoration-line-through">{before}</span>{' '}
-      <span class="fw-semibold">{after}</span>
+      <span className="text-body-secondary text-decoration-line-through">{before}</span>{' '}
+      <span className="fw-semibold">{after}</span>
     </>
   );
 }
@@ -36,12 +36,12 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
 
   return (
     <div>
-      <p class="mb-2">
+      <p className="mb-2">
         {preview.summary.ok} von {preview.summary.total} Benutzern werden geändert
         {preview.summary.skipped > 0 && `, ${preview.summary.skipped} übersprungen`}.
       </p>
-      <div class="table-responsive" style="max-height:50vh">
-        <table class="table table-sm align-middle">
+      <div className="table-responsive" style={{ maxHeight: '50vh' }}>
+        <table className="table table-sm align-middle">
           <thead>
             <tr>
               <th scope="col">Benutzer</th>
@@ -55,10 +55,10 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
           </thead>
           <tbody>
             {preview.results.map(entry => (
-              <tr key={entry.userId} class={entry.status === 'skipped' ? 'text-body-secondary' : undefined}>
+              <tr key={entry.userId} className={entry.status === 'skipped' ? 'text-body-secondary' : undefined}>
                 <td>{entry.userName}</td>
                 {entry.status === 'skipped' ? (
-                  <td colSpan={columnCount} class="fst-italic">
+                  <td colSpan={columnCount} className="fst-italic">
                     {entry.message}
                   </td>
                 ) : (
@@ -69,7 +69,7 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
                         <td key={field}>
                           <DiffCell before={diff.before} after={diff.after} />
                           {field === 'oe' && entry.message && (
-                            <div class="small text-body-secondary fst-italic">{entry.message}</div>
+                            <div className="small text-body-secondary fst-italic">{entry.message}</div>
                           )}
                         </td>
                       );

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../../reactRender';
 
 const { fetchAdminLogsMock, fetchAdminUserNameMapMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -152,8 +152,7 @@ describe('AdminLogBrowser', () => {
     fetchAdminLogsMock.mockClear();
 
     const input = container.querySelector('input') as HTMLInputElement;
-    input.value = 'delete';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(input, 'delete');
     await flush();
 
     const searchButton = Array.from(container.querySelectorAll('button')).find(b => b.textContent === 'Suchen');
@@ -169,8 +168,7 @@ describe('AdminLogBrowser', () => {
     fetchAdminLogsMock.mockClear();
 
     const input = container.querySelector('input') as HTMLInputElement;
-    input.value = 'create';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(input, 'create');
     await flush();
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await flush();
@@ -185,8 +183,7 @@ describe('AdminLogBrowser', () => {
     expect(Array.from(container.querySelectorAll('button')).some(b => b.textContent === 'Zurücksetzen')).toBe(false);
 
     const input = container.querySelector('input') as HTMLInputElement;
-    input.value = 'update';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(input, 'update');
     await flush();
 
     const resetButton = Array.from(container.querySelectorAll('button')).find(b => b.textContent === 'Zurücksetzen');

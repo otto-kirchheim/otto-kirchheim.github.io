@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'preact/hooks';
+import type React from 'react';
+import { Fragment, useEffect, useState } from 'react';
+
 import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
 
@@ -15,11 +17,11 @@ function truncateId(val: unknown): string {
   return s.length > 10 ? `…${s.slice(-8)}` : s;
 }
 
-function userName(map: Record<string, string>, id: string | null): preact.JSX.Element | string {
+function userName(map: Record<string, string>, id: string | null): React.JSX.Element | string {
   if (!id) return '—';
   const name = map[id];
   if (name) return name;
-  return <code class="text-muted">{truncateId(id)}</code>;
+  return <code className="text-muted">{truncateId(id)}</code>;
 }
 
 /** Der geloggte Payload liegt unter `params.payload` (siehe writeAdminLog im Backend). */
@@ -65,24 +67,24 @@ export function AdminLogBrowser() {
 
   return (
     <div>
-      <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+      <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
         <input
           type="text"
-          class="form-control form-control-sm"
-          style="max-width:300px"
+          className="form-control form-control-sm"
+          style={{ maxWidth: '300px' }}
           placeholder="Aktion filtern (z.B. update, delete)…"
           value={actionFilter}
-          onInput={e => setActionFilter((e.target as HTMLInputElement).value)}
+          onChange={e => setActionFilter((e.target as HTMLInputElement).value)}
           onKeyDown={e => {
             if (e.key === 'Enter') search();
           }}
         />
-        <button class="btn btn-sm btn-primary" onClick={search}>
+        <button className="btn btn-sm btn-primary" onClick={search}>
           Suchen
         </button>
         {actionFilter && (
           <button
-            class="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-outline-secondary"
             onClick={() => {
               setActionFilter('');
               loadPage(1, '');
@@ -91,39 +93,42 @@ export function AdminLogBrowser() {
             Zurücksetzen
           </button>
         )}
-        <button class="btn btn-sm btn-outline-secondary ms-auto" onClick={() => loadPage(currentPage, actionFilter)}>
-          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+        <button
+          className="btn btn-sm btn-outline-secondary ms-auto"
+          onClick={() => loadPage(currentPage, actionFilter)}
+        >
+          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
             refresh
           </span>
           Aktualisieren
         </button>
       </div>
 
-      {loadError && <div class="alert alert-danger py-2 small">{loadError}</div>}
+      {loadError && <div className="alert alert-danger py-2 small">{loadError}</div>}
 
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead class="table-dark">
+      <div className="table-responsive">
+        <table className="table table-sm table-hover align-middle mb-0">
+          <thead className="table-dark">
             <tr>
               <th>Zeitstempel</th>
               <th>Aktion</th>
               <th>Admin</th>
-              <th class="d-none d-md-table-cell">Ziel-User</th>
-              <th class="d-none d-lg-table-cell">Ressource-ID</th>
-              <th class="text-end">Details</th>
+              <th className="d-none d-md-table-cell">Ziel-User</th>
+              <th className="d-none d-lg-table-cell">Ressource-ID</th>
+              <th className="text-end">Details</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={6} class="text-center py-4">
-                  <div class="spinner-border spinner-border-sm" role="status" />
+                <td colSpan={6} className="text-center py-4">
+                  <div className="spinner-border spinner-border-sm" role="status" />
                 </td>
               </tr>
             )}
             {!loading && (!logs || logs.data.length === 0) && (
               <tr>
-                <td colSpan={6} class="text-center py-3 text-muted">
+                <td colSpan={6} className="text-center py-3 text-muted">
                   Keine Log-Einträge
                 </td>
               </tr>
@@ -137,26 +142,29 @@ export function AdminLogBrowser() {
                 const payload = logPayload(entry);
                 const open = openDetailsId === id;
                 return (
-                  <>
-                    <tr key={id}>
-                      <td class="small text-nowrap">{formatTs(entry['timestamp'])}</td>
+                  <Fragment key={id}>
+                    <tr>
+                      <td className="small text-nowrap">{formatTs(entry['timestamp'])}</td>
                       <td>
-                        <code class="small text-break">{String(entry['action'] ?? '')}</code>
+                        <code className="small text-break">{String(entry['action'] ?? '')}</code>
                       </td>
-                      <td class="small">{userName(userNameMap, adminId)}</td>
-                      <td class="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
-                      <td class="small d-none d-lg-table-cell">
-                        {targetResourceId ? <code class="text-muted">{truncateId(targetResourceId)}</code> : '—'}
+                      <td className="small">{userName(userNameMap, adminId)}</td>
+                      <td className="small d-none d-md-table-cell">{userName(userNameMap, targetUserId)}</td>
+                      <td className="small d-none d-lg-table-cell">
+                        {targetResourceId ? <code className="text-muted">{truncateId(targetResourceId)}</code> : '—'}
                       </td>
-                      <td class="text-end">
+                      <td className="text-end">
                         {payload !== null && (
                           <button
-                            class="btn btn-sm btn-link p-0"
+                            className="btn btn-sm btn-link p-0"
                             aria-label={open ? 'Details ausblenden' : 'Details anzeigen'}
                             aria-expanded={open}
                             onClick={() => setOpenDetailsId(open ? null : id)}
                           >
-                            <span class="material-icons-round" style="font-size:1.1rem;vertical-align:middle">
+                            <span
+                              className="material-icons-round"
+                              style={{ fontSize: '1.1rem', verticalAlign: 'middle' }}
+                            >
                               {open ? 'expand_less' : 'expand_more'}
                             </span>
                           </button>
@@ -164,15 +172,15 @@ export function AdminLogBrowser() {
                       </td>
                     </tr>
                     {open && (
-                      <tr key={`${id}-details`}>
-                        <td colSpan={6} class="bg-body-tertiary">
-                          <pre class="small mb-0 text-break" style="white-space:pre-wrap">
+                      <tr>
+                        <td colSpan={6} className="bg-body-tertiary">
+                          <pre className="small mb-0 text-break" style={{ whiteSpace: 'pre-wrap' }}>
                             {JSON.stringify(payload, null, 2)}
                           </pre>
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
           </tbody>
@@ -180,20 +188,20 @@ export function AdminLogBrowser() {
       </div>
 
       {totalPages > 1 && (
-        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-          <small class="text-muted">
+        <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+          <small className="text-muted">
             Gesamt: {logs?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div class="btn-group btn-group-sm">
+          <div className="btn-group btn-group-sm">
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1, actionFilter)}
             >
               ‹
             </button>
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1, actionFilter)}
             >

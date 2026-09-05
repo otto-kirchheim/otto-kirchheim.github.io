@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, type SubmitEvent } from 'react';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { FormularEditor, leereSeite, type Konfig } from './FormularEditor/FormularEditor';
@@ -180,7 +181,7 @@ export function FormularUpload() {
     }
   }
 
-  async function handleSubmit(e: Event): Promise<void> {
+  async function handleSubmit(e: SubmitEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     if (!datei) {
       createSnackBar({ message: 'Die PDF-Vorlage ist erforderlich', status: 'error', timeout: 3000, fixed: true });
@@ -233,16 +234,16 @@ export function FormularUpload() {
   }
 
   return (
-    <form class="d-flex flex-column gap-3" onSubmit={e => void handleSubmit(e)}>
-      <h5 class="mb-0">{bearbeiteId ? 'Formular-Version bearbeiten' : 'Formular-Vorlage hochladen'}</h5>
-      <p class="small text-body-secondary mb-0">
+    <form className="d-flex flex-column gap-3" onSubmit={e => void handleSubmit(e)}>
+      <h5 className="mb-0">{bearbeiteId ? 'Formular-Version bearbeiten' : 'Formular-Vorlage hochladen'}</h5>
+      <p className="small text-body-secondary mb-0">
         Version anlegen: eine fertige PDF-Vorlage (reines Text-Layout, in LibreOffice aus dem xlsx exportiert) plus die
         Koordinaten-Config. Bestehende Versionen lassen sich unten bearbeiten oder löschen — beides prüft, ob die
         Gültigkeitszeiträume danach lückenlos aneinander anschließen, und fragt sonst nach.
       </p>
 
-      <div class="border rounded p-2">
-        <h6 class="small fw-semibold">Vorhandene Versionen ({formular})</h6>
+      <div className="border rounded p-2">
+        <h6 className="small fw-semibold">Vorhandene Versionen ({formular})</h6>
         <FormularVersionenListe
           versionen={versionen}
           bearbeiteId={bearbeiteId}
@@ -252,14 +253,14 @@ export function FormularUpload() {
         />
       </div>
 
-      <div class="row g-2">
-        <div class="col-md-3">
-          <label class="form-label" for="formular-upload-code">
+      <div className="row g-2">
+        <div className="col-md-3">
+          <label className="form-label" htmlFor="formular-upload-code">
             Formular
           </label>
           <select
             id="formular-upload-code"
-            class="form-select"
+            className="form-select"
             value={formular}
             onChange={e => wechsleFormular((e.target as HTMLSelectElement).value as FormularCode)}
           >
@@ -270,54 +271,54 @@ export function FormularUpload() {
             ))}
           </select>
         </div>
-        <div class="col-md-3">
-          <label class="form-label" for="formular-upload-version">
+        <div className="col-md-3">
+          <label className="form-label" htmlFor="formular-upload-version">
             Version
           </label>
           <input
             id="formular-upload-version"
-            class="form-control"
+            className="form-control"
             value={version}
-            onInput={e => setVersion((e.target as HTMLInputElement).value)}
+            onChange={e => setVersion((e.target as HTMLInputElement).value)}
             required
           />
         </div>
-        <div class="col-md-3">
-          <label class="form-label" for="formular-upload-gueltig-von">
+        <div className="col-md-3">
+          <label className="form-label" htmlFor="formular-upload-gueltig-von">
             Gültig ab
           </label>
           <input
             id="formular-upload-gueltig-von"
             type="date"
-            class="form-control"
+            className="form-control"
             value={gueltigVon}
-            onInput={e => setGueltigVon((e.target as HTMLInputElement).value)}
+            onChange={e => setGueltigVon((e.target as HTMLInputElement).value)}
             required
           />
         </div>
-        <div class="col-md-3">
-          <label class="form-label" for="formular-upload-gueltig-bis">
+        <div className="col-md-3">
+          <label className="form-label" htmlFor="formular-upload-gueltig-bis">
             Gültig bis (leer = offen)
           </label>
           <input
             id="formular-upload-gueltig-bis"
             type="date"
-            class="form-control"
+            className="form-control"
             value={gueltigBis}
-            onInput={e => setGueltigBis((e.target as HTMLInputElement).value)}
+            onChange={e => setGueltigBis((e.target as HTMLInputElement).value)}
           />
         </div>
       </div>
 
       <div>
-        <label class="form-label" for="formular-upload-pdf">
+        <label className="form-label" htmlFor="formular-upload-pdf">
           PDF-Vorlage{bearbeiteId ? ' (leer lassen, um die gespeicherte zu behalten)' : ''}
         </label>
         <input
           id="formular-upload-pdf"
           type="file"
           accept="application/pdf"
-          class="form-control"
+          className="form-control"
           onChange={e => {
             const gewaehlt = (e.target as HTMLInputElement).files?.[0] ?? null;
             // Neue Datei = neuer Upload; die bisherige Vorlagen-ID darf dann nicht weiterverwendet
@@ -329,15 +330,15 @@ export function FormularUpload() {
         />
       </div>
 
-      <details class="border rounded p-2 bg-body-secondary">
-        <summary class="small fw-semibold" style="cursor: pointer">
+      <details className="border rounded p-2 bg-body-secondary">
+        <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
           Hilfe zur Koordinaten-Config
         </summary>
-        <div class="small mt-2">
-          <p class="mb-2">
+        <div className="small mt-2">
+          <p className="mb-2">
             Koordinatensystem: PDF-Punkte (1pt = 1/72 Zoll), Ursprung <strong>unten links</strong>. A4 = 595×842pt.
           </p>
-          <p class="mb-1">
+          <p className="mb-1">
             <strong>Die PDF-Vorlage ist EINE Datei mit allen Seiten</strong> — nicht je Seite eine eigene Datei. Ist das
             Formular dreiseitig, enthält die hochgeladene PDF genau diese drei Seiten (im xlsx alle Blätter zusammen
             nach PDF exportieren). Im Editor legst du darüber die <strong>Seitenfolge</strong> an: „+ Seite" hängt eine
@@ -345,7 +346,7 @@ export function FormularUpload() {
             hochgeladenen PDF sie benutzt. Zwei Seitendefinitionen dürfen dieselbe PDF-Seite nutzen, wenn sie nur anders
             befüllt werden.
           </p>
-          <p class="mb-1">
+          <p className="mb-1">
             Welche Seiten im Ergebnis landen, entscheiden die Daten: Seite 1 kommt immer, jede weitere nur, wenn ihre
             Tabellen Zeilen haben (oder sie gar keine Tabelle trägt). Eine Seite mit{' '}
             <em>„Diese Seite bei Überlauf wiederholen"</em> wird so oft gedruckt, wie noch Zeilen übrig sind — bei EA
@@ -354,13 +355,13 @@ export function FormularUpload() {
             <em>Einstellungen übernehmen von</em> kopiert eine bestehende Seite (Felder, Tabellenbereiche, Signatur) auf
             die aktuelle — die Vorlagenseite bleibt dabei, wie sie ist.
           </p>
-          <p class="mb-1">
+          <p className="mb-1">
             Eintrag in der Liste rechts <em>scharf schalten</em>, dann links auf dem PDF ein{' '}
             <strong>Rechteck über die Zelle ziehen</strong> (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten
             Ausschnitt). Der Text wird laut Ausrichtung in dieser Zelle platziert, bei „zentriert" mittig zwischen den
             beiden Kanten.
           </p>
-          <ul class="mb-2">
+          <ul className="mb-2">
             <li>
               <strong>Felder</strong> — alles außerhalb der Datentabelle: Kopfangaben, Summen, Übertrag, Seitenzahl. Es
               gibt bewusst nur einen Bereich, denn die Position bestimmt allein die gezogene Zelle. Je Feld wählbar:
@@ -428,7 +429,7 @@ export function FormularUpload() {
               ist dafür nichts zu hinterlegen — es genügt, im Formular Platz für die Unterschriften freizulassen.
             </li>
           </ul>
-          <p class="mb-1">
+          <p className="mb-1">
             Schriftgröße, Ausrichtung und Format gelten je Zelle; <em>Schrift automatisch verkleinern</em> passt zu
             lange Werte in die Zelle ein, <em>Zeilenumbruch</em> bricht an Wortgrenzen um. Senkrecht wird der Text immer
             in der Zelle zentriert, sobald sie als Rechteck aufgezogen wurde — ein Feld ohne Ober-/Unterkante sitzt
@@ -436,7 +437,7 @@ export function FormularUpload() {
             Eintrags lässt sich aufklappen, um die Kanten nachträglich exakt anzugleichen (z.B. gleiche Höhe wie das
             Feld daneben).
           </p>
-          <p class="mb-0">
+          <p className="mb-0">
             Zwei Vorschauen erzeugen jeweils ein echtes PDF: <em>Beispieldaten</em> füllt fachlich passende Werte ein
             (Name, Personalnummer, Auftragsnummern, Datum) und sieht damit aus wie ein ausgefülltes Formular;{' '}
             <em>Platzhalter</em> setzt generische Füllwerte und zeigt vor allem, welche Zelle zu welchem Eintrag gehört.
@@ -449,18 +450,18 @@ export function FormularUpload() {
       {datei ? (
         <FormularEditor formular={formular} datei={datei} value={konfig} onChange={setKonfig} />
       ) : (
-        <p class="text-body-secondary small">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
+        <p className="text-body-secondary small">PDF-Vorlage zuerst auswählen, um Koordinaten setzen zu können.</p>
       )}
 
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary" disabled={speichert}>
+      <div className="d-flex gap-2">
+        <button type="submit" className="btn btn-primary" disabled={speichert}>
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </button>
         {bearbeiteId && (
           <>
             <button
               type="button"
-              class="btn btn-outline-primary"
+              className="btn btn-outline-primary"
               disabled={speichert}
               onClick={neueVersionAusBearbeitung}
               title="Konfiguration und PDF übernehmen, aber als neue Version speichern statt die bestehende zu überschreiben"
@@ -469,7 +470,7 @@ export function FormularUpload() {
             </button>
             <button
               type="button"
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={speichert}
               onClick={() => setzeFormularZurueck(formular)}
             >

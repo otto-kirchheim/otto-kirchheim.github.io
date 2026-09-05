@@ -36,34 +36,34 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
   if (gruppen.length === 0 && vorlagen.length === 0) return null;
 
   return (
-    <div class="mb-2">
-      <div class="small fw-semibold mb-1">Dynamische Spalten</div>
+    <div className="mb-2">
+      <div className="small fw-semibold mb-1">Dynamische Spalten</div>
 
       {gruppen.map(([name, gruppe]) => {
         const kategorie = VORLAGEN_KATEGORIE[name];
         const kurztexte = Boolean(gruppe.beschriftungen);
         return (
-          <div key={name} class="border rounded p-2 mb-1 bg-body">
-            <div class="d-flex align-items-center gap-1 mb-1">
-              <span class="small fw-semibold flex-grow-1">
-                {name} <span class="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
+          <div key={name} className="border rounded p-2 mb-1 bg-body">
+            <div className="d-flex align-items-center gap-1 mb-1">
+              <span className="small fw-semibold flex-grow-1">
+                {name} <span className="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
               </span>
               <button
                 type="button"
-                class="btn btn-sm btn-outline-danger py-0"
+                className="btn btn-sm btn-outline-danger py-0"
                 onClick={() => setzeGruppe(name, undefined)}
                 title="Gruppe löschen"
               >
-                <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+                <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
                   delete
                 </span>
               </button>
             </div>
 
-            <div class="row g-1 mb-1">
-              <div class="col-6">
+            <div className="row g-1 mb-1">
+              <div className="col-6">
                 <select
-                  class="form-select form-select-sm"
+                  className="form-select form-select-sm"
                   title="Zeilenfeld mit der Liste"
                   value={gruppe.quelle}
                   onChange={e => setzeGruppe(name, { ...gruppe, quelle: (e.target as HTMLSelectElement).value })}
@@ -75,30 +75,30 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                   ))}
                 </select>
               </div>
-              <div class="col-3">
+              <div className="col-3">
                 <input
-                  class="form-control form-control-sm font-monospace"
+                  className="form-control form-control-sm font-monospace"
                   title="Feld im Listeneintrag, das den Schlüssel trägt"
                   value={gruppe.schluessel}
-                  onInput={e => setzeGruppe(name, { ...gruppe, schluessel: (e.target as HTMLInputElement).value })}
+                  onChange={e => setzeGruppe(name, { ...gruppe, schluessel: (e.target as HTMLInputElement).value })}
                 />
               </div>
-              <div class="col-3">
+              <div className="col-3">
                 <input
-                  class="form-control form-control-sm font-monospace"
+                  className="form-control form-control-sm font-monospace"
                   title="Feld im Listeneintrag mit dem anzuzeigenden Wert"
                   value={gruppe.wert}
-                  onInput={e => setzeGruppe(name, { ...gruppe, wert: (e.target as HTMLInputElement).value })}
+                  onChange={e => setzeGruppe(name, { ...gruppe, wert: (e.target as HTMLInputElement).value })}
                 />
               </div>
             </div>
 
             <input
-              class="form-control form-control-sm font-monospace mb-1"
+              className="form-control form-control-sm font-monospace mb-1"
               title="Erlaubte Schlüssel, durch Komma getrennt — diese Reihenfolge bestimmt die Platzvergabe"
               placeholder="Schlüssel, durch Komma getrennt"
               value={(gruppe.auswahl ?? []).join(', ')}
-              onInput={e => {
+              onChange={e => {
                 const auswahl = (e.target as HTMLInputElement).value
                   .split(',')
                   .map(t => t.trim())
@@ -108,9 +108,9 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
             />
 
             {kategorie && (
-              <div class="form-check">
+              <div className="form-check">
                 <input
-                  class="form-check-input"
+                  className="form-check-input"
                   type="checkbox"
                   checked={kurztexte}
                   onChange={e =>
@@ -120,7 +120,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                     })
                   }
                 />
-                <label class="form-check-label small">Kurztext statt Code als Überschrift</label>
+                <label className="form-check-label small">Kurztext statt Code als Überschrift</label>
               </div>
             )}
           </div>
@@ -131,7 +131,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
         <button
           key={v.name}
           type="button"
-          class="btn btn-sm btn-outline-secondary me-1"
+          className="btn btn-sm btn-outline-secondary me-1"
           title={`Legt die Gruppe „${v.name}" plus ${v.plaetze} Spaltenplätze an`}
           onClick={() => onVorlage(v.name, v.gruppe, v.plaetze)}
         >

@@ -16,35 +16,35 @@ type Props = {
  * geschlossen (also bearbeitet) werden muss.
  */
 export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbeiten, onLoeschen }: Props) {
-  if (laedt) return <p class="small text-body-secondary mb-0">Versionen werden geladen…</p>;
+  if (laedt) return <p className="small text-body-secondary mb-0">Versionen werden geladen…</p>;
   if (versionen.length === 0)
-    return <p class="small text-body-secondary mb-0">Für dieses Formular gibt es noch keine Version.</p>;
+    return <p className="small text-body-secondary mb-0">Für dieses Formular gibt es noch keine Version.</p>;
 
   return (
-    <div class="table-responsive">
-      <table class="table table-sm align-middle mb-0">
+    <div className="table-responsive">
+      <table className="table table-sm align-middle mb-0">
         <thead>
           <tr>
             <th scope="col">Version</th>
             <th scope="col">Gültig ab</th>
             <th scope="col">Gültig bis</th>
-            <th scope="col" class="text-end">
+            <th scope="col" className="text-end">
               Aktion
             </th>
           </tr>
         </thead>
         <tbody>
           {versionen.map(v => (
-            <tr key={v.id} class={v.id === bearbeiteId ? 'table-active' : undefined}>
+            <tr key={v.id} className={v.id === bearbeiteId ? 'table-active' : undefined}>
               <td>{v.version}</td>
               <td>{v.gueltigVon}</td>
-              <td>{v.gueltigBis ?? <span class="text-body-secondary">offen</span>}</td>
-              <td class="text-end">
-                <div class="btn-group btn-group-sm">
-                  <button type="button" class="btn btn-outline-secondary" onClick={() => onBearbeiten(v)}>
+              <td>{v.gueltigBis ?? <span className="text-body-secondary">offen</span>}</td>
+              <td className="text-end">
+                <div className="btn-group btn-group-sm">
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => onBearbeiten(v)}>
                     Bearbeiten
                   </button>
-                  <button type="button" class="btn btn-outline-danger" onClick={() => onLoeschen(v)}>
+                  <button type="button" className="btn btn-outline-danger" onClick={() => onLoeschen(v)}>
                     Löschen
                   </button>
                 </div>

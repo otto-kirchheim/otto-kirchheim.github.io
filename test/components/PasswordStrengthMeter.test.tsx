@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test';
-import { createRef, render } from 'preact';
+import { createRef } from 'react';
+import { render, setzeWert } from '../reactRender';
+
 import PasswordStrengthMeter from '@/components/PasswordStrengthMeter';
 
 async function flush(): Promise<void> {
@@ -18,8 +20,7 @@ function setup(): { container: HTMLDivElement; input: HTMLInputElement } {
 }
 
 async function typePassword(input: HTMLInputElement, value: string): Promise<void> {
-  input.value = value;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  setzeWert(input, value);
   await flush();
 }
 

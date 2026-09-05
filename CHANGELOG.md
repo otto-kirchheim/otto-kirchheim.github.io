@@ -2,6 +2,37 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (54)
+
+### feat (DB-UX-Migration Phase A1+A2: Preact 10 -> React 19)
+
+Framework-Wechsel ohne DB-UX-Code, damit React-Umstellung und Design-System-Umstellung
+getrennt verifizierbar bleiben. `preact` und `@preact/preset-vite` raus, `react`/`react-dom`
+19.2.8 plus `@vitejs/plugin-react-swc` und `esbuild` rein.
+
+- **Rendern:** neues `infrastructure/ui/reactRoot.ts` mit `mount`/`unmount` (ein
+  `WeakMap`-Root-Cache je Container, Rendern per `flushSync`). Preacts `render` war synchron,
+  `root.render` ist es nicht -- Bootstrap-Modals, CustomTable und der Signatur-Dialog lesen
+  direkt nach dem Rendern aus dem DOM.
+- **Codemods:** 74 Quelldateien auf React-Importe, 1301x `class=` -> `className=`, 25x `for=`
+  -> `htmlFor=`, 128 String-`style`-Attribute zu Objekten, 12 Dateien von `render()` auf
+  `mount`/`unmount`.
+- **Formularfelder:** `MyInput`, `MyCheckbox` und `MySelect` schalten ohne Handler auf
+  `defaultValue`/`defaultChecked` um. Die Modals nutzen die Felder als Vorbelegung und lesen
+  den Endwert per Ref aus dem DOM -- als "controlled" waeren sie in React nicht mehr
+  editierbar gewesen. Alle 79 JSX-`onInput=` sind jetzt `onChange=`.
+- **Lint:** `eslint-plugin-react` + `eslint-plugin-react-hooks` ergaenzt (Rules of Hooks
+  fehlten unter Preact komplett). Die neuen Compiler-Regeln `set-state-in-effect` und `refs`
+  stehen vorerst auf `warn`.
+- **Bundle:** eigener `react`-Vendor-Chunk (189,6 KB / 59,6 KB gz), `cssMinify: 'esbuild'`.
+- **Tests:** `test/reactRender.ts` als Render-/Event-Helfer; Checkbox-Klicks, Wert-Setzen ueber
+  den nativen Setter und `pointerover` statt `pointerenter`, weil React Events anders
+  aufhaengt. 2070 Tests gruen, 0 React-Warnungen (vorher 115).
+
+Verifikation: `typecheck`, `lint`, `test` (2070/0) und `build` gruen; Browser-Smoke via
+Chrome headless (Feature-Tabs mounten/unmounten/remounten, Modal-Pfad synchron, vorbelegte
+Felder bleiben tippbar, Theme-Wechsel, keine React-Fehler in der Konsole).
+
 ## 2026-09-05 (53)
 
 ### chore (DB-UX-Migration: Wegwerf-Spike-Ergebnisse in den Plan eingearbeitet)

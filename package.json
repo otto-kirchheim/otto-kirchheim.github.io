@@ -45,12 +45,17 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^20.14.0",
-    "@preact/preset-vite": "^2.10.6",
     "@types/bootstrap": "^5.2.11",
     "@types/bun": "^1.4.1",
     "@types/file-saver": "^2.0.7",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react-swc": "^4.3.3",
+    "esbuild": "^0.28.2",
     "eslint": "^10.10.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.0",
     "prettier": "^3.9.6",
@@ -74,9 +79,13 @@
     "file-saver": "^2.0.5",
     "material-icons": "^1.13.14",
     "pdfjs-dist": "^6.3.289",
-    "preact": "^10.29.8",
+    "react": "^19",
+    "react-dom": "^19",
     "signature_pad": "^5.1.4",
     "uuid": "^14.0.2",
     "zod": "^4.5.4"
-  }
+  },
+  "trustedDependencies": [
+    "@swc/core"
+  ]
 }

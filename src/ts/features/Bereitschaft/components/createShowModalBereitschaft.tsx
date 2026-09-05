@@ -5,7 +5,7 @@ import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '@/types';
 const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(column: Column<T>, row: Row<T>) => {
   if (column.editing) return;
   return (
-    <div className="mb-1 row">
+    <div className="mb-1 row" key={column.name}>
       <label className="col-5 col-form-label text-wrap fw-bold" htmlFor={column.name}>
         {column.title}
       </label>

@@ -1,6 +1,6 @@
-import type { FunctionalComponent } from 'preact';
+import { type FC, type ReactNode } from 'react';
 
-const MyModalBody: FunctionalComponent<{ className?: string }> = ({ className, children }) => {
+const MyModalBody: FC<{ className?: string; children?: ReactNode }> = ({ className, children }) => {
   const defaultClass = 'modal-body';
   const additionalClass = className ? ` ${className}` : ' row g-2';
 

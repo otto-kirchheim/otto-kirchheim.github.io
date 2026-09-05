@@ -1,4 +1,5 @@
-import { createPortal } from 'preact/compat';
+import { createPortal } from 'react-dom';
+
 import dayjs from '@/infrastructure/date/configDayjs';
 import { JsonEditor } from './JsonEditor';
 import {
@@ -48,19 +49,19 @@ export function AdminResourceEditModal({
 }: Props) {
   return createPortal(
     <>
-      <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
-        <div class="modal-dialog modal-lg modal-fullscreen-sm-down">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">
+      <div className="modal fade show d-block" tabIndex={-1} style={{ zIndex: '1055' }}>
+        <div className="modal-dialog modal-lg modal-fullscreen-sm-down">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">
                 {resource.label} bearbeiten
-                <code class="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
+                <code className="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
               </h5>
-              <button type="button" class="btn-close" onClick={closeEdit} />
+              <button type="button" className="btn-close" onClick={closeEdit} />
             </div>
 
-            <div class="modal-body" style="max-height:65vh;overflow-y:auto">
-              {edit.saveError && <div class="alert alert-danger py-2 small">{edit.saveError}</div>}
+            <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
+              {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
 
               {Object.entries(edit.values).map(([key, val]) => {
                 const immutable = IMMUTABLE_FIELDS.has(key);
@@ -76,35 +77,40 @@ export function AdminResourceEditModal({
                 const isTimeString = typeof val === 'string' && !looksLikeIso(val) && TIME_STRING_FIELDS.has(key);
 
                 return (
-                  <div key={key} class="mb-3">
-                    <label class="form-label fw-semibold small mb-1">
+                  <div key={key} className="mb-3">
+                    <label className="form-label fw-semibold small mb-1">
                       {key}
-                      {immutable && <span class="fw-normal text-muted ms-1">(nicht änderbar)</span>}
-                      {readonly && <span class="fw-normal text-muted ms-1">(nur lesen)</span>}
-                      {isUserRef && <span class="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
+                      {immutable && <span className="fw-normal text-muted ms-1">(nicht änderbar)</span>}
+                      {readonly && <span className="fw-normal text-muted ms-1">(nur lesen)</span>}
+                      {isUserRef && <span className="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
                       {crossRef && (
-                        <span class="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
+                        <span className="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
                       )}
                       {isNull && !disabled && !isUserRef && (
-                        <span class="badge bg-warning text-dark ms-1" style="font-size:0.65em">
+                        <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '0.65em' }}>
                           leer
                         </span>
                       )}
                     </label>
 
                     {isUserRef ? (
-                      <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <code class="small bg-body-secondary rounded px-2 py-1">{String(val ?? '')}</code>
-                        {userNameMap[String(val)] && <span class="small fw-semibold">{userNameMap[String(val)]}</span>}
+                      <div className="d-flex align-items-center gap-2 flex-wrap">
+                        <code className="small bg-body-secondary rounded px-2 py-1">{String(val ?? '')}</code>
+                        {userNameMap[String(val)] && (
+                          <span className="small fw-semibold">{userNameMap[String(val)]}</span>
+                        )}
                         {onNavigateToUser && (
                           <button
-                            class="btn btn-sm btn-outline-info ms-auto"
+                            className="btn btn-sm btn-outline-info ms-auto"
                             onClick={() => {
                               closeEdit();
                               onNavigateToUser(String(val));
                             }}
                           >
-                            <span class="material-icons-round me-1" style="font-size:0.85rem;vertical-align:middle">
+                            <span
+                              className="material-icons-round me-1"
+                              style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}
+                            >
                               person_search
                             </span>
                             Zum Profil
@@ -113,7 +119,7 @@ export function AdminResourceEditModal({
                       </div>
                     ) : disabled ? (
                       <input
-                        class="form-control form-control-sm bg-body-secondary text-muted font-monospace"
+                        className="form-control form-control-sm bg-body-secondary text-muted font-monospace"
                         readOnly
                         value={
                           isDateOnly
@@ -127,19 +133,22 @@ export function AdminResourceEditModal({
                       />
                     ) : crossRef ? (
                       crossRef.isArray && Array.isArray(val) ? (
-                        <div class="d-flex flex-column gap-1">
-                          {(val as string[]).length === 0 && <em class="text-muted small">Keine Verknüpfungen</em>}
+                        <div className="d-flex flex-column gap-1">
+                          {(val as string[]).length === 0 && <em className="text-muted small">Keine Verknüpfungen</em>}
                           {(val as string[]).map((id, i) => (
-                            <div key={i} class="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1">
-                              <code class="small flex-grow-1">{truncateId(id)}</code>
+                            <div
+                              key={i}
+                              className="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1"
+                            >
+                              <code className="small flex-grow-1">{truncateId(id)}</code>
                               <button
-                                class="btn btn-sm btn-outline-info py-0"
+                                className="btn btn-sm btn-outline-info py-0"
                                 onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
                               >
-                                <span class="material-icons-round" style="font-size:0.85rem">
+                                <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
                                   open_in_new
                                 </span>
-                                <span class="ms-1 d-none d-sm-inline">
+                                <span className="ms-1 d-none d-sm-inline">
                                   {RESOURCES[crossRef.resourceIdx].shortLabel}
                                 </span>
                               </button>
@@ -147,15 +156,20 @@ export function AdminResourceEditModal({
                           ))}
                         </div>
                       ) : isNull ? (
-                        <em class="text-muted small">Keine Verknüpfung (null)</em>
+                        <em className="text-muted small">Keine Verknüpfung (null)</em>
                       ) : (
-                        <div class="d-flex align-items-center gap-2">
-                          <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{truncateId(val)}</code>
+                        <div className="d-flex align-items-center gap-2">
+                          <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">
+                            {truncateId(val)}
+                          </code>
                           <button
-                            class="btn btn-sm btn-outline-info"
+                            className="btn btn-sm btn-outline-info"
                             onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
                           >
-                            <span class="material-icons-round me-1" style="font-size:0.85rem;vertical-align:middle">
+                            <span
+                              className="material-icons-round me-1"
+                              style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}
+                            >
                               open_in_new
                             </span>
                             {RESOURCES[crossRef.resourceIdx].label}
@@ -163,10 +177,10 @@ export function AdminResourceEditModal({
                         </div>
                       )
                     ) : typeof val === 'boolean' ? (
-                      <div class="form-check mt-1">
+                      <div className="form-check mt-1">
                         <input
                           type="checkbox"
-                          class="form-check-input"
+                          className="form-check-input"
                           checked={val}
                           onChange={e => handleValueChange(key, (e.target as HTMLInputElement).checked)}
                         />
@@ -174,7 +188,7 @@ export function AdminResourceEditModal({
                     ) : isNull ? (
                       <input
                         type="text"
-                        class="form-control form-control-sm border-warning"
+                        className="form-control form-control-sm border-warning"
                         placeholder="(leer – Wert eingeben oder leer lassen)"
                         onChange={e => {
                           const v = (e.target as HTMLInputElement).value;
@@ -190,14 +204,14 @@ export function AdminResourceEditModal({
                     ) : isTimeString ? (
                       <input
                         type="time"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={String(val)}
                         onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
                       />
                     ) : isDateOnly ? (
                       <input
                         type="date"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={toDateInput(String(val))}
                         onChange={e => {
                           const v = (e.target as HTMLInputElement).value;
@@ -207,7 +221,7 @@ export function AdminResourceEditModal({
                     ) : isDateTime ? (
                       <input
                         type="datetime-local"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={toDatetimeLocal(String(val))}
                         onChange={e => {
                           const v = (e.target as HTMLInputElement).value;
@@ -216,7 +230,7 @@ export function AdminResourceEditModal({
                       />
                     ) : fieldEnum ? (
                       <select
-                        class="form-select form-select-sm"
+                        className="form-select form-select-sm"
                         value={String(val ?? '')}
                         onChange={e => handleValueChange(key, (e.target as HTMLSelectElement).value)}
                       >
@@ -229,19 +243,19 @@ export function AdminResourceEditModal({
                     ) : typeof val === 'number' ? (
                       <input
                         type="number"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={val}
                         onChange={e => handleValueChange(key, parseFloat((e.target as HTMLInputElement).value) || 0)}
                       />
                     ) : isObjectId(val) ? (
-                      <div class="d-flex align-items-center gap-2">
-                        <code class="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
+                      <div className="d-flex align-items-center gap-2">
+                        <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
                         <button
-                          class="btn btn-sm btn-outline-secondary"
+                          className="btn btn-sm btn-outline-secondary"
                           title="Kopieren"
                           onClick={() => void navigator.clipboard?.writeText(val)}
                         >
-                          <span class="material-icons-round" style="font-size:0.85rem">
+                          <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
                             content_copy
                           </span>
                         </button>
@@ -249,7 +263,7 @@ export function AdminResourceEditModal({
                     ) : (
                       <input
                         type="text"
-                        class="form-control form-control-sm"
+                        className="form-control form-control-sm"
                         value={String(val ?? '')}
                         onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
                       />
@@ -259,14 +273,14 @@ export function AdminResourceEditModal({
               })}
             </div>
 
-            <div class="modal-footer">
-              <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
                 Abbrechen
               </button>
-              <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+              <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
                 {edit.saving ? (
                   <>
-                    <span class="spinner-border spinner-border-sm me-1" role="status" />
+                    <span className="spinner-border spinner-border-sm me-1" role="status" />
                     Speichern…
                   </>
                 ) : (
@@ -277,7 +291,7 @@ export function AdminResourceEditModal({
           </div>
         </div>
       </div>
-      <div class="modal-backdrop fade show" style="z-index:1054" />
+      <div className="modal-backdrop fade show" style={{ zIndex: '1054' }} />
     </>,
     document.body,
   );

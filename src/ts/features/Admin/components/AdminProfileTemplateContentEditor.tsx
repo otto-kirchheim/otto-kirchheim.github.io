@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState } from 'react';
+
 import { ZULAGEN_CATALOG } from '../../Einstellungen/utils/zulagenCatalog';
 import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
 import {
@@ -84,9 +85,9 @@ export function AdminProfileTemplateContentEditor({
     return (
       <button
         type="button"
-        class={`badge border ${active ? 'text-bg-dark border-dark' : hasData ? 'text-bg-primary border-primary' : 'text-bg-secondary border-secondary'}`}
+        className={`badge border ${active ? 'text-bg-dark border-dark' : hasData ? 'text-bg-primary border-primary' : 'text-bg-secondary border-secondary'}`}
         onClick={() => setActiveSection(current => (current === key ? null : key))}
-        style="cursor: pointer"
+        style={{ cursor: 'pointer' }}
       >
         {label}
       </button>
@@ -95,8 +96,8 @@ export function AdminProfileTemplateContentEditor({
 
   return (
     <div>
-      <label class="form-label small fw-semibold mb-1">Template-Inhalt</label>
-      <div class="d-flex flex-wrap gap-2 mb-2">
+      <label className="form-label small fw-semibold mb-1">Template-Inhalt</label>
+      <div className="d-flex flex-wrap gap-2 mb-2">
         {sectionButton('Pers', 'Pers')}
         {sectionButton('Arbeitszeit', 'Arbeitszeit')}
         {sectionButton('Fahrzeit', 'Fahrzeit')}
@@ -105,11 +106,11 @@ export function AdminProfileTemplateContentEditor({
       </div>
 
       {activeSection === 'Pers' && (
-        <div class="border rounded p-2 mb-2">
-          <div class="row g-2">
+        <div className="border rounded p-2 mb-2">
+          <div className="row g-2">
             {PERS_FIELDS.map(field => (
-              <div class="col-12 col-md-6" key={`${templateId}-pers-${field.key}`}>
-                <label class="form-label small mb-1">{field.label}</label>
+              <div className="col-12 col-md-6" key={`${templateId}-pers-${field.key}`}>
+                <label className="form-label small mb-1">{field.label}</label>
                 {field.key === 'OE' ? (
                   <OeLevelBoxes
                     value={templateContent.Pers[field.key] ?? ''}
@@ -117,9 +118,9 @@ export function AdminProfileTemplateContentEditor({
                   />
                 ) : field.type === 'select' && field.options ? (
                   <select
-                    class="form-select form-select-sm"
+                    className="form-select form-select-sm"
                     value={templateContent.Pers[field.key] ?? ''}
-                    onInput={e => onUpdatePersField(field.key, (e.target as HTMLSelectElement).value)}
+                    onChange={e => onUpdatePersField(field.key, (e.target as HTMLSelectElement).value)}
                   >
                     {field.options.map(option => (
                       <option value={option.value} key={`${templateId}-pers-${field.key}-${option.value || 'empty'}`}>
@@ -130,9 +131,9 @@ export function AdminProfileTemplateContentEditor({
                 ) : (
                   <input
                     type={field.type ?? 'text'}
-                    class="form-control form-control-sm"
+                    className="form-control form-control-sm"
                     value={templateContent.Pers[field.key] ?? ''}
-                    onInput={e => onUpdatePersField(field.key, (e.target as HTMLInputElement).value)}
+                    onChange={e => onUpdatePersField(field.key, (e.target as HTMLInputElement).value)}
                   />
                 )}
               </div>
@@ -142,7 +143,7 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Arbeitszeit' && (
-        <div class="border rounded p-2 mb-2">
+        <div className="border rounded p-2 mb-2">
           {templateContent.Arbeitszeit ? (
             <ArbeitszeiteingabePanel
               key={`${templateId}-arbeitszeit`}
@@ -150,9 +151,9 @@ export function AdminProfileTemplateContentEditor({
               onChange={onUpdateArbeitszeit}
             />
           ) : (
-            <div class="d-flex justify-content-between align-items-center">
-              <small class="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
-              <button class="btn btn-sm btn-outline-secondary" onClick={onEnableArbeitszeit} disabled={isSaving}>
+            <div className="d-flex justify-content-between align-items-center">
+              <small className="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
+              <button className="btn btn-sm btn-outline-secondary" onClick={onEnableArbeitszeit} disabled={isSaving}>
                 Arbeitszeit aktivieren
               </button>
             </div>
@@ -161,11 +162,11 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Fahrzeit' && (
-        <div class="border rounded p-2 mb-2">
-          <div class="d-flex justify-content-between align-items-center mb-1">
-            <label class="form-label small fw-semibold mb-0">Fahrzeit-Einträge</label>
+        <div className="border rounded p-2 mb-2">
+          <div className="d-flex justify-content-between align-items-center mb-1">
+            <label className="form-label small fw-semibold mb-0">Fahrzeit-Einträge</label>
             <button
-              class="btn btn-sm btn-outline-secondary"
+              className="btn btn-sm btn-outline-secondary"
               onClick={onAddFahrzeitRow}
               disabled={isSaving}
               data-disabler
@@ -173,47 +174,47 @@ export function AdminProfileTemplateContentEditor({
               Zeile hinzufügen
             </button>
           </div>
-          <div class="d-flex flex-column gap-2">
+          <div className="d-flex flex-column gap-2">
             {templateContent.Fahrzeit.length === 0 && (
-              <small class="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>
+              <small className="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>
             )}
             {templateContent.Fahrzeit.map((row, index) => (
-              <div class="row g-2 align-items-end" key={`${templateId}-fz-${index}`}>
-                <div class="col-12">
-                  <div class="input-group input-group-sm admin-fahrzeit-input-group">
+              <div className="row g-2 align-items-end" key={`${templateId}-fz-${index}`}>
+                <div className="col-12">
+                  <div className="input-group input-group-sm admin-fahrzeit-input-group">
                     <input
-                      class="form-control admin-fahrzeit-key"
+                      className="form-control admin-fahrzeit-key"
                       placeholder="Key"
                       aria-label="Key"
                       value={row.key}
-                      onInput={e => onUpdateFahrzeitRow(index, 'key', (e.target as HTMLInputElement).value)}
+                      onChange={e => onUpdateFahrzeitRow(index, 'key', (e.target as HTMLInputElement).value)}
                     />
 
                     <input
-                      class="form-control admin-fahrzeit-text"
+                      className="form-control admin-fahrzeit-text"
                       placeholder="Beschreibung"
                       aria-label="Beschreibung"
                       value={row.text}
-                      onInput={e => onUpdateFahrzeitRow(index, 'text', (e.target as HTMLInputElement).value)}
+                      onChange={e => onUpdateFahrzeitRow(index, 'text', (e.target as HTMLInputElement).value)}
                     />
 
                     <input
                       type="time"
-                      class="form-control admin-fahrzeit-value"
+                      className="form-control admin-fahrzeit-value"
                       placeholder="Wert"
                       aria-label="Wert"
                       value={row.value}
-                      onInput={e => onUpdateFahrzeitRow(index, 'value', (e.target as HTMLInputElement).value)}
+                      onChange={e => onUpdateFahrzeitRow(index, 'value', (e.target as HTMLInputElement).value)}
                     />
 
                     <button
-                      class="btn btn-outline-danger"
+                      className="btn btn-outline-danger"
                       onClick={() => onRemoveFahrzeitRow(index)}
                       disabled={isSaving}
                       data-disabler
                     >
-                      <span class="d-none d-sm-inline">Löschen</span>
-                      <span class="d-sm-none">X</span>
+                      <span className="d-none d-sm-inline">Löschen</span>
+                      <span className="d-sm-none">X</span>
                     </button>
                   </div>
                 </div>
@@ -224,11 +225,11 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'VorgabenB' && (
-        <div class="border rounded p-2 mb-2">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <label class="form-label small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
+        <div className="border rounded p-2 mb-2">
+          <div className="d-flex justify-content-between align-items-center mb-2">
+            <label className="form-label small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
             <button
-              class="btn btn-sm btn-outline-secondary"
+              className="btn btn-sm btn-outline-secondary"
               onClick={onAddVorgabenBRow}
               disabled={isSaving}
               data-disabler
@@ -238,7 +239,7 @@ export function AdminProfileTemplateContentEditor({
           </div>
 
           {templateContent.VorgabenB.length === 0 && (
-            <small class="text-body-secondary">Keine VorgabenB-Einträge vorhanden.</small>
+            <small className="text-body-secondary">Keine VorgabenB-Einträge vorhanden.</small>
           )}
 
           {templateContent.VorgabenB.length > 0 &&
@@ -248,35 +249,35 @@ export function AdminProfileTemplateContentEditor({
               const row = templateContent.VorgabenB[currentIndex];
 
               return (
-                <div class="d-flex flex-column gap-2">
-                  <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                    <div class="btn-group btn-group-sm" role="group" aria-label="VorgabenB Navigation">
+                <div className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <div className="btn-group btn-group-sm" role="group" aria-label="VorgabenB Navigation">
                       <button
-                        class="btn btn-outline-secondary"
+                        className="btn btn-outline-secondary"
                         onClick={() => onSelectVorgabenBRow(currentIndex - 1)}
                         disabled={isSaving || currentIndex <= 0}
                       >
                         Zurück
                       </button>
                       <button
-                        class="btn btn-outline-secondary"
+                        className="btn btn-outline-secondary"
                         onClick={() => onSelectVorgabenBRow(currentIndex + 1)}
                         disabled={isSaving || currentIndex >= maxIndex}
                       >
                         Weiter
                       </button>
                     </div>
-                    <small class="text-body-secondary">
+                    <small className="text-body-secondary">
                       Vorgabe {currentIndex + 1} von {templateContent.VorgabenB.length}
                     </small>
                   </div>
 
-                  <div class="input-group input-group-sm">
-                    <span class="input-group-text">Auswahl</span>
+                  <div className="input-group input-group-sm">
+                    <span className="input-group-text">Auswahl</span>
                     <select
-                      class="form-select"
+                      className="form-select"
                       value={currentIndex}
-                      onInput={e => onSelectVorgabenBRow(Number((e.target as HTMLSelectElement).value))}
+                      onChange={e => onSelectVorgabenBRow(Number((e.target as HTMLSelectElement).value))}
                     >
                       {templateContent.VorgabenB.map((item, index) => (
                         <option key={`${templateId}-vb-select-${index}`} value={index}>
@@ -287,16 +288,16 @@ export function AdminProfileTemplateContentEditor({
                     </select>
                   </div>
 
-                  <div class="border rounded p-2" key={`${templateId}-vb-${currentIndex}`}>
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <strong class="small d-flex align-items-center gap-2">
-                        <span class="badge text-bg-secondary">#{currentIndex + 1}</span>
+                  <div className="border rounded p-2" key={`${templateId}-vb-${currentIndex}`}>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <strong className="small d-flex align-items-center gap-2">
+                        <span className="badge text-bg-secondary">#{currentIndex + 1}</span>
                         {row.value.Name ? ` - ${row.value.Name}` : ''}
-                        {row.value.standard && <span class="badge text-bg-success">Standard</span>}
+                        {row.value.standard && <span className="badge text-bg-success">Standard</span>}
                       </strong>
-                      <div class="d-flex gap-1">
+                      <div className="d-flex gap-1">
                         <button
-                          class="btn btn-sm btn-outline-secondary"
+                          className="btn btn-sm btn-outline-secondary"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'up')}
                           disabled={isSaving || currentIndex === 0}
                           title="Nach oben"
@@ -304,7 +305,7 @@ export function AdminProfileTemplateContentEditor({
                           ↑
                         </button>
                         <button
-                          class="btn btn-sm btn-outline-secondary"
+                          className="btn btn-sm btn-outline-secondary"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'down')}
                           disabled={isSaving || currentIndex === templateContent.VorgabenB.length - 1}
                           title="Nach unten"
@@ -313,7 +314,7 @@ export function AdminProfileTemplateContentEditor({
                         </button>
                         {!row.value.standard && (
                           <button
-                            class="btn btn-sm btn-outline-success"
+                            className="btn btn-sm btn-outline-success"
                             onClick={() => onSetVorgabenBStandard(currentIndex)}
                             disabled={isSaving}
                           >
@@ -321,7 +322,7 @@ export function AdminProfileTemplateContentEditor({
                           </button>
                         )}
                         <button
-                          class="btn btn-sm btn-outline-danger"
+                          className="btn btn-sm btn-outline-danger"
                           onClick={() => onRemoveVorgabenBRow(currentIndex)}
                           disabled={isSaving}
                           data-disabler
@@ -331,13 +332,13 @@ export function AdminProfileTemplateContentEditor({
                       </div>
                     </div>
 
-                    <div class="row g-2 mb-2">
-                      <div class="col-12">
-                        <label class="form-label small mb-1">Bezeichnung</label>
+                    <div className="row g-2 mb-2">
+                      <div className="col-12">
+                        <label className="form-label small mb-1">Bezeichnung</label>
                         <input
-                          class="form-control form-control-sm"
+                          className="form-control form-control-sm"
                           value={row.value.Name}
-                          onInput={e =>
+                          onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
                               ...current,
                               value: { ...current.value, Name: (e.target as HTMLInputElement).value },
@@ -374,14 +375,14 @@ export function AdminProfileTemplateContentEditor({
                       }
                     />
 
-                    <div class="row g-2 mb-2">
-                      <div class="col-12 col-lg-6">
-                        <label class="form-label small mb-1">Beginn Bereitschaft</label>
+                    <div className="row g-2 mb-2">
+                      <div className="col-12 col-lg-6">
+                        <label className="form-label small mb-1">Beginn Bereitschaft</label>
                         <input
                           type="time"
-                          class="form-control form-control-sm"
+                          className="form-control form-control-sm"
                           value={row.value.beginnB.zeit}
-                          onInput={e =>
+                          onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
                               ...current,
                               value: {
@@ -395,13 +396,13 @@ export function AdminProfileTemplateContentEditor({
                           }
                         />
                       </div>
-                      <div class="col-12 col-lg-6">
-                        <label class="form-label small mb-1">Ende Bereitschaft</label>
+                      <div className="col-12 col-lg-6">
+                        <label className="form-label small mb-1">Ende Bereitschaft</label>
                         <input
                           type="time"
-                          class="form-control form-control-sm"
+                          className="form-control form-control-sm"
                           value={row.value.endeB.zeit}
-                          onInput={e =>
+                          onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
                               ...current,
                               value: {
@@ -417,17 +418,17 @@ export function AdminProfileTemplateContentEditor({
                       </div>
                     </div>
 
-                    <div class="mb-2">
-                      <label class="form-label small mb-1">Aktive Schichten</label>
-                      <div class="d-flex flex-wrap gap-3">
+                    <div className="mb-2">
+                      <label className="form-label small mb-1">Aktive Schichten</label>
+                      <div className="d-flex flex-wrap gap-3">
                         {SCHICHT_OPTIONEN.map(({ typ, label }) => (
-                          <label key={typ} class="form-check m-0">
+                          <label key={typ} className="form-check m-0">
                             <input
-                              class="form-check-input me-1"
+                              className="form-check-input me-1"
                               type="checkbox"
                               checked={row.value.schichten.includes(typ)}
                               disabled={typ === 'frueh' || isSaving}
-                              onInput={e => {
+                              onChange={e => {
                                 const checked = (e.target as HTMLInputElement).checked;
                                 onUpdateVorgabenBRow(currentIndex, current => {
                                   const schichten = checked
@@ -461,7 +462,7 @@ export function AdminProfileTemplateContentEditor({
                                 });
                               }}
                             />
-                            <span class="form-check-label">{label}</span>
+                            <span className="form-check-label">{label}</span>
                           </label>
                         ))}
                       </div>
@@ -496,14 +497,14 @@ export function AdminProfileTemplateContentEditor({
                           }
                         />
 
-                        <div class="row g-2 mb-2">
-                          <div class="col-12 col-lg-6">
-                            <label class="form-label small mb-1">Beginn Nachtschicht</label>
+                        <div className="row g-2 mb-2">
+                          <div className="col-12 col-lg-6">
+                            <label className="form-label small mb-1">Beginn Nachtschicht</label>
                             <input
                               type="time"
-                              class="form-control form-control-sm"
+                              className="form-control form-control-sm"
                               value={row.value.beginnN.zeit}
-                              onInput={e =>
+                              onChange={e =>
                                 onUpdateVorgabenBRow(currentIndex, current => ({
                                   ...current,
                                   value: {
@@ -517,13 +518,13 @@ export function AdminProfileTemplateContentEditor({
                               }
                             />
                           </div>
-                          <div class="col-12 col-lg-6">
-                            <label class="form-label small mb-1">Ende Nachtschicht</label>
+                          <div className="col-12 col-lg-6">
+                            <label className="form-label small mb-1">Ende Nachtschicht</label>
                             <input
                               type="time"
-                              class="form-control form-control-sm"
+                              className="form-control form-control-sm"
                               value={row.value.endeN.zeit}
-                              onInput={e =>
+                              onChange={e =>
                                 onUpdateVorgabenBRow(currentIndex, current => ({
                                   ...current,
                                   value: {
@@ -540,7 +541,7 @@ export function AdminProfileTemplateContentEditor({
                         </div>
                       </>
                     ) : (
-                      <div class="small text-body-secondary mb-2">Keine Nachtschicht aktiviert.</div>
+                      <div className="small text-body-secondary mb-2">Keine Nachtschicht aktiviert.</div>
                     )}
                   </div>
                 </div>
@@ -550,36 +551,36 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Einstellungen' && (
-        <div class="border rounded p-2">
-          <div class="mb-2">
-            <label class="form-label small mb-1">Sichtbare Bereiche</label>
-            <div class="d-flex flex-wrap gap-2">
+        <div className="border rounded p-2">
+          <div className="mb-2">
+            <label className="form-label small mb-1">Sichtbare Bereiche</label>
+            <div className="d-flex flex-wrap gap-2">
               {TAB_OPTIONS.map(option => (
-                <label class="form-check m-0" key={`${templateId}-tab-${option.key}`}>
+                <label className="form-check m-0" key={`${templateId}-tab-${option.key}`}>
                   <input
-                    class="form-check-input me-1"
+                    className="form-check-input me-1"
                     type="checkbox"
                     checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
-                    onInput={() => onToggleAktivierterTab(option.key)}
+                    onChange={() => onToggleAktivierterTab(option.key)}
                   />
-                  <span class="form-check-label">{option.label}</span>
+                  <span className="form-check-label">{option.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div>
-            <label class="form-label small mb-1">Benötigte Zulagen</label>
-            <div class="d-flex flex-wrap gap-2">
+            <label className="form-label small mb-1">Benötigte Zulagen</label>
+            <div className="d-flex flex-wrap gap-2">
               {ZULAGEN_CATALOG.map(zulage => (
-                <label class="form-check m-0" key={`${templateId}-zulage-${zulage.code}`}>
+                <label className="form-check m-0" key={`${templateId}-zulage-${zulage.code}`}>
                   <input
-                    class="form-check-input me-1"
+                    className="form-check-input me-1"
                     type="checkbox"
                     checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
-                    onInput={() => onToggleZulage(zulage.code)}
+                    onChange={() => onToggleZulage(zulage.code)}
                   />
-                  <span class="form-check-label">{zulage.code}</span>
+                  <span className="form-check-label">{zulage.code}</span>
                 </label>
               ))}
             </div>

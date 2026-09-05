@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../../../reactRender';
+
 import { WertVorschau } from '@/features/Admin/components/FormularEditor/WertVorschau';
 
 function renderWertVorschau(text: string): HTMLDivElement {

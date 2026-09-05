@@ -1,14 +1,14 @@
 import type { Dayjs } from 'dayjs';
-import type { FunctionalComponent, GenericEventHandler, RefObject } from 'preact';
+import { type FC, type ChangeEventHandler, type RefObject } from 'react';
 
 type TMySelect = {
-  myRef?: RefObject<HTMLSelectElement>;
+  myRef?: RefObject<HTMLSelectElement | null>;
   id: string;
   title: string;
   value?: string | number | Dayjs;
   className: string;
   required?: boolean;
-  changeHandler?: GenericEventHandler<HTMLSelectElement>;
+  changeHandler?: ChangeEventHandler<HTMLSelectElement>;
   options: {
     value?: string | number;
     text: string;
@@ -18,17 +18,13 @@ type TMySelect = {
   }[];
 };
 
-const MySelect: FunctionalComponent<TMySelect> = ({
-  myRef,
-  className,
-  options,
-  changeHandler,
-  title,
-  value,
-  id,
-  ...selectProps
-}) => {
-  value = typeof value === 'object' ? value?.toString() : value;
+const MySelect: FC<TMySelect> = ({ myRef, className, options, changeHandler, title, value, id, ...selectProps }) => {
+  const wert = typeof value === 'object' ? value?.toString() : value;
+  // React kennt nur "controlled" (value + onChange) oder "uncontrolled" (defaultValue). Ohne
+  // Handler waere `value` ein schreibgeschuetztes Feld -- die Aufrufer nutzen das Feld aber als
+  // Vorbelegung und lesen den Wert spaeter per Ref aus (Preact-Verhalten).
+  const vorauswahl = wert ?? options.find(o => o.selected)?.value ?? undefined;
+  const gesteuert = changeHandler !== undefined && wert !== undefined;
 
   return (
     <div className={className}>
@@ -36,17 +32,12 @@ const MySelect: FunctionalComponent<TMySelect> = ({
         ref={myRef}
         id={id}
         className="form-select validate"
-        onInput={changeHandler}
-        value={value}
+        onChange={changeHandler}
+        {...(gesteuert ? { value: wert } : { defaultValue: vorauswahl })}
         {...selectProps}
       >
         {options.map(optionObject => (
-          <option
-            key={optionObject.text}
-            value={optionObject.value ?? ''}
-            disabled={optionObject.disabled}
-            selected={optionObject.selected}
-          >
+          <option key={optionObject.text} value={optionObject.value ?? ''} disabled={optionObject.disabled}>
             {optionObject.text}
           </option>
         ))}

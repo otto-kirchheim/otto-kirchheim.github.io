@@ -1,5 +1,5 @@
+import { huelleMock, inputMock } from './reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h } from 'preact';
 
 const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInstanceMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -13,9 +13,9 @@ const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInsta
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
-  MyFormModal: (props: Record<string, unknown>) => h('div', props),
-  MyModalBody: (props: Record<string, unknown>) => h('div', props),
-  MyInput: (props: Record<string, unknown>) => h('input', props),
+  MyFormModal: huelleMock,
+  MyModalBody: huelleMock,
+  MyInput: inputMock,
 }));
 
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({

@@ -1,4 +1,4 @@
-import type { FunctionalComponent, MouseEventHandler } from 'preact';
+import { type FC, type MouseEventHandler } from 'react';
 
 type TMyButton = {
   id?: string;
@@ -11,7 +11,7 @@ type TMyButton = {
   clickHandler?: MouseEventHandler<HTMLButtonElement>;
 };
 
-const MyButton: FunctionalComponent<TMyButton> = ({
+const MyButton: FC<TMyButton> = ({
   id,
   type = 'button',
   className = 'btn btn-primary',

@@ -1,4 +1,5 @@
-import { render } from 'preact';
+import { mount } from '@/infrastructure/ui';
+
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
@@ -16,16 +17,16 @@ interface IBerechnungMobileCardsProps {
 }
 
 const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
-  <div class="d-flex justify-content-between gap-2 py-1 ps-3 berechnung-card-zeile">
-    <span class="text-start">{label}</span>
-    <span class="text-end text-nowrap">{wert}</span>
+  <div className="d-flex justify-content-between gap-2 py-1 ps-3 berechnung-card-zeile">
+    <span className="text-start">{label}</span>
+    <span className="text-end text-nowrap">{wert}</span>
   </div>
 );
 
 const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null }) => (
-  <div class="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
-    <span class="text-start">{titel}</span>
-    <span class="text-end text-nowrap">{summe === null ? '' : formatCurrency(summe)}</span>
+  <div className="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
+    <span className="text-start">{titel}</span>
+    <span className="text-end text-nowrap">{summe === null ? '' : formatCurrency(summe)}</span>
   </div>
 );
 
@@ -71,15 +72,15 @@ function MonatsKarte({
       )) ?? [];
 
   return (
-    <div class="accordion-item">
-      <h2 class="accordion-header">
+    <div className="accordion-item">
+      <h2 className="accordion-header">
         <button
-          class={`accordion-button${offen ? '' : ' collapsed'}`}
+          className={`accordion-button${offen ? '' : ' collapsed'}`}
           type="button"
           data-bs-toggle="collapse"
           data-bs-target={`#${collapseId}`}
         >
-          <span class="d-flex justify-content-between w-100 me-2">
+          <span className="d-flex justify-content-between w-100 me-2">
             <span>{monatsName}</span>
             <span>{ergebnis.summeGesamt === null ? '' : formatCurrency(ergebnis.summeGesamt)}</span>
           </span>
@@ -87,10 +88,10 @@ function MonatsKarte({
       </h2>
       <div
         id={collapseId}
-        class={`accordion-collapse collapse${offen ? ' show' : ''}`}
+        className={`accordion-collapse collapse${offen ? ' show' : ''}`}
         data-bs-parent="#accordionBerechnung"
       >
-        <div class="accordion-body py-2">
+        <div className="accordion-body py-2">
           {zeigeGruppe('bereitschaft') && (
             <>
               <GruppenTitel titel="Bereitschaft" summe={ergebnis.summeBereitschaft} />
@@ -134,9 +135,9 @@ function MonatsKarte({
             </>
           )}
           {zeigeGruppe('ea') && ergebnis.eaMinuten !== null && (
-            <div class="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
-              <span class="text-start">Entgeltausgleich</span>
-              <span class="text-end text-nowrap">{timeConvert(ergebnis.eaMinuten)}</span>
+            <div className="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
+              <span className="text-start">Entgeltausgleich</span>
+              <span className="text-end text-nowrap">{timeConvert(ergebnis.eaMinuten)}</span>
             </div>
           )}
           <GruppenTitel titel="Gesamt" summe={ergebnis.summeGesamt} />
@@ -152,7 +153,7 @@ const BerechnungMobileCards = ({
   zulagenBreakdown,
   offenerMonat,
 }: IBerechnungMobileCardsProps) => (
-  <div class="accordion" id="accordionBerechnung">
+  <div className="accordion" id="accordionBerechnung">
     {monatsErgebnisse.map(ergebnis => (
       <MonatsKarte
         key={ergebnis.monat}
@@ -175,14 +176,14 @@ export function mountBerechnungMobileCards(
 
   const aktuellerMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
 
-  render(
+  mount(
+    container,
     <BerechnungMobileCards
       monatsErgebnisse={monatsErgebnisse}
       aktivierteTabs={aktivierteTabs}
       zulagenBreakdown={zulagenBreakdown}
       offenerMonat={aktuellerMonat}
     />,
-    container,
   );
 }
 

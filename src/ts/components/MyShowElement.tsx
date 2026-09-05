@@ -1,5 +1,5 @@
 import type { Dayjs } from 'dayjs';
-import type { FunctionalComponent } from 'preact';
+import { type FC } from 'react';
 
 type TMyShowElement = {
   divClass?: string;
@@ -10,7 +10,7 @@ type TMyShowElement = {
   text?: string | number | Date | Dayjs;
 };
 
-const MyShowElement: FunctionalComponent<TMyShowElement> = ({
+const MyShowElement: FC<TMyShowElement> = ({
   divClass = 'mb-1 row',
   labelClass = 'col-3 col-form-label text-wrap fw-bold',
   spanClass = 'col-9 align-middle text-break my-auto',

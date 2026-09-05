@@ -1,5 +1,5 @@
-import { type JSX } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { type JSX, useEffect, useRef, useState } from 'react';
+
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
@@ -69,19 +69,19 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
 
   return (
     <div>
-      <table class="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">
+      <table className="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">
         <thead>
-          <tr class="table-primary align-middle text-center">
+          <tr className="table-primary align-middle text-center">
             <th id="titelTkgSt">Tätigkeitsstätte</th>
-            <th class="w40">Beschreibung</th>
-            <th class="w20">Fahrzeit</th>
-            <th class="fahrzeiten-aktionen-spalte">Aktionen</th>
+            <th className="w40">Beschreibung</th>
+            <th className="w20">Fahrzeit</th>
+            <th className="fahrzeiten-aktionen-spalte">Aktionen</th>
           </tr>
         </thead>
         <tbody ref={tbodyRef}>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={4} class="text-body-secondary text-center">
+              <td colSpan={4} className="text-body-secondary text-center">
                 Keine Fahrzeiten hinterlegt.
               </td>
             </tr>
@@ -96,51 +96,51 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
               <tr key={index} data-row-index={index}>
                 {fields.map(field => (
                   <td key={field}>
-                    <div class="input-group input-group-sm input-group-mobile-fahrzeit">
-                      <span class="input-group-text d-md-none">{FIELD_LABELS[field]}</span>
+                    <div className="input-group input-group-sm input-group-mobile-fahrzeit">
+                      <span className="input-group-text d-md-none">{FIELD_LABELS[field]}</span>
                       <input
                         type={field === 'value' ? 'time' : 'text'}
-                        class={`form-control text-center${
+                        className={`form-control text-center${
                           hasContent && field !== 'text' && row[field] === '' ? ' is-invalid' : ''
                         }`}
                         aria-label={FIELD_LABELS[field]}
                         placeholder={field === 'text' ? 'optional' : undefined}
                         value={row[field]}
-                        onInput={e => updateRow(index, field, (e.target as HTMLInputElement).value)}
+                        onChange={e => updateRow(index, field, (e.target as HTMLInputElement).value)}
                       />
                     </div>
                   </td>
                 ))}
-                <td class="text-center align-middle">
-                  <div class="btn-group btn-group-sm fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
+                <td className="text-center align-middle">
+                  <div className="btn-group btn-group-sm fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
                     <button
                       type="button"
-                      class="btn btn-outline-secondary"
+                      className="btn btn-outline-secondary"
                       onClick={() => moveRow(index, 'up')}
                       disabled={index === 0}
                       title="Nach oben"
                       aria-label="Nach oben verschieben"
                     >
-                      <span class="material-icons-round small-icons">arrow_upward</span>
+                      <span className="material-icons-round small-icons">arrow_upward</span>
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline-secondary"
+                      className="btn btn-outline-secondary"
                       onClick={() => moveRow(index, 'down')}
                       disabled={index === rows.length - 1}
                       title="Nach unten"
                       aria-label="Nach unten verschieben"
                     >
-                      <span class="material-icons-round small-icons">arrow_downward</span>
+                      <span className="material-icons-round small-icons">arrow_downward</span>
                     </button>
                     <button
                       type="button"
-                      class="btn btn-outline-danger"
+                      className="btn btn-outline-danger"
                       onClick={() => removeRow(index)}
                       title="Zeile löschen"
                       aria-label="Zeile löschen"
                     >
-                      <span class="material-icons-round small-icons">delete</span>
+                      <span className="material-icons-round small-icons">delete</span>
                     </button>
                   </div>
                 </td>
@@ -149,8 +149,12 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
           })}
         </tbody>
       </table>
-      <button type="button" class="btn btn-sm btn-secondary d-flex align-items-center gap-1 mt-md-2" onClick={addRow}>
-        <span class="material-icons-round small-icons">add</span>
+      <button
+        type="button"
+        className="btn btn-sm btn-secondary d-flex align-items-center gap-1 mt-md-2"
+        onClick={addRow}
+      >
+        <span className="material-icons-round small-icons">add</span>
         Zeile hinzufügen
       </button>
     </div>

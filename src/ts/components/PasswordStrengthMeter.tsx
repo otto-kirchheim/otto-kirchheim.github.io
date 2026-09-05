@@ -1,5 +1,5 @@
-import type { RefObject } from 'preact';
-import { Component } from 'preact';
+import { Component, type RefObject } from 'react';
+
 import { getPasswordStrength } from '@/infrastructure/validation/passwordStrength';
 import type { PasswordStrengthLevel } from '@/infrastructure/validation/passwordStrength';
 
@@ -12,7 +12,7 @@ const LEVEL_META: Record<PasswordStrengthLevel, { label: string; barClass: strin
   strong: { label: 'Stark', barClass: 'bg-success', textClass: 'text-success' },
 };
 
-type Props = { passwordInputRef: RefObject<HTMLInputElement> };
+type Props = { passwordInputRef: RefObject<HTMLInputElement | null> };
 type State = { level: PasswordStrengthLevel | null };
 
 export default class PasswordStrengthMeter extends Component<Props, State> {

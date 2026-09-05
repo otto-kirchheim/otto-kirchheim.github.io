@@ -1,6 +1,14 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { Fragment, createRef, type FunctionalComponent } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import {
+  createRef,
+  type FC,
+  type SubmitEvent,
+  Fragment,
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useState,
+} from 'react';
+
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
@@ -67,7 +75,7 @@ type WeekdayRangeSelectorProps = {
   initialEnd: vorgabenBElement;
 };
 
-const WeekdayRangeSelector: FunctionalComponent<WeekdayRangeSelectorProps> = ({
+const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
   startId,
   endId,
   label,
@@ -102,7 +110,7 @@ const WeekdayRangeSelector: FunctionalComponent<WeekdayRangeSelectorProps> = ({
     setAwaitingEndSelection(false);
   };
 
-  const handlePointerDown = (event: PointerEvent, slot: number): void => {
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slot: number): void => {
     if (event.pointerType === 'mouse') {
       const normalizedAnchor = startHasNwoche ? slot : slot % 7;
       setStartSlot(normalizedAnchor);
@@ -181,8 +189,8 @@ const WeekdayRangeSelector: FunctionalComponent<WeekdayRangeSelectorProps> = ({
         })}
       </div>
 
-      <input type="hidden" id={`${startId}Tag`} value={startValue.tag} />
-      <input type="hidden" id={`${endId}Tag`} value={endValue.tag} />
+      <input type="hidden" id={`${startId}Tag`} value={startValue.tag} readOnly />
+      <input type="hidden" id={`${endId}Tag`} value={endValue.tag} readOnly />
       {startHasNwoche ? (
         <input type="checkbox" id={`${startId}Nwoche`} checked={startNwocheState} hidden readOnly />
       ) : null}
@@ -274,7 +282,7 @@ type SchichtenConfigSectionProps = {
   nachtEnde: vorgabenBElement;
 };
 
-const SchichtenConfigSection: FunctionalComponent<SchichtenConfigSectionProps> = ({
+const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
   aZ,
   initialSchichten,
   initialOverrides,
@@ -419,8 +427,8 @@ export default function EditorModalVE(
 
   modal.row = row;
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();

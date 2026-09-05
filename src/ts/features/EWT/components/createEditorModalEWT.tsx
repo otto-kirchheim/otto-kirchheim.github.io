@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import { Row } from '@/infrastructure/table/CustomTable';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -276,8 +277,8 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
   modal.row = row;
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       event.preventDefault();
       clearZeitfehler();
 

@@ -1,4 +1,5 @@
-import type { JSX } from 'preact';
+import { type JSX } from 'react';
+
 import type { Column, Row } from '@/infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
 import { createShowElement3, createTagElement, getColumn } from '@/components/showModalHelpers';

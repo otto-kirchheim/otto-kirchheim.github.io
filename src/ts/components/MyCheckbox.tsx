@@ -1,26 +1,30 @@
-import type { ComponentChild, FunctionalComponent, GenericEventHandler, Ref } from 'preact';
+import { type FC, type ChangeEventHandler, type ReactNode, type Ref } from 'react';
 
 type TMyCheckbox = {
   className: string;
   id: string;
-  children: ComponentChild;
+  children: ReactNode;
   checked?: boolean;
   disabled?: boolean;
   myRef?: Ref<HTMLInputElement>;
-  changeHandler?: GenericEventHandler<HTMLInputElement>;
+  changeHandler?: ChangeEventHandler<HTMLInputElement>;
 };
 
-const MyCheckbox: FunctionalComponent<TMyCheckbox> = ({
-  className,
-  changeHandler,
-  children,
-  id,
-  myRef,
-  ...inputProps
-}) => {
+const MyCheckbox: FC<TMyCheckbox> = ({ className, changeHandler, children, id, myRef, checked, ...inputProps }) => {
+  // Ohne Handler ist `checked` in React schreibgeschuetzt; die Aufrufer meinen eine Vorbelegung.
+  const zustand = changeHandler ? { checked } : { defaultChecked: checked };
+
   return (
     <div className={className}>
-      <input type="checkbox" className="form-check-input" id={id} onInput={changeHandler} ref={myRef} {...inputProps} />
+      <input
+        type="checkbox"
+        className="form-check-input"
+        id={id}
+        onChange={changeHandler}
+        ref={myRef}
+        {...zustand}
+        {...inputProps}
+      />
       <label className="form-check-label" htmlFor={id}>
         {children}
       </label>

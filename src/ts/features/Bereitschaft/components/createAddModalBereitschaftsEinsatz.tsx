@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
@@ -124,8 +125,8 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   });
   modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
 
-  function onSubmit(): (event: Event) => void {
-    return async (event: Event): Promise<void> => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();

@@ -1,9 +1,10 @@
 import Popover from 'bootstrap/js/dist/popover';
-import type { RefObject } from 'preact';
-import { Component, createRef } from 'preact';
+import { Component, createRef, type ChangeEventHandler, type ReactNode, type RefObject } from 'react';
 
 type TModalBodyInputElementOption = {
-  myRef?: RefObject<HTMLInputElement>;
+  /** React 19 vererbt `children` nicht mehr implizit (Preact tat das). */
+  children?: ReactNode;
+  myRef?: RefObject<HTMLInputElement | null>;
   type: string;
   id: string;
   name: string;
@@ -29,7 +30,7 @@ type TModalBodyInputElementOption = {
   minLength?: number | string;
   maxLength?: number | string;
   list?: string;
-  onInput?: (this: HTMLInputElement, ev: Event) => void;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
   invalidFeedbackId?: string;
   invalidFeedbackText?: string;
 };
@@ -38,7 +39,7 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
   fallbackInputRef = createRef<HTMLInputElement>();
   popoverInstance: Popover | null = null;
 
-  get inputRef(): RefObject<HTMLInputElement> {
+  get inputRef(): RefObject<HTMLInputElement | null> {
     return this.props.myRef ?? this.fallbackInputRef;
   }
 
@@ -76,11 +77,16 @@ export default class MyInput extends Component<TModalBodyInputElementOption> {
       ...inputProps
     } = this.props;
 
+    const { dataZulageInputCode, minLength, maxLength, value, onChange, ...restInputProps } = inputProps;
+    // Ohne `onChange` waere `value` in React ein schreibgeschuetztes Feld. Die Modals nutzen das
+    // Feld als Vorbelegung und lesen den Endwert per Ref aus dem DOM -- das ist `defaultValue`.
+    const wert = onChange ? { value, onChange } : { defaultValue: value };
     const normalizedInputProps = {
-      ...inputProps,
-      'data-zulage-input-code': inputProps.dataZulageInputCode,
-      minLength: typeof inputProps.minLength === 'string' ? Number(inputProps.minLength) : inputProps.minLength,
-      maxLength: typeof inputProps.maxLength === 'string' ? Number(inputProps.maxLength) : inputProps.maxLength,
+      ...restInputProps,
+      ...wert,
+      'data-zulage-input-code': dataZulageInputCode,
+      minLength: typeof minLength === 'string' ? Number(minLength) : minLength,
+      maxLength: typeof maxLength === 'string' ? Number(maxLength) : maxLength,
     };
 
     return (

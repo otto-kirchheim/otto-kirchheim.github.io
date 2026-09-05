@@ -1,4 +1,5 @@
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
@@ -166,8 +167,8 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
   });
   modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
       addNebengeldTag(form, tableN);

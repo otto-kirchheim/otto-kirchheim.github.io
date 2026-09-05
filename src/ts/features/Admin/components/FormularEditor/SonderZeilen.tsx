@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+
 import type {
   Ausrichtung,
   FormatName,
@@ -52,9 +53,9 @@ function SonderZeileName({
   const [entwurf, setEntwurf] = useState(name);
   return (
     <input
-      class="form-control form-control-sm fw-semibold flex-grow-1"
+      className="form-control form-control-sm fw-semibold flex-grow-1"
       value={entwurf}
-      onInput={e => setEntwurf((e.target as HTMLInputElement).value)}
+      onChange={e => setEntwurf((e.target as HTMLInputElement).value)}
       onKeyDown={e => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       }}
@@ -113,16 +114,16 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
   }
 
   return (
-    <div class="mb-2">
-      <div class="d-flex align-items-center gap-1 mb-1">
-        <span class="small fw-semibold flex-grow-1">Sonderzeilen (Überschrift/Summe über mehrere Spalten)</span>
+    <div className="mb-2">
+      <div className="d-flex align-items-center gap-1 mb-1">
+        <span className="small fw-semibold flex-grow-1">Sonderzeilen (Überschrift/Summe über mehrere Spalten)</span>
       </div>
 
       {zeilen.map(([name, zeile], zeileIndex) => {
         const rows = zeilenFuerUeber(zeile.ueber ?? '$alle', tabelleName, vorschau.kontext);
         return (
-          <div key={zeileIndex} class="border rounded p-2 mb-1 bg-body">
-            <div class="d-flex align-items-center gap-1 mb-1">
+          <div key={zeileIndex} className="border rounded p-2 mb-1 bg-body">
+            <div className="d-flex align-items-center gap-1 mb-1">
               <SonderZeileName
                 name={name}
                 vergeben={zeilen.map(([n]) => n).filter(n => n !== name)}
@@ -130,20 +131,20 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
               />
               <button
                 type="button"
-                class="btn btn-sm btn-outline-danger py-0"
+                className="btn btn-sm btn-outline-danger py-0"
                 onClick={() => setzeZeile(name, undefined)}
                 title="Sonderzeile löschen"
               >
-                <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+                <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
                   delete
                 </span>
               </button>
             </div>
 
-            <div class="row g-1 mb-1">
-              <div class="col-12">
+            <div className="row g-1 mb-1">
+              <div className="col-12">
                 <select
-                  class="form-select form-select-sm"
+                  className="form-select form-select-sm"
                   title="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
                   value={zeile.ueber ?? '$alle'}
                   onChange={e => setzeZeile(name, { ...zeile, ueber: (e.target as HTMLSelectElement).value })}
@@ -165,14 +166,14 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                 ? sonderZeileZelleWert(zelle, spalte, tabelleName, rows, vorschau.daten, vorschau.kontext)
                 : undefined;
               return (
-                <div key={index} class="row g-1 mb-1 align-items-center">
+                <div key={index} className="row g-1 mb-1 align-items-center">
                   {/* Was: welche Spalte, welcher Wert. */}
-                  <div class="col-4 small text-truncate" title={bezeichnung}>
+                  <div className="col-4 small text-truncate" title={bezeichnung}>
                     {bezeichnung}
                   </div>
-                  <div class="col-8">
+                  <div className="col-8">
                     <select
-                      class="form-select form-select-sm"
+                      className="form-select form-select-sm"
                       value={zelle?.art ?? ''}
                       onChange={e => {
                         const v = (e.target as HTMLSelectElement).value;
@@ -196,9 +197,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                   {zelle && (
                     <>
                       {/* Format: wie der Wert dieser Zelle angezeigt wird. */}
-                      <div class="col-12 mt-1">
+                      <div className="col-12 mt-1">
                         <select
-                          class="form-select form-select-sm"
+                          className="form-select form-select-sm"
                           title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
                           value={zelle.format ?? ''}
                           onChange={e =>
@@ -217,22 +218,22 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                       </div>
 
                       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen. */}
-                      <div class="col-3 mt-1">
+                      <div className="col-3 mt-1">
                         <input
                           type="number"
-                          class="form-control form-control-sm"
+                          className="form-control form-control-sm"
                           title="Schriftgröße dieser Zelle -- ohne Angabe gilt die Größe der Spalte"
                           placeholder={`Größe (Spalte: ${spalte.size})`}
                           value={zelle.size ?? ''}
-                          onInput={e => {
+                          onChange={e => {
                             const v = (e.target as HTMLInputElement).value;
                             setzeZelle(name, zeile, index, { ...zelle, size: v === '' ? undefined : Number(v) });
                           }}
                         />
                       </div>
-                      <div class="col-3 mt-1 form-check mb-0">
+                      <div className="col-3 mt-1 form-check mb-0">
                         <input
-                          class="form-check-input"
+                          className="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.fett)}
                           onChange={e =>
@@ -242,11 +243,11 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                             })
                           }
                         />
-                        <label class="form-check-label small">Fett</label>
+                        <label className="form-check-label small">Fett</label>
                       </div>
-                      <div class="col-3 mt-1 form-check mb-0">
+                      <div className="col-3 mt-1 form-check mb-0">
                         <input
-                          class="form-check-input"
+                          className="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.kursiv)}
                           onChange={e =>
@@ -256,11 +257,11 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                             })
                           }
                         />
-                        <label class="form-check-label small">Kursiv</label>
+                        <label className="form-check-label small">Kursiv</label>
                       </div>
-                      <div class="col-3 mt-1 form-check mb-0">
+                      <div className="col-3 mt-1 form-check mb-0">
                         <input
-                          class="form-check-input"
+                          className="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.unterstrichen)}
                           onChange={e =>
@@ -270,13 +271,13 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                             })
                           }
                         />
-                        <label class="form-check-label small">Unterstr.</label>
+                        <label className="form-check-label small">Unterstr.</label>
                       </div>
 
                       {/* Verhalten: Ausrichtung und Auto-Verkleinerung steuern beide, wie der Text in die Zelle passt. */}
-                      <div class="col-8 mt-1">
+                      <div className="col-8 mt-1">
                         <select
-                          class="form-select form-select-sm"
+                          className="form-select form-select-sm"
                           title="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
                           value={zelle.align ?? ''}
                           onChange={e =>
@@ -292,9 +293,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           <option value="rechts">rechts</option>
                         </select>
                       </div>
-                      <div class="col-4 mt-1 form-check mb-0">
+                      <div className="col-4 mt-1 form-check mb-0">
                         <input
-                          class="form-check-input"
+                          className="form-check-input"
                           type="checkbox"
                           checked={Boolean(zelle.autoGroesse)}
                           onChange={e =>
@@ -304,12 +305,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                             })
                           }
                         />
-                        <label class="form-check-label small">auto. verkleinern</label>
+                        <label className="form-check-label small">auto. verkleinern</label>
                       </div>
                     </>
                   )}
                   {zelle && (
-                    <div class="col-12">
+                    <div className="col-12">
                       <WertVorschau text={vorschauText ?? ''} />
                     </div>
                   )}
@@ -320,7 +321,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
         );
       })}
 
-      <button type="button" class="btn btn-sm btn-outline-secondary" onClick={neueZeile}>
+      <button type="button" className="btn btn-sm btn-outline-secondary" onClick={neueZeile}>
         + Sonderzeile
       </button>
     </div>

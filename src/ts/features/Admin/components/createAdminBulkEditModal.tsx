@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState } from 'react';
+
 import { MyDivModal, MyModalBody, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import {

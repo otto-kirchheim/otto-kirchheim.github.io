@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 // --- Hoisted mocks ---
-const { mockRender, mockFetchCurrentAdminCapabilities, mockGetActAsState, mockGetServerUrl } = (
+const { mockMount, mockUnmount, mockFetchCurrentAdminCapabilities, mockGetActAsState, mockGetServerUrl } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
-  mockRender: vi.fn(),
+  mockMount: vi.fn(),
+  mockUnmount: vi.fn(),
   mockFetchCurrentAdminCapabilities: vi.fn(),
   mockGetActAsState: vi.fn(() => ({ active: false })),
   mockGetServerUrl: vi.fn(async () => 'https://example.com/api/v2'),
 }));
 
-vi.mock('preact', () => ({ render: mockRender, h: vi.fn(() => null) }));
-vi.mock('preact/hooks', () => ({ useState: vi.fn((v: unknown) => [v, vi.fn()]), useEffect: vi.fn() }));
+vi.mock('@/infrastructure/ui/reactRoot', () => ({ mount: mockMount, unmount: mockUnmount }));
 vi.mock('@/features/Admin/utils/api', () => ({
   fetchCurrentAdminCapabilities: mockFetchCurrentAdminCapabilities,
 }));
@@ -47,13 +47,13 @@ describe('Admin feature lifecycle registration', () => {
     document.querySelector('#Admin')?.classList.remove('d-none');
     mountAdminTab('AdminUser');
 
-    expect(mockRender).toHaveBeenCalled();
+    expect(mockMount).toHaveBeenCalled();
   });
 
-  it('unmountAdminTab calls render(null) to unmount', () => {
+  it('unmountAdminTab haengt den Admin-Root ab', () => {
     unmountAdminTab();
 
-    expect(mockRender).toHaveBeenCalledWith(null, expect.anything());
+    expect(mockUnmount).toHaveBeenCalledWith(expect.anything());
   });
 
   it('featureLifecycleRegistry handles Admin register/unregister cycle', async () => {
@@ -73,11 +73,11 @@ describe('Admin feature lifecycle registration', () => {
 
     await featureLifecycleRegistry.initializeAll({ isAdmin: true, userName: 'AdminUser' });
     expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(false);
-    expect(mockRender).toHaveBeenCalled();
+    expect(mockMount).toHaveBeenCalled();
 
-    mockRender.mockClear();
+    mockUnmount.mockClear();
     await featureLifecycleRegistry.teardownAll();
-    expect(mockRender).toHaveBeenCalledWith(null, expect.anything());
+    expect(mockUnmount).toHaveBeenCalledWith(expect.anything());
   });
 
   it('register does not mount when isAdmin=false', async () => {
@@ -92,6 +92,6 @@ describe('Admin feature lifecycle registration', () => {
 
     await featureLifecycleRegistry.initializeAll({ isAdmin: false, userName: 'RegularUser' });
     expect(document.querySelector('#admin')?.classList.contains('d-none')).toBe(true);
-    expect(mockRender).not.toHaveBeenCalled();
+    expect(mockMount).not.toHaveBeenCalled();
   });
 });

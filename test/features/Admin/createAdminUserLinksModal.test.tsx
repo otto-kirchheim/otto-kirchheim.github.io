@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h, render } from 'preact';
+import { createElement as h } from 'react';
+import { render } from '../../reactRender';
 
 const { showModalMock, createSnackBarMock, issueVerificationLinkMock, issuePasswordResetLinkMock, writeTextMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
@@ -13,7 +14,7 @@ const { showModalMock, createSnackBarMock, issueVerificationLinkMock, issuePassw
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
-  MyModalHeader: (props: { title: string }) => h('div', { class: 'modal-header-stub' }, props.title),
+  MyModalHeader: (props: { title: string }) => h('div', { className: 'modal-header-stub' }, props.title),
 }));
 
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({

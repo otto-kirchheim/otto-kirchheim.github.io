@@ -1,5 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { render } from 'preact';
+import { klickeCheckbox, render, setzeWert } from '../../../reactRender';
+
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { ListenGruppen } from '@/features/Admin/components/FormularEditor/ListenGruppen';
 
@@ -103,8 +104,7 @@ describe('ListenGruppen', () => {
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
     const schluesselInput = container.querySelectorAll('input.font-monospace')[0] as HTMLInputElement;
-    schluesselInput.value = 'NeuerSchluessel';
-    schluesselInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(schluesselInput, 'NeuerSchluessel');
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(updated.listen?.erschwernis.schluessel).toBe('NeuerSchluessel');
@@ -120,8 +120,7 @@ describe('ListenGruppen', () => {
     const auswahlInput = container.querySelector(
       'input[placeholder="Schlüssel, durch Komma getrennt"]',
     ) as HTMLInputElement;
-    auswahlInput.value = ' A , B ,, C ';
-    auswahlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(auswahlInput, ' A , B ,, C ');
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(updated.listen?.erschwernis.auswahl).toEqual(['A', 'B', 'C']);
@@ -137,8 +136,7 @@ describe('ListenGruppen', () => {
     const auswahlInput = container.querySelector(
       'input[placeholder="Schlüssel, durch Komma getrennt"]',
     ) as HTMLInputElement;
-    auswahlInput.value = '   ';
-    auswahlInput.dispatchEvent(new Event('input', { bubbles: true }));
+    setzeWert(auswahlInput, '   ');
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(updated.listen?.erschwernis.auswahl).toBeUndefined();
@@ -164,8 +162,7 @@ describe('ListenGruppen', () => {
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
     const checkbox = container.querySelector('.form-check-input') as HTMLInputElement;
-    checkbox.checked = true;
-    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    klickeCheckbox(checkbox, true);
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(updated.listen?.erschwernis.beschriftungen).toBeDefined();
@@ -181,8 +178,7 @@ describe('ListenGruppen', () => {
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
     const checkbox = container.querySelector('.form-check-input') as HTMLInputElement;
-    checkbox.checked = false;
-    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    klickeCheckbox(checkbox, false);
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(updated.listen?.erschwernis.beschriftungen).toBeUndefined();

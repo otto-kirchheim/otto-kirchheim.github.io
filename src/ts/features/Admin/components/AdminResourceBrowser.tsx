@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { AdminResourceEditModal } from './AdminResourceEditModal';
 import {
@@ -205,32 +206,36 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   return (
     <div>
       {/* Resource Tabs */}
-      <ul class="nav nav-tabs mb-3 flex-wrap" role="tablist">
+      <ul className="nav nav-tabs mb-3 flex-wrap" role="tablist">
         {RESOURCES.map((r, i) => (
-          <li key={r.endpoint} class="nav-item" role="presentation">
-            <button class={`nav-link ${i === activeIdx ? 'active' : ''}`} onClick={() => setActiveIdx(i)} type="button">
-              <span class="d-none d-md-inline">{r.label}</span>
-              <span class="d-md-none">{r.shortLabel}</span>
+          <li key={r.endpoint} className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${i === activeIdx ? 'active' : ''}`}
+              onClick={() => setActiveIdx(i)}
+              type="button"
+            >
+              <span className="d-none d-md-inline">{r.label}</span>
+              <span className="d-md-none">{r.shortLabel}</span>
             </button>
           </li>
         ))}
       </ul>
 
       {/* Filter-Panel */}
-      <div class="card bg-body-secondary border-0 mb-3">
-        <div class="card-body py-2 px-3">
-          <div class="d-flex flex-wrap gap-2 align-items-end">
+      <div className="card bg-body-secondary border-0 mb-3">
+        <div className="card-body py-2 px-3">
+          <div className="d-flex flex-wrap gap-2 align-items-end">
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
-            <div class="flex-grow-1" style="min-width:180px;max-width:300px">
-              <label class="form-label small mb-1">Benutzer</label>
-              <div class="position-relative">
+            <div className="flex-grow-1" style={{ minWidth: '180px', maxWidth: '300px' }}>
+              <label className="form-label small mb-1">Benutzer</label>
+              <div className="position-relative">
                 <input
                   type="text"
                   list={`user-datalist-${activeIdx}`}
-                  class="form-control form-control-sm"
+                  className="form-control form-control-sm"
                   placeholder="Alle Benutzer (Name eingeben…)"
                   value={userSearchText}
-                  onInput={e => {
+                  onChange={e => {
                     const text = (e.target as HTMLInputElement).value;
                     setUserSearchText(text);
                     const match = sortedUsers.find(([, name]) => name === text);
@@ -239,8 +244,8 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 />
                 {filterUserId && (
                   <button
-                    class="btn btn-sm btn-link position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
-                    style="line-height:1"
+                    className="btn btn-sm btn-link position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
+                    style={{ lineHeight: '1' }}
                     onClick={() => {
                       setFilterUserId('');
                       setUserSearchText('');
@@ -259,10 +264,10 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </div>
 
             {/* Jahr: nur vorhandene Jahre aus Backend */}
-            <div style="min-width:100px">
-              <label class="form-label small mb-1">Jahr</label>
+            <div style={{ minWidth: '100px' }}>
+              <label className="form-label small mb-1">Jahr</label>
               <select
-                class="form-select form-select-sm"
+                className="form-select form-select-sm"
                 value={filterJahr}
                 onChange={e => setFilterJahr((e.target as HTMLSelectElement).value)}
               >
@@ -276,10 +281,10 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </div>
 
             {/* Monat */}
-            <div style="min-width:130px">
-              <label class="form-label small mb-1">Monat</label>
+            <div style={{ minWidth: '130px' }}>
+              <label className="form-label small mb-1">Monat</label>
               <select
-                class="form-select form-select-sm"
+                className="form-select form-select-sm"
                 value={filterMonat}
                 onChange={e => setFilterMonat((e.target as HTMLSelectElement).value)}
               >
@@ -292,15 +297,15 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               </select>
             </div>
 
-            <div class="d-flex gap-2 ms-auto align-items-end">
-              <button class="btn btn-sm btn-primary" onClick={applyFilter}>
-                <span class="material-icons-round me-1" style="font-size:0.9rem;vertical-align:middle">
+            <div className="d-flex gap-2 ms-auto align-items-end">
+              <button className="btn btn-sm btn-primary" onClick={applyFilter}>
+                <span className="material-icons-round me-1" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
                   filter_list
                 </span>
                 Filtern
               </button>
               {hasActiveFilter && (
-                <button class="btn btn-sm btn-outline-secondary" onClick={resetFilter}>
+                <button className="btn btn-sm btn-outline-secondary" onClick={resetFilter}>
                   Zurücksetzen
                 </button>
               )}
@@ -308,15 +313,15 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           </div>
 
           {hasActiveFilter && (
-            <div class="mt-2 d-flex flex-wrap gap-2">
+            <div className="mt-2 d-flex flex-wrap gap-2">
               {activeFilter.userId && (
-                <span class="badge bg-primary rounded-pill">
+                <span className="badge bg-primary rounded-pill">
                   User: {userNameMap[activeFilter.userId] ?? truncateId(activeFilter.userId)}
                 </span>
               )}
-              {activeFilter.jahr && <span class="badge bg-secondary rounded-pill">Jahr: {activeFilter.jahr}</span>}
+              {activeFilter.jahr && <span className="badge bg-secondary rounded-pill">Jahr: {activeFilter.jahr}</span>}
               {activeFilter.monat && (
-                <span class="badge bg-secondary rounded-pill">Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}</span>
+                <span className="badge bg-secondary rounded-pill">Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}</span>
               )}
             </div>
           )}
@@ -324,30 +329,30 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       </div>
 
       {loadError && (
-        <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
-          <span class="material-icons-round small">error</span>
+        <div className="alert alert-danger d-flex align-items-center gap-2 py-2">
+          <span className="material-icons-round small">error</span>
           {loadError}
-          <button class="btn btn-sm btn-outline-danger ms-auto" onClick={() => setLoadError(null)}>
+          <button className="btn btn-sm btn-outline-danger ms-auto" onClick={() => setLoadError(null)}>
             ×
           </button>
         </div>
       )}
 
       {/* Tabelle */}
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead class="table-dark">
+      <div className="table-responsive">
+        <table className="table table-sm table-hover align-middle mb-0">
+          <thead className="table-dark">
             <tr>
-              <th style="width:6rem">ID</th>
+              <th style={{ width: '6rem' }}>ID</th>
               {resource.tableFields.map(f => (
                 <th key={f}>{f === 'User' ? 'Benutzer' : f}</th>
               ))}
               {resource.extraFields?.map(f => (
-                <th key={f} class="d-none d-lg-table-cell">
+                <th key={f} className="d-none d-lg-table-cell">
                   {f === 'createdAt' ? 'Erstellt' : f}
                 </th>
               ))}
-              <th style="width:7rem" class="text-end">
+              <th style={{ width: '7rem' }} className="text-end">
                 Aktionen
               </th>
             </tr>
@@ -355,14 +360,14 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={totalCols} class="text-center py-4">
-                  <div class="spinner-border spinner-border-sm" role="status" />
+                <td colSpan={totalCols} className="text-center py-4">
+                  <div className="spinner-border spinner-border-sm" role="status" />
                 </td>
               </tr>
             )}
             {!loading && (!page || page.data.length === 0) && (
               <tr>
-                <td colSpan={totalCols} class="text-center py-3 text-muted">
+                <td colSpan={totalCols} className="text-center py-3 text-muted">
                   Keine Einträge {hasActiveFilter && '(Filter aktiv)'}
                 </td>
               </tr>
@@ -370,28 +375,28 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             {!loading &&
               page?.data.map(doc => (
                 <tr key={String(doc['_id'])}>
-                  <td style="cursor:pointer" title="Klicken zum Bearbeiten" onClick={() => openEdit(doc)}>
-                    <code class="small text-primary-emphasis">{truncateId(doc['_id'])}</code>
+                  <td style={{ cursor: 'pointer' }} title="Klicken zum Bearbeiten" onClick={() => openEdit(doc)}>
+                    <code className="small text-primary-emphasis">{truncateId(doc['_id'])}</code>
                   </td>
                   {resource.tableFields.map(f => {
                     if (f === 'User') {
                       const userId = String(doc[f] ?? '');
                       const name = userNameMap[userId];
                       return (
-                        <td key={f} class="small">
-                          <div class="d-flex align-items-center gap-1 flex-nowrap">
-                            <span>{name ?? <code class="text-muted">{truncateId(userId)}</code>}</span>
+                        <td key={f} className="small">
+                          <div className="d-flex align-items-center gap-1 flex-nowrap">
+                            <span>{name ?? <code className="text-muted">{truncateId(userId)}</code>}</span>
                             {onNavigateToUser && (
                               <button
-                                class="btn btn-link btn-sm p-0 text-info flex-shrink-0"
-                                style="line-height:1"
+                                className="btn btn-link btn-sm p-0 text-info flex-shrink-0"
+                                style={{ lineHeight: '1' }}
                                 onClick={e => {
-                                  (e as MouseEvent).stopPropagation();
+                                  e.stopPropagation();
                                   onNavigateToUser(userId);
                                 }}
                                 title="Zum Profil"
                               >
-                                <span class="material-icons-round" style="font-size:0.85rem">
+                                <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
                                   person_search
                                 </span>
                               </button>
@@ -401,32 +406,32 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                       );
                     }
                     return (
-                      <td key={f} class="small">
+                      <td key={f} className="small">
                         {formatCell(f, doc[f])}
                       </td>
                     );
                   })}
                   {resource.extraFields?.map(f => (
-                    <td key={f} class="small d-none d-lg-table-cell">
+                    <td key={f} className="small d-none d-lg-table-cell">
                       {formatCell(f, doc[f])}
                     </td>
                   ))}
-                  <td class="text-end">
+                  <td className="text-end">
                     <button
-                      class="btn btn-sm btn-outline-primary me-1 py-0"
+                      className="btn btn-sm btn-outline-primary me-1 py-0"
                       onClick={() => openEdit(doc)}
                       title="Bearbeiten"
                     >
-                      <span class="material-icons-round" style="font-size:1rem">
+                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
                         edit
                       </span>
                     </button>
                     <button
-                      class="btn btn-sm btn-outline-danger py-0"
+                      className="btn btn-sm btn-outline-danger py-0"
                       onClick={() => handleDelete(doc)}
                       title="Löschen"
                     >
-                      <span class="material-icons-round" style="font-size:1rem">
+                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
                         delete
                       </span>
                     </button>
@@ -438,19 +443,21 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       </div>
 
       {/* Pagination */}
-      <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-        <small class="text-muted">{page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}</small>
+      <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <small className="text-muted">
+          {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
+        </small>
         {totalPages > 1 && (
-          <div class="btn-group btn-group-sm">
+          <div className="btn-group btn-group-sm">
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
             </button>
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
@@ -458,8 +465,8 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </button>
           </div>
         )}
-        <button class="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
-          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+        <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
+          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
             refresh
           </span>
           Aktualisieren

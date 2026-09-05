@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h, render, type ComponentChildren } from 'preact';
+import { createElement as h, type ReactNode } from 'react';
+import { inputMock, render } from '../../reactRender';
+
 import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenEA, IVorgabenU } from '@/types';
 
@@ -27,10 +29,9 @@ vi.mock('@/components', () => ({
   showModal: showModalMock,
   // Echtes <form ref={...}> statt Stub-Div: der SUT liest Felder ueber `ref.current.querySelector(...)`,
   // die Kinder muessen also tatsaechlich im per Ref referenzierten Element landen.
-  MyFormModal: (props: { myRef?: unknown; children?: ComponentChildren }) =>
-    h('form', { ref: props.myRef }, props.children),
-  MyModalBody: (props: { children?: ComponentChildren }) => h('div', {}, props.children),
-  MyInput: (props: { id: string; [key: string]: unknown }) => h('input', props),
+  MyFormModal: (props: { myRef?: unknown; children?: ReactNode }) => h('form', { ref: props.myRef }, props.children),
+  MyModalBody: (props: { children?: ReactNode }) => h('div', {}, props.children),
+  MyInput: inputMock,
   MySelect: (props: {
     id: string;
     changeHandler?: (e: Event) => void;
@@ -38,8 +39,12 @@ vi.mock('@/components', () => ({
   }) =>
     h(
       'select',
-      { id: props.id, onChange: props.changeHandler },
-      props.options.map(o => h('option', { value: o.value, selected: o.selected, disabled: o.disabled }, o.text)),
+      {
+        id: props.id,
+        onChange: props.changeHandler,
+        defaultValue: props.options.find(o => o.selected)?.value,
+      },
+      props.options.map(o => h('option', { key: o.text, value: o.value, disabled: o.disabled }, o.text)),
     ),
 }));
 

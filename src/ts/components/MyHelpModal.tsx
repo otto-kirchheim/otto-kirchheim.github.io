@@ -1,9 +1,10 @@
-import type { FunctionalComponent } from 'preact';
+import { type FC } from 'react';
+
 import type { HelpContent } from '@/core/help/helpContent';
 import { openOnboardingGuide } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
 import { MyDivModal, MyModalBody } from '.';
 
-const MyHelpModal: FunctionalComponent<{ content: HelpContent }> = ({ content }) => (
+const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
   <MyDivModal
     title={content.title}
     Footer={
@@ -87,7 +88,7 @@ const MyHelpModal: FunctionalComponent<{ content: HelpContent }> = ({ content })
 
       {content.tipp && (
         <div className="alert alert-info mb-0 py-2" role="alert">
-          <span className="material-icons-round align-middle me-1" style="font-size:1rem">
+          <span className="material-icons-round align-middle me-1" style={{ fontSize: '1rem' }}>
             lightbulb
           </span>
           {content.tipp}
@@ -101,7 +102,7 @@ const MyHelpModal: FunctionalComponent<{ content: HelpContent }> = ({ content })
           data-bs-dismiss="modal"
           onClick={() => openOnboardingGuide()}
         >
-          <span className="material-icons-round align-middle me-1" style="font-size:1rem">
+          <span className="material-icons-round align-middle me-1" style={{ fontSize: '1rem' }}>
             replay
           </span>
           Ersteinrichtung erneut öffnen

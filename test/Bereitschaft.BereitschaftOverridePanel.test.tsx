@@ -1,5 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { render } from 'preact';
+import { klickeCheckbox, render, setzeWert } from './reactRender';
+
 import { BereitschaftOverridePanel } from '@/features/Bereitschaft/components/BereitschaftOverridePanel';
 import type { IVorgabenUaZ } from '@/core/types';
 
@@ -24,20 +25,18 @@ function renderPanel(
   return { container, onChange };
 }
 
-// Preact batches setState-triggered re-renders on a microtask; flush it before asserting on the DOM.
+// React rendert `mount` synchron (flushSync); nachgelagerte Effekte brauchen trotzdem einen Tick.
 async function flush(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 async function fireChange(el: HTMLInputElement, checked: boolean): Promise<void> {
-  el.checked = checked;
-  el.dispatchEvent(new Event('change', { bubbles: true }));
+  klickeCheckbox(el, checked);
   await flush();
 }
 
 async function fireInput(el: HTMLInputElement, value: string): Promise<void> {
-  el.value = value;
-  el.dispatchEvent(new Event('input', { bubbles: true }));
+  setzeWert(el, value);
   await flush();
 }
 

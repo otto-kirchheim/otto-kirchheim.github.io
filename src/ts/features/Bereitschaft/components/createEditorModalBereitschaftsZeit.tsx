@@ -1,6 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import type { ComponentChild, ComponentChildren } from 'preact';
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent, type ReactNode } from 'react';
+
 import type { Column } from '@/infrastructure/table/CustomTable';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -11,7 +11,7 @@ import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag'
 import dayjs from '@/infrastructure/date/configDayjs';
 import { getBereitschaftsZeitraumDaten, persistBereitschaftsZeitraumTableData } from '../utils';
 
-const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ComponentChild => {
+const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ReactNode => {
   let datum: dayjs.Dayjs, min: string, max: string;
   switch (column.name) {
     case 'editing':
@@ -52,7 +52,7 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): Compone
   }
 };
 
-const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr: number): ComponentChild => {
+const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr: number): ReactNode => {
   let datum, min, max;
   switch (column.name) {
     case 'editing':
@@ -91,7 +91,7 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
   }
 };
 
-const createElements = (row: CustomTable<IDatenBZ> | Row<IDatenBZ>): ComponentChildren => {
+const createElements = (row: CustomTable<IDatenBZ> | Row<IDatenBZ>): ReactNode => {
   if (row instanceof Row) {
     return row.columns.array.map(column => createElementRow(column, row));
   } else if (row instanceof CustomTable) {
@@ -123,8 +123,8 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 
   modal.row = row;
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
 

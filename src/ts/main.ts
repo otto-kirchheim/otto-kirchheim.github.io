@@ -1,8 +1,6 @@
 import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
-import 'preact/debug';
-
 import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/infrastructure/storage/Storage';

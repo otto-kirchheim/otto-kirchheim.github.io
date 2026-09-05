@@ -32,19 +32,19 @@ export function BulkEditOeLevelsEditor({
 }: Props) {
   return (
     <div>
-      <div class="fw-semibold small mb-1">Ebenen ersetzen in</div>
+      <div className="fw-semibold small mb-1">Ebenen ersetzen in</div>
 
-      <div class="d-flex flex-wrap gap-3 mb-2">
+      <div className="d-flex flex-wrap gap-3 mb-2">
         {TARGETS.map(target => (
-          <div class="form-check" key={target}>
+          <div className="form-check" key={target}>
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               id={`bulkOeTarget-${target}`}
               checked={applyTo.has(target)}
               onChange={() => onToggleTarget(target)}
             />
-            <label class="form-check-label" for={`bulkOeTarget-${target}`}>
+            <label className="form-check-label" htmlFor={`bulkOeTarget-${target}`}>
               {OE_TARGET_LABELS[target]}
             </label>
           </div>
@@ -62,9 +62,9 @@ export function BulkEditOeLevelsEditor({
             onAddLevel={onAddLevel}
             onRemoveLevel={onRemoveLevel}
           />
-          <div class="small text-body-secondary mt-1">
-            Nur <span class="fw-semibold text-warning">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei jedem
-            Eintrag, der die Ebene hat.
+          <div className="small text-body-secondary mt-1">
+            Nur <span className="fw-semibold text-warning">hervorgehobene</span> Ebenen werden ersetzt — in Listen bei
+            jedem Eintrag, der die Ebene hat.
           </div>
         </>
       )}

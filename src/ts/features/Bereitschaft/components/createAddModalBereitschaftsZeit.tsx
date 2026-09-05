@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef, type VNode } from 'preact';
+import { createRef, type SubmitEvent, type ReactElement } from 'react';
+
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
 import { MyCheckbox, MyFormModal, MyModalBody, MySelect, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
@@ -62,7 +63,7 @@ const createSonderDateInputElement = (id: string, value: string) => (
 );
 
 // Ein „Zeitpunkt" (Anfang/Ende) als kompakte Zeile: Label · Datum (füllt) · Zeit · optional „berechnet"-Badge.
-const punktZeile = (label: string, berechnet: boolean, dateEl: VNode, timeEl: VNode) => (
+const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, timeEl: ReactElement) => (
   <div className="d-flex align-items-center gap-2 py-1">
     <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
       {label}
@@ -174,7 +175,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
         value={datum.format('YYYY-MM-DD')}
-        onInput={changeHandler}
+        onChange={changeHandler}
       />
     );
   };
@@ -394,8 +395,8 @@ export default function createAddModalBereitschaftsZeit(): void {
   });
   refreshSpaetFelder();
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();

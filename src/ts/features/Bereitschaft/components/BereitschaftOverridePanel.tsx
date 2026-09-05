@@ -1,5 +1,5 @@
-import { type FunctionalComponent, type JSX } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { type FC, type JSX, useEffect, useState } from 'react';
+
 import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeOverrides';
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { SchichtOverrideEditor } from '@/features/Einstellungen/components/SchichtOverrideEditor';
@@ -11,7 +11,7 @@ const createSonderTimeInput = (id: string, value: string, onChange: (value: stri
     className="form-control form-control-sm"
     style={{ width: '7rem' }}
     value={value}
-    onInput={e => onChange((e.target as HTMLInputElement).value)}
+    onChange={e => onChange((e.target as HTMLInputElement).value)}
   />
 );
 
@@ -24,7 +24,7 @@ type BereitschaftOverridePanelProps = {
  * Optionaler Abschnitt im „Neue Bereitschaft eingeben"-Modal: erlaubt, die aZ-Arbeitszeiten je Wochentag
  * für genau diesen Eintrag zu überschreiben (gleicher Editor wie im VorgabenB-Editor).
  */
-export const BereitschaftOverridePanel: FunctionalComponent<BereitschaftOverridePanelProps> = ({
+export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
   aZ,
   onChange,
 }: BereitschaftOverridePanelProps) => {
@@ -126,7 +126,7 @@ export const BereitschaftOverridePanel: FunctionalComponent<BereitschaftOverride
                     value={sonderOverride?.pause ?? aZ.sonder.pause}
                     min={0}
                     step={5}
-                    onInput={e =>
+                    onChange={e =>
                       handleSonderChange({
                         aktiv: true,
                         beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,

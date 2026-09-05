@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render } from '../reactRender';
+
 import MyModalHeader from '@/components/MyModalHeader';
 
 function renderMyModalHeader(props: Parameters<typeof MyModalHeader>[0]): HTMLDivElement {

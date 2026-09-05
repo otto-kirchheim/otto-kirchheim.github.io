@@ -1,11 +1,12 @@
-import type { ComponentChild, FunctionalComponent } from 'preact';
+import { type FC, type ReactNode } from 'react';
+
 import { MyButton } from '.';
 
 type TMyModalFooter = {
-  customButtons?: ComponentChild[];
+  customButtons?: ReactNode[];
   submitText?: string;
 };
-const MyEditorFooter: FunctionalComponent<TMyModalFooter> = ({ customButtons = [], submitText = 'Hinzufügen' }) => {
+const MyEditorFooter: FC<TMyModalFooter> = ({ customButtons = [], submitText = 'Hinzufügen' }) => {
   return (
     <div className="modal-footer">
       <MyButton type="submit" text={submitText} />

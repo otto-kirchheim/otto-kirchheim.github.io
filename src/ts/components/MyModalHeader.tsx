@@ -1,11 +1,9 @@
-import type { FunctionalComponent } from 'preact';
+import { type FC } from 'react';
+
 import type { HelpContextKey } from '@/core/help/helpContent';
 import { openHelpModal } from '@/core/help/openHelpModal';
 
-const MyModalHeader: FunctionalComponent<{ title: string; helpContext?: HelpContextKey }> = ({
-  title,
-  helpContext,
-}) => {
+const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ title, helpContext }) => {
   return (
     <div className="modal-header">
       <h5 className="modal-title">{title}</h5>
@@ -16,7 +14,7 @@ const MyModalHeader: FunctionalComponent<{ title: string; helpContext?: HelpCont
           aria-label="Hilfe anzeigen"
           onClick={() => openHelpModal(helpContext)}
         >
-          <span className="material-icons-round align-middle" style="font-size:1.25rem">
+          <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
             help_outline
           </span>
         </button>

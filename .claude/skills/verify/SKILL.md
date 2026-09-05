@@ -22,5 +22,8 @@ Die Einstellungen-/Hauptseite rendert komplett aus localStorage — ein laufende
 
 ## Gotchas
 
-- Preact-Effects laufen auf Microtask → nach Interaktionen ~150ms warten.
+- `mount()` rendert per `flushSync` synchron; `useEffect` laeuft danach → nach Interaktionen ~150ms warten.
+- Ohne Backend startet der Auth-Lifecycle nicht, die Feature-Tabs mounten also nicht von selbst. Fuer
+  reine UI-Pruefungen die Module im Seitenkontext importieren (`await import('/ts/features/EWT/EwtTab.tsx')`)
+  und `mountEwtTab()` aufrufen.
 - `bun test` mit mehreren Dateien in einem Prozess produziert Cross-File-Fehler; immer `bun run test` (sequentiell pro Datei) für die Suite nutzen.

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 /** Payload-Grenze im Backend (`oeLevelsSchema.max(10)`); real kommen max. ~7 Ebenen vor. */
 export const MAX_OE_LEVELS = 10;
 
@@ -32,9 +33,9 @@ function separatorBefore(levels: string[], index: number): string {
   return '-';
 }
 
-function widthFor(value: string, placeholder: string): string {
+function widthFor(value: string, placeholder: string): CSSProperties {
   const chars = Math.max(2, value.length, placeholder.length);
-  return `width: calc(${chars}ch + 1.5rem)`;
+  return { width: `calc(${chars}ch + 1.5rem)` };
 }
 
 /** Reine Darstellung einer OE-Kette als ein Textfeld je Ebene (positionsgebunden, leere Ebenen bleiben erhalten). */
@@ -52,22 +53,22 @@ export function OeLevelInputs({
   const canRemove = onRemoveLevel && !disabled && levels.length > 1;
 
   return (
-    <div class="d-flex flex-wrap align-items-center gap-1">
+    <div className="d-flex flex-wrap align-items-center gap-1">
       {levels.map((level, index) => {
         const placeholder = placeholders[index] ?? '';
         const changed = highlightFilled && level.trim() !== '';
         return (
-          <div key={index} class="d-flex align-items-center gap-1">
-            {index > 0 && <span class="text-body-secondary">{separatorBefore(levels, index)}</span>}
+          <div key={index} className="d-flex align-items-center gap-1">
+            {index > 0 && <span className="text-body-secondary">{separatorBefore(levels, index)}</span>}
             <input
               type="text"
-              class={`form-control form-control-sm oe-level-input${changed ? ' border-warning border-2 fw-semibold' : ''}`}
+              className={`form-control form-control-sm oe-level-input${changed ? ' border-warning border-2 fw-semibold' : ''}`}
               style={widthFor(level, placeholder)}
               aria-label={ariaLabel(index)}
               placeholder={placeholder}
               value={level}
               disabled={disabled}
-              onInput={e => onChangeLevel(index, (e.target as HTMLInputElement).value)}
+              onChange={e => onChangeLevel(index, (e.target as HTMLInputElement).value)}
             />
           </div>
         );
@@ -75,11 +76,11 @@ export function OeLevelInputs({
       {canRemove && (
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary px-1 py-0"
+          className="btn btn-sm btn-outline-secondary px-1 py-0"
           aria-label="Letzte Ebene entfernen"
           onClick={onRemoveLevel}
         >
-          <span class="material-icons-round" style="font-size: 0.9rem; vertical-align: middle">
+          <span className="material-icons-round" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
             remove
           </span>
         </button>
@@ -87,11 +88,11 @@ export function OeLevelInputs({
       {canAdd && (
         <button
           type="button"
-          class="btn btn-sm btn-outline-primary px-1 py-0"
+          className="btn btn-sm btn-outline-primary px-1 py-0"
           aria-label="Ebene hinzufügen"
           onClick={onAddLevel}
         >
-          <span class="material-icons-round" style="font-size: 0.9rem; vertical-align: middle">
+          <span className="material-icons-round" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
             add
           </span>
         </button>

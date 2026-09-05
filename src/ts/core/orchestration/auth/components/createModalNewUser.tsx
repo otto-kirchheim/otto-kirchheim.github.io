@@ -1,4 +1,5 @@
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 import { checkNeuerBenutzer } from '../utils';
@@ -107,8 +108,8 @@ export default function createModalNewUser(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
       form.classList.add('was-validated');

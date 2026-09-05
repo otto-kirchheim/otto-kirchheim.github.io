@@ -1,5 +1,6 @@
-import { createPortal } from 'preact/compat';
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { JsonEditor } from './JsonEditor';
@@ -309,27 +310,27 @@ export function AdminUserProfileEditor({
   return (
     <div>
       {/* Search */}
-      <div class="mb-3">
+      <div className="mb-3">
         <input
           type="search"
-          class="form-control form-control-sm"
+          className="form-control form-control-sm"
           placeholder="Name oder OE suchen…"
           value={search}
-          onInput={e => setSearch((e.target as HTMLInputElement).value)}
+          onChange={e => setSearch((e.target as HTMLInputElement).value)}
         />
       </div>
 
-      {loadError && <div class="alert alert-danger py-2 small">{loadError}</div>}
+      {loadError && <div className="alert alert-danger py-2 small">{loadError}</div>}
 
       {/* Table */}
-      <div class="table-responsive">
-        <table class="table table-sm table-hover align-middle mb-0">
-          <thead class="table-dark">
+      <div className="table-responsive">
+        <table className="table table-sm table-hover align-middle mb-0">
+          <thead className="table-dark">
             <tr>
               <th>Name</th>
               <th>OE</th>
               <th>User-ID</th>
-              <th style="width:5rem" class="text-end">
+              <th style={{ width: '5rem' }} className="text-end">
                 Aktion
               </th>
             </tr>
@@ -337,14 +338,14 @@ export function AdminUserProfileEditor({
           <tbody>
             {loading && (
               <tr>
-                <td colSpan={4} class="text-center py-4">
-                  <div class="spinner-border spinner-border-sm" role="status" />
+                <td colSpan={4} className="text-center py-4">
+                  <div className="spinner-border spinner-border-sm" role="status" />
                 </td>
               </tr>
             )}
             {!loading && filteredRows.length === 0 && (
               <tr>
-                <td colSpan={4} class="text-center py-3 text-muted">
+                <td colSpan={4} className="text-center py-3 text-muted">
                   Keine Profile
                 </td>
               </tr>
@@ -352,24 +353,24 @@ export function AdminUserProfileEditor({
             {!loading &&
               filteredRows.map(row => (
                 <tr key={row._id}>
-                  <td class="small">
+                  <td className="small">
                     {row.vorname || row.nachname ? (
                       `${row.vorname} ${row.nachname}`.trim()
                     ) : (
-                      <em class="text-muted">kein Name</em>
+                      <em className="text-muted">kein Name</em>
                     )}
                   </td>
-                  <td class="small">{row.oe || <em class="text-muted">—</em>}</td>
+                  <td className="small">{row.oe || <em className="text-muted">—</em>}</td>
                   <td>
-                    <code class="small text-muted">…{row.User.slice(-8)}</code>
+                    <code className="small text-muted">…{row.User.slice(-8)}</code>
                   </td>
-                  <td class="text-end">
+                  <td className="text-end">
                     <button
-                      class="btn btn-sm btn-outline-primary py-0"
+                      className="btn btn-sm btn-outline-primary py-0"
                       onClick={() => openEdit(row)}
                       title="Bearbeiten"
                     >
-                      <span class="material-icons-round" style="font-size:1rem">
+                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
                         edit
                       </span>
                     </button>
@@ -382,20 +383,20 @@ export function AdminUserProfileEditor({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-          <small class="text-muted">
+        <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+          <small className="text-muted">
             Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div class="btn-group btn-group-sm">
+          <div className="btn-group btn-group-sm">
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
             </button>
             <button
-              class="btn btn-outline-secondary"
+              className="btn btn-outline-secondary"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
@@ -405,9 +406,9 @@ export function AdminUserProfileEditor({
         </div>
       )}
 
-      <div class="text-end mt-2">
-        <button class="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
-          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+      <div className="text-end mt-2">
+        <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
+          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
             refresh
           </span>
           Aktualisieren
@@ -418,31 +419,33 @@ export function AdminUserProfileEditor({
       {edit &&
         createPortal(
           <>
-            <div class="modal fade show d-block" tabIndex={-1} style="z-index:1055">
-              <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">
+            <div className="modal fade show d-block" tabIndex={-1} style={{ zIndex: '1055' }}>
+              <div className="modal-dialog modal-xl modal-fullscreen-sm-down">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
                       UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
                     </h5>
-                    <button type="button" class="btn-close" onClick={closeEdit} />
+                    <button type="button" className="btn-close" onClick={closeEdit} />
                   </div>
 
-                  <div class="modal-body" style="max-height:70vh;overflow-y:auto">
-                    {edit.saveError && <div class="alert alert-danger py-2 small">{edit.saveError}</div>}
+                  <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
 
-                    <div class="row g-4">
+                    <div className="row g-4">
                       {/* Pers Fields */}
-                      <div class="col-md-6">
-                        <h6 class="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
+                      <div className="col-md-6">
+                        <h6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
                         {Object.entries(edit.pers).map(([key, val]) => {
                           const selectOpts = PERS_SELECT_FIELDS[key];
                           return (
-                            <div key={key} class="mb-2">
-                              <label class="form-label small fw-semibold mb-1">{PERS_FIELD_LABELS[key] ?? key}</label>
+                            <div key={key} className="mb-2">
+                              <label className="form-label small fw-semibold mb-1">
+                                {PERS_FIELD_LABELS[key] ?? key}
+                              </label>
                               {selectOpts ? (
                                 <select
-                                  class="form-select form-select-sm"
+                                  className="form-select form-select-sm"
                                   value={String(val ?? '')}
                                   onChange={e => handlePersChange(key, (e.target as HTMLSelectElement).value)}
                                 >
@@ -467,7 +470,7 @@ export function AdminUserProfileEditor({
                               ) : (
                                 <input
                                   type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                                  class="form-control form-control-sm"
+                                  className="form-control form-control-sm"
                                   value={persFieldToInput(key, val)}
                                   onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
                                 />
@@ -478,11 +481,11 @@ export function AdminUserProfileEditor({
                       </div>
 
                       {/* JSON Sections */}
-                      <div class="col-md-6">
-                        <h6 class="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
+                      <div className="col-md-6">
+                        <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
                         {JSON_SECTIONS.map(section => (
-                          <div key={section} class="mb-3">
-                            <label class="form-label small fw-semibold mb-1">{section}</label>
+                          <div key={section} className="mb-3">
+                            <label className="form-label small fw-semibold mb-1">{section}</label>
                             <JsonEditor
                               value={edit.jsonRaw[section] ?? ''}
                               onChange={raw => handleJsonChange(section, raw)}
@@ -494,14 +497,14 @@ export function AdminUserProfileEditor({
                     </div>
 
                     {/* User Actions */}
-                    <div class="border-top mt-4 pt-3">
-                      <h6 class="fw-semibold mb-3">Benutzer-Aktionen</h6>
-                      <div class="d-flex flex-wrap gap-3 align-items-start">
+                    <div className="border-top mt-4 pt-3">
+                      <h6 className="fw-semibold mb-3">Benutzer-Aktionen</h6>
+                      <div className="d-flex flex-wrap gap-3 align-items-start">
                         {/* emailVerified */}
                         <div>
-                          <div class="small text-muted mb-1">emailVerified</div>
+                          <div className="small text-muted mb-1">emailVerified</div>
                           <button
-                            class={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
+                            className={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
                             onClick={handleToggleEmailVerified}
                           >
                             {edit.emailVerified === null
@@ -511,32 +514,32 @@ export function AdminUserProfileEditor({
                                 : 'false – umschalten'}
                           </button>
                           {edit.emailVerified === null && (
-                            <div class="small text-muted mt-1">Klicken zum Setzen auf true</div>
+                            <div className="small text-muted mt-1">Klicken zum Setzen auf true</div>
                           )}
                         </div>
 
                         {/* Passkeys */}
-                        <div class="flex-grow-1">
-                          <div class="small text-muted mb-1">
+                        <div className="flex-grow-1">
+                          <div className="small text-muted mb-1">
                             Passkeys
                             {edit.passkeysLoading && (
-                              <span class="spinner-border spinner-border-sm ms-2" role="status" />
+                              <span className="spinner-border spinner-border-sm ms-2" role="status" />
                             )}
                           </div>
                           {edit.passkeys.length === 0 && !edit.passkeysLoading && (
-                            <div class="small text-muted">Keine Passkeys</div>
+                            <div className="small text-muted">Keine Passkeys</div>
                           )}
                           {edit.passkeys.map(pk => (
-                            <div key={pk.credentialId} class="d-flex align-items-center gap-2 mb-1">
-                              <span class="small">
-                                {pk.name ?? 'Passkey'} <code class="text-muted">…{pk.credentialId.slice(-8)}</code>
+                            <div key={pk.credentialId} className="d-flex align-items-center gap-2 mb-1">
+                              <span className="small">
+                                {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
                               </span>
                               <button
-                                class="btn btn-sm btn-outline-danger py-0"
+                                className="btn btn-sm btn-outline-danger py-0"
                                 onClick={() => handleDeletePasskey(pk.credentialId)}
                                 title="Passkey löschen"
                               >
-                                <span class="material-icons-round" style="font-size:0.9rem">
+                                <span className="material-icons-round" style={{ fontSize: '0.9rem' }}>
                                   delete
                                 </span>
                               </button>
@@ -547,14 +550,14 @@ export function AdminUserProfileEditor({
                     </div>
                   </div>
 
-                  <div class="modal-footer">
-                    <button class="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+                  <div className="modal-footer">
+                    <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
                       Schließen
                     </button>
-                    <button class="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+                    <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
                       {edit.saving ? (
                         <>
-                          <span class="spinner-border spinner-border-sm me-1" role="status" />
+                          <span className="spinner-border spinner-border-sm me-1" role="status" />
                           Speichern…
                         </>
                       ) : (
@@ -565,7 +568,7 @@ export function AdminUserProfileEditor({
                 </div>
               </div>
             </div>
-            <div class="modal-backdrop fade show" style="z-index:1054" />
+            <div className="modal-backdrop fade show" style={{ zIndex: '1054' }} />
           </>,
           document.body,
         )}

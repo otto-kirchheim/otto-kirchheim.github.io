@@ -28,15 +28,15 @@ function ZahlEingabe({
   onChange: (v: number) => void;
 }) {
   return (
-    <div class="input-group input-group-sm w-auto">
-      <span class="input-group-text px-2">{label}</span>
+    <div className="input-group input-group-sm w-auto">
+      <span className="input-group-text px-2">{label}</span>
       <input
         type="number"
         step={schritt}
-        class="form-control px-1"
-        style="max-width:5.5rem"
+        className="form-control px-1"
+        style={{ maxWidth: '5.5rem' }}
         value={wert}
-        onInput={e => {
+        onChange={e => {
           const v = Number((e.target as HTMLInputElement).value);
           if (Number.isFinite(v)) onChange(v);
         }}
@@ -55,18 +55,18 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
     onChange({ faktoren: { ...faktoren, ...teil }, gekoppelt: g });
 
   return (
-    <div class="border border-primary rounded p-2 mb-2 bg-primary-subtle small">
-      <div class="d-flex flex-wrap align-items-center gap-2">
-        <strong class="me-1">Koordinaten anpassen</strong>
+    <div className="border border-primary rounded p-2 mb-2 bg-primary-subtle small">
+      <div className="d-flex flex-wrap align-items-center gap-2">
+        <strong className="me-1">Koordinaten anpassen</strong>
         {alt && (
-          <span class="text-body-secondary">
+          <span className="text-body-secondary">
             {alt.w.toFixed(0)}×{alt.h.toFixed(0)}
             {neu ? ` → ${neu.w.toFixed(0)}×${neu.h.toFixed(0)}` : ''} pt
           </span>
         )}
-        <div class="form-check mb-0">
+        <div className="form-check mb-0">
           <input
-            class="form-check-input"
+            className="form-check-input"
             type="checkbox"
             id="skalier-gekoppelt"
             checked={gekoppelt}
@@ -75,7 +75,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
               setze(g ? { x: faktoren.y } : {}, g);
             }}
           />
-          <label class="form-check-label" for="skalier-gekoppelt">
+          <label className="form-check-label" htmlFor="skalier-gekoppelt">
             X=Y
           </label>
         </div>
@@ -89,11 +89,11 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
         )}
         <ZahlEingabe label="Versatz X" schritt="0.1" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
         <ZahlEingabe label="Versatz Y" schritt="0.1" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
-        <div class="input-group input-group-sm w-auto">
-          <span class="input-group-text px-2">Drehen</span>
+        <div className="input-group input-group-sm w-auto">
+          <span className="input-group-text px-2">Drehen</span>
           <select
-            class="form-select px-1"
-            style="max-width:5rem"
+            className="form-select px-1"
+            style={{ maxWidth: '5rem' }}
             value={String(drehung)}
             onChange={e => onChange({ drehung: Number((e.target as HTMLSelectElement).value) as Drehwinkel })}
           >
@@ -103,16 +103,16 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
             <option value="270">270°</option>
           </select>
         </div>
-        <div class="btn-group btn-group-sm ms-auto">
-          <button type="button" class="btn btn-primary" onClick={onAnwenden}>
+        <div className="btn-group btn-group-sm ms-auto">
+          <button type="button" className="btn btn-primary" onClick={onAnwenden}>
             Anwenden
           </button>
-          <button type="button" class="btn btn-outline-secondary" onClick={onAbbrechen}>
+          <button type="button" className="btn btn-outline-secondary" onClick={onAbbrechen}>
             Abbrechen
           </button>
         </div>
       </div>
-      <div class="text-body-secondary mt-1">
+      <div className="text-body-secondary mt-1">
         Jede Koordinate wird <code>Wert × Faktor + Versatz</code> (Versatz in PDF-Punkten). Schriftgröße und
         Tabellen-Zeilenhöhe folgen dem Y-Faktor. Die Vorschau zeigt das Ergebnis live.
         {drehung !== 0 && (

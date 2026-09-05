@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState } from 'react';
+
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard, formatUptime } from './adminDashboardCharts';
 
@@ -28,17 +29,17 @@ function StatCard({
 }) {
   const display = label ?? value?.toLocaleString() ?? '–';
   return (
-    <div class="col-sm-6 col-xl-3">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body d-flex gap-3 align-items-start">
-          <span class={`material-icons-round fs-2 ${colorClass}`}>{icon}</span>
-          <div style="min-width:0">
-            <div class="text-body-secondary small">{title}</div>
-            <div class="fs-3 fw-bold lh-1 mt-1">
+    <div className="col-sm-6 col-xl-3">
+      <div className="card border-0 shadow-sm h-100">
+        <div className="card-body d-flex gap-3 align-items-start">
+          <span className={`material-icons-round fs-2 ${colorClass}`}>{icon}</span>
+          <div style={{ minWidth: '0' }}>
+            <div className="text-body-secondary small">{title}</div>
+            <div className="fs-3 fw-bold lh-1 mt-1">
               {display}
-              {unit && <span class="fs-6 fw-normal ms-1 text-body-secondary">{unit}</span>}
+              {unit && <span className="fs-6 fw-normal ms-1 text-body-secondary">{unit}</span>}
             </div>
-            {sub && <div class="text-body-secondary small mt-1">{sub}</div>}
+            {sub && <div className="text-body-secondary small mt-1">{sub}</div>}
           </div>
         </div>
       </div>
@@ -85,9 +86,9 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <div class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Wird geladen…</span>
+      <div className="text-center py-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Wird geladen…</span>
         </div>
       </div>
     );
@@ -95,10 +96,10 @@ export function AdminDashboard() {
 
   if (error) {
     return (
-      <div class="alert alert-danger d-flex align-items-center gap-2">
-        <span class="material-icons-round">error</span>
+      <div className="alert alert-danger d-flex align-items-center gap-2">
+        <span className="material-icons-round">error</span>
         <span>{error}</span>
-        <button class="btn btn-sm btn-outline-danger ms-auto" onClick={load}>
+        <button className="btn btn-sm btn-outline-danger ms-auto" onClick={load}>
           Neu laden
         </button>
       </div>
@@ -111,7 +112,7 @@ export function AdminDashboard() {
 
   return (
     <div>
-      <div class="row g-3 mb-4">
+      <div className="row g-3 mb-4">
         {(() => {
           const gap = stats.users.total - stats.profiles.total;
           const sub =
@@ -158,25 +159,25 @@ export function AdminDashboard() {
           })()}
       </div>
 
-      <div class="row g-3">
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h6 class="card-title fw-semibold mb-3">Rollenverteilung</h6>
+      <div className="row g-3">
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <h6 className="card-title fw-semibold mb-3">Rollenverteilung</h6>
               {Object.entries(stats.users.byRole).map(([role, count]) => (
-                <div key={role} class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                  <span class="small">{ROLE_LABELS[role] ?? role}</span>
-                  <span class="badge bg-secondary rounded-pill">{count}</span>
+                <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                  <span className="small">{ROLE_LABELS[role] ?? role}</span>
+                  <span className="badge bg-secondary rounded-pill">{count}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h6 class="card-title fw-semibold mb-3">Ressourcenbestand</h6>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <h6 className="card-title fw-semibold mb-3">Ressourcenbestand</h6>
               {(
                 [
                   [
@@ -194,25 +195,25 @@ export function AdminDashboard() {
                   ['Entgeltausgleich-Einträge', stats.resources.entgeltausgleich, stats.growth.entgeltausgleichLast7d],
                 ] as [string, number, number][]
               ).map(([label, count, growth]) => (
-                <div key={label} class="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
-                  <span class="small" style="min-width:0;word-break:break-word">
+                <div key={label} className="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
+                  <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>
                     {label}
-                    {growth > 0 && <span class="badge bg-success-subtle text-success ms-1">+{growth}</span>}
+                    {growth > 0 && <span className="badge bg-success-subtle text-success ms-1">+{growth}</span>}
                   </span>
-                  <span class="badge bg-primary rounded-pill flex-shrink-0">{count.toLocaleString()}</span>
+                  <span className="badge bg-primary rounded-pill flex-shrink-0">{count.toLocaleString()}</span>
                 </div>
               ))}
-              <div class="text-body-secondary mt-2" style="font-size:.7rem">
+              <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
                 +N = neue Einträge (7 Tage)
               </div>
             </div>
           </div>
         </div>
 
-        <div class="col-md-4">
-          <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-              <h6 class="card-title fw-semibold mb-3">Auth-Aktivität</h6>
+        <div className="col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <h6 className="card-title fw-semibold mb-3">Auth-Aktivität</h6>
               {(
                 [
                   ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person_add', 'text-success'],
@@ -220,14 +221,14 @@ export function AdminDashboard() {
                   ['Passkey-Nutzer', stats.auth.passkeyUsers, 'fingerprint', 'text-info'],
                 ] as [string, number, string, string][]
               ).map(([label, count, icon, color]) => (
-                <div key={label} class="d-flex justify-content-between align-items-center py-2 border-bottom">
-                  <span class="d-flex align-items-center gap-2 small">
-                    <span class={`material-icons-round ${color}`} style="font-size:1rem">
+                <div key={label} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                  <span className="d-flex align-items-center gap-2 small">
+                    <span className={`material-icons-round ${color}`} style={{ fontSize: '1rem' }}>
                       {icon}
                     </span>
                     {label}
                   </span>
-                  <span class="badge bg-secondary rounded-pill">{count}</span>
+                  <span className="badge bg-secondary rounded-pill">{count}</span>
                 </div>
               ))}
             </div>
@@ -235,8 +236,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div class="row g-3 mt-0">
-        <div class="col-12">
+      <div className="row g-3 mt-0">
+        <div className="col-12">
           <MemoryCard
             heap={heap}
             loading={heapLoading}
@@ -247,9 +248,9 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div class="text-end mt-3">
-        <button class="btn btn-sm btn-outline-secondary" onClick={load}>
-          <span class="material-icons-round me-1" style="font-size:1rem;vertical-align:middle">
+      <div className="text-end mt-3">
+        <button className="btn btn-sm btn-outline-secondary" onClick={load}>
+          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
             refresh
           </span>
           Aktualisieren

@@ -106,37 +106,37 @@ export function TabellenBlock({
   }
 
   return (
-    <div class="border rounded p-2 mb-2 bg-body-tertiary">
-      <div class="d-flex align-items-center gap-1 mb-1">
-        <span class="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
+    <div className="border rounded p-2 mb-2 bg-body-tertiary">
+      <div className="d-flex align-items-center gap-1 mb-1">
+        <span className="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
         {bereich && (
           <button
             type="button"
-            class="btn btn-sm btn-outline-secondary py-0"
+            className="btn btn-sm btn-outline-secondary py-0"
             onClick={onVonSeiteEntfernen}
             title="Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)"
           >
-            <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+            <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
               link_off
             </span>
           </button>
         )}
         <button
           type="button"
-          class="btn btn-sm btn-outline-danger py-0"
+          className="btn btn-sm btn-outline-danger py-0"
           onClick={onDelete}
           title="Tabelle löschen (aus dem ganzen Dokument)"
         >
-          <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+          <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
             delete
           </span>
         </button>
       </div>
 
-      <div class="row g-1 mb-1">
-        <div class="col-7">
+      <div className="row g-1 mb-1">
+        <div className="col-7">
           <select
-            class="form-select form-select-sm"
+            className="form-select form-select-sm"
             value={tabelle.quelle}
             onChange={e => onChange({ ...tabelle, quelle: (e.target as HTMLSelectElement).value })}
           >
@@ -147,10 +147,10 @@ export function TabellenBlock({
             ))}
           </select>
         </div>
-        <div class="col-5">
-          <div class="form-check">
+        <div className="col-5">
+          <div className="form-check">
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               checked={Boolean(tabelle.filter)}
               onChange={e =>
@@ -162,15 +162,15 @@ export function TabellenBlock({
                 })
               }
             />
-            <label class="form-check-label small">Nur bestimmte Zeilen</label>
+            <label className="form-check-label small">Nur bestimmte Zeilen</label>
           </div>
         </div>
       </div>
 
       {tabelle.filter && (
-        <div class="mb-1 ps-2 border-start">
+        <div className="mb-1 ps-2 border-start">
           <select
-            class="form-select form-select-sm mb-1"
+            className="form-select form-select-sm mb-1"
             value={tabelle.filter.feld}
             onChange={e => onChange({ ...tabelle, filter: { feld: (e.target as HTMLSelectElement).value, werte: [] } })}
           >
@@ -181,11 +181,11 @@ export function TabellenBlock({
             ))}
           </select>
           {filterWerte.length > 0 ? (
-            <div class="d-flex flex-wrap gap-2">
+            <div className="d-flex flex-wrap gap-2">
               {filterWerte.map(wert => (
-                <div key={wert} class="form-check">
+                <div key={wert} className="form-check">
                   <input
-                    class="form-check-input"
+                    className="form-check-input"
                     type="checkbox"
                     checked={tabelle.filter!.werte.includes(wert)}
                     onChange={e => {
@@ -196,16 +196,16 @@ export function TabellenBlock({
                       onChange({ ...tabelle, filter: { ...tabelle.filter!, werte } });
                     }}
                   />
-                  <label class="form-check-label small">{wert}</label>
+                  <label className="form-check-label small">{wert}</label>
                 </div>
               ))}
             </div>
           ) : (
             <input
-              class="form-control form-control-sm font-monospace"
+              className="form-control form-control-sm font-monospace"
               placeholder="Werte, durch Komma getrennt"
               value={tabelle.filter.werte.join(', ')}
-              onInput={e =>
+              onChange={e =>
                 onChange({
                   ...tabelle,
                   filter: {
@@ -222,32 +222,32 @@ export function TabellenBlock({
         </div>
       )}
 
-      <div class="d-flex align-items-center gap-2 mb-1">
+      <div className="d-flex align-items-center gap-2 mb-1">
         <ScharfButton
           aktiv={aktiv}
           onClick={() => onArm(aktiv ? null : { bereich: 'tabelle', tabelle: name })}
           titel="Auf dem PDF die erste Datenzeile dieser Tabelle markieren — setzt Startposition und Zeilenhöhe"
         />
-        <span class="small">erste Datenzeile auf dieser Seite</span>
+        <span className="small">erste Datenzeile auf dieser Seite</span>
       </div>
       {bereich && maxZeilen > 1 && (
-        <div class="d-flex align-items-center gap-2 mb-1">
+        <div className="d-flex align-items-center gap-2 mb-1">
           <ScharfButton
             aktiv={letzteAktiv}
             onClick={() => onArm(letzteAktiv ? null : { bereich: 'letzteZeile', tabelle: name })}
             titel="Letzte Datenzeile markieren — daraus wird die Zeilenhöhe über alle Zeilen gemittelt"
           />
-          <span class="small">
-            letzte Datenzeile <span class="text-body-secondary">— misst die Höhe genauer</span>
+          <span className="small">
+            letzte Datenzeile <span className="text-body-secondary">— misst die Höhe genauer</span>
           </span>
         </div>
       )}
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <span class="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
+      <div className="d-flex align-items-center gap-2 mb-1">
+        <span className="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
         {bereich && (
-          <div class="form-check mb-0">
+          <div className="form-check mb-0">
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               checked={eigenePlatzierung}
               title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
@@ -260,23 +260,23 @@ export function TabellenBlock({
                 });
               }}
             />
-            <label class="form-check-label small">eigene je Seite</label>
+            <label className="form-check-label small">eigene je Seite</label>
           </div>
         )}
       </div>
-      <div class="row g-1 mb-1 align-items-end">
+      <div className="row g-1 mb-1 align-items-end">
         <ZahlFeld label="startY" wert={startY} onChange={v => setzeStartY(v ?? 0)} />
         <ZahlFeld label="Höhe" wert={zeilenHoehe} min={0.1} onChange={v => setzeZeilenHoehe(v ?? 1)} />
         <ZahlFeld label="Zeilen" wert={maxZeilen} ganzzahl min={1} onChange={v => setzeMaxZeilen(v ?? 1)} />
       </div>
       {!bereich && (
-        <div class="d-flex align-items-center gap-2 mb-2">
-          <div class="small text-body-secondary flex-grow-1">
+        <div className="d-flex align-items-center gap-2 mb-2">
+          <div className="small text-body-secondary flex-grow-1">
             Auf dieser Seite noch kein Platz — Startposition setzen, um sie hier zu zeigen.
           </div>
           <button
             type="button"
-            class="btn btn-sm btn-outline-secondary"
+            className="btn btn-sm btn-outline-secondary"
             onClick={() => onSeiteChange({ ...seite, bereiche: [...seite.bereiche, { tabelle: name }] })}
             title="Übernimmt Startposition, Höhe und Zeilenzahl unverändert von der Tabelle -- z.B. wenn nur die Spalten dieser Seite abweichen"
           >
@@ -312,18 +312,18 @@ export function TabellenBlock({
       <SonderZeilen tabelle={tabelle} tabelleName={name} vorschau={vorschau} onChange={onChange} />
 
       {bereich && Object.keys(tabelle.sonderzeilen ?? {}).length > 0 && (
-        <div class="mb-1">
-          <div class="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
+        <div className="mb-1">
+          <div className="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
           {Object.keys(tabelle.sonderzeilen ?? {}).map(sonderName => {
             const platzierungen = bereich.sonderzeilen ?? [];
             const indizes = platzierungen.map((_, i) => i).filter(i => platzierungen[i]!.name === sonderName);
             return (
-              <div key={sonderName} class="mb-1">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                  <span class="small flex-grow-1">{sonderName}</span>
+              <div key={sonderName} className="mb-1">
+                <div className="d-flex align-items-center gap-2 mb-1">
+                  <span className="small flex-grow-1">{sonderName}</span>
                   <button
                     type="button"
-                    class="btn btn-sm btn-outline-secondary py-0"
+                    className="btn btn-sm btn-outline-secondary py-0"
                     title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
                     onClick={() => setzeBereich({ sonderzeilen: [...platzierungen, { name: sonderName, y: startY }] })}
                   >
@@ -334,7 +334,7 @@ export function TabellenBlock({
                   const platz = platzierungen[i]!;
                   const zeilenAktiv = istGleich(armed, { bereich: 'sonderzeile', tabelle: name, index: i });
                   return (
-                    <div key={i} class="d-flex align-items-end gap-1 mb-1 flex-wrap">
+                    <div key={i} className="d-flex align-items-end gap-1 mb-1 flex-wrap">
                       <ScharfButton
                         aktiv={zeilenAktiv}
                         onClick={() => onArm(zeilenAktiv ? null : { bereich: 'sonderzeile', tabelle: name, index: i })}
@@ -358,11 +358,11 @@ export function TabellenBlock({
                       />
                       <button
                         type="button"
-                        class="btn btn-sm btn-outline-danger py-0"
+                        className="btn btn-sm btn-outline-danger py-0"
                         title="Diese Platzierung entfernen"
                         onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
                       >
-                        <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+                        <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
                           delete
                         </span>
                       </button>
@@ -375,12 +375,12 @@ export function TabellenBlock({
         </div>
       )}
 
-      <div class="d-flex align-items-center gap-2 mb-1">
-        <span class="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>
+      <div className="d-flex align-items-center gap-2 mb-1">
+        <span className="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>
         {bereich && (
-          <div class="form-check mb-0">
+          <div className="form-check mb-0">
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               checked={eigeneSpalten}
               title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
@@ -388,7 +388,7 @@ export function TabellenBlock({
                 setzeBereich({ spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined })
               }
             />
-            <label class="form-check-label small">eigene je Seite</label>
+            <label className="form-check-label small">eigene je Seite</label>
           </div>
         )}
       </div>
@@ -425,7 +425,7 @@ export function TabellenBlock({
       ))}
       <button
         type="button"
-        class="btn btn-sm btn-outline-secondary"
+        className="btn btn-sm btn-outline-secondary"
         onClick={() =>
           setzeSpalten([
             ...spalten,

@@ -1,4 +1,5 @@
-import { useState } from 'preact/hooks';
+import { useState } from 'react';
+
 import { joinOeLevels } from '@/infrastructure/data/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 import type { AdminUserRow } from '../utils/api';
@@ -23,30 +24,30 @@ export function BulkEditUserOverview({
     : selectedUsers;
 
   return (
-    <div class="mb-3">
-      <div class="d-flex justify-content-between align-items-center mb-1">
-        <span class="fw-semibold small">Ausgewählte Benutzer ({selectedUsers.length})</span>
+    <div className="mb-3">
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <span className="fw-semibold small">Ausgewählte Benutzer ({selectedUsers.length})</span>
         {selectedUsers.length > 5 && (
           <input
             type="search"
-            class="form-control form-control-sm"
-            style="max-width: 14rem"
+            className="form-control form-control-sm"
+            style={{ maxWidth: '14rem' }}
             placeholder="Name oder OE filtern…"
             aria-label="Ausgewählte Benutzer filtern"
             value={filter}
-            onInput={e => setFilter((e.target as HTMLInputElement).value)}
+            onChange={e => setFilter((e.target as HTMLInputElement).value)}
           />
         )}
       </div>
-      <div class="table-responsive border rounded" style="max-height:30vh">
-        <table class="table table-sm mb-0 align-middle">
-          <thead class="sticky-top bg-body">
+      <div className="table-responsive border rounded" style={{ maxHeight: '30vh' }}>
+        <table className="table table-sm mb-0 align-middle">
+          <thead className="sticky-top bg-body">
             <tr>
               <th scope="col">Benutzer</th>
               <th scope="col">OE</th>
               <th scope="col">Betrieb</th>
-              <th scope="col" class="text-end">
-                <span class="visually-hidden">Abwählen</span>
+              <th scope="col" className="text-end">
+                <span className="visually-hidden">Abwählen</span>
               </th>
             </tr>
           </thead>
@@ -56,15 +57,15 @@ export function BulkEditUserOverview({
                 <td>{user.fullName || user.userName}</td>
                 <td>{joinOeLevels(user.oe) || '–'}</td>
                 <td>{user.betrieb || '–'}</td>
-                <td class="text-end">
+                <td className="text-end">
                   <button
                     type="button"
-                    class="btn btn-sm btn-link text-danger p-0"
+                    className="btn btn-sm btn-link text-danger p-0"
                     aria-label={`${user.fullName || user.userName} abwählen`}
                     disabled={selectedUsers.length <= 1}
                     onClick={() => onRemoveUser(user._id)}
                   >
-                    <span class="material-icons-round" style="font-size: 1.1rem; vertical-align: middle">
+                    <span className="material-icons-round" style={{ fontSize: '1.1rem', verticalAlign: 'middle' }}>
                       close
                     </span>
                   </button>
@@ -73,7 +74,7 @@ export function BulkEditUserOverview({
             ))}
             {visibleUsers.length === 0 && (
               <tr>
-                <td colSpan={4} class="text-body-secondary fst-italic">
+                <td colSpan={4} className="text-body-secondary fst-italic">
                   Keine Treffer
                 </td>
               </tr>

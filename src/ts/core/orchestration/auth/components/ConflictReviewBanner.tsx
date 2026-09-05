@@ -1,6 +1,6 @@
-import type { FunctionalComponent } from 'preact';
-import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { type FC, useState } from 'react';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import dayjs from '@/infrastructure/date/configDayjs';
 
 type Resource = { name: string; months: number[] };
@@ -10,7 +10,7 @@ type Props = {
   onSave: () => Promise<void>;
 };
 
-const ConflictReviewBanner: FunctionalComponent<Props> = ({ resources, onSave }) => {
+const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
   const [saving, setSaving] = useState(false);
 
   const text = `Betroffene Bereiche: ${resources
@@ -68,23 +68,23 @@ const ConflictReviewBanner: FunctionalComponent<Props> = ({ resources, onSave })
 
 export default ConflictReviewBanner;
 
-export function hideConflictReviewBanner(mount: HTMLElement): void {
-  render(null, mount);
+export function hideConflictReviewBanner(container: HTMLElement): void {
+  unmount(container);
 }
 
 export function showConflictReviewBanner(
-  mount: HTMLElement,
+  container: HTMLElement,
   resources: { name: string; months: number[] }[],
   onSave: () => Promise<void>,
 ): void {
-  render(
+  mount(
+    container,
     <ConflictReviewBanner
       resources={resources}
       onSave={async () => {
         await onSave();
-        render(null, mount);
+        unmount(container);
       }}
     />,
-    mount,
   );
 }

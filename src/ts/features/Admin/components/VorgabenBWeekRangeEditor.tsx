@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
   { tag: 1, short: 'Mo' },
@@ -101,7 +101,7 @@ export function VorgabenBWeekRangeEditor({
     onEndChange(nextEnd.tag, nextEnd.Nwoche);
   };
 
-  const handlePointerDown = (event: PointerEvent, slot: number): void => {
+  const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slot: number): void => {
     if (disabled) return;
 
     if (event.pointerType === 'mouse') {
@@ -142,15 +142,15 @@ export function VorgabenBWeekRangeEditor({
     endSlot === null ? `${getSlotLabel(startSlot)} -> ...` : `${getSlotLabel(startSlot)} -> ${getSlotLabel(endSlot)}`;
 
   return (
-    <div class="mb-2">
-      <div class="d-flex flex-wrap gap-2 align-items-baseline mb-2">
-        <span class="form-label small fw-semibold mb-0">{label}</span>
-        <span class="small text-body-secondary">Auswahl: {rangeText}</span>
+    <div className="mb-2">
+      <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
+        <span className="form-label small fw-semibold mb-0">{label}</span>
+        <span className="small text-body-secondary">Auswahl: {rangeText}</span>
       </div>
 
       <div
-        class="d-grid"
-        style="grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .375rem;"
+        className="d-grid"
+        style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '.375rem' }}
         onPointerUp={clearDrag}
         onPointerLeave={clearDrag}
       >
@@ -171,7 +171,7 @@ export function VorgabenBWeekRangeEditor({
             <button
               key={`${selectorKey}-${slot}`}
               type="button"
-              class={`btn btn-sm ${variantClass} py-2`}
+              className={`btn btn-sm ${variantClass} py-2`}
               disabled={disabled}
               onPointerDown={event => handlePointerDown(event, slot)}
               onPointerEnter={() => handlePointerEnter(slot)}

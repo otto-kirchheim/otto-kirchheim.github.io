@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
+
 import type { Column } from '@/infrastructure/table/CustomTable';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -110,7 +111,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
   const ewtOptions = buildEwtOptions(dataE);
 
-  const handleEwtChange = (evt: Event): void => {
+  const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
     const selectedId = select.value;
     const currentForm = ref.current;
@@ -211,8 +212,8 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   });
   modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;
       event.preventDefault();
 

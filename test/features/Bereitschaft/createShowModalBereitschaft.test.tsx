@@ -1,23 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h, render, type ComponentChildren } from 'preact';
+import { createElement as h, type ReactNode } from 'react';
+import { render } from '../../reactRender';
+
 import type { Column, Row, CustomTableTypes } from '@/infrastructure/table/CustomTable';
 
 const { showModalMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
 }));
 
-type StubProps = { children?: ComponentChildren; Footer?: ComponentChildren; errorMessage?: string };
+type StubProps = { children?: ReactNode; Footer?: ReactNode; errorMessage?: string };
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
   MyDivModal: (props: StubProps) =>
-    h('div', { class: 'modal-stub' }, [
-      props.errorMessage ? h('div', { class: 'error' }, props.errorMessage) : null,
+    h(
+      'div',
+      { className: 'modal-stub' },
+      props.errorMessage ? h('div', { className: 'error' }, props.errorMessage) : null,
       props.Footer,
       props.children,
-    ]),
-  MyModalBody: (props: StubProps) => h('div', { class: 'modal-body-stub' }, props.children),
-  MyShowFooter: () => h('div', { class: 'show-footer' }),
+    ),
+  MyModalBody: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
+  MyShowFooter: () => h('div', { className: 'show-footer' }),
 }));
 
 import ShowModalBereitschaft from '@/features/Bereitschaft/components/createShowModalBereitschaft';

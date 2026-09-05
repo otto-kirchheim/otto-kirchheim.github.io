@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { authApi } from '@/infrastructure/api/apiService';
@@ -70,8 +71,8 @@ export default function createModalPasskeySetPassword(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
-  function onSubmit(): (event: Event) => Promise<void> {
-    return async (event: Event): Promise<void> => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
       form.classList.add('was-validated');

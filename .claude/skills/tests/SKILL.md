@@ -44,7 +44,7 @@ test/
 ├── core/, infrastructure/, features/, Admin/, Einstellungen/, orchestration/, fixtures/
 ├── class/                  # Legacy-Ordnername (testet u.a. infrastructure/table/CustomTable.ts,
 │                           #  infrastructure/ui/CustomSnackbar.ts — nie umbenannt)
-├── components/             # Preact-Komponenten-Tests
+├── components/             # React-Komponenten-Tests
 └── Utilities/              # Utility-Tests (abortController, FetchRetry, download, ...)
 ```
 

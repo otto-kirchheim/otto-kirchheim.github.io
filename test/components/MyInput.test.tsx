@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'bun:test';
-import { render, type ComponentProps } from 'preact';
+import { describe, expect, it, mock } from 'bun:test';
+import { type ComponentProps } from 'react';
+import { render } from '../reactRender';
+
 import MyInput from '@/components/MyInput';
 
 function renderMyInput(props: ComponentProps<typeof MyInput>): HTMLDivElement {
@@ -30,7 +32,7 @@ describe('MyInput', () => {
     expect(container.querySelector('input')).toBe(input);
   });
 
-  it('should not re-sync the popover when unrelated props change', () => {
+  it('behaelt das Eingabefeld, wenn sich unbeteiligte Props aendern', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     render(<MyInput type="text" id="myid" name="myname" value="a" />, container);
@@ -39,6 +41,20 @@ describe('MyInput', () => {
     render(<MyInput type="text" id="myid" name="myname" value="b" />, container);
 
     expect(container.querySelector('input')).toBe(input);
+    // Ohne `onChange` ist `value` nur eine Vorbelegung (React: `defaultValue`). Nach dem Mounten
+    // schreibt React sie nicht mehr ins DOM -- Tippen des Nutzers bleibt dadurch erhalten.
+    expect(input.value).toBe('a');
+  });
+
+  it('folgt dem Wert, wenn ein onChange-Handler das Feld steuert', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const onChange = mock(() => {});
+    render(<MyInput type="text" id="myid" name="myname" value="a" onChange={onChange} />, container);
+    const input = container.querySelector('input')!;
+
+    render(<MyInput type="text" id="myid" name="myname" value="b" onChange={onChange} />, container);
+
     expect(input.value).toBe('b');
   });
 });

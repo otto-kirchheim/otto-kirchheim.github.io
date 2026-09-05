@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { render } from 'preact';
+import { mount, unmount } from '@/infrastructure/ui';
+
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
 
@@ -27,9 +28,9 @@ export function DatenpfadWahl({
   const bekannt = eintraege.some(e => e.pfad === wert);
   return (
     <div>
-      <div class="input-group input-group-sm">
+      <div className="input-group input-group-sm">
         <select
-          class="form-select"
+          className="form-select"
           value={bekannt ? wert : '__frei'}
           onChange={e => onChange((e.target as HTMLSelectElement).value)}
         >
@@ -47,15 +48,15 @@ export function DatenpfadWahl({
         </select>
         {!bekannt && (
           <input
-            class={`form-control font-monospace${belegt.has(wert) ? ' is-invalid' : ''}`}
+            className={`form-control font-monospace${belegt.has(wert) ? ' is-invalid' : ''}`}
             placeholder="Datenpfad"
             value={wert === '__frei' ? '' : wert}
-            onInput={e => onChange((e.target as HTMLInputElement).value)}
+            onChange={e => onChange((e.target as HTMLInputElement).value)}
           />
         )}
       </div>
       {!bekannt && belegt.has(wert) && (
-        <div class="small text-danger">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
+        <div className="small text-danger">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
       )}
     </div>
   );
@@ -88,10 +89,10 @@ export function ZusammengesetzteQuellen({
   const bekannterTrenner = TRENNER.some(t => t.wert === (feld.trenner ?? ' '));
 
   return (
-    <div class="mb-1">
+    <div className="mb-1">
       {quellen.map((pfad, i) => (
-        <div key={i} class="d-flex gap-1 mb-1">
-          <div class="flex-grow-1">
+        <div key={i} className="d-flex gap-1 mb-1">
+          <div className="flex-grow-1">
             <DatenpfadWahl
               wert={pfad}
               eintraege={eintraege}
@@ -100,7 +101,7 @@ export function ZusammengesetzteQuellen({
           </div>
           <button
             type="button"
-            class="btn btn-sm btn-outline-danger py-0"
+            className="btn btn-sm btn-outline-danger py-0"
             onClick={() => onChange({ ...feld, quellen: quellen.filter((_, j) => j !== i) })}
             title="Teil entfernen"
           >
@@ -108,17 +109,17 @@ export function ZusammengesetzteQuellen({
           </button>
         </div>
       ))}
-      <div class="d-flex gap-1 align-items-center">
+      <div className="d-flex gap-1 align-items-center">
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           onClick={() => onChange({ ...feld, quellen: [...quellen, eintraege[0]?.pfad ?? ''] })}
         >
           + Teil
         </button>
-        <span class="small text-muted">getrennt durch</span>
+        <span className="small text-muted">getrennt durch</span>
         <select
-          class="form-select form-select-sm w-auto"
+          className="form-select form-select-sm w-auto"
           value={bekannterTrenner ? (feld.trenner ?? ' ') : '__frei'}
           onChange={e => {
             const v = (e.target as HTMLSelectElement).value;
@@ -134,11 +135,11 @@ export function ZusammengesetzteQuellen({
         </select>
         {!bekannterTrenner && (
           <input
-            class="form-control form-control-sm font-monospace w-auto"
-            style="max-width:6rem"
+            className="form-control form-control-sm font-monospace w-auto"
+            style={{ maxWidth: '6rem' }}
             placeholder="Zeichen"
             value={feld.trenner ?? ''}
-            onInput={e => onChange({ ...feld, trenner: (e.target as HTMLInputElement).value })}
+            onChange={e => onChange({ ...feld, trenner: (e.target as HTMLInputElement).value })}
           />
         )}
       </div>
@@ -179,7 +180,7 @@ export function PlatzhalterPicker({
 
   return (
     <select
-      class="form-select form-select-sm mb-1"
+      className="form-select form-select-sm mb-1"
       value=""
       title="Datenpfad an der Cursorposition einfügen"
       onChange={e => {
@@ -229,7 +230,7 @@ const PLATZHALTER_BEISPIELE: { platzhalter: string; beschreibung: string }[] = [
 function PlatzhalterHilfeInhalt() {
   return (
     <>
-      <table class="table table-sm mb-3">
+      <table className="table table-sm mb-3">
         <thead>
           <tr>
             <th>Platzhalter</th>
@@ -239,18 +240,18 @@ function PlatzhalterHilfeInhalt() {
         <tbody>
           {PLATZHALTER_BEISPIELE.map(b => (
             <tr key={b.platzhalter}>
-              <td class="font-monospace text-nowrap">{b.platzhalter}</td>
+              <td className="font-monospace text-nowrap">{b.platzhalter}</td>
               <td>{b.beschreibung}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <div class="small fw-semibold mb-1">Verfügbare Formate (für das Feld-Format und {'{Pfad:Format}'})</div>
-      <table class="table table-sm mb-0">
+      <div className="small fw-semibold mb-1">Verfügbare Formate (für das Feld-Format und {'{Pfad:Format}'})</div>
+      <table className="table table-sm mb-0">
         <tbody>
           {FORMATE.filter(f => f.wert !== '').map(f => (
             <tr key={f.wert}>
-              <td class="font-monospace text-nowrap">{f.wert}</td>
+              <td className="font-monospace text-nowrap">{f.wert}</td>
               <td>{f.label}</td>
             </tr>
           ))}
@@ -271,26 +272,26 @@ export function openPlatzhalterHilfe(): void {
   container.setAttribute('tabindex', '-1');
   document.body.appendChild(container);
 
-  render(
-    <div class="modal-dialog modal-dialog-scrollable modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Platzhalter &amp; Formate</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" />
+  mount(
+    container,
+    <div className="modal-dialog modal-dialog-scrollable modal-lg">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h5 className="modal-title">Platzhalter &amp; Formate</h5>
+          <button type="button" className="btn-close" data-bs-dismiss="modal" />
         </div>
-        <div class="modal-body">
+        <div className="modal-body">
           <PlatzhalterHilfeInhalt />
         </div>
       </div>
     </div>,
-    container,
   );
 
   const bsModal = new Modal(container);
   container.addEventListener(
     'hidden.bs.modal',
     () => {
-      render(null, container);
+      unmount(container);
       bsModal.dispose();
       container.remove();
     },

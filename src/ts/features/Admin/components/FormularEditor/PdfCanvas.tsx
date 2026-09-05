@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { ladePdfjs } from './pdfjsLoader';
 
@@ -334,7 +335,7 @@ export function PdfCanvas({
     ctx.setLineDash([]);
   }, [rechtecke, raster, ziehen, gerendert, achse, messModus, messBoxen]);
 
-  function canvasKoordinate(e: MouseEvent): { x: number; y: number } | null {
+  function canvasKoordinate(e: { clientX: number; clientY: number }): { x: number; y: number } | null {
     const canvas = canvasRef.current;
     if (!canvas) return null;
     const rect = canvas.getBoundingClientRect();
@@ -372,7 +373,7 @@ export function PdfCanvas({
     ctx.stroke();
   }
 
-  function handleDown(e: MouseEvent): void {
+  function handleDown(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!scharfGeschaltet) return;
     const p = canvasKoordinate(e);
     if (!p) return;
@@ -380,7 +381,7 @@ export function PdfCanvas({
     zeichneLupe(p);
   }
 
-  function handleMove(e: MouseEvent): void {
+  function handleMove(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!scharfGeschaltet) return;
     const p = canvasKoordinate(e);
     if (!p) return;
@@ -424,7 +425,7 @@ export function PdfCanvas({
     return 'Rechteck über die Zelle ziehen (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten Ausschnitt).';
   }
 
-  function handleMessKlick(e: MouseEvent): void {
+  function handleMessKlick(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!messModus || !onGemessen) return;
     const viewport = viewportRef.current;
     const p = canvasKoordinate(e);
@@ -458,10 +459,10 @@ export function PdfCanvas({
 
   return (
     <div>
-      <div class="d-flex align-items-center flex-wrap gap-2 mb-1 small">
+      <div className="d-flex align-items-center flex-wrap gap-2 mb-1 small">
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary py-0"
+          className="btn btn-sm btn-outline-secondary py-0"
           disabled={!pdf || angezeigt <= 0}
           onClick={() => setAngezeigt(i => i - 1)}
         >
@@ -472,7 +473,7 @@ export function PdfCanvas({
         </span>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary py-0"
+          className="btn btn-sm btn-outline-secondary py-0"
           disabled={!pdf || angezeigt >= (pdf?.numPages ?? 1) - 1}
           onClick={() => setAngezeigt(i => i + 1)}
         >
@@ -480,16 +481,16 @@ export function PdfCanvas({
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-primary py-0"
+          className="btn btn-sm btn-outline-primary py-0"
           disabled={!pdf}
           onClick={() => onQuelleWaehlen(angezeigt)}
         >
           Als Quelle für „{aktiveSeiteLabel}“ verwenden
         </button>
-        <div class="ms-auto d-flex align-items-center gap-1">
-          <span class="text-muted">Zoom</span>
+        <div className="ms-auto d-flex align-items-center gap-1">
+          <span className="text-muted">Zoom</span>
           <select
-            class="form-select form-select-sm py-0 w-auto"
+            className="form-select form-select-sm py-0 w-auto"
             value={String(zoom)}
             onChange={e => setZoom(Number((e.target as HTMLSelectElement).value))}
           >
@@ -501,40 +502,48 @@ export function PdfCanvas({
           </select>
         </div>
       </div>
-      {fehler && <div class="text-danger small mb-1">{fehler}</div>}
+      {fehler && <div className="text-danger small mb-1">{fehler}</div>}
       {scharfGeschaltet && (
-        <div class="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
+        <div className="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
           <span>{ziehHinweis()}</span>
-          {liveAnzeige() && <span class="badge text-bg-primary font-monospace">{liveAnzeige()}</span>}
+          {liveAnzeige() && <span className="badge text-bg-primary font-monospace">{liveAnzeige()}</span>}
         </div>
       )}
       {messModus && (
-        <div class="small text-primary mb-1">
+        <div className="small text-primary mb-1">
           Ein Textstück der PDF anklicken — die gemessene Schriftgröße wird übernommen (mit scharfgeschaltetem Feld
           direkt in dessen Größe).
         </div>
       )}
-      <div class="position-relative">
-        <div class="border rounded overflow-auto" style="max-height:70vh">
+      <div className="position-relative">
+        <div className="border rounded overflow-auto" style={{ maxHeight: '70vh' }}>
           <div
-            class="position-relative"
-            style={`width:max-content;cursor:${messModus ? 'help' : scharfGeschaltet ? 'crosshair' : 'default'}`}
+            className="position-relative"
+            style={{
+              width: 'max-content',
+              cursor: messModus ? 'help' : scharfGeschaltet ? 'crosshair' : 'default',
+            }}
             onMouseDown={handleDown}
             onMouseMove={handleMove}
             onMouseUp={handleUp}
             onMouseLeave={handleLeave}
             onClick={handleMessKlick}
           >
-            <canvas ref={canvasRef} style="display:block" />
-            <canvas ref={overlayRef} class="position-absolute top-0 start-0" style="pointer-events:none" />
+            <canvas ref={canvasRef} style={{ display: 'block' }} />
+            <canvas ref={overlayRef} className="position-absolute top-0 start-0" style={{ pointerEvents: 'none' }} />
           </div>
         </div>
         <canvas
           ref={lupeRef}
           width={LUPE_GROESSE}
           height={LUPE_GROESSE}
-          class="position-absolute border border-2 border-danger rounded-circle bg-body shadow"
-          style={`display:${scharfGeschaltet && lupeSichtbar ? 'block' : 'none'};right:12px;bottom:12px;pointer-events:none`}
+          className="position-absolute border border-2 border-danger rounded-circle bg-body shadow"
+          style={{
+            display: scharfGeschaltet && lupeSichtbar ? 'block' : 'none',
+            right: '12px',
+            bottom: '12px',
+            pointerEvents: 'none',
+          }}
         />
       </div>
     </div>

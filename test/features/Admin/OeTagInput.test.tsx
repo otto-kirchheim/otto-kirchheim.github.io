@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from 'preact';
+import { render, setzeWert } from '../../reactRender';
+
 import { OeTagInput } from '@/features/Admin/components/OeTagInput';
 
 async function flush(): Promise<void> {
@@ -26,8 +27,7 @@ function levelInputs(container: HTMLDivElement): HTMLInputElement[] {
 }
 
 async function setValue(input: HTMLInputElement, value: string): Promise<void> {
-  input.value = value;
-  input.dispatchEvent(new Event('input', { bubbles: true }));
+  setzeWert(input, value);
   await flush();
 }
 

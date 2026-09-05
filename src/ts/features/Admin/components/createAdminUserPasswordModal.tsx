@@ -1,5 +1,6 @@
 import Modal from 'bootstrap/js/dist/modal';
-import { createRef } from 'preact';
+import { createRef, type SubmitEvent } from 'react';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
@@ -59,8 +60,8 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
-  function onSubmit(): (event: Event) => Promise<void> {
-    return async (event: Event): Promise<void> => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();

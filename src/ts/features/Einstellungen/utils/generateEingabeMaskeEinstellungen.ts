@@ -8,7 +8,8 @@ import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUvorg
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { setupPersValidation } from '@/infrastructure/validation/addressValidation';
 import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
-import { h, render } from 'preact';
+import { createElement } from 'react';
+import { mount } from '@/infrastructure/ui';
 
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
@@ -47,7 +48,7 @@ function populateEmailField(): void {
   emailInput.value = Storage.get<string>('BenutzerEmail', { default: '' });
 }
 
-// Zählt jeden Aufruf hoch, damit `key` sich ändert und Preact das Panel neu mounted statt
+// Zählt jeden Aufruf hoch, damit `key` sich ändert und React das Panel neu mountet statt
 // den bestehenden Component-State (inkl. veralteter Arbeitszeit nach Act-as-Wechsel) zu behalten.
 let arbeitszeitPanelRenderCount = 0;
 let fahrzeitPanelRenderCount = 0;
@@ -55,7 +56,10 @@ let fahrzeitPanelRenderCount = 0;
 function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
   if (!panel) return;
-  render(h(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.Fahrzeit ?? [] }), panel);
+  mount(
+    panel,
+    createElement(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.Fahrzeit ?? [] }),
+  );
 }
 
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
@@ -64,7 +68,7 @@ function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const aZ = isLegacyArbeitszeit(VorgabenU.Arbeitszeit)
     ? migrateArbeitszeit(VorgabenU.Arbeitszeit)
     : VorgabenU.Arbeitszeit;
-  render(h(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }), panel);
+  mount(panel, createElement(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }));
 }
 
 function setElementValues<T>(values: T): void {

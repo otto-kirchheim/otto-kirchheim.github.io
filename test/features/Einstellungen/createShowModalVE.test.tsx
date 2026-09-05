@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h, render, type ComponentChildren } from 'preact';
+import { createElement as h, type ReactNode } from 'react';
+import { render } from '../../reactRender';
+
 import type { Row } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/types';
 
@@ -7,18 +9,20 @@ const { showModalMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) =>
   showModalMock: vi.fn(),
 }));
 
-type StubProps = { children?: ComponentChildren; Footer?: ComponentChildren };
+type StubProps = { children?: ReactNode; Footer?: ReactNode };
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
-  MyDivModal: (props: StubProps) => h('div', { class: 'modal-stub' }, [props.Footer, props.children]),
-  MyModalBody: (props: StubProps) => h('div', { class: 'modal-body-stub' }, props.children),
+  MyDivModal: (props: StubProps) => h('div', { className: 'modal-stub' }, props.Footer, props.children),
+  MyModalBody: (props: StubProps) => h('div', { className: 'modal-body-stub' }, props.children),
   MyShowElement: (props: { id: string; title: string; text: string }) =>
-    h('div', { class: 'show-element', 'data-id': props.id }, [
-      h('span', { class: 'label' }, props.title),
-      h('span', { class: 'value' }, props.text),
-    ]),
-  MyShowFooter: () => h('div', { class: 'show-footer' }),
+    h(
+      'div',
+      { className: 'show-element', 'data-id': props.id },
+      h('span', { className: 'label' }, props.title),
+      h('span', { className: 'value' }, props.text),
+    ),
+  MyShowFooter: () => h('div', { className: 'show-footer' }),
 }));
 
 import ShowModalVE from '@/features/Einstellungen/components/createShowModalVE';

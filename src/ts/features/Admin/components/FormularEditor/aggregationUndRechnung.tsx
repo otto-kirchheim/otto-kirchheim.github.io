@@ -157,10 +157,10 @@ export function AggregationEditor({
   }
 
   return (
-    <div class="row g-1 mb-1">
-      <div class="col-3">
+    <div className="row g-1 mb-1">
+      <div className="col-3">
         <select
-          class="form-select form-select-sm"
+          className="form-select form-select-sm"
           value={wert.op}
           onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as OpName })}
         >
@@ -171,9 +171,9 @@ export function AggregationEditor({
           ))}
         </select>
       </div>
-      <div class="col-4">
+      <div className="col-4">
         <select
-          class="form-select form-select-sm"
+          className="form-select form-select-sm"
           value={wert.ueber}
           onChange={e => onChange({ ...wert, ueber: (e.target as HTMLSelectElement).value })}
         >
@@ -183,9 +183,9 @@ export function AggregationEditor({
           <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
         </select>
       </div>
-      <div class="col-5">
+      <div className="col-5">
         <select
-          class="form-select form-select-sm"
+          className="form-select form-select-sm"
           value={
             wert.liste
               ? `liste:${wert.liste.tabelle}:${wert.liste.gruppe}:${wert.liste.index ?? 'gesamt'}${LISTE_ART_SUFFIX[wert.liste.art ?? 'summe']}`
@@ -238,40 +238,40 @@ export function AggregationEditor({
           )}
         </select>
       </div>
-      <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+      <div className="col-12 d-flex flex-wrap align-items-center gap-2">
         <span
-          class="small text-body-secondary"
+          className="small text-body-secondary"
           title="Grenzt die Aggregation auf eine oder mehrere Teiltabellen ein -- ohne Auswahl laufen alle Tabellen zusammen"
         >
           Tabellen:
         </span>
         {Object.keys(tabellen).map(name => (
-          <div key={name} class="form-check form-check-inline m-0">
+          <div key={name} className="form-check form-check-inline m-0">
             <input
-              class="form-check-input"
+              className="form-check-input"
               type="checkbox"
               checked={gewaehlt.includes(name)}
               onChange={() => schalteTabelle(name)}
             />
-            <label class="form-check-label small">{name}</label>
+            <label className="form-check-label small">{name}</label>
           </div>
         ))}
       </div>
       {wert.op === 'letztesDatum' && (
-        <div class="col-12 d-flex align-items-center gap-2">
+        <div className="col-12 d-flex align-items-center gap-2">
           <input
             type="number"
             min="0"
-            class="form-control form-control-sm"
-            style="max-width:6rem"
+            className="form-control form-control-sm"
+            style={{ maxWidth: '6rem' }}
             placeholder="Tage"
             value={wert.maxTage ?? ''}
-            onInput={e => {
+            onChange={e => {
               const roh = (e.target as HTMLInputElement).value;
               onChange({ ...wert, maxTage: roh === '' ? undefined : Number(roh) });
             }}
           />
-          <span class="small text-body-secondary">
+          <span className="small text-body-secondary">
             Tage Frist — liegt der letzte Eintrag länger zurück (oder fehlt er), wird das heutige Datum gesetzt. Leer
             lassen: immer der letzte Eintrag.
           </span>
@@ -315,10 +315,10 @@ export function Rechnung({
   }
 
   return (
-    <div class="mb-1">
-      <div class="input-group input-group-sm mb-1">
+    <div className="mb-1">
+      <div className="input-group input-group-sm mb-1">
         <select
-          class="form-select"
+          className="form-select"
           value={wert.op}
           onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as ZeilenOpName })}
         >
@@ -329,19 +329,24 @@ export function Rechnung({
           ))}
         </select>
         {onEntfernen && (
-          <button type="button" class="btn btn-outline-danger" title="Zwischenrechnung entfernen" onClick={onEntfernen}>
+          <button
+            type="button"
+            className="btn btn-outline-danger"
+            title="Zwischenrechnung entfernen"
+            onClick={onEntfernen}
+          >
             ×
           </button>
         )}
       </div>
-      <div class="small text-body-secondary mb-1">
+      <div className="small text-body-secondary mb-1">
         Operanden der Reihe nach verrechnet — für gemischte Rechnungen eine Zwischenrechnung einsetzen.
       </div>
 
       {wert.operanden.map((operand, i) =>
         typeof operand === 'object' ? (
           // Index als Key: Operanden haben keine eigene ID, ihre Reihenfolge ist Teil der Rechnung.
-          <div key={i} class="border-start border-2 ps-2 ms-1 mb-1">
+          <div key={i} className="border-start border-2 ps-2 ms-1 mb-1">
             <Rechnung
               wert={operand}
               zeilenFelder={zeilenFelder}
@@ -351,9 +356,9 @@ export function Rechnung({
           </div>
         ) : (
           // Index als Key, siehe oben.
-          <div key={i} class="input-group input-group-sm mb-1">
+          <div key={i} className="input-group input-group-sm mb-1">
             <select
-              class="form-select"
+              className="form-select"
               value={typeof operand === 'number' ? '__zahl' : operand}
               onChange={e => {
                 const v = (e.target as HTMLSelectElement).value;
@@ -374,29 +379,29 @@ export function Rechnung({
               <input
                 type="number"
                 step="any"
-                class="form-control"
+                className="form-control"
                 value={operand}
-                onInput={e => setzeOperand(i, Number((e.target as HTMLInputElement).value))}
+                onChange={e => setzeOperand(i, Number((e.target as HTMLInputElement).value))}
               />
             )}
-            <button type="button" class="btn btn-outline-danger" onClick={() => entferneOperand(i)}>
+            <button type="button" className="btn btn-outline-danger" onClick={() => entferneOperand(i)}>
               ×
             </button>
           </div>
         ),
       )}
 
-      <div class="d-flex gap-1">
+      <div className="d-flex gap-1">
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, zeilenFelder[0]?.pfad ?? ''] })}
         >
           + Operand
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           title="Geklammerte Zwischenrechnung als weiteren Operanden anhängen"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, { op: 'differenz', operanden: [] }] })}
         >

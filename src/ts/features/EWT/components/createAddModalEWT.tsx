@@ -1,4 +1,5 @@
-import { createRef } from 'preact';
+import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
+
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { IDatenEWT } from '@/types';
@@ -92,7 +93,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     buchungstagHinweisRef.current.classList.add('d-none');
   };
 
-  const changeBuero = (event: Event) => {
+  const changeBuero = (event: ChangeEvent<HTMLInputElement>) => {
     event.stopPropagation();
     if (!berechnenRef.current || !EOrtRef.current || !SchichtRef.current) return;
     const target = event.currentTarget as HTMLInputElement | null;
@@ -122,7 +123,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           <MyButton
             className="btn btn-secondary btn-lg text-start w-100"
             id="btnNaechsterTag"
-            clickHandler={(e: MouseEvent) => {
+            clickHandler={(e: MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setNaechsterEwtTag();
               updateBuchungstagAnzeige();
@@ -206,8 +207,8 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
 
   updateBuchungstagAnzeige();
 
-  function onSubmit(): (event: Event) => void {
-    return (event: Event): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
+    return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form.checkValidity && !form.checkValidity()) return;
       event.preventDefault();

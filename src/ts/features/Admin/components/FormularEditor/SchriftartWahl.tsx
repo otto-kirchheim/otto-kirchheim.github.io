@@ -116,12 +116,12 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
   const fehlt = fehlendeVorlagenSchnitte(value, vorlageFonts);
 
   return (
-    <div class="d-flex flex-column gap-1">
-      <div class="d-flex flex-wrap align-items-center gap-2 small">
-        <label class="d-flex align-items-center gap-1" title="Grundschrift für den gesamten Fließtext">
-          <span class="text-muted">Schrift</span>
+    <div className="d-flex flex-column gap-1">
+      <div className="d-flex flex-wrap align-items-center gap-2 small">
+        <label className="d-flex align-items-center gap-1" title="Grundschrift für den gesamten Fließtext">
+          <span className="text-muted">Schrift</span>
           <select
-            class="form-select form-select-sm w-auto"
+            className="form-select form-select-sm w-auto"
             value={basis}
             onChange={e => setzeBasis((e.target as HTMLSelectElement).value)}
           >
@@ -137,12 +137,12 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
           return (
             <label
               key={schnitt}
-              class="d-flex align-items-center gap-1"
+              className="d-flex align-items-center gap-1"
               title={`Nur für ${schnittLabel(schnitt)}-Text abweichend (z.B. wenn die Grundschrift diesen Schnitt nicht hat)`}
             >
-              <span class="text-muted">{schnittLabel(schnitt)}</span>
+              <span className="text-muted">{schnittLabel(schnitt)}</span>
               <select
-                class="form-select form-select-sm w-auto"
+                className="form-select form-select-sm w-auto"
                 value={gewaehlt}
                 onChange={e => setzeAbweichung(schnitt, (e.target as HTMLSelectElement).value)}
               >
@@ -158,7 +158,7 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
         })}
       </div>
       {fehlt.length > 0 && (
-        <div class="small text-warning-emphasis">
+        <div className="small text-warning-emphasis">
           Die gewählte Schrift bringt {fehlt.map(schnittLabel).join(' und ')} nicht mit — dort setzt der Renderer
           Helvetica im passenden Schnitt. Für einen anderen Ersatz das jeweilige Feld gezielt wählen.
         </div>

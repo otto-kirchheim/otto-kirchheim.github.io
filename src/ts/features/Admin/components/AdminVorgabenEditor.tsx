@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'react';
+
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -197,18 +198,18 @@ export function AdminVorgabenEditor() {
 
   return (
     <div>
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">VorgabenGeld</h5>
-        <button class="btn btn-sm btn-outline-primary" onClick={handleCreateYear} data-disabler>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h5 className="mb-0">VorgabenGeld</h5>
+        <button className="btn btn-sm btn-outline-primary" onClick={handleCreateYear} data-disabler>
           Jahr anlegen
         </button>
       </div>
 
-      <div class="row g-2 mb-3">
-        <div class="col-12 col-md-4">
-          <label class="form-label">Jahr</label>
+      <div className="row g-2 mb-3">
+        <div className="col-12 col-md-4">
+          <label className="form-label">Jahr</label>
           <select
-            class="form-select"
+            className="form-select"
             value={selectedYear ?? ''}
             onChange={e => handleSelectYear(Number((e.target as HTMLSelectElement).value))}
             disabled={loading || saving}
@@ -228,10 +229,10 @@ export function AdminVorgabenEditor() {
         </div>
       </div>
 
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <label class="form-label mb-0">Monatswerte</label>
+      <div className="d-flex justify-content-between align-items-center mb-2">
+        <label className="form-label mb-0">Monatswerte</label>
         <button
-          class="btn btn-sm btn-outline-secondary"
+          className="btn btn-sm btn-outline-secondary"
           onClick={addMonthEntry}
           disabled={loading || saving || !selectedYear}
           data-disabler
@@ -240,28 +241,28 @@ export function AdminVorgabenEditor() {
         </button>
       </div>
 
-      <div class="d-flex flex-column gap-3">
-        {monthEntries.length === 0 && <div class="alert alert-secondary mb-0">Keine Monatswerte vorhanden.</div>}
+      <div className="d-flex flex-column gap-3">
+        {monthEntries.length === 0 && <div className="alert alert-secondary mb-0">Keine Monatswerte vorhanden.</div>}
 
         {monthEntries.map((entry, index) => (
-          <div key={`${entry.key}-${index}`} class="border rounded p-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="d-flex align-items-center gap-2">
-                <label class="form-label mb-0 small fw-semibold">Monat</label>
+          <div key={`${entry.key}-${index}`} className="border rounded p-3">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="d-flex align-items-center gap-2">
+                <label className="form-label mb-0 small fw-semibold">Monat</label>
                 <input
                   type="number"
                   min={1}
                   max={12}
-                  class="form-control form-control-sm"
-                  style="width: 5.5rem"
+                  className="form-control form-control-sm"
+                  style={{ width: '5.5rem' }}
                   value={entry.key}
-                  onInput={e => updateMonthKey(index, Number((e.target as HTMLInputElement).value))}
+                  onChange={e => updateMonthKey(index, Number((e.target as HTMLInputElement).value))}
                   disabled={loading || saving || !selectedYear || entry.key === 1}
                 />
               </div>
 
               <button
-                class="btn btn-sm btn-outline-danger"
+                className="btn btn-sm btn-outline-danger"
                 onClick={() => removeMonthEntry(index)}
                 disabled={loading || saving || !selectedYear || monthEntries.length <= 1}
                 data-disabler
@@ -270,17 +271,17 @@ export function AdminVorgabenEditor() {
               </button>
             </div>
 
-            <div class="row g-2">
+            <div className="row g-2">
               {GELD_FIELDS.map(field => (
-                <div class="col-12 col-md-6 col-xl-4" key={`${entry.key}-${field}`}>
-                  <label class="form-label small mb-1">{field}</label>
+                <div className="col-12 col-md-6 col-xl-4" key={`${entry.key}-${field}`}>
+                  <label className="form-label small mb-1">{field}</label>
                   <input
                     type="number"
                     inputMode="decimal"
                     step="0.01"
-                    class="form-control form-control-sm"
+                    className="form-control form-control-sm"
                     value={entry.value[field] ?? ''}
-                    onInput={e => updateField(index, field, (e.target as HTMLInputElement).value)}
+                    onChange={e => updateField(index, field, (e.target as HTMLInputElement).value)}
                     disabled={loading || saving || !selectedYear}
                   />
                 </div>
@@ -290,9 +291,9 @@ export function AdminVorgabenEditor() {
         ))}
       </div>
 
-      <div class="d-flex gap-2 mt-3">
+      <div className="d-flex gap-2 mt-3">
         <button
-          class="btn btn-primary"
+          className="btn btn-primary"
           onClick={handleSave}
           disabled={saving || loading || !selectedYear}
           data-disabler
@@ -300,7 +301,7 @@ export function AdminVorgabenEditor() {
           {saving ? 'Speichert...' : 'Speichern'}
         </button>
         <button
-          class="btn btn-outline-danger"
+          className="btn btn-outline-danger"
           onClick={handleDelete}
           disabled={saving || loading || !selectedYear}
           data-disabler

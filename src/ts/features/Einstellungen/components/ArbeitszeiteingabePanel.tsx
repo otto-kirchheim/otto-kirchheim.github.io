@@ -1,5 +1,5 @@
-import { type JSX } from 'preact';
-import { useState, useEffect, useRef } from 'preact/hooks';
+import { type JSX, useEffect, useRef, useState } from 'react';
+
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
 import { setArbeitszeitPanelState } from './arbeitszeitPanelState';
@@ -83,7 +83,7 @@ function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: strin
           id="fahrzeit"
           className="form-control"
           value={value}
-          onInput={e => onChange((e.target as HTMLInputElement).value)}
+          onChange={e => onChange((e.target as HTMLInputElement).value)}
           required
         />
         <label htmlFor="fahrzeit">Fahrzeit Wohnung / Arbeitsort</label>
@@ -284,7 +284,7 @@ export function SchichtSection({
                 className="form-control form-control-sm"
                 style={{ width: '7rem' }}
                 value={newConfig.beginn}
-                onInput={e => setNewConfig(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
+                onChange={e => setNewConfig(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
               />
               <span>–</span>
               <input
@@ -292,7 +292,7 @@ export function SchichtSection({
                 className="form-control form-control-sm"
                 style={{ width: '7rem' }}
                 value={newConfig.ende}
-                onInput={e => setNewConfig(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
+                onChange={e => setNewConfig(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
               />
               {isOvernightSchicht(newConfig) && (
                 <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
@@ -307,7 +307,7 @@ export function SchichtSection({
                   value={newConfig.pause}
                   min={0}
                   step={5}
-                  onInput={e =>
+                  onChange={e =>
                     setNewConfig(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))
                   }
                 />
@@ -422,7 +422,7 @@ function ScheduleGroupRow({
           className="form-control form-control-sm"
           style={{ width: '7rem' }}
           value={local.beginn}
-          onInput={e => setLocal(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
+          onChange={e => setLocal(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
         />
         <span>–</span>
         <input
@@ -430,7 +430,7 @@ function ScheduleGroupRow({
           className="form-control form-control-sm"
           style={{ width: '7rem' }}
           value={local.ende}
-          onInput={e => setLocal(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
+          onChange={e => setLocal(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
         />
         {isOvernightSchicht(local) && (
           <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
@@ -445,7 +445,7 @@ function ScheduleGroupRow({
             value={local.pause}
             min={0}
             step={5}
-            onInput={e => setLocal(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))}
+            onChange={e => setLocal(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))}
           />
           <span className="text-muted small">min</span>
         </div>
@@ -554,7 +554,7 @@ function SonderSection({
             className="form-control form-control-sm"
             style={{ width: '7rem' }}
             value={sonder.beginn}
-            onInput={e => update({ beginn: (e.target as HTMLInputElement).value })}
+            onChange={e => update({ beginn: (e.target as HTMLInputElement).value })}
           />
           <span>–</span>
           <input
@@ -562,7 +562,7 @@ function SonderSection({
             className="form-control form-control-sm"
             style={{ width: '7rem' }}
             value={sonder.ende}
-            onInput={e => update({ ende: (e.target as HTMLInputElement).value })}
+            onChange={e => update({ ende: (e.target as HTMLInputElement).value })}
           />
           <div className="d-flex align-items-center gap-1">
             <input
@@ -572,7 +572,7 @@ function SonderSection({
               value={sonder.pause}
               min={0}
               step={5}
-              onInput={e => update({ pause: Number((e.target as HTMLInputElement).value) })}
+              onChange={e => update({ pause: Number((e.target as HTMLInputElement).value) })}
             />
             <span className="text-muted small">min</span>
           </div>

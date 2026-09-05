@@ -1,8 +1,9 @@
-import type { FunctionalComponent } from 'preact';
+import { type FC } from 'react';
+
 import type { TMyModal } from '@/types';
 import { MyEditorFooter, MyModalHeader } from '.';
 
-const MyFormModal: FunctionalComponent<TMyModal<HTMLFormElement>> = ({
+const MyFormModal: FC<TMyModal<HTMLFormElement>> = ({
   size,
   myRef,
   onSubmit,
@@ -20,7 +21,7 @@ const MyFormModal: FunctionalComponent<TMyModal<HTMLFormElement>> = ({
       {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
       {errorMessage && (
         <div className="alert alert-danger mx-3 mt-3 mb-0 py-2" role="alert">
-          <span className="material-icons-round align-middle me-1" style="font-size:1rem">
+          <span className="material-icons-round align-middle me-1" style={{ fontSize: '1rem' }}>
             error
           </span>
           {errorMessage}

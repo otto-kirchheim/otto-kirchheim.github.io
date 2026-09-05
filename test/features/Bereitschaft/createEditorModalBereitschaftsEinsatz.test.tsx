@@ -1,5 +1,7 @@
+import { huelleMock, inputMock } from '../../reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { h } from 'preact';
+import { createElement as h } from 'react';
+
 import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenBE } from '@/types';
 
@@ -35,9 +37,9 @@ const {
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
-  MyFormModal: (props: Record<string, unknown>) => h('div', props),
-  MyModalBody: (props: Record<string, unknown>) => h('div', props),
-  MyInput: (props: Record<string, unknown>) => h('input', props),
+  MyFormModal: huelleMock,
+  MyModalBody: huelleMock,
+  MyInput: inputMock,
   MySelect: (props: Record<string, unknown>) => h('select', props),
 }));
 

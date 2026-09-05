@@ -11,10 +11,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
-    "types": ["bun-types"],
+    "types": ["bun-types", "react", "react-dom"],
     "noEmit": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "preact",
+    "jsxImportSource": "react",
 
     "strict": true,
     "noUnusedLocals": true,

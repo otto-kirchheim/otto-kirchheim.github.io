@@ -1,4 +1,5 @@
-import { type FunctionalComponent } from 'preact';
+import { type FC } from 'react';
+
 import type { BereitschaftSchichtTyp, IPerWeekdaySchicht, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { mergePerWeekdaySchicht } from '@/types';
 import { SchichtSection } from './ArbeitszeiteingabePanel';
@@ -26,7 +27,7 @@ type SchichtOverrideEditorProps = {
  * Kontrollierter Editor für optionale per-Wochentag-Overrides je Schicht. Wiederverwendet `SchichtSection`
  * und liefert pro aktivierter Schicht ein vollständiges `IPerWeekdaySchicht` als Snapshot-Override zurück.
  */
-export const SchichtOverrideEditor: FunctionalComponent<SchichtOverrideEditorProps> = ({
+export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
   aZ,
   schichten,
   overrides,

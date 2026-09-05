@@ -61,14 +61,14 @@ export { default as MyFormModal } from "./MyFormModal";
 
 ### Import-Reihenfolge
 
-1. Externe Pakete (`preact`, `dayjs`, `bootstrap`)
+1. Externe Pakete (`react`, `dayjs`, `bootstrap`)
 2. `core`/`infrastructure` (per `@/`-Alias, z.B. `@/infrastructure/api/FetchRetry`)
 3. Komponenten (`../components`)
 4. Lokale Dateien (`./utils`)
 
 ---
 
-## Preact-Komponenten
+## React-Komponenten
 
 ### Props-Typen
 
@@ -83,17 +83,19 @@ const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => { ... };
 
 ### Modal-Rendering
 
-Preact-Komponenten werden in Bootstrap-Modals gerendert:
+React-Komponenten werden in Bootstrap-Modals gerendert:
 
 ```ts
-import { render } from "preact";
-render(<MyComponent {...props} />, document.getElementById("modal-body"));
+import { mount, unmount } from "@/infrastructure/ui";
+mount(document.getElementById("modal-body"), <MyComponent {...props} />);
+// Abhaengen (frueher `render(null, el)`):
+unmount(document.getElementById("modal-body"));
 ```
 
 ### JSX
 
-- `jsxImportSource: "preact"` (automatisch via TSConfig)
-- Preact `FunctionalComponent<T>` statt React `FC<T>`
+- `jsxImportSource: "react"` (automatisch via TSConfig)
+- React `FC<T>`; `children` gehoert explizit in den Props-Typ (React vererbt sie nicht implizit)
 
 ---
 

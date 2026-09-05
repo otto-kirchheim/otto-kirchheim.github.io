@@ -43,18 +43,18 @@ export function SpalteZeile({
   const gruppen = Object.keys(listen ?? {});
   const modus = spalte.listenPlatz ? 'liste' : spalte.wenn ? 'wenn' : spalte.berechnet ? 'berechnet' : 'daten';
   return (
-    <div class="border rounded p-2 mb-1">
-      <div class="d-flex align-items-center flex-wrap gap-1 mb-1">
+    <div className="border rounded p-2 mb-1">
+      <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
         <ScharfButton
           aktiv={istGleich(armed, { bereich: 'spalte', tabelle: tabellenName, index })}
           onClick={onArm}
           titel="Auf dem PDF die Spaltenbreite markieren — nur die x-Kanten werden übernommen"
         />
-        <span class="small text-truncate flex-grow-1">{spalte.label ?? (spalte.key || '(ohne Feld)')}</span>
+        <span className="small text-truncate flex-grow-1">{spalte.label ?? (spalte.key || '(ohne Feld)')}</span>
         <Zellkoordinaten wert={spalte} onChange={onChange} nurX />
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary py-0"
+          className="btn btn-sm btn-outline-secondary py-0"
           onClick={() => onMove(-1)}
           title="Nach oben"
         >
@@ -62,30 +62,30 @@ export function SpalteZeile({
         </button>
         <button
           type="button"
-          class="btn btn-sm btn-outline-secondary py-0"
+          className="btn btn-sm btn-outline-secondary py-0"
           onClick={() => onMove(1)}
           title="Nach unten"
         >
           ↓
         </button>
-        <button type="button" class="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Spalte löschen">
-          <span class="material-icons-round" style="font-size:0.85rem;vertical-align:middle">
+        <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Spalte löschen">
+          <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
             delete
           </span>
         </button>
       </div>
 
-      <div class="btn-group btn-group-sm w-100 mb-1">
+      <div className="btn-group btn-group-sm w-100 mb-1">
         <button
           type="button"
-          class={`btn ${modus === 'daten' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${modus === 'daten' ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() => onChange({ ...spalte, berechnet: undefined, wenn: undefined, listenPlatz: undefined })}
         >
           Datenfeld
         </button>
         <button
           type="button"
-          class={`btn ${modus === 'berechnet' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${modus === 'berechnet' ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() =>
             onChange({
               ...spalte,
@@ -99,7 +99,7 @@ export function SpalteZeile({
         </button>
         <button
           type="button"
-          class={`btn ${modus === 'wenn' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className={`btn ${modus === 'wenn' ? 'btn-primary' : 'btn-outline-secondary'}`}
           onClick={() => {
             const startPfad = zeilenFelder[0]?.pfad ?? '';
             onChange({
@@ -116,7 +116,7 @@ export function SpalteZeile({
         {gruppen.length > 0 && (
           <button
             type="button"
-            class={`btn ${modus === 'liste' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className={`btn ${modus === 'liste' ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() =>
               onChange({
                 ...spalte,
@@ -133,22 +133,22 @@ export function SpalteZeile({
       </div>
 
       {(modus === 'berechnet' || modus === 'wenn') && (
-        <div class="input-group input-group-sm mb-1">
+        <div className="input-group input-group-sm mb-1">
           <span
-            class="input-group-text px-1 small"
+            className="input-group-text px-1 small"
             title="Schlüssel, unter dem der Wert dieser Spalte in die Zeile geschrieben wird -- darüber ist er in Ankreuz-Bedingungen und Summenfeldern anderer Spalten wiederverwendbar. Muss sich von anderen Spalten unterscheiden, sonst überschreiben sie sich gegenseitig."
           >
             Schlüssel
           </span>
           <input
-            class="form-control font-monospace"
+            className="form-control font-monospace"
             placeholder="z.B. dauer"
             value={spalte.key}
             // Leerer Schlüssel macht die Spalte für berechneteEintraege() (Feld-Dropdown in
             // Summenfeldern) unsichtbar und wird von mitBerechnetenSpalten() in `shared` unter
             // `zeile['']` geschrieben -- niemals speichern, Eingabe bei leerem Wert verwerfen statt
             // den Schlüssel zu löschen.
-            onInput={e => {
+            onChange={e => {
               const wert = (e.target as HTMLInputElement).value;
               if (wert !== '') onChange({ ...spalte, key: wert });
             }}
@@ -157,10 +157,10 @@ export function SpalteZeile({
       )}
 
       {spalte.listenPlatz ? (
-        <div class="row g-1 mb-1">
-          <div class="col-8">
+        <div className="row g-1 mb-1">
+          <div className="col-8">
             <select
-              class="form-select form-select-sm"
+              className="form-select form-select-sm"
               value={spalte.listenPlatz.gruppe}
               onChange={e =>
                 onChange({
@@ -176,16 +176,16 @@ export function SpalteZeile({
               ))}
             </select>
           </div>
-          <div class="col-4">
-            <div class="input-group input-group-sm">
-              <span class="input-group-text px-1 small">Platz</span>
+          <div className="col-4">
+            <div className="input-group input-group-sm">
+              <span className="input-group-text px-1 small">Platz</span>
               <input
                 type="number"
                 min={1}
                 step={1}
-                class="form-control"
+                className="form-control"
                 value={spalte.listenPlatz.index + 1}
-                onInput={e =>
+                onChange={e =>
                   onChange({
                     ...spalte,
                     listenPlatz: {
@@ -212,7 +212,7 @@ export function SpalteZeile({
           onChange={berechnet => onChange({ ...spalte, berechnet })}
         />
       ) : (
-        <div class="mb-1">
+        <div className="mb-1">
           <DatenpfadWahl
             wert={spalte.key}
             eintraege={zeilenFelder}
@@ -227,10 +227,10 @@ export function SpalteZeile({
       )}
 
       <input
-        class="form-control form-control-sm mb-1"
+        className="form-control form-control-sm mb-1"
         placeholder="Anzeigename (nur für diese Liste)"
         value={spalte.label ?? ''}
-        onInput={e => onChange({ ...spalte, label: (e.target as HTMLInputElement).value || undefined })}
+        onChange={e => onChange({ ...spalte, label: (e.target as HTMLInputElement).value || undefined })}
       />
       <DarstellungsFelder wert={spalte} onChange={onChange} />
       <WertVorschau text={spaltenWert(spalte, beispielZeile, vorschau.kontext.listen[tabellenName])} />
