@@ -6,6 +6,7 @@ import type {
   ZeilenBerechnet,
   ZeilenOpName,
 } from '@otto-kirchheim/nebengeld-shared';
+import dayjs from '@/infrastructure/date/configDayjs';
 
 type Aggregator = (rows: Zeile[], feld?: string) => number;
 
@@ -86,8 +87,8 @@ export function datumMitFrist(letztes: number, maxTage: number | undefined, heut
 export function alsMinuten(v: unknown): number {
   const treffer = /^(\d{1,2}):(\d{2})/.exec(String(v ?? ''));
   if (treffer) return Number(treffer[1]) * 60 + Number(treffer[2]);
-  const d = new Date(v as string);
-  return Number.isNaN(d.getTime()) ? 0 : d.getHours() * 60 + d.getMinutes();
+  const d = dayjs((v ?? null) as string | null);
+  return d.isValid() ? d.hour() * 60 + d.minute() : 0;
 }
 
 /**
