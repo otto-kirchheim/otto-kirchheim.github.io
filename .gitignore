@@ -6,6 +6,12 @@ dev-dist/
 plan/
 graphify-out/
 
+# Environment variables
+.env
+.env.*
+.env.local
+.env.local.*
+
 # ruflo / MCP (lokale Agenten-Tooling-Artefakte, nicht Teil des Projekts)
 ruvector.db
 agentdb.rvf
