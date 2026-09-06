@@ -17,13 +17,12 @@ const MAX_BREITE = 900;
 const DIALOG_RAND = 8;
 
 /**
- * Größtmögliche Canvas-Größe im festen `CANVAS_RATIO`, die noch komplett ins Modal passt, plus ob
- * dabei die Höhe die bindende Dimension war (dann lohnt sich randloses Fullscreen + kompakte
- * Kopf-/Fußzeile, siehe `aufGroesseAnpassen()`). Kopf-/Fußzeile sind unabhängig von der Canvas-
- * Größe messbar, kein Henne-Ei-Problem.
+ * Größtmögliche Canvas-Größe im festen `CANVAS_RATIO`, die noch komplett in den Dialog passt, plus
+ * ob dabei die Höhe die bindende Dimension war (dann lohnt sich randlos + kompakte Fußzeile, siehe
+ * `aufGroesseAnpassen()`). Der Dialog hat keine Kopfzeile mehr; die Fußzeile ist unabhängig von der
+ * Canvas-Größe messbar, kein Henne-Ei-Problem.
  */
 function berechneCanvasGroesse(
-  header: HTMLElement,
   footer: HTMLElement,
   body: HTMLElement,
   content: HTMLElement,
@@ -40,8 +39,7 @@ function berechneCanvasGroesse(
   const contentRahmenY = parseFloat(contentStil.borderTopWidth) + parseFloat(contentStil.borderBottomWidth);
 
   const maxBreite = Math.min(window.innerWidth - rand * 2, maxBreiteVorgabe) - paddingX;
-  const maxHoehe =
-    window.innerHeight - rand * 2 - header.offsetHeight - footer.offsetHeight - paddingY - contentRahmenY;
+  const maxHoehe = window.innerHeight - rand * 2 - footer.offsetHeight - paddingY - contentRahmenY;
 
   let breite = Math.max(maxBreite, 0);
   let hoehe = breite / CANVAS_RATIO;
@@ -174,43 +172,30 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
   return new Promise<SignaturErgebnis>(resolve => {
     // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus, sonst blendet Bootstrap
     // den Inhalt im Dialog aus (`display: none`).
+    // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche. Titel und Schliessen-Knopf
+    // sassen frueher oben und kosteten im Querformat rund ein Viertel der Hoehe -- die
+    // Fusszeile traegt beides jetzt als kleine Schaltflaechen mit.
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="db-drawer-header modal-header">
-            <header class="db-drawer-header-container">
-              <h5 class="modal-title">Unterschrift</h5>
-            </header>
-            <button
-              type="button"
-              class="db-button"
-              data-variant="ghost"
-              data-icon="cross"
-              data-no-text="true"
-              data-bs-dismiss="modal"
-              aria-label="Schließen"
-            >
-              Schließen
-            </button>
-          </div>
           <div class="modal-body">
             <canvas class="signatur-canvas"></canvas>
           </div>
-          <div class="modal-footer">
+          <div class="modal-footer signatur-fusszeile">
             <div class="form-check me-auto">
               <input type="checkbox" class="form-check-input" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
-              <label class="form-check-label" for="signatur-speichern">Für nächstes Mal merken (nur auf diesem Gerät)</label>
+              <label class="form-check-label" for="signatur-speichern">Merken</label>
             </div>
-            <button type="button" class="btn btn-outline-secondary" data-loeschen="true">Löschen</button>
-            <button type="button" class="btn btn-primary" data-fertig="true">Fertig</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Abbrechen</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-loeschen="true">Löschen</button>
+            <button type="button" class="btn btn-sm btn-primary" data-fertig="true">Fertig</button>
           </div>
         </div>
       </div>
     `;
 
     const canvas = modal.querySelector('canvas')!;
-    const header = modal.querySelector<HTMLElement>('.modal-header')!;
     const body = modal.querySelector<HTMLElement>('.modal-body')!;
     const footer = modal.querySelector<HTMLElement>('.modal-footer')!;
     const dialog = modal.querySelector<HTMLElement>('.modal-dialog')!;
@@ -245,14 +230,14 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
     const aufGroesseAnpassen = () => {
       content.classList.remove('signatur-modal-kompakt');
       dialog.style.margin = `${DIALOG_RAND}px auto`;
-      const erster = berechneCanvasGroesse(header, footer, body, content, DIALOG_RAND, MAX_BREITE);
+      const erster = berechneCanvasGroesse(footer, body, content, DIALOG_RAND, MAX_BREITE);
       let { breite, hoehe } = erster;
       const hoehengebunden = erster.hoehengebunden;
 
       if (hoehengebunden) {
         content.classList.add('signatur-modal-kompakt');
         dialog.style.margin = '0';
-        ({ breite, hoehe } = berechneCanvasGroesse(header, footer, body, content, 0, MAX_BREITE));
+        ({ breite, hoehe } = berechneCanvasGroesse(footer, body, content, 0, MAX_BREITE));
       }
 
       canvas.style.width = `${breite}px`;

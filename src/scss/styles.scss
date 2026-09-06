@@ -231,23 +231,42 @@ td:has(.SchichtBereitschaft) {
   touch-action: none;
 }
 
+/* Der Unterschrift-Dialog hat keine Kopfzeile; die Fußzeile trägt Merken-Haken, Abbrechen,
+   Löschen und Fertig in einer schmalen Reihe. Jede Zeile Höhe hier fehlt der Schreibfläche. */
+.signatur-fusszeile {
+  gap: 0.35rem;
+  padding: 0.35rem 0.5rem;
+  flex-wrap: nowrap;
+
+  .form-check {
+    margin: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .form-check-input {
+    margin: 0;
+    float: none;
+  }
+
+  .btn {
+    margin: 0;
+  }
+}
+
 /* Randloser Unterschrift-Modus (signaturDialog.ts, aktiviert wenn die Höhe die bindende Dimension
-   ist -- typisch Querformat-Handy): kompaktere Kopf-/Fußzeile gewinnt zusätzlichen Vertikalraum
+   ist -- typisch Querformat-Handy): noch kompaktere Fußzeile gewinnt zusätzlichen Vertikalraum
    für den Canvas zurück, statt ihn an Bootstraps Standard-Padding zu verlieren. */
-.signatur-modal-kompakt .modal-header {
-  padding: 0.35rem 0.75rem;
-}
-
-.signatur-modal-kompakt .modal-title {
-  font-size: 1rem;
-}
-
 .signatur-modal-kompakt .modal-body {
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 
-.signatur-modal-kompakt .modal-footer {
-  padding: 0.35rem 0.75rem;
+.signatur-modal-kompakt .signatur-fusszeile {
+  padding: 0.25rem 0.5rem;
 }
 
 /* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
@@ -711,6 +730,16 @@ body {
   inline-size: 100vw;
   max-inline-size: 100vw;
   border-radius: 0;
+
+  /* Im Hochformat bindet die Breite -- Feld und Fusszeile stehen dann mittig statt oben
+     angeklebt mit einer leeren Flaeche darunter. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  > .db-drawer-content {
+    flex: 0 0 auto;
+  }
 }
 
 .db-drawer-content {

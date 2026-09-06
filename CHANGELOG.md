@@ -23,10 +23,12 @@ Bootstraps `Modal`-Plugin ist raus. Dialoge laufen ueber `DBDrawer` bzw. den nat
   Geschwister-Panels der jeweiligen `.tab-content` und schreibt den Hash ausschliesslich
   fuer die Hauptnavigation.
 - **Unterschriftenfeld:** Der Drawer war auf 36 rem gedeckelt, im Querformat blieb kaum
-  Platz. Mit `signatur-drawer` nimmt er die volle Breite (Feld 603x241 -> 685x274 px bei
-  844x390). Das Pad entsteht jetzt im naechsten Frame statt auf `shown.bs.modal`; Resize-
-  Handler und Frame-Rueckruf pruefen `canvas.isConnected`, damit ein geschlossener Dialog
-  keine Arbeit mehr ausloest.
+  Platz. Er nimmt jetzt die volle Breite, die Kopfzeile ist ganz entfallen und die Fusszeile
+  traegt Merken-Haken, Abbrechen, Loeschen und Fertig als kleine Schaltflaechen in einer
+  schmalen Reihe. Feld im Querformat 603x241 -> 828x331 px bei 844x390, im Hochformat mittig
+  statt oben angeklebt. Das Pad entsteht im naechsten Frame statt auf `shown.bs.modal`;
+  Resize-Handler und Frame-Rueckruf pruefen `canvas.isConnected`, damit ein geschlossener
+  Dialog keine Arbeit mehr ausloest.
 - **Kopfzeilen** der Dialoge im DB-Aufbau (Titel links, Hilfe und Schliessen als Icon-Buttons
   rechts) -- vorher ueberlappten Titel, `?` und `x`.
 - Tooltip in der Admin-Benutzerkarte auf `title` umgestellt; das Bootstrap-Tooltip-Plugin ist
