@@ -1,5 +1,7 @@
-import Popover from 'bootstrap/js/dist/popover';
-import { Component, createRef, type ChangeEventHandler, type ReactNode, type RefObject } from 'react';
+import { DBInput, DBTooltip } from '@db-ux/react-core-components';
+import { useRef, type ChangeEventHandler, type FC, type ReactNode, type RefObject } from 'react';
+
+import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
 
 type TModalBodyInputElementOption = {
   /** React 19 vererbt `children` nicht mehr implizit (Preact tat das). */
@@ -35,70 +37,78 @@ type TModalBodyInputElementOption = {
   invalidFeedbackText?: string;
 };
 
-export default class MyInput extends Component<TModalBodyInputElementOption> {
-  fallbackInputRef = createRef<HTMLInputElement>();
-  popoverInstance: Popover | null = null;
+/**
+ * Der frühere Bootstrap-Popover nahm HTML-Schnipsel entgegen (`'-Mindestens 8 Zeichen <br/>'`).
+ * Der DB-Tooltip bekommt Text, deshalb werden Zeilenumbrüche hier zu echten Zeilen.
+ */
+export function hinweisZeilen(content: string): string[] {
+  return content
+    .split(/<br\s*\/?>/i)
+    .map(zeile => zeile.replace(/<[^>]+>/g, '').trim())
+    .filter(Boolean);
+}
 
-  get inputRef(): RefObject<HTMLInputElement | null> {
-    return this.props.myRef ?? this.fallbackInputRef;
-  }
+/** `form-floating` ist Bootstrap-Layout; DBInput bringt sein Label-Layout selbst mit. */
+export function feldKlassen(divClass?: string): string {
+  return (divClass ?? '')
+    .split(/\s+/)
+    .filter(k => k && k !== 'form-floating')
+    .join(' ');
+}
 
-  componentDidMount(): void {
-    this.syncPopover();
-  }
+const MyInput: FC<TModalBodyInputElementOption> = props => {
+  const {
+    myRef,
+    divClass,
+    popover,
+    children,
+    invalidFeedbackId,
+    invalidFeedbackText,
+    dataZulageInputCode,
+    minLength,
+    maxLength,
+    value,
+    onChange,
+    ...inputProps
+  } = props;
 
-  componentDidUpdate(previousProps: Readonly<TModalBodyInputElementOption>): void {
-    if (previousProps.popover !== this.props.popover || previousProps.myRef !== this.props.myRef) {
-      this.syncPopover();
-    }
-  }
+  const eigeneRef = useRef<HTMLInputElement>(null);
+  useSofortigeId(eigeneRef, props.id);
 
-  componentWillUnmount(): void {
-    this.popoverInstance?.dispose();
-  }
+  // Ohne `onChange` waere `value` in React ein schreibgeschuetztes Feld. Die Modals nutzen das
+  // Feld als Vorbelegung und lesen den Endwert per Ref aus dem DOM -- das ist `defaultValue`.
+  const wert = onChange ? { value, onChange } : { defaultValue: value };
+  const hinweis = popover ? hinweisZeilen(popover.content) : [];
 
-  syncPopover(): void {
-    this.popoverInstance?.dispose();
-    this.popoverInstance = null;
-
-    if (this.props.popover && this.inputRef.current) {
-      this.popoverInstance = new Popover(this.inputRef.current, this.props.popover);
-    }
-  }
-
-  render() {
-    const {
-      myRef: _myRef,
-      divClass,
-      popover: _popover,
-      children,
-      invalidFeedbackId,
-      invalidFeedbackText,
-      ...inputProps
-    } = this.props;
-
-    const { dataZulageInputCode, minLength, maxLength, value, onChange, ...restInputProps } = inputProps;
-    // Ohne `onChange` waere `value` in React ein schreibgeschuetztes Feld. Die Modals nutzen das
-    // Feld als Vorbelegung und lesen den Endwert per Ref aus dem DOM -- das ist `defaultValue`.
-    const wert = onChange ? { value, onChange } : { defaultValue: value };
-    const normalizedInputProps = {
-      ...restInputProps,
-      ...wert,
-      'data-zulage-input-code': dataZulageInputCode,
-      minLength: typeof minLength === 'string' ? Number(minLength) : minLength,
-      maxLength: typeof maxLength === 'string' ? Number(maxLength) : maxLength,
-    };
-
-    return (
-      <div className={divClass ?? 'form-floating'}>
-        <input ref={this.inputRef} className="form-control validate" {...normalizedInputProps} />
-        <label htmlFor={this.props.id}>{children}</label>
+  return (
+    <div className={feldKlassen(divClass)}>
+      {/* `type` und die Laengenbegrenzungen kommen ueber die Props der Aufrufstelle. */}
+      {/* eslint-disable-next-line db-ux/input-type-required, db-ux/form-validation-message-required */}
+      <DBInput
+        ref={refZusammenfuehren(eigeneRef, myRef)}
+        label={typeof children === 'string' ? children : props.name}
+        {...inputProps}
+        {...wert}
+        data-zulage-input-code={dataZulageInputCode}
+        minLength={typeof minLength === 'string' ? Number(minLength) : minLength}
+        maxLength={typeof maxLength === 'string' ? Number(maxLength) : maxLength}
+      >
+        {popover ? (
+          <DBTooltip placement={popover.placement ?? 'top'}>
+            {popover.title ? <strong>{popover.title}</strong> : null}
+            {hinweis.map(zeile => (
+              <span key={zeile}>{zeile}</span>
+            ))}
+          </DBTooltip>
+        ) : null}
         {invalidFeedbackId ? (
           <div id={invalidFeedbackId} className="invalid-feedback">
             {invalidFeedbackText}
           </div>
         ) : null}
-      </div>
-    );
-  }
-}
+      </DBInput>
+    </div>
+  );
+};
+
+export default MyInput;

@@ -244,6 +244,9 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       if (!input) return;
       input.setCustomValidity('');
       input.classList.remove('is-invalid');
+      // DB-UX faerbt ueber `data-custom-validity`, Bootstrap ueber `is-invalid` -- solange
+      // beide Systeme im Build sind, wird beides gesetzt.
+      input.removeAttribute('data-custom-validity');
       if (feedback) feedback.textContent = '';
     });
   };
@@ -299,6 +302,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           if (!invalidInput) continue;
           invalidInput.setCustomValidity(fehler.message);
           invalidInput.classList.add('is-invalid');
+          invalidInput.setAttribute('data-custom-validity', 'invalid');
           if (feedback) feedback.textContent = fehler.message;
         }
 

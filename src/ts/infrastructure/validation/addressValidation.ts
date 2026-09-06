@@ -110,6 +110,9 @@ function setValidationState(input: ValidatableElement, isValid: boolean, message
   input.setCustomValidity(message);
   input.classList.toggle('is-invalid', !isValid);
   input.classList.toggle('is-valid', isValid && input.value.trim() !== '');
+  // DB-UX faerbt ueber `data-custom-validity` statt ueber die Bootstrap-Klassen.
+  if (isValid) input.removeAttribute('data-custom-validity');
+  else input.setAttribute('data-custom-validity', 'invalid');
   feedback.textContent = message;
   feedback.classList.toggle('d-block', !isValid);
 

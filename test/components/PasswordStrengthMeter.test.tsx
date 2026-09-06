@@ -24,6 +24,13 @@ async function typePassword(input: HTMLInputElement, value: string): Promise<voi
   await flush();
 }
 
+/** Gefuellte Balken tragen seit Phase C den DB-Token der Semantik als Inline-Hintergrund. */
+function gefuellteBalken(container: HTMLElement, semantik: string): number {
+  return Array.from(container.querySelectorAll<HTMLDivElement>('div[style]')).filter(el =>
+    el.style.background.includes(`--db-${semantik}-origin-default`),
+  ).length;
+}
+
 describe('PasswordStrengthMeter', () => {
   it('rendert nichts, solange kein Wert eingegeben wurde', () => {
     const { container } = setup();
@@ -35,7 +42,7 @@ describe('PasswordStrengthMeter', () => {
     await typePassword(input, 'aaa');
 
     expect(container.textContent).toBe('Zu schwach');
-    expect(container.querySelectorAll('.bg-danger').length).toBe(1);
+    expect(gefuellteBalken(container, 'critical')).toBe(1);
   });
 
   it('zeigt "Schwach" bei zwei erfüllten Regeln', async () => {
@@ -43,7 +50,7 @@ describe('PasswordStrengthMeter', () => {
     await typePassword(input, 'aaaaaaaa');
 
     expect(container.textContent).toBe('Schwach');
-    expect(container.querySelectorAll('.bg-warning').length).toBe(2);
+    expect(gefuellteBalken(container, 'warning')).toBe(2);
   });
 
   it('zeigt "Mittel" bei drei erfüllten Regeln', async () => {
@@ -51,7 +58,7 @@ describe('PasswordStrengthMeter', () => {
     await typePassword(input, 'Aaaaaaaa');
 
     expect(container.textContent).toBe('Mittel');
-    expect(container.querySelectorAll('.bg-info').length).toBe(3);
+    expect(gefuellteBalken(container, 'informational')).toBe(3);
   });
 
   it('zeigt "Stark" bei vier oder mehr erfüllten Regeln', async () => {
@@ -59,7 +66,7 @@ describe('PasswordStrengthMeter', () => {
     await typePassword(input, 'Aaaaaaa1');
 
     expect(container.textContent).toBe('Stark');
-    expect(container.querySelectorAll('.bg-success').length).toBe(4);
+    expect(gefuellteBalken(container, 'successful')).toBe(4);
   });
 
   it('setzt die Anzeige zurück, wenn das Feld geleert wird', async () => {

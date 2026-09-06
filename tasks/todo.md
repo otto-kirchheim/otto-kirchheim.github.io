@@ -1,3 +1,87 @@
+# Aktueller Plan: DB-UX-Migration -- Phase C (Basiskomponenten -> DB React Components) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase C. `src/ts/components/*` werden duenne
+Adapter ueber `@db-ux/react-core-components@5.3.0`. Barrel und Props bleiben stabil, damit die
+Aufrufstellen (MyInput 17x, MySelect 9x, MyButton/MyCheckbox je 6x, PasswordStrengthMeter 5x)
+unveraendert bleiben. Die Bootstrap-Modal-Shell bleibt bis Phase E.
+
+**Geprueft vorab (installiertes Paket, nicht geraten):**
+- Alle relevanten DB-Komponenten sind `forwardRef` -- `myRef` zeigt weiter auf das echte
+  `<input>`/`<select>`, die `submit*`-Utilities lesen also unveraendert per Ref/`querySelector`.
+- `DBInput` reicht `pattern`, `autoComplete`, `list`, `min`/`max`/`step`, `readOnly` durch,
+  **aber kein `defaultValue`** -- es setzt immer `value={props.value}` und haengt intern
+  `onChange`/`onInput` an. Fuer die Vorbelegungs-Felder (siehe A2) heisst das: `value` NICHT
+  durchreichen, sondern den Startwert nach dem Mounten ueber die Ref ins DOM schreiben.
+  Sonst friert React das Feld wieder ein.
+- `@db-ux/core-eslint-plugin@5.3.0` existiert.
+
+## Plan
+
+- [x] **C.1 Deps + Lint.** `@db-ux/react-core-components@5.3.0` (erledigt, keine peerDeps --
+      `react` wird aus dem Root aufgeloest, kein doppeltes React). `@db-ux/core-eslint-plugin`
+      als devDependency + Flat-Config-Eintrag.
+- [x] **C.2 `MyButton` -> `DBButton`.** `text` -> children, `clickHandler` -> `onClick`,
+      `className`-Bootstrap-Varianten -> `variant`; `dataBsDismiss`/`dataBsToggle` weiter als
+      DOM-Attribute durchreichen (Bootstrap-Modal lebt noch).
+- [x] **C.3 `MyCheckbox` -> `DBCheckbox`.** `children` -> `label`, `changeHandler` ->
+      `onChange`; Vorbelegung ohne Handler wie in A2 (`defaultChecked`-Ersatz per Ref).
+- [x] **C.4 `MySelect` -> `DBSelect`.** `options`-Array -> `<option>`-Kinder, `title` ->
+      `label`, Vorauswahl analog C.3.
+- [x] **C.5 `MyInput` -> `DBInput`.** Bootstrap-`Popover` (+ `@popperjs/core`-Nutzung in
+      dieser Datei) raus -> `message`/`DBInfotext` bzw. `DBTooltip`; `invalidFeedback*` ->
+      `invalidMessage`; Klassenkomponente wird Funktionskomponente. Startwert per Ref.
+- [x] **C.6 `PasswordStrengthMeter`** auf DB-Tokens + `DBInfotext`, Bewertungslogik unveraendert.
+- [x] **C.7 Aufrufstellen + Tests** nachziehen, wo sich Props doch aendern; Test-Doubles in
+      `test/reactRender.ts` an die neue Struktur anpassen.
+
+## Verifikationskriterien (C)
+
+- `bun run typecheck`, `bun run lint` (inkl. neuem DB-Plugin), `bun run test` gruen.
+- `bun run build` gruen.
+- `verify`-Skill: je Feature ein Add- und ein Edit-Modal, Auth-Formulare, Validierungsfehler,
+  **Tippen in vorbelegten Feldern** (die A2-Falle), Tastatur-Fokus, Hell/Dunkel.
+
+## Review (C)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`build` gruen, `bun run test` **2074/0** (4 neue
+Tests fuer `buttonLook`/`MyButton`). Kein Feature-Modul musste angefasst werden -- die
+Adapter behalten die bisherigen Props.
+
+**Der Fund der Phase:** die DB-Komponenten vergeben ihre `id` erst in einem `useEffect`.
+Direkt nach `mount()`/`showModal()` steht sie also **nicht** im DOM -- gemessen: `#berechnen`
+fehlt sofort, ist nach einem Tick da. Der Bestandscode sucht seine Felder aber synchron
+(`document.querySelector('#Tag')?.addEventListener(...)` unmittelbar nach `showModal()` in
+`createAddModalEWT`), und das `?.` verschluckt den Fehlschlag lautlos -- der Buchungstag
+haette einfach nicht mehr mitgezaehlt. Ein zweites `flushSync` in `mount()` half nicht
+(Passive Effects laufen erst im naechsten Tick). Loesung: `useSofortigeId` schreibt die `id`
+im `useLayoutEffect`, der noch im `flushSync`-Commit laeuft. Im Browser bestaetigt: alle drei
+Feld-ids stehen sofort nach `showModal`.
+
+**Weitere Anpassungen, die der Plan nicht vorhergesehen hatte:**
+- `DBInput` reicht kein `defaultValue`-Prop weiter *als eigenes Prop*, laesst es aber ueber
+  seinen `default*`-Passthrough durch -- die A2-Regel (Vorbelegung = `defaultValue`, sonst
+  friert React das Feld ein) gilt also unveraendert weiter und ist in allen drei Feld-Adaptern
+  umgesetzt. Browser-Gegenprobe: Tippen im vorbelegten Feld ergibt `vorbelegtX`.
+- Der Ungueltig-Zustand lief bisher ueber `is-invalid` + Bootstraps Geschwister-Selektor.
+  Im DB-Markup greift beides nicht mehr; deshalb setzen `createEditorModalEWT` und
+  `addressValidation` zusaetzlich `data-custom-validity` und `.db-input .invalid-feedback`
+  wird per CSS sichtbar geschaltet. Gemessen: Feldfarbe wechselt auf den kritischen Ton,
+  Fehlertext erscheint in Rot.
+- Die DB-Lint-Regeln melden bei generischen Adaptern zwangslaeufig Fehlalarme
+  (`select-requires-options` bei `options.map(...)`, `input-type-required` beim Prop-Spread) --
+  begruendet deaktiviert; `form-label-required` war dagegen ein echter Fund und wurde
+  behoben (Text-Label als `label`-Prop statt nur als Kind).
+
+**Offen / bewusst nicht in C:** Die Bootstrap-Modal-Shell (`showModal`, `MyFormModal`,
+`MyDivModal`, `MyModalHeader/Body`) bleibt bis Phase E. Die Buttons in den Feature-Tabs
+(`*Tab.tsx`) sind rohes Bootstrap-Markup, kein `MyButton` -- die kommen mit Phase D.
+Der globale Bootstrap-`Popover`-Init in `main.ts` bleibt, weil `index.html` noch zwei
+`data-bs-toggle="popover"`-Trigger hat.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase B (DB-UX-CSS-Layer + db-theme + Token-Bridge) - 2026-09-06
 
 ## Kontext

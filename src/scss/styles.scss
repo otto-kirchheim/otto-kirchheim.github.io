@@ -604,3 +604,10 @@ body {
     padding-right: 0.5rem !important;
   }
 }
+
+// Bootstraps `.invalid-feedback` blendet sich nur ueber den Geschwister-Selektor
+// `.is-invalid ~ .invalid-feedback` ein -- im DB-Input-Markup greift der nicht mehr.
+// Der leere Container ist unsichtbar, gefuellt wird er von EWT/addressValidation.
+.db-input .invalid-feedback {
+  display: block;
+}

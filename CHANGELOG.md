@@ -2,6 +2,41 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (56)
+
+### feat (DB-UX-Migration Phase C: Basiskomponenten auf DB React Components)
+
+`MyButton`, `MyCheckbox`, `MySelect`, `MyInput` und `PasswordStrengthMeter` sind jetzt duenne
+Adapter ueber `@db-ux/react-core-components@5.3.0`. Die Props der Aufrufstellen bleiben
+unveraendert -- kein Feature-Modul musste angefasst werden.
+
+- `MyButton` -> `DBButton`: `buttonLook()` uebersetzt die Bootstrap-Klassen der Aufrufstellen
+  (`btn-primary`, `btn-outline-info`, `btn-lg`, `w-100` ...) in `variant`/`data-color`/`size`/
+  `width`; unbekannte Layout-Klassen gehen weiter als `className` durch.
+- `MyCheckbox` -> `DBSwitch` (alle Aufrufstellen nutzten `form-check form-switch`, also
+  durchgehend Schalter).
+- `MySelect` -> `DBSelect`, `MyInput` -> `DBInput` (Klassen- wird Funktionskomponente).
+  Der Bootstrap-`Popover` in `MyInput` weicht einem `DBTooltip`; `hinweisZeilen()` macht aus
+  den bisherigen HTML-Schnipseln (`'... <br/>'`) echte Zeilen.
+- `PasswordStrengthMeter` nutzt DB-Farb-Tokens und `DBInfotext` statt `bg-*`/`text-*`.
+- **Neu `components/dbFeldHelfer.ts`:** `useSofortigeId` setzt die `id` im `useLayoutEffect`
+  auf das Feld. Die DB-Komponenten vergeben ihre `id` erst in einem `useEffect` -- direkt nach
+  `showModal()` stand sie noch nicht im DOM, und Code wie
+  `document.querySelector('#Tag')?.addEventListener(...)` (EWT-Buchungstag) waere still
+  ins Leere gelaufen. `refZusammenfuehren` verbindet dabei die Ref des Aufrufers mit der
+  internen.
+- Ungueltig-Zustand: `createEditorModalEWT` und `addressValidation` setzen zusaetzlich zu
+  `is-invalid` jetzt `data-custom-validity` (darueber faerbt DB UX), und
+  `.db-input .invalid-feedback` wird sichtbar geschaltet -- Bootstraps Geschwister-Selektor
+  greift im DB-Markup nicht mehr.
+- ESLint: `@db-ux/core-eslint-plugin` (recommended) aktiv.
+
+Verifikation: `typecheck`, `lint`, `test` (2074/0, davon 4 neue fuer `buttonLook`/`MyButton`)
+und `build` gruen. Browser-Smoke: ids stehen sofort nach `showModal`, vorbelegtes Feld bleibt
+tippbar (`vorbelegt` -> `vorbelegtX`), Schalter und Select reagieren, DB-Markup
+(`.db-input`/`.db-switch`/`.db-select`/`.db-button` + Tooltip) vorhanden, Feature-Tabs
+mounten/unmounten unveraendert, 0 Konsolenfehler ausser den erwarteten Auth-401.
+
 ## 2026-09-06 (55)
 
 ### feat (DB-UX-Migration Phase B: DB-UX-CSS-Layer, db-theme und Token-Bridge)

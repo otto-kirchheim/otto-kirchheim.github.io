@@ -4,6 +4,7 @@ import { defineConfig } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import prettierConfig from 'eslint-config-prettier';
+import dbUx from '@db-ux/core-eslint-plugin';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 
@@ -42,6 +43,13 @@ export default defineConfig(
       // Waehrend der Migration hart, damit Preact-Attribute (class=, for=) auffallen.
       'react/no-unknown-property': 'error',
     },
+  },
+  // DB-UX-eigene Regeln (Label-Pflicht, Button-Typ, Tooltip-Regeln ...) fuer die
+  // Komponenten-Adapter aus Phase C.
+  {
+    files: ['**/*.tsx'],
+    plugins: { 'db-ux': dbUx },
+    rules: dbUx.configs.recommended.rules,
   },
   {
     files: ['**/*.ts', '**/*.tsx'],

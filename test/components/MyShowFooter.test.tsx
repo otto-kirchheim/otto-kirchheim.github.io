@@ -51,8 +51,12 @@ describe('MyShowFooter', () => {
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons.map(b => b.textContent)).toEqual(['Bearbeiten', 'Löschen', 'Schließen']);
     expect(buttons.every(b => b.getAttribute('data-bs-dismiss') === 'modal')).toBe(true);
-    expect(buttons[1]?.className).toBe('btn btn-danger');
-    expect(buttons[2]?.className).toBe('btn btn-secondary');
+    // Seit Phase C rendert MyButton einen DBButton: die Bootstrap-Klasse ist zu
+    // `data-variant`/`data-color` geworden.
+    expect(buttons[1]?.getAttribute('data-variant')).toBe('filled');
+    expect(buttons[1]?.getAttribute('data-color')).toBe('critical');
+    expect(buttons[2]?.getAttribute('data-variant')).toBe('filled');
+    expect(buttons[2]?.getAttribute('data-color')).toBeNull();
   });
 
   it('should call editRow with the row when the Bearbeiten button is clicked', () => {

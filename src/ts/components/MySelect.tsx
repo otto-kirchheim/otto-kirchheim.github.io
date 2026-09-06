@@ -1,5 +1,8 @@
+import { DBSelect } from '@db-ux/react-core-components';
 import type { Dayjs } from 'dayjs';
-import { type FC, type ChangeEventHandler, type RefObject } from 'react';
+import { useRef, type ChangeEventHandler, type FC, type RefObject } from 'react';
+
+import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
 
 type TMySelect = {
   myRef?: RefObject<HTMLSelectElement | null>;
@@ -22,16 +25,20 @@ const MySelect: FC<TMySelect> = ({ myRef, className, options, changeHandler, tit
   const wert = typeof value === 'object' ? value?.toString() : value;
   // React kennt nur "controlled" (value + onChange) oder "uncontrolled" (defaultValue). Ohne
   // Handler waere `value` ein schreibgeschuetztes Feld -- die Aufrufer nutzen das Feld aber als
-  // Vorbelegung und lesen den Wert spaeter per Ref aus (Preact-Verhalten).
+  // Vorbelegung und lesen den Wert spaeter per Ref aus.
   const vorauswahl = wert ?? options.find(o => o.selected)?.value ?? undefined;
   const gesteuert = changeHandler !== undefined && wert !== undefined;
+  const eigeneRef = useRef<HTMLSelectElement>(null);
+  useSofortigeId(eigeneRef, id);
 
   return (
     <div className={className}>
-      <select
-        ref={myRef}
+      {/* Die Optionen kommen aus `options.map(...)`; das sieht die statische Regel nicht. */}
+      {/* eslint-disable-next-line db-ux/select-requires-options */}
+      <DBSelect
+        ref={refZusammenfuehren(eigeneRef, myRef)}
         id={id}
-        className="form-select validate"
+        label={title}
         onChange={changeHandler}
         {...(gesteuert ? { value: wert } : { defaultValue: vorauswahl })}
         {...selectProps}
@@ -41,10 +48,7 @@ const MySelect: FC<TMySelect> = ({ myRef, className, options, changeHandler, tit
             {optionObject.text}
           </option>
         ))}
-      </select>
-      <label className="form-label" htmlFor={id}>
-        {title}
-      </label>
+      </DBSelect>
     </div>
   );
 };
