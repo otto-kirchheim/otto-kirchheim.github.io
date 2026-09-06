@@ -331,9 +331,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             data-bs-toggle="tooltip"
             data-bs-title="Lädt die Benutzerliste sofort neu"
           >
-            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-              refresh
-            </span>
+            <span
+              className="db-icon me-1 db-font-size-sm"
+              data-icon="circular_arrows"
+              style={{ verticalAlign: 'middle' }}
+            />
             Aktualisieren
           </button>
           <button
@@ -344,9 +346,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             data-bs-toggle="tooltip"
             data-bs-title="Setzt Name-, OE- und Rollenfilter zurück"
           >
-            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-              filter_alt_off
-            </span>
+            <span className="app-icon app-icon--filter-off me-1 db-font-size-sm" style={{ verticalAlign: 'middle' }} />
             Filter zurücksetzen
           </button>
         </div>
@@ -394,9 +394,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
           <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
           <button className="btn btn-primary btn-sm" type="button" onClick={openBulkEdit}>
-            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-              edit_note
-            </span>
+            <span className="db-icon me-1 db-font-size-sm" data-icon="pen" style={{ verticalAlign: 'middle' }} />
             Massenänderung
           </button>
           <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setSelectedIds(new Set())}>

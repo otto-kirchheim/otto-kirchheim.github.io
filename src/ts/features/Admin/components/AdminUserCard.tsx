@@ -73,9 +73,7 @@ export function AdminUserCard({
                 onChange={onToggleSelection}
               />
             )}
-            <span className="material-icons-round text-body-secondary" style={{ fontSize: '1.25rem' }}>
-              person
-            </span>
+            <span className="db-icon text-body-secondary db-font-size-md" data-icon="person" />
             <span className="text-truncate">
               <span className="fw-semibold d-block text-truncate">{currentUser.fullName || currentUser.userName}</span>
               {currentUser.fullName && (
@@ -86,11 +84,10 @@ export function AdminUserCard({
           <div className="d-flex align-items-center gap-2">
             <span className={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
             <span
-              className="material-icons-round text-body-secondary"
-              style={{ fontSize: '1.25rem', transition: 'transform 0.2s' }}
-            >
-              {isExpanded ? 'expand_less' : 'expand_more'}
-            </span>
+              className="db-icon text-body-secondary db-font-size-md"
+              data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
+              style={{ transition: 'transform 0.2s' }}
+            />
           </div>
         </div>
 
@@ -282,11 +279,10 @@ export function AdminUserCard({
                     ) : (
                       <>
                         <span
-                          className="material-icons-round me-1"
-                          style={{ fontSize: '1rem', verticalAlign: 'middle' }}
-                        >
-                          save
-                        </span>
+                          className="db-icon me-1 db-font-size-sm"
+                          data-icon="save"
+                          style={{ verticalAlign: 'middle' }}
+                        />
                         Speichern
                       </>
                     )}
@@ -299,9 +295,7 @@ export function AdminUserCard({
                       title="Änderungen verwerfen"
                       data-disabler
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                        undo
-                      </span>
+                      <span className="db-icon db-font-size-sm" data-icon="undo" style={{ verticalAlign: 'middle' }} />
                     </button>
                   )}
                 </>
@@ -312,9 +306,11 @@ export function AdminUserCard({
                 disabled={isSaving}
                 data-disabler
               >
-                <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                  {isSelfRow ? 'home' : 'visibility'}
-                </span>
+                <span
+                  className="db-icon me-1 db-font-size-sm"
+                  data-icon={isSelfRow ? 'house' : 'eye'}
+                  style={{ verticalAlign: 'middle' }}
+                />
                 {isSelfRow ? 'Eigene Daten' : 'Daten laden'}
               </button>
               {editable && (
@@ -325,9 +321,7 @@ export function AdminUserCard({
                   title="Passwort für diesen Benutzer setzen"
                   data-disabler
                 >
-                  <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                    password
-                  </span>
+                  <span className="db-icon db-font-size-sm" data-icon="key" style={{ verticalAlign: 'middle' }} />
                 </button>
               )}
               {editable && (
@@ -340,9 +334,11 @@ export function AdminUserCard({
                   title="Verifizierungs-/Passwort-Reset-Link erzeugen"
                   data-disabler
                 >
-                  <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                    link
-                  </span>
+                  <span
+                    className="db-icon db-font-size-sm"
+                    data-icon="link_chain"
+                    style={{ verticalAlign: 'middle' }}
+                  />
                 </button>
               )}
               {editable && (
@@ -353,9 +349,7 @@ export function AdminUserCard({
                   title="Benutzer löschen"
                   data-disabler
                 >
-                  <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                    delete
-                  </span>
+                  <span className="db-icon db-font-size-sm" data-icon="bin" style={{ verticalAlign: 'middle' }} />
                 </button>
               )}
             </div>

@@ -88,9 +88,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.tipp && (
         <div className="alert alert-info mb-0 py-2" role="alert">
-          <span className="material-icons-round align-middle me-1" style={{ fontSize: '1rem' }}>
-            lightbulb
-          </span>
+          <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="light_bulb" />
           {content.tipp}
         </div>
       )}
@@ -102,9 +100,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
           data-bs-dismiss="modal"
           onClick={() => openOnboardingGuide()}
         >
-          <span className="material-icons-round align-middle me-1" style={{ fontSize: '1rem' }}>
-            replay
-          </span>
+          <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="circular_arrows" />
           Ersteinrichtung erneut öffnen
         </button>
       )}

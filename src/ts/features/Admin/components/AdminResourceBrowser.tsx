@@ -299,9 +299,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
             <div className="d-flex gap-2 ms-auto align-items-end">
               <button className="btn btn-sm btn-primary" onClick={applyFilter}>
-                <span className="material-icons-round me-1" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-                  filter_list
-                </span>
+                <span className="db-icon me-1 db-font-size-xs" data-icon="funnel" style={{ verticalAlign: 'middle' }} />
                 Filtern
               </button>
               {hasActiveFilter && (
@@ -330,7 +328,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
       {loadError && (
         <div className="alert alert-danger d-flex align-items-center gap-2 py-2">
-          <span className="material-icons-round small">error</span>
+          <span className="db-icon small" data-icon="exclamation_mark_circle" />
           {loadError}
           <button className="btn btn-sm btn-outline-danger ms-auto" onClick={() => setLoadError(null)}>
             ×
@@ -396,9 +394,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                                 }}
                                 title="Zum Profil"
                               >
-                                <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
-                                  person_search
-                                </span>
+                                <span className="db-icon db-font-size-xs" data-icon="magnifying_glass" />
                               </button>
                             )}
                           </div>
@@ -422,18 +418,14 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                       onClick={() => openEdit(doc)}
                       title="Bearbeiten"
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-                        edit
-                      </span>
+                      <span className="db-icon db-font-size-sm" data-icon="pen" />
                     </button>
                     <button
                       className="btn btn-sm btn-outline-danger py-0"
                       onClick={() => handleDelete(doc)}
                       title="Löschen"
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-                        delete
-                      </span>
+                      <span className="db-icon db-font-size-sm" data-icon="bin" />
                     </button>
                   </td>
                 </tr>
@@ -466,9 +458,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           </div>
         )}
         <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
-          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-            refresh
-          </span>
+          <span
+            className="db-icon me-1 db-font-size-sm"
+            data-icon="circular_arrows"
+            style={{ verticalAlign: 'middle' }}
+          />
           Aktualisieren
         </button>
       </div>

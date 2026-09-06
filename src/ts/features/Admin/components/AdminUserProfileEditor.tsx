@@ -370,9 +370,7 @@ export function AdminUserProfileEditor({
                       onClick={() => openEdit(row)}
                       title="Bearbeiten"
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-                        edit
-                      </span>
+                      <span className="db-icon db-font-size-sm" data-icon="pen" />
                     </button>
                   </td>
                 </tr>
@@ -408,9 +406,11 @@ export function AdminUserProfileEditor({
 
       <div className="text-end mt-2">
         <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
-          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-            refresh
-          </span>
+          <span
+            className="db-icon me-1 db-font-size-sm"
+            data-icon="circular_arrows"
+            style={{ verticalAlign: 'middle' }}
+          />
           Aktualisieren
         </button>
       </div>
@@ -539,9 +539,7 @@ export function AdminUserProfileEditor({
                                 onClick={() => handleDeletePasskey(pk.credentialId)}
                                 title="Passkey löschen"
                               >
-                                <span className="material-icons-round" style={{ fontSize: '0.9rem' }}>
-                                  delete
-                                </span>
+                                <span className="db-icon db-font-size-xs" data-icon="bin" />
                               </button>
                             </div>
                           ))}

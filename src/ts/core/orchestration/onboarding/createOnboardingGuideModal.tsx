@@ -185,9 +185,10 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
           aria-label={minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}
           onClick={() => setMinimiert(m => !m)}
         >
-          <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
-            {minimiert ? 'expand_less' : 'expand_more'}
-          </span>
+          <span
+            className="db-icon align-middle db-font-size-md"
+            data-icon={minimiert ? 'chevron_up' : 'chevron_down'}
+          />
         </button>
       </div>
 

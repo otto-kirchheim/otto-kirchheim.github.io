@@ -150,10 +150,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
         <div className="col-12 position-relative d-flex text-muted">
           <div className="w-50 text-center">
-            <span className="material-icons-round small-icons">arrow_downward</span>
+            <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
           </div>
           <div className="w-50 text-center">
-            <span className="material-icons-round small-icons">arrow_upward</span>
+            <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
           </div>
           <span className="fw-semibold text-uppercase position-absolute top-50 start-50 translate-middle">Wohnung</span>
         </div>
@@ -174,10 +174,10 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
         <div className="col-12 position-relative d-flex text-muted">
           <div className="w-50 text-center">
-            <span className="material-icons-round small-icons">arrow_downward</span>
+            <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
           </div>
           <div className="w-50 text-center">
-            <span className="material-icons-round small-icons">arrow_upward</span>
+            <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
           </div>
         </div>
       </MyModalBody>

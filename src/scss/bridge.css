@@ -31,4 +31,31 @@
     --bs-warning: var(--db-warning-origin-default, #ffc107);
     --bs-warning-bg-subtle: var(--db-warning-bg-basic-level-1-default, #fff3cd);
   }
+
+  /* DB setzt `list-style-type: var(--db-list-bullet)` auf Listen; das schlaegt Bootstraps
+     `list-style: none` aus dem unteren Layer und setzt rote Punkte vor jeden Navigations-
+     und Listeneintrag. Fuer die Bootstrap-Listenmuster wieder abschalten. */
+  .nav,
+  .navbar-nav,
+  .dropdown-menu,
+  .list-unstyled,
+  .list-group,
+  .pagination,
+  .breadcrumb {
+    list-style: none;
+  }
+
+  /* DB stylt `input[type=checkbox|radio]` global (32 px Kantenlaenge, eigene Marker). Fuer die
+     verbliebenen Bootstrap-Formularhaken -- z.B. im Formular-Editor -- die Bootstrap-Groesse
+     zurueckholen, sonst stehen dort riesige leere Kaesten. Die DB-Schalter (`db-switch`,
+     `db-checkbox`) sind davon nicht betroffen. */
+  .form-check-input {
+    inline-size: 1em;
+    block-size: 1em;
+    margin-block-start: 0.25em;
+  }
+
+  .form-switch .form-check-input {
+    inline-size: 2em;
+  }
 }

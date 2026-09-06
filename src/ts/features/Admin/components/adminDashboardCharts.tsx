@@ -251,9 +251,7 @@ export function MemoryCard({
         {/* ── Header ── */}
         <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
           <h6 className="card-title fw-semibold mb-0 text-nowrap">
-            <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-              memory
-            </span>
+            <span className="db-icon me-1 db-font-size-sm" data-icon="pulse_wave" style={{ verticalAlign: 'middle' }} />
             Memory-Verlauf
           </h6>
           <div className="d-flex gap-2 flex-shrink-0">
@@ -279,15 +277,15 @@ export function MemoryCard({
               {snapping ? (
                 <span className="spinner-border spinner-border-sm" />
               ) : (
-                <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                  add_chart
-                </span>
+                <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
               )}
             </button>
             <button className="btn btn-sm btn-outline-secondary" onClick={onRefresh} disabled={loading}>
-              <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                refresh
-              </span>
+              <span
+                className="db-icon db-font-size-sm"
+                data-icon="circular_arrows"
+                style={{ verticalAlign: 'middle' }}
+              />
             </button>
           </div>
         </div>
@@ -414,18 +412,16 @@ export function MemoryCard({
                 <div className="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
                 <ul className="list-unstyled mb-0">
                   {pagedEvents.map((p, i) => {
-                    const icon =
-                      p.event === 'startup' ? 'power_settings_new' : p.event === 'shutdown' ? 'power_off' : 'add_chart';
+                    const icon = p.event === 'startup' ? 'start' : p.event === 'shutdown' ? 'stop' : 'line_chart';
                     const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
                     return (
                       <li key={i} className="py-1 border-bottom">
                         <div className="d-flex align-items-center gap-2">
                           <span
-                            className="material-icons-round flex-shrink-0"
-                            style={{ fontSize: '.85rem', color: EVENT_COLORS[p.event] }}
-                          >
-                            {icon}
-                          </span>
+                            className="db-icon flex-shrink-0 db-font-size-xs"
+                            data-icon={icon}
+                            style={{ color: EVENT_COLORS[p.event] }}
+                          />
                           <span className="small fw-medium" style={{ color: EVENT_COLORS[p.event] }}>
                             {EVENT_LABELS[p.event]}
                           </span>
@@ -455,9 +451,11 @@ export function MemoryCard({
                       onClick={() => setEventsPage(p => Math.max(0, p - 1))}
                       disabled={eventsPage === 0}
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                        chevron_left
-                      </span>
+                      <span
+                        className="db-icon db-font-size-sm"
+                        data-icon="chevron_left"
+                        style={{ verticalAlign: 'middle' }}
+                      />
                     </button>
                     <span className="text-body-secondary">
                       {eventsPage + 1} / {eventPageCount}
@@ -467,9 +465,11 @@ export function MemoryCard({
                       onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
                       disabled={eventsPage === eventPageCount - 1}
                     >
-                      <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                        chevron_right
-                      </span>
+                      <span
+                        className="db-icon db-font-size-sm"
+                        data-icon="chevron_right"
+                        style={{ verticalAlign: 'middle' }}
+                      />
                     </button>
                   </div>
                 )}

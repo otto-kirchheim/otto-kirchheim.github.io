@@ -41,7 +41,7 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
       <div className="alert alert-info border-info-subtle shadow-sm mb-0" role="status" aria-live="polite">
         <div className="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2 gap-sm-3">
           <div className="d-flex align-items-start gap-2">
-            <span className="material-icons-round mt-1 mt-sm-0 flex-shrink-0">edit_note</span>
+            <span className="db-icon mt-1 mt-sm-0 flex-shrink-0" data-icon="pen" />
             <div>
               <div className="fw-semibold">Bitte erst Änderungen überprüfen und speichern</div>
               <div className="small mt-1">{text}</div>

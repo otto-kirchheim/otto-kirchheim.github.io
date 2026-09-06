@@ -54,9 +54,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                 onClick={() => setzeGruppe(name, undefined)}
                 title="Gruppe löschen"
               >
-                <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-                  delete
-                </span>
+                <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
               </button>
             </div>
 

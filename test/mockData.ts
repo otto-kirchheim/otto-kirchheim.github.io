@@ -978,7 +978,7 @@ export const mockEinstellungen = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
     '<form class="text-center" id="formEinstellungen">' +
-      '<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler><span class="material-icons-round big-icons">save</span>Speichern</button>' +
+      '<button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler><span class="db-icon db-font-size-lg big-icons" data-icon="save"></span>Speichern</button>' +
       '<input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required /><label for="Vorname">Vorname</label>' +
       '<input type="Text" placeholder="Mustermann" id="Nachname" class="form-control validate" required /><label for="Nachname">Nachname</label>' +
       '<input type="Text" placeholder="01234567" id="PNummer" class="form-control validate" required /><label for="PNummer">Personalnummer</label>' +

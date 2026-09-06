@@ -128,9 +128,9 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
         }
         if (row.isError && !errorIconRendered) {
           const icon = document.createElement('span');
-          icon.classList.add('material-icons-round', 'customtable-error-icon');
+          icon.classList.add('db-icon', 'db-font-size-sm', 'customtable-error-icon');
           icon.setAttribute('aria-hidden', 'true');
-          icon.textContent = 'error';
+          icon.dataset['icon'] = 'exclamation_mark_circle';
           td.appendChild(icon);
           errorIconRendered = true;
         }
@@ -240,7 +240,9 @@ export function renderHeader<T extends CustomTableTypes>(self: CustomTable<T>): 
   function handleSortable(th: HTMLTableCellElement, column: Column<T>): void {
     th.classList.add('customtable-sortable');
     const span = document.createElement('span');
-    span.classList.add('customtableIcon');
+    // `db-icon` + `data-icon`: die DB-Icon-Schrift loest den Namen als Ligatur auf.
+    span.classList.add('customtableIcon', 'db-icon', 'db-font-size-sm');
+    span.setAttribute('aria-hidden', 'true');
     handleSorted(column, th, span);
     th.append(span);
     th.addEventListener('click', (event: MouseEvent): void => {
@@ -250,11 +252,17 @@ export function renderHeader<T extends CustomTableTypes>(self: CustomTable<T>): 
   }
 
   function handleSorted(column: Column<T>, th: HTMLTableCellElement, span: HTMLSpanElement): void {
-    if (!column.sorted) return span.classList.add('customtable-sort');
+    if (!column.sorted) {
+      span.classList.add('customtable-sort');
+      span.dataset['icon'] = 'arrows_vertical';
+      return;
+    }
     const direction = column.direction ? column.direction.toLowerCase() : 'asc';
     sortRows(self, column.index, <Directions>direction.toUpperCase());
     th.classList.add(`customtable-${direction}`);
-    span.classList.add(direction == 'asc' ? 'customtable-sort-asc' : 'customtable-sort-desc');
+    const aufsteigend = direction == 'asc';
+    span.classList.add(aufsteigend ? 'customtable-sort-asc' : 'customtable-sort-desc');
+    span.dataset['icon'] = aufsteigend ? 'sort_up' : 'sort_down';
   }
 }
 

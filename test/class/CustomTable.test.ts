@@ -131,7 +131,7 @@ describe('CustomTable', () => {
     expect(tr?.classList.contains('customtable-error')).toBe(true);
     expect(tr?.getAttribute('data-error-message')).toBe('Validierung fehlgeschlagen');
     expect(tr?.title).toBe('Validierung fehlgeschlagen');
-    expect(tr?.querySelector('.customtable-error-icon')?.textContent).toBe('error');
+    expect(tr?.querySelector('.customtable-error-icon')?.getAttribute('data-icon')).toBe('exclamation_mark_circle');
     expect(table.rows.getChanges(false).update).toHaveLength(1);
   });
 

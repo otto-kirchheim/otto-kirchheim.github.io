@@ -184,9 +184,7 @@ function EwtTab() {
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           EWT
           <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
-            <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
-              help_outline
-            </span>
+            <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
           </button>
         </h1>
         <h4 id="MonatE"></h4>
@@ -196,25 +194,25 @@ function EwtTab() {
         <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
           <div className="col d-grid">
             <button type="button" className="btn btn-primary" id="btnESEE" data-disabler>
-              <span className="material-icons-round big-icons">add_circle_outlined</span>
+              <span className="db-icon" data-icon="plus" />
               Anwesenheit
             </button>
           </div>
           <div className="col d-grid">
             <button className="btn btn-primary" type="button" id="btnZb" data-disabler>
-              <span className="material-icons-round big-icons">calculate</span>
+              <span className="db-icon" data-icon="bar_chart" />
               Berechnen
             </button>
           </div>
           <div className="col d-grid">
             <button className="btn btn-success" type="button" id="btnSaveE" data-disabler>
-              <span className="material-icons-round big-icons">save</span>
+              <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
           <div className="col d-grid">
             <button className="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
-              <span className="material-icons-round big-icons">download</span>
+              <span className="db-icon" data-icon="download" />
               PDF erzeugen
             </button>
           </div>

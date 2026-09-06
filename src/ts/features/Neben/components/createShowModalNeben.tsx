@@ -11,7 +11,7 @@ const createShowElement = (
   column_1: [columnName: string, className?: string],
   column_2: [columnName: string, className?: string],
   classNameDiv: string = 'mb-2 col-12 text-center',
-  separator: JSX.Element = <span className="material-icons-round big-icons">arrow_right_alt</span>,
+  separator: JSX.Element = <span className="db-icon db-font-size-lg" data-icon="arrow_right" />,
 ) => {
   const column1: Column<IDatenN> = getColumn(row, column_1[0]);
   const column2: Column<IDatenN> = getColumn(row, column_2[0]);

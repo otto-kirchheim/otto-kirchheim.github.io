@@ -32,7 +32,7 @@ function StatCard({
     <div className="col-sm-6 col-xl-3">
       <div className="card border-0 shadow-sm h-100">
         <div className="card-body d-flex gap-3 align-items-start">
-          <span className={`material-icons-round fs-2 ${colorClass}`}>{icon}</span>
+          <span className={`db-icon fs-2 ${colorClass} db-font-size-lg`} data-icon={icon} />
           <div style={{ minWidth: '0' }}>
             <div className="text-body-secondary small">{title}</div>
             <div className="fs-3 fw-bold lh-1 mt-1">
@@ -97,7 +97,7 @@ export function AdminDashboard() {
   if (error) {
     return (
       <div className="alert alert-danger d-flex align-items-center gap-2">
-        <span className="material-icons-round">error</span>
+        <span className="db-icon" data-icon="exclamation_mark_circle" />
         <span>{error}</span>
         <button className="btn btn-sm btn-outline-danger ms-auto" onClick={load}>
           Neu laden
@@ -124,7 +124,7 @@ export function AdminDashboard() {
               title="Benutzer"
               value={stats.users.total}
               sub={sub}
-              icon={gap === 0 ? 'group' : 'warning'}
+              icon={gap === 0 ? 'persons' : 'exclamation_mark_triangle'}
               colorClass={gap === 0 ? 'text-primary' : 'text-danger'}
             />
           );
@@ -133,14 +133,14 @@ export function AdminDashboard() {
           title="Profile-Templates"
           value={stats.templates.total}
           sub={`Aktiv: ${stats.templates.active} · Inaktiv: ${stats.templates.inactive}`}
-          icon="content_copy"
+          icon="copy"
           colorClass="text-info"
         />
         <StatCard
           title="Admin-Aktivität"
           value={stats.adminActivity.logsLast7d}
           sub="Logs (letzte 7 Tage)"
-          icon="history"
+          icon="counter_clockwise_clock"
           colorClass="text-warning"
         />
         {cur &&
@@ -152,7 +152,7 @@ export function AdminDashboard() {
                 label={value}
                 unit={unit}
                 sub="seit letztem Start"
-                icon="schedule"
+                icon="clock"
                 colorClass="text-success"
               />
             );
@@ -223,9 +223,7 @@ export function AdminDashboard() {
               ).map(([label, count, icon, color]) => (
                 <div key={label} className="d-flex justify-content-between align-items-center py-2 border-bottom">
                   <span className="d-flex align-items-center gap-2 small">
-                    <span className={`material-icons-round ${color}`} style={{ fontSize: '1rem' }}>
-                      {icon}
-                    </span>
+                    <span className={`db-icon ${color} db-font-size-sm`} data-icon={icon} />
                     {label}
                   </span>
                   <span className="badge bg-secondary rounded-pill">{count}</span>
@@ -250,9 +248,11 @@ export function AdminDashboard() {
 
       <div className="text-end mt-3">
         <button className="btn btn-sm btn-outline-secondary" onClick={load}>
-          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-            refresh
-          </span>
+          <span
+            className="db-icon me-1 db-font-size-sm"
+            data-icon="circular_arrows"
+            style={{ verticalAlign: 'middle' }}
+          />
           Aktualisieren
         </button>
       </div>

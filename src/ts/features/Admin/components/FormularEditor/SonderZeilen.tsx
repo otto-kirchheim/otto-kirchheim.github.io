@@ -135,9 +135,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                 onClick={() => setzeZeile(name, undefined)}
                 title="Sonderzeile löschen"
               >
-                <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-                  delete
-                </span>
+                <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
               </button>
             </div>
 

@@ -76,9 +76,7 @@ export default function AdminTab() {
     <div className="admin-tab-bg py-4 px-2 px-md-4">
       <div className="position-relative mb-3 text-center">
         <h1 className="mb-0 d-inline-flex align-items-center gap-1 text-dark-emphasis">
-          <span className="material-icons-round" style={{ fontSize: '1.5rem' }}>
-            manage_accounts
-          </span>
+          <span className="db-icon db-font-size-lg" data-icon="profile_card" />
           Admin
         </h1>
       </div>
@@ -260,7 +258,7 @@ export default function AdminTab() {
           {!actAsState.active && (
             <div className="alert alert-secondary border shadow-sm mb-3" role="status" aria-live="polite">
               <div className="d-flex align-items-start gap-2">
-                <span className="material-icons-round mt-1">home</span>
+                <span className="db-icon mt-1" data-icon="house" />
                 <div>
                   <div className="fw-semibold">Eigene Daten aktiv</div>
                   <div className="small">Du arbeitest gerade mit deinen eigenen Daten.</div>

@@ -34,7 +34,7 @@ describe('MyDivModal', () => {
     const alert = container.querySelector('.alert-danger');
     expect(alert).not.toBeNull();
     expect(alert?.textContent).toContain('Etwas ist schiefgelaufen');
-    expect(alert?.querySelector('.material-icons-round')?.textContent).toBe('error');
+    expect(alert?.querySelector('.db-icon')?.getAttribute('data-icon')).toBe('exclamation_mark_circle');
   });
 
   it('should pass helpContext through to the default MyModalHeader', () => {

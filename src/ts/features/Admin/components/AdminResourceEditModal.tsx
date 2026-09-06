@@ -108,11 +108,10 @@ export function AdminResourceEditModal({
                             }}
                           >
                             <span
-                              className="material-icons-round me-1"
-                              style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}
-                            >
-                              person_search
-                            </span>
+                              className="db-icon me-1 db-font-size-xs"
+                              data-icon="magnifying_glass"
+                              style={{ verticalAlign: 'middle' }}
+                            />
                             Zum Profil
                           </button>
                         )}
@@ -145,9 +144,7 @@ export function AdminResourceEditModal({
                                 className="btn btn-sm btn-outline-info py-0"
                                 onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
                               >
-                                <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
-                                  open_in_new
-                                </span>
+                                <span className="db-icon db-font-size-xs" data-icon="arrow_up_right" />
                                 <span className="ms-1 d-none d-sm-inline">
                                   {RESOURCES[crossRef.resourceIdx].shortLabel}
                                 </span>
@@ -167,11 +164,10 @@ export function AdminResourceEditModal({
                             onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
                           >
                             <span
-                              className="material-icons-round me-1"
-                              style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}
-                            >
-                              open_in_new
-                            </span>
+                              className="db-icon me-1 db-font-size-xs"
+                              data-icon="arrow_up_right"
+                              style={{ verticalAlign: 'middle' }}
+                            />
                             {RESOURCES[crossRef.resourceIdx].label}
                           </button>
                         </div>
@@ -255,9 +251,7 @@ export function AdminResourceEditModal({
                           title="Kopieren"
                           onClick={() => void navigator.clipboard?.writeText(val)}
                         >
-                          <span className="material-icons-round" style={{ fontSize: '0.85rem' }}>
-                            content_copy
-                          </span>
+                          <span className="db-icon db-font-size-xs" data-icon="copy" />
                         </button>
                       </div>
                     ) : (

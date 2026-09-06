@@ -21,9 +21,11 @@ export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClic
       onClick={onClick}
       title={titel ?? 'Rechteck auf dem PDF aufziehen, um Position und Zellbreite zu setzen'}
     >
-      <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-        {aktiv ? 'highlight_alt' : 'crop_free'}
-      </span>
+      <span
+        className="db-icon db-font-size-xs"
+        data-icon={aktiv ? 'location_crosshairs' : 'resize'}
+        style={{ verticalAlign: 'middle' }}
+      />
     </button>
   );
 }
@@ -101,9 +103,11 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
         x={wert.x.toFixed(0)}
         {wert.y !== undefined && `, y=${wert.y.toFixed(0)}`}
         {breite !== null && `, ${breite.toFixed(0)}${hoehe === null ? ' br.' : `×${hoehe.toFixed(0)}`}`}
-        <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
-          {offen ? 'expand_less' : 'expand_more'}
-        </span>
+        <span
+          className="db-icon db-font-size-2xs"
+          data-icon={offen ? 'chevron_up' : 'chevron_down'}
+          style={{ verticalAlign: 'middle' }}
+        />
       </button>
       {offen && (
         <div className="row g-1 w-100 mt-1">

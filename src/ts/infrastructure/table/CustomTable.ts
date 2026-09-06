@@ -119,10 +119,10 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
           addText: options.editing?.addText ?? 'Neue Zeile',
           editText:
             options.editing?.editText ??
-            '<span class="material-icons-round small-icons" aria-hidden="true">edit</span>',
+            '<span class="db-icon db-font-size-sm" data-icon="pen" aria-hidden="true"></span>',
           deleteText:
             options.editing?.deleteText ??
-            '<span class="material-icons-round small-icons" aria-hidden="true">delete</span>',
+            '<span class="db-icon db-font-size-sm" data-icon="bin" aria-hidden="true"></span>',
           deleteAllText: options.editing?.deleteAllText ?? 'Alle Zeilen löschen',
           addRow:
             options.editing?.addRow ??
@@ -147,7 +147,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
           deleteAllRows: options.editing?.deleteAllRows ?? this.deleteAllRows,
           undoDeleteText:
             options.editing?.undoDeleteText ??
-            '<span class="material-icons-round small-icons" aria-hidden="true">undo</span>',
+            '<span class="db-icon db-font-size-sm" data-icon="undo" aria-hidden="true"></span>',
           customButton: options.editing?.customButton ?? null,
         },
         classes: options.classes ?? [],

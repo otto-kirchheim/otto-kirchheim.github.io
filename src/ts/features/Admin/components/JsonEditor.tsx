@@ -63,9 +63,10 @@ export function JsonEditor({ value, onChange, error }: Props) {
         style={{ cursor: 'pointer', userSelect: 'none', borderRadius: 'inherit' }}
         onClick={() => setOpen(o => !o)}
       >
-        <span className="material-icons-round text-muted flex-shrink-0" style={{ fontSize: '0.95rem' }}>
-          {open ? 'expand_less' : 'expand_more'}
-        </span>
+        <span
+          className="db-icon text-muted flex-shrink-0 db-font-size-xs"
+          data-icon={open ? 'chevron_up' : 'chevron_down'}
+        />
 
         <span className={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>{label}</span>
 
@@ -86,9 +87,7 @@ export function JsonEditor({ value, onChange, error }: Props) {
               onClick={handleFormat}
               title="JSON formatieren"
             >
-              <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
-                format_align_left
-              </span>
+              <span className="db-icon db-font-size-2xs" data-icon="list" style={{ verticalAlign: 'middle' }} />
               <span className="ms-1 d-none d-sm-inline">Format</span>
             </button>
           )}
@@ -98,9 +97,11 @@ export function JsonEditor({ value, onChange, error }: Props) {
             onClick={() => setOpen(o => !o)}
             title={open ? 'Einklappen' : 'Bearbeiten'}
           >
-            <span className="material-icons-round" style={{ fontSize: '0.8rem', verticalAlign: 'middle' }}>
-              {open ? 'close' : 'edit'}
-            </span>
+            <span
+              className="db-icon db-font-size-2xs"
+              data-icon={open ? 'cross' : 'pen'}
+              style={{ verticalAlign: 'middle' }}
+            />
           </button>
         </div>
       </div>
@@ -120,9 +121,11 @@ export function JsonEditor({ value, onChange, error }: Props) {
           />
           {hasError && (
             <div className="small mt-1 text-danger">
-              <span className="material-icons-round me-1" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-                error_outline
-              </span>
+              <span
+                className="db-icon me-1 db-font-size-xs"
+                data-icon="exclamation_mark_circle"
+                style={{ verticalAlign: 'middle' }}
+              />
               {error ?? 'Ungültiges JSON'}
             </div>
           )}

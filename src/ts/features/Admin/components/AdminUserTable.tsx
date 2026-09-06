@@ -253,19 +253,16 @@ export function AdminUserList() {
                   onClick={() => setExpandedUserId(isExpanded ? null : currentUser._id)}
                 >
                   <div className="d-flex align-items-center gap-2 text-truncate">
-                    <span className="material-icons-round text-body-secondary" style={{ fontSize: '1.25rem' }}>
-                      person
-                    </span>
+                    <span className="db-icon text-body-secondary db-font-size-md" data-icon="person" />
                     <span className="fw-semibold text-truncate">{currentUser.userName}</span>
                   </div>
                   <div className="d-flex align-items-center gap-2">
                     <span className={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
                     <span
-                      className="material-icons-round text-body-secondary"
-                      style={{ fontSize: '1.25rem', transition: 'transform 0.2s' }}
-                    >
-                      {isExpanded ? 'expand_less' : 'expand_more'}
-                    </span>
+                      className="db-icon text-body-secondary db-font-size-md"
+                      data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
+                      style={{ transition: 'transform 0.2s' }}
+                    />
                   </div>
                 </div>
 
@@ -368,11 +365,10 @@ export function AdminUserList() {
                             ) : (
                               <>
                                 <span
-                                  className="material-icons-round me-1"
-                                  style={{ fontSize: '1rem', verticalAlign: 'middle' }}
-                                >
-                                  save
-                                </span>
+                                  className="db-icon me-1 db-font-size-sm"
+                                  data-icon="save"
+                                  style={{ verticalAlign: 'middle' }}
+                                />
                                 Speichern
                               </>
                             )}
@@ -385,11 +381,10 @@ export function AdminUserList() {
                               title="Änderungen verwerfen"
                             >
                               <span
-                                className="material-icons-round"
-                                style={{ fontSize: '1rem', verticalAlign: 'middle' }}
-                              >
-                                undo
-                              </span>
+                                className="db-icon db-font-size-sm"
+                                data-icon="undo"
+                                style={{ verticalAlign: 'middle' }}
+                              />
                             </button>
                           )}
                         </>
@@ -400,11 +395,10 @@ export function AdminUserList() {
                         disabled={isSaving}
                       >
                         <span
-                          className="material-icons-round me-1"
-                          style={{ fontSize: '1rem', verticalAlign: 'middle' }}
-                        >
-                          {isSelfRow ? 'home' : 'visibility'}
-                        </span>
+                          className="db-icon me-1 db-font-size-sm"
+                          data-icon={isSelfRow ? 'house' : 'eye'}
+                          style={{ verticalAlign: 'middle' }}
+                        />
                         {isSelfRow ? 'Eigene Daten' : 'Daten laden'}
                       </button>
                     </div>

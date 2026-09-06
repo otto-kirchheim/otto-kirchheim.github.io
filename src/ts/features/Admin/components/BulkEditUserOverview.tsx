@@ -65,9 +65,7 @@ export function BulkEditUserOverview({
                     disabled={selectedUsers.length <= 1}
                     onClick={() => onRemoveUser(user._id)}
                   >
-                    <span className="material-icons-round" style={{ fontSize: '1.1rem', verticalAlign: 'middle' }}>
-                      close
-                    </span>
+                    <span className="db-icon db-font-size-md" data-icon="cross" style={{ verticalAlign: 'middle' }} />
                   </button>
                 </td>
               </tr>

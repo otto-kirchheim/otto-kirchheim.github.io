@@ -14,9 +14,7 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
           aria-label="Hilfe anzeigen"
           onClick={() => openHelpModal(helpContext)}
         >
-          <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
-            help_outline
-          </span>
+          <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
         </button>
       )}
       <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>

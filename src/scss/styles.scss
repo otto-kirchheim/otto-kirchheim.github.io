@@ -1,5 +1,3 @@
-$material-icons-font-path: '~material-icons/iconfont/';
-
 // Compile-Time-Gegenstueck zur Token-Bridge: Bootstrap backt seine Komponentenfarben
 // (`--bs-btn-bg`, Links, Focus-Ringe) beim Kompilieren aus `$primary` ein, dort hilft ein
 // Laufzeit-`var()` nicht. #ec0016 ist `--db-brand-origin-default` -- in Hell und Dunkel
@@ -10,9 +8,6 @@ $primary: #ec0016;
 @layer bootstrap {
   @import '~bootstrap/scss/bootstrap';
 }
-
-// Material-Icons bleiben vorerst unlayered (Phase G ersetzt sie durch DB-Icons).
-@import '~material-icons/iconfont/round.scss';
 
 .dropdown-menu .active .bi {
   display: block !important;
@@ -42,21 +37,57 @@ body {
   min-width: 120px;
 }
 
-.small-icons {
-  vertical-align: middle;
-  font-size: 1.3rem;
+// Die Icon-Groesse steuert im DB-System `--db-icon-font-size`; die Klassen
+// `db-font-size-2xs|xs|sm|md|lg` setzen sie aus der Token-Skala.
+
+// Icon-Buttons: `.db-icon` hat selbst `font-size: 0`, das Glyph sitzt im `::before` und
+// richtet sich an der Grundlinie aus -- neben 1-rem-Text sah das zu gross und zu tief aus.
+// Eine Flex-Zeile zentriert beides zueinander, die Groesse haengt an der Button-Schrift.
+.btn:has(> .db-icon) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
 }
 
+.btn > .db-icon {
+  --db-icon-font-size: 1.25rem;
+  --db-icon-vertical-align: middle;
+}
+
+.btn-lg > .db-icon {
+  --db-icon-font-size: 1.5rem;
+}
+
+.btn-sm > .db-icon {
+  --db-icon-font-size: 1rem;
+}
 .big-icons {
-  vertical-align: middle;
-  width: 36px;
-  font-size: 36px;
-  margin-right: 0.2rem;
+  margin-right: 0.35rem;
 }
 
 .einstellungen-icons {
-  font-size: 36px;
   padding: 10px 2px 0;
+}
+
+// Zwei Motive gibt es im DB-Satz nicht (Theme-Automatik, Filter zuruecksetzen). Sie liegen
+// als SVG unter `src/icons/`, zusammengesetzt nach DB-Regelwerk von `scripts/icon-varianten.py`.
+// Die Maske faerbt das SVG mit `currentColor` und nutzt dieselbe Groessenvariable wie DB-Icons.
+.app-icon {
+  display: inline-block;
+  inline-size: var(--db-icon-font-size, 1.5rem);
+  block-size: var(--db-icon-font-size, 1.5rem);
+  vertical-align: middle;
+  background: currentcolor;
+  mask: var(--app-icon) center / contain no-repeat;
+}
+
+.app-icon--theme-auto {
+  --app-icon: url('../icons/theme-auto.svg');
+}
+
+.app-icon--filter-off {
+  --app-icon: url('../icons/filter-off.svg');
 }
 
 .card {

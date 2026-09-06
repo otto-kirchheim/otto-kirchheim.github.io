@@ -97,9 +97,11 @@ export function AdminLogBrowser() {
           className="btn btn-sm btn-outline-secondary ms-auto"
           onClick={() => loadPage(currentPage, actionFilter)}
         >
-          <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-            refresh
-          </span>
+          <span
+            className="db-icon me-1 db-font-size-sm"
+            data-icon="circular_arrows"
+            style={{ verticalAlign: 'middle' }}
+          />
           Aktualisieren
         </button>
       </div>
@@ -162,11 +164,10 @@ export function AdminLogBrowser() {
                             onClick={() => setOpenDetailsId(open ? null : id)}
                           >
                             <span
-                              className="material-icons-round"
-                              style={{ fontSize: '1.1rem', verticalAlign: 'middle' }}
-                            >
-                              {open ? 'expand_less' : 'expand_more'}
-                            </span>
+                              className="db-icon db-font-size-md"
+                              data-icon={open ? 'chevron_up' : 'chevron_down'}
+                              style={{ verticalAlign: 'middle' }}
+                            />
                           </button>
                         )}
                       </td>

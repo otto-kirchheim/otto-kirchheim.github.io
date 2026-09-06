@@ -119,9 +119,7 @@ function NebenTab() {
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Nebenbezüge
           <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpNeben" aria-label="Hilfe anzeigen">
-            <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
-              help_outline
-            </span>
+            <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
           </button>
         </h1>
         <h4 id="MonatN"></h4>
@@ -131,19 +129,19 @@ function NebenTab() {
         <div className="row row-cols-1 row-cols-md-3 justify-content-center justify-content-sm-start justify-content-md-center g-3 my-3 w200">
           <div className="col d-grid">
             <button type="button" className="btn btn-primary" id="btnESN" data-disabler>
-              <span className="material-icons-round big-icons">add_circle_outlined</span>
+              <span className="db-icon" data-icon="plus" />
               Hinzufügen
             </button>
           </div>
           <div className="col d-grid">
             <button className="btn btn-success" type="button" id="btnSaveN" data-disabler>
-              <span className="material-icons-round big-icons">save</span>
+              <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
           <div className="col d-grid">
             <button className="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
-              <span className="material-icons-round big-icons">download</span>
+              <span className="db-icon" data-icon="download" />
               PDF erzeugen
             </button>
           </div>

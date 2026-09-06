@@ -94,8 +94,8 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
         <hr />
 
         <div className="icon-ewt-arrow">
-          <span className="material-icons-round big-icons">arrow_downward</span>
-          <span className="material-icons-round big-icons">arrow_upward</span>
+          <span className="db-icon db-font-size-lg" data-icon="arrow_down" />
+          <span className="db-icon db-font-size-lg" data-icon="arrow_up" />
         </div>
 
         {createTitle('ab', 'Wohnung', 'an')}

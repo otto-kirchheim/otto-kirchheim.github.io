@@ -76,7 +76,7 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
 function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: string) => void }): JSX.Element {
   return (
     <div className="input-group">
-      <span className="input-group-text material-icons-round einstellungen-icons">drive_eta</span>
+      <span className="db-icon input-group-text db-font-size-lg" data-icon="car" />
       <div className="form-floating">
         <input
           type="time"
@@ -319,9 +319,7 @@ export function SchichtSection({
                 onClick={saveNewOverride}
                 disabled={newDays.length === 0}
               >
-                <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-                  check
-                </span>
+                <span className="db-icon db-font-size-sm" data-icon="check" />
               </button>
               <button
                 type="button"
@@ -331,9 +329,7 @@ export function SchichtSection({
                   setNewDays([]);
                 }}
               >
-                <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-                  close
-                </span>
+                <span className="db-icon db-font-size-sm" data-icon="cross" />
               </button>
             </div>
           </div>
@@ -346,9 +342,7 @@ export function SchichtSection({
               setNewConfig(schicht.default);
             }}
           >
-            <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-              add
-            </span>
+            <span className="db-icon db-font-size-sm" data-icon="plus" />
             Zeitvariante
           </button>
         )}
@@ -457,9 +451,7 @@ function ScheduleGroupRow({
             setEditing(false);
           }}
         >
-          <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-            check
-          </span>
+          <span className="db-icon db-font-size-sm" data-icon="check" />
         </button>
         <button
           type="button"
@@ -469,9 +461,7 @@ function ScheduleGroupRow({
             setEditing(false);
           }}
         >
-          <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-            close
-          </span>
+          <span className="db-icon db-font-size-sm" data-icon="cross" />
         </button>
       </div>
     );
@@ -499,9 +489,7 @@ function ScheduleGroupRow({
           </span>
         )}
         <span className="text-muted small">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
-        <span className="material-icons-round text-muted" style={{ fontSize: '1rem' }}>
-          edit
-        </span>
+        <span className="db-icon text-muted db-font-size-sm" data-icon="pen" />
       </button>
       {onDelete && (
         <button
@@ -510,9 +498,7 @@ function ScheduleGroupRow({
           onClick={onDelete}
           title="Zeitvariante löschen"
         >
-          <span className="material-icons-round" style={{ fontSize: '1rem' }}>
-            delete
-          </span>
+          <span className="db-icon db-font-size-sm" data-icon="bin" />
         </button>
       )}
     </div>

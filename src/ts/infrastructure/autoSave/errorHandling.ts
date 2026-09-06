@@ -70,7 +70,7 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
   const rowDesc = err.label ?? (err.operation !== 'create' && err.id ? err.id : `#${globalIdx + 1}`);
   return `<li class="list-group-item px-0">
     <div class="d-flex gap-2 align-items-start">
-      <span class="material-icons-round text-danger flex-shrink-0" style="font-size:1.1rem;margin-top:2px" aria-hidden="true">error_outline</span>
+      <span class="db-icon text-danger flex-shrink-0" data-icon="exclamation_mark_circle" style="font-size:1.1rem;margin-top:2px" aria-hidden="true"></span>
       <div class="flex-grow-1">
         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
           <span class="badge text-bg-danger">${escapeHtml(opLabel(err.operation))}</span>

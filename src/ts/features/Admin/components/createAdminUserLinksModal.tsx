@@ -137,9 +137,11 @@ function LinkSection({
                   type="button"
                   onClick={() => void copyToClipboard(link.url, 'Link kopiert')}
                 >
-                  <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                    link
-                  </span>
+                  <span
+                    className="db-icon me-1 db-font-size-sm"
+                    data-icon="link_chain"
+                    style={{ verticalAlign: 'middle' }}
+                  />
                   Link kopieren
                 </button>
                 <button
@@ -147,9 +149,7 @@ function LinkSection({
                   type="button"
                   onClick={() => void copyToClipboard(buildShareText(kind, userName, link.url), 'Text kopiert')}
                 >
-                  <span className="material-icons-round me-1" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-                    content_copy
-                  </span>
+                  <span className="db-icon me-1 db-font-size-sm" data-icon="copy" style={{ verticalAlign: 'middle' }} />
                   Text kopieren
                 </button>
               </div>

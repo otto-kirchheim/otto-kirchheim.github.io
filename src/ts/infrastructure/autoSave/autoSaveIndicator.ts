@@ -3,15 +3,15 @@
  * Speichern-Button. Jeder Button zeigt den Worst-Case-Status seiner
  * zugeordneten Ressourcen.
  *
- * Icons (Material Icons):
- * - idle:            kein Badge sichtbar
- * - pending:         cloud_queue  (grau)
- * - pending+offline: cloud_off    (gelb) – Änderungen warten auf Verbindung
- * - saving:          cloud_sync   (blau, pulse-Animation)
- * - saved:           cloud_done   (grün, verblasst nach 2 s)
- * - error (Daten):   error        (rot)  – z. B. 422 Validierungsfehler
- * - error (Netzwerk): cloud_off   (rot)  – Server nicht erreichbar
- * - blocked:         warning      (gelb) – Überschneidung mit ungespeicherter Löschung, manuell speichern
+ * Icons (DB UX, gesetzt als `data-icon`):
+ * - idle:             kein Badge sichtbar
+ * - pending:          cloud                       (grau)
+ * - pending+offline:  wifi_disabled               (gelb) – Änderungen warten auf Verbindung
+ * - saving:           cloud_upload                (blau, pulse-Animation)
+ * - saved:            check_circle                (grün, verblasst nach 2 s)
+ * - error (Daten):    exclamation_mark_circle     (rot)  – z. B. 422 Validierungsfehler
+ * - error (Netzwerk): wifi_disabled               (rot)  – Server nicht erreichbar
+ * - blocked:          exclamation_mark_triangle   (gelb) – Überschneidung mit ungespeicherter Löschung
  */
 
 import { onAutoSaveStatus } from './autoSave';
@@ -26,14 +26,18 @@ const BUTTON_RESOURCE_MAP: ReadonlyArray<{ buttonId: string; resources: TResourc
   { buttonId: 'btnSaveEinstellungen', resources: ['settings'] },
 ];
 
+/** DB-UX-Icon-Namen; gesetzt wird `data-icon`, nicht der Textinhalt (siehe `dbIcons.ts`). */
 const ICON_MAP: Record<TSaveStatus, string> = {
   idle: '',
-  pending: 'cloud_queue',
-  saving: 'cloud_sync',
-  saved: 'cloud_done',
-  error: 'error',
-  blocked: 'warning',
+  pending: 'cloud',
+  saving: 'cloud_upload',
+  saved: 'check_circle',
+  error: 'exclamation_mark_circle',
+  blocked: 'exclamation_mark_triangle',
 };
+
+/** Kein Netz: der DB-Satz hat dafuer das durchgestrichene WLAN-Symbol. */
+const ICON_OFFLINE = 'wifi_disabled';
 
 const BG_MAP: Record<TSaveStatus, string> = {
   idle: '',
@@ -106,7 +110,8 @@ function createBadgeElement(): HTMLSpanElement {
   badge.style.opacity = '0';
 
   const iconEl = document.createElement('span');
-  iconEl.className = 'material-icons-round';
+  iconEl.className = 'db-icon db-font-size-sm';
+  iconEl.setAttribute('aria-hidden', 'true');
   badge.appendChild(iconEl);
 
   return badge;
@@ -162,7 +167,7 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
   badge.classList.remove(...Object.values(BG_MAP).filter(Boolean));
   badge.classList.remove('autosave-pulse');
 
-  const iconEl = badge.querySelector<HTMLSpanElement>('.material-icons-round');
+  const iconEl = badge.querySelector<HTMLSpanElement>('.db-icon');
 
   const bg = BG_MAP[status];
   if (bg) badge.classList.add(bg);
@@ -175,16 +180,16 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
       .map(r => errorMessages.get(r)!);
 
     const allNetwork = errors.length > 0 && errors.every(isNetworkError);
-    if (iconEl) iconEl.textContent = allNetwork ? 'cloud_off' : 'error';
+    if (iconEl) iconEl.dataset['icon'] = allNetwork ? ICON_OFFLINE : 'exclamation_mark_circle';
     badge.title = errors.length > 0 ? errors.join('\n') : TOOLTIP_MAP[status];
   } else if (status === 'pending' && !navigator.onLine) {
     // Offline: pending-Änderungen mit cloud_off kennzeichnen
     badge.classList.remove(bg);
     badge.classList.add('bg-warning');
-    if (iconEl) iconEl.textContent = 'cloud_off';
+    if (iconEl) iconEl.dataset['icon'] = ICON_OFFLINE;
     badge.title = 'Offline – Änderungen werden bei Verbindung gespeichert';
   } else {
-    if (iconEl) iconEl.textContent = icon;
+    if (iconEl) iconEl.dataset['icon'] = icon;
     badge.title = TOOLTIP_MAP[status];
   }
 

@@ -24,6 +24,6 @@ describe('MyModalHeader', () => {
 
     const helpButton = container.querySelector('[aria-label="Hilfe anzeigen"]');
     expect(helpButton).not.toBeNull();
-    expect(helpButton?.querySelector('.material-icons-round')?.textContent).toBe('help_outline');
+    expect(helpButton?.querySelector('.db-icon')?.getAttribute('data-icon')).toBe('question_mark_circle');
   });
 });

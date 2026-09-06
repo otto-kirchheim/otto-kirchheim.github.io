@@ -116,9 +116,7 @@ export function TabellenBlock({
             onClick={onVonSeiteEntfernen}
             title="Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)"
           >
-            <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-              link_off
-            </span>
+            <span className="db-icon db-font-size-xs" data-icon="unlink_chain" style={{ verticalAlign: 'middle' }} />
           </button>
         )}
         <button
@@ -127,9 +125,7 @@ export function TabellenBlock({
           onClick={onDelete}
           title="Tabelle löschen (aus dem ganzen Dokument)"
         >
-          <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-            delete
-          </span>
+          <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
         </button>
       </div>
 
@@ -362,9 +358,7 @@ export function TabellenBlock({
                         title="Diese Platzierung entfernen"
                         onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
                       >
-                        <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-                          delete
-                        </span>
+                        <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
                       </button>
                     </div>
                   );

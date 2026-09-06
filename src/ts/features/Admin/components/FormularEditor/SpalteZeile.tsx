@@ -69,9 +69,7 @@ export function SpalteZeile({
           ↓
         </button>
         <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Spalte löschen">
-          <span className="material-icons-round" style={{ fontSize: '0.85rem', verticalAlign: 'middle' }}>
-            delete
-          </span>
+          <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
         </button>
       </div>
 

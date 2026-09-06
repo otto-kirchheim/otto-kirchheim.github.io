@@ -201,9 +201,7 @@ function BereitschaftTab() {
             id="btnHelpBereitschaft"
             aria-label="Hilfe anzeigen"
           >
-            <span className="material-icons-round align-middle" style={{ fontSize: '1.25rem' }}>
-              help_outline
-            </span>
+            <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
           </button>
         </h1>
         <h4 id="MonatB"></h4>
@@ -213,25 +211,25 @@ function BereitschaftTab() {
         <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
           <div className="col d-grid">
             <button type="button" className="btn btn-primary" id="btnESZ" data-disabler>
-              <span className="material-icons-round big-icons">add_circle_outlined</span>
+              <span className="db-icon" data-icon="plus" />
               Bereitschaft
             </button>
           </div>
           <div className="col d-grid">
             <button type="button" className="btn btn-primary" id="btnESE" data-disabler>
-              <span className="material-icons-round big-icons">add_circle_outlined</span>
+              <span className="db-icon" data-icon="plus" />
               Einsatz
             </button>
           </div>
           <div className="col d-grid">
             <button type="button" className="btn btn-success" id="btnSaveB" data-disabler>
-              <span className="material-icons-round big-icons">save</span>
+              <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
           <div className="col d-grid">
             <button type="button" className="btn btn-secondary" id="btnDownloadB" data-disabler>
-              <span className="material-icons-round big-icons">download</span>
+              <span className="db-icon" data-icon="download" />
               PDF erzeugen
             </button>
           </div>

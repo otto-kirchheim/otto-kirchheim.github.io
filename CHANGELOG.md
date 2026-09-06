@@ -2,6 +2,62 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (57)
+
+### feat (DB-UX-Migration Phase G: Material Icons raus, DB-Icons rein)
+
+Alle 138 Icon-Stellen in 39 Dateien nutzen jetzt den DB-Icon-Satz. Die Zuordnung der
+59 Material-Namen wurde vorab an einer Vergleichsseite (alt/neu, mit Alternativen) freigegeben.
+
+- **`components/dbIcons.ts`** (neu): Mapping Material-Name -> DB-Name plus die
+  Groessenklassen des Design-Systems (`db-font-size-2xs|xs|sm|md|lg` setzen
+  `--db-icon-font-size`).
+- **Markup:** `<span class="material-icons-round">name</span>` ist ueberall
+  `<span class="db-icon" data-icon="db_name">` -- in TSX, in den DOM-String-Templates von
+  `CustomTable` und in `index.html`. Die Groesse kommt nicht mehr aus Inline-`fontSize`,
+  sondern aus der passenden `db-font-size-*`-Klasse (`.db-icon` selbst hat
+  `font-size: 0 !important`, das Glyph sitzt im `::before`).
+- **Zwei Eigenbau-Motive**, die es im DB-Satz nicht gibt, nach DB-Regelwerk aus je zwei
+  offiziellen 24-dp-Icons zusammengesetzt (`scripts/icon-varianten.py` -> `src/icons/`):
+  `theme-auto` (Sonne + Mond) fuer die Theme-Automatik und `filter-off` (Trichter mit
+  2-dp-Durchstreichung und Verschnitt) fuer "Filter zuruecksetzen". Eingebunden als
+  CSS-Maske (`.app-icon`), die `currentColor` und dieselbe Groessenvariable nutzt.
+- **AutoSave-Badge und Tabellen-Fehlerzeile** setzen jetzt `dataset.icon` statt Text:
+  `cloud`/`cloud_upload`/`check_circle`/`exclamation_mark_circle`/`exclamation_mark_triangle`,
+  offline `wifi_disabled`.
+- **Raus:** `material-icons`-Dependency, der SCSS-Import, der Font-Preload in
+  `vite.config.ts` und der `~material-icons`-Alias.
+
+**Nachtrag nach dem ersten Sichttest** (drei Klassen von Fehlern, die der Codemod nicht sehen
+konnte):
+
+- **Dynamische Icon-Namen** blieben Material-Namen, weil sie als JSX-Ausdruck im Attribut
+  stehen (`data-icon={open ? 'expand_less' : 'expand_more'}`, Dashboard-Kacheln, Ereignisliste).
+  Ohne passendes Glyph rendert die Icon-Schrift nichts -- daher die leeren Kacheln.
+  Alle 13 Stellen auf DB-Namen umgestellt (`chevron_up`/`chevron_down`, `house`/`eye`,
+  `persons`, `counter_clockwise_clock`, `clock`, `start`/`stop`, ...).
+- **Sortier-Pfeile der Tabelle** standen als Text (`sort`, `arrow_drop_up`) in der Ansicht:
+  `customtable.css` setzte die Motive ueber `content:` als Material-Ligaturen und erzwang
+  `font-family: 'Material Icons Round'`. Jetzt `data-icon` am Element
+  (`arrows_vertical`/`sort_up`/`sort_down`), Schrift und Groesse kommen aus der DB-Regel.
+- **Rote Punkte vor jedem Navigations- und Listeneintrag:** DB setzt
+  `list-style-type: var(--db-list-bullet)` auf Listen und schlaegt damit Bootstraps
+  `list-style: none` aus dem unteren Layer. Bridge-Regel fuer `.nav`, `.navbar-nav`,
+  `.dropdown-menu`, `.list-unstyled`, `.list-group`, `.pagination`, `.breadcrumb`.
+- Dazu: DB stylt `input[type=checkbox]` global auf 32 px -- die verbliebenen
+  Bootstrap-Haken im Formular-Editor waren dadurch riesige leere Kaesten; Bridge holt die
+  Bootstrap-Groesse zurueck.
+- **Icons in Buttons** waren zu gross und sassen zu tief: `.db-icon` hat selbst `font-size: 0`,
+  das Glyph im `::before` richtet sich an der Grundlinie aus. Buttons mit Icon sind jetzt eine
+  Flex-Zeile (`align-items: center`, `gap`), die Icongroesse haengt an der Button-Groesse
+  (1,25 rem regulaer, 1 rem bei `btn-sm`, 1,5 rem bei `btn-lg`).
+- **Neuer Test `test/icons.dbSet.test.ts`:** liest den installierten Icon-Satz und prueft
+  jeden im Quellcode verwendeten Namen dagegen -- inklusive der ternaeren Ausdruecke.
+
+Verifikation: `typecheck`, `lint`, `test` (2077/0) und `build` gruen. Browser: kein Icon ohne
+Glyph, keine `material-icons-round`-Reste, Sortier-Icons als Glyph statt Text, keine
+Listen-Punkte mehr, Bootstrap-Haken wieder in normaler Groesse, 0 Konsolenfehler.
+
 ## 2026-09-06 (56)
 
 ### feat (DB-UX-Migration Phase C: Basiskomponenten auf DB React Components)

@@ -7,7 +7,6 @@ const baseConfig: UserConfig = {
   resolve: {
     alias: {
       '~bootstrap': path.resolve(import.meta.dirname, 'node_modules/bootstrap'),
-      '~material-icons': path.resolve(import.meta.dirname, 'node_modules/material-icons'),
       '@/components': path.resolve(import.meta.dirname, 'src/ts/components'),
       '@/core': path.resolve(import.meta.dirname, 'src/ts/core'),
       '@/types': path.resolve(import.meta.dirname, 'src/ts/core/types'),

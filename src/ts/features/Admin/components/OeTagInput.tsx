@@ -63,9 +63,7 @@ export function OeTagInput({
             onClick={handleAdd}
             disabled={!inputValue.trim()}
           >
-            <span className="material-icons-round" style={{ fontSize: '1rem', verticalAlign: 'middle' }}>
-              add
-            </span>
+            <span className="db-icon db-font-size-sm" data-icon="plus" style={{ verticalAlign: 'middle' }} />
           </button>
         </div>
       )}

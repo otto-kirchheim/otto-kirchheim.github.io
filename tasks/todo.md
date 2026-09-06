@@ -1,3 +1,76 @@
+# Aktueller Plan: DB-UX-Migration -- Phase G (Material Icons -> DB-Icons) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase G. 59 verschiedene Material-Icons an 138
+Stellen in 39 Dateien. Der DB-Satz hat 451 Motive, deckt aber nicht alles ab -- fuer die
+Luecken erlaubt das DB-Regelwerk (Marketingportal, Funktionale Icons) **Komposition**
+(zwei bestehende Icons verbinden) und **Durchstreichung** (2-dp-Linie plus Verschnitt);
+Raster 24 dp, Schutzraum 2 dp, Strichstaerke 2 dp.
+
+## Plan -- FERTIG
+
+- [x] **G.1 Inventur + Mapping-Vorschlag.** 59 Namen erhoben, 39 mit direktem Gegenstueck,
+      20 fachliche Entscheidungen.
+- [x] **G.2 Vergleichsseite** (Artifact) mit gerendertem Alt/Neu und je 2--4 Alternativen;
+      Freigabe durch den User am 2026-09-06 (5C `market`, 8D `theme-auto`, 10D `filter-off`,
+      11C `pulse_wave`, 16C `person`, sonst Empfehlung).
+- [x] **G.3 Eigenbau-Varianten** `scripts/icon-varianten.py` -> `src/icons/theme-auto.svg`,
+      `src/icons/filter-off.svg`; eingebunden als CSS-Maske (`.app-icon`).
+- [x] **G.4 Mapping-Modul** `src/ts/components/dbIcons.ts`.
+- [x] **G.5 Codemod** ueber TSX, DOM-String-Templates und `index.html`; Groessen aus
+      Inline-`fontSize`/`small-icons`/`big-icons` auf `db-font-size-*` abgebildet.
+- [x] **G.6 Imperative Stellen** (AutoSave-Badge, Tabellen-Fehlerzeile) auf `dataset.icon`.
+- [x] **G.7 Material-Icons entfernt:** Dependency, SCSS-Import, Vite-Preload, Alias.
+
+## Verifikationskriterien (G)
+
+- Grep `material-icons` in `src/` = 0.
+- `typecheck`, `lint`, `test`, `build` gruen.
+- Browser: jedes `.db-icon[data-icon]` hat ein Glyph (kein leeres `::before`), Eigenbau-Icons
+  rendern ueber die Maske.
+
+## Review (G)
+
+**Ergebnis 2026-09-06:** 39 Dateien geaendert, 135 DB-Icons + 3 Eigenbau-Stellen.
+`typecheck`/`lint`/`build` gruen, `bun run test` **2074/0**. Browser-Pruefung auf der
+Startseite: 94 Icons im DOM, **keins ohne Glyph**, 0 `material-icons-round`-Reste,
+Groessen 20/24/28 px, keine Konsolenfehler.
+
+**Zwei Dinge, die der Plan nicht auf dem Schirm hatte:**
+1. `.db-icon` setzt `font-size: 0 !important` -- die bisherige Groessensteuerung ueber
+   `font-size` (Inline-Styles, `.small-icons`, `.big-icons`) war damit wirkungslos. Die
+   Groesse kommt jetzt aus `--db-icon-font-size`, gesetzt ueber die DB-Klassen
+   `db-font-size-2xs|xs|sm|md|lg`; der Codemod hat die alten rem/px-Werte darauf abgebildet.
+2. Zwei Motive fehlen im Satz. Statt semantisch schiefer Ersatzicons sind sie nach
+   DB-Regelwerk zusammengesetzt: `theme-auto` (Sonne + Mond) und `filter-off` (Trichter
+   durchgestrichen). Beim ersten Versuch lief der Strich falsch herum -- die offiziellen
+   `*_disabled`-Icons streichen von unten links nach oben rechts -- und der Modifikator sass
+   auf dem Rand statt im 2-dp-Schutzraum; beides nach Sichtvergleich mit `eye_disabled`
+   korrigiert. `link_chain` durchgestrichen wurde verworfen (Strich laeuft parallel zur Kette,
+   unleserlich), dafuer gibt es `unlink_chain` offiziell.
+
+**Nacharbeit nach dem Sichttest des Users (gleicher Tag).** Der Codemod ersetzt nur, was er
+als Literal sieht -- drei Fehlerklassen blieben:
+1. `data-icon={...}` mit JSX-Ausdruck (13 Stellen) trug weiter Material-Namen. Symptom: leere
+   Dashboard-Kacheln, roter Ersatzpunkt in Listen. Lehre: nach so einem Codemod **jeden**
+   Icon-Namen gegen den echten Satz pruefen, nicht nur die Literale -- dafuer gibt es jetzt
+   `test/icons.dbSet.test.ts`.
+2. `customtable.css` setzte Sortier-Icons per `content:` als Material-Ligatur und erzwang
+   `font-family: 'Material Icons Round' !important`. Ohne die Schrift stand der Name als Text
+   in der Kopfzeile. Jetzt `data-icon` am Element.
+3. Rote Punkte vor Navigations- und Listeneintraegen: DB setzt `list-style-type:
+   var(--db-list-bullet)`, was Bootstraps `list-style: none` aus dem unteren Layer schlaegt.
+   Bridge-Regel ergaenzt -- dieselbe Klasse Problem wie bei den Checkbox-Groessen (DB stylt
+   `input[type=checkbox]` global auf 32 px).
+
+**Offen:** Die Icon-Fonts des DB-Satzes liegen als eigene woff2 im Build (`db-*.woff2`, aus
+dem Precache ausgenommen, siehe Phase B). Ob die App wirklich alle Icon-Gewichte braucht,
+klaert Phase I. Eigene, selbst gezeichnete Symbole kann der User spaeter unter `src/icons/`
+ergaenzen -- Einbindung wie bei den beiden erzeugten.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase C (Basiskomponenten -> DB React Components) - 2026-09-06
 
 ## Kontext

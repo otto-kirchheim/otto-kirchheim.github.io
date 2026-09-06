@@ -80,9 +80,7 @@ export function OeLevelInputs({
           aria-label="Letzte Ebene entfernen"
           onClick={onRemoveLevel}
         >
-          <span className="material-icons-round" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-            remove
-          </span>
+          <span className="db-icon db-font-size-xs" data-icon="minus" style={{ verticalAlign: 'middle' }} />
         </button>
       )}
       {canAdd && (
@@ -92,9 +90,7 @@ export function OeLevelInputs({
           aria-label="Ebene hinzufügen"
           onClick={onAddLevel}
         >
-          <span className="material-icons-round" style={{ fontSize: '0.9rem', verticalAlign: 'middle' }}>
-            add
-          </span>
+          <span className="db-icon db-font-size-xs" data-icon="plus" style={{ verticalAlign: 'middle' }} />
         </button>
       )}
     </div>

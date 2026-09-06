@@ -121,7 +121,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                       title="Nach oben"
                       aria-label="Nach oben verschieben"
                     >
-                      <span className="material-icons-round small-icons">arrow_upward</span>
+                      <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
                     </button>
                     <button
                       type="button"
@@ -131,7 +131,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                       title="Nach unten"
                       aria-label="Nach unten verschieben"
                     >
-                      <span className="material-icons-round small-icons">arrow_downward</span>
+                      <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
                     </button>
                     <button
                       type="button"
@@ -140,7 +140,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                       title="Zeile löschen"
                       aria-label="Zeile löschen"
                     >
-                      <span className="material-icons-round small-icons">delete</span>
+                      <span className="db-icon db-font-size-sm" data-icon="bin" />
                     </button>
                   </div>
                 </td>
@@ -154,7 +154,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
         className="btn btn-sm btn-secondary d-flex align-items-center gap-1 mt-md-2"
         onClick={addRow}
       >
-        <span className="material-icons-round small-icons">add</span>
+        <span className="db-icon db-font-size-sm" data-icon="plus" />
         Zeile hinzufügen
       </button>
     </div>

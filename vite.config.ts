@@ -30,12 +30,6 @@ export default defineConfig(() => ({
     UnpluginInjectPreload({
       files: [
         {
-          outputMatch: /material-icons-round-[a-z-0-9]*\.woff2$/,
-          attributes: {
-            crossOrigin: 'anonymous',
-          },
-        },
-        {
           // Fliesstext-Schnitt der DB-Screen-Sans; die uebrigen Schnitte laedt der Browser
           // erst, wenn sie wirklich gebraucht werden.
           outputMatch: /dbneoscreensans-regular-[A-Za-z-0-9_]*\.woff2$/,

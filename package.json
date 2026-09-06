@@ -82,7 +82,6 @@
     "dayjs": "^1.11.23",
     "dayjs-feiertage": "^0.1.0",
     "file-saver": "^2.0.5",
-    "material-icons": "^1.13.14",
     "pdfjs-dist": "^6.3.289",
     "react": "^19",
     "react-dom": "^19",

@@ -170,7 +170,7 @@
                   type="button"
                   role="tab"
                 >
-                  <span class="material-icons-round align-text-top d-lg-block d-none">settings</span>
+                  <span class="db-icon align-text-top d-lg-block d-none" data-icon="gear_wheel"></span>
                   <span class="d-lg-none">Einstellungen</span>
                 </button>
               </li>
@@ -184,7 +184,7 @@
                   type="button"
                   role="tab"
                 >
-                  <span class="material-icons-round align-text-top d-lg-block d-none">admin_panel_settings</span>
+                  <span class="db-icon align-text-top d-lg-block d-none" data-icon="shield_check"></span>
                   <span class="d-lg-none">Admin</span>
                 </button>
               </li>
@@ -204,7 +204,7 @@
                   data-bs-display="static"
                   aria-label="Toggle theme (auto)"
                 >
-                  <span class="material-icons-round me-2 theme-icon-active">brightness_auto</span>
+                  <span class="app-icon app-icon--theme-auto me-2 theme-icon-active"></span>
                   <span class="d-lg-none" id="bd-theme-text">Design Auswählen</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme-text">
@@ -215,9 +215,9 @@
                       data-bs-theme-value="light"
                       aria-pressed="false"
                     >
-                      <span class="material-icons-round me-2 theme-icon">light_mode</span>
+                      <span class="db-icon me-2 theme-icon" data-icon="sun"></span>
                       Hell
-                      <span class="bi material-icons-round ms-auto d-none">check</span>
+                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
                     </button>
                   </li>
                   <li>
@@ -227,9 +227,9 @@
                       data-bs-theme-value="dark"
                       aria-pressed="false"
                     >
-                      <span class="material-icons-round me-2 theme-icon">dark_mode</span>
+                      <span class="db-icon me-2 theme-icon" data-icon="moon"></span>
                       Dunkel
-                      <span class="bi material-icons-round ms-auto d-none">check</span>
+                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
                     </button>
                   </li>
                   <li>
@@ -239,9 +239,9 @@
                       data-bs-theme-value="auto"
                       aria-pressed="true"
                     >
-                      <span class="material-icons-round me-2 theme-icon">brightness_auto</span>
+                      <span class="app-icon app-icon--theme-auto me-2 theme-icon"></span>
                       Auto
-                      <span class="bi material-icons-round ms-auto d-none">check</span>
+                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
                     </button>
                   </li>
                 </ul>
@@ -302,7 +302,7 @@
           class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 gap-md-3"
         >
           <div class="d-flex align-items-start gap-2">
-            <span class="material-icons-round mt-1 mt-md-0">visibility</span>
+            <span class="db-icon mt-1 mt-md-0" data-icon="eye"></span>
             <div>
               <div class="fw-semibold">Fremde Benutzerdaten aktiv</div>
               <div class="small" id="actAsNoticeText"></div>
@@ -325,7 +325,7 @@
             <div class="d-inline-flex align-items-center justify-content-center gap-2">
               <h1 class="mt-2 mb-0" id="Willkommen">Willkommen</h1>
               <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpStart" aria-label="Hilfe anzeigen">
-                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+                <span class="db-icon align-middle" data-icon="question_mark_circle" style="font-size: 1.25rem"></span>
               </button>
             </div>
             <p class="text-body-secondary mb-0">Nebengeld digital erfassen, berechnen und als PDF erzeugen.</p>
@@ -336,7 +336,7 @@
               <div class="card h-100 text-start">
                 <div class="card-body">
                   <h5 class="card-title d-flex align-items-center gap-2">
-                    <span class="material-icons-round text-primary">tune</span>
+                    <span class="db-icon text-primary" data-icon="sliders_horizontal"></span>
                     1. Einstellungen prüfen
                   </h5>
                   <p class="card-text mb-0">Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
@@ -347,7 +347,7 @@
               <div class="card h-100 text-start">
                 <div class="card-body">
                   <h5 class="card-title d-flex align-items-center gap-2">
-                    <span class="material-icons-round text-primary">edit_note</span>
+                    <span class="db-icon text-primary" data-icon="pen"></span>
                     2. Monate erfassen
                   </h5>
                   <p class="card-text mb-0">Bereitschaft, EWT und Nebenbezüge eintragen und speichern.</p>
@@ -358,7 +358,7 @@
               <div class="card h-100 text-start">
                 <div class="card-body">
                   <h5 class="card-title d-flex align-items-center gap-2">
-                    <span class="material-icons-round text-primary">picture_as_pdf</span>
+                    <span class="db-icon text-primary" data-icon="document"></span>
                     3. Ergebnis exportieren
                   </h5>
                   <p class="card-text mb-0">Berechnung prüfen und die Formulare als PDF erzeugen.</p>
@@ -374,7 +374,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="bereitschaft-tab"
               >
-                <span class="material-icons-round">event_available</span>
+                <span class="db-icon" data-icon="calendar"></span>
                 Bereitschaft
               </button>
             </div>
@@ -384,7 +384,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="ewt-tab"
               >
-                <span class="material-icons-round">alt_route</span>
+                <span class="db-icon" data-icon="changeover"></span>
                 EWT
               </button>
             </div>
@@ -394,7 +394,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="neben-tab"
               >
-                <span class="material-icons-round">payments</span>
+                <span class="db-icon" data-icon="cash"></span>
                 Nebenbezüge
               </button>
             </div>
@@ -404,7 +404,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="ea-tab"
               >
-                <span class="material-icons-round">balance</span>
+                <span class="db-icon" data-icon="euro_sign"></span>
                 Entgeltausgleich
               </button>
             </div>
@@ -414,7 +414,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="berechnung-tab"
               >
-                <span class="material-icons-round">calculate</span>
+                <span class="db-icon" data-icon="bar_chart"></span>
                 Berechnung
               </button>
             </div>
@@ -424,7 +424,7 @@
                 class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
                 data-jump-tab="einstellungen-tab"
               >
-                <span class="material-icons-round">settings</span>
+                <span class="db-icon" data-icon="gear_wheel"></span>
                 Einstellungen
               </button>
             </div>
@@ -561,7 +561,7 @@
                 id="btnHelpEinstellungen"
                 aria-label="Hilfe anzeigen"
               >
-                <span class="material-icons-round align-middle" style="font-size: 1.25rem">help_outline</span>
+                <span class="db-icon align-middle" data-icon="question_mark_circle" style="font-size: 1.25rem"></span>
               </button>
             </h1>
           </div>
@@ -615,7 +615,7 @@
               <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
                 <div class="col d-grid">
                   <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
-                    <span class="material-icons-round big-icons">save</span>
+                    <span class="db-icon" data-icon="save"></span>
                     Speichern
                   </button>
                 </div>
@@ -637,7 +637,7 @@
                   <div class="accordion-body row g-3 text-start">
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">person</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
                         <div class="form-floating">
                           <input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required />
                           <label for="Vorname">Vorname</label>
@@ -646,7 +646,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">person</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -661,7 +661,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">badge</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="id_card"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -676,7 +676,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">phone</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="telephone"></span>
                         <div class="form-floating">
                           <input
                             type="tel"
@@ -691,7 +691,7 @@
                     </div>
                     <div class="col-12">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">mail</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="envelope"></span>
                         <div class="form-floating">
                           <input
                             type="email"
@@ -711,7 +711,7 @@
                     <small id="EmailVerificationHint" class="col-12 form-text text-body-secondary d-block ps-1"></small>
                     <div class="col-12">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">home</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="house"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -726,7 +726,7 @@
                     </div>
                     <div class="col-12">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">home_work</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="house"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -740,7 +740,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -755,7 +755,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -770,7 +770,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">flag</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="map"></span>
                         <div class="form-floating">
                           <select id="Bundesland" class="form-select">
                             <option value="" disabled selected>Bundesland wählen…</option>
@@ -797,7 +797,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">group</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="persons"></span>
                         <div class="form-floating">
                           <select class="form-select validate" id="TB" name="TB" required>
                             <option value="" disabled selected>Bitte Wählen</option>
@@ -811,7 +811,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -826,7 +826,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -841,7 +841,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required />
                           <label for="Gewerk">Gewerk</label>
@@ -850,7 +850,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">work</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -872,7 +872,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">work</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
                         <div class="form-floating">
                           <input type="Text" placeholder="105" id="Entgeltgruppe" class="form-control validate" />
                           <label for="Entgeltgruppe">Entgeltgruppe (Optional / Entgeltausgleich)</label>
@@ -881,7 +881,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">business</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
                         <div class="form-floating">
                           <input
                             type="Number"
@@ -898,7 +898,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">train</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="train"></span>
                         <div class="form-floating">
                           <input
                             type="Text"
@@ -913,7 +913,7 @@
                     </div>
                     <div class="col-12 col-md-6">
                       <div class="input-group">
-                        <span class="input-group-text material-icons-round einstellungen-icons">train</span>
+                        <span class="db-icon input-group-text db-font-size-lg" data-icon="train"></span>
                         <div class="form-floating">
                           <input
                             type="Number"
