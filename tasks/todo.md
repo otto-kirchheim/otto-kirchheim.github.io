@@ -1,3 +1,82 @@
+# Aktueller Plan: DB-UX-Migration -- Phase F (CustomTable auf DB-Table-CSS) - 2026-09-06
+
+## Kontext
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase F. Es gibt **keine** interaktive
+DB-Tabellen-Komponente -- nur die CSS-Klassen aus `@db-ux/core-components`. Die eigene
+Sortier-/Inline-Edit-/Soft-Delete-Logik der `CustomTable`-Klasse bleibt vollstaendig
+erhalten; ausgetauscht wird nur die Praesentation.
+
+Geprueft vorab: DB erwartet `<div class="db-table" data-width="full">` als Huelle um eine
+normale `<table>`; Varianten ueber `data-variant="spaced"`, `data-divider`,
+`data-sub-header-emphasis`, `data-interactive`. Der DB-Tooltip ist reines CSS
+(`<i role="tooltip" class="db-tooltip">`) -- die Bootstrap-Tooltip-JS-Komponente entfaellt
+damit ersatzlos (sie war die 7. Bootstrap-JS-Abhaengigkeit).
+
+## Plan
+
+- [x] **F.1 Button-Mapping teilen.** `buttonLook` aus `components/MyButton.tsx` nach
+      `infrastructure/ui/dbButton.ts` verschieben und um einen Vanilla-Helfer ergaenzen
+      (`erzeugeDbButton`), damit React-Adapter und `customTableRender` dieselbe Zuordnung
+      Bootstrap-Klasse -> DB-Prop nutzen. Schichtregel: `components/` darf
+      `infrastructure/` importieren, nicht umgekehrt.
+- [x] **F.2 `customTableRender.ts`:** Footer- und Zeilen-Buttons ueber den Helfer;
+      `customButton.classes`-Konvention bleibt (Aufrufstellen unveraendert).
+- [x] **F.3 Tabellen-Markup:** `<div class="db-table" data-width="full">` statt
+      `table table-bordered table-striped table-hover align-middle` -- 5 Tabellen in den
+      Feature-Tabs plus die beiden in `index.html`.
+- [x] **F.4 Tooltips:** `bootstrap/js/dist/tooltip` raus aus `customTableRender.ts` und
+      `AdminUserList.tsx`; stattdessen ein `db-tooltip`-Element im jeweiligen Elternknoten.
+- [x] **F.5 `customtable.css`** auf DB-Tokens (heute 17 `--bs-*`-Zugriffe und
+      `[data-bs-theme='light']`-Selektoren); Responsive-Breakpoints bleiben JS-seitig.
+- [x] **F.6 Schalter in DOM-Strings:** `berechnenParser` und `schichtParser` in `EwtTab.tsx`
+      erzeugen `.form-check.form-switch`-Markup -> DB-Switch-Markup.
+
+## Verifikationskriterien (F)
+
+- `typecheck`, `lint`, `test`, `build` gruen.
+- Browser: Sortierung (auf/ab/neutral), Inline-Editing, Zeile hinzufuegen/loeschen/
+  wiederherstellen, "Alle Zeilen loeschen", Fehlerzeile mit Tooltip, Schalter in der
+  EWT-Tabelle, Responsive-Umbruch je Breakpoint.
+- Grep: `bootstrap/js/dist/tooltip` = 0.
+
+## Review (F)
+
+**Ergebnis 2026-09-06:** `typecheck`/`lint`/`build` gruen, `bun run test` 2077/0. Browser mit
+echten EWT-Daten: 11 Zeilen, 25 DB-Buttons, **0** Bootstrap-Buttons, Sortier-Icon als Glyph,
+Schalter als DB-Toggle, Kopfzeile lesbar, keine Konsolenfehler.
+
+**Der Fund der Phase:** `.db-table table { display: grid }` -- DB legt Tabellen als CSS-Grid
+aus und zaehlt die Spalten per `:has()`-Kette bis 20. Die `CustomTable` braucht aber
+`colspan` (Fusszeile, Leer-Meldung, Inline-Editor) und blendet Spalten je Breakpoint aus;
+im Grid-Modell landeten alle Fuss-Buttons in einer schmalen Spalte (Screenshot). Deshalb
+bleibt `table.customtable` beim nativen Table-Layout -- Farben, Rahmen und Abstaende kommen
+weiter aus dem DB-Layer. Das ist die zweite Stelle nach den Listen-Bullets, an der DB-CSS
+globale Elementregeln setzt, die der Bestand anders braucht.
+
+**Weiterer Fund:** `table-primary` an der Kopfzeile faerbte den Text schwarz, sobald die
+Bootstrap-`table`-Klasse weg war -- auf dunklem Grund unlesbar. Ersetzt durch
+`data-sub-header-emphasis="weak"`, das DB in beiden Modi korrekt aufloest.
+
+**Nachtrag aus dem Sichttest des Users:** vier Korrekturen -- Marker der Aktionsspalte stand
+ueber statt neben den Buttons (DB-Buttons sind Flex-Container), Zebra-Streifen fehlten
+(`data-variant="zebra"` ist das Gegenstueck zu `table-striped`), Sortier-Icons waren als
+`sort_up`/`sort_down` nicht zuzuordnen (jetzt schlichte Pfeile) und ohne `data-divider="both"`
+fehlten die Spaltenlinien. Dazu `data-size="small"` plus `white-space: nowrap` gegen die
+doppelt hohe Zeile -- mit Ausnahme von `.cell-multiline` (Zulagen-Liste), die weiter umbricht.
+**Der eigentliche Fehler dabei:** der Layout-Override hing an `table.customtable`, die
+Berechnungstabelle heisst aber `table-Berechnung` und lag noch im Grid-Modell (Kopf und Rumpf
+liefen auseinander). Die Regel steht jetzt in `bridge.css` und gilt fuer alle Tabellen in einer
+`db-table`-Huelle. Die sticky Label-Spalte der Berechnungstabelle nimmt ihren Hintergrund
+per `inherit` aus der Zeile, statt stur die Seitenfarbe zu setzen -- sonst laeuft der
+Zebra-Streifen bzw. das Kopfband dort nicht durch.
+
+**Offen:** Die Admin-Tabellen (`table table-sm table-hover`, ~30 Stellen) sind noch Bootstrap;
+sie gehoeren zu Phase H. Der `+`-Marker fuer eingeklappte Spalten ist unveraendertes
+Bestandsverhalten.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase G (Material Icons -> DB-Icons) - 2026-09-06
 
 ## Kontext

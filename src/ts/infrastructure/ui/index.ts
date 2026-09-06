@@ -8,4 +8,5 @@ export { default as updateTabVisibility, hideAllFeatureTabs } from './updateTabV
 export { default as initializeColorModeToggler } from './BSColorToggler';
 export * from './loadingButtonState';
 export * from './CustomSnackbar';
+export * from './dbButton';
 export * from './reactRoot';

@@ -133,12 +133,14 @@ function EaTab() {
       </div>
       <hr />
 
-      <div className="table-responsive">
-        <table
-          id="tableEA"
-          className="table table-bordered table-striped table-hover align-middle"
-          aria-label="Entgeltausgleich"
-        ></table>
+      <div
+        className="db-table table-responsive"
+        data-width="full"
+        data-variant="zebra"
+        data-divider="both"
+        data-size="small"
+      >
+        <table id="tableEA" className="align-middle" aria-label="Entgeltausgleich"></table>
       </div>
     </div>
   );

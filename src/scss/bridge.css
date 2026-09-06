@@ -58,4 +58,15 @@
   .form-switch .form-check-input {
     inline-size: 2em;
   }
+
+  /* DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus `:has()`-Spaltenzaehlung).
+     Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile, Leer-Meldung, Inline-Editor),
+     mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten -- im Grid-Modell rutschen
+     diese Zellen in eine einzige Spalte (Berechnungstabelle: Kopf und Rumpf laufen auseinander).
+     Deshalb bleibt das native Table-Layout; Farben, Abstaende und Rahmen kommen aus dem
+     DB-Layer. Faellt mit der Umstellung auf DB-konformes Tabellen-Markup (Phase H/I). */
+  .db-table > table {
+    display: table;
+    inline-size: 100%;
+  }
 }

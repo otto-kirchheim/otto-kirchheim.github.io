@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import base from './vite.base-config.ts';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import UnpluginInjectPreload from 'unplugin-inject-preload/vite';
 import { compression } from 'vite-plugin-compression2';
 import { VitePWA } from 'vite-plugin-pwa';

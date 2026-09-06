@@ -1,6 +1,6 @@
+import { DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useMemo, useState } from 'react';
 
-import Tooltip from 'bootstrap/js/dist/tooltip';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import {
   fetchAdminUsers,
@@ -32,15 +32,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const user = getUserCookie();
   const debouncedNameFilter = useDebouncedValue(filter.name, 300);
-
-  useEffect(() => {
-    const tooltipEls = Array.from(document.querySelectorAll<HTMLElement>('[data-bs-toggle="tooltip"]'));
-    const instances = tooltipEls.map(el => Tooltip.getOrCreateInstance(el));
-
-    return () => {
-      for (const instance of instances) instance.dispose();
-    };
-  });
 
   function buildEditState(entry: AdminUserRow): UserEditState {
     return {
@@ -281,12 +272,13 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               className="form-control"
               id="adminFilterName"
               placeholder="Name"
-              data-bs-toggle="tooltip"
-              data-bs-title="Suche nach vollständigem Namen oder Benutzername"
               value={filter.name}
               onChange={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
             />
             <label htmlFor="adminFilterName">Name / Benutzer</label>
+            <DBInfotext size="small" semantic="informational">
+              Sucht in Name und Benutzername
+            </DBInfotext>
           </div>
         </div>
         <div className="col-12 col-sm-4">
@@ -296,12 +288,13 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               className="form-control"
               id="adminFilterOe"
               placeholder="OE (z.B. IL 03, IL04, KSL)"
-              data-bs-toggle="tooltip"
-              data-bs-title="OE-Suche: tolerant für IL03/IL 03. Mehrere OEs mit Komma trennen"
               value={filter.oe}
               onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
             <label htmlFor="adminFilterOe">OE</label>
+            <DBInfotext size="small" semantic="informational">
+              IL03 und IL 03 finden dasselbe; mehrere OEs mit Komma trennen
+            </DBInfotext>
           </div>
         </div>
         <div className="col-12 col-sm-4">
@@ -309,8 +302,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             <select
               className="form-select"
               id="adminFilterRole"
-              data-bs-toggle="tooltip"
-              data-bs-title="Filtert Benutzer nach Rolle"
               value={filter.role}
               onChange={e => setFilter(f => ({ ...f, role: (e.target as HTMLSelectElement).value }))}
             >
@@ -324,13 +315,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           </div>
         </div>
         <div className="col-12 d-flex justify-content-end gap-2">
-          <button
-            className="btn btn-outline-primary btn-sm"
-            type="button"
-            onClick={() => void refreshUsersNow()}
-            data-bs-toggle="tooltip"
-            data-bs-title="Lädt die Benutzerliste sofort neu"
-          >
+          <button className="btn btn-outline-primary btn-sm" type="button" onClick={() => void refreshUsersNow()}>
+            <DBTooltip placement="top">Lädt die Benutzerliste sofort neu</DBTooltip>
             <span
               className="db-icon me-1 db-font-size-sm"
               data-icon="circular_arrows"
@@ -343,9 +329,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             type="button"
             onClick={resetFilters}
             disabled={!filter.name && !filter.oe && !filter.role}
-            data-bs-toggle="tooltip"
-            data-bs-title="Setzt Name-, OE- und Rollenfilter zurück"
           >
+            <DBTooltip placement="top">Setzt Name-, OE- und Rollenfilter zurück</DBTooltip>
             <span className="app-icon app-icon--filter-off me-1 db-font-size-sm" style={{ verticalAlign: 'middle' }} />
             Filter zurücksetzen
           </button>

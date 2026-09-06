@@ -1,7 +1,8 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { render } from '../reactRender';
 
-import MyButton, { buttonLook } from '@/components/MyButton';
+import MyButton from '@/components/MyButton';
+import { buttonLook } from '@/infrastructure/ui/dbButton';
 
 function renderButton(node: React.ReactElement): HTMLDivElement {
   const container = document.createElement('div');

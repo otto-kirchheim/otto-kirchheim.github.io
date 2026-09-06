@@ -28,9 +28,11 @@ function EwtTab() {
       // Beide Parser erzeugen festes Markup ohne Benutzereingaben (Boolean bzw.
       // Switch über feste Fälle) — nur deshalb dürfen die Spalten `html: true` setzen.
       berechnenParser = (value: unknown): string => {
-        return `<div class="form-check form-switch"><input type="checkbox" class="row-checkbox form-check-input"${
+        // DB-Schalter-Markup (`db-switch` > `label` > `input[role=switch]`); die Beschriftung
+        // steht in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
+        return `<div class="db-switch"><label><input type="checkbox" role="switch" class="row-checkbox" aria-label="Berechnen"${
           value ? ' checked' : ''
-        }></div>`;
+        }></label></div>`;
       },
       schichtParser = (value: unknown): string => {
         switch (value as string) {
@@ -220,12 +222,14 @@ function EwtTab() {
       </div>
       <hr />
 
-      <div className="table-responsive">
-        <table
-          id="tableE"
-          className="table table-bordered table-striped table-hover align-middle"
-          aria-label="EWT"
-        ></table>
+      <div
+        className="db-table table-responsive"
+        data-width="full"
+        data-variant="zebra"
+        data-divider="both"
+        data-size="small"
+      >
+        <table id="tableE" className="align-middle" aria-label="EWT"></table>
       </div>
     </div>
   );

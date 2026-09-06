@@ -149,8 +149,13 @@ td:has(.SchichtBereitschaft) {
   max-width: 11.5rem;
   white-space: normal;
 }
+// Die Label-Spalte klebt beim horizontalen Scrollen (`position: sticky`) und braucht deshalb
+// einen eigenen Hintergrund -- sonst scrollen die Monatsspalten sichtbar darunter durch.
+// `inherit` uebernimmt dabei den Ton der jeweiligen Zeile (Zebra-Streifen, Kopfband) statt
+// wie frueher stur die Seitenfarbe zu setzen.
+.table-Berechnung > thead > tr > th:first-child,
 .table-Berechnung tbody tr th {
-  background-color: var(--bs-body-bg);
+  background-color: inherit;
 }
 
 // Verschachtelte Label-Tabellen (EWT-Schwellen, Zulagen-Codes) müssen in der

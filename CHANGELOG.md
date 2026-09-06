@@ -2,6 +2,63 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (58)
+
+### feat (DB-UX-Migration Phase F: CustomTable auf DB-Table-CSS)
+
+Die Tabellen tragen jetzt DB-Optik; die eigene Sortier-, Inline-Edit- und Soft-Delete-Logik
+der `CustomTable` bleibt unveraendert.
+
+- **Huelle:** `<div class="db-table" data-width="full">` statt der Bootstrap-Tabellenklassen
+  (`table table-bordered table-striped table-hover`) -- 5 Tabellen in den Feature-Tabs und
+  2 in `index.html`. Ueberschriften stehen jetzt vor der Huelle statt darin.
+- **Kopfzeilen** nutzen `data-sub-header-emphasis="weak"` statt `table-primary`; das faerbt in
+  Hell und Dunkel korrekt (`table-primary` setzte schwarzen Text auf dunklem Grund).
+- **Buttons:** `infrastructure/ui/dbButton.ts` (neu) haelt die Zuordnung
+  Bootstrap-Klasse -> DB-Prop; `MyButton` (React) und `customTableRender` (Vanilla-DOM) nutzen
+  sie gemeinsam. Fuss- und Zeilen-Buttons sind damit DB-Buttons, die `customButton.classes`-
+  Konvention der Aufrufstellen bleibt.
+- **Tooltips:** `bootstrap/js/dist/tooltip` ist raus. Die Fehlerzeile bekommt ein
+  `db-tooltip`-Element (reines CSS, kein JS-Lebenszyklus mehr), die Filter in `AdminUserList`
+  einen `DBInfotext` -- ein Tooltip an einem `div` waere per Tastatur nicht erreichbar
+  (`db-ux/tooltip-requires-interactive-parent`).
+- **`customtable.css`** ohne `--bs-*`: Soft-Delete, Fehlerzeile und Fehler-Icon lesen jetzt
+  DB-Tokens.
+- **Schalter in der EWT-Tabelle** (`berechnenParser`, DOM-String mit `html: true`) nutzen
+  DB-Switch-Markup statt `form-check form-switch`.
+- **Zebra-Streifen** ueber `data-variant="zebra"` -- das Gegenstueck zu `table-striped`, das
+  mit den Bootstrap-Klassen weggefallen war. Mit Zebra faerbt DB die Kopfzeile zusaetzlich
+  als Vibrant-Band.
+- **Aktionsspalte:** Zeilen-Buttons in `small`, Marker fuer eingeklappte Spalten und
+  Button-Gruppe per `white-space: nowrap` in einer Zeile -- die DB-Buttons sind selbst
+  Flex-Container und haben den Marker sonst in die Zeile darueber gedraengt.
+- **Trennlinien** ueber `data-divider="both"` (Ersatz fuer `table-bordered`) -- ohne sie liess
+  sich das Sortier-Icon keiner Spalte zuordnen.
+- **Sortier-Icons** sind schlichte Pfeile (`arrow_up`/`arrow_down`); `sort_up`/`sort_down`
+  tragen zusaetzliche Balken und waren in der dichten Kopfzeile nicht lesbar. Neutral
+  (beim Ueberfahren) bleibt `arrows_vertical`.
+- **Zeilenhoehe:** `data-size="small"` (DB-Standard ist deutlich luftiger als Bootstrap) und
+  `white-space: nowrap` fuer Datenzellen -- "Mi 01.03." brach sonst auf zwei Zeilen um und
+  verdoppelte die Zeilenhoehe. Ausgenommen sind Zellen mit mehrzeiligem Inhalt
+  (`.cell-multiline`, z.B. die Zulagen-Liste); Freitext-Spalten kuerzt `.custom-text-truncate`.
+
+**Bewusst nicht uebernommen:** DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus
+`:has()`-Spaltenzaehlung). Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile,
+Leer-Meldung, Inline-Editor), mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten --
+im Grid-Modell rutschen diese Zellen in eine einzige Spalte; bei der Berechnungstabelle liefen
+Kopf und Rumpf komplett auseinander. Die Regel steht deshalb in `bridge.css` und gilt fuer
+**alle** Tabellen in einer `db-table`-Huelle, nicht nur fuer die `CustomTable`: natives
+Table-Layout, Farben und Abstaende aus dem DB-Layer. Faellt mit der Umstellung auf
+DB-konformes Tabellen-Markup (Phase H/I).
+
+**Nebenbei:** `@vitejs/plugin-react-swc` -> `@vitejs/plugin-react`. Vite 8 empfiehlt das, sobald
+keine SWC-Plugins genutzt werden (Rolldown bringt Oxc mit); damit faellt auch `@swc/core` aus
+den `trustedDependencies` und ein Postinstall weniger laeuft.
+
+Verifikation: `typecheck`, `lint`, `test` (2077/0) und `build` gruen. Browser mit echten Daten:
+11 Zeilen, 25 DB-Buttons, 0 Bootstrap-Buttons, Sortier-Icon als Glyph, Schalter rendert als
+DB-Toggle, Kopfzeile lesbar, 0 Konsolenfehler.
+
 ## 2026-09-06 (57)
 
 ### feat (DB-UX-Migration Phase G: Material Icons raus, DB-Icons rein)

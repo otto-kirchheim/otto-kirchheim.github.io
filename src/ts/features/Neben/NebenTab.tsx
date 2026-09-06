@@ -149,12 +149,14 @@ function NebenTab() {
       </div>
       <hr />
 
-      <div className="table-responsive">
-        <table
-          id="tableN"
-          className="table table-bordered table-striped table-hover align-middle"
-          aria-label="Nebengeld"
-        ></table>
+      <div
+        className="db-table table-responsive"
+        data-width="full"
+        data-variant="zebra"
+        data-divider="both"
+        data-size="small"
+      >
+        <table id="tableN" className="align-middle" aria-label="Nebengeld"></table>
       </div>
     </div>
   );

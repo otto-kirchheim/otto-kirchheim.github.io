@@ -1,10 +1,10 @@
-import Tooltip from 'bootstrap/js/dist/tooltip';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import type { Column } from './Column';
 import type { CustomTable } from './CustomTable';
 import type { CustomHTMLTableRowElement, CustomTableTypes, Directions } from './customTableTypes';
 import type { Row } from './Row';
+import { erzeugeDbButton } from '../ui/dbButton';
 
 /**
  * It creates a footer for the table
@@ -47,17 +47,7 @@ export function renderFooter<T extends CustomTableTypes>(self: CustomTable<T>): 
   if (self.options.customFunction?.afterDrawFooter) self.options.customFunction.afterDrawFooter.call(self);
 
   function createButton(classes = ['btn', 'btn-primary'], text = 'Button', eventlistener = () => {}) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.classList.add(...classes);
-    button.innerText = text;
-    button.title = text;
-    button.addEventListener('click', event => {
-      event.stopPropagation();
-      event.preventDefault();
-      eventlistener();
-    });
-    return button;
+    return erzeugeDbButton(classes, text, eventlistener);
   }
 }
 
@@ -70,7 +60,8 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
   const thead = self.$el.tHead as HTMLTableSectionElement;
   const tbody = self.$el.tBodies[0];
   const tfoot = self.$el.tFoot as HTMLTableSectionElement;
-  tbody.querySelectorAll<HTMLElement>('[data-bs-toggle="tooltip"]').forEach(el => Tooltip.getInstance(el)?.dispose());
+  // Der DB-Tooltip ist reines CSS -- beim Neuzeichnen verschwindet er mit dem Markup,
+  // es gibt keine Instanz mehr aufzuraeumen (frueher: Bootstrap-Tooltip-JS).
   tbody.innerHTML = '';
   const sortedColumn = self.columns.array.find(column => column.sorted);
   if (sortedColumn) sortRows(self, sortedColumn.index, sortedColumn.direction);
@@ -85,19 +76,9 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
       eventListener: (row: Row<T>) => void,
       row: Row<T>,
       title = 'button',
-    ): HTMLButtonElement => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.classList.add(...classList);
-      button.innerHTML = text;
-      button.title = title;
-      button.addEventListener('click', event => {
-        event.stopPropagation();
-        event.preventDefault();
-        eventListener(row);
-      });
-      return button;
-    };
+    ): HTMLButtonElement =>
+      // `text` ist Icon-Markup (siehe CustomTable-Defaults), deshalb als HTML einsetzen.
+      erzeugeDbButton(classList, text, () => eventListener(row), { titel: title, alsHtml: true });
 
     for (const row of allVisibleRows) {
       const tr: CustomHTMLTableRowElement<T> = document.createElement('tr');
@@ -122,9 +103,12 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
         }
         const td = document.createElement('td');
         if (row.isError && row._errorMessage) {
-          td.setAttribute('data-bs-toggle', 'tooltip');
-          td.setAttribute('data-bs-title', row._errorMessage);
-          new Tooltip(td, { placement: 'auto', trigger: 'hover focus' });
+          const tooltip = document.createElement('i');
+          tooltip.setAttribute('role', 'tooltip');
+          tooltip.classList.add('db-tooltip');
+          tooltip.dataset['placement'] = 'top';
+          tooltip.textContent = row._errorMessage;
+          td.appendChild(tooltip);
         }
         if (row.isError && !errorIconRendered) {
           const icon = document.createElement('span');
@@ -142,7 +126,7 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
           if (row.isDeleted) {
             // Gelöschte Zeile: nur Undo-Button anzeigen
             const buttonUndo = createActionButton(
-              ['btn', 'btn-outline-warning'],
+              ['btn', 'btn-outline-warning', 'btn-sm'],
               column.editing.undoDeleteText,
               (r: Row<T>) => r.undoDelete(),
               row,
@@ -152,14 +136,14 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
           } else {
             // Normale Zeile: Edit + Delete Buttons
             const buttonEdit = createActionButton(
-              ['btn', 'btn-outline-primary'],
+              ['btn', 'btn-outline-primary', 'btn-sm'],
               column.editing.editText,
               self.options.editing.editRow,
               row,
               'edit',
             );
             const buttonDelete = createActionButton(
-              ['btn', 'btn-outline-danger'],
+              ['btn', 'btn-outline-danger', 'btn-sm'],
               column.editing.deleteText,
               self.options.editing.deleteRow,
               row,
@@ -221,7 +205,10 @@ export function renderHeader<T extends CustomTableTypes>(self: CustomTable<T>): 
   const thead = self.$el.tHead as HTMLTableSectionElement;
   thead.innerHTML = '';
   const tr = document.createElement('tr');
-  tr.classList.add('customtable-header', 'table-primary');
+  tr.classList.add('customtable-header');
+  // DB faerbt Kopfzeilen ueber die Emphase, nicht ueber eine Farbklasse -- `weak` entspricht
+  // dem bisherigen `table-primary`-Ton und funktioniert in Hell und Dunkel.
+  tr.dataset['subHeaderEmphasis'] = 'weak';
   self.columns.array.forEach(column => {
     if (!column.visible) return;
     const th = document.createElement('th');
@@ -262,7 +249,9 @@ export function renderHeader<T extends CustomTableTypes>(self: CustomTable<T>): 
     th.classList.add(`customtable-${direction}`);
     const aufsteigend = direction == 'asc';
     span.classList.add(aufsteigend ? 'customtable-sort-asc' : 'customtable-sort-desc');
-    span.dataset['icon'] = aufsteigend ? 'sort_up' : 'sort_down';
+    // Klare Richtungspfeile: `sort_up`/`sort_down` tragen zusaetzliche Balken und sind in einer
+    // dichten Kopfzeile schwer zuzuordnen.
+    span.dataset['icon'] = aufsteigend ? 'arrow_up' : 'arrow_down';
   }
 }
 

@@ -236,22 +236,26 @@ function BereitschaftTab() {
         </div>
       </div>
       <hr />
-      <div className="table-responsive">
-        <h4 id="titelBZ">Bereitschaftszeitraum</h4>
-        <table
-          id="tableBZ"
-          className="table table-bordered table-striped table-hover align-middle"
-          aria-describedby="TitelBZ"
-        ></table>
+      <h4 id="titelBZ">Bereitschaftszeitraum</h4>
+      <div
+        className="db-table table-responsive"
+        data-width="full"
+        data-variant="zebra"
+        data-divider="both"
+        data-size="small"
+      >
+        <table id="tableBZ" className="align-middle" aria-describedby="TitelBZ"></table>
       </div>
       <hr />
-      <div className="table-responsive">
-        <h4 id="titelBE">Bereitschaftseinsätze</h4>
-        <table
-          id="tableBE"
-          className="table table-bordered table-striped table-hover align-middle"
-          aria-describedby="titelBE"
-        ></table>
+      <h4 id="titelBE">Bereitschaftseinsätze</h4>
+      <div
+        className="db-table table-responsive"
+        data-width="full"
+        data-variant="zebra"
+        data-divider="both"
+        data-size="small"
+      >
+        <table id="tableBE" className="align-middle" aria-describedby="titelBE"></table>
       </div>
     </div>
   );

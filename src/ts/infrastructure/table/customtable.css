@@ -4,54 +4,45 @@
   font-size: 30px;
 }
 
-/* Soft-Delete: Gelöschte Zeilen durchgestrichen + ausgegraut */
+/* Soft-Delete: Gelöschte Zeilen durchgestrichen + ausgegraut.
+   Farben aus dem DB-Token-Satz; die `--bs-*`-Fallbacks sind weg, seit Phase B/G die Tabelle
+   auf DB-Markup steht. `light-dark()` in den Tokens deckt beide Modi ab. */
 tr.customtable-deleted > td,
 tr.customtable-deleted > th {
   opacity: 0.45;
   text-decoration: line-through;
-  background-color: var(--bs-danger-bg-subtle, #f8d7da) !important;
+  background-color: var(--db-critical-bg-basic-level-1-default) !important;
 }
 
 tr.customtable-deleted > td {
-  color: var(--bs-secondary-color, #6c757d);
+  color: var(--db-adaptive-on-bg-basic-emphasis-70-default);
 }
 
 tr.customtable-deleted:hover {
   opacity: 0.6;
 }
 
-[data-bs-theme='light'] tr.customtable-deleted .btn-outline-warning {
-  --bs-btn-color: #000;
-  --bs-btn-bg: #ffc107;
-  --bs-btn-border-color: #ffc107;
-  --bs-btn-hover-color: #000;
-  --bs-btn-hover-bg: #ffca2c;
-  --bs-btn-hover-border-color: #ffc720;
-  --bs-btn-active-color: #000;
-  --bs-btn-active-bg: #ffcd39;
-  --bs-btn-active-border-color: #ffc720;
-}
-
 tr.customtable-error > td,
 tr.customtable-error > th {
-  background-color: var(--bs-warning-bg-subtle, #fff3cd) !important;
-  box-shadow: inset 4px 0 0 var(--bs-danger, #dc3545);
+  background-color: var(--db-warning-bg-basic-level-1-default) !important;
+  box-shadow: inset 4px 0 0 var(--db-critical-origin-default);
   cursor: help;
 }
 
 tr.customtable-error td {
-  color: var(--bs-emphasis-color, #212529);
+  color: var(--db-adaptive-on-bg-basic-emphasis-100-default);
 }
 
 .customtable-error-icon {
+  --db-icon-font-size: 1rem;
+
   vertical-align: text-bottom;
-  font-size: 1rem;
   margin-right: 0.35rem;
-  color: var(--bs-danger, #dc3545);
+  color: var(--db-critical-origin-default);
 }
 
 tr.customtable-error:hover {
-  background-color: var(--bs-warning-bg-subtle, #fff3cd) !important;
+  background-color: var(--db-warning-bg-basic-level-1-default) !important;
 }
 
 tr.customtable-error.customtable-deleted {
@@ -59,17 +50,30 @@ tr.customtable-error.customtable-deleted {
     135deg,
     transparent 0,
     transparent calc(50% - 1px),
-    var(--bs-danger, #dc3545) 50%,
+    var(--db-critical-origin-default) 50%,
     transparent calc(50% + 1px),
     transparent 100%
   );
 }
 
-tr.customtable-editing td div {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
+/* Aktionsspalte: Marker (`::before`, siehe unten) und Button-Gruppe bleiben in einer Zeile.
+   Ohne `nowrap` rutscht der Marker ueber die Buttons, sobald die Spalte schmal wird. */
+td.customtable-editing {
+  white-space: nowrap;
+}
+
+td.customtable-editing > div {
+  display: inline-flex;
+  gap: 0.25rem;
+  vertical-align: middle;
+}
+
+/* Datums- und Zeitwerte sollen nicht umbrechen ("Fr 31.07." statt zweizeilig); die Zeile waere
+   sonst doppelt so hoch. Ausgenommen sind Zellen, die mehrzeiligen Inhalt fuehren
+   (`.cell-multiline`, z.B. die Zulagen-Liste) -- dort kommen die Umbrueche aus dem Datenwert.
+   Lange Freitexte kuerzt `.custom-text-truncate`, die Kopfzeile darf weiter umbrechen. */
+table.customtable > tbody > tr > td:not(.customtable-editing, .cell-multiline) {
+  white-space: nowrap;
 }
 
 table.customtable > tbody > tr > td.customtable-sortable,

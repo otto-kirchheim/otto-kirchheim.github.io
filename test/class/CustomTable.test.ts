@@ -492,8 +492,11 @@ describe('CustomTable', () => {
       rows: [],
     });
 
-    const addButton = document.querySelector<HTMLButtonElement>('tfoot .btn-primary');
-    const customButton = document.querySelector<HTMLButtonElement>('tfoot .btn-secondary');
+    // Seit Phase F sind es DB-Buttons: die Bootstrap-Variante steckt in `data-variant`/`data-color`.
+    const addButton = document.querySelector<HTMLButtonElement>('tfoot .db-button[data-variant="brand"]');
+    const customButton = document.querySelector<HTMLButtonElement>(
+      'tfoot .db-button[data-variant="filled"]:not([data-color])',
+    );
     expect(addButton).not.toBeNull();
     expect(customButton).not.toBeNull();
 
@@ -523,8 +526,12 @@ describe('CustomTable', () => {
       rows: [{ _id: '1', label: 'A', value: 1 }],
     });
 
-    const editButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-primary');
-    const deleteButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-danger');
+    const editButton = document.querySelector<HTMLButtonElement>(
+      'tbody .db-button[data-variant="outlined"]:not([data-color])',
+    );
+    const deleteButton = document.querySelector<HTMLButtonElement>(
+      'tbody .db-button[data-variant="outlined"][data-color="critical"]',
+    );
     expect(editButton).not.toBeNull();
     expect(deleteButton).not.toBeNull();
 
@@ -596,8 +603,12 @@ describe('CustomTable', () => {
     });
 
     const addButton = document.querySelector<HTMLButtonElement>('tfoot .btn-primary');
-    const editButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-primary');
-    const deleteButton = document.querySelector<HTMLButtonElement>('tbody .btn-outline-danger');
+    const editButton = document.querySelector<HTMLButtonElement>(
+      'tbody .db-button[data-variant="outlined"]:not([data-color])',
+    );
+    const deleteButton = document.querySelector<HTMLButtonElement>(
+      'tbody .db-button[data-variant="outlined"][data-color="critical"]',
+    );
     const tr = document.querySelector<HTMLTableRowElement>('tbody tr');
 
     expect(() => addButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }))).not.toThrow();
