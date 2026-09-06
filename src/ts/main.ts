@@ -36,6 +36,22 @@ featureLifecycleRegistry.registerFeature({
   },
 });
 
+// Ein einmal registrierter Service Worker ueberlebt das Abschalten von `devOptions` --
+// er liefert dann weiter alte Bundles aus, und Fehlerbilder ueberstehen Reload und
+// Server-Neustart. Im Dev-Modus deshalb aktiv abmelden und die Caches leeren.
+if (import.meta.env.DEV && 'serviceWorker' in navigator) {
+  void navigator.serviceWorker.getRegistrations().then(async registrierungen => {
+    if (registrierungen.length === 0) return;
+    await Promise.all(registrierungen.map(registrierung => registrierung.unregister()));
+    if ('caches' in window) {
+      const namen = await caches.keys();
+      await Promise.all(namen.map(name => caches.delete(name)));
+    }
+    console.warn('Alter Service Worker abgemeldet und Caches geleert -- Seite wird neu geladen.');
+    location.reload();
+  });
+}
+
 const intervalMS = 60 * 60 * 1000;
 
 const updateSW = registerSW({
