@@ -378,7 +378,7 @@ describe('#createAddModalBereitschaftsZeit', () => {
     const form = document.querySelector<HTMLFormElement>('form');
     expect(form).toBeTruthy();
 
-    const modalBody = document.querySelector<HTMLDivElement>('.modal-body');
+    const modalBody = document.querySelector<HTMLDivElement>('.dialog-koerper');
     expect(modalBody).toBeTruthy();
 
     const vorgabeBSelect = document.querySelector<HTMLSelectElement>('#vorgabeB');

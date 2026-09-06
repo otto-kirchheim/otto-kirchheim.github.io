@@ -117,7 +117,6 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
   const modal = showModal<IDatenEA>(
     <MyFormModal
       myRef={ref}
-      size="sm"
       title="Entgeltausgleich hinzufügen"
       helpContext="modal.eaEintrag.add"
       onSubmit={onSubmit()}

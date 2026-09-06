@@ -110,18 +110,18 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
 
   inhalt.innerHTML = `
     <div data-error-dialog="true">
-      <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title">Fehler beim Speichern</h5>
+      <div class="db-drawer-header bg-danger text-white">
+        <h5>Fehler beim Speichern</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body">
+      <div class="dialog-koerper">
         <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
         <ul class="list-group list-group-flush">${itemsHtml}</ul>
         <div class="alert alert-info mt-3 mb-0 py-2 small">
           Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.
         </div>
       </div>
-      <div class="modal-footer">
+      <div class="dialog-fuss">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
       </div>
     </div>

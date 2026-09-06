@@ -282,7 +282,7 @@ export function AdminBulkEditModal({
   }
 
   const footer = (
-    <div className="modal-footer">
+    <div className="dialog-fuss">
       {step === 'preview' && (
         <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={() => setStep('form')}>
           Zurück
@@ -313,7 +313,7 @@ export function AdminBulkEditModal({
 
   return (
     <MyDivModal
-      dialogClass="modal-xl modal-fullscreen-lg-down modal-dialog-scrollable"
+      size="xl"
       title={`Massenänderung: ${selectedUsers.length} Benutzer`}
       Footer={footer}
       errorMessage={error}

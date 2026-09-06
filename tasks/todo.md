@@ -1413,3 +1413,42 @@ Ziel: die offensichtlichsten 0%-Lücken in isolierbaren Modulen schließen.
 
 - Ergebnis: Anders als beim ersten (verworfenen) Versuch gibt es jetzt eine echte Order-Garantie im Erfolgsfall, ohne die "nichts darf fehlschlagen"-Vorgabe zu verletzen -- möglich, weil `flushResource` selbst nie wirft (Fehlerbehandlung passiert vollständig innerhalb von AutoSave). Der Hinweis aus dem vorherigen Schritt bleibt als zusätzliches, unabhängiges Signal bestehen für den (seltenen) Fall, dass der Sync nicht rechtzeitig durchläuft.
 - Verifikation: `cd /home/jan/Dokumente/DB-Nebengeld/frontend && bunx --bun tsc --noEmit`, `bunx --bun eslint src/ test/`, `TZ=Europe/Berlin bun test --isolate` → 2023/2023 bestanden.
+
+## Phase H (1): Bootstrap-`.modal-*`-Huellen raus
+
+Die Dialoge liegen seit Phase E im `DBDrawer`, tragen innen aber noch Bootstraps Modal-Geruest.
+Das ist doppelt: `.modal-dialog`/`.modal-content` sind reine Huellen, deren Optik in
+`styles.scss` bereits wieder abgeraeumt wird (Rahmen weg, Hintergrund weg, Breite ueberschrieben).
+Die Groessen-Prop ist dadurch heute wirkungslos -- jeder Dialog rendert 36 rem.
+
+- [x] `.modal-dialog` (Huelle) ersatzlos entfernen, `.modal-content` -> `.dialog-rumpf`
+- [x] `.modal-body` -> `.dialog-koerper`, `.modal-footer` -> `.dialog-fuss`
+- [x] `.modal-header`/`.modal-title` entfallen (Kopf traegt bereits `.db-drawer-header`)
+- [x] `TMyModal.size` auf `'lg' | 'xl'` eindampfen, `dialogClass` streichen; Breite kommt ueber
+      `--db-drawer-max-width` am `<dialog>` (per `:has()` aus dem Rumpf gehoben)
+- [x] `size="sm"` (9 Stellen) und `size="fullscreen-sm-down"` entfernen -- beide heute wirkungslos
+- [x] `dialogClass="modal-xl ..."` (Massenbearbeitung) -> `size="xl"`
+- [x] `styles.scss`: Block `.db-drawer-content { .modal-* }` durch echte Regeln fuer die neuen
+      Klassen ersetzen; Unterschriften-Dialog (`signatur-modal-kompakt`) mitziehen
+- [x] Tests nachziehen (10 Dateien greifen per `.modal-*`-Selektor zu)
+
+### Verifikationskriterien
+
+- `grep -r "modal-dialog\|modal-content\|modal-header\|modal-title\|modal-body\|modal-footer" src/`
+  liefert keine Treffer mehr
+- Lint 0 Fehler, komplette Testsuite gruen
+- Sichtpruefung im Dev-Server: Anmelde-Dialog, ein Editor-Dialog, Impressum, Hilfe,
+  Bestaetigungsdialog, Unterschriftenfeld (Hoch- und Querformat) -- hell und dunkel
+- Breite: `sm`-Dialoge unveraendert 36 rem; nur die vier Admin-/Editor-Dialoge mit `lg`/`xl`
+  werden breiter (48 rem / 64 rem)
+
+### Review (Phase H, Schritt 1)
+
+- Ergebnis: `grep -r "modal-dialog|modal-content|modal-header|modal-title|modal-body|modal-footer|modal-backdrop" src/`
+  ist leer. Zwei Altlasten fielen dabei auf und sind mitbehoben: der tote Selektor in
+  `setNaechsterEwtTag` (seit Phase E ohne Treffer) und die leere Variable
+  `--db-divider-bg-color`, wegen der Kopf- und Fusszeile ihre Trennlinie verloren haetten.
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler, 26 alte Warnungen),
+  `bun run test` 2085/2085. Sichtpruefung gegen den Dev-Server: Impressum, Bestaetigungs-,
+  Hilfe- und Passwort-Dialog, Platzhalter-Hilfe (`lg` = 768 px), Unterschriftenfeld in
+  Hoch- und Querformat.

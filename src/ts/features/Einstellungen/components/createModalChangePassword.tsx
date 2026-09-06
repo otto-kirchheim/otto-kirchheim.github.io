@@ -9,7 +9,7 @@ export default function createModalChangePassword(): void {
   const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
-    <MyFormModal myRef={ref} size="sm" title="Passwort Ändern" submitText="Speichern" onSubmit={onSubmit()}>
+    <MyFormModal myRef={ref} title="Passwort Ändern" submitText="Speichern" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
           divClass="form-floating col-12"

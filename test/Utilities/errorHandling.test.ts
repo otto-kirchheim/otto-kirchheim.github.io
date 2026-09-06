@@ -123,7 +123,7 @@ describe('errorHandling', () => {
       focusable.focus();
       const blurSpy = vi.spyOn(focusable, 'blur');
 
-      modal.querySelector<HTMLButtonElement>('.modal-footer [data-bs-dismiss="modal"]')!.click();
+      modal.querySelector<HTMLButtonElement>('.dialog-fuss [data-bs-dismiss="modal"]')!.click();
 
       expect(blurSpy).toHaveBeenCalledTimes(1);
       expect(document.querySelector('[data-error-dialog]')).toBeNull();

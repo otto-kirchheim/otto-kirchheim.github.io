@@ -13,7 +13,7 @@ export default function createModalLogin(): void {
   const supportsPasskeys = browserSupportsWebAuthn();
 
   const footer = (
-    <div className="modal-footer flex-column align-items-stretch gap-0 p-0">
+    <div className="dialog-fuss flex-column align-items-stretch gap-0 p-0">
       <div className="d-flex justify-content-center gap-2 w-100 px-3 pt-3">
         <MyButton className="btn btn-primary" type="submit" text="Einloggen" id="btnLoginModal" />
       </div>

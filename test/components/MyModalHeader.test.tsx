@@ -14,7 +14,7 @@ describe('MyModalHeader', () => {
   it('renders title and close button without a help trigger by default', () => {
     const container = renderMyModalHeader({ title: 'Test Titel' });
 
-    expect(container.querySelector('.modal-title')?.textContent).toBe('Test Titel');
+    expect(container.querySelector('.db-drawer-header h2')?.textContent).toBe('Test Titel');
     expect(container.querySelector('[data-action="close"]')).not.toBeNull();
     expect(container.querySelector('[data-icon="question_mark_circle"]')).toBeNull();
   });

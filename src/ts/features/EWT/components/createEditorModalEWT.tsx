@@ -89,7 +89,6 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const modal: CustomHTMLDivElement<IDatenEWT> = showModal(
     <MyFormModal
       myRef={ref}
-      size="fullscreen-sm-down"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
       helpContext={row instanceof Row ? 'modal.ewtEintrag.edit' : 'modal.ewtEintrag.add'}

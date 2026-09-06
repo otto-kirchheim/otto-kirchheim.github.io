@@ -31,12 +31,12 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
     const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(ergebnis));
 
     inhalt.innerHTML = `
-      <div class="modal-header">
-        <h5 class="modal-title">${title}</h5>
+      <div class="db-drawer-header">
+        <h5>${title}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <div class="modal-body"><p>${escapedMessage}</p></div>
-      <div class="modal-footer">
+      <div class="dialog-koerper"><p>${escapedMessage}</p></div>
+      <div class="dialog-fuss">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelLabel}</button>
         <button type="button" class="btn ${confirmClass}" data-confirm="true">${confirmLabel}</button>
       </div>

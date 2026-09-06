@@ -272,15 +272,13 @@ export function openPlatzhalterHilfe(): void {
 
   oeffneDrawer(
     container,
-    <div className="modal-dialog modal-dialog-scrollable modal-lg">
-      <div className="modal-content">
-        <div className="modal-header">
-          <h5 className="modal-title">Platzhalter &amp; Formate</h5>
-          <button type="button" className="btn-close" data-bs-dismiss="modal" />
-        </div>
-        <div className="modal-body">
-          <PlatzhalterHilfeInhalt />
-        </div>
+    <div className="dialog-rumpf" data-breite="lg">
+      <div className="db-drawer-header">
+        <h5>Platzhalter &amp; Formate</h5>
+        <button type="button" className="btn-close" data-bs-dismiss="modal" />
+      </div>
+      <div className="dialog-koerper">
+        <PlatzhalterHilfeInhalt />
       </div>
     </div>,
     () => {

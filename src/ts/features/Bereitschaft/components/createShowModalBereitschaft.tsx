@@ -22,7 +22,6 @@ export default function ShowModalBereitschaft<T extends CustomTableTypes = IDate
 ): void {
   const modal: CustomHTMLDivElement<T> = showModal<T>(
     <MyDivModal
-      size="sm"
       title={titel}
       Footer={<MyShowFooter row={row} />}
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}

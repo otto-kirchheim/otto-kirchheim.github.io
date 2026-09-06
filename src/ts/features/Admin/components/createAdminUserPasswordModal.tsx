@@ -9,13 +9,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
   const passwortRef = createRef<HTMLInputElement>();
 
   const modal = showModal(
-    <MyFormModal
-      myRef={ref}
-      size="sm"
-      title={`Passwort setzen: ${userName}`}
-      submitText="Passwort setzen"
-      onSubmit={onSubmit()}
-    >
+    <MyFormModal myRef={ref} title={`Passwort setzen: ${userName}`} submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
         <div className="col-12">
           <p className="small text-body-secondary mb-0">

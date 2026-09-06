@@ -42,7 +42,6 @@ const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 co
 export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
     <MyDivModal
-      size="sm"
       title={titel}
       Footer={<MyShowFooter row={row} />}
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}

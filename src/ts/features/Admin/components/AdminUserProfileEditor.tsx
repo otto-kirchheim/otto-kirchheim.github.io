@@ -1,5 +1,8 @@
+import { DBDrawer } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+import { DIALOG_RICHTUNG } from '@/components/showModal';
 
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
@@ -418,156 +421,151 @@ export function AdminUserProfileEditor({
       {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
       {edit &&
         createPortal(
-          <>
-            <div className="modal fade show d-block" tabIndex={-1} style={{ zIndex: '1055' }}>
-              <div className="modal-dialog modal-xl modal-fullscreen-sm-down">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">
-                      UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
-                    </h5>
-                    <button type="button" className="btn-close" onClick={closeEdit} />
-                  </div>
+          // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog selbst mit.
+          // eslint-disable-next-line db-ux/drawer-header-required
+          <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={closeEdit}>
+            <div className="dialog-rumpf" data-breite="xl">
+              <div className="db-drawer-header">
+                <h5>
+                  UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
+                </h5>
+                <button type="button" className="btn-close" onClick={closeEdit} />
+              </div>
 
-                  <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                    {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
+              <div className="dialog-koerper">
+                {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
 
-                    <div className="row g-4">
-                      {/* Pers Fields */}
-                      <div className="col-md-6">
-                        <h6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
-                        {Object.entries(edit.pers).map(([key, val]) => {
-                          const selectOpts = PERS_SELECT_FIELDS[key];
-                          return (
-                            <div key={key} className="mb-2">
-                              <label className="form-label small fw-semibold mb-1">
-                                {PERS_FIELD_LABELS[key] ?? key}
-                              </label>
-                              {selectOpts ? (
-                                <select
-                                  className="form-select form-select-sm"
-                                  value={String(val ?? '')}
-                                  onChange={e => handlePersChange(key, (e.target as HTMLSelectElement).value)}
-                                >
-                                  <option value="">(keine Auswahl)</option>
-                                  {typeof selectOpts[0] === 'string'
-                                    ? (selectOpts as string[]).map(opt => (
-                                        <option key={opt} value={opt}>
-                                          {opt}
-                                        </option>
-                                      ))
-                                    : (selectOpts as { value: string; label: string }[]).map(opt => (
-                                        <option key={opt.value} value={opt.value}>
-                                          {opt.label} ({opt.value})
-                                        </option>
-                                      ))}
-                                </select>
-                              ) : key === 'OE' ? (
-                                <OeLevelBoxes
-                                  value={persFieldToInput(key, val)}
-                                  onChange={value => handlePersChange(key, value)}
-                                />
-                              ) : (
-                                <input
-                                  type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                                  className="form-control form-control-sm"
-                                  value={persFieldToInput(key, val)}
-                                  onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* JSON Sections */}
-                      <div className="col-md-6">
-                        <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
-                        {JSON_SECTIONS.map(section => (
-                          <div key={section} className="mb-3">
-                            <label className="form-label small fw-semibold mb-1">{section}</label>
-                            <JsonEditor
-                              value={edit.jsonRaw[section] ?? ''}
-                              onChange={raw => handleJsonChange(section, raw)}
-                              error={edit.jsonErrors[section]}
+                <div className="row g-4">
+                  {/* Pers Fields */}
+                  <div className="col-md-6">
+                    <h6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
+                    {Object.entries(edit.pers).map(([key, val]) => {
+                      const selectOpts = PERS_SELECT_FIELDS[key];
+                      return (
+                        <div key={key} className="mb-2">
+                          <label className="form-label small fw-semibold mb-1">{PERS_FIELD_LABELS[key] ?? key}</label>
+                          {selectOpts ? (
+                            <select
+                              className="form-select form-select-sm"
+                              value={String(val ?? '')}
+                              onChange={e => handlePersChange(key, (e.target as HTMLSelectElement).value)}
+                            >
+                              <option value="">(keine Auswahl)</option>
+                              {typeof selectOpts[0] === 'string'
+                                ? (selectOpts as string[]).map(opt => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ))
+                                : (selectOpts as { value: string; label: string }[]).map(opt => (
+                                    <option key={opt.value} value={opt.value}>
+                                      {opt.label} ({opt.value})
+                                    </option>
+                                  ))}
+                            </select>
+                          ) : key === 'OE' ? (
+                            <OeLevelBoxes
+                              value={persFieldToInput(key, val)}
+                              onChange={value => handlePersChange(key, value)}
                             />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* User Actions */}
-                    <div className="border-top mt-4 pt-3">
-                      <h6 className="fw-semibold mb-3">Benutzer-Aktionen</h6>
-                      <div className="d-flex flex-wrap gap-3 align-items-start">
-                        {/* emailVerified */}
-                        <div>
-                          <div className="small text-muted mb-1">emailVerified</div>
-                          <button
-                            className={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
-                            onClick={handleToggleEmailVerified}
-                          >
-                            {edit.emailVerified === null
-                              ? 'unbekannt'
-                              : edit.emailVerified
-                                ? 'true ✓'
-                                : 'false – umschalten'}
-                          </button>
-                          {edit.emailVerified === null && (
-                            <div className="small text-muted mt-1">Klicken zum Setzen auf true</div>
+                          ) : (
+                            <input
+                              type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
+                              className="form-control form-control-sm"
+                              value={persFieldToInput(key, val)}
+                              onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
+                            />
                           )}
                         </div>
-
-                        {/* Passkeys */}
-                        <div className="flex-grow-1">
-                          <div className="small text-muted mb-1">
-                            Passkeys
-                            {edit.passkeysLoading && (
-                              <span className="spinner-border spinner-border-sm ms-2" role="status" />
-                            )}
-                          </div>
-                          {edit.passkeys.length === 0 && !edit.passkeysLoading && (
-                            <div className="small text-muted">Keine Passkeys</div>
-                          )}
-                          {edit.passkeys.map(pk => (
-                            <div key={pk.credentialId} className="d-flex align-items-center gap-2 mb-1">
-                              <span className="small">
-                                {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
-                              </span>
-                              <button
-                                className="btn btn-sm btn-outline-danger py-0"
-                                onClick={() => handleDeletePasskey(pk.credentialId)}
-                                title="Passkey löschen"
-                              >
-                                <span className="db-icon db-font-size-xs" data-icon="bin" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
-                      Schließen
-                    </button>
-                    <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
-                      {edit.saving ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-1" role="status" />
-                          Speichern…
-                        </>
-                      ) : (
-                        'Profil speichern'
+                  {/* JSON Sections */}
+                  <div className="col-md-6">
+                    <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
+                    {JSON_SECTIONS.map(section => (
+                      <div key={section} className="mb-3">
+                        <label className="form-label small fw-semibold mb-1">{section}</label>
+                        <JsonEditor
+                          value={edit.jsonRaw[section] ?? ''}
+                          onChange={raw => handleJsonChange(section, raw)}
+                          error={edit.jsonErrors[section]}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* User Actions */}
+                <div className="border-top mt-4 pt-3">
+                  <h6 className="fw-semibold mb-3">Benutzer-Aktionen</h6>
+                  <div className="d-flex flex-wrap gap-3 align-items-start">
+                    {/* emailVerified */}
+                    <div>
+                      <div className="small text-muted mb-1">emailVerified</div>
+                      <button
+                        className={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
+                        onClick={handleToggleEmailVerified}
+                      >
+                        {edit.emailVerified === null
+                          ? 'unbekannt'
+                          : edit.emailVerified
+                            ? 'true ✓'
+                            : 'false – umschalten'}
+                      </button>
+                      {edit.emailVerified === null && (
+                        <div className="small text-muted mt-1">Klicken zum Setzen auf true</div>
                       )}
-                    </button>
+                    </div>
+
+                    {/* Passkeys */}
+                    <div className="flex-grow-1">
+                      <div className="small text-muted mb-1">
+                        Passkeys
+                        {edit.passkeysLoading && (
+                          <span className="spinner-border spinner-border-sm ms-2" role="status" />
+                        )}
+                      </div>
+                      {edit.passkeys.length === 0 && !edit.passkeysLoading && (
+                        <div className="small text-muted">Keine Passkeys</div>
+                      )}
+                      {edit.passkeys.map(pk => (
+                        <div key={pk.credentialId} className="d-flex align-items-center gap-2 mb-1">
+                          <span className="small">
+                            {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
+                          </span>
+                          <button
+                            className="btn btn-sm btn-outline-danger py-0"
+                            onClick={() => handleDeletePasskey(pk.credentialId)}
+                            title="Passkey löschen"
+                          >
+                            <span className="db-icon db-font-size-xs" data-icon="bin" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <div className="dialog-fuss">
+                <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+                  Schließen
+                </button>
+                <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+                  {edit.saving ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" />
+                      Speichern…
+                    </>
+                  ) : (
+                    'Profil speichern'
+                  )}
+                </button>
+              </div>
             </div>
-            <div className="modal-backdrop fade show" style={{ zIndex: '1054' }} />
-          </>,
+          </DBDrawer>,
           document.body,
         )}
     </div>

@@ -1,7 +1,7 @@
 import { type FC, type ReactNode } from 'react';
 
 const MyModalBody: FC<{ className?: string; children?: ReactNode }> = ({ className, children }) => {
-  const defaultClass = 'modal-body';
+  const defaultClass = 'dialog-koerper';
   const additionalClass = className ? ` ${className}` : ' row g-2';
 
   return (

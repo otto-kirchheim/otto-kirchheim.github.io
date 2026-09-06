@@ -11,7 +11,7 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
   };
 
   return (
-    <div className="modal-footer">
+    <div className="dialog-fuss">
       <MyButton text="Bearbeiten" dataBsDismiss="modal" clickHandler={editClickHandler} />
       <MyButton className="btn btn-danger" text="Löschen" dataBsDismiss="modal" clickHandler={deleteClickHandler} />
       <MyButton className="btn btn-secondary" text="Schließen" dataBsDismiss="modal" />

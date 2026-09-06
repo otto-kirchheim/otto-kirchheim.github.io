@@ -14,18 +14,18 @@ describe('MyDivModal', () => {
   it('should render the default header, children and footer with default submit text', () => {
     const container = renderMyDivModal({ title: 'Test Titel', children: <p className="my-child">Kind</p> });
 
-    expect(container.querySelector('.modal-dialog')).not.toBeNull();
-    expect(container.querySelector('.modal-content')?.className).toBe('modal-content');
-    expect(container.querySelector('.modal-header .modal-title')?.textContent).toBe('Test Titel');
+    expect(container.querySelector('.dialog-rumpf')).not.toBeNull();
+    expect(container.querySelector('.dialog-rumpf')?.getAttribute('data-breite')).toBeNull();
+    expect(container.querySelector('.db-drawer-header h2')?.textContent).toBe('Test Titel');
     expect(container.querySelector('.my-child')?.textContent).toBe('Kind');
-    expect(container.querySelector('.modal-footer button[type="submit"]')?.textContent).toBe('Hinzufügen');
+    expect(container.querySelector('.dialog-fuss button[type="submit"]')?.textContent).toBe('Hinzufügen');
     expect(container.querySelector('.alert-danger')).toBeNull();
   });
 
-  it('should append a size-specific modal-content class when size is provided', () => {
+  it('should mark the requested width on the dialog body when size is provided', () => {
     const container = renderMyDivModal({ title: 'Titel', size: 'lg' });
 
-    expect(container.querySelector('.modal-content')?.className).toBe('modal-content modal-lg');
+    expect(container.querySelector('.dialog-rumpf')?.getAttribute('data-breite')).toBe('lg');
   });
 
   it('should render the errorMessage alert with icon when errorMessage is provided', () => {
@@ -50,7 +50,7 @@ describe('MyDivModal', () => {
     });
 
     expect(container.querySelector('.custom-header')?.textContent).toBe('Custom');
-    expect(container.querySelector('.modal-header')).toBeNull();
+    expect(container.querySelector('.db-drawer-header')).toBeNull();
   });
 
   it('should render a custom Footer instead of the default MyEditorFooter', () => {
@@ -60,7 +60,7 @@ describe('MyDivModal', () => {
     });
 
     expect(container.querySelector('.custom-footer')?.textContent).toBe('CustomFooter');
-    expect(container.querySelector('.modal-footer button[type="submit"]')).toBeNull();
+    expect(container.querySelector('.dialog-fuss button[type="submit"]')).toBeNull();
   });
 
   it('should pass submitText and customButtons through to the default footer', () => {
@@ -74,7 +74,7 @@ describe('MyDivModal', () => {
       ],
     });
 
-    expect(container.querySelector('.modal-footer button[type="submit"]')?.textContent).toBe('Speichern');
+    expect(container.querySelector('.dialog-fuss button[type="submit"]')?.textContent).toBe('Speichern');
     expect(container.querySelector('.extra-btn')?.textContent).toBe('Extra');
   });
 });

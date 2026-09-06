@@ -178,27 +178,25 @@ function AdminUserLinksModal({
   emailVerified: boolean;
 }) {
   return (
-    <div className="modal-dialog">
-      <div className="modal-content">
-        <MyModalHeader title={`Login-Hilfe: ${userName}`} />
-        <div className="modal-body">
-          <p className="small text-body-secondary">
-            Die Links werden nur einmal angezeigt und nicht gespeichert. Bitte per DB-Mail oder Teams an den Benutzer
-            weitergeben – so umgehst du den Konzern-Spamfilter.
-          </p>
-          <LinkSection
-            kind="verification"
-            userId={userId}
-            userName={userName}
-            disabledHint={emailVerified ? 'E-Mail ist bereits verifiziert – kein Link nötig.' : undefined}
-          />
-          <LinkSection kind="reset" userId={userId} userName={userName} />
-        </div>
-        <div className="modal-footer">
-          <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">
-            Schließen
-          </button>
-        </div>
+    <div className="dialog-rumpf">
+      <MyModalHeader title={`Login-Hilfe: ${userName}`} />
+      <div className="dialog-koerper">
+        <p className="small text-body-secondary">
+          Die Links werden nur einmal angezeigt und nicht gespeichert. Bitte per DB-Mail oder Teams an den Benutzer
+          weitergeben – so umgehst du den Konzern-Spamfilter.
+        </p>
+        <LinkSection
+          kind="verification"
+          userId={userId}
+          userName={userName}
+          disabledHint={emailVerified ? 'E-Mail ist bereits verifiziert – kein Link nötig.' : undefined}
+        />
+        <LinkSection kind="reset" userId={userId} userName={userName} />
+      </div>
+      <div className="dialog-fuss">
+        <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">
+          Schließen
+        </button>
       </div>
     </div>
   );

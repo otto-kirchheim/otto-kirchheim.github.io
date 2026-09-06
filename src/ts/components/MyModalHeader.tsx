@@ -10,9 +10,9 @@ import { openHelpModal } from '@/core/help/openHelpModal';
  */
 const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ title, helpContext }) => {
   return (
-    <div className="db-drawer-header modal-header">
+    <div className="db-drawer-header">
       <header className="db-drawer-header-container">
-        <h2 className="modal-title">{title}</h2>
+        <h2>{title}</h2>
       </header>
       {helpContext && (
         <button

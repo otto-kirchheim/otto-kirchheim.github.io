@@ -8,7 +8,7 @@ type TMyModalFooter = {
 };
 const MyEditorFooter: FC<TMyModalFooter> = ({ customButtons = [], submitText = 'Hinzufügen' }) => {
   return (
-    <div className="modal-footer">
+    <div className="dialog-fuss">
       <MyButton type="submit" text={submitText} />
       {customButtons}
       <MyButton className="btn btn-secondary" dataBsDismiss="modal" text="Abbrechen" />

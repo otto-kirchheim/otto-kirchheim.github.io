@@ -238,7 +238,7 @@ describe('EWT utils extra', () => {
       <div id="modal">
         <div>
           <form>
-            <div class="modal-footer">
+            <div class="dialog-fuss">
               <button class="btn btn-primary">Speichern</button>
             </div>
           </form>
@@ -250,9 +250,7 @@ describe('EWT utils extra', () => {
 
     expect(() => setNaechsterEwtTag(1, alleTage)).toThrow('Alle Tage im Monat sind bereits belegt');
 
-    const saveButton = document.querySelector<HTMLButtonElement>(
-      '#modal > div > form > div.modal-footer > button.btn.btn-primary',
-    );
+    const saveButton = document.querySelector<HTMLButtonElement>('#modal .dialog-fuss > button.btn.btn-primary');
     expect(saveButton?.getAttribute('disabled')).toBe('true');
     expect(createSnackBarMock).toHaveBeenCalledTimes(1);
   });

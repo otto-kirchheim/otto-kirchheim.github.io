@@ -8,7 +8,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
   <MyDivModal
     title={content.title}
     Footer={
-      <div className="modal-footer">
+      <div className="dialog-fuss">
         <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
           Schließen
         </button>

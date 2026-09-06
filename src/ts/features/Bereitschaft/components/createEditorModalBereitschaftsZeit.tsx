@@ -106,7 +106,6 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
   const modal: CustomHTMLDivElement<IDatenBZ> = showModal(
     <MyFormModal
       myRef={ref}
-      size="sm"
       title={titel}
       submitText={row instanceof Row ? 'Speichern' : undefined}
       helpContext={row instanceof Row ? 'modal.bereitschaftEintrag.edit' : 'modal.bereitschaftEintrag.add'}

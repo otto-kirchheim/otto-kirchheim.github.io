@@ -1,5 +1,8 @@
+import { DBDrawer } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+
+import { DIALOG_RICHTUNG } from '@/components/showModal';
 
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import {
@@ -167,61 +170,58 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
   const istVorlagenSchrift = SCHNITTE.some(s => familieFuerSchnitt(value, s.key).startsWith('vorlage:'));
 
   return createPortal(
-    <>
-      <div className="modal fade show d-block" tabIndex={-1} style={{ zIndex: '1055' }}>
-        <div className="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-sm-down">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Schriftart</h5>
-              <button type="button" className="btn-close" aria-label="Schließen" onClick={onClose} />
+    // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog selbst mit.
+    // eslint-disable-next-line db-ux/drawer-header-required
+    <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={onClose}>
+      <div className="dialog-rumpf" data-breite="lg">
+        <div className="db-drawer-header">
+          <h5>Schriftart</h5>
+          <button type="button" className="btn-close" aria-label="Schließen" onClick={onClose} />
+        </div>
+
+        <div className="dialog-koerper d-flex flex-column gap-3">
+          <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
+
+          <Vorschau value={value} vorlageFonts={vorlageFonts} />
+
+          {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
+            <div className="small text-muted">
+              Eingebettet:{' '}
+              {[
+                ...vorlageFonts.map(f => (
+                  <span key={f.id}>
+                    {f.label.replace(' (Vorlage)', '')} ({schnitteText(f)})
+                  </span>
+                )),
+                ...unbrauchbareFonts.map(n => (
+                  <span
+                    key={n}
+                    className="text-danger text-decoration-line-through"
+                    title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
+                  >
+                    {n}
+                  </span>
+                )),
+              ].flatMap((el, i) => (i === 0 ? [el] : [', ', el]))}
+              .
             </div>
+          )}
 
-            <div className="modal-body d-flex flex-column gap-3" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-              <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
-
-              <Vorschau value={value} vorlageFonts={vorlageFonts} />
-
-              {(vorlageFonts.length > 0 || unbrauchbareFonts.length > 0) && (
-                <div className="small text-muted">
-                  Eingebettet:{' '}
-                  {[
-                    ...vorlageFonts.map(f => (
-                      <span key={f.id}>
-                        {f.label.replace(' (Vorlage)', '')} ({schnitteText(f)})
-                      </span>
-                    )),
-                    ...unbrauchbareFonts.map(n => (
-                      <span
-                        key={n}
-                        className="text-danger text-decoration-line-through"
-                        title="Teilzeichensatz oder kaputte Zeichenzuordnung (z.B. aus PDF24) — nicht als Formularschrift nutzbar"
-                      >
-                        {n}
-                      </span>
-                    )),
-                  ].flatMap((el, i) => (i === 0 ? [el] : [', ', el]))}
-                  .
-                </div>
-              )}
-
-              {istVorlagenSchrift && (
-                <div className="small text-warning-emphasis">
-                  Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres
-                  Helvetica. Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
-                </div>
-              )}
+          {istVorlagenSchrift && (
+            <div className="small text-warning-emphasis">
+              Eingebettete Schrift gewählt — nur die Vorschau nutzt sie, der Download rendert bis auf Weiteres
+              Helvetica. Fehlende Glyphen (Teilzeichensatz) erscheinen als leere Kästchen.
             </div>
+          )}
+        </div>
 
-            <div className="modal-footer">
-              <button type="button" className="btn btn-primary" onClick={onClose}>
-                Fertig
-              </button>
-            </div>
-          </div>
+        <div className="dialog-fuss">
+          <button type="button" className="btn btn-primary" onClick={onClose}>
+            Fertig
+          </button>
         </div>
       </div>
-      <div className="modal-backdrop fade show" style={{ zIndex: '1054' }} />
-    </>,
+    </DBDrawer>,
     document.body,
   );
 }

@@ -5,7 +5,6 @@ import { MyModalHeader, MyEditorFooter } from '.';
 
 const MyDivModal: FC<Omit<TMyModal<HTMLDivElement>, 'myRef' | 'onSubmit'>> = ({
   size,
-  dialogClass,
   title,
   helpContext,
   Header,
@@ -15,18 +14,16 @@ const MyDivModal: FC<Omit<TMyModal<HTMLDivElement>, 'myRef' | 'onSubmit'>> = ({
   customButtons,
   errorMessage,
 }) => (
-  <div className={dialogClass ? `modal-dialog ${dialogClass}` : 'modal-dialog'}>
-    <div className={size ? `modal-content modal-${size}` : 'modal-content'}>
-      {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
-      {errorMessage && (
-        <div className="alert alert-danger mx-3 mt-3 mb-0 py-2" role="alert">
-          <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="exclamation_mark_circle" />
-          {errorMessage}
-        </div>
-      )}
-      {children}
-      {Footer ?? <MyEditorFooter submitText={submitText} customButtons={customButtons} />}
-    </div>
+  <div className="dialog-rumpf" data-breite={size}>
+    {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
+    {errorMessage && (
+      <div className="alert alert-danger mx-3 mt-3 mb-0 py-2" role="alert">
+        <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="exclamation_mark_circle" />
+        {errorMessage}
+      </div>
+    )}
+    {children}
+    {Footer ?? <MyEditorFooter submitText={submitText} customButtons={customButtons} />}
   </div>
 );
 

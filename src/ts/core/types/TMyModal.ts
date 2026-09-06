@@ -5,18 +5,11 @@ export type TMyModal<T> = {
   myRef: React.RefObject<T | null>;
   title: string;
   helpContext?: HelpContextKey;
-  size?:
-    | 'sm'
-    | 'lg'
-    | 'xl'
-    | 'fullscreen'
-    | 'fullscreen-sm-down'
-    | 'fullscreen-md-down'
-    | 'fullscreen-lg-down'
-    | 'fullscreen-xl-down'
-    | 'fullscreen-xxl-down';
-  /** Zusätzliche Klassen auf `.modal-dialog` (z.B. `modal-xl modal-fullscreen-lg-down`). */
-  dialogClass?: string;
+  /**
+   * Breite des Dialogs. Ohne Angabe 36 rem; `lg` 48 rem, `xl` 64 rem. Auf schmalen Geraeten
+   * fuellt der Drawer ohnehin die volle Breite, deshalb gibt es keine Fullscreen-Stufen mehr.
+   */
+  size?: 'lg' | 'xl';
   submitText?: string;
   customButtons?: React.ReactNode[];
   onSubmit: React.SubmitEventHandler<T>;

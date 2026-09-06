@@ -8,7 +8,7 @@ function getModalEl() {
 
 /** Abbrechen/Schliessen -- der Weg, den auch der Nutzer nimmt. */
 function abbrechen() {
-  document.body.querySelector<HTMLButtonElement>('.modal-footer [data-bs-dismiss="modal"]')!.click();
+  document.body.querySelector<HTMLButtonElement>('.dialog-fuss [data-bs-dismiss="modal"]')!.click();
 }
 
 describe('confirmDialog', () => {
@@ -54,9 +54,9 @@ describe('confirmDialog', () => {
     });
 
     const modal = getModalEl()!;
-    expect(modal.querySelector('.modal-title')?.textContent).toBe('Mein Titel');
+    expect(modal.querySelector('.db-drawer-header h5')?.textContent).toBe('Mein Titel');
     expect(modal.querySelector('[data-confirm="true"]')?.textContent).toBe('Ja');
-    expect(modal.querySelector('.modal-footer [data-bs-dismiss="modal"]')?.textContent).toBe('Nein');
+    expect(modal.querySelector('.dialog-fuss [data-bs-dismiss="modal"]')?.textContent).toBe('Nein');
     expect(modal.querySelector('[data-confirm="true"]')?.classList.contains('btn-warning')).toBe(true);
 
     abbrechen();
@@ -64,7 +64,7 @@ describe('confirmDialog', () => {
 
   it('converts newlines in message to <br>', async () => {
     confirmDialog('Zeile1\nZeile2');
-    const body = getModalEl()!.querySelector('.modal-body p')!;
+    const body = getModalEl()!.querySelector('.dialog-koerper p')!;
     expect(body.innerHTML).toContain('Zeile1<br>Zeile2');
     abbrechen();
   });

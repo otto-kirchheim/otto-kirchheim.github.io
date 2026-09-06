@@ -2,6 +2,42 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (62)
+
+### refactor (DB-UX-Migration Phase H: Bootstraps Modal-Huellen raus)
+
+Die Dialoge lagen seit Phase E im `DBDrawer`, trugen innen aber weiter Bootstraps
+Modal-Geruest. Das war doppelt: `.modal-dialog`/`.modal-content` waren reine Huellen, deren
+Optik `styles.scss` gleich wieder abraeumte (Rahmen weg, Hintergrund weg, Breite
+ueberschrieben) -- und dadurch war auch die Groessen-Prop wirkungslos, jeder Dialog rendete
+36 rem.
+
+- **Neue Klassen** statt der Bootstrap-Huellen: `.dialog-rumpf` (Flex-Spalte, beim Formular
+  das `<form>` selbst), `.dialog-koerper`, `.dialog-fuss`. Die Kopfzeile traegt nur noch
+  `.db-drawer-header`, der Titel gar keine Klasse mehr. `.modal-dialog`/`.modal-content`
+  sind ersatzlos entfallen.
+- **Breite** kommt ueber `--db-drawer-max-width` am `<dialog>`; `:has([data-breite])` hebt die
+  Angabe aus dem Rumpf hoch. `TMyModal.size` kennt nur noch `lg` (48 rem) und `xl` (64 rem) --
+  `sm` und die `fullscreen-*-down`-Stufen waren im Drawer ohne Wirkung und sind raus. Vier
+  Admin-/Editor-Dialoge werden dadurch breiter, alle uebrigen bleiben bei 36 rem.
+- **Drei Admin-Dialoge** (Ressource bearbeiten, Schriftart, UserProfile) hingen als
+  handgebaute `.modal.show` samt `.modal-backdrop` und z-index 1054/1055 am `document.body`.
+  Sie laufen jetzt ueber `DBDrawer` -- der native `<dialog>` stapelt selbst im Top-Layer,
+  Backdrop und Escape kommen vom Browser. Die `maxHeight: 65vh|70vh`-Inline-Stile sind weg,
+  der Drawer-Inhalt scrollt ohnehin.
+- **`setNaechsterEwtTag`** suchte den Speichern-Knopf ueber
+  `#modal > div > form > div.modal-footer` -- dieser Pfad passte seit Phase E nicht mehr auf
+  den echten DOM (der Drawer schiebt drei Ebenen dazwischen), der Knopf wurde also nie mehr
+  deaktiviert. Jetzt `#modal .dialog-fuss > button.btn.btn-primary`.
+- **Trennlinien** an Kopf- und Fusszeile nutzten `--db-divider-bg-color`; DB definiert die
+  Variable nur in einzelnen Komponenten (Accordion, Control-Panel), im Drawer war sie leer
+  und die ganze Border-Regel damit ungueltig. Jetzt
+  `--db-adaptive-on-bg-basic-emphasis-60-default`.
+- **Unterschriftenfeld:** der Drawer-Innenabstand ging von der Schreibflaeche ab, ohne dass
+  `berechneCanvasGroesse()` ihn sah -- das Feld lief rechts aus dem Bild. Mit
+  `--db-drawer-content-padding: 0` passt es wieder: Querformat 836x334 (vorher 828x331, davon
+  16 px ueber den Rand), Hochformat 374x150 buendig.
+
 ## 2026-09-06 (61)
 
 ### feat (DB-UX-Migration Phase E: Snackbar als DB-Notification)

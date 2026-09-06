@@ -208,17 +208,13 @@ td:has(.SchichtBereitschaft) {
   justify-content: center;
 }
 
-.modal-footer {
-  justify-content: space-evenly;
-}
-
-.modal-body.row {
+.dialog-koerper.row {
   align-content: start;
 }
 
 /* Unterschrift-Canvas (signaturDialog.ts): Breite/Höhe kommen als exakte Pixelwerte per
    `berechneCanvasGroesse()` aus JS (deterministisch statt CSS-`aspect-ratio`/Flex-Interaktion,
-   die sich in Bootstraps `.modal-body`-Layout als unzuverlässig erwies) -- hier nur noch
+   die sich im vorherigen Bootstrap-Layout als unzuverlässig erwies) -- hier nur noch
    Zentrierung (Block-Element mit fester Breite < 100% zentriert per `margin: 0 auto`) und Optik. */
 .signatur-canvas {
   display: block;
@@ -260,12 +256,12 @@ td:has(.SchichtBereitschaft) {
 
 /* Randloser Unterschrift-Modus (signaturDialog.ts, aktiviert wenn die Höhe die bindende Dimension
    ist -- typisch Querformat-Handy): noch kompaktere Fußzeile gewinnt zusätzlichen Vertikalraum
-   für den Canvas zurück, statt ihn an Bootstraps Standard-Padding zu verlieren. */
-.signatur-modal-kompakt .modal-body {
+   für den Canvas zurück, statt ihn an das Standard-Padding zu verlieren. */
+.signatur-kompakt .dialog-koerper {
   padding: 0.25rem;
 }
 
-.signatur-modal-kompakt .signatur-fusszeile {
+.signatur-kompakt .signatur-fusszeile {
   padding: 0.25rem 0.5rem;
 }
 
@@ -739,26 +735,60 @@ body {
 
   > .db-drawer-content {
     flex: 0 0 auto;
+    /* Der Drawer-Innenabstand geht sonst von der Schreibflaeche ab, ohne dass
+       `berechneCanvasGroesse()` ihn sieht -- das Feld lief rechts aus dem Bild. */
+    --db-drawer-content-padding: 0;
   }
 }
 
-.db-drawer-content {
-  .modal-dialog {
+// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie
+// hoch, damit der Dialog-Inhalt seine Breite selbst mitbringen kann (`TMyModal.size`).
+.db-drawer:has([data-breite='lg']) {
+  --db-drawer-max-width: 48rem;
+}
+
+.db-drawer:has([data-breite='xl']) {
+  --db-drawer-max-width: 64rem;
+}
+
+// Rumpf, Kopf, Koerper und Fusszeile eines Dialogs. Rahmen, Hintergrund und Aussenabstand
+// kommen vom Drawer; hier steht nur die innere Gliederung.
+.dialog-rumpf {
+  display: flex;
+  flex-direction: column;
+}
+
+.db-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-block-end: 0.75rem;
+  border-block-end: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+
+  // Titel nimmt den freien Platz, Hilfe und Schliessen ruecken nach rechts.
+  > :first-child {
+    flex: 1 1 auto;
+  }
+
+  :is(h1, h2, h3, h4, h5, h6) {
     margin: 0;
-    max-width: none;
-    inline-size: 100%;
+    font-size: 1.25rem;
   }
+}
 
-  .modal-content {
-    border: 0;
-    border-radius: 0;
-    background: none;
-  }
+.dialog-koerper {
+  flex: 1 1 auto;
+  padding-block: 1rem;
+}
 
-  .modal-header,
-  .modal-footer {
-    border-color: var(--db-divider-bg-color);
-  }
+.dialog-fuss {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0.5rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 // Bootstraps `.invalid-feedback` blendet sich nur ueber den Geschwister-Selektor

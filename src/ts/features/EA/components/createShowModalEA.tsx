@@ -6,7 +6,6 @@ import type { CustomHTMLDivElement, IDatenEA } from '@/types';
 export default function ShowModalEA(row: Row<IDatenEA>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenEA> = showModal(
     <MyDivModal
-      size="sm"
       title={titel}
       Footer={<MyShowFooter row={row} />}
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
