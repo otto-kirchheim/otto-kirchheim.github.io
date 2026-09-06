@@ -1,4 +1,3 @@
-import Modal from 'bootstrap/js/dist/modal';
 import {
   createRef,
   type FC,
@@ -10,7 +9,7 @@ import {
 } from 'react';
 
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
@@ -481,7 +480,7 @@ export default function EditorModalVE(
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       saveTableDataVorgabenU(table);
     };
     function setStandard(ft: CustomTable<IVorgabenUvorgabenB>, newStandard: Row<IVorgabenUvorgabenB> | null): void {

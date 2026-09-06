@@ -1,4 +1,4 @@
-import Modal from 'bootstrap/js/dist/modal';
+import { erzeugeDbDialog } from '@/infrastructure/ui/dbDialog';
 import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
 import type { BulkErrorEntry } from '../api/apiService';
 import type { TResourceKey } from '@/types';
@@ -83,9 +83,9 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
 }
 
 export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, errors: BulkErrorEntry[]): void {
-  // Bestehendes offenes Dialog erweitern statt gestapeltes neues Modal zu erzeugen.
-  // .show nur vorhanden während Bootstrap das Modal als sichtbar behandelt.
-  const existingModal = document.querySelector<HTMLElement>('[data-error-dialog].show');
+  // Bestehendes offenes Dialog erweitern statt ein gestapeltes neues zu erzeugen.
+  // `[open]` trägt der native `<dialog>`, solange er sichtbar ist.
+  const existingModal = document.querySelector<HTMLElement>('dialog[open] [data-error-dialog]');
   if (existingModal) {
     const list = existingModal.querySelector('ul');
     const countEl = existingModal.querySelector<HTMLElement>('[data-error-count]');
@@ -104,41 +104,34 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
 
   const itemsHtml = errors.map((err, i) => buildErrorItemHtml(err, i)).join('');
 
-  const modal = document.createElement('div');
-  modal.className = 'modal fade';
-  modal.setAttribute('tabindex', '-1');
-  modal.setAttribute('data-error-dialog', 'true');
-  modal.innerHTML = `
-    <div class="modal-dialog modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header bg-danger text-white">
-          <h5 class="modal-title">Fehler beim Speichern</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+  const { inhalt, schliessen } = erzeugeDbDialog(() => {
+    /* nichts aufzuraeumen -- `erzeugeDbDialog` entfernt den Dialog selbst */
+  });
+
+  inhalt.innerHTML = `
+    <div data-error-dialog="true">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Fehler beim Speichern</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
+        <ul class="list-group list-group-flush">${itemsHtml}</ul>
+        <div class="alert alert-info mt-3 mb-0 py-2 small">
+          Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.
         </div>
-        <div class="modal-body">
-          <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
-          <ul class="list-group list-group-flush">${itemsHtml}</ul>
-          <div class="alert alert-info mt-3 mb-0 py-2 small">
-            Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
-        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
       </div>
     </div>
   `;
 
-  document.body.appendChild(modal);
-  const bsModal = new Modal(modal);
-  bsModal.show();
-
-  modal.addEventListener('hide.bs.modal', () => {
-    (modal.querySelector<HTMLElement>(':focus') ?? (document.activeElement as HTMLElement))?.blur();
-  });
-  modal.addEventListener('hidden.bs.modal', () => {
-    bsModal.dispose();
-    modal.remove();
+  // Der Fokus muss raus, bevor der Dialog verschwindet -- sonst bleibt er am entfernten Knoten.
+  inhalt.addEventListener('click', event => {
+    if (!(event.target as HTMLElement | null)?.closest('[data-bs-dismiss="modal"]')) return;
+    (document.activeElement as HTMLElement | null)?.blur();
+    schliessen();
   });
 }
 

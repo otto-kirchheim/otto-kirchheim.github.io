@@ -1,8 +1,7 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
 
 export default function createAdminUserPasswordModal(userId: string, userName: string): void {
@@ -96,7 +95,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
 
       try {
         await updateUserPassword(userId, newPassword);
-        Modal.getInstance(modal)?.hide();
+        schliesseModal();
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         errorMessage.textContent = msg;

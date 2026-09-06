@@ -11,7 +11,7 @@ import MySelect from './MySelect';
 import MyShowElement from './MyShowElement';
 import MyShowFooter from './MyShowFooter';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
-import showModal from './showModal';
+import showModal, { oeffneDrawer, schliesseModal } from './showModal';
 
 export {
   MyButton,
@@ -28,4 +28,6 @@ export {
   MyShowFooter,
   PasswordStrengthMeter,
   showModal,
+  oeffneDrawer,
+  schliesseModal,
 };

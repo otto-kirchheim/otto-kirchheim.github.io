@@ -15,15 +15,15 @@ describe('MyModalHeader', () => {
     const container = renderMyModalHeader({ title: 'Test Titel' });
 
     expect(container.querySelector('.modal-title')?.textContent).toBe('Test Titel');
-    expect(container.querySelector('.btn-close')).not.toBeNull();
-    expect(container.querySelector('[aria-label="Hilfe anzeigen"]')).toBeNull();
+    expect(container.querySelector('[data-action="close"]')).not.toBeNull();
+    expect(container.querySelector('[data-icon="question_mark_circle"]')).toBeNull();
   });
 
   it('renders a help trigger when helpContext is provided', () => {
     const container = renderMyModalHeader({ title: 'Test Titel', helpContext: 'tab.start' });
 
-    const helpButton = container.querySelector('[aria-label="Hilfe anzeigen"]');
+    const helpButton = container.querySelector('[data-icon="question_mark_circle"]');
     expect(helpButton).not.toBeNull();
-    expect(helpButton?.querySelector('.db-icon')?.getAttribute('data-icon')).toBe('question_mark_circle');
+    expect(helpButton?.textContent).toContain('Hilfe anzeigen');
   });
 });

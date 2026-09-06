@@ -2,6 +2,39 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (60)
+
+### feat (DB-UX-Migration Phase E: Modal-Infrastruktur auf DB-Drawer)
+
+Bootstraps `Modal`-Plugin ist raus. Dialoge laufen ueber `DBDrawer` bzw. den nativen
+`<dialog>` -- Escape, Backdrop-Klick, Fokus-Falle und Scroll-Sperre kommen damit vom Browser.
+
+- **`components/showModal.tsx`** mountet einen `DBDrawer` in `#modal`. Der Vertrag bleibt:
+  synchron zurueckgegebenes `#modal`, `.row`/`.role` beschreibbar, Feld-Ids sofort per
+  `querySelector` erreichbar. Schaltflaechen mit `data-bs-dismiss="modal"` schliessen weiter
+  -- ueber Delegation, damit kein Dialog-Baustein angefasst werden musste.
+- **`infrastructure/ui/dbDialog.ts` (neu)** ist das Vanilla-Gegenstueck fuer `confirmDialog`,
+  den AutoSave-Fehlerdialog und den Unterschriften-Dialog. `escapeSchliesst: false` fuer die
+  Entscheidungen, die nicht versehentlich weggeklickt werden duerfen.
+- **Impressum** haengt nicht mehr an `data-bs-toggle="modal"` (das ohne Plugin wirkungslos
+  war), sondern an `data-dialog-target` -- der Knopf in der Fusszeile funktioniert wieder.
+- **Admin-Unternavigation:** acht Reiter hingen noch an `data-bs-toggle="pill"` und waren
+  seit Phase D tot. Der `tabController` kennt jetzt Tab-Gruppen -- er schaltet nur die
+  Geschwister-Panels der jeweiligen `.tab-content` und schreibt den Hash ausschliesslich
+  fuer die Hauptnavigation.
+- **Unterschriftenfeld:** Der Drawer war auf 36 rem gedeckelt, im Querformat blieb kaum
+  Platz. Mit `signatur-drawer` nimmt er die volle Breite (Feld 603x241 -> 685x274 px bei
+  844x390). Das Pad entsteht jetzt im naechsten Frame statt auf `shown.bs.modal`; Resize-
+  Handler und Frame-Rueckruf pruefen `canvas.isConnected`, damit ein geschlossener Dialog
+  keine Arbeit mehr ausloest.
+- **Kopfzeilen** der Dialoge im DB-Aufbau (Titel links, Hilfe und Schliessen als Icon-Buttons
+  rechts) -- vorher ueberlappten Titel, `?` und `x`.
+- Tooltip in der Admin-Benutzerkarte auf `title` umgestellt; das Bootstrap-Tooltip-Plugin ist
+  seit Phase F nicht mehr geladen.
+
+Uebrig aus Phase E: `CustomSnackbar` auf DB-Notification-Optik (rein kosmetisch) und das
+Entfernen der `.modal-*`-Huellen -- Letzteres gehoert zum Utility-Sweep in Phase H.
+
 ## 2026-09-06 (59)
 
 ### feat (DB-UX-Migration Phase D: App-Shell, Navigation, index.html)

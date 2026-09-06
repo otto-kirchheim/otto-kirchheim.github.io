@@ -28,7 +28,26 @@ function sichtbareSchalter(): HTMLElement[] {
 }
 
 function panel(id: string): HTMLElement | null {
-  return document.getElementById(id);
+  const el = document.getElementById(id);
+  return el?.classList.contains('tab-pane') ? el : null;
+}
+
+/**
+ * Geschwister-Panels einer Gruppe. Es gibt mehr als eine: die Hauptnavigation schaltet
+ * `#tabContent`, das Admin-Panel seine eigene `.tab-content` -- ein Wechsel darf immer nur
+ * die eigene Gruppe umschalten.
+ */
+function gruppe(ziel: HTMLElement): HTMLElement[] {
+  const eltern = ziel.parentElement;
+  if (!eltern) return [ziel];
+  return [...eltern.children].filter(
+    (el): el is HTMLElement => el instanceof HTMLElement && el.classList.contains('tab-pane'),
+  );
+}
+
+/** Nur der Wechsel in der Hauptnavigation gehoert in den Hash. */
+function istHauptgruppe(ziel: HTMLElement): boolean {
+  return ziel.parentElement?.id === 'tabContent';
 }
 
 /** Id des aktuell sichtbaren Panels. */
@@ -44,20 +63,25 @@ export function aktiverTab(): string | null {
  */
 export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {}): boolean {
   const ziel = panel(id);
-  if (!ziel || !ziel.classList.contains('tab-pane')) return false;
-  if (aktiverTab() === id) {
-    if (hashSchreiben && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
+  if (!ziel) return false;
+
+  const imHash = hashSchreiben && istHauptgruppe(ziel);
+  if (ziel.classList.contains('active')) {
+    if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
     return true;
   }
 
-  for (const pane of document.querySelectorAll<HTMLElement>('#tabContent > .tab-pane')) {
+  for (const pane of gruppe(ziel)) {
     const aktiv = pane === ziel;
     pane.classList.toggle('active', aktiv);
     pane.classList.toggle('show', aktiv);
   }
 
+  const gruppenIds = new Set(gruppe(ziel).map(pane => pane.id));
   for (const el of schalter()) {
-    const aktiv = el.getAttribute(ZIEL_ATTRIBUT) === id;
+    const elZiel = el.getAttribute(ZIEL_ATTRIBUT);
+    if (!elZiel || !gruppenIds.has(elZiel)) continue;
+    const aktiv = elZiel === id;
     el.classList.toggle('active', aktiv);
     // `.db-navigation-item` traegt die Aktiv-Markierung im DB-System am Listenelement.
     el.closest('.db-navigation-item')?.setAttribute('data-active', String(aktiv));
@@ -67,7 +91,7 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
     }
   }
 
-  if (hashSchreiben && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
+  if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
 
   const ausloeser = schalter(id).find(el => el.getAttribute('role') === 'tab') ?? null;
   if (fokus) ausloeser?.focus();

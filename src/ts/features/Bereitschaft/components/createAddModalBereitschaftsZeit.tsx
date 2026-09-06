@@ -1,8 +1,7 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
-import { MyCheckbox, MyFormModal, MyModalBody, MySelect, showModal } from '@/components';
+import { MyCheckbox, MyFormModal, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -403,7 +402,7 @@ export default function createAddModalBereitschaftsZeit(): void {
       const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
       if (!table) throw new Error('tableBZ nicht gefunden');
       submitBereitschaftsZeiten(modal, table);
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       persistBereitschaftsZeitraumTableData(table.instance);
     };
   }

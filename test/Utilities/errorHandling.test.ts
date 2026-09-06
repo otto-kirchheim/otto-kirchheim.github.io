@@ -9,11 +9,6 @@ import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import type { RowErrorMatch } from '@/infrastructure/autoSave/savePipeline';
 
-const showMock = vi.fn();
-const disposeMock = vi.fn();
-const MockModal = vi.fn(() => ({ show: showMock, hide: vi.fn(), dispose: disposeMock }));
-vi.mock('bootstrap/js/dist/modal', () => ({ default: MockModal }));
-
 describe('errorHandling', () => {
   describe('escapeHtml', () => {
     it('escapes ampersand', () => {
@@ -98,9 +93,9 @@ describe('errorHandling', () => {
       expect(modal).toBeTruthy();
       expect(modal?.innerHTML).toContain('Fehler beim Speichern');
       expect(modal?.innerHTML).toContain('Failed to create');
-      expect(showMock).toHaveBeenCalledTimes(1);
+      expect(modal?.closest('dialog')?.hasAttribute('open')).toBe(true);
 
-      modal?.remove();
+      modal?.closest('dialog')?.remove();
     });
 
     it('extends existing visible dialog instead of creating a new one', () => {
@@ -108,7 +103,6 @@ describe('errorHandling', () => {
 
       const modal = document.querySelector<HTMLElement>('[data-error-dialog]');
       expect(modal).toBeTruthy();
-      modal?.classList.add('show');
 
       showErrorDialog('BE', [{ operation: 'update', message: 'Zweiter Fehler', id: 'abc' }]);
 
@@ -117,7 +111,7 @@ describe('errorHandling', () => {
       expect(modal?.innerHTML).toContain('Zweiter Fehler');
       expect(modal?.querySelector('[data-error-count]')?.textContent).toContain('2 Fehler');
 
-      modal?.remove();
+      modal?.closest('dialog')?.remove();
     });
 
     it('blurs the focused element and disposes the modal on dismiss', () => {
@@ -129,11 +123,9 @@ describe('errorHandling', () => {
       focusable.focus();
       const blurSpy = vi.spyOn(focusable, 'blur');
 
-      modal.dispatchEvent(new Event('hide.bs.modal'));
-      expect(blurSpy).toHaveBeenCalledTimes(1);
+      modal.querySelector<HTMLButtonElement>('.modal-footer [data-bs-dismiss="modal"]')!.click();
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
-      expect(disposeMock).toHaveBeenCalledTimes(1);
+      expect(blurSpy).toHaveBeenCalledTimes(1);
       expect(document.querySelector('[data-error-dialog]')).toBeNull();
     });
   });

@@ -1,7 +1,6 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -132,7 +131,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
       event.preventDefault();
       const success = await submitBereitschaftsEinsatz(modal, tableBE!, tableBZ!);
 
-      if (success) Modal.getInstance(modal)?.hide();
+      if (success) schliesseModal();
     };
   }
 }

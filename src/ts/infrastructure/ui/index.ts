@@ -9,6 +9,7 @@ export { default as initializeColorModeToggler } from './BSColorToggler';
 export * from './loadingButtonState';
 export * from './CustomSnackbar';
 export * from './dbButton';
+export * from './dbDialog';
 export * from './reactRoot';
 export * from './tabController';
 export * from './navDrawer';

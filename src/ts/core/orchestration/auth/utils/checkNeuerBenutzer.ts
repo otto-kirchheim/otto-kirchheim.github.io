@@ -1,4 +1,3 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -8,7 +7,7 @@ import { getPasswordValidationMessage } from '@/infrastructure/validation/passwo
 import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
 import { openOnboardingGuideOnce } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
 import userLoginSuccess from './userLoginSuccess';
-import type { CustomHTMLDivElement } from '@/types';
+import { schliesseModal } from '@/components';
 
 async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   if (typeof PublicKeyCredential === 'undefined') {
@@ -42,7 +41,7 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   }
 }
 
-export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): Promise<void> {
+export default async function checkNeuerBenutzer(): Promise<void> {
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
   if (!errorMessage) throw new Error('errorMessage not found');
 
@@ -96,7 +95,7 @@ export default async function checkNeuerBenutzer(modal: CustomHTMLDivElement): P
 
     await maybeSetupPasskeyAfterSignup();
 
-    Modal.getInstance(modal)?.hide();
+    schliesseModal();
 
     createSnackBar({
       message: 'Benutzer erfolgreich angelegt.',

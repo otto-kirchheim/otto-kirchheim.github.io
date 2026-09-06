@@ -61,6 +61,17 @@ if (typeof bunVi.setSystemTime !== 'function') {
   };
 }
 
+// happy-dom kennt `<dialog>.showModal()`/`close()` nicht. Die Dialoge der App (DB-Drawer ueber
+// nativem `<dialog>`) brauchen im Test nur das `open`-Attribut -- Fokus-Falle und Top-Layer
+// pruefen die Puppeteer-Smokes, nicht happy-dom.
+HTMLDialogElement.prototype.showModal ??= function showModal(this: HTMLDialogElement) {
+  this.setAttribute('open', '');
+};
+HTMLDialogElement.prototype.close ??= function close(this: HTMLDialogElement) {
+  this.removeAttribute('open');
+  this.dispatchEvent(new Event('close'));
+};
+
 afterEach(() => {
   vi.restoreAllMocks();
 });

@@ -1,11 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const showMock = vi.fn();
-const hideMock = vi.fn();
-const disposeMock = vi.fn();
-const ModalConstructor = vi.fn(() => ({ show: showMock, hide: hideMock, dispose: disposeMock }));
-vi.mock('bootstrap/js/dist/modal', () => ({ default: ModalConstructor }));
-
 const clearMock = vi.fn();
 const offMock = vi.fn();
 const erstelleSignaturPadMock = vi.fn(() => ({ clear: clearMock, off: offMock }));
@@ -27,14 +21,24 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 import { signaturDialog } from '@/infrastructure/pdf/signaturDialog';
 
 // Beide Dialoge (Entscheidung UND Pad) sind echter, ungemockter Code aus `signaturDialog.ts` selbst
-// und bauen je ein reales `.modal`-Element -- die beiden Helper unterscheiden daher per Inhalt
-// (Canvas = Pad, `[data-wahl]`-Buttons = Entscheidung), nicht per Reihenfolge.
+// und bauen je einen realen `<dialog class="db-drawer">` -- die beiden Helper unterscheiden daher
+// per Inhalt (Canvas = Pad, `[data-wahl]`-Buttons = Entscheidung), nicht per Reihenfolge.
 function getPadModalEl() {
-  return [...document.body.querySelectorAll<HTMLElement>('.modal')].find(m => m.querySelector('canvas')) ?? null;
+  return [...document.body.querySelectorAll<HTMLElement>('dialog')].find(m => m.querySelector('canvas')) ?? null;
 }
 
 function getEntscheidungModalEl() {
-  return [...document.body.querySelectorAll<HTMLElement>('.modal')].find(m => m.querySelector('[data-wahl]')) ?? null;
+  return [...document.body.querySelectorAll<HTMLElement>('dialog')].find(m => m.querySelector('[data-wahl]')) ?? null;
+}
+
+/** Schliessen ohne Auswahl -- entspricht dem Klick auf das X in der Kopfzeile. */
+function schliesseUeberX(dialog: HTMLElement) {
+  dialog.querySelector<HTMLButtonElement>('[data-bs-dismiss="modal"]')!.click();
+}
+
+/** Der native `<dialog>` ist sofort sichtbar; das Pad entsteht im naechsten Frame. */
+function naechsterFrame() {
+  return new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 }
 
 /** Öffnet den Pad-Dialog über die Entscheidung "Ja" (kein Cache) bzw. "Ändern" (mit Cache). */
@@ -69,10 +73,10 @@ describe('signaturDialog', () => {
       expect(getPadModalEl()).toBeNull();
     });
 
-    it('Schließen ohne Wahl (hidden.bs.modal) zählt wie "Ohne Unterschrift", NICHT wie "Digital"', async () => {
+    it('Schließen ohne Wahl (Schließen über X) zählt wie "Ohne Unterschrift", NICHT wie "Digital"', async () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
 
       expect(await promise).toEqual({ png: undefined, digital: false });
     });
@@ -84,15 +88,15 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       expect(getPadModalEl()).not.toBeNull();
-      expect(erstelleSignaturPadMock).not.toHaveBeenCalled(); // erst nach shown.bs.modal, siehe unten
+      expect(erstelleSignaturPadMock).not.toHaveBeenCalled(); // erst nach dem ersten Frame, siehe unten
 
-      getPadModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(getPadModalEl()!);
       await promise;
     });
   });
 
   describe('Pad-Dialog (erreicht über "Ja" ohne Cache)', () => {
-    it('erstellt das Pad erst nach shown.bs.modal, nicht schon beim Rendern (Phase-4-Lehre)', async () => {
+    it('erstellt das Pad erst nach dem ersten Frame, nicht schon beim Rendern (Phase-4-Lehre)', async () => {
       holeSignaturPngMock.mockReturnValue('data:image/png;base64,abc');
 
       const promise = signaturDialog();
@@ -103,18 +107,17 @@ describe('signaturDialog', () => {
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(1);
 
       modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
       expect(await promise).toEqual({ png: 'data:image/png;base64,abc', digital: false });
-      expect(hideMock).toHaveBeenCalled();
 
-      // `bsModal.hide()` ist hier gemockt und löst kein echtes `hidden.bs.modal` aus (das würde
+      // `bsModal.hide()` ist hier gemockt und löst kein echtes `Schließen über X` aus (das würde
       // Bootstrap nach der Ausblend-Animation selbst tun) -- ohne diesen Event bliebe der
       // window-resize-Listener aus dem Dialog über das Testende hinaus registriert und würde in
       // späteren Tests unerwartet mitfeuern.
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
     });
 
     it('ein leer gelassenes Pad (holeSignaturPng liefert null) resolved ohne png, digital=false', async () => {
@@ -126,11 +129,11 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
 
       expect(await promise).toEqual({ png: undefined, digital: false });
-      modal.dispatchEvent(new Event('hidden.bs.modal')); // Aufräumen, siehe Kommentar im Test darüber
+      schliesseUeberX(modal); // Aufräumen, siehe Kommentar im Test darüber
     });
 
     it('"Löschen" ruft pad.clear() auf', async () => {
@@ -140,11 +143,11 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       modal.querySelector<HTMLButtonElement>('[data-loeschen="true"]')!.click();
       expect(clearMock).toHaveBeenCalledTimes(1);
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
       await promise;
     });
 
@@ -155,18 +158,18 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(1);
 
       window.dispatchEvent(new Event('resize'));
       expect(offMock).toHaveBeenCalledTimes(1); // alte Pointer-Listener zuerst lösen
       expect(erstelleSignaturPadMock).toHaveBeenCalledTimes(2); // Pad neu mit aktueller Canvas-Größe
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
       await promise;
     });
 
-    it('resize vor shown.bs.modal (Pad existiert noch nicht) tut nichts', async () => {
+    it('resize vor dem ersten Frame (Pad existiert noch nicht) tut nichts', async () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
       oeffnePad(entscheidung);
@@ -176,7 +179,7 @@ describe('signaturDialog', () => {
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
       expect(offMock).not.toHaveBeenCalled();
 
-      getPadModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(getPadModalEl()!);
       await promise;
     });
 
@@ -187,8 +190,8 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      await naechsterFrame();
+      schliesseUeberX(modal);
       await promise;
 
       erstelleSignaturPadMock.mockClear();
@@ -196,15 +199,15 @@ describe('signaturDialog', () => {
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
     });
 
-    it('Schließen ohne "Fertig" (hidden.bs.modal) resolved ohne png, digital=false', async () => {
+    it('Schließen ohne "Fertig" (Schließen über X) resolved ohne png, digital=false', async () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
       oeffnePad(entscheidung);
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal')); // Aufräumen der Entscheidung, siehe Kommentar oben
+      schliesseUeberX(entscheidung); // Aufräumen der Entscheidung, siehe Kommentar oben
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
 
       expect(await promise).toEqual({ png: undefined, digital: false });
       expect(document.body.querySelector('.modal')).toBeNull();
@@ -219,12 +222,12 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
 
       expect(setzeSignaturPngMock).not.toHaveBeenCalled();
       expect(modal.querySelector<HTMLInputElement>('[data-speichern="true"]')!.checked).toBe(false);
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
       await promise;
     });
 
@@ -238,7 +241,7 @@ describe('signaturDialog', () => {
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       modal.querySelector<HTMLInputElement>('[data-speichern="true"]')!.checked = true;
       modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
 
@@ -246,7 +249,7 @@ describe('signaturDialog', () => {
       expect(storageSetMock).toHaveBeenCalledWith('signaturCache', 'data:image/png;base64,neu');
       expect(storageRemoveMock).not.toHaveBeenCalled();
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
     });
   });
 
@@ -262,7 +265,7 @@ describe('signaturDialog', () => {
       expect(getPadModalEl()).toBeNull();
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
 
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
     });
 
     it('"Digital" -- resolved ohne png, digital=true, kein Pad', async () => {
@@ -276,7 +279,7 @@ describe('signaturDialog', () => {
       expect(getPadModalEl()).toBeNull();
       expect(erstelleSignaturPadMock).not.toHaveBeenCalled();
 
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
     });
 
     it('"Ohne Unterschrift" -- resolved ohne png, digital=false, kein Pad (Datum bleibt sichtbar trotz Cache)', async () => {
@@ -289,15 +292,15 @@ describe('signaturDialog', () => {
       expect(await promise).toEqual({ png: undefined, digital: false });
       expect(getPadModalEl()).toBeNull();
 
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
     });
 
-    it('Schließen ohne Wahl (hidden.bs.modal) zählt wie "Ohne Unterschrift"', async () => {
+    it('Schließen ohne Wahl (Schließen über X) zählt wie "Ohne Unterschrift"', async () => {
       storageGetMock.mockReturnValue('data:image/png;base64,cached');
 
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
 
       expect(await promise).toEqual({ png: undefined, digital: false });
       expect(getPadModalEl()).toBeNull();
@@ -309,16 +312,15 @@ describe('signaturDialog', () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
       oeffnePad(entscheidung);
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
       expect(modal.querySelector<HTMLInputElement>('[data-speichern="true"]')!.checked).toBe(true);
-
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       expect(setzeSignaturPngMock).toHaveBeenCalledWith(expect.anything(), 'data:image/png;base64,cached');
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
       await promise;
     });
 
@@ -329,11 +331,11 @@ describe('signaturDialog', () => {
       const promise = signaturDialog();
       const entscheidung = getEntscheidungModalEl()!;
       oeffnePad(entscheidung); // "Ändern" -- Cache vorhanden, Pad öffnet
-      entscheidung.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(entscheidung);
       await Promise.resolve();
 
       const modal = getPadModalEl()!;
-      modal.dispatchEvent(new Event('shown.bs.modal'));
+      await naechsterFrame();
       modal.querySelector<HTMLInputElement>('[data-speichern="true"]')!.checked = false;
       modal.querySelector<HTMLButtonElement>('[data-fertig="true"]')!.click();
 
@@ -341,7 +343,7 @@ describe('signaturDialog', () => {
       expect(storageRemoveMock).toHaveBeenCalledWith('signaturCache');
       expect(storageSetMock).not.toHaveBeenCalled();
 
-      modal.dispatchEvent(new Event('hidden.bs.modal'));
+      schliesseUeberX(modal);
     });
   });
 });

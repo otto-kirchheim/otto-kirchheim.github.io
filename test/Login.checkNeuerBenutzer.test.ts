@@ -7,7 +7,6 @@ const {
   meMock,
   userLoginSuccessMock,
   hideMock,
-  getInstanceMock,
   registerPasskeyWithResultMock,
   resetTokenStateMock,
   confirmMock,
@@ -18,7 +17,6 @@ const {
   meMock: vi.fn(),
   userLoginSuccessMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
   registerPasskeyWithResultMock: vi.fn(),
   resetTokenStateMock: vi.fn(),
   confirmMock: vi.fn(),
@@ -51,14 +49,7 @@ vi.mock('@/infrastructure/tokenManagement/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: class MockModal {
-    static getInstance = getInstanceMock;
-    show = vi.fn();
-    hide = vi.fn();
-    dispose = vi.fn();
-  },
-}));
+vi.mock('@/components', () => ({ schliesseModal: hideMock }));
 
 vi.mock('@/infrastructure/ui/confirmDialog', () => ({
   confirmDialog: confirmMock,
@@ -86,7 +77,6 @@ describe('checkNeuerBenutzer', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     confirmMock.mockResolvedValue(false);
     Object.defineProperty(globalThis, 'PublicKeyCredential', {
       value: class PublicKeyCredentialMock {},
@@ -101,7 +91,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await expect(checkNeuerBenutzer(modal as never)).rejects.toThrow('errorMessage not found');
+    await expect(checkNeuerBenutzer()).rejects.toThrow('errorMessage not found');
   });
 
   it('setzt Validierungsfehler wenn Zugangscode fehlt', async () => {
@@ -109,7 +99,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Zugangscode Eingeben');
     expect(registerMock).not.toHaveBeenCalled();
@@ -124,7 +114,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Benutzername Eingeben');
     expect(registerMock).not.toHaveBeenCalled();
@@ -140,7 +130,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte E-Mail Eingeben');
     expect(registerMock).not.toHaveBeenCalled();
@@ -157,7 +147,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Passwort Eingeben');
     expect(registerMock).not.toHaveBeenCalled();
@@ -175,7 +165,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Bitte Passwort wiederholen');
     expect(registerMock).not.toHaveBeenCalled();
@@ -189,7 +179,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Passwörter falsch wiederholt');
     expect(registerMock).not.toHaveBeenCalled();
@@ -205,7 +195,7 @@ describe('checkNeuerBenutzer', () => {
     const modal = document.querySelector<HTMLDivElement>('#modal-root');
     if (!modal) throw new Error('modal not found');
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe(
       'Das Passwort muss mindestens 8 Zeichen lang sein',
@@ -214,28 +204,27 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('zeigt Offline-Fehler ohne Register-Call', async () => {
-    const modal = setupDom();
+    setupDom();
     Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(document.querySelector<HTMLDivElement>('#errorMessage')?.textContent).toBe('Keine Internetverbindung');
     expect(registerMock).not.toHaveBeenCalled();
   });
 
   it('fuehrt erfolgreichen Registrierungs-Flow mit Skip der Passkey-Einrichtung aus', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'org-admin' });
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(registerMock).toHaveBeenCalledWith('otto', 'test@example.com', ' pass12345 ', 'code-1');
     expect(resetTokenStateMock).toHaveBeenCalledTimes(1);
     expect(meMock).toHaveBeenCalledTimes(1);
     expect(confirmMock).toHaveBeenCalledTimes(1);
     expect(registerPasskeyWithResultMock).not.toHaveBeenCalled();
-    expect(getInstanceMock).toHaveBeenCalledWith(modal);
     expect(hideMock).toHaveBeenCalledTimes(1);
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
     expect(userLoginSuccessMock).toHaveBeenCalledWith({
@@ -248,7 +237,7 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('richtet auf Wunsch direkt einen Passkey nach dem Signup ein', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member', email: 'test@example.com', emailVerified: false });
     confirmMock.mockResolvedValue(true);
@@ -258,7 +247,7 @@ describe('checkNeuerBenutzer', () => {
       message: 'Passkey erfolgreich eingerichtet',
     });
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(1);
     expect(userLoginSuccessMock).toHaveBeenCalledWith({
@@ -270,7 +259,7 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('bietet bei technischem Passkey-Fehler einen Retry an', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member' });
     confirmMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
@@ -278,7 +267,7 @@ describe('checkNeuerBenutzer', () => {
       .mockResolvedValueOnce({ ok: false, reason: 'error', message: 'Passkey fehlgeschlagen' })
       .mockResolvedValueOnce({ ok: true, reason: 'success', message: 'Passkey erfolgreich eingerichtet' });
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(2);
     expect(confirmMock).toHaveBeenCalledTimes(2);
@@ -286,13 +275,13 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('ueberspringt die Passkey-Einrichtung wenn der Browser PublicKeyCredential nicht unterstuetzt', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member' });
     // @ts-expect-error – Browser ohne WebAuthn-Unterstuetzung simulieren
     delete globalThis.PublicKeyCredential;
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(confirmMock).not.toHaveBeenCalled();
     expect(registerPasskeyWithResultMock).not.toHaveBeenCalled();
@@ -306,7 +295,7 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('bricht die Passkey-Einrichtung ab wenn der Retry nach einem Fehler abgelehnt wird', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockResolvedValue(undefined);
     meMock.mockResolvedValue({ role: 'member' });
     confirmMock.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
@@ -316,7 +305,7 @@ describe('checkNeuerBenutzer', () => {
       message: 'Passkey fehlgeschlagen',
     });
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     expect(registerPasskeyWithResultMock).toHaveBeenCalledTimes(1);
     expect(confirmMock).toHaveBeenCalledTimes(2);
@@ -330,10 +319,10 @@ describe('checkNeuerBenutzer', () => {
   });
 
   it('zeigt Fehler-Snackbar und schreibt Fehlermeldung bei Fehler', async () => {
-    const modal = setupDom();
+    setupDom();
     registerMock.mockRejectedValue(new Error('<img src=x onerror=alert(1)>'));
 
-    await checkNeuerBenutzer(modal as never);
+    await checkNeuerBenutzer();
 
     const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
     expect(errorMessage?.textContent).toBe('<img src=x onerror=alert(1)>');

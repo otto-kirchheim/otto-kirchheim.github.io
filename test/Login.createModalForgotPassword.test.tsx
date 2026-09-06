@@ -1,17 +1,17 @@
 import { huelleMock, inputMock } from './reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock, getInstanceMock } = (
+const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   forgotPasswordMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,
@@ -25,12 +25,6 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
 vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     forgotPassword: forgotPasswordMock,
-  },
-}));
-
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: getInstanceMock,
   },
 }));
 
@@ -58,7 +52,6 @@ describe('createModalForgotPassword', () => {
     document.body.innerHTML = '<div id="errorMessage"></div>';
     vi.clearAllMocks();
     setupShowModalMock();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
@@ -73,7 +66,6 @@ describe('createModalForgotPassword', () => {
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(forgotPasswordMock).toHaveBeenCalledWith('user@deutschebahn.com');
-    expect(getInstanceMock).toHaveBeenCalled();
     expect(hideMock).toHaveBeenCalledTimes(1);
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
   });

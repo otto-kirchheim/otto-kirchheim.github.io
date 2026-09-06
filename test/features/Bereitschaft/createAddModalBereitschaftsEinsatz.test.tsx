@@ -9,7 +9,6 @@ const {
   onEventMock,
   storageGetMock,
   hideMock,
-  getInstanceMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
   submitBereitschaftsEinsatzMock: vi.fn(),
@@ -17,13 +16,13 @@ const {
   onEventMock: vi.fn(),
   storageGetMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 type InputProps = { id: string; name?: string; type?: string; min?: string; max?: string; value?: string };
 type SelectProps = { id: string; options: Array<{ value?: string; text: string }> };
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: (props: { children?: ReactNode }) => h('div', { className: 'modal-stub' }, props.children),
   MyModalBody: (props: { children?: ReactNode }) => h('div', { className: 'modal-body-stub' }, props.children),
@@ -59,10 +58,6 @@ vi.mock('@/core', () => ({
   onEvent: onEventMock,
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: { getInstance: getInstanceMock },
-}));
-
 import createAddModalBereitschaftsEinsatz from '@/features/Bereitschaft/components/createAddModalBereitschaftsEinsatz';
 
 function makeColumnTable(id: string, columns: Array<{ name: string; type?: string; longTitle?: string }>): void {
@@ -96,7 +91,6 @@ describe('createAddModalBereitschaftsEinsatz', () => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
     storageGetMock.mockImplementation((key: string) => (key === 'Jahr' ? 2025 : 4));
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
     onEventMock.mockReturnValue(vi.fn());
   });

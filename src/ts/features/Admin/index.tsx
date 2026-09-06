@@ -92,8 +92,7 @@ export default function AdminTab() {
               <button
                 className={`nav-link ${isSuperAdmin ? 'active' : ''}`}
                 id="admin-tab-dashboard"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-dashboard"
+                data-tab-target="admin-pane-dashboard"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-dashboard"
@@ -112,8 +111,7 @@ export default function AdminTab() {
             <button
               className={`nav-link ${!isSuperAdmin ? 'active' : ''}`}
               id="admin-tab-users"
-              data-bs-toggle="pill"
-              data-bs-target="#admin-pane-users"
+              data-tab-target="admin-pane-users"
               type="button"
               role="tab"
               aria-controls="admin-pane-users"
@@ -127,8 +125,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-vorgaben"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-vorgaben"
+                data-tab-target="admin-pane-vorgaben"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-vorgaben"
@@ -143,8 +140,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-templates"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-templates"
+                data-tab-target="admin-pane-templates"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-templates"
@@ -159,8 +155,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-formulare"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-formulare"
+                data-tab-target="admin-pane-formulare"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-formulare"
@@ -180,8 +175,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-resources"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-resources"
+                data-tab-target="admin-pane-resources"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-resources"
@@ -196,8 +190,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-profiles"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-profiles"
+                data-tab-target="admin-pane-profiles"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-profiles"
@@ -212,8 +205,7 @@ export default function AdminTab() {
               <button
                 className="nav-link"
                 id="admin-tab-logs"
-                data-bs-toggle="pill"
-                data-bs-target="#admin-pane-logs"
+                data-tab-target="admin-pane-logs"
                 type="button"
                 role="tab"
                 aria-controls="admin-pane-logs"

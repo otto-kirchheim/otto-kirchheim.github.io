@@ -1,7 +1,7 @@
-import Modal from 'bootstrap/js/dist/modal';
+import { erzeugeDbDialog } from './dbDialog';
 
 /**
- * Async Bootstrap-Modal-Ersatz für window.confirm().
+ * Async Dialog-Ersatz für window.confirm() (DB-Drawer über nativem `<dialog>`).
  * Gibt ein Promise<boolean> zurück (true = bestätigt, false = abgebrochen).
  */
 
@@ -25,47 +25,26 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
   } = options;
 
   return new Promise<boolean>(resolve => {
-    const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.setAttribute('tabindex', '-1');
-
     const escapedMessage = message.replace(/\n/g, '<br>');
 
-    modal.innerHTML = `
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">${title}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body"><p>${escapedMessage}</p></div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelLabel}</button>
-            <button type="button" class="btn ${confirmClass}" data-confirm="true">${confirmLabel}</button>
-          </div>
-        </div>
+    let ergebnis = false;
+    const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(ergebnis));
+
+    inhalt.innerHTML = `
+      <div class="modal-header">
+        <h5 class="modal-title">${title}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body"><p>${escapedMessage}</p></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelLabel}</button>
+        <button type="button" class="btn ${confirmClass}" data-confirm="true">${confirmLabel}</button>
       </div>
     `;
 
-    document.body.appendChild(modal);
-
-    const bsModal = new Modal(modal);
-    let resolved = false;
-
-    const finish = (result: boolean) => {
-      if (resolved) return;
-      resolved = true;
-      bsModal.hide();
-      resolve(result);
-    };
-
-    modal.querySelector('[data-confirm="true"]')?.addEventListener('click', () => finish(true));
-    modal.addEventListener('hidden.bs.modal', () => {
-      finish(false);
-      bsModal.dispose();
-      modal.remove();
+    inhalt.querySelector('[data-confirm="true"]')?.addEventListener('click', () => {
+      ergebnis = true;
+      schliessen();
     });
-
-    bsModal.show();
   });
 }

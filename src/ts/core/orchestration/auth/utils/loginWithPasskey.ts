@@ -1,4 +1,3 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
 import { userLoginSuccess } from '.';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -7,6 +6,7 @@ import { authApi } from '@/infrastructure/api/apiService';
 import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
 import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
 import type { CustomHTMLDivElement } from '@/types';
+import { schliesseModal } from '@/components';
 
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');
@@ -40,7 +40,7 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
 
     const me = await authApi.me().catch(() => null);
     const effectiveUserName = me?.userName ?? userName ?? resolvedUserName ?? '';
-    Modal.getInstance(modal)?.hide();
+    schliesseModal();
     await userLoginSuccess({
       username: effectiveUserName,
       role: me?.role,

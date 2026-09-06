@@ -1,10 +1,9 @@
-import Modal from 'bootstrap/js/dist/modal';
 import type { Dayjs } from 'dayjs';
 import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenBE } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -263,7 +262,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       persistBereitschaftsEinsatzTableData(table);
     };
   }

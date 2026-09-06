@@ -1,7 +1,6 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
-import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
 import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
@@ -96,7 +95,7 @@ export default function createModalResetPassword(token: string): void {
 
       try {
         await authApi.resetPassword(token, newPassword);
-        Modal.getInstance(modal)?.hide();
+        schliesseModal();
         createSnackBar({
           message: 'Passwort wurde erfolgreich zurückgesetzt. Bitte melde dich erneut an.',
           status: 'success',

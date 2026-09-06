@@ -7,12 +7,6 @@ import type { CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 // registriert einen document-weiten Click-Handler, der ohne echtes .modal-Element crasht.
 // Für diesen isolierten Komponententest wird das Modul daher wie in
 // Login.createModalResetPassword.test.tsx gemockt.
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: vi.fn(),
-    getOrCreateInstance: vi.fn(() => ({ show: vi.fn(), hide: vi.fn() })),
-  },
-}));
 
 const { default: MyShowFooter } = await import('@/components/MyShowFooter');
 

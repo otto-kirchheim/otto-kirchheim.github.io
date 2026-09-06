@@ -1,8 +1,7 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
 import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { authApi } from '@/infrastructure/api/apiService';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { getPasskeyErrorMessage } from '@/infrastructure/tokenManagement/passkeys';
@@ -124,7 +123,7 @@ export default function createModalPasskeySetPassword(): void {
         await authApi.setPasswordWithPasskey(credential, challengeToken, newPassword);
         resetTokenState();
 
-        Modal.getInstance(modal)?.hide();
+        schliesseModal();
         createSnackBar({
           message: 'Passwort wurde neu gesetzt.',
           status: 'success',

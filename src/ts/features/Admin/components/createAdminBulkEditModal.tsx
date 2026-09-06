@@ -1,7 +1,6 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { useMemo, useState } from 'react';
 
-import { MyDivModal, MyModalBody, showModal } from '@/components';
+import { MyDivModal, MyModalBody, schliesseModal, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import {
   bulkUpdateUserProfiles,
@@ -423,11 +422,7 @@ export function AdminBulkEditModal({
 }
 
 export default function createAdminBulkEditModal(selectedUsers: AdminUserRow[], onApplied: () => void): void {
-  const modal = showModal(
-    <AdminBulkEditModal
-      selectedUsers={selectedUsers}
-      onApplied={onApplied}
-      closeModal={() => Modal.getInstance(modal)?.hide()}
-    />,
+  showModal(
+    <AdminBulkEditModal selectedUsers={selectedUsers} onApplied={onApplied} closeModal={() => schliesseModal()} />,
   );
 }

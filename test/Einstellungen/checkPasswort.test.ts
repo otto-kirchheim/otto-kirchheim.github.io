@@ -26,9 +26,7 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: { getInstance: () => ({ hide: modalHideMock }) },
-}));
+vi.mock('@/components', () => ({ schliesseModal: modalHideMock }));
 
 import checkPasswort from '@/features/Einstellungen/utils/checkPasswort';
 import type { CustomHTMLDivElement } from '@/core/types';

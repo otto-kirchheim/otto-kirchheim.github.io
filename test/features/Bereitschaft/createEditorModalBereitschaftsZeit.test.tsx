@@ -11,7 +11,6 @@ const {
   persistBereitschaftsZeitraumTableDataMock,
   storageGetMock,
   hideMock,
-  getInstanceMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
@@ -19,10 +18,10 @@ const {
   persistBereitschaftsZeitraumTableDataMock: vi.fn(),
   storageGetMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,
@@ -40,10 +39,6 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
 vi.mock('@/features/Bereitschaft/utils', () => ({
   getBereitschaftsZeitraumDaten: getBereitschaftsZeitraumDatenMock,
   persistBereitschaftsZeitraumTableData: persistBereitschaftsZeitraumTableDataMock,
-}));
-
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: { getInstance: getInstanceMock },
 }));
 
 import EditorModalBereitschaftsZeit from '@/features/Bereitschaft/components/createEditorModalBereitschaftsZeit';
@@ -123,7 +118,6 @@ describe('EditorModalBereitschaftsZeit', () => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
     getBereitschaftsZeitraumDatenMock.mockReturnValue([]);
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     storageGetMock.mockImplementation((key: string) => (key === 'Jahr' ? 2025 : 6));
   });
 

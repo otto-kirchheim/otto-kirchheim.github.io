@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const showMock = vi.fn();
-const hideMock = vi.fn();
-const disposeMock = vi.fn();
-const ModalConstructor = vi.fn(() => ({ show: showMock, hide: hideMock, dispose: disposeMock }));
-vi.mock('bootstrap/js/dist/modal', () => ({ default: ModalConstructor }));
-
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 
 function getModalEl() {
-  return document.body.querySelector<HTMLElement>('.modal');
+  return document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');
+}
+
+/** Abbrechen/Schliessen -- der Weg, den auch der Nutzer nimmt. */
+function abbrechen() {
+  document.body.querySelector<HTMLButtonElement>('.modal-footer [data-bs-dismiss="modal"]')!.click();
 }
 
 describe('confirmDialog', () => {
@@ -27,12 +26,12 @@ describe('confirmDialog', () => {
 
     const result = await promise;
     expect(result).toBe(true);
-    expect(hideMock).toHaveBeenCalled();
+    expect(getModalEl()).toBeNull();
   });
 
-  it('resolves false when hidden.bs.modal fires (cancel / close)', async () => {
+  it('resolves false when the dialog is dismissed (cancel / close)', async () => {
     const promise = confirmDialog('Wirklich?');
-    getModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+    abbrechen();
     expect(await promise).toBe(false);
   });
 
@@ -40,10 +39,10 @@ describe('confirmDialog', () => {
     const promise = confirmDialog('Doppelt?');
 
     document.body.querySelector<HTMLButtonElement>('[data-confirm="true"]')!.click();
-    getModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+    // Zweiter Schliessversuch nach dem Bestaetigen darf das Ergebnis nicht mehr aendern.
+    getModalEl()?.dispatchEvent(new Event('cancel'));
 
     expect(await promise).toBe(true);
-    expect(hideMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders custom title, labels and class', async () => {
@@ -60,21 +59,20 @@ describe('confirmDialog', () => {
     expect(modal.querySelector('.modal-footer [data-bs-dismiss="modal"]')?.textContent).toBe('Nein');
     expect(modal.querySelector('[data-confirm="true"]')?.classList.contains('btn-warning')).toBe(true);
 
-    modal.dispatchEvent(new Event('hidden.bs.modal'));
+    abbrechen();
   });
 
   it('converts newlines in message to <br>', async () => {
     confirmDialog('Zeile1\nZeile2');
     const body = getModalEl()!.querySelector('.modal-body p')!;
     expect(body.innerHTML).toContain('Zeile1<br>Zeile2');
-    getModalEl()!.dispatchEvent(new Event('hidden.bs.modal'));
+    abbrechen();
   });
 
-  it('removes modal element after hidden.bs.modal', async () => {
+  it('entfernt den Dialog aus dem DOM, sobald er geschlossen wird', async () => {
     const promise = confirmDialog('Test');
-    const modal = getModalEl()!;
-    modal.dispatchEvent(new Event('hidden.bs.modal'));
+    abbrechen();
     await promise;
-    expect(document.body.querySelector('.modal')).toBeNull();
+    expect(getModalEl()).toBeNull();
   });
 });

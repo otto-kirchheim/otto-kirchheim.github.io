@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { loginUserMock, loginWithPasskeyMock, showMock, getOrCreateInstanceMock, browserSupportsWebAuthnMock } = (
+const { loginUserMock, loginWithPasskeyMock, browserSupportsWebAuthnMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   loginUserMock: vi.fn(),
   loginWithPasskeyMock: vi.fn(),
-  showMock: vi.fn(),
-  getOrCreateInstanceMock: vi.fn(),
   browserSupportsWebAuthnMock: vi.fn(),
 }));
 
@@ -19,19 +17,12 @@ vi.mock('@simplewebauthn/browser', () => ({
   browserSupportsWebAuthn: browserSupportsWebAuthnMock,
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getOrCreateInstance: getOrCreateInstanceMock,
-  },
-}));
-
 import createModalLogin from '@/core/orchestration/auth/components/createModalLogin';
 
 describe('createModalLogin', () => {
   beforeEach(() => {
     document.body.innerHTML = '<div id="modal"></div>';
     vi.clearAllMocks();
-    getOrCreateInstanceMock.mockReturnValue({ show: showMock });
     browserSupportsWebAuthnMock.mockReturnValue(true);
   });
 

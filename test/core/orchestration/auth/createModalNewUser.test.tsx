@@ -47,8 +47,8 @@ describe('createModalNewUser', () => {
     vi.clearAllMocks();
   });
 
-  it('ruft checkNeuerBenutzer mit dem Modal auf, wenn das Formular gültig ist', () => {
-    const fakeModal = setupShowModalMock(true);
+  it('ruft checkNeuerBenutzer auf, wenn das Formular gültig ist', () => {
+    setupShowModalMock(true);
     createModalNewUser();
 
     const preventDefault = vi.fn();
@@ -56,7 +56,7 @@ describe('createModalNewUser', () => {
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(getForm().classList.contains('was-validated')).toBe(true);
-    expect(checkNeuerBenutzerMock).toHaveBeenCalledWith(fakeModal);
+    expect(checkNeuerBenutzerMock).toHaveBeenCalledTimes(1);
   });
 
   it('bricht ab und ruft checkNeuerBenutzer nicht auf, wenn das Formular ungültig ist', () => {

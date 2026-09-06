@@ -1,10 +1,9 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
 import type { Column } from '@/infrastructure/table/CustomTable';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import { default as applySelectOptions } from '../../Neben/utils/applySelectOptions';
 import type { CustomHTMLDivElement, IDatenEA, IDatenEWT } from '@/types';
@@ -224,7 +223,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       persistEaTableData(table);
     };
   }

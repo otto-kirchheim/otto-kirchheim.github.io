@@ -16,7 +16,7 @@ describe('MyDivModal', () => {
 
     expect(container.querySelector('.modal-dialog')).not.toBeNull();
     expect(container.querySelector('.modal-content')?.className).toBe('modal-content');
-    expect(container.querySelector('.modal-header h5.modal-title')?.textContent).toBe('Test Titel');
+    expect(container.querySelector('.modal-header .modal-title')?.textContent).toBe('Test Titel');
     expect(container.querySelector('.my-child')?.textContent).toBe('Kind');
     expect(container.querySelector('.modal-footer button[type="submit"]')?.textContent).toBe('Hinzufügen');
     expect(container.querySelector('.alert-danger')).toBeNull();
@@ -40,7 +40,7 @@ describe('MyDivModal', () => {
   it('should pass helpContext through to the default MyModalHeader', () => {
     const container = renderMyDivModal({ title: 'Titel', helpContext: 'tab.start' });
 
-    expect(container.querySelector('[aria-label="Hilfe anzeigen"]')).not.toBeNull();
+    expect(container.querySelector('[data-icon="question_mark_circle"]')).not.toBeNull();
   });
 
   it('should render a custom Header instead of the default MyModalHeader', () => {

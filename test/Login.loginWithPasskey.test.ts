@@ -10,7 +10,6 @@ const resetTokenStateMock = vi.fn();
 const startAuthenticationMock = vi.fn();
 const browserSupportsWebAuthnMock = vi.fn();
 const hideMock = vi.fn();
-const getInstanceMock = vi.fn();
 
 vi.mock('@/core/orchestration/auth/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
@@ -42,11 +41,7 @@ vi.mock('@simplewebauthn/browser', () => ({
   WebAuthnError: class WebAuthnError extends Error {},
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: getInstanceMock,
-  },
-}));
+vi.mock('@/components', () => ({ schliesseModal: hideMock }));
 
 import loginWithPasskey from '@/core/orchestration/auth/utils/loginWithPasskey';
 
@@ -69,7 +64,6 @@ describe('loginWithPasskey', () => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
     browserSupportsWebAuthnMock.mockReturnValue(true);
-    getInstanceMock.mockReturnValue({ hide: hideMock });
   });
 
   it('startet bei leerem Benutzernamen trotzdem die explizite Passkey-Abfrage', async () => {

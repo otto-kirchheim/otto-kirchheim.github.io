@@ -1,10 +1,10 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { userLoginSuccess } from '.';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
 import { authApi } from '@/infrastructure/api/apiService';
 import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern';
 import type { CustomHTMLDivElement } from '@/types';
+import { schliesseModal } from '@/components';
 
 export default async function loginUser(
   modal: CustomHTMLDivElement,
@@ -42,7 +42,7 @@ export default async function loginUser(
     await authApi.login(username, passwort);
     resetTokenState();
     const me = await authApi.me().catch(() => null);
-    Modal.getInstance(modal)?.hide();
+    schliesseModal();
     await userLoginSuccess({ username, role: me?.role, email: me?.email, emailVerified: me?.emailVerified });
   } catch (err: unknown) {
     if (err instanceof Error) {

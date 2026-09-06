@@ -2,17 +2,17 @@ import { huelleMock, inputMock } from '../../reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h } from 'react';
 
-const { showModalMock, createSnackBarMock, updateUserPasswordMock, hideMock, getInstanceMock } = (
+const { showModalMock, createSnackBarMock, updateUserPasswordMock, hideMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   updateUserPasswordMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,
@@ -26,10 +26,6 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
 
 vi.mock('@/features/Admin/utils/api', () => ({
   updateUserPassword: updateUserPasswordMock,
-}));
-
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: { getInstance: getInstanceMock },
 }));
 
 import createAdminUserPasswordModal from '@/features/Admin/components/createAdminUserPasswordModal';
@@ -60,7 +56,6 @@ describe('createAdminUserPasswordModal', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupShowModalMock();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 

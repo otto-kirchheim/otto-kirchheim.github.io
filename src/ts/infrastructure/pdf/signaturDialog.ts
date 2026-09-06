@@ -1,4 +1,4 @@
-import Modal from 'bootstrap/js/dist/modal';
+import { erzeugeDbDialog } from '@/infrastructure/ui/dbDialog';
 import Storage from '../storage/Storage';
 import { erstelleSignaturPad, holeSignaturPng, setzeSignaturPng } from './signaturePad';
 
@@ -81,15 +81,27 @@ type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
  */
 function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
   return new Promise<SignaturWahl>(resolve => {
+    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus, sonst blendet Bootstrap
+    // den Inhalt im Dialog aus (`display: none`).
     const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.setAttribute('tabindex', '-1');
     modal.innerHTML = `
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Unterschrift</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="db-drawer-header modal-header">
+            <header class="db-drawer-header-container">
+              <h5 class="modal-title">Unterschrift</h5>
+            </header>
+            <button
+              type="button"
+              class="db-button"
+              data-variant="ghost"
+              data-icon="cross"
+              data-no-text="true"
+              data-bs-dismiss="modal"
+              aria-label="Schließen"
+            >
+              Schließen
+            </button>
           </div>
           <div class="modal-body">
             ${
@@ -120,27 +132,19 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
       </div>
     `;
 
-    document.body.appendChild(modal);
-    const bsModal = new Modal(modal, { backdrop: 'static', keyboard: false });
-    let resolved = false;
-
-    const finish = (wahl: SignaturWahl) => {
-      if (resolved) return;
-      resolved = true;
-      bsModal.hide();
-      resolve(wahl);
-    };
-
-    modal.querySelectorAll<HTMLButtonElement>('[data-wahl]').forEach(btn => {
-      btn.addEventListener('click', () => finish(btn.dataset['wahl'] as SignaturWahl));
+    let wahl: SignaturWahl = 'ohne';
+    const { inhalt, schliessen } = erzeugeDbDialog(() => resolve(wahl), {
+      hintergrundSchliesst: false,
+      escapeSchliesst: false,
     });
-    modal.addEventListener('hidden.bs.modal', () => {
-      finish('ohne');
-      bsModal.dispose();
-      modal.remove();
-    });
+    inhalt.append(modal);
 
-    bsModal.show();
+    inhalt.querySelectorAll<HTMLButtonElement>('[data-wahl]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        wahl = btn.dataset['wahl'] as SignaturWahl;
+        schliessen();
+      });
+    });
   });
 }
 
@@ -168,15 +172,27 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
   // wahl === 'neu' -- weiter zum Pad, ggf. vorbefüllt mit der bisherigen Unterschrift
 
   return new Promise<SignaturErgebnis>(resolve => {
+    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus, sonst blendet Bootstrap
+    // den Inhalt im Dialog aus (`display: none`).
     const modal = document.createElement('div');
-    modal.className = 'modal fade';
-    modal.setAttribute('tabindex', '-1');
     modal.innerHTML = `
       <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Unterschrift</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <div class="db-drawer-header modal-header">
+            <header class="db-drawer-header-container">
+              <h5 class="modal-title">Unterschrift</h5>
+            </header>
+            <button
+              type="button"
+              class="db-button"
+              data-variant="ghost"
+              data-icon="cross"
+              data-no-text="true"
+              data-bs-dismiss="modal"
+              aria-label="Schließen"
+            >
+              Schließen
+            </button>
           </div>
           <div class="modal-body">
             <canvas class="signatur-canvas"></canvas>
@@ -193,24 +209,25 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
       </div>
     `;
 
-    document.body.appendChild(modal);
-
     const canvas = modal.querySelector('canvas')!;
     const header = modal.querySelector<HTMLElement>('.modal-header')!;
     const body = modal.querySelector<HTMLElement>('.modal-body')!;
     const footer = modal.querySelector<HTMLElement>('.modal-footer')!;
     const dialog = modal.querySelector<HTMLElement>('.modal-dialog')!;
     const content = modal.querySelector<HTMLElement>('.modal-content')!;
-    const bsModal = new Modal(modal, { backdrop: 'static', keyboard: false });
     let pad: ReturnType<typeof erstelleSignaturPad> | undefined;
-    let resolved = false;
+    let ergebnis: string | undefined;
 
-    const finish = (png: string | undefined) => {
-      if (resolved) return;
-      resolved = true;
-      bsModal.hide();
-      resolve({ png, digital: false });
-    };
+    const { inhalt, schliessen } = erzeugeDbDialog(
+      () => {
+        window.removeEventListener('resize', aufResizeReagieren);
+        resolve({ png: ergebnis, digital: false });
+      },
+      // Das Unterschriftenfeld braucht die volle Breite -- die Standardbreite des Drawers
+      // (36rem) liess im Querformat kaum Platz zum Schreiben.
+      { hintergrundSchliesst: false, escapeSchliesst: false, rahmenKlassen: ['signatur-drawer'] },
+    );
+    inhalt.append(modal);
 
     /**
      * Setzt Canvas-CSS-Größe und Dialog-Breite passend zueinander (siehe `berechneCanvasGroesse()`)
@@ -245,7 +262,11 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
       dialog.style.maxWidth = hoehengebunden ? '100vw' : `${breite + paddingX}px`;
     };
 
-    modal.addEventListener('shown.bs.modal', () => {
+    // Der native `<dialog>` ist nach `showModal()` sofort sichtbar -- anders als beim
+    // Bootstrap-Modal braucht das Pad kein `shown`-Ereignis mehr abzuwarten. Die Messung
+    // laeuft trotzdem erst im naechsten Frame, damit Layout und Schriften stehen.
+    requestAnimationFrame(() => {
+      if (!canvas.isConnected) return; // Dialog war schneller wieder zu als der naechste Frame
       aufGroesseAnpassen();
       pad = erstelleSignaturPad(canvas);
       if (cachedPng) void setzeSignaturPng(pad, cachedPng);
@@ -262,7 +283,9 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
      * Größe umzurechnen) ist fehleranfällig, die paar Striche sind schnell nachgezogen.
      */
     const aufResizeReagieren = () => {
-      if (!pad) return;
+      // `isConnected` faengt den Fall ab, dass der Dialog schon aus dem Dokument ist, der
+      // Listener aber noch haengt (Abbau ueber einen anderen Weg als `schliessen()`).
+      if (!pad || !canvas.isConnected) return;
       aufGroesseAnpassen();
       pad.off();
       pad = erstelleSignaturPad(canvas);
@@ -282,15 +305,8 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
       } else {
         Storage.remove('signaturCache');
       }
-      finish(png);
+      ergebnis = png;
+      schliessen();
     });
-    modal.addEventListener('hidden.bs.modal', () => {
-      window.removeEventListener('resize', aufResizeReagieren);
-      finish(undefined);
-      bsModal.dispose();
-      modal.remove();
-    });
-
-    bsModal.show();
   });
 }

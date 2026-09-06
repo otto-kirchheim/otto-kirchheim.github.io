@@ -80,6 +80,7 @@ import Collapse from 'bootstrap/js/dist/collapse';
 import Popover from 'bootstrap/js/dist/popover';
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
+import { initStatischeDialoge } from '@/infrastructure/ui/dbDialog';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -90,6 +91,7 @@ registerAppStartTask(() => {
   // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
   initTabController();
   initNavSchublade();
+  initStatischeDialoge();
 
   Array.from(document.querySelectorAll('.collapse')).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
   Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(

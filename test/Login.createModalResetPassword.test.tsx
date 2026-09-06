@@ -1,17 +1,17 @@
 import { huelleMock, inputMock } from './reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock, getInstanceMock } = (
+const { showModalMock, createSnackBarMock, resetPasswordMock, hideMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   resetPasswordMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,
@@ -25,12 +25,6 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
 vi.mock('@/infrastructure/api/apiService', () => ({
   authApi: {
     resetPassword: resetPasswordMock,
-  },
-}));
-
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: getInstanceMock,
   },
 }));
 
@@ -64,7 +58,6 @@ describe('createModalResetPassword', () => {
     document.body.innerHTML = '<div id="errorMessage"></div>';
     vi.clearAllMocks();
     setupShowModalMock();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 

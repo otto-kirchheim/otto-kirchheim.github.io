@@ -693,6 +693,45 @@ body {
   inline-size: 100%;
 }
 
+// --- Dialoge als DB-Drawer ------------------------------------------------------------------
+// Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die Bootstrap-Huellen
+// darin liefern nur noch Kopfzeile, Rumpf und Fusszeile -- Rahmen, Hintergrund und Abstand
+// kommen vom Drawer, sonst staende ein Kasten im Kasten. Faellt mit Bootstrap (Phase H).
+.db-drawer:not(.db-header-drawer) {
+  --db-drawer-max-width: 36rem;
+}
+
+// Das Unterschriftenfeld nutzt den ganzen Bildschirm -- im Querformat bleibt sonst nur ein
+// schmaler Streifen zum Schreiben (`signaturDialog.ts` rechnet die Canvas-Groesse daraus).
+.db-drawer:has(> .signatur-drawer) {
+  --db-drawer-max-width: 100vw;
+}
+
+.signatur-drawer {
+  inline-size: 100vw;
+  max-inline-size: 100vw;
+  border-radius: 0;
+}
+
+.db-drawer-content {
+  .modal-dialog {
+    margin: 0;
+    max-width: none;
+    inline-size: 100%;
+  }
+
+  .modal-content {
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: var(--db-divider-bg-color);
+  }
+}
+
 // Bootstraps `.invalid-feedback` blendet sich nur ueber den Geschwister-Selektor
 // `.is-invalid ~ .invalid-feedback` ein -- im DB-Input-Markup greift der nicht mehr.
 // Der leere Container ist unsichtbar, gefuellt wird er von EWT/addressValidation.

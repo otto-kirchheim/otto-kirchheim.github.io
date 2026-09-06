@@ -21,7 +21,7 @@
   divergiert von `origin/main` – Sync + Arbeitsbranch-Wechsel offen (User-Rückfrage).
 - **Noch offen in Phase 0:** `.env.example` (Sandbox-Deny → Phase B), Frontend-Gitlink-Bump
   im Parent (bewusst erst später).
-- **Phase A, B, C, F, G, D** – erledigt (Branch `feat/db-ux`); **E, H, I** – offen.
+- **Phase A, B, C, F, G, D, E** – erledigt (Branch `feat/db-ux`); **H, I** – offen.
 
 Für Phase B werden die DB-Markentheme-Secrets gebraucht: `frontend/.env` (gitignored)
 mit `ASSET_PASSWORD` / `ASSET_INIT_VECTOR` aus dem DB-Marketingportal; `bun install`

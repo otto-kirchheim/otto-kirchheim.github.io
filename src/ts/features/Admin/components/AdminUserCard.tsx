@@ -59,8 +59,7 @@ export function AdminUserCard({
           className="card-header d-flex justify-content-between align-items-center py-2"
           style={{ cursor: 'pointer' }}
           onClick={onToggleExpand}
-          data-bs-toggle="tooltip"
-          data-bs-title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
+          title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
         >
           <div className="d-flex align-items-center gap-2 text-truncate">
             {isSuperAdmin && !isSelfRow && (

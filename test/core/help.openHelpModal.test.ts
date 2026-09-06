@@ -1,14 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const showMock = vi.fn();
-const disposeMock = vi.fn();
-const ModalConstructor = vi.fn(() => ({ show: showMock, dispose: disposeMock }));
-vi.mock('bootstrap/js/dist/modal', () => ({ default: ModalConstructor }));
-
 import { openHelpModal } from '@/core/help/openHelpModal';
 
 function getModalEl() {
-  return document.body.querySelector<HTMLElement>('.modal');
+  return document.body.querySelector<HTMLDialogElement>('dialog.db-drawer');
 }
 
 describe('openHelpModal', () => {
@@ -24,7 +19,7 @@ describe('openHelpModal', () => {
     expect(modal).not.toBeNull();
     expect(modal?.textContent).toContain('EWT');
     expect(modal?.textContent).toContain('Berechnen');
-    expect(showMock).toHaveBeenCalledTimes(1);
+    expect(modal?.hasAttribute('open')).toBe(true);
   });
 
   it('does not touch the shared #modal element used by Add/Edit-Modals', () => {
@@ -35,13 +30,11 @@ describe('openHelpModal', () => {
     expect(document.querySelector('#modal')?.textContent).toBe('bestehende Eingaben');
   });
 
-  it('cleans up the dedicated modal element after hidden.bs.modal', () => {
+  it('räumt den eigenen Dialog beim Schließen wieder ab', () => {
     openHelpModal('tab.neben');
 
-    const modal = getModalEl()!;
-    modal.dispatchEvent(new Event('hidden.bs.modal'));
+    getModalEl()!.querySelector<HTMLButtonElement>('[data-bs-dismiss="modal"]')!.click();
 
-    expect(disposeMock).toHaveBeenCalledTimes(1);
-    expect(document.body.querySelector('.modal')).toBeNull();
+    expect(getModalEl()).toBeNull();
   });
 });

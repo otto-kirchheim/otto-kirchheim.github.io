@@ -8,7 +8,7 @@ export default function createModalNewUser(): void {
   const ref = createRef<HTMLFormElement>();
   const passwortRef = createRef<HTMLInputElement>();
 
-  const modal = showModal(
+  showModal(
     <MyFormModal myRef={ref} title="Neuen Benutzer Erstellen" submitText="Erstellen" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
@@ -114,7 +114,7 @@ export default function createModalNewUser(): void {
       event.preventDefault();
       form.classList.add('was-validated');
       if (form.checkValidity && !form.checkValidity()) return;
-      checkNeuerBenutzer(modal);
+      checkNeuerBenutzer();
     };
   }
 }

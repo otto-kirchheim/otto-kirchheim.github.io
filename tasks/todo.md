@@ -1,3 +1,44 @@
+# Aktueller Plan: DB-UX-Migration -- Phase E (Modal-Infrastruktur -> DB-Drawer) - 2026-09-06
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase E. DB UX v5 hat keine Modal-Komponente;
+`DBDrawer` ist das Pendant und baut auf nativem `<dialog>`. 21 Aufrufstellen von `showModal`,
+dazu drei Vanilla-Dialoge (Bestaetigung, AutoSave-Fehler, Unterschrift) und zwei
+eigenstaendige (Hilfe, Platzhalter-Hilfe im FormularEditor).
+
+## Aufgaben
+
+- [x] `components/showModal.tsx` auf `DBDrawer`; Vertrag (`#modal` synchron, `.row`/`.role`,
+      Feld-Ids) unveraendert; `data-bs-dismiss="modal"` per Delegation
+- [x] `infrastructure/ui/dbDialog.ts` (neu) als Vanilla-Gegenstueck inkl. `escapeSchliesst`
+- [x] `confirmDialog`, AutoSave-Fehlerdialog, Signatur-Dialoge, Hilfe, Platzhalter-Hilfe
+- [x] Alle `Modal.getInstance(...)?.hide()` -> `schliesseModal()` (17 Dateien); `schliesseModal`
+      und `oeffneDrawer` ueber den `@/components`-Barrel
+- [x] Kopfzeilen im DB-Drawer-Aufbau (`MyModalHeader`, Signatur-Dialoge)
+- [x] Impressum von `data-bs-toggle="modal"` auf `data-dialog-target`
+- [x] Admin-Unternavigation auf den `tabController` (Tab-Gruppen statt fester `#tabContent`)
+- [x] Unterschriftenfeld nutzt im Querformat die volle Breite
+- [x] Tooltip in `AdminUserCard` auf `title` (Bootstrap-Tooltip seit Phase F weg)
+- [x] Tests: 17 Dateien von der Bootstrap-Attrappe auf `schliesseModal`/`<dialog>` umgestellt,
+      `HTMLDialogElement`-Polyfill in `test/setupBun.ts`
+
+## Verifikation
+
+- `bun run lint` 0 Fehler, `bun run test` 2083/2083 gruen, `bun run build` erfolgreich.
+- Puppeteer-Smokes gegen den Dev-Server: EWT-Dialog oeffnet mit erreichbaren Feld-Ids
+  (`#Tag`), Desktop als Seitenpanel und Handy in voller Breite; Impressum oeffnet und
+  schliesst ueber X und Fusszeilen-Knopf; Unterschriftenfeld im Querformat 685x274 statt
+  603x241 px.
+
+## Offen / Naechste Phasen
+
+- `CustomSnackbar` auf DB-Notification-Optik (kosmetisch).
+- H (Bootstrap raus -- inkl. der `.modal-*`-Huellen und der letzten Plugins `Collapse`,
+  `Popover`), danach I (Cleanup).
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase D (App-Shell / Navigation / index.html) - 2026-09-06
 
 ## Ausgangslage

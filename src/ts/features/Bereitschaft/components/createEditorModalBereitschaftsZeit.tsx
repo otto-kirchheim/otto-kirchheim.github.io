@@ -1,10 +1,9 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent, type ReactNode } from 'react';
 
 import type { Column } from '@/infrastructure/table/CustomTable';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenBZ } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -171,7 +170,7 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
       if (row instanceof Row) row.val(values);
       else row.rows.add(values);
 
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       persistBereitschaftsZeitraumTableData(table);
     };
   }

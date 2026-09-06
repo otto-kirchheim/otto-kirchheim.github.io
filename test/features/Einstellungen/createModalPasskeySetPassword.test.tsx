@@ -13,7 +13,6 @@ const {
   getPasskeyErrorMessageMock,
   resetTokenStateMock,
   hideMock,
-  getInstanceMock,
 } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),
   createSnackBarMock: vi.fn(),
@@ -25,10 +24,10 @@ const {
   getPasskeyErrorMessageMock: vi.fn(),
   resetTokenStateMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/components', () => ({
+  schliesseModal: hideMock,
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,
@@ -64,10 +63,6 @@ vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: { getInstance: getInstanceMock },
-}));
-
 import createModalPasskeySetPassword from '@/features/Einstellungen/components/createModalPasskeySetPassword';
 
 function setupShowModalMock(): void {
@@ -100,7 +95,6 @@ describe('createModalPasskeySetPassword', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setupShowModalMock();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     browserSupportsWebAuthnMock.mockReturnValue(true);
     getUserCookieMock.mockReturnValue({ userName: 'max.mustermann' });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });

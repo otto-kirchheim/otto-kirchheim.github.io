@@ -1,8 +1,8 @@
-import Modal from 'bootstrap/js/dist/modal';
-import { mount, unmount } from '@/infrastructure/ui';
+import { unmount } from '@/infrastructure/ui';
 
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { oeffneDrawer } from '@/components';
 
 /**
  * Wählt EINEN Datenpfad -- für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel
@@ -268,11 +268,9 @@ function PlatzhalterHilfeInhalt() {
  */
 export function openPlatzhalterHilfe(): void {
   const container = document.createElement('div');
-  container.className = 'modal fade';
-  container.setAttribute('tabindex', '-1');
   document.body.appendChild(container);
 
-  mount(
+  oeffneDrawer(
     container,
     <div className="modal-dialog modal-dialog-scrollable modal-lg">
       <div className="modal-content">
@@ -285,17 +283,9 @@ export function openPlatzhalterHilfe(): void {
         </div>
       </div>
     </div>,
-  );
-
-  const bsModal = new Modal(container);
-  container.addEventListener(
-    'hidden.bs.modal',
     () => {
       unmount(container);
-      bsModal.dispose();
       container.remove();
     },
-    { once: true },
   );
-  bsModal.show();
 }

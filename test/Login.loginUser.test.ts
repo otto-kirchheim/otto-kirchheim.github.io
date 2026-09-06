@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock, getInstanceMock } = (
+const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMock, hideMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
   userLoginSuccessMock: vi.fn(),
@@ -9,7 +9,6 @@ const { userLoginSuccessMock, setLoadingMock, clearLoadingMock, loginMock, meMoc
   loginMock: vi.fn(),
   meMock: vi.fn(),
   hideMock: vi.fn(),
-  getInstanceMock: vi.fn(),
 }));
 
 vi.mock('@/core/orchestration/auth/utils', () => ({
@@ -31,11 +30,7 @@ vi.mock('@/infrastructure/api/apiService', () => ({
   },
 }));
 
-vi.mock('bootstrap/js/dist/modal', () => ({
-  default: {
-    getInstance: getInstanceMock,
-  },
-}));
+vi.mock('@/components', () => ({ schliesseModal: hideMock }));
 
 import loginUser from '@/core/orchestration/auth/utils/loginUser';
 
@@ -58,7 +53,6 @@ describe('loginUser', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
-    getInstanceMock.mockReturnValue({ hide: hideMock });
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
@@ -90,7 +84,6 @@ describe('loginUser', () => {
 
     expect(loginMock).toHaveBeenCalledWith('otto', 'secret');
     expect(meMock).toHaveBeenCalledTimes(1);
-    expect(getInstanceMock).toHaveBeenCalledWith(modal);
     expect(hideMock).toHaveBeenCalledTimes(1);
     expect(userLoginSuccessMock).toHaveBeenCalledWith({
       username: 'otto',

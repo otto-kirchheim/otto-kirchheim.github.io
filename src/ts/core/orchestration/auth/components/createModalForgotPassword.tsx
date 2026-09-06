@@ -1,7 +1,6 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
-import { MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
 
@@ -49,7 +48,7 @@ export default function createModalForgotPassword(): void {
 
       try {
         await authApi.forgotPassword(emailInput.value.trim());
-        Modal.getInstance(modal)?.hide();
+        schliesseModal();
         createSnackBar({
           message:
             'Falls die E-Mail verifiziert registriert ist, wurde ein Reset-Link versendet. Bitte auch den Junk-E-Mail-Ordner prüfen.',

@@ -1,10 +1,18 @@
-import Modal from 'bootstrap/js/dist/modal';
 import { createRef, type SubmitEvent } from 'react';
 
 import { Row } from '@/infrastructure/table/CustomTable';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import {
+  MyButton,
+  MyCheckbox,
+  MyFormModal,
+  MyInput,
+  MyModalBody,
+  MySelect,
+  schliesseModal,
+  showModal,
+} from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -390,7 +398,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         deletedRowToReactivate.val(values);
       } else row.rows.add(values);
 
-      Modal.getInstance(modal)?.hide();
+      schliesseModal();
       persistEwtTableData(table);
     };
   }
