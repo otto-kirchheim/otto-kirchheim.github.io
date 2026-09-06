@@ -106,7 +106,9 @@ function LinkSection({
         <>
           {!link && (
             <button
-              className="btn btn-outline-primary btn-sm"
+              className="db-button"
+              data-variant="outlined"
+              data-size="small"
               type="button"
               disabled={loading}
               onClick={() => void handleIssue()}
@@ -133,7 +135,9 @@ function LinkSection({
               />
               <div className="d-flex flex-wrap gap-2">
                 <button
-                  className="btn btn-outline-secondary btn-sm"
+                  className="db-button"
+                  data-variant="outlined"
+                  data-size="small"
                   type="button"
                   onClick={() => void copyToClipboard(link.url, 'Link kopiert')}
                 >
@@ -145,7 +149,9 @@ function LinkSection({
                   Link kopieren
                 </button>
                 <button
-                  className="btn btn-outline-secondary btn-sm"
+                  className="db-button"
+                  data-variant="outlined"
+                  data-size="small"
                   type="button"
                   onClick={() => void copyToClipboard(buildShareText(kind, userName, link.url), 'Text kopiert')}
                 >
@@ -194,7 +200,7 @@ function AdminUserLinksModal({
         <LinkSection kind="reset" userId={userId} userName={userName} />
       </div>
       <div className="dialog-fuss">
-        <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">
+        <button className="db-button" data-variant="filled" type="button" data-bs-dismiss="modal">
           Schließen
         </button>
       </div>

@@ -153,7 +153,13 @@ export function AdminProfileTemplateContentEditor({
           ) : (
             <div className="d-flex justify-content-between align-items-center">
               <small className="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
-              <button className="btn btn-sm btn-outline-secondary" onClick={onEnableArbeitszeit} disabled={isSaving}>
+              <button
+                className="db-button"
+                data-variant="outlined"
+                data-size="small"
+                onClick={onEnableArbeitszeit}
+                disabled={isSaving}
+              >
                 Arbeitszeit aktivieren
               </button>
             </div>
@@ -166,7 +172,9 @@ export function AdminProfileTemplateContentEditor({
           <div className="d-flex justify-content-between align-items-center mb-1">
             <label className="form-label small fw-semibold mb-0">Fahrzeit-Einträge</label>
             <button
-              className="btn btn-sm btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
+              data-size="small"
               onClick={onAddFahrzeitRow}
               disabled={isSaving}
               data-disabler
@@ -208,7 +216,9 @@ export function AdminProfileTemplateContentEditor({
                     />
 
                     <button
-                      className="btn btn-outline-danger"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-color="critical"
                       onClick={() => onRemoveFahrzeitRow(index)}
                       disabled={isSaving}
                       data-disabler
@@ -229,7 +239,9 @@ export function AdminProfileTemplateContentEditor({
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="form-label small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
             <button
-              className="btn btn-sm btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
+              data-size="small"
               onClick={onAddVorgabenBRow}
               disabled={isSaving}
               data-disabler
@@ -251,16 +263,18 @@ export function AdminProfileTemplateContentEditor({
               return (
                 <div className="d-flex flex-column gap-2">
                   <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                    <div className="btn-group btn-group-sm" role="group" aria-label="VorgabenB Navigation">
+                    <div className="knopfgruppe" role="group" aria-label="VorgabenB Navigation">
                       <button
-                        className="btn btn-outline-secondary"
+                        className="db-button"
+                        data-variant="outlined"
                         onClick={() => onSelectVorgabenBRow(currentIndex - 1)}
                         disabled={isSaving || currentIndex <= 0}
                       >
                         Zurück
                       </button>
                       <button
-                        className="btn btn-outline-secondary"
+                        className="db-button"
+                        data-variant="outlined"
                         onClick={() => onSelectVorgabenBRow(currentIndex + 1)}
                         disabled={isSaving || currentIndex >= maxIndex}
                       >
@@ -297,7 +311,9 @@ export function AdminProfileTemplateContentEditor({
                       </strong>
                       <div className="d-flex gap-1">
                         <button
-                          className="btn btn-sm btn-outline-secondary"
+                          className="db-button"
+                          data-variant="outlined"
+                          data-size="small"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'up')}
                           disabled={isSaving || currentIndex === 0}
                           title="Nach oben"
@@ -305,7 +321,9 @@ export function AdminProfileTemplateContentEditor({
                           ↑
                         </button>
                         <button
-                          className="btn btn-sm btn-outline-secondary"
+                          className="db-button"
+                          data-variant="outlined"
+                          data-size="small"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'down')}
                           disabled={isSaving || currentIndex === templateContent.VorgabenB.length - 1}
                           title="Nach unten"
@@ -314,7 +332,10 @@ export function AdminProfileTemplateContentEditor({
                         </button>
                         {!row.value.standard && (
                           <button
-                            className="btn btn-sm btn-outline-success"
+                            className="db-button"
+                            data-variant="outlined"
+                            data-color="successful"
+                            data-size="small"
                             onClick={() => onSetVorgabenBStandard(currentIndex)}
                             disabled={isSaving}
                           >
@@ -322,7 +343,10 @@ export function AdminProfileTemplateContentEditor({
                           </button>
                         )}
                         <button
-                          className="btn btn-sm btn-outline-danger"
+                          className="db-button"
+                          data-variant="outlined"
+                          data-color="critical"
+                          data-size="small"
                           onClick={() => onRemoveVorgabenBRow(currentIndex)}
                           disabled={isSaving}
                           data-disabler

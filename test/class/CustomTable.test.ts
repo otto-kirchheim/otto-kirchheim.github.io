@@ -98,9 +98,9 @@ describe('CustomTable', () => {
     const tbody = document.querySelector('tbody');
     expect(tbody).not.toBeNull();
 
-    const undoButton = tbody?.querySelector('.btn-outline-warning');
-    const editButton = tbody?.querySelector('.btn-outline-primary');
-    const deleteButton = tbody?.querySelector('.btn-outline-danger');
+    const undoButton = tbody?.querySelector('[data-color="warning"]');
+    const editButton = tbody?.querySelector('[data-variant="outlined"]:not([data-color])');
+    const deleteButton = tbody?.querySelector('[data-color="critical"]');
 
     expect(undoButton).not.toBeNull();
     expect(editButton).toBeNull();
@@ -602,7 +602,7 @@ describe('CustomTable', () => {
       rows: [{ _id: '1', label: 'A', value: 1 }],
     });
 
-    const addButton = document.querySelector<HTMLButtonElement>('tfoot .btn-primary');
+    const addButton = document.querySelector<HTMLButtonElement>('tfoot [data-variant="brand"]');
     const editButton = document.querySelector<HTMLButtonElement>(
       'tbody .db-button[data-variant="outlined"]:not([data-color])',
     );

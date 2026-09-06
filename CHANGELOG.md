@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (64)
+
+### refactor (DB-UX-Migration Phase H: Buttons auf DB UX)
+
+Alle Schaltflaechen sind `db-button`; Bootstraps `btn`-Klassen kommen in `src/` nicht mehr vor
+(257 Stellen in 59 Dateien).
+
+- **Zuordnung** wie in `infrastructure/ui/dbButton.ts` schon angelegt: `btn-primary` ->
+  `data-variant="brand"`, `btn-secondary` -> `filled`, `btn-outline-*` -> `outlined`,
+  `btn-link` -> `ghost`, `btn-sm` -> `data-size="small"`, `w-100` -> `data-width="full"`.
+  Die Semantikfarben kommen ueber `data-color` (`critical`, `successful`, `warning`,
+  `informational`) -- DB faerbt darueber die adaptiven Tokens von `filled`/`outlined`/`ghost`
+  um, `brand` bleibt immer DB-Rot. `btn-outline-success` und `btn-outline-warning` in der
+  Zuordnung ergaenzt.
+- **`btn-close`** ist ein DB-Ghost-Icon-Button (`data-icon="cross"`, `data-no-text`) und
+  traegt jetzt einen Text -- vorher waren die Knoepfe leer und damit ohne Namen fuer
+  Screenreader.
+- **`btn-group`** -> `.knopfgruppe`: eine Reihe mit kleinem Abstand statt zusammengeschobener
+  Knoepfe mit geteilten Rahmen.
+- **`MyButton`** nimmt die DB-Attribute direkt entgegen (`data-variant`, `data-color`,
+  `data-size`, `data-width`) statt eine Bootstrap-Klassenliste zu zerlegen. `buttonLook()`
+  bleibt fuer die `classes`-Option von `CustomTable`.
+- **`confirmDialog`** kennt statt `confirmClass` jetzt `confirmVariant` und `confirmColor`.
+- **Dark-Theme-Korrekturen** fuer `.btn-outline-*` sind entfallen -- sie stellten
+  `--bs-btn-*`-Variablen gerade, die kein Knopf mehr liest.
+- **`setNaechsterEwtTag`** sucht den Speichern-Knopf jetzt ueber
+  `button[data-variant="brand"]`.
+
 ## 2026-09-06 (63)
 
 ### refactor (DB-UX-Migration Phase H: Raster und Akkordeon ohne Bootstrap)

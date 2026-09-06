@@ -59,24 +59,28 @@ body {
 // Icon-Buttons: `.db-icon` hat selbst `font-size: 0`, das Glyph sitzt im `::before` und
 // richtet sich an der Grundlinie aus -- neben 1-rem-Text sah das zu gross und zu tief aus.
 // Eine Flex-Zeile zentriert beides zueinander, die Groesse haengt an der Button-Schrift.
-.btn:has(> .db-icon) {
+.db-button:has(> .db-icon) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
 }
 
-.btn > .db-icon {
+.db-button > .db-icon {
   --db-icon-font-size: 1.25rem;
   --db-icon-vertical-align: middle;
 }
 
-.btn-lg > .db-icon {
-  --db-icon-font-size: 1.5rem;
+.db-button[data-size='small'] > .db-icon {
+  --db-icon-font-size: 1rem;
 }
 
-.btn-sm > .db-icon {
-  --db-icon-font-size: 1rem;
+// Knopfgruppe (Ersatz fuer Bootstraps `.btn-group`): eine Reihe mit kleinem Abstand statt
+// zusammengeschobener Knoepfe mit geteilten Rahmen.
+.knopfgruppe {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 .big-icons {
   margin-right: 0.35rem;
@@ -265,7 +269,7 @@ td:has(.SchichtBereitschaft) {
     float: none;
   }
 
-  .btn {
+  .db-button {
     margin: 0;
   }
 }
@@ -405,34 +409,6 @@ body {
   }
 }
 
-// Bootstrap überschreibt die Farb-Variablen von .btn-outline-* im Dark-Theme nicht -- die festen
-// Grundfarben (Rahmen/Text) haben auf dunklem Hintergrund zu wenig Kontrast (secondary/primary am
-// stärksten betroffen, da Grau/Blau gegen den neutralen Dark-Hintergrund kaum Eigenfarbe hergeben).
-// Zusätzlich unterscheidet sich der deaktivierte Zustand bei JEDER Outline-Variante nur durch 65%
-// Opacity von der aktiven Farbe -- kaum auseinanderzuhalten. Wir binden stattdessen die
-// theme-eigenen Tokens ein, die Bootstrap für genau diesen Zweck bereits mitliefert.
-[data-bs-theme='dark'] .btn-outline-secondary {
-  --bs-btn-color: var(--bs-secondary-text-emphasis);
-  --bs-btn-border-color: var(--bs-secondary-text-emphasis);
-}
-
-[data-bs-theme='dark'] .btn-outline-primary {
-  --bs-btn-color: var(--bs-primary-text-emphasis);
-  --bs-btn-border-color: var(--bs-primary-text-emphasis);
-}
-
-// Deaktivierte Outline-Buttons einheitlich auf den Dark-Theme-Rahmenton -- deutlich stumpfer als
-// jede aktive Farbe, damit "deaktiviert" auf den ersten Blick erkennbar bleibt.
-[data-bs-theme='dark'] .btn-outline-secondary,
-[data-bs-theme='dark'] .btn-outline-primary,
-[data-bs-theme='dark'] .btn-outline-success,
-[data-bs-theme='dark'] .btn-outline-danger,
-[data-bs-theme='dark'] .btn-outline-warning,
-[data-bs-theme='dark'] .btn-outline-info {
-  --bs-btn-disabled-color: var(--bs-border-color);
-  --bs-btn-disabled-border-color: var(--bs-border-color);
-}
-
 .admin-user-cards {
   column-count: 1;
   column-gap: 1rem;
@@ -476,7 +452,7 @@ body {
   flex: 0 0 5.75rem;
 }
 
-.admin-fahrzeit-input-group > .btn {
+.admin-fahrzeit-input-group > .db-button {
   flex: 0 0 auto;
 }
 
@@ -569,7 +545,7 @@ body {
     flex: 0 0 4.25rem;
   }
 
-  .admin-fahrzeit-input-group > .btn {
+  .admin-fahrzeit-input-group > .db-button {
     flex: 0 0 2.25rem;
     padding-right: 0.25rem;
     padding-left: 0.25rem;

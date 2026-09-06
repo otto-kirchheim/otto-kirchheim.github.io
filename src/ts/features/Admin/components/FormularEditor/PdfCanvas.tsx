@@ -462,7 +462,9 @@ export function PdfCanvas({
       <div className="d-flex align-items-center flex-wrap gap-2 mb-1 small">
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-size="small"
           disabled={!pdf || angezeigt <= 0}
           onClick={() => setAngezeigt(i => i - 1)}
         >
@@ -473,7 +475,9 @@ export function PdfCanvas({
         </span>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-size="small"
           disabled={!pdf || angezeigt >= (pdf?.numPages ?? 1) - 1}
           onClick={() => setAngezeigt(i => i + 1)}
         >
@@ -481,7 +485,9 @@ export function PdfCanvas({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-size="small"
           disabled={!pdf}
           onClick={() => onQuelleWaehlen(angezeigt)}
         >

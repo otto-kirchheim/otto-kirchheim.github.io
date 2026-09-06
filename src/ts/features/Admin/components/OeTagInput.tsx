@@ -44,11 +44,15 @@ export function OeTagInput({
             {!disabled && (
               <button
                 type="button"
-                className="btn-close btn-close-white ms-1"
-                style={{ fontSize: '0.55em' }}
-                aria-label={`${oe} entfernen`}
+                className="db-button ms-1"
+                data-icon="cross"
+                data-variant="ghost"
+                data-size="small"
+                data-no-text="true"
                 onClick={() => handleRemove(index)}
-              />
+              >
+                {`${oe} entfernen`}
+              </button>
             )}
           </span>
         ))}
@@ -58,8 +62,11 @@ export function OeTagInput({
           <span className="text-body-secondary small">{placeholder}</span>
           <OeLevelBoxes value={inputValue} onChange={setInputValue} defaultLevelCount={defaultLevelCount} />
           <button
-            className="btn btn-outline-primary btn-sm"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
             type="button"
+            aria-label="Wert hinzufügen"
             onClick={handleAdd}
             disabled={!inputValue.trim()}
           >

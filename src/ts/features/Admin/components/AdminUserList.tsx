@@ -315,7 +315,13 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           </div>
         </div>
         <div className="d-flex justify-content-end gap-2">
-          <button className="btn btn-outline-primary btn-sm" type="button" onClick={() => void refreshUsersNow()}>
+          <button
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
+            type="button"
+            onClick={() => void refreshUsersNow()}
+          >
             <DBTooltip placement="top">Lädt die Benutzerliste sofort neu</DBTooltip>
             <span
               className="db-icon me-1 db-font-size-sm"
@@ -325,7 +331,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             Aktualisieren
           </button>
           <button
-            className="btn btn-outline-secondary btn-sm"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
             type="button"
             onClick={resetFilters}
             disabled={!filter.name && !filter.oe && !filter.role}
@@ -378,11 +386,17 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       {isSuperAdmin && selectedUsers.length > 0 && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
           <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
-          <button className="btn btn-primary btn-sm" type="button" onClick={openBulkEdit}>
+          <button className="db-button" data-variant="brand" data-size="small" type="button" onClick={openBulkEdit}>
             <span className="db-icon me-1 db-font-size-sm" data-icon="pen" style={{ verticalAlign: 'middle' }} />
             Massenänderung
           </button>
-          <button className="btn btn-outline-secondary btn-sm" type="button" onClick={() => setSelectedIds(new Set())}>
+          <button
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
+            type="button"
+            onClick={() => setSelectedIds(new Set())}
+          >
             Auswahl aufheben
           </button>
         </div>

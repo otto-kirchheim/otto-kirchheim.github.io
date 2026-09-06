@@ -569,7 +569,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </ul>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           title="Alle Koordinaten proportional umrechnen — z.B. nach dem Wechsel auf eine Vorlage mit anderer Seitengröße"
           disabled={skalier !== null}
           onClick={() => void oeffneSkalierenManuell()}
@@ -578,7 +580,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           title="Formularweite Schriftfamilie je Schnitt wählen — mit Live-Vorschau"
           onClick={() => setSchriftDialogOffen(true)}
         >
@@ -586,16 +590,20 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         </button>
         <button
           type="button"
-          className={`btn btn-sm ${messModus ? 'btn-warning' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={messModus ? 'filled' : 'outlined'}
+          data-color={messModus ? 'warning' : undefined}
+          data-size="small"
           title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
           onClick={() => setMessModus(m => !m)}
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
         </button>
-        <div className="btn-group btn-group-sm">
+        <div className="knopfgruppe">
           <button
             type="button"
-            className="btn btn-primary"
+            className="db-button"
+            data-variant="brand"
             title="Fachlich passende Werte aus dem Datenkatalog — sieht aus wie ein ausgefülltes Formular"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('beispiel')}
@@ -604,7 +612,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           </button>
           <button
             type="button"
-            className="btn btn-outline-primary"
+            className="db-button"
+            data-variant="outlined"
             title="Generische Füllwerte — zeigt vor allem, welche Zelle zu welchem Eintrag gehört"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('platzhalter')}
@@ -730,7 +739,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             {value.seiten.length > 1 && (
               <button
                 type="button"
-                className="btn btn-sm btn-outline-danger mt-2"
+                className="db-button mt-2"
+                data-variant="outlined"
+                data-color="critical"
+                data-size="small"
                 onClick={() => {
                   onChange({ ...value, seiten: value.seiten.filter((_, i) => i !== seitenIndex) });
                   setTab(Math.max(seitenIndex - 1, 0));
@@ -806,12 +818,21 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
       />
       {fehler && <div className="small text-danger mt-1">{fehler}</div>}
       <div className="d-flex gap-1 mt-1">
-        <button type="button" className="btn btn-sm btn-primary" disabled={entwurf === null} onClick={uebernehmen}>
+        <button
+          type="button"
+          className="db-button"
+          data-variant="brand"
+          data-size="small"
+          disabled={entwurf === null}
+          onClick={uebernehmen}
+        >
           Übernehmen
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           disabled={entwurf === null}
           onClick={() => (setEntwurf(null), setFehler(null))}
         >
@@ -819,7 +840,9 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary ms-auto"
+          className="db-button ms-auto"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => void navigator.clipboard?.writeText(angezeigt)}
         >
           In Zwischenablage

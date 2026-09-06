@@ -32,8 +32,8 @@ async function setValue(input: HTMLInputElement, value: string): Promise<void> {
 }
 
 function addButton(container: HTMLDivElement): HTMLButtonElement | undefined {
-  return Array.from(container.querySelectorAll('button')).find(b => !b.hasAttribute('aria-label')) as
-    HTMLButtonElement | undefined;
+  // Der Hinzufuegen-Knopf traegt das Plus-Symbol; die Entfernen-Knoepfe sitzen in den Tags.
+  return container.querySelector<HTMLButtonElement>('button[aria-label="Wert hinzufügen"]') ?? undefined;
 }
 
 describe('OeTagInput', () => {
@@ -92,7 +92,7 @@ describe('OeTagInput', () => {
       },
     });
 
-    (container.querySelector('.badge .btn-close') as HTMLButtonElement).click();
+    (container.querySelector('.badge .db-button[data-icon="cross"]') as HTMLButtonElement).click();
 
     expect(current).toEqual(['IW']);
   });
@@ -100,7 +100,7 @@ describe('OeTagInput', () => {
   it('blendet Eingabe-Bereich und Remove-Buttons aus, wenn disabled=true', () => {
     const container = renderInput({ values: ['V'], disabled: true });
 
-    expect(container.querySelector('.btn-close')).toBeNull();
+    expect(container.querySelector('.db-button[data-icon="cross"]')).toBeNull();
     expect(addButton(container)).toBeUndefined();
   });
 

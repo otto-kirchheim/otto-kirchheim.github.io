@@ -45,19 +45,22 @@ describe('confirmDialog', () => {
     expect(await promise).toBe(true);
   });
 
-  it('renders custom title, labels and class', async () => {
+  it('renders custom title, labels and semantics', async () => {
     confirmDialog('Nachricht', {
       title: 'Mein Titel',
       confirmLabel: 'Ja',
       cancelLabel: 'Nein',
-      confirmClass: 'btn-warning',
+      confirmColor: 'warning',
+      confirmVariant: 'brand',
     });
 
     const modal = getModalEl()!;
+    const bestaetigen = modal.querySelector<HTMLButtonElement>('[data-confirm="true"]')!;
     expect(modal.querySelector('.db-drawer-header h5')?.textContent).toBe('Mein Titel');
-    expect(modal.querySelector('[data-confirm="true"]')?.textContent).toBe('Ja');
+    expect(bestaetigen.textContent).toBe('Ja');
     expect(modal.querySelector('.dialog-fuss [data-bs-dismiss="modal"]')?.textContent).toBe('Nein');
-    expect(modal.querySelector('[data-confirm="true"]')?.classList.contains('btn-warning')).toBe(true);
+    expect(bestaetigen.dataset.variant).toBe('brand');
+    expect(bestaetigen.dataset.color).toBe('warning');
 
     abbrechen();
   });

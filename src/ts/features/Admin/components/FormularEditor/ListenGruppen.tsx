@@ -50,7 +50,10 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               </span>
               <button
                 type="button"
-                className="btn btn-sm btn-outline-danger py-0"
+                className="db-button py-0"
+                data-variant="outlined"
+                data-color="critical"
+                data-size="small"
                 onClick={() => setzeGruppe(name, undefined)}
                 title="Gruppe löschen"
               >
@@ -129,7 +132,9 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
         <button
           key={v.name}
           type="button"
-          className="btn btn-sm btn-outline-secondary me-1"
+          className="db-button me-1"
+          data-variant="outlined"
+          data-size="small"
           title={`Legt die Gruppe „${v.name}" plus ${v.plaetze} Spaltenplätze an`}
           onClick={() => onVorlage(v.name, v.gruppe, v.plaetze)}
         >

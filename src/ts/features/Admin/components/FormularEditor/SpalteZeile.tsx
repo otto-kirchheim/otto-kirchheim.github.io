@@ -54,7 +54,9 @@ export function SpalteZeile({
         <Zellkoordinaten wert={spalte} onChange={onChange} nurX />
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => onMove(-1)}
           title="Nach oben"
         >
@@ -62,28 +64,40 @@ export function SpalteZeile({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => onMove(1)}
           title="Nach unten"
         >
           ↓
         </button>
-        <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Spalte löschen">
+        <button
+          type="button"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-color="critical"
+          data-size="small"
+          onClick={onDelete}
+          title="Spalte löschen"
+        >
           <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
         </button>
       </div>
 
-      <div className="btn-group btn-group-sm w-100 mb-1">
+      <div className="knopfgruppe w-100 mb-1">
         <button
           type="button"
-          className={`btn ${modus === 'daten' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={modus === 'daten' ? 'brand' : 'outlined'}
           onClick={() => onChange({ ...spalte, berechnet: undefined, wenn: undefined, listenPlatz: undefined })}
         >
           Datenfeld
         </button>
         <button
           type="button"
-          className={`btn ${modus === 'berechnet' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={modus === 'berechnet' ? 'brand' : 'outlined'}
           onClick={() =>
             onChange({
               ...spalte,
@@ -97,7 +111,8 @@ export function SpalteZeile({
         </button>
         <button
           type="button"
-          className={`btn ${modus === 'wenn' ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={modus === 'wenn' ? 'brand' : 'outlined'}
           onClick={() => {
             const startPfad = zeilenFelder[0]?.pfad ?? '';
             onChange({
@@ -114,7 +129,8 @@ export function SpalteZeile({
         {gruppen.length > 0 && (
           <button
             type="button"
-            className={`btn ${modus === 'liste' ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className="db-button"
+            data-variant={modus === 'liste' ? 'brand' : 'outlined'}
             onClick={() =>
               onChange({
                 ...spalte,

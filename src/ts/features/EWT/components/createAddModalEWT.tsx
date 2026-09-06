@@ -115,7 +115,10 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
       <MyModalBody>
         <div className="">
           <MyButton
-            className="btn btn-secondary btn-lg text-start w-100"
+            className="db-button text-start"
+            data-variant="filled"
+            data-size="medium"
+            data-width="full"
             id="btnNaechsterTag"
             clickHandler={(e: MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();

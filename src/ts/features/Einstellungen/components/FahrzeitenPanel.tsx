@@ -112,10 +112,11 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                   </td>
                 ))}
                 <td className="text-center align-middle">
-                  <div className="btn-group btn-group-sm fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
+                  <div className="knopfgruppe fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
                     <button
                       type="button"
-                      className="btn btn-outline-secondary"
+                      className="db-button"
+                      data-variant="outlined"
                       onClick={() => moveRow(index, 'up')}
                       disabled={index === 0}
                       title="Nach oben"
@@ -125,7 +126,8 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-secondary"
+                      className="db-button"
+                      data-variant="outlined"
                       onClick={() => moveRow(index, 'down')}
                       disabled={index === rows.length - 1}
                       title="Nach unten"
@@ -135,7 +137,9 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-outline-danger"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-color="critical"
                       onClick={() => removeRow(index)}
                       title="Zeile löschen"
                       aria-label="Zeile löschen"
@@ -151,7 +155,9 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       </table>
       <button
         type="button"
-        className="btn btn-sm btn-secondary d-flex align-items-center gap-1 mt-md-2"
+        className="db-button d-flex align-items-center gap-1 mt-md-2"
+        data-variant="filled"
+        data-size="small"
         onClick={addRow}
       >
         <span className="db-icon db-font-size-sm" data-icon="plus" />

@@ -103,11 +103,11 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
             <option value="270">270°</option>
           </select>
         </div>
-        <div className="btn-group btn-group-sm ms-auto">
-          <button type="button" className="btn btn-primary" onClick={onAnwenden}>
+        <div className="knopfgruppe ms-auto">
+          <button type="button" className="db-button" data-variant="brand" onClick={onAnwenden}>
             Anwenden
           </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={onAbbrechen}>
+          <button type="button" className="db-button" data-variant="outlined" onClick={onAbbrechen}>
             Abbrechen
           </button>
         </div>

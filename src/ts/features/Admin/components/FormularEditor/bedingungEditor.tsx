@@ -73,17 +73,19 @@ function VergleichWahl({
     <>
       <div className="raster mb-1 abstand-1">
         <div className="sp-8">
-          <div className="btn-group btn-group-sm w-100">
+          <div className="knopfgruppe w-100">
             <button
               type="button"
-              className={`btn ${!wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className="db-button"
+              data-variant={!wenn.bereich ? 'brand' : 'outlined'}
               onClick={() => onChange({ bereich: undefined, werte: wenn.werte ?? [] })}
             >
               Werte-Liste
             </button>
             <button
               type="button"
-              className={`btn ${wenn.bereich ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className="db-button"
+              data-variant={wenn.bereich ? 'brand' : 'outlined'}
               title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
               onClick={() => onChange({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
             >
@@ -184,17 +186,19 @@ export function AnkreuzBedingung({
 
   return (
     <div className="mb-1">
-      <div className="btn-group btn-group-sm w-100 mb-1">
+      <div className="knopfgruppe w-100 mb-1">
         <button
           type="button"
-          className={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={!wenn.berechnet ? 'brand' : 'outlined'}
           onClick={() => setzeWenn({ feld: wenn.feld ?? zeilenFelder[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
         </button>
         <button
           type="button"
-          className={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={wenn.berechnet ? 'brand' : 'outlined'}
           title="Prüft einen berechneten Wert dieser Zeile, z.B. eine Dauer aus Beginn/Ende"
           onClick={() =>
             setzeWenn({
@@ -280,17 +284,19 @@ export function FeldAnkreuzBedingung({
 
   return (
     <div className="mb-1">
-      <div className="btn-group btn-group-sm w-100 mb-1">
+      <div className="knopfgruppe w-100 mb-1">
         <button
           type="button"
-          className={`btn ${!wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={!wenn.berechnet ? 'brand' : 'outlined'}
           onClick={() => setzeWenn({ feld: wenn.feld ?? feldOptionen[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
         </button>
         <button
           type="button"
-          className={`btn ${wenn.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={wenn.berechnet ? 'brand' : 'outlined'}
           title="Prüft eine Aggregation über Zeilen, z.B. die Gesamtsumme"
           onClick={() =>
             setzeWenn({

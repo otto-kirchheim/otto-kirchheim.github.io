@@ -80,7 +80,9 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     row instanceof Row ? (
       <MyButton
         key="Zeitenloeschen"
-        className="btn btn-danger"
+        className="db-button"
+        data-variant="filled"
+        data-color="critical"
         text="Zeiten löschen"
         clickHandler={() => clearEwtZeiten(modal)}
       />

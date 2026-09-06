@@ -164,19 +164,19 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
           const isEnd = endSlot !== null && slot === endSlot;
           const isInRange = endSlot === null ? slot === startSlot : slot >= startSlot && slot <= endSlot;
 
-          const variantClass = isStart
-            ? 'btn-success'
-            : isEnd
-              ? 'btn-info'
-              : isInRange
-                ? 'btn-primary'
-                : 'btn-outline-secondary';
+          // Start/Ende/Bereich unterscheiden sich ueber Variante und Semantikfarbe des
+          // DB-Buttons; ausserhalb des Bereichs bleibt der Schalter neutral umrandet.
+          const variante = isStart || isEnd ? 'filled' : isInRange ? 'brand' : 'outlined';
+          const farbe = isStart ? 'successful' : isEnd ? 'informational' : undefined;
 
           return (
             <button
               key={`${startId}-${slot}`}
               type="button"
-              className={`btn btn-sm ${variantClass} py-2`}
+              className="db-button py-2"
+              data-variant={variante}
+              data-color={farbe}
+              data-size="small"
               onPointerDown={event => handlePointerDown(event, slot)}
               onPointerEnter={() => handlePointerEnter(slot)}
               onClick={() => updateByTap(slot)}

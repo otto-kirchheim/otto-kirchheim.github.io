@@ -101,7 +101,10 @@ export function ZusammengesetzteQuellen({
           </div>
           <button
             type="button"
-            className="btn btn-sm btn-outline-danger py-0"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-color="critical"
+            data-size="small"
             onClick={() => onChange({ ...feld, quellen: quellen.filter((_, j) => j !== i) })}
             title="Teil entfernen"
           >
@@ -112,7 +115,9 @@ export function ZusammengesetzteQuellen({
       <div className="d-flex gap-1 align-items-center">
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => onChange({ ...feld, quellen: [...quellen, eintraege[0]?.pfad ?? ''] })}
         >
           + Teil
@@ -275,7 +280,16 @@ export function openPlatzhalterHilfe(): void {
     <div className="dialog-rumpf" data-breite="lg">
       <div className="db-drawer-header">
         <h5>Platzhalter &amp; Formate</h5>
-        <button type="button" className="btn-close" data-bs-dismiss="modal" />
+        <button
+          type="button"
+          className="db-button"
+          data-icon="cross"
+          data-variant="ghost"
+          data-no-text="true"
+          data-bs-dismiss="modal"
+        >
+          Schließen
+        </button>
       </div>
       <div className="dialog-koerper">
         <PlatzhalterHilfeInhalt />

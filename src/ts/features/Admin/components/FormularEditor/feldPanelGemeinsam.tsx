@@ -17,7 +17,10 @@ export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClic
   return (
     <button
       type="button"
-      className={`btn btn-sm py-0 ${aktiv ? 'btn-danger' : 'btn-outline-primary'}`}
+      className="db-button py-0"
+      data-variant={aktiv ? 'filled' : 'outlined'}
+      data-color={aktiv ? 'critical' : undefined}
+      data-size="small"
       onClick={onClick}
       title={titel ?? 'Rechteck auf dem PDF aufziehen, um Position und Zellbreite zu setzen'}
     >
@@ -96,7 +99,9 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
     <>
       <button
         type="button"
-        className="btn btn-sm btn-link p-0 small text-muted text-nowrap text-decoration-none"
+        className="db-button p-0 small text-muted text-nowrap text-decoration-none"
+        data-variant="ghost"
+        data-size="small"
         onClick={() => setOffen(o => !o)}
         title="Koordinaten bearbeiten"
       >

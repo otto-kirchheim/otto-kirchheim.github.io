@@ -454,14 +454,15 @@ export function FormularUpload() {
       )}
 
       <div className="d-flex gap-2">
-        <button type="submit" className="btn btn-primary" disabled={speichert}>
+        <button type="submit" className="db-button" data-variant="brand" disabled={speichert}>
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
         </button>
         {bearbeiteId && (
           <>
             <button
               type="button"
-              className="btn btn-outline-primary"
+              className="db-button"
+              data-variant="outlined"
               disabled={speichert}
               onClick={neueVersionAusBearbeitung}
               title="Konfiguration und PDF übernehmen, aber als neue Version speichern statt die bestehende zu überschreiben"
@@ -470,7 +471,8 @@ export function FormularUpload() {
             </button>
             <button
               type="button"
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={speichert}
               onClick={() => setzeFormularZurueck(formular)}
             >

@@ -11,7 +11,7 @@ const MyEditorFooter: FC<TMyModalFooter> = ({ customButtons = [], submitText = '
     <div className="dialog-fuss">
       <MyButton type="submit" text={submitText} />
       {customButtons}
-      <MyButton className="btn btn-secondary" dataBsDismiss="modal" text="Abbrechen" />
+      <MyButton className="db-button" data-variant="filled" dataBsDismiss="modal" text="Abbrechen" />
     </div>
   );
 };

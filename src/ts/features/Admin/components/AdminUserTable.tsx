@@ -353,7 +353,9 @@ export function AdminUserList() {
                       {editable && (
                         <>
                           <button
-                            className="btn btn-primary btn-sm flex-grow-1"
+                            className="db-button flex-grow-1"
+                            data-variant="brand"
+                            data-size="small"
                             onClick={() => handleSave(currentUser._id)}
                             disabled={!changed || isSaving}
                           >
@@ -375,7 +377,9 @@ export function AdminUserList() {
                           </button>
                           {changed && (
                             <button
-                              className="btn btn-outline-secondary btn-sm"
+                              className="db-button"
+                              data-variant="outlined"
+                              data-size="small"
                               onClick={() => handleResetEdit(currentUser._id)}
                               disabled={isSaving}
                               title="Änderungen verwerfen"
@@ -390,7 +394,9 @@ export function AdminUserList() {
                         </>
                       )}
                       <button
-                        className="btn btn-outline-secondary btn-sm flex-grow-1"
+                        className="db-button flex-grow-1"
+                        data-variant="outlined"
+                        data-size="small"
                         onClick={() => handleLoadAsUser(currentUser._id)}
                         disabled={isSaving}
                       >

@@ -60,7 +60,9 @@ export function BulkEditUserOverview({
                 <td className="text-end">
                   <button
                     type="button"
-                    className="btn btn-sm btn-link text-danger p-0"
+                    className="db-button text-danger p-0"
+                    data-variant="ghost"
+                    data-size="small"
                     aria-label={`${user.fullName || user.userName} abwählen`}
                     disabled={selectedUsers.length <= 1}
                     onClick={() => onRemoveUser(user._id)}

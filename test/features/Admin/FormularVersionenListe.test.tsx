@@ -79,8 +79,8 @@ describe('FormularVersionenListe', () => {
     const v = version({ id: 'v1' });
     const container = renderListe({ versionen: [v], bearbeiteId: null, laedt: false, onBearbeiten, onLoeschen });
 
-    (container.querySelector('.btn-outline-secondary') as HTMLButtonElement).click();
-    (container.querySelector('.btn-outline-danger') as HTMLButtonElement).click();
+    (container.querySelector('.db-button[data-variant="outlined"]:not([data-color])') as HTMLButtonElement).click();
+    (container.querySelector('.db-button[data-color="critical"]') as HTMLButtonElement).click();
 
     expect(onBearbeiten).toHaveBeenCalledWith(v);
     expect(onLoeschen).toHaveBeenCalledWith(v);

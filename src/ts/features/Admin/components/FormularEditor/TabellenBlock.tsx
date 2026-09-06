@@ -112,7 +112,9 @@ export function TabellenBlock({
         {bereich && (
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary py-0"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-size="small"
             onClick={onVonSeiteEntfernen}
             title="Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)"
           >
@@ -121,7 +123,10 @@ export function TabellenBlock({
         )}
         <button
           type="button"
-          className="btn btn-sm btn-outline-danger py-0"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-color="critical"
+          data-size="small"
           onClick={onDelete}
           title="Tabelle löschen (aus dem ganzen Dokument)"
         >
@@ -272,7 +277,9 @@ export function TabellenBlock({
           </div>
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
             onClick={() => onSeiteChange({ ...seite, bereiche: [...seite.bereiche, { tabelle: name }] })}
             title="Übernimmt Startposition, Höhe und Zeilenzahl unverändert von der Tabelle -- z.B. wenn nur die Spalten dieser Seite abweichen"
           >
@@ -319,7 +326,9 @@ export function TabellenBlock({
                   <span className="small flex-grow-1">{sonderName}</span>
                   <button
                     type="button"
-                    className="btn btn-sm btn-outline-secondary py-0"
+                    className="db-button py-0"
+                    data-variant="outlined"
+                    data-size="small"
                     title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
                     onClick={() => setzeBereich({ sonderzeilen: [...platzierungen, { name: sonderName, y: startY }] })}
                   >
@@ -354,7 +363,10 @@ export function TabellenBlock({
                       />
                       <button
                         type="button"
-                        className="btn btn-sm btn-outline-danger py-0"
+                        className="db-button py-0"
+                        data-variant="outlined"
+                        data-color="critical"
+                        data-size="small"
                         title="Diese Platzierung entfernen"
                         onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
                       >
@@ -419,7 +431,9 @@ export function TabellenBlock({
       ))}
       <button
         type="button"
-        className="btn btn-sm btn-outline-secondary"
+        className="db-button"
+        data-variant="outlined"
+        data-size="small"
         onClick={() =>
           setzeSpalten([
             ...spalten,

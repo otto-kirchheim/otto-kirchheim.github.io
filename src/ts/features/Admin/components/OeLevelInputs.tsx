@@ -76,7 +76,9 @@ export function OeLevelInputs({
       {canRemove && (
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary px-1 py-0"
+          className="db-button px-1 py-0"
+          data-variant="outlined"
+          data-size="small"
           aria-label="Letzte Ebene entfernen"
           onClick={onRemoveLevel}
         >
@@ -86,7 +88,9 @@ export function OeLevelInputs({
       {canAdd && (
         <button
           type="button"
-          className="btn btn-sm btn-outline-primary px-1 py-0"
+          className="db-button px-1 py-0"
+          data-variant="outlined"
+          data-size="small"
           aria-label="Ebene hinzufügen"
           onClick={onAddLevel}
         >

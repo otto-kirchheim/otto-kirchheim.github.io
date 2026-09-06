@@ -84,7 +84,10 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
 
     const removeButton = document.createElement('button');
     removeButton.type = 'button';
-    removeButton.className = 'btn btn-outline-danger btn-sm';
+    removeButton.className = 'db-button';
+    removeButton.dataset['variant'] = 'outlined';
+    removeButton.dataset['color'] = 'critical';
+    removeButton.dataset['size'] = 'small';
     removeButton.textContent = 'Entfernen';
     removeButton.addEventListener('click', () => {
       void removePasskeyFromSettings(passkey);

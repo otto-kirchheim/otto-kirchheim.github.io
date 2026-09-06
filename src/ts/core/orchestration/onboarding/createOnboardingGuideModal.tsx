@@ -181,7 +181,9 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
         </span>
         <button
           type="button"
-          className="btn btn-sm btn-link p-0"
+          className="db-button p-0"
+          data-variant="ghost"
+          data-size="small"
           aria-label={minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}
           onClick={() => setMinimiert(m => !m)}
         >
@@ -259,21 +261,30 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
         <div className="card-footer d-flex gap-2 py-2">
           <button
             type="button"
-            className="btn btn-secondary btn-sm"
+            className="db-button"
+            data-variant="filled"
+            data-size="small"
             disabled={isFirst}
             onClick={() => setStepIndex(index => index - 1)}
           >
             Zurück
           </button>
-          <button type="button" className="btn btn-link btn-sm me-auto" onClick={onClose}>
+          <button type="button" className="db-button me-auto" data-variant="ghost" data-size="small" onClick={onClose}>
             Überspringen
           </button>
           {isLast ? (
-            <button type="button" className="btn btn-primary btn-sm" onClick={onClose}>
+            <button type="button" className="db-button" data-variant="brand" data-size="small" onClick={onClose}>
               Fertig
             </button>
           ) : (
-            <button type="button" className="btn btn-primary btn-sm" disabled={!weiterErlaubt} onClick={weiter}>
+            <button
+              type="button"
+              className="db-button"
+              data-variant="brand"
+              data-size="small"
+              disabled={!weiterErlaubt}
+              onClick={weiter}
+            >
               {weiterText}
             </button>
           )}

@@ -119,10 +119,10 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
           <p class="small text-body-secondary mt-2 mb-0">Die Unterschrift wird nur auf diesem Gerät verarbeitet und zwischengespeichert.</p>
           </div>
           <div class="dialog-fuss">
-          <button type="button" class="btn btn-outline-secondary" data-wahl="digital">Digital</button>
-          <button type="button" class="btn btn-outline-secondary" data-wahl="ohne">Ohne Unterschrift</button>
-            ${cachedPng ? '<button type="button" class="btn btn-outline-secondary" data-wahl="neu">Ändern</button>' : ''}
-          <button type="button" class="btn btn-primary" data-wahl="${cachedPng ? 'verwenden' : 'neu'}">${cachedPng ? 'Verwenden' : 'Ja'}</button>
+          <button type="button" class="db-button" data-variant="outlined" data-wahl="digital">Digital</button>
+          <button type="button" class="db-button" data-variant="outlined" data-wahl="ohne">Ohne Unterschrift</button>
+            ${cachedPng ? '<button type="button" class="db-button" data-variant="outlined" data-wahl="neu">Ändern</button>' : ''}
+          <button type="button" class="db-button" data-variant="brand" data-wahl="${cachedPng ? 'verwenden' : 'neu'}">${cachedPng ? 'Verwenden' : 'Ja'}</button>
           </div>
       </div>
     `;
@@ -183,9 +183,9 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
             <input type="checkbox" class="form-check-input" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
             <label class="form-check-label" for="signatur-speichern">Merken</label>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Abbrechen</button>
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-loeschen="true">Löschen</button>
-          <button type="button" class="btn btn-sm btn-primary" data-fertig="true">Fertig</button>
+          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-bs-dismiss="modal">Abbrechen</button>
+          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-loeschen="true">Löschen</button>
+          <button type="button" class="db-button" data-variant="brand" data-size="small" data-fertig="true">Fertig</button>
         </div>
       </div>
     `;

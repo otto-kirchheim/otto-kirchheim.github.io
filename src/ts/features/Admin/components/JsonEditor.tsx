@@ -82,7 +82,9 @@ export function JsonEditor({ value, onChange, error }: Props) {
         <div className="ms-auto d-flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
           {open && (
             <button
-              className="btn btn-sm btn-outline-secondary py-0"
+              className="db-button py-0"
+              data-variant="outlined"
+              data-size="small"
               style={{ fontSize: '0.75rem' }}
               onClick={handleFormat}
               title="JSON formatieren"
@@ -92,7 +94,9 @@ export function JsonEditor({ value, onChange, error }: Props) {
             </button>
           )}
           <button
-            className="btn btn-sm btn-outline-secondary py-0"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-size="small"
             style={{ fontSize: '0.75rem' }}
             onClick={() => setOpen(o => !o)}
             title={open ? 'Einklappen' : 'Bearbeiten'}

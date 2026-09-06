@@ -268,7 +268,9 @@ export function SchichtSection({
                 <button
                   key={day}
                   type="button"
-                  className={`btn btn-sm ${newDays.includes(day) ? 'btn-primary' : 'btn-outline-secondary'}`}
+                  className="db-button"
+                  data-variant={newDays.includes(day) ? 'brand' : 'outlined'}
+                  data-size="small"
                   style={{ minWidth: '2.5rem' }}
                   onClick={() =>
                     setNewDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]))
@@ -315,7 +317,10 @@ export function SchichtSection({
               </div>
               <button
                 type="button"
-                className="btn btn-sm btn-success ms-auto"
+                className="db-button ms-auto"
+                data-variant="filled"
+                data-color="successful"
+                data-size="small"
                 onClick={saveNewOverride}
                 disabled={newDays.length === 0}
               >
@@ -323,7 +328,9 @@ export function SchichtSection({
               </button>
               <button
                 type="button"
-                className="btn btn-sm btn-outline-secondary"
+                className="db-button"
+                data-variant="outlined"
+                data-size="small"
                 onClick={() => {
                   setAddingOverride(false);
                   setNewDays([]);
@@ -336,7 +343,9 @@ export function SchichtSection({
         ) : (
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary mt-2 d-flex align-items-center gap-1"
+            className="db-button mt-2 d-flex align-items-center gap-1"
+            data-variant="outlined"
+            data-size="small"
             onClick={() => {
               setAddingOverride(true);
               setNewConfig(schicht.default);
@@ -364,7 +373,9 @@ function WeekdayChips({
         <button
           key={day}
           type="button"
-          className={`btn btn-sm ${regelarbeitstage.includes(day) ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={regelarbeitstage.includes(day) ? 'brand' : 'outlined'}
+          data-size="small"
           style={{ minWidth: '2.5rem' }}
           onClick={() => onToggle(day)}
         >
@@ -445,7 +456,10 @@ function ScheduleGroupRow({
         </div>
         <button
           type="button"
-          className="btn btn-sm btn-success"
+          className="db-button"
+          data-variant="filled"
+          data-color="successful"
+          data-size="small"
           onClick={() => {
             onUpdate(local);
             setEditing(false);
@@ -455,7 +469,9 @@ function ScheduleGroupRow({
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => {
             setLocal(config);
             setEditing(false);
@@ -471,7 +487,8 @@ function ScheduleGroupRow({
     <div className="d-flex align-items-center py-1">
       <button
         type="button"
-        className="d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start btn btn-link text-decoration-none text-body px-0"
+        className="db-button d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start text-decoration-none text-body px-0"
+        data-variant="ghost"
         onClick={() => {
           setLocal(config);
           setEditing(true);
@@ -494,7 +511,9 @@ function ScheduleGroupRow({
       {onDelete && (
         <button
           type="button"
-          className="btn btn-sm btn-link text-danger px-1"
+          className="db-button text-danger px-1"
+          data-variant="ghost"
+          data-size="small"
           onClick={onDelete}
           title="Zeitvariante löschen"
         >

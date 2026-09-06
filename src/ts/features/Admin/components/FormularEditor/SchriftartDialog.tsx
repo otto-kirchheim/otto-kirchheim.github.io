@@ -176,7 +176,16 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
       <div className="dialog-rumpf" data-breite="lg">
         <div className="db-drawer-header">
           <h5>Schriftart</h5>
-          <button type="button" className="btn-close" aria-label="Schließen" onClick={onClose} />
+          <button
+            type="button"
+            className="db-button"
+            data-icon="cross"
+            data-variant="ghost"
+            data-no-text="true"
+            onClick={onClose}
+          >
+            Schließen
+          </button>
         </div>
 
         <div className="dialog-koerper d-flex flex-column gap-3">
@@ -216,7 +225,7 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
         </div>
 
         <div className="dialog-fuss">
-          <button type="button" className="btn btn-primary" onClick={onClose}>
+          <button type="button" className="db-button" data-variant="brand" onClick={onClose}>
             Fertig
           </button>
         </div>

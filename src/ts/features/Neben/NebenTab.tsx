@@ -118,7 +118,14 @@ function NebenTab() {
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Nebenbezüge
-          <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpNeben" aria-label="Hilfe anzeigen">
+          <button
+            type="button"
+            className="db-button p-0"
+            data-variant="ghost"
+            data-size="small"
+            id="btnHelpNeben"
+            aria-label="Hilfe anzeigen"
+          >
             <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
           </button>
         </h1>
@@ -128,19 +135,26 @@ function NebenTab() {
       <div className="mitte">
         <div className="raster-auto my-3 knopfreihe abstand-3">
           <div className="d-grid">
-            <button type="button" className="btn btn-primary" id="btnESN" data-disabler>
+            <button type="button" className="db-button" data-variant="brand" id="btnESN" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Hinzufügen
             </button>
           </div>
           <div className="d-grid">
-            <button className="btn btn-success" type="button" id="btnSaveN" data-disabler>
+            <button
+              className="db-button"
+              data-variant="filled"
+              data-color="successful"
+              type="button"
+              id="btnSaveN"
+              data-disabler
+            >
               <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
           <div className="d-grid">
-            <button className="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
+            <button className="db-button" data-variant="filled" type="button" id="btnDownloadN" data-disabler>
               <span className="db-icon" data-icon="download" />
               PDF erzeugen
             </button>

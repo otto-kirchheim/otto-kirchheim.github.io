@@ -79,12 +79,14 @@ export function AdminLogBrowser() {
             if (e.key === 'Enter') search();
           }}
         />
-        <button className="btn btn-sm btn-primary" onClick={search}>
+        <button className="db-button" data-variant="brand" data-size="small" onClick={search}>
           Suchen
         </button>
         {actionFilter && (
           <button
-            className="btn btn-sm btn-outline-secondary"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
             onClick={() => {
               setActionFilter('');
               loadPage(1, '');
@@ -94,7 +96,9 @@ export function AdminLogBrowser() {
           </button>
         )}
         <button
-          className="btn btn-sm btn-outline-secondary ms-auto"
+          className="db-button ms-auto"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => loadPage(currentPage, actionFilter)}
         >
           <span
@@ -158,7 +162,9 @@ export function AdminLogBrowser() {
                       <td className="text-end">
                         {payload !== null && (
                           <button
-                            className="btn btn-sm btn-link p-0"
+                            className="db-button p-0"
+                            data-variant="ghost"
+                            data-size="small"
                             aria-label={open ? 'Details ausblenden' : 'Details anzeigen'}
                             aria-expanded={open}
                             onClick={() => setOpenDetailsId(open ? null : id)}
@@ -193,16 +199,18 @@ export function AdminLogBrowser() {
           <small className="text-muted">
             Gesamt: {logs?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div className="btn-group btn-group-sm">
+          <div className="knopfgruppe">
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1, actionFilter)}
             >
               ‹
             </button>
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1, actionFilter)}
             >

@@ -131,7 +131,7 @@ export function FeldPanel({
             value={neuerName}
             onChange={e => setNeuerName((e.target as HTMLInputElement).value)}
           />
-          <button type="button" className="btn btn-outline-secondary" onClick={tabelleAnlegen}>
+          <button type="button" className="db-button" data-variant="outlined" onClick={tabelleAnlegen}>
             + Tabelle
           </button>
         </div>
@@ -148,7 +148,10 @@ export function FeldPanel({
           {seite.signaturBild && (
             <button
               type="button"
-              className="btn btn-sm btn-outline-danger py-0"
+              className="db-button py-0"
+              data-variant="outlined"
+              data-color="critical"
+              data-size="small"
               onClick={() => onSeiteChange({ ...seite, signaturBild: undefined })}
             >
               Löschen
@@ -193,7 +196,14 @@ export function FeldPanel({
                 titel="Position auf dem PDF aufziehen"
               />
               <span className="small flex-grow-1">Feld gesetzt</span>
-              <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={datumLoeschen}>
+              <button
+                type="button"
+                className="db-button py-0"
+                data-variant="outlined"
+                data-color="critical"
+                data-size="small"
+                onClick={datumLoeschen}
+              >
                 Löschen
               </button>
             </div>
@@ -242,7 +252,13 @@ export function FeldPanel({
             </div>
           </>
         ) : (
-          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={datumHinzufuegen}>
+          <button
+            type="button"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
+            onClick={datumHinzufuegen}
+          >
             + Datum hinzufügen
           </button>
         )}

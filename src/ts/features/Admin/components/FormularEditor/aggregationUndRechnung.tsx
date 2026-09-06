@@ -331,7 +331,9 @@ export function Rechnung({
         {onEntfernen && (
           <button
             type="button"
-            className="btn btn-outline-danger"
+            className="db-button"
+            data-variant="outlined"
+            data-color="critical"
             title="Zwischenrechnung entfernen"
             onClick={onEntfernen}
           >
@@ -384,7 +386,13 @@ export function Rechnung({
                 onChange={e => setzeOperand(i, Number((e.target as HTMLInputElement).value))}
               />
             )}
-            <button type="button" className="btn btn-outline-danger" onClick={() => entferneOperand(i)}>
+            <button
+              type="button"
+              className="db-button"
+              data-variant="outlined"
+              data-color="critical"
+              onClick={() => entferneOperand(i)}
+            >
               ×
             </button>
           </div>
@@ -394,14 +402,18 @@ export function Rechnung({
       <div className="d-flex gap-1">
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, zeilenFelder[0]?.pfad ?? ''] })}
         >
           + Operand
         </button>
         <button
           type="button"
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           title="Geklammerte Zwischenrechnung als weiteren Operanden anhängen"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, { op: 'differenz', operanden: [] }] })}
         >

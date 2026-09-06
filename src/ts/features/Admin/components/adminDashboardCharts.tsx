@@ -269,7 +269,10 @@ export function MemoryCard({
               ))}
             </select>
             <button
-              className="btn btn-sm btn-outline-success"
+              className="db-button"
+              data-variant="outlined"
+              data-color="successful"
+              data-size="small"
               onClick={takeSnapshot}
               disabled={snapping || loading}
               title="Manuellen Heap-Snapshot jetzt speichern"
@@ -280,7 +283,13 @@ export function MemoryCard({
                 <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
               )}
             </button>
-            <button className="btn btn-sm btn-outline-secondary" onClick={onRefresh} disabled={loading}>
+            <button
+              className="db-button"
+              data-variant="outlined"
+              data-size="small"
+              onClick={onRefresh}
+              disabled={loading}
+            >
               <span
                 className="db-icon db-font-size-sm"
                 data-icon="circular_arrows"
@@ -447,7 +456,9 @@ export function MemoryCard({
                     style={{ fontSize: '.75rem' }}
                   >
                     <button
-                      className="btn btn-sm btn-link p-0 text-body-secondary"
+                      className="db-button p-0 text-body-secondary"
+                      data-variant="ghost"
+                      data-size="small"
                       onClick={() => setEventsPage(p => Math.max(0, p - 1))}
                       disabled={eventsPage === 0}
                     >
@@ -461,7 +472,9 @@ export function MemoryCard({
                       {eventsPage + 1} / {eventPageCount}
                     </span>
                     <button
-                      className="btn btn-sm btn-link p-0 text-body-secondary"
+                      className="db-button p-0 text-body-secondary"
+                      data-variant="ghost"
+                      data-size="small"
                       onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
                       disabled={eventsPage === eventPageCount - 1}
                     >

@@ -244,7 +244,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                 />
                 {filterUserId && (
                   <button
-                    className="btn btn-sm btn-link position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
+                    className="db-button position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
+                    data-variant="ghost"
+                    data-size="small"
                     style={{ lineHeight: '1' }}
                     onClick={() => {
                       setFilterUserId('');
@@ -298,12 +300,12 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </div>
 
             <div className="d-flex gap-2 ms-auto align-items-end">
-              <button className="btn btn-sm btn-primary" onClick={applyFilter}>
+              <button className="db-button" data-variant="brand" data-size="small" onClick={applyFilter}>
                 <span className="db-icon me-1 db-font-size-xs" data-icon="funnel" style={{ verticalAlign: 'middle' }} />
                 Filtern
               </button>
               {hasActiveFilter && (
-                <button className="btn btn-sm btn-outline-secondary" onClick={resetFilter}>
+                <button className="db-button" data-variant="outlined" data-size="small" onClick={resetFilter}>
                   Zurücksetzen
                 </button>
               )}
@@ -330,7 +332,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         <div className="alert alert-danger d-flex align-items-center gap-2 py-2">
           <span className="db-icon small" data-icon="exclamation_mark_circle" />
           {loadError}
-          <button className="btn btn-sm btn-outline-danger ms-auto" onClick={() => setLoadError(null)}>
+          <button
+            className="db-button ms-auto"
+            data-variant="outlined"
+            data-color="critical"
+            data-size="small"
+            onClick={() => setLoadError(null)}
+          >
             ×
           </button>
         </div>
@@ -386,7 +394,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                             <span>{name ?? <code className="text-muted">{truncateId(userId)}</code>}</span>
                             {onNavigateToUser && (
                               <button
-                                className="btn btn-link btn-sm p-0 text-info flex-shrink-0"
+                                className="db-button p-0 text-info flex-shrink-0"
+                                data-variant="ghost"
+                                data-size="small"
                                 style={{ lineHeight: '1' }}
                                 onClick={e => {
                                   e.stopPropagation();
@@ -414,14 +424,19 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   ))}
                   <td className="text-end">
                     <button
-                      className="btn btn-sm btn-outline-primary me-1 py-0"
+                      className="db-button me-1 py-0"
+                      data-variant="outlined"
+                      data-size="small"
                       onClick={() => openEdit(doc)}
                       title="Bearbeiten"
                     >
                       <span className="db-icon db-font-size-sm" data-icon="pen" />
                     </button>
                     <button
-                      className="btn btn-sm btn-outline-danger py-0"
+                      className="db-button py-0"
+                      data-variant="outlined"
+                      data-color="critical"
+                      data-size="small"
                       onClick={() => handleDelete(doc)}
                       title="Löschen"
                     >
@@ -440,16 +455,18 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
         </small>
         {totalPages > 1 && (
-          <div className="btn-group btn-group-sm">
+          <div className="knopfgruppe">
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
             </button>
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
@@ -457,7 +474,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </button>
           </div>
         )}
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
+        <button className="db-button" data-variant="outlined" data-size="small" onClick={() => loadPage(currentPage)}>
           <span
             className="db-icon me-1 db-font-size-sm"
             data-icon="circular_arrows"

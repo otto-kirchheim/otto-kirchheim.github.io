@@ -54,15 +54,26 @@ function FeldZeile({
           {feld.label ?? keyName}
         </span>
         <Zellkoordinaten wert={feld} onChange={onChange} />
-        <button type="button" className="btn btn-sm btn-outline-danger py-0" onClick={onDelete} title="Feld löschen">
+        <button
+          type="button"
+          className="db-button py-0"
+          data-variant="outlined"
+          data-color="critical"
+          data-size="small"
+          onClick={onDelete}
+          title="Feld löschen"
+        >
           <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
         </button>
       </div>
 
-      <div className="btn-group btn-group-sm w-100 mb-1">
+      <div className="knopfgruppe w-100 mb-1">
         <button
           type="button"
-          className={`btn ${!festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={
+            !festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'brand' : 'outlined'
+          }
           onClick={() =>
             onChange({
               ...feld,
@@ -78,7 +89,8 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          className={`btn ${festerText ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={festerText ? 'brand' : 'outlined'}
           title="Fester Text, wahlweise mit eingefügten Datenpfaden"
           onClick={() =>
             onChange({
@@ -95,7 +107,8 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          className={`btn ${feld.quellen ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={feld.quellen ? 'brand' : 'outlined'}
           title="Mehrere Werte in eine Zelle, ohne Trennzeichen-Lücke bei leeren/optionalen Teilen (z.B. Adress2)"
           onClick={() =>
             onChange({
@@ -113,7 +126,8 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          className={`btn ${feld.berechnet ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={feld.berechnet ? 'brand' : 'outlined'}
           onClick={() =>
             onChange({
               ...feld,
@@ -129,7 +143,8 @@ function FeldZeile({
         </button>
         <button
           type="button"
-          className={`btn ${feld.wenn ? 'btn-primary' : 'btn-outline-secondary'}`}
+          className="db-button"
+          data-variant={feld.wenn ? 'brand' : 'outlined'}
           title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
           onClick={() => {
             const startPfad = katalogFelder(formular)[0]?.pfad ?? '';
@@ -148,7 +163,8 @@ function FeldZeile({
         {mitListen.length > 0 && (
           <button
             type="button"
-            className={`btn ${feld.listenKopf ? 'btn-primary' : 'btn-outline-secondary'}`}
+            className="db-button"
+            data-variant={feld.listenKopf ? 'brand' : 'outlined'}
             title="Überschrift über einem dynamischen Spaltenplatz — zeigt den Schlüssel, der dort gelandet ist"
             onClick={() => {
               const [tabellenName, tabelle] = mitListen[0]!;
@@ -255,7 +271,13 @@ function FeldZeile({
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
             leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere" nutzen.
             Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
-            <button type="button" className="btn btn-link btn-sm p-0 align-baseline" onClick={openPlatzhalterHilfe}>
+            <button
+              type="button"
+              className="db-button p-0 align-baseline"
+              data-variant="ghost"
+              data-size="small"
+              onClick={openPlatzhalterHilfe}
+            >
               Alle Platzhalter &amp; Formate…
             </button>
           </div>
@@ -388,7 +410,9 @@ export function FeldListe({
           <button
             key={v.key}
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
             onClick={() => hinzufuegen(v.key, { ...v.feld })}
           >
             {v.label}

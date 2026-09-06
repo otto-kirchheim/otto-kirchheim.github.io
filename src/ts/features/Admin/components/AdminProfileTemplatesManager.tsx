@@ -349,7 +349,7 @@ export function AdminProfileTemplatesManager() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Profile-Templates</h5>
-        <button className="btn btn-sm btn-outline-primary" onClick={handleCreate} data-disabler>
+        <button className="db-button" data-variant="outlined" data-size="small" onClick={handleCreate} data-disabler>
           Hinzufügen
         </button>
       </div>
@@ -373,7 +373,9 @@ export function AdminProfileTemplatesManager() {
               className={`border rounded ${changed ? 'border-warning' : 'border-secondary-subtle'}`}
             >
               <button
-                className="btn w-100 text-start d-flex justify-content-between align-items-center"
+                className="db-button text-start d-flex justify-content-between align-items-center"
+                data-variant="filled"
+                data-width="full"
                 onClick={() => setExpandedId(expanded ? null : template._id)}
               >
                 <span>
@@ -441,35 +443,47 @@ export function AdminProfileTemplatesManager() {
 
                   <div className="d-flex flex-wrap gap-2 mt-2">
                     <button
-                      className="btn btn-primary btn-sm"
+                      className="db-button"
+                      data-variant="brand"
+                      data-size="small"
                       onClick={() => handleSave(template)}
                       disabled={!changed || isSaving}
                     >
                       {isSaving ? 'Speichert...' : 'Speichern'}
                     </button>
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-size="small"
                       onClick={() => handleCopy(template)}
                       disabled={isSaving}
                     >
                       Kopieren
                     </button>
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-size="small"
                       onClick={() => handleAdoptTemplateContent(template)}
                       disabled={isSaving}
                     >
                       Inhalt uebernehmen
                     </button>
                     <button
-                      className={`btn btn-outline-${template.active ? 'warning' : 'success'} btn-sm`}
+                      className="db-button"
+                      data-variant="outlined"
+                      data-color={template.active ? 'warning' : 'successful'}
+                      data-size="small"
                       onClick={() => handleToggleActive(template)}
                       disabled={isSaving}
                     >
                       {template.active ? 'Deaktivieren' : 'Aktivieren'}
                     </button>
                     <button
-                      className="btn btn-outline-danger btn-sm"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-color="critical"
+                      data-size="small"
                       onClick={() => handleDelete(template)}
                       disabled={isSaving}
                     >

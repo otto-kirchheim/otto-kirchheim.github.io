@@ -139,7 +139,9 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
                 </div>
                 <button
                   type="button"
-                  className={`btn btn-sm ${sonderOverride ? 'btn-outline-secondary' : 'btn-outline-secondary'} ms-auto`}
+                  className="db-button ms-auto"
+                  data-variant={sonderOverride ? 'outlined' : 'outlined'}
+                  data-size="small"
                   onClick={() => handleSonderChange(undefined)}
                 >
                   {sonderOverride ? 'Zurücksetzen' : 'Deaktivieren'}

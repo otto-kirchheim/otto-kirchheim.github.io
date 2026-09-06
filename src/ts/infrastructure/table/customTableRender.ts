@@ -120,7 +120,7 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
         }
         if (column.editing) {
           const divBtnGroup = document.createElement('div');
-          divBtnGroup.classList.add('btn-group', 'btn-group-sm');
+          divBtnGroup.classList.add('knopfgruppe');
           divBtnGroup.setAttribute('role', 'group');
 
           if (row.isDeleted) {

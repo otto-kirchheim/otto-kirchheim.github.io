@@ -131,7 +131,10 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
               />
               <button
                 type="button"
-                className="btn btn-sm btn-outline-danger py-0"
+                className="db-button py-0"
+                data-variant="outlined"
+                data-color="critical"
+                data-size="small"
                 onClick={() => setzeZeile(name, undefined)}
                 title="Sonderzeile löschen"
               >
@@ -319,7 +322,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
         );
       })}
 
-      <button type="button" className="btn btn-sm btn-outline-secondary" onClick={neueZeile}>
+      <button type="button" className="db-button" data-variant="outlined" data-size="small" onClick={neueZeile}>
         + Sonderzeile
       </button>
     </div>

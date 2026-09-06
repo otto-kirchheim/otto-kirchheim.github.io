@@ -84,7 +84,9 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
   const customFooterButton = [
     <MyButton
       key="Manuell"
-      className="btn btn-info"
+      className="db-button"
+      data-variant="filled"
+      data-color="informational"
       type="button"
       dataBsDismiss="modal"
       text="Manuell"

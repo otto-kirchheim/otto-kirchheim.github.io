@@ -49,7 +49,9 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
           </div>
           <div className="d-flex justify-content-center align-self-stretch align-self-sm-auto gap-2 flex-shrink-0">
             <button
-              className="btn btn-primary btn-sm u-min-w-120"
+              className="db-button u-min-w-120"
+              data-variant="brand"
+              data-size="small"
               type="button"
               disabled={saving}
               onClick={handleClick}

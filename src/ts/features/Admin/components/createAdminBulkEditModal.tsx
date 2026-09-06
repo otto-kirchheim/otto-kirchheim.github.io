@@ -284,27 +284,46 @@ export function AdminBulkEditModal({
   const footer = (
     <div className="dialog-fuss">
       {step === 'preview' && (
-        <button type="button" className="btn btn-outline-secondary" disabled={busy} onClick={() => setStep('form')}>
+        <button
+          type="button"
+          className="db-button"
+          data-variant="outlined"
+          disabled={busy}
+          onClick={() => setStep('form')}
+        >
           Zurück
         </button>
       )}
-      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">
+      <button type="button" className="db-button" data-variant="filled" data-bs-dismiss="modal">
         {step === 'result' ? 'Schließen' : 'Abbrechen'}
       </button>
       {step === 'form' && (
-        <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void runPreview()}>
+        <button
+          type="button"
+          className="db-button"
+          data-variant="brand"
+          disabled={busy}
+          onClick={() => void runPreview()}
+        >
           {busy && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
           Vorschau
         </button>
       )}
       {step === 'preview' && (
-        <button type="button" className="btn btn-danger" disabled={busy} onClick={() => void runApply()}>
+        <button
+          type="button"
+          className="db-button"
+          data-variant="filled"
+          data-color="critical"
+          disabled={busy}
+          onClick={() => void runApply()}
+        >
           {busy && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
           {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
         </button>
       )}
       {step === 'result' && (
-        <button type="button" className="btn btn-primary" onClick={closeModal}>
+        <button type="button" className="db-button" data-variant="brand" onClick={closeModal}>
           Fertig
         </button>
       )}

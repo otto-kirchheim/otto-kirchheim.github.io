@@ -99,7 +99,13 @@ export function AdminDashboard() {
       <div className="alert alert-danger d-flex align-items-center gap-2">
         <span className="db-icon" data-icon="exclamation_mark_circle" />
         <span>{error}</span>
-        <button className="btn btn-sm btn-outline-danger ms-auto" onClick={load}>
+        <button
+          className="db-button ms-auto"
+          data-variant="outlined"
+          data-color="critical"
+          data-size="small"
+          onClick={load}
+        >
           Neu laden
         </button>
       </div>
@@ -247,7 +253,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="text-end mt-3">
-        <button className="btn btn-sm btn-outline-secondary" onClick={load}>
+        <button className="db-button" data-variant="outlined" data-size="small" onClick={load}>
           <span
             className="db-icon me-1 db-font-size-sm"
             data-icon="circular_arrows"

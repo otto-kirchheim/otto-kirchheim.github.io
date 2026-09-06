@@ -1474,3 +1474,44 @@ Die Groessen-Prop ist dadurch heute wirkungslos -- jeder Dialog rendert 36 rem.
   `bun run build` erfolgreich. Sichtpruefung im Dev-Server: Startseite (1300/768/412 px),
   Einstellungen mit offenem und geschlossenem Akkordeon (1300/412 px), Passwort-Dialog
   (1300/412 px). Kein horizontaler Ueberlauf in keiner Breite.
+
+## Phase H (3): Buttons auf DB UX
+
+- [x] 257 Button-Stellen in 59 Dateien auf `db-button` + `data-variant`/`data-color`/`data-size`
+- [x] `btn-close` -> DB-Ghost-Icon-Button mit Text (vorher ohne Namen fuer Screenreader)
+- [x] `btn-group` -> `.knopfgruppe`
+- [x] `MyButton` nimmt DB-Attribute direkt statt Bootstrap-Klassenliste
+- [x] `confirmDialog`: `confirmClass` -> `confirmVariant` + `confirmColor`
+- [x] Dark-Theme-Korrekturen fuer `.btn-outline-*` entfernt (lasen `--bs-btn-*`)
+- [x] Tests auf die neuen Selektoren umgestellt (7 Dateien)
+
+### Review
+
+- Ergebnis: `btn`-Klassen kommen in `src/` nicht mehr vor. Im Browser gemessen: 0 Elemente mit
+  Bootstrap-Button-Klasse, 27 `db-button`, alle mit `data-variant`. Ein Nebenbefund: der
+  Hinzufuegen-Knopf in `OeTagInput` hatte gar keinen zugaenglichen Namen -- jetzt
+  `aria-label="Wert hinzufügen"`.
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` 2086/2086,
+  `bun run build` erfolgreich.
+
+## Naechster Schritt (Phase H, offen)
+
+Der Utility-Sweep ist zur Haelfte erledigt (Raster, Akkordeon, Buttons). Was bleibt, nach
+Groesse sortiert -- Zahlen sind Klassenvorkommen in `class`/`className`-Attributen:
+
+- Abstaende `m*`/`p*`/`gap-*` (~960) -- braucht eigene App-Utilities oder Ersatz durch `gap`
+- Formulare `form-control`, `form-label`, `form-check`, `input-group`, `form-floating` (~578)
+  -> DB-Komponenten `db-input`, `db-select`, `db-checkbox`, `db-switch`
+- Text `text-*`, `fs-*`, `fw-*`, `lh-*` (~467)
+- Flex/Ausrichtung `d-flex`, `justify-content-*`, `align-items-*` (~347)
+- Display `d-*` (~288)
+- Komponenten `card`, `alert`, `badge`, `nav`, `table`, `list-group` (~250)
+  -> `db-card`, `db-infotext`/`db-notification`, `db-tag`, `db-tabs`, `db-table`
+- Farben/Rahmen `bg-*`, `border-*`, `rounded-*`, `shadow-*` (~223)
+- Danach: `Popover`-Plugin, `@layer bootstrap`-Import raus, `bootstrap`/`@types/bootstrap`/
+  `@popperjs/core` deinstallieren, `bridge.css` abbauen.
+
+Offener Punkt fuer die Sichtpruefung: der Seed-Login schlaegt gegen das echte Backend fehl
+(Token-Refresh), deshalb mounten die React-Tabs Bereitschaft/EWT/EA/Neben im Smoke-Test nicht.
+Entweder einen Testbenutzer bereitstellen oder die Token-Antwort per Request-Interception
+faelschen.

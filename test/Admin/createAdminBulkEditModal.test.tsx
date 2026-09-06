@@ -104,7 +104,7 @@ describe('AdminBulkEditModal', () => {
   it('sendet ohne angehaktes Ziel keine OE-Änderung (kein API-Call)', async () => {
     const container = renderModal([makeUser()]);
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     expect(container.textContent).toContain('Bitte mindestens eine Änderung auswählen');
@@ -128,7 +128,7 @@ describe('AdminBulkEditModal', () => {
     container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
     await flush();
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     expect(container.textContent).toContain('Bitte mindestens eine Ebene zum Ersetzen ausfüllen');
@@ -147,7 +147,7 @@ describe('AdminBulkEditModal', () => {
     setzeWert(firstLevelInput, 'X');
     await flush();
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     expect(mockBulkUpdateUserProfiles).toHaveBeenCalledTimes(1);
@@ -170,7 +170,7 @@ describe('AdminBulkEditModal', () => {
     setzeWert(gewerkInputAfter, 'Fahrweg');
     await flush();
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     const payload = mockBulkUpdateUserProfiles.mock.calls[0][0] as BulkUserProfileUpdatePayload;
@@ -199,7 +199,7 @@ describe('AdminBulkEditModal', () => {
 
     expect(container.textContent).toContain('Wird hinzugefügt: V.IW-MI-IL');
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     const payload = mockBulkUpdateUserProfiles.mock.calls[0][0] as BulkUserProfileUpdatePayload;
@@ -248,7 +248,7 @@ describe('AdminBulkEditModal', () => {
     setzeWert(betriebInput, 'Neu');
     await flush();
 
-    container.querySelector<HTMLButtonElement>('button.btn-primary')!.click();
+    container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
     await flush();
 
     const headers = Array.from(container.querySelectorAll('table thead th')).map(th => th.textContent);

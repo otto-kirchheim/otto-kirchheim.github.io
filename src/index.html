@@ -193,7 +193,7 @@
           </div>
 
           <div class="db-header-primary-action">
-            <button class="btn btn-primary" type="button" id="btnLogin">Anmelden</button>
+            <button class="db-button" data-variant="brand" type="button" id="btnLogin">Anmelden</button>
             <select id="Monat" class="form-select validate d-none" required aria-label="Monatswechsel">
               <option value="1">Januar</option>
               <option value="2">Februar</option>
@@ -277,7 +277,7 @@
             </div>
           </div>
           <div class="d-grid d-sm-flex gap-2">
-            <button class="btn btn-warning btn-sm" id="actAsOwnDataButton" type="button">Eigene Daten laden</button>
+            <button class="db-button" data-variant="filled" data-color="warning" data-size="small" id="actAsOwnDataButton" type="button">Eigene Daten laden</button>
           </div>
         </div>
       </div>
@@ -292,7 +292,7 @@
           <div class="text-center mb-4 mb-md-5">
             <div class="d-inline-flex align-items-center justify-content-center gap-2">
               <h1 class="mt-2 mb-0" id="Willkommen">Willkommen</h1>
-              <button type="button" class="btn btn-sm btn-link p-0" id="btnHelpStart" aria-label="Hilfe anzeigen">
+              <button type="button" class="db-button p-0" data-variant="ghost" data-size="small" id="btnHelpStart" aria-label="Hilfe anzeigen">
                 <span class="db-icon align-middle" data-icon="question_mark_circle" style="font-size: 1.25rem"></span>
               </button>
             </div>
@@ -339,7 +339,7 @@
             <div class="d-none" id="quick-bereitschaft-tab">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="bereitschaft-tab"
               >
                 <span class="db-icon" data-icon="calendar"></span>
@@ -349,7 +349,7 @@
             <div class="d-none" id="quick-ewt-tab">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="ewt-tab"
               >
                 <span class="db-icon" data-icon="changeover"></span>
@@ -359,7 +359,7 @@
             <div class="d-none" id="quick-neben-tab">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="neben-tab"
               >
                 <span class="db-icon" data-icon="cash"></span>
@@ -369,7 +369,7 @@
             <div class="d-none" id="quick-ea-tab">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="ea-tab"
               >
                 <span class="db-icon" data-icon="euro_sign"></span>
@@ -379,7 +379,7 @@
             <div class="">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="berechnung-tab"
               >
                 <span class="db-icon" data-icon="bar_chart"></span>
@@ -389,7 +389,7 @@
             <div class="">
               <button
                 type="button"
-                class="btn btn-outline-primary w-100 d-flex flex-column align-items-center gap-1 py-3"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
                 data-jump-tab="einstellungen-tab"
               >
                 <span class="db-icon" data-icon="gear_wheel"></span>
@@ -464,7 +464,7 @@
             id="berechnungMonatsNav"
           >
             <button
-              class="btn btn-outline-secondary btn-sm"
+              class="db-button" data-variant="outlined" data-size="small"
               id="btnBerechnungMonatePrev"
               type="button"
               aria-label="Frühere Monate anzeigen"
@@ -473,7 +473,7 @@
             </button>
             <span id="berechnungMonatsFensterLabel" class="small"></span>
             <button
-              class="btn btn-outline-secondary btn-sm"
+              class="db-button" data-variant="outlined" data-size="small"
               id="btnBerechnungMonateNext"
               type="button"
               aria-label="Spätere Monate anzeigen"
@@ -528,7 +528,7 @@
               Einstellungen
               <button
                 type="button"
-                class="btn btn-sm btn-link p-0"
+                class="db-button p-0" data-variant="ghost" data-size="small"
                 id="btnHelpEinstellungen"
                 aria-label="Hilfe anzeigen"
               >
@@ -540,10 +540,10 @@
           <div class="mitte">
             <div class="raster-auto mb-3 knopfreihe abstand-3">
               <div class="d-grid">
-                <button class="btn btn-primary" type="button" name="Logout" id="btnLogout">Ausloggen</button>
+                <button class="db-button" data-variant="brand" type="button" name="Logout" id="btnLogout">Ausloggen</button>
               </div>
               <div class="d-grid">
-                <button class="btn btn-secondary" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
+                <button class="db-button" data-variant="filled" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
                   Passwort Ändern
                 </button>
               </div>
@@ -568,7 +568,7 @@
                   data-bs-content="Achtung: Vor Jahreswechsel Speichern!!"
                 />
 
-                <button class="btn btn-primary" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
+                <button class="db-button" data-variant="brand" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
                   Auswählen
                 </button>
               </div>
@@ -579,7 +579,7 @@
             <div class="mitte">
               <div class="raster-auto my-3 knopfreihe abstand-3">
                 <div class="d-grid">
-                  <button type="submit" class="btn btn-success" name="btnES" id="btnSaveEinstellungen" data-disabler>
+                  <button type="submit" class="db-button" data-variant="filled" data-color="successful" name="btnES" id="btnSaveEinstellungen" data-disabler>
                     <span class="db-icon" data-icon="save"></span>
                     Speichern
                   </button>
@@ -659,7 +659,7 @@
                           />
                           <label for="EmailAnzeige">E-Mail</label>
                         </div>
-                        <button class="btn btn-outline-primary" type="button" id="btnResendVerificationEmail" disabled>
+                        <button class="db-button" data-variant="outlined" type="button" id="btnResendVerificationEmail" disabled>
                           Verifizierungs-Mail senden
                         </button>
                       </div>
@@ -907,10 +907,10 @@
                         >
                       </div>
                       <div class="d-flex flex-column gap-2">
-                        <button class="btn btn-outline-primary" type="button" id="btnAddPasskeyInline" disabled>
+                        <button class="db-button" data-variant="outlined" type="button" id="btnAddPasskeyInline" disabled>
                           Biometrie einrichten
                         </button>
-                        <button class="btn btn-outline-secondary" type="button" id="btnPasswortPerPasskey" hidden>
+                        <button class="db-button" data-variant="outlined" type="button" id="btnPasswortPerPasskey" hidden>
                           Passwort per Passkey neu setzen
                         </button>
                       </div>
@@ -1112,7 +1112,7 @@
             </div>
           </div>
           <div class="dialog-fuss">
-            <button type="button" class="btn btn-secondary" data-action="close">Schließen</button>
+            <button type="button" class="db-button" data-variant="filled" data-action="close">Schließen</button>
           </div>
         </div>
       </article>
@@ -1124,7 +1124,7 @@
       <span class="text-body-secondary small" id="copyrightText" data-start-year="2021"
         >&copy; 2021 Jan Otto | v%APP_VERSION%</span
       >
-      <button type="button" class="btn btn-outline-secondary btn-sm impressum" data-dialog-target="impressum">
+      <button type="button" class="db-button impressum" data-variant="outlined" data-size="small" data-dialog-target="impressum">
         Impressum
       </button>
     </footer>

@@ -14,7 +14,7 @@ type DbButtonLook = {
 
 /**
  * Uebersetzt die Bootstrap-Button-Klassen der Aufrufstellen in DB-UX-Props, damit die
- * ~20 `<MyButton className="btn btn-...">` unveraendert bleiben koennen. Alles, was hier
+ * ~20 `<MyButton className="db-button btn-..." data-variant="filled">` unveraendert bleiben koennen. Alles, was hier
  * nicht erkannt wird (Layout-Klassen wie `text-start`), geht als `className` weiter --
  * solange Bootstrap noch im Build ist, wirkt es dort.
  */
@@ -60,6 +60,14 @@ export function buttonLook(className: string): DbButtonLook {
       case 'btn-outline-danger':
         look.variant = 'outlined';
         look.color = 'critical';
+        break;
+      case 'btn-outline-success':
+        look.variant = 'outlined';
+        look.color = 'successful';
+        break;
+      case 'btn-outline-warning':
+        look.variant = 'outlined';
+        look.color = 'warning';
         break;
       case 'btn-link':
         look.variant = 'ghost';

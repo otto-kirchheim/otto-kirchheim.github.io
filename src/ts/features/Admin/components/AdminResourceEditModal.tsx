@@ -60,7 +60,16 @@ export function AdminResourceEditModal({
             {resource.label} bearbeiten
             <code className="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
           </h5>
-          <button type="button" className="btn-close" onClick={closeEdit} />
+          <button
+            type="button"
+            className="db-button"
+            data-icon="cross"
+            data-variant="ghost"
+            data-no-text="true"
+            onClick={closeEdit}
+          >
+            Schließen
+          </button>
         </div>
 
         <div className="dialog-koerper">
@@ -102,7 +111,10 @@ export function AdminResourceEditModal({
                     {userNameMap[String(val)] && <span className="small fw-semibold">{userNameMap[String(val)]}</span>}
                     {onNavigateToUser && (
                       <button
-                        className="btn btn-sm btn-outline-info ms-auto"
+                        className="db-button ms-auto"
+                        data-variant="outlined"
+                        data-color="informational"
+                        data-size="small"
                         onClick={() => {
                           closeEdit();
                           onNavigateToUser(String(val));
@@ -139,7 +151,10 @@ export function AdminResourceEditModal({
                         <div key={i} className="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1">
                           <code className="small flex-grow-1">{truncateId(id)}</code>
                           <button
-                            className="btn btn-sm btn-outline-info py-0"
+                            className="db-button py-0"
+                            data-variant="outlined"
+                            data-color="informational"
+                            data-size="small"
                             onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
                           >
                             <span className="db-icon db-font-size-xs" data-icon="arrow_up_right" />
@@ -156,7 +171,10 @@ export function AdminResourceEditModal({
                     <div className="d-flex align-items-center gap-2">
                       <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{truncateId(val)}</code>
                       <button
-                        className="btn btn-sm btn-outline-info"
+                        className="db-button"
+                        data-variant="outlined"
+                        data-color="informational"
+                        data-size="small"
                         onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
                       >
                         <span
@@ -243,7 +261,9 @@ export function AdminResourceEditModal({
                   <div className="d-flex align-items-center gap-2">
                     <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
                     <button
-                      className="btn btn-sm btn-outline-secondary"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-size="small"
                       title="Kopieren"
                       onClick={() => void navigator.clipboard?.writeText(val)}
                     >
@@ -264,10 +284,10 @@ export function AdminResourceEditModal({
         </div>
 
         <div className="dialog-fuss">
-          <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+          <button className="db-button" data-variant="filled" onClick={closeEdit} disabled={edit.saving}>
             Abbrechen
           </button>
-          <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+          <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
             {edit.saving ? (
               <>
                 <span className="spinner-border spinner-border-sm me-1" role="status" />

@@ -16,7 +16,13 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
 
   const wantsPasskey = await confirmDialog(
     'Benutzer erfolgreich angelegt. Möchtest du jetzt direkt einen Passkey für zukünftige Logins einrichten?',
-    { title: 'Passkey einrichten', confirmLabel: 'Ja', cancelLabel: 'Nein', confirmClass: 'btn-primary' },
+    {
+      title: 'Passkey einrichten',
+      confirmLabel: 'Ja',
+      cancelLabel: 'Nein',
+      confirmVariant: 'brand',
+      confirmColor: undefined,
+    },
   );
 
   if (!wantsPasskey) {
@@ -33,7 +39,8 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
     const retry = await confirmDialog(`${result.message}\n\nPasskey-Einrichtung erneut versuchen?`, {
       title: 'Passkey-Fehler',
       confirmLabel: 'Erneut versuchen',
-      confirmClass: 'btn-primary',
+      confirmVariant: 'brand',
+      confirmColor: undefined,
     });
     if (!retry) {
       return;

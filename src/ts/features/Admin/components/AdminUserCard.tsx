@@ -265,7 +265,9 @@ export function AdminUserCard({
               {editable && (
                 <>
                   <button
-                    className="btn btn-primary btn-sm flex-grow-1"
+                    className="db-button flex-grow-1"
+                    data-variant="brand"
+                    data-size="small"
                     onClick={onSave}
                     disabled={!changed || isSaving}
                     data-disabler
@@ -288,7 +290,9 @@ export function AdminUserCard({
                   </button>
                   {changed && (
                     <button
-                      className="btn btn-outline-secondary btn-sm"
+                      className="db-button"
+                      data-variant="outlined"
+                      data-size="small"
                       onClick={onResetEdit}
                       disabled={isSaving}
                       title="Änderungen verwerfen"
@@ -300,7 +304,9 @@ export function AdminUserCard({
                 </>
               )}
               <button
-                className="btn btn-outline-secondary btn-sm flex-grow-1"
+                className="db-button flex-grow-1"
+                data-variant="outlined"
+                data-size="small"
                 onClick={onLoadAsUser}
                 disabled={isSaving}
                 data-disabler
@@ -314,7 +320,10 @@ export function AdminUserCard({
               </button>
               {editable && (
                 <button
-                  className="btn btn-outline-warning btn-sm"
+                  className="db-button"
+                  data-variant="outlined"
+                  data-color="warning"
+                  data-size="small"
                   onClick={() => createAdminUserPasswordModal(currentUser._id, currentUser.userName)}
                   disabled={isSaving}
                   title="Passwort für diesen Benutzer setzen"
@@ -325,7 +334,10 @@ export function AdminUserCard({
               )}
               {editable && (
                 <button
-                  className="btn btn-outline-info btn-sm"
+                  className="db-button"
+                  data-variant="outlined"
+                  data-color="informational"
+                  data-size="small"
                   onClick={() =>
                     createAdminUserLinksModal(currentUser._id, currentUser.userName, currentUser.emailVerified)
                   }
@@ -342,7 +354,10 @@ export function AdminUserCard({
               )}
               {editable && (
                 <button
-                  className="btn btn-outline-danger btn-sm"
+                  className="db-button"
+                  data-variant="outlined"
+                  data-color="critical"
+                  data-size="small"
                   onClick={onDelete}
                   disabled={isSaving}
                   title="Benutzer löschen"

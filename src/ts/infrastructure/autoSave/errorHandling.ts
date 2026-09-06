@@ -112,7 +112,7 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
     <div data-error-dialog="true">
       <div class="db-drawer-header bg-danger text-white">
         <h5>Fehler beim Speichern</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-bs-dismiss="modal">Schließen</button>
       </div>
       <div class="dialog-koerper">
         <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
@@ -122,7 +122,7 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
         </div>
       </div>
       <div class="dialog-fuss">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Schließen</button>
+        <button type="button" class="db-button" data-variant="filled" data-bs-dismiss="modal">Schließen</button>
       </div>
     </div>
   `;

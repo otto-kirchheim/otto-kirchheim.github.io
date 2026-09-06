@@ -46,10 +46,22 @@ describe('MyButton', () => {
   });
 
   it('reicht die Bootstrap-Modal-Attribute weiter, solange die Modal-Shell Bootstrap ist', () => {
-    const container = renderButton(<MyButton text="Abbrechen" className="btn btn-secondary" dataBsDismiss="modal" />);
+    const container = renderButton(
+      <MyButton text="Abbrechen" data-variant="filled" data-color="critical" dataBsDismiss="modal" />,
+    );
     const button = container.querySelector('button')!;
 
     expect(button.getAttribute('data-bs-dismiss')).toBe('modal');
     expect(button.getAttribute('data-variant')).toBe('filled');
+    expect(button.getAttribute('data-color')).toBe('critical');
+  });
+
+  it('nutzt ohne Angabe die Markenvariante und laesst `db-button` in der Klassenliste nicht doppelt stehen', () => {
+    const container = renderButton(<MyButton text="Speichern" className="db-button text-start" />);
+    const button = container.querySelector('button')!;
+
+    expect(button.getAttribute('data-variant')).toBe('brand');
+    expect(button.className.split(/\s+/).filter(k => k === 'db-button')).toHaveLength(1);
+    expect(button.className).toContain('text-start');
   });
 });

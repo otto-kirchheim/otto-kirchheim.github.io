@@ -40,11 +40,17 @@ export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbe
               <td>{v.gueltigVon}</td>
               <td>{v.gueltigBis ?? <span className="text-body-secondary">offen</span>}</td>
               <td className="text-end">
-                <div className="btn-group btn-group-sm">
-                  <button type="button" className="btn btn-outline-secondary" onClick={() => onBearbeiten(v)}>
+                <div className="knopfgruppe">
+                  <button type="button" className="db-button" data-variant="outlined" onClick={() => onBearbeiten(v)}>
                     Bearbeiten
                   </button>
-                  <button type="button" className="btn btn-outline-danger" onClick={() => onLoeschen(v)}>
+                  <button
+                    type="button"
+                    className="db-button"
+                    data-variant="outlined"
+                    data-color="critical"
+                    onClick={() => onLoeschen(v)}
+                  >
                     Löschen
                   </button>
                 </div>

@@ -200,7 +200,13 @@ export function AdminVorgabenEditor() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">VorgabenGeld</h5>
-        <button className="btn btn-sm btn-outline-primary" onClick={handleCreateYear} data-disabler>
+        <button
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
+          onClick={handleCreateYear}
+          data-disabler
+        >
           Jahr anlegen
         </button>
       </div>
@@ -232,7 +238,9 @@ export function AdminVorgabenEditor() {
       <div className="d-flex justify-content-between align-items-center mb-2">
         <label className="form-label mb-0">Monatswerte</label>
         <button
-          className="btn btn-sm btn-outline-secondary"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
           onClick={addMonthEntry}
           disabled={loading || saving || !selectedYear}
           data-disabler
@@ -262,7 +270,10 @@ export function AdminVorgabenEditor() {
               </div>
 
               <button
-                className="btn btn-sm btn-outline-danger"
+                className="db-button"
+                data-variant="outlined"
+                data-color="critical"
+                data-size="small"
                 onClick={() => removeMonthEntry(index)}
                 disabled={loading || saving || !selectedYear || monthEntries.length <= 1}
                 data-disabler
@@ -293,7 +304,8 @@ export function AdminVorgabenEditor() {
 
       <div className="d-flex gap-2 mt-3">
         <button
-          className="btn btn-primary"
+          className="db-button"
+          data-variant="brand"
           onClick={handleSave}
           disabled={saving || loading || !selectedYear}
           data-disabler
@@ -301,7 +313,9 @@ export function AdminVorgabenEditor() {
           {saving ? 'Speichert...' : 'Speichern'}
         </button>
         <button
-          className="btn btn-outline-danger"
+          className="db-button"
+          data-variant="outlined"
+          data-color="critical"
           onClick={handleDelete}
           disabled={saving || loading || !selectedYear}
           data-disabler

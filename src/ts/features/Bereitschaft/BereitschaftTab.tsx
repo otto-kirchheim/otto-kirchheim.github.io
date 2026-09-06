@@ -197,7 +197,9 @@ function BereitschaftTab() {
           Bereitschaft
           <button
             type="button"
-            className="btn btn-sm btn-link p-0"
+            className="db-button p-0"
+            data-variant="ghost"
+            data-size="small"
             id="btnHelpBereitschaft"
             aria-label="Hilfe anzeigen"
           >
@@ -210,25 +212,32 @@ function BereitschaftTab() {
       <div className="mitte">
         <div className="raster-auto my-3 knopfreihe abstand-3">
           <div className="d-grid">
-            <button type="button" className="btn btn-primary" id="btnESZ" data-disabler>
+            <button type="button" className="db-button" data-variant="brand" id="btnESZ" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Bereitschaft
             </button>
           </div>
           <div className="d-grid">
-            <button type="button" className="btn btn-primary" id="btnESE" data-disabler>
+            <button type="button" className="db-button" data-variant="brand" id="btnESE" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Einsatz
             </button>
           </div>
           <div className="d-grid">
-            <button type="button" className="btn btn-success" id="btnSaveB" data-disabler>
+            <button
+              type="button"
+              className="db-button"
+              data-variant="filled"
+              data-color="successful"
+              id="btnSaveB"
+              data-disabler
+            >
               <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
           <div className="d-grid">
-            <button type="button" className="btn btn-secondary" id="btnDownloadB" data-disabler>
+            <button type="button" className="db-button" data-variant="filled" id="btnDownloadB" data-disabler>
               <span className="db-icon" data-icon="download" />
               PDF erzeugen
             </button>

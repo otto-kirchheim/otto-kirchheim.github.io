@@ -271,7 +271,7 @@ export function AdminUserProfileEditor({
     const confirmed = await confirmDialog(`emailVerified wird auf ${String(newVal)} gesetzt.`, {
       title: 'emailVerified ändern?',
       confirmLabel: 'Setzen',
-      confirmClass: 'btn-warning',
+      confirmColor: 'warning',
     });
     if (!confirmed) return;
     try {
@@ -369,7 +369,9 @@ export function AdminUserProfileEditor({
                   </td>
                   <td className="text-end">
                     <button
-                      className="btn btn-sm btn-outline-primary py-0"
+                      className="db-button py-0"
+                      data-variant="outlined"
+                      data-size="small"
                       onClick={() => openEdit(row)}
                       title="Bearbeiten"
                     >
@@ -388,16 +390,18 @@ export function AdminUserProfileEditor({
           <small className="text-muted">
             Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div className="btn-group btn-group-sm">
+          <div className="knopfgruppe">
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
             </button>
             <button
-              className="btn btn-outline-secondary"
+              className="db-button"
+              data-variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
@@ -408,7 +412,7 @@ export function AdminUserProfileEditor({
       )}
 
       <div className="text-end mt-2">
-        <button className="btn btn-sm btn-outline-secondary" onClick={() => loadPage(currentPage)}>
+        <button className="db-button" data-variant="outlined" data-size="small" onClick={() => loadPage(currentPage)}>
           <span
             className="db-icon me-1 db-font-size-sm"
             data-icon="circular_arrows"
@@ -429,7 +433,16 @@ export function AdminUserProfileEditor({
                 <h5>
                   UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
                 </h5>
-                <button type="button" className="btn-close" onClick={closeEdit} />
+                <button
+                  type="button"
+                  className="db-button"
+                  data-icon="cross"
+                  data-variant="ghost"
+                  data-no-text="true"
+                  onClick={closeEdit}
+                >
+                  Schließen
+                </button>
               </div>
 
               <div className="dialog-koerper">
@@ -505,7 +518,10 @@ export function AdminUserProfileEditor({
                     <div>
                       <div className="small text-muted mb-1">emailVerified</div>
                       <button
-                        className={`btn btn-sm ${edit.emailVerified ? 'btn-success' : 'btn-outline-secondary'}`}
+                        className="db-button"
+                        data-variant={edit.emailVerified ? 'filled' : 'outlined'}
+                        data-color={edit.emailVerified ? 'successful' : undefined}
+                        data-size="small"
                         onClick={handleToggleEmailVerified}
                       >
                         {edit.emailVerified === null
@@ -536,7 +552,10 @@ export function AdminUserProfileEditor({
                             {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
                           </span>
                           <button
-                            className="btn btn-sm btn-outline-danger py-0"
+                            className="db-button py-0"
+                            data-variant="outlined"
+                            data-color="critical"
+                            data-size="small"
                             onClick={() => handleDeletePasskey(pk.credentialId)}
                             title="Passkey löschen"
                           >
@@ -550,10 +569,10 @@ export function AdminUserProfileEditor({
               </div>
 
               <div className="dialog-fuss">
-                <button className="btn btn-secondary" onClick={closeEdit} disabled={edit.saving}>
+                <button className="db-button" data-variant="filled" onClick={closeEdit} disabled={edit.saving}>
                   Schließen
                 </button>
-                <button className="btn btn-primary" onClick={saveEdit} disabled={edit.saving}>
+                <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
                   {edit.saving ? (
                     <>
                       <span className="spinner-border spinner-border-sm me-1" role="status" />

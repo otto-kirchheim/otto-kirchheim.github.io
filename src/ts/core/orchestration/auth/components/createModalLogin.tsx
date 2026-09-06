@@ -15,7 +15,7 @@ export default function createModalLogin(): void {
   const footer = (
     <div className="dialog-fuss flex-column align-items-stretch gap-0 p-0">
       <div className="d-flex justify-content-center gap-2 w-100 px-3 pt-3">
-        <MyButton className="btn btn-primary" type="submit" text="Einloggen" id="btnLoginModal" />
+        <MyButton className="db-button" data-variant="brand" type="submit" text="Einloggen" id="btnLoginModal" />
       </div>
 
       {supportsPasskeys && (
@@ -28,7 +28,8 @@ export default function createModalLogin(): void {
             </p>
             <div className="d-flex justify-content-center gap-2">
               <MyButton
-                className="btn btn-outline-primary"
+                className="db-button"
+                data-variant="outlined"
                 type="button"
                 text="Mit Passkey"
                 clickHandler={() => {
@@ -46,20 +47,23 @@ export default function createModalLogin(): void {
         <span className="small text-body-secondary">Weitere Optionen</span>
         <div className="d-grid d-sm-flex gap-2">
           <MyButton
-            className="btn btn-outline-secondary"
+            className="db-button"
+            data-variant="outlined"
             type="button"
             dataBsDismiss="modal"
             text="Passwort vergessen"
             clickHandler={() => createModalForgotPassword()}
           />
           <MyButton
-            className="btn btn-outline-info"
+            className="db-button"
+            data-variant="outlined"
+            data-color="informational"
             type="button"
             dataBsDismiss="modal"
             text="Registrieren"
             clickHandler={() => createModalNewUser()}
           />
-          <MyButton className="btn btn-secondary" type="button" dataBsDismiss="modal" text="Abbrechen" />
+          <MyButton className="db-button" data-variant="filled" type="button" dataBsDismiss="modal" text="Abbrechen" />
         </div>
       </div>
     </div>
