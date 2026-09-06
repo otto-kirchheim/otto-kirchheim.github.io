@@ -20,7 +20,7 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
 const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
-      <div className="col-12 pt-2">
+      <div className="pt-2">
         <h6 className="mb-2">Bereitschaft</h6>
       </div>
       {createShowElement(row, 'beginnB', false)}
@@ -34,7 +34,7 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
 
   return (
     <>
-      <div className="col-12 pt-2">
+      <div className="pt-2">
         <h6 className="mb-2">Nachtschicht</h6>
       </div>
       {createShowElement(row, 'nacht')}
@@ -44,7 +44,7 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
           {createShowElement(row, 'endeN', false)}
         </>
       ) : (
-        <div className="col-12 small text-body-secondary pb-1">Keine Nachtschicht aktiviert.</div>
+        <div className="small text-body-secondary pb-1">Keine Nachtschicht aktiviert.</div>
       )}
     </>
   );

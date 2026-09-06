@@ -129,8 +129,8 @@ export function TabellenBlock({
         </button>
       </div>
 
-      <div className="row g-1 mb-1">
-        <div className="col-7">
+      <div className="raster mb-1 abstand-1">
+        <div className="sp-7">
           <select
             className="form-select form-select-sm"
             value={tabelle.quelle}
@@ -143,7 +143,7 @@ export function TabellenBlock({
             ))}
           </select>
         </div>
-        <div className="col-5">
+        <div className="sp-5">
           <div className="form-check">
             <input
               className="form-check-input"
@@ -260,7 +260,7 @@ export function TabellenBlock({
           </div>
         )}
       </div>
-      <div className="row g-1 mb-1 align-items-end">
+      <div className="raster mb-1 align-items-end abstand-1">
         <ZahlFeld label="startY" wert={startY} onChange={v => setzeStartY(v ?? 0)} />
         <ZahlFeld label="Höhe" wert={zeilenHoehe} min={0.1} onChange={v => setzeZeilenHoehe(v ?? 1)} />
         <ZahlFeld label="Zeilen" wert={maxZeilen} ganzzahl min={1} onChange={v => setzeMaxZeilen(v ?? 1)} />

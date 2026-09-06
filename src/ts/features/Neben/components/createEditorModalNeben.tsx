@@ -139,7 +139,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       <MyModalBody>
         {dataE.length > 0 && (
           <MySelect
-            className="form-floating col-12"
+            className="form-floating"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={ewtOptions}
@@ -164,9 +164,9 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
         {['Beginn', 'Ende'].map(value => createTimeElement(row, value, { required: true }))}
 
-        <div className="col-12 border rounded p-2">
+        <div className="border rounded p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
-          <div className="row g-2">
+          <div className="raster abstand-2">
             {configuredZulagen.map(zulage => {
               const currentValue = existingZulagen.find(item => item.Typ === zulage.code)?.Wert ?? 0;
               return (

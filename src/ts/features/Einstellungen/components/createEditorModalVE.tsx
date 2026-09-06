@@ -148,7 +148,7 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
     endSlot === null ? `${getSlotLabel(startSlot)} -> ...` : `${getSlotLabel(startSlot)} -> ${getSlotLabel(endSlot)}`;
 
   return (
-    <div className="col-12">
+    <div className="">
       <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
         <span className="fw-semibold">{label}</span>
         <span className="small text-body-secondary">Auswahl: {inRangeText}</span>
@@ -227,7 +227,7 @@ const createcheckboxElement = (
   const isChecked: boolean = row instanceof Row ? (row.cells?.[column.name] as boolean) : false;
 
   return (
-    <div className="col-12">
+    <div className="">
       <MyCheckbox className="form-check form-switch" id={column.name} checked={isChecked}>
         {column.title}
       </MyCheckbox>
@@ -315,7 +315,7 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
 
   return (
     <Fragment>
-      <div className="col-12">
+      <div className="">
         <label className="form-label fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</label>
         <div className="d-flex flex-wrap gap-3">
           <div className="form-check">
@@ -342,9 +342,9 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
       </div>
 
       {nachtAktiv && (
-        <div className="col-12 border rounded p-2">
+        <div className="border rounded p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht-Zeitraum</p>
-          <div className="row g-2">
+          <div className="raster abstand-2">
             <WeekdayRangeSelector
               startId="beginnN"
               endId="endeN"
@@ -403,11 +403,11 @@ export default function EditorModalVE(
       <MyModalBody>
         {createNameElement(row)}
         {createcheckboxElement(row, 'standard')}
-        <div className="col-12">
+        <div className="">
           <hr className="my-0" />
         </div>
         {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
-        <div className="col-12">
+        <div className="">
           <hr className="my-0" />
         </div>
         <SchichtenConfigSection

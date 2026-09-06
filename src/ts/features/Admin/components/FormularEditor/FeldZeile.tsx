@@ -172,8 +172,8 @@ function FeldZeile({
       </div>
 
       {feld.listenKopf ? (
-        <div className="row g-1 mb-1">
-          <div className="col-4">
+        <div className="raster mb-1 abstand-1">
+          <div className="sp-4">
             <select
               className="form-select form-select-sm"
               value={feld.listenKopf.tabelle}
@@ -190,7 +190,7 @@ function FeldZeile({
               ))}
             </select>
           </div>
-          <div className="col-5">
+          <div className="sp-5">
             <select
               className="form-select form-select-sm"
               value={feld.listenKopf.gruppe}
@@ -208,7 +208,7 @@ function FeldZeile({
               ))}
             </select>
           </div>
-          <div className="col-3">
+          <div className="sp-3">
             <div className="input-group input-group-sm">
               <span className="input-group-text px-1 small">Platz</span>
               <input

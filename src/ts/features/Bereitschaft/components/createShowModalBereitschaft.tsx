@@ -5,11 +5,11 @@ import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '@/types';
 const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(column: Column<T>, row: Row<T>) => {
   if (column.editing) return;
   return (
-    <div className="mb-1 row" key={column.name}>
-      <label className="col-5 col-form-label text-wrap fw-bold" htmlFor={column.name}>
+    <div className="mb-1 raster" key={column.name}>
+      <label className="sp-5 col-form-label text-wrap fw-bold" htmlFor={column.name}>
         {column.title}
       </label>
-      <span className="col-7 align-middle text-break my-auto" id={column.name}>
+      <span className="sp-7 align-middle text-break my-auto" id={column.name}>
         {column.parser(row.cells[column.name] as T[keyof T])}
       </span>
     </div>

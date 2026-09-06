@@ -435,9 +435,9 @@ export function AdminUserProfileEditor({
               <div className="dialog-koerper">
                 {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
 
-                <div className="row g-4">
+                <div className="raster abstand-4">
                   {/* Pers Fields */}
-                  <div className="col-md-6">
+                  <div className="sp-md-6">
                     <h6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
                     {Object.entries(edit.pers).map(([key, val]) => {
                       const selectOpts = PERS_SELECT_FIELDS[key];
@@ -482,7 +482,7 @@ export function AdminUserProfileEditor({
                   </div>
 
                   {/* JSON Sections */}
-                  <div className="col-md-6">
+                  <div className="sp-md-6">
                     <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
                     {JSON_SECTIONS.map(section => (
                       <div key={section} className="mb-3">

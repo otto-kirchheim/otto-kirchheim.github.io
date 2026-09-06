@@ -157,8 +157,8 @@ export function AggregationEditor({
   }
 
   return (
-    <div className="row g-1 mb-1">
-      <div className="col-3">
+    <div className="raster mb-1 abstand-1">
+      <div className="sp-3">
         <select
           className="form-select form-select-sm"
           value={wert.op}
@@ -171,7 +171,7 @@ export function AggregationEditor({
           ))}
         </select>
       </div>
-      <div className="col-4">
+      <div className="sp-4">
         <select
           className="form-select form-select-sm"
           value={wert.ueber}
@@ -183,7 +183,7 @@ export function AggregationEditor({
           <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
         </select>
       </div>
-      <div className="col-5">
+      <div className="sp-5">
         <select
           className="form-select form-select-sm"
           value={
@@ -238,7 +238,7 @@ export function AggregationEditor({
           )}
         </select>
       </div>
-      <div className="col-12 d-flex flex-wrap align-items-center gap-2">
+      <div className="d-flex flex-wrap align-items-center gap-2">
         <span
           className="small text-body-secondary"
           title="Grenzt die Aggregation auf eine oder mehrere Teiltabellen ein -- ohne Auswahl laufen alle Tabellen zusammen"
@@ -258,7 +258,7 @@ export function AggregationEditor({
         ))}
       </div>
       {wert.op === 'letztesDatum' && (
-        <div className="col-12 d-flex align-items-center gap-2">
+        <div className="d-flex align-items-center gap-2">
           <input
             type="number"
             min="0"

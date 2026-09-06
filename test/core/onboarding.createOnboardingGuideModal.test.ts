@@ -3,12 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 const zeigeTabMock = vi.fn(() => true);
 vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
-const collapseShowMock = vi.fn();
-const collapseGetOrCreateInstanceMock = vi.fn(() => ({ show: collapseShowMock }));
-vi.mock('bootstrap/js/dist/collapse', () => ({
-  default: { getOrCreateInstance: collapseGetOrCreateInstanceMock },
-}));
-
 import Storage from '@/infrastructure/storage/Storage';
 import type { IVorgabenU } from '@/types';
 import {
@@ -76,7 +70,7 @@ describe('createOnboardingGuideModal (Panel)', () => {
         <li><button id="einstellungen-tab" type="button" data-tab-target="Einstellungen"></button></li>
       </ul>
       <div id="modal"><form>bestehende Eingaben</form></div>
-      <div class="accordion-item"><div id="collapseOne"></div></div>
+      <li class="db-accordion-item"><details id="collapseOne"></details></li>
     `;
     vi.clearAllMocks();
     Storage.remove('OnboardingAbgeschlossen');
@@ -187,15 +181,8 @@ describe('createOnboardingGuideModal (Panel)', () => {
 
     expect(zeigeTabMock).toHaveBeenCalled();
     expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
-    expect(collapseGetOrCreateInstanceMock).toHaveBeenCalled();
-    expect(
-      collapseGetOrCreateInstanceMock.mock.calls.some(
-        call =>
-          (((call as unknown as unknown[]).at(0) as HTMLElement | null | undefined)?.id ?? null) === 'collapseOne',
-      ),
-    ).toBe(true);
-    expect(collapseShowMock).toHaveBeenCalled();
-    expect(document.querySelector('.accordion-item')?.classList.contains('onboarding-focus')).toBe(true);
+    expect(document.querySelector<HTMLDetailsElement>('#collapseOne')?.open).toBe(true);
+    expect(document.querySelector('.db-accordion-item')?.classList.contains('onboarding-focus')).toBe(true);
     expect(getPanel()).not.toBeNull();
   });
 

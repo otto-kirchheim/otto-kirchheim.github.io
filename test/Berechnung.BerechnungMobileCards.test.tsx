@@ -37,14 +37,14 @@ describe('#BerechnungMobileCards', () => {
     mountBerechnungMobileCards(monatsErgebnisse, ['bereitschaft', 'ewt', 'neben']);
 
     const container = document.querySelector('#berechnungMobileCards')!;
-    const items = container.querySelectorAll('.accordion-item');
+    const items = container.querySelectorAll('.db-accordion-item');
     expect(items.length).toBe(monatsErgebnisse.length);
 
-    const ersterHeader = items[0].querySelector('.accordion-button')!;
+    const ersterHeader = items[0].querySelector('summary')!;
     expect(ersterHeader.textContent).toContain('Jan');
     expect(ersterHeader.textContent).toContain('496,49');
 
-    const ersterBody = items[0].querySelector('.accordion-body')!;
+    const ersterBody = items[0].querySelector('summary + div')!;
     expect(ersterBody.textContent).toContain('Bereitschaftszulage');
     expect(ersterBody.textContent).toContain('258,00');
     // Gruppensummen stehen in den Zwischenüberschriften
@@ -81,11 +81,11 @@ describe('#BerechnungMobileCards', () => {
       container,
     );
 
-    const items = container.querySelectorAll('.accordion-item');
+    const items = container.querySelectorAll('.db-accordion-item');
     // Januar: neben deaktiviert, aber Daten vorhanden → Block sichtbar
-    expect(items[0].querySelector('.accordion-body')!.textContent).toContain('Nebenbezüge');
+    expect(items[0].querySelector('summary + div')!.textContent).toContain('Nebenbezüge');
     // Februar: neben deaktiviert, keine Daten → Block ausgeblendet
-    expect(items[1].querySelector('.accordion-body')!.textContent).not.toContain('Nebenbezüge');
+    expect(items[1].querySelector('summary + div')!.textContent).not.toContain('Nebenbezüge');
   });
 
   it('zeigt Zulagen des Monats auch bei nur einem Code im Jahr, lässt 0-Zeilen weg', () => {
@@ -107,7 +107,7 @@ describe('#BerechnungMobileCards', () => {
       container,
     );
 
-    const items = container.querySelectorAll('.accordion-item');
+    const items = container.querySelectorAll('.db-accordion-item');
     // Januar: Code mit Wert 3 → Zeile sichtbar (auch bei nur einem Code im Jahr)
     expect(items[0].textContent).toContain('040 Fahrentsch.');
     expect(items[0].textContent).toContain('3 Stk.');
@@ -143,11 +143,8 @@ describe('#BerechnungMobileCards', () => {
     mountBerechnungMobileCards(monatsErgebnisse, []);
 
     const container = document.querySelector('#berechnungMobileCards')!;
-    expect(container.querySelector('#berechnungMonatCollapse2')?.classList.contains('show')).toBe(true);
-    expect(container.querySelector('#berechnungMonatCollapse1')?.classList.contains('show')).toBe(false);
-    expect(
-      container.querySelector('[data-bs-target="#berechnungMonatCollapse2"]')?.classList.contains('collapsed'),
-    ).toBe(false);
+    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse2')?.open).toBe(true);
+    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse1')?.open).toBe(false);
   });
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {
@@ -162,7 +159,7 @@ describe('#BerechnungMobileCards', () => {
 
     generateTableBerechnung(datenBerechungMock as IVorgabenBerechnung, VorgabenGeldMock);
 
-    const items = document.querySelectorAll('#berechnungMobileCards .accordion-item');
+    const items = document.querySelectorAll('#berechnungMobileCards .db-accordion-item');
     expect(items.length).toBe(Object.keys(datenBerechungMock).length);
   });
 });

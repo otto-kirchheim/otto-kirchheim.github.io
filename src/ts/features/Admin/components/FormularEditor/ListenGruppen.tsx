@@ -58,8 +58,8 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               </button>
             </div>
 
-            <div className="row g-1 mb-1">
-              <div className="col-6">
+            <div className="raster mb-1 abstand-1">
+              <div className="sp-6">
                 <select
                   className="form-select form-select-sm"
                   title="Zeilenfeld mit der Liste"
@@ -73,7 +73,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                   ))}
                 </select>
               </div>
-              <div className="col-3">
+              <div className="sp-3">
                 <input
                   className="form-control form-control-sm font-monospace"
                   title="Feld im Listeneintrag, das den Schlüssel trägt"
@@ -81,7 +81,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                   onChange={e => setzeGruppe(name, { ...gruppe, schluessel: (e.target as HTMLInputElement).value })}
                 />
               </div>
-              <div className="col-3">
+              <div className="sp-3">
                 <input
                   className="form-control form-control-sm font-monospace"
                   title="Feld im Listeneintrag mit dem anzuzeigenden Wert"

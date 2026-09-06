@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (63)
+
+### refactor (DB-UX-Migration Phase H: Raster und Akkordeon ohne Bootstrap)
+
+- **Rasterhilfen (`scss/raster.scss`, neu)** ersetzen `.row`/`.col-*`/`.container`:
+  `.raster` (12 Spalten, Kinder standardmaessig volle Breite, `.sp-*` verschmaelert einzelne),
+  `.raster-auto` (so viele gleich breite Spalten, wie bei `--spalte-min` hineinpassen),
+  `.abstand-0..5` (Bootstraps Rinnenbreiten), `.mitte`/`.breit` fuer die Container. 383
+  Klassenvorkommen in 45 Dateien umgestellt. Anders als bei Bootstrap gibt es keine negativen
+  Aussenabstaende und kein Innenpolster an den Kindern -- der Abstand kommt aus `gap`.
+- **`.w200` -> `.knopfreihe`:** die Knopfreihen der Tabs bekommen eigene Spaltenregeln
+  (gleich breit bis 250 px, Gruppe zentriert). Mit gestreckten Rasterspalten standen die
+  Knoepfe sonst weit auseinander statt mittig beieinander.
+- **Jahresauswahl** in den Einstellungen kommt ohne Rasterverschachtelung aus
+  (`.jahr-auswahl`, 30 rem, mittig) -- vorher drei Ebenen fuer eine Eingabezeile.
+- **Akkordeon auf DB UX:** Einstellungen (7 Abschnitte) und die Berechnungs-Monatskarten
+  laufen als `db-accordion` mit nativem `<details>`/`<summary>`. Exklusives Aufklappen macht
+  jetzt das `name`-Attribut statt `data-bs-parent`. Damit faellt Bootstraps
+  `Collapse`-Plugin ersatzlos weg (`main.ts`, `onboardingValidation.ts`).
+- **Floating-Labels:** Bootstrap blendet den Platzhalter aus, wenn ein Floating-Label das
+  Feld beschriftet -- weil Bootstrap im untersten Layer liegt, faerbten die DB-Regeln ihn
+  wieder ein und Label und Platzhalter standen uebereinander (sichtbar, sobald ein
+  Einstellungen-Abschnitt offen war). Eine App-Regel setzt ihn wieder auf `transparent`.
+
 ## 2026-09-06 (62)
 
 ### refactor (DB-UX-Migration Phase H: Bootstraps Modal-Huellen raus)

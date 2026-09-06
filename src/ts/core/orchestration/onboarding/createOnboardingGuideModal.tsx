@@ -156,7 +156,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
     if (!collapseId) return;
 
     springeZu('#einstellungen-tab', collapseId);
-    const accordionItem = document.querySelector(collapseId)?.closest('.accordion-item');
+    const accordionItem = document.querySelector(collapseId)?.closest('.db-accordion-item');
     accordionItem?.classList.add('onboarding-focus');
     return () => accordionItem?.classList.remove('onboarding-focus');
   }, [step]);

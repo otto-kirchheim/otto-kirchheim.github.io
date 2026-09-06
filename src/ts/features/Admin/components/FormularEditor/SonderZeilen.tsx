@@ -139,8 +139,8 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
               </button>
             </div>
 
-            <div className="row g-1 mb-1">
-              <div className="col-12">
+            <div className="raster mb-1 abstand-1">
+              <div className="">
                 <select
                   className="form-select form-select-sm"
                   title="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
@@ -164,12 +164,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                 ? sonderZeileZelleWert(zelle, spalte, tabelleName, rows, vorschau.daten, vorschau.kontext)
                 : undefined;
               return (
-                <div key={index} className="row g-1 mb-1 align-items-center">
+                <div key={index} className="raster mb-1 align-items-center abstand-1">
                   {/* Was: welche Spalte, welcher Wert. */}
-                  <div className="col-4 small text-truncate" title={bezeichnung}>
+                  <div className="sp-4 small text-truncate" title={bezeichnung}>
                     {bezeichnung}
                   </div>
-                  <div className="col-8">
+                  <div className="sp-8">
                     <select
                       className="form-select form-select-sm"
                       value={zelle?.art ?? ''}
@@ -195,7 +195,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                   {zelle && (
                     <>
                       {/* Format: wie der Wert dieser Zelle angezeigt wird. */}
-                      <div className="col-12 mt-1">
+                      <div className="mt-1">
                         <select
                           className="form-select form-select-sm"
                           title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
@@ -216,7 +216,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                       </div>
 
                       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen. */}
-                      <div className="col-3 mt-1">
+                      <div className="sp-3 mt-1">
                         <input
                           type="number"
                           className="form-control form-control-sm"
@@ -229,7 +229,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           }}
                         />
                       </div>
-                      <div className="col-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 form-check mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -243,7 +243,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                         <label className="form-check-label small">Fett</label>
                       </div>
-                      <div className="col-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 form-check mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -257,7 +257,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                         <label className="form-check-label small">Kursiv</label>
                       </div>
-                      <div className="col-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 form-check mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -273,7 +273,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                       </div>
 
                       {/* Verhalten: Ausrichtung und Auto-Verkleinerung steuern beide, wie der Text in die Zelle passt. */}
-                      <div className="col-8 mt-1">
+                      <div className="sp-8 mt-1">
                         <select
                           className="form-select form-select-sm"
                           title="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
@@ -291,7 +291,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           <option value="rechts">rechts</option>
                         </select>
                       </div>
-                      <div className="col-4 mt-1 form-check mb-0">
+                      <div className="sp-4 mt-1 form-check mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -308,7 +308,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                     </>
                   )}
                   {zelle && (
-                    <div className="col-12">
+                    <div className="">
                       <WertVorschau text={vorschauText ?? ''} />
                     </div>
                   )}

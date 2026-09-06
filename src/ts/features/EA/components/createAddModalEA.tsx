@@ -124,7 +124,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
       <MyModalBody>
         {initialDataE.length > 0 && (
           <MySelect
-            className="form-floating col-12"
+            className="form-floating"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={buildEwtOptions(initialDataE, getUsedEwtRefs(), initialNextEwt?._id)}

@@ -67,7 +67,7 @@ describe('ShowModalBereitschaft', () => {
     ShowModalBereitschaft(row, 'Details');
     const container = renderCapturedVnode();
 
-    expect(container.querySelectorAll('.row').length).toBe(2);
+    expect(container.querySelectorAll('.raster').length).toBe(2);
     expect(container.querySelector('#Beginn')?.textContent).toBe('08:00');
     expect(container.querySelector('#Ende')?.textContent).toBe('16:00');
   });

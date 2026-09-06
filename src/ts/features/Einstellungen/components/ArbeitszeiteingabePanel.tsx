@@ -44,8 +44,8 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
   return (
     <div>
       <FahrzeitInput value={aZ.fahrzeit} onChange={updateFahrzeit} />
-      <div className="row g-0">
-        <div className="col-12 col-lg-6 arbeitszeit-col-left">
+      <div className="raster abstand-0">
+        <div className="sp-lg-6 arbeitszeit-col-left">
           <hr className="my-3" />
           <SchichtSection title="Frühschicht" schicht={aZ.frueh} onChange={updateFrueh} />
           <hr className="my-3" />
@@ -56,7 +56,7 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
             onChange={updateSpaet}
           />
         </div>
-        <div className="col-12 col-lg-6 arbeitszeit-col-right">
+        <div className="sp-lg-6 arbeitszeit-col-right">
           <hr className="my-3" />
           <OptionalSchichtSection
             title="Nachtschicht"

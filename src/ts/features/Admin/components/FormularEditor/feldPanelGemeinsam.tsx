@@ -55,7 +55,7 @@ export function ZahlFeld({
   };
 
   return (
-    <div className="col">
+    <div className="">
       <div className="input-group input-group-sm">
         <span className="input-group-text px-1 small">{label}</span>
         <input
@@ -110,7 +110,7 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
         />
       </button>
       {offen && (
-        <div className="row g-1 w-100 mt-1">
+        <div className="raster w-100 mt-1 abstand-1">
           <ZahlFeld label="x" wert={wert.x} onChange={v => onChange({ ...wert, x: v ?? 0 })} />
           <ZahlFeld label="x2" wert={wert.x2} onChange={v => onChange({ ...wert, x2: v })} />
           {!nurX && (
@@ -149,8 +149,8 @@ export function DarstellungsFelder<
   return (
     <>
       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
-      <div className="row g-1 align-items-center">
-        <div className="col-3">
+      <div className="raster align-items-center abstand-1">
+        <div className="sp-3">
           <input
             type="number"
             className="form-control form-control-sm"
@@ -159,7 +159,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
           />
         </div>
-        <div className="col-3 form-check mb-0">
+        <div className="sp-3 form-check mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -168,7 +168,7 @@ export function DarstellungsFelder<
           />
           <label className="form-check-label small">Fett</label>
         </div>
-        <div className="col-3 form-check mb-0">
+        <div className="sp-3 form-check mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -177,7 +177,7 @@ export function DarstellungsFelder<
           />
           <label className="form-check-label small">Kursiv</label>
         </div>
-        <div className="col-3 form-check mb-0">
+        <div className="sp-3 form-check mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -188,8 +188,8 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
-      <div className="row g-1 mt-1">
-        <div className="col-5">
+      <div className="raster mt-1 abstand-1">
+        <div className="sp-5">
           <select
             className="form-select form-select-sm"
             value={wert.align ?? 'links'}
@@ -200,7 +200,7 @@ export function DarstellungsFelder<
             <option value="rechts">rechts</option>
           </select>
         </div>
-        <div className="col-7">
+        <div className="sp-7">
           <select
             className="form-select form-select-sm"
             title="Textrichtung in der Zelle — 90° für schmale, hochkant beschriftete Felder"
@@ -219,8 +219,8 @@ export function DarstellungsFelder<
         </div>
       </div>
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
-      <div className="row g-1 mt-1">
-        <div className="col-12">
+      <div className="raster mt-1 abstand-1">
+        <div className="">
           <select
             className="form-select form-select-sm"
             value={wert.format ?? ''}

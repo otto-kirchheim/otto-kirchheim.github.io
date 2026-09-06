@@ -110,7 +110,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           {row.columns.array.find(column => column.name === 'Tag')?.title ?? 'Tag'}
         </MyInput>
 
-        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="col-12 col-sm-6 d-none">
+        <div ref={buchungstagHinweisRef} id="buchungstagHinweisEdit" className="sp-sm-6 d-none">
           <MyInput
             myRef={buchungstagHinweisTextRef}
             disabled
@@ -123,7 +123,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           </MyInput>
         </div>
         <MySelect
-          className="form-floating col-12 col-sm-7"
+          className="form-floating sp-sm-7"
           id="Einsatzort"
           title={row.columns.array.find(column => column.name === 'Einsatzort')?.title ?? 'Einsatzort'}
           value={row instanceof Row ? row.cells['Einsatzort'].toString() : undefined}
@@ -138,14 +138,14 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           ]}
         />
         <MySelect
-          className="form-floating col-12 col-sm-7"
+          className="form-floating sp-sm-7"
           required
           id={'Schicht'}
           title={row.columns.array.find(column => column.name === 'Schicht')?.title ?? 'Schicht'}
           value={row instanceof Row ? row.cells['Schicht'].toString() : undefined}
           options={buildSchichtOptionen(vorgabenU)}
         />
-        <div className="col-12 col-sm-4">
+        <div className="sp-sm-4">
           <MyCheckbox
             className="form-check form-switch"
             id={'berechnen'}
@@ -155,7 +155,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           </MyCheckbox>
         </div>
 
-        <div className="col-12 position-relative d-flex text-muted">
+        <div className="position-relative d-flex text-muted">
           <div className="w-50 text-center">
             <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
           </div>
@@ -167,19 +167,19 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
         {createTimeElement(row, 'abWE')}
         {createTimeElement(row, 'anWE')}
 
-        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">Arbeitszeit</p>
+        <p className="text-center text-muted fw-semibold text-uppercase mb-0">Arbeitszeit</p>
         {createTimeElement(row, 'beginE')}
         {createTimeElement(row, 'endeE')}
 
-        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">1. Tätigkeitsstätte</p>
+        <p className="text-center text-muted fw-semibold text-uppercase mb-0">1. Tätigkeitsstätte</p>
         {createTimeElement(row, 'ab1E')}
         {createTimeElement(row, 'an1E')}
 
-        <p className="col-12 text-center text-muted fw-semibold text-uppercase mb-0">Einsatzort</p>
+        <p className="text-center text-muted fw-semibold text-uppercase mb-0">Einsatzort</p>
         {createTimeElement(row, 'anEE')}
         {createTimeElement(row, 'abEE')}
 
-        <div className="col-12 position-relative d-flex text-muted">
+        <div className="position-relative d-flex text-muted">
           <div className="w-50 text-center">
             <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
           </div>

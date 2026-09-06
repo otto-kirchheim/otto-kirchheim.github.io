@@ -37,7 +37,7 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
   };
 
   return (
-    <div className="container-fluid px-2 px-md-3 mt-1">
+    <div className="breit px-2 px-md-3 mt-1">
       <div className="alert alert-info border-info-subtle shadow-sm mb-0" role="status" aria-live="polite">
         <div className="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2 gap-sm-3">
           <div className="d-flex align-items-start gap-2">

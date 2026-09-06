@@ -78,7 +78,7 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
   };
 
   return (
-    <div className="col-12">
+    <div className="">
       <div className="form-check form-switch bereitschaft">
         <input
           className="form-check-input"

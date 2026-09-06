@@ -29,7 +29,7 @@ function StatCard({
 }) {
   const display = label ?? value?.toLocaleString() ?? '–';
   return (
-    <div className="col-sm-6 col-xl-3">
+    <div className="sp-sm-6 sp-xl-3">
       <div className="card border-0 shadow-sm h-100">
         <div className="card-body d-flex gap-3 align-items-start">
           <span className={`db-icon fs-2 ${colorClass} db-font-size-lg`} data-icon={icon} />
@@ -112,7 +112,7 @@ export function AdminDashboard() {
 
   return (
     <div>
-      <div className="row g-3 mb-4">
+      <div className="raster mb-4 abstand-3">
         {(() => {
           const gap = stats.users.total - stats.profiles.total;
           const sub =
@@ -159,8 +159,8 @@ export function AdminDashboard() {
           })()}
       </div>
 
-      <div className="row g-3">
-        <div className="col-md-4">
+      <div className="raster abstand-3">
+        <div className="sp-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <h6 className="card-title fw-semibold mb-3">Rollenverteilung</h6>
@@ -174,7 +174,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="col-md-4">
+        <div className="sp-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <h6 className="card-title fw-semibold mb-3">Ressourcenbestand</h6>
@@ -210,7 +210,7 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="col-md-4">
+        <div className="sp-md-4">
           <div className="card border-0 shadow-sm h-100">
             <div className="card-body">
               <h6 className="card-title fw-semibold mb-3">Auth-Aktivität</h6>
@@ -234,8 +234,8 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <div className="row g-3 mt-0">
-        <div className="col-12">
+      <div className="raster mt-0 abstand-3">
+        <div className="">
           <MemoryCard
             heap={heap}
             loading={heapLoading}

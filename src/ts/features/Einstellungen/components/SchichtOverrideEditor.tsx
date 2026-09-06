@@ -54,7 +54,7 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
   };
 
   return (
-    <div className="col-12">
+    <div className="">
       <label className="form-label fw-semibold small text-uppercase text-muted mb-1">
         Zeiten je Wochentag überschreiben (optional)
       </label>

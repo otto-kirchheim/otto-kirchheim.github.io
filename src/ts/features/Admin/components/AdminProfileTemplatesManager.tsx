@@ -386,8 +386,8 @@ export function AdminProfileTemplatesManager() {
 
               {expanded && (
                 <div className="p-3 border-top">
-                  <div className="row g-2 mb-2">
-                    <div className="col-12 col-md-4">
+                  <div className="raster mb-2 abstand-2">
+                    <div className="sp-md-4">
                       <label className="form-label small fw-semibold mb-1">Code</label>
                       <input
                         className="form-control form-control-sm"
@@ -395,7 +395,7 @@ export function AdminProfileTemplatesManager() {
                         onChange={e => updateEdit(template._id, { code: (e.target as HTMLInputElement).value })}
                       />
                     </div>
-                    <div className="col-12 col-md-8">
+                    <div className="sp-md-8">
                       <label className="form-label small fw-semibold mb-1">Name</label>
                       <input
                         className="form-control form-control-sm"

@@ -108,11 +108,11 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
       customButtons={customFooterButton}
     >
       <MyModalBody>
-        <div className="col-12">
+        <div className="">
           <p className="text-center text-bg-warning p-1 rounded mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
         </div>
         <MySelect
-          className="form-floating col-12 col-sm-6"
+          className="form-floating sp-sm-6"
           title="Tag (Aus EWT)"
           id="Tag"
           required
@@ -129,9 +129,9 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
         >
           Auftragsnummer
         </MyInput>
-        <div className="col-12 border rounded p-2">
+        <div className="border rounded p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
-          <div className="row g-2">
+          <div className="raster abstand-2">
             {configuredZulagen.map(zulage => (
               <MyInput
                 key={zulage.code}

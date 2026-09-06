@@ -264,8 +264,8 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
   return (
     <div>
       {/* Filter-Leiste */}
-      <div className="row g-2 mb-3">
-        <div className="col-12 col-sm-4">
+      <div className="raster mb-3 abstand-2">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <input
               type="text"
@@ -281,7 +281,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             </DBInfotext>
           </div>
         </div>
-        <div className="col-12 col-sm-4">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <input
               type="text"
@@ -297,7 +297,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             </DBInfotext>
           </div>
         </div>
-        <div className="col-12 col-sm-4">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <select
               className="form-select"
@@ -314,7 +314,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             <label htmlFor="adminFilterRole">Rolle</label>
           </div>
         </div>
-        <div className="col-12 d-flex justify-content-end gap-2">
+        <div className="d-flex justify-content-end gap-2">
           <button className="btn btn-outline-primary btn-sm" type="button" onClick={() => void refreshUsersNow()}>
             <DBTooltip placement="top">Lädt die Benutzerliste sofort neu</DBTooltip>
             <span

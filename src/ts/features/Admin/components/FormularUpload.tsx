@@ -253,8 +253,8 @@ export function FormularUpload() {
         />
       </div>
 
-      <div className="row g-2">
-        <div className="col-md-3">
+      <div className="raster abstand-2">
+        <div className="sp-md-3">
           <label className="form-label" htmlFor="formular-upload-code">
             Formular
           </label>
@@ -271,7 +271,7 @@ export function FormularUpload() {
             ))}
           </select>
         </div>
-        <div className="col-md-3">
+        <div className="sp-md-3">
           <label className="form-label" htmlFor="formular-upload-version">
             Version
           </label>
@@ -283,7 +283,7 @@ export function FormularUpload() {
             required
           />
         </div>
-        <div className="col-md-3">
+        <div className="sp-md-3">
           <label className="form-label" htmlFor="formular-upload-gueltig-von">
             Gültig ab
           </label>
@@ -296,7 +296,7 @@ export function FormularUpload() {
             required
           />
         </div>
-        <div className="col-md-3">
+        <div className="sp-md-3">
           <label className="form-label" htmlFor="formular-upload-gueltig-bis">
             Gültig bis (leer = offen)
           </label>

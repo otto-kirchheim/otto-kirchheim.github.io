@@ -180,8 +180,8 @@ function EwtTab() {
   }, []);
 
   return (
-    <div className="container-lg text-center">
-      <div className="row justify-content-center">
+    <div className="mitte text-center">
+      <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           EWT
           <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpEWT" aria-label="Hilfe anzeigen">
@@ -191,27 +191,27 @@ function EwtTab() {
         <h4 id="MonatE"></h4>
       </div>
 
-      <div className="container">
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-          <div className="col d-grid">
+      <div className="mitte">
+        <div className="raster-auto my-3 knopfreihe abstand-3">
+          <div className="d-grid">
             <button type="button" className="btn btn-primary" id="btnESEE" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Anwesenheit
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button className="btn btn-primary" type="button" id="btnZb" data-disabler>
               <span className="db-icon" data-icon="bar_chart" />
               Berechnen
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button className="btn btn-success" type="button" id="btnSaveE" data-disabler>
               <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button className="btn btn-secondary" type="button" id="btnDownloadE" data-disabler>
               <span className="db-icon" data-icon="download" />
               PDF erzeugen

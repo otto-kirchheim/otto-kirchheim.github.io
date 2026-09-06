@@ -156,7 +156,7 @@ export function FeldPanel({
           )}
         </div>
         {seite.signaturBild && (
-          <div className="row g-1 mt-1">
+          <div className="raster mt-1 abstand-1">
             <ZahlFeld
               label="x"
               wert={seite.signaturBild.x}

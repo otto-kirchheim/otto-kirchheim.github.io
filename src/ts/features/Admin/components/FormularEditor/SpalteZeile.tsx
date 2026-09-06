@@ -155,8 +155,8 @@ export function SpalteZeile({
       )}
 
       {spalte.listenPlatz ? (
-        <div className="row g-1 mb-1">
-          <div className="col-8">
+        <div className="raster mb-1 abstand-1">
+          <div className="sp-8">
             <select
               className="form-select form-select-sm"
               value={spalte.listenPlatz.gruppe}
@@ -174,7 +174,7 @@ export function SpalteZeile({
               ))}
             </select>
           </div>
-          <div className="col-4">
+          <div className="sp-4">
             <div className="input-group input-group-sm">
               <span className="input-group-text px-1 small">Platz</span>
               <input

@@ -1,7 +1,6 @@
 import type { IVorgabenU } from '@/types';
 import Storage from '@/infrastructure/storage/Storage';
 import { PERS_FIELD_LABELS, validatePersInput } from '@/infrastructure/validation/addressValidation';
-import Collapse from 'bootstrap/js/dist/collapse';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
 
 /** Die 5 Pflichtfelder der persönlichen Daten, die der Nutzer selbst eintragen muss. */
@@ -71,12 +70,10 @@ export function springeZu(tabButtonId: string, collapseId?: string): void {
   if ((collapseId || tabZiel) && tabZiel && !zeigeTab(tabZiel)) return;
 
   if (!collapseId) return;
-  const collapseEl = document.querySelector<HTMLElement>(collapseId);
-  if (!collapseEl) return;
-  try {
-    Collapse.getOrCreateInstance(collapseEl).show();
-  } catch {
-    return;
-  }
-  collapseEl.closest('.accordion-item')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Die Einstellungen-Abschnitte sind seit Phase H native `<details>` (DB-Accordion) --
+  // aufklappen heisst `open`, kein Bootstrap-Collapse mehr.
+  const abschnitt = document.querySelector<HTMLDetailsElement>(collapseId);
+  if (!abschnitt) return;
+  abschnitt.open = true;
+  abschnitt.closest('.db-accordion-item')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

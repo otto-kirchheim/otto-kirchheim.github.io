@@ -71,7 +71,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
         return (
           <Fragment>
             <MySelect
-              className="form-floating col-12 col-sm-6"
+              className="form-floating sp-sm-6"
               id={column.name}
               title={column.title}
               required

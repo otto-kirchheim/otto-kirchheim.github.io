@@ -1,0 +1,79 @@
+// App-eigene Rasterhilfen -- Ersatz fuer Bootstraps `.row`/`.col-*`/`.container` (Phase H).
+//
+// Zwei Muster decken alles ab, was die App braucht:
+//   `.raster`      12 Spalten, Kinder standardmaessig ueber die volle Breite; `.sp-*`
+//                  verschmaelert einzelne Kinder. Ersetzt `row` + `col-*`.
+//   `.raster-auto` so viele gleich breite Spalten, wie bei `--spalte-min` Mindestbreite
+//                  hineinpassen. Ersetzt `row row-cols-*` + `col`.
+//
+// Anders als bei Bootstrap gibt es keine negativen Aussenabstaende und kein Innenpolster an
+// den Kindern -- der Abstand kommt aus `gap`, der Inhalt steht buendig am Containerrand.
+
+$breakpoints: (
+  'sm': 36em,
+  'md': 48em,
+  'lg': 62em,
+  'xl': 75em,
+);
+
+// Bootstraps Rinnenbreiten (`g-0` bis `g-4`), damit die Abstaende beim Umstieg gleich bleiben.
+$abstaende: (
+  0: 0,
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 1rem,
+  4: 1.5rem,
+  5: 3rem,
+);
+
+.raster {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--raster-abstand, 0);
+
+  > * {
+    grid-column: span 12;
+  }
+}
+
+.raster-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--spalte-min, 14rem), 1fr));
+  gap: var(--raster-abstand, 0);
+}
+
+@each $stufe, $wert in $abstaende {
+  .abstand-#{$stufe} {
+    --raster-abstand: #{$wert};
+  }
+}
+
+@for $i from 1 through 12 {
+  .sp-#{$i} {
+    grid-column: span #{$i};
+  }
+}
+
+@each $name, $breite in $breakpoints {
+  @media (min-width: #{$breite}) {
+    @for $i from 1 through 12 {
+      .sp-#{$name}-#{$i} {
+        grid-column: span #{$i};
+      }
+    }
+  }
+}
+
+// Zentrierter Inhaltsbereich (Ersatz fuer `.container`) und randlose Vollbreite
+// (Ersatz fuer `.container-fluid`).
+.mitte {
+  inline-size: 100%;
+  max-inline-size: 75rem;
+  margin-inline: auto;
+  padding-inline: 0.75rem;
+}
+
+.breit {
+  inline-size: 100%;
+  padding-inline: 0.75rem;
+}

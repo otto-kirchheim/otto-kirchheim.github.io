@@ -107,9 +107,9 @@ export function AdminProfileTemplateContentEditor({
 
       {activeSection === 'Pers' && (
         <div className="border rounded p-2 mb-2">
-          <div className="row g-2">
+          <div className="raster abstand-2">
             {PERS_FIELDS.map(field => (
-              <div className="col-12 col-md-6" key={`${templateId}-pers-${field.key}`}>
+              <div className="sp-md-6" key={`${templateId}-pers-${field.key}`}>
                 <label className="form-label small mb-1">{field.label}</label>
                 {field.key === 'OE' ? (
                   <OeLevelBoxes
@@ -179,8 +179,8 @@ export function AdminProfileTemplateContentEditor({
               <small className="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>
             )}
             {templateContent.Fahrzeit.map((row, index) => (
-              <div className="row g-2 align-items-end" key={`${templateId}-fz-${index}`}>
-                <div className="col-12">
+              <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
+                <div className="">
                   <div className="input-group input-group-sm admin-fahrzeit-input-group">
                     <input
                       className="form-control admin-fahrzeit-key"
@@ -332,8 +332,8 @@ export function AdminProfileTemplateContentEditor({
                       </div>
                     </div>
 
-                    <div className="row g-2 mb-2">
-                      <div className="col-12">
+                    <div className="raster mb-2 abstand-2">
+                      <div className="">
                         <label className="form-label small mb-1">Bezeichnung</label>
                         <input
                           className="form-control form-control-sm"
@@ -375,8 +375,8 @@ export function AdminProfileTemplateContentEditor({
                       }
                     />
 
-                    <div className="row g-2 mb-2">
-                      <div className="col-12 col-lg-6">
+                    <div className="raster mb-2 abstand-2">
+                      <div className="sp-lg-6">
                         <label className="form-label small mb-1">Beginn Bereitschaft</label>
                         <input
                           type="time"
@@ -396,7 +396,7 @@ export function AdminProfileTemplateContentEditor({
                           }
                         />
                       </div>
-                      <div className="col-12 col-lg-6">
+                      <div className="sp-lg-6">
                         <label className="form-label small mb-1">Ende Bereitschaft</label>
                         <input
                           type="time"
@@ -497,8 +497,8 @@ export function AdminProfileTemplateContentEditor({
                           }
                         />
 
-                        <div className="row g-2 mb-2">
-                          <div className="col-12 col-lg-6">
+                        <div className="raster mb-2 abstand-2">
+                          <div className="sp-lg-6">
                             <label className="form-label small mb-1">Beginn Nachtschicht</label>
                             <input
                               type="time"
@@ -518,7 +518,7 @@ export function AdminProfileTemplateContentEditor({
                               }
                             />
                           </div>
-                          <div className="col-12 col-lg-6">
+                          <div className="sp-lg-6">
                             <label className="form-label small mb-1">Ende Nachtschicht</label>
                             <input
                               type="time"

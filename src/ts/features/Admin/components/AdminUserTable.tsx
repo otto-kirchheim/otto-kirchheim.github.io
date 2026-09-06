@@ -165,8 +165,8 @@ export function AdminUserList() {
   return (
     <div>
       {/* Filter-Leiste */}
-      <div className="row g-2 mb-3">
-        <div className="col-12 col-sm-4">
+      <div className="raster mb-3 abstand-2">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <input
               type="text"
@@ -179,7 +179,7 @@ export function AdminUserList() {
             <label htmlFor="adminFilterName">Name</label>
           </div>
         </div>
-        <div className="col-12 col-sm-4">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <input
               type="text"
@@ -192,7 +192,7 @@ export function AdminUserList() {
             <label htmlFor="adminFilterOe">OE</label>
           </div>
         </div>
-        <div className="col-12 col-sm-4">
+        <div className="sp-sm-4">
           <div className="form-floating">
             <select
               className="form-select"
@@ -233,7 +233,7 @@ export function AdminUserList() {
       )}
 
       {/* User-Cards */}
-      <div className="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+      <div className="raster-auto abstand-3">
         {visibleUsers.map(currentUser => {
           const isSelfRow = user?.userName === currentUser.userName;
           const edit = edits[currentUser._id] ?? buildEditState(currentUser);
@@ -244,7 +244,7 @@ export function AdminUserList() {
           const editable = canEdit() && !isSelfRow;
 
           return (
-            <div key={currentUser._id} className="col">
+            <div key={currentUser._id} className="">
               <div className={`card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
                 {/* Card Header */}
                 <div

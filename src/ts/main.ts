@@ -76,7 +76,6 @@ const updateSW = registerSW({
 });
 console.log(pwaInfo);
 
-import Collapse from 'bootstrap/js/dist/collapse';
 import Popover from 'bootstrap/js/dist/popover';
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
@@ -93,7 +92,6 @@ registerAppStartTask(() => {
   initNavSchublade();
   initStatischeDialoge();
 
-  Array.from(document.querySelectorAll('.collapse')).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
   Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
     popoverTriggerEl => new Popover(popoverTriggerEl),
   );

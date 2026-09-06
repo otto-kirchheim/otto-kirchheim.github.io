@@ -191,8 +191,8 @@ function BereitschaftTab() {
   }, []);
 
   return (
-    <div className="container text-center">
-      <div className="row justify-content-center">
+    <div className="mitte text-center">
+      <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Bereitschaft
           <button
@@ -207,27 +207,27 @@ function BereitschaftTab() {
         <h4 id="MonatB"></h4>
       </div>
 
-      <div className="container">
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 justify-content-center g-3 my-3 w200">
-          <div className="col d-grid">
+      <div className="mitte">
+        <div className="raster-auto my-3 knopfreihe abstand-3">
+          <div className="d-grid">
             <button type="button" className="btn btn-primary" id="btnESZ" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Bereitschaft
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button type="button" className="btn btn-primary" id="btnESE" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Einsatz
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button type="button" className="btn btn-success" id="btnSaveB" data-disabler>
               <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button type="button" className="btn btn-secondary" id="btnDownloadB" data-disabler>
               <span className="db-icon" data-icon="download" />
               PDF erzeugen

@@ -1452,3 +1452,25 @@ Die Groessen-Prop ist dadurch heute wirkungslos -- jeder Dialog rendert 36 rem.
   `bun run test` 2085/2085. Sichtpruefung gegen den Dev-Server: Impressum, Bestaetigungs-,
   Hilfe- und Passwort-Dialog, Platzhalter-Hilfe (`lg` = 768 px), Unterschriftenfeld in
   Hoch- und Querformat.
+
+## Phase H (2): Raster und Akkordeon
+
+- [x] `scss/raster.scss` mit `.raster`, `.raster-auto`, `.sp-*`, `.abstand-*`, `.mitte`, `.breit`
+- [x] 383 Rasterklassen in 45 Dateien per Codemod umgestellt
+- [x] `.w200` -> `.knopfreihe` mit eigenen Spaltenregeln (gleich breit, Gruppe zentriert)
+- [x] Jahresauswahl ohne Rasterverschachtelung (`.jahr-auswahl`)
+- [x] Einstellungen-Akkordeon und Berechnungs-Monatskarten auf `db-accordion` (`<details>`)
+- [x] Bootstraps `Collapse`-Plugin entfernt (`main.ts`, `onboardingValidation.ts`)
+- [x] Floating-Label-Platzhalter wieder ausgeblendet (Layer-Reihenfolge hatte ihn eingefaerbt)
+
+### Review
+
+- Ergebnis: `.row`/`.col-*`/`.container`/`.accordion-*` kommen in `src/` nicht mehr vor. Von den
+  Bootstrap-Plugins ist nur noch `Popover` geladen. Zwei Altlasten fielen dabei auf und sind
+  behoben: die Knopfreihen waren mit gestreckten Rasterspalten nicht mehr zentriert, und die
+  Floating-Labels ueberlagerten ihren Platzhalter (Layer-Reihenfolge, war schon vorher so,
+  aber nur bei offenem Akkordeon sichtbar).
+- Verifikation: `bunx --bun tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` 2085/2085,
+  `bun run build` erfolgreich. Sichtpruefung im Dev-Server: Startseite (1300/768/412 px),
+  Einstellungen mit offenem und geschlossenem Akkordeon (1300/412 px), Passwort-Dialog
+  (1300/412 px). Kein horizontaler Ueberlauf in keiner Breite.

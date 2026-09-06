@@ -320,12 +320,12 @@ export function AdminBulkEditModal({
     >
       <MyModalBody>
         {step === 'form' && (
-          <div className="col-12 row g-3">
-            <div className="col-12">
+          <div className="raster abstand-3">
+            <div className="">
               <BulkEditUserOverview selectedUsers={selectedUsers} onRemoveUser={removeSelectedUser} />
             </div>
 
-            <div className="col-12 col-xl-6">
+            <div className="sp-xl-6">
               <div className="border rounded p-3 h-100 d-flex flex-column gap-3">
                 <div className="fw-semibold">OE ändern</div>
 
@@ -360,11 +360,11 @@ export function AdminBulkEditModal({
               </div>
             </div>
 
-            <div className="col-12 col-xl-6">
+            <div className="sp-xl-6">
               <BulkEditSimpleFieldsBlock fields={simpleFields} onChange={updateSimpleField} />
             </div>
 
-            <div className="col-12">
+            <div className="">
               <BulkEditApplySourceBlock
                 applySource={applySource}
                 onApplySourceChange={source => {
@@ -385,7 +385,7 @@ export function AdminBulkEditModal({
         )}
 
         {step === 'preview' && preview && (
-          <div className="col-12">
+          <div className="">
             <BulkEditPreviewTable
               preview={preview}
               activeFields={previewFields.activeFields}
@@ -395,7 +395,7 @@ export function AdminBulkEditModal({
         )}
 
         {step === 'result' && result && (
-          <div className="col-12">
+          <div className="">
             <p className="fw-semibold">
               {result.summary.ok} aktualisiert, {result.summary.skipped} übersprungen, {result.summary.errors} Fehler
             </p>

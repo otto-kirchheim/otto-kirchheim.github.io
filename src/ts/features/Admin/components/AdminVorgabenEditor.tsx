@@ -205,8 +205,8 @@ export function AdminVorgabenEditor() {
         </button>
       </div>
 
-      <div className="row g-2 mb-3">
-        <div className="col-12 col-md-4">
+      <div className="raster mb-3 abstand-2">
+        <div className="sp-md-4">
           <label className="form-label">Jahr</label>
           <select
             className="form-select"
@@ -271,9 +271,9 @@ export function AdminVorgabenEditor() {
               </button>
             </div>
 
-            <div className="row g-2">
+            <div className="raster abstand-2">
               {GELD_FIELDS.map(field => (
-                <div className="col-12 col-md-6 col-xl-4" key={`${entry.key}-${field}`}>
+                <div className="sp-md-6 sp-xl-4" key={`${entry.key}-${field}`}>
                   <label className="form-label small mb-1">{field}</label>
                   <input
                     type="number"

@@ -20,7 +20,7 @@ export default function createModalPasskeySetPassword(): void {
   const modal = showModal(
     <MyFormModal myRef={ref} title="Passwort per Passkey neu setzen" submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="col-12">
+        <div className="">
           <p className="small text-body-secondary mb-0">
             Du bestätigst die Änderung mit deinem Passkey (Fingerprint, Face ID oder Geräte-PIN) – dein altes Passwort
             wird nicht benötigt. Andere Sitzungen werden abgemeldet.

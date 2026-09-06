@@ -9,6 +9,8 @@ $primary: #ec0016;
   @import '~bootstrap/scss/bootstrap';
 }
 
+@import 'raster';
+
 .dropdown-menu .active .bi {
   display: block !important;
 }
@@ -21,8 +23,22 @@ body {
   justify-content: center;
 }
 
-.w200 > * {
-  max-width: 250px;
+// Knopfreihen der Tabs (Bereitschaft, EWT, EA, Neben, Einstellungen): gleich breite Spalten
+// bis 250px, die Gruppe als Ganzes zentriert -- ohne die Deckelung zoege jeder Knopf ueber die
+// halbe Seite, mit gestreckten Rasterspalten stuenden sie weit auseinander.
+.knopfreihe {
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 15.625rem));
+  justify-content: center;
+}
+
+.knopfreihe > * {
+  max-inline-size: 250px;
+}
+
+// Jahresauswahl in den Einstellungen: mittig und nicht ueber die ganze Breite gezogen.
+.jahr-auswahl {
+  max-inline-size: 30rem;
+  margin-inline: auto;
 }
 
 .w20 {
@@ -174,7 +190,7 @@ td:has(.SchichtBereitschaft) {
 }
 
 #berechnungMobileCards {
-  .accordion-button {
+  .db-accordion-item summary {
     font-size: 0.95rem;
     padding-block: 0.65rem;
   }
@@ -183,7 +199,7 @@ td:has(.SchichtBereitschaft) {
     font-size: 0.9rem;
   }
 
-  .accordion-body > .berechnung-card-gruppe:not(:first-child) {
+  .db-accordion-item summary + div > .berechnung-card-gruppe:not(:first-child) {
     border-top: 2px solid var(--bs-secondary-color);
     margin-top: 0.5rem;
     padding-top: 0.5rem;
@@ -208,7 +224,7 @@ td:has(.SchichtBereitschaft) {
   justify-content: center;
 }
 
-.dialog-koerper.row {
+.dialog-koerper.raster {
   align-content: start;
 }
 
@@ -291,8 +307,15 @@ td:has(.SchichtBereitschaft) {
   color: rgba(var(--bs-body-color-rgb), 0.65);
 }
 
-.row > .form-floating > label {
+.raster > .form-floating > label {
   left: auto;
+}
+
+// Bootstraps Floating-Label ersetzt den Platzhalter und blendet ihn dafuer aus. Bootstrap liegt
+// aber im untersten Layer -- die DB-Regeln faerben `::placeholder` wieder ein, Label und
+// Platzhalter standen dadurch uebereinander (sichtbar in den Einstellungen-Abschnitten).
+.form-floating > .form-control::placeholder {
+  color: transparent;
 }
 
 .form-floating.required.readonly label:after {

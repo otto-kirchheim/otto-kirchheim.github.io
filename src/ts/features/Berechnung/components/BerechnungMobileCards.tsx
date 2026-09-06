@@ -72,26 +72,15 @@ function MonatsKarte({
       )) ?? [];
 
   return (
-    <div className="accordion-item">
-      <h2 className="accordion-header">
-        <button
-          className={`accordion-button${offen ? '' : ' collapsed'}`}
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target={`#${collapseId}`}
-        >
+    <li className="db-accordion-item">
+      <details name="accordionBerechnung" id={collapseId} open={offen}>
+        <summary>
           <span className="d-flex justify-content-between w-100 me-2">
             <span>{monatsName}</span>
             <span>{ergebnis.summeGesamt === null ? '' : formatCurrency(ergebnis.summeGesamt)}</span>
           </span>
-        </button>
-      </h2>
-      <div
-        id={collapseId}
-        className={`accordion-collapse collapse${offen ? ' show' : ''}`}
-        data-bs-parent="#accordionBerechnung"
-      >
-        <div className="accordion-body py-2">
+        </summary>
+        <div className="py-2">
           {zeigeGruppe('bereitschaft') && (
             <>
               <GruppenTitel titel="Bereitschaft" summe={ergebnis.summeBereitschaft} />
@@ -142,8 +131,8 @@ function MonatsKarte({
           )}
           <GruppenTitel titel="Gesamt" summe={ergebnis.summeGesamt} />
         </div>
-      </div>
-    </div>
+      </details>
+    </li>
   );
 }
 
@@ -153,7 +142,7 @@ const BerechnungMobileCards = ({
   zulagenBreakdown,
   offenerMonat,
 }: IBerechnungMobileCardsProps) => (
-  <div className="accordion" id="accordionBerechnung">
+  <ul className="db-accordion" id="accordionBerechnung" data-variant="card">
     {monatsErgebnisse.map(ergebnis => (
       <MonatsKarte
         key={ergebnis.monat}
@@ -163,7 +152,7 @@ const BerechnungMobileCards = ({
         offen={ergebnis.monat === offenerMonat}
       />
     ))}
-  </div>
+  </ul>
 );
 
 export function mountBerechnungMobileCards(

@@ -114,8 +114,8 @@ function NebenTab() {
   }, []);
 
   return (
-    <div className="container-lg text-center">
-      <div className="row justify-content-center">
+    <div className="mitte text-center">
+      <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Nebenbezüge
           <button type="button" className="btn btn-sm btn-link p-0" id="btnHelpNeben" aria-label="Hilfe anzeigen">
@@ -125,21 +125,21 @@ function NebenTab() {
         <h4 id="MonatN"></h4>
       </div>
 
-      <div className="container">
-        <div className="row row-cols-1 row-cols-md-3 justify-content-center justify-content-sm-start justify-content-md-center g-3 my-3 w200">
-          <div className="col d-grid">
+      <div className="mitte">
+        <div className="raster-auto my-3 knopfreihe abstand-3">
+          <div className="d-grid">
             <button type="button" className="btn btn-primary" id="btnESN" data-disabler>
               <span className="db-icon" data-icon="plus" />
               Hinzufügen
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button className="btn btn-success" type="button" id="btnSaveN" data-disabler>
               <span className="db-icon" data-icon="save" />
               Speichern
             </button>
           </div>
-          <div className="col d-grid">
+          <div className="d-grid">
             <button className="btn btn-secondary" type="button" id="btnDownloadN" data-disabler>
               <span className="db-icon" data-icon="download" />
               PDF erzeugen

@@ -54,9 +54,9 @@ export default function createModalNewUser(): void {
         >
           E-Mail (@deutschebahn.com)
         </MyInput>
-        <div className="col-12 border rounded p-2">
+        <div className="border rounded p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Passwort</p>
-          <div className="row g-2">
+          <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
               divClass="form-floating col-12"

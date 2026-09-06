@@ -49,16 +49,16 @@ const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
 
 const createTitle = (vor: string, text: string, nach: string) => (
   <div className="icon-ewt">
-    <span className="col-1 text-center">{vor}</span>
-    <h5 className="col-6 text-center mb-1 text-truncate">{text}</h5>
-    <span className="col-1 text-center">{nach}</span>
+    <span className="sp-1 text-center">{vor}</span>
+    <h5 className="sp-6 text-center mb-1 text-truncate">{text}</h5>
+    <span className="sp-1 text-center">{nach}</span>
   </div>
 );
 
 const createShowElement = (row: Row<IDatenEWT>, columnName: string) => {
   const column: Column<IDatenEWT> = getColumn(row, columnName);
   return (
-    <div className="mb-1 col-6 text-center">
+    <div className="mb-1 sp-6 text-center">
       <span id={column.name}>{column.parser(row.cells[column.name])}</span>
     </div>
   );
@@ -74,7 +74,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
       <MyModalBody>
         {createTagElement(row)}
         <MyCheckbox
-          className="form-check form-switch col-4"
+          className="form-check form-switch sp-4"
           id={'berechnen'}
           checked={row.cells?.['berechnen'] ?? true}
           changeHandler={(e: ChangeEvent<HTMLInputElement>) => {

@@ -73,7 +73,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           Bis
         </MyInput>
         <MySelect
-          className="form-floating col-12 col-sm-6"
+          className="form-floating sp-sm-6"
           required
           id="LRE"
           title={columns.find(col => col.name === 'LRE')?.longTitle || 'LRE'}
@@ -102,7 +102,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         >
           Km Privatfahrzeug
         </MyInput>
-        <div className="col-12">
+        <div className="">
           <MyCheckbox className="form-check form-switch bereitschaft" id="berZeit">
             Bereitschaftszeitraum für diesen Einsatz anlegen?
             <br />

@@ -46,8 +46,8 @@ function VergleichWahl({
   if (istBoolean) {
     const aktuell = wenn.werte?.[0] !== false;
     return (
-      <div className="row g-1 mb-1">
-        <div className="col-8">
+      <div className="raster mb-1 abstand-1">
+        <div className="sp-8">
           <select
             className="form-select form-select-sm"
             value={String(aktuell)}
@@ -57,7 +57,7 @@ function VergleichWahl({
             <option value="false">Nein (nicht zutreffend)</option>
           </select>
         </div>
-        <div className="col-4">
+        <div className="sp-4">
           <input
             className="form-control form-control-sm"
             placeholder="Zeichen"
@@ -71,8 +71,8 @@ function VergleichWahl({
 
   return (
     <>
-      <div className="row g-1 mb-1">
-        <div className="col-8">
+      <div className="raster mb-1 abstand-1">
+        <div className="sp-8">
           <div className="btn-group btn-group-sm w-100">
             <button
               type="button"
@@ -91,7 +91,7 @@ function VergleichWahl({
             </button>
           </div>
         </div>
-        <div className="col-4">
+        <div className="sp-4">
           <input
             className="form-control form-control-sm"
             placeholder="Zeichen"
