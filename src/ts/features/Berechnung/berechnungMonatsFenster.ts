@@ -1,5 +1,6 @@
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
+import { TAB_SHOWN_EVENT } from '@/infrastructure/ui/tabController';
 
 /**
  * Monats-Fenster für die Berechnungstabelle unterhalb xl (<1200px):
@@ -99,5 +100,5 @@ export function initBerechnungMonatsFensterNav(): void {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => wendeMonatsFensterAn(), 150);
   });
-  document.querySelector('#berechnung-tab')?.addEventListener('shown.bs.tab', () => wendeMonatsFensterAn());
+  document.querySelector('#berechnung-tab')?.addEventListener(TAB_SHOWN_EVENT, () => wendeMonatsFensterAn());
 }

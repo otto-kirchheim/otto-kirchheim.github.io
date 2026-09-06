@@ -1,3 +1,49 @@
+# Aktueller Plan: DB-UX-Migration -- Phase D (App-Shell / Navigation / index.html) - 2026-09-06
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase D. Die Kopfzeile war Bootstrap-`navbar` mit
+`.offcanvas`, `.nav-pills`, `data-bs-toggle="pill"` und dem `Tab`-Plugin. Abweichung vom Plan:
+statt einer React-Shell bleibt die Kopfzeile statisches Markup mit DB-Klassen. Grund: rund 15
+Stellen ausserhalb der Kopfzeile schalten Nav-Eintraege ueber feste Ids und `d-none`
+(`auth/index.ts`, `logoutUser`, `updateTabVisibility`, Schnellzugriff, Onboarding). Eine
+React-Shell haette all das mitziehen muessen; `DBHeader` rendert die Navigation ausserdem
+zweimal, was die Ids doppelt vergeben haette.
+
+## Aufgaben
+
+- [x] `infrastructure/ui/tabController.ts` -- Panelwechsel, `aria-selected`, Hash, `tab:shown`,
+      Tastatursteuerung, `setzeTabSichtbar`
+- [x] `infrastructure/ui/navDrawer.ts` -- mobile Schublade (`<dialog class="db-drawer">`),
+      Navigation zieht um statt doppelt zu existieren
+- [x] `index.html`: DB-Header-Markup, Tab-Eintraege als `<a href="#Ziel" data-tab-target>`
+- [x] `main.ts`: `Tab`/`Offcanvas`/`Dropdown` raus, Controller rein, Hash ueber
+      `zeigeTabAusHash()`
+- [x] `logoutUser`, `onboardingValidation`, `berechnungMonatsFenster` auf Controller/`tab:shown`
+- [x] `BSColorToggler` auf DB-Sub-Navigation; Symbolabgleich ueber `data-icon`/`app-icon`
+- [x] Dev-Service-Worker hinter `PWA_DEV=true` (lieferte alte Stylesheets aus)
+- [x] Tests: `test/ui.tabController.test.ts` (neu), `logoutUser`- und Onboarding-Test auf den
+      Controller umgestellt, Icon-Test kennt DBs `none`-Sentinel
+- [x] Doku: `CHANGELOG.md`, `.claude/skills/architektur/SKILL.md`
+
+## Verifikation
+
+- `bun run lint` 0 Fehler, `bun run test` 2083/2083 gruen, `bun run build` erfolgreich.
+- Kopfleisten-Smoke (Puppeteer, `scratchpad/smoke/kopf.mjs`) gegen den echten Dev-Server:
+  Tabwechsel setzt Panel + `data-active` + `aria-selected` + Hash (`#Berechnung`),
+  `history.back()` schaltet zurueck, Schublade oeffnet mit der Navigation darin
+  (`doppelteIds: 1`), Schliessen holt sie in die Kopfzeile zurueck.
+- Design-Smoke: Untermenue oeffnet per Hover, Auswahl "Hell" setzt `data-bs-theme=light` und
+  tauscht das Symbol (`moon` -> `sun`), `aria-label` folgt.
+- Sichtpruefung Desktop (1500px) und Handy (420px) inklusive offener Schublade.
+
+## Offen / Naechste Phasen
+
+- E (Modal-Infrastruktur -> DB-Drawer), H (Bootstrap raus), I (Cleanup).
+- `Collapse` und `Popover` sind weiterhin Bootstrap (Einstellungen-Akkordeons) -- Phase H.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase F (CustomTable auf DB-Table-CSS) - 2026-09-06
 
 ## Kontext

@@ -1,5 +1,5 @@
-import Tab from 'bootstrap/js/dist/tab';
 import { default as Storage } from '@/infrastructure/storage/Storage';
+import { zeigeTab } from '@/infrastructure/ui/tabController';
 import { abortController } from '@/infrastructure/api/abortController';
 import { cancelAllPending } from '@/infrastructure/autoSave/autoSave';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -44,11 +44,7 @@ export default function logoutUser({
   Storage.clear();
   updateActAsBanner();
 
-  const sel = document.querySelector<HTMLButtonElement>(`#start-tab`);
-  if (sel instanceof HTMLButtonElement) {
-    Tab.getOrCreateInstance(sel).show();
-    window.scrollTo(0, 1);
-  }
+  if (zeigeTab('start')) window.scrollTo(0, 1);
 
   for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#Monat', '#startSchnellzugriff'])
     toggleClassForElement(selector);

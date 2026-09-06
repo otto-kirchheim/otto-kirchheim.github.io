@@ -297,8 +297,11 @@ export default defineConfig(() => ({
           },
         ],
       },
+      // Der Service Worker im Dev-Modus liefert waehrend der DB-UX-Migration alte Stylesheets
+      // aus, obwohl Vite laengst neue schickt -- Fehlerbilder ueberleben dann Reload und
+      // Server-Neustart. Deshalb standardmaessig aus; fuer PWA-Tests `PWA_DEV=true bun run start`.
       devOptions: {
-        enabled: true,
+        enabled: process.env['PWA_DEV'] === 'true',
         type: 'module',
         suppressWarnings: true,
       },

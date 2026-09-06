@@ -1,8 +1,8 @@
 import type { IVorgabenU } from '@/types';
 import Storage from '@/infrastructure/storage/Storage';
 import { PERS_FIELD_LABELS, validatePersInput } from '@/infrastructure/validation/addressValidation';
-import Tab from 'bootstrap/js/dist/tab';
 import Collapse from 'bootstrap/js/dist/collapse';
+import { zeigeTab } from '@/infrastructure/ui/tabController';
 
 /** Die 5 Pflichtfelder der persönlichen Daten, die der Nutzer selbst eintragen muss. */
 const PERS_FELDER = [
@@ -66,19 +66,9 @@ export function validatePersoenlicheDaten(): { ok: boolean; offeneFelder: string
 export function springeZu(tabButtonId: string, collapseId?: string): void {
   const tabButton = document.querySelector<HTMLButtonElement>(tabButtonId);
   if (!tabButton) return;
-  const tabTargetSelector =
-    tabButton.getAttribute('data-bs-target') ??
-    tabButton.getAttribute('href') ??
-    tabButton.getAttribute('aria-controls');
-  const tabTarget = tabTargetSelector ? document.querySelector<HTMLElement>(tabTargetSelector) : null;
+  const tabZiel = tabButton.getAttribute('data-tab-target') ?? tabButton.getAttribute('aria-controls');
 
-  if (collapseId || tabTarget) {
-    try {
-      Tab.getOrCreateInstance(tabButton).show();
-    } catch {
-      return;
-    }
-  }
+  if ((collapseId || tabZiel) && tabZiel && !zeigeTab(tabZiel)) return;
 
   if (!collapseId) return;
   const collapseEl = document.querySelector<HTMLElement>(collapseId);

@@ -152,14 +152,19 @@ Storage.set("dataN", neuerWert);
 
 ## Navigation
 
-**Kein Client-Side-Router.** Navigation über Bootstrap-Pills/Tabs:
+**Kein Client-Side-Router.** Navigation über den DB-Header und `infrastructure/ui/tabController.ts`:
 
 ```html
-<a data-bs-toggle="pill" href="#bereitschaft-tab">Bereitschaft</a>
+<li class="db-navigation-item">
+  <a role="tab" id="bereitschaft-tab" href="#Bereitschaft" data-tab-target="Bereitschaft">Bereitschaft</a>
+</li>
 ```
 
-Tab-Wechsel werden von Bootstrap selbst gehandelt. Feature-Module registrieren sich
-über `window.addEventListener("load", ...)` und initialisieren ihre Tabellen/Listener.
+`data-tab-target` nennt die Id des `.tab-pane`. Der Controller hängt per Delegation an
+`document`, schaltet Panel und `aria-selected` um, schreibt `location.hash` (Deep-Links und
+Browser-Zurück inklusive) und meldet den Wechsel als `tab:shown`-CustomEvent. Die mobile
+Schublade (`infrastructure/ui/navDrawer.ts`) verschiebt dieselbe Navigation in ein
+`<dialog class="db-drawer">` -- die Tab-Ids bleiben dadurch eindeutig.
 
 ---
 

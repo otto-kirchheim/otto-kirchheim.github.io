@@ -38,7 +38,9 @@ describe('DB-Icon-Namen', () => {
   });
 
   it('verwendet im Quellcode nur Namen, die es wirklich gibt', () => {
-    const eigen = new Set<string>(EIGENE_ICONS);
+    // `none` ist kein Motiv, sondern die DB-eigene Abschaltung des Standard-Logos
+    // (`DBBrand` setzt sie selbst, wenn ein eigenes Bild uebergeben wird).
+    const eigen = new Set<string>([...EIGENE_ICONS, 'none']);
     const unbekannt = new Set<string>();
 
     for (const datei of [...sammleDateien('src', ['.ts', '.tsx', '.html'])]) {

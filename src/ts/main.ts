@@ -61,10 +61,9 @@ const updateSW = registerSW({
 console.log(pwaInfo);
 
 import Collapse from 'bootstrap/js/dist/collapse';
-import Dropdown from 'bootstrap/js/dist/dropdown';
-import Offcanvas from 'bootstrap/js/dist/offcanvas';
 import Popover from 'bootstrap/js/dist/popover';
-import Tab from 'bootstrap/js/dist/tab';
+import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
+import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -72,8 +71,10 @@ console.log('Version:', import.meta.env.APP_VERSION);
 registerAppStartTask(() => {
   setImpressumAndCopyright();
 
-  Array.from(document.querySelectorAll('.dropdown-toggle')).forEach(dropdownToggleEl => new Dropdown(dropdownToggleEl));
-  Array.from(document.querySelectorAll('.offcanvas')).forEach(offcanvasEl => new Offcanvas(offcanvasEl));
+  // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
+  initTabController();
+  initNavSchublade();
+
   Array.from(document.querySelectorAll('.collapse')).forEach(collapseEl => new Collapse(collapseEl, { toggle: false }));
   Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
     popoverTriggerEl => new Popover(popoverTriggerEl),
@@ -108,17 +109,7 @@ registerAppStartTask(() => {
   if (!navigator.onLine) setOffline();
   else window.addEventListener('offline', setOffline);
 
-  if (Storage.check('Benutzer')) {
-    const hash: string = document.location.hash;
-
-    if (hash.length === 0) return;
-    const selector: string = `${hash.toLowerCase()}-tab`;
-    const tabElement = document.querySelector<HTMLButtonElement>(selector);
-
-    if (!(tabElement instanceof HTMLButtonElement)) return;
-    Tab.getOrCreateInstance(tabElement).show();
-    window.scrollTo(0, 1);
-  }
+  if (Storage.check('Benutzer') && zeigeTabAusHash()) window.scrollTo(0, 1);
 
   function setImpressumAndCopyright() {
     const copyrightElement = document.querySelector<HTMLSpanElement>('#copyrightText');

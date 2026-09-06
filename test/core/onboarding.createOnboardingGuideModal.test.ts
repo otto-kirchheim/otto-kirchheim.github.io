@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-const tabShowMock = vi.fn();
-const tabGetOrCreateInstanceMock = vi.fn(() => ({ show: tabShowMock }));
-vi.mock('bootstrap/js/dist/tab', () => ({ default: { getOrCreateInstance: tabGetOrCreateInstanceMock } }));
+const zeigeTabMock = vi.fn(() => true);
+vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
 const collapseShowMock = vi.fn();
 const collapseGetOrCreateInstanceMock = vi.fn(() => ({ show: collapseShowMock }));
@@ -70,11 +69,11 @@ describe('createOnboardingGuideModal (Panel)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <ul>
-        <li><button id="bereitschaft-tab" type="button"></button></li>
-        <li class="d-none"><button id="ewt-tab" type="button"></button></li>
-        <li><button id="neben-tab" type="button"></button></li>
-        <li><button id="berechnung-tab" type="button"></button></li>
-        <li><button id="einstellungen-tab" type="button"></button></li>
+        <li><button id="bereitschaft-tab" type="button" data-tab-target="Bereitschaft"></button></li>
+        <li class="d-none"><button id="ewt-tab" type="button" data-tab-target="EWT"></button></li>
+        <li><button id="neben-tab" type="button" data-tab-target="Neben"></button></li>
+        <li><button id="berechnung-tab" type="button" data-tab-target="Berechnung"></button></li>
+        <li><button id="einstellungen-tab" type="button" data-tab-target="Einstellungen"></button></li>
       </ul>
       <div id="modal"><form>bestehende Eingaben</form></div>
       <div class="accordion-item"><div id="collapseOne"></div></div>
@@ -146,14 +145,8 @@ describe('createOnboardingGuideModal (Panel)', () => {
     await tick();
     expect(getPanel()?.textContent).toContain('Arbeitszeit prüfen');
     // Prüf-Schritt öffnet den zugehörigen Einstellungen-Bereich automatisch; Weiter ist die Bestätigung.
-    expect(tabGetOrCreateInstanceMock).toHaveBeenCalled();
-    expect(
-      tabGetOrCreateInstanceMock.mock.calls.some(
-        call =>
-          (((call as unknown as unknown[]).at(0) as HTMLElement | null | undefined)?.id ?? null) ===
-          'einstellungen-tab',
-      ),
-    ).toBe(true);
+    expect(zeigeTabMock).toHaveBeenCalled();
+    expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
 
     expect(findButton('Weiter')?.disabled).toBe(false);
 
@@ -192,15 +185,8 @@ describe('createOnboardingGuideModal (Panel)', () => {
     openOnboardingGuide();
     await tick();
 
-    expect(tabGetOrCreateInstanceMock).toHaveBeenCalled();
-    expect(
-      tabGetOrCreateInstanceMock.mock.calls.some(
-        call =>
-          (((call as unknown as unknown[]).at(0) as HTMLElement | null | undefined)?.id ?? null) ===
-          'einstellungen-tab',
-      ),
-    ).toBe(true);
-    expect(tabShowMock).toHaveBeenCalled();
+    expect(zeigeTabMock).toHaveBeenCalled();
+    expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
     expect(collapseGetOrCreateInstanceMock).toHaveBeenCalled();
     expect(
       collapseGetOrCreateInstanceMock.mock.calls.some(

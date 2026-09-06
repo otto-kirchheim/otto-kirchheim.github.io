@@ -26,6 +26,11 @@ export default function initializeColorModeToggler() {
 
   setTheme(preferredTheme);
 
+  /**
+   * Spiegelt das aktive Thema in die Kopfzeile: Das Symbol des gewaehlten Eintrags wird auf
+   * den Schalter uebernommen. DB-Symbole haengen an `data-icon` bzw. an der `app-icon`-Klasse
+   * (Eigenbau `theme-auto`) -- kopiert wird deshalb die Symbol-Beschreibung, nicht Text.
+   */
   const showActiveTheme = (theme: Theme, focus = false) => {
     const themeSwitcher = document.querySelector<HTMLButtonElement>('#bd-theme');
     if (!themeSwitcher) return;
@@ -35,11 +40,8 @@ export default function initializeColorModeToggler() {
     const btnToActive = document.querySelector<HTMLButtonElement>(`[data-bs-theme-value="${theme}"]`);
     if (!themeSwitcherText || !activeThemeIcon || !btnToActive) return;
 
-    const btnToActiveSymbol = btnToActive.querySelector('span');
-    if (!btnToActiveSymbol) return;
-
-    const SymbolOfActiveBtn = btnToActiveSymbol.innerText;
-    if (!SymbolOfActiveBtn) return;
+    const quelle = btnToActive.querySelector<HTMLSpanElement>('.db-icon, .app-icon');
+    if (!quelle) return;
 
     document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
       element.classList.remove('active');
@@ -48,9 +50,13 @@ export default function initializeColorModeToggler() {
 
     btnToActive.classList.add('active');
     btnToActive.setAttribute('aria-pressed', 'true');
-    activeThemeIcon.innerText = SymbolOfActiveBtn;
-    const themeSwitcherLabel = `${themeSwitcherText.textContent} (${btnToActive.dataset.bsThemeValue})`;
-    themeSwitcher.setAttribute('aria-label', themeSwitcherLabel);
+
+    activeThemeIcon.className = `${quelle.className} theme-icon-active`;
+    if (quelle.dataset['icon']) activeThemeIcon.dataset['icon'] = quelle.dataset['icon'];
+    else delete activeThemeIcon.dataset['icon'];
+
+    themeSwitcher.setAttribute('aria-label', `${themeSwitcherText.textContent} (${theme})`);
+    themeSwitcher.setAttribute('aria-expanded', 'false');
 
     if (focus) themeSwitcher.focus();
   };
@@ -61,6 +67,11 @@ export default function initializeColorModeToggler() {
   });
 
   showActiveTheme(preferredTheme);
+
+  document.querySelector<HTMLButtonElement>('#bd-theme')?.addEventListener('click', event => {
+    const schalter = event.currentTarget as HTMLButtonElement;
+    schalter.setAttribute('aria-expanded', String(schalter.getAttribute('aria-expanded') !== 'true'));
+  });
 
   document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
     toggle.addEventListener('click', () => {

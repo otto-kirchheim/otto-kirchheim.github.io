@@ -2,6 +2,37 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (59)
+
+### feat (DB-UX-Migration Phase D: App-Shell, Navigation, index.html)
+
+Die Kopfzeile ist jetzt ein DB-Header; Bootstraps `Tab`-, `Offcanvas`- und `Dropdown`-Plugins
+sind aus der Navigation raus.
+
+- **`infrastructure/ui/tabController.ts` (neu)** ersetzt Bootstraps `Tab`. Schalter tragen
+  `data-tab-target="<Panel-Id>"` und werden per Delegation an `document` bedient; der
+  Controller schaltet `.tab-pane`, pflegt `aria-selected`/`data-active`, schreibt
+  `location.hash` (Deep-Link und Browser-Zurueck ueber `hashchange`) und meldet den Wechsel
+  als `tab:shown`-CustomEvent. Pfeiltasten/Pos1/Ende wandern durch die Tabliste.
+- **`infrastructure/ui/navDrawer.ts` (neu)** oeffnet die mobile Navigation in einem
+  `<dialog class="db-drawer">`. `DBHeader` rendert die Navigation dafuer zweimal -- das ginge
+  hier nicht, weil die App ihre Tabs ueber feste Ids anspricht. Die Navigation existiert
+  deshalb genau einmal und zieht beim Oeffnen in die Schublade und danach zurueck.
+- **`index.html`:** `<header class="navbar">` + `.offcanvas#navmenu` + `.nav-pills` -->
+  `.db-header` mit `.db-navigation`. Tab-Eintraege sind jetzt `<a href="#Ziel">` statt
+  `<button>` -- DB stylt in Navigationseintraegen nur Links. Alle bisherigen Ids
+  (`#navmenu`, `#btn-navmenu`, `#admin`, `#Monat`, `#btnLogin`, `*-tab`) bleiben, damit das
+  `d-none`-Schalten aus `auth/`, `logoutUser` und `updateTabVisibility` unveraendert greift.
+- **Monatswechsel und Anmelde-Knopf** sitzen in `.db-header-primary-action` -- dort zeigt DB
+  sie auch auf dem Handy neben der Marke (in `.db-header-secondary-action` waeren sie in die
+  Schubladen-Fusszeile gewandert).
+- **Design-Umschalter:** Bootstrap-Dropdown --> DB-Sub-Navigation (Desktop rein per CSS,
+  mobil ueber `aria-expanded`). `BSColorToggler` uebernimmt jetzt die Symbol-Beschreibung
+  (`data-icon` bzw. `app-icon`-Klasse) des gewaehlten Eintrags; das alte `innerText`-Kopieren
+  stammte noch von den Material-Ligaturen und war seit Phase G wirkungslos.
+- **Dev-Service-Worker aus:** `devOptions.enabled` haengt an `PWA_DEV=true`. Der SW lieferte im
+  Dev-Modus alte Stylesheets aus, sodass Fehlerbilder Reload und Server-Neustart ueberlebten.
+
 ## 2026-09-06 (58)
 
 ### feat (DB-UX-Migration Phase F: CustomTable auf DB-Table-CSS)

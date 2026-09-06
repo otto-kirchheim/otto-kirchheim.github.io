@@ -619,26 +619,78 @@ body {
   border-radius: var(--bs-border-radius);
 }
 
-// Navbar bricht zwischen 992px und ~1118px zweizeilig um: #navmenu erhält ab lg zwar
-// flex-grow:1 (Bootstrap navbar-offcanvas-Pattern), die Tab-Liste bleibt aber per
-// .flex-wrap umbruchfähig, statt in einer Zeile zu bleiben.
-@media screen and (min-width: 992px) {
-  #navmenu .navbar-nav.flex-wrap {
-    flex-wrap: nowrap !important;
+// --- DB-Header ----------------------------------------------------------------------------
+// Die Kopfzeile bleibt beim Scrollen stehen (wie bisher `.sticky-top`); `.db-header` selbst
+// bringt dafuer nichts mit.
+.db-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1030;
+}
+
+// Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.
+.db-brand {
+  gap: 0.5rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+// DB stylt in Navigationseintraegen nur `a` (Navigation = Links) und den Aufklapp-Schalter.
+// Die Design-Auswahl sind aber echte Schaltflaechen -- sie bekommen denselben Look.
+.db-navigation-item > button:not(.db-navigation-item-expand-button) {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: var(--db-spacing-fixed-xs);
+  inline-size: 100%;
+  padding: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-sm);
+  border: var(--db-border-width-3xs) solid transparent;
+  border-radius: var(--db-border-radius-xs);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--db-adaptive-bg-basic-transparent-full-hovered);
   }
 }
 
-// Im engsten Bereich (992–1199px) zusätzlich Abstände straffen, damit der Monat-Select
-// nicht auf ein paar Buchstaben zusammengequetscht wird.
-@media screen and (min-width: 992px) and (max-width: 1199.95px) {
-  #ewt-tab {
-    margin-right: 0.75rem !important;
+// Einstellungen/Admin/Design sitzen rechts, sobald die Navigation waagerecht laeuft.
+// DB laesst die Navigation dort auf ihre Inhaltsbreite schrumpfen -- ohne freie Breite gibt
+// es kein `margin-inline-start: auto`, deshalb zuerst die volle Breite zurueckholen.
+@media screen and (min-width: 64em) {
+  .db-header-navigation-bar .db-header-navigation {
+    flex: 1 1 auto;
   }
 
-  #navmenu .nav-link {
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
+  .db-header-navigation > .db-navigation {
+    inline-size: 100%;
   }
+
+  .db-navigation > menu > .nav-rechts {
+    margin-inline-start: auto;
+  }
+
+  // In der Aktionsspalte steht nur der Burger-Schalter; ohne ihn bliebe auf dem Desktop
+  // nur die Trennlinie stehen.
+  .db-header-navigation-bar > .db-header-action-container:not(:has(.db-header-secondary-action)) {
+    display: none;
+  }
+}
+
+// Der Monatswechsel steht in der Kopfzeile neben dem Anmelde-Knopf und darf dort nicht
+// auf ein paar Buchstaben zusammenschrumpfen.
+.db-header-primary-action #Monat {
+  inline-size: auto;
+  min-inline-size: 8rem;
+}
+
+// Die Navigation zieht fuer die mobile Schublade um; dort fuellt sie die volle Hoehe.
+.db-header-drawer-navigation > .db-header-navigation {
+  inline-size: 100%;
 }
 
 // Bootstraps `.invalid-feedback` blendet sich nur ueber den Geschwister-Selektor

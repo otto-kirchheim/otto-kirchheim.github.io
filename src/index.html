@@ -32,261 +32,223 @@
       </div>
     </noscript>
 
-    <header class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top" data-bs-theme="dark">
-      <nav class="container-fluid" id="tabs" role="tablist" id="tab">
-        <button
-          class="navbar-brand nav-link me-1"
-          id="brand-start-tab"
-          data-bs-toggle="pill"
-          data-bs-target="#start"
-          type="button"
-          role="tab"
-        >
-          <img src="icons/192x192-icon.png" alt="Logo" width="30" height="30" class="d-inline-block align-text-top" />
-          Nebengeld
-        </button>
+    <header class="db-header sticky-top" id="appHeader">
+      <div class="db-header-navigation-bar">
+        <div class="db-header-brand-container">
+          <a class="db-brand" href="#start" id="brand-start-tab" data-tab-target="start" data-icon="none">
+            <img src="icons/192x192-icon.png" alt="" width="30" height="30" />
+            Nebengeld
+          </a>
+        </div>
 
-        <div
-          class="offcanvas offcanvas-end text-bg-dark d-none"
-          id="navmenu"
-          aria-labelledby="navmenuLabel"
-          tabindex="-1"
-          role="navigation"
-        >
-          <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="navmenuLabel">
-              <img
-                src="icons/192x192-icon.png"
-                alt="Logo"
-                width="30"
-                height="30"
-                class="d-inline-block align-text-top me-1"
-              />
-              Nebengeld
-            </h5>
+        <div class="db-header-navigation-container">
+          <!-- Die Navigation existiert genau einmal; fuer die mobile Schublade zieht sie um
+               (`navDrawer.ts`), damit die Tab-Ids eindeutig bleiben. -->
+          <div class="db-header-navigation d-none" id="navmenu">
+            <nav class="db-navigation" id="tabs" role="tablist" aria-label="Hauptnavigation">
+              <menu>
+            <li class="db-navigation-item" data-active="true" role="presentation">
+              <a
+                role="tab"
+                id="start-tab"
+                href="#start"
+                data-tab-target="start"
+                aria-controls="start"
+                aria-selected="true"
+                tabindex="0"
+              >
+                Start
+              </a>
+            </li>
+            <li class="db-navigation-item d-none" role="presentation">
+              <a
+                role="tab"
+                id="bereitschaft-tab"
+                href="#Bereitschaft"
+                data-tab-target="Bereitschaft"
+                aria-controls="Bereitschaft"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Bereitschaft
+              </a>
+            </li>
+            <li class="db-navigation-item d-none" role="presentation">
+              <a
+                role="tab"
+                id="ewt-tab"
+                href="#EWT"
+                data-tab-target="EWT"
+                aria-controls="EWT"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                EWT
+              </a>
+            </li>
+            <li class="db-navigation-item d-none" role="presentation">
+              <a
+                role="tab"
+                id="neben-tab"
+                href="#Neben"
+                data-tab-target="Neben"
+                aria-controls="Neben"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Nebenbezüge
+              </a>
+            </li>
+            <li class="db-navigation-item d-none" role="presentation">
+              <a
+                role="tab"
+                id="ea-tab"
+                href="#EA"
+                data-tab-target="EA"
+                aria-controls="EA"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Entgeltausgleich
+              </a>
+            </li>
+            <li class="db-navigation-item" role="presentation">
+              <a
+                role="tab"
+                id="berechnung-tab"
+                href="#Berechnung"
+                data-tab-target="Berechnung"
+                aria-controls="Berechnung"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Berechnung
+              </a>
+            </li>
+            <li class="db-navigation-item nav-rechts" role="presentation">
+              <button
+                type="button"
+                role="tab"
+                id="einstellungen-tab"
+                data-tab-target="Einstellungen"
+                aria-controls="Einstellungen"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                <span class="db-icon d-none d-lg-inline" data-icon="gear_wheel"></span><span class="d-lg-none">Einstellungen</span>
+              </button>
+            </li>
+            <li class="db-navigation-item d-none" role="presentation" id="admin">
+              <button
+                type="button"
+                role="tab"
+                id="admin-tab"
+                data-tab-target="Admin"
+                aria-controls="Admin"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                <span class="db-icon d-none d-lg-inline" data-icon="shield_check"></span><span class="d-lg-none">Admin</span>
+              </button>
+            </li>
+
+                <li class="db-navigation-item" role="presentation">
+                  <button
+                    type="button"
+                    class="db-navigation-item-expand-button"
+                    id="bd-theme"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="bd-theme-menu"
+                    aria-label="Design auswählen (auto)"
+                  >
+                    <span class="app-icon app-icon--theme-auto theme-icon-active"></span>
+                    <span class="d-lg-none" id="bd-theme-text">Design auswählen</span>
+                  </button>
+                  <menu class="db-sub-navigation" id="bd-theme-menu" aria-labelledby="bd-theme">
+                <li class="db-navigation-item" role="presentation">
+                  <button type="button" data-bs-theme-value="light" aria-pressed="false">
+                    <span class="db-icon" data-icon="sun"></span>
+                    Hell
+                  </button>
+                </li>
+                <li class="db-navigation-item" role="presentation">
+                  <button type="button" data-bs-theme-value="dark" aria-pressed="false">
+                    <span class="db-icon" data-icon="moon"></span>
+                    Dunkel
+                  </button>
+                </li>
+                <li class="db-navigation-item" role="presentation">
+                  <button type="button" data-bs-theme-value="auto" aria-pressed="true">
+                    <span class="app-icon app-icon--theme-auto"></span>
+                    Auto
+                  </button>
+                </li>
+                  </menu>
+                </li>
+              </menu>
+            </nav>
+          </div>
+
+          <div class="db-header-primary-action">
+            <button class="btn btn-primary" type="button" id="btnLogin">Anmelden</button>
+            <select id="Monat" class="form-select validate d-none" required aria-label="Monatswechsel">
+              <option value="1">Januar</option>
+              <option value="2">Februar</option>
+              <option value="3">März</option>
+              <option value="4">April</option>
+              <option value="5">Mai</option>
+              <option value="6">Juni</option>
+              <option value="7">Juli</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">Oktober</option>
+              <option value="11">November</option>
+              <option value="12">Dezember</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="db-header-action-container">
+          <div class="db-header-burger-menu-container">
             <button
               type="button"
-              class="btn-close btn-close-white"
-              data-bs-dismiss="offcanvas"
-              aria-label="Close"
-            ></button>
-          </div>
-          <div class="offcanvas-body p-4 pt-0 p-lg-0">
-            <ul class="navbar-nav nav-pills flex-row nav-fill flex-wrap bd-navbar-nav">
-              <li class="nav-item py-lg-1 col-12 col-lg-auto">
-                <hr class="d-lg-none my-1 text-white-50" />
-              </li>
-              <li class="nav-item col-6 col-lg-auto d-lg-none" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2 active"
-                  id="start-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#start"
-                  type="button"
-                  role="tab"
-                >
-                  Start
-                </button>
-              </li>
-              <li class="nav-item py-lg-1 col-12 col-lg-auto">
-                <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
-                <hr class="d-lg-none my-1 text-white-50" />
-              </li>
-              <li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="bereitschaft-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#Bereitschaft"
-                  type="button"
-                  role="tab"
-                >
-                  Bereitschaft
-                </button>
-              </li>
-              <li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 me-lg-5 px-lg-3"
-                  id="ewt-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#EWT"
-                  type="button"
-                  role="tab"
-                >
-                  EWT
-                </button>
-              </li>
-              <li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="neben-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#Neben"
-                  type="button"
-                  role="tab"
-                >
-                  Nebenbezüge
-                </button>
-              </li>
-              <li class="nav-item col-12 col-lg-auto d-none" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="ea-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#EA"
-                  type="button"
-                  role="tab"
-                >
-                  Entgeltausgleich
-                </button>
-              </li>
-
-              <li class="py-lg-1 col-12 col-lg-auto">
-                <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
-                <hr class="d-lg-none my-1 text-white-50" />
-              </li>
-
-              <li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="berechnung-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#Berechnung"
-                  type="button"
-                  role="tab"
-                >
-                  Berechnung
-                </button>
-              </li>
-            </ul>
-            <hr class="d-lg-none my-1 text-white-50" />
-            <ul class="navbar-nav nav-pills flex-row nav-fill flex-wrap ms-md-auto">
-              <li class="nav-item col-12 col-lg-auto" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="einstellungen-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#Einstellungen"
-                  type="button"
-                  role="tab"
-                >
-                  <span class="db-icon align-text-top d-lg-block d-none" data-icon="gear_wheel"></span>
-                  <span class="d-lg-none">Einstellungen</span>
-                </button>
-              </li>
-
-              <li class="nav-item col-12 col-lg-auto d-none" id="admin" data-bs-dismiss="offcanvas" role="presentation">
-                <button
-                  class="nav-link py-2 px-0 px-lg-2"
-                  id="admin-tab"
-                  data-bs-toggle="pill"
-                  data-bs-target="#Admin"
-                  type="button"
-                  role="tab"
-                >
-                  <span class="db-icon align-text-top d-lg-block d-none" data-icon="shield_check"></span>
-                  <span class="d-lg-none">Admin</span>
-                </button>
-              </li>
-
-              <li class="py-lg-1 col-12 col-lg-auto">
-                <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
-                <hr class="d-lg-none my-1 text-white-50" />
-              </li>
-
-              <li class="nav-item col-12 col-lg-auto dropdown" data-bs-theme="dark" role="presentation">
-                <button
-                  class="btn btn-link nav-link dropdown-toggle d-flex align-items-center justify-content-center py-2 px-0 px-lg-2"
-                  id="bd-theme"
-                  type="button"
-                  aria-expanded="false"
-                  data-bs-toggle="dropdown"
-                  data-bs-display="static"
-                  aria-label="Toggle theme (auto)"
-                >
-                  <span class="app-icon app-icon--theme-auto me-2 theme-icon-active"></span>
-                  <span class="d-lg-none" id="bd-theme-text">Design Auswählen</span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="bd-theme-text">
-                  <li>
-                    <button
-                      type="button"
-                      class="dropdown-item d-flex align-items-center"
-                      data-bs-theme-value="light"
-                      aria-pressed="false"
-                    >
-                      <span class="db-icon me-2 theme-icon" data-icon="sun"></span>
-                      Hell
-                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      class="dropdown-item d-flex align-items-center"
-                      data-bs-theme-value="dark"
-                      aria-pressed="false"
-                    >
-                      <span class="db-icon me-2 theme-icon" data-icon="moon"></span>
-                      Dunkel
-                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      type="button"
-                      class="dropdown-item d-flex align-items-center active"
-                      data-bs-theme-value="auto"
-                      aria-pressed="true"
-                    >
-                      <span class="app-icon app-icon--theme-auto me-2 theme-icon"></span>
-                      Auto
-                      <span class="db-icon bi ms-auto d-none" data-icon="check"></span>
-                    </button>
-                  </li>
-                </ul>
-              </li>
-              <li class="py-lg-1 col-12 col-lg-auto">
-                <div class="vr d-none d-lg-flex h-100 mx-lg-2 text-white-50"></div>
-              </li>
-            </ul>
+              class="db-button d-none"
+              data-variant="ghost"
+              data-icon="menu"
+              data-no-text="true"
+              id="btn-navmenu"
+              aria-controls="navdrawer"
+              aria-expanded="false"
+            >
+              Menü
+            </button>
           </div>
         </div>
+      </div>
 
-        <div class="ms-auto me-2">
-          <button class="btn btn-primary" id="btnLogin">Anmelden</button>
-          <select
-            id="Monat"
-            class="text-dark-emphasis form-select validate d-none"
-            required
-            data-bs-original-titel="Monatswechsel"
-          >
-            <option value="1">Januar</option>
-            <option value="2">Februar</option>
-            <option value="3">März</option>
-            <option value="4">April</option>
-            <option value="5">Mai</option>
-            <option value="6">Juni</option>
-            <option value="7">Juli</option>
-            <option value="8">August</option>
-            <option value="9">September</option>
-            <option value="10">Oktober</option>
-            <option value="11">November</option>
-            <option value="12">Dezember</option>
-          </select>
-        </div>
-        <button
-          class="navbar-toggler d-none"
-          type="button"
-          aria-label="Menü"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#navmenu"
-          aria-controls="navmenu"
-          id="btn-navmenu"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-      </nav>
+      <dialog class="db-drawer db-header-drawer" id="navdrawer" data-direction="right" aria-label="Menü">
+        <article class="db-drawer-container" data-direction="right" data-rounded="true" data-show-spacing="true">
+          <div class="db-drawer-header">
+            <header class="db-drawer-header-container">
+              <h2>Nebengeld</h2>
+            </header>
+            <button
+              type="button"
+              class="db-button"
+              data-action="close"
+              data-variant="ghost"
+              data-icon="cross"
+              data-no-text="true"
+            >
+              Schließen
+            </button>
+          </div>
+          <div class="db-drawer-content">
+            <div class="db-header-drawer-navigation"></div>
+          </div>
+        </article>
+      </dialog>
     </header>
 
     <div class="modal" id="modal" tabindex="-1"></div>

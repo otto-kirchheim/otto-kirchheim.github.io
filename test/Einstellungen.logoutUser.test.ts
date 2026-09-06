@@ -7,8 +7,7 @@ const resetAbortMock = vi.fn();
 const destroyAutoSaveIndicatorMock = vi.fn();
 const logoutMock = vi.fn().mockResolvedValue(undefined);
 const unmountAdminTabMock = vi.fn();
-const getOrCreateInstanceMock = vi.fn();
-const showMock = vi.fn();
+const zeigeTabMock = vi.fn(() => true);
 const publishEventMock = vi.fn();
 
 vi.mock('@/infrastructure/storage/Storage', () => ({
@@ -52,10 +51,8 @@ vi.mock('@/core/events/appEvents', () => ({
   publishEvent: publishEventMock,
 }));
 
-vi.mock('bootstrap/js/dist/tab', () => ({
-  default: {
-    getOrCreateInstance: getOrCreateInstanceMock,
-  },
+vi.mock('@/infrastructure/ui/tabController', () => ({
+  zeigeTab: zeigeTabMock,
 }));
 
 import logoutUser from '@/features/Einstellungen/utils/logoutUser';
@@ -66,7 +63,8 @@ describe('logoutUser', () => {
     vi.clearAllMocks();
     (Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true);
     document.body.innerHTML = `
-      <button id="start-tab"></button>
+      <div id="tabContent"><div class="tab-pane" id="start"></div></div>
+      <button id="start-tab" data-tab-target="start"></button>
       <button id="btnLogin" class="d-none"></button>
       <div id="navmenu"></div>
       <button id="btn-navmenu"></button>
@@ -74,7 +72,7 @@ describe('logoutUser', () => {
       <input id="Monat" />
       <h1 id="Willkommen">Hallo</h1>
     `;
-    getOrCreateInstanceMock.mockReturnValue({ show: showMock });
+    zeigeTabMock.mockReturnValue(true);
     Object.defineProperty(window, 'scrollTo', { value: vi.fn(), writable: true });
   });
 
@@ -84,7 +82,7 @@ describe('logoutUser', () => {
 
     expect(logoutMock).not.toHaveBeenCalled();
     expect(Storage.clear).toHaveBeenCalledTimes(1);
-    expect(showMock).toHaveBeenCalledTimes(1);
+    expect(zeigeTabMock).toHaveBeenCalledWith('start');
     expect(publishEventMock).toHaveBeenCalledWith('user:logout', { reason: 'manual' });
   });
 
@@ -104,15 +102,15 @@ describe('logoutUser', () => {
     expect(logoutMock).not.toHaveBeenCalled();
   });
 
-  it('zeigt Tab nicht wenn #start-tab kein HTMLButtonElement ist', () => {
+  it('scrollt nicht, wenn es das Start-Panel nicht gibt', () => {
     document.body.innerHTML = `
-      <div id="start-tab"></div>
       <button id="btnLogin" class="d-none"></button>
     `;
+    zeigeTabMock.mockReturnValue(false);
 
     logoutUser({ serverLogout: false });
 
-    expect(getOrCreateInstanceMock).not.toHaveBeenCalled();
+    expect(window.scrollTo).not.toHaveBeenCalled();
   });
 
   it('published version-mismatch reason when provided', () => {
@@ -123,10 +121,10 @@ describe('logoutUser', () => {
 
   it('setzt Willkommen-Text auch wenn Element fehlt (kein Fehler)', () => {
     document.body.innerHTML = `
-      <button id="start-tab"></button>
+      <button id="start-tab" data-tab-target="start"></button>
       <button id="btnLogin" class="d-none"></button>
     `;
-    getOrCreateInstanceMock.mockReturnValue({ show: showMock });
+    zeigeTabMock.mockReturnValue(true);
 
     expect(() => logoutUser({ serverLogout: false })).not.toThrow();
   });

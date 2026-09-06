@@ -22,7 +22,7 @@
 ### Tech-Stack
 
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
-- **Build Tool:** Vite (v8) mit `@vitejs/plugin-react-swc`
+- **Build Tool:** Vite (v8) mit `@vitejs/plugin-react` (Oxc)
 - **Sprache:** TypeScript (strict mode; kein any)
 - **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) neben Bootstrap 5.3 + SCSS + Material Icons; Cascade Layers `bootstrap < db-ux < bridge < app` (`src/scss/layers.scss`)
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
@@ -93,8 +93,9 @@ test/
 ### Architektur-Konzepte
 
 **Tab-basierte SPA (kein Router):**
-Die Navigation erfolgt über Bootstrap-Tabs (`data-bs-toggle="pill"`), nicht über einen Client-Side-Router.
-Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
+Die Navigation erfolgt über den DB-Header und `infrastructure/ui/tabController.ts`
+(`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent, Hash-Sync), nicht über einen
+Client-Side-Router. Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
 
 **3-Schichten-Architektur:**
 
@@ -126,7 +127,7 @@ features/Feature/
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
 4. **React** für Modals/Dialoge und die Feature-Tabs, **nicht** für die statische Hauptseiten-Struktur (`index.html`)
-5. **Bootstrap-Tabs** für Navigation, kein Router
+5. **`tabController`** für die Tab-Navigation, kein Router (Bootstrap-`Tab`/`Offcanvas`/`Dropdown` sind raus)
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
