@@ -8,6 +8,9 @@
   max-width: 100%;
   z-index: 1080;
   overflow: hidden;
+  padding: 0.5rem;
+  /* Der Halter deckt einen grossen Bereich ab -- Klicks nur auf den Meldungen selbst. */
+  pointer-events: none;
 }
 
 .CustomSnackbar-container--top-left {
@@ -47,6 +50,13 @@
   transform: translateX(-50%);
 }
 
+/* Die App-Fusszeile liegt fest am unteren Rand -- unten verankerte Meldungen weichen ihr aus. */
+.CustomSnackbar-container--bottom-left,
+.CustomSnackbar-container--bottom-center,
+.CustomSnackbar-container--bottom-right {
+  padding-bottom: 4rem;
+}
+
 .CustomSnackbar-container--fixed {
   position: fixed;
 }
@@ -58,127 +68,23 @@
 .CustomSnackbar__wrapper {
   overflow: hidden;
   margin: 0;
-  border-radius: 3px;
   display: flex;
-  min-width: auto;
+  inline-size: min(26rem, calc(100vw - 2rem));
+  pointer-events: auto;
   transition-property: all;
   transition-timing-function: ease;
   transition-duration: 0.5s;
 }
 
 .CustomSnackbar {
-  --snackbar-status-width: 12px;
-  --snackbar-icon-size: 22px;
-  --snackbar-status-icon-padding: 7px;
-  display: inline-flex;
-  box-sizing: border-box;
-  border-radius: 3px;
-  color: #eee;
-  font-size: 16px;
-  background-color: #262626;
-  vertical-align: bottom;
-  box-shadow: 0 0 4px 0 black;
-  margin: 0 10px;
   flex-grow: 1;
-  align-items: stretch;
 }
 
-.CustomSnackbar__close,
-.CustomSnackbar__status,
-.CustomSnackbar__message-wrapper {
-  position: relative;
-}
-
-.CustomSnackbar__message-wrapper {
-  flex: 1;
-  padding: 12px;
-}
-
-.CustomSnackbar__message {
-  display: inline-block;
-}
-
-.CustomSnackbar__status {
+.CustomSnackbar__actions {
   display: flex;
-  min-width: var(--snackbar-status-width);
-  width: var(--snackbar-status-width);
-  margin-right: 0;
-  border-radius: 3px 0 0 3px;
-  background-color: transparent;
-  flex: 0 0 var(--snackbar-status-width);
-  align-self: stretch;
-}
-
-.CustomSnackbar__status.CustomSnackbar--success,
-.CustomSnackbar__status.CustomSnackbar--warning,
-.CustomSnackbar__status.CustomSnackbar--danger,
-.CustomSnackbar__status.CustomSnackbar--info {
-  justify-content: center;
-  align-items: center;
-}
-
-.CustomSnackbar__status.CustomSnackbar--success {
-  background-color: #4caf50;
-}
-
-.CustomSnackbar__status.CustomSnackbar--warning {
-  background-color: #ff9800;
-}
-
-.CustomSnackbar__status.CustomSnackbar--danger {
-  background-color: #b90909;
-}
-
-.CustomSnackbar__status.CustomSnackbar--info {
-  background-color: #2196f3;
-}
-
-.CustomSnackbar__icon {
-  display: flex;
-  border: 2px solid white;
-  font-weight: bold;
-  border-radius: 20px;
-  height: var(--snackbar-icon-size);
-  width: var(--snackbar-icon-size);
-  margin: 0;
-  font-family: monospace;
-  justify-content: center;
-  align-items: center;
-  flex: 0 0 auto;
-}
-
-.CustomSnackbar__status--with-icon {
-  padding-left: var(--snackbar-status-icon-padding);
-  padding-right: var(--snackbar-status-icon-padding);
-  justify-content: center;
-}
-
-.CustomSnackbar__action {
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  color: #838cff;
-  cursor: pointer;
-  max-width: min-content;
-  white-space: normal;
-}
-
-.CustomSnackbar__action:hover {
-  background-color: #333;
-}
-
-.CustomSnackbar__close {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  padding: 0 10px;
-  -webkit-user-select: none;
-  user-select: none;
-  color: #bbb;
-}
-
-.CustomSnackbar__close:hover {
-  background-color: #444;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block-start: 0.75rem;
 }
 
 @media (max-width: 576px) {
@@ -186,53 +92,13 @@
     left: 0;
     right: 0;
     align-items: stretch;
-    padding: 0 8px;
   }
 
   .CustomSnackbar__wrapper {
-    width: 100%;
-  }
-
-  .CustomSnackbar {
-    position: relative;
-    width: 100%;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    padding-left: var(--snackbar-status-width);
-  }
-
-  .CustomSnackbar__status {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    border-radius: 3px 0 0 3px;
-  }
-
-  .CustomSnackbar__message-wrapper {
-    flex: 1 1 0;
-    min-width: 0;
-    padding: 12px 14px;
-  }
-
-  .CustomSnackbar__close {
-    flex: 0 0 auto;
-    align-self: flex-start;
-    padding: 0 14px;
-    min-height: 42px;
+    inline-size: 100%;
   }
 
   .CustomSnackbar__action {
-    flex: 1 1 100%;
-    min-height: 42px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    max-width: none;
-    min-width: 0;
-    justify-content: flex-start;
-    text-align: left;
-    padding: 10px 12px;
-    font-size: 0.95rem;
-    line-height: 1.25;
+    flex: 1 1 auto;
   }
 }

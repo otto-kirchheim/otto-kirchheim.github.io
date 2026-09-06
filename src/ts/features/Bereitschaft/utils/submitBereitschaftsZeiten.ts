@@ -210,7 +210,6 @@ export default async function submitBereitschaftsZeiten(
             });
           },
           dismiss: true,
-          class: ['text-primary'],
         },
         {
           text: 'Abbrechen',

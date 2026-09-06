@@ -76,29 +76,31 @@ describe('CustomSnackbar', () => {
     vi.useRealTimers();
   });
 
-  // ─── Status-Farben ──────────────────────────────────────────────────────────
+  // ─── Status und Semantik ────────────────────────────────────────────────────
 
-  describe('Status-Farben', () => {
+  describe('Status und Semantik', () => {
     it.each([
-      ['success', 'CustomSnackbar--success'],
-      ['green', 'CustomSnackbar--success'],
-      ['warning', 'CustomSnackbar--warning'],
-      ['alert', 'CustomSnackbar--warning'],
-      ['orange', 'CustomSnackbar--warning'],
-      ['danger', 'CustomSnackbar--danger'],
-      ['error', 'CustomSnackbar--danger'],
-      ['red', 'CustomSnackbar--danger'],
-      ['info', 'CustomSnackbar--info'],
-    ] as const)('status "%s" setzt Klasse %s', (status, expectedClass) => {
+      ['success', 'successful'],
+      ['green', 'successful'],
+      ['warning', 'warning'],
+      ['alert', 'warning'],
+      ['orange', 'warning'],
+      ['danger', 'critical'],
+      ['error', 'critical'],
+      ['red', 'critical'],
+      ['info', 'informational'],
+    ] as const)('status "%s" setzt data-semantic="%s"', (status, expectedSemantic) => {
       createSnackBar({ message: 'Test', timeout: false, status });
-      const statusEl = document.querySelector('.CustomSnackbar__status');
-      expect(statusEl).not.toBeNull();
-      expect(statusEl?.classList.contains(expectedClass)).toBe(true);
+      const notification = document.querySelector<HTMLDivElement>('.CustomSnackbar');
+      expect(notification).not.toBeNull();
+      expect(notification?.dataset.semantic).toBe(expectedSemantic);
     });
 
-    it('leerer status rendert kein Status-Element', () => {
+    it('leerer status bleibt neutral und ohne Symbol', () => {
       createSnackBar({ message: 'Test', timeout: false, status: '' });
-      expect(document.querySelector('.CustomSnackbar__status')).toBeNull();
+      const notification = document.querySelector<HTMLDivElement>('.CustomSnackbar');
+      expect(notification?.dataset.semantic).toBe('adaptive');
+      expect(notification?.dataset.icon).toBeUndefined();
     });
   });
 
@@ -202,47 +204,36 @@ describe('CustomSnackbar', () => {
     });
   });
 
-  // ─── Icons ───────────────────────────────────────────────────────────────────
+  // ─── Symbole ─────────────────────────────────────────────────────────────────
 
-  describe('Icons', () => {
+  describe('Symbole', () => {
     it.each([
-      ['exclamation', '!'],
-      ['warn', '!'],
-      ['danger', '!'],
-      ['info', '?'],
-      ['question', '?'],
-      ['question-mark', '?'],
-      ['plus', '+'],
-      ['add', '+'],
-    ] as const)('icon "%s" zeigt Text "%s"', (icon, expectedText) => {
+      ['exclamation', 'exclamation_mark_triangle'],
+      ['warn', 'exclamation_mark_triangle'],
+      ['danger', 'exclamation_mark_triangle'],
+      ['!', 'exclamation_mark_triangle'],
+      ['info', 'information_circle'],
+      ['question', 'question_mark_circle'],
+      ['question-mark', 'question_mark_circle'],
+      ['?', 'question_mark_circle'],
+      ['plus', 'plus'],
+      ['add', 'plus'],
+      ['+', 'plus'],
+    ] as const)('icon "%s" setzt data-icon="%s"', (icon, expectedIcon) => {
       createSnackBar({ message: 'Test', timeout: false, icon });
-      const iconEl = document.querySelector('.CustomSnackbar__icon');
-      expect(iconEl?.textContent).toBe(expectedText);
+      expect(document.querySelector<HTMLDivElement>('.CustomSnackbar')?.dataset.icon).toBe(expectedIcon);
     });
 
-    it('einzelnes Sonderzeichen wird direkt als Icon-Text gesetzt', () => {
-      createSnackBar({ message: 'Test', timeout: false, icon: '*' });
-      const iconEl = document.querySelector('.CustomSnackbar__icon');
-      expect(iconEl?.textContent).toBe('*');
+    it('unbekannter Name wird als DB-Symbolname durchgereicht', () => {
+      createSnackBar({ message: 'Test', timeout: false, icon: 'calendar' });
+      expect(document.querySelector<HTMLDivElement>('.CustomSnackbar')?.dataset.icon).toBe('calendar');
     });
 
-    it('mehrzeichiges unbekanntes Icon warnt und nutzt nur den ersten Buchstaben', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-      createSnackBar({ message: 'Test', timeout: false, icon: 'abc' });
-      expect(warnSpy).toHaveBeenCalledWith('Invalid icon character provided: ', 'abc');
-      const iconEl = document.querySelector('.CustomSnackbar__icon');
-      expect(iconEl?.textContent).toBe('a');
-    });
-
-    it('Icon setzt --with-icon Klasse und CSS-Variable auf Status-Span', () => {
-      createSnackBar({ message: 'Test', timeout: false, icon: 'info', status: 'info' });
-      const statusEl = document.querySelector('.CustomSnackbar__status');
-      expect(statusEl?.classList.contains('CustomSnackbar__status--with-icon')).toBe(true);
-    });
-
-    it('kein Icon → kein CustomSnackbar__icon Element', () => {
-      createSnackBar({ message: 'Test', timeout: false });
-      expect(document.querySelector('.CustomSnackbar__icon')).toBeNull();
+    it('ohne icon liefert der Status das Standardsymbol', () => {
+      createSnackBar({ message: 'Test', timeout: false, status: 'success' });
+      const notification = document.querySelector<HTMLDivElement>('.CustomSnackbar');
+      expect(notification?.dataset.icon).toBe('check_circle');
+      expect(notification?.dataset.showIcon).toBe('true');
     });
   });
 
@@ -254,11 +245,23 @@ describe('CustomSnackbar', () => {
       expect(document.querySelector('.CustomSnackbar__close')).toBeNull();
     });
 
-    it('dismissible=true (Standard) fügt Close-Button mit × hinzu', () => {
+    it('dismissible=true (Standard) fügt einen DB-Schließen-Button hinzu', () => {
       createSnackBar({ message: 'Test', timeout: false });
-      const closeBtn = document.querySelector('.CustomSnackbar__close');
+      const closeBtn = document.querySelector<HTMLButtonElement>('.CustomSnackbar__close');
       expect(closeBtn).not.toBeNull();
-      expect(closeBtn?.textContent).toBe('×');
+      expect(closeBtn?.classList.contains('db-button')).toBe(true);
+      expect(closeBtn?.dataset.icon).toBe('cross');
+      expect(closeBtn?.textContent).toBe('Schließen');
+    });
+
+    it('titel rendert einen Kopfbereich, ohne titel bleibt er weg', () => {
+      createSnackBar({ message: 'Test', timeout: false, titel: 'Gespeichert' });
+      const kopf = document.querySelector('[data-area="head"]');
+      expect(kopf?.textContent).toBe('Gespeichert');
+
+      document.body.innerHTML = '';
+      createSnackBar({ message: 'Test', timeout: false });
+      expect(document.querySelector('[data-area="head"]')).toBeNull();
     });
 
     it('Close-Button schließt Snackbar beim Klick', () => {

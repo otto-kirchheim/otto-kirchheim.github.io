@@ -85,7 +85,6 @@ export default async function userLoginSuccess({
             void requestVerificationMail(email);
           },
           dismiss: true,
-          class: ['text-primary'],
         },
       ],
     });

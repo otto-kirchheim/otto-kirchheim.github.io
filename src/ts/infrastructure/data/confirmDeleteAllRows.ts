@@ -28,9 +28,8 @@ export function confirmDeleteAllRows<T extends CustomTableTypes>(options: {
           persist(table);
         },
         dismiss: true,
-        class: ['text-danger'],
       },
-      { text: 'Nein', dismiss: true, class: ['text-primary'] },
+      { text: 'Nein', dismiss: true },
     ],
   });
 }

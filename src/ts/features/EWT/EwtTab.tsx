@@ -104,8 +104,8 @@ function EwtTab() {
               text: 'Alle Zeiten entfernen',
               function: () => {
                 createSnackBar({
-                  message:
-                    'Möchtest du wirklich alle Zeiten entfernen?<br /><small>(nur bei Zeilen die auch berechnet werden)</small>',
+                  titel: 'Alle Zeiten entfernen?',
+                  message: 'Nur bei Zeilen, die auch berechnet werden.',
                   icon: 'question',
                   status: 'error',
                   dismissible: false,
@@ -139,9 +139,8 @@ function EwtTab() {
                         persistEwtTableData(ftE);
                       },
                       dismiss: true,
-                      class: ['text-danger'],
                     },
-                    { text: 'Nein', dismiss: true, class: ['text-primary'] },
+                    { text: 'Nein', dismiss: true },
                   ],
                 });
               },

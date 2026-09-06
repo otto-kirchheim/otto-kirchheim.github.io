@@ -103,9 +103,8 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
                 buttonDisable(false);
               },
               dismiss: true,
-              class: ['text-danger'],
             },
-            { text: 'Nein', dismiss: true, class: ['text-primary'] },
+            { text: 'Nein', dismiss: true },
           ],
         });
       },

@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-06 (61)
+
+### feat (DB-UX-Migration Phase E: Snackbar als DB-Notification)
+
+Die Snackbar rendert jetzt `db-notification` statt der dunklen Pille mit farbigem Streifen.
+Die `createSnackBar`-Schnittstelle bleibt -- `status`, `icon`, `actions`, `dismissible`,
+`position`, `timeout`, `width`, `speed` verhalten sich unveraendert.
+
+- **Farbe und Symbol** kommen aus `data-semantic` und `data-icon`: `success|green` ->
+  `successful`, `warning|alert|orange` -> `warning`, `danger|error|red` -> `critical`,
+  `info` -> `informational`. Ohne Status bleibt die Meldung `adaptive` und ohne Symbol.
+- **`titel` (neu, optional)** rendert einen Kopfbereich (`<header data-area="head">`). Ohne
+  Titel bleibt es bei der einzeiligen Nachricht. Genutzt beim EWT-Ruecklauf "Alle Zeiten
+  entfernen?" -- die Frage steht jetzt im Kopf, der Hinweis im Text statt als `<small>`.
+- **Aktionen** sind DB-Buttons (erste `brand`, weitere `outlined`) im Inhaltsbereich; die
+  Bootstrap-Klassen `text-danger`/`text-primary`/`text-secondary`/`text-info` an den
+  Aktionen sind entfallen, die Farbe kommt aus der Variante.
+- **Schliessen** ist ein DB-Ghost-Button mit `cross`-Symbol statt eines `×`-Spans.
+- **Fusszeile:** unten verankerte Meldungen halten 4 rem Abstand, damit sie nicht auf der
+  festen App-Fusszeile liegen. Der Halter ist `pointer-events: none`, nur die Meldungen
+  selbst nehmen Klicks -- sonst haette der Freiraum die Fusszeile blockiert.
+
 ## 2026-09-06 (60)
 
 ### feat (DB-UX-Migration Phase E: Modal-Infrastruktur auf DB-Drawer)

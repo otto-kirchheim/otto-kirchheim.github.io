@@ -122,7 +122,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             buttonDisable(false);
           },
           dismiss: true,
-          class: ['text-primary', 'u-min-w-120'],
+          class: ['u-min-w-120'],
         },
         {
           text: 'Lokale Daten behalten & speichern',
@@ -186,7 +186,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             buttonDisable(false);
           },
           dismiss: true,
-          class: ['text-secondary', 'u-min-w-120'],
+          class: ['u-min-w-120'],
         },
         {
           text: 'Vergleichen & manuell speichern',
@@ -256,7 +256,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             clearLoading('btnAuswaehlen');
           },
           dismiss: true,
-          class: ['text-info', 'u-min-w-120'],
+          class: ['u-min-w-120'],
         },
       ],
     });
