@@ -226,7 +226,11 @@
           </div>
         </div>
       </div>
+    </header>
 
+    <!-- Die Navigations-Schublade liegt bewusst neben dem Header, nicht darin: ein
+         `position: fixed`-Overlay in einer `sticky` Kopfzeile ist unnoetig verschachtelt.
+         `navDrawer.ts` findet sie ueber die Id. -->
       <dialog class="db-drawer db-header-drawer" id="navdrawer" data-direction="to-right" aria-label="Menü">
         <article class="db-drawer-container" data-direction="to-right" data-rounded="true" data-show-spacing="true">
           <div class="db-drawer-header">
@@ -249,7 +253,6 @@
           </div>
         </article>
       </dialog>
-    </header>
 
     <div class="modal" id="modal" tabindex="-1"></div>
 
