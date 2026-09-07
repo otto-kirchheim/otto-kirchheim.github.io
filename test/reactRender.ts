@@ -76,3 +76,40 @@ export function huelleMock(props: Record<string, unknown>): ReactNode {
   // stattdessen ihre Position als impliziten Schluessel.
   return createElement('div', { ref: props.myRef as never }, ...(Array.isArray(kinder) ? kinder : [kinder]));
 }
+
+/**
+ * Findet das Bedienelement einer DB-Feldhuelle (`db-input`, `db-select`, `db-textarea`,
+ * `db-checkbox`) ueber den Text seiner Beschriftung.
+ *
+ * Seit dem Umstieg auf die DB-Bausteine steht die Beschriftung in einem echten `<label>`
+ * statt in `aria-label` -- Tests, die frueher `input[aria-label="..."]` genutzt haben,
+ * suchen darueber weiter dasselbe Feld.
+ */
+export function feldMitBeschriftung<T extends HTMLElement = HTMLInputElement>(
+  wurzel: ParentNode,
+  beschriftung: string | RegExp,
+): T | null {
+  const passt = (text: string) => (typeof beschriftung === 'string' ? text === beschriftung : beschriftung.test(text));
+  for (const huelle of wurzel.querySelectorAll('.db-input, .db-select, .db-textarea, .db-checkbox')) {
+    const label = huelle.querySelector('label');
+    if (label && passt((label.textContent ?? '').trim())) {
+      return huelle.querySelector<T>('input, select, textarea');
+    }
+  }
+  return null;
+}
+
+/** Wie `feldMitBeschriftung`, aber fuer alle passenden Felder. */
+export function felderMitBeschriftung<T extends HTMLElement = HTMLInputElement>(
+  wurzel: ParentNode,
+  beschriftung: RegExp,
+): T[] {
+  const treffer: T[] = [];
+  for (const huelle of wurzel.querySelectorAll('.db-input, .db-select, .db-textarea, .db-checkbox')) {
+    const label = huelle.querySelector('label');
+    if (!label || !beschriftung.test((label.textContent ?? '').trim())) continue;
+    const feld = huelle.querySelector<T>('input, select, textarea');
+    if (feld) treffer.push(feld);
+  }
+  return treffer;
+}

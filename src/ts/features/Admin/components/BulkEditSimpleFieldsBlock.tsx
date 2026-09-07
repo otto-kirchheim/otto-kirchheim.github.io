@@ -1,4 +1,5 @@
 import { FIELD_LABELS, type SimpleFieldKey } from '../utils/bulkEditOe';
+import { DbFeld } from '@/components';
 
 export const SIMPLE_FIELD_KEYS: SimpleFieldKey[] = ['betrieb', 'gewerk', 'ersteTkgSt', 'ersteTkgStAdresse'];
 
@@ -18,26 +19,27 @@ export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
         {SIMPLE_FIELD_KEYS.map(key => (
           <div key={key}>
             <div>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`bulkSimple-${key}`}
-                checked={fields[key].enabled}
-                onChange={e => onChange(key, { enabled: (e.target as HTMLInputElement).checked })}
-              />
-              <label className="form-check-label fw-semibold" htmlFor={`bulkSimple-${key}`}>
-                {FIELD_LABELS[key]}
-              </label>
+              <div className="db-checkbox" data-size="small">
+                <label>
+                  <input
+                    type="checkbox"
+                    id={`bulkSimple-${key}`}
+                    checked={fields[key].enabled}
+                    onChange={e => onChange(key, { enabled: (e.target as HTMLInputElement).checked })}
+                  />
+                  {FIELD_LABELS[key]}
+                </label>
+              </div>
             </div>
             {fields[key].enabled && (
               <div className="mt-1 ms-4">
-                <input
+                <DbFeld
                   type="text"
-                  className="form-control form-control-sm"
+                  beschriftung={`Neuer Wert für ${FIELD_LABELS[key]}`}
+                  dicht
                   placeholder={FIELD_LABELS[key]}
-                  aria-label={FIELD_LABELS[key]}
                   value={fields[key].value}
-                  onChange={e => onChange(key, { value: (e.target as HTMLInputElement).value })}
+                  onChange={e => onChange(key, { value: e.target.value })}
                 />
               </div>
             )}

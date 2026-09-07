@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render, setzeWert } from '../reactRender';
+import { feldMitBeschriftung, felderMitBeschriftung, render, setzeWert } from '../reactRender';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminUserRow, BulkApplyResult, BulkUserProfileUpdatePayload } from '@/features/Admin/utils/api';
@@ -74,14 +74,12 @@ describe('AdminBulkEditModal', () => {
     const users = [makeUser({ oe: ['V', 'IW', 'MI'] }), makeUser({ _id: 'u2', oe: ['V', 'IW', 'N'] })];
     const container = renderModal(users);
 
-    expect(container.querySelector('input[aria-label="Ebene 1 ersetzen"]')).toBeNull();
+    expect(feldMitBeschriftung(container, 'Ebene 1 ersetzen')).toBeNull();
 
     container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
     await flush();
 
-    const levelInputs = Array.from(
-      container.querySelectorAll<HTMLInputElement>('input[aria-label^="Ebene "][aria-label$=" ersetzen"]'),
-    );
+    const levelInputs = felderMitBeschriftung<HTMLInputElement>(container, /^Ebene .* ersetzen$/);
     expect(levelInputs.map(input => input.value)).toEqual(['', '', '']);
     expect(levelInputs.map(input => input.placeholder)).toEqual(['V', 'IW', '']);
   });
@@ -91,14 +89,16 @@ describe('AdminBulkEditModal', () => {
     container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
     await flush();
 
-    const secondLevelInput = container.querySelector<HTMLInputElement>('input[aria-label="Ebene 2 ersetzen"]')!;
+    const secondLevelInput = feldMitBeschriftung<HTMLInputElement>(container, 'Ebene 2 ersetzen')!;
     setzeWert(secondLevelInput, 'NEU');
     await flush();
 
-    const highlighted = Array.from(
-      container.querySelectorAll<HTMLInputElement>('input[aria-label$=" ersetzen"].border-warning'),
+    const highlighted = felderMitBeschriftung<HTMLInputElement>(container, / ersetzen$/).filter(input =>
+      input.classList.contains('border-warning'),
     );
-    expect(highlighted.map(input => input.getAttribute('aria-label'))).toEqual(['Ebene 2 ersetzen']);
+    expect(highlighted.map(input => input.closest('.db-input')?.querySelector('label')?.textContent)).toEqual([
+      'Ebene 2 ersetzen',
+    ]);
   });
 
   it('sendet ohne angehaktes Ziel keine OE-Änderung (kein API-Call)', async () => {
@@ -143,7 +143,7 @@ describe('AdminBulkEditModal', () => {
     container.querySelector<HTMLInputElement>('#bulkOeTarget-teamOes')!.click();
     await flush();
 
-    const firstLevelInput = container.querySelector<HTMLInputElement>('input[aria-label="Ebene 1 ersetzen"]')!;
+    const firstLevelInput = feldMitBeschriftung<HTMLInputElement>(container, 'Ebene 1 ersetzen')!;
     setzeWert(firstLevelInput, 'X');
     await flush();
 
@@ -160,13 +160,13 @@ describe('AdminBulkEditModal', () => {
     mockBulkUpdateUserProfiles.mockResolvedValue(emptyResult());
     const container = renderModal([makeUser()]);
 
-    const gewerkInput = container.querySelector<HTMLInputElement>('input[aria-label="Gewerk"]');
+    const gewerkInput = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Gewerk');
     expect(gewerkInput).toBeNull();
 
     container.querySelector<HTMLInputElement>('#bulkSimple-gewerk')!.click();
     await flush();
 
-    const gewerkInputAfter = container.querySelector<HTMLInputElement>('input[aria-label="Gewerk"]')!;
+    const gewerkInputAfter = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Gewerk')!;
     setzeWert(gewerkInputAfter, 'Fahrweg');
     await flush();
 
@@ -189,9 +189,7 @@ describe('AdminBulkEditModal', () => {
     container.querySelector<HTMLInputElement>('#bulkAdminOe-teamOes-add')!.click();
     await flush();
 
-    const levelInputs = Array.from(
-      container.querySelectorAll<HTMLInputElement>('input[aria-label^="Team-Admin-OEs: Ebene "]'),
-    );
+    const levelInputs = felderMitBeschriftung<HTMLInputElement>(container, /^Team-Admin-OEs: Ebene /);
     expect(levelInputs.map(input => input.placeholder)).toEqual(['V', 'IW', 'MI', '']);
 
     setzeWert(levelInputs[3], 'IL');
@@ -214,7 +212,7 @@ describe('AdminBulkEditModal', () => {
     removeRadio.click();
     await flush();
 
-    const select = container.querySelector<HTMLSelectElement>('select[aria-label="Team-Admin-OEs entfernen"]')!;
+    const select = feldMitBeschriftung<HTMLSelectElement>(container, 'Team-Admin-OEs entfernen')!;
     const options = Array.from(select.options)
       .map(opt => opt.value)
       .filter(Boolean);
@@ -244,7 +242,7 @@ describe('AdminBulkEditModal', () => {
 
     container.querySelector<HTMLInputElement>('#bulkSimple-betrieb')!.click();
     await flush();
-    const betriebInput = container.querySelector<HTMLInputElement>('input[aria-label="Betrieb"]')!;
+    const betriebInput = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Betrieb')!;
     setzeWert(betriebInput, 'Neu');
     await flush();
 
@@ -262,9 +260,9 @@ describe('AdminBulkEditModal', () => {
     templateRadio.click();
     await flush();
 
-    const templateRadioLabel = templateRadio.closest('div')!;
-    const select = container.querySelector('select[aria-label="Vorlage"]')!;
-    expect(templateRadioLabel.nextElementSibling).toBe(select.parentElement);
-    expect(container.querySelector('select[aria-label="Muster-Benutzer"]')).toBeNull();
+    const templateRadioBox = templateRadio.closest('.db-checkbox')!;
+    const select = feldMitBeschriftung<HTMLSelectElement>(container, 'Vorlage wählen')!;
+    expect(templateRadioBox.nextElementSibling).toBe(select.closest('.db-select')!.parentElement);
+    expect(feldMitBeschriftung(container, 'Muster-Benutzer wählen')).toBeNull();
   });
 });

@@ -8,6 +8,7 @@ import {
   type FormularCode,
   type KatalogEintrag,
 } from './datenKatalog';
+import { DbAuswahl, DbFeld } from '@/components';
 
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
  * GEPRÜFTE Wert davor unterscheidet sich, der Vergleich danach ist identisch. */
@@ -48,18 +49,20 @@ function VergleichWahl({
     return (
       <div className="raster mb-1 abstand-1">
         <div className="sp-8">
-          <select
-            className="form-select form-select-sm"
+          <DbAuswahl
+            beschriftung="Bedingung"
+            dicht
             value={String(aktuell)}
-            onChange={e => onChange({ werte: [(e.target as HTMLSelectElement).value === 'true'], bereich: undefined })}
+            onChange={e => onChange({ werte: [e.target.value === 'true'], bereich: undefined })}
           >
             <option value="true">Ja (zutreffend)</option>
             <option value="false">Nein (nicht zutreffend)</option>
-          </select>
+          </DbAuswahl>
         </div>
         <div className="sp-4">
-          <input
-            className="form-control form-control-sm"
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
             placeholder="Zeichen"
             value={wenn.dann}
             onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
@@ -94,8 +97,9 @@ function VergleichWahl({
           </div>
         </div>
         <div className="sp-4">
-          <input
-            className="form-control form-control-sm"
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
             placeholder="Zeichen"
             value={wenn.dann}
             onChange={e => onChange({ dann: (e.target as HTMLInputElement).value })}
@@ -104,39 +108,44 @@ function VergleichWahl({
       </div>
 
       {wenn.bereich ? (
-        <div className="input-group input-group-sm">
-          <span className="input-group-text px-1 small">ab</span>
-          <input
-            className="form-control"
+        <div className="feldgruppe">
+          <DbFeld
+            beschriftung="ab"
+            beschriftungZeigen
+            dicht
             placeholder="z.B. 8:00 oder 5"
             value={wenn.bereich.von}
-            onChange={e => onChange({ bereich: { ...wenn.bereich!, von: (e.target as HTMLInputElement).value } })}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, von: e.target.value } })}
           />
-          <span className="input-group-text px-1 small">bis vor</span>
-          <input
-            className="form-control"
+          <DbFeld
+            beschriftung="bis vor"
+            beschriftungZeigen
+            dicht
             placeholder="z.B. 14:00 oder 20"
             value={wenn.bereich.bis}
-            onChange={e => onChange({ bereich: { ...wenn.bereich!, bis: (e.target as HTMLInputElement).value } })}
+            onChange={e => onChange({ bereich: { ...wenn.bereich!, bis: e.target.value } })}
           />
         </div>
       ) : auswahl.length > 0 ? (
         <div className="d-flex flex-wrap gap-2">
           {auswahl.map(wert => (
-            <div key={wert}>
-              <input
-                className="form-check-input"
-                type="checkbox"
-                checked={(wenn.werte ?? []).includes(wert)}
-                onChange={e => schalte(wert, (e.target as HTMLInputElement).checked)}
-              />
-              <label className="form-check-label small">{wert}</label>
+            <div key={wert} className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={(wenn.werte ?? []).includes(wert)}
+                  onChange={e => schalte(wert, e.target.checked)}
+                />
+                {wert}
+              </label>
             </div>
           ))}
         </div>
       ) : (
-        <input
-          className="form-control form-control-sm font-monospace"
+        <DbFeld
+          beschriftung="Werte, durch Komma getrennt"
+          dicht
+          feldKlasse="font-monospace"
           placeholder="Werte, durch Komma getrennt"
           value={(wenn.werte ?? []).join(', ')}
           onChange={e =>
@@ -222,8 +231,10 @@ export function AnkreuzBedingung({
           />
         </div>
       ) : (
-        <select
-          className="form-select form-select-sm mb-1"
+        <DbAuswahl
+          beschriftung="Geprüftes Feld"
+          dicht
+          className="mb-1"
           value={wenn.feld ?? ''}
           onChange={e => {
             const feld = (e.target as HTMLSelectElement).value;
@@ -249,7 +260,7 @@ export function AnkreuzBedingung({
               ))}
             </optgroup>
           ))}
-        </select>
+        </DbAuswahl>
       )}
 
       <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />
@@ -321,8 +332,10 @@ export function FeldAnkreuzBedingung({
           />
         </div>
       ) : (
-        <select
-          className="form-select form-select-sm mb-1"
+        <DbAuswahl
+          beschriftung="Geprüftes Feld"
+          dicht
+          className="mb-1"
           value={wenn.feld ?? ''}
           onChange={e => {
             const pfad = (e.target as HTMLSelectElement).value;
@@ -346,7 +359,7 @@ export function FeldAnkreuzBedingung({
               ))}
             </optgroup>
           ))}
-        </select>
+        </DbAuswahl>
       )}
 
       <VergleichWahl wenn={wenn} auswahl={auswahl} istBoolean={istBoolean} onChange={setzeWenn} />

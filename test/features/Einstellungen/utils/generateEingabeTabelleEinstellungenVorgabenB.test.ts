@@ -109,14 +109,14 @@ describe('generateEingabeTabelleEinstellungenVorgabenB', () => {
       expect(trueParser(false)).toBe('Nein');
     });
 
-    it('weekdayParser: baut Wochentag + Woche + Zeit mit <br/> bei umbruch', () => {
+    it('weekdayParser: baut Wochentag + Woche + Zeit mit Zeilenumbruch', () => {
       generateEingabeTabelleEinstellungenVorgabenB({});
       const weekdayParser = parserFor('beginnB');
-      expect(weekdayParser({ tag: 3, zeit: '08:00', Nwoche: false })).toBe('Mi W1<br/>08:00');
-      expect(weekdayParser({ tag: 0, zeit: '10:00', Nwoche: true })).toBe('So W2<br/>10:00');
+      expect(weekdayParser({ tag: 3, zeit: '08:00', Nwoche: false })).toBe('Mi W1\n08:00');
+      expect(weekdayParser({ tag: 0, zeit: '10:00', Nwoche: true })).toBe('So W2\n10:00');
     });
 
-    it('weekdayParser: nutzt " | " statt <br/> wenn option=false', () => {
+    it('weekdayParser: nutzt " | " statt Zeilenumbruch wenn option=false', () => {
       generateEingabeTabelleEinstellungenVorgabenB({});
       const weekdayParser = parserFor('beginnB');
       expect(weekdayParser({ tag: 1, zeit: '06:00' }, false)).toBe('Mo W1 | 06:00');
@@ -125,13 +125,13 @@ describe('generateEingabeTabelleEinstellungenVorgabenB', () => {
     it('weekdayParser: fällt auf "-" zurück, wenn Tag/Zeit unbekannt sind', () => {
       generateEingabeTabelleEinstellungenVorgabenB({});
       const weekdayParser = parserFor('beginnB');
-      expect(weekdayParser({ tag: 99 })).toBe('- W1<br/>-');
+      expect(weekdayParser({ tag: 99 })).toBe('- W1\n-');
     });
 
     it('nachtRangeParser: delegiert an weekdayParser', () => {
       generateEingabeTabelleEinstellungenVorgabenB({});
       const nachtParser = parserFor('beginnN');
-      expect(nachtParser({ tag: 2, zeit: '22:00', Nwoche: true })).toBe('Di W2<br/>22:00');
+      expect(nachtParser({ tag: 2, zeit: '22:00', Nwoche: true })).toBe('Di W2\n22:00');
     });
   });
 

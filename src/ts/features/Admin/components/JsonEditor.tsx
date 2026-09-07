@@ -113,16 +113,21 @@ export function JsonEditor({ value, onChange, error }: Props) {
       {/* Editor */}
       {open && (
         <div className="p-2">
-          <textarea
-            className={`form-control form-control-sm font-monospace w-100${hasError ? ' is-invalid' : ''}`}
-            rows={autoRows(value)}
-            style={{ fontSize: '0.72rem', resize: 'vertical', minHeight: '80px', lineHeight: '1.45' }}
-            value={value}
-            onChange={e => onChange((e.target as HTMLTextAreaElement).value)}
-            spellCheck={false}
-            autoComplete="off"
-            autoCorrect="off"
-          />
+          <div className="db-textarea w-100" data-density="functional" data-hide-label="true">
+            <label htmlFor={`json-${label}`}>{label}</label>
+            <textarea
+              id={`json-${label}`}
+              className="font-monospace"
+              data-custom-validity={hasError ? 'invalid' : undefined}
+              rows={autoRows(value)}
+              style={{ fontSize: '0.72rem', resize: 'vertical', minHeight: '80px', lineHeight: '1.45' }}
+              value={value}
+              onChange={e => onChange((e.target as HTMLTextAreaElement).value)}
+              spellCheck={false}
+              autoComplete="off"
+              autoCorrect="off"
+            />
+          </div>
           {hasError && (
             <div className="small mt-1 text-danger">
               <span

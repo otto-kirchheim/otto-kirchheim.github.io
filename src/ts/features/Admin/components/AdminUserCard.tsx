@@ -6,6 +6,7 @@ import createAdminUserPasswordModal from './createAdminUserPasswordModal';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import { OeTagInput } from './OeTagInput';
 import { ROLE_LABELS, type UserEditState } from './adminUserListTypen';
+import { DbAuswahl } from '@/components';
 
 type Props = {
   currentUser: AdminUserRow;
@@ -63,14 +64,17 @@ export function AdminUserCard({
         >
           <div className="d-flex align-items-center gap-2 text-truncate">
             {isSuperAdmin && !isSelfRow && (
-              <input
-                className="form-check-input mt-0 flex-shrink-0"
-                type="checkbox"
-                aria-label={`${currentUser.userName} für Massenänderung auswählen`}
-                checked={isSelected}
-                onClick={e => e.stopPropagation()}
-                onChange={onToggleSelection}
-              />
+              <div className="db-checkbox flex-shrink-0" data-size="small" data-hide-label="true">
+                <label>
+                  <input
+                    type="checkbox"
+                    aria-label={`${currentUser.userName} für Massenänderung auswählen`}
+                    checked={isSelected}
+                    onClick={e => e.stopPropagation()}
+                    onChange={onToggleSelection}
+                  />
+                </label>
+              </div>
             )}
             <span className="db-icon text-body-secondary db-font-size-md" data-icon="person" />
             <span className="text-truncate">
@@ -135,9 +139,10 @@ export function AdminUserCard({
           <div className="card-body border-top pt-3">
             {/* Rolle */}
             <div className="mb-3">
-              <label className="form-label fw-semibold small mb-1">Rolle</label>
-              <select
-                className="form-select form-select-sm"
+              <DbAuswahl
+                beschriftung="Rolle"
+                beschriftungZeigen
+                dicht
                 value={edit.role}
                 onChange={e => updateEdit({ role: (e.target as HTMLSelectElement).value as TUserRole })}
                 disabled={!roleEditable || isSelfRow}
@@ -146,12 +151,12 @@ export function AdminUserCard({
                 <option value="team-admin">Team-Admin</option>
                 <option value="org-admin">Org-Admin</option>
                 <option value="super-admin">Super-Admin</option>
-              </select>
+              </DbAuswahl>
             </div>
 
             {/* OE */}
             <div className="mb-3">
-              <label className="form-label fw-semibold small mb-1">OE</label>
+              <label className="fw-semibold small mb-1">OE</label>
               <OeLevelBoxes value={edit.oe} onChange={value => updateEdit({ oe: value })} disabled={!editable} />
             </div>
 
@@ -179,80 +184,87 @@ export function AdminUserCard({
               <div className="small fw-semibold mb-2">Spezielle Admin-Berechtigungen</div>
 
               <div className="mb-1">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`perm-vorgaben-${currentUser._id}`}
-                  checked={edit.canEditVorgabenGeld}
-                  onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-                <label className="form-check-label" htmlFor={`perm-vorgaben-${currentUser._id}`}>
-                  Darf VorgabenGeld bearbeiten
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`perm-vorgaben-${currentUser._id}`}
+                      checked={edit.canEditVorgabenGeld}
+                      onChange={e => updateEdit({ canEditVorgabenGeld: (e.target as HTMLInputElement).checked })}
+                      disabled={!permissionEditable}
+                    />
+                    Darf VorgabenGeld bearbeiten
+                  </label>
+                </div>
               </div>
 
               <div className="mb-1">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`perm-templates-${currentUser._id}`}
-                  checked={edit.canEditProfileTemplates}
-                  onChange={e => {
-                    const checked = (e.target as HTMLInputElement).checked;
-                    updateEdit({
-                      canEditProfileTemplates: checked,
-                      canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
-                    });
-                  }}
-                  disabled={!permissionEditable}
-                />
-                <label className="form-check-label" htmlFor={`perm-templates-${currentUser._id}`}>
-                  Darf Profile-Templates bearbeiten
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`perm-templates-${currentUser._id}`}
+                      checked={edit.canEditProfileTemplates}
+                      onChange={e => {
+                        const checked = (e.target as HTMLInputElement).checked;
+                        updateEdit({
+                          canEditProfileTemplates: checked,
+                          canEditOwnTeamTemplatesOnly: checked ? edit.canEditOwnTeamTemplatesOnly : false,
+                        });
+                      }}
+                      disabled={!permissionEditable}
+                    />
+                    Darf Profile-Templates bearbeiten
+                  </label>
+                </div>
               </div>
 
               <div className="mb-1">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`perm-teamonly-${currentUser._id}`}
-                  checked={edit.canEditOwnTeamTemplatesOnly}
-                  onChange={e => updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable || !edit.canEditProfileTemplates}
-                />
-                <label className="form-check-label" htmlFor={`perm-teamonly-${currentUser._id}`}>
-                  Profile-Templates nur im eigenen Team/OE-Scope
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`perm-teamonly-${currentUser._id}`}
+                      checked={edit.canEditOwnTeamTemplatesOnly}
+                      onChange={e =>
+                        updateEdit({ canEditOwnTeamTemplatesOnly: (e.target as HTMLInputElement).checked })
+                      }
+                      disabled={!permissionEditable || !edit.canEditProfileTemplates}
+                    />
+                    Profile-Templates nur im eigenen Team/OE-Scope
+                  </label>
+                </div>
               </div>
 
               <div className="mb-1">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`perm-formulare-erstellen-${currentUser._id}`}
-                  checked={edit.canCreateFormularVorlagen}
-                  onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-                <label className="form-check-label" htmlFor={`perm-formulare-erstellen-${currentUser._id}`}>
-                  Darf Formular-Vorlagen erstellen
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`perm-formulare-erstellen-${currentUser._id}`}
+                      checked={edit.canCreateFormularVorlagen}
+                      onChange={e => updateEdit({ canCreateFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                      disabled={!permissionEditable}
+                    />
+                    Darf Formular-Vorlagen erstellen
+                  </label>
+                </div>
                 <div className="small text-body-secondary">Erstellen beinhaltet automatisch Bearbeiten.</div>
               </div>
 
               <div>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`perm-formulare-bearbeiten-${currentUser._id}`}
-                  checked={edit.canEditFormularVorlagen}
-                  onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
-                  disabled={!permissionEditable}
-                />
-                <label className="form-check-label" htmlFor={`perm-formulare-bearbeiten-${currentUser._id}`}>
-                  Darf Formular-Vorlagen bearbeiten
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`perm-formulare-bearbeiten-${currentUser._id}`}
+                      checked={edit.canEditFormularVorlagen}
+                      onChange={e => updateEdit({ canEditFormularVorlagen: (e.target as HTMLInputElement).checked })}
+                      disabled={!permissionEditable}
+                    />
+                    Darf Formular-Vorlagen bearbeiten
+                  </label>
+                </div>
               </div>
 
               {!permissionEditable && (

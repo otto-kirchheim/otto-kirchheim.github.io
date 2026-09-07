@@ -19,6 +19,7 @@ import {
   type AdminPage,
   type AdminPasskey,
 } from '../utils/api';
+import { DbAuswahl, DbFeld } from '@/components';
 
 const BUNDESLAND_OPTIONS = [
   { value: 'BW', label: 'Baden-Württemberg' },
@@ -314,9 +315,10 @@ export function AdminUserProfileEditor({
     <div>
       {/* Search */}
       <div className="mb-3">
-        <input
+        <DbFeld
+          beschriftung="Name oder OE suchen…"
+          dicht
           type="search"
-          className="form-control form-control-sm"
           placeholder="Name oder OE suchen…"
           value={search}
           onChange={e => setSearch((e.target as HTMLInputElement).value)}
@@ -456,12 +458,13 @@ export function AdminUserProfileEditor({
                       const selectOpts = PERS_SELECT_FIELDS[key];
                       return (
                         <div key={key} className="mb-2">
-                          <label className="form-label small fw-semibold mb-1">{PERS_FIELD_LABELS[key] ?? key}</label>
                           {selectOpts ? (
-                            <select
-                              className="form-select form-select-sm"
+                            <DbAuswahl
+                              beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                              beschriftungZeigen
+                              dicht
                               value={String(val ?? '')}
-                              onChange={e => handlePersChange(key, (e.target as HTMLSelectElement).value)}
+                              onChange={e => handlePersChange(key, e.target.value)}
                             >
                               <option value="">(keine Auswahl)</option>
                               {typeof selectOpts[0] === 'string'
@@ -475,18 +478,23 @@ export function AdminUserProfileEditor({
                                       {opt.label} ({opt.value})
                                     </option>
                                   ))}
-                            </select>
+                            </DbAuswahl>
                           ) : key === 'OE' ? (
-                            <OeLevelBoxes
-                              value={persFieldToInput(key, val)}
-                              onChange={value => handlePersChange(key, value)}
-                            />
+                            <>
+                              <span className="small fw-semibold">{PERS_FIELD_LABELS[key] ?? key}</span>
+                              <OeLevelBoxes
+                                value={persFieldToInput(key, val)}
+                                onChange={value => handlePersChange(key, value)}
+                              />
+                            </>
                           ) : (
-                            <input
+                            <DbFeld
+                              beschriftung={PERS_FIELD_LABELS[key] ?? key}
+                              beschriftungZeigen
+                              dicht
                               type={PERS_NUMBER_FIELDS.has(key) ? 'number' : 'text'}
-                              className="form-control form-control-sm"
                               value={persFieldToInput(key, val)}
-                              onChange={e => handlePersChange(key, (e.target as HTMLInputElement).value)}
+                              onChange={e => handlePersChange(key, e.target.value)}
                             />
                           )}
                         </div>
@@ -499,7 +507,7 @@ export function AdminUserProfileEditor({
                     <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
                     {JSON_SECTIONS.map(section => (
                       <div key={section} className="mb-3">
-                        <label className="form-label small fw-semibold mb-1">{section}</label>
+                        <label className="small fw-semibold mb-1">{section}</label>
                         <JsonEditor
                           value={edit.jsonRaw[section] ?? ''}
                           onChange={raw => handleJsonChange(section, raw)}

@@ -15,6 +15,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { OeTagInput } from './OeTagInput';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type UserEditState = {
   oe: string;
@@ -168,9 +169,9 @@ export function AdminUserList() {
       <div className="raster mb-3 abstand-2">
         <div className="sp-sm-4">
           <div>
-            <input
+            <DbFeld
+              beschriftung="Name"
               type="text"
-              className="form-control"
               id="adminFilterName"
               placeholder="Name"
               value={filter.name}
@@ -181,9 +182,9 @@ export function AdminUserList() {
         </div>
         <div className="sp-sm-4">
           <div>
-            <input
+            <DbFeld
+              beschriftung="OE"
               type="text"
-              className="form-control"
               id="adminFilterOe"
               placeholder="OE"
               value={filter.oe}
@@ -194,19 +195,19 @@ export function AdminUserList() {
         </div>
         <div className="sp-sm-4">
           <div>
-            <select
-              className="form-select"
+            <DbAuswahl
+              beschriftung="Rolle"
+              beschriftungZeigen
               id="adminFilterRole"
               value={filter.role}
-              onChange={e => setFilter(f => ({ ...f, role: (e.target as HTMLSelectElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, role: e.target.value }))}
             >
               <option value="">Alle</option>
               <option value="member">Mitglied</option>
               <option value="team-admin">Team-Admin</option>
               <option value="org-admin">Org-Admin</option>
               <option value="super-admin">Super-Admin</option>
-            </select>
-            <label htmlFor="adminFilterRole">Rolle</label>
+            </DbAuswahl>
           </div>
         </div>
       </div>
@@ -300,9 +301,10 @@ export function AdminUserList() {
                   <div className="card-body border-top pt-3">
                     {/* Rolle */}
                     <div className="mb-3">
-                      <label className="form-label fw-semibold small mb-1">Rolle</label>
-                      <select
-                        className="form-select form-select-sm"
+                      <DbAuswahl
+                        beschriftung="Rolle"
+                        beschriftungZeigen
+                        dicht
                         value={edit.role}
                         onChange={e =>
                           updateEdit(currentUser._id, {
@@ -315,15 +317,16 @@ export function AdminUserList() {
                         <option value="team-admin">Team-Admin</option>
                         <option value="org-admin">Org-Admin</option>
                         <option value="super-admin">Super-Admin</option>
-                      </select>
+                      </DbAuswahl>
                     </div>
 
                     {/* OE */}
                     <div className="mb-3">
-                      <label className="form-label fw-semibold small mb-1">OE</label>
-                      <input
+                      <DbFeld
+                        beschriftung="OE"
+                        beschriftungZeigen
+                        dicht
                         type="text"
-                        className="form-control form-control-sm"
                         value={edit.oe}
                         onChange={e => updateEdit(currentUser._id, { oe: (e.target as HTMLInputElement).value })}
                         disabled={!editable}

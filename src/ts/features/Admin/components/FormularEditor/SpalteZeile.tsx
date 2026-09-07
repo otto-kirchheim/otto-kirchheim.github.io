@@ -7,6 +7,7 @@ import { DatenpfadWahl } from './datenpfadUndFormeln';
 import { DarstellungsFelder, ScharfButton, Zellkoordinaten, istGleich } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
+import { DbAuswahl, DbFeld } from '@/components';
 
 export function SpalteZeile({
   spalte,
@@ -147,39 +148,37 @@ export function SpalteZeile({
       </div>
 
       {(modus === 'berechnet' || modus === 'wenn') && (
-        <div className="input-group input-group-sm mb-1">
-          <span
-            className="input-group-text px-1 small"
-            title="Schlüssel, unter dem der Wert dieser Spalte in die Zeile geschrieben wird -- darüber ist er in Ankreuz-Bedingungen und Summenfeldern anderer Spalten wiederverwendbar. Muss sich von anderen Spalten unterscheiden, sonst überschreiben sie sich gegenseitig."
-          >
-            Schlüssel
-          </span>
-          <input
-            className="form-control font-monospace"
-            placeholder="z.B. dauer"
-            value={spalte.key}
-            // Leerer Schlüssel macht die Spalte für berechneteEintraege() (Feld-Dropdown in
-            // Summenfeldern) unsichtbar und wird von mitBerechnetenSpalten() in `shared` unter
-            // `zeile['']` geschrieben -- niemals speichern, Eingabe bei leerem Wert verwerfen statt
-            // den Schlüssel zu löschen.
-            onChange={e => {
-              const wert = (e.target as HTMLInputElement).value;
-              if (wert !== '') onChange({ ...spalte, key: wert });
-            }}
-          />
-        </div>
+        <DbFeld
+          beschriftung="Schlüssel"
+          beschriftungZeigen
+          dicht
+          className="mb-1"
+          feldKlasse="font-monospace"
+          title="Schlüssel, unter dem der Wert dieser Spalte in die Zeile geschrieben wird -- darüber ist er in Ankreuz-Bedingungen und Summenfeldern anderer Spalten wiederverwendbar. Muss sich von anderen Spalten unterscheiden, sonst überschreiben sie sich gegenseitig."
+          placeholder="z.B. dauer"
+          value={spalte.key}
+          // Leerer Schlüssel macht die Spalte für berechneteEintraege() (Feld-Dropdown in
+          // Summenfeldern) unsichtbar und wird von mitBerechnetenSpalten() in `shared` unter
+          // `zeile['']` geschrieben -- niemals speichern, Eingabe bei leerem Wert verwerfen statt
+          // den Schlüssel zu löschen.
+          onChange={e => {
+            const wert = e.target.value;
+            if (wert !== '') onChange({ ...spalte, key: wert });
+          }}
+        />
       )}
 
       {spalte.listenPlatz ? (
         <div className="raster mb-1 abstand-1">
           <div className="sp-8">
-            <select
-              className="form-select form-select-sm"
+            <DbAuswahl
+              beschriftung="Listen-Gruppe"
+              dicht
               value={spalte.listenPlatz.gruppe}
               onChange={e =>
                 onChange({
                   ...spalte,
-                  listenPlatz: { ...spalte.listenPlatz!, gruppe: (e.target as HTMLSelectElement).value },
+                  listenPlatz: { ...spalte.listenPlatz!, gruppe: e.target.value },
                 })
               }
             >
@@ -188,28 +187,27 @@ export function SpalteZeile({
                   {g}
                 </option>
               ))}
-            </select>
+            </DbAuswahl>
           </div>
           <div className="sp-4">
-            <div className="input-group input-group-sm">
-              <span className="input-group-text px-1 small">Platz</span>
-              <input
-                type="number"
-                min={1}
-                step={1}
-                className="form-control"
-                value={spalte.listenPlatz.index + 1}
-                onChange={e =>
-                  onChange({
-                    ...spalte,
-                    listenPlatz: {
-                      ...spalte.listenPlatz!,
-                      index: Math.max(0, Math.round(Number((e.target as HTMLInputElement).value)) - 1),
-                    },
-                  })
-                }
-              />
-            </div>
+            <DbFeld
+              beschriftung="Platz"
+              beschriftungZeigen
+              dicht
+              type="number"
+              min={1}
+              step={1}
+              value={spalte.listenPlatz.index + 1}
+              onChange={e =>
+                onChange({
+                  ...spalte,
+                  listenPlatz: {
+                    ...spalte.listenPlatz!,
+                    index: Math.max(0, Math.round(Number(e.target.value)) - 1),
+                  },
+                })
+              }
+            />
           </div>
         </div>
       ) : spalte.wenn ? (
@@ -240,8 +238,10 @@ export function SpalteZeile({
         </div>
       )}
 
-      <input
-        className="form-control form-control-sm mb-1"
+      <DbFeld
+        beschriftung="Anzeigename (nur für diese Liste)"
+        dicht
+        className="mb-1"
         placeholder="Anzeigename (nur für diese Liste)"
         value={spalte.label ?? ''}
         onChange={e => onChange({ ...spalte, label: (e.target as HTMLInputElement).value || undefined })}

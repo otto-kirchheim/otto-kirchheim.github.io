@@ -13,6 +13,7 @@ import {
 } from './feldPanelGemeinsam';
 import type { Props } from './feldPanelTypen';
 import { TabellenBlock } from './TabellenBlock';
+import { DbAuswahl, DbFeld } from '@/components';
 
 export type { Armed, Vorschau } from './feldPanelTypen';
 
@@ -124,12 +125,13 @@ export function FeldPanel({
             }
           />
         ))}
-        <div className="input-group input-group-sm">
-          <input
-            className="form-control"
+        <div className="feldgruppe">
+          <DbFeld
+            beschriftung="Name der neuen Tabelle"
+            dicht
             placeholder="Name der neuen Tabelle"
             value={neuerName}
-            onChange={e => setNeuerName((e.target as HTMLInputElement).value)}
+            onChange={e => setNeuerName(e.target.value)}
           />
           <button type="button" className="db-button" data-variant="outlined" onClick={tabelleAnlegen}>
             + Tabelle
@@ -207,12 +209,14 @@ export function FeldPanel({
                 Löschen
               </button>
             </div>
-            <select
-              className="form-select form-select-sm mt-1"
+            <DbAuswahl
+              beschriftung="Datenfeld für das Unterschriftsdatum"
+              dicht
+              className="mt-1"
               value={datumFeld.berechnet?.feld ?? ''}
               onChange={e =>
                 datumAendern({
-                  berechnet: { ...datumFeld.berechnet!, feld: (e.target as HTMLSelectElement).value || undefined },
+                  berechnet: { ...datumFeld.berechnet!, feld: e.target.value || undefined },
                 })
               }
             >
@@ -226,7 +230,7 @@ export function FeldPanel({
                   ))}
                 </optgroup>
               ))}
-            </select>
+            </DbAuswahl>
             <div className="mt-1">
               <Zellkoordinaten wert={datumFeld} onChange={datumAendern} />
             </div>
@@ -234,11 +238,12 @@ export function FeldPanel({
               <DarstellungsFelder wert={datumFeld} onChange={datumAendern} />
             </div>
             <div className="d-flex align-items-center gap-2 mt-1">
-              <input
+              <DbFeld
+                beschriftung="Tage"
+                dicht
                 type="number"
                 min="0"
-                className="form-control form-control-sm"
-                style={{ maxWidth: '6rem' }}
+                huelleStyle={{ maxWidth: '6rem' }}
                 placeholder="Tage"
                 value={datumFeld.berechnet?.maxTage ?? ''}
                 onChange={e => {

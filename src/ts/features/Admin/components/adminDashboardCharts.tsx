@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
+import { DbAuswahl } from '@/components';
 
 export function formatUptime(seconds: number): { value: string; unit: string } {
   if (seconds < 3600) return { value: Math.round(seconds / 60).toString(), unit: 'Min.' };
@@ -255,8 +256,10 @@ export function MemoryCard({
             Memory-Verlauf
           </h6>
           <div className="d-flex gap-2 flex-shrink-0">
-            <select
-              className="form-select form-select-sm w-auto"
+            <DbAuswahl
+              beschriftung="Zeitraum des Memory-Verlaufs"
+              dicht
+              className="w-auto"
               value={days}
               disabled={loading}
               title="Zeitraum des Memory-Verlaufs"
@@ -267,7 +270,7 @@ export function MemoryCard({
                   {d === 1 ? '24 Std.' : `${d} Tage`}
                 </option>
               ))}
-            </select>
+            </DbAuswahl>
             <button
               className="db-button"
               data-variant="outlined"
@@ -301,14 +304,13 @@ export function MemoryCard({
 
         {/* ── Environment Toggles ── */}
         <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
-          <label>
-            <input
-              type="checkbox"
-              className="form-check-input"
-              checked={visibleEnvironments.has('gcp')}
-              onChange={() => toggleEnvironment('gcp')}
-            />
-            <span className="form-check-label">
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={visibleEnvironments.has('gcp')}
+                onChange={() => toggleEnvironment('gcp')}
+              />
               <span
                 style={{
                   display: 'inline-block',
@@ -320,16 +322,15 @@ export function MemoryCard({
                 }}
               />
               GCP
-            </span>
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              className="form-check-input"
-              checked={visibleEnvironments.has('homeserver')}
-              onChange={() => toggleEnvironment('homeserver')}
-            />
-            <span className="form-check-label">
+            </label>
+          </div>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={visibleEnvironments.has('homeserver')}
+                onChange={() => toggleEnvironment('homeserver')}
+              />
               <span
                 style={{
                   display: 'inline-block',
@@ -341,8 +342,8 @@ export function MemoryCard({
                 }}
               />
               HomeServer
-            </span>
-          </label>
+            </label>
+          </div>
         </div>
 
         {loading && !heap ? (

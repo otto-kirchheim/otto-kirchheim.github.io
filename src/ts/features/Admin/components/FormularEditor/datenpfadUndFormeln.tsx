@@ -2,7 +2,7 @@ import { unmount } from '@/infrastructure/ui';
 
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
-import { oeffneDrawer } from '@/components';
+import { DbAuswahl, DbFeld, oeffneDrawer } from '@/components';
 
 /**
  * Wählt EINEN Datenpfad -- für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel
@@ -28,11 +28,12 @@ export function DatenpfadWahl({
   const bekannt = eintraege.some(e => e.pfad === wert);
   return (
     <div>
-      <div className="input-group input-group-sm">
-        <select
-          className="form-select"
+      <div className="feldgruppe">
+        <DbAuswahl
+          beschriftung="Datenfeld"
+          dicht
           value={bekannt ? wert : '__frei'}
-          onChange={e => onChange((e.target as HTMLSelectElement).value)}
+          onChange={e => onChange(e.target.value)}
         >
           {gruppiere(eintraege).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
@@ -45,13 +46,16 @@ export function DatenpfadWahl({
             </optgroup>
           ))}
           <option value="__frei">Freier Datenpfad…</option>
-        </select>
+        </DbAuswahl>
         {!bekannt && (
-          <input
-            className={`form-control font-monospace${belegt.has(wert) ? ' is-invalid' : ''}`}
+          <DbFeld
+            beschriftung="Freier Datenpfad"
+            dicht
+            feldKlasse="font-monospace"
+            ungueltig={belegt.has(wert)}
             placeholder="Datenpfad"
             value={wert === '__frei' ? '' : wert}
-            onChange={e => onChange((e.target as HTMLInputElement).value)}
+            onChange={e => onChange(e.target.value)}
           />
         )}
       </div>
@@ -123,11 +127,13 @@ export function ZusammengesetzteQuellen({
           + Teil
         </button>
         <span className="small text-muted">getrennt durch</span>
-        <select
-          className="form-select form-select-sm w-auto"
+        <DbAuswahl
+          beschriftung="Trennzeichen"
+          dicht
+          className="w-auto"
           value={bekannterTrenner ? (feld.trenner ?? ' ') : '__frei'}
           onChange={e => {
-            const v = (e.target as HTMLSelectElement).value;
+            const v = e.target.value;
             onChange({ ...feld, trenner: v === '__frei' ? '' : v });
           }}
         >
@@ -137,11 +143,14 @@ export function ZusammengesetzteQuellen({
             </option>
           ))}
           <option value="__frei">eigenes…</option>
-        </select>
+        </DbAuswahl>
         {!bekannterTrenner && (
-          <input
-            className="form-control form-control-sm font-monospace w-auto"
-            style={{ maxWidth: '6rem' }}
+          <DbFeld
+            beschriftung="Zeichen"
+            dicht
+            className="w-auto"
+            feldKlasse="font-monospace"
+            huelleStyle={{ maxWidth: '6rem' }}
             placeholder="Zeichen"
             value={feld.trenner ?? ''}
             onChange={e => onChange({ ...feld, trenner: (e.target as HTMLInputElement).value })}
@@ -184,8 +193,10 @@ export function PlatzhalterPicker({
   }
 
   return (
-    <select
-      className="form-select form-select-sm mb-1"
+    <DbAuswahl
+      beschriftung="Datenpfad an der Cursorposition einfügen"
+      dicht
+      className="mb-1"
       value=""
       title="Datenpfad an der Cursorposition einfügen"
       onChange={e => {
@@ -203,7 +214,7 @@ export function PlatzhalterPicker({
           ))}
         </optgroup>
       ))}
-    </select>
+    </DbAuswahl>
   );
 }
 

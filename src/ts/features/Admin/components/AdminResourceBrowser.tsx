@@ -23,6 +23,7 @@ import {
   fetchAdminUserNameMap,
   type AdminPage,
 } from '../utils/api';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
 
@@ -227,12 +228,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           <div className="d-flex flex-wrap gap-2 align-items-end">
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
             <div className="flex-grow-1" style={{ minWidth: '180px', maxWidth: '300px' }}>
-              <label className="form-label small mb-1">Benutzer</label>
+              <label className="small mb-1">Benutzer</label>
               <div className="position-relative">
-                <input
+                <DbFeld
+                  beschriftung="Alle Benutzer (Name eingeben…)"
+                  dicht
                   type="text"
                   list={`user-datalist-${activeIdx}`}
-                  className="form-control form-control-sm"
                   placeholder="Alle Benutzer (Name eingeben…)"
                   value={userSearchText}
                   onChange={e => {
@@ -267,9 +269,10 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
             {/* Jahr: nur vorhandene Jahre aus Backend */}
             <div style={{ minWidth: '100px' }}>
-              <label className="form-label small mb-1">Jahr</label>
-              <select
-                className="form-select form-select-sm"
+              <DbAuswahl
+                beschriftung="Jahr"
+                beschriftungZeigen
+                dicht
                 value={filterJahr}
                 onChange={e => setFilterJahr((e.target as HTMLSelectElement).value)}
               >
@@ -279,14 +282,15 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     {y}
                   </option>
                 ))}
-              </select>
+              </DbAuswahl>
             </div>
 
             {/* Monat */}
             <div style={{ minWidth: '130px' }}>
-              <label className="form-label small mb-1">Monat</label>
-              <select
-                className="form-select form-select-sm"
+              <DbAuswahl
+                beschriftung="Monat"
+                beschriftungZeigen
+                dicht
                 value={filterMonat}
                 onChange={e => setFilterMonat((e.target as HTMLSelectElement).value)}
               >
@@ -296,7 +300,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     {m}
                   </option>
                 ))}
-              </select>
+              </DbAuswahl>
             </div>
 
             <div className="d-flex gap-2 ms-auto align-items-end">

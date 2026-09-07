@@ -12,6 +12,7 @@ import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert
 import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
   tabelle: TabellenDef;
@@ -52,10 +53,13 @@ function SonderZeileName({
 }) {
   const [entwurf, setEntwurf] = useState(name);
   return (
-    <input
-      className="form-control form-control-sm fw-semibold flex-grow-1"
+    <DbFeld
+      beschriftung="Name der Sonderzeile"
+      dicht
+      className="flex-grow-1"
+      feldKlasse="fw-semibold"
       value={entwurf}
-      onChange={e => setEntwurf((e.target as HTMLInputElement).value)}
+      onChange={e => setEntwurf(e.target.value)}
       onKeyDown={e => {
         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
       }}
@@ -144,8 +148,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
 
             <div className="raster mb-1 abstand-1">
               <div>
-                <select
-                  className="form-select form-select-sm"
+                <DbAuswahl
+                  beschriftung="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
+                  dicht
                   title="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
                   value={zeile.ueber ?? '$alle'}
                   onChange={e => setzeZeile(name, { ...zeile, ueber: (e.target as HTMLSelectElement).value })}
@@ -155,7 +160,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </DbAuswahl>
               </div>
             </div>
 
@@ -173,11 +178,12 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                     {bezeichnung}
                   </div>
                   <div className="sp-8">
-                    <select
-                      className="form-select form-select-sm"
+                    <DbAuswahl
+                      beschriftung={`Art der Zelle: ${bezeichnung}`}
+                      dicht
                       value={zelle?.art ?? ''}
                       onChange={e => {
-                        const v = (e.target as HTMLSelectElement).value;
+                        const v = e.target.value;
                         setzeZelle(
                           name,
                           zeile,
@@ -192,15 +198,16 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           {a.label}
                         </option>
                       ))}
-                    </select>
+                    </DbAuswahl>
                   </div>
 
                   {zelle && (
                     <>
                       {/* Format: wie der Wert dieser Zelle angezeigt wird. */}
                       <div className="mt-1">
-                        <select
-                          className="form-select form-select-sm"
+                        <DbAuswahl
+                          beschriftung="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
+                          dicht
                           title="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
                           value={zelle.format ?? ''}
                           onChange={e =>
@@ -215,14 +222,15 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                               {f.label}
                             </option>
                           ))}
-                        </select>
+                        </DbAuswahl>
                       </div>
 
                       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen. */}
                       <div className="sp-3 mt-1">
-                        <input
+                        <DbFeld
+                          beschriftung="Schriftgröße dieser Zelle -- ohne Angabe gilt die Größe der Spalte"
+                          dicht
                           type="number"
-                          className="form-control form-control-sm"
                           title="Schriftgröße dieser Zelle -- ohne Angabe gilt die Größe der Spalte"
                           placeholder={`Größe (Spalte: ${spalte.size})`}
                           value={zelle.size ?? ''}
@@ -233,52 +241,62 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={Boolean(zelle.fett)}
-                          onChange={e =>
-                            setzeZelle(name, zeile, index, {
-                              ...zelle,
-                              fett: (e.target as HTMLInputElement).checked || undefined,
-                            })
-                          }
-                        />
-                        <label className="form-check-label small">Fett</label>
+                        <div className="db-checkbox" data-size="small">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(zelle.fett)}
+                              onChange={e =>
+                                setzeZelle(name, zeile, index, {
+                                  ...zelle,
+                                  fett: (e.target as HTMLInputElement).checked || undefined,
+                                })
+                              }
+                            />
+                            Fett
+                          </label>
+                        </div>
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={Boolean(zelle.kursiv)}
-                          onChange={e =>
-                            setzeZelle(name, zeile, index, {
-                              ...zelle,
-                              kursiv: (e.target as HTMLInputElement).checked || undefined,
-                            })
-                          }
-                        />
-                        <label className="form-check-label small">Kursiv</label>
+                        <div className="db-checkbox" data-size="small">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(zelle.kursiv)}
+                              onChange={e =>
+                                setzeZelle(name, zeile, index, {
+                                  ...zelle,
+                                  kursiv: (e.target as HTMLInputElement).checked || undefined,
+                                })
+                              }
+                            />
+                            Kursiv
+                          </label>
+                        </div>
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={Boolean(zelle.unterstrichen)}
-                          onChange={e =>
-                            setzeZelle(name, zeile, index, {
-                              ...zelle,
-                              unterstrichen: (e.target as HTMLInputElement).checked || undefined,
-                            })
-                          }
-                        />
-                        <label className="form-check-label small">Unterstr.</label>
+                        <div className="db-checkbox" data-size="small">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(zelle.unterstrichen)}
+                              onChange={e =>
+                                setzeZelle(name, zeile, index, {
+                                  ...zelle,
+                                  unterstrichen: (e.target as HTMLInputElement).checked || undefined,
+                                })
+                              }
+                            />
+                            Unterstr.
+                          </label>
+                        </div>
                       </div>
 
                       {/* Verhalten: Ausrichtung und Auto-Verkleinerung steuern beide, wie der Text in die Zelle passt. */}
                       <div className="sp-8 mt-1">
-                        <select
-                          className="form-select form-select-sm"
+                        <DbAuswahl
+                          beschriftung="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
+                          dicht
                           title="Ausrichtung dieser Zelle -- ohne Auswahl gilt die Ausrichtung der Spalte"
                           value={zelle.align ?? ''}
                           onChange={e =>
@@ -292,21 +310,24 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           <option value="links">links</option>
                           <option value="zentriert">zentriert</option>
                           <option value="rechts">rechts</option>
-                        </select>
+                        </DbAuswahl>
                       </div>
                       <div className="sp-4 mt-1 mb-0">
-                        <input
-                          className="form-check-input"
-                          type="checkbox"
-                          checked={Boolean(zelle.autoGroesse)}
-                          onChange={e =>
-                            setzeZelle(name, zeile, index, {
-                              ...zelle,
-                              autoGroesse: (e.target as HTMLInputElement).checked || undefined,
-                            })
-                          }
-                        />
-                        <label className="form-check-label small">auto. verkleinern</label>
+                        <div className="db-checkbox" data-size="small">
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(zelle.autoGroesse)}
+                              onChange={e =>
+                                setzeZelle(name, zeile, index, {
+                                  ...zelle,
+                                  autoGroesse: (e.target as HTMLInputElement).checked || undefined,
+                                })
+                              }
+                            />
+                            auto. verkleinern
+                          </label>
+                        </div>
                       </div>
                     </>
                   )}

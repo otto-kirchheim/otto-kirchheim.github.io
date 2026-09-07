@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { DbFeld } from '@/components';
 /** Payload-Grenze im Backend (`oeLevelsSchema.max(10)`); real kommen max. ~7 Ebenen vor. */
 export const MAX_OE_LEVELS = 10;
 
@@ -60,15 +61,16 @@ export function OeLevelInputs({
         return (
           <div key={index} className="d-flex align-items-center gap-1">
             {index > 0 && <span className="text-body-secondary">{separatorBefore(levels, index)}</span>}
-            <input
+            <DbFeld
               type="text"
-              className={`form-control form-control-sm oe-level-input${changed ? ' border-warning border-2 fw-semibold' : ''}`}
-              style={widthFor(level, placeholder)}
-              aria-label={ariaLabel(index)}
+              beschriftung={ariaLabel(index)}
+              dicht
+              feldKlasse={`oe-level-input${changed ? ' border-warning border-2 fw-semibold' : ''}`}
+              huelleStyle={widthFor(level, placeholder)}
               placeholder={placeholder}
               value={level}
               disabled={disabled}
-              onChange={e => onChangeLevel(index, (e.target as HTMLInputElement).value)}
+              onChange={e => onChangeLevel(index, e.target.value)}
             />
           </div>
         );

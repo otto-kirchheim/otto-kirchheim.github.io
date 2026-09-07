@@ -151,7 +151,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle });
 
-    expect(container.querySelectorAll('.form-check-input').length).toBe(1);
+    expect(container.querySelectorAll('.db-checkbox input').length).toBe(1);
   });
 
   it('setzt beschriftungen (Kurztexte) beim Aktivieren der Checkbox', () => {
@@ -161,7 +161,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
-    const checkbox = container.querySelector('.form-check-input') as HTMLInputElement;
+    const checkbox = container.querySelector('.db-checkbox input') as HTMLInputElement;
     klickeCheckbox(checkbox, true);
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
@@ -177,7 +177,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
-    const checkbox = container.querySelector('.form-check-input') as HTMLInputElement;
+    const checkbox = container.querySelector('.db-checkbox input') as HTMLInputElement;
     klickeCheckbox(checkbox, false);
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;

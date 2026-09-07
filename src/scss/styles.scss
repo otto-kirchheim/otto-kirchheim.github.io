@@ -53,6 +53,12 @@ body {
     flex: 1 1 auto;
     min-inline-size: 0;
   }
+
+  // Knoepfe und Vorsatztexte behalten ihre Inhaltsbreite -- ohne das schrumpft der Knopf auf
+  // die Feldbreite mit und sein Text verschwindet.
+  > :not(.db-input, .db-select) {
+    flex: 0 0 auto;
+  }
 }
 
 // DB zeigt einen Tooltip bei `:hover`/`:focus-visible` des Elternknotens. Ein Eingabefeld gibt
@@ -102,6 +108,12 @@ body {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 0.25rem;
+}
+
+// In Tabellenzellen bleiben Bearbeiten/Loeschen nebeneinander: die Aktionsspalte ist schmal,
+// mit Umbruch stapeln sich die beiden Knoepfe und die Zeile wird doppelt so hoch.
+td > .knopfgruppe {
+  flex-wrap: nowrap;
 }
 .big-icons {
   margin-right: 0.35rem;
@@ -275,19 +287,9 @@ td:has(.SchichtBereitschaft) {
   padding: 0.35rem 0.5rem;
   flex-wrap: nowrap;
 
-  .form-check {
-    margin: 0;
-    padding: 0;
+  .db-checkbox {
     font-size: 0.8rem;
     white-space: nowrap;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-  }
-
-  .form-check-input {
-    margin: 0;
-    float: none;
   }
 
   .db-button {
@@ -306,6 +308,16 @@ td:has(.SchichtBereitschaft) {
   padding: 0.25rem 0.5rem;
 }
 
+// Formularbeschriftungen richten sich am Feld aus, nicht an der Textausrichtung des
+// umgebenden Abschnitts (`text-center` in den Einstellungen zog sie sonst in die Mitte).
+.db-input > label,
+.db-select > label,
+.db-textarea > label,
+.db-checkbox > label,
+.db-switch > label {
+  text-align: start;
+}
+
 /* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
    selbst, damit CustomTable die Zelle als Text (nicht als HTML) setzen kann. */
 .cell-multiline {
@@ -318,43 +330,9 @@ td:has(.SchichtBereitschaft) {
   opacity: 0.6;
 }
 
-.form-group.required .control-label:after,
-.form-floating.required label:after {
-  content: '*' !important;
-  color: var(--bs-danger);
-  margin-right: -4px;
-  padding-right: 2px;
-  display: flex;
-  justify-content: end;
-}
 
-.form-floating.required input:disabled + label::after {
-  color: rgba(var(--bs-body-color-rgb), 0.65);
-}
-
-.raster > .form-floating > label {
-  left: auto;
-}
-
-// Bootstraps Floating-Label ersetzt den Platzhalter und blendet ihn dafuer aus. Bootstrap liegt
-// aber im untersten Layer -- die DB-Regeln faerben `::placeholder` wieder ein, Label und
-// Platzhalter standen dadurch uebereinander (sichtbar in den Einstellungen-Abschnitten).
-.form-floating > .form-control::placeholder {
-  color: transparent;
-}
-
-.form-floating.required.readonly label:after {
-  content: '' !important;
-  color: var(--bs-danger);
-  margin-left: -5px;
-  padding-left: 2px;
-}
-
-.form-switch {
-  margin: auto 0 auto 1rem;
-}
-
-td > .form-switch {
+// Schalter in Tabellenzellen sollen mittig unter der Spaltenueberschrift stehen.
+td > .db-switch {
   margin: auto 0 auto 1.7rem;
 }
 
@@ -446,9 +424,10 @@ body {
   flex-wrap: nowrap;
 }
 
-.admin-fahrzeit-input-group > .form-control {
-  min-width: 0;
-  width: 0;
+// Die drei Felder teilen sich die Zeile nach den flex-Vorgaben unten, nicht nach ihrer
+// Wunschbreite -- ohne `min-inline-size: 0` setzt jedes Feld seine Mindestbreite durch.
+.admin-fahrzeit-input-group > .db-input {
+  min-inline-size: 0;
 }
 
 .admin-fahrzeit-input-group > .admin-fahrzeit-key {
@@ -495,7 +474,13 @@ body {
 }
 
 // Ab md tragen die Spaltenkoepfe die Beschriftung; im Feld bleibt sie nur fuer Screenreader.
+// `--db-label-visible-above: 0` muss mit: sonst haelt DB die Zeile ueber dem Feld weiter frei
+// und jede Tabellenzeile bekommt eine leere Zeile Hoehe dazu.
 @media screen and (min-width: 48em) {
+  .fahrzeit-feld {
+    --db-label-visible-above: 0;
+  }
+
   .fahrzeit-feld > label {
     position: absolute;
     inline-size: 1px;
@@ -812,9 +797,3 @@ body {
   border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
-// Bootstraps `.invalid-feedback` blendet sich nur ueber den Geschwister-Selektor
-// `.is-invalid ~ .invalid-feedback` ein -- im DB-Input-Markup greift der nicht mehr.
-// Der leere Container ist unsichtbar, gefuellt wird er von EWT/addressValidation.
-.db-input .invalid-feedback {
-  display: block;
-}

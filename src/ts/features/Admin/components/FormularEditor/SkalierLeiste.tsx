@@ -1,3 +1,4 @@
+import { DbAuswahl, DbFeld } from '@/components';
 import type { Drehwinkel, SkalierFaktoren } from './skaliereKonfig';
 
 type Masse = { w: number; h: number };
@@ -28,20 +29,20 @@ function ZahlEingabe({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="input-group input-group-sm w-auto">
-      <span className="input-group-text px-2">{label}</span>
-      <input
-        type="number"
-        step={schritt}
-        className="form-control px-1"
-        style={{ maxWidth: '5.5rem' }}
-        value={wert}
-        onChange={e => {
-          const v = Number((e.target as HTMLInputElement).value);
-          if (Number.isFinite(v)) onChange(v);
-        }}
-      />
-    </div>
+    <DbFeld
+      beschriftung={label}
+      beschriftungZeigen
+      dicht
+      className="w-auto"
+      type="number"
+      step={schritt}
+      huelleStyle={{ maxWidth: '5.5rem' }}
+      value={wert}
+      onChange={e => {
+        const v = Number(e.target.value);
+        if (Number.isFinite(v)) onChange(v);
+      }}
+    />
   );
 }
 
@@ -65,19 +66,20 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           </span>
         )}
         <div className="mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="skalier-gekoppelt"
-            checked={gekoppelt}
-            onChange={e => {
-              const g = (e.target as HTMLInputElement).checked;
-              setze(g ? { x: faktoren.y } : {}, g);
-            }}
-          />
-          <label className="form-check-label" htmlFor="skalier-gekoppelt">
-            X=Y
-          </label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                id="skalier-gekoppelt"
+                checked={gekoppelt}
+                onChange={e => {
+                  const g = (e.target as HTMLInputElement).checked;
+                  setze(g ? { x: faktoren.y } : {}, g);
+                }}
+              />
+              X=Y
+            </label>
+          </div>
         </div>
         {gekoppelt ? (
           <ZahlEingabe label="Faktor" schritt="0.001" wert={faktoren.y} onChange={v => setze({ x: v, y: v })} />
@@ -89,20 +91,20 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
         )}
         <ZahlEingabe label="Versatz X" schritt="0.1" wert={faktoren.dx} onChange={v => setze({ dx: v })} />
         <ZahlEingabe label="Versatz Y" schritt="0.1" wert={faktoren.dy} onChange={v => setze({ dy: v })} />
-        <div className="input-group input-group-sm w-auto">
-          <span className="input-group-text px-2">Drehen</span>
-          <select
-            className="form-select px-1"
-            style={{ maxWidth: '5rem' }}
-            value={String(drehung)}
-            onChange={e => onChange({ drehung: Number((e.target as HTMLSelectElement).value) as Drehwinkel })}
-          >
-            <option value="0">0°</option>
-            <option value="90">90°</option>
-            <option value="180">180°</option>
-            <option value="270">270°</option>
-          </select>
-        </div>
+        <DbAuswahl
+          beschriftung="Drehen"
+          beschriftungZeigen
+          dicht
+          className="w-auto"
+          huelleStyle={{ maxWidth: '5rem' }}
+          value={String(drehung)}
+          onChange={e => onChange({ drehung: Number(e.target.value) as Drehwinkel })}
+        >
+          <option value="0">0°</option>
+          <option value="90">90°</option>
+          <option value="180">180°</option>
+          <option value="270">270°</option>
+        </DbAuswahl>
         <div className="knopfgruppe ms-auto">
           <button type="button" className="db-button" data-variant="brand" onClick={onAnwenden}>
             Anwenden

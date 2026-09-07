@@ -16,6 +16,7 @@ import {
   type VersionNutzdaten,
   type VersionUebersicht,
 } from './formularVersionenApi';
+import { DbAuswahl, DbFeld } from '@/components';
 
 const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
 
@@ -255,70 +256,60 @@ export function FormularUpload() {
 
       <div className="raster abstand-2">
         <div className="sp-md-3">
-          <label className="form-label" htmlFor="formular-upload-code">
-            Formular
-          </label>
-          <select
+          <DbAuswahl
+            beschriftung="Formular"
+            beschriftungZeigen
             id="formular-upload-code"
-            className="form-select"
             value={formular}
-            onChange={e => wechsleFormular((e.target as HTMLSelectElement).value as FormularCode)}
+            onChange={e => wechsleFormular(e.target.value as FormularCode)}
           >
             {FORMULAR_CODES.map(code => (
               <option key={code} value={code}>
                 {FORMULAR_LABELS[code]}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </div>
         <div className="sp-md-3">
-          <label className="form-label" htmlFor="formular-upload-version">
-            Version
-          </label>
-          <input
+          <DbFeld
+            beschriftung="Version"
+            beschriftungZeigen
             id="formular-upload-version"
-            className="form-control"
             value={version}
-            onChange={e => setVersion((e.target as HTMLInputElement).value)}
+            onChange={e => setVersion(e.target.value)}
             required
           />
         </div>
         <div className="sp-md-3">
-          <label className="form-label" htmlFor="formular-upload-gueltig-von">
-            Gültig ab
-          </label>
-          <input
+          <DbFeld
+            beschriftung="Gültig ab"
+            beschriftungZeigen
             id="formular-upload-gueltig-von"
             type="date"
-            className="form-control"
             value={gueltigVon}
-            onChange={e => setGueltigVon((e.target as HTMLInputElement).value)}
+            onChange={e => setGueltigVon(e.target.value)}
             required
           />
         </div>
         <div className="sp-md-3">
-          <label className="form-label" htmlFor="formular-upload-gueltig-bis">
-            Gültig bis (leer = offen)
-          </label>
-          <input
+          <DbFeld
+            beschriftung="Gültig bis (leer = offen)"
+            beschriftungZeigen
             id="formular-upload-gueltig-bis"
             type="date"
-            className="form-control"
             value={gueltigBis}
-            onChange={e => setGueltigBis((e.target as HTMLInputElement).value)}
+            onChange={e => setGueltigBis(e.target.value)}
           />
         </div>
       </div>
 
       <div>
-        <label className="form-label" htmlFor="formular-upload-pdf">
-          PDF-Vorlage{bearbeiteId ? ' (leer lassen, um die gespeicherte zu behalten)' : ''}
-        </label>
-        <input
+        <DbFeld
+          beschriftung={`PDF-Vorlage${bearbeiteId ? ' (leer lassen, um die gespeicherte zu behalten)' : ''}`}
+          beschriftungZeigen
           id="formular-upload-pdf"
           type="file"
           accept="application/pdf"
-          className="form-control"
           onChange={e => {
             const gewaehlt = (e.target as HTMLInputElement).files?.[0] ?? null;
             // Neue Datei = neuer Upload; die bisherige Vorlagen-ID darf dann nicht weiterverwendet

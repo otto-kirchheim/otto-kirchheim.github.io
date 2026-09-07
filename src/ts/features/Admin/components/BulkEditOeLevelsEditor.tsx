@@ -37,16 +37,17 @@ export function BulkEditOeLevelsEditor({
       <div className="d-flex flex-wrap gap-3 mb-2">
         {TARGETS.map(target => (
           <div key={target}>
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id={`bulkOeTarget-${target}`}
-              checked={applyTo.has(target)}
-              onChange={() => onToggleTarget(target)}
-            />
-            <label className="form-check-label" htmlFor={`bulkOeTarget-${target}`}>
-              {OE_TARGET_LABELS[target]}
-            </label>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="checkbox"
+                  id={`bulkOeTarget-${target}`}
+                  checked={applyTo.has(target)}
+                  onChange={() => onToggleTarget(target)}
+                />
+                {OE_TARGET_LABELS[target]}
+              </label>
+            </div>
           </div>
         ))}
       </div>

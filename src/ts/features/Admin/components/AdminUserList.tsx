@@ -17,6 +17,7 @@ import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import createAdminBulkEditModal from './createAdminBulkEditModal';
 import { AdminUserCard } from './AdminUserCard';
 import type { UserEditState } from './adminUserListTypen';
+import { DbAuswahl, DbFeld } from '@/components';
 
 export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
@@ -267,9 +268,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       <div className="raster mb-3 abstand-2">
         <div className="sp-sm-4">
           <div>
-            <input
+            <DbFeld
+              beschriftung="Name"
               type="text"
-              className="form-control"
               id="adminFilterName"
               placeholder="Name"
               value={filter.name}
@@ -283,9 +284,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
         <div className="sp-sm-4">
           <div>
-            <input
+            <DbFeld
+              beschriftung="OE (z.B. IL 03, IL04, KSL)"
               type="text"
-              className="form-control"
               id="adminFilterOe"
               placeholder="OE (z.B. IL 03, IL04, KSL)"
               value={filter.oe}
@@ -299,19 +300,19 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
         <div className="sp-sm-4">
           <div>
-            <select
-              className="form-select"
+            <DbAuswahl
+              beschriftung="Rolle"
+              beschriftungZeigen
               id="adminFilterRole"
               value={filter.role}
-              onChange={e => setFilter(f => ({ ...f, role: (e.target as HTMLSelectElement).value }))}
+              onChange={e => setFilter(f => ({ ...f, role: e.target.value }))}
             >
               <option value="">Alle</option>
               <option value="member">Mitglied</option>
               <option value="team-admin">Team-Admin</option>
               <option value="org-admin">Org-Admin</option>
               <option value="super-admin">Super-Admin</option>
-            </select>
-            <label htmlFor="adminFilterRole">Rolle</label>
+            </DbAuswahl>
           </div>
         </div>
         <div className="d-flex justify-content-end gap-2">
@@ -366,16 +367,17 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
           {isSuperAdmin && selectableUsers.length > 0 && (
             <div className="mb-0">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="adminUserSelectAll"
-                checked={allSelectableSelected}
-                onChange={toggleSelectAll}
-              />
-              <label className="form-check-label small" htmlFor="adminUserSelectAll">
-                Alle auswählen
-              </label>
+              <div className="db-checkbox" data-size="small">
+                <label>
+                  <input
+                    type="checkbox"
+                    id="adminUserSelectAll"
+                    checked={allSelectableSelected}
+                    onChange={toggleSelectAll}
+                  />
+                  Alle auswählen
+                </label>
+              </div>
             </div>
           )}
           <span className="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>

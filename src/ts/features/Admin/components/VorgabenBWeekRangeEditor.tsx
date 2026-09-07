@@ -144,7 +144,7 @@ export function VorgabenBWeekRangeEditor({
   return (
     <div className="mb-2">
       <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
-        <span className="form-label small fw-semibold mb-0">{label}</span>
+        <span className="small fw-semibold mb-0">{label}</span>
         <span className="small text-body-secondary">Auswahl: {rangeText}</span>
       </div>
 

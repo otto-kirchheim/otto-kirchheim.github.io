@@ -10,6 +10,7 @@ import {
   upsertVorgabeByYear,
   type BackendVorgabe,
 } from '../utils/api';
+import { DbAuswahl, DbFeld } from '@/components';
 
 export function AdminVorgabenEditor() {
   const [entries, setEntries] = useState<BackendVorgabe[]>([]);
@@ -213,9 +214,9 @@ export function AdminVorgabenEditor() {
 
       <div className="raster mb-3 abstand-2">
         <div className="sp-md-4">
-          <label className="form-label">Jahr</label>
-          <select
-            className="form-select"
+          <DbAuswahl
+            beschriftung="Jahr"
+            beschriftungZeigen
             value={selectedYear ?? ''}
             onChange={e => handleSelectYear(Number((e.target as HTMLSelectElement).value))}
             disabled={loading || saving}
@@ -231,12 +232,12 @@ export function AdminVorgabenEditor() {
             {selectedYear && !sortedYears.some(v => v._id === selectedYear) && (
               <option value={selectedYear}>{selectedYear}</option>
             )}
-          </select>
+          </DbAuswahl>
         </div>
       </div>
 
       <div className="d-flex justify-content-between align-items-center mb-2">
-        <label className="form-label mb-0">Monatswerte</label>
+        <label className="mb-0">Monatswerte</label>
         <button
           className="db-button"
           data-variant="outlined"
@@ -256,13 +257,14 @@ export function AdminVorgabenEditor() {
           <div key={`${entry.key}-${index}`} className="border rounded p-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <div className="d-flex align-items-center gap-2">
-                <label className="form-label mb-0 small fw-semibold">Monat</label>
-                <input
+                <DbFeld
+                  beschriftung="Monat"
+                  beschriftungZeigen
+                  dicht
                   type="number"
                   min={1}
                   max={12}
-                  className="form-control form-control-sm"
-                  style={{ width: '5.5rem' }}
+                  huelleStyle={{ width: '5.5rem' }}
                   value={entry.key}
                   onChange={e => updateMonthKey(index, Number((e.target as HTMLInputElement).value))}
                   disabled={loading || saving || !selectedYear || entry.key === 1}
@@ -285,12 +287,13 @@ export function AdminVorgabenEditor() {
             <div className="raster abstand-2">
               {GELD_FIELDS.map(field => (
                 <div className="sp-md-6 sp-xl-4" key={`${entry.key}-${field}`}>
-                  <label className="form-label small mb-1">{field}</label>
-                  <input
+                  <DbFeld
+                    beschriftung={field}
+                    beschriftungZeigen
+                    dicht
                     type="number"
                     inputMode="decimal"
                     step="0.01"
-                    className="form-control form-control-sm"
                     value={entry.value[field] ?? ''}
                     onChange={e => updateField(index, field, (e.target as HTMLInputElement).value)}
                     disabled={loading || saving || !selectedYear}

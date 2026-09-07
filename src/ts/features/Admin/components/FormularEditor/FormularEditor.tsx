@@ -17,6 +17,7 @@ import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
 import { schriftKurz } from './SchriftartWahl';
 import { SchriftartDialog } from './SchriftartDialog';
 import type { FormularCode } from './datenKatalog';
+import { DbAuswahl } from '@/components';
 
 type Masse = { w: number; h: number };
 type SkalierState = {
@@ -635,37 +636,34 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
 
       {aktiveSeite && (
         <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
-          <div className="mb-0">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id="seite-wiederholt"
-              checked={Boolean(aktiveSeite.wiederholt)}
-              onChange={e =>
-                setzeAktiveSeite({ ...aktiveSeite, wiederholt: (e.target as HTMLInputElement).checked || undefined })
-              }
-            />
-            <label
-              className="form-check-label"
-              htmlFor="seite-wiederholt"
-              title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
-            >
+          <div
+            className="db-checkbox"
+            data-size="small"
+            title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
+          >
+            <label htmlFor="seite-wiederholt">
+              <input
+                type="checkbox"
+                id="seite-wiederholt"
+                checked={Boolean(aktiveSeite.wiederholt)}
+                onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: e.target.checked || undefined })}
+              />
               Diese Seite bei Überlauf wiederholen
             </label>
           </div>
 
           {value.seiten.length > 1 && (
             <div className="d-flex align-items-center gap-1">
-              <label className="mb-0" htmlFor="seite-kopieren">
-                Einstellungen übernehmen von
-              </label>
-              <select
+              <DbAuswahl
+                beschriftung="Einstellungen übernehmen von"
+                beschriftungZeigen
                 id="seite-kopieren"
-                className="form-select form-select-sm w-auto"
+                dicht
+                className="w-auto"
                 value=""
                 onChange={e => {
-                  const quelle = value.seiten[Number((e.target as HTMLSelectElement).value)];
-                  (e.target as HTMLSelectElement).value = '';
+                  const quelle = value.seiten[Number(e.target.value)];
+                  e.target.value = '';
                   if (!quelle) return;
                   // `quelle` (die PDF-Seite) bleibt, alles andere wird übernommen -- gemeint ist
                   // „gleiches Layout, andere Vorlagenseite", nicht „dieselbe Seite zweimal".
@@ -680,7 +678,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
                     </option>
                   ),
                 )}
-              </select>
+              </DbAuswahl>
             </div>
           )}
         </div>
@@ -806,16 +804,21 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
       <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
         Konfiguration als JSON (kopieren / einfügen)
       </summary>
-      <textarea
-        className={`form-control form-control-sm font-monospace mt-1${fehler ? ' is-invalid' : ''}`}
-        style={{ fontSize: '0.7rem', minHeight: '12rem' }}
-        spellCheck={false}
-        value={angezeigt}
-        onChange={e => {
-          setEntwurf((e.target as HTMLTextAreaElement).value);
-          setFehler(null);
-        }}
-      />
+      <div className="db-textarea mt-1" data-density="functional" data-hide-label="true">
+        <label htmlFor="konfig-json">Konfiguration als JSON</label>
+        <textarea
+          id="konfig-json"
+          className="font-monospace"
+          data-custom-validity={fehler ? 'invalid' : undefined}
+          style={{ fontSize: '0.7rem', minHeight: '12rem' }}
+          spellCheck={false}
+          value={angezeigt}
+          onChange={e => {
+            setEntwurf((e.target as HTMLTextAreaElement).value);
+            setFehler(null);
+          }}
+        />
+      </div>
       {fehler && <div className="small text-danger mt-1">{fehler}</div>}
       <div className="d-flex gap-1 mt-1">
         <button

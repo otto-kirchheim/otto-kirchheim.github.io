@@ -2,6 +2,39 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-07 (66)
+
+### refactor (DB-UX-Migration Phase H: Formulare im Admin-Panel, Sichtkorrekturen)
+
+Der zweite Teil des Formular-Umbaus: Admin-Panel und Formular-Editor. Damit kommen
+`form-control`, `form-select`, `form-check`, `form-label`, `form-text`, `input-group`,
+`invalid-feedback` und `is-invalid` in `src/` nicht mehr vor.
+
+- **110 Felder** in rund 30 Dateien auf `DbFeld`/`DbAuswahl` bzw. `db-checkbox`/`db-textarea`
+  umgestellt. Wo die Beschriftung bisher als `input-group-text`-Vorsatzbox oder als eigenes
+  `form-label` daneben stand, ist sie jetzt das `<label>` der Feldhuelle; wo es gar keine gab
+  (kompakte Felder im Formular-Editor), tragen die Felder erstmals einen Namen.
+- **Doppelte Beschriftungen entzerrt:** In der Massenbearbeitung hiess der Haken wie das
+  Feld darunter -- das Feld heisst jetzt „Neuer Wert für …", die Quellen-Auswahl
+  „Vorlage wählen"/„Muster-Benutzer wählen".
+- **Sichtkorrekturen** (aus der Durchsicht am echten Dev-Server):
+  - Fahrzeiten-Tabelle: ab md haelt DB die Zeile ueber dem Feld nicht mehr frei
+    (`--db-label-visible-above: 0`) -- jede Zeile war sonst eine Leerzeile hoeher, und das
+    Uhr-Symbol des Zeitfelds sass zu tief.
+  - Bearbeiten/Loeschen in Tabellenzellen bleiben nebeneinander (`td > .knopfgruppe` ohne
+    Umbruch) statt sich in der schmalen Aktionsspalte zu stapeln.
+  - Beschriftungen richten sich am Feld aus, nicht an der Textausrichtung des Abschnitts
+    (`text-center` in den Einstellungen zog sie in die Mitte).
+  - In der `.feldgruppe` behalten Knoepfe ihre Inhaltsbreite -- „Auswählen" schrumpfte sonst
+    mit dem Feld und verlor seinen Text.
+  - Monatsnavigation der Berechnung nutzt `chevron_left`/`chevron_right` statt der Zeichen
+    `‹`/`›`, die als schmale, ueberhohe Knoepfe standen.
+- **Bereitschafts-Voreinstellungen:** Die Tabelle zeigte `Do W1<br/>15:45` woertlich --
+  `CustomTable` setzt Zellen als Text. Der Parser liefert jetzt einen echten Zeilenumbruch,
+  die vier Spalten tragen `cell-multiline` (dasselbe Muster wie die Zulagen-Spalte).
+- **Testhilfe:** `feldMitBeschriftung`/`felderMitBeschriftung` in `test/reactRender.ts` finden
+  ein Feld ueber den Text seiner Beschriftung -- Ersatz fuer die `input[aria-label=…]`-Selektoren.
+
 ## 2026-09-07 (65)
 
 ### refactor (DB-UX-Migration Phase H: Formulare auf DB UX, Bootstrap-JS raus)

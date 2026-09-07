@@ -1,5 +1,6 @@
 import { joinOeLevels } from '@/infrastructure/data/oeLevels';
 import { OeLevelInputs } from './OeLevelInputs';
+import { DbAuswahl } from '@/components';
 
 export type AdminOeActionMode = 'none' | 'add' | 'remove';
 export type AdminOeActionState = { mode: AdminOeActionMode; value: string; levels: string[] };
@@ -54,17 +55,18 @@ export function BulkEditAdminOesBlock({
       <div className="d-flex gap-3 mb-1 flex-wrap">
         {MODE_OPTIONS.map(([mode, modeLabel]) => (
           <div key={mode}>
-            <input
-              className="form-check-input"
-              type="radio"
-              name={`bulkAdminOe-${field}`}
-              id={`bulkAdminOe-${field}-${mode}`}
-              checked={action.mode === mode}
-              onChange={() => selectMode(mode)}
-            />
-            <label className="form-check-label" htmlFor={`bulkAdminOe-${field}-${mode}`}>
-              {modeLabel}
-            </label>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="radio"
+                  name={`bulkAdminOe-${field}`}
+                  id={`bulkAdminOe-${field}-${mode}`}
+                  checked={action.mode === mode}
+                  onChange={() => selectMode(mode)}
+                />
+                {modeLabel}
+              </label>
+            </div>
           </div>
         ))}
       </div>
@@ -95,11 +97,11 @@ export function BulkEditAdminOesBlock({
       )}
 
       {action.mode === 'remove' && (
-        <select
-          className="form-select form-select-sm"
-          aria-label={`${label} entfernen`}
+        <DbAuswahl
+          beschriftung={`${label} entfernen`}
+          dicht
           value={action.value}
-          onChange={e => onChange({ value: (e.target as HTMLSelectElement).value })}
+          onChange={e => onChange({ value: e.target.value })}
         >
           <option value="">Pfad wählen …</option>
           {existingPaths.map(path => (
@@ -107,7 +109,7 @@ export function BulkEditAdminOesBlock({
               {path}
             </option>
           ))}
-        </select>
+        </DbAuswahl>
       )}
     </div>
   );

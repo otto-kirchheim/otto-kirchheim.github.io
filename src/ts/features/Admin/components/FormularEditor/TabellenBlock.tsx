@@ -6,6 +6,7 @@ import type { Armed, Vorschau } from './feldPanelTypen';
 import { ListenGruppen } from './ListenGruppen';
 import { SonderZeilen } from './SonderZeilen';
 import { SpalteZeile } from './SpalteZeile';
+import { DbAuswahl, DbFeld } from '@/components';
 
 /**
  * Schlüssel für eine neu angelegte Spalte, ohne eine bestehende Spalte derselben Tabelle zu
@@ -136,74 +137,85 @@ export function TabellenBlock({
 
       <div className="raster mb-1 abstand-1">
         <div className="sp-7">
-          <select
-            className="form-select form-select-sm"
+          <DbAuswahl
+            beschriftung="Zeilenquelle"
+            dicht
             value={tabelle.quelle}
-            onChange={e => onChange({ ...tabelle, quelle: (e.target as HTMLSelectElement).value })}
+            onChange={e => onChange({ ...tabelle, quelle: e.target.value })}
           >
             {ZEILEN_QUELLEN[formular].map(q => (
               <option key={q.pfad} value={q.pfad}>
                 {q.label}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </div>
         <div className="sp-5">
           <div>
-            <input
-              className="form-check-input"
-              type="checkbox"
-              checked={Boolean(tabelle.filter)}
-              onChange={e =>
-                onChange({
-                  ...tabelle,
-                  filter: (e.target as HTMLInputElement).checked
-                    ? { feld: zeilenFelder[0]?.pfad ?? '', werte: [] }
-                    : undefined,
-                })
-              }
-            />
-            <label className="form-check-label small">Nur bestimmte Zeilen</label>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={Boolean(tabelle.filter)}
+                  onChange={e =>
+                    onChange({
+                      ...tabelle,
+                      filter: (e.target as HTMLInputElement).checked
+                        ? { feld: zeilenFelder[0]?.pfad ?? '', werte: [] }
+                        : undefined,
+                    })
+                  }
+                />
+                Nur bestimmte Zeilen
+              </label>
+            </div>
           </div>
         </div>
       </div>
 
       {tabelle.filter && (
         <div className="mb-1 ps-2 border-start">
-          <select
-            className="form-select form-select-sm mb-1"
+          <DbAuswahl
+            beschriftung="Filterfeld"
+            dicht
+            className="mb-1"
             value={tabelle.filter.feld}
-            onChange={e => onChange({ ...tabelle, filter: { feld: (e.target as HTMLSelectElement).value, werte: [] } })}
+            onChange={e => onChange({ ...tabelle, filter: { feld: e.target.value, werte: [] } })}
           >
             {zeilenFelder.map(f => (
               <option key={f.pfad} value={f.pfad}>
                 {f.label}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
           {filterWerte.length > 0 ? (
             <div className="d-flex flex-wrap gap-2">
               {filterWerte.map(wert => (
                 <div key={wert}>
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={tabelle.filter!.werte.includes(wert)}
-                    onChange={e => {
-                      const an = (e.target as HTMLInputElement).checked;
-                      const werte = an
-                        ? [...tabelle.filter!.werte, wert]
-                        : tabelle.filter!.werte.filter(w => w !== wert);
-                      onChange({ ...tabelle, filter: { ...tabelle.filter!, werte } });
-                    }}
-                  />
-                  <label className="form-check-label small">{wert}</label>
+                  <div className="db-checkbox" data-size="small">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={tabelle.filter!.werte.includes(wert)}
+                        onChange={e => {
+                          const an = (e.target as HTMLInputElement).checked;
+                          const werte = an
+                            ? [...tabelle.filter!.werte, wert]
+                            : tabelle.filter!.werte.filter(w => w !== wert);
+                          onChange({ ...tabelle, filter: { ...tabelle.filter!, werte } });
+                        }}
+                      />
+                      {wert}
+                    </label>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <input
-              className="form-control form-control-sm font-monospace"
+            <DbFeld
+              beschriftung="Werte, durch Komma getrennt"
+              dicht
+              feldKlasse="font-monospace"
               placeholder="Werte, durch Komma getrennt"
               value={tabelle.filter.werte.join(', ')}
               onChange={e =>
@@ -247,21 +259,24 @@ export function TabellenBlock({
         <span className="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
         {bereich && (
           <div className="mb-0">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              checked={eigenePlatzierung}
-              title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
-              onChange={e => {
-                const an = (e.target as HTMLInputElement).checked;
-                setzeBereich({
-                  startY: an ? startY : undefined,
-                  hoehe: an ? zeilenHoehe : undefined,
-                  maxZeilen: an ? maxZeilen : undefined,
-                });
-              }}
-            />
-            <label className="form-check-label small">eigene je Seite</label>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={eigenePlatzierung}
+                  title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
+                  onChange={e => {
+                    const an = (e.target as HTMLInputElement).checked;
+                    setzeBereich({
+                      startY: an ? startY : undefined,
+                      hoehe: an ? zeilenHoehe : undefined,
+                      maxZeilen: an ? maxZeilen : undefined,
+                    });
+                  }}
+                />
+                eigene je Seite
+              </label>
+            </div>
           </div>
         )}
       </div>
@@ -385,16 +400,21 @@ export function TabellenBlock({
         <span className="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>
         {bereich && (
           <div className="mb-0">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              checked={eigeneSpalten}
-              title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
-              onChange={e =>
-                setzeBereich({ spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined })
-              }
-            />
-            <label className="form-check-label small">eigene je Seite</label>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={eigeneSpalten}
+                  title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
+                  onChange={e =>
+                    setzeBereich({
+                      spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined,
+                    })
+                  }
+                />
+                eigene je Seite
+              </label>
+            </div>
           </div>
         )}
       </div>

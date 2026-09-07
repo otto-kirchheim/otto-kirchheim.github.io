@@ -15,6 +15,7 @@ import {
 } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
+import { DbAuswahl, DbFeld } from '@/components';
 
 function FeldZeile({
   keyName,
@@ -190,11 +191,12 @@ function FeldZeile({
       {feld.listenKopf ? (
         <div className="raster mb-1 abstand-1">
           <div className="sp-4">
-            <select
-              className="form-select form-select-sm"
+            <DbAuswahl
+              beschriftung="Tabelle"
+              dicht
               value={feld.listenKopf.tabelle}
               onChange={e => {
-                const tabellenName = (e.target as HTMLSelectElement).value;
+                const tabellenName = e.target.value;
                 const gruppe = Object.keys(tabellen[tabellenName]?.listen ?? {})[0] ?? '';
                 onChange({ ...feld, listenKopf: { ...feld.listenKopf!, tabelle: tabellenName, gruppe } });
               }}
@@ -204,16 +206,17 @@ function FeldZeile({
                   {name}
                 </option>
               ))}
-            </select>
+            </DbAuswahl>
           </div>
           <div className="sp-5">
-            <select
-              className="form-select form-select-sm"
+            <DbAuswahl
+              beschriftung="Listen-Gruppe"
+              dicht
               value={feld.listenKopf.gruppe}
               onChange={e =>
                 onChange({
                   ...feld,
-                  listenKopf: { ...feld.listenKopf!, gruppe: (e.target as HTMLSelectElement).value },
+                  listenKopf: { ...feld.listenKopf!, gruppe: e.target.value },
                 })
               }
             >
@@ -222,28 +225,27 @@ function FeldZeile({
                   {g}
                 </option>
               ))}
-            </select>
+            </DbAuswahl>
           </div>
           <div className="sp-3">
-            <div className="input-group input-group-sm">
-              <span className="input-group-text px-1 small">Platz</span>
-              <input
-                type="number"
-                min={1}
-                step={1}
-                className="form-control"
-                value={feld.listenKopf.index + 1}
-                onChange={e =>
-                  onChange({
-                    ...feld,
-                    listenKopf: {
-                      ...feld.listenKopf!,
-                      index: Math.max(0, Math.round(Number((e.target as HTMLInputElement).value)) - 1),
-                    },
-                  })
-                }
-              />
-            </div>
+            <DbFeld
+              beschriftung="Platz"
+              beschriftungZeigen
+              dicht
+              type="number"
+              min={1}
+              step={1}
+              value={feld.listenKopf.index + 1}
+              onChange={e =>
+                onChange({
+                  ...feld,
+                  listenKopf: {
+                    ...feld.listenKopf!,
+                    index: Math.max(0, Math.round(Number(e.target.value)) - 1),
+                  },
+                })
+              }
+            />
           </div>
         </div>
       ) : feld.wenn ? (
@@ -258,14 +260,15 @@ function FeldZeile({
             wert={feld.text ?? ''}
             onEinfuegen={neu => onChange({ ...feld, text: neu })}
           />
-          <input
-            ref={textRef}
-            className="form-control form-control-sm"
+          <DbFeld
+            beschriftung="z.B. Übertrag  oder  Seite {seite} von {seiten}"
+            dicht
+            feldRef={textRef}
             placeholder="z.B. Übertrag  oder  Seite {seite} von {seiten}"
             value={feld.text}
             onChange={e => onChange({ ...feld, text: (e.target as HTMLInputElement).value })}
           />
-          <div className="form-text small">
+          <div className="small text-body-secondary">
             Platzhalter in <code>{'{ }'}</code>: <code>{'{seite}'}</code>, <code>{'{seiten}'}</code>,{' '}
             <code>{'{heute}'}</code> oder jeder Datenpfad (z.B. <code>{'{Monat}'}</code>, oder oben aus der Liste
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
@@ -300,8 +303,10 @@ function FeldZeile({
         </div>
       )}
 
-      <input
-        className="form-control form-control-sm mb-1"
+      <DbFeld
+        beschriftung="Anzeigename (nur für diese Liste)"
+        dicht
+        className="mb-1"
         placeholder="Anzeigename (nur für diese Liste)"
         value={feld.label ?? ''}
         onChange={e => onChange({ ...feld, label: (e.target as HTMLInputElement).value || undefined })}

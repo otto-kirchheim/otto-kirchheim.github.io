@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyModalHeader, showModal } from '@/components';
+import { DbFeld, MyModalHeader, showModal } from '@/components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../utils/api';
 
 type LinkKind = 'verification' | 'reset';
@@ -126,12 +126,15 @@ function LinkSection({
 
           {link && (
             <>
-              <input
-                className="form-control form-control-sm font-monospace mb-2"
+              <DbFeld
+                beschriftung="Einladungslink"
+                dicht
+                className="mb-2"
+                feldKlasse="font-monospace"
                 type="text"
                 readOnly
                 value={link.url}
-                onFocus={e => (e.target as HTMLInputElement).select()}
+                onFocus={e => e.target.select()}
               />
               <div className="d-flex flex-wrap gap-2">
                 <button

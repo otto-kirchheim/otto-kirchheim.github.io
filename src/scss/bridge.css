@@ -45,20 +45,6 @@
     list-style: none;
   }
 
-  /* DB stylt `input[type=checkbox|radio]` global (32 px Kantenlaenge, eigene Marker). Fuer die
-     verbliebenen Bootstrap-Formularhaken -- z.B. im Formular-Editor -- die Bootstrap-Groesse
-     zurueckholen, sonst stehen dort riesige leere Kaesten. Die DB-Schalter (`db-switch`,
-     `db-checkbox`) sind davon nicht betroffen. */
-  .form-check-input {
-    inline-size: 1em;
-    block-size: 1em;
-    margin-block-start: 0.25em;
-  }
-
-  .form-switch .form-check-input {
-    inline-size: 2em;
-  }
-
   /* DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus `:has()`-Spaltenzaehlung).
      Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile, Leer-Meldung, Inline-Editor),
      mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten -- im Grid-Modell rutschen

@@ -35,7 +35,9 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
   const weekdayParser = (value: unknown, option: unknown = true): string => {
     const v = value as { tag: number; zeit?: string; Nwoche?: boolean };
     const umbruch = option !== false;
-    const separator = umbruch ? '<br/>' : ' | ';
+    // Zeilenumbruch als echtes Zeichen: CustomTable setzt Zellen als Text, `<br/>` stuende
+    // sonst woertlich in der Zelle. Die Spalten tragen dafuer `cell-multiline`.
+    const separator = umbruch ? '\n' : ' | ';
     const weekdays: Record<number, string> = { 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa', 7: 'So', 0: 'So' };
     const weekday = weekdays[v.tag] ?? '-';
     const week = v.Nwoche ? 'W2' : 'W1';
@@ -50,17 +52,39 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
     columns: [
       { name: 'Name', title: 'Name' },
       { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
-      { name: 'beginnB', title: 'Ber Von', longTitle: 'Bereitschaft Von', parser: weekdayParser, breakpoints: 'sm' },
-      { name: 'endeB', title: 'Ber Bis', longTitle: 'Bereitschaft Bis', parser: weekdayParser, breakpoints: 'sm' },
+      {
+        classes: ['cell-multiline'],
+        name: 'beginnB',
+        title: 'Ber Von',
+        longTitle: 'Bereitschaft Von',
+        parser: weekdayParser,
+        breakpoints: 'sm',
+      },
+      {
+        classes: ['cell-multiline'],
+        name: 'endeB',
+        title: 'Ber Bis',
+        longTitle: 'Bereitschaft Bis',
+        parser: weekdayParser,
+        breakpoints: 'sm',
+      },
       { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'lg' },
       {
+        classes: ['cell-multiline'],
         name: 'beginnN',
         title: 'Nacht Von',
         longTitle: 'Nachtschicht Von',
         parser: nachtRangeParser,
         breakpoints: 'lg',
       },
-      { name: 'endeN', title: 'Nacht Bis', longTitle: 'Nachtschicht Bis', parser: nachtRangeParser, breakpoints: 'lg' },
+      {
+        classes: ['cell-multiline'],
+        name: 'endeN',
+        title: 'Nacht Bis',
+        longTitle: 'Nachtschicht Bis',
+        parser: nachtRangeParser,
+        breakpoints: 'lg',
+      },
     ],
     rows: [...Object.values(VorgabenB)],
     editing: {

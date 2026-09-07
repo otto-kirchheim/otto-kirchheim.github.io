@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
+import { DbFeld } from '@/components';
 
 const ITEMS_PER_PAGE = 25;
 
@@ -68,10 +69,11 @@ export function AdminLogBrowser() {
   return (
     <div>
       <div className="d-flex gap-2 mb-3 flex-wrap align-items-center">
-        <input
+        <DbFeld
+          beschriftung="Aktion filtern (z.B. update, delete)…"
+          dicht
           type="text"
-          className="form-control form-control-sm"
-          style={{ maxWidth: '300px' }}
+          huelleStyle={{ maxWidth: '300px' }}
           placeholder="Aktion filtern (z.B. update, delete)…"
           value={actionFilter}
           onChange={e => setActionFilter((e.target as HTMLInputElement).value)}

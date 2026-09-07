@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
 import type { Armed } from './feldPanelTypen';
+import { DbAuswahl, DbFeld } from '@/components';
 
 export function istGleich(a: Armed | null, b: Armed): boolean {
   if (!a || a.bereich !== b.bereich) return false;
@@ -59,20 +60,19 @@ export function ZahlFeld({
 
   return (
     <div>
-      <div className="input-group input-group-sm">
-        <span className="input-group-text px-1 small">{label}</span>
-        <input
-          type="number"
-          step={ganzzahl ? 1 : 'any'}
-          min={min}
-          className="form-control px-1"
-          value={wert === undefined ? '' : Number(wert.toFixed(2))}
-          onChange={e => {
-            const v = (e.target as HTMLInputElement).value;
-            onChange(v === '' ? undefined : begrenzt(Number(v)));
-          }}
-        />
-      </div>
+      <DbFeld
+        beschriftung={label}
+        beschriftungZeigen
+        dicht
+        type="number"
+        step={ganzzahl ? 1 : 'any'}
+        min={min}
+        value={wert === undefined ? '' : Number(wert.toFixed(2))}
+        onChange={e => {
+          const v = e.target.value;
+          onChange(v === '' ? undefined : begrenzt(Number(v)));
+        }}
+      />
     </div>
   );
 }
@@ -156,58 +156,72 @@ export function DarstellungsFelder<
       {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
       <div className="raster align-items-center abstand-1">
         <div className="sp-3">
-          <input
+          <DbFeld
+            beschriftung={wert.autoGroesse ? 'Maximale Schriftgröße' : 'Schriftgröße'}
+            dicht
             type="number"
-            className="form-control form-control-sm"
             title={wert.autoGroesse ? 'Maximale Schriftgröße' : 'Schriftgröße'}
             value={wert.size}
-            onChange={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
+            onChange={e => onChange({ ...wert, size: Number(e.target.value) })}
           />
         </div>
         <div className="sp-3 mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={Boolean(wert.fett)}
-            onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
-          />
-          <label className="form-check-label small">Fett</label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(wert.fett)}
+                onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
+              />
+              Fett
+            </label>
+          </div>
         </div>
         <div className="sp-3 mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={Boolean(wert.kursiv)}
-            onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
-          />
-          <label className="form-check-label small">Kursiv</label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(wert.kursiv)}
+                onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
+              />
+              Kursiv
+            </label>
+          </div>
         </div>
         <div className="sp-3 mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={Boolean(wert.unterstrichen)}
-            onChange={e => onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })}
-          />
-          <label className="form-check-label small">Unterstr.</label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(wert.unterstrichen)}
+                onChange={e =>
+                  onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })
+                }
+              />
+              Unterstr.
+            </label>
+          </div>
         </div>
       </div>
       {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
       <div className="raster mt-1 abstand-1">
         <div className="sp-5">
-          <select
-            className="form-select form-select-sm"
+          <DbAuswahl
+            beschriftung="Ausrichtung"
+            dicht
             value={wert.align ?? 'links'}
-            onChange={e => onChange({ ...wert, align: (e.target as HTMLSelectElement).value as Ausrichtung })}
+            onChange={e => onChange({ ...wert, align: e.target.value as Ausrichtung })}
           >
             <option value="links">links</option>
             <option value="zentriert">zentriert</option>
             <option value="rechts">rechts</option>
-          </select>
+          </DbAuswahl>
         </div>
         <div className="sp-7">
-          <select
-            className="form-select form-select-sm"
+          <DbAuswahl
+            beschriftung="Textrichtung in der Zelle — 90° für schmale, hochkant beschriftete Felder"
+            dicht
             title="Textrichtung in der Zelle — 90° für schmale, hochkant beschriftete Felder"
             value={String(wert.drehung ?? 0)}
             onChange={e => {
@@ -220,19 +234,20 @@ export function DarstellungsFelder<
                 {d.label}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </div>
       </div>
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
       <div className="raster mt-1 abstand-1">
         <div>
-          <select
-            className="form-select form-select-sm"
+          <DbAuswahl
+            beschriftung="Format"
+            dicht
             value={wert.format ?? ''}
             onChange={e =>
               onChange({
                 ...wert,
-                format: ((e.target as HTMLSelectElement).value || undefined) as FormatName | undefined,
+                format: (e.target.value || undefined) as FormatName | undefined,
               })
             }
           >
@@ -241,28 +256,34 @@ export function DarstellungsFelder<
                 {f.label}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </div>
       </div>
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
       <div className="d-flex gap-3 mt-1">
         <div>
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={Boolean(wert.autoGroesse)}
-            onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
-          />
-          <label className="form-check-label small">Schrift automatisch verkleinern</label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(wert.autoGroesse)}
+                onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
+              />
+              Schrift automatisch verkleinern
+            </label>
+          </div>
         </div>
         <div>
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={Boolean(wert.umbruch)}
-            onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
-          />
-          <label className="form-check-label small">Zeilenumbruch</label>
+          <div className="db-checkbox" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={Boolean(wert.umbruch)}
+                onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
+              />
+              Zeilenumbruch
+            </label>
+          </div>
         </div>
       </div>
     </>

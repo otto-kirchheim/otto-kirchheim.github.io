@@ -35,7 +35,7 @@ export function OeTagInput({
 
   return (
     <div className="mb-2">
-      <label className="form-label fw-semibold small mb-1">{label}</label>
+      <label className="fw-semibold small mb-1">{label}</label>
       <div className="d-flex flex-wrap gap-1 mb-1">
         {values.length === 0 && <span className="text-body-secondary small fst-italic">Keine</span>}
         {values.map((oe, index) => (

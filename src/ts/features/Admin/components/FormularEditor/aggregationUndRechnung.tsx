@@ -9,6 +9,7 @@ import type {
   ZeilenOperand,
 } from '@otto-kirchheim/nebengeld-shared';
 import { gruppiere, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DbAuswahl, DbFeld } from '@/components';
 
 /**
  * Berechnete/Ankreuz-Spalten als Katalogeinträge -- `mitBerechnetenSpalten()` in `shared` trägt
@@ -159,33 +160,36 @@ export function AggregationEditor({
   return (
     <div className="raster mb-1 abstand-1">
       <div className="sp-3">
-        <select
-          className="form-select form-select-sm"
+        <DbAuswahl
+          beschriftung="Rechenart"
+          dicht
           value={wert.op}
-          onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as OpName })}
+          onChange={e => onChange({ ...wert, op: e.target.value as OpName })}
         >
           {AGGREGATIONS_OPS.map(o => (
             <option key={o.wert} value={o.wert}>
               {o.label}
             </option>
           ))}
-        </select>
+        </DbAuswahl>
       </div>
       <div className="sp-4">
-        <select
-          className="form-select form-select-sm"
+        <DbAuswahl
+          beschriftung="Bezugsbereich"
+          dicht
           value={wert.ueber}
-          onChange={e => onChange({ ...wert, ueber: (e.target as HTMLSelectElement).value })}
+          onChange={e => onChange({ ...wert, ueber: e.target.value })}
         >
           <option value="$alle">alle Zeilen (Gesamtsumme)</option>
           <option value="$seite">nur diese Seite</option>
           <option value="$bisher">alle Vorseiten (Übertrag)</option>
           <option value="$laufend">bis hierher (Übertrag + diese Seite)</option>
-        </select>
+        </DbAuswahl>
       </div>
       <div className="sp-5">
-        <select
-          className="form-select form-select-sm"
+        <DbAuswahl
+          beschriftung="Feld oder Liste"
+          dicht
           value={
             wert.liste
               ? `liste:${wert.liste.tabelle}:${wert.liste.gruppe}:${wert.liste.index ?? 'gesamt'}${LISTE_ART_SUFFIX[wert.liste.art ?? 'summe']}`
@@ -236,7 +240,7 @@ export function AggregationEditor({
                 ))}
             </optgroup>
           )}
-        </select>
+        </DbAuswahl>
       </div>
       <div className="d-flex flex-wrap align-items-center gap-2">
         <span
@@ -246,24 +250,22 @@ export function AggregationEditor({
           Tabellen:
         </span>
         {Object.keys(tabellen).map(name => (
-          <div key={name} className="form-check-inline m-0">
-            <input
-              className="form-check-input"
-              type="checkbox"
-              checked={gewaehlt.includes(name)}
-              onChange={() => schalteTabelle(name)}
-            />
-            <label className="form-check-label small">{name}</label>
+          <div key={name} className="db-checkbox" data-size="small">
+            <label>
+              <input type="checkbox" checked={gewaehlt.includes(name)} onChange={() => schalteTabelle(name)} />
+              {name}
+            </label>
           </div>
         ))}
       </div>
       {wert.op === 'letztesDatum' && (
         <div className="d-flex align-items-center gap-2">
-          <input
+          <DbFeld
+            beschriftung="Tage"
+            dicht
             type="number"
             min="0"
-            className="form-control form-control-sm"
-            style={{ maxWidth: '6rem' }}
+            huelleStyle={{ maxWidth: '6rem' }}
             placeholder="Tage"
             value={wert.maxTage ?? ''}
             onChange={e => {
@@ -316,18 +318,19 @@ export function Rechnung({
 
   return (
     <div className="mb-1">
-      <div className="input-group input-group-sm mb-1">
-        <select
-          className="form-select"
+      <div className="feldgruppe mb-1">
+        <DbAuswahl
+          beschriftung="Rechenart"
+          dicht
           value={wert.op}
-          onChange={e => onChange({ ...wert, op: (e.target as HTMLSelectElement).value as ZeilenOpName })}
+          onChange={e => onChange({ ...wert, op: e.target.value as ZeilenOpName })}
         >
           {ZEILEN_OPS_AUSWAHL.map(o => (
             <option key={o.wert} value={o.wert}>
               {o.text}
             </option>
           ))}
-        </select>
+        </DbAuswahl>
         {onEntfernen && (
           <button
             type="button"
@@ -358,12 +361,13 @@ export function Rechnung({
           </div>
         ) : (
           // Index als Key, siehe oben.
-          <div key={i} className="input-group input-group-sm mb-1">
-            <select
-              className="form-select"
+          <div key={i} className="feldgruppe mb-1">
+            <DbAuswahl
+              beschriftung="Operand"
+              dicht
               value={typeof operand === 'number' ? '__zahl' : operand}
               onChange={e => {
-                const v = (e.target as HTMLSelectElement).value;
+                const v = e.target.value;
                 if (v === '__zahl') setzeOperand(i, 0);
                 else if (v === '__rechnung') setzeOperand(i, { op: 'differenz', operanden: [] });
                 else setzeOperand(i, v);
@@ -376,14 +380,15 @@ export function Rechnung({
               ))}
               <option value="__zahl">Fester Zahlenwert…</option>
               <option value="__rechnung">Zwischenrechnung (Klammer)…</option>
-            </select>
+            </DbAuswahl>
             {typeof operand === 'number' && (
-              <input
+              <DbFeld
+                beschriftung="Zahlenwert"
+                dicht
                 type="number"
                 step="any"
-                className="form-control"
                 value={operand}
-                onChange={e => setzeOperand(i, Number((e.target as HTMLInputElement).value))}
+                onChange={e => setzeOperand(i, Number(e.target.value))}
               />
             )}
             <button

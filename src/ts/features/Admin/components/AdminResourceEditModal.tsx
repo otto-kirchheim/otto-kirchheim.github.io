@@ -23,6 +23,7 @@ import {
   type EditState,
   type ResourceConfig,
 } from './adminResourceBrowserGemeinsam';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
   edit: EditState;
@@ -90,7 +91,7 @@ export function AdminResourceEditModal({
 
             return (
               <div key={key} className="mb-3">
-                <label className="form-label fw-semibold small mb-1">
+                <label className="fw-semibold small mb-1">
                   {key}
                   {immutable && <span className="fw-normal text-muted ms-1">(nicht änderbar)</span>}
                   {readonly && <span className="fw-normal text-muted ms-1">(nur lesen)</span>}
@@ -130,8 +131,11 @@ export function AdminResourceEditModal({
                     )}
                   </div>
                 ) : disabled ? (
-                  <input
-                    className="form-control form-control-sm bg-body-secondary text-muted font-monospace"
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
+                    className="bg-body-secondary text-muted"
+                    feldKlasse="font-monospace"
                     readOnly
                     value={
                       isDateOnly
@@ -187,18 +191,18 @@ export function AdminResourceEditModal({
                     </div>
                   )
                 ) : typeof val === 'boolean' ? (
-                  <div className="mt-1">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={val}
-                      onChange={e => handleValueChange(key, (e.target as HTMLInputElement).checked)}
-                    />
+                  <div className="db-checkbox mt-1" data-size="small">
+                    <label>
+                      <input type="checkbox" checked={val} onChange={e => handleValueChange(key, e.target.checked)} />
+                      {key}
+                    </label>
                   </div>
                 ) : isNull ? (
-                  <input
+                  <DbFeld
+                    beschriftung="(leer – Wert eingeben oder leer lassen)"
+                    dicht
+                    className="border-warning"
                     type="text"
-                    className="form-control form-control-sm border-warning"
                     placeholder="(leer – Wert eingeben oder leer lassen)"
                     onChange={e => {
                       const v = (e.target as HTMLInputElement).value;
@@ -212,50 +216,55 @@ export function AdminResourceEditModal({
                     error={edit.jsonErrors[key]}
                   />
                 ) : isTimeString ? (
-                  <input
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
                     type="time"
-                    className="form-control form-control-sm"
                     value={String(val)}
-                    onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
+                    onChange={e => handleValueChange(key, e.target.value)}
                   />
                 ) : isDateOnly ? (
-                  <input
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
                     type="date"
-                    className="form-control form-control-sm"
                     value={toDateInput(String(val))}
                     onChange={e => {
-                      const v = (e.target as HTMLInputElement).value;
+                      const v = e.target.value;
                       handleValueChange(key, v ? `${v}T00:00:00.000Z` : null);
                     }}
                   />
                 ) : isDateTime ? (
-                  <input
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
                     type="datetime-local"
-                    className="form-control form-control-sm"
                     value={toDatetimeLocal(String(val))}
                     onChange={e => {
-                      const v = (e.target as HTMLInputElement).value;
+                      const v = e.target.value;
                       handleValueChange(key, v ? dayjs(v).toISOString() : null);
                     }}
                   />
                 ) : fieldEnum ? (
-                  <select
-                    className="form-select form-select-sm"
+                  <DbAuswahl
+                    beschriftung={key}
+                    dicht
                     value={String(val ?? '')}
-                    onChange={e => handleValueChange(key, (e.target as HTMLSelectElement).value)}
+                    onChange={e => handleValueChange(key, e.target.value)}
                   >
                     {fieldEnum.map(v => (
                       <option key={v} value={v}>
                         {v}
                       </option>
                     ))}
-                  </select>
+                  </DbAuswahl>
                 ) : typeof val === 'number' ? (
-                  <input
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
                     type="number"
-                    className="form-control form-control-sm"
                     value={val}
-                    onChange={e => handleValueChange(key, parseFloat((e.target as HTMLInputElement).value) || 0)}
+                    onChange={e => handleValueChange(key, parseFloat(e.target.value) || 0)}
                   />
                 ) : isObjectId(val) ? (
                   <div className="d-flex align-items-center gap-2">
@@ -271,11 +280,12 @@ export function AdminResourceEditModal({
                     </button>
                   </div>
                 ) : (
-                  <input
+                  <DbFeld
+                    beschriftung={key}
+                    dicht
                     type="text"
-                    className="form-control form-control-sm"
                     value={String(val ?? '')}
-                    onChange={e => handleValueChange(key, (e.target as HTMLInputElement).value)}
+                    onChange={e => handleValueChange(key, e.target.value)}
                   />
                 )}
               </div>

@@ -1,5 +1,6 @@
 import { CATEGORY_LABELS } from '../utils/bulkEditOe';
 import type { AdminUserRow, BackendProfileTemplate, BulkApplyCategory } from '../utils/api';
+import { DbAuswahl } from '@/components';
 
 export type ApplySource = 'none' | 'template' | 'user';
 
@@ -46,25 +47,24 @@ export function BulkEditApplySourceBlock({
       <div className="d-flex flex-column gap-2">
         {SOURCE_OPTIONS.map(([value, label]) => (
           <div key={value}>
-            <div>
-              <input
-                className="form-check-input"
-                type="radio"
-                name="bulkApplySource"
-                id={`bulkApplySource-${value}`}
-                checked={applySource === value}
-                onChange={() => onApplySourceChange(value)}
-              />
-              <label className="form-check-label" htmlFor={`bulkApplySource-${value}`}>
+            <div className="db-checkbox" data-size="small">
+              <label>
+                <input
+                  type="radio"
+                  name="bulkApplySource"
+                  id={`bulkApplySource-${value}`}
+                  checked={applySource === value}
+                  onChange={() => onApplySourceChange(value)}
+                />
                 {label}
               </label>
             </div>
 
             {value === 'template' && applySource === 'template' && (
               <div className="mt-1 ms-4">
-                <select
-                  className="form-select form-select-sm"
-                  aria-label="Vorlage"
+                <DbAuswahl
+                  beschriftung="Vorlage wählen"
+                  dicht
                   value={templateId}
                   onChange={e => onTemplateIdChange((e.target as HTMLSelectElement).value)}
                 >
@@ -74,15 +74,15 @@ export function BulkEditApplySourceBlock({
                       {template.name} ({template.code})
                     </option>
                   ))}
-                </select>
+                </DbAuswahl>
               </div>
             )}
 
             {value === 'user' && applySource === 'user' && (
               <div className="mt-1 ms-4">
-                <select
-                  className="form-select form-select-sm"
-                  aria-label="Muster-Benutzer"
+                <DbAuswahl
+                  beschriftung="Muster-Benutzer wählen"
+                  dicht
                   value={sourceUserId}
                   onChange={e => onSourceUserIdChange((e.target as HTMLSelectElement).value)}
                 >
@@ -92,7 +92,7 @@ export function BulkEditApplySourceBlock({
                       {user.fullName || user.userName}
                     </option>
                   ))}
-                </select>
+                </DbAuswahl>
               </div>
             )}
           </div>
@@ -107,16 +107,17 @@ export function BulkEditApplySourceBlock({
           <div className="d-flex gap-3 flex-wrap">
             {(Object.keys(CATEGORY_LABELS) as BulkApplyCategory[]).map(category => (
               <div key={category}>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`bulkCategory-${category}`}
-                  checked={categories.includes(category)}
-                  onChange={() => onToggleCategory(category)}
-                />
-                <label className="form-check-label" htmlFor={`bulkCategory-${category}`}>
-                  {CATEGORY_LABELS[category]}
-                </label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      id={`bulkCategory-${category}`}
+                      checked={categories.includes(category)}
+                      onChange={() => onToggleCategory(category)}
+                    />
+                    {CATEGORY_LABELS[category]}
+                  </label>
+                </div>
               </div>
             ))}
           </div>

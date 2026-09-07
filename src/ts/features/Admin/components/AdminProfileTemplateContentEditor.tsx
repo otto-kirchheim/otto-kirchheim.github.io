@@ -12,6 +12,7 @@ import {
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';
 import type { BereitschaftSchichtTyp } from '@/types';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type SectionKey = 'Pers' | 'Arbeitszeit' | 'Fahrzeit' | 'VorgabenB' | 'Einstellungen';
 
@@ -96,7 +97,7 @@ export function AdminProfileTemplateContentEditor({
 
   return (
     <div>
-      <label className="form-label small fw-semibold mb-1">Template-Inhalt</label>
+      <label className="small fw-semibold mb-1">Template-Inhalt</label>
       <div className="d-flex flex-wrap gap-2 mb-2">
         {sectionButton('Pers', 'Pers')}
         {sectionButton('Arbeitszeit', 'Arbeitszeit')}
@@ -110,30 +111,36 @@ export function AdminProfileTemplateContentEditor({
           <div className="raster abstand-2">
             {PERS_FIELDS.map(field => (
               <div className="sp-md-6" key={`${templateId}-pers-${field.key}`}>
-                <label className="form-label small mb-1">{field.label}</label>
                 {field.key === 'OE' ? (
-                  <OeLevelBoxes
-                    value={templateContent.Pers[field.key] ?? ''}
-                    onChange={value => onUpdatePersField(field.key, value)}
-                  />
+                  <>
+                    <span className="small">{field.label}</span>
+                    <OeLevelBoxes
+                      value={templateContent.Pers[field.key] ?? ''}
+                      onChange={value => onUpdatePersField(field.key, value)}
+                    />
+                  </>
                 ) : field.type === 'select' && field.options ? (
-                  <select
-                    className="form-select form-select-sm"
+                  <DbAuswahl
+                    beschriftung={field.label}
+                    beschriftungZeigen
+                    dicht
                     value={templateContent.Pers[field.key] ?? ''}
-                    onChange={e => onUpdatePersField(field.key, (e.target as HTMLSelectElement).value)}
+                    onChange={e => onUpdatePersField(field.key, e.target.value)}
                   >
                     {field.options.map(option => (
                       <option value={option.value} key={`${templateId}-pers-${field.key}-${option.value || 'empty'}`}>
                         {option.label}
                       </option>
                     ))}
-                  </select>
+                  </DbAuswahl>
                 ) : (
-                  <input
+                  <DbFeld
+                    beschriftung={field.label}
+                    beschriftungZeigen
+                    dicht
                     type={field.type ?? 'text'}
-                    className="form-control form-control-sm"
                     value={templateContent.Pers[field.key] ?? ''}
-                    onChange={e => onUpdatePersField(field.key, (e.target as HTMLInputElement).value)}
+                    onChange={e => onUpdatePersField(field.key, e.target.value)}
                   />
                 )}
               </div>
@@ -170,7 +177,7 @@ export function AdminProfileTemplateContentEditor({
       {activeSection === 'Fahrzeit' && (
         <div className="border rounded p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-1">
-            <label className="form-label small fw-semibold mb-0">Fahrzeit-Einträge</label>
+            <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
             <button
               className="db-button"
               data-variant="outlined"
@@ -189,28 +196,28 @@ export function AdminProfileTemplateContentEditor({
             {templateContent.Fahrzeit.map((row, index) => (
               <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
                 <div>
-                  <div className="input-group input-group-sm admin-fahrzeit-input-group">
-                    <input
-                      className="form-control admin-fahrzeit-key"
+                  <div className="feldgruppe admin-fahrzeit-input-group">
+                    <DbFeld
+                      beschriftung="Key"
+                      className="admin-fahrzeit-key"
                       placeholder="Key"
-                      aria-label="Key"
                       value={row.key}
                       onChange={e => onUpdateFahrzeitRow(index, 'key', (e.target as HTMLInputElement).value)}
                     />
 
-                    <input
-                      className="form-control admin-fahrzeit-text"
+                    <DbFeld
+                      beschriftung="Beschreibung"
+                      className="admin-fahrzeit-text"
                       placeholder="Beschreibung"
-                      aria-label="Beschreibung"
                       value={row.text}
                       onChange={e => onUpdateFahrzeitRow(index, 'text', (e.target as HTMLInputElement).value)}
                     />
 
-                    <input
+                    <DbFeld
+                      beschriftung="Wert"
+                      className="admin-fahrzeit-value"
                       type="time"
-                      className="form-control admin-fahrzeit-value"
                       placeholder="Wert"
-                      aria-label="Wert"
                       value={row.value}
                       onChange={e => onUpdateFahrzeitRow(index, 'value', (e.target as HTMLInputElement).value)}
                     />
@@ -237,7 +244,7 @@ export function AdminProfileTemplateContentEditor({
       {activeSection === 'VorgabenB' && (
         <div className="border rounded p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-2">
-            <label className="form-label small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
+            <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
             <button
               className="db-button"
               data-variant="outlined"
@@ -286,21 +293,20 @@ export function AdminProfileTemplateContentEditor({
                     </small>
                   </div>
 
-                  <div className="input-group input-group-sm">
-                    <span className="input-group-text">Auswahl</span>
-                    <select
-                      className="form-select"
-                      value={currentIndex}
-                      onChange={e => onSelectVorgabenBRow(Number((e.target as HTMLSelectElement).value))}
-                    >
-                      {templateContent.VorgabenB.map((item, index) => (
-                        <option key={`${templateId}-vb-select-${index}`} value={index}>
-                          #{index + 1}
-                          {item.value.Name ? ` - ${item.value.Name}` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <DbAuswahl
+                    beschriftung="Auswahl"
+                    beschriftungZeigen
+                    dicht
+                    value={currentIndex}
+                    onChange={e => onSelectVorgabenBRow(Number(e.target.value))}
+                  >
+                    {templateContent.VorgabenB.map((item, index) => (
+                      <option key={`${templateId}-vb-select-${index}`} value={index}>
+                        #{index + 1}
+                        {item.value.Name ? ` - ${item.value.Name}` : ''}
+                      </option>
+                    ))}
+                  </DbAuswahl>
 
                   <div className="border rounded p-2" key={`${templateId}-vb-${currentIndex}`}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
@@ -358,9 +364,10 @@ export function AdminProfileTemplateContentEditor({
 
                     <div className="raster mb-2 abstand-2">
                       <div>
-                        <label className="form-label small mb-1">Bezeichnung</label>
-                        <input
-                          className="form-control form-control-sm"
+                        <DbFeld
+                          beschriftung="Bezeichnung"
+                          beschriftungZeigen
+                          dicht
                           value={row.value.Name}
                           onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
@@ -401,10 +408,11 @@ export function AdminProfileTemplateContentEditor({
 
                     <div className="raster mb-2 abstand-2">
                       <div className="sp-lg-6">
-                        <label className="form-label small mb-1">Beginn Bereitschaft</label>
-                        <input
+                        <DbFeld
+                          beschriftung="Beginn Bereitschaft"
+                          beschriftungZeigen
+                          dicht
                           type="time"
-                          className="form-control form-control-sm"
                           value={row.value.beginnB.zeit}
                           onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
@@ -421,10 +429,11 @@ export function AdminProfileTemplateContentEditor({
                         />
                       </div>
                       <div className="sp-lg-6">
-                        <label className="form-label small mb-1">Ende Bereitschaft</label>
-                        <input
+                        <DbFeld
+                          beschriftung="Ende Bereitschaft"
+                          beschriftungZeigen
+                          dicht
                           type="time"
-                          className="form-control form-control-sm"
                           value={row.value.endeB.zeit}
                           onChange={e =>
                             onUpdateVorgabenBRow(currentIndex, current => ({
@@ -443,51 +452,52 @@ export function AdminProfileTemplateContentEditor({
                     </div>
 
                     <div className="mb-2">
-                      <label className="form-label small mb-1">Aktive Schichten</label>
+                      <label className="small mb-1">Aktive Schichten</label>
                       <div className="d-flex flex-wrap gap-3">
                         {SCHICHT_OPTIONEN.map(({ typ, label }) => (
-                          <label key={typ} className="m-0">
-                            <input
-                              className="form-check-input me-1"
-                              type="checkbox"
-                              checked={row.value.schichten.includes(typ)}
-                              disabled={typ === 'frueh' || isSaving}
-                              onChange={e => {
-                                const checked = (e.target as HTMLInputElement).checked;
-                                onUpdateVorgabenBRow(currentIndex, current => {
-                                  const schichten = checked
-                                    ? [...current.value.schichten.filter(s => s !== typ), typ]
-                                    : current.value.schichten.filter(s => s !== typ);
-                                  const nacht = schichten.includes('nacht');
-                                  return {
-                                    ...current,
-                                    value: {
-                                      ...current.value,
-                                      schichten,
-                                      nacht,
-                                      ...(nacht
-                                        ? {}
-                                        : {
-                                            beginnN: {
-                                              ...current.value.beginnN,
-                                              tag: current.value.beginnB.tag,
-                                              zeit: current.value.beginnB.zeit,
-                                              Nwoche: false,
-                                            },
-                                            endeN: {
-                                              ...current.value.endeN,
-                                              tag: current.value.endeB.tag,
-                                              zeit: current.value.endeB.zeit,
-                                              Nwoche: current.value.endeB.Nwoche,
-                                            },
-                                          }),
-                                    },
-                                  };
-                                });
-                              }}
-                            />
-                            <span className="form-check-label">{label}</span>
-                          </label>
+                          <div className="db-checkbox m-0" data-size="small" key={typ}>
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={row.value.schichten.includes(typ)}
+                                disabled={typ === 'frueh' || isSaving}
+                                onChange={e => {
+                                  const checked = (e.target as HTMLInputElement).checked;
+                                  onUpdateVorgabenBRow(currentIndex, current => {
+                                    const schichten = checked
+                                      ? [...current.value.schichten.filter(s => s !== typ), typ]
+                                      : current.value.schichten.filter(s => s !== typ);
+                                    const nacht = schichten.includes('nacht');
+                                    return {
+                                      ...current,
+                                      value: {
+                                        ...current.value,
+                                        schichten,
+                                        nacht,
+                                        ...(nacht
+                                          ? {}
+                                          : {
+                                              beginnN: {
+                                                ...current.value.beginnN,
+                                                tag: current.value.beginnB.tag,
+                                                zeit: current.value.beginnB.zeit,
+                                                Nwoche: false,
+                                              },
+                                              endeN: {
+                                                ...current.value.endeN,
+                                                tag: current.value.endeB.tag,
+                                                zeit: current.value.endeB.zeit,
+                                                Nwoche: current.value.endeB.Nwoche,
+                                              },
+                                            }),
+                                      },
+                                    };
+                                  });
+                                }}
+                              />
+                              {label}
+                            </label>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -523,10 +533,11 @@ export function AdminProfileTemplateContentEditor({
 
                         <div className="raster mb-2 abstand-2">
                           <div className="sp-lg-6">
-                            <label className="form-label small mb-1">Beginn Nachtschicht</label>
-                            <input
+                            <DbFeld
+                              beschriftung="Beginn Nachtschicht"
+                              beschriftungZeigen
+                              dicht
                               type="time"
-                              className="form-control form-control-sm"
                               value={row.value.beginnN.zeit}
                               onChange={e =>
                                 onUpdateVorgabenBRow(currentIndex, current => ({
@@ -543,10 +554,11 @@ export function AdminProfileTemplateContentEditor({
                             />
                           </div>
                           <div className="sp-lg-6">
-                            <label className="form-label small mb-1">Ende Nachtschicht</label>
-                            <input
+                            <DbFeld
+                              beschriftung="Ende Nachtschicht"
+                              beschriftungZeigen
+                              dicht
                               type="time"
-                              className="form-control form-control-sm"
                               value={row.value.endeN.zeit}
                               onChange={e =>
                                 onUpdateVorgabenBRow(currentIndex, current => ({
@@ -577,35 +589,37 @@ export function AdminProfileTemplateContentEditor({
       {activeSection === 'Einstellungen' && (
         <div className="border rounded p-2">
           <div className="mb-2">
-            <label className="form-label small mb-1">Sichtbare Bereiche</label>
+            <label className="small mb-1">Sichtbare Bereiche</label>
             <div className="d-flex flex-wrap gap-2">
               {TAB_OPTIONS.map(option => (
-                <label className="m-0" key={`${templateId}-tab-${option.key}`}>
-                  <input
-                    className="form-check-input me-1"
-                    type="checkbox"
-                    checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
-                    onChange={() => onToggleAktivierterTab(option.key)}
-                  />
-                  <span className="form-check-label">{option.label}</span>
-                </label>
+                <div className="db-checkbox m-0" data-size="small" key={`${templateId}-tab-${option.key}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
+                      onChange={() => onToggleAktivierterTab(option.key)}
+                    />
+                    {option.label}
+                  </label>
+                </div>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="form-label small mb-1">Benötigte Zulagen</label>
+            <label className="small mb-1">Benötigte Zulagen</label>
             <div className="d-flex flex-wrap gap-2">
               {ZULAGEN_CATALOG.map(zulage => (
-                <label className="m-0" key={`${templateId}-zulage-${zulage.code}`}>
-                  <input
-                    className="form-check-input me-1"
-                    type="checkbox"
-                    checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
-                    onChange={() => onToggleZulage(zulage.code)}
-                  />
-                  <span className="form-check-label">{zulage.code}</span>
-                </label>
+                <div className="db-checkbox m-0" data-size="small" key={`${templateId}-zulage-${zulage.code}`}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
+                      onChange={() => onToggleZulage(zulage.code)}
+                    />
+                    {zulage.code}
+                  </label>
+                </div>
               ))}
             </div>
           </div>

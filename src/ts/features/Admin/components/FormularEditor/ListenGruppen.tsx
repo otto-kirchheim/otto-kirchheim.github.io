@@ -6,6 +6,7 @@ import {
   zulagenKurztexte,
   type FormularCode,
 } from './datenKatalog';
+import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
   tabelle: TabellenDef;
@@ -63,8 +64,9 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
 
             <div className="raster mb-1 abstand-1">
               <div className="sp-6">
-                <select
-                  className="form-select form-select-sm"
+                <DbAuswahl
+                  beschriftung="Zeilenfeld mit der Liste"
+                  dicht
                   title="Zeilenfeld mit der Liste"
                   value={gruppe.quelle}
                   onChange={e => setzeGruppe(name, { ...gruppe, quelle: (e.target as HTMLSelectElement).value })}
@@ -74,19 +76,23 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
                       {f.label}
                     </option>
                   ))}
-                </select>
+                </DbAuswahl>
               </div>
               <div className="sp-3">
-                <input
-                  className="form-control form-control-sm font-monospace"
+                <DbFeld
+                  beschriftung="Feld im Listeneintrag, das den Schlüssel trägt"
+                  dicht
+                  feldKlasse="font-monospace"
                   title="Feld im Listeneintrag, das den Schlüssel trägt"
                   value={gruppe.schluessel}
                   onChange={e => setzeGruppe(name, { ...gruppe, schluessel: (e.target as HTMLInputElement).value })}
                 />
               </div>
               <div className="sp-3">
-                <input
-                  className="form-control form-control-sm font-monospace"
+                <DbFeld
+                  beschriftung="Feld im Listeneintrag mit dem anzuzeigenden Wert"
+                  dicht
+                  feldKlasse="font-monospace"
                   title="Feld im Listeneintrag mit dem anzuzeigenden Wert"
                   value={gruppe.wert}
                   onChange={e => setzeGruppe(name, { ...gruppe, wert: (e.target as HTMLInputElement).value })}
@@ -94,8 +100,11 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               </div>
             </div>
 
-            <input
-              className="form-control form-control-sm font-monospace mb-1"
+            <DbFeld
+              beschriftung="Schlüssel, durch Komma getrennt"
+              dicht
+              className="mb-1"
+              feldKlasse="font-monospace"
               title="Erlaubte Schlüssel, durch Komma getrennt — diese Reihenfolge bestimmt die Platzvergabe"
               placeholder="Schlüssel, durch Komma getrennt"
               value={(gruppe.auswahl ?? []).join(', ')}
@@ -110,18 +119,23 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
 
             {kategorie && (
               <div>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  checked={kurztexte}
-                  onChange={e =>
-                    setzeGruppe(name, {
-                      ...gruppe,
-                      beschriftungen: (e.target as HTMLInputElement).checked ? zulagenKurztexte(kategorie) : undefined,
-                    })
-                  }
-                />
-                <label className="form-check-label small">Kurztext statt Code als Überschrift</label>
+                <div className="db-checkbox" data-size="small">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={kurztexte}
+                      onChange={e =>
+                        setzeGruppe(name, {
+                          ...gruppe,
+                          beschriftungen: (e.target as HTMLInputElement).checked
+                            ? zulagenKurztexte(kategorie)
+                            : undefined,
+                        })
+                      }
+                    />
+                    Kurztext statt Code als Überschrift
+                  </label>
+                </div>
               </div>
             )}
           </div>

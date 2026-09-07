@@ -20,6 +20,7 @@ import {
   toEditState,
   type TemplateEditState,
 } from './adminProfileTemplatesManagerGemeinsam';
+import { DbFeld } from '@/components';
 
 export function AdminProfileTemplatesManager() {
   const [templates, setTemplates] = useState<BackendProfileTemplate[]>([]);
@@ -390,17 +391,19 @@ export function AdminProfileTemplatesManager() {
                 <div className="p-3 border-top">
                   <div className="raster mb-2 abstand-2">
                     <div className="sp-md-4">
-                      <label className="form-label small fw-semibold mb-1">Code</label>
-                      <input
-                        className="form-control form-control-sm"
+                      <DbFeld
+                        beschriftung="Code"
+                        beschriftungZeigen
+                        dicht
                         value={edit.code}
                         onChange={e => updateEdit(template._id, { code: (e.target as HTMLInputElement).value })}
                       />
                     </div>
                     <div className="sp-md-8">
-                      <label className="form-label small fw-semibold mb-1">Name</label>
-                      <input
-                        className="form-control form-control-sm"
+                      <DbFeld
+                        beschriftung="Name"
+                        beschriftungZeigen
+                        dicht
                         value={edit.name}
                         onChange={e => updateEdit(template._id, { name: (e.target as HTMLInputElement).value })}
                       />
@@ -408,9 +411,10 @@ export function AdminProfileTemplatesManager() {
                   </div>
 
                   <div className="mb-2">
-                    <label className="form-label small fw-semibold mb-1">Beschreibung</label>
-                    <input
-                      className="form-control form-control-sm"
+                    <DbFeld
+                      beschriftung="Beschreibung"
+                      beschriftungZeigen
+                      dicht
                       value={edit.description}
                       onChange={e => updateEdit(template._id, { description: (e.target as HTMLInputElement).value })}
                     />

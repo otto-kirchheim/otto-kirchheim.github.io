@@ -1,4 +1,11 @@
-import { useId, type ChangeEventHandler, type CSSProperties, type ReactNode, type Ref } from 'react';
+import {
+  useId,
+  type CSSProperties,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type Ref,
+  type SelectHTMLAttributes,
+} from 'react';
 
 /**
  * Kompakte Eingabefelder ohne sichtbare Beschriftung (Panels, Zeilen-Editoren, Werkzeugleisten).
@@ -17,13 +24,12 @@ type GemeinsameProps = {
   beschriftung: string;
   beschriftungZeigen?: boolean;
   dicht?: boolean;
+  /** Klasse an der Huelle -- Layout (Breite, Abstand) gehoert hierhin. */
   className?: string;
+  /** Ohne `id` verknuepft `useId()` Label und Feld. */
   id?: string;
-  name?: string;
-  disabled?: boolean;
-  required?: boolean;
-  style?: CSSProperties;
-  title?: string;
+  /** Breite/Abstand gehoeren an die Huelle, damit das Feld sie ausfuellt. */
+  huelleStyle?: CSSProperties;
 };
 
 function huellenAttribute({
@@ -42,25 +48,14 @@ function huellenAttribute({
   };
 }
 
-type DbFeldProps = GemeinsameProps & {
-  type: string;
-  value?: string | number;
-  min?: string | number;
-  max?: string | number;
-  step?: string | number;
-  placeholder?: string;
-  list?: string;
-  readOnly?: boolean;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
-  onBlur?: ChangeEventHandler<HTMLInputElement>;
-  /** Klasse am `<input>` selbst (z.B. `text-center`), nicht an der Huelle. */
-  feldKlasse?: string;
-  /** Ersetzt Bootstraps `is-invalid`: DB faerbt ueber `data-custom-validity`. */
-  ungueltig?: boolean;
-  /** Breite/Abstand gehoeren an die Huelle, damit das Feld sie ausfuellt. */
-  huelleStyle?: CSSProperties;
-  feldRef?: Ref<HTMLInputElement>;
-};
+type DbFeldProps = GemeinsameProps &
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'ref'> & {
+    /** Klasse am `<input>` selbst (z.B. `text-center`), nicht an der Huelle. */
+    feldKlasse?: string;
+    /** Ersetzt Bootstraps `is-invalid`: DB faerbt ueber `data-custom-validity`. */
+    ungueltig?: boolean;
+    feldRef?: Ref<HTMLInputElement>;
+  };
 
 export function DbFeld({
   beschriftung,
@@ -96,12 +91,11 @@ export function DbFeld({
   );
 }
 
-type DbAuswahlProps = GemeinsameProps & {
-  value?: string | number;
-  onChange?: ChangeEventHandler<HTMLSelectElement>;
-  children: ReactNode;
-  huelleStyle?: CSSProperties;
-};
+type DbAuswahlProps = GemeinsameProps &
+  Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'id' | 'ref'> & {
+    children: ReactNode;
+    feldRef?: Ref<HTMLSelectElement>;
+  };
 
 export function DbAuswahl({
   beschriftung,
@@ -111,6 +105,7 @@ export function DbAuswahl({
   id,
   children,
   huelleStyle,
+  feldRef,
   ...feldProps
 }: DbAuswahlProps) {
   const erzeugteId = useId();
@@ -124,7 +119,7 @@ export function DbAuswahl({
       <label htmlFor={feldId}>{beschriftung}</label>
       {/* Die Optionen kommen von der Aufrufstelle; das sieht die statische Regel nicht. */}
       {/* eslint-disable-next-line db-ux/select-requires-options */}
-      <select id={feldId} {...feldProps}>
+      <select ref={feldRef} id={feldId} {...feldProps}>
         {children}
       </select>
     </div>

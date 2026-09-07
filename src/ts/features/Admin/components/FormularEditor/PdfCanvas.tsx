@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { ladePdfjs } from './pdfjsLoader';
+import { DbAuswahl } from '@/components';
 
 // pdfjs liefert `convertToPdfPoint`/`convertToViewportPoint` nicht typisiert genug fuer unsere
 // Zwecke -- eigenes, minimales Interface statt des vollen `PageViewport`-Typs.
@@ -495,17 +496,19 @@ export function PdfCanvas({
         </button>
         <div className="ms-auto d-flex align-items-center gap-1">
           <span className="text-muted">Zoom</span>
-          <select
-            className="form-select form-select-sm py-0 w-auto"
+          <DbAuswahl
+            beschriftung="Zoom"
+            dicht
+            className="py-0 w-auto"
             value={String(zoom)}
-            onChange={e => setZoom(Number((e.target as HTMLSelectElement).value))}
+            onChange={e => setZoom(Number(e.target.value))}
           >
             {ZOOM_STUFEN.map(z => (
               <option key={z} value={String(z)}>
                 {Math.round(z * 100)} %
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </div>
       </div>
       {fehler && <div className="text-danger small mb-1">{fehler}</div>}

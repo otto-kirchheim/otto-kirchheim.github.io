@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { joinOeLevels } from '@/infrastructure/data/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 import type { AdminUserRow } from '../utils/api';
+import { DbFeld } from '@/components';
 
 /** Übersichtstabelle der für die Massenänderung ausgewählten Benutzer mit aktuellen Werten. */
 export function BulkEditUserOverview({
@@ -28,12 +29,12 @@ export function BulkEditUserOverview({
       <div className="d-flex justify-content-between align-items-center mb-1">
         <span className="fw-semibold small">Ausgewählte Benutzer ({selectedUsers.length})</span>
         {selectedUsers.length > 5 && (
-          <input
+          <DbFeld
+            beschriftung="Ausgewählte Benutzer filtern"
+            dicht
             type="search"
-            className="form-control form-control-sm"
-            style={{ maxWidth: '14rem' }}
+            huelleStyle={{ maxWidth: '14rem' }}
             placeholder="Name oder OE filtern…"
-            aria-label="Ausgewählte Benutzer filtern"
             value={filter}
             onChange={e => setFilter((e.target as HTMLInputElement).value)}
           />

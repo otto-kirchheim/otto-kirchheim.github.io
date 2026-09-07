@@ -1,6 +1,7 @@
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import { SCHRIFTARTEN } from './datenKatalog';
 import type { VorlageFontFamilie } from './vorlageFonts';
+import { DbAuswahl } from '@/components';
 
 export const SCHNITTE = [
   { key: 'normal', label: 'Normal' },
@@ -120,17 +121,19 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
       <div className="d-flex flex-wrap align-items-center gap-2 small">
         <label className="d-flex align-items-center gap-1" title="Grundschrift für den gesamten Fließtext">
           <span className="text-muted">Schrift</span>
-          <select
-            className="form-select form-select-sm w-auto"
+          <DbAuswahl
+            beschriftung="Grundschrift"
+            dicht
+            className="w-auto"
             value={basis}
-            onChange={e => setzeBasis((e.target as HTMLSelectElement).value)}
+            onChange={e => setzeBasis(e.target.value)}
           >
             {familienFuer('normal', basis).map(o => (
               <option key={o.wert} value={o.wert}>
                 {o.label}
               </option>
             ))}
-          </select>
+          </DbAuswahl>
         </label>
         {ABWEICHUNGEN.map(schnitt => {
           const gewaehlt = objekt?.[schnitt] ?? '';
@@ -141,10 +144,12 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
               title={`Nur für ${schnittLabel(schnitt)}-Text abweichend (z.B. wenn die Grundschrift diesen Schnitt nicht hat)`}
             >
               <span className="text-muted">{schnittLabel(schnitt)}</span>
-              <select
-                className="form-select form-select-sm w-auto"
+              <DbAuswahl
+                beschriftung={`Schrift für ${schnittLabel(schnitt)}`}
+                dicht
+                className="w-auto"
                 value={gewaehlt}
-                onChange={e => setzeAbweichung(schnitt, (e.target as HTMLSelectElement).value)}
+                onChange={e => setzeAbweichung(schnitt, e.target.value)}
               >
                 <option value="">(wie Schrift)</option>
                 {familienFuer(schnitt, gewaehlt).map(o => (
@@ -152,7 +157,7 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
                     {o.label}
                   </option>
                 ))}
-              </select>
+              </DbAuswahl>
             </label>
           );
         })}
