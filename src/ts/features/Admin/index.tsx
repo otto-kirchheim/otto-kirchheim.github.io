@@ -221,9 +221,11 @@ export default function AdminTab() {
       {capabilitiesLoading && <div className="small text-body-secondary mb-3">Berechtigungen werden geladen...</div>}
 
       {!capabilitiesLoading && !canSeeVorgabenTab && !canSeeTemplatesTab && !canSeeFormulareTab && (
-        <div className="alert alert-secondary mb-3" role="alert">
-          Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder Formular-Vorlagen
-          vergeben.
+        <div className="db-notification mb-3" data-semantic="neutral" role="alert">
+          <span data-area="content">
+            Es sind aktuell keine zusätzlichen Admin-Rechte für VorgabenGeld, Profile-Templates oder Formular-Vorlagen
+            vergeben.
+          </span>
         </div>
       )}
 
@@ -248,14 +250,20 @@ export default function AdminTab() {
           tabIndex={0}
         >
           {!actAsState.active && (
-            <div className="alert alert-secondary border shadow-sm mb-3" role="status" aria-live="polite">
-              <div className="d-flex align-items-start gap-2">
-                <span className="db-icon mt-1" data-icon="house" />
-                <div>
-                  <div className="fw-semibold">Eigene Daten aktiv</div>
-                  <div className="small">Du arbeitest gerade mit deinen eigenen Daten.</div>
+            <div
+              className="db-notification border shadow-sm mb-3"
+              data-semantic="neutral"
+              role="status"
+              aria-live="polite"
+            >
+              <span data-area="content">
+                <div className="d-flex align-items-start gap-2">
+                  <div>
+                    <div className="fw-semibold">Eigene Daten aktiv</div>
+                    <div className="small">Du arbeitest gerade mit deinen eigenen Daten.</div>
+                  </div>
                 </div>
-              </div>
+              </span>
             </div>
           )}
           <AdminUserList isSuperAdmin={isSuperAdmin} />

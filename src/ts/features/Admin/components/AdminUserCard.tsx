@@ -115,7 +115,7 @@ export function AdminUserCard({
               <>
                 <span className="text-body-secondary ms-2">Team:</span>
                 {currentUser.adminForTeamOes.map(oe => (
-                  <span key={oe} className="badge bg-info-subtle text-info-emphasis">
+                  <span key={oe} className="db-tag" data-semantic="informational">
                     {oe}
                   </span>
                 ))}
@@ -125,7 +125,7 @@ export function AdminUserCard({
               <>
                 <span className="text-body-secondary ms-2">Org:</span>
                 {currentUser.adminForOrganizationOes.map(oe => (
-                  <span key={oe} className="badge bg-warning-subtle text-warning-emphasis">
+                  <span key={oe} className="db-tag" data-semantic="warning">
                     {oe}
                   </span>
                 ))}
@@ -286,7 +286,7 @@ export function AdminUserCard({
                   >
                     {isSaving ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-1" role="status" />
+                        <span className="laedt me-1" data-size="small" role="status" />
                         Speichern…
                       </>
                     ) : (

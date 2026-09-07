@@ -218,12 +218,12 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
                 und zum nächsten Bahnhof.
               </p>
               {persValidation.ok ? (
-                <div className="alert alert-success py-2 mb-0" role="status">
-                  Alle Pflichtangaben sind eingetragen.
+                <div className="db-notification py-2 mb-0" data-semantic="successful" role="status">
+                  <span data-area="content">Alle Pflichtangaben sind eingetragen.</span>
                 </div>
               ) : (
-                <div className="alert alert-warning py-2 mb-0" role="status">
-                  Noch offen: {persValidation.offeneFelder.join(', ')}
+                <div className="db-notification py-2 mb-0" data-semantic="warning" role="status">
+                  <span data-area="content">Noch offen: {persValidation.offeneFelder.join(', ')}</span>
                 </div>
               )}
             </>

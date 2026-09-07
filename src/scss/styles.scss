@@ -102,6 +102,34 @@ body {
   --db-icon-font-size: 1rem;
 }
 
+// Ladeanzeige (Ersatz fuer Bootstraps `.spinner-border`): DB hat keine eigene Komponente
+// dafuer, nutzt aber an mehreren Stellen das drehende `circular_arrows`-Symbol.
+.laedt {
+  display: inline-block;
+  animation: laedt-drehung 1.5s linear infinite;
+
+  &::before {
+    display: inline-block;
+    color: var(--db-icon-color, inherit);
+    font-family: var(--db-icon-font-family, var(--db-icon-default-font-family, 'db-ux-default', 'icon-font-fallback'));
+    font-size: var(--db-icon-font-size, 1.5rem);
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    content: 'circular_arrows';
+  }
+}
+
+.laedt[data-size='small'] {
+  --db-icon-font-size: 1rem;
+}
+
+@keyframes laedt-drehung {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 // Knopfgruppe (Ersatz fuer Bootstraps `.btn-group`): eine Reihe mit kleinem Abstand statt
 // zusammengeschobener Knoepfe mit geteilten Rahmen.
 .knopfgruppe {

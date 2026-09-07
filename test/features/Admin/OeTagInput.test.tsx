@@ -44,7 +44,7 @@ describe('OeTagInput', () => {
 
   it('rendert jeden Wert als Badge', () => {
     const container = renderInput({ values: ['V.IW-MI', 'V.IW-N'] });
-    const badges = container.querySelectorAll('.badge');
+    const badges = container.querySelectorAll('.db-tag');
     expect(badges.length).toBe(2);
     expect(badges[0].textContent).toContain('V.IW-MI');
   });
@@ -92,7 +92,7 @@ describe('OeTagInput', () => {
       },
     });
 
-    (container.querySelector('.badge .db-button[data-icon="cross"]') as HTMLButtonElement).click();
+    (container.querySelector('.db-tag .db-button[data-icon="cross"]') as HTMLButtonElement).click();
 
     expect(current).toEqual(['IW']);
   });

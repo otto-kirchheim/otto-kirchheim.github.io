@@ -87,9 +87,8 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
       )}
 
       {content.tipp && (
-        <div className="alert alert-info mb-0 py-2" role="alert">
-          <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="light_bulb" />
-          {content.tipp}
+        <div className="db-notification mb-0 py-2" data-semantic="informational" role="alert">
+          <span data-area="content">{content.tipp}</span>
         </div>
       )}
 

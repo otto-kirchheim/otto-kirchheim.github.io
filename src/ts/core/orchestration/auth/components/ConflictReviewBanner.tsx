@@ -38,31 +38,23 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
 
   return (
     <div className="breit px-2 px-md-3 mt-1">
-      <div className="alert alert-info border-info-subtle shadow-sm mb-0" role="status" aria-live="polite">
-        <div className="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2 gap-sm-3">
-          <div className="d-flex align-items-start gap-2">
-            <span className="db-icon mt-1 mt-sm-0 flex-shrink-0" data-icon="pen" />
-            <div>
-              <div className="fw-semibold">Bitte erst Änderungen überprüfen und speichern</div>
-              <div className="small mt-1">{text}</div>
-            </div>
-          </div>
-          <div className="d-flex justify-content-center align-self-stretch align-self-sm-auto gap-2 flex-shrink-0">
-            <button
-              className="db-button u-min-w-120"
-              data-variant="brand"
-              data-size="small"
-              type="button"
-              disabled={saving}
-              onClick={handleClick}
-            >
-              Übernehmen{' '}
-              {saving && (
-                <span className="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>
-              )}
-            </button>
-          </div>
-        </div>
+      {/* Der Knopf steht als direktes Kind im `close`-Bereich des Meldungsrasters -- innerhalb
+          des Inhalts wuerde DB die Spalte trotzdem freihalten und der Text bliebe schmal. */}
+      <div className="db-notification shadow-sm mb-0" data-semantic="informational" role="status" aria-live="polite">
+        <span data-area="content">
+          <span className="fw-semibold d-block">Bitte erst Änderungen überprüfen und speichern</span>
+          <span className="small">{text}</span>
+        </span>
+        <button
+          className="db-button u-min-w-120"
+          data-variant="brand"
+          data-size="small"
+          type="button"
+          disabled={saving}
+          onClick={handleClick}
+        >
+          Übernehmen {saving && <span className="laedt ms-2" role="status" aria-hidden="true" />}
+        </button>
       </div>
     </div>
   );

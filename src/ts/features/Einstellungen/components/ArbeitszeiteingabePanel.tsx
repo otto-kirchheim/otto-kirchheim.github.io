@@ -290,7 +290,7 @@ export function SchichtSection({
                 onChange={e => setNewConfig(prev => ({ ...prev, ende: e.target.value }))}
               />
               {isOvernightSchicht(newConfig) && (
-                <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
+                <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
                   +1 Tag
                 </span>
               )}
@@ -433,7 +433,7 @@ function ScheduleGroupRow({
           onChange={e => setLocal(prev => ({ ...prev, ende: e.target.value }))}
         />
         {isOvernightSchicht(local) && (
-          <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
+          <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
             +1 Tag
           </span>
         )}
@@ -498,7 +498,7 @@ function ScheduleGroupRow({
           {config.beginn} – {config.ende}
         </span>
         {overnight && (
-          <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
+          <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
             +1 Tag
           </span>
         )}

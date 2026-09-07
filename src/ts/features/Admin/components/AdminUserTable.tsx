@@ -215,7 +215,7 @@ export function AdminUserList() {
       {/* Ladeanzeige */}
       {loading && (
         <div className="text-center py-4">
-          <div className="spinner-border text-primary" role="status">
+          <div className="laedt text-primary" role="status">
             <span className="visually-hidden">Laden…</span>
           </div>
         </div>
@@ -223,8 +223,8 @@ export function AdminUserList() {
 
       {/* Keine Ergebnisse */}
       {!loading && visibleUsers.length === 0 && (
-        <div className="alert alert-secondary text-center" role="alert">
-          Keine Benutzer gefunden.
+        <div className="db-notification text-center" data-semantic="neutral" role="alert">
+          <span data-area="content">Keine Benutzer gefunden.</span>
         </div>
       )}
 
@@ -277,7 +277,7 @@ export function AdminUserList() {
                       <>
                         <span className="text-body-secondary ms-2">Team:</span>
                         {currentUser.adminForTeamOes.map(oe => (
-                          <span key={oe} className="badge bg-info-subtle text-info-emphasis">
+                          <span key={oe} className="db-tag" data-semantic="informational">
                             {oe}
                           </span>
                         ))}
@@ -287,7 +287,7 @@ export function AdminUserList() {
                       <>
                         <span className="text-body-secondary ms-2">Org:</span>
                         {currentUser.adminForOrganizationOes.map(oe => (
-                          <span key={oe} className="badge bg-warning-subtle text-warning-emphasis">
+                          <span key={oe} className="db-tag" data-semantic="warning">
                             {oe}
                           </span>
                         ))}
@@ -364,7 +364,7 @@ export function AdminUserList() {
                           >
                             {isSaving ? (
                               <>
-                                <span className="spinner-border spinner-border-sm me-1" role="status" />
+                                <span className="laedt me-1" data-size="small" role="status" />
                                 Speichern…
                               </>
                             ) : (

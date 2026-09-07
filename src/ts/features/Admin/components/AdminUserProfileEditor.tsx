@@ -325,7 +325,11 @@ export function AdminUserProfileEditor({
         />
       </div>
 
-      {loadError && <div className="alert alert-danger py-2 small">{loadError}</div>}
+      {loadError && (
+        <div className="db-notification py-2 small" data-semantic="critical">
+          <span data-area="content">{loadError}</span>
+        </div>
+      )}
 
       {/* Table */}
       <div className="table-responsive">
@@ -344,7 +348,7 @@ export function AdminUserProfileEditor({
             {loading && (
               <tr>
                 <td colSpan={4} className="text-center py-4">
-                  <div className="spinner-border spinner-border-sm" role="status" />
+                  <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}
@@ -448,7 +452,11 @@ export function AdminUserProfileEditor({
               </div>
 
               <div className="dialog-koerper">
-                {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
+                {edit.saveError && (
+                  <div className="db-notification py-2 small" data-semantic="critical">
+                    <span data-area="content">{edit.saveError}</span>
+                  </div>
+                )}
 
                 <div className="raster abstand-4">
                   {/* Pers Fields */}
@@ -547,9 +555,7 @@ export function AdminUserProfileEditor({
                     <div className="flex-grow-1">
                       <div className="small text-muted mb-1">
                         Passkeys
-                        {edit.passkeysLoading && (
-                          <span className="spinner-border spinner-border-sm ms-2" role="status" />
-                        )}
+                        {edit.passkeysLoading && <span className="laedt ms-2" data-size="small" role="status" />}
                       </div>
                       {edit.passkeys.length === 0 && !edit.passkeysLoading && (
                         <div className="small text-muted">Keine Passkeys</div>
@@ -583,7 +589,7 @@ export function AdminUserProfileEditor({
                 <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
                   {edit.saving ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status" />
+                      <span className="laedt me-1" data-size="small" role="status" />
                       Speichern…
                     </>
                   ) : (

@@ -319,13 +319,19 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           {hasActiveFilter && (
             <div className="mt-2 d-flex flex-wrap gap-2">
               {activeFilter.userId && (
-                <span className="badge bg-primary rounded-pill">
+                <span className="db-tag" data-semantic="informational" data-emphasis="strong">
                   User: {userNameMap[activeFilter.userId] ?? truncateId(activeFilter.userId)}
                 </span>
               )}
-              {activeFilter.jahr && <span className="badge bg-secondary rounded-pill">Jahr: {activeFilter.jahr}</span>}
+              {activeFilter.jahr && (
+                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                  Jahr: {activeFilter.jahr}
+                </span>
+              )}
               {activeFilter.monat && (
-                <span className="badge bg-secondary rounded-pill">Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}</span>
+                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                  Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}
+                </span>
               )}
             </div>
           )}
@@ -333,18 +339,19 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       </div>
 
       {loadError && (
-        <div className="alert alert-danger d-flex align-items-center gap-2 py-2">
-          <span className="db-icon small" data-icon="exclamation_mark_circle" />
-          {loadError}
-          <button
-            className="db-button ms-auto"
-            data-variant="outlined"
-            data-color="critical"
-            data-size="small"
-            onClick={() => setLoadError(null)}
-          >
-            ×
-          </button>
+        <div className="db-notification d-flex align-items-center gap-2 py-2" data-semantic="critical">
+          <span data-area="content">
+            {loadError}
+            <button
+              className="db-button ms-auto"
+              data-variant="outlined"
+              data-color="critical"
+              data-size="small"
+              onClick={() => setLoadError(null)}
+            >
+              ×
+            </button>
+          </span>
         </div>
       )}
 
@@ -371,7 +378,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             {loading && (
               <tr>
                 <td colSpan={totalCols} className="text-center py-4">
-                  <div className="spinner-border spinner-border-sm" role="status" />
+                  <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}

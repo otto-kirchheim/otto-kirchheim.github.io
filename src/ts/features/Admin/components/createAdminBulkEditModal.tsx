@@ -305,7 +305,7 @@ export function AdminBulkEditModal({
           disabled={busy}
           onClick={() => void runPreview()}
         >
-          {busy && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
+          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
           Vorschau
         </button>
       )}
@@ -318,7 +318,7 @@ export function AdminBulkEditModal({
           disabled={busy}
           onClick={() => void runApply()}
         >
-          {busy && <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />}
+          {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
           {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
         </button>
       )}

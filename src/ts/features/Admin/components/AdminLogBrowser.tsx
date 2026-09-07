@@ -112,7 +112,11 @@ export function AdminLogBrowser() {
         </button>
       </div>
 
-      {loadError && <div className="alert alert-danger py-2 small">{loadError}</div>}
+      {loadError && (
+        <div className="db-notification py-2 small" data-semantic="critical">
+          <span data-area="content">{loadError}</span>
+        </div>
+      )}
 
       <div className="table-responsive">
         <table className="table table-sm table-hover align-middle mb-0">
@@ -130,7 +134,7 @@ export function AdminLogBrowser() {
             {loading && (
               <tr>
                 <td colSpan={6} className="text-center py-4">
-                  <div className="spinner-border spinner-border-sm" role="status" />
+                  <div className="laedt" data-size="small" role="status" />
                 </td>
               </tr>
             )}

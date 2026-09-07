@@ -19,7 +19,7 @@ describe('MyDivModal', () => {
     expect(container.querySelector('.db-drawer-header h2')?.textContent).toBe('Test Titel');
     expect(container.querySelector('.my-child')?.textContent).toBe('Kind');
     expect(container.querySelector('.dialog-fuss button[type="submit"]')?.textContent).toBe('Hinzufügen');
-    expect(container.querySelector('.alert-danger')).toBeNull();
+    expect(container.querySelector('.db-notification[data-semantic="critical"]')).toBeNull();
   });
 
   it('should mark the requested width on the dialog body when size is provided', () => {
@@ -28,13 +28,13 @@ describe('MyDivModal', () => {
     expect(container.querySelector('.dialog-rumpf')?.getAttribute('data-breite')).toBe('lg');
   });
 
-  it('should render the errorMessage alert with icon when errorMessage is provided', () => {
+  it('should render the errorMessage as a critical notification when errorMessage is provided', () => {
     const container = renderMyDivModal({ title: 'Titel', errorMessage: 'Etwas ist schiefgelaufen' });
 
-    const alert = container.querySelector('.alert-danger');
-    expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain('Etwas ist schiefgelaufen');
-    expect(alert?.querySelector('.db-icon')?.getAttribute('data-icon')).toBe('exclamation_mark_circle');
+    // DB faerbt die Meldung und setzt ihr Symbol ueber `data-semantic`.
+    const meldung = container.querySelector('.db-notification');
+    expect(meldung?.getAttribute('data-semantic')).toBe('critical');
+    expect(meldung?.querySelector('[data-area="content"]')?.textContent).toContain('Etwas ist schiefgelaufen');
   });
 
   it('should pass helpContext through to the default MyModalHeader', () => {

@@ -39,7 +39,12 @@ export function OeTagInput({
       <div className="d-flex flex-wrap gap-1 mb-1">
         {values.length === 0 && <span className="text-body-secondary small fst-italic">Keine</span>}
         {values.map((oe, index) => (
-          <span key={`${oe}-${index}`} className="badge bg-primary d-inline-flex align-items-center gap-1 py-1 px-2">
+          <span
+            key={`${oe}-${index}`}
+            className="db-tag d-inline-flex align-items-center gap-1 py-1 px-2"
+            data-semantic="informational"
+            data-emphasis="strong"
+          >
             {oe}
             {!disabled && (
               <button

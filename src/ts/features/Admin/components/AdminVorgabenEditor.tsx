@@ -251,7 +251,11 @@ export function AdminVorgabenEditor() {
       </div>
 
       <div className="d-flex flex-column gap-3">
-        {monthEntries.length === 0 && <div className="alert alert-secondary mb-0">Keine Monatswerte vorhanden.</div>}
+        {monthEntries.length === 0 && (
+          <div className="db-notification mb-0" data-semantic="neutral">
+            <span data-area="content">Keine Monatswerte vorhanden.</span>
+          </div>
+        )}
 
         {monthEntries.map((entry, index) => (
           <div key={`${entry.key}-${index}`} className="border rounded p-3">

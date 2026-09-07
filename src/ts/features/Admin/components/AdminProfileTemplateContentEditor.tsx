@@ -311,9 +311,15 @@ export function AdminProfileTemplateContentEditor({
                   <div className="border rounded p-2" key={`${templateId}-vb-${currentIndex}`}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <strong className="small d-flex align-items-center gap-2">
-                        <span className="badge text-bg-secondary">#{currentIndex + 1}</span>
+                        <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                          #{currentIndex + 1}
+                        </span>
                         {row.value.Name ? ` - ${row.value.Name}` : ''}
-                        {row.value.standard && <span className="badge text-bg-success">Standard</span>}
+                        {row.value.standard && (
+                          <span className="db-tag" data-semantic="successful" data-emphasis="strong">
+                            Standard
+                          </span>
+                        )}
                       </strong>
                       <div className="d-flex gap-1">
                         <button

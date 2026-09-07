@@ -74,7 +74,11 @@ export function AdminResourceEditModal({
         </div>
 
         <div className="dialog-koerper">
-          {edit.saveError && <div className="alert alert-danger py-2 small">{edit.saveError}</div>}
+          {edit.saveError && (
+            <div className="db-notification py-2 small" data-semantic="critical">
+              <span data-area="content">{edit.saveError}</span>
+            </div>
+          )}
 
           {Object.entries(edit.values).map(([key, val]) => {
             const immutable = IMMUTABLE_FIELDS.has(key);
@@ -100,7 +104,12 @@ export function AdminResourceEditModal({
                     <span className="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
                   )}
                   {isNull && !disabled && !isUserRef && (
-                    <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '0.65em' }}>
+                    <span
+                      className="db-tag text-dark ms-1"
+                      data-semantic="warning"
+                      data-emphasis="strong"
+                      style={{ fontSize: '0.65em' }}
+                    >
                       leer
                     </span>
                   )}
@@ -300,7 +309,7 @@ export function AdminResourceEditModal({
           <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
             {edit.saving ? (
               <>
-                <span className="spinner-border spinner-border-sm me-1" role="status" />
+                <span className="laedt me-1" data-size="small" role="status" />
                 Speichern…
               </>
             ) : (

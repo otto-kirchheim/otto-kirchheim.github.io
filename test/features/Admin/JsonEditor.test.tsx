@@ -19,7 +19,7 @@ function header(container: HTMLDivElement): HTMLDivElement {
 }
 
 function badge(container: HTMLDivElement): HTMLSpanElement | null {
-  return container.querySelector('.badge');
+  return container.querySelector('.db-tag');
 }
 
 async function click(el: Element): Promise<void> {

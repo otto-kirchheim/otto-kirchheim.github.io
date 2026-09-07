@@ -87,7 +87,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
+        <div className="laedt text-primary" role="status">
           <span className="visually-hidden">Wird geladen…</span>
         </div>
       </div>
@@ -96,18 +96,19 @@ export function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="alert alert-danger d-flex align-items-center gap-2">
-        <span className="db-icon" data-icon="exclamation_mark_circle" />
-        <span>{error}</span>
-        <button
-          className="db-button ms-auto"
-          data-variant="outlined"
-          data-color="critical"
-          data-size="small"
-          onClick={load}
-        >
-          Neu laden
-        </button>
+      <div className="db-notification d-flex align-items-center gap-2" data-semantic="critical">
+        <span data-area="content">
+          <span>{error}</span>
+          <button
+            className="db-button ms-auto"
+            data-variant="outlined"
+            data-color="critical"
+            data-size="small"
+            onClick={load}
+          >
+            Neu laden
+          </button>
+        </span>
       </div>
     );
   }
@@ -173,7 +174,9 @@ export function AdminDashboard() {
               {Object.entries(stats.users.byRole).map(([role, count]) => (
                 <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
                   <span className="small">{ROLE_LABELS[role] ?? role}</span>
-                  <span className="badge bg-secondary rounded-pill">{count}</span>
+                  <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                    {count}
+                  </span>
                 </div>
               ))}
             </div>
@@ -204,9 +207,15 @@ export function AdminDashboard() {
                 <div key={label} className="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
                   <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>
                     {label}
-                    {growth > 0 && <span className="badge bg-success-subtle text-success ms-1">+{growth}</span>}
+                    {growth > 0 && (
+                      <span className="db-tag text-success ms-1" data-semantic="successful">
+                        +{growth}
+                      </span>
+                    )}
                   </span>
-                  <span className="badge bg-primary rounded-pill flex-shrink-0">{count.toLocaleString()}</span>
+                  <span className="db-tag flex-shrink-0" data-semantic="informational" data-emphasis="strong">
+                    {count.toLocaleString()}
+                  </span>
                 </div>
               ))}
               <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
@@ -232,7 +241,9 @@ export function AdminDashboard() {
                     <span className={`db-icon ${color} db-font-size-sm`} data-icon={icon} />
                     {label}
                   </span>
-                  <span className="badge bg-secondary rounded-pill">{count}</span>
+                  <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                    {count}
+                  </span>
                 </div>
               ))}
             </div>

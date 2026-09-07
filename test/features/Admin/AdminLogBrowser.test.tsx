@@ -51,7 +51,7 @@ describe('AdminLogBrowser', () => {
     const container = renderBrowser();
     await flush(1);
 
-    expect(container.querySelector('.spinner-border')).not.toBeNull();
+    expect(container.querySelector('.laedt')).not.toBeNull();
   });
 
   it('zeigt "Keine Log-Einträge" bei leerem Ergebnis', async () => {
@@ -112,7 +112,7 @@ describe('AdminLogBrowser', () => {
     const container = renderBrowser();
     await flush();
 
-    expect(container.querySelector('.alert-danger')?.textContent).toBe('Server nicht erreichbar');
+    expect(container.querySelector('.db-notification[data-semantic="critical"]')?.textContent).toBe('Server nicht erreichbar');
   });
 
   it('klappt die Payload-Details auf und wieder zu', async () => {

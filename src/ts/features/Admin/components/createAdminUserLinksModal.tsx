@@ -115,7 +115,7 @@ function LinkSection({
             >
               {loading ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" />
+                  <span className="laedt me-1" data-size="small" role="status" />
                   Erzeugen…
                 </>
               ) : (

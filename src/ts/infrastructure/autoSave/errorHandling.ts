@@ -73,7 +73,7 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
       <span class="db-icon text-danger flex-shrink-0" data-icon="exclamation_mark_circle" style="font-size:1.1rem;margin-top:2px" aria-hidden="true"></span>
       <div class="flex-grow-1">
         <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-          <span class="badge text-bg-danger">${escapeHtml(opLabel(err.operation))}</span>
+          <span class="db-tag" data-semantic="critical" data-emphasis="strong">${escapeHtml(opLabel(err.operation))}</span>
           <span class="text-body-secondary small">${escapeHtml(rowDesc)}</span>
         </div>
         <div class="text-danger small">${escapeHtml(err.message)}</div>
@@ -117,8 +117,8 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
       <div class="dialog-koerper">
         <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
         <ul class="list-group list-group-flush">${itemsHtml}</ul>
-        <div class="alert alert-info mt-3 mb-0 py-2 small">
-          Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.
+        <div class="db-notification mt-3 mb-0 py-2 small" data-semantic="informational">
+          <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
         </div>
       </div>
       <div class="dialog-fuss">

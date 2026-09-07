@@ -75,7 +75,12 @@ const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, tim
     {dateEl}
     {timeEl}
     {berechnet ? (
-      <span className="badge text-bg-light border berechnet-badge flex-shrink-0" style={{ fontSize: '0.6rem' }}>
+      <span
+        className="db-tag border berechnet-badge flex-shrink-0"
+        data-semantic="neutral"
+        data-emphasis="strong"
+        style={{ fontSize: '0.6rem' }}
+      >
         berechnet
       </span>
     ) : null}

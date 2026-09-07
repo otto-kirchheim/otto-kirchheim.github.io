@@ -515,7 +515,11 @@ export function PdfCanvas({
       {scharfGeschaltet && (
         <div className="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
           <span>{ziehHinweis()}</span>
-          {liveAnzeige() && <span className="badge text-bg-primary font-monospace">{liveAnzeige()}</span>}
+          {liveAnzeige() && (
+            <span className="db-tag font-monospace" data-semantic="informational" data-emphasis="strong">
+              {liveAnzeige()}
+            </span>
+          )}
         </div>
       )}
       {messModus && (

@@ -19,9 +19,8 @@ const MyFormModal: FC<TMyModal<HTMLFormElement>> = ({
   <form ref={myRef} onSubmit={onSubmit} className="dialog-rumpf" data-breite={size}>
     {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
     {errorMessage && (
-      <div className="alert alert-danger mx-3 mt-3 mb-0 py-2" role="alert">
-        <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="exclamation_mark_circle" />
-        {errorMessage}
+      <div className="db-notification mx-3 mt-3 mb-0 py-2" data-semantic="critical" role="alert">
+        <span data-area="content">{errorMessage}</span>
       </div>
     )}
     {children}

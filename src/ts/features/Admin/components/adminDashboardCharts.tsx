@@ -281,7 +281,7 @@ export function MemoryCard({
               title="Manuellen Heap-Snapshot jetzt speichern"
             >
               {snapping ? (
-                <span className="spinner-border spinner-border-sm" />
+                <span className="laedt" data-size="small" />
               ) : (
                 <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
               )}
@@ -348,7 +348,7 @@ export function MemoryCard({
 
         {loading && !heap ? (
           <div className="text-center py-3">
-            <span className="spinner-border spinner-border-sm text-primary" />
+            <span className="laedt text-primary" data-size="small" />
           </div>
         ) : (
           <>
@@ -357,7 +357,7 @@ export function MemoryCard({
               <div className="small text-body-secondary mb-2">
                 <div className="mb-1">
                   {cur.environment && (
-                    <span className="badge" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
+                    <span className="db-tag" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
                       {ENV_LABELS[cur.environment]}
                     </span>
                   )}
@@ -437,7 +437,7 @@ export function MemoryCard({
                           </span>
                           {p.environment && (
                             <span
-                              className="badge ms-auto"
+                              className="db-tag ms-auto"
                               style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
                             >
                               {ENV_LABELS[p.environment].split(' ')[0]}
