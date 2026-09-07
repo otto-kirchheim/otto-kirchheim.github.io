@@ -54,24 +54,21 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
   };
 
   return (
-    <div className="">
-      <label className="form-label fw-semibold small text-uppercase text-muted mb-1">
-        Zeiten je Wochentag überschreiben (optional)
-      </label>
+    <div>
+      <p className="fw-semibold small text-uppercase text-muted mb-1">Zeiten je Wochentag überschreiben (optional)</p>
       {overridable.map(typ => {
         const base = aZ?.[typ];
         const enabled = overrides[typ] !== undefined;
         return (
           <div key={typ} className="border rounded p-2 mb-2">
-            <div className="form-check form-switch mb-1">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`override-${typ}`}
-                checked={enabled}
-                onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
-              />
-              <label className="form-check-label" htmlFor={`override-${typ}`}>
+            <div className="db-checkbox mb-1" data-size="small">
+              <label htmlFor={`override-${typ}`}>
+                <input
+                  type="checkbox"
+                  id={`override-${typ}`}
+                  checked={enabled}
+                  onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
+                />
                 {SCHICHT_LABELS[typ]} – eigene Zeiten
               </label>
             </div>

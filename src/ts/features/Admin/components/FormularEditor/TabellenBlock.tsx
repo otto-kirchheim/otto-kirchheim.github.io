@@ -149,7 +149,7 @@ export function TabellenBlock({
           </select>
         </div>
         <div className="sp-5">
-          <div className="form-check">
+          <div>
             <input
               className="form-check-input"
               type="checkbox"
@@ -184,7 +184,7 @@ export function TabellenBlock({
           {filterWerte.length > 0 ? (
             <div className="d-flex flex-wrap gap-2">
               {filterWerte.map(wert => (
-                <div key={wert} className="form-check">
+                <div key={wert}>
                   <input
                     className="form-check-input"
                     type="checkbox"
@@ -246,7 +246,7 @@ export function TabellenBlock({
       <div className="d-flex align-items-center gap-2 mb-1">
         <span className="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
         {bereich && (
-          <div className="form-check mb-0">
+          <div className="mb-0">
             <input
               className="form-check-input"
               type="checkbox"
@@ -384,7 +384,7 @@ export function TabellenBlock({
       <div className="d-flex align-items-center gap-2 mb-1">
         <span className="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>
         {bereich && (
-          <div className="form-check mb-0">
+          <div className="mb-0">
             <input
               className="form-check-input"
               type="checkbox"

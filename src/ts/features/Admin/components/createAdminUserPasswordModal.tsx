@@ -11,7 +11,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
   const modal = showModal(
     <MyFormModal myRef={ref} title={`Passwort setzen: ${userName}`} submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="">
+        <div>
           <p className="small text-body-secondary mb-0">
             Das Passwort wird direkt für diesen Benutzer gesetzt. Der Benutzer muss sich danach mit dem neuen Passwort
             anmelden.
@@ -19,7 +19,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
         </div>
         <MyInput
           myRef={passwortRef}
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="adminUserPasswordNew"
@@ -37,7 +37,7 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
         </MyInput>
         <PasswordStrengthMeter passwordInputRef={passwortRef} />
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="adminUserPasswordRepeat"

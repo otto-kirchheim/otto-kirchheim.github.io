@@ -12,7 +12,7 @@ export default function createModalChangePassword(): void {
     <MyFormModal myRef={ref} title="Passwort Ändern" submitText="Speichern" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="PasswortAlt"
@@ -26,7 +26,7 @@ export default function createModalChangePassword(): void {
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="PasswortNeu"
@@ -47,7 +47,7 @@ export default function createModalChangePassword(): void {
             </MyInput>
             <PasswordStrengthMeter passwordInputRef={passwortRef} />
             <MyInput
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="PasswortNeu2"
@@ -79,7 +79,6 @@ export default function createModalChangePassword(): void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
-      form.classList.add('was-validated');
       if (form.checkValidity && !form.checkValidity()) return;
       checkPasswort(modal);
     };

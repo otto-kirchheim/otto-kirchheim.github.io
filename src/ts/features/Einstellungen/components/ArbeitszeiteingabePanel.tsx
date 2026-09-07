@@ -1,5 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
+import { DbFeld } from '@/components';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
 import { setArbeitszeitPanelState } from './arbeitszeitPanelState';
@@ -75,19 +76,15 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
 
 function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: string) => void }): JSX.Element {
   return (
-    <div className="input-group">
-      <span className="db-icon input-group-text db-font-size-lg" data-icon="car" />
-      <div className="form-floating">
-        <input
-          type="time"
-          id="fahrzeit"
-          className="form-control"
-          value={value}
-          onChange={e => onChange((e.target as HTMLInputElement).value)}
-          required
-        />
-        <label htmlFor="fahrzeit">Fahrzeit Wohnung / Arbeitsort</label>
-      </div>
+    <div className="db-input" data-icon="car">
+      <label htmlFor="fahrzeit">Fahrzeit Wohnung / Arbeitsort</label>
+      <input
+        type="time"
+        id="fahrzeit"
+        value={value}
+        onChange={e => onChange((e.target as HTMLInputElement).value)}
+        required
+      />
     </div>
   );
 }
@@ -124,15 +121,9 @@ function OptionalSchichtSection({
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">{title}</h5>
-        <div className="form-check form-switch ms-2 mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={enabled}
-            onChange={handleToggle}
-            id={`toggle-${title}`}
-          />
-          <label className="form-check-label" htmlFor={`toggle-${title}`}>
+        <div className="db-switch ms-2" data-size="small">
+          <label htmlFor={`toggle-${title}`}>
+            <input type="checkbox" role="switch" checked={enabled} onChange={handleToggle} id={`toggle-${title}`} />
             {enabled ? 'aktiv' : 'inaktiv'}
           </label>
         </div>
@@ -281,20 +272,22 @@ export function SchichtSection({
               ))}
             </div>
             <div className="d-flex align-items-center gap-2 flex-wrap">
-              <input
+              <DbFeld
                 type="time"
-                className="form-control form-control-sm"
-                style={{ width: '7rem' }}
+                beschriftung="Beginn"
+                dicht
+                huelleStyle={{ width: '7rem' }}
                 value={newConfig.beginn}
-                onChange={e => setNewConfig(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
+                onChange={e => setNewConfig(prev => ({ ...prev, beginn: e.target.value }))}
               />
               <span>–</span>
-              <input
+              <DbFeld
                 type="time"
-                className="form-control form-control-sm"
-                style={{ width: '7rem' }}
+                beschriftung="Ende"
+                dicht
+                huelleStyle={{ width: '7rem' }}
                 value={newConfig.ende}
-                onChange={e => setNewConfig(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
+                onChange={e => setNewConfig(prev => ({ ...prev, ende: e.target.value }))}
               />
               {isOvernightSchicht(newConfig) && (
                 <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
@@ -302,16 +295,16 @@ export function SchichtSection({
                 </span>
               )}
               <div className="d-flex align-items-center gap-1">
-                <input
+                <DbFeld
                   type="number"
-                  className="form-control form-control-sm text-center"
-                  style={{ width: '4rem' }}
+                  beschriftung="Pause in Minuten"
+                  dicht
+                  feldKlasse="text-center"
+                  huelleStyle={{ width: '4rem' }}
                   value={newConfig.pause}
                   min={0}
                   step={5}
-                  onChange={e =>
-                    setNewConfig(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))
-                  }
+                  onChange={e => setNewConfig(prev => ({ ...prev, pause: Number(e.target.value) }))}
                 />
                 <span className="text-muted small">min</span>
               </div>
@@ -422,20 +415,22 @@ function ScheduleGroupRow({
         <span className="fw-medium" style={{ minWidth: '7rem' }}>
           {dayLabel}
         </span>
-        <input
+        <DbFeld
           type="time"
-          className="form-control form-control-sm"
-          style={{ width: '7rem' }}
+          beschriftung="Beginn"
+          dicht
+          huelleStyle={{ width: '7rem' }}
           value={local.beginn}
-          onChange={e => setLocal(prev => ({ ...prev, beginn: (e.target as HTMLInputElement).value }))}
+          onChange={e => setLocal(prev => ({ ...prev, beginn: e.target.value }))}
         />
         <span>–</span>
-        <input
+        <DbFeld
           type="time"
-          className="form-control form-control-sm"
-          style={{ width: '7rem' }}
+          beschriftung="Ende"
+          dicht
+          huelleStyle={{ width: '7rem' }}
           value={local.ende}
-          onChange={e => setLocal(prev => ({ ...prev, ende: (e.target as HTMLInputElement).value }))}
+          onChange={e => setLocal(prev => ({ ...prev, ende: e.target.value }))}
         />
         {isOvernightSchicht(local) && (
           <span className="badge text-bg-secondary" style={{ fontSize: '0.65rem' }}>
@@ -443,14 +438,16 @@ function ScheduleGroupRow({
           </span>
         )}
         <div className="d-flex align-items-center gap-1">
-          <input
+          <DbFeld
             type="number"
-            className="form-control form-control-sm text-center"
-            style={{ width: '4rem' }}
+            beschriftung="Pause in Minuten"
+            dicht
+            feldKlasse="text-center"
+            huelleStyle={{ width: '4rem' }}
             value={local.pause}
             min={0}
             step={5}
-            onChange={e => setLocal(prev => ({ ...prev, pause: Number((e.target as HTMLInputElement).value) }))}
+            onChange={e => setLocal(prev => ({ ...prev, pause: Number(e.target.value) }))}
           />
           <span className="text-muted small">min</span>
         </div>
@@ -539,45 +536,49 @@ function SonderSection({
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">Sonderschicht</h5>
-        <div className="form-check form-switch ms-2 mb-0">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={enabled}
-            onChange={() => onChange({ ...sonder, aktiv: !enabled })}
-            id="toggle-sonder"
-          />
-          <label className="form-check-label" htmlFor="toggle-sonder">
+        <div className="db-switch ms-2" data-size="small">
+          <label htmlFor="toggle-sonder">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={enabled}
+              onChange={() => onChange({ ...sonder, aktiv: !enabled })}
+              id="toggle-sonder"
+            />
             {enabled ? 'aktiv' : 'inaktiv'}
           </label>
         </div>
       </div>
       {enabled && (
         <div className="d-flex align-items-center gap-2 flex-wrap">
-          <input
+          <DbFeld
             type="time"
-            className="form-control form-control-sm"
-            style={{ width: '7rem' }}
+            beschriftung="Beginn"
+            dicht
+            huelleStyle={{ width: '7rem' }}
             value={sonder.beginn}
-            onChange={e => update({ beginn: (e.target as HTMLInputElement).value })}
+            onChange={e => update({ beginn: e.target.value })}
           />
           <span>–</span>
-          <input
+          <DbFeld
             type="time"
-            className="form-control form-control-sm"
-            style={{ width: '7rem' }}
+            beschriftung="Ende"
+            dicht
+            huelleStyle={{ width: '7rem' }}
             value={sonder.ende}
-            onChange={e => update({ ende: (e.target as HTMLInputElement).value })}
+            onChange={e => update({ ende: e.target.value })}
           />
           <div className="d-flex align-items-center gap-1">
-            <input
+            <DbFeld
               type="number"
-              className="form-control form-control-sm text-center"
-              style={{ width: '4rem' }}
+              beschriftung="Pause in Minuten"
+              dicht
+              feldKlasse="text-center"
+              huelleStyle={{ width: '4rem' }}
               value={sonder.pause}
               min={0}
               step={5}
-              onChange={e => update({ pause: Number((e.target as HTMLInputElement).value) })}
+              onChange={e => update({ pause: Number(e.target.value) })}
             />
             <span className="text-muted small">min</span>
           </div>

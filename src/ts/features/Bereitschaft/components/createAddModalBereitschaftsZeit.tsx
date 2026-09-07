@@ -1,7 +1,7 @@
 import { createRef, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
-import { MyCheckbox, MyFormModal, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
+import { DbFeld, MyCheckbox, MyFormModal, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBZ, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -21,13 +21,15 @@ import { BereitschaftOverridePanel } from './BereitschaftOverridePanel';
 
 // Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum manuell anpassen" editierbar.
 const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
-  <input
+  <DbFeld
     type="date"
     id={id}
+    beschriftung="Datum"
+    dicht
     required
     disabled
-    className="form-control form-control-sm flex-grow-1"
-    style={{ minWidth: 0, maxWidth: '10rem' }}
+    className="flex-grow-1"
+    huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
     min={min.format('YYYY-MM-DD')}
     max={max.format('YYYY-MM-DD')}
     value={date.format('YYYY-MM-DD')}
@@ -39,24 +41,27 @@ const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs,
 // Override-Panel, da auch die Berechnung die Nacht-Blöcke daraus ableitet). Wert wird von
 // applyBereitschaftsVorgabe/updateBereitschaftsDatum gesetzt und von submitBereitschaftsZeiten gelesen.
 const createTimeInputElement = (id: string, name: string, required = false) => (
-  <input
+  <DbFeld
     type="time"
     id={id}
     name={name}
-    aria-label={name}
+    beschriftung={name}
+    dicht
     required={required}
     disabled
-    className="form-control form-control-sm flex-shrink-0"
-    style={{ width: '6.5rem' }}
+    className="flex-shrink-0"
+    huelleStyle={{ width: '6.5rem' }}
   />
 );
 
 const createSonderDateInputElement = (id: string, value: string) => (
-  <input
+  <DbFeld
     type="date"
     id={id}
-    className="form-control form-control-sm flex-grow-1"
-    style={{ minWidth: 0, maxWidth: '10rem' }}
+    beschriftung="Datum"
+    dicht
+    className="flex-grow-1"
+    huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
     value={value}
   />
 );
@@ -113,7 +118,7 @@ export default function createAddModalBereitschaftsZeit(): void {
     return (
       <MySelect
         myRef={ref}
-        className="form-floating pb-3"
+        className="pb-3"
         id="vorgabeB"
         title="Auswahl Bereitschaft"
         value={auswahl}
@@ -164,13 +169,15 @@ export default function createAddModalBereitschaftsZeit(): void {
       updateBereitschaftsDatum(modal, effektiveVorgabe(), datum);
     };
     return (
-      <input
-        ref={ref}
+      <DbFeld
+        feldRef={ref}
         type="date"
         id="bA"
+        beschriftung="Datum"
+        dicht
         required
-        className="form-control form-control-sm flex-grow-1"
-        style={{ minWidth: 0, maxWidth: '10rem' }}
+        className="flex-grow-1"
+        huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
         value={datum.format('YYYY-MM-DD')}
@@ -189,9 +196,9 @@ export default function createAddModalBereitschaftsZeit(): void {
       <MyModalBody>
         {vorgabenB_Select()}
 
-        <div className="">
+        <div>
           <MyCheckbox
-            className="form-check form-switch bereitschaft"
+            className="bereitschaft"
             id="eigen"
             changeHandler={() => {
               toggleBereitschaftsEigeneWerte(modal, effektiveVorgabe(), datum);
@@ -225,9 +232,9 @@ export default function createAddModalBereitschaftsZeit(): void {
         </div>
 
         {spaetVerfuegbar && (
-          <div className="">
+          <div>
             <MyCheckbox
-              className="form-check form-switch bereitschaft"
+              className="bereitschaft"
               id="spaet"
               checked={vorgabenB[auswahl].schichten?.includes('spaet') ?? false}
             >
@@ -257,9 +264,9 @@ export default function createAddModalBereitschaftsZeit(): void {
         )}
 
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
-          <div className="">
+          <div>
             <MyCheckbox
-              className="form-check form-switch bereitschaft"
+              className="bereitschaft"
               id="sonder"
               checked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
               changeHandler={() => {
@@ -294,9 +301,9 @@ export default function createAddModalBereitschaftsZeit(): void {
           </div>
         )}
 
-        <div className="">
+        <div>
           <MyCheckbox
-            className="form-check form-switch bereitschaft"
+            className="bereitschaft"
             id="nacht"
             checked={
               vorgabenB[auswahl].schichten ? vorgabenB[auswahl].schichten!.includes('nacht') : vorgabenB[auswahl].nacht

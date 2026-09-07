@@ -148,7 +148,7 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
     endSlot === null ? `${getSlotLabel(startSlot)} -> ...` : `${getSlotLabel(startSlot)} -> ${getSlotLabel(endSlot)}`;
 
   return (
-    <div className="">
+    <div>
       <div className="d-flex flex-wrap gap-2 align-items-baseline mb-2">
         <span className="fw-semibold">{label}</span>
         <span className="small text-body-secondary">Auswahl: {inRangeText}</span>
@@ -205,14 +205,7 @@ const createNameElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgaben
   const value: string = row instanceof Row ? (row.cells[column.name] as string) : '';
 
   return (
-    <MyInput
-      divClass="form-floating col-12"
-      required
-      type={column.type}
-      id={column.name}
-      name={column.title}
-      value={value}
-    >
+    <MyInput divClass="sp-12" required type={column.type} id={column.name} name={column.title} value={value}>
       {column.title}
     </MyInput>
   );
@@ -227,8 +220,8 @@ const createcheckboxElement = (
   const isChecked: boolean = row instanceof Row ? (row.cells?.[column.name] as boolean) : false;
 
   return (
-    <div className="">
-      <MyCheckbox className="form-check form-switch" id={column.name} checked={isChecked}>
+    <div>
+      <MyCheckbox id={column.name} checked={isChecked}>
         {column.title}
       </MyCheckbox>
     </div>
@@ -315,25 +308,24 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
 
   return (
     <Fragment>
-      <div className="">
-        <label className="form-label fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</label>
+      <div>
+        <p className="fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</p>
         <div className="d-flex flex-wrap gap-3">
-          <div className="form-check">
-            <input className="form-check-input" type="checkbox" id="schicht-frueh" checked disabled />
-            <label className="form-check-label" htmlFor="schicht-frueh">
+          <div className="db-checkbox" data-size="small">
+            <label htmlFor="schicht-frueh">
+              <input type="checkbox" id="schicht-frueh" checked disabled />
               {SCHICHT_LABELS.frueh}
             </label>
           </div>
           {optionalSchichten.map(typ => (
-            <div key={typ} className="form-check">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`schicht-${typ}`}
-                checked={schichten.includes(typ)}
-                onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
-              />
-              <label className="form-check-label" htmlFor={`schicht-${typ}`}>
+            <div key={typ} className="db-checkbox" data-size="small">
+              <label htmlFor={`schicht-${typ}`}>
+                <input
+                  type="checkbox"
+                  id={`schicht-${typ}`}
+                  checked={schichten.includes(typ)}
+                  onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
+                />
                 {SCHICHT_LABELS[typ]}
               </label>
             </div>
@@ -403,11 +395,11 @@ export default function EditorModalVE(
       <MyModalBody>
         {createNameElement(row)}
         {createcheckboxElement(row, 'standard')}
-        <div className="">
+        <div>
           <hr className="my-0" />
         </div>
         {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
-        <div className="">
+        <div>
           <hr className="my-0" />
         </div>
         <SchichtenConfigSection

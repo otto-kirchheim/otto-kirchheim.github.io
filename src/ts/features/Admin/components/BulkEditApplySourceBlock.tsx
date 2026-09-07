@@ -46,7 +46,7 @@ export function BulkEditApplySourceBlock({
       <div className="d-flex flex-column gap-2">
         {SOURCE_OPTIONS.map(([value, label]) => (
           <div key={value}>
-            <div className="form-check">
+            <div>
               <input
                 className="form-check-input"
                 type="radio"
@@ -106,7 +106,7 @@ export function BulkEditApplySourceBlock({
           </div>
           <div className="d-flex gap-3 flex-wrap">
             {(Object.keys(CATEGORY_LABELS) as BulkApplyCategory[]).map(category => (
-              <div className="form-check" key={category}>
+              <div key={category}>
                 <input
                   className="form-check-input"
                   type="checkbox"

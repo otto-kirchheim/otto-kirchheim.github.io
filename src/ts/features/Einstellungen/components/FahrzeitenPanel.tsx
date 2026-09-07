@@ -1,5 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
+import { DbFeld } from '@/components';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
@@ -96,19 +97,20 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
               <tr key={index} data-row-index={index}>
                 {fields.map(field => (
                   <td key={field}>
-                    <div className="input-group input-group-sm input-group-mobile-fahrzeit">
-                      <span className="input-group-text d-md-none">{FIELD_LABELS[field]}</span>
-                      <input
-                        type={field === 'value' ? 'time' : 'text'}
-                        className={`form-control text-center${
-                          hasContent && field !== 'text' && row[field] === '' ? ' is-invalid' : ''
-                        }`}
-                        aria-label={FIELD_LABELS[field]}
-                        placeholder={field === 'text' ? 'optional' : undefined}
-                        value={row[field]}
-                        onChange={e => updateRow(index, field, (e.target as HTMLInputElement).value)}
-                      />
-                    </div>
+                    {/* Die Beschriftung steht ab md im Tabellenkopf; darunter (Karten-Layout)
+                        zeigt sie das Feld selbst -- fruehere `input-group-text`-Vorsatzbox. */}
+                    <DbFeld
+                      className="fahrzeit-feld"
+                      beschriftungZeigen
+                      dicht
+                      type={field === 'value' ? 'time' : 'text'}
+                      beschriftung={FIELD_LABELS[field]}
+                      feldKlasse="text-center"
+                      ungueltig={hasContent && field !== 'text' && row[field] === ''}
+                      placeholder={field === 'text' ? 'optional' : undefined}
+                      value={row[field]}
+                      onChange={e => updateRow(index, field, e.target.value)}
+                    />
                   </td>
                 ))}
                 <td className="text-center align-middle">

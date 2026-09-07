@@ -26,7 +26,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Tag':
         return (
           <MyInput
-            divClass="form-floating col-12 col-sm-6"
+            divClass="sp-12 sp-sm-6"
             type="date"
             id={column.name}
             name={column.title}
@@ -41,7 +41,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Auftragsnummer':
         return (
           <MyInput
-            divClass="form-floating col-12"
+            divClass="sp-12"
             type="text"
             id={column.name}
             name={column.longTitle}
@@ -57,7 +57,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Ende':
         return (
           <MyInput
-            divClass="form-floating col-12 col-sm-6"
+            divClass="sp-12 sp-sm-6"
             type="time"
             id={column.name}
             name={column.title}
@@ -71,7 +71,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
         return (
           <Fragment>
             <MySelect
-              className="form-floating sp-sm-6"
+              className="sp-sm-6"
               id={column.name}
               title={column.title}
               required
@@ -90,7 +90,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'PrivatKm':
         return (
           <MyInput
-            divClass="form-floating col-12 col-sm-6"
+            divClass="sp-12 sp-sm-6"
             type="number"
             id={column.name}
             name={column.longTitle}

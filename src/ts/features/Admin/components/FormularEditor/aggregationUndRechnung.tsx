@@ -246,7 +246,7 @@ export function AggregationEditor({
           Tabellen:
         </span>
         {Object.keys(tabellen).map(name => (
-          <div key={name} className="form-check form-check-inline m-0">
+          <div key={name} className="form-check-inline m-0">
             <input
               className="form-check-input"
               type="checkbox"

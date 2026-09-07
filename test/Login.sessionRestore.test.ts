@@ -104,7 +104,7 @@ describe('auth/index.ts — session restore', () => {
       <h1 id="Willkommen"></h1>
       <div id="loginDisplay"></div>
       <input id="Jahr" />
-      <input id="Monat" class="d-none" />
+      <div id="MonatFeld" class="db-select d-none"><input id="Monat" /></div>
       <div id="admin" class="d-none"></div>
       <div id="Admin" class="d-none"></div>
       <button id="admin-tab"></button>

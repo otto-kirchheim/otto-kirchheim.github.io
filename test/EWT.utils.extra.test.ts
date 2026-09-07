@@ -348,11 +348,11 @@ describe('EWT utils extra', () => {
     // Kein Fehlerzustand -> Guard bricht sofort ab (kein Fehler, kein Aufruf von reportValidity).
     expect(() => abWEInput.dispatchEvent(new Event('focus', { bubbles: true }))).not.toThrow();
 
-    // is-invalid gesetzt, aber keine Validierungsmeldung -> Guard bricht ebenfalls ab.
-    abWEInput.classList.add('is-invalid');
+    // Fehlerzustand gesetzt, aber keine Validierungsmeldung -> Guard bricht ebenfalls ab.
+    abWEInput.setAttribute('data-custom-validity', 'invalid');
     expect(() => abWEInput.dispatchEvent(new Event('click', { bubbles: true }))).not.toThrow();
 
-    // is-invalid mit Meldung -> reportValidity() wird aufgerufen.
+    // Fehlerzustand mit Meldung -> reportValidity() wird aufgerufen.
     abWEInput.setCustomValidity('Fehlerhafte Zeit');
     const reportValiditySpy = vi.spyOn(abWEInput, 'reportValidity');
     abWEInput.dispatchEvent(new Event('focus', { bubbles: true }));
@@ -389,8 +389,8 @@ describe('EWT utils extra', () => {
     const endeEInput = form.querySelector<HTMLInputElement>('#endeE');
     const endeEFeedback = form.querySelector<HTMLDivElement>('#zeitfehler-endeE');
 
-    expect(beginEInput?.classList.contains('is-invalid')).toBe(true);
-    expect(endeEInput?.classList.contains('is-invalid')).toBe(true);
+    expect(beginEInput?.getAttribute('data-custom-validity')).toBe('invalid');
+    expect(endeEInput?.getAttribute('data-custom-validity')).toBe('invalid');
     expect(endeEFeedback?.textContent).toContain('Muss nach "Arbeitszeit Von" liegen.');
     // Speichern wurde verhindert: der ursprüngliche Tag im Datensatz ist unverändert.
     expect(existingRow.cells.Tag).toBe('2026-03-15');

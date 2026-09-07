@@ -104,7 +104,7 @@ describe('createModalResetPassword', () => {
     );
   });
 
-  it('markiert das Formular für Bootstrap-Validierung bei ungültigen Eingaben', async () => {
+  it('bricht bei ungültigen Eingaben vor dem API-Aufruf ab', async () => {
     setupShowModalMock('pass12345', 'pass12345', false);
 
     createModalResetPassword('token-123');
@@ -113,9 +113,7 @@ describe('createModalResetPassword', () => {
     const preventDefault = vi.fn();
     await submit({ preventDefault } as unknown as Event);
 
-    const form = showModalMock.mock.calls[0][0].props.myRef.current as HTMLFormElement;
     expect(preventDefault).toHaveBeenCalledTimes(1);
-    expect(form.classList.contains('was-validated')).toBe(true);
     expect(resetPasswordMock).not.toHaveBeenCalled();
   });
 

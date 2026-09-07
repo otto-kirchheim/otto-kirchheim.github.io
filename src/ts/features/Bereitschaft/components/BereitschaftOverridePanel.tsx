@@ -1,17 +1,19 @@
 import { type FC, type JSX, useEffect, useState } from 'react';
 
+import { DbFeld } from '@/components';
 import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeOverrides';
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { SchichtOverrideEditor } from '@/features/Einstellungen/components/SchichtOverrideEditor';
 
 const createSonderTimeInput = (id: string, value: string, onChange: (value: string) => void): JSX.Element => (
-  <input
+  <DbFeld
     type="time"
     id={id}
-    className="form-control form-control-sm"
-    style={{ width: '7rem' }}
+    beschriftung={id.endsWith('Ende') ? 'Ende' : 'Beginn'}
+    dicht
+    huelleStyle={{ width: '7rem' }}
     value={value}
-    onChange={e => onChange((e.target as HTMLInputElement).value)}
+    onChange={e => onChange(e.target.value)}
   />
 );
 
@@ -78,16 +80,15 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
   };
 
   return (
-    <div className="">
-      <div className="form-check form-switch bereitschaft">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id="azOverride"
-          checked={open}
-          onChange={e => toggleOpen((e.target as HTMLInputElement).checked)}
-        />
-        <label className="form-check-label" htmlFor="azOverride">
+    <div>
+      <div className="db-checkbox bereitschaft" data-size="small">
+        <label htmlFor="azOverride">
+          <input
+            type="checkbox"
+            id="azOverride"
+            checked={open}
+            onChange={e => toggleOpen((e.target as HTMLInputElement).checked)}
+          />
           Andere Arbeitszeiten hinterlegen
         </label>
       </div>
@@ -119,10 +120,12 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
                   }),
                 )}
                 <div className="d-flex align-items-center gap-1">
-                  <input
+                  <DbFeld
                     type="number"
-                    className="form-control form-control-sm text-center"
-                    style={{ width: '4rem' }}
+                    beschriftung="Pause in Minuten"
+                    dicht
+                    feldKlasse="text-center"
+                    huelleStyle={{ width: '4rem' }}
                     value={sonderOverride?.pause ?? aZ.sonder.pause}
                     min={0}
                     step={5}
@@ -131,7 +134,7 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
                         aktiv: true,
                         beginn: sonderOverride?.beginn ?? aZ.sonder.beginn,
                         ende: sonderOverride?.ende ?? aZ.sonder.ende,
-                        pause: Number((e.target as HTMLInputElement).value),
+                        pause: Number(e.target.value),
                       })
                     }
                   />

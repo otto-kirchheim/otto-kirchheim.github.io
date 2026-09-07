@@ -36,7 +36,7 @@ export function BulkEditOeLevelsEditor({
 
       <div className="d-flex flex-wrap gap-3 mb-2">
         {TARGETS.map(target => (
-          <div className="form-check" key={target}>
+          <div key={target}>
             <input
               className="form-check-input"
               type="checkbox"

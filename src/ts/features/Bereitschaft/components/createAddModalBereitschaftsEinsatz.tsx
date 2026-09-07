@@ -46,7 +46,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
         </p>
         <MyInput
-          divClass="form-floating col-12 col-sm-6"
+          divClass="sp-12 sp-sm-6"
           required
           type={columns.find(col => col.name === 'Tag')?.type || 'Date'}
           id="Datum"
@@ -58,7 +58,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           Datum
         </MyInput>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type={columns.find(col => col.name === 'Auftragsnummer')?.type || 'text'}
           id="SAPNR"
@@ -66,14 +66,14 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         >
           SAP-Nr / Einsatzbeschreibung
         </MyInput>
-        <MyInput divClass="form-floating col-12 col-sm-6" required type="time" id="ZeitVon" name="Von">
+        <MyInput divClass="sp-12 sp-sm-6" required type="time" id="ZeitVon" name="Von">
           Von
         </MyInput>
-        <MyInput divClass="form-floating col-12 col-sm-6" required type="time" id="ZeitBis" name="Bis">
+        <MyInput divClass="sp-12 sp-sm-6" required type="time" id="ZeitBis" name="Bis">
           Bis
         </MyInput>
         <MySelect
-          className="form-floating sp-sm-6"
+          className="sp-sm-6"
           required
           id="LRE"
           title={columns.find(col => col.name === 'LRE')?.longTitle || 'LRE'}
@@ -87,7 +87,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           ]}
         />
         <MyInput
-          divClass="form-floating col-12 col-sm-6 pb-3"
+          divClass="sp-12 sp-sm-6 pb-3"
           type={columns.find(col => col.name === 'PrivatKm')?.type || 'number'}
           id="privatkm"
           name={columns.find(col => col.name === 'PrivatKm')?.longTitle || 'Km Privatfahrzeug'}
@@ -102,8 +102,8 @@ export default function createAddModalBereitschaftsEinsatz(): void {
         >
           Km Privatfahrzeug
         </MyInput>
-        <div className="">
-          <MyCheckbox className="form-check form-switch bereitschaft" id="berZeit">
+        <div>
+          <MyCheckbox className="bereitschaft" id="berZeit">
             Bereitschaftszeitraum für diesen Einsatz anlegen?
             <br />
             <small>(z.B. LRE3 außerhalb der Bereitschaft oder Einsatz über Bereitschaftszeitraum-Grenzen hinaus)</small>

@@ -64,7 +64,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
             {neu ? ` → ${neu.w.toFixed(0)}×${neu.h.toFixed(0)}` : ''} pt
           </span>
         )}
-        <div className="form-check mb-0">
+        <div className="mb-0">
           <input
             className="form-check-input"
             type="checkbox"

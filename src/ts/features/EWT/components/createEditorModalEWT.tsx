@@ -50,7 +50,7 @@ const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnN
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return (
     <MyInput
-      divClass="form-floating col-6"
+      divClass="sp-6"
       type="time"
       id={column.name}
       name={column.title}
@@ -100,7 +100,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     >
       <MyModalBody>
         <MyInput
-          divClass="form-floating col-12 col-sm-5"
+          divClass="sp-12 sp-sm-5"
           required
           type="date"
           id="Tag"
@@ -125,7 +125,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           </MyInput>
         </div>
         <MySelect
-          className="form-floating sp-sm-7"
+          className="sp-sm-7"
           id="Einsatzort"
           title={row.columns.array.find(column => column.name === 'Einsatzort')?.title ?? 'Einsatzort'}
           value={row instanceof Row ? row.cells['Einsatzort'].toString() : undefined}
@@ -140,7 +140,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           ]}
         />
         <MySelect
-          className="form-floating sp-sm-7"
+          className="sp-sm-7"
           required
           id={'Schicht'}
           title={row.columns.array.find(column => column.name === 'Schicht')?.title ?? 'Schicht'}
@@ -148,11 +148,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           options={buildSchichtOptionen(vorgabenU)}
         />
         <div className="sp-sm-4">
-          <MyCheckbox
-            className="form-check form-switch"
-            id={'berechnen'}
-            checked={row instanceof Row ? row.cells['berechnen'] : true}
-          >
+          <MyCheckbox id={'berechnen'} checked={row instanceof Row ? row.cells['berechnen'] : true}>
             {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
           </MyCheckbox>
         </div>
@@ -252,9 +248,6 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       const feedback = form.querySelector<HTMLDivElement>(`#${getZeitfehlerElementId(feld)}`);
       if (!input) return;
       input.setCustomValidity('');
-      input.classList.remove('is-invalid');
-      // DB-UX faerbt ueber `data-custom-validity`, Bootstrap ueber `is-invalid` -- solange
-      // beide Systeme im Build sind, wird beides gesetzt.
       input.removeAttribute('data-custom-validity');
       if (feedback) feedback.textContent = '';
     });
@@ -263,7 +256,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   const showZeitfehlerPopup = (event: Event): void => {
     const input = event.currentTarget as HTMLInputElement | null;
     if (!input) return;
-    if (!input.classList.contains('is-invalid')) return;
+    if (input.getAttribute('data-custom-validity') !== 'invalid') return;
     if (!input.validationMessage) return;
     input.reportValidity();
   };
@@ -310,7 +303,6 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
           const feedback = form.querySelector<HTMLDivElement>(`#${getZeitfehlerElementId(fehler.feld)}`);
           if (!invalidInput) continue;
           invalidInput.setCustomValidity(fehler.message);
-          invalidInput.classList.add('is-invalid');
           invalidInput.setAttribute('data-custom-validity', 'invalid');
           if (feedback) feedback.textContent = fehler.message;
         }

@@ -20,7 +20,7 @@ export default function createModalPasskeySetPassword(): void {
   const modal = showModal(
     <MyFormModal myRef={ref} title="Passwort per Passkey neu setzen" submitText="Passwort setzen" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="">
+        <div>
           <p className="small text-body-secondary mb-0">
             Du bestätigst die Änderung mit deinem Passkey (Fingerprint, Face ID oder Geräte-PIN) – dein altes Passwort
             wird nicht benötigt. Andere Sitzungen werden abgemeldet.
@@ -28,7 +28,7 @@ export default function createModalPasskeySetPassword(): void {
         </div>
         <MyInput
           myRef={passwortRef}
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="PasskeyPasswortNeu"
@@ -47,7 +47,7 @@ export default function createModalPasskeySetPassword(): void {
         </MyInput>
         <PasswordStrengthMeter passwordInputRef={passwortRef} />
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="PasskeyPasswortNeu2"
@@ -68,7 +68,6 @@ export default function createModalPasskeySetPassword(): void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
-      form.classList.add('was-validated');
       if (form.checkValidity && !form.checkValidity()) return;
 
       const errorMessage = modal.querySelector<HTMLSpanElement>('#errorMessage');

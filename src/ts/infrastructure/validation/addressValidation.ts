@@ -70,28 +70,31 @@ export function isValidGermanAddress(value: string): boolean {
   return normalizedValue.length > 0 && GERMAN_ADDRESS_REGEX.test(normalizedValue);
 }
 
-function getOrCreateValidationFeedback(input: ValidatableElement): HTMLDivElement {
+/**
+ * Fehlertext zum Feld. DB rendert Meldungen als `db-infotext` innerhalb der Feldhuelle
+ * (`db-input`/`db-select`) -- dort landet der Text, sonst direkt hinter dem Feld.
+ */
+function getOrCreateValidationFeedback(input: ValidatableElement): HTMLSpanElement {
   const feedbackId = `${input.id || 'field'}-feedback`;
   const describedBy = input.getAttribute('aria-describedby');
   const existingById = document.getElementById(feedbackId);
-  if (existingById instanceof HTMLDivElement) return existingById;
+  if (existingById instanceof HTMLSpanElement) return existingById;
 
-  const existingFeedback = input
-    .closest('.input-group, .form-floating, .mb-3, .col, .row, form, div')
-    ?.querySelector<HTMLDivElement>(`.invalid-feedback[data-for="${input.id}"]`);
+  const huelle = input.closest('.db-input, .db-select');
+  const existingFeedback = (huelle ?? input.parentElement)?.querySelector<HTMLSpanElement>(
+    `.db-infotext[data-for="${input.id}"]`,
+  );
   if (existingFeedback) return existingFeedback;
 
-  const feedback = document.createElement('div');
+  const feedback = document.createElement('span');
   feedback.id = feedbackId;
   feedback.dataset.for = input.id;
-  feedback.className = 'invalid-feedback';
+  feedback.className = 'db-infotext';
+  feedback.dataset.semantic = 'critical';
+  feedback.dataset.size = 'small';
   feedback.setAttribute('aria-live', 'polite');
 
-  const inputGroup = input.closest('.input-group');
-  if (inputGroup) inputGroup.classList.add('has-validation');
-
-  const formFloating = input.closest('.form-floating');
-  if (formFloating) formFloating.appendChild(feedback);
+  if (huelle) huelle.appendChild(feedback);
   else input.insertAdjacentElement('afterend', feedback);
 
   input.setAttribute(
@@ -108,13 +111,11 @@ function setValidationState(input: ValidatableElement, isValid: boolean, message
   const feedback = getOrCreateValidationFeedback(input);
 
   input.setCustomValidity(message);
-  input.classList.toggle('is-invalid', !isValid);
-  input.classList.toggle('is-valid', isValid && input.value.trim() !== '');
-  // DB-UX faerbt ueber `data-custom-validity` statt ueber die Bootstrap-Klassen.
+  // DB faerbt Feld und Meldung ueber `data-custom-validity` am Feld.
   if (isValid) input.removeAttribute('data-custom-validity');
   else input.setAttribute('data-custom-validity', 'invalid');
   feedback.textContent = message;
-  feedback.classList.toggle('d-block', !isValid);
+  feedback.hidden = isValid;
 
   return isValid;
 }

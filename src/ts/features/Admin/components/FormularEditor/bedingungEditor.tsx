@@ -123,7 +123,7 @@ function VergleichWahl({
       ) : auswahl.length > 0 ? (
         <div className="d-flex flex-wrap gap-2">
           {auswahl.map(wert => (
-            <div key={wert} className="form-check">
+            <div key={wert}>
               <input
                 className="form-check-input"
                 type="checkbox"

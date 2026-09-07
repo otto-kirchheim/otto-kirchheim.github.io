@@ -17,7 +17,7 @@ export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
       <div className="d-flex flex-column gap-2">
         {SIMPLE_FIELD_KEYS.map(key => (
           <div key={key}>
-            <div className="form-check">
+            <div>
               <input
                 className="form-check-input"
                 type="checkbox"

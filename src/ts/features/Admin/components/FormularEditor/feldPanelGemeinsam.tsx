@@ -58,7 +58,7 @@ export function ZahlFeld({
   };
 
   return (
-    <div className="">
+    <div>
       <div className="input-group input-group-sm">
         <span className="input-group-text px-1 small">{label}</span>
         <input
@@ -164,7 +164,7 @@ export function DarstellungsFelder<
             onChange={e => onChange({ ...wert, size: Number((e.target as HTMLInputElement).value) })}
           />
         </div>
-        <div className="sp-3 form-check mb-0">
+        <div className="sp-3 mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -173,7 +173,7 @@ export function DarstellungsFelder<
           />
           <label className="form-check-label small">Fett</label>
         </div>
-        <div className="sp-3 form-check mb-0">
+        <div className="sp-3 mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -182,7 +182,7 @@ export function DarstellungsFelder<
           />
           <label className="form-check-label small">Kursiv</label>
         </div>
-        <div className="sp-3 form-check mb-0">
+        <div className="sp-3 mb-0">
           <input
             className="form-check-input"
             type="checkbox"
@@ -225,7 +225,7 @@ export function DarstellungsFelder<
       </div>
       {/* Format: eigene Zeile, unabhängig von Ausrichtung/Drehung. */}
       <div className="raster mt-1 abstand-1">
-        <div className="">
+        <div>
           <select
             className="form-select form-select-sm"
             value={wert.format ?? ''}
@@ -246,7 +246,7 @@ export function DarstellungsFelder<
       </div>
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
       <div className="d-flex gap-3 mt-1">
-        <div className="form-check">
+        <div>
           <input
             className="form-check-input"
             type="checkbox"
@@ -255,7 +255,7 @@ export function DarstellungsFelder<
           />
           <label className="form-check-label small">Schrift automatisch verkleinern</label>
         </div>
-        <div className="form-check">
+        <div>
           <input
             className="form-check-input"
             type="checkbox"

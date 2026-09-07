@@ -167,7 +167,7 @@ export function AdminUserList() {
       {/* Filter-Leiste */}
       <div className="raster mb-3 abstand-2">
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <input
               type="text"
               className="form-control"
@@ -180,7 +180,7 @@ export function AdminUserList() {
           </div>
         </div>
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <input
               type="text"
               className="form-control"
@@ -193,7 +193,7 @@ export function AdminUserList() {
           </div>
         </div>
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <select
               className="form-select"
               id="adminFilterRole"
@@ -244,7 +244,7 @@ export function AdminUserList() {
           const editable = canEdit() && !isSelfRow;
 
           return (
-            <div key={currentUser._id} className="">
+            <div key={currentUser._id}>
               <div className={`card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
                 {/* Card Header */}
                 <div

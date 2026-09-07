@@ -301,7 +301,7 @@ export function MemoryCard({
 
         {/* ── Environment Toggles ── */}
         <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
-          <label className="form-check">
+          <label>
             <input
               type="checkbox"
               className="form-check-input"
@@ -322,7 +322,7 @@ export function MemoryCard({
               GCP
             </span>
           </label>
-          <label className="form-check">
+          <label>
             <input
               type="checkbox"
               className="form-check-input"

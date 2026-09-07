@@ -635,7 +635,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
 
       {aktiveSeite && (
         <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
-          <div className="form-check mb-0">
+          <div className="mb-0">
             <input
               className="form-check-input"
               type="checkbox"

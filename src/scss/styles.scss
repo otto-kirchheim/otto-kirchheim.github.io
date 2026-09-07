@@ -41,6 +41,27 @@ body {
   margin-inline: auto;
 }
 
+// Ersatz fuer Bootstraps `.input-group`: DB kennt keine Gruppe aus Feld und angehaengtem Knopf.
+// Das Feld nimmt den freien Platz, der Knopf steht buendig daneben und behaelt seine Hoehe.
+.feldgruppe {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--db-spacing-fixed-xs);
+
+  > .db-input,
+  > .db-select {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+}
+
+// DB zeigt einen Tooltip bei `:hover`/`:focus-visible` des Elternknotens. Ein Eingabefeld gibt
+// den Fokus aber an sein `<input>` weiter, der Elternknoten selbst wird nie fokussiert --
+// `:focus-within` holt den Hinweis fuer den Tastaturweg zurueck.
+[data-has-tooltip='true']:focus-within > .db-tooltip:first-of-type {
+  visibility: visible;
+}
+
 .w20 {
   width: 20%;
 }
@@ -370,27 +391,17 @@ body {
   white-space: nowrap;
 }
 
-#settings-zulagen-list .form-check {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  margin: 0;
+// Zulagen stehen als einzeln umrandete Zeilen untereinander; DBs Haken bringt Abstand und
+// Ausrichtung selbst mit, hier kommt nur der Rahmen um die jeweilige Zeile dazu.
+#settings-zulagen-list .db-checkbox {
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--bs-border-color-translucent);
-  border-radius: var(--bs-border-radius-sm);
+  border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+  border-radius: var(--db-border-radius-xs);
 }
 
-#settings-zulagen-list .form-check-input {
-  margin-left: 0;
-  margin-top: 0.2rem;
-  flex: 0 0 auto;
-}
-
-#settings-zulagen-list .form-check-label {
+#settings-zulagen-list .db-checkbox > label {
   text-align: left;
   line-height: 1.35;
-  margin: 0;
-  flex: 1;
 }
 
 #admin-tabs {
@@ -483,6 +494,18 @@ body {
   }
 }
 
+// Ab md tragen die Spaltenkoepfe die Beschriftung; im Feld bleibt sie nur fuer Screenreader.
+@media screen and (min-width: 48em) {
+  .fahrzeit-feld > label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 // Aktionen-Spalte der Fahrzeiten-Tabelle so schmal wie ihre Buttons halten
 .fahrzeiten-aktionen-spalte {
   width: 1%;
@@ -522,9 +545,8 @@ body {
     padding-bottom: 0.5rem;
   }
 
-  #collapseFour .input-group-mobile-fahrzeit .input-group-text {
-    min-width: 9.25rem;
-    justify-content: flex-start;
+  #collapseFour .fahrzeit-feld > label {
+    min-inline-size: 9.25rem;
   }
 
   // Zeilen-Aktionen (↑/↓/Löschen) im Karten-Layout als volle Breite für gute Tap-Ziele
@@ -697,7 +719,7 @@ body {
 
 // Der Monatswechsel steht in der Kopfzeile neben dem Anmelde-Knopf und darf dort nicht
 // auf ein paar Buchstaben zusammenschrumpfen.
-.db-header-primary-action #Monat {
+.db-header-primary-action .db-select {
   inline-size: auto;
   min-inline-size: 8rem;
 }

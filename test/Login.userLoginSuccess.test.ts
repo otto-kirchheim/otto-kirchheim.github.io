@@ -67,7 +67,7 @@ describe('userLoginSuccess', () => {
       <h1 id="Willkommen"></h1>
       <button id="btnLogin" class="btn"></button>
       <input id="Jahr" />
-      <input id="Monat" class="d-none" />
+      <div id="MonatFeld" class="db-select d-none"><input id="Monat" /></div>
       <div id="admin" class="d-none"></div>
       <div id="Admin" class="d-none"></div>
     `;
@@ -99,7 +99,7 @@ describe('userLoginSuccess', () => {
     expect(document.querySelector('#btnLogin')?.classList.contains('d-none')).toBe(true);
     expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');
     expect(document.querySelector<HTMLInputElement>('#Monat')?.value).not.toBe('');
-    expect(document.querySelector<HTMLInputElement>('#Monat')?.classList.contains('d-none')).toBe(false);
+    expect(document.querySelector('#MonatFeld')?.classList.contains('d-none')).toBe(false);
     expect(initAutoSaveIndicatorMock).toHaveBeenCalledTimes(1);
     expect(selectYearMock).toHaveBeenCalledTimes(1);
     expect(mountAdminTabMock).not.toHaveBeenCalled();

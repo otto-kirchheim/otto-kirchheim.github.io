@@ -24,9 +24,9 @@ const createTagElement = (row: Row<IDatenEWT>) => {
 
   return (
     <MyShowElement
-      divClass="mb-1 row col-8"
-      labelClass="col-2 col-sm-3 col-form-label text-wrap fw-bold"
-      spanClass="col-10 col-sm-9 align-middle text-break text-end my-auto"
+      divClass="mb-1 row sp-8"
+      labelClass="sp-2 sp-sm-3 text-wrap fw-bold"
+      spanClass="sp-10 sp-sm-9 align-middle text-break text-end my-auto"
       title={`${column.title}:`}
       id="Tag"
       text={tagText}
@@ -38,8 +38,8 @@ const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
   const column: Column<IDatenEWT> = getColumn(row, columnName);
   return (
     <MyShowElement
-      labelClass="col-4 col-sm-5 col-form-label text-wrap fw-bold"
-      spanClass="col-8 col-sm-7 align-middle text-break my-auto"
+      labelClass="sp-4 sp-sm-5 text-wrap fw-bold"
+      spanClass="sp-8 sp-sm-7 align-middle text-break my-auto"
       title={`${column.title}:`}
       id={column.name}
       text={column.parser(row.cells[column.name]) ?? '\u00A0'}
@@ -74,7 +74,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
       <MyModalBody>
         {createTagElement(row)}
         <MyCheckbox
-          className="form-check form-switch sp-4"
+          className="sp-4"
           id={'berechnen'}
           checked={row.cells?.['berechnen'] ?? true}
           changeHandler={(e: ChangeEvent<HTMLInputElement>) => {

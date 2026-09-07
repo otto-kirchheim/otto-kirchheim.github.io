@@ -145,7 +145,7 @@ describe('saveEinstellungen address validation', () => {
 
     expect(() => saveEinstellungen()).toThrow('Persönliche Daten fehlerhaft');
     expect(bundeslandInput.validationMessage).not.toBe('');
-    expect(bundeslandInput.classList.contains('is-invalid')).toBe(true);
+    expect(bundeslandInput.getAttribute('data-custom-validity')).toBe('invalid');
   });
 
   it('rejects invalid numeric personal fields like kmArbeitsort', () => {
@@ -156,7 +156,7 @@ describe('saveEinstellungen address validation', () => {
 
     expect(() => saveEinstellungen()).toThrow('Persönliche Daten fehlerhaft');
     expect(kmArbeitsortInput.validationMessage).not.toBe('');
-    expect(kmArbeitsortInput.classList.contains('is-invalid')).toBe(true);
+    expect(kmArbeitsortInput.getAttribute('data-custom-validity')).toBe('invalid');
   });
 
   it('accepts an 8-digit Personalnummer with leading zero', () => {
@@ -178,7 +178,7 @@ describe('saveEinstellungen address validation', () => {
 
     expect(() => saveEinstellungen()).toThrow('Persönliche Daten fehlerhaft');
     expect(pNummerInput.validationMessage).toContain('genau 8-stellig');
-    expect(pNummerInput.classList.contains('is-invalid')).toBe(true);
+    expect(pNummerInput.getAttribute('data-custom-validity')).toBe('invalid');
   });
 
   it('speichert aZ aus Storage wenn kein Panel-State gesetzt', () => {

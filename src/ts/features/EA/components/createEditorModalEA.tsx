@@ -24,7 +24,7 @@ const createTextElement = (row: CustomTable<IDatenEA> | Row<IDatenEA>, columnNam
   const column = getColumn(row, columnName);
   return (
     <MyInput
-      divClass="form-floating col-6"
+      divClass="sp-6"
       type="text"
       id={column.name}
       name={column.longTitle}
@@ -111,7 +111,6 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
       <MyModalBody>
         {dataE.length > 0 && (
           <MySelect
-            className="form-floating"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={ewtOptions}
@@ -120,7 +119,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
         )}
 
         <MyInput
-          divClass="form-floating col-6"
+          divClass="sp-6"
           required
           type="date"
           id="Tag"
@@ -134,7 +133,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
         </MyInput>
 
         <MyInput
-          divClass="form-floating col-6"
+          divClass="sp-6"
           required
           type="time"
           id="Dauer"
@@ -146,7 +145,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
         </MyInput>
 
         <MyInput
-          divClass="form-floating col-6"
+          divClass="sp-6"
           type="text"
           id="Taetigkeit"
           name="Tätigkeit"

@@ -8,8 +8,8 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
   return (
     <MyShowElement
       divClass="mb-1"
-      labelClass="col-3 col-form-label text-wrap fw-bold"
-      spanClass="col-9 align-middle text-break my-auto"
+      labelClass="sp-3 text-wrap fw-bold"
+      spanClass="sp-9 align-middle text-break my-auto"
       title={`${column.title}:`}
       id={column.name}
       text={column.parser(row.cells[column.name], falseparser)}

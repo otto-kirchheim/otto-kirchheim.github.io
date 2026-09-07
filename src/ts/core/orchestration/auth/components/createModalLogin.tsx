@@ -73,7 +73,7 @@ export default function createModalLogin(): void {
     <MyFormModal myRef={ref} title="Einloggen" submitText="Einloggen" onSubmit={onSubmit()} Footer={footer}>
       <MyModalBody>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="text"
           id="Benutzer"
@@ -84,7 +84,7 @@ export default function createModalLogin(): void {
           Benutzer
         </MyInput>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="password"
           id="Passwort"

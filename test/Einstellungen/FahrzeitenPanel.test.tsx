@@ -35,10 +35,20 @@ async function fireInput(el: HTMLInputElement, value: string): Promise<void> {
   await flush();
 }
 
+/** Feld einer Zelle ueber die Beschriftung in der `db-input`-Huelle finden. */
+function feld(bereich: ParentNode, beschriftung: string): HTMLInputElement {
+  const huelle = Array.from(bereich.querySelectorAll('tbody .db-input')).find(
+    el => el.querySelector('label')?.textContent === beschriftung,
+  );
+  const input = huelle?.querySelector<HTMLInputElement>('input');
+  if (!input) throw new Error(`Feld ${beschriftung} nicht gefunden`);
+  return input;
+}
+
 function rowKeys(container: HTMLDivElement): string[] {
-  return Array.from(
-    container.querySelectorAll<HTMLInputElement>('tbody input[type="text"][aria-label="Tätigkeitsstätte"]'),
-  ).map(input => input.value);
+  return Array.from(container.querySelectorAll<HTMLTableRowElement>('tbody tr')).map(
+    zeile => zeile.querySelector<HTMLInputElement>('td .db-input input')?.value ?? '',
+  );
 }
 
 afterEach(() => {
@@ -119,22 +129,22 @@ describe('FahrzeitenPanel', () => {
 
   it('synchronisiert Eingaben sofort in die Bridge und markiert leere Pflichtfelder als ungültig', async () => {
     const container = renderPanel([{ key: '', text: '', value: '' }]);
-    const keyInput = container.querySelector<HTMLInputElement>('tbody input[aria-label="Tätigkeitsstätte"]')!;
+    const keyInput = feld(container, 'Tätigkeitsstätte');
 
     await fireInput(keyInput, 'Fulda');
 
     expect(getFahrzeitPanelState()).toEqual([{ key: 'Fulda', text: '', value: '' }]);
-    expect(keyInput.classList.contains('is-invalid')).toBe(false);
-    const textInput = container.querySelector<HTMLInputElement>('tbody input[aria-label="Beschreibung"]')!;
-    const valueInput = container.querySelector<HTMLInputElement>('tbody input[aria-label="Fahrzeit"]')!;
+    expect(keyInput.hasAttribute('data-custom-validity')).toBe(false);
+    const textInput = feld(container, 'Beschreibung');
+    const valueInput = feld(container, 'Fahrzeit');
     // Beschreibung ist optional und wird nie als ungültig markiert
-    expect(textInput.classList.contains('is-invalid')).toBe(false);
-    expect(valueInput.classList.contains('is-invalid')).toBe(true);
+    expect(textInput.hasAttribute('data-custom-validity')).toBe(false);
+    expect(valueInput.getAttribute('data-custom-validity')).toBe('invalid');
   });
 
   it('markiert eine komplett leere Zeile nicht als ungültig', () => {
     const container = renderPanel([{ key: '', text: '', value: '' }]);
 
-    expect(container.querySelector('tbody .is-invalid')).toBeNull();
+    expect(container.querySelector('tbody [data-custom-validity="invalid"]')).toBeNull();
   });
 });

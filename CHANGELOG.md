@@ -2,6 +2,38 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-07 (65)
+
+### refactor (DB-UX-Migration Phase H: Formulare auf DB UX, Bootstrap-JS raus)
+
+Felder, Auswahllisten und Schalter ausserhalb des Admin-Panels laufen auf den DB-Bausteinen.
+Damit ist auch das letzte Bootstrap-JS-Plugin (`Popover`) raus -- `bootstrap/js` kommt in
+`src/` nicht mehr vor.
+
+- **Zuordnung:** `form-floating` + `form-control` -> `.db-input[data-variant="floating"]`
+  (Label vor dem Feld), `form-select` -> `.db-select`, `form-check` -> `.db-checkbox`,
+  `form-check form-switch` -> `.db-switch` (Feld jeweils **im** Label), `form-control-sm`/
+  `form-select-sm` -> `data-density="functional"`, `form-text`/`invalid-feedback` ->
+  `.db-infotext`. `form-label` entfaellt, die Beschriftung steht in der Feldhuelle.
+- **`input-group` + Icon-Vorsatz** (13 Felder in den persoenlichen Daten) -> `data-icon` an
+  der Huelle; DB rendert das Icon per CSS (`content: attr(data-icon)`), die Vorsatzbox
+  entfaellt. Fuer die zwei Gruppen aus Feld **und Knopf** (E-Mail, Jahresauswahl) gibt es
+  `.feldgruppe` -- DB hat dafuer keine Entsprechung.
+- **`Popover` entfernt**: einziger Aufrufer war der Hinweis am Jahr-Feld, der jetzt ein
+  `db-tooltip` ist (wie die Tabellenzellen seit Phase F). Eine App-Regel zeigt ihn zusaetzlich
+  bei `:focus-within`, weil DB nur `:hover`/`:focus-visible` am Elternknoten kennt und der
+  Fokus im `<input>` sitzt.
+- **`DbFeld`/`DbAuswahl` (`components/DbFeld.tsx`, neu)** kapseln die Huelle fuer die vielen
+  kompakten Felder in Panels und Zeilen-Editoren. Sie vergeben per `useId()` die Verknuepfung
+  Label <-> Feld -- die Felder haben damit erstmals durchgaengig einen zugaenglichen Namen.
+- **Validierung ohne Bootstrap-Klassen:** `addressValidation` schreibt den Fehlertext als
+  `db-infotext[data-semantic="critical"]` in die Feldhuelle und markiert das Feld nur noch
+  ueber `data-custom-validity`; `is-invalid`/`is-valid`/`has-validation` sind weg. Die vier
+  `was-validated`-Marker in den Passwort-/Registrier-Dialogen entfallen ersatzlos -- DB faerbt
+  ueber `:user-invalid`.
+- **Monatswechsel** in der Kopfzeile liegt jetzt in einer `db-select`-Huelle; das Ein- und
+  Ausblenden haengt an ihr (`#MonatFeld`), sonst bliebe DBs Aufklapp-Pfeil allein stehen.
+
 ## 2026-09-06 (64)
 
 ### refactor (DB-UX-Migration Phase H: Buttons auf DB UX)

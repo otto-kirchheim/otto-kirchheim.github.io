@@ -109,7 +109,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
             />
 
             {kategorie && (
-              <div className="form-check">
+              <div>
                 <input
                   className="form-check-input"
                   type="checkbox"

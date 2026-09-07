@@ -19,11 +19,11 @@ describe('MyShowElement', () => {
     const label = container.querySelector('label');
     const span = container.querySelector('span');
 
-    expect(div?.className).toBe('mb-1 row');
-    expect(label?.className).toBe('col-3 col-form-label text-wrap fw-bold');
+    expect(div?.className).toBe('raster mb-1');
+    expect(label?.className).toBe('sp-3 text-wrap fw-bold');
     expect(label?.getAttribute('for')).toBe('myid');
     expect(label?.textContent).toBe('Titel');
-    expect(span?.className).toBe('col-9 align-middle text-break my-auto');
+    expect(span?.className).toBe('sp-9 align-middle text-break my-auto');
     expect(span?.id).toBe('myid');
     expect(span?.textContent).toBe(' ');
   });

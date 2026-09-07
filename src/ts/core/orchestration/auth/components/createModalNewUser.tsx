@@ -12,7 +12,7 @@ export default function createModalNewUser(): void {
     <MyFormModal myRef={ref} title="Neuen Benutzer Erstellen" submitText="Erstellen" onSubmit={onSubmit()}>
       <MyModalBody>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="text"
           id="Zugang"
@@ -23,7 +23,7 @@ export default function createModalNewUser(): void {
           Zugangscode
         </MyInput>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="text"
           id="Benutzer"
@@ -39,7 +39,7 @@ export default function createModalNewUser(): void {
           Benutzer
         </MyInput>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="email"
           id="Email"
@@ -59,7 +59,7 @@ export default function createModalNewUser(): void {
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="Passwort"
@@ -80,7 +80,7 @@ export default function createModalNewUser(): void {
             </MyInput>
             <PasswordStrengthMeter passwordInputRef={passwortRef} />
             <MyInput
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="Passwort2"
@@ -112,7 +112,6 @@ export default function createModalNewUser(): void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
-      form.classList.add('was-validated');
       if (form.checkValidity && !form.checkValidity()) return;
       checkNeuerBenutzer();
     };

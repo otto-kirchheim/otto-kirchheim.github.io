@@ -143,7 +143,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
             </div>
 
             <div className="raster mb-1 abstand-1">
-              <div className="">
+              <div>
                 <select
                   className="form-select form-select-sm"
                   title="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
@@ -232,7 +232,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           }}
                         />
                       </div>
-                      <div className="sp-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -246,7 +246,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                         <label className="form-check-label small">Fett</label>
                       </div>
-                      <div className="sp-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -260,7 +260,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                         />
                         <label className="form-check-label small">Kursiv</label>
                       </div>
-                      <div className="sp-3 mt-1 form-check mb-0">
+                      <div className="sp-3 mt-1 mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -294,7 +294,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                           <option value="rechts">rechts</option>
                         </select>
                       </div>
-                      <div className="sp-4 mt-1 form-check mb-0">
+                      <div className="sp-4 mt-1 mb-0">
                         <input
                           className="form-check-input"
                           type="checkbox"
@@ -311,7 +311,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
                     </>
                   )}
                   {zelle && (
-                    <div className="">
+                    <div>
                       <WertVorschau text={vorschauText ?? ''} />
                     </div>
                   )}

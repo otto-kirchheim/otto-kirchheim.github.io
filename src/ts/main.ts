@@ -76,7 +76,6 @@ const updateSW = registerSW({
 });
 console.log(pwaInfo);
 
-import Popover from 'bootstrap/js/dist/popover';
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
 import { initStatischeDialoge } from '@/infrastructure/ui/dbDialog';
@@ -91,10 +90,6 @@ registerAppStartTask(() => {
   initTabController();
   initNavSchublade();
   initStatischeDialoge();
-
-  Array.from(document.querySelectorAll('[data-bs-toggle="popover"]')).forEach(
-    popoverTriggerEl => new Popover(popoverTriggerEl),
-  );
 
   if (Storage.size() > 3) {
     const currentVersion: string = import.meta.env.APP_VERSION;
@@ -148,9 +143,8 @@ registerAppStartTask(() => {
     if (mailElement) {
       const local = ['j', 'a', 'n', 'o', 't', 't', 'o', '1', '9', '8', '9'].join('');
       const domain = ['g', 'm', 'a', 'i', 'l', '.', 'c', 'o', 'm'].join('');
-      const mail = `${local}@${domain}`;
-      mailElement.textContent = mail;
-      mailElement.href = `mailto:${mail}`;
+      mailElement.textContent = `${local}@${domain}`;
+      mailElement.href = `mailto:${local}@${domain}`;
     }
   }
 

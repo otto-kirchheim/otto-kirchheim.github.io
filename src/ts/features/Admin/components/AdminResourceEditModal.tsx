@@ -187,7 +187,7 @@ export function AdminResourceEditModal({
                     </div>
                   )
                 ) : typeof val === 'boolean' ? (
-                  <div className="form-check mt-1">
+                  <div className="mt-1">
                     <input
                       type="checkbox"
                       className="form-check-input"

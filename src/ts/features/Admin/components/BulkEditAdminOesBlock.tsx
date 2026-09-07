@@ -53,7 +53,7 @@ export function BulkEditAdminOesBlock({
       <div className="fw-semibold small mb-1">{label}</div>
       <div className="d-flex gap-3 mb-1 flex-wrap">
         {MODE_OPTIONS.map(([mode, modeLabel]) => (
-          <div className="form-check" key={mode}>
+          <div key={mode}>
             <input
               className="form-check-input"
               type="radio"

@@ -11,8 +11,8 @@ export function createTagElement<T extends CustomTableTypes>(row: Row<T>) {
   const column = getColumn(row, 'Tag');
   return (
     <MyShowElement
-      divClass="mb-2 col-12 text-center"
-      labelClass="pe-3 align-middle col-form-label text-wrap fw-bold"
+      divClass="mb-2 sp-12 text-center"
+      labelClass="pe-3 align-middle text-wrap fw-bold"
       spanClass="align-middle my-auto"
       title={`${column.longTitle}:`}
       id={column.name}

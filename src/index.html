@@ -194,20 +194,23 @@
 
           <div class="db-header-primary-action">
             <button class="db-button" data-variant="brand" type="button" id="btnLogin">Anmelden</button>
-            <select id="Monat" class="form-select validate d-none" required aria-label="Monatswechsel">
-              <option value="1">Januar</option>
-              <option value="2">Februar</option>
-              <option value="3">März</option>
-              <option value="4">April</option>
-              <option value="5">Mai</option>
-              <option value="6">Juni</option>
-              <option value="7">Juli</option>
-              <option value="8">August</option>
-              <option value="9">September</option>
-              <option value="10">Oktober</option>
-              <option value="11">November</option>
-              <option value="12">Dezember</option>
-            </select>
+            <div class="db-select d-none" id="MonatFeld" data-hide-label="true">
+              <label for="Monat">Monatswechsel</label>
+              <select id="Monat" required>
+                <option value="1">Januar</option>
+                <option value="2">Februar</option>
+                <option value="3">März</option>
+                <option value="4">April</option>
+                <option value="5">Mai</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">August</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Dezember</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -277,7 +280,16 @@
             </div>
           </div>
           <div class="d-grid d-sm-flex gap-2">
-            <button class="db-button" data-variant="filled" data-color="warning" data-size="small" id="actAsOwnDataButton" type="button">Eigene Daten laden</button>
+            <button
+              class="db-button"
+              data-variant="filled"
+              data-color="warning"
+              data-size="small"
+              id="actAsOwnDataButton"
+              type="button"
+            >
+              Eigene Daten laden
+            </button>
           </div>
         </div>
       </div>
@@ -292,7 +304,14 @@
           <div class="text-center mb-4 mb-md-5">
             <div class="d-inline-flex align-items-center justify-content-center gap-2">
               <h1 class="mt-2 mb-0" id="Willkommen">Willkommen</h1>
-              <button type="button" class="db-button p-0" data-variant="ghost" data-size="small" id="btnHelpStart" aria-label="Hilfe anzeigen">
+              <button
+                type="button"
+                class="db-button p-0"
+                data-variant="ghost"
+                data-size="small"
+                id="btnHelpStart"
+                aria-label="Hilfe anzeigen"
+              >
                 <span class="db-icon align-middle" data-icon="question_mark_circle" style="font-size: 1.25rem"></span>
               </button>
             </div>
@@ -339,7 +358,9 @@
             <div class="d-none" id="quick-bereitschaft-tab">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="bereitschaft-tab"
               >
                 <span class="db-icon" data-icon="calendar"></span>
@@ -349,7 +370,9 @@
             <div class="d-none" id="quick-ewt-tab">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="ewt-tab"
               >
                 <span class="db-icon" data-icon="changeover"></span>
@@ -359,7 +382,9 @@
             <div class="d-none" id="quick-neben-tab">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="neben-tab"
               >
                 <span class="db-icon" data-icon="cash"></span>
@@ -369,7 +394,9 @@
             <div class="d-none" id="quick-ea-tab">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="ea-tab"
               >
                 <span class="db-icon" data-icon="euro_sign"></span>
@@ -379,7 +406,9 @@
             <div class="">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="berechnung-tab"
               >
                 <span class="db-icon" data-icon="bar_chart"></span>
@@ -389,7 +418,9 @@
             <div class="">
               <button
                 type="button"
-                class="db-button d-flex flex-column align-items-center gap-1 py-3" data-variant="outlined" data-width="full"
+                class="db-button d-flex flex-column align-items-center gap-1 py-3"
+                data-variant="outlined"
+                data-width="full"
                 data-jump-tab="einstellungen-tab"
               >
                 <span class="db-icon" data-icon="gear_wheel"></span>
@@ -464,7 +495,9 @@
             id="berechnungMonatsNav"
           >
             <button
-              class="db-button" data-variant="outlined" data-size="small"
+              class="db-button"
+              data-variant="outlined"
+              data-size="small"
               id="btnBerechnungMonatePrev"
               type="button"
               aria-label="Frühere Monate anzeigen"
@@ -473,7 +506,9 @@
             </button>
             <span id="berechnungMonatsFensterLabel" class="small"></span>
             <button
-              class="db-button" data-variant="outlined" data-size="small"
+              class="db-button"
+              data-variant="outlined"
+              data-size="small"
               id="btnBerechnungMonateNext"
               type="button"
               aria-label="Spätere Monate anzeigen"
@@ -528,7 +563,9 @@
               Einstellungen
               <button
                 type="button"
-                class="db-button p-0" data-variant="ghost" data-size="small"
+                class="db-button p-0"
+                data-variant="ghost"
+                data-size="small"
                 id="btnHelpEinstellungen"
                 aria-label="Hilfe anzeigen"
               >
@@ -540,10 +577,18 @@
           <div class="mitte">
             <div class="raster-auto mb-3 knopfreihe abstand-3">
               <div class="d-grid">
-                <button class="db-button" data-variant="brand" type="button" name="Logout" id="btnLogout">Ausloggen</button>
+                <button class="db-button" data-variant="brand" type="button" name="Logout" id="btnLogout">
+                  Ausloggen
+                </button>
               </div>
               <div class="d-grid">
-                <button class="db-button" data-variant="filled" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
+                <button
+                  class="db-button"
+                  data-variant="filled"
+                  type="button"
+                  name="PasswortAEndern"
+                  id="btnPasswortAEndern"
+                >
                   Passwort Ändern
                 </button>
               </div>
@@ -552,23 +597,20 @@
 
           <div class="mitte">
             <form id="formSelectMonatJahr" class="my-3">
-              <div class="input-group jahr-auswahl">
-                <label for="Jahr" class="input-group-text text-dark-emphasis">Jahr</label>
-                <input
-                  id="Jahr"
-                  type="number"
-                  class="form-control text-dark-emphasis validate"
-                  min="2021"
-                  max="2030"
-                  required
-                  data-bs-toggle="popover"
-                  data-bs-trigger="focus"
-                  data-bs-placement="top"
-                  data-bs-original-titel="Monatswechsel"
-                  data-bs-content="Achtung: Vor Jahreswechsel Speichern!!"
-                />
-
-                <button class="db-button" data-variant="brand" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
+              <div class="feldgruppe jahr-auswahl">
+                <div class="db-input" data-variant="floating" data-icon="calendar" data-has-tooltip="true">
+                  <label for="Jahr">Jahr</label>
+                  <input id="Jahr" type="number" placeholder="2026" min="2021" max="2030" required />
+                  <i role="tooltip" class="db-tooltip" data-placement="top">Achtung: Vor Jahreswechsel Speichern!!</i>
+                </div>
+                <button
+                  class="db-button"
+                  data-variant="brand"
+                  type="submit"
+                  id="btnAuswaehlen"
+                  name="Auswählen"
+                  data-disabler
+                >
                   Auswählen
                 </button>
               </div>
@@ -579,7 +621,15 @@
             <div class="mitte">
               <div class="raster-auto my-3 knopfreihe abstand-3">
                 <div class="d-grid">
-                  <button type="submit" class="db-button" data-variant="filled" data-color="successful" name="btnES" id="btnSaveEinstellungen" data-disabler>
+                  <button
+                    type="submit"
+                    class="db-button"
+                    data-variant="filled"
+                    data-color="successful"
+                    name="btnES"
+                    id="btnSaveEinstellungen"
+                    data-disabler
+                  >
                     <span class="db-icon" data-icon="save"></span>
                     Speichern
                   </button>
@@ -592,296 +642,174 @@
                   <summary>Persönliche Daten</summary>
                   <div class="raster text-start abstand-3">
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
-                        <div class="form-floating">
-                          <input type="Text" placeholder="Max" id="Vorname" class="form-control validate" required />
-                          <label for="Vorname">Vorname</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="person">
+                        <label for="Vorname">Vorname</label>
+                        <input type="text" placeholder="Max" id="Vorname" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Mustermann"
-                            id="Nachname"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="Nachname">Nachname</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="person">
+                        <label for="Nachname">Nachname</label>
+                        <input type="text" placeholder="Mustermann" id="Nachname" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="id_card"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="01234567"
-                            id="PNummer"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="PNummer">Personalnummer</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="id_card">
+                        <label for="PNummer">Personalnummer</label>
+                        <input type="text" placeholder="01234567" id="PNummer" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="telephone"></span>
-                        <div class="form-floating">
-                          <input
-                            type="tel"
-                            id="Telefon"
-                            placeholder="0123/45678910"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="Telefon">Telefon</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="telephone">
+                        <label for="Telefon">Telefon</label>
+                        <input type="tel" id="Telefon" placeholder="0123/45678910" required />
                       </div>
                     </div>
                     <div class="">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="envelope"></span>
-                        <div class="form-floating">
-                          <input
-                            type="email"
-                            id="EmailAnzeige"
-                            class="form-control"
-                            placeholder="user@deutschebahn.com"
-                            readonly
-                            disabled
-                          />
+                      <div class="feldgruppe">
+                        <div class="db-input" data-variant="floating" data-icon="envelope">
                           <label for="EmailAnzeige">E-Mail</label>
+                          <input type="email" id="EmailAnzeige" placeholder="user@deutschebahn.com" readonly disabled />
                         </div>
-                        <button class="db-button" data-variant="outlined" type="button" id="btnResendVerificationEmail" disabled>
+                        <button
+                          class="db-button"
+                          data-variant="outlined"
+                          type="button"
+                          id="btnResendVerificationEmail"
+                          disabled
+                        >
                           Verifizierungs-Mail senden
                         </button>
                       </div>
                     </div>
-                    <small id="EmailVerificationHint" class="form-text text-body-secondary d-block ps-1"></small>
+                    <span
+                      id="EmailVerificationHint"
+                      class="db-infotext"
+                      data-size="small"
+                      data-show-icon-leading="false"
+                    ></span>
                     <div class="">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="house"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Musterstraße 17, 12345 Musterstadt"
-                            id="Adress1"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="Adress1">Wohnsitz 1</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="house">
+                        <label for="Adress1">Wohnsitz 1</label>
+                        <input type="text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress1" required />
                       </div>
                     </div>
                     <div class="">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="house"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Musterstraße 17, 12345 Musterstadt"
-                            id="Adress2"
-                            class="form-control validate"
-                          />
-                          <label for="Adress2">Wohnsitz 2</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="house">
+                        <label for="Adress2">Wohnsitz 2</label>
+                        <input type="text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress2" />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Kirchheim"
-                            id="ErsteTkgSt"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="ErsteTkgSt">Erste Tätigkeitsstätte</label>
+                        <input type="text" placeholder="Kirchheim" id="ErsteTkgSt" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Musterstraße 17, 12345 Musterstadt"
-                            id="ErsteTkgStAdresse"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
+                        <input
+                          type="text"
+                          placeholder="Musterstraße 17, 12345 Musterstadt"
+                          id="ErsteTkgStAdresse"
+                          required
+                        />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="map"></span>
-                        <div class="form-floating">
-                          <select id="Bundesland" class="form-select">
-                            <option value="" disabled selected>Bundesland wählen…</option>
-                            <option value="BW">Baden-Württemberg</option>
-                            <option value="BY">Bayern</option>
-                            <option value="BE">Berlin</option>
-                            <option value="BB">Brandenburg</option>
-                            <option value="HB">Bremen</option>
-                            <option value="HH">Hamburg</option>
-                            <option value="HE">Hessen</option>
-                            <option value="MV">Mecklenburg-Vorpommern</option>
-                            <option value="NI">Niedersachsen</option>
-                            <option value="NW">Nordrhein-Westfalen</option>
-                            <option value="RP">Rheinland-Pfalz</option>
-                            <option value="SL">Saarland</option>
-                            <option value="SN">Sachsen</option>
-                            <option value="ST">Sachsen-Anhalt</option>
-                            <option value="SH">Schleswig-Holstein</option>
-                            <option value="TH">Thüringen</option>
-                          </select>
-                          <label for="Bundesland">Bundesland (Feiertage)</label>
-                        </div>
+                      <div class="db-select" data-variant="floating" data-icon="map">
+                        <label for="Bundesland">Bundesland (Feiertage)</label>
+                        <select id="Bundesland">
+                          <option value="" disabled selected>Bundesland wählen…</option>
+                          <option value="BW">Baden-Württemberg</option>
+                          <option value="BY">Bayern</option>
+                          <option value="BE">Berlin</option>
+                          <option value="BB">Brandenburg</option>
+                          <option value="HB">Bremen</option>
+                          <option value="HH">Hamburg</option>
+                          <option value="HE">Hessen</option>
+                          <option value="MV">Mecklenburg-Vorpommern</option>
+                          <option value="NI">Niedersachsen</option>
+                          <option value="NW">Nordrhein-Westfalen</option>
+                          <option value="RP">Rheinland-Pfalz</option>
+                          <option value="SL">Saarland</option>
+                          <option value="SN">Sachsen</option>
+                          <option value="ST">Sachsen-Anhalt</option>
+                          <option value="SH">Schleswig-Holstein</option>
+                          <option value="TH">Thüringen</option>
+                        </select>
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="persons"></span>
-                        <div class="form-floating">
-                          <select class="form-select validate" id="TB" name="TB" required>
-                            <option value="" disabled selected>Bitte Wählen</option>
-                            <option value="Tarifkraft">Tarifkraft</option>
-                            <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
-                            <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
-                          </select>
-                          <label for="TB">Tarif / Beamter</label>
-                        </div>
+                      <div class="db-select" data-variant="floating" data-icon="persons">
+                        <label for="TB">Tarif / Beamter</label>
+                        <select id="TB" name="TB" required>
+                          <option value="" disabled selected>Bitte Wählen</option>
+                          <option value="Tarifkraft">Tarifkraft</option>
+                          <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
+                          <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
+                        </select>
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="DB Netz AG"
-                            id="Betrieb"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="Betrieb">Betrieb</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="Betrieb">Betrieb</label>
+                        <input type="text" placeholder="DB Netz AG" id="Betrieb" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="I.NA-MI-N-KSL-IL 03"
-                            id="OE"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="OE">OE</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="OE">OE</label>
+                        <input type="text" placeholder="I.NA-MI-N-KSL-IL 03" id="OE" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input type="Text" placeholder="LST" id="Gewerk" class="form-control validate" required />
-                          <label for="Gewerk">Gewerk</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="Gewerk">Gewerk</label>
+                        <input type="text" placeholder="LST" id="Gewerk" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Signalmechaniker RBEG"
-                            id="Taetigkeit"
-                            class="form-control validate"
-                            list="taetigkeitVorschlaege"
-                          />
-                          <label for="Taetigkeit">Tätigkeit / Stellenbezeichnung</label>
-                          <datalist id="taetigkeitVorschlaege">
-                            <option value="Arbeiter"></option>
-                            <option value="Facharbeiter"></option>
-                            <option value="Signalmechaniker"></option>
-                            <option value="Signalmechaniker RBEG"></option>
-                            <option value="Meister"></option>
-                          </datalist>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="person">
+                        <label for="Taetigkeit">Tätigkeit / Stellenbezeichnung</label>
+                        <input
+                          type="text"
+                          placeholder="Signalmechaniker RBEG"
+                          id="Taetigkeit"
+                          list="taetigkeitVorschlaege"
+                        />
+                        <datalist id="taetigkeitVorschlaege">
+                          <option value="Arbeiter"></option>
+                          <option value="Facharbeiter"></option>
+                          <option value="Signalmechaniker"></option>
+                          <option value="Signalmechaniker RBEG"></option>
+                          <option value="Meister"></option>
+                        </datalist>
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="person"></span>
-                        <div class="form-floating">
-                          <input type="Text" placeholder="105" id="Entgeltgruppe" class="form-control validate" />
-                          <label for="Entgeltgruppe">Entgeltgruppe (Optional / Entgeltausgleich)</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="person">
+                        <label for="Entgeltgruppe">Entgeltgruppe (Optional / Entgeltausgleich)</label>
+                        <input type="text" placeholder="105" id="Entgeltgruppe" />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="market"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Number"
-                            placeholder="12"
-                            id="kmArbeitsort"
-                            class="form-control validate"
-                            min="1"
-                            max="100"
-                            required
-                          />
-                          <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="market">
+                        <label for="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
+                        <input type="number" placeholder="12" id="kmArbeitsort" min="1" max="100" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="train"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Text"
-                            placeholder="Bad Hersfeld"
-                            id="nBhf"
-                            class="form-control validate"
-                            required
-                          />
-                          <label for="nBhf">nächster Bahnhof</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="train">
+                        <label for="nBhf">nächster Bahnhof</label>
+                        <input type="text" placeholder="Bad Hersfeld" id="nBhf" required />
                       </div>
                     </div>
                     <div class="sp-md-6">
-                      <div class="input-group">
-                        <span class="db-icon input-group-text db-font-size-lg" data-icon="train"></span>
-                        <div class="form-floating">
-                          <input
-                            type="Number"
-                            placeholder="12"
-                            id="kmnBhf"
-                            class="form-control validate"
-                            min="1"
-                            max="100"
-                            required
-                          />
-                          <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
-                        </div>
+                      <div class="db-input" data-variant="floating" data-icon="train">
+                        <label for="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
+                        <input type="number" placeholder="12" id="kmnBhf" min="1" max="100" required />
                       </div>
                     </div>
                   </div>
@@ -902,15 +830,27 @@
                         <p class="text-body-secondary small mb-1">
                           Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
                         </p>
-                        <small id="PasskeyStatus" class="form-text text-body-secondary d-block"
-                          >Biometrie-Status wird geladen...</small
+                        <span id="PasskeyStatus" class="db-infotext" data-size="small" data-show-icon-leading="false"
+                          >Biometrie-Status wird geladen...</span
                         >
                       </div>
                       <div class="d-flex flex-column gap-2">
-                        <button class="db-button" data-variant="outlined" type="button" id="btnAddPasskeyInline" disabled>
+                        <button
+                          class="db-button"
+                          data-variant="outlined"
+                          type="button"
+                          id="btnAddPasskeyInline"
+                          disabled
+                        >
                           Biometrie einrichten
                         </button>
-                        <button class="db-button" data-variant="outlined" type="button" id="btnPasswortPerPasskey" hidden>
+                        <button
+                          class="db-button"
+                          data-variant="outlined"
+                          type="button"
+                          id="btnPasswortPerPasskey"
+                          hidden
+                        >
                           Passwort per Passkey neu setzen
                         </button>
                       </div>
@@ -961,45 +901,29 @@
                         <h6 class="fw-bold mb-3">Sichtbare Bereiche</h6>
                         <p class="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
                         <div class="d-flex flex-column gap-2">
-                          <div class="form-check form-switch d-flex align-items-center">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="tab-bereitschaft"
-                              data-tab-key="bereitschaft"
-                            />
-                            <label class="form-check-label ms-2" for="tab-bereitschaft">Bereitschaft</label>
+                          <div class="db-switch">
+                            <label for="tab-bereitschaft">
+                              <input type="checkbox" role="switch" id="tab-bereitschaft" data-tab-key="bereitschaft" />
+                              Bereitschaft
+                            </label>
                           </div>
-                          <div class="form-check form-switch d-flex align-items-center">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="tab-ewt"
-                              data-tab-key="ewt"
-                            />
-                            <label class="form-check-label ms-2" for="tab-ewt">EWT</label>
+                          <div class="db-switch">
+                            <label for="tab-ewt">
+                              <input type="checkbox" role="switch" id="tab-ewt" data-tab-key="ewt" />
+                              EWT
+                            </label>
                           </div>
-                          <div class="form-check form-switch d-flex align-items-center">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="tab-neben"
-                              data-tab-key="neben"
-                            />
-                            <label class="form-check-label ms-2" for="tab-neben">Nebenbezüge</label>
+                          <div class="db-switch">
+                            <label for="tab-neben">
+                              <input type="checkbox" role="switch" id="tab-neben" data-tab-key="neben" />
+                              Nebenbezüge
+                            </label>
                           </div>
-                          <div class="form-check form-switch d-flex align-items-center">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="tab-ea"
-                              data-tab-key="ea"
-                            />
-                            <label class="form-check-label ms-2" for="tab-ea">Entgeltausgleich</label>
+                          <div class="db-switch">
+                            <label for="tab-ea">
+                              <input type="checkbox" role="switch" id="tab-ea" data-tab-key="ea" />
+                              Entgeltausgleich
+                            </label>
                           </div>
                         </div>
                       </div>
@@ -1010,23 +934,23 @@
                       <div>
                         <h6 class="fw-bold mb-3">AutoSave</h6>
                         <div class="d-flex flex-column gap-3">
-                          <div class="form-check form-switch d-flex align-items-center">
-                            <input
-                              class="form-check-input"
-                              type="checkbox"
-                              role="switch"
-                              id="autoSaveEnabled"
-                              data-settings-key="autoSaveEnabled"
-                            />
-                            <label class="form-check-label ms-2" for="autoSaveEnabled">AutoSave aktivieren</label>
+                          <div class="db-switch">
+                            <label for="autoSaveEnabled">
+                              <input
+                                type="checkbox"
+                                role="switch"
+                                id="autoSaveEnabled"
+                                data-settings-key="autoSaveEnabled"
+                              />
+                              AutoSave aktivieren
+                            </label>
                           </div>
                           <div>
-                            <label for="autoSaveDelay" class="form-label">
+                            <label for="autoSaveDelay">
                               Verzögerung: <span id="autoSaveDelayLabel" class="fw-semibold">10 s</span>
                             </label>
                             <input
                               type="range"
-                              class="form-range"
                               id="autoSaveDelay"
                               data-settings-key="autoSaveDelayMs"
                               min="0"
@@ -1124,7 +1048,13 @@
       <span class="text-body-secondary small" id="copyrightText" data-start-year="2021"
         >&copy; 2021 Jan Otto | v%APP_VERSION%</span
       >
-      <button type="button" class="db-button impressum" data-variant="outlined" data-size="small" data-dialog-target="impressum">
+      <button
+        type="button"
+        class="db-button impressum"
+        data-variant="outlined"
+        data-size="small"
+        data-dialog-target="impressum"
+      >
         Impressum
       </button>
     </footer>

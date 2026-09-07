@@ -48,14 +48,6 @@ export function hinweisZeilen(content: string): string[] {
     .filter(Boolean);
 }
 
-/** `form-floating` ist Bootstrap-Layout; DBInput bringt sein Label-Layout selbst mit. */
-export function feldKlassen(divClass?: string): string {
-  return (divClass ?? '')
-    .split(/\s+/)
-    .filter(k => k && k !== 'form-floating')
-    .join(' ');
-}
-
 const MyInput: FC<TModalBodyInputElementOption> = props => {
   const {
     myRef,
@@ -81,7 +73,7 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
   const hinweis = popover ? hinweisZeilen(popover.content) : [];
 
   return (
-    <div className={feldKlassen(divClass)}>
+    <div className={divClass}>
       {/* `type` und die Laengenbegrenzungen kommen ueber die Props der Aufrufstelle. */}
       {/* eslint-disable-next-line db-ux/input-type-required, db-ux/form-validation-message-required */}
       <DBInput
@@ -102,9 +94,9 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
           </DBTooltip>
         ) : null}
         {invalidFeedbackId ? (
-          <div id={invalidFeedbackId} className="invalid-feedback">
+          <span id={invalidFeedbackId} className="db-infotext" data-semantic="critical" data-size="small">
             {invalidFeedbackText}
-          </div>
+          </span>
         ) : null}
       </DBInput>
     </div>

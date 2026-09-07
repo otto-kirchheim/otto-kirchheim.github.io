@@ -266,7 +266,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       {/* Filter-Leiste */}
       <div className="raster mb-3 abstand-2">
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <input
               type="text"
               className="form-control"
@@ -282,7 +282,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           </div>
         </div>
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <input
               type="text"
               className="form-control"
@@ -298,7 +298,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           </div>
         </div>
         <div className="sp-sm-4">
-          <div className="form-floating">
+          <div>
             <select
               className="form-select"
               id="adminFilterRole"
@@ -365,7 +365,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       {!loading && visibleUsers.length > 0 && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
           {isSuperAdmin && selectableUsers.length > 0 && (
-            <div className="form-check mb-0">
+            <div className="mb-0">
               <input
                 className="form-check-input"
                 type="checkbox"

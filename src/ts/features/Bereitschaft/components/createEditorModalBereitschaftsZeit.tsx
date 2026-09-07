@@ -22,7 +22,7 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ReactNo
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
       return (
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           type="datetime-local"
           id={column.name}
           name={column.title}
@@ -37,7 +37,7 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ReactNo
     default:
       return (
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           type="number"
           id={column.name}
           name={column.title}
@@ -63,7 +63,7 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
       max = datum.add(1, 'M').startOf('M').format('YYYY-MM-DDTHH:mm');
       return (
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           type="datetime-local"
           id={column.name}
           name={column.longTitle}
@@ -76,14 +76,7 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
       );
     default:
       return (
-        <MyInput
-          divClass="form-floating col-12"
-          type="number"
-          id={column.name}
-          name={column.longTitle}
-          min={'0'}
-          max={'60'}
-        >
+        <MyInput divClass="sp-12" type="number" id={column.name} name={column.longTitle} min={'0'} max={'60'}>
           {column.longTitle}
         </MyInput>
       );

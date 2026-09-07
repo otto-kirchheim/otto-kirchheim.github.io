@@ -1515,3 +1515,50 @@ Offener Punkt fuer die Sichtpruefung: der Seed-Login schlaegt gegen das echte Ba
 (Token-Refresh), deshalb mounten die React-Tabs Bereitschaft/EWT/EA/Neben im Smoke-Test nicht.
 Entweder einen Testbenutzer bereitstellen oder die Token-Antwort per Request-Interception
 faelschen.
+
+## Phase H (4): Formulare auf DB UX
+
+Bootstraps Formular-CSS ist der letzte grosse Klassenblock vor dem Rauswurf (~578 Vorkommen in
+rund 60 Dateien). DB liefert dafuer fertige Bausteine, die ohne JS auskommen: `db-input`,
+`db-select`, `db-checkbox`, `db-switch` -- jeweils Huelle mit `<label>` + Feld darin.
+Zuordnung (aus `@db-ux/core-components/build/styles/bundle.css` verifiziert):
+
+| Bootstrap | DB |
+| --- | --- |
+| `form-floating` + `form-control` | `.db-input[data-variant="floating"]` (Label vor dem Feld) |
+| `form-control` + eigenes `form-label` | `.db-input` mit `<label>` in der Huelle |
+| `form-select` | `.db-select` |
+| `form-control-sm`/`form-select-sm`/`input-group-sm` | `data-density="functional"` an der Huelle |
+| `input-group` + `input-group-text`-Icon | `data-icon="…"` an der Huelle (reines CSS, `content: attr(data-icon)`) |
+| `input-group` mit Text-Praefix/Knopf | App-Klasse `.feldgruppe` (DB hat keine Entsprechung) |
+| `form-check` (+ `form-check-input`/`-label`) | `.db-checkbox` mit Feld **im** Label |
+| `form-check form-switch` | `.db-switch` (`role="switch"` am Input) |
+| `form-text` / `invalid-feedback` | `.db-infotext` (`data-size="small"`, `data-semantic="critical"`) |
+| `form-label` | entfaellt (Label steht in der Huelle) |
+
+- [ ] `src/index.html` (98 Stellen): Persoenliche Daten, Jahr-Auswahl, Monatswechsel
+- [ ] `main.ts`: `Popover`-Plugin raus -- der einzige verbliebene Aufrufer ist das Jahr-Feld,
+      es bekommt einen `db-tooltip` wie die Tabellenzellen seit Phase F
+- [ ] `.tsx`-Sweep (~55 Dateien), Schwerpunkt Admin/FormularEditor und die Feature-Modals
+- [ ] `addressValidation.ts`: `closest('.input-group, .form-floating, …')` auf `.db-input`,
+      Fehlertext als `db-infotext` statt `invalid-feedback`; `is-invalid` faellt weg
+      (`data-custom-validity="invalid"` wird bereits gesetzt)
+- [ ] `styles.scss`: Bootstrap-Formular-Korrekturen (Floating-Platzhalter, `.form-check`-Regeln
+      in Signatur-Fusszeile und Zulagen-Liste, `.form-floating.required`-Sternchen) durch
+      DB-taugliche Regeln ersetzen; `.feldgruppe` anlegen
+- [ ] `was-validated` (4 Dialoge): Bootstrap-Klasse ohne Wirkung im DB-Markup -- durch
+      `data-custom-validity` am jeweiligen Feld ersetzen
+- [ ] Tests nachziehen
+
+### Verifikationskriterien (H4)
+
+- `grep -rE "form-control|form-select|form-check|form-switch|form-floating|form-label|form-text|input-group|invalid-feedback|is-invalid|was-validated" src/` ist leer
+- `bootstrap/js` kommt in `src/` nicht mehr vor (Popover war das letzte Plugin)
+- `typecheck`, `lint` 0 Fehler, Testsuite ohne neue Fehlschlaege, `build` erfolgreich
+- Sichtpruefung: Einstellungen (Persoenliche Daten, Jahr-Auswahl), ein Add- und ein
+  Editor-Dialog je Feature, Admin-Vorlageneditor, Anmelde-/Registrier-Dialog -- hell und dunkel,
+  1300 px und 412 px
+
+**Umgebungshinweis:** In diesem Container fehlen `ASSET_PASSWORD`/`ASSET_INIT_VECTOR`, die
+DB-Markenassets sind deshalb unentschluesselt (`*.svg.enc`). `test/icons.dbSet.test.ts` faellt
+dadurch mit 3 Tests aus -- unabhaengig von dieser Aenderung.

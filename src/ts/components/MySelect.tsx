@@ -9,7 +9,7 @@ type TMySelect = {
   id: string;
   title: string;
   value?: string | number | Dayjs;
-  className: string;
+  className?: string;
   required?: boolean;
   changeHandler?: ChangeEventHandler<HTMLSelectElement>;
   options: {

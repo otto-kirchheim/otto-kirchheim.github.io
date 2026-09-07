@@ -124,7 +124,6 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
       <MyModalBody>
         {initialDataE.length > 0 && (
           <MySelect
-            className="form-floating"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={buildEwtOptions(initialDataE, getUsedEwtRefs(), initialNextEwt?._id)}
@@ -133,7 +132,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
         )}
 
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="date"
           id="Tag"
@@ -144,18 +143,11 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
           Tag
         </MyInput>
 
-        <MyInput divClass="form-floating col-12" required type="time" id="Dauer" name="Dauer">
+        <MyInput divClass="sp-12" required type="time" id="Dauer" name="Dauer">
           Dauer
         </MyInput>
 
-        <MyInput
-          divClass="form-floating col-12"
-          required
-          type="text"
-          id="Taetigkeit"
-          name="Taetigkeit"
-          list="taetigkeitVorschlaege"
-        >
+        <MyInput divClass="sp-12" required type="text" id="Taetigkeit" name="Taetigkeit" list="taetigkeitVorschlaege">
           Tätigkeit
         </MyInput>
         <datalist id="taetigkeitVorschlaege">
@@ -165,7 +157,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
         </datalist>
 
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="text"
           id="Entgeltgruppe"

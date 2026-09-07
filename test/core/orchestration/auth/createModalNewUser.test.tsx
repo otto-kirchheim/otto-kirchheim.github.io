@@ -34,10 +34,6 @@ function setupShowModalMock(checkValidity = true): HTMLDivElement {
   return fakeModal;
 }
 
-function getForm(): HTMLFormElement {
-  return showModalMock.mock.calls[0][0].props.myRef.current as HTMLFormElement;
-}
-
 function getSubmit(): (event: Event) => void {
   return showModalMock.mock.calls[0][0].props.onSubmit as (event: Event) => void;
 }
@@ -55,7 +51,6 @@ describe('createModalNewUser', () => {
     getSubmit()({ preventDefault } as unknown as Event);
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
-    expect(getForm().classList.contains('was-validated')).toBe(true);
     expect(checkNeuerBenutzerMock).toHaveBeenCalledTimes(1);
   });
 
@@ -67,7 +62,6 @@ describe('createModalNewUser', () => {
     getSubmit()({ preventDefault } as unknown as Event);
 
     expect(preventDefault).toHaveBeenCalledTimes(1);
-    expect(getForm().classList.contains('was-validated')).toBe(true);
     expect(checkNeuerBenutzerMock).not.toHaveBeenCalled();
   });
 });

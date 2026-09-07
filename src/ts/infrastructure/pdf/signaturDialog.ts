@@ -179,9 +179,11 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
           <canvas class="signatur-canvas"></canvas>
         </div>
         <div class="dialog-fuss signatur-fusszeile">
-          <div class="form-check me-auto">
-            <input type="checkbox" class="form-check-input" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
-            <label class="form-check-label" for="signatur-speichern">Merken</label>
+          <div class="db-checkbox me-auto" data-size="small">
+            <label for="signatur-speichern">
+              <input type="checkbox" id="signatur-speichern" data-speichern="true" ${cachedPng ? 'checked' : ''}>
+              Merken
+            </label>
           </div>
           <button type="button" class="db-button" data-variant="outlined" data-size="small" data-bs-dismiss="modal">Abbrechen</button>
           <button type="button" class="db-button" data-variant="outlined" data-size="small" data-loeschen="true">Löschen</button>

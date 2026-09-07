@@ -46,7 +46,8 @@ registerAppStartTask(() => {
 
   const willkommenEl = document.querySelector<HTMLHeadingElement>('#Willkommen');
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
-  const monatEl = document.querySelector<HTMLInputElement>('#Monat');
+  const monatEl = document.querySelector<HTMLSelectElement>('#Monat');
+  const monatFeldEl = document.querySelector<HTMLDivElement>('#MonatFeld');
   const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
   const actAsButtonEl = document.querySelector<HTMLButtonElement>('#actAsOwnDataButton');
 
@@ -130,7 +131,7 @@ registerAppStartTask(() => {
     }
     markStep('session-restore', 'sr:admin-toggle');
 
-    monatEl?.classList.remove('d-none');
+    monatFeldEl?.classList.remove('d-none');
     navmenuEl?.classList.remove('d-none');
     btnNavmenuEl?.classList.remove('d-none');
     document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');

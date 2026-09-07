@@ -46,7 +46,7 @@ export default function logoutUser({
 
   if (zeigeTab('start')) window.scrollTo(0, 1);
 
-  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#Monat', '#startSchnellzugriff'])
+  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#MonatFeld', '#startSchnellzugriff'])
     toggleClassForElement(selector);
   hideAllFeatureTabs();
 

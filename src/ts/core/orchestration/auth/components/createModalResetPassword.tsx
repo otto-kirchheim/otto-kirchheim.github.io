@@ -17,7 +17,7 @@ export default function createModalResetPassword(token: string): void {
           <div className="raster abstand-2">
             <MyInput
               myRef={passwortRef}
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="PasswortNeuReset"
@@ -38,7 +38,7 @@ export default function createModalResetPassword(token: string): void {
             </MyInput>
             <PasswordStrengthMeter passwordInputRef={passwortRef} />
             <MyInput
-              divClass="form-floating col-12"
+              divClass="sp-12"
               required
               type="password"
               id="PasswortNeuReset2"
@@ -63,7 +63,6 @@ export default function createModalResetPassword(token: string): void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       event.preventDefault();
-      form.classList.add('was-validated');
       if (form.checkValidity && !form.checkValidity()) return;
 
       const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');

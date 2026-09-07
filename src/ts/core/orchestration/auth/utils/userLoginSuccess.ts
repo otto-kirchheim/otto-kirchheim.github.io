@@ -67,8 +67,8 @@ export default async function userLoginSuccess({
   await featureLifecycleRegistry.initializeAll({ isAdmin: userIsAdmin, userName: username });
   markStep('login', 'feature:lifecycle');
 
-  const monatEl = document.querySelector<HTMLInputElement>('#Monat');
-  monatEl?.classList.remove('d-none');
+  const monatFeldEl = document.querySelector<HTMLDivElement>('#MonatFeld');
+  monatFeldEl?.classList.remove('d-none');
 
   console.log('Eingeloggt');
 

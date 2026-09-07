@@ -113,7 +113,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const modal = showModal<IDatenEWT>(
     <MyFormModal myRef={ref} title="Neue Anwesenheit eingeben" helpContext="modal.ewt.add" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="">
+        <div>
           <MyButton
             className="db-button text-start"
             data-variant="filled"
@@ -130,7 +130,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           />
         </div>
         <MyInput
-          divClass="form-floating col-12"
+          divClass="sp-12"
           required
           type="date"
           id="Tag"
@@ -153,7 +153,6 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           </MyInput>
         </div>
         <MySelect
-          className="form-floating"
           title="Einsatzort"
           id="EOrt"
           myRef={EOrtRef}
@@ -167,21 +166,14 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
             }),
           ]}
         />
-        <MySelect
-          className="form-floating"
-          title="Schicht"
-          id="Schicht"
-          required
-          myRef={SchichtRef}
-          options={buildSchichtOptionen(vorgabenU)}
-        />
-        <div className="">
-          <MyCheckbox className="form-check form-switch" id="berechnen1" myRef={berechnenRef} checked>
+        <MySelect title="Schicht" id="Schicht" required myRef={SchichtRef} options={buildSchichtOptionen(vorgabenU)} />
+        <div>
+          <MyCheckbox id="berechnen1" myRef={berechnenRef} checked>
             Berechnen
           </MyCheckbox>
         </div>
-        <div className="">
-          <MyCheckbox className="form-check form-switch" id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
+        <div>
+          <MyCheckbox id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
             Büro
             <br />
             <small>(Keine Fahrt zu einem Einsatzort)</small>

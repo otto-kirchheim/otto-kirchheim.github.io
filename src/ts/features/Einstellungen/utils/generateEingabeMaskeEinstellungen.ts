@@ -174,10 +174,9 @@ function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
 
   for (const zulage of ZULAGEN_CATALOG) {
     const wrapper = document.createElement('div');
-    wrapper.className = 'form-check';
+    wrapper.className = 'db-checkbox';
 
     const input = document.createElement('input');
-    input.className = 'form-check-input';
     input.type = 'checkbox';
     input.id = `zulage-${zulage.code}`;
     input.dataset.zulageCode = zulage.code;
@@ -197,12 +196,12 @@ function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
       syncCategoryAvailability(zulage.category);
     });
 
+    // DB erwartet das Feld IM Label -- die Optik (Haken, Abstand) haengt an dieser Schachtelung.
     const label = document.createElement('label');
-    label.className = 'form-check-label';
     label.setAttribute('for', input.id);
-    label.textContent = `${zulage.code} - ${zulage.label}`;
+    label.appendChild(input);
+    label.append(`${zulage.code} - ${zulage.label}`);
 
-    wrapper.appendChild(input);
     wrapper.appendChild(label);
     const categoryContainer = ensureCategoryContainer(zulage.category);
     categoryContainer.appendChild(wrapper);

@@ -34,7 +34,7 @@ const createTimeElement = (
   const column = getColumn(row, columnName);
   return (
     <MyInput
-      divClass="form-floating col-6"
+      divClass="sp-6"
       type={column.type ?? 'time'}
       id={column.name}
       name={column.longTitle}
@@ -50,7 +50,7 @@ const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName:
   const column = getColumn(row, columnName);
   return (
     <MyInput
-      divClass="form-floating col-6"
+      divClass="sp-6"
       type={column.type ?? 'text'}
       id={column.name}
       name={column.longTitle}
@@ -139,7 +139,6 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       <MyModalBody>
         {dataE.length > 0 && (
           <MySelect
-            className="form-floating"
             id="ewtRefSelect"
             title="EWT-Eintrag (optional)"
             options={ewtOptions}
@@ -148,7 +147,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
         )}
 
         <MyInput
-          divClass="form-floating col-6"
+          divClass="sp-6"
           required
           type="date"
           id="Tag"
@@ -172,7 +171,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
               return (
                 <MyInput
                   key={zulage.code}
-                  divClass="form-floating col-6"
+                  divClass="sp-6"
                   type="number"
                   id={`zulage-${zulage.code}`}
                   name={`${zulage.code} ${zulage.label}`}

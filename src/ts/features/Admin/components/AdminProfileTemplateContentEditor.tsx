@@ -188,7 +188,7 @@ export function AdminProfileTemplateContentEditor({
             )}
             {templateContent.Fahrzeit.map((row, index) => (
               <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
-                <div className="">
+                <div>
                   <div className="input-group input-group-sm admin-fahrzeit-input-group">
                     <input
                       className="form-control admin-fahrzeit-key"
@@ -357,7 +357,7 @@ export function AdminProfileTemplateContentEditor({
                     </div>
 
                     <div className="raster mb-2 abstand-2">
-                      <div className="">
+                      <div>
                         <label className="form-label small mb-1">Bezeichnung</label>
                         <input
                           className="form-control form-control-sm"
@@ -446,7 +446,7 @@ export function AdminProfileTemplateContentEditor({
                       <label className="form-label small mb-1">Aktive Schichten</label>
                       <div className="d-flex flex-wrap gap-3">
                         {SCHICHT_OPTIONEN.map(({ typ, label }) => (
-                          <label key={typ} className="form-check m-0">
+                          <label key={typ} className="m-0">
                             <input
                               className="form-check-input me-1"
                               type="checkbox"
@@ -580,7 +580,7 @@ export function AdminProfileTemplateContentEditor({
             <label className="form-label small mb-1">Sichtbare Bereiche</label>
             <div className="d-flex flex-wrap gap-2">
               {TAB_OPTIONS.map(option => (
-                <label className="form-check m-0" key={`${templateId}-tab-${option.key}`}>
+                <label className="m-0" key={`${templateId}-tab-${option.key}`}>
                   <input
                     className="form-check-input me-1"
                     type="checkbox"
@@ -597,7 +597,7 @@ export function AdminProfileTemplateContentEditor({
             <label className="form-label small mb-1">Benötigte Zulagen</label>
             <div className="d-flex flex-wrap gap-2">
               {ZULAGEN_CATALOG.map(zulage => (
-                <label className="form-check m-0" key={`${templateId}-zulage-${zulage.code}`}>
+                <label className="m-0" key={`${templateId}-zulage-${zulage.code}`}>
                   <input
                     className="form-check-input me-1"
                     type="checkbox"

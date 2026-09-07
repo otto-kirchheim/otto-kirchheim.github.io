@@ -178,7 +178,7 @@ export function AdminUserCard({
             <div className="border rounded p-2 mt-2">
               <div className="small fw-semibold mb-2">Spezielle Admin-Berechtigungen</div>
 
-              <div className="form-check mb-1">
+              <div className="mb-1">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -192,7 +192,7 @@ export function AdminUserCard({
                 </label>
               </div>
 
-              <div className="form-check mb-1">
+              <div className="mb-1">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -212,7 +212,7 @@ export function AdminUserCard({
                 </label>
               </div>
 
-              <div className="form-check mb-1">
+              <div className="mb-1">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -226,7 +226,7 @@ export function AdminUserCard({
                 </label>
               </div>
 
-              <div className="form-check mb-1">
+              <div className="mb-1">
                 <input
                   className="form-check-input"
                   type="checkbox"
@@ -241,7 +241,7 @@ export function AdminUserCard({
                 <div className="small text-body-secondary">Erstellen beinhaltet automatisch Bearbeiten.</div>
               </div>
 
-              <div className="form-check">
+              <div>
                 <input
                   className="form-check-input"
                   type="checkbox"

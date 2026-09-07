@@ -1,3 +1,4 @@
+import { DbAuswahl, DbFeld } from './DbFeld';
 import MyButton from './MyButton';
 import MyCheckbox from './MyCheckbox';
 import MyDivModal from './MyDivModal';
@@ -14,6 +15,8 @@ import PasswordStrengthMeter from './PasswordStrengthMeter';
 import showModal, { oeffneDrawer, schliesseModal } from './showModal';
 
 export {
+  DbAuswahl,
+  DbFeld,
   MyButton,
   MyCheckbox,
   MyDivModal,

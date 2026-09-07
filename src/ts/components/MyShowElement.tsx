@@ -11,9 +11,9 @@ type TMyShowElement = {
 };
 
 const MyShowElement: FC<TMyShowElement> = ({
-  divClass = 'mb-1 row',
-  labelClass = 'col-3 col-form-label text-wrap fw-bold',
-  spanClass = 'col-9 align-middle text-break my-auto',
+  divClass = 'raster mb-1',
+  labelClass = 'sp-3 text-wrap fw-bold',
+  spanClass = 'sp-9 align-middle text-break my-auto',
   title,
   id,
   text = '\u00A0',

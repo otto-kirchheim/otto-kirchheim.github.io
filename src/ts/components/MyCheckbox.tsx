@@ -4,7 +4,7 @@ import { useRef, type ChangeEventHandler, type FC, type ReactNode, type Ref } fr
 import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
 
 type TMyCheckbox = {
-  className: string;
+  className?: string;
   name?: string;
   id: string;
   children: ReactNode;
@@ -14,22 +14,13 @@ type TMyCheckbox = {
   changeHandler?: ChangeEventHandler<HTMLInputElement>;
 };
 
-/**
- * Alle Aufrufstellen nutzen `form-check form-switch`, also durchgehend Schalter -- deshalb
- * `DBSwitch` und nicht `DBCheckbox`. Die Bootstrap-Klassen fallen weg, App-eigene Klassen
- * (z.B. `bereitschaft`, Grid-Spalten) bleiben erhalten.
+/*
+ * Alle Aufrufstellen meinen Schalter, nicht Haken -- deshalb `DBSwitch` und nicht `DBCheckbox`.
+ * App-eigene Klassen (z.B. `bereitschaft`, Rasterspalten) reicht `className` durch.
  */
-export function switchKlassen(className: string): string {
-  return className
-    .split(/\s+/)
-    .filter(k => k && k !== 'form-check' && k !== 'form-switch')
-    .join(' ');
-}
-
 const MyCheckbox: FC<TMyCheckbox> = ({ className, changeHandler, children, id, myRef, checked, ...inputProps }) => {
   // Ohne Handler ist `checked` in React schreibgeschuetzt; die Aufrufer meinen eine Vorbelegung.
   const zustand = changeHandler ? { checked } : { defaultChecked: checked };
-  const rest = switchKlassen(className);
   const eigeneRef = useRef<HTMLInputElement>(null);
   useSofortigeId(eigeneRef, id);
 
@@ -39,7 +30,7 @@ const MyCheckbox: FC<TMyCheckbox> = ({ className, changeHandler, children, id, m
 
   return (
     <DBSwitch
-      className={rest || undefined}
+      className={className || undefined}
       id={id}
       label={textLabel}
       aria-label={textLabel ? undefined : (inputProps.name ?? id)}
