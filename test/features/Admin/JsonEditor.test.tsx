@@ -55,7 +55,7 @@ describe('JsonEditor', () => {
     it('zeigt "Ungültiges JSON" bei kaputtem JSON', () => {
       const container = renderEditor({ value: '{kaputt' });
       expect(badge(container)?.textContent).toBe('Ungültiges JSON');
-      expect(badge(container)?.className).toContain('bg-danger');
+      expect(badge(container)?.getAttribute('data-semantic')).toBe('critical');
     });
   });
 

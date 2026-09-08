@@ -28,7 +28,7 @@ let startMonat: number | null = null;
  * nächste hinzu.
  */
 export function ermittleFensterGroesse(): number {
-  const container = document.querySelector<HTMLElement>('#Berechnung .table-responsive');
+  const container = document.querySelector<HTMLElement>('#Berechnung .db-table');
   const basisBreite = container?.clientWidth || window.innerWidth - RESERVE_PX;
   const verfuegbar = basisBreite - ERSTE_SPALTE_PX;
 

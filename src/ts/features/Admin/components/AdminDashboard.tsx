@@ -30,8 +30,8 @@ function StatCard({
   const display = label ?? value?.toLocaleString() ?? '–';
   return (
     <div className="sp-sm-6 sp-xl-3">
-      <div className="card border-0 shadow-sm h-100">
-        <div className="card-body d-flex gap-3 align-items-start">
+      <div className="db-card border-0 shadow-sm h-100">
+        <div className="d-flex gap-3 align-items-start">
           <span className={`db-icon fs-2 ${colorClass} db-font-size-lg`} data-icon={icon} />
           <div style={{ minWidth: '0' }}>
             <div className="text-body-secondary small">{title}</div>
@@ -168,85 +168,79 @@ export function AdminDashboard() {
 
       <div className="raster abstand-3">
         <div className="sp-md-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h6 className="card-title fw-semibold mb-3">Rollenverteilung</h6>
-              {Object.entries(stats.users.byRole).map(([role, count]) => (
-                <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                  <span className="small">{ROLE_LABELS[role] ?? role}</span>
-                  <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="sp-md-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h6 className="card-title fw-semibold mb-3">Ressourcenbestand</h6>
-              {(
-                [
-                  [
-                    'Bereitschaftseinsätze',
-                    stats.resources.bereitschaftseinsaetze,
-                    stats.growth.bereitschaftseinsaetzeLast7d,
-                  ],
-                  [
-                    'Bereitschaftszeiträume',
-                    stats.resources.bereitschaftszeitraeume,
-                    stats.growth.bereitschaftszaetraumeLast7d,
-                  ],
-                  ['Einsatzwechseltätigkeiten', stats.resources.einsatzwechseltaetigkeiten, stats.growth.ewtLast7d],
-                  ['Nebengeld-Einträge', stats.resources.nebengeld, stats.growth.nebengeldLast7d],
-                  ['Entgeltausgleich-Einträge', stats.resources.entgeltausgleich, stats.growth.entgeltausgleichLast7d],
-                ] as [string, number, number][]
-              ).map(([label, count, growth]) => (
-                <div key={label} className="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
-                  <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>
-                    {label}
-                    {growth > 0 && (
-                      <span className="db-tag text-success ms-1" data-semantic="successful">
-                        +{growth}
-                      </span>
-                    )}
-                  </span>
-                  <span className="db-tag flex-shrink-0" data-semantic="informational" data-emphasis="strong">
-                    {count.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
-                +N = neue Einträge (7 Tage)
+          <div className="db-card border-0 shadow-sm h-100">
+            <h6 className="fw-semibold mb-3">Rollenverteilung</h6>
+            {Object.entries(stats.users.byRole).map(([role, count]) => (
+              <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span className="small">{ROLE_LABELS[role] ?? role}</span>
+                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                  {count}
+                </span>
               </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="sp-md-4">
+          <div className="db-card border-0 shadow-sm h-100">
+            <h6 className="fw-semibold mb-3">Ressourcenbestand</h6>
+            {(
+              [
+                [
+                  'Bereitschaftseinsätze',
+                  stats.resources.bereitschaftseinsaetze,
+                  stats.growth.bereitschaftseinsaetzeLast7d,
+                ],
+                [
+                  'Bereitschaftszeiträume',
+                  stats.resources.bereitschaftszeitraeume,
+                  stats.growth.bereitschaftszaetraumeLast7d,
+                ],
+                ['Einsatzwechseltätigkeiten', stats.resources.einsatzwechseltaetigkeiten, stats.growth.ewtLast7d],
+                ['Nebengeld-Einträge', stats.resources.nebengeld, stats.growth.nebengeldLast7d],
+                ['Entgeltausgleich-Einträge', stats.resources.entgeltausgleich, stats.growth.entgeltausgleichLast7d],
+              ] as [string, number, number][]
+            ).map(([label, count, growth]) => (
+              <div key={label} className="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
+                <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>
+                  {label}
+                  {growth > 0 && (
+                    <span className="db-tag text-success ms-1" data-semantic="successful">
+                      +{growth}
+                    </span>
+                  )}
+                </span>
+                <span className="db-tag flex-shrink-0" data-semantic="informational" data-emphasis="strong">
+                  {count.toLocaleString()}
+                </span>
+              </div>
+            ))}
+            <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
+              +N = neue Einträge (7 Tage)
             </div>
           </div>
         </div>
 
         <div className="sp-md-4">
-          <div className="card border-0 shadow-sm h-100">
-            <div className="card-body">
-              <h6 className="card-title fw-semibold mb-3">Auth-Aktivität</h6>
-              {(
-                [
-                  ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person_add', 'text-success'],
-                  ['E-Mail verifiziert', stats.auth.emailVerified, 'verified', 'text-primary'],
-                  ['Passkey-Nutzer', stats.auth.passkeyUsers, 'fingerprint', 'text-info'],
-                ] as [string, number, string, string][]
-              ).map(([label, count, icon, color]) => (
-                <div key={label} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                  <span className="d-flex align-items-center gap-2 small">
-                    <span className={`db-icon ${color} db-font-size-sm`} data-icon={icon} />
-                    {label}
-                  </span>
-                  <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
-                    {count}
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="db-card border-0 shadow-sm h-100">
+            <h6 className="fw-semibold mb-3">Auth-Aktivität</h6>
+            {(
+              [
+                ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person_add', 'text-success'],
+                ['E-Mail verifiziert', stats.auth.emailVerified, 'verified', 'text-primary'],
+                ['Passkey-Nutzer', stats.auth.passkeyUsers, 'fingerprint', 'text-info'],
+              ] as [string, number, string, string][]
+            ).map(([label, count, icon, color]) => (
+              <div key={label} className="d-flex justify-content-between align-items-center py-2 border-bottom">
+                <span className="d-flex align-items-center gap-2 small">
+                  <span className={`db-icon ${color} db-font-size-sm`} data-icon={icon} />
+                  {label}
+                </span>
+                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                  {count}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

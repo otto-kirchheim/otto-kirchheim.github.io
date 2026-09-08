@@ -9,8 +9,8 @@ type TMyButton = {
   type?: 'button' | 'reset' | 'submit';
   className?: string;
   ariaLabel?: string;
-  dataBsDismiss?: string;
-  dataBsTarget?: string;
+  dialogDismiss?: string;
+  dialogTargetModal?: string;
   text: string;
   clickHandler?: MouseEventHandler<HTMLButtonElement>;
   /** DB-Button-Attribute -- so geschrieben, wie sie auch im Markup stehen. */
@@ -25,8 +25,8 @@ const MyButton: FC<TMyButton> = ({
   type = 'button',
   className,
   ariaLabel,
-  dataBsDismiss,
-  dataBsTarget,
+  dialogDismiss,
+  dialogTargetModal,
   text,
   clickHandler,
   'data-variant': variant = 'brand',
@@ -50,9 +50,9 @@ const MyButton: FC<TMyButton> = ({
       size={size}
       width={width}
       data-color={color}
-      // Bootstrap steuert die Modals bis Phase E weiterhin ueber diese Attribute.
-      data-bs-dismiss={dataBsDismiss}
-      data-bs-target={dataBsTarget}
+      // Schliess-Kontrakt der Dialoge (`showModal.tsx`/`dbDialog.ts`), per Delegation ausgewertet.
+      data-dialog-dismiss={dialogDismiss}
+      data-dialog-target-modal={dialogTargetModal}
       onClick={clickHandler}
     >
       {text}

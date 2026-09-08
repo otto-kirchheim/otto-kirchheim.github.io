@@ -15,10 +15,12 @@
     "lint": "bunx --bun eslint src/ test/",
     "lint:fix": "bunx --bun eslint src/ test/ --fix",
     "lint:files": "bunx --bun eslint",
+    "lint:css": "bunx --bun stylelint \"src/**/*.{css,scss}\" --max-warnings 93",
+    "lint:css:fix": "bunx --bun stylelint \"src/**/*.{css,scss}\" --fix",
     "preview": "bunx --bun vite preview --outDir=../public/public",
     "dev-test": "TZ=Europe/Berlin bun test --isolate --watch",
     "coverage": "TZ=Europe/Berlin bun test --isolate --coverage",
-    "release:check": "bun run typecheck && bun run lint && bun run test && bun run build",
+    "release:check": "bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build",
     "release": "bun run release:patch",
     "release:patch": "bun run release:check && bun ./scripts/release.ts patch",
     "release:minor": "bun run release:check && bun ./scripts/release.ts minor",
@@ -36,6 +38,9 @@
   "lint-staged": {
     "**/*.{ts,tsx}": [
       "bun run lint:files --"
+    ],
+    "src/**/*.{css,scss}": [
+      "bunx --bun stylelint"
     ]
   },
   "type": "module",
@@ -44,9 +49,10 @@
   "license": "ISC",
   "devDependencies": {
     "@db-ux/core-eslint-plugin": "5.3.0",
+    "@db-ux/core-stylelint": "^5.3.0",
+    "@double-great/stylelint-a11y": "^3.5.3",
     "@eslint/js": "^10.0.1",
     "@happy-dom/global-registrator": "^20.14.0",
-    "@types/bootstrap": "^5.2.11",
     "@types/bun": "^1.4.1",
     "@types/file-saver": "^2.0.7",
     "@types/react": "^19",
@@ -59,9 +65,14 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.5.0",
+    "postcss-scss": "^4.0.9",
     "prettier": "^3.9.6",
     "puppeteer": "^25.10.0",
     "sass": "^1.104.0",
+    "stylelint": "^17.15.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-use-logical": "^2.1.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
     "unplugin-inject-preload": "^3.0.0",
@@ -77,9 +88,7 @@
     "@db-ux/react-core-components": "5.3.0",
     "@otto-kirchheim/nebengeld-shared": "github:otto-kirchheim/nebengeld-shared#dev",
     "@pdf-lib/fontkit": "^1.1.1",
-    "@popperjs/core": "^2.11.8",
     "@simplewebauthn/browser": "^14.0.0",
-    "bootstrap": "^5.3.8",
     "dayjs": "^1.11.23",
     "dayjs-feiertage": "^0.1.0",
     "file-saver": "^2.0.5",

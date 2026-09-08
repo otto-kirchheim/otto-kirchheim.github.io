@@ -9,7 +9,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
     title={content.title}
     Footer={
       <div className="dialog-fuss">
-        <button type="button" className="db-button" data-variant="filled" data-bs-dismiss="modal">
+        <button type="button" className="db-button" data-variant="filled" data-dialog-dismiss="modal">
           Schließen
         </button>
       </div>
@@ -98,7 +98,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
           className="db-button align-self-start"
           data-variant="outlined"
           data-size="small"
-          data-bs-dismiss="modal"
+          data-dialog-dismiss="modal"
           onClick={() => openOnboardingGuide()}
         >
           <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="circular_arrows" />

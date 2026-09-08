@@ -24,11 +24,11 @@ type UserEditState = {
   adminForOrganizationOes: string[];
 };
 
-const ROLE_LABELS: Record<TUserRole, { label: string; color: string }> = {
-  member: { label: 'Mitglied', color: 'secondary' },
-  'team-admin': { label: 'Team-Admin', color: 'info' },
-  'org-admin': { label: 'Org-Admin', color: 'warning' },
-  'super-admin': { label: 'Super-Admin', color: 'danger' },
+const ROLE_LABELS: Record<TUserRole, { label: string; semantic: string }> = {
+  member: { label: 'Mitglied', semantic: 'neutral' },
+  'team-admin': { label: 'Team-Admin', semantic: 'informational' },
+  'org-admin': { label: 'Org-Admin', semantic: 'warning' },
+  'super-admin': { label: 'Super-Admin', semantic: 'critical' },
 };
 
 export function AdminUserList() {
@@ -246,10 +246,13 @@ export function AdminUserList() {
 
           return (
             <div key={currentUser._id}>
-              <div className={`card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
+              <div
+                className={`db-card h-100 ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}
+                data-spacing="none"
+              >
                 {/* Card Header */}
                 <div
-                  className="card-header d-flex justify-content-between align-items-center py-2"
+                  className="d-flex justify-content-between align-items-center py-2 px-3 bg-body-secondary border-bottom"
                   style={{ cursor: 'pointer' }}
                   onClick={() => setExpandedUserId(isExpanded ? null : currentUser._id)}
                 >
@@ -258,7 +261,9 @@ export function AdminUserList() {
                     <span className="fw-semibold text-truncate">{currentUser.userName}</span>
                   </div>
                   <div className="d-flex align-items-center gap-2">
-                    <span className={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
+                    <span className="db-tag" data-semantic={roleInfo.semantic} data-emphasis="strong">
+                      {roleInfo.label}
+                    </span>
                     <span
                       className="db-icon text-body-secondary db-font-size-md"
                       data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
@@ -268,7 +273,7 @@ export function AdminUserList() {
                 </div>
 
                 {/* Kompakt-Info (immer sichtbar) */}
-                <div className="card-body py-2">
+                <div className="py-2 px-3">
                   <div className="d-flex flex-wrap gap-2 align-items-center small">
                     <span className="text-body-secondary">OE:</span>
                     <span className="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
@@ -298,7 +303,7 @@ export function AdminUserList() {
 
                 {/* Erweiterte Bearbeitung (aufklappbar) */}
                 {isExpanded && (
-                  <div className="card-body border-top pt-3">
+                  <div className="border-top pt-3 pb-3 px-3">
                     {/* Rolle */}
                     <div className="mb-3">
                       <DbAuswahl

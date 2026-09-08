@@ -86,7 +86,9 @@ export function AdminProfileTemplateContentEditor({
     return (
       <button
         type="button"
-        className={`badge border ${active ? 'text-bg-dark border-dark' : hasData ? 'text-bg-primary border-primary' : 'text-bg-secondary border-secondary'}`}
+        className="db-tag"
+        data-semantic={active || hasData ? 'informational' : 'neutral'}
+        data-emphasis={active ? 'strong' : 'weak'}
         onClick={() => setActiveSection(current => (current === key ? null : key))}
         style={{ cursor: 'pointer' }}
       >

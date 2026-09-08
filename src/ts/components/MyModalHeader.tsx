@@ -6,7 +6,7 @@ import { openHelpModal } from '@/core/help/openHelpModal';
 /**
  * Kopfzeile der Dialoge im DB-Drawer-Aufbau: Titel links, Aktionen rechts. Der
  * Schliessen-Knopf traegt beide Marker -- `data-action="close"` fuer den Drawer selbst und
- * `data-bs-dismiss="modal"` fuer die Delegation aus `showModal.tsx`.
+ * `data-dialog-dismiss="modal"` fuer die Delegation aus `showModal.tsx`.
  */
 const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ title, helpContext }) => {
   return (
@@ -33,7 +33,7 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
         data-icon="cross"
         data-no-text="true"
         data-action="close"
-        data-bs-dismiss="modal"
+        data-dialog-dismiss="modal"
       >
         Schließen
       </button>

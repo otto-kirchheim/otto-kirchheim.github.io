@@ -246,33 +246,37 @@ const PLATZHALTER_BEISPIELE: { platzhalter: string; beschreibung: string }[] = [
 function PlatzhalterHilfeInhalt() {
   return (
     <>
-      <table className="table table-sm mb-3">
-        <thead>
-          <tr>
-            <th>Platzhalter</th>
-            <th>Bedeutung</th>
-          </tr>
-        </thead>
-        <tbody>
-          {PLATZHALTER_BEISPIELE.map(b => (
-            <tr key={b.platzhalter}>
-              <td className="font-monospace text-nowrap">{b.platzhalter}</td>
-              <td>{b.beschreibung}</td>
+      <div className="db-table mb-3" data-width="full" data-size="small" data-divider="both">
+        <table>
+          <thead>
+            <tr>
+              <th>Platzhalter</th>
+              <th>Bedeutung</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {PLATZHALTER_BEISPIELE.map(b => (
+              <tr key={b.platzhalter}>
+                <td className="font-monospace text-nowrap">{b.platzhalter}</td>
+                <td>{b.beschreibung}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="small fw-semibold mb-1">Verfügbare Formate (für das Feld-Format und {'{Pfad:Format}'})</div>
-      <table className="table table-sm mb-0">
-        <tbody>
-          {FORMATE.filter(f => f.wert !== '').map(f => (
-            <tr key={f.wert}>
-              <td className="font-monospace text-nowrap">{f.wert}</td>
-              <td>{f.label}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="db-table" data-width="full" data-size="small" data-divider="both">
+        <table>
+          <tbody>
+            {FORMATE.filter(f => f.wert !== '').map(f => (
+              <tr key={f.wert}>
+                <td className="font-monospace text-nowrap">{f.wert}</td>
+                <td>{f.label}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }
@@ -297,7 +301,7 @@ export function openPlatzhalterHilfe(): void {
           data-icon="cross"
           data-variant="ghost"
           data-no-text="true"
-          data-bs-dismiss="modal"
+          data-dialog-dismiss="modal"
         >
           Schließen
         </button>

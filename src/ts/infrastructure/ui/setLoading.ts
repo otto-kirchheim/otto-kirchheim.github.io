@@ -9,7 +9,8 @@ export default function setLoading(btn: string): void {
   rememberOriginalButtonContent(btn, btnElement);
 
   const spinner = document.createElement('span');
-  spinner.className = 'spinner-grow spinner-grow-sm';
+  spinner.className = 'laedt';
+  spinner.dataset['size'] = 'small';
   spinner.setAttribute('role', 'status');
   spinner.setAttribute('aria-hidden', 'true');
 

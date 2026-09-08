@@ -2,6 +2,68 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-08 (67)
+
+### refactor (DB-UX-Migration Phase H: Bootstrap vollstaendig entfernt)
+
+Abschluss von Phase H. `bootstrap`, `@types/bootstrap` und `@popperjs/core` sind deinstalliert,
+der `~bootstrap`-Alias ist aus `vite.base-config.ts` raus, `bridge.css` ist geloescht und das
+Layer-Modell auf `@layer db-ux, app` geschrumpft. Kein `data-bs-*` und kein `--bs-*` mehr in
+`src/` oder `test/`.
+
+- **Karten** (`card`/`card-body`/`card-title`/`card-text`/`card-header`/`card-footer`) auf
+  `db-card`. Wo eine Kopf- oder Fusszeile die volle Breite braucht, steht `data-spacing="none"`
+  an der Karte und der Abstand an den Abschnitten -- DBs Karte polstert sonst aussen herum.
+- **Navigation** (`nav-pills`/`nav-tabs`/`nav-item`/`nav-link`) auf `db-navigation` mit
+  `db-navigation-item` und `data-active`, wie schon in der Kopfzeile. Die Admin-Unternavigation
+  ist damit datengetrieben (eine Liste statt achtmal desselben Blocks).
+- **Tabellen:** die restlichen sieben `table table-sm …` im Admin-Panel und in den Einstellungen
+  liegen jetzt in einer `db-table`-Huelle; `table-responsive` entfaellt, weil `db-table` selbst
+  scrollt. `table-hover` hat kein Gegenstueck an der Huelle -- dafuer gibt es
+  `.db-table[data-interactive='true']`.
+- **Restliche Bootstrap-Muster:** `list-group`/`list-group-flush` -> `trennliste`,
+  `spinner-grow` -> `.laedt`, die letzten sechs `badge`/`text-bg-*` -> `db-tag` mit
+  `data-semantic`. Der AutoSave-Punkt am Speichern-Knopf traegt seinen Zustand jetzt als
+  `data-semantic` statt als `bg-*`-Klasse.
+- **`src/scss/utilities.scss` (neu):** rund 200 Hilfsklassen mit denselben Namen wie bei
+  Bootstrap (`d-flex`, `mb-3`, `text-body-secondary`, `border`, …), aber auf DB-Tokens
+  gerechnet. Damit blieben die rund 5.000 Klassen-Vorkommen im Bestand unveraendert. Ebenfalls
+  darin: `tab-pane`/`fade`, die vorher aus Bootstraps Tab-CSS kamen, und die zwei Gegenregeln
+  zum DB-Layer (Listen-Bullets, Table-Layout), die bisher in `bridge.css` standen.
+- **Umbenannt:** `data-bs-dismiss` -> `data-dialog-dismiss`, `data-bs-target` ->
+  `data-dialog-target-modal`, `data-bs-theme` -> `data-mode` (DBs eigenes Attribut),
+  `data-bs-theme-value` -> `data-theme-value`, `BSColorToggler` -> `DBColorToggler`.
+- **Verifikation:** `typecheck`/`lint` (0 Fehler, 28 Alt-Warnungen)/`test` (2084/0)/`build`
+  gruen. Browser (Chrome headless, Dev-Server): Layer-Reihenfolge `db-ux, app`, 0 Bootstrap-
+  Klassen und 0 `data-bs-*` im DOM, 20 Hilfsklassen-Stichproben mit erwarteten Werten,
+  Tabwechsel setzt Panel + `data-active` + Hash, Admin-Unternavigation waagerecht mit
+  Aktiv-Markierung, Hell/Dunkel wechseln Grund und Text, 0 Konsolenfehler.
+
+### build (Stylelint als Gate)
+
+`stylelint.config.mjs` war angelegt, aber weder lauffaehig noch verdrahtet. Jetzt:
+`bun run lint:css` (neu, dazu `lint:css:fix`), eingehaengt in `release:check`, in `lint-staged`
+und als eigener Schritt in `deploy.yml`.
+
+- **Lauffaehig gemacht:** SCSS wurde bisher gar nicht geparst (`//` war ein Syntaxfehler) --
+  jetzt `stylelint-config-standard-scss` als Override fuer `**/*.scss`. Die beiden Paket-Importe
+  in `db-ux.css` sind von `import-notation` ausgenommen, weil Vite Bare-Specifier nur in der
+  String-Form aufloest.
+- **Ratsche:** die fuenf `db-ux/*`-Token-Regeln melden als `warning`; `lint:css` laeuft mit
+  `--max-warnings 93` (Stand heute). Neue Hartcodierungen brechen den Lauf, beseitigte duerfen
+  die Grenze senken. Der Rest der Regeln ist `error` und steht auf 0.
+- **Behoben statt weggedrueckt:** doppelte `max-inline-size`/`position`, `min-height: 85vh`
+  neben `min-block-size: 85%`, `word-break: break-word` (abgekuendigt), `-webkit-sticky`,
+  physische Eigenschaften in `styles.scss`/`customtable.css`.
+- **Autofix-Falle:** `stylelint-use-logical` fasst mehrere `top`/`right`/`bottom`/`left` zu
+  `inset: logical …` zusammen -- diese Kurzform unterstuetzt kein Browser, die Snackbar-
+  Positionierung waere still kaputt gewesen. Die fuenf Eigenschaften sind jetzt per `except`
+  vom Autofix ausgenommen.
+- `selector-class-pattern`/`selector-id-pattern` lassen den Bestand zu (`customtableIcon`,
+  `#Berechnung`, `#collapseFour`, BEM `__element`/`--modifikator`), verlangen fuer Neues aber
+  kebab-case. `no-descending-specificity` und `media-feature-range-notation` sind mit Begruendung
+  aus.
+
 ## 2026-09-07 (66)
 
 ### refactor (DB-UX-Migration Phase H: Formulare im Admin-Panel, Sichtkorrekturen)

@@ -13,7 +13,7 @@ describe('#generateTableBerechnung', () => {
     Storage.set('VorgabenGeld', VorgabenGeldMock);
 
     document.body.innerHTML =
-      '<!DOCTYPE html><table class="table table-bordered table-striped table-hover align-middle table-Berechnung" aria-describedby="titelBerechnung">' +
+      '<!DOCTYPE html><table class="align-middle table-Berechnung" aria-describedby="titelBerechnung">' +
       '<thead class="align-middle">' +
       '<tr class="table-primary align-middle">' +
       '<th></th>' +

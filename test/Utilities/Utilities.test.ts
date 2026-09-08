@@ -260,9 +260,7 @@ describe('#setLoading + #clearLoading', () => {
 
   it('should set the button to loading state', () => {
     setLoading('test-button');
-    expect(button.innerHTML).toBe(
-      '<span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>',
-    );
+    expect(button.innerHTML).toBe('<span class="laedt" data-size="small" role="status" aria-hidden="true"></span>');
     expect(button.disabled).toBe(true);
   });
 

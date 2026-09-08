@@ -54,10 +54,13 @@ export function AdminUserCard({
 
   return (
     <div className="admin-user-card-col">
-      <div className={`card ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}>
+      <div
+        className={`db-card ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}
+        data-spacing="none"
+      >
         {/* Card Header */}
         <div
-          className="card-header d-flex justify-content-between align-items-center py-2"
+          className="d-flex justify-content-between align-items-center py-2 px-3 bg-body-secondary border-bottom"
           style={{ cursor: 'pointer' }}
           onClick={onToggleExpand}
           title={isExpanded ? 'Details einklappen' : 'Details ausklappen'}
@@ -85,7 +88,9 @@ export function AdminUserCard({
             </span>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <span className={`badge bg-${roleInfo.color}`}>{roleInfo.label}</span>
+            <span className="db-tag" data-semantic={roleInfo.semantic} data-emphasis="strong">
+              {roleInfo.label}
+            </span>
             <span
               className="db-icon text-body-secondary db-font-size-md"
               data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
@@ -95,17 +100,14 @@ export function AdminUserCard({
         </div>
 
         {/* Kompakt-Info (immer sichtbar) */}
-        <div className="card-body py-2">
+        <div className="py-2 px-3">
           <div className="d-flex flex-wrap gap-2 align-items-center small">
             <span className="text-body-secondary">OE:</span>
             <span className="fw-medium">{joinOeLevels(currentUser.oe) || '–'}</span>
 
             <span
-              className={`badge ${
-                currentUser.emailVerified
-                  ? 'bg-success-subtle text-success-emphasis'
-                  : 'bg-danger-subtle text-danger-emphasis'
-              }`}
+              className="db-tag"
+              data-semantic={currentUser.emailVerified ? 'successful' : 'critical'}
               title={currentUser.email || undefined}
             >
               {currentUser.emailVerified ? 'E-Mail verifiziert' : 'E-Mail nicht verifiziert'}
@@ -136,7 +138,7 @@ export function AdminUserCard({
 
         {/* Erweiterte Bearbeitung (aufklappbar) */}
         {isExpanded && (
-          <div className="card-body border-top pt-3">
+          <div className="border-top pt-3 pb-3 px-3">
             {/* Rolle */}
             <div className="mb-3">
               <DbAuswahl

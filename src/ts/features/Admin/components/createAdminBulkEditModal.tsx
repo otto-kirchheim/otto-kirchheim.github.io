@@ -294,7 +294,7 @@ export function AdminBulkEditModal({
           Zurück
         </button>
       )}
-      <button type="button" className="db-button" data-variant="filled" data-bs-dismiss="modal">
+      <button type="button" className="db-button" data-variant="filled" data-dialog-dismiss="modal">
         {step === 'result' ? 'Schließen' : 'Abbrechen'}
       </button>
       {step === 'form' && (
@@ -419,12 +419,16 @@ export function AdminBulkEditModal({
               {result.summary.ok} aktualisiert, {result.summary.skipped} übersprungen, {result.summary.errors} Fehler
             </p>
             {result.results.some(entry => entry.status !== 'ok') && (
-              <ul className="list-group list-group-flush">
+              <ul className="trennliste">
                 {result.results
                   .filter(entry => entry.status !== 'ok')
                   .map(entry => (
-                    <li className="list-group-item px-0" key={entry.userId}>
-                      <span className={`badge me-2 text-bg-${entry.status === 'error' ? 'danger' : 'secondary'}`}>
+                    <li className="trennliste-eintrag px-0" key={entry.userId}>
+                      <span
+                        className="db-tag me-2"
+                        data-semantic={entry.status === 'error' ? 'critical' : 'neutral'}
+                        data-emphasis="strong"
+                      >
                         {entry.status === 'error' ? 'Fehler' : 'Übersprungen'}
                       </span>
                       {entry.userName}

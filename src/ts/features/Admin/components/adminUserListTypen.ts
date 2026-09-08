@@ -13,9 +13,9 @@ export type UserEditState = {
   canEditFormularVorlagen: boolean;
 };
 
-export const ROLE_LABELS: Record<TUserRole, { label: string; color: string }> = {
-  member: { label: 'Mitglied', color: 'secondary' },
-  'team-admin': { label: 'Team-Admin', color: 'info' },
-  'org-admin': { label: 'Org-Admin', color: 'warning' },
-  'super-admin': { label: 'Super-Admin', color: 'danger' },
+export const ROLE_LABELS: Record<TUserRole, { label: string; semantic: string }> = {
+  member: { label: 'Mitglied', semantic: 'neutral' },
+  'team-admin': { label: 'Team-Admin', semantic: 'informational' },
+  'org-admin': { label: 'Org-Admin', semantic: 'warning' },
+  'super-admin': { label: 'Super-Admin', semantic: 'critical' },
 };

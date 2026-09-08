@@ -1,23 +1,4 @@
-// Compile-Time-Gegenstueck zur Token-Bridge: Bootstrap backt seine Komponentenfarben
-// (`--bs-btn-bg`, Links, Focus-Ringe) beim Kompilieren aus `$primary` ein, dort hilft ein
-// Laufzeit-`var()` nicht. #ec0016 ist `--db-brand-origin-default` -- in Hell und Dunkel
-// derselbe Wert, deshalb ist die statische Farbe hier korrekt. Faellt mit Bootstrap (Phase H).
-$primary: #ec0016;
-
-// Bootstrap in den untersten Layer, damit DB-UX-Tokens und die Bridge dagegen gewinnen.
-@layer bootstrap {
-  @import '~bootstrap/scss/bootstrap';
-}
-
 @import 'raster';
-
-.dropdown-menu .active .bi {
-  display: block !important;
-}
-
-.bi {
-  font-size: 16px;
-}
 
 body {
   justify-content: center;
@@ -69,15 +50,15 @@ body {
 }
 
 .w20 {
-  width: 20%;
+  inline-size: 20%;
 }
 
 .w40 {
-  width: 40%;
+  inline-size: 40%;
 }
 
 .u-min-w-120 {
-  min-width: 120px;
+  min-inline-size: 120px;
 }
 
 // Die Icon-Groesse steuert im DB-System `--db-icon-font-size`; die Klassen
@@ -143,8 +124,9 @@ body {
 td > .knopfgruppe {
   flex-wrap: nowrap;
 }
+
 .big-icons {
-  margin-right: 0.35rem;
+  margin-inline-end: 0.35rem;
 }
 
 .einstellungen-icons {
@@ -171,14 +153,10 @@ td > .knopfgruppe {
   --app-icon: url('../icons/filter-off.svg');
 }
 
-.card {
-  min-width: min-content;
-}
-
 .icon-ewt {
   display: flex;
   align-items: center;
-  justify-content: center; //space-evenly;
+  justify-content: center; // space-evenly;
   padding-inline: 30px;
   font-size: smaller;
 }
@@ -202,14 +180,36 @@ td:has(.SchichtBereitschaft) {
   margin: 0.5rem;
 }
 
-.table {
-  max-width: -moz-fit-content;
-  max-width: fit-content;
+// Ersatz fuer Bootstraps `list-group list-group-flush`: eine Liste ohne Aussenrahmen, deren
+// Eintraege nur durch eine Linie getrennt sind (Passkeys, Fehlerlisten beim Massenspeichern).
+.trennliste {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.trennliste-eintrag {
+  padding-block: var(--db-spacing-fixed-sm);
+  border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+
+  &:last-child {
+    border-block-end: 0;
+  }
+}
+
+.db-table > table {
+  max-inline-size: fit-content;
   margin: auto;
 }
 
-.table > tbody {
+.db-table > table > tbody {
   white-space: nowrap;
+}
+
+// Bootstraps `table-hover` hat an der DB-Huelle kein Gegenstueck: DB markiert einzelne Zeilen
+// ueber `data-interactive` am `tr`. Fuer ganze Tabellen genuegt eine Regel an der Huelle.
+.db-table[data-interactive='true'] > table > tbody > tr:hover {
+  background-color: var(--db-adaptive-bg-basic-transparent-full-hovered);
 }
 
 .table-Berechnung {
@@ -220,16 +220,17 @@ td:has(.SchichtBereitschaft) {
 .table-Berechnung > thead > tr > th:nth-child(1),
 .table-Berechnung tbody tr th {
   font-weight: normal;
-  left: -2px;
-  position: -webkit-sticky;
+  inset-inline-start: -2px;
   position: sticky;
+
   // Feste Breite der Label-Spalte — identisch auf allen Breakpoints,
   // Grundlage für die dynamische Monatsanzahl im Zwischenbereich
-  width: 11.5rem;
-  min-width: 11.5rem;
-  max-width: 11.5rem;
+  inline-size: 11.5rem;
+  min-inline-size: 11.5rem;
+  max-inline-size: 11.5rem;
   white-space: normal;
 }
+
 // Die Label-Spalte klebt beim horizontalen Scrollen (`position: sticky`) und braucht deshalb
 // einen eigenen Hintergrund -- sonst scrollen die Monatsspalten sichtbar darunter durch.
 // `inherit` uebernimmt dabei den Ton der jeweiligen Zeile (Zebra-Streifen, Kopfband) statt
@@ -239,19 +240,24 @@ td:has(.SchichtBereitschaft) {
   background-color: inherit;
 }
 
-// Verschachtelte Label-Tabellen (EWT-Schwellen, Zulagen-Codes) müssen in der
-// festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu überlaufen
-.table-Berechnung tbody tr th table {
-  width: 100%;
-}
+// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes). Sie muessen in
+// der festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu ueberlaufen, und duerfen das
+// Raster der `db-table`-Huelle nicht erben -- sonst bekommt jede Beschriftungszeile eigene Linien.
+.berechnung-label-tabelle {
+  inline-size: 100%;
+  margin: 0;
+  border-collapse: collapse;
 
-.table-Berechnung tbody tr th table td {
-  white-space: normal;
+  td {
+    padding-block: 0;
+    border: 0;
+    white-space: normal;
+  }
 }
 
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > th,
 .table-Berechnung > tbody > tr.berechnung-gruppen-start > td {
-  border-top: 2px solid var(--bs-secondary-color);
+  border-block-start: 2px solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
 }
 
 #berechnungMobileCards {
@@ -265,9 +271,9 @@ td:has(.SchichtBereitschaft) {
   }
 
   .db-accordion-item summary + div > .berechnung-card-gruppe:not(:first-child) {
-    border-top: 2px solid var(--bs-secondary-color);
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
+    border-block-start: 2px solid var(--db-adaptive-on-bg-basic-emphasis-70-default);
+    margin-block-start: 0.5rem;
+    padding-block-start: 0.5rem;
   }
 
   .berechnung-card-zeile {
@@ -276,14 +282,12 @@ td:has(.SchichtBereitschaft) {
 
   // Dünne Linien nur zwischen aufeinanderfolgenden Zeilen, keine am Gruppenende
   .berechnung-card-zeile + .berechnung-card-zeile {
-    border-top: 1px solid var(--bs-border-color);
+    border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   }
 }
 
 .vertical-center {
-  min-height: 85%;
-  min-height: 85vh;
-
+  min-block-size: 85vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -300,11 +304,12 @@ td:has(.SchichtBereitschaft) {
 .signatur-canvas {
   display: block;
   margin: 0 auto;
+
   /* border-box statt des Default content-box: sonst kommt der 1px-Rahmen zur per JS gesetzten
      Breite/Höhe oben drauf (2px Differenz je Achse) -- in engen Fullscreen-Fällen genau der
      Unterschied zwischen Passen und Überlaufen. */
   box-sizing: border-box;
-  border: 1px solid var(--bs-border-color);
+  border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   touch-action: none;
 }
 
@@ -365,30 +370,30 @@ td > .db-switch {
 }
 
 .bereitschaft {
-  width: 90%;
+  inline-size: 90%;
 }
 
 footer {
   pointer-events: none;
 }
+
 footer > .impressum {
   pointer-events: all;
 }
 
 .app-footer {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset-inline: 0;
+  inset-block-end: 0;
   z-index: 1030;
 }
 
 body {
-  padding-bottom: 3.5rem;
+  padding-block-end: 3.5rem;
 }
 
 .offcanvas-impressum {
-  margin-bottom: 3.25rem !important;
+  margin-block-end: 3.25rem !important;
 }
 
 .custom-text-truncate {
@@ -406,15 +411,11 @@ body {
 }
 
 #settings-zulagen-list .db-checkbox > label {
-  text-align: left;
+  text-align: start;
   line-height: 1.35;
 }
 
-#admin-tabs {
-  align-items: center;
-}
-
-#admin-tabs .nav-link {
+#admin-tabs .db-navigation-item > button {
   white-space: normal;
 }
 
@@ -433,7 +434,7 @@ body {
 
 .admin-user-card-col {
   break-inside: avoid;
-  margin-bottom: 1rem;
+  margin-block-end: 1rem;
 }
 
 @media screen and (min-width: 768px) {
@@ -478,26 +479,27 @@ body {
 // table-layout: fixed hält die Label-Spalte hart auf 11.5rem, unabhängig davon,
 // wie viele Monatsspalten berechnungMonatsFenster.ts einblendet. Scrollen bleibt Fallback.
 @media screen and (max-width: 1199.98px) {
-  #Berechnung .table-responsive {
+  #Berechnung .db-table {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
   table.table-Berechnung {
     table-layout: fixed;
-    width: 100%;
-    max-width: none;
+    inline-size: 100%;
+    max-inline-size: none;
   }
 
   .table-Berechnung > thead > tr > th:first-child,
   .table-Berechnung > tbody > tr > th {
     z-index: 1;
   }
+
   // Sichtbare Monatsspalten teilen sich den Platz rechts der festen
   // Label-Spalte gleichmäßig; die Anzahl liefert berechnungMonatsFenster.ts
   // über die CSS-Variable (col-1-Prozentbreite wird hier überschrieben)
   .table-Berechnung > thead th[data-monat]:not(.d-none) {
-    width: calc((100% - 11.5rem) / var(--berechnung-monatsspalten, 6));
+    inline-size: calc((100% - 11.5rem) / var(--berechnung-monatsspalten, 6));
   }
 }
 
@@ -521,7 +523,7 @@ body {
 
 // Aktionen-Spalte der Fahrzeiten-Tabelle so schmal wie ihre Buttons halten
 .fahrzeiten-aktionen-spalte {
-  width: 1%;
+  inline-size: 1%;
   white-space: nowrap;
 }
 
@@ -534,14 +536,14 @@ body {
   #collapseFour table tr,
   #collapseFour table td {
     display: block;
-    width: 100%;
+    inline-size: 100%;
   }
 
   #collapseFour table tbody tr {
-    margin-bottom: 0.75rem;
-    border: 1px solid var(--bs-border-color);
-    border-radius: var(--bs-border-radius);
-    background-color: var(--bs-body-bg);
+    margin-block-end: 0.75rem;
+    border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    border-radius: var(--db-border-radius-sm);
+    background-color: var(--db-adaptive-bg-basic-level-1-default);
     overflow: hidden;
   }
 
@@ -551,11 +553,11 @@ body {
   }
 
   #collapseFour table tbody td:first-child {
-    padding-top: 0.5rem;
+    padding-block-start: 0.5rem;
   }
 
   #collapseFour table tbody td:last-child {
-    padding-bottom: 0.5rem;
+    padding-block-end: 0.5rem;
   }
 
   #collapseFour .fahrzeit-feld > label {
@@ -565,7 +567,7 @@ body {
   // Zeilen-Aktionen (↑/↓/Löschen) im Karten-Layout als volle Breite für gute Tap-Ziele
   #collapseFour .fahrzeiten-aktionen {
     display: flex;
-    width: 100%;
+    inline-size: 100%;
   }
 
   .admin-fahrzeit-input-group > .admin-fahrzeit-key {
@@ -582,8 +584,7 @@ body {
 
   .admin-fahrzeit-input-group > .db-button {
     flex: 0 0 2.25rem;
-    padding-right: 0.25rem;
-    padding-left: 0.25rem;
+    padding-inline: 0.25rem;
   }
 
   #btnResendVerificationEmail {
@@ -592,7 +593,7 @@ body {
     padding: 0.25rem 0.5rem;
     white-space: normal;
     text-align: center;
-    max-width: 8.5rem;
+    max-inline-size: 8.5rem;
   }
 }
 
@@ -605,67 +606,67 @@ body {
 
 @media screen and (min-width: 992px) {
   .arbeitszeit-col-left {
-    border-right: 1px solid var(--bs-border-color);
-    padding-right: 1.5rem;
+    border-inline-end: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+    padding-inline-end: 1.5rem;
   }
 
   .arbeitszeit-col-right {
-    padding-left: 1.5rem;
+    padding-inline-start: 1.5rem;
   }
 }
 
 @media screen and (max-width: 479.95px) {
   .custom-text-truncate {
-    max-width: 120px;
+    max-inline-size: 120px;
   }
 }
 
 @media screen and (min-width: 480px) and (max-width: 575.95px) {
   .custom-text-truncate {
-    max-width: 130px;
+    max-inline-size: 130px;
   }
 }
 
 @media screen and (min-width: 576px) and (max-width: 767.95px) {
   .custom-text-truncate {
-    max-width: 140px;
+    max-inline-size: 140px;
   }
 }
 
 @media screen and (min-width: 768px) and (max-width: 991.95px) {
   .custom-text-truncate {
-    max-width: 240px;
+    max-inline-size: 240px;
   }
 }
 
 @media screen and (min-width: 992px) and (max-width: 1199.95px) {
   .custom-text-truncate {
-    max-width: 480px;
+    max-inline-size: 480px;
   }
 }
 
 @media screen and (min-width: 1200px) and (max-width: 1399.95px) {
   .custom-text-truncate {
-    max-width: 650px;
+    max-inline-size: 650px;
   }
 }
 
 // Ersteinrichtungs-Panel: volle Breite auf xs/sm, feste Breite ab md (schwebt unten rechts)
 .onboarding-panel {
-  width: 100%;
+  inline-size: 100%;
 }
 
 @media screen and (min-width: 768px) {
   .onboarding-panel {
-    width: 26rem;
+    inline-size: 26rem;
   }
 }
 
 // Hebt während der Ersteinrichtung den gerade zu prüfenden Einstellungen-Bereich hervor
 .onboarding-focus {
-  outline: 2px solid var(--bs-primary);
+  outline: 2px solid var(--db-brand-origin-default);
   outline-offset: 2px;
-  border-radius: var(--bs-border-radius);
+  border-radius: var(--db-border-radius-sm);
 }
 
 // --- DB-Header ----------------------------------------------------------------------------
@@ -707,6 +708,29 @@ body {
   }
 }
 
+// Unternavigation des Admin-Panels. DB legt `.db-navigation > menu` erst ab `md` waagerecht
+// aus und bricht nie um; die Adminbereiche sind aber bis zu acht kurze Eintraege, die auch
+// auf dem Handy nebeneinander passen sollen.
+.admin-unternavigation {
+  inline-size: 100%;
+  padding: var(--db-spacing-fixed-2xs);
+  border-radius: var(--db-border-radius-md);
+  background-color: var(--db-adaptive-bg-basic-level-2-default);
+
+  > menu {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: var(--db-spacing-fixed-xs);
+  }
+}
+
+// Rein optischer Trennstrich zwischen den Gruppen der Unternavigation.
+.admin-unternavigation-trenner {
+  align-self: stretch;
+  inline-size: var(--db-border-width-3xs);
+  background-color: var(--db-adaptive-on-bg-basic-emphasis-50-default);
+}
+
 // Einstellungen/Admin/Design sitzen rechts, sobald die Navigation waagerecht laeuft.
 // DB laesst die Navigation dort auf ihre Inhaltsbreite schrumpfen -- ohne freie Breite gibt
 // es kein `margin-inline-start: auto`, deshalb zuerst die volle Breite zurueckholen.
@@ -743,9 +767,9 @@ body {
 }
 
 // --- Dialoge als DB-Drawer ------------------------------------------------------------------
-// Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die Bootstrap-Huellen
-// darin liefern nur noch Kopfzeile, Rumpf und Fusszeile -- Rahmen, Hintergrund und Abstand
-// kommen vom Drawer, sonst staende ein Kasten im Kasten. Faellt mit Bootstrap (Phase H).
+// Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die App-Huellen darin
+// (`dialog-kopf`/`-koerper`/`-fuss`) liefern nur Kopfzeile, Rumpf und Fusszeile -- Rahmen,
+// Hintergrund und Abstand kommen vom Drawer, sonst staende ein Kasten im Kasten.
 .db-drawer:not(.db-header-drawer) {
   --db-drawer-max-width: 36rem;
 }
@@ -769,6 +793,7 @@ body {
 
   > .db-drawer-content {
     flex: 0 0 auto;
+
     /* Der Drawer-Innenabstand geht sonst von der Schreibflaeche ab, ohne dass
        `berechneCanvasGroesse()` ihn sieht -- das Feld lief rechts aus dem Bild. */
     --db-drawer-content-padding: 0;

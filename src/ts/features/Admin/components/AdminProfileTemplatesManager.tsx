@@ -384,7 +384,11 @@ export function AdminProfileTemplatesManager() {
                 <span>
                   <strong>{template.code}</strong> - {template.name}
                 </span>
-                <span className={`badge ${template.active ? 'text-bg-success' : 'text-bg-secondary'}`}>
+                <span
+                  className="db-tag"
+                  data-semantic={template.active ? 'successful' : 'neutral'}
+                  data-emphasis="strong"
+                >
                   {template.active ? 'aktiv' : 'inaktiv'}
                 </span>
               </button>

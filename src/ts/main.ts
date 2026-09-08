@@ -5,7 +5,7 @@ import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einst
 import { createSnackBar, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
-import { default as initializeColorModeToggler } from '@/infrastructure/ui/BSColorToggler';
+import { default as initializeColorModeToggler } from '@/infrastructure/ui/DBColorToggler';
 import { default as setOffline } from '@/infrastructure/ui/setOffline';
 import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -170,5 +170,5 @@ initializeAppBootstrap();
 // Reihenfolge ist bedeutsam: erst die Layer-Deklaration, dann DB UX, dann die App-Styles.
 import '../scss/layers.scss';
 import '../scss/db-ux.css';
-import '../scss/bridge.css';
+import '../scss/utilities.scss';
 import '../scss/styles.scss';

@@ -589,8 +589,8 @@ export const datenBerechungMock: IVorgabenBerechnung = {
 export const mockNeben = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
-      '<table id="tableN" class="table table-bordered table-striped table-hover align-middle" aria-label="Nebengeld"></table>' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableN" class="align-middle" aria-label="Nebengeld"></table>' +
       '</div>',
   );
 
@@ -611,8 +611,8 @@ export const mockNeben = (): void => {
 export const mockEWT = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
-      '<table id="tableE" class="table table-bordered table-striped table-hover align-middle" aria-label="EWT"></table>' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableE" class="align-middle" aria-label="EWT"></table>' +
       '</div>',
   );
 
@@ -657,13 +657,13 @@ export const mockEWT = (): void => {
 export const mockBereitschaft = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBZ">Bereitschaftszeitraum</h4>' +
-      '<table id="tableBZ" class="table table-bordered table-striped table-hover align-middle" aria-describedby="TitelBZ"></table>' +
+      '<table id="tableBZ" class="align-middle" aria-describedby="TitelBZ"></table>' +
       '</div>' +
-      '<div class="table-responsive">' +
+      '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
       '<h4 id="titelBE">Bereitschaftseinsätze</h4>' +
-      '<table id="tableBE" class="table table-bordered table-striped table-hover align-middle" aria-describedby="titelBE"></table>' +
+      '<table id="tableBE" class="align-middle" aria-describedby="titelBE"></table>' +
       '</div>',
   );
 
@@ -943,8 +943,8 @@ export const datenNMock: Required<IDaten>['N'] = [
 export const mockEA = (): void => {
   document.body.insertAdjacentHTML(
     'beforeend',
-    '<div class="table-responsive">' +
-      '<table id="tableEA" class="table table-bordered table-striped table-hover align-middle" aria-label="Entgeltausgleich"></table>' +
+    '<div class="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">' +
+      '<table id="tableEA" class="align-middle" aria-label="Entgeltausgleich"></table>' +
       '</div>',
   );
 
@@ -1002,7 +1002,7 @@ export const mockEinstellungen = (): void => {
       '<input type="time" id="eN" class="form-control validate" required /><label for="eN">Arbeitsende Nacht</label>' +
       '<input type="time" id="bS" class="form-control validate" required /><label for="bS">Arbeitsbeginn Sonderschicht</label>' +
       '<input type="time" id="eS" class="form-control validate" required /><label for="eS">Arbeitsende Sonderschicht</label>' +
-      '<table id="tableVE" class="table table-bordered table-striped table-hover align-middle"	aria-label="Voreinstellungen Bereitschaft"></table>' +
+      '<table id="tableVE" class="align-middle"	aria-label="Voreinstellungen Bereitschaft"></table>' +
       '<div id="fahrzeiten-panel"></div></form>',
   );
 };

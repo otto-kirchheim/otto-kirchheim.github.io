@@ -332,9 +332,9 @@ export function AdminUserProfileEditor({
       )}
 
       {/* Table */}
-      <div className="table-responsive">
-        <table className="table table-sm table-hover align-middle mb-0">
-          <thead className="table-dark">
+      <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
+        <table className="align-middle mb-0">
+          <thead>
             <tr>
               <th>Name</th>
               <th>OE</th>

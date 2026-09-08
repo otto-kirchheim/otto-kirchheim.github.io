@@ -37,7 +37,7 @@ tr.customtable-error td {
   --db-icon-font-size: 1rem;
 
   vertical-align: text-bottom;
-  margin-right: 0.35rem;
+  margin-inline-end: 0.35rem;
   color: var(--db-critical-origin-default);
 }
 
@@ -83,7 +83,7 @@ table.customtable > tfoot > tr > th.customtable-sortable,
 table.customtable > thead > tr > td.customtable-sortable,
 table.customtable > thead > tr > th.customtable-sortable {
   position: relative;
-  padding-right: 30px;
+  padding-inline-end: 30px;
   cursor: pointer;
 }
 
@@ -103,9 +103,9 @@ th.customtable-sortable:hover > span.customtableIcon {
 
 th.customtable-sortable > span.customtableIcon {
   position: absolute;
-  right: 6px;
-  top: 50%;
-  margin-top: -12px;
+  inset-inline-end: 6px;
+  inset-block-start: 50%;
+  margin-block-start: -12px;
   opacity: 0;
   transition: opacity 0.3s ease-in;
 }
@@ -113,7 +113,7 @@ th.customtable-sortable > span.customtableIcon {
 /* Schrift, Groesse und Glaettung kommen aus der DB-Icon-Regel (`.db-icon[data-icon]`). */
 .customtableIcon {
   position: relative;
-  top: 1px;
+  inset-block-start: 1px;
   display: inline-block;
 }
 
@@ -129,6 +129,7 @@ th.customtable-sortable:hover > span.customtableIcon {
   .customtable-editing > div > button {
     padding-inline: 4px;
   }
+
   .customtable-editing.customtable-toggle-xxl::before,
   .customtable-editing.customtable-toggle-xl::before,
   .customtable-editing.customtable-toggle-lg::before,
@@ -137,9 +138,10 @@ th.customtable-sortable:hover > span.customtableIcon {
   .customtable-editing.customtable-toggle-xs::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 }
+
 @media screen and (max-width: 575.95px) {
   [data-breakpoints*='sm'] {
     display: none;
@@ -148,7 +150,7 @@ th.customtable-sortable:hover > span.customtableIcon {
   .customtable-editing.customtable-toggle-sm::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 
   th.customtable-sortable > span.customtableIcon {
@@ -160,10 +162,11 @@ th.customtable-sortable:hover > span.customtableIcon {
   [data-breakpoints*='md'] {
     display: none;
   }
+
   .customtable-editing.customtable-toggle-md::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 }
 
@@ -171,10 +174,11 @@ th.customtable-sortable:hover > span.customtableIcon {
   [data-breakpoints*='lg'] {
     display: none;
   }
+
   .customtable-editing.customtable-toggle-lg::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 }
 
@@ -182,20 +186,23 @@ th.customtable-sortable:hover > span.customtableIcon {
   [data-breakpoints*='xl'] {
     display: none;
   }
+
   .customtable-editing.customtable-toggle-xl::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 }
+
 @media screen and (max-width: 1399.95px) {
   [data-breakpoints*='xxl'] {
     display: none;
   }
+
   .customtable-editing.customtable-toggle-xxl::before {
     content: '+';
     opacity: 0.3;
-    margin-right: 8px;
+    margin-inline-end: 8px;
   }
 }
 
@@ -203,12 +210,18 @@ th.customtable-sortable:hover > span.customtableIcon {
 
 /* ─── AutoSave Badge auf Speichern-Buttons ─── */
 
+/* Der Zustandspunkt sitzt in der Ecke des Speichern-Knopfes. `db-tag` bringt die Mindestmasse
+   eines bedienbaren Elements mit (Hoehe und Breite `sm`) -- hier ist er reine Anzeige und muss
+   auf Symbolgroesse schrumpfen. */
 .autosave-badge {
   pointer-events: none;
   user-select: none;
   line-height: 1;
   z-index: 1;
   padding: 0.3em !important;
+  min-inline-size: 0;
+  inline-size: auto;
+  block-size: auto;
 }
 
 .autosave-badge .db-icon {
@@ -222,6 +235,7 @@ th.customtable-sortable:hover > span.customtableIcon {
   .autosave-badge .db-icon {
     font-size: 0.7rem;
   }
+
   .autosave-badge {
     padding: 0.2em !important;
   }
@@ -232,6 +246,7 @@ th.customtable-sortable:hover > span.customtableIcon {
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.4;
   }

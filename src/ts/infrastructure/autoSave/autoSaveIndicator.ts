@@ -39,13 +39,14 @@ const ICON_MAP: Record<TSaveStatus, string> = {
 /** Kein Netz: der DB-Satz hat dafuer das durchgestrichene WLAN-Symbol. */
 const ICON_OFFLINE = 'wifi_disabled';
 
-const BG_MAP: Record<TSaveStatus, string> = {
+/** DB-Semantik je Speicherzustand -- steht als `data-semantic` am `db-tag` des Knopfes. */
+const SEMANTIK_MAP: Record<TSaveStatus, string> = {
   idle: '',
-  pending: 'bg-secondary',
-  saving: 'bg-info',
-  saved: 'bg-success',
-  error: 'bg-danger',
-  blocked: 'bg-warning',
+  pending: 'neutral',
+  saving: 'informational',
+  saved: 'successful',
+  error: 'critical',
+  blocked: 'warning',
 };
 
 const TOOLTIP_MAP: Record<TSaveStatus, string> = {
@@ -105,7 +106,8 @@ function isNetworkError(msg: string): boolean {
 
 function createBadgeElement(): HTMLSpanElement {
   const badge = document.createElement('span');
-  badge.className = 'autosave-badge position-absolute top-0 start-100 translate-middle badge rounded-pill';
+  badge.className = 'autosave-badge db-tag position-absolute top-0 start-100 translate-middle';
+  badge.dataset['emphasis'] = 'strong';
   badge.style.transition = 'opacity 0.3s ease';
   badge.style.opacity = '0';
 
@@ -163,14 +165,13 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
     return;
   }
 
-  // Hintergrund-Klassen bereinigen
-  badge.classList.remove(...Object.values(BG_MAP).filter(Boolean));
   badge.classList.remove('autosave-pulse');
 
   const iconEl = badge.querySelector<HTMLSpanElement>('.db-icon');
 
-  const bg = BG_MAP[status];
-  if (bg) badge.classList.add(bg);
+  const semantik = SEMANTIK_MAP[status];
+  if (semantik) badge.dataset['semantic'] = semantik;
+  else delete badge.dataset['semantic'];
   badge.style.opacity = '1';
 
   // Bei error: Icon + Tooltip nach Fehlerart differenzieren
@@ -184,8 +185,7 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
     badge.title = errors.length > 0 ? errors.join('\n') : TOOLTIP_MAP[status];
   } else if (status === 'pending' && !navigator.onLine) {
     // Offline: pending-Änderungen mit cloud_off kennzeichnen
-    badge.classList.remove(bg);
-    badge.classList.add('bg-warning');
+    badge.dataset['semantic'] = 'warning';
     if (iconEl) iconEl.dataset['icon'] = ICON_OFFLINE;
     badge.title = 'Offline – Änderungen werden bei Verbindung gespeichert';
   } else {

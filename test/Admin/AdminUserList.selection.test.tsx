@@ -30,9 +30,6 @@ vi.mock('@/features/Admin/components/createAdminBulkEditModal', () => ({
 vi.mock('@/features/Admin/components/createAdminUserPasswordModal', () => ({ default: vi.fn() }));
 vi.mock('@/features/Admin/components/createAdminUserLinksModal', () => ({ default: vi.fn() }));
 vi.mock('@/features/Admin/utils/actAs', () => ({ loadUserDataForAdminSelection: vi.fn() }));
-vi.mock('bootstrap/js/dist/tooltip', () => ({
-  default: { getOrCreateInstance: vi.fn(() => ({ dispose: vi.fn() })) },
-}));
 
 const { AdminUserList } = await import('@/features/Admin/components/AdminUserList');
 

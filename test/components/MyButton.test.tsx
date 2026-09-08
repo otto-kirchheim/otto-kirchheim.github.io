@@ -47,11 +47,11 @@ describe('MyButton', () => {
 
   it('reicht die Bootstrap-Modal-Attribute weiter, solange die Modal-Shell Bootstrap ist', () => {
     const container = renderButton(
-      <MyButton text="Abbrechen" data-variant="filled" data-color="critical" dataBsDismiss="modal" />,
+      <MyButton text="Abbrechen" data-variant="filled" data-color="critical" dialogDismiss="modal" />,
     );
     const button = container.querySelector('button')!;
 
-    expect(button.getAttribute('data-bs-dismiss')).toBe('modal');
+    expect(button.getAttribute('data-dialog-dismiss')).toBe('modal');
     expect(button.getAttribute('data-variant')).toBe('filled');
     expect(button.getAttribute('data-color')).toBe('critical');
   });

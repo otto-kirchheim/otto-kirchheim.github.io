@@ -207,24 +207,27 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   return (
     <div>
       {/* Resource Tabs */}
-      <ul className="nav nav-tabs mb-3 flex-wrap" role="tablist">
-        {RESOURCES.map((r, i) => (
-          <li key={r.endpoint} className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${i === activeIdx ? 'active' : ''}`}
-              onClick={() => setActiveIdx(i)}
-              type="button"
+      <nav className="db-navigation admin-unternavigation mb-3" role="tablist" aria-label="Ressourcen">
+        <menu>
+          {RESOURCES.map((r, i) => (
+            <li
+              key={r.endpoint}
+              className="db-navigation-item"
+              data-active={String(i === activeIdx)}
+              role="presentation"
             >
-              <span className="d-none d-md-inline">{r.label}</span>
-              <span className="d-md-none">{r.shortLabel}</span>
-            </button>
-          </li>
-        ))}
-      </ul>
+              <button onClick={() => setActiveIdx(i)} type="button" role="tab" aria-selected={i === activeIdx}>
+                <span className="d-none d-md-inline">{r.label}</span>
+                <span className="d-md-none">{r.shortLabel}</span>
+              </button>
+            </li>
+          ))}
+        </menu>
+      </nav>
 
       {/* Filter-Panel */}
-      <div className="card bg-body-secondary border-0 mb-3">
-        <div className="card-body py-2 px-3">
+      <div className="db-card bg-body-secondary border-0 mb-3" data-spacing="none">
+        <div className="py-2 px-3">
           <div className="d-flex flex-wrap gap-2 align-items-end">
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
             <div className="flex-grow-1" style={{ minWidth: '180px', maxWidth: '300px' }}>
@@ -356,9 +359,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       )}
 
       {/* Tabelle */}
-      <div className="table-responsive">
-        <table className="table table-sm table-hover align-middle mb-0">
-          <thead className="table-dark">
+      <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
+        <table className="align-middle mb-0">
+          <thead>
             <tr>
               <th style={{ width: '6rem' }}>ID</th>
               {resource.tableFields.map(f => (
@@ -495,7 +498,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </button>
       </div>
 
-      {/* Edit Modal – Portal: sichtbar auch in versteckten Bootstrap-Tab-Panes */}
+      {/* Edit Modal – Portal: sichtbar auch in versteckten Tab-Panes */}
       {edit && (
         <AdminResourceEditModal
           edit={edit}

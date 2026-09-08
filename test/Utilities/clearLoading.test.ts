@@ -10,7 +10,7 @@ describe('clearLoading', () => {
     container.innerHTML = `
       <div id="ladeAnzeige"></div>
       <button id="btnTest" disabled>
-        <span class="spinner-border spinner-border-sm"></span> Laden…
+        <span class="laedt" data-size="small"></span> Laden…
       </button>
       <button id="btnLogin" disabled>Laden…</button>
     `;

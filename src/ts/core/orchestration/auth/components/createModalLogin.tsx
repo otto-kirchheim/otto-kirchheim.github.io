@@ -50,7 +50,7 @@ export default function createModalLogin(): void {
             className="db-button"
             data-variant="outlined"
             type="button"
-            dataBsDismiss="modal"
+            dialogDismiss="modal"
             text="Passwort vergessen"
             clickHandler={() => createModalForgotPassword()}
           />
@@ -59,11 +59,11 @@ export default function createModalLogin(): void {
             data-variant="outlined"
             data-color="informational"
             type="button"
-            dataBsDismiss="modal"
+            dialogDismiss="modal"
             text="Registrieren"
             clickHandler={() => createModalNewUser()}
           />
-          <MyButton className="db-button" data-variant="filled" type="button" dataBsDismiss="modal" text="Abbrechen" />
+          <MyButton className="db-button" data-variant="filled" type="button" dialogDismiss="modal" text="Abbrechen" />
         </div>
       </div>
     </div>

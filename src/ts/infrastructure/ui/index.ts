@@ -5,7 +5,7 @@ export { default as setLoading } from './setLoading';
 export { default as setOffline } from './setOffline';
 export { default as setVersionOutdated } from './setVersionOutdated';
 export { default as updateTabVisibility, hideAllFeatureTabs } from './updateTabVisibility';
-export { default as initializeColorModeToggler } from './BSColorToggler';
+export { default as initializeColorModeToggler } from './DBColorToggler';
 export * from './loadingButtonState';
 export * from './CustomSnackbar';
 export * from './dbButton';

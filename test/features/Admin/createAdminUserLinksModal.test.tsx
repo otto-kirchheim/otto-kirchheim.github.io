@@ -197,7 +197,7 @@ describe('createAdminUserLinksModal', () => {
 
   it('rendert einen Schließen-Button im Footer', () => {
     const container = renderModal();
-    const closeButton = container.querySelector('[data-bs-dismiss="modal"]');
+    const closeButton = container.querySelector('[data-dialog-dismiss="modal"]');
     expect(closeButton?.textContent).toBe('Schließen');
   });
 });

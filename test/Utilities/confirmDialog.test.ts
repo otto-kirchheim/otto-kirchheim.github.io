@@ -8,7 +8,7 @@ function getModalEl() {
 
 /** Abbrechen/Schliessen -- der Weg, den auch der Nutzer nimmt. */
 function abbrechen() {
-  document.body.querySelector<HTMLButtonElement>('.dialog-fuss [data-bs-dismiss="modal"]')!.click();
+  document.body.querySelector<HTMLButtonElement>('.dialog-fuss [data-dialog-dismiss="modal"]')!.click();
 }
 
 describe('confirmDialog', () => {
@@ -58,7 +58,7 @@ describe('confirmDialog', () => {
     const bestaetigen = modal.querySelector<HTMLButtonElement>('[data-confirm="true"]')!;
     expect(modal.querySelector('.db-drawer-header h5')?.textContent).toBe('Mein Titel');
     expect(bestaetigen.textContent).toBe('Ja');
-    expect(modal.querySelector('.dialog-fuss [data-bs-dismiss="modal"]')?.textContent).toBe('Nein');
+    expect(modal.querySelector('.dialog-fuss [data-dialog-dismiss="modal"]')?.textContent).toBe('Nein');
     expect(bestaetigen.dataset.variant).toBe('brand');
     expect(bestaetigen.dataset.color).toBe('warning');
 

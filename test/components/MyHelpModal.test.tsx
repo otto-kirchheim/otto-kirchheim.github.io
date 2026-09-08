@@ -6,7 +6,7 @@ vi.mock('@/core/orchestration/onboarding/createOnboardingGuideModal', () => ({
   openOnboardingGuide: openOnboardingGuideMock,
 }));
 
-// MyHelpModal's Reopen-Button traegt data-bs-dismiss="modal". Der reale Bootstrap-Modal-Import
+// MyHelpModal's Reopen-Button traegt data-dialog-dismiss="modal". Der reale Bootstrap-Modal-Import
 // registriert einen document-weiten Click-Handler, der ohne echtes .modal-Element crasht.
 // Fuer diesen isolierten Komponententest wird das Modul daher wie in MyShowFooter.test.tsx gemockt.
 
@@ -39,7 +39,7 @@ describe('MyHelpModal', () => {
       btn.textContent?.includes('Ersteinrichtung erneut öffnen'),
     );
     expect(button).not.toBeUndefined();
-    expect(button?.getAttribute('data-bs-dismiss')).toBe('modal');
+    expect(button?.getAttribute('data-dialog-dismiss')).toBe('modal');
 
     button!.click();
     expect(openOnboardingGuideMock).toHaveBeenCalledTimes(1);

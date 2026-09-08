@@ -1,0 +1,526 @@
+// Eigene Hilfsklassen -- der Ersatz fuer Bootstraps Utility-API (Phase H der DB-UX-Migration).
+// Die Klassennamen sind bewusst dieselben wie bei Bootstrap: rund 5.000 Vorkommen in gut 100
+// Dateien bleiben damit unveraendert, und die Umstellung bleibt auf diese Datei begrenzt.
+// Werte und Farben kommen aber aus den DB-Tokens, nicht aus Bootstraps Scale -- deshalb sind
+// die Abstaende hier auf die `--db-spacing-*`-Stufen abgebildet und nicht auf .25/.5/1/1.5/3rem.
+// Nicht enthalten ist alles, was der Bestand nicht nutzt. Wer eine neue Hilfsklasse braucht,
+// ergaenzt sie hier -- ein `grep` auf den Namen zeigt, ob es sie schon gibt.
+
+@use 'sass:math';
+@use 'sass:string';
+
+$umbrueche: (
+  'sm': 36em,
+  'md': 48em,
+  'lg': 62em,
+  'xl': 75em,
+  'xxl': 87.5em,
+);
+
+// Abstandsstufen. 0-5 folgen Bootstraps Stufung, liegen aber auf den DB-Spacing-Tokens.
+$abstaende: (
+  '0': 0,
+  '1': var(--db-spacing-fixed-2xs),
+  '2': var(--db-spacing-fixed-xs),
+  '3': var(--db-spacing-fixed-sm),
+  '4': var(--db-spacing-fixed-md),
+  '5': var(--db-spacing-fixed-xl),
+);
+
+// Kuerzel -> CSS-Eigenschaften. `s`/`e` sind die logischen Kanten (start/end).
+$kanten: (
+  '': (
+    'margin',
+  ),
+  't': (
+    'margin-block-start',
+  ),
+  'b': (
+    'margin-block-end',
+  ),
+  's': (
+    'margin-inline-start',
+  ),
+  'e': (
+    'margin-inline-end',
+  ),
+  'x': (
+    'margin-inline-start',
+    'margin-inline-end',
+  ),
+  'y': (
+    'margin-block-start',
+    'margin-block-end',
+  ),
+);
+$farben: (
+  'primary': var(--db-brand-origin-default),
+  'body': var(--db-adaptive-on-bg-basic-emphasis-100-default),
+  'body-secondary': var(--db-adaptive-on-bg-basic-emphasis-70-default),
+  'muted': var(--db-adaptive-on-bg-basic-emphasis-70-default),
+  'danger': var(--db-critical-on-bg-basic-emphasis-100-default),
+  'success': var(--db-successful-on-bg-basic-emphasis-100-default),
+  'warning': var(--db-warning-on-bg-basic-emphasis-100-default),
+  'info': var(--db-informational-on-bg-basic-emphasis-100-default),
+  'white': var(--db-neutral-0-default, #fff),
+  'dark': var(--db-adaptive-on-bg-basic-emphasis-100-default),
+  'dark-emphasis': var(--db-adaptive-on-bg-basic-emphasis-100-default),
+  'primary-emphasis': var(--db-brand-on-bg-basic-emphasis-100-default, var(--db-brand-origin-default)),
+  'warning-emphasis': var(--db-warning-on-bg-basic-emphasis-100-default),
+);
+$fuellungen: (
+  'body': var(--db-adaptive-bg-basic-level-1-default),
+  'body-secondary': var(--db-adaptive-bg-basic-level-2-default),
+  'body-tertiary': var(--db-adaptive-bg-basic-level-3-default),
+  'danger': var(--db-critical-origin-default),
+  'danger-subtle': var(--db-critical-bg-basic-level-1-default),
+  'primary-subtle': var(--db-brand-bg-basic-level-1-default, var(--db-adaptive-bg-basic-level-2-default)),
+);
+$rahmenfarben: (
+  'primary': var(--db-brand-origin-default),
+  'danger': var(--db-critical-origin-default),
+  'warning': var(--db-warning-origin-default),
+  'primary-subtle': var(--db-brand-bg-basic-level-3-default, var(--db-brand-origin-default)),
+  'secondary-subtle': var(--db-adaptive-on-bg-basic-emphasis-60-default),
+  'success-subtle': var(--db-successful-bg-basic-level-3-default),
+  'warning-subtle': var(--db-warning-bg-basic-level-3-default),
+  'danger-subtle': var(--db-critical-bg-basic-level-3-default),
+  'info-subtle': var(--db-informational-bg-basic-level-3-default),
+);
+
+// Paare aus Klassen-Suffix und Wert fuer `d-*`, `flex-*`, `justify-content-*`, `align-items-*`.
+$anzeigen: (
+  'none': none,
+  'block': block,
+  'inline': inline,
+  'inline-flex': inline-flex,
+  'flex': flex,
+  'grid': grid,
+  'table-cell': table-cell,
+);
+$ausrichtung: (
+  'start': flex-start,
+  'end': flex-end,
+  'center': center,
+  'between': space-between,
+  'evenly': space-evenly,
+  'baseline': baseline,
+  'stretch': stretch,
+);
+
+@mixin anzeige-klassen($suffix: '') {
+  @each $name, $wert in $anzeigen {
+    .d#{$suffix}-#{$name} {
+      display: $wert !important;
+    }
+  }
+}
+
+@mixin abstands-klassen($suffix: '') {
+  @each $kuerzel, $eigenschaften in $kanten {
+    @each $stufe, $wert in $abstaende {
+      .m#{$kuerzel}#{$suffix}-#{$stufe} {
+        @each $eigenschaft in $eigenschaften {
+          #{$eigenschaft}: $wert !important;
+        }
+      }
+
+      .p#{$kuerzel}#{$suffix}-#{$stufe} {
+        @each $eigenschaft in $eigenschaften {
+          #{'padding' + string.slice($eigenschaft, 7)}: $wert !important;
+        }
+      }
+    }
+
+    .m#{$kuerzel}#{$suffix}-auto {
+      @each $eigenschaft in $eigenschaften {
+        #{$eigenschaft}: auto !important;
+      }
+    }
+  }
+
+  @each $stufe, $wert in $abstaende {
+    .gap#{$suffix}-#{$stufe} {
+      gap: $wert !important;
+    }
+  }
+}
+
+@mixin flex-klassen($suffix: '') {
+  .flex#{$suffix}-row {
+    flex-direction: row !important;
+  }
+
+  .flex#{$suffix}-column {
+    flex-direction: column !important;
+  }
+
+  @each $name, $wert in $ausrichtung {
+    .justify-content#{$suffix}-#{$name} {
+      justify-content: $wert !important;
+    }
+
+    .align-items#{$suffix}-#{$name} {
+      align-items: $wert !important;
+    }
+  }
+}
+
+@layer app {
+  // ── Anzeige, Abstaende, Flexbox: Grundstufe plus je Umbruchpunkt ──
+  @include anzeige-klassen;
+  @include abstands-klassen;
+  @include flex-klassen;
+
+  @each $kuerzel, $breite in $umbrueche {
+    @media screen and (min-width: $breite) {
+      @include anzeige-klassen('-#{$kuerzel}');
+      @include abstands-klassen('-#{$kuerzel}');
+      @include flex-klassen('-#{$kuerzel}');
+    }
+  }
+
+  // ── Flexbox, Rest ──
+  .flex-wrap {
+    flex-wrap: wrap !important;
+  }
+
+  .flex-nowrap {
+    flex-wrap: nowrap !important;
+  }
+
+  .flex-fill {
+    flex: 1 1 auto !important;
+  }
+
+  .align-self-start {
+    align-self: flex-start !important;
+  }
+
+  @for $i from 0 through 1 {
+    .flex-grow-#{$i} {
+      flex-grow: $i !important;
+    }
+
+    .flex-shrink-#{$i} {
+      flex-shrink: $i !important;
+    }
+  }
+
+  // ── Text ──
+  .small {
+    font-size: 0.875em;
+  }
+
+  .text-center {
+    text-align: center !important;
+  }
+
+  .text-start {
+    text-align: start !important;
+  }
+
+  .text-end {
+    text-align: end !important;
+  }
+
+  .text-uppercase {
+    text-transform: uppercase !important;
+  }
+
+  .text-nowrap {
+    white-space: nowrap !important;
+  }
+
+  .text-wrap {
+    white-space: normal !important;
+  }
+
+  .text-break {
+    overflow-wrap: break-word !important;
+  }
+
+  .text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .text-decoration-none {
+    text-decoration: none !important;
+  }
+
+  .text-decoration-line-through {
+    text-decoration: line-through !important;
+  }
+
+  .font-monospace {
+    font-family: var(--db-font-family-mono, ui-monospace, 'SFMono-Regular', 'Menlo', monospace) !important;
+  }
+
+  .fst-italic {
+    font-style: italic !important;
+  }
+
+  .align-middle {
+    vertical-align: middle !important;
+  }
+
+  .align-baseline {
+    vertical-align: baseline !important;
+  }
+
+  // Schriftgewichte: Bootstraps Stufen auf die DB-Schnitte.
+  .fw-normal {
+    font-weight: 400 !important;
+  }
+
+  .fw-medium {
+    font-weight: 500 !important;
+  }
+
+  .fw-semibold {
+    font-weight: 600 !important;
+  }
+
+  .fw-bold {
+    font-weight: 700 !important;
+  }
+
+  // Ueberschriftengroessen (`fs-1` .. `fs-6`) entsprechen `h1` .. `h6`.
+  $schriftgroessen: (
+    '1': 2.5rem,
+    '2': 2rem,
+    '3': 1.75rem,
+    '4': 1.5rem,
+    '5': 1.25rem,
+    '6': 1rem,
+  );
+
+  @each $stufe, $wert in $schriftgroessen {
+    .fs-#{$stufe} {
+      font-size: $wert !important;
+    }
+  }
+
+  .lh-1 {
+    line-height: 1 !important;
+  }
+
+  @each $name, $wert in $farben {
+    .text-#{$name} {
+      color: $wert !important;
+    }
+  }
+
+  // ── Flaechen und Rahmen ──
+  @each $name, $wert in $fuellungen {
+    .bg-#{$name} {
+      background-color: $wert !important;
+    }
+  }
+
+  // `text-bg-*` setzt Grund und Schrift zusammen -- Warnhinweise in den Eingabemasken.
+  .text-bg-warning {
+    background-color: var(--db-warning-bg-basic-level-1-default) !important;
+    color: var(--db-warning-on-bg-basic-emphasis-100-default) !important;
+  }
+
+  .text-bg-danger {
+    background-color: var(--db-critical-bg-basic-level-1-default) !important;
+    color: var(--db-critical-on-bg-basic-emphasis-100-default) !important;
+  }
+
+  .border,
+  .border-1 {
+    border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
+  }
+
+  .border-0 {
+    border: 0 !important;
+  }
+
+  .border-top {
+    border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
+  }
+
+  .border-bottom {
+    border-block-end: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
+  }
+
+  .border-start {
+    border-inline-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
+  }
+
+  @each $name, $wert in $rahmenfarben {
+    .border-#{$name} {
+      border-color: $wert !important;
+    }
+  }
+
+  .rounded {
+    border-radius: var(--db-border-radius-sm) !important;
+  }
+
+  .rounded-0 {
+    border-radius: 0 !important;
+  }
+
+  .rounded-1 {
+    border-radius: var(--db-border-radius-xs) !important;
+  }
+
+  .rounded-2 {
+    border-radius: var(--db-border-radius-sm) !important;
+  }
+
+  .rounded-3 {
+    border-radius: var(--db-border-radius-md) !important;
+  }
+
+  .rounded-circle {
+    border-radius: 50% !important;
+  }
+
+  .shadow {
+    box-shadow: var(--db-elevation-md) !important;
+  }
+
+  .shadow-sm {
+    box-shadow: var(--db-elevation-sm) !important;
+  }
+
+  // ── Groesse ──
+  @each $anteil in (25, 50, 75, 100) {
+    .w-#{$anteil} {
+      inline-size: #{$anteil}#{'%'} !important;
+    }
+
+    .h-#{$anteil} {
+      block-size: #{$anteil}#{'%'} !important;
+    }
+  }
+
+  .w-auto {
+    inline-size: auto !important;
+  }
+
+  .h-auto {
+    block-size: auto !important;
+  }
+
+  // ── Position ──
+  .position-relative {
+    position: relative !important;
+  }
+
+  .position-absolute {
+    position: absolute !important;
+  }
+
+  .position-fixed {
+    position: fixed !important;
+  }
+
+  .sticky-top {
+    position: sticky !important;
+    inset-block-start: 0;
+    z-index: 1020;
+  }
+
+  @each $seite in ('top', 'bottom', 'start', 'end') {
+    $eigenschaft: if(
+      $seite == 'top',
+      'inset-block-start',
+      if($seite == 'bottom', 'inset-block-end', if($seite == 'start', 'inset-inline-start', 'inset-inline-end'))
+    );
+
+    .#{$seite}-0 {
+      #{$eigenschaft}: 0 !important;
+    }
+
+    .#{$seite}-50 {
+      #{$eigenschaft}: 50% !important;
+    }
+
+    .#{$seite}-100 {
+      #{$eigenschaft}: 100% !important;
+    }
+  }
+
+  .translate-middle {
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .translate-middle-y {
+    transform: translateY(-50%) !important;
+  }
+
+  // ── Sonstiges ──
+  .overflow-auto {
+    overflow: auto !important;
+  }
+
+  .list-unstyled {
+    padding-inline-start: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  @each $stufe in (0, 25, 50, 75, 100) {
+    .opacity-#{$stufe} {
+      opacity: #{math.div($stufe, 100)} !important;
+    }
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+
+  // ── Tab-Panels ──
+  // Der `tabController` schaltet `.active`/`.show`; die Panels selbst bringen keine eigene
+  // Sichtbarkeitslogik mit. Frueher kam beides aus Bootstraps `.tab-pane`/`.fade`.
+  .tab-pane {
+    display: none;
+
+    &.active {
+      display: block;
+    }
+  }
+
+  // ── Gegenregeln zum DB-Layer ──
+  // DB setzt `list-style-type: var(--db-list-bullet)` auf Listen; ohne Gegenregel steht vor
+  // jedem Eintrag der App-Listen ein roter Punkt.
+  .trennliste,
+  .list-unstyled {
+    list-style: none;
+  }
+
+  // DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus `:has()`-Spaltenzaehlung).
+  // Die Tabellen im Bestand arbeiten mit `colspan` (Fusszeile, Leer-Meldung, Inline-Editor),
+  // mit Zeilenkoepfen und mit je Breakpoint ausgeblendeten Spalten -- im Grid-Modell rutschen
+  // diese Zellen in eine einzige Spalte (Berechnungstabelle: Kopf und Rumpf laufen auseinander).
+  // Deshalb bleibt das native Table-Layout; Farben, Abstaende und Rahmen kommen aus dem DB-Layer.
+  .db-table > table {
+    display: table;
+    inline-size: 100%;
+  }
+
+  .fade {
+    @media screen and (prefers-reduced-motion: no-preference) {
+      transition: opacity var(--db-transition-duration-medium, 0.15s) linear;
+    }
+
+    &:not(.show) {
+      opacity: 0;
+    }
+  }
+}

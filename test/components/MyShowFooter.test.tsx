@@ -3,7 +3,7 @@ import { render } from '../reactRender';
 
 import type { CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 
-// MyShowFooter's Buttons tragen data-bs-dismiss="modal". Der reale Bootstrap-Modal-Import
+// MyShowFooter's Buttons tragen data-dialog-dismiss="modal". Der reale Bootstrap-Modal-Import
 // registriert einen document-weiten Click-Handler, der ohne echtes .modal-Element crasht.
 // Für diesen isolierten Komponententest wird das Modul daher wie in
 // Login.createModalResetPassword.test.tsx gemockt.
@@ -44,7 +44,7 @@ describe('MyShowFooter', () => {
 
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons.map(b => b.textContent)).toEqual(['Bearbeiten', 'Löschen', 'Schließen']);
-    expect(buttons.every(b => b.getAttribute('data-bs-dismiss') === 'modal')).toBe(true);
+    expect(buttons.every(b => b.getAttribute('data-dialog-dismiss') === 'modal')).toBe(true);
     // Seit Phase C rendert MyButton einen DBButton: die Bootstrap-Klasse ist zu
     // `data-variant`/`data-color` geworden.
     expect(buttons[1]?.getAttribute('data-variant')).toBe('filled');

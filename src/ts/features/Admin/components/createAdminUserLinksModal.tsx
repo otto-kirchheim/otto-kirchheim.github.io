@@ -203,7 +203,7 @@ function AdminUserLinksModal({
         <LinkSection kind="reset" userId={userId} userName={userName} />
       </div>
       <div className="dialog-fuss">
-        <button className="db-button" data-variant="filled" type="button" data-bs-dismiss="modal">
+        <button className="db-button" data-variant="filled" type="button" data-dialog-dismiss="modal">
           Schließen
         </button>
       </div>

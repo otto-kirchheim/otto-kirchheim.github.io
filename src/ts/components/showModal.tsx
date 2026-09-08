@@ -13,7 +13,7 @@ import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
  *
  * Der Vertrag der Aufrufstellen bleibt: `showModal(children)` gibt `#modal` synchron
  * zurueck und `#modal.row`/`#modal.role` bleiben beschreibbar. Schaltflaechen mit
- * `data-bs-dismiss="modal"` schliessen weiter -- ueber Delegation, damit kein einziger
+ * `data-dialog-dismiss="modal"` schliessen weiter -- ueber Delegation, damit kein einziger
  * Dialog-Baustein angefasst werden muss. Der Schliessen-Knopf des Drawers selbst traegt
  * `data-action="close"` und laeuft ueber dessen `onClose`.
  */
@@ -21,7 +21,7 @@ import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 /** Richtung, aus der Dialoge einfahren. */
 export const DIALOG_RICHTUNG = 'to-left' as const;
 
-/** Schliess-Funktion je Dialog-Container -- fuer `data-bs-dismiss` und gestapelte Dialoge. */
+/** Schliess-Funktion je Dialog-Container -- fuer `data-dialog-dismiss` und gestapelte Dialoge. */
 const schliesser = new WeakMap<HTMLElement, () => void>();
 
 function zuruecksetzen<T extends CustomTableTypes>(modal: CustomHTMLDivElement<T>): void {
@@ -70,11 +70,11 @@ export default function showModal<T extends CustomTableTypes>(children: ReactNod
   return modal;
 }
 
-// Ersatz fuer das entfernte Bootstrap-Plugin: `data-bs-dismiss="modal"` bleibt der
+// Ersatz fuer das entfernte Bootstrap-Plugin: `data-dialog-dismiss="modal"` bleibt der
 // Abbrechen-/Schliessen-Marker im Markup. Delegation am Dokument erfasst damit auch
 // gestapelte Dialoge und spaeter nachgerenderte Schaltflaechen.
 document.addEventListener('click', event => {
-  const knopf = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-bs-dismiss="modal"]');
+  const knopf = (event.target as HTMLElement | null)?.closest<HTMLElement>('[data-dialog-dismiss="modal"]');
   const container = knopf?.closest<HTMLElement>('.db-drawer')?.parentElement;
   const schliessen = container ? schliesser.get(container) : undefined;
   if (!schliessen) return;

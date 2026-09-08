@@ -47,7 +47,7 @@ const ZEILEN: IZeilenDefinition[] = [
   {
     gruppe: 'ewt',
     rowHtml:
-      '<tr><th><table class="table table-borderless m-0"><tbody>' +
+      '<tr><th><table class="berechnung-label-tabelle"><tbody>' +
       '<tr><td class="py-0">Anzahl der</td><td class="py-0">>8</td></tr>' +
       '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
       '<tr><td class="py-0"></td><td class="py-0">>24</td></tr>' +
@@ -65,7 +65,7 @@ const ZEILEN: IZeilenDefinition[] = [
   {
     gruppe: 'ewt',
     rowHtml:
-      '<tr><th><table class="table table-borderless m-0"><tbody>' +
+      '<tr><th><table class="berechnung-label-tabelle"><tbody>' +
       '<tr><td class="py-0">steuerfreie</td><td class="py-0">>8</td></tr>' +
       '<tr><td class="py-0">Abwesenheiten</td><td class="py-0">>14</td></tr>' +
       '</tbody></table></th></tr>',
@@ -98,7 +98,7 @@ function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeilenDefini
 
   return {
     gruppe: 'neben',
-    rowHtml: `<tr><th><table class="table table-borderless m-0"><tbody>${labelRows}</tbody></table></th></tr>`,
+    rowHtml: `<tr><th><table class="berechnung-label-tabelle"><tbody>${labelRows}</tbody></table></th></tr>`,
     // Wie bei den EWT-Zeilen: Monate ohne jegliche Zulagen bekommen eine leere Zelle
     inhalt: m =>
       breakdown.codes.some(c => breakdown.values[c.code][m.monat - 1] > 0)

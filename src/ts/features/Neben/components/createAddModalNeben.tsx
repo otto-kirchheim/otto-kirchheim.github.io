@@ -88,7 +88,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
       data-variant="filled"
       data-color="informational"
       type="button"
-      dataBsDismiss="modal"
+      dialogDismiss="modal"
       text="Manuell"
       clickHandler={() => {
         const table = document.querySelector<CustomHTMLTableElement<IDatenN>>('#tableN');

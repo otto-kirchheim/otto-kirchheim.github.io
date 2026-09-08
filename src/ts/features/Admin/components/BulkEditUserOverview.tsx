@@ -40,8 +40,8 @@ export function BulkEditUserOverview({
           />
         )}
       </div>
-      <div className="table-responsive border rounded" style={{ maxHeight: '30vh' }}>
-        <table className="table table-sm mb-0 align-middle">
+      <div className="db-table" data-width="full" data-size="small" data-divider="both" style={{ maxHeight: '30vh' }}>
+        <table className="align-middle mb-0">
           <thead className="sticky-top bg-body">
             <tr>
               <th scope="col">Benutzer</th>

@@ -78,8 +78,8 @@ type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
  */
 function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
   return new Promise<SignaturWahl>(resolve => {
-    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus, sonst blendet Bootstrap
-    // den Inhalt im Dialog aus (`display: none`).
+    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus -- `.fade` ohne `.show` haelt den
+    // Inhalt sonst auf `opacity: 0` (siehe `utilities.scss`).
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="dialog-rumpf">
@@ -93,7 +93,7 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
             data-variant="ghost"
             data-icon="cross"
             data-no-text="true"
-            data-bs-dismiss="modal"
+            data-dialog-dismiss="modal"
             aria-label="Schließen"
           >
             Schließen
@@ -167,8 +167,8 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
   // wahl === 'neu' -- weiter zum Pad, ggf. vorbefüllt mit der bisherigen Unterschrift
 
   return new Promise<SignaturErgebnis>(resolve => {
-    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus, sonst blendet Bootstrap
-    // den Inhalt im Dialog aus (`display: none`).
+    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus -- `.fade` ohne `.show` haelt den
+    // Inhalt sonst auf `opacity: 0` (siehe `utilities.scss`).
     // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche. Titel und Schliessen-Knopf
     // sassen frueher oben und kosteten im Querformat rund ein Viertel der Hoehe -- die
     // Fusszeile traegt beides jetzt als kleine Schaltflaechen mit.
@@ -185,7 +185,7 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
               Merken
             </label>
           </div>
-          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-bs-dismiss="modal">Abbrechen</button>
+          <button type="button" class="db-button" data-variant="outlined" data-size="small" data-dialog-dismiss="modal">Abbrechen</button>
           <button type="button" class="db-button" data-variant="outlined" data-size="small" data-loeschen="true">Löschen</button>
           <button type="button" class="db-button" data-variant="brand" data-size="small" data-fertig="true">Fertig</button>
         </div>

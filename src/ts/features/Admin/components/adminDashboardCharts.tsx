@@ -19,10 +19,10 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  startup: 'var(--bs-warning)',
-  shutdown: 'var(--bs-danger)',
-  manual: 'var(--bs-success)',
-  periodic: 'var(--bs-secondary)',
+  startup: 'var(--db-warning-origin-default)',
+  shutdown: 'var(--db-critical-origin-default)',
+  manual: 'var(--db-successful-origin-default)',
+  periodic: 'var(--db-adaptive-on-bg-basic-emphasis-70-default)',
 };
 
 const ENV_LABELS: Record<string, string> = {
@@ -105,16 +105,44 @@ function MemorySparkline({
       aria-hidden="true"
     >
       {/* Achsen */}
-      <line x1={PX} y1={PT} x2={PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
-      <line x1={PX} y1={H - PB} x2={W - PX} y2={H - PB} stroke="var(--bs-border-color)" strokeWidth="0.5" />
+      <line
+        x1={PX}
+        y1={PT}
+        x2={PX}
+        y2={H - PB}
+        stroke="var(--db-adaptive-on-bg-basic-emphasis-60-default)"
+        strokeWidth="0.5"
+      />
+      <line
+        x1={PX}
+        y1={H - PB}
+        x2={W - PX}
+        y2={H - PB}
+        stroke="var(--db-adaptive-on-bg-basic-emphasis-60-default)"
+        strokeWidth="0.5"
+      />
 
       {/* X-Achsen-Beschriftung */}
       {ticks.map((t, i) => {
         const x = toX(t);
         return (
           <g key={i}>
-            <line x1={x} y1={H - PB} x2={x} y2={H - PB + 3} stroke="var(--bs-border-color)" strokeWidth="0.5" />
-            <text x={x} y={H - 2} fontSize="6" fill="var(--bs-body-color)" opacity="0.5" textAnchor="middle">
+            <line
+              x1={x}
+              y1={H - PB}
+              x2={x}
+              y2={H - PB + 3}
+              stroke="var(--db-adaptive-on-bg-basic-emphasis-60-default)"
+              strokeWidth="0.5"
+            />
+            <text
+              x={x}
+              y={H - 2}
+              fontSize="6"
+              fill="var(--db-adaptive-on-bg-basic-emphasis-100-default)"
+              opacity="0.5"
+              textAnchor="middle"
+            >
               {fmtTick(t)}
             </text>
           </g>
@@ -183,7 +211,7 @@ function MemorySparkline({
         </>
       )}
 
-      <text x={PX + 2} y={PT + 8} fontSize="7" fill="var(--bs-body-color)" opacity="0.5">
+      <text x={PX + 2} y={PT + 8} fontSize="7" fill="var(--db-adaptive-on-bg-basic-emphasis-100-default)" opacity="0.5">
         {vMax} MB
       </text>
     </svg>
@@ -247,251 +275,238 @@ export function MemoryCard({
   const lastSnap = (heap?.history.length ?? 0) > 0 ? heap!.history[heap!.history.length - 1] : null;
 
   return (
-    <div className="card border-0 shadow-sm">
-      <div className="card-body">
-        {/* ── Header ── */}
-        <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
-          <h6 className="card-title fw-semibold mb-0 text-nowrap">
-            <span className="db-icon me-1 db-font-size-sm" data-icon="pulse_wave" style={{ verticalAlign: 'middle' }} />
-            Memory-Verlauf
-          </h6>
-          <div className="d-flex gap-2 flex-shrink-0">
-            <DbAuswahl
-              beschriftung="Zeitraum des Memory-Verlaufs"
-              dicht
-              className="w-auto"
-              value={days}
-              disabled={loading}
-              title="Zeitraum des Memory-Verlaufs"
-              onChange={e => onDaysChange(Number((e.target as HTMLSelectElement).value))}
-            >
-              {HEAP_RANGE_OPTIONS.map(d => (
-                <option key={d} value={d}>
-                  {d === 1 ? '24 Std.' : `${d} Tage`}
-                </option>
-              ))}
-            </DbAuswahl>
-            <button
-              className="db-button"
-              data-variant="outlined"
-              data-color="successful"
-              data-size="small"
-              onClick={takeSnapshot}
-              disabled={snapping || loading}
-              title="Manuellen Heap-Snapshot jetzt speichern"
-            >
-              {snapping ? (
-                <span className="laedt" data-size="small" />
-              ) : (
-                <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
-              )}
-            </button>
-            <button
-              className="db-button"
-              data-variant="outlined"
-              data-size="small"
-              onClick={onRefresh}
-              disabled={loading}
-            >
-              <span
-                className="db-icon db-font-size-sm"
-                data-icon="circular_arrows"
-                style={{ verticalAlign: 'middle' }}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* ── Environment Toggles ── */}
-        <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={visibleEnvironments.has('gcp')}
-                onChange={() => toggleEnvironment('gcp')}
-              />
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  background: '#4285F4',
-                  borderRadius: '2px',
-                  marginRight: '4px',
-                }}
-              />
-              GCP
-            </label>
-          </div>
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={visibleEnvironments.has('homeserver')}
-                onChange={() => toggleEnvironment('homeserver')}
-              />
-              <span
-                style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  background: '#34A853',
-                  borderRadius: '2px',
-                  marginRight: '4px',
-                }}
-              />
-              HomeServer
-            </label>
-          </div>
-        </div>
-
-        {loading && !heap ? (
-          <div className="text-center py-3">
-            <span className="laedt text-primary" data-size="small" />
-          </div>
-        ) : (
-          <>
-            {/* ── Aktuelle Werte – eine kompakte Zeile ── */}
-            {cur && (
-              <div className="small text-body-secondary mb-2">
-                <div className="mb-1">
-                  {cur.environment && (
-                    <span className="db-tag" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
-                      {ENV_LABELS[cur.environment]}
-                    </span>
-                  )}
-                </div>
-                <p className="mb-0">
-                  <span className="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
-                  {' · '}
-                  <span className="fw-semibold" style={{ color: 'var(--bs-orange)' }}>
-                    RSS
-                  </span>{' '}
-                  {cur.rss} MB
-                  {' · '}Extern {cur.external} MB
-                  {lastSnap && (
-                    <>
-                      {' · '}Loop {lastSnap.eventLoopDelay} ms · Uptime {formatUptime(lastSnap.uptime).value}{' '}
-                      {formatUptime(lastSnap.uptime).unit}
-                    </>
-                  )}
-                </p>
-              </div>
+    <div className="db-card border-0 shadow-sm">
+      {/* ── Header ── */}
+      <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
+        <h6 className="fw-semibold mb-0 text-nowrap">
+          <span className="db-icon me-1 db-font-size-sm" data-icon="pulse_wave" style={{ verticalAlign: 'middle' }} />
+          Memory-Verlauf
+        </h6>
+        <div className="d-flex gap-2 flex-shrink-0">
+          <DbAuswahl
+            beschriftung="Zeitraum des Memory-Verlaufs"
+            dicht
+            className="w-auto"
+            value={days}
+            disabled={loading}
+            title="Zeitraum des Memory-Verlaufs"
+            onChange={e => onDaysChange(Number((e.target as HTMLSelectElement).value))}
+          >
+            {HEAP_RANGE_OPTIONS.map(d => (
+              <option key={d} value={d}>
+                {d === 1 ? '24 Std.' : `${d} Tage`}
+              </option>
+            ))}
+          </DbAuswahl>
+          <button
+            className="db-button"
+            data-variant="outlined"
+            data-color="successful"
+            data-size="small"
+            onClick={takeSnapshot}
+            disabled={snapping || loading}
+            title="Manuellen Heap-Snapshot jetzt speichern"
+          >
+            {snapping ? (
+              <span className="laedt" data-size="small" />
+            ) : (
+              <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
             )}
+          </button>
+          <button
+            className="db-button"
+            data-variant="outlined"
+            data-size="small"
+            onClick={onRefresh}
+            disabled={loading}
+          >
+            <span className="db-icon db-font-size-sm" data-icon="circular_arrows" style={{ verticalAlign: 'middle' }} />
+          </button>
+        </div>
+      </div>
 
-            {/* ── Chart ── */}
-            <MemorySparkline history={heap?.history ?? []} visibleEnvironments={visibleEnvironments} />
+      {/* ── Environment Toggles ── */}
+      <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
+        <div className="db-checkbox" data-size="small">
+          <label>
+            <input type="checkbox" checked={visibleEnvironments.has('gcp')} onChange={() => toggleEnvironment('gcp')} />
+            <span
+              style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#4285F4',
+                borderRadius: '2px',
+                marginRight: '4px',
+              }}
+            />
+            GCP
+          </label>
+        </div>
+        <div className="db-checkbox" data-size="small">
+          <label>
+            <input
+              type="checkbox"
+              checked={visibleEnvironments.has('homeserver')}
+              onChange={() => toggleEnvironment('homeserver')}
+            />
+            <span
+              style={{
+                display: 'inline-block',
+                width: '8px',
+                height: '8px',
+                background: '#34A853',
+                borderRadius: '2px',
+                marginRight: '4px',
+              }}
+            />
+            HomeServer
+          </label>
+        </div>
+      </div>
 
-            {/* ── Legende ── */}
-            <div
-              className="d-flex gap-2 mt-1 flex-wrap"
-              style={{ fontSize: '.72rem', color: 'var(--bs-secondary-color)' }}
-            >
-              {(
-                [
-                  ['#34A853', false, 'HomeServer Heap'],
-                  ['#34A853', false, 'HomeServer RSS', true],
-                  ['#4285F4', false, 'GCP Heap'],
-                  ['#4285F4', false, 'GCP RSS', true],
-                  ['var(--bs-warning)', true, 'Serverstart'],
-                  ['var(--bs-success)', true, 'Manuell'],
-                  ['var(--bs-danger)', true, 'Shutdown'],
-                ] as [string, boolean, string, boolean?][]
-              ).map(([color, dashed, label, reduced]) => (
-                <span key={label} className="d-flex align-items-center gap-1">
-                  <span
-                    style={{
-                      width: '14px',
-                      height: dashed ? '0' : '2px',
-                      background: dashed ? 'none' : color,
-                      borderTop: dashed ? `2px dashed ${color}` : 'none',
-                      opacity: reduced ? '.5' : '.85',
-                      display: 'inline-block',
-                      flexShrink: 0,
-                    }}
-                  />
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            {/* ── Ereignisse ── */}
-            {history.length > 0 && (
-              <div className="mt-2 pt-2 border-top">
-                <div className="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
-                <ul className="list-unstyled mb-0">
-                  {pagedEvents.map((p, i) => {
-                    const icon = p.event === 'startup' ? 'start' : p.event === 'shutdown' ? 'stop' : 'line_chart';
-                    const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
-                    return (
-                      <li key={i} className="py-1 border-bottom">
-                        <div className="d-flex align-items-center gap-2">
-                          <span
-                            className="db-icon flex-shrink-0 db-font-size-xs"
-                            data-icon={icon}
-                            style={{ color: EVENT_COLORS[p.event] }}
-                          />
-                          <span className="small fw-medium" style={{ color: EVENT_COLORS[p.event] }}>
-                            {EVENT_LABELS[p.event]}
-                          </span>
-                          {p.environment && (
-                            <span
-                              className="db-tag ms-auto"
-                              style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
-                            >
-                              {ENV_LABELS[p.environment].split(' ')[0]}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-body-secondary" style={{ fontSize: '.72rem', paddingLeft: '1.6rem' }}>
-                          {ts} · {p.rss} MB RSS · {p.heapUsed} MB Heap
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-                {eventPageCount > 1 && (
-                  <div
-                    className="d-flex align-items-center justify-content-between mt-2"
-                    style={{ fontSize: '.75rem' }}
-                  >
-                    <button
-                      className="db-button p-0 text-body-secondary"
-                      data-variant="ghost"
-                      data-size="small"
-                      onClick={() => setEventsPage(p => Math.max(0, p - 1))}
-                      disabled={eventsPage === 0}
-                    >
-                      <span
-                        className="db-icon db-font-size-sm"
-                        data-icon="chevron_left"
-                        style={{ verticalAlign: 'middle' }}
-                      />
-                    </button>
-                    <span className="text-body-secondary">
-                      {eventsPage + 1} / {eventPageCount}
-                    </span>
-                    <button
-                      className="db-button p-0 text-body-secondary"
-                      data-variant="ghost"
-                      data-size="small"
-                      onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
-                      disabled={eventsPage === eventPageCount - 1}
-                    >
-                      <span
-                        className="db-icon db-font-size-sm"
-                        data-icon="chevron_right"
-                        style={{ verticalAlign: 'middle' }}
-                      />
-                    </button>
-                  </div>
+      {loading && !heap ? (
+        <div className="text-center py-3">
+          <span className="laedt text-primary" data-size="small" />
+        </div>
+      ) : (
+        <>
+          {/* ── Aktuelle Werte – eine kompakte Zeile ── */}
+          {cur && (
+            <div className="small text-body-secondary mb-2">
+              <div className="mb-1">
+                {cur.environment && (
+                  <span className="db-tag" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
+                    {ENV_LABELS[cur.environment]}
+                  </span>
                 )}
               </div>
-            )}
-          </>
-        )}
-      </div>
+              <p className="mb-0">
+                <span className="fw-semibold text-primary">Heap</span> {cur.heapUsed}/{cur.heapTotal} MB
+                {' · '}
+                <span className="fw-semibold" style={{ color: 'var(--db-warning-origin-default)' }}>
+                  RSS
+                </span>{' '}
+                {cur.rss} MB
+                {' · '}Extern {cur.external} MB
+                {lastSnap && (
+                  <>
+                    {' · '}Loop {lastSnap.eventLoopDelay} ms · Uptime {formatUptime(lastSnap.uptime).value}{' '}
+                    {formatUptime(lastSnap.uptime).unit}
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
+          {/* ── Chart ── */}
+          <MemorySparkline history={heap?.history ?? []} visibleEnvironments={visibleEnvironments} />
+
+          {/* ── Legende ── */}
+          <div
+            className="d-flex gap-2 mt-1 flex-wrap"
+            style={{ fontSize: '.72rem', color: 'var(--db-adaptive-on-bg-basic-emphasis-70-default)' }}
+          >
+            {(
+              [
+                ['#34A853', false, 'HomeServer Heap'],
+                ['#34A853', false, 'HomeServer RSS', true],
+                ['#4285F4', false, 'GCP Heap'],
+                ['#4285F4', false, 'GCP RSS', true],
+                ['var(--db-warning-origin-default)', true, 'Serverstart'],
+                ['var(--db-successful-origin-default)', true, 'Manuell'],
+                ['var(--db-critical-origin-default)', true, 'Shutdown'],
+              ] as [string, boolean, string, boolean?][]
+            ).map(([color, dashed, label, reduced]) => (
+              <span key={label} className="d-flex align-items-center gap-1">
+                <span
+                  style={{
+                    width: '14px',
+                    height: dashed ? '0' : '2px',
+                    background: dashed ? 'none' : color,
+                    borderTop: dashed ? `2px dashed ${color}` : 'none',
+                    opacity: reduced ? '.5' : '.85',
+                    display: 'inline-block',
+                    flexShrink: 0,
+                  }}
+                />
+                {label}
+              </span>
+            ))}
+          </div>
+
+          {/* ── Ereignisse ── */}
+          {history.length > 0 && (
+            <div className="mt-2 pt-2 border-top">
+              <div className="small text-body-secondary mb-1">Ereignisse ({history.length}):</div>
+              <ul className="list-unstyled mb-0">
+                {pagedEvents.map((p, i) => {
+                  const icon = p.event === 'startup' ? 'start' : p.event === 'shutdown' ? 'stop' : 'line_chart';
+                  const ts = dayjs(p.timestamp).format('DD.MM., HH:mm');
+                  return (
+                    <li key={i} className="py-1 border-bottom">
+                      <div className="d-flex align-items-center gap-2">
+                        <span
+                          className="db-icon flex-shrink-0 db-font-size-xs"
+                          data-icon={icon}
+                          style={{ color: EVENT_COLORS[p.event] }}
+                        />
+                        <span className="small fw-medium" style={{ color: EVENT_COLORS[p.event] }}>
+                          {EVENT_LABELS[p.event]}
+                        </span>
+                        {p.environment && (
+                          <span
+                            className="db-tag ms-auto"
+                            style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
+                          >
+                            {ENV_LABELS[p.environment].split(' ')[0]}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-body-secondary" style={{ fontSize: '.72rem', paddingLeft: '1.6rem' }}>
+                        {ts} · {p.rss} MB RSS · {p.heapUsed} MB Heap
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              {eventPageCount > 1 && (
+                <div className="d-flex align-items-center justify-content-between mt-2" style={{ fontSize: '.75rem' }}>
+                  <button
+                    className="db-button p-0 text-body-secondary"
+                    data-variant="ghost"
+                    data-size="small"
+                    onClick={() => setEventsPage(p => Math.max(0, p - 1))}
+                    disabled={eventsPage === 0}
+                  >
+                    <span
+                      className="db-icon db-font-size-sm"
+                      data-icon="chevron_left"
+                      style={{ verticalAlign: 'middle' }}
+                    />
+                  </button>
+                  <span className="text-body-secondary">
+                    {eventsPage + 1} / {eventPageCount}
+                  </span>
+                  <button
+                    className="db-button p-0 text-body-secondary"
+                    data-variant="ghost"
+                    data-size="small"
+                    onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
+                    disabled={eventsPage === eventPageCount - 1}
+                  >
+                    <span
+                      className="db-icon db-font-size-sm"
+                      data-icon="chevron_right"
+                      style={{ verticalAlign: 'middle' }}
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -68,7 +68,9 @@ export function JsonEditor({ value, onChange, error }: Props) {
           data-icon={open ? 'chevron_up' : 'chevron_down'}
         />
 
-        <span className={`badge flex-shrink-0 ${hasError ? 'bg-danger' : 'bg-secondary'}`}>{label}</span>
+        <span className="db-tag flex-shrink-0" data-semantic={hasError ? 'critical' : 'neutral'} data-emphasis="strong">
+          {label}
+        </span>
 
         {!open && hint && (
           <span

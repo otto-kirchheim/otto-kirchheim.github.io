@@ -1,11 +1,9 @@
 // App-eigene Rasterhilfen -- Ersatz fuer Bootstraps `.row`/`.col-*`/`.container` (Phase H).
-//
 // Zwei Muster decken alles ab, was die App braucht:
 //   `.raster`      12 Spalten, Kinder standardmaessig ueber die volle Breite; `.sp-*`
 //                  verschmaelert einzelne Kinder. Ersetzt `row` + `col-*`.
 //   `.raster-auto` so viele gleich breite Spalten, wie bei `--spalte-min` Mindestbreite
 //                  hineinpassen. Ersetzt `row row-cols-*` + `col`.
-//
 // Anders als bei Bootstrap gibt es keine negativen Aussenabstaende und kein Innenpolster an
 // den Kindern -- der Abstand kommt aus `gap`, der Inhalt steht buendig am Containerrand.
 

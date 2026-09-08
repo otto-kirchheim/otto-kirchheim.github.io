@@ -173,8 +173,8 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
   const titel = getStepTitle(step);
 
   return (
-    <div className="card border shadow">
-      <div className="card-header d-flex align-items-center gap-2 py-2">
+    <div className="db-card shadow" data-spacing="none">
+      <div className="d-flex align-items-center gap-2 py-2 px-3 bg-body-secondary border-bottom">
         <strong className="me-auto">Ersteinrichtung</strong>
         <span className="text-body-secondary small">
           Schritt {stepIndex + 1} von {steps.length}
@@ -195,7 +195,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
       </div>
 
       {!minimiert && (
-        <div className="card-body d-flex flex-column gap-2 overflow-auto" style={{ maxHeight: '45vh' }}>
+        <div className="d-flex flex-column gap-2 overflow-auto p-3" style={{ maxHeight: '45vh' }}>
           <h6 className="mb-0">{titel}</h6>
 
           {step.art === 'intro' && (
@@ -258,7 +258,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
       )}
 
       {!minimiert && (
-        <div className="card-footer d-flex gap-2 py-2">
+        <div className="d-flex gap-2 py-2 px-3 bg-body-secondary border-top">
           <button
             type="button"
             className="db-button"
@@ -299,7 +299,8 @@ function openGuidePanel(captureSnapshot: boolean): void {
 
   const container = document.createElement('div');
   container.id = PANEL_ID;
-  // z-index 1040: unter Bootstrap-Modal/Backdrop (1050/1055), damit Add/Edit-Modale darüber öffnen.
+  // z-index 1040: unter den Dialogen (nativer `<dialog>` liegt in der Top-Layer), damit
+  // Add/Edit-Dialoge darueber oeffnen.
   container.className = 'position-fixed bottom-0 end-0 p-2 p-md-3 onboarding-panel';
   container.style.zIndex = '1040';
   document.body.appendChild(container);

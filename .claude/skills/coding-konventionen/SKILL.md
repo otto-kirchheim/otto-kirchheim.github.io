@@ -61,7 +61,7 @@ export { default as MyFormModal } from "./MyFormModal";
 
 ### Import-Reihenfolge
 
-1. Externe Pakete (`react`, `dayjs`, `bootstrap`)
+1. Externe Pakete (`react`, `dayjs`, `@db-ux/react-core-components`)
 2. `core`/`infrastructure` (per `@/`-Alias, z.B. `@/infrastructure/api/FetchRetry`)
 3. Komponenten (`../components`)
 4. Lokale Dateien (`./utils`)
@@ -83,7 +83,7 @@ const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => { ... };
 
 ### Modal-Rendering
 
-React-Komponenten werden in Bootstrap-Modals gerendert:
+React-Komponenten werden in einen `DBDrawer` gerendert (`showModal()`, nativer `<dialog>`):
 
 ```ts
 import { mount, unmount } from "@/infrastructure/ui";
@@ -99,21 +99,26 @@ unmount(document.getElementById("modal-body"));
 
 ---
 
-## Bootstrap
+## Styles
 
-### Module einzeln importieren
+Gate: `bun run lint:css` (Stylelint, Teil von `release:check`). Regeln und Begruendungen stehen
+im Kopf von `stylelint.config.mjs`.
+
+Bootstrap ist raus (Phase H) -- kein Paket, kein CSS, kein JS, keine `data-bs-*`-Attribute.
+
+### Ladereihenfolge (`main.ts`)
 
 ```ts
-import Collapse from "bootstrap/js/dist/collapse";
-import Modal from "bootstrap/js/dist/modal";
+import '../scss/layers.scss'; // @layer db-ux, app;
+import '../scss/db-ux.css'; // DB-UX-Bundle in layer(db-ux)
+import '../scss/utilities.scss'; // eigene Hilfsklassen in @layer app
+import '../scss/styles.scss'; // App-Regeln, bewusst ungelayert (schlagen alle Layer)
 ```
 
-### CSS via SCSS
+### Hilfsklassen
 
-```scss
-@import "~bootstrap/scss/bootstrap";
-@import "~material-icons/iconfont/material-icons.css";
-```
+Die Klassennamen entsprechen Bootstraps Utility-API (`d-flex`, `mb-3`, `text-body-secondary`, ...),
+die Werte kommen aber aus den DB-Tokens. Neue Hilfsklassen gehoeren nach `src/scss/utilities.scss`.
 
 ---
 

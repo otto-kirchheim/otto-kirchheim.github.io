@@ -30,7 +30,7 @@ umgekehrt. Details siehe `frontend/CLAUDE.md`.
 ### `src/index.html`
 
 - Einzige HTML-Datei (SPA), >1000 Zeilen
-- Bootstrap-basierte Tabs als Navigation (Pills)
+- DB-Header (`db-navigation`) plus `tabController` als Navigation
 
 ### `src/ts/main.ts`
 
@@ -39,7 +39,7 @@ umgekehrt. Details siehe `frontend/CLAUDE.md`.
 - `initializeAppBootstrap()`/`registerAppStartTask()` (`core/`) für die Init-Reihenfolge
 - PWA Service Worker Registrierung
 - Version-Check (API vs. lokal)
-- Bootstrap JS-Module einzeln importieren (Collapse, Dropdown, Offcanvas, Popover, Tab, Modal)
+- UI-Controller starten (`tabController`, `navDrawer`, `dbDialog`, `DBColorToggler`) -- Bootstrap-JS gibt es nicht mehr
 
 ---
 
@@ -104,14 +104,15 @@ class MyInput extends Component<Props, State> {
 }
 ```
 
-### 3. `showModal()` – React in Bootstrap-Modals
+### 3. `showModal()` – React im DB-Drawer
 
-React wird primär als Template-Engine für Bootstrap-Modals und die Feature-Tabs verwendet:
+React wird primär als Template-Engine für die Dialoge und die Feature-Tabs verwendet. Der Dialog
+selbst ist ein `DBDrawer` über nativem `<dialog>`; geschlossen wird per Delegation über
+`data-dialog-dismiss="modal"` oder `schliesseModal()`.
 
 ```ts
 import { mount } from "@/infrastructure/ui";
-// Rendern einer React-Komponente in ein Bootstrap-Modal DOM-Element
-render(<MyFormModal {...props} />, modalElement);
+mount(modalElement, <MyFormModal {...props} />);
 ```
 
 ### 4. CustomTable (Vanilla-DOM)

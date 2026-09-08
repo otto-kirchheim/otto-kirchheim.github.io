@@ -39,11 +39,11 @@ export function confirmDialog(message: string, options: ConfirmDialogOptions = {
     inhalt.innerHTML = `
       <div class="db-drawer-header">
         <h5>${title}</h5>
-        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-bs-dismiss="modal">Schließen</button>
+        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
       </div>
       <div class="dialog-koerper"><p>${escapedMessage}</p></div>
       <div class="dialog-fuss">
-        <button type="button" class="db-button" data-variant="filled" data-bs-dismiss="modal">${cancelLabel}</button>
+        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">${cancelLabel}</button>
         <button type="button" class="db-button" data-variant="${confirmVariant}"${
           confirmColor ? ` data-color="${confirmColor}"` : ''
         } data-confirm="true">${confirmLabel}</button>

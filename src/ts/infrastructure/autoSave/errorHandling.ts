@@ -68,7 +68,7 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
   const opLabel = (op: BulkErrorEntry['operation']) =>
     op === 'create' ? 'Erstellen' : op === 'update' ? 'Ändern' : 'Löschen';
   const rowDesc = err.label ?? (err.operation !== 'create' && err.id ? err.id : `#${globalIdx + 1}`);
-  return `<li class="list-group-item px-0">
+  return `<li class="trennliste-eintrag px-0">
     <div class="d-flex gap-2 align-items-start">
       <span class="db-icon text-danger flex-shrink-0" data-icon="exclamation_mark_circle" style="font-size:1.1rem;margin-top:2px" aria-hidden="true"></span>
       <div class="flex-grow-1">
@@ -112,24 +112,24 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
     <div data-error-dialog="true">
       <div class="db-drawer-header bg-danger text-white">
         <h5>Fehler beim Speichern</h5>
-        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-bs-dismiss="modal">Schließen</button>
+        <button type="button" class="db-button" data-icon="cross" data-variant="ghost" data-no-text="true" data-dialog-dismiss="modal">Schließen</button>
       </div>
       <div class="dialog-koerper">
         <p class="fw-semibold mb-2" data-error-count>${errors.length} Fehler gefunden:</p>
-        <ul class="list-group list-group-flush">${itemsHtml}</ul>
+        <ul class="trennliste">${itemsHtml}</ul>
         <div class="db-notification mt-3 mb-0 py-2 small" data-semantic="informational">
           <span data-area="content">Die fehlerhaften Zeilen sind in der Tabelle rot markiert und können erneut gespeichert werden.</span>
         </div>
       </div>
       <div class="dialog-fuss">
-        <button type="button" class="db-button" data-variant="filled" data-bs-dismiss="modal">Schließen</button>
+        <button type="button" class="db-button" data-variant="filled" data-dialog-dismiss="modal">Schließen</button>
       </div>
     </div>
   `;
 
   // Der Fokus muss raus, bevor der Dialog verschwindet -- sonst bleibt er am entfernten Knoten.
   inhalt.addEventListener('click', event => {
-    if (!(event.target as HTMLElement | null)?.closest('[data-bs-dismiss="modal"]')) return;
+    if (!(event.target as HTMLElement | null)?.closest('[data-dialog-dismiss="modal"]')) return;
     (document.activeElement as HTMLElement | null)?.blur();
     schliessen();
   });

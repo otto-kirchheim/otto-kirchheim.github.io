@@ -1,3 +1,87 @@
+# Aktueller Plan: DB-UX-Migration -- Phase H (Bootstrap vollstaendig raus) - 2026-09-08
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase H. Vorarbeit lag als WIP-Commit `1979676` vor
+(Modal-Huellen, Raster/Akkordeon, Buttons, Formulare, Bootstrap-JS; Alerts -> `db-notification`,
+Badges -> `db-tag`, `spinner-border` -> `.laedt`). Offen waren 5 rote Tests, die Karten, die
+Reste (`nav-*`, `table-*`, `fade`, `list-group`) und der Utility-Sweep.
+
+## Aufgaben
+
+- [x] **H.1 Rote Tests.** `JsonEditor` hatte als einziges Badge noch `badge bg-*`; der Test war
+      schon auf `.db-tag` umgestellt. Markup nachgezogen, die stehengebliebene
+      `bg-danger`-Zusicherung auf `data-semantic="critical"`.
+- [x] **H.2 Karten** -> `db-card` (8 Dateien). Karten mit Kopf-/Fusszeile bekommen
+      `data-spacing="none"`, damit die Abschnitte die volle Breite behalten.
+- [x] **H.3 Navigation** -> `db-navigation`/`db-navigation-item` mit `data-active`
+      (Admin-Unternavigation, Ressourcen-Reiter, Seiten-Reiter im Formular-Editor). Die
+      Admin-Unternavigation ist jetzt eine Liste statt achtmal desselben Blocks.
+- [x] **H.4 Tabellen** -> `db-table`-Huelle (7 Stellen), `table-responsive` entfaellt.
+      Nested Label-Tabellen der Berechnung als `berechnung-label-tabelle` ausgenommen.
+- [x] **H.5 Reste:** `list-group` -> `trennliste`, `spinner-grow` -> `.laedt`, letzte
+      `badge`/`text-bg-*` -> `db-tag`, AutoSave-Punkt auf `data-semantic`.
+- [x] **H.6 `src/scss/utilities.scss`** (neu, `@layer app`): Hilfsklassen mit Bootstrap-Namen
+      auf DB-Tokens, dazu `tab-pane`/`fade` und die Gegenregeln aus `bridge.css`.
+- [x] **H.7 Bootstrap raus:** SCSS-Import, `~bootstrap`-Alias, `bridge.css`, Layer auf
+      `db-ux, app`, Pakete deinstalliert. `data-bs-*` umbenannt, `--bs-*` auf DB-Tokens,
+      `BSColorToggler` -> `DBColorToggler`.
+- [x] **H.8 Doku:** `CHANGELOG.md` (67), `CLAUDE.md`, `../WORKSPACE.md`,
+      `.claude/skills/architektur`, `.claude/skills/coding-konventionen`.
+- [x] **H.9 Stylelint als Gate** (Nachtrag auf Zuruf): `stylelint.config.mjs` lauffaehig gemacht
+      (SCSS-Parser fehlte, `//` war ein Syntaxfehler), `bun run lint:css` + `lint:css:fix` neu,
+      eingehaengt in `release:check`, `lint-staged` und `deploy.yml`. Die `db-ux/*`-Token-Regeln
+      laufen als Ratsche (`--max-warnings 93`), alles andere ist `error` und steht auf 0.
+
+## Verifikation
+
+- `bunx --bun tsc --noEmit` 0, `bun run lint` 0 Fehler / 28 Alt-Warnungen,
+  `bun run lint:css` 0 Fehler / 93 Warnungen (unter der Grenze),
+  `bun run test` **2084 pass / 0 fail** (2 skip), `bun run build` gruen (Precache 59 / 4,5 MB).
+- Grep: `data-bs-` = 0, `--bs-` = 0 in `src/` und `test/`; `bootstrap` nur noch in erklaerenden
+  Kommentaren und im app-eigenen Modul `core/bootstrap.ts` (Init-Sequenz, keine Bibliothek).
+- Browser (Chrome headless gegen den Dev-Server): Layer-Reihenfolge `db-ux, app`; 0 Bootstrap-
+  Klassen und 0 `data-bs-*` im DOM; 20 Hilfsklassen-Stichproben mit den erwarteten Werten
+  (`d-flex` flex, `gap-2` 8px, `mb-3` 12px, `border` 1px solid, `rounded` 8px, `small` 14px,
+  `visually-hidden` absolute, …); Tabwechsel setzt Panel + `data-active` + Hash
+  (`#Einstellungen`); Startkarten 381x134 px mit 12 px Polster; Admin-Unternavigation
+  waagerecht mit Aktiv-Markierung; Hell/Dunkel setzen `data-mode` und tauschen Grund
+  (`#16181b` / `#fff`) und Text; 0 Konsolenfehler.
+
+## Funde
+
+1. **`db-card` polstert aussen.** Bootstraps `card-header`/`card-footer` sitzen randlos an der
+   Kartenkante. Mit DBs Standardpolster stuenden sie eingerueckt im Kasten -- deshalb
+   `data-spacing="none"` plus Abstand an den Abschnitten, wo eine Kopfzeile existiert.
+2. **`db-table` scrollt selbst** (`overflow: auto` bei `data-width="full"`) -- `table-responsive`
+   war an den bereits migrierten Tabellen doppelt gemoppelt. `#Berechnung .table-responsive`
+   (JS-Messung der Fensterbreite + Media-Query) musste auf `.db-table` umgehaengt werden.
+3. **Ein Perl-Ersetzungslauf hat `${isSelfRow ? …}` in Template-Literalen verschluckt** --
+   `${…}` ist auch in Perl eine Variableninterpolation. Beide Stellen (`AdminUserCard`,
+   `AdminUserTable`) haetten still ihre Rahmenmarkierung verloren; der Diff hat es gezeigt.
+   Lehre steht in `tasks/lessons.md`.
+4. **Bootstraps Abstandsskala und die DB-Skala decken sich nicht.** `mb-3` ist jetzt 12 px statt
+   16 px (`--db-spacing-fixed-sm`), `p-2` bleibt 8 px. Bewusste Entscheidung: Klassennamen
+   behalten, Werte aus den Tokens -- sonst haetten die Abstaende zwei Systeme gemischt.
+5. **`body` hat keinen eigenen Hintergrund mehr** (Bootstrap setzte ihn). Der Grund kommt vom
+   `<html>` aus dem DB-Theme (`#16181b` / `#fff`), gemessen im Browser -- kein weisses Aufblitzen.
+6. **`stylelint --fix` hat eine Regression eingebaut.** `stylelint-use-logical` fasst mehrere
+   `top`/`right`/`bottom`/`left` in einem Block zu `inset: logical …` zusammen. Diese Kurzform
+   unterstuetzt kein Browser -- alle sechs Positionsvarianten der Snackbar waeren still auf die
+   Grundstellung zurueckgefallen. Datei zurueckgenommen, die fuenf Eigenschaften per `except`
+   vom Autofix ausgenommen. Ein Autofix eines Linters ist kein Freifahrtschein; der Diff gehoert
+   angesehen.
+
+## Offen / Naechste Phase
+
+- Phase I (Cleanup): `data-density`/`data-color` final, Marken-Logos und Icon-Gewichte aus dem
+  Build halten, `manifest.theme_color`/`<meta name="theme-color">` (heute `#212529`) auf
+  DB-Werte, `customtable.css` in `@layer app`, `npx @db-ux/agent-cli` neu ausfuehren.
+- Die 28 Lint-Warnungen (React-19-Hinweise auf Preact-Muster) sind weiterhin offen.
+- Gitlink-Bump des Frontends im Parent-Repo steht aus.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase E (Modal-Infrastruktur -> DB-Drawer) - 2026-09-06
 
 ## Ausgangslage

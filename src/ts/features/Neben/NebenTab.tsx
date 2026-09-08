@@ -163,13 +163,7 @@ function NebenTab() {
       </div>
       <hr />
 
-      <div
-        className="db-table table-responsive"
-        data-width="full"
-        data-variant="zebra"
-        data-divider="both"
-        data-size="small"
-      >
+      <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table id="tableN" className="align-middle" aria-label="Nebengeld"></table>
       </div>
     </div>

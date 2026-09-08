@@ -66,6 +66,28 @@ export default function AdminTab() {
   const canSeeFormulareTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditFormularVorlagen);
   const isSuperAdmin = capabilities?.role === 'super-admin';
 
+  /**
+   * Die Unternavigation des Admin-Panels. Sichtbarkeit haengt an den Berechtigungen; die
+   * Trenner sind rein optisch. Der `tabController` schaltet ueber `data-tab-target` und setzt
+   * `data-active` am `.db-navigation-item` -- hier steht nur der Startzustand.
+   */
+  const unterTabs = (
+    [
+      { art: 'tab', id: 'dashboard', text: 'Dashboard', sichtbar: isSuperAdmin },
+      { art: 'trenner', id: 'trenner-1', text: '', sichtbar: isSuperAdmin },
+      { art: 'tab', id: 'users', text: 'Benutzerverwaltung', sichtbar: true },
+      { art: 'tab', id: 'vorgaben', text: 'VorgabenGeld', sichtbar: canSeeVorgabenTab },
+      { art: 'tab', id: 'templates', text: 'Profile-Templates', sichtbar: canSeeTemplatesTab },
+      { art: 'tab', id: 'formulare', text: 'Formular-Vorlagen', sichtbar: canSeeFormulareTab },
+      { art: 'trenner', id: 'trenner-2', text: '', sichtbar: isSuperAdmin },
+      { art: 'tab', id: 'resources', text: 'Ressourcen', sichtbar: isSuperAdmin },
+      { art: 'tab', id: 'profiles', text: 'Profile', sichtbar: isSuperAdmin },
+      { art: 'tab', id: 'logs', text: 'Admin-Logs', sichtbar: isSuperAdmin },
+    ] as const
+  ).filter(eintrag => eintrag.sichtbar);
+
+  const aktiverUnterTab = isSuperAdmin ? 'dashboard' : 'users';
+
   function navigateToProfile(userId: string) {
     setProfileSearch(userId);
     setProfileSearchKey(k => k + 1);
@@ -82,140 +104,34 @@ export default function AdminTab() {
       </div>
 
       <div className="mb-3">
-        <ul
-          className="nav nav-pills flex-wrap align-items-center gap-2 bg-dark-subtle rounded-3 p-2"
-          id="admin-tabs"
-          role="tablist"
-        >
-          {isSuperAdmin && (
-            <li className="nav-item" role="presentation">
-              <button
-                className={`nav-link ${isSuperAdmin ? 'active' : ''}`}
-                id="admin-tab-dashboard"
-                data-tab-target="admin-pane-dashboard"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-dashboard"
-                aria-selected={isSuperAdmin ? 'true' : 'false'}
-              >
-                Dashboard
-              </button>
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li className="nav-item d-flex align-items-center" aria-hidden="true">
-              <div className="vr" style={{ height: '1.5rem' }} />
-            </li>
-          )}
-          <li className="nav-item" role="presentation">
-            <button
-              className={`nav-link ${!isSuperAdmin ? 'active' : ''}`}
-              id="admin-tab-users"
-              data-tab-target="admin-pane-users"
-              type="button"
-              role="tab"
-              aria-controls="admin-pane-users"
-              aria-selected={!isSuperAdmin ? 'true' : 'false'}
-            >
-              Benutzerverwaltung
-            </button>
-          </li>
-          {canSeeVorgabenTab && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-vorgaben"
-                data-tab-target="admin-pane-vorgaben"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-vorgaben"
-                aria-selected="false"
-              >
-                VorgabenGeld
-              </button>
-            </li>
-          )}
-          {canSeeTemplatesTab && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-templates"
-                data-tab-target="admin-pane-templates"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-templates"
-                aria-selected="false"
-              >
-                Profile-Templates
-              </button>
-            </li>
-          )}
-          {canSeeFormulareTab && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-formulare"
-                data-tab-target="admin-pane-formulare"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-formulare"
-                aria-selected="false"
-              >
-                Formular-Vorlagen
-              </button>
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li className="nav-item d-flex align-items-center" aria-hidden="true">
-              <div className="vr" style={{ height: '1.5rem' }} />
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-resources"
-                data-tab-target="admin-pane-resources"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-resources"
-                aria-selected="false"
-              >
-                Ressourcen
-              </button>
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-profiles"
-                data-tab-target="admin-pane-profiles"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-profiles"
-                aria-selected="false"
-              >
-                Profile
-              </button>
-            </li>
-          )}
-          {isSuperAdmin && (
-            <li className="nav-item" role="presentation">
-              <button
-                className="nav-link"
-                id="admin-tab-logs"
-                data-tab-target="admin-pane-logs"
-                type="button"
-                role="tab"
-                aria-controls="admin-pane-logs"
-                aria-selected="false"
-              >
-                Admin-Logs
-              </button>
-            </li>
-          )}
-        </ul>
+        <nav className="db-navigation admin-unternavigation" id="admin-tabs" role="tablist" aria-label="Adminbereiche">
+          <menu>
+            {unterTabs.map(eintrag =>
+              eintrag.art === 'trenner' ? (
+                <li key={eintrag.id} className="db-navigation-item admin-unternavigation-trenner" aria-hidden="true" />
+              ) : (
+                <li
+                  key={eintrag.id}
+                  className="db-navigation-item"
+                  data-active={String(eintrag.id === aktiverUnterTab)}
+                  role="presentation"
+                >
+                  <button
+                    id={`admin-tab-${eintrag.id}`}
+                    data-tab-target={`admin-pane-${eintrag.id}`}
+                    type="button"
+                    role="tab"
+                    aria-controls={`admin-pane-${eintrag.id}`}
+                    aria-selected={eintrag.id === aktiverUnterTab}
+                    tabIndex={eintrag.id === aktiverUnterTab ? 0 : -1}
+                  >
+                    {eintrag.text}
+                  </button>
+                </li>
+              ),
+            )}
+          </menu>
+        </nav>
       </div>
 
       {capabilitiesLoading && <div className="small text-body-secondary mb-3">Berechtigungen werden geladen...</div>}

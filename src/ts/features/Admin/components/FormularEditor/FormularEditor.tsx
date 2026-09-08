@@ -538,36 +538,33 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   return (
     <div className="border rounded p-2">
       <div className="d-flex align-items-center gap-2 mb-2">
-        <ul className="nav nav-pills flex-grow-1 flex-wrap">
-          {value.seiten.map((s, i) => (
-            <li className="nav-item" key={i}>
+        <nav className="db-navigation admin-unternavigation flex-grow-1" aria-label="Seiten der Vorlage">
+          <menu>
+            {value.seiten.map((s, i) => (
+              <li className="db-navigation-item" data-active={String(i === seitenIndex)} key={i}>
+                <button type="button" onClick={() => setTab(i)}>
+                  Seite {i + 1}
+                  {s.wiederholt ? ' ↻' : ''}
+                </button>
+              </li>
+            ))}
+            <li className="db-navigation-item">
               <button
                 type="button"
-                className={`nav-link py-1 ${i === seitenIndex ? 'active' : ''}`}
-                onClick={() => setTab(i)}
+                title="Weitere Seite anhängen — die Seitenfolge bildet das Formular ab (Bereitschaft: 1, 2, 3 unterschiedlich)"
+                onClick={() => {
+                  // Quelle der letzten Seite + 1 als Vorschlag: Vorlagen-PDFs sind in der Regel in
+                  // derselben Reihenfolge aufgebaut wie das Formular.
+                  const letzte = value.seiten.at(-1);
+                  onChange({ ...value, seiten: [...value.seiten, leereSeite((letzte?.quelle ?? -1) + 1)] });
+                  setTab(value.seiten.length);
+                }}
               >
-                Seite {i + 1}
-                {s.wiederholt ? ' ↻' : ''}
+                + Seite
               </button>
             </li>
-          ))}
-          <li className="nav-item">
-            <button
-              type="button"
-              className="nav-link py-1"
-              title="Weitere Seite anhängen — die Seitenfolge bildet das Formular ab (Bereitschaft: 1, 2, 3 unterschiedlich)"
-              onClick={() => {
-                // Quelle der letzten Seite + 1 als Vorschlag: Vorlagen-PDFs sind in der Regel in
-                // derselben Reihenfolge aufgebaut wie das Formular.
-                const letzte = value.seiten.at(-1);
-                onChange({ ...value, seiten: [...value.seiten, leereSeite((letzte?.quelle ?? -1) + 1)] });
-                setTab(value.seiten.length);
-              }}
-            >
-              + Seite
-            </button>
-          </li>
-        </ul>
+          </menu>
+        </nav>
         <button
           type="button"
           className="db-button"
@@ -756,7 +753,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             onMouseDown={starteSplitZiehen}
             title="Breite ziehen"
           >
-            <div className="mx-auto" style={{ width: '2px', background: 'var(--bs-border-color)' }} />
+            <div
+              className="mx-auto"
+              style={{ width: '2px', background: 'var(--db-adaptive-on-bg-basic-emphasis-60-default)' }}
+            />
           </div>
           <div style={{ flex: `1 1 ${100 - splitAnteil}%`, minWidth: 0, maxHeight: '70vh', overflowY: 'auto' }}>
             <FeldPanel

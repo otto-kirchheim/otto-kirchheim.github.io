@@ -1,8 +1,6 @@
 // Reihenfolge der Cascade Layers -- muss als allererstes CSS geladen werden, damit die
 // Prioritaet unabhaengig von der Import-Reihenfolge feststeht.
-//
-// bootstrap < db-ux < bridge < app:
-// DB-UX-Tokens gewinnen gegen Bootstrap, die Bridge (--bs-* auf DB-Tokens) gewinnt gegen
-// beide, App-Overrides bleiben oben. Unlayered CSS (Material-Icons, App-Regeln in
-// styles.scss) schlaegt weiterhin alle Layer -- das ist gewollt, solange die Migration laeuft.
-@layer bootstrap, db-ux, bridge, app;
+// db-ux < app: die eigenen Hilfsklassen und Gegenregeln (`utilities.scss`) gewinnen gegen das
+// DB-UX-Bundle. Unlayered CSS (`styles.scss`, `customtable.css`) schlaegt weiterhin alle Layer;
+// dort stehen die App-spezifischen Regeln, die auch gegen eine Hilfsklasse gewinnen sollen.
+@layer db-ux, app;

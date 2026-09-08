@@ -121,7 +121,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('cloud_upload');
-    expect(badge.classList.contains('bg-info')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('informational');
     expect(badge.classList.contains('autosave-pulse')).toBe(true);
     expect(badge.style.opacity).toBe('1');
   });
@@ -135,7 +135,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveE .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('exclamation_mark_circle');
-    expect(badge.classList.contains('bg-danger')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('critical');
     expect(badge.style.opacity).toBe('1');
   });
 
@@ -149,7 +149,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveN .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('check_circle');
-    expect(badge.classList.contains('bg-success')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('successful');
     expect(badge.style.opacity).toBe('1');
 
     vi.advanceTimersByTime(2100);
@@ -167,7 +167,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('exclamation_mark_triangle');
-    expect(badge.classList.contains('bg-warning')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('warning');
     expect(badge.title).toContain('manuell speichern');
     expect(badge.style.opacity).toBe('1');
   });
@@ -182,7 +182,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('exclamation_mark_triangle');
-    expect(badge.classList.contains('bg-warning')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('warning');
 
     listener('BZ', 'error');
     expect((badge.querySelector('.db-icon') as HTMLSpanElement).dataset['icon']).toBe('exclamation_mark_circle');
@@ -198,7 +198,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveB .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('exclamation_mark_circle');
-    expect(badge.classList.contains('bg-danger')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('critical');
   });
 
   it('should hide badge when status returns to idle', () => {
@@ -213,7 +213,7 @@ describe('autoSaveIndicator', () => {
     expect(badge.style.opacity).toBe('0');
   });
 
-  it('should show cloud_off with bg-warning when pending and offline', () => {
+  it('should show cloud_off with warning-Semantik when pending and offline', () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
     initAutoSaveIndicator();
     const listener = mockOnAutoSaveStatus.mock.calls[0][0];
@@ -223,7 +223,7 @@ describe('autoSaveIndicator', () => {
     const badge = document.querySelector('#btnSaveN .autosave-badge') as HTMLSpanElement;
     const icon = badge.querySelector('.db-icon') as HTMLSpanElement;
     expect(icon.dataset['icon']).toBe('wifi_disabled');
-    expect(badge.classList.contains('bg-warning')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('warning');
 
     Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
   });
@@ -234,13 +234,13 @@ describe('autoSaveIndicator', () => {
 
     listener('EWT', 'error', 'Validierungsfehler');
     let badge = document.querySelector('#btnSaveE .autosave-badge') as HTMLSpanElement;
-    expect(badge.classList.contains('bg-danger')).toBe(true);
+    expect(badge.dataset['semantic']).toBe('critical');
 
     listener('EWT', 'saving');
     badge = document.querySelector('#btnSaveE .autosave-badge') as HTMLSpanElement;
     // Nach dem Übergang auf saving: kein error-Icon mehr
     expect((badge.querySelector('.db-icon') as HTMLSpanElement).dataset['icon']).toBe('cloud_upload');
-    expect(badge.classList.contains('bg-danger')).toBe(false);
+    expect(badge.dataset['semantic']).not.toBe('critical');
   });
 
   it('triggers badge re-render on window online event', () => {

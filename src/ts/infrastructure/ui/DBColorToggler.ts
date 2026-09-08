@@ -18,7 +18,7 @@ export default function initializeColorModeToggler() {
     const effektiv =
       theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
 
-    document.documentElement.setAttribute('data-bs-theme', effektiv);
+    document.documentElement.setAttribute('data-mode', effektiv);
     // DB UX arbeitet mit `light-dark()`; das loest nur auf, wenn `color-scheme` gesetzt ist.
     // Bei 'auto' bleibt die OS-Automatik erhalten, statt sie auf den Momentanwert einzufrieren.
     document.documentElement.style.colorScheme = theme === 'auto' ? 'light dark' : effektiv;
@@ -37,13 +37,13 @@ export default function initializeColorModeToggler() {
 
     const themeSwitcherText = document.querySelector<HTMLSpanElement>('#bd-theme-text');
     const activeThemeIcon = document.querySelector<HTMLSpanElement>('.theme-icon-active');
-    const btnToActive = document.querySelector<HTMLButtonElement>(`[data-bs-theme-value="${theme}"]`);
+    const btnToActive = document.querySelector<HTMLButtonElement>(`[data-theme-value="${theme}"]`);
     if (!themeSwitcherText || !activeThemeIcon || !btnToActive) return;
 
     const quelle = btnToActive.querySelector<HTMLSpanElement>('.db-icon, .app-icon');
     if (!quelle) return;
 
-    document.querySelectorAll('[data-bs-theme-value]').forEach(element => {
+    document.querySelectorAll('[data-theme-value]').forEach(element => {
       element.classList.remove('active');
       element.setAttribute('aria-pressed', 'false');
     });
@@ -73,9 +73,9 @@ export default function initializeColorModeToggler() {
     schalter.setAttribute('aria-expanded', String(schalter.getAttribute('aria-expanded') !== 'true'));
   });
 
-  document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
+  document.querySelectorAll('[data-theme-value]').forEach(toggle => {
     toggle.addEventListener('click', () => {
-      const theme = toggle.getAttribute('data-bs-theme-value') as Theme;
+      const theme = toggle.getAttribute('data-theme-value') as Theme;
       setStoredTheme(theme);
       setTheme(theme);
       showActiveTheme(theme, true);

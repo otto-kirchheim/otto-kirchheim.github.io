@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import initializeColorModeToggler from '@/infrastructure/ui/BSColorToggler';
+import initializeColorModeToggler from '@/infrastructure/ui/DBColorToggler';
 
-describe('BSColorToggler', () => {
+describe('DBColorToggler', () => {
   let mediaListeners: ((e: { matches: boolean }) => void)[];
 
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    document.documentElement.removeAttribute('data-bs-theme');
+    document.documentElement.removeAttribute('data-mode');
     mediaListeners = [];
 
     // Mock window.matchMedia (nicht in jsdom verfügbar)
@@ -34,15 +34,15 @@ describe('BSColorToggler', () => {
 				<span class="theme-icon-active">dark_mode</span>
 			</button>
 			<span id="bd-theme-text">Theme</span>
-			<button data-bs-theme-value="light"><span>light_mode</span></button>
-			<button data-bs-theme-value="dark"><span>dark_mode</span></button>
-			<button data-bs-theme-value="auto"><span>contrast</span></button>
+			<button data-theme-value="light"><span>light_mode</span></button>
+			<button data-theme-value="dark"><span>dark_mode</span></button>
+			<button data-theme-value="auto"><span>contrast</span></button>
 		`;
   });
 
-  it('setzt data-bs-theme auf documentElement', () => {
+  it('setzt data-mode auf documentElement', () => {
     initializeColorModeToggler();
-    const theme = document.documentElement.getAttribute('data-bs-theme');
+    const theme = document.documentElement.getAttribute('data-mode');
     expect(theme).not.toBeNull();
     expect(['light', 'dark']).toContain(theme ?? '');
   });
@@ -50,16 +50,16 @@ describe('BSColorToggler', () => {
   it('setzt Theme bei Klick auf Toggler-Button', () => {
     initializeColorModeToggler();
 
-    const lightBtn = document.querySelector<HTMLButtonElement>('[data-bs-theme-value="light"]')!;
+    const lightBtn = document.querySelector<HTMLButtonElement>('[data-theme-value="light"]')!;
     lightBtn.click();
 
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
+    expect(document.documentElement.getAttribute('data-mode')).toBe('light');
   });
 
   it('speichert Theme in localStorage bei Klick', () => {
     initializeColorModeToggler();
 
-    const darkBtn = document.querySelector<HTMLButtonElement>('[data-bs-theme-value="dark"]')!;
+    const darkBtn = document.querySelector<HTMLButtonElement>('[data-theme-value="dark"]')!;
     darkBtn.click();
 
     expect(JSON.parse(localStorage.getItem('theme')!)).toBe('dark');
@@ -68,11 +68,11 @@ describe('BSColorToggler', () => {
   it('auto-Modus setzt Theme basierend auf prefers-color-scheme', () => {
     initializeColorModeToggler();
 
-    const autoBtn = document.querySelector<HTMLButtonElement>('[data-bs-theme-value="auto"]')!;
+    const autoBtn = document.querySelector<HTMLButtonElement>('[data-theme-value="auto"]')!;
     autoBtn.click();
 
     // In jsdom ist prefers-color-scheme nicht gesetzt, ergibt "light"
-    const theme = document.documentElement.getAttribute('data-bs-theme');
+    const theme = document.documentElement.getAttribute('data-mode');
     expect(theme).not.toBeNull();
     expect(['light', 'dark']).toContain(theme ?? '');
   });
@@ -82,20 +82,20 @@ describe('BSColorToggler', () => {
     initializeColorModeToggler();
 
     // Dark mode sollte gesetzt sein
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
+    expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
   });
 
   it('wechselt Theme zwischen light und dark', () => {
     initializeColorModeToggler();
 
-    const lightBtn = document.querySelector<HTMLButtonElement>('[data-bs-theme-value="light"]')!;
-    const darkBtn = document.querySelector<HTMLButtonElement>('[data-bs-theme-value="dark"]')!;
+    const lightBtn = document.querySelector<HTMLButtonElement>('[data-theme-value="light"]')!;
+    const darkBtn = document.querySelector<HTMLButtonElement>('[data-theme-value="dark"]')!;
 
     lightBtn.click();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
+    expect(document.documentElement.getAttribute('data-mode')).toBe('light');
 
     darkBtn.click();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
+    expect(document.documentElement.getAttribute('data-mode')).toBe('dark');
   });
 
   it('funktioniert wenn DOM-Elemente fehlen', () => {
@@ -110,7 +110,7 @@ describe('BSColorToggler', () => {
     // Kein 'light'/'dark' in Storage gespeichert (Default 'auto') → Listener soll Theme neu setzen
     mediaListeners.forEach(cb => cb({ matches: true }));
 
-    const theme = document.documentElement.getAttribute('data-bs-theme');
+    const theme = document.documentElement.getAttribute('data-mode');
     expect(['light', 'dark']).toContain(theme ?? '');
   });
 
@@ -119,9 +119,9 @@ describe('BSColorToggler', () => {
     initializeColorModeToggler();
     expect(mediaListeners.length).toBeGreaterThan(0);
 
-    const themeBeforeChange = document.documentElement.getAttribute('data-bs-theme');
+    const themeBeforeChange = document.documentElement.getAttribute('data-mode');
     mediaListeners.forEach(cb => cb({ matches: true }));
-    const themeAfterChange = document.documentElement.getAttribute('data-bs-theme');
+    const themeAfterChange = document.documentElement.getAttribute('data-mode');
 
     // Der Change-Listener greift bei explizit gespeichertem 'light'/'dark' nicht erneut ein
     expect(themeAfterChange).toBe(themeBeforeChange);

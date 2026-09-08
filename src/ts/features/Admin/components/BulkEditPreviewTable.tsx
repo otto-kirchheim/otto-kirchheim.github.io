@@ -40,8 +40,8 @@ export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: P
         {preview.summary.ok} von {preview.summary.total} Benutzern werden geändert
         {preview.summary.skipped > 0 && `, ${preview.summary.skipped} übersprungen`}.
       </p>
-      <div className="table-responsive" style={{ maxHeight: '50vh' }}>
-        <table className="table table-sm align-middle">
+      <div className="db-table" data-width="full" data-size="small" data-divider="both" style={{ maxHeight: '50vh' }}>
+        <table className="align-middle">
           <thead>
             <tr>
               <th scope="col">Benutzer</th>

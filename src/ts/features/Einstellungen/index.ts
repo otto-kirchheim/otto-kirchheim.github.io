@@ -54,7 +54,7 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
   sortedPasskeys.forEach(passkey => {
     const item = document.createElement('div');
     item.className =
-      'list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3';
+      'trennliste-eintrag d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3';
 
     const info = document.createElement('div');
     info.className = 'text-start';
@@ -67,12 +67,16 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
     badgeRow.className = 'd-flex flex-wrap gap-2 mt-2';
 
     const deviceBadge = document.createElement('span');
-    deviceBadge.className = 'badge rounded-pill text-bg-secondary';
+    deviceBadge.className = 'db-tag';
+    deviceBadge.dataset['semantic'] = 'neutral';
+    deviceBadge.dataset['emphasis'] = 'strong';
     deviceBadge.textContent = getPasskeyDeviceLabel(passkey);
     badgeRow.appendChild(deviceBadge);
 
     const backupBadge = document.createElement('span');
-    backupBadge.className = `badge rounded-pill ${passkey.backedUp ? 'text-bg-success' : 'text-bg-warning'}`;
+    backupBadge.className = 'db-tag';
+    backupBadge.dataset['semantic'] = passkey.backedUp ? 'successful' : 'warning';
+    backupBadge.dataset['emphasis'] = 'strong';
     backupBadge.textContent = passkey.backedUp ? 'Synchronisiert' : 'Nur lokal';
     badgeRow.appendChild(backupBadge);
 
@@ -262,7 +266,7 @@ async function resendVerificationEmailFromSettings(): Promise<void> {
 /**
  * Appliziert die gespeicherten Einstellungen zur Runtime.
  * - AutoSave: Setzt den Global State
- * - Theme: Wird über bestehende BSColorToggler-Logik von Storage gelesen
+ * - Theme: Wird über bestehende DBColorToggler-Logik von Storage gelesen
  */
 function applyEinstellungenToRuntime(): void {
   const VorgabenU = Storage.get<{

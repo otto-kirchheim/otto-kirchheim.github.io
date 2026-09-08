@@ -33,7 +33,7 @@ describe('openHelpModal', () => {
   it('räumt den eigenen Dialog beim Schließen wieder ab', () => {
     openHelpModal('tab.neben');
 
-    getModalEl()!.querySelector<HTMLButtonElement>('[data-bs-dismiss="modal"]')!.click();
+    getModalEl()!.querySelector<HTMLButtonElement>('[data-dialog-dismiss="modal"]')!.click();
 
     expect(getModalEl()).toBeNull();
   });

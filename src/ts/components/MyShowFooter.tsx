@@ -12,16 +12,16 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
 
   return (
     <div className="dialog-fuss">
-      <MyButton text="Bearbeiten" dataBsDismiss="modal" clickHandler={editClickHandler} />
+      <MyButton text="Bearbeiten" dialogDismiss="modal" clickHandler={editClickHandler} />
       <MyButton
         className="db-button"
         data-variant="filled"
         data-color="critical"
         text="Löschen"
-        dataBsDismiss="modal"
+        dialogDismiss="modal"
         clickHandler={deleteClickHandler}
       />
-      <MyButton className="db-button" data-variant="filled" text="Schließen" dataBsDismiss="modal" />
+      <MyButton className="db-button" data-variant="filled" text="Schließen" dialogDismiss="modal" />
     </div>
   );
 }

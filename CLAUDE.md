@@ -17,14 +17,14 @@
 
 ## Projektübersicht
 
-**DB-Nebengeld Frontend** – TypeScript SPA mit React 19, Bootstrap 5, Vite und PWA-Support.
+**DB-Nebengeld Frontend** – TypeScript SPA mit React 19, DB UX Design System, Vite und PWA-Support.
 
 ### Tech-Stack
 
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
 - **Build Tool:** Vite (v8) mit `@vitejs/plugin-react` (Oxc)
 - **Sprache:** TypeScript (strict mode; kein any)
-- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) neben Bootstrap 5.3 + SCSS + Material Icons; Cascade Layers `bootstrap < db-ux < bridge < app` (`src/scss/layers.scss`)
+- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app` (`src/scss/layers.scss`). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`)
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
@@ -40,8 +40,10 @@ bun run start          # Entwicklung mit Vite Dev-Server (--host)
 bun run build          # Produktion Build (nach ./dist)
 bun run test           # Bun-Testlauf (sequentiell pro Datei)
 bun run dev-test       # Bun Watch-Mode
-bun run lint           # Linting prüfen
-bun run lint:fix       # Linting auto-fix
+bun run lint           # ESLint prüfen
+bun run lint:fix       # ESLint auto-fix
+bun run lint:css       # Stylelint prüfen (Ratsche: --max-warnings, siehe stylelint.config.mjs)
+bun run lint:css:fix   # Stylelint auto-fix -- danach IMMER den Diff ansehen
 bun run coverage       # Tests mit Coverage
 bun run preview        # Build-Preview (Port 8082)
 ```
@@ -52,11 +54,11 @@ bun run preview        # Build-Preview (Port 8082)
 
 ```
 src/
-├── index.html             # SPA-Einstiegspunkt (Bootstrap-Tabs als Navigation)
+├── index.html             # SPA-Einstiegspunkt (DB-Header + tabController als Navigation)
 ├── env.d.ts               # Vite Environment-Typen
-├── scss/                  # Bootstrap + Custom Styles
+├── scss/                  # DB-UX-Import, Hilfsklassen, App-Styles
 ├── ts/
-│   ├── main.ts            # App-Init (PWA, Version-Check, Bootstrap-Module)
+│   ├── main.ts            # App-Init (PWA, Version-Check, UI-Controller)
 │   ├── components/        # React UI-Bausteine (Modals, Buttons, Inputs)
 │   ├── core/              # Zentrale Contracts und Events
 │   │   ├── types/         # Alle TS-Interfaces + API-Envelope-Typen
@@ -115,8 +117,8 @@ features/Feature/
 
 **Hybrid-Rendering:**
 
-- **Hauptseite:** Statisches HTML + Bootstrap
-- **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in Bootstrap-Modals (intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`)
+- **Hauptseite:** Statisches HTML + DB-UX-Klassen
+- **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`)
 - **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein React) – liegt in `infrastructure/table/`
 
 ---
@@ -127,7 +129,7 @@ features/Feature/
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
 4. **React** für Modals/Dialoge und die Feature-Tabs, **nicht** für die statische Hauptseiten-Struktur (`index.html`)
-5. **`tabController`** für die Tab-Navigation, kein Router (Bootstrap-`Tab`/`Offcanvas`/`Dropdown` sind raus)
+5. **`tabController`** für die Tab-Navigation, kein Router
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks

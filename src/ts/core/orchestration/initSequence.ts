@@ -56,7 +56,7 @@ export const BOOT_SEQUENCE = [
   },
   {
     name: 'boot:main-ui',
-    description: 'main.ts: Bootstrap widgets, color mode toggle, version check',
+    description: 'main.ts: Farbmodus-Schalter, Version-Check, UI-Controller',
     dependsOn: ['boot:auth'],
   },
 ] as const satisfies ReadonlyArray<InitStep>;

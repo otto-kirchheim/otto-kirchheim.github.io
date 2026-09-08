@@ -5,10 +5,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  max-width: 100%;
+  max-inline-size: 100%;
   z-index: 1080;
   overflow: hidden;
   padding: 0.5rem;
+
   /* Der Halter deckt einen grossen Bereich ab -- Klicks nur auf den Meldungen selbst. */
   pointer-events: none;
 }
@@ -54,7 +55,7 @@
 .CustomSnackbar-container--bottom-left,
 .CustomSnackbar-container--bottom-center,
 .CustomSnackbar-container--bottom-right {
-  padding-bottom: 4rem;
+  padding-block-end: 4rem;
 }
 
 .CustomSnackbar-container--fixed {

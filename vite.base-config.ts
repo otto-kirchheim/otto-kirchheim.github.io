@@ -6,7 +6,6 @@ const baseConfig: UserConfig = {
   root: path.resolve(import.meta.dirname, 'src'),
   resolve: {
     alias: {
-      '~bootstrap': path.resolve(import.meta.dirname, 'node_modules/bootstrap'),
       '@/components': path.resolve(import.meta.dirname, 'src/ts/components'),
       '@/core': path.resolve(import.meta.dirname, 'src/ts/core'),
       '@/types': path.resolve(import.meta.dirname, 'src/ts/core/types'),
@@ -56,7 +55,8 @@ const baseConfig: UserConfig = {
   css: {
     preprocessorOptions: {
       scss: {
-        silenceDeprecations: ['import', 'color-functions', 'global-builtin', 'if-function'],
+        // `@import` ist in Dart Sass abgekuendigt; `styles.scss` nutzt es noch fuer `raster`.
+        silenceDeprecations: ['import'],
       },
     },
   },

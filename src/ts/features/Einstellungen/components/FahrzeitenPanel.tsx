@@ -69,8 +69,15 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
   };
 
   return (
-    <div>
-      <table className="table table-bordered table-striped table-hover mt-3" aria-describedby="titelTkgSt">
+    <div
+      className="db-table mt-3"
+      data-width="full"
+      data-variant="zebra"
+      data-divider="both"
+      data-size="small"
+      data-interactive="true"
+    >
+      <table aria-describedby="titelTkgSt">
         <thead>
           <tr className="align-middle text-center" data-sub-header-emphasis="weak">
             <th id="titelTkgSt">Tätigkeitsstätte</th>

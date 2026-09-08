@@ -21,8 +21,8 @@ export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbe
     return <p className="small text-body-secondary mb-0">Für dieses Formular gibt es noch keine Version.</p>;
 
   return (
-    <div className="table-responsive">
-      <table className="table table-sm align-middle mb-0">
+    <div className="db-table" data-width="full" data-size="small" data-divider="both">
+      <table className="align-middle mb-0">
         <thead>
           <tr>
             <th scope="col">Version</th>

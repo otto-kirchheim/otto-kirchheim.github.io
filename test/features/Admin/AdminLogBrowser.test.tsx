@@ -112,7 +112,9 @@ describe('AdminLogBrowser', () => {
     const container = renderBrowser();
     await flush();
 
-    expect(container.querySelector('.db-notification[data-semantic="critical"]')?.textContent).toBe('Server nicht erreichbar');
+    expect(container.querySelector('.db-notification[data-semantic="critical"]')?.textContent).toBe(
+      'Server nicht erreichbar',
+    );
   });
 
   it('klappt die Payload-Details auf und wieder zu', async () => {

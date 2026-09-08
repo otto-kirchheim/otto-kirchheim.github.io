@@ -33,7 +33,7 @@ function getEntscheidungModalEl() {
 
 /** Schliessen ohne Auswahl -- entspricht dem Klick auf das X in der Kopfzeile. */
 function schliesseUeberX(dialog: HTMLElement) {
-  dialog.querySelector<HTMLButtonElement>('[data-bs-dismiss="modal"]')!.click();
+  dialog.querySelector<HTMLButtonElement>('[data-dialog-dismiss="modal"]')!.click();
 }
 
 /** Der native `<dialog>` ist sofort sichtbar; das Pad entsteht im naechsten Frame. */

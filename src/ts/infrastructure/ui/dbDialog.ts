@@ -27,7 +27,7 @@ export type DbDialogOptionen = {
 /**
  * Haengt einen offenen Drawer-Dialog an `document.body` und meldet ihn samt Inhaltsknoten
  * zurueck. `beimSchliessen` laeuft genau einmal -- egal ob per Escape, Hintergrund,
- * `data-bs-dismiss` oder `schliessen()`.
+ * `data-dialog-dismiss` oder `schliessen()`.
  */
 export function erzeugeDbDialog(beimSchliessen: () => void, optionen: DbDialogOptionen = {}): DbDialog {
   const { hintergrundSchliesst = true, escapeSchliesst = true, rahmenKlassen = [] } = optionen;
@@ -66,7 +66,7 @@ export function erzeugeDbDialog(beimSchliessen: () => void, optionen: DbDialogOp
 
   dialog.addEventListener('click', event => {
     const ziel = event.target as HTMLElement | null;
-    if (ziel?.closest('[data-bs-dismiss="modal"], [data-action="close"]')) {
+    if (ziel?.closest('[data-dialog-dismiss="modal"], [data-action="close"]')) {
       event.preventDefault();
       schliessen();
       return;
@@ -98,7 +98,7 @@ export function initStatischeDialoge(): () => void {
 
     const offener = ziel?.closest<HTMLDialogElement>('dialog[open]');
     if (!offener) return;
-    if (ziel?.closest('[data-action="close"], [data-bs-dismiss="modal"]') || ziel === offener) offener.close();
+    if (ziel?.closest('[data-action="close"], [data-dialog-dismiss="modal"]') || ziel === offener) offener.close();
   };
 
   document.addEventListener('click', beiKlick);
