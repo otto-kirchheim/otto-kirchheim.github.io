@@ -2,6 +2,11 @@
 
 > Genehmigter Gesamtplan. Fortschritt und Phasen-Logs: `tasks/todo.md`.
 > Branch: `feat/db-ux` (Frontend, von `origin/dev`) · `feat/db-ux-migration` (Parent-Repo).
+>
+> **Folgeplan Phase J–N: `tasks/plan-react-umbau.md`** — native Controls auf
+> `@db-ux/react-core-components`, danach App-Shell, statische Tabs und `CustomTable`
+> nach React (Zielbild: `index.html` nur noch `<head>` + React-Root).
+> Startet erst, wenn Phase I hier abgeschlossen ist.
 
 ## Status (2026-09-05)
 
