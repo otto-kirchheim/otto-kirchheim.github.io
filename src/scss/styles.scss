@@ -83,6 +83,19 @@ body {
   --db-icon-font-size: 1rem;
 }
 
+// DB setzt am Knopf `white-space: pre-line`, damit man Beschriftungen von Hand umbrechen kann.
+// Damit wird aber auch der Zeilenumbruch aus dem Quelltext zu einem echten Umbruch: steht die
+// Beschriftung wie ueblich in einer eigenen Zeile zwischen `<button …>` und `</button>`, ergibt
+// das eine leere erste Zeile und den Text darunter. Gemessen am Impressum-Knopf: 44 px hoch
+// statt 24, Text 23 px unter der Oberkante statt 3. Betroffen war jeder Knopf der App -- bei den
+// hohen Varianten fiel es nur weniger auf, weil `min-block-size` die Luecke ohnehin fuellt.
+//
+// Die Umbrueche kommen hier ausschliesslich aus der Formatierung (Prettier bricht die
+// Attributliste um), nie aus dem Inhalt -- deshalb wieder einsammeln.
+.db-button {
+  white-space: normal;
+}
+
 // Semantik-Knoepfe (Speichern gruen, Loeschen rot, ...).
 //
 // DB kennt am Knopf nur `data-variant` (brand|filled|outlined|ghost); `data-color` ist ein
@@ -95,7 +108,10 @@ body {
 // die Semantik-Knoepfe hier die Vollfarbe ihrer Palette, mit demselben Gewicht wie
 // `data-variant="brand"` die Markenfarbe nimmt. `outlined` zeigt die Semantik in Rahmen und
 // Schrift, statt sie auf Weiss zu verlieren.
-@each $semantik in ('brand', 'critical', 'successful', 'warning', 'informational') {
+// `brand` steht bewusst nicht in der Liste: als umrandeter Knopf waere das roter Text, und den
+// laesst das DB-Regelwerk nur fuer Links und Warnungen zu (Markenfarben, Double Coding). Die
+// Markenfarbe kommt am Knopf ueber `data-variant="brand"` -- gefuellt, mit weisser Schrift.
+@each $semantik in ('critical', 'successful', 'warning', 'informational') {
   .db-button[data-color='#{$semantik}'][data-variant='filled'] {
     background-color: var(--db-#{$semantik}-origin-default);
     color: var(--db-#{$semantik}-on-origin-default);
