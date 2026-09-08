@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-08 (68)
+
+### fix (DB-UX-Migration Phase H: Sichtkorrekturen aus dem Test)
+
+- **Berechnungstabelle:** die verschachtelten Auslege-Tabellen im Zeilenkopf (EWT-Schwellen,
+  Zulagen-Codes) hatten um jede Beschriftungszeile ein eigenes Kaestchen. Die `db-table`-Huelle
+  setzt ihre Linien an `tr` (`border-block-end`) und an `td, th:not(:last-child)`
+  (`border-inline-end`) -- beide Selektoren greifen auch auf die innere Tabelle durch. Die
+  Gegenregel setzte bisher nur `td` zurueck; `tr` war der entscheidende Teil.
+- **Semantik-Knoepfe:** "Speichern" stand als dunkelgruener Kasten mit gruener Schrift da.
+  Grund: DBs `data-variant="filled"` ist keine Vollfarbe, sondern eine 16-%-Lasur
+  (`bg-basic-transparent-semi`), und `data-color` stellt nur die Palette des Teilbaums um --
+  gemessen `rgb(114 191 26 / 0.16)` auf `rgb(195 255 157)`. Semantik-Knoepfe nehmen jetzt die
+  Vollfarbe ihrer Palette (`--db-<semantik>-origin-default` mit `-on-origin-default` als
+  Schrift), mit demselben Gewicht wie `data-variant="brand"` die Markenfarbe nimmt. Gemessen:
+  Kontrast 6,71 statt eines unlesbaren Schleiers. `outlined` zeigt die Semantik jetzt in Rahmen
+  und Schrift, statt sie auf Weiss zu verlieren.
+- **Biometrie:** "Weitere Biometrie einrichten" war seit Phase H optisch identisch zum
+  Zweit-Knopf darunter (`btn-outline-primary` und `btn-outline-secondary` liefen beide auf
+  `outlined`). Der Haupt-Knopf traegt jetzt `data-color="brand"`.
+- **Sass:** `if()` in `utilities.scss` durch eine Map ersetzt -- die verschachtelte Form ist in
+  Dart Sass abgekuendigt und meldete sich bei jedem Build.
+- `scss/comment-no-empty` in der Stylelint-Config abgeschaltet: mehrzeilige `//`-Erklaerungen
+  trennen ihre Absaetze mit einer leeren `//`-Zeile.
+
+**Nicht geaendert:** Die Farbsaeume am Wort "Impressum" sind Subpixel-Glaettung des Browsers,
+kein CSS -- gemessen steht dort reines `rgb(237, 238, 240)` ohne `text-shadow` und ohne Verlauf.
+
 ## 2026-09-08 (67)
 
 ### refactor (DB-UX-Migration Phase H: Bootstrap vollstaendig entfernt)

@@ -83,6 +83,46 @@ body {
   --db-icon-font-size: 1rem;
 }
 
+// Semantik-Knoepfe (Speichern gruen, Loeschen rot, ...).
+//
+// DB kennt am Knopf nur `data-variant` (brand|filled|outlined|ghost); `data-color` ist ein
+// Paletten-Schalter, der die `--db-adaptive-*`-Tokens des Teilbaums umstellt. `filled` ist
+// dabei keine Vollfarbe, sondern eine 16-%-Lasur -- in einer Semantik-Palette also ein matter
+// Farbschleier mit farbigem Text auf farbigem Grund. Gemessen an "Speichern":
+// Grund `rgb(114 191 26 / 0.16)`, Schrift `rgb(195 255 157)` -- ein dunkelgruener Kasten.
+//
+// `buttonLook()` bildet die alten Bootstrap-Varianten aber genau darauf ab. Deshalb bekommen
+// die Semantik-Knoepfe hier die Vollfarbe ihrer Palette, mit demselben Gewicht wie
+// `data-variant="brand"` die Markenfarbe nimmt. `outlined` zeigt die Semantik in Rahmen und
+// Schrift, statt sie auf Weiss zu verlieren.
+@each $semantik in ('brand', 'critical', 'successful', 'warning', 'informational') {
+  .db-button[data-color='#{$semantik}'][data-variant='filled'] {
+    background-color: var(--db-#{$semantik}-origin-default);
+    color: var(--db-#{$semantik}-on-origin-default);
+    border-color: transparent;
+
+    --db-icon-color: var(--db-#{$semantik}-on-origin-default);
+
+    &:hover:not(:disabled) {
+      background-color: var(--db-#{$semantik}-origin-hovered);
+    }
+
+    &:active:not(:disabled) {
+      background-color: var(--db-#{$semantik}-origin-pressed);
+    }
+  }
+
+  .db-button[data-color='#{$semantik}'][data-variant='outlined'] {
+    // Der Rahmen soll die Semantikfarbe zeigen, nicht einen Grauton. `-origin-default` ist ein
+    // echtes DB-Token; die Regel kennt fuer Rahmen nur die `-on-bg-emphasis-*`-Reihe.
+    /* stylelint-disable-next-line db-ux/use-border-color */
+    border-color: var(--db-#{$semantik}-origin-default);
+    color: var(--db-#{$semantik}-origin-default);
+
+    --db-icon-color: var(--db-#{$semantik}-origin-default);
+  }
+}
+
 // Ladeanzeige (Ersatz fuer Bootstraps `.spinner-border`): DB hat keine eigene Komponente
 // dafuer, nutzt aber an mehreren Stellen das drehende `circular_arrows`-Symbol.
 .laedt {
@@ -242,15 +282,26 @@ td:has(.SchichtBereitschaft) {
 
 // Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes). Sie muessen in
 // der festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu ueberlaufen, und duerfen das
-// Raster der `db-table`-Huelle nicht erben -- sonst bekommt jede Beschriftungszeile eigene Linien.
+// Raster der `db-table`-Huelle nicht erben.
+//
+// Die Huelle setzt ihre Linien an `tr` (`border-block-end`) und an `td, th:not(:last-child)`
+// (`border-inline-end`); beide Selektoren greifen auch auf die verschachtelte Tabelle durch.
+// Ohne diese Gegenregel bekommt jede Beschriftungszeile ein eigenes Kaestchen -- das `tr`
+// zurueckzusetzen ist der entscheidende Teil, `td` allein reicht nicht.
 .berechnung-label-tabelle {
   inline-size: 100%;
   margin: 0;
   border-collapse: collapse;
 
-  td {
-    padding-block: 0;
+  tr,
+  td,
+  th {
     border: 0;
+  }
+
+  td,
+  th {
+    padding-block: 0;
     white-space: normal;
   }
 }

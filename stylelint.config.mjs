@@ -31,6 +31,12 @@ export default {
       // und meldet jedes `@use`/`@each`/`@mixin` als unbekannte At-Rule.
       files: ['**/*.scss'],
       extends: ['stylelint-config-standard-scss'],
+      rules: {
+        // Mehrzeilige `//`-Erklaerungen trennen ihre Absaetze mit einer leeren `//`-Zeile. Die
+        // Regel sieht darin einen leeren Kommentar; die Alternative waere laufender Text ohne
+        // Absaetze.
+        'scss/comment-no-empty': null,
+      },
     },
     {
       // `db-ux.css` enthaelt nur die beiden Paket-Importe in ihre Cascade Layer.

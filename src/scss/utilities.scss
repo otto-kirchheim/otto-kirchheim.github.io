@@ -88,6 +88,14 @@ $rahmenfarben: (
   'info-subtle': var(--db-informational-bg-basic-level-3-default),
 );
 
+// Klassen-Suffix -> logische Versatz-Eigenschaft fuer `top-*`/`bottom-*`/`start-*`/`end-*`.
+$kanten-versatz: (
+  'top': inset-block-start,
+  'bottom': inset-block-end,
+  'start': inset-inline-start,
+  'end': inset-inline-end,
+);
+
 // Paare aus Klassen-Suffix und Wert fuer `d-*`, `flex-*`, `justify-content-*`, `align-items-*`.
 $anzeigen: (
   'none': none,
@@ -428,13 +436,7 @@ $ausrichtung: (
     z-index: 1020;
   }
 
-  @each $seite in ('top', 'bottom', 'start', 'end') {
-    $eigenschaft: if(
-      $seite == 'top',
-      'inset-block-start',
-      if($seite == 'bottom', 'inset-block-end', if($seite == 'start', 'inset-inline-start', 'inset-inline-end'))
-    );
-
+  @each $seite, $eigenschaft in $kanten-versatz {
     .#{$seite}-0 {
       #{$eigenschaft}: 0 !important;
     }
