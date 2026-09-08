@@ -97,14 +97,20 @@ $kanten-versatz: (
 );
 
 // Paare aus Klassen-Suffix und Wert fuer `d-*`, `flex-*`, `justify-content-*`, `align-items-*`.
+//
+// `none` MUSS am Ende stehen. Alle `d-*`-Klassen haben dieselbe Spezifitaet und dasselbe
+// `!important`; ueber `<div class="d-flex ... d-none">` entscheidet damit allein die
+// Reihenfolge in dieser Datei. Der Bestand blendet an rund 40 Stellen so aus (Ladeanzeige,
+// Navigationseintraege, Schnellzugriff) -- steht `none` vorn, gewinnt `d-flex` und das
+// Element bleibt sichtbar. Bootstrap gibt `none` aus demselben Grund zuletzt aus.
 $anzeigen: (
-  'none': none,
   'block': block,
   'inline': inline,
   'inline-flex': inline-flex,
   'flex': flex,
   'grid': grid,
   'table-cell': table-cell,
+  'none': none,
 );
 $ausrichtung: (
   'start': flex-start,
