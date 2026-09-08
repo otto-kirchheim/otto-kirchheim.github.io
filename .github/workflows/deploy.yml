@@ -40,6 +40,8 @@ jobs:
           ASSET_INIT_VECTOR: ${{ secrets.ASSET_INIT_VECTOR }}
       - name: Typecheck
         run: bun run typecheck
+      - name: Stylelint
+        run: bun run lint:css
       - name: Build
         run: bun run build
       - name: Setup Pages
