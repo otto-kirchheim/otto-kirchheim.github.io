@@ -18,8 +18,7 @@ export function erstelleSignaturPad(canvas: HTMLCanvasElement): SignaturePad {
   canvas.width = breite;
   canvas.height = hoehe;
   canvas.getContext('2d')?.scale(ratio, ratio);
-
-  return new SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)' });
+  return new SignaturePad(canvas, { backgroundColor: 'rgba(0,0,0,0)', minWidth: 1, maxWidth: 3.5, dotSize: 2 });
 }
 
 /** Liefert die Unterschrift als PNG-Data-URL, oder `null` wenn das Pad leer ist. */

@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (80)
+
+### change (Unterschrift-Pad: Strichstärke erhöht)
+
+- `erstelleSignaturPad` (`infrastructure/pdf/signaturePad.ts`) setzt jetzt `minWidth: 1` und
+  `maxWidth: 3.5` statt der `signature_pad`-Defaults (`0.5` / `2.5`). Die im PDF eingebettete
+  Unterschrift steht dadurch kräftiger.
+- Tests: `signaturePad.test.ts` + `signaturDialog.test.ts` unverändert grün (23/23).
+
 ## 2026-09-09 (79)
 
 ### refactor (Drawer-Kopfzeilen: `eslint-disable db-ux/drawer-header-required` abbauen + `aria-labelledby`)
