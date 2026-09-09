@@ -1,0 +1,270 @@
+/*
+ * GENERIERT von scripts/gen-iconset.mts -- NICHT von Hand editieren.
+ * Quelle: src/ts/components/iconRegistry.ts   (Neu erzeugen: bun run icons:gen)
+ *
+ * CSS-Remap-Layer fuer den Wechsel des Icon-Satzes auf Material Symbols. Bildet jeden in der
+ * App genutzten DB-UX-Icon-Namen auf den Material-Namen ab, indem der vom Design-System
+ * vorgesehene Override "--db-icon" gesetzt wird
+ * ([data-icon]::before { content: var(--db-icon, attr(data-icon)) }). Erst aktiv, wenn der
+ * @import in src/scss/db-ux.css einkommentiert und --db-icon-font-family in styles.scss auf
+ * Material Symbols gestellt ist.
+ */
+@layer app {
+  [data-icon="arrow_down"] {
+    --db-icon: "arrow_downward";
+  }
+
+  [data-icon="arrow_right"] {
+    --db-icon: "arrow_right_alt";
+  }
+
+  [data-icon="arrow_up"] {
+    --db-icon: "arrow_upward";
+  }
+
+  /* DB-Motiv "in neuem Kontext oeffnen" */
+  [data-icon="arrow_up_right"] {
+    --db-icon: "open_in_new";
+  }
+
+  [data-icon="bar_chart"] {
+    --db-icon: "bar_chart";
+  }
+
+  [data-icon="bin"] {
+    --db-icon: "delete";
+  }
+
+  /* DB_ICON alt: event_available */
+  [data-icon="calendar"] {
+    --db-icon: "calendar_today";
+  }
+
+  [data-icon="car"] {
+    --db-icon: "directions_car";
+  }
+
+  [data-icon="cash"] {
+    --db-icon: "payments";
+  }
+
+  /* DB_ICON alt: alt_route */
+  [data-icon="changeover"] {
+    --db-icon: "swap_horiz";
+  }
+
+  [data-icon="check"] {
+    --db-icon: "check";
+  }
+
+  [data-icon="check_circle"] {
+    --db-icon: "check_circle";
+  }
+
+  [data-icon="chevron_down"] {
+    --db-icon: "expand_more";
+  }
+
+  [data-icon="chevron_left"] {
+    --db-icon: "chevron_left";
+  }
+
+  [data-icon="chevron_right"] {
+    --db-icon: "chevron_right";
+  }
+
+  [data-icon="chevron_up"] {
+    --db-icon: "expand_less";
+  }
+
+  [data-icon="circular_arrows"] {
+    --db-icon: "refresh";
+  }
+
+  [data-icon="cloud"] {
+    --db-icon: "cloud";
+  }
+
+  [data-icon="cloud_upload"] {
+    --db-icon: "cloud_upload";
+  }
+
+  [data-icon="copy"] {
+    --db-icon: "content_copy";
+  }
+
+  [data-icon="cross"] {
+    --db-icon: "close";
+  }
+
+  /* DB_ICON alt: picture_as_pdf */
+  [data-icon="document"] {
+    --db-icon: "description";
+  }
+
+  [data-icon="download"] {
+    --db-icon: "download";
+  }
+
+  [data-icon="envelope"] {
+    --db-icon: "mail";
+  }
+
+  /* ggf. euro_symbol */
+  [data-icon="euro_sign"] {
+    --db-icon: "euro";
+  }
+
+  [data-icon="exclamation_mark_circle"] {
+    --db-icon: "error";
+  }
+
+  [data-icon="exclamation_mark_triangle"] {
+    --db-icon: "warning";
+  }
+
+  [data-icon="eye"] {
+    --db-icon: "visibility";
+  }
+
+  [data-icon="funnel"] {
+    --db-icon: "filter_list";
+  }
+
+  [data-icon="gear_wheel"] {
+    --db-icon: "settings";
+  }
+
+  [data-icon="house"] {
+    --db-icon: "home";
+  }
+
+  [data-icon="id_card"] {
+    --db-icon: "badge";
+  }
+
+  [data-icon="information_circle"] {
+    --db-icon: "info";
+  }
+
+  [data-icon="key"] {
+    --db-icon: "key";
+  }
+
+  /* DB_ICON alt: add_chart */
+  [data-icon="line_chart"] {
+    --db-icon: "show_chart";
+  }
+
+  [data-icon="link_chain"] {
+    --db-icon: "link";
+  }
+
+  /* DB_ICON alt: format_align_left */
+  [data-icon="list"] {
+    --db-icon: "format_list_bulleted";
+  }
+
+  /* DB_ICON alt: highlight_alt; ggf. center_focus_strong */
+  [data-icon="location_crosshairs"] {
+    --db-icon: "my_location";
+  }
+
+  [data-icon="magnifying_glass"] {
+    --db-icon: "search";
+  }
+
+  [data-icon="map"] {
+    --db-icon: "map";
+  }
+
+  /* DB_ICON alt: business */
+  [data-icon="market"] {
+    --db-icon: "storefront";
+  }
+
+  [data-icon="menu"] {
+    --db-icon: "menu";
+  }
+
+  [data-icon="minus"] {
+    --db-icon: "remove";
+  }
+
+  [data-icon="moon"] {
+    --db-icon: "dark_mode";
+  }
+
+  [data-icon="pen"] {
+    --db-icon: "edit";
+  }
+
+  [data-icon="person"] {
+    --db-icon: "person";
+  }
+
+  [data-icon="persons"] {
+    --db-icon: "group";
+  }
+
+  [data-icon="plus"] {
+    --db-icon: "add";
+  }
+
+  /* DB_ICON alt: manage_accounts; badge kollidiert mit id_card */
+  [data-icon="profile_card"] {
+    --db-icon: "contact_page";
+  }
+
+  /* DB_ICON alt: memory; ggf. vital_signs */
+  [data-icon="pulse_wave"] {
+    --db-icon: "monitoring";
+  }
+
+  [data-icon="question_mark_circle"] {
+    --db-icon: "help";
+  }
+
+  /* DB_ICON alt: crop_free; ggf. crop_free */
+  [data-icon="resize"] {
+    --db-icon: "open_in_full";
+  }
+
+  [data-icon="save"] {
+    --db-icon: "save";
+  }
+
+  /* DB_ICON alt: admin_panel_settings */
+  [data-icon="shield_check"] {
+    --db-icon: "verified_user";
+  }
+
+  [data-icon="sliders_horizontal"] {
+    --db-icon: "tune";
+  }
+
+  [data-icon="sun"] {
+    --db-icon: "light_mode";
+  }
+
+  /* ggf. phone */
+  [data-icon="telephone"] {
+    --db-icon: "call";
+  }
+
+  [data-icon="train"] {
+    --db-icon: "train";
+  }
+
+  [data-icon="undo"] {
+    --db-icon: "undo";
+  }
+
+  [data-icon="unlink_chain"] {
+    --db-icon: "link_off";
+  }
+
+  [data-icon="wifi_disabled"] {
+    --db-icon: "wifi_off";
+  }
+}

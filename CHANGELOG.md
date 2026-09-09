@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (77)
+
+### chore (Icon-Satz austauschbar vorbereitet -- KEIN Austausch)
+
+- Grund: `@db-ux/db-theme*` (Schriften + Icons) steht unter der DB-Font-Lizenz und darf nicht
+  oeffentlich ausgeliefert werden. Damit ein spaeterer Wechsel auf einen freien Icon-Satz
+  (z. B. Material Symbols) nicht die ~160 `data-icon`-Aufrufstellen anfasst, ist jetzt die
+  Umschalt-Mechanik da; Laufzeitverhalten unveraendert (DB-Icons weiter aktiv).
+- Ansatz: CSS-Remap-Layer ueber den vom Design-System vorgesehenen Override
+  `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }`. Neu:
+  - `src/ts/components/iconRegistry.ts` -- Single Source of Truth: jeder genutzte DB-Icon-Name
+    -> Material-Name (+ `hinweis` bei ungenauer Entsprechung). Kopf-Kommentar = Swap-Runbook.
+  - `scripts/gen-iconset.mts` + Script `bun run icons:gen` -- erzeugt `src/scss/iconset.material.css`
+    (`[data-icon="<db>"]{--db-icon:"<material>"}`), eingecheckt aber **nicht importiert**.
+  - `src/scss/db-ux.css` -- auskommentierter `@import` + Runbook. `src/scss/styles.scss` --
+    auskommentierter Block `ICON-SATZ` (`@font-face` Material Symbols lokal, `--db-icon-font-family`).
+  - `test/iconRegistry.test.ts` -- prueft Abdeckung aller Aufrufstellen und Deckungsgleichheit
+    der generierten CSS (Drift-Schutz).
+- core-components rendert intern ~15 eigene Icon-Namen (Checkbox-Haken, Select-Chevron,
+  Notification-Icons) -- laut Abstimmung nur im Runbook dokumentiert, kein Code jetzt.
+- `typecheck`/`lint`/`lint:css` 0 Fehler, `test --isolate` 2100 pass / 0 fail, `build` gruen;
+  `dist/` unveraendert (neue CSS nicht gebundelt).
+
 ## 2026-09-09 (76)
 
 ### fix (Formularfelder zeigten `TODO: Add an invalidMessage`)

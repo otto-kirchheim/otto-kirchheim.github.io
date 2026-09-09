@@ -9,6 +9,7 @@
     "test": "TZ=Europe/Berlin bun test --isolate",
     "typecheck": "bunx --bun tsc --noEmit",
     "build": "bunx --bun vite build",
+    "icons:gen": "bun scripts/gen-iconset.mts",
     "format": "prettier --write 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "format:check": "prettier --check 'src/**/*.{ts,tsx}' 'test/**/*.{ts,tsx}'",
     "lint-staged": "lint-staged",

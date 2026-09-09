@@ -97,6 +97,36 @@ hr {
 // Die Icon-Groesse steuert im DB-System `--db-icon-font-size`; die Klassen
 // `db-font-size-2xs|xs|sm|md|lg` setzen sie aus der Token-Skala.
 
+// === ICON-SATZ ================================================================================
+// Standard: die DB-UX-Icon-Schrift aus `@db-ux/db-theme-icons` (DB-Font-Lizenz -- nur DB-Kontext,
+// keine oeffentliche Weitergabe). Der Render-Weg ist `[data-icon]::before { content:
+// var(--db-icon, attr(data-icon)) }` mit einer Ligatur-Schrift.
+//
+// Wechsel auf Material Symbols (Runbook: `src/ts/components/iconRegistry.ts`) -- diesen Block
+// aktivieren, den `@import './iconset.material.css'` in `db-ux.css` einkommentieren und
+// `bun run icons:gen` laufen lassen. Die woff2 LOKAL buendeln (CSP + oeffentliches Hosting),
+// nicht per Google-Fonts-CDN.
+//
+// @font-face {
+//   font-family: "Material Symbols Outlined";
+//   font-style: normal;
+//   font-weight: 100 700;
+//   font-display: block;
+//   src: url("../assets/material-symbols-outlined.woff2") format("woff2");
+// }
+//
+// :root {
+//   --db-icon-font-family: "Material Symbols Outlined";
+//   --db-icon-font-weight: 400;
+// }
+//
+// [data-icon]::before,
+// [data-icon-leading]::before,
+// [data-icon-trailing]::after {
+//   font-variation-settings: "opsz" 24, "wght" 400, "FILL" 0, "GRAD" 0;
+// }
+// =============================================================================================
+
 // Icon-Buttons: `.db-icon` hat selbst `font-size: 0`, das Glyph sitzt im `::before` und
 // richtet sich an der Grundlinie aus -- neben 1-rem-Text sah das zu gross und zu tief aus.
 // Eine Flex-Zeile zentriert beides zueinander, die Groesse haengt an der Button-Schrift.
