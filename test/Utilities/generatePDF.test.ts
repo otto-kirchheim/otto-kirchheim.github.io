@@ -269,7 +269,9 @@ describe('generatePDF utility', () => {
           EWT: [
             {
               Buchungstag: '20',
-              Einsatzort: 'Fulda',
+              // Einsatzort = Tätigkeitsstätte + Beschreibung aus mockVorgabenU.Fahrzeit
+              // (key 'Fulda' -> text 'Materialtransport'), getrennt mit ' | '.
+              Einsatzort: 'Fulda | Materialtransport',
               Schicht: 'Nacht',
               abWE: '07:00',
               ab1E: '08:00',

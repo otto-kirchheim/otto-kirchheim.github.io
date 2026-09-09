@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (81)
+
+### change (EWT-PDF: Einsatzort mit Beschreibung)
+
+- `generatePDF` (`infrastructure/data/generatePDF.ts`, `modus 'E'`) druckt beim Einsatzort jetzt
+  Tätigkeitsstätte **und** Beschreibung (`VorgabenU.Fahrzeit[].key` + `.text`), getrennt mit
+  ` | `, statt nur der Tätigkeitsstätte. Auflösung über eine einmalig gebaute `Map` (key -> text);
+  fehlt eine Beschreibung, bleibt es beim reinen Ort (`filter(Boolean)`).
+- Kein Datenmodell-/Typsystem-Spiegel betroffen: `Einsatzort` bleibt ein String-Feld, die
+  EWT-Zeile speichert weiterhin nur den `key`.
+- Test: `generatePDF.test.ts` (`mode 'E'`) erwartet jetzt `'Fulda | Materialtransport'`.
+
 ## 2026-09-09 (80)
 
 ### change (Unterschrift-Pad: Strichstärke erhöht)

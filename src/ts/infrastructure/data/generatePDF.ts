@@ -149,6 +149,9 @@ export default async function generatePDF(
       // Beamter = TB !== 'Tarifkraft' (Konvention siehe calculateBerechnungRows.ts) -- Grundlage
       // für `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
       const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
+      // Einsatzort-Auswahl speichert nur die Tätigkeitsstätte (`Fahrzeit[].key`); Beschreibung
+      // (`Fahrzeit[].text`) für den Druck anhängen -- volle Ortsangabe statt nur erster Teil.
+      const einsatzortBeschreibung = new Map(localVorgabenU.Fahrzeit.map(fz => [fz.key, fz.text]));
       data.Daten = {
         // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, `IPdfEWT`
         // typisiert es (wie das bisherige Backend-Modell) als `number` -- vorbestehende
@@ -157,7 +160,7 @@ export default async function generatePDF(
         EWT: ewtRaw.map(e => {
           const basis = {
             Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
-            Einsatzort: e.Einsatzort,
+            Einsatzort: [e.Einsatzort, einsatzortBeschreibung.get(e.Einsatzort)].filter(Boolean).join(' | '),
             Schicht: normalizeEwtSchichtForDownload(e.Schicht),
             abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
             ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
