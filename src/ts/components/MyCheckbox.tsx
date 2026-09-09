@@ -1,7 +1,7 @@
 import { DBSwitch } from '@db-ux/react-core-components';
 import { useRef, type ChangeEventHandler, type FC, type ReactNode, type Ref } from 'react';
 
-import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
+import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
 type TMyCheckbox = {
   className?: string;
@@ -55,6 +55,7 @@ const MyCheckbox: FC<TMyCheckbox> = ({
       id={id}
       label={textLabel}
       aria-label={textLabel ? undefined : (inputProps.name ?? id)}
+      invalidMessage={STANDARD_UNGUELTIG_MELDUNG}
       onChange={changeHandler}
       ref={refZusammenfuehren(eigeneRef, myRef)}
       {...zustand}

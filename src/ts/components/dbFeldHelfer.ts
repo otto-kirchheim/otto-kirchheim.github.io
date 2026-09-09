@@ -1,6 +1,15 @@
 import { useLayoutEffect, type Ref, type RefObject } from 'react';
 
 /**
+ * Fallback-Text fuer die Ungueltig-Meldung der DB-Formularfelder. Ohne `invalidMessage`
+ * rendern `DBInput`/`DBSelect`/`DBSwitch` ihre eingebaute Entwickler-Notiz
+ * `TODO: Add an invalidMessage` (`@db-ux/react-core-components`, `DEFAULT_INVALID_MESSAGE`),
+ * die bei einem `:user-invalid`- oder `data-custom-validity="invalid"`-Feld sichtbar wird.
+ * Aufrufer mit einer feldspezifischen Meldung reichen sie ueber die eigene Prop durch.
+ */
+export const STANDARD_UNGUELTIG_MELDUNG = 'Bitte überprüfe diese Eingabe.';
+
+/**
  * Verbindet die Ref des Aufrufers mit einer eigenen Ref auf dasselbe Element.
  * (React 19 unterstuetzt zwar Ref-Callbacks mit Cleanup, aber nicht mehrere Refs am Element.)
  */

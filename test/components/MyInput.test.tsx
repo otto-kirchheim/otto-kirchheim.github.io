@@ -46,6 +46,27 @@ describe('MyInput', () => {
     expect(input.value).toBe('a');
   });
 
+  it('setzt eine Ungueltig-Meldung statt der DB-Notiz "TODO: Add an invalidMessage"', async () => {
+    const container = renderMyInput({ type: 'text', id: 'myid', name: 'myname', required: true });
+    for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0)); // DBInput setzt _invalidMessage im Effect
+    const meldung = container.querySelector('.db-infotext[data-semantic="critical"]');
+    expect(meldung?.textContent).toBe('Bitte überprüfe diese Eingabe.');
+    expect(container.innerHTML).not.toContain('TODO: Add an invalidMessage');
+  });
+
+  it('reicht eine feldspezifische Ungueltig-Meldung durch', async () => {
+    const container = renderMyInput({
+      type: 'text',
+      id: 'myid',
+      name: 'myname',
+      required: true,
+      invalidMessage: 'Pflichtfeld: SAP-Nummer angeben.',
+    });
+    for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+    const meldung = container.querySelector('.db-infotext[data-semantic="critical"]');
+    expect(meldung?.textContent).toBe('Pflichtfeld: SAP-Nummer angeben.');
+  });
+
   it('folgt dem Wert, wenn ein onChange-Handler das Feld steuert', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);

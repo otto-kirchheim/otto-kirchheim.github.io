@@ -2,7 +2,7 @@ import { DBSelect } from '@db-ux/react-core-components';
 import type { Dayjs } from 'dayjs';
 import { useRef, type ChangeEventHandler, type FC, type RefObject } from 'react';
 
-import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
+import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
 type TMySelect = {
   myRef?: RefObject<HTMLSelectElement | null>;
@@ -11,6 +11,8 @@ type TMySelect = {
   value?: string | number | Dayjs;
   className?: string;
   required?: boolean;
+  /** Ungueltig-Meldung des DB-Felds. Ohne Angabe gilt `STANDARD_UNGUELTIG_MELDUNG`. */
+  invalidMessage?: string;
   changeHandler?: ChangeEventHandler<HTMLSelectElement>;
   options: {
     value?: string | number;
@@ -21,7 +23,17 @@ type TMySelect = {
   }[];
 };
 
-const MySelect: FC<TMySelect> = ({ myRef, className, options, changeHandler, title, value, id, ...selectProps }) => {
+const MySelect: FC<TMySelect> = ({
+  myRef,
+  className,
+  options,
+  changeHandler,
+  title,
+  value,
+  id,
+  invalidMessage,
+  ...selectProps
+}) => {
   const wert = typeof value === 'object' ? value?.toString() : value;
   // React kennt nur "controlled" (value + onChange) oder "uncontrolled" (defaultValue). Ohne
   // Handler waere `value` ein schreibgeschuetztes Feld -- die Aufrufer nutzen das Feld aber als
@@ -39,6 +51,7 @@ const MySelect: FC<TMySelect> = ({ myRef, className, options, changeHandler, tit
         ref={refZusammenfuehren(eigeneRef, myRef)}
         id={id}
         label={title}
+        invalidMessage={invalidMessage ?? STANDARD_UNGUELTIG_MELDUNG}
         onChange={changeHandler}
         {...(gesteuert ? { value: wert } : { defaultValue: vorauswahl })}
         {...selectProps}

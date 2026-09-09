@@ -1,7 +1,7 @@
 import { DBInput, DBTooltip } from '@db-ux/react-core-components';
 import { useRef, type ChangeEventHandler, type FC, type ReactNode, type RefObject } from 'react';
 
-import { refZusammenfuehren, useSofortigeId } from './dbFeldHelfer';
+import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
 type TModalBodyInputElementOption = {
   /** React 19 vererbt `children` nicht mehr implizit (Preact tat das). */
@@ -35,6 +35,9 @@ type TModalBodyInputElementOption = {
   onChange?: ChangeEventHandler<HTMLInputElement>;
   invalidFeedbackId?: string;
   invalidFeedbackText?: string;
+  /** Ungueltig-Meldung des DB-Felds. Ohne Angabe gilt `STANDARD_UNGUELTIG_MELDUNG` -- sonst
+   *  zeigt `DBInput` seine eingebaute `TODO: Add an invalidMessage`-Notiz. */
+  invalidMessage?: string;
 };
 
 /**
@@ -56,6 +59,7 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
     children,
     invalidFeedbackId,
     invalidFeedbackText,
+    invalidMessage,
     dataZulageInputCode,
     minLength,
     maxLength,
@@ -75,10 +79,11 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
   return (
     <div className={divClass}>
       {/* `type` und die Laengenbegrenzungen kommen ueber die Props der Aufrufstelle. */}
-      {/* eslint-disable-next-line db-ux/input-type-required, db-ux/form-validation-message-required */}
+      {/* eslint-disable-next-line db-ux/input-type-required */}
       <DBInput
         ref={refZusammenfuehren(eigeneRef, myRef)}
         label={typeof children === 'string' ? children : props.name}
+        invalidMessage={invalidMessage ?? invalidFeedbackText ?? STANDARD_UNGUELTIG_MELDUNG}
         {...inputProps}
         {...wert}
         data-zulage-input-code={dataZulageInputCode}

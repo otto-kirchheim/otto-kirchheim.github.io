@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (76)
+
+### fix (Formularfelder zeigten `TODO: Add an invalidMessage`)
+
+- Ungueltige Pflichtfelder (`required` + leer nach Interaktion) zeigten unter der Eingabe den
+  Text `TODO: Add an invalidMessage` -- die eingebaute Entwickler-Notiz
+  (`DEFAULT_INVALID_MESSAGE`) von `@db-ux/react-core-components`, die `DBInput`/`DBSelect`/
+  `DBSwitch` ohne `invalidMessage`-Prop rendern und per CSS bei `:user-invalid` /
+  `data-custom-validity="invalid"` einblenden. Betroffen waren alle `MyInput`/`MySelect`-
+  Aufrufstellen ohne eigene Meldung (z. B. "SAP-Nr / Einsatzbeschreibung", "LRE" im
+  Bereitschafts-Dialog, EWT-Zeitfelder).
+- Fix zentral in den drei Wrappern: `MyInput`, `MySelect`, `MyCheckbox` (`DBSwitch`) setzen jetzt
+  `invalidMessage`. Fallback `STANDARD_UNGUELTIG_MELDUNG` ("Bitte überprüfe diese Eingabe.",
+  in `dbFeldHelfer.ts`); Aufrufstellen mit feldspezifischer Meldung reichen sie ueber die neue
+  Prop `invalidMessage` (bzw. das bestehende `invalidFeedbackText` bei `MyInput`) durch.
+- `db-ux/form-validation-message-required` in `MyInput` ist damit erfuellt -- die
+  `eslint-disable`-Zeile nennt nur noch `db-ux/input-type-required`.
+- `DbFeld`/`DbAuswahl` (handgebaute `db-input`/`db-select`-Huelle ohne Infotext-Kind) und die
+  statischen `db-input`-Bloecke in `index.html` waren nie betroffen.
+- Tests: `test/components/MyInput.test.tsx` um zwei Faelle erweitert (Fallback-Meldung statt
+  TODO-Notiz, Durchreichen einer feldspezifischen Meldung). `typecheck`/`lint` 0 Fehler,
+  `test --isolate` 2096 pass / 0 fail, `build` gruen, im Headless-Chrome verifiziert
+  (Infotext = "Bitte überprüfe diese Eingabe.", kein `TODO:` mehr im DOM).
+
 ## 2026-09-09 (75)
 
 ### fix (DB-Neo-Schrift im PDF: Vorschau brach mit `reading 'pos'` ab)
