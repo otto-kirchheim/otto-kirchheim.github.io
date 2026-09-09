@@ -2,6 +2,33 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (79)
+
+### refactor (Drawer-Kopfzeilen: `eslint-disable db-ux/drawer-header-required` abbauen + `aria-labelledby`)
+
+- `db-ux/drawer-header-required` sichert, dass ein `DBDrawer` einen Schliessen-Knopf UND einen
+  `aria-labelledby`-Bezug am `<dialog>` hat. An vier Stellen war die Regel per
+  `eslint-disable` stummgeschaltet -- die Dialoge hatten dadurch keinen zugaenglichen Namen.
+- `SchriftartDialog`, `AdminResourceEditModal`, `AdminUserProfileEditor`: handgebaute
+  `<div className="db-drawer-header">`-Kopfzeile durch `header={<DBDrawerHeader …>}` ersetzt
+  (die von `DBDrawer` vorgesehene Slot-Prop). Disable entfaellt, `DBDrawerHeader` setzt
+  `aria-labelledby` selbst. `data-breite` bleibt an `.dialog-rumpf`, Breite unveraendert.
+- `showModal.tsx` (`oeffneDrawer`): Disable bleibt -- die Huelle ist generisch, den Titel
+  bringt erst `children` (`MyModalHeader`) mit; die `header`-Prop-Umstellung braucht den
+  Modal-Baustein-Umbau (Phase H). Der irrefuehrende Kommentar ("inklusive
+  `aria-labelledby`-Bezug") ist korrigiert, und `MyModalHeader` verknuepft den umschliessenden
+  `<dialog>` jetzt tatsaechlich per `aria-labelledby` mit seiner `<h2>` (Effekt + `useId`,
+  Cleanup beim Unmount) -- damit haben auch alle `showModal`/`MyFormModal`/`MyDivModal`-Dialoge
+  einen zugaenglichen Namen.
+- Verbleibende `eslint-disable` in `src/` geprueft und als berechtigt bestaetigt:
+  `db-ux/input-type-required` (MyInput -- `type` ist dynamische Pflicht-Prop),
+  `db-ux/select-requires-options` (MySelect -- `<option>` aus `options.map()`),
+  `react-hooks/refs` (PdfCanvas -- Ref-Lesen im Render, global nur `warn`, per Kommentar
+  begruendet).
+- Tests: `MyModalHeader.test.tsx` um den `aria-labelledby`-Fall erweitert.
+  `typecheck`/`lint` 0 Fehler (21 unveraenderte Warnungen), `test --isolate` 0 fail, `build`
+  gruen, DOM-Struktur + Schliessen + `aria-labelledby` im Headless-Chrome geprueft.
+
 ## 2026-09-09 (78)
 
 ### fix (PDF-Summenzeilen: leere Zelle statt 0 bei fehlender Zulagenart)

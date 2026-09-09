@@ -26,4 +26,20 @@ describe('MyModalHeader', () => {
     expect(helpButton).not.toBeNull();
     expect(helpButton?.textContent).toContain('Hilfe anzeigen');
   });
+
+  it('verknuepft den umschliessenden <dialog> per aria-labelledby mit der Ueberschrift', async () => {
+    const dialog = document.createElement('dialog');
+    const container = document.createElement('div');
+    dialog.appendChild(container);
+    document.body.appendChild(dialog);
+    render(<MyModalHeader title="Test Titel" />, container);
+    for (let i = 0; i < 5; i++) await new Promise(resolve => setTimeout(resolve, 0));
+
+    const h2 = container.querySelector('h2')!;
+    expect(h2.id).not.toBe('');
+    expect(dialog.getAttribute('aria-labelledby')).toBe(h2.id);
+
+    render(null, container);
+    expect(dialog.getAttribute('aria-labelledby')).toBeNull();
+  });
 });

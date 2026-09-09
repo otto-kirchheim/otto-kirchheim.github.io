@@ -38,9 +38,10 @@ export function oeffneDrawer(container: HTMLElement, inhalt: ReactNode, beimSchl
   schliesser.set(container, beimSchliessen);
   mount(
     container,
-    // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog-Inhalt selbst mit
-    // (`MyModalHeader`), inklusive `aria-labelledby`-Bezug -- ein zweiter `DBDrawerHeader`
-    // waere eine doppelte Ueberschrift. Faellt mit dem Umbau der Modal-Bausteine (Phase H).
+    // `db-ux/drawer-header-required` verlangt `header={<DBDrawerHeader/>}`. Diese Huelle ist
+    // generisch -- den Titel bringt erst der `children`-Inhalt mit (`MyModalHeader`, der den
+    // `<dialog>` selbst per `aria-labelledby` verknuepft). Auf die `header`-Prop umstellen kann
+    // erst der Umbau der Modal-Bausteine (Phase H).
     // eslint-disable-next-line db-ux/drawer-header-required
     <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={beimSchliessen}>
       {inhalt}

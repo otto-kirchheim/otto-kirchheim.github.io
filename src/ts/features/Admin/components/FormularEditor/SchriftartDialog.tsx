@@ -1,4 +1,4 @@
-import { DBDrawer } from '@db-ux/react-core-components';
+import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -174,24 +174,15 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
   const istVorlagenSchrift = SCHNITTE.some(s => familieFuerSchnitt(value, s.key).startsWith('vorlage:'));
 
   return createPortal(
-    // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog selbst mit.
-    // eslint-disable-next-line db-ux/drawer-header-required
-    <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={onClose}>
+    <DBDrawer
+      open
+      direction={DIALOG_RICHTUNG}
+      showSpacing={false}
+      rounded
+      onClose={onClose}
+      header={<DBDrawerHeader text="Schriftart" closeButtonText="Schließen" />}
+    >
       <div className="dialog-rumpf" data-breite="lg">
-        <div className="db-drawer-header">
-          <h5>Schriftart</h5>
-          <button
-            type="button"
-            className="db-button"
-            data-icon="cross"
-            data-variant="ghost"
-            data-no-text="true"
-            onClick={onClose}
-          >
-            Schließen
-          </button>
-        </div>
-
         <div className="dialog-koerper d-flex flex-column gap-3">
           <SchriftartWahl value={value} vorlageFonts={vorlageFonts} onChange={onChange} />
 

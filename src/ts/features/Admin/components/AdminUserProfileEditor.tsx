@@ -1,4 +1,4 @@
-import { DBDrawer } from '@db-ux/react-core-components';
+import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -431,26 +431,20 @@ export function AdminUserProfileEditor({
       {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
       {edit &&
         createPortal(
-          // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog selbst mit.
-          // eslint-disable-next-line db-ux/drawer-header-required
-          <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={closeEdit}>
+          <DBDrawer
+            open
+            direction={DIALOG_RICHTUNG}
+            showSpacing={false}
+            rounded
+            onClose={closeEdit}
+            header={
+              <DBDrawerHeader
+                text={`UserProfile: ${(edit.pers['Vorname'] as string) ?? ''} ${(edit.pers['Nachname'] as string) ?? ''}`}
+                closeButtonText="Schließen"
+              />
+            }
+          >
             <div className="dialog-rumpf" data-breite="xl">
-              <div className="db-drawer-header">
-                <h5>
-                  UserProfile: {(edit.pers['Vorname'] as string) ?? ''} {(edit.pers['Nachname'] as string) ?? ''}
-                </h5>
-                <button
-                  type="button"
-                  className="db-button"
-                  data-icon="cross"
-                  data-variant="ghost"
-                  data-no-text="true"
-                  onClick={closeEdit}
-                >
-                  Schließen
-                </button>
-              </div>
-
               <div className="dialog-koerper">
                 {edit.saveError && (
                   <div className="db-notification py-2 small" data-semantic="critical">

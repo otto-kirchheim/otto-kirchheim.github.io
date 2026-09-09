@@ -1,4 +1,4 @@
-import { DBDrawer } from '@db-ux/react-core-components';
+import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
 import { DIALOG_RICHTUNG } from '@/components/showModal';
@@ -52,27 +52,22 @@ export function AdminResourceEditModal({
   navigateToEntry,
 }: Props) {
   return createPortal(
-    // Kopfzeile samt Titel und Schliessen-Knopf bringt der Dialog selbst mit.
-    // eslint-disable-next-line db-ux/drawer-header-required
-    <DBDrawer open direction={DIALOG_RICHTUNG} showSpacing={false} rounded onClose={closeEdit}>
-      <div className="dialog-rumpf" data-breite="lg">
-        <div className="db-drawer-header">
-          <h5>
+    <DBDrawer
+      open
+      direction={DIALOG_RICHTUNG}
+      showSpacing={false}
+      rounded
+      onClose={closeEdit}
+      header={
+        <DBDrawerHeader closeButtonText="Schließen">
+          <h2>
             {resource.label} bearbeiten
             <code className="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
-          </h5>
-          <button
-            type="button"
-            className="db-button"
-            data-icon="cross"
-            data-variant="ghost"
-            data-no-text="true"
-            onClick={closeEdit}
-          >
-            Schließen
-          </button>
-        </div>
-
+          </h2>
+        </DBDrawerHeader>
+      }
+    >
+      <div className="dialog-rumpf" data-breite="lg">
         <div className="dialog-koerper">
           {edit.saveError && (
             <div className="db-notification py-2 small" data-semantic="critical">
