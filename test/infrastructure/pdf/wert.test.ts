@@ -392,7 +392,11 @@ describe('wert', () => {
         y: 0,
         size: 10,
         format: 'waehrung',
-        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' } },
+        berechnet: {
+          op: 'summe',
+          ueber: '$alle',
+          liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' },
+        },
       };
       expect(wert(f, 'egal', daten, leererKontext)).toBe('');
     });

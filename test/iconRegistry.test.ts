@@ -65,9 +65,7 @@ describe('Icon-Registry', () => {
   });
 
   it('hat fuer jeden Eintrag ein nicht-leeres Material-Ziel ohne Leerzeichen', () => {
-    const kaputt = Object.entries(ICON_REGISTRY).filter(
-      ([, ziel]) => !ziel.material || /\s/.test(ziel.material),
-    );
+    const kaputt = Object.entries(ICON_REGISTRY).filter(([, ziel]) => !ziel.material || /\s/.test(ziel.material));
     expect(kaputt).toEqual([]);
   });
 
