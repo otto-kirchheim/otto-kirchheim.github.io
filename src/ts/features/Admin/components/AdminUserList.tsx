@@ -269,14 +269,14 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="sp-sm-4">
           <div>
             <DbFeld
-              beschriftung="Name"
+              beschriftung="Name / Benutzer"
+              beschriftungZeigen
               type="text"
               id="adminFilterName"
-              placeholder="Name"
+              placeholder="z.B. Nachname oder Benutzername"
               value={filter.name}
               onChange={e => setFilter(f => ({ ...f, name: (e.target as HTMLInputElement).value }))}
             />
-            <label htmlFor="adminFilterName">Name / Benutzer</label>
             <DBInfotext size="small" semantic="informational">
               Sucht in Name und Benutzername
             </DBInfotext>
@@ -285,14 +285,14 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="sp-sm-4">
           <div>
             <DbFeld
-              beschriftung="OE (z.B. IL 03, IL04, KSL)"
+              beschriftung="OE"
+              beschriftungZeigen
               type="text"
               id="adminFilterOe"
-              placeholder="OE (z.B. IL 03, IL04, KSL)"
+              placeholder="z.B. IL 03, IL04, KSL"
               value={filter.oe}
               onChange={e => setFilter(f => ({ ...f, oe: (e.target as HTMLInputElement).value }))}
             />
-            <label htmlFor="adminFilterOe">OE</label>
             <DBInfotext size="small" semantic="informational">
               IL03 und IL 03 finden dasselbe; mehrere OEs mit Komma trennen
             </DBInfotext>

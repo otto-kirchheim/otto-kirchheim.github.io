@@ -240,8 +240,11 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
 - "Tag:" Label/Wert: Abstand 7px, auf einer Zeile. ✓
 - `.ewt-trenner`: 406px breit, 1px hoch -- Linie, kein Punkt. ✓
 - Gates: typecheck 0, lint 0/21, lint:css 0/90, test 2084/0/2, build gruen (966 Module).
-- [ ] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
-      `DbFeld`/`DbAuswahl` unterschiedlich konfiguriert -> Beschriftungsposition vereinheitlichen.
+- [x] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
+      "Name"/"OE" hatten die `DbFeld`-Beschriftung versteckt (`data-hide-label`) + ein zweites
+      `<label>` NACH dem Feld (Beschriftung unter dem Feld, doppeltes `for`-Label). Jetzt alle
+      drei `DbFeld`/`DbAuswahl` mit `beschriftungZeigen`, kein Zusatz-`<label>`. Browser-
+      verifiziert (`scratchpad/filter.mjs`): 3x `labelAboveField: true`, `dupLabels: 1`.
 - [x] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"
       verschwindet nicht.** Ursache: der `onEvent('data:changed')`-Listener, der den Hinweis
       bei Sync ausblendet, wurde ueber `modal.addEventListener('hide.bs.modal', unsub)`

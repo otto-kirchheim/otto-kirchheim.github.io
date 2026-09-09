@@ -81,6 +81,12 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   blieb auf 0, der Punkt wirkte leer/abgeschnitten. `.autosave-badge` setzt jetzt die
   Icon-Groesse (`--db-sizing-xs`) und einen hellen Ring (`box-shadow`), der den Punkt vom
   Knopf trennt. Browser-verifiziert (5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt).
+- **Admin-Benutzerliste-Filter: Beschriftungen einheitlich ueber dem Feld.** "Name" und "OE"
+  hatten die `DbFeld`-Beschriftung versteckt und ein zweites `<label>` NACH dem Feld gerendert
+  (Beschriftung unter dem Feld, dazu ein doppeltes `for`-Label). "Rolle" nutzte die eigene
+  `DbAuswahl`-Beschriftung ueber dem Feld. Jetzt alle drei mit `beschriftungZeigen` und ohne
+  Zusatz-`<label>` -> Beschriftung einheitlich oben, Hilfetext (`DBInfotext`) darunter.
+  Browser-verifiziert: alle drei Labels ueber dem Feld, kein doppeltes `for`-Label mehr.
 
 ## 2026-09-08 (68)
 
