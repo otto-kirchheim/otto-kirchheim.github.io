@@ -386,24 +386,38 @@ td:has(.SchichtBereitschaft) {
 // der festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu ueberlaufen, und duerfen das
 // Raster der `db-table`-Huelle nicht erben.
 //
-// Die Huelle setzt ihre Linien an `tr` (`border-block-end`) und an `td, th:not(:last-child)`
-// (`border-inline-end`); beide Selektoren greifen auch auf die verschachtelte Tabelle durch.
-// Ohne diese Gegenregel bekommt jede Beschriftungszeile ein eigenes Kaestchen -- das `tr`
-// zurueckzusetzen ist der entscheidende Teil, `td` allein reicht nicht.
+// Die Huelle greift mit mehreren Selektoren durch die verschachtelte Tabelle: `border-block-end`
+// an `tr`, `border-inline-end` an `td, th:not(:last-child)`, `border-inline` am `table` selbst
+// (Zebra-Variante) und ein Zebra-Hintergrund an jeder ungeraden `tr`. Alles zuruecksetzen, damit
+// die Auslege-Tabelle randlos und transparent in der Beschriftungsspalte sitzt.
+//
+// Ausserdem rechnet der DB-Layer `.db-table table` (Nachfahren-Selektor) als CSS-Grid. Die
+// App-Gegenregel in `utilities.scss` faengt nur `.db-table > table` ab, nicht diese
+// verschachtelte Tabelle -- ohne den `display: table`-Reset kippen Label- und Einheit-Spalte
+// uebereinander.
 .berechnung-label-tabelle {
+  display: table;
   inline-size: 100%;
   margin: 0;
+  border: 0;
   border-collapse: collapse;
 
-  tr,
-  td,
-  th {
+  tbody {
+    display: table-row-group;
+  }
+
+  tr {
+    display: table-row;
     border: 0;
+    background-color: transparent;
   }
 
   td,
   th {
+    display: table-cell;
     padding-block: 0;
+    border: 0;
+    background-color: transparent;
     white-space: normal;
   }
 }

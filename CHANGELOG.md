@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (73)
+
+### fix (DB-UX: Berechnungstabelle -- verschachtelte Auslege-Tabellen kippen uebereinander)
+
+- Die Auslege-Tabellen im Zeilenkopf (`.berechnung-label-tabelle`: EWT-Schwellen, Zulagen-Codes)
+  rutschten mit Label- und Einheit-Spalte uebereinander -- Text lag doppelt ("040 Fahrentsch."
+  ueber "Stk.").
+- Ursache: Der DB-Layer rechnet `.db-table table` (Nachfahren-Selektor) als CSS-Grid
+  (`display: grid` + `:has()`-Spaltenzaehlung). Die App-Gegenregel in `utilities.scss` faengt
+  nur `.db-table > table` (Kind-Selektor) ab, nicht die im `<th>` verschachtelte Tabelle. Ohne
+  `display: table` dort kollabieren `tbody`/`tr`/`td` in eine einzige Grid-Zelle.
+- Fix in `styles.scss` (unlayered): `.berechnung-label-tabelle` und ihre `tbody`/`tr`/`td`/`th`
+  bekommen explizit die nativen `display: table*`-Werte zurueck.
+- Zusatz (Wunsch): dieselbe Tabelle sitzt jetzt randlos und transparent in der
+  Beschriftungsspalte -- `border: 0` am Tabellen-Element (die Zebra-Variante zieht sonst ein
+  `border-inline` durch) sowie `background-color: transparent` an `tr`/`td`/`th` (killt den
+  durchgereichten Zebra-Hintergrund der ungeraden Zeile).
+- Browser-verifiziert an der gebauten CSS mit echtem DOM (`.db-table[data-variant=zebra]` >
+  `table.table-Berechnung` > `th` > `table.berechnung-label-tabelle`): Spalten getrennt
+  (x=25/142, kein Ueberlapp), alle Zellraender 0, alle Hintergruende transparent.
+- `lint:css` 90/93 (unveraendert), `build` erfolgreich.
+
 ## 2026-09-09 (72)
 
 ### fix (Speichern-Knopf schrumpft und "springt" waehrend des Ladens)
