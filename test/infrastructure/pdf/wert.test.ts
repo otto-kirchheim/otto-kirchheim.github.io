@@ -288,14 +288,14 @@ describe('wert', () => {
       expect(wert(f, 'egal', daten, listenKontext)).toBe('1');
     });
 
-    it('unbelegter Platz (weniger vorkommende Codes als Spalten) ergibt 0 statt eines Absturzes', () => {
+    it('unbelegter Platz (weniger vorkommende Codes als Spalten): leere Zelle statt einer 0', () => {
       const f: Feld = {
         x: 0,
         y: 0,
         size: 10,
         berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', index: 5 } },
       };
-      expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
+      expect(wert(f, 'egal', daten, listenKontext)).toBe('');
     });
 
     it('unbekannte Tabelle/Gruppe (keine Auflösung im Kontext) ergibt 0 statt eines Absturzes', () => {
@@ -383,6 +383,18 @@ describe('wert', () => {
         },
       };
       expect(wert(f, 'egal', daten, listenKontext)).toBe('0');
+    });
+
+    it('keine Zeile trägt eine Zulagenart -> leere Zelle statt einer 0', () => {
+      const leererKontext: Kontext = { ...listenKontext, $alle: { haupt: [{ Zulagen: [] }, {}] } };
+      const f: Feld = {
+        x: 0,
+        y: 0,
+        size: 10,
+        format: 'waehrung',
+        berechnet: { op: 'summe', ueber: '$alle', liste: { tabelle: 'haupt', gruppe: 'erschwernis', art: 'summeGeld' } },
+      };
+      expect(wert(f, 'egal', daten, leererKontext)).toBe('');
     });
   });
 
@@ -474,10 +486,16 @@ describe('wert', () => {
       expect(sonderZeileZelleWert(zelle, spaltePlatz0, 'haupt', zeilen, daten, listenKontext)).toBe('4,00 €');
     });
 
-    it('unbelegter Platz -> 0 statt einer leeren Zelle oder eines Absturzes', () => {
+    it('unbelegter Platz (Spalte trägt keine Zulagenart) -> leere Zelle statt einer 0', () => {
       const spaltePlatz9: Spalte = { key: 'ez9', x: 0, size: 8, listenPlatz: { gruppe: 'erschwernis', index: 9 } };
       const zelle: SonderZeileZelle = { spaltenIndex: 9, art: 'summe' };
-      expect(sonderZeileZelleWert(zelle, spaltePlatz9, 'haupt', zeilen, daten, listenKontext)).toBe('0');
+      expect(sonderZeileZelleWert(zelle, spaltePlatz9, 'haupt', zeilen, daten, listenKontext)).toBe('');
+    });
+
+    it('gar keine Zulagen-Gruppe in der Tabelle -> 0 (kaputte Konfiguration, keine fehlende Eingabe)', () => {
+      const spalteFremd: Spalte = { key: 'x', x: 0, size: 8, listenPlatz: { gruppe: 'gibtsNicht', index: 0 } };
+      const zelle: SonderZeileZelle = { spaltenIndex: 0, art: 'summe' };
+      expect(sonderZeileZelleWert(zelle, spalteFremd, 'haupt', zeilen, daten, listenKontext)).toBe('0');
     });
 
     it('Format-Override pro Zelle schlägt Spalte.format', () => {

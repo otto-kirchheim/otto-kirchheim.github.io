@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (78)
+
+### fix (PDF-Summenzeilen: leere Zelle statt 0 bei fehlender Zulagenart)
+
+- Trägt eine Spalte keine Zulage (kein Eintrag mit Code / `Zulagenart`), zeigen die
+  Summenzeilen jetzt eine leere Zelle statt einer `0`, die eine echte Nullsumme vortäuscht.
+- `summeGeldwertGruppe()` / `summeBereinigtGruppe()` (`infrastructure/pdf/abgeleiteteWerte.ts`)
+  geben `number | undefined` zurück: `undefined`, wenn über alle Zeilen kein einziger Eintrag
+  einen String-Code führt. Gemeinsame Hilfsfunktion `zulagenEintraegeGruppe()`. Ein vorhandener,
+  aber unbekannter Code trägt weiterhin `0` bei (die Spalte trägt ja eine Zulagenart).
+- `wert.ts`: dynamischer Spaltenplatz ohne aufgelösten Code (`code === undefined`) → leere Zelle
+  statt `formatiere(0)` -- in `sonderZeileZelleWert()` und `berechneAggregation()`. Fehlt die
+  Zulagen-Gruppe ganz (`!gruppe`, kaputte Konfiguration), bleibt es bei `0`.
+- Tests: `abgeleiteteWerte.test.ts` / `wert.test.ts` angepasst und erweitert
+  (leere-Zelle-Fälle vs. `0`-Fälle getrennt abgesichert). `test/infrastructure/pdf/` 395/395,
+  `tsc`/`lint`/`build` grün.
+
 ## 2026-09-09 (77)
 
 ### chore (Icon-Satz austauschbar vorbereitet -- KEIN Austausch)

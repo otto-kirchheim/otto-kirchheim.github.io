@@ -161,19 +161,25 @@ function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unkn
       // Feld.listenKopf) -- ein fest im Berechnet.liste eingetragener Code würde an der
       // Überschrift vorbeirechnen, sobald sich die monatliche Platzbelegung verschiebt.
       const code = schluesselAufPlatz(aufloesung, b.liste.gruppe, b.liste.index);
-      const wert =
-        gruppe && code !== undefined
-          ? summeUeberListe(rows ?? [], {
-              quelle: gruppe.quelle,
-              schluessel: gruppe.schluessel,
-              wert: gruppe.wert,
-              code,
-            })
-          : 0;
-      if (code === undefined) roh = wert;
-      else if (art === 'summeGeld') roh = geldwertZulagenCode(code, wert, geldMonat);
-      else if (art === 'bereinigt') roh = bereinigteZulagenStunden(code, wert) ?? 0;
-      else roh = wert;
+      if (!gruppe) {
+        // Keine Zulagen-Gruppe in dieser Tabelle: 0 -- das wäre eine kaputte Konfiguration, keine
+        // fehlende Eingabe.
+        roh = 0;
+      } else if (code === undefined) {
+        // Dynamischer Platz ohne Code (diesen Monat trägt die Spalte keine Zulagenart): leer statt
+        // einer 0, die eine echte Nullsumme vortäuschen würde.
+        roh = undefined;
+      } else {
+        const wert = summeUeberListe(rows ?? [], {
+          quelle: gruppe.quelle,
+          schluessel: gruppe.schluessel,
+          wert: gruppe.wert,
+          code,
+        });
+        if (art === 'summeGeld') roh = geldwertZulagenCode(code, wert, geldMonat);
+        else if (art === 'bereinigt') roh = bereinigteZulagenStunden(code, wert) ?? 0;
+        else roh = wert;
+      }
     }
   } else {
     roh = OPS[b.op](rows ?? [], b.feld);
@@ -233,9 +239,11 @@ export function sonderZeileZelleWert(
   const aufloesung = kontext.listen[tabelleName];
   const gruppe = aufloesung?.gruppen[spalte.listenPlatz.gruppe];
   const code = schluesselAufPlatz(aufloesung, spalte.listenPlatz.gruppe, spalte.listenPlatz.index);
-  // Unbelegter Platz (dieser Monat kommt der Code nicht vor): 0 statt einer leeren Zelle -- eine
-  // Summenzeile soll immer eine Zahl zeigen, nicht wie eine kaputte Konfiguration aussehen.
-  if (!gruppe || code === undefined) return formatiere(0);
+  // Keine Zulagen-Gruppe in dieser Tabelle: 0 -- kaputte Konfiguration, keine fehlende Eingabe.
+  if (!gruppe) return formatiere(0);
+  // Unbelegter Platz (dieser Monat trägt die Spalte keine Zulagenart): leere Zelle statt einer 0,
+  // die eine echte Nullsumme vortäuschen würde.
+  if (code === undefined) return '';
   const summe = summeUeberListe(rows, {
     quelle: gruppe.quelle,
     schluessel: gruppe.schluessel,

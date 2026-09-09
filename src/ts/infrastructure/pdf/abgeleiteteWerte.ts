@@ -188,30 +188,44 @@ export function bereinigteZulagenStunden(code: string, wert: number): number | u
 }
 
 /**
+ * Alle Zulagen-Einträge einer Listen-Gruppe über mehrere Zeilen, je mit eigenem (String-)Code und
+ * numerischem Wert -- gemeinsame Grundlage von `summeGeldwertGruppe()`/`summeBereinigtGruppe()`.
+ * Einträge ohne String-Code (fehlende `Zulagenart`) oder aus einer Nicht-Array-Quelle fallen raus.
+ * Eine leere Rückgabe heißt: die Spalte trägt gar keine Zulage -- die Aufrufer geben dann
+ * `undefined` statt `0` zurück (leere Summenzelle, keine irreführende Null).
+ */
+function zulagenEintraegeGruppe(
+  rows: Zeile[],
+  gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>,
+): { code: string; wert: number }[] {
+  return rows.flatMap(zeile => {
+    const eintraege = zeile[gruppe.quelle];
+    if (!Array.isArray(eintraege)) return [];
+    return eintraege.flatMap((e: unknown) => {
+      const eintrag = e as Zeile;
+      const code = eintrag[gruppe.schluessel];
+      return typeof code === 'string' ? [{ code, wert: alsZahl(eintrag[gruppe.wert]) }] : [];
+    });
+  });
+}
+
+/**
  * Geldwert ALLER Einträge einer Listen-Gruppe zusammen (Phase 13, Sonderzeilen) -- anders als
  * `geldwertZulagenCode()` nicht für EINEN vorgegebenen Code, sondern je Eintrag mit dessen EIGENEM
  * Code aus `zeile[gruppe.schluessel]`: Grundlage der Gesamtsumme über alle Zulagen-Spaltenplätze
  * einer Tabelle (`Berechnet.liste` ohne `index`), unabhängig davon, welcher Code gerade auf welchem
- * Platz steht. Ein Eintrag ohne (String-)Code oder mit unbekanntem Code trägt `0` bei, statt die
- * gesamte Summe zu verwerfen.
+ * Platz steht. Ein Eintrag mit unbekanntem Code trägt `0` bei, statt die Summe zu verwerfen.
+ * Trägt keine Zeile eine Zulagenart (kein einziger Eintrag mit Code), gibt es `undefined` statt
+ * `0` -- die Summenzelle bleibt leer.
  */
 export function summeGeldwertGruppe(
   rows: Zeile[],
   gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>,
   geldMonat: ZulagenGeldSatz,
-): number {
-  return rows.reduce((summe, zeile) => {
-    const eintraege = zeile[gruppe.quelle];
-    if (!Array.isArray(eintraege)) return summe;
-    return (
-      summe +
-      eintraege.reduce((s: number, e: unknown) => {
-        const eintrag = e as Zeile;
-        const code = eintrag[gruppe.schluessel];
-        return typeof code === 'string' ? s + geldwertZulagenCode(code, alsZahl(eintrag[gruppe.wert]), geldMonat) : s;
-      }, 0)
-    );
-  }, 0);
+): number | undefined {
+  const eintraege = zulagenEintraegeGruppe(rows, gruppe);
+  if (eintraege.length === 0) return undefined;
+  return eintraege.reduce((s, e) => s + geldwertZulagenCode(e.code, e.wert, geldMonat), 0);
 }
 
 /**
@@ -219,24 +233,16 @@ export function summeGeldwertGruppe(
  * wie `summeGeldwertGruppe()`, aber über `bereinigteZulagenStunden()` statt `geldwertZulagenCode()`.
  * Stück-Codes (keine Std.-Umrechnung) tragen `0` bei statt die Summe zu verwerfen -- anders als bei
  * einer einzelnen Zelle (dort `"-"`, siehe `sonderZeileZelleWert()`) ist eine Gesamtsumme ohne den
- * nicht umrechenbaren Anteil weiterhin eine sinnvolle Zahl.
+ * nicht umrechenbaren Anteil weiterhin eine sinnvolle Zahl. Ohne jede Zulagenart (kein Eintrag mit
+ * Code) gibt es wie bei `summeGeldwertGruppe()` `undefined` statt `0`.
  */
 export function summeBereinigtGruppe(
   rows: Zeile[],
   gruppe: Pick<ListenGruppe, 'quelle' | 'schluessel' | 'wert'>,
-): number {
-  return rows.reduce((summe, zeile) => {
-    const eintraege = zeile[gruppe.quelle];
-    if (!Array.isArray(eintraege)) return summe;
-    return (
-      summe +
-      eintraege.reduce((s: number, e: unknown) => {
-        const eintrag = e as Zeile;
-        const code = eintrag[gruppe.schluessel];
-        return typeof code === 'string' ? s + (bereinigteZulagenStunden(code, alsZahl(eintrag[gruppe.wert])) ?? 0) : s;
-      }, 0)
-    );
-  }, 0);
+): number | undefined {
+  const eintraege = zulagenEintraegeGruppe(rows, gruppe);
+  if (eintraege.length === 0) return undefined;
+  return eintraege.reduce((s, e) => s + (bereinigteZulagenStunden(e.code, e.wert) ?? 0), 0);
 }
 
 export interface BereitschaftszulageWerte {

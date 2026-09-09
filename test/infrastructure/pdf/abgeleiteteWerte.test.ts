@@ -260,18 +260,22 @@ describe('summeGeldwertGruppe (Gesamtsumme über alle Einträge einer Listen-Gru
     expect(summeGeldwertGruppe(rows, gruppe, geld)).toBe((Math.round(60 / 60) + Math.round(120 / 60)) * 2);
   });
 
-  it('nicht-Array-Quelle trägt 0 bei statt abzustürzen', () => {
+  it('nicht-Array-Quelle (keine Zulage) -> undefined statt 0', () => {
     const rows: Zeile[] = [{ Zulagen: 'kaputt' }];
-    expect(summeGeldwertGruppe(rows, gruppe, geld)).toBe(0);
+    expect(summeGeldwertGruppe(rows, gruppe, geld)).toBeUndefined();
   });
 
-  it('unbekannter Code im Eintrag wird ignoriert (trägt 0 bei)', () => {
+  it('unbekannter Code im Eintrag wird ignoriert (trägt 0 bei) -- die Spalte trägt trotzdem eine Zulagenart', () => {
     const rows: Zeile[] = [{ Zulagen: [{ Typ: '999', Wert: 100 }] }];
     expect(summeGeldwertGruppe(rows, gruppe, geld)).toBe(0);
   });
 
-  it('keine Zeilen -> 0', () => {
-    expect(summeGeldwertGruppe([], gruppe, geld)).toBe(0);
+  it('keine Zeilen -> undefined', () => {
+    expect(summeGeldwertGruppe([], gruppe, geld)).toBeUndefined();
+  });
+
+  it('Einträge ohne Code (fehlende Zulagenart) -> undefined', () => {
+    expect(summeGeldwertGruppe([{ Zulagen: [{ Wert: 100 }] }], gruppe, geld)).toBeUndefined();
   });
 });
 
@@ -302,12 +306,16 @@ describe('summeBereinigtGruppe (Std.-Gesamtsumme über alle Einträge einer List
     expect(summeBereinigtGruppe(rows, gruppe)).toBe(1);
   });
 
-  it('nicht-Array-Quelle trägt 0 bei statt abzustürzen', () => {
-    expect(summeBereinigtGruppe([{ Zulagen: 'kaputt' }], gruppe)).toBe(0);
+  it('nicht-Array-Quelle (keine Zulage) -> undefined statt 0', () => {
+    expect(summeBereinigtGruppe([{ Zulagen: 'kaputt' }], gruppe)).toBeUndefined();
   });
 
-  it('keine Zeilen -> 0', () => {
-    expect(summeBereinigtGruppe([], gruppe)).toBe(0);
+  it('keine Zeilen -> undefined', () => {
+    expect(summeBereinigtGruppe([], gruppe)).toBeUndefined();
+  });
+
+  it('nur Stück-Codes (keine Std.-Umrechnung, aber vorhandene Zulagenart) -> 0, nicht undefined', () => {
+    expect(summeBereinigtGruppe([{ Zulagen: [{ Typ: '040', Wert: 3 }] }], gruppe)).toBe(0);
   });
 });
 
