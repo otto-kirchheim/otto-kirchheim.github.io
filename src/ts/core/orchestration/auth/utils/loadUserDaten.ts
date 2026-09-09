@@ -10,6 +10,7 @@ import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
+import { warmeFormularCaches } from '@/infrastructure/pdf/warmeFormularCaches';
 import { type LoadedYearData, loadAllYearData } from '@/infrastructure/api/apiService';
 import {
   getMonatFromBE,
@@ -300,6 +301,9 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   updateTabVisibility(vorgabenU.Einstellungen?.aktivierteTabs);
   await syncFeatureTabs(vorgabenU.Einstellungen?.aktivierteTabs);
+  // Formular-Vorlagen-Cache im Hintergrund vorwaermen (nicht blockierend) -- damit ein
+  // spaeterer PDF-Export auch nach Verbindungsabbruch funktioniert.
+  warmeFormularCaches(vorgabenU.Einstellungen?.aktivierteTabs, monat, jahr);
   document.querySelector<HTMLDivElement>('#navmenu')?.classList.remove('d-none');
   document.querySelector<HTMLButtonElement>('#btn-navmenu')?.classList.remove('d-none');
   document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');

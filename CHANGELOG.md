@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (74)
+
+### feat (PDF-Vorlagen-Cache im Hintergrund vorwaermen)
+
+- `formularVersionCache`/`vorlagenPdfCache` fuellten sich bisher erst *nach* dem ersten
+  erfolgreichen PDF-Export. Bricht die Verbindung waehrend des ersten Exports eines Monats weg,
+  war der Cache leer und der Export schlug fehl.
+- Neu: `warmeFormularCaches()` (`infrastructure/pdf/warmeFormularCaches.ts`) loest die zum
+  gewaehlten Monat gueltige ("neueste") Version fuer jedes aktivierte Feature-Formular
+  (`bereitschaft`/`ewt`/`neben`->`ez`/`ea`) auf und legt sie samt Vorlagen-PDF ab. Aufruf aus
+  `loadUserDaten.ts` nach `syncFeatureTabs()` -- also bei Login und jedem Jahr-/Monatswechsel.
+- Laeuft komplett im Hintergrund und blockiert nichts: der Aufrufer startet ohne `await`, die
+  Arbeit selbst haengt in `requestIdleCallback` (Fallback `setTimeout`), die Formulare werden
+  sequentiell abgearbeitet. `warmeVorlagenCache()` ist best-effort und still -- nur online
+  (`navigator.onLine`), kein "Offline"-Snackbar, schluckt jeden Fehler, zieht die Binaer-PDF
+  nur wenn noch nicht im Cache. Die Version wird bei jedem Lauf neu aufgeloest und
+  ueberschrieben, damit eine veroeffentlichte neue Version nicht an einer alten Cache-Zeile
+  haengenbleibt.
+- `loeseVersionAuf()`/`holeVorlageAlsDatei()` haben dafuer einen optionalen `still`-Schalter
+  (unterdrueckt `zeigeOfflineHinweis()`); der normale Export-Pfad ist unveraendert.
+- Service Worker (`vite.config.ts`): eigener Runtime-Cache `formular-vorlagen-cache` fuer
+  `/api/v2/(formulare|vorlagen)/` (NetworkFirst, 30 Tage), VOR der generischen
+  `/api/v2/`-Regel -- sonst verdraengen die groesseren Vorlagen-PDFs die 50 Eintraege der
+  `api-cache` und verfallen mit ihr nach 1 h.
+- Tests: `test/pdf.warmeFormularCaches.test.ts` (Mapping, Legacy-Default, Dedupe, Noop,
+  wirft-nie). `typecheck`/`lint` 0 Fehler, `test` 2089 pass / 0 fail, `build` gruen,
+  `dist/sw.js` enthaelt den neuen Cache.
+
 ## 2026-09-09 (73)
 
 ### fix (DB-UX: Berechnungstabelle -- verschachtelte Auslege-Tabellen kippen uebereinander)

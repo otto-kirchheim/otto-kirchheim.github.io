@@ -327,6 +327,19 @@ export default defineConfig(() => ({
         navigateFallback: '/index.html',
         runtimeCaching: [
           {
+            // Formular-Versionen (JSON) + Vorlagen-PDFs (Binaer) langlebig und getrennt halten --
+            // sonst verdraengen die groesseren PDF-Antworten die 50 Eintraege der `api-cache` und
+            // verfallen mit ihr nach 1 h. Muss VOR der generischen `/api/v2/`-Regel stehen.
+            urlPattern: /\/api\/v2\/(?:formulare|vorlagen)\//,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'formular-vorlagen-cache',
+              networkTimeoutSeconds: 10,
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
             urlPattern: /\/api\/v2\//,
             handler: 'NetworkFirst',
             options: {

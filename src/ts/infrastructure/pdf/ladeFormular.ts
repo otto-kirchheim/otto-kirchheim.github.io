@@ -6,6 +6,12 @@ import { parseVersion } from './configSchema';
 import { build } from './build';
 import { cacheVersion, cacheVorlage, getCachedVersion, getCachedVorlage } from './formularCache';
 
+/** Warmlauf-Aufrufe (`warmeVorlagenCache`) laufen still: kein "Offline"-Snackbar, wenn der
+ * Prefetch scheitert. Der normale Export-Pfad bleibt bei `false`. */
+interface LadeOptionen {
+  still?: boolean;
+}
+
 /** Trägt den HTTP-Status mit, z.B. um einen 404 ("keine gültige Version") erkennbar zu machen. */
 export class ApiFehler extends Error {
   constructor(
@@ -44,7 +50,7 @@ function zeigeOfflineHinweis(): void {
  * antwortet mit einem echten HTTP-Fehler, z.B. 404 "gelöscht") wird dagegen NIE durch den Cache
  * maskiert und immer weitergereicht.
  */
-export async function holeVorlageAlsDatei(vorlageId: string): Promise<File> {
+export async function holeVorlageAlsDatei(vorlageId: string, { still = false }: LadeOptionen = {}): Promise<File> {
   try {
     const serverUrl = await getServerUrl();
     const res = await fetch(`${serverUrl}/vorlagen/${vorlageId}`, { headers: authHeader() });
@@ -56,7 +62,7 @@ export async function holeVorlageAlsDatei(vorlageId: string): Promise<File> {
     if (err instanceof ApiFehler) throw err;
     const cached = getCachedVorlage(vorlageId);
     if (!cached) throw err;
-    zeigeOfflineHinweis();
+    if (!still) zeigeOfflineHinweis();
     return cached;
   }
 }
@@ -77,7 +83,7 @@ function vorlagenId(template: string): string {
  * (erreichbarer Server sagt bewusst "nein", z.B. "keine gültige Version für diesen Stichtag") wird
  * dagegen NIE durch den Cache maskiert.
  */
-async function loeseVersionAuf(formular: string, stichtag: string) {
+async function loeseVersionAuf(formular: string, stichtag: string, { still = false }: LadeOptionen = {}) {
   try {
     const antwort = await FetchRetry<undefined, unknown>(
       `formulare/${formular}?stichtag=${stichtag}`,
@@ -98,8 +104,32 @@ async function loeseVersionAuf(formular: string, stichtag: string) {
     if (err instanceof ApiFehler) throw err;
     const cached = getCachedVersion(formular, stichtag);
     if (!cached) throw err;
-    zeigeOfflineHinweis();
+    if (!still) zeigeOfflineHinweis();
     return cached;
+  }
+}
+
+/**
+ * Vorwaermer fuer den Offline-Fallback: loest die zum Stichtag gueltige ("neueste") Version
+ * server-seitig auf und legt sie samt zugehoeriger Vorlagen-PDF in `formularCache` ab. Best-effort
+ * und komplett still -- laeuft im Hintergrund (siehe `warmeFormularCaches.ts`) und darf nie werfen
+ * oder ein Snackbar zeigen.
+ *
+ * - Nur online: ohne Netz gibt es nichts frisch zu holen, und der Fallback-Pfad soll hier nicht
+ *   greifen (kein "Offline"-Hinweis fuer einen Vorgang, den der Nutzer nicht ausgeloest hat).
+ * - Version wird bewusst bei jedem Lauf neu aufgeloest und ueberschrieben, damit eine laengst
+ *   veroeffentlichte neue Version nicht dauerhaft an einer alten Cache-Zeile haengenbleibt.
+ * - Die Vorlagen-PDF (Binaerdaten) wird nur gezogen, wenn sie noch nicht im Cache liegt.
+ */
+export async function warmeVorlagenCache(formular: string, stichtag: string): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+  try {
+    const version = await loeseVersionAuf(formular, stichtag, { still: true });
+    const id = vorlagenId(version.layout.template);
+    if (getCachedVorlage(id)) return;
+    await holeVorlageAlsDatei(id, { still: true });
+  } catch {
+    // best-effort: offline / keine gueltige Version / Quota -> Warmlauf still ueberspringen
   }
 }
 
