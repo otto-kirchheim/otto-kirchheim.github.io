@@ -269,10 +269,14 @@ td > .knopfgruppe {
 }
 
 // Trennlinie im EWT-Anzeige-Modal: ein blankes `<hr>` kollabiert in der `.raster`-Grid-
-// Umgebung zu einem Punkt -- volle Rasterbreite + explizite Linie erzwingen.
+// Umgebung zu einem Punkt -- die UA-Regel `hr { margin-inline: auto }` gewinnt als
+// Auto-Margin im Grid-Item gegen `justify-self: stretch`, das `hr` schrumpft auf 0.
+// Deshalb `margin-inline: 0` + volle Rasterbreite + explizite Linie erzwingen.
 .ewt-trenner {
   grid-column: 1 / -1;
+  inline-size: 100%;
   margin-block: var(--db-spacing-fixed-sm);
+  margin-inline: 0;
   border: 0;
   border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }

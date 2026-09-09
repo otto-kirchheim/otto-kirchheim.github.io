@@ -229,7 +229,17 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       `divClass="raster mb-1"`, `labelClass="sp-4 sp-sm-5 ..."`, `spanClass="sp-8 sp-sm-7 ..."`
       -> Label und Wert teilen das 12-Spalten-Raster (`raster.scss`).
 - [x] **EWT-Anzeige: `<hr />` rendert als Punkt.** Jetzt `<hr className="ewt-trenner" />` plus
-      Regel in `styles.scss` (`grid-column: 1 / -1`, `border-block-start`). Kein Punkt mehr.
+      Regel in `styles.scss`. Ursache war die UA-Regel `hr { margin-inline: auto }` -- als
+      Auto-Margin im Grid-Item schlaegt sie `justify-self: stretch`, das `hr` schrumpft auf 0.
+      Fix: `margin-inline: 0` + `inline-size: 100%` + `grid-column: 1 / -1`.
+      Browser-verifiziert (Mobil, 420px): Trennerbreite 406px, Hoehe 1px.
+
+**Browser-Verifikation EWT-Anzeige-Modal (2026-09-09, `scratchpad/ewt.mjs`, Mobil 420px):**
+- Schalter "Berechnen?": Row-State `unchanged` -> `modified`, `cells.berechnen` gekippt,
+  `localStorage.dataE[0].berechnen` aktualisiert. ✓
+- "Tag:" Label/Wert: Abstand 7px, auf einer Zeile. ✓
+- `.ewt-trenner`: 406px breit, 1px hoch -- Linie, kein Punkt. ✓
+- Gates: typecheck 0, lint 0/21, lint:css 0/90, test 2084/0/2, build gruen (966 Module).
 - [ ] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
       `DbFeld`/`DbAuswahl` unterschiedlich konfiguriert -> Beschriftungsposition vereinheitlichen.
 - [ ] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"

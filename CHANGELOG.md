@@ -54,7 +54,11 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   meldet an AutoSave) aus dem Aufruf-Closure. `MyCheckbox` bekommt ein explizites
   `defaultChecked` -> ein `changeHandler` ohne Wert-Sync haengt den Schalter nicht mehr.
   "Tag:" hat Abstand zum Wert (`raster` + `sp-*` statt Bootstrap-Rest `row`); die
-  Trennlinie rendert als Linie statt als Punkt (`.ewt-trenner` mit `grid-column: 1 / -1`).
+  Trennlinie rendert als Linie statt als Punkt -- die UA-Regel `hr { margin-inline: auto }`
+  schlug als Auto-Margin im Grid das `justify-self: stretch`, `.ewt-trenner` bekommt jetzt
+  `margin-inline: 0` + `inline-size: 100%` + `grid-column: 1 / -1`.
+  Browser-verifiziert (Mobil 420px): Schalter kippt Row-State + `localStorage.dataE`,
+  Trenner 406px breit / 1px hoch.
 
 ## 2026-09-08 (68)
 
