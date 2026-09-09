@@ -254,10 +254,18 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       `data:changed{BZ}` aus (`display:none`); Oeffnen/Schliessen/Neu-Oeffnen ohne
       Listener-Aufbau (genau 1 Hinweis-Knoten, genau 1 Style-Write). Test-Mocks fuer
       `@/components` in 3 Dateien um `beiModalSchliessen` ergaenzt. Suite 2084/0/2.
-- [ ] **AutoSave-Badge im echten Modal wirkt "fehlerhaft".** Im isolierten Test (5 Status,
-      Hell+Dunkel) rendert `db-badge` sauber (rund, farbig, Icon). Im Modal evtl.
-      Kontrast (neutral/grau im Dunkelmodus für `pending`) oder Clipping durch den Knopf-
-      Container. Gegen echten Save-Flow prüfen.
+- [x] **EWT-Anzeige "Berechnen?"-Schalter nach oben rechts** (User-Wunsch). Schalter + Tag
+      teilen eine Flex-Zeile (`.ewt-kopf` in `styles.scss`); der Schalter belegt keine eigene
+      Rasterzeile mehr. Browser-verifiziert Desktop + Mobil: rechtsbuendig, Rest nicht verschoben.
+- [x] **AutoSave-Zustandspunkt "fehlerhaft".** Zwei Bugs: (1) `initAutoSaveIndicator()`
+      sprang bei `badgeElements.size > 0` raus -- Feature-Tabs fuellen die Map per
+      `registerAutoSaveButton()` (in `LOGIN_INIT_SEQUENCE` vor `ui:autoSaveIndicator`), ohne
+      den Status-Listener zu registrieren -> Badges wurden nie aktualisiert. Guard jetzt auf
+      `if (unsubscribe)`. (2) `db-badge`-Klasse setzt `--db-icon-font-size` nicht -> Icon-Glyph
+      auf 0, Punkt wirkte leer. `.autosave-badge` setzt Icon-Groesse + hellen Ring
+      (`box-shadow`). Browser-verifiziert: 5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt.
+      (Voller Save-Flow -> Badge-Status im Puppeteer-Harness nicht reproduzierbar wegen
+      dyn.-Import-Modulidentitaet; Look + Guard-Logik geprueft.)
 - [ ] **`border-radius: 0` -- Nebenwirkungen systematisch prüfen** (`<hr>`-Punkt ist ein
       Hinweis): Elemente, die auf Rundung als Formgebung angewiesen waren (Trennlinien,
       Fortschrittsbalken, Zierpunkte).

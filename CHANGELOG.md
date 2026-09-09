@@ -68,6 +68,19 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   `MutationObserver` und ruft `cleanup` genau einmal, wenn der Dialog-Inhalt entfernt wird
   (Schliessen oder direktes Neu-Oeffnen). 6 Dialoge umgestellt. Browser-verifiziert: Hinweis
   blendet nach BZ-Sync aus, kein Listener-Aufbau ueber Oeffnen/Schliessen/Neu-Oeffnen.
+- **EWT-Anzeige-Modal: "Berechnen?"-Schalter nach oben rechts.** Schalter + Tag-Zeile teilen
+  jetzt eine Flex-Zeile (`.ewt-kopf`) -- der Schalter sitzt buendig oben rechts, statt eine
+  eigene Rasterzeile zwischen Tag und Einsatzort zu belegen. Browser-verifiziert Desktop +
+  Mobil (420px): Schalter rechtsbuendig, Einsatzort/Schicht nicht verschoben.
+- **AutoSave-Zustandspunkt auf den Speichern-Knoepfen -- sichtbar statt "fehlerhaft".** Zwei
+  Fehler: (1) `initAutoSaveIndicator()` sprang bei `badgeElements.size > 0` raus -- aber die
+  Feature-Tabs rufen `registerAutoSaveButton()` in `LOGIN_INIT_SEQUENCE` VOR
+  `ui:autoSaveIndicator` und fuellen die Map, ohne den Status-Listener zu registrieren ->
+  die Badges wurden nie aktualisiert. Jetzt Guard auf `if (unsubscribe)`. (2) Die
+  `db-badge`-Klasse setzt `--db-icon-font-size` nicht -> das Status-Icon (Glyph im `::before`)
+  blieb auf 0, der Punkt wirkte leer/abgeschnitten. `.autosave-badge` setzt jetzt die
+  Icon-Groesse (`--db-sizing-xs`) und einen hellen Ring (`box-shadow`), der den Punkt vom
+  Knopf trennt. Browser-verifiziert (5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt).
 
 ## 2026-09-08 (68)
 

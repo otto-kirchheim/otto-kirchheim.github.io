@@ -82,23 +82,27 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
       errorMessage={row.isError ? (row._errorMessage ?? undefined) : undefined}
     >
       <MyModalBody>
-        {createTagElement(row)}
-        <MyCheckbox
-          className="sp-4"
-          id={'berechnen'}
-          defaultChecked={row.cells?.['berechnen'] ?? true}
-          changeHandler={(e: ChangeEvent<HTMLInputElement>) => {
-            // `row` kommt aus dem Aufruf-Closure -- der fruehere `closest('.modal')`-Umweg
-            // ging ins Leere (`#modal` ist eine Id, keine Klasse) -> Schalter ohne Wirkung.
-            // `val()` statt direkter `cells`-Mutation: setzt den Row-State auf 'modified'
-            // und meldet die Aenderung an AutoSave -- genau wie der Checkbox-Handler der
-            // Tabelle (`attachBerechnenToggleListeners`).
-            row.val({ ...row.cells, berechnen: e.target.checked });
-            persistEwtTableData(row.CustomTable);
-          }}
-        >
-          {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
-        </MyCheckbox>
+        {/* Tag-Zeile + "Berechnen?"-Schalter teilen eine Flex-Zeile: der Schalter sitzt oben
+            rechts, ohne eine eigene Rasterzeile zu belegen. */}
+        <div className="ewt-kopf">
+          {createTagElement(row)}
+          <MyCheckbox
+            className="ewt-kopf-schalter"
+            id={'berechnen'}
+            defaultChecked={row.cells?.['berechnen'] ?? true}
+            changeHandler={(e: ChangeEvent<HTMLInputElement>) => {
+              // `row` kommt aus dem Aufruf-Closure -- der fruehere `closest('.modal')`-Umweg
+              // ging ins Leere (`#modal` ist eine Id, keine Klasse) -> Schalter ohne Wirkung.
+              // `val()` statt direkter `cells`-Mutation: setzt den Row-State auf 'modified'
+              // und meldet die Aenderung an AutoSave -- genau wie der Checkbox-Handler der
+              // Tabelle (`attachBerechnenToggleListeners`).
+              row.val({ ...row.cells, berechnen: e.target.checked });
+              persistEwtTableData(row.CustomTable);
+            }}
+          >
+            {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
+          </MyCheckbox>
+        </div>
         {createOrtSchichtElement(row, 'Einsatzort')}
         {createOrtSchichtElement(row, 'Schicht')}
         <hr className="ewt-trenner" />

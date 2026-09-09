@@ -225,7 +225,12 @@ function updateBadge(buttonId: string, resources: TResourceKey[]): void {
  * Sollte einmal nach dem Login aufgerufen werden.
  */
 export function initAutoSaveIndicator(): void {
-  if (badgeElements.size > 0) return; // Bereits initialisiert
+  // "Bereits initialisiert" heisst: der globale Status-Listener haengt. NICHT an
+  // `badgeElements.size` festmachen -- `registerAutoSaveButton` (aus den Feature-Tabs, die
+  // in `LOGIN_INIT_SEQUENCE` VOR `ui:autoSaveIndicator` mounten) fuellt die Map, ohne den
+  // Listener zu registrieren. Mit der alten Bedingung sprang init dann raus und die Badges
+  // wurden nie aktualisiert.
+  if (unsubscribe) return;
 
   for (const { buttonId, resources } of BUTTON_RESOURCE_MAP) {
     const btn = document.getElementById(buttonId);

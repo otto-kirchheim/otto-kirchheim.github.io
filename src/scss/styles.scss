@@ -233,6 +233,28 @@ td > .knopfgruppe {
   --app-icon: url('../icons/filter-off.svg');
 }
 
+// EWT-Anzeige-Modal: Die Tag-Zeile und der "Berechnen?"-Schalter teilen eine Flex-Zeile.
+// Der Schalter sitzt buendig oben rechts, ohne eine eigene Rasterzeile zu belegen -- die
+// Abschnitte darunter (Einsatzort/Schicht/Zeiten) bleiben unveraendert.
+.ewt-kopf {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--db-spacing-fixed-sm);
+}
+
+// createTagElement rendert ein eigenes `.raster` -- als Flex-Kind darf es schrumpfen,
+// damit ein langer (abweichender) Buchungstag den Schalter nicht aus der Zeile drueckt.
+.ewt-kopf > :first-child {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  margin-block-end: 0;
+}
+
+.ewt-kopf-schalter {
+  flex: none;
+}
+
 // EWT-Anzeige-Modal: Pfeilzeile, Titelzeile und Zeitzeile teilen dasselbe Raster mit festen
 // Aussenspalten -- so stehen Ab-Pfeil, `ab`/`von` und der linke Zeitwert senkrecht
 // uebereinander, ebenso An-Pfeil, `an`/`bis` und der rechte Zeitwert.
