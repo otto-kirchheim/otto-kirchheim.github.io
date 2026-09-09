@@ -87,6 +87,15 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   `DbAuswahl`-Beschriftung ueber dem Feld. Jetzt alle drei mit `beschriftungZeigen` und ohne
   Zusatz-`<label>` -> Beschriftung einheitlich oben, Hilfetext (`DBInfotext`) darunter.
   Browser-verifiziert: alle drei Labels ueber dem Feld, kein doppeltes `for`-Label mehr.
+- **`border-radius: 0`-Sweep (Nebenwirkungen der eckigen Formensprache).** Systematisch
+  durchgegangen: kritisch war nur das `<hr>`. Ein `<hr>` als Flex-/Grid-Kind kollabiert auf
+  Breite 0 -- die UA-Regel `hr { margin-inline: auto }` ist ein Auto-Margin und schlaegt
+  `stretch`. Global neutralisiert (`hr { margin-inline: 0 }` in `styles.scss`); betraf die
+  Trenner in den Einstellungen ("Sichtbare Bereiche"/AutoSave, `d-flex`-Spalte) und die
+  VE-Anzeige-/Editor-Modale (`.raster`-Koerper). Browser-verifiziert (Einstellungen: 5x `<hr>`
+  jetzt 457-958px statt 0). Unkritisch: Passwort-Staerke-Balken (nutzen `--db-border-radius-full`
+  -> weiter pill), AutoSave-Punkt (`db-badge` -> `-full`, rund), der native `type="range"`-Slider
+  (UA-Styling). Keine `db-progress`/`db-slider`/Avatar-Komponenten im Einsatz.
 
 ## 2026-09-08 (68)
 

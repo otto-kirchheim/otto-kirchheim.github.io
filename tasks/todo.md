@@ -269,9 +269,13 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       (`box-shadow`). Browser-verifiziert: 5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt.
       (Voller Save-Flow -> Badge-Status im Puppeteer-Harness nicht reproduzierbar wegen
       dyn.-Import-Modulidentitaet; Look + Guard-Logik geprueft.)
-- [ ] **`border-radius: 0` -- Nebenwirkungen systematisch prüfen** (`<hr>`-Punkt ist ein
-      Hinweis): Elemente, die auf Rundung als Formgebung angewiesen waren (Trennlinien,
-      Fortschrittsbalken, Zierpunkte).
+- [x] **`border-radius: 0` -- Nebenwirkungen systematisch geprüft.** Kritisch nur das `<hr>`:
+      als Flex-/Grid-Kind kollabiert es auf Breite 0 (UA `hr { margin-inline: auto }` schlägt
+      `stretch`). Global gefixt: `hr { margin-inline: 0 }` in `styles.scss`. Betraf Einstellungen
+      ("Sichtbare Bereiche"/AutoSave-Trenner, `d-flex`) + VE-Modale (`.raster`). Browser-
+      verifiziert (`scratchpad/hr.mjs`): 5x `<hr>` jetzt 457-958px statt 0. Unkritisch:
+      Passwort-Stärke-Balken (`--db-border-radius-full` -> pill), AutoSave-Punkt (`db-badge`,
+      rund), `type="range"`-Slider (UA). Keine `db-progress`/`db-slider`/Avatar im Einsatz.
 
 **Noch offen:**
 - **I.4 / I.6** -- ungenutzte Font-Schnitte build-seitig ausschliessen; Bundle-Budget

@@ -28,6 +28,15 @@ body {
   justify-content: center;
 }
 
+// Ein `<hr>` als Flex-/Grid-Kind kollabiert auf Breite 0: die UA-Regel `hr { margin-inline:
+// auto }` ist ein Auto-Margin und schlaegt `align-self`/`justify-self: stretch` -- das `hr`
+// schrumpft auf seine 0-Intrinsic-Breite (sieht aus wie ein Punkt). Die App zentriert nie
+// eine schmale Linie, deshalb global neutralisieren. Betrifft die Trenner in den
+// Einstellungen (`d-flex`-Spalten, `.raster`-Modalkoerper) und im EWT-Anzeige-Modal.
+hr {
+  margin-inline: 0;
+}
+
 // Knopfreihen der Tabs (Bereitschaft, EWT, EA, Neben, Einstellungen): gleich breite Spalten
 // bis 250px, die Gruppe als Ganzes zentriert -- ohne die Deckelung zoege jeder Knopf ueber die
 // halbe Seite, mit gestreckten Rasterspalten stuenden sie weit auseinander.
@@ -290,15 +299,11 @@ td > .knopfgruppe {
   font-size: inherit;
 }
 
-// Trennlinie im EWT-Anzeige-Modal: ein blankes `<hr>` kollabiert in der `.raster`-Grid-
-// Umgebung zu einem Punkt -- die UA-Regel `hr { margin-inline: auto }` gewinnt als
-// Auto-Margin im Grid-Item gegen `justify-self: stretch`, das `hr` schrumpft auf 0.
-// Deshalb `margin-inline: 0` + volle Rasterbreite + explizite Linie erzwingen.
+// Trennlinie im EWT-Anzeige-Modal: volle Rasterbreite (die 0-Breiten-Falle des `<hr>` deckt
+// die globale `hr { margin-inline: 0 }`-Regel oben ab) plus die sichtbare Linie.
 .ewt-trenner {
   grid-column: 1 / -1;
-  inline-size: 100%;
   margin-block: var(--db-spacing-fixed-sm);
-  margin-inline: 0;
   border: 0;
   border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
