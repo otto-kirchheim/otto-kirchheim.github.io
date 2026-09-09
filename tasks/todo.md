@@ -278,11 +278,49 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       rund), `type="range"`-Slider (UA). Keine `db-progress`/`db-slider`/Avatar im Einsatz.
 
 **Noch offen:**
-- **I.4 / I.6** -- ungenutzte Font-Schnitte build-seitig ausschliessen; Bundle-Budget
-  gegen die Spike-Zahlen im CHANGELOG festhalten.
-- **I.11 Rest** -- `../WORKSPACE.md`, `../CLAUDE.md`, `frontend/.claude/README.md`,
-  `.claude/skills/architektur` final durchsehen.
-- Gitlink-Bump im Parent nach dem naechsten Frontend-Commit.
+- **I.4** -- geklaert (Entscheidung, kein Code): ungenutzte woff2-Schnitte bleiben bewusst im
+  Build. `@font-face`-`src` laedt der Browser erst beim tatsaechlichen Glyph-Rendering -> fuer
+  echte Nutzer 0 Byte. Der Precache ist ueber `globIgnores` bereits eng (nur die 4
+  Fliesstext-Schnitte). Build-seitiges Strippen braechte nur ein kleineres Deploy-Artefakt,
+  riskiert aber einen synthetisierten Fallback-Satz. Begruendung steht im CHANGELOG (69).
+- **I.6** -- erledigt: Bundle-Budget vs. Phase-0-Spike im CHANGELOG (69) festgehalten
+  (React-Runtime 59 KB gz, DB-UX+App-CSS 92 KB gz, 32 woff2 / 1,82 MB, Precache 47 / 4,3 MB).
+- **I.11** -- `frontend/CLAUDE.md` (Scripts/Styling), `.claude/skills/verify`,
+  `.claude/skills/architektur` (Modal-Teardown + `beiModalSchliessen`), `../WORKSPACE.md`
+  (React 19 / Bootstrap raus / neues Design), `CHANGELOG.md` (69). `frontend/.claude/README.md`
+  + Root `../CLAUDE.md` sind generisch/Workflow -> kein Phase-I-Drift. `graphify update .` gelaufen.
+- **I.9** -- 28 -> 21 ESLint-Warnungen. Rest (~13 setState-im-Effect, ~7 exhaustive-deps in
+  verschachtelten Admin-Komponenten) bewusst als dokumentierte Ausnahme belassen: Warnungen,
+  kein CI-Fehler; echtes Regressionsrisiko > Nutzen. Einzeln mit Testabdeckung angehen, wenn
+  die Komponenten ohnehin angefasst werden (Phase J).
+- Gitlink-Bump im Parent nach dem naechsten Frontend-Commit (weiterhin offen).
+
+## Review Phase I -- Abschluss (2026-09-09, Session 4)
+
+**Committed auf `feat/db-ux`** (noch nicht gepusht):
+- `5ba1231` Phase-I-Sammelstand (eckig, Schwelle, PDF-Schriften, PWA-Farben, Button-Konvention,
+  Marken-Logos raus, I.9 teilweise, Doku)
+- `ab2fa1f` EWT-Anzeige-Modal: `<hr>`-Trenner + "Berechnen?"-Schalter aendert Row-State
+- `36abbf8` Dialog-Sync-Hinweise: Listener-Leak (totes `hide.bs.modal`) -> `beiModalSchliessen()`,
+  6 Dialoge
+- `ce00ec5` EWT-Schalter oben rechts (`.ewt-kopf`) + AutoSave-Zustandspunkt sichtbar
+  (Guard-Bug `if (unsubscribe)` + Icon-Groesse + Ring)
+- `799ab5d` Admin-Benutzerliste-Filter: Beschriftungen einheitlich oben
+- `bc5e830` `<hr>` als Flex-/Grid-Kind global gefixt (`hr { margin-inline: 0 }`)
+
+**Checkpoint (2026-09-09):** `typecheck` 0 · `lint` 0/21 · `lint:css` 0/90 · `test` 2084/0/2 ·
+`build` gruen (966 Module) · `graphify update .` gelaufen (3630 Nodes).
+
+**Browser-verifiziert (Puppeteer, Chrome headless gegen Dev-Server):** EWT-Anzeige-Modal
+(Schalter kippt Row-State + `localStorage.dataE`, Trenner voll breit, Schalter oben rechts,
+Desktop + Mobil 420px) · Bereitschaftseinsatz-Sync-Hinweis (blendet nach BZ-Sync aus, kein
+Listener-Aufbau ueber Oeffnen/Schliessen/Neu-Oeffnen) · Admin-Filter (3x Label oben, kein
+Doppel-`for`) · AutoSave-Badge-Optik (5 Semantiken, Icon sichtbar) · Einstellungen-`<hr>`
+(457-958px statt 0).
+
+**Bewusst offen gelassen:** I.9-Rest (21 Warnungen, dokumentierte Ausnahme) · Gitlink-Bump
+Parent (nach Push) · voller Save-Flow -> AutoSave-Badge-Status im Harness nicht reproduzierbar
+(Optik + Guard-Logik geprueft).
 
 ---
 

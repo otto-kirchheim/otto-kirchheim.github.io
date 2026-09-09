@@ -110,6 +110,11 @@ React wird primär als Template-Engine für die Dialoge und die Feature-Tabs ver
 selbst ist ein `DBDrawer` über nativem `<dialog>`; geschlossen wird per Delegation über
 `data-dialog-dismiss="modal"` oder `schliesseModal()`.
 
+Aufräumen beim Schließen: `beiModalSchliessen(cleanup)` (aus `@/components`). Es beobachtet
+`#modal` per `MutationObserver` und ruft `cleanup` genau einmal, sobald der Dialog-Inhalt
+entfernt wird. **Nicht** `modal.addEventListener('hide.bs.modal', …)** verwenden – das ist ein
+Bootstrap-Event und feuert seit Phase H nie mehr (Listener leaken sonst pro Öffnung).
+
 ```ts
 import { mount } from "@/infrastructure/ui";
 mount(modalElement, <MyFormModal {...props} />);
