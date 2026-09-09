@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (70)
+
+### fix (DB-UX: Drawer schneidet linksbuendigen Text ab bei ~500px Bildschirmbreite)
+
+- Der Dialog-Drawer ist rechtsbuendig verankert; `--db-drawer-max-width` sind `36rem`, was
+  mit `data-density="functional"` (14px-Basis) **504px** ergibt -- nicht 576px. War der
+  sichtbare Viewport schmaler (kleiner Bildschirm, oder ~508px mit klassischem Scrollbalken),
+  lief die linke Kante des Drawers ins Negative und schnitt linksbuendigen Text ab
+  ("Von"/"Bis"/"Pause" -> "on"/"is"/"ause"). Fix: `.db-drawer-container` bekommt
+  `max-inline-size: min(var(--db-drawer-max-width), 100%)` -- der Drawer bleibt immer
+  vollstaendig im Bild. Browser-verifiziert 400-1200px: kein Abschnitt, Seitenpanel-Verhalten
+  ab Desktop unveraendert.
+
 ## 2026-09-08 (69)
 
 ### refactor (DB-UX-Migration Phase I: Cleanup, Token-Finalisierung, DB-"neues-Design"-Feinschliff)

@@ -979,6 +979,16 @@ body:has(#start.active) {
   --db-drawer-max-width: 36rem;
 }
 
+// Der Drawer ist rechtsbuendig verankert. `--db-drawer-max-width` sind 36rem -- mit
+// `data-density="functional"` (14px-Basis) = 504px. Ist der sichtbare Viewport schmaler
+// (kleiner Bildschirm oder ~508px mit klassischem Scrollbalken), lief die linke Kante des
+// Drawers ins Negative -> linksbuendiger Text ("Von"/"Bis"/"Pause") war links abgeschnitten.
+// `min(..., 100%)` deckelt zusaetzlich auf die Breite des enthaltenden Blocks (ICB, ohne
+// Scrollbalken) -> der Drawer bleibt immer vollstaendig im Bild.
+.db-drawer:not(.db-header-drawer) .db-drawer-container {
+  max-inline-size: min(var(--db-drawer-max-width), 100%);
+}
+
 // Das Unterschriftenfeld nutzt den ganzen Bildschirm -- im Querformat bleibt sonst nur ein
 // schmaler Streifen zum Schreiben (`signaturDialog.ts` rechnet die Canvas-Groesse daraus).
 .db-drawer:has(> .signatur-drawer) {
