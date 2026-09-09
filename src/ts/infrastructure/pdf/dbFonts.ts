@@ -3,7 +3,15 @@
  * (`helvetica`/`times`/`courier`) und den Vorlagen-Schriften (`vorlage:<Name>`) die beiden
  * DB-Familien `db-sans` (DB Neo Screen Sans) und `db-head` (DB Neo Screen Head). Die
  * woff2-Dateien liegen als entschluesselte Assets in `@db-ux/db-theme-fonts` -- dieselben,
- * die das Theme-CSS per `@font-face` laedt. `@pdf-lib/fontkit` liest woff2 direkt.
+ * die das Theme-CSS per `@font-face` laedt.
+ *
+ * `@pdf-lib/fontkit` (1.1.1, die einzige mit `@cantoo/pdf-lib` kompatible Version) kann diese
+ * Schriften NICHT subsetten -- der Encoder bricht bei `pdf.save()` mit
+ * `Cannot read properties of undefined (reading 'pos')` ab, sowohl aus woff2 als auch aus
+ * entpacktem TTF. `build.ts` bettet sie deshalb OHNE Subset ein; das verlangt echtes SFNT
+ * (woff2-Bytes in einem `FontFile2` ergeben eine kaputte PDF), also wird hier per
+ * `woff2-encoder` nach TrueType entpackt. Das wasm-Modul (~90 KB gz) laedt lazy und nur,
+ * wenn wirklich eine DB-Schrift gebraucht wird.
  */
 
 export type DbSchriftFamilie = 'db-sans' | 'db-head';
@@ -54,7 +62,11 @@ function urls(): Record<string, string> {
 
 const cache = new Map<string, Promise<Uint8Array | null>>();
 
-/** Font-Bytes fuer einen DB-Schnitt, oder `null` wenn das Asset fehlt / nicht ladbar ist. */
+/**
+ * SFNT-(TrueType-)Bytes fuer einen DB-Schnitt, aus dem woff2-Asset entpackt -- oder `null`,
+ * wenn das Asset fehlt bzw. nicht ladbar/entpackbar ist (dann faellt `build.ts` auf Helvetica
+ * zurueck).
+ */
 export function dbFontBytes(familie: DbSchriftFamilie, schnitt: Schnitt): Promise<Uint8Array | null> {
   const datei = DATEI[familie][schnitt];
   let p = cache.get(datei);
@@ -65,7 +77,9 @@ export function dbFontBytes(familie: DbSchriftFamilie, schnitt: Schnitt): Promis
       try {
         const res = await fetch(eintrag[1]);
         if (!res.ok) return null;
-        return new Uint8Array(await res.arrayBuffer());
+        const woff2 = new Uint8Array(await res.arrayBuffer());
+        const { default: entpacke } = await import('woff2-encoder/decompress');
+        return await entpacke(woff2);
       } catch {
         return null;
       }

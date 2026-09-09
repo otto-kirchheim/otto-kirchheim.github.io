@@ -2,6 +2,37 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (75)
+
+### fix (DB-Neo-Schrift im PDF: Vorschau brach mit `reading 'pos'` ab)
+
+- Der Formular-Editor meldete bei "Beispieldaten"/"Platzhalter"-Vorschau
+  `Vorschau fehlgeschlagen: Cannot read properties of undefined (reading 'pos')`,
+  sobald `db-sans`/`db-head` als Schriftfamilie gewaehlt war.
+- Ursache: `@pdf-lib/fontkit` 1.1.1 (die einzige mit `@cantoo/pdf-lib` 2.9.1 kompatible Version)
+  kann die DB-Neo-Screen-Schriften **nicht subsetten** -- der TTF-Subset-Encoder bricht in
+  `pdf.save()` mit `reading 'pos'` bzw. `Index out of range` ab, aus woff2 **und** aus
+  entpacktem TrueType, in jedem Schnitt. Der `try/catch` um `embedFont(bytes, { subset: true })`
+  in `build.ts` griff nicht, weil die Subset-Serialisierung erst beim spaeteren `pdf.save()`
+  laeuft. Das gestrige Feature (74/69) war damit nie funktionsfaehig -- die Tests fielen mangels
+  Asset auf Helvetica zurueck.
+- Fix: DB-Schriften werden jetzt **vollstaendig** (ohne Subset) eingebettet. Das verlangt echtes
+  SFNT -- rohe woff2-Bytes in einem `FontFile2` ergeben eine kaputte PDF --, deshalb entpackt
+  `dbFonts.ts` die woff2 vorher per neuer Dependency `woff2-encoder` (nur der
+  `woff2-encoder/decompress`-Einstieg, ~107 KB br, laedt lazy und nur wenn eine DB-Schrift
+  wirklich gebraucht wird -- eigener Chunk `decompress-*.js`). Fehlt das Asset oder scheitert
+  das Entpacken, gilt weiterhin Helvetica im passenden Schnitt.
+- Kosten: die generierte PDF traegt die DB-Schrift jetzt komplett (~50-60 KB pro genutztem
+  Schnitt), statt nur der genutzten Glyphen -- nur wenn `db-sans`/`db-head` gewaehlt ist.
+- Lizenz: `woff2-encoder/decompress` liefert bitgleich das Hersteller-TrueType zurueck (WOFF2 =
+  reiner Kompressions-Container), kein Subset, keine Glyph-/Tabellen-Aenderung -- Einbettung des
+  unveraenderten Zeichensatzes in DB-intern erzeugte PDFs ist von der DB-Font-Lizenz gedeckt
+  (mit User geklaert).
+- Tests: neu `test/infrastructure/pdf/dbFonts.test.ts` (faehrt woff2 -> TrueType -> Einbettung
+  ohne Subset -> `pdf.save()` fuer alle vier `db-sans`-Schnitte ab, `skipIf` ohne Asset).
+  `typecheck`/`lint` 0 Fehler, `test --isolate` 2094 pass / 0 fail, `build` gruen, im echten
+  Headless-Chrome verifiziert (wasm entpackt, `pdf.save()` liefert gueltige PDF).
+
 ## 2026-09-09 (74)
 
 ### feat (PDF-Vorlagen-Cache im Hintergrund vorwaermen)

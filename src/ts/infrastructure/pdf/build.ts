@@ -58,12 +58,14 @@ async function ladeSchnitt(
 ): Promise<PDFFont> {
   const index = SCHNITTE.indexOf(schnitt);
   if (istDbFamilie(familie)) {
-    // DB Neo Screen Sans/Head aus `@db-ux/db-theme-fonts` einbetten (subset -- nur genutzte
-    // Glyphen). Fehlt das Asset (Build ohne ASSET-Secrets), gilt Helvetica im passenden Schnitt.
+    // DB Neo Screen Sans/Head aus `@db-ux/db-theme-fonts` (in `dbFonts.ts` nach TrueType
+    // entpackt) VOLLSTAENDIG einbetten -- `@pdf-lib/fontkit` 1.1.1 kann diese Schriften nicht
+    // subsetten (bricht bei `pdf.save()` mit `reading 'pos'` ab). Fehlt das Asset (Build ohne
+    // ASSET-Secrets) oder scheitert das Entpacken, gilt Helvetica im passenden Schnitt.
     const bytes = await dbFontBytes(familie, schnitt);
     if (bytes) {
       try {
-        return await pdf.embedFont(bytes, { subset: true });
+        return await pdf.embedFont(bytes);
       } catch (fehler) {
         console.warn(`DB-Schrift "${familie}" (${schnitt}) nicht einbettbar -- Helvetica:`, fehler);
       }
