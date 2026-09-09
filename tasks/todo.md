@@ -1,3 +1,50 @@
+# Aktueller Plan: Formular-Vorlagen-Cache im Hintergrund vorwaermen - 2026-09-09
+
+## Ausgangslage
+
+`formularVersionCache` (+ `vorlagenPdfCache`) in `infrastructure/pdf/formularCache.ts` fuellt sich
+heute nur *nach* dem ersten erfolgreichen PDF-Export (`loeseVersionAuf`/`holeVorlageAlsDatei` in
+`ladeFormular.ts`). Luecke: Export online gestartet, Verbindung faellt weg, erster Export des
+Monats -> Cache-Miss -> Abbruch. Ziel: die zum gewaehlten Monat gueltige ("neueste") Version +
+zugehoerige Vorlagen-PDF proaktiv, komplett im Hintergrund und nicht blockierend cachen.
+Backend hat keinen "newest"-Endpunkt fuer Member (`GET /formulare/:f` verlangt `stichtag`,
+`liste` ist TEAM_ADMIN) -> Prefetch immer pro konkretem Stichtag = 1. des gewaehlten Monats.
+
+## Aufgaben
+
+Status 2026-09-09: umgesetzt. Hinweis 5: Datei liegt als `test/pdf.warmeFormularCaches.test.ts`;
+Offline-Skip von `warmeVorlagenCache` selbst nicht per Test abgedeckt (bräuchte FetchRetry-Mock),
+die `navigator.onLine`-Guard ist eine Zeile und per Lesen geprüft.
+
+- [x] **1 `ladeFormular.ts`:** optionaler `still`-Schalter an `loeseVersionAuf` +
+      `holeVorlageAlsDatei` (unterdrueckt `zeigeOfflineHinweis()` fuer den Warmlauf).
+      Neu exportiert: `warmeVorlagenCache(formular, stichtag)` -- nur online
+      (`navigator.onLine !== false`), loest die Version frisch auf (ueberschreibt die
+      gecachte -> haelt "neueste" aktuell), zieht die Vorlagen-PDF nur wenn noch nicht in
+      `vorlagenPdfCache`, schluckt jeden Fehler.
+- [x] **2 Neu `infrastructure/pdf/warmeFormularCaches.ts`:** `aktivierteTabs` -> FormularCode
+      (`bereitschaft`,`ewt`,`neben`->`ez`,`ea`), Stichtag `dayjs([jahr, monat-1, 1])`,
+      sequentiell mit `requestIdleCallback`-Planung (Fallback `setTimeout`), voll detached.
+- [x] **3 Hook in `loadUserDaten.ts`** nach `syncFeatureTabs(...)`:
+      `void warmeFormularCaches(vorgabenU.Einstellungen?.aktivierteTabs, monat, jahr)` --
+      laeuft bei Login und jedem Jahr-/Monatswechsel.
+- [x] **4 `vite.config.ts` workbox:** eigener Runtime-Cache `formular-vorlagen-cache` fuer
+      `/api/v2/(formulare|vorlagen)/` (NetworkFirst, 30 Tage, eigene `maxEntries`), VOR der
+      generischen `/api/v2/`-Regel -- sonst verdraengen die Binaer-PDFs die 50 Eintraege der
+      `api-cache` und verfallen nach 1 h.
+- [x] **5 Tests** `test/warmeFormularCaches.test.ts`: Mapping, Skip-wenn-gecacht,
+      wirft-nie, Offline-Skip.
+- [x] **6 Doku:** `frontend/CHANGELOG.md`, ggf. `tasks/lessons.md`, `graphify update .`.
+
+### Verifikation
+
+- `bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build`
+- `dist/sw.js` enthaelt `formular-vorlagen-cache` und den `(formulare|vorlagen)`-Pattern
+- Kein zusaetzlicher `await` im `loadUserDaten`-Pfad (Warmlauf blockiert nichts) -- per Lesen
+  der Aufrufstelle geprueft.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase I (Cleanup, Token-Finalisierung, Doku) - 2026-09-08
 
 ## Ausgangslage
@@ -2020,3 +2067,88 @@ Zuordnung (aus `@db-ux/core-components/build/styles/bundle.css` verifiziert):
 **Umgebungshinweis:** In diesem Container fehlen `ASSET_PASSWORD`/`ASSET_INIT_VECTOR`, die
 DB-Markenassets sind deshalb unentschluesselt (`*.svg.enc`). `test/icons.dbSet.test.ts` faellt
 dadurch mit 3 Tests aus -- unabhaengig von dieser Aenderung.
+
+## Aktueller Plan: Icon-Satz austauschbar machen (Vorbereitung, KEIN Austausch)
+
+**Ziel:** Der DB-UX-Icon-Satz (`@db-ux/db-theme-icons`, DB-Font-Lizenz) soll spaeter ohne
+Anfassen der ~160 Aufrufstellen gegen einen freien Satz (z. B. Material Symbols) getauscht
+werden koennen. Jetzt nur die Umschalt-Mechanik bauen; Laufzeitverhalten bleibt exakt gleich
+(DB-Icons weiter aktiv).
+
+**Ansatz (mit User abgestimmt):** CSS-Remap-Layer. Render-Weg bleibt `data-icon` +
+Icon-Font-Ligatur. DB-UX rendert `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }`
+-- der `--db-icon`-Override ist der vom Design-System vorgesehene Angelpunkt. Ein Generator
+erzeugt aus der Registry eine `iconset.<satz>.css` mit `[data-icon="<db>"]{--db-icon:"<ziel>"}`.
+Umschalten = eine `@import`-Zeile + `--db-icon-font-family` + `@font-face`.
+
+**core-components-interne Icon-Namen (~15, z. B. `.db-select`-Chevron, Notification-Icons):**
+laut Abstimmung nur dokumentiert, kein Code jetzt -- Aufgabenliste im Runbook-Kommentar.
+
+- [x] `src/ts/components/iconRegistry.ts` -- Single Source of Truth: jeder im `src/` genutzte
+      DB-Icon-Name -> `{ material: string; hinweis?: string }`. Typ `DbIconName`. Kopf-Kommentar
+      = Swap-Runbook. `theme-auto`/`filter-off` (Eigenbau-SVG, `.app-icon`-Maske) und `none`
+      (Logo-Abschaltung) bleiben aussen vor (`NICHT_REMAPPT`).
+- [x] `scripts/gen-iconset.mts` -- liest die Registry, schreibt `src/scss/iconset.material.css`
+      (deterministisch sortiert, "GENERIERT -- nicht editieren"-Kopf, eigene `@layer app`).
+      `--check`-Flag fuer den Drift-Test.
+- [x] `src/scss/iconset.material.css` -- generierte Ausgabe, eingecheckt, **nicht importiert**.
+- [x] `src/scss/db-ux.css` -- auskommentierter `@import './iconset.material.css';` plus
+      Runbook-Kommentar (Umschaltschritte).
+- [x] `src/scss/styles.scss` -- auskommentierter `ICON-SATZ`-Block (`@font-face` Material
+      Symbols lokal gebuendelt, `--db-icon-font-family`, `font-variation-settings`).
+- [x] `package.json` -- Script `"icons:gen": "bun scripts/gen-iconset.mts"`.
+- [x] `test/iconRegistry.test.ts` -- (a) jeder `data-icon="…"`-/Ternary-Literal in `src/` ist
+      Registry-Key (oder `NICHT_REMAPPT`); (b) JS-Tabellen-Icons sind Registry-Keys; (c) jedes
+      `material`-Ziel nicht leer/ohne Leerzeichen; (d) `iconset.material.css` deckungsgleich mit
+      `renderIconsetCss()` (Drift-Schutz).
+- [x] `frontend/CHANGELOG.md` (77) + Review unten.
+
+### Verifikationskriterien (Icon-Swap-Prep)
+
+- [x] `bun run typecheck` / `bun run lint` / `bun run lint:css` 0 Fehler (lint:css 90 Warnungen,
+      unter Ratsche 93, keine aus den neuen Dateien).
+- [x] `bun run icons:gen` erzeugt die Datei ohne weiteren Git-Diff (Registry und CSS synchron).
+- [x] `bun test --isolate` 2100 pass / 0 fail (davon `test/iconRegistry.test.ts` 4/4).
+- [x] `bun run build` erfolgreich; `dist/assets/index-*.css` enthaelt **keine** Remap-Regeln
+      (`grep` auf `--db-icon:"expand_more"` / `data-icon="arrow_down"` = 0) -- die neue CSS wird
+      nicht importiert.
+- [ ] Sichtpruefung Startseite + je ein Feature-Dialog: Icons unveraendert (DB-Satz aktiv) --
+      offen (Container ohne `ASSET_*`, DB-Icon-Schrift hier ohnehin nicht dekodierbar).
+
+### Review (Icon-Swap-Prep)
+
+Reine Vorbereitung, kein Verhaltens- oder Bundle-Unterschied. Der Render-Weg bleibt
+`data-icon` + Icon-Font-Ligatur; neu ist nur der vom Design-System bereits vorgesehene
+`--db-icon`-Override als generierte, noch nicht importierte Remap-Schicht. Aufrufstellen
+(~160 in ~44 Dateien) unangetastet -- der Swap ist dadurch ein Diff in 3 Dateien + ein
+Font-Bundle statt einer Sweep-Migration.
+
+Bewusste Grenzen: (1) core-components-interne Icon-Namen nur im Runbook, nicht im Generator
+(so abgestimmt). (2) Einige Material-Zuordnungen sind Naeherungen -- als `hinweis` in der
+Registry und als `/* … */` in der generierten CSS markiert, beim echten Swap zu sichten.
+(3) `iconRegistry.ts` haelt DB->Material, `dbIcons.ts` weiter Material->DB (alte
+Vergleichsseite) -- doppelte Pflege, aber `dbIcons.ts` ist nur noch Referenz.
+
+Der Container hat keine `ASSET_*`-Secrets, die DB-Icon-Schrift ist unentschluesselt; die
+visuelle Gegenprobe (Icons unveraendert) muss in einer Umgebung mit Assets erfolgen.
+
+---
+
+## PDF-Summenzeilen: leere Zelle statt 0 bei fehlender Zulagenart (2026-09-09)
+
+User-Vorgabe: Wenn eine Spalte keine Zulagen hat (kein Code / Zulagenart), sollen die
+Summenzeilen keine Zahl zeigen -> `undefined` / leere Zelle.
+
+- [x] `summeGeldwertGruppe()` / `summeBereinigtGruppe()` -> `number | undefined`; gemeinsame
+      Hilfsfunktion `zulagenEintraegeGruppe()`; leere Eintragsliste -> `undefined`.
+- [x] `wert.ts` `berechneAggregation()` + `sonderZeileZelleWert()`: `code === undefined`
+      (unbelegter dynamischer Platz) -> leere Zelle; `!gruppe` bleibt bei `0`.
+- [x] Tests angepasst/erweitert (leere-Zelle- vs. 0-Fälle getrennt).
+
+### Verifikation
+
+- `bunx tsc --noEmit` sauber, `bun run lint` 0 Fehler (21 vorbestehende Warnungen).
+- `bun test test/infrastructure/pdf/ --isolate` 395/395.
+- `bun run build` grün.
+- Vorbestehende ~9 Testfehler (Bereitschaft*/AdminLogBrowser) sind fremde WIP im Submodul,
+  ohne meine Änderung ebenfalls rot (per gezieltem `git stash` der 4 Dateien geprüft).
