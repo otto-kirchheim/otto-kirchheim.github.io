@@ -6,6 +6,9 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
   const btnElement = document.querySelector<HTMLButtonElement>(`#${btn}`);
   if (!btnElement) return;
 
+  // Ladebreiten-Fixierung aus `setLoading` wieder loesen.
+  btnElement.style.minInlineSize = '';
+
   const badge = btnElement.querySelector<HTMLSpanElement>('.autosave-badge');
 
   const originalContent = takeOriginalButtonContent(btn);

@@ -2,6 +2,38 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-09 (72)
+
+### fix (Speichern-Knopf schrumpft und "springt" waehrend des Ladens)
+
+- Die DB-Knoepfe sind `inline-size: fit-content`. Waehrend `setLoading()` den Inhalt durch den
+  reinen Spinner ersetzt, schrumpfte der Knopf von ~106px auf ~37px und sass linksbuendig als
+  kleiner leerer Kasten in seiner Rasterspalte -- besonders auffaellig beim ersten (langsamen)
+  Speichern nach dem Laden, bei dem die Server-URL noch nicht ermittelt ist. `setLoading()`
+  friert jetzt `min-inline-size` auf die Ausgangsbreite ein, `clearLoading()` loest sie wieder.
+  Der Spinner wird ueber `justify-content: center` (db-button) mittig gehalten. Gilt fuer alle
+  Lade-Knoepfe (Login, PDF, Modal-Submits). Browser-verifiziert: Knopf bleibt 106px, kein
+  Versatz. Test `#setLoading + #clearLoading` unveraendert gruen.
+- Hinweis (nicht behoben): der erste Speichervorgang dauert laenger, weil `FetchRetry` erst die
+  erreichbare Server-URL ermittelt (mehrere Endpunkte mit Timeout). Ab dem zweiten Aufruf ist
+  die URL gecacht.
+
+## 2026-09-09 (71)
+
+### fix (DB-UX: AutoSave-Zustandspunkt -- Symbol angeschnitten)
+
+- Der Punkt (`db-badge` ohne `data-size`) ist als reiner Zustandspunkt gedacht. Das Glyph
+  (`.db-icon::before`) bekam aus `.db-badge .db-icon` trotzdem die 2xs-Body-Groesse
+  (~12px = `0.875rem` bei `data-density="functional"`, 14px-Basis) und wurde von
+  `overflow: clip` am `::before` beschnitten -- das Symbol sah abgeschnitten/kaputt aus.
+- Die Ursache lag daran, dass `--db-icon-font-size` am Badge (Elternknoten) gesetzt war;
+  die DB-Regel setzt die Variable direkt am `.db-icon` und schlaegt damit die Vererbung.
+  Fix: `--db-icon-font-size: 0.6875rem` jetzt am `.autosave-badge > .db-icon` selbst,
+  plus `overflow: visible` am `::before`. Das Symbol (~9,6px) passt jetzt mit Rand in den
+  12px-Punkt. Browser-verifiziert: `cloud`, `cloud_upload`, `check_circle`,
+  `exclamation_mark_circle`, `exclamation_mark_triangle`, `wifi_disabled` -- alle vollstaendig
+  sichtbar. `lint:css` 90/93.
+
 ## 2026-09-09 (70)
 
 ### fix (DB-UX: Drawer schneidet linksbuendigen Text ab bei ~500px Bildschirmbreite)
@@ -89,11 +121,8 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   Fehler: (1) `initAutoSaveIndicator()` sprang bei `badgeElements.size > 0` raus -- aber die
   Feature-Tabs rufen `registerAutoSaveButton()` in `LOGIN_INIT_SEQUENCE` VOR
   `ui:autoSaveIndicator` und fuellen die Map, ohne den Status-Listener zu registrieren ->
-  die Badges wurden nie aktualisiert. Jetzt Guard auf `if (unsubscribe)`. (2) Die
-  `db-badge`-Klasse setzt `--db-icon-font-size` nicht -> das Status-Icon (Glyph im `::before`)
-  blieb auf 0, der Punkt wirkte leer/abgeschnitten. `.autosave-badge` setzt jetzt die
-  Icon-Groesse (`--db-sizing-xs`) und einen hellen Ring (`box-shadow`), der den Punkt vom
-  Knopf trennt. Browser-verifiziert (5 Semantiken, Icon sichtbar, Ecke sauber abgesetzt).
+  die Badges wurden nie aktualisiert. Jetzt Guard auf `if (unsubscribe)`. (2) Das Symbol war
+  im Punkt zu gross und angeschnitten -> siehe Eintrag (71).
 - **Admin-Benutzerliste-Filter: Beschriftungen einheitlich ueber dem Feld.** "Name" und "OE"
   hatten die `DbFeld`-Beschriftung versteckt und ein zweites `<label>` NACH dem Feld gerendert
   (Beschriftung unter dem Feld, dazu ein doppeltes `for`-Label). "Rolle" nutzte die eigene

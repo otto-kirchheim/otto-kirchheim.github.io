@@ -226,16 +226,18 @@ th.customtable-sortable:hover > span.customtableIcon {
 /* ─── AutoSave-Zustandspunkt auf Speichern-Buttons ─── */
 
 /* `position: absolute`, die Eck-Verankerung (`transform: translate(50%, -50%)` an der
-   oberen rechten Ecke) und die Semantik-Farbe kommen aus der `db-badge`-Klasse. Zwei
+   oberen rechten Ecke) und die Semantik-Farbe kommen aus der `db-badge`-Klasse. Drei
    Luecken schliesst diese Regel:
-   - `db-badge` setzt `--db-icon-font-size` nicht -> das Status-Icon (`.db-icon`, Glyph im
-     `::before`) blieb auf 0 und damit unsichtbar; der Punkt sah leer/fehlerhaft aus.
+   - Ohne `data-size` ist `db-badge` ein reiner Punkt; das Glyph (`.db-icon::before`)
+     bekommt aus `.db-badge .db-icon` die 2xs-Body-Groesse (~12 px). Das ist groesser als
+     der Punkt -> `overflow: clip` am `::before` schnitt das Symbol an. Die
+     `--db-icon-font-size` MUSS am `.db-icon` selbst stehen (nicht am Badge), sonst
+     gewinnt die DB-Regel auf dem Kind gegen die geerbte Variable.
+   - `fit-content` + `min-inline-size` machten den Punkt oval -> feste quadratische Groesse.
    - Halb aus einem eckigen Knopf ragend ohne Absetzung wirkte er "abgeschnitten" -> ein
      heller Ring (`box-shadow`) trennt ihn sauber vom Knopfgrund.
    `customtable.css` ist unlayered -> schlaegt `@layer db-ux` ohne `!important`. */
 .autosave-badge {
-  --db-icon-font-size: 0.75rem;
-
   inline-size: var(--db-sizing-xs);
   block-size: var(--db-sizing-xs);
   min-inline-size: 0;
@@ -247,6 +249,16 @@ th.customtable-sortable:hover > span.customtableIcon {
   box-shadow: 0 0 0 0.125rem var(--db-adaptive-bg-basic-level-1-default);
   z-index: 1;
   pointer-events: none;
+}
+
+.autosave-badge > .db-icon {
+  --db-icon-font-size: 0.6875rem;
+}
+
+.autosave-badge > .db-icon::before {
+  /* DB begrenzt das Glyph auf die Icon-Box und schneidet Ueberstand ab; hier passt
+     das Symbol in den Punkt, der Rand darf sichtbar bleiben. */
+  overflow: visible;
 }
 
 @keyframes autosave-pulse {

@@ -8,6 +8,15 @@ export default function setLoading(btn: string): void {
 
   rememberOriginalButtonContent(btn, btnElement);
 
+  // Die DB-Knoepfe sind `inline-size: fit-content` -- ohne Fixierung schrumpft der Knopf
+  // waehrend des Ladens auf die Breite des Spinners (~37px statt ~106px) und "springt".
+  // `min-inline-size` haelt die Ausgangsbreite; `justify-content: center` (db-button)
+  // zentriert den Spinner darin.
+  const breite = btnElement.getBoundingClientRect().width;
+  if (breite > 0 && !btnElement.style.minInlineSize) {
+    btnElement.style.minInlineSize = `${Math.ceil(breite)}px`;
+  }
+
   const spinner = document.createElement('span');
   spinner.className = 'laedt';
   spinner.dataset['size'] = 'small';
