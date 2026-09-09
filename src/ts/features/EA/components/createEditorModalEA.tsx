@@ -3,7 +3,15 @@ import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 import type { Column } from '@/infrastructure/table/CustomTable';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
+import {
+  MyFormModal,
+  MyInput,
+  MyModalBody,
+  MySelect,
+  beiModalSchliessen,
+  schliesseModal,
+  showModal,
+} from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import { default as applySelectOptions } from '../../Neben/utils/applySelectOptions';
 import type { CustomHTMLDivElement, IDatenEA, IDatenEWT } from '@/types';
@@ -181,7 +189,7 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
     // während dieses Modal noch offen ist) — Dauer muss dann neu berechnet werden.
     if (select.value) applyEwtSelection(form, select.value);
   });
-  modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
+  beiModalSchliessen(unsubscribeEwtSync);
 
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {

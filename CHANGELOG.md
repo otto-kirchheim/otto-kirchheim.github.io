@@ -59,6 +59,15 @@ Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
   `margin-inline: 0` + `inline-size: 100%` + `grid-column: 1 / -1`.
   Browser-verifiziert (Mobil 420px): Schalter kippt Row-State + `localStorage.dataE`,
   Trenner 406px breit / 1px hoch.
+- **Dialog-Sync-Hinweise (EA / Neben / Bereitschaftseinsatz): Listener-Leak behoben.** Die
+  Add-/Editor-Dialoge registrieren einen `onEvent('data:changed')`-Listener, der den Hinweis
+  "noch nicht gespeicherter Zeitraum/EWT-Eintrag" bei Sync ausblendet. Aufgeraeumt wurde er
+  ueber `modal.addEventListener('hide.bs.modal', ...)` -- ein Bootstrap-Event, das seit Phase H
+  nie mehr feuert, also lief pro Dialog-Oeffnung ein Listener auf und blieb. Neu:
+  `beiModalSchliessen(cleanup)` (`components/showModal.tsx`) beobachtet `#modal` per
+  `MutationObserver` und ruft `cleanup` genau einmal, wenn der Dialog-Inhalt entfernt wird
+  (Schliessen oder direktes Neu-Oeffnen). 6 Dialoge umgestellt. Browser-verifiziert: Hinweis
+  blendet nach BZ-Sync aus, kein Listener-Aufbau ueber Oeffnen/Schliessen/Neu-Oeffnen.
 
 ## 2026-09-08 (68)
 

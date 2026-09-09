@@ -35,6 +35,7 @@ const {
 
 vi.mock('@/components', () => ({
   schliesseModal: hideMock,
+  beiModalSchliessen: vi.fn(),
   showModal: showModalMock,
   MyFormModal: huelleMock,
   MyModalBody: huelleMock,

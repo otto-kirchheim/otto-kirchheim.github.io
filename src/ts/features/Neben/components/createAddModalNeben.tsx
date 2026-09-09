@@ -2,9 +2,9 @@ import { createRef, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
-import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { onEvent } from '@/core';
 import { addNebengeldTag, applySelectOptions, getConfiguredNebenZulagen, getNebengeldDaten } from '../utils';
@@ -101,7 +101,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
 
   const configuredZulagen = getConfiguredNebenZulagen();
 
-  const modal: CustomHTMLDivElement<IDatenN> = showModal(
+  showModal(
     <MyFormModal
       myRef={ref}
       title="Neuen Nebenbezug eingeben"
@@ -161,7 +161,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
     const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag' });
     applySelectOptions(select, getTagOptions(freshDataE));
   });
-  modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
+  beiModalSchliessen(unsubscribeEwtSync);
 
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {

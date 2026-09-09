@@ -58,6 +58,33 @@ export function schliesseModal(): void {
   zuruecksetzen(modal);
 }
 
+/**
+ * Ruft `aufraeumen` genau einmal auf, sobald der aktuell offene Dialog-Inhalt aus `#modal`
+ * entfernt wird -- durch `schliesseModal`/`unmount` oder durch das direkte Neu-Oeffnen eines
+ * anderen Dialogs im selben Container.
+ *
+ * Ersatz fuer das tote `modal.addEventListener('hide.bs.modal', ...)`: `hide.bs.modal` ist ein
+ * Bootstrap-Plugin-Event und feuert seit Phase H (Bootstrap raus) nie mehr. Ohne diese Bruecke
+ * leaken pro Dialog-Oeffnung registrierte `onEvent`-Listener (Sync-Hinweise in den EA-/Neben-/
+ * Bereitschaftseinsatz-Dialogen).
+ *
+ * Beobachtet wird der konkrete Inhaltsknoten (der `DBDrawer`-Wrapper), nicht nur
+ * `childElementCount`: Beim direkten Neu-Oeffnen ersetzt `showModal` den alten Knoten synchron
+ * durch einen neuen -- die Pruefung `!inhalt.isConnected` erkennt das trotzdem.
+ */
+export function beiModalSchliessen(aufraeumen: () => void): void {
+  const modal = document.querySelector<HTMLElement>('#modal');
+  const inhalt = modal?.firstElementChild;
+  if (!modal || !inhalt) return;
+
+  const beobachter = new MutationObserver(() => {
+    if (inhalt.isConnected) return;
+    beobachter.disconnect();
+    aufraeumen();
+  });
+  beobachter.observe(modal, { childList: true });
+}
+
 export default function showModal<T extends CustomTableTypes>(children: ReactNode): CustomHTMLDivElement<T> {
   const modal = document.querySelector<CustomHTMLDivElement<T>>('#modal');
   if (!modal) throw new Error('Element nicht gefunden');

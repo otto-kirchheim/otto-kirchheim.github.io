@@ -27,6 +27,7 @@ const {
 
 vi.mock('@/components', () => ({
   showModal: showModalMock,
+  beiModalSchliessen: vi.fn(),
   // Echtes <form ref={...}> statt Stub-Div: der SUT liest Felder ueber `ref.current.querySelector(...)`,
   // die Kinder muessen also tatsaechlich im per Ref referenzierten Element landen.
   MyFormModal: (props: { myRef?: unknown; children?: ReactNode }) => h('form', { ref: props.myRef }, props.children),

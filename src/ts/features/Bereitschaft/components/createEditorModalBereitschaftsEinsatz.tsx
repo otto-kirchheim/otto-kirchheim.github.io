@@ -3,7 +3,15 @@ import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
+import {
+  MyFormModal,
+  MyInput,
+  MyModalBody,
+  MySelect,
+  beiModalSchliessen,
+  schliesseModal,
+  showModal,
+} from '@/components';
 import type { CustomHTMLDivElement, IDatenBE } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -168,7 +176,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
     if (!el) return;
     el.style.display = hasUnsyncedBz() ? '' : 'none';
   });
-  modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
+  beiModalSchliessen(unsubscribeBzSyncHint);
 
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {

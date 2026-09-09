@@ -12,7 +12,7 @@ import MySelect from './MySelect';
 import MyShowElement from './MyShowElement';
 import MyShowFooter from './MyShowFooter';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
-import showModal, { oeffneDrawer, schliesseModal } from './showModal';
+import showModal, { beiModalSchliessen, oeffneDrawer, schliesseModal } from './showModal';
 
 export {
   DbAuswahl,
@@ -31,6 +31,7 @@ export {
   MyShowFooter,
   PasswordStrengthMeter,
   showModal,
+  beiModalSchliessen,
   oeffneDrawer,
   schliesseModal,
 };

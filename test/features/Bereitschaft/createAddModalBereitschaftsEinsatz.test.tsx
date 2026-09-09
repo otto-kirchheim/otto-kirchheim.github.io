@@ -23,6 +23,7 @@ type SelectProps = { id: string; options: Array<{ value?: string; text: string }
 
 vi.mock('@/components', () => ({
   schliesseModal: hideMock,
+  beiModalSchliessen: vi.fn(),
   showModal: showModalMock,
   MyFormModal: (props: { children?: ReactNode }) => h('div', { className: 'modal-stub' }, props.children),
   MyModalBody: (props: { children?: ReactNode }) => h('div', { className: 'modal-body-stub' }, props.children),

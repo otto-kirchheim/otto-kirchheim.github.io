@@ -1,6 +1,15 @@
 import { createRef, type SubmitEvent } from 'react';
 
-import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
+import {
+  MyCheckbox,
+  MyFormModal,
+  MyInput,
+  MyModalBody,
+  MySelect,
+  beiModalSchliessen,
+  schliesseModal,
+  showModal,
+} from '@/components';
 import type { CustomHTMLDivElement, CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag';
@@ -122,7 +131,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
     if (!el) return;
     el.style.display = hasUnsyncedBz() ? '' : 'none';
   });
-  modal.addEventListener('hide.bs.modal', unsubscribeBzSyncHint, { once: true });
+  beiModalSchliessen(unsubscribeBzSyncHint);
 
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {

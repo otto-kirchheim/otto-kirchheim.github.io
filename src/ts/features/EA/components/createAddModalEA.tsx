@@ -1,7 +1,7 @@
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import { MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import type { IDatenEA, IDatenEWT, IVorgabenU } from '@/types';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import Storage from '@/infrastructure/storage/Storage';
@@ -183,7 +183,7 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     applySelectOptions(select, buildEwtOptions(freshDataE, getUsedEwtRefs(), select.value));
     if (select.value) applyEwtSelection(freshDataE, select.value);
   });
-  modal.addEventListener('hide.bs.modal', unsubscribeEwtSync, { once: true });
+  beiModalSchliessen(unsubscribeEwtSync);
 
   /** Wählt nach dem Speichern den nächsten noch nicht verknüpften EWT-Eintrag und füllt Tag/Dauer neu — ermöglicht durchgängiges Erfassen ohne Modal-Neustart. */
   function advanceToNextEwt(): void {

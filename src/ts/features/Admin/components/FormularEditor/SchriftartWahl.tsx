@@ -121,12 +121,7 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
       <div className="schriftwahl-raster small">
         <label className="schriftwahl-zeile" title="Grundschrift für den gesamten Fließtext">
           <span className="text-muted">Schrift</span>
-          <DbAuswahl
-            beschriftung="Grundschrift"
-            dicht
-            value={basis}
-            onChange={e => setzeBasis(e.target.value)}
-          >
+          <DbAuswahl beschriftung="Grundschrift" dicht value={basis} onChange={e => setzeBasis(e.target.value)}>
             {familienFuer('normal', basis).map(o => (
               <option key={o.wert} value={o.wert}>
                 {o.label}

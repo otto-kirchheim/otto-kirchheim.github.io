@@ -242,9 +242,18 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
 - Gates: typecheck 0, lint 0/21, lint:css 0/90, test 2084/0/2, build gruen (966 Module).
 - [ ] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
       `DbFeld`/`DbAuswahl` unterschiedlich konfiguriert -> Beschriftungsposition vereinheitlichen.
-- [ ] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"
-      verschwindet nicht** (`createAddModalBereitschaftsEinsatz.tsx:45`). Prüfen, ob die
-      Sichtbarkeit an einen Zustand gebunden ist, der nicht mehr aktualisiert wird.
+- [x] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"
+      verschwindet nicht.** Ursache: der `onEvent('data:changed')`-Listener, der den Hinweis
+      bei Sync ausblendet, wurde ueber `modal.addEventListener('hide.bs.modal', unsub)`
+      aufgeraeumt -- `hide.bs.modal` ist ein Bootstrap-Event und feuert seit Phase H nie mehr.
+      Pro Dialog-Oeffnung lief also ein Listener auf; die geleakten Listener aus frueheren
+      Oeffnungen zeigen auf detachte `bzSyncHintRef`-Knoten und stoerten die Sichtbarkeits-
+      logik. Neu: `beiModalSchliessen(cleanup)` (`components/showModal.tsx`, MutationObserver
+      auf `#modal`), in **6** Dialogen (EA/Neben/Bereitschaftseinsatz je Add + Editor).
+      Browser-verifiziert (`scratchpad/be-hint.mjs`): Hinweis blendet nach BZ-Sync +
+      `data:changed{BZ}` aus (`display:none`); Oeffnen/Schliessen/Neu-Oeffnen ohne
+      Listener-Aufbau (genau 1 Hinweis-Knoten, genau 1 Style-Write). Test-Mocks fuer
+      `@/components` in 3 Dateien um `beiModalSchliessen` ergaenzt. Suite 2084/0/2.
 - [ ] **AutoSave-Badge im echten Modal wirkt "fehlerhaft".** Im isolierten Test (5 Status,
       Hell+Dunkel) rendert `db-badge` sauber (rund, farbig, Icon). Im Modal evtl.
       Kontrast (neutral/grau im Dunkelmodus für `pending`) oder Clipping durch den Knopf-
