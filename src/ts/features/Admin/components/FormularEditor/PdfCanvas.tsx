@@ -458,6 +458,12 @@ export function PdfCanvas({
     });
   }
 
+  // Einmal berechnen statt zweimal aus dem JSX aufrufen. Liest `viewportRef` -- bewusst:
+  // der Wert entsteht nur bei aktivem Ziehen, der Viewport ist dann aus dem Mount-Effect
+  // laengst gesetzt und das pdf.js-Objekt gehoert nicht in State.
+  // eslint-disable-next-line react-hooks/refs
+  const liveText = liveAnzeige();
+
   return (
     <div>
       <div className="d-flex align-items-center flex-wrap gap-2 mb-1 small">
@@ -515,9 +521,9 @@ export function PdfCanvas({
       {scharfGeschaltet && (
         <div className="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
           <span>{ziehHinweis()}</span>
-          {liveAnzeige() && (
+          {liveText && (
             <span className="db-tag font-monospace" data-semantic="informational" data-emphasis="strong">
-              {liveAnzeige()}
+              {liveText}
             </span>
           )}
         </div>

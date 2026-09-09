@@ -241,7 +241,7 @@ export default function createAddModalBereitschaftsZeit(): void {
             <MyCheckbox
               className="bereitschaft"
               id="spaet"
-              checked={vorgabenB[auswahl].schichten?.includes('spaet') ?? false}
+              defaultChecked={vorgabenB[auswahl].schichten?.includes('spaet') ?? false}
             >
               Spätschicht
             </MyCheckbox>
@@ -273,7 +273,7 @@ export default function createAddModalBereitschaftsZeit(): void {
             <MyCheckbox
               className="bereitschaft"
               id="sonder"
-              checked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
+              defaultChecked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
               changeHandler={() => {
                 const sonderChecked = modal.querySelector<HTMLInputElement>('#sonder')?.checked ?? false;
                 const sonderContainer = modal.querySelector<HTMLElement>('#sonderschicht');
@@ -310,7 +310,7 @@ export default function createAddModalBereitschaftsZeit(): void {
           <MyCheckbox
             className="bereitschaft"
             id="nacht"
-            checked={
+            defaultChecked={
               vorgabenB[auswahl].schichten ? vorgabenB[auswahl].schichten!.includes('nacht') : vorgabenB[auswahl].nacht
             }
             changeHandler={() => {

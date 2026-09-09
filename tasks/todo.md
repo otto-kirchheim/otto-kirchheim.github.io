@@ -1,3 +1,305 @@
+# Aktueller Plan: DB-UX-Migration -- Phase I (Cleanup, Token-Finalisierung, Doku) - 2026-09-08
+
+## Ausgangslage
+
+Gesamtplan `tasks/plan-db-ux-migration.md`, Phase I. Phase H ist abgeschlossen und gepusht
+(`feat/db-ux` @ 5a8b4dd). Baseline heute verifiziert: `typecheck` 0, `lint` 0 Fehler /
+28 Alt-Warnungen, `lint:css` 0 Fehler / 93 Warnungen, `test` 2084 pass / 0 fail / 2 skip
+(1 sporadischer Flake im Erstlauf, im Rerun gruen), `build` gruen (Precache 59 / 4,5 MB).
+
+Design-Grundlage neu abgeglichen mit dem DB-Marketingportal ("neues Design"):
+Prinzipien, Markenfarben, Logo, Layout, Icons, Schwelle -- Kernwerte in der Referenz-Memory
+`db-brand-farben-neues-design`. Wichtigste harte Regel fuer Phase I: **DB Red (`#EC0016`)
+nie als Hintergrundflaeche** -> PWA-`theme_color` wird Weiss/Cold Black, nicht rot.
+`#EC0016` deckt sich mit `@db-ux/db-theme` 6.2 `--db-brand-origin-base` und ist der
+Barrierefreiheits-Rotton fuer UI.
+
+## Aufgaben
+
+- [x] **I.1 btn-Residuen sauber ziehen.** `customButton`-API nimmt jetzt `look?: DbButtonLook`
+      (DB-Semantik) statt `classes: string[]`. Neu: `erzeugeDbButtonAusLook` in `dbButton.ts`;
+      `erzeugeDbButton(string[])` bleibt als duenner Wrapper fuer die `customTableRender`-Defaults
+      (Add/Delete/Undo). Call-Sites `EwtTab.tsx` + `generateEingabeTabelleEinstellungenVorgabenB.ts`
+      auf `look: { variant: 'filled' }`; `CustomTable.test.ts` mitgezogen. tsc/lint/betroffene
+      Tests gruen.
+- [x] **I.2 Layer-Modell.** ENTSCHEIDUNG (User delegiert): `customtable.css` bleibt bewusst
+      unlayered -- Verschieben nach `@layer app` wuerde seine `!important`-Regeln hinter
+      `@layer db-ux` fallen lassen (bei `!important` kehrt sich die Layer-Rangfolge um) und
+      der unlayered `styles.scss`-Hover wuerde die Fehlerzeilen-Warnfarbe ueberschreiben.
+      Das 3-Stufen-Modell (`db-ux` < `app` < unlayered) ist jetzt in `layers.scss`
+      ausfuehrlich als bewusste Entscheidung dokumentiert. Kein Code-Umbau.
+- [x] **I.3 Marken-Logos aus dem Build halten.** PostCSS-Plugin `dropDbSubBrandLogos` in
+      `vite.base-config.ts` (`css.postcss.plugins`) entfernt alle `[data-logo=db-*]`-Regeln,
+      bevor Vite die `url()` aufloest. Ergebnis: `dist/assets/logo-*.svg` 13 -> 0
+      (Default-Logo wird jetzt als data-URI inlined), Precache 59 -> 47 Eintraege,
+      4526 -> 4436 KiB. `light-dark(` weiter 870 (esbuild-Minifier intakt). Build gruen.
+- [ ] **I.4 Ungenutzte Icon-/Font-Gewichte.** Precache-globIgnores stehen schon (italic,
+      black, digital, head, db-*.woff2). Gegenpruefen welche woff2 real im Build sind und ob
+      weitere Schnitte raus koennen; Build-seitig (nicht nur Precache) ungenutzte Schnitte
+      ausschliessen wenn moeglich.
+- [x] **I.5 PWA-Farben.** `vite.config.ts` `theme_color` + `background_color` = `#ffffff`.
+      `src/index.html`: eine `<meta name="theme-color">` -> zwei mediengescopte
+      (`light` = `#ffffff`, `dark` = `#16181b`, der Cold-Black-Ton des DB-Themes). DB erlaubt
+      kein rotes Fill -> Browserleiste folgt dem App-Grund. Manifest im Build verifiziert.
+- [ ] **I.6 Bundle-Budget** gegen die Spike-Zahlen (React-Runtime ~60 KB gz, DB-UX-CSS
+      ~84 KB gz) im Bundle-Report/CHANGELOG festhalten; `globPatterns` final pruefen.
+- [x] **I.7 data-density / data-color final.** User-Freigabe: `functional`, kein globales
+      `data-color`. `src/index.html` `<html data-density="regular">` -> `"functional"`.
+      (Global `data-color="red"` haette die ganze Flaeche/Text rot gefaerbt -> DB-Regelbruch;
+      Rot bleibt Akzent ueber `--db-brand-*`.) Kein Test asserted `regular`.
+- [ ] **I.8 Dark-Mode-QA end-to-end.** Alle Tabs + je ein Modal, Hell/Dunkel/Auto, Mobile,
+      Deep-Link. `verify`-Skill + manuelle Sichtpruefung.
+- [ ] **I.9 ESLint-Config aufraeumen + 28 Warnungen.** React-19-`react-hooks/refs`-Hinweise
+      (Preact-Muster: `ref.current = x` im Render) in den Admin-/Einstellungen-Komponenten
+      sauber auf `useEffect`/`useLatestRef` ziehen. `@db-ux/core-eslint-plugin` /
+      `@db-ux/core-stylelint` optional pruefen.
+- [ ] **I.10 `@db-ux/agent-cli`** final neu ausfuehren, `.github/copilot-instructions.md`
+      committen (Token liegt evtl. ohne `workflows`-Permission -> nicht an `.github/workflows/`
+      pushen, aber `copilot-instructions.md` ist ok).
+- [ ] **I.11 Doku (Done-Kriterium).** `frontend/CLAUDE.md`, `.claude/skills/architektur`,
+      `.claude/skills/verify`, `.claude/skills/bootstrap` (entfernen/umschreiben), Root
+      `../CLAUDE.md` + `../WORKSPACE.md` + `frontend/.claude/README.md`,
+      `frontend/CHANGELOG.md` (69), `graphify update .`.
+- [x] **I.12 Gitlink-Bump Frontend im Parent -- verifiziert, in Sync.** Parent-HEAD-Gitlink
+      fuer `frontend` = `5a8b4dd` = aktueller `frontend`-HEAD. (`b2903e2` aus der Uebergabe
+      existiert in diesem Repo nicht -- vermutlich Tippfehler; der Fakt "Gitlink zeigt aufs
+      richtige Commit" stimmt.) Nach dem naechsten Frontend-Commit erneut noetig.
+- [x] **I.10 `@db-ux/agent-cli` + `.github/copilot-instructions.md`.** `@db-ux/agent-cli@^5.3.0`
+      als devDependency (bunx erzeugt ephemere `/tmp/bunx-...`-Pfade in der Ausgabe -> nicht
+      committbar). `.amazonq/rules` bewusst NICHT erzeugt (Projekt nutzt GitHub Copilot, nicht
+      Amazon Q; agent-cli erzeugt sonst beides). `.github/copilot-instructions.md` (222 Z.,
+      stabile `node_modules/@db-ux/...`-Pfade) neu generiert -- committbar.
+- [x] **I.13 Nav-Elemente vereinheitlicht (User-Fund).** Einstellungen + Admin von
+      `<button role="tab">` auf `<a role="tab" href="#Einstellungen|#Admin" data-tab-target>`
+      (Icon-/Text-Spans unveraendert) -> alle Haupttabs sind jetzt gleichartige, per
+      Rechts-/Mittelklick deeplinkbare Links. Browser-verifiziert: Klick setzt Hash + aktiviert
+      Panel, `tagName === 'A'`. Verbleibende Buttons sind alle begruendet: `#bd-theme`
+      (Popup-Trigger) und die Admin-Unternavigation (`<button role="tab">` fuer Nicht-URL-
+      Sub-Tabs = korrektes ARIA-APG-Muster) -- die `styles.scss`-Regel
+      `.db-navigation-item > button:not(.db-navigation-item-expand-button)` bleibt fuer die
+      Admin-Unternavigation noetig.
+- [ ] **I.14 CLAUDE.md-Drift.** `frontend/CLAUDE.md` "Starten" nennt `bun run start` /
+      `bun run preview` (Port 8082) -- Scripts heissen `dev` / `dev:local`, `preview` schreibt
+      nach `../public/public`. Bei I.11 mitziehen.
+
+## I.15 Sichtkorrekturen (laufende visuelle QA mit dem User, 2026-09-08)
+
+- [x] **I.15a Tabellen-Fussknoepfe ohne Abstand.** `customTableRender.renderFooter` gab dem
+      `divFooter` nur `justify-content-sm-evenly` -- das Element war aber `display:block`,
+      also griff weder `justify-content` noch `gap`. Jetzt
+      `d-flex flex-wrap gap-2 justify-content-center justify-content-sm-evenly`.
+- [x] **I.15b Text-Markierung beim Ziehen** im `VorgabenBWeekRangeEditor` (Wochen-Chips):
+      `userSelect: 'none'` am `.d-grid`-Container.
+- [x] **I.15c EWT-Anzeige-Modal `ab/an` bzw. `von/bis`** klebten am Abschnittstitel und
+      standen nicht auf einer Linie mit den Zeitwerten. `createTitle` + getrennte
+      `createShowElement`-Paare -> ein `createZeitBlock` je Abschnitt; Pfeilzeile, Kuerzel und
+      Zeitwerte teilen jetzt EIN CSS-Grid (`.ewt-zeit`, feste Aussenspalten `4.5rem 1fr 4.5rem`)
+      -> Ab-Pfeil / `ab`|`von` / linker Zeitwert stehen senkrecht uebereinander, ebenso rechts.
+      Alte `.icon-ewt*`-Regeln entfernt. Browser-verifiziert (Mobil-Viewport, Anzeige-Modal).
+- [x] **I.15d Fehlende Abschlusslinie / Zeilentrenner der Tabellen.** Ursache: `utilities.scss`
+      erzwingt `.db-table > table { display: table }` (statt DBs Grid), DBs Default aber ist
+      `border-collapse: separate` -- und bei `separate` rendern `border`-Regeln an `<tr>` NICHT.
+      Damit waren DBs `:is(tfoot,tbody) tr { border-block-end }` komplett wirkungslos (keine
+      Zeilentrenner, keine untere Linie). `customtable.css`: `table.customtable {
+      border-collapse: collapse; }` -> DBs Rahmenregeln greifen wie vorgesehen.
+      Browser-verifiziert Hell + Dunkel (EWT-Tabelle mit 4 Zeilen): Zeilentrenner + untere
+      Abschlusslinie da, keine doppelten Rahmen.
+- [x] **I.15e Button-Farben vereinheitlicht** (User-Freigabe: Schema OK). Konvention:
+      Primaer/Bestaetigen = `brand`, destruktiv = `outlined`+`critical` (weniger Gewicht),
+      neutral/schliessen/abbrechen = `filled`, Zeilen-Aktionen = `outlined`.
+      - `customTableRender.renderFooter`: "Alle Zeilen loeschen" `filled`+`critical` ->
+        `outlined`+`critical`; "Neue Zeile" bleibt `brand`.
+      - `MyShowFooter`: "Loeschen" `filled`+`critical` -> `outlined`+`critical` (Test mit).
+      - Zeilen-Edit/Delete/Undo waren schon `outlined` (neutral/critical/warning) -- ok.
+      - `MyEditorFooter` (Submit `brand` / Abbrechen `filled`) -- schon konform.
+- [x] **I.15f Waagerechter Scrollbalken ab 1024px (User-Fund).** Ab `64em` laeuft die
+      Navigation waagerecht; der Design-Auswahl-Flyout (`#bd-theme-menu`, 280px,
+      `position: absolute`, `visibility: hidden`) war an der linken Kante verankert -> klappte
+      nach rechts auf und ragte auch unsichtbar ueber den Viewport -> `scrollWidth` > Breite.
+      Fix: im `@media (min-width: 64em)`-Block `#bd-theme-menu { inset-inline: auto 0; }` ->
+      rechtsbuendig, oeffnet nach links/unten. Browser-verifiziert 1024-1600px: kein Overflow.
+- [x] **I.15g "Alle Zeilen loeschen" bei leerer Tabelle** wurde nicht mehr ausgeblendet:
+      der Empty-State suchte `tfoot .btn-danger` -- die Klasse gibt es seit Phase F nicht mehr
+      (DB-Button traegt `data-variant`). Marker-Klasse `customtable-delete-all` am Knopf,
+      Selektor angepasst. (Latent seit Phase F, vom User-QA aufgedeckt.)
+- [x] **I.15h "Start" als eigener Nav-Eintrag entfernt (User-Fund).** Die Wortmarke
+      (`.db-brand` / `#brand-start-tab`, `data-tab-target="start"`) IST der Start-Schalter --
+      der Listeneintrag war redundant. `#berechnung-tab` (erster immer sichtbarer Eintrag)
+      bekommt `tabindex="0"` fuer den initialen Tastaturfokus der Tabliste; Onboarding-Schluss
+      `springeZu('#start-tab')` -> `'#brand-start-tab'`. Browser-verifiziert: Marke -> `#start`
+      aktiv, kein Overflow.
+- [x] **I.15i Formensprache "von rund zu eckig" (User-Fund, DB "neues Design").** Alle
+      `--db-border-radius-*`-Tokens am `:root` (`styles.scss`, unlayered) auf `0` --
+      Karten, Knoepfe, Felder, Tags, Akkordeon, Drawer, Notifications usw. haben jetzt
+      90-Grad-Ecken. `--db-border-radius-full` bleibt fuer inhaerent runde Elemente (Radio,
+      Switch, Passwort-Staerke-Balken). Deckt sich mit deutschebahn.com. Browser-verifiziert.
+- [x] **I.15j DB-Schwelle -- offizielle Geometrie + Farbe.** User hat die offiziellen Assets
+      (`src/icons/DB_Schwelle*/Screen/…`, SVG+PNG, alle Farbvarianten) ins Repo gelegt.
+      `--schwelle-motiv` = Inline-SVG mit der **exakten S-Varianten-Geometrie** (viewBox
+      1304x240, 11 Balken, Raster 120, Breite 24 -> 104) als Maske; `background-color:
+      #ff002b` (Dynamic Red, exakter Asset-Farbwert). `.schwelle` in `styles.scss`, Hoehe
+      `--db-sizing-regular-md` / ab 48em `-lg`. Platzierung: waagerecht an der Oberkante des
+      `#start`-Panels, `mask ... right center / 66% 100%` -> rechtsbuendig ~2/3, dicke Balken
+      in der oberen rechten Ecke, diagonal gegenueber der Wortmarke, 1x pro Viewport.
+      Browser-verifiziert Hell (rot auf weiss) + Dunkel (rot auf Cold Black -- DB-konforme
+      Sekundaervariante). Nicht ins Bundle gezogen (Maske ist Inline-Data-URI).
+
+      **Optional, falls gewuenscht:** DB zeigt die horizontale Variante meist an der
+      UNTERkante (Balken in die untere rechte Ecke); Oberkante ist hier eine Web-Adaption
+      (Kopfzeile = oberer Rahmen). Alternativ: subtile Hintergrund-Variante (Grau-Balken
+      vollflaechig, Text ueberlagert) -- nie mit der prominenten kombinieren.
+
+## Verifikation
+
+- `bun run release:check` gruen (`typecheck` 0 / `lint` 0 Fehler / `lint:css` 0 Fehler /
+  `test` >= 2084 pass / `build` gruen).
+- `dist/assets/logo-*.svg` = 1 statt 13; Precache-Groesse gesunken; im CHANGELOG belegt.
+- `grep -c 'light-dark(' dist/assets/*.css` weiterhin > 800 (esbuild-Minifier, Phase-B-Falle).
+- `verify`-Skill: Vollpfad Hell/Dunkel/Auto, Mobile, Deep-Link `#EWT`, 0 Konsolenfehler.
+- PWA: `theme_color`/`background_color`/`<meta>` = DB-Werte; kein schwarzes Splash.
+
+## Review (Zwischenstand 2026-09-08, Ende Session 2)
+
+**Erledigt & verifiziert:** I.1, I.2, I.3, I.5, I.7, I.10, I.12, I.13, I.14, I.15a-j
+(j = erste Version), I.15d. Doku (I.11) teilweise: `CHANGELOG.md` (69),
+`frontend/CLAUDE.md` (Scripts/Styling), `.claude/skills/verify`, `graphify update .`.
+
+Checkpoint: `typecheck` 0 · `lint` 0/28 · `lint:css` 0/92 · `test` 2084/0/2 · `build` gruen ·
+`light-dark(` 870 · Precache 47 / 4438 KiB.
+
+QA-Sweep Hell/Dunkel **Desktop + Mobile**: keine Regressionen aus eckig / functional /
+Schwelle / Button-Farben / `border-collapse`. Konsolenfehler nur backend-bedingt.
+Confirm-Dialog-"OK" bleibt bewusst `filled`+`critical` (Primaeraktion des Dialogs).
+
+**Feinschliff / mit User:** I.15j (Schwelle: Wachstum/Position/Groesse, evtl. offizielles SVG).
+
+**I.9 teilweise:** 28 -> 21 ESLint-Warnungen. Erledigt: 2 verwaiste `eslint-disable`
+(`DbFeld`), `ArbeitszeiteingabePanel` (latest-ref jetzt im Effect), `OeLevelBoxes`
+(`useRef` -> `useState`, React-Muster "State beim Prop-Wechsel anpassen"), `PdfCanvas`
+(`liveAnzeige` einmal berechnet, scoped `eslint-disable` mit Begruendung -- pdf.js-Viewport
+gehoert nicht in State). Tests: OeLevelBoxes 23/0, betroffene 77/0, Suite 2084/0.
+**Rest (21):** ~13 "setState synchron im Effect", ~7 `exhaustive-deps` -- nuancierte
+Faelle in komplexen Admin-Komponenten, seit Phase A bewusst zurueckgestellt; niedriger
+Nutzen (Warnungen, kein CI-Fehler) vs. echtes Regressionsrisiko. Einzeln mit Testabdeckung
+angehen oder bewusst als dokumentierte Ausnahme lassen.
+
+**Session 3 (2026-09-08, Forts.):**
+- **I.15j Schwelle final:** offizielle Standard-Geometrie (nicht S), am UNTEREN Rand des
+  `#start`-Panels, buendig an der fixierten Fusszeile (kein Abstand), kein Scrollbalken auf
+  keinem Tab. `#start.active`-Layout (nicht `#start` -- sonst schob das per `opacity`
+  versteckte Panel die anderen Tabs weg). Farbvarianten: primaerer Einsatz, durchgaengig Rot.
+- **DB-Neo-PDF-Schriften (User-Wunsch, neues Feature):** `db-sans`/`db-head` im Formular-
+  Vorlagen-Editor waehlbar, `build.ts` bettet sie per fontkit/subset ein. `dbFonts.ts` (neu),
+  `datenKatalog.SCHRIFTARTEN`, `SchriftartDialog`-Vorschau. `import.meta.glob` lazy +
+  try/catch (Bun-Test-kompatibel). PDF/Admin-Tests 547/0.
+- **I.15k Admin-Dashboard:** fehlender vertikaler Abstand zwischen der Karten-Reihe und der
+  Memory-Karte (`mb-4` an der `.raster`-Reihe). Start-Schnellzugriff `abstand-2` -> `abstand-3`
+  (gleicher Gitterabstand wie die Karten darueber).
+- **I.15l Schriftart-Dialog** neu formatiert: 4 ausgerichtete Zeilen (Grid, feste
+  Beschriftungsspalte) statt umbrechender Inline-Reihe (`.schriftwahl-raster`).
+- **I.15m Leere Tabelle:** fehlende Oberkante (Kopf ist bei Leerstand ausgeblendet) --
+  `tr.customtable-empty` bekommt `border-block-start` (customtable.css).
+- **I.15n `MyCheckbox` haengende Schalter (React 19).** `MyCheckbox` war gesteuert, sobald
+  ein `changeHandler` gesetzt war -- Aufrufer mit reinem Seiteneffekt-Handler (Feld
+  ein-/ausblenden, ohne den Wert nachzufuehren) liessen den Schalter auf dem Ausgangswert
+  haengen. Neu: explizites `defaultChecked` -> immer ungesteuert. Umgestellt: Bereitschafts-
+  Zeitraum-Modal "Sonderschicht"/"Nachtschicht", EWT-Anzeige-Modal "Berechnen?". ("Spaetschicht"
+  hat gar keinen Handler -> war nie betroffen; Admin-Checkboxen fuehren den Wert per `useState`
+  nach -> korrekt gesteuert.)
+- **I.15o AutoSave-Zustandspunkt auf `db-badge` umgestellt (User-Fund).** War ein
+  zurechtgestutztes `db-tag` (beschriftete Chip-Komponente, hier als Icon-Punkt missbraucht,
+  `!important`-Padding gegen die Mindestmasse). `@db-ux/core-components` hat dafuer die eigene
+  Komponente **`db-badge`** -- mit `data-placement="corner-top-right"` (absolute Positionierung,
+  ersetzt die Bootstrap-Klassen `position-absolute top-0 start-100 translate-middle`),
+  `data-semantic` (Farbe) und `data-emphasis="strong"` (Vollfarbe). `.autosave-badge` hat jetzt
+  nur noch `z-index` + `pointer-events: none`; alle Farb-/Groessen-/Padding-Regeln weg.
+  `db-badge` ist bewusst rund (`--db-border-radius-full`) -- so sieht DB Badges/Status-Punkte
+  vor, das ist KEIN Verstoss gegen "rund zu eckig" (das betrifft Container/Flaechen).
+  Icon-Markup nach DB-`DBIcon`-Muster: `<span class="db-icon" data-icon="…">` OHNE eigene
+  `db-font-size-*`-Klasse (Groesse steuert `db-badge`). `lint:css` 91 -> 90. Tests 2084/0.
+- **I.9:** 28 -> 21 Warnungen (2 verwaiste Direktiven, ArbeitszeiteingabePanel, OeLevelBoxes,
+  PdfCanvas). Rest = nuancierte setState-im-Effect/exhaustive-deps, seit Phase A zurueckgestellt.
+
+## I.16 -- EWT-Anzeige-Modal + weitere QA-Funde (User, laufend) -- GEBÜNDELT ABARBEITEN
+
+- [x] **EWT-Anzeige "Berechnen?"-Schalter ohne Wirkung.** Der `changeHandler` holte die Zeile
+      per `e.target.closest('.modal').row` -- `#modal` ist eine ID, keine Klasse -> `null` ->
+      Handler crasht. Jetzt die `row` direkt aus dem Aufruf-Closure (`createShowModalEWT.tsx`).
+- [x] **EWT-Anzeige: "Tag:" ohne Abstand zum Wert.** `createTagElement` jetzt
+      `divClass="raster mb-1"`, `labelClass="sp-4 sp-sm-5 ..."`, `spanClass="sp-8 sp-sm-7 ..."`
+      -> Label und Wert teilen das 12-Spalten-Raster (`raster.scss`).
+- [x] **EWT-Anzeige: `<hr />` rendert als Punkt.** Jetzt `<hr className="ewt-trenner" />` plus
+      Regel in `styles.scss` (`grid-column: 1 / -1`, `border-block-start`). Kein Punkt mehr.
+- [ ] **Admin-Benutzerliste-Filter: Label mal oben (Rolle), mal unten (Name/OE).**
+      `DbFeld`/`DbAuswahl` unterschiedlich konfiguriert -> Beschriftungsposition vereinheitlichen.
+- [ ] **Bereitschaftseinsatz-Modal: Warnhinweis "noch nicht gespeicherter Zeitraum"
+      verschwindet nicht** (`createAddModalBereitschaftsEinsatz.tsx:45`). Prüfen, ob die
+      Sichtbarkeit an einen Zustand gebunden ist, der nicht mehr aktualisiert wird.
+- [ ] **AutoSave-Badge im echten Modal wirkt "fehlerhaft".** Im isolierten Test (5 Status,
+      Hell+Dunkel) rendert `db-badge` sauber (rund, farbig, Icon). Im Modal evtl.
+      Kontrast (neutral/grau im Dunkelmodus für `pending`) oder Clipping durch den Knopf-
+      Container. Gegen echten Save-Flow prüfen.
+- [ ] **`border-radius: 0` -- Nebenwirkungen systematisch prüfen** (`<hr>`-Punkt ist ein
+      Hinweis): Elemente, die auf Rundung als Formgebung angewiesen waren (Trennlinien,
+      Fortschrittsbalken, Zierpunkte).
+
+**Noch offen:**
+- **I.4 / I.6** -- ungenutzte Font-Schnitte build-seitig ausschliessen; Bundle-Budget
+  gegen die Spike-Zahlen im CHANGELOG festhalten.
+- **I.11 Rest** -- `../WORKSPACE.md`, `../CLAUDE.md`, `frontend/.claude/README.md`,
+  `.claude/skills/architektur` final durchsehen.
+- Gitlink-Bump im Parent nach dem naechsten Frontend-Commit.
+
+---
+
+# Vorbereitet (BLOCKIERT durch Phase I): React-Umbau Phase J-N - 2026-09-08
+
+Plan: `tasks/plan-react-umbau.md`. **Startet erst, wenn Phase I oben abgeschlossen ist.**
+Kein Code angefasst -- bisher nur der Plan im Repo abgelegt.
+
+Ziel (User-Vorgabe): **alles als React**, inklusive `CustomTable`; `index.html` schrumpft am
+Ende auf `<head>` + einen React-Root.
+
+- **J** Native Controls -> `@db-ux/react-core-components` (`DBButton`/`DBTag`/`DBCheckbox`/
+  `DBRadio`/`DBTextarea` direkt an den Aufrufstellen); `DbFeld`/`DbAuswahl` innen auf
+  `DBInput`/`DBSelect`; `MyButton` aufloesen. Querschnitt: `@db-ux/core-foundations`
+  (helpers-Mixins, `_screen-sizes.scss` als einzige Breakpoint-Quelle, `utilities.scss`/
+  `raster.scss` abgleichen).
+- **K** App-Shell nach React (`DBHeader`/`DBNavigation`/Brand, Theme-Umschalter, `navdrawer`
+  + `impressum` als `DBDrawer`, Fusszeile; `tabController` wird React-State).
+- **L** Statische Tabs nach React (Start, Berechnung-Huelle, Einstellungen-Formular).
+- **M** `CustomTable` nach React -- offene Weiche M-a/M-b/M-c, Marktabgleich im Plan
+  (Ergebnis: nur `@tanstack/react-table` waere headless-kompatibel, ersetzt aber nur die
+  Sortierlogik; Tendenz M-a Portierung).
+- **N** `index.html` auf `<head>` + `<div id="app">`, `main.ts` -> `main.tsx`.
+
+## Aufgaben Phase J (erst nach Phase I abhaken)
+
+- [x] **J-0 Plan im Repo ablegen.** `tasks/plan-react-umbau.md` angelegt, Querverweis in
+      `tasks/plan-db-ux-migration.md`, dieser Abschnitt. Grund: Umsetzung laeuft im Wechsel
+      auf mehreren Geraeten -- Status wird hier gepflegt, nicht im Plan.
+- [ ] **J0 Querschnitt foundations** -- `styles.scss`/`utilities.scss` auf helpers-Mixins,
+      `_screen-sizes.scss`-Spiegel als TS-Konstante fuer `CustomTable.ts:30`.
+- [ ] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (+ neuer Render-Test).
+- [ ] **J2 FormularEditor** (15 Dateien, + schmale Render-Tests fuer `FeldZeile`,
+      `TabellenBlock`, `feldPanelGemeinsam`, `SchriftartDialog`).
+- [ ] **J3 Admin uebrige Komponenten.**
+- [ ] **J4 Einstellungen-Komponenten.**
+- [ ] **J5 Bereitschaft / EWT / Neben / EA.**
+- [ ] **J6 Feature-Tab-Buttons** (`data-disabler` + `buttonDisable.ts`-Selektor pruefen).
+- [ ] **J6b `MyButton` aufloesen** -> `DBButton`.
+- [ ] **J7 `My*`- + `core/`-Rest-Markup.**
+- [ ] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (Wrapper bleibt, Innenleben
+      getauscht; Aufrufstellen unveraendert).
+- [ ] **J9 Cleanup + Doku** (Grep-Gate, `agent-cli`, CLAUDE.md/Skills/CHANGELOG,
+      `graphify update .`).
+
+**Verifikation je Slice:** `bun run typecheck && bun run lint && bun run lint:css &&
+bun run test && bun run build` + MCP `db-ux__verify_migrated_code` + `verify`-Skill fuer die
+beruehrten Screens + manuell Hell/Dunkel/Auto und Mobile.
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase H (Bootstrap vollstaendig raus) - 2026-09-08
 
 ## Ausgangslage

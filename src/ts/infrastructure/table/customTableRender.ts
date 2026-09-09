@@ -4,7 +4,7 @@ import type { Column } from './Column';
 import type { CustomTable } from './CustomTable';
 import type { CustomHTMLTableRowElement, CustomTableTypes, Directions } from './customTableTypes';
 import type { Row } from './Row';
-import { erzeugeDbButton } from '../ui/dbButton';
+import { erzeugeDbButton, erzeugeDbButtonAusLook } from '../ui/dbButton';
 
 /**
  * It creates a footer for the table
@@ -22,18 +22,21 @@ export function renderFooter<T extends CustomTableTypes>(self: CustomTable<T>): 
     td.colSpan = self.columns.array.length + 1;
 
     const divFooter = document.createElement('div');
-    divFooter.classList.add('justify-content-sm-evenly');
+    // Ohne `d-flex` greift `justify-content`/`gap` nicht -- die Knoepfe klebten sonst aneinander.
+    divFooter.classList.add('d-flex', 'flex-wrap', 'gap-2', 'justify-content-center', 'justify-content-sm-evenly');
 
+    // Farb-Konvention: Primaeraktion (Hinzufuegen) = `brand`, destruktiv (alle loeschen) =
+    // `outlined`+`critical` -- weniger Gewicht als die Primaeraktion, klar unterscheidbar.
     const buttonAdd = createButton(['btn', 'btn-primary'], self.options.editing.addText, self.options.editing.addRow);
     const buttonDeleteAlle = createButton(
-      ['btn', 'btn-danger'],
+      ['btn', 'btn-outline-danger', 'customtable-delete-all'],
       self.options.editing.deleteAllText,
       self.options.editing.deleteAllRows,
     );
     divFooter.appendChild(buttonAdd);
     if (self.options.editing.customButton && self.options.editing.customButton.length > 0) {
       self.options.editing.customButton.forEach(button => {
-        const customButton = createButton(button.classes, button.text, button.function);
+        const customButton = erzeugeDbButtonAusLook(button.look ?? { variant: 'filled' }, button.text, button.function);
         divFooter.appendChild(customButton);
       });
     }
@@ -179,7 +182,7 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
       tbody.appendChild(tr);
     }
     thead.style.display = '';
-    const dangerBtn = tfoot?.querySelector<HTMLButtonElement>('.btn-danger');
+    const dangerBtn = tfoot?.querySelector<HTMLButtonElement>('.customtable-delete-all');
     if (dangerBtn) dangerBtn.style.display = '';
   } else {
     const tr = document.createElement('tr');
@@ -191,7 +194,7 @@ export function renderRows<T extends CustomTableTypes>(self: CustomTable<T>): vo
     tbody.appendChild(tr);
 
     thead.style.display = 'none';
-    const dangerBtn = tfoot?.querySelector<HTMLButtonElement>('.btn-danger');
+    const dangerBtn = tfoot?.querySelector<HTMLButtonElement>('.customtable-delete-all');
     if (dangerBtn) dangerBtn.style.display = 'none';
   }
   if (self.options.customFunction?.afterDrawRows) self.options.customFunction.afterDrawRows.call(self);

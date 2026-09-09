@@ -1,7 +1,22 @@
+/* Die `db-table`-Huelle legt ihre Linien per `border-block-end` an `tr` -- das rendert nur bei
+   `border-collapse: collapse`. Weil `utilities.scss` das native `display: table` erzwingt (statt
+   DBs Grid), stand die Tabelle sonst auf `separate`: keine Zeilentrenner und keine
+   Abschlusslinie unten ("Box wirkt offen"). Mit `collapse` greifen DBs Rahmenregeln wie
+   vorgesehen. */
+table.customtable {
+  border-collapse: collapse;
+}
+
 .customtable-empty {
   vertical-align: middle;
   text-align: center;
   font-size: 30px;
+}
+
+/* Leere Tabelle: der Kopf ist ausgeblendet, also fehlt DBs `thead`-Oberkante. Die
+   Leer-Zeile bekommt sie selbst, damit die Box oben nicht offen wirkt. */
+tr.customtable-empty {
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 /* Soft-Delete: Gelöschte Zeilen durchgestrichen + ausgegraut.
@@ -208,37 +223,14 @@ th.customtable-sortable:hover > span.customtableIcon {
 
 /* ─── AutoSave Indicator ─────────────────────────────── */
 
-/* ─── AutoSave Badge auf Speichern-Buttons ─── */
+/* ─── AutoSave-Zustandspunkt auf Speichern-Buttons ─── */
 
-/* Der Zustandspunkt sitzt in der Ecke des Speichern-Knopfes. `db-tag` bringt die Mindestmasse
-   eines bedienbaren Elements mit (Hoehe und Breite `sm`) -- hier ist er reine Anzeige und muss
-   auf Symbolgroesse schrumpfen. */
+/* Form, Farbe (je `data-semantic`), Groesse und Eck-Positionierung kommen aus `db-badge`
+   (siehe `autoSaveIndicator.ts`). Hier nur, was die Komponente nicht abdeckt: nicht klickbar
+   und ueber dem Knopftext. */
 .autosave-badge {
-  pointer-events: none;
-  user-select: none;
-  line-height: 1;
   z-index: 1;
-  padding: 0.3em !important;
-  min-inline-size: 0;
-  inline-size: auto;
-  block-size: auto;
-}
-
-.autosave-badge .db-icon {
-  font-size: 0.85rem;
-  line-height: 1;
-  display: block;
-}
-
-/* Auf kleinen Bildschirmen etwas kleiner */
-@media screen and (max-width: 575.95px) {
-  .autosave-badge .db-icon {
-    font-size: 0.7rem;
-  }
-
-  .autosave-badge {
-    padding: 0.2em !important;
-  }
+  pointer-events: none;
 }
 
 @keyframes autosave-pulse {

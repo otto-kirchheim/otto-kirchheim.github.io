@@ -135,7 +135,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
       customButton: [
         {
           text: 'Standardeinstellungen',
-          classes: ['btn', 'btn-secondary'],
+          look: { variant: 'filled' },
           function: async () => {
             const code = Storage.check('VorgabenU')
               ? Storage.get<IVorgabenU>('VorgabenU', true).Pers.ErsteTkgSt.toLowerCase()

@@ -8,7 +8,11 @@ type TMyCheckbox = {
   name?: string;
   id: string;
   children: ReactNode;
+  /** Gesteuerter Zustand -- der Aufrufer haelt den Wert per `changeHandler` in Sync. */
   checked?: boolean;
+  /** Ungesteuerte Vorbelegung -- fuer Aufrufer, die `changeHandler` nur fuer einen
+   *  Seiteneffekt (z.B. ein Feld ein-/ausblenden) nutzen und den Wert per DOM auslesen. */
+  defaultChecked?: boolean;
   disabled?: boolean;
   myRef?: Ref<HTMLInputElement>;
   changeHandler?: ChangeEventHandler<HTMLInputElement>;
@@ -18,9 +22,26 @@ type TMyCheckbox = {
  * Alle Aufrufstellen meinen Schalter, nicht Haken -- deshalb `DBSwitch` und nicht `DBCheckbox`.
  * App-eigene Klassen (z.B. `bereitschaft`, Rasterspalten) reicht `className` durch.
  */
-const MyCheckbox: FC<TMyCheckbox> = ({ className, changeHandler, children, id, myRef, checked, ...inputProps }) => {
-  // Ohne Handler ist `checked` in React schreibgeschuetzt; die Aufrufer meinen eine Vorbelegung.
-  const zustand = changeHandler ? { checked } : { defaultChecked: checked };
+const MyCheckbox: FC<TMyCheckbox> = ({
+  className,
+  changeHandler,
+  children,
+  id,
+  myRef,
+  checked,
+  defaultChecked,
+  ...inputProps
+}) => {
+  // Explizites `defaultChecked` -> immer ungesteuert. Sonst: mit `changeHandler` UND
+  // gesetztem `checked` gesteuert (Aufrufer synct den Wert), andernfalls Vorbelegung.
+  // (Ein `changeHandler`, der `checked` NICHT nachfuehrt, wuerde den Schalter sonst in
+  // React 19 auf den Ausgangswert zuruecksetzen -- er "haengt".)
+  const zustand =
+    defaultChecked !== undefined
+      ? { defaultChecked }
+      : changeHandler && checked !== undefined
+        ? { checked }
+        : { defaultChecked: checked };
   const eigeneRef = useRef<HTMLInputElement>(null);
   useSofortigeId(eigeneRef, id);
 

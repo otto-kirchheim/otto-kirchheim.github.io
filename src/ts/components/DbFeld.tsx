@@ -78,7 +78,6 @@ export function DbFeld({
       style={huelleStyle}
     >
       <label htmlFor={feldId}>{beschriftung}</label>
-      {/* eslint-disable-next-line db-ux/form-validation-message-required */}
       <input
         ref={feldRef}
         id={feldId}
@@ -117,8 +116,7 @@ export function DbAuswahl({
       style={huelleStyle}
     >
       <label htmlFor={feldId}>{beschriftung}</label>
-      {/* Die Optionen kommen von der Aufrufstelle; das sieht die statische Regel nicht. */}
-      {/* eslint-disable-next-line db-ux/select-requires-options */}
+      {/* Die Optionen kommen als `children` von der Aufrufstelle. */}
       <select ref={feldRef} id={feldId} {...feldProps}>
         {children}
       </select>

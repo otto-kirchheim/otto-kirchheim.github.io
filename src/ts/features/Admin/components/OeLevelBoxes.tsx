@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { MAX_OE_LEVELS, OeLevelInputs } from './OeLevelInputs';
@@ -36,18 +36,21 @@ export function OeLevelBoxes({
   placeholders,
 }: OeLevelBoxesProps) {
   const [levels, setLevels] = useState(() => levelsFrom(value, defaultLevelCount));
-  const lastEmitted = useRef(value);
+  // Zuletzt gesehener/emittierter Wert als State (nicht Ref) -- so ist das Nachziehen bei
+  // externer Prop-Aenderung das von React dokumentierte "State beim Prop-Wechsel anpassen"
+  // und schreibt keine Ref waehrend des Renderns.
+  const [lastEmitted, setLastEmitted] = useState(value);
 
   // Externe Änderung (z.B. Reset nach dem Hinzufügen einer Tag-OE) übernehmen,
   // eigene Emissionen ignorieren.
-  if (value !== lastEmitted.current) {
-    lastEmitted.current = value;
+  if (value !== lastEmitted) {
+    setLastEmitted(value);
     setLevels(levelsFrom(value, defaultLevelCount));
   }
 
   function emit(next: string[]): void {
     const joined = joinOeLevels(next);
-    lastEmitted.current = joined;
+    setLastEmitted(joined);
     setLevels(next);
     onChange(joined);
   }

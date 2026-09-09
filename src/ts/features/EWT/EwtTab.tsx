@@ -100,7 +100,7 @@ function EwtTab() {
           },
           customButton: [
             {
-              classes: ['btn', 'btn-secondary'],
+              look: { variant: 'filled' },
               text: 'Alle Zeiten entfernen',
               function: () => {
                 createSnackBar({

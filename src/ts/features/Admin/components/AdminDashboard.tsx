@@ -166,7 +166,7 @@ export function AdminDashboard() {
           })()}
       </div>
 
-      <div className="raster abstand-3">
+      <div className="raster mb-4 abstand-3">
         <div className="sp-md-4">
           <div className="db-card border-0 shadow-sm h-100">
             <h6 className="fw-semibold mb-3">Rollenverteilung</h6>

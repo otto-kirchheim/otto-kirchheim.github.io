@@ -16,8 +16,14 @@ interface PanelProps {
 export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps): JSX.Element {
   const [aZ, setAZ] = useState<IVorgabenUaZ>(initialValues);
   const panelStateRef = useRef<IVorgabenUaZ>(initialValues);
+  // Neueste `onChange`-Referenz halten, ohne bei jeder neuen Funktions-Identitaet den
+  // `[aZ]`-Effect neu zu feuern. Zuweisung im Effect (nicht im Render), damit React 19
+  // die Ref nicht waehrend des Renderns beschrieben sieht; dieser Effect steht bewusst VOR
+  // dem `[aZ]`-Effect, der die Ref liest.
   const onChangeRef = useRef(onChange);
-  onChangeRef.current = onChange;
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  });
 
   const updatePanelState = (updater: (current: IVorgabenUaZ) => IVorgabenUaZ): void => {
     const next = updater(panelStateRef.current);

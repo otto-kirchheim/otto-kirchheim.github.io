@@ -35,6 +35,10 @@ const CSS_STANDARD: Record<string, string> = {
   helvetica: 'Helvetica, Arial, sans-serif',
   times: '"Times New Roman", Times, serif',
   courier: '"Courier New", Courier, monospace',
+  // DB-Neo-Schnitte: das Theme-CSS hat die @font-face bereits geladen -> die Vorschau nutzt
+  // dieselbe Schrift, die `build.ts` ins PDF einbettet.
+  'db-sans': '"DB Neo Screen Sans", Helvetica, Arial, sans-serif',
+  'db-head': '"DB Neo Screen Head", Helvetica, Arial, sans-serif',
 };
 const HELVETICA = CSS_STANDARD.helvetica!;
 

@@ -4,12 +4,13 @@
  * Genutzt von `components/MyButton` (React) und `infrastructure/table/customTableRender`
  * (Vanilla-DOM), damit beide Wege dieselbe Zuordnung verwenden.
  */
-type DbButtonLook = {
+export type DbButtonLook = {
   variant: 'brand' | 'filled' | 'outlined' | 'ghost';
   color?: 'critical' | 'informational' | 'successful' | 'warning';
   size?: 'small' | 'medium';
   width?: 'full';
-  rest: string;
+  /** Layout-Klassen ohne DB-Entsprechung (z. B. `text-start`), von `utilities.scss` bedient. */
+  rest?: string;
 };
 
 /**
@@ -90,19 +91,19 @@ export function buttonLook(className: string): DbButtonLook {
 }
 
 /**
- * Baut einen DB-Button als DOM-Element -- fuer die Stellen, die kein React nutzen
- * (Tabellen-Fuss, Zeilen-Aktionen).
+ * Baut einen DB-Button als DOM-Element aus einem fertigen DB-Look -- fuer die Stellen, die
+ * kein React nutzen (Tabellen-Fuss, Zeilen-Aktionen) und die DB-Semantik direkt angeben.
  */
-export function erzeugeDbButton(
-  klassen: string[],
+export function erzeugeDbButtonAusLook(
+  look: DbButtonLook,
   inhalt: string,
   beiKlick: () => void,
   optionen: { titel?: string; alsHtml?: boolean } = {},
 ): HTMLButtonElement {
-  const { variant, color, size, width, rest } = buttonLook(klassen.join(' '));
+  const { variant, color, size, width, rest } = look;
   const button = document.createElement('button');
   button.type = 'button';
-  button.classList.add('db-button', ...rest.split(' ').filter(Boolean));
+  button.classList.add('db-button', ...(rest ?? '').split(' ').filter(Boolean));
   button.dataset['variant'] = variant;
   if (color) button.dataset['color'] = color;
   if (size) button.dataset['size'] = size;
@@ -119,4 +120,18 @@ export function erzeugeDbButton(
   });
 
   return button;
+}
+
+/**
+ * Wie `erzeugeDbButtonAusLook`, nimmt aber noch die Bootstrap-Klassen-Notation entgegen.
+ * Genutzt von den `customTableRender`-Defaults (Add/Delete/Undo-Zeilenaktionen), deren
+ * Icon-/Klassen-Konvention aus der Bootstrap-Zeit stammt.
+ */
+export function erzeugeDbButton(
+  klassen: string[],
+  inhalt: string,
+  beiKlick: () => void,
+  optionen: { titel?: string; alsHtml?: boolean } = {},
+): HTMLButtonElement {
+  return erzeugeDbButtonAusLook(buttonLook(klassen.join(' ')), inhalt, beiKlick, optionen);
 }

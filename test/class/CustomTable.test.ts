@@ -315,7 +315,7 @@ describe('CustomTable', () => {
         editRow: vi.fn(),
         showRow: vi.fn(),
         deleteRow: vi.fn(),
-        customButton: [{ text: 'Extra', classes: ['btn', 'btn-secondary'], function: vi.fn() }],
+        customButton: [{ text: 'Extra', look: { variant: 'filled' }, function: vi.fn() }],
       },
       columns: [
         {
@@ -486,7 +486,7 @@ describe('CustomTable', () => {
         showRow: vi.fn(),
         deleteRow: vi.fn(),
         deleteAllRows: vi.fn(),
-        customButton: [{ text: 'Extra', classes: ['btn', 'btn-secondary'], function: customFn }],
+        customButton: [{ text: 'Extra', look: { variant: 'filled' }, function: customFn }],
       },
       columns: [{ name: 'label', title: 'Label' }],
       rows: [],

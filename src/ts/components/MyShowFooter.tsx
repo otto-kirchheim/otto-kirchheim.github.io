@@ -12,10 +12,12 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
 
   return (
     <div className="dialog-fuss">
+      {/* Farb-Konvention: Primaeraktion = `brand`, destruktiv = `outlined`+`critical`
+          (weniger Gewicht als die Primaeraktion), neutral/schliessen = `filled`. */}
       <MyButton text="Bearbeiten" dialogDismiss="modal" clickHandler={editClickHandler} />
       <MyButton
         className="db-button"
-        data-variant="filled"
+        data-variant="outlined"
         data-color="critical"
         text="Löschen"
         dialogDismiss="modal"

@@ -150,7 +150,7 @@ export function VorgabenBWeekRangeEditor({
 
       <div
         className="d-grid"
-        style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '.375rem' }}
+        style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '.375rem', userSelect: 'none' }}
         onPointerUp={clearDrag}
         onPointerLeave={clearDrag}
       >

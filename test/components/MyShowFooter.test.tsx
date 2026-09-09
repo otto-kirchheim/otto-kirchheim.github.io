@@ -46,8 +46,9 @@ describe('MyShowFooter', () => {
     expect(buttons.map(b => b.textContent)).toEqual(['Bearbeiten', 'Löschen', 'Schließen']);
     expect(buttons.every(b => b.getAttribute('data-dialog-dismiss') === 'modal')).toBe(true);
     // Seit Phase C rendert MyButton einen DBButton: die Bootstrap-Klasse ist zu
-    // `data-variant`/`data-color` geworden.
-    expect(buttons[1]?.getAttribute('data-variant')).toBe('filled');
+    // `data-variant`/`data-color` geworden. Farb-Konvention (Phase I): destruktiv =
+    // `outlined`+`critical`, weniger Gewicht als die `brand`-Primaeraktion.
+    expect(buttons[1]?.getAttribute('data-variant')).toBe('outlined');
     expect(buttons[1]?.getAttribute('data-color')).toBe('critical');
     expect(buttons[2]?.getAttribute('data-variant')).toBe('filled');
     expect(buttons[2]?.getAttribute('data-color')).toBeNull();

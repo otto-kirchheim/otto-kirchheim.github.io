@@ -2,6 +2,60 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-08 (69)
+
+### refactor (DB-UX-Migration Phase I: Cleanup, Token-Finalisierung, DB-"neues-Design"-Feinschliff)
+
+Laufender Stand von Phase I. Details und Verifikation in `tasks/todo.md`.
+
+- **Formensprache "von rund zu eckig":** alle `--db-border-radius-*`-Tokens am `:root` auf `0`
+  (`--db-border-radius-full` bleibt fuer Radio/Switch/Meter). Karten, Knoepfe, Felder, Tags,
+  Akkordeon, Drawer, Notifications haben jetzt 90-Grad-Ecken -- wie deutschebahn.com.
+- **DB-Schwelle** am UNTEREN Rand des Startbereichs (`#start.active`): offizielle
+  Standard-Geometrie (`src/icons/DB_Schwelle/Screen/…`, 15 Balken, Raster 120, Breite 8 -> 120)
+  als Inline-SVG-Maske ueber Dynamic Red (`#ff002b`, exakt der Asset-Farbwert), rechtsbuendig
+  ~2/3 der Breite, laeuft in die untere rechte Ecke -- diagonal gegenueber der Wortmarke,
+  genau einmal im Viewport, buendig an der fixierten Fusszeile ohne senkrechten Scrollbalken.
+  `--schwelle-motiv` + `.schwelle` + `#start.active`-Layout in `styles.scss`. Offizielle
+  SVG/PNG-Assets (alle Farbvarianten, Standard + S) liegen als Referenz unter `src/icons/`.
+- **DB-Neo-Schriften in der PDF-Ausgabe.** Der Formular-Vorlagen-Editor bietet neben
+  Helvetica/Times/Courier jetzt `DB Neo Screen Sans` (`db-sans`) und `DB Neo Screen Head`
+  (`db-head`); `build.ts` bettet den passenden Schnitt aus `@db-ux/db-theme-fonts` per fontkit
+  (subset) ins PDF ein -- fehlt das Asset (Build ohne ASSET-Secrets), gilt Helvetica.
+  Neu: `infrastructure/pdf/dbFonts.ts`. Keine Aenderung an `shared`/`backend` noetig
+  (`Schriftfamilie` ist bereits `string`). Editor-Vorschau nutzt dieselbe Schrift (Theme-CSS).
+- **`data-density="functional"`** am `<html>` (vorher `regular`) -- kompakter, passt zur
+  formular-/tabellenlastigen App und zur DB-"funktionalen Anwendung". Kein globales
+  `data-color` (Rot bleibt Akzent ueber `--db-brand-*`).
+- **PWA-Farben:** `theme_color` / `background_color` = `#ffffff`; `<meta name="theme-color">`
+  mediengescoped (light `#ffffff` / dark `#16181b`). DB erlaubt kein rotes Fill.
+- **Marken-Sub-Logos aus dem Build:** PostCSS-Plugin entfernt die `[data-logo=db-*]`-Regeln
+  aus `@db-ux/db-theme` -> 12 ungenutzte Logo-SVGs / ~90 KiB weniger im Precache (59 -> 47).
+- **Bundle-Budget** (gegen die Phase-0-Spike-Zahlen): React-Runtime **59 KB gz** (Spike: 59,6),
+  DB-UX-CSS + App-SCSS **92 KB gz** (Spike: 84 -- die Differenz sind die App-eigenen Styles
+  inkl. eckig/Schwelle), 32 woff2 / 1,82 MB (Spike: 1,78 MB). Bootstrap (~35 KB gz CSS + JS)
+  ist dafuer weg. Precache 47 Eintraege / 4,3 MB. Die ungenutzten Font-Schnitte
+  (`dbneoscreenhead-*italic*`, `dbneoscreensans-*digital*`, Black-Schnitte) bleiben bewusst
+  im Build: der Browser laedt eine `@font-face`-`src` erst, wenn wirklich ein passendes Glyph
+  gerendert wird -- fuer echte Nutzer kosten sie 0 Byte. Der Precache ist ueber `globIgnores`
+  bereits eng gefasst (nur die 4 Fliesstext-Schnitte). Build-seitiges Strippen brächte nur
+  ein kleineres Deploy-Artefakt, riskiert aber synthetisierten Fallback-Satz.
+- **Button-Farbkonvention:** destruktiv (`filled`+`critical`) -> `outlined`+`critical` bei
+  "Alle Zeilen loeschen" und Modal-"Loeschen"; Primaeraktion bleibt `brand`. `customButton`
+  der CustomTable spricht `look: DbButtonLook` statt Bootstrap-Klassen.
+- **Navigation:** "Start" ist kein eigener Eintrag mehr (die Wortmarke ist der Start-Schalter);
+  der Design-Auswahl-Flyout ist rechtsbuendig verankert -- behebt einen waagerechten
+  Scrollbalken ab 1024 px. "Alle Zeilen loeschen" wird bei leerer Tabelle wieder ausgeblendet.
+- **EWT-Anzeige-Modal:** `ab/an` bzw. `von/bis` stehen mit Pfeilen und Zeitwerten auf je einer
+  senkrechten Linie (gemeinsames Raster). Tabellen-Fussknoepfe haben wieder Abstand.
+  Der "Berechnen?"-Schalter aendert jetzt auch den Zustand: der Handler holte die Zeile
+  ueber `e.target.closest('.modal').row` -- `#modal` ist eine Id, keine Klasse -> `null`.
+  Jetzt `row.val({ ...row.cells, berechnen })` (setzt den Row-State auf `modified` und
+  meldet an AutoSave) aus dem Aufruf-Closure. `MyCheckbox` bekommt ein explizites
+  `defaultChecked` -> ein `changeHandler` ohne Wert-Sync haengt den Schalter nicht mehr.
+  "Tag:" hat Abstand zum Wert (`raster` + `sp-*` statt Bootstrap-Rest `row`); die
+  Trennlinie rendert als Linie statt als Punkt (`.ewt-trenner` mit `grid-column: 1 / -1`).
+
 ## 2026-09-08 (68)
 
 ### fix (DB-UX-Migration Phase H: Sichtkorrekturen aus dem Test)

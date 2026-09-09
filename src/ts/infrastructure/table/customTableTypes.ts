@@ -1,6 +1,7 @@
 import type { Column } from './Column';
 import type { CustomTable } from './CustomTable';
 import type { Row } from './Row';
+import type { DbButtonLook } from '../ui/dbButton';
 
 export type CustomTableTypes = Record<string, unknown>;
 
@@ -58,7 +59,7 @@ export interface CustomTableOptions<T extends CustomTableTypes> {
     showRow: (row: Row<T>) => void;
     deleteRow: (row: Row<T>) => void;
     deleteAllRows?: () => void;
-    customButton?: { text: string; classes: string[]; function: () => void }[] | null;
+    customButton?: { text: string; look?: DbButtonLook; function: () => void }[] | null;
   };
   classes?: string[];
   /** Callback bei jeder Datenänderung (für Auto-Save Integration) */
@@ -108,7 +109,7 @@ export interface CustomTableOptionsAll<T extends CustomTableTypes> {
     showRow: (row: Row<T>) => void;
     deleteRow: (row: Row<T>) => void;
     deleteAllRows: () => void;
-    customButton: { text: string; classes: string[]; function: () => void }[] | null;
+    customButton: { text: string; look?: DbButtonLook; function: () => void }[] | null;
   };
   classes: string[];
   /** Callback bei jeder Datenänderung (für Auto-Save Integration) */

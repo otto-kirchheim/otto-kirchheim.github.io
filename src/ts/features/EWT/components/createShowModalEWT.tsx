@@ -24,9 +24,9 @@ const createTagElement = (row: Row<IDatenEWT>) => {
 
   return (
     <MyShowElement
-      divClass="mb-1 row sp-8"
-      labelClass="sp-2 sp-sm-3 text-wrap fw-bold"
-      spanClass="sp-10 sp-sm-9 align-middle text-break text-end my-auto"
+      divClass="raster mb-1"
+      labelClass="sp-4 sp-sm-5 text-wrap fw-bold"
+      spanClass="sp-8 sp-sm-7 align-middle text-break my-auto"
       title={`${column.title}:`}
       id="Tag"
       text={tagText}
@@ -47,19 +47,29 @@ const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
   );
 };
 
-const createTitle = (vor: string, text: string, nach: string) => (
-  <div className="icon-ewt">
-    <span className="sp-1 text-center">{vor}</span>
-    <h5 className="sp-6 text-center mb-1 text-truncate">{text}</h5>
-    <span className="sp-1 text-center">{nach}</span>
-  </div>
-);
-
-const createShowElement = (row: Row<IDatenEWT>, columnName: string) => {
-  const column: Column<IDatenEWT> = getColumn(row, columnName);
+// Ein Zeit-Block: Richtungskuerzel + Zeitwert stehen links bzw. rechts auf einer senkrechten
+// Linie -- dieselbe wie die Pfeile darueber (`.ewt-zeit`-Raster, feste Aussenspalten).
+const createZeitBlock = (
+  row: Row<IDatenEWT>,
+  vor: string,
+  titel: string,
+  nach: string,
+  feldLinks: string,
+  feldRechts: string,
+) => {
+  const links = getColumn(row, feldLinks);
+  const rechts = getColumn(row, feldRechts);
   return (
-    <div className="mb-1 sp-6 text-center">
-      <span id={column.name}>{column.parser(row.cells[column.name])}</span>
+    <div className="ewt-zeit">
+      <span className="ewt-zeit-links">{vor}</span>
+      <h5 className="ewt-zeit-titel text-truncate">{titel}</h5>
+      <span className="ewt-zeit-rechts">{nach}</span>
+      <span className="ewt-zeit-links" id={links.name}>
+        {links.parser(row.cells[feldLinks])}
+      </span>
+      <span className="ewt-zeit-rechts" id={rechts.name}>
+        {rechts.parser(row.cells[feldRechts])}
+      </span>
     </div>
   );
 };
@@ -76,42 +86,32 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
         <MyCheckbox
           className="sp-4"
           id={'berechnen'}
-          checked={row.cells?.['berechnen'] ?? true}
+          defaultChecked={row.cells?.['berechnen'] ?? true}
           changeHandler={(e: ChangeEvent<HTMLInputElement>) => {
-            const row = ((e.target as HTMLInputElement).closest('.modal') as CustomHTMLDivElement<IDatenEWT>)
-              .row as Row<IDatenEWT>;
-            row.cells.berechnen = (e.target as HTMLInputElement).checked;
-            const table = row.CustomTable;
-            table.drawRows();
-            persistEwtTableData(table);
+            // `row` kommt aus dem Aufruf-Closure -- der fruehere `closest('.modal')`-Umweg
+            // ging ins Leere (`#modal` ist eine Id, keine Klasse) -> Schalter ohne Wirkung.
+            // `val()` statt direkter `cells`-Mutation: setzt den Row-State auf 'modified'
+            // und meldet die Aenderung an AutoSave -- genau wie der Checkbox-Handler der
+            // Tabelle (`attachBerechnenToggleListeners`).
+            row.val({ ...row.cells, berechnen: e.target.checked });
+            persistEwtTableData(row.CustomTable);
           }}
         >
           {row.columns.array.find(column => column.name === 'berechnen')?.title ?? 'Berechnen?'}
         </MyCheckbox>
         {createOrtSchichtElement(row, 'Einsatzort')}
         {createOrtSchichtElement(row, 'Schicht')}
-        <hr />
+        <hr className="ewt-trenner" />
 
-        <div className="icon-ewt-arrow">
-          <span className="db-icon db-font-size-lg" data-icon="arrow_down" />
-          <span className="db-icon db-font-size-lg" data-icon="arrow_up" />
+        <div className="ewt-zeit ewt-zeit-pfeile">
+          <span className="db-icon db-font-size-lg ewt-zeit-links" data-icon="arrow_down" />
+          <span className="db-icon db-font-size-lg ewt-zeit-rechts" data-icon="arrow_up" />
         </div>
 
-        {createTitle('ab', 'Wohnung', 'an')}
-        {createShowElement(row, 'abWE')}
-        {createShowElement(row, 'anWE')}
-
-        {createTitle('von', 'Arbeitszeit', 'bis')}
-        {createShowElement(row, 'beginE')}
-        {createShowElement(row, 'endeE')}
-
-        {createTitle('ab', '1. Tätigkeitsstätte', 'an')}
-        {createShowElement(row, 'ab1E')}
-        {createShowElement(row, 'an1E')}
-
-        {createTitle('an', 'Einsatzort', 'ab')}
-        {createShowElement(row, 'anEE')}
-        {createShowElement(row, 'abEE')}
+        {createZeitBlock(row, 'ab', 'Wohnung', 'an', 'abWE', 'anWE')}
+        {createZeitBlock(row, 'von', 'Arbeitszeit', 'bis', 'beginE', 'endeE')}
+        {createZeitBlock(row, 'ab', '1. Tätigkeitsstätte', 'an', 'ab1E', 'an1E')}
+        {createZeitBlock(row, 'an', 'Einsatzort', 'ab', 'anEE', 'abEE')}
       </MyModalBody>
     </MyDivModal>,
   );

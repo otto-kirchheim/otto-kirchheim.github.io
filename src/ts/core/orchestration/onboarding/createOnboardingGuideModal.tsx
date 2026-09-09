@@ -165,7 +165,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
   const weiterText = 'Weiter';
   const weiter = () => {
     if (step.art === 'tour' && step.tab.tabButtonId === letzterTourTab) {
-      void springeZu('#start-tab');
+      void springeZu('#brand-start-tab');
     }
     setStepIndex(index => index + 1);
   };

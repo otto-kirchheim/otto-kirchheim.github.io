@@ -52,8 +52,10 @@ export default defineConfig(() => ({
         description: 'Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zetteln',
         lang: 'de',
         dir: 'ltr',
-        theme_color: '#212529',
-        background_color: '#000000',
+        // DB "neues Design": Weiss als Grund, DB Red bleibt Akzent (nie Flaeche). Das
+        // Splash matcht damit den App-Hintergrund im Hellmodus -- kein schwarzes Aufblitzen.
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
         orientation: 'any',
         scope: '/',
         id: '/',

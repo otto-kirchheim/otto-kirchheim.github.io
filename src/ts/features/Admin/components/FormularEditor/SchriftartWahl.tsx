@@ -117,14 +117,13 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
   const fehlt = fehlendeVorlagenSchnitte(value, vorlageFonts);
 
   return (
-    <div className="d-flex flex-column gap-1">
-      <div className="d-flex flex-wrap align-items-center gap-2 small">
-        <label className="d-flex align-items-center gap-1" title="Grundschrift für den gesamten Fließtext">
+    <div className="d-flex flex-column gap-2">
+      <div className="schriftwahl-raster small">
+        <label className="schriftwahl-zeile" title="Grundschrift für den gesamten Fließtext">
           <span className="text-muted">Schrift</span>
           <DbAuswahl
             beschriftung="Grundschrift"
             dicht
-            className="w-auto"
             value={basis}
             onChange={e => setzeBasis(e.target.value)}
           >
@@ -140,14 +139,13 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
           return (
             <label
               key={schnitt}
-              className="d-flex align-items-center gap-1"
+              className="schriftwahl-zeile"
               title={`Nur für ${schnittLabel(schnitt)}-Text abweichend (z.B. wenn die Grundschrift diesen Schnitt nicht hat)`}
             >
               <span className="text-muted">{schnittLabel(schnitt)}</span>
               <DbAuswahl
                 beschriftung={`Schrift für ${schnittLabel(schnitt)}`}
                 dicht
-                className="w-auto"
                 value={gewaehlt}
                 onChange={e => setzeAbweichung(schnitt, e.target.value)}
               >

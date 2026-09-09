@@ -48,6 +48,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@db-ux/agent-cli": "^5.3.0",
     "@db-ux/core-eslint-plugin": "5.3.0",
     "@db-ux/core-stylelint": "^5.3.0",
     "@double-great/stylelint-a11y": "^3.5.3",

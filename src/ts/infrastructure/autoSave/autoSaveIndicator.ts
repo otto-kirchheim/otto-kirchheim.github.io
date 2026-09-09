@@ -106,13 +106,21 @@ function isNetworkError(msg: string): boolean {
 
 function createBadgeElement(): HTMLSpanElement {
   const badge = document.createElement('span');
-  badge.className = 'autosave-badge db-tag position-absolute top-0 start-100 translate-middle';
-  badge.dataset['emphasis'] = 'strong';
+  // DB-`db-badge` (core-components) -- die dafuer vorgesehene Komponente fuer einen
+  // Zustandspunkt in der Ecke eines Elements. `data-placement` uebernimmt die absolute
+  // Positionierung, `data-semantic` die Farbe (in `updateBadge`). Der Knopf traegt
+  // `position-relative` als Bezugspunkt.
+  badge.className = 'autosave-badge db-badge';
+  badge.dataset['placement'] = 'corner-top-right';
+  badge.dataset['emphasis'] = 'strong'; // Vollfarbe statt blasser Lasur je Semantik
   badge.style.transition = 'opacity 0.3s ease';
   badge.style.opacity = '0';
 
+  // `<span class="db-icon" data-icon="…">` = das Markup, das `DBIcon` erzeugt. Die Groesse
+  // steuert `db-badge` ueber `.db-badge .db-icon` -- keine eigene `db-font-size-*`-Klasse.
+  // Der Status steht am `title` des Badge (siehe `updateBadge`), das Symbol ist dekorativ.
   const iconEl = document.createElement('span');
-  iconEl.className = 'db-icon db-font-size-sm';
+  iconEl.className = 'db-icon';
   iconEl.setAttribute('aria-hidden', 'true');
   badge.appendChild(iconEl);
 

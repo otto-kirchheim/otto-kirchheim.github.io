@@ -9,6 +9,7 @@ import { sonderZeileZelleWert, wert, zeilenFuerUeber, type Kontext, type Tabelle
 import { spaltenWert } from './spaltenWert';
 import { dreheTabellenZelle } from './tabellenDrehung';
 import { verteile } from './verteile';
+import { dbFontBytes, istDbFamilie } from './dbFonts';
 
 /** Standard-14-Schnitte je wählbarer Familie (`Layout.schriftart`). Einbetten kostet nichts --
  *  pdf-lib legt für Standard-Fonts keine Font-Bytes ins PDF. */
@@ -56,6 +57,19 @@ async function ladeSchnitt(
   eingebettet: EingebetteteFonts | undefined,
 ): Promise<PDFFont> {
   const index = SCHNITTE.indexOf(schnitt);
+  if (istDbFamilie(familie)) {
+    // DB Neo Screen Sans/Head aus `@db-ux/db-theme-fonts` einbetten (subset -- nur genutzte
+    // Glyphen). Fehlt das Asset (Build ohne ASSET-Secrets), gilt Helvetica im passenden Schnitt.
+    const bytes = await dbFontBytes(familie, schnitt);
+    if (bytes) {
+      try {
+        return await pdf.embedFont(bytes, { subset: true });
+      } catch (fehler) {
+        console.warn(`DB-Schrift "${familie}" (${schnitt}) nicht einbettbar -- Helvetica:`, fehler);
+      }
+    }
+    return pdf.embedFont(STANDARD_FAMILIEN.helvetica![index]!);
+  }
   if (familie.startsWith('vorlage:')) {
     // Nur die Bytes GENAU dieses Schnitts -- eine eingebettete Familie ohne z.B. Kursiv soll dort
     // nicht den aufrechten Normal-Schnitt zeigen, sondern Helvetica im passenden Schnitt.
@@ -84,9 +98,9 @@ async function ladeFontSet(
     Schnitt,
     string
   >;
-  // fontkit nur laden, wenn wirklich eine eingebettete Familie im Spiel ist -- bleibt sonst aus dem
-  // Haupt-Bundle des Download-Pfads.
-  if (Object.values(familien).some(f => f.startsWith('vorlage:'))) {
+  // fontkit nur laden, wenn wirklich eine einzubettende Familie im Spiel ist (Vorlagen- oder
+  // DB-Schrift) -- bleibt sonst aus dem Haupt-Bundle des Download-Pfads.
+  if (Object.values(familien).some(f => f.startsWith('vorlage:') || istDbFamilie(f))) {
     pdf.registerFontkit((await import('@pdf-lib/fontkit')).default);
   }
   return {

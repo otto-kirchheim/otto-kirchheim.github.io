@@ -1,5 +1,29 @@
 @import 'raster';
 
+// DB "neues Design" -- Formensprache: von rund zu eckig, Fokus auf Klarheit und Praezision
+// (90-Grad-Ecken). Die core-web-5.3-Komponenten runden ueber diese Tokens; global auf 0
+// gesetzt zieht das Karten, Knoepfe, Felder, Tags, Akkordeon, Drawer, Notifications usw. auf
+// eckige Ecken. `--db-border-radius-full` bleibt unveraendert fuer inhaerent runde Elemente
+// (Radio, Switch, Passwort-Staerke-Balken). Unlayered -> schlaegt die `:root`-Defaults des
+// db-theme.
+:root {
+  --db-border-radius-3xs: 0;
+  --db-border-radius-2xs: 0;
+  --db-border-radius-xs: 0;
+  --db-border-radius-sm: 0;
+  --db-border-radius-md: 0;
+  --db-border-radius-lg: 0;
+  --db-border-radius-xl: 0;
+  --db-border-radius-2xl: 0;
+  --db-border-radius-3xl: 0;
+
+  // Motiv der Schwelle: die offizielle Standardversion (`src/icons/DB_Schwelle/Screen/…`),
+  // Geometrie 1:1 uebernommen (viewBox 1800x240, 15 Balken, Raster 120, Breite 8 -> 120).
+  // Als Maske ueber `background-color` -> Farbe kommt aus dem Theme statt aus dem Asset.
+  // `preserveAspectRatio='none'` laesst die Maske sich mit `.schwelle` strecken.
+  --schwelle-motiv: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1800 240' preserveAspectRatio='none' fill='%23fff'%3e%3crect width='8' height='240'/%3e%3crect x='120' width='16' height='240'/%3e%3crect x='240' width='24' height='240'/%3e%3crect x='360' width='32' height='240'/%3e%3crect x='480' width='40' height='240'/%3e%3crect x='600' width='48' height='240'/%3e%3crect x='720' width='56' height='240'/%3e%3crect x='840' width='64' height='240'/%3e%3crect x='960' width='72' height='240'/%3e%3crect x='1080' width='80' height='240'/%3e%3crect x='1200' width='88' height='240'/%3e%3crect x='1320' width='96' height='240'/%3e%3crect x='1440' width='104' height='240'/%3e%3crect x='1560' width='112' height='240'/%3e%3crect x='1680' width='120' height='240'/%3e%3c/svg%3e");
+}
+
 body {
   justify-content: center;
 }
@@ -209,17 +233,48 @@ td > .knopfgruppe {
   --app-icon: url('../icons/filter-off.svg');
 }
 
-.icon-ewt {
-  display: flex;
+// EWT-Anzeige-Modal: Pfeilzeile, Titelzeile und Zeitzeile teilen dasselbe Raster mit festen
+// Aussenspalten -- so stehen Ab-Pfeil, `ab`/`von` und der linke Zeitwert senkrecht
+// uebereinander, ebenso An-Pfeil, `an`/`bis` und der rechte Zeitwert.
+.ewt-zeit {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr 4.5rem;
   align-items: center;
-  justify-content: center; // space-evenly;
-  padding-inline: 30px;
+  column-gap: var(--db-spacing-fixed-xs);
+  padding-inline: var(--db-spacing-fixed-md);
+  margin-block-end: var(--db-spacing-fixed-xs);
   font-size: smaller;
 }
 
-.icon-ewt-arrow {
-  display: flex;
-  justify-content: space-around;
+.ewt-zeit-links {
+  grid-column: 1;
+  justify-self: center;
+  text-align: center;
+}
+
+.ewt-zeit-rechts {
+  grid-column: 3;
+  justify-self: center;
+  text-align: center;
+}
+
+.ewt-zeit-titel {
+  grid-column: 2;
+  margin: 0;
+  text-align: center;
+}
+
+.ewt-zeit-pfeile {
+  font-size: inherit;
+}
+
+// Trennlinie im EWT-Anzeige-Modal: ein blankes `<hr>` kollabiert in der `.raster`-Grid-
+// Umgebung zu einem Punkt -- volle Rasterbreite + explizite Linie erzwingen.
+.ewt-trenner {
+  grid-column: 1 / -1;
+  margin-block: var(--db-spacing-fixed-sm);
+  border: 0;
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 td:has(.SchichtBereitschaft) {
@@ -745,6 +800,50 @@ body {
   z-index: 1030;
 }
 
+// DB "neues Design" -- die Schwelle (Markenstreifen aus Balken mit wachsender Breite,
+// Metapher Bahnschwelle, "dynamische Spannung von duenn nach dick"). Platzierung am
+// Formatrand: waagerecht an der UNTERkante des Startbereichs, rechtsbuendig und rund 2/3 der
+// Breite -- die dicken Balken laufen in die untere rechte Ecke, die duennen enden mittig. So
+// steht die Schwelle diagonal gegenueber der Wortmarke (oben links) und beruehrt sie nicht.
+// Genau einmal im Viewport, gerade Kanten, keine Rundung. Primaerer Einsatz laut DB:
+// DB Rot auf Weiss (Hellmodus) bzw. DB Rot ODER Weiss auf Cold Black (Dunkelmodus) -- hier
+// durchgaengig Rot. `background-color` = Dynamic Red, exakt der Farbwert des offiziellen
+// Screen-Assets (`src/icons/DB_Schwelle/Screen/DB_Schwelle_Dynamic-Red_RGB…`); die Schwelle
+// ist eine Markengrafik, kein UI-Element (fuer die gilt `#EC0016`).
+.schwelle {
+  block-size: var(--db-sizing-regular-md);
+  background-color: #ff002b;
+  mask: var(--schwelle-motiv) no-repeat right center / 66% 100%;
+}
+
+// Startseite: die Schwelle soll die fixierte Fusszeile beruehren. Der Body-Freiraum fuer die
+// Fusszeile (`padding/margin-block-end`) entfaellt hier, und der Startbereich reicht als
+// Flex-Spalte exakt bis zur Fusszeilen-Oberkante -- die Schwelle als letztes Kind wird per
+// `margin-block-start: auto` an die Unterkante gedrueckt. Kein senkrechter Scrollbalken.
+body:has(#start.active) {
+  padding-block-end: 0;
+  margin-block-end: 0;
+}
+
+// Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (nur per `opacity` versteckte)
+// Panel als 100dvh hohe Leerflaeche im Layout und schiebt die anderen Tabs nach unten weg.
+#start.active {
+  display: flex;
+  flex-direction: column;
+  // stylelint-disable-next-line db-ux/use-sizing -- Viewport minus fixe Kopf- (~3rem) und Fusszeilenhoehe (~2.25rem)
+  min-block-size: calc(100dvh - 5.75rem);
+
+  > .schwelle {
+    margin-block-start: auto;
+  }
+}
+
+@media screen and (min-width: 48em) {
+  .schwelle {
+    block-size: var(--db-sizing-regular-lg);
+  }
+}
+
 // Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.
 .db-brand {
   gap: 0.5rem;
@@ -818,6 +917,14 @@ body {
   // nur die Trennlinie stehen.
   .db-header-navigation-bar > .db-header-action-container:not(:has(.db-header-secondary-action)) {
     display: none;
+  }
+
+  // Der Design-Auswahl-Flyout ist der aeusserste rechte Eintrag. DB richtet ihn an der
+  // linken Kante des Eintrags aus -- er klappt dann nach rechts auf und ragt (auch bei
+  // `visibility: hidden`) ueber den Viewport, was ab 64em einen waagerechten Scrollbalken
+  // erzeugt. Rechtsbuendig verankern, damit er nach links/unten oeffnet und im Bild bleibt.
+  #bd-theme-menu {
+    inset-inline: auto 0;
   }
 }
 
@@ -905,6 +1012,19 @@ body {
 .dialog-koerper {
   flex: 1 1 auto;
   padding-block: 1rem;
+}
+
+// Schriftart-Dialog: Grundschrift + drei Schnitt-Abweichungen als ausgerichtete Zeilen
+// (Beschriftungsspalte fest, Auswahl fuellt) statt als umbrechende Inline-Reihe.
+.schriftwahl-raster {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--db-spacing-fixed-2xs) var(--db-spacing-fixed-sm);
+}
+
+.schriftwahl-zeile {
+  display: contents;
 }
 
 .dialog-fuss {

@@ -24,7 +24,7 @@
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
 - **Build Tool:** Vite (v8) mit `@vitejs/plugin-react` (Oxc)
 - **Sprache:** TypeScript (strict mode; kein any)
-- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app` (`src/scss/layers.scss`). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`)
+- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app < unlayered` (`src/scss/layers.scss`, dort ausführlich begründet). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`). DB "neues Design" (Phase I): `<html data-density="functional">`, Formensprache eckig (`--db-border-radius-*` = 0 am `:root` in `styles.scss`, nur `-full` bleibt), DB-Schwelle (`.schwelle` + `--schwelle-motiv`) am oberen Rand des Startbereichs. Brand-Regeln in der Memory `db-brand-farben-neues-design`
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
@@ -36,7 +36,8 @@
 ```bash
 ./scripts/install.sh   # bun install MIT den ASSET_*-Secrets aus .env (DB-UX-Markenassets)
 bun install            # ohne Secrets -- Build laeuft, aber ohne DB-Schriften/-Icons
-bun run start          # Entwicklung mit Vite Dev-Server (--host)
+bun run dev            # Entwicklung mit Vite Dev-Server (--host, Proxy-HMR ueber dev.otto.home64.de)
+bun run dev:local      # dito ohne Proxy (VITE_LOCAL_HMR=1, direkt http://localhost:8080)
 bun run build          # Produktion Build (nach ./dist)
 bun run test           # Bun-Testlauf (sequentiell pro Datei)
 bun run dev-test       # Bun Watch-Mode
@@ -45,7 +46,7 @@ bun run lint:fix       # ESLint auto-fix
 bun run lint:css       # Stylelint prüfen (Ratsche: --max-warnings, siehe stylelint.config.mjs)
 bun run lint:css:fix   # Stylelint auto-fix -- danach IMMER den Diff ansehen
 bun run coverage       # Tests mit Coverage
-bun run preview        # Build-Preview (Port 8082)
+bun run preview        # Build-Preview (schreibt nach ../public/public)
 ```
 
 ---

@@ -3,13 +3,17 @@ import type { FormatName, ListenGruppe, Schriftfamilie } from '@otto-kirchheim/n
 
 export type FormularCode = 'ez' | 'ewt' | 'bereitschaft' | 'ea';
 
-/** Standard-14-Schriftfamilien für die formularweite Schriftart (`Layout.schriftart`, je Schnitt
- *  wählbar). In der Vorlage eingebettete Familien (`vorlage:*`) hängt der Editor zur Laufzeit an
- *  (siehe `vorlageFonts.ts` / `SchriftartWahl.tsx`). */
+/** Wählbare Schriftfamilien für die formularweite Schriftart (`Layout.schriftart`, je Schnitt
+ *  wählbar). `helvetica`/`times`/`courier` sind die Standard-14 (nicht ins PDF eingebettet);
+ *  `db-sans`/`db-head` sind die DB-Neo-Screen-Schnitte aus `@db-ux/db-theme-fonts`, die
+ *  `build.ts` per fontkit ins PDF einbettet (subset). In der Vorlage eingebettete Familien
+ *  (`vorlage:*`) hängt der Editor zur Laufzeit an (siehe `vorlageFonts.ts` / `SchriftartWahl.tsx`). */
 export const SCHRIFTARTEN: { wert: Schriftfamilie; label: string }[] = [
   { wert: 'helvetica', label: 'Helvetica (Standard)' },
   { wert: 'times', label: 'Times' },
   { wert: 'courier', label: 'Courier' },
+  { wert: 'db-sans', label: 'DB Neo Screen Sans' },
+  { wert: 'db-head', label: 'DB Neo Screen Head' },
 ];
 
 /** Format-Auswahl für Feld/Spalte/Sonderzeilen-Zelle -- `''` steht für "kein eigenes Format". */

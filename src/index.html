@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" data-mode="auto" data-density="regular" style="color-scheme: light dark">
+<html lang="de" data-mode="auto" data-density="functional" style="color-scheme: light dark">
   <head>
     <meta charset="utf-8" />
     <base target="_top" />
@@ -8,7 +8,10 @@
     <meta name="author" content="Jan Otto" />
     <meta name="mobile-web-app-capable" content="true" />
     <meta name="apple-mobile-web-app-capable" content="true" />
-    <meta name="theme-color" content="#212529" />
+    <!-- DB "neues Design": DB Red (#EC0016) nie als Flaeche -- die Browserleiste folgt dem
+         App-Grund (Weiss im Hellmodus, Cold-Black-Ton des DB-Themes im Dunkelmodus). -->
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16181b" media="(prefers-color-scheme: dark)" />
     <title>Nebengeld</title>
     <link rel="icon" type="image/png" href="icons/16x16-icon.png" sizes="16x16" />
     <link rel="icon" type="image/png" href="icons/32x32-icon.png" sizes="32x32" />
@@ -46,20 +49,9 @@
                (`navDrawer.ts`), damit die Tab-Ids eindeutig bleiben. -->
           <div class="db-header-navigation d-none" id="navmenu">
             <nav class="db-navigation" id="tabs" role="tablist" aria-label="Hauptnavigation">
+              <!-- "Start" ist kein eigener Nav-Eintrag: die Wortmarke (`.db-brand`,
+                   `#brand-start-tab`) ist der Start-Schalter. -->
               <menu>
-                <li class="db-navigation-item" data-active="true" role="presentation">
-                  <a
-                    role="tab"
-                    id="start-tab"
-                    href="#start"
-                    data-tab-target="start"
-                    aria-controls="start"
-                    aria-selected="true"
-                    tabindex="0"
-                  >
-                    Start
-                  </a>
-                </li>
                 <li class="db-navigation-item d-none" role="presentation">
                   <a
                     role="tab"
@@ -113,6 +105,9 @@
                   </a>
                 </li>
                 <li class="db-navigation-item" role="presentation">
+                  <!-- Erster immer sichtbarer Eintrag: haelt beim Laden (Panel `start`, kein
+                       eigener Tab) den Tastaturfokus fuer die Tabliste. `tabController` zieht
+                       den `tabindex` bei jedem echten Tabwechsel nach. -->
                   <a
                     role="tab"
                     id="berechnung-tab"
@@ -120,16 +115,16 @@
                     data-tab-target="Berechnung"
                     aria-controls="Berechnung"
                     aria-selected="false"
-                    tabindex="-1"
+                    tabindex="0"
                   >
                     Berechnung
                   </a>
                 </li>
                 <li class="db-navigation-item nav-rechts" role="presentation">
-                  <button
-                    type="button"
+                  <a
                     role="tab"
                     id="einstellungen-tab"
+                    href="#Einstellungen"
                     data-tab-target="Einstellungen"
                     aria-controls="Einstellungen"
                     aria-selected="false"
@@ -137,13 +132,13 @@
                   >
                     <span class="db-icon d-none d-lg-inline" data-icon="gear_wheel"></span
                     ><span class="d-lg-none">Einstellungen</span>
-                  </button>
+                  </a>
                 </li>
                 <li class="db-navigation-item d-none" role="presentation" id="admin">
-                  <button
-                    type="button"
+                  <a
                     role="tab"
                     id="admin-tab"
+                    href="#Admin"
                     data-tab-target="Admin"
                     aria-controls="Admin"
                     aria-selected="false"
@@ -151,7 +146,7 @@
                   >
                     <span class="db-icon d-none d-lg-inline" data-icon="shield_check"></span
                     ><span class="d-lg-none">Admin</span>
-                  </button>
+                  </a>
                 </li>
 
                 <li class="db-navigation-item" role="presentation">
@@ -348,7 +343,7 @@
             </div>
           </div>
 
-          <div class="raster-auto mb-4 d-lg-none d-none abstand-2" id="startSchnellzugriff">
+          <div class="raster-auto mb-4 d-lg-none d-none abstand-3" id="startSchnellzugriff">
             <div class="d-none" id="quick-bereitschaft-tab">
               <button
                 type="button"
@@ -451,6 +446,10 @@
 						<span>Neuer Vordruck: <br />Es wird für jede Schicht eine Auftragsnummer benötigt!</span>
 					</div>
 				</div> -->
+
+        <!-- DB-Schwelle: Markenstreifen am unteren Rand des Startbereichs, rechtsbuendig,
+             diagonal gegenueber der Wortmarke oben links. -->
+        <div class="schwelle" aria-hidden="true"></div>
       </div>
 
       <!-- Tab Bereitschaft -->
