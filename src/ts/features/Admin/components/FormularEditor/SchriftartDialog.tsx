@@ -142,7 +142,7 @@ function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorl
   const geladen = useVorlagenFaces(vorlageFonts);
   const fehlt = new Set(fehlendeVorlagenSchnitte(value, vorlageFonts));
   return (
-    <div className="border rounded p-2 bg-body-tertiary">
+    <div className="border p-2 bg-body-tertiary">
       {SCHNITTE.map(s => (
         <SchnittZeile
           key={s.key}

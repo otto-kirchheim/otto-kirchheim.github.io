@@ -22,7 +22,7 @@ export function Abschnitt({
   children: ReactNode;
 }) {
   return (
-    <details className="klapp-abschnitt border rounded p-2 mb-2 bg-body" open={offen}>
+    <details className="klapp-abschnitt border p-2 mb-2 bg-body" open={offen}>
       <summary className="small fw-semibold d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
         <span className="klapp-pfeil" aria-hidden="true">
           ▸
@@ -58,7 +58,7 @@ export function KlappZeile({
   children: ReactNode;
 }) {
   return (
-    <details className="klapp-zeile border rounded p-2 mb-1" open={offen || undefined}>
+    <details className="klapp-zeile border p-2 mb-1" open={offen || undefined}>
       <summary className="d-flex align-items-center flex-wrap gap-1" style={{ cursor: 'pointer' }}>
         <span className="klapp-pfeil small" aria-hidden="true">
           ▸

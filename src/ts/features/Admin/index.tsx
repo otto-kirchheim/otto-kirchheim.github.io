@@ -95,7 +95,7 @@ export default function AdminTab() {
   }
 
   return (
-    <div className="admin-tab-bg py-4 px-2 px-md-4">
+    <div className="py-4 px-2 px-md-4">
       <div className="position-relative mb-3 text-center">
         <h1 className="mb-0 d-inline-flex align-items-center gap-1 text-dark-emphasis">
           <span className="db-icon db-font-size-lg" data-icon="profile_card" />
@@ -148,7 +148,7 @@ export default function AdminTab() {
       <div className="tab-content" id="admin-tab-content">
         {isSuperAdmin && (
           <div
-            className={`tab-pane fade ${isSuperAdmin ? 'show active' : ''} bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
+            className={`tab-pane fade ${isSuperAdmin ? 'show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
             id="admin-pane-dashboard"
             role="tabpanel"
             aria-labelledby="admin-tab-dashboard"
@@ -159,7 +159,7 @@ export default function AdminTab() {
         )}
 
         <div
-          className={`tab-pane fade ${!isSuperAdmin ? 'show active' : ''} bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
+          className={`tab-pane fade ${!isSuperAdmin ? 'show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
           id="admin-pane-users"
           role="tabpanel"
           aria-labelledby="admin-tab-users"
@@ -187,7 +187,7 @@ export default function AdminTab() {
 
         {canSeeVorgabenTab && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-info-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-info-subtle"
             id="admin-pane-vorgaben"
             role="tabpanel"
             aria-labelledby="admin-tab-vorgaben"
@@ -199,7 +199,7 @@ export default function AdminTab() {
 
         {canSeeTemplatesTab && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-warning-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-warning-subtle"
             id="admin-pane-templates"
             role="tabpanel"
             aria-labelledby="admin-tab-templates"
@@ -211,7 +211,7 @@ export default function AdminTab() {
 
         {canSeeFormulareTab && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-info-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-info-subtle"
             id="admin-pane-formulare"
             role="tabpanel"
             aria-labelledby="admin-tab-formulare"
@@ -223,7 +223,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-danger-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-danger-subtle"
             id="admin-pane-resources"
             role="tabpanel"
             aria-labelledby="admin-tab-resources"
@@ -235,7 +235,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-success-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-success-subtle"
             id="admin-pane-profiles"
             role="tabpanel"
             aria-labelledby="admin-tab-profiles"
@@ -247,7 +247,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override rounded-3 shadow-sm p-3 mb-4 border border-1 border-secondary-subtle"
+            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-secondary-subtle"
             id="admin-pane-logs"
             role="tabpanel"
             aria-labelledby="admin-tab-logs"

@@ -334,7 +334,7 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
       </div>
 
       {nachtAktiv && (
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Nachtschicht-Zeitraum</p>
           <div className="raster abstand-2">
             <WeekdayRangeSelector

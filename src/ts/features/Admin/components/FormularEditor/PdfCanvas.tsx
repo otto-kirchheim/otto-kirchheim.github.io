@@ -535,7 +535,7 @@ export function PdfCanvas({
         </div>
       )}
       <div className="position-relative">
-        <div className="border rounded overflow-auto" style={{ maxHeight: '70vh' }}>
+        <div className="border overflow-auto" style={{ maxHeight: '70vh' }}>
           <div
             className="position-relative"
             style={{

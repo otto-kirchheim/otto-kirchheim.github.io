@@ -112,7 +112,7 @@ export function AdminResourceEditModal({
 
                 {isUserRef ? (
                   <div className="d-flex align-items-center gap-2 flex-wrap">
-                    <code className="small bg-body-secondary rounded px-2 py-1">{String(val ?? '')}</code>
+                    <code className="small bg-body-secondary px-2 py-1">{String(val ?? '')}</code>
                     {userNameMap[String(val)] && <span className="small fw-semibold">{userNameMap[String(val)]}</span>}
                     {onNavigateToUser && (
                       <button
@@ -156,7 +156,7 @@ export function AdminResourceEditModal({
                     <div className="d-flex flex-column gap-1">
                       {(val as string[]).length === 0 && <em className="text-muted small">Keine Verknüpfungen</em>}
                       {(val as string[]).map((id, i) => (
-                        <div key={i} className="d-flex align-items-center gap-2 bg-body-secondary rounded px-2 py-1">
+                        <div key={i} className="d-flex align-items-center gap-2 bg-body-secondary px-2 py-1">
                           <code className="small flex-grow-1">{truncateId(id)}</code>
                           <button
                             className="db-button py-0"
@@ -177,7 +177,7 @@ export function AdminResourceEditModal({
                     <em className="text-muted small">Keine Verknüpfung (null)</em>
                   ) : (
                     <div className="d-flex align-items-center gap-2">
-                      <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{truncateId(val)}</code>
+                      <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{truncateId(val)}</code>
                       <button
                         className="db-button"
                         data-variant="outlined"
@@ -272,7 +272,7 @@ export function AdminResourceEditModal({
                   />
                 ) : isObjectId(val) ? (
                   <div className="d-flex align-items-center gap-2">
-                    <code className="small bg-body-secondary rounded px-2 py-1 flex-grow-1">{val}</code>
+                    <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{val}</code>
                     <button
                       className="db-button"
                       data-variant="outlined"

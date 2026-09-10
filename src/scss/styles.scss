@@ -1038,6 +1038,45 @@ body:has(#start.active) {
   inline-size: 100%;
 }
 
+// Optische Grenze vor "Berechnung": links davon die Fachbereiche
+// (Bereitschaft/EWT/Nebenbezuege/Entgeltausgleich), rechts die uebergreifenden Bereiche
+// (Berechnung, Einstellungen). Der Trenner folgt der Navigationsrichtung -- in der Kopfzeile
+// eine senkrechte Linie links, in der Schublade eine waagerechte oben. Gescopt ueber den
+// jeweiligen Platz, in den `navDrawer.ts` dieselbe `#navmenu`-Navigation schiebt.
+//
+// Die Linie liegt in einem `::before` im Aussenabstand, NICHT als `border`/`padding` am
+// `.db-navigation-item` selbst -- letzteres verbreitert die Item-Box und damit den
+// Aktiv-Indikator (`.db-navigation-item::after`, `inline-size: 100%`), der dann links ueber
+// den Text hinausragt.
+.db-header-navigation-container .nav-trenner,
+.db-header-drawer-navigation .nav-trenner {
+  position: relative;
+}
+
+.db-header-navigation-container .nav-trenner {
+  margin-inline-start: var(--db-spacing-fixed-sm);
+}
+
+.db-header-navigation-container .nav-trenner::before {
+  content: '';
+  position: absolute;
+  inset-block: 20%;
+  inset-inline-start: calc(var(--db-spacing-fixed-sm) / -2);
+  border-inline-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
+.db-header-drawer-navigation .nav-trenner {
+  margin-block-start: var(--db-spacing-fixed-sm);
+}
+
+.db-header-drawer-navigation .nav-trenner::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(var(--db-spacing-fixed-sm) / -2);
+  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
+}
+
 // --- Dialoge als DB-Drawer ------------------------------------------------------------------
 // Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die App-Huellen darin
 // (`dialog-kopf`/`-koerper`/`-fuss`) liefern nur Kopfzeile, Rumpf und Fusszeile -- Rahmen,

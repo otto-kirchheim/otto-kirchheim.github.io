@@ -93,7 +93,7 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
         </label>
       </div>
       {open && (
-        <div className="border rounded p-2 mt-1">
+        <div className="border p-2 mt-1">
           <SchichtOverrideEditor aZ={aZ} schichten={activeSchichten} overrides={overrides} onChange={handleEditor} />
           {aZ.sonder.aktiv && sonderActive && (
             <div className="mt-3 pt-3 border-top">

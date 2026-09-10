@@ -109,7 +109,7 @@ export function AdminProfileTemplateContentEditor({
       </div>
 
       {activeSection === 'Pers' && (
-        <div className="border rounded p-2 mb-2">
+        <div className="border p-2 mb-2">
           <div className="raster abstand-2">
             {PERS_FIELDS.map(field => (
               <div className="sp-md-6" key={`${templateId}-pers-${field.key}`}>
@@ -152,7 +152,7 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Arbeitszeit' && (
-        <div className="border rounded p-2 mb-2">
+        <div className="border p-2 mb-2">
           {templateContent.Arbeitszeit ? (
             <ArbeitszeiteingabePanel
               key={`${templateId}-arbeitszeit`}
@@ -177,7 +177,7 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Fahrzeit' && (
-        <div className="border rounded p-2 mb-2">
+        <div className="border p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-1">
             <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
             <button
@@ -244,7 +244,7 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'VorgabenB' && (
-        <div className="border rounded p-2 mb-2">
+        <div className="border p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
             <button
@@ -310,7 +310,7 @@ export function AdminProfileTemplateContentEditor({
                     ))}
                   </DbAuswahl>
 
-                  <div className="border rounded p-2" key={`${templateId}-vb-${currentIndex}`}>
+                  <div className="border p-2" key={`${templateId}-vb-${currentIndex}`}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <strong className="small d-flex align-items-center gap-2">
                         <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
@@ -595,7 +595,7 @@ export function AdminProfileTemplateContentEditor({
       )}
 
       {activeSection === 'Einstellungen' && (
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <div className="mb-2">
             <label className="small mb-1">Sichtbare Bereiche</label>
             <div className="d-flex flex-wrap gap-2">

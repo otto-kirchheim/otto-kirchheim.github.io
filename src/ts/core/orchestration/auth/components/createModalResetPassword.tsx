@@ -12,7 +12,7 @@ export default function createModalResetPassword(token: string): void {
   const modal = showModal(
     <MyFormModal myRef={ref} title="Passwort zurücksetzen" submitText="Passwort speichern" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Neues Passwort</p>
           <div className="raster abstand-2">
             <MyInput

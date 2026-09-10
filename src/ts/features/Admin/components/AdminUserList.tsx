@@ -386,7 +386,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
       {/* Aktionsleiste bei aktiver Auswahl */}
       {isSuperAdmin && selectedUsers.length > 0 && (
-        <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-body-tertiary sticky-top">
+        <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border bg-body-tertiary sticky-top">
           <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
           <button className="db-button" data-variant="brand" data-size="small" type="button" onClick={openBulkEdit}>
             <span className="db-icon me-1 db-font-size-sm" data-icon="pen" style={{ verticalAlign: 'middle' }} />

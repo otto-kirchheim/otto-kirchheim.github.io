@@ -21,7 +21,7 @@ export default function createModalChangePassword(): void {
         >
           Altes Passwort
         </MyInput>
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Neues Passwort</p>
           <div className="raster abstand-2">
             <MyInput

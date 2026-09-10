@@ -111,7 +111,7 @@ export function TabellenBlock({
   }
 
   return (
-    <div className="border rounded p-2 mb-2 bg-body-tertiary">
+    <div className="border p-2 mb-2 bg-body-tertiary">
       <div className="d-flex align-items-center gap-1 mb-1">
         <span className="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
         {bereich && (
@@ -385,7 +385,7 @@ export function TabellenBlock({
                       .filter(Boolean)
                       .join('   |   ');
                     return (
-                      <div key={i} className="border rounded p-2 mb-1 bg-body">
+                      <div key={i} className="border p-2 mb-1 bg-body">
                         <div className="d-flex align-items-end gap-1 mb-1 flex-wrap">
                           <ScharfButton
                             aktiv={zeilenAktiv}

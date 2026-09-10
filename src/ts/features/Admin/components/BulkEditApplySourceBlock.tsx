@@ -41,7 +41,7 @@ export function BulkEditApplySourceBlock({
   onToggleCategory,
 }: Props) {
   return (
-    <div className="border rounded p-3">
+    <div className="border p-3">
       <div className="fw-semibold mb-2">Daten übernehmen von</div>
 
       <div className="d-flex flex-column gap-2">

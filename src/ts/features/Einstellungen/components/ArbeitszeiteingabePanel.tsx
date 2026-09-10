@@ -258,7 +258,7 @@ export function SchichtSection({
           />
         ))}
         {addingOverride ? (
-          <div className="border rounded p-2 mt-2">
+          <div className="border p-2 mt-2">
             <p className="small text-muted fw-semibold text-uppercase mb-2">Neue Zeitvariante</p>
             <div className="d-flex gap-1 mb-2">
               {regelarbeitstage.map(day => (

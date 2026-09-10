@@ -217,7 +217,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         <small className="text-muted" id="schichtHinweisText" />
 
-        <div className="border rounded p-3">
+        <div className="border p-3">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Bereitschaftszeitraum</p>
           {/* Zeit-Platzhalter werden unmittelbar von applyBereitschaftsVorgabe aus aZ je Wochentag gesetzt. */}
           {punktZeile('Anfang', false, datumInput(), createTimeInputElement('bAT', 'Von', true))}
@@ -250,7 +250,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         {spaetVerfuegbar && (
           <div
-            className="border rounded p-3"
+            className="border p-3"
             id="spaetschicht"
             style={{
               display: !(vorgabenB[auswahl].schichten?.includes('spaet') ?? false) ? 'none' : undefined,
@@ -287,7 +287,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
           <div
-            className="border rounded p-3"
+            className="border p-3"
             id="sonderschicht"
             style={{ display: (vorgabenB[auswahl].schichten?.includes('sonder') ?? false) ? '' : 'none' }}
           >
@@ -322,7 +322,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         </div>
 
         <div
-          className="border rounded p-3"
+          className="border p-3"
           id="nachtschicht"
           style={{
             display: !(vorgabenB[auswahl].schichten?.includes('nacht') ?? vorgabenB[auswahl].nacht)

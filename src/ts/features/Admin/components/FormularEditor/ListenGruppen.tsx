@@ -44,7 +44,7 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
         const kategorie = VORLAGEN_KATEGORIE[name];
         const kurztexte = Boolean(gruppe.beschriftungen);
         return (
-          <div key={name} className="border rounded p-2 mb-1 bg-body">
+          <div key={name} className="border p-2 mb-1 bg-body">
             <div className="d-flex align-items-center gap-1 mb-1">
               <span className="small fw-semibold flex-grow-1">
                 {name} <span className="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>

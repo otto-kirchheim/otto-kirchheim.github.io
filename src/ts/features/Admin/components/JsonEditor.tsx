@@ -55,7 +55,7 @@ export function JsonEditor({ value, onChange, error }: Props) {
 
   return (
     <div
-      className={`border rounded ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
+      className={`border ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
     >
       {/* Kopfzeile / Summary – immer sichtbar, zum Auf-/Zuklappen */}
       <div

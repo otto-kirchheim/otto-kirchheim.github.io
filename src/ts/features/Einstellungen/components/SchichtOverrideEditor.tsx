@@ -60,7 +60,7 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
         const base = aZ?.[typ];
         const enabled = overrides[typ] !== undefined;
         return (
-          <div key={typ} className="border rounded p-2 mb-2">
+          <div key={typ} className="border p-2 mb-2">
             <div className="db-checkbox mb-1" data-size="small">
               <label htmlFor={`override-${typ}`}>
                 <input

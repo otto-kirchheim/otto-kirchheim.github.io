@@ -258,7 +258,7 @@ export function AdminVorgabenEditor() {
         )}
 
         {monthEntries.map((entry, index) => (
-          <div key={`${entry.key}-${index}`} className="border rounded p-3">
+          <div key={`${entry.key}-${index}`} className="border p-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <div className="d-flex align-items-center gap-2">
                 <DbFeld

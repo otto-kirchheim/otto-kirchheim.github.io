@@ -350,6 +350,12 @@ $ausrichtung: (
     border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default) !important;
   }
 
+  // Kraeftigerer Rahmen fuer "geaendert"-Betonung (OeLevelInputs, Formel-Verschachtelung,
+  // Signatur-Griff im PdfCanvas). Nur die Breite -- Farbe kommt aus `.border-*`.
+  .border-2 {
+    border-width: var(--db-border-width-xs) !important;
+  }
+
   .border-0 {
     border: 0 !important;
   }
@@ -372,26 +378,10 @@ $ausrichtung: (
     }
   }
 
-  .rounded {
-    border-radius: var(--db-border-radius-sm) !important;
-  }
-
-  .rounded-0 {
-    border-radius: 0 !important;
-  }
-
-  .rounded-1 {
-    border-radius: var(--db-border-radius-xs) !important;
-  }
-
-  .rounded-2 {
-    border-radius: var(--db-border-radius-sm) !important;
-  }
-
-  .rounded-3 {
-    border-radius: var(--db-border-radius-md) !important;
-  }
-
+  // `.rounded` / `.rounded-1..3` gab es als Bootstrap-Ersatz -- im DB "neuen Design" sind alle
+  // `--db-border-radius-*` (ausser `-full`) auf 0 (`styles.scss :root`, Formensprache eckig),
+  // die Klassen waren also wirkungslos und wurden aus dem Markup entfernt. Nur `.rounded-circle`
+  // bleibt (echte 50%-Rundung, z.B. Signatur-Griff im PdfCanvas).
   .rounded-circle {
     border-radius: 50% !important;
   }

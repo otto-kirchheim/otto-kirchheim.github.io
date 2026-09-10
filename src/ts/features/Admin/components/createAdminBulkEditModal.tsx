@@ -345,7 +345,7 @@ export function AdminBulkEditModal({
             </div>
 
             <div className="sp-xl-6">
-              <div className="border rounded p-3 h-100 d-flex flex-column gap-3">
+              <div className="border p-3 h-100 d-flex flex-column gap-3">
                 <div className="fw-semibold">OE ändern</div>
 
                 <BulkEditOeLevelsEditor

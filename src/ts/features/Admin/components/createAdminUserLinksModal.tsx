@@ -94,7 +94,7 @@ function LinkSection({
   }
 
   return (
-    <div className="border rounded p-2 mb-2">
+    <div className="border p-2 mb-2">
       <p className="fw-semibold mb-1">{config.heading}</p>
       <p className="small text-body-secondary mb-2">
         {config.description} Gültigkeit: {config.validity}.

@@ -243,7 +243,7 @@ export function FormularUpload() {
         Gültigkeitszeiträume danach lückenlos aneinander anschließen, und fragt sonst nach.
       </p>
 
-      <div className="border rounded p-2">
+      <div className="border p-2">
         <h6 className="small fw-semibold">Vorhandene Versionen ({formular})</h6>
         <FormularVersionenListe
           versionen={versionen}
@@ -321,7 +321,7 @@ export function FormularUpload() {
         />
       </div>
 
-      <details className="border rounded p-2 bg-body-secondary">
+      <details className="border p-2 bg-body-secondary">
         <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
           Hilfe zur Koordinaten-Config
         </summary>

@@ -2,6 +2,36 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-10 (89)
+
+### chore (tote Bootstrap-Reste in Klassen entfernt)
+
+- `class="rounded"` / `rounded-1..3` lösten zu `border-radius: var(--db-border-radius-*)` = `0`
+  auf (DB „neues Design", eckig) → wirkungslos. **57 Vorkommen in 38 Dateien** aus dem Markup
+  entfernt; die zugehörigen Definitionen in `utilities.scss` gelöscht. `rounded-circle` bleibt
+  (echte 50 %-Rundung). Zwei Tests (`.border.rounded`-Selektoren) mitgezogen.
+- `admin-tab-bg` (`Admin/index.tsx`): keine Regel, kein JS-Hook → entfernt.
+- `footer`-Klasse am `<footer>` (`index.html`): keine `.footer`-Regel, `.app-footer` macht die
+  Arbeit → entfernt.
+- `.border-2` hatte keine Regel (nur `.border-1`) → die 2px-Betonung (OeLevelInputs,
+  Formel-Verschachtelung, Signatur-Griff) wirkte nicht. `.border-2 { border-width:
+  var(--db-border-width-xs) }` in `utilities.scss` ergänzt, damit die 3 Aufrufstellen greifen.
+
+## 2026-09-10 (88)
+
+### change (Navigation: Trenner vor „Berechnung")
+
+- `<li>` von „Berechnung" bekommt die Klasse `nav-trenner` (`src/index.html`). `styles.scss`
+  zeichnet je nach Navigationsrichtung eine Linie über ein `::before` im Außenabstand (NICHT
+  `border`/`padding` am `.db-navigation-item` selbst -- das verbreitert die Item-Box und schiebt
+  den roten Aktiv-Indikator `::after` über den Text): in der Kopfzeile senkrecht links
+  (`.db-header-navigation-container .nav-trenner`), in der mobilen Schublade waagerecht oben
+  (`.db-header-drawer-navigation .nav-trenner`) -- `navDrawer.ts` schiebt dieselbe `#navmenu`
+  zwischen beiden Plätzen. Grenzt die Fachbereiche (Bereitschaft/EWT/Nebenbezüge/
+  Entgeltausgleich) von den übergreifenden Bereichen (Berechnung, Einstellungen) ab.
+- Grenzfall: sind alle Fachbereiche ausgeblendet (`d-none`), steht die Linie als führender
+  Akzent vor „Berechnung" -- optisch unauffällig, kein Fehler.
+
 ## 2026-09-10 (87)
 
 ### change (FormularEditor: alles ausklappbar -- Abschnitte UND einzelne Felder/Spalten)

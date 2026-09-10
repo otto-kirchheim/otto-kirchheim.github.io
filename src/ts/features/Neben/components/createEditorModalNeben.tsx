@@ -171,7 +171,7 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
         {['Beginn', 'Ende'].map(value => createTimeElement(row, value, { required: true }))}
 
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
           <div className="raster abstand-2">
             {configuredZulagen.map(zulage => {

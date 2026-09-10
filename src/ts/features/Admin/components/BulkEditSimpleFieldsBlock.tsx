@@ -13,7 +13,7 @@ type Props = {
 /** "Weitere Felder setzen": Betrieb/Gewerk/Erste TkgSt/TkgSt Adresse als Checkbox+Textfeld. */
 export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
   return (
-    <div className="border rounded p-3">
+    <div className="border p-3">
       <div className="fw-semibold mb-2">Weitere Felder setzen</div>
       <div className="d-flex flex-column gap-2">
         {SIMPLE_FIELD_KEYS.map(key => (

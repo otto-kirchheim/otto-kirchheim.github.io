@@ -553,7 +553,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   }
 
   return (
-    <div className="border rounded p-2">
+    <div className="border p-2">
       <div className="d-flex align-items-center gap-2 mb-2">
         <nav className="db-navigation admin-unternavigation flex-grow-1" aria-label="Seiten der Vorlage">
           <menu>

@@ -223,7 +223,7 @@ export function AnkreuzBedingung({
       </div>
 
       {wenn.berechnet ? (
-        <div className="border rounded p-2 mb-1">
+        <div className="border p-2 mb-1">
           <Rechnung
             wert={wenn.berechnet}
             zeilenFelder={zeilenFelder}
@@ -323,7 +323,7 @@ export function FeldAnkreuzBedingung({
       </div>
 
       {wenn.berechnet ? (
-        <div className="border rounded p-2 mb-1">
+        <div className="border p-2 mb-1">
           <AggregationEditor
             wert={wenn.berechnet}
             formular={formular}

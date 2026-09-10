@@ -182,7 +182,7 @@ export function AdminUserCard({
               defaultLevelCount={splitOeInput(edit.oe).length}
             />
 
-            <div className="border rounded p-2 mt-2">
+            <div className="border p-2 mt-2">
               <div className="small fw-semibold mb-2">Spezielle Admin-Berechtigungen</div>
 
               <div className="mb-1">

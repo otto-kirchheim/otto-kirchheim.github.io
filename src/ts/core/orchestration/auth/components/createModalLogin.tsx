@@ -20,7 +20,7 @@ export default function createModalLogin(): void {
 
       {supportsPasskeys && (
         <div className="w-100 px-3 p-3">
-          <div className="border rounded-3 px-3 py-2 bg-body-tertiary">
+          <div className="border px-3 py-2 bg-body-tertiary">
             <div className="small fw-semibold text-uppercase text-body-secondary mb-1">Alternative Anmeldung</div>
             <p className="small text-body-secondary mb-2">
               Mit einem gespeicherten Passkey kann der Benutzername leer bleiben – der Browser zeigt dann passende

@@ -149,14 +149,10 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
       onSubmit={onSubmit()}
     >
       <MyModalBody>
-        <p className="text-bg-warning p-2 rounded small">
+        <p className="text-bg-warning p-2 small">
           Hinweis: Vor dem Speichern muss ein passender Bereitschaftszeitraum vorhanden sein.
         </p>
-        <p
-          ref={bzSyncHintRef}
-          className="text-bg-warning p-2 rounded small"
-          style={{ display: hasUnsyncedBz() ? '' : 'none' }}
-        >
+        <p ref={bzSyncHintRef} className="text-bg-warning p-2 small" style={{ display: hasUnsyncedBz() ? '' : 'none' }}>
           Achtung: Es gibt einen gerade erst angelegten, noch nicht gespeicherten Bereitschaftszeitraum. Falls dieser
           zum Einsatz passt, bitte kurz warten, bis er synchronisiert ist.
         </p>

@@ -56,7 +56,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
     onChange({ faktoren: { ...faktoren, ...teil }, gekoppelt: g });
 
   return (
-    <div className="border border-primary rounded p-2 mb-2 bg-primary-subtle small">
+    <div className="border border-primary p-2 mb-2 bg-primary-subtle small">
       <div className="d-flex flex-wrap align-items-center gap-2">
         <strong className="me-1">Koordinaten anpassen</strong>
         {alt && (

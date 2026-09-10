@@ -65,7 +65,7 @@ describe('createAdminUserLinksModal', () => {
 
   it('zeigt einen Hinweis statt Button, wenn E-Mail bereits verifiziert ist', () => {
     const container = renderModal('u1', 'Max', true);
-    const sections = container.querySelectorAll('.border.rounded');
+    const sections = container.querySelectorAll('.border.p-2.mb-2');
     expect(sections[0].textContent).toContain('bereits verifiziert');
     expect(sections[0].querySelector('button')).toBeNull();
     expect(sections[1].querySelector('button')).not.toBeNull();
@@ -157,7 +157,7 @@ describe('createAdminUserLinksModal', () => {
     });
     writeTextMock.mockResolvedValue(undefined);
     const container = renderModal('u1', 'Erika Musterfrau');
-    const resetButton = container.querySelectorAll('.border.rounded')[1].querySelector('button') as HTMLButtonElement;
+    const resetButton = container.querySelectorAll('.border.p-2.mb-2')[1].querySelector('button') as HTMLButtonElement;
     resetButton.click();
     await flush();
     await flush();

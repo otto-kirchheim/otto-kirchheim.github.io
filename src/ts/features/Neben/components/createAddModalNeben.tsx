@@ -111,7 +111,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
     >
       <MyModalBody>
         <div>
-          <p className="text-center text-bg-warning p-1 rounded mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
+          <p className="text-center text-bg-warning p-1 mb-0">!!! Erst EWT Eingeben und Berechnen !!!</p>
         </div>
         <MySelect className="sp-sm-6" title="Tag (Aus EWT)" id="Tag" required options={getTagOptions(dataE)} />
         <MyInput
@@ -125,7 +125,7 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
         >
           Auftragsnummer
         </MyInput>
-        <div className="border rounded p-2">
+        <div className="border p-2">
           <p className="text-muted small fw-semibold text-uppercase mb-2 ps-1">Zulagen</p>
           <div className="raster abstand-2">
             {configuredZulagen.map(zulage => (

@@ -125,7 +125,7 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
         // Platzierung verschieden (`TabellenBereich.sonderzeilen[].ueber`) und wird dort angezeigt.
         const rows = zeilenFuerUeber('$alle', tabelleName, vorschau.kontext);
         return (
-          <div key={zeileIndex} className="border rounded p-2 mb-1 bg-body">
+          <div key={zeileIndex} className="border p-2 mb-1 bg-body">
             <div className="d-flex align-items-center gap-1 mb-1">
               <SonderZeileName
                 name={name}

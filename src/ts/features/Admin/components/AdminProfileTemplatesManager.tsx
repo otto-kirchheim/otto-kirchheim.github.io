@@ -371,10 +371,7 @@ export function AdminProfileTemplatesManager() {
           const templateContent = edit.templateContent;
 
           return (
-            <div
-              key={template._id}
-              className={`border rounded ${changed ? 'border-warning' : 'border-secondary-subtle'}`}
-            >
+            <div key={template._id} className={`border ${changed ? 'border-warning' : 'border-secondary-subtle'}`}>
               <button
                 className="db-button text-start d-flex justify-content-between align-items-center"
                 data-variant="filled"
