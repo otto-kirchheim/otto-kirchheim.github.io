@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-10 (90)
+
+### chore (Rasterabstände auf DB-UX-Spacing-Tokens)
+
+- Die `$abstaende`-Map in `src/scss/raster.scss` (Stufen `.abstand-0..5`, Ersatz für Bootstraps
+  `g-0..g-5`) hielt eigene rem-Werte. Jetzt auf `--db-spacing-fixed-*` gelegt
+  (`2xs`/`xs`/`md`/`lg`/`2xl`), damit der Rasterabstand automatisch der Density folgt.
+- Bei `functional`/`regular` sind die rem-Werte identisch zu vorher (0.25 / 0.5 / 1 / 1.5 / 3 rem),
+  also kein visueller Diff im aktuellen Theme. `.abstand-0` bleibt hart `0`.
+- DB UX hat kein 12-Spalten-Raster; `raster.scss` (`.raster`/`.sp-*`/`.raster-auto`) bleibt der
+  App-eigene Bootstrap-Grid-Ersatz.
+
 ## 2026-09-10 (89)
 
 ### chore (tote Bootstrap-Reste in Klassen entfernt)
