@@ -4,7 +4,7 @@ import { Rechnung } from './aggregationUndRechnung';
 import { AnkreuzBedingung } from './bedingungEditor';
 import { istBooleanFeld, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
 import { DatenpfadWahl } from './datenpfadUndFormeln';
-import { DarstellungsFelder, ScharfButton, Zellkoordinaten, istGleich } from './feldPanelGemeinsam';
+import { DarstellungsFelder, KlappZeile, ScharfButton, Zellkoordinaten, istGleich } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
 import { DbAuswahl, DbFeld } from '@/components';
@@ -43,47 +43,54 @@ export function SpalteZeile({
   const zeilenFelder = katalogZeilenFelder(formular, quelle);
   const gruppen = Object.keys(listen ?? {});
   const modus = spalte.listenPlatz ? 'liste' : spalte.wenn ? 'wenn' : spalte.berechnet ? 'berechnet' : 'daten';
+  const aktiv = istGleich(armed, { bereich: 'spalte', tabelle: tabellenName, index });
   return (
-    <div className="border rounded p-2 mb-1">
-      <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
-        <ScharfButton
-          aktiv={istGleich(armed, { bereich: 'spalte', tabelle: tabellenName, index })}
-          onClick={onArm}
-          titel="Auf dem PDF die Spaltenbreite markieren — nur die x-Kanten werden übernommen"
-        />
-        <span className="small text-truncate flex-grow-1">{spalte.label ?? (spalte.key || '(ohne Feld)')}</span>
+    <KlappZeile
+      offen={aktiv}
+      titel={spalte.label ?? (spalte.key || '(ohne Feld)')}
+      aktionen={
+        <>
+          <ScharfButton
+            aktiv={aktiv}
+            onClick={onArm}
+            titel="Auf dem PDF die Spaltenbreite markieren — nur die x-Kanten werden übernommen"
+          />
+          <button
+            type="button"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-size="small"
+            onClick={() => onMove(-1)}
+            title="Nach oben"
+          >
+            <span className="db-icon db-font-size-xs" data-icon="arrow_up" style={{ verticalAlign: 'middle' }} />
+          </button>
+          <button
+            type="button"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-size="small"
+            onClick={() => onMove(1)}
+            title="Nach unten"
+          >
+            <span className="db-icon db-font-size-xs" data-icon="arrow_down" style={{ verticalAlign: 'middle' }} />
+          </button>
+          <button
+            type="button"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-color="critical"
+            data-size="small"
+            onClick={onDelete}
+            title="Spalte löschen"
+          >
+            <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
+          </button>
+        </>
+      }
+    >
+      <div className="mb-1">
         <Zellkoordinaten wert={spalte} onChange={onChange} nurX />
-        <button
-          type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-size="small"
-          onClick={() => onMove(-1)}
-          title="Nach oben"
-        >
-          ↑
-        </button>
-        <button
-          type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-size="small"
-          onClick={() => onMove(1)}
-          title="Nach unten"
-        >
-          ↓
-        </button>
-        <button
-          type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-color="critical"
-          data-size="small"
-          onClick={onDelete}
-          title="Spalte löschen"
-        >
-          <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-        </button>
       </div>
 
       <div className="knopfgruppe w-100 mb-1">
@@ -248,6 +255,6 @@ export function SpalteZeile({
       />
       <DarstellungsFelder wert={spalte} onChange={onChange} />
       <WertVorschau text={spaltenWert(spalte, beispielZeile, vorschau.kontext.listen[tabellenName])} />
-    </div>
+    </KlappZeile>
   );
 }

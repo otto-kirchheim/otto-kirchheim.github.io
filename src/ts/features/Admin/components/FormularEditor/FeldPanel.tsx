@@ -4,6 +4,7 @@ import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FeldListe } from './FeldZeile';
 import { gruppiere, katalogZeilenFelder, ZEILEN_QUELLEN } from './datenKatalog';
 import {
+  Abschnitt,
   DarstellungsFelder,
   ScharfButton,
   ZahlFeld,
@@ -44,6 +45,7 @@ export function FeldPanel({
   armed,
   onArm,
   vorschau,
+  onSonderzeileUmbenannt,
 }: Props) {
   const [neuerName, setNeuerName] = useState('');
   const signaturAktiv = istGleich(armed, { bereich: 'signaturBild' });
@@ -85,18 +87,27 @@ export function FeldPanel({
 
   return (
     <div>
-      <FeldListe
-        felder={seite.felder}
-        formular={formular}
-        tabellen={tabellen}
-        armed={armed}
-        onArm={onArm}
-        vorschau={vorschau}
-        onChange={felder => onSeiteChange({ ...seite, felder })}
-      />
+      <Abschnitt
+        titel="Felder"
+        zusatz={<span className="text-body-secondary">{Object.keys(seite.felder).length}</span>}
+        offen
+      >
+        <FeldListe
+          felder={seite.felder}
+          formular={formular}
+          tabellen={tabellen}
+          armed={armed}
+          onArm={onArm}
+          vorschau={vorschau}
+          onChange={felder => onSeiteChange({ ...seite, felder })}
+        />
+      </Abschnitt>
 
-      <div className="mb-3">
-        <div className="small fw-semibold">Datentabellen</div>
+      <Abschnitt
+        titel="Datentabellen"
+        zusatz={<span className="text-body-secondary">{Object.keys(tabellen).length}</span>}
+        offen
+      >
         <div className="small text-body-secondary mb-1">
           Mehrere Tabellen dürfen dieselbe Quelle nutzen und sich nur im Filter unterscheiden (z.B. Einsätze getrennt
           nach LRE). Startposition und Zeilenzahl gelten immer je Seite; Zeilenhöhe und Spalten gelten standardmäßig für
@@ -113,6 +124,7 @@ export function FeldPanel({
             armed={armed}
             onArm={onArm}
             vorschau={vorschau}
+            onSonderzeileUmbenannt={(alt, neu) => onSonderzeileUmbenannt(name, alt, neu)}
             onChange={next => onTabellenChange({ ...tabellen, [name]: next })}
             onDelete={() => {
               const rest = { ...tabellen };
@@ -137,9 +149,9 @@ export function FeldPanel({
             + Tabelle
           </button>
         </div>
-      </div>
+      </Abschnitt>
 
-      <div className="mb-3">
+      <Abschnitt titel="Signatur & Unterschriftsdatum">
         <div className="small fw-semibold mb-1">Signatur-Fläche</div>
         <div className="d-flex align-items-center gap-2">
           <ScharfButton
@@ -267,7 +279,7 @@ export function FeldPanel({
             + Datum hinzufügen
           </button>
         )}
-      </div>
+      </Abschnitt>
     </div>
   );
 }

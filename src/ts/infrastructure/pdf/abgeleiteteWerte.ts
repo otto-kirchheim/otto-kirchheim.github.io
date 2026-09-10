@@ -81,16 +81,14 @@ export function bzAbgeleiteteWerte(
   zeile: Pick<IPdfBereitschaftszeitraum, 'Beginn' | 'Ende' | 'Pause'>,
 ): BzAbgeleiteteWerte {
   const minuten =
-    ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) + zeile.Pause;
+    ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) + (zeile.Pause ?? 0);
   return { Dauer: minuten };
 }
 
 export interface BeAbgeleiteteWerte {
   /** Minuten, nicht HH:mm -- siehe Modulkommentar. */
   Dauer: number;
-  /** Rohe km, nur für Tarifkraft gedruckt -- sonst `undefined` (siehe `PrivatKmBetrag`). */
-  PrivatKm?: number;
-  /** Euro, auf 2 Nachkommastellen gerundet, nur für Beamte gedruckt -- sonst `undefined`. */
+  /** Euro (km * Satz), auf 2 Nachkommastellen gerundet; `undefined` bei 0 km. */
   PrivatKmBetrag?: number;
 }
 
@@ -106,20 +104,17 @@ export interface BeAbgeleiteteWerte {
  * einer sichtbar falschen Summe aufaddieren würde.
  *
  * Gedruckt wird je Person nur EINE der beiden Spalten (Tarifkraft: rohe km / Beamter: Euro-Betrag,
- * User-Vorgabe 2026-08-25) -- der jeweils andere Wert bleibt `undefined` statt einer Zahl, die im
- * Formular gar nicht vorgesehen ist. Der Betrag wird dafür IMMER aus der rohen `zeile.PrivatKm`
- * berechnet, bevor `PrivatKm` selbst ggf. auf `undefined` geht (Reihenfolge wichtig).
+ * User-Vorgabe 2026-08-25). Beide Werte liegen auf der Zeile -- die rohe `PrivatKm` aus dem
+ * Zeilenobjekt selbst, der Euro-Betrag hier --; welche Spalte erscheint, entscheidet die Vorlage.
  */
 export function beAbgeleiteteWerte(
   zeile: Pick<IPdfBereitschaftseinsatz, 'Beginn' | 'Ende'> & { PrivatKm: number },
   privatKmSatz: number,
-  beamter: boolean,
 ): BeAbgeleiteteWerte {
   const privatKmBetrag = Math.round(zeile.PrivatKm * privatKmSatz * 100) / 100;
   return {
     Dauer: ZEILEN_OPS.zeitdifferenz([alsMinuten(zeile.Ende), alsMinuten(zeile.Beginn)]),
-    PrivatKm: beamter ? undefined : zeile.PrivatKm || undefined,
-    PrivatKmBetrag: beamter ? privatKmBetrag || undefined : undefined,
+    PrivatKmBetrag: privatKmBetrag || undefined,
   };
 }
 

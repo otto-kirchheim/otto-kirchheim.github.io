@@ -19,6 +19,12 @@ export type Props = {
   armed: Armed | null;
   onArm: (armed: Armed | null) => void;
   vorschau: Vorschau;
+  /**
+   * Benennt eine Sonderzeile um -- Inhalt (`TabellenDef.sonderzeilen`) UND alle Platzierungen
+   * (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite in einem Zug, sonst zeigen die
+   * Platzierungen nach dem Umbenennen ins Leere. Muss auf `value`-Ebene laufen (kennt alle Seiten).
+   */
+  onSonderzeileUmbenannt: (tabelle: string, alt: string, neu: string) => void;
 };
 
 /**

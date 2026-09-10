@@ -14,7 +14,7 @@ import type {
   IVorgabenGeldType,
   IVorgabenU,
 } from '@/types';
-import type { IBereitschaftszeitraumPdfBody, IEntgeltausgleichPdfBody, INebengeldPdfBody } from '../pdf/pdfDaten';
+import type { IBereitschaftszeitraumPdfBody, IEntgeltausgleichPdfBody, IEwtPdfBody, INebengeldPdfBody } from '../pdf/pdfDaten';
 import {
   beAbgeleiteteWerte,
   bereitschaftszulageAbgeleiteteWerte,
@@ -116,7 +116,9 @@ export default async function generatePDF(
       // analog EWT (Phase 10). In benannten Variablen gehalten (statt inline in `data.Daten`), weil
       // dieselben Zeilen gleich nochmal für die Bereitschaftszulage summiert werden.
       const bzMitDauer = bzRaw.map(bz => {
-        const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause ?? 0 };
+        // 0-Pause bewusst als `undefined` -- die Spalte bleibt leer statt „0" zu drucken;
+        // `bzAbgeleiteteWerte()` deckelt intern mit `?? 0`, die Dauer bleibt korrekt.
+        const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause || undefined };
         return { ...basis, ...bzAbgeleiteteWerte(basis) };
       });
       const beMitDauer = beRaw.map(be => {
@@ -128,7 +130,7 @@ export default async function generatePDF(
           LRE: be.LRE,
           PrivatKm: be.PrivatKm ?? 0,
         };
-        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz, beamter) };
+        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
       });
       data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumPdfBody['Daten'];
 
@@ -176,7 +178,7 @@ export default async function generatePDF(
           // `build()` sieht sie dann als normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
           return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
         }),
-      };
+      } satisfies IEwtPdfBody['Daten'];
       break;
     }
     case 'N': {

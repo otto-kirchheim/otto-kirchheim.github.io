@@ -483,6 +483,30 @@ td:has(.SchichtBereitschaft) {
   }
 }
 
+// FormularEditor: ausklappbare Abschnitte und Einzel-Zeilen (Feld/Spalte).
+// `<summary>` als Flex ohne den nativen Marker -- der Pfeil `.klapp-pfeil` ersetzt ihn und
+// dreht sich beim Aufklappen.
+.klapp-zeile > summary,
+.klapp-abschnitt > summary {
+  list-style: none;
+}
+
+.klapp-zeile > summary::-webkit-details-marker,
+.klapp-abschnitt > summary::-webkit-details-marker {
+  display: none;
+}
+
+.klapp-pfeil {
+  display: inline-block;
+  flex: none;
+  transition: transform 0.12s ease;
+}
+
+.klapp-zeile[open] > summary .klapp-pfeil,
+.klapp-abschnitt[open] > summary .klapp-pfeil {
+  transform: rotate(90deg);
+}
+
 .vertical-center {
   min-block-size: 85vh;
   display: flex;
@@ -559,7 +583,6 @@ td:has(.SchichtBereitschaft) {
   font-style: italic;
   opacity: 0.6;
 }
-
 
 // Schalter in Tabellenzellen sollen mittig unter der Spaltenueberschrift stehen.
 td > .db-switch {
@@ -1121,4 +1144,3 @@ body:has(#start.active) {
   padding-block-start: 0.75rem;
   border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
-

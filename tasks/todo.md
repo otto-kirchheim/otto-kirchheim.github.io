@@ -1,3 +1,69 @@
+# Aktueller Plan: Lint-Warnungen abbauen (I.9 + stylelint-Ratsche) - 2026-09-09
+
+## Ausgangslage
+
+User-Auftrag: alle offenen Warnungen fixen, `eslint-disable` nur im Ausnahmefall.
+Stand: `lint` 0 Fehler / 21 Warnungen, `lint:css` 0 Fehler / 90 Warnungen.
+
+Antworten aus der Rueckfrage: Umfang = ESLint (21) + stylelint (90); Verifikation =
+typecheck + test + Review (kein Browser-Verify); Zielkonflikte = Ref-Pattern/Umbau statt disable.
+
+## Analyse (2026-09-09)
+
+### ESLint 21 -- zwei Klassen
+
+1. `react-hooks/set-state-in-effect` (~14x) + gepaarte `react-hooks/exhaustive-deps` (~7x) in
+   ~13 Admin-/Bereitschaft-Komponenten. Keiner der Loader (`load`/`reload`/`reloadUsers`/
+   `loadPageWith`) ist `useCallback`; die Effekte rufen sie synchron -> `setLoading(true)` im
+   synchronen Effektpfad. Sauberer Fix je Komponente: Loader in `useCallback`, Fetch im Effekt
+   als async-IIFE (setState nur nach `await`), `loading` initial `true` fuer den Mount,
+   Refetch = stale-while-revalidate (kein Spinner mehr beim Filterwechsel). Das ist eine
+   Verhaltensaenderung pro Komponente und beruehrt jede Admin-Datenansicht.
+2. Reine "State beim Prop-Wechsel zuruecksetzen"-Faelle (`adminDashboardCharts` `setEventsPage(0)`
+   auf `[heap]`, `PdfCanvas` `setAngezeigt(seiteIndex)` auf `[seiteIndex]`,
+   `AdminUserList` `setSelectedIds(new Set())` auf Filterwechsel): React-idiomatisch via
+   prev-value-Ref + Anpassung in der Render-Phase. Klein, testbar.
+
+### stylelint 90 -- grosser Anteil dokumentierte False Positives
+
+`tasks/lessons.md` Z. 53 haelt fest: die `db-ux/*`-Regeln laufen bewusst als Ratsche
+(severity warning + `--max-warnings`), NICHT als Fix-Auftrag, weil das Plugin
+`gap: $wert` / `gap: var(--token)` / `calc(...)` nicht als Token erkennt.
+Betroffen davon hier u.a.: `raster.scss` `var(--raster-abstand,0)`, `utilities.scss` `$wert`
+(SCSS-Mixin-Parameter), `styles.scss` `calc(...)`/`min(...)`, `1px`-Haarlinien (kein
+`db-sizing`-Token fuer 1px), `border-radius: 50%` (Kreis -- Formensprache ist sonst eckig).
+Echte, mechanisch ersetzbare Faelle: die festen `0.25/0.35/0.5/0.75rem`- und `8px`-Spacings.
+Ersatz durch `db-spacing-fixed-*` aendert die Optik (Werte liegen zwischen den Token-Stufen)
+-> visuelle Regressionsgefahr ohne Browser-Verify.
+
+## Befund nach erstem Versuch (2026-09-09) -- Sackgasse
+
+`adminDashboardCharts` (`setEventsPage(0)` auf `[heap]`) auf das offizielle React-Muster
+"State in der Render-Phase via prev-Ref anpassen" umgestellt -> `set-state-in-effect` weg,
+dafuer **zwei** neue `react-hooks/refs`-Warnungen ("Cannot access refs during render").
+Die Projekt-Config (`eslint-plugin-react-hooks@7`, Compiler-Regeln inkl. `refs`) ist strenger
+als die React-Doku und lehnt **beide** Muster ab. Aenderung wieder verworfen.
+
+Konsequenz: warnungsfrei geht nur ueber Architektur:
+- Derived-State-Resets: `key`-Prop am Elternteil setzen (aendert die Elternkomponenten).
+- Fetch/Loading: raus aus `useEffect` -- Suspense + `use()` oder eine Data-Fetching-Schicht
+  (React Query o.ae., aktuell nicht im Projekt).
+
+Beides ist ein groesserer Umbau mit Regressionsrisiko in jeder Admin-Ansicht, ohne
+Browser-Verifikation nicht verantwortbar. Deckt sich mit der Team-Entscheidung (I.9-Zurueckstellung)
+und der `lessons.md`-Ratschen-Philosophie.
+
+## Empfehlung -- mit User zu klaeren
+
+1. ESLint 21: als dokumentierte Ausnahme unter der (nicht-brechenden) Warnschwelle lassen,
+   ODER gezielter Architektur-Umbau je Komponente MIT Browser-Verify (`verify`-Skill), 1-2
+   Komponenten pro Sitzung.
+2. stylelint 90: Ratsche ist projektgewollt. Falls doch Abbau -> nur die exakt token-gleichen
+   Spacings, Rest (var()/$wert/calc()/1px/50%) bleibt per Definition.
+3. Kein pauschales `eslint-disable` -- brächte nichts ausser Rauschen.
+
+---
+
 # Aktueller Plan: Formular-Vorlagen-Cache im Hintergrund vorwaermen - 2026-09-09
 
 ## Ausgangslage

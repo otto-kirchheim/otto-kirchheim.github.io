@@ -129,37 +129,28 @@ describe('bzAbgeleiteteWerte', () => {
 
 describe('beAbgeleiteteWerte', () => {
   it('berechnet Dauer in Minuten über Ende minus Beginn', () => {
-    expect(beAbgeleiteteWerte({ Beginn: '01:15', Ende: '02:00', PrivatKm: 0 }, 0, false).Dauer).toBe(45);
+    expect(beAbgeleiteteWerte({ Beginn: '01:15', Ende: '02:00', PrivatKm: 0 }, 0).Dauer).toBe(45);
   });
 
   it('ergänzt über Mitternacht (Ende < Beginn)', () => {
-    expect(beAbgeleiteteWerte({ Beginn: '23:00', Ende: '01:00', PrivatKm: 0 }, 0, false).Dauer).toBe(120);
+    expect(beAbgeleiteteWerte({ Beginn: '23:00', Ende: '01:00', PrivatKm: 0 }, 0).Dauer).toBe(120);
   });
 
-  it('berechnet PrivatKmBetrag über PrivatKm mal Satz, für Beamter', () => {
-    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 12 }, 0.27, true).PrivatKmBetrag).toBe(3.24);
+  it('berechnet PrivatKmBetrag über PrivatKm mal Satz', () => {
+    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 12 }, 0.27).PrivatKmBetrag).toBe(3.24);
   });
 
   it('rundet auf 2 Nachkommastellen (Fließkomma-Rauschen, 13 * 0.27 === 3.5100000000000002)', () => {
-    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 13 }, 0.27, true).PrivatKmBetrag).toBe(3.51);
+    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 13 }, 0.27).PrivatKmBetrag).toBe(3.51);
   });
 
   it('liefert undefined ohne Privat-km', () => {
-    expect(
-      beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 0 }, 0.27, true).PrivatKmBetrag,
-    ).toBeUndefined();
+    expect(beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 0 }, 0.27).PrivatKmBetrag).toBeUndefined();
   });
 
-  it('Tarifkraft: rohe km gesetzt, PrivatKmBetrag undefined', () => {
-    const werte = beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 12 }, 0.27, false);
-    expect(werte.PrivatKm).toBe(12);
-    expect(werte.PrivatKmBetrag).toBeUndefined();
-  });
-
-  it('Beamter: PrivatKmBetrag gesetzt, rohe km undefined', () => {
-    const werte = beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 12 }, 0.27, true);
-    expect(werte.PrivatKm).toBeUndefined();
-    expect(werte.PrivatKmBetrag).toBe(3.24);
+  it('berechnet PrivatKmBetrag unabhängig -- welche Spalte (rohe km / Euro) gedruckt wird, entscheidet die Vorlage', () => {
+    const werte = beAbgeleiteteWerte({ Beginn: '01:00', Ende: '02:00', PrivatKm: 12 }, 0.27);
+    expect(werte).toEqual({ Dauer: 60, PrivatKmBetrag: 3.24 });
   });
 });
 

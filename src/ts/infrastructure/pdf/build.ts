@@ -250,7 +250,9 @@ export async function build(
       for (const platz of bereich.sonderzeilen ?? []) {
         const sonderzeile = tabelle.sonderzeilen?.[platz.name];
         if (!sonderzeile) continue;
-        const rows = zeilenFuerUeber(sonderzeile.ueber ?? '$alle', bereich.tabelle, kontext);
+        // `platz.ueber` ist der Seiten-Override: dieselbe benannte Sonderzeile trägt so auf Seite 1
+        // die Gesamtsumme und auf Folgeseiten die Seitensumme (siehe `TabellenBereich.sonderzeilen`).
+        const rows = zeilenFuerUeber(platz.ueber ?? sonderzeile.ueber ?? '$alle', bereich.tabelle, kontext);
         for (const zelle of sonderzeile.zellen) {
           const spalte = spalteFuerZelle(spalten, zelle);
           if (!spalte) continue;

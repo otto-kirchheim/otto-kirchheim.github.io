@@ -139,3 +139,25 @@ export function dreheKonfig(k: Konfig, grad: Drehwinkel, alt: { w: number; h: nu
 
   return kopie;
 }
+
+/**
+ * Benennt eine Sonderzeile um: den Key im Inhalt (`TabellenDef.sonderzeilen`) UND jede Platzierung
+ * (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite. Ohne den zweiten Teil zeigen die
+ * Platzierungen nach dem Umbenennen ins Leere (`build.ts` findet die Sonderzeile nicht mehr).
+ * No-op, wenn `alt === neu`, `alt` nicht existiert oder `neu` schon vergeben ist. Reine Funktion.
+ * Die Iterationsreihenfolge im Record bleibt erhalten, damit die Editor-Karte nicht springt.
+ */
+export function benenneSonderzeileUm(k: Konfig, tabelle: string, alt: string, neu: string): Konfig {
+  const inhalt = k.tabellen[tabelle]?.sonderzeilen;
+  if (!inhalt || alt === neu || !(alt in inhalt) || neu in inhalt) return k;
+  const kopie: Konfig = structuredClone(k);
+  const t = kopie.tabellen[tabelle]!;
+  t.sonderzeilen = Object.fromEntries(Object.entries(t.sonderzeilen!).map(([n, z]) => [n === alt ? neu : n, z]));
+  for (const seite of kopie.seiten) {
+    for (const bereich of seite.bereiche) {
+      if (bereich.tabelle !== tabelle || !bereich.sonderzeilen) continue;
+      for (const platz of bereich.sonderzeilen) if (platz.name === alt) platz.name = neu;
+    }
+  }
+  return kopie;
+}

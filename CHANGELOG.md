@@ -2,6 +2,91 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-10 (87)
+
+### change (FormularEditor: alles ausklappbar -- Abschnitte UND einzelne Felder/Spalten)
+
+- Die lange, flache Editor-Spalte ist jetzt in native `<details>` gegliedert:
+  - **Abschnitte** (`Abschnitt` in `feldPanelGemeinsam.tsx`): „Felder", „Datentabellen", je
+    Tabelle „Spalten" und „Sonderzeilen"; Felder/Datentabellen/Spalten anfangs offen,
+    Sonderzeilen zu. Titel trägt die Anzahl.
+  - **Einzel-Einträge** (`KlappZeile`): jedes Feld (`FeldZeile`) und jede Spalte (`SpalteZeile`)
+    ist zugeklappt nur Name + Scharf-/Löschen-Knopf, aufgeklappt der volle Editor. Ein gerade
+    scharf geschalteter Eintrag klappt automatisch auf (`offen={aktiv}`). Aktions-Knöpfe in der
+    `<summary>` klappen nicht um (`preventDefault` am Wrapper); die Koordinaten-Felder sind
+    dafür aus der Kopfzeile in den aufgeklappten Bereich gewandert.
+  - Pfeil `.klapp-pfeil` dreht sich beim Aufklappen (`styles.scss`).
+
+### fix (FormularEditor: Sonderzeilen -- doppelter Zeilenbezug-Selektor, Umbenennen unvollständig)
+
+- Es gab zwei „Zeilenbezug"-Selektoren (Inhalt in `SonderZeilen.tsx` + Platzierung in
+  `TabellenBlock.tsx`) -- unklar, welcher gilt. Der Inhalt-Selektor ist raus; der Zeilenbezug
+  ($alle/$seite/$bisher/$laufend) wird nur noch **je Platzierung/Seite** gesetzt
+  (`TabellenBereich.sonderzeilen[].ueber`, Eintrag 84), mit Wert-Vorschau der aktuellen Seite.
+  `SonderZeilen.tsx` legt nur noch fest, WAS die Sonderzeile zeigt.
+- Umbenennen einer Sonderzeile zog bisher nur den Key in `TabellenDef.sonderzeilen` mit, nicht
+  die Platzierungen (`TabellenBereich.sonderzeilen[].name`) -- die zeigten danach ins Leere.
+  Neu: `benenneSonderzeileUm()` (`skaliereKonfig.ts`) benennt Inhalt UND jede Platzierung auf
+  JEDER Seite in einem Zug um; verdrahtet über `onSonderzeileUmbenannt` bis `FormularEditor`.
+- Reine Editor-Änderung, kein Datenmodell-/Renderer-Diff.
+
+## 2026-09-09 (85)
+
+### change (Bereitschafts-PDF: `beAbgeleiteteWerte` ohne Beamter-Verzweigung, Pause 0 als leere Spalte)
+
+- `beAbgeleiteteWerte()` (`infrastructure/pdf/abgeleiteteWerte.ts`) verzweigt nicht mehr über
+  `beamter`: `PrivatKmBetrag` wird immer aus `km * privatKmSatz` berechnet (`undefined` nur bei
+  0 km), die rohe `PrivatKm` bleibt aus dem Zeilenobjekt selbst auf der Zeile. Welche der beiden
+  Spalten (rohe km / Euro) gedruckt wird, entscheidet die Vorlage. `BeAbgeleiteteWerte.PrivatKm`
+  entfällt, der dritte Parameter (`beamter`) entfällt.
+- `generatePDF` (`modus 'B'`): 0-Pause eines Bereitschaftszeitraums geht als `undefined` ins
+  Zeilenobjekt (`bz.Pause || undefined`) — die Pause-Spalte bleibt leer statt „0" zu drucken;
+  `bzAbgeleiteteWerte()` deckelt intern mit `?? 0`, die `Dauer` bleibt unverändert.
+- Typsystem-Spiegel (frontend-lokal): `IPdfBereitschaftszeitraum.Pause` und
+  `IPdfBereitschaftseinsatz.Pause` jetzt optional (`pdfDaten.ts`). Kein `shared`/Backend-Diff.
+- Tests: `abgeleiteteWerte.test.ts` + `generatePDF.test.ts` (`modus 'B'`) auf die neue Signatur
+  und die beiden immer gesetzten Werte gezogen.
+
+## 2026-09-09 (84)
+
+### feat (FormularEditor: Sonderzeilen-Zeilenbezug pro Seite überschreibbar)
+
+- `SonderZeile.ueber` (`$alle`/`$seite`/`$bisher`/`$laufend`) hing bisher nur am Inhalt der
+  Sonderzeile und galt damit auf jeder Seite gleich. Neu: optionaler Seiten-Override `ueber` am
+  Platzierungs-Eintrag (`TabellenBereich.sonderzeilen[]`). Dieselbe benannte Summenzeile trägt so
+  auf der ersten Seite die Gesamtsumme (`$alle`) und auf den Folgeseiten die Seitensumme
+  (`$seite`), ohne den Inhalt zu duplizieren.
+- `build.ts`: `zeilenFuerUeber(platz.ueber ?? sonderzeile.ueber ?? '$alle', …)` — greift auch in
+  der PDF-Vorschau des Editors.
+- `TabellenBlock.tsx`: je Platzierung eine Auswahl „Zeilenbezug (diese Seite)“ mit Default
+  „wie Sonderzeile“. `UEBER_OPTIONEN` aus `SonderZeilen.tsx` exportiert.
+- Typsystem-Spiegel: `shared/src/formular/types.ts`, `infrastructure/pdf/configSchema.ts` und
+  `backend/src/validation/formular.schemas.ts` (`ueber: z.string().optional()`) mitgezogen.
+
+## 2026-09-09 (83)
+
+### fix (FormularEditor: zweiter Vorlagen-Wechsel bot keinen Skalier-Vorschlag mehr)
+
+- Die Swap-Erkennung (`FormularEditor.tsx`) nahm als alte Seitengröße die in der Konfiguration
+  gespeicherte `groesse`. Nach dem Ablauf „ausgefülltes Muster laden → Felder setzen →
+  Skalier-Vorschlag abbrechen" gehört diese `groesse` aber noch zum ursprünglichen Template, nicht
+  zum zwischenzeitlich gezeigten Muster. Beim nächsten Wechsel auf die leere Vorlage (gleiche
+  Papiergröße wie das Original) kam so fälschlich „gleich groß, nichts zu tun" heraus — die an der
+  Muster-PDF gesetzten Koordinaten wurden ungeprüft übernommen und lagen verschoben.
+- Jetzt wird immer die zuletzt gezeigte PDF (`prev`) frisch vermessen; `groesse` dient nur noch als
+  Rückfall, falls `prev` nicht lesbar ist. `oeffneSkalierenManuell()` misst analog die aktuell
+  gezeigte `datei` statt `aktiveSeite.groesse`.
+- Kein Typsystem-Spiegel betroffen.
+
+## 2026-09-09 (82)
+
+### fix (FormularEditor: fehlendes Icon an den Spalten-Verschiebe-Knöpfen)
+
+- `SpalteZeile` (`features/Admin/components/FormularEditor/SpalteZeile.tsx`) nutzte die
+  Unicode-Pfeile `↑` / `↓` als Button-Inhalt. Im DB-„neuen Design“ (DB Icon Font) rendert
+  `↑` nicht und zeigte ein Tofu-Kästchen. Ersetzt durch `db-icon`-Spans
+  (`data-icon="arrow_up"` / `"arrow_down"`), analog zum Löschen-Knopf (`data-icon="bin"`).
+
 ## 2026-09-09 (81)
 
 ### change (EWT-PDF: Einsatzort mit Beschreibung)

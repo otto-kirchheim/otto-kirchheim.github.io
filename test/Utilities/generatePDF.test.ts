@@ -137,7 +137,8 @@ describe('generatePDF utility', () => {
           Daten: {
             // Minuten, nicht HH:mm: Pause 30 von 8h (08:00 -> 16:00) Zeitspanne PLUS Pause = 510
             // (Pause zaehlt als Dienstzeit, wie aktualisiereBerechnung.ts); Einsatz 10:00 -> 12:00
-            // = 120. PrivatKmBetrag: TB 'Tarifkraft' -> PrivatPKWTarif 0.27 * 12 = 3.24.
+            // = 120. PrivatKmBetrag: PrivatPKWTarif 0.27 * 12 = 3.24 (immer berechnet, welche Spalte
+            // -- rohe km oder Euro -- gedruckt wird, entscheidet die Vorlage).
             BZ: [{ Beginn: '2026-04-19T08:00:00.000Z', Ende: '2026-04-19T16:00:00.000Z', Pause: 30, Dauer: 510 }],
             BE: [
               {
@@ -148,7 +149,7 @@ describe('generatePDF utility', () => {
                 LRE: 'LRE2',
                 PrivatKm: 12,
                 Dauer: 120,
-                PrivatKmBetrag: undefined,
+                PrivatKmBetrag: 3.24,
               },
             ],
           },
@@ -203,10 +204,11 @@ describe('generatePDF utility', () => {
         'bereitschaft',
         '2026-04-01',
         expect.objectContaining({
-          // PrivatPKWBeamter 0.2 * 12 = 2.4 statt PrivatPKWTarif 0.27 * 12 = 3.24. Beamter: rohe km
-          // bleiben undefined, nur der Euro-Betrag ist gesetzt.
+          // PrivatPKWBeamter 0.2 * 12 = 2.4 statt PrivatPKWTarif 0.27 * 12 = 3.24 -- der Satz kommt
+          // vorberechnet aus generatePDF (TB != 'Tarifkraft'). Rohe km und Euro-Betrag liegen beide
+          // auf der Zeile, welche Spalte gedruckt wird, entscheidet die Vorlage.
           Daten: expect.objectContaining({
-            BE: [expect.objectContaining({ PrivatKm: undefined, PrivatKmBetrag: 2.4 })],
+            BE: [expect.objectContaining({ PrivatKm: 12, PrivatKmBetrag: 2.4 })],
           }),
           // bereitschaftMinuten = 1560 (BZ, 26h) - 120 (BE) = 1440. SummeBeamter1 = 1440-600 = 840;
           // SummeBeamter2 = round(840/8/60) = 2; Satz 'Besoldungsgruppe A 8' = 16,37 (VorgabenGeldMock);

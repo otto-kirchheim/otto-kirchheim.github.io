@@ -10,7 +10,13 @@ import { FeldPanel, type Armed } from './FeldPanel';
 import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';
 import { beispielSignatur } from './beispielSignatur';
 import { seitenMasse } from './pdfjsLoader';
-import { dreheKonfig, skaliereKonfig, type Drehwinkel, type SkalierFaktoren } from './skaliereKonfig';
+import {
+  benenneSonderzeileUm,
+  dreheKonfig,
+  skaliereKonfig,
+  type Drehwinkel,
+  type SkalierFaktoren,
+} from './skaliereKonfig';
 import { dreheTabellenZelle, entdrehePunkt } from '@/infrastructure/pdf/tabellenDrehung';
 import { SkalierLeiste } from './SkalierLeiste';
 import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
@@ -254,7 +260,14 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     let abbruch = false;
     void (async () => {
       const quelle = value.seiten[seitenIndex]?.quelle ?? 0;
-      const alt = value.seiten[seitenIndex]?.groesse ?? (await seitenMasse(prev, quelle).catch(() => null));
+      // `alt` ist die Größe der ZULETZT angezeigten Vorlage (`prev`), gemessen -- nicht die in der
+      // Konfiguration eingefrorene `groesse`. Nach einem Wechsel ohne „Anwenden" (z. B. ausgefülltes
+      // Muster laden, Felder setzen, Skalier-Vorschlag abbrechen) gehört `groesse` noch zum
+      // ursprünglichen Template. Vergliche der nächste Wechsel gegen diese alte `groesse`, käme bei
+      // „Muster (A4) → leere Vorlage (A4)" fälschlich „gleich groß, nichts zu tun" heraus, obwohl die
+      // Koordinaten am zwischenzeitlich gezeigten Muster (andere Größe) gesetzt wurden. `groesse`
+      // bleibt nur als Rückfall, falls `prev` nicht lesbar ist.
+      const alt = (await seitenMasse(prev, quelle).catch(() => null)) ?? value.seiten[seitenIndex]?.groesse ?? null;
       const neu = await seitenMasse(datei, quelle).catch(() => null);
       if (abbruch || !alt || !neu) return;
       if (Math.abs(alt.w - neu.w) < 1 && Math.abs(alt.h - neu.h) < 1) return;
@@ -303,7 +316,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];
 
   async function oeffneSkalierenManuell() {
-    const masse = aktiveSeite?.groesse ?? (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null));
+    // Die tatsächlich gezeigte `datei` messen statt `aktiveSeite.groesse` zu vertrauen -- letzteres
+    // kann nach einem abgebrochenen Vorlagen-Wechsel noch zum alten Template gehören (siehe
+    // Swap-Erkennung oben). `groesse` nur als Rückfall.
+    const masse =
+      (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null)) ?? aktiveSeite?.groesse ?? null;
     setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true, drehung: 0 });
   }
 
@@ -768,6 +785,10 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               armed={armed}
               onArm={setArmed}
               vorschau={vorschau}
+              onSonderzeileUmbenannt={(tabelle, alt, neu) => {
+                const naechste = benenneSonderzeileUm(value, tabelle, alt, neu);
+                if (naechste !== value) onChange(naechste);
+              }}
             />
           </div>
         </div>

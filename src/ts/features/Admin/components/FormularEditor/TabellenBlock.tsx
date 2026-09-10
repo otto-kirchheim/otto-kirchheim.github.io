@@ -1,11 +1,13 @@
 import type { Spalte, SeitenDef, TabellenBereich, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
 import { berechneteEintraege } from './aggregationUndRechnung';
 import { katalogZeilenFelder, werteAuswahl, ZEILEN_QUELLEN, type FormularCode } from './datenKatalog';
-import { ScharfButton, ZahlFeld, istGleich } from './feldPanelGemeinsam';
+import { Abschnitt, ScharfButton, ZahlFeld, istGleich } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { ListenGruppen } from './ListenGruppen';
-import { SonderZeilen } from './SonderZeilen';
+import { SonderZeilen, UEBER_OPTIONEN } from './SonderZeilen';
 import { SpalteZeile } from './SpalteZeile';
+import { WertVorschau } from './WertVorschau';
+import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
@@ -34,6 +36,7 @@ export function TabellenBlock({
   onDelete,
   onVonSeiteEntfernen,
   vorschau,
+  onSonderzeileUmbenannt,
 }: {
   name: string;
   tabelle: TabellenDef;
@@ -46,6 +49,7 @@ export function TabellenBlock({
   onDelete: () => void;
   onVonSeiteEntfernen: () => void;
   vorschau: Vorschau;
+  onSonderzeileUmbenannt: (alt: string, neu: string) => void;
 }) {
   const zeilenFelder = katalogZeilenFelder(formular, tabelle.quelle);
   // Bereits konfigurierte berechnete UND Ankreuz-Spalten dieser Tabelle -- der Renderer trägt ihren
@@ -327,147 +331,208 @@ export function TabellenBlock({
         }}
       />
 
-      <SonderZeilen tabelle={tabelle} tabelleName={name} vorschau={vorschau} onChange={onChange} />
+      <Abschnitt
+        titel="Sonderzeilen"
+        zusatz={<span className="text-body-secondary">{Object.keys(tabelle.sonderzeilen ?? {}).length}</span>}
+      >
+        <SonderZeilen
+          tabelle={tabelle}
+          tabelleName={name}
+          vorschau={vorschau}
+          onChange={onChange}
+          onUmbenennen={onSonderzeileUmbenannt}
+        />
 
-      {bereich && Object.keys(tabelle.sonderzeilen ?? {}).length > 0 && (
-        <div className="mb-1">
-          <div className="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
-          {Object.keys(tabelle.sonderzeilen ?? {}).map(sonderName => {
-            const platzierungen = bereich.sonderzeilen ?? [];
-            const indizes = platzierungen.map((_, i) => i).filter(i => platzierungen[i]!.name === sonderName);
-            return (
-              <div key={sonderName} className="mb-1">
-                <div className="d-flex align-items-center gap-2 mb-1">
-                  <span className="small flex-grow-1">{sonderName}</span>
-                  <button
-                    type="button"
-                    className="db-button py-0"
-                    data-variant="outlined"
-                    data-size="small"
-                    title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
-                    onClick={() => setzeBereich({ sonderzeilen: [...platzierungen, { name: sonderName, y: startY }] })}
-                  >
-                    + Platzieren
-                  </button>
+        {bereich && Object.keys(tabelle.sonderzeilen ?? {}).length > 0 && (
+          <div className="mb-1">
+            <div className="small fw-semibold mb-1">Sonderzeilen auf dieser Seite</div>
+            {Object.keys(tabelle.sonderzeilen ?? {}).map(sonderName => {
+              const platzierungen = bereich.sonderzeilen ?? [];
+              const indizes = platzierungen.map((_, i) => i).filter(i => platzierungen[i]!.name === sonderName);
+              const sonderzeile = tabelle.sonderzeilen![sonderName]!;
+              const standardUeber = sonderzeile.ueber ?? '$alle';
+              return (
+                <div key={sonderName} className="mb-1">
+                  <div className="d-flex align-items-center gap-2 mb-1">
+                    <span className="small flex-grow-1">{sonderName}</span>
+                    <button
+                      type="button"
+                      className="db-button py-0"
+                      data-variant="outlined"
+                      data-size="small"
+                      title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
+                      onClick={() =>
+                        setzeBereich({
+                          sonderzeilen: [...platzierungen, { name: sonderName, y: startY, ueber: standardUeber }],
+                        })
+                      }
+                    >
+                      + Platzieren
+                    </button>
+                  </div>
+                  {indizes.map(i => {
+                    const platz = platzierungen[i]!;
+                    const zeilenAktiv = istGleich(armed, { bereich: 'sonderzeile', tabelle: name, index: i });
+                    // Zeilenbezug DIESER Platzierung -- die Vorschau rechnet mit dem Kontext der gerade
+                    // angezeigten Seite, so ist der Unterschied zwischen den Seiten direkt sichtbar.
+                    const effektiv = platz.ueber ?? standardUeber;
+                    const rows = zeilenFuerUeber(effektiv, name, vorschau.kontext);
+                    const vorschauText = sonderzeile.zellen
+                      .map(z => {
+                        const sp = spalten[z.spaltenIndex];
+                        return sp ? sonderZeileZelleWert(z, sp, name, rows, vorschau.daten, vorschau.kontext) : '';
+                      })
+                      .filter(Boolean)
+                      .join('   |   ');
+                    return (
+                      <div key={i} className="border rounded p-2 mb-1 bg-body">
+                        <div className="d-flex align-items-end gap-1 mb-1 flex-wrap">
+                          <ScharfButton
+                            aktiv={zeilenAktiv}
+                            onClick={() =>
+                              onArm(zeilenAktiv ? null : { bereich: 'sonderzeile', tabelle: name, index: i })
+                            }
+                            titel="Band über diese Zeile auf dem PDF ziehen -- setzt y/y2"
+                          />
+                          <ZahlFeld
+                            label="y"
+                            wert={platz.y}
+                            onChange={v =>
+                              setzeBereich({
+                                sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y: v ?? 0 } : p)),
+                              })
+                            }
+                          />
+                          <ZahlFeld
+                            label="y2"
+                            wert={platz.y2}
+                            onChange={v =>
+                              setzeBereich({
+                                sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y2: v } : p)),
+                              })
+                            }
+                          />
+                          <div className="flex-grow-1" style={{ minWidth: '11rem' }}>
+                            <DbAuswahl
+                              beschriftung="Zeilenbezug (nur diese Seite)"
+                              dicht
+                              title="Welche Zeilen die Summe dieser Platzierung erfasst -- z.B. erste Seite Gesamtsumme, Folgeseiten nur diese Seite"
+                              value={effektiv}
+                              onChange={e =>
+                                setzeBereich({
+                                  sonderzeilen: platzierungen.map((p, ii) =>
+                                    ii === i ? { ...p, ueber: (e.target as HTMLSelectElement).value } : p,
+                                  ),
+                                })
+                              }
+                            >
+                              {UEBER_OPTIONEN.map(o => (
+                                <option key={o.wert} value={o.wert}>
+                                  {o.label}
+                                </option>
+                              ))}
+                            </DbAuswahl>
+                          </div>
+                          <button
+                            type="button"
+                            className="db-button py-0"
+                            data-variant="outlined"
+                            data-color="critical"
+                            data-size="small"
+                            title="Diese Platzierung entfernen"
+                            onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
+                          >
+                            <span
+                              className="db-icon db-font-size-xs"
+                              data-icon="bin"
+                              style={{ verticalAlign: 'middle' }}
+                            />
+                          </button>
+                        </div>
+                        <WertVorschau text={vorschauText} />
+                      </div>
+                    );
+                  })}
                 </div>
-                {indizes.map(i => {
-                  const platz = platzierungen[i]!;
-                  const zeilenAktiv = istGleich(armed, { bereich: 'sonderzeile', tabelle: name, index: i });
-                  return (
-                    <div key={i} className="d-flex align-items-end gap-1 mb-1 flex-wrap">
-                      <ScharfButton
-                        aktiv={zeilenAktiv}
-                        onClick={() => onArm(zeilenAktiv ? null : { bereich: 'sonderzeile', tabelle: name, index: i })}
-                        titel="Band über diese Zeile auf dem PDF ziehen -- setzt y/y2"
-                      />
-                      <ZahlFeld
-                        label="y"
-                        wert={platz.y}
-                        onChange={v =>
-                          setzeBereich({
-                            sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y: v ?? 0 } : p)),
-                          })
-                        }
-                      />
-                      <ZahlFeld
-                        label="y2"
-                        wert={platz.y2}
-                        onChange={v =>
-                          setzeBereich({ sonderzeilen: platzierungen.map((p, ii) => (ii === i ? { ...p, y2: v } : p)) })
-                        }
-                      />
-                      <button
-                        type="button"
-                        className="db-button py-0"
-                        data-variant="outlined"
-                        data-color="critical"
-                        data-size="small"
-                        title="Diese Platzierung entfernen"
-                        onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
-                      >
-                        <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      <div className="d-flex align-items-center gap-2 mb-1">
-        <span className="small fw-semibold flex-grow-1">Spalten {eigeneSpalten ? '(nur diese Seite)' : ''}</span>
-        {bereich && (
-          <div className="mb-0">
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={eigeneSpalten}
-                  title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
-                  onChange={e =>
-                    setzeBereich({
-                      spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined,
-                    })
-                  }
-                />
-                eigene je Seite
-              </label>
-            </div>
+              );
+            })}
           </div>
         )}
-      </div>
-      {spalten.map((spalte, index) => (
-        <SpalteZeile
-          key={index}
-          spalte={spalte}
-          tabellenName={name}
-          formular={formular}
-          quelle={tabelle.quelle}
-          andereBerechnete={andereBerechnete}
-          armed={armed}
-          index={index}
-          beispielZeile={beispielZeile}
-          listen={tabelle.listen}
-          vorschau={vorschau}
-          onArm={() =>
-            onArm(
-              istGleich(armed, { bereich: 'spalte', tabelle: name, index })
-                ? null
-                : { bereich: 'spalte', tabelle: name, index },
-            )
-          }
-          onChange={next => setzeSpalten(spalten.map((s, i) => (i === index ? next : s)))}
-          onDelete={() => setzeSpalten(spalten.filter((_, i) => i !== index))}
-          onMove={richtung => {
-            const ziel = index + richtung;
-            if (ziel < 0 || ziel >= spalten.length) return;
-            const kopie = [...spalten];
-            [kopie[index], kopie[ziel]] = [kopie[ziel]!, kopie[index]!];
-            setzeSpalten(kopie);
-          }}
-        />
-      ))}
-      <button
-        type="button"
-        className="db-button"
-        data-variant="outlined"
-        data-size="small"
-        onClick={() =>
-          setzeSpalten([
-            ...spalten,
-            {
-              key: eindeutigerSpaltenSchluessel(zeilenFelder[0]?.pfad || 'feld', spalten),
-              x: 50,
-              size: 10,
-              align: 'zentriert',
-            },
-          ])
-        }
+      </Abschnitt>
+
+      <Abschnitt
+        titel={`Spalten${eigeneSpalten ? ' (nur diese Seite)' : ''}`}
+        zusatz={<span className="text-body-secondary">{spalten.length}</span>}
+        offen
       >
-        + Spalte
-      </button>
+        {bereich && (
+          <div className="db-checkbox mb-1" data-size="small">
+            <label>
+              <input
+                type="checkbox"
+                checked={eigeneSpalten}
+                title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
+                onChange={e =>
+                  setzeBereich({
+                    spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined,
+                  })
+                }
+              />
+              eigene je Seite
+            </label>
+          </div>
+        )}
+        {spalten.map((spalte, index) => (
+          <SpalteZeile
+            key={index}
+            spalte={spalte}
+            tabellenName={name}
+            formular={formular}
+            quelle={tabelle.quelle}
+            andereBerechnete={andereBerechnete}
+            armed={armed}
+            index={index}
+            beispielZeile={beispielZeile}
+            listen={tabelle.listen}
+            vorschau={vorschau}
+            onArm={() =>
+              onArm(
+                istGleich(armed, { bereich: 'spalte', tabelle: name, index })
+                  ? null
+                  : { bereich: 'spalte', tabelle: name, index },
+              )
+            }
+            onChange={next => setzeSpalten(spalten.map((s, i) => (i === index ? next : s)))}
+            onDelete={() => setzeSpalten(spalten.filter((_, i) => i !== index))}
+            onMove={richtung => {
+              const ziel = index + richtung;
+              if (ziel < 0 || ziel >= spalten.length) return;
+              const kopie = [...spalten];
+              [kopie[index], kopie[ziel]] = [kopie[ziel]!, kopie[index]!];
+              setzeSpalten(kopie);
+            }}
+          />
+        ))}
+        <button
+          type="button"
+          className="db-button"
+          data-variant="outlined"
+          data-size="small"
+          onClick={() =>
+            setzeSpalten([
+              ...spalten,
+              {
+                key: eindeutigerSpaltenSchluessel(zeilenFelder[0]?.pfad || 'feld', spalten),
+                x: 50,
+                size: 10,
+                align: 'zentriert',
+              },
+            ])
+          }
+        >
+          + Spalte
+        </button>
+      </Abschnitt>
     </div>
   );
 }

@@ -53,7 +53,13 @@ export interface IPdfBase {
 
 // `Dauer` wird erst durch `bzAbgeleiteteWerte()` (abgeleiteteWerte.ts) berechnet, deshalb optional
 // statt vom Typsystem erzwungen. Bewusst `number` (Minuten), nicht `"HH:mm"` wie bei EWT.
-export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_id'>> & { Dauer?: number };
+// `Pause` bleibt optional (statt über `Required` erzwungen): `generatePDF` setzt eine 0-Pause bewusst
+// auf `undefined`, damit die Spalte leer bleibt statt „0" zu drucken; `bzAbgeleiteteWerte()` rechnet
+// mit `?? 0` weiter.
+export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_id' | 'Pause'>> & {
+  Pause?: number | undefined;
+  Dauer?: number;
+};
 
 // Hinweis: `Tag` ist hier `"DD.MM.YYYY"` formatiert statt ISO-Date wie im
 // domain-Basistyp -- generatePDF formatiert es um, kein Typ-Diff.
@@ -62,15 +68,15 @@ export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_
 // wird je Person nur eine der beiden Spalten (Tarifkraft: rohe km / Beamter: Euro-Betrag), siehe
 // `beAbgeleiteteWerte()`.
 export type IPdfBereitschaftseinsatz = Required<
-  Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'PrivatKm'>
+  Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'Pause' | 'PrivatKm'>
 > & {
+  Pause?: number | undefined;
   Dauer?: number;
-  PrivatKm?: number;
   PrivatKmBetrag?: number;
 };
 
 export interface IPdfEWT {
-  Buchungstag: number;
+  Buchungstag: string;
   Einsatzort: string;
   Schicht: string;
   abWE?: string;
@@ -94,6 +100,12 @@ export interface IPdfEWT {
   TkgSt8bis24?: boolean;
   TkgStUeber24?: boolean;
 }
+
+export type IEwtPdfBody = {
+  Daten: {
+    EWT: IPdfEWT[];
+  };
+};
 
 // `Arbeitszeit` wird erst durch `ezAbgeleiteteWerte()` (abgeleiteteWerte.ts) berechnet, deshalb
 // optional statt vom Typsystem erzwungen.

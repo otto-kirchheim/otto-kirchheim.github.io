@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'bun:test';
-import { dreheKonfig, skaliereKonfig } from '@/features/Admin/components/FormularEditor/skaliereKonfig';
+import {
+  benenneSonderzeileUm,
+  dreheKonfig,
+  skaliereKonfig,
+} from '@/features/Admin/components/FormularEditor/skaliereKonfig';
 import type { Konfig } from '@/features/Admin/components/FormularEditor/FormularEditor';
 
 function beispielKonfig(): Konfig {
@@ -137,5 +141,40 @@ describe('dreheKonfig', () => {
     const gedreht = dreheKonfig(k, 90, A4).seiten[0]!;
     expect(gedreht.felder.name!.drehung).toBeUndefined();
     // 270 + 90 = 360 -> 0 -> undefined
+  });
+});
+
+describe('benenneSonderzeileUm', () => {
+  it('benennt Inhalt UND jede Platzierung auf jeder Seite um', () => {
+    const k = beispielKonfig();
+    // zweite Seite mit derselben Platzierung, um "auf jeder Seite" zu prüfen
+    k.seiten.push({
+      quelle: 1,
+      felder: {},
+      bereiche: [
+        { tabelle: 'haupt', startY: 650, hoehe: 14, sonderzeilen: [{ name: 'summe', y: 90, ueber: '$seite' }] },
+      ],
+    });
+
+    const neu = benenneSonderzeileUm(k, 'haupt', 'summe', 'Gesamtsumme');
+
+    expect(Object.keys(neu.tabellen.haupt!.sonderzeilen!)).toEqual(['Gesamtsumme']);
+    expect(neu.seiten[0]!.bereiche[0]!.sonderzeilen).toEqual([{ name: 'Gesamtsumme', y: 120, y2: 134 }]);
+    expect(neu.seiten[1]!.bereiche[0]!.sonderzeilen).toEqual([{ name: 'Gesamtsumme', y: 90, ueber: '$seite' }]);
+  });
+
+  it('lässt die Eingabe unberührt (reine Funktion)', () => {
+    const k = beispielKonfig();
+    const vorher = structuredClone(k);
+    benenneSonderzeileUm(k, 'haupt', 'summe', 'X');
+    expect(k).toEqual(vorher);
+  });
+
+  it('ist ein No-op bei gleichem Namen, unbekanntem alt oder bereits vergebenem neu', () => {
+    const k = beispielKonfig();
+    expect(benenneSonderzeileUm(k, 'haupt', 'summe', 'summe')).toBe(k);
+    expect(benenneSonderzeileUm(k, 'haupt', 'gibtsNicht', 'Neu')).toBe(k);
+    k.tabellen.haupt!.sonderzeilen!.belegt = { zellen: [] };
+    expect(benenneSonderzeileUm(k, 'haupt', 'summe', 'belegt')).toBe(k);
   });
 });

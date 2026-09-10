@@ -376,4 +376,31 @@ describe('build', () => {
     const doc = await PDFDocument.load(bytes);
     expect(doc.getPageCount()).toBe(1);
   });
+
+  it('erlaubt einen Seiten-Override von SonderZeile.ueber je Platzierung (erste Seite Gesamtsumme, Folgeseiten nur diese Seite)', async () => {
+    // Der Bezug-Auswahl-Wert selbst (`$seite` vs. `$alle`) ist in `wert.test.ts`/`zeilenFuerUeber`
+    // exakt abgedeckt -- hier nur die Verdrahtung: `platz.ueber` sticht `sonderzeile.ueber`.
+    const cfg = macheCfg();
+    cfg.layout.seiten[0]!.bereiche = [{ tabelle: 'haupt', startY: 700, maxZeilen: 2 }];
+    cfg.layout.seiten.push({
+      quelle: 0,
+      wiederholt: true,
+      bereiche: [{ tabelle: 'haupt', startY: 680, maxZeilen: 2, sonderzeilen: [{ name: 'summe', y: 40 }] }],
+      felder: {},
+    });
+    cfg.tabellen.haupt!.sonderzeilen = {
+      summe: { ueber: '$seite', zellen: [{ spaltenIndex: 1, art: 'summe', format: 'waehrung' }] },
+    };
+    // Erste Seite: gleiche benannte Sonderzeile, aber Bezug per Platzierung auf $alle gehoben.
+    cfg.layout.seiten[0]!.bereiche[0]!.sonderzeilen = [{ name: 'summe', y: 40, ueber: '$alle' }];
+
+    const daten = {
+      name: 'Max',
+      zeilen: Array.from({ length: 6 }, (_, i) => ({ text: `Zeile ${i + 1}`, betrag: i + 1 })),
+    };
+
+    const bytes = await build(cfg, daten);
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getPageCount()).toBe(3);
+  });
 });

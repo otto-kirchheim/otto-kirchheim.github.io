@@ -8,6 +8,7 @@ import { istBooleanFeld, katalogFelder, type FormularCode } from './datenKatalog
 import { DatenpfadWahl, PlatzhalterPicker, openPlatzhalterHilfe, ZusammengesetzteQuellen } from './datenpfadUndFormeln';
 import {
   DarstellungsFelder,
+  KlappZeile,
   ScharfButton,
   Zellkoordinaten,
   istGleich,
@@ -47,25 +48,34 @@ function FeldZeile({
   const textRef = useRef<HTMLInputElement>(null);
   // Tabellen mit dynamischen Spalten -- nur dafür gibt es überhaupt Überschriften zu setzen.
   const mitListen = Object.entries(tabellen).filter(([, t]) => t.listen && Object.keys(t.listen).length > 0);
+  const aktiv = istGleich(armed, { bereich: 'feld', key: keyName });
   return (
-    <div className="border rounded p-2 mb-1">
-      <div className="d-flex align-items-center flex-wrap gap-1 mb-1">
-        <ScharfButton aktiv={istGleich(armed, { bereich: 'feld', key: keyName })} onClick={onArm} />
-        <span className="font-monospace small text-truncate flex-grow-1" title={keyName}>
+    <KlappZeile
+      offen={aktiv}
+      titel={
+        <span className="font-monospace" title={keyName}>
           {feld.label ?? keyName}
         </span>
+      }
+      aktionen={
+        <>
+          <ScharfButton aktiv={aktiv} onClick={onArm} />
+          <button
+            type="button"
+            className="db-button py-0"
+            data-variant="outlined"
+            data-color="critical"
+            data-size="small"
+            onClick={onDelete}
+            title="Feld löschen"
+          >
+            <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
+          </button>
+        </>
+      }
+    >
+      <div className="mb-1">
         <Zellkoordinaten wert={feld} onChange={onChange} />
-        <button
-          type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-color="critical"
-          data-size="small"
-          onClick={onDelete}
-          title="Feld löschen"
-        >
-          <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-        </button>
       </div>
 
       <div className="knopfgruppe w-100 mb-1">
@@ -313,7 +323,7 @@ function FeldZeile({
       />
       <DarstellungsFelder wert={feld} onChange={onChange} />
       <WertVorschau text={wert(feld, keyName, vorschau.daten, vorschau.kontext)} />
-    </div>
+    </KlappZeile>
   );
 }
 
@@ -379,8 +389,7 @@ export function FeldListe({
   const belegtePfade = new Set(Object.keys(felder));
 
   return (
-    <div className="mb-3">
-      <div className="small fw-semibold">Felder</div>
+    <div>
       <div className="small text-body-secondary mb-1">
         Alles außerhalb der Datentabelle — Kopfangaben, Summen, Übertrag, Seitenzahl. Die Position bestimmt allein die
         Zelle, bei Summen der gewählte Bezug (diese Seite / Vorseiten / alle Zeilen).

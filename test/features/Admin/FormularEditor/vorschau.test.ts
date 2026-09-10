@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import type { SeitenDef, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { erzeugeVorschau } from '@/features/Admin/components/FormularEditor/dummyDaten';
-import { wert } from '@/infrastructure/pdf/wert';
+import { sonderZeileZelleWert, wert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
 
 const tabellen: Record<string, TabellenDef> = {
   haupt: {
@@ -100,6 +100,52 @@ describe('erzeugeVorschau', () => {
     const { kontext } = erzeugeVorschau(tabellen, [zuKlein], 0, 'ez');
     expect(kontext.seite).toBe(1);
     expect(kontext.seiten).toBe(1);
+  });
+
+  describe('Sonderzeile: Zeilenbezug pro Seite (TabellenBereich.sonderzeilen[].ueber)', () => {
+    // Tabelle mit Summen-Sonderzeile über die betrag-Spalte (Index 1). Standard-Bezug `$seite`.
+    const mitSonderzeile: Record<string, TabellenDef> = {
+      haupt: {
+        ...tabellen.haupt!,
+        sonderzeilen: { Summe: { ueber: '$seite', zellen: [{ spaltenIndex: 1, art: 'summe' }] } },
+      },
+    };
+    const seite1: SeitenDef = {
+      quelle: 0,
+      bereiche: [
+        { tabelle: 'haupt', startY: 700, maxZeilen: 2, sonderzeilen: [{ name: 'Summe', y: 40, ueber: '$alle' }] },
+      ],
+      felder: {},
+    };
+    const seite2: SeitenDef = {
+      quelle: 0,
+      wiederholt: true,
+      bereiche: [{ tabelle: 'haupt', startY: 680, maxZeilen: 2, sonderzeilen: [{ name: 'Summe', y: 40 }] }],
+      felder: {},
+    };
+
+    function summe(seitenIndex: number, platzUeber: string): number {
+      const { daten, kontext } = erzeugeVorschau(mitSonderzeile, [seite1, seite2], seitenIndex, 'ez');
+      const rows = zeilenFuerUeber(platzUeber, 'haupt', kontext);
+      const text = sonderZeileZelleWert(
+        { spaltenIndex: 1, art: 'summe' },
+        mitSonderzeile.haupt!.spalten[1]!,
+        'haupt',
+        rows,
+        daten,
+        kontext,
+      );
+      return Number(text.replace(/[^\d,-]/g, '').replace(',', '.'));
+    }
+
+    it('die Platzierung mit ueber:$alle summiert über alle Seiten, die ohne Override nur ihre Seite', () => {
+      const gesamt = summe(0, '$alle'); // Seite 1: Override $alle
+      const nurSeite2 = summe(1, '$seite'); // Seite 2: Standard $seite
+      expect(gesamt).toBeGreaterThan(0);
+      expect(nurSeite2).toBeGreaterThan(0);
+      // Über alle Seiten muss mehr zusammenkommen als auf einer einzelnen Folgeseite.
+      expect(gesamt).toBeGreaterThan(nurSeite2);
+    });
   });
 
   describe('Werteart', () => {

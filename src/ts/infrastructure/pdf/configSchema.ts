@@ -188,13 +188,15 @@ const tabellenBereichSchema = z.object({
   /** Seitenspezifische Drehung; ohne Angabe gilt `tabellenDefSchema.drehung`. */
   drehung: drehungSchema.optional(),
   /** Platzierungen der Tabellen-Sonderzeilen auf dieser Seite; `name` darf mehrfach vorkommen
-   *  (z.B. Überschrift oben UND als Kopie unten). */
+   *  (z.B. Überschrift oben UND als Kopie unten). `ueber` überschreibt `SonderZeile.ueber` nur
+   *  für diese Platzierung (Seiten-Override, siehe Typsystem-Spiegel). */
   sonderzeilen: z
     .array(
       z.object({
         name: z.string(),
         y: z.number(),
         y2: z.number().optional(),
+        ueber: z.string().optional(),
       }),
     )
     .optional(),

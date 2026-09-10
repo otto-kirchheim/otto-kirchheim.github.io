@@ -19,6 +19,8 @@ type Props = {
   tabelleName: string;
   vorschau: Vorschau;
   onChange: (tabelle: TabellenDef) => void;
+  /** Umbenennen inkl. aller Platzierungen auf allen Seiten (siehe `feldPanelTypen.ts`). */
+  onUmbenennen: (alt: string, neu: string) => void;
 };
 
 const ARTEN: { wert: SonderZeileArt; label: string; nurListenPlatz?: boolean }[] = [
@@ -28,7 +30,7 @@ const ARTEN: { wert: SonderZeileArt; label: string; nurListenPlatz?: boolean }[]
   { wert: 'summeGeld', label: 'Summe (€)', nurListenPlatz: true },
 ];
 
-const UEBER_OPTIONEN = [
+export const UEBER_OPTIONEN = [
   { wert: '$alle', label: 'alle Zeilen (Gesamtsumme)' },
   { wert: '$seite', label: 'nur diese Seite' },
   { wert: '$bisher', label: 'alle Vorseiten (Übertrag)' },
@@ -80,7 +82,7 @@ function SonderZeileName({
  * in `FeldPanel.tsx`s `TabellenBlock` fest, nicht diese Komponente. `vorschau` liefert dieselben
  * Beispielwerte, die auch das erzeugte PDF zeigen würde (siehe `Vorschau` in `FeldPanel.tsx`).
  */
-export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props) {
+export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmbenennen }: Props) {
   const zeilen = Object.entries(tabelle.sonderzeilen ?? {});
 
   function setzeZeile(name: string, zeile: SonderZeile | undefined): void {
@@ -97,15 +99,10 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
     setzeZeile(name, { ueber: '$alle', zellen: [] });
   }
 
-  // Position bleibt erhalten (anders als delete+neu Einfügen, das ans Ende der Iterationsreihenfolge
-  // rutschen würde) -- die Karte springt beim Umbenennen sonst sichtbar in der Liste herum.
-  function benenneUm(alterName: string, neuerName: string): void {
-    const eintraege = Object.entries(tabelle.sonderzeilen ?? {});
-    onChange({
-      ...tabelle,
-      sonderzeilen: Object.fromEntries(eintraege.map(([n, z]) => [n === alterName ? neuerName : n, z])),
-    });
-  }
+  // Umbenennen läuft eine Ebene höher (`onUmbenennen`), weil dabei nicht nur der Key in
+  // `tabelle.sonderzeilen` wandert, sondern auch jede Platzierung
+  // (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite -- sonst zeigen die Platzierungen
+  // nach dem Umbenennen ins Leere.
 
   function setzeZelle(
     name: string,
@@ -124,14 +121,16 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
       </div>
 
       {zeilen.map(([name, zeile], zeileIndex) => {
-        const rows = zeilenFuerUeber(zeile.ueber ?? '$alle', tabelleName, vorschau.kontext);
+        // Kartenvorschau immer über alle Zeilen -- der tatsächliche Zeilenbezug ist je Seite/
+        // Platzierung verschieden (`TabellenBereich.sonderzeilen[].ueber`) und wird dort angezeigt.
+        const rows = zeilenFuerUeber('$alle', tabelleName, vorschau.kontext);
         return (
           <div key={zeileIndex} className="border rounded p-2 mb-1 bg-body">
             <div className="d-flex align-items-center gap-1 mb-1">
               <SonderZeileName
                 name={name}
                 vergeben={zeilen.map(([n]) => n).filter(n => n !== name)}
-                onRename={neuerName => benenneUm(name, neuerName)}
+                onRename={neuerName => onUmbenennen(name, neuerName)}
               />
               <button
                 type="button"
@@ -146,22 +145,10 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange }: Props
               </button>
             </div>
 
-            <div className="raster mb-1 abstand-1">
-              <div>
-                <DbAuswahl
-                  beschriftung="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
-                  dicht
-                  title="Zeilenbezug -- nur für Summe/bereinigte Summe/Summe (€) relevant"
-                  value={zeile.ueber ?? '$alle'}
-                  onChange={e => setzeZeile(name, { ...zeile, ueber: (e.target as HTMLSelectElement).value })}
-                >
-                  {UEBER_OPTIONEN.map(o => (
-                    <option key={o.wert} value={o.wert}>
-                      {o.label}
-                    </option>
-                  ))}
-                </DbAuswahl>
-              </div>
+            <div className="small text-body-secondary mb-1">
+              Hier steht nur, WAS die Sonderzeile zeigt. WO sie auf einer Seite sitzt und welcher Zeilenbezug
+              ($alle/$seite/…) dort gilt, legt „Sonderzeilen auf dieser Seite“ je Seite fest. Die Vorschau unten rechnet
+              mit „alle Zeilen“.
             </div>
 
             {tabelle.spalten.map((spalte, index) => {

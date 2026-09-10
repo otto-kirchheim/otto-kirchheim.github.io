@@ -1,9 +1,83 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
 import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
 import type { Armed } from './feldPanelTypen';
 import { DbAuswahl, DbFeld } from '@/components';
+
+/**
+ * Ausklappbarer Abschnitt (natives `<details>`, kein State) -- hält die lange Editor-Spalte
+ * (Felder / Spalten / Sonderzeilen …) übersichtlich. `titel` steht in der `<summary>`, optional
+ * mit `zusatz` rechts (z.B. Anzahl oder ein „+"-Knopf). `offen` = anfangs aufgeklappt.
+ */
+export function Abschnitt({
+  titel,
+  zusatz,
+  offen,
+  children,
+}: {
+  titel: ReactNode;
+  zusatz?: ReactNode;
+  offen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details className="klapp-abschnitt border rounded p-2 mb-2 bg-body" open={offen}>
+      <summary className="small fw-semibold d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+        <span className="klapp-pfeil" aria-hidden="true">
+          ▸
+        </span>
+        <span className="flex-grow-1">{titel}</span>
+        {zusatz}
+      </summary>
+      <div className="mt-2">{children}</div>
+    </details>
+  );
+}
+
+/**
+ * Ein einzelner ausklappbarer Eintrag (Feld / Spalte): zugeklappt nur `titel`, aufgeklappt der
+ * ganze Editor darunter. `aktionen` (Scharf-Knopf, Löschen …) stehen rechts in der `<summary>` und
+ * bleiben immer sichtbar/bedienbar. Ihr Klick klappt NICHT um: der Wrapper ruft `preventDefault()`,
+ * das die Standardaktion des `<summary>`-Klicks (das Umklappen) unterdrückt -- Reacts
+ * `stopPropagation` reicht dafür nicht, weil das native Toggle nicht über einen Listener läuft.
+ * Deshalb gehören in `aktionen` nur `<button>`s, KEINE `<input>`s (preventDefault schluckt dort den
+ * Fokus-Klick) -- Koordinatenfelder o.ä. in `children` an den Anfang setzen.
+ * `offen` erzwingt aufgeklappt (z.B. wenn der Eintrag gerade scharf geschaltet ist); ist es
+ * `false`/`undefined`, entscheidet der Nutzer per Klick.
+ */
+export function KlappZeile({
+  titel,
+  aktionen,
+  offen,
+  children,
+}: {
+  titel: ReactNode;
+  aktionen?: ReactNode;
+  offen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details className="klapp-zeile border rounded p-2 mb-1" open={offen || undefined}>
+      <summary className="d-flex align-items-center flex-wrap gap-1" style={{ cursor: 'pointer' }}>
+        <span className="klapp-pfeil small" aria-hidden="true">
+          ▸
+        </span>
+        <span className="small text-truncate flex-grow-1">{titel}</span>
+        {aktionen !== undefined && (
+          <span
+            className="d-flex align-items-center flex-wrap gap-1"
+            role="presentation"
+            onClick={e => e.preventDefault()}
+          >
+            {aktionen}
+          </span>
+        )}
+      </summary>
+      <div className="mt-2">{children}</div>
+    </details>
+  );
+}
 
 export function istGleich(a: Armed | null, b: Armed): boolean {
   if (!a || a.bereich !== b.bereich) return false;
