@@ -594,8 +594,27 @@ Ende auf `<head>` + einen React-Root.
       (`useSofortigeKlasse`, `useSofortigeHuelleStyle`) -- kein zusaetzlicher DOM-Wrapper, sonst
       haette der `.feldgruppe > .db-input`-Selektor (styles.scss) nicht mehr gegriffen.
       Puppeteer-verifiziert inkl. dieses Falls. Details: CHANGELOG (101).
-- [ ] **J9 Cleanup + Doku** (Grep-Gate, `agent-cli`, CLAUDE.md/Skills/CHANGELOG,
-      `graphify update .`).
+- [x] **J9 Cleanup + Doku** (2026-09-11). `npx @db-ux/agent-cli .` neu generiert ->
+      `.github/copilot-instructions.md` unveraendert (schon aktuell fuer 5.3.0). Tote
+      `db-*`-Regeln in `styles.scss`/`utilities.scss` geprueft: keine Bootstrap-Era-Leichen
+      gefunden (nur erklaerende Kommentare, die Bootstraps alte Namen fuer den Vergleich
+      nennen). `.claude/skills/{architektur,coding-konventionen}/SKILL.md`: veraltete
+      `MyButton`-Beispiele (geloescht in J6b) und ein Preact-Relikt (`FunctionalComponent<Props>`
+      statt `FC<Props>`) korrigiert; Class-Component-Beispiel zeigte faelschlich `MyInput`
+      (laengst `FC`) -- durch den tatsaechlich einzigen verbliebenen Class-Component
+      (`PasswordStrengthMeter.tsx`) ersetzt. Neuer Abschnitt "DB-UX-Komponenten zuerst" in
+      `coding-konventionen` dokumentiert die J1-J8-Konventionen (DBButton/DBLoadingButton/
+      MyCheckbox/DbFeld-DbAuswahl). `graphify update .` gelaufen (3166 Nodes, 8829 Edges,
+      242 Communities; `graphify-out/` gitignored, keine Commit-Aenderung).
+      Abschliessendes Grep-Gate ueber den ganzen `src/ts/`-Baum: keine unerwarteten rohen
+      `db-button`/Checkbox/Radio-Instanzen -- nur bereits dokumentierte Ausnahmen
+      (`VorgabenBWeekRangeEditor.tsx` seit J3 bewusst ausserhalb des Umfangs; `EwtTab.tsx`s
+      CustomTable-Zellparser; `createEditorModalVE.tsx`s versteckte Nwoche-Datentraeger;
+      `AdminProfileTemplateContentEditor.tsx`s DBTag-Checkbox-Muster aus J1) sowie `<button
+      role="tab">` in `db-navigation`-Kontexten (Admin-Unternavigation, kein `db-button` --
+      anderes DB-UX-Muster, nie im Umfang). Details: CHANGELOG (102).
+
+**Phase J (J0-J9) damit vollstaendig abgeschlossen.**
 
 **Verifikation je Slice:** `bun run typecheck && bun run lint && bun run lint:css &&
 bun run test && bun run build` + MCP `db-ux__verify_migrated_code` + `verify`-Skill fuer die

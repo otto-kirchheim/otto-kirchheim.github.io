@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (102)
+
+### docs (Phase J9: Cleanup + Doku -- Phase J abgeschlossen)
+
+- `npx @db-ux/agent-cli .` neu generiert -> `.github/copilot-instructions.md` unverändert
+  (bereits aktuell für 5.3.0).
+- Tote `db-*`-Regeln in `styles.scss`/`utilities.scss` geprüft: keine Bootstrap-Ära-Leichen
+  gefunden.
+- `.claude/skills/{architektur,coding-konventionen}/SKILL.md`: veraltete `MyButton`-Beispiele
+  (gelöscht in J6b) und ein Preact-Relikt (`FunctionalComponent<Props>` statt `FC<Props>`)
+  korrigiert; Class-Component-Beispiel zeigte fälschlich `MyInput` (längst `FC`) — durch den
+  tatsächlich einzigen verbliebenen Class-Component (`PasswordStrengthMeter.tsx`) ersetzt.
+  Neuer Abschnitt „DB-UX-Komponenten zuerst" in `coding-konventionen` dokumentiert die
+  J1-J8-Konventionen.
+- `graphify update .` gelaufen (3166 Nodes, 8829 Edges, 242 Communities).
+- Abschließendes Grep-Gate über den ganzen `src/ts/`-Baum: keine unerwarteten rohen
+  `db-button`/Checkbox/Radio-Instanzen — nur bereits dokumentierte Ausnahmen
+  (`VorgabenBWeekRangeEditor.tsx`, `EwtTab.tsx`s CustomTable-Zellparser,
+  `createEditorModalVE.tsx`s versteckte Nwoche-Datenträger, `AdminProfileTemplateContentEditor.tsx`s
+  DBTag-Checkbox-Muster) sowie `<button role="tab">` in `db-navigation`-Kontexten (anderes
+  DB-UX-Muster, nie im Umfang).
+
+**Phase J (J0-J9) damit vollständig abgeschlossen.**
+
 ## 2026-09-11 (101)
 
 ### refactor (Phase J8: `DbFeld`/`DbAuswahl` auf `DBInput`/`DBSelect` umgestellt)

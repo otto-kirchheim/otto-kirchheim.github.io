@@ -9,7 +9,7 @@ description: 'Use when: frontend topic architektur'
 
 ```
 src/ts/
-├── components/      # Generische React-Bausteine (MyButton, MyInput, MyFormModal, showModal, ...)
+├── components/      # Generische React-Bausteine (DBLoadingButton, MyInput, MyFormModal, showModal, ...)
 ├── core/            # Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung
 │   ├── types/       # Alle geteilten TS-Interfaces
 │   ├── hooks/       # registerHook/invokeHook, featureLifecycleRegistry
@@ -77,29 +77,35 @@ Login/Register/Reset ist **kein** Feature-Modul, sondern Teil der Auth-Orchestri
 
 ### 1. React Functional Components
 
-Einfache UI-Bausteine wie Buttons, Selects, Modals:
+Einfache UI-Bausteine wie Buttons, Selects, Modals -- DB-UX-Komponenten direkt verwenden
+(`DBButton`, `DBCheckbox`, `DBTag`, ...) statt rohes `db-*`-Markup nachzubauen, siehe
+`coding-konventionen`-Skill:
 
 ```tsx
+import { DBButton } from "@db-ux/react-core-components";
 import { type FC } from "react";
 
-const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => {
-	return <button onClick={onClick}>{label}</button>;
-};
+const MeinButton: FC<Props> = ({ label, onClick }) => (
+	<DBButton type="button" onClick={onClick}>
+		{label}
+	</DBButton>
+);
 ```
 
 ### 2. React Class Components
 
-Komplexere Widgets mit Lifecycle (z.B. Popover-Integration):
+Selten, nur wenn Lifecycle-Methoden (statt Hooks) den Code klarer machen -- z.B.
+`PasswordStrengthMeter.tsx` (Debounce-Timer in `componentDidMount`/`componentWillUnmount`):
 
 ```tsx
 import { Component } from "react";
 
-class MyInput extends Component<Props, State> {
+class PasswordStrengthMeter extends Component<Props, State> {
 	componentDidMount() {
-		/* Popover init */
+		/* Timer starten */
 	}
 	componentWillUnmount() {
-		/* Cleanup */
+		/* Timer aufraeumen */
 	}
 }
 ```

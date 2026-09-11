@@ -10,7 +10,7 @@ description: 'Use when: frontend topic coding-konventionen'
 ### Dateien & Ordner
 
 - **Feature-Module:** PascalCase (`Bereitschaft/`, `EWT/`, `Neben/`)
-- **Komponenten:** PascalCase (`MyButton.tsx`, `MyFormModal.tsx`)
+- **Komponenten:** PascalCase (`DBLoadingButton.tsx`, `MyFormModal.tsx`)
 - **Utilities:** camelCase (`configDayjs.ts`, `saveDaten.ts`)
 - **Klassen:** PascalCase (`CustomTable.ts`, `CustomSnackbar.ts`)
 - **Interfaces:** PascalCase mit `I`-Prefix (`IDaten.ts`, `IVorgabenU.ts`)
@@ -55,7 +55,7 @@ Jeder Ordner hat eine `index.ts` mit Re-Exports:
 
 ```ts
 // components/index.ts
-export { default as MyButton } from "./MyButton";
+export { default as DBLoadingButton } from "./DBLoadingButton";
 export { default as MyFormModal } from "./MyFormModal";
 ```
 
@@ -70,6 +70,24 @@ export { default as MyFormModal } from "./MyFormModal";
 
 ## React-Komponenten
 
+### DB-UX-Komponenten zuerst
+
+Native HTML-Controls (`<button>`, `<input type="checkbox">`, roh gebautes `db-tag`/`db-textarea`-
+Markup) sind seit Phase J durchgehend auf `@db-ux/react-core-components` umgestellt
+(`DBButton`, `DBCheckbox`, `DBRadio`, `DBTag`, `DBTextarea`, `DBInput`/`DBSelect`). Neuer Code
+verwendet diese Komponenten direkt statt rohes `db-*`-Markup nachzubauen.
+
+- **`DBButton`** braucht ein explizites `type` (Lint-Regel `db-ux/button-type-required`); ein
+  icon-only Button (`noText`) braucht ein `<DBTooltip>`-Kind.
+- **`DBLoadingButton`** (`components/DBLoadingButton.tsx`) statt `DBButton`, wenn der Button per
+  `id` an `setLoading`/`clearLoading` haengt (z.B. Speichern-/PDF-Buttons) -- ein normaler
+  `DBButton` wuerde deren `replaceChildren()`-Zugriff am React-Tree vorbei nicht ueberleben,
+  siehe `infrastructure/ui/buttonLoadingStore.ts`.
+- **`MyCheckbox`** (kapselt `DBSwitch`) fuer alles, was semantisch ein Schalter ist
+  (`role="switch"`-Markup), nicht `DBCheckbox`.
+- **`DbFeld`/`DbAuswahl`** (kapseln `DBInput`/`DBSelect`) fuer kompakte Felder ohne sichtbares
+  Label -- eigene Konventionen (`beschriftung`, `dicht`, `huelleStyle`), siehe deren Kopfkommentar.
+
 ### Props-Typen
 
 ```tsx
@@ -78,7 +96,7 @@ interface Props {
   onClick: () => void;
 }
 
-const MyButton: FunctionalComponent<Props> = ({ label, onClick }) => { ... };
+const MeinButton: FC<Props> = ({ label, onClick }) => { ... };
 ```
 
 ### Modal-Rendering
