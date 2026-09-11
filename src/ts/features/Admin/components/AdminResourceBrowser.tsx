@@ -23,6 +23,7 @@ import {
   fetchAdminUserNameMap,
   type AdminPage,
 } from '../utils/api';
+import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
@@ -248,10 +249,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                   }}
                 />
                 {filterUserId && (
-                  <button
-                    className="db-button position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
-                    data-variant="ghost"
-                    data-size="small"
+                  <DBButton
+                    type="button"
+                    className="position-absolute end-0 top-50 translate-middle-y p-0 pe-2 text-muted"
+                    variant="ghost"
+                    size="small"
                     style={{ lineHeight: '1' }}
                     onClick={() => {
                       setFilterUserId('');
@@ -260,7 +262,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     title="Benutzer-Filter löschen"
                   >
                     ×
-                  </button>
+                  </DBButton>
                 )}
               </div>
               <datalist id={`user-datalist-${activeIdx}`}>
@@ -307,14 +309,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </div>
 
             <div className="d-flex gap-2 ms-auto align-items-end">
-              <button className="db-button" data-variant="brand" data-size="small" onClick={applyFilter}>
-                <span className="db-icon me-1 db-font-size-xs" data-icon="funnel" style={{ verticalAlign: 'middle' }} />
+              <DBButton type="button" variant="brand" size="small" icon="funnel" onClick={applyFilter}>
                 Filtern
-              </button>
+              </DBButton>
               {hasActiveFilter && (
-                <button className="db-button" data-variant="outlined" data-size="small" onClick={resetFilter}>
+                <DBButton type="button" variant="outlined" size="small" onClick={resetFilter}>
                   Zurücksetzen
-                </button>
+                </DBButton>
               )}
             </div>
           </div>
@@ -322,19 +323,19 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
           {hasActiveFilter && (
             <div className="mt-2 d-flex flex-wrap gap-2">
               {activeFilter.userId && (
-                <span className="db-tag" data-semantic="informational" data-emphasis="strong">
+                <DBTag semantic="informational" emphasis="strong">
                   User: {userNameMap[activeFilter.userId] ?? truncateId(activeFilter.userId)}
-                </span>
+                </DBTag>
               )}
               {activeFilter.jahr && (
-                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                <DBTag semantic="neutral" emphasis="strong">
                   Jahr: {activeFilter.jahr}
-                </span>
+                </DBTag>
               )}
               {activeFilter.monat && (
-                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                <DBTag semantic="neutral" emphasis="strong">
                   Monat: {MONATE[(activeFilter.monat ?? 1) - 1]}
-                </span>
+                </DBTag>
               )}
             </div>
           )}
@@ -345,15 +346,16 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         <div className="db-notification d-flex align-items-center gap-2 py-2" data-semantic="critical">
           <span data-area="content">
             {loadError}
-            <button
-              className="db-button ms-auto"
-              data-variant="outlined"
+            <DBButton
+              type="button"
+              className="ms-auto"
+              variant="outlined"
               data-color="critical"
-              data-size="small"
+              size="small"
               onClick={() => setLoadError(null)}
             >
               ×
-            </button>
+            </DBButton>
           </span>
         </div>
       )}
@@ -407,19 +409,21 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                           <div className="d-flex align-items-center gap-1 flex-nowrap">
                             <span>{name ?? <code className="text-muted">{truncateId(userId)}</code>}</span>
                             {onNavigateToUser && (
-                              <button
-                                className="db-button p-0 text-info flex-shrink-0"
-                                data-variant="ghost"
-                                data-size="small"
+                              <DBButton
+                                type="button"
+                                className="p-0 text-info flex-shrink-0"
+                                variant="ghost"
+                                size="small"
+                                icon="magnifying_glass"
+                                noText
                                 style={{ lineHeight: '1' }}
                                 onClick={e => {
                                   e.stopPropagation();
                                   onNavigateToUser(userId);
                                 }}
-                                title="Zum Profil"
                               >
-                                <span className="db-icon db-font-size-xs" data-icon="magnifying_glass" />
-                              </button>
+                                <DBTooltip>Zum Profil</DBTooltip>
+                              </DBButton>
                             )}
                           </div>
                         </td>
@@ -437,25 +441,29 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
                     </td>
                   ))}
                   <td className="text-end">
-                    <button
-                      className="db-button me-1 py-0"
-                      data-variant="outlined"
-                      data-size="small"
+                    <DBButton
+                      type="button"
+                      className="me-1 py-0"
+                      variant="outlined"
+                      size="small"
+                      icon="pen"
+                      noText
                       onClick={() => openEdit(doc)}
-                      title="Bearbeiten"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="pen" />
-                    </button>
-                    <button
-                      className="db-button py-0"
-                      data-variant="outlined"
+                      <DBTooltip>Bearbeiten</DBTooltip>
+                    </DBButton>
+                    <DBButton
+                      type="button"
+                      className="py-0"
+                      variant="outlined"
                       data-color="critical"
-                      data-size="small"
+                      size="small"
+                      icon="bin"
+                      noText
                       onClick={() => handleDelete(doc)}
-                      title="Löschen"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="bin" />
-                    </button>
+                      <DBTooltip>Löschen</DBTooltip>
+                    </DBButton>
                   </td>
                 </tr>
               ))}
@@ -470,32 +478,33 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </small>
         {totalPages > 1 && (
           <div className="knopfgruppe">
-            <button
-              className="db-button"
-              data-variant="outlined"
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
-            </button>
-            <button
-              className="db-button"
-              data-variant="outlined"
+            </DBButton>
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
               ›
-            </button>
+            </DBButton>
           </div>
         )}
-        <button className="db-button" data-variant="outlined" data-size="small" onClick={() => loadPage(currentPage)}>
-          <span
-            className="db-icon me-1 db-font-size-sm"
-            data-icon="circular_arrows"
-            style={{ verticalAlign: 'middle' }}
-          />
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          icon="circular_arrows"
+          onClick={() => loadPage(currentPage)}
+        >
           Aktualisieren
-        </button>
+        </DBButton>
       </div>
 
       {/* Edit Modal – Portal: sichtbar auch in versteckten Tab-Panes */}
