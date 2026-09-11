@@ -22,6 +22,16 @@ function renderGruppen(props: Partial<Parameters<typeof ListenGruppen>[0]> = {})
   return container;
 }
 
+/**
+ * Der Loeschknopf ist ein `DBButton` mit `noText`; seine Bezeichnung steht seit J2 in einem
+ * `DBTooltip`-Kind statt in `title` (DB-Vorgabe `db-ux/button-no-text-requires-tooltip`).
+ */
+function loeschKnoepfe(container: Element): HTMLButtonElement[] {
+  return [...container.querySelectorAll<HTMLButtonElement>('button')].filter(b =>
+    b.textContent?.includes('Gruppe löschen'),
+  );
+}
+
 describe('ListenGruppen', () => {
   it('rendert nichts, wenn weder Gruppen noch Vorlagen existieren (nicht-EZ-Formular)', () => {
     const container = renderGruppen({ formular: 'ewt', tabelle: baseTabelle() });
@@ -75,7 +85,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
-    (container.querySelector('button[title="Gruppe löschen"]') as HTMLButtonElement).click();
+    loeschKnoepfe(container)[0]!.click();
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ listen: undefined }));
   });
@@ -90,7 +100,7 @@ describe('ListenGruppen', () => {
     });
     const container = renderGruppen({ formular: 'ez', tabelle, onChange });
 
-    (container.querySelectorAll('button[title="Gruppe löschen"]')[0] as HTMLButtonElement).click();
+    loeschKnoepfe(container)[0]!.click();
 
     const updated = onChange.mock.calls[0][0] as TabellenDef;
     expect(Object.keys(updated.listen ?? {})).toEqual(['leistung']);

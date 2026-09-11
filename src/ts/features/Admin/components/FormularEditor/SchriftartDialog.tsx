@@ -1,4 +1,4 @@
-import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -220,9 +220,9 @@ export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onCha
         </div>
 
         <div className="dialog-fuss">
-          <button type="button" className="db-button" data-variant="brand" onClick={onClose}>
+          <DBButton type="button" variant="brand" onClick={onClose}>
             Fertig
-          </button>
+          </DBButton>
         </div>
       </div>
     </DBDrawer>,

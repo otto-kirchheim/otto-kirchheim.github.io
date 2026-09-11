@@ -6,6 +6,7 @@ import {
   zulagenKurztexte,
   type FormularCode,
 } from './datenKatalog';
+import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
@@ -49,17 +50,18 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
               <span className="small fw-semibold flex-grow-1">
                 {name} <span className="text-body-secondary">— {gruppe.auswahl?.length ?? 0} mögliche Schlüssel</span>
               </span>
-              <button
+              <DBButton
                 type="button"
-                className="db-button py-0"
-                data-variant="outlined"
+                className="py-0"
+                variant="outlined"
                 data-color="critical"
-                data-size="small"
+                size="small"
+                icon="bin"
+                noText
                 onClick={() => setzeGruppe(name, undefined)}
-                title="Gruppe löschen"
               >
-                <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-              </button>
+                <DBTooltip>Gruppe löschen</DBTooltip>
+              </DBButton>
             </div>
 
             <div className="raster mb-1 abstand-1">
@@ -119,23 +121,17 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
 
             {kategorie && (
               <div>
-                <div className="db-checkbox" data-size="small">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={kurztexte}
-                      onChange={e =>
-                        setzeGruppe(name, {
-                          ...gruppe,
-                          beschriftungen: (e.target as HTMLInputElement).checked
-                            ? zulagenKurztexte(kategorie)
-                            : undefined,
-                        })
-                      }
-                    />
-                    Kurztext statt Code als Überschrift
-                  </label>
-                </div>
+                <DBCheckbox
+                  size="small"
+                  label="Kurztext statt Code als Überschrift"
+                  checked={kurztexte}
+                  onChange={e =>
+                    setzeGruppe(name, {
+                      ...gruppe,
+                      beschriftungen: (e.target as HTMLInputElement).checked ? zulagenKurztexte(kategorie) : undefined,
+                    })
+                  }
+                />
               </div>
             )}
           </div>

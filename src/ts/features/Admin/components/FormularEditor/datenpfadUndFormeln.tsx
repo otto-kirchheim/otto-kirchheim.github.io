@@ -2,6 +2,7 @@ import { unmount } from '@/infrastructure/ui';
 
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld, oeffneDrawer } from '@/components';
 
 /**
@@ -103,29 +104,28 @@ export function ZusammengesetzteQuellen({
               onChange={neu => onChange({ ...feld, quellen: quellen.map((p, j) => (j === i ? neu : p)) })}
             />
           </div>
-          <button
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
+            className="py-0"
+            variant="outlined"
             data-color="critical"
-            data-size="small"
+            size="small"
             onClick={() => onChange({ ...feld, quellen: quellen.filter((_, j) => j !== i) })}
             title="Teil entfernen"
           >
             ×
-          </button>
+          </DBButton>
         </div>
       ))}
       <div className="d-flex gap-1 align-items-center">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+          variant="outlined"
+          size="small"
           onClick={() => onChange({ ...feld, quellen: [...quellen, eintraege[0]?.pfad ?? ''] })}
         >
           + Teil
-        </button>
+        </DBButton>
         <span className="small text-muted">getrennt durch</span>
         <DbAuswahl
           beschriftung="Trennzeichen"
@@ -295,16 +295,9 @@ export function openPlatzhalterHilfe(): void {
     <div className="dialog-rumpf" data-breite="lg">
       <div className="db-drawer-header">
         <h5>Platzhalter &amp; Formate</h5>
-        <button
-          type="button"
-          className="db-button"
-          data-icon="cross"
-          data-variant="ghost"
-          data-no-text="true"
-          data-dialog-dismiss="modal"
-        >
-          Schließen
-        </button>
+        <DBButton type="button" icon="cross" variant="ghost" noText data-dialog-dismiss="modal">
+          <DBTooltip>Schließen</DBTooltip>
+        </DBButton>
       </div>
       <div className="dialog-koerper">
         <PlatzhalterHilfeInhalt />

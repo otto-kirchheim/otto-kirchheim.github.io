@@ -7,6 +7,7 @@ import { DatenpfadWahl } from './datenpfadUndFormeln';
 import { DarstellungsFelder, KlappZeile, ScharfButton, Zellkoordinaten, istGleich } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 export function SpalteZeile({
@@ -55,37 +56,40 @@ export function SpalteZeile({
             onClick={onArm}
             titel="Auf dem PDF die Spaltenbreite markieren — nur die x-Kanten werden übernommen"
           />
-          <button
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
-            data-size="small"
+            className="py-0"
+            variant="outlined"
+            size="small"
+            icon="arrow_up"
+            noText
             onClick={() => onMove(-1)}
-            title="Nach oben"
           >
-            <span className="db-icon db-font-size-xs" data-icon="arrow_up" style={{ verticalAlign: 'middle' }} />
-          </button>
-          <button
+            <DBTooltip>Nach oben</DBTooltip>
+          </DBButton>
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
-            data-size="small"
+            className="py-0"
+            variant="outlined"
+            size="small"
+            icon="arrow_down"
+            noText
             onClick={() => onMove(1)}
-            title="Nach unten"
           >
-            <span className="db-icon db-font-size-xs" data-icon="arrow_down" style={{ verticalAlign: 'middle' }} />
-          </button>
-          <button
+            <DBTooltip>Nach unten</DBTooltip>
+          </DBButton>
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
+            className="py-0"
+            variant="outlined"
             data-color="critical"
-            data-size="small"
+            size="small"
+            icon="bin"
+            noText
             onClick={onDelete}
-            title="Spalte löschen"
           >
-            <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-          </button>
+            <DBTooltip>Spalte löschen</DBTooltip>
+          </DBButton>
         </>
       }
     >
@@ -94,18 +98,16 @@ export function SpalteZeile({
       </div>
 
       <div className="knopfgruppe w-100 mb-1">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={modus === 'daten' ? 'brand' : 'outlined'}
+          variant={modus === 'daten' ? 'brand' : 'outlined'}
           onClick={() => onChange({ ...spalte, berechnet: undefined, wenn: undefined, listenPlatz: undefined })}
         >
           Datenfeld
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={modus === 'berechnet' ? 'brand' : 'outlined'}
+          variant={modus === 'berechnet' ? 'brand' : 'outlined'}
           onClick={() =>
             onChange({
               ...spalte,
@@ -116,11 +118,10 @@ export function SpalteZeile({
           }
         >
           Berechnet
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={modus === 'wenn' ? 'brand' : 'outlined'}
+          variant={modus === 'wenn' ? 'brand' : 'outlined'}
           onClick={() => {
             const startPfad = zeilenFelder[0]?.pfad ?? '';
             onChange({
@@ -133,12 +134,11 @@ export function SpalteZeile({
           title="Nur ein Kreuz setzen, wenn ein Feld einen bestimmten Wert hat"
         >
           Ankreuzen
-        </button>
+        </DBButton>
         {gruppen.length > 0 && (
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant={modus === 'liste' ? 'brand' : 'outlined'}
+            variant={modus === 'liste' ? 'brand' : 'outlined'}
             onClick={() =>
               onChange({
                 ...spalte,
@@ -150,7 +150,7 @@ export function SpalteZeile({
             title="Ein Platz einer dynamischen Spaltengruppe — welcher Schlüssel dort steht, entscheiden die Daten"
           >
             Listen-Platz
-          </button>
+          </DBButton>
         )}
       </div>
 

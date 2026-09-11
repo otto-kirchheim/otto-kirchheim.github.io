@@ -14,6 +14,7 @@ import {
 } from './feldPanelGemeinsam';
 import type { Props } from './feldPanelTypen';
 import { TabellenBlock } from './TabellenBlock';
+import { DBButton } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 export type { Armed, Vorschau } from './feldPanelTypen';
@@ -145,9 +146,9 @@ export function FeldPanel({
             value={neuerName}
             onChange={e => setNeuerName(e.target.value)}
           />
-          <button type="button" className="db-button" data-variant="outlined" onClick={tabelleAnlegen}>
+          <DBButton type="button" variant="outlined" onClick={tabelleAnlegen}>
             + Tabelle
-          </button>
+          </DBButton>
         </div>
       </Abschnitt>
 
@@ -160,16 +161,16 @@ export function FeldPanel({
           />
           <span className="small flex-grow-1">{seite.signaturBild ? 'Fläche gesetzt' : 'nicht gesetzt'}</span>
           {seite.signaturBild && (
-            <button
+            <DBButton
               type="button"
-              className="db-button py-0"
-              data-variant="outlined"
+              className="py-0"
+              variant="outlined"
               data-color="critical"
-              data-size="small"
+              size="small"
               onClick={() => onSeiteChange({ ...seite, signaturBild: undefined })}
             >
               Löschen
-            </button>
+            </DBButton>
           )}
         </div>
         {seite.signaturBild && (
@@ -269,15 +270,9 @@ export function FeldPanel({
             </div>
           </>
         ) : (
-          <button
-            type="button"
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
-            onClick={datumHinzufuegen}
-          >
+          <DBButton type="button" variant="outlined" size="small" onClick={datumHinzufuegen}>
             + Datum hinzufügen
-          </button>
+          </DBButton>
         )}
       </Abschnitt>
     </div>
