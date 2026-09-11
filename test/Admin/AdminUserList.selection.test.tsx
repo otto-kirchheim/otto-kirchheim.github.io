@@ -67,10 +67,17 @@ async function renderList(isSuperAdmin: boolean): Promise<HTMLDivElement> {
   return container;
 }
 
+/**
+ * Seit der Umstellung auf `DBCheckbox` (J3) traegt die Auswahl-Checkbox ihre Bezeichnung als
+ * echtes, visuell verstecktes `<label>` (`label` + `showLabel={false}`) statt als `aria-label`
+ * -- DB verlangt fuer `db-ux/form-label-required` ein `label`, und das Ergebnis ist barrierefrei
+ * gleichwertig (assoziiertes `<label for>` statt reinem Attribut).
+ */
 function selectionCheckboxes(container: HTMLDivElement): HTMLInputElement[] {
-  return Array.from(
-    container.querySelectorAll<HTMLInputElement>('input[type="checkbox"][aria-label*="Massenänderung"]'),
-  );
+  return Array.from(container.querySelectorAll<HTMLLabelElement>('.db-checkbox label'))
+    .filter(label => label.textContent?.includes('Massenänderung'))
+    .map(label => label.querySelector('input[type="checkbox"]'))
+    .filter((input): input is HTMLInputElement => input !== null);
 }
 
 describe('AdminUserList Mehrfachauswahl', () => {
@@ -94,20 +101,25 @@ describe('AdminUserList Mehrfachauswahl', () => {
   it('bietet die eigene Zeile nicht zur Auswahl an', async () => {
     const container = await renderList(true);
 
-    const labels = selectionCheckboxes(container).map(input => input.getAttribute('aria-label'));
+    const labels = selectionCheckboxes(container).map(input => input.closest('label')?.textContent ?? null);
     expect(labels).toHaveLength(2);
     expect(labels.some(label => label?.includes('admin '))).toBe(false);
   });
 
   it('blendet die Aktionsleiste erst bei getroffener Auswahl ein', async () => {
     const container = await renderList(true);
-    expect(container.textContent).not.toContain('Massenänderung');
+    // `textContent` allein reicht nicht mehr: seit der DBCheckbox-Umstellung tragen die
+    // Auswahl-Checkboxen "... fuer Massenaenderung auswaehlen" als (visuell verstecktes,
+    // aber im DOM vorhandenes) <label> -- das Wort steckt also immer im Text. Der
+    // Massenaenderungs-KNOPF selbst ist der eindeutige Indikator fuer die Aktionsleiste.
+    const findButton = () => [...container.querySelectorAll('button')].find(b => b.textContent === 'Massenänderung');
+    expect(findButton()).toBeUndefined();
 
     selectionCheckboxes(container)[0].click();
     await flush();
 
     expect(container.textContent).toContain('1 ausgewählt');
-    expect(container.textContent).toContain('Massenänderung');
+    expect(findButton()).toBeDefined();
   });
 
   it('übergibt die ausgewählten Benutzer an den Massenänderungs-Dialog', async () => {
