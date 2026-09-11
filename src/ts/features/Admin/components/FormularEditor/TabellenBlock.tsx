@@ -8,6 +8,7 @@ import { SonderZeilen, UEBER_OPTIONEN } from './SonderZeilen';
 import { SpalteZeile } from './SpalteZeile';
 import { WertVorschau } from './WertVorschau';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';
+import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
@@ -115,28 +116,30 @@ export function TabellenBlock({
       <div className="d-flex align-items-center gap-1 mb-1">
         <span className="fw-semibold small flex-grow-1">Tabelle „{name}"</span>
         {bereich && (
-          <button
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
-            data-size="small"
+            className="py-0"
+            variant="outlined"
+            size="small"
+            icon="unlink_chain"
+            noText
             onClick={onVonSeiteEntfernen}
-            title="Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)"
           >
-            <span className="db-icon db-font-size-xs" data-icon="unlink_chain" style={{ verticalAlign: 'middle' }} />
-          </button>
+            <DBTooltip>Von dieser Seite entfernen (Tabelle bleibt auf anderen Seiten erhalten)</DBTooltip>
+          </DBButton>
         )}
-        <button
+        <DBButton
           type="button"
-          className="db-button py-0"
-          data-variant="outlined"
+          className="py-0"
+          variant="outlined"
           data-color="critical"
-          data-size="small"
+          size="small"
+          icon="bin"
+          noText
           onClick={onDelete}
-          title="Tabelle löschen (aus dem ganzen Dokument)"
         >
-          <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-        </button>
+          <DBTooltip>Tabelle löschen (aus dem ganzen Dokument)</DBTooltip>
+        </DBButton>
       </div>
 
       <div className="raster mb-1 abstand-1">
@@ -156,23 +159,19 @@ export function TabellenBlock({
         </div>
         <div className="sp-5">
           <div>
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={Boolean(tabelle.filter)}
-                  onChange={e =>
-                    onChange({
-                      ...tabelle,
-                      filter: (e.target as HTMLInputElement).checked
-                        ? { feld: zeilenFelder[0]?.pfad ?? '', werte: [] }
-                        : undefined,
-                    })
-                  }
-                />
-                Nur bestimmte Zeilen
-              </label>
-            </div>
+            <DBCheckbox
+              size="small"
+              label="Nur bestimmte Zeilen"
+              checked={Boolean(tabelle.filter)}
+              onChange={e =>
+                onChange({
+                  ...tabelle,
+                  filter: (e.target as HTMLInputElement).checked
+                    ? { feld: zeilenFelder[0]?.pfad ?? '', werte: [] }
+                    : undefined,
+                })
+              }
+            />
           </div>
         </div>
       </div>
@@ -196,22 +195,18 @@ export function TabellenBlock({
             <div className="d-flex flex-wrap gap-2">
               {filterWerte.map(wert => (
                 <div key={wert}>
-                  <div className="db-checkbox" data-size="small">
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={tabelle.filter!.werte.includes(wert)}
-                        onChange={e => {
-                          const an = (e.target as HTMLInputElement).checked;
-                          const werte = an
-                            ? [...tabelle.filter!.werte, wert]
-                            : tabelle.filter!.werte.filter(w => w !== wert);
-                          onChange({ ...tabelle, filter: { ...tabelle.filter!, werte } });
-                        }}
-                      />
-                      {wert}
-                    </label>
-                  </div>
+                  <DBCheckbox
+                    size="small"
+                    label={String(wert)}
+                    checked={tabelle.filter!.werte.includes(wert)}
+                    onChange={e => {
+                      const an = (e.target as HTMLInputElement).checked;
+                      const werte = an
+                        ? [...tabelle.filter!.werte, wert]
+                        : tabelle.filter!.werte.filter(w => w !== wert);
+                      onChange({ ...tabelle, filter: { ...tabelle.filter!, werte } });
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -263,24 +258,20 @@ export function TabellenBlock({
         <span className="small fw-semibold flex-grow-1">Datenzeile {eigenePlatzierung ? '(nur diese Seite)' : ''}</span>
         {bereich && (
           <div className="mb-0">
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={eigenePlatzierung}
-                  title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
-                  onChange={e => {
-                    const an = (e.target as HTMLInputElement).checked;
-                    setzeBereich({
-                      startY: an ? startY : undefined,
-                      hoehe: an ? zeilenHoehe : undefined,
-                      maxZeilen: an ? maxZeilen : undefined,
-                    });
-                  }}
-                />
-                eigene je Seite
-              </label>
-            </div>
+            <DBCheckbox
+              size="small"
+              label="eigene je Seite"
+              checked={eigenePlatzierung}
+              title="Eigene Startposition/Höhe/Zeilenzahl nur für diese Seite — beim Einschalten gelten zunächst die bisherigen Werte, beim Ausschalten wieder die der Tabelle"
+              onChange={e => {
+                const an = (e.target as HTMLInputElement).checked;
+                setzeBereich({
+                  startY: an ? startY : undefined,
+                  hoehe: an ? zeilenHoehe : undefined,
+                  maxZeilen: an ? maxZeilen : undefined,
+                });
+              }}
+            />
           </div>
         )}
       </div>
@@ -294,16 +285,15 @@ export function TabellenBlock({
           <div className="small text-body-secondary flex-grow-1">
             Auf dieser Seite noch kein Platz — Startposition setzen, um sie hier zu zeigen.
           </div>
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant="outlined"
+            variant="outlined"
             data-size="small"
             onClick={() => onSeiteChange({ ...seite, bereiche: [...seite.bereiche, { tabelle: name }] })}
             title="Übernimmt Startposition, Höhe und Zeilenzahl unverändert von der Tabelle -- z.B. wenn nur die Spalten dieser Seite abweichen"
           >
             Mit Werten der Tabelle platzieren
-          </button>
+          </DBButton>
         </div>
       )}
 
@@ -355,11 +345,11 @@ export function TabellenBlock({
                 <div key={sonderName} className="mb-1">
                   <div className="d-flex align-items-center gap-2 mb-1">
                     <span className="small flex-grow-1">{sonderName}</span>
-                    <button
+                    <DBButton
                       type="button"
-                      className="db-button py-0"
-                      data-variant="outlined"
-                      data-size="small"
+                      className="py-0"
+                      variant="outlined"
+                      size="small"
                       title="Diese Sonderzeile an einer weiteren Position platzieren (z.B. Überschrift oben UND als Kopie unten)"
                       onClick={() =>
                         setzeBereich({
@@ -368,7 +358,7 @@ export function TabellenBlock({
                       }
                     >
                       + Platzieren
-                    </button>
+                    </DBButton>
                   </div>
                   {indizes.map(i => {
                     const platz = platzierungen[i]!;
@@ -433,21 +423,18 @@ export function TabellenBlock({
                               ))}
                             </DbAuswahl>
                           </div>
-                          <button
+                          <DBButton
                             type="button"
-                            className="db-button py-0"
-                            data-variant="outlined"
+                            className="py-0"
+                            variant="outlined"
                             data-color="critical"
-                            data-size="small"
-                            title="Diese Platzierung entfernen"
+                            size="small"
+                            icon="bin"
+                            noText
                             onClick={() => setzeBereich({ sonderzeilen: platzierungen.filter((_, ii) => ii !== i) })}
                           >
-                            <span
-                              className="db-icon db-font-size-xs"
-                              data-icon="bin"
-                              style={{ verticalAlign: 'middle' }}
-                            />
-                          </button>
+                            <DBTooltip>Diese Platzierung entfernen</DBTooltip>
+                          </DBButton>
                         </div>
                         <WertVorschau text={vorschauText} />
                       </div>
@@ -466,21 +453,18 @@ export function TabellenBlock({
         offen
       >
         {bereich && (
-          <div className="db-checkbox mb-1" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={eigeneSpalten}
-                title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
-                onChange={e =>
-                  setzeBereich({
-                    spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined,
-                  })
-                }
-              />
-              eigene je Seite
-            </label>
-          </div>
+          <DBCheckbox
+            className="mb-1"
+            size="small"
+            label="eigene je Seite"
+            checked={eigeneSpalten}
+            title="Eigenes Spaltenraster nur für diese Seite — beim Einschalten werden die Spalten der Tabelle als Ausgangspunkt kopiert, beim Ausschalten gelten wieder die der Tabelle"
+            onChange={e =>
+              setzeBereich({
+                spalten: (e.target as HTMLInputElement).checked ? structuredClone(spalten) : undefined,
+              })
+            }
+          />
         )}
         {spalten.map((spalte, index) => (
           <SpalteZeile
@@ -513,10 +497,9 @@ export function TabellenBlock({
             }}
           />
         ))}
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
+          variant="outlined"
           data-size="small"
           onClick={() =>
             setzeSpalten([
@@ -531,7 +514,7 @@ export function TabellenBlock({
           }
         >
           + Spalte
-        </button>
+        </DBButton>
       </Abschnitt>
     </div>
   );

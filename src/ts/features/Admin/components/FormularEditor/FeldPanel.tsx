@@ -211,16 +211,16 @@ export function FeldPanel({
                 titel="Position auf dem PDF aufziehen"
               />
               <span className="small flex-grow-1">Feld gesetzt</span>
-              <button
+              <DBButton
                 type="button"
-                className="db-button py-0"
-                data-variant="outlined"
+                className="py-0"
+                variant="outlined"
                 data-color="critical"
-                data-size="small"
+                size="small"
                 onClick={datumLoeschen}
               >
                 Löschen
-              </button>
+              </DBButton>
             </div>
             <DbAuswahl
               beschriftung="Datenfeld für das Unterschriftsdatum"
