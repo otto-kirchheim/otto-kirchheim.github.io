@@ -12,8 +12,12 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   in `vite.base-config.ts`); `customtable.css` wurde dazu zu `customtable.scss`, und
   `infrastructure/ui/breakpoints.ts` spiegelt die Werte für die TS-Seite.
 - **Die Skala ändert sich damit bewusst:** 480/576/768/992/1200/1400 → 320/768/1024/1440/1920.
-  Nur 768 ist in beiden Systemen gleich. `xxl` entfällt (DB kennt die Stufe nicht; es gab keine
-  einzige `*-xxl-*`-Klasse im Bestand).
+  Nur 768 ist in beiden Systemen gleich.
+- `xxl` **bleibt erhalten**, obwohl DB bei `xl` endet: gemeinsame Quelle ist jetzt
+  `src/scss/_breakpoints.scss`, das `xs`–`xl` aus den Foundations bezieht und `xxl` als klar
+  markierte Projekt-Erweiterung auf 2560 px (QHD, nächste reale Geräteklasse) ergänzt.
+  Die EWT-Tabelle nutzt die Stufe für `Buchungstag` — sie ist dort wie vorher die zuletzt
+  erscheinende Spalte, jetzt ab 2560 statt ab 1400.
 - Betroffen waren 68 `sp-{sm,md,lg,xl}-*`- und 117 Utility-Verwendungen. Die
   `.custom-text-truncate`-Leiter in `styles.scss` (6 Bootstrap-Stufen) wurde auf dieselben
   DB-Schwellen gezogen, sonst hätte der Text an anderen Breiten gestuft als die Spalten daneben.
@@ -25,9 +29,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   lg→md und `beginnN`/`endeN` lg→md.
 - Vier bespoke Media Queries in `styles.scss` (1200/1199.98/992/576 px) bleiben bewusst auf
   ihren Werten -- sie gehören zu einzelnen Komponenten, nicht zur Stufenleiter.
-- Verifiziert (Chrome headless): Umschaltpunkte exakt bei 320/768/1024/1440/1920; Spaltenleitern
-  EWT 4→6→8→13→14, Neben 4→5→6, EA 3→5, Bereitschaft 8→10→11; kein waagerechter Seitenüberlauf
-  auf 7 Tabs × 7 Breiten; Konsolenfehler nur backend-bedingt. `lint:css` 90 → 84 Warnungen.
+- Verifiziert (Chrome headless): Umschaltpunkte exakt bei 320/768/1024/1440/1920/2560;
+  Spaltenleitern EWT 4→6→8→13→13→14, Neben 4→5→6, EA 3→5, Bereitschaft 8→10→11; kein
+  waagerechter Seitenüberlauf auf 7 Tabs × 8 Breiten; Konsolenfehler nur backend-bedingt.
+  `lint:css` 90 → 84 Warnungen.
 
 ## 2026-09-10 (90)
 

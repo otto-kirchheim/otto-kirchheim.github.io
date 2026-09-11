@@ -1,12 +1,6 @@
-@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
+@use '../../../scss/breakpoints' as bp;
 
-$stufen: (
-  'xs': db.$db-screen-size-xs,
-  'sm': db.$db-screen-size-sm,
-  'md': db.$db-screen-size-md,
-  'lg': db.$db-screen-size-lg,
-  'xl': db.$db-screen-size-xl,
-);
+$stufen: bp.$px;
 
 /* Die `db-table`-Huelle legt ihre Linien per `border-block-end` an `tr` -- das rendert nur bei
    `border-collapse: collapse`. Weil `utilities.scss` das native `display: table` erzwingt (statt
@@ -148,7 +142,7 @@ th.customtable-sortable:hover > span.customtableIcon {
 
 /* Spaltenstufen: eine Spalte mit `data-breakpoints="md"` verschwindet unterhalb der Stufe `md`,
    und der Aufklapp-Knopf der Bearbeiten-Spalte (`customtable-toggle-md`) bekommt dort sein "+".
-   Die Schwellen kommen aus `@db-ux/core-foundations`; `BREAKPOINTS` in
+   Die Schwellen kommen aus `scss/_breakpoints.scss`; `BREAKPOINTS` in
    `infrastructure/ui/breakpoints.ts` spiegelt dieselben Werte fuer die Spaltenlogik in
    `CustomTable.ts`. Da `max-width`-Abfragen sich ueberlagern, traegt bei schmalem Fenster
    automatisch jede groessere Stufe ihr "+" bei -- eine Sammelregel ist nicht noetig. */
@@ -166,13 +160,13 @@ th.customtable-sortable:hover > span.customtableIcon {
   }
 }
 
-@media screen and (max-width: #{db.$db-screen-size-xs - 0.05}px) {
+@media screen and (max-width: #{bp.$xs - 0.05}px) {
   .customtable-editing > div > button {
     padding-inline: 4px;
   }
 }
 
-@media screen and (max-width: #{db.$db-screen-size-sm - 0.05}px) {
+@media screen and (max-width: #{bp.$sm - 0.05}px) {
   th.customtable-sortable > span.customtableIcon {
     opacity: 1;
   }

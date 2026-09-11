@@ -471,9 +471,11 @@ Ende auf `<head>` + einen React-Root.
 - [x] **J0 Querschnitt foundations -- Breakpoint-Teil (J-Q2) erledigt** (2026-09-11, Branch
       `feat/react-umbau`). `raster.scss`, `utilities.scss`, `customtable.scss` (vorher `.css`)
       und `CustomTable.ts` beziehen die Schwellen jetzt aus
-      `@db-ux/core-foundations/.../_screen-sizes.scss`; `infrastructure/ui/breakpoints.ts` ist
-      der TS-Spiegel. Skala bewusst gewechselt (480/576/768/992/1200/1400 -> 320/768/1024/
-      1440/1920), `xxl` entfaellt. Spaltenstufen ALLER Tabellen neu beurteilt -- ein reiner
+      `src/scss/_breakpoints.scss` (xs-xl aus `@db-ux/core-foundations`, `xxl` als
+      Projekt-Erweiterung auf 2560, weil DB bei `xl` endet und die EWT-Tabelle eine Stufe
+      darueber braucht); `infrastructure/ui/breakpoints.ts` ist der TS-Spiegel. Skala bewusst
+      gewechselt (480/576/768/992/1200/1400 -> 320/768/1024/1440/1920/2560).
+      Spaltenstufen ALLER Tabellen neu beurteilt -- ein reiner
       Skalentausch haette Kernspalten zu weit nach oben geschoben (EWT bei 1000 px: 4 von 14).
       Details im `CHANGELOG.md` (91).
       **Rest von J0 offen:** J-Q1 (helpers-Mixins fuer Fokus-Ringe, visually-hidden, Divider,

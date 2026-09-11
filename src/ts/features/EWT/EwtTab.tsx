@@ -60,7 +60,7 @@ function EwtTab() {
             direction: 'ASC',
             parser: tagParser,
           },
-          { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xl', parser: tagParser },
+          { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
           { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
           { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time', html: true },
           { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'md', type: 'time' },

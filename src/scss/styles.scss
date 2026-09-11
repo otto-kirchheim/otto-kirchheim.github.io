@@ -1,4 +1,4 @@
-@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
+@use 'breakpoints' as bp;
 @import 'raster';
 
 // DB "neues Design" -- Formensprache: von rund zu eckig, Fokus auf Klarheit und Praezision
@@ -658,7 +658,7 @@ body {
   margin-block-end: 1rem;
 }
 
-@media screen and (min-width: #{db.$db-screen-size-sm}px) {
+@media screen and (min-width: #{bp.$sm}px) {
   .admin-user-cards {
     column-count: 2;
   }
@@ -748,7 +748,7 @@ body {
   white-space: nowrap;
 }
 
-@media screen and (max-width: #{db.$db-screen-size-sm - 0.05}px) {
+@media screen and (max-width: #{bp.$sm - 0.05}px) {
   #collapseFour table thead {
     display: none;
   }
@@ -839,31 +839,31 @@ body {
 // Kappungsbreite der `Einsatzort`-Spalte, gestuft entlang derselben DB-Schwellen, an denen die
 // Nachbarspalten der EWT-Tabelle auftauchen (`customtable.scss`) -- sonst stuft der Text an
 // anderen Breiten als die Spalten. Oberhalb der groessten Stufe bleibt der Text ungekappt.
-@media screen and (max-width: #{db.$db-screen-size-xs - 0.05}px) {
+@media screen and (max-width: #{bp.$xs - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 120px;
   }
 }
 
-@media screen and (min-width: #{db.$db-screen-size-xs}px) and (max-width: #{db.$db-screen-size-sm - 0.05}px) {
+@media screen and (min-width: #{bp.$xs}px) and (max-width: #{bp.$sm - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 140px;
   }
 }
 
-@media screen and (min-width: #{db.$db-screen-size-sm}px) and (max-width: #{db.$db-screen-size-md - 0.05}px) {
+@media screen and (min-width: #{bp.$sm}px) and (max-width: #{bp.$md - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 240px;
   }
 }
 
-@media screen and (min-width: #{db.$db-screen-size-md}px) and (max-width: #{db.$db-screen-size-lg - 0.05}px) {
+@media screen and (min-width: #{bp.$md}px) and (max-width: #{bp.$lg - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 480px;
   }
 }
 
-@media screen and (min-width: #{db.$db-screen-size-lg}px) and (max-width: #{db.$db-screen-size-xl - 0.05}px) {
+@media screen and (min-width: #{bp.$lg}px) and (max-width: #{bp.$xl - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 650px;
   }
@@ -874,7 +874,7 @@ body {
   inline-size: 100%;
 }
 
-@media screen and (min-width: #{db.$db-screen-size-sm}px) {
+@media screen and (min-width: #{bp.$sm}px) {
   .onboarding-panel {
     inline-size: 26rem;
   }

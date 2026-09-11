@@ -7,19 +7,12 @@
 // Anders als bei Bootstrap gibt es keine negativen Aussenabstaende und kein Innenpolster an
 // den Kindern -- der Abstand kommt aus `gap`, der Inhalt steht buendig am Containerrand.
 
-// Breakpoints kommen aus `@db-ux/core-foundations` und sind damit projektweit die einzige
-// Quelle (J-Q2). `xs` (20em/320px) bleibt aussen vor: Kinder von `.raster` sind ohnehin
-// standardmaessig volle Breite, eine Stufe unterhalb der kleinsten Geraetebreite hat keinen
-// Nutzen. Die Werte weichen bewusst von der frueheren Bootstrap-Staffel ab
-// (sm 36em -> 48em, md 48em -> 64em, lg 62em -> 90em, xl 75em -> 120em).
-@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
+// Umbruchstufen aus `_breakpoints.scss` (J-Q2) -- xs-xl aus `@db-ux/core-foundations`, xxl als
+// Projekt-Erweiterung. Die Werte weichen bewusst von der frueheren Bootstrap-Staffel ab
+// (sm 36em -> 48em, md 48em -> 64em, lg 62em -> 90em, xl 75em -> 120em, xxl 87.5em -> 160em).
+@use 'breakpoints' as bp;
 
-$breakpoints: (
-  'sm': db.$db-breakpoint-sm,
-  'md': db.$db-breakpoint-md,
-  'lg': db.$db-breakpoint-lg,
-  'xl': db.$db-breakpoint-xl,
-);
+$breakpoints: bp.$em;
 
 // Rasterabstaende auf die DB-UX-Tokens `--db-spacing-fixed-*` gelegt: der Abstand folgt so
 // automatisch der Density. Die Stufen entsprechen weiterhin Bootstraps Rinnenbreiten `g-0`

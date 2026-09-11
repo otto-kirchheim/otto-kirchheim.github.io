@@ -1,0 +1,37 @@
+// Projektweite Umbruchstufen -- die EINE Quelle fuer `raster.scss`, `utilities.scss`,
+// `styles.scss` und `infrastructure/table/customtable.scss`.
+//
+// `xs`-`xl` kommen unveraendert aus `@db-ux/core-foundations` (320/768/1024/1440/1920).
+// `xxl` ist eine bewusste Projekt-Erweiterung: DB endet bei `xl`, die EWT-Tabelle hat aber
+// mehr Spalten, als auf 1920 px nebeneinander passen, und braucht darueber noch eine Stufe.
+// Der Wert 2560 ist die naechste reale Geraeteklasse (QHD/1440p-Schirme).
+// `infrastructure/ui/breakpoints.ts` spiegelt dieselbe Tabelle fuer die TypeScript-Seite.
+
+@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
+
+// Rohe Pixelwerte -- fuer `max-width`-Abfragen, die auf `$wert - 0.05px` rechnen.
+$xs: db.$db-screen-size-xs;
+$sm: db.$db-screen-size-sm;
+$md: db.$db-screen-size-md;
+$lg: db.$db-screen-size-lg;
+$xl: db.$db-screen-size-xl;
+$xxl: 2560;
+$breakpoint-xxl: 160em;
+$px: (
+  'xs': $xs,
+  'sm': $sm,
+  'md': $md,
+  'lg': $lg,
+  'xl': $xl,
+  'xxl': $xxl,
+);
+
+// em-Werte -- fuer `min-width`-Abfragen. `xs` fehlt bewusst: eine Stufe unterhalb der
+// kleinsten Geraetebreite hat als *Mindest*breite keinen Nutzen.
+$em: (
+  'sm': db.$db-breakpoint-sm,
+  'md': db.$db-breakpoint-md,
+  'lg': db.$db-breakpoint-lg,
+  'xl': db.$db-breakpoint-xl,
+  'xxl': $breakpoint-xxl,
+);
