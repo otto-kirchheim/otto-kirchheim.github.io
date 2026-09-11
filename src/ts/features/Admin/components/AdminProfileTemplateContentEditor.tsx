@@ -11,6 +11,7 @@ import {
 } from './profileTemplates.shared';
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';
+import { DBButton, DBCheckbox, DBTag } from '@db-ux/react-core-components';
 import type { BereitschaftSchichtTyp } from '@/types';
 import { DbAuswahl, DbFeld } from '@/components';
 
@@ -79,21 +80,25 @@ export function AdminProfileTemplateContentEditor({
     [templateContent],
   );
 
+  // Interaktives Tag nach DB-Muster: `DBTag` rendert immer ein `<div>` und kann selbst kein
+  // Button sein -- ein Kontrollelement kommt als Kind hinein (siehe DB-Beispiel "Checked").
+  // Eine Checkbox statt Radio, weil ein erneuter Klick den Abschnitt wieder zuklappt; ein
+  // `role="tablist"` waere falsch, dort ist immer genau ein Eintrag gewaehlt.
   const sectionButton = (key: SectionKey, label: string) => {
     const active = activeSection === key;
     const hasData = badgeState[key];
 
     return (
-      <button
-        type="button"
-        className="db-tag"
-        data-semantic={active || hasData ? 'informational' : 'neutral'}
-        data-emphasis={active ? 'strong' : 'weak'}
-        onClick={() => setActiveSection(current => (current === key ? null : key))}
-        style={{ cursor: 'pointer' }}
-      >
-        {label}
-      </button>
+      <DBTag semantic={active || hasData ? 'informational' : 'neutral'} emphasis={active ? 'strong' : 'weak'}>
+        <label>
+          <input
+            type="checkbox"
+            checked={active}
+            onChange={() => setActiveSection(current => (current === key ? null : key))}
+          />
+          {label}
+        </label>
+      </DBTag>
     );
   };
 
@@ -162,15 +167,9 @@ export function AdminProfileTemplateContentEditor({
           ) : (
             <div className="d-flex justify-content-between align-items-center">
               <small className="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
-              <button
-                className="db-button"
-                data-variant="outlined"
-                data-size="small"
-                onClick={onEnableArbeitszeit}
-                disabled={isSaving}
-              >
+              <DBButton type="button" variant="outlined" size="small" onClick={onEnableArbeitszeit} disabled={isSaving}>
                 Arbeitszeit aktivieren
-              </button>
+              </DBButton>
             </div>
           )}
         </div>
@@ -180,16 +179,16 @@ export function AdminProfileTemplateContentEditor({
         <div className="border p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-1">
             <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
-            <button
-              className="db-button"
-              data-variant="outlined"
-              data-size="small"
+            <DBButton
+              type="button"
+              variant="outlined"
+              size="small"
               onClick={onAddFahrzeitRow}
               disabled={isSaving}
               data-disabler
             >
               Zeile hinzufügen
-            </button>
+            </DBButton>
           </div>
           <div className="d-flex flex-column gap-2">
             {templateContent.Fahrzeit.length === 0 && (
@@ -224,9 +223,9 @@ export function AdminProfileTemplateContentEditor({
                       onChange={e => onUpdateFahrzeitRow(index, 'value', (e.target as HTMLInputElement).value)}
                     />
 
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
+                    <DBButton
+                      type="button"
+                      variant="outlined"
                       data-color="critical"
                       onClick={() => onRemoveFahrzeitRow(index)}
                       disabled={isSaving}
@@ -234,7 +233,7 @@ export function AdminProfileTemplateContentEditor({
                     >
                       <span className="d-none d-sm-inline">Löschen</span>
                       <span className="d-sm-none">X</span>
-                    </button>
+                    </DBButton>
                   </div>
                 </div>
               </div>
@@ -247,16 +246,16 @@ export function AdminProfileTemplateContentEditor({
         <div className="border p-2 mb-2">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
-            <button
-              className="db-button"
-              data-variant="outlined"
-              data-size="small"
+            <DBButton
+              type="button"
+              variant="outlined"
+              size="small"
               onClick={onAddVorgabenBRow}
               disabled={isSaving}
               data-disabler
             >
               Vorgabe hinzufügen
-            </button>
+            </DBButton>
           </div>
 
           {templateContent.VorgabenB.length === 0 && (
@@ -273,22 +272,22 @@ export function AdminProfileTemplateContentEditor({
                 <div className="d-flex flex-column gap-2">
                   <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
                     <div className="knopfgruppe" role="group" aria-label="VorgabenB Navigation">
-                      <button
-                        className="db-button"
-                        data-variant="outlined"
+                      <DBButton
+                        type="button"
+                        variant="outlined"
                         onClick={() => onSelectVorgabenBRow(currentIndex - 1)}
                         disabled={isSaving || currentIndex <= 0}
                       >
                         Zurück
-                      </button>
-                      <button
-                        className="db-button"
-                        data-variant="outlined"
+                      </DBButton>
+                      <DBButton
+                        type="button"
+                        variant="outlined"
                         onClick={() => onSelectVorgabenBRow(currentIndex + 1)}
                         disabled={isSaving || currentIndex >= maxIndex}
                       >
                         Weiter
-                      </button>
+                      </DBButton>
                     </div>
                     <small className="text-body-secondary">
                       Vorgabe {currentIndex + 1} von {templateContent.VorgabenB.length}
@@ -313,60 +312,60 @@ export function AdminProfileTemplateContentEditor({
                   <div className="border p-2" key={`${templateId}-vb-${currentIndex}`}>
                     <div className="d-flex justify-content-between align-items-center mb-2">
                       <strong className="small d-flex align-items-center gap-2">
-                        <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                        <DBTag semantic="neutral" emphasis="strong">
                           #{currentIndex + 1}
-                        </span>
+                        </DBTag>
                         {row.value.Name ? ` - ${row.value.Name}` : ''}
                         {row.value.standard && (
-                          <span className="db-tag" data-semantic="successful" data-emphasis="strong">
+                          <DBTag semantic="successful" emphasis="strong">
                             Standard
-                          </span>
+                          </DBTag>
                         )}
                       </strong>
                       <div className="d-flex gap-1">
-                        <button
-                          className="db-button"
-                          data-variant="outlined"
-                          data-size="small"
+                        <DBButton
+                          type="button"
+                          variant="outlined"
+                          size="small"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'up')}
                           disabled={isSaving || currentIndex === 0}
                           title="Nach oben"
                         >
                           ↑
-                        </button>
-                        <button
-                          className="db-button"
-                          data-variant="outlined"
-                          data-size="small"
+                        </DBButton>
+                        <DBButton
+                          type="button"
+                          variant="outlined"
+                          size="small"
                           onClick={() => onMoveVorgabenBRow(currentIndex, 'down')}
                           disabled={isSaving || currentIndex === templateContent.VorgabenB.length - 1}
                           title="Nach unten"
                         >
                           ↓
-                        </button>
+                        </DBButton>
                         {!row.value.standard && (
-                          <button
-                            className="db-button"
-                            data-variant="outlined"
+                          <DBButton
+                            type="button"
+                            variant="outlined"
                             data-color="successful"
-                            data-size="small"
+                            size="small"
                             onClick={() => onSetVorgabenBStandard(currentIndex)}
                             disabled={isSaving}
                           >
                             Als Standard
-                          </button>
+                          </DBButton>
                         )}
-                        <button
-                          className="db-button"
-                          data-variant="outlined"
+                        <DBButton
+                          type="button"
+                          variant="outlined"
                           data-color="critical"
-                          data-size="small"
+                          size="small"
                           onClick={() => onRemoveVorgabenBRow(currentIndex)}
                           disabled={isSaving}
                           data-disabler
                         >
                           Entfernen
-                        </button>
+                        </DBButton>
                       </div>
                     </div>
 
@@ -463,49 +462,47 @@ export function AdminProfileTemplateContentEditor({
                       <label className="small mb-1">Aktive Schichten</label>
                       <div className="d-flex flex-wrap gap-3">
                         {SCHICHT_OPTIONEN.map(({ typ, label }) => (
-                          <div className="db-checkbox m-0" data-size="small" key={typ}>
-                            <label>
-                              <input
-                                type="checkbox"
-                                checked={row.value.schichten.includes(typ)}
-                                disabled={typ === 'frueh' || isSaving}
-                                onChange={e => {
-                                  const checked = (e.target as HTMLInputElement).checked;
-                                  onUpdateVorgabenBRow(currentIndex, current => {
-                                    const schichten = checked
-                                      ? [...current.value.schichten.filter(s => s !== typ), typ]
-                                      : current.value.schichten.filter(s => s !== typ);
-                                    const nacht = schichten.includes('nacht');
-                                    return {
-                                      ...current,
-                                      value: {
-                                        ...current.value,
-                                        schichten,
-                                        nacht,
-                                        ...(nacht
-                                          ? {}
-                                          : {
-                                              beginnN: {
-                                                ...current.value.beginnN,
-                                                tag: current.value.beginnB.tag,
-                                                zeit: current.value.beginnB.zeit,
-                                                Nwoche: false,
-                                              },
-                                              endeN: {
-                                                ...current.value.endeN,
-                                                tag: current.value.endeB.tag,
-                                                zeit: current.value.endeB.zeit,
-                                                Nwoche: current.value.endeB.Nwoche,
-                                              },
-                                            }),
-                                      },
-                                    };
-                                  });
-                                }}
-                              />
-                              {label}
-                            </label>
-                          </div>
+                          <DBCheckbox
+                            className="m-0"
+                            size="small"
+                            key={typ}
+                            label={label}
+                            checked={row.value.schichten.includes(typ)}
+                            disabled={typ === 'frueh' || isSaving}
+                            onChange={e => {
+                              const checked = (e.target as HTMLInputElement).checked;
+                              onUpdateVorgabenBRow(currentIndex, current => {
+                                const schichten = checked
+                                  ? [...current.value.schichten.filter(s => s !== typ), typ]
+                                  : current.value.schichten.filter(s => s !== typ);
+                                const nacht = schichten.includes('nacht');
+                                return {
+                                  ...current,
+                                  value: {
+                                    ...current.value,
+                                    schichten,
+                                    nacht,
+                                    ...(nacht
+                                      ? {}
+                                      : {
+                                          beginnN: {
+                                            ...current.value.beginnN,
+                                            tag: current.value.beginnB.tag,
+                                            zeit: current.value.beginnB.zeit,
+                                            Nwoche: false,
+                                          },
+                                          endeN: {
+                                            ...current.value.endeN,
+                                            tag: current.value.endeB.tag,
+                                            zeit: current.value.endeB.zeit,
+                                            Nwoche: current.value.endeB.Nwoche,
+                                          },
+                                        }),
+                                  },
+                                };
+                              });
+                            }}
+                          />
                         ))}
                       </div>
                     </div>
@@ -600,16 +597,14 @@ export function AdminProfileTemplateContentEditor({
             <label className="small mb-1">Sichtbare Bereiche</label>
             <div className="d-flex flex-wrap gap-2">
               {TAB_OPTIONS.map(option => (
-                <div className="db-checkbox m-0" data-size="small" key={`${templateId}-tab-${option.key}`}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
-                      onChange={() => onToggleAktivierterTab(option.key)}
-                    />
-                    {option.label}
-                  </label>
-                </div>
+                <DBCheckbox
+                  className="m-0"
+                  size="small"
+                  key={`${templateId}-tab-${option.key}`}
+                  label={option.label}
+                  checked={templateContent.Einstellungen.aktivierteTabs.includes(option.key)}
+                  onChange={() => onToggleAktivierterTab(option.key)}
+                />
               ))}
             </div>
           </div>
@@ -618,16 +613,14 @@ export function AdminProfileTemplateContentEditor({
             <label className="small mb-1">Benötigte Zulagen</label>
             <div className="d-flex flex-wrap gap-2">
               {ZULAGEN_CATALOG.map(zulage => (
-                <div className="db-checkbox m-0" data-size="small" key={`${templateId}-zulage-${zulage.code}`}>
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
-                      onChange={() => onToggleZulage(zulage.code)}
-                    />
-                    {zulage.code}
-                  </label>
-                </div>
+                <DBCheckbox
+                  className="m-0"
+                  size="small"
+                  key={`${templateId}-zulage-${zulage.code}`}
+                  label={zulage.code}
+                  checked={templateContent.Einstellungen.benoetigteZulagen.includes(zulage.code)}
+                  onChange={() => onToggleZulage(zulage.code)}
+                />
               ))}
             </div>
           </div>

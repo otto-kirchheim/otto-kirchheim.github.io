@@ -494,7 +494,18 @@ Ende auf `<head>` + einen React-Root.
       (3,6 KB gz); auf Entscheidung des Users bleiben sie stehen, weil ein vollstaendiges
       Raster gewollt ist. Der Dateikopf von `utilities.scss` behauptete das Gegenteil und
       wurde korrigiert.
-- [ ] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (+ neuer Render-Test).
+- [x] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (2026-09-11). 14 Controls:
+      10 `DBButton`, 2 `DBTag`, 3 `DBCheckbox`. Neuer Render-Test mit 6 Faellen.
+      **Muster fuer J2-J7, drei Festlegungen:**
+      1. Ein `<button class="db-tag">` laesst sich NICHT als `DBTag` abbilden -- die Komponente
+         rendert immer ein `<div>`. Interaktive Tags bekommen ein Kontrollelement als Kind
+         (DB-Beispiel "Checked"): Checkbox bei zuklappbaren Umschaltern, Radio bei fester
+         Auswahl. Sichtbare Folge: DBs Pruefzustands-Symbol (`showCheckState`) erscheint.
+      2. `db-ux/button-type-required` erzwingt `type` an jedem `DBButton`. Das ist kein
+         Lint-Rauschen: die rohen `<button>` hatten grossteils keins und haetten im `<form>`
+         als `submit` gegolten. Bei jedem Slice mitnehmen.
+      3. `data-color` und `data-disabler` bleiben Passthrough-DOM-Attribute (kein Prop),
+         `variant`/`size` werden Props.
 - [ ] **J2 FormularEditor** (15 Dateien, + schmale Render-Tests fuer `FeldZeile`,
       `TabellenBlock`, `feldPanelGemeinsam`, `SchriftartDialog`).
 - [ ] **J3 Admin uebrige Komponenten.**

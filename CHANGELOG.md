@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (93)
+
+### refactor (Phase J1: Referenz-Slice auf `@db-ux/react-core-components`)
+
+- `AdminProfileTemplateContentEditor.tsx` ist der Referenz-Slice für J2–J7: 14 native Controls
+  auf DB-React-Komponenten. 10 `<button class="db-button">` → `DBButton`, 2
+  `<span class="db-tag">` → `DBTag`, 3 `db-checkbox`-Blöcke → `DBCheckbox`.
+- **Abschnitts-Umschalter:** `DBTag` rendert immer ein `<div>` und kann selbst kein Button
+  sein. DB sieht für interaktive Tags ein Kontrollelement als Kind vor (Beispiel „Checked") —
+  umgesetzt als Checkbox im `<label>`. Eine Checkbox statt Radio, weil ein erneuter Klick den
+  Abschnitt zuklappt; `role="tablist"` wäre falsch (dort ist immer genau einer gewählt).
+  **Sichtbare Änderung:** die Tags tragen jetzt DBs Prüfzustands-Symbol (`showCheckState`,
+  Standard an) — vorher war der Schaltzustand rein farblich codiert.
+- **Altfehler mitgefixt:** die rohen `<button>` hatten größtenteils kein `type`. Innerhalb
+  eines `<form>` ist der Default `submit` — ein Klick auf „Zeile hinzufügen" hätte das
+  Formular abgeschickt. `db-ux/button-type-required` hat es aufgedeckt, alle 10 Knöpfe haben
+  jetzt `type="button"`.
+- Neuer Render-Test `test/features/Admin/AdminProfileTemplateContentEditor.test.tsx` (6 Fälle:
+  Abschnitt auf/zu, Wechsel statt Doppelöffnung, beide Checkbox-Callbacks, `disabled` bei
+  `isSaving`, expliziter `type` an jedem Knopf). Die Komponente hatte bisher keinen Test.
+- Browser-verifiziert: Umschalten per Maus **und** Leertaste, Semantik folgt dem Zustand,
+  0 Konsolenfehler.
+
 ## 2026-09-11 (92)
 
 ### fix (Phase J0/J-Q1: `hidden` schlägt die `d-*`-Utilities)
