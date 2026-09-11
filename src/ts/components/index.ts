@@ -1,6 +1,5 @@
 import { DbAuswahl, DbFeld } from './DbFeld';
 import DBLoadingButton from './DBLoadingButton';
-import MyButton from './MyButton';
 import MyCheckbox from './MyCheckbox';
 import MyDivModal from './MyDivModal';
 import MyEditorFooter from './MyEditorFooter';
@@ -19,7 +18,6 @@ export {
   DbAuswahl,
   DbFeld,
   DBLoadingButton,
-  MyButton,
   MyCheckbox,
   MyDivModal,
   MyEditorFooter,

@@ -1,4 +1,4 @@
-import { MyButton } from '.';
+import { DBButton } from '@db-ux/react-core-components';
 import type { CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 
 function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
@@ -14,16 +14,21 @@ function MyShowFooter<T extends CustomTableTypes>({ row }: { row: Row<T> }) {
     <div className="dialog-fuss">
       {/* Farb-Konvention: Primaeraktion = `brand`, destruktiv = `outlined`+`critical`
           (weniger Gewicht als die Primaeraktion), neutral/schliessen = `filled`. */}
-      <MyButton text="Bearbeiten" dialogDismiss="modal" clickHandler={editClickHandler} />
-      <MyButton
-        className="db-button"
-        data-variant="outlined"
+      <DBButton type="button" variant="brand" data-dialog-dismiss="modal" onClick={editClickHandler}>
+        Bearbeiten
+      </DBButton>
+      <DBButton
+        type="button"
+        variant="outlined"
         data-color="critical"
-        text="Löschen"
-        dialogDismiss="modal"
-        clickHandler={deleteClickHandler}
-      />
-      <MyButton className="db-button" data-variant="filled" text="Schließen" dialogDismiss="modal" />
+        data-dialog-dismiss="modal"
+        onClick={deleteClickHandler}
+      >
+        Löschen
+      </DBButton>
+      <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
+        Schließen
+      </DBButton>
     </div>
   );
 }

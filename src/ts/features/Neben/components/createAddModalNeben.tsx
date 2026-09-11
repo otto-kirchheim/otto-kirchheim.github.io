@@ -1,8 +1,9 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { MyButton, MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
+import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -82,21 +83,21 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
   }
 
   const customFooterButton = [
-    <MyButton
+    <DBButton
       key="Manuell"
-      className="db-button"
-      data-variant="filled"
+      variant="filled"
       data-color="informational"
       type="button"
-      dialogDismiss="modal"
-      text="Manuell"
-      clickHandler={() => {
+      data-dialog-dismiss="modal"
+      onClick={() => {
         const table = document.querySelector<CustomHTMLTableElement<IDatenN>>('#tableN');
         if (!table) throw new Error('table N nicht gefunden');
 
         table.instance.options.editing.addRow();
       }}
-    />,
+    >
+      Manuell
+    </DBButton>,
   ];
 
   const configuredZulagen = getConfiguredNebenZulagen();

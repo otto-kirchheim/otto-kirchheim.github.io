@@ -1,6 +1,5 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { type FC, type ReactNode } from 'react';
-
-import { MyButton } from '.';
 
 type TMyModalFooter = {
   customButtons?: ReactNode[];
@@ -9,9 +8,13 @@ type TMyModalFooter = {
 const MyEditorFooter: FC<TMyModalFooter> = ({ customButtons = [], submitText = 'Hinzufügen' }) => {
   return (
     <div className="dialog-fuss">
-      <MyButton type="submit" text={submitText} />
+      <DBButton type="submit" variant="brand">
+        {submitText}
+      </DBButton>
       {customButtons}
-      <MyButton className="db-button" data-variant="filled" dialogDismiss="modal" text="Abbrechen" />
+      <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
+        Abbrechen
+      </DBButton>
     </div>
   );
 };

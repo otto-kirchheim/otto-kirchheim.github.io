@@ -1,8 +1,9 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef, type SubmitEvent } from 'react';
 
 import { loginUser, loginWithPasskey } from '../utils';
-import { MyButton, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
+import { DBLoadingButton, MyFormModal, MyInput, MyModalBody, showModal } from '@/components';
 import { createModalForgotPassword, createModalNewUser } from '.';
 import type { CustomHTMLDivElement } from '@/types';
 
@@ -15,7 +16,9 @@ export default function createModalLogin(): void {
   const footer = (
     <div className="dialog-fuss flex-column align-items-stretch gap-0 p-0">
       <div className="d-flex justify-content-center gap-2 w-100 px-3 pt-3">
-        <MyButton className="db-button" data-variant="brand" type="submit" text="Einloggen" id="btnLoginModal" />
+        <DBLoadingButton variant="brand" type="submit" id="btnLoginModal">
+          Einloggen
+        </DBLoadingButton>
       </div>
 
       {supportsPasskeys && (
@@ -27,15 +30,15 @@ export default function createModalLogin(): void {
               Geräte an.
             </p>
             <div className="d-flex justify-content-center gap-2">
-              <MyButton
-                className="db-button"
-                data-variant="outlined"
+              <DBButton
+                variant="outlined"
                 type="button"
-                text="Mit Passkey"
-                clickHandler={() => {
+                onClick={() => {
                   if (currentModal) void loginWithPasskey(currentModal);
                 }}
-              />
+              >
+                Mit Passkey
+              </DBButton>
             </div>
           </div>
         </div>
@@ -46,24 +49,26 @@ export default function createModalLogin(): void {
       <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 w-100 px-3 pb-3">
         <span className="small text-body-secondary">Weitere Optionen</span>
         <div className="d-grid d-sm-flex gap-2">
-          <MyButton
-            className="db-button"
-            data-variant="outlined"
+          <DBButton
+            variant="outlined"
             type="button"
-            dialogDismiss="modal"
-            text="Passwort vergessen"
-            clickHandler={() => createModalForgotPassword()}
-          />
-          <MyButton
-            className="db-button"
-            data-variant="outlined"
+            data-dialog-dismiss="modal"
+            onClick={() => createModalForgotPassword()}
+          >
+            Passwort vergessen
+          </DBButton>
+          <DBButton
+            variant="outlined"
             data-color="informational"
             type="button"
-            dialogDismiss="modal"
-            text="Registrieren"
-            clickHandler={() => createModalNewUser()}
-          />
-          <MyButton className="db-button" data-variant="filled" type="button" dialogDismiss="modal" text="Abbrechen" />
+            data-dialog-dismiss="modal"
+            onClick={() => createModalNewUser()}
+          >
+            Registrieren
+          </DBButton>
+          <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
+            Abbrechen
+          </DBButton>
         </div>
       </div>
     </div>

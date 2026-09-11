@@ -1,18 +1,10 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
 import { Row } from '@/infrastructure/table/CustomTable';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import {
-  MyButton,
-  MyCheckbox,
-  MyFormModal,
-  MyInput,
-  MyModalBody,
-  MySelect,
-  schliesseModal,
-  showModal,
-} from '@/components';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -78,14 +70,15 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
   const customButtons =
     row instanceof Row ? (
-      <MyButton
+      <DBButton
         key="Zeitenloeschen"
-        className="db-button"
-        data-variant="filled"
+        type="button"
+        variant="filled"
         data-color="critical"
-        text="Zeiten löschen"
-        clickHandler={() => clearEwtZeiten(modal)}
-      />
+        onClick={() => clearEwtZeiten(modal)}
+      >
+        Zeiten löschen
+      </DBButton>
     ) : undefined;
 
   const modal: CustomHTMLDivElement<IDatenEWT> = showModal(

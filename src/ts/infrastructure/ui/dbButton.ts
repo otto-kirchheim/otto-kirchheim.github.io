@@ -1,8 +1,9 @@
 /**
  * Bruecke zwischen den Bootstrap-Button-Klassen im Bestand und den DB-UX-Button-Props.
  *
- * Genutzt von `components/MyButton` (React) und `infrastructure/table/customTableRender`
- * (Vanilla-DOM), damit beide Wege dieselbe Zuordnung verwenden.
+ * Genutzt von `infrastructure/table/customTableRender` (Vanilla-DOM, ausserhalb von React
+ * -- `components/MyButton` nutzte dies frueher ebenfalls, wurde in Phase J6b aber zugunsten
+ * von direktem `DBButton` aufgeloest).
  */
 export type DbButtonLook = {
   variant: 'brand' | 'filled' | 'outlined' | 'ghost';

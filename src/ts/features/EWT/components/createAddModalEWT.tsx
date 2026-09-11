@@ -1,7 +1,8 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import { MyButton, MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
+import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { IDatenEWT } from '@/types';
 import { type IVorgabenU, type IVorgabenUfZ } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
@@ -114,20 +115,22 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     <MyFormModal myRef={ref} title="Neue Anwesenheit eingeben" helpContext="modal.ewt.add" onSubmit={onSubmit()}>
       <MyModalBody>
         <div>
-          <MyButton
-            className="db-button text-start"
-            data-variant="filled"
-            data-size="medium"
-            data-width="full"
+          <DBButton
+            type="button"
+            className="text-start"
+            variant="filled"
+            size="medium"
+            width="full"
             id="btnNaechsterTag"
-            clickHandler={(e: MouseEvent<HTMLButtonElement>) => {
+            onClick={(e: MouseEvent<HTMLButtonElement>) => {
               e.preventDefault();
               setNaechsterEwtTag();
               updateBuchungstagAnzeige();
             }}
-            text="+1 Tag"
-            ariaLabel="Nächster Tag"
-          />
+            aria-label="Nächster Tag"
+          >
+            +1 Tag
+          </DBButton>
         </div>
         <MyInput
           divClass="sp-12"
