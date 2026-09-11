@@ -13,6 +13,7 @@ import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModa
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { SchichtOverrideEditor } from './SchichtOverrideEditor';
 
 const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
@@ -170,20 +171,20 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
           const farbe = isStart ? 'successful' : isEnd ? 'informational' : undefined;
 
           return (
-            <button
+            <DBButton
               key={`${startId}-${slot}`}
               type="button"
-              className="db-button py-2"
-              data-variant={variante}
+              className="py-2"
+              variant={variante}
               data-color={farbe}
-              data-size="small"
+              size="small"
               onPointerDown={event => handlePointerDown(event, slot)}
               onPointerEnter={() => handlePointerEnter(slot)}
               onClick={() => updateByTap(slot)}
               aria-pressed={isStart || isEnd || isInRange}
             >
               {WEEKDAY_SLOTS[slot % 7].short}
-            </button>
+            </DBButton>
           );
         })}
       </div>
@@ -311,24 +312,16 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
       <div>
         <p className="fw-semibold small text-uppercase text-muted mb-1">Aktive Schichten</p>
         <div className="d-flex flex-wrap gap-3">
-          <div className="db-checkbox" data-size="small">
-            <label htmlFor="schicht-frueh">
-              <input type="checkbox" id="schicht-frueh" checked disabled />
-              {SCHICHT_LABELS.frueh}
-            </label>
-          </div>
+          <DBCheckbox size="small" id="schicht-frueh" label={SCHICHT_LABELS.frueh} checked disabled />
           {optionalSchichten.map(typ => (
-            <div key={typ} className="db-checkbox" data-size="small">
-              <label htmlFor={`schicht-${typ}`}>
-                <input
-                  type="checkbox"
-                  id={`schicht-${typ}`}
-                  checked={schichten.includes(typ)}
-                  onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
-                />
-                {SCHICHT_LABELS[typ]}
-              </label>
-            </div>
+            <DBCheckbox
+              key={typ}
+              size="small"
+              id={`schicht-${typ}`}
+              label={SCHICHT_LABELS[typ]}
+              checked={schichten.includes(typ)}
+              onChange={e => toggleSchicht(typ, (e.target as HTMLInputElement).checked)}
+            />
           ))}
         </div>
       </div>

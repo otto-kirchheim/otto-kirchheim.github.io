@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (96)
+
+### refactor (Phase J4: Einstellungen-Komponenten auf `@db-ux/react-core-components`)
+
+- 4 Dateien, 24 Controls: `ArbeitszeiteingabePanel` (9 Buttons, 2 Switches, 3 Tags),
+  `FahrzeitenPanel` (4 Buttons), `createEditorModalVE` (1 Button, 2 Checkboxen),
+  `SchichtOverrideEditor` (1 Checkbox).
+- **`type="checkbox" role="switch"` → `MyCheckbox`, nicht `DBCheckbox`.** Die zwei
+  Umschalter „Schicht aktiv/inaktiv" meinen Schalter, nicht Haken — `MyCheckbox` kapselt
+  bereits `DBSwitch` inklusive der React-19-Glue gegen den „hängenden Schalter"
+  (`lessons.md`) und ist laut Plan bewusst behalten. `MyCheckbox`s Prop-Typ kannte `size`
+  nicht, obwohl es zur Laufzeit längst durchgereicht wurde — additive Typ-Erweiterung
+  (`size?: SizeType`) statt die Prop wegzulassen und die Größe der Umschalter zu verlieren.
+- Zwei native `<input type="checkbox" hidden readOnly>` in `createEditorModalVE.tsx`
+  bewusst unangetastet — reine Datenträger für den `Nwoche`-Zustand (per
+  `document.querySelector` gelesen), keine echten UI-Controls; `DBCheckbox` hätte hier
+  sichtbares Label-Markup erzwungen.
+- `aria-label` an Icon-Buttons bleibt Passthrough (Tests in `FahrzeitenPanel.test.tsx`
+  selektieren darüber), zusätzlich `DBTooltip` für die `noText`-Pflicht.
+- Grep-Gate: 0 rohe `db-button`/`db-tag`/`db-switch`/interaktive `checkbox` im Ordner
+  (die zwei versteckten Nwoche-Träger ausgenommen). `lint` 0/21 · `lint:css` 0/84 ·
+  `test` 2128/0 · `build` grün.
+
 ## 2026-09-11 (95)
 
 ### refactor (Phase J3: übrige Admin-Komponenten auf `@db-ux/react-core-components`)

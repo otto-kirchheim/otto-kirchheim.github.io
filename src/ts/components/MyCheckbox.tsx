@@ -1,4 +1,4 @@
-import { DBSwitch } from '@db-ux/react-core-components';
+import { DBSwitch, type SizeType } from '@db-ux/react-core-components';
 import { useRef, type ChangeEventHandler, type FC, type ReactNode, type Ref } from 'react';
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
@@ -14,6 +14,7 @@ type TMyCheckbox = {
    *  Seiteneffekt (z.B. ein Feld ein-/ausblenden) nutzen und den Wert per DOM auslesen. */
   defaultChecked?: boolean;
   disabled?: boolean;
+  size?: SizeType;
   myRef?: Ref<HTMLInputElement>;
   changeHandler?: ChangeEventHandler<HTMLInputElement>;
 };

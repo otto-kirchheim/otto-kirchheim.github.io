@@ -2,6 +2,7 @@ import { type FC } from 'react';
 
 import type { BereitschaftSchichtTyp, IPerWeekdaySchicht, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { mergePerWeekdaySchicht } from '@/types';
+import { DBCheckbox } from '@db-ux/react-core-components';
 import { SchichtSection } from './ArbeitszeiteingabePanel';
 
 const SCHICHT_LABELS: Record<'frueh' | 'spaet' | 'nacht', string> = { frueh: 'Früh', spaet: 'Spät', nacht: 'Nacht' };
@@ -61,17 +62,14 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
         const enabled = overrides[typ] !== undefined;
         return (
           <div key={typ} className="border p-2 mb-2">
-            <div className="db-checkbox mb-1" data-size="small">
-              <label htmlFor={`override-${typ}`}>
-                <input
-                  type="checkbox"
-                  id={`override-${typ}`}
-                  checked={enabled}
-                  onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
-                />
-                {SCHICHT_LABELS[typ]} – eigene Zeiten
-              </label>
-            </div>
+            <DBCheckbox
+              className="mb-1"
+              size="small"
+              id={`override-${typ}`}
+              label={`${SCHICHT_LABELS[typ]} – eigene Zeiten`}
+              checked={enabled}
+              onChange={e => setEnabled(typ, (e.target as HTMLInputElement).checked)}
+            />
             {enabled && base && (
               <SchichtSection
                 title=""

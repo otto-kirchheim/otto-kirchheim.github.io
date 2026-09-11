@@ -1,6 +1,7 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DbFeld } from '@/components';
+import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DbFeld, MyCheckbox } from '@/components';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
 import { setArbeitszeitPanelState } from './arbeitszeitPanelState';
@@ -127,12 +128,9 @@ function OptionalSchichtSection({
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">{title}</h5>
-        <div className="db-switch ms-2" data-size="small">
-          <label htmlFor={`toggle-${title}`}>
-            <input type="checkbox" role="switch" checked={enabled} onChange={handleToggle} id={`toggle-${title}`} />
-            {enabled ? 'aktiv' : 'inaktiv'}
-          </label>
-        </div>
+        <MyCheckbox className="ms-2" size="small" id={`toggle-${title}`} checked={enabled} changeHandler={handleToggle}>
+          {enabled ? 'aktiv' : 'inaktiv'}
+        </MyCheckbox>
       </div>
       {enabled && <SchichtSection title="" schicht={schicht} onChange={onChange} />}
     </div>
@@ -262,19 +260,18 @@ export function SchichtSection({
             <p className="small text-muted fw-semibold text-uppercase mb-2">Neue Zeitvariante</p>
             <div className="d-flex gap-1 mb-2">
               {regelarbeitstage.map(day => (
-                <button
+                <DBButton
                   key={day}
                   type="button"
-                  className="db-button"
-                  data-variant={newDays.includes(day) ? 'brand' : 'outlined'}
-                  data-size="small"
+                  variant={newDays.includes(day) ? 'brand' : 'outlined'}
+                  size="small"
                   style={{ minWidth: '2.5rem' }}
                   onClick={() =>
                     setNewDays(prev => (prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]))
                   }
                 >
                   {DAY_LABELS[day]}
-                </button>
+                </DBButton>
               ))}
             </div>
             <div className="d-flex align-items-center gap-2 flex-wrap">
@@ -296,9 +293,9 @@ export function SchichtSection({
                 onChange={e => setNewConfig(prev => ({ ...prev, ende: e.target.value }))}
               />
               {isOvernightSchicht(newConfig) && (
-                <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
+                <DBTag semantic="neutral" emphasis="strong" style={{ fontSize: '0.65rem' }}>
                   +1 Tag
-                </span>
+                </DBTag>
               )}
               <div className="d-flex align-items-center gap-1">
                 <DbFeld
@@ -314,45 +311,48 @@ export function SchichtSection({
                 />
                 <span className="text-muted small">min</span>
               </div>
-              <button
+              <DBButton
                 type="button"
-                className="db-button ms-auto"
-                data-variant="filled"
+                className="ms-auto"
+                variant="filled"
                 data-color="successful"
-                data-size="small"
+                size="small"
+                icon="check"
+                noText
                 onClick={saveNewOverride}
                 disabled={newDays.length === 0}
               >
-                <span className="db-icon db-font-size-sm" data-icon="check" />
-              </button>
-              <button
+                <DBTooltip>Übernehmen</DBTooltip>
+              </DBButton>
+              <DBButton
                 type="button"
-                className="db-button"
-                data-variant="outlined"
-                data-size="small"
+                variant="outlined"
+                size="small"
+                icon="cross"
+                noText
                 onClick={() => {
                   setAddingOverride(false);
                   setNewDays([]);
                 }}
               >
-                <span className="db-icon db-font-size-sm" data-icon="cross" />
-              </button>
+                <DBTooltip>Abbrechen</DBTooltip>
+              </DBButton>
             </div>
           </div>
         ) : (
-          <button
+          <DBButton
             type="button"
-            className="db-button mt-2 d-flex align-items-center gap-1"
-            data-variant="outlined"
-            data-size="small"
+            className="mt-2 d-flex align-items-center gap-1"
+            variant="outlined"
+            size="small"
+            icon="plus"
             onClick={() => {
               setAddingOverride(true);
               setNewConfig(schicht.default);
             }}
           >
-            <span className="db-icon db-font-size-sm" data-icon="plus" />
             Zeitvariante
-          </button>
+          </DBButton>
         )}
       </div>
     </div>
@@ -369,17 +369,16 @@ function WeekdayChips({
   return (
     <div className="d-flex flex-wrap gap-1">
       {[1, 2, 3, 4, 5, 6, 7].map(day => (
-        <button
+        <DBButton
           key={day}
           type="button"
-          className="db-button"
-          data-variant={regelarbeitstage.includes(day) ? 'brand' : 'outlined'}
-          data-size="small"
+          variant={regelarbeitstage.includes(day) ? 'brand' : 'outlined'}
+          size="small"
           style={{ minWidth: '2.5rem' }}
           onClick={() => onToggle(day)}
         >
           {DAY_LABELS[day]}
-        </button>
+        </DBButton>
       ))}
     </div>
   );
@@ -439,9 +438,9 @@ function ScheduleGroupRow({
           onChange={e => setLocal(prev => ({ ...prev, ende: e.target.value }))}
         />
         {isOvernightSchicht(local) && (
-          <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
+          <DBTag semantic="neutral" emphasis="strong" style={{ fontSize: '0.65rem' }}>
             +1 Tag
-          </span>
+          </DBTag>
         )}
         <div className="d-flex align-items-center gap-1">
           <DbFeld
@@ -457,41 +456,44 @@ function ScheduleGroupRow({
           />
           <span className="text-muted small">min</span>
         </div>
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="filled"
+          variant="filled"
           data-color="successful"
-          data-size="small"
+          size="small"
+          icon="check"
+          noText
           onClick={() => {
             onUpdate(local);
             setEditing(false);
           }}
         >
-          <span className="db-icon db-font-size-sm" data-icon="check" />
-        </button>
-        <button
+          <DBTooltip>Übernehmen</DBTooltip>
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+          variant="outlined"
+          size="small"
+          icon="cross"
+          noText
           onClick={() => {
             setLocal(config);
             setEditing(false);
           }}
         >
-          <span className="db-icon db-font-size-sm" data-icon="cross" />
-        </button>
+          <DBTooltip>Abbrechen</DBTooltip>
+        </DBButton>
       </div>
     );
   }
 
   return (
     <div className="d-flex align-items-center py-1">
-      <button
+      <DBButton
         type="button"
-        className="db-button d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start text-decoration-none text-body px-0"
-        data-variant="ghost"
+        className="d-flex align-items-center flex-wrap gap-2 flex-grow-1 text-start text-decoration-none text-body px-0"
+        variant="ghost"
+        iconTrailing="pen"
         onClick={() => {
           setLocal(config);
           setEditing(true);
@@ -504,24 +506,24 @@ function ScheduleGroupRow({
           {config.beginn} – {config.ende}
         </span>
         {overnight && (
-          <span className="db-tag" data-semantic="neutral" data-emphasis="strong" style={{ fontSize: '0.65rem' }}>
+          <DBTag semantic="neutral" emphasis="strong" style={{ fontSize: '0.65rem' }}>
             +1 Tag
-          </span>
+          </DBTag>
         )}
         <span className="text-muted small">{config.pause > 0 ? `${config.pause} min` : 'keine Pause'}</span>
-        <span className="db-icon text-muted db-font-size-sm" data-icon="pen" />
-      </button>
+      </DBButton>
       {onDelete && (
-        <button
+        <DBButton
           type="button"
-          className="db-button text-danger px-1"
-          data-variant="ghost"
-          data-size="small"
+          className="text-danger px-1"
+          variant="ghost"
+          size="small"
+          icon="bin"
+          noText
           onClick={onDelete}
-          title="Zeitvariante löschen"
         >
-          <span className="db-icon db-font-size-sm" data-icon="bin" />
-        </button>
+          <DBTooltip>Zeitvariante löschen</DBTooltip>
+        </DBButton>
       )}
     </div>
   );
@@ -542,18 +544,15 @@ function SonderSection({
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">Sonderschicht</h5>
-        <div className="db-switch ms-2" data-size="small">
-          <label htmlFor="toggle-sonder">
-            <input
-              type="checkbox"
-              role="switch"
-              checked={enabled}
-              onChange={() => onChange({ ...sonder, aktiv: !enabled })}
-              id="toggle-sonder"
-            />
-            {enabled ? 'aktiv' : 'inaktiv'}
-          </label>
-        </div>
+        <MyCheckbox
+          className="ms-2"
+          size="small"
+          id="toggle-sonder"
+          checked={enabled}
+          changeHandler={() => onChange({ ...sonder, aktiv: !enabled })}
+        >
+          {enabled ? 'aktiv' : 'inaktiv'}
+        </MyCheckbox>
       </div>
       {enabled && (
         <div className="d-flex align-items-center gap-2 flex-wrap">

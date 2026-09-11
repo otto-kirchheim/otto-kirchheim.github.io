@@ -540,7 +540,17 @@ Ende auf `<head>` + einen React-Root.
       Grep-Gate ueber den ganzen `Admin/components`-Ordner: 0 rohe Controls bis auf zwei
       erwartete Ausnahmen (J1-Interaktiv-Tag-Checkbox, `VorgabenBWeekRangeEditor.tsx` war von
       Anfang an ausserhalb des Umfangs). Details im CHANGELOG (95).
-- [ ] **J4 Einstellungen-Komponenten.**
+- [x] **J4 Einstellungen-Komponenten** (2026-09-11). 4 Dateien, 24 Controls.
+      **`type="checkbox" role="switch"` -> `MyCheckbox`, nicht `DBCheckbox`** -- die zwei
+      "Schicht aktiv/inaktiv"-Umschalter meinen Schalter, `MyCheckbox` kapselt bereits
+      `DBSwitch` inkl. der React-19-Glue gegen den "haengenden Schalter" (lessons.md) und
+      ist laut Bestandsaufnahme bewusst behalten. Dessen Typ kannte `size` nicht, obwohl es
+      zur Laufzeit schon durchgereicht wurde -- additive Erweiterung (`size?: SizeType`)
+      statt die Groesse der Umschalter zu verlieren.
+      Zwei `<input type="checkbox" hidden readOnly>` (Nwoche-Datentraeger in
+      `createEditorModalVE.tsx`) bewusst NICHT konvertiert -- keine echten UI-Controls,
+      `DBCheckbox` haette sichtbares Label-Markup erzwungen.
+      Details: CHANGELOG (96).
 - [ ] **J5 Bereitschaft / EWT / Neben / EA.**
 - [ ] **J6 Feature-Tab-Buttons** (`data-disabler` + `buttonDisable.ts`-Selektor pruefen).
 - [ ] **J6b `MyButton` aufloesen** -> `DBButton`.

@@ -3,6 +3,7 @@ import { type JSX, useEffect, useRef, useState } from 'react';
 import { DbFeld } from '@/components';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
 
 interface PanelProps {
@@ -122,39 +123,39 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                 ))}
                 <td className="text-center align-middle">
                   <div className="knopfgruppe fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
-                    <button
+                    <DBButton
                       type="button"
-                      className="db-button"
-                      data-variant="outlined"
+                      variant="outlined"
+                      icon="arrow_up"
+                      noText
                       onClick={() => moveRow(index, 'up')}
                       disabled={index === 0}
-                      title="Nach oben"
                       aria-label="Nach oben verschieben"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="arrow_up" />
-                    </button>
-                    <button
+                      <DBTooltip>Nach oben</DBTooltip>
+                    </DBButton>
+                    <DBButton
                       type="button"
-                      className="db-button"
-                      data-variant="outlined"
+                      variant="outlined"
+                      icon="arrow_down"
+                      noText
                       onClick={() => moveRow(index, 'down')}
                       disabled={index === rows.length - 1}
-                      title="Nach unten"
                       aria-label="Nach unten verschieben"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="arrow_down" />
-                    </button>
-                    <button
+                      <DBTooltip>Nach unten</DBTooltip>
+                    </DBButton>
+                    <DBButton
                       type="button"
-                      className="db-button"
-                      data-variant="outlined"
+                      variant="outlined"
                       data-color="critical"
+                      icon="bin"
+                      noText
                       onClick={() => removeRow(index)}
-                      title="Zeile löschen"
                       aria-label="Zeile löschen"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="bin" />
-                    </button>
+                      <DBTooltip>Zeile löschen</DBTooltip>
+                    </DBButton>
                   </div>
                 </td>
               </tr>
@@ -162,16 +163,16 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
           })}
         </tbody>
       </table>
-      <button
+      <DBButton
         type="button"
-        className="db-button d-flex align-items-center gap-1 mt-md-2"
-        data-variant="filled"
-        data-size="small"
+        className="d-flex align-items-center gap-1 mt-md-2"
+        variant="filled"
+        size="small"
+        icon="plus"
         onClick={addRow}
       >
-        <span className="db-icon db-font-size-sm" data-icon="plus" />
         Zeile hinzufügen
-      </button>
+      </DBButton>
     </div>
   );
 }
