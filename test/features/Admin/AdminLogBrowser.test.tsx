@@ -123,13 +123,19 @@ describe('AdminLogBrowser', () => {
     await flush();
 
     expect(container.querySelectorAll('tbody tr').length).toBe(1);
-    (container.querySelector('button[aria-label="Details anzeigen"]') as HTMLButtonElement).click();
+    // Bezeichnung steht seit der Umstellung auf DBButton in einem DBTooltip-Kind (nicht mehr
+    // `aria-label`, siehe db-ux/button-no-text-requires-tooltip).
+    let toggle = [...container.querySelectorAll('button')].find(b => b.textContent?.includes('Details anzeigen'));
+    expect(toggle).toBeDefined();
+    toggle!.click();
     await flush();
 
     expect(container.querySelectorAll('tbody tr').length).toBe(2);
     expect(container.querySelector('pre')?.textContent).toContain('"field": "value"');
 
-    (container.querySelector('button[aria-label="Details ausblenden"]') as HTMLButtonElement).click();
+    toggle = [...container.querySelectorAll('button')].find(b => b.textContent?.includes('Details ausblenden'));
+    expect(toggle).toBeDefined();
+    toggle!.click();
     await flush();
 
     expect(container.querySelectorAll('tbody tr').length).toBe(1);
@@ -145,7 +151,7 @@ describe('AdminLogBrowser', () => {
     const container = renderBrowser();
     await flush();
 
-    expect(container.querySelector('button[aria-label]')).toBeNull();
+    expect([...container.querySelectorAll('button')].some(b => b.textContent?.includes('Details'))).toBe(false);
   });
 
   it('sucht nach Aktion beim Klick auf "Suchen"', async () => {

@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 const ITEMS_PER_PAGE = 25;
@@ -81,35 +82,32 @@ export function AdminLogBrowser() {
             if (e.key === 'Enter') search();
           }}
         />
-        <button className="db-button" data-variant="brand" data-size="small" onClick={search}>
+        <DBButton type="button" variant="brand" size="small" onClick={search}>
           Suchen
-        </button>
+        </DBButton>
         {actionFilter && (
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+          <DBButton
+            type="button"
+            variant="outlined"
+            size="small"
             onClick={() => {
               setActionFilter('');
               loadPage(1, '');
             }}
           >
             Zurücksetzen
-          </button>
+          </DBButton>
         )}
-        <button
-          className="db-button ms-auto"
-          data-variant="outlined"
-          data-size="small"
+        <DBButton
+          type="button"
+          className="ms-auto"
+          variant="outlined"
+          size="small"
+          icon="circular_arrows"
           onClick={() => loadPage(currentPage, actionFilter)}
         >
-          <span
-            className="db-icon me-1 db-font-size-sm"
-            data-icon="circular_arrows"
-            style={{ verticalAlign: 'middle' }}
-          />
           Aktualisieren
-        </button>
+        </DBButton>
       </div>
 
       {loadError && (
@@ -167,20 +165,18 @@ export function AdminLogBrowser() {
                       </td>
                       <td className="text-end">
                         {payload !== null && (
-                          <button
-                            className="db-button p-0"
-                            data-variant="ghost"
-                            data-size="small"
-                            aria-label={open ? 'Details ausblenden' : 'Details anzeigen'}
+                          <DBButton
+                            type="button"
+                            className="p-0"
+                            variant="ghost"
+                            size="small"
+                            icon={open ? 'chevron_up' : 'chevron_down'}
+                            noText
                             aria-expanded={open}
                             onClick={() => setOpenDetailsId(open ? null : id)}
                           >
-                            <span
-                              className="db-icon db-font-size-md"
-                              data-icon={open ? 'chevron_up' : 'chevron_down'}
-                              style={{ verticalAlign: 'middle' }}
-                            />
-                          </button>
+                            <DBTooltip>{open ? 'Details ausblenden' : 'Details anzeigen'}</DBTooltip>
+                          </DBButton>
                         )}
                       </td>
                     </tr>
@@ -206,22 +202,22 @@ export function AdminLogBrowser() {
             Gesamt: {logs?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
           <div className="knopfgruppe">
-            <button
-              className="db-button"
-              data-variant="outlined"
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1, actionFilter)}
             >
               ‹
-            </button>
-            <button
-              className="db-button"
-              data-variant="outlined"
+            </DBButton>
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1, actionFilter)}
             >
               ›
-            </button>
+            </DBButton>
           </div>
         </div>
       )}
