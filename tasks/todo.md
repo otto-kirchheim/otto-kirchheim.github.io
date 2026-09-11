@@ -517,7 +517,29 @@ Ende auf `<head>` + einen React-Root.
       Browser-Probe VOR dem Commit gefahren, `invalidMessage={fehler}` ergaenzt.
       Render-Tests fuer FeldZeile/TabellenBlock/feldPanelGemeinsam/SchriftartDialog in
       `test/features/Admin/FormularEditor/dbUxJ2.test.tsx`. Details: CHANGELOG (94).
-- [ ] **J3 Admin uebrige Komponenten.**
+- [x] **J3 Admin uebrige Komponenten** (2026-09-11). 23 Dateien, ~120 Controls, 13 Commits.
+      **Zwei DBRadio-Erstfaelle** (`BulkEditAdminOesBlock`, `BulkEditApplySourceBlock`): beide
+      Radios trugen bisher faelschlich die `db-checkbox`-Wrapperklasse (runde statt eckige
+      Optik) -- `DBRadio` korrigiert das automatisch mit.
+      **`OeTagInput` nutzt jetzt DBs eingebautes** `behavior="removable"` + `onRemove` statt
+      den Entfernen-Knopf von Hand nachzubauen; testverifiziert identische DOM-Struktur.
+      **Lint-Fund `db-ux/form-label-required`:** `DBCheckbox` akzeptiert reines `aria-label`
+      NICHT als Ersatz fuer `label` -- braucht `label` + `showLabel={false}` (DBs
+      Standard-visually-hidden-Technik). Deckte eine echte Verhaltensaenderung auf: ein
+      `aria-label`-Attribut taucht nie in `textContent` auf, ein (auch verstecktes)
+      `<label>`-Element schon -- ein Test in `AdminUserList.selection.test.tsx` waere sonst
+      bei jedem Render fehlgeschlagen (Assertion auf Knopf statt rohen Text umgestellt).
+      **`showIcon`-Technik** fuer Buttons mit dynamisch wechselndem Icon (Snapshot-Spinner in
+      `adminDashboardCharts.tsx`): `icon` bleibt gesetzt (Lint verlangt einen statischen Wert
+      bei `noText`), `showIcon={boolean}` blendet das Glyph per DBs eigener CSS-Regel
+      (`content:none`) aus, wenn ein eigener Spinner-Kind-Node gerendert wird. Per
+      Browser-Probe verifiziert.
+      **`ROLE_LABELS.semantic`** (geteilt zwischen `AdminUserTable`/`AdminUserCard` via
+      `adminUserListTypen.ts`) war als `string` typisiert -- an der Quelle auf die echte
+      `SemanticType`-Union von `@db-ux/react-core-components` korrigiert.
+      Grep-Gate ueber den ganzen `Admin/components`-Ordner: 0 rohe Controls bis auf zwei
+      erwartete Ausnahmen (J1-Interaktiv-Tag-Checkbox, `VorgabenBWeekRangeEditor.tsx` war von
+      Anfang an ausserhalb des Umfangs). Details im CHANGELOG (95).
 - [ ] **J4 Einstellungen-Komponenten.**
 - [ ] **J5 Bereitschaft / EWT / Neben / EA.**
 - [ ] **J6 Feature-Tab-Buttons** (`data-disabler` + `buttonDisable.ts`-Selektor pruefen).

@@ -2,6 +2,44 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (95)
+
+### refactor (Phase J3: übrige Admin-Komponenten auf `@db-ux/react-core-components`)
+
+- 23 Dateien, ~120 Controls, 13 Commits: `AdminUserList`, `AdminVorgabenEditor`,
+  `AdminUserProfileEditor`, `AdminLogBrowser`, `AdminDashboard`/`adminDashboardCharts`,
+  `OeLevelInputs`, `OeTagInput`, `AdminUserTable`, `FormularUpload`,
+  `FormularVersionenListe`, `JsonEditor`, `createAdminBulkEditModal`,
+  `AdminResourceEditModal`, `AdminUserCard`, `AdminProfileTemplatesManager`,
+  `AdminResourceBrowser` sowie die `BulkEdit*`-Bausteine — `db-button`/`db-tag`/
+  `db-checkbox` → `DBButton`/`DBTag`/`DBCheckbox`.
+- **Erste zwei `DBRadio`-Fälle im Projekt** (`BulkEditAdminOesBlock`,
+  `BulkEditApplySourceBlock`): beide Radios trugen bisher fälschlich die
+  `db-checkbox`-Wrapperklasse (runde statt der DB-Radio-Optik) — `DBRadio` korrigiert das
+  automatisch mit.
+- **`OeTagInput` nutzt jetzt DBs eingebautes `behavior="removable"` + `onRemove`** statt den
+  Entfernen-Knopf von Hand nachzubauen — DBTag rendert dabei exakt dieselbe Struktur
+  (`.db-button[data-icon=cross]` mit `DBTooltip`), Tests blieben ohne Anpassung grün.
+- **Lint-Fund `db-ux/form-label-required`:** `DBCheckbox` akzeptiert reines `aria-label`
+  nicht als Ersatz für `label` — braucht `label` + `showLabel={false}` (DBs
+  Standard-visually-hidden-Technik, `clip:rect`). Deckte eine echte Verhaltensänderung auf:
+  ein `aria-label`-Attribut taucht nie in `textContent` auf, ein (auch visuell verstecktes)
+  `<label>`-Element schon — ein Test in `AdminUserList.selection.test.tsx` wäre sonst bei
+  jedem Render fehlgeschlagen (Assertion auf den tatsächlichen Knopf statt rohen Text
+  umgestellt).
+- **`showIcon`-Technik für Buttons mit dynamisch wechselndem Icon** (Snapshot-Spinner in
+  `adminDashboardCharts.tsx`): `icon` bleibt statisch gesetzt (Lint verlangt das bei
+  `noText`), `showIcon={boolean}` blendet das Glyph per DBs eigener CSS-Regel
+  (`content:none`) aus, sobald ein eigener Spinner als Kind gerendert wird. Per Browser-Probe
+  verifiziert (`data-show-icon` + `::before`-Content in beiden Zuständen).
+- **`ROLE_LABELS.semantic`** (geteilt zwischen `AdminUserTable`/`AdminUserCard` über
+  `adminUserListTypen.ts`) war als `string` typisiert — an der Quelle auf die echte
+  `SemanticType`-Union korrigiert statt lokal weggecastet.
+- Grep-Gate über den gesamten `Admin/components`-Ordner: 0 rohe Controls bis auf zwei
+  erwartete Ausnahmen (J1-Interaktiv-Tag-Checkbox in
+  `AdminProfileTemplateContentEditor.tsx`; `VorgabenBWeekRangeEditor.tsx` lag von Anfang an
+  außerhalb des J3-Umfangs). `lint` 0/21 · `lint:css` 0/84 · `test` 2128/0 · `build` grün.
+
 ## 2026-09-11 (93)
 
 ### refactor (Phase J1: Referenz-Slice auf `@db-ux/react-core-components`)
