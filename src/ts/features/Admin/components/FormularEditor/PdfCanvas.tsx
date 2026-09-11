@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from 
 
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
 import { ladePdfjs } from './pdfjsLoader';
+import { DBButton, DBTag } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 // pdfjs liefert `convertToPdfPoint`/`convertToViewportPoint` nicht typisiert genug fuer unsere
@@ -467,39 +468,39 @@ export function PdfCanvas({
   return (
     <div>
       <div className="d-flex align-items-center flex-wrap gap-2 mb-1 small">
-        <button
+        <DBButton
           type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-size="small"
+          className="py-0"
+          variant="outlined"
+          size="small"
           disabled={!pdf || angezeigt <= 0}
           onClick={() => setAngezeigt(i => i - 1)}
         >
           ‹
-        </button>
+        </DBButton>
         <span>
           PDF-Seite {angezeigt + 1} von {pdf?.numPages ?? '…'}
         </span>
-        <button
+        <DBButton
           type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-size="small"
+          className="py-0"
+          variant="outlined"
+          size="small"
           disabled={!pdf || angezeigt >= (pdf?.numPages ?? 1) - 1}
           onClick={() => setAngezeigt(i => i + 1)}
         >
           ›
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button py-0"
-          data-variant="outlined"
-          data-size="small"
+          className="py-0"
+          variant="outlined"
+          size="small"
           disabled={!pdf}
           onClick={() => onQuelleWaehlen(angezeigt)}
         >
           Als Quelle für „{aktiveSeiteLabel}“ verwenden
-        </button>
+        </DBButton>
         <div className="ms-auto d-flex align-items-center gap-1">
           <span className="text-muted">Zoom</span>
           <DbAuswahl
@@ -522,9 +523,9 @@ export function PdfCanvas({
         <div className="small text-primary mb-1 d-flex flex-wrap gap-2 align-items-center">
           <span>{ziehHinweis()}</span>
           {liveText && (
-            <span className="db-tag font-monospace" data-semantic="informational" data-emphasis="strong">
+            <DBTag className="font-monospace" semantic="informational" emphasis="strong">
               {liveText}
-            </span>
+            </DBTag>
           )}
         </div>
       )}

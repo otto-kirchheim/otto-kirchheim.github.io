@@ -23,6 +23,7 @@ import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
 import { schriftKurz } from './SchriftartWahl';
 import { SchriftartDialog } from './SchriftartDialog';
 import type { FormularCode } from './datenKatalog';
+import { DBButton, DBCheckbox, DBTextarea } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 type Masse = { w: number; h: number };
@@ -582,59 +583,54 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
             </li>
           </menu>
         </nav>
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+          variant="outlined"
+          size="small"
           title="Alle Koordinaten proportional umrechnen — z.B. nach dem Wechsel auf eine Vorlage mit anderer Seitengröße"
           disabled={skalier !== null}
           onClick={() => void oeffneSkalierenManuell()}
         >
           Skalieren…
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+          variant="outlined"
+          size="small"
           title="Formularweite Schriftfamilie je Schnitt wählen — mit Live-Vorschau"
           onClick={() => setSchriftDialogOffen(true)}
         >
           Schrift: {schriftKurz(value.schriftart)}
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={messModus ? 'filled' : 'outlined'}
+          variant={messModus ? 'filled' : 'outlined'}
           data-color={messModus ? 'warning' : undefined}
-          data-size="small"
+          size="small"
           title="Auf ein Textstück der PDF klicken, um dessen Schriftgröße abzulesen — z.B. an einer ausgefüllten Vorlage"
           onClick={() => setMessModus(m => !m)}
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
-        </button>
+        </DBButton>
         <div className="knopfgruppe">
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant="brand"
+            variant="brand"
             title="Fachlich passende Werte aus dem Datenkatalog — sieht aus wie ein ausgefülltes Formular"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('beispiel')}
           >
             {vorschauLaeuft === 'beispiel' ? 'Erzeugt…' : 'Beispieldaten'}
-          </button>
-          <button
+          </DBButton>
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant="outlined"
+            variant="outlined"
             title="Generische Füllwerte — zeigt vor allem, welche Zelle zu welchem Eintrag gehört"
             disabled={vorschauLaeuft !== null}
             onClick={() => void testdatenVorschau('platzhalter')}
           >
             {vorschauLaeuft === 'platzhalter' ? 'Erzeugt…' : 'Platzhalter'}
-          </button>
+          </DBButton>
         </div>
       </div>
 
@@ -650,21 +646,14 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
 
       {aktiveSeite && (
         <div className="d-flex flex-wrap align-items-center gap-3 mb-2 small">
-          <div
-            className="db-checkbox"
-            data-size="small"
+          <DBCheckbox
+            size="small"
+            id="seite-wiederholt"
+            label="Diese Seite bei Überlauf wiederholen"
             title="Bei Zeilenüberlauf wird genau diese Seite so oft wiederholt, wie noch Zeilen übrig sind"
-          >
-            <label htmlFor="seite-wiederholt">
-              <input
-                type="checkbox"
-                id="seite-wiederholt"
-                checked={Boolean(aktiveSeite.wiederholt)}
-                onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: e.target.checked || undefined })}
-              />
-              Diese Seite bei Überlauf wiederholen
-            </label>
-          </div>
+            checked={Boolean(aktiveSeite.wiederholt)}
+            onChange={e => setzeAktiveSeite({ ...aktiveSeite, wiederholt: e.target.checked || undefined })}
+          />
 
           {value.seiten.length > 1 && (
             <div className="d-flex align-items-center gap-1">
@@ -749,19 +738,19 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
               aktiveSeiteLabel={`Seite ${seitenIndex + 1}`}
             />
             {value.seiten.length > 1 && (
-              <button
+              <DBButton
                 type="button"
-                className="db-button mt-2"
-                data-variant="outlined"
+                className="mt-2"
+                variant="outlined"
                 data-color="critical"
-                data-size="small"
+                size="small"
                 onClick={() => {
                   onChange({ ...value, seiten: value.seiten.filter((_, i) => i !== seitenIndex) });
                   setTab(Math.max(seitenIndex - 1, 0));
                 }}
               >
                 Seite {seitenIndex + 1} entfernen
-              </button>
+              </DBButton>
             )}
           </div>
           <div
@@ -825,52 +814,44 @@ function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konf
       <summary className="small fw-semibold" style={{ cursor: 'pointer' }}>
         Konfiguration als JSON (kopieren / einfügen)
       </summary>
-      <div className="db-textarea mt-1" data-density="functional" data-hide-label="true">
-        <label htmlFor="konfig-json">Konfiguration als JSON</label>
-        <textarea
-          id="konfig-json"
-          className="font-monospace"
-          data-custom-validity={fehler ? 'invalid' : undefined}
-          style={{ fontSize: '0.7rem', minHeight: '12rem' }}
-          spellCheck={false}
-          value={angezeigt}
-          onChange={e => {
-            setEntwurf((e.target as HTMLTextAreaElement).value);
-            setFehler(null);
-          }}
-        />
-      </div>
-      {fehler && <div className="small text-danger mt-1">{fehler}</div>}
+      <DBTextarea
+        className="mt-1"
+        data-density="functional"
+        id="konfig-json"
+        label="Konfiguration als JSON"
+        showLabel={false}
+        validation={fehler ? 'invalid' : undefined}
+        invalidMessage={fehler ?? undefined}
+        style={{ fontSize: '0.7rem', minHeight: '12rem' }}
+        spellCheck={false}
+        value={angezeigt}
+        onChange={e => {
+          setEntwurf((e.target as HTMLTextAreaElement).value);
+          setFehler(null);
+        }}
+      />
       <div className="d-flex gap-1 mt-1">
-        <button
-          type="button"
-          className="db-button"
-          data-variant="brand"
-          data-size="small"
-          disabled={entwurf === null}
-          onClick={uebernehmen}
-        >
+        <DBButton type="button" variant="brand" size="small" disabled={entwurf === null} onClick={uebernehmen}>
           Übernehmen
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+          variant="outlined"
+          size="small"
           disabled={entwurf === null}
           onClick={() => (setEntwurf(null), setFehler(null))}
         >
           Verwerfen
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button ms-auto"
-          data-variant="outlined"
-          data-size="small"
+          className="ms-auto"
+          variant="outlined"
+          size="small"
           onClick={() => void navigator.clipboard?.writeText(angezeigt)}
         >
           In Zwischenablage
-        </button>
+        </DBButton>
       </div>
     </details>
   );

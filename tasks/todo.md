@@ -506,8 +506,17 @@ Ende auf `<head>` + einen React-Root.
          als `submit` gegolten. Bei jedem Slice mitnehmen.
       3. `data-color` und `data-disabler` bleiben Passthrough-DOM-Attribute (kein Prop),
          `variant`/`size` werden Props.
-- [ ] **J2 FormularEditor** (15 Dateien, + schmale Render-Tests fuer `FeldZeile`,
-      `TabellenBlock`, `feldPanelGemeinsam`, `SchriftartDialog`).
+- [x] **J2 FormularEditor** (2026-09-11). 13 Dateien (nicht 15 -- `FeldPanel`/`FeldZeile` teilen
+      sich keine eigene Datei mehr als im Plan angenommen), 74 Controls. `db-button`/`db-tag`/
+      `db-checkbox`/`db-textarea` -> `DBButton`/`DBTag`/`DBCheckbox`/`DBTextarea`.
+      **Zwei Buttons bewusst NICHT angefasst:** die Seiten-Tabs der Admin-Unternavigation in
+      `FormularEditor.tsx` (`.db-navigation-item > button`) sind laut I.13 kein `db-button`-Fall,
+      sondern das korrekte native Tab-Muster -- DB hat dafuer keine Komponente.
+      **Fund:** `DBTextarea` haette ohne `invalidMessage` den Platzhalter "TODO: Add an
+      invalidMessage" gezeigt (derselbe Fehler wie zuvor bei `DbFeld`, CHANGELOG 91) --
+      Browser-Probe VOR dem Commit gefahren, `invalidMessage={fehler}` ergaenzt.
+      Render-Tests fuer FeldZeile/TabellenBlock/feldPanelGemeinsam/SchriftartDialog in
+      `test/features/Admin/FormularEditor/dbUxJ2.test.tsx`. Details: CHANGELOG (94).
 - [ ] **J3 Admin uebrige Komponenten.**
 - [ ] **J4 Einstellungen-Komponenten.**
 - [ ] **J5 Bereitschaft / EWT / Neben / EA.**

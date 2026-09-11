@@ -25,6 +25,34 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
 - Browser-verifiziert: Umschalten per Maus **und** Leertaste, Semantik folgt dem Zustand,
   0 Konsolenfehler.
 
+## 2026-09-11 (94)
+
+### refactor (Phase J2: FormularEditor-Cluster auf `@db-ux/react-core-components`)
+
+- 13 Dateien, 74 native Controls: `SpalteZeile`, `ListenGruppen`, `FeldPanel`, `SchriftartDialog`,
+  `datenpfadUndFormeln`, `feldPanelGemeinsam`, `FeldZeile`, `aggregationUndRechnung`,
+  `bedingungEditor`, `SkalierLeiste`, `SonderZeilen`, `TabellenBlock`, `PdfCanvas`,
+  `FormularEditor` — `db-button` → `DBButton`, `db-checkbox` → `DBCheckbox`, statische `db-tag` →
+  `DBTag`, das eine `db-textarea` → `DBTextarea`.
+- **Zwei native Buttons in `FormularEditor.tsx` bleiben bewusst unangetastet:** die Seiten-Tabs der
+  Admin-Unternavigation (`.db-navigation-item > button`) sind laut `todo.md` I.13 kein
+  `db-button`-Fall, sondern das korrekte ARIA-APG-Muster für Nicht-URL-Sub-Tabs — DB hat dafür
+  keine Komponente.
+- **`DBTextarea` hätte fast eine generische Meldung gezeigt.** Ohne `invalidMessage` rendert DB
+  bei `validation="invalid"` den Platzhaltertext „TODO: Add an invalidMessage" (derselbe Fehler,
+  den CHANGELOG (91)/`fix(db-ux): Formularfelder zeigten "TODO: Add an invalidMessage"` schon bei
+  `DbFeld` behoben hatte). Browser-Probe bestätigt: mit gesetzter `invalidMessage` erscheint der
+  eigene Fehlertext, `aria-invalid="true"`, korrekt verdrahtet — eine A11y-Verbesserung gegenüber
+  der vorherigen separaten `<div>`. Die alte manuelle Fehleranzeige ist damit entfallen.
+  Ohne Validierungsfehler bleibt die Meldung `display:none`, wie zuvor.
+- Neue Render-Tests für die vier laut Plan noch ungetesteten Dateien (`FeldZeile`, `TabellenBlock`,
+  `feldPanelGemeinsam`, `SchriftartDialog`) in `test/features/Admin/FormularEditor/dbUxJ2.test.tsx`
+  — Fokus auf den DB-UX-Umstellungen (Icon-Knopf+Tooltip statt `title`, Modus-Knopfgruppen,
+  Checkbox-Callbacks), nicht auf der fachlichen Logik.
+- Grep-Gate: 0 `className="db-button"` / `db-tag` / `db-textarea` / `type="checkbox"` im Cluster
+  (die zwei Navigation-Buttons ausgenommen). `lint` 0/21 · `lint:css` 0/84 · `test` 2128/0 ·
+  `build` grün.
+
 ## 2026-09-11 (92)
 
 ### fix (Phase J0/J-Q1: `hidden` schlägt die `d-*`-Utilities)
