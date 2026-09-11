@@ -1,4 +1,4 @@
-import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBDrawer, DBDrawerHeader, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
 import { DIALOG_RICHTUNG } from '@/components/showModal';
@@ -99,14 +99,14 @@ export function AdminResourceEditModal({
                     <span className="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
                   )}
                   {isNull && !disabled && !isUserRef && (
-                    <span
-                      className="db-tag text-dark ms-1"
-                      data-semantic="warning"
-                      data-emphasis="strong"
+                    <DBTag
+                      className="text-dark ms-1"
+                      semantic="warning"
+                      emphasis="strong"
                       style={{ fontSize: '0.65em' }}
                     >
                       leer
-                    </span>
+                    </DBTag>
                   )}
                 </label>
 
@@ -115,23 +115,20 @@ export function AdminResourceEditModal({
                     <code className="small bg-body-secondary px-2 py-1">{String(val ?? '')}</code>
                     {userNameMap[String(val)] && <span className="small fw-semibold">{userNameMap[String(val)]}</span>}
                     {onNavigateToUser && (
-                      <button
-                        className="db-button ms-auto"
-                        data-variant="outlined"
+                      <DBButton
+                        type="button"
+                        className="ms-auto"
+                        variant="outlined"
                         data-color="informational"
-                        data-size="small"
+                        size="small"
+                        icon="magnifying_glass"
                         onClick={() => {
                           closeEdit();
                           onNavigateToUser(String(val));
                         }}
                       >
-                        <span
-                          className="db-icon me-1 db-font-size-xs"
-                          data-icon="magnifying_glass"
-                          style={{ verticalAlign: 'middle' }}
-                        />
                         Zum Profil
-                      </button>
+                      </DBButton>
                     )}
                   </div>
                 ) : disabled ? (
@@ -158,18 +155,19 @@ export function AdminResourceEditModal({
                       {(val as string[]).map((id, i) => (
                         <div key={i} className="d-flex align-items-center gap-2 bg-body-secondary px-2 py-1">
                           <code className="small flex-grow-1">{truncateId(id)}</code>
-                          <button
-                            className="db-button py-0"
-                            data-variant="outlined"
+                          <DBButton
+                            type="button"
+                            className="py-0"
+                            variant="outlined"
                             data-color="informational"
-                            data-size="small"
+                            size="small"
+                            icon="arrow_up_right"
                             onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
                           >
-                            <span className="db-icon db-font-size-xs" data-icon="arrow_up_right" />
                             <span className="ms-1 d-none d-sm-inline">
                               {RESOURCES[crossRef.resourceIdx].shortLabel}
                             </span>
-                          </button>
+                          </DBButton>
                         </div>
                       ))}
                     </div>
@@ -178,29 +176,26 @@ export function AdminResourceEditModal({
                   ) : (
                     <div className="d-flex align-items-center gap-2">
                       <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{truncateId(val)}</code>
-                      <button
-                        className="db-button"
-                        data-variant="outlined"
+                      <DBButton
+                        type="button"
+                        variant="outlined"
                         data-color="informational"
-                        data-size="small"
+                        size="small"
+                        icon="arrow_up_right"
                         onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
                       >
-                        <span
-                          className="db-icon me-1 db-font-size-xs"
-                          data-icon="arrow_up_right"
-                          style={{ verticalAlign: 'middle' }}
-                        />
                         {RESOURCES[crossRef.resourceIdx].label}
-                      </button>
+                      </DBButton>
                     </div>
                   )
                 ) : typeof val === 'boolean' ? (
-                  <div className="db-checkbox mt-1" data-size="small">
-                    <label>
-                      <input type="checkbox" checked={val} onChange={e => handleValueChange(key, e.target.checked)} />
-                      {key}
-                    </label>
-                  </div>
+                  <DBCheckbox
+                    className="mt-1"
+                    size="small"
+                    label={key}
+                    checked={val}
+                    onChange={e => handleValueChange(key, e.target.checked)}
+                  />
                 ) : isNull ? (
                   <DbFeld
                     beschriftung="(leer – Wert eingeben oder leer lassen)"
@@ -273,15 +268,16 @@ export function AdminResourceEditModal({
                 ) : isObjectId(val) ? (
                   <div className="d-flex align-items-center gap-2">
                     <code className="small bg-body-secondary px-2 py-1 flex-grow-1">{val}</code>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
-                      data-size="small"
-                      title="Kopieren"
+                    <DBButton
+                      type="button"
+                      variant="outlined"
+                      size="small"
+                      icon="copy"
+                      noText
                       onClick={() => void navigator.clipboard?.writeText(val)}
                     >
-                      <span className="db-icon db-font-size-xs" data-icon="copy" />
-                    </button>
+                      <DBTooltip>Kopieren</DBTooltip>
+                    </DBButton>
                   </div>
                 ) : (
                   <DbFeld
@@ -298,10 +294,10 @@ export function AdminResourceEditModal({
         </div>
 
         <div className="dialog-fuss">
-          <button className="db-button" data-variant="filled" onClick={closeEdit} disabled={edit.saving}>
+          <DBButton type="button" variant="filled" onClick={closeEdit} disabled={edit.saving}>
             Abbrechen
-          </button>
-          <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
+          </DBButton>
+          <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
             {edit.saving ? (
               <>
                 <span className="laedt me-1" data-size="small" role="status" />
@@ -310,7 +306,7 @@ export function AdminResourceEditModal({
             ) : (
               'Speichern'
             )}
-          </button>
+          </DBButton>
         </div>
       </div>
     </DBDrawer>,
