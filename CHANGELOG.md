@@ -2,6 +2,33 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (91)
+
+### refactor (Phase J0: Breakpoints aus `@db-ux/core-foundations`)
+
+- Die Umbruchschwellen standen an vier Stellen mit je eigenen Werten: `raster.scss`,
+  `utilities.scss`, `customtable.css` und `CustomTable.ts:30`. Alle vier beziehen sie jetzt aus
+  `@db-ux/core-foundations/build/styles/_screen-sizes.scss` (dafür `loadPaths: ['node_modules']`
+  in `vite.base-config.ts`); `customtable.css` wurde dazu zu `customtable.scss`, und
+  `infrastructure/ui/breakpoints.ts` spiegelt die Werte für die TS-Seite.
+- **Die Skala ändert sich damit bewusst:** 480/576/768/992/1200/1400 → 320/768/1024/1440/1920.
+  Nur 768 ist in beiden Systemen gleich. `xxl` entfällt (DB kennt die Stufe nicht; es gab keine
+  einzige `*-xxl-*`-Klasse im Bestand).
+- Betroffen waren 68 `sp-{sm,md,lg,xl}-*`- und 117 Utility-Verwendungen. Die
+  `.custom-text-truncate`-Leiter in `styles.scss` (6 Bootstrap-Stufen) wurde auf dieselben
+  DB-Schwellen gezogen, sonst hätte der Text an anderen Breiten gestuft als die Spalten daneben.
+- **Spaltenstufen aller Tabellen neu beurteilt**, weil ein reiner Skalentausch Kernspalten zu
+  weit nach oben geschoben hätte (EWT zeigte bei 1000 px nur noch 4 von 14 Spalten). Leitlinie:
+  die alte `md`-Schwelle (768) ist wertgleich mit der neuen `sm` — dort liegt die
+  Handy/Tablet-Grenze. EWT `beginE`/`endeE` md→sm, `abWE`/`anWE` xl→md, `berechnen` xl→lg;
+  Neben `Zulagen` md→sm; EA `Tätigkeit`/`Entgeltgruppe` md→sm; VorgabenB `standard`/`nacht`
+  lg→md und `beginnN`/`endeN` lg→md.
+- Vier bespoke Media Queries in `styles.scss` (1200/1199.98/992/576 px) bleiben bewusst auf
+  ihren Werten -- sie gehören zu einzelnen Komponenten, nicht zur Stufenleiter.
+- Verifiziert (Chrome headless): Umschaltpunkte exakt bei 320/768/1024/1440/1920; Spaltenleitern
+  EWT 4→6→8→13→14, Neben 4→5→6, EA 3→5, Bereitschaft 8→10→11; kein waagerechter Seitenüberlauf
+  auf 7 Tabs × 7 Breiten; Konsolenfehler nur backend-bedingt. `lint:css` 90 → 84 Warnungen.
+
 ## 2026-09-10 (90)
 
 ### chore (Rasterabstände auf DB-UX-Spacing-Tokens)

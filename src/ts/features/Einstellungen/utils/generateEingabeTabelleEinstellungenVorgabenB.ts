@@ -51,7 +51,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
   const ftVE = createCustomTable('tableVE', {
     columns: [
       { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'lg' },
+      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'md' },
       {
         classes: ['cell-multiline'],
         name: 'beginnB',
@@ -68,14 +68,14 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
         parser: weekdayParser,
         breakpoints: 'sm',
       },
-      { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'lg' },
+      { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'md' },
       {
         classes: ['cell-multiline'],
         name: 'beginnN',
         title: 'Nacht Von',
         longTitle: 'Nachtschicht Von',
         parser: nachtRangeParser,
-        breakpoints: 'lg',
+        breakpoints: 'md',
       },
       {
         classes: ['cell-multiline'],
@@ -83,7 +83,7 @@ export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?:
         title: 'Nacht Bis',
         longTitle: 'Nachtschicht Bis',
         parser: nachtRangeParser,
-        breakpoints: 'lg',
+        breakpoints: 'md',
       },
     ],
     rows: [...Object.values(VorgabenB)],

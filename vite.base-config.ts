@@ -71,6 +71,9 @@ const baseConfig: UserConfig = {
       scss: {
         // `@import` ist in Dart Sass abgekuendigt; `styles.scss` nutzt es noch fuer `raster`.
         silenceDeprecations: ['import'],
+        // Erlaubt `@use '@db-ux/...'` ohne relativen Pfad -- die Breakpoints kommen aus
+        // `@db-ux/core-foundations/build/styles/screen-sizes`.
+        loadPaths: ['node_modules'],
       },
     },
     postcss: {

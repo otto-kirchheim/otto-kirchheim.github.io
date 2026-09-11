@@ -8,13 +8,17 @@
 
 @use 'sass:math';
 @use 'sass:string';
+@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
 
+// Umbruchstufen aus `@db-ux/core-foundations` (J-Q2) -- dieselbe Quelle wie `raster.scss` und
+// `customtable.scss`. Die Schwellen liegen hoeher als in der frueheren Bootstrap-Staffel
+// (sm 36em -> 48em, md 48em -> 64em, lg 62em -> 90em, xl 75em -> 120em). `xxl` ist entfallen:
+// DB kennt die Stufe nicht, und der Bestand nutzte keine einzige `*-xxl-*`-Klasse.
 $umbrueche: (
-  'sm': 36em,
-  'md': 48em,
-  'lg': 62em,
-  'xl': 75em,
-  'xxl': 87.5em,
+  'sm': db.$db-breakpoint-sm,
+  'md': db.$db-breakpoint-md,
+  'lg': db.$db-breakpoint-lg,
+  'xl': db.$db-breakpoint-xl,
 );
 
 // Abstandsstufen. 0-5 folgen Bootstraps Stufung, liegen aber auf den DB-Spacing-Tokens.

@@ -38,8 +38,8 @@ function EaTab() {
       columns: [
         { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
         { name: 'Dauer', title: 'Dauer', longTitle: 'Dauer', type: 'time' },
-        { name: 'Taetigkeit', title: 'Tätigkeit', longTitle: 'Tätigkeit', breakpoints: 'md' },
-        { name: 'Entgeltgruppe', title: 'Entgeltgruppe', longTitle: 'Entgeltgruppe', breakpoints: 'md' },
+        { name: 'Taetigkeit', title: 'Tätigkeit', longTitle: 'Tätigkeit', breakpoints: 'sm' },
+        { name: 'Entgeltgruppe', title: 'Entgeltgruppe', longTitle: 'Entgeltgruppe', breakpoints: 'sm' },
       ],
       empty: () => getEmptyText(Jahr),
       rows: getEaDaten(undefined, undefined, { scope: 'all' }),

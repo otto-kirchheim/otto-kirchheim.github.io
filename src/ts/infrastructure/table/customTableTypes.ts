@@ -2,6 +2,7 @@ import type { Column } from './Column';
 import type { CustomTable } from './CustomTable';
 import type { Row } from './Row';
 import type { DbButtonLook } from '../ui/dbButton';
+import type { BreakpointName } from '../ui/breakpoints';
 
 export type CustomTableTypes = Record<string, unknown>;
 
@@ -130,5 +131,5 @@ export interface CustomHTMLTableRowElement<T extends CustomTableTypes> extends H
   data?: Row<T>;
 }
 
-export type Breakpoints = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+export type Breakpoints = BreakpointName;
 export type Directions = 'ASC' | 'DESC';

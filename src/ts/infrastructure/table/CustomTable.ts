@@ -3,8 +3,9 @@
  *
  * Copyright 2022-2026 Jan Otto
  */
-import './customtable.css';
+import './customtable.scss';
 import type { CustomHTMLTableElement } from '@/types';
+import { BREAKPOINTS } from '@/infrastructure/ui/breakpoints';
 import { Column, Columns } from './Column';
 import { renderFooter, renderHeader, renderRows } from './customTableRender';
 import type {
@@ -27,7 +28,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
   public rows: Rows<T>;
   public columns: Columns<T>;
   public state: { editing: boolean | null; sorting: boolean | null };
-  private readonly o = { breakpoints: { xs: 480, sm: 576, md: 768, lg: 992, xl: 1200, xxl: 1400 } };
+  private readonly o = { breakpoints: BREAKPOINTS };
   public options: CustomTableOptionsAll<T>;
 
   constructor(initTable: string | CustomHTMLTableElement<T>, options: CustomTableOptions<T>) {

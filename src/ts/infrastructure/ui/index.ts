@@ -1,4 +1,5 @@
 export * from './actAsStatus';
+export * from './breakpoints';
 export { default as buttonDisable } from './buttonDisable';
 export { default as clearLoading } from './clearLoading';
 export { default as setLoading } from './setLoading';

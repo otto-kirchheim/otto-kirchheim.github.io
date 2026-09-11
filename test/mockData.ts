@@ -648,7 +648,7 @@ export const mockEWT = (): void => {
       { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
       { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'md', type: 'time' },
       { name: 'anWE', title: 'An Wohnung', breakpoints: 'xl', type: 'time' },
-      { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xxl' },
+      { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'xl' },
     ],
     rows: [],
   });

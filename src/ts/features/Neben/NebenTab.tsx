@@ -43,7 +43,7 @@ function NebenTab() {
           name: 'zulagenAnzeigeN',
           title: 'Zulagen',
           longTitle: 'Zulagen',
-          breakpoints: 'md',
+          breakpoints: 'sm',
           classes: ['cell-multiline'],
           parser: (value: unknown) => (typeof value === 'string' && value.length > 0 ? value : '-'),
         },

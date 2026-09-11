@@ -14,7 +14,12 @@ import type {
   IVorgabenGeldType,
   IVorgabenU,
 } from '@/types';
-import type { IBereitschaftszeitraumPdfBody, IEntgeltausgleichPdfBody, IEwtPdfBody, INebengeldPdfBody } from '../pdf/pdfDaten';
+import type {
+  IBereitschaftszeitraumPdfBody,
+  IEntgeltausgleichPdfBody,
+  IEwtPdfBody,
+  INebengeldPdfBody,
+} from '../pdf/pdfDaten';
 import {
   beAbgeleiteteWerte,
   bereitschaftszulageAbgeleiteteWerte,

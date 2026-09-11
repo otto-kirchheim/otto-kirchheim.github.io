@@ -81,7 +81,8 @@ export function bzAbgeleiteteWerte(
   zeile: Pick<IPdfBereitschaftszeitraum, 'Beginn' | 'Ende' | 'Pause'>,
 ): BzAbgeleiteteWerte {
   const minuten =
-    ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) + (zeile.Pause ?? 0);
+    ZEILEN_OPS.zeitspanne([alsZeitstempelMinuten(zeile.Ende), alsZeitstempelMinuten(zeile.Beginn)]) +
+    (zeile.Pause ?? 0);
   return { Dauer: minuten };
 }
 

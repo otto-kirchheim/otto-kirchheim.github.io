@@ -1,3 +1,13 @@
+@use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
+
+$stufen: (
+  'xs': db.$db-screen-size-xs,
+  'sm': db.$db-screen-size-sm,
+  'md': db.$db-screen-size-md,
+  'lg': db.$db-screen-size-lg,
+  'xl': db.$db-screen-size-xl,
+);
+
 /* Die `db-table`-Huelle legt ihre Linien per `border-block-end` an `tr` -- das rendert nur bei
    `border-collapse: collapse`. Weil `utilities.scss` das native `display: table` erzwingt (statt
    DBs Grid), stand die Tabelle sonst auf `separate`: keine Zeilentrenner und keine
@@ -136,88 +146,35 @@ th.customtable-sortable:hover > span.customtableIcon {
   opacity: 1;
 }
 
-@media screen and (max-width: 479.95px) {
-  [data-breakpoints*='xs'] {
-    display: none;
-  }
+/* Spaltenstufen: eine Spalte mit `data-breakpoints="md"` verschwindet unterhalb der Stufe `md`,
+   und der Aufklapp-Knopf der Bearbeiten-Spalte (`customtable-toggle-md`) bekommt dort sein "+".
+   Die Schwellen kommen aus `@db-ux/core-foundations`; `BREAKPOINTS` in
+   `infrastructure/ui/breakpoints.ts` spiegelt dieselben Werte fuer die Spaltenlogik in
+   `CustomTable.ts`. Da `max-width`-Abfragen sich ueberlagern, traegt bei schmalem Fenster
+   automatisch jede groessere Stufe ihr "+" bei -- eine Sammelregel ist nicht noetig. */
+@each $name, $px in $stufen {
+  @media screen and (max-width: #{$px - 0.05}px) {
+    [data-breakpoints*='#{$name}'] {
+      display: none;
+    }
 
+    .customtable-editing.customtable-toggle-#{$name}::before {
+      content: '+';
+      opacity: 0.3;
+      margin-inline-end: 8px;
+    }
+  }
+}
+
+@media screen and (max-width: #{db.$db-screen-size-xs - 0.05}px) {
   .customtable-editing > div > button {
     padding-inline: 4px;
   }
-
-  .customtable-editing.customtable-toggle-xxl::before,
-  .customtable-editing.customtable-toggle-xl::before,
-  .customtable-editing.customtable-toggle-lg::before,
-  .customtable-editing.customtable-toggle-md::before,
-  .customtable-editing.customtable-toggle-sm::before,
-  .customtable-editing.customtable-toggle-xs::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
-  }
 }
 
-@media screen and (max-width: 575.95px) {
-  [data-breakpoints*='sm'] {
-    display: none;
-  }
-
-  .customtable-editing.customtable-toggle-sm::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
-  }
-
+@media screen and (max-width: #{db.$db-screen-size-sm - 0.05}px) {
   th.customtable-sortable > span.customtableIcon {
     opacity: 1;
-  }
-}
-
-@media screen and (max-width: 767.95px) {
-  [data-breakpoints*='md'] {
-    display: none;
-  }
-
-  .customtable-editing.customtable-toggle-md::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
-  }
-}
-
-@media screen and (max-width: 991.95px) {
-  [data-breakpoints*='lg'] {
-    display: none;
-  }
-
-  .customtable-editing.customtable-toggle-lg::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
-  }
-}
-
-@media screen and (max-width: 1199.95px) {
-  [data-breakpoints*='xl'] {
-    display: none;
-  }
-
-  .customtable-editing.customtable-toggle-xl::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
-  }
-}
-
-@media screen and (max-width: 1399.95px) {
-  [data-breakpoints*='xxl'] {
-    display: none;
-  }
-
-  .customtable-editing.customtable-toggle-xxl::before {
-    content: '+';
-    opacity: 0.3;
-    margin-inline-end: 8px;
   }
 }
 

@@ -437,10 +437,15 @@ Parent (nach Push) · voller Save-Flow -> AutoSave-Badge-Status im Harness nicht
 
 ---
 
-# Vorbereitet (BLOCKIERT durch Phase I): React-Umbau Phase J-N - 2026-09-08
+# Laufend: React-Umbau Phase J-N - Start 2026-09-11
 
-Plan: `tasks/plan-react-umbau.md`. **Startet erst, wenn Phase I oben abgeschlossen ist.**
-Kein Code angefasst -- bisher nur der Plan im Repo abgelegt.
+Plan: `tasks/plan-react-umbau.md`. Branch `feat/react-umbau` (Frontend + Parent).
+
+**Phase I ist abgeschlossen** (geprueft 2026-09-11): Abschluss-Commit `ede59c5`, Review-Abschnitt
+weiter oben, `lint` 0 Fehler / 21 Warnungen = der dokumentierte Ausnahmezustand. Bewusst offen
+geblieben und kein Blocker fuer J: I.9-Rest (21 Warnungen, Sackgassen-Analyse oben), I.4
+(Entscheidung ohne Code). I.8 war nie abgehakt, inhaltlich aber durch den QA-Sweep
+Hell/Dunkel Desktop+Mobile erledigt.
 
 Ziel (User-Vorgabe): **alles als React**, inklusive `CustomTable`; `index.html` schrumpft am
 Ende auf `<head>` + einen React-Root.
@@ -463,8 +468,17 @@ Ende auf `<head>` + einen React-Root.
 - [x] **J-0 Plan im Repo ablegen.** `tasks/plan-react-umbau.md` angelegt, Querverweis in
       `tasks/plan-db-ux-migration.md`, dieser Abschnitt. Grund: Umsetzung laeuft im Wechsel
       auf mehreren Geraeten -- Status wird hier gepflegt, nicht im Plan.
-- [ ] **J0 Querschnitt foundations** -- `styles.scss`/`utilities.scss` auf helpers-Mixins,
-      `_screen-sizes.scss`-Spiegel als TS-Konstante fuer `CustomTable.ts:30`.
+- [x] **J0 Querschnitt foundations -- Breakpoint-Teil (J-Q2) erledigt** (2026-09-11, Branch
+      `feat/react-umbau`). `raster.scss`, `utilities.scss`, `customtable.scss` (vorher `.css`)
+      und `CustomTable.ts` beziehen die Schwellen jetzt aus
+      `@db-ux/core-foundations/.../_screen-sizes.scss`; `infrastructure/ui/breakpoints.ts` ist
+      der TS-Spiegel. Skala bewusst gewechselt (480/576/768/992/1200/1400 -> 320/768/1024/
+      1440/1920), `xxl` entfaellt. Spaltenstufen ALLER Tabellen neu beurteilt -- ein reiner
+      Skalentausch haette Kernspalten zu weit nach oben geschoben (EWT bei 1000 px: 4 von 14).
+      Details im `CHANGELOG.md` (91).
+      **Rest von J0 offen:** J-Q1 (helpers-Mixins fuer Fokus-Ringe, visually-hidden, Divider,
+      Interaktiv-Zustaende) und J-Q3 (`utilities.scss`/`raster.scss` inhaltlich gegen
+      foundations abgleichen) sind noch nicht angefasst.
 - [ ] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (+ neuer Render-Test).
 - [ ] **J2 FormularEditor** (15 Dateien, + schmale Render-Tests fuer `FeldZeile`,
       `TabellenBlock`, `feldPanelGemeinsam`, `SchriftartDialog`).
