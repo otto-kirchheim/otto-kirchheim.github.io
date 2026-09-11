@@ -1,4 +1,4 @@
-import { useLayoutEffect, type Ref, type RefObject } from 'react';
+import { useLayoutEffect, type CSSProperties, type Ref, type RefObject } from 'react';
 
 /**
  * Fallback-Text fuer die Ungueltig-Meldung der DB-Formularfelder. Ohne `invalidMessage`
@@ -37,4 +37,31 @@ export function useSofortigeId<T extends HTMLElement>(ref: RefObject<T | null>, 
     const element = ref.current;
     if (id && element && element.id !== id) element.id = id;
   }, [ref, id]);
+}
+
+/**
+ * Reicht eine Klasse direkt ans Element durch (fuer `DBInput`/`DBSelect`, die selbst keine
+ * eigene Prop fuer eine Klasse NUR am inneren `<input>`/`<select>` anbieten -- deren
+ * `className` landet ausschliesslich an der `.db-input`/`.db-select`-Huelle).
+ */
+export function useSofortigeKlasse<T extends HTMLElement>(ref: RefObject<T | null>, klasse?: string): void {
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (element) element.className = klasse ?? '';
+  }, [ref, klasse]);
+}
+
+/**
+ * Uebertraegt Inline-Styles auf die `.db-input`/`.db-select`-Huelle, die `DBInput`/`DBSelect`
+ * selbst rendern. Ueber deren Prop-API nicht erreichbar: ein `style`-Prop landet dort am
+ * INNEREN Feld (siehe `useSofortigeKlasse`), nicht an der Huelle -- und ein zusaetzlicher
+ * eigener Wrapper wuerde `.feldgruppe > .db-input`/`.db-select` (styles.scss) brechen, weil die
+ * Huelle dann kein direktes Kind der Feldgruppe mehr waere. `ref.current.parentElement` ist
+ * die Huelle selbst (`DBInput`/`DBSelect` rendern `<label>`+Feld als direkte Kinder davon).
+ */
+export function useSofortigeHuelleStyle<T extends HTMLElement>(ref: RefObject<T | null>, style?: CSSProperties): void {
+  useLayoutEffect(() => {
+    const huelle = ref.current?.parentElement;
+    if (huelle && style) Object.assign(huelle.style, style);
+  }, [ref, style]);
 }

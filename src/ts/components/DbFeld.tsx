@@ -1,5 +1,7 @@
+import { DBInput, DBSelect } from '@db-ux/react-core-components';
 import {
   useId,
+  useRef,
   type CSSProperties,
   type InputHTMLAttributes,
   type ReactNode,
@@ -7,15 +9,21 @@ import {
   type SelectHTMLAttributes,
 } from 'react';
 
+import {
+  refZusammenfuehren,
+  STANDARD_UNGUELTIG_MELDUNG,
+  useSofortigeHuelleStyle,
+  useSofortigeId,
+  useSofortigeKlasse,
+} from './dbFeldHelfer';
+
 /**
  * Kompakte Eingabefelder ohne sichtbare Beschriftung (Panels, Zeilen-Editoren, Werkzeugleisten).
  *
- * Bootstrap stylte ein nacktes `<input class="form-control">`; DB stylt `input`/`select` nur
- * innerhalb einer `db-input`/`db-select`-Huelle, und die verlangt ein `<label>`. Diese Huelle an
- * rund 60 Stellen von Hand zu wiederholen (inklusive erfundener `id`s fuer `htmlFor`) waere der
- * Hauptteil des Umbaus -- deshalb steht sie hier einmal. `useId()` liefert die Verknuepfung
- * Label <-> Feld; damit bekommen die Felder nebenbei einen zugaenglichen Namen, den sie unter
- * Bootstrap ueberwiegend nicht hatten.
+ * Duenner Wrapper um `DBInput`/`DBSelect`: die beiden erzeugen die `db-input`/`db-select`-Huelle
+ * inklusive `<label>`-Verknuepfung selbst, diese Komponenten uebersetzen nur die kompaktere
+ * Aufrufstellen-API (verstecktes Label per Default, `dicht`, `huelleStyle`, `feldKlasse`)
+ * in deren Props. Rund 60 Aufrufstellen bleiben dadurch unveraendert.
  *
  * Sichtbare Beschriftung: `beschriftungZeigen`. Gedraengte Groesse (Ersatz fuer
  * `form-control-sm`/`form-select-sm`): `dicht`.
@@ -32,24 +40,8 @@ type GemeinsameProps = {
   huelleStyle?: CSSProperties;
 };
 
-function huellenAttribute({
-  beschriftungZeigen,
-  dicht,
-  klasse,
-}: {
-  beschriftungZeigen?: boolean;
-  dicht?: boolean;
-  klasse: string;
-}) {
-  return {
-    className: klasse,
-    ...(beschriftungZeigen ? {} : { 'data-hide-label': 'true' }),
-    ...(dicht ? { 'data-density': 'functional' } : {}),
-  };
-}
-
 type DbFeldProps = GemeinsameProps &
-  Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'ref'> & {
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'ref' | 'onInput'> & {
     /** Klasse am `<input>` selbst (z.B. `text-center`), nicht an der Huelle. */
     feldKlasse?: string;
     /** Ersetzt Bootstraps `is-invalid`: DB faerbt ueber `data-custom-validity`. */
@@ -61,7 +53,7 @@ export function DbFeld({
   beschriftung,
   beschriftungZeigen,
   dicht,
-  className = '',
+  className,
   id,
   feldKlasse,
   huelleStyle,
@@ -71,27 +63,30 @@ export function DbFeld({
 }: DbFeldProps) {
   const erzeugteId = useId();
   const feldId = id ?? erzeugteId;
+  const eigeneRef = useRef<HTMLInputElement>(null);
+  useSofortigeId(eigeneRef, feldId);
+  useSofortigeKlasse(eigeneRef, feldKlasse);
+  useSofortigeHuelleStyle(eigeneRef, huelleStyle);
 
   return (
-    <div
-      {...huellenAttribute({ beschriftungZeigen, dicht, klasse: `db-input ${className}`.trim() })}
-      style={huelleStyle}
-    >
-      <label htmlFor={feldId}>{beschriftung}</label>
-      <input
-        ref={feldRef}
-        id={feldId}
-        className={feldKlasse}
-        data-custom-validity={ungueltig ? 'invalid' : undefined}
-        aria-invalid={ungueltig || undefined}
-        {...feldProps}
-      />
-    </div>
+    // `type` kommt ueber die Props der Aufrufstelle; die statische Regel sieht das nicht.
+    // eslint-disable-next-line db-ux/input-type-required
+    <DBInput
+      ref={refZusammenfuehren(eigeneRef, feldRef)}
+      id={feldId}
+      label={beschriftung}
+      showLabel={beschriftungZeigen === true}
+      data-density={dicht ? 'functional' : undefined}
+      className={className}
+      validation={ungueltig ? 'invalid' : undefined}
+      invalidMessage={STANDARD_UNGUELTIG_MELDUNG}
+      {...feldProps}
+    />
   );
 }
 
 type DbAuswahlProps = GemeinsameProps &
-  Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'id' | 'ref'> & {
+  Omit<SelectHTMLAttributes<HTMLSelectElement>, 'className' | 'id' | 'ref' | 'onInput'> & {
     children: ReactNode;
     feldRef?: Ref<HTMLSelectElement>;
   };
@@ -100,7 +95,7 @@ export function DbAuswahl({
   beschriftung,
   beschriftungZeigen,
   dicht,
-  className = '',
+  className,
   id,
   children,
   huelleStyle,
@@ -109,17 +104,23 @@ export function DbAuswahl({
 }: DbAuswahlProps) {
   const erzeugteId = useId();
   const feldId = id ?? erzeugteId;
+  const eigeneRef = useRef<HTMLSelectElement>(null);
+  useSofortigeId(eigeneRef, feldId);
+  useSofortigeHuelleStyle(eigeneRef, huelleStyle);
 
   return (
-    <div
-      {...huellenAttribute({ beschriftungZeigen, dicht, klasse: `db-select ${className}`.trim() })}
-      style={huelleStyle}
+    // Die Optionen kommen als `children` von der Aufrufstelle; das sieht die statische Regel nicht.
+    // eslint-disable-next-line db-ux/select-requires-options
+    <DBSelect
+      ref={refZusammenfuehren(eigeneRef, feldRef)}
+      id={feldId}
+      label={beschriftung}
+      showLabel={beschriftungZeigen === true}
+      data-density={dicht ? 'functional' : undefined}
+      className={className}
+      {...feldProps}
     >
-      <label htmlFor={feldId}>{beschriftung}</label>
-      {/* Die Optionen kommen als `children` von der Aufrufstelle. */}
-      <select ref={feldRef} id={feldId} {...feldProps}>
-        {children}
-      </select>
-    </div>
+      {children}
+    </DBSelect>
   );
 }
