@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (92)
+
+### fix (Phase J0/J-Q1: `hidden` schlägt die `d-*`-Utilities)
+
+- Die `d-*`-Klassen setzen `display` mit `!important` und schlugen damit die UA-Regel
+  `[hidden] { display: none }` — ein `el.hidden = true` im TypeScript blieb auf jedem Element
+  mit einer solchen Klasse wirkungslos. Kein aktiver Fehler im Bestand (die vier per `.hidden`
+  geschalteten Elemente tragen zufällig keine `d-*`-Klasse), aber eine stille Falle.
+- Übernommen ist das Muster aus `helpers/_display.scss` (`&:not([hidden])`); DBs Mixin selbst
+  arbeitet ohne `!important` und ist für eine Bootstrap-kompatible Utility-API nicht nutzbar.
+  Browser-verifiziert über 7 Fälle, inklusive der Reihenfolge-Regel `d-none` gewinnt.
+
+### chore (Phase J0/J-Q3: Abgleich mit foundations — Ergebnis dokumentiert)
+
+- `@db-ux/core-foundations` liefert **kein** Utility-System, nur Tokens plus neun Hilfsklassen
+  (`db-divider-*`, `db-focus-default`) — an `utilities.scss`/`raster.scss` ist nichts 1:1 zu
+  ersetzen. Die übrigen helpers-Mixins passen fachlich nicht (Begründung je Mixin in
+  `tasks/todo.md`): DBs `visually-hidden` nutzt das abgekündigte `clip: rect()`, die
+  Projektfassung mit `clip-path` ist moderner.
+- Skript-Inventar aus dem **gebauten** CSS (nicht per grep, siehe `lessons.md`): 697 von 901
+  Utility-Klassen sind ungenutzt, Kosten 3,6 KB gzip = 3,8 % des CSS. Bewusste Entscheidung,
+  sie stehen zu lassen — ein vollständiges Raster ist gewollt. Der Dateikopf behauptete bisher
+  das Gegenteil („nicht enthalten ist, was der Bestand nicht nutzt") und wurde korrigiert.
+
 ## 2026-09-11 (91)
 
 ### refactor (Phase J0: Breakpoints aus `@db-ux/core-foundations`)

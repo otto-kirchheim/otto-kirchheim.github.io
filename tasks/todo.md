@@ -478,9 +478,22 @@ Ende auf `<head>` + einen React-Root.
       Spaltenstufen ALLER Tabellen neu beurteilt -- ein reiner
       Skalentausch haette Kernspalten zu weit nach oben geschoben (EWT bei 1000 px: 4 von 14).
       Details im `CHANGELOG.md` (91).
-      **Rest von J0 offen:** J-Q1 (helpers-Mixins fuer Fokus-Ringe, visually-hidden, Divider,
-      Interaktiv-Zustaende) und J-Q3 (`utilities.scss`/`raster.scss` inhaltlich gegen
-      foundations abgleichen) sind noch nicht angefasst.
+      **J-Q1 erledigt:** Von den helpers-Mixins ist genau eines uebernommen -- das
+      `[hidden]`-Muster aus `_display.scss` (die `d-*`-Klassen schlugen mit ihrem `!important`
+      die UA-Regel `[hidden]`, `el.hidden = true` war damit wirkungslos). Der Rest passt
+      NICHT und bleibt bewusst Eigenbau, jeweils mit Grund: `%a11y-visually-hidden` nutzt das
+      abgekuendigte `clip: rect()` (Projektfassung mit `clip-path` ist moderner),
+      `get-focus-placeholder` ist ein `:focus-visible`-Ring in Informational-Farbe (das
+      einzige Outline im Projekt ist die Onboarding-Hervorhebung in Markenfarbe), `divider`
+      hat kein Gegenstueck (keine handgebauten Trenner-Pseudoelemente), `interactive-bg`
+      zielt auf Disabled-bewusste Button-Hintergruende (die 9 `:hover` im Projekt sitzen auf
+      Tabellenzeilen), `px-to-em` hat keinen Eigenbau mehr.
+      **J-Q3 erledigt:** foundations liefert kein Utility-System (nur Tokens + 9 Klassen
+      `db-divider-*`/`db-focus-default`) -- es gibt nichts 1:1 zu ersetzen. Das
+      Skript-Inventar aus dem gebauten CSS zeigt 697 von 901 Utility-Klassen ungenutzt
+      (3,6 KB gz); auf Entscheidung des Users bleiben sie stehen, weil ein vollstaendiges
+      Raster gewollt ist. Der Dateikopf von `utilities.scss` behauptete das Gegenteil und
+      wurde korrigiert.
 - [ ] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (+ neuer Render-Test).
 - [ ] **J2 FormularEditor** (15 Dateien, + schmale Render-Tests fuer `FeldZeile`,
       `TabellenBlock`, `feldPanelGemeinsam`, `SchriftartDialog`).

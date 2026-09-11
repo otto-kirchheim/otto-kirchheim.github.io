@@ -3,8 +3,15 @@
 // Dateien bleiben damit unveraendert, und die Umstellung bleibt auf diese Datei begrenzt.
 // Werte und Farben kommen aber aus den DB-Tokens, nicht aus Bootstraps Scale -- deshalb sind
 // die Abstaende hier auf die `--db-spacing-*`-Stufen abgebildet und nicht auf .25/.5/1/1.5/3rem.
-// Nicht enthalten ist alles, was der Bestand nicht nutzt. Wer eine neue Hilfsklasse braucht,
-// ergaenzt sie hier -- ein `grep` auf den Namen zeigt, ob es sie schon gibt.
+// Die Schleifen unten erzeugen das VOLLSTAENDIGE Raster (jede Stufe x jeder Breakpoint), nicht
+// nur die belegten Kombinationen: von 901 erzeugten Klassen sind 697 aktuell ungenutzt. Das ist
+// Absicht -- wer `mt-5` schreibt, soll es vorfinden. Kosten dafuer sind 3,6 KB gzip (3,8 % des
+// CSS-Bundles), gemessen 2026-09-11; Utility-CSS ist hochgradig repetitiv und komprimiert gut.
+// Das Inventar gehoert aus dem GEBAUTEN CSS ermittelt, nicht per grep ueber diese Datei -- die
+// Klassennamen entstehen erst durch die Schleifen (siehe `tasks/lessons.md`).
+//
+// `@db-ux/core-foundations` ist hier KEIN Ersatz: das Paket liefert Tokens und genau neun
+// Hilfsklassen (`db-divider-*`, `db-focus-default`), kein Utility-System.
 
 @use 'sass:math';
 @use 'sass:string';
