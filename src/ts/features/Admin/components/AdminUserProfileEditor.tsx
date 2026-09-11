@@ -1,4 +1,4 @@
-import { DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerHeader, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -374,15 +374,17 @@ export function AdminUserProfileEditor({
                     <code className="small text-muted">…{row.User.slice(-8)}</code>
                   </td>
                   <td className="text-end">
-                    <button
-                      className="db-button py-0"
-                      data-variant="outlined"
-                      data-size="small"
+                    <DBButton
+                      type="button"
+                      className="py-0"
+                      variant="outlined"
+                      size="small"
+                      icon="pen"
+                      noText
                       onClick={() => openEdit(row)}
-                      title="Bearbeiten"
                     >
-                      <span className="db-icon db-font-size-sm" data-icon="pen" />
-                    </button>
+                      <DBTooltip>Bearbeiten</DBTooltip>
+                    </DBButton>
                   </td>
                 </tr>
               ))}
@@ -397,35 +399,36 @@ export function AdminUserProfileEditor({
             Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
           <div className="knopfgruppe">
-            <button
-              className="db-button"
-              data-variant="outlined"
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
             >
               ‹
-            </button>
-            <button
-              className="db-button"
-              data-variant="outlined"
+            </DBButton>
+            <DBButton
+              type="button"
+              variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
             >
               ›
-            </button>
+            </DBButton>
           </div>
         </div>
       )}
 
       <div className="text-end mt-2">
-        <button className="db-button" data-variant="outlined" data-size="small" onClick={() => loadPage(currentPage)}>
-          <span
-            className="db-icon me-1 db-font-size-sm"
-            data-icon="circular_arrows"
-            style={{ verticalAlign: 'middle' }}
-          />
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
+          icon="circular_arrows"
+          onClick={() => loadPage(currentPage)}
+        >
           Aktualisieren
-        </button>
+        </DBButton>
       </div>
 
       {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
@@ -527,11 +530,11 @@ export function AdminUserProfileEditor({
                     {/* emailVerified */}
                     <div>
                       <div className="small text-muted mb-1">emailVerified</div>
-                      <button
-                        className="db-button"
-                        data-variant={edit.emailVerified ? 'filled' : 'outlined'}
+                      <DBButton
+                        type="button"
+                        variant={edit.emailVerified ? 'filled' : 'outlined'}
                         data-color={edit.emailVerified ? 'successful' : undefined}
-                        data-size="small"
+                        size="small"
                         onClick={handleToggleEmailVerified}
                       >
                         {edit.emailVerified === null
@@ -539,7 +542,7 @@ export function AdminUserProfileEditor({
                           : edit.emailVerified
                             ? 'true ✓'
                             : 'false – umschalten'}
-                      </button>
+                      </DBButton>
                       {edit.emailVerified === null && (
                         <div className="small text-muted mt-1">Klicken zum Setzen auf true</div>
                       )}
@@ -559,16 +562,18 @@ export function AdminUserProfileEditor({
                           <span className="small">
                             {pk.name ?? 'Passkey'} <code className="text-muted">…{pk.credentialId.slice(-8)}</code>
                           </span>
-                          <button
-                            className="db-button py-0"
-                            data-variant="outlined"
+                          <DBButton
+                            type="button"
+                            className="py-0"
+                            variant="outlined"
                             data-color="critical"
-                            data-size="small"
+                            size="small"
+                            icon="bin"
+                            noText
                             onClick={() => handleDeletePasskey(pk.credentialId)}
-                            title="Passkey löschen"
                           >
-                            <span className="db-icon db-font-size-xs" data-icon="bin" />
-                          </button>
+                            <DBTooltip>Passkey löschen</DBTooltip>
+                          </DBButton>
                         </div>
                       ))}
                     </div>
@@ -577,10 +582,10 @@ export function AdminUserProfileEditor({
               </div>
 
               <div className="dialog-fuss">
-                <button className="db-button" data-variant="filled" onClick={closeEdit} disabled={edit.saving}>
+                <DBButton type="button" variant="filled" onClick={closeEdit} disabled={edit.saving}>
                   Schließen
-                </button>
-                <button className="db-button" data-variant="brand" onClick={saveEdit} disabled={edit.saving}>
+                </DBButton>
+                <DBButton type="button" variant="brand" onClick={saveEdit} disabled={edit.saving}>
                   {edit.saving ? (
                     <>
                       <span className="laedt me-1" data-size="small" role="status" />
@@ -589,7 +594,7 @@ export function AdminUserProfileEditor({
                   ) : (
                     'Profil speichern'
                   )}
-                </button>
+                </DBButton>
               </div>
             </div>
           </DBDrawer>,

@@ -10,6 +10,7 @@ import {
   upsertVorgabeByYear,
   type BackendVorgabe,
 } from '../utils/api';
+import { DBButton } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 export function AdminVorgabenEditor() {
@@ -201,15 +202,9 @@ export function AdminVorgabenEditor() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">VorgabenGeld</h5>
-        <button
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
-          onClick={handleCreateYear}
-          data-disabler
-        >
+        <DBButton type="button" variant="outlined" size="small" onClick={handleCreateYear} data-disabler>
           Jahr anlegen
-        </button>
+        </DBButton>
       </div>
 
       <div className="raster mb-3 abstand-2">
@@ -238,16 +233,16 @@ export function AdminVorgabenEditor() {
 
       <div className="d-flex justify-content-between align-items-center mb-2">
         <label className="mb-0">Monatswerte</label>
-        <button
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="small"
           onClick={addMonthEntry}
           disabled={loading || saving || !selectedYear}
           data-disabler
         >
           Monat hinzufügen
-        </button>
+        </DBButton>
       </div>
 
       <div className="d-flex flex-column gap-3">
@@ -275,17 +270,17 @@ export function AdminVorgabenEditor() {
                 />
               </div>
 
-              <button
-                className="db-button"
-                data-variant="outlined"
+              <DBButton
+                type="button"
+                variant="outlined"
                 data-color="critical"
-                data-size="small"
+                size="small"
                 onClick={() => removeMonthEntry(index)}
                 disabled={loading || saving || !selectedYear || monthEntries.length <= 1}
                 data-disabler
               >
                 Entfernen
-              </button>
+              </DBButton>
             </div>
 
             <div className="raster abstand-2">
@@ -310,25 +305,25 @@ export function AdminVorgabenEditor() {
       </div>
 
       <div className="d-flex gap-2 mt-3">
-        <button
-          className="db-button"
-          data-variant="brand"
+        <DBButton
+          type="button"
+          variant="brand"
           onClick={handleSave}
           disabled={saving || loading || !selectedYear}
           data-disabler
         >
           {saving ? 'Speichert...' : 'Speichern'}
-        </button>
-        <button
-          className="db-button"
-          data-variant="outlined"
+        </DBButton>
+        <DBButton
+          type="button"
+          variant="outlined"
           data-color="critical"
           onClick={handleDelete}
           disabled={saving || loading || !selectedYear}
           data-disabler
         >
           Löschen
-        </button>
+        </DBButton>
       </div>
     </div>
   );

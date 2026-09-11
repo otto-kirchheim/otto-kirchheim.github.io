@@ -1,4 +1,4 @@
-import { DBInfotext, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useMemo, useState } from 'react';
 
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
@@ -316,25 +316,19 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
           </div>
         </div>
         <div className="d-flex justify-content-end gap-2">
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+          <DBButton
+            variant="outlined"
+            size="small"
             type="button"
+            icon="circular_arrows"
             onClick={() => void refreshUsersNow()}
           >
             <DBTooltip placement="top">Lädt die Benutzerliste sofort neu</DBTooltip>
-            <span
-              className="db-icon me-1 db-font-size-sm"
-              data-icon="circular_arrows"
-              style={{ verticalAlign: 'middle' }}
-            />
             Aktualisieren
-          </button>
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+          </DBButton>
+          <DBButton
+            variant="outlined"
+            size="small"
             type="button"
             onClick={resetFilters}
             disabled={!filter.name && !filter.oe && !filter.role}
@@ -342,7 +336,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
             <DBTooltip placement="top">Setzt Name-, OE- und Rollenfilter zurück</DBTooltip>
             <span className="app-icon app-icon--filter-off me-1 db-font-size-sm" style={{ verticalAlign: 'middle' }} />
             Filter zurücksetzen
-          </button>
+          </DBButton>
         </div>
       </div>
 
@@ -367,17 +361,13 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
           {isSuperAdmin && selectableUsers.length > 0 && (
             <div className="mb-0">
-              <div className="db-checkbox" data-size="small">
-                <label>
-                  <input
-                    type="checkbox"
-                    id="adminUserSelectAll"
-                    checked={allSelectableSelected}
-                    onChange={toggleSelectAll}
-                  />
-                  Alle auswählen
-                </label>
-              </div>
+              <DBCheckbox
+                size="small"
+                id="adminUserSelectAll"
+                label="Alle auswählen"
+                checked={allSelectableSelected}
+                onChange={toggleSelectAll}
+              />
             </div>
           )}
           <span className="text-body-secondary small">{visibleUsers.length} Benutzer gefunden</span>
@@ -388,19 +378,12 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
       {isSuperAdmin && selectedUsers.length > 0 && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border bg-body-tertiary sticky-top">
           <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
-          <button className="db-button" data-variant="brand" data-size="small" type="button" onClick={openBulkEdit}>
-            <span className="db-icon me-1 db-font-size-sm" data-icon="pen" style={{ verticalAlign: 'middle' }} />
+          <DBButton variant="brand" size="small" type="button" icon="pen" onClick={openBulkEdit}>
             Massenänderung
-          </button>
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
-            type="button"
-            onClick={() => setSelectedIds(new Set())}
-          >
+          </DBButton>
+          <DBButton variant="outlined" size="small" type="button" onClick={() => setSelectedIds(new Set())}>
             Auswahl aufheben
-          </button>
+          </DBButton>
         </div>
       )}
 
