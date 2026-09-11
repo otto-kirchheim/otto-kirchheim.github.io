@@ -588,8 +588,12 @@ Ende auf `<head>` + einen React-Root.
       `createOnboardingGuideModal.tsx`, `ConflictReviewBanner.tsx` auf `DBButton` umgestellt;
       `openHelpModal.tsx` hatte keine eigenen Buttons. Kein Button mit `setLoading`-Bezug.
       Details: CHANGELOG (100).
-- [ ] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (Wrapper bleibt, Innenleben
-      getauscht; Aufrufstellen unveraendert).
+- [x] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (2026-09-11, Wrapper bleibt,
+      Innenleben getauscht; Aufrufstellen unveraendert). Zwei API-Luecken (feldKlasse,
+      huelleStyle) per neuen `useLayoutEffect`-Helfern in `dbFeldHelfer.ts` geschlossen
+      (`useSofortigeKlasse`, `useSofortigeHuelleStyle`) -- kein zusaetzlicher DOM-Wrapper, sonst
+      haette der `.feldgruppe > .db-input`-Selektor (styles.scss) nicht mehr gegriffen.
+      Puppeteer-verifiziert inkl. dieses Falls. Details: CHANGELOG (101).
 - [ ] **J9 Cleanup + Doku** (Grep-Gate, `agent-cli`, CLAUDE.md/Skills/CHANGELOG,
       `graphify update .`).
 

@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (101)
+
+### refactor (Phase J8: `DbFeld`/`DbAuswahl` auf `DBInput`/`DBSelect` umgestellt)
+
+- Innenleben von handgeschriebenem `<div class="db-input">`+`<label>`+`<input>` auf echtes
+  `DBInput`/`DBSelect` umgestellt. Aufrufstellen-API unverändert — alle 36/28 Aufrufstellen
+  bleiben unangetastet.
+- Drei API-Lücken von `DBInput`/`DBSelect` per neuen Helfern in `dbFeldHelfer.ts` geschlossen
+  (`useLayoutEffect`, wie schon `useSofortigeId` aus J1): `useSofortigeKlasse` (`feldKlasse`
+  hat keine Entsprechung — `className` landet nur an der Hülle), `useSofortigeHuelleStyle`
+  (`huelleStyle` über Props nicht erreichbar — `style` landet am inneren Feld; ein zusätzlicher
+  Wrapper hätte `.feldgruppe > .db-input`/`.db-select`, styles.scss:61-73, gebrochen, weil die
+  Hülle dann kein direktes Kind mehr wäre — stattdessen `ref.current.parentElement` direkt
+  gestylt).
+- `db-ux/input-type-required`/`select-requires-options`: erwartete False-Positives (Props/
+  Children kommen von der Aufrufstelle) — per `eslint-disable-next-line` entschärft, exakt das
+  etablierte Muster aus `MyInput.tsx`/`MySelect.tsx`.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0
+  (alle Aufrufstellen unverändert grün, keine Testanpassung nötig) · `build` grün. Puppeteer:
+  `.feldgruppe`-Direct-Child-Selektor trifft weiterhin zu, huelleStyle/feldKlasse/dicht/id/
+  Label-Verknüpfung/ungueltig-Validierung/DbAuswahl-Optionen alle korrekt.
+
 ## 2026-09-11 (100)
 
 ### refactor (Phase J7: restliches `My*`/`core/`-Markup auf `DBButton`)
