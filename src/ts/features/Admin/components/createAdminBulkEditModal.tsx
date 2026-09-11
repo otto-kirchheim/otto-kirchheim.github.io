@@ -19,6 +19,7 @@ import { BulkEditSimpleFieldsBlock, SIMPLE_FIELD_KEYS, type SimpleFieldState } f
 import { BulkEditApplySourceBlock, type ApplySource } from './BulkEditApplySourceBlock';
 import { BulkEditAdminOesBlock, type AdminOeActionState } from './BulkEditAdminOesBlock';
 import { BulkEditPreviewTable, type PreviewFieldKey } from './BulkEditPreviewTable';
+import { DBButton, DBTag } from '@db-ux/react-core-components';
 import { MAX_OE_LEVELS } from './OeLevelInputs';
 
 type Step = 'form' | 'preview' | 'result';
@@ -284,48 +285,29 @@ export function AdminBulkEditModal({
   const footer = (
     <div className="dialog-fuss">
       {step === 'preview' && (
-        <button
-          type="button"
-          className="db-button"
-          data-variant="outlined"
-          disabled={busy}
-          onClick={() => setStep('form')}
-        >
+        <DBButton type="button" variant="outlined" disabled={busy} onClick={() => setStep('form')}>
           Zurück
-        </button>
+        </DBButton>
       )}
-      <button type="button" className="db-button" data-variant="filled" data-dialog-dismiss="modal">
+      <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
         {step === 'result' ? 'Schließen' : 'Abbrechen'}
-      </button>
+      </DBButton>
       {step === 'form' && (
-        <button
-          type="button"
-          className="db-button"
-          data-variant="brand"
-          disabled={busy}
-          onClick={() => void runPreview()}
-        >
+        <DBButton type="button" variant="brand" disabled={busy} onClick={() => void runPreview()}>
           {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
           Vorschau
-        </button>
+        </DBButton>
       )}
       {step === 'preview' && (
-        <button
-          type="button"
-          className="db-button"
-          data-variant="filled"
-          data-color="critical"
-          disabled={busy}
-          onClick={() => void runApply()}
-        >
+        <DBButton type="button" variant="filled" data-color="critical" disabled={busy} onClick={() => void runApply()}>
           {busy && <span className="laedt me-2" data-size="small" aria-hidden="true" />}
           {preview ? `${preview.summary.ok} Profile ändern` : 'Änderungen anwenden'}
-        </button>
+        </DBButton>
       )}
       {step === 'result' && (
-        <button type="button" className="db-button" data-variant="brand" onClick={closeModal}>
+        <DBButton type="button" variant="brand" onClick={closeModal}>
           Fertig
-        </button>
+        </DBButton>
       )}
     </div>
   );
@@ -424,13 +406,13 @@ export function AdminBulkEditModal({
                   .filter(entry => entry.status !== 'ok')
                   .map(entry => (
                     <li className="trennliste-eintrag px-0" key={entry.userId}>
-                      <span
-                        className="db-tag me-2"
-                        data-semantic={entry.status === 'error' ? 'critical' : 'neutral'}
-                        data-emphasis="strong"
+                      <DBTag
+                        className="me-2"
+                        semantic={entry.status === 'error' ? 'critical' : 'neutral'}
+                        emphasis="strong"
                       >
                         {entry.status === 'error' ? 'Fehler' : 'Übersprungen'}
-                      </span>
+                      </DBTag>
                       {entry.userName}
                       {entry.message && <span className="text-body-secondary"> — {entry.message}</span>}
                     </li>
