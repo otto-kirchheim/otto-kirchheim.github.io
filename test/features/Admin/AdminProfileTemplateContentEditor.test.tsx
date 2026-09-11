@@ -91,11 +91,9 @@ describe('AdminProfileTemplateContentEditor', () => {
     const { container, spies } = zeichne();
     klickeCheckbox(abschnittsSchalter(container, 'Einstellungen'), true);
 
-    const ersteZulage = container.querySelectorAll(
-      '.db-checkbox input[type="checkbox"]',
-    )[// die ersten vier Checkboxen sind die sichtbaren Bereiche (TAB_OPTIONS)
-    4] as HTMLInputElement;
-    klickeCheckbox(ersteZulage, true);
+    // Die ersten vier Checkboxen sind die sichtbaren Bereiche (TAB_OPTIONS), danach die Zulagen.
+    const alle = container.querySelectorAll<HTMLInputElement>('.db-checkbox input[type="checkbox"]');
+    klickeCheckbox(alle[4], true);
 
     expect(spies.onToggleZulage).toHaveBeenCalled();
   });
