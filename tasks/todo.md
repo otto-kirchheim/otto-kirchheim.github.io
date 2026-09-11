@@ -571,7 +571,14 @@ Ende auf `<head>` + einen React-Root.
       DOM (dieselbe Bugklasse wie der "haengende Schalter" bei `DBSwitch`). Fix: genereller
       Poll-Helfer statt fixer Tick-Zahl.
       Details: CHANGELOG (97).
-- [ ] **J6 Feature-Tab-Buttons** (`data-disabler` + `buttonDisable.ts`-Selektor pruefen).
+- [x] **J6 Feature-Tab-Buttons** (2026-09-11). Buttons selbst bereits in J5 konvertiert;
+      J6-Rest war die `buttonDisable.ts`-Verifikation. Per Puppeteer echten Fehler gefunden:
+      `clearLoading(id)` setzte `disabled` eines Buttons per Re-Render zurueck, auch wenn ein
+      GLOBALES `buttonDisable(true)` fuer einen ANDEREN Button noch aktiv war (`DBLoadingButton`
+      kannte nur den eigenen Ladezustand). Fix: neuer `globalDisableStore` +
+      `useGlobalDisabled`-Hook (analog `buttonLoadingStore`), `buttonDisable.ts` schreibt
+      zusaetzlich in den Store, `DBLoadingButton` verrechnet `disabled || loading || globalDisabled`.
+      Details: CHANGELOG (98).
 - [ ] **J6b `MyButton` aufloesen** -> `DBButton`.
 - [ ] **J7 `My*`- + `core/`-Rest-Markup.**
 - [ ] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (Wrapper bleibt, Innenleben

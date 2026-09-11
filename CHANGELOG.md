@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (98)
+
+### fix (Phase J6: `buttonDisable.ts` gegen `DBLoadingButton` abgesichert)
+
+- Puppeteer-Test aufgedeckt: `clearLoading(id)` setzt den `disabled`-Prop des jeweiligen
+  Buttons per Re-Render auf `false` zurück, auch wenn ein globales `buttonDisable(true)`
+  (z.B. während ein anderer Button speichert) noch aktiv sein sollte — `DBLoadingButton`
+  kannte nur seinen eigenen Ladezustand, nicht den globalen Disable-Sweep aus
+  `buttonDisable.ts` (setzt `[data-disabler]` direkt am DOM, an React vorbei).
+- Neuer `globalDisableStore` + `useGlobalDisabled`-Hook, analog zum `buttonLoadingStore`
+  aus J5. `buttonDisable.ts` behält den DOM-Sweep (für noch-native Buttons) und schreibt
+  zusätzlich in den Store; `DBLoadingButton` verrechnet
+  `disabled || loading || globalDisabled`.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2128/0 ·
+  `build` grün; Puppeteer-Szenario (globales Disable während eines Sibling-Ladezyklus)
+  zeigt jetzt korrektes Verhalten.
+
 ## 2026-09-11 (97)
 
 ### refactor (Phase J5: Bereitschaft/EWT/Neben/EA-Tab-Buttons auf `@db-ux/react-core-components`)
