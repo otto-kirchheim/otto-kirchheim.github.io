@@ -1,4 +1,5 @@
 import type { VersionUebersicht } from './formularVersionenApi';
+import { DBButton } from '@db-ux/react-core-components';
 
 type Props = {
   versionen: VersionUebersicht[];
@@ -41,18 +42,12 @@ export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbe
               <td>{v.gueltigBis ?? <span className="text-body-secondary">offen</span>}</td>
               <td className="text-end">
                 <div className="knopfgruppe">
-                  <button type="button" className="db-button" data-variant="outlined" onClick={() => onBearbeiten(v)}>
+                  <DBButton type="button" variant="outlined" onClick={() => onBearbeiten(v)}>
                     Bearbeiten
-                  </button>
-                  <button
-                    type="button"
-                    className="db-button"
-                    data-variant="outlined"
-                    data-color="critical"
-                    onClick={() => onLoeschen(v)}
-                  >
+                  </DBButton>
+                  <DBButton type="button" variant="outlined" data-color="critical" onClick={() => onLoeschen(v)}>
                     Löschen
-                  </button>
+                  </DBButton>
                 </div>
               </td>
             </tr>

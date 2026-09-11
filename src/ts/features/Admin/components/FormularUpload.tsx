@@ -16,6 +16,7 @@ import {
   type VersionNutzdaten,
   type VersionUebersicht,
 } from './formularVersionenApi';
+import { DBButton } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
@@ -445,30 +446,28 @@ export function FormularUpload() {
       )}
 
       <div className="d-flex gap-2">
-        <button type="submit" className="db-button" data-variant="brand" disabled={speichert}>
+        <DBButton type="submit" variant="brand" disabled={speichert}>
           {speichert ? 'Speichert…' : bearbeiteId ? 'Änderungen speichern' : 'Version anlegen'}
-        </button>
+        </DBButton>
         {bearbeiteId && (
           <>
-            <button
+            <DBButton
               type="button"
-              className="db-button"
-              data-variant="outlined"
+              variant="outlined"
               disabled={speichert}
               onClick={neueVersionAusBearbeitung}
               title="Konfiguration und PDF übernehmen, aber als neue Version speichern statt die bestehende zu überschreiben"
             >
               Als neue Version anlegen
-            </button>
-            <button
+            </DBButton>
+            <DBButton
               type="button"
-              className="db-button"
-              data-variant="outlined"
+              variant="outlined"
               disabled={speichert}
               onClick={() => setzeFormularZurueck(formular)}
             >
               Bearbeiten abbrechen
-            </button>
+            </DBButton>
           </>
         )}
       </div>
