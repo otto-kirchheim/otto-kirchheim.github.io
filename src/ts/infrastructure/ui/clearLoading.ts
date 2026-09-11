@@ -1,3 +1,4 @@
+import { setButtonLoading } from './buttonLoadingStore';
 import { takeOriginalButtonContent } from './loadingButtonState';
 
 export default function clearLoading(btn: string, resetLoader: boolean = true): void {
@@ -8,6 +9,11 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
 
   // Ladebreiten-Fixierung aus `setLoading` wieder loesen.
   btnElement.style.minInlineSize = '';
+
+  if (btnElement.dataset['reactLoading'] === 'true') {
+    setButtonLoading(btn, false);
+    return;
+  }
 
   const badge = btnElement.querySelector<HTMLSpanElement>('.autosave-badge');
 

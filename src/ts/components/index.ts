@@ -1,4 +1,5 @@
 import { DbAuswahl, DbFeld } from './DbFeld';
+import DBLoadingButton from './DBLoadingButton';
 import MyButton from './MyButton';
 import MyCheckbox from './MyCheckbox';
 import MyDivModal from './MyDivModal';
@@ -17,6 +18,7 @@ import showModal, { beiModalSchliessen, oeffneDrawer, schliesseModal } from './s
 export {
   DbAuswahl,
   DbFeld,
+  DBLoadingButton,
   MyButton,
   MyCheckbox,
   MyDivModal,

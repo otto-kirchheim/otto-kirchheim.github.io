@@ -1,6 +1,8 @@
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
+import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
@@ -195,16 +197,18 @@ function BereitschaftTab() {
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Bereitschaft
-          <button
+          <DBButton
             type="button"
-            className="db-button p-0"
-            data-variant="ghost"
-            data-size="small"
+            className="p-0"
+            variant="ghost"
+            size="small"
             id="btnHelpBereitschaft"
+            icon="question_mark_circle"
+            noText
             aria-label="Hilfe anzeigen"
           >
-            <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
-          </button>
+            <DBTooltip>Hilfe anzeigen</DBTooltip>
+          </DBButton>
         </h1>
         <h4 id="MonatB"></h4>
       </div>
@@ -212,35 +216,31 @@ function BereitschaftTab() {
       <div className="mitte">
         <div className="raster-auto my-3 knopfreihe abstand-3">
           <div className="d-grid">
-            <button type="button" className="db-button" data-variant="brand" id="btnESZ" data-disabler>
-              <span className="db-icon" data-icon="plus" />
+            <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESZ" data-disabler>
               Bereitschaft
-            </button>
+            </DBLoadingButton>
           </div>
           <div className="d-grid">
-            <button type="button" className="db-button" data-variant="brand" id="btnESE" data-disabler>
-              <span className="db-icon" data-icon="plus" />
+            <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESE" data-disabler>
               Einsatz
-            </button>
+            </DBLoadingButton>
           </div>
           <div className="d-grid">
-            <button
+            <DBLoadingButton
               type="button"
-              className="db-button"
-              data-variant="filled"
+              variant="filled"
               data-color="successful"
+              icon="save"
               id="btnSaveB"
               data-disabler
             >
-              <span className="db-icon" data-icon="save" />
               Speichern
-            </button>
+            </DBLoadingButton>
           </div>
           <div className="d-grid">
-            <button type="button" className="db-button" data-variant="filled" id="btnDownloadB" data-disabler>
-              <span className="db-icon" data-icon="download" />
+            <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadB" data-disabler>
               PDF erzeugen
-            </button>
+            </DBLoadingButton>
           </div>
         </div>
       </div>
