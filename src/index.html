@@ -1042,21 +1042,7 @@
       </article>
     </dialog>
 
-    <footer
-      class="app-footer bg-body-tertiary border-top px-3 py-2 d-flex justify-content-between align-items-center"
-    >
-      <span class="text-body-secondary small" id="copyrightText" data-start-year="2021"
-        >&copy; 2021 Jan Otto | v%APP_VERSION%</span
-      >
-      <button
-        type="button"
-        class="db-button impressum"
-        data-variant="outlined"
-        data-size="small"
-        data-dialog-target="impressum"
-      >
-        Impressum
-      </button>
-    </footer>
+    <!-- Phase K1: React-Slice, siehe infrastructure/ui/AppFooter.tsx -- gemountet in main.ts. -->
+    <div id="appFooterRoot"></div>
   </body>
 </html>

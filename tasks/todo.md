@@ -620,6 +620,106 @@ Ende auf `<head>` + einen React-Root.
 bun run test && bun run build` + MCP `db-ux__verify_migrated_code` + `verify`-Skill fuer die
 beruehrten Screens + manuell Hell/Dunkel/Auto und Mobile.
 
+## Aufgaben Phase K -- App-Shell nach React (Planungsdurchgang 2026-09-11)
+
+Startbedingung erfuellt: Phase J vollstaendig abgeschlossen. Ziel laut Plan (`plan-react-umbau.md`
+Abschnitt "Phase K"): `src/index.html:38-255` + `:1043-1060` (Header, Navigation, Theme-
+Umschalter, `navdrawer`-Dialog, `impressum`-Dialog, Fusszeile) werden React, gemountet ueber
+`infrastructure/ui/reactRoot.ts` (`mount`/`unmount`, `flushSync`, WeakMap-Root-Cache -- bereits
+das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
+
+**Bestandsaufnahme (gelesen: `index.html`, `main.ts`, `tabController.ts`, `navDrawer.ts`,
+`dbDialog.ts`, `DBColorToggler.ts`, `reactRoot.ts`, graphify-Traversal ab `tabController`):**
+
+- `tabController.ts` (`data-tab-target`, `TAB_SHOWN_EVENT` = `tab:shown`) wird von JEDEM
+  Feature-Tab gebraucht (`BereitschaftTab`, `EwtTab`, `NebenTab`, `EaTab`,
+  `Einstellungen/index.ts`, `Admin/index.tsx`) sowie von `autoSave.ts` und
+  `featureLifecycleRegistry`. Kompatibilitaetsbruecke ist Pflicht bis Phase N: `data-tab-target`
+  auf den neuen React-Nav-Items, `tab:shown` weiter als `CustomEvent` auf `document` UND
+  bubblend auf dem Ausloeser, `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`-Signaturen bleiben
+  bestehen (Aufrufer: `Admin`-Feature-Registrierung, `initSequence.ts`, `Berechnung`-Monatswechsel).
+- `navDrawer.ts` zieht die Navigation per `prepend()` physisch zwischen Kopfzeile und Schublade
+  um (Grund: feste Ids, keine doppelte Navigation). Sobald `DBHeader`/`DBNavigation` React-Bauteile
+  sind, kann React sie zweimal rendern (Desktop + Drawer) und die Ids selbst vergeben -- der
+  Umzugs-Kniff entfaellt mit der Nav-Migration (K5/K6), nicht schon mit dem Drawer selbst (K4:
+  `DBDrawer` als Huelle bekommt erst in K5 echten React-Navigationsinhalt).
+- `initStatischeDialoge()` (`dbDialog.ts`) bedient `data-dialog-target`/`data-action="close"` fuer
+  IRGENDEIN `<dialog>` im Baum -- nicht nur Impressum. Nach K3 (Impressum -> `DBDrawer` mit
+  eigenem React-State) bleibt die Funktion fuer eventuelle andere statische Dialoge stehen, bis
+  keiner mehr uebrig ist (Grep-Gate am Ende von K).
+- `DBColorToggler.ts` liest/schreibt ausschliesslich per `document.querySelector` +
+  `data-theme-value`/`#bd-theme*`-Ids; wird in K2 zu einem Hook (`useColorMode`), Storage-Key
+  `theme` und die `data-mode`/`color-scheme`-Logik am `<html>`-Element bleiben exakt gleich.
+- `reactRoot.mount`/`unmount` ist synchron (`flushSync`) und bereits das App-Muster fuer
+  DOM-Interop -- kein neuer Mechanismus noetig fuer den Header-Root.
+
+**Slices (je 1 PR, aufsteigendes Risiko, analog Phase J):**
+
+- [ ] **K0 Root-Punkt.** `<header id="appHeader">` bekommt einen leeren Mount-Container
+      (`<div id="appHeaderRoot">`), `main.ts` mountet eine `<AppHeader/>`-Platzhalterkomponente
+      hinein (noch ohne Inhalt/Verhalten) -- reine Verkabelung, damit K1-K5 iterativ Inhalt
+      nachliefern koennen, statt am Ende in einem Big-Bang-Slice zu mounten.
+- [x] **K1 Fusszeile** (2026-09-11). `<footer class="app-footer">` -> `<AppFooter/>`
+      (`infrastructure/ui/AppFooter.tsx`), gemountet ueber `<div id="appFooterRoot">` in
+      `index.html` + `mount()` aus `reactRoot.ts` in `main.ts` (per `createElement`, kein JSX in
+      `main.ts` -- die Umbenennung zu `main.tsx` bleibt bewusst Phase N vorbehalten).
+      Copyright-Jahr/-Version wandert von `main.ts:setImpressumAndCopyright` (DOM-Textzuweisung)
+      in den Komponenten-Render (`dayjs()` + `import.meta.env.APP_VERSION`); die Funktion heisst
+      jetzt `setImpressum` und bedient nur noch Telefon/Mail-Verschleierung. Impressum-Button
+      bleibt bewusst natives `data-dialog-target="impressum"` (als `DBButton`) -- der Dialog
+      selbst haengt bis K3 am alten `dbDialog.ts`-Delegationsmechanismus, der ist
+      ausloeser-agnostisch. CSS-Vertrag `footer > .impressum { pointer-events: all }`
+      (styles.scss:601) beachtet: `DBButton` bleibt direktes Kind von `<footer>`.
+      Puppeteer-verifiziert: Footer-Text/-Button korrekt gerendert, Impressum-Dialog
+      oeffnet/schliesst weiterhin, Dark-Mode-Umschaltung unveraendert. Details: CHANGELOG (103).
+- [ ] **K2 Theme-Umschalter.** `db-header-navigation-item-expand-button` + `db-sub-navigation`
+      (`#bd-theme*`) als `<ThemeSwitcher/>`-Komponente mit `useColorMode`-Hook; `DBColorToggler.ts`
+      wird abgeloest, Storage-Key `theme` und `data-mode`-Attribut auf `<html>` bleiben identisch
+      (Verifikation: Hell/Dunkel/Auto + OS-Automatik-Wechsel manuell, wie bisher in Phase I/J
+      geprueft).
+- [ ] **K3 Impressum-Dialog.** `<dialog id="impressum">` -> `DBDrawer` mit eigenem
+      offen/geschlossen-React-State; Ausloeser (Footer-Button aus K1) setzt den State statt
+      `data-dialog-target`. Inhalt (Kontaktdaten, `impressumTelefon`/`impressumMail`-Verschleierung
+      aus `main.ts`) wandert mit rein.
+- [ ] **K4 NavDrawer-Huelle.** `<dialog id="navdrawer">` -> `DBDrawer` (Header „Nebengeld" +
+      Schliessen-Button), aber **noch mit dem alten `navDrawer.ts`-Umzugs-Kniff** fuer den
+      Navigationsinhalt -- Trennung von Huelle (K4) und Navigationsinhalt (K5) haelt jeden Slice
+      klein und einzeln testbar.
+- [ ] **K5 Header/Brand/Navigation.** `DBHeader`+`DBBrand`+`DBNavigation`/`DBNavigationItem`
+      ersetzen das handgeschriebene `db-header`-Markup; Navigation wird EINMAL als React-Baum
+      formuliert und zweimal gerendert (Kopfzeile + Drawer-Inhalt aus K4) -- `navDrawer.ts`
+      entfaellt vollstaendig, die Ids vergibt React (`useId` oder feste Suffixe pro Kontext).
+      `data-tab-target`/`role="tab"`/`aria-selected`/`aria-controls`/`tabindex` exakt wie bisher
+      pro Item, damit `tabController.ts` unveraendert weiterlaeuft (Kompat-Bruecke, s. o.).
+      Login-Button (`#btnLogin`) und Monats-`<select>` (`#MonatFeld`) im
+      `db-header-primary-action` ziehen mit um, bleiben aber unveraendertes Markup/Verhalten
+      (Login-Modal-Anbindung, `changeMonatJahr`) -- nur der umschliessende JSX-Baum ist neu.
+- [ ] **K6 `tabController` -> React-State.** Aktiver Tab + Hash-Sync als Hook
+      (`useActiveTab`/Kontext), von `AppHeader`/`AppNavigation` UND den bestehenden
+      `.tab-pane`-Containern (noch statisches HTML bis Phase L) gemeinsam genutzt. Pflicht-
+      Kompatbruecke bleibt bestehen: `data-tab-target` weiter auf jedem Panel/Schalter lesbar,
+      `tab:shown`-`CustomEvent` weiter auf `document` UND bubblend ausgeloest (Feature-
+      Lifecycle/AutoSave/Berechnung-Monatswechsel hoeren darauf), `zeigeTab`/`zeigeTabAusHash`/
+      `setzeTabSichtbar`-Exporte bleiben als duenne Wrapper um den Hook-State bestehen, damit
+      `Admin`s `setzeTabSichtbar`-Aufruf und `initSequence.ts` unveraendert funktionieren.
+      A11y-Risiko aus dem Plan beachten: `role="tablist"`, `aria-selected`, roving `tabindex`
+      duerfen nicht schlechter werden; `d-none`-Sichtbarkeit (Admin, optionale Bereiche) wandert
+      von `main.ts`/`syncFeatureTabs` in den React-State.
+- [ ] **K7 Cleanup + Doku.** Tote Dateien (`navDrawer.ts`, ggf. `dbDialog.ts` falls kein
+      statischer Dialog mehr uebrig, `DBColorToggler.ts`) loeschen; Grep-Gate
+      `rg 'data-dialog-target|prepend\(navigation\)' src/ts`; `frontend/CLAUDE.md`,
+      `.claude/skills/architektur` (Hybrid-Rendering-Absatz veraltet danach), `CHANGELOG.md`,
+      dieser Abschnitt hier auf "abgeschlossen"; `graphify update .`.
+
+**Bewusst NICHT in K (bleibt Phase L/M/N):** Tab-Panel-Inhalte (`#start`, `#Berechnung`,
+`#Einstellungen`) bleiben statisches HTML in `index.html`, nur ihre Sichtbarkeits-/Aktiv-Logik
+haengt ab K6 am neuen State. `CustomTable`, `main.tsx`-Umbenennung, restlicher `index.html`-Body.
+
+**Verifikation je Slice:** wie Phase J (`typecheck && lint && lint:css && test && build` +
+`db-ux__verify_migrated_code` + `verify`-Skill) **zusaetzlich** Deep-Link `#EWT` nach jedem
+Slice pruefen (Hash-Sync darf nie brechen) und Mobile-Viewport < 768 px fuer Drawer/Burger-Menu
+(K4/K5).
+
 ---
 
 # Aktueller Plan: DB-UX-Migration -- Phase H (Bootstrap vollstaendig raus) - 2026-09-08

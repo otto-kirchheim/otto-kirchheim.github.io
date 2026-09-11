@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (103)
+
+### refactor (Phase K1: Fusszeile nach React)
+
+- `<footer class="app-footer">` (Copyright-Zeile + Impressum-Button) als `AppFooter`-Komponente
+  (`infrastructure/ui/AppFooter.tsx`) neu gebaut, gemountet über `reactRoot.mount()` in
+  `main.ts`. Erster React-Slice der App-Shell-Migration (Phase K).
+- Copyright-Jahr/-Version-Berechnung (`main.ts:setImpressumAndCopyright`) in den
+  Komponenten-Render verlagert; die Funktion heißt jetzt `setImpressum` und kümmert sich nur
+  noch um Telefon-/Mail-Verschleierung im Impressum-Dialog.
+- Impressum-Button bleibt bewusst natives `data-dialog-target="impressum"` (jetzt als
+  `DBButton`) — der Dialog selbst hängt bis Phase K3 am bestehenden `dbDialog.ts`-Mechanismus.
+
 ## 2026-09-11 (102)
 
 ### docs (Phase J9: Cleanup + Doku -- Phase J abgeschlossen)

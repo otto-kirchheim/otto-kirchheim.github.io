@@ -8,7 +8,6 @@ import { default as compareVersion } from '@/infrastructure/validation/compareVe
 import { default as initializeColorModeToggler } from '@/infrastructure/ui/DBColorToggler';
 import { default as setOffline } from '@/infrastructure/ui/setOffline';
 import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
-import dayjs from '@/infrastructure/date/configDayjs';
 import { registerHook, featureLifecycleRegistry } from './core/hooks';
 import type { FeatureContext } from './core/hooks';
 import { validateAllSequences, markStep } from './core/orchestration/initSequence';
@@ -79,12 +78,18 @@ console.log(pwaInfo);
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
 import { initStatischeDialoge } from '@/infrastructure/ui/dbDialog';
+import { createElement } from 'react';
+import { mount } from '@/infrastructure/ui/reactRoot';
+import AppFooter from '@/infrastructure/ui/AppFooter';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
 registerAppStartTask(() => {
-  setImpressumAndCopyright();
+  const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
+  if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
+
+  setImpressum();
 
   // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
   initTabController();
@@ -122,17 +127,7 @@ registerAppStartTask(() => {
 
   if (Storage.check('Benutzer') && zeigeTabAusHash()) window.scrollTo(0, 1);
 
-  function setImpressumAndCopyright() {
-    const copyrightElement = document.querySelector<HTMLSpanElement>('#copyrightText');
-    if (copyrightElement) {
-      const startYearRaw = copyrightElement.dataset.startYear;
-      const startYear = Number.parseInt(startYearRaw ?? '2021', 10);
-      const currentYear = dayjs().year();
-      const yearLabel =
-        Number.isFinite(startYear) && startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
-      copyrightElement.textContent = `© ${yearLabel} Jan Otto | v${import.meta.env.APP_VERSION}`;
-    }
-
+  function setImpressum() {
     const telefonElement = document.querySelector<HTMLSpanElement>('#impressumTelefon');
     const mailElement = document.querySelector<HTMLAnchorElement>('#impressumMail');
     if (telefonElement) {
@@ -150,9 +145,9 @@ registerAppStartTask(() => {
 
   // Direkt nach DOMContentLoaded (defer) und auch im load-Event aufrufen
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setImpressumAndCopyright);
+    document.addEventListener('DOMContentLoaded', setImpressum);
   } else {
-    setImpressumAndCopyright();
+    setImpressum();
   }
   markStep('boot', 'boot:main-ui');
 });
