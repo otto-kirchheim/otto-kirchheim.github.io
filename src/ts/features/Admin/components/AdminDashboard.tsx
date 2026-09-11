@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard, formatUptime } from './adminDashboardCharts';
+import { DBButton, DBTag } from '@db-ux/react-core-components';
 
 const ROLE_LABELS: Record<string, string> = {
   member: 'Mitglied',
@@ -99,15 +100,16 @@ export function AdminDashboard() {
       <div className="db-notification d-flex align-items-center gap-2" data-semantic="critical">
         <span data-area="content">
           <span>{error}</span>
-          <button
-            className="db-button ms-auto"
-            data-variant="outlined"
+          <DBButton
+            type="button"
+            className="ms-auto"
+            variant="outlined"
             data-color="critical"
-            data-size="small"
+            size="small"
             onClick={load}
           >
             Neu laden
-          </button>
+          </DBButton>
         </span>
       </div>
     );
@@ -173,9 +175,9 @@ export function AdminDashboard() {
             {Object.entries(stats.users.byRole).map(([role, count]) => (
               <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
                 <span className="small">{ROLE_LABELS[role] ?? role}</span>
-                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                <DBTag semantic="neutral" emphasis="strong">
                   {count}
-                </span>
+                </DBTag>
               </div>
             ))}
           </div>
@@ -205,14 +207,14 @@ export function AdminDashboard() {
                 <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>
                   {label}
                   {growth > 0 && (
-                    <span className="db-tag text-success ms-1" data-semantic="successful">
+                    <DBTag className="text-success ms-1" semantic="successful">
                       +{growth}
-                    </span>
+                    </DBTag>
                   )}
                 </span>
-                <span className="db-tag flex-shrink-0" data-semantic="informational" data-emphasis="strong">
+                <DBTag className="flex-shrink-0" semantic="informational" emphasis="strong">
                   {count.toLocaleString()}
-                </span>
+                </DBTag>
               </div>
             ))}
             <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
@@ -236,9 +238,9 @@ export function AdminDashboard() {
                   <span className={`db-icon ${color} db-font-size-sm`} data-icon={icon} />
                   {label}
                 </span>
-                <span className="db-tag" data-semantic="neutral" data-emphasis="strong">
+                <DBTag semantic="neutral" emphasis="strong">
                   {count}
-                </span>
+                </DBTag>
               </div>
             ))}
           </div>
@@ -258,14 +260,9 @@ export function AdminDashboard() {
       </div>
 
       <div className="text-end mt-3">
-        <button className="db-button" data-variant="outlined" data-size="small" onClick={load}>
-          <span
-            className="db-icon me-1 db-font-size-sm"
-            data-icon="circular_arrows"
-            style={{ verticalAlign: 'middle' }}
-          />
+        <DBButton type="button" variant="outlined" size="small" icon="circular_arrows" onClick={load}>
           Aktualisieren
-        </button>
+        </DBButton>
       </div>
     </div>
   );

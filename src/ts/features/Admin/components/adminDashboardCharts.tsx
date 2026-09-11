@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
+import { DBButton, DBCheckbox, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 export function formatUptime(seconds: number): { value: string; unit: string } {
@@ -298,71 +299,66 @@ export function MemoryCard({
               </option>
             ))}
           </DbAuswahl>
-          <button
-            className="db-button"
-            data-variant="outlined"
+          <DBButton
+            type="button"
+            variant="outlined"
             data-color="successful"
-            data-size="small"
+            size="small"
+            icon="line_chart"
+            showIcon={!snapping}
+            noText
             onClick={takeSnapshot}
             disabled={snapping || loading}
-            title="Manuellen Heap-Snapshot jetzt speichern"
           >
-            {snapping ? (
-              <span className="laedt" data-size="small" />
-            ) : (
-              <span className="db-icon db-font-size-sm" data-icon="line_chart" style={{ verticalAlign: 'middle' }} />
-            )}
-          </button>
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+            <DBTooltip>Manuellen Heap-Snapshot jetzt speichern</DBTooltip>
+            {snapping && <span className="laedt" data-size="small" />}
+          </DBButton>
+          <DBButton
+            type="button"
+            variant="outlined"
+            size="small"
+            icon="circular_arrows"
+            noText
             onClick={onRefresh}
             disabled={loading}
           >
-            <span className="db-icon db-font-size-sm" data-icon="circular_arrows" style={{ verticalAlign: 'middle' }} />
-          </button>
+            <DBTooltip>Aktualisieren</DBTooltip>
+          </DBButton>
         </div>
       </div>
 
       {/* ── Environment Toggles ── */}
       <div className="mb-2 d-flex gap-2" style={{ fontSize: '.85rem' }}>
-        <div className="db-checkbox" data-size="small">
-          <label>
-            <input type="checkbox" checked={visibleEnvironments.has('gcp')} onChange={() => toggleEnvironment('gcp')} />
-            <span
-              style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                background: '#4285F4',
-                borderRadius: '2px',
-                marginRight: '4px',
-              }}
-            />
-            GCP
-          </label>
-        </div>
-        <div className="db-checkbox" data-size="small">
-          <label>
-            <input
-              type="checkbox"
-              checked={visibleEnvironments.has('homeserver')}
-              onChange={() => toggleEnvironment('homeserver')}
-            />
-            <span
-              style={{
-                display: 'inline-block',
-                width: '8px',
-                height: '8px',
-                background: '#34A853',
-                borderRadius: '2px',
-                marginRight: '4px',
-              }}
-            />
-            HomeServer
-          </label>
-        </div>
+        <DBCheckbox size="small" checked={visibleEnvironments.has('gcp')} onChange={() => toggleEnvironment('gcp')}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              background: '#4285F4',
+              borderRadius: '2px',
+              marginRight: '4px',
+            }}
+          />
+          GCP
+        </DBCheckbox>
+        <DBCheckbox
+          size="small"
+          checked={visibleEnvironments.has('homeserver')}
+          onChange={() => toggleEnvironment('homeserver')}
+        >
+          <span
+            style={{
+              display: 'inline-block',
+              width: '8px',
+              height: '8px',
+              background: '#34A853',
+              borderRadius: '2px',
+              marginRight: '4px',
+            }}
+          />
+          HomeServer
+        </DBCheckbox>
       </div>
 
       {loading && !heap ? (
@@ -376,9 +372,7 @@ export function MemoryCard({
             <div className="small text-body-secondary mb-2">
               <div className="mb-1">
                 {cur.environment && (
-                  <span className="db-tag" style={{ backgroundColor: ENV_COLORS[cur.environment] }}>
-                    {ENV_LABELS[cur.environment]}
-                  </span>
+                  <DBTag style={{ backgroundColor: ENV_COLORS[cur.environment] }}>{ENV_LABELS[cur.environment]}</DBTag>
                 )}
               </div>
               <p className="mb-0">
@@ -455,12 +449,12 @@ export function MemoryCard({
                           {EVENT_LABELS[p.event]}
                         </span>
                         {p.environment && (
-                          <span
-                            className="db-tag ms-auto"
+                          <DBTag
+                            className="ms-auto"
                             style={{ backgroundColor: ENV_COLORS[p.environment], fontSize: '.7rem' }}
                           >
                             {ENV_LABELS[p.environment].split(' ')[0]}
-                          </span>
+                          </DBTag>
                         )}
                       </div>
                       <div className="text-body-secondary" style={{ fontSize: '.72rem', paddingLeft: '1.6rem' }}>
@@ -472,35 +466,33 @@ export function MemoryCard({
               </ul>
               {eventPageCount > 1 && (
                 <div className="d-flex align-items-center justify-content-between mt-2" style={{ fontSize: '.75rem' }}>
-                  <button
-                    className="db-button p-0 text-body-secondary"
-                    data-variant="ghost"
-                    data-size="small"
+                  <DBButton
+                    type="button"
+                    className="p-0 text-body-secondary"
+                    variant="ghost"
+                    size="small"
+                    icon="chevron_left"
+                    noText
                     onClick={() => setEventsPage(p => Math.max(0, p - 1))}
                     disabled={eventsPage === 0}
                   >
-                    <span
-                      className="db-icon db-font-size-sm"
-                      data-icon="chevron_left"
-                      style={{ verticalAlign: 'middle' }}
-                    />
-                  </button>
+                    <DBTooltip>Vorherige Seite</DBTooltip>
+                  </DBButton>
                   <span className="text-body-secondary">
                     {eventsPage + 1} / {eventPageCount}
                   </span>
-                  <button
-                    className="db-button p-0 text-body-secondary"
-                    data-variant="ghost"
-                    data-size="small"
+                  <DBButton
+                    type="button"
+                    className="p-0 text-body-secondary"
+                    variant="ghost"
+                    size="small"
+                    icon="chevron_right"
+                    noText
                     onClick={() => setEventsPage(p => Math.min(eventPageCount - 1, p + 1))}
                     disabled={eventsPage === eventPageCount - 1}
                   >
-                    <span
-                      className="db-icon db-font-size-sm"
-                      data-icon="chevron_right"
-                      style={{ verticalAlign: 'middle' }}
-                    />
-                  </button>
+                    <DBTooltip>Nächste Seite</DBTooltip>
+                  </DBButton>
                 </div>
               )}
             </div>
