@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { DbFeld, MyModalHeader, showModal } from '@/components';
+import { DBButton } from '@db-ux/react-core-components';
 import { issueVerificationLink, issuePasswordResetLink, type AdminIssuedLink } from '../utils/api';
 
 type LinkKind = 'verification' | 'reset';
@@ -105,10 +106,9 @@ function LinkSection({
       ) : (
         <>
           {!link && (
-            <button
-              className="db-button"
-              data-variant="outlined"
-              data-size="small"
+            <DBButton
+              variant="outlined"
+              size="small"
               type="button"
               disabled={loading}
               onClick={() => void handleIssue()}
@@ -121,7 +121,7 @@ function LinkSection({
               ) : (
                 'Link erzeugen'
               )}
-            </button>
+            </DBButton>
           )}
 
           {link && (
@@ -137,30 +137,24 @@ function LinkSection({
                 onFocus={e => e.target.select()}
               />
               <div className="d-flex flex-wrap gap-2">
-                <button
-                  className="db-button"
-                  data-variant="outlined"
-                  data-size="small"
+                <DBButton
+                  variant="outlined"
+                  size="small"
                   type="button"
+                  icon="link_chain"
                   onClick={() => void copyToClipboard(link.url, 'Link kopiert')}
                 >
-                  <span
-                    className="db-icon me-1 db-font-size-sm"
-                    data-icon="link_chain"
-                    style={{ verticalAlign: 'middle' }}
-                  />
                   Link kopieren
-                </button>
-                <button
-                  className="db-button"
-                  data-variant="outlined"
-                  data-size="small"
+                </DBButton>
+                <DBButton
+                  variant="outlined"
+                  size="small"
                   type="button"
+                  icon="copy"
                   onClick={() => void copyToClipboard(buildShareText(kind, userName, link.url), 'Text kopiert')}
                 >
-                  <span className="db-icon me-1 db-font-size-sm" data-icon="copy" style={{ verticalAlign: 'middle' }} />
                   Text kopieren
-                </button>
+                </DBButton>
               </div>
               {!link.mailSent && (
                 <p className="small text-warning-emphasis mt-2 mb-0">
@@ -203,9 +197,9 @@ function AdminUserLinksModal({
         <LinkSection kind="reset" userId={userId} userName={userName} />
       </div>
       <div className="dialog-fuss">
-        <button className="db-button" data-variant="filled" type="button" data-dialog-dismiss="modal">
+        <DBButton variant="filled" type="button" data-dialog-dismiss="modal">
           Schließen
-        </button>
+        </DBButton>
       </div>
     </div>
   );

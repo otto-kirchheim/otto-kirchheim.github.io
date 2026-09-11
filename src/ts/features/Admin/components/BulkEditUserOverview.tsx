@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { joinOeLevels } from '@/infrastructure/data/oeLevels';
 import { useDebouncedValue, matchesOeQuery } from '../utils/adminUserListHelpers';
 import type { AdminUserRow } from '../utils/api';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 /** Übersichtstabelle der für die Massenänderung ausgewählten Benutzer mit aktuellen Werten. */
@@ -59,17 +60,18 @@ export function BulkEditUserOverview({
                 <td>{joinOeLevels(user.oe) || '–'}</td>
                 <td>{user.betrieb || '–'}</td>
                 <td className="text-end">
-                  <button
+                  <DBButton
                     type="button"
-                    className="db-button text-danger p-0"
-                    data-variant="ghost"
-                    data-size="small"
-                    aria-label={`${user.fullName || user.userName} abwählen`}
+                    className="text-danger p-0"
+                    variant="ghost"
+                    size="small"
+                    icon="cross"
+                    noText
                     disabled={selectedUsers.length <= 1}
                     onClick={() => onRemoveUser(user._id)}
                   >
-                    <span className="db-icon db-font-size-md" data-icon="cross" style={{ verticalAlign: 'middle' }} />
-                  </button>
+                    <DBTooltip>{`${user.fullName || user.userName} abwählen`}</DBTooltip>
+                  </DBButton>
                 </td>
               </tr>
             ))}

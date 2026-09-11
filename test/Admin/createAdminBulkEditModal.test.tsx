@@ -4,6 +4,40 @@ import { feldMitBeschriftung, felderMitBeschriftung, render, setzeWert } from '.
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminUserRow, BulkApplyResult, BulkUserProfileUpdatePayload } from '@/features/Admin/utils/api';
 
+/**
+ * Seit der Umstellung auf `DBCheckbox`/`DBButton` (J3) vergibt DB die `id` erst per `useEffect`
+ * (`checkbox-${useId()}` als Fallback) -- direkt nach `render()` ist sie noch nicht gesetzt.
+ * `feldMitBeschriftung` (Label-Text statt `id`) ist robust dagegen; fuer Checkboxen ausserhalb
+ * eines Formular-Kontexts reicht die Suche ueber `.db-checkbox label`.
+ */
+function checkboxMitBeschriftung(wurzel: ParentNode, beschriftung: string): HTMLInputElement {
+  const treffer = [...wurzel.querySelectorAll('.db-checkbox label, .db-radio label')].find(
+    l => l.textContent?.trim() === beschriftung,
+  );
+  const input = treffer?.querySelector<HTMLInputElement>('input');
+  if (!input) throw new Error(`Checkbox/Radio "${beschriftung}" nicht gefunden`);
+  return input;
+}
+
+function knopfMitText(wurzel: ParentNode, text: string): HTMLButtonElement {
+  const knopf = [...wurzel.querySelectorAll('button')].find(b => b.textContent?.includes(text));
+  if (!knopf) throw new Error(`Knopf mit Text "${text}" nicht gefunden`);
+  return knopf;
+}
+
+/**
+ * `BulkEditAdminOesBlock` rendert zweimal (teamOes/organizationOes) mit denselben Label-Texten
+ * ("Hinzufügen"/"Entfernen") -- `name` (statisch, nicht per `useId` erzeugt) grenzt auf den
+ * richtigen Block ein, `beschriftung` waehlt darin die Option.
+ */
+function radioMitNameUndBeschriftung(wurzel: ParentNode, name: string, beschriftung: string): HTMLInputElement {
+  const treffer = [...wurzel.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${name}"]`)].find(
+    radio => radio.closest('label')?.textContent?.trim() === beschriftung,
+  );
+  if (!treffer) throw new Error(`Radio name="${name}" mit Beschriftung "${beschriftung}" nicht gefunden`);
+  return treffer;
+}
+
 const { mockBulkUpdateUserProfiles, mockFetchProfileTemplates } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }
 ).hoisted(() => ({
@@ -76,7 +110,7 @@ describe('AdminBulkEditModal', () => {
 
     expect(feldMitBeschriftung(container, 'Ebene 1 ersetzen')).toBeNull();
 
-    container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
+    checkboxMitBeschriftung(container, 'Pers.OE').click();
     await flush();
 
     const levelInputs = felderMitBeschriftung<HTMLInputElement>(container, /^Ebene .* ersetzen$/);
@@ -86,7 +120,7 @@ describe('AdminBulkEditModal', () => {
 
   it('hebt nur die Ebenen hervor, in die tatsächlich etwas eingetippt wurde', async () => {
     const container = renderModal([makeUser({ oe: ['V', 'IW', 'MI'] })]);
-    container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
+    checkboxMitBeschriftung(container, 'Pers.OE').click();
     await flush();
 
     const secondLevelInput = feldMitBeschriftung<HTMLInputElement>(container, 'Ebene 2 ersetzen')!;
@@ -115,7 +149,7 @@ describe('AdminBulkEditModal', () => {
     const users = [makeUser(), makeUser({ _id: 'u2', userName: 'user2', fullName: 'User Zwei' })];
     const container = renderModal(users);
 
-    container.querySelector<HTMLButtonElement>('button[aria-label="User Zwei abwählen"]')!.click();
+    knopfMitText(container, 'User Zwei abwählen').click();
     await flush();
 
     expect(container.textContent).toContain('Ausgewählte Benutzer (1)');
@@ -125,7 +159,7 @@ describe('AdminBulkEditModal', () => {
   it('verlangt eine ausgefüllte Ebene, sobald ein Ziel angehakt ist', async () => {
     const container = renderModal([makeUser({ oe: [] })]);
 
-    container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
+    checkboxMitBeschriftung(container, 'Pers.OE').click();
     await flush();
 
     container.querySelector<HTMLButtonElement>('button[data-variant="brand"]')!.click();
@@ -139,8 +173,8 @@ describe('AdminBulkEditModal', () => {
     mockBulkUpdateUserProfiles.mockResolvedValue(emptyResult());
     const container = renderModal([makeUser()]);
 
-    container.querySelector<HTMLInputElement>('#bulkOeTarget-pers')!.click();
-    container.querySelector<HTMLInputElement>('#bulkOeTarget-teamOes')!.click();
+    checkboxMitBeschriftung(container, 'Pers.OE').click();
+    checkboxMitBeschriftung(container, 'Team-Admin-OEs').click();
     await flush();
 
     const firstLevelInput = feldMitBeschriftung<HTMLInputElement>(container, 'Ebene 1 ersetzen')!;
@@ -163,7 +197,7 @@ describe('AdminBulkEditModal', () => {
     const gewerkInput = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Gewerk');
     expect(gewerkInput).toBeNull();
 
-    container.querySelector<HTMLInputElement>('#bulkSimple-gewerk')!.click();
+    checkboxMitBeschriftung(container, 'Gewerk').click();
     await flush();
 
     const gewerkInputAfter = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Gewerk')!;
@@ -186,7 +220,7 @@ describe('AdminBulkEditModal', () => {
     ];
     const container = renderModal(users);
 
-    container.querySelector<HTMLInputElement>('#bulkAdminOe-teamOes-add')!.click();
+    radioMitNameUndBeschriftung(container, 'bulkAdminOe-teamOes', 'Hinzufügen').click();
     await flush();
 
     const levelInputs = felderMitBeschriftung<HTMLInputElement>(container, /^Team-Admin-OEs: Ebene /);
@@ -208,7 +242,7 @@ describe('AdminBulkEditModal', () => {
     const users = [makeUser({ adminForTeamOes: ['V.IW-MI'] }), makeUser({ _id: 'u2', adminForTeamOes: ['V.IW-N'] })];
     const container = renderModal(users);
 
-    const removeRadio = container.querySelector<HTMLInputElement>('#bulkAdminOe-teamOes-remove')!;
+    const removeRadio = radioMitNameUndBeschriftung(container, 'bulkAdminOe-teamOes', 'Entfernen');
     removeRadio.click();
     await flush();
 
@@ -240,7 +274,7 @@ describe('AdminBulkEditModal', () => {
     } satisfies BulkApplyResult);
     const container = renderModal([makeUser()]);
 
-    container.querySelector<HTMLInputElement>('#bulkSimple-betrieb')!.click();
+    checkboxMitBeschriftung(container, 'Betrieb').click();
     await flush();
     const betriebInput = feldMitBeschriftung<HTMLInputElement>(container, 'Neuer Wert für Betrieb')!;
     setzeWert(betriebInput, 'Neu');
@@ -256,11 +290,11 @@ describe('AdminBulkEditModal', () => {
   it('zeigt das Vorlage-Select direkt unter dem Vorlage-Radio, nicht unter Muster-Benutzer', async () => {
     const container = renderModal([makeUser()]);
 
-    const templateRadio = container.querySelector<HTMLInputElement>('#bulkApplySource-template')!;
+    const templateRadio = radioMitNameUndBeschriftung(container, 'bulkApplySource', 'Vorlage');
     templateRadio.click();
     await flush();
 
-    const templateRadioBox = templateRadio.closest('.db-checkbox')!;
+    const templateRadioBox = templateRadio.closest('.db-radio')!;
     const select = feldMitBeschriftung<HTMLSelectElement>(container, 'Vorlage wählen')!;
     expect(templateRadioBox.nextElementSibling).toBe(select.closest('.db-select')!.parentElement);
     expect(feldMitBeschriftung(container, 'Muster-Benutzer wählen')).toBeNull();

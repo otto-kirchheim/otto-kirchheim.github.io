@@ -1,4 +1,5 @@
 import { FIELD_LABELS, type SimpleFieldKey } from '../utils/bulkEditOe';
+import { DBCheckbox } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 export const SIMPLE_FIELD_KEYS: SimpleFieldKey[] = ['betrieb', 'gewerk', 'ersteTkgSt', 'ersteTkgStAdresse'];
@@ -19,17 +20,13 @@ export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
         {SIMPLE_FIELD_KEYS.map(key => (
           <div key={key}>
             <div>
-              <div className="db-checkbox" data-size="small">
-                <label>
-                  <input
-                    type="checkbox"
-                    id={`bulkSimple-${key}`}
-                    checked={fields[key].enabled}
-                    onChange={e => onChange(key, { enabled: (e.target as HTMLInputElement).checked })}
-                  />
-                  {FIELD_LABELS[key]}
-                </label>
-              </div>
+              <DBCheckbox
+                size="small"
+                id={`bulkSimple-${key}`}
+                label={FIELD_LABELS[key]}
+                checked={fields[key].enabled}
+                onChange={e => onChange(key, { enabled: (e.target as HTMLInputElement).checked })}
+              />
             </div>
             {fields[key].enabled && (
               <div className="mt-1 ms-4">

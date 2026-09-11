@@ -1,5 +1,6 @@
 import { CATEGORY_LABELS } from '../utils/bulkEditOe';
 import type { AdminUserRow, BackendProfileTemplate, BulkApplyCategory } from '../utils/api';
+import { DBCheckbox, DBRadio } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 export type ApplySource = 'none' | 'template' | 'user';
@@ -47,18 +48,14 @@ export function BulkEditApplySourceBlock({
       <div className="d-flex flex-column gap-2">
         {SOURCE_OPTIONS.map(([value, label]) => (
           <div key={value}>
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="radio"
-                  name="bulkApplySource"
-                  id={`bulkApplySource-${value}`}
-                  checked={applySource === value}
-                  onChange={() => onApplySourceChange(value)}
-                />
-                {label}
-              </label>
-            </div>
+            <DBRadio
+              size="small"
+              name="bulkApplySource"
+              id={`bulkApplySource-${value}`}
+              label={label}
+              checked={applySource === value}
+              onChange={() => onApplySourceChange(value)}
+            />
 
             {value === 'template' && applySource === 'template' && (
               <div className="mt-1 ms-4">
@@ -107,17 +104,12 @@ export function BulkEditApplySourceBlock({
           <div className="d-flex gap-3 flex-wrap">
             {(Object.keys(CATEGORY_LABELS) as BulkApplyCategory[]).map(category => (
               <div key={category}>
-                <div className="db-checkbox" data-size="small">
-                  <label>
-                    <input
-                      type="checkbox"
-                      id={`bulkCategory-${category}`}
-                      checked={categories.includes(category)}
-                      onChange={() => onToggleCategory(category)}
-                    />
-                    {CATEGORY_LABELS[category]}
-                  </label>
-                </div>
+                <DBCheckbox
+                  id={`bulkCategory-${category}`}
+                  label={CATEGORY_LABELS[category]}
+                  checked={categories.includes(category)}
+                  onChange={() => onToggleCategory(category)}
+                />
               </div>
             ))}
           </div>

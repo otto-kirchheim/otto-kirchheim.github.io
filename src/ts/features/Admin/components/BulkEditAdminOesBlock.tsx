@@ -1,5 +1,6 @@
 import { joinOeLevels } from '@/infrastructure/data/oeLevels';
 import { OeLevelInputs } from './OeLevelInputs';
+import { DBRadio } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 export type AdminOeActionMode = 'none' | 'add' | 'remove';
@@ -55,18 +56,14 @@ export function BulkEditAdminOesBlock({
       <div className="d-flex gap-3 mb-1 flex-wrap">
         {MODE_OPTIONS.map(([mode, modeLabel]) => (
           <div key={mode}>
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="radio"
-                  name={`bulkAdminOe-${field}`}
-                  id={`bulkAdminOe-${field}-${mode}`}
-                  checked={action.mode === mode}
-                  onChange={() => selectMode(mode)}
-                />
-                {modeLabel}
-              </label>
-            </div>
+            <DBRadio
+              size="small"
+              name={`bulkAdminOe-${field}`}
+              id={`bulkAdminOe-${field}-${mode}`}
+              label={modeLabel}
+              checked={action.mode === mode}
+              onChange={() => selectMode(mode)}
+            />
           </div>
         ))}
       </div>

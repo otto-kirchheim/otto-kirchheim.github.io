@@ -1,6 +1,7 @@
 import { OE_TARGET_LABELS } from '../utils/bulkEditOe';
 import { OeLevelInputs } from './OeLevelInputs';
 import type { BulkOeTargetField } from '../utils/api';
+import { DBCheckbox } from '@db-ux/react-core-components';
 
 const TARGETS: BulkOeTargetField[] = ['pers', 'teamOes', 'organizationOes'];
 
@@ -37,17 +38,13 @@ export function BulkEditOeLevelsEditor({
       <div className="d-flex flex-wrap gap-3 mb-2">
         {TARGETS.map(target => (
           <div key={target}>
-            <div className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="checkbox"
-                  id={`bulkOeTarget-${target}`}
-                  checked={applyTo.has(target)}
-                  onChange={() => onToggleTarget(target)}
-                />
-                {OE_TARGET_LABELS[target]}
-              </label>
-            </div>
+            <DBCheckbox
+              size="small"
+              id={`bulkOeTarget-${target}`}
+              label={OE_TARGET_LABELS[target]}
+              checked={applyTo.has(target)}
+              onChange={() => onToggleTarget(target)}
+            />
           </div>
         ))}
       </div>
