@@ -1,6 +1,8 @@
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
+import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import { openHelpModal } from '@/core';
@@ -118,16 +120,18 @@ function NebenTab() {
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Nebenbezüge
-          <button
+          <DBButton
             type="button"
-            className="db-button p-0"
-            data-variant="ghost"
-            data-size="small"
+            className="p-0"
+            variant="ghost"
+            size="small"
             id="btnHelpNeben"
+            icon="question_mark_circle"
+            noText
             aria-label="Hilfe anzeigen"
           >
-            <span className="db-icon align-middle db-font-size-md" data-icon="question_mark_circle" />
-          </button>
+            <DBTooltip>Hilfe anzeigen</DBTooltip>
+          </DBButton>
         </h1>
         <h4 id="MonatN"></h4>
       </div>
@@ -135,29 +139,26 @@ function NebenTab() {
       <div className="mitte">
         <div className="raster-auto my-3 knopfreihe abstand-3">
           <div className="d-grid">
-            <button type="button" className="db-button" data-variant="brand" id="btnESN" data-disabler>
-              <span className="db-icon" data-icon="plus" />
+            <DBButton type="button" variant="brand" icon="plus" id="btnESN" data-disabler>
               Hinzufügen
-            </button>
+            </DBButton>
           </div>
           <div className="d-grid">
-            <button
-              className="db-button"
-              data-variant="filled"
-              data-color="successful"
+            <DBLoadingButton
               type="button"
+              variant="filled"
+              data-color="successful"
+              icon="save"
               id="btnSaveN"
               data-disabler
             >
-              <span className="db-icon" data-icon="save" />
               Speichern
-            </button>
+            </DBLoadingButton>
           </div>
           <div className="d-grid">
-            <button className="db-button" data-variant="filled" type="button" id="btnDownloadN" data-disabler>
-              <span className="db-icon" data-icon="download" />
+            <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadN" data-disabler>
               PDF erzeugen
-            </button>
+            </DBLoadingButton>
           </div>
         </div>
       </div>

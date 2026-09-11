@@ -30,6 +30,40 @@ async function flush(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 0));
 }
 
+/**
+ * `DBCheckbox` vergibt seine `id` erst ueber einen eigenen `useEffect` (`resetIds()` dort setzt
+ * `_id` per State, also ein ZWEITER Commit nach dem ersten `flushSync`-Render) -- wie viele
+ * Ticks das im Testlauf braucht, schwankt mit der Systemlast (voller Suite-Lauf mit 192 Dateien
+ * im selben Prozess vs. isolierter Lauf dieser einen Datei). Ein einzelner `flush()` war deshalb
+ * gelegentlich zu kurz -- betrifft nicht nur `#azOverride`, sondern jedes per Id gesuchte
+ * `DBCheckbox` (z.B. `#override-frueh` aus `SchichtOverrideEditor`), deshalb generisch per
+ * Selector statt eine feste Tick-Zahl zu raten.
+ */
+async function warteAufElement<T extends Element = HTMLInputElement>(
+  container: HTMLDivElement,
+  selector: string,
+): Promise<T> {
+  for (let i = 0; i < 20; i++) {
+    const el = container.querySelector<T>(selector);
+    if (el) {
+      // `DBCheckbox` setzt in einem WEITEREN Mount-Effekt `_ref.current.checked` direkt am DOM
+      // (an Reacts Value-Tracker vorbei, siehe `checkbox.js`) -- laeuft der noch nach dem
+      // Id-Commit, kann ein sofortiges `.click()` das native `change`-Event verschlucken
+      // (dieselbe Klasse Bug wie der "haengende Schalter" bei `DBSwitch`, siehe `MyCheckbox.tsx`).
+      // Zwei weitere Ticks lassen diesen Effekt sicher durchlaufen, bevor der Test interagiert.
+      await flush();
+      await flush();
+      return el;
+    }
+    await flush();
+  }
+  throw new Error(`${selector} nicht gefunden`);
+}
+
+async function warteAufAzOverride(container: HTMLDivElement): Promise<HTMLInputElement> {
+  return warteAufElement<HTMLInputElement>(container, '#azOverride');
+}
+
 async function fireChange(el: HTMLInputElement, checked: boolean): Promise<void> {
   klickeCheckbox(el, checked);
   await flush();
@@ -48,30 +82,25 @@ describe('BereitschaftOverridePanel', () => {
 
   it('zeigt initial nur den geschlossenen Schalter, kein Editor-Panel', async () => {
     const { container } = renderPanel(createAz());
-    // DBCheckbox vergibt die `id` erst per `useEffect` (useId + resetIds), nicht im ersten
-    // synchronen `flushSync`-Render -- ohne diesen Tick liefert `#azOverride` hier `null`.
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride');
+    const toggle = await warteAufAzOverride(container);
     expect(toggle?.checked).toBe(false);
     expect(container.querySelector('.border.p-2.mt-1')).toBeNull();
   });
 
   it('öffnet das Panel und meldet leere Overrides beim Aktivieren des Schalters', async () => {
     const { container, onChange } = renderPanel(createAz());
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
 
     await fireChange(toggle, true);
 
     expect(onChange).toHaveBeenCalledWith({});
     expect(container.querySelector('.border.p-2.mt-1')).not.toBeNull();
-    expect(container.querySelector('#override-frueh')).not.toBeNull();
+    await warteAufElement(container, '#override-frueh');
   });
 
   it('meldet undefined beim Schließen des Panels', async () => {
     const { container, onChange } = renderPanel(createAz());
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
 
     await fireChange(toggle, true);
     onChange.mockClear();
@@ -84,12 +113,11 @@ describe('BereitschaftOverridePanel', () => {
 
   it('reicht Wochentag-Overrides aus dem SchichtOverrideEditor durch', async () => {
     const { container, onChange } = renderPanel(createAz());
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
     await fireChange(toggle, true);
     onChange.mockClear();
 
-    const fruehOverride = container.querySelector<HTMLInputElement>('#override-frueh')!;
+    const fruehOverride = await warteAufElement<HTMLInputElement>(container, '#override-frueh');
     await fireChange(fruehOverride, true);
 
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ frueh: expect.objectContaining({ aktiv: true }) }));
@@ -103,8 +131,7 @@ describe('BereitschaftOverridePanel', () => {
     document.body.appendChild(sonderCheckbox);
 
     const { container, onChange } = renderPanel(createAz());
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
     await fireChange(toggle, true);
 
     expect(container.querySelector('#sonderOverrideBeginn')).not.toBeNull();
@@ -150,8 +177,7 @@ describe('BereitschaftOverridePanel', () => {
     document.body.appendChild(sonderCheckbox);
 
     const { container } = renderPanel(createAz());
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
     await fireChange(toggle, true);
 
     expect(container.querySelector('#sonderOverrideBeginn')).toBeNull();
@@ -191,8 +217,7 @@ describe('BereitschaftOverridePanel', () => {
     const { container } = renderPanel(
       createAz({ sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 } }),
     );
-    await flush();
-    const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
+    const toggle = await warteAufAzOverride(container);
     await fireChange(toggle, true);
 
     expect(container.querySelector('#sonderOverrideBeginn')).toBeNull();
