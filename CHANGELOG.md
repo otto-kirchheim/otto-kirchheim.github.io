@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (100)
+
+### refactor (Phase J7: restliches `My*`/`core/`-Markup auf `DBButton`)
+
+- `MyModalHeader.tsx` (Hilfe-/Schließen-Icon-Buttons, `noText`+`DBTooltip`), `MyHelpModal.tsx`
+  (Schließen-Button, „Ersteinrichtung erneut öffnen"-Button), `createOnboardingGuideModal.tsx`
+  (Minimieren-Toggle `noText`+`DBTooltip`, Zurück/Überspringen/Fertig/Weiter),
+  `ConflictReviewBanner.tsx` (Übernehmen-Button, bestehendes lokales `isSaving`-Spinner-Muster
+  wie `AdminUserTable.tsx` übernommen). `openHelpModal.tsx` enthielt keine eigenen Buttons.
+- Keiner der Buttons hat einen `setLoading`-Bezug (kein `id`-Attribut, das an
+  `setLoading`/`clearLoading` hängt) — einfacher `DBButton` reicht überall.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0 ·
+  `build` grün. Grep-Gate: 0 rohe `db-button` in allen 5 J7-Dateien.
+
 ## 2026-09-11 (99)
 
 ### refactor (Phase J6b: `MyButton` aufgelöst -> `DBButton`)

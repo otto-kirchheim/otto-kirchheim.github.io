@@ -584,7 +584,10 @@ Ende auf `<head>` + einen React-Root.
       `btnLoginModal` (setLoading-Bezug ueber `loginUser.ts`) -> `DBLoadingButton`. `dbButton.ts`
       (buttonLook, weiterhin fuer Vanilla-DOM CustomTable gebraucht) unangetastet.
       Details: CHANGELOG (99).
-- [ ] **J7 `My*`- + `core/`-Rest-Markup.**
+- [x] **J7 `My*`- + `core/`-Rest-Markup** (2026-09-11). `MyModalHeader.tsx`, `MyHelpModal.tsx`,
+      `createOnboardingGuideModal.tsx`, `ConflictReviewBanner.tsx` auf `DBButton` umgestellt;
+      `openHelpModal.tsx` hatte keine eigenen Buttons. Kein Button mit `setLoading`-Bezug.
+      Details: CHANGELOG (100).
 - [ ] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (Wrapper bleibt, Innenleben
       getauscht; Aufrufstellen unveraendert).
 - [ ] **J9 Cleanup + Doku** (Grep-Gate, `agent-cli`, CLAUDE.md/Skills/CHANGELOG,
