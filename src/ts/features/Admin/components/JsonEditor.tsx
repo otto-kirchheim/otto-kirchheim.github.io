@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DBButton, DBTag, DBTextarea, DBTooltip } from '@db-ux/react-core-components';
 
 type Props = {
   value: string;
@@ -68,9 +69,9 @@ export function JsonEditor({ value, onChange, error }: Props) {
           data-icon={open ? 'chevron_up' : 'chevron_down'}
         />
 
-        <span className="db-tag flex-shrink-0" data-semantic={hasError ? 'critical' : 'neutral'} data-emphasis="strong">
+        <DBTag className="flex-shrink-0" semantic={hasError ? 'critical' : 'neutral'} emphasis="strong">
           {label}
-        </span>
+        </DBTag>
 
         {!open && hint && (
           <span
@@ -83,53 +84,61 @@ export function JsonEditor({ value, onChange, error }: Props) {
 
         <div className="ms-auto d-flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
           {open && (
-            <button
-              className="db-button py-0"
-              data-variant="outlined"
-              data-size="small"
+            <DBButton
+              type="button"
+              className="py-0"
+              variant="outlined"
+              size="small"
               style={{ fontSize: '0.75rem' }}
+              icon="list"
               onClick={handleFormat}
               title="JSON formatieren"
             >
-              <span className="db-icon db-font-size-2xs" data-icon="list" style={{ verticalAlign: 'middle' }} />
               <span className="ms-1 d-none d-sm-inline">Format</span>
-            </button>
+            </DBButton>
           )}
-          <button
-            className="db-button py-0"
-            data-variant="outlined"
-            data-size="small"
+          <DBButton
+            type="button"
+            className="py-0"
+            variant="outlined"
+            size="small"
             style={{ fontSize: '0.75rem' }}
+            icon={open ? 'cross' : 'pen'}
+            noText
             onClick={() => setOpen(o => !o)}
-            title={open ? 'Einklappen' : 'Bearbeiten'}
           >
-            <span
-              className="db-icon db-font-size-2xs"
-              data-icon={open ? 'cross' : 'pen'}
-              style={{ verticalAlign: 'middle' }}
-            />
-          </button>
+            <DBTooltip>{open ? 'Einklappen' : 'Bearbeiten'}</DBTooltip>
+          </DBButton>
         </div>
       </div>
 
       {/* Editor */}
       {open && (
         <div className="p-2">
-          <div className="db-textarea w-100" data-density="functional" data-hide-label="true">
-            <label htmlFor={`json-${label}`}>{label}</label>
-            <textarea
-              id={`json-${label}`}
-              className="font-monospace"
-              data-custom-validity={hasError ? 'invalid' : undefined}
-              rows={autoRows(value)}
-              style={{ fontSize: '0.72rem', resize: 'vertical', minHeight: '80px', lineHeight: '1.45' }}
-              value={value}
-              onChange={e => onChange((e.target as HTMLTextAreaElement).value)}
-              spellCheck={false}
-              autoComplete="off"
-              autoCorrect="off"
-            />
-          </div>
+          <DBTextarea
+            className="w-100"
+            data-density="functional"
+            id={`json-${label}`}
+            label={label}
+            showLabel={false}
+            data-custom-validity={hasError ? 'invalid' : undefined}
+            rows={autoRows(value)}
+            style={{
+              fontSize: '0.72rem',
+              resize: 'vertical',
+              minHeight: '80px',
+              lineHeight: '1.45',
+              // `.font-monospace` (utilities.scss) steht am Wrapper (`className`, einzige verfuegbare
+              // Klassen-Prop von DBTextarea), aber DB setzt font-family direkt am <textarea> --
+              // Vererbung vom Wrapper verliert dagegen. Deshalb hier inline, direkt am Feld.
+              fontFamily: 'var(--db-font-family-mono, ui-monospace, "SFMono-Regular", "Menlo", monospace)',
+            }}
+            value={value}
+            onChange={e => onChange((e.target as HTMLTextAreaElement).value)}
+            spellCheck={false}
+            autoComplete="off"
+            autoCorrect="off"
+          />
           {hasError && (
             <div className="small mt-1 text-danger">
               <span
