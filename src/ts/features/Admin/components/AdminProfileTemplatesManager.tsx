@@ -20,6 +20,7 @@ import {
   toEditState,
   type TemplateEditState,
 } from './adminProfileTemplatesManagerGemeinsam';
+import { DBButton, DBTag } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 export function AdminProfileTemplatesManager() {
@@ -350,9 +351,9 @@ export function AdminProfileTemplatesManager() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h5 className="mb-0">Profile-Templates</h5>
-        <button className="db-button" data-variant="outlined" data-size="small" onClick={handleCreate} data-disabler>
+        <DBButton type="button" variant="outlined" size="small" onClick={handleCreate} data-disabler>
           Hinzufügen
-        </button>
+        </DBButton>
       </div>
 
       {loading && <div className="text-body-secondary">Lädt Templates...</div>}
@@ -372,23 +373,20 @@ export function AdminProfileTemplatesManager() {
 
           return (
             <div key={template._id} className={`border ${changed ? 'border-warning' : 'border-secondary-subtle'}`}>
-              <button
-                className="db-button text-start d-flex justify-content-between align-items-center"
-                data-variant="filled"
-                data-width="full"
+              <DBButton
+                type="button"
+                className="text-start d-flex justify-content-between align-items-center"
+                variant="filled"
+                width="full"
                 onClick={() => setExpandedId(expanded ? null : template._id)}
               >
                 <span>
                   <strong>{template.code}</strong> - {template.name}
                 </span>
-                <span
-                  className="db-tag"
-                  data-semantic={template.active ? 'successful' : 'neutral'}
-                  data-emphasis="strong"
-                >
+                <DBTag semantic={template.active ? 'successful' : 'neutral'} emphasis="strong">
                   {template.active ? 'aktiv' : 'inaktiv'}
-                </span>
-              </button>
+                </DBTag>
+              </DBButton>
 
               {expanded && (
                 <div className="p-3 border-top">
@@ -449,53 +447,53 @@ export function AdminProfileTemplatesManager() {
                   </div>
 
                   <div className="d-flex flex-wrap gap-2 mt-2">
-                    <button
-                      className="db-button"
-                      data-variant="brand"
-                      data-size="small"
+                    <DBButton
+                      type="button"
+                      variant="brand"
+                      size="small"
                       onClick={() => handleSave(template)}
                       disabled={!changed || isSaving}
                     >
                       {isSaving ? 'Speichert...' : 'Speichern'}
-                    </button>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
-                      data-size="small"
+                    </DBButton>
+                    <DBButton
+                      type="button"
+                      variant="outlined"
+                      size="small"
                       onClick={() => handleCopy(template)}
                       disabled={isSaving}
                     >
                       Kopieren
-                    </button>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
-                      data-size="small"
+                    </DBButton>
+                    <DBButton
+                      type="button"
+                      variant="outlined"
+                      size="small"
                       onClick={() => handleAdoptTemplateContent(template)}
                       disabled={isSaving}
                     >
                       Inhalt uebernehmen
-                    </button>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
+                    </DBButton>
+                    <DBButton
+                      type="button"
+                      variant="outlined"
                       data-color={template.active ? 'warning' : 'successful'}
-                      data-size="small"
+                      size="small"
                       onClick={() => handleToggleActive(template)}
                       disabled={isSaving}
                     >
                       {template.active ? 'Deaktivieren' : 'Aktivieren'}
-                    </button>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
+                    </DBButton>
+                    <DBButton
+                      type="button"
+                      variant="outlined"
                       data-color="critical"
-                      data-size="small"
+                      size="small"
                       onClick={() => handleDelete(template)}
                       disabled={isSaving}
                     >
                       Löschen
-                    </button>
+                    </DBButton>
                   </div>
                 </div>
               )}
