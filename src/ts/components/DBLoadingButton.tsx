@@ -2,6 +2,7 @@ import { DBButton } from '@db-ux/react-core-components';
 import { type ComponentProps, type FC } from 'react';
 
 import useButtonLoading from '@/infrastructure/ui/useButtonLoading';
+import useGlobalDisabled from '@/infrastructure/ui/useGlobalDisabled';
 
 type TDBLoadingButton = ComponentProps<typeof DBButton> & {
   id: string;
@@ -17,6 +18,7 @@ type TDBLoadingButton = ComponentProps<typeof DBButton> & {
  */
 const DBLoadingButton: FC<TDBLoadingButton> = ({ id, type, icon, disabled, loadingText, children, ...rest }) => {
   const loading = useButtonLoading(id);
+  const globalDisabled = useGlobalDisabled();
 
   return (
     <DBButton
@@ -25,7 +27,7 @@ const DBLoadingButton: FC<TDBLoadingButton> = ({ id, type, icon, disabled, loadi
       data-react-loading="true"
       icon={loading ? undefined : icon}
       showIcon={!loading}
-      disabled={disabled || loading}
+      disabled={disabled || loading || globalDisabled}
       {...rest}
     >
       {loading && <span className="laedt me-1" data-size="small" role="status" aria-hidden="true" />}
