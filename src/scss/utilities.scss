@@ -120,9 +120,16 @@ $ausrichtung: (
   'stretch': stretch,
 );
 
+// `:not([hidden])` nach dem Vorbild von `helpers/_display.scss` aus `@db-ux/core-foundations`
+// (dort `@mixin display`): ohne den Schutz schlaegt das `!important` die UA-Regel
+// `[hidden] { display: none }`, und ein `el.hidden = true` im TypeScript bleibt auf jedem
+// Element mit `d-*`-Klasse wirkungslos. DBs Mixin selbst ist hier nicht nutzbar, weil es ohne
+// `!important` arbeitet -- diese Klassen brauchen es (Bootstrap-kompatible Utility-API).
+// Die Spezifitaet steigt fuer ALLE `d-*` gleichermaessig, die Reihenfolge-Regel oben
+// (`none` zuletzt) bleibt damit unveraendert gueltig.
 @mixin anzeige-klassen($suffix: '') {
   @each $name, $wert in $anzeigen {
-    .d#{$suffix}-#{$name} {
+    .d#{$suffix}-#{$name}:not([hidden]) {
       display: $wert !important;
     }
   }
