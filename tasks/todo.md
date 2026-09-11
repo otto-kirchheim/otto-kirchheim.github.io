@@ -579,7 +579,11 @@ Ende auf `<head>` + einen React-Root.
       `useGlobalDisabled`-Hook (analog `buttonLoadingStore`), `buttonDisable.ts` schreibt
       zusaetzlich in den Store, `DBLoadingButton` verrechnet `disabled || loading || globalDisabled`.
       Details: CHANGELOG (98).
-- [ ] **J6b `MyButton` aufloesen** -> `DBButton`.
+- [x] **J6b `MyButton` aufloesen** -> `DBButton`** (2026-09-11). `MyButton.tsx` geloescht,
+      7 Aufrufstellen + `MyEditorFooter`/`MyShowFooter` direkt auf `DBButton` umgestellt.
+      `btnLoginModal` (setLoading-Bezug ueber `loginUser.ts`) -> `DBLoadingButton`. `dbButton.ts`
+      (buttonLook, weiterhin fuer Vanilla-DOM CustomTable gebraucht) unangetastet.
+      Details: CHANGELOG (99).
 - [ ] **J7 `My*`- + `core/`-Rest-Markup.**
 - [ ] **J8 `DbFeld`/`DbAuswahl` -> `DBInput`/`DBSelect`** (Wrapper bleibt, Innenleben
       getauscht; Aufrufstellen unveraendert).

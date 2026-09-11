@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (99)
+
+### refactor (Phase J6b: `MyButton` aufgelöst -> `DBButton`)
+
+- `MyButton.tsx` gelöscht, alle 7 Aufrufstellen + `MyEditorFooter`/`MyShowFooter` direkt auf
+  `DBButton` umgestellt: `MyEditorFooter`, `MyShowFooter`, `createModalLogin` (5 Buttons),
+  `createEditorModalEWT` (1), `createAddModalEWT` (1), `createAddModalNeben` (1).
+- `btnLoginModal` (`createModalLogin`) geht über `loginUser.ts` → `setLoading`/`clearLoading`
+  (gleiches Muster wie J5/J6) → `DBLoadingButton` statt einfachem `DBButton`.
+- `dbButton.ts` (`buttonLook`/`erzeugeDbButton`) bleibt unangetastet — wird von
+  `customTableRender` (Vanilla-DOM, Phase M) weiterhin gebraucht.
+- Tests: `MyButton.test.tsx` gelöscht; die `buttonLook`-Fälle (weiterhin relevant) nach
+  `test/Utilities/dbButton.test.ts` verschoben.
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test` 2125/0 ·
+  `build` grün. Puppeteer: Login-Modal komplett geprüft, `btnLoginModal`-Lade-/Disable-Zyklus
+  funktioniert.
+
 ## 2026-09-11 (98)
 
 ### fix (Phase J6: `buttonDisable.ts` gegen `DBLoadingButton` abgesichert)
