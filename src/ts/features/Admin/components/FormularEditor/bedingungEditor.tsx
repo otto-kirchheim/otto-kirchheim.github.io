@@ -8,6 +8,7 @@ import {
   type FormularCode,
   type KatalogEintrag,
 } from './datenKatalog';
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
@@ -77,23 +78,21 @@ function VergleichWahl({
       <div className="raster mb-1 abstand-1">
         <div className="sp-8">
           <div className="knopfgruppe w-100">
-            <button
+            <DBButton
               type="button"
-              className="db-button"
-              data-variant={!wenn.bereich ? 'brand' : 'outlined'}
+              variant={!wenn.bereich ? 'brand' : 'outlined'}
               onClick={() => onChange({ bereich: undefined, werte: wenn.werte ?? [] })}
             >
               Werte-Liste
-            </button>
-            <button
+            </DBButton>
+            <DBButton
               type="button"
-              className="db-button"
-              data-variant={wenn.bereich ? 'brand' : 'outlined'}
+              variant={wenn.bereich ? 'brand' : 'outlined'}
               title="Kreuz nur, wenn der Wert in diesem Bereich liegt (von einschließlich, bis ausschließlich) -- Zahl, Uhrzeit oder Datum, je nachdem was das Feld liefert"
               onClick={() => onChange({ bereich: wenn.bereich ?? { von: '', bis: '' }, werte: undefined })}
             >
               Wertebereich
-            </button>
+            </DBButton>
           </div>
         </div>
         <div className="sp-4">
@@ -129,16 +128,13 @@ function VergleichWahl({
       ) : auswahl.length > 0 ? (
         <div className="d-flex flex-wrap gap-2">
           {auswahl.map(wert => (
-            <div key={wert} className="db-checkbox" data-size="small">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={(wenn.werte ?? []).includes(wert)}
-                  onChange={e => schalte(wert, e.target.checked)}
-                />
-                {wert}
-              </label>
-            </div>
+            <DBCheckbox
+              key={wert}
+              size="small"
+              label={String(wert)}
+              checked={(wenn.werte ?? []).includes(wert)}
+              onChange={e => schalte(wert, e.target.checked)}
+            />
           ))}
         </div>
       ) : (
@@ -196,18 +192,16 @@ export function AnkreuzBedingung({
   return (
     <div className="mb-1">
       <div className="knopfgruppe w-100 mb-1">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={!wenn.berechnet ? 'brand' : 'outlined'}
+          variant={!wenn.berechnet ? 'brand' : 'outlined'}
           onClick={() => setzeWenn({ feld: wenn.feld ?? zeilenFelder[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={wenn.berechnet ? 'brand' : 'outlined'}
+          variant={wenn.berechnet ? 'brand' : 'outlined'}
           title="Prüft einen berechneten Wert dieser Zeile, z.B. eine Dauer aus Beginn/Ende"
           onClick={() =>
             setzeWenn({
@@ -219,7 +213,7 @@ export function AnkreuzBedingung({
           }
         >
           Berechnung
-        </button>
+        </DBButton>
       </div>
 
       {wenn.berechnet ? (
@@ -296,18 +290,16 @@ export function FeldAnkreuzBedingung({
   return (
     <div className="mb-1">
       <div className="knopfgruppe w-100 mb-1">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={!wenn.berechnet ? 'brand' : 'outlined'}
+          variant={!wenn.berechnet ? 'brand' : 'outlined'}
           onClick={() => setzeWenn({ feld: wenn.feld ?? feldOptionen[0]?.pfad ?? '', berechnet: undefined })}
         >
           Feld
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={wenn.berechnet ? 'brand' : 'outlined'}
+          variant={wenn.berechnet ? 'brand' : 'outlined'}
           title="Prüft eine Aggregation über Zeilen, z.B. die Gesamtsumme"
           onClick={() =>
             setzeWenn({
@@ -319,7 +311,7 @@ export function FeldAnkreuzBedingung({
           }
         >
           Berechnung
-        </button>
+        </DBButton>
       </div>
 
       {wenn.berechnet ? (

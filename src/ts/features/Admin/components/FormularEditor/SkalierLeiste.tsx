@@ -1,3 +1,4 @@
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 import type { Drehwinkel, SkalierFaktoren } from './skaliereKonfig';
 
@@ -66,20 +67,16 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           </span>
         )}
         <div className="mb-0">
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                id="skalier-gekoppelt"
-                checked={gekoppelt}
-                onChange={e => {
-                  const g = (e.target as HTMLInputElement).checked;
-                  setze(g ? { x: faktoren.y } : {}, g);
-                }}
-              />
-              X=Y
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            id="skalier-gekoppelt"
+            label="X=Y"
+            checked={gekoppelt}
+            onChange={e => {
+              const g = (e.target as HTMLInputElement).checked;
+              setze(g ? { x: faktoren.y } : {}, g);
+            }}
+          />
         </div>
         {gekoppelt ? (
           <ZahlEingabe label="Faktor" schritt="0.001" wert={faktoren.y} onChange={v => setze({ x: v, y: v })} />
@@ -106,12 +103,12 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           <option value="270">270°</option>
         </DbAuswahl>
         <div className="knopfgruppe ms-auto">
-          <button type="button" className="db-button" data-variant="brand" onClick={onAnwenden}>
+          <DBButton type="button" variant="brand" onClick={onAnwenden}>
             Anwenden
-          </button>
-          <button type="button" className="db-button" data-variant="outlined" onClick={onAbbrechen}>
+          </DBButton>
+          <DBButton type="button" variant="outlined" onClick={onAbbrechen}>
             Abbrechen
-          </button>
+          </DBButton>
         </div>
       </div>
       <div className="text-body-secondary mt-1">

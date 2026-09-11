@@ -12,6 +12,7 @@ import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert
 import { FORMATE } from './datenKatalog';
 import { WertVorschau } from './WertVorschau';
 import type { Vorschau } from './FeldPanel';
+import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
@@ -132,17 +133,18 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                 vergeben={zeilen.map(([n]) => n).filter(n => n !== name)}
                 onRename={neuerName => onUmbenennen(name, neuerName)}
               />
-              <button
+              <DBButton
                 type="button"
-                className="db-button py-0"
-                data-variant="outlined"
+                className="py-0"
+                variant="outlined"
                 data-color="critical"
-                data-size="small"
+                size="small"
+                icon="bin"
+                noText
                 onClick={() => setzeZeile(name, undefined)}
-                title="Sonderzeile löschen"
               >
-                <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-              </button>
+                <DBTooltip>Sonderzeile löschen</DBTooltip>
+              </DBButton>
             </div>
 
             <div className="small text-body-secondary mb-1">
@@ -228,55 +230,43 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                         />
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <div className="db-checkbox" data-size="small">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(zelle.fett)}
-                              onChange={e =>
-                                setzeZelle(name, zeile, index, {
-                                  ...zelle,
-                                  fett: (e.target as HTMLInputElement).checked || undefined,
-                                })
-                              }
-                            />
-                            Fett
-                          </label>
-                        </div>
+                        <DBCheckbox
+                          size="small"
+                          label="Fett"
+                          checked={Boolean(zelle.fett)}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              fett: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
+                        />
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <div className="db-checkbox" data-size="small">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(zelle.kursiv)}
-                              onChange={e =>
-                                setzeZelle(name, zeile, index, {
-                                  ...zelle,
-                                  kursiv: (e.target as HTMLInputElement).checked || undefined,
-                                })
-                              }
-                            />
-                            Kursiv
-                          </label>
-                        </div>
+                        <DBCheckbox
+                          size="small"
+                          label="Kursiv"
+                          checked={Boolean(zelle.kursiv)}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              kursiv: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
+                        />
                       </div>
                       <div className="sp-3 mt-1 mb-0">
-                        <div className="db-checkbox" data-size="small">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(zelle.unterstrichen)}
-                              onChange={e =>
-                                setzeZelle(name, zeile, index, {
-                                  ...zelle,
-                                  unterstrichen: (e.target as HTMLInputElement).checked || undefined,
-                                })
-                              }
-                            />
-                            Unterstr.
-                          </label>
-                        </div>
+                        <DBCheckbox
+                          size="small"
+                          label="Unterstr."
+                          checked={Boolean(zelle.unterstrichen)}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              unterstrichen: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
+                        />
                       </div>
 
                       {/* Verhalten: Ausrichtung und Auto-Verkleinerung steuern beide, wie der Text in die Zelle passt. */}
@@ -300,21 +290,17 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                         </DbAuswahl>
                       </div>
                       <div className="sp-4 mt-1 mb-0">
-                        <div className="db-checkbox" data-size="small">
-                          <label>
-                            <input
-                              type="checkbox"
-                              checked={Boolean(zelle.autoGroesse)}
-                              onChange={e =>
-                                setzeZelle(name, zeile, index, {
-                                  ...zelle,
-                                  autoGroesse: (e.target as HTMLInputElement).checked || undefined,
-                                })
-                              }
-                            />
-                            auto. verkleinern
-                          </label>
-                        </div>
+                        <DBCheckbox
+                          size="small"
+                          label="auto. verkleinern"
+                          checked={Boolean(zelle.autoGroesse)}
+                          onChange={e =>
+                            setzeZelle(name, zeile, index, {
+                              ...zelle,
+                              autoGroesse: (e.target as HTMLInputElement).checked || undefined,
+                            })
+                          }
+                        />
                       </div>
                     </>
                   )}
@@ -330,9 +316,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
         );
       })}
 
-      <button type="button" className="db-button" data-variant="outlined" data-size="small" onClick={neueZeile}>
+      <DBButton type="button" variant="outlined" size="small" onClick={neueZeile}>
         + Sonderzeile
-      </button>
+      </DBButton>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import {
 } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 function FeldZeile({
@@ -60,17 +61,18 @@ function FeldZeile({
       aktionen={
         <>
           <ScharfButton aktiv={aktiv} onClick={onArm} />
-          <button
+          <DBButton
             type="button"
-            className="db-button py-0"
-            data-variant="outlined"
+            className="py-0"
+            variant="outlined"
             data-color="critical"
-            data-size="small"
+            size="small"
+            icon="bin"
+            noText
             onClick={onDelete}
-            title="Feld löschen"
           >
-            <span className="db-icon db-font-size-xs" data-icon="bin" style={{ verticalAlign: 'middle' }} />
-          </button>
+            <DBTooltip>Feld löschen</DBTooltip>
+          </DBButton>
         </>
       }
     >
@@ -79,10 +81,9 @@ function FeldZeile({
       </div>
 
       <div className="knopfgruppe w-100 mb-1">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={
+          variant={
             !festerText && !feld.berechnet && !feld.wenn && !feld.quellen && !feld.listenKopf ? 'brand' : 'outlined'
           }
           onClick={() =>
@@ -97,11 +98,10 @@ function FeldZeile({
           }
         >
           Datenfeld
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={festerText ? 'brand' : 'outlined'}
+          variant={festerText ? 'brand' : 'outlined'}
           title="Fester Text, wahlweise mit eingefügten Datenpfaden"
           onClick={() =>
             onChange({
@@ -115,11 +115,10 @@ function FeldZeile({
           }
         >
           Text
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={feld.quellen ? 'brand' : 'outlined'}
+          variant={feld.quellen ? 'brand' : 'outlined'}
           title="Mehrere Werte in eine Zelle, ohne Trennzeichen-Lücke bei leeren/optionalen Teilen (z.B. Adress2)"
           onClick={() =>
             onChange({
@@ -134,11 +133,10 @@ function FeldZeile({
           }
         >
           Mehrere
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={feld.berechnet ? 'brand' : 'outlined'}
+          variant={feld.berechnet ? 'brand' : 'outlined'}
           onClick={() =>
             onChange({
               ...feld,
@@ -151,11 +149,10 @@ function FeldZeile({
           }
         >
           Summe
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant={feld.wenn ? 'brand' : 'outlined'}
+          variant={feld.wenn ? 'brand' : 'outlined'}
           title="Zeigt ein Zeichen nur, wenn eine Bedingung zutrifft, z.B. bei Gesamtsumme > 0"
           onClick={() => {
             const startPfad = katalogFelder(formular)[0]?.pfad ?? '';
@@ -170,12 +167,11 @@ function FeldZeile({
           }}
         >
           Ankreuzen
-        </button>
+        </DBButton>
         {mitListen.length > 0 && (
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant={feld.listenKopf ? 'brand' : 'outlined'}
+            variant={feld.listenKopf ? 'brand' : 'outlined'}
             title="Überschrift über einem dynamischen Spaltenplatz — zeigt den Schlüssel, der dort gelandet ist"
             onClick={() => {
               const [tabellenName, tabelle] = mitListen[0]!;
@@ -194,7 +190,7 @@ function FeldZeile({
             }}
           >
             Überschrift
-          </button>
+          </DBButton>
         )}
       </div>
 
@@ -284,15 +280,15 @@ function FeldZeile({
             einfügen) -- auch mehrere gemischt, z.B. <code>{'{Nachname}, {Vorname}'}</code>. Für Trennzeichen, die bei
             leeren/optionalen Werten automatisch wegfallen (z.B. Adress2), stattdessen den Modus „Mehrere" nutzen.
             Format erzwingen mit <code>{'{Pfad:Format}'}</code>, z.B. <code>{'{heute:datumKurz}'}</code>.{' '}
-            <button
+            <DBButton
               type="button"
-              className="db-button p-0 align-baseline"
-              data-variant="ghost"
-              data-size="small"
+              className="p-0 align-baseline"
+              variant="ghost"
+              size="small"
               onClick={openPlatzhalterHilfe}
             >
               Alle Platzhalter &amp; Formate…
-            </button>
+            </DBButton>
           </div>
         </div>
       ) : feld.berechnet ? (
@@ -421,16 +417,15 @@ export function FeldListe({
         ))}
       <div className="d-flex flex-wrap gap-1">
         {VORLAGEN.map(v => (
-          <button
+          <DBButton
             key={v.key}
             type="button"
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+            variant="outlined"
+            size="small"
             onClick={() => hinzufuegen(v.key, { ...v.feld })}
           >
             {v.label}
-          </button>
+          </DBButton>
         ))}
       </div>
     </div>

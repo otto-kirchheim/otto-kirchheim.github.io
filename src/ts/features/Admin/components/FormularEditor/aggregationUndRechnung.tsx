@@ -9,6 +9,7 @@ import type {
   ZeilenOperand,
 } from '@otto-kirchheim/nebengeld-shared';
 import { gruppiere, katalogZeilenFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
@@ -250,12 +251,13 @@ export function AggregationEditor({
           Tabellen:
         </span>
         {Object.keys(tabellen).map(name => (
-          <div key={name} className="db-checkbox" data-size="small">
-            <label>
-              <input type="checkbox" checked={gewaehlt.includes(name)} onChange={() => schalteTabelle(name)} />
-              {name}
-            </label>
-          </div>
+          <DBCheckbox
+            key={name}
+            size="small"
+            label={name}
+            checked={gewaehlt.includes(name)}
+            onChange={() => schalteTabelle(name)}
+          />
         ))}
       </div>
       {wert.op === 'letztesDatum' && (
@@ -332,16 +334,15 @@ export function Rechnung({
           ))}
         </DbAuswahl>
         {onEntfernen && (
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant="outlined"
+            variant="outlined"
             data-color="critical"
             title="Zwischenrechnung entfernen"
             onClick={onEntfernen}
           >
             ×
-          </button>
+          </DBButton>
         )}
       </div>
       <div className="small text-body-secondary mb-1">
@@ -391,39 +392,31 @@ export function Rechnung({
                 onChange={e => setzeOperand(i, Number(e.target.value))}
               />
             )}
-            <button
-              type="button"
-              className="db-button"
-              data-variant="outlined"
-              data-color="critical"
-              onClick={() => entferneOperand(i)}
-            >
+            <DBButton type="button" variant="outlined" data-color="critical" onClick={() => entferneOperand(i)}>
               ×
-            </button>
+            </DBButton>
           </div>
         ),
       )}
 
       <div className="d-flex gap-1">
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
+          variant="outlined"
           data-size="small"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, zeilenFelder[0]?.pfad ?? ''] })}
         >
           + Operand
-        </button>
-        <button
+        </DBButton>
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="outlined"
+          variant="outlined"
           data-size="small"
           title="Geklammerte Zwischenrechnung als weiteren Operanden anhängen"
           onClick={() => onChange({ ...wert, operanden: [...wert.operanden, { op: 'differenz', operanden: [] }] })}
         >
           + Zwischenrechnung
-        </button>
+        </DBButton>
       </div>
     </div>
   );
