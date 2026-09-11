@@ -15,6 +15,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { OeTagInput } from './OeTagInput';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
+import { DBButton, DBTag, DBTooltip, type SemanticType } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type UserEditState = {
@@ -24,7 +25,7 @@ type UserEditState = {
   adminForOrganizationOes: string[];
 };
 
-const ROLE_LABELS: Record<TUserRole, { label: string; semantic: string }> = {
+const ROLE_LABELS: Record<TUserRole, { label: string; semantic: SemanticType }> = {
   member: { label: 'Mitglied', semantic: 'neutral' },
   'team-admin': { label: 'Team-Admin', semantic: 'informational' },
   'org-admin': { label: 'Org-Admin', semantic: 'warning' },
@@ -261,9 +262,9 @@ export function AdminUserList() {
                     <span className="fw-semibold text-truncate">{currentUser.userName}</span>
                   </div>
                   <div className="d-flex align-items-center gap-2">
-                    <span className="db-tag" data-semantic={roleInfo.semantic} data-emphasis="strong">
+                    <DBTag semantic={roleInfo.semantic} emphasis="strong">
                       {roleInfo.label}
-                    </span>
+                    </DBTag>
                     <span
                       className="db-icon text-body-secondary db-font-size-md"
                       data-icon={isExpanded ? 'chevron_up' : 'chevron_down'}
@@ -282,9 +283,9 @@ export function AdminUserList() {
                       <>
                         <span className="text-body-secondary ms-2">Team:</span>
                         {currentUser.adminForTeamOes.map(oe => (
-                          <span key={oe} className="db-tag" data-semantic="informational">
+                          <DBTag key={oe} semantic="informational">
                             {oe}
-                          </span>
+                          </DBTag>
                         ))}
                       </>
                     )}
@@ -292,9 +293,9 @@ export function AdminUserList() {
                       <>
                         <span className="text-body-secondary ms-2">Org:</span>
                         {currentUser.adminForOrganizationOes.map(oe => (
-                          <span key={oe} className="db-tag" data-semantic="warning">
+                          <DBTag key={oe} semantic="warning">
                             {oe}
-                          </span>
+                          </DBTag>
                         ))}
                       </>
                     )}
@@ -360,61 +361,45 @@ export function AdminUserList() {
                     <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
                       {editable && (
                         <>
-                          <button
-                            className="db-button flex-grow-1"
-                            data-variant="brand"
-                            data-size="small"
+                          <DBButton
+                            className="flex-grow-1"
+                            type="button"
+                            variant="brand"
+                            size="small"
+                            icon={isSaving ? undefined : 'save'}
+                            showIcon={!isSaving}
                             onClick={() => handleSave(currentUser._id)}
                             disabled={!changed || isSaving}
                           >
-                            {isSaving ? (
-                              <>
-                                <span className="laedt me-1" data-size="small" role="status" />
-                                Speichern…
-                              </>
-                            ) : (
-                              <>
-                                <span
-                                  className="db-icon me-1 db-font-size-sm"
-                                  data-icon="save"
-                                  style={{ verticalAlign: 'middle' }}
-                                />
-                                Speichern
-                              </>
-                            )}
-                          </button>
+                            {isSaving && <span className="laedt me-1" data-size="small" role="status" />}
+                            {isSaving ? 'Speichern…' : 'Speichern'}
+                          </DBButton>
                           {changed && (
-                            <button
-                              className="db-button"
-                              data-variant="outlined"
-                              data-size="small"
+                            <DBButton
+                              type="button"
+                              variant="outlined"
+                              size="small"
+                              icon="undo"
+                              noText
                               onClick={() => handleResetEdit(currentUser._id)}
                               disabled={isSaving}
-                              title="Änderungen verwerfen"
                             >
-                              <span
-                                className="db-icon db-font-size-sm"
-                                data-icon="undo"
-                                style={{ verticalAlign: 'middle' }}
-                              />
-                            </button>
+                              <DBTooltip>Änderungen verwerfen</DBTooltip>
+                            </DBButton>
                           )}
                         </>
                       )}
-                      <button
-                        className="db-button flex-grow-1"
-                        data-variant="outlined"
-                        data-size="small"
+                      <DBButton
+                        className="flex-grow-1"
+                        type="button"
+                        variant="outlined"
+                        size="small"
+                        icon={isSelfRow ? 'house' : 'eye'}
                         onClick={() => handleLoadAsUser(currentUser._id)}
                         disabled={isSaving}
                       >
-                        <span
-                          className="db-icon me-1 db-font-size-sm"
-                          data-icon={isSelfRow ? 'house' : 'eye'}
-                          style={{ verticalAlign: 'middle' }}
-                        />
                         {isSelfRow ? 'Eigene Daten' : 'Daten laden'}
-                      </button>
+                      </DBButton>
                     </div>
                   </div>
                 )}
