@@ -1,3 +1,4 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { type FC } from 'react';
 
 import type { HelpContent } from '@/core/help/helpContent';
@@ -9,9 +10,9 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
     title={content.title}
     Footer={
       <div className="dialog-fuss">
-        <button type="button" className="db-button" data-variant="filled" data-dialog-dismiss="modal">
+        <DBButton type="button" variant="filled" data-dialog-dismiss="modal">
           Schließen
-        </button>
+        </DBButton>
       </div>
     }
   >
@@ -93,17 +94,17 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
       )}
 
       {content.reopenOnboardingAction && (
-        <button
+        <DBButton
           type="button"
-          className="db-button align-self-start"
-          data-variant="outlined"
-          data-size="small"
+          className="align-self-start"
+          variant="outlined"
+          size="small"
+          icon="circular_arrows"
           data-dialog-dismiss="modal"
           onClick={() => openOnboardingGuide()}
         >
-          <span className="db-icon align-middle me-1 db-font-size-sm" data-icon="circular_arrows" />
           Ersteinrichtung erneut öffnen
-        </button>
+        </DBButton>
       )}
     </MyModalBody>
   </MyDivModal>

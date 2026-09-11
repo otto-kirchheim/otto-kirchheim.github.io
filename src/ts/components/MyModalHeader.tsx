@@ -1,3 +1,4 @@
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useId, useRef, type FC } from 'react';
 
 import type { HelpContextKey } from '@/core/help/helpContent';
@@ -31,28 +32,28 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
         <h2 id={ueberschriftId}>{title}</h2>
       </header>
       {helpContext && (
-        <button
+        <DBButton
           type="button"
-          className="db-button"
-          data-variant="ghost"
-          data-icon="question_mark_circle"
-          data-no-text="true"
+          variant="ghost"
+          icon="question_mark_circle"
+          noText
+          aria-label="Hilfe anzeigen"
           onClick={() => openHelpModal(helpContext)}
         >
-          Hilfe anzeigen
-        </button>
+          <DBTooltip>Hilfe anzeigen</DBTooltip>
+        </DBButton>
       )}
-      <button
+      <DBButton
         type="button"
-        className="db-button"
-        data-variant="ghost"
-        data-icon="cross"
-        data-no-text="true"
+        variant="ghost"
+        icon="cross"
+        noText
+        aria-label="Schließen"
         data-action="close"
         data-dialog-dismiss="modal"
       >
-        Schließen
-      </button>
+        <DBTooltip>Schließen</DBTooltip>
+      </DBButton>
     </div>
   );
 };

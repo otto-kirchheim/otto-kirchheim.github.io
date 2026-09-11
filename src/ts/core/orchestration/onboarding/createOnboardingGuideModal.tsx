@@ -1,3 +1,4 @@
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
@@ -179,19 +180,18 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
         <span className="text-body-secondary small">
           Schritt {stepIndex + 1} von {steps.length}
         </span>
-        <button
+        <DBButton
           type="button"
-          className="db-button p-0"
-          data-variant="ghost"
-          data-size="small"
+          className="p-0"
+          variant="ghost"
+          size="small"
+          icon={minimiert ? 'chevron_up' : 'chevron_down'}
+          noText
           aria-label={minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}
           onClick={() => setMinimiert(m => !m)}
         >
-          <span
-            className="db-icon align-middle db-font-size-md"
-            data-icon={minimiert ? 'chevron_up' : 'chevron_down'}
-          />
-        </button>
+          <DBTooltip>{minimiert ? 'Ersteinrichtung ausklappen' : 'Ersteinrichtung minimieren'}</DBTooltip>
+        </DBButton>
       </div>
 
       {!minimiert && (
@@ -259,34 +259,26 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
 
       {!minimiert && (
         <div className="d-flex gap-2 py-2 px-3 bg-body-secondary border-top">
-          <button
+          <DBButton
             type="button"
-            className="db-button"
-            data-variant="filled"
-            data-size="small"
+            variant="filled"
+            size="small"
             disabled={isFirst}
             onClick={() => setStepIndex(index => index - 1)}
           >
             Zurück
-          </button>
-          <button type="button" className="db-button me-auto" data-variant="ghost" data-size="small" onClick={onClose}>
+          </DBButton>
+          <DBButton type="button" className="me-auto" variant="ghost" size="small" onClick={onClose}>
             Überspringen
-          </button>
+          </DBButton>
           {isLast ? (
-            <button type="button" className="db-button" data-variant="brand" data-size="small" onClick={onClose}>
+            <DBButton type="button" variant="brand" size="small" onClick={onClose}>
               Fertig
-            </button>
+            </DBButton>
           ) : (
-            <button
-              type="button"
-              className="db-button"
-              data-variant="brand"
-              data-size="small"
-              disabled={!weiterErlaubt}
-              onClick={weiter}
-            >
+            <DBButton type="button" variant="brand" size="small" disabled={!weiterErlaubt} onClick={weiter}>
               {weiterText}
-            </button>
+            </DBButton>
           )}
         </div>
       )}

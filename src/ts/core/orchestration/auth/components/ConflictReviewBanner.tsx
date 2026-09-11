@@ -1,3 +1,4 @@
+import { DBButton } from '@db-ux/react-core-components';
 import { type FC, useState } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
@@ -45,16 +46,16 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
           <span className="fw-semibold d-block">Bitte erst Änderungen überprüfen und speichern</span>
           <span className="small">{text}</span>
         </span>
-        <button
-          className="db-button u-min-w-120"
-          data-variant="brand"
-          data-size="small"
+        <DBButton
+          className="u-min-w-120"
+          variant="brand"
+          size="small"
           type="button"
           disabled={saving}
           onClick={handleClick}
         >
           Übernehmen {saving && <span className="laedt ms-2" role="status" aria-hidden="true" />}
-        </button>
+        </DBButton>
       </div>
     </div>
   );
