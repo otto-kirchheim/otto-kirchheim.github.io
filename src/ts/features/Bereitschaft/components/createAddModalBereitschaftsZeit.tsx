@@ -1,3 +1,4 @@
+import { DBTag } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
@@ -75,14 +76,14 @@ const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, tim
     {dateEl}
     {timeEl}
     {berechnet ? (
-      <span
-        className="db-tag border berechnet-badge flex-shrink-0"
-        data-semantic="neutral"
-        data-emphasis="strong"
+      <DBTag
+        className="border berechnet-badge flex-shrink-0"
+        semantic="neutral"
+        emphasis="strong"
         style={{ fontSize: '0.6rem' }}
       >
         berechnet
-      </span>
+      </DBTag>
     ) : null}
   </div>
 );

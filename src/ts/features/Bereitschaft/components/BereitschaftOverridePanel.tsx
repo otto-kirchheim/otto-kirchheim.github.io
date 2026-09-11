@@ -1,3 +1,4 @@
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { type FC, type JSX, useEffect, useState } from 'react';
 
 import { DbFeld } from '@/components';
@@ -81,17 +82,14 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
 
   return (
     <div>
-      <div className="db-checkbox bereitschaft" data-size="small">
-        <label htmlFor="azOverride">
-          <input
-            type="checkbox"
-            id="azOverride"
-            checked={open}
-            onChange={e => toggleOpen((e.target as HTMLInputElement).checked)}
-          />
-          Andere Arbeitszeiten hinterlegen
-        </label>
-      </div>
+      <DBCheckbox
+        className="bereitschaft"
+        size="small"
+        id="azOverride"
+        label="Andere Arbeitszeiten hinterlegen"
+        checked={open}
+        onChange={e => toggleOpen(e.target.checked)}
+      />
       {open && (
         <div className="border p-2 mt-1">
           <SchichtOverrideEditor aZ={aZ} schichten={activeSchichten} overrides={overrides} onChange={handleEditor} />
@@ -140,15 +138,15 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
                   />
                   <span className="text-muted small">min</span>
                 </div>
-                <button
+                <DBButton
                   type="button"
-                  className="db-button ms-auto"
-                  data-variant={sonderOverride ? 'outlined' : 'outlined'}
-                  data-size="small"
+                  className="ms-auto"
+                  variant="outlined"
+                  size="small"
                   onClick={() => handleSonderChange(undefined)}
                 >
                   {sonderOverride ? 'Zurücksetzen' : 'Deaktivieren'}
-                </button>
+                </DBButton>
               </div>
             </div>
           )}

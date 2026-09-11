@@ -46,8 +46,11 @@ describe('BereitschaftOverridePanel', () => {
     expect(container.querySelector('input')).toBeNull();
   });
 
-  it('zeigt initial nur den geschlossenen Schalter, kein Editor-Panel', () => {
+  it('zeigt initial nur den geschlossenen Schalter, kein Editor-Panel', async () => {
     const { container } = renderPanel(createAz());
+    // DBCheckbox vergibt die `id` erst per `useEffect` (useId + resetIds), nicht im ersten
+    // synchronen `flushSync`-Render -- ohne diesen Tick liefert `#azOverride` hier `null`.
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride');
     expect(toggle?.checked).toBe(false);
     expect(container.querySelector('.border.p-2.mt-1')).toBeNull();
@@ -55,6 +58,7 @@ describe('BereitschaftOverridePanel', () => {
 
   it('öffnet das Panel und meldet leere Overrides beim Aktivieren des Schalters', async () => {
     const { container, onChange } = renderPanel(createAz());
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
 
     await fireChange(toggle, true);
@@ -66,6 +70,7 @@ describe('BereitschaftOverridePanel', () => {
 
   it('meldet undefined beim Schließen des Panels', async () => {
     const { container, onChange } = renderPanel(createAz());
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
 
     await fireChange(toggle, true);
@@ -79,6 +84,7 @@ describe('BereitschaftOverridePanel', () => {
 
   it('reicht Wochentag-Overrides aus dem SchichtOverrideEditor durch', async () => {
     const { container, onChange } = renderPanel(createAz());
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
     await fireChange(toggle, true);
     onChange.mockClear();
@@ -97,6 +103,7 @@ describe('BereitschaftOverridePanel', () => {
     document.body.appendChild(sonderCheckbox);
 
     const { container, onChange } = renderPanel(createAz());
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
     await fireChange(toggle, true);
 
@@ -143,6 +150,7 @@ describe('BereitschaftOverridePanel', () => {
     document.body.appendChild(sonderCheckbox);
 
     const { container } = renderPanel(createAz());
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
     await fireChange(toggle, true);
 
@@ -183,6 +191,7 @@ describe('BereitschaftOverridePanel', () => {
     const { container } = renderPanel(
       createAz({ sonder: { aktiv: false, beginn: '20:15', ende: '07:00', pause: 20 } }),
     );
+    await flush();
     const toggle = container.querySelector<HTMLInputElement>('#azOverride')!;
     await fireChange(toggle, true);
 
