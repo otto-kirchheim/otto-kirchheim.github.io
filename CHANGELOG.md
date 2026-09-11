@@ -2,6 +2,41 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-11 (97)
+
+### refactor (Phase J5: Bereitschaft/EWT/Neben/EA-Tab-Buttons auf `@db-ux/react-core-components`)
+
+- 6 Dateien: `BereitschaftTab` (5 Buttons), `BereitschaftOverridePanel` (1 Checkbox, 1
+  Button), `createAddModalBereitschaftsZeit` (1 Tag), `EwtTab`/`NebenTab`/`EaTab` (je
+  Hilfe-/Hinzufügen-/Speichern-/PDF-Button, 4-5 pro Datei).
+- **Neuer Architektur-Baustein: `buttonLoadingStore` + `useButtonLoading` + `DBLoadingButton`.**
+  `setLoading(id)`/`clearLoading(id)` (aufgerufen aus reinem TS-Code wie `saveDaten.ts`,
+  `submitBereitschaftsZeiten.ts`, außerhalb von React) manipulierten Button-Kinder bisher
+  per `btnElement.replaceChildren(...)` direkt im DOM — für `DBButton`-Instanzen unterläuft
+  das den React-Tree (ein späteres Reconcile kann mit `NotFoundError: removeChild`
+  crashen). Betraf nicht nur Bereitschaft: `btnLoginModal` läuft bereits über `MyButton`
+  und trägt denselben latenten Fehler in sich. Fix: neuer `buttonLoadingStore` macht den
+  Ladezustand deklarativ abonnierbar; `setLoading`/`clearLoading` prüfen
+  `data-react-loading="true"` (von `DBLoadingButton` gesetzt) und schalten für solche
+  Buttons auf den Store um, alle anderen (noch native) Buttons laufen unverändert über
+  den alten `replaceChildren`-Pfad — kein Flag-Day, jede Phase migriert nur die Buttons,
+  die sie gerade anfasst. Puppeteer-Verifikation: 7 aufeinanderfolgende Lade-Zyklen ohne
+  Konsolenfehler; der AutoSave-Badge (`autoSaveIndicator.ts`, `appendChild` statt
+  `replaceChildren`) übersteht dieselben Zyklen unverändert und blieb deshalb unangetastet.
+- `EwtTab.tsx`: `berechnenParser`/`schichtParser` (rohe HTML-Strings für `CustomTable`s
+  Vanilla-DOM-Zellen) bewusst nicht angefasst — kein JSX, Phase M.
+- Flakiness in `Bereitschaft.BereitschaftOverridePanel.test.tsx` gefunden und behoben
+  (trat bei wiederholtem vollem Suite-Lauf ~1-in-8 auf, vorher nie beobachtet, weil ein
+  solcher Lauf zuvor nicht nötig war): `DBCheckbox` vergibt seine `id` per `useEffect`
+  (nicht im ersten `flushSync`-Render) und setzt `_ref.current.checked` in einem weiteren
+  Mount-Effekt direkt am DOM, an Reacts Value-Tracker vorbei — dieselbe Bugklasse wie der
+  „hängende Schalter" bei `DBSwitch` (`MyCheckbox.tsx`). Fix: genereller `warteAufElement`-
+  Poll-Helfer statt fixer Tick-Zahl, mit Settle-Ticks nach Fund; betraf auch
+  `#override-frueh` (`SchichtOverrideEditor`, bereits aus J4).
+- Verifikation: `typecheck`/`lint` 0/21 · `lint:css` 0/84 · `TZ=Europe/Berlin test`
+  2128/0 (Suite 25× wiederholt, 0 Fehlschläge, gegen die gefundene Flakiness) · `build`
+  grün.
+
 ## 2026-09-11 (96)
 
 ### refactor (Phase J4: Einstellungen-Komponenten auf `@db-ux/react-core-components`)

@@ -551,7 +551,26 @@ Ende auf `<head>` + einen React-Root.
       `createEditorModalVE.tsx`) bewusst NICHT konvertiert -- keine echten UI-Controls,
       `DBCheckbox` haette sichtbares Label-Markup erzwungen.
       Details: CHANGELOG (96).
-- [ ] **J5 Bereitschaft / EWT / Neben / EA.**
+- [x] **J5 Bereitschaft / EWT / Neben / EA** (2026-09-11). 6 Dateien.
+      **Neuer Baustein `buttonLoadingStore` + `useButtonLoading` + `DBLoadingButton`** --
+      `setLoading(id)`/`clearLoading(id)` (aus reinem TS-Code wie `saveDaten.ts`, ausserhalb
+      von React aufgerufen) manipulierten Button-Kinder per `replaceChildren()` direkt im
+      DOM, das unterlaeuft bei `DBButton`-Instanzen den React-Tree (spaeteres Reconcile kann
+      mit `NotFoundError: removeChild` crashen -- `btnLoginModal` laeuft bereits ueber
+      `MyButton` und traegt denselben latenten Fehler in sich). Fix macht den Ladezustand
+      ueber einen Store deklarativ abonnierbar; `data-react-loading="true"` markiert
+      konvertierte Buttons, alle anderen laufen unveraendert ueber den alten Pfad -- kein
+      Flag-Day. Puppeteer-verifiziert (7 Lade-Zyklen, keine Konsolenfehler); der AutoSave-
+      Badge (`appendChild`, nicht `replaceChildren`) blieb unangetastet, uebersteht dieselben
+      Zyklen nachweislich unbeschadet.
+      `EwtTab.tsx`: `berechnenParser`/`schichtParser` (rohe HTML-Strings fuer `CustomTable`)
+      bewusst nicht angefasst -- kein JSX, Phase M.
+      Nebenbei gefunden+behoben: Flakiness in `Bereitschaft.BereitschaftOverridePanel.test.tsx`
+      (~1-in-8 bei wiederholtem vollem Suite-Lauf) -- `DBCheckbox` vergibt `id` per
+      `useEffect` und setzt `_ref.current.checked` in einem weiteren Mount-Effekt direkt am
+      DOM (dieselbe Bugklasse wie der "haengende Schalter" bei `DBSwitch`). Fix: genereller
+      Poll-Helfer statt fixer Tick-Zahl.
+      Details: CHANGELOG (97).
 - [ ] **J6 Feature-Tab-Buttons** (`data-disabler` + `buttonDisable.ts`-Selektor pruefen).
 - [ ] **J6b `MyButton` aufloesen** -> `DBButton`.
 - [ ] **J7 `My*`- + `core/`-Rest-Markup.**
