@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 /** Payload-Grenze im Backend (`oeLevelsSchema.max(10)`); real kommen max. ~7 Ebenen vor. */
 export const MAX_OE_LEVELS = 10;
@@ -76,28 +77,32 @@ export function OeLevelInputs({
         );
       })}
       {canRemove && (
-        <button
+        <DBButton
           type="button"
-          className="db-button px-1 py-0"
-          data-variant="outlined"
-          data-size="small"
+          className="px-1 py-0"
+          variant="outlined"
+          size="small"
+          icon="minus"
+          noText
           aria-label="Letzte Ebene entfernen"
           onClick={onRemoveLevel}
         >
-          <span className="db-icon db-font-size-xs" data-icon="minus" style={{ verticalAlign: 'middle' }} />
-        </button>
+          <DBTooltip>Letzte Ebene entfernen</DBTooltip>
+        </DBButton>
       )}
       {canAdd && (
-        <button
+        <DBButton
           type="button"
-          className="db-button px-1 py-0"
-          data-variant="outlined"
-          data-size="small"
+          className="px-1 py-0"
+          variant="outlined"
+          size="small"
+          icon="plus"
+          noText
           aria-label="Ebene hinzufügen"
           onClick={onAddLevel}
         >
-          <span className="db-icon db-font-size-xs" data-icon="plus" style={{ verticalAlign: 'middle' }} />
-        </button>
+          <DBTooltip>Ebene hinzufügen</DBTooltip>
+        </DBButton>
       )}
     </div>
   );

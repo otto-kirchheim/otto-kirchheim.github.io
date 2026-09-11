@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { OeLevelBoxes } from './OeLevelBoxes';
 
 type OeTagInputProps = {
@@ -39,44 +40,35 @@ export function OeTagInput({
       <div className="d-flex flex-wrap gap-1 mb-1">
         {values.length === 0 && <span className="text-body-secondary small fst-italic">Keine</span>}
         {values.map((oe, index) => (
-          <span
+          <DBTag
             key={`${oe}-${index}`}
-            className="db-tag d-inline-flex align-items-center gap-1 py-1 px-2"
-            data-semantic="informational"
-            data-emphasis="strong"
+            className="d-inline-flex align-items-center gap-1 py-1 px-2"
+            semantic="informational"
+            emphasis="strong"
+            behavior={disabled ? 'static' : 'removable'}
+            removeButton={`${oe} entfernen`}
+            onRemove={() => handleRemove(index)}
           >
             {oe}
-            {!disabled && (
-              <button
-                type="button"
-                className="db-button ms-1"
-                data-icon="cross"
-                data-variant="ghost"
-                data-size="small"
-                data-no-text="true"
-                onClick={() => handleRemove(index)}
-              >
-                {`${oe} entfernen`}
-              </button>
-            )}
-          </span>
+          </DBTag>
         ))}
       </div>
       {!disabled && (
         <div className="d-flex flex-wrap align-items-center gap-2">
           <span className="text-body-secondary small">{placeholder}</span>
           <OeLevelBoxes value={inputValue} onChange={setInputValue} defaultLevelCount={defaultLevelCount} />
-          <button
-            className="db-button"
-            data-variant="outlined"
-            data-size="small"
+          <DBButton
+            variant="outlined"
+            size="small"
             type="button"
+            icon="plus"
+            noText
             aria-label="Wert hinzufügen"
             onClick={handleAdd}
             disabled={!inputValue.trim()}
           >
-            <span className="db-icon db-font-size-sm" data-icon="plus" style={{ verticalAlign: 'middle' }} />
-          </button>
+            <DBTooltip>Wert hinzufügen</DBTooltip>
+          </DBButton>
         </div>
       )}
     </div>
