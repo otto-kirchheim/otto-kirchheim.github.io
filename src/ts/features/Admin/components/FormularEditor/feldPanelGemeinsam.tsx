@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
 import type { Armed } from './feldPanelTypen';
+import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
@@ -90,21 +91,18 @@ export function istGleich(a: Armed | null, b: Armed): boolean {
 
 export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClick: () => void; titel?: string }) {
   return (
-    <button
+    <DBButton
       type="button"
-      className="db-button py-0"
-      data-variant={aktiv ? 'filled' : 'outlined'}
+      className="py-0"
+      variant={aktiv ? 'filled' : 'outlined'}
       data-color={aktiv ? 'critical' : undefined}
-      data-size="small"
+      size="small"
+      icon={aktiv ? 'location_crosshairs' : 'resize'}
+      noText
       onClick={onClick}
-      title={titel ?? 'Rechteck auf dem PDF aufziehen, um Position und Zellbreite zu setzen'}
     >
-      <span
-        className="db-icon db-font-size-xs"
-        data-icon={aktiv ? 'location_crosshairs' : 'resize'}
-        style={{ verticalAlign: 'middle' }}
-      />
-    </button>
+      <DBTooltip>{titel ?? 'Rechteck auf dem PDF aufziehen, um Position und Zellbreite zu setzen'}</DBTooltip>
+    </DBButton>
   );
 }
 
@@ -171,23 +169,19 @@ export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; 
 
   return (
     <>
-      <button
+      <DBButton
         type="button"
-        className="db-button p-0 small text-muted text-nowrap text-decoration-none"
-        data-variant="ghost"
-        data-size="small"
+        className="p-0 small text-muted text-nowrap text-decoration-none"
+        variant="ghost"
+        size="small"
+        iconTrailing={offen ? 'chevron_up' : 'chevron_down'}
         onClick={() => setOffen(o => !o)}
         title="Koordinaten bearbeiten"
       >
         x={wert.x.toFixed(0)}
         {wert.y !== undefined && `, y=${wert.y.toFixed(0)}`}
         {breite !== null && `, ${breite.toFixed(0)}${hoehe === null ? ' br.' : `×${hoehe.toFixed(0)}`}`}
-        <span
-          className="db-icon db-font-size-2xs"
-          data-icon={offen ? 'chevron_up' : 'chevron_down'}
-          style={{ verticalAlign: 'middle' }}
-        />
-      </button>
+      </DBButton>
       {offen && (
         <div className="raster w-100 mt-1 abstand-1">
           <ZahlFeld label="x" wert={wert.x} onChange={v => onChange({ ...wert, x: v ?? 0 })} />
@@ -240,42 +234,28 @@ export function DarstellungsFelder<
           />
         </div>
         <div className="sp-3 mb-0">
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={Boolean(wert.fett)}
-                onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
-              />
-              Fett
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            label="Fett"
+            checked={Boolean(wert.fett)}
+            onChange={e => onChange({ ...wert, fett: (e.target as HTMLInputElement).checked || undefined })}
+          />
         </div>
         <div className="sp-3 mb-0">
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={Boolean(wert.kursiv)}
-                onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
-              />
-              Kursiv
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            label="Kursiv"
+            checked={Boolean(wert.kursiv)}
+            onChange={e => onChange({ ...wert, kursiv: (e.target as HTMLInputElement).checked || undefined })}
+          />
         </div>
         <div className="sp-3 mb-0">
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={Boolean(wert.unterstrichen)}
-                onChange={e =>
-                  onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })
-                }
-              />
-              Unterstr.
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            label="Unterstr."
+            checked={Boolean(wert.unterstrichen)}
+            onChange={e => onChange({ ...wert, unterstrichen: (e.target as HTMLInputElement).checked || undefined })}
+          />
         </div>
       </div>
       {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
@@ -336,28 +316,20 @@ export function DarstellungsFelder<
       {/* Verhalten: Auto-Verkleinerung und Umbruch steuern beide, wie der Text in die Zelle passt. */}
       <div className="d-flex gap-3 mt-1">
         <div>
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={Boolean(wert.autoGroesse)}
-                onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
-              />
-              Schrift automatisch verkleinern
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            label="Schrift automatisch verkleinern"
+            checked={Boolean(wert.autoGroesse)}
+            onChange={e => onChange({ ...wert, autoGroesse: (e.target as HTMLInputElement).checked || undefined })}
+          />
         </div>
         <div>
-          <div className="db-checkbox" data-size="small">
-            <label>
-              <input
-                type="checkbox"
-                checked={Boolean(wert.umbruch)}
-                onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
-              />
-              Zeilenumbruch
-            </label>
-          </div>
+          <DBCheckbox
+            size="small"
+            label="Zeilenumbruch"
+            checked={Boolean(wert.umbruch)}
+            onChange={e => onChange({ ...wert, umbruch: (e.target as HTMLInputElement).checked || undefined })}
+          />
         </div>
       </div>
     </>

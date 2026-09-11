@@ -139,17 +139,17 @@ export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props)
       })}
 
       {vorlagen.map(v => (
-        <button
+        <DBButton
           key={v.name}
           type="button"
-          className="db-button me-1"
-          data-variant="outlined"
-          data-size="small"
+          className="me-1"
+          variant="outlined"
+          size="small"
           title={`Legt die Gruppe „${v.name}" plus ${v.plaetze} Spaltenplätze an`}
           onClick={() => onVorlage(v.name, v.gruppe, v.plaetze)}
         >
           + {v.label}
-        </button>
+        </DBButton>
       ))}
     </div>
   );
