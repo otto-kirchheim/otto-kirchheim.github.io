@@ -82,6 +82,7 @@ import { mount } from '@/infrastructure/ui/reactRoot';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import StartTab from '@/infrastructure/ui/StartTab';
+import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -106,6 +107,12 @@ if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 20
 // die Kinder an.
 const startRoot = document.querySelector<HTMLDivElement>('#start');
 if (startRoot) mount(startRoot, createElement(StartTab));
+
+// Muss ebenfalls VOR der App-Start-Task-Warteschlange laufen: `Berechnung/index.ts`s eigener
+// `registerAppStartTask`-Aufruf (per `import '@/features/Berechnung'` unten) ruft ggf. sofort
+// `generateTableBerechnung()` auf, das `#tbodyBerechnung` erst durch diesen Mount bekommt.
+const berechnungRoot = document.querySelector<HTMLDivElement>('#Berechnung');
+if (berechnungRoot) mount(berechnungRoot, createElement(BerechnungTab));
 
 // Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
 // bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.

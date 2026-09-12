@@ -876,10 +876,35 @@ Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-r
       Ueberschrift vorhanden, Deep-Link `#EWT` weiterhin funktionsfaehig (Hash-Sync unveraendert,
       greift wie zuvor nur bei gesetztem `Benutzer`-Storage-Key), Mobile-Viewport ohne Fehler.
       `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
-      (111).
-- [ ] **L2 Berechnung-Tab-Huelle.** Titel, Monats-Navigation, `db-table`-Geruest; `#tbodyBerechnung`
-      wird von `Berechnung/generateTableBerechnung.ts` per DOM-String befuellt -> nach React
-      ziehen. `BerechnungMobileCards.tsx` ist bereits React.
+      (112).
+- [x] **L2 Berechnung-Tab-Huelle** (2026-09-12). Titel, Monats-Navigation, `db-table`-Geruest ->
+      `BerechnungTab.tsx` (`infrastructure/ui/`), direkt in `#Berechnung` gemountet (kein
+      Wrapper-Div, analog L1). `#tbodyBerechnung` (bisher `generateTableBerechnung.ts` per
+      `innerHTML`-Strings) -> `BerechnungTableRows.tsx` (`Berechnung/components/`), eigener
+      React-Root direkt auf dem `<tbody>` (analog `BerechnungMobileCards`/
+      `#berechnungMobileCards` -- `BerechnungTab.tsx` rendert beide Container nur als leere
+      Blaetter). `generateTableBerechnung.ts` dadurch von ~90 auf ~25 Zeilen geschrumpft: nur noch
+      Daten berechnen (`calculateBerechnungRows`/`calculateZulagenBreakdown`) und beide
+      React-Roots mounten. Toter `nullParser`-Helper (`'&nbsp;'`-Sentinel fuers alte
+      `innerHTML`-Bauen) mit entfernt -- JSX rendert `null`-Werte jetzt direkt als `' '`.
+      `berechnungMonatsFenster.ts` (Spalten-Fenster, Prev/Next-Nav) unveraendert: liest
+      `td[data-monat]`-Zellen generisch per `querySelectorAll`, unabhaengig davon ob React oder
+      `innerHTML` sie erzeugt hat -- `wendeMonatsFensterAn()` bleibt nach dem `mount()`-Aufruf
+      synchron gueltig (`flushSync` in `reactRoot.ts`, exakt der Header/Footer-Mechanismus).
+      Bestehende Tests (`Berechnung.test.ts` inkl. `innerHTML`-Serialisierungs-Assertions,
+      `Berechnung.monatsFenster.test.ts`) liefen **ohne Anpassung** durch -- die
+      React-gerenderten Zellen serialisieren identisch zu den alten `innerHTML`-Strings.
+      Puppeteer-verifiziert (Hell/Dunkel-Screenshot Desktop, Mobile-Karten-Ansicht): 13 Zeilen,
+      Gruppen-Trennlinien, Waehrungsformat, `Summe Gesamt` Monat 3 exakt wie im Unit-Test
+      (`496,49 €`), Monatsfenster-Navigation korrekt ausgeblendet (alle 12 Monate sichtbar).
+      `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
+      (113).
+- [ ] **L3 Einstellungen-Tab.** Groesster Slice (~390 Zeilen): Personendaten-Formular,
+      Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount,
+      Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste. Aufwand liegt in der Entkopplung
+      (`saveEinstellungen`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts` lesen
+      per `document.querySelector` aus dem DOM) -- Reihenfolge laut Plan: erst Teilpanels, dann
+      Personendaten-Formular; `#tableVE` bleibt bis Phase M eine `CustomTable`.
 - [ ] **L3 Einstellungen-Tab.** Groesster Slice (~390 Zeilen): Personendaten-Formular,
       Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount,
       Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste. Aufwand liegt in der Entkopplung

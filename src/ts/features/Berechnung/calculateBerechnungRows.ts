@@ -12,8 +12,6 @@ const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
   (n, g) => Math.round(n.SIPO / 60) * g.SIPO,
 ];
 
-export const nullParser = (value: null | string | number): string | number => value ?? '&nbsp;';
-
 export const timeConvert = (num: number): string => {
   const hours = Math.floor(num / 60);
   const minutes = Math.round(num % 60);

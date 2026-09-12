@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (113)
+
+### refactor (Phase L2: Berechnung-Tab-Huelle nach React)
+
+- Titel, Monats-Navigation und `db-table`-Geruest (`index.html`) → `BerechnungTab.tsx`
+  (`infrastructure/ui/`), direkt in die `#Berechnung`-Tab-Pane gemountet (kein Wrapper-Div,
+  analog L1/`StartTab`).
+- `#tbodyBerechnung` (bisher `generateTableBerechnung.ts` per `innerHTML`-Strings befuellt) →
+  `BerechnungTableRows.tsx` (`Berechnung/components/`), eigener React-Root direkt auf dem
+  `<tbody>`-Element (analog `BerechnungMobileCards`/`#berechnungMobileCards` — `BerechnungTab.tsx`
+  rendert beide Container nur als leere Blaetter, ruehrt ihre Kinder nie an).
+  `generateTableBerechnung.ts` dadurch von ~90 auf ~25 Zeilen geschrumpft: nur noch Daten
+  berechnen und beide React-Roots mounten. Toter `nullParser`-Helper (`'&nbsp;'`-Sentinel fuers
+  alte `innerHTML`-Bauen) mit entfernt.
+- `berechnungMonatsFenster.ts` (Spalten-Fenster, Prev/Next-Navigation) unveraendert: liest
+  `td[data-monat]`-Zellen generisch per `querySelectorAll`, unabhaengig von React oder
+  `innerHTML`; bleibt nach dem `mount()`-Aufruf synchron gueltig (`flushSync`, wie bei
+  Header/Footer).
+- Bestehende Tests (`Berechnung.test.ts` inkl. `innerHTML`-Serialisierungs-Assertions,
+  `Berechnung.monatsFenster.test.ts`) liefen ohne Anpassung durch — die React-gerenderten
+  Zellen serialisieren identisch zu den alten `innerHTML`-Strings.
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot, Mobile-Karten-Ansicht): 13 Zeilen,
+  Gruppen-Trennlinien, Waehrungsformat, `Summe Gesamt` exakt wie im Unit-Test.
+
 ## 2026-09-12 (112)
 
 ### refactor (Phase L1: Start-Tab nach React)
