@@ -100,8 +100,11 @@ Die Navigation erfolgt über `AppHeader.tsx` (React, `DBHeader`/`DBNavigation`) 
 `infrastructure/ui/tabController.ts` (`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent,
 Hash-Sync), nicht über einen Client-Side-Router. Aktiver Tab der Hauptnavigation ist ein
 `useSyncExternalStore`-Modul-Store (`activeTabStore.ts`/`useActiveTab.ts`), von `AppHeader`
-reaktiv gelesen. Die Tab-Panel-Inhalte (`#start`, `#Berechnung`, `#Einstellungen`, ...) sind
-weiterhin statisches HTML in der einzigen `src/index.html`.
+reaktiv gelesen. Die Tab-Panel-Inhalte werden seit Phase L schrittweise React (`#start` seit
+2026-09-12: `StartTab.tsx`, direkt in die `#start`-Tab-Pane gemountet, kein Wrapper-Div –
+`styles.scss`s `#start.active > .schwelle`-Kindselektor verlangt das); `#Berechnung`,
+`#Einstellungen` etc. sind bis zu ihrem jeweiligen L-Slice weiterhin statisches HTML in der
+einzigen `src/index.html`.
 
 **3-Schichten-Architektur:**
 

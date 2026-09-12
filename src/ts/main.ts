@@ -81,6 +81,7 @@ import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
+import StartTab from '@/infrastructure/ui/StartTab';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -98,6 +99,13 @@ if (appHeaderRoot) mount(appHeaderRoot, createElement(AppHeader));
 
 const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
 if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
+
+// Kein separates Root-Div: `.schwelle` (styles.scss) braucht `#start.active > .schwelle`
+// als direkten Kindselektor, React mountet deshalb direkt in die `#start`-Tab-Pane hinein --
+// `class="tab-pane fade show active"` bleibt Sache von `tabController.ts`, React ruehrt nur
+// die Kinder an.
+const startRoot = document.querySelector<HTMLDivElement>('#start');
+if (startRoot) mount(startRoot, createElement(StartTab));
 
 // Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
 // bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.

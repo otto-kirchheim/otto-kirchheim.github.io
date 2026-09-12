@@ -849,6 +849,47 @@ haengt ab K6 am neuen State. `CustomTable`, `main.tsx`-Umbenennung, restlicher `
 Slice pruefen (Hash-Sync darf nie brechen) und Mobile-Viewport < 768 px fuer Drawer/Burger-Menu
 (K4/K5).
 
+## Aufgaben Phase L -- Statische Tabs nach React (Start 2026-09-12)
+
+Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-react-umbau.md`
+(Abschnitt "Phase L"): L1 Start-Tab, L2 Berechnung-Tab-Huelle, L3 Einstellungen-Tab.
+
+- [x] **L1 Start-Tab** (2026-09-12). `index.html`s Start-Tab-Markup (Willkommen-Ueberschrift +
+      Hilfe-Knopf, 3 Info-Karten, Schnellzugriff-Block, Ladeanzeige, DB-Schwelle) ->
+      `StartTab.tsx` (`infrastructure/ui/`), rein praesentational. Verkabelung bleibt bewusst
+      extern und unveraendert (`#btnHelpStart`/`#startSchnellzugriff [data-jump-tab]`-Klicks +
+      `#Willkommen`-Text in `auth/index.ts`, `#quick-*-tab`-Sichtbarkeit in
+      `updateTabVisibility.ts`, `#startSchnellzugriff`-Sichtbarkeit in `auth/index.ts` /
+      `loadUserDaten.ts` / `logoutUser.ts`, `#ladeAnzeige` in `setLoading.ts`/`clearLoading.ts`)
+      -- alle IDs/Klassen 1:1 uebernommen, keiner dieser Aufrufer musste angefasst werden. Toter
+      auskommentierter "Neuerungen"-Block (HTML-Kommentar, seit laengerem inaktiv) beim Portieren
+      entfernt.
+      **Kernfund (User-Screenshot, Schwelle riesig/falsch positioniert):** erster Versuch mountete
+      ueber ein zusaetzliches `<div id="startRoot">` INNERHALB der `#start`-Tab-Pane. Das brach
+      `styles.scss`s `#start.active > .schwelle`-Kindselektor (Fusszeilen-buendige Platzierung per
+      `margin-block-start: auto` im Flex-Layout von `#start.active`) -- die Schwelle war dadurch
+      Enkel statt Kind, landete mitten im Panel und lief unmaskiert breit. Fix: React mountet
+      direkt in `#start` selbst hinein (kein Zwischen-Div), `class="tab-pane fade show active"`
+      bleibt unveraendert Sache von `tabController.ts`, React ruehrt nur die Kinder an --
+      Puppeteer-Screenshot (Hell/Dunkel) danach: Schwelle korrekt an der Fusszeile.
+      Puppeteer-verifiziert: Start-Tab rendert fehlerfrei (Konsole ohne Errors), 3 Karten +
+      Ueberschrift vorhanden, Deep-Link `#EWT` weiterhin funktionsfaehig (Hash-Sync unveraendert,
+      greift wie zuvor nur bei gesetztem `Benutzer`-Storage-Key), Mobile-Viewport ohne Fehler.
+      `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
+      (111).
+- [ ] **L2 Berechnung-Tab-Huelle.** Titel, Monats-Navigation, `db-table`-Geruest; `#tbodyBerechnung`
+      wird von `Berechnung/generateTableBerechnung.ts` per DOM-String befuellt -> nach React
+      ziehen. `BerechnungMobileCards.tsx` ist bereits React.
+- [ ] **L3 Einstellungen-Tab.** Groesster Slice (~390 Zeilen): Personendaten-Formular,
+      Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount,
+      Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste. Aufwand liegt in der Entkopplung
+      (`saveEinstellungen`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts` lesen
+      per `document.querySelector` aus dem DOM) -- Reihenfolge laut Plan: erst Teilpanels, dann
+      Personendaten-Formular; `#tableVE` bleibt bis Phase M eine `CustomTable`.
+
+**Verifikation je Slice:** wie Phase K, zusaetzlich Puppeteer-Screenshot (Hell+Dunkel) bei
+jedem Slice mit sichtbarem/positionierungsrelevantem Markup (Lehre aus L1).
+
 ---
 
 # Fix: Berechnung-Tabelle -- komplette Ansicht seit J0 nie mehr erreichbar (2026-09-12)

@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (112)
+
+### refactor (Phase L1: Start-Tab nach React)
+
+- Start-Tab-Markup (`index.html`: Willkommen-Ueberschrift + Hilfe-Knopf, 3 Info-Karten,
+  Schnellzugriff-Block, Ladeanzeige, DB-Schwelle) → `StartTab.tsx` (`infrastructure/ui/`), rein
+  praesentational. Verkabelung bleibt bewusst extern (`auth/index.ts`,
+  `updateTabVisibility.ts`, `setLoading.ts`/`clearLoading.ts`) — alle IDs/Klassen 1:1
+  uebernommen, kein externer Aufrufer musste angefasst werden. Toter auskommentierter
+  „Neuerungen"-Block beim Portieren entfernt.
+- React mountet direkt in die `#start`-Tab-Pane hinein (kein separates Root-Div): `styles.scss`s
+  `#start.active > .schwelle`-Kindselektor (Fusszeilen-buendige Platzierung per
+  `margin-block-start: auto`) verlangt die Schwelle als direktes Kind — ein Zwischen-Div hätte
+  den Selektor gebrochen (beim ersten Versuch live beobachtet: Schwelle riesig und falsch
+  positioniert). `class="tab-pane fade show active"` bleibt unveraendert Sache von
+  `tabController.ts`.
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot, Desktop + Mobile-Viewport): Start-Tab rendert
+  fehlerfrei, Schwelle korrekt an der Fusszeile, Deep-Link `#EWT` weiterhin funktionsfaehig.
+
 ## 2026-09-12 (111)
 
 ### docs (Phase K7: Cleanup + Doku, Phase K abgeschlossen)
