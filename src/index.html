@@ -202,29 +202,9 @@
 
     <!-- Die Navigations-Schublade liegt bewusst neben dem Header, nicht darin: ein
          `position: fixed`-Overlay in einer `sticky` Kopfzeile ist unnoetig verschachtelt.
-         `navDrawer.ts` findet sie ueber die Id. -->
-    <dialog class="db-drawer db-header-drawer" id="navdrawer" data-direction="to-right" aria-label="Menü">
-      <article class="db-drawer-container" data-direction="to-right" data-rounded="true" data-show-spacing="true">
-        <div class="db-drawer-header">
-          <header class="db-drawer-header-container">
-            <h2>Nebengeld</h2>
-          </header>
-          <button
-            type="button"
-            class="db-button"
-            data-action="close"
-            data-variant="ghost"
-            data-icon="cross"
-            data-no-text="true"
-          >
-            Schließen
-          </button>
-        </div>
-        <div class="db-drawer-content">
-          <div class="db-header-drawer-navigation"></div>
-        </div>
-      </article>
-    </dialog>
+         Phase K4: React-Huelle (infrastructure/ui/NavDrawerShell.tsx), `navDrawer.ts` findet
+         den resultierenden `<dialog id="navdrawer">` weiterhin ueber die Id. -->
+    <div id="navDrawerRoot"></div>
 
     <!-- Aufnahme fuer den geteilten Dialog (`showModal.tsx` haengt hier den DB-Drawer ein). -->
     <div id="modal"></div>

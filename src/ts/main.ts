@@ -80,6 +80,7 @@ import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import ThemeSwitcher from '@/infrastructure/ui/ThemeSwitcher';
+import NavDrawerShell from '@/infrastructure/ui/NavDrawerShell';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -90,6 +91,11 @@ registerAppStartTask(() => {
 
   const themeSwitcherRoot = document.querySelector<HTMLDivElement>('#themeSwitcherRoot');
   if (themeSwitcherRoot) mount(themeSwitcherRoot, createElement(ThemeSwitcher));
+
+  // NavDrawerShell muss VOR initNavSchublade() gemountet sein: die faengt sich beim Aufruf
+  // einmalig den `#navdrawer`-Knoten (schliesst sich sonst dauerhaft an ein leeres Element).
+  const navDrawerRoot = document.querySelector<HTMLDivElement>('#navDrawerRoot');
+  if (navDrawerRoot) mount(navDrawerRoot, createElement(NavDrawerShell));
 
   // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
   initTabController();

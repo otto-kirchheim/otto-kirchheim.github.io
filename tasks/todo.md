@@ -704,10 +704,25 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       Puppeteer-verifiziert: Dialog oeffnet mit Titel + korrektem `aria-labelledby`
       (`DBDrawerHeader` verknuepft automatisch), Telefon/Mail entschluesselt sichtbar,
       Schliessen-Knopf schliesst. Details: CHANGELOG (107).
-- [ ] **K4 NavDrawer-Huelle.** `<dialog id="navdrawer">` -> `DBDrawer` (Header „Nebengeld" +
-      Schliessen-Button), aber **noch mit dem alten `navDrawer.ts`-Umzugs-Kniff** fuer den
-      Navigationsinhalt -- Trennung von Huelle (K4) und Navigationsinhalt (K5) haelt jeden Slice
-      klein und einzeln testbar.
+- [x] **K4 NavDrawer-Huelle** (2026-09-12). `<dialog id="navdrawer">` -> `NavDrawerShell.tsx`
+      (`infrastructure/ui/`), gemountet ueber `<div id="navDrawerRoot">` **vor** `initNavSchublade()`
+      in `main.ts` (die Funktion faengt sich den `#navdrawer`-Knoten einmalig beim Aufruf).
+      Bewusst uncontrolled -- kein `open`-Prop, keine State-Anbindung: `navDrawer.ts` steuert den
+      resultierenden `<dialog>` weiterhin direkt per `showModal()`/`close()`, der alte
+      Umzugs-Kniff fuer die Navigation bleibt unangetastet (K5).
+      **Zwei DBDrawer-Eigenheiten mit `onClose={schliesseNavSchublade}` abgefangen:** Escape ruft
+      in `DBDrawer` immer `event.preventDefault()` (unterdrueckt den nativen Cancel-Schliessweg),
+      der Schliessen-Knopf-Klick immer `event.stopPropagation()` (unterbindet `navDrawer.ts`s
+      eigene `document`-Klick-Delegation) -- ohne eigenes `onClose` waeren beide Wege ins Leere
+      gelaufen. Backdrop-Klick und `[data-tab-target]`-Klicks bleiben unveraendert Sache von
+      `navDrawer.ts`.
+      `DBDrawerHeader` (Titel "Nebengeld") ersetzt das manuelle `aria-label="Menü"` durch
+      automatisches `aria-labelledby` -- wie schon bei `ImpressumDialog` (K3), User-Vorgabe: neue
+      Dialoge nutzen DB-UX-Komponenten direkt.
+      Puppeteer-verifiziert (Mobile-Viewport, gegen laufenden Dev-Server statt eigenem, um den
+      parallel laufenden User-Server nicht zu killen): Burger oeffnet, Navigation zieht in die
+      Schublade um, Escape UND Schliessen-Knopf schliessen korrekt (Navigation zurueck in
+      Kopfzeile). Details: CHANGELOG (108).
 - [ ] **K5 Header/Brand/Navigation.** `DBHeader`+`DBBrand`+`DBNavigation`/`DBNavigationItem`
       ersetzen das handgeschriebene `db-header`-Markup; Navigation wird EINMAL als React-Baum
       formuliert und zweimal gerendert (Kopfzeile + Drawer-Inhalt aus K4) -- `navDrawer.ts`

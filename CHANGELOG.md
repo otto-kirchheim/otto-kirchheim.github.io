@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (108)
+
+### refactor (Phase K4: NavDrawer-Hülle nach React)
+
+- `<dialog id="navdrawer">` als `NavDrawerShell.tsx` neu gebaut — bewusst uncontrolled (kein
+  `open`-Prop/State), `navDrawer.ts` steuert den resultierenden `<dialog>` weiterhin direkt per
+  `showModal()`/`close()`; der Navigationsinhalt-Umzug bleibt unverändert (Phase K5).
+- `onClose={schliesseNavSchublade}` fängt zwei `DBDrawer`-Eigenheiten ab, die sonst Escape und
+  den Schließen-Knopf lahmgelegt hätten (`preventDefault()` bzw. `stopPropagation()` in
+  `DBDrawer`s eigenem Handler).
+- `DBDrawerHeader` ersetzt das manuelle `aria-label="Menü"` durch automatisches
+  `aria-labelledby` (verlinkt auf den Titel "Nebengeld").
+
 ## 2026-09-12 (107)
 
 ### refactor (Phase K3: Impressum-Dialog nach React)
