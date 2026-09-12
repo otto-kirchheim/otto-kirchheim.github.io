@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (107)
+
+### refactor (Phase K3: Impressum-Dialog nach React)
+
+- `<dialog id="impressum">` als `ImpressumDialog.tsx` neu gebaut, gerendert neben `DBFooter` in
+  `AppFooter.tsx` (teilt den React-State mit dem auslösenden Knopf). `data-dialog-target`/
+  `dbDialog.ts`-Mechanismus dadurch für diesen Dialog abgelöst.
+- `initStatischeDialoge()` (`dbDialog.ts`) war danach ohne verbleibenden Aufrufer — entfernt,
+  ebenso der zugehörige `main.ts`-Code (inkl. der alten Telefon/Mail-DOM-Verschleierung, jetzt
+  Teil der Komponente).
+- Nutzt die echten `DBDrawerHeader`/`DBDrawerFooter`-Slots (neuer Dialog, keine Altlast) statt
+  der `MyModalHeader`/`dialog-koerper`/`dialog-fuss`-Konvention der bestehenden Dialoge.
+
 ## 2026-09-12 (106)
 
 ### fix (Berechnung-Tabelle: komplette Ansicht seit J0 nie mehr erreichbar)

@@ -688,10 +688,22 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       verifiziert: vorher immer `dark`, nachher alle 5 korrekt). Nur der explizite Button-Klick
       traf einen separaten, korrekten Codepfad. `#bd-theme-menu` bleibt bewusst feste Id (nicht
       `useId()`): `styles.scss:1022` verankert den Flyout darueber. Details: CHANGELOG (105).
-- [ ] **K3 Impressum-Dialog.** `<dialog id="impressum">` -> `DBDrawer` mit eigenem
-      offen/geschlossen-React-State; Ausloeser (Footer-Button aus K1) setzt den State statt
-      `data-dialog-target`. Inhalt (Kontaktdaten, `impressumTelefon`/`impressumMail`-Verschleierung
-      aus `main.ts`) wandert mit rein.
+- [x] **K3 Impressum-Dialog** (2026-09-12). `<dialog id="impressum">` -> `ImpressumDialog.tsx`
+      (`infrastructure/ui/`), gerendert als Geschwister von `DBFooter` in `AppFooter.tsx` (teilt
+      den `useState`, kein zweiter Mount-Punkt). Impressum-Knopf setzt `open` statt
+      `data-dialog-target`; `initStatischeDialoge()` dadurch tot -- aus `dbDialog.ts`/`main.ts`
+      entfernt (erledigt jetzt statt in K7, da direkter Nebeneffekt dieser Aenderung).
+      Telefon/Mail-Zeichenarray-Verschleierung aus `main.ts:setImpressum` in die Komponente
+      verlagert (dort komplett geloescht, inkl. des toten DOMContentLoaded-Zweigs).
+      **Nutzt echte `DBDrawerHeader`/`DBDrawerFooter`-Slots** (`header`/`footer`-Props von
+      `DBDrawer`) statt der `MyModalHeader`/`dialog-koerper`/`dialog-fuss`-Handkonvention der
+      bestehenden Dialoge -- User-Vorgabe: der `children`-Umstieg gilt nur fuer bestehende
+      Dialoge (Bestandsschutz), NEUE Dialoge nutzen DB-UX-Komponenten direkt, wo verfuegbar.
+      `.db-drawer-content`/`.db-drawer-footer` bringen Padding/Flex-Layout schon aus dem
+      core-components-CSS mit, keine Handklassen noetig.
+      Puppeteer-verifiziert: Dialog oeffnet mit Titel + korrektem `aria-labelledby`
+      (`DBDrawerHeader` verknuepft automatisch), Telefon/Mail entschluesselt sichtbar,
+      Schliessen-Knopf schliesst. Details: CHANGELOG (107).
 - [ ] **K4 NavDrawer-Huelle.** `<dialog id="navdrawer">` -> `DBDrawer` (Header „Nebengeld" +
       Schliessen-Button), aber **noch mit dem alten `navDrawer.ts`-Umzugs-Kniff** fuer den
       Navigationsinhalt -- Trennung von Huelle (K4) und Navigationsinhalt (K5) haelt jeden Slice

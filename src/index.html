@@ -952,68 +952,8 @@
       </div>
     </div>
 
-    <!-- Impressum als DB-Drawer (nativer `<dialog>`); geoeffnet ueber `data-dialog-target`
-         am Knopf in der Fusszeile, siehe `infrastructure/ui/dbDialog.ts`. -->
-    <dialog class="db-drawer" id="impressum" data-direction="to-left" aria-labelledby="impressumTitel">
-      <article class="db-drawer-container" data-direction="to-left" data-rounded="true" data-show-spacing="false">
-        <div class="db-drawer-content">
-          <div class="db-drawer-header">
-            <header class="db-drawer-header-container">
-              <h3 id="impressumTitel">Impressum</h3>
-            </header>
-            <button
-              type="button"
-              class="db-button"
-              data-variant="ghost"
-              data-icon="cross"
-              data-no-text="true"
-              data-action="close"
-              aria-label="Schließen"
-            >
-              Schließen
-            </button>
-          </div>
-          <div class="dialog-koerper">
-            <div class="impressum">
-              <p class="mb-4">Angaben gemäß § 5 TMG</p>
-              <p>
-                &#x4A;&#x61;&#x6E;&#x20;&#x4F;&#x74;&#x74;&#x6F;<br />
-                &#x57;&#x65;&#x69;&#x6E;&#x67;&#x61;&#x72;&#x74;&#x65;&#x6E;&#x20;&#x37; <br />
-                &#x33;&#x36;&#x32;&#x37;&#x32;&#x20;&#x4E;&#x69;&#x65;&#x64;&#x65;&#x72;&#x61;&#x75;&#x6C;&#x61;<br />
-              </p>
-              <p>
-                <strong>Kontakt:</strong><br />Telefon: <span id="impressumTelefon">wird geladen…</span><br />E-Mail:
-                <a id="impressumMail" href="#" rel="nofollow">wird geladen…</a>
-              </p>
-              <p>
-                <strong>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:</strong><br />
-                &#x4A;&#x61;&#x6E;&#x20;&#x4F;&#x74;&#x74;&#x6F;
-              </p>
-              <p>
-                <strong>Hinweis zur Anwendung</strong><br />
-                Diese Anwendung dient der digitalen Erfassung und Berechnung von Nebengeld-Daten.
-              </p>
-              <p>
-                <strong>Haftung für Inhalte und Links</strong><br />
-                Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Gewähr für die Aktualität, Richtigkeit
-                und Vollständigkeit der bereitgestellten Informationen. Für Inhalte externer Links sind ausschließlich
-                deren Betreiber verantwortlich.
-              </p>
-              <p>
-                <strong>Urheberrecht</strong><br />
-                Die durch den Betreiber erstellten Inhalte unterliegen dem deutschen Urheberrecht. Eine Nutzung
-                außerhalb der Grenzen des Urheberrechts bedarf der vorherigen Zustimmung.
-              </p>
-            </div>
-          </div>
-          <div class="dialog-fuss">
-            <button type="button" class="db-button" data-variant="filled" data-action="close">Schließen</button>
-          </div>
-        </div>
-      </article>
-    </dialog>
-
-    <!-- Phase K1: React-Slice, siehe infrastructure/ui/AppFooter.tsx -- gemountet in main.ts. -->
+    <!-- Phase K1/K3: React-Slice, siehe infrastructure/ui/AppFooter.tsx (mountet auch den
+         Impressum-Dialog, infrastructure/ui/ImpressumDialog.tsx) -- gemountet in main.ts. -->
     <div id="appFooterRoot"></div>
   </body>
 </html>

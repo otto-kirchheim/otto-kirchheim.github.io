@@ -76,7 +76,6 @@ console.log(pwaInfo);
 
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
-import { initStatischeDialoge } from '@/infrastructure/ui/dbDialog';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import AppFooter from '@/infrastructure/ui/AppFooter';
@@ -92,12 +91,9 @@ registerAppStartTask(() => {
   const themeSwitcherRoot = document.querySelector<HTMLDivElement>('#themeSwitcherRoot');
   if (themeSwitcherRoot) mount(themeSwitcherRoot, createElement(ThemeSwitcher));
 
-  setImpressum();
-
   // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
   initTabController();
   initNavSchublade();
-  initStatischeDialoge();
 
   if (Storage.size() > 3) {
     const currentVersion: string = import.meta.env.APP_VERSION;
@@ -128,28 +124,6 @@ registerAppStartTask(() => {
 
   if (Storage.check('Benutzer') && zeigeTabAusHash()) window.scrollTo(0, 1);
 
-  function setImpressum() {
-    const telefonElement = document.querySelector<HTMLSpanElement>('#impressumTelefon');
-    const mailElement = document.querySelector<HTMLAnchorElement>('#impressumMail');
-    if (telefonElement) {
-      const country = ['+', '4', '9', '(', '0', ')'];
-      const number = ['1', '7', '0', '-', '6', '7', '0', '8', '6', '9', '2'];
-      telefonElement.textContent = `${country.join('')}${number.join('')}`;
-    }
-    if (mailElement) {
-      const local = ['j', 'a', 'n', 'o', 't', 't', 'o', '1', '9', '8', '9'].join('');
-      const domain = ['g', 'm', 'a', 'i', 'l', '.', 'c', 'o', 'm'].join('');
-      mailElement.textContent = `${local}@${domain}`;
-      mailElement.href = `mailto:${local}@${domain}`;
-    }
-  }
-
-  // Direkt nach DOMContentLoaded (defer) und auch im load-Event aufrufen
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setImpressum);
-  } else {
-    setImpressum();
-  }
   markStep('boot', 'boot:main-ui');
 });
 

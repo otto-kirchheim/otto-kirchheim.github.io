@@ -78,29 +78,3 @@ export function erzeugeDbDialog(beimSchliessen: () => void, optionen: DbDialogOp
 
   return { dialog, inhalt, schliessen };
 }
-
-/**
- * Statische Dialoge im HTML (Impressum) oeffnen sich ueber `data-dialog-target="<Id>"` am
- * Ausloeser -- der Ersatz fuer Bootstraps `data-bs-toggle="modal"`. Geschlossen wird ueber
- * `[data-action="close"]`, den Hintergrund oder Escape.
- */
-export function initStatischeDialoge(): () => void {
-  const beiKlick = (event: MouseEvent) => {
-    const ziel = event.target as HTMLElement | null;
-
-    const ausloeser = ziel?.closest<HTMLElement>('[data-dialog-target]');
-    if (ausloeser) {
-      const id = ausloeser.dataset['dialogTarget'];
-      const dialog = id ? document.querySelector<HTMLDialogElement>(`#${CSS.escape(id)}`) : null;
-      if (dialog && !dialog.open) dialog.showModal();
-      return;
-    }
-
-    const offener = ziel?.closest<HTMLDialogElement>('dialog[open]');
-    if (!offener) return;
-    if (ziel?.closest('[data-action="close"], [data-dialog-dismiss="modal"]') || ziel === offener) offener.close();
-  };
-
-  document.addEventListener('click', beiKlick);
-  return () => document.removeEventListener('click', beiKlick);
-}
