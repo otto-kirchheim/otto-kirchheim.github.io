@@ -96,9 +96,12 @@ test/
 ### Architektur-Konzepte
 
 **Tab-basierte SPA (kein Router):**
-Die Navigation erfolgt über den DB-Header und `infrastructure/ui/tabController.ts`
-(`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent, Hash-Sync), nicht über einen
-Client-Side-Router. Das gesamte HTML ist in einer einzigen `src/index.html` definiert.
+Die Navigation erfolgt über `AppHeader.tsx` (React, `DBHeader`/`DBNavigation`) und
+`infrastructure/ui/tabController.ts` (`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent,
+Hash-Sync), nicht über einen Client-Side-Router. Aktiver Tab der Hauptnavigation ist ein
+`useSyncExternalStore`-Modul-Store (`activeTabStore.ts`/`useActiveTab.ts`), von `AppHeader`
+reaktiv gelesen. Die Tab-Panel-Inhalte (`#start`, `#Berechnung`, `#Einstellungen`, ...) sind
+weiterhin statisches HTML in der einzigen `src/index.html`.
 
 **3-Schichten-Architektur:**
 
@@ -118,8 +121,9 @@ features/Feature/
 
 **Hybrid-Rendering:**
 
-- **Hauptseite:** Statisches HTML + DB-UX-Klassen
-- **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`)
+- **App-Shell (Header/Footer):** React (`AppHeader.tsx`/`AppFooter.tsx`), gemountet über `<div id="appHeaderRoot">`/`<div id="appFooterRoot">` in `index.html` (Phase K, seit 2026-09-12 abgeschlossen)
+- **Tab-Panel-Inhalte:** Statisches HTML + DB-UX-Klassen (`#start`, `#Berechnung`, `#Einstellungen`, ...), Migration nach React folgt erst in einer späteren Phase
+- **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`); neue Dialoge (z. B. `ImpressumDialog.tsx`) nutzen die offiziellen `DBDrawerHeader`/`DBDrawerFooter`-Slot-Komponenten statt des projekteigenen `MyModalHeader`-Musters
 - **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein React) – liegt in `infrastructure/table/`
 
 ---
@@ -129,7 +133,7 @@ features/Feature/
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
-4. **React** für Modals/Dialoge und die Feature-Tabs, **nicht** für die statische Hauptseiten-Struktur (`index.html`)
+4. **React** für App-Shell (Header/Footer), Modals/Dialoge und die Feature-Tabs, **nicht** für die Tab-Panel-Inhalte in `index.html` (statisches HTML bis zu einer späteren Migrationsphase)
 5. **`tabController`** für die Tab-Navigation, kein Router
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff

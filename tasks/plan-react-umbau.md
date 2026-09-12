@@ -192,10 +192,21 @@ nur ihr rohes `db-button`-Markup wird ersetzt.
 
 # Roadmap K–N (Zielbild, je eigener Planungsdurchgang zum Start)
 
-## Phase K — App-Shell nach React
+## Phase K — App-Shell nach React (abgeschlossen 2026-09-12)
 
 `src/index.html:38-255` + `:1043-1058` (Header, Navigation, Theme-Umschalter, `navdrawer`,
 `impressum`, Fußzeile) werden React, gemountet über `infrastructure/ui/reactRoot.ts`.
+
+**Ergebnis (K0–K7, feat/react-umbau):** `AppFooter.tsx`, `useColorMode.ts`/`ThemeSwitcher.tsx`,
+`ImpressumDialog.tsx` (offizielle `DBDrawerHeader`/`DBDrawerFooter`-Slots statt
+`MyModalHeader`), `AppHeader.tsx` (`DBHeader`/`DBNavigation`/`DBNavigationItem`),
+`activeTabStore.ts`/`useActiveTab.ts`. `navDrawer.ts`, `DBColorToggler.ts`,
+`NavDrawerShell.tsx` (Zwischenschritt K4) gelöscht. Kernfund unterwegs: `DBHeader` rendert seine
+`children` gleichzeitig ZWEIMAL im DOM (Desktop + Drawer-Kopie, kein Umzugs-Kniff mehr nötig) —
+das brach mehrere `querySelector`-Aufrufer, gefixt auf `querySelectorAll`
+(`updateTabVisibility.ts`, `auth/index.ts`). Details je Slice in `tasks/todo.md` (Abschnitt
+„Aufgaben Phase K") und `CHANGELOG.md` (103–110). Tab-Panel-Inhalte bleiben bewusst statisches
+HTML (Phase L).
 
 - `DBHeader` + `DBBrand` + `DBNavigation`/`DBNavigationItem` statt handgeschriebenem
   `db-header`-Markup; Theme-Umschalter (`#bd-theme` + `db-sub-navigation`) als React-Komponente,
@@ -335,7 +346,7 @@ bun run build              # Vite 8 / Rolldown
 - `src/ts/features/Admin/components/AdminProfileTemplateContentEditor.tsx` — Referenz (J1)
 - `src/ts/features/Admin/components/FormularEditor/*` — größter Cluster (J2)
 - `src/index.html` — Phase K/L
-- `src/ts/main.ts` · `infrastructure/ui/{tabController,navDrawer,dbDialog}.ts` — Phase K/N
+- `src/ts/main.ts` · `infrastructure/ui/{tabController,activeTabStore,dbDialog}.ts` — Phase K/N (`navDrawer.ts` seit K5 gelöscht)
 - `src/ts/features/Einstellungen/{index.ts,utils/generateEingabeMaskeEinstellungen.ts}` — Phase L3
 - `src/ts/infrastructure/table/*` + `infrastructure/autoSave/{savePipeline,overlapGuard}.ts` — Phase M
 - `tasks/plan-db-ux-migration.md`, `tasks/todo.md`, `CHANGELOG.md` — Phasen-Doku

@@ -824,11 +824,21 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       `true`/`0`); initial ohne Login/Hash zeigt `#berechnung-tab` `tabIndex=0`/`aria-selected=
       "false"` (Fallback-Fokus-Fall). `typecheck && lint && lint:css && test`(2120 pass) `&&
       build` gruen. Details: CHANGELOG (110).
-- [ ] **K7 Cleanup + Doku.** Tote Dateien (`navDrawer.ts`, ggf. `dbDialog.ts` falls kein
-      statischer Dialog mehr uebrig, `DBColorToggler.ts`) loeschen; Grep-Gate
-      `rg 'data-dialog-target|prepend\(navigation\)' src/ts`; `frontend/CLAUDE.md`,
-      `.claude/skills/architektur` (Hybrid-Rendering-Absatz veraltet danach), `CHANGELOG.md`,
-      dieser Abschnitt hier auf "abgeschlossen"; `graphify update .`.
+- [x] **K7 Cleanup + Doku** (2026-09-12). Tote Dateien bereits in fruehreren K-Slices geloescht
+      (`navDrawer.ts`/`NavDrawerShell.tsx` K5, `DBColorToggler.ts` K2) -- nichts mehr zu tun.
+      `dbDialog.ts` bleibt: `erzeugeDbDialog` wird weiter von `confirmDialog.ts`/
+      `signaturDialog.ts`/`errorHandling.ts` genutzt, kein toter Code. Grep-Gate `rg
+      'data-dialog-target|prepend\(navigation\)' src/ts src/index.html` -- 0 Treffer (nur zwei
+      Doku-Kommentare in `ImpressumDialog.tsx`/`AppFooter.tsx`, die den alten Mechanismus
+      historisch referenzieren, keine echten Vorkommen mehr).
+      Doku aktualisiert: `frontend/CLAUDE.md` (Tab-basierte-SPA-Absatz + Hybrid-Rendering-Absatz
+      -- App-Shell ist jetzt React, nicht mehr Teil der statischen Hauptseite; Regel 4 entsprechend
+      geschaerft), `.claude/skills/architektur/SKILL.md` (App-Einstiegspunkte, State-Management --
+      `useSyncExternalStore`-Modul-Stores ergaenzt statt "kein reaktives State Management", und
+      Navigation-Absatz -- DBHeader-Doppel-Rendering-Falle + K6-Store dokumentiert),
+      `tasks/plan-react-umbau.md` (Phase-K-Abschnitt auf "abgeschlossen" markiert mit
+      Ergebnis-Zusammenfassung, Kritische-Dateien-Eintrag `navDrawer.ts` -> `activeTabStore.ts`
+      korrigiert). `graphify update .` nach Abschluss.
 
 **Bewusst NICHT in K (bleibt Phase L/M/N):** Tab-Panel-Inhalte (`#start`, `#Berechnung`,
 `#Einstellungen`) bleiben statisches HTML in `index.html`, nur ihre Sichtbarkeits-/Aktiv-Logik

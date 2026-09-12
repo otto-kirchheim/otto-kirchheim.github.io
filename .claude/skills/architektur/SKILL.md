@@ -29,8 +29,10 @@ umgekehrt. Details siehe `frontend/CLAUDE.md`.
 
 ### `src/index.html`
 
-- Einzige HTML-Datei (SPA), >1000 Zeilen
-- DB-Header (`db-navigation`) plus `tabController` als Navigation
+- Einzige HTML-Datei (SPA), >1000 Zeilen für den statischen Rest (Tab-Panel-Inhalte:
+  `#start`, `#Berechnung`, `#Einstellungen`, ...)
+- Kopf-/Fußzeile sind seit Phase K (App-Shell) React: `<div id="appHeaderRoot">`/
+  `<div id="appFooterRoot">` werden in `main.ts` gemountet, siehe `AppHeader.tsx`/`AppFooter.tsx`
 
 ### `src/ts/main.ts`
 
@@ -39,7 +41,11 @@ umgekehrt. Details siehe `frontend/CLAUDE.md`.
 - `initializeAppBootstrap()`/`registerAppStartTask()` (`core/`) für die Init-Reihenfolge
 - PWA Service Worker Registrierung
 - Version-Check (API vs. lokal)
-- UI-Controller starten (`tabController`, `navDrawer`, `dbDialog`, `DBColorToggler`) -- Bootstrap-JS gibt es nicht mehr
+- `AppHeader`/`AppFooter` mounten + `initTabController()` -- bewusst SYNCHRON beim Modul-Import,
+  nicht in `registerAppStartTask()` (ES-Module-Import-Hoisting-Falle, siehe Kommentar in
+  `main.ts`). `navDrawer.ts`/`DBColorToggler.ts` sind seit Phase K gelöscht (`DBHeader` bringt
+  die mobile Schublade eingebaut mit, `useColorMode`-Hook ersetzt den Controller); `dbDialog.ts`
+  bleibt für `confirmDialog`/`signaturDialog`/`errorHandling` bestehen.
 
 ---
 
@@ -146,7 +152,15 @@ Toast/Snackbar-System, ebenfalls Vanilla-DOM:
 
 ### localStorage via `Storage`-Singleton
 
-Es gibt **kein reaktives State Management** (keine Signals, kein Context, keinen Store).
+Kein Context, keine Signal-Bibliothek. Für App-weiten UI-Zustand, den mehrere React-Wurzeln
+gemeinsam sehen müssen (z. B. weil `DBHeader` seine `children` doppelt rendert, Desktop- +
+Drawer-Kopie), gibt es einen schlanken, handgeschriebenen `useSyncExternalStore`-Modul-Store
+pro Zustand -- kein generisches Store-Framework, jeder Store ist eine eigene Datei mit
+`get*()`/`subscribe*()`/`set*()` plus einem `use*()`-Hook, der Konsument-Komponenten daran
+anschließt. Beispiele: `infrastructure/ui/navigationVisibleStore.ts` +
+`useNavigationVisible.ts` (Nav-Sichtbarkeit bei Login/Logout), `infrastructure/ui/
+activeTabStore.ts` + `useActiveTab.ts` (aktiver Tab der Hauptnavigation, Phase K6),
+`infrastructure/ui/useColorMode.ts` (Theme, Storage-rückgekoppelt).
 
 ```ts
 import Storage from "@/infrastructure/storage/Storage";
@@ -164,19 +178,30 @@ Storage.set("dataN", neuerWert);
 
 ## Navigation
 
-**Kein Client-Side-Router.** Navigation über den DB-Header und `infrastructure/ui/tabController.ts`:
+**Kein Client-Side-Router.** Navigation über `AppHeader.tsx` (`DBHeader`/`DBNavigation`/
+`DBNavigationItem`) und `infrastructure/ui/tabController.ts`:
 
-```html
-<li class="db-navigation-item">
-  <a role="tab" id="bereitschaft-tab" href="#Bereitschaft" data-tab-target="Bereitschaft">Bereitschaft</a>
-</li>
+```tsx
+<DBNavigationItem role="presentation" active={aktiverTab === 'Bereitschaft'} backButtonText="Zurück">
+  <a role="tab" id="bereitschaft-tab" href="#Bereitschaft" data-tab-target="Bereitschaft" aria-selected={...}>
+    Bereitschaft
+  </a>
+</DBNavigationItem>
 ```
 
-`data-tab-target` nennt die Id des `.tab-pane`. Der Controller hängt per Delegation an
-`document`, schaltet Panel und `aria-selected` um, schreibt `location.hash` (Deep-Links und
-Browser-Zurück inklusive) und meldet den Wechsel als `tab:shown`-CustomEvent. Die mobile
-Schublade (`infrastructure/ui/navDrawer.ts`) verschiebt dieselbe Navigation in ein
-`<dialog class="db-drawer">` -- die Tab-Ids bleiben dadurch eindeutig.
+`data-tab-target` nennt die Id des `.tab-pane` (weiterhin statisches HTML in `index.html`, Phase
+L). Der Controller hängt per Delegation an `document`, schaltet Panel um, schreibt
+`location.hash` (Deep-Links und Browser-Zurück inklusive) und meldet den Wechsel als
+`tab:shown`-CustomEvent. **Wichtig:** `DBHeader` rendert seine `children` (die Navigation)
+gleichzeitig ZWEIMAL im DOM -- einmal inline in der Kopfzeile, einmal als Kopie in seinem
+eingebauten Drawer (kein "Umzugs"-Mechanismus wie zuvor bei `navDrawer.ts`, das seit Phase K5
+gelöscht ist). Jeder `data-tab-target`/`id` existiert dadurch potenziell zweimal simultan im
+DOM -- `querySelector('#id')` liefert nur die erste Kopie; Code, der beide Kopien treffen muss,
+verwendet `querySelectorAll` (z. B. `updateTabVisibility.ts`). `aria-selected`/`tabIndex`/die
+`active`-Markierung der Hauptnav-Einträge kommen seit Phase K6 reaktiv aus `useActiveTab()`
+(`activeTabStore.ts`) statt aus DOM-Handschrieb in `tabController.ts` -- das betrifft nur die
+Hauptgruppe (`#tabContent`); Admins Unternavigation (`features/Admin/index.tsx`, eigene,
+unabhängige Tab-Gruppe) bleibt am alten, DOM-schreibenden Mechanismus.
 
 ---
 

@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (111)
+
+### docs (Phase K7: Cleanup + Doku, Phase K abgeschlossen)
+
+- Grep-Gate `data-dialog-target|prepend\(navigation\)` liefert 0 echte Treffer (nur zwei
+  historische Doku-Kommentare) — tote Dateien (`navDrawer.ts`, `NavDrawerShell.tsx`,
+  `DBColorToggler.ts`) bereits in K2/K5 gelöscht, `dbDialog.ts` bleibt (weiter live für
+  `confirmDialog`/`signaturDialog`/`errorHandling`).
+- `frontend/CLAUDE.md`: Tab-basierte-SPA- und Hybrid-Rendering-Absätze aktualisiert — App-Shell
+  (Header/Footer) ist jetzt React, nicht mehr Teil der statischen Hauptseite.
+- `.claude/skills/architektur/SKILL.md`: App-Einstiegspunkte, State-Management (
+  `useSyncExternalStore`-Modul-Stores dokumentiert statt „kein reaktives State Management") und
+  Navigation-Absatz (DBHeader-Doppel-Rendering, `activeTabStore`) aktualisiert.
+- `tasks/plan-react-umbau.md`: Phase-K-Abschnitt auf „abgeschlossen" markiert mit
+  Ergebnis-Zusammenfassung.
+
 ## 2026-09-12 (110)
 
 ### refactor (Phase K6: `tabController` -> React-State)
