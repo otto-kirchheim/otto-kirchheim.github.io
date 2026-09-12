@@ -266,7 +266,7 @@ async function resendVerificationEmailFromSettings(): Promise<void> {
 /**
  * Appliziert die gespeicherten Einstellungen zur Runtime.
  * - AutoSave: Setzt den Global State
- * - Theme: Wird über bestehende DBColorToggler-Logik von Storage gelesen
+ * - Theme: Wird über bestehende `useColorMode`-Logik von Storage gelesen
  */
 function applyEinstellungenToRuntime(): void {
   const VorgabenU = Storage.get<{

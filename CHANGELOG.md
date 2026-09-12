@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (105)
+
+### refactor (Phase K2: Theme-Umschalter nach React)
+
+- `#bd-theme`/`#bd-theme-menu` als `ThemeSwitcher.tsx` neu gebaut, `DBColorToggler.ts` gelöscht.
+  Neuer Hook `useColorMode.ts` kapselt Storage-Key `theme` und die `data-mode`/`color-scheme`-
+  Logik.
+- **Bugfix beim Umbau:** das Anfangstheme wurde bisher durch eine Operator-Präzedenz-Falle
+  (`getStoredTheme() || matches ? 'dark' : 'light'`) bei JEDEM Laden auf `'dark'` gesetzt,
+  unabhängig von gespeichertem Theme oder OS-Präferenz — nur der explizite Button-Klick war
+  korrekt. Betraf jeden Erstbesuch der App.
+
 ## 2026-09-12 (104)
 
 ### chore (DB-UX-Pakete auf 5.4.0)

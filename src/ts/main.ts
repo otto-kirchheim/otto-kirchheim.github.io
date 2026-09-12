@@ -5,7 +5,6 @@ import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einst
 import { createSnackBar, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
-import { default as initializeColorModeToggler } from '@/infrastructure/ui/DBColorToggler';
 import { default as setOffline } from '@/infrastructure/ui/setOffline';
 import { default as storageAvailable } from '@/infrastructure/storage/storageAvailable';
 import { registerHook, featureLifecycleRegistry } from './core/hooks';
@@ -81,6 +80,7 @@ import { initStatischeDialoge } from '@/infrastructure/ui/dbDialog';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import AppFooter from '@/infrastructure/ui/AppFooter';
+import ThemeSwitcher from '@/infrastructure/ui/ThemeSwitcher';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -88,6 +88,9 @@ console.log('Version:', import.meta.env.APP_VERSION);
 registerAppStartTask(() => {
   const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
   if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
+
+  const themeSwitcherRoot = document.querySelector<HTMLDivElement>('#themeSwitcherRoot');
+  if (themeSwitcherRoot) mount(themeSwitcherRoot, createElement(ThemeSwitcher));
 
   setImpressum();
 
@@ -120,8 +123,6 @@ registerAppStartTask(() => {
       fixed: false,
     });
   }
-  initializeColorModeToggler();
-
   if (!navigator.onLine) setOffline();
   else window.addEventListener('offline', setOffline);
 

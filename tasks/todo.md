@@ -677,11 +677,17 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       `footer > .impressum` in `styles.scss` zu `footer .impressum` (Nachfahre statt Kind, wegen
       der neuen `.db-footer-meta-content`-Verschachtelung) -- `pointer-events` vererbt sich, die
       Tiefe ist egal. Details: CHANGELOG (104).
-- [ ] **K2 Theme-Umschalter.** `db-header-navigation-item-expand-button` + `db-sub-navigation`
-      (`#bd-theme*`) als `<ThemeSwitcher/>`-Komponente mit `useColorMode`-Hook; `DBColorToggler.ts`
-      wird abgeloest, Storage-Key `theme` und `data-mode`-Attribut auf `<html>` bleiben identisch
-      (Verifikation: Hell/Dunkel/Auto + OS-Automatik-Wechsel manuell, wie bisher in Phase I/J
-      geprueft).
+- [x] **K2 Theme-Umschalter** (2026-09-12). `#bd-theme`+`#bd-theme-menu` -> `ThemeSwitcher.tsx`
+      (`infrastructure/ui/`), `DBColorToggler.ts` geloescht (samt Test). Neuer Hook
+      `useColorMode.ts` kapselt Storage-Key `theme` + `data-mode`/`color-scheme`-Logik.
+      **Bug beim Umbau gefunden+gefixt:** der Vorgaenger ermittelte das Anfangstheme ueber
+      `getStoredTheme() || matchMedia(...).matches ? 'dark' : 'light'` -- `||` bindet staerker
+      als `?:`, das Ergebnis war `(getStoredTheme() || matches) ? 'dark' : 'light'`, und weil
+      `getStoredTheme()` wegen `default: 'auto'` IMMER truthy ist, war das Anfangstheme bei
+      JEDEM Laden `'dark'`, unabhaengig von Storage/OS-Praeferenz (Puppeteer-Matrix ueber 5 Faelle
+      verifiziert: vorher immer `dark`, nachher alle 5 korrekt). Nur der explizite Button-Klick
+      traf einen separaten, korrekten Codepfad. `#bd-theme-menu` bleibt bewusst feste Id (nicht
+      `useId()`): `styles.scss:1022` verankert den Flyout darueber. Details: CHANGELOG (105).
 - [ ] **K3 Impressum-Dialog.** `<dialog id="impressum">` -> `DBDrawer` mit eigenem
       offen/geschlossen-React-State; Ausloeser (Footer-Button aus K1) setzt den State statt
       `data-dialog-target`. Inhalt (Kontaktdaten, `impressumTelefon`/`impressumMail`-Verschleierung

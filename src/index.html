@@ -151,39 +151,9 @@
                   </a>
                 </li>
 
+                <!-- Phase K2: React-Slice, siehe infrastructure/ui/ThemeSwitcher.tsx -- gemountet in main.ts. -->
                 <li class="db-navigation-item" role="presentation">
-                  <button
-                    type="button"
-                    class="db-navigation-item-expand-button"
-                    id="bd-theme"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                    aria-controls="bd-theme-menu"
-                    aria-label="Design auswählen (auto)"
-                  >
-                    <span class="app-icon app-icon--theme-auto theme-icon-active"></span>
-                    <span class="d-lg-none" id="bd-theme-text">Design auswählen</span>
-                  </button>
-                  <menu class="db-sub-navigation" id="bd-theme-menu" aria-labelledby="bd-theme">
-                    <li class="db-navigation-item" role="presentation">
-                      <button type="button" data-theme-value="light" aria-pressed="false">
-                        <span class="db-icon" data-icon="sun"></span>
-                        Hell
-                      </button>
-                    </li>
-                    <li class="db-navigation-item" role="presentation">
-                      <button type="button" data-theme-value="dark" aria-pressed="false">
-                        <span class="db-icon" data-icon="moon"></span>
-                        Dunkel
-                      </button>
-                    </li>
-                    <li class="db-navigation-item" role="presentation">
-                      <button type="button" data-theme-value="auto" aria-pressed="true">
-                        <span class="app-icon app-icon--theme-auto"></span>
-                        Auto
-                      </button>
-                    </li>
-                  </menu>
+                  <div id="themeSwitcherRoot"></div>
                 </li>
               </menu>
             </nav>
