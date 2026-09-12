@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (104)
+
+### chore (DB-UX-Pakete auf 5.4.0)
+
+- `@db-ux/core-components`, `@db-ux/core-foundations`, `@db-ux/react-core-components`,
+  `@db-ux/agent-cli`, `@db-ux/core-eslint-plugin`, `@db-ux/core-stylelint` von 5.3.0 auf 5.4.0.
+  `@db-ux/db-theme` unverändert (6.2.0, kein Update verfügbar).
+- `AppFooter.tsx` (Phase K1) auf die damit neu hinzugekommenen `DBFooter`/`DBFooterMeta`
+  umgestellt statt Hand-Markup; `styles.scss`: `footer > .impressum` zu `footer .impressum`
+  (Nachfahre statt Kind, wegen der neuen Verschachtelung durch `DBFooterMeta`).
+
 ## 2026-09-11 (103)
 
 ### refactor (Phase K1: Fusszeile nach React)

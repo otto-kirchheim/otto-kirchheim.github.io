@@ -1,11 +1,14 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBFooter, DBFooterMeta } from '@db-ux/react-core-components';
 import dayjs from '@/infrastructure/date/configDayjs';
 
 /**
- * Phase K1: erster React-Slice der App-Shell. `footer { pointer-events: none }` +
- * `footer > .impressum { pointer-events: all }` (styles.scss) verlangt, dass der Button
- * DIREKTES Kind von `<footer>` bleibt -- kein zusaetzlicher Wrapper.
+ * Phase K1: erster React-Slice der App-Shell. Nutzt die mit `@db-ux/react-core-components`
+ * 5.4.0 hinzugekommenen `DBFooter`/`DBFooterMeta` (Copyright-Zeile + Sekundaerinhalt,
+ * `.db-footer-meta`-Styling deckt sich mit dem bisherigen Handbau) statt eigenem Markup.
  *
+ * `footer .impressum { pointer-events: all }` (styles.scss:601) ist ein Nachfahren- kein
+ * Kind-Selektor, weil `DBFooterMeta` den Button jetzt in `.db-footer-meta-content` verschachtelt
+ * -- `pointer-events` vererbt sich, der Selektor muss die Verschachtelungstiefe nicht kennen.
  * Der Impressum-Knopf bleibt bewusst `data-dialog-target="impressum"`: der Dialog selbst ist
  * noch der Vanilla-`dbDialog.ts`-Mechanismus (`initStatischeDialoge`), der per Delegation auf
  * `document` lauscht -- das funktioniert unabhaengig davon, ob der Ausloeser nativ oder React
@@ -16,13 +19,12 @@ export default function AppFooter({ startYear = 2021 }: { startYear?: number }) 
   const yearLabel = startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
 
   return (
-    <footer className="app-footer bg-body-tertiary border-top px-3 py-2 d-flex justify-content-between align-items-center">
-      <span className="text-body-secondary small">
-        &copy; {yearLabel} Jan Otto | v{import.meta.env.APP_VERSION}
-      </span>
-      <DBButton type="button" className="impressum" variant="outlined" size="small" data-dialog-target="impressum">
-        Impressum
-      </DBButton>
-    </footer>
+    <DBFooter className="app-footer">
+      <DBFooterMeta copyright={`${yearLabel} Jan Otto | v${import.meta.env.APP_VERSION}`}>
+        <DBButton type="button" className="impressum" variant="outlined" size="small" data-dialog-target="impressum">
+          Impressum
+        </DBButton>
+      </DBFooterMeta>
+    </DBFooter>
   );
 }

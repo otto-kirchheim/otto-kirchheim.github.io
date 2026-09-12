@@ -672,6 +672,11 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       (styles.scss:601) beachtet: `DBButton` bleibt direktes Kind von `<footer>`.
       Puppeteer-verifiziert: Footer-Text/-Button korrekt gerendert, Impressum-Dialog
       oeffnet/schliesst weiterhin, Dark-Mode-Umschaltung unveraendert. Details: CHANGELOG (103).
+      **Nachtrag (2026-09-12):** `@db-ux/*` auf 5.4.0 aktualisiert (User-Vorgabe) -- bringt echte
+      `DBFooter`/`DBFooterMeta`-Komponenten. `AppFooter.tsx` von Hand-Markup auf diese umgestellt;
+      `footer > .impressum` in `styles.scss` zu `footer .impressum` (Nachfahre statt Kind, wegen
+      der neuen `.db-footer-meta-content`-Verschachtelung) -- `pointer-events` vererbt sich, die
+      Tiefe ist egal. Details: CHANGELOG (104).
 - [ ] **K2 Theme-Umschalter.** `db-header-navigation-item-expand-button` + `db-sub-navigation`
       (`#bd-theme*`) als `<ThemeSwitcher/>`-Komponente mit `useColorMode`-Hook; `DBColorToggler.ts`
       wird abgeloest, Storage-Key `theme` und `data-mode`-Attribut auf `<html>` bleiben identisch

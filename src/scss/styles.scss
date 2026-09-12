@@ -598,7 +598,10 @@ footer {
   pointer-events: none;
 }
 
-footer > .impressum {
+// Nachfahren- statt Kind-Selektor: `DBFooterMeta` (@db-ux/react-core-components 5.4.0)
+// verschachtelt den Button in `.db-footer-meta-content`; `pointer-events` vererbt sich, die
+// Selektortiefe ist also unerheblich.
+footer .impressum {
   pointer-events: all;
 }
 
