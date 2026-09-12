@@ -41,7 +41,11 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       header={<DBDrawerHeader text="Impressum" closeButtonText="Schließen" />}
       footer={
         <DBDrawerFooter>
-          <DBButton type="button" variant="filled" data-action="close">
+          {/* Kein `dbDialog.ts`/`data-action="close"` mehr (K3: eigener React-State) -- der
+              Knopf braucht deshalb einen echten `onClick`, sonst tut er nichts (Bug-Fund:
+              Schliessen-Knopf im Footer reagierte nicht; nur `DBDrawerHeader`s eingebauter
+              X-Knopf war ueber `onClose` verdrahtet). */}
+          <DBButton type="button" variant="filled" onClick={onClose}>
             Schließen
           </DBButton>
         </DBDrawerFooter>

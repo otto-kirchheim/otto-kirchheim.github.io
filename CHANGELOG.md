@@ -2,6 +2,35 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (117)
+
+### fix (Impressum-Schliessen-Knopf, Theme-Switcher im Burger-Menue)
+
+- **Impressum-Schliessen-Knopf, zwei unabhaengige Ursachen:**
+  1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Ueberbleibsel, das
+     faelschlich auf `data-action="close"` als DB-Drawer-eigenen Delegationsmechanismus vertraute
+     -- der greift bei `<DBButton>` durchaus, siehe Punkt 2). Fix: `onClick={onClose}`.
+  2. **Der eigentliche Blocker:** `styles.scss` hatte `footer { pointer-events: none; }` als
+     Tag-Selektor (fuer die eigene fixierte `.app-footer`-Leiste gedacht) -- das traf aber JEDES
+     `<footer>`-Element im Dokument, auch `DBDrawerFooter` (rendert selbst ein `<footer
+     class="db-drawer-footer">`). Der Knopf war dadurch optisch vorhanden, aber fuer echte
+     Mausklicks unerreichbar (`elementFromPoint()` an seiner Position lieferte den
+     `.db-drawer-container` dahinter). Ein per JS ausgeloester Klick (Test, Screenreader) hatte
+     das Problem verdeckt, weil er kein Hit-Testing macht. Fix: Selektor auf `.app-footer`
+     beschraenkt.
+- `ThemeSwitcher.tsx`: Klick auf den Umschalter im mobilen Burger-Menue schloss die komplette
+  Navigations-Schublade statt nur das Design-Untermenue zu oeffnen. Ursache (im DB-UX-Quellcode
+  verifiziert, `header.js`): `DBHeader`s Drawer schliesst bei jedem Klick, dessen Ziel
+  `.closest('.db-navigation-item')` matcht; der Umschalter-Knopf steckt in genau so einem `<li>`
+  und rief nie `stopPropagation()`. Fix: `stopPropagation()` im Umschalter- und in den
+  Design-Options-Klick-Handlern. Nur die mobile Drawer-Kopie war betroffen (die Desktop-Kopie
+  der Navigation hat keinen solchen Klick-Listener).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer mit ECHTEN Maus-Klicks (`page.mouse.click`, nicht
+  `.click()` -- Lehre aus diesem Fund): Impressum oeffnet/schliesst korrekt per Mausklick auf den
+  Fusszeilen-Knopf; Theme-Umschalter im Drawer expandiert das Untermenue, Drawer bleibt offen,
+  Themenwahl greift, Drawer bleibt weiterhin offen.
+
 ## 2026-09-12 (116)
 
 ### refactor (Phase M0/M1: CustomTable-Rendering nach React)

@@ -594,22 +594,28 @@ td > .db-switch {
   inline-size: 90%;
 }
 
-footer {
+// Bug-Fund: `footer { pointer-events: none }` (Tag-Selektor statt `.app-footer`) traf JEDES
+// `<footer>`-Element im Dokument -- auch `DBDrawerFooter` (rendert selbst ein `<footer
+// class="db-drawer-footer">`, siehe `@db-ux/react-core-components`). Der "Schließen"-Knopf im
+// Impressum-Dialog (und jeder andere Knopf in einem `DBDrawerFooter`) war dadurch fuer echte
+// Mausklicks unerreichbar -- optisch da, aber `pointer-events: none` von diesem globalen Tag-
+// Selektor geerbt. `elementFromPoint()` an der Knopf-Position lieferte den `.db-drawer-container`
+// dahinter statt des Knopfs. Fix: auf `.app-footer` beschraenkt, damit nur die eigene fixierte
+// App-Fusszeile betroffen ist (ihre Randflaeche jenseits von Text/Knopf soll Klicks auf Inhalt
+// dahinter durchlassen), nicht jedes `<footer>` im Dokument.
+.app-footer {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: 1030;
   pointer-events: none;
 }
 
 // Nachfahren- statt Kind-Selektor: `DBFooterMeta` (@db-ux/react-core-components 5.4.0)
 // verschachtelt den Button in `.db-footer-meta-content`; `pointer-events` vererbt sich, die
 // Selektortiefe ist also unerheblich.
-footer .impressum {
+.app-footer .impressum {
   pointer-events: all;
-}
-
-.app-footer {
-  position: fixed;
-  inset-inline: 0;
-  inset-block-end: 0;
-  z-index: 1030;
 }
 
 body {

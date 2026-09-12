@@ -30,7 +30,8 @@ export default function ThemeSwitcher() {
   const menuId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
 
-  function waehle(neu: Theme): void {
+  function waehle(event: { stopPropagation(): void }, neu: Theme): void {
+    event.stopPropagation();
     setTheme(neu);
     setOffen(false);
     toggleRef.current?.focus();
@@ -47,7 +48,15 @@ export default function ThemeSwitcher() {
         aria-expanded={offen}
         aria-controls={menuId}
         aria-label={`Design auswählen (${theme})`}
-        onClick={() => setOffen(vorher => !vorher)}
+        onClick={event => {
+          // `DBHeader`s mobiler Drawer schliesst bei JEDEM Klick, dessen Ziel
+          // `.closest('.db-navigation-item')` matcht (siehe `header.js`/`isEventTargetNavigationItem`
+          // im DB-UX-Paket) -- dieser Knopf sitzt in genau so einem `<li>`. Ohne
+          // `stopPropagation()` schliesst ein Klick hier die ganze Schublade statt nur das
+          // Untermenue zu oeffnen (Bug-Fund: Burger-Menue schliesst beim Theme-Klick komplett).
+          event.stopPropagation();
+          setOffen(vorher => !vorher);
+        }}
       >
         <span className={`${THEME_ICON[theme].klasse} theme-icon-active`} data-icon={THEME_ICON[theme].icon} />
         <span className="d-md-none">Design auswählen</span>
@@ -60,7 +69,7 @@ export default function ThemeSwitcher() {
               data-theme-value={wert}
               className={theme === wert ? 'active' : undefined}
               aria-pressed={theme === wert}
-              onClick={() => waehle(wert)}
+              onClick={event => waehle(event, wert)}
             >
               <span className={THEME_ICON[wert].klasse} data-icon={THEME_ICON[wert].icon} />
               {THEME_LABEL[wert]}

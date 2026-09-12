@@ -2785,3 +2785,43 @@ autoSave-Kopplung, DOM-Struktur von `customTableRender.ts`, Test-Abdeckung).
   `datetimeParser`-Formatierung korrekt), VE im Einstellungen-Accordion (4 Vorlagen-Zeilen,
   Breakpoint-Spaltenumschaltung, Custom-Button "Standardeinstellungen"). **Alle 6 Instanzen
   damit live bestaetigt.**
+
+---
+
+## Fix: Impressum-Schliessen-Knopf + Theme-Switcher im Burger-Menue (2026-09-12)
+
+User-Meldung: Impressum-Dialog laesst sich ueber den Fusszeilen-Knopf nicht schliessen;
+Theme-Umschalter im mobilen Burger-Menue schliesst beim Anklicken die ganze Navigation statt
+das Design-Untermenue zu oeffnen. Beide Regressionen stammen aus Phase K (K3/K5).
+
+- [x] **Impressum, zwei unabhaengige Ursachen (User meldete "geht immer noch nicht" nach dem
+      ersten Fix -- zweite Ursache erst dadurch gefunden):**
+      1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Annahme war,
+         `data-action="close"` wuerde ueber einen globalen `dbDialog.ts`-Listener laufen --
+         falsch, siehe 2). Fix: `onClick={onClose}`.
+      2. **Eigentlicher Blocker:** `styles.scss`s `footer { pointer-events: none; }` war ein
+         Tag-Selektor (fuer `.app-footer` gedacht), traf aber JEDES `<footer>` im Dokument --
+         auch `DBDrawerFooter` (rendert selbst `<footer class="db-drawer-footer">`). Der Knopf
+         war optisch da, aber `elementFromPoint()` an seiner Position lieferte den
+         `.db-drawer-container` dahinter -- fuer echte Mausklicks unerreichbar. Per JS
+         ausgeloeste Klicks (`.click()`, keine Hit-Testing) verdeckten das in meinem ersten
+         Test. Fix: Selektor auf `.app-footer` beschraenkt.
+- [x] **Theme-Switcher:** Root-Cause im DB-UX-Quellcode verifiziert (`header.js`):
+      `DBHeader`s Drawer-Kopie der Navigation traegt einen Klick-Listener, der bei JEDEM Klick,
+      dessen Ziel `.closest('.db-navigation-item')` matcht, die Schublade schliesst
+      (`isEventTargetNavigationItem`) -- die Desktop-Kopie hat diesen Listener nicht.
+      `ThemeSwitcher.tsx`s Umschalter-Knopf sitzt in genau so einem `<li>` und rief nie
+      `stopPropagation()` auf. Fix: `stopPropagation()` im Umschalter- und in den
+      Design-Options-Klicks.
+- [x] Lessons ergaenzt (`tasks/lessons.md`): DBHeader-Drawer-Autoclose-Falle, globaler
+      `footer`-Tag-Selektor trifft `DBDrawerFooter`, `.click()` vs. echtem Klick beim Testen.
+
+### Verifikation
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build` gruen.
+- Puppeteer mit ECHTEN Maus-Klicks (`page.mouse.click`, nicht `.click()`): Impressum oeffnet
+  und schliesst korrekt per Mausklick auf den Fusszeilen-Knopf (`elementFromPoint()` an dessen
+  Position liefert jetzt den Knopf selbst, nicht mehr den Container dahinter). Theme-Umschalter
+  im Drawer: Klick expandiert das Untermenue (`aria-expanded` false→true), Drawer bleibt
+  `open===true`; Themenwahl (`dark`) greift (`data-mode="dark"`), Drawer bleibt weiterhin offen.
