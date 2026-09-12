@@ -3,13 +3,27 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { TAB_SHOWN_EVENT } from '@/infrastructure/ui/tabController';
 
 /**
- * Monats-Fenster für die Berechnungstabelle unterhalb xl (<1200px):
- * Die Anzahl sichtbarer Monatsspalten wird dynamisch aus der verfügbaren
- * Breite berechnet (Containerbreite − erste Spalte − Reserve, geteilt durch
- * die Monatsspaltenbreite); per Prev/Next-Buttons verschiebbar.
- * Ab xl zeigt `d-xl-table-cell` immer alle Spalten — kein JS-Media-Query nötig.
+ * Monats-Fenster für die Berechnungstabelle: die Anzahl sichtbarer Monatsspalten wird
+ * rein aus der verfügbaren Containerbreite berechnet (Containerbreite − erste Spalte −
+ * Reserve, geteilt durch die Monatsspaltenbreite); per Prev/Next-Buttons verschiebbar.
+ * Erreichen alle 12 Monate das Fenster, blendet sich die Navigation selbst aus (unten) —
+ * das ist die "komplette Tabelle".
+ *
+ * Bis 2026-09 gab es dafür zusätzlich einen `d-xl-table-cell`-Viewport-Breakpoint, der ALLE
+ * Spalten erzwang, sobald der Viewport (nicht der tatsächliche Tabellen-Container!) eine
+ * bestimmte Breite erreichte. Der Container ist durch `.mitte` aber auf ~1029px gedeckelt,
+ * unabhängig vom Viewport (Puppeteer-gemessen, konstant von 1280px bis 2560px Breite) — nach
+ * der Breakpoint-Vereinheitlichung auf die DB-UX-Skala (`_breakpoints.scss`, `xl` 1200px ->
+ * 1920px) lag dieser Breakpoint jenseits jeder real erreichbaren Containerbreite, die
+ * komplette Tabelle war dadurch nie mehr erreichbar. Entfernt zugunsten von reinem
+ * Breiten-JS -- kein Viewport-Container-Mismatch mehr möglich.
  */
-const MONAT_MIN_PX = 80; // Mindestbreite je Monatsspalte (Währungsbeträge) — unterschritten → eine Spalte weniger
+// Mindestbreite je Monatsspalte (Währungsbeträge). `--db-sizing-xl` statt Handwert: bei
+// Functional-Density/14px-Root real 70px (Puppeteer gemessen) -- die einzige DB-UX-Sizing-Stufe,
+// die alle 12 Spalten noch in den gedeckelten ~1029px-Container passen laesst (12 x 70 = 840px
+// von 845px nutzbarer Breite, ~5px Reserve). Wie `infrastructure/ui/breakpoints.ts` ist dies ein
+// TS-Spiegel eines CSS-Tokens, kein Live-`getComputedStyle`-Read.
+const MONAT_MIN_PX = 70;
 const RESERVE_PX = 24; // Container-Margin/-Padding
 const ERSTE_SPALTE_PX = 184; // feste 11.5rem der Label-Spalte, siehe styles.scss
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] as const;
@@ -56,7 +70,6 @@ export function wendeMonatsFensterAn(): void {
   for (const zelle of Array.from(zellen)) {
     const monat = Number(zelle.dataset.monat);
     zelle.classList.toggle('d-none', !sichtbar(monat));
-    zelle.classList.toggle('d-xl-table-cell', !sichtbar(monat));
   }
 
   // Spaltenanzahl als CSS-Variable — die zugehörige width-Regel greift nur

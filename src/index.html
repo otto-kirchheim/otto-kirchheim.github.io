@@ -446,7 +446,8 @@
 
       <!-- Tab Berechnung -->
       <div class="tab-pane fade" id="Berechnung" role="tabpanel">
-        <!-- mitte: unterhalb 1200px volle Breite für das Monats-Fenster, ab 1200px wie gehabt -->
+        <!-- Monats-Fenster: Spaltenanzahl rein breitenbasiert (berechnungMonatsFenster.ts),
+             kein Viewport-Breakpoint mehr -- Details dort. -->
         <div class="mitte text-center mb-3">
           <div>
             <h1 id="titelBerechnung">Berechnung</h1>
@@ -456,7 +457,7 @@
           <div id="berechnungMobileCards" class="d-sm-none text-start" aria-describedby="titelBerechnung"></div>
 
           <div
-            class="d-none d-sm-flex d-xl-none justify-content-center align-items-center gap-3 mb-2"
+            class="d-none d-sm-flex justify-content-center align-items-center gap-3 mb-2"
             id="berechnungMonatsNav"
           >
             <button

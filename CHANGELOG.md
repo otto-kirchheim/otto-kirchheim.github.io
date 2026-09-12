@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (106)
+
+### fix (Berechnung-Tabelle: komplette Ansicht seit J0 nie mehr erreichbar)
+
+- `berechnungMonatsFenster.ts`: Viewport-Breakpoint-Override (`d-xl-table-cell`/`d-xl-none`,
+  Bootstrap-Relikt bei "xl" = 1200px) entfernt. Nach der Breakpoint-Vereinheitlichung (J0) auf
+  die DB-UX-Skala verschob sich "xl" auf 1920px — der Container (`.mitte`) deckelt aber
+  unabhängig vom Viewport auf ~1029px Inhaltsbreite, weshalb die komplette 12-Monats-Ansicht
+  zwischen 1200px und 1920px Viewport (praktisch jeder Desktop/Laptop) nicht mehr erreichbar war.
+- Sichtbarkeit läuft jetzt rein über die vorhandene breitenbasierte JS-Berechnung
+  (`ermittleFensterGroesse`), kein Viewport-Container-Mismatch mehr möglich.
+- `MONAT_MIN_PX` von `80` auf `70` (`--db-sizing-xl`, Functional-Density) — DB-UX-Token statt
+  Handwert, einzige Stufe, die 12 Spalten noch in den gedeckelten Container passen lässt.
+
 ## 2026-09-12 (105)
 
 ### refactor (Phase K2: Theme-Umschalter nach React)

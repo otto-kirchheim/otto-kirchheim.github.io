@@ -16,7 +16,7 @@ describe('#berechnungMonatsFenster', () => {
     Storage.set('Monat', 1); // Fenster startet bei Jan
 
     document.body.innerHTML =
-      '<div id="berechnungMonatsNav" class="d-none d-sm-flex d-xl-none"></div>' +
+      '<div id="berechnungMonatsNav" class="d-none d-sm-flex"></div>' +
       '<button id="btnBerechnungMonatePrev"></button>' +
       '<span id="berechnungMonatsFensterLabel"></span>' +
       '<button id="btnBerechnungMonateNext"></button>' +
@@ -41,13 +41,12 @@ describe('#berechnungMonatsFenster', () => {
     expect(groesse).toBeLessThanOrEqual(12);
   });
 
-  it('blendet Monate außerhalb des Fensters aus (d-none d-xl-table-cell)', () => {
+  it('blendet Monate außerhalb des Fensters aus (d-none)', () => {
     expect(kopfzelle(1).classList.contains('d-none')).toBe(false);
     expect(kopfzelle(groesse).classList.contains('d-none')).toBe(false);
 
     if (groesse < 12) {
       expect(kopfzelle(groesse + 1).classList.contains('d-none')).toBe(true);
-      expect(kopfzelle(groesse + 1).classList.contains('d-xl-table-cell')).toBe(true);
 
       const tdVersteckt = document.querySelector<HTMLElement>(`#tbodyBerechnung td[data-monat="${groesse + 1}"]`);
       expect(tdVersteckt?.classList.contains('d-none')).toBe(true);

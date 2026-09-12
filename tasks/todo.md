@@ -733,6 +733,52 @@ Slice pruefen (Hash-Sync darf nie brechen) und Mobile-Viewport < 768 px fuer Dra
 
 ---
 
+# Fix: Berechnung-Tabelle -- komplette Ansicht seit J0 nie mehr erreichbar (2026-09-12)
+
+User-Meldung: "Tabelle gibt es in 3 Stufen (Mobil/Karten, Pfeiltasten-Fenster, komplett) --
+Stufe 3 fehlt auf dem Desktop." Puppeteer-Untersuchung bestaetigt echte Regression, kein
+Missverstaendnis.
+
+## Root Cause
+
+`berechnungMonatsFenster.ts` berechnet die sichtbaren Monatsspalten aus der Container-Breite
+(`ermittleFensterGroesse`); ein Viewport-Breakpoint (`d-xl-table-cell`/`d-xl-none` auf
+`#berechnungMonatsNav`) erzwang zusaetzlich ALLE 12 Spalten ab einer festen Viewport-Breite, egal
+was die Breiten-Rechnung ergab -- ein Relikt aus der Bootstrap-Aera (`xl` = 1200px). J0
+(Breakpoint-Vereinheitlichung auf `_breakpoints.scss`, DB-UX-Skala) verschob `xl` global auf
+1920px, ohne diese eine Stelle mitzuziehen (Berechnung ist keine `CustomTable`-Instanz, fiel
+durch J0s "alle Tabellen neu beurteilt"-Sweep).
+
+Puppeteer-gemessen: `.mitte` deckelt den Container unabhaengig vom Viewport auf ~1029px Inhalt
+(75rem bei 14px Root-Fontsize der Functional-Density = 1050px, minus `.db-table`-Padding) --
+konstant von 1280px bis 2560px Viewport-Breite getestet. Zwischen dem alten Schwellwert (1200px)
+und dem neuen (1920px) -- praktisch jeder reale Laptop/Desktop -- sah der User nur noch Stufe 2.
+
+## Fix
+
+- [x] `d-xl-table-cell`-Klassen-Toggle in `berechnungMonatsFenster.ts` entfernt; Sichtbarkeit
+      laeuft nur noch ueber `d-none`, rein breitenbasiert -- kein Viewport-Container-Mismatch
+      mehr moeglich.
+- [x] `MONAT_MIN_PX` von hartem `80` auf `70` (= `--db-sizing-xl`, Functional-Density/14px-Root,
+      Puppeteer gemessen) -- User-Vorgabe: DB-UX-Token statt Handwert. Einzige Sizing-Stufe, die
+      12 Spalten noch in den gedeckelten ~1029px-Container passen laesst (12x70=840 von 845px
+      nutzbar, ~5px Reserve). TS-Spiegel mit Kommentar auf den Token, kein Live-`getComputedStyle`
+      (Konvention wie `infrastructure/ui/breakpoints.ts`).
+- [x] `#berechnungMonatsNav` in `index.html`: `d-xl-none` entfernt, `nav.style.display='none'`
+      (JS, inline `!important`) blendet die Navigation weiterhin korrekt aus, sobald alle 12
+      sichtbar sind -- inline `!important` schlaegt Klassen-`!important` unabhaengig von
+      Verschachtelung/Breakpoint.
+- [x] `test/Berechnung.monatsFenster.test.ts` angepasst (kein `d-xl-table-cell` mehr).
+- [x] Puppeteer-Matrix 1024/1280/1440/1920px: ab 1280px alle 12 Monate sichtbar, Navigation
+      versteckt; bei 1024px 11 sichtbar mit Navigation -- Fix bestaetigt.
+
+### Verifikation
+
+`bun run typecheck && bun run lint && bun run lint:css && bun run test && bun run build` --
+alle gruen (2116 pass, gleicher Warn-Ausnahmezustand wie vorher). Details: CHANGELOG (106).
+
+---
+
 # Aktueller Plan: DB-UX-Migration -- Phase H (Bootstrap vollstaendig raus) - 2026-09-08
 
 ## Ausgangslage
