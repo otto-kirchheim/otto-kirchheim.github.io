@@ -72,6 +72,18 @@ describe('updateTabVisibility', () => {
     container.remove();
     expect(() => updateTabVisibility(['bereitschaft'])).not.toThrow();
   });
+
+  it('schaltet BEIDE Kopien um, wenn eine Tab-Id zweimal im DOM steht (Desktop- + Drawer-Kopie von DBHeader, Phase K5)', () => {
+    const zweiteKopie = document.createElement('li');
+    zweiteKopie.innerHTML = '<button id="bereitschaft-tab"></button>';
+    container.querySelector('ul')!.append(zweiteKopie);
+
+    updateTabVisibility(['bereitschaft']);
+
+    const kopien = document.querySelectorAll<HTMLButtonElement>('#bereitschaft-tab');
+    expect(kopien).toHaveLength(2);
+    kopien.forEach(el => expect(el.parentElement!.classList.contains('d-none')).toBe(false));
+  });
 });
 
 describe('hideAllFeatureTabs', () => {

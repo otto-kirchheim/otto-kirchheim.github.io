@@ -109,6 +109,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
 import { showConflictReviewBanner } from '@/core/orchestration/auth/components';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
 type MockTableInstance = {
   rows: {
@@ -143,10 +144,9 @@ describe('loadUserDaten', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <h1 id="Willkommen"></h1>
-      <div id="navmenu" class="d-none"></div>
-      <button id="btn-navmenu" class="d-none"></button>
       <div id="conflictReviewBannerMount"></div>
     `;
+    setNavigationSichtbar(false);
     vi.clearAllMocks();
   });
 
@@ -239,8 +239,7 @@ describe('loadUserDaten', () => {
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
     expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'success' }));
-    expect(document.querySelector('#navmenu')?.classList.contains('d-none')).toBe(false);
-    expect(document.querySelector('#btn-navmenu')?.classList.contains('d-none')).toBe(false);
+    expect(isNavigationSichtbar()).toBe(true);
   });
 
   it('nutzt Serverdaten wenn lokale Ressourcen zwar neuer wirken, aber keine _id enthalten', async () => {

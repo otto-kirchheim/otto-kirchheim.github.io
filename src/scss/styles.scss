@@ -1022,7 +1022,9 @@ body:has(#start.active) {
   // linken Kante des Eintrags aus -- er klappt dann nach rechts auf und ragt (auch bei
   // `visibility: hidden`) ueber den Viewport, was ab 64em einen waagerechten Scrollbalken
   // erzeugt. Rechtsbuendig verankern, damit er nach links/unten oeffnet und im Bild bleibt.
-  #bd-theme-menu {
+  // Klassen- statt Id-Selektor (Phase K5): `ThemeSwitcher` bekommt seit `DBHeader`s
+  // eingebauter Drawer-Verdopplung pro Instanz eine eigene, per `useId()` erzeugte Id.
+  .theme-umschalter-menu {
     inset-inline: auto 0;
   }
 }

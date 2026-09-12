@@ -35,176 +35,10 @@
       </div>
     </noscript>
 
-    <header class="db-header sticky-top" id="appHeader">
-      <div class="db-header-navigation-bar">
-        <div class="db-header-brand-container">
-          <a class="db-brand" href="#start" id="brand-start-tab" data-tab-target="start" data-icon="none">
-            <img src="icons/192x192-icon.png" alt="" width="30" height="30" />
-            Nebengeld
-          </a>
-        </div>
-
-        <div class="db-header-navigation-container">
-          <!-- Die Navigation existiert genau einmal; fuer die mobile Schublade zieht sie um
-               (`navDrawer.ts`), damit die Tab-Ids eindeutig bleiben. -->
-          <div class="db-header-navigation d-none" id="navmenu">
-            <nav class="db-navigation" id="tabs" role="tablist" aria-label="Hauptnavigation">
-              <!-- "Start" ist kein eigener Nav-Eintrag: die Wortmarke (`.db-brand`,
-                   `#brand-start-tab`) ist der Start-Schalter. -->
-              <menu>
-                <li class="db-navigation-item d-none" role="presentation">
-                  <a
-                    role="tab"
-                    id="bereitschaft-tab"
-                    href="#Bereitschaft"
-                    data-tab-target="Bereitschaft"
-                    aria-controls="Bereitschaft"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    Bereitschaft
-                  </a>
-                </li>
-                <li class="db-navigation-item d-none" role="presentation">
-                  <a
-                    role="tab"
-                    id="ewt-tab"
-                    href="#EWT"
-                    data-tab-target="EWT"
-                    aria-controls="EWT"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    EWT
-                  </a>
-                </li>
-                <li class="db-navigation-item d-none" role="presentation">
-                  <a
-                    role="tab"
-                    id="neben-tab"
-                    href="#Neben"
-                    data-tab-target="Neben"
-                    aria-controls="Neben"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    Nebenbezüge
-                  </a>
-                </li>
-                <li class="db-navigation-item d-none" role="presentation">
-                  <a
-                    role="tab"
-                    id="ea-tab"
-                    href="#EA"
-                    data-tab-target="EA"
-                    aria-controls="EA"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    Entgeltausgleich
-                  </a>
-                </li>
-                <li class="db-navigation-item nav-trenner" role="presentation">
-                  <!-- Erster immer sichtbarer Eintrag: haelt beim Laden (Panel `start`, kein
-                       eigener Tab) den Tastaturfokus fuer die Tabliste. `tabController` zieht
-                       den `tabindex` bei jedem echten Tabwechsel nach. `nav-trenner`: optische
-                       Grenze zwischen den Fachbereichen (Bereitschaft/EWT/Neben/EA) und den
-                       uebergreifenden Bereichen (Berechnung, Einstellungen) -- siehe styles.scss. -->
-                  <a
-                    role="tab"
-                    id="berechnung-tab"
-                    href="#Berechnung"
-                    data-tab-target="Berechnung"
-                    aria-controls="Berechnung"
-                    aria-selected="false"
-                    tabindex="0"
-                  >
-                    Berechnung
-                  </a>
-                </li>
-                <li class="db-navigation-item nav-rechts" role="presentation">
-                  <a
-                    role="tab"
-                    id="einstellungen-tab"
-                    href="#Einstellungen"
-                    data-tab-target="Einstellungen"
-                    aria-controls="Einstellungen"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    <span class="db-icon d-none d-lg-inline" data-icon="gear_wheel"></span
-                    ><span class="d-lg-none">Einstellungen</span>
-                  </a>
-                </li>
-                <li class="db-navigation-item d-none" role="presentation" id="admin">
-                  <a
-                    role="tab"
-                    id="admin-tab"
-                    href="#Admin"
-                    data-tab-target="Admin"
-                    aria-controls="Admin"
-                    aria-selected="false"
-                    tabindex="-1"
-                  >
-                    <span class="db-icon d-none d-lg-inline" data-icon="shield_check"></span
-                    ><span class="d-lg-none">Admin</span>
-                  </a>
-                </li>
-
-                <!-- Phase K2: React-Slice, siehe infrastructure/ui/ThemeSwitcher.tsx -- gemountet in main.ts. -->
-                <li class="db-navigation-item" role="presentation">
-                  <div id="themeSwitcherRoot"></div>
-                </li>
-              </menu>
-            </nav>
-          </div>
-
-          <div class="db-header-primary-action">
-            <button class="db-button" data-variant="brand" type="button" id="btnLogin">Anmelden</button>
-            <div class="db-select d-none" id="MonatFeld" data-hide-label="true">
-              <label for="Monat">Monatswechsel</label>
-              <select id="Monat" required>
-                <option value="1">Januar</option>
-                <option value="2">Februar</option>
-                <option value="3">März</option>
-                <option value="4">April</option>
-                <option value="5">Mai</option>
-                <option value="6">Juni</option>
-                <option value="7">Juli</option>
-                <option value="8">August</option>
-                <option value="9">September</option>
-                <option value="10">Oktober</option>
-                <option value="11">November</option>
-                <option value="12">Dezember</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="db-header-action-container">
-          <div class="db-header-burger-menu-container">
-            <button
-              type="button"
-              class="db-button d-none"
-              data-variant="ghost"
-              data-icon="menu"
-              data-no-text="true"
-              id="btn-navmenu"
-              aria-controls="navdrawer"
-              aria-expanded="false"
-            >
-              Menü
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <!-- Die Navigations-Schublade liegt bewusst neben dem Header, nicht darin: ein
-         `position: fixed`-Overlay in einer `sticky` Kopfzeile ist unnoetig verschachtelt.
-         Phase K4: React-Huelle (infrastructure/ui/NavDrawerShell.tsx), `navDrawer.ts` findet
-         den resultierenden `<dialog id="navdrawer">` weiterhin ueber die Id. -->
-    <div id="navDrawerRoot"></div>
+    <!-- Phase K5: React-Slice, siehe infrastructure/ui/AppHeader.tsx -- gemountet in main.ts.
+         Loest navDrawer.ts/NavDrawerShell.tsx (Phase K4) vollstaendig ab: DBHeader bringt den
+         Drawer eingebaut mit. -->
+    <div id="appHeaderRoot"></div>
 
     <!-- Aufnahme fuer den geteilten Dialog (`showModal.tsx` haengt hier den DB-Drawer ein). -->
     <div id="modal"></div>
@@ -295,7 +129,12 @@
             </div>
           </div>
 
-          <div class="raster-auto mb-4 d-lg-none d-none abstand-3" id="startSchnellzugriff">
+          <!-- d-md-none, nicht d-lg-none: DBHeader wechselt intern bei 64em/1024px (unser
+               md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation (core-components-
+               CSS, @media (min-width:64em)); lg (1440px) ist seit der Breakpoint-Vereinheit-
+               lichung (Phase J0) zu breit und liess die Schnellzugriff-Buttons faelschlich auch
+               auf normalen Desktop-Breiten stehen. -->
+          <div class="raster-auto mb-4 d-md-none d-none abstand-3" id="startSchnellzugriff">
             <div class="d-none" id="quick-bereitschaft-tab">
               <button
                 type="button"

@@ -101,9 +101,13 @@ vi.mock('@/features/Admin/utils/actAs', () => ({
 }));
 
 import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
 let authModuleLoaded = false;
 
+// `#admin`/`#admin-tab` bewusst ZWEIMAL im Fixture (Desktop-Kopfzeile + Drawer-Kopie von
+// `DBHeader`, Phase K5) -- deckt ab, dass beide Kopien getroffen werden (`querySelectorAll`
+// statt `querySelector`).
 function setupDom(): void {
   document.body.innerHTML = `
     <button id="btnLogin"></button>
@@ -112,11 +116,11 @@ function setupDom(): void {
     <input id="Jahr" />
     <input id="Monat" class="d-none" />
     <div id="admin" class="d-none"></div>
+    <div id="admin" class="d-none"></div>
     <div id="Admin" class="d-none"></div>
     <button id="admin-tab"></button>
+    <button id="admin-tab"></button>
     <button id="brand-start-tab"></button>
-    <div id="navmenu" class="d-none"></div>
-    <button id="btn-navmenu" class="d-none"></button>
     <button id="actAsOwnDataButton"></button>
   `;
 }
@@ -130,6 +134,7 @@ describe('auth/index.ts', () => {
 
     setupDom();
     vi.clearAllMocks();
+    setNavigationSichtbar(false);
     resetSteps('auth-gate');
     resetSteps('session-restore');
     resetSteps('boot');
@@ -238,6 +243,30 @@ describe('auth/index.ts', () => {
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(window.location.hash).toBe('#start');
+  });
+
+  it('macht die Navigation sichtbar und schaltet BEIDE #admin-Kopien um (Session-Restore, Admin)', async () => {
+    getUserCookieMock.mockReturnValue({ userName: 'otto-admin' });
+    isAdminMock.mockReturnValue(true);
+
+    expect(isNavigationSichtbar()).toBe(false);
+
+    await taskRef.fn?.();
+
+    expect(isNavigationSichtbar()).toBe(true);
+    const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
+    expect(adminElemente).toHaveLength(2);
+    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(false));
+  });
+
+  it('versteckt BEIDE #admin-Kopien, wenn kein Benutzer angemeldet ist', async () => {
+    storageCheckMock.mockImplementation(() => false);
+    storageGetMock.mockImplementation(() => null);
+
+    await taskRef.fn?.();
+
+    const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
+    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(true));
   });
 
   it('fuehrt SESSION_RESTORE Steps in deklarierter Reihenfolge aus', async () => {

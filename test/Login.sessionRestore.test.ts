@@ -89,6 +89,7 @@ vi.mock('@/core/orchestration/auth/utils', () => ({
 }));
 
 import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
+import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
 let authModuleLoaded = false;
 
@@ -109,10 +110,9 @@ describe('auth/index.ts — session restore', () => {
       <div id="Admin" class="d-none"></div>
       <button id="admin-tab"></button>
       <button id="brand-start-tab"></button>
-      <div id="navmenu" class="d-none"></div>
-      <button id="btn-navmenu" class="d-none"></button>
       <button id="actAsOwnDataButton"></button>
     `;
+    setNavigationSichtbar(false);
     vi.clearAllMocks();
     resetSteps('auth-gate');
     resetSteps('session-restore');

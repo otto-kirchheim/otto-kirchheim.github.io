@@ -9,6 +9,7 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
+import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import { warmeFormularCaches } from '@/infrastructure/pdf/warmeFormularCaches';
 import { type LoadedYearData, loadAllYearData } from '@/infrastructure/api/apiService';
@@ -304,8 +305,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   // Formular-Vorlagen-Cache im Hintergrund vorwaermen (nicht blockierend) -- damit ein
   // spaeterer PDF-Export auch nach Verbindungsabbruch funktioniert.
   warmeFormularCaches(vorgabenU.Einstellungen?.aktivierteTabs, monat, jahr);
-  document.querySelector<HTMLDivElement>('#navmenu')?.classList.remove('d-none');
-  document.querySelector<HTMLButtonElement>('#btn-navmenu')?.classList.remove('d-none');
+  setNavigationSichtbar(true);
   document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
   createSnackBar({
     message: `Neue Daten geladen.`,

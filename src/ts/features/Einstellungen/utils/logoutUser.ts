@@ -1,5 +1,6 @@
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
+import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 import { abortController } from '@/infrastructure/api/abortController';
 import { cancelAllPending } from '@/infrastructure/autoSave/autoSave';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
@@ -13,10 +14,10 @@ import { publishEvent } from '@/core/events/appEvents';
 
 type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';
 
+// `querySelectorAll`, nicht `querySelector`: `#admin` existiert seit Phase K5 zweimal
+// (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`).
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
-  const element = document.querySelector<HTMLElement>(selector);
-  if (addClass) element?.classList.add(className);
-  else element?.classList.remove(className);
+  document.querySelectorAll<HTMLElement>(selector).forEach(element => element.classList.toggle(className, addClass));
 }
 
 export default function logoutUser({
@@ -46,8 +47,8 @@ export default function logoutUser({
 
   if (zeigeTab('start')) window.scrollTo(0, 1);
 
-  for (const selector of ['#navmenu', '#btn-navmenu', '#admin', '#MonatFeld', '#startSchnellzugriff'])
-    toggleClassForElement(selector);
+  setNavigationSichtbar(false);
+  for (const selector of ['#admin', '#MonatFeld', '#startSchnellzugriff']) toggleClassForElement(selector);
   hideAllFeatureTabs();
 
   clearLoading('btnLogin', false);

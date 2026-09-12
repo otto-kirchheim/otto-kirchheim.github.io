@@ -2,6 +2,50 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (109)
+
+### refactor (Phase K5: Header/Brand/Navigation nach React)
+
+- `AppHeader.tsx` ersetzt das handgeschriebene `db-header`-Markup vollständig mit `DBHeader` +
+  `DBNavigation` + `DBNavigationItem` (Marke bewusst handgeschrieben, kein `DBBrand` — das
+  rendert ein `<div>`, kein `<a>`). `navDrawer.ts`/`NavDrawerShell.tsx` (Phase K4) vollständig
+  gelöscht — `DBHeader` bringt den Drawer eingebaut mit.
+- **Kernfund:** `DBHeader` rendert seine `children` zweimal gleichzeitig im DOM (Desktop-Kopfzeile
+  + Drawer-Kopie), kein Umzugs-Kniff wie zuvor. Bricht jeden `querySelector('#id')`-Aufrufer, der
+  genau ein Element erwartet:
+  - `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
+    umgestellt.
+  - `#navmenu`/`#btn-navmenu` (Sichtbarkeits-Toggle bei Login/Logout/Session-Restore) gibt es
+    unter `DBHeader` nicht mehr — ersetzt durch `navigationVisibleStore.ts`/
+    `useNavigationVisible.ts`. Burger-Knopf bleibt immer sichtbar (keine Versteck-Option in
+    `DBHeader`).
+  - `tabController.ts`: Fokus-Lookup in `zeigeTab()` bevorzugt jetzt die sichtbare Kopie.
+  - `ThemeSwitcher` (Phase K2) ist jetzt direkt eingebettet statt separat gemountet, dadurch
+    ebenfalls dupliziert — `useColorMode` von lokalem `useState` auf modul-globalen Store
+    umgebaut (sonst unsynchronisierte Theme-Anzeige zwischen den Kopien), feste Ids auf `useId()`
+    umgestellt.
+- **Zweiter Fund:** ES-Modul-Importe werten vor dem Top-Level-Code des importierenden Moduls aus
+  — `auth/index.ts`s `registerAppStartTask`-Aufruf landete dadurch vor dem Header/Footer-Mount in
+  der Warteschlange, obwohl er im Quelltext später steht. `auth`s Task griff auf `#Monat` zu
+  (jetzt Teil von `AppHeader`), bevor gemountet wurde, warf und stoppte die Restwarteschlange.
+  Fix: Header/Footer-Mount + `initTabController()` laufen jetzt synchron beim Modul-Import statt
+  als Queue-Eintrag.
+- **Drei weitere Bugs beim Live-Test gefunden:**
+  1. `{sichtbar && <DBNavigation>}` (bedingtes Rendern) war der falsche Ansatz — die Navigation
+     existierte bis zum Login gar nicht im DOM, `updateTabVisibility()`/Admin-Toggle/Klick-Listener
+     liefen davor ins Leere und nie wieder. Fix: `<DBNavigation className={sichtbar ? undefined :
+     'd-none'}>`, immer gerendert.
+  2. `updateTabVisibility.ts` nutzte `querySelector` (nur eine Kopie) — Bereitschaft/EWT/Neben/EA
+     blieben in der Drawer-Kopie versteckt. Auf `querySelectorAll` umgestellt.
+  3. `d-lg-none`/`d-lg-inline` an drei Stellen (`#startSchnellzugriff`, `AppHeader.tsx`s
+     Einstellungen-/Admin-Icon-Swap, `ThemeSwitcher.tsx`) zeigten auf den falschen Breakpoint —
+     `DBHeader` wechselt bei `64em`/1024px (`md`), nicht `lg` (1440px seit der
+     Breakpoint-Vereinheitlichung in J0). Auf `d-md-*` umgestellt.
+  4. Monatswechsel-`<select id="Monat" required>` bekam durch DB-UXs automatische
+     `:user-valid`-Erfolgsfaerbung einen grünen Rahmen — `data-custom-validity="neutral"`
+     ergänzt (DB-UXs Escape-Hatch dafür); vorbestehend, durch die anderen K5-Fixes erst
+     zuverlässig sichtbar geworden.
+
 ## 2026-09-12 (108)
 
 ### refactor (Phase K4: NavDrawer-Hülle nach React)

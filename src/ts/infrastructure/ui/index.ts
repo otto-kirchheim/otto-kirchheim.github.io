@@ -13,4 +13,3 @@ export * from './dbButton';
 export * from './dbDialog';
 export * from './reactRoot';
 export * from './tabController';
-export * from './navDrawer';

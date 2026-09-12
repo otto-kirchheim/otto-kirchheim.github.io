@@ -79,7 +79,7 @@ export const SESSION_RESTORE_SEQUENCE = [
   },
   {
     name: 'sr:nav-visible',
-    description: 'Show monatEl, navmenu, btnNavmenu',
+    description: 'Show monatEl, setNavigationSichtbar(true)',
     dependsOn: ['sr:admin-toggle'],
   },
   {

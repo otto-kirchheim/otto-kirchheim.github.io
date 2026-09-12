@@ -22,7 +22,9 @@ featureLifecycleRegistry.registerFeature({
   name: 'Admin',
   async register(ctx: FeatureContext): Promise<void> {
     if (ctx.isAdmin) {
-      document.querySelector<HTMLDivElement>('#admin')?.classList.remove('d-none');
+      // `#admin` existiert seit Phase K5 zweimal (Desktop-Kopfzeile + Drawer-Kopie von
+      // `DBHeader`) -- beide Vorkommen anfassen, nicht nur das erste.
+      document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => el.classList.remove('d-none'));
       document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
       const { mountAdminTab } = await import('@/features/Admin');
       mountAdminTab(ctx.userName);
@@ -75,32 +77,33 @@ const updateSW = registerSW({
 console.log(pwaInfo);
 
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
-import { initNavSchublade } from '@/infrastructure/ui/navDrawer';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
+import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
-import ThemeSwitcher from '@/infrastructure/ui/ThemeSwitcher';
-import NavDrawerShell from '@/infrastructure/ui/NavDrawerShell';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
+// Bewusst AUSSERHALB von `registerAppStartTask`: ES-Module-Imports werten VOR dem Top-Level-Code
+// des importierenden Moduls aus -- `auth/index.ts`s eigener `registerAppStartTask`-Aufruf (per
+// `import './core/orchestration/auth'` unten) landet dadurch in der Warteschlange VOR diesem
+// hier, obwohl er im Quelltext spaeter steht. `auth`s Task griff (`selectYear` ->
+// `setMonatJahr`) auf `#Monat` zu, das seit Phase K5 erst durch `AppHeader`s Mount entsteht --
+// mit dem Mount in der Warteschlange kam die Race genau umgekehrt zur Absicht: `auth`s Task lief
+// zuerst und warf, bevor Header/Footer je gemountet wurden. Header/Footer-Mount und
+// `initTabController()` laufen deshalb synchron beim Modul-Import, nicht als Queue-Eintrag.
+const appHeaderRoot = document.querySelector<HTMLDivElement>('#appHeaderRoot');
+if (appHeaderRoot) mount(appHeaderRoot, createElement(AppHeader));
+
+const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
+if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
+
+// Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
+// bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.
+initTabController();
+
 registerAppStartTask(() => {
-  const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
-  if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
-
-  const themeSwitcherRoot = document.querySelector<HTMLDivElement>('#themeSwitcherRoot');
-  if (themeSwitcherRoot) mount(themeSwitcherRoot, createElement(ThemeSwitcher));
-
-  // NavDrawerShell muss VOR initNavSchublade() gemountet sein: die faengt sich beim Aufruf
-  // einmalig den `#navdrawer`-Knoten (schliesst sich sonst dauerhaft an ein leeres Element).
-  const navDrawerRoot = document.querySelector<HTMLDivElement>('#navDrawerRoot');
-  if (navDrawerRoot) mount(navDrawerRoot, createElement(NavDrawerShell));
-
-  // Tabs und mobile Navigations-Schublade laufen seit dem DB-Header ohne Bootstrap-Plugins.
-  initTabController();
-  initNavSchublade();
-
   if (Storage.size() > 3) {
     const currentVersion: string = import.meta.env.APP_VERSION;
     const clientVersion: string = Storage.get('Version', { check: true, default: '0.0.0' });

@@ -20,7 +20,11 @@ const LEGACY_DEFAULT_ON_TAB_IDS = new Set(['bereitschaft-tab', 'ewt-tab', 'neben
 
 /** Blendet Nav-Eintrag und zugehörigen Schnellzugriff-Button (Start-Tab) gemeinsam ein/aus. */
 function toggleFeatureTab(tabId: string, visible: boolean): void {
-  document.querySelector<HTMLButtonElement>(`#${tabId}`)?.parentElement?.classList.toggle('d-none', !visible);
+  // `querySelectorAll`, nicht `querySelector`: die Nav-Eintraege existieren seit Phase K5
+  // zweimal (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`).
+  document
+    .querySelectorAll<HTMLButtonElement>(`#${tabId}`)
+    .forEach(el => el.parentElement?.classList.toggle('d-none', !visible));
   document.querySelector<HTMLButtonElement>(`#quick-${tabId}`)?.classList.toggle('d-none', !visible);
 }
 

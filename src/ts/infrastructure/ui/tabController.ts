@@ -93,7 +93,12 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 
   if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
 
-  const ausloeser = schalter(id).find(el => el.getAttribute('role') === 'tab') ?? null;
+  // Seit Phase K5 (`DBHeader`) existiert jeder Schalter potenziell zweimal gleichzeitig im DOM
+  // (Desktop-Kopfzeile + Drawer-Kopie) -- die sichtbare Kopie bevorzugen, sonst kann `.focus()`
+  // ins Leere laufen (ein `display:none`-Element laesst sich nicht fokussieren) und das
+  // `tab:shown`-Event haengt am falschen (unsichtbaren) Element.
+  const tabSchalter = schalter(id).filter(el => el.getAttribute('role') === 'tab');
+  const ausloeser = tabSchalter.find(el => el.offsetParent !== null) ?? tabSchalter[0] ?? null;
   if (fokus) ausloeser?.focus();
 
   const detail: TabWechsel = { id, schalter: ausloeser };

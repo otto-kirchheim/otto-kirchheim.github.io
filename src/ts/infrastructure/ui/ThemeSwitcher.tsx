@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useColorMode, type Theme } from './useColorMode';
 
 const THEME_ICON: Record<Theme, { klasse: string; icon?: string }> = {
@@ -11,43 +11,48 @@ const THEME_LABEL: Record<Theme, string> = { light: 'Hell', dark: 'Dunkel', auto
 
 /**
  * Phase K2: React-Ersatz fuer den Theme-Umschalter aus `index.html` (`#bd-theme` +
- * `#bd-theme-menu`), bisher von `DBColorToggler.ts` bedient. Wird in das statische
- * `<li class="db-navigation-item">` gemountet (`index.html`), das die Positionierung im
- * Nav-Flow noch uebernimmt -- entfaellt vollstaendig in K5 (`DBNavigation`).
+ * `#bd-theme-menu`), bisher von `DBColorToggler.ts` bedient. Wird als `<li>` in die Navigation
+ * gerendert (`AppHeader.tsx`).
  *
- * `#bd-theme-menu` bleibt eine feste Id (nicht `useId()`): `styles.scss:1022` verankert den
- * Flyout darueber, und die Komponente wird -- wie schon der Vorgaenger -- genau einmal
- * gerendert (die mobile Schublade zieht denselben DOM-Knoten per `navDrawer.ts` um, statt ihn
- * zu duplizieren).
+ * Ids ueber `useId()` statt fest (Nachtrag Phase K5): `DBHeader` rendert seine `children`
+ * zweimal (Desktop-Kopfzeile + Drawer-Kopie) -- mit festen `id="bd-theme"`/`id="bd-theme-menu"`
+ * gaebe es doppelte Ids im DOM. `aria-controls`/`aria-labelledby` bleiben dadurch weiterhin
+ * korrekt INNERHALB derselben Instanz verknuepft. Die Positionierungsregel in `styles.scss`
+ * haengt deshalb an der Klasse `.theme-umschalter-menu`, nicht mehr an der (jetzt dynamischen)
+ * Id. Fokus nach Auswahl laeuft ueber `useRef` statt `document.getElementById('bd-theme')` --
+ * sonst wuerde ein Klick in der Drawer-Kopie den Fokus auf die (ggf. unsichtbare) Desktop-Kopie
+ * springen lassen.
  */
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useColorMode();
   const [offen, setOffen] = useState(false);
+  const toggleId = useId();
+  const menuId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   function waehle(neu: Theme): void {
     setTheme(neu);
     setOffen(false);
-    document.getElementById('bd-theme')?.focus();
+    toggleRef.current?.focus();
   }
 
   return (
     <>
       <button
+        ref={toggleRef}
         type="button"
         className="db-navigation-item-expand-button"
-        id="bd-theme"
+        id={toggleId}
         aria-haspopup="true"
         aria-expanded={offen}
-        aria-controls="bd-theme-menu"
+        aria-controls={menuId}
         aria-label={`Design auswählen (${theme})`}
         onClick={() => setOffen(vorher => !vorher)}
       >
         <span className={`${THEME_ICON[theme].klasse} theme-icon-active`} data-icon={THEME_ICON[theme].icon} />
-        <span className="d-lg-none" id="bd-theme-text">
-          Design auswählen
-        </span>
+        <span className="d-md-none">Design auswählen</span>
       </button>
-      <menu className="db-sub-navigation" id="bd-theme-menu" aria-labelledby="bd-theme">
+      <menu className="db-sub-navigation theme-umschalter-menu" id={menuId} aria-labelledby={toggleId}>
         {(Object.keys(THEME_LABEL) as Theme[]).map(wert => (
           <li className="db-navigation-item" role="presentation" key={wert}>
             <button

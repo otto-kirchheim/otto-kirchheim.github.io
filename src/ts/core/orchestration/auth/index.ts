@@ -9,6 +9,7 @@ import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVis
 import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { initAutoSaveEventListener } from '@/infrastructure/autoSave/autoSave';
+import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
 import { markStep } from '../initSequence';
@@ -61,16 +62,18 @@ registerAppStartTask(() => {
     willkommenEl.innerHTML = `Hallo, ${displayName}.`;
   };
 
-  const adminEl = document.querySelector<HTMLDivElement>('#admin');
+  // `#admin`/`#admin-tab` existieren seit Phase K5 zweimal (Desktop-Kopfzeile + Drawer-Kopie
+  // von `DBHeader`) -- ueberall `querySelectorAll` statt `querySelector`.
+  const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
   const adminTabPaneEl = document.querySelector<HTMLDivElement>('#Admin');
-  const adminTabButtonEl = document.querySelector<HTMLButtonElement>('#admin-tab');
+  const adminTabButtonElemente = document.querySelectorAll<HTMLButtonElement>('#admin-tab');
   const brandStartTabEl = document.querySelector<HTMLButtonElement>('#brand-start-tab');
-  const navmenuEl = document.querySelector<HTMLDivElement>('#navmenu');
-  const btnNavmenuEl = document.querySelector<HTMLButtonElement>('#btn-navmenu');
 
-  adminTabButtonEl?.addEventListener('click', () => {
-    void ensureAdminTabMounted();
-  });
+  for (const el of adminTabButtonElemente) {
+    el.addEventListener('click', () => {
+      void ensureAdminTabMounted();
+    });
+  }
   actAsButtonEl?.addEventListener('click', () => {
     import('@/features/Admin/utils/actAs').then(({ loadOwnUserData }) => {
       void loadOwnUserData();
@@ -112,7 +115,7 @@ registerAppStartTask(() => {
     markStep('session-restore', 'sr:tab-visibility');
 
     const userIsAdmin = isAdmin();
-    adminEl?.classList.toggle('d-none', !userIsAdmin);
+    adminElemente.forEach(el => el.classList.toggle('d-none', !userIsAdmin));
     adminTabPaneEl?.classList.toggle('d-none', !userIsAdmin);
 
     if (!userIsAdmin) {
@@ -132,8 +135,7 @@ registerAppStartTask(() => {
     markStep('session-restore', 'sr:admin-toggle');
 
     monatFeldEl?.classList.remove('d-none');
-    navmenuEl?.classList.remove('d-none');
-    btnNavmenuEl?.classList.remove('d-none');
+    setNavigationSichtbar(true);
     document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
     markStep('session-restore', 'sr:nav-visible');
 
@@ -146,7 +148,7 @@ registerAppStartTask(() => {
     if (navigator.onLine) selectYear(monat, jahr);
     markStep('session-restore', 'sr:select-year');
   } else {
-    adminEl?.classList.add('d-none');
+    adminElemente.forEach(el => el.classList.add('d-none'));
     adminTabPaneEl?.classList.add('d-none');
     updateActAsBanner();
   }

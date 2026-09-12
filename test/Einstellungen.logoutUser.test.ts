@@ -57,17 +57,18 @@ vi.mock('@/infrastructure/ui/tabController', () => ({
 
 import logoutUser from '@/features/Einstellungen/utils/logoutUser';
 import Storage from '@/infrastructure/storage/Storage';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
 describe('logoutUser', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (Storage.check as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    setNavigationSichtbar(true);
     document.body.innerHTML = `
       <div id="tabContent"><div class="tab-pane" id="start"></div></div>
       <button id="start-tab" data-tab-target="start"></button>
       <button id="btnLogin" class="d-none"></button>
-      <div id="navmenu"></div>
-      <button id="btn-navmenu"></button>
+      <div id="admin"></div>
       <div id="admin"></div>
       <input id="Monat" />
       <h1 id="Willkommen">Hallo</h1>
@@ -111,6 +112,17 @@ describe('logoutUser', () => {
     logoutUser({ serverLogout: false });
 
     expect(window.scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('versteckt die Navigation und BEIDE #admin-Kopien (Desktop- + Drawer-Kopie)', () => {
+    expect(isNavigationSichtbar()).toBe(true);
+
+    logoutUser({ serverLogout: false });
+
+    expect(isNavigationSichtbar()).toBe(false);
+    const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
+    expect(adminElemente).toHaveLength(2);
+    adminElemente.forEach(el => expect(el.classList.contains('d-none')).toBe(true));
   });
 
   it('published version-mismatch reason when provided', () => {
