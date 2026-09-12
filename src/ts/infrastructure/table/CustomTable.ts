@@ -3,11 +3,13 @@
  *
  * Copyright 2022-2026 Jan Otto
  */
+import { createElement } from 'react';
 import './customtable.scss';
 import type { CustomHTMLTableElement } from '@/types';
+import { mount } from '@/infrastructure/ui/reactRoot';
 import { BREAKPOINTS } from '@/infrastructure/ui/breakpoints';
 import { Column, Columns } from './Column';
-import { renderFooter, renderHeader, renderRows } from './customTableRender';
+import CustomTableView from './CustomTableView';
 import type {
   Breakpoints,
   CustomTableOptions,
@@ -46,10 +48,6 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     this.options = ApplyOptions.bind(this)(options);
     this.state = setState.bind(this)();
 
-    const thead = this.$el.tHead ?? this.$el.createTHead();
-    const tfoot = this.$el.tFoot ?? this.$el.createTFoot();
-    if (this.$el.tBodies.length === 0) this.$el.createTBody();
-
     this.$el.classList.add(...['customtable', ...this.options.classes]);
 
     if (this.state.editing) {
@@ -82,9 +80,6 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     this.rows = new Rows<T>(this, this.options.rows);
 
     this.draw();
-
-    if (tfoot.childNodes.length === 0) this.$el.deleteTFoot();
-    if (thead.childNodes.length === 0) this.$el.deleteTHead();
 
     return this;
 
@@ -205,9 +200,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
    */
   public draw(): void {
     if (this.options.customFunction?.beforeDraw) this.options.customFunction.beforeDraw.call(this);
-    this.drawHeader();
-    this.drawFooter();
-    this.drawRows();
+    this.render();
     if (this.options.customFunction?.afterDraw) this.options.customFunction.afterDraw.call(this);
   }
 
@@ -215,21 +208,41 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
    * It creates a footer for the table
    */
   public drawFooter(): void {
-    renderFooter(this);
+    this.render();
   }
 
   /**
    * It draws the rows of the table
    */
   public drawRows(): void {
-    renderRows(this);
+    this.render();
   }
 
   /**
    * It draws the header of the table
    */
   public drawHeader(): void {
-    renderHeader(this);
+    this.render();
+  }
+
+  /**
+   * Rendert Kopf/Zeilen/Fuss in einem Zug neu (React-Ersatz fuer `customTableRender.ts`).
+   * `Row`/`Rows` unterscheiden nicht, welche `draw*()`-Methode eine Aenderung ausloest --
+   * alle vier Einstiegspunkte rendern deshalb identisch komplett neu; React uebernimmt das
+   * Diffing. `mount()` ist per `flushSync` synchron (siehe `reactRoot.ts`), der Aufrufer sieht
+   * danach garantiert das aktualisierte DOM -- exakt der bisherige synchrone Vertrag.
+   */
+  private render(): void {
+    const hooks = this.options.customFunction;
+    if (hooks?.beforeDrawHeader) hooks.beforeDrawHeader.call(this);
+    if (hooks?.beforeDrawFooter) hooks.beforeDrawFooter.call(this);
+    if (hooks?.beforeDrawRows) hooks.beforeDrawRows.call(this);
+
+    mount(this.$el, createElement(CustomTableView, { table: this as CustomTable<CustomTableTypes> }));
+
+    if (hooks?.afterDrawHeader) hooks.afterDrawHeader.call(this);
+    if (hooks?.afterDrawFooter) hooks.afterDrawFooter.call(this);
+    if (hooks?.afterDrawRows) hooks.afterDrawRows.call(this);
   }
 
   /** Benachrichtigt den onChange-Callback (für Auto-Save-Integration) */

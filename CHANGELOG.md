@@ -2,6 +2,32 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (116)
+
+### refactor (Phase M0/M1: CustomTable-Rendering nach React)
+
+- `customTableRender.ts` (333 Zeilen, Vanilla-DOM) geloescht → `CustomTableView.tsx`
+  (`infrastructure/table/`, React). `CustomTable.ts`s `draw()`/`drawHeader()`/`drawFooter()`/
+  `drawRows()` rendern jetzt einheitlich per `mount(this.$el, <CustomTableView table={this} />)`
+  (synchron via `flushSync`, exakt der bisherige Render-Vertrag). Betrifft alle 6
+  `createCustomTable()`-Instanzen gleichzeitig (`tableBZ`/`tableBE`/`tableE`/`tableN`/`tableEA`/
+  `tableVE`) — `Row.ts`/`Rows.ts`/`Column.ts` (reine Datenklassen) unveraendert, `el.instance`-
+  Vertrag fuer `savePipeline.ts`/`overlapGuard.ts`/`changeTracking.ts` unangetastet.
+- `tr.data = row`-Verknuepfung (von `attachBerechnenToggleListeners.ts`, EWT, extern gelesen)
+  per `ref`-Callback nachgebildet; mobiler Zeilen-Klick-Handler korrekt auf `event.view?.
+  innerWidth` umgestellt (statt globalem `window.innerWidth`).
+- `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt HTML-Strings
+  fuer `dangerouslySetInnerHTML` — sauberer fuer die interaktive `berechnen`-Checkbox.
+- Zeilen-Aktions- und Fusszeilen-Knoepfe sind jetzt echte `<DBButton>` statt der
+  Handmarkup-Bruecke `erzeugeDbButton`/`erzeugeDbButtonAusLook`; `infrastructure/ui/dbButton.ts`
+  auf den weiterhin benoetigten `DbButtonLook`-Typ eingedampft.
+- Bekannte, dokumentierte Nebenwirkung: React-Dev-Warnung „flushSync was called from inside a
+  lifecycle method" beim Klick auf Zeilen-Aktionsknoepfe (alle 6 Tabellen instanziieren
+  `createCustomTable()` in ihrem `useEffect()`) — nicht fatal, keine Testfehlschlaege, keine
+  beobachtbare Fehlfunktion, bewusst nicht behoben (siehe `plan-react-umbau.md`).
+- Verifiziert: volle Suite (2119 Tests) + Puppeteer fuer alle 6 Instanzen (`tableEA`, `tableE`/
+  EWT, `tableN`/Neben, `tableBZ`+`tableBE`/Bereitschaft, `tableVE`/Einstellungen), Hell+Dunkel.
+
 ## 2026-09-12 (115)
 
 ### feat (Fahrzeiten: Sortieroptionen)

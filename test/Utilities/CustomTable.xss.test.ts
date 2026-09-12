@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'bun:test';
+import { createElement } from 'react';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 
 type Row = { _id: string; Einsatzort: string };
 
-function renderTable(rows: Row[], html = false): HTMLTableElement {
+function renderTable(rows: Row[], html = false, parser?: (value: unknown) => string): HTMLTableElement {
   const table = document.createElement('table');
   table.id = `xssTable${Math.random().toString(36).slice(2)}`;
   document.body.appendChild(table);
 
   new CustomTable<Row>(table as never, {
-    columns: [{ name: 'Einsatzort', title: 'Einsatzort', html }],
+    columns: [{ name: 'Einsatzort', title: 'Einsatzort', html, ...(parser ? { parser } : {}) }],
     rows,
   });
 
@@ -34,8 +35,15 @@ describe('CustomTable - Zellinhalte', () => {
     expect(cell!.textContent).toBe('</span><script>alert(1)</script>');
   });
 
-  it('rendert Markup nur bei Spalten mit html: true (z.B. der Berechnen-Schalter)', () => {
-    const table = renderTable([{ _id: 'r1', Einsatzort: '<input type="checkbox" class="row-checkbox">' }], true);
+  it('rendert JSX nur bei Spalten mit html: true (z.B. der Berechnen-Schalter)', () => {
+    // Seit dem React-Umbau (Phase M) gibt ein `html: true`-Parser JSX direkt zurueck statt
+    // eines rohen HTML-Strings (kein `dangerouslySetInnerHTML` mehr, siehe `EwtTab.tsx`s
+    // `berechnenParser`/`schichtParser` und `customTableTypes.ts`s `html`-Doku).
+    const table = renderTable(
+      [{ _id: 'r1', Einsatzort: 'x' }],
+      true,
+      () => createElement('input', { type: 'checkbox', className: 'row-checkbox' }) as unknown as string,
+    );
 
     expect(table.querySelector('tbody td span input.row-checkbox')).not.toBeNull();
   });

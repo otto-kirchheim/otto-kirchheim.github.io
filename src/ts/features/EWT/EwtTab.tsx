@@ -27,16 +27,26 @@ function EwtTab() {
         const d = dayjs(s);
         return d.isValid() ? d.format('dd DD.MM.') : s;
       },
-      // Beide Parser erzeugen festes Markup ohne Benutzereingaben (Boolean bzw.
-      // Switch über feste Fälle) — nur deshalb dürfen die Spalten `html: true` setzen.
-      berechnenParser = (value: unknown): string => {
-        // DB-Schalter-Markup (`db-switch` > `label` > `input[role=switch]`); die Beschriftung
-        // steht in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
-        return `<div class="db-switch"><label><input type="checkbox" role="switch" class="row-checkbox" aria-label="Berechnen"${
-          value ? ' checked' : ''
-        }></label></div>`;
-      },
-      schichtParser = (value: unknown): string => {
+      // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
+      // nur deshalb duerfen die Spalten `html: true` setzen (`CustomTableView.tsx` rendert den
+      // Rueckgabewert dann direkt statt ihn zu `String()`en).
+      berechnenParser = (value: unknown) => (
+        // Unkontrolliert mit Absicht: `attachBerechnenToggleListeners` (unten) liest den
+        // Klick-Zustand direkt vom DOM-Element, kein React-State noetig. Beschriftung steht
+        // in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
+        <div className="db-switch">
+          <label>
+            <input
+              type="checkbox"
+              role="switch"
+              className="row-checkbox"
+              aria-label="Berechnen"
+              defaultChecked={Boolean(value)}
+            />
+          </label>
+        </div>
+      ),
+      schichtParser = (value: unknown) => {
         switch (value as string) {
           case 'T':
             return 'Tag';
@@ -45,7 +55,12 @@ function EwtTab() {
           case 'SP':
             return 'Spät';
           case 'BN': //legacy: BN = Bereitschaft + Nacht
-            return "<span class='SchichtBereitschaft'>Bereitschaft<br>+ Nacht</span>";
+            return (
+              <span className="SchichtBereitschaft">
+                Bereitschaft
+                <br />+ Nacht
+              </span>
+            );
           case 'S':
             return 'Sonder';
           default:
@@ -64,7 +79,16 @@ function EwtTab() {
           },
           { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
           { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
-          { name: 'Schicht', title: 'Schicht', parser: schichtParser, type: 'time', html: true },
+          {
+            name: 'Schicht',
+            title: 'Schicht',
+            // `parser` ist auf `string | number` typisiert (gilt fuer alle anderen Spalten
+            // dieser und aller anderen Tabellen); `html: true`-Spalten sind der dokumentierte
+            // Ausnahmefall und geben tatsaechlich JSX zurueck, siehe `CustomTableView.tsx`.
+            parser: schichtParser as unknown as (value: unknown) => string,
+            type: 'time',
+            html: true,
+          },
           { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'md', type: 'time' },
           { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'sm', type: 'time' },
           { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
@@ -73,7 +97,13 @@ function EwtTab() {
           { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
           { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'sm', type: 'time' },
           { name: 'anWE', title: 'An Wohnung', breakpoints: 'md', type: 'time' },
-          { name: 'berechnen', title: 'Berechnen?', parser: berechnenParser, breakpoints: 'lg', html: true },
+          {
+            name: 'berechnen',
+            title: 'Berechnen?',
+            parser: berechnenParser as unknown as (value: unknown) => string,
+            breakpoints: 'lg',
+            html: true,
+          },
         ],
         rows: getEwtDaten(undefined, undefined, { scope: 'all' }),
         sorting: { enabled: true },

@@ -242,21 +242,31 @@ das Element erzeugt hat. Ein reiner 1:1-Markup-Port genügte für alle drei Slic
 Wiring-Datei musste angefasst werden. Details je Slice in `tasks/todo.md` (Abschnitt „Aufgaben
 Phase L") und `CHANGELOG.md` (112–114). `#tableVE` bleibt bis Phase M eine `CustomTable`.
 
-## Phase M — `CustomTable` nach React  *(offene Weiche)*
+## Phase M — `CustomTable` nach React
 
-`infrastructure/table/` = 1448 Zeilen über `CustomTable.ts`, `Row.ts`, `Rows.ts`, `Column.ts`,
-`customTableRender.ts`, `customTableTypes.ts`, `customtable.css`. 12 Instanziierungen in
-`{Bereitschaft,EWT,Neben,EA}Tab.tsx`, `generateEingabeTabelleEinstellungenVorgabenB.ts`,
-`autoSave.ts`.
+**Planungssession 2026-09-12 (Web-Recherche + Code-Verifikation vor Umsetzungsstart):**
+Bestandsaufnahme korrigiert und Richtung entschieden, siehe „Entscheidung" unten.
+
+`infrastructure/table/` = 1429 Zeilen über `CustomTable.ts` (270), `Row.ts` (138), `Rows.ts` (275),
+`Column.ts` (49), `customTableRender.ts` (333), `customTableTypes.ts` (135), `customtable.scss`
+(228). **Korrektur:** tatsächlich **6** Instanziierungen (nicht 12 wie in der ersten
+Bestandsaufnahme notiert), alle über die Factory `createCustomTable()` (`CustomTable.ts:264`):
+`tableBZ` + `tableBE` (`BereitschaftTab.tsx:56,127`), `tableE` (`EwtTab.tsx:55`), `tableN`
+(`NebenTab.tsx:39`), `tableEA` (`EaTab.tsx:39`), `tableVE`
+(`generateEingabeTabelleEinstellungenVorgabenB.ts:51`). `autoSave.ts` selbst instanziiert keine
+Tabelle, sondern konsumiert sie (s. u.).
 
 **Die eigentliche Kopplung ist nicht das Rendering, sondern `infrastructure/autoSave/`:**
-`savePipeline.ts` findet Tabellen über `el.instance` (`savePipeline.ts:31-33`) und arbeitet
-mit `Row`/`TableChanges`/`RowState`; `overlapGuard.ts` und `changeTracking` ebenso.
-DB UX liefert **keine** interaktive DataTable — nur `DBTable`/`DBTableRow`/`DBTableDataCell`
-als Bausteine. Sortierung, Inline-Edit, Soft-Delete/Undo und die Breakpoint-Umschaltung
+`savePipeline.ts` findet Tabellen über `el.instance` (`savePipeline.ts:33`) und arbeitet mit
+`Row`/`TableChanges`/`RowState`; `overlapGuard.ts` und `changeTracking.ts` ebenso (zusammen
+1651 Zeilen `infrastructure/autoSave/`). DB UX liefert weiterhin **keine** interaktive
+DataTable — frisch per `db-ux`-MCP-Tool geprüft (`list_components`, `get_component_props('table')`):
+`DBTable`/`DBTableRow`/`DBTableDataCell` sind reine Präsentations-Bausteine (Props nur
+`variant`/`size`/`divider`/`columnSizes`/`stickyHeader` — kein Sort-, Edit- oder
+Selection-State). Sortierung, Inline-Edit, Soft-Delete/Undo und die Breakpoint-Umschaltung
 (`customtable-toggle-*`) bleiben in jedem Fall Eigenbau.
 
-Drei Richtungen, **Entscheidung erst beim Start von M**:
+Drei Richtungen standen zur Wahl:
 
 - **M-a Portierung** — `Row`/`Rows`/`Column` bleiben als reine Datenklassen (kein DOM),
   nur `customTableRender.ts` wird durch React-Komponenten über `DBTable` ersetzt; der
@@ -268,7 +278,7 @@ Drei Richtungen, **Entscheidung erst beim Start von M**:
 - **M-c Fremdbibliothek** — siehe Marktabgleich; kommt praktisch nur als *Variante von M-b*
   in Frage, nicht als Abkürzung.
 
-### Marktabgleich Tabellen-Bibliotheken (Stand 2026-09-08, `npm view`)
+### Marktabgleich Tabellen-Bibliotheken (Stand 2026-09-08, `npm view`; 2026-09-12 web-verifiziert)
 
 Harte Randbedingung: Phase F hat die Tabellen bereits auf **DB-Table-CSS** gestellt.
 Jede Bibliothek, die eigenes DOM oder eigene Styles mitbringt, macht das rückgängig und
@@ -276,7 +286,7 @@ bricht die DB-Marken-/A11y-Vorgaben. Es bleibt damit praktisch nur *headless*.
 
 | Paket | Version | Peer React | Unpacked | Urteil |
 |---|---|---|---|---|
-| **`@tanstack/react-table`** | 9.2.4, MIT | `>=18` | 134 KB | **Einzige tragfähige Option.** Headless: liefert Spalten-/Zeilenmodell, Sortierung, Filter, Gruppierung — **kein** DOM, **kein** CSS. Verträgt sich mit DB-Table-CSS und React 19. |
+| **`@tanstack/react-table`** | **9.0.0, seit 2026-08-04 stabil (GA)**, MIT | `>=18` | 134 KB | **Einzige tragfähige Option.** Headless: liefert Spalten-/Zeilenmodell, Sortierung, Filter, Gruppierung — **kein** DOM, **kein** CSS. Verträgt sich mit DB-Table-CSS und React 19. Web-Suche 2026-09-12: v9 nach >2 Jahren Arbeit stabil, kein neuer Herausforderer aufgetaucht. |
 | `react-data-grid` | 7.0.0-**beta**.61, MIT | `^19.2` | 373 KB | Beta; eigenes virtualisiertes DOM + eigene Styles → DB-Table-CSS wäre wirkungslos. Raus. |
 | `ag-grid-react` | 36.1.0, MIT | 16–19 | 834 KB | Eigenes Theming-System, fortgeschrittene Funktionen nur unter Enterprise-Lizenz. Kollidiert mit DB UX. Raus. |
 | `@glideapps/glide-data-grid` | 6.0.3, MIT | max **18** | 3,7 MB | Canvas-Renderer → kein DB-CSS, keine DOM-A11y; zusätzlich `lodash`/`marked`/`react-responsive-carousel`. Raus. |
@@ -291,12 +301,95 @@ Breakpoint-Spaltenumschaltung (`customtable-toggle-*`) — und vor allem **nicht
 Risikoblock ist. Wer TanStack einführt, schreibt das Datenmodell ohnehin neu, macht also
 M-b — nur mit zusätzlicher Abhängigkeit.
 
-→ **Vorläufige Tendenz: M-a.** M-c nur erwägen, wenn beim Start von M ohnehin M-b gewählt
-wird; dann TanStack Table v9 als Datenmodell darunter. Endgültige Entscheidung beim
-Phasenstart, mit einem Wegwerf-Spike wie in Phase 0.
+### Entscheidung (2026-09-12): **M-a Portierung**
 
-Vorarbeit aus J0 nutzen: die Breakpoints aus `_screen-sizes.scss` sind dann bereits die
-einzige Quelle, `CustomTable.ts:30` spiegelt sie nur noch.
+Web-Recherche + `db-ux`-MCP-Verifikation bestätigen den Stand vom 2026-09-08 unveraendert:
+TanStack Table v9 ist zwar jetzt final (GA), deckt aber weiterhin nicht den eigentlichen
+Risikoblock ab (`autoSave`-Kopplung, Inline-Edit, Soft-Delete/Undo, Breakpoint-Umschaltung) —
+kein neuer Befund, der M-b/M-c attraktiver macht. Bei nur 6 Instanziierungsstellen (statt der
+angenommenen 12) ist zudem auch der Umfang von M-b kleiner als urspruenglich befuerchtet; das
+aendert aber nichts am Kernrisiko: `savePipeline`/`overlapGuard`/`changeTracking` haengen exakt
+an `Row`/`TableChanges`/`RowState`, nicht an *wie viele* Tabellen sie bedienen.
+
+→ **M-a.** `Row`/`Rows`/`Column` bleiben unveraendert (reine Datenklassen, kein DOM); nur
+`customTableRender.ts` (333 Z.) wird durch React-Komponenten ersetzt, die auf `DBTable`/
+`DBTableRow`/`DBTableDataCell` aufsetzen. Der `el.instance`-Vertrag bleibt ueber einen
+Ref-Adapter erhalten (die React-Tabellenkomponente haengt sich selbst als `.instance` an ihr
+Root-Element, exakt wie `CustomTable` es heute tut) — `autoSave` in all seinen drei Dateien
+bleibt komplett unangetastet.
+
+### M0/M1 abgeschlossen (2026-09-12) — Kernerkenntnis: keine inkrementelle Slice-Reihenfolge moeglich
+
+Die im Plan vorgesehene Slice-Reihenfolge (M1 EA, M2 Neben, M3 EWT, ...) ging von *pro Tabelle
+unabhaengig umstellbaren* Instanzen aus. Das stimmt fuer M-a nicht: `CustomTable.ts` ist EINE
+gemeinsame Klasse fuer alle 6 Instanzen. Sobald ihr `draw()`/`drawHeader()`/`drawFooter()`/
+`drawRows()` auf React umgestellt ist, gilt das sofort fuer **alle 6 Tabellen gleichzeitig** —
+es gibt keinen Mechanismus, nur `tableEA` auf den neuen Renderer zu heben und die anderen 5 beim
+alten zu belassen, ausser mit einem Feature-Flag (unnoetige Komplexitaet fuer einen Uebergang,
+der ohnehin komplett vollzogen werden soll). Die Slice-Nummern M1–M5 sind damit hinfaellig; M0
+und M1 sind faktisch ein einziger Schritt geworden, der alle 6 Instanzen auf einmal umstellt.
+
+**Umsetzung:** `customTableRender.ts` (333 Z., geloescht) → `CustomTableView.tsx`
+(`infrastructure/table/`, React-Komponente). `CustomTable.ts`s vier `draw*()`-Methoden rufen
+jetzt einheitlich eine private `render()`, die `mount(this.$el, <CustomTableView table={this} />)`
+aufruft (`mount()` aus `reactRoot.ts`, per `flushSync` synchron — exakt der bisherige
+Render-Vertrag: Aufrufer sehen direkt danach das aktualisierte DOM). `Row.ts`/`Rows.ts`/
+`Column.ts` **komplett unveraendert** (kein DOM, riefen schon vorher nur `drawRows()`/
+`_notifyChange()` auf `this.CustomTable`). `el.instance`-Vertrag unangetastet: `$el` ist die
+`<table>` selbst, React mountet direkt hinein (kein Wrapper-Div, analog L1–L3), `.instance`
+bleibt eine normale Property auf dem Element, die React nie anfasst.
+
+**Drei echte Korrekturen unterwegs gefunden** (nicht im Plan vorgesehen):
+- `tr.data = row` ist entgegen der ersten Annahme **kein rein renderinternes Bookkeeping**:
+  `attachBerechnenToggleListeners.ts` (EWT, `afterDrawRows`-Hook) liest
+  `checkbox.closest('tr')?.data`, um die zugehoerige `Row`-Instanz zu finden. Per `ref`-Callback
+  in `CustomTableView.tsx` nachgebildet.
+- Der mobile Zeilen-Klick-Handler (`showRow` unterhalb des Breakpoints) muss `event.view?.
+  innerWidth` lesen, nicht das globale `window.innerWidth` — Unterschied wird in Tests mit
+  synthetischen Events sichtbar (kein `view` gesetzt), Puppeteer/echter Browser haette den Bug
+  verdeckt.
+- `column.html`-Spalten (EWT: `Schicht`/`berechnen`) lieferten bisher rohe HTML-**Strings** fuer
+  `dangerouslySetInnerHTML` — funktioniert technisch, ist aber kein sauberes React-Muster
+  (insbesondere fuer die interaktive `berechnen`-Checkbox). Umgestellt auf Parser, die JSX direkt
+  zurueckgeben (`EwtTab.tsx`s `schichtParser`/`berechnenParser`); der Spaltenvertrag selbst
+  (`parser: (value) => string | number`) blieb unveraendert (eine versuchte Typ-Erweiterung auf
+  `ReactNode` brach 4 unabhaengige Show/Edit-Modals, die denselben Parser fuer Read-only-Anzeigen
+  wiederverwenden — stattdessen lokaler Cast an den beiden `html:true`-Stellen).
+- Zeilen-Aktionsknoepfe (Edit/Delete/Undo) und Fusszeilen-Knoepfe (Hinzufuegen/Alle-loeschen/
+  Custom) sind jetzt echte `<DBButton>` (User-Korrektur waehrend der Umsetzung) statt der
+  Handmarkup-Bruecke `erzeugeDbButton`/`erzeugeDbButtonAusLook` (`infrastructure/ui/dbButton.ts`,
+  auf den `DbButtonLook`-Typ eingedampft, den `customButton`-Optionen noch brauchen).
+
+**Bekannte Nebenwirkung (nicht behoben, dokumentiert):** Klick auf einen Zeilen-Aktionsknopf
+(Edit/Delete/Undo) loest `React: "flushSync was called from inside a lifecycle method"` in der
+Dev-Konsole aus. Ursache: alle 6 Tabellen instanziieren `createCustomTable()` innerhalb des
+`useEffect()` ihrer jeweiligen Tab-Komponente (bereits vor Phase M so) — das war unauffaellig,
+solange `draw()` reines Vanilla-DOM war, wird aber sichtbar, seit `draw()` intern `mount()`/
+`flushSync` aufruft. Nicht fatal (Dev-only-Warnung, in Produktion entfernt), keine Test-
+Fehlschlaege, keine beobachtbare Fehlfunktion (Puppeteer-verifiziert). Sauberer Fix wuerde die
+gesamte Trigger-Architektur aendern (z. B. `useSyncExternalStore`-Store statt synchronem
+`mount()`), was den `el.instance`/`Row`-Vertrag gefaehrden wuerde -- bewusst zurueckgestellt.
+
+**Verifiziert:** volle Suite (2119 Tests, inkl. `CustomTable.test.ts` 748 Z. mit einer
+Anpassung -- `event.view`-Fix -- und `CustomTable.xss.test.ts` mit einer Anpassung -- neuer
+JSX-Vertrag statt HTML-String; `dbButton.test.ts` geloescht, testete nur die entfernte
+Vanilla-Bruecke) `&& lint && lint:css && build` gruen. Puppeteer: `tableEA` (Sortierung,
+Soft-Delete/Undo, Add/Edit/Delete) und `tableE`/EWT (Berechnen-Schalter, Schicht-Text mit
+Zeilenumbruch, `tr.data`-Verknuepfung, Custom-Footer-Button) live gepflasterhaft geprueft, beide
+Hell/Dunkel.
+
+**Offen:** `tableN` (Neben), `tableBZ`/`tableBE` (Bereitschaft), `tableVE` (Einstellungen) sind
+durch den gemeinsamen Klassen-Umbau technisch bereits auf React umgestellt und von der vollen
+Testsuite mitabgedeckt. Nachtrag 2026-09-12: alle vier zusaetzlich per Puppeteer live geprueft
+(`tableN`/Neben: 2 sortierte Zeilen inkl. Aktionsspalte; `tableBZ`+`tableBE`/Bereitschaft: je 1
+Zeile, `datetimeParser`-Formatierung korrekt; `tableVE`/Einstellungen-Accordion `#collapseThree`:
+4 Vorlagen-Zeilen, Breakpoint-Spaltenumschaltung sichtbar bei schmaler Ansicht, Custom-Button
+„Standardeinstellungen" rendert). **Damit sind alle 6 Instanzen live bestaetigt**, nicht nur
+ueber die Testsuite.
+
+**M6 Cleanup** (noch offen): `CustomTable.ts`/`Row.ts`/`Rows.ts`/`Column.ts`/
+`customTableTypes.ts` bleiben (weiterhin die Datenschicht); Doku-Kommentare
+(`CLAUDE.md`, `.claude/skills/architektur/SKILL.md`) bereits in dieser Session aktualisiert.
 
 ## Phase N — `index.html` auf ein Minimum
 

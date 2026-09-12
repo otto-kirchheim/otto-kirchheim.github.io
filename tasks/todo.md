@@ -2718,3 +2718,70 @@ Summenzeilen keine Zahl zeigen -> `undefined` / leere Zelle.
 - `bun run build` grün.
 - Vorbestehende ~9 Testfehler (Bereitschaft*/AdminLogBrowser) sind fremde WIP im Submodul,
   ohne meine Änderung ebenfalls rot (per gezieltem `git stash` der 4 Dateien geprüft).
+
+---
+
+## Phase M0/M1: CustomTable-Rendering nach React (2026-09-12)
+
+Planungssession vorab (Web-Recherche + `db-ux`-MCP-Verifikation): TanStack Table v9 seit
+2026-08-04 GA, deckt aber weiterhin nicht den Risikoblock (autoSave-Kopplung, Inline-Edit,
+Soft-Delete/Undo, Breakpoint-Umschaltung) ab; DB UX liefert weiterhin keine interaktive
+Tabellen-Komponente. Entscheidung: **M-a Portierung** (Details: `plan-react-umbau.md`
+Abschnitt „Phase M"). Kontrakt-Recherche per Explore-Agent vor Umsetzung (Row/Rows/Column/
+autoSave-Kopplung, DOM-Struktur von `customTableRender.ts`, Test-Abdeckung).
+
+- [x] **Kernerkenntnis:** die urspruenglich geplante Slice-Reihenfolge (M1 EA, M2 Neben, ...)
+      war hinfaellig -- `CustomTable.ts` ist eine gemeinsame Klasse fuer alle 6 Instanzen
+      (`tableBZ`, `tableBE`, `tableE`, `tableN`, `tableEA`, `tableVE` -- Korrektur: 6 statt der
+      urspruenglich angenommenen 12). M0 (Spike) und M1 (Umsetzung) sind dadurch faktisch ein
+      einziger Schritt geworden, der alle 6 Tabellen gleichzeitig umstellt.
+- [x] `customTableRender.ts` (333 Z., geloescht) -> `CustomTableView.tsx`
+      (`infrastructure/table/`). `CustomTable.ts`s vier `draw*()`-Methoden rufen jetzt
+      einheitlich `mount(this.$el, <CustomTableView table={this} />)` (per `flushSync`
+      synchron, exakt der bisherige Render-Vertrag). `Row.ts`/`Rows.ts`/`Column.ts`
+      **komplett unveraendert** (bereits reine Datenklassen, riefen schon vorher nur
+      `drawRows()`/`_notifyChange()` auf). `el.instance`-Vertrag unangetastet: `$el` bleibt
+      die `<table>` selbst, React mountet direkt hinein (kein Wrapper-Div).
+- [x] **Drei echte Korrekturen unterwegs gefunden** (nicht im Plan vorgesehen):
+      1. `tr.data = row` wird extern gelesen (`attachBerechnenToggleListeners.ts`, EWT) --
+         per `ref`-Callback nachgebildet, nicht nur renderinternes Bookkeeping wie vermutet.
+      2. Mobiler Zeilen-Klick-Handler brauchte `event.view?.innerWidth`, nicht das globale
+         `window.innerWidth` -- Unterschied nur mit synthetischen Test-Events sichtbar.
+      3. `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt
+         HTML-Strings fuer `dangerouslySetInnerHTML` (sauberer fuer die interaktive
+         `berechnen`-Checkbox) -- `EwtTab.tsx`s Parser umgestellt, Spaltenvertrag
+         (`parser: string | number`) unveraendert gelassen (Typ-Erweiterung auf `ReactNode`
+         haette 4 fremde Show/Edit-Modals gebrochen, die denselben Parser wiederverwenden --
+         stattdessen lokaler Cast an den zwei `html:true`-Stellen).
+- [x] Zeilen-Aktionsknoepfe (Edit/Delete/Undo) und Fusszeilen-Knoepfe (Hinzufuegen/
+      Alle-loeschen/Custom) auf echte `<DBButton>` umgestellt (User-Korrektur waehrend der
+      Umsetzung, zwei Iterationen) statt der Handmarkup-Bruecke `erzeugeDbButton`/
+      `erzeugeDbButtonAusLook` -- `infrastructure/ui/dbButton.ts` auf den `DbButtonLook`-Typ
+      eingedampft (den brauchen die `customButton`-Optionen noch), Funktionen + ihr Test
+      (`dbButton.test.ts`) geloescht.
+- [x] **Bekannte, dokumentierte Nebenwirkung (nicht behoben):** Klick auf einen
+      Zeilen-Aktionsknopf loest `React: "flushSync was called from inside a lifecycle method"`
+      in der Dev-Konsole aus (alle 6 Tab-Komponenten rufen `createCustomTable()` in ihrem
+      eigenen `useEffect()` auf -- unauffaellig bei Vanilla-DOM, sichtbar seit `draw()` intern
+      `flushSync` nutzt). Nicht fatal: Dev-only, keine Testfehlschlaege, keine beobachtbare
+      Fehlfunktion. Sauberer Fix wuerde die Trigger-Architektur aendern (z. B.
+      `useSyncExternalStore` statt synchronem `mount()`) und den `el.instance`-Vertrag
+      gefaehrden -- bewusst zurueckgestellt.
+- [x] Tests angepasst: `CustomTable.test.ts` (748 Z., `event.view`-Fix, sonst unveraendert
+      gruen), `CustomTable.xss.test.ts` (ein Test auf neuen JSX-Vertrag umgestellt).
+
+### Verifikation
+
+- `bunx tsc --noEmit` sauber, `bun run lint` 0 Fehler (21 vorbestehende Warnungen, keine neuen).
+- `bun run test`: 2119/2119 (volle Suite inkl. `autoSave`/`savePipeline`/`overlapGuard`/
+  `changeTracking`, alle 6 Tabellen indirekt mitgetestet).
+- `bun run lint:css` unveraendert (84 vorbestehende Warnungen), `bun run build` grün.
+- Puppeteer (Hell+Dunkel): `tableEA` (Sortierung auf/absteigend, Soft-Delete zeigt Undo-Button,
+  Add/Edit/Delete-Buttons, Fusszeile), `tableE`/EWT (Berechnen-Schalter korrekt
+  checked/unchecked, `Schicht`-Text "Bereitschaft + Nacht" mit Zeilenumbruch, `tr.data`
+  nachweislich gesetzt, Custom-Footer-Button "Alle Zeiten entfernen").
+- Nachtrag (User-Wunsch vor Commit): `tableN`/`tableBZ`/`tableBE`/`tableVE` zusaetzlich per
+  Puppeteer live geprueft -- Neben (2 Zeilen), Bereitschaft BZ+BE (je 1 Zeile,
+  `datetimeParser`-Formatierung korrekt), VE im Einstellungen-Accordion (4 Vorlagen-Zeilen,
+  Breakpoint-Spaltenumschaltung, Custom-Button "Standardeinstellungen"). **Alle 6 Instanzen
+  damit live bestaetigt.**

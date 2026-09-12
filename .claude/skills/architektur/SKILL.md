@@ -132,13 +132,17 @@ import { mount } from "@/infrastructure/ui";
 mount(modalElement, <MyFormModal {...props} />);
 ```
 
-### 4. CustomTable (Vanilla-DOM)
+### 4. CustomTable (Datenmodell Vanilla, Rendering React seit Phase M)
 
-Eigene Tabellen-Klasse, **nicht** React-basiert:
+Eigene Tabellen-Klasse: `Row`/`Rows`/`Column` sind reine, DOM-freie Datenklassen (unverändert
+über den React-Umbau hinweg); Sorting, Editing, Responsive Breakpoints, Soft-Delete/Undo werden
+seit Phase M über `CustomTableView.tsx` als React-Komponente gerendert, direkt in das
+`<table>`-Element gemountet (`mount()`, kein Wrapper-Div). Der `el.instance`-Vertrag
+(`savePipeline.ts`/`overlapGuard.ts`/`changeTracking.ts` finden die Tabelle über
+`tableElement.instance`) bleibt dadurch unberührt.
 
-- Sorting, Editing, Responsive Breakpoints
-- Event-Handling über DOM-Events
-- Definiert in `src/ts/infrastructure/table/CustomTable.ts`
+- Definiert in `src/ts/infrastructure/table/CustomTable.ts` (Klasse) + `CustomTableView.tsx`
+  (Rendering)
 
 ### 5. CustomSnackbar (Vanilla-DOM)
 

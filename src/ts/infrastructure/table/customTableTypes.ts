@@ -37,9 +37,9 @@ export interface CustomTableOptions<T extends CustomTableTypes> {
     parser?: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
     classes?: string[];
     /**
-     * Nur setzen, wenn der `parser` dieser Spalte nachweislich festes Markup aus
-     * dem eigenen Code erzeugt (z.B. ein Schalter). Zellwerte werden dann als
-     * HTML eingesetzt — für Spalten mit Freitext aus Benutzereingaben verboten.
+     * Nur setzen, wenn der `parser` dieser Spalte JSX statt eines Textwerts zurueckgibt
+     * (z. B. ein Schalter) -- fuer Spalten mit Freitext aus Benutzereingaben verboten.
+     * `CustomTableView.tsx` rendert den Rueckgabewert dann direkt statt ihn zu `String()`en.
      */
     html?: boolean;
     editing?: CustomTableOptions<T>['editing'];

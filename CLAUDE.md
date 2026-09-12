@@ -75,7 +75,7 @@ src/
 │   │   ├── data/          # resourceConfig, persistTableData, mergeVisibleResourceRows, fieldMapper
 │   │   ├── date/          # dayjs-Konfiguration
 │   │   ├── storage/       # Storage-Singleton
-│   │   ├── table/         # CustomTable (Vanilla-DOM, kein React) + customtable.css
+│   │   ├── table/         # CustomTable (Datenmodell Row/Rows/Column, Rendering seit Phase M React via CustomTableView.tsx)
 │   │   ├── tokenManagement/ # JWT, Passkeys, Token-Refresh
 │   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, CustomSnackbar
 │   │   └── validation/    # Passwort-Validierung
@@ -131,7 +131,7 @@ features/Feature/
 - **App-Shell (Header/Footer):** React (`AppHeader.tsx`/`AppFooter.tsx`), gemountet über `<div id="appHeaderRoot">`/`<div id="appFooterRoot">` in `index.html` (Phase K, seit 2026-09-12 abgeschlossen)
 - **Tab-Panel-Inhalte:** React seit Phase K/L (abgeschlossen 2026-09-12) – `#start`: `StartTab.tsx`; `#Berechnung`: `BerechnungTab.tsx` + `BerechnungTableRows.tsx`; `#Einstellungen`: `EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`
 - **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`); neue Dialoge (z. B. `ImpressumDialog.tsx`) nutzen die offiziellen `DBDrawerHeader`/`DBDrawerFooter`-Slot-Komponenten statt des projekteigenen `MyModalHeader`-Musters
-- **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein React) – liegt in `infrastructure/table/`
+- **Tabellen:** Eigene `CustomTable`-Klasse – `Row`/`Rows`/`Column` (Datenmodell, DOM-frei, unveraendert seit Phase M) + `CustomTableView.tsx` (Rendering, seit Phase M React statt Vanilla-DOM) – liegt in `infrastructure/table/`
 
 ---
 
@@ -146,7 +146,7 @@ features/Feature/
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
 8. **ESLint + Prettier** mit Husky Pre-Commit Hooks
 9. **Bun test** für alle Tests, happy-dom als DOM-Environment
-10. **CustomTable** als zentrale Tabellen-UI (Vanilla-DOM, nicht React)
+10. **CustomTable** als zentrale Tabellen-UI (`Row`/`Rows`/`Column`-Datenmodell DOM-frei, Rendering seit Phase M React via `CustomTableView.tsx`)
 11. **`confirmDialog`** statt `window.confirm()` (aus `infrastructure/ui/confirmDialog.ts`)
 12. **`resourceConfig.ts`** als zentrale Resource-Konfiguration (Storage-Keys, Table-IDs)
 13. **Schichtentrennung:** `features/` → `infrastructure/` → `core/`, nie umgekehrt
