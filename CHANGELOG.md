@@ -2,6 +2,38 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (115)
+
+### feat (Fahrzeiten: Sortieroptionen)
+
+- `FahrzeitenPanel.tsx`: Spaltenkoepfe "Tätigkeitsstätte"/"Beschreibung" sind jetzt klickbare
+  Sortier-Knoepfe (Icon-Konvention aus `CustomTable` uebernommen: `arrows_vertical` neutral,
+  `arrow_up`/`arrow_down` aktiv; erneuter Klick auf dieselbe Spalte dreht die Richtung um).
+  Sortiert den bestehenden State einmalig per Klick um (kein Live-Sort waehrend der Eingabe),
+  ueber dieselbe `fahrzeitPanelState`-Bridge persistiert wie die manuellen Auf/Ab-Knoepfe.
+- Test ergaenzt (`FahrzeitenPanel.test.tsx`): auf-/absteigende Sortierung je Spalte.
+
+## 2026-09-12 (114)
+
+### refactor (Phase L3: Einstellungen-Tab nach React, Phase L abgeschlossen)
+
+- Toolbar, Jahr-Formular und alle 7 Accordion-Items (Persönliche Daten, Biometrie & Geräte,
+  Arbeitszeit, Bereitschaft, Fahrzeiten, Einstellungen & Bereiche, Zulagen) → `EinstellungenTab.tsx`
+  (`infrastructure/ui/`) + `PersoenlicheDatenPanel.tsx` (`Einstellungen/components/`, ausgelagert
+  wegen 500-Zeilen-Regel), direkt in die `#Einstellungen`-Tab-Pane gemountet (kein Wrapper-Div,
+  analog L1/L2).
+- **Kernerkenntnis:** anders als der urspruengliche Plan vermutete, liegt der Aufwand NICHT in
+  einer Entkopplung von `document.querySelector`-Reads — `saveEinstellungen.ts`,
+  `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`, `selectYear.ts` u. a. lesen/
+  schreiben ausschliesslich per `#Id`-Selektor, unabhaengig von React oder statischem HTML. Ein
+  reiner 1:1-Markup-Port genuegte; keine einzige dieser Dateien musste angefasst werden.
+- Einzige echte Korrektur: `<select>` (`Bundesland`/`TB`) nutzten `<option selected>` (in React
+  wirkungslos) → auf `defaultValue` am `<select>` umgestellt; `<input type="range" value="9">`
+  analog auf `defaultValue` (vermeidet React-"unkontrolliert→kontrolliert"-Warnung).
+- Puppeteer-verifiziert (Hell/Dunkel-Screenshot je Accordion-Panel, Mobile-Viewport): alle Panels
+  funktionsfaehig, keine bestehende Test-Datei musste angepasst werden.
+- **Phase L (L1–L3) damit vollstaendig abgeschlossen.**
+
 ## 2026-09-12 (113)
 
 ### refactor (Phase L2: Berechnung-Tab-Huelle nach React)

@@ -13,12 +13,28 @@ interface PanelProps {
 const FIELD_LABELS = { key: 'Tätigkeitsstätte', text: 'Beschreibung', value: 'Fahrzeit' } as const;
 type FahrzeitField = keyof typeof FIELD_LABELS;
 
+type SortField = 'key' | 'text';
+type SortState = { field: SortField; direction: 'asc' | 'desc' } | null;
+
+const SORT_BUTTON_STYLE = {
+  background: 'none',
+  border: 'none',
+  padding: 0,
+  font: 'inherit',
+  color: 'inherit',
+  cursor: 'pointer',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+} as const;
+
 // Legacy-Werte wie "0:30" auf "HH:mm" heben – ein type="time"-Input zeigt sie sonst leer an
 const normalizeInitialRows = (rows: IVorgabenUfZ[]): IVorgabenUfZ[] =>
   rows.map(row => ({ ...row, value: normalizeTimeString(row.value) }));
 
 export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
   const [rows, setRows] = useState<IVorgabenUfZ[]>(() => normalizeInitialRows(initialRows));
+  const [sort, setSort] = useState<SortState>(null);
   const rowsRef = useRef<IVorgabenUfZ[]>(rows);
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const focusRowIndex = useRef<number | null>(null);
@@ -69,6 +85,24 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
     });
   };
 
+  // Sortiert die bestehenden Zeilen einmalig neu (kein persistenter Live-Sort -- Tippen in
+  // einer Zeile soll sie nicht mitten in der Eingabe verschieben); erneuter Klick auf dieselbe
+  // Spalte dreht die Richtung um, analog dem Sortier-Icon-Muster aus `CustomTable`
+  // (`arrows_vertical`/`arrow_up`/`arrow_down`, siehe `customTableRender.ts`).
+  const toggleSort = (field: SortField): void => {
+    const direction = sort?.field === field && sort.direction === 'asc' ? 'desc' : 'asc';
+    setSort({ field, direction });
+    updateRows(current =>
+      [...current].sort((a, b) => {
+        const cmp = a[field].localeCompare(b[field], 'de', { sensitivity: 'base' });
+        return direction === 'asc' ? cmp : -cmp;
+      }),
+    );
+  };
+
+  const sortIcon = (field: SortField): string =>
+    sort?.field === field ? (sort.direction === 'asc' ? 'arrow_up' : 'arrow_down') : 'arrows_vertical';
+
   return (
     <div
       className="db-table mt-3"
@@ -81,8 +115,18 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       <table aria-describedby="titelTkgSt">
         <thead>
           <tr className="align-middle text-center" data-sub-header-emphasis="weak">
-            <th id="titelTkgSt">Tätigkeitsstätte</th>
-            <th className="w40">Beschreibung</th>
+            <th id="titelTkgSt">
+              <button type="button" style={SORT_BUTTON_STYLE} onClick={() => toggleSort('key')}>
+                Tätigkeitsstätte
+                <span className="db-icon db-font-size-sm" data-icon={sortIcon('key')} aria-hidden="true" />
+              </button>
+            </th>
+            <th className="w40">
+              <button type="button" style={SORT_BUTTON_STYLE} onClick={() => toggleSort('text')}>
+                Beschreibung
+                <span className="db-icon db-font-size-sm" data-icon={sortIcon('text')} aria-hidden="true" />
+              </button>
+            </th>
             <th className="w20">Fahrzeit</th>
             <th className="fahrzeiten-aktionen-spalte">Aktionen</th>
           </tr>

@@ -899,18 +899,40 @@ Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-r
       (`496,49 €`), Monatsfenster-Navigation korrekt ausgeblendet (alle 12 Monate sichtbar).
       `typecheck && lint && lint:css && test` (2120 pass) `&& build` gruen. Details: CHANGELOG
       (113).
-- [ ] **L3 Einstellungen-Tab.** Groesster Slice (~390 Zeilen): Personendaten-Formular,
-      Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount,
-      Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste. Aufwand liegt in der Entkopplung
-      (`saveEinstellungen`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts` lesen
-      per `document.querySelector` aus dem DOM) -- Reihenfolge laut Plan: erst Teilpanels, dann
-      Personendaten-Formular; `#tableVE` bleibt bis Phase M eine `CustomTable`.
-- [ ] **L3 Einstellungen-Tab.** Groesster Slice (~390 Zeilen): Personendaten-Formular,
-      Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount,
-      Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste. Aufwand liegt in der Entkopplung
-      (`saveEinstellungen`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts` lesen
-      per `document.querySelector` aus dem DOM) -- Reihenfolge laut Plan: erst Teilpanels, dann
-      Personendaten-Formular; `#tableVE` bleibt bis Phase M eine `CustomTable`.
+- [x] **L3 Einstellungen-Tab** (2026-09-12). Toolbar, Jahr-Formular, Accordion-Geruest (7 Items) ->
+      `EinstellungenTab.tsx` (`infrastructure/ui/`) + `PersoenlicheDatenPanel.tsx`
+      (`Einstellungen/components/`, ausgelagert wegen 500-Zeilen-Regel), direkt in `#Einstellungen`
+      gemountet (kein Wrapper-Div, analog L1/L2).
+      **Kernerkenntnis (Explore-Agent-Recherche vor Umsetzung):** anders als der Plan-Entwurf
+      vermutete ("Aufwand liegt in der Entkopplung"), ist die GESAMTE Verkabelung
+      (`saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`,
+      `selectYear.ts`, ...) ausschliesslich `document.querySelector('#<Id>')`-basiert --
+      unabhaengig davon, ob React oder statisches HTML das Element erzeugt. Reiner 1:1-Markup-Port
+      (alle IDs/Klassen/Attribute unveraendert) genuegte deshalb; **keine einzige** dieser Dateien
+      musste angefasst werden (auch nicht `#collapseFive`-Scoping, `#PasskeyList`/
+      `#settings-zulagen-list`-Imperativ-DOM-Befuellung, `#arbeitszeit-panel`/`#fahrzeiten-panel`-
+      Sub-React-Roots oder `#tableVE`-`CustomTable`). Die im Plan vorgesehene Reihenfolge
+      "erst Teilpanels, dann Personendaten" damit hinfaellig -- ein Slice statt mehrerer.
+      Einzige echte Korrektur: zwei `<select>` (`Bundesland`/`TB`) nutzten `<option selected>` --
+      in React wirkungslos (Warnung), auf `defaultValue` am `<select>` umgestellt;
+      `<input type="range" value="9">` analog auf `defaultValue` (unveraendertes Verhalten,
+      vermeidet React-"unkontrolliert->kontrolliert"-Warnung).
+      Puppeteer-verifiziert (Hell/Dunkel-Screenshot je Accordion-Panel, Mobile-Viewport):
+      Personendaten aus `VorgabenU` korrekt vorbefuellt (inkl. `Bundesland`-Select), Passkeys-Badge
+      + Status-Text, Sichtbare-Bereiche-Switches + AutoSave-Slider korrekt aus Storage gelesen,
+      Zulagen-Liste (3 Kategorien) imperativ befuellt, Arbeitszeit-/Fahrzeiten-Sub-Roots gemountet,
+      `#tableVE` (6 Zeilen) unveraendert funktionsfaehig. `typecheck && lint && lint:css && test`
+      (2120 pass) `&& build` gruen -- keine bestehende Test-Datei musste angepasst werden.
+      Details: CHANGELOG (114).
+- [x] **Nachtrag: Fahrzeiten-Sortieroptionen** (2026-09-12, User-Wunsch waehrend L3-Review).
+      `FahrzeitenPanel.tsx`: Spaltenkoepfe "Tätigkeitsstätte"/"Beschreibung" jetzt klickbare
+      Sortier-Knoepfe (Icon-Konvention aus `CustomTable` uebernommen: `arrows_vertical` neutral,
+      `arrow_up`/`arrow_down` aktiv; erneuter Klick auf dieselbe Spalte dreht die Richtung um).
+      Bewusst kein Live-Sort bei jedem Tastendruck (haette Zeilen waehrend der Eingabe verschoben)
+      -- Sortierung ordnet den bestehenden State einmalig per Klick um, ueber `updateRows`/die
+      bestehende `fahrzeitPanelState`-Bridge genauso persistiert wie die manuellen Auf/Ab-Knoepfe.
+      Test ergaenzt (`FahrzeitenPanel.test.tsx`): auf-/absteigend je Spalte. `typecheck && lint &&
+      test` (2121 pass) gruen. Details: CHANGELOG (115).
 
 **Verifikation je Slice:** wie Phase K, zusaetzlich Puppeteer-Screenshot (Hell+Dunkel) bei
 jedem Slice mit sichtbarem/positionierungsrelevantem Markup (Lehre aus L1).

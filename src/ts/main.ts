@@ -83,6 +83,7 @@ import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import StartTab from '@/infrastructure/ui/StartTab';
 import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
+import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -113,6 +114,12 @@ if (startRoot) mount(startRoot, createElement(StartTab));
 // `generateTableBerechnung()` auf, das `#tbodyBerechnung` erst durch diesen Mount bekommt.
 const berechnungRoot = document.querySelector<HTMLDivElement>('#Berechnung');
 if (berechnungRoot) mount(berechnungRoot, createElement(BerechnungTab));
+
+// Ebenfalls VOR der Warteschlange: `Einstellungen/index.ts`s `registerAppStartTask`-Callback
+// verkabelt Toolbar/Jahr-Formular/Accordion-Felder per `document.querySelector` -- die Elemente
+// muessen dafuer schon existieren.
+const einstellungenRoot = document.querySelector<HTMLDivElement>('#Einstellungen');
+if (einstellungenRoot) mount(einstellungenRoot, createElement(EinstellungenTab));
 
 // Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
 // bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.

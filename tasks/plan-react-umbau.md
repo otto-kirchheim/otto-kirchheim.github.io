@@ -224,20 +224,23 @@ HTML (Phase L).
   schlechter werden; das `d-none`-Ein-/Ausblenden der Tabs (Admin, optionale Bereiche)
   wandert von `main.ts:27-28` und `syncFeatureTabs` in den React-State.
 
-## Phase L — Statische Tabs nach React
+## Phase L — Statische Tabs nach React (abgeschlossen 2026-09-12)
 
 | Slice | Inhalt | Anmerkung |
 |---|---|---|
-| L1 | **Start-Tab** (`index.html:297-453`) | rein präsentational (Willkommen, 3 Karten, Schnellzugriff, Ladeanzeige, DB-Schwelle) — einfachster Einstieg, guter Beweis für das K-Shell-Muster |
-| L2 | **Berechnung-Tab-Hülle** (`:476-544`) | Titel, Monats-Navigation, `db-table`-Gerüst; `#tbodyBerechnung` wird heute von `Berechnung/generateTableBerechnung.ts` per DOM-String befüllt → nach React ziehen. `BerechnungMobileCards.tsx` ist bereits React. |
-| L3 | **Einstellungen-Tab** (`:554-979`, ~390 Zeilen) | der große Brocken: Personendaten-Formular, Passkeys/Biometrie, Arbeitszeit-Mount, Bereitschaft-Tabelle `#tableVE`, Fahrzeiten-Mount, Sichtbare-Bereiche-/AutoSave-Schalter, Zulagen-Liste |
+| L1 | **Start-Tab** | rein präsentational (Willkommen, 3 Karten, Schnellzugriff, Ladeanzeige, DB-Schwelle) — einfachster Einstieg, guter Beweis für das K-Shell-Muster |
+| L2 | **Berechnung-Tab-Hülle** | Titel, Monats-Navigation, `db-table`-Gerüst + `#tbodyBerechnung`-Zeilengenerierung (`BerechnungTableRows.tsx`, eigener Root direkt auf `<tbody>`) |
+| L3 | **Einstellungen-Tab** | Toolbar, Jahr-Formular, alle 7 Accordion-Items (`EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`) |
 
-Der Aufwand in L3 liegt **nicht im Markup**, sondern in der Entkopplung: `saveEinstellungen`,
-`generateEingabeMaskeEinstellungen.ts` (294 Z., baut heute mit `h()`/`render()`),
-`Einstellungen/index.ts` (346 Z.) und die Passkey-/Zulagen-Renderer lesen ihre Werte per
-`document.querySelector('#Vorname')` aus dem DOM. Diese Stellen müssen auf React-State
-umgestellt werden. Reihenfolge: erst die Teilpanels (Passkeys, Zulagen, Sichtbare Bereiche,
-AutoSave), dann das Personendaten-Formular; `#tableVE` bleibt bis Phase M eine `CustomTable`.
+**Ergebnis:** Alle drei Slices mounten React direkt in die jeweilige Tab-Pane (kein Wrapper-Div —
+bei L1 zwingend wegen `#start.active > .schwelle`-Kindselektor in `styles.scss`, bei L2/L3 aus
+Konsistenz). **Kernerkenntnis aus L3, die den ursprünglichen Plan widerlegt:** Die hier vermutete
+Notwendigkeit, `saveEinstellungen`/`generateEingabeMaskeEinstellungen.ts`/`Einstellungen/index.ts`
+von `document.querySelector`-Reads auf React-State umzustellen, bestand nicht — diese Dateien
+lesen/schreiben ausschließlich per `#Id`-Selektor, unabhängig davon, ob React oder statisches HTML
+das Element erzeugt hat. Ein reiner 1:1-Markup-Port genügte für alle drei Slices; keine einzige
+Wiring-Datei musste angefasst werden. Details je Slice in `tasks/todo.md` (Abschnitt „Aufgaben
+Phase L") und `CHANGELOG.md` (112–114). `#tableVE` bleibt bis Phase M eine `CustomTable`.
 
 ## Phase M — `CustomTable` nach React  *(offene Weiche)*
 

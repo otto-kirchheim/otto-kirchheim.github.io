@@ -147,4 +147,25 @@ describe('FahrzeitenPanel', () => {
 
     expect(container.querySelector('tbody [data-custom-validity="invalid"]')).toBeNull();
   });
+
+  it('sortiert per Klick auf die Spaltenkoepfe (Tätigkeitsstätte/Beschreibung), erneuter Klick dreht um', async () => {
+    const container = renderPanel(createRows());
+    const sortTaetigkeitsstaette = Array.from(container.querySelectorAll<HTMLButtonElement>('thead button')).find(b =>
+      b.textContent?.includes('Tätigkeitsstätte'),
+    )!;
+    const sortBeschreibung = Array.from(container.querySelectorAll<HTMLButtonElement>('thead button')).find(b =>
+      b.textContent?.includes('Beschreibung'),
+    )!;
+
+    await click(sortTaetigkeitsstaette);
+    expect(rowKeys(container)).toEqual(['Bad Hersfeld', 'Kaiserau', 'Kirchheim']);
+    expect(getFahrzeitPanelState()?.map(r => r.key)).toEqual(['Bad Hersfeld', 'Kaiserau', 'Kirchheim']);
+
+    await click(sortTaetigkeitsstaette);
+    expect(rowKeys(container)).toEqual(['Kirchheim', 'Kaiserau', 'Bad Hersfeld']);
+
+    await click(sortBeschreibung);
+    // Beschreibung aufsteigend: "Bahnhof" < "Beiersgraben" < "km 167,0"
+    expect(rowKeys(container)).toEqual(['Bad Hersfeld', 'Kirchheim', 'Kaiserau']);
+  });
 });

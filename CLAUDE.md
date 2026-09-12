@@ -100,12 +100,15 @@ Die Navigation erfolgt über `AppHeader.tsx` (React, `DBHeader`/`DBNavigation`) 
 `infrastructure/ui/tabController.ts` (`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent,
 Hash-Sync), nicht über einen Client-Side-Router. Aktiver Tab der Hauptnavigation ist ein
 `useSyncExternalStore`-Modul-Store (`activeTabStore.ts`/`useActiveTab.ts`), von `AppHeader`
-reaktiv gelesen. Die Tab-Panel-Inhalte werden seit Phase L schrittweise React: `#start`
-(`StartTab.tsx`, direkt in die `#start`-Tab-Pane gemountet, kein Wrapper-Div – `styles.scss`s
-`#start.active > .schwelle`-Kindselektor verlangt das) und `#Berechnung` (`BerechnungTab.tsx` als
-Huelle + `BerechnungTableRows.tsx` als eigener React-Root direkt auf `<tbody id="tbodyBerechnung">`,
-analog `BerechnungMobileCards`) sind seit 2026-09-12 React; `#Einstellungen` ist bis zu seinem
-L-Slice weiterhin statisches HTML in der einzigen `src/index.html`.
+reaktiv gelesen. Seit Phase L (abgeschlossen 2026-09-12) sind alle Tab-Panel-Inhalte React,
+direkt in die jeweilige Tab-Pane gemountet (kein Wrapper-Div): `#start` (`StartTab.tsx` –
+`styles.scss`s `#start.active > .schwelle`-Kindselektor verlangt das Fehlen eines Wrapper-Divs),
+`#Berechnung` (`BerechnungTab.tsx` als Huelle + `BerechnungTableRows.tsx` als eigener React-Root
+direkt auf `<tbody id="tbodyBerechnung">`, analog `BerechnungMobileCards`) und `#Einstellungen`
+(`EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`). Die gesamte Feld-Verkabelung dieser Tabs
+(`saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`,
+`berechnungMonatsFenster.ts` u. a.) bleibt bewusst `document.querySelector('#Id')`-basiert und
+unveraendert – sie ist unabhaengig davon, ob React oder statisches HTML das Element erzeugt hat.
 
 **3-Schichten-Architektur:**
 
@@ -126,7 +129,7 @@ features/Feature/
 **Hybrid-Rendering:**
 
 - **App-Shell (Header/Footer):** React (`AppHeader.tsx`/`AppFooter.tsx`), gemountet über `<div id="appHeaderRoot">`/`<div id="appFooterRoot">` in `index.html` (Phase K, seit 2026-09-12 abgeschlossen)
-- **Tab-Panel-Inhalte:** schrittweise React seit Phase L (`#start`: `StartTab.tsx`; `#Berechnung`: `BerechnungTab.tsx` + `BerechnungTableRows.tsx`); `#Einstellungen` etc. weiterhin statisches HTML + DB-UX-Klassen bis zum jeweiligen L-Slice
+- **Tab-Panel-Inhalte:** React seit Phase K/L (abgeschlossen 2026-09-12) – `#start`: `StartTab.tsx`; `#Berechnung`: `BerechnungTab.tsx` + `BerechnungTableRows.tsx`; `#Einstellungen`: `EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`
 - **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`); neue Dialoge (z. B. `ImpressumDialog.tsx`) nutzen die offiziellen `DBDrawerHeader`/`DBDrawerFooter`-Slot-Komponenten statt des projekteigenen `MyModalHeader`-Musters
 - **Tabellen:** Eigene `CustomTable`-Klasse (Vanilla-DOM, kein React) – liegt in `infrastructure/table/`
 
@@ -137,7 +140,7 @@ features/Feature/
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
-4. **React** für App-Shell (Header/Footer), Modals/Dialoge, die Feature-Tabs und die bereits migrierten Tab-Panel-Inhalte (`#start`, `#Berechnung`); die restlichen Tab-Panel-Inhalte in `index.html` sind bis zum jeweiligen Phase-L-Slice statisches HTML
+4. **React** für App-Shell (Header/Footer), Modals/Dialoge, die Feature-Tabs und alle Tab-Panel-Inhalte (seit Phase L, 2026-09-12); `index.html` selbst bleibt Einstiegspunkt (`main.tsx`-Umbenennung + Rest-Body erst Phase N)
 5. **`tabController`** für die Tab-Navigation, kein Router
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff
