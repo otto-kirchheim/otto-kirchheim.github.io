@@ -792,17 +792,38 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       weder `"valid"` noch `"invalid"` (beide loesen selbst eine Farbe aus). Vorbestehend, durch
       die K5-Fixes erst zuverlaessig sichtbar geworden.
       Details: CHANGELOG (109).
-- [ ] **K6 `tabController` -> React-State.** Aktiver Tab + Hash-Sync als Hook
-      (`useActiveTab`/Kontext), von `AppHeader`/`AppNavigation` UND den bestehenden
-      `.tab-pane`-Containern (noch statisches HTML bis Phase L) gemeinsam genutzt. Pflicht-
-      Kompatbruecke bleibt bestehen: `data-tab-target` weiter auf jedem Panel/Schalter lesbar,
-      `tab:shown`-`CustomEvent` weiter auf `document` UND bubblend ausgeloest (Feature-
-      Lifecycle/AutoSave/Berechnung-Monatswechsel hoeren darauf), `zeigeTab`/`zeigeTabAusHash`/
-      `setzeTabSichtbar`-Exporte bleiben als duenne Wrapper um den Hook-State bestehen, damit
-      `Admin`s `setzeTabSichtbar`-Aufruf und `initSequence.ts` unveraendert funktionieren.
-      A11y-Risiko aus dem Plan beachten: `role="tablist"`, `aria-selected`, roving `tabindex`
-      duerfen nicht schlechter werden; `d-none`-Sichtbarkeit (Admin, optionale Bereiche) wandert
-      von `main.ts`/`syncFeatureTabs` in den React-State.
+- [x] **K6 `tabController` -> React-State** (2026-09-12). Aktiver Tab der Hauptnavigation
+      (`#tabContent`-Gruppe) als `useSyncExternalStore`-Modul-Store (`activeTabStore.ts` +
+      `useActiveTab.ts`, analog `navigationVisibleStore`/`useNavigationVisible`); `AppHeader.tsx`
+      berechnet `aria-selected`/`tabIndex`/`className="active"`/`DBNavigationItem`s `active`-Prop
+      (-> `data-active` am `<li>`) reaktiv daraus statt aus `tabController.ts`s DOM-Handschrieb --
+      der entfaellt in `zeigeTab()` fuer die Hauptgruppe entsprechend (`if (hauptgruppe)
+      setAktivenTab(id); else { ...alter Schleifen-Code... }`). Bewusst NUR die Hauptgruppe:
+      Admins Unternavigation (`admin-pane-*`, `features/Admin/index.tsx`) ist eine eigene,
+      unabhaengige Tab-Gruppe (kann parallel zur Hauptgruppe einen ANDEREN aktiven Tab haben --
+      ein einzelner globaler "aktiver Tab" wuerde das nicht abbilden) und bleibt unveraendert am
+      alten, DOM-schreibenden Mechanismus in `zeigeTab()`s `else`-Zweig.
+      Pflicht-Kompatbruecke unangetastet: `data-tab-target` weiter auf jedem Panel/Schalter
+      lesbar, `tab:shown`-`CustomEvent` weiter auf `document` UND bubblend ausgeloest,
+      `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`/`aktiverTab`-Exporte unveraendert (nur
+      intern um den `setAktivenTab`-Aufruf erweitert). `.tab-pane`-Panels bleiben statisches HTML
+      (Phase L) -- ihr Sichtbarkeits-/Aktiv-Klassenwechsel (`.active`/`.show`) laeuft weiter
+      imperativ in `zeigeTab()`, unveraendert.
+      A11y: roving `tabindex` bleibt korrekt -- "Berechnung" (Default-Fokusziel bei `aktiverTab
+      === null`, z. B. initial auf `#start`) faellt jetzt auf `tabIndex={aktiverTab === null ||
+      aktiverTab === 'Berechnung' ? 0 : -1}` zurueck statt fest auf `0`, sonst haetten nach einem
+      echten Tabwechsel zwei Eintraege gleichzeitig `tabIndex={0}` gehabt.
+      Test: `ui.tabController.test.ts` -- die Assertions auf `aria-selected`/`data-active` per
+      `document.querySelector` (Hauptgruppen-Fixture) durch `getAktivenTab()`-Pruefung ersetzt
+      (`beforeEach` resettet den Modul-Singleton-Store per `setAktivenTab('start')`, analog dem
+      `navigationVisibleStore`-Testmuster in `Einstellungen.logoutUser.test.ts`).
+      Puppeteer-verifiziert (`https://dev.otto.home64.de/`, ueber bereits laufenden Dev-Server):
+      Deep-Link `#EWT` setzt `aria-selected="true"`/`tabIndex=0`/`class="active"`/`data-active=
+      "true"` korrekt auf BEIDEN DOM-Kopien (Desktop + Drawer) gleichzeitig; Klick auf
+      `#berechnung-tab` schaltet reaktiv auf beiden Kopien um (EWT wird `false`/`-1`, Berechnung
+      `true`/`0`); initial ohne Login/Hash zeigt `#berechnung-tab` `tabIndex=0`/`aria-selected=
+      "false"` (Fallback-Fokus-Fall). `typecheck && lint && lint:css && test`(2120 pass) `&&
+      build` gruen. Details: CHANGELOG (110).
 - [ ] **K7 Cleanup + Doku.** Tote Dateien (`navDrawer.ts`, ggf. `dbDialog.ts` falls kein
       statischer Dialog mehr uebrig, `DBColorToggler.ts`) loeschen; Grep-Gate
       `rg 'data-dialog-target|prepend\(navigation\)' src/ts`; `frontend/CLAUDE.md`,

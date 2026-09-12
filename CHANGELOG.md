@@ -2,6 +2,33 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-12 (110)
+
+### refactor (Phase K6: `tabController` -> React-State)
+
+- Aktiver Tab der Hauptnavigation (`#tabContent`-Gruppe) als `useSyncExternalStore`-Modul-Store
+  (`activeTabStore.ts` + `useActiveTab.ts`, analog `navigationVisibleStore`/
+  `useNavigationVisible`). `AppHeader.tsx` berechnet `aria-selected`/`tabIndex`/
+  `className="active"`/`DBNavigationItem`s `active`-Prop (→ `data-active` am `<li>`) reaktiv
+  daraus statt aus `tabController.ts`s DOM-Handschrieb — der entfällt in `zeigeTab()` für die
+  Hauptgruppe entsprechend.
+- Bewusst NUR die Hauptgruppe: Admins Unternavigation (`admin-pane-*`) ist eine eigene,
+  unabhängige Tab-Gruppe (kann parallel einen anderen aktiven Tab haben) und bleibt am alten,
+  DOM-schreibenden Mechanismus im `else`-Zweig von `zeigeTab()`.
+- Pflicht-Kompatbrücke unangetastet: `data-tab-target`, `tab:shown`-`CustomEvent` (`document` +
+  bubblend), `zeigeTab`/`zeigeTabAusHash`/`setzeTabSichtbar`/`aktiverTab`-Exporte unverändert.
+  `.tab-pane`-Panels bleiben statisches HTML (Phase L), ihr `.active`/`.show`-Wechsel läuft
+  weiter imperativ.
+- A11y: roving `tabindex` bleibt korrekt — "Berechnung" (Default-Fokusziel bei `aktiverTab ===
+  null`) fällt jetzt auf `tabIndex={aktiverTab === null || aktiverTab === 'Berechnung' ? 0 : -1}`
+  zurück statt fest auf `0`.
+- `ui.tabController.test.ts`: Assertions auf `aria-selected`/`data-active` per
+  `document.querySelector` durch `getAktivenTab()`-Prüfung ersetzt; `beforeEach` resettet den
+  Modul-Singleton-Store.
+- Puppeteer-verifiziert: Deep-Link `#EWT` setzt Attribute korrekt auf BEIDEN DOM-Kopien
+  (Desktop + Drawer) gleichzeitig; Klick auf `#berechnung-tab` schaltet reaktiv auf beiden
+  Kopien um; initial ohne Login/Hash zeigt `#berechnung-tab` den Fallback-Fokus-Zustand.
+
 ## 2026-09-12 (109)
 
 ### refactor (Phase K5: Header/Brand/Navigation nach React)

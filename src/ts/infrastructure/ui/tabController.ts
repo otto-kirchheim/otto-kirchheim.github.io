@@ -9,7 +9,15 @@
  *
  * Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`; sie werden ueber
  * Delegation bedient, damit die Navigation zwischen Kopfzeile und Schublade umziehen darf.
+ *
+ * Phase K6: der aktive Tab der Hauptnavigation (`#tabContent`-Gruppe) wird zusaetzlich in
+ * `activeTabStore` gespiegelt (`setAktivenTab`) -- `AppHeader.tsx` liest ihn per `useActiveTab()`
+ * und berechnet `aria-selected`/`tabindex`/`data-active` selbst, der DOM-Handschrieb auf die
+ * Hauptnav-Schalter entfaellt deshalb unten. Admins Unternavigation (`admin-pane-*`, eigene
+ * Tab-Gruppe) ist NICHT die Hauptgruppe und bleibt am alten, DOM-schreibenden Mechanismus.
  */
+
+import { setAktivenTab } from './activeTabStore';
 
 export type TabWechsel = { id: string; schalter: HTMLElement | null };
 
@@ -65,9 +73,11 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   const ziel = panel(id);
   if (!ziel) return false;
 
-  const imHash = hashSchreiben && istHauptgruppe(ziel);
+  const hauptgruppe = istHauptgruppe(ziel);
+  const imHash = hashSchreiben && hauptgruppe;
   if (ziel.classList.contains('active')) {
     if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
+    if (hauptgruppe) setAktivenTab(id);
     return true;
   }
 
@@ -77,17 +87,21 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
     pane.classList.toggle('show', aktiv);
   }
 
-  const gruppenIds = new Set(gruppe(ziel).map(pane => pane.id));
-  for (const el of schalter()) {
-    const elZiel = el.getAttribute(ZIEL_ATTRIBUT);
-    if (!elZiel || !gruppenIds.has(elZiel)) continue;
-    const aktiv = elZiel === id;
-    el.classList.toggle('active', aktiv);
-    // `.db-navigation-item` traegt die Aktiv-Markierung im DB-System am Listenelement.
-    el.closest('.db-navigation-item')?.setAttribute('data-active', String(aktiv));
-    if (el.getAttribute('role') === 'tab') {
-      el.setAttribute('aria-selected', String(aktiv));
-      el.setAttribute('tabindex', aktiv ? '0' : '-1');
+  if (hauptgruppe) {
+    setAktivenTab(id);
+  } else {
+    const gruppenIds = new Set(gruppe(ziel).map(pane => pane.id));
+    for (const el of schalter()) {
+      const elZiel = el.getAttribute(ZIEL_ATTRIBUT);
+      if (!elZiel || !gruppenIds.has(elZiel)) continue;
+      const aktiv = elZiel === id;
+      el.classList.toggle('active', aktiv);
+      // `.db-navigation-item` traegt die Aktiv-Markierung im DB-System am Listenelement.
+      el.closest('.db-navigation-item')?.setAttribute('data-active', String(aktiv));
+      if (el.getAttribute('role') === 'tab') {
+        el.setAttribute('aria-selected', String(aktiv));
+        el.setAttribute('tabindex', aktiv ? '0' : '-1');
+      }
     }
   }
 

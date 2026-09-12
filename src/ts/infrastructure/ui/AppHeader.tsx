@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DBHeader, DBNavigation, DBNavigationItem } from '@db-ux/react-core-components';
 import ThemeSwitcher from './ThemeSwitcher';
+import useActiveTab from './useActiveTab';
 import useNavigationVisible from './useNavigationVisible';
 
 /**
@@ -27,10 +28,16 @@ import useNavigationVisible from './useNavigationVisible';
  * kein `<a>` -- unser Link-Verhalten (`href="#start"`, `data-tab-target`, `.db-brand`-Styling
  * in `styles.scss:947` als Link-Reset) muesste sonst dupliziert/umgebaut werden. Bestandsschutz
  * fuer bereits funktionierendes Markup, kein neues UI-Element.
+ *
+ * Phase K6: `aria-selected`/`tabIndex`/`active`-Markierung der Hauptnav-Eintraege kommen jetzt
+ * reaktiv aus `useActiveTab()` statt aus `tabController.ts`s DOM-Handschrieb (der entfaellt fuer
+ * die Hauptgruppe dort entsprechend). `DBNavigationItem`s `active`-Prop setzt `data-active` am
+ * `<li>` (vorher: `tabController` per `closest('.db-navigation-item')`).
  */
 export default function AppHeader() {
   const [drawerOffen, setDrawerOffen] = useState(false);
   const navigationSichtbar = useNavigationVisible();
+  const aktiverTab = useActiveTab();
 
   return (
     <DBHeader
@@ -75,99 +82,133 @@ export default function AppHeader() {
       }
     >
       <DBNavigation className={navigationSichtbar ? undefined : 'd-none'} role="tablist" aria-label="Hauptnavigation">
-        <DBNavigationItem role="presentation" className="d-none" backButtonText="Zurück">
+        <DBNavigationItem
+          role="presentation"
+          className="d-none"
+          active={aktiverTab === 'Bereitschaft'}
+          backButtonText="Zurück"
+        >
           <a
             role="tab"
             id="bereitschaft-tab"
             href="#Bereitschaft"
             data-tab-target="Bereitschaft"
             aria-controls="Bereitschaft"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'Bereitschaft'}
+            tabIndex={aktiverTab === 'Bereitschaft' ? 0 : -1}
+            className={aktiverTab === 'Bereitschaft' ? 'active' : undefined}
           >
             Bereitschaft
           </a>
         </DBNavigationItem>
-        <DBNavigationItem role="presentation" className="d-none" backButtonText="Zurück">
+        <DBNavigationItem role="presentation" className="d-none" active={aktiverTab === 'EWT'} backButtonText="Zurück">
           <a
             role="tab"
             id="ewt-tab"
             href="#EWT"
             data-tab-target="EWT"
             aria-controls="EWT"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'EWT'}
+            tabIndex={aktiverTab === 'EWT' ? 0 : -1}
+            className={aktiverTab === 'EWT' ? 'active' : undefined}
           >
             EWT
           </a>
         </DBNavigationItem>
-        <DBNavigationItem role="presentation" className="d-none" backButtonText="Zurück">
+        <DBNavigationItem
+          role="presentation"
+          className="d-none"
+          active={aktiverTab === 'Neben'}
+          backButtonText="Zurück"
+        >
           <a
             role="tab"
             id="neben-tab"
             href="#Neben"
             data-tab-target="Neben"
             aria-controls="Neben"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'Neben'}
+            tabIndex={aktiverTab === 'Neben' ? 0 : -1}
+            className={aktiverTab === 'Neben' ? 'active' : undefined}
           >
             Nebenbezüge
           </a>
         </DBNavigationItem>
-        <DBNavigationItem role="presentation" className="d-none" backButtonText="Zurück">
+        <DBNavigationItem role="presentation" className="d-none" active={aktiverTab === 'EA'} backButtonText="Zurück">
           <a
             role="tab"
             id="ea-tab"
             href="#EA"
             data-tab-target="EA"
             aria-controls="EA"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'EA'}
+            tabIndex={aktiverTab === 'EA' ? 0 : -1}
+            className={aktiverTab === 'EA' ? 'active' : undefined}
           >
             Entgeltausgleich
           </a>
         </DBNavigationItem>
         {/* Erster immer sichtbarer Eintrag: haelt beim Laden (Panel `start`, kein eigener
-              Tab) den Tastaturfokus fuer die Tabliste. `tabController` zieht den `tabindex` bei
-              jedem echten Tabwechsel nach. `nav-trenner`: optische Grenze zwischen den
-              Fachbereichen (Bereitschaft/EWT/Neben/EA) und den uebergreifenden Bereichen
+              Tab, `aktiverTab` also `null`) den Tastaturfokus fuer die Tabliste -- `tabIndex`
+              faellt deshalb auf `0` zurueck, wenn `aktiverTab` `null` ist (roving Tabindex
+              braucht sonst gar keinen Eintrag mit `0`). `nav-trenner`: optische Grenze zwischen
+              den Fachbereichen (Bereitschaft/EWT/Neben/EA) und den uebergreifenden Bereichen
               (Berechnung, Einstellungen) -- siehe styles.scss. */}
-        <DBNavigationItem role="presentation" className="nav-trenner" backButtonText="Zurück">
+        <DBNavigationItem
+          role="presentation"
+          className="nav-trenner"
+          active={aktiverTab === 'Berechnung'}
+          backButtonText="Zurück"
+        >
           <a
             role="tab"
             id="berechnung-tab"
             href="#Berechnung"
             data-tab-target="Berechnung"
             aria-controls="Berechnung"
-            aria-selected="false"
-            tabIndex={0}
+            aria-selected={aktiverTab === 'Berechnung'}
+            tabIndex={aktiverTab === null || aktiverTab === 'Berechnung' ? 0 : -1}
+            className={aktiverTab === 'Berechnung' ? 'active' : undefined}
           >
             Berechnung
           </a>
         </DBNavigationItem>
-        <DBNavigationItem role="presentation" className="nav-rechts" backButtonText="Zurück">
+        <DBNavigationItem
+          role="presentation"
+          className="nav-rechts"
+          active={aktiverTab === 'Einstellungen'}
+          backButtonText="Zurück"
+        >
           <a
             role="tab"
             id="einstellungen-tab"
             href="#Einstellungen"
             data-tab-target="Einstellungen"
             aria-controls="Einstellungen"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'Einstellungen'}
+            tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
+            className={aktiverTab === 'Einstellungen' ? 'active' : undefined}
           >
             <span className="db-icon d-none d-md-inline" data-icon="gear_wheel" />
             <span className="d-md-none">Einstellungen</span>
           </a>
         </DBNavigationItem>
-        <DBNavigationItem role="presentation" className="d-none" id="admin" backButtonText="Zurück">
+        <DBNavigationItem
+          role="presentation"
+          className="d-none"
+          id="admin"
+          active={aktiverTab === 'Admin'}
+          backButtonText="Zurück"
+        >
           <a
             role="tab"
             id="admin-tab"
             href="#Admin"
             data-tab-target="Admin"
             aria-controls="Admin"
-            aria-selected="false"
-            tabIndex={-1}
+            aria-selected={aktiverTab === 'Admin'}
+            tabIndex={aktiverTab === 'Admin' ? 0 : -1}
+            className={aktiverTab === 'Admin' ? 'active' : undefined}
           >
             <span className="db-icon d-none d-md-inline" data-icon="shield_check" />
             <span className="d-md-none">Admin</span>

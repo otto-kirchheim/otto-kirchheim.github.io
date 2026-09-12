@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
+import { getAktivenTab, setAktivenTab } from '@/infrastructure/ui/activeTabStore';
 import {
   TAB_SHOWN_EVENT,
   aktiverTab,
@@ -38,6 +39,9 @@ function aufbau(): void {
 beforeEach(() => {
   aufbau();
   abbauen = initTabController();
+  // Phase K6: `activeTabStore` ist ein Modul-Singleton (ueberlebt zwischen Tests) -- auf den
+  // Ausgangszustand der Fixture zuruecksetzen, `setAktivenTab` feuert bei Gleichheit ohnehin nicht.
+  setAktivenTab('start');
 });
 
 afterEach(() => {
@@ -47,18 +51,16 @@ afterEach(() => {
 });
 
 describe('tabController', () => {
-  it('schaltet Panel, Schalterzustand und Hash gemeinsam um', () => {
+  it('schaltet Panel, Hash und activeTabStore gemeinsam um', () => {
     expect(zeigeTab('EWT')).toBe(true);
 
     expect(aktiverTab()).toBe('EWT');
     expect(document.querySelector('#start')?.classList.contains('active')).toBe(false);
     expect(document.querySelector('#EWT')?.classList.contains('show')).toBe(true);
-    expect(document.querySelector('#ewt-tab')?.getAttribute('aria-selected')).toBe('true');
-    expect(document.querySelector('#start-tab')?.getAttribute('aria-selected')).toBe('false');
-    expect(document.querySelector('#ewt-tab')?.closest('.db-navigation-item')?.getAttribute('data-active')).toBe(
-      'true',
-    );
     expect(document.location.hash).toBe('#EWT');
+    // Seit K6 schreibt `zeigeTab` fuer die Hauptgruppe nicht mehr direkt `aria-selected`/
+    // `data-active` auf den Schalter -- das uebernimmt `AppHeader.tsx` reaktiv via `useActiveTab()`.
+    expect(getAktivenTab()).toBe('EWT');
   });
 
   it('ignoriert unbekannte Ziele', () => {
