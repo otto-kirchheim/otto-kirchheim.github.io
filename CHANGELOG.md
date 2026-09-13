@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (126)
+
+### fix (Unterschrift-Canvas im Dark Mode kaum sichtbar)
+
+- `.signatur-canvas` (`styles.scss`) hatte keinen eigenen Hintergrund -- im Dark Mode zeigte die
+  Flaeche die dunkle Dialog-Huelle durch, die schwarze Unterschrift (`signaturePad.ts`s
+  Default-`penColor`) war praktisch unsichtbar.
+- Fix: `background-color: var(--db-neutral-0-default, #fff)` -- bewusst IMMER weiss, unabhaengig
+  vom App-Theme, da der Canvas Papier simuliert, auf das die schwarze Tinte spaeter im (immer
+  weissen) PDF gedruckt wird. Rein optisch: das exportierte PNG bleibt transparent
+  (`erstelleSignaturPad()`s `backgroundColor: 'rgba(0,0,0,0)'`), `toDataURL()` erfasst nur den
+  Canvas-Inhalt, nicht die CSS-Hintergrundfarbe des Elements -- keine Auswirkung auf das PDF.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, 84 vorbestehende
+  Warnungen unveraendert), `bun run test` (2119 pass), `bun run build`. Puppeteer mit
+  `data-mode="dark"`: Canvas-Hintergrund bleibt `rgb(255, 255, 255)`.
+
 ## 2026-09-13 (125)
 
 ### fix (Neben-Editor-Modal: fehlende key-Prop)

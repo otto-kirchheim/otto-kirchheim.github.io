@@ -533,6 +533,15 @@ td:has(.SchichtBereitschaft) {
   box-sizing: border-box;
   border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   touch-action: none;
+
+  /* Bewusst IMMER weiss, unabhaengig vom App-Theme: der Canvas simuliert Papier, auf das
+     spaeter die schwarze Tinte (`signaturePad.ts`s Default-`penColor`) im PDF gedruckt wird --
+     PDFs sind unabhaengig vom Dark Mode immer weiss. Im Dark Mode blieb die Flaeche sonst dunkel
+     (geerbt von der Dialog-Huelle) und die schwarze Unterschrift praktisch unsichtbar. Nur die
+     CSS-Anzeige aendert sich -- das exportierte PNG bleibt transparent (`erstelleSignaturPad()`s
+     `backgroundColor: 'rgba(0,0,0,0)'`), `toDataURL()` erfasst nur den Canvas-Inhalt, nicht die
+     CSS-Hintergrundfarbe des Elements. */
+  background-color: var(--db-neutral-0-default, #fff);
 }
 
 /* Der Unterschrift-Dialog hat keine Kopfzeile; die Fußzeile trägt Merken-Haken, Abbrechen,
