@@ -1,3 +1,4 @@
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { generateTableBerechnung } from '.';
 import type {
   IDaten,
@@ -93,9 +94,17 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
 
       const LREValue = value.LRE;
 
-      if (LREValue === 'LRE 1') Berechnung.B.L1++;
-      else if (LREValue === 'LRE 2') Berechnung.B.L2++;
-      else if (LREValue === 'LRE 3') Berechnung.B.L3++;
+      switch (LREValue) {
+        case LreType.LRE_1:
+          Berechnung.B.L1++;
+          break;
+        case LreType.LRE_2:
+          Berechnung.B.L2++;
+          break;
+        case LreType.LRE_3:
+          Berechnung.B.L3++;
+          break;
+      }
 
       if (value.PrivatKm) Berechnung.B.K += value.PrivatKm;
     });

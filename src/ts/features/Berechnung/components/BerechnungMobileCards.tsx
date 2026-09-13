@@ -5,6 +5,7 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 
 const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] as const;
 
@@ -93,9 +94,9 @@ function MonatsKarte({
               {ergebnis.bereitschaftszulage !== null && (
                 <DetailZeile label="Bereitschaftszulage" wert={formatCurrency(ergebnis.bereitschaftszulage)} />
               )}
-              {ergebnis.lre1 !== null && <DetailZeile label="LRE 1" wert={formatCurrency(ergebnis.lre1)} />}
-              {ergebnis.lre2 !== null && <DetailZeile label="LRE 2" wert={formatCurrency(ergebnis.lre2)} />}
-              {ergebnis.lre3 !== null && <DetailZeile label="LRE 3" wert={formatCurrency(ergebnis.lre3)} />}
+              {ergebnis.lre1 !== null && <DetailZeile label={LreType.LRE_1} wert={formatCurrency(ergebnis.lre1)} />}
+              {ergebnis.lre2 !== null && <DetailZeile label={LreType.LRE_2} wert={formatCurrency(ergebnis.lre2)} />}
+              {ergebnis.lre3 !== null && <DetailZeile label={LreType.LRE_3} wert={formatCurrency(ergebnis.lre3)} />}
               {ergebnis.privatPkw !== null && (
                 <DetailZeile label="Privat-PKW" wert={formatCurrency(ergebnis.privatPkw)} />
               )}

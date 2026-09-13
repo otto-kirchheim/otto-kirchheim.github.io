@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import {
@@ -89,11 +90,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
               value={row instanceof Row ? row.cells[column.name] : ''}
               options={[
                 { text: 'Bitte Einsatz auswählen', disabled: true, selected: true },
-                { value: 'LRE 1', text: 'LRE 1' },
-                { value: 'LRE 2', text: 'LRE 2' },
-                { value: 'LRE 1/2 ohne x', text: 'LRE 1/2 ohne x' },
-                { value: 'LRE 3', text: 'LRE 3' },
-                { value: 'LRE 3 ohne x', text: 'LRE 3 ohne x' },
+                ...Object.values(LreType).map(lre => ({ value: lre, text: lre })),
               ]}
             />
           </Fragment>
@@ -246,7 +243,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      if (values.LRE === 'LRE 1' && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
+      if (values.LRE === LreType.LRE_1 && hasConflictingLre1(einsatzStart, einsatzDate, currentBe)) {
         createSnackBar({
           message: 'Bereitschaft<br/>Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.',
           status: 'warning',
@@ -256,7 +253,7 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
         return;
       }
 
-      if ((values.LRE === 'LRE 1' || values.LRE === 'LRE 2') && hasLre12TooClose(einsatzStart, currentBe)) {
+      if ((values.LRE === LreType.LRE_1 || values.LRE === LreType.LRE_2) && hasLre12TooClose(einsatzStart, currentBe)) {
         createSnackBar({
           message:
             'Bereitschaft<br/>Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.',

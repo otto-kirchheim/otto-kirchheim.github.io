@@ -1,5 +1,6 @@
 import { createRef, type SubmitEvent } from 'react';
 
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import {
   MyCheckbox,
   MyFormModal,
@@ -84,11 +85,7 @@ export default function createAddModalBereitschaftsEinsatz(): void {
           title={columns.find(col => col.name === 'LRE')?.longTitle || 'LRE'}
           options={[
             { text: 'Bitte Einsatz auswählen', disabled: true, selected: true },
-            { value: 'LRE 1', text: 'LRE 1' },
-            { value: 'LRE 2', text: 'LRE 2' },
-            { value: 'LRE 1/2 ohne x', text: 'LRE 1/2 ohne x' },
-            { value: 'LRE 3', text: 'LRE 3' },
-            { value: 'LRE 3 ohne x', text: 'LRE 3 ohne x' },
+            ...Object.values(LreType).map(lre => ({ value: lre, text: lre })),
           ]}
         />
         <MyInput

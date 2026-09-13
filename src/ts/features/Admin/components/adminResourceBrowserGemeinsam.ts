@@ -1,3 +1,4 @@
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import dayjs from '@/infrastructure/date/configDayjs';
 
 export const IMMUTABLE_FIELDS = new Set(['_id', '__v', 'createdAt']);
@@ -6,7 +7,7 @@ export const ITEMS_PER_PAGE = 25;
 
 // Felder mit festen Enum-Werten → Dropdown
 export const FIELD_ENUMS: Record<string, string[]> = {
-  LRE: ['LRE 1', 'LRE 2', 'LRE 1/2 ohne x', 'LRE 3', 'LRE 3 ohne x'],
+  LRE: Object.values(LreType),
   Schicht: ['T', 'SP', 'N', 'S', 'BN'],
 };
 

@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import { mount } from '@/infrastructure/ui';
 import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
@@ -59,9 +60,9 @@ const ZEILEN: IZeile[] = [
     label: 'Bereitschaftszulage',
     inhalt: m => currency(m.bereitschaftszulage),
   },
-  { id: 'lre1', gruppe: 'bereitschaft', label: 'LRE 1', inhalt: m => currency(m.lre1) },
-  { id: 'lre2', gruppe: 'bereitschaft', label: 'LRE 2', inhalt: m => currency(m.lre2) },
-  { id: 'lre3', gruppe: 'bereitschaft', label: 'LRE 3', inhalt: m => currency(m.lre3) },
+  { id: 'lre1', gruppe: 'bereitschaft', label: LreType.LRE_1, inhalt: m => currency(m.lre1) },
+  { id: 'lre2', gruppe: 'bereitschaft', label: LreType.LRE_2, inhalt: m => currency(m.lre2) },
+  { id: 'lre3', gruppe: 'bereitschaft', label: LreType.LRE_3, inhalt: m => currency(m.lre3) },
   { id: 'privatPkw', gruppe: 'bereitschaft', label: 'Privat-PKW', inhalt: m => currency(m.privatPkw) },
   {
     id: 'summeBereitschaft',

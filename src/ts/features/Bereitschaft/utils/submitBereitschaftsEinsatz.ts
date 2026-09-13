@@ -1,3 +1,4 @@
+import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import {
   B_WECHSEL_MINUTE,
   B_WECHSEL_STUNDE,
@@ -161,7 +162,7 @@ export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude
   const cutoff = einsatzStart.startOf('day').hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).second(0).millisecond(0);
   const windowStart = einsatzStart.isBefore(cutoff) ? cutoff.subtract(1, 'day') : cutoff;
   return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
-    if (be.LRE !== 'LRE 1' && be.LRE !== 'LRE 2') return false;
+    if (be.LRE !== LreType.LRE_1 && be.LRE !== LreType.LRE_2) return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
     const beDate = dayjs(be.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const beStartRaw = dayjs(`${beDate}T${be.Beginn}`);
@@ -184,7 +185,7 @@ export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, Tag: 
     : cutoff;
   const windowEnd = windowStart.add(1, 'day').set('hour', B_WECHSEL_STUNDE).set('minute', B_WECHSEL_MINUTE);
   return getBereitschaftsEinsatzDaten(undefined, undefined, { excludeDeleted: true }).some(be => {
-    if (be.LRE !== 'LRE 1') return false;
+    if (be.LRE !== LreType.LRE_1) return false;
     if (exclude && isSameBereitschaftsEinsatz(be, exclude)) return false;
     const beDate = dayjs(be.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const beStart = dayjs(`${beDate}T${be.Beginn}`);
@@ -373,8 +374,7 @@ export default async function submitBereitschaftsEinsatz(
 
   const Tag = datumInput.value;
 
-  if (!['LRE 1', 'LRE 2', 'LRE 1/2 ohne x', 'LRE 3', 'LRE 3 ohne x'].includes(lreSelect.value))
-    throw new Error('LRE unbekannt');
+  if (!(Object.values(LreType) as string[]).includes(lreSelect.value)) throw new Error('LRE unbekannt');
 
   if (vonInput.value === bisInput.value) return failWith('Beginn und Ende dürfen nicht identisch sein.');
 
@@ -443,10 +443,10 @@ export default async function submitBereitschaftsEinsatz(
 
   if (hasOverlap(einsatzStart, einsatzEnd)) return failWith('Bereitschaftseinsätze dürfen sich nicht überschneiden.');
 
-  if (daten.LRE === 'LRE 1' && hasConflictingLre1(einsatzStart, Tag))
+  if (daten.LRE === LreType.LRE_1 && hasConflictingLre1(einsatzStart, Tag))
     return failWith('Im gewählten Bereitschaftszeitraum existiert bereits ein LRE 1.');
 
-  if ((daten.LRE === 'LRE 1' || daten.LRE === 'LRE 2') && hasLre12TooClose(einsatzStart))
+  if ((daten.LRE === LreType.LRE_1 || daten.LRE === LreType.LRE_2) && hasLre12TooClose(einsatzStart))
     return failWith('Weniger als 10 Minuten nach einem LRE 1/2-Einsatz: Bitte "LRE 1/2 ohne x" verwenden.');
 
   tableBE.instance.rows.add(daten);
