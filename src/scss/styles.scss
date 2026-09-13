@@ -916,6 +916,24 @@ body {
   z-index: 1030;
 }
 
+// DB-UX' eigene Regel fuer `data-position="top"` zentriert die Marke im mobilen Header
+// (`justify-items: center` auf der `1fr`-Spalte "brand" -- offizielles Verhalten, kein Bug,
+// siehe `node_modules/@db-ux/core-components/build/components/control-panel-mobile/
+// control-panel-mobile.css:268-274). Diese App will die Marke linksbuendig wie am Desktop --
+// `actions-1`/`drawer-button` sind `min-content`-Spalten, `start` statt `center` aendert dort
+// nichts sichtbar.
+.db-control-panel-mobile[data-position='top'] {
+  justify-items: start;
+}
+
+// `DBControlPanelBrand` zeigt sein Logo per `::before`/`background-image: var(--db-logo-url)`
+// (siehe `control-panel-brand.css`) -- Standardwert ist DB-UX' eigenes `logo.svg`. Eigenes
+// App-Icon per Override statt Kind-`<img>` (letzteres erzeugte ein zusaetzliches, zweites Icon
+// NEBEN dem DB-Logo, da das `::before` unabhaengig von Kindern immer rendert).
+.db-control-panel-brand {
+  --db-logo-url: url('/icons/192x192-icon.png');
+}
+
 // DB "neues Design" -- die Schwelle (Markenstreifen aus Balken mit wachsender Breite,
 // Metapher Bahnschwelle, "dynamische Spannung von duenn nach dick"). Platzierung am
 // Formatrand: waagerecht an der UNTERkante des Startbereichs, rechtsbuendig und rund 2/3 der

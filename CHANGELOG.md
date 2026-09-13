@@ -2,6 +2,35 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (134)
+
+### fix (Kopfzeile: doppeltes Logo, Mobile-Zentrierung, Drawer schliesst nicht)
+
+- **Falsches/doppeltes Logo:** `DBControlPanelBrand` zeigt IMMER ein Logo per `::before`/
+  `background-image: var(--db-logo-url)` (Standard: DB-UX' eigenes `logo.svg`) -- kein
+  Bild-Prop, kein bedingter Fallback. Ein eigenes Kind-`<img>` erzeugte deshalb ein ZWEITES
+  Icon neben dem generischen DB-Logo statt es zu ersetzen. Fix: `<img>` entfernt,
+  `--db-logo-url` per CSS-Override auf `icons/192x192-icon.png` gesetzt (`styles.scss`) -- das
+  ist der von DB UX vorgesehene Anpassungspunkt fuer das eigene Markenzeichen.
+- **Marke auf Mobile zentriert:** `.db-control-panel-mobile[data-position="top"]` setzt laut
+  DB-UX-Quellcode bewusst `justify-items: center` auf der `1fr`-Spalte "brand" (offizielles
+  Verhalten fuer diesen Modus, kein Bug). Per CSS-Override auf `justify-items: start`
+  korrigiert -- `actions-1`/`drawer-button` sind `min-content`-Spalten, davon unberuehrt.
+- **Drawer schliesst nicht bei Klick auf Einstellungen:** seit dem `actions2`-Umbau (Eintrag
+  133) sitzen Einstellungen/Admin/Theme auf Mobile im `DBDrawerFooter` -- AUSSERHALB von
+  `.db-control-panel-mobile-drawer-scroll-container`, dem einzigen Bereich, den
+  `DBControlPanelMobile`s eingebauter Auto-Close-Klick-Handler beobachtet.
+  `DBControlPanelMobile` bietet keinen `open`/`onToggle`-Prop von aussen. Neuer Helfer
+  `schliesseMobilenDrawer.ts`: schliesst den naechsten `<dialog>`-Vorfahren direkt per
+  `HTMLDialogElement.close()` (Desktop: kein Vorfahre, No-op). Wichtiger Fund dabei: `DBDrawer`
+  reicht den per `className`-Prop uebergebenen Klassennamen NICHT an sein eigenes `<dialog>`
+  durch (`<dialog class="db-drawer">` traegt nur die feste Basis-Klasse) -- der Helfer nutzt
+  deshalb einen reinen `dialog`-Tag-Selektor statt einer (nie treffenden) spezifischeren Klasse.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: ein Icon im
+  Header, Marke linksbuendig mobil, Klick auf Einstellungen im Drawer-Footer schliesst die
+  Schublade UND wechselt den Tab.
+
 ## 2026-09-13 (133)
 
 ### refactor (Kopfzeile: Einstellungen/Admin/Theme in actions2)

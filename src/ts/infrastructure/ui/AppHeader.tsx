@@ -9,6 +9,7 @@ import {
   DBControlPanelNavigationItem,
   DBSelect,
 } from '@db-ux/react-core-components';
+import schliesseMobilenDrawer from './schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
 import useMediaQuery from './useMediaQuery';
@@ -70,7 +71,7 @@ export default function AppHeader() {
 
   const brand = (
     <a href="#start" id="brand-start-tab" data-tab-target="start">
-      <DBControlPanelBrand data-icon-variant="icons/192x192-icon.png">Nebengeld</DBControlPanelBrand>
+      <DBControlPanelBrand>Nebengeld</DBControlPanelBrand>
     </a>
   );
 
@@ -105,6 +106,7 @@ export default function AppHeader() {
         aria-selected={aktiverTab === 'Einstellungen'}
         aria-label="Einstellungen"
         tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
+        onClick={event => schliesseMobilenDrawer(event.currentTarget)}
       />
       {/* `#admin` (nicht `#admin-tab`): `auth/index.ts` blendet darueber den KOMPLETTEN Knopf
           per `d-none` aus, solange der Benutzer kein Admin ist -- separate Id von `#admin-tab`
@@ -124,6 +126,7 @@ export default function AppHeader() {
           aria-selected={aktiverTab === 'Admin'}
           aria-label="Admin"
           tabIndex={aktiverTab === 'Admin' ? 0 : -1}
+          onClick={event => schliesseMobilenDrawer(event.currentTarget)}
         />
       </span>
       <ThemeSwitcher />
