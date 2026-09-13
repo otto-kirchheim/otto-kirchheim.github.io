@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" data-mode="auto" data-density="functional" style="color-scheme: light dark">
+<html lang="de" data-mode="auto" data-density="regular" style="color-scheme: light dark">
   <head>
     <meta charset="utf-8" />
     <base target="_top" />
@@ -8,8 +8,6 @@
     <meta name="author" content="Jan Otto" />
     <meta name="mobile-web-app-capable" content="true" />
     <meta name="apple-mobile-web-app-capable" content="true" />
-    <!-- DB "neues Design": DB Red (#EC0016) nie als Flaeche -- die Browserleiste folgt dem
-         App-Grund (Weiss im Hellmodus, Cold-Black-Ton des DB-Themes im Dunkelmodus). -->
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#16181b" media="(prefers-color-scheme: dark)" />
     <title>Nebengeld</title>
@@ -25,18 +23,18 @@
     <noscript>
       <div class="mitte mx-auto" id="alertPlaceholder">
         <div class="db-notification text-center mt-4" data-semantic="critical" role="alert">
-          <span data-area="content">Bitte Cookies zulassen! <br />Für die volle Funktionalität dieser Website ist es notwendig, Cookies zu
-          aktivieren.<br />
-          Hier ist die
-          <a href="https://enablecookies.info" target="_blank">
-            Anleitung, wie Sie Cookies in Ihrem Webbrowser aktivieren können</a
-          >.</span>
+          <span data-area="content"
+            >Bitte Cookies zulassen! <br />Für die volle Funktionalität dieser Website ist es notwendig, Cookies zu
+            aktivieren.<br />
+            Hier ist die
+            <a href="https://enablecookies.info" target="_blank">
+              Anleitung, wie Sie Cookies in Ihrem Webbrowser aktivieren können</a
+            >.</span
+          >
         </div>
       </div>
     </noscript>
 
-    <!-- Phase N: die gesamte Shell (Header/Tabs/Footer) ist ein einziger React-Baum, siehe
-         `ts/App.tsx` -- gemountet in `main.tsx`. -->
     <div id="app"></div>
   </body>
 </html>

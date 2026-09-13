@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DBHeader, DBNavigation, DBNavigationItem } from '@db-ux/react-core-components';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
+import useHeaderForceMobile from './useHeaderForceMobile';
 import useNavigationVisible from './useNavigationVisible';
 
 /**
@@ -38,6 +39,7 @@ export default function AppHeader() {
   const [drawerOffen, setDrawerOffen] = useState(false);
   const navigationSichtbar = useNavigationVisible();
   const aktiverTab = useActiveTab();
+  const forceMobile = useHeaderForceMobile();
 
   return (
     <DBHeader
@@ -45,6 +47,7 @@ export default function AppHeader() {
       className="sticky-top"
       drawerOpen={drawerOffen}
       onToggle={setDrawerOffen}
+      forceMobile={forceMobile}
       burgerMenuLabel="Menü"
       drawerHeaderText="Nebengeld"
       brand={

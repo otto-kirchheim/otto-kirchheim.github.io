@@ -2,6 +2,35 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (129)
+
+### fix (Kopfzeile bei data-density="regular" ab 1024px abgeschnitten)
+
+- `data-density` auf `regular` umgestellt (siehe Eintrag 128 -- Ursprungsproblem waren zu kleine
+  Zeilen-Knoepfe, dort bereits gefixt). Danach gemeldet: bei `regular` ist die volle
+  Kopfzeilen-Navigation erst ab 1215px vollstaendig sichtbar, darunter (aber noch oberhalb von
+  `DBHeader`s eigener 1024px-Weiche) schneidet die Kopfzeile rechts ab (Einstellungen/Admin/
+  Theme-Switcher/Login-Knopf ausserhalb des Viewports).
+- Ursache: `DBHeader`s Mobil/Desktop-Umschaltung ist eine feste CSS-Media-Query bei
+  `min-width: 64em` -- `em` in Media Queries bezieht sich auf die Browser-Standardschriftgroesse
+  (i. d. R. 16px), nicht auf `data-density`s tatsaechliche `:root`-Schriftgroesse. Bei `regular`
+  (16px-Wurzel, groessere Abstaende/Schrift als `functional`s 14px) braucht die Navigation real
+  mehr Platz als die 1024px, ab denen `DBHeader` bereits in den Desktop-Modus schaltet -- eine
+  Luecke von 1024-1215px, in der der Inhalt nicht in eine Zeile passt.
+- Fix: `useHeaderForceMobile()` (neuer Hook, `infrastructure/ui/`) haelt `DBHeader`s
+  Burger-Navigation per offiziellem `forceMobile`-Prop bis zur tatsaechlich benoetigten Breite
+  erzwungen -- density-abhaengiger Schwellwert (`functional`: 1024px, deckt sich mit `DBHeader`s
+  eigener Weiche; `regular`: 1215px, per Puppeteer-Bisektion gemessen mit vollstaendig sichtbarer
+  Navigation: eingeloggt, alle Tabs aktiviert, Admin-Rolle).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer:
+  `.db-header-navigation-bar`s `scrollWidth`/`clientWidth` exakt gleich (kein Overflow) bei
+  1213-1300px unter `regular`; Burger-Drawer oeffnet weiterhin korrekt und zeigt die volle
+  Navigation; `functional` bei 1024px unveraendert (Hook wirkt dort als No-op, deckungsgleich mit
+  `DBHeader`s eigener Schwelle).
+
+## 2026-09-13 (128)
+
 ## 2026-09-13 (128)
 
 ### fix (Tabellen-Zeilenaktionen zu klein, Von/Bis-Zelle zu breit)

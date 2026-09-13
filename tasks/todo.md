@@ -3028,3 +3028,51 @@ Sollte `regular` spaeter doch gewuenscht sein: `body`s `padding-block-end`-Hartw
 (nicht per Auge neu kalibrieren -- das bricht bei der naechsten Footer-Inhalts-Aenderung wieder),
 und die Bereitschaftszeitraum-Tabelle bei schmalen Breakpoints auf Ueberlauf pruefen (Pause-Spalte
 ggf. wie in EWT/Neben per `breakpoints`-Property ausblenden).
+
+## `data-density="regular"` doch eingefuehrt + Kopfzeilen-Fix (2026-09-13, Folgesession)
+
+User hat sich fuer `regular` entschieden (`index.html` steht seither so) und meldete: volle
+Kopfzeilen-Navigation erst ab 1215px sichtbar, darunter rechts abgeschnitten.
+
+- [x] Ursache gefunden: `DBHeader`s Mobil/Desktop-Weiche ist eine feste CSS-Media-Query
+      `min-width: 64em` -- `em` in Media Queries bezieht sich auf die Browser-Standard-
+      Schriftgroesse (16px), NICHT auf `data-density`s tatsaechliche `:root`-Groesse. Bei
+      `regular` (16px-Wurzel, groessere Abstaende als `functional`s 14px) braucht die Navigation
+      real mehr als die 1024px, ab denen `DBHeader` schon in den Desktop-Modus schaltet --
+      1024-1215px war eine Luecke, in der Inhalt abgeschnitten wurde.
+- [x] Fix: `useHeaderForceMobile()` (neu, `infrastructure/ui/useHeaderForceMobile.ts`) haelt
+      `DBHeader`s Burger-Navigation per offiziellem `forceMobile`-Prop bis zur tatsaechlich
+      benoetigten Breite erzwungen -- density-abhaengiger Schwellwert (`functional`: 1024px =
+      `DBHeader`s eigene Weiche, No-op; `regular`: 1215px, per Puppeteer-Bisektion gemessen mit
+      voll sichtbarer Navigation: eingeloggt, alle Tabs aktiviert, Admin-Rolle). In `AppHeader.tsx`
+      per `forceMobile={forceMobile}` verdrahtet.
+- [x] Erwogen und verworfen: kompletter Umstieg auf `db-control-panel-desktop`/`-mobile`
+      (vom User verlinkt, im installierten `@db-ux/react-core-components` 5.4.0 vorhanden) --
+      geprueft, ob diese Komponenten selbst Container-basiert automatisch umschalten: NEIN, auch
+      dort waere die Mobil/Desktop-Grenze eine von der App selbst zu setzende, feste Breite (kein
+      eingebauter Vorteil gegenueber `DBHeader` + eigenem `forceMobile`). Ein Komplettumbau der
+      gesamten Kopfzeile waere ein groesseres, riskanteres Vorhaben ohne belegten Mehrwert fuer
+      dieses konkrete Problem -- nicht gemacht.
+- [x] `index.html` (jetzt `data-density="regular"`, inkl. der parallelen User-Formatierung) sowie
+      `AppHeader.tsx`, `useHeaderForceMobile.ts` commitet. `BereitschaftTab.tsx`/`NebenTab.tsx`
+      weiterhin NICHT commitet -- laufende eigene Aenderungen des Users (Datumsformat DD.MM.YY,
+      LRE-Parser).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer: `.db-header-navigation-bar`s `scrollWidth === clientWidth` (kein Overflow) bei
+  1213-1300px unter `regular`, Burger sichtbar bis 1214px, volle Nav ab 1215px. Burger-Drawer
+  oeffnet weiterhin korrekt (Klick-Test), zeigt volle Navigation. `functional` bei 1024px
+  unveraendert (Hook wirkt dort als No-op).
+
+### Review
+
+Zwei aus der vorherigen Session bekannte, mit `regular` weiterhin offene Baustellen (siehe Review
+oben) bleiben unveraendert offen, da nicht Teil dieses Auftrags: Footer-`padding-block-end`-
+Hartwert (`styles.scss:631`) und Bereitschaftszeitraum-Tabellen-Ueberlauf bei 375px. Bei
+Gelegenheit nachziehen. Der `MIN_DESKTOP_WIDTH_PX`-Schwellwert in `useHeaderForceMobile.ts` ist,
+wie `berechnungMonatsFenster.ts`s `MONAT_MIN_PX`, ein gemessener Hartwert -- bei kuenftigen
+Aenderungen an den Hauptnav-Eintraegen (mehr/weniger/laengere Eintraege) per Puppeteer neu
+vermessen, im Code-Kommentar dokumentiert.
