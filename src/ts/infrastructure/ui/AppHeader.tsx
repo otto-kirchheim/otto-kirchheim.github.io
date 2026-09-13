@@ -132,7 +132,7 @@ export default function AppHeader() {
         <a
           className="db-button"
           data-variant="ghost"
-          data-icon="shield_check"
+          data-icon="key"
           data-no-text="true"
           role="tab"
           id="admin-tab"
