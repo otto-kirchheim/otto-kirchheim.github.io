@@ -74,7 +74,7 @@ const updateSW = registerSW({
       }, intervalMS);
   },
 });
-console.log(pwaInfo);
+if (import.meta.env.DEV) console.log(pwaInfo ?? 'No PWA info available.');
 
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { createElement } from 'react';

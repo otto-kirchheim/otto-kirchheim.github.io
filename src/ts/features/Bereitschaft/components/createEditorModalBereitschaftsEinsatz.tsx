@@ -34,6 +34,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Tag':
         return (
           <MyInput
+            key={column.name}
             divClass="sp-12 sp-sm-6"
             type="date"
             id={column.name}
@@ -49,6 +50,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Auftragsnummer':
         return (
           <MyInput
+            key={column.name}
             divClass="sp-12"
             type="text"
             id={column.name}
@@ -65,6 +67,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'Ende':
         return (
           <MyInput
+            key={column.name}
             divClass="sp-12 sp-sm-6"
             type="time"
             id={column.name}
@@ -77,7 +80,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
         );
       case 'LRE':
         return (
-          <Fragment>
+          <Fragment key={column.name}>
             <MySelect
               className="sp-sm-6"
               id={column.name}
@@ -98,6 +101,7 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
       case 'PrivatKm':
         return (
           <MyInput
+            key={column.name}
             divClass="sp-12 sp-sm-6"
             type="number"
             id={column.name}

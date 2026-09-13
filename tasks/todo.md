@@ -2825,3 +2825,47 @@ das Design-Untermenue zu oeffnen. Beide Regressionen stammen aus Phase K (K3/K5)
   Position liefert jetzt den Knopf selbst, nicht mehr den Container dahinter). Theme-Umschalter
   im Drawer: Klick expandiert das Untermenue (`aria-expanded` false→true), Drawer bleibt
   `open===true`; Themenwahl (`dark`) greift (`data-mode="dark"`), Drawer bleibt weiterhin offen.
+
+## Fix: Konsolen-Fehler (flushSync-Warnung, fehlende key-Props, PWA-Info-Log) (2026-09-13)
+
+User-Meldung: Dev-Konsole zeigte beim Laden/Login und bei jedem Tabellen-Modal (Bereitschaft)
+mehrfach `flushSync was called from inside a lifecycle method`, dazu eine `key`-Prop-Warnung
+und ein nacktes `undefined`-Log aus `main.ts`. Die `flushSync`-Warnung war in Phase M0/M1 bewusst
+zurueckgestellt und dokumentiert worden ("Sauberer Fix wuerde die gesamte Trigger-Architektur
+aendern... bewusst zurueckgestellt") -- jetzt behoben, siehe `tasks/lessons.md` fuer die
+Ursachenanalyse.
+
+- [x] **flushSync-Reentranz:** Modul-Flag in `infrastructure/ui/reactRoot.ts`s `mount()` --
+      waehrend eines laufenden `flushSync` rendert ein verschachtelter `mount()`-Aufruf ohne
+      eigenes `flushSync`. Ref-Vertraege bleiben erhalten (React committet die verschachtelte
+      Sync-Lane beim Verlassen des aeusseren `flushSync` mit), kein Fallback (Microtask-Verzoegerung
+      der Modal-Oeffnung) noetig.
+- [x] **Fehlende `key`-Props:** `createEditorModalBereitschaftsZeit.tsx` (4 Stellen),
+      `createEditorModalBereitschaftsEinsatz.tsx` (5 Stellen, inkl. `Fragment`-Fall bei `LRE`).
+- [x] **`main.ts:77 undefined`-Log:** `console.log(pwaInfo)` nur noch in Dev
+      (`import.meta.env.DEV`), mit Fallback-Text bei fehlendem `pwaInfo` (User-Wunsch: Log in
+      Dev behalten, nur in Prod entfernen).
+- [x] Nicht App-Code: `Could not establish connection. Receiving end does not exist.` stammt von
+      einer Browser-Erweiterung, keine Massnahme.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, 21 bzw. 84 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` 2119/2119 gruen, `bun run build` gruen.
+- Puppeteer ohne Backend (`VorgabenU`-Fixture aus `test/mockData.ts`s `VorgabenUMock`
+  uebernommen, da ein unvollstaendiges Objekt `Einstellungen/index.ts`s Boot-Task mit einem
+  `pageerror` abbricht -- siehe `tasks/lessons.md`): Bereitschaft-Tab per direktem Modul-Import
+  (`mountBereitschaftTab()`) gemountet (verschachtelter Mount #1), Bearbeiten-Button geklickt
+  (verschachtelter Mount #2 via `showModal`) -- Konsole in beiden Faellen sauber, keine
+  `flushSync`- oder `key`-Warnung, Formularfelder korrekt mit den Zeilenwerten befuellt.
+
+### Review
+
+Root-Cause statt Symptom behoben: die Warnung kam nicht von einer einzelnen Fundstelle, sondern
+strukturell von jeder Verschachtelung zweier `mount()`-Aufrufe (Tabellen-Rendering + Modal-Oeffnung,
+oder Feature-Tab-Mount + Tabellen-Erzeugung im `useEffect`). Ein Guard an der einen zentralen
+Stelle (`reactRoot.ts`) deckt damit alle heutigen UND kuenftigen Verschachtelungen ab, statt jede
+Aufrufstelle einzeln zu entschaerfen (z. B. per `queueMicrotask` in jedem Tabellen-Handler). Die
+im Plan vorgesehene Fallback-Variante (Modal-Oeffnung per Microtask entkoppeln, falls der
+Ref-Vertrag bricht) war nicht noetig -- per Puppeteer bestaetigt, dass `ref.current` direkt nach
+`showModal()` gesetzt ist.

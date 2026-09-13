@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (118)
+
+### fix (Konsolen-Fehler: flushSync-Warnung, fehlende key-Props, PWA-Info-Log)
+
+- **`flushSync was called from inside a lifecycle method`** (in Phase M0/M1 bewusst
+  zurueckgestellt): `mount()` (`infrastructure/ui/reactRoot.ts`) rendert seit Phase M
+  verschachtelt -- `CustomTable.draw()` mountet selbst, und aus einer so gerenderten Tabelle
+  heraus oeffnet ein Klick per `showModal()` das naechste `mount()`. Fix: ein Modul-Flag, das
+  waehrend des aeusseren `flushSync` gesetzt ist -- ein `mount()`-Aufruf waehrenddessen rendert
+  ohne eigenes `flushSync`, React arbeitet die Sync-Lane beim Verlassen des aeusseren
+  `flushSync` mit ab. Ref-Vertraege der inneren Aufrufer bleiben erhalten (per Puppeteer
+  verifiziert).
+- **Fehlende `key`-Props:** `createEditorModalBereitschaftsZeit.tsx` (4 Stellen) und
+  `createEditorModalBereitschaftsEinsatz.tsx` (5 Stellen) mappten Spalten-Listen ohne `key` --
+  ergaenzt (`key={column.name}`, bei der `LRE`-Fragment-Stelle `<Fragment key={column.name}>`).
+- **`main.ts:77 undefined`-Log:** `console.log(pwaInfo)` lief ungefiltert; jetzt nur in Dev
+  (`import.meta.env.DEV`), mit Fallback-Text, wenn `pwaInfo` fehlt.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer (ohne Backend, `VorgabenU`-Fixture aus
+  `test/mockData.ts` uebernommen, Bereitschaft-Tab per direktem Modul-Import gemountet): Konsole
+  beim Login/Tab-Mount und beim Oeffnen des Bearbeiten-Modals sauber, keine `flushSync`- oder
+  `key`-Warnung mehr, Formularfelder korrekt befuellt.
+
 ## 2026-09-12 (117)
 
 ### fix (Impressum-Schliessen-Knopf, Theme-Switcher im Burger-Menue)
