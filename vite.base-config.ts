@@ -1,5 +1,5 @@
 import path from 'path';
-import { version } from './package.json' with { type: 'json' };
+import pkg from './package.json' with { type: 'json' };
 import type { UserConfig } from 'vite';
 
 /**
@@ -29,7 +29,7 @@ const baseConfig: UserConfig = {
   },
   base: '/',
   define: {
-    'import.meta.env.APP_VERSION': JSON.stringify(version),
+    'import.meta.env.APP_VERSION': JSON.stringify(pkg.version),
   },
   build: {
     outDir: '../dist',

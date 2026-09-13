@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bunx --bun vite --host",
     "dev:local": "VITE_LOCAL_HMR=1 bunx --bun vite --host",
+    "dev:pwa": "PWA_DEV=true bunx --bun vite --host",
     "test": "TZ=Europe/Berlin bun test --isolate",
     "typecheck": "bunx --bun tsc --noEmit",
     "build": "bunx --bun vite build",
