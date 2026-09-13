@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
 
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
@@ -171,15 +171,19 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
         />
         <MySelect title="Schicht" id="Schicht" required myRef={SchichtRef} options={buildSchichtOptionen(vorgabenU)} />
         <div>
-          <MyCheckbox id="berechnen1" myRef={berechnenRef} checked>
+          <DBCheckbox id="berechnen1" ref={berechnenRef} defaultChecked>
             Berechnen
-          </MyCheckbox>
+          </DBCheckbox>
         </div>
-        <div>
+        <div className="mt-2">
+          {/* Eigener `span` noetig: das Switch-Label ist `display: flex; flex-direction: row`,
+              ein `<br/>` direkt als Kind wirkt dort NICHT (Flex-Items liegen nebeneinander,
+              unabhaengig vom `<br/>`) -- innerhalb des `span`s gilt normaler Textfluss. */}
           <MyCheckbox id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
-            Büro
-            <br />
-            <small>(Keine Fahrt zu einem Einsatzort)</small>
+            <span>
+              Büro
+              <small className="d-block mt-1">(Keine Fahrt zu einem Einsatzort)</small>
+            </span>
           </MyCheckbox>
         </div>
       </MyModalBody>

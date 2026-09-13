@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (121)
+
+### fix (EWT-Add-Modal: "Berechnen" als Checkbox, "Büro"-Hinweis abgesetzt)
+
+- `createAddModalEWT.tsx`: "Berechnen" von `MyCheckbox` (rendert `DBSwitch`, ein Schalter) auf
+  `DBCheckbox` (echtes Häkchen) umgestellt -- User-Wunsch. `defaultChecked` statt `checked`
+  (kein `changeHandler` vorhanden, sonst haette React 19 den Schalter auf den Ausgangswert
+  zurueckgesetzt, siehe `MyCheckbox.tsx`s Kommentar zum selben Muster).
+- "Büro"-Checkbox: Erklaerungstext `(Keine Fahrt zu einem Einsatzort)` auf eigene Zeile mit
+  Abstand. Ein einfaches `<br/>` reichte NICHT, da das Switch-Label `display: flex;
+  flex-direction: row` ist -- Kinder liegen als Flex-Items nebeneinander, unabhaengig vom
+  `<br/>`. Fix: Text in einen `<span>` gebuendelt (ein Flex-Item, darin normaler Textfluss),
+  `<small className="d-block mt-1">` fuer Zeilenumbruch + Abstand. Zusaetzlich `mt-2` an der
+  Büro-Checkbox-Zeile fuer mehr Abstand zur "Berechnen"-Zeile darueber.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer-Screenshot: "Berechnen" zeigt Haken statt Schalter, "Büro" zweizeilig
+  mit sichtbarem Abstand.
+
 ## 2026-09-13 (120)
 
 ### fix (Datumsfeld "Anfang" in "Neue Bereitschaft eingeben" nicht aenderbar)
