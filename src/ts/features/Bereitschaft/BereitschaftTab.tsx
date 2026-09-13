@@ -51,20 +51,42 @@ function BereitschaftTab() {
       ).length;
     };
 
-    const datetimeParser = (value: unknown): string => dayjs(value as string).format('DD.MM.YYYY, LT'),
+    // Zwei Zeilen (Datum, Zeit) statt "DD.MM.YYYY, HH:mm" in einer -- schmaler, dadurch auf
+    // schmalen Viewports (siehe `html: true`-Praezedenzfall in `EwtTab.tsx`s `schichtParser`)
+    // eher ohne Tabellen-Ueberlauf lesbar.
+    const datetimeParser = (value: unknown) => {
+        const d = dayjs(value as string);
+        return (
+          <span>
+            {d.format('DD.MM.YY')}
+            <br />
+            {d.format('LT')}
+          </span>
+        );
+      },
       timeZeroParser = (value: unknown): number | string => (!value ? '' : (value as number)),
       ftBZ: CustomTable<IDatenBZ> = createCustomTable<IDatenBZ>('tableBZ', {
         columns: [
           {
             name: 'Beginn',
             title: 'Von',
-            parser: datetimeParser,
+            // `parser` ist auf `string | number` typisiert (siehe EwtTab.tsx), `html: true`
+            // ist der dokumentierte Ausnahmefall fuer tatsaechlich JSX-lieferende Parser.
+            parser: datetimeParser as unknown as (value: unknown) => string,
+            html: true,
             sortable: true,
             sorted: true,
             direction: 'ASC',
             type: 'DateTime',
           },
-          { name: 'Ende', title: 'Bis', parser: datetimeParser, sortable: true, type: 'DateTime' },
+          {
+            name: 'Ende',
+            title: 'Bis',
+            parser: datetimeParser as unknown as (value: unknown) => string,
+            html: true,
+            sortable: true,
+            type: 'DateTime',
+          },
           { name: 'Pause', title: 'Pause', parser: timeZeroParser, breakpoints: 'xs', type: 'number' },
         ],
         rows: getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }),

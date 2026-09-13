@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (128)
+
+### fix (Tabellen-Zeilenaktionen zu klein, Von/Bis-Zelle zu breit)
+
+- Ausgangspunkt war eine Ueberlegung, `data-density="regular"` statt `functional` zu setzen
+  (Bearbeiten/Loeschen-Knoepfe in Tabellen zu klein zum Treffen) -- per Puppeteer ueber alle
+  7 Tabs x 4 Breakpoints (375/768/1024/1440px) gegen den funktionalen Stand verglichen, dabei
+  zwei Regressionen gefunden: bei 375px ueberlaeuft die Bereitschaftszeitraum-Tabelle (Pause-
+  Spalte faellt aus dem Viewport), UND der fixierte App-Footer (`body { padding-block-end:
+  3.5rem }`, Hartwert kalibriert auf die 14px-Wurzel von `functional`) rutscht in den
+  Seiteninhalt statt ans Ende. Auf Rueckfrage stellte sich heraus: das eigentliche Problem war
+  gar nicht die globale Dichte, sondern schlicht `size="small"` an den Zeilen-Knoepfen.
+- Fix (chirurgisch, ohne Density-Aenderung): `CustomTableView.tsx`s `editingButton()` (Bearbeiten/
+  Loeschen/Rueckgaengig, gilt fuer ALLE Tabellen) von `size="small"` auf `size="medium"` --
+  Klickflaeche von 17.5x17.5px auf 28x28px (Puppeteer gemessen), ohne jede
+  Density-Nebenwirkung.
+- Zusatzwunsch waehrend der Pruefung: `BereitschaftTab.tsx`s Von/Bis-Spalten (Zeitraum-Tabelle)
+  zeigten "DD.MM.YYYY, HH:mm" in einer Zeile -- jetzt zwei Zeilen (Datum, Zeit) per
+  `html: true`-Parser (Praezedenzfall: `EwtTab.tsx`s `schichtParser`), schmaler und auf
+  schmalen Viewports eher ohne Tabellen-Ueberlauf lesbar.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Buttons in
+  Bereitschaft-/EWT-Tabellen sichtbar groesser, bestehende zweizeilige `html: true`-Zellen
+  (EWT "Bereitschaft + Nacht") unveraendert, kein Layout-Bruch bei 375px/1024px.
+
 ## 2026-09-13 (127)
 
 ### refactor (Phase N Slice 2 -- tabController-Pane-Toggle nach React)

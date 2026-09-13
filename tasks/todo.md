@@ -2984,3 +2984,47 @@ Render-Test-Setup fuer die volle App-Shell, waere ein groesserer separater Aufwa
 Mocks) -- stattdessen ausschliesslich per Puppeteer im echten Browser verifiziert. Bei kuenftigen
 Aenderungen an `App.tsx`s Pane-Struktur oder `activeTabStore` erneut per Puppeteer gegenpruefen,
 nicht nur auf `tsc`/`bun test` verlassen.
+
+## `data-density="regular"`-Untersuchung + Fix: Zeilen-Knoepfe zu klein (2026-09-13)
+
+User-Anstoss: `data-density="functional"` auf `regular` umstellen, vorher/nachher ueber alle Tabs
+und Breakpoints testen.
+
+- [x] Automatisierte Messung: 7 Tabs (Start/Bereitschaft/EWT/Neben/EA/Berechnung/Einstellungen)
+      x 4 Breakpoints (375/768/1024/1440px) x 2 Dichten, per Puppeteer (Feature-Tabs ueber
+      direkten Modul-Import + `mount<Feature>Tab()`, da kein Backend/Login verfuegbar).
+      Automatisiert erfasst: Body-/Pane-/Nav-Overflow, Ueberlauf-Kandidaten (Elemente ueber den
+      Viewport-Rand hinaus), Konsolenfehler, `berechnungMonatsFenster`-Kennzahlen.
+- [x] Einzige gefundene Abweichung: 375px/Bereitschaft. Per Screenshot bestaetigt: zwei echte
+      Regressionen unter `regular` -- (1) Bereitschaftszeitraum-Tabelle ueberlaeuft (Pause-Spalte
+      faellt raus), (2) fixierter App-Footer rutscht in den Seiteninhalt (`body {
+      padding-block-end: 3.5rem }` in `styles.scss:631` ist ein Hartwert, kalibriert auf die
+      Footer-Hoehe bei `functional`s 14px-Wurzel -- bei `regular` reicht die reservierte Flaeche
+      nicht mehr).
+- [x] Rueckfrage ergab: das eigentliche Problem war nicht die globale Dichte, sondern
+      `size="small"` an den Zeilen-Aktions-Knoepfen (Bearbeiten/Loeschen). Chirurgischer Fix
+      OHNE Density-Aenderung: `CustomTableView.tsx`s `editingButton()` auf `size="medium"` --
+      17.5x17.5px -> 28x28px Klickflaeche (Puppeteer gemessen), gilt fuer alle Tabellen.
+- [x] Zusatzwunsch waehrend der Pruefung: `BereitschaftTab.tsx`s Von/Bis-Zellen zweizeilig
+      (Datum, Zeit) statt einer langen Zeile -- per `html: true`-Parser, Praezedenzfall
+      `EwtTab.tsx`s `schichtParser`.
+- [x] `index.html` NICHT commitet: User bearbeitet die Datei parallel selbst weiter (Stand beim
+      Abschluss dieser Aufgabe: `data-density="regular"` gesetzt, mit den zwei oben genannten,
+      weiterhin unbehobenen Bugs) -- bewusst dem User ueberlassen. `NebenTab.tsx` (Tag-Parser
+      mit "-"-Fallback) ebenfalls eine parallele User-Aenderung, nicht commitet.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer: Buttons in Bereitschaft-/EWT-Tabellen sichtbar groesser (Screenshot), bestehende
+  zweizeilige `html: true`-Zellen (EWT "Bereitschaft + Nacht") unveraendert funktionsfaehig,
+  kein neuer Layout-Bruch bei 375px/1024px.
+
+### Review
+
+Sollte `regular` spaeter doch gewuenscht sein: `body`s `padding-block-end`-Hartwert in
+`styles.scss:631` durch eine tatsaechlich gemessene/CSS-Variable-basierte Footer-Hoehe ersetzen
+(nicht per Auge neu kalibrieren -- das bricht bei der naechsten Footer-Inhalts-Aenderung wieder),
+und die Bereitschaftszeitraum-Tabelle bei schmalen Breakpoints auf Ueberlauf pruefen (Pause-Spalte
+ggf. wie in EWT/Neben per `breakpoints`-Property ausblenden).

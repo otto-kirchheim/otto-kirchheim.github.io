@@ -103,7 +103,7 @@ function editingButton(props: {
       type="button"
       variant="outlined"
       data-color={props.color}
-      size="small"
+      size="medium"
       icon={props.icon}
       noText
       aria-label={props.tooltip}
