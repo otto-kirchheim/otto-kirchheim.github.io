@@ -133,7 +133,13 @@ registerAppStartTask(() => {
   if (!navigator.onLine) setOffline();
   else window.addEventListener('offline', setOffline);
 
-  if (Storage.check('Benutzer') && zeigeTabAusHash()) window.scrollTo(0, 1);
+  // `zeigeTabAusHash()` IMMER aufrufen (nicht nur wenn angemeldet): `tabController.ts`s
+  // Login-Gate (`zeigeTab()`, geschuetzte Haupttabs -> `start`) korrigiert einen tief
+  // verlinkten/alten Hash (`#EWT` u.ae.) sonst nicht -- die Adressleiste bliebe falsch, obwohl
+  // bereits `start` angezeigt wird. `scrollTo(0, 1)` (Mobile-Safari: Adressleiste einklappen)
+  // bleibt bewusst nur fuer den eingeloggten Fall gaengig, wie zuvor.
+  const hashGezeigt = zeigeTabAusHash();
+  if (Storage.check('Benutzer') && hashGezeigt) window.scrollTo(0, 1);
 
   markStep('boot', 'boot:main-ui');
 });

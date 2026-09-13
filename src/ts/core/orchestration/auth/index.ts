@@ -10,9 +10,16 @@ import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeA
 import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { initAutoSaveEventListener } from '@/infrastructure/autoSave/autoSave';
 import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
+import { setzeHauptTabErlaubtPruefung } from '@/infrastructure/ui/tabController';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
 import { markStep } from '../initSequence';
+
+// `tabController.ts` bleibt bewusst auth-agnostisch (siehe dortiger Kommentar) -- die eigentliche
+// Login-Policy fuer Hauptgruppen-Tabs (nur `start` ohne Session) sitzt deshalb hier, nicht dort.
+// Pruefung live bei jedem Aufruf (nicht einmalig `hasRestorableSession` zwischenspeichern):
+// deckt Login/Logout waehrend der Laufzeit korrekt ab, ohne einen zweiten `hashchange`-Listener.
+setzeHauptTabErlaubtPruefung(id => id === 'start' || (Storage.check('Benutzer') && Boolean(getUserCookie())));
 
 let adminTabMounted = false;
 

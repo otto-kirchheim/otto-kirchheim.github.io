@@ -7,6 +7,7 @@ import {
   DBControlPanelMobile,
   DBControlPanelNavigation,
   DBControlPanelNavigationItem,
+  DBDivider,
   DBSelect,
 } from '@db-ux/react-core-components';
 import schliesseMobilenDrawer from './schliesseMobilenDrawer';
@@ -14,6 +15,7 @@ import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
 import useMediaQuery from './useMediaQuery';
 import useNavigationVisible from './useNavigationVisible';
+import { BREAKPOINTS } from './breakpoints';
 
 const MONATE_LANG = [
   'Januar',
@@ -64,10 +66,14 @@ const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'S
 export default function AppHeader() {
   const navigationSichtbar = useNavigationVisible();
   const aktiverTab = useActiveTab();
-  // Unter 1024px kurze Monatsnamen (spart Platz im Select, siehe `actions1` -- User-Fund:
+  // Unter ${BREAKPOINTS.md}px kurze Monatsnamen (spart Platz im Select, siehe `actions1` -- User-Fund:
   // die volle Namensliste war auf schmalen Viewports zu breit).
-  const schmalerViewport = useMediaQuery('(max-width: 1023px)');
+  const schmalerViewport = useMediaQuery(`(max-width: ${BREAKPOINTS.md}px)`);
   const monatsNamen = schmalerViewport ? MONATE_KURZ : MONATE_LANG;
+  // Shells eigene Mobil-Weiche (siehe Kopfkommentar): <=48em (768px) liegt die Navigation in
+  // der Schublade (Eintraege UNTEREINANDER) statt in der horizontalen Kopfzeile -- der Trenner
+  // vor "Berechnung" muss dort deshalb liegend statt stehend sein.
+  const istMobil = useMediaQuery(`(max-width: ${BREAKPOINTS.sm}px)`);
 
   const brand = (
     <a href="#start" id="brand-start-tab" data-tab-target="start">
@@ -81,20 +87,30 @@ export default function AppHeader() {
         Anmelden
       </button>
 
-      <DBSelect
-        className="db-select"
-        id="Monat"
-        label="Monat"
-        showLabel={false}
-        options={monatsNamen.map((name, index) => ({ value: index + 1, label: name }))}
-      />
+      {/* `#MonatFeld`: `auth/index.ts` blendet den Wrapper erst nach erfolgreichem Login per
+          `classList.remove('d-none')` ein (Regression durchs Shell-Rewrite -- die alte,
+          DBHeader-Aera-Markup hatte diesen Wrapper direkt am `<div class="db-select">`, das
+          heutige `<DBSelect>` bringt selbst keinen und die `d-none`-Vorgabe fehlte deshalb). */}
+      <div id="MonatFeld" className="d-none">
+        <DBSelect
+          className="db-select"
+          id="Monat"
+          label="Monat"
+          showLabel={false}
+          options={monatsNamen.map((name, index) => ({ value: index + 1, label: name }))}
+        />
+      </div>
     </DBControlPanelActions1>
   );
 
   const actions2 = (
     <DBControlPanelActions2>
+      {/* Vor Login war Einstellungen frueher Teil derselben `<DBNavigation>` wie Bereitschaft/
+          EWT/... (siehe Git-Historie vor dem Shell-Umbau) -- `navigationSichtbar` blendete beide
+          gemeinsam aus. Seit `actions2` ein eigener Slot ist, braucht der Knopf dieselbe
+          Bedingung explizit, sonst bleibt er (Regression) auch abgemeldet sichtbar. */}
       <a
-        className="db-button"
+        className={navigationSichtbar ? 'db-button' : 'db-button d-none'}
         data-variant="ghost"
         data-icon="gear_wheel"
         data-no-text="true"
@@ -187,6 +203,7 @@ export default function AppHeader() {
           Entgeltausgleich
         </a>
       </DBControlPanelNavigationItem>
+      <DBDivider variant={istMobil ? 'horizontal' : 'vertical'} />
       {/* `aktiverTab === null` (Panel `start`, kein eigener Tab) haelt den Tastaturfokus fuer
           die Tabliste hier -- roving Tabindex braucht sonst gar keinen Eintrag mit `0`. */}
       <DBControlPanelNavigationItem active={aktiverTab === 'Berechnung'}>

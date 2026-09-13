@@ -17,17 +17,18 @@
   --db-border-radius-xl: 0;
   --db-border-radius-2xl: 0;
   --db-border-radius-3xl: 0;
-
-  // Motiv der Schwelle: die offizielle Standardversion (`src/icons/DB_Schwelle/Screen/…`),
-  // Geometrie 1:1 uebernommen (viewBox 1800x240, 15 Balken, Raster 120, Breite 8 -> 120).
-  // Als Maske ueber `background-color` -> Farbe kommt aus dem Theme statt aus dem Asset.
-  // `preserveAspectRatio='none'` laesst die Maske sich mit `.schwelle` strecken.
-  --schwelle-motiv: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1800 240' preserveAspectRatio='none' fill='%23fff'%3e%3crect width='8' height='240'/%3e%3crect x='120' width='16' height='240'/%3e%3crect x='240' width='24' height='240'/%3e%3crect x='360' width='32' height='240'/%3e%3crect x='480' width='40' height='240'/%3e%3crect x='600' width='48' height='240'/%3e%3crect x='720' width='56' height='240'/%3e%3crect x='840' width='64' height='240'/%3e%3crect x='960' width='72' height='240'/%3e%3crect x='1080' width='80' height='240'/%3e%3crect x='1200' width='88' height='240'/%3e%3crect x='1320' width='96' height='240'/%3e%3crect x='1440' width='104' height='240'/%3e%3crect x='1560' width='112' height='240'/%3e%3crect x='1680' width='120' height='240'/%3e%3c/svg%3e");
 }
 
-body {
-  justify-content: center;
-}
+// Aus der Vor-Shell-Architektur (mehrere freistehende Mount-Roots direkt in `body`): zentrierte
+// deren Inhalt vertikal, falls `body` durch die Fusszeilen-Reservierung (`padding-block-end`
+// unten) hoeher war als der eigentliche Inhalt. Seit `App.tsx` den gesamten Baum in EINEM
+// `DBShell` buendelt, das per eigenem CSS-Grid selbst exakt auf die verfuegbare Hoehe rechnet
+// (`.db-shell` = 100% der Viewport-Hoehe), schiebt `justify-content: center` diesen einzigen,
+// bereits korrekt hohen Baum bei jeder Restfoerderung (durch `padding-block-end`) nach OBEN ins
+// Negative -- auf jedem Tab ausser `#start` (das die Reservierung per `body:has(#start.active)`
+// gezielt auf 0 setzt), Kopfzeile und Seiteninhalt ueberlappten sich dadurch. Zentrierung ist
+// obsolet: `#start`s eigenes "Fusszeile beruehren"-Verhalten laeuft unabhaengig davon ueber
+// `.db-shell-content`s eigenes Flex-Layout (siehe `#start.active` unten).
 
 // Ein `<hr>` als Flex-/Grid-Kind kollabiert auf Breite 0: die UA-Regel `hr { margin-inline:
 // auto }` ist ein Auto-Margin und schlaegt `align-self`/`justify-self: stretch` -- das `hr`
@@ -627,7 +628,15 @@ td > .db-switch {
   pointer-events: all;
 }
 
-body {
+// Reservierung fuer `.app-footer` (`position: fixed`, siehe unten) MUSS in `.db-shell-content`
+// selbst sitzen, nicht auf `body`: `.db-shell` ist bereits exakt auf `100dvh` gerechnet (eigenes
+// CSS-Grid, `.db-shell-content` als zweite Zeile) -- ein `padding-block-end` auf `body` blaeht
+// `body`s Box UEBER diese `100dvh` hinaus auf, wodurch zusaetzlich zu `.db-shell-content`s
+// eigenem `overflow-y: auto` (Shells Vorgabe) noch das gesamte Dokument (`html`) scrollbar wird.
+// Zwei gleichzeitig aktive, am selben Rand gestapelte Scrollbalken sind das Ergebnis -- der
+// aeussere (Dokument-)Balken verschwindet dabei optisch hinter dem `position: sticky`-Header
+// (User-Fund). Die Reservierung gehoert deshalb IN den ohnehin schon scrollenden Container.
+.db-shell-content {
   padding-block-end: 3.5rem;
 }
 
@@ -934,29 +943,12 @@ body {
   --db-logo-url: url('/icons/192x192-icon.png');
 }
 
-// DB "neues Design" -- die Schwelle (Markenstreifen aus Balken mit wachsender Breite,
-// Metapher Bahnschwelle, "dynamische Spannung von duenn nach dick"). Platzierung am
-// Formatrand: waagerecht an der UNTERkante des Startbereichs, rechtsbuendig und rund 2/3 der
-// Breite -- die dicken Balken laufen in die untere rechte Ecke, die duennen enden mittig. So
-// steht die Schwelle diagonal gegenueber der Wortmarke (oben links) und beruehrt sie nicht.
-// Genau einmal im Viewport, gerade Kanten, keine Rundung. Primaerer Einsatz laut DB:
-// DB Rot auf Weiss (Hellmodus) bzw. DB Rot ODER Weiss auf Cold Black (Dunkelmodus) -- hier
-// durchgaengig Rot. `background-color` = Dynamic Red, exakt der Farbwert des offiziellen
-// Screen-Assets (`src/icons/DB_Schwelle/Screen/DB_Schwelle_Dynamic-Red_RGB…`); die Schwelle
-// ist eine Markengrafik, kein UI-Element (fuer die gilt `#EC0016`).
-.schwelle {
-  block-size: var(--db-sizing-regular-md);
-  background-color: #ff002b;
-  mask: var(--schwelle-motiv) no-repeat right center / 66% 100%;
-}
-
-// Startseite: die Schwelle soll die fixierte Fusszeile beruehren. Der Body-Freiraum fuer die
-// Fusszeile (`padding/margin-block-end`) entfaellt hier, und der Startbereich reicht als
+// Startseite: die Schwelle soll die fixierte Fusszeile beruehren. Der Freiraum fuer die
+// Fusszeile (`padding-block-end` oben) entfaellt hier, und der Startbereich reicht als
 // Flex-Spalte exakt bis zur Fusszeilen-Oberkante -- die Schwelle als letztes Kind wird per
 // `margin-block-start: auto` an die Unterkante gedrueckt. Kein senkrechter Scrollbalken.
-body:has(#start.active) {
+.db-shell-content:has(#start.active) {
   padding-block-end: 0;
-  margin-block-end: 0;
 }
 
 // Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (nur per `opacity` versteckte)
@@ -968,16 +960,6 @@ body:has(#start.active) {
   // .db-control-panel-desktop 73px bei regular-Dichte/1440px) und Fusszeilenhoehe (41px) =
   // 114px = 7.125rem bei 16px-Wurzel. Bei Aenderungen an Kopf-/Fusszeileninhalt neu vermessen.
   min-block-size: calc(100dvh - 7.125rem);
-
-  > .schwelle {
-    margin-block-start: auto;
-  }
-}
-
-@media screen and (min-width: 48em) {
-  .schwelle {
-    block-size: var(--db-sizing-regular-lg);
-  }
 }
 
 // Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.

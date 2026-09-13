@@ -27,12 +27,39 @@
 import { flushExtern } from './reactRoot';
 import { getAktivenTab, setAktivenTab } from './activeTabStore';
 
+// Standard: alles erlaubt -- Auth-Policy gehoert NICHT hierher (siehe Kopfkommentar,
+// tabController bleibt bewusst attribut-/klassenbasiert und auth-agnostisch, exakt wie die
+// Unit-Tests es pruefen). `auth/index.ts` ersetzt diese Pruefung EINMAL bei Modul-Ladezeit durch
+// die echte Login-Pruefung -- `zeigeTab()` ist die einzige Konvergenzstelle (Hash, Klick,
+// Tastatur, Deep-Link), ein zweiter, paralleler `hashchange`-Listener in der Auth-Schicht waere
+// reihenfolge-abhaengig/race-anfaellig.
+let istHauptTabErlaubt: (id: string) => boolean = () => true;
+
+/** Ersetzt die Erlaubnis-Pruefung fuer Hauptgruppen-Tabs (z. B. Login-Gate). */
+export function setzeHauptTabErlaubtPruefung(pruefung: (id: string) => boolean): void {
+  istHauptTabErlaubt = pruefung;
+}
+
 export type TabWechsel = { id: string; schalter: HTMLElement | null };
 
 /** Wird auf dem Schalter (bubbelnd) und auf `document` ausgeloest. */
 export const TAB_SHOWN_EVENT = 'tab:shown';
 
 const ZIEL_ATTRIBUT = 'data-tab-target';
+
+/**
+ * Schreibt den Hash OHNE `location.hash = ...` -- das loest nativ einen Scroll-zum-Anker aus,
+ * sobald ein Element mit dieser Id existiert (hier IMMER, die `.tab-pane`s tragen exakt diese
+ * Ids). Ohne `scroll-margin-top` in Header-Hoehe landet der native Sprung genau am Dokument-
+ * Layout-Top des Panes -- hinter dem `position: sticky`-Header verdeckt (Bug: Kopfzeile
+ * ueberdeckt Panel-Inhalt sofort beim Tab-Wechsel, auf jedem Tab ausser Start). `history.
+ * pushState` aktualisiert Hash/History identisch (inkl. Back/Forward -- `hashchange` feuert
+ * bei Popstate weiterhin, MDN: Fragment-Unterschied zwischen History-Eintraegen genuegt,
+ * unabhaengig davon ob per Anker-Klick oder `pushState` erzeugt), aber ganz ohne Scroll.
+ */
+function schreibeHash(id: string): void {
+  history.pushState(null, '', `#${id}`);
+}
 
 function schalter(id?: string): HTMLElement[] {
   const selektor = id ? `[${ZIEL_ATTRIBUT}="${CSS.escape(id)}"]` : `[${ZIEL_ATTRIBUT}]`;
@@ -86,12 +113,25 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   if (!ziel) return false;
 
   const hauptgruppe = istHauptgruppe(ziel);
+
+  // Nav/Einstellungen-Knopf sind zwar per `d-none` versteckt (siehe `AppHeader.tsx`), ein direkt
+  // gesetzter/veraenderter Hash (Adressleiste, alter Link, Zurueck-Button) waere sonst trotzdem
+  // ein Schlupfloch. Admin hat mit `#admin-tab`s eigenem Rollen-Redirect (`auth/index.ts`)
+  // bereits ein Analogon.
+  if (hauptgruppe && !istHauptTabErlaubt(id)) {
+    // `hashSchreiben: true` erzwungen (nicht durchgereicht): der Aufrufer wollte `id` zeigen,
+    // nicht `start` -- ohne Korrektur zeigt die Adressleiste weiter den (jetzt falschen) alten
+    // Hash, waehrend `start` bereits sichtbar ist (z. B. `zeigeTabAusHash()` beim Laden ruft mit
+    // `hashSchreiben: false`, weil der Hash ja schon zum urspruenglichen Ziel passt).
+    return zeigeTab('start', { hashSchreiben: true, fokus });
+  }
+
   const imHash = hashSchreiben && hauptgruppe;
   // Hauptgruppe: "schon aktiv" kommt aus dem Store (die DOM-Klasse wird hier nicht mehr
   // geschrieben). Admin-Subnav: weiterhin aus dem DOM, dort unveraendert.
   const bereitsAktiv = hauptgruppe ? getAktivenTab() === id : ziel.classList.contains('active');
   if (bereitsAktiv) {
-    if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
+    if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
     if (hauptgruppe) setAktivenTab(id);
     return true;
   }
@@ -122,7 +162,7 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
     }
   }
 
-  if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
+  if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
 
   // Seit Phase K5 (`DBHeader`) existiert jeder Schalter potenziell zweimal gleichzeitig im DOM
   // (Desktop-Kopfzeile + Drawer-Kopie) -- die sichtbare Kopie bevorzugen, sonst kann `.focus()`
