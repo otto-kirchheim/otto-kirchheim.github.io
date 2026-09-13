@@ -32,8 +32,11 @@ registerAppStartTask(() => {
     if (vorgabenU?.VorgabenB?.[0]?.endeB?.Nwoche === undefined) Storage.remove('VorgabenU');
   }
 
-  const btnLogin = document.querySelector<HTMLButtonElement>('#btnLogin');
-  btnLogin?.addEventListener('click', () => createModalLogin());
+  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat`/`#MonatFeld` existieren seit
+  // dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel rendern `actions1` beide) --
+  // dasselbe Muster wie `#admin`/`#admin-tab` unten.
+  const btnLoginElemente = document.querySelectorAll<HTMLButtonElement>('#btnLogin');
+  btnLoginElemente.forEach(el => el.addEventListener('click', () => createModalLogin()));
 
   document
     .querySelector<HTMLButtonElement>('#btnHelpStart')
@@ -47,8 +50,8 @@ registerAppStartTask(() => {
 
   const willkommenEl = document.querySelector<HTMLHeadingElement>('#Willkommen');
   const jahrEl = document.querySelector<HTMLInputElement>('#Jahr');
-  const monatEl = document.querySelector<HTMLSelectElement>('#Monat');
-  const monatFeldEl = document.querySelector<HTMLDivElement>('#MonatFeld');
+  const monatElemente = document.querySelectorAll<HTMLSelectElement>('#Monat');
+  const monatFeldElemente = document.querySelectorAll<HTMLDivElement>('#MonatFeld');
   const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
   const actAsButtonEl = document.querySelector<HTMLButtonElement>('#actAsOwnDataButton');
 
@@ -98,7 +101,7 @@ registerAppStartTask(() => {
       return;
     }
 
-    if (btnLogin) btnLogin.classList.add('d-none');
+    btnLoginElemente.forEach(el => el.classList.add('d-none'));
 
     if (willkommenEl) willkommenEl.innerHTML = `Hallo, ${benutzer}.`;
     if (loginDisplayEl) loginDisplayEl.classList.add('d-none');
@@ -106,7 +109,7 @@ registerAppStartTask(() => {
     const { monat, jahr } = getStoredMonatJahr();
 
     if (jahrEl) jahrEl.value = jahr.toString();
-    if (monatEl) monatEl.value = monat.toString();
+    monatElemente.forEach(el => (el.value = monat.toString()));
 
     console.log('Benutzer gefunden');
     markStep('session-restore', 'sr:ui-welcome');
@@ -134,7 +137,7 @@ registerAppStartTask(() => {
     }
     markStep('session-restore', 'sr:admin-toggle');
 
-    monatFeldEl?.classList.remove('d-none');
+    monatFeldElemente.forEach(el => el.classList.remove('d-none'));
     setNavigationSichtbar(true);
     document.querySelector<HTMLDivElement>('#startSchnellzugriff')?.classList.remove('d-none');
     markStep('session-restore', 'sr:nav-visible');

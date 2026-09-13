@@ -277,8 +277,9 @@ function applyEinstellungenToRuntime(): void {
 }
 
 registerAppStartTask(() => {
-  const Monat = document.querySelector<HTMLInputElement>('#Monat');
-  Monat?.addEventListener('change', changeMonatJahr);
+  // `#Monat` existiert seit dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel) --
+  // `querySelectorAll`, sonst reagiert nur die zuerst gefundene Kopie auf Aenderungen.
+  document.querySelectorAll<HTMLInputElement>('#Monat').forEach(el => el.addEventListener('change', changeMonatJahr));
 
   const Jahr = document.querySelector<HTMLInputElement>('#Jahr');
   Jahr?.addEventListener('change', changeMonatJahr);

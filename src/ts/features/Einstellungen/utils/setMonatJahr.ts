@@ -1,7 +1,8 @@
 import dayjs from '@/infrastructure/date/configDayjs';
 
 export default function setMonatJahr(jahr: number, monat: number): void {
-  const inputMonat = document.querySelector<HTMLInputElement>('#Monat');
+  // `#Monat` existiert seit dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel).
+  const inputMonatElemente = document.querySelectorAll<HTMLInputElement>('#Monat');
   const headingMonatB = document.querySelector<HTMLHeadingElement>('#MonatB');
   const headingMonatE = document.querySelector<HTMLHeadingElement>('#MonatE');
   const headingMonatN = document.querySelector<HTMLHeadingElement>('#MonatN');
@@ -9,9 +10,9 @@ export default function setMonatJahr(jahr: number, monat: number): void {
 
   // Bereitschaft/EWT/Neben sind je nach aktivierteTabs conditional gemountet — ihre Headings können fehlen,
   // ohne dass das den Monatswechsel für die restliche App (u. a. Berechnung, immer gemountet) blockieren darf.
-  if (!inputMonat || !headingMonatBerechnung) throw new Error('One or more elements not found.');
+  if (inputMonatElemente.length === 0 || !headingMonatBerechnung) throw new Error('One or more elements not found.');
 
-  inputMonat.value = monat.toString();
+  inputMonatElemente.forEach(el => (el.value = monat.toString()));
   const datum = dayjs([+jahr, monat - 1]);
   const monatLabel = datum.format('MM / YY');
   if (headingMonatB) headingMonatB.innerText = monatLabel;

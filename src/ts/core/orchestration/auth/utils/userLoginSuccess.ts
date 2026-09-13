@@ -47,15 +47,16 @@ export default async function userLoginSuccess({
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) willkommen.innerHTML = `Hallo, ${escapeHtml(username)}.`;
 
-  document.querySelector<HTMLButtonElement>('#btnLogin')?.classList.add('d-none');
+  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat` existieren seit dem
+  // Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel rendern `actions1` beide).
+  document.querySelectorAll<HTMLButtonElement>('#btnLogin').forEach(element => element.classList.add('d-none'));
 
   const aktJahr = dayjs().year();
   const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
   if (jahrInput) jahrInput.value = aktJahr.toString();
 
   const monat = dayjs().month() + 1;
-  const monatInput = document.querySelector<HTMLInputElement>('#Monat');
-  if (monatInput) monatInput.value = monat.toString();
+  document.querySelectorAll<HTMLInputElement>('#Monat').forEach(element => (element.value = monat.toString()));
   markStep('login', 'ui:year-month');
 
   const userIsAdmin = role ? role !== 'member' : isAdmin();
@@ -67,8 +68,7 @@ export default async function userLoginSuccess({
   await featureLifecycleRegistry.initializeAll({ isAdmin: userIsAdmin, userName: username });
   markStep('login', 'feature:lifecycle');
 
-  const monatFeldEl = document.querySelector<HTMLDivElement>('#MonatFeld');
-  monatFeldEl?.classList.remove('d-none');
+  document.querySelectorAll<HTMLDivElement>('#MonatFeld').forEach(element => element.classList.remove('d-none'));
 
   console.log('Eingeloggt');
 

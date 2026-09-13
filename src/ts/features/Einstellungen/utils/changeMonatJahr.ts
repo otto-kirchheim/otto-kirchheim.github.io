@@ -6,7 +6,18 @@ import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
 import { setMonatJahr } from '.';
 
-export default function changeMonatJahr(): void {
+export default function changeMonatJahr(event?: Event): void {
+  // `#Monat` existiert seit dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel) --
+  // beide Kopien sind eigenstaendige, unkontrollierte `<select>`-Elemente ohne React-Bindung.
+  // Aendert der User die MOBILE Kopie, muss die Desktop-Kopie (und jeder spaetere `querySelector`
+  // hier im Modul) denselben Wert sehen, sonst liest der Rest der Funktion die alte Kopie.
+  const zielInput = event?.target as HTMLInputElement | undefined;
+  if (zielInput?.id === 'Monat' || zielInput?.id === 'Jahr') {
+    document
+      .querySelectorAll<HTMLInputElement>(`#${zielInput.id}`)
+      .forEach(el => el !== zielInput && (el.value = zielInput.value));
+  }
+
   const monatInput = document.querySelector<HTMLInputElement>('#Monat');
   const jahrInput = document.querySelector<HTMLInputElement>('#Jahr');
   if (!monatInput || !jahrInput) throw new Error('Input Monat oder Jahr nicht gefunden');

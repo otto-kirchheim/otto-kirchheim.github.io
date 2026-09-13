@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (131)
+
+### fix (Shell-Umbau: doppelte #btnLogin/#Monat/#MonatFeld nach Login nicht synchron)
+
+- Nach dem Shell-Umbau (Eintrag 130) existieren `#btnLogin`/`#Monat`/`#MonatFeld` zweimal im DOM
+  (Desktop- + Mobile-Control-Panel rendern `actions1` beide) -- mehrere Login-/Session-Restore-
+  Codepfade nutzten noch `document.querySelector` (singular), aktualisierten also nur die zuerst
+  gefundene Kopie. Symptome: "Anmelden" blieb nach Login sichtbar (nur eine Kopie ausgeblendet),
+  Monatsfeld blieb verborgen.
+- Betroffen und auf `querySelectorAll` umgestellt: `userLoginSuccess.ts` (`#btnLogin`
+  ausblenden, `#Monat`-Wert setzen, `#MonatFeld` einblenden), `auth/index.ts`s Session-Restore-
+  Pfad (dieselben drei), `Einstellungen/index.ts`s `#Monat`-`change`-Listener-Registrierung
+  (sonst reagiert nur eine Kopie auf Nutzereingaben), `setMonatJahr.ts`.
+- Zusaetzlich gehaertet: `changeMonatJahr.ts` synchronisiert bei einer Aenderung jetzt den
+  Wert auf ALLE `#Monat`/`#Jahr`-Kopien (per `event.target`) -- sonst wuerde eine Aenderung an
+  der mobilen Kopie von Code, der weiterhin `querySelector('#Monat')` (die Desktop-Kopie) liest,
+  nicht bemerkt.
+- `AppHeader.tsx`: `DBControlPanelDesktop`/`DBControlPanelMobile` brauchen `orientation`/
+  `position`-Props EXPLIZIT (kein Default in der DB-UX-Quelle, anders als `DBShell`s
+  `controlPanelDesktopPosition`) -- ohne sie griffen mehrere CSS-Regeln nicht (Symptom: Marke
+  im mobilen Header zentriert statt linksbuendig).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test --isolate`
+  (2119 pass), `bun run build`. Puppeteer: Marke im mobilen Header linksbuendig.
+
 ## 2026-09-13 (130)
 
 ### refactor (Header-Umbau: DBHeader -> DB UX Shell)
