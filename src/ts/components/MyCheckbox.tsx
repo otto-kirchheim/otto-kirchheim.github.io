@@ -1,11 +1,14 @@
-import { DBSwitch, type SizeType } from '@db-ux/react-core-components';
-import { useRef, type ChangeEventHandler, type FC, type ReactNode, type Ref } from 'react';
+import { DBSwitch } from '@db-ux/react-core-components';
+import { useRef, type ChangeEventHandler, type ComponentProps, type FC, type ReactNode, type Ref } from 'react';
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
-type TMyCheckbox = {
-  className?: string;
-  name?: string;
+/** Von `DBSwitch`s eigenem Prop-Typ abgeleitet statt einer Hand-Allowlist -- siehe `MyInput.tsx`
+ *  fuer die Begruendung. */
+type TMyCheckbox = Omit<
+  ComponentProps<typeof DBSwitch>,
+  'ref' | 'label' | 'checked' | 'defaultChecked' | 'onChange' | 'children' | 'id'
+> & {
   id: string;
   children: ReactNode;
   /** Gesteuerter Zustand -- der Aufrufer haelt den Wert per `changeHandler` in Sync. */
@@ -13,8 +16,6 @@ type TMyCheckbox = {
   /** Ungesteuerte Vorbelegung -- fuer Aufrufer, die `changeHandler` nur fuer einen
    *  Seiteneffekt (z.B. ein Feld ein-/ausblenden) nutzen und den Wert per DOM auslesen. */
   defaultChecked?: boolean;
-  disabled?: boolean;
-  size?: SizeType;
   myRef?: Ref<HTMLInputElement>;
   changeHandler?: ChangeEventHandler<HTMLInputElement>;
 };

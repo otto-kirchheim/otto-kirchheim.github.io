@@ -1,16 +1,21 @@
 import { DBSelect } from '@db-ux/react-core-components';
 import type { Dayjs } from 'dayjs';
-import { useRef, type ChangeEventHandler, type FC, type RefObject } from 'react';
+import { useRef, type ChangeEventHandler, type ComponentProps, type FC, type RefObject } from 'react';
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
-type TMySelect = {
+/** Von `DBSelect`s eigenem Prop-Typ abgeleitet statt einer Hand-Allowlist -- siehe `MyInput.tsx`
+ *  fuer die Begruendung. `className` bleibt die Klasse der Huelle (`<div>`), nicht von `DBSelect`
+ *  selbst -- deshalb ausgenommen und unten neu (unveraendert) typisiert. */
+type TMySelect = Omit<
+  ComponentProps<typeof DBSelect>,
+  'ref' | 'label' | 'value' | 'onChange' | 'className' | 'invalidMessage' | 'children' | 'options'
+> & {
   myRef?: RefObject<HTMLSelectElement | null>;
   id: string;
   title: string;
   value?: string | number | Dayjs;
   className?: string;
-  required?: boolean;
   /** Ungueltig-Meldung des DB-Felds. Ohne Angabe gilt `STANDARD_UNGUELTIG_MELDUNG`. */
   invalidMessage?: string;
   changeHandler?: ChangeEventHandler<HTMLSelectElement>;

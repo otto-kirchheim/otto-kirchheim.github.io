@@ -2,6 +2,26 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (124)
+
+### refactor (MySelect, MyCheckbox: Prop-Typ von DBSelect/DBSwitch ableiten)
+
+- Fortsetzung von `MyInput.tsx`s Refactor (voriger Eintrag) auf die beiden anderen 1:1-Wrapper:
+  `MySelect.tsx` (`DBSelect`) und `MyCheckbox.tsx` (`DBSwitch`). Gleiches Muster:
+  `Omit<ComponentProps<typeof DB*>, ...> & {eigene Felder}` statt Hand-Allowlist.
+- Kollisionen gefunden und ausgenommen: `MySelect`s eigene `options`-Prop (Text-basiert)
+  kollidiert mit `DBSelect`s nativer `options`-Prop (`DBSelectOptionType`, `value`
+  Pflichtfeld, kein `text`); `className` bleibt die Klasse der Huelle (`<div>`), nicht von
+  `DBSelect` selbst.
+- Nebeneffekt: `MySelect` bekommt dadurch automatisch `disabled` (fehlte bisher komplett --
+  kein Aufrufer konnte ein Select-Feld deaktivieren) sowie `size`/Icon-Props; `MyCheckbox`
+  behaelt sein bestehendes `checked`/`defaultChecked`-Disambiguierungsmuster unveraendert
+  (verhindert die Bug-Klasse aus dem Bereitschaft-Datumsfeld-Fund vom selben Tag).
+- Rein typseitig, keine Laufzeit-Aenderung. Verifiziert: `bunx tsc --noEmit` (0 Fehler ueber
+  alle Aufrufstellen), `bun run lint` (0 Fehler), `bun run test` (2119 pass, unveraendert),
+  `bun run build`. Puppeteer: Bereitschaft-Modal (nutzt beide Komponenten) unveraendertes
+  Verhalten.
+
 ## 2026-09-13 (123)
 
 ### refactor (MyInput: Prop-Typ von DBInput ableiten statt Hand-Allowlist)
