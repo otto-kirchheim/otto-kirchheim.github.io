@@ -1,3 +1,5 @@
+import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
+
 /**
  * Phase L3: "Persönliche Daten"-Accordion-Panel (ehemals `index.html`, `#collapseOne`-Inhalt)
  * als React-Komponente. Rein praesentational -- alle Feld-IDs 1:1 uebernommen, denn
@@ -111,9 +113,11 @@ export default function PersoenlicheDatenPanel() {
             <option value="" disabled>
               Bitte Wählen
             </option>
-            <option value="Tarifkraft">Tarifkraft</option>
-            <option value="Besoldungsgruppe A 8">Besoldungsgruppe A 8</option>
-            <option value="Besoldungsgruppe A 9">Besoldungsgruppe A 9</option>
+            {TB_VALUES.map(wert => (
+              <option key={wert} value={wert}>
+                {wert}
+              </option>
+            ))}
           </select>
         </div>
       </div>

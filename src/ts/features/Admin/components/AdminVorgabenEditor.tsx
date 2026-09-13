@@ -12,6 +12,7 @@ import {
 } from '../utils/api';
 import { DBButton } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
+import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
 export function AdminVorgabenEditor() {
   const [entries, setEntries] = useState<BackendVorgabe[]>([]);
@@ -23,9 +24,7 @@ export function AdminVorgabenEditor() {
   const [saving, setSaving] = useState(false);
 
   const GELD_FIELDS = [
-    'Tarifkraft',
-    'Besoldungsgruppe A 8',
-    'Besoldungsgruppe A 9',
+    ...TB_VALUES,
     'PrivatPKWTarif',
     'PrivatPKWBeamter',
     'Fahrentsch',
