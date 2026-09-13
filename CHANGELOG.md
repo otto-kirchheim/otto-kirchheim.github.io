@@ -2,6 +2,31 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (122)
+
+### fix (MyInput: doppelte Invalid-Feedback-Anzeige bei Passwortfeldern)
+
+- `MyInput.tsx` rendert den manuellen Feedback-`<span>` (kritisch eingefärbt) nur noch, wenn
+  `invalidFeedbackText` NICHT gesetzt ist. Vorher zeigte er den Text dauerhaft (unabhängig vom
+  Validity-Status), während `DBInput`s eigenes `invalidMessage` (bereits über `invalidFeedbackText`
+  gespeist) denselben Text zusätzlich nativ nur bei ungültiger Eingabe anzeigte -- Duplikat.
+  Betraf die 3 Passwort-Modals (`createModalResetPassword`, `createModalNewUser`,
+  `createModalChangePassword`).
+  `createEditorModalEWT.tsx`s Zeitfehler-Validierung (übergibt nur `invalidFeedbackId`, keinen
+  Text, befüllt den leeren Span zur Laufzeit per `querySelector(...).textContent = ...` für eigene
+  Geschäftsregeln) bleibt unverändert funktionsfähig.
+- Audit aller 11 `My*`-Wrapper-Komponenten (`MyCheckbox`, `MyDivModal`, `MyEditorFooter`,
+  `MyFormModal`, `MyHelpModal`, `MyInput`, `MyModalBody`, `MyModalHeader`, `MySelect`,
+  `MyShowElement`, `MyShowFooter`) auf denselben Duplikat-Fehlertyp: kein weiterer Fund. Keine
+  Komponente ist ein direkt durch die zugrunde liegende `DB*`-Komponente ersetzbarer, wertloser
+  Wrapper -- jede fasst entweder mehrere Komponenten zusammen oder löst ein von DB-UX nicht
+  angebotenes Problem (React-19-Controlled/Uncontrolled-Disambiguierung ohne `onChange`,
+  Ref-Merging, ID-Synchronisation).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Reset-Passwort-Modal zeigt den Span nicht mehr, native
+  `invalidMessage` erscheint weiterhin bei ungültiger Eingabe; EWT-Editier-Modal zeigt alle 8
+  `zeitfehler-*`-Spans weiterhin (leer) vorhanden.
+
 ## 2026-09-13 (121)
 
 ### fix (EWT-Add-Modal: "Berechnen" als Checkbox, "Büro"-Hinweis abgesetzt)

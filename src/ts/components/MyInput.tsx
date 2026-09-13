@@ -98,10 +98,15 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
             ))}
           </DBTooltip>
         ) : null}
-        {invalidFeedbackId ? (
-          <span id={invalidFeedbackId} className="db-infotext" data-semantic="critical" data-size="small">
-            {invalidFeedbackText}
-          </span>
+        {/* Nur fuer Aufrufer OHNE `invalidFeedbackText` (z.B. `createEditorModalEWT.tsx`s
+            Zeitfehler-Validierung): die brauchen ein stabiles, leeres Element mit `id`, das sie
+            per `querySelector(...).textContent = ...` zur Laufzeit selbst befuellen -- eigene
+            Geschaeftsregel-Validierung, kein natives HTML5-`required`/`pattern`. Ist `invalidFeedbackText`
+            gesetzt, uebernimmt bereits `invalidMessage` oben (Zeile 86) die native DBInput-Anzeige;
+            dieser Span wuerde denselben Text sonst zusaetzlich DAUERHAFT (nicht nur bei Invalid-Status)
+            anzeigen -- Duplikat statt Fallback. */}
+        {invalidFeedbackId && !invalidFeedbackText ? (
+          <span id={invalidFeedbackId} className="db-infotext" data-semantic="critical" data-size="small" />
         ) : null}
       </DBInput>
     </div>
