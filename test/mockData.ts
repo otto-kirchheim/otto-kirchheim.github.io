@@ -8,11 +8,11 @@ import type { IVorgabenU } from '@/core/types/IVorgabenU';
 
 export const VorgabenGeldMock: IVorgabenGeld = {
   1: {
-    A: 0,
-    B: 0,
-    C: 0,
-    SIPO: 0,
-    GKR: 0,
+    A: 0.98,
+    B: 1.59,
+    C: 2.16,
+    SIPO: 0.44,
+    GKR: 0.9,
     BE14: 24,
     BE8: 9,
     'Besoldungsgruppe A 8': 16.37,
