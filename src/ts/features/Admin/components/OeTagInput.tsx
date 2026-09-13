@@ -34,6 +34,14 @@ export function OeTagInput({
     onChange(values.filter((_, i) => i !== index));
   }
 
+  /** Tag anklicken -- Wert in die Eingabe uebernehmen und aus der Liste entfernen (bearbeiten
+      statt nur loeschen zu koennen). `DBTag`s `onRemove` ruft `event.stopPropagation()` -- ein
+      Klick auf den X-Knopf loest deshalb NICHT zusaetzlich das Bearbeiten aus. */
+  function handleEdit(index: number) {
+    setInputValue(values[index]);
+    onChange(values.filter((_, i) => i !== index));
+  }
+
   return (
     <div className="mb-2">
       <label className="fw-semibold small mb-1">{label}</label>
@@ -43,11 +51,14 @@ export function OeTagInput({
           <DBTag
             key={`${oe}-${index}`}
             className="d-inline-flex align-items-center gap-1 py-1 px-2"
+            style={disabled ? undefined : { cursor: 'pointer' }}
+            title={disabled ? undefined : 'Zum Bearbeiten anklicken'}
             semantic="informational"
             emphasis="strong"
             behavior={disabled ? 'static' : 'removable'}
             removeButton={`${oe} entfernen`}
             onRemove={() => handleRemove(index)}
+            onClick={disabled ? undefined : () => handleEdit(index)}
           >
             {oe}
           </DBTag>

@@ -97,6 +97,32 @@ describe('OeTagInput', () => {
     expect(current).toEqual(['IW']);
   });
 
+  it('übernimmt einen Wert per Tag-Klick zurück in die Eingabe und entfernt ihn aus der Liste', async () => {
+    let current = ['V.IW', 'V.N'];
+    const container = renderInput({
+      values: current,
+      onChange: v => {
+        current = v;
+      },
+    });
+
+    (container.querySelector('.db-tag') as HTMLElement).click();
+    await flush();
+
+    expect(current).toEqual(['V.N']);
+    expect(levelInputs(container)[0].value).toBe('V');
+    expect(levelInputs(container)[1]?.value).toBe('IW');
+  });
+
+  it('lässt Tags bei disabled=true nicht anklickbar sein (kein Bearbeiten)', () => {
+    const onChange = () => {
+      throw new Error('onChange sollte nicht aufgerufen werden');
+    };
+    const container = renderInput({ values: ['V'], onChange, disabled: true });
+
+    expect(() => (container.querySelector('.db-tag') as HTMLElement).click()).not.toThrow();
+  });
+
   it('blendet Eingabe-Bereich und Remove-Buttons aus, wenn disabled=true', () => {
     const container = renderInput({ values: ['V'], disabled: true });
 
