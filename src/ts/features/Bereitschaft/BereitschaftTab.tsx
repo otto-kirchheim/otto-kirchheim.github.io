@@ -55,7 +55,9 @@ function BereitschaftTab() {
     // schmalen Viewports (siehe `html: true`-Praezedenzfall in `EwtTab.tsx`s `schichtParser`)
     // eher ohne Tabellen-Ueberlauf lesbar.
     const datetimeParser = (value: unknown) => {
+        const mediaQuery: MediaQueryList = window.matchMedia('(max-width: 768px)');
         const d = dayjs(value as string);
+        if (!mediaQuery.matches) return d.format('DD.MM.YYYY, LT');
         return (
           <span>
             {d.format('DD.MM.YY')}
@@ -146,56 +148,77 @@ function BereitschaftTab() {
 
     // ----------------------------- Bereitschaftseinsätze ------------------------------------------------
 
-    const ftBE: CustomTable<IDatenBE> = createCustomTable<IDatenBE>('tableBE', {
-      columns: [
-        { name: 'Tag', title: 'Datum', sortable: true, sorted: true, direction: 'ASC', type: 'Date' },
-        {
-          name: 'Auftragsnummer',
-          title: 'Auftrags-Nr.',
-          longTitle: 'SAP-Nr / Einsatzbeschreibung',
-          sortable: true,
-          classes: ['custom-text-truncate'],
-          type: 'text',
-        },
-        { name: 'Beginn', title: 'Von', sortable: true, breakpoints: 'sm', type: 'time' },
-        { name: 'Ende', title: 'Bis', sortable: true, breakpoints: 'sm', type: 'time' },
-        { name: 'LRE', title: 'LRE', sortable: true },
-        {
-          name: 'PrivatKm',
-          title: 'Privat Km',
-          longTitle: 'Kilometer Privatfahrzeug',
-          parser: timeZeroParser,
-          breakpoints: 'md',
-          type: 'number',
-        },
-      ],
-      rows: getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }),
-      sorting: { enabled: true },
-      onChange: createOnChangeHandler('BE'),
-      editing: {
-        enabled: true,
-        addRow: () => {
-          EditorModalBE(ftBE, 'Einsatz hinzufügen');
-        },
-        editRow: row => {
-          EditorModalBE(row, 'Einsatz bearbeiten');
-        },
-        showRow: row => {
-          ShowModalBereitschaft(row, 'Einsatz anzeigen');
-        },
-        deleteRow: row => {
-          row.deleteRow();
-          persistBereitschaftsEinsatzTableData(ftBE);
-        },
-        deleteAllRows: () => {
-          confirmDeleteAllRows({
-            table: ftBE,
-            rowFilter: (cells, m) => getMonatFromBE(cells) === m,
-            persist: persistBereitschaftsEinsatzTableData,
-          });
-        },
+    const dateParser = (value: unknown) => {
+        const d = dayjs(value as string, 'DD.MM.YYYY');
+        return d.format('DD.MM.YY');
       },
-    });
+      lreParser = (value: unknown) => {
+        const s = value as string;
+        if (!s) return '-';
+        const match = s.match(/^LRE\s+(\d+(?:\/\d+)?)(?:\s+(ohne\s+x))?/);
+        if (!match) return s;
+        const [, num, ohneX] = match;
+        const cleanNum = num.replace('/', '');
+        return ohneX ? `${cleanNum}oX` : cleanNum;
+      },
+      ftBE: CustomTable<IDatenBE> = createCustomTable<IDatenBE>('tableBE', {
+        columns: [
+          {
+            name: 'Tag',
+            title: 'Datum',
+            sortable: true,
+            sorted: true,
+            direction: 'ASC',
+            type: 'Date',
+            parser: dateParser,
+          },
+          {
+            name: 'Auftragsnummer',
+            title: 'Auftrags-Nr.',
+            longTitle: 'SAP-Nr / Einsatzbeschreibung',
+            sortable: true,
+            classes: ['custom-text-truncate'],
+            type: 'text',
+          },
+          { name: 'Beginn', title: 'Von', sortable: true, breakpoints: 'sm', type: 'time' },
+          { name: 'Ende', title: 'Bis', sortable: true, breakpoints: 'sm', type: 'time' },
+          { name: 'LRE', title: 'LRE', sortable: true, parser: lreParser },
+          {
+            name: 'PrivatKm',
+            title: 'Privat Km',
+            longTitle: 'Kilometer Privatfahrzeug',
+            parser: timeZeroParser,
+            breakpoints: 'md',
+            type: 'number',
+          },
+        ],
+        rows: getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all' }),
+        sorting: { enabled: true },
+        onChange: createOnChangeHandler('BE'),
+        editing: {
+          enabled: true,
+          addRow: () => {
+            EditorModalBE(ftBE, 'Einsatz hinzufügen');
+          },
+          editRow: row => {
+            EditorModalBE(row, 'Einsatz bearbeiten');
+          },
+          showRow: row => {
+            ShowModalBereitschaft(row, 'Einsatz anzeigen');
+          },
+          deleteRow: row => {
+            row.deleteRow();
+            persistBereitschaftsEinsatzTableData(ftBE);
+          },
+          deleteAllRows: () => {
+            confirmDeleteAllRows({
+              table: ftBE,
+              rowFilter: (cells, m) => getMonatFromBE(cells) === m,
+              persist: persistBereitschaftsEinsatzTableData,
+            });
+          },
+        },
+      });
 
     const unbindButtons = bindClickHandlers([
       ['btnESZ', createAddModalBereitschaftsZeit],

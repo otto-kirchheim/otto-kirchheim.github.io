@@ -36,9 +36,21 @@ function NebenTab() {
 
     const getEmptyText = (Jahr: number) => (checkIfGreater2024(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2024');
 
+    const dateParser = (value: unknown) => {
+      const d = dayjs(value as string, 'DD.MM.YYYY');
+      return d.format('DD.MM.YY');
+    };
+
     const ftN = createCustomTable('tableN', {
       columns: [
-        { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+        {
+          name: 'Tag',
+          title: 'Tag',
+          sortable: true,
+          sorted: true,
+          direction: 'ASC',
+          parser: dateParser,
+        },
         { name: 'Beginn', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
         { name: 'Ende', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
         {
