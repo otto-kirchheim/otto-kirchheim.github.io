@@ -2,6 +2,17 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (125)
+
+### fix (Neben-Editor-Modal: fehlende key-Prop)
+
+- `createEditorModalNeben.tsx`s `createTimeElement()` (erzeugt die Beginn-/Ende-Felder ueber
+  `['Beginn', 'Ende'].map(...)`) lieferte `<MyInput>` ohne `key` -- ergaenzt (`key={column.name}`),
+  gleiches Muster wie die Bereitschaft-Modal-Fixe vom selben Tag.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Neben-Editor-Modal (ueber Tagesauswahl → "Manuell" erreicht) zeigt
+  Tag/Auftragsnummer/Beginn/Ende, keine `key`-Warnung mehr.
+
 ## 2026-09-13 (124)
 
 ### refactor (MySelect, MyCheckbox: Prop-Typ von DBSelect/DBSwitch ableiten)

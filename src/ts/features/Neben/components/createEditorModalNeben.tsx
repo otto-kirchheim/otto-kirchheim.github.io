@@ -42,6 +42,7 @@ const createTimeElement = (
   const column = getColumn(row, columnName);
   return (
     <MyInput
+      key={column.name}
       divClass="sp-6"
       type={column.type ?? 'time'}
       id={column.name}
