@@ -79,11 +79,7 @@ if (import.meta.env.DEV) console.log(pwaInfo ?? 'No PWA info available.');
 import { initTabController, zeigeTabAusHash } from '@/infrastructure/ui/tabController';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
-import AppHeader from '@/infrastructure/ui/AppHeader';
-import AppFooter from '@/infrastructure/ui/AppFooter';
-import StartTab from '@/infrastructure/ui/StartTab';
-import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
-import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
+import App from './App';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
@@ -94,32 +90,16 @@ console.log('Version:', import.meta.env.APP_VERSION);
 // hier, obwohl er im Quelltext spaeter steht. `auth`s Task griff (`selectYear` ->
 // `setMonatJahr`) auf `#Monat` zu, das seit Phase K5 erst durch `AppHeader`s Mount entsteht --
 // mit dem Mount in der Warteschlange kam die Race genau umgekehrt zur Absicht: `auth`s Task lief
-// zuerst und warf, bevor Header/Footer je gemountet wurden. Header/Footer-Mount und
-// `initTabController()` laufen deshalb synchron beim Modul-Import, nicht als Queue-Eintrag.
-const appHeaderRoot = document.querySelector<HTMLDivElement>('#appHeaderRoot');
-if (appHeaderRoot) mount(appHeaderRoot, createElement(AppHeader));
-
-const appFooterRoot = document.querySelector<HTMLDivElement>('#appFooterRoot');
-if (appFooterRoot) mount(appFooterRoot, createElement(AppFooter, { startYear: 2021 }));
-
-// Kein separates Root-Div: `.schwelle` (styles.scss) braucht `#start.active > .schwelle`
-// als direkten Kindselektor, React mountet deshalb direkt in die `#start`-Tab-Pane hinein --
-// `class="tab-pane fade show active"` bleibt Sache von `tabController.ts`, React ruehrt nur
-// die Kinder an.
-const startRoot = document.querySelector<HTMLDivElement>('#start');
-if (startRoot) mount(startRoot, createElement(StartTab));
-
-// Muss ebenfalls VOR der App-Start-Task-Warteschlange laufen: `Berechnung/index.ts`s eigener
-// `registerAppStartTask`-Aufruf (per `import '@/features/Berechnung'` unten) ruft ggf. sofort
-// `generateTableBerechnung()` auf, das `#tbodyBerechnung` erst durch diesen Mount bekommt.
-const berechnungRoot = document.querySelector<HTMLDivElement>('#Berechnung');
-if (berechnungRoot) mount(berechnungRoot, createElement(BerechnungTab));
-
-// Ebenfalls VOR der Warteschlange: `Einstellungen/index.ts`s `registerAppStartTask`-Callback
-// verkabelt Toolbar/Jahr-Formular/Accordion-Felder per `document.querySelector` -- die Elemente
-// muessen dafuer schon existieren.
-const einstellungenRoot = document.querySelector<HTMLDivElement>('#Einstellungen');
-if (einstellungenRoot) mount(einstellungenRoot, createElement(EinstellungenTab));
+// zuerst und warf, bevor Header/Footer je gemountet wurden. Der Root-Render (und
+// `initTabController()`) laeuft deshalb synchron beim Modul-Import, nicht als Queue-Eintrag --
+// UND ueber `mount()` (nicht direkt `createRoot().render()`), weil `mount()` per `flushSync`
+// auch die passiven Effekte der gemounteten Baeume synchron abarbeitet. Ein reines
+// `createRoot().render()` committet zwar das DOM synchron, plant `useEffect`-Hooks (z. B.
+// `EinstellungenTab`s Tabellen-Erzeugung) aber nur asynchron ein -- ohne `flushSync` liefe der
+// erste `registerAppStartTask`-Callback (spaetestens bei `window: 'load'`) potenziell VOR diesen
+// Effekten und faende die von ihnen erzeugten Elemente noch nicht vor.
+const appRoot = document.getElementById('app');
+if (appRoot) mount(appRoot, createElement(App));
 
 // Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
 // bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.

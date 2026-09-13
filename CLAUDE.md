@@ -55,11 +55,12 @@ bun run preview        # Build-Preview (schreibt nach ../public/public)
 
 ```
 src/
-├── index.html             # SPA-Einstiegspunkt (DB-Header + tabController als Navigation)
+├── index.html             # Minimaler Einstiegspunkt (`<div id="app">` + `<noscript>`, Phase N)
 ├── env.d.ts               # Vite Environment-Typen
 ├── scss/                  # DB-UX-Import, Hilfsklassen, App-Styles
 ├── ts/
-│   ├── main.ts            # App-Init (PWA, Version-Check, UI-Controller)
+│   ├── main.tsx           # App-Init (PWA, Version-Check) + Root-Mount von `App.tsx`
+│   ├── App.tsx            # App-Shell als ein React-Baum (Header, Tabs, Footer, Phase N)
 │   ├── components/        # React UI-Bausteine (Modals, Buttons, Inputs)
 │   ├── core/              # Zentrale Contracts und Events
 │   │   ├── types/         # Alle TS-Interfaces + API-Envelope-Typen
@@ -100,15 +101,24 @@ Die Navigation erfolgt über `AppHeader.tsx` (React, `DBHeader`/`DBNavigation`) 
 `infrastructure/ui/tabController.ts` (`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent,
 Hash-Sync), nicht über einen Client-Side-Router. Aktiver Tab der Hauptnavigation ist ein
 `useSyncExternalStore`-Modul-Store (`activeTabStore.ts`/`useActiveTab.ts`), von `AppHeader`
-reaktiv gelesen. Seit Phase L (abgeschlossen 2026-09-12) sind alle Tab-Panel-Inhalte React,
-direkt in die jeweilige Tab-Pane gemountet (kein Wrapper-Div): `#start` (`StartTab.tsx` –
-`styles.scss`s `#start.active > .schwelle`-Kindselektor verlangt das Fehlen eines Wrapper-Divs),
-`#Berechnung` (`BerechnungTab.tsx` als Huelle + `BerechnungTableRows.tsx` als eigener React-Root
-direkt auf `<tbody id="tbodyBerechnung">`, analog `BerechnungMobileCards`) und `#Einstellungen`
-(`EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`). Die gesamte Feld-Verkabelung dieser Tabs
+reaktiv gelesen. Seit Phase N (Slice 1, abgeschlossen 2026-09-13) ist die gesamte Shell
+(`App.tsx`) ein einziger React-Baum, der ueber `main.tsx` per `mount()`
+(`infrastructure/ui/reactRoot.ts`, NICHT direkt `createRoot().render()` -- siehe unten) in
+`<div id="app">` gemountet wird; `index.html` enthaelt nur noch `<noscript>` + diesen einen Div.
+Alle Tab-Panel-Inhalte sind React, direkt in der jeweiligen Tab-Pane als JSX-Kind (kein
+Wrapper-Div): `#start` (`StartTab.tsx` – `styles.scss`s `#start.active > .schwelle`-Kindselektor
+verlangt das Fehlen eines Wrapper-Divs), `#Berechnung` (`BerechnungTab.tsx` als Huelle +
+`BerechnungTableRows.tsx` als eigener React-Root direkt auf `<tbody id="tbodyBerechnung">`,
+analog `BerechnungMobileCards`) und `#Einstellungen` (`EinstellungenTab.tsx` +
+`PersoenlicheDatenPanel.tsx`). Die gesamte Feld-Verkabelung dieser Tabs
 (`saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `Einstellungen/index.ts`,
 `berechnungMonatsFenster.ts` u. a.) bleibt bewusst `document.querySelector('#Id')`-basiert und
 unveraendert – sie ist unabhaengig davon, ob React oder statisches HTML das Element erzeugt hat.
+**Wichtig fuer `main.tsx`:** der Root-Mount muss ueber `mount()` laufen (per `flushSync`), nicht
+ueber ein blankes `createRoot().render()` -- Letzteres committet zwar das DOM synchron, plant
+`useEffect`-Hooks (z. B. `EinstellungenTab`s Tabellen-Erzeugung) aber nur asynchron ein, und der
+erste `registerAppStartTask`-Callback laeuft dann potenziell VOR diesen Effekten (siehe
+`tasks/lessons.md`).
 
 **3-Schichten-Architektur:**
 
@@ -121,15 +131,15 @@ Jedes Feature folgt der gleichen Struktur:
 
 ```
 features/Feature/
-├── index.ts          # window.load → CustomTable Init + Event Binding
+├── index.ts          # featureLifecycleRegistry.registerFeature() -> mount()/unmount() der Tab-Komponente
 ├── components/       # React TSX: Add/Edit/Show Modals
 └── utils/            # Business-Logik, Berechnungen, Daten-Handling
 ```
 
 **Hybrid-Rendering:**
 
-- **App-Shell (Header/Footer):** React (`AppHeader.tsx`/`AppFooter.tsx`), gemountet über `<div id="appHeaderRoot">`/`<div id="appFooterRoot">` in `index.html` (Phase K, seit 2026-09-12 abgeschlossen)
-- **Tab-Panel-Inhalte:** React seit Phase K/L (abgeschlossen 2026-09-12) – `#start`: `StartTab.tsx`; `#Berechnung`: `BerechnungTab.tsx` + `BerechnungTableRows.tsx`; `#Einstellungen`: `EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`
+- **App-Shell:** ein einziger React-Baum (`App.tsx`), gemountet via `main.tsx` in `<div id="app">` (Phase N, seit 2026-09-13 abgeschlossen). Enthaelt `AppHeader.tsx`/`AppFooter.tsx` als normale JSX-Kinder (keine separaten Sub-Roots mehr) sowie alle Tab-Panes.
+- **Tab-Panel-Inhalte:** React seit Phase K/L/N – `#start`: `StartTab.tsx`; `#Berechnung`: `BerechnungTab.tsx` + `BerechnungTableRows.tsx`; `#Einstellungen`: `EinstellungenTab.tsx` + `PersoenlicheDatenPanel.tsx`
 - **Modale/Dialoge:** React-Komponenten, gerendert via `showModal()` in einen `DBDrawer` (nativer `<dialog>`; intern `mount`/`unmount` aus `infrastructure/ui/reactRoot.ts`); neue Dialoge (z. B. `ImpressumDialog.tsx`) nutzen die offiziellen `DBDrawerHeader`/`DBDrawerFooter`-Slot-Komponenten statt des projekteigenen `MyModalHeader`-Musters
 - **Tabellen:** Eigene `CustomTable`-Klasse – `Row`/`Rows`/`Column` (Datenmodell, DOM-frei, unveraendert seit Phase M) + `CustomTableView.tsx` (Rendering, seit Phase M React statt Vanilla-DOM) – liegt in `infrastructure/table/`
 
@@ -140,7 +150,7 @@ features/Feature/
 1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
-4. **React** für App-Shell (Header/Footer), Modals/Dialoge, die Feature-Tabs und alle Tab-Panel-Inhalte (seit Phase L, 2026-09-12); `index.html` selbst bleibt Einstiegspunkt (`main.tsx`-Umbenennung + Rest-Body erst Phase N)
+4. **React** für die gesamte App-Shell (`App.tsx`, ein Baum), Modals/Dialoge, die Feature-Tabs und alle Tab-Panel-Inhalte (seit Phase N, 2026-09-13); `index.html` ist nur noch `<noscript>` + `<div id="app">`
 5. **`tabController`** für die Tab-Navigation, kein Router
 6. **`FetchRetry`** für alle API-Aufrufe (Auto-Token-Refresh, Retry-Logik)
 7. **`Storage`-Singleton** für typsicheren localStorage-Zugriff

@@ -2869,3 +2869,40 @@ Aufrufstelle einzeln zu entschaerfen (z. B. per `queueMicrotask` in jedem Tabell
 im Plan vorgesehene Fallback-Variante (Modal-Oeffnung per Microtask entkoppeln, falls der
 Ref-Vertrag bricht) war nicht noetig -- per Puppeteer bestaetigt, dass `ref.current` direkt nach
 `showModal()` gesetzt ist.
+
+## Phase N, Slice 1: App-Shell-Konsolidierung (2026-09-13)
+
+Naechster Schritt nach Phase M0/M1 laut `frontend/tasks/plan-react-umbau.md`. Scope vorab per
+Exploration korrigiert (siehe Plandoku): Feature-`index.ts`-Konvertierung war schon erledigt,
+`dbDialog`/`featureLifecycleRegistry`/`syncFeatureTabs`/`tabController`-Hauptteil bewusst NICHT
+Teil dieser Slice (orthogonal zur Shell, siehe "Slice 2" im Plandoku).
+
+- [x] `src/ts/App.tsx` (neu): komplette `index.html`-Body-Struktur als ein React-Baum, identische
+      `id`/`class`-Attribute. `AppHeader`/`AppFooter`/`StartTab`/`BerechnungTab`/
+      `EinstellungenTab` jetzt echte JSX-Kinder statt fuenf separater `mount()`-Aufrufe;
+      `#appHeaderRoot`/`#appFooterRoot`-Wrapper-Divs entfallen (nirgends sonst referenziert).
+- [x] `main.ts` → `main.tsx`, `index.html` auf `<noscript>` + `<div id="app">` reduziert.
+- [x] `frontend/CLAUDE.md` (Architektur/Hybrid-Rendering) aktualisiert.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test --isolate` 2119/2119
+  unveraendert, `bun run build` gruen.
+- Puppeteer ohne Backend: kompletter Boot-Log identisch zum Vor-Umbau-Stand (`boot:berechnung` →
+  `boot:einstellungen` → `cookie:check` → `Benutzer gefunden` → `sr:*` → `boot:auth` →
+  `boot:main-ui`, kein `pageerror`), Tab-Wechsel per Klick, Hash-Sync ueberlebt vollen Reload,
+  `#start.active > .schwelle`-Selektor weiterhin erfuellt, verschachtelte `mount()`-Aufrufe
+  (Feature-Tab + Tabellen-Modal) unveraendert warnungsfrei.
+
+### Review
+
+Ein direktes `createRoot(#app).render(<App/>)` (erster Versuch) verletzte die dokumentierte
+Ordering-Invariante aus `main.ts` fuer den Boot-Ablauf: es committet das DOM synchron, plant
+`useEffect`s aber nur asynchron ein -- der erste `registerAppStartTask`-Callback lief dadurch vor
+`EinstellungenTab`s Tabellen-Effekt und warf `Tabelle nicht gefunden`. Nur per echtem
+Browser-Boot-Lauf gefunden, nicht durch `tsc`/`lint`/`bun test`/`build` (kein Test rendert die
+volle Boot-Sequenz). Fix: Root-Mount ueber denselben `mount()`-Helfer wie alle anderen
+Mount-Stellen im Code (`flushSync`, arbeitet Effekte synchron mit ab) statt `createRoot()` direkt
+-- Lehre in `tasks/lessons.md` festgehalten. Damit bestaetigt: das Vorab-Verifizieren im echten
+Browser (statt nur `tsc`/`lint`/Tests zu vertrauen) hat hier einen Boot-Blocker gefunden, der sonst
+erst beim naechsten manuellen Test im Browser aufgefallen waere.

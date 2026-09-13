@@ -393,13 +393,69 @@ ueber die Testsuite.
 
 ## Phase N — `index.html` auf ein Minimum
 
-- `index.html` behält `<head>` + `<body><div id="app"></div>` (plus `<noscript>`).
-- `main.ts` → `main.tsx`: ein `createRoot(#app)` rendert Shell + Tabs.
-  `tabController`, `navDrawer`, `dbDialog`, `featureLifecycleRegistry`, `syncFeatureTabs`
-  entfallen oder werden Hooks; die Kompatibilitätsbrücken aus K fallen weg.
-- Feature-`index.ts` (`window.load` → `CustomTable`-Init) → React-Mount.
-- PWA/Version-Check/Impressum-Verschleierung aus `main.ts:86-158` in Komponenten/Hooks.
-- Erst möglich, wenn K, L und M durch sind.
+**Scope-Korrektur (2026-09-13, vor Umsetzungsstart per Exploration verifiziert):** der Plantext
+vom 2026-09-08 war an zwei Stellen ueberholt bzw. zu optimistisch:
+
+- "Feature-`index.ts` (`window.load` → `CustomTable`-Init) → React-Mount" war zum
+  Umsetzungszeitpunkt bereits erledigt (nicht Teil dieser Phase): Bereitschaft/EWT/Neben/EA
+  laufen laengst ueber `featureLifecycleRegistry.registerFeature()` + `mount()`/`unmount()`
+  (identisches Muster wie Admin). Kein `window.load` mehr im Code ausser dem generischen
+  `core/bootstrap.ts:29`.
+- `dbDialog.ts`/`featureLifecycleRegistry`/`syncFeatureTabs` "entfallen" war zu optimistisch:
+  `dbDialog.ts` ist aktiv genutzt (`confirmDialog.ts`, `autoSave/errorHandling.ts`,
+  `pdf/signaturDialog.ts`) und mit dem Shell-Umbau nicht verwandt.
+  `featureLifecycleRegistry`/`syncFeatureTabs` steuern Ressourcen-Aktivierung
+  (Login/Jahr-Wechsel/Save), ebenfalls orthogonal zur Shell. `tabController` bedient neben der
+  Haupt-Tab-Gruppe zusaetzlich die Admin-Subnavigation. Alle drei bewusst NICHT Teil von Slice 1
+  (siehe unten).
+
+### Slice 1 — Shell-Konsolidierung (abgeschlossen 2026-09-13)
+
+- [x] `src/ts/App.tsx` (neu): bildet die vormalige `index.html`-Body-Struktur 1:1 als JSX nach
+      (identische `id`/`class`-Attribute) -- `tabController`, `autoSave`,
+      `featureLifecycleRegistry`/`syncFeatureTabs` und der Admin-Sichtbarkeits-Toggle finden ihre
+      Elemente weiterhin per `querySelector`, unabhaengig davon ob JSX oder statisches HTML sie
+      erzeugt hat (bewaehrtes Phase-L-Muster, jetzt auf die ganze Shell ausgeweitet).
+      `AppHeader`/`AppFooter`/`StartTab`/`BerechnungTab`/`EinstellungenTab` sind jetzt echte
+      JSX-Kinder statt fuenf separater `mount()`-Aufrufe in eigene Sub-Roots (`#appHeaderRoot`/
+      `#appFooterRoot`-Wrapper-Divs komplett entfallen, da nirgends sonst referenziert).
+- [x] `main.ts` → `main.tsx`: der Root-Mount laeuft ueber `mount()` (`infrastructure/ui/
+      reactRoot.ts`), NICHT ueber ein direktes `createRoot(#app).render(<App/>)` -- siehe
+      Kern-Erkenntnis unten. `initTabController()` folgt weiterhin synchron danach.
+- [x] `index.html`: Body auf `<noscript>` + `<div id="app">` reduziert, Script-Tag auf
+      `main.tsx`.
+- [x] Doku aktualisiert: `frontend/CLAUDE.md` (Architektur/Hybrid-Rendering-Abschnitte),
+      `tasks/lessons.md`.
+
+**Kern-Erkenntnis (per Puppeteer gefunden, nicht im Plan vorgesehen):** ein reines
+`createRoot(#app).render(<App/>)` reicht NICHT aus, um die bestehende Ordering-Invariante aus
+`main.ts:91-98` zu erhalten. Es committet das DOM zwar synchron, plant `useEffect`-Hooks (z. B.
+`EinstellungenTab`s Tabellen-Erzeugung) aber nur asynchron ein -- der erste
+`registerAppStartTask`-Callback (`Einstellungen/index.ts`) lief dadurch vor diesem Effekt und warf
+`Tabelle nicht gefunden`. Die alten fuenf `mount()`-Aufrufe hatten dieses Problem nicht, weil
+`mount()` per `flushSync` auch passive Effekte synchron abarbeitet. Fix: `main.tsx` mountet die
+ganze App ueber denselben `mount()`-Helfer (`createElement(App)`), nicht ueber `createRoot()`
+direkt -- ein einziger `flushSync`-Aufruf statt vormals fuenf, Ordering-Garantie identisch.
+
+**Verifiziert:** `bunx tsc --noEmit`/`bun run lint`/`bun run lint:css` sauber (0 Fehler),
+`bun test --isolate` 2119/2119 unveraendert, `bun run build` gruen. Puppeteer ohne Backend
+(`VorgabenU`-Fixture aus `test/mockData.ts`): kompletter Boot-Log identisch zum Vor-Umbau-Stand
+(`boot:berechnung` → `boot:einstellungen` → `cookie:check` → `Benutzer gefunden` → `sr:*` →
+`boot:auth` → `boot:main-ui`, kein `pageerror`), Tab-Wechsel per Klick funktioniert
+(`location.hash` + `.active`/`.show`-Klassen), Hash-Sync ueberlebt vollen Reload
+(`/#Einstellungen` direkt geladen zeigt Einstellungen aktiv), `#start.active > .schwelle`-
+Selektor weiterhin erfuellt, verschachtelte `mount()`-Aufrufe (Feature-Tab-Mount +
+Tabellen-Modal, siehe Konsolen-Fehler-Fix vom selben Tag) unveraendert warnungsfrei.
+
+### Slice 2 — offen, eigene Session
+
+- `tabController`s Haupt-Tab-Gruppen-Logik (`.tab-pane`-Klassen-Toggle, Hash-Schreiben) in
+  Store/Hook verlagern -- Admin-Subnav-Teil bliebe ohnehin bestehen. Risiko: `tab:shown`-
+  Event-Vertrag (`berechnungMonatsFenster.ts` hoert darauf).
+- `dbDialog.ts` -- aktiv genutztes, eigenstaendiges System, kein Bezug zur Shell.
+- `featureLifecycleRegistry`/`syncFeatureTabs` -- Ressourcen-Aktivierungs-Mounting, unangetastet.
+- PWA/Versions-Check/Offline-Banner aus `main.tsx` in einen `useAppBootstrap()`-Hook extrahieren
+  (rein kosmetisch, kein funktionaler Gewinn fuer "index.html minimal").
 
 ---
 

@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (119)
+
+### refactor (Phase N, Slice 1: App-Shell-Konsolidierung)
+
+- **`src/ts/App.tsx` (neu):** die gesamte Shell (Header, Tabs, Footer) ist jetzt ein einziger
+  React-Baum statt fuenf separater `mount()`-Aufrufe. `AppHeader`/`AppFooter`/`StartTab`/
+  `BerechnungTab`/`EinstellungenTab` sind echte JSX-Kinder; `#appHeaderRoot`/`#appFooterRoot`
+  entfallen (nirgends sonst referenziert). `index.html` reduziert auf `<noscript>` +
+  `<div id="app">`; `main.ts` → `main.tsx`.
+- `tabController`, `autoSave`, `featureLifecycleRegistry`/`syncFeatureTabs` und der
+  Admin-Sichtbarkeits-Toggle unveraendert -- sie finden ihre Elemente per `querySelector`,
+  unabhaengig davon ob JSX oder statisches HTML sie erzeugt hat.
+- Root-Mount laeuft ueber `mount()` (`infrastructure/ui/reactRoot.ts`), NICHT ueber ein direktes
+  `createRoot().render()`: Letzteres committet das DOM zwar synchron, plant `useEffect`-Hooks
+  aber nur asynchron ein -- ein erster Versuch damit brach den Boot-Ablauf (`EinstellungenTab`s
+  Tabellen-Effekt lief noch nicht, als der naechste Boot-Schritt schon zugriff). `mount()`s
+  `flushSync` erhaelt die bestehende Ordering-Invariante aus `main.ts` unveraendert.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler), `bun run test`
+  (2119 pass), `bun run build`. Puppeteer ohne Backend: kompletter Boot-Log identisch zum
+  Vor-Umbau-Stand, Tab-Wechsel, Hash-Sync ueber vollen Reload, `#start.active > .schwelle`
+  weiterhin erfuellt.
+
 ## 2026-09-13 (118)
 
 ### fix (Konsolen-Fehler: flushSync-Warnung, fehlende key-Props, PWA-Info-Log)

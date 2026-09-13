@@ -18,7 +18,7 @@
     <link rel="shortcut icon" type="image/png" href="icons/48x48-icon.png" sizes="48x48" />
     <link rel="icon" type="image/png" href="icons/96x96-icon.png" sizes="96x96" />
     <link rel="apple-touch-icon" href="icons/192x192-icon.png" sizes="192x192" />
-    <script type="module" src="ts/main.ts"></script>
+    <script type="module" src="ts/main.tsx"></script>
   </head>
 
   <body class="flex-column mb-5">
@@ -35,99 +35,8 @@
       </div>
     </noscript>
 
-    <!-- Phase K5: React-Slice, siehe infrastructure/ui/AppHeader.tsx -- gemountet in main.ts.
-         Loest navDrawer.ts/NavDrawerShell.tsx (Phase K4) vollstaendig ab: DBHeader bringt den
-         Drawer eingebaut mit. -->
-    <div id="appHeaderRoot"></div>
-
-    <!-- Aufnahme fuer den geteilten Dialog (`showModal.tsx` haengt hier den DB-Drawer ein). -->
-    <div id="modal"></div>
-
-    <div class="breit px-2 px-md-3 mt-2">
-      <div
-        class="db-notification shadow-sm d-none mb-0" data-semantic="warning" data-variant="standalone"
-        id="actAsNotice"
-        role="status"
-        aria-live="polite"
-      >
-        <div
-          class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 gap-md-3"
-        >
-          <div class="d-flex align-items-start gap-2">
-            <span class="db-icon mt-1 mt-md-0" data-icon="eye"></span>
-            <div>
-              <div class="fw-semibold">Fremde Benutzerdaten aktiv</div>
-              <div class="small" id="actAsNoticeText"></div>
-            </div>
-          </div>
-          <div class="d-grid d-sm-flex gap-2">
-            <button
-              class="db-button"
-              data-variant="filled"
-              data-color="warning"
-              data-size="small"
-              id="actAsOwnDataButton"
-              type="button"
-            >
-              Eigene Daten laden
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div id="conflictReviewBannerMount"></div>
-
-    <div class="tab-content mt-1" id="tabContent">
-      <!-- Tab Start -->
-      <!-- Phase L1: React-Slice, siehe infrastructure/ui/StartTab.tsx -- gemountet in main.ts direkt
-           in dieses Element (kein separates Root-Div): `styles.scss` verankert `.schwelle` per
-           `#start.active > .schwelle`-Kindselektor fuer die Fusszeilen-buendige Platzierung; ein
-           Wrapper-Div dazwischen wuerde den Selektor brechen. `tabController.ts` verwaltet die
-           Klassen (`tab-pane fade show active`) an diesem Element weiter unveraendert -- React
-           ruehrt nur seine eigenen Kinder an. -->
-      <div class="tab-pane fade show active" id="start" role="tabpanel"></div>
-
-      <!-- Tab Bereitschaft -->
-      <div class="tab-pane fade" id="Bereitschaft" role="tabpanel">
-        <div id="bereitschaft-root"></div>
-      </div>
-
-      <!-- Tab EWT Anzeigen -->
-      <div class="tab-pane fade" id="EWT" role="tabpanel">
-        <div id="ewt-root"></div>
-      </div>
-
-      <!-- Tab Nebenbezüge Anzeigen -->
-      <div class="tab-pane fade" id="Neben" role="tabpanel">
-        <div id="neben-root"></div>
-      </div>
-
-      <!-- Tab Entgeltausgleich Anzeigen -->
-      <div class="tab-pane fade" id="EA" role="tabpanel">
-        <div id="ea-root"></div>
-      </div>
-
-      <!-- Tab Berechnung -->
-      <!-- Phase L2: React-Slice, siehe infrastructure/ui/BerechnungTab.tsx -- gemountet in
-           main.ts direkt in dieses Element (kein Wrapper-Div, analog L1/StartTab). -->
-      <div class="tab-pane fade" id="Berechnung" role="tabpanel"></div>
-
-      <!-- Tab Admin -->
-      <div class="tab-pane fade" id="Admin" role="tabpanel">
-        <div class="breit px-3 px-md-4 mb-3">
-          <div id="admin-root"></div>
-        </div>
-      </div>
-
-      <!-- Tab Einstellungen -->
-      <!-- Phase L3: React-Slice, siehe infrastructure/ui/EinstellungenTab.tsx -- gemountet in
-           main.ts direkt in dieses Element (kein Wrapper-Div, analog L1/L2). -->
-      <div class="tab-pane fade" id="Einstellungen" role="tabpanel"></div>
-    </div>
-
-    <!-- Phase K1/K3: React-Slice, siehe infrastructure/ui/AppFooter.tsx (mountet auch den
-         Impressum-Dialog, infrastructure/ui/ImpressumDialog.tsx) -- gemountet in main.ts. -->
-    <div id="appFooterRoot"></div>
+    <!-- Phase N: die gesamte Shell (Header/Tabs/Footer) ist ein einziger React-Baum, siehe
+         `ts/App.tsx` -- gemountet in `main.tsx`. -->
+    <div id="app"></div>
   </body>
 </html>
