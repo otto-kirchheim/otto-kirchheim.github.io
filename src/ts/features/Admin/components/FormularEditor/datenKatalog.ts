@@ -276,7 +276,13 @@ const ZEILEN_FELDER: Record<FormularCode, KatalogEintrag[]> = {
       quelle: 'Daten.BE',
       beispiel: i => `B-200${11 + i}`,
     },
-    { pfad: 'LRE', label: 'LRE', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: LreType.LRE_1 },
+    {
+      pfad: 'LRE',
+      label: 'LRE',
+      gruppe: 'Zeile BE',
+      quelle: 'Daten.BE',
+      beispiel: i => Object.values(LreType)[i % Object.values(LreType).length],
+    },
     { pfad: 'PrivatKm', label: 'Privat-km', gruppe: 'Zeile BE', quelle: 'Daten.BE', beispiel: i => 8 + i * 2 },
     // Vorberechnet (Phase 11, siehe infrastructure/pdf/abgeleiteteWerte.ts::bzAbgeleiteteWerte/
     // beAbgeleiteteWerte) -- eigene Gruppe je Quelle, damit der Editor sie ohne Rechnung-Builder
