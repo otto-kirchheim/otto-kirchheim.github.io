@@ -114,35 +114,32 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const modal = showModal<IDatenEWT>(
     <MyFormModal myRef={ref} title="Neue Anwesenheit eingeben" helpContext="modal.ewt.add" onSubmit={onSubmit()}>
       <MyModalBody>
-        <div>
-          <DBButton
-            type="button"
-            className="text-start"
-            variant="filled"
-            size="medium"
-            width="full"
-            id="btnNaechsterTag"
-            onClick={(e: MouseEvent<HTMLButtonElement>) => {
-              e.preventDefault();
-              setNaechsterEwtTag();
-              updateBuchungstagAnzeige();
-            }}
-            aria-label="Nächster Tag"
-          >
-            +1 Tag
-          </DBButton>
-        </div>
+        <DBButton
+          type="button"
+          className="text-start"
+          variant="filled"
+          size="medium"
+          id="btnNaechsterTag"
+          icon="plus"
+          onClick={(e: MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            setNaechsterEwtTag();
+            updateBuchungstagAnzeige();
+          }}
+          aria-label="Nächster Tag"
+        >
+          Nächster Tag
+        </DBButton>
         <MyInput
-          divClass="sp-12"
           required
           type="date"
           id="Tag"
           name="Tag"
+          message="Bitte Starttag auswählen"
+          messageIcon={'calendar'}
           min={datum.format('YYYY-MM-DD')}
           max={maxDate}
-        >
-          Tag
-        </MyInput>
+        ></MyInput>
         <div ref={buchungstagHinweisRef} id="buchungstagHinweis" className="d-none">
           <MyInput
             type="date"
@@ -170,15 +167,12 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           ]}
         />
         <MySelect title="Schicht" id="Schicht" required myRef={SchichtRef} options={buildSchichtOptionen(vorgabenU)} />
-        <div>
+        <div className="mt-3">
           <DBCheckbox id="berechnen1" ref={berechnenRef} defaultChecked>
             Berechnen
           </DBCheckbox>
         </div>
-        <div className="mt-2">
-          {/* Eigener `span` noetig: das Switch-Label ist `display: flex; flex-direction: row`,
-              ein `<br/>` direkt als Kind wirkt dort NICHT (Flex-Items liegen nebeneinander,
-              unabhaengig vom `<br/>`) -- innerhalb des `span`s gilt normaler Textfluss. */}
+        <div className="mt-3">
           <MyCheckbox id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
             <span>
               Büro
