@@ -2,6 +2,38 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (130)
+
+### refactor (Header-Umbau: DBHeader -> DB UX Shell)
+
+- `AppHeader.tsx` komplett auf DB UX' `DBShell` + `DBControlPanelDesktop`/`DBControlPanelMobile` +
+  `DBControlPanelNavigation(Item)` umgestellt (vorher `DBHeader`/`DBNavigation`). Anlass: `DBHeader`s
+  fixe CSS-Weiche bei 1024px reagiert nicht auf `data-density` (siehe Eintrag 129s
+  `useHeaderForceMobile()`-Notloesung) -- Shell hat eine eingebaute Weiche bei GENAU 48em (768px),
+  passt exakt zum gewuenschten Schwellwert. `useHeaderForceMobile.ts` daher ersatzlos entfernt.
+- `App.tsx`: `<DBShell>` umschliesst `AppHeader` + `<DBShellContent>` (CSS-Grid braucht beide als
+  direkte Geschwister), `AppFooter` bleibt bewusst ausserhalb (eigener `position:fixed`-Overlay).
+- Feature-Drilldown (urspruenglich geplant, Bereitschaft/EWT/Neben/EA in ein Untermenue buendeln)
+  erwies sich als nicht noetig: `DBControlPanelNavigation` bringt bereits eingebaute
+  Horizontal-Scroll-Buttons fuer den Fall mit, dass die flache Nav nicht in eine Zeile passt
+  (`overflow-scroll-right-button`, per `ResizeObserverListener`) -- deckt die Luecke ab, ohne
+  Sonderbehandlung.
+- `ThemeSwitcher.tsx` vereinfacht: vorher Hell/Dunkel/Auto-Flyout-Menue (brach im neuen, horizontal
+  scrollenden Nav-Container), jetzt ein einfacher Zwei-Zustands-Schalter (`DBSwitch`s eingebautes
+  `visualAid`+`iconLeading="moon"`+`iconTrailing="sun"`, offiziell dokumentiertes Muster). Label
+  nur noch per `.visually-hidden` fuer Screenreader, visuell nur Icon-Schalter.
+- `styles.scss`: `.db-header`-Regeln auf `.db-control-panel-desktop`/`-mobile` migriert (Sticky-
+  Positionierung), `#start.active`s Hoehen-Hartwert neu vermessen (114px = 7.125rem bei
+  16px-Wurzel/regular-Dichte, vorher 5.75rem fuer die alte, kleinere DBHeader-Hoehe), tote
+  `.db-header-*`/`.nav-trenner`/`.nav-rechts`-Selektoren entfernt, `.theme-umschalter-menu`-
+  Ueberlaufschutz auf 48em verschoben, `#tabContent`-Abstand zur Kopfzeile von `mt-1` auf `mt-3`
+  erhoeht.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Burger-Nav
+  <=768px, volle Nav ab 769px ohne Overflow (beide Dichten), Drawer oeffnet/schliesst korrekt
+  (inkl. Auto-Close bei Nav-Klick), Horizontal-Scroll-Buttons bei enger Breite funktionsfaehig,
+  Theme-Umschalter (Klick + `data-mode`-Aenderung) funktioniert Desktop und Mobile.
+
 ## 2026-09-13 (129)
 
 ### fix (Kopfzeile bei data-density="regular" ab 1024px abgeschnitten)

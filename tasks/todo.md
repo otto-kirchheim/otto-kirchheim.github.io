@@ -3076,3 +3076,61 @@ Gelegenheit nachziehen. Der `MIN_DESKTOP_WIDTH_PX`-Schwellwert in `useHeaderForc
 wie `berechnungMonatsFenster.ts`s `MONAT_MIN_PX`, ein gemessener Hartwert -- bei kuenftigen
 Aenderungen an den Hauptnav-Eintraegen (mehr/weniger/laengere Eintraege) per Puppeteer neu
 vermessen, im Code-Kommentar dokumentiert.
+
+## Header-Umbau: DBHeader -> DB UX Shell (2026-09-13, Folgesession)
+
+`useHeaderForceMobile.ts`s 1024/1215px-Notloesung durch einen echten Komponentenwechsel ersetzt --
+User-Entscheidung nach Rueckfrage (Plan-Mode, siehe `.claude/plans` der Session): kompletter
+Umstieg von `DBHeader`/`DBNavigation` auf DB UX' neueres "Shell"-System
+(`DBShell`/`DBControlPanelDesktop`/`DBControlPanelMobile`/`DBControlPanelNavigation(Item)`).
+
+- [x] `AppHeader.tsx` liefert nur noch die zwei Control-Panels (kein eigenes `DBShell` --
+      dessen CSS-Grid braucht Control-Panels UND `DBShellContent` als direkte Geschwister, siehe
+      `App.tsx`). Alle 8 Hauptnav-Punkte weiterhin FLACH (keine Gruppierung/Drilldown noetig,
+      siehe unten).
+- [x] `App.tsx`: `<DBShell><AppHeader/><DBShellContent>{...}</DBShellContent><AppFooter/></DBShell>`.
+- [x] `useHeaderForceMobile.ts` geloescht -- Shells eigene CSS-Weiche bei 48em (768px, exakt DB-
+      Quellcode-verifiziert: `shell.css` versteckt `.db-control-panel-mobile`/`-desktop`
+      wechselseitig bei `48em<width`/`width<=48em`) deckt den Bedarf bereits ab, ohne JS.
+- [x] Feature-Drilldown NICHT gebaut: `DBControlPanelNavigationItemGroup` (das Drilldown-Element)
+      ist zwingend an `DBControlPanelNavigation`s Shell-Kontext gekoppelt (kein Problem mehr seit
+      dem Shell-Umstieg) -- aber User stellte waehrend der Verifikation fest, dass
+      `DBControlPanelNavigation` bereits eingebaute Scroll-Buttons fuer nicht-passende Breiten
+      mitbringt (`.overflow-scroll-right-button`, per `ResizeObserverListener`) -- deckt die
+      urspruengliche Luecke (1024-1215px bei `regular`) bereits ab, Drilldown erwies sich als
+      unnoetig.
+- [x] `ThemeSwitcher.tsx` von Hell/Dunkel/Auto-Flyout (brach im neuen horizontal scrollenden
+      Nav-`<menu>`, funktionierte aber weiterhin mobil -- User-Fund) auf einfachen
+      Icon-Schalter umgestellt: `iconLeading="moon"` `iconTrailing="sun"` `visualAid` (offiziell
+      dokumentiertes `DBSwitch`-Muster, User lieferte Referenzbild). Text-Label nur noch per
+      `.visually-hidden` (User-Wunsch: kein sichtbares Label).
+- [x] `styles.scss`: `.db-header`-Sticky-Regel auf `.db-control-panel-desktop`/`-mobile` migriert,
+      `.db-drawer:not(...)`-Scoping auf `.db-control-panel-mobile-drawer` aktualisiert, tote
+      `.db-header-navigation-bar`/`.nav-trenner`/`.nav-rechts`-Regeln entfernt (Flex-Workarounds
+      unnoetig, Shell nutzt CSS-Grid mit expliziten Spalten), `.theme-umschalter-menu`-
+      Ueberlaufschutz von 64em auf 48em verschoben (passend zur neuen Weiche),
+      `#start.active`s Hoehen-Hartwert neu vermessen (7.125rem statt 5.75rem, neue Kopf-/
+      Fusszeilenhoehe bei `regular`-Dichte), `#tabContent`-Abstand `mt-1` -> `mt-3` (User-Fund:
+      zu wenig Luft zwischen Kopfzeile und Seiteninhalt).
+- [x] `BereitschaftTab.tsx`/`NebenTab.tsx` weiterhin NICHT commitet -- laufende eigene
+      Aenderungen des Users (Datumsformat, LRE-Parser).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer gegen den laufenden User-Dev-Server (Port 8080): Burger-Nav <=768px, volle Nav ab
+  769px ohne Overflow (`scrollWidth === clientWidth`, beide Dichten), Drawer oeffnet per Klick,
+  Nav-Klick im Drawer schliesst ihn automatisch (Auto-Close-Detection funktioniert weiterhin,
+  `isEventTargetNavigationItem` prueft sowohl `.db-navigation-item` als auch
+  `.db-control-panel-navigation-item`), Horizontal-Scroll-Button bei 900px sichtbar und
+  funktionsfaehig, Theme-Umschalter schaltet `data-mode`/localStorage korrekt um (Desktop + Mobile).
+
+### Review
+
+Nicht abschliessend reproduziert: eine vom User gemeldete Ausrichtungs-Abweichung zwischen
+Admin/Theme-Schalter/Monatsfeld in der Kopfzeile -- eigene Messung zeigte nur ~2px Hoehen-
+Unterschied (Formular-Elemente vs. Nav-Items), visuell bei 1440px kein auffaelliges Ergebnis.
+Moeglich, dass es sich um einen zwischenzeitlichen Zustand waehrend der schnellen Iterationen
+handelte (mehrere Vite-HMR-Updates kurz hintereinander). Beim naechsten Live-Test erneut pruefen,
+falls das Bild weiterhin auftritt: genauer Viewport/Zustand (eingeloggt? welche Breite?) noetig.

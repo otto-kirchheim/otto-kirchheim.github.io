@@ -905,10 +905,12 @@ body {
   border-radius: var(--db-border-radius-sm);
 }
 
-// --- DB-Header ----------------------------------------------------------------------------
-// Die Kopfzeile bleibt beim Scrollen stehen (wie bisher `.sticky-top`); `.db-header` selbst
-// bringt dafuer nichts mit.
-.db-header {
+// --- DB Shell / Control Panel (Header-Umbau von DBHeader auf DB UX Shell) ------------------
+// Die Kopfzeile bleibt beim Scrollen stehen (wie bisher `.sticky-top`); weder `.db-control-panel-
+// desktop` noch `.db-control-panel-mobile` bringen das von sich aus mit. Beide Klassen noetig,
+// da `DBShell` Desktop- UND Mobile-Control-Panel gleichzeitig im DOM haelt (CSS-Weiche bei 48em).
+.db-control-panel-desktop,
+.db-control-panel-mobile {
   position: sticky;
   inset-block-start: 0;
   z-index: 1030;
@@ -944,8 +946,10 @@ body:has(#start.active) {
 #start.active {
   display: flex;
   flex-direction: column;
-  // stylelint-disable-next-line db-ux/use-sizing -- Viewport minus fixe Kopf- (~3rem) und Fusszeilenhoehe (~2.25rem)
-  min-block-size: calc(100dvh - 5.75rem);
+  // stylelint-disable-next-line db-ux/use-sizing -- Viewport minus Kopf- (Puppeteer gemessen:
+  // .db-control-panel-desktop 73px bei regular-Dichte/1440px) und Fusszeilenhoehe (41px) =
+  // 114px = 7.125rem bei 16px-Wurzel. Bei Aenderungen an Kopf-/Fusszeileninhalt neu vermessen.
+  min-block-size: calc(100dvh - 7.125rem);
 
   > .schwelle {
     margin-block-start: auto;
@@ -1011,34 +1015,13 @@ body:has(#start.active) {
   background-color: var(--db-adaptive-on-bg-basic-emphasis-50-default);
 }
 
-// Einstellungen/Admin/Design sitzen rechts, sobald die Navigation waagerecht laeuft.
-// DB laesst die Navigation dort auf ihre Inhaltsbreite schrumpfen -- ohne freie Breite gibt
-// es kein `margin-inline-start: auto`, deshalb zuerst die volle Breite zurueckholen.
-@media screen and (min-width: 64em) {
-  .db-header-navigation-bar .db-header-navigation {
-    flex: 1 1 auto;
-  }
-
-  .db-header-navigation > .db-navigation {
-    inline-size: 100%;
-  }
-
-  .db-navigation > menu > .nav-rechts {
-    margin-inline-start: auto;
-  }
-
-  // In der Aktionsspalte steht nur der Burger-Schalter; ohne ihn bliebe auf dem Desktop
-  // nur die Trennlinie stehen.
-  .db-header-navigation-bar > .db-header-action-container:not(:has(.db-header-secondary-action)) {
-    display: none;
-  }
-
-  // Der Design-Auswahl-Flyout ist der aeusserste rechte Eintrag. DB richtet ihn an der
-  // linken Kante des Eintrags aus -- er klappt dann nach rechts auf und ragt (auch bei
-  // `visibility: hidden`) ueber den Viewport, was ab 64em einen waagerechten Scrollbalken
-  // erzeugt. Rechtsbuendig verankern, damit er nach links/unten oeffnet und im Bild bleibt.
-  // Klassen- statt Id-Selektor (Phase K5): `ThemeSwitcher` bekommt seit `DBHeader`s
-  // eingebauter Drawer-Verdopplung pro Instanz eine eigene, per `useId()` erzeugte Id.
+// Der Design-Auswahl-Flyout ist der letzte Nav-Eintrag. DB richtet ihn an der linken Kante des
+// Eintrags aus -- er klappt nach rechts auf und ragt (auch bei `visibility: hidden`) ueber den
+// Viewport bzw. `.db-control-panel-navigation`s eigenen horizontalen Scroll-Container hinaus.
+// Rechtsbuendig verankern, damit er nach links/unten oeffnet und im Bild bleibt. Klassen- statt
+// Id-Selektor: `ThemeSwitcher` bekommt seit `DBHeader`s (jetzt `DBShell`s) eingebauter
+// Drawer-Verdopplung pro Instanz eine eigene, per `useId()` erzeugte Id.
+@media screen and (min-width: 48em) {
   .theme-umschalter-menu {
     inset-inline: auto 0;
   }
@@ -1046,60 +1029,16 @@ body:has(#start.active) {
 
 // Der Monatswechsel steht in der Kopfzeile neben dem Anmelde-Knopf und darf dort nicht
 // auf ein paar Buchstaben zusammenschrumpfen.
-.db-header-primary-action .db-select {
+.db-control-panel-actions-1 .db-select {
   inline-size: auto;
   min-inline-size: 8rem;
-}
-
-// Die Navigation zieht fuer die mobile Schublade um; dort fuellt sie die volle Hoehe.
-.db-header-drawer-navigation > .db-header-navigation {
-  inline-size: 100%;
-}
-
-// Optische Grenze vor "Berechnung": links davon die Fachbereiche
-// (Bereitschaft/EWT/Nebenbezuege/Entgeltausgleich), rechts die uebergreifenden Bereiche
-// (Berechnung, Einstellungen). Der Trenner folgt der Navigationsrichtung -- in der Kopfzeile
-// eine senkrechte Linie links, in der Schublade eine waagerechte oben. Gescopt ueber den
-// jeweiligen Platz, in den `navDrawer.ts` dieselbe `#navmenu`-Navigation schiebt.
-//
-// Die Linie liegt in einem `::before` im Aussenabstand, NICHT als `border`/`padding` am
-// `.db-navigation-item` selbst -- letzteres verbreitert die Item-Box und damit den
-// Aktiv-Indikator (`.db-navigation-item::after`, `inline-size: 100%`), der dann links ueber
-// den Text hinausragt.
-.db-header-navigation-container .nav-trenner,
-.db-header-drawer-navigation .nav-trenner {
-  position: relative;
-}
-
-.db-header-navigation-container .nav-trenner {
-  margin-inline-start: var(--db-spacing-fixed-sm);
-}
-
-.db-header-navigation-container .nav-trenner::before {
-  content: '';
-  position: absolute;
-  inset-block: 20%;
-  inset-inline-start: calc(var(--db-spacing-fixed-sm) / -2);
-  border-inline-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
-}
-
-.db-header-drawer-navigation .nav-trenner {
-  margin-block-start: var(--db-spacing-fixed-sm);
-}
-
-.db-header-drawer-navigation .nav-trenner::before {
-  content: '';
-  position: absolute;
-  inset-inline: 0;
-  inset-block-start: calc(var(--db-spacing-fixed-sm) / -2);
-  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 // --- Dialoge als DB-Drawer ------------------------------------------------------------------
 // Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die App-Huellen darin
 // (`dialog-kopf`/`-koerper`/`-fuss`) liefern nur Kopfzeile, Rumpf und Fusszeile -- Rahmen,
 // Hintergrund und Abstand kommen vom Drawer, sonst staende ein Kasten im Kasten.
-.db-drawer:not(.db-header-drawer) {
+.db-drawer:not(.db-control-panel-mobile-drawer) {
   --db-drawer-max-width: 36rem;
 }
 
@@ -1109,7 +1048,7 @@ body:has(#start.active) {
 // Drawers ins Negative -> linksbuendiger Text ("Von"/"Bis"/"Pause") war links abgeschnitten.
 // `min(..., 100%)` deckelt zusaetzlich auf die Breite des enthaltenden Blocks (ICB, ohne
 // Scrollbalken) -> der Drawer bleibt immer vollstaendig im Bild.
-.db-drawer:not(.db-header-drawer) .db-drawer-container {
+.db-drawer:not(.db-control-panel-mobile-drawer) .db-drawer-container {
   max-inline-size: min(var(--db-drawer-max-width), 100%);
 }
 

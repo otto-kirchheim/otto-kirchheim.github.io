@@ -1,3 +1,4 @@
+import { DBShell, DBShellContent } from '@db-ux/react-core-components';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import StartTab from '@/infrastructure/ui/StartTab';
@@ -18,91 +19,99 @@ import useActiveTab from '@/infrastructure/ui/useActiveTab';
  * `activeTabStore` (`useActiveTab()`) -- `tabController.ts`s `zeigeTab()` schreibt fuer diese
  * Hauptgruppe keine DOM-Klassen mehr, siehe dortiger Kommentar. `null` (Store-Anfangswert) heisst
  * "start" ist aktiv, identisch zum vormals hartkodierten `fade show active` auf `#start`.
+ *
+ * Header-Umbau (DBHeader -> DB UX Shell): `<DBShell>` umschliesst `AppHeader` (liefert die
+ * beiden Control-Panels, kein eigenes `DBShell`, siehe dort) UND `<DBShellContent>` --
+ * `DBShell`s CSS-Grid braucht beide als direkte Geschwister. `AppFooter` bleibt bewusst
+ * AUSSERHALB von `DBShellContent` (eigener `position: fixed`-Overlay, unabhaengig vom
+ * Content-Scroll).
  */
 export default function App() {
   const aktiverTab = useActiveTab() ?? 'start';
   const paneKlasse = (id: string): string => `tab-pane fade${aktiverTab === id ? ' show active' : ''}`;
 
   return (
-    <>
+    <DBShell>
       <AppHeader />
 
-      <div id="modal"></div>
+      <DBShellContent>
+        <div id="modal"></div>
 
-      <div className="breit px-2 px-md-3 mt-2">
-        <div
-          className="db-notification shadow-sm d-none mb-0"
-          data-semantic="warning"
-          data-variant="standalone"
-          id="actAsNotice"
-          role="status"
-          aria-live="polite"
-        >
-          <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 gap-md-3">
-            <div className="d-flex align-items-start gap-2">
-              <span className="db-icon mt-1 mt-md-0" data-icon="eye"></span>
-              <div>
-                <div className="fw-semibold">Fremde Benutzerdaten aktiv</div>
-                <div className="small" id="actAsNoticeText"></div>
+        <div className="breit px-2 px-md-3 mt-2">
+          <div
+            className="db-notification shadow-sm d-none mb-0"
+            data-semantic="warning"
+            data-variant="standalone"
+            id="actAsNotice"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 gap-md-3">
+              <div className="d-flex align-items-start gap-2">
+                <span className="db-icon mt-1 mt-md-0" data-icon="eye"></span>
+                <div>
+                  <div className="fw-semibold">Fremde Benutzerdaten aktiv</div>
+                  <div className="small" id="actAsNoticeText"></div>
+                </div>
+              </div>
+              <div className="d-grid d-sm-flex gap-2">
+                <button
+                  className="db-button"
+                  data-variant="filled"
+                  data-color="warning"
+                  data-size="small"
+                  id="actAsOwnDataButton"
+                  type="button"
+                >
+                  Eigene Daten laden
+                </button>
               </div>
             </div>
-            <div className="d-grid d-sm-flex gap-2">
-              <button
-                className="db-button"
-                data-variant="filled"
-                data-color="warning"
-                data-size="small"
-                id="actAsOwnDataButton"
-                type="button"
-              >
-                Eigene Daten laden
-              </button>
+          </div>
+        </div>
+
+        <div id="conflictReviewBannerMount"></div>
+
+        <div className="tab-content mt-3" id="tabContent">
+          {/* Tab Start -- kein Wrapper-Div: `styles.scss` verankert `.schwelle` per
+              `#start.active > .schwelle`-Kindselektor. */}
+          <div className={paneKlasse('start')} id="start" role="tabpanel">
+            <StartTab />
+          </div>
+
+          <div className={paneKlasse('Bereitschaft')} id="Bereitschaft" role="tabpanel">
+            <div id="bereitschaft-root"></div>
+          </div>
+
+          <div className={paneKlasse('EWT')} id="EWT" role="tabpanel">
+            <div id="ewt-root"></div>
+          </div>
+
+          <div className={paneKlasse('Neben')} id="Neben" role="tabpanel">
+            <div id="neben-root"></div>
+          </div>
+
+          <div className={paneKlasse('EA')} id="EA" role="tabpanel">
+            <div id="ea-root"></div>
+          </div>
+
+          <div className={paneKlasse('Berechnung')} id="Berechnung" role="tabpanel">
+            <BerechnungTab />
+          </div>
+
+          <div className={paneKlasse('Admin')} id="Admin" role="tabpanel">
+            <div className="breit px-3 px-md-4 mb-3">
+              <div id="admin-root"></div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div id="conflictReviewBannerMount"></div>
-
-      <div className="tab-content mt-1" id="tabContent">
-        {/* Tab Start -- kein Wrapper-Div: `styles.scss` verankert `.schwelle` per
-            `#start.active > .schwelle`-Kindselektor. */}
-        <div className={paneKlasse('start')} id="start" role="tabpanel">
-          <StartTab />
-        </div>
-
-        <div className={paneKlasse('Bereitschaft')} id="Bereitschaft" role="tabpanel">
-          <div id="bereitschaft-root"></div>
-        </div>
-
-        <div className={paneKlasse('EWT')} id="EWT" role="tabpanel">
-          <div id="ewt-root"></div>
-        </div>
-
-        <div className={paneKlasse('Neben')} id="Neben" role="tabpanel">
-          <div id="neben-root"></div>
-        </div>
-
-        <div className={paneKlasse('EA')} id="EA" role="tabpanel">
-          <div id="ea-root"></div>
-        </div>
-
-        <div className={paneKlasse('Berechnung')} id="Berechnung" role="tabpanel">
-          <BerechnungTab />
-        </div>
-
-        <div className={paneKlasse('Admin')} id="Admin" role="tabpanel">
-          <div className="breit px-3 px-md-4 mb-3">
-            <div id="admin-root"></div>
+          <div className={paneKlasse('Einstellungen')} id="Einstellungen" role="tabpanel">
+            <EinstellungenTab />
           </div>
         </div>
-
-        <div className={paneKlasse('Einstellungen')} id="Einstellungen" role="tabpanel">
-          <EinstellungenTab />
-        </div>
-      </div>
+      </DBShellContent>
 
       <AppFooter startYear={2021} />
-    </>
+    </DBShell>
   );
 }
