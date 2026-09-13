@@ -5,10 +5,28 @@ import {
   DBControlPanelMobile,
   DBControlPanelNavigation,
   DBControlPanelNavigationItem,
+  DBSelect,
 } from '@db-ux/react-core-components';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
+import useMediaQuery from './useMediaQuery';
 import useNavigationVisible from './useNavigationVisible';
+
+const MONATE_LANG = [
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
+] as const;
+const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'] as const;
 
 /**
  * Phase "Shell"-Umbau: `DBHeader`/`DBNavigation` (fixe CSS-Weiche bei 1024px, siehe
@@ -43,6 +61,10 @@ import useNavigationVisible from './useNavigationVisible';
 export default function AppHeader() {
   const navigationSichtbar = useNavigationVisible();
   const aktiverTab = useActiveTab();
+  // Unter 1024px kurze Monatsnamen (spart Platz im Select, siehe `actions1` -- User-Fund:
+  // die volle Namensliste war auf schmalen Viewports zu breit).
+  const schmalerViewport = useMediaQuery('(max-width: 1023px)');
+  const monatsNamen = schmalerViewport ? MONATE_KURZ : MONATE_LANG;
 
   const brand = (
     <a className="db-brand" href="#start" id="brand-start-tab" data-tab-target="start" data-icon="none">
@@ -56,26 +78,14 @@ export default function AppHeader() {
       <button className="db-button" data-variant="brand" type="button" id="btnLogin">
         Anmelden
       </button>
-      <div className="db-select d-none" id="MonatFeld" data-hide-label="true">
-        <label htmlFor="Monat">Monatswechsel</label>
-        {/* `data-custom-validity="neutral"` unterdrueckt DB-UXs automatische
-            `:user-valid`-Erfolgsfaerbung (gruener Rahmen) -- der Monatswechsel ist keine
-            Formularvalidierung, `required` steht nur der Semantik wegen da. */}
-        <select id="Monat" required data-custom-validity="neutral">
-          <option value="1">Januar</option>
-          <option value="2">Februar</option>
-          <option value="3">März</option>
-          <option value="4">April</option>
-          <option value="5">Mai</option>
-          <option value="6">Juni</option>
-          <option value="7">Juli</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">Oktober</option>
-          <option value="11">November</option>
-          <option value="12">Dezember</option>
-        </select>
-      </div>
+
+      <DBSelect
+        className="db-select"
+        id="Monat"
+        label="Monat"
+        showLabel={false}
+        options={monatsNamen.map((name, index) => ({ value: index + 1, label: name }))}
+      />
     </DBControlPanelActions1>
   );
 
@@ -157,7 +167,9 @@ export default function AppHeader() {
           aria-controls="Einstellungen"
           aria-selected={aktiverTab === 'Einstellungen'}
           tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
-        ></a>
+        >
+          Einstellungen
+        </a>
       </DBControlPanelNavigationItem>
       <DBControlPanelNavigationItem className="d-none" id="admin" active={aktiverTab === 'Admin'} icon="shield_check">
         <a
@@ -168,19 +180,24 @@ export default function AppHeader() {
           aria-controls="Admin"
           aria-selected={aktiverTab === 'Admin'}
           tabIndex={aktiverTab === 'Admin' ? 0 : -1}
-        ></a>
+        >
+          Admin
+        </a>
       </DBControlPanelNavigationItem>
-      <ThemeSwitcher />
+      <>
+        <ThemeSwitcher />
+      </>
     </DBControlPanelNavigation>
   );
 
   return (
     <Fragment>
-      <DBControlPanelDesktop id="appHeaderDesktop" brand={brand} actions1={actions1}>
+      <DBControlPanelDesktop id="appHeaderDesktop" orientation="horizontal" brand={brand} actions1={actions1}>
         {navigation}
       </DBControlPanelDesktop>
       <DBControlPanelMobile
         id="appHeaderMobile"
+        position="top"
         burgerMenuLabel="Menü"
         drawerHeaderText="Nebengeld"
         brand={brand}

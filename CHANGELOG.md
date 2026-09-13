@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (132)
+
+### feat (Monatswechsel-Select: kurze Monatsnamen unter 1024px)
+
+- `AppHeader.tsx`s Monat-`DBSelect` (in `actions1`) zeigt unter 1024px Breite abgekuerzte
+  Monatsnamen (Jan/Feb/Mär/...), darueber die vollen Namen -- User-Fund: die volle Namensliste
+  war auf schmalen Viewports zu breit (`actions1` teilt sich den Platz mit Anmelden-Knopf).
+- Neuer Hook `useMediaQuery.ts` (`infrastructure/ui/`): reaktiver `window.matchMedia`-Wert,
+  reagiert auf `change`-Events. Erwogen und verworfen: Wechsel auf `DBCustomSelect` fuer
+  unterschiedlichen Text in Liste vs. geschlossenem Zustand -- User-Entscheidung, bei der
+  einfacheren, bereits funktionierenden Breakpoint-Loesung zu bleiben (kein natives `<select>`
+  mehr, deutlich schwerere Komponente fuer einen rein kosmetischen Unterschied).
+- `DBSelect`s `options`-Prop-Feld heisst `label`, nicht `text` (anders als das projekteigene
+  `MySelect`) -- erst mit `text` versucht, zeigte nur die numerischen Werte an.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Select zeigt
+  "Jan".."Dez" bei 900px, "Januar".."Dezember" bei 1200px.
+
 ## 2026-09-13 (131)
 
 ### fix (Shell-Umbau: doppelte #btnLogin/#Monat/#MonatFeld nach Login nicht synchron)
