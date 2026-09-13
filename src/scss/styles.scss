@@ -935,6 +935,18 @@ td > .db-switch {
   justify-items: start;
 }
 
+// `DBControlPanelNavigationItem` leitet OHNE `tooltip`/`text`-Prop automatisch einen Tooltip vom
+// sichtbaren Link-Text ab (`control-panel-navigation-item.js`: faellt mangels beider Props auf
+// `anchor.textContent` zurueck) -- laut eigener Prop-Doku fuer eingeklappte Sidebar-Navigation
+// (`DBShell` mit `controlPanelDesktopPosition="left"`) gedacht, wo nur das Icon sichtbar ist. In
+// unserem horizontalen `position="top"`-Modus ist das Label ohnehin immer sichtbar -- der
+// Tooltip verdoppelt es nur (User-Fund: Klick/Fokus auf einen Nav-Eintrag zeigt ein Popup mit
+// exakt demselben Text wie der Link selbst). Kein Prop zum Abschalten (Quelle geprueft), deshalb
+// per CSS unterdrueckt statt eines leeren `tooltip=""`, das denselben Fallback trotzdem ausloest.
+.db-control-panel-navigation-item .db-tooltip {
+  display: none;
+}
+
 // `DBControlPanelBrand` zeigt sein Logo per `::before`/`background-image: var(--db-logo-url)`
 // (siehe `control-panel-brand.css`) -- Standardwert ist DB-UX' eigenes `logo.svg`. Eigenes
 // App-Icon per Override statt Kind-`<img>` (letzteres erzeugte ein zusaetzliches, zweites Icon
