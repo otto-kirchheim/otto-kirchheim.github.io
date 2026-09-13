@@ -33,7 +33,7 @@ const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs,
     huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
     min={min.format('YYYY-MM-DD')}
     max={max.format('YYYY-MM-DD')}
-    value={date.format('YYYY-MM-DD')}
+    defaultValue={date.format('YYYY-MM-DD')}
   />
 );
 
@@ -63,7 +63,7 @@ const createSonderDateInputElement = (id: string, value: string) => (
     dicht
     className="flex-grow-1"
     huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
-    value={value}
+    defaultValue={value}
   />
 );
 
@@ -186,7 +186,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
         min={datum.startOf('M').format('YYYY-MM-DD')}
         max={datum.endOf('M').format('YYYY-MM-DD')}
-        value={datum.format('YYYY-MM-DD')}
+        defaultValue={datum.format('YYYY-MM-DD')}
         onChange={changeHandler}
       />
     );

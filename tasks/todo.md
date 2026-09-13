@@ -2906,3 +2906,29 @@ Mount-Stellen im Code (`flushSync`, arbeitet Effekte synchron mit ab) statt `cre
 -- Lehre in `tasks/lessons.md` festgehalten. Damit bestaetigt: das Vorab-Verifizieren im echten
 Browser (statt nur `tsc`/`lint`/Tests zu vertrauen) hat hier einen Boot-Blocker gefunden, der sonst
 erst beim naechsten manuellen Test im Browser aufgefallen waere.
+
+## Fix: Datumsfeld "Anfang" in "Neue Bereitschaft eingeben" nicht aenderbar (2026-09-13)
+
+User-Meldung waehrend der Verifikation von Phase N: im Add-Modal (`createAddModalBereitschaftsZeit.tsx`)
+liess sich das Anfangs-Datum nicht mehr aendern, auffaellig aber: die abgeleitete Zeit aktualisierte
+sich trotzdem korrekt. Alt-Bug, unabhaengig von der heutigen Phase-N-/Konsolen-Fehler-Arbeit (Datei
+zuletzt in Phase J5/J8 geaendert) -- User bat um sofortigen Fix trotz fehlendem Bezug zum Tagesthema.
+
+- [x] Root-Cause: `datumInput()`, `createDateInputElement`, `createSonderDateInputElement`
+      setzten `value={...}` (React "controlled") auf Feldern, deren Folgewert tatsaechlich per
+      `applyBereitschaftsVorgabe`/`updateBereitschaftsDatum` imperativ per `input.value = ...`
+      von aussen gesetzt wird -- ohne begleitenden State-Re-Render sprang React den Wert beim
+      naechsten Tick auf den zuletzt gerenderten `value` zurueck.
+- [x] Fix: alle drei Stellen in `createAddModalBereitschaftsZeit.tsx` auf `defaultValue`
+      umgestellt (chirurgisch, nur diese Datei -- `DbFeld.tsx` selbst NICHT angefasst, da dort
+      ~60 andere Aufrufstellen haengen und `MyInput.tsx`s bereits vorhandene, aehnliche Loesung
+      fuer Faelle MIT `onChange` ohnehin nicht ausreicht, siehe `tasks/lessons.md`).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119 unveraendert, `bun run build` gruen.
+- Puppeteer: Modal ueber `btnESZ` geoeffnet, `#bA` per echtem `input`/`change`-Event auf einen vom
+  berechneten Default ABWEICHENDEN Wert gesetzt (sonst waere der Test aussagelos, siehe Lehre) --
+  Wert bleibt nach dem Event UND nach zusaetzlicher Wartezeit erhalten (kein Snapback mehr),
+  `#bE` korrekt auf den neuen Wochenzyklus nachgezogen, keine Konsolenfehler.

@@ -2,6 +2,23 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (120)
+
+### fix (Datumsfeld "Anfang" in "Neue Bereitschaft eingeben" nicht aenderbar)
+
+- `createAddModalBereitschaftsZeit.tsx`: `datumInput()`/`createDateInputElement()`/
+  `createSonderDateInputElement()` setzten `value={...}` (React "controlled") auf Feldern
+  (`bA`, `bE`, `nA`, `nE`, `sonderVon`, `sonderBis`), deren Folgewert tatsaechlich imperativ per
+  `input.value = ...` (`applyBereitschaftsVorgabe`/`updateBereitschaftsDatum`) gesetzt wird --
+  ohne begleitenden Re-Render sprang der Wert nach jeder Nutzer-Aenderung zurueck (die
+  abgeleitete Zeit aktualisierte sich trotzdem, da rein imperativ). Fix: alle drei Stellen auf
+  `defaultValue` umgestellt.
+- Alt-Bug (Phase J5/J8), unabhaengig vom Phase-N-Umbau; beim Verifizieren der Shell-Konsolidierung
+  aufgefallen.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2119 pass),
+  `bun run build`. Puppeteer: Datum auf einen vom Default abweichenden Wert geaendert, bleibt
+  nach dem Event und nach Wartezeit erhalten, Ende-Datum korrekt nachgezogen.
+
 ## 2026-09-13 (119)
 
 ### refactor (Phase N, Slice 1: App-Shell-Konsolidierung)
