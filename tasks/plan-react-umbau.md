@@ -447,15 +447,39 @@ direkt -- ein einziger `flushSync`-Aufruf statt vormals fuenf, Ordering-Garantie
 Selektor weiterhin erfuellt, verschachtelte `mount()`-Aufrufe (Feature-Tab-Mount +
 Tabellen-Modal, siehe Konsolen-Fehler-Fix vom selben Tag) unveraendert warnungsfrei.
 
-### Slice 2 — offen, eigene Session
+### Slice 2 — `tabController`-Pane-Toggle (abgeschlossen 2026-09-13)
 
-- `tabController`s Haupt-Tab-Gruppen-Logik (`.tab-pane`-Klassen-Toggle, Hash-Schreiben) in
-  Store/Hook verlagern -- Admin-Subnav-Teil bliebe ohnehin bestehen. Risiko: `tab:shown`-
-  Event-Vertrag (`berechnungMonatsFenster.ts` hoert darauf).
+- [x] `tabController.ts`s `zeigeTab()`: das `.tab-pane`-Klassen-Toggle (`active`/`show`) der
+      Hauptgruppe (`#tabContent`) entfaellt -- `App.tsx`s Panes berechnen ihre Klassen jetzt
+      selbst aus `activeTabStore` (`useActiveTab()`, analog `AppHeader.tsx` seit K6). Admins
+      Unternavigation bleibt unveraendert am alten, DOM-schreibenden Mechanismus (eigene
+      Tab-Gruppe, `istHauptgruppe()` greift dort nicht).
+- [x] **Risiko geloest:** `berechnungMonatsFenster.ts`s `tab:shown`-Handler misst `#Berechnung`s
+      `clientWidth` und braucht das Pane synchron sichtbar VOR dem Event-Dispatch. Fix:
+      `reactRoot.ts` bekommt `flushExtern()` (generalisiert aus `mount()`s bestehendem
+      `flushSync`+Re-Entranz-Guard) -- `setAktivenTab()` laeuft in `zeigeTab()` jetzt dadurch,
+      React committet die Pane-Sichtbarkeit synchron, bevor `tab:shown` gefeuert wird. Per
+      Puppeteer verifiziert: Pane hat `display:block`/`active`/`show` direkt nach `.click()`,
+      noch OHNE await/Tick.
+- [x] `aktiverTab()` (exportierter Helfer) liest seither `activeTabStore` statt DOM
+      (`#tabContent > .tab-pane.active` existiert als geschriebene Klasse dort nicht mehr).
+- [x] `test/ui.tabController.test.ts` angepasst: die zwei DOM-Klassen-Assertions fuer
+      Hauptgruppen-Panes entfernt (kein React-Baum in diesem Unit-Test, das ist jetzt
+      `App.tsx`s Verantwortung) -- Hash-/Store-Assertions unveraendert gruen.
+
+**Nicht angefasst (weiterhin bewusst ausserhalb der Shell):**
+
 - `dbDialog.ts` -- aktiv genutztes, eigenstaendiges System, kein Bezug zur Shell.
 - `featureLifecycleRegistry`/`syncFeatureTabs` -- Ressourcen-Aktivierungs-Mounting, unangetastet.
 - PWA/Versions-Check/Offline-Banner aus `main.tsx` in einen `useAppBootstrap()`-Hook extrahieren
-  (rein kosmetisch, kein funktionaler Gewinn fuer "index.html minimal").
+  (rein kosmetisch, kein funktionaler Gewinn fuer "index.html minimal" -- bewusst nicht gemacht).
+
+**Bei der Verifikation gefundene, nicht Slice-2-bedingte Beobachtung:** in einer
+Backend-losen Puppeteer-Session (kein echter Login) bleibt `#berechnung-tab` unsichtbar
+(`navigationVisibleStore` vor Login false) und `berechnungMonatsFenster.ts`s Label/Spaltenzahl
+populieren sich in diesem Testaufbau nicht. Per `git stash`-A/B-Vergleich gegen den Vor-Slice-2-
+Stand bestaetigt: identisches Verhalten, keine Regression -- ausserhalb des Slice-2-Scopes, nicht
+behoben.
 
 ---
 

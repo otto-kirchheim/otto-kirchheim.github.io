@@ -101,7 +101,13 @@ Die Navigation erfolgt über `AppHeader.tsx` (React, `DBHeader`/`DBNavigation`) 
 `infrastructure/ui/tabController.ts` (`data-tab-target="<Panel-Id>"`, `tab:shown`-CustomEvent,
 Hash-Sync), nicht über einen Client-Side-Router. Aktiver Tab der Hauptnavigation ist ein
 `useSyncExternalStore`-Modul-Store (`activeTabStore.ts`/`useActiveTab.ts`), von `AppHeader`
-reaktiv gelesen. Seit Phase N (Slice 1, abgeschlossen 2026-09-13) ist die gesamte Shell
+reaktiv gelesen. Seit Phase N Slice 2 (abgeschlossen 2026-09-13) gilt das auch für die
+`#tabContent`-Panes selbst: `zeigeTab()` schreibt für die Hauptgruppe keine `active`/`show`-DOM-
+Klassen mehr, `App.tsx`s Panes berechnen sie React-eigen aus demselben Store. `setAktivenTab()`
+läuft dafür durch `flushExtern()` (`reactRoot.ts`) – `berechnungMonatsFenster.ts`s
+`tab:shown`-Handler misst synchron `clientWidth` und braucht das Pane davor sichtbar. Admins
+Unternavigation (eigene Tab-Gruppe) bleibt am alten, DOM-schreibenden Mechanismus. Seit Phase N
+(Slice 1, abgeschlossen 2026-09-13) ist die gesamte Shell
 (`App.tsx`) ein einziger React-Baum, der ueber `main.tsx` per `mount()`
 (`infrastructure/ui/reactRoot.ts`, NICHT direkt `createRoot().render()` -- siehe unten) in
 `<div id="app">` gemountet wird; `index.html` enthaelt nur noch `<noscript>` + diesen einen Div.

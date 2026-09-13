@@ -2932,3 +2932,55 @@ zuletzt in Phase J5/J8 geaendert) -- User bat um sofortigen Fix trotz fehlendem 
   berechneten Default ABWEICHENDEN Wert gesetzt (sonst waere der Test aussagelos, siehe Lehre) --
   Wert bleibt nach dem Event UND nach zusaetzlicher Wartezeit erhalten (kein Snapback mehr),
   `#bE` korrekt auf den neuen Wochenzyklus nachgezogen, keine Konsolenfehler.
+
+## Phase N Slice 2 — `tabController`-Pane-Toggle in Store/Hook verlagert (2026-09-13)
+
+Laut Plandoku bewusst riskant und fuer eine eigene Session zurueckgestellt (Slice 1 lief bereits
+gebuendelt in den Root-Gitlink). User-Entscheidung nach Rueckfrage: jetzt umsetzen.
+
+- [x] `tabController.ts`s `zeigeTab()`: `.tab-pane`-Klassen-Toggle (`active`/`show`) der
+      Hauptgruppe (`#tabContent`) entfernt -- `App.tsx`s Panes lesen `activeTabStore` per
+      `useActiveTab()` und berechnen ihre Klasse selbst. "Schon aktiv"-Kurzschluss nutzt dafuer
+      `getAktivenTab()` statt `classList.contains('active')`. Admin-Subnav (eigene, nicht-
+      Hauptgruppe) unveraendert am alten DOM-Mechanismus.
+- [x] `reactRoot.ts`: `flushExtern()` aus `mount()`s bestehendem `flushSync`+Re-Entranz-Guard
+      extrahiert (generischer nutzbar als nur fuer Root-Renders). `zeigeTab()` ruft
+      `flushExtern(() => setAktivenTab(id))` fuer die Hauptgruppe.
+- [x] `aktiverTab()` (exportierter Helfer in `tabController.ts`) liest jetzt `activeTabStore`
+      statt DOM.
+- [x] `test/ui.tabController.test.ts`: zwei DOM-Klassen-Assertions fuer Hauptgruppen-Panes
+      entfernt (kein React-Baum in diesem Unit-Test -- das ist jetzt `App.tsx`s Job).
+- [x] `tasks/plan-react-umbau.md` Slice-2-Abschnitt abgehakt/dokumentiert.
+
+### Warum ueberhaupt riskant (und wie geloest)
+
+`berechnungMonatsFenster.ts` hoert auf `tab:shown` und misst darin synchron `#Berechnung`s
+`clientWidth` (`ermittleFensterGroesse()`) -- ein Pane, das erst asynchron sichtbar wird
+(React-Default ohne `flushSync`), liefert dort `clientWidth: 0` und eine falsche Spaltenzahl.
+Vorher war das kein Problem, weil `zeigeTab()` die Pane-Klassen synchron per DOM-Handschrieb
+gesetzt hat, VOR dem Event-Dispatch. Fix: derselbe `flushSync`-Trick wie bei `mount()` (Slice 1,
+Konsolen-Fehler-Fix) -- `flushExtern()` zwingt Reacts Reaktion auf die Store-Aenderung synchron
+vor die Fortsetzung von `zeigeTab()`.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen unveraendert),
+  `bun run test --isolate` 2119/2119, `bun run build` gruen.
+- Puppeteer (`bun run dev:local`, eigener Port, NICHT den laufenden User-Dev-Server anfassen):
+  Klick auf Hauptnav-Switcher -> Pane hat `display:block`/`active`/`show` DIREKT nach `.click()`,
+  noch OHNE `await`/Tick (Beweis fuer die synchrone Flush-Garantie) -- keine `flushSync`-Konsolen-
+  Warnung. Hash-Sync, Tastatur-Navigation (`ArrowRight`), Deep-Link-Reload (`#Einstellungen`) und
+  `#start.active > .schwelle`-Selektor unveraendert funktionsfaehig.
+- A/B per `git stash`: dieselbe Puppeteer-Pruefung gegen den unveraenderten Vor-Slice-2-Stand
+  laufen lassen, wenn ein Symptom unklar bleibt, ob es eine Regression ist -- so gefunden, dass
+  `berechnungMonatsFenster.ts`s Label/Spaltenzahl in einer Backend-losen Testsession (kein echter
+  Login, `#berechnung-tab` bleibt via `navigationVisibleStore` unsichtbar) auf BEIDEN Staenden
+  identisch leer bleiben -- keine Slice-2-Regression, ausserhalb des Scopes.
+
+### Review
+
+Kein neuer Testfall fuer `App.tsx`s Pane-Klassenberechnung selbst angelegt (kein bestehendes
+Render-Test-Setup fuer die volle App-Shell, waere ein groesserer separater Aufwand mit vielen
+Mocks) -- stattdessen ausschliesslich per Puppeteer im echten Browser verifiziert. Bei kuenftigen
+Aenderungen an `App.tsx`s Pane-Struktur oder `activeTabStore` erneut per Puppeteer gegenpruefen,
+nicht nur auf `tsc`/`bun test` verlassen.

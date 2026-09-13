@@ -3,6 +3,7 @@ import AppFooter from '@/infrastructure/ui/AppFooter';
 import StartTab from '@/infrastructure/ui/StartTab';
 import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
 import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
+import useActiveTab from '@/infrastructure/ui/useActiveTab';
 
 /**
  * App-Shell, ein einziger React-Baum (Phase N, Slice 1). Bildet die vormalige
@@ -12,8 +13,16 @@ import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
  * Phase-L-Muster fuer `#start`/`#Berechnung`/`#Einstellungen`, jetzt auf die ganze Shell
  * ausgeweitet). `#modal` und die leeren Feature-Root-Divs (`bereitschaft-root` etc.) bleiben
  * leer -- `showModal`/`featureLifecycleRegistry` mounten dort weiterhin selbst per `mount()`.
+ *
+ * Seit Phase N Slice 2 berechnen die `#tabContent`-Panes ihre `active`/`show`-Klassen selbst aus
+ * `activeTabStore` (`useActiveTab()`) -- `tabController.ts`s `zeigeTab()` schreibt fuer diese
+ * Hauptgruppe keine DOM-Klassen mehr, siehe dortiger Kommentar. `null` (Store-Anfangswert) heisst
+ * "start" ist aktiv, identisch zum vormals hartkodierten `fade show active` auf `#start`.
  */
 export default function App() {
+  const aktiverTab = useActiveTab() ?? 'start';
+  const paneKlasse = (id: string): string => `tab-pane fade${aktiverTab === id ? ' show active' : ''}`;
+
   return (
     <>
       <AppHeader />
@@ -58,37 +67,37 @@ export default function App() {
       <div className="tab-content mt-1" id="tabContent">
         {/* Tab Start -- kein Wrapper-Div: `styles.scss` verankert `.schwelle` per
             `#start.active > .schwelle`-Kindselektor. */}
-        <div className="tab-pane fade show active" id="start" role="tabpanel">
+        <div className={paneKlasse('start')} id="start" role="tabpanel">
           <StartTab />
         </div>
 
-        <div className="tab-pane fade" id="Bereitschaft" role="tabpanel">
+        <div className={paneKlasse('Bereitschaft')} id="Bereitschaft" role="tabpanel">
           <div id="bereitschaft-root"></div>
         </div>
 
-        <div className="tab-pane fade" id="EWT" role="tabpanel">
+        <div className={paneKlasse('EWT')} id="EWT" role="tabpanel">
           <div id="ewt-root"></div>
         </div>
 
-        <div className="tab-pane fade" id="Neben" role="tabpanel">
+        <div className={paneKlasse('Neben')} id="Neben" role="tabpanel">
           <div id="neben-root"></div>
         </div>
 
-        <div className="tab-pane fade" id="EA" role="tabpanel">
+        <div className={paneKlasse('EA')} id="EA" role="tabpanel">
           <div id="ea-root"></div>
         </div>
 
-        <div className="tab-pane fade" id="Berechnung" role="tabpanel">
+        <div className={paneKlasse('Berechnung')} id="Berechnung" role="tabpanel">
           <BerechnungTab />
         </div>
 
-        <div className="tab-pane fade" id="Admin" role="tabpanel">
+        <div className={paneKlasse('Admin')} id="Admin" role="tabpanel">
           <div className="breit px-3 px-md-4 mb-3">
             <div id="admin-root"></div>
           </div>
         </div>
 
-        <div className="tab-pane fade" id="Einstellungen" role="tabpanel">
+        <div className={paneKlasse('Einstellungen')} id="Einstellungen" role="tabpanel">
           <EinstellungenTab />
         </div>
       </div>

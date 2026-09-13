@@ -15,9 +15,17 @@
  * und berechnet `aria-selected`/`tabindex`/`data-active` selbst, der DOM-Handschrieb auf die
  * Hauptnav-Schalter entfaellt deshalb unten. Admins Unternavigation (`admin-pane-*`, eigene
  * Tab-Gruppe) ist NICHT die Hauptgruppe und bleibt am alten, DOM-schreibenden Mechanismus.
+ *
+ * Phase N Slice 2: auch das Pane-Klassen-Toggle (`active`/`show`) der Hauptgruppe entfaellt hier
+ * -- `App.tsx`s Panes lesen `activeTabStore` per `useActiveTab()` und berechnen ihre Klassen
+ * selbst (React-eigen statt DOM-Handschrieb). `setAktivenTab()` laeuft dafuer durch
+ * `flushExtern()` (`reactRoot.ts`): `berechnungMonatsFenster.ts`s `tab:shown`-Handler misst
+ * `#Berechnung`s `clientWidth` und braucht das sichtbare Pane VOR dem Event -- ohne den
+ * synchronen Flush waere die React-Reaktion auf die Store-Aenderung erst nach dem Event fertig.
  */
 
-import { setAktivenTab } from './activeTabStore';
+import { flushExtern } from './reactRoot';
+import { getAktivenTab, setAktivenTab } from './activeTabStore';
 
 export type TabWechsel = { id: string; schalter: HTMLElement | null };
 
@@ -58,9 +66,13 @@ function istHauptgruppe(ziel: HTMLElement): boolean {
   return ziel.parentElement?.id === 'tabContent';
 }
 
-/** Id des aktuell sichtbaren Panels. */
+/**
+ * Id des aktuell aktiven Hauptgruppen-Panels. Liest seit Slice 2 `activeTabStore` statt des DOM
+ * (`App.tsx` schreibt die `active`/`show`-Klassen React-eigen, nicht mehr `zeigeTab()`) --
+ * `null` (Store-Anfangswert vor jedem Wechsel) bedeutet "start", die Default-Pane.
+ */
 export function aktiverTab(): string | null {
-  return document.querySelector<HTMLElement>('#tabContent > .tab-pane.active')?.id ?? null;
+  return getAktivenTab() ?? 'start';
 }
 
 /**
@@ -75,21 +87,26 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 
   const hauptgruppe = istHauptgruppe(ziel);
   const imHash = hashSchreiben && hauptgruppe;
-  if (ziel.classList.contains('active')) {
+  // Hauptgruppe: "schon aktiv" kommt aus dem Store (die DOM-Klasse wird hier nicht mehr
+  // geschrieben). Admin-Subnav: weiterhin aus dem DOM, dort unveraendert.
+  const bereitsAktiv = hauptgruppe ? getAktivenTab() === id : ziel.classList.contains('active');
+  if (bereitsAktiv) {
     if (imHash && document.location.hash.slice(1) !== id) document.location.hash = `#${id}`;
     if (hauptgruppe) setAktivenTab(id);
     return true;
   }
 
-  for (const pane of gruppe(ziel)) {
-    const aktiv = pane === ziel;
-    pane.classList.toggle('active', aktiv);
-    pane.classList.toggle('show', aktiv);
-  }
-
   if (hauptgruppe) {
-    setAktivenTab(id);
+    // `flushExtern`: `App.tsx`s Panes muessen VOR dem `tab:shown`-Dispatch unten sichtbar sein
+    // (siehe Kommentar am Dateikopf) -- `berechnungMonatsFenster.ts` misst sonst `clientWidth`
+    // eines noch unsichtbaren Containers.
+    flushExtern(() => setAktivenTab(id));
   } else {
+    for (const pane of gruppe(ziel)) {
+      const aktiv = pane === ziel;
+      pane.classList.toggle('active', aktiv);
+      pane.classList.toggle('show', aktiv);
+    }
     const gruppenIds = new Set(gruppe(ziel).map(pane => pane.id));
     for (const el of schalter()) {
       const elZiel = el.getAttribute(ZIEL_ATTRIBUT);

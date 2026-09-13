@@ -17,6 +17,31 @@ const roots = new WeakMap<Element | DocumentFragment, Root>();
 let imFlush = false;
 
 /**
+ * Fuehrt `fn` synchron aus und flusht dabei ausgeloeste React-Updates (Renders wie
+ * `mount()`, aber auch reine Store-Mutationen, die `useSyncExternalStore`-Abonnenten
+ * benachrichtigen -- z. B. `tabController.ts`s `setAktivenTab()`). Aufrufer, die direkt
+ * danach aus dem DOM lesen (Sichtbarkeit, `clientWidth` etc.), brauchen diese Garantie.
+ *
+ * Nutzt denselben Re-Entranz-Schutz wie `mount()`: verschachtelte Aufrufe (z. B. ein
+ * Tab-Wechsel, der aus einem gerade per `flushSync` gemounteten Baum heraus ausgeloest
+ * wird) lassen das innere `flushSync` weg, statt zu warnen -- die aeussere Flush-Phase
+ * arbeitet die Sync-Lane ohnehin mit ab.
+ */
+export function flushExtern(fn: () => void): void {
+  if (imFlush) {
+    fn();
+    return;
+  }
+
+  imFlush = true;
+  try {
+    flushSync(fn);
+  } finally {
+    imFlush = false;
+  }
+}
+
+/**
  * Rendert `node` in `container`.
  *
  * Der Aufruf ist per `flushSync` bewusst synchron: der bestehende Code (Bootstrap-Modals,
@@ -35,20 +60,7 @@ export function mount(container: Element | DocumentFragment, node: ReactNode): v
     roots.set(container, root);
   }
   const zuRendern = root;
-
-  if (imFlush) {
-    zuRendern.render(node);
-    return;
-  }
-
-  imFlush = true;
-  try {
-    flushSync(() => {
-      zuRendern.render(node);
-    });
-  } finally {
-    imFlush = false;
-  }
+  flushExtern(() => zuRendern.render(node));
 }
 
 /**

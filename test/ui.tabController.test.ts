@@ -51,15 +51,16 @@ afterEach(() => {
 });
 
 describe('tabController', () => {
-  it('schaltet Panel, Hash und activeTabStore gemeinsam um', () => {
+  it('schaltet Hash und activeTabStore gemeinsam um', () => {
     expect(zeigeTab('EWT')).toBe(true);
 
     expect(aktiverTab()).toBe('EWT');
-    expect(document.querySelector('#start')?.classList.contains('active')).toBe(false);
-    expect(document.querySelector('#EWT')?.classList.contains('show')).toBe(true);
     expect(document.location.hash).toBe('#EWT');
     // Seit K6 schreibt `zeigeTab` fuer die Hauptgruppe nicht mehr direkt `aria-selected`/
     // `data-active` auf den Schalter -- das uebernimmt `AppHeader.tsx` reaktiv via `useActiveTab()`.
+    // Seit Slice 2 gilt dasselbe fuer die Pane-Klassen (`active`/`show`) -- die schreibt `App.tsx`
+    // reaktiv aus demselben Store, hier ohne gemounteten React-Baum also nicht pruefbar (siehe
+    // Puppeteer-Verifikation).
     expect(getAktivenTab()).toBe('EWT');
   });
 

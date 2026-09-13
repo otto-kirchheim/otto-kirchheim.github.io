@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (127)
+
+### refactor (Phase N Slice 2 -- tabController-Pane-Toggle nach React)
+
+- `tabController.ts`s `zeigeTab()` schreibt fuer die Hauptgruppe (`#tabContent`) keine
+  `active`/`show`-DOM-Klassen mehr -- `App.tsx`s Panes berechnen sie selbst aus `activeTabStore`
+  (`useActiveTab()`, analog `AppHeader.tsx` seit Phase K6). Admin-Subnav (eigene Tab-Gruppe)
+  bleibt unveraendert am alten, DOM-schreibenden Mechanismus.
+- Risiko (laut Plan bewusst zurueckgestellt): `berechnungMonatsFenster.ts`s `tab:shown`-Handler
+  misst synchron `#Berechnung`s `clientWidth` -- ohne synchronen Flush waere das Pane beim
+  Event-Dispatch noch unsichtbar. Fix: `reactRoot.ts` bekommt `flushExtern()` (aus `mount()`s
+  bestehendem `flushSync`+Re-Entranz-Guard generalisiert), `zeigeTab()` nutzt es fuer
+  `setAktivenTab()`.
+- `aktiverTab()` (exportierter Helfer) liest seither `activeTabStore` statt DOM.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Pane hat
+  `display:block`/`active`/`show` synchron direkt nach `.click()` (ohne await), keine
+  `flushSync`-Konsolen-Warnung, Hash-Sync/Tastatur-Navigation/Deep-Link/`.schwelle`-Selektor
+  unveraendert funktionsfaehig. A/B per `git stash` gegen den Vor-Aenderungs-Stand: ein
+  unabhaengiges Symptom (`berechnungMonatsFenster`-Label bleibt in Backend-loser Testsession
+  leer) bestand identisch vorher -- keine Regression.
+
 ## 2026-09-13 (126)
 
 ### fix (Unterschrift-Canvas im Dark Mode kaum sichtbar)
