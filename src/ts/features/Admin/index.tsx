@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 import { mount, unmount } from '@/infrastructure/ui';
 
 import { AdminUserList } from './components/AdminUserList';
@@ -13,7 +14,7 @@ import { ACT_AS_STATUS_EVENT, getActAsState } from '@/infrastructure/ui/actAsSta
 import { fetchCurrentAdminCapabilities } from './utils/api';
 
 type AdminCapabilities = {
-  role: 'member' | 'team-admin' | 'org-admin' | 'super-admin';
+  role: Role;
   canEditVorgabenGeld: boolean;
   canEditProfileTemplates: boolean;
   canEditOwnTeamTemplatesOnly: boolean;
@@ -59,12 +60,13 @@ export default function AdminTab() {
   const [profileSearch, setProfileSearch] = useState('');
   const [profileSearchKey, setProfileSearchKey] = useState(0);
 
-  const isTeamAdminOrHigher =
-    capabilities?.role === 'team-admin' || capabilities?.role === 'org-admin' || capabilities?.role === 'super-admin';
+  const isTeamAdminOrHigher = capabilities
+    ? ROLE_HIERARCHY[capabilities.role] >= ROLE_HIERARCHY[Role.TEAM_ADMIN]
+    : false;
   const canSeeVorgabenTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditVorgabenGeld);
   const canSeeTemplatesTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditProfileTemplates);
   const canSeeFormulareTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditFormularVorlagen);
-  const isSuperAdmin = capabilities?.role === 'super-admin';
+  const isSuperAdmin = capabilities?.role === Role.SUPER_ADMIN;
 
   /**
    * Die Unternavigation des Admin-Panels. Sichtbarkeit haengt an den Berechtigungen; die

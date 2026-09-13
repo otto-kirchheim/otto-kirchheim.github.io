@@ -1,6 +1,7 @@
 import { DBButton, DBCheckbox, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useMemo, useState } from 'react';
 
+import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import {
   fetchAdminUsers,
@@ -78,17 +79,17 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
   function canEdit() {
     if (!user) return false;
-    return user.role === 'team-admin' || user.role === 'org-admin' || user.role === 'super-admin';
+    return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.TEAM_ADMIN];
   }
 
   function canEditRole() {
     if (!user) return false;
-    return user.role === 'org-admin' || user.role === 'super-admin';
+    return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.ORG_ADMIN];
   }
 
   function canEditPermissions() {
     if (!user) return false;
-    return user.role === 'super-admin';
+    return user.role === Role.SUPER_ADMIN;
   }
 
   function updateEdit(userId: string, patch: Partial<UserEditState>) {
@@ -308,10 +309,10 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
               onChange={e => setFilter(f => ({ ...f, role: e.target.value }))}
             >
               <option value="">Alle</option>
-              <option value="member">Mitglied</option>
-              <option value="team-admin">Team-Admin</option>
-              <option value="org-admin">Org-Admin</option>
-              <option value="super-admin">Super-Admin</option>
+              <option value={Role.MEMBER}>Mitglied</option>
+              <option value={Role.TEAM_ADMIN}>Team-Admin</option>
+              <option value={Role.ORG_ADMIN}>Org-Admin</option>
+              <option value={Role.SUPER_ADMIN}>Super-Admin</option>
             </DbAuswahl>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { selectYear } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import Storage from '@/infrastructure/storage/Storage';
@@ -59,7 +60,7 @@ export default async function userLoginSuccess({
   document.querySelectorAll<HTMLInputElement>('#Monat').forEach(element => (element.value = monat.toString()));
   markStep('login', 'ui:year-month');
 
-  const userIsAdmin = role ? role !== 'member' : isAdmin();
+  const userIsAdmin = role ? role !== Role.MEMBER : isAdmin();
   if (!userIsAdmin) {
     Storage.remove('actAsUserId');
     Storage.remove('actAsUserName');

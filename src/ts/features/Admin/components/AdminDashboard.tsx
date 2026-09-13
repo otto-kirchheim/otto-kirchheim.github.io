@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard, formatUptime } from './adminDashboardCharts';
 import { DBButton, DBTag } from '@db-ux/react-core-components';
 
-const ROLE_LABELS: Record<string, string> = {
-  member: 'Mitglied',
-  'team-admin': 'Team-Admin',
-  'org-admin': 'Org-Admin',
-  'super-admin': 'Super-Admin',
+const ROLE_LABELS: Record<Role, string> = {
+  [Role.MEMBER]: 'Mitglied',
+  [Role.TEAM_ADMIN]: 'Team-Admin',
+  [Role.ORG_ADMIN]: 'Org-Admin',
+  [Role.SUPER_ADMIN]: 'Super-Admin',
 };
 
 function StatCard({
@@ -174,7 +175,7 @@ export function AdminDashboard() {
             <h6 className="fw-semibold mb-3">Rollenverteilung</h6>
             {Object.entries(stats.users.byRole).map(([role, count]) => (
               <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
-                <span className="small">{ROLE_LABELS[role] ?? role}</span>
+                <span className="small">{ROLE_LABELS[role as Role] ?? role}</span>
                 <DBTag semantic="neutral" emphasis="strong">
                   {count}
                 </DBTag>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
@@ -32,7 +33,7 @@ export function AdminProfileTemplatesManager() {
   const [savingId, setSavingId] = useState<string | null>(null);
 
   const user = getUserCookie();
-  const canDelete = user?.role === 'super-admin';
+  const canDelete = user?.role === Role.SUPER_ADMIN;
 
   const sortedTemplates = useMemo(
     () => [...templates].sort((a, b) => Number(b.active) - Number(a.active) || a.code.localeCompare(b.code)),

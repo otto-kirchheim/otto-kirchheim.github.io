@@ -3,7 +3,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { TUserRole } from '@/types';
-import type { ApiResponse as SharedApiResponse } from '@otto-kirchheim/nebengeld-shared';
+import { Role, ROLE_HIERARCHY, type ApiResponse as SharedApiResponse } from '@otto-kirchheim/nebengeld-shared';
 
 type ApiResponse<T> = SharedApiResponse<T> & { statusCode?: number };
 
@@ -164,22 +164,22 @@ export async function fetchCurrentAdminCapabilities(): Promise<CurrentUserCapabi
   const response = await FetchRetry<undefined, BackendUser>('auth/me', undefined, 'GET');
   const user = unwrapResponse<BackendUser>(response);
 
-  const isTeamAdminOrHigher = user.role === 'team-admin' || user.role === 'org-admin' || user.role === 'super-admin';
+  const isTeamAdminOrHigher = ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.TEAM_ADMIN];
   const canEditProfileTemplates =
-    user.role === 'super-admin' || (isTeamAdminOrHigher && Boolean(user.canEditProfileTemplates));
+    user.role === Role.SUPER_ADMIN || (isTeamAdminOrHigher && Boolean(user.canEditProfileTemplates));
   const canCreateFormularVorlagen =
-    user.role === 'super-admin' || (isTeamAdminOrHigher && Boolean(user.canCreateFormularVorlagen));
+    user.role === Role.SUPER_ADMIN || (isTeamAdminOrHigher && Boolean(user.canCreateFormularVorlagen));
   // Erstellen impliziert Bearbeiten, nicht umgekehrt.
   const canEditFormularVorlagen =
-    user.role === 'super-admin' ||
+    user.role === Role.SUPER_ADMIN ||
     (isTeamAdminOrHigher && (Boolean(user.canEditFormularVorlagen) || Boolean(user.canCreateFormularVorlagen)));
 
   return {
     role: user.role,
-    canEditVorgabenGeld: user.role === 'super-admin' || (isTeamAdminOrHigher && Boolean(user.canEditVorgabenGeld)),
+    canEditVorgabenGeld: user.role === Role.SUPER_ADMIN || (isTeamAdminOrHigher && Boolean(user.canEditVorgabenGeld)),
     canEditProfileTemplates,
     canEditOwnTeamTemplatesOnly:
-      user.role === 'super-admin' ? false : canEditProfileTemplates && Boolean(user.canEditOwnTeamTemplatesOnly),
+      user.role === Role.SUPER_ADMIN ? false : canEditProfileTemplates && Boolean(user.canEditOwnTeamTemplatesOnly),
     canCreateFormularVorlagen,
     canEditFormularVorlagen,
   };

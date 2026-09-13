@@ -1,3 +1,4 @@
+import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { TUserRole } from '@/types';
 import type { SemanticType } from '@db-ux/react-core-components';
 
@@ -15,8 +16,8 @@ export type UserEditState = {
 };
 
 export const ROLE_LABELS: Record<TUserRole, { label: string; semantic: SemanticType }> = {
-  member: { label: 'Mitglied', semantic: 'neutral' },
-  'team-admin': { label: 'Team-Admin', semantic: 'informational' },
-  'org-admin': { label: 'Org-Admin', semantic: 'warning' },
-  'super-admin': { label: 'Super-Admin', semantic: 'critical' },
+  [Role.MEMBER]: { label: 'Mitglied', semantic: 'neutral' },
+  [Role.TEAM_ADMIN]: { label: 'Team-Admin', semantic: 'informational' },
+  [Role.ORG_ADMIN]: { label: 'Org-Admin', semantic: 'warning' },
+  [Role.SUPER_ADMIN]: { label: 'Super-Admin', semantic: 'critical' },
 };

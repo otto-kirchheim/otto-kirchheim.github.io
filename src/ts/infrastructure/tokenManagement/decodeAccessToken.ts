@@ -1,13 +1,10 @@
 import Storage from '../storage/Storage';
-import type { Role } from '@otto-kirchheim/nebengeld-shared';
+import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 
 export type UserCookieData = {
   userName: string;
   role: Role;
 };
-
-/** Admin-Rollen (alles außer "member") */
-const ADMIN_ROLES = new Set(['team-admin', 'org-admin', 'super-admin']);
 
 function hasStoredSessionToken(): boolean {
   return Storage.check('AccessToken') || Storage.check('RefreshToken');
@@ -34,7 +31,8 @@ export function getUserCookie(): UserCookieData | null {
  * Prüft, ob der aktuelle Benutzer eine Admin-Rolle hat.
  * Liest das `user`-Cookie.
  */
+/** Admin = mindestens Team-Admin-Rang (alles außer "member"). */
 export function isAdmin(): boolean {
   const user = getUserCookie();
-  return user ? ADMIN_ROLES.has(user.role) : false;
+  return user ? ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.TEAM_ADMIN] : false;
 }
