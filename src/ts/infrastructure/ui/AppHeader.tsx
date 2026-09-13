@@ -1,6 +1,8 @@
 import { Fragment } from 'react';
 import {
   DBControlPanelActions1,
+  DBControlPanelActions2,
+  DBControlPanelBrand,
   DBControlPanelDesktop,
   DBControlPanelMobile,
   DBControlPanelNavigation,
@@ -67,9 +69,8 @@ export default function AppHeader() {
   const monatsNamen = schmalerViewport ? MONATE_KURZ : MONATE_LANG;
 
   const brand = (
-    <a className="db-brand" href="#start" id="brand-start-tab" data-tab-target="start" data-icon="none">
-      <img src="icons/192x192-icon.png" alt="" width={30} height={30} />
-      Nebengeld
+    <a href="#start" id="brand-start-tab" data-tab-target="start">
+      <DBControlPanelBrand data-icon-variant="icons/192x192-icon.png">Nebengeld</DBControlPanelBrand>
     </a>
   );
 
@@ -87,6 +88,46 @@ export default function AppHeader() {
         options={monatsNamen.map((name, index) => ({ value: index + 1, label: name }))}
       />
     </DBControlPanelActions1>
+  );
+
+  const actions2 = (
+    <DBControlPanelActions2>
+      <a
+        className="db-button"
+        data-variant="ghost"
+        data-icon="gear_wheel"
+        data-no-text="true"
+        role="tab"
+        id="einstellungen-tab"
+        href="#Einstellungen"
+        data-tab-target="Einstellungen"
+        aria-controls="Einstellungen"
+        aria-selected={aktiverTab === 'Einstellungen'}
+        aria-label="Einstellungen"
+        tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
+      />
+      {/* `#admin` (nicht `#admin-tab`): `auth/index.ts` blendet darueber den KOMPLETTEN Knopf
+          per `d-none` aus, solange der Benutzer kein Admin ist -- separate Id von `#admin-tab`
+          (Klick-Listener/Tab-Attribute), weil beide `querySelectorAll` mit unterschiedlichem
+          Zweck brauchen (siehe dortiger Kommentar). */}
+      <span id="admin" className="d-none">
+        <a
+          className="db-button"
+          data-variant="ghost"
+          data-icon="shield_check"
+          data-no-text="true"
+          role="tab"
+          id="admin-tab"
+          href="#Admin"
+          data-tab-target="Admin"
+          aria-controls="Admin"
+          aria-selected={aktiverTab === 'Admin'}
+          aria-label="Admin"
+          tabIndex={aktiverTab === 'Admin' ? 0 : -1}
+        />
+      </span>
+      <ThemeSwitcher />
+    </DBControlPanelActions2>
   );
 
   const navigation = (
@@ -158,41 +199,18 @@ export default function AppHeader() {
           Berechnung
         </a>
       </DBControlPanelNavigationItem>
-      <DBControlPanelNavigationItem active={aktiverTab === 'Einstellungen'} icon="gear_wheel">
-        <a
-          role="tab"
-          id="einstellungen-tab"
-          href="#Einstellungen"
-          data-tab-target="Einstellungen"
-          aria-controls="Einstellungen"
-          aria-selected={aktiverTab === 'Einstellungen'}
-          tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
-        >
-          Einstellungen
-        </a>
-      </DBControlPanelNavigationItem>
-      <DBControlPanelNavigationItem className="d-none" id="admin" active={aktiverTab === 'Admin'} icon="shield_check">
-        <a
-          role="tab"
-          id="admin-tab"
-          href="#Admin"
-          data-tab-target="Admin"
-          aria-controls="Admin"
-          aria-selected={aktiverTab === 'Admin'}
-          tabIndex={aktiverTab === 'Admin' ? 0 : -1}
-        >
-          Admin
-        </a>
-      </DBControlPanelNavigationItem>
-      <>
-        <ThemeSwitcher />
-      </>
     </DBControlPanelNavigation>
   );
 
   return (
     <Fragment>
-      <DBControlPanelDesktop id="appHeaderDesktop" orientation="horizontal" brand={brand} actions1={actions1}>
+      <DBControlPanelDesktop
+        id="appHeaderDesktop"
+        orientation="horizontal"
+        brand={brand}
+        actions1={actions1}
+        actions2={actions2}
+      >
         {navigation}
       </DBControlPanelDesktop>
       <DBControlPanelMobile
@@ -202,6 +220,7 @@ export default function AppHeader() {
         drawerHeaderText="Nebengeld"
         brand={brand}
         actions1={actions1}
+        actions2={actions2}
       >
         {navigation}
       </DBControlPanelMobile>

@@ -9,6 +9,10 @@ import { useColorMode } from './useColorMode';
  * Store kennt weiterhin `'auto'` (Erststart folgt der OS-Praeferenz, `Storage`-Default) -- der
  * Schalter selbst bietet nur noch die beiden expliziten Zustaende an, ein Klick verlaesst
  * `'auto'` endgueltig zugunsten des jeweils angezeigten Zustands.
+ *
+ * KEIN `<li>`-Wrapper mehr (Nachtrag): sitzt seit dem `actions2`-Umbau nicht mehr in
+ * `DBControlPanelNavigation`s `<menu>`, sondern direkt in `actions2` (Desktop: eigener Slot;
+ * Mobile: `DBDrawerFooter`) -- ein `<li>` ausserhalb jeder Liste waere ungueltiges HTML.
  */
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useColorMode();
@@ -16,17 +20,15 @@ export default function ThemeSwitcher() {
   const istDunkel = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   return (
-    <li className="db-navigation-item" role="presentation">
-      <MyCheckbox
-        id={id}
-        checked={istDunkel}
-        iconLeading="moon"
-        iconTrailing="sun"
-        visualAid
-        changeHandler={event => setTheme(event.target.checked ? 'dark' : 'light')}
-      >
-        <span className="visually-hidden">Dunkles Design</span>
-      </MyCheckbox>
-    </li>
+    <MyCheckbox
+      id={id}
+      checked={istDunkel}
+      iconLeading="moon"
+      iconTrailing="sun"
+      visualAid
+      changeHandler={event => setTheme(event.target.checked ? 'dark' : 'light')}
+    >
+      <span className="visually-hidden">Dunkles Design</span>
+    </MyCheckbox>
   );
 }

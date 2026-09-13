@@ -2,6 +2,35 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (133)
+
+### refactor (Kopfzeile: Einstellungen/Admin/Theme in actions2)
+
+- `AppHeader.tsx`: `actions1` jetzt nur noch Anmelden + Monatsauswahl, `actions2` (neu) buendelt
+  Einstellungen/Admin/Theme-Schalter -- User-Vorgabe. Auf Desktop durch Trennlinie abgesetzt am
+  Ende der Kopfzeile, auf Mobile automatisch im Drawer-Footer (`ControlPanelProps`-Doku: "actions2
+  -- Mobile: Shown inside the drawer at the bottom").
+- Einstellungen/Admin dafuer von `DBControlPanelNavigationItem` (Teil der Hauptnav) auf
+  Icon-only-`<a class="db-button" data-variant="ghost">` umgestellt (passt zum `actions2`-Slot,
+  der keine Nav-`<menu>`-Umgebung bereitstellt) -- `data-tab-target`/`role="tab"` bleiben erhalten,
+  `tabController.ts` sieht keinen Unterschied (rein attributbasiert). `#admin`/`#admin-tab`
+  bleiben zwei getrennte Elemente (Sichtbarkeits-Toggle vs. Klick-Listener/Tab-Attribute).
+- `ThemeSwitcher.tsx`: `<li className="db-navigation-item">`-Wrapper entfernt -- sitzt nicht mehr
+  in `DBControlPanelNavigation`s `<menu>`, ein `<li>` ausserhalb jeder Liste waere ungueltiges
+  HTML gewesen.
+- Marke (`brand`) nutzt jetzt `DBControlPanelBrand` (User-Vorgabe) statt reinem Handmarkup, bleibt
+  in einem eigenen `<a>` gewrapped (Link-/`data-tab-target`-Verhalten). Bekannter Nebeneffekt:
+  `DBControlPanelBrand` zeigt ohne eigenes Bild-Kind das generische DB-Logo statt des App-eigenen
+  Icons.
+- Bekannte Einschraenkung: bei sehr schmalen Mobilgeraeten (~390px) ist die kompakte Kopfleiste
+  (Marke + Anmelden + Monatsauswahl) breiter als der Viewport, der Drawer-Button dadurch visuell
+  verdeckt (bleibt aber klickbar). Drawer-Inhalt selbst (inkl. `actions2` im Footer) unveraendert
+  funktionsfaehig.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 21 vorbestehende Warnungen
+  unveraendert), `bun run test --isolate` (2119 pass), `bun run build`. Puppeteer: Klick auf
+  Einstellungen/Admin/Theme-Schalter funktioniert (Desktop, `actions2`), Drawer-Footer zeigt
+  dieselben drei Elemente auf Mobile korrekt an.
+
 ## 2026-09-13 (132)
 
 ### feat (Monatswechsel-Select: kurze Monatsnamen unter 1024px)
