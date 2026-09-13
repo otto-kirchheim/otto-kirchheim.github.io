@@ -2,6 +2,26 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-13 (123)
+
+### refactor (MyInput: Prop-Typ von DBInput ableiten statt Hand-Allowlist)
+
+- `MyInput.tsx`s Prop-Typ war eine hand-gepflegte Liste einzelner Felder -- jede DBInput-Faehigkeit,
+  die dort nicht explizit aufgefuehrt war (z. B. Density, Icons, `messageSize`/`validMessageSize`/
+  `invalidMessageSize`, `dataList`, `size`), liess sich an keiner der 17 Aufrufstellen nutzen, ohne
+  diese Datei anzufassen. User-Fund: "MyInput kann nicht alles, was DBInput kann".
+- Umgestellt auf `Omit<ComponentProps<typeof DBInput>, ...>` -- jede aktuelle UND kuenftige
+  DBInput-Faehigkeit ist jetzt automatisch verfuegbar. Ausgenommen (und mit eigener Logik neu
+  typisiert) bleiben nur die Felder, die `MyInput` selbst berechnet oder anders behandelt:
+  `label` (aus `children`/`name` abgeleitet), `value`/`onChange` (controlled/uncontrolled-
+  Disambiguierung), `invalidMessage` (Default-Text-Fallback), `minLength`/`maxLength`
+  (String→Number-Koerzion), `children`/`id`/`name`/`type` (Pflichtfelder statt optional), und
+  `popover` (eigene DBTooltip-Uebersetzung -- kollidiert sonst mit DBInputs nativem
+  Popover-API-Attribut gleichen Namens).
+- Rein typseitig, keine Laufzeit-Aenderung: Verifiziert `bunx tsc --noEmit` (0 Fehler ueber alle
+  17 Aufrufstellen + Tests), `bun run lint` (0 Fehler), `bun run test` (2119 pass, unveraendert),
+  `bun run build`. Puppeteer: Reset-Passwort-Modal identisches Verhalten wie vor dem Refactor.
+
 ## 2026-09-13 (122)
 
 ### fix (MyInput: doppelte Invalid-Feedback-Anzeige bei Passwortfeldern)

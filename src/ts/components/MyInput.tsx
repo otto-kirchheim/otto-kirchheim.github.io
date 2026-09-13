@@ -1,24 +1,38 @@
 import { DBInput, DBTooltip } from '@db-ux/react-core-components';
-import { useRef, type ChangeEventHandler, type FC, type ReactNode, type RefObject } from 'react';
+import { useRef, type ChangeEventHandler, type ComponentProps, type FC, type ReactNode, type RefObject } from 'react';
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
-type TModalBodyInputElementOption = {
+/**
+ * Von `DBInput`s eigenem Prop-Typ abgeleitet statt einer Hand-Allowlist: jede DBInput-Faehigkeit
+ * (Density, Icons, Message-Groessen, Datalist, ...) ist dadurch automatisch an jeder Aufrufstelle
+ * verfuegbar, auch neue, ohne dass diese Datei angefasst werden muss. Nur die Felder, die MyInput
+ * selbst berechnet oder mit eigener Logik belegt, werden ausgenommen und unten neu typisiert.
+ */
+type TModalBodyInputElementOption = Omit<
+  ComponentProps<typeof DBInput>,
+  | 'ref'
+  | 'label'
+  | 'value'
+  | 'onChange'
+  | 'invalidMessage'
+  | 'minLength'
+  | 'maxLength'
+  | 'children'
+  | 'id'
+  | 'name'
+  | 'type'
+  | 'popover'
+> & {
   /** React 19 vererbt `children` nicht mehr implizit (Preact tat das). */
   children?: ReactNode;
   myRef?: RefObject<HTMLInputElement | null>;
-  type: string;
   id: string;
   name: string;
+  type: string;
   value?: string | number;
-  step?: string;
   divClass?: string;
-  required?: boolean;
-  disabled?: boolean;
   dataZulageInputCode?: string;
-  pattern?: string;
-  autoComplete?:
-    'on' | 'off' | 'username' | 'username webauthn' | 'current-password' | 'new-password' | 'email' | 'tel';
   popover?: {
     content: string;
     title?: string;
@@ -27,11 +41,8 @@ type TModalBodyInputElementOption = {
     placement?: 'top' | 'right' | 'left' | 'bottom';
     html?: boolean;
   };
-  min?: string;
-  max?: string;
   minLength?: number | string;
   maxLength?: number | string;
-  list?: string;
   onChange?: ChangeEventHandler<HTMLInputElement>;
   invalidFeedbackId?: string;
   invalidFeedbackText?: string;
