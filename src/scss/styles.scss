@@ -943,10 +943,10 @@ td > .db-switch {
   --db-logo-url: url('/icons/192x192-icon.png');
 }
 
-// Startseite: die Schwelle soll die fixierte Fusszeile beruehren. Der Freiraum fuer die
-// Fusszeile (`padding-block-end` oben) entfaellt hier, und der Startbereich reicht als
-// Flex-Spalte exakt bis zur Fusszeilen-Oberkante -- die Schwelle als letztes Kind wird per
-// `margin-block-start: auto` an die Unterkante gedrueckt. Kein senkrechter Scrollbalken.
+// Startseite reicht exakt bis zur Fusszeilen-Oberkante (kein senkrechter Scrollbalken). Der
+// Freiraum fuer die Fusszeile (`padding-block-end`) entfaellt hier deshalb -- `#tabContent`s
+// `mt-3`-Abstand zur Kopfzeile wird fuer Start bereits in `App.tsx` weggelassen (nicht hier per
+// CSS: `.mt-3` ist DB-UXs eigenes `!important`, ein unlayered Gegenrule kann das nicht schlagen).
 .db-shell-content:has(#start.active) {
   padding-block-end: 0;
 }
@@ -957,9 +957,12 @@ td > .db-switch {
   display: flex;
   flex-direction: column;
   // stylelint-disable-next-line db-ux/use-sizing -- Viewport minus Kopf- (Puppeteer gemessen:
-  // .db-control-panel-desktop 73px bei regular-Dichte/1440px) und Fusszeilenhoehe (41px) =
-  // 114px = 7.125rem bei 16px-Wurzel. Bei Aenderungen an Kopf-/Fusszeileninhalt neu vermessen.
-  min-block-size: calc(100dvh - 7.125rem);
+  // .db-control-panel-desktop 73px bei regular-Dichte/1440px), Fusszeilenhoehe (41px) UND der
+  // stets vorhandene `.breit...mt-2`-Abstand des (meist leeren) `#actAsNotice`-Wrappers in
+  // `App.tsx` (8px, unconditional -- kollabiert mit nichts mehr, seit `#tabContent`s `mt-3` fuer
+  // Start selbst weggelassen wird, siehe dort) = 122px = 7.625rem bei 16px-Wurzel. Bei
+  // Aenderungen an Kopf-/Fusszeileninhalt oder dieser Wrapper-Struktur neu vermessen.
+  min-block-size: calc(100dvh - 7.625rem);
 }
 
 // Die Marke ist ein Link auf den Start-Tab, soll aber wie eine Wortmarke aussehen.
@@ -1015,18 +1018,6 @@ td > .db-switch {
   background-color: var(--db-adaptive-on-bg-basic-emphasis-50-default);
 }
 
-// Der Design-Auswahl-Flyout ist der letzte Nav-Eintrag. DB richtet ihn an der linken Kante des
-// Eintrags aus -- er klappt nach rechts auf und ragt (auch bei `visibility: hidden`) ueber den
-// Viewport bzw. `.db-control-panel-navigation`s eigenen horizontalen Scroll-Container hinaus.
-// Rechtsbuendig verankern, damit er nach links/unten oeffnet und im Bild bleibt. Klassen- statt
-// Id-Selektor: `ThemeSwitcher` bekommt seit `DBHeader`s (jetzt `DBShell`s) eingebauter
-// Drawer-Verdopplung pro Instanz eine eigene, per `useId()` erzeugte Id.
-@media screen and (min-width: 48em) {
-  .theme-umschalter-menu {
-    inset-inline: auto 0;
-  }
-}
-
 // Der Monatswechsel steht in der Kopfzeile neben dem Anmelde-Knopf und darf dort nicht
 // auf ein paar Buchstaben zusammenschrumpfen.
 .db-control-panel-actions-1 .db-select {
@@ -1038,17 +1029,30 @@ td > .db-switch {
 // Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die App-Huellen darin
 // (`dialog-kopf`/`-koerper`/`-fuss`) liefern nur Kopfzeile, Rumpf und Fusszeile -- Rahmen,
 // Hintergrund und Abstand kommen vom Drawer, sonst staende ein Kasten im Kasten.
-.db-drawer:not(.db-control-panel-mobile-drawer) {
+//
+// Variable bleibt bewusst am `.db-drawer` (dem `<dialog>`) gesetzt, nicht am Container: die
+// `:has(> .signatur-drawer)`-Ausnahme unten setzt sie ebenfalls dort, `var(...)` unten muss beide
+// Faelle per normaler Vererbung sehen. Ein `:not(.db-control-panel-mobile-drawer)` waere hier
+// wirkungslos -- die Klasse sitzt NIE auf `.db-drawer` selbst, siehe naechster Kommentar.
+.db-drawer {
   --db-drawer-max-width: 36rem;
 }
 
+// `:not(.db-control-panel-mobile-drawer)` MUSS auf `.db-drawer-container` sitzen, nicht auf
+// `.db-drawer`: `DBDrawer` reicht die `className`-Prop an sein INNERES
+// `<article class="db-drawer-container">` durch, nicht an das `<dialog>`-Wurzelelement selbst
+// (Puppeteer-verifiziert -- `DBControlPanelMobile`s Schublade ist `<dialog class="db-drawer">
+// <article class="db-drawer-container db-control-panel-mobile-drawer">`). Frueher stand der
+// `:not()` versehentlich am `<dialog>`, wo die Klasse nie ankommt -- die 36rem-Deckelung unten
+// griff dadurch unbeabsichtigt auch fuer die mobile Navigations-Schublade.
+//
 // Der Drawer ist rechtsbuendig verankert. `--db-drawer-max-width` sind 36rem -- mit
 // `data-density="functional"` (14px-Basis) = 504px. Ist der sichtbare Viewport schmaler
 // (kleiner Bildschirm oder ~508px mit klassischem Scrollbalken), lief die linke Kante des
 // Drawers ins Negative -> linksbuendiger Text ("Von"/"Bis"/"Pause") war links abgeschnitten.
 // `min(..., 100%)` deckelt zusaetzlich auf die Breite des enthaltenden Blocks (ICB, ohne
 // Scrollbalken) -> der Drawer bleibt immer vollstaendig im Bild.
-.db-drawer:not(.db-control-panel-mobile-drawer) .db-drawer-container {
+.db-drawer-container:not(.db-control-panel-mobile-drawer) {
   max-inline-size: min(var(--db-drawer-max-width), 100%);
 }
 

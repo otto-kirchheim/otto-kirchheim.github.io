@@ -72,9 +72,13 @@ export default function App() {
 
         <div id="conflictReviewBannerMount"></div>
 
-        <div className="tab-content mt-3" id="tabContent">
-          {/* Tab Start -- kein Wrapper-Div: `styles.scss` verankert `.schwelle` per
-              `#start.active > .schwelle`-Kindselektor. */}
+        {/* `mt-3` (Abstand zur Kopfzeile) nur ausserhalb Start: `.mt-3` nutzt DB-UXs eigenes
+            `!important` -- ein CSS-Gegenrule in `styles.scss` (unlayered, sonst hoechste
+            Prioritaet) kann das NICHT schlagen, `!important` kehrt die Cascade-Layer-Reihenfolge
+            um. Start reicht per `min-block-size` exakt bis zur Fusszeile (siehe `#start.active`
+            unten) -- mit `mt-3` ragte Start um genau diese 12px unter die Fusszeile (User-Fund,
+            Puppeteer-gemessen `startRect.bottom` vs. `footerRect.top`). */}
+        <div className={`tab-content${aktiverTab === 'start' ? '' : ' mt-3'}`} id="tabContent">
           <div className={paneKlasse('start')} id="start" role="tabpanel">
             <StartTab />
           </div>
