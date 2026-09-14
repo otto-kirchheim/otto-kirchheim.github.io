@@ -3,24 +3,18 @@ import Storage from '@/infrastructure/storage/Storage';
 import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { TUserRole } from '@/types';
-import { Role, ROLE_HIERARCHY, type ApiResponse as SharedApiResponse } from '@otto-kirchheim/nebengeld-shared';
+import {
+  Role,
+  ROLE_HIERARCHY,
+  type ApiResponse as SharedApiResponse,
+  type IVorgabeEntry,
+  type IUserAdminRow,
+} from '@otto-kirchheim/nebengeld-shared';
 
 type ApiResponse<T> = SharedApiResponse<T> & { statusCode?: number };
 
-type BackendUser = {
-  _id: string;
-  userName: string;
-  email?: string;
-  emailVerified?: boolean;
-  role: TUserRole;
-  adminForTeamOes?: string[];
-  adminForOrganizationOes?: string[];
-  canEditVorgabenGeld?: boolean;
-  canEditProfileTemplates?: boolean;
-  canEditOwnTeamTemplatesOnly?: boolean;
-  canCreateFormularVorlagen?: boolean;
-  canEditFormularVorlagen?: boolean;
-};
+/** Wie shared `IUserAdminRow` beschrieben -- das Backend hat kein eigenes DTO dafür, siehe dort. */
+type BackendUser = IUserAdminRow;
 
 type CurrentUserCapabilities = {
   role: TUserRole;
@@ -40,11 +34,9 @@ type BackendUserProfile = {
   };
 };
 
-type BackendVorgabeValue = Record<string, number | undefined>;
-
 export type BackendVorgabe = {
   _id: number;
-  Vorgaben: Array<{ key: number; value: BackendVorgabeValue }>;
+  Vorgaben: IVorgabeEntry[];
   updatedAt?: string;
 };
 
@@ -261,9 +253,9 @@ export async function fetchVorgabeByYear(year: number): Promise<BackendVorgabe> 
 
 export async function upsertVorgabeByYear(
   year: number,
-  vorgaben: Array<{ key: number; value: BackendVorgabeValue }>,
+  vorgaben: IVorgabeEntry[],
 ): Promise<BackendVorgabe> {
-  const response = await FetchRetry<{ Vorgaben: Array<{ key: number; value: BackendVorgabeValue }> }, BackendVorgabe>(
+  const response = await FetchRetry<{ Vorgaben: IVorgabeEntry[] }, BackendVorgabe>(
     `vorgaben/${year}`,
     { Vorgaben: vorgaben },
     'PUT',

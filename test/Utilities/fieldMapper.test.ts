@@ -421,6 +421,7 @@ describe('fieldMapper – UserProfile', () => {
       Adress2: '',
       ErsteTkgSt: 'Berlin',
       ErsteTkgStAdresse: 'Berliner Str. 1',
+      Bundesland: 'BE',
       Betrieb: 'DB Netz',
       OE: ['TEST', 'OE'],
       Gewerk: 'LST',

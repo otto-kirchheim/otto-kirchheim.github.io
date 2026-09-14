@@ -1,4 +1,9 @@
-import type { TarifBesoldung } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  BereitschaftSchichtTyp,
+  IFahrzeit,
+  IPers,
+  IVorgabeBWert,
+} from '@otto-kirchheim/nebengeld-shared';
 
 export interface IVorgabenUEinstellungen {
   aktivierteTabs: string[];
@@ -24,28 +29,11 @@ export interface IVorgabenUServer {
   }[];
   Einstellungen: IVorgabenUEinstellungen;
 }
-export interface IVorgabenUPers {
-  Vorname: string;
-  Nachname: string;
-  PNummer: string;
-  Telefon: string;
-  Adress1: string;
-  Adress2: string;
-  ErsteTkgSt: string;
-  ErsteTkgStAdresse: string;
-  Bundesland: string;
-  Betrieb: string;
+
+/** Wie shared `IPers`, nur `OE` als EIN Text-Feld statt Ebenen-Array — Formular pflegt es so,
+ *  `joinOeLevels`/`splitOeInput` (`infrastructure/data/fieldMapper.ts`) wandeln beim Laden/Speichern. */
+export interface IVorgabenUPers extends Omit<IPers, 'OE'> {
   OE: string;
-  Gewerk: string;
-  kmArbeitsort: number;
-  nBhf: string;
-  kmnBhf: number;
-  /** Schlüssel in die Geld-Vorgaben — siehe `TB_VALUES` im shared-Paket. */
-  TB: TarifBesoldung;
-  /** Grundtätigkeit des Mitarbeiters (Kopf-Feld Entgeltausgleich-Formular), z.B. "Signalmechaniker RBEG". Optional: Bestandsnutzer ohne EA-Nutzung haben es (noch) nicht gepflegt. */
-  Taetigkeit?: string;
-  /** Entgeltgruppe der Grundtätigkeit (Kopf-Feld Entgeltausgleich-Formular), z.B. "105". Optional, siehe `Taetigkeit`. */
-  Entgeltgruppe?: string;
 }
 
 // --- Arbeitszeiten (neues per-Wochentag-Modell) ---
@@ -85,18 +73,19 @@ export interface IVorgabenUaZ {
   fahrzeit: string; // HH:mm Dauer Wohnung ↔ Arbeit
 }
 
-export interface IVorgabenUfZ {
-  [key: string]: string;
-  key: string;
-  text: string;
-  value: string;
-}
+export type IVorgabenUfZ = IFahrzeit;
 
-export type BereitschaftSchichtTyp = 'frueh' | 'spaet' | 'nacht' | 'sonder';
+export type { BereitschaftSchichtTyp };
 
-export interface IVorgabenUvorgabenB {
+/**
+ * Wie shared `IVorgabeBWert`, nur mit den Optionalitäts-Garantien der hydrierten Frontend-Form
+ * (analog `IVorgabenUaZ`): `Nwoche` ist bei `endeB`/`beginnN`/`endeN` immer gesetzt (nie bei
+ * `beginnB` -- siehe shared-Kommentar), `schichtenOverrides` stärker typisiert, `standard` als
+ * `true`-Literal (Abwesenheit statt `false` markiert "nicht Standard").
+ */
+export interface IVorgabenUvorgabenB
+  extends Omit<IVorgabeBWert, 'beginnB' | 'endeB' | 'beginnN' | 'endeN' | 'schichtenOverrides' | 'standard'> {
   [k: string]: unknown;
-  Name: string;
   beginnB: {
     tag: number;
     zeit?: string;
@@ -106,13 +95,9 @@ export interface IVorgabenUvorgabenB {
     zeit?: string;
     Nwoche: boolean;
   };
-  // NEU: Schichtauswahl für Bereitschaftszeitraum
-  schichten?: BereitschaftSchichtTyp[];
   schichtenOverrides?: {
     [K in BereitschaftSchichtTyp]?: Partial<IPerWeekdaySchicht>;
   };
-  // DEPRECATED — Fallback für alte Einträge; wird bei Migration auf schichten: ['nacht'] gemappt
-  nacht: boolean;
   beginnN: {
     tag: number;
     zeit?: string;

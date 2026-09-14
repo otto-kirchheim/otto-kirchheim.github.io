@@ -94,7 +94,7 @@ export default function PersoenlicheDatenPanel() {
       <div className="sp-md-6">
         <div className="db-select" data-variant="floating" data-icon="map">
           <label htmlFor="Bundesland">Bundesland (Feiertage)</label>
-          <select id="Bundesland" defaultValue="">
+          <select id="Bundesland" defaultValue="" required>
             <option value="" disabled>
               Bundesland wählen…
             </option>
