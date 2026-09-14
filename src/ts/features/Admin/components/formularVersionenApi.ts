@@ -1,5 +1,9 @@
 import { FetchRetry, getServerUrl } from '@/infrastructure/api/FetchRetry';
 import { ApiFehler, authHeader, holeVorlageAlsDatei } from '@/infrastructure/pdf/ladeFormular';
+import type {
+  VersionUebersicht as SharedVersionUebersicht,
+  VersionNutzdaten as SharedVersionNutzdaten,
+} from '@otto-kirchheim/nebengeld-shared';
 import type { Konfig } from './FormularEditor/FormularEditor';
 import type { FormularCode } from './FormularEditor/datenKatalog';
 
@@ -8,22 +12,16 @@ import type { FormularCode } from './FormularEditor/datenKatalog';
 // Importe (`FormularUpload.tsx`) unverändert bleiben.
 export { ApiFehler, holeVorlageAlsDatei };
 
-/** Eine gespeicherte Formular-Version, wie sie `GET /formulare/:f/versionen` liefert. */
-export interface VersionUebersicht {
-  id: string;
-  version: string;
-  gueltigVon: string;
-  gueltigBis: string | null;
-  vorlageId: string;
+/**
+ * Eine gespeicherte Formular-Version, wie sie `GET /formulare/:f/versionen` liefert -- schärft
+ * `konfig`/`tabellen` aus `shared`s lose typisiertem Wire-Format auf `Konfig` (FormularEditor).
+ */
+export interface VersionUebersicht extends Omit<SharedVersionUebersicht, 'konfig' | 'tabellen'> {
   konfig: Omit<Konfig, 'tabellen'>;
   tabellen: Konfig['tabellen'];
 }
 
-export interface VersionNutzdaten {
-  version: string;
-  gueltigVon: string;
-  gueltigBis: string | null;
-  vorlageId: string;
+export interface VersionNutzdaten extends Omit<SharedVersionNutzdaten, 'konfig' | 'tabellen'> {
   konfig: Omit<Konfig, 'tabellen'>;
   tabellen: Konfig['tabellen'];
 }
