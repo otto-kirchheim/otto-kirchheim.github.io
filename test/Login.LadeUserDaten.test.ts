@@ -111,17 +111,29 @@ import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
 import { showConflictReviewBanner } from '@/core/orchestration/auth/components';
 import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 
+type MockRow = { _id?: string; _state: string; cells: Record<string, unknown>; CustomTable: unknown; columns: unknown };
+
 type MockTableInstance = {
   rows: {
     load: ReturnType<typeof vi.fn>;
     setFilter: ReturnType<typeof vi.fn>;
-    array: Array<{ _id?: string; _state: string; cells: unknown; CustomTable: unknown; columns: unknown }>;
+    array: MockRow[];
     getChanges: ReturnType<typeof vi.fn>;
+    markRowsDirtyByMatch: (matcher: (cells: Record<string, unknown>) => boolean) => number;
+    reconcileDeletedRows: (
+      serverRows: Record<string, unknown>[],
+      matcher: (cells: Record<string, unknown>) => boolean,
+    ) => number;
   };
   drawRows: ReturnType<typeof vi.fn>;
   columns: { array: [] };
 };
 
+/**
+ * Spiegelt `Rows.ts`s `markRowsDirtyByMatch()`/`reconcileDeletedRows()` auf diesem
+ * Test-Fake (`rows.array` sind hier plain Objects, keine echten `Row`-Instanzen) --
+ * gleiche Semantik wie die echte Klasse, siehe `tasks/todo.md`/Plan-Dokument.
+ */
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): MockTableInstance {
   const instance: MockTableInstance = {
     rows: {
@@ -129,6 +141,44 @@ function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): MockTableIn
       setFilter: vi.fn(),
       array: [],
       getChanges: vi.fn().mockReturnValue({ create: [], update: [], delete: [] }),
+      markRowsDirtyByMatch: matcher => {
+        let count = 0;
+        for (const row of instance.rows.array) {
+          if (row._state === 'deleted') continue;
+          if (!matcher(row.cells)) continue;
+          row._state = typeof row._id === 'string' && row._id.length > 0 ? 'modified' : 'new';
+          count += 1;
+        }
+        return count;
+      },
+      reconcileDeletedRows: (serverRows, matcher) => {
+        const serverIds = new Set(serverRows.filter(row => typeof row._id === 'string').map(row => row._id as string));
+        let count = 0;
+        for (const row of instance.rows.array) {
+          if (row._state === 'deleted') continue;
+          if (typeof row._id !== 'string') continue;
+          if (!matcher(row.cells)) continue;
+          if (serverIds.has(row._id)) continue;
+          row._state = 'deleted';
+          count += 1;
+        }
+        const existingIds = new Set(
+          instance.rows.array.filter(row => typeof row._id === 'string').map(row => row._id as string),
+        );
+        for (const serverRow of serverRows) {
+          const id = serverRow._id;
+          if (typeof id !== 'string' || existingIds.has(id) || !matcher(serverRow)) continue;
+          instance.rows.array.push({
+            _id: id,
+            _state: 'deleted',
+            cells: serverRow,
+            CustomTable: instance,
+            columns: instance.columns,
+          });
+          count += 1;
+        }
+        return count;
+      },
     },
     drawRows: vi.fn(),
     columns: { array: [] },

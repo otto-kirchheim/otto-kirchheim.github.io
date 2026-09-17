@@ -20,8 +20,9 @@ import type {
 } from './customTableTypes';
 import { Row } from './Row';
 import { Rows } from './Rows';
+import { getRowKey } from './customTableTypes';
 
-export { Column, Columns, Row, Rows };
+export { Column, Columns, Row, Rows, getRowKey };
 export type { CustomTableTypes, RowState, TableChanges };
 
 export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {

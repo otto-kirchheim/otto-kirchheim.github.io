@@ -3257,3 +3257,56 @@ sind aber bewusst unterschiedlich.
 **Offen, weiterhin bewusst nicht umgesetzt:** der eigentliche `useReducer`-Umbau
 (Ansatz 3 im Plan `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`). Diese
 Kapselung ist Vorbereitung, keine Vorentscheidung dafuer.
+
+## Phase 0: 5 Risikostellen gehaertet -- Vorbedingung fuer useReducer-Umbau (2026-09-17)
+
+Nach zwei Explore-Agenten (kartierten 14 externe `.instance`-Aufrufer + 5 Stellen mit hartem
+synchronem Read-nach-Mutation) und einem Plan-Agenten wurde Phase 0 aus dem Plan-Dokument
+`~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md` (Teil 1) vollstaendig umgesetzt.
+
+- [x] `customTableTypes.ts`: `getRowKey(row)` neu -- stabiler ID-Schluessel
+      (`new:<_clientRequestId>` / `id:<_id>`), wirft bei inkonsistentem Row-State.
+- [x] `Rows.ts`: `commitChanges`/`commitAutoSave`/`_commitCreateAndUpdate` auf
+      `ReadonlySet<string>` umgestellt; `findById(id)`, `markRowsDirtyByMatch(matcher)`,
+      `reconcileDeletedRows(serverRows, matcher)` neu.
+- [x] `CustomTable.ts`: `getRowKey` per Barrel-Export.
+- [x] `autoSave.ts`: `includedRows`/`failedRows`-Sets per `.map(getRowKey)`.
+- [x] `loadUserDaten.conflict.ts`: `markRowsForAutosave`/`reconcileRowsAsDeleted` auf die neuen
+      `Rows.ts`-Methoden umgestellt, `Row`-Import entfernt.
+- [x] `submitBereitschaftsEinsatz.ts`: Stelle A (echte Zellen-Aenderung) auf `row.val(...)`,
+      Stellen B/C/D (reiner State-Flip) auf `findById(...)`.
+- [x] `createAddModalBereitschaftsZeit.tsx`: `onSubmit` awaitet `submitBereitschaftsZeiten`
+      jetzt -- einzige echte Verhaltensaenderung im Umfang (Modal bleibt bei Fehler offen).
+- [x] `generateEingabeMaskeEinstellungen.ts`: klaerender Kommentar, kein Bug.
+- [x] Tests nachgezogen: `test/class/CustomTable.test.ts` (Race-Tests auf `getRowKey`, neuer
+      Reihenfolge-Unabhaengigkeits-Test fuer `markRowsDirtyByMatch`/`reconcileDeletedRows`),
+      `test/Login.LadeUserDaten.test.ts` (Mock um funktionale Implementierungen erweitert),
+      `test/Utilities/autoSave.test.ts` (Test-Fixtures brauchten `_clientRequestId` fuer
+      `_state: 'new'`-Zeilen, analog dem echten `Row`-Konstruktor -- war vorher nie eine
+      Invariante, die etwas geprueft hat).
+- [ ] Schritt 11 (dedizierter Test fuer die Await-Reihenfolge in
+      `createAddModalBereitschaftsZeit.tsx`) bewusst NICHT geschrieben -- der Sibling-Test
+      vergleichbarer Komplexitaet ist 264 Zeilen fuer ein einzelnes Modal; unverhaeltnismaessig
+      fuer ein einzelnes Call-Ordering-Faktum. `tsc` bestaetigt die Typkorrektheit. Bei Bedarf
+      spaeter nachziehen.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run test` (2121/2121 pass, identische Anzahl wie vor Phase 0), `bun run build` gruen.
+
+### Review
+
+Eigener Fehler waehrend der Verifikation: zwei Testfehler in
+`test/Bereitschaft.submitBereitschaftsEinsatz.test.ts` fälschlich als "vorbestehend, unabhaengig
+von meinen Aenderungen" gemeldet -- Beleg dafuer war ein isolierter `git worktree`-Vergleich bei
+Commit `d699488`, ABER ohne die vom `package.json`-Testskript gesetzte `TZ=Europe/Berlin`-
+Env-Variable ausgefuehrt (die Tests rechnen explizit mit Berlin-Zeitzonen-Grenzen). Mit
+korrektem `bun run test`-Aufruf (TZ gesetzt) waren es 0 Fehler, auch vorher schon. Lehre: ein
+Vergleich "alt vs. neu" ist nur aussagekraeftig, wenn beide Seiten mit IDENTISCHEM Befehl
+laufen -- projekteigenes `test`-Skript nutzen (`bun run test`), nie einen eigenen `bun test`-
+Aufruf ohne Pruefung der Env-Variablen im Skript als Vergleichsbasis nehmen.
+
+**Naechster Schritt:** Phase A (Reducer-Kern, `Row`/`Rows`/`Column`/`CustomTable` als
+`useReducer`) -- zwangsweise atomar fuer alle 6 Tabellen, siehe Plan-Dokument Teil 2. Noch nicht
+begonnen.

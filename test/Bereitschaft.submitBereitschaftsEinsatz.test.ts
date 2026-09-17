@@ -125,10 +125,25 @@ function createBZ(Beginn: string, Ende: string, id?: string): IDatenBZ {
   return { Beginn, Ende, Pause: 0, ...(id ? { _id: id } : {}) } as IDatenBZ;
 }
 
+type MockBERow = { cells: IDatenBE; _state: string; val: (value: IDatenBE) => void };
+
+/** Spiegelt `Row.val()`s Semantik (Zellen setzen + `unchanged` -> `modified`) fürs Mock. */
+function makeMockBERow(cells: IDatenBE, state = 'unchanged'): MockBERow {
+  const row: MockBERow = {
+    cells,
+    _state: state,
+    val(value) {
+      row.cells = value;
+      if (row._state === 'unchanged') row._state = 'modified';
+    },
+  };
+  return row;
+}
+
 function createTableBEMock() {
   const addMock = vi.fn();
   const loadMock = vi.fn();
-  const rowsArray: { cells: IDatenBE; _state: string }[] = [];
+  const rowsArray: MockBERow[] = [];
   const ftBE = { rows: { add: addMock, load: loadMock, array: rowsArray } };
   const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftBE };
   table.id = 'tableBE';
@@ -140,7 +155,8 @@ function createTableBZMock() {
   const loadMock = vi.fn();
   const setFilterMock = vi.fn();
   const rowsArray: { _id?: string; _state: string }[] = [];
-  const ftBZ = { rows: { load: loadMock, setFilter: setFilterMock, array: rowsArray } };
+  const findById = (id: string | undefined) => rowsArray.find(row => row._id === id);
+  const ftBZ = { rows: { load: loadMock, setFilter: setFilterMock, array: rowsArray, findById } };
   const table = document.createElement('table') as HTMLTableElement & { instance: typeof ftBZ };
   table.id = 'tableBZ';
   table.instance = ftBZ;
@@ -479,10 +495,7 @@ describe('submitBereitschaftsEinsatz', () => {
 
       const modal = createModal({ ZeitVon: '09:00', ZeitBis: '16:00', berZeit: true });
       const { table: tableBE, rowsArray } = createTableBEMock();
-      rowsArray.push({
-        cells: { Bereitschaftszeitraum: ['bz2'] } as unknown as IDatenBE,
-        _state: 'unchanged',
-      });
+      rowsArray.push(makeMockBERow({ Bereitschaftszeitraum: ['bz2'] } as unknown as IDatenBE));
       const { table: tableBZ, loadMock } = createTableBZMock();
 
       const merged = createBZ('2023-04-12T07:00:00.000Z', '2023-04-12T22:00:00.000Z', 'bz1');

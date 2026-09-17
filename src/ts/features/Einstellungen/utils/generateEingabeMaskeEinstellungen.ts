@@ -37,6 +37,8 @@ export default function generateEingabeMaskeEinstellungen(
   const ftVE = table.instance;
 
   if (ftVE instanceof CustomTable) {
+    // rows.load() ist synchron (siehe Rows.ts) -- saveTableDataVorgabenU() liest danach
+    // garantiert den frisch geladenen State, kein Race moeglich.
     ftVE.rows.load([...Object.values(VorgabenB)]);
     saveTableDataVorgabenU(ftVE);
   } else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);

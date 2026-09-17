@@ -1,4 +1,3 @@
-import { Row } from '@/infrastructure/table/CustomTable';
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
@@ -85,58 +84,23 @@ export function markRowsForAutosave(selector: string, storageName: TStorageData,
   if (changedMonths.size === 0) return;
 
   const table = document.querySelector<CustomHTMLTableElement>(selector);
-  const rows = table?.instance.rows.array;
-  if (!rows) return;
+  if (!table) return;
 
-  rows.forEach(row => {
-    if (row._state === 'deleted') return;
-    if (![...changedMonths].some(month => rowMatchesMonth(storageName, row.cells, month))) return;
-    row._state = typeof row._id === 'string' && row._id.length > 0 ? 'modified' : 'new';
-  });
+  table.instance.rows.markRowsDirtyByMatch(cells =>
+    [...changedMonths].some(month => rowMatchesMonth(storageName, cells, month)),
+  );
 }
 
 export function reconcileRowsAsDeleted<
   T extends CustomTableTypes = IDatenBE | IDatenBZ | IDatenEWT | IDatenN | IDatenEA,
 >(selector: string, storageName: TStorageData, serverData: T[], changedMonths: Set<number>): number {
   const tableEl = document.querySelector<CustomHTMLTableElement>(selector);
-  if (!tableEl?.instance?.rows?.array) return 0;
-  const table = tableEl.instance;
+  if (!tableEl?.instance?.rows) return 0;
 
-  const serverIds = new Set(
-    serverData
-      .filter(row => typeof (row as Record<string, unknown>)._id === 'string')
-      .map(row => (row as Record<string, unknown>)._id as string),
-  );
+  const matcher = (cells: unknown): boolean =>
+    changedMonths.size === 0 || [...changedMonths].some(month => rowMatchesMonth(storageName, cells, month));
 
-  let count = 0;
-
-  table.rows.array.forEach(row => {
-    if (row._state === 'deleted') return;
-    if (typeof row._id !== 'string') return;
-    if (changedMonths.size > 0 && ![...changedMonths].some(month => rowMatchesMonth(storageName, row.cells, month))) {
-      return;
-    }
-    if (serverIds.has(row._id)) return;
-    row._state = 'deleted';
-    count += 1;
-  });
-
-  const existingIds = new Set(
-    table.rows.array.filter(row => typeof row._id === 'string').map(row => row._id as string),
-  );
-
-  for (const serverRow of serverData) {
-    const current = serverRow;
-    if (typeof current._id !== 'string') continue;
-    if (existingIds.has(current._id)) continue;
-    if (changedMonths.size > 0 && ![...changedMonths].some(month => rowMatchesMonth(storageName, serverRow, month))) {
-      continue;
-    }
-
-    table.rows.array.push(new Row(table, serverRow, 'deleted'));
-    count += 1;
-  }
-
+  const count = tableEl.instance.rows.reconcileDeletedRows(serverData, matcher);
   if (count > 0) tableEl.instance.drawRows();
   return count;
 }

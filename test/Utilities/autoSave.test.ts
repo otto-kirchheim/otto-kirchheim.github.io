@@ -55,6 +55,7 @@ import {
 } from '@/infrastructure/autoSave/autoSave';
 import { clearAllHooks } from '@/core/hooks';
 import { onEvent, clearAllEventListeners, publishEvent } from '@/core/events/appEvents';
+import { createClientRequestId } from '@/infrastructure/autoSave/changeTracking';
 
 // --- Hilfsfunktion: Mock-Table im DOM erstellen ---
 function createMockTable(
@@ -70,6 +71,14 @@ function createMockTable(
     _originalCells?: Record<string, unknown>;
   }[] = [],
 ) {
+  // Spiegelt `Row.ts`s Konstruktor: eine 'new'-Zeile hat immer eine `_clientRequestId` --
+  // `getRowKey()` (autoSave.ts) verlangt das inzwischen als Invariante fuer den
+  // AutoSave-Commit-Race-Schutz. Test-Fixtures bauen `rows` als Plain-Objects ohne den echten
+  // Konstruktor, holen das hier nach, statt jede einzelne Fixture-Stelle anzufassen.
+  rows.forEach(row => {
+    if (row._state === 'new' && !row._clientRequestId) row._clientRequestId = createClientRequestId();
+  });
+
   const mockCommitChanges = vi.fn();
   const mockCommitAutoSave = vi.fn();
   const mockGetChanges = vi.fn().mockReturnValue(changes);
@@ -1006,6 +1015,10 @@ describe('autoSave', () => {
 
       const row = table.getRows()[0];
       row._state = 'new';
+      // Ein echtes 'new' hat immer eine _clientRequestId (Row-Konstruktor) -- das direkte
+      // Umsetzen des States hier im Test uebersprint das, `getRowKey()` (autoSave.ts) verlangt
+      // sie inzwischen als Invariante.
+      row._clientRequestId ??= 'retry-test-client-request-id';
 
       mockBzBulk.mockImplementation(async bulk => ({
         created: [],

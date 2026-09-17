@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createCustomTable, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, getRowKey, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
 
 interface TableRow extends CustomTableTypes {
   _id?: string;
@@ -700,7 +700,7 @@ describe('CustomTable', () => {
       // Snapshot wie im echten AutoSave-Flow: VOR dem Request genommen.
       const changeRows = table.rows.getChangeRows(false);
       expect(changeRows.create).toHaveLength(1);
-      const includedRows = new Set(changeRows.create);
+      const includedRows = new Set(changeRows.create.map(getRowKey));
 
       // Waehrend der Request "in flight" ist, legt der Nutzer eine zweite Zeile an.
       table.rows.add({ label: 'waehrenddessen' } as TableRow);
@@ -733,7 +733,7 @@ describe('CustomTable', () => {
       table.getRows()[0].deleteRow();
       const changeRows = table.rows.getChangeRows(true);
       expect(changeRows.delete).toHaveLength(1);
-      const includedRows = new Set(changeRows.delete);
+      const includedRows = new Set(changeRows.delete.map(getRowKey));
 
       // Waehrend der Request laeuft, loescht der Nutzer eine zweite, noch nicht mitgesendete Zeile.
       table.getRows()[1].deleteRow();
@@ -744,5 +744,51 @@ describe('CustomTable', () => {
       expect(table.rows.array[0]._id).toBe('b');
       expect(table.rows.array[0]._state).toBe('deleted');
     });
+  });
+});
+
+describe('Rows – markRowsDirtyByMatch/reconcileDeletedRows (Reihenfolge-Unabhängigkeit)', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  function buildTable(id: string) {
+    createTableElement(id);
+    return createCustomTable<TableRow>(id, {
+      columns: [{ name: 'label', title: 'Label' }],
+      rows: [
+        { _id: 'both', label: 'auf beiden Seiten', value: 1 },
+        { _id: 'local-only', label: 'nur lokal', value: 2 },
+      ],
+    });
+  }
+
+  function snapshot(table: ReturnType<typeof buildTable>) {
+    return table.rows.array
+      .map(row => ({ _id: row._id, _state: row._state, label: row.cells.label }))
+      .sort((a, b) => (a._id ?? '').localeCompare(b._id ?? ''));
+  }
+
+  it('liefert dasselbe Ergebnis unabhängig von der Aufrufreihenfolge der beiden Methoden', () => {
+    const serverRows: TableRow[] = [
+      { _id: 'both', label: 'auf beiden Seiten (Server)', value: 1 },
+      { _id: 'server-only', label: 'nur auf dem Server', value: 3 },
+    ];
+    const matcher = () => true;
+
+    const tableAB = buildTable('reconcile-order-ab');
+    tableAB.rows.markRowsDirtyByMatch(matcher);
+    tableAB.rows.reconcileDeletedRows(serverRows, matcher);
+
+    const tableBA = buildTable('reconcile-order-ba');
+    tableBA.rows.reconcileDeletedRows(serverRows, matcher);
+    tableBA.rows.markRowsDirtyByMatch(matcher);
+
+    expect(snapshot(tableAB)).toEqual(snapshot(tableBA));
+    expect(snapshot(tableAB)).toEqual([
+      { _id: 'both', _state: 'modified', label: 'auf beiden Seiten' },
+      { _id: 'local-only', _state: 'deleted', label: 'nur lokal' },
+      { _id: 'server-only', _state: 'deleted', label: 'nur auf dem Server' },
+    ]);
   });
 });

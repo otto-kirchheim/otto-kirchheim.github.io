@@ -1,6 +1,6 @@
 import { stripMetaFields } from '../data/metaFields';
 import type { CustomTable } from './CustomTable';
-import { getEffectiveRowState } from './customTableTypes';
+import { getEffectiveRowState, getRowKey } from './customTableTypes';
 import type { CustomTableTypes, DirtyRowState, RowState, TableChanges } from './customTableTypes';
 import { Row } from './Row';
 
@@ -184,22 +184,25 @@ export class Rows<T extends CustomTableTypes> {
    * - 'deleted' → entfernt aus Array
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
-   * @param includedRows - Row-Snapshot aus `getChangeRows()` vor dem Request. Nur diese
-   *   Zeilen werden committet/entfernt - alles was danach neu hinzugekommen ist, bleibt
-   *   fuer den naechsten Save-Lauf unangetastet (AutoSave-Commit-Race, siehe oben).
+   * @param failedRows - Schlüssel (`getRowKey()`) der Zeilen, deren Save fehlgeschlagen ist.
+   * @param includedRows - Schlüssel-Snapshot aus `getChangeRows()` (per `getRowKey()`) vor dem
+   *   Request. Nur diese Zeilen werden committet/entfernt - alles was danach neu hinzugekommen
+   *   ist, bleibt fuer den naechsten Save-Lauf unangetastet (AutoSave-Commit-Race, siehe oben).
+   *   ID-basiert statt Objektidentität, damit der Snapshot eine async Anfrage ueberlebt, ohne
+   *   auf dieselbe Row-Objektreferenz angewiesen zu sein.
    */
   commitChanges(
     createdIds?: Map<number, string>,
-    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
-    includedRows?: ReadonlySet<Row<T>>,
+    failedRows: ReadonlySet<string> = new Set<string>(),
+    includedRows?: ReadonlySet<string>,
   ): void {
     this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
 
     // Gelöschte Zeilen entfernen - nur wenn Teil dieses Batches
     this.array = this.array.filter(row => {
       if (getEffectiveRowState(row) !== 'deleted') return true;
-      if (failedRows.has(row)) return true;
-      return includedRows !== undefined && !includedRows.has(row);
+      if (failedRows.has(getRowKey(row))) return true;
+      return includedRows !== undefined && !includedRows.has(getRowKey(row));
     });
     this.CustomTable.drawRows();
   }
@@ -209,12 +212,13 @@ export class Rows<T extends CustomTableTypes> {
    * Gelöschte Zeilen bleiben als 'deleted' sichtbar.
    *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
+   * @param failedRows - siehe `commitChanges()`
    * @param includedRows - siehe `commitChanges()`
    */
   commitAutoSave(
     createdIds?: Map<number, string>,
-    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
-    includedRows?: ReadonlySet<Row<T>>,
+    failedRows: ReadonlySet<string> = new Set<string>(),
+    includedRows?: ReadonlySet<string>,
   ): void {
     this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
     this.CustomTable.drawRows();
@@ -266,21 +270,21 @@ export class Rows<T extends CustomTableTypes> {
   /** Interne Hilfsmethode: new → unchanged, modified → unchanged */
   private _commitCreateAndUpdate(
     createdIds?: Map<number, string>,
-    failedRows: ReadonlySet<Row<T>> = new Set<Row<T>>(),
-    includedRows?: ReadonlySet<Row<T>>,
+    failedRows: ReadonlySet<string> = new Set<string>(),
+    includedRows?: ReadonlySet<string>,
   ): void {
     let createIdx = 0;
 
     for (const row of this.array) {
       const effectiveState = getEffectiveRowState(row);
-      const inBatch = includedRows === undefined || includedRows.has(row);
+      const inBatch = includedRows === undefined || includedRows.has(getRowKey(row));
 
       switch (effectiveState) {
         case 'new': {
           // Zeile nicht Teil dieser Anfrage (erst waehrend des Requests angelegt) - createIdx
           // NICHT erhoehen, sonst verschiebt sich die Zuordnung fuer alle folgenden Zeilen.
           if (!inBatch) break;
-          const isFailedRow = failedRows.has(row);
+          const isFailedRow = failedRows.has(getRowKey(row));
           const newId = createdIds?.get(createIdx);
           if (!isFailedRow && newId) {
             row._id = newId;
@@ -298,7 +302,7 @@ export class Rows<T extends CustomTableTypes> {
         }
         case 'modified':
           if (!inBatch) break;
-          if (!failedRows.has(row)) {
+          if (!failedRows.has(getRowKey(row))) {
             row._state = 'unchanged';
             row._errorState = undefined;
             row._errorMessage = null;
@@ -307,12 +311,75 @@ export class Rows<T extends CustomTableTypes> {
           break;
         case 'deleted':
           if (!inBatch) break;
-          if (!failedRows.has(row)) {
+          if (!failedRows.has(getRowKey(row))) {
             row._errorState = undefined;
             row._errorMessage = null;
           }
           break;
       }
     }
+  }
+
+  /** Sucht eine Zeile per Backend-`_id`. */
+  findById(id: string | undefined): Row<T> | undefined {
+    if (!id) return undefined;
+    return this.array.find(row => row._id === id);
+  }
+
+  /**
+   * Markiert alle nicht bereits gelöschten Zeilen, deren Zellen `matcher` erfüllen, als lokal
+   * geändert -- State-only, KEINE Zellen-Änderung (Zellen sind zu diesem Zeitpunkt bereits über
+   * `load()` aktuell). `new` bleibt `new`, alles andere wird `modified`. Für Konflikt-Reviews
+   * (`loadUserDaten`), NICHT für normale Bearbeitung (dafür `row.val()`). Ruft bewusst kein
+   * `drawRows()` -- der Aufrufer entscheidet, siehe `syncCellsSilently()`.
+   * @returns Anzahl der markierten Zeilen.
+   */
+  markRowsDirtyByMatch(matcher: (cells: T) => boolean): number {
+    let count = 0;
+    for (const row of this.array) {
+      if (row._state === 'deleted') continue;
+      if (!matcher(row.cells)) continue;
+      row._state = typeof row._id === 'string' && row._id.length > 0 ? 'modified' : 'new';
+      count += 1;
+    }
+    return count;
+  }
+
+  /**
+   * Reconciled den Bestand gegen `serverRows`, eingeschränkt auf Zeilen/Server-Einträge, die
+   * `matcher` erfüllen:
+   * - Lokale (nicht bereits gelöschte) Zeilen mit `_id`, die in `serverRows` fehlen, werden
+   *   `deleted`.
+   * - `serverRows`-Einträge, deren `_id` lokal komplett fehlt, werden als neue `deleted`-Zeilen
+   *   angehängt (informativ für die Review-Anzeige).
+   * Überschneidet sich NIE mit `markRowsDirtyByMatch()` auf derselben Zeile -- beide Methoden
+   * sind daher in beliebiger Reihenfolge aufrufbar. Ruft KEIN `drawRows()`.
+   * @returns Anzahl betroffener Zeilen.
+   */
+  reconcileDeletedRows(serverRows: T[], matcher: (cells: T) => boolean): number {
+    const serverIds = new Set(
+      serverRows
+        .filter(row => typeof (row as Record<string, unknown>)._id === 'string')
+        .map(row => (row as Record<string, unknown>)._id as string),
+    );
+
+    let count = 0;
+    for (const row of this.array) {
+      if (row._state === 'deleted') continue;
+      if (typeof row._id !== 'string') continue;
+      if (!matcher(row.cells)) continue;
+      if (serverIds.has(row._id)) continue;
+      row._state = 'deleted';
+      count += 1;
+    }
+
+    const existingIds = new Set(this.array.filter(row => typeof row._id === 'string').map(row => row._id as string));
+    for (const serverRow of serverRows) {
+      const id = (serverRow as Record<string, unknown>)._id;
+      if (typeof id !== 'string' || existingIds.has(id) || !matcher(serverRow)) continue;
+      this.array.push(new Row(this.CustomTable, serverRow, 'deleted'));
+      count += 1;
+    }
+    return count;
   }
 }

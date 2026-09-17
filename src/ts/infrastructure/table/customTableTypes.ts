@@ -16,6 +16,33 @@ export function getEffectiveRowState(row: { _state: RowState; _errorState?: Dirt
   return row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
 }
 
+/**
+ * Stabiler, ID-basierter Schlüssel für eine Zeile — Ersatz für Objektidentitäts-Vergleiche
+ * (`Set<Row>.has(row)`) über asynchrone Grenzen hinweg (AutoSave-Commit-Race). `new`-Zeilen
+ * (auch im Fehlerzustand mit `_errorState === 'new'`) nutzen `_clientRequestId` (immer
+ * vorhanden, siehe `Row`-Konstruktor); alle anderen nutzen `_id` (für `modified`/`deleted`
+ * durch `getChangeRows()` bereits garantiert vorhanden). Wirft bei Verletzung dieser Invariante
+ * bewusst, statt eine falsche Zeile zufällig zu matchen.
+ */
+export function getRowKey(row: {
+  _state: RowState;
+  _errorState?: DirtyRowState;
+  _id?: string;
+  _clientRequestId?: string;
+}): string {
+  const effectiveState = getEffectiveRowState(row);
+  if (effectiveState === 'new') {
+    if (!row._clientRequestId) {
+      throw new Error('getRowKey: Zeile im State "new" ohne _clientRequestId - inkonsistenter Row-State.');
+    }
+    return `new:${row._clientRequestId}`;
+  }
+  if (!row._id) {
+    throw new Error(`getRowKey: Zeile im State "${effectiveState}" ohne _id - inkonsistenter Row-State.`);
+  }
+  return `id:${row._id}`;
+}
+
 /** Änderungen einer Tabelle für Bulk-Operationen */
 export interface TableChanges<T extends CustomTableTypes> {
   create: T[];

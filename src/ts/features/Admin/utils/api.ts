@@ -251,10 +251,7 @@ export async function fetchVorgabeByYear(year: number): Promise<BackendVorgabe> 
   return unwrapResponse<BackendVorgabe>(response);
 }
 
-export async function upsertVorgabeByYear(
-  year: number,
-  vorgaben: IVorgabeEntry[],
-): Promise<BackendVorgabe> {
+export async function upsertVorgabeByYear(year: number, vorgaben: IVorgabeEntry[]): Promise<BackendVorgabe> {
   const response = await FetchRetry<{ Vorgaben: IVorgabeEntry[] }, BackendVorgabe>(
     `vorgaben/${year}`,
     { Vorgaben: vorgaben },

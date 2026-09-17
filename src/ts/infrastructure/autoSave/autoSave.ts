@@ -11,6 +11,7 @@ import { createSnackBar } from '../ui/CustomSnackbar';
 import { publishEvent } from '@/core';
 import { onEvent } from '@/core/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
+import { getRowKey } from '../table/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '@/types';
 import { profileApi } from '../api/apiService';
 import Storage from '../storage/Storage';
@@ -380,7 +381,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   // (AutoSave-Commit-Race) — der bereits vorhandene queuedDuringSave-Mechanismus holt sie
   // im nächsten Save-Lauf nach.
   const changeRows = table.rows.getChangeRows(includeDeletes);
-  const includedRows = new Set([...changeRows.create, ...changeRows.update, ...changeRows.delete]);
+  const includedRows = new Set([...changeRows.create, ...changeRows.update, ...changeRows.delete].map(getRowKey));
 
   setStatus(resource, 'saving');
 
@@ -401,7 +402,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       changeRows.delete,
       result.errors,
     );
-    const failedRows = new Set(rowErrorMatches.map(entry => entry.row));
+    const failedRows = new Set(rowErrorMatches.map(entry => getRowKey(entry.row)));
 
     if (includeDeletes) table.rows.commitChanges(createdIds, failedRows, includedRows);
     else table.rows.commitAutoSave(createdIds, failedRows, includedRows);

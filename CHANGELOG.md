@@ -2,6 +2,33 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (137)
+
+### refactor (CustomTable Phase 0: 5 Risikostellen von Objektidentitaet auf ID-Zugriff gehaertet)
+
+- **Vorbedingung fuer einen spaeteren `useReducer`-Umbau von `CustomTable`** (Zielzustand "(b)",
+  `.instance` bleibt Kompatibilitaets-Shim): 5 Stellen, die hart auf Objektidentitaet bzw.
+  fragile Aufrufreihenfolge ueber asynchrone Grenzen hinweg vertrauten, gehaertet -- in echten
+  Bereitschaft/EWT/Neben/EA-Speicherpfaden, nicht nur theoretisch.
+- **AutoSave-Commit-Race** (`Rows.ts`/`autoSave.ts`): neue `getRowKey(row)`
+  (`customTableTypes.ts`) liefert einen stabilen ID-Schluessel (`new:<_clientRequestId>` bzw.
+  `id:<_id>`) -- ersetzt `Set<Row>`/`.has(row)`-Objektidentitaet in `commitChanges`/
+  `commitAutoSave`/`_commitCreateAndUpdate` durch `Set<string>`.
+- **`submitBereitschaftsEinsatz.ts`**: neue `Rows.findById(id)` statt wiederholter
+  inline-`for`-Schleifen; echte Zellen-Aenderung (`Bereitschaftszeitraum`-Merge) nutzt jetzt
+  `row.val(...)` statt direkter `row.cells.X =`-Mutation.
+- **`loadUserDaten.conflict.ts`**: neue `Rows.markRowsDirtyByMatch(matcher)`/
+  `reconcileDeletedRows(serverRows, matcher)` statt direkter `rows.array`-Mutation (inkl.
+  `array.push(new Row(...))`-Bypass). Die bisher wechselnde Aufrufreihenfolge zwischen "Lokale
+  Daten behalten" und "Vergleichen & manuell speichern" war beweisbar bereits unschaedlich (beide
+  Funktionen sind gegenseitig exklusiv geschrieben) -- kein Bug, aber jetzt gekapselt.
+- **`createAddModalBereitschaftsZeit.tsx`**: `onSubmit` awaitet `submitBereitschaftsZeiten`
+  jetzt -- einzige echte Verhaltensaenderung im ganzen Umfang: bei einem geworfenen Fehler bleibt
+  das Modal offen statt sich faelschlich sofort zu schliessen.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2121/2121 pass,
+  identische Anzahl), `bun run build` gruen. Details/Diskussion: `tasks/todo.md`, Plan-Dokument
+  `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`.
+
 ## 2026-09-17 (136)
 
 ### refactor (CustomTable: direkte Row-Mutation hinter Rows.ts-Methoden gekapselt)

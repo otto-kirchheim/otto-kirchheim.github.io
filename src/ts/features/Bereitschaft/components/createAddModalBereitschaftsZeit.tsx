@@ -407,14 +407,16 @@ export default function createAddModalBereitschaftsZeit(): void {
   });
   refreshSpaetFelder();
 
-  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
-    return (event: SubmitEvent<HTMLFormElement>): void => {
+  function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
+    return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
       if (form?.checkValidity && !form.checkValidity()) return;
       event.preventDefault();
       const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
       if (!table) throw new Error('tableBZ nicht gefunden');
-      submitBereitschaftsZeiten(modal, table);
+      // `submitBereitschaftsZeiten` kann werfen (fehlende Inputs/Jahreswechsel-Inkonsistenz) --
+      // await verhindert, dass sich das Modal bei einem Fehler faelschlich trotzdem schliesst.
+      await submitBereitschaftsZeiten(modal, table);
       schliesseModal();
       persistBereitschaftsZeitraumTableData(table.instance);
     };

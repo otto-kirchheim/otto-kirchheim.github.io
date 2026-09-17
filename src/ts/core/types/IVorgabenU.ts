@@ -1,9 +1,4 @@
-import type {
-  BereitschaftSchichtTyp,
-  IFahrzeit,
-  IPers,
-  IVorgabeBWert,
-} from '@otto-kirchheim/nebengeld-shared';
+import type { BereitschaftSchichtTyp, IFahrzeit, IPers, IVorgabeBWert } from '@otto-kirchheim/nebengeld-shared';
 
 export interface IVorgabenUEinstellungen {
   aktivierteTabs: string[];
@@ -83,8 +78,10 @@ export type { BereitschaftSchichtTyp };
  * `beginnB` -- siehe shared-Kommentar), `schichtenOverrides` stärker typisiert, `standard` als
  * `true`-Literal (Abwesenheit statt `false` markiert "nicht Standard").
  */
-export interface IVorgabenUvorgabenB
-  extends Omit<IVorgabeBWert, 'beginnB' | 'endeB' | 'beginnN' | 'endeN' | 'schichtenOverrides' | 'standard'> {
+export interface IVorgabenUvorgabenB extends Omit<
+  IVorgabeBWert,
+  'beginnB' | 'endeB' | 'beginnN' | 'endeN' | 'schichtenOverrides' | 'standard'
+> {
   [k: string]: unknown;
   beginnB: {
     tag: number;

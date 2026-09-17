@@ -257,20 +257,18 @@ function handleGap(
       for (const row of tableBE.instance.rows.array) {
         const ref = row.cells.Bereitschaftszeitraum;
         if (!ref?.includes(deletedId)) continue;
-        row.cells.Bereitschaftszeitraum = ref.map(id => (id === deletedId ? (mergedBz._id ?? id) : id));
-        if (row._state === 'unchanged') row._state = 'modified';
+        row.val({
+          ...row.cells,
+          Bereitschaftszeitraum: ref.map(id => (id === deletedId ? (mergedBz._id ?? id) : id)),
+        });
         beChanged = true;
       }
-      if (beChanged) scheduleAutoSave('BE');
+      if (beChanged) scheduleAutoSave('BE'); // redundant (val() hat _notifyChange() bereits ausgeloest), aber harmlos
       needsBeFlush = true;
     }
     reloadBzTable(tableBZ, monat);
-    for (const row of tableBZ.instance.rows.array) {
-      if (row._id === mergedBz._id) {
-        row._state = 'modified';
-        break;
-      }
-    }
+    const mergedRow = tableBZ.instance.rows.findById(mergedBz._id);
+    if (mergedRow) mergedRow._state = 'modified';
   } else {
     const { updatedStartBz, updatedEndBz } = resolution;
     Storage.set('dataBZ', [
@@ -282,8 +280,9 @@ function handleGap(
       }),
     ]);
     reloadBzTable(tableBZ, monat);
-    for (const row of tableBZ.instance.rows.array) {
-      if (row._id === updatedStartBz._id || row._id === updatedEndBz._id) row._state = 'modified';
+    for (const id of [updatedStartBz._id, updatedEndBz._id]) {
+      const row = tableBZ.instance.rows.findById(id);
+      if (row) row._state = 'modified';
     }
   }
 
@@ -309,12 +308,8 @@ function handlePartial(
   if (resolution.newBz) updatedAll.push(resolution.newBz);
   Storage.set('dataBZ', updatedAll);
   reloadBzTable(tableBZ, monat);
-  for (const row of tableBZ.instance.rows.array) {
-    if (row._id === resolution.updatedBz._id) {
-      row._state = 'modified';
-      break;
-    }
-  }
+  const updatedRow = tableBZ.instance.rows.findById(resolution.updatedBz._id);
+  if (updatedRow) updatedRow._state = 'modified';
   createSnackBar({
     message: 'Bereitschaft<br/>Bereitschaftszeitraum erweitert',
     status: 'success',
