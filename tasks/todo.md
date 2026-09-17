@@ -3182,3 +3182,25 @@ beide nicht in der urspruenglichen Explore-Recherche aufgefallen, weil sie keine
 rohes Button-Markup mit eigener DOM-Verkabelung. Lehre: bei "React-Huelle"-Suche gezielt auch
 nach rohem `<button>`-Markup mit `setLoading`/`clearLoading`-Kopplung suchen, nicht nur nach dem
 `createCustomTable`-Muster.
+
+## flushSync-Nebenwirkung (CustomTable): erledigt sich von selbst (2026-09-17)
+
+Als naechster, kleinerer Schritt aus [[project-react-umbau-phase-j]] gewaehlt: die in Phase M
+dokumentierte Dev-Warnung "flushSync was called from inside a lifecycle method" (Klick auf
+Zeilen-Aktionsknopf) per `useSyncExternalStore`-Wrapper um `CustomTable.draw()` beheben.
+
+- [x] Vor dem Fix per Puppeteer (`bun run dev:local` + `puppeteer-core`, `mountEaTab()` direkt
+      importiert, `activeTabStore.setAktivenTab('EA')` erzwungen, `page.mouse.click` auf
+      Delete- und Edit-Button von `tableEA`) neu geprueft, ob die Warnung ueberhaupt noch
+      auftritt -- Ergebnis: **nein**, Konsole blieb in beiden Faellen sauber (Edit oeffnet zudem
+      ein verschachteltes `mount()` ueber `showModal()`).
+- [x] `plan-react-umbau.md`s "Bekannte Nebenwirkung"-Absatz (Phase M) und den Plan unter
+      `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md` entsprechend aktualisiert --
+      kein Code-Fix noetig, die Doku war stale.
+
+### Review
+
+Vermutliche Ursache des Verschwindens: `reactRoot.ts`s Re-Entranz-Guard (`imFlush`/
+`flushExtern()`) wurde nach der urspruenglichen Phase-M-Dokumentation ergaenzt (siehe
+`tasks/lessons.md`s Eintrag zu verschachtelten `flushSync`-Aufrufen) und deckt den
+Zeilen-Aktionsknopf-Fall inzwischen mit ab. Kein CustomTable-Code angefasst.

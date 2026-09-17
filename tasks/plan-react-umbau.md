@@ -360,15 +360,18 @@ bleibt eine normale Property auf dem Element, die React nie anfasst.
   Handmarkup-Bruecke `erzeugeDbButton`/`erzeugeDbButtonAusLook` (`infrastructure/ui/dbButton.ts`,
   auf den `DbButtonLook`-Typ eingedampft, den `customButton`-Optionen noch brauchen).
 
-**Bekannte Nebenwirkung (nicht behoben, dokumentiert):** Klick auf einen Zeilen-Aktionsknopf
-(Edit/Delete/Undo) loest `React: "flushSync was called from inside a lifecycle method"` in der
-Dev-Konsole aus. Ursache: alle 6 Tabellen instanziieren `createCustomTable()` innerhalb des
-`useEffect()` ihrer jeweiligen Tab-Komponente (bereits vor Phase M so) — das war unauffaellig,
-solange `draw()` reines Vanilla-DOM war, wird aber sichtbar, seit `draw()` intern `mount()`/
-`flushSync` aufruft. Nicht fatal (Dev-only-Warnung, in Produktion entfernt), keine Test-
-Fehlschlaege, keine beobachtbare Fehlfunktion (Puppeteer-verifiziert). Sauberer Fix wuerde die
-gesamte Trigger-Architektur aendern (z. B. `useSyncExternalStore`-Store statt synchronem
-`mount()`), was den `el.instance`/`Row`-Vertrag gefaehrden wuerde -- bewusst zurueckgestellt.
+**Ehemals dokumentierte Nebenwirkung, per 2026-09-17 nicht mehr reproduzierbar:** hier stand,
+dass ein Klick auf einen Zeilen-Aktionsknopf (Edit/Delete/Undo) `React: "flushSync was called
+from inside a lifecycle method"` in der Dev-Konsole ausloest (Ursache damals: alle 6 Tabellen
+instanziieren `createCustomTable()` innerhalb des `useEffect()` ihrer Tab-Komponente, `draw()`
+ruft intern `mount()`/`flushSync`). Beim Versuch, das im Rahmen der AutoSave-Store-Migration
+(siehe `tasks/todo.md` "AutoSave-Badge und Login-Button") als kleineren Zwischenschritt zu
+fixen, per Puppeteer gegen `bun run dev:local` neu geprueft (Delete-Klick auf `EaTab`s
+`tableEA` UND Edit-Klick, der `showModal()`s verschachteltes `mount()` ausloest): Browser-
+Konsole blieb in beiden Faellen sauber, keine `flushSync`-Warnung. Vermutliche Ursache des
+Verschwindens: `reactRoot.ts`s Re-Entranz-Guard (`imFlush`/`flushExtern()`, aus einer spaeteren
+Phase-N-Aenderung, siehe `tasks/lessons.md`) deckt den Fall inzwischen ab. Kein Code-Fix mehr
+noetig -- nur diese Doku war stale.
 
 **Verifiziert:** volle Suite (2119 Tests, inkl. `CustomTable.test.ts` 748 Z. mit einer
 Anpassung -- `event.view`-Fix -- und `CustomTable.xss.test.ts` mit einer Anpassung -- neuer
