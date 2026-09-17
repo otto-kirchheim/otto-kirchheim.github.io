@@ -10,6 +10,7 @@ import {
   DBDivider,
   DBSelect,
 } from '@db-ux/react-core-components';
+import { DBLoadingButton } from '@/components';
 import schliesseMobilenDrawer from './schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
@@ -83,9 +84,9 @@ export default function AppHeader() {
 
   const actions1 = (
     <DBControlPanelActions1>
-      <button className="db-button" data-variant="brand" type="button" id="btnLogin">
+      <DBLoadingButton variant="brand" type="button" id="btnLogin">
         Anmelden
-      </button>
+      </DBLoadingButton>
 
       {/* `#MonatFeld`: `auth/index.ts` blendet den Wrapper erst nach erfolgreichem Login per
           `classList.remove('d-none')` ein (Regression durchs Shell-Rewrite -- die alte,

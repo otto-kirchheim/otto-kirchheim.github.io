@@ -50,7 +50,7 @@ export interface IconZiel {
 
 /**
  * Jeder DB-UX-Icon-Name, der im `src/` in einem `data-icon` landen kann (statische Attribute,
- * Ternary-Ausdruecke und die JS-Abbildungstabellen in `autoSaveIndicator.ts`/`CustomSnackbar.ts`).
+ * Ternary-Ausdruecke und die JS-Abbildungstabellen in `AutoSaveBadge.tsx`/`CustomSnackbar.ts`).
  * `test/iconRegistry.test.ts` prueft, dass keine Aufrufstelle einen Namen nutzt, der hier fehlt.
  */
 export const ICON_REGISTRY = {

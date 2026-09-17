@@ -17,7 +17,7 @@ storage:user
 | `storage:user` | `userLoginSuccess.ts` | Saves Benutzer/Rolle/Email/Version to localStorage |
 | `ui:year-month` | `userLoginSuccess.ts` | Sets `#Jahr`/`#Monat` inputs |
 | `feature:lifecycle` | `userLoginSuccess.ts` → `featureLifecycleRegistry.initializeAll()` | Mounts Admin tab if user is admin (lazy), shows `#admin`/`#Admin` nav elements. Bereitschaft/EWT/Neben are **not** mounted here — `aktivierteTabs` isn't known yet at this point (it lives on `vorgabenU.Einstellungen`, fetched later in `data:selectYear`) |
-| `ui:autoSaveIndicator` | `userLoginSuccess.ts` → `initAutoSaveIndicator()` | Starts the AutoSave status badge/indicator |
+| `ui:autoSaveIndicator` | `userLoginSuccess.ts` | Ordering checkpoint only — the AutoSave status badge is now a `DBLoadingButton`/`AutoSaveBadge` prop-/store-driven render, no imperative init call left (`autoSaveIndicator.ts` removed) |
 | `data:selectYear` | `userLoginSuccess.ts` → `selectYear()` → `loadUserDaten.ts` | Fetches and populates year data from server/storage; also calls `syncFeatureTabs(aktivierteTabs)` (`core/orchestration/syncFeatureTabs.ts`), which mounts/unmounts the Bereitschaft/EWT/Neben Preact tab content via `featureLifecycleRegistry` — re-evaluated on every year/month change, not just login |
 
 ## Hook Bindings (registered in main.ts)

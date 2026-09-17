@@ -6,7 +6,6 @@ const {
   storageRemoveMock,
   setLoadingMock,
   isAdminMock,
-  initAutoSaveIndicatorMock,
   mountAdminTabMock,
   createSnackBarMock,
   requestVerificationMailMock,
@@ -16,7 +15,6 @@ const {
   storageRemoveMock: vi.fn(),
   setLoadingMock: vi.fn(),
   isAdminMock: vi.fn(),
-  initAutoSaveIndicatorMock: vi.fn(),
   mountAdminTabMock: vi.fn(),
   createSnackBarMock: vi.fn(),
   requestVerificationMailMock: vi.fn(),
@@ -47,10 +45,6 @@ vi.mock('@/infrastructure/ui/setLoading', () => ({
 
 vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
-}));
-
-vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
-  initAutoSaveIndicator: initAutoSaveIndicatorMock,
 }));
 
 vi.mock('@/features/Admin', () => ({
@@ -100,7 +94,6 @@ describe('userLoginSuccess', () => {
     expect(document.querySelector<HTMLInputElement>('#Jahr')?.value).not.toBe('');
     expect(document.querySelector<HTMLInputElement>('#Monat')?.value).not.toBe('');
     expect(document.querySelector('#MonatFeld')?.classList.contains('d-none')).toBe(false);
-    expect(initAutoSaveIndicatorMock).toHaveBeenCalledTimes(1);
     expect(selectYearMock).toHaveBeenCalledTimes(1);
     expect(mountAdminTabMock).not.toHaveBeenCalled();
   });

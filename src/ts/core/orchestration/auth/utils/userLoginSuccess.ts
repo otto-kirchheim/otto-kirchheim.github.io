@@ -5,7 +5,6 @@ import Storage from '@/infrastructure/storage/Storage';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
 import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
 import { isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import dayjs from '@/infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
 import { featureLifecycleRegistry } from '@/core/hooks';
@@ -92,7 +91,6 @@ export default async function userLoginSuccess({
   }
 
   updateActAsBanner();
-  initAutoSaveIndicator();
   markStep('login', 'ui:autoSaveIndicator');
 
   selectYear(monat, aktJahr);

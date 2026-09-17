@@ -2,6 +2,32 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (135)
+
+### refactor (AutoSave-Badge und Login-Button: DOM-Huelle -> React-Store)
+
+- **AutoSave-Badge -> `useSyncExternalStore`-Store:** `autoSaveIndicator.ts` (Modul-globaler
+  Pub/Sub mit direkter `classList`/`appendChild`-Manipulation am Save-Button) durch
+  `autoSaveStatusStore.ts` + `useAutoSaveStatus.ts` + `AutoSaveBadge.tsx` ersetzt, analog dem
+  bestehenden `buttonLoadingStore.ts`/`useButtonLoading.ts`-Muster. `DBLoadingButton.tsx` bekommt
+  ein neues optionales `autoSaveResources`-Prop, das die Badge deklarativ als Kind rendert.
+  Betrifft alle 5 Speichern-Buttons (`btnSaveN`/`btnSaveE`/`btnSaveEA`/`btnSaveB`/
+  `btnSaveEinstellungen`) -- Letzterer war bisher ein rohes `<button>` ohne `DBLoadingButton`,
+  jetzt einheitlich. `autoSaveIndicator.ts` hat danach keine Aufrufer mehr und ist entfernt
+  (inkl. Aufrufstellen in `userLoginSuccess.ts`/`auth/index.ts`/`logoutUser.ts`, Test-Datei).
+  `autoSave.ts`s Kernlogik (`savePipeline`/`overlapGuard`/`changeTracking`) ist unangetastet --
+  die Badge war reine Anzeige-Kopplung, keine Business-Logik.
+- **btnLogin -> `DBLoadingButton`:** derselbe Huelle-Befund beim Nachpruefen: `AppHeader.tsx`s
+  Login-Button war ebenfalls ein rohes `<button>`, dessen Ladezustand `setLoading`/`clearLoading`
+  per direkter DOM-Manipulation (`replaceChildren`, `.disabled`) statt ueber den bereits
+  vorhandenen `buttonLoadingStore` steuerten. Auf `DBLoadingButton` umgestellt; redundante
+  manuelle `.disabled`-Zuweisungen in `loginUser.ts`/`loginWithPasskey.ts` (fuer `btnLogin` UND
+  das bereits migrierte `btnLoginModal`) entfernt, `clearLoading.ts`s toter `btnLogin`-Sonderfall
+  fuer den Fallback-Text ebenfalls.
+- Verifiziert: `bun run test` (2120 pass, inkl. neuer `autoSaveStatusStore.test.ts` und
+  `AutoSaveBadge.test.tsx`), `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run build`.
+
 ## 2026-09-13 (134)
 
 ### fix (Kopfzeile: doppeltes Logo, Mobile-Zentrierung, Drawer schliesst nicht)

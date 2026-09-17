@@ -4,7 +4,6 @@ const cancelAllPendingMock = vi.fn();
 const clearLoadingMock = vi.fn();
 const hideAllFeatureTabsMock = vi.fn();
 const resetAbortMock = vi.fn();
-const destroyAutoSaveIndicatorMock = vi.fn();
 const logoutMock = vi.fn().mockResolvedValue(undefined);
 const unmountAdminTabMock = vi.fn();
 const zeigeTabMock = vi.fn(() => true);
@@ -23,6 +22,7 @@ vi.mock('@/infrastructure/api/abortController', () => ({
 
 vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   cancelAllPending: cancelAllPendingMock,
+  onAutoSaveStatus: vi.fn(() => () => {}),
 }));
 
 vi.mock('@/infrastructure/ui/clearLoading', () => ({
@@ -31,10 +31,6 @@ vi.mock('@/infrastructure/ui/clearLoading', () => ({
 
 vi.mock('@/infrastructure/ui/updateTabVisibility', () => ({
   hideAllFeatureTabs: hideAllFeatureTabsMock,
-}));
-
-vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
-  destroyAutoSaveIndicator: destroyAutoSaveIndicatorMock,
 }));
 
 vi.mock('@/infrastructure/api/apiService', () => ({

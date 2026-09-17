@@ -3134,3 +3134,51 @@ Unterschied (Formular-Elemente vs. Nav-Items), visuell bei 1440px kein auffaelli
 Moeglich, dass es sich um einen zwischenzeitlichen Zustand waehrend der schnellen Iterationen
 handelte (mehrere Vite-HMR-Updates kurz hintereinander). Beim naechsten Live-Test erneut pruefen,
 falls das Bild weiterhin auftritt: genauer Viewport/Zustand (eingeloggt? welche Breite?) noetig.
+
+## AutoSave-Badge und Login-Button: DOM-Huelle -> React-Store (2026-09-17)
+
+Ziel: mehr echte React-Logik statt duenner Huelle um Legacy-Klassen (User-Auftrag). Plan unter
+`~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`, zwei Bereiche identifiziert und
+umgesetzt, ein dritter (CustomTable-Datenmodell) bewusst zurueckgestellt.
+
+- [x] `autoSaveStatusStore.ts`/`useAutoSaveStatus.ts` neu -- `useSyncExternalStore`-Store analog
+      `buttonLoadingStore.ts`, dockt an `onAutoSaveStatus()` aus `autoSave.ts` an.
+- [x] `AutoSaveBadge.tsx` neu -- deklarative Portierung von `autoSaveIndicator.ts`s
+      `updateBadge()` (Icon/Semantik/Tooltip/2s-Fade als lokaler Component-State).
+- [x] `DBLoadingButton.tsx`: neues optionales Prop `autoSaveResources`, rendert die Badge als Kind.
+- [x] Alle 5 Speichern-Buttons migriert: `EaTab`/`NebenTab`/`EwtTab`/`BereitschaftTab` (jeweils
+      `registerAutoSaveButton()`-Aufruf entfernt, Prop ergaenzt) und `EinstellungenTab.tsx`
+      (`btnSaveEinstellungen` war rohes `<button>`, jetzt `<DBLoadingButton>`).
+- [x] `autoSaveIndicator.ts` entfernt (keine Aufrufer mehr) -- inkl. Aufrufstellen in
+      `userLoginSuccess.ts`/`auth/index.ts`/`logoutUser.ts` (dort durch
+      `resetAutoSaveStatusStore()` ersetzt) und der alten Testdatei. `initSequence.ts`/
+      `DEPENDENCIES.md`: Schritt-Namen bleiben als reine Ordnungs-Checkpoints erhalten
+      (Beschreibung aktualisiert), keine Test-Ordnungskette angefasst.
+- [x] `btnLogin` (`AppHeader.tsx`) beim Nachpruefen als gleiches Huelle-Muster gefunden (rohes
+      `<button>`, `setLoading`/`clearLoading` per DOM statt Store) -- ebenfalls auf
+      `DBLoadingButton` umgestellt. Redundante manuelle `.disabled`-Zuweisungen in
+      `loginUser.ts`/`loginWithPasskey.ts` entfernt (galten auch fuer das bereits migrierte
+      `btnLoginModal`). `clearLoading.ts`s toter `btnLogin`-Textfallback entfernt.
+- [x] Neue Tests: `test/Utilities/autoSaveStatusStore.test.ts`,
+      `test/components/AutoSaveBadge.test.tsx`. Bestehende Mocks in mehreren Testdateien
+      (`onAutoSaveStatus` fehlte in Teil-Mocks von `autoSave.ts`) ergaenzt, wo `DBLoadingButton`
+      transitiv importiert wird.
+- [ ] Phase 2 (CustomTable-Datenmodell, `Row`/`Rows`/`TableChanges` in React-State heben) bewusst
+      nicht umgesetzt -- Team hatte das am 2026-09-12 wegen `savePipeline`/`overlapGuard`-Kopplung
+      an Objektidentitaet zurueckgestellt. Bewertungsrahmen im Plan festgehalten, nach Bedarf neu
+      aufgreifen.
+
+### Verifikationskriterien
+
+- `bun run test` (2120 pass, 0 fail), `bun run lint`/`lint:css` (0 Fehler, 20 vorbestehende
+  Warnungen unveraendert), `bun run build` gruen.
+
+### Review
+
+Umsetzung deckungsgleich mit dem Plan, keine Abweichungen. Zwei zusaetzliche Huelle-Faelle
+(`btnSaveEinstellungen`, `btnLogin`) erst beim Nachpruefen des Diffs durch den User gefunden --
+beide nicht in der urspruenglichen Explore-Recherche aufgefallen, weil sie keine
+`createCustomTable()`/`registerAutoSaveButton()`-Aufrufe in einem Tab-`useEffect` waren, sondern
+rohes Button-Markup mit eigener DOM-Verkabelung. Lehre: bei "React-Huelle"-Suche gezielt auch
+nach rohem `<button>`-Markup mit `setLoading`/`clearLoading`-Kopplung suchen, nicht nur nach dem
+`createCustomTable`-Muster.

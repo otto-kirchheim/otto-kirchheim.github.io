@@ -6,7 +6,7 @@ import { cancelAllPending } from '@/infrastructure/autoSave/autoSave';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
 import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
-import { destroyAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
+import { resetAutoSaveStatusStore } from '@/infrastructure/autoSave/autoSaveStatusStore';
 import { authApi } from '@/infrastructure/api/apiService';
 import { featureLifecycleRegistry } from '@/core/hooks';
 import { resetFeatureTabSync } from '@/core/orchestration/syncFeatureTabs';
@@ -28,7 +28,7 @@ export default function logoutUser({
   reason?: LogoutReason;
 } = {}): void {
   cancelAllPending();
-  destroyAutoSaveIndicator();
+  resetAutoSaveStatusStore();
   abortController.reset('Logout');
 
   // Server-seitigen Logout nur dann auslösen, wenn der Logout bewusst vom User kommt

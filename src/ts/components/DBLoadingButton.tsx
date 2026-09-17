@@ -1,13 +1,17 @@
 import { DBButton } from '@db-ux/react-core-components';
 import { type ComponentProps, type FC } from 'react';
 
+import AutoSaveBadge from './AutoSaveBadge';
 import useButtonLoading from '@/infrastructure/ui/useButtonLoading';
 import useGlobalDisabled from '@/infrastructure/ui/useGlobalDisabled';
+import type { TResourceKey } from '@/types';
 
 type TDBLoadingButton = ComponentProps<typeof DBButton> & {
   id: string;
   /** Text waehrend des Ladens; ohne Angabe bleiben die normalen `children` stehen. */
   loadingText?: string;
+  /** Zeigt ein AutoSave-Status-Badge (Ecke) fuer diese Ressourcen -- siehe `AutoSaveBadge.tsx`. */
+  autoSaveResources?: readonly TResourceKey[];
 };
 
 /**
@@ -16,7 +20,17 @@ type TDBLoadingButton = ComponentProps<typeof DBButton> & {
  * `data-react-loading="true"` sagt den beiden Funktionen, den Zustand ueber den
  * `buttonLoadingStore` statt per `replaceChildren` zu setzen -- siehe dort fuer den Grund.
  */
-const DBLoadingButton: FC<TDBLoadingButton> = ({ id, type, icon, disabled, loadingText, children, ...rest }) => {
+const DBLoadingButton: FC<TDBLoadingButton> = ({
+  id,
+  type,
+  icon,
+  disabled,
+  loadingText,
+  autoSaveResources,
+  className,
+  children,
+  ...rest
+}) => {
   const loading = useButtonLoading(id);
   const globalDisabled = useGlobalDisabled();
 
@@ -28,10 +42,12 @@ const DBLoadingButton: FC<TDBLoadingButton> = ({ id, type, icon, disabled, loadi
       icon={loading ? undefined : icon}
       showIcon={!loading}
       disabled={disabled || loading || globalDisabled}
+      className={autoSaveResources ? [className, 'position-relative'].filter(Boolean).join(' ') : className}
       {...rest}
     >
       {loading && <span className="laedt me-1" data-size="small" role="status" aria-hidden="true" />}
       {loading && loadingText ? loadingText : children}
+      {autoSaveResources && <AutoSaveBadge resources={autoSaveResources} />}
     </DBButton>
   );
 };

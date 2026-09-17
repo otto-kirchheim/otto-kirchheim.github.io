@@ -25,7 +25,7 @@ const ERLAUBT = new Set<string>([...Object.keys(ICON_REGISTRY), ...NICHT_REMAPPT
 
 /**
  * Icon-Namen aus den JS-Abbildungstabellen, die per `element.dataset.icon = …` gesetzt werden
- * und deshalb von den `data-icon`-Regexen nicht erfasst sind (`autoSaveIndicator.ts`,
+ * und deshalb von den `data-icon`-Regexen nicht erfasst sind (`AutoSaveBadge.tsx`,
  * `CustomSnackbar.ts`). Hier explizit, damit ihr Entfernen aus der Registry auffaellt.
  */
 const JS_TABELLEN_ICONS = [

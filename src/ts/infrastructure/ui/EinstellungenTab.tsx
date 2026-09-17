@@ -1,3 +1,4 @@
+import { DBLoadingButton } from '@/components';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 
 /**
@@ -92,18 +93,18 @@ export default function EinstellungenTab() {
         <div className="mitte">
           <div className="raster-auto my-3 knopfreihe abstand-3">
             <div className="d-grid">
-              <button
+              <DBLoadingButton
                 type="submit"
-                className="db-button"
-                data-variant="filled"
+                variant="filled"
                 data-color="successful"
                 name="btnES"
                 id="btnSaveEinstellungen"
+                icon="save"
                 data-disabler
+                autoSaveResources={['settings']}
               >
-                <span className="db-icon" data-icon="save" />
                 Speichern
-              </button>
+              </DBLoadingButton>
             </div>
           </div>
         </div>

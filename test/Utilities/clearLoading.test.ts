@@ -12,7 +12,6 @@ describe('clearLoading', () => {
       <button id="btnTest" disabled>
         <span class="laedt" data-size="small"></span> Laden…
       </button>
-      <button id="btnLogin" disabled>Laden…</button>
     `;
     document.body.appendChild(container);
   });
@@ -36,12 +35,6 @@ describe('clearLoading', () => {
   it('versteckt Ladeanzeige nicht wenn resetLoader=false', () => {
     clearLoading('btnTest', false);
     expect(document.querySelector('#ladeAnzeige')!.classList.contains('d-none')).toBe(false);
-  });
-
-  it('verwendet Fallback "Anmelden" für btnLogin ohne normaltext', () => {
-    clearLoading('btnLogin');
-    const btn = document.querySelector<HTMLButtonElement>('#btnLogin')!;
-    expect(btn.innerHTML).toBe('Anmelden');
   });
 
   it('verwendet textContent als Fallback wenn kein normaltext gesetzt', () => {

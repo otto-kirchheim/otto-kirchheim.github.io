@@ -7,7 +7,6 @@ import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
 import Storage from '@/infrastructure/storage/Storage';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { getUserCookie, isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
-import { initAutoSaveIndicator } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { initAutoSaveEventListener } from '@/infrastructure/autoSave/autoSave';
 import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
 import { setzeHauptTabErlaubtPruefung } from '@/infrastructure/ui/tabController';
@@ -152,7 +151,6 @@ registerAppStartTask(() => {
     initAutoSaveEventListener();
     markStep('session-restore', 'sr:autosave-listener');
 
-    initAutoSaveIndicator();
     markStep('session-restore', 'sr:autosave-indicator');
 
     if (navigator.onLine) selectYear(monat, jahr);

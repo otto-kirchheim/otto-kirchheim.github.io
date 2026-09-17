@@ -11,7 +11,6 @@ import { getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
-import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
@@ -89,8 +88,6 @@ function EaTab() {
       ['btnHelpEA', () => openHelpModal('tab.ea')],
     ]);
 
-    registerAutoSaveButton('btnSaveEA', ['EA']);
-
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
     ftEA.rows.setFilter(
       row => getMonatFromEA(row) === monat && checkIfGreater2025(Storage.get<number>('Jahr', { default: Jahr })),
@@ -135,6 +132,7 @@ function EaTab() {
               icon="save"
               id="btnSaveEA"
               data-disabler
+              autoSaveResources={['EA']}
             >
               Speichern
             </DBLoadingButton>

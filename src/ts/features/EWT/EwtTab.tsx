@@ -13,7 +13,6 @@ import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
-import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
@@ -203,8 +202,6 @@ function EwtTab() {
       ['btnHelpEWT', () => openHelpModal('tab.ewt')],
     ]);
 
-    registerAutoSaveButton('btnSaveE', ['EWT']);
-
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
     ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 
@@ -252,6 +249,7 @@ function EwtTab() {
               icon="save"
               id="btnSaveE"
               data-disabler
+              autoSaveResources={['EWT']}
             >
               Speichern
             </DBLoadingButton>

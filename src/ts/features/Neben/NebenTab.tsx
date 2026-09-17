@@ -11,7 +11,6 @@ import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
-import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import dayjs from '@/infrastructure/date/configDayjs';
 import generatePDF from '@/infrastructure/data/generatePDF';
@@ -117,8 +116,6 @@ function NebenTab() {
       ['btnHelpNeben', () => openHelpModal('tab.neben')],
     ]);
 
-    registerAutoSaveButton('btnSaveN', ['N']);
-
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
     ftN.rows.setFilter(
       row => getMonatFromN(row) === monat && checkIfGreater2024(Storage.get<number>('Jahr', { default: Jahr })),
@@ -163,6 +160,7 @@ function NebenTab() {
               icon="save"
               id="btnSaveN"
               data-disabler
+              autoSaveResources={['N']}
             >
               Speichern
             </DBLoadingButton>

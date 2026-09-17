@@ -7,7 +7,6 @@ const {
   updateTabVisibilityMock,
   isAdminMock,
   getUserCookieMock,
-  initAutoSaveIndicatorMock,
   initAutoSaveEventListenerMock,
   storageCheckMock,
   storageGetMock,
@@ -24,7 +23,6 @@ const {
   updateTabVisibilityMock: vi.fn(),
   isAdminMock: vi.fn(),
   getUserCookieMock: vi.fn(),
-  initAutoSaveIndicatorMock: vi.fn(),
   initAutoSaveEventListenerMock: vi.fn(),
   storageCheckMock: vi.fn(),
   storageGetMock: vi.fn(),
@@ -73,15 +71,12 @@ vi.mock('@/infrastructure/tokenManagement/decodeAccessToken', () => ({
   isAdmin: isAdminMock,
 }));
 
-vi.mock('@/infrastructure/autoSave/autoSaveIndicator', () => ({
-  initAutoSaveIndicator: initAutoSaveIndicatorMock,
-}));
-
 vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   initAutoSaveEventListener: initAutoSaveEventListenerMock,
   createOnChangeHandler: vi.fn(),
   setAutoSaveEnabled: vi.fn(),
   setAutoSaveDelay: vi.fn(),
+  onAutoSaveStatus: vi.fn(() => () => {}),
 }));
 
 vi.mock('@/core/orchestration/auth/components', () => ({

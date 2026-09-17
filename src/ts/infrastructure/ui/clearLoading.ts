@@ -29,7 +29,7 @@ export default function clearLoading(btn: string, resetLoader: boolean = true): 
   }
 
   // Fallback prevents "undefined" labels when a button was never put into loading state.
-  const fallbackText = btn === 'btnLogin' ? 'Anmelden' : btnElement.textContent?.trim() || '';
+  const fallbackText = btnElement.textContent?.trim() || '';
   const normalText = btnElement.dataset.normaltext?.trim() || fallbackText;
   if (badge) {
     btnElement.replaceChildren(document.createTextNode(normalText), badge);

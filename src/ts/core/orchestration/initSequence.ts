@@ -89,7 +89,7 @@ export const SESSION_RESTORE_SEQUENCE = [
   },
   {
     name: 'sr:autosave-indicator',
-    description: 'initAutoSaveIndicator()',
+    description: 'Ordering checkpoint only (AutoSave-Badge ist DBLoadingButton-Prop, kein Init-Call mehr)',
     dependsOn: ['sr:autosave-listener'],
   },
   {
@@ -125,7 +125,7 @@ export const LOGIN_INIT_SEQUENCE = [
   },
   {
     name: 'ui:autoSaveIndicator',
-    description: 'Initialize AutoSave status indicator',
+    description: 'Ordering checkpoint only (AutoSave-Badge ist DBLoadingButton-Prop, kein Init-Call mehr)',
     dependsOn: ['feature:lifecycle'],
   },
   {

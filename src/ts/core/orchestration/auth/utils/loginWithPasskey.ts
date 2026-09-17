@@ -11,7 +11,6 @@ import { schliesseModal } from '@/components';
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
-  const btnLogin = document.querySelector<HTMLButtonElement>('#btnLogin');
 
   if (!usernameInput) throw new Error('Benutzer Input nicht gefunden');
   if (!errorMessage) throw new Error('Error Nachrichtenfeld nicht gefunden');
@@ -23,7 +22,6 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
     return;
   }
 
-  if (btnLogin) btnLogin.disabled = true;
   setLoading('btnLogin');
 
   try {
@@ -51,6 +49,5 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
     errorMessage.textContent = getPasskeyErrorMessage(error, 'Biometrie-Anmeldung fehlgeschlagen');
   } finally {
     clearLoading('btnLogin', false);
-    if (btnLogin) btnLogin.disabled = false;
   }
 }

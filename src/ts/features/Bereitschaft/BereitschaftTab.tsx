@@ -12,7 +12,6 @@ import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows
 import { createOnChangeHandler } from '@/infrastructure/autoSave/autoSave';
 import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 import { default as saveDaten } from '@/infrastructure/data/saveDaten';
-import { registerAutoSaveButton } from '@/infrastructure/autoSave/autoSaveIndicator';
 import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
 import Storage from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
@@ -228,8 +227,6 @@ function BereitschaftTab() {
       ['btnHelpBereitschaft', () => openHelpModal('tab.bereitschaft')],
     ]);
 
-    registerAutoSaveButton('btnSaveB', ['BZ', 'BE']);
-
     const monat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
     ftBZ.rows.setFilter(row => getMonatFromBZ(row) === monat);
     ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
@@ -278,6 +275,7 @@ function BereitschaftTab() {
               icon="save"
               id="btnSaveB"
               data-disabler
+              autoSaveResources={['BZ', 'BE']}
             >
               Speichern
             </DBLoadingButton>
