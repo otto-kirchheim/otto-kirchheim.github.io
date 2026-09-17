@@ -121,18 +121,12 @@ function editingButton(props: {
 /**
  * Toggelt die Sortierung auf `column` (aus einem Klick-Handler heraus, nicht in der
  * Render-Funktion einer Komponente) -- absichtlich eine eigenstaendige Funktion statt einer
- * Closure in `HeaderCell`: `column`/`table` sind veraenderliche Fachobjekte (siehe `Row`/`Rows`),
- * keine React-Props im ueblichen Sinn; als Komponenten-Closure markiert der
- * `react-hooks/immutability`-Linter das faelschlich als Props-Mutation.
+ * Closure in `HeaderCell`. Dispatcht seit Phase A `TOGGLE_COLUMN_SORT` (siehe
+ * `tableReducer.ts`) statt einzelner Spalten-Feld-Mutationen -- `Column` ist seither ein
+ * reines Lese-Objekt ohne Setter (siehe `Column.ts`).
  */
 function toggleColumnSort(table: AnyTable, column: AnyColumn): void {
-  const direction = column.direction === 'ASC' ? 'DESC' : 'ASC';
-  table.columns.array.forEach(c => {
-    c.sorted = false;
-    c.direction = null;
-  });
-  column.sorted = true;
-  column.direction = direction;
+  table.dispatch({ type: 'TOGGLE_COLUMN_SORT', columnName: column.name });
   table.draw();
 }
 

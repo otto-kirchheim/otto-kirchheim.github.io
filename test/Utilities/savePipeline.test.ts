@@ -40,7 +40,9 @@ function syncCellsSilently<T extends CustomTableTypes>(rows: Row<T>[], transform
     const next = transform(row);
     if (next === null) continue;
     row.cells = next;
-    if (row._state === 'unchanged') row._originalCells = { ...next };
+    // `_originalCells` ist am echten `Row`-Shim (Phase A) nur lesbar; dieser Test-Fake ist
+    // keine echte Instanz (siehe Docblock oben) -- Cast bewusst nur hier lokalisiert.
+    if (row._state === 'unchanged') (row as unknown as { _originalCells?: T })._originalCells = { ...next };
     changed = true;
   }
   return changed;

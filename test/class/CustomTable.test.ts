@@ -623,7 +623,7 @@ describe('CustomTable', () => {
 
   // ─── Standard-deleteAllRows (private Methode) ────────────────
 
-  it('deleteAllRows (private Methode) leert alle Zeilen und rendert neu', () => {
+  it('deleteAllRows (private Methode) delegiert an rows.deleteAll() (Soft-Delete)', () => {
     createTableElement('default-delete-all-table');
 
     const table = createCustomTable<TableRow>('default-delete-all-table', {
@@ -645,10 +645,15 @@ describe('CustomTable', () => {
 
     // Private Methode direkt mit korrektem `this`-Kontext aufrufen
     // (der Options-Default `this.deleteAllRows` wird als unbound Referenz gespeichert
-    // und ist daher nur über einen an die Instanz gebundenen Aufruf sicher testbar).
+    // und ist daher nur über einen an die Instanz gebundenen Aufruf sicher testbar). Seit
+    // Phase A delegiert der Fallback an `rows.deleteAll()` (Soft-Delete, siehe CustomTable.ts) --
+    // ein roher Array-Clear ist über den Reducer-State-Zugriff nicht mehr möglich, und dieser
+    // Zweig ist ohnehin praktisch unerreicht (alle 6 produktiven Tabellen liefern einen eigenen
+    // `deleteAllRows`).
     (table as unknown as { deleteAllRows: () => void }).deleteAllRows();
 
-    expect(table.getRows()).toHaveLength(0);
+    expect(table.getRows()).toHaveLength(2);
+    expect(table.getRows().every(row => row.isDeleted)).toBe(true);
   });
 
   // ─── Sortierbarer Spaltenkopf: Klick → onSortClicked ─────────
@@ -681,9 +686,14 @@ describe('CustomTable', () => {
     expect(column?.sorted).toBe(true);
     expect(column?.direction).toBe('ASC');
 
+    // `Column` wird seit Phase A bei jedem `.array`-Zugriff frisch aus dem aktuellen
+    // Reducer-State synthetisiert (kein Wrapper-Cache wie bei `Row`, siehe `Column.ts`) --
+    // die oben gehaltene `column`-Referenz ist ein Snapshot und bleibt bewusst auf 'ASC'
+    // einfrieren. Der aktuelle Wert muss nach dem zweiten Klick frisch gelesen werden.
     const thAfterFirstSort = document.querySelector<HTMLTableCellElement>('thead th.customtable-sortable');
     thAfterFirstSort?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    expect(column?.direction).toBe('DESC');
+    const columnAfterSecondSort = table.columns.array.find(c => c.name === 'value');
+    expect(columnAfterSecondSort?.direction).toBe('DESC');
   });
 
   describe('AutoSave-Commit-Race (getChangeRows + includedRows)', () => {

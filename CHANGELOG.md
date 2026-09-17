@@ -2,6 +2,41 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (138)
+
+### refactor (CustomTable Phase A: Reducer-Kern + `.instance`-Shim, Zielzustand "(b)")
+
+- **`Row`/`Rows`/`Column`/`Columns` sind keine Datenklassen mehr, sondern duenne Shims** ueber
+  einem reinen `TableReducerState<T>` (`RowRecord<T>[]`/`ColumnRecord<T>[]`), verwaltet per
+  neuem `tableReducer(state, action)` (`infrastructure/table/tableReducer.ts`, 15 Aktionstypen,
+  1:1 Spiegel jeder bisherigen `Row`/`Rows`/`CustomTableView`-Mutationsmethode). `CustomTable`
+  haelt den State als Instanzfeld (`getState()`/`dispatch()`/`getRowRecord()`) -- in dieser Phase
+  noch keine React-`useReducer`-Anbindung (folgt in Achse B), daher synchron ohne `flushExtern`.
+- **`.instance`-Vertrag fuer die 14 externen Aufrufer-Dateien bleibt unveraendert**: `row.cells`/
+  `row._state`/`row.val()`/`table.rows.array`/... funktionieren identisch, jetzt als
+  Getter/Setter bzw. dispatch-Aufrufe statt Feldmutation.
+- **Row-Wrapper-Cache** (`Rows.ts`, `Map<uid, Row<T>>`): garantiert `existingRow === row` ueber
+  die Zeit -- zwingende Vorbedingung fuer die 6 Editor-Modals, die eine beim Modal-Oeffnen
+  gehaltene `Row`-Referenz per `===` gegen einen spaeteren `.array`-Zugriff vergleichen.
+  `Rows.array` cached zusaetzlich anhand der Referenzidentitaet von `state.rows`, damit
+  `CustomTableView.tsx`s In-Render-Sortiermutation (`table.rows.array.sort(...)`) weiter
+  funktioniert.
+- **`Column`/`Columns`**: kein Wrapper-Cache (keine `===`-Abhaengigkeit im Code gefunden) --
+  `.array` synthetisiert bei jedem Zugriff frische, rein lesende `Column`-Instanzen.
+  `CustomTableView.tsx`s `toggleColumnSort()` dispatcht seither `TOGGLE_COLUMN_SORT` statt
+  einzelner Spalten-Feld-Mutationen.
+- `CustomTable`s Default-Fallback fuer `options.editing.deleteAllRows` (praktisch unerreicht --
+  alle 6 produktiven Tabellen liefern einen eigenen) delegiert jetzt an `rows.deleteAll()`
+  (Soft-Delete) statt eines rohen Array-Clears.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2137/2137 pass), `bun run build` gruen, sowie ein manueller
+  Puppeteer-Durchklick (Sortier-Klick x2, Add/Edit/Delete/Undo, Row-Identitaet ueber zwei
+  `.array`-Zugriffe) gegen den laufenden Dev-Server -- keine Konsolenfehler.
+- **Noch nicht Teil dieser Aenderung**: Achse B (State in einen echten `useReducer`-Hook je Tab
+  verschieben, `CustomTableView.tsx`-Props auf `state`/`dispatch`) und Zielzustand "(a)"
+  (Invertierung der 14 `.instance`-Aufrufer) -- beide bewusst zurueckgestellt, siehe
+  Plan-Dokument.
+
 ## 2026-09-17 (137)
 
 ### refactor (CustomTable Phase 0: 5 Risikostellen von Objektidentitaet auf ID-Zugriff gehaertet)

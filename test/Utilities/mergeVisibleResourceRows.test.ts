@@ -25,7 +25,7 @@ vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
   getMonatFromN: getMonatFromNMock,
 }));
 
-import { Row, createCustomTable, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import mergeVisibleResourceRows from '@/infrastructure/data/mergeVisibleResourceRows';
 
 interface TableRow extends CustomTableTypes {
@@ -58,12 +58,10 @@ describe('mergeVisibleResourceRows – toStorage Marker-Persistierung', () => {
       rows: [],
     });
 
-    table.rows.array = [
-      new Row(table, { _id: 'u1', label: 'unchanged' }, 'unchanged'),
-      new Row(table, { label: 'new' }, 'new'),
-      new Row(table, { _id: 'm1', label: 'modified' }, 'modified'),
-      new Row(table, { _id: 'd1', label: 'deleted' }, 'deleted'),
-    ];
+    table.rows.add({ _id: 'u1', label: 'unchanged' }, 'unchanged');
+    table.rows.add({ label: 'new' }, 'new');
+    table.rows.add({ _id: 'm1', label: 'modified' }, 'modified');
+    table.rows.add({ _id: 'd1', label: 'deleted' }, 'deleted');
 
     const result = mergeVisibleResourceRows('BZ', table) as Array<Record<string, unknown>>;
 
@@ -80,11 +78,11 @@ describe('mergeVisibleResourceRows – toStorage Marker-Persistierung', () => {
       rows: [],
     });
 
-    const errorRow = new Row(table, { _id: 'e1', label: 'error' }, 'unchanged');
+    table.rows.add({ _id: 'e1', label: 'error' }, 'unchanged');
+    const errorRow = table.rows.array[0];
     errorRow._state = 'error';
     errorRow._errorMessage = 'Speichern fehlgeschlagen';
     errorRow._errorState = 'modified';
-    table.rows.array = [errorRow];
 
     const result = mergeVisibleResourceRows('BZ', table) as Array<Record<string, unknown>>;
 

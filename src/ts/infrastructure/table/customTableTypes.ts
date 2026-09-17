@@ -160,3 +160,88 @@ export interface CustomHTMLTableRowElement<T extends CustomTableTypes> extends H
 
 export type Breakpoints = BreakpointName;
 export type Directions = 'ASC' | 'DESC';
+
+// ─── Reducer-Kern (Phase A) ────────────────────────────────────────────────
+//
+// Reine, serialisierbare Datenform einer Zeile/Spalte für den `useReducer`-Kern. KEINE
+// Klasse, kein DOM-/Table-Backref -- der `.instance`-Shim (`Row`/`Rows`/`Column`/`Columns`
+// in Row.ts/Rows.ts/Column.ts) baut die nach außen sichtbare Klassen-API darüber.
+//
+// `uid` ist ein drittes, von `getRowKey()` UNABHÄNGIGES Konzept: ein permanenter, intern
+// vergebener Cache-Schlüssel für die Row-Shim-Instanz (löst das `===`-Problem der 6
+// Editor-Modals, siehe Plan-Dokument), ändert sich nie über die Lebenszeit der Zeile.
+// `getRowKey()` bleibt ausschließlich für den AutoSave-Commit-Race-Abgleich zuständig und
+// ändert sich bewusst bei new→unchanged.
+
+export interface RowRecord<T extends CustomTableTypes> {
+  uid: string;
+  cells: T;
+  _id?: string;
+  _state: RowState;
+  _errorState?: DirtyRowState;
+  _errorMessage: string | null;
+  _originalCells?: T;
+  _clientRequestId?: string;
+  _stateBeforeDelete?: RowState;
+}
+
+export interface ColumnRecord<T extends CustomTableTypes> {
+  name: string;
+  title: string;
+  longTitle: string;
+  breakpoints: Breakpoints | null;
+  sortable: boolean;
+  sorted: boolean;
+  direction: Directions | null;
+  type: string;
+  parser: (this: Column<T>, value: T[keyof T], option?: unknown) => string | number;
+  classes: string[];
+  visible: boolean;
+  html: boolean;
+  editing?: CustomTableOptionsAll<T>['editing'];
+}
+
+export interface TableReducerState<T extends CustomTableTypes> {
+  rows: RowRecord<T>[];
+  columns: ColumnRecord<T>[];
+  rowFilter: ((cells: T) => boolean) | null;
+  editingEnabled: boolean | null;
+  sortingEnabled: boolean | null;
+}
+
+export type TableAction<T extends CustomTableTypes> =
+  | { type: 'ADD'; value: T; state?: RowState } // Rows.add()
+  | { type: 'LOAD'; rows: T[]; add?: boolean } // Rows.load()/loadSmart()
+  | { type: 'SET_FILTER'; filter: ((cells: T) => boolean) | null } // Rows.setFilter()
+  | { type: 'UPDATE_CELLS'; uid: string; value: T } // Row.val()
+  | { type: 'DELETE_ROW'; uid: string } // Row.deleteRow()
+  | { type: 'UNDO_DELETE'; uid: string } // Row.undoDelete()
+  | {
+      // Escape-Hatch für Direktzuweisungen auf Row-Felder außerhalb von val()/deleteRow()/
+      // undoDelete() -- u.a. Phase-0-Stellen (submitBereitschaftsEinsatz.ts B/C/D) und die
+      // AutoSave-Fehlerpfade (errorHandling.ts, changeTracking.ts, persistEwtTableData.ts),
+      // die schon vor dem Reducer-Umbau per Rohfeld-Zuweisung arbeiteten. Kein Vorbild für
+      // neuen Code -- neue Schreibzugriffe gehören in eine eigene TableAction.
+      type: 'SET_ROW_FIELD';
+      uid: string;
+      field: '_state' | '_errorState' | '_errorMessage' | '_id' | '_clientRequestId' | 'cells';
+      value: unknown;
+    }
+  | { type: 'DELETE_ALL' } // Rows.deleteAll()
+  | {
+      type: 'COMMIT_CHANGES'; // Rows.commitChanges()
+      createdIds?: Map<number, string>;
+      failedRowKeys: ReadonlySet<string>;
+      includedRowKeys?: ReadonlySet<string>;
+    }
+  | {
+      type: 'COMMIT_AUTO_SAVE'; // Rows.commitAutoSave()
+      createdIds?: Map<number, string>;
+      failedRowKeys: ReadonlySet<string>;
+      includedRowKeys?: ReadonlySet<string>;
+    }
+  | { type: 'SYNC_CELLS_SILENTLY'; transform: (row: RowRecord<T>) => T | null } // Rows.syncCellsSilently()
+  | { type: 'PATCH_CELLS_AS_MODIFIED'; transform: (row: RowRecord<T>) => T | null } // Rows.patchCellsAsModified()
+  | { type: 'MARK_DIRTY_BY_MATCH'; matcher: (cells: T) => boolean } // Rows.markRowsDirtyByMatch()
+  | { type: 'RECONCILE_DELETED'; serverRows: T[]; matcher: (cells: T) => boolean } // Rows.reconcileDeletedRows()
+  | { type: 'TOGGLE_COLUMN_SORT'; columnName: string }; // CustomTableView.tsx toggleColumnSort()

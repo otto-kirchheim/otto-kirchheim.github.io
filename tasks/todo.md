@@ -3310,3 +3310,76 @@ Aufruf ohne Pruefung der Env-Variablen im Skript als Vergleichsbasis nehmen.
 **Naechster Schritt:** Phase A (Reducer-Kern, `Row`/`Rows`/`Column`/`CustomTable` als
 `useReducer`) -- zwangsweise atomar fuer alle 6 Tabellen, siehe Plan-Dokument Teil 2. Noch nicht
 begonnen.
+
+## Phase A: Reducer-Kern + `.instance`-Shim -- Zielzustand "(b)" (2026-09-17)
+
+- [x] `customTableTypes.ts`: `RowRecord<T>`/`ColumnRecord<T>`/`TableReducerState<T>`/
+      `TableAction<T>` ergaenzt (15 Aktionstypen, 1:1 Spiegel jeder bisherigen
+      `Row`/`Rows`/`CustomTableView`-Methode).
+- [x] `tableReducer.ts` (neu): reiner `tableReducer(state, action)`, `createRowRecord()`
+      exportiert (fuer `CustomTable`s Konstruktor). 16 isolierte Unit-Tests
+      (`test/class/tableReducer.test.ts`), alle gruen vor jeder Live-Verkabelung.
+- [x] `Row.ts`/`Rows.ts`/`Column.ts` auf Shims umgestellt: Felder als Getter/Setter (Row) bzw.
+      reine Getter (Column, kein Wrapper-Cache noetig), Methoden dispatchen. `Rows`s
+      Wrapper-Cache (`uid` -> `Row`-Instanz) + `state.rows`-Referenz-Cache fuer `.array`
+      erhalten sowohl die `===`-Garantie der 6 Editor-Modals als auch `CustomTableView.tsx`s
+      In-Render-Sortiermutation, ohne `CustomTableView.tsx` selbst groesser anfassen zu muessen.
+- [x] `CustomTable.ts`: `tableState`-Instanzfeld + `getState()`/`dispatch()`/`getRowRecord()`;
+      Konstruktor baut initialen State direkt aus `options.rows`/`options.columns` (nicht per
+      `LOAD`-Aktion -- die restauriert zusaetzlich Meta-Felder, die der alte `Rows`-Konstruktor
+      nie anfasste). `deleteAllRows()`-Fallback delegiert an `rows.deleteAll()` (Soft-Delete)
+      statt rohem Array-Clear (Zweig praktisch unerreicht, siehe Review).
+- [x] `CustomTableView.tsx`: nur `toggleColumnSort()` angefasst (dispatcht jetzt
+      `TOGGLE_COLUMN_SORT`) -- alles andere (Rendering, In-Render-Sort) unveraendert, weil der
+      `.array`-Vertrag erhalten blieb.
+- [x] Tests nachgezogen: `test/Utilities/mergeVisibleResourceRows.test.ts` (Row-Konstruktion
+      auf `rows.add(value, state)` umgestellt, alter 3-Arg-`new Row(...)`-Konstruktor entfaellt),
+      `test/Utilities/savePipeline.test.ts` (Test-Fake fuer `_originalCells`-Schreibzugriff
+      lokal typisiert), `test/class/CustomTable.test.ts` (2 Tests an neue, bewusst geaenderte
+      Semantik angepasst: `deleteAllRows`-Fallback jetzt Soft-Delete; Sortier-Test liest
+      `Column` nach dem zweiten Klick frisch statt eine gehaltene Referenz weiterzuverwenden --
+      `Column` hat seit Phase A keinen Identitaets-Vertrag mehr, siehe Review).
+- [x] `frontend/CHANGELOG.md` Eintrag (138) ergaenzt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run lint:css` (0 Fehler, 84 vorbestehende Warnungen unveraendert), `bun run test`
+  (2137/2137 pass), `bun run build` gruen, `bun run format` vor Commit.
+- Manueller Puppeteer-Durchklick gegen den laufenden Dev-Server (`tableN`-artige Test-Instanz,
+  nicht die echte `NebenTab`-Tabelle): Sortier-Klick x2 (ASC->DESC->ASC, korrekte Reihenfolge),
+  `rows.add()` (State `new`), `row.val()` (State `modified`), Row-Identitaet ueber zwei
+  `.array`-Zugriffe stabil, `deleteRow()`+`undoDelete()` (State-Restauration korrekt),
+  `deleteRow()` einer `new`-Zeile (vollstaendig entfernt). Keine Konsolenfehler.
+
+### Review
+
+**Kein neuer Bug gefunden, zwei bewusste, dokumentierte Verhaltensaenderungen:**
+
+1. `CustomTable`s privater `deleteAllRows()`-Fallback (nur aktiv, wenn eine Tabelle KEIN eigenes
+   `options.editing.deleteAllRows` liefert -- per Grep verifiziert: alle 6 produktiven Tabellen
+   tun das, dieser Zweig ist im Betrieb also unerreicht) loeschte vorher hart
+   (`rows.array.length = 0`). Da `rows.array` seit Phase A ein reiner Getter auf den
+   Reducer-State ist, ist ein roher Array-Clear nicht mehr moeglich -- der Fallback delegiert
+   jetzt an `rows.deleteAll()` (Soft-Delete, konsistent mit dem Rest der Tabelle). Test
+   entsprechend angepasst.
+2. `Column`-Instanzen sind seit Phase A KEIN Identitaets-Vertrag mehr (anders als `Row`): jeder
+   `.array`-Zugriff synthetisiert frische Objekte aus dem aktuellen `ColumnRecord`. Eine ueber
+   die Zeit gehaltene `Column`-Referenz ist dadurch ein Snapshot, kein live Objekt mehr -- per
+   Grep verifiziert, dass ausser dem jetzt entfernten `toggleColumnSort()`-Direktmutations-Code
+   nirgends eine `Column`-Referenz laenger als einen Render-Zyklus gehalten wird. Ein
+   Test hielt eine solche Referenz ueber zwei Klicks; angepasst auf frisches Nachlesen.
+
+**Bewusst zurueckgestellt (kein Blocker, siehe Plan-Dokument "Offene Risiken"):** Wenn eine
+`Row`-Referenz aus dem Wrapper-Cache verschwindet (echte Entfernung aus dem State, z. B. durch
+`RECONCILE_DELETED`/`LOAD`), wirft ein spaeterer Lesezugriff auf diese Instanz jetzt hart
+(`Row: kein RowRecord fuer uid ... `) statt vorher stillschweigend als "Zombie"-Objekt
+weiterzuleben. Betrifft nur den theoretischen Fall "Zeile wird waehrend eines offenen
+Editor-Modals von einem anderen Flow entfernt" -- kein bekannter produktiver Pfad tut das,
+daher keine Aenderung vorgenommen.
+
+**Naechster Schritt:** Achse B (State je Tabelle in einen echten `useReducer`-Hook verschieben,
+`CustomTableView.tsx`-Props auf `state`/`dispatch`, `Row`-Setter dann mit `flushExtern`
+wrappen). Migrationsreihenfolge laut Plan-Dokument: NebenTab -> EaTab -> EwtTab ->
+BereitschaftTab -> EinstellungenTab/tableVE. Noch nicht begonnen. Zielzustand "(a)" (14
+`.instance`-Aufrufer invertieren) bleibt bewusst ausserhalb des Scopes.

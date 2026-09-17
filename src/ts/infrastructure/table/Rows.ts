@@ -1,70 +1,82 @@
-import { stripMetaFields } from '../data/metaFields';
 import type { CustomTable } from './CustomTable';
-import { getEffectiveRowState, getRowKey } from './customTableTypes';
-import type { CustomTableTypes, DirtyRowState, RowState, TableChanges } from './customTableTypes';
+import { getEffectiveRowState } from './customTableTypes';
+import type { CustomTableTypes, RowRecord, RowState, TableChanges } from './customTableTypes';
 import { Row } from './Row';
 
 const NON_ERROR_ROW_STATES: readonly RowState[] = ['unchanged', 'new', 'modified', 'deleted'];
-const DIRTY_ROW_STATES: readonly DirtyRowState[] = ['new', 'modified', 'deleted'];
 
+/**
+ * `.instance`-Shim für die Zeilen-Sammlung (Phase A). Hält KEINEN eigenen Zustand mehr außer
+ * dem Row-Wrapper-Cache (`uid` -> stabile `Row`-Instanz, siehe `Row.ts`s Docblock) -- die
+ * eigentlichen Daten leben im `RowRecord<T>[]` auf `CustomTable`s Reducer-State. Jede Methode
+ * dispatcht die passende `TableAction` und stellt anschließend exakt dieselben
+ * `drawRows()`/`_notifyChange()`-Aufrufe wie vorher her.
+ */
 export class Rows<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
-  public array: Array<Row<T>> = [];
-  private rowFilter: ((cells: T) => boolean) | null = null;
+  private readonly wrapperCache = new Map<string, Row<T>>();
+  private cachedArrayFor: RowRecord<T>[] | null = null;
+  private cachedArray: Row<T>[] = [];
 
-  constructor(table: CustomTable<T>, rows: T[]) {
-    this.array = rows.map(row => new Row(table, row, 'unchanged'));
+  constructor(table: CustomTable<T>) {
     this.CustomTable = table;
+  }
+
+  /**
+   * Projiziert `CustomTable.getState().rows` (RowRecord[]) auf stabile `Row`-Wrapper.
+   * Gecached anhand der Referenzidentität von `state.rows`: Solange kein `dispatch()`
+   * stattfand (neuer Array-Wert), liefert ein zweiter `.array`-Zugriff dieselbe Array-Instanz
+   * zurück -- das erhält den alten, mutierbaren-Array-Vertrag, den `CustomTableView.tsx`s
+   * In-Render-Sortierung (`table.rows.array.sort(...)`) braucht (siehe dort).
+   */
+  get array(): Row<T>[] {
+    const stateRows = this.CustomTable.getState().rows;
+    if (this.cachedArrayFor === stateRows) return this.cachedArray;
+
+    const validUids = new Set(stateRows.map(r => r.uid));
+    for (const uid of this.wrapperCache.keys()) {
+      if (!validUids.has(uid)) this.wrapperCache.delete(uid);
+    }
+
+    this.cachedArray = stateRows.map(record => {
+      let wrapper = this.wrapperCache.get(record.uid);
+      if (!wrapper) {
+        wrapper = new Row(this.CustomTable, record.uid);
+        this.wrapperCache.set(record.uid, wrapper);
+      }
+      return wrapper;
+    });
+    this.cachedArrayFor = stateRows;
+    return this.cachedArray;
   }
 
   /** Neue Zeile hinzufügen (State: 'new') */
   add(value: T, state: RowState = 'new'): void {
-    this.array.push(new Row(this.CustomTable, value, state));
+    this.CustomTable.dispatch({ type: 'ADD', value, state });
     this.CustomTable.drawRows();
     this.CustomTable._notifyChange();
   }
 
   /**
-   * Zeilen laden mit vollständiger State-Restauration aus Meta-Feldern:
-   * - __errorMessage → 'error' (inkl. _errorState und _errorMessage)
-   * - __localState (explizit 'unchanged'|'new'|'modified'|'deleted') → direkt übernommen
-   * - kein __localState (Alt-Daten vor diesem Marker-Schema) → Fallback: kein _id → 'new', sonst 'unchanged'
+   * Zeilen laden mit vollständiger State-Restauration aus Meta-Feldern (siehe
+   * `tableReducer.ts`s `LOAD`-Case). `hasPendingChanges` wird wie im alten Code VOR dem
+   * eigentlichen Laden anhand der Rohdaten ermittelt (Fehler-Zeilen zählen bewusst nicht mit).
    */
   load(array: T[], add = false): void {
-    if (!add) this.array.length = 0;
-    let hasPendingChanges = false;
-    array.forEach(row => {
+    const hasPendingChanges = array.some(row => {
       const r = row as Record<string, unknown>;
+      if (r.__errorMessage) return false;
       const storedLocalState = r.__localState as string | undefined;
-      const storedErrorMsg = r.__errorMessage as string | undefined;
-      const storedErrorState = r.__errorState as string | undefined;
-
-      // Alle __-Felder generisch aus Cells entfernen (erweiterbar für zukünftige Meta-Felder)
-      const cells = stripMetaFields({ ...row }) as T;
-      const hasId =
-        '_id' in (cells as Record<string, unknown>) && typeof (cells as Record<string, unknown>)._id === 'string';
-
+      const hasId = '_id' in r && typeof r._id === 'string';
       const baseState: RowState = NON_ERROR_ROW_STATES.includes(storedLocalState as RowState)
         ? (storedLocalState as RowState)
         : hasId
           ? 'unchanged'
-          : 'new'; // Fallback für Alt-Daten ohne __localState-Marker
-      const newRow = new Row(this.CustomTable, cells, baseState);
-
-      if (storedErrorMsg) {
-        newRow._state = 'error';
-        newRow._errorState = DIRTY_ROW_STATES.includes(storedErrorState as DirtyRowState)
-          ? (storedErrorState as DirtyRowState)
-          : hasId
-            ? 'modified'
-            : 'new';
-        newRow._errorMessage = storedErrorMsg;
-      } else if (baseState === 'new' || baseState === 'modified') {
-        hasPendingChanges = true;
-      }
-
-      this.array.push(newRow);
+          : 'new';
+      return baseState === 'new' || baseState === 'modified';
     });
+
+    this.CustomTable.dispatch({ type: 'LOAD', rows: array, add });
     this.CustomTable.drawRows();
     if (hasPendingChanges) this.CustomTable._notifyChange();
   }
@@ -76,14 +88,15 @@ export class Rows<T extends CustomTableTypes> {
 
   /** Setzt/entfernt einen unsichtbaren Zeilenfilter und zeichnet die Tabelle neu. */
   setFilter(filter: ((cells: T) => boolean) | null): void {
-    this.rowFilter = filter;
+    this.CustomTable.dispatch({ type: 'SET_FILTER', filter });
     this.CustomTable.drawRows();
   }
 
   /** Liefert die aktuell sichtbaren Zeilen unter Berücksichtigung des aktiven Filters. */
   getFilteredRows(): Array<Row<T>> {
-    if (!this.rowFilter) return this.array;
-    return this.array.filter(row => this.rowFilter?.(row.cells) ?? true);
+    const filter = this.CustomTable.getState().rowFilter;
+    if (!filter) return this.array;
+    return this.array.filter(row => filter(row.cells));
   }
 
   /**
@@ -155,54 +168,35 @@ export class Rows<T extends CustomTableTypes> {
    * Existierende Zeilen werden als 'deleted' markiert.
    */
   deleteAll(): void {
-    let hasRemovedRows = false;
-    let hasSoftDeletes = false;
-    for (const row of this.array) {
+    const before = this.CustomTable.getState().rows;
+    const hasRemovedRows = before.some(row => getEffectiveRowState(row) === 'new');
+    const hasSoftDeletes = before.some(row => {
       const effectiveState = getEffectiveRowState(row);
-      if (effectiveState === 'new') {
-        hasRemovedRows = true;
-      } else if (effectiveState !== 'deleted') {
-        row._state = 'deleted';
-        row._errorState = undefined;
-        row._errorMessage = null;
-        hasSoftDeletes = true;
-      }
-    }
-    if (hasRemovedRows) {
-      this.array = this.array.filter(row => getEffectiveRowState(row) !== 'new');
-    }
+      return effectiveState !== 'new' && effectiveState !== 'deleted';
+    });
+
+    this.CustomTable.dispatch({ type: 'DELETE_ALL' });
     this.CustomTable.drawRows();
-    if (hasRemovedRows || hasSoftDeletes) {
-      this.CustomTable._notifyChange();
-    }
+    if (hasRemovedRows || hasSoftDeletes) this.CustomTable._notifyChange();
   }
 
   /**
    * Nach erfolgreichem manuellen Speichern (inkl. Löschungen): Alle States zurücksetzen.
-   * - 'new' → 'unchanged' (mit _id aus Server-Response)
-   * - 'modified' → 'unchanged'
-   * - 'deleted' → entfernt aus Array
-   *
    * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
    * @param failedRows - Schlüssel (`getRowKey()`) der Zeilen, deren Save fehlgeschlagen ist.
    * @param includedRows - Schlüssel-Snapshot aus `getChangeRows()` (per `getRowKey()`) vor dem
-   *   Request. Nur diese Zeilen werden committet/entfernt - alles was danach neu hinzugekommen
-   *   ist, bleibt fuer den naechsten Save-Lauf unangetastet (AutoSave-Commit-Race, siehe oben).
-   *   ID-basiert statt Objektidentität, damit der Snapshot eine async Anfrage ueberlebt, ohne
-   *   auf dieselbe Row-Objektreferenz angewiesen zu sein.
+   *   Request. Nur diese Zeilen werden committet/entfernt (AutoSave-Commit-Race, siehe oben).
    */
   commitChanges(
     createdIds?: Map<number, string>,
     failedRows: ReadonlySet<string> = new Set<string>(),
     includedRows?: ReadonlySet<string>,
   ): void {
-    this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
-
-    // Gelöschte Zeilen entfernen - nur wenn Teil dieses Batches
-    this.array = this.array.filter(row => {
-      if (getEffectiveRowState(row) !== 'deleted') return true;
-      if (failedRows.has(getRowKey(row))) return true;
-      return includedRows !== undefined && !includedRows.has(getRowKey(row));
+    this.CustomTable.dispatch({
+      type: 'COMMIT_CHANGES',
+      createdIds,
+      failedRowKeys: failedRows,
+      includedRowKeys: includedRows,
     });
     this.CustomTable.drawRows();
   }
@@ -210,114 +204,44 @@ export class Rows<T extends CustomTableTypes> {
   /**
    * Nach erfolgreichem Auto-Save (OHNE Löschungen): Nur new/modified zurücksetzen.
    * Gelöschte Zeilen bleiben als 'deleted' sichtbar.
-   *
-   * @param createdIds - Mapping von Index → neue _id für erstellte Einträge
-   * @param failedRows - siehe `commitChanges()`
-   * @param includedRows - siehe `commitChanges()`
    */
   commitAutoSave(
     createdIds?: Map<number, string>,
     failedRows: ReadonlySet<string> = new Set<string>(),
     includedRows?: ReadonlySet<string>,
   ): void {
-    this._commitCreateAndUpdate(createdIds, failedRows, includedRows);
+    this.CustomTable.dispatch({
+      type: 'COMMIT_AUTO_SAVE',
+      createdIds,
+      failedRowKeys: failedRows,
+      includedRowKeys: includedRows,
+    });
     this.CustomTable.drawRows();
   }
 
   /**
    * Aktualisiert die Zellen aller nicht-gelöschten Zeilen anhand von `transform` (liefert
-   * `null` für unveränderte Zeilen zurück). Fasst NUR die Zellen an, nicht den State — gedacht
-   * für einen autoritativen Content-Sync (z.B. Server-Antwort nach einem Save), bei dem die
-   * Zeile NICHT erneut als `modified` erscheinen soll. Zieht `_originalCells` mit, wenn die
-   * Zeile `unchanged` ist, damit ein späterer Diff nicht faelschlich eine Änderung sieht.
-   * Ruft bewusst kein `drawRows()` — der Aufrufer entscheidet über die Redraw-Bedingung
-   * anhand des Rückgabewerts (z.B. immer vs. nur bei echter Änderung).
+   * `null` für unveränderte Zeilen zurück). Fasst NUR die Zellen an, nicht den State. Ruft
+   * bewusst kein `drawRows()` -- der Aufrufer entscheidet über die Redraw-Bedingung.
    * @returns ob irgendeine Zeile betroffen war.
    */
-  syncCellsSilently(transform: (row: Row<T>) => T | null): boolean {
-    let changed = false;
-    for (const row of this.array) {
-      if (row._state === 'deleted') continue;
-      const next = transform(row);
-      if (next === null) continue;
-      row.cells = next;
-      if (row._state === 'unchanged') row._originalCells = { ...next };
-      changed = true;
-    }
-    return changed;
+  syncCellsSilently(transform: (row: RowRecord<T>) => T | null): boolean {
+    const before = this.CustomTable.getState().rows;
+    this.CustomTable.dispatch({ type: 'SYNC_CELLS_SILENTLY', transform });
+    const after = this.CustomTable.getState().rows;
+    return before.some((row, i) => row !== after[i]);
   }
 
   /**
-   * Wendet `transform` auf die Zellen aller nicht-gelöschten Zeilen an (liefert `null` für
-   * unveränderte Zeilen zurück) und markiert eine vorher `unchanged` Zeile als `modified` —
-   * eine echte lokale Änderung, die AutoSave abholen soll (z.B. aus einer verknüpften Ressource
-   * abgeleitete Felder). Ruft bewusst kein `drawRows()`, siehe `syncCellsSilently()`.
+   * Wendet `transform` auf die Zellen aller nicht-gelöschten Zeilen an und markiert eine vorher
+   * `unchanged` Zeile als `modified`. Ruft bewusst kein `drawRows()`, siehe `syncCellsSilently()`.
    * @returns ob irgendeine Zeile betroffen war.
    */
-  patchCellsAsModified(transform: (row: Row<T>) => T | null): boolean {
-    let changed = false;
-    for (const row of this.array) {
-      if (row._state === 'deleted') continue;
-      const next = transform(row);
-      if (next === null) continue;
-      row.cells = next;
-      if (row._state === 'unchanged') row._state = 'modified';
-      changed = true;
-    }
-    return changed;
-  }
-
-  /** Interne Hilfsmethode: new → unchanged, modified → unchanged */
-  private _commitCreateAndUpdate(
-    createdIds?: Map<number, string>,
-    failedRows: ReadonlySet<string> = new Set<string>(),
-    includedRows?: ReadonlySet<string>,
-  ): void {
-    let createIdx = 0;
-
-    for (const row of this.array) {
-      const effectiveState = getEffectiveRowState(row);
-      const inBatch = includedRows === undefined || includedRows.has(getRowKey(row));
-
-      switch (effectiveState) {
-        case 'new': {
-          // Zeile nicht Teil dieser Anfrage (erst waehrend des Requests angelegt) - createIdx
-          // NICHT erhoehen, sonst verschiebt sich die Zuordnung fuer alle folgenden Zeilen.
-          if (!inBatch) break;
-          const isFailedRow = failedRows.has(getRowKey(row));
-          const newId = createdIds?.get(createIdx);
-          if (!isFailedRow && newId) {
-            row._id = newId;
-            (row.cells as Record<string, unknown>)._id = newId;
-          }
-          if (!isFailedRow) {
-            row._state = 'unchanged';
-            row._errorState = undefined;
-            row._errorMessage = null;
-            row._clientRequestId = undefined;
-            row._originalCells = { ...row.cells };
-          }
-          createIdx++;
-          break;
-        }
-        case 'modified':
-          if (!inBatch) break;
-          if (!failedRows.has(getRowKey(row))) {
-            row._state = 'unchanged';
-            row._errorState = undefined;
-            row._errorMessage = null;
-            row._originalCells = { ...row.cells };
-          }
-          break;
-        case 'deleted':
-          if (!inBatch) break;
-          if (!failedRows.has(getRowKey(row))) {
-            row._errorState = undefined;
-            row._errorMessage = null;
-          }
-          break;
-      }
-    }
+  patchCellsAsModified(transform: (row: RowRecord<T>) => T | null): boolean {
+    const before = this.CustomTable.getState().rows;
+    this.CustomTable.dispatch({ type: 'PATCH_CELLS_AS_MODIFIED', transform });
+    const after = this.CustomTable.getState().rows;
+    return before.some((row, i) => row !== after[i]);
   }
 
   /** Sucht eine Zeile per Backend-`_id`. */
@@ -328,58 +252,33 @@ export class Rows<T extends CustomTableTypes> {
 
   /**
    * Markiert alle nicht bereits gelöschten Zeilen, deren Zellen `matcher` erfüllen, als lokal
-   * geändert -- State-only, KEINE Zellen-Änderung (Zellen sind zu diesem Zeitpunkt bereits über
-   * `load()` aktuell). `new` bleibt `new`, alles andere wird `modified`. Für Konflikt-Reviews
-   * (`loadUserDaten`), NICHT für normale Bearbeitung (dafür `row.val()`). Ruft bewusst kein
-   * `drawRows()` -- der Aufrufer entscheidet, siehe `syncCellsSilently()`.
+   * geändert -- State-only, KEINE Zellen-Änderung. `new` bleibt `new`, alles andere wird
+   * `modified`. Ruft bewusst kein `drawRows()`.
    * @returns Anzahl der markierten Zeilen.
    */
   markRowsDirtyByMatch(matcher: (cells: T) => boolean): number {
-    let count = 0;
-    for (const row of this.array) {
-      if (row._state === 'deleted') continue;
-      if (!matcher(row.cells)) continue;
-      row._state = typeof row._id === 'string' && row._id.length > 0 ? 'modified' : 'new';
-      count += 1;
-    }
-    return count;
+    const before = this.CustomTable.getState().rows;
+    this.CustomTable.dispatch({ type: 'MARK_DIRTY_BY_MATCH', matcher });
+    const after = this.CustomTable.getState().rows;
+    return before.filter((row, i) => row !== after[i]).length;
   }
 
   /**
    * Reconciled den Bestand gegen `serverRows`, eingeschränkt auf Zeilen/Server-Einträge, die
-   * `matcher` erfüllen:
-   * - Lokale (nicht bereits gelöschte) Zeilen mit `_id`, die in `serverRows` fehlen, werden
-   *   `deleted`.
-   * - `serverRows`-Einträge, deren `_id` lokal komplett fehlt, werden als neue `deleted`-Zeilen
-   *   angehängt (informativ für die Review-Anzeige).
-   * Überschneidet sich NIE mit `markRowsDirtyByMatch()` auf derselben Zeile -- beide Methoden
-   * sind daher in beliebiger Reihenfolge aufrufbar. Ruft KEIN `drawRows()`.
+   * `matcher` erfüllen (siehe `tableReducer.ts`s `RECONCILE_DELETED`-Case für die genaue
+   * Semantik). Ruft KEIN `drawRows()`.
    * @returns Anzahl betroffener Zeilen.
    */
   reconcileDeletedRows(serverRows: T[], matcher: (cells: T) => boolean): number {
-    const serverIds = new Set(
-      serverRows
-        .filter(row => typeof (row as Record<string, unknown>)._id === 'string')
-        .map(row => (row as Record<string, unknown>)._id as string),
-    );
+    const before = this.CustomTable.getState().rows;
+    this.CustomTable.dispatch({ type: 'RECONCILE_DELETED', serverRows, matcher });
+    const after = this.CustomTable.getState().rows;
 
     let count = 0;
-    for (const row of this.array) {
-      if (row._state === 'deleted') continue;
-      if (typeof row._id !== 'string') continue;
-      if (!matcher(row.cells)) continue;
-      if (serverIds.has(row._id)) continue;
-      row._state = 'deleted';
-      count += 1;
+    for (let i = 0; i < before.length; i++) {
+      if (before[i] !== after[i]) count++;
     }
-
-    const existingIds = new Set(this.array.filter(row => typeof row._id === 'string').map(row => row._id as string));
-    for (const serverRow of serverRows) {
-      const id = (serverRow as Record<string, unknown>)._id;
-      if (typeof id !== 'string' || existingIds.has(id) || !matcher(serverRow)) continue;
-      this.array.push(new Row(this.CustomTable, serverRow, 'deleted'));
-      count += 1;
-    }
+    count += after.length - before.length;
     return count;
   }
 }

@@ -12,15 +12,20 @@ import { Column, Columns } from './Column';
 import CustomTableView from './CustomTableView';
 import type {
   Breakpoints,
+  ColumnRecord,
   CustomTableOptions,
   CustomTableOptionsAll,
   CustomTableTypes,
+  RowRecord,
   RowState,
+  TableAction,
   TableChanges,
+  TableReducerState,
 } from './customTableTypes';
 import { Row } from './Row';
 import { Rows } from './Rows';
 import { getRowKey } from './customTableTypes';
+import { createRowRecord, tableReducer } from './tableReducer';
 
 export { Column, Columns, Row, Rows, getRowKey };
 export type { CustomTableTypes, RowState, TableChanges };
@@ -33,6 +38,13 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
   public state: { editing: boolean | null; sorting: boolean | null };
   private readonly o = { breakpoints: BREAKPOINTS };
   public options: CustomTableOptionsAll<T>;
+  /**
+   * Reducer-Kern (Phase A des `useReducer`-Umbaus, siehe `tableReducer.ts`). In dieser Phase
+   * ein simples Instanzfeld -- `dispatch()` mutiert es synchron per Zuweisung, kein React-
+   * `useReducer`. `Row`/`Rows`/`Column`/`Columns` lesen/schreiben ausschließlich über
+   * `getState()`/`dispatch()`/`getRowRecord()`, nie direkt.
+   */
+  private tableState: TableReducerState<T>;
 
   constructor(initTable: string | CustomHTMLTableElement<T>, options: CustomTableOptions<T>) {
     if (typeof initTable === 'string') {
@@ -77,8 +89,17 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
       }
       this.options.columns.unshift(editingRow);
     }
-    this.columns = new Columns(this, this.options.columns);
-    this.rows = new Rows<T>(this, this.options.rows);
+
+    const initialColumns: ColumnRecord<T>[] = this.options.columns.map(column => ({ ...column }));
+    this.tableState = {
+      rows: this.options.rows.map(row => createRowRecord(row, 'unchanged')),
+      columns: initialColumns,
+      rowFilter: null,
+      editingEnabled: this.state.editing,
+      sortingEnabled: this.state.sorting,
+    };
+    this.columns = new Columns(this);
+    this.rows = new Rows<T>(this);
 
     this.draw();
 
@@ -179,6 +200,21 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     }
   }
 
+  /** Liest den aktuellen Reducer-State (Phase A, siehe `tableReducer.ts`). */
+  public getState(): TableReducerState<T> {
+    return this.tableState;
+  }
+
+  /** Wendet `action` rein auf den Reducer-State an -- kein Rendern, keine Seiteneffekte. */
+  public dispatch(action: TableAction<T>): void {
+    this.tableState = tableReducer(this.tableState, action);
+  }
+
+  /** Sucht den `RowRecord` einer `uid` im aktuellen State (für den `Row`-Shim). */
+  public getRowRecord(uid: string): RowRecord<T> | undefined {
+    return this.tableState.rows.find(row => row.uid === uid);
+  }
+
   /**
    * It returns an array of the rows in the table.
    * @returns {object[]} An array of rows.
@@ -251,9 +287,15 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     if (this.options.onChange) this.options.onChange(this);
   }
 
+  /**
+   * Default-Fallback für `options.editing.deleteAllRows`, sofern eine Tabelle keinen eigenen
+   * liefert -- alle 6 produktiven Tabellen tun das (siehe `*Tab.tsx`), dieser Zweig ist damit
+   * praktisch unerreicht. Delegiert an `rows.deleteAll()` (Soft-Delete) statt eines rohen
+   * Array-Clears, den der Reducer-State-Zugriff (`rows.array` ist seit Phase A ein Getter)
+   * ohnehin nicht mehr zulässt.
+   */
   private deleteAllRows(): void {
-    this.rows.array.length = 0;
-    this.draw();
+    this.rows.deleteAll();
   }
 
   /**
