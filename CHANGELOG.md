@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (136)
+
+### refactor (CustomTable: direkte Row-Mutation hinter Rows.ts-Methoden gekapselt)
+
+- **Ansatz 1 (ID-Entkopplung) als Vorstufe fuer einen spaeteren, noch nicht beschlossenen
+  React-State-Umbau von `CustomTable`:** zwei neue Methoden auf `Rows.ts`,
+  `syncCellsSilently(transform)` (Content-Sync ohne Dirty-Flag, z.B. Server-Antwort nach einem
+  Save) und `patchCellsAsModified(transform)` (echte lokale Aenderung, markiert `unchanged` ->
+  `modified`) -- nach dem Vorbild der bestehenden `_commitCreateAndUpdate()`: Aufrufer uebergibt
+  nur Batch-Daten, keine State-Verzweigung von aussen.
+- `savePipeline.ts` (`applyServerRowsToTable`, `unlinkNebengeldRefsForDeletedEwtIds`,
+  `unlinkEaRefsForDeletedEwtIds`) und `syncFieldsFromEwtRows.ts` (Cross-Tabellen-Sync
+  EWT -> Neben/EA) mutieren `row.cells`/`row._originalCells` nicht mehr direkt in eigenen
+  Schleifen, sondern rufen die neuen `Rows.ts`-Methoden. Reiner Refactor, kein
+  Verhaltensunterschied.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run test` (2120/2120 pass,
+  identische Anzahl wie vorher), `bun run build` gruen. Details/Diskussion:
+  `tasks/todo.md` Abschnitt "Ansatz 1 (ID-Entkopplung)".
+
 ## 2026-09-17 (135)
 
 ### refactor (AutoSave-Badge und Login-Button: DOM-Huelle -> React-Store)

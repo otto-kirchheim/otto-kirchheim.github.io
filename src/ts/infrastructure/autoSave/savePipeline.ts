@@ -50,13 +50,10 @@ export function applyServerRowsToTable(
     }
   });
 
-  for (const row of table.rows.array) {
-    if (row._state === 'deleted' || !row._id) continue;
-    const serverRow = serverRowsById.get(row._id);
-    if (!serverRow) continue;
-    row.cells = serverRow;
-    row._originalCells = { ...serverRow };
-  }
+  table.rows.syncCellsSilently(row => {
+    if (!row._id) return null;
+    return serverRowsById.get(row._id) ?? null;
+  });
 
   if (typeof table.drawRows === 'function') table.drawRows();
 }
@@ -121,19 +118,12 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
   const nebenTable = findTable<IDatenN>(RESOURCE_TABLE_ID_MAP.N);
   if (!nebenTable) return;
 
-  let tableChanged = false;
-  for (const row of nebenTable.rows.array) {
-    if (row._state === 'deleted') continue;
+  const tableChanged = nebenTable.rows.syncCellsSilently(row => {
     const ref = (row.cells as IDatenN).EWT;
-    if (!ref || !deletedIdSet.has(ref)) continue;
-
+    if (!ref || !deletedIdSet.has(ref)) return null;
     const { EWT: _removed, ...withoutRef } = row.cells as IDatenN;
-    row.cells = withoutRef as IDatenN;
-    if (row._state === 'unchanged') {
-      row._originalCells = { ...(withoutRef as IDatenN) };
-    }
-    tableChanged = true;
-  }
+    return withoutRef as IDatenN;
+  });
 
   if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
 }
@@ -158,19 +148,12 @@ export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
   const eaTable = findTable<IDatenEA>(RESOURCE_TABLE_ID_MAP.EA);
   if (!eaTable) return;
 
-  let tableChanged = false;
-  for (const row of eaTable.rows.array) {
-    if (row._state === 'deleted') continue;
+  const tableChanged = eaTable.rows.syncCellsSilently(row => {
     const ref = (row.cells as IDatenEA).EWT;
-    if (!ref || !deletedIdSet.has(ref)) continue;
-
+    if (!ref || !deletedIdSet.has(ref)) return null;
     const { EWT: _removed, ...withoutRef } = row.cells as IDatenEA;
-    row.cells = withoutRef as IDatenEA;
-    if (row._state === 'unchanged') {
-      row._originalCells = { ...(withoutRef as IDatenEA) };
-    }
-    tableChanged = true;
-  }
+    return withoutRef as IDatenEA;
+  });
 
   if (tableChanged && typeof eaTable.drawRows === 'function') eaTable.drawRows();
 }

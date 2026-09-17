@@ -3204,3 +3204,56 @@ Vermutliche Ursache des Verschwindens: `reactRoot.ts`s Re-Entranz-Guard (`imFlus
 `flushExtern()`) wurde nach der urspruenglichen Phase-M-Dokumentation ergaenzt (siehe
 `tasks/lessons.md`s Eintrag zu verschachtelten `flushSync`-Aufrufen) und deckt den
 Zeilen-Aktionsknopf-Fall inzwischen mit ab. Kein CustomTable-Code angefasst.
+
+## Ansatz 1 (ID-Entkopplung, Vorstufe fuer CustomTable-State): direkte Row-Mutation gekapselt (2026-09-17)
+
+Reiner Refactor, kein Verhaltensunterschied -- Vorbereitung fuer einen spaeteren (noch nicht
+beschlossenen) React-State-Umbau von `CustomTable`. Scope nach Rueckfrage: AutoSave-Pfad
+UND Cross-Tabellen-Sync (beide vom User bestaetigt).
+
+- [x] Zwei neue Methoden auf `Rows.ts`, nach dem Vorbild von `_commitCreateAndUpdate()`
+      (Aufrufer übergibt nur Batch-Daten, keine State-Verzweigung von außen):
+      - `syncCellsSilently(transform)` -- Content-Sync ohne Dirty-Flag (Server-Antwort nach
+        einem Save; Zeile soll NICHT erneut als `modified` erscheinen). Zieht
+        `_originalCells` mit, wenn die Zeile `unchanged` ist.
+      - `patchCellsAsModified(transform)` -- echte lokale Aenderung (z.B. aus einer
+        verknuepften Ressource abgeleitete Felder), markiert `unchanged` -> `modified`.
+      Beide rufen bewusst KEIN `drawRows()` selbst -- der Aufrufer behaelt seine bisherige
+      Redraw-Bedingung (unconditional vs. nur bei echter Aenderung) ueber den Rueckgabewert.
+- [x] `savePipeline.ts`: `applyServerRowsToTable`, `unlinkNebengeldRefsForDeletedEwtIds`,
+      `unlinkEaRefsForDeletedEwtIds` nutzen jetzt `syncCellsSilently` statt direkter
+      `row.cells =`/`row._originalCells =`-Mutation in eigener Schleife.
+- [x] `syncFieldsFromEwtRows.ts` (Cross-Tabellen-Sync EWT -> Neben/EA, aufgerufen aus
+      `syncEwtToNeben.ts`/`syncEwtToEa.ts`, unabhaengig vom Save-Zyklus) nutzt jetzt
+      `patchCellsAsModified`.
+- [x] `changeTracking.ts`s `_clientRequestId`-Zuweisung bewusst NICHT angefasst -- separater,
+      kleinerer Fall, nicht Teil des bestaetigten Scopes.
+- [x] Test-Fakes (hand-gebaute `{ rows: { array } }`-Objekte ohne echte `Rows`-Instanz) in
+      `savePipeline.test.ts`, `autoSave.test.ts`, `Neben.syncEwtToNeben.test.ts`,
+      `EA.syncEwtToEa.test.ts` um eine Spiegel-Implementierung der jeweils benutzten Methode
+      ergaenzt (gleiche Semantik wie die echte Klasse).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit`, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run test` (2120/2120 pass, identische Anzahl wie vorher -- reiner Refactor, keine
+  neuen/entfernten Tests), `bun run build` gruen.
+
+### Review
+
+Vor dem Schreiben von Code mehrfach mit dem User durchgesprochen (Nachfragen zu `row._id`-
+Herkunft, `_state: 'new'`-Editier-Fall, Scope AutoSave-vs-Cross-Tabellen-Sync) -- dabei zwei
+eigene Designfehler im ersten Entwurf aufgedeckt: (1) ein einzelnes `applyServerSync(id, patch)`
+haette nicht auf brandneue Zeilen (noch keine `_id`) gepasst -- deren Erstvergabe laeuft ueber
+einen komplett anderen Korrelationsschluessel (`_clientRequestId`, siehe `_commitCreateAndUpdate`).
+(2) eine State-Verzweigung im AUFRUFER (statt intern in der Methode) haette exakt das
+Caller-muss-State-kennen-Problem eingefuehrt, das die bestehende `_commitCreateAndUpdate`
+bereits vermeidet. Lehre: bei Row-Mutations-Refactors zuerst ALLE echten Aufrufer + deren
+State-Branching lesen, nicht von der Aehnlichkeit des Mutationsmusters auf gleiche Semantik
+schliessen -- `applyServerRowsToTable` (Content-Sync, bleibt "unchanged") und
+`syncFieldsFromEwtRows` (Content-Patch, wird "modified") sehen im Code fast identisch aus,
+sind aber bewusst unterschiedlich.
+
+**Offen, weiterhin bewusst nicht umgesetzt:** der eigentliche `useReducer`-Umbau
+(Ansatz 3 im Plan `~/.claude/plans/plane-im-frontend-mehr-floating-phoenix.md`). Diese
+Kapselung ist Vorbereitung, keine Vorentscheidung dafuer.

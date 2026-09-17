@@ -220,6 +220,49 @@ export class Rows<T extends CustomTableTypes> {
     this.CustomTable.drawRows();
   }
 
+  /**
+   * Aktualisiert die Zellen aller nicht-gelöschten Zeilen anhand von `transform` (liefert
+   * `null` für unveränderte Zeilen zurück). Fasst NUR die Zellen an, nicht den State — gedacht
+   * für einen autoritativen Content-Sync (z.B. Server-Antwort nach einem Save), bei dem die
+   * Zeile NICHT erneut als `modified` erscheinen soll. Zieht `_originalCells` mit, wenn die
+   * Zeile `unchanged` ist, damit ein späterer Diff nicht faelschlich eine Änderung sieht.
+   * Ruft bewusst kein `drawRows()` — der Aufrufer entscheidet über die Redraw-Bedingung
+   * anhand des Rückgabewerts (z.B. immer vs. nur bei echter Änderung).
+   * @returns ob irgendeine Zeile betroffen war.
+   */
+  syncCellsSilently(transform: (row: Row<T>) => T | null): boolean {
+    let changed = false;
+    for (const row of this.array) {
+      if (row._state === 'deleted') continue;
+      const next = transform(row);
+      if (next === null) continue;
+      row.cells = next;
+      if (row._state === 'unchanged') row._originalCells = { ...next };
+      changed = true;
+    }
+    return changed;
+  }
+
+  /**
+   * Wendet `transform` auf die Zellen aller nicht-gelöschten Zeilen an (liefert `null` für
+   * unveränderte Zeilen zurück) und markiert eine vorher `unchanged` Zeile als `modified` —
+   * eine echte lokale Änderung, die AutoSave abholen soll (z.B. aus einer verknüpften Ressource
+   * abgeleitete Felder). Ruft bewusst kein `drawRows()`, siehe `syncCellsSilently()`.
+   * @returns ob irgendeine Zeile betroffen war.
+   */
+  patchCellsAsModified(transform: (row: Row<T>) => T | null): boolean {
+    let changed = false;
+    for (const row of this.array) {
+      if (row._state === 'deleted') continue;
+      const next = transform(row);
+      if (next === null) continue;
+      row.cells = next;
+      if (row._state === 'unchanged') row._state = 'modified';
+      changed = true;
+    }
+    return changed;
+  }
+
   /** Interne Hilfsmethode: new → unchanged, modified → unchanged */
   private _commitCreateAndUpdate(
     createdIds?: Map<number, string>,

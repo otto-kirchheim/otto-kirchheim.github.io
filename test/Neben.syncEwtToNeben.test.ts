@@ -50,7 +50,21 @@ function mountTableN(rows: (IDatenN & { _state?: string })[]) {
     cells: { ...r } as IDatenN,
     _originalCells: { ...r } as IDatenN,
   }));
-  const instance = { rows: { array: tableRows }, drawRows: vi.fn() };
+  // Spiegelt `Rows.ts`s `patchCellsAsModified()`: deleted überspringen, `unchanged` -> `modified`
+  // markieren -- gleiche Semantik wie die echte Klasse, auf diesem Fake.
+  const patchCellsAsModified = (transform: (row: (typeof tableRows)[number]) => IDatenN | null): boolean => {
+    let changed = false;
+    for (const row of tableRows) {
+      if (row._state === 'deleted') continue;
+      const next = transform(row);
+      if (next === null) continue;
+      row.cells = next;
+      if (row._state === 'unchanged') row._state = 'modified';
+      changed = true;
+    }
+    return changed;
+  };
+  const instance = { rows: { array: tableRows, patchCellsAsModified }, drawRows: vi.fn() };
   (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
   document.body.appendChild(el);
   return instance;

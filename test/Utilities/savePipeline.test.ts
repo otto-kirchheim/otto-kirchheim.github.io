@@ -28,10 +28,35 @@ function makeNRow(
   } as unknown as Row<CustomTableTypes> & { cells: IDatenN };
 }
 
+/**
+ * Spiegelt `Rows.ts`s `syncCellsSilently()` auf einem simplen Test-Fake (`{ array }`), das
+ * keine echte `Rows`-Instanz ist -- gleiche Semantik (deleted überspringen, `_originalCells`
+ * bei `unchanged` mitziehen), damit die Tests dieselbe Logik prüfen wie die echte Klasse.
+ */
+function syncCellsSilently<T extends CustomTableTypes>(rows: Row<T>[], transform: (row: Row<T>) => T | null): boolean {
+  let changed = false;
+  for (const row of rows) {
+    if (row._state === 'deleted') continue;
+    const next = transform(row);
+    if (next === null) continue;
+    row.cells = next;
+    if (row._state === 'unchanged') row._originalCells = { ...next };
+    changed = true;
+  }
+  return changed;
+}
+
 function mountTableN(rows: (Row<CustomTableTypes> & { cells: IDatenN })[]) {
   const el = document.createElement('table');
   el.id = 'tableN';
-  const instance = { rows: { array: rows as Row<CustomTableTypes>[] }, drawRows: vi.fn() };
+  const instance = {
+    rows: {
+      array: rows as Row<CustomTableTypes>[],
+      syncCellsSilently: (transform: (row: Row<CustomTableTypes>) => CustomTableTypes | null) =>
+        syncCellsSilently(rows as Row<CustomTableTypes>[], transform),
+    },
+    drawRows: vi.fn(),
+  };
   (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
   document.body.appendChild(el);
   return instance;
@@ -58,7 +83,14 @@ function makeEaRow(
 function mountTableEA(rows: (Row<CustomTableTypes> & { cells: IDatenEA })[]) {
   const el = document.createElement('table');
   el.id = 'tableEA';
-  const instance = { rows: { array: rows as Row<CustomTableTypes>[] }, drawRows: vi.fn() };
+  const instance = {
+    rows: {
+      array: rows as Row<CustomTableTypes>[],
+      syncCellsSilently: (transform: (row: Row<CustomTableTypes>) => CustomTableTypes | null) =>
+        syncCellsSilently(rows as Row<CustomTableTypes>[], transform),
+    },
+    drawRows: vi.fn(),
+  };
   (el as HTMLTableElement & { instance: typeof instance }).instance = instance;
   document.body.appendChild(el);
   return instance;
@@ -77,7 +109,11 @@ function makeRow(overrides: Partial<Row<CustomTableTypes>> & { cells?: CustomTab
 
 function makeTable(rows: Row<CustomTableTypes>[]): CustomTable<CustomTableTypes> {
   return {
-    rows: { array: rows },
+    rows: {
+      array: rows,
+      syncCellsSilently: (transform: (row: Row<CustomTableTypes>) => CustomTableTypes | null) =>
+        syncCellsSilently(rows, transform),
+    },
     drawRows: vi.fn(),
   } as unknown as CustomTable<CustomTableTypes>;
 }

@@ -97,6 +97,20 @@ function createMockTable(
       getFilteredRows: vi.fn().mockReturnValue(rows),
       commitChanges: mockCommitChanges,
       commitAutoSave: mockCommitAutoSave,
+      // Spiegelt `Rows.ts`s `syncCellsSilently()`: deleted überspringen, `_originalCells` bei
+      // `unchanged` mitziehen -- gleiche Semantik wie die echte Klasse, auf diesem Fake.
+      syncCellsSilently: vi.fn((transform: (row: (typeof rows)[number]) => Record<string, unknown> | null) => {
+        let changed = false;
+        for (const row of rows) {
+          if (row._state === 'deleted') continue;
+          const next = transform(row);
+          if (next === null) continue;
+          row.cells = next;
+          if (row._state === 'unchanged') row._originalCells = { ...next };
+          changed = true;
+        }
+        return changed;
+      }),
       array: rows,
     },
   };

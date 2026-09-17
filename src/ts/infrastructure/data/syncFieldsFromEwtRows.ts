@@ -44,19 +44,15 @@ export function syncFieldsFromEwtRows<T extends { EWT?: string }>(
   const table = el?.instance ?? null;
   if (!table) return;
 
-  let tableChanged = false;
-  for (const row of table.rows.array) {
-    if (row._state === 'deleted') continue;
+  const tableChanged = table.rows.patchCellsAsModified(row => {
     const ref = (row.cells as T).EWT;
-    if (!ref) continue;
+    if (!ref) return null;
     const ewt = ewtById.get(ref);
-    if (!ewt) continue;
+    if (!ewt) return null;
     const patch = config.deriveFields(ewt);
-    if (!hasChanges(row.cells as T, patch)) continue;
-    row.cells = { ...row.cells, ...patch };
-    if (row._state === 'unchanged') row._state = 'modified';
-    tableChanged = true;
-  }
+    if (!hasChanges(row.cells as T, patch)) return null;
+    return { ...row.cells, ...patch };
+  });
   if (tableChanged && typeof table.drawRows === 'function') table.drawRows();
   if (tableChanged) publishEvent('data:changed', { resource: config.resource, action: 'update' });
 }
