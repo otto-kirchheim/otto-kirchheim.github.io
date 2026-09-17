@@ -4,7 +4,9 @@ import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
+import CustomTableView from '@/infrastructure/table/CustomTableView';
+import type { CustomHTMLTableElement, IDatenN } from '@/types';
 import { openHelpModal } from '@/core';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
@@ -18,87 +20,90 @@ import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './compone
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
 function NebenTab() {
-  useEffect(() => {
-    const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
+  const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
-    const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
-      const checked: boolean = Jahr >= 2024;
-      if (!checked && showError)
-        createSnackBar({
-          message: 'Sorry, für 2023 gibt es keine Nebengelder mehr...',
-          icon: '!',
-          status: 'error',
-        });
+  const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
+    const checked: boolean = Jahr >= 2024;
+    if (!checked && showError)
+      createSnackBar({
+        message: 'Sorry, für 2023 gibt es keine Nebengelder mehr...',
+        icon: '!',
+        status: 'error',
+      });
 
-      return checked;
-    };
+    return checked;
+  };
 
-    const getEmptyText = (Jahr: number) => (checkIfGreater2024(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2024');
+  const getEmptyText = (Jahr: number) => (checkIfGreater2024(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2024');
 
-    const dateParser = (value: unknown) => {
-      const d = dayjs(value as string, 'DD.MM.YYYY');
-      return d.format('DD.MM.YY');
-    };
+  const dateParser = (value: unknown) => {
+    const d = dayjs(value as string, 'DD.MM.YYYY');
+    return d.format('DD.MM.YY');
+  };
 
-    const ftN = createCustomTable('tableN', {
-      columns: [
-        {
-          name: 'Tag',
-          title: 'Tag',
-          sortable: true,
-          sorted: true,
-          direction: 'ASC',
-          parser: dateParser,
-        },
-        { name: 'Beginn', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
-        { name: 'Ende', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
-        {
-          name: 'zulagenAnzeigeN',
-          title: 'Zulagen',
-          longTitle: 'Zulagen',
-          breakpoints: 'sm',
-          classes: ['cell-multiline'],
-          parser: (value: unknown) => (typeof value === 'string' && value.length > 0 ? value : '-'),
-        },
-        {
-          name: 'Auftragsnummer',
-          title: 'Auftragsnummer',
-          breakpoints: 'md',
-          parser: (value: unknown) => {
-            const s = value as string;
-            return s ? s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-';
-          },
-        },
-      ],
-      empty: () => getEmptyText(Jahr),
-      rows: getNebengeldDaten(undefined, undefined, { scope: 'all' }),
-      sorting: { enabled: true },
-      onChange: createOnChangeHandler('N'),
-      editing: {
-        enabled: true,
-        addRow: () => {
-          EditorModalNeben(ftN, 'Nebenbezug hinzufügen');
-        },
-        editRow: row => {
-          EditorModalNeben(row, 'Nebenbezug bearbeiten');
-        },
-        showRow: row => {
-          ShowModalNeben(row, 'Nebenbezug anzeigen');
-        },
-        deleteRow: row => {
-          row.deleteRow();
-          persistNebengeldTableData(ftN);
-        },
-        deleteAllRows: () => {
-          confirmDeleteAllRows({
-            table: ftN,
-            rowFilter: (cells, m) => getMonatFromN(cells) === m,
-            persist: persistNebengeldTableData,
-          });
+  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
+  // bisherige `useEffect(() => {...}, [])`-Verhalten, Closures (Jahr/checkIfGreater2024/...)
+  // bleiben deshalb wie vorher auf den Mount-Zeitpunkt eingefroren.
+  const ftN = useCustomTableState<IDatenN>('tableN', {
+    columns: [
+      {
+        name: 'Tag',
+        title: 'Tag',
+        sortable: true,
+        sorted: true,
+        direction: 'ASC',
+        parser: dateParser,
+      },
+      { name: 'Beginn', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
+      { name: 'Ende', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
+      {
+        name: 'zulagenAnzeigeN',
+        title: 'Zulagen',
+        longTitle: 'Zulagen',
+        breakpoints: 'sm',
+        classes: ['cell-multiline'],
+        parser: (value: unknown) => (typeof value === 'string' && value.length > 0 ? value : '-'),
+      },
+      {
+        name: 'Auftragsnummer',
+        title: 'Auftragsnummer',
+        breakpoints: 'md',
+        parser: (value: unknown) => {
+          const s = value as string;
+          return s ? s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-';
         },
       },
-    });
+    ],
+    empty: () => getEmptyText(Jahr),
+    rows: getNebengeldDaten(undefined, undefined, { scope: 'all' }),
+    sorting: { enabled: true },
+    onChange: createOnChangeHandler('N'),
+    editing: {
+      enabled: true,
+      addRow: () => {
+        EditorModalNeben(ftN, 'Nebenbezug hinzufügen');
+      },
+      editRow: row => {
+        EditorModalNeben(row, 'Nebenbezug bearbeiten');
+      },
+      showRow: row => {
+        ShowModalNeben(row, 'Nebenbezug anzeigen');
+      },
+      deleteRow: row => {
+        row.deleteRow();
+        persistNebengeldTableData(ftN);
+      },
+      deleteAllRows: () => {
+        confirmDeleteAllRows({
+          table: ftN,
+          rowFilter: (cells, m) => getMonatFromN(cells) === m,
+          persist: persistNebengeldTableData,
+        });
+      },
+    },
+  });
 
+  useEffect(() => {
     const unbindButtons = bindClickHandlers([
       [
         'btnESN',
@@ -122,6 +127,10 @@ function NebenTab() {
     );
 
     return unbindButtons;
+    // Bewusst einmalig wie vorher (`useEffect(() => {...}, [])`) -- `ftN` ist stabil (siehe
+    // `useCustomTableState()`), `Jahr`/`checkIfGreater2024` bleiben wie zuvor auf den
+    // Mount-Zeitpunkt eingefroren.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -175,7 +184,16 @@ function NebenTab() {
       <hr />
 
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
-        <table id="tableN" className="align-middle" aria-label="Nebengeld"></table>
+        <table
+          id="tableN"
+          className="align-middle"
+          aria-label="Nebengeld"
+          ref={(el: HTMLTableElement | null) => {
+            if (el) ftN.attachElement(el as CustomHTMLTableElement<IDatenN>);
+          }}
+        >
+          <CustomTableView table={asAnyTable(ftN)} />
+        </table>
       </div>
     </div>
   );

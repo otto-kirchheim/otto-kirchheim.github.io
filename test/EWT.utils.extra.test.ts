@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenEWT, IVorgabenU } from '@/core/types';
 import EditorModalEWT from '@/features/EWT/components/createEditorModalEWT';
 import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagEwt';
@@ -61,7 +62,7 @@ function createVorgabenU(): IVorgabenU {
 function createEditorTable(rows: IDatenEWT[]): CustomTable<IDatenEWT> {
   document.body.innerHTML = '<div id="modal" class="modal"></div><table id="tableE"></table>';
 
-  return new CustomTable<IDatenEWT>('tableE', {
+  return createCustomTable<IDatenEWT>('tableE', {
     columns: [
       { name: 'Tag', title: 'Tag' },
       { name: 'Buchungstag', title: 'Buchungstag' },

@@ -4,9 +4,10 @@ import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
+import CustomTableView from '@/infrastructure/table/CustomTableView';
 import { openHelpModal } from '@/core';
-import type { IVorgabenU } from '@/types';
+import type { CustomHTMLTableElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
@@ -20,169 +21,171 @@ import generatePDF from '@/infrastructure/data/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
 function EwtTab() {
-  useEffect(() => {
-    const tagParser = (value: unknown) => {
-        const s = value as string;
-        const d = dayjs(s);
-        return d.isValid() ? d.format('dd DD.MM.') : s;
-      },
-      // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
-      // nur deshalb duerfen die Spalten `html: true` setzen (`CustomTableView.tsx` rendert den
-      // Rueckgabewert dann direkt statt ihn zu `String()`en).
-      berechnenParser = (value: unknown) => (
-        // Unkontrolliert mit Absicht: `attachBerechnenToggleListeners` (unten) liest den
-        // Klick-Zustand direkt vom DOM-Element, kein React-State noetig. Beschriftung steht
-        // in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
-        <div className="db-switch">
-          <label>
-            <input
-              type="checkbox"
-              role="switch"
-              className="row-checkbox"
-              aria-label="Berechnen"
-              defaultChecked={Boolean(value)}
-            />
-          </label>
-        </div>
-      ),
-      schichtParser = (value: unknown) => {
-        switch (value as string) {
-          case 'T':
-            return 'Tag';
-          case 'N':
-            return 'Nacht';
-          case 'SP':
-            return 'Spät';
-          case 'BN': //legacy: BN = Bereitschaft + Nacht
-            return (
-              <span className="SchichtBereitschaft">
-                Bereitschaft
-                <br />+ Nacht
-              </span>
-            );
-          case 'S':
-            return 'Sonder';
-          default:
-            return 'Unbekannt';
-        }
-      },
-      ftE = createCustomTable('tableE', {
-        columns: [
+  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
+  // bisherige `useEffect(() => {...}, [])`-Verhalten.
+  const tagParser = (value: unknown) => {
+      const s = value as string;
+      const d = dayjs(s);
+      return d.isValid() ? d.format('dd DD.MM.') : s;
+    },
+    // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
+    // nur deshalb duerfen die Spalten `html: true` setzen (`CustomTableView.tsx` rendert den
+    // Rueckgabewert dann direkt statt ihn zu `String()`en).
+    berechnenParser = (value: unknown) => (
+      // Unkontrolliert mit Absicht: `attachBerechnenToggleListeners` (unten) liest den
+      // Klick-Zustand direkt vom DOM-Element, kein React-State noetig. Beschriftung steht
+      // in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
+      <div className="db-switch">
+        <label>
+          <input
+            type="checkbox"
+            role="switch"
+            className="row-checkbox"
+            aria-label="Berechnen"
+            defaultChecked={Boolean(value)}
+          />
+        </label>
+      </div>
+    ),
+    schichtParser = (value: unknown) => {
+      switch (value as string) {
+        case 'T':
+          return 'Tag';
+        case 'N':
+          return 'Nacht';
+        case 'SP':
+          return 'Spät';
+        case 'BN': //legacy: BN = Bereitschaft + Nacht
+          return (
+            <span className="SchichtBereitschaft">
+              Bereitschaft
+              <br />+ Nacht
+            </span>
+          );
+        case 'S':
+          return 'Sonder';
+        default:
+          return 'Unbekannt';
+      }
+    },
+    ftE = useCustomTableState<IDatenEWT>('tableE', {
+      columns: [
+        {
+          name: 'Tag',
+          title: 'Tag',
+          sortable: true,
+          sorted: true,
+          direction: 'ASC',
+          parser: tagParser,
+        },
+        { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
+        { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
+        {
+          name: 'Schicht',
+          title: 'Schicht',
+          // `parser` ist auf `string | number` typisiert (gilt fuer alle anderen Spalten
+          // dieser und aller anderen Tabellen); `html: true`-Spalten sind der dokumentierte
+          // Ausnahmefall und geben tatsaechlich JSX zurueck, siehe `CustomTableView.tsx`.
+          parser: schichtParser as unknown as (value: unknown) => string,
+          type: 'time',
+          html: true,
+        },
+        { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'md', type: 'time' },
+        { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'sm', type: 'time' },
+        { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
+        { name: 'anEE', title: 'An Einsatzort', breakpoints: 'lg', type: 'time' },
+        { name: 'abEE', title: 'Ab Einsatzort', breakpoints: 'lg', type: 'time' },
+        { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
+        { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'sm', type: 'time' },
+        { name: 'anWE', title: 'An Wohnung', breakpoints: 'md', type: 'time' },
+        {
+          name: 'berechnen',
+          title: 'Berechnen?',
+          parser: berechnenParser as unknown as (value: unknown) => string,
+          breakpoints: 'lg',
+          html: true,
+        },
+      ],
+      rows: getEwtDaten(undefined, undefined, { scope: 'all' }),
+      sorting: { enabled: true },
+      onChange: createOnChangeHandler('EWT'),
+      editing: {
+        enabled: true,
+        addRow: () => {
+          EditorModalEWT(ftE, 'Anwesenheit hinzufügen');
+        },
+        editRow: row => {
+          EditorModalEWT(row, 'Anwesenheit bearbeiten');
+        },
+        showRow: row => {
+          ShowModalEWT(row, 'Anwesenheit anzeigen');
+        },
+        deleteRow: row => {
+          row.deleteRow();
+          persistEwtTableData(ftE);
+        },
+        deleteAllRows: () => {
+          confirmDeleteAllRows({
+            table: ftE,
+            rowFilter: (cells, m) => isEwtInMonat(cells, m),
+            persist: persistEwtTableData,
+          });
+        },
+        customButton: [
           {
-            name: 'Tag',
-            title: 'Tag',
-            sortable: true,
-            sorted: true,
-            direction: 'ASC',
-            parser: tagParser,
-          },
-          { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
-          { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
-          {
-            name: 'Schicht',
-            title: 'Schicht',
-            // `parser` ist auf `string | number` typisiert (gilt fuer alle anderen Spalten
-            // dieser und aller anderen Tabellen); `html: true`-Spalten sind der dokumentierte
-            // Ausnahmefall und geben tatsaechlich JSX zurueck, siehe `CustomTableView.tsx`.
-            parser: schichtParser as unknown as (value: unknown) => string,
-            type: 'time',
-            html: true,
-          },
-          { name: 'abWE', title: 'Ab Wohnung', breakpoints: 'md', type: 'time' },
-          { name: 'beginE', title: 'Arbeitszeit Von', breakpoints: 'sm', type: 'time' },
-          { name: 'ab1E', title: 'Ab 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
-          { name: 'anEE', title: 'An Einsatzort', breakpoints: 'lg', type: 'time' },
-          { name: 'abEE', title: 'Ab Einsatzort', breakpoints: 'lg', type: 'time' },
-          { name: 'an1E', title: 'An 1.Tgk.-St.', breakpoints: 'lg', type: 'time' },
-          { name: 'endeE', title: 'Arbeitszeit Bis', breakpoints: 'sm', type: 'time' },
-          { name: 'anWE', title: 'An Wohnung', breakpoints: 'md', type: 'time' },
-          {
-            name: 'berechnen',
-            title: 'Berechnen?',
-            parser: berechnenParser as unknown as (value: unknown) => string,
-            breakpoints: 'lg',
-            html: true,
+            look: { variant: 'filled' },
+            text: 'Alle Zeiten entfernen',
+            function: () => {
+              createSnackBar({
+                titel: 'Alle Zeiten entfernen?',
+                message: 'Nur bei Zeilen, die auch berechnet werden.',
+                icon: 'question',
+                status: 'error',
+                dismissible: false,
+                timeout: false,
+                fixed: true,
+                actions: [
+                  {
+                    text: 'Ja',
+                    function: () => {
+                      const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+
+                      [...ftE.rows.array].forEach(row => {
+                        if (row._state === 'deleted') return;
+                        if (!isEwtInMonat(row.cells, activeMonat)) return;
+                        if (!row.cells.berechnen) return;
+
+                        row.val({
+                          ...row.cells,
+                          abWE: '',
+                          ab1E: '',
+                          anEE: '',
+                          beginE: '',
+                          endeE: '',
+                          abEE: '',
+                          an1E: '',
+                          anWE: '',
+                        });
+                      });
+
+                      buttonDisable(false);
+                      persistEwtTableData(ftE);
+                    },
+                    dismiss: true,
+                  },
+                  { text: 'Nein', dismiss: true },
+                ],
+              });
+            },
           },
         ],
-        rows: getEwtDaten(undefined, undefined, { scope: 'all' }),
-        sorting: { enabled: true },
-        onChange: createOnChangeHandler('EWT'),
-        editing: {
-          enabled: true,
-          addRow: () => {
-            EditorModalEWT(ftE, 'Anwesenheit hinzufügen');
-          },
-          editRow: row => {
-            EditorModalEWT(row, 'Anwesenheit bearbeiten');
-          },
-          showRow: row => {
-            ShowModalEWT(row, 'Anwesenheit anzeigen');
-          },
-          deleteRow: row => {
-            row.deleteRow();
-            persistEwtTableData(ftE);
-          },
-          deleteAllRows: () => {
-            confirmDeleteAllRows({
-              table: ftE,
-              rowFilter: (cells, m) => isEwtInMonat(cells, m),
-              persist: persistEwtTableData,
-            });
-          },
-          customButton: [
-            {
-              look: { variant: 'filled' },
-              text: 'Alle Zeiten entfernen',
-              function: () => {
-                createSnackBar({
-                  titel: 'Alle Zeiten entfernen?',
-                  message: 'Nur bei Zeilen, die auch berechnet werden.',
-                  icon: 'question',
-                  status: 'error',
-                  dismissible: false,
-                  timeout: false,
-                  fixed: true,
-                  actions: [
-                    {
-                      text: 'Ja',
-                      function: () => {
-                        const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+      },
+      customFunction: {
+        afterDrawRows: attachBerechnenToggleListeners,
+      },
+    });
 
-                        [...ftE.rows.array].forEach(row => {
-                          if (row._state === 'deleted') return;
-                          if (!isEwtInMonat(row.cells, activeMonat)) return;
-                          if (!row.cells.berechnen) return;
-
-                          row.val({
-                            ...row.cells,
-                            abWE: '',
-                            ab1E: '',
-                            anEE: '',
-                            beginE: '',
-                            endeE: '',
-                            abEE: '',
-                            an1E: '',
-                            anWE: '',
-                          });
-                        });
-
-                        buttonDisable(false);
-                        persistEwtTableData(ftE);
-                      },
-                      dismiss: true,
-                    },
-                    { text: 'Nein', dismiss: true },
-                  ],
-                });
-              },
-            },
-          ],
-        },
-        customFunction: {
-          afterDrawRows: attachBerechnenToggleListeners,
-        },
-      });
-
+  useEffect(() => {
     const unbindButtons = bindClickHandlers([
       [
         'btnZb',
@@ -206,6 +209,8 @@ function EwtTab() {
     ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 
     return unbindButtons;
+    // Bewusst einmalig wie vorher -- `ftE` ist stabil (siehe `NebenTab.tsx`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -264,7 +269,16 @@ function EwtTab() {
       <hr />
 
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
-        <table id="tableE" className="align-middle" aria-label="EWT"></table>
+        <table
+          id="tableE"
+          className="align-middle"
+          aria-label="EWT"
+          ref={(el: HTMLTableElement | null) => {
+            if (el) ftE.attachElement(el as CustomHTMLTableElement<IDatenEWT>);
+          }}
+        >
+          <CustomTableView table={asAnyTable(ftE)} />
+        </table>
       </div>
     </div>
   );

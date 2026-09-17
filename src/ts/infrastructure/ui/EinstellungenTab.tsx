@@ -1,5 +1,6 @@
 import { DBLoadingButton } from '@/components';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
+import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
 /**
  * Phase L3: Einstellungen-Tab-Huelle (ehemals `index.html`: Toolbar, Jahr-Formular,
@@ -20,8 +21,10 @@ import PersoenlicheDatenPanel from '@/features/Einstellungen/components/Persoenl
  *   bestehenden, unabhaengigen React-Roots (`ArbeitszeiteingabePanel`/`FahrzeitenPanel`, per
  *   `mount()` aus `generateEingabeMaskeEinstellungen.ts` -- exakt das gleiche
  *   Leerer-Blatt-Prinzip wie `#berechnungMobileCards` in `BerechnungTab.tsx`).
- * - `<table id="tableVE">` bleibt eine `CustomTable`-Instanz (Vanilla-DOM) -- Migration dafuer
- *   erst in einer spaeteren Phase M.
+ * - `#tableVE` ist seit Achse B des `useReducer`-Umbaus eine eigene Feature-Komponente
+ *   (`VorgabenBTable`, siehe `features/Einstellungen/components/`) statt eines rohen
+ *   `<table>` -- ausgelagert, weil diese Huelle bewusst infrastructure-schichtig ist und laut
+ *   Architektur nicht auf `features/` zugreifen darf (analog `PersoenlicheDatenPanel`).
  * - `#collapseFive` als Eltern-Id bleibt bestehen: `generateEingabeMaskeEinstellungen.ts`/
  *   `saveEinstellungen.ts` scopen ihre `[data-tab-key]`-Suche darauf.
  */
@@ -174,7 +177,7 @@ export default function EinstellungenTab() {
               <summary>Bereitschaft</summary>
               <div className="raster abstand-3">
                 <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
-                  <table id="tableVE" className="align-middle" aria-label="Voreinstellungen Bereitschaft"></table>
+                  <VorgabenBTable />
                 </div>
               </div>
             </details>

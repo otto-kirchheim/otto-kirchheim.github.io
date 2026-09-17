@@ -3383,3 +3383,64 @@ daher keine Aenderung vorgenommen.
 wrappen). Migrationsreihenfolge laut Plan-Dokument: NebenTab -> EaTab -> EwtTab ->
 BereitschaftTab -> EinstellungenTab/tableVE. Noch nicht begonnen. Zielzustand "(a)" (14
 `.instance`-Aufrufer invertieren) bleibt bewusst ausserhalb des Scopes.
+
+## Achse B: alle 6 Tabellen auf echten `useReducer`-Hook (2026-09-17)
+
+Abweichung vom urspruenglichen Plan (der von unabhaengiger Pro-Tabelle-Migration ausging): beim
+Umsetzen zeigte sich, dass `CustomTable`s Konstruktions-Vertrag sich fuer ALLE Tabellen
+gleichzeitig aendert (Hook-Konstruktion kann das DOM-Element beim ersten Aufruf noch nicht
+nachschlagen, `dispatch()` muss auf echten `useReducer`-Dispatch umschalten) -- vom User bestaetigt:
+"Alle 6 Tabellen in einem Zug".
+
+- [x] `CustomTable.ts`: Konstruktor privat, zwei Fabriken (`fromElement` fuer Achse A/Tests,
+      `forHook` fuer Achse B, kein DOM-Zugriff). `attachRuntime(state, dispatch)`/
+      `attachElement(el)` als spaetes Binden. `dispatch()` prueft `reactDispatch`: gesetzt ->
+      `flushExtern`-gewrapptes echtes Hook-`dispatch`; sonst (Achse A) unveraendert synchrone
+      Zuweisung. `draw()`/`drawRows()`/`drawHeader()`/`drawFooter()`/`render()` No-Op sobald
+      `reactDispatch` gesetzt ist. Neuer Hook `useCustomTableState()` + Helper `asAnyTable()`
+      (zentralisiert den `CustomTable<T>` -> `CustomTable<CustomTableTypes>`-Cast fuer
+      `<CustomTableView table={...} />` als JSX-Kind).
+- [x] `CustomTableView.tsx`: `{table}`-Props unveraendert. Neuer `useEffect` loest
+      `customFunction`-Hooks fuer Achse-B-Tabellen aus (`isReactManaged()`-Guard verhindert
+      Doppelfeuerung, falls je eine Achse-A-Tabelle `customFunction` nutzt). `toggleColumnSort()`
+      unveraendert (das vorhandene `table.draw()` ist in Achse B bereits ein No-Op).
+- [x] `NebenTab.tsx`/`EaTab.tsx`/`EwtTab.tsx`/`BereitschaftTab.tsx` (tableBZ+tableBE): Tabellen-
+      konstruktion aus dem `useEffect(() => {...}, [])` in den Komponenten-Body verschoben,
+      `bindClickHandlers()`/`setFilter()` in einem eigenen `useEffect(() => {...}, [])`
+      belassen. `<table>` traegt jetzt einen Ref-Callback (`attachElement`) und rendert
+      `<CustomTableView table={asAnyTable(ftX)} />` als Kind statt eines leeren `<table>`.
+- [x] `tableVE`: neue Feature-Komponente `features/Einstellungen/components/VorgabenBTable.tsx`
+      (Spalten/Editing/customButton-Logik aus `generateEingabeTabelleEinstellungenVorgabenB.ts`
+      dorthin verschoben) -- NICHT in `infrastructure/ui/EinstellungenTab.tsx` selbst, weil die
+      Huelle bewusst infrastructure-schichtig ist (analog `PersoenlicheDatenPanel`).
+      `generateEingabeTabelleEinstellungenVorgabenB()` ist jetzt ein reiner Daten-Nachlader
+      (`document.querySelector('#tableVE')?.instance` + `rows.load()`); `generateEingabeMaskeEinstellungen.ts`
+      unveraendert (dessen `ftVE instanceof CustomTable`-Zweig ist jetzt immer wahr).
+- [x] Tests nachgezogen: `test/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB.test.ts`
+      komplett neu (testet jetzt den Daten-Nachlader), neue
+      `test/features/Einstellungen/components/VorgabenBTable.test.tsx` (Spalten/Editing-Callback-
+      Tests, jetzt echte DOM-Interaktion statt `createCustomTable`-Mock).
+- [x] `frontend/CHANGELOG.md` Eintrag (139) ergaenzt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint` (0 Fehler, 20 vorbestehende Warnungen unveraendert),
+  `bun run lint:css` (0 Fehler, 84 vorbestehende Warnungen unveraendert), `bun run test`
+  (2141/2141 pass), `bun run build` gruen, `bun run format` vor Commit.
+- Manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server: isolierte Testkomponente
+  (Sortier-Klick x2, Add/Edit/Delete/Undo, externe synchrone Feld-Schreibzugriffe erscheinen
+  sofort im DOM, Row-Identitaet ueber zwei `.array`-Zugriffe stabil); alle 6 echten Tabellen
+  mounten mit funktionierendem `.instance`; `tableVE`s "Standardeinstellungen"-Knopf laedt im
+  Offline-Fallback korrekt die `BereitschaftsEinsatzZeiträume`. Keine Konsolenfehler in allen
+  Durchlaeufen.
+
+### Review
+
+Kein neuer Bug gefunden. Die einzige echte Abweichung vom urspruenglichen Plan-Dokument ist die
+oben beschriebene Scope-Korrektur (alle 6 Tabellen statt Pro-Tabelle-Migration) -- inhaltlich
+folgt die Umsetzung sonst genau dem geplanten `.instance`-Shim-Design.
+
+**Naechster Schritt:** keiner vorgesehen -- Zielzustand "(b)" ist damit vollstaendig erreicht.
+Ein spaeterer Zielzustand "(a)" (die 14 `.instance`-Aufrufer zusaetzlich invertieren) bleibt
+bewusst ausserhalb des Scopes, ist aber durch den UI-/Shim-agnostischen Reducer-Kern
+(`tableReducer.ts`) architektonisch nicht verbaut.

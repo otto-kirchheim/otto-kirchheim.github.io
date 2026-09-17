@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
 
 type Row = { _id: string; Einsatzort: string };
 
@@ -9,7 +9,7 @@ function renderTable(rows: Row[], html = false, parser?: (value: unknown) => str
   table.id = `xssTable${Math.random().toString(36).slice(2)}`;
   document.body.appendChild(table);
 
-  new CustomTable<Row>(table as never, {
+  createCustomTable<Row>(table as never, {
     columns: [{ name: 'Einsatzort', title: 'Einsatzort', html, ...(parser ? { parser } : {}) }],
     rows,
   });

@@ -3,10 +3,10 @@
  *
  * Copyright 2022-2026 Jan Otto
  */
-import { createElement } from 'react';
+import { createElement, useReducer, useRef } from 'react';
 import './customtable.scss';
 import type { CustomHTMLTableElement } from '@/types';
-import { mount } from '@/infrastructure/ui/reactRoot';
+import { flushExtern, mount } from '@/infrastructure/ui/reactRoot';
 import { BREAKPOINTS } from '@/infrastructure/ui/breakpoints';
 import { Column, Columns } from './Column';
 import CustomTableView from './CustomTableView';
@@ -31,37 +31,33 @@ export { Column, Columns, Row, Rows, getRowKey };
 export type { CustomTableTypes, RowState, TableChanges };
 
 export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
-  public $el: CustomHTMLTableElement<T>;
+  public $el: CustomHTMLTableElement<T> | null;
   public table: string;
   public rows: Rows<T>;
   public columns: Columns<T>;
   public state: { editing: boolean | null; sorting: boolean | null };
   private readonly o = { breakpoints: BREAKPOINTS };
   public options: CustomTableOptionsAll<T>;
-  /**
-   * Reducer-Kern (Phase A des `useReducer`-Umbaus, siehe `tableReducer.ts`). In dieser Phase
-   * ein simples Instanzfeld -- `dispatch()` mutiert es synchron per Zuweisung, kein React-
-   * `useReducer`. `Row`/`Rows`/`Column`/`Columns` lesen/schreiben ausschließlich über
-   * `getState()`/`dispatch()`/`getRowRecord()`, nie direkt.
-   */
   private tableState: TableReducerState<T>;
+  /**
+   * Nur gesetzt, wenn die Instanz per `useCustomTableState()` (Achse B) an einen echten
+   * React-`useReducer` gebunden ist -- dann rendert die Tab-Komponente selbst per JSX,
+   * `draw()`/`drawRows()`/... werden No-Ops und `dispatch()` routet ueber `flushExtern` in den
+   * echten Hook-`dispatch`. `null` = Achse-A-Betrieb (`createCustomTable()`, u.a. alle Tests
+   * und andere DOM-lose Verwendungen): die Instanz rendert sich weiterhin selbst per `mount()`.
+   */
+  private reactDispatch: ((action: TableAction<T>) => void) | null = null;
 
-  constructor(initTable: string | CustomHTMLTableElement<T>, options: CustomTableOptions<T>) {
-    if (typeof initTable === 'string') {
-      this.table = initTable;
-      const el = document.querySelector<CustomHTMLTableElement<T>>(`#${initTable}`);
-      if (!el) throw new Error('Tabelle nicht gefunden');
-      this.$el = el;
-    } else if (initTable instanceof HTMLTableElement) {
-      this.table = initTable.id;
-      this.$el = initTable;
-    } else throw new Error('Tabellen Fehler');
-
-    this.$el.instance = this;
+  private constructor(elementId: string, el: CustomHTMLTableElement<T> | null, options: CustomTableOptions<T>) {
+    this.table = elementId;
+    this.$el = el;
     this.options = ApplyOptions.bind(this)(options);
     this.state = setState.bind(this)();
 
-    this.$el.classList.add(...['customtable', ...this.options.classes]);
+    if (this.$el) {
+      this.$el.instance = this;
+      this.$el.classList.add(...['customtable', ...this.options.classes]);
+    }
 
     if (this.state.editing) {
       const editingRow: CustomTableOptionsAll<T>['columns'][0] = {
@@ -101,7 +97,7 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     this.columns = new Columns(this);
     this.rows = new Rows<T>(this);
 
-    this.draw();
+    if (this.$el) this.draw();
 
     return this;
 
@@ -200,14 +196,75 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
     }
   }
 
-  /** Liest den aktuellen Reducer-State (Phase A, siehe `tableReducer.ts`). */
+  /** Konstruiert eine Instanz gegen ein bereits im DOM vorhandenes `<table>` (Achse A: Tests, sonstige DOM-Verwendungen). */
+  static fromElement<T extends CustomTableTypes>(
+    initTable: string | CustomHTMLTableElement<T>,
+    options: CustomTableOptions<T>,
+  ): CustomTable<T> {
+    let elementId: string;
+    let el: CustomHTMLTableElement<T>;
+    if (typeof initTable === 'string') {
+      elementId = initTable;
+      const found = document.querySelector<CustomHTMLTableElement<T>>(`#${initTable}`);
+      if (!found) throw new Error('Tabelle nicht gefunden');
+      el = found;
+    } else if (initTable instanceof HTMLTableElement) {
+      elementId = initTable.id;
+      el = initTable;
+    } else throw new Error('Tabellen Fehler');
+    return new CustomTable<T>(elementId, el, options);
+  }
+
+  /** Konstruiert eine Instanz ohne DOM-Element (Achse B: `useCustomTableState()`, siehe dort -- das `<table>` existiert beim ersten Render noch nicht, wird per Ref-Callback nachgetragen). */
+  static forHook<T extends CustomTableTypes>(elementId: string, options: CustomTableOptions<T>): CustomTable<T> {
+    return new CustomTable<T>(elementId, null, options);
+  }
+
+  /**
+   * Bindet Achse-B-Laufzeitwerte (siehe Klassendoc oben) -- von `useCustomTableState()` bei
+   * jedem Render der Tab-Komponente erneut aufgerufen, haelt `tableState`/`reactDispatch`
+   * aktuell.
+   */
+  public attachRuntime(state: TableReducerState<T>, dispatch: (action: TableAction<T>) => void): void {
+    this.tableState = state;
+    this.reactDispatch = dispatch;
+  }
+
+  /** Ref-Callback-Ziel der Tab-Komponente (Achse B): traegt das inzwischen gemountete `<table>`-Element nach. */
+  public attachElement(el: CustomHTMLTableElement<T>): void {
+    this.$el = el;
+    el.instance = this;
+    el.classList.add('customtable', ...this.options.classes);
+  }
+
+  /** Liest den aktuellen Reducer-State (siehe `tableReducer.ts`). */
   public getState(): TableReducerState<T> {
     return this.tableState;
   }
 
-  /** Wendet `action` rein auf den Reducer-State an -- kein Rendern, keine Seiteneffekte. */
+  /**
+   * Achse B (`useCustomTableState()`) aktiv? `CustomTableView.tsx` nutzt das, um die
+   * `customFunction`-Hooks nur einmal auszuloesen -- in Achse A feuert bereits `render()`
+   * selbst rund um `mount()`, ein zusaetzlicher `useEffect`-Aufruf dort waere doppelt.
+   */
+  public isReactManaged(): boolean {
+    return this.reactDispatch !== null;
+  }
+
+  /**
+   * Wendet `action` auf den Reducer-State an. Achse A (kein `attachRuntime()`-Aufruf seit
+   * Konstruktion): simple synchrone Zuweisung. Achse B: routet ueber `flushExtern`
+   * (`reactRoot.ts`) in den echten `useReducer`-`dispatch` -- React batcht/verzoegert Updates
+   * sonst, externe Aufrufer (die 14 `.instance`-Dateien) lesen direkt nach dem Aufruf aber den
+   * neuen Wert (siehe `Row.ts`s Docblock).
+   */
   public dispatch(action: TableAction<T>): void {
-    this.tableState = tableReducer(this.tableState, action);
+    if (this.reactDispatch) {
+      const reactDispatch = this.reactDispatch;
+      flushExtern(() => reactDispatch(action));
+    } else {
+      this.tableState = tableReducer(this.tableState, action);
+    }
   }
 
   /** Sucht den `RowRecord` einer `uid` im aktuellen State (für den `Row`-Shim). */
@@ -233,9 +290,12 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
   }
 
   /**
-   * It creates all elements for the table
+   * It creates all elements for the table. Achse B (`reactDispatch` gesetzt): No-Op -- React
+   * rendert bereits automatisch bei jeder Zustandsaenderung, `draw()` existiert nur noch fuer
+   * die 14 externen Aufrufer, die es nach eigenen Mutationen aufrufen (siehe `Row.ts`s Docblock).
    */
   public draw(): void {
+    if (this.reactDispatch) return;
     if (this.options.customFunction?.beforeDraw) this.options.customFunction.beforeDraw.call(this);
     this.render();
     if (this.options.customFunction?.afterDraw) this.options.customFunction.afterDraw.call(this);
@@ -245,31 +305,33 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
    * It creates a footer for the table
    */
   public drawFooter(): void {
-    this.render();
+    if (!this.reactDispatch) this.render();
   }
 
   /**
    * It draws the rows of the table
    */
   public drawRows(): void {
-    this.render();
+    if (!this.reactDispatch) this.render();
   }
 
   /**
    * It draws the header of the table
    */
   public drawHeader(): void {
-    this.render();
+    if (!this.reactDispatch) this.render();
   }
 
   /**
-   * Rendert Kopf/Zeilen/Fuss in einem Zug neu (React-Ersatz fuer `customTableRender.ts`).
+   * Rendert Kopf/Zeilen/Fuss in einem Zug neu (React-Ersatz fuer `customTableRender.ts`,
+   * NUR fuer Achse A -- Achse B rendert per JSX, siehe `draw()`).
    * `Row`/`Rows` unterscheiden nicht, welche `draw*()`-Methode eine Aenderung ausloest --
    * alle vier Einstiegspunkte rendern deshalb identisch komplett neu; React uebernimmt das
    * Diffing. `mount()` ist per `flushSync` synchron (siehe `reactRoot.ts`), der Aufrufer sieht
    * danach garantiert das aktualisierte DOM -- exakt der bisherige synchrone Vertrag.
    */
   private render(): void {
+    if (!this.$el) return;
     const hooks = this.options.customFunction;
     if (hooks?.beforeDrawHeader) hooks.beforeDrawHeader.call(this);
     if (hooks?.beforeDrawFooter) hooks.beforeDrawFooter.call(this);
@@ -291,8 +353,8 @@ export class CustomTable<T extends CustomTableTypes = CustomTableTypes> {
    * Default-Fallback für `options.editing.deleteAllRows`, sofern eine Tabelle keinen eigenen
    * liefert -- alle 6 produktiven Tabellen tun das (siehe `*Tab.tsx`), dieser Zweig ist damit
    * praktisch unerreicht. Delegiert an `rows.deleteAll()` (Soft-Delete) statt eines rohen
-   * Array-Clears, den der Reducer-State-Zugriff (`rows.array` ist seit Phase A ein Getter)
-   * ohnehin nicht mehr zulässt.
+   * Array-Clears, den der Reducer-State-Zugriff (`rows.array` ist ein Getter) ohnehin nicht
+   * mehr zulässt.
    */
   private deleteAllRows(): void {
     this.rows.deleteAll();
@@ -322,5 +384,38 @@ export function createCustomTable<T extends CustomTableTypes>(
   table: string | CustomHTMLTableElement<T>,
   options: CustomTableOptions<T>,
 ): CustomTable<T> {
-  return new CustomTable<T>(table, options);
+  return CustomTable.fromElement<T>(table, options);
+}
+
+/**
+ * Achse B des `useReducer`-Umbaus: ersetzt `createCustomTable()` in einer Tab-Komponente.
+ * Konstruiert die `CustomTable`-Shim-Instanz genau einmal (`useRef`, `options` wird nur beim
+ * allerersten Aufruf gelesen -- exakt das bisherige `useEffect(() => {...}, [])`-Verhalten,
+ * nur ohne Effekt) und bindet sie an einen echten `useReducer`. Die Tab-Komponente rendert
+ * `<CustomTableView table={...} />` direkt als JSX-Kind; das `<table>`-Element traegt einen
+ * `ref`-Callback, der `instance.attachElement(el)` aufruft (das Element existiert beim ersten
+ * Render dieser Funktion noch nicht).
+ */
+export function useCustomTableState<T extends CustomTableTypes>(
+  elementId: string,
+  options: CustomTableOptions<T>,
+): CustomTable<T> {
+  const instanceRef = useRef<CustomTable<T> | null>(null);
+  if (!instanceRef.current) instanceRef.current = CustomTable.forHook<T>(elementId, options);
+  const instance = instanceRef.current;
+
+  const [state, dispatch] = useReducer(tableReducer, instance.getState());
+  instance.attachRuntime(state, dispatch);
+
+  return instance;
+}
+
+/**
+ * `CustomTableView` ist absichtlich nicht generisch (siehe Docblock dort) -- eine Tab-
+ * Komponente, die `<CustomTableView table={ftN} />` direkt als JSX-Kind rendert (Achse B),
+ * braucht deshalb an dieser einen Stelle einen Cast auf den Laufzeit-Erasure-Typ. Zentral
+ * hier statt an 6 Call-Sites wiederholt.
+ */
+export function asAnyTable<T extends CustomTableTypes>(table: CustomTable<T>): CustomTable<CustomTableTypes> {
+  return table as unknown as CustomTable<CustomTableTypes>;
 }

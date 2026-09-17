@@ -1,152 +1,22 @@
-import { saveEinstellungen } from '.';
-import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
+import { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
-import { EditorModalVE, ShowModalVE } from '../components';
-import { apiFetch } from '@/infrastructure/api/apiFetchHelper';
 
-type ProfileTemplateVorgabenBResponse = {
-  template?: { VorgabenB?: Array<{ key: string; value: Record<string, unknown> }> };
-};
-
-async function fetchTemplateVorgabenB(code: string): Promise<IVorgabenUvorgabenB[] | null> {
-  try {
-    const result = await apiFetch<undefined, ProfileTemplateVorgabenBResponse>(
-      `profile-templates/code/${code.toLowerCase()}`,
-    );
-    const entries = result?.template?.VorgabenB;
-    if (entries && entries.length > 0) return entries.map(e => e.value as IVorgabenUvorgabenB);
-    return null;
-  } catch {
-    return null;
-  }
-}
-
+/**
+ * Laedt `VorgabenB`-Zeilen in die bestehende `#tableVE`-Instanz (seit Achse B des
+ * `useReducer`-Umbaus konstruiert `VorgabenBTable.tsx` -- eine feste, immer gemountete
+ * Feature-Komponente, siehe dort -- die Instanz genau einmal; hier wird nur noch
+ * nachgeladen). `rows.load()` ist synchron (siehe `Rows.ts`), ein Aufrufer, der direkt danach
+ * liest, sieht garantiert den frisch geladenen State.
+ */
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
   [key: string]: IVorgabenUvorgabenB;
-}) {
+}): void {
   VorgabenB ??= Storage.check('VorgabenU') ? Storage.get<IVorgabenU>('VorgabenU', true).VorgabenB : {};
 
-  const trueParser = (value: unknown): string => (value ? 'Ja' : 'Nein');
+  const table = document.querySelector<CustomHTMLTableElement<IVorgabenUvorgabenB>>('#tableVE');
+  const ftVE = table?.instance;
+  if (!(ftVE instanceof CustomTable)) return;
 
-  const weekdayParser = (value: unknown, option: unknown = true): string => {
-    const v = value as { tag: number; zeit?: string; Nwoche?: boolean };
-    const umbruch = option !== false;
-    // Zeilenumbruch als echtes Zeichen: CustomTable setzt Zellen als Text, `<br/>` stuende
-    // sonst woertlich in der Zelle. Die Spalten tragen dafuer `cell-multiline`.
-    const separator = umbruch ? '\n' : ' | ';
-    const weekdays: Record<number, string> = { 1: 'Mo', 2: 'Di', 3: 'Mi', 4: 'Do', 5: 'Fr', 6: 'Sa', 7: 'So', 0: 'So' };
-    const weekday = weekdays[v.tag] ?? '-';
-    const week = v.Nwoche ? 'W2' : 'W1';
-    return `${weekday} ${week}${separator}${v.zeit || '-'}`;
-  };
-
-  const nachtRangeParser = (value: unknown, option: unknown = true): string => {
-    return weekdayParser(value, option);
-  };
-
-  const ftVE = createCustomTable('tableVE', {
-    columns: [
-      { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'md' },
-      {
-        classes: ['cell-multiline'],
-        name: 'beginnB',
-        title: 'Ber Von',
-        longTitle: 'Bereitschaft Von',
-        parser: weekdayParser,
-        breakpoints: 'sm',
-      },
-      {
-        classes: ['cell-multiline'],
-        name: 'endeB',
-        title: 'Ber Bis',
-        longTitle: 'Bereitschaft Bis',
-        parser: weekdayParser,
-        breakpoints: 'sm',
-      },
-      { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'md' },
-      {
-        classes: ['cell-multiline'],
-        name: 'beginnN',
-        title: 'Nacht Von',
-        longTitle: 'Nachtschicht Von',
-        parser: nachtRangeParser,
-        breakpoints: 'md',
-      },
-      {
-        classes: ['cell-multiline'],
-        name: 'endeN',
-        title: 'Nacht Bis',
-        longTitle: 'Nachtschicht Bis',
-        parser: nachtRangeParser,
-        breakpoints: 'md',
-      },
-    ],
-    rows: [...Object.values(VorgabenB)],
-    editing: {
-      enabled: true,
-      addRow: () => {
-        EditorModalVE(ftVE, 'Voreinstellung hinzufügen');
-      },
-      editRow: row => {
-        EditorModalVE(row, 'Voreinstellung bearbeiten');
-      },
-      showRow: row => {
-        ShowModalVE(row, 'Voreinstellung anzeigen');
-      },
-      deleteRow: row => {
-        if (!row.cells.standard) {
-          row.deleteRow();
-        } else {
-          createSnackBar({
-            message: 'Löschen von Standard nicht möglich<br /><small>(Bitte erst neuen Standard setzen)</small>',
-            icon: '!',
-            status: 'info',
-            timeout: 3000,
-            fixed: true,
-          });
-        }
-      },
-      deleteAllRows: () => {
-        createSnackBar({
-          message: 'Möchtest du wirklich alle Zeilen löschen?',
-          icon: 'question',
-          status: 'error',
-          dismissible: false,
-          timeout: false,
-          fixed: true,
-          actions: [
-            {
-              text: 'Ja',
-              function: () => {
-                ftVE.rows.load([]);
-                buttonDisable(false);
-              },
-              dismiss: true,
-            },
-            { text: 'Nein', dismiss: true },
-          ],
-        });
-      },
-      customButton: [
-        {
-          text: 'Standardeinstellungen',
-          look: { variant: 'filled' },
-          function: async () => {
-            const code = Storage.check('VorgabenU')
-              ? Storage.get<IVorgabenU>('VorgabenU', true).Pers.ErsteTkgSt.toLowerCase()
-              : '';
-            let vorgabenB = code ? await fetchTemplateVorgabenB(code) : null;
-            if (!vorgabenB) vorgabenB = await fetchTemplateVorgabenB('muster');
-            ftVE.rows.load(vorgabenB ?? Object.values(BereitschaftsEinsatzZeiträume));
-            saveEinstellungen();
-          },
-        },
-      ],
-    },
-  });
+  ftVE.rows.load([...Object.values(VorgabenB ?? {})]);
 }

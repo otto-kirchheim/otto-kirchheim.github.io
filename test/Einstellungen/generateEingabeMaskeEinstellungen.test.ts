@@ -22,7 +22,7 @@ import {
 } from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
 import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IVorgabenU } from '@/types';
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/core/types';
 import { saveTableDataVorgabenU } from '@/features/Einstellungen/utils';
 import Storage from '@/infrastructure/storage/Storage';
@@ -296,7 +296,7 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
     (Storage.get as ReturnType<typeof vi.fn>).mockReturnValue('erika@example.com');
 
     // Reale CustomTable-Instanz an #tableVE binden, damit der `ftVE instanceof CustomTable`-Zweig greift.
-    new CustomTable<IVorgabenUvorgabenB>('tableVE', {
+    createCustomTable<IVorgabenUvorgabenB>('tableVE', {
       columns: [{ name: 'Name', title: 'Name' }],
       rows: [],
       sorting: { enabled: false },

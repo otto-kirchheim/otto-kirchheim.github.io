@@ -4,7 +4,9 @@ import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
+import CustomTableView from '@/infrastructure/table/CustomTableView';
+import type { CustomHTMLTableElement, IDatenEA } from '@/types';
 import { openHelpModal } from '@/core';
 import { confirmDeleteAllRows } from '@/infrastructure/data/confirmDeleteAllRows';
 import { getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
@@ -18,59 +20,61 @@ import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
 import { getEaDaten, persistEaTableData } from './utils';
 
 function EaTab() {
-  useEffect(() => {
-    const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
+  const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
-    const checkIfGreater2025 = (Jahr: number, showError?: boolean) => {
-      const checked: boolean = Jahr >= 2025;
-      if (!checked && showError)
-        createSnackBar({
-          message: 'Sorry, vor 2025 gibt es keinen Entgeltausgleich...',
-          icon: '!',
-          status: 'error',
-        });
+  const checkIfGreater2025 = (Jahr: number, showError?: boolean) => {
+    const checked: boolean = Jahr >= 2025;
+    if (!checked && showError)
+      createSnackBar({
+        message: 'Sorry, vor 2025 gibt es keinen Entgeltausgleich...',
+        icon: '!',
+        status: 'error',
+      });
 
-      return checked;
-    };
+    return checked;
+  };
 
-    const getEmptyText = (Jahr: number) => (checkIfGreater2025(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2025');
+  const getEmptyText = (Jahr: number) => (checkIfGreater2025(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2025');
 
-    const ftEA = createCustomTable('tableEA', {
-      columns: [
-        { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
-        { name: 'Dauer', title: 'Dauer', longTitle: 'Dauer', type: 'time' },
-        { name: 'Taetigkeit', title: 'Tätigkeit', longTitle: 'Tätigkeit', breakpoints: 'sm' },
-        { name: 'Entgeltgruppe', title: 'Entgeltgruppe', longTitle: 'Entgeltgruppe', breakpoints: 'sm' },
-      ],
-      empty: () => getEmptyText(Jahr),
-      rows: getEaDaten(undefined, undefined, { scope: 'all' }),
-      sorting: { enabled: true },
-      onChange: createOnChangeHandler('EA'),
-      editing: {
-        enabled: true,
-        addRow: () => {
-          if (checkIfGreater2025(Jahr, true)) createAddModalEA(ftEA);
-        },
-        editRow: row => {
-          EditorModalEA(row, 'Entgeltausgleich bearbeiten');
-        },
-        showRow: row => {
-          ShowModalEA(row, 'Entgeltausgleich anzeigen');
-        },
-        deleteRow: row => {
-          row.deleteRow();
-          persistEaTableData(ftEA);
-        },
-        deleteAllRows: () => {
-          confirmDeleteAllRows({
-            table: ftEA,
-            rowFilter: (cells, m) => getMonatFromEA(cells) === m,
-            persist: persistEaTableData,
-          });
-        },
+  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
+  // bisherige `useEffect(() => {...}, [])`-Verhalten.
+  const ftEA = useCustomTableState<IDatenEA>('tableEA', {
+    columns: [
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Dauer', title: 'Dauer', longTitle: 'Dauer', type: 'time' },
+      { name: 'Taetigkeit', title: 'Tätigkeit', longTitle: 'Tätigkeit', breakpoints: 'sm' },
+      { name: 'Entgeltgruppe', title: 'Entgeltgruppe', longTitle: 'Entgeltgruppe', breakpoints: 'sm' },
+    ],
+    empty: () => getEmptyText(Jahr),
+    rows: getEaDaten(undefined, undefined, { scope: 'all' }),
+    sorting: { enabled: true },
+    onChange: createOnChangeHandler('EA'),
+    editing: {
+      enabled: true,
+      addRow: () => {
+        if (checkIfGreater2025(Jahr, true)) createAddModalEA(ftEA);
       },
-    });
+      editRow: row => {
+        EditorModalEA(row, 'Entgeltausgleich bearbeiten');
+      },
+      showRow: row => {
+        ShowModalEA(row, 'Entgeltausgleich anzeigen');
+      },
+      deleteRow: row => {
+        row.deleteRow();
+        persistEaTableData(ftEA);
+      },
+      deleteAllRows: () => {
+        confirmDeleteAllRows({
+          table: ftEA,
+          rowFilter: (cells, m) => getMonatFromEA(cells) === m,
+          persist: persistEaTableData,
+        });
+      },
+    },
+  });
 
+  useEffect(() => {
     const unbindButtons = bindClickHandlers([
       [
         'btnESEA',
@@ -94,6 +98,9 @@ function EaTab() {
     );
 
     return unbindButtons;
+    // Bewusst einmalig wie vorher -- `ftEA` ist stabil, `Jahr`/`checkIfGreater2025` bleiben auf
+    // den Mount-Zeitpunkt eingefroren (siehe `NebenTab.tsx`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -147,7 +154,16 @@ function EaTab() {
       <hr />
 
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
-        <table id="tableEA" className="align-middle" aria-label="Entgeltausgleich"></table>
+        <table
+          id="tableEA"
+          className="align-middle"
+          aria-label="Entgeltausgleich"
+          ref={(el: HTMLTableElement | null) => {
+            if (el) ftEA.attachElement(el as CustomHTMLTableElement<IDatenEA>);
+          }}
+        >
+          <CustomTableView table={asAnyTable(ftEA)} />
+        </table>
       </div>
     </div>
   );

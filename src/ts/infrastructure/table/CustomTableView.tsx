@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from 'react';
+import { useEffect } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';
@@ -272,6 +273,25 @@ export default function CustomTableView({ table }: { table: AnyTable }): ReactNo
   if (sortedColumn) sortRows(table, sortedColumn.index, sortedColumn.direction);
 
   const rows = table.rows.getFilteredRows();
+  const state = table.getState();
+
+  // Achse B (`useCustomTableState()`): `CustomTable.draw()`/`render()` sind dort No-Ops (React
+  // rendert schon selbst) -- die `customFunction`-Hooks (aktuell nur `EwtTab.tsx`s
+  // `afterDrawRows: attachBerechnenToggleListeners`) muessen deshalb hier ausgeloest werden,
+  // nach jedem Commit dieser Komponente. In Achse A (`isReactManaged() === false`) feuert
+  // `render()` sie bereits selbst rund um `mount()` -- hier zusaetzlich waere doppelt.
+  useEffect(() => {
+    if (!table.isReactManaged()) return;
+    const hooks = table.options.customFunction;
+    hooks?.beforeDrawHeader?.call(table);
+    hooks?.beforeDrawFooter?.call(table);
+    hooks?.beforeDrawRows?.call(table);
+    hooks?.afterDrawHeader?.call(table);
+    hooks?.afterDrawFooter?.call(table);
+    hooks?.afterDrawRows?.call(table);
+    // `table` ist stabil (siehe `useCustomTableState()`s `useRef`); `state` steht hier fuer
+    // "irgendetwas hat sich geaendert", nicht fuer einen echten Datenfluss.
+  }, [state, table]);
 
   return (
     <>

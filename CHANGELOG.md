@@ -2,6 +2,51 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (139)
+
+### refactor (CustomTable Achse B: alle 6 Tabellen auf echten `useReducer`-Hook umgestellt)
+
+- **`useCustomTableState(elementId, options)`** (neu, `CustomTable.ts`): ersetzt `createCustomTable()`
+  in den 6 Tab-Komponenten. Konstruiert die `CustomTable`-Shim-Instanz einmalig (`useRef`) und
+  bindet sie an einen echten `useReducer(tableReducer, ...)` -- Zustandsaenderungen lösen jetzt
+  einen normalen React-Re-Render aus statt eines manuell aufgerufenen `mount()`.
+- **`CustomTable` ist dual-mode**: `createCustomTable()` (Achse A -- Tests, sonstige
+  DOM-Verwendungen ohne React-Kontext) bleibt unveraendert und rendert sich weiterhin per
+  eigenem `mount()`-Aufruf selbst. `useCustomTableState()` (Achse B) schaltet `draw()`/
+  `drawRows()`/... auf No-Op um (React rendert selbst) und routet `dispatch()` ueber
+  `flushExtern` in den echten Hook-`dispatch` -- damit sehen die 14 externen `.instance`-
+  Aufrufer (AutoSave, Bereitschaft-Submit, ...) nach einer Feld-Zuweisung (`row._state = ...`)
+  weiterhin sofort den aktualisierten State/DOM, obwohl React-`dispatch` selbst asynchron/
+  gebatcht ist.
+- **`CustomTable.$el`**: jetzt nullable, wird bei Achse B per Ref-Callback der Tab-Komponente
+  nachgetragen (`attachElement()`) -- das `<table>`-Element existiert beim ersten Hook-Aufruf
+  noch nicht (React hat es noch nicht committet).
+- **`CustomTableView.tsx`**: unveraendertes `{table}`-Props-Contract (kein Umbau auf
+  `{state, dispatch}` noetig); ein neuer `useEffect` löst die `customFunction`-Hooks
+  (aktuell nur `EwtTab.tsx`s `afterDrawRows`) fuer Achse-B-Tabellen aus, da `draw()`/`render()`
+  dort No-Ops sind.
+- **`NebenTab`/`EaTab`/`EwtTab`/`BereitschaftTab`** (BZ+BE): Tabellenkonstruktion aus dem
+  `useEffect(() => {...}, [])` in den Komponenten-Body verschoben (`useCustomTableState()` ist
+  ein Hook, kein Effekt); `bindClickHandlers()`/`setFilter()` bleiben in einem eigenen
+  `useEffect(() => {...}, [])` -- Closures (`Jahr`, `checkIfGreater202X`, ...) bleiben exakt wie
+  vorher auf den Mount-Zeitpunkt eingefroren.
+- **`tableVE`/Einstellungen**: neue Feature-Komponente `VorgabenBTable.tsx`
+  (`features/Einstellungen/components/`) konstruiert die Instanz jetzt einmalig bei Mount --
+  vorher hat `generateEingabeTabelleEinstellungenVorgabenB()` bei jedem Aufruf eine komplett
+  neue `CustomTable` angelegt (die im Login/Reload-Pfad ohnehin fast immer schon eine bestehende
+  Instanz per `rows.load()` nachlud, siehe `generateEingabeMaskeEinstellungen.ts`). Ausgelagert
+  in eine eigene Feature-Komponente statt direkt in `infrastructure/ui/EinstellungenTab.tsx`,
+  weil diese Huelle bewusst infrastructure-schichtig ist und laut Architektur nicht auf
+  `features/` zugreifen darf (analog `PersoenlicheDatenPanel`).
+  `generateEingabeTabelleEinstellungenVorgabenB()` ist dadurch auf einen reinen Daten-Nachlader
+  geschrumpft (`document.querySelector('#tableVE')?.instance` + `rows.load()`).
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass, 4 neu durch die `VorgabenBTable`-Tests), `bun run
+  build` gruen, sowie mehrere manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server (alle
+  6 Tabellen mounten mit funktionierendem `.instance`, Sortier-Klicks, externe synchrone
+  Feld-Schreibzugriffe erscheinen sofort im DOM, `tableVE`s "Standardeinstellungen"-Knopf laedt
+  den Offline-Fallback korrekt) -- keine Konsolenfehler.
+
 ## 2026-09-17 (138)
 
 ### refactor (CustomTable Phase A: Reducer-Kern + `.instance`-Shim, Zielzustand "(b)")
