@@ -1,20 +1,13 @@
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { getUserCookie } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import { default as setLoading } from '@/infrastructure/ui/setLoading';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import setMonatJahr from './setMonatJahr';
 
 export default function selectYear(monat?: number, jahr?: number): void {
-  if (!navigator.onLine) {
-    createSnackBar({
-      message: 'Daten laden nicht möglich – keine Internetverbindung',
-      status: 'error',
-      timeout: 3000,
-      fixed: true,
-    });
-    return;
-  }
+  // Kein eigener Offline-Hinweis hier: `setOffline.ts` zeigt bereits eine dauerhafte,
+  // globale Banner fuer die ganze Session, solange `navigator.onLine === false`.
+  if (!navigator.onLine) return;
 
   if (!monat) {
     const monatInput = document.querySelector<HTMLInputElement>('#Monat');

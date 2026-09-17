@@ -48,15 +48,9 @@ export default async function generatePDF(
 ): Promise<void> {
   if (button === null) return;
 
-  if (!navigator.onLine) {
-    createSnackBar({
-      message: 'Download nicht möglich – keine Internetverbindung',
-      status: 'error',
-      timeout: 3000,
-      fixed: true,
-    });
-    return;
-  }
+  // Kein eigener Offline-Hinweis hier: `setOffline.ts` zeigt bereits eine dauerhafte,
+  // globale Banner fuer die ganze Session, solange `navigator.onLine === false`.
+  if (!navigator.onLine) return;
 
   setLoading(button.id);
   buttonDisable(true);

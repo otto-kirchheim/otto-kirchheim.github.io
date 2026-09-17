@@ -412,7 +412,7 @@ describe('autoSave', () => {
       expect(getResourceStatus('settings').status).toBe('saved');
     });
 
-    it('zeigt Fehler-Snackbar bei Settings-Fehler', async () => {
+    it('setzt Fehler-Status ohne eigenen Snackbar bei Settings-Fehler (Badge-Tooltip zeigt die Meldung, siehe AutoSaveBadge.tsx)', async () => {
       Storage.set('VorgabenU', { test: true });
       mockUpdateMyProfile.mockRejectedValue(new Error('Profile save failed'));
 
@@ -420,12 +420,8 @@ describe('autoSave', () => {
       await viCompat.advanceTimersByTimeAsync(getAutoSaveDelay() + 100);
 
       expect(getResourceStatus('settings').status).toBe('error');
-      expect(mockCreateSnackBar).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining('Profile save failed'),
-          status: 'error',
-        }),
-      );
+      expect(getResourceStatus('settings').lastError).toContain('Profile save failed');
+      expect(mockCreateSnackBar).not.toHaveBeenCalled();
     });
 
     it('bleibt pending bei offline Settings-Save', async () => {

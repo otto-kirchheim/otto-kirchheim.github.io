@@ -84,16 +84,15 @@ describe('saveDaten', () => {
     expect(mockSetLoading).not.toHaveBeenCalled();
   });
 
-  it('zeigt Offline-Snackbar wenn keine Verbindung', async () => {
+  it('bricht offline ohne eigenen Snackbar ab (globale Offline-Banner reicht, siehe setOffline.ts)', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    await saveDaten(button);
-    expect(mockCreateSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.stringContaining('keine Internetverbindung'),
-        status: 'error',
-      }),
-    );
-    expect(mockSetLoading).not.toHaveBeenCalled();
+    try {
+      await saveDaten(button);
+      expect(mockCreateSnackBar).not.toHaveBeenCalled();
+      expect(mockSetLoading).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+    }
   });
 
   it('setzt Loading und deaktiviert Buttons', async () => {

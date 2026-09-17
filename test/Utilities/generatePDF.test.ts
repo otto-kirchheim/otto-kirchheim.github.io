@@ -89,17 +89,15 @@ describe('generatePDF utility', () => {
     expect(mockSetLoading).not.toHaveBeenCalled();
   });
 
-  it('should show error snackbar when offline', async () => {
+  it('bricht offline ohne eigenen Snackbar ab (globale Offline-Banner reicht, siehe setOffline.ts)', async () => {
     Object.defineProperty(navigator, 'onLine', { value: false, writable: true, configurable: true });
-    await generatePDF(button, 'B');
-    expect(createSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: expect.stringContaining('keine Internetverbindung'),
-        status: 'error',
-      }),
-    );
-    expect(mockSetLoading).not.toHaveBeenCalled();
-    Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
+    try {
+      await generatePDF(button, 'B');
+      expect(createSnackBar).not.toHaveBeenCalled();
+      expect(mockSetLoading).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
+    }
   });
 
   it('should throw if Monat/Jahr not found in storage', async () => {

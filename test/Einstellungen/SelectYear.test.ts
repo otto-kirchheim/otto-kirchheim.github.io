@@ -52,11 +52,15 @@ describe('SelectYear', () => {
     Object.defineProperty(navigator, 'onLine', { value: true, writable: true, configurable: true });
   });
 
-  it('zeigt Fehler bei fehlender Internetverbindung', () => {
+  it('bricht offline ohne eigenen Snackbar ab (globale Offline-Banner reicht, siehe setOffline.ts)', () => {
     Object.defineProperty(navigator, 'onLine', { value: false, configurable: true });
-    selectYear();
-    expect(createSnackBarMock).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
-    expect(setLoadingMock).not.toHaveBeenCalled();
+    try {
+      selectYear();
+      expect(createSnackBarMock).not.toHaveBeenCalled();
+      expect(setLoadingMock).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(navigator, 'onLine', { value: true, configurable: true });
+    }
   });
 
   it('liest Monat/Jahr aus DOM-Inputs und speichert sie', () => {

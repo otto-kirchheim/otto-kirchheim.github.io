@@ -3,11 +3,10 @@
  *
  * - Löschungen werden NICHT automatisch gesendet (nur beim manuellen Speichern)
  * - Erstellt/Geänderte Zeilen werden nach konfigurierbarer Inaktivitätszeit gespeichert
- * - Status-Anzeige per SnackBar + optionales Badge
+ * - Status-Anzeige per `AutoSaveBadge` (Tooltip zeigt Fehlermeldungen)
  * - Einstellungen (UserProfile) werden ebenfalls automatisch gespeichert
  */
 
-import { createSnackBar } from '../ui/CustomSnackbar';
 import { publishEvent } from '@/core';
 import { onEvent } from '@/core/events/appEvents';
 import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
@@ -506,14 +505,11 @@ async function saveSettingsNow(): Promise<void> {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('AutoSave Einstellungen fehlgeschlagen:', msg);
+    // Kein eigener Snackbar hier: `setStatus('error', msg)` treibt `AutoSaveBadge`s
+    // Tooltip (zeigt exakt dieselbe Fehlermeldung) -- konsistent mit BZ/BE/EWT/N/EA, die
+    // bei AutoSave-Fehlern ebenfalls keine zusaetzliche Snackbar zeigen (nur Badge +
+    // `showErrorDialog` fuer Tabellen).
     setStatus('settings', 'error', msg);
-
-    createSnackBar({
-      message: `Auto-Save (Einstellungen): ${msg}`,
-      status: 'error',
-      timeout: 5000,
-      fixed: true,
-    });
   } finally {
     const hasQueuedChanges = state.queuedDuringSave;
     state.queuedDuringSave = false;

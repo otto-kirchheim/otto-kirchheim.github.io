@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-17 (140)
+
+### fix (4 redundante Snackbar-Meldungen entfernt)
+
+Vorbereitungsschritt fuer den CustomSnackbar-Umbau auf React (Grundsatz: nur zeigen, was noetig
+ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist):
+
+- `saveDaten.ts`/`generatePDF.ts`/`selectYear.ts`: eigener "... nicht moeglich -- keine
+  Internetverbindung"-Snackbar bei Offline-Klick entfernt -- `setOffline.ts` zeigt bereits eine
+  dauerhafte, globale Banner fuer die gesamte Session, solange `navigator.onLine === false`.
+- `autoSave.ts`s `saveSettingsNow()`: Fehler-Snackbar bei AutoSave-Fehlern fuer `settings`
+  entfernt -- `AutoSaveBadge.tsx` zeigt dieselbe Fehlermeldung bereits als Tooltip, konsistent
+  mit BZ/BE/EWT/N/EA (die bei AutoSave-Fehlern ebenfalls keine zusaetzliche Snackbar zeigen).
+- Tests entsprechend angepasst (`bun run test` 2141/2141 pass); ein Test in
+  `generatePDF.test.ts`/`saveDaten.test.ts`/`SelectYear.test.ts` liess bei fehlgeschlagener
+  Assertion `navigator.onLine` global auf `false` haengen (kein `try/finally`) -- behoben, war
+  Ursache mehrerer scheinbar unabhaengiger Testfehler in denselben Dateien.
+
 ## 2026-09-17 (139)
 
 ### refactor (CustomTable Achse B: alle 6 Tabellen auf echten `useReducer`-Hook umgestellt)
