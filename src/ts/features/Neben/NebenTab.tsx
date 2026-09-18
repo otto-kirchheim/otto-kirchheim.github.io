@@ -36,9 +36,10 @@ function NebenTab() {
 
   const getEmptyText = (Jahr: number) => (checkIfGreater2024(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2024');
 
-  const dateParser = (value: unknown) => {
-    const d = dayjs(value as string, 'DD.MM.YYYY');
-    return d.format('DD.MM.YY');
+  const tagParser = (value: unknown) => {
+    const s = value as string;
+    const d = dayjs(s, 'DD.MM.YYYY', true);
+    return d.isValid() ? d.format('dd DD.MM.') : s;
   };
 
   // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
@@ -52,7 +53,7 @@ function NebenTab() {
         sortable: true,
         sorted: true,
         direction: 'ASC',
-        parser: dateParser,
+        parser: tagParser,
       },
       { name: 'Beginn', title: 'Arbeit Von', longTitle: 'Arbeitszeit Von', type: 'time' },
       { name: 'Ende', title: 'Arbeit Bis', longTitle: 'Arbeitszeit Bis', type: 'time' },
