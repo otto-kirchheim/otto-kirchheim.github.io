@@ -6,5 +6,6 @@ export { ArbeitszeiteingabePanel } from './ArbeitszeiteingabePanel';
 export { getArbeitszeitPanelState, setArbeitszeitPanelState } from './arbeitszeitPanelState';
 export { FahrzeitenPanel } from './FahrzeitenPanel';
 export { getFahrzeitPanelState, setFahrzeitPanelState } from './fahrzeitPanelState';
+export { default as ZulagenCheckboxList } from './ZulagenCheckboxList';
 
 export { EditorModalVE, createModalChangePassword, createModalPasskeySetPassword, ShowModalVE };

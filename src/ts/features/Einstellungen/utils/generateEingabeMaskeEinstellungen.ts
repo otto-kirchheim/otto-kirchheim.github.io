@@ -1,7 +1,6 @@
 import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
-import { ZULAGEN_CATALOG, ZULAGEN_CATEGORY_MAX_SELECTIONS, ZulageCategory } from './zulagenCatalog';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
-import { ArbeitszeiteingabePanel, FahrzeitenPanel } from '../components';
+import { ArbeitszeiteingabePanel, FahrzeitenPanel, ZulagenCheckboxList } from '../components';
 import { CustomTable } from '@/infrastructure/table/CustomTable';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
@@ -54,6 +53,7 @@ function populateEmailField(): void {
 // den bestehenden Component-State (inkl. veralteter Arbeitszeit nach Act-as-Wechsel) zu behalten.
 let arbeitszeitPanelRenderCount = 0;
 let fahrzeitPanelRenderCount = 0;
+let zulagenPanelRenderCount = 0;
 
 function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
@@ -98,120 +98,7 @@ function populateTabCheckboxes(aktivierteTabs?: string[]): void {
 function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
   const host = document.querySelector<HTMLDivElement>('#settings-zulagen-list');
   if (!host) return;
-  const hostElement = host;
-
-  const selectedCodes = new Set(benoetigteZulagen ?? []);
-  const inputsByCategory = new Map<ZulageCategory, HTMLInputElement[]>();
-  const selectedCountByCategory = new Map<ZulageCategory, number>();
-  const categoryContainerMap = new Map<ZulageCategory, HTMLDivElement>();
-  const categoryDisplayOrder: ZulageCategory[] = [
-    ZulageCategory.Erschwerniszulage,
-    ZulageCategory.LeistungspramieUndFahrentschaedigung,
-    ZulageCategory.Ganzkoerperreinigung,
-  ];
-
-  function getCategoryLabel(category: ZulageCategory): string {
-    switch (category) {
-      case ZulageCategory.Erschwerniszulage:
-        return 'Erschwerniszulagen';
-      case ZulageCategory.LeistungspramieUndFahrentschaedigung:
-        return 'Leistungsprämie u. Fahrentschädigung';
-      case ZulageCategory.Ganzkoerperreinigung:
-        return 'Ganzkörperreinigung';
-      default:
-        return 'Zulagen';
-    }
-  }
-
-  function ensureCategoryContainer(category: ZulageCategory): HTMLDivElement {
-    const existing = categoryContainerMap.get(category);
-    if (existing) return existing;
-
-    const section = document.createElement('div');
-    section.className = 'mb-3';
-    section.dataset.zulageCategorySection = category;
-
-    const title = document.createElement('div');
-    title.className = 'fw-semibold';
-    title.textContent = getCategoryLabel(category);
-
-    const limit = document.createElement('small');
-    limit.className = 'text-body-secondary d-block mb-2';
-    limit.textContent = `Max. ${ZULAGEN_CATEGORY_MAX_SELECTIONS[category]} gleichzeitig`;
-
-    const list = document.createElement('div');
-    list.dataset.zulageCategoryList = category;
-
-    section.appendChild(title);
-    section.appendChild(limit);
-    section.appendChild(list);
-    hostElement.appendChild(section);
-    categoryContainerMap.set(category, list);
-    return list;
-  }
-
-  function getSelectedCount(category: ZulageCategory): number {
-    return selectedCountByCategory.get(category) ?? 0;
-  }
-
-  function incrementSelected(category: ZulageCategory): void {
-    selectedCountByCategory.set(category, getSelectedCount(category) + 1);
-  }
-
-  function syncCategoryAvailability(category: ZulageCategory): void {
-    const inputs = inputsByCategory.get(category) ?? [];
-    const maxSelections = ZULAGEN_CATEGORY_MAX_SELECTIONS[category];
-    const selectedCount = inputs.filter(input => input.checked).length;
-    const disableUnchecked = selectedCount >= maxSelections;
-
-    for (const input of inputs) {
-      input.disabled = disableUnchecked && !input.checked;
-    }
-  }
-
-  hostElement.innerHTML = '';
-  for (const category of categoryDisplayOrder) {
-    ensureCategoryContainer(category);
-  }
-
-  for (const zulage of ZULAGEN_CATALOG) {
-    const wrapper = document.createElement('div');
-    wrapper.className = 'db-checkbox';
-
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.id = `zulage-${zulage.code}`;
-    input.dataset.zulageCode = zulage.code;
-    input.dataset.zulageCategory = zulage.category;
-
-    if (!inputsByCategory.has(zulage.category)) {
-      inputsByCategory.set(zulage.category, []);
-    }
-    inputsByCategory.get(zulage.category)!.push(input);
-
-    const maxSelections = ZULAGEN_CATEGORY_MAX_SELECTIONS[zulage.category];
-    const shouldPreselect = selectedCodes.has(zulage.code) && getSelectedCount(zulage.category) < maxSelections;
-    input.checked = shouldPreselect;
-    if (shouldPreselect) incrementSelected(zulage.category);
-
-    input.addEventListener('change', () => {
-      syncCategoryAvailability(zulage.category);
-    });
-
-    // DB erwartet das Feld IM Label -- die Optik (Haken, Abstand) haengt an dieser Schachtelung.
-    const label = document.createElement('label');
-    label.setAttribute('for', input.id);
-    label.appendChild(input);
-    label.append(`${zulage.code} - ${zulage.label}`);
-
-    wrapper.appendChild(label);
-    const categoryContainer = ensureCategoryContainer(zulage.category);
-    categoryContainer.appendChild(wrapper);
-  }
-
-  for (const category of categoryDisplayOrder) {
-    syncCategoryAvailability(category);
-  }
+  mount(host, createElement(ZulagenCheckboxList, { key: zulagenPanelRenderCount++, benoetigteZulagen }));
 }
 
 /**

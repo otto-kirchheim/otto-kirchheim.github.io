@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (142)
+
+### refactor (Zulagen-Checkboxen auf React umgebaut)
+
+Fortsetzung der "mehr echtes React"-Initiative (Teil 2 nach CustomSnackbar):
+
+- `populateZulagenCheckboxes()` in `generateEingabeMaskeEinstellungen.ts` (~120 Zeilen
+  `document.createElement`) ersetzt durch neue `<ZulagenCheckboxList>`-Komponente
+  (`features/Einstellungen/components/`), gemountet per `mount()` -- exakt dasselbe lokale
+  Muster wie `ArbeitszeiteingabePanel`/`FahrzeitenPanel` in derselben Datei.
+- Checkbox-Karte nutzt jetzt den echten DB-UX-Baustein `<DBCheckbox>` statt handgebauter
+  `db-checkbox`-Divs; `id`/`data-zulage-code`/`data-zulage-category` unveraendert, damit
+  `saveEinstellungen.ts` (liest per DOM-Query) unangetastet bleibt.
+- Kategorie-Limit-Logik (max. Auswahl je Zulagen-Kategorie) jetzt als abgeleiteter State statt
+  manuellem Increment/Decrement-Bookkeeping.
+- `test/Einstellungen/generateEingabeMaskeEinstellungen.test.ts`: Toggle-Interaktion von
+  `checked=true`+`dispatchEvent` auf `input.click()` umgestellt (React-kontrollierte Checkbox).
+
 ## 2026-09-18 (141)
 
 ### refactor (CustomSnackbar auf React umgebaut)

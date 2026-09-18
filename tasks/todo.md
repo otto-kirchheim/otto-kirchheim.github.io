@@ -3492,3 +3492,50 @@ Karte visuell konsistent mit dem Rest des Design-Systems.
 
 **Naechster Schritt:** Teil 2 (Zulagen-Checkboxen in `generateEingabeMaskeEinstellungen.ts`) --
 noch nicht begonnen, Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung).
+
+## Zulagen-Checkboxen auf React umgebaut (2026-09-18)
+
+Teil 2 der "mehr echtes React"-Initiative, direkt nach CustomSnackbar (Teil 1). Siehe
+`plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung; Teil 3/4
+(`tabController.ts` Admin-Unternavigation, `showModal.tsx`-Rest) bleiben Skizze.
+
+- [x] `ZulagenCheckboxList.tsx` neu (`features/Einstellungen/components/`), gemountet per
+      `mount()` in `#settings-zulagen-list` -- exakt dasselbe lokale Muster wie
+      `ArbeitszeiteingabePanel`/`FahrzeitenPanel` in `generateEingabeMaskeEinstellungen.ts`.
+      Kein neuer Store noetig: `populateZulagenCheckboxes` ist nur aus 3 Stellen aufgerufen
+      (Login, Act-as-Wechsel, Tab-Mount), keine 124-Aufrufer-Problematik wie bei CustomSnackbar.
+- [x] Karte nutzt `<DBCheckbox>` (DB-UX-Baustein, per `mcp__db-ux__get_component_props` +
+      kompilierte Quelle verifiziert) statt handgebauter `db-checkbox`-Divs; `id`/
+      `data-zulage-code`/`data-zulage-category` unveraendert, `saveEinstellungen.ts` (liest
+      per DOM-Query) unangetastet.
+- [x] Kategorie-Limit-Logik (max. Auswahl je Kategorie) als abgeleiteter State statt manuellem
+      Increment/Decrement-Bookkeeping -- gleiches Ergebnis, weniger Fehlerflaeche.
+- [x] `generateEingabeMaskeEinstellungen.ts`: ~120 Zeilen `document.createElement`-Code entfernt,
+      `populateZulagenCheckboxes` auf 3-Zeilen-`mount()`-Aufruf reduziert.
+- [x] `test/Einstellungen/generateEingabeMaskeEinstellungen.test.ts`: Toggle-Interaktion von
+      `checked=true`+`dispatchEvent` auf `input.click()` umgestellt (React-kontrollierte
+      Checkbox), `flush()`-Helper ergaenzt (gleiches Muster wie `CustomSnackbar.test.ts`).
+      Stolperstein: ein Lint-Autofix (`db-ux/form-label-required`) haengte automatisch eine
+      `label`-Prop an `<DBCheckbox>`, die alte `children`-Text blieb aber stehen -- Text waere
+      doppelt gerendert (Komponente rendert `label` UND `children`); `children` entfernt.
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Manueller Puppeteer-Durchklick: Zulagen-Tab (Accordion "Zulagen") -- Vorbelegung nach
+  Login/Act-as-Wechsel, Kategorie-Limit greift beim 8. Erschwernis-Haken und lockert sich nach
+  Abwahl wieder, Speichern persistiert die gecheckten Codes -- keine Konsolenfehler.
+
+### Review
+
+Kleiner Umbau als Teil 1: keine 124-Aufrufer-Huelle, kein neuer Store noetig, da
+`populateZulagenCheckboxes` eine reine interne Funktion war und bereits ein etabliertes lokales
+`mount()`-Muster direkt daneben existierte. Einzige echte Ueberraschung: der Lint-Autofix, der
+beim ersten `bun run lint`-Lauf automatisch die `label`-Prop ergaenzte, statt nur zu warnen --
+ohne Review haette das zu doppelt sichtbarem Checkbox-Text gefuehrt.
+
+**Naechster Schritt:** Teil 3 (`tabController.ts` Admin-Unternavigation) -- noch nicht begonnen,
+Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung fuer
+`tabs`/`tab-list`/`tab-item`/`tab-panel`).

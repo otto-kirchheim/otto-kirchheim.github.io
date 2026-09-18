@@ -31,6 +31,13 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
+// `ZulagenCheckboxList` (React) aktualisiert `disabled` erst nach einem Tick (kein `act()` in
+// diesem Projekt, siehe `test/reactRender.ts`, gleiches Muster wie `CustomSnackbar.test.ts`).
+async function flush(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
+
 // ─── formatDelayLabel ────────────────────────────────────────────────────────
 
 describe('formatDelayLabel', () => {
@@ -166,7 +173,7 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
     expect(checkedErschwernis.length).toBe(7);
   });
 
-  it('deaktiviert weitere Erschwerniszulagen nach 7 Selektionen und aktiviert bei Abwahl wieder', () => {
+  it('deaktiviert weitere Erschwerniszulagen nach 7 Selektionen und aktiviert bei Abwahl wieder', async () => {
     setupDomShell();
     generateEingabeMaskeEinstellungen(buildVorgabenU());
 
@@ -180,16 +187,16 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
     expect(erschwernisInputs.length).toBe(8);
 
     for (const input of erschwernisInputs.slice(0, 7)) {
-      input.checked = true;
-      input.dispatchEvent(new Event('change'));
+      input.click();
+      await flush();
     }
 
     const eighth = erschwernisInputs[7];
     expect(eighth.disabled).toBe(true);
 
     const first = erschwernisInputs[0];
-    first.checked = false;
-    first.dispatchEvent(new Event('change'));
+    first.click();
+    await flush();
 
     expect(eighth.disabled).toBe(false);
   });

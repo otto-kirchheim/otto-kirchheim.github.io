@@ -13,14 +13,13 @@ import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
  * `document.querySelector('#<Id>')`, unabhaengig davon, ob React oder statisches HTML das
  * Element erzeugt hat. Alle IDs/Klassen/Attribute deshalb 1:1 uebernommen -- keine dieser
  * Dateien musste fuer den Umbau angefasst werden:
- * - `#PasskeyList`/`#settings-zulagen-list` bleiben leere Container, die von `index.ts`
- *   (`renderPasskeyList`) bzw. `generateEingabeMaskeEinstellungen.ts`
- *   (`populateZulagenCheckboxes`) weiterhin per plain-DOM (`document.createElement`) befuellt
- *   werden -- kein React-Root, unveraendert.
- * - `#arbeitszeit-panel`/`#fahrzeiten-panel` bleiben leere Container fuer die bereits
- *   bestehenden, unabhaengigen React-Roots (`ArbeitszeiteingabePanel`/`FahrzeitenPanel`, per
- *   `mount()` aus `generateEingabeMaskeEinstellungen.ts` -- exakt das gleiche
- *   Leerer-Blatt-Prinzip wie `#berechnungMobileCards` in `BerechnungTab.tsx`).
+ * - `#PasskeyList` bleibt leerer Container, der von `index.ts` (`renderPasskeyList`) weiterhin
+ *   per plain-DOM (`document.createElement`) befuellt wird -- kein React-Root, unveraendert.
+ * - `#arbeitszeit-panel`/`#fahrzeiten-panel`/`#settings-zulagen-list` bleiben leere Container
+ *   fuer die bereits bestehenden, unabhaengigen React-Roots
+ *   (`ArbeitszeiteingabePanel`/`FahrzeitenPanel`/`ZulagenCheckboxList`, per `mount()` aus
+ *   `generateEingabeMaskeEinstellungen.ts` -- exakt das gleiche Leerer-Blatt-Prinzip wie
+ *   `#berechnungMobileCards` in `BerechnungTab.tsx`).
  * - `#tableVE` ist seit Achse B des `useReducer`-Umbaus eine eigene Feature-Komponente
  *   (`VorgabenBTable`, siehe `features/Einstellungen/components/`) statt eines rohen
  *   `<table>` -- ausgelagert, weil diese Huelle bewusst infrastructure-schichtig ist und laut
