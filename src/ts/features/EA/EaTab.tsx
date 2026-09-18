@@ -34,13 +34,23 @@ function EaTab() {
     return checked;
   };
 
-  const getEmptyText = (Jahr: number) => (checkIfGreater2025(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2025');
+  const tagParser = (value: unknown) => {
+      const s = value as string;
+      // Erst strikt deutsch parsen (lokale Speicherpfade schreiben 'DD.MM.YYYY', z. B.
+      // `addEaTag.ts`), erst danach locker fuer ISO-Strings vom Server --
+      // `dayjs(s, 'DD.MM.YYYY')` allein laesst ISO ungueltig, `dayjs(s)` allein laesst
+      // deutsch ungueltig (gleiches Muster wie `getMonatFromEA`).
+      const strict = dayjs(s, 'DD.MM.YYYY', true);
+      const d = strict.isValid() ? strict : dayjs(s);
+      return d.isValid() ? d.format('dd DD.MM.') : s;
+    },
+    getEmptyText = (Jahr: number) => (checkIfGreater2025(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2025');
 
   // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
   // bisherige `useEffect(() => {...}, [])`-Verhalten.
   const ftEA = useCustomTableState<IDatenEA>('tableEA', {
     columns: [
-      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC' },
+      { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC', parser: tagParser },
       { name: 'Dauer', title: 'Dauer', longTitle: 'Dauer', type: 'time' },
       { name: 'Taetigkeit', title: 'Tätigkeit', longTitle: 'Tätigkeit', breakpoints: 'sm' },
       { name: 'Entgeltgruppe', title: 'Entgeltgruppe', longTitle: 'Entgeltgruppe', breakpoints: 'sm' },
