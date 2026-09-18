@@ -57,12 +57,12 @@ export function BereitschaftTab() {
   const datetimeParser = (value: unknown) => {
       const mediaQuery: MediaQueryList = window.matchMedia('(max-width: 768px)');
       const d = dayjs(value as string);
-      if (!mediaQuery.matches) return d.format('DD.MM.YYYY, LT');
+      if (!mediaQuery.matches) return d.isValid() ? d.format('dd DD.MM., LT') : (value as string);
       return (
         <span>
-          {d.format('DD.MM.YY')}
+          {d.isValid() ? d.format('dd DD.MM.') : (value as string)}
           <br />
-          {d.format('LT')}
+          {d.isValid() ? d.format('LT') : (value as string)}
         </span>
       );
     },
@@ -149,8 +149,8 @@ export function BereitschaftTab() {
   // ----------------------------- Bereitschaftseinsätze ------------------------------------------------
 
   const dateParser = (value: unknown) => {
-      const d = dayjs(value as string, 'DD.MM.YYYY');
-      return d.format('DD.MM.YY');
+      const d = dayjs(value as string, 'DD.MM.YYYY', true);
+      return d.isValid() ? d.format('dd DD.MM.') : (value as string);
     },
     lreParser = (value: unknown) => {
       const s = value as string;
