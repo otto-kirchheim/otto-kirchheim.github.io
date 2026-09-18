@@ -1,6 +1,7 @@
 import { DBShell, DBShellContent } from '@db-ux/react-core-components';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
+import SnackbarHost from '@/infrastructure/ui/SnackbarHost';
 import StartTab from '@/infrastructure/ui/StartTab';
 import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
 import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
@@ -22,9 +23,10 @@ import useActiveTab from '@/infrastructure/ui/useActiveTab';
  *
  * Header-Umbau (DBHeader -> DB UX Shell): `<DBShell>` umschliesst `AppHeader` (liefert die
  * beiden Control-Panels, kein eigenes `DBShell`, siehe dort) UND `<DBShellContent>` --
- * `DBShell`s CSS-Grid braucht beide als direkte Geschwister. `AppFooter` bleibt bewusst
- * AUSSERHALB von `DBShellContent` (eigener `position: fixed`-Overlay, unabhaengig vom
- * Content-Scroll).
+ * `DBShell`s CSS-Grid braucht beide als direkte Geschwister. `AppFooter`/`SnackbarHost` bleiben
+ * bewusst AUSSERHALB von `DBShellContent` (eigene `position: fixed/absolute`-Overlays,
+ * unabhaengig vom Content-Scroll) -- `SnackbarHost` rendert seine Container ohnehin per
+ * `createPortal` direkt in `document.body`, die Position im Baum hier ist nur Konvention.
  */
 export default function App() {
   const aktiverTab = useActiveTab() ?? 'start';
@@ -116,6 +118,7 @@ export default function App() {
       </DBShellContent>
 
       <AppFooter startYear={2021} />
+      <SnackbarHost />
     </DBShell>
   );
 }

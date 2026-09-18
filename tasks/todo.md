@@ -3444,3 +3444,51 @@ folgt die Umsetzung sonst genau dem geplanten `.instance`-Shim-Design.
 Ein spaeterer Zielzustand "(a)" (die 14 `.instance`-Aufrufer zusaetzlich invertieren) bleibt
 bewusst ausserhalb des Scopes, ist aber durch den UI-/Shim-agnostischen Reducer-Kern
 (`tableReducer.ts`) architektonisch nicht verbaut.
+
+## CustomSnackbar auf React umgebaut (2026-09-18)
+
+Naechster Kandidat der "mehr echtes React"-Initiative nach dem `CustomTable`-Umbau, per
+`graphify` (god_nodes) als meistverbundener verbliebener Vanilla-DOM-Knoten identifiziert (152
+Kanten, 124 Aufrufstellen). Siehe Plan-Dokument `plane-im-frontend-mehr-floating-phoenix.md`
+Teil 1 fuer die volle Architektur-Begruendung; Teil 2-4 (Zulagen-Checkboxen, `tabController.ts`
+Admin-Unternavigation, `showModal.tsx`-Rest) sind dort nur grob skizziert, noch nicht begonnen.
+
+- [x] **Vorbereitung** (eigener Commit): 4 Snackbar-Meldungen entfernt, die dieselbe Information
+      wiederholten, die bereits anderweitig sichtbar war (globale Offline-Banner,
+      AutoSaveBadge-Tooltip) -- auf expliziten Nutzerwunsch geprueft ("nur zeigen, was noetig
+      ist"), nicht alle 124 Aufrufstellen pauschal reduziert (siehe Plan-Dokument fuer die
+      Einzelfall-Begruendung).
+- [x] `snackbarStore.ts`/`useSnackbars.ts`/`SnackbarHost.tsx`/`SnackbarItem.tsx` neu,
+      `CustomSnackbar.ts` auf duennen Wrapper reduziert (`createSnackBar()`-Vertrag fuer alle
+      124 Aufrufstellen unveraendert), `<SnackbarHost />` in `App.tsx` gemountet.
+- [x] Karte nutzt `<DBNotification variant="overlay">` (DB-UX-Baustein, per
+      `mcp__db-ux__get_component_props` verifiziert -- laut Doku explizit fuer Snackbar-artige
+      Overlays gedacht) statt handgebauter Divs; `CustomSnackbar.css` blieb unveraendert (keine
+      Regeln fuer die jetzt ersetzten Elemente enthalten).
+- [x] `test/class/CustomSnackbar.test.ts` komplett neu (53 Faelle, gleiche Abdeckung wie vorher
+      -- rendert jetzt echt `<SnackbarHost />`, prueft ueber DOM/Public-API statt private
+      Felder). Stolperstein: `document.body.innerHTML = ''` zwischen Tests brach Reacts eigene
+      Buchhaltung fuer die `createPortal(..., document.body)`-Root (`removeChild`-Fehler in
+      SPAETEREN Tests) -- Host wird jetzt einmal fuer die ganze Datei gemountet,
+      `resetSnackbarStore()` + Zwei-Microtask-`flush()` raeumt zwischen Tests stattdessen ueber
+      normale Reconciliation auf (gleiches `flush()`-Pattern wie `AutoSaveBadge.test.tsx`).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Manueller Puppeteer-Durchklick gegen den laufenden Dev-Server: HTML-Message, Semantik-Mapping,
+  geteilter Container bei gleicher Position/separater bei unterschiedlicher, `fixed:true`,
+  Aktion mit `dismiss` (Funktion + Schliessen), spaetes `.Close()` auf gehaltene Referenz
+  (`setOffline.ts`-Muster), Close-Button, Auto-Close nach Timeout -- keine Konsolenfehler.
+
+### Review
+
+Kein neuer Bug gefunden. Die einzige echte Ueberraschung war der `DBNotification`-Fund selbst
+(nicht im urspruenglichen Plan-Entwurf, erst durch gezielte `mcp__db-ux__*`-Abfrage auf
+Nutzeranstoss entdeckt) -- reduziert die Handarbeit in `SnackbarItem.tsx` spuerbar und haelt die
+Karte visuell konsistent mit dem Rest des Design-Systems.
+
+**Naechster Schritt:** Teil 2 (Zulagen-Checkboxen in `generateEingabeMaskeEinstellungen.ts`) --
+noch nicht begonnen, Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung).

@@ -2,6 +2,37 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (141)
+
+### refactor (CustomSnackbar auf React umgebaut)
+
+Fortsetzung der "mehr echtes React"-Initiative (per `graphify` als meistverbundener Vanilla-DOM-
+Knoten im Graph identifiziert, 152 Kanten, 124 Aufrufstellen):
+
+- **`createSnackBar(options)` bleibt die einzige oeffentliche Funktion**, Signatur/Rueckgabe-
+  Vertrag (`.Close()` funktioniert auch spaeter aufgerufen, siehe `setOffline.ts`/
+  `FetchRetry.ts`) unveraendert -- keine der 124 Aufrufstellen wurde angefasst.
+- Neu: `snackbarStore.ts` (`useSyncExternalStore`-Modul-Store, analog `autoSaveStatusStore.ts`),
+  `useSnackbars.ts`, `SnackbarHost.tsx` (einmal in `App.tsx` gemountet, gruppiert Eintraege nach
+  Position + Ziel-Container und portalt sie per `createPortal`), `SnackbarItem.tsx` (eine Karte,
+  Hoehen-Animation via `ref` -- exakt dieselbe Doppel-`requestAnimationFrame`-Sequenz wie die
+  alte `SnackBar.Open()`/`Close()`).
+- Die Karte selbst nutzt jetzt den echten DB-UX-Baustein `<DBNotification variant="overlay">`
+  statt handgebauter `db-notification`-Divs -- laut Doku explizit fuer "absolute and floating
+  notifications like snackbars etc." gedacht, Props passen 1:1 auf das bisherige Options-Mapping
+  (`semantic`/`icon`/`showIcon`/`headline`/`closeable`/`onClose`). `CustomSnackbar.css` musste
+  dafuer NICHT geaendert werden (enthielt schon nie Regeln fuer Titel/Message/Close-Button --
+  die kamen immer aus dem DB-UX-Paket).
+- `test/class/CustomSnackbar.test.ts` komplett neu geschrieben (53 Faelle, gleiche Abdeckung):
+  rendert jetzt `<SnackbarHost />` echt und prueft ueber das DOM/den Public-API-Vertrag statt
+  private Felder (`_Element`/`_Container`) des alten `SnackBar`.
+- Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2141/2141 pass), `bun run build` gruen, sowie ein manueller
+  Puppeteer-Durchklick (mehrere Snackbars gleichzeitig, gleiche/verschiedene Position, Aktion
+  mit `dismiss`, spaetes `.Close()` auf gehaltene Referenz, Auto-Close nach Timeout, HTML-
+  Message) gegen den laufenden Dev-Server -- keine Konsolenfehler.
+- Vorbereitend (Commit davor): 4 redundante Snackbar-Meldungen entfernt (siehe Eintrag 140).
+
 ## 2026-09-17 (140)
 
 ### fix (4 redundante Snackbar-Meldungen entfernt)
