@@ -1,4 +1,4 @@
-import { DBShell, DBShellContent } from '@db-ux/react-core-components';
+import { DBButton, DBShell, DBShellContent } from '@db-ux/react-core-components';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import SnackbarHost from '@/infrastructure/ui/SnackbarHost';
@@ -57,16 +57,9 @@ export default function App() {
                 </div>
               </div>
               <div className="d-grid d-sm-flex gap-2">
-                <button
-                  className="db-button"
-                  data-variant="filled"
-                  data-color="warning"
-                  data-size="small"
-                  id="actAsOwnDataButton"
-                  type="button"
-                >
+                <DBButton variant="filled" data-color="warning" size="small" id="actAsOwnDataButton" type="button">
                   Eigene Daten laden
-                </button>
+                </DBButton>
               </div>
             </div>
           </div>

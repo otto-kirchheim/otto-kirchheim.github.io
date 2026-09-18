@@ -204,6 +204,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         <div>
           <MyCheckbox
+            schalter
             className="bereitschaft"
             id="eigen"
             changeHandler={() => {
@@ -272,6 +273,7 @@ export default function createAddModalBereitschaftsZeit(): void {
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
           <div>
             <MyCheckbox
+              schalter
               className="bereitschaft"
               id="sonder"
               defaultChecked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
@@ -309,6 +311,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         <div>
           <MyCheckbox
+            schalter
             className="bereitschaft"
             id="nacht"
             defaultChecked={

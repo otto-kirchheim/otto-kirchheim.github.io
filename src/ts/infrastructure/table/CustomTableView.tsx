@@ -24,11 +24,9 @@ import type { CustomHTMLTableRowElement, CustomTableTypes, Directions } from './
  * dieselbe Signatur (`self: CustomTable<T extends CustomTableTypes>` mit `T` nur als
  * Funktions-eigenem Typparameter, nie aus dem Aufrufkontext) nutzte.
  *
- * Button-Markup bewusst als natives `<button class="db-button" data-variant="...">` statt
- * `<DBButton>` gehalten -- exakt das, was `erzeugeDbButtonAusLook` (die bisherige
- * Vanilla-DOM-Bruecke) produzierte, inkl. `dangerouslySetInnerHTML` fuer die konfigurierbaren
- * Icon-Button-Texte (`editText`/`deleteText`/`undoDeleteText`), die als HTML-String im
- * `CustomTableOptions`-Vertrag stehen (immer entwicklerkontrolliert, nie Nutzerdaten).
+ * Zeilen-Aktionen sind echte `<DBButton>` (siehe `editingButton()`); die Icon-Button-Texte
+ * `editText`/`deleteText`/`undoDeleteText` aus dem `CustomTableOptions`-Vertrag werden nicht mehr
+ * gerendert.
  */
 
 type AnyTable = CustomTable<CustomTableTypes>;

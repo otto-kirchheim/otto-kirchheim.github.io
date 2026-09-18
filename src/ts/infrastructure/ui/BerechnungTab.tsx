@@ -1,3 +1,5 @@
+import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+
 /**
  * Phase L2: Berechnung-Tab-Huelle (ehemals `index.html`: Titel, Monats-Navigation,
  * `db-table`-Geruest) als React-Komponente, gemountet direkt in die `#Berechnung`-Tab-Pane
@@ -22,29 +24,29 @@ export default function BerechnungTab() {
       <div id="berechnungMobileCards" className="d-sm-none text-start" aria-describedby="titelBerechnung"></div>
 
       <div className="d-none d-sm-flex justify-content-center align-items-center gap-3 mb-2" id="berechnungMonatsNav">
-        <button
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
-          data-icon="chevron_left"
-          data-no-text="true"
+        <DBButton
+          variant="outlined"
+          size="small"
+          icon="chevron_left"
+          noText
           id="btnBerechnungMonatePrev"
           type="button"
+          aria-label="Frühere Monate anzeigen"
         >
-          Frühere Monate anzeigen
-        </button>
+          <DBTooltip>Frühere Monate anzeigen</DBTooltip>
+        </DBButton>
         <span id="berechnungMonatsFensterLabel" className="small"></span>
-        <button
-          className="db-button"
-          data-variant="outlined"
-          data-size="small"
-          data-icon="chevron_right"
-          data-no-text="true"
+        <DBButton
+          variant="outlined"
+          size="small"
+          icon="chevron_right"
+          noText
           id="btnBerechnungMonateNext"
           type="button"
+          aria-label="Spätere Monate anzeigen"
         >
-          Spätere Monate anzeigen
-        </button>
+          <DBTooltip>Spätere Monate anzeigen</DBTooltip>
+        </DBButton>
       </div>
 
       <div

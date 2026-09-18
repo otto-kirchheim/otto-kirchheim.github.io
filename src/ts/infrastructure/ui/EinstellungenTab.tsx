@@ -1,5 +1,5 @@
 import { DBLoadingButton } from '@/components';
-import { DBButton, DBDivider, DBInput, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBDivider, DBInput, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
@@ -109,14 +109,9 @@ export default function EinstellungenTab() {
                   <div>
                     <h6 className="mb-1 d-flex align-items-center gap-2">
                       Registrierte Biometrie-Anmeldungen
-                      <span
-                        className="db-tag"
-                        data-semantic="neutral"
-                        data-emphasis="strong"
-                        id="PasskeyAccordionCount"
-                      >
+                      <DBTag semantic="neutral" emphasis="strong" id="PasskeyAccordionCount">
                         0
-                      </span>
+                      </DBTag>
                     </h6>
                     <p className="text-body-secondary small mb-1">
                       Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
@@ -182,30 +177,10 @@ export default function EinstellungenTab() {
                     <h6 className="fw-bold mb-3">Sichtbare Bereiche</h6>
                     <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
                     <div className="d-flex flex-column gap-2">
-                      <div className="db-switch">
-                        <label htmlFor="tab-bereitschaft">
-                          <input type="checkbox" role="switch" id="tab-bereitschaft" data-tab-key="bereitschaft" />
-                          Bereitschaft
-                        </label>
-                      </div>
-                      <div className="db-switch">
-                        <label htmlFor="tab-ewt">
-                          <input type="checkbox" role="switch" id="tab-ewt" data-tab-key="ewt" />
-                          EWT
-                        </label>
-                      </div>
-                      <div className="db-switch">
-                        <label htmlFor="tab-neben">
-                          <input type="checkbox" role="switch" id="tab-neben" data-tab-key="neben" />
-                          Nebenbezüge
-                        </label>
-                      </div>
-                      <div className="db-switch">
-                        <label htmlFor="tab-ea">
-                          <input type="checkbox" role="switch" id="tab-ea" data-tab-key="ea" />
-                          Entgeltausgleich
-                        </label>
-                      </div>
+                      <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
+                      <DBCheckbox id="tab-ewt" label="EWT" data-tab-key="ewt" />
+                      <DBCheckbox id="tab-neben" label="Nebenbezüge" data-tab-key="neben" />
+                      <DBCheckbox id="tab-ea" label="Entgeltausgleich" data-tab-key="ea" />
                     </div>
                   </div>
 
@@ -215,17 +190,11 @@ export default function EinstellungenTab() {
                   <div>
                     <h6 className="fw-bold mb-3">AutoSave</h6>
                     <div className="d-flex flex-column gap-3">
-                      <div className="db-switch">
-                        <label htmlFor="autoSaveEnabled">
-                          <input
-                            type="checkbox"
-                            role="switch"
-                            id="autoSaveEnabled"
-                            data-settings-key="autoSaveEnabled"
-                          />
-                          AutoSave aktivieren
-                        </label>
-                      </div>
+                      <DBCheckbox
+                        id="autoSaveEnabled"
+                        label="AutoSave aktivieren"
+                        data-settings-key="autoSaveEnabled"
+                      />
                       <div>
                         <label htmlFor="autoSaveDelay">
                           Verzögerung:{' '}

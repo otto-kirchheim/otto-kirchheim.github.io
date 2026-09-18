@@ -73,76 +73,76 @@ export default function StartTab() {
              in tasks/todo.md. */}
       <div className="raster-auto mb-4 d-md-none d-none abstand-3" id="startSchnellzugriff">
         <div className="d-none" id="quick-bereitschaft-tab">
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="bereitschaft-tab"
+            icon="calendar"
           >
-            <span className="db-icon" data-icon="calendar" />
             Bereitschaft
-          </button>
+          </DBButton>
         </div>
         <div className="d-none" id="quick-ewt-tab">
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="ewt-tab"
+            icon="changeover"
           >
-            <span className="db-icon" data-icon="changeover" />
             EWT
-          </button>
+          </DBButton>
         </div>
         <div className="d-none" id="quick-neben-tab">
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="neben-tab"
+            icon="cash"
           >
-            <span className="db-icon" data-icon="cash" />
             Nebenbezüge
-          </button>
+          </DBButton>
         </div>
         <div className="d-none" id="quick-ea-tab">
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="ea-tab"
+            icon="euro_sign"
           >
-            <span className="db-icon" data-icon="euro_sign" />
             Entgeltausgleich
-          </button>
+          </DBButton>
         </div>
         <div>
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="berechnung-tab"
+            icon="bar_chart"
           >
-            <span className="db-icon" data-icon="bar_chart" />
             Berechnung
-          </button>
+          </DBButton>
         </div>
         <div>
-          <button
+          <DBButton
             type="button"
-            className="db-button d-flex flex-column align-items-center gap-1 py-3"
-            data-variant="outlined"
-            data-width="full"
+            className="d-flex flex-column align-items-center gap-1 py-3"
+            variant="outlined"
+            width="full"
             data-jump-tab="einstellungen-tab"
+            icon="gear_wheel"
           >
-            <span className="db-icon" data-icon="gear_wheel" />
             Einstellungen
-          </button>
+          </DBButton>
         </div>
       </div>
 

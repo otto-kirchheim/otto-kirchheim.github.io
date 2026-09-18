@@ -87,6 +87,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
         <div className="ewt-kopf">
           {createTagElement(row)}
           <MyCheckbox
+            schalter
             className="ewt-kopf-schalter"
             id={'berechnen'}
             defaultChecked={row.cells?.['berechnen'] ?? true}

@@ -197,7 +197,12 @@ export function AdminProfileTemplateContentEditor({
             {templateContent.Fahrzeit.map((row, index) => (
               <div className="raster align-items-end abstand-2" key={`${templateId}-fz-${index}`}>
                 <div>
-                  <div className="feldgruppe admin-fahrzeit-input-group">
+                  <DBStack
+                    direction="row"
+                    alignment="end"
+                    gap="x-small"
+                    className="feldgruppe admin-fahrzeit-input-group"
+                  >
                     <DbFeld
                       beschriftung="Key"
                       className="admin-fahrzeit-key"
@@ -234,7 +239,7 @@ export function AdminProfileTemplateContentEditor({
                       <span className="d-none d-sm-inline">Löschen</span>
                       <span className="d-sm-none">X</span>
                     </DBButton>
-                  </div>
+                  </DBStack>
                 </div>
               </div>
             ))}

@@ -1,3 +1,7 @@
+import { DBButton, DBInput, DBSelect, DBStack } from '@db-ux/react-core-components';
+import type { ComponentProps } from 'react';
+
+import { STANDARD_UNGUELTIG_MELDUNG } from '@/components/dbFeldHelfer';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
 /**
@@ -8,6 +12,8 @@ import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
  * -- unveraendert gueltig, unabhaengig davon, ob React oder statisches HTML das Element erzeugt
  * hat. Keine dieser Dateien musste fuer den Umbau angefasst werden.
  */
+
+const TAETIGKEIT_VORSCHLAEGE = ['Arbeiter', 'Facharbeiter', 'Signalmechaniker', 'Signalmechaniker RBEG', 'Meister'];
 
 const BUNDESLAENDER = [
   ['BW', 'Baden-Württemberg'],
@@ -28,153 +34,176 @@ const BUNDESLAENDER = [
   ['TH', 'Thüringen'],
 ] as const;
 
+type FeldProps = { id: string; label: string; icon: string } & Partial<
+  Omit<ComponentProps<typeof DBInput>, 'id' | 'label' | 'icon'>
+>;
+
+/** Gemeinsame Huelle der Stammdaten-Felder: schwebendes Label, Icon, Standard-Fehlermeldung. */
+function Feld({ id, label, icon, ...rest }: FeldProps) {
+  return (
+    <DBInput
+      id={id}
+      label={label}
+      showLabel
+      variant="floating"
+      icon={icon}
+      type="text"
+      invalidMessage={STANDARD_UNGUELTIG_MELDUNG}
+      {...rest}
+    />
+  );
+}
+
+/** Auswahlfeld analog `Feld`; die Optionen kommen als Kinder. */
+function Auswahl({
+  id,
+  label,
+  icon,
+  children,
+  ...rest
+}: { id: string; label: string; icon: string } & Partial<
+  Omit<ComponentProps<typeof DBSelect>, 'id' | 'label' | 'icon'>
+>) {
+  return (
+    // Die Optionen kommen als Kinder der Aufrufstelle; das sieht die statische Regel nicht.
+    // eslint-disable-next-line db-ux/select-requires-options
+    <DBSelect
+      id={id}
+      label={label}
+      showLabel
+      variant="floating"
+      icon={icon}
+      invalidMessage={STANDARD_UNGUELTIG_MELDUNG}
+      required
+      defaultValue=""
+      {...rest}
+    >
+      {children}
+    </DBSelect>
+  );
+}
+
 export default function PersoenlicheDatenPanel() {
   return (
     <div className="raster text-start abstand-3">
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="person">
-          <label htmlFor="Vorname">Vorname</label>
-          <input type="text" placeholder="Max" id="Vorname" required />
-        </div>
+        <Feld id="Vorname" label="Vorname" icon="person" placeholder="Max" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="person">
-          <label htmlFor="Nachname">Nachname</label>
-          <input type="text" placeholder="Mustermann" id="Nachname" required />
-        </div>
+        <Feld id="Nachname" label="Nachname" icon="person" placeholder="Mustermann" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="id_card">
-          <label htmlFor="PNummer">Personalnummer</label>
-          <input type="text" placeholder="01234567" id="PNummer" required />
-        </div>
+        <Feld id="PNummer" label="Personalnummer" icon="id_card" placeholder="01234567" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="telephone">
-          <label htmlFor="Telefon">Telefon</label>
-          <input type="tel" id="Telefon" placeholder="0123/45678910" required />
-        </div>
+        <Feld id="Telefon" label="Telefon" icon="telephone" type="tel" placeholder="0123/45678910" required />
       </div>
       <div>
-        <div className="feldgruppe">
-          <div className="db-input" data-variant="floating" data-icon="envelope">
-            <label htmlFor="EmailAnzeige">E-Mail</label>
-            <input type="email" id="EmailAnzeige" placeholder="user@deutschebahn.com" readOnly disabled />
-          </div>
-          <button className="db-button" data-variant="outlined" type="button" id="btnResendVerificationEmail" disabled>
+        <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
+          <Feld
+            id="EmailAnzeige"
+            label="E-Mail"
+            icon="envelope"
+            type="email"
+            placeholder="user@deutschebahn.com"
+            readOnly
+            disabled
+          />
+          <DBButton variant="outlined" type="button" id="btnResendVerificationEmail" disabled>
             Verifizierungs-Mail senden
-          </button>
-        </div>
+          </DBButton>
+        </DBStack>
       </div>
       <span id="EmailVerificationHint" className="db-infotext" data-size="small" data-show-icon-leading="false"></span>
       <div>
-        <div className="db-input" data-variant="floating" data-icon="house">
-          <label htmlFor="Adress1">Wohnsitz 1</label>
-          <input type="text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress1" required />
-        </div>
+        <Feld id="Adress1" label="Wohnsitz 1" icon="house" placeholder="Musterstraße 17, 12345 Musterstadt" required />
       </div>
       <div>
-        <div className="db-input" data-variant="floating" data-icon="house">
-          <label htmlFor="Adress2">Wohnsitz 2</label>
-          <input type="text" placeholder="Musterstraße 17, 12345 Musterstadt" id="Adress2" />
-        </div>
+        <Feld id="Adress2" label="Wohnsitz 2" icon="house" placeholder="Musterstraße 17, 12345 Musterstadt" />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="ErsteTkgSt">Erste Tätigkeitsstätte</label>
-          <input type="text" placeholder="Kirchheim" id="ErsteTkgSt" required />
-        </div>
+        <Feld id="ErsteTkgSt" label="Erste Tätigkeitsstätte" icon="market" placeholder="Kirchheim" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="ErsteTkgStAdresse">Adresse Erste Tätigkeitsstätte</label>
-          <input type="text" placeholder="Musterstraße 17, 12345 Musterstadt" id="ErsteTkgStAdresse" required />
-        </div>
+        <Feld
+          id="ErsteTkgStAdresse"
+          label="Adresse Erste Tätigkeitsstätte"
+          icon="market"
+          placeholder="Musterstraße 17, 12345 Musterstadt"
+          required
+        />
       </div>
       <div className="sp-md-6">
-        <div className="db-select" data-variant="floating" data-icon="map">
-          <label htmlFor="Bundesland">Bundesland (Feiertage)</label>
-          <select id="Bundesland" defaultValue="" required>
-            <option value="" disabled>
-              Bundesland wählen…
+        <Auswahl id="Bundesland" label="Bundesland (Feiertage)" icon="map">
+          <option value="" disabled>
+            Bundesland wählen…
+          </option>
+          {BUNDESLAENDER.map(([code, name]) => (
+            <option key={code} value={code}>
+              {name}
             </option>
-            {BUNDESLAENDER.map(([code, name]) => (
-              <option key={code} value={code}>
-                {name}
-              </option>
-            ))}
-          </select>
-        </div>
+          ))}
+        </Auswahl>
       </div>
       <div className="sp-md-6">
-        <div className="db-select" data-variant="floating" data-icon="persons">
-          <label htmlFor="TB">Tarif / Beamter</label>
-          <select id="TB" name="TB" required defaultValue="">
-            <option value="" disabled>
-              Bitte Wählen
+        <Auswahl id="TB" label="Tarif / Beamter" icon="persons" name="TB">
+          <option value="" disabled>
+            Bitte Wählen
+          </option>
+          {TB_VALUES.map(wert => (
+            <option key={wert} value={wert}>
+              {wert}
             </option>
-            {TB_VALUES.map(wert => (
-              <option key={wert} value={wert}>
-                {wert}
-              </option>
-            ))}
-          </select>
-        </div>
+          ))}
+        </Auswahl>
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="Betrieb">Betrieb</label>
-          <input type="text" placeholder="DB Netz AG" id="Betrieb" required />
-        </div>
+        <Feld id="Betrieb" label="Betrieb" icon="market" placeholder="DB Netz AG" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="OE">OE</label>
-          <input type="text" placeholder="I.NA-MI-N-KSL-IL 03" id="OE" required />
-        </div>
+        <Feld id="OE" label="OE" icon="market" placeholder="I.NA-MI-N-KSL-IL 03" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="Gewerk">Gewerk</label>
-          <input type="text" placeholder="LST" id="Gewerk" required />
-        </div>
+        <Feld id="Gewerk" label="Gewerk" icon="market" placeholder="LST" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="person">
-          <label htmlFor="Taetigkeit">Tätigkeit / Stellenbezeichnung</label>
-          <input type="text" placeholder="Signalmechaniker RBEG" id="Taetigkeit" list="taetigkeitVorschlaege" />
-          <datalist id="taetigkeitVorschlaege">
-            <option value="Arbeiter"></option>
-            <option value="Facharbeiter"></option>
-            <option value="Signalmechaniker"></option>
-            <option value="Signalmechaniker RBEG"></option>
-            <option value="Meister"></option>
-          </datalist>
-        </div>
+        <Feld
+          id="Taetigkeit"
+          label="Tätigkeit / Stellenbezeichnung"
+          icon="person"
+          placeholder="Signalmechaniker RBEG"
+          dataList={TAETIGKEIT_VORSCHLAEGE}
+        />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="person">
-          <label htmlFor="Entgeltgruppe">Entgeltgruppe (Optional / Entgeltausgleich)</label>
-          <input type="text" placeholder="105" id="Entgeltgruppe" />
-        </div>
+        <Feld id="Entgeltgruppe" label="Entgeltgruppe (Optional / Entgeltausgleich)" icon="person" placeholder="105" />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="market">
-          <label htmlFor="kmArbeitsort">Entfernung zur Arbeitsstätte in km</label>
-          <input type="number" placeholder="12" id="kmArbeitsort" min="1" max="100" required />
-        </div>
+        <Feld
+          id="kmArbeitsort"
+          label="Entfernung zur Arbeitsstätte in km"
+          icon="market"
+          type="number"
+          placeholder="12"
+          min={1}
+          max={100}
+          required
+        />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="train">
-          <label htmlFor="nBhf">nächster Bahnhof</label>
-          <input type="text" placeholder="Bad Hersfeld" id="nBhf" required />
-        </div>
+        <Feld id="nBhf" label="nächster Bahnhof" icon="train" placeholder="Bad Hersfeld" required />
       </div>
       <div className="sp-md-6">
-        <div className="db-input" data-variant="floating" data-icon="train">
-          <label htmlFor="kmnBhf">Entfernung zum nächsten Bahnhof in km</label>
-          <input type="number" placeholder="12" id="kmnBhf" min="1" max="100" required />
-        </div>
+        <Feld
+          id="kmnBhf"
+          label="Entfernung zum nächsten Bahnhof in km"
+          icon="train"
+          type="number"
+          placeholder="12"
+          min={1}
+          max={100}
+          required
+        />
       </div>
     </div>
   );
