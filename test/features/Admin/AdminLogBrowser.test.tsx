@@ -223,7 +223,7 @@ describe('AdminLogBrowser', () => {
       const container = renderBrowser();
       await flush();
 
-      expect(container.querySelector('.knopfgruppe')).toBeNull();
+      expect(container.querySelector('[aria-label="Vorherige Seite"]')).toBeNull();
     });
 
     it('zeigt Gesamt/Seite und navigiert vor/zurück', async () => {
@@ -234,7 +234,8 @@ describe('AdminLogBrowser', () => {
       expect(container.textContent).toContain('Gesamt: 60');
       expect(container.textContent).toContain('Seite 1/3');
 
-      const [prevButton, nextButton] = Array.from(container.querySelectorAll('.knopfgruppe button'));
+      const prevButton = container.querySelector('[aria-label="Vorherige Seite"]');
+      const nextButton = container.querySelector('[aria-label="Nächste Seite"]');
       expect((prevButton as HTMLButtonElement).disabled).toBe(true);
       expect((nextButton as HTMLButtonElement).disabled).toBe(false);
 

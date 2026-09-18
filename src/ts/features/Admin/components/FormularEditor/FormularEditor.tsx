@@ -23,7 +23,7 @@ import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
 import { schriftKurz } from './SchriftartWahl';
 import { SchriftartDialog } from './SchriftartDialog';
 import type { FormularCode } from './datenKatalog';
-import { DBButton, DBCheckbox, DBTextarea } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBStack, DBTextarea } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 
 type Masse = { w: number; h: number };
@@ -555,7 +555,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
 
   return (
     <div className="border p-2">
-      <div className="d-flex align-items-center gap-2 mb-2">
+      <DBStack direction="row" alignment="center" gap="x-small" className="mb-2">
         <nav className="db-navigation admin-unternavigation flex-grow-1" aria-label="Seiten der Vorlage">
           <menu>
             {value.seiten.map((s, i) => (
@@ -612,7 +612,7 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         >
           {messModus ? 'Messen beenden' : 'Schriftgröße messen'}
         </DBButton>
-        <div className="knopfgruppe">
+        <DBStack direction="row" wrap gap="2x-small">
           <DBButton
             type="button"
             variant="brand"
@@ -631,8 +631,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
           >
             {vorschauLaeuft === 'platzhalter' ? 'Erzeugt…' : 'Platzhalter'}
           </DBButton>
-        </div>
-      </div>
+        </DBStack>
+      </DBStack>
 
       {schriftDialogOffen && (
         <SchriftartDialog

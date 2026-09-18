@@ -2,7 +2,7 @@ import { pwaInfo } from 'virtual:pwa-info';
 import { registerSW } from 'virtual:pwa-register';
 
 import { logoutUser, changeMonatJahr, saveEinstellungen } from '@/features/Einstellungen/utils';
-import { createSnackBar, setVersionOutdated } from '@/infrastructure/ui';
+import { createSnackBar, initPullToRefresh, setVersionOutdated } from '@/infrastructure/ui';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as compareVersion } from '@/infrastructure/validation/compareVersion';
 import { default as setOffline } from '@/infrastructure/ui/setOffline';
@@ -104,6 +104,9 @@ if (appRoot) mount(appRoot, createElement(App));
 // Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
 // bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.
 initTabController();
+
+// Muss nach dem Root-Mount stehen: `.db-shell-content` entsteht erst mit `App.tsx`s Baum.
+initPullToRefresh();
 
 registerAppStartTask(() => {
   if (Storage.size() > 3) {

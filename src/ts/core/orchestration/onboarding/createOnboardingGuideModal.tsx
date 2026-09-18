@@ -38,6 +38,7 @@ function getTourTabs(): TourTab[] {
     { tabButtonId: '#bereitschaft-tab', key: 'tab.bereitschaft' },
     { tabButtonId: '#ewt-tab', key: 'tab.ewt' },
     { tabButtonId: '#neben-tab', key: 'tab.neben' },
+    { tabButtonId: '#ea-tab', key: 'tab.ea' },
   ];
 
   for (const { tabButtonId, key } of helpTabs) {

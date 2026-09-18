@@ -16,7 +16,7 @@ import {
 } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 function FeldZeile({
@@ -80,7 +80,7 @@ function FeldZeile({
         <Zellkoordinaten wert={feld} onChange={onChange} />
       </div>
 
-      <div className="knopfgruppe w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
         <DBButton
           type="button"
           variant={
@@ -192,7 +192,7 @@ function FeldZeile({
             Überschrift
           </DBButton>
         )}
-      </div>
+      </DBStack>
 
       {feld.listenKopf ? (
         <div className="raster mb-1 abstand-1">

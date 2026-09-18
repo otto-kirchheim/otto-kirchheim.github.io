@@ -1,4 +1,5 @@
 import { DBLoadingButton } from '@/components';
+import { DBButton, DBDivider, DBInput, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
@@ -11,8 +12,9 @@ import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
  * `saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `selectYear.ts`, ...) bleibt
  * bewusst unveraendert: sie liest/schreibt jedes Feld ausschliesslich per
  * `document.querySelector('#<Id>')`, unabhaengig davon, ob React oder statisches HTML das
- * Element erzeugt hat. Alle IDs/Klassen/Attribute deshalb 1:1 uebernommen -- keine dieser
- * Dateien musste fuer den Umbau angefasst werden:
+ * Element erzeugt hat. Alle IDs behalten deshalb ihren Wert -- nur die reine Markup-Huelle
+ * (Knopf-Reihen als `<DBStack>`/`<DBButton>` statt Hand-Markup, siehe Umbau "Flex-Layouts ->
+ * DBStack") wurde angepasst:
  * - `#PasskeyList` bleibt leerer Container, der von `index.ts` (`renderPasskeyList`) weiterhin
  *   per plain-DOM (`document.createElement`) befuellt wird -- kein React-Root, unveraendert.
  * - `#arbeitszeit-panel`/`#fahrzeiten-panel`/`#settings-zulagen-list` bleiben leere Container
@@ -29,87 +31,69 @@ import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
  */
 export default function EinstellungenTab() {
   return (
-    <div className="mitte text-center mb-3">
-      <div>
-        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
-          Einstellungen
-          <button
-            type="button"
-            className="db-button p-0"
-            data-variant="ghost"
-            data-size="small"
-            id="btnHelpEinstellungen"
-            aria-label="Hilfe anzeigen"
-          >
-            <span className="db-icon align-middle" data-icon="question_mark_circle" style={{ fontSize: '1.25rem' }} />
-          </button>
-        </h1>
-      </div>
+    <div className="mitte text-center">
+      <h1 className="d-inline-flex align-items-center justify-content-center">
+        Einstellungen
+        <DBButton
+          variant="ghost"
+          size="small"
+          type="button"
+          id="btnHelpEinstellungen"
+          aria-label="Hilfe anzeigen"
+          icon={'question_mark_circle'}
+          noText
+        >
+          <DBTooltip placement="top">Hilfe anzeigen</DBTooltip>
+        </DBButton>
+      </h1>
 
-      <div className="mitte">
-        <div className="raster-auto mb-3 knopfreihe abstand-3">
-          <div className="d-grid">
-            <button className="db-button" data-variant="brand" type="button" name="Logout" id="btnLogout">
-              Ausloggen
-            </button>
-          </div>
-          <div className="d-grid">
-            <button
-              className="db-button"
-              data-variant="filled"
-              type="button"
-              name="PasswortAEndern"
-              id="btnPasswortAEndern"
+      {/* Ausloggen wanderte in die Shell-Kopfzeile (siehe AppHeader.tsx "actions2") --
+          "Buttons und Elemente sollten ein Raster einhalten"-Feedback plus immer erreichbar
+          statt im Tab versteckt. Passwort Ändern wanderte in den Biometrie-Accordion (siehe
+          dort) -- Account-Sicherheitsaktionen jetzt an einer Stelle gruppiert. */}
+      <DBStack direction="column" alignment="center" justifyContent="center" gap="medium">
+        <form id="formSelectMonatJahr">
+          <DBStack direction="row" alignment="end" gap="medium" className="knopfreihe-gleich">
+            <DBInput
+              id="Jahr"
+              label="Jahr"
+              showLabel
+              variant="floating"
+              icon="calendar"
+              type="number"
+              placeholder="2026"
+              min={2021}
+              max={2030}
+              required
+              invalidMessage="Bitte ein Jahr zwischen 2021 und 2030 angeben."
             >
-              Passwort Ändern
-            </button>
-          </div>
-        </div>
-      </div>
+              <DBTooltip placement="top">Achtung: Vor Jahreswechsel Speichern!!</DBTooltip>
+            </DBInput>
 
-      <div className="mitte">
-        <form id="formSelectMonatJahr" className="my-3">
-          <div className="feldgruppe jahr-auswahl">
-            <div className="db-input" data-variant="floating" data-icon="calendar" data-has-tooltip="true">
-              <label htmlFor="Jahr">Jahr</label>
-              <input id="Jahr" type="number" placeholder="2026" min="2021" max="2030" required />
-              <i role="tooltip" className="db-tooltip" data-placement="top">
-                Achtung: Vor Jahreswechsel Speichern!!
-              </i>
-            </div>
-            <button
-              className="db-button"
-              data-variant="brand"
-              type="submit"
-              id="btnAuswaehlen"
-              name="Auswählen"
-              data-disabler
-            >
+            <DBButton variant="brand" type="submit" id="btnAuswaehlen" name="Auswählen" data-disabler>
               Auswählen
-            </button>
-          </div>
+            </DBButton>
+          </DBStack>
         </form>
-      </div>
+      </DBStack>
 
-      <form className="text-center" id="formEinstellungen">
-        <div className="mitte">
-          <div className="raster-auto my-3 knopfreihe abstand-3">
-            <div className="d-grid">
-              <DBLoadingButton
-                type="submit"
-                variant="filled"
-                data-color="successful"
-                name="btnES"
-                id="btnSaveEinstellungen"
-                icon="save"
-                data-disabler
-                autoSaveResources={['settings']}
-              >
-                Speichern
-              </DBLoadingButton>
-            </div>
-          </div>
-        </div>
+      <DBDivider width="full" />
+
+      <form id="formEinstellungen">
+        <DBLoadingButton
+          type="submit"
+          variant="filled"
+          data-color="successful"
+          name="btnES"
+          id="btnSaveEinstellungen"
+          icon="save"
+          data-disabler
+          autoSaveResources={['settings']}
+          className="mb-4"
+        >
+          Speichern
+        </DBLoadingButton>
+
         <ul className="db-accordion" id="einstellungen" data-variant="card">
           <li className="db-accordion-item">
             <details name="einstellungen" id="collapseOne">
@@ -119,7 +103,7 @@ export default function EinstellungenTab() {
           </li>
           <li className="db-accordion-item" id="PasskeysAccordionItem">
             <details name="einstellungen" id="collapsePasskeys">
-              <summary>Biometrie & Geräte</summary>
+              <summary>Sicherheit</summary>
               <div className="text-start">
                 <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                   <div>
@@ -141,23 +125,22 @@ export default function EinstellungenTab() {
                       Biometrie-Status wird geladen...
                     </span>
                   </div>
-                  <div className="d-flex flex-column gap-2">
-                    {/* Haupt-Aktion als gefuellter Knopf, die Zweit-Aktion darunter nur
+                  <DBStack direction="column" gap="x-small">
+                    {/* Haupt-Aktion als gefuellter Knopf, die Zweit-Aktionen darunter nur
                          umrandet. Kein Rot: das DB-Regelwerk laesst roten Text nur fuer
-                         Links und Warnungen zu (Markenfarben, Double Coding). */}
-                    <button className="db-button" data-variant="filled" type="button" id="btnAddPasskeyInline" disabled>
+                         Links und Warnungen zu (Markenfarben, Double Coding). Passwort Ändern
+                         zog von der oberen Knopfreihe her -- Account-Sicherheitsaktionen
+                         jetzt an einer Stelle gruppiert. */}
+                    <DBButton variant="filled" type="button" id="btnAddPasskeyInline" disabled>
                       Biometrie einrichten
-                    </button>
-                    <button
-                      className="db-button"
-                      data-variant="outlined"
-                      type="button"
-                      id="btnPasswortPerPasskey"
-                      hidden
-                    >
+                    </DBButton>
+                    <DBButton variant="outlined" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
+                      Passwort Ändern
+                    </DBButton>
+                    <DBButton variant="outlined" type="button" id="btnPasswortPerPasskey" hidden>
                       Passwort per Passkey neu setzen
-                    </button>
-                  </div>
+                    </DBButton>
+                  </DBStack>
                 </div>
                 <div className="trennliste" id="PasskeyList"></div>
               </div>

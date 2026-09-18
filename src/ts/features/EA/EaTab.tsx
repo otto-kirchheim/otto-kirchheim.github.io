@@ -1,4 +1,4 @@
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
@@ -125,31 +125,25 @@ function EaTab() {
       </div>
 
       <div className="mitte">
-        <div className="raster-auto my-3 knopfreihe abstand-3">
-          <div className="d-grid">
-            <DBButton type="button" variant="brand" icon="plus" id="btnESEA" data-disabler>
-              Hinzufügen
-            </DBButton>
-          </div>
-          <div className="d-grid">
-            <DBLoadingButton
-              type="button"
-              variant="filled"
-              data-color="successful"
-              icon="save"
-              id="btnSaveEA"
-              data-disabler
-              autoSaveResources={['EA']}
-            >
-              Speichern
-            </DBLoadingButton>
-          </div>
-          <div className="d-grid">
-            <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadEA" data-disabler>
-              PDF erzeugen
-            </DBLoadingButton>
-          </div>
-        </div>
+        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
+          <DBButton type="button" variant="brand" icon="plus" id="btnESEA" data-disabler>
+            Hinzufügen
+          </DBButton>
+          <DBLoadingButton
+            type="button"
+            variant="filled"
+            data-color="successful"
+            icon="save"
+            id="btnSaveEA"
+            data-disabler
+            autoSaveResources={['EA']}
+          >
+            Speichern
+          </DBLoadingButton>
+          <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadEA" data-disabler>
+            PDF erzeugen
+          </DBLoadingButton>
+        </DBStack>
       </div>
       <hr />
 

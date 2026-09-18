@@ -2,7 +2,7 @@ import type { MouseEvent, ReactNode } from 'react';
 import { useEffect } from 'react';
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import type { CustomTable } from './CustomTable';
 import type { Column } from './Column';
 import type { Row } from './Row';
@@ -213,7 +213,7 @@ function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
               />
             )}
             {column.editing ? (
-              <div className="knopfgruppe" role="group">
+              <DBStack direction="row" wrap={false} gap="2x-small" role="group">
                 {row.isDeleted
                   ? editingButton({
                       icon: 'undo',
@@ -236,7 +236,7 @@ function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
                         onClick: () => table.options.editing.deleteRow(row),
                       }),
                     ]}
-              </div>
+              </DBStack>
             ) : (
               // `html: true`-Spalten liefern JSX direkt (kein `dangerouslySetInnerHTML` mehr
               // noetig, seit `Column.parser` `ReactNode` zurueckgeben darf, siehe

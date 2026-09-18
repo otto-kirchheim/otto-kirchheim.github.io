@@ -11,7 +11,7 @@ import {
 } from './profileTemplates.shared';
 import { VorgabenBWeekRangeEditor } from './VorgabenBWeekRangeEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';
-import { DBButton, DBCheckbox, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBStack, DBTag } from '@db-ux/react-core-components';
 import type { BereitschaftSchichtTyp } from '@/types';
 import { DbAuswahl, DbFeld } from '@/components';
 
@@ -105,13 +105,13 @@ export function AdminProfileTemplateContentEditor({
   return (
     <div>
       <label className="small fw-semibold mb-1">Template-Inhalt</label>
-      <div className="d-flex flex-wrap gap-2 mb-2">
+      <DBStack direction="row" wrap gap="x-small" className="mb-2">
         {sectionButton('Pers', 'Pers')}
         {sectionButton('Arbeitszeit', 'Arbeitszeit')}
         {sectionButton('Fahrzeit', 'Fahrzeit')}
         {sectionButton('VorgabenB', 'VorgabenB')}
         {sectionButton('Einstellungen', 'Einstellungen')}
-      </div>
+      </DBStack>
 
       {activeSection === 'Pers' && (
         <div className="border p-2 mb-2">
@@ -165,19 +165,19 @@ export function AdminProfileTemplateContentEditor({
               onChange={onUpdateArbeitszeit}
             />
           ) : (
-            <div className="d-flex justify-content-between align-items-center">
+            <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none">
               <small className="text-body-secondary">Keine Arbeitszeit hinterlegt.</small>
               <DBButton type="button" variant="outlined" size="small" onClick={onEnableArbeitszeit} disabled={isSaving}>
                 Arbeitszeit aktivieren
               </DBButton>
-            </div>
+            </DBStack>
           )}
         </div>
       )}
 
       {activeSection === 'Fahrzeit' && (
         <div className="border p-2 mb-2">
-          <div className="d-flex justify-content-between align-items-center mb-1">
+          <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-1">
             <label className="small fw-semibold mb-0">Fahrzeit-Einträge</label>
             <DBButton
               type="button"
@@ -189,8 +189,8 @@ export function AdminProfileTemplateContentEditor({
             >
               Zeile hinzufügen
             </DBButton>
-          </div>
-          <div className="d-flex flex-column gap-2">
+          </DBStack>
+          <DBStack direction="column" gap="x-small">
             {templateContent.Fahrzeit.length === 0 && (
               <small className="text-body-secondary">Keine Fahrzeit-Einträge vorhanden.</small>
             )}
@@ -238,13 +238,13 @@ export function AdminProfileTemplateContentEditor({
                 </div>
               </div>
             ))}
-          </div>
+          </DBStack>
         </div>
       )}
 
       {activeSection === 'VorgabenB' && (
         <div className="border p-2 mb-2">
-          <div className="d-flex justify-content-between align-items-center mb-2">
+          <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="none" className="mb-2">
             <label className="small fw-semibold mb-0">Bereitschaftszeitraum-Vorgaben</label>
             <DBButton
               type="button"
@@ -256,7 +256,7 @@ export function AdminProfileTemplateContentEditor({
             >
               Vorgabe hinzufügen
             </DBButton>
-          </div>
+          </DBStack>
 
           {templateContent.VorgabenB.length === 0 && (
             <small className="text-body-secondary">Keine VorgabenB-Einträge vorhanden.</small>
@@ -269,9 +269,9 @@ export function AdminProfileTemplateContentEditor({
               const row = templateContent.VorgabenB[currentIndex];
 
               return (
-                <div className="d-flex flex-column gap-2">
-                  <div className="d-flex justify-content-between align-items-center gap-2 flex-wrap">
-                    <div className="knopfgruppe" role="group" aria-label="VorgabenB Navigation">
+                <DBStack direction="column" gap="x-small">
+                  <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small">
+                    <DBStack direction="row" wrap gap="2x-small" role="group" aria-label="VorgabenB Navigation">
                       <DBButton
                         type="button"
                         variant="outlined"
@@ -288,11 +288,11 @@ export function AdminProfileTemplateContentEditor({
                       >
                         Weiter
                       </DBButton>
-                    </div>
+                    </DBStack>
                     <small className="text-body-secondary">
                       Vorgabe {currentIndex + 1} von {templateContent.VorgabenB.length}
                     </small>
-                  </div>
+                  </DBStack>
 
                   <DbAuswahl
                     beschriftung="Auswahl"
@@ -310,7 +310,14 @@ export function AdminProfileTemplateContentEditor({
                   </DbAuswahl>
 
                   <div className="border p-2" key={`${templateId}-vb-${currentIndex}`}>
-                    <div className="d-flex justify-content-between align-items-center mb-2">
+                    <DBStack
+                      direction="row"
+                      wrap
+                      alignment="center"
+                      justifyContent="space-between"
+                      gap="none"
+                      className="mb-2"
+                    >
                       <strong className="small d-flex align-items-center gap-2">
                         <DBTag semantic="neutral" emphasis="strong">
                           #{currentIndex + 1}
@@ -322,7 +329,7 @@ export function AdminProfileTemplateContentEditor({
                           </DBTag>
                         )}
                       </strong>
-                      <div className="d-flex gap-1">
+                      <DBStack direction="row" gap="2x-small">
                         <DBButton
                           type="button"
                           variant="outlined"
@@ -366,8 +373,8 @@ export function AdminProfileTemplateContentEditor({
                         >
                           Entfernen
                         </DBButton>
-                      </div>
-                    </div>
+                      </DBStack>
+                    </DBStack>
 
                     <div className="raster mb-2 abstand-2">
                       <div>
@@ -460,7 +467,7 @@ export function AdminProfileTemplateContentEditor({
 
                     <div className="mb-2">
                       <label className="small mb-1">Aktive Schichten</label>
-                      <div className="d-flex flex-wrap gap-3">
+                      <DBStack direction="row" wrap gap="medium">
                         {SCHICHT_OPTIONEN.map(({ typ, label }) => (
                           <DBCheckbox
                             className="m-0"
@@ -504,7 +511,7 @@ export function AdminProfileTemplateContentEditor({
                             }}
                           />
                         ))}
-                      </div>
+                      </DBStack>
                     </div>
 
                     {row.value.schichten.includes('nacht') ? (
@@ -585,7 +592,7 @@ export function AdminProfileTemplateContentEditor({
                       <div className="small text-body-secondary mb-2">Keine Nachtschicht aktiviert.</div>
                     )}
                   </div>
-                </div>
+                </DBStack>
               );
             })()}
         </div>
@@ -595,7 +602,7 @@ export function AdminProfileTemplateContentEditor({
         <div className="border p-2">
           <div className="mb-2">
             <label className="small mb-1">Sichtbare Bereiche</label>
-            <div className="d-flex flex-wrap gap-2">
+            <DBStack direction="row" wrap gap="x-small">
               {TAB_OPTIONS.map(option => (
                 <DBCheckbox
                   className="m-0"
@@ -606,12 +613,12 @@ export function AdminProfileTemplateContentEditor({
                   onChange={() => onToggleAktivierterTab(option.key)}
                 />
               ))}
-            </div>
+            </DBStack>
           </div>
 
           <div>
             <label className="small mb-1">Benötigte Zulagen</label>
-            <div className="d-flex flex-wrap gap-2">
+            <DBStack direction="row" wrap gap="x-small">
               {ZULAGEN_CATALOG.map(zulage => (
                 <DBCheckbox
                   className="m-0"
@@ -622,7 +629,7 @@ export function AdminProfileTemplateContentEditor({
                   onChange={() => onToggleZulage(zulage.code)}
                 />
               ))}
-            </div>
+            </DBStack>
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@ import {
   type FormularCode,
   type KatalogEintrag,
 } from './datenKatalog';
-import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /** Form, die sich `Bedingung` (Zeile) und `FeldBedingung` (Dokument) exakt teilen -- nur der
@@ -77,7 +77,7 @@ function VergleichWahl({
     <>
       <div className="raster mb-1 abstand-1">
         <div className="sp-8">
-          <div className="knopfgruppe w-100">
+          <DBStack direction="row" wrap gap="2x-small" className="w-100">
             <DBButton
               type="button"
               variant={!wenn.bereich ? 'brand' : 'outlined'}
@@ -93,7 +93,7 @@ function VergleichWahl({
             >
               Wertebereich
             </DBButton>
-          </div>
+          </DBStack>
         </div>
         <div className="sp-4">
           <DbFeld
@@ -107,7 +107,7 @@ function VergleichWahl({
       </div>
 
       {wenn.bereich ? (
-        <div className="feldgruppe">
+        <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
           <DbFeld
             beschriftung="ab"
             beschriftungZeigen
@@ -124,9 +124,9 @@ function VergleichWahl({
             value={wenn.bereich.bis}
             onChange={e => onChange({ bereich: { ...wenn.bereich!, bis: e.target.value } })}
           />
-        </div>
+        </DBStack>
       ) : auswahl.length > 0 ? (
-        <div className="d-flex flex-wrap gap-2">
+        <DBStack direction="row" wrap gap="x-small">
           {auswahl.map(wert => (
             <DBCheckbox
               key={wert}
@@ -136,7 +136,7 @@ function VergleichWahl({
               onChange={e => schalte(wert, e.target.checked)}
             />
           ))}
-        </div>
+        </DBStack>
       ) : (
         <DbFeld
           beschriftung="Werte, durch Komma getrennt"
@@ -191,7 +191,7 @@ export function AnkreuzBedingung({
 
   return (
     <div className="mb-1">
-      <div className="knopfgruppe w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
         <DBButton
           type="button"
           variant={!wenn.berechnet ? 'brand' : 'outlined'}
@@ -214,7 +214,7 @@ export function AnkreuzBedingung({
         >
           Berechnung
         </DBButton>
-      </div>
+      </DBStack>
 
       {wenn.berechnet ? (
         <div className="border p-2 mb-1">
@@ -289,7 +289,7 @@ export function FeldAnkreuzBedingung({
 
   return (
     <div className="mb-1">
-      <div className="knopfgruppe w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
         <DBButton
           type="button"
           variant={!wenn.berechnet ? 'brand' : 'outlined'}
@@ -312,7 +312,7 @@ export function FeldAnkreuzBedingung({
         >
           Berechnung
         </DBButton>
-      </div>
+      </DBStack>
 
       {wenn.berechnet ? (
         <div className="border p-2 mb-1">

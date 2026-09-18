@@ -3,7 +3,7 @@ import { type JSX, useEffect, useRef, useState } from 'react';
 import { DbFeld } from '@/components';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { setFahrzeitPanelState } from './fahrzeitPanelState';
 
 interface PanelProps {
@@ -166,7 +166,14 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                   </td>
                 ))}
                 <td className="text-center align-middle">
-                  <div className="knopfgruppe fahrzeiten-aktionen" role="group" aria-label="Zeilen-Aktionen">
+                  <DBStack
+                    direction="row"
+                    wrap={false}
+                    gap="2x-small"
+                    className="fahrzeiten-aktionen"
+                    role="group"
+                    aria-label="Zeilen-Aktionen"
+                  >
                     <DBButton
                       type="button"
                       variant="outlined"
@@ -200,7 +207,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
                     >
                       <DBTooltip>Zeile löschen</DBTooltip>
                     </DBButton>
-                  </div>
+                  </DBStack>
                 </td>
               </tr>
             );

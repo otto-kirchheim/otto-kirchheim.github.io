@@ -1,4 +1,4 @@
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 import { mount, unmount } from '@/infrastructure/ui';
 
@@ -261,36 +261,28 @@ function BereitschaftTab() {
       </div>
 
       <div className="mitte">
-        <div className="raster-auto my-3 knopfreihe abstand-3">
-          <div className="d-grid">
-            <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESZ" data-disabler>
-              Bereitschaft
-            </DBLoadingButton>
-          </div>
-          <div className="d-grid">
-            <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESE" data-disabler>
-              Einsatz
-            </DBLoadingButton>
-          </div>
-          <div className="d-grid">
-            <DBLoadingButton
-              type="button"
-              variant="filled"
-              data-color="successful"
-              icon="save"
-              id="btnSaveB"
-              data-disabler
-              autoSaveResources={['BZ', 'BE']}
-            >
-              Speichern
-            </DBLoadingButton>
-          </div>
-          <div className="d-grid">
-            <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadB" data-disabler>
-              PDF erzeugen
-            </DBLoadingButton>
-          </div>
-        </div>
+        <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
+          <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESZ" data-disabler>
+            Bereitschaft
+          </DBLoadingButton>
+          <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESE" data-disabler>
+            Einsatz
+          </DBLoadingButton>
+          <DBLoadingButton
+            type="button"
+            variant="filled"
+            data-color="successful"
+            icon="save"
+            id="btnSaveB"
+            data-disabler
+            autoSaveResources={['BZ', 'BE']}
+          >
+            Speichern
+          </DBLoadingButton>
+          <DBLoadingButton type="button" variant="filled" icon="download" id="btnDownloadB" data-disabler>
+            PDF erzeugen
+          </DBLoadingButton>
+        </DBStack>
       </div>
       <hr />
       <h4 id="titelBZ">Bereitschaftszeitraum</h4>

@@ -2,7 +2,7 @@ import { unmount } from '@/infrastructure/ui';
 
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld, oeffneDrawer } from '@/components';
 
 /**
@@ -29,7 +29,7 @@ export function DatenpfadWahl({
   const bekannt = eintraege.some(e => e.pfad === wert);
   return (
     <div>
-      <div className="feldgruppe">
+      <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
         <DbAuswahl
           beschriftung="Datenfeld"
           dicht
@@ -59,7 +59,7 @@ export function DatenpfadWahl({
             onChange={e => onChange(e.target.value)}
           />
         )}
-      </div>
+      </DBStack>
       {!bekannt && belegt.has(wert) && (
         <div className="small text-danger">Dieser Datenpfad wird schon von einem anderen Feld verwendet.</div>
       )}
@@ -96,7 +96,7 @@ export function ZusammengesetzteQuellen({
   return (
     <div className="mb-1">
       {quellen.map((pfad, i) => (
-        <div key={i} className="d-flex gap-1 mb-1">
+        <DBStack key={i} direction="row" gap="2x-small" className="mb-1">
           <div className="flex-grow-1">
             <DatenpfadWahl
               wert={pfad}
@@ -115,9 +115,9 @@ export function ZusammengesetzteQuellen({
           >
             ×
           </DBButton>
-        </div>
+        </DBStack>
       ))}
-      <div className="d-flex gap-1 align-items-center">
+      <DBStack direction="row" alignment="center" gap="2x-small">
         <DBButton
           type="button"
           variant="outlined"
@@ -156,7 +156,7 @@ export function ZusammengesetzteQuellen({
             onChange={e => onChange({ ...feld, trenner: (e.target as HTMLInputElement).value })}
           />
         )}
-      </div>
+      </DBStack>
     </div>
   );
 }

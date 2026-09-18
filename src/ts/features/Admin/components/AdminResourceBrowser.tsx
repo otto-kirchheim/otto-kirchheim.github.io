@@ -23,7 +23,7 @@ import {
   fetchAdminUserNameMap,
   type AdminPage,
 } from '../utils/api';
-import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
@@ -472,17 +472,18 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       </div>
 
       {/* Pagination */}
-      <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+      <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
         <small className="text-muted">
           {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
         </small>
         {totalPages > 1 && (
-          <div className="knopfgruppe">
+          <DBStack direction="row" wrap gap="2x-small">
             <DBButton
               type="button"
               variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
+              aria-label="Vorherige Seite"
             >
               ‹
             </DBButton>
@@ -491,10 +492,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
+              aria-label="Nächste Seite"
             >
               ›
             </DBButton>
-          </div>
+          </DBStack>
         )}
         <DBButton
           type="button"
@@ -505,7 +507,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         >
           Aktualisieren
         </DBButton>
-      </div>
+      </DBStack>
 
       {/* Edit Modal – Portal: sichtbar auch in versteckten Tab-Panes */}
       {edit && (

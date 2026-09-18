@@ -39,31 +39,58 @@ hr {
   margin-inline: 0;
 }
 
-// Knopfreihen der Tabs (Bereitschaft, EWT, EA, Neben, Einstellungen): gleich breite Spalten
-// bis 250px, die Gruppe als Ganzes zentriert -- ohne die Deckelung zoege jeder Knopf ueber die
-// halbe Seite, mit gestreckten Rasterspalten stuenden sie weit auseinander.
-.knopfreihe {
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 15.625rem));
-  justify-content: center;
-}
-
+// Knopfreihen der Tabs (Bereitschaft, EWT, EA, Neben, Einstellungen): jeder Knopf bis 250px
+// gedeckelt -- ohne die Deckelung zoege jeder Knopf ueber die halbe Seite. Richtung/Umbruch/
+// Zentrierung/Abstand kommen seit dem `<DBStack>`-Umbau als Props an den Aufrufstellen.
 .knopfreihe > * {
   max-inline-size: 250px;
 }
 
+// Gleich breite Knoepfe innerhalb einer Reihe (statt je eigener Inhaltsbreite) -- Alternative
+// zu einem CSS-Grid, wenn die Reihe eine `<DBStack>` bleiben soll (z. B. EinstellungenTab.tsx).
+// Feste (nicht nur minimale) Breite, sonst zieht der laengste Knopftext die anderen schief.
+.knopfreihe-gleich > * {
+  inline-size: 12rem;
+}
+
+// Gleich breite Kacheln (Karten, Kurz-Zugriff-Knoepfe, ...) innerhalb einer Reihe -- anders als
+// `.knopfreihe-gleich` keine feste Breite, sondern gleichmaessiges Wachsen/Schrumpfen: die
+// Kacheln sollen die volle Zeilenbreite ausfuellen (wie zuvor `.raster-auto`s Grid-Spalten),
+// nicht auf einen festen Wert gedeckelt bleiben. `min-inline-size` entspricht `raster-auto`s
+// bisherigem `--spalte-min`.
+.karten-gleich > * {
+  flex: 1 1 0%;
+  min-inline-size: 14rem;
+}
+
+// `<DBStack>` (@db-ux/react-core-components) ist als "fuelle den Elternbereich"-Baustein
+// gedacht (`block-size`/`inline-size: 100%`). Fuer eine einzelne, flach im Fluss stehende
+// Stelle bleibt das folgenlos (Prozent-Hoehe gegen einen Elternteil ohne definierte Hoehe
+// loest zu `auto` auf) -- **aber sobald ein `<DBStack>` selbst FLEX-KIND eines aeusseren
+// `<DBStack direction="row">` ist** (z. B. mehrere Knopfreihen zu einer Zeile zusammengefasst),
+// zwingt `inline-size: 100%` es, die gesamte Breite des Elternteils zu beanspruchen -- alle
+// Geschwister werden dadurch auf eigene Zeilen verdraengt, obwohl reichlich Platz da waere.
+// Per Puppeteer nachgewiesen (drei verschachtelte Knopfreihen in `EinstellungenTab.tsx`, sollten
+// nebeneinander stehen, standen aber jede auf eigener Zeile). `overflow: auto` schneidet
+// ausserdem nachweislich Box-Shadows/Fokusringe ab, die ueber die Randbox eines Kindes
+// hinausragen (typisches DB-UX-Button-Fokusmuster) -- ein normales `<div>` hat als Default
+// `overflow: visible`, `<DBStack>` nicht.
+.db-stack {
+  inline-size: auto;
+  overflow: visible;
+}
+
 // Jahresauswahl in den Einstellungen: mittig und nicht ueber die ganze Breite gezogen.
 .jahr-auswahl {
-  max-inline-size: 30rem;
+  max-inline-size: 18.5rem;
   margin-inline: auto;
 }
 
 // Ersatz fuer Bootstraps `.input-group`: DB kennt keine Gruppe aus Feld und angehaengtem Knopf.
 // Das Feld nimmt den freien Platz, der Knopf steht buendig daneben und behaelt seine Hoehe.
+// Container-Eigenschaften (display/align-items/gap) kommen seit dem `<DBStack>`-Umbau als Props
+// an den Aufrufstellen -- diese Kind-Selektoren bleiben, weil `<DBStack>` dafuer keine Props hat.
 .feldgruppe {
-  display: flex;
-  align-items: flex-end;
-  gap: var(--db-spacing-fixed-xs);
-
   > .db-input,
   > .db-select {
     flex: 1 1 auto;
@@ -206,9 +233,11 @@ hr {
 
 // Ladeanzeige (Ersatz fuer Bootstraps `.spinner-border`): DB hat keine eigene Komponente
 // dafuer, nutzt aber an mehreren Stellen das drehende `circular_arrows`-Symbol.
-.laedt {
+// Das Symbol teilt sich `.laedt` mit dem Zum-Aktualisieren-Ziehen (`pullToRefresh.ts`) -- dort
+// fuehrt beim Ziehen der Finger die Drehung, die Dauerdrehung kommt erst beim Ausloesen dazu.
+.laedt,
+.ptr-indikator__symbol {
   display: inline-block;
-  animation: laedt-drehung 1.5s linear infinite;
 
   &::before {
     display: inline-block;
@@ -222,6 +251,10 @@ hr {
   }
 }
 
+.laedt {
+  animation: laedt-drehung 1.5s linear infinite;
+}
+
 .laedt[data-size='small'] {
   --db-icon-font-size: 1rem;
 }
@@ -232,18 +265,35 @@ hr {
   }
 }
 
-// Knopfgruppe (Ersatz fuer Bootstraps `.btn-group`): eine Reihe mit kleinem Abstand statt
-// zusammengeschobener Knoepfe mit geteilten Rahmen.
-.knopfgruppe {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+// Zum-Aktualisieren-Ziehen: der Kreis faehrt hinter der oberen Kante des Inhaltsbereichs hervor
+// und zeigt ueber die Drehung des Symbols, wie weit noch gezogen werden muss. `position: fixed`
+// statt eines Kindes von `.db-shell-content`, weil dessen `overflow-y: auto` ein oberhalb
+// liegendes Kind sonst abschneidet (bzw. den Scrollbereich verlaengert). Lage und Sichtbarkeit
+// setzt `pullToRefresh.ts` je Bewegung inline.
+.ptr-indikator {
+  position: fixed;
+  inset-block-start: var(--ptr-oben, 0);
+  inset-inline-start: 50%;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: var(--db-border-radius-full);
+  background-color: var(--db-base-bg-color-basic-level-1);
+  box-shadow: 0 0.125rem 0.375rem rgb(0 0 0 / 25%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+
+  --db-icon-font-size: 1.25rem;
 }
 
-// In Tabellenzellen bleiben Bearbeiten/Loeschen nebeneinander: die Aktionsspalte ist schmal,
-// mit Umbruch stapeln sich die beiden Knoepfe und die Zeile wird doppelt so hoch.
-td > .knopfgruppe {
-  flex-wrap: nowrap;
+// Ab der Ausloese-Distanz: Farbe wechselt auf die Interaktionsfarbe -- das ist das Signal
+// "jetzt loslassen".
+.ptr-indikator--bereit {
+  --db-icon-color: var(--db-brand-origin-default);
 }
 
 .big-icons {
@@ -640,6 +690,28 @@ td > .db-switch {
   padding-block-end: 3.5rem;
 }
 
+// Chromes eingebautes Zum-Aktualisieren-Ziehen aus: sonst reicht der Container die Geste am
+// oberen Rand an den Wurzel-Scroller weiter, der parallel zu `pullToRefresh.ts` neu laedt --
+// nach eigener Schwelle, gerade nicht erst beim Loslassen nach unserer Anzeige (User-Fund am
+// Geraet). Die eigene Geste ersetzt es vollstaendig.
+html,
+body,
+.db-shell-content {
+  overscroll-behavior-y: contain;
+}
+
+// `DBFooterMeta` stapelt Copyright/Impressum-Knopf unter genau dieser Breite
+// (`footer-meta.css`: `@media (max-width: 47.9375em) { flex-direction: column }`) -- der Footer
+// wird dadurch von 41px auf 69px hoeher (per Puppeteer gemessen), die feste `3.5rem`-Reservierung
+// (56px) reicht dann nicht mehr, Inhalt landet sichtbar HINTER dem `position: fixed`-Footer statt
+// darueber. Reservierung an derselben Bruchstelle anpassen, nicht den Footer zwingen, einzeilig
+// zu bleiben (auf schmalen Handys waeren Copyright+Knopf sonst nebeneinander gequetscht).
+@media (max-width: 47.9375em) {
+  .db-shell-content {
+    padding-block-end: 5rem;
+  }
+}
+
 .offcanvas-impressum {
   margin-block-end: 3.25rem !important;
 }
@@ -959,8 +1031,16 @@ td > .db-switch {
 // Freiraum fuer die Fusszeile (`padding-block-end`) entfaellt hier deshalb -- `#tabContent`s
 // `mt-3`-Abstand zur Kopfzeile wird fuer Start bereits in `App.tsx` weggelassen (nicht hier per
 // CSS: `.mt-3` ist DB-UXs eigenes `!important`, ein unlayered Gegenrule kann das nicht schlagen).
-.db-shell-content:has(#start.active) {
-  padding-block-end: 0;
+//
+// NUR oberhalb der Fusszeilen-Bruchstelle: die Annahme "Start passt exakt, scrollt also nie"
+// gilt auf dem Handy nicht -- dort blendet `#startSchnellzugriff` (`d-md-none`) sechs zusaetzliche
+// Kacheln ein, der Startbereich scrollt, und ohne Reservierung verschwindet die letzte Kachel
+// hinter der `position: fixed`-Fusszeile (User-Fund am Geraet). Unterhalb greift deshalb die
+// normale Reservierung aus der Basisregel.
+@media (min-width: 48em) {
+  .db-shell-content:has(#start.active) {
+    padding-block-end: 0;
+  }
 }
 
 // Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (nur per `opacity` versteckte)

@@ -1,4 +1,4 @@
-import { DBButton, DBDrawer, DBDrawerHeader, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerHeader, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -394,16 +394,17 @@ export function AdminUserProfileEditor({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
           <small className="text-muted">
             Gesamt: {page?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div className="knopfgruppe">
+          <DBStack direction="row" wrap gap="2x-small">
             <DBButton
               type="button"
               variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1)}
+              aria-label="Vorherige Seite"
             >
               ‹
             </DBButton>
@@ -412,11 +413,12 @@ export function AdminUserProfileEditor({
               variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1)}
+              aria-label="Nächste Seite"
             >
               ›
             </DBButton>
-          </div>
-        </div>
+          </DBStack>
+        </DBStack>
       )}
 
       <div className="text-end mt-2">

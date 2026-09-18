@@ -1,5 +1,6 @@
 import { Fragment } from 'react';
 import {
+  DBButton,
   DBControlPanelActions1,
   DBControlPanelActions2,
   DBControlPanelBrand,
@@ -9,6 +10,7 @@ import {
   DBControlPanelNavigationItem,
   DBDivider,
   DBSelect,
+  DBTooltip,
 } from '@db-ux/react-core-components';
 import { DBLoadingButton } from '@/components';
 import schliesseMobilenDrawer from './schliesseMobilenDrawer';
@@ -124,11 +126,14 @@ export default function AppHeader() {
         aria-label="Einstellungen"
         tabIndex={aktiverTab === 'Einstellungen' ? 0 : -1}
         onClick={event => schliesseMobilenDrawer(event.currentTarget)}
-      />
+      >
+        <DBTooltip>Einstellungen</DBTooltip>
+      </a>
       {/* `#admin` (nicht `#admin-tab`): `auth/index.ts` blendet darueber den KOMPLETTEN Knopf
           per `d-none` aus, solange der Benutzer kein Admin ist -- separate Id von `#admin-tab`
           (Klick-Listener/Tab-Attribute), weil beide `querySelectorAll` mit unterschiedlichem
           Zweck brauchen (siehe dortiger Kommentar). */}
+
       <span id="admin" className="d-none">
         <a
           className="db-button"
@@ -144,8 +149,28 @@ export default function AppHeader() {
           aria-label="Admin"
           tabIndex={aktiverTab === 'Admin' ? 0 : -1}
           onClick={event => schliesseMobilenDrawer(event.currentTarget)}
-        />
+        >
+          <DBTooltip>Admin</DBTooltip>
+        </a>
       </span>
+      {/* Ausloggen zieht seit dem "Buttons und Elemente sollten ein Raster einhalten"-Feedback
+          aus `EinstellungenTab.tsx` hier hoch -- immer erreichbar statt im Einstellungen-Tab
+          versteckt, dieselbe `navigationSichtbar`-Bedingung wie `#einstellungen-tab` (nur nach
+          Login sichtbar). Klick-Handler bleibt `Einstellungen/index.ts` (id-basierte
+          Verkabelung, unabhaengig vom Renderort -- siehe Datei-Kopfkommentar dort). */}
+      <DBButton
+        className={navigationSichtbar ? undefined : 'd-none'}
+        variant="ghost"
+        type="button"
+        id="btnLogout"
+        icon="log_out"
+        noText
+        aria-label="Ausloggen"
+        onClick={event => schliesseMobilenDrawer(event.currentTarget)}
+      >
+        <DBTooltip>Ausloggen</DBTooltip>
+      </DBButton>
+
       <ThemeSwitcher />
     </DBControlPanelActions2>
   );

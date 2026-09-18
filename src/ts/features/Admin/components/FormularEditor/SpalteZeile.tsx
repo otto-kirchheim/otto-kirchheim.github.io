@@ -7,7 +7,7 @@ import { DatenpfadWahl } from './datenpfadUndFormeln';
 import { DarstellungsFelder, KlappZeile, ScharfButton, Zellkoordinaten, istGleich } from './feldPanelGemeinsam';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 export function SpalteZeile({
@@ -97,7 +97,7 @@ export function SpalteZeile({
         <Zellkoordinaten wert={spalte} onChange={onChange} nurX />
       </div>
 
-      <div className="knopfgruppe w-100 mb-1">
+      <DBStack direction="row" wrap gap="2x-small" className="w-100 mb-1">
         <DBButton
           type="button"
           variant={modus === 'daten' ? 'brand' : 'outlined'}
@@ -152,7 +152,7 @@ export function SpalteZeile({
             Listen-Platz
           </DBButton>
         )}
-      </div>
+      </DBStack>
 
       {(modus === 'berechnet' || modus === 'wenn') && (
         <DbFeld

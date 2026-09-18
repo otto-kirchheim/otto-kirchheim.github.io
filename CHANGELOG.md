@@ -2,6 +2,86 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (147)
+
+### refactor (Flex-Layouts auf `<DBStack>`, weitere DB-UX-Bausteine statt Hand-Markup)
+
+- **`<DBStack>` statt Hand-Flex**: alle 14 `.knopfgruppe`- und 6 `.knopfreihe`-Stellen
+  (Bereitschaft/EWT/EA/Neben/Einstellungen, Admin-Paginierungen, FormularEditor-Modus-Leisten,
+  `CustomTableView`s Zeilen-Aktionen) sowie diverse `d-flex`-Container nutzen jetzt
+  `<DBStack>`-Props (`direction`/`wrap`/`alignment`/`justifyContent`/`gap`) statt
+  Utility-Klassen. `styles.scss` behaelt von `.knopfgruppe`/`.knopfreihe` nur noch, was
+  `<DBStack>` nicht kann (250px-Deckel je Knopf).
+- **Zwei `<DBStack>`-Fallen, per Puppeteer belegt und dokumentiert**:
+  1. Gap ist per Default `sm` (nicht 0) -- jede Stelle setzt `gap` explizit, sonst entsteht
+     Abstand, wo vorher keiner war.
+  2. `.db-stack { inline-size: 100% }` laesst ein verschachteltes `<DBStack>` als Flex-Kind eines
+     `direction="row"`-Elternteils die ganze Zeile beanspruchen -- Geschwister werden auf eigene
+     Zeilen verdraengt. Gegenregel `inline-size: auto` in `styles.scss`; `overflow: auto` wird
+     dort ebenfalls auf `visible` zurueckgesetzt (schnitt Fokusringe/Box-Shadows ab).
+- **`td > .knopfgruppe { flex-wrap: nowrap }` entfiel** -- die drei tatsaechlich in einer
+  Tabellenzelle sitzenden Knopfgruppen (`CustomTableView`, `FormularVersionenListe`,
+  `FahrzeitenPanel`) setzen stattdessen `wrap={false}` als Prop.
+- **Echte DB-UX-Komponenten statt Roh-Markup**: `<DBButton>`/`<DBTooltip>` fuer den
+  Hilfe-Knopf in `StartTab`, `<DBInput>`+`<DBTooltip>` fuer das Jahr-Feld, `<DBCard>` fuer die
+  drei Start-Karten, `<DBButton>` fuer Ausloggen/Passwort/Biometrie.
+- **Ausloggen in die Shell-Kopfzeile** (`AppHeader.tsx`, `actions2`, Icon `log_out`, dieselbe
+  `navigationSichtbar`-Bedingung wie das Zahnrad) und **Passwort Ändern in den Sicherheits-
+  Accordion** (vormals "Biometrie & Geräte", jetzt "Sicherheit") -- Konto-Aktionen gebuendelt,
+  die obere Knopfreihe im Einstellungen-Tab entfaellt. Beide Ids bleiben unveraendert, die
+  Klick-Verkabelung in `Einstellungen/index.ts` ist id-basiert und lief ohne Anpassung weiter.
+- **`aria-label` fuer die Paginierungs-Pfeile** (`‹`/`›`) in AdminLogBrowser/-ResourceBrowser/
+  -UserProfileEditor -- vorher hatten die Icon-Knoepfe keinen zugaenglichen Namen; der Test in
+  `AdminLogBrowser.test.tsx` selektiert darueber statt ueber die entfallene `.knopfgruppe`.
+
+### fix (Layout: Karten-Ausrichtung, Accordion-Breite, Footer-Reservierung mobil)
+
+- **Start-Karten**: Fliesstext startete je nach Titel-Umbruch auf unterschiedlicher Hoehe
+  (DB-UX-Card-Richtlinie "Inhalt-Ausrichtung": Titel/Aktionen konsistent ueber alle Karten
+  ausrichten). Titelzeile reserviert jetzt zwei Zeilen Hoehe -- alle drei Absaetze beginnen
+  auf derselben Y-Position (per Puppeteer bei 820px verifiziert: 310px fuer alle drei).
+- **Einstellungen-Accordion war viel zu schmal**: `alignment="center"` am aeusseren `<DBStack>`
+  schrumpft JEDES Kind auf seine Inhaltsbreite -- auch das Accordion-Formular samt breiter
+  VorgabenB-Tabelle (257px statt 1176px, Tabelle lief seitlich aus dem Rahmen). Accordion sitzt
+  jetzt als Geschwister ausserhalb der zentrierten Knopf-Spalte.
+- **Fusszeile verdeckte auf dem Handy Inhalt**: `DBFooterMeta` stapelt Copyright und
+  Impressum-Knopf unter 47.9375em (eigene DB-UX-Bruchstelle), der Footer waechst dadurch von
+  41px auf 69px -- die feste `3.5rem`-Reservierung in `.db-shell-content` reichte nicht mehr
+  (13px Inhalt lagen hinter dem `position: fixed`-Footer). Reservierung an derselben Bruchstelle
+  auf `5rem` erhoeht, statt den Footer einzeilig zu erzwingen (auf schmalen Geraeten waeren
+  Copyright und Knopf sonst nebeneinander gequetscht).
+
+### feat (Zum-Aktualisieren-Ziehen auf dem Handy)
+
+- **Eigene Pull-to-Refresh-Geste** (`infrastructure/ui/pullToRefresh.ts`, in `main.tsx` nach dem
+  Root-Mount initialisiert -- `.db-shell-content` entsteht erst mit `App.tsx`s Baum). Grund:
+  Chromes eingebaute Geste haengt am WURZEL-Scroller, das Dokument scrollt in dieser App aber
+  nie (`DBShell` rechnet sein Raster auf `100dvh`, gescrollt wird nur in `.db-shell-content`).
+  Sobald ein Tab laenger als der Viewport ist, verschluckt dieser innere Container die Geste --
+  daher der User-Fund "geht nicht, wenn #-Tags genutzt werden". Alle Stellschrauben stehen als
+  benannte Konstanten am Dateikopf (`AUSLOESE_DISTANZ_PX` 80, `MAX_ZUG_PX` 120, `DAEMPFUNG` 0.5,
+  `MIN_VERTIKAL_VERHAELTNIS` 1.5, `ZURUECK_DAUER_MS` 200).
+- Greift nur aus der Ruhelage am oberen Rand, einfingrig und bei klar senkrechter Bewegung --
+  das Querscrollen breiter Tabellen bleibt unangetastet. Listener sind `passive`, der Inhalt
+  folgt gedaempft und schnappt unterhalb der Ausloese-Distanz zurueck.
+- **Ladeanzeige beim Ziehen**: ein Kreis faehrt hinter der oberen Kante des Inhaltsbereichs
+  hervor, Deckkraft und Drehung des `circular_arrows`-Symbols folgen dem Fortschritt (eine volle
+  Umdrehung = Ausloese-Distanz erreicht), ab der Schwelle wechselt es auf die Markenfarbe; beim
+  Loslassen dreht es bis zum Neuaufbau von selbst weiter. `position: fixed` statt Container-Kind,
+  weil `overflow-y: auto` ein oberhalb liegendes Kind abschneiden wuerde. Die Glyph-Regel teilt
+  es sich mit `.laedt`.
+- **Chromes eigenes Zum-Aktualisieren-Ziehen ausgeschaltet** (User-Fund am Geraet: die Seite lud
+  schon beim Runterziehen neu, ohne Loslassen). Der Container reichte die Geste am oberen Rand an
+  den Wurzel-Scroller weiter, dessen native Geste parallel zur eigenen lief -- Headless-Chrome
+  kennt sie nicht, daher fiel es im Puppeteer-Test nicht auf. Jetzt `overscroll-behavior-y:
+  contain` an `html`/`body`/`.db-shell-content` und ein nicht-passiver `touchmove` mit
+  `preventDefault()`, solange gezogen wird (waagerechtes Wischen bleibt beim Browser). Ausgeloest
+  wird ausschliesslich im `touchend`, ab `AUSLOESE_DISTANZ_PX`.
+- Getestet in `test/ui.pullToRefresh.test.ts` (Daempfung, Zurueckschnappen, Ausloesen erst beim
+  Loslassen, Zurueckziehen unter die Schwelle, `preventDefault`, Indikator-Fortschritt,
+  waagerechtes Wischen, Ruhelage-Bedingung) und per Puppeteer mit echten Touch-Events auf
+  375px-Viewport.
+
 ## 2026-09-18 (146)
 
 ### chore (ESLint: eslint-plugin-react-refresh ergaenzt)

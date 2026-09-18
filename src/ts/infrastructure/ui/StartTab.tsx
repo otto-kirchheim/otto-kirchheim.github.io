@@ -1,3 +1,5 @@
+import { DBButton, DBCard, DBStack, DBTooltip } from '@db-ux/react-core-components';
+
 /**
  * Phase L1: Start-Tab (ehemals `index.html:82-244`) als React-Komponente. Gemountet direkt in
  * die `#start`-Tab-Pane hinein (kein Wrapper-Div wie bei `AppHeader`/`AppFooter`): `styles.scss`s
@@ -21,49 +23,50 @@ export default function StartTab() {
           <h1 className="mt-2 mb-0" id="Willkommen">
             Willkommen
           </h1>
-          <button
+          <DBButton
             type="button"
-            className="db-button p-0"
-            data-variant="ghost"
-            data-size="small"
+            className="p-0"
+            variant="ghost"
+            size="small"
             id="btnHelpStart"
+            icon="question_mark_circle"
+            noText
             aria-label="Hilfe anzeigen"
           >
-            <span className="db-icon align-middle" data-icon="question_mark_circle" style={{ fontSize: '1.25rem' }} />
-          </button>
+            <DBTooltip>Hilfe anzeigen</DBTooltip>
+          </DBButton>
         </div>
         <p className="text-body-secondary mb-0">Nebengeld digital erfassen, berechnen und als PDF erzeugen.</p>
       </div>
 
-      <div className="raster-auto mb-4 abstand-3">
-        <div>
-          <div className="db-card h-100 text-start">
-            <h5 className="d-flex align-items-center gap-2">
-              <span className="db-icon text-primary" data-icon="sliders_horizontal" />
-              1. Einstellungen prüfen
-            </h5>
-            <p className="mb-0">Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
-          </div>
-        </div>
-        <div>
-          <div className="db-card h-100 text-start">
-            <h5 className="d-flex align-items-center gap-2">
-              <span className="db-icon text-primary" data-icon="pen" />
-              2. Monate erfassen
-            </h5>
-            <p className="mb-0">Bereitschaft, EWT und Nebenbezüge eintragen und speichern.</p>
-          </div>
-        </div>
-        <div>
-          <div className="db-card h-100 text-start">
-            <h5 className="d-flex align-items-center gap-2">
-              <span className="db-icon text-primary" data-icon="document" />
-              3. Ergebnis exportieren
-            </h5>
-            <p className="mb-0">Berechnung prüfen und die Formulare als PDF erzeugen.</p>
-          </div>
-        </div>
-      </div>
+      <DBStack direction="row" wrap gap="medium" className="mb-4 karten-gleich">
+        {/* `minBlockSize` reserviert Platz fuer 2 Zeilen Titel (28px Zeilenhoehe) -- ohne das
+            faengt "Persönliche Daten..." unterhalb eines einzeiligen Titels hoeher an als
+            unterhalb eines zweizeiligen ("1. Einstellungen prüfen" wickelt bei dieser Breite
+            um), Fliesstext startet dann nicht mehr auf gleicher Hoehe (DB-UX-Card-Richtlinie
+            "Inhalt-Ausrichtung": Titel/Aktionen konsistent ueber alle Karten im Grid ausrichten). */}
+        <DBCard className="h-100 text-start">
+          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+            <span className="db-icon text-primary" data-icon="sliders_horizontal" />
+            1. Einstellungen prüfen
+          </h5>
+          <p className="mb-0">Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
+        </DBCard>
+        <DBCard className="h-100 text-start">
+          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+            <span className="db-icon text-primary" data-icon="pen" />
+            2. Monate erfassen
+          </h5>
+          <p className="mb-0">Bereitschaft, EWT und Nebenbezüge eintragen und speichern.</p>
+        </DBCard>
+        <DBCard className="h-100 text-start">
+          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+            <span className="db-icon text-primary" data-icon="document" />
+            3. Ergebnis exportieren
+          </h5>
+          <p className="mb-0">Berechnung prüfen und die Formulare als PDF erzeugen.</p>
+        </DBCard>
+      </DBStack>
 
       {/* d-md-none, nicht d-lg-none: DBHeader wechselt intern bei 64em/1024px (unser
              md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation -- siehe K5-Begruendung
@@ -143,14 +146,21 @@ export default function StartTab() {
         </div>
       </div>
 
-      <div className="d-flex flex-column align-items-center justify-content-center mt-4 d-none" id="ladeAnzeige">
+      <DBStack
+        direction="column"
+        alignment="center"
+        justifyContent="center"
+        gap="none"
+        className="mt-4 d-none"
+        id="ladeAnzeige"
+      >
         <strong role="status">Lädt...</strong>
         <span
           className="laedt text-primary"
           style={{ '--db-icon-font-size': '3rem' } as React.CSSProperties}
           role="status"
         />
-      </div>
+      </DBStack>
     </div>
   );
 }

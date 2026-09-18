@@ -1,4 +1,4 @@
-import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 import type { Drehwinkel, SkalierFaktoren } from './skaliereKonfig';
 
@@ -58,7 +58,7 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
 
   return (
     <div className="border border-primary p-2 mb-2 bg-primary-subtle small">
-      <div className="d-flex flex-wrap align-items-center gap-2">
+      <DBStack direction="row" wrap alignment="center" gap="x-small">
         <strong className="me-1">Koordinaten anpassen</strong>
         {alt && (
           <span className="text-body-secondary">
@@ -102,15 +102,15 @@ export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange
           <option value="180">180°</option>
           <option value="270">270°</option>
         </DbAuswahl>
-        <div className="knopfgruppe ms-auto">
+        <DBStack direction="row" wrap gap="2x-small" className="ms-auto">
           <DBButton type="button" variant="brand" onClick={onAnwenden}>
             Anwenden
           </DBButton>
           <DBButton type="button" variant="outlined" onClick={onAbbrechen}>
             Abbrechen
           </DBButton>
-        </div>
-      </div>
+        </DBStack>
+      </DBStack>
       <div className="text-body-secondary mt-1">
         Jede Koordinate wird <code>Wert × Faktor + Versatz</code> (Versatz in PDF-Punkten). Schriftgröße und
         Tabellen-Zeilenhöhe folgen dem Y-Faktor. Die Vorschau zeigt das Ergebnis live.

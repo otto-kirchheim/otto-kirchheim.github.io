@@ -3,7 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 const ITEMS_PER_PAGE = 25;
@@ -197,16 +197,17 @@ export function AdminLogBrowser() {
       </div>
 
       {totalPages > 1 && (
-        <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+        <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
           <small className="text-muted">
             Gesamt: {logs?.total ?? 0} · Seite {currentPage}/{totalPages}
           </small>
-          <div className="knopfgruppe">
+          <DBStack direction="row" wrap gap="2x-small">
             <DBButton
               type="button"
               variant="outlined"
               disabled={currentPage <= 1}
               onClick={() => loadPage(currentPage - 1, actionFilter)}
+              aria-label="Vorherige Seite"
             >
               ‹
             </DBButton>
@@ -215,11 +216,12 @@ export function AdminLogBrowser() {
               variant="outlined"
               disabled={currentPage >= totalPages}
               onClick={() => loadPage(currentPage + 1, actionFilter)}
+              aria-label="Nächste Seite"
             >
               ›
             </DBButton>
-          </div>
-        </div>
+          </DBStack>
+        </DBStack>
       )}
     </div>
   );

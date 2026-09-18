@@ -23,6 +23,7 @@ export default function AppFooter({ startYear = 2021 }: { startYear?: number }) 
 
   return (
     <>
+      <ImpressumDialog open={impressumOffen} onClose={() => setImpressumOffen(false)} />
       <DBFooter className="app-footer">
         <DBFooterMeta copyright={`${yearLabel} Jan Otto | v${import.meta.env.APP_VERSION}`}>
           <DBButton
@@ -36,7 +37,6 @@ export default function AppFooter({ startYear = 2021 }: { startYear?: number }) 
           </DBButton>
         </DBFooterMeta>
       </DBFooter>
-      <ImpressumDialog open={impressumOffen} onClose={() => setImpressumOffen(false)} />
     </>
   );
 }
