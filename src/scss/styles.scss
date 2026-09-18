@@ -847,6 +847,19 @@ body,
   white-space: nowrap;
 }
 
+// Sortier-Leiste des Fahrzeiten-Panels (Auswahl + Knopf): nur unter sm noetig, weil dort das
+// Karten-Layout den Tabellenkopf samt Sortier-Knoepfen ausblendet; ab sm uebernehmen die
+// Kopf-Knoepfe wieder.
+.fahrzeiten-sortierung {
+  margin-block-end: var(--db-spacing-fixed-sm);
+}
+
+@media screen and (min-width: #{bp.$sm}px) {
+  .fahrzeiten-sortierung {
+    display: none;
+  }
+}
+
 @media screen and (max-width: #{bp.$sm - 0.05}px) {
   #collapseFour table thead {
     display: none;

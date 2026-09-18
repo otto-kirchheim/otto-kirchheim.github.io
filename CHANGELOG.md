@@ -2,6 +2,18 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (148)
+
+### feat (Fahrzeiten-Sortierung im Karten-Layout)
+
+- **Sortieren auch am Handy**: das Fahrzeiten-Panel (Einstellungen > Fahrzeiten) bekommt
+  oberhalb der Tabelle eine Sortier-Leiste: Auswahl (Taetigkeitsstaette/Beschreibung,
+  `DbAuswahl`) plus "Sortieren"-Knopf. Grund: unter `sm` blendet das Karten-Layout den
+  Tabellenkopf aus -- die bisherigen Sortier-Knoepfe in den Spaltenkoepfen waren dort
+  unerreichbar. Die Leiste ist nur unter `sm` sichtbar; darueber sortieren weiter die
+  Kopf-Knoepfe. Wie diese dreht ein erneutes Antippen bei gleichem Kriterium die Richtung
+  um (`toggleSort` wiederverwendet, Knopf-Icon spiegelt Richtungs-Zustand).
+
 ## 2026-09-18 (147)
 
 ### refactor (Flex-Layouts auf `<DBStack>`, weitere DB-UX-Bausteine statt Hand-Markup)

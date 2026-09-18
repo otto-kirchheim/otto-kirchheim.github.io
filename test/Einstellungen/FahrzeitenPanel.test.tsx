@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { render, setzeWert } from '../reactRender';
+import { feldMitBeschriftung, render, setzeWert } from '../reactRender';
 
 import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
 import { getFahrzeitPanelState, setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';
@@ -167,5 +167,33 @@ describe('FahrzeitenPanel', () => {
     await click(sortBeschreibung);
     // Beschreibung aufsteigend: "Bahnhof" < "Beiersgraben" < "km 167,0"
     expect(rowKeys(container)).toEqual(['Bad Hersfeld', 'Kirchheim', 'Kaiserau']);
+  });
+
+  it('sortiert über die Sortier-Leiste (Auswahl + Knopf) für das Karten-Layout, Richtung kippt bei Wiederholung', async () => {
+    const container = renderPanel(createRows());
+    const auswahl = feldMitBeschriftung<HTMLSelectElement>(container, 'Sortieren nach')!;
+    expect(auswahl).not.toBeNull();
+    const sortierKnopf = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('.fahrzeiten-sortierung button'),
+    ).find(b => b.textContent?.includes('Sortieren'))!;
+
+    // Auswahl steht initial auf "Tätigkeitsstätte": Knopfdruck sortiert aufsteigend nach key
+    await click(sortierKnopf);
+    expect(rowKeys(container)).toEqual(['Bad Hersfeld', 'Kaiserau', 'Kirchheim']);
+
+    // Auswahl auf "Beschreibung" umstellen -- React haengt onChange am nativen change-Event
+    const setter = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, 'value')?.set;
+    setter?.call(auswahl, 'text');
+    auswahl.dispatchEvent(new Event('change', { bubbles: true }));
+    await flush();
+
+    await click(sortierKnopf);
+    // Beschreibung aufsteigend: "Bahnhof" < "Beiersgraben" < "km 167,0"
+    expect(rowKeys(container)).toEqual(['Bad Hersfeld', 'Kirchheim', 'Kaiserau']);
+
+    // Erneutes Antippen desselben Kriteriums dreht die Richtung um
+    await click(sortierKnopf);
+    expect(rowKeys(container)).toEqual(['Kaiserau', 'Kirchheim', 'Bad Hersfeld']);
+    expect(getFahrzeitPanelState()?.map(r => r.key)).toEqual(['Kaiserau', 'Kirchheim', 'Bad Hersfeld']);
   });
 });

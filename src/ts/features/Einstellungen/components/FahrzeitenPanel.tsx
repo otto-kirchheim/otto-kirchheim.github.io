@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DbFeld } from '@/components';
+import { DbAuswahl, DbFeld } from '@/components';
 import type { IVorgabenUfZ } from '@/types';
 import { normalizeTimeString } from '@/infrastructure/validation/timeString';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
@@ -35,6 +35,7 @@ const normalizeInitialRows = (rows: IVorgabenUfZ[]): IVorgabenUfZ[] =>
 export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
   const [rows, setRows] = useState<IVorgabenUfZ[]>(() => normalizeInitialRows(initialRows));
   const [sort, setSort] = useState<SortState>(null);
+  const [sortFeld, setSortFeld] = useState<SortField>('key');
   const rowsRef = useRef<IVorgabenUfZ[]>(rows);
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const focusRowIndex = useRef<number | null>(null);
@@ -100,7 +101,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
     );
   };
 
-  const sortIcon = (field: SortField): string =>
+  const sortIcon = (field: SortField): 'arrows_vertical' | 'arrow_up' | 'arrow_down' =>
     sort?.field === field ? (sort.direction === 'asc' ? 'arrow_up' : 'arrow_down') : 'arrows_vertical';
 
   return (
@@ -112,6 +113,39 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       data-size="small"
       data-interactive="true"
     >
+      {/* Sortier-Leiste fuer das Karten-Layout: unter sm blendet styles.scss den Tabellenkopf
+          samt Sortier-Knoepfen aus (`#collapseFour table thead`), darum eigene Auswahl + Knopf.
+          Erneutes Antippen bei gleichem Kriterium dreht die Richtung um -- dasselbe
+          toggleSort-Muster wie die Kopf-Knoepfe, die ab sm wieder uebernehmen. */}
+      <DBStack
+        direction="row"
+        wrap={false}
+        gap="small"
+        alignment="end"
+        className="fahrzeiten-sortierung"
+        role="group"
+        aria-label="Sortierung"
+      >
+        <DbAuswahl
+          beschriftung="Sortieren nach"
+          beschriftungZeigen
+          dicht
+          value={sortFeld}
+          onChange={e => setSortFeld(e.target.value as SortField)}
+        >
+          <option value="key">Tätigkeitsstätte</option>
+          <option value="text">Beschreibung</option>
+        </DbAuswahl>
+        <DBButton
+          type="button"
+          variant="outlined"
+          size="medium"
+          icon={sortIcon(sortFeld)}
+          onClick={() => toggleSort(sortFeld)}
+        >
+          Sortieren
+        </DBButton>
+      </DBStack>
       <table aria-describedby="titelTkgSt">
         <thead>
           <tr className="align-middle text-center" data-sub-header-emphasis="weak">
