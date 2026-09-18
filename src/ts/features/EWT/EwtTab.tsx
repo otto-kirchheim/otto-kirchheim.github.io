@@ -1,6 +1,5 @@
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
-import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -20,12 +19,12 @@ import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
-function EwtTab() {
+export function EwtTab() {
   // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
   // bisherige `useEffect(() => {...}, [])`-Verhalten.
   const tagParser = (value: unknown) => {
       const s = value as string;
-      const d = dayjs(s);
+      const d = dayjs(s, 'DD.MM.YYYY', true);
       return d.isValid() ? d.format('dd DD.MM.') : s;
     },
     // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
@@ -274,18 +273,4 @@ function EwtTab() {
       </div>
     </div>
   );
-}
-
-export function mountEwtTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#ewt-root');
-  if (!container) return;
-
-  mount(container, <EwtTab />);
-}
-
-export function unmountEwtTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#ewt-root');
-  if (!container) return;
-
-  unmount(container);
 }

@@ -5,15 +5,10 @@ import { wert } from '@/infrastructure/pdf/wert';
 import { AggregationEditor } from './aggregationUndRechnung';
 import { FeldAnkreuzBedingung } from './bedingungEditor';
 import { istBooleanFeld, katalogFelder, type FormularCode } from './datenKatalog';
-import { DatenpfadWahl, PlatzhalterPicker, openPlatzhalterHilfe, ZusammengesetzteQuellen } from './datenpfadUndFormeln';
-import {
-  DarstellungsFelder,
-  KlappZeile,
-  ScharfButton,
-  Zellkoordinaten,
-  istGleich,
-  naechsterFreierSchluessel,
-} from './feldPanelGemeinsam';
+import { DatenpfadWahl, PlatzhalterPicker, ZusammengesetzteQuellen } from './datenpfadUndFormeln';
+import { openPlatzhalterHilfe } from './platzhalterHilfe';
+import { DarstellungsFelder, KlappZeile, ScharfButton, Zellkoordinaten } from './feldPanelGemeinsam';
+import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { WertVorschau } from './WertVorschau';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';

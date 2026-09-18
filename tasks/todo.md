@@ -1,3 +1,128 @@
+# Aktueller Plan: Halb-Roh-Markup auf echte DB-Komponenten umstellen - 2026-09-18
+
+## Ausgangslage
+
+User-Auftrag: alle "puren" Elemente (Button, Input, Select, Badge, Tag, ...) finden und auf `DB*`
+umbauen. Bestandsaufnahme ueber alle `src/**/*.tsx` (Stand nach Commit `51f62b7`): der Grossteil der
+App nutzt DB-Komponenten bereits (`DBButton` 480x, `DBTooltip` 143x, `DBStack` 111x, `DBTag` 67x,
+`DBCheckbox` 65x). Uebrig ist fast nur **Halb-Roh-Markup**: `<div className="db-input">`,
+`<button className="db-button">`, `<div className="db-notification">` -- DB-CSS ohne die
+React-Komponente. Kein einziger nackter Stil-loser Button/Input.
+
+**Korrektur einer eigenen Fehleinschaetzung:** `CustomTableView.tsx` hat KEINE rohen Buttons.
+`editingButton()` (Z. 94) rendert echte `DBButton`; der Kopfkommentar (Z. 27-31) stammt noch aus
+Phase M0/M1 und behauptet das Gegenteil. Nicht umbauen, nur Kommentar berichtigen (Schritt 0).
+Lehre: "bewusst roh"-Begruendungen aus Kommentaren immer gegen den Code pruefen.
+
+## Verifizierte Fakten (Grundlage der Reihenfolge)
+
+- **Id-Verdrahtung ueberlebt `DBInput`**: `<DBInput id="Jahr">` (`EinstellungenTab.tsx:57`) laeuft
+  produktiv und wird extern per `document.querySelector('#Jahr')` gelesen/geschrieben
+  (`userLoginSuccess.ts:55`, `auth/index.ts:58`). `saveEinstellungen.ts:29` und
+  `generateEingabeMaskeEinstellungen.ts:78` arbeiten generisch ueber `#${key}` +
+  `element.value = ...` + `reportValidity()` -- gleiches Muster, also portabel.
+- **Bestehende Wrapper wiederverwenden, keine neuen bauen**: `MyInput`/`MySelect`/`MyCheckbox`
+  (`DBSwitch`), `DbFeld` (kompakt, verstecktes Label, ~29 Nutzer), `DBLoadingButton`. Vorbilder fuer
+  `DBNotification` (`SnackbarItem.tsx:132`), `DBDivider` (`AppHeader.tsx:232`), `DBSelect`
+  (`AppHeader.tsx:98`).
+- **`DBAccordionItem` rendert `<li id>`** (id am `<li>`, nicht an `<details>`) und hat
+  `open`/`defaultOpen`; die Einstellungen-Tabs sind an `#collapseOne..Six`, `name="einstellungen"`
+  (exklusives Oeffnen) und `closest('.db-accordion-item')` (Onboarding) gekoppelt -> Risiko, eigener
+  Schritt mit Spike.
+- **`DBNotification`** kennt `semantic`, `variant`, `role`, `ariaLive`, `onClose` -- deckt alle 12
+  Fundstellen ab.
+- Verfuegbar (laut `list_components`): accordion, badge, button, card, checkbox, divider, input,
+  link, notification, select, switch, table(+Teile), tabs/tab-item/tab-list/tab-panel, tag,
+  textarea, heading, section. **Nicht vorhanden:** Range-Slider, Liste (`ul`/`ol`).
+
+## Bewusst NICHT umbauen (mit Begruendung)
+
+- `input type="range"` (`autoSaveDelay`): keine DB-Komponente.
+- `type="hidden"` / `hidden`-Checkboxen in `createEditorModalVE.tsx`: reine Datentraeger.
+- Checkbox-in-`DBTag` (`AdminProfileTemplateContentEditor.tsx:94`): Filter-Chip, kein 1:1-Ersatz.
+- `ul`/`ol`/`label` in Hilfe-/Onboarding-Text: keine DB-Listenkomponente.
+- `AppHeader.tsx` `<a data-tab-target>` (8x): Kommentar dort begruendet, dass
+  `DBControlPanelNavigationItem` ein `<div>` rendert. **Vor dem Festschreiben pruefen** (siehe
+  Lehre oben), sonst Abschnitt "Zurueckgestellt".
+- Sortier-Knoepfe `FahrzeitenPanel.tsx:119/125` (Ghost-Knopf mit Inline-Style im Tabellenkopf):
+  erst im Puppeteer-Bild entscheiden, ob `DBButton` zu gross wirkt.
+
+## Aufgaben
+
+Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizierbar.
+
+- [ ] **0. Kommentar berichtigen** -- `CustomTableView.tsx` Z. 27-31 (Kopfkommentar) an den Ist-Stand
+      anpassen; pruefen, ob `editText`/`deleteText`/`undoDeleteText` in `CustomTableOptions` wirklich
+      toter Vertrag sind (kein Aufrufer setzt sie) -- wenn ja, als eigenen Aufraeum-Punkt notieren,
+      nicht im selben Zug entfernen.
+- [ ] **1. Buttons** (kleines Risiko): `StartTab.tsx` (6 Schnellzugriff-Knoepfe, mit
+      `data-jump-tab`, Wiring in `auth/index.ts:51` per `[data-jump-tab]`), `BerechnungTab.tsx`
+      (2 Monats-Pfeile, `#btnBerechnungMonatePrev/Next`), `App.tsx:60` (`#actAsOwnDataButton`),
+      `PersoenlicheDatenPanel.tsx:64` (`#btnResendVerificationEmail`),
+      `VorgabenBWeekRangeEditor.tsx:168` (Wochentag-Schalter, `aria-pressed`, Pointer-Events).
+      Achtung: alle Ids/`data-*` muessen am `<button>` landen; `DBButton` reicht `data-*`/`aria-*`
+      per `filterPassingProps` durch (im Spike bestaetigen).
+- [ ] **2. Switches + Tag**: `EinstellungenTab.tsx` (5x `db-switch`: `tab-*`, `autoSaveEnabled`;
+      `#collapseFive input[data-tab-key]` und `input[data-settings-key]` bleiben Selektoren ->
+      `data-*` am inneren `<input>` pruefen) -> `DBSwitch` (Vorbild `MyCheckbox`); `db-tag`
+      `#PasskeyAccordionCount` -> `DBTag` (Wiring `Einstellungen/index.ts:42`, schreibt Text
+      per DOM); `EwtTab.tsx:40` Berechnen-Schalter (`row-checkbox`, `attachBerechnenToggleListeners`
+      liest DOM-Zustand) -> `DBSwitch`.
+- [ ] **3. `PersoenlicheDatenPanel.tsx`** (groesster Einzelgewinn): 15x `db-input` -> `DBInput
+    variant="floating"` (Vorbild `Jahr` in `EinstellungenTab.tsx`), 2x `<select>` ->
+      `DBSelect`. Beibehalten: `id`, `required`, `placeholder`, `type` (`tel`/`email`/`number`
+      mit `min`/`max`), `list="taetigkeitVorschlaege"` (Datalist -> `DBInput dataList` pruefen),
+      `readOnly disabled` bei `EmailAnzeige`. `saveEinstellungen` liest per `#${key}` und ruft
+      `reportValidity()` -- im Spike bestaetigen, dass die Validierungsmeldung weiter erscheint
+      (DBInput bringt `invalidMessage`, ggf. Doppelmeldung vermeiden). Dazu
+      `ArbeitszeiteingabePanel.tsx:88` `FahrzeitInput` (`type="time"`).
+- [ ] **4. `DBNotification`** (12 Stellen, siehe Liste unten): `role`/`semantic` 1:1 uebernehmen,
+      `d-none`-Umschalter an `App.tsx:44` (wird extern per DOM gesteuert, `actAsStatus.ts` -- Id
+      dort nachschlagen) nicht brechen. `py-2`/`mb-*`-Klassen als `className` behalten.
+- [ ] **5. `DBDivider` + `DBCard`**: 16x `<hr>` -> `<DBDivider width="full">` (ohne `width` kollabiert
+      die Linie -- Erfahrung aus dem Einstellungen-Umbau); 7x `div.db-card` -> `DBCard`
+      (`AdminDashboard` 4x, `adminDashboardCharts`, `AdminResourceBrowser`, Onboarding).
+      `data-spacing="none"`/`shadow`-Klassen pruefen.
+- [ ] **6. Accordion** (mittleres Risiko, ZUERST Spike): `EinstellungenTab.tsx` (7 Items),
+      `BerechnungMobileCards.tsx`, `FormularUpload.tsx` -> `DBAccordion`/`DBAccordionItem`.
+      Spike-Fragen: (a) landet `id="collapseOne"` so am DOM, dass `#collapseFive
+    input[data-tab-key]` weiter trifft? (b) exklusives Oeffnen (`name="einstellungen"`) ->
+      `behavior="single"`? (c) `createOnboardingGuideModal.tsx:161` `closest('.db-accordion-item')`.
+- [ ] **7. Tabellen + Tabs** (nur nach Rueckfrage, groesster Umfang): 6 Admin-`db-table` ->
+      `DBTable`-Familie (nur wo Zeilen ohnehin React-gerendert); Tab-Leisten
+      (`Admin/index.tsx:138`, `AdminResourceBrowser.tsx:220`, `FormularEditor.tsx:563/570`) ->
+      `DBTabs`. Tab-Leisten haengen an `data-tab-target`/`admin-unternavigation` -- eigene
+      Entscheidung.
+- [ ] **8. `DBLink`**: `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
+      Kommentars.
+
+### 12 `db-notification`-Fundstellen (Schritt 4)
+
+`MyFormModal.tsx:22`, `MyDivModal.tsx:20`, `MyHelpModal.tsx:91`, `App.tsx:44`,
+`ConflictReviewBanner.tsx:44`, `AdminResourceBrowser.tsx:346`, `AdminResourceEditModal.tsx:73`,
+`AdminDashboard.tsx:101`, `Admin/index.tsx:158`, `AdminProfileTemplatesManager.tsx:362`,
+`createOnboardingGuideModal.tsx:222/226`.
+
+## Verifikation (pro Schritt)
+
+1. `bunx tsc --noEmit`, `bun run lint` (0 Fehler), `bun run lint:css`, `bun run test` (0 fail),
+   `bun run format`.
+2. **Puppeteer gegen den laufenden Dev-Server :8080** (nie eigenen starten): Vorher-/Nachher-
+   Screenshot je betroffenem Bereich, Desktop 1280px UND Mobil 375px; Ids per
+   `document.querySelector` weiter auffindbar.
+3. Einstellungen-Schritte: Feld ausfuellen -> Speichern -> `localStorage`-Inhalt und
+   `reportValidity()`-Verhalten unveraendert; Laden setzt Werte weiter in die Felder.
+4. Bekannte DB-UX-Fallen im Blick: `:empty` + `::before` (Badge/Icon), `DBDivider` ohne `width`,
+   verschachtelte `DBStack`s (siehe CHANGELOG 147).
+5. CHANGELOG-Eintrag je Schritt (`frontend/CHANGELOG.md`), `graphify update .` nach Codeaenderung.
+
+## Offene Rueckfragen an den User
+
+- Umfang: Schritte 0-5 in einem Zug, oder erst 1-3? (Empfehlung: 0-3, dann Zwischenstand.)
+- Schritt 6 (Accordion) und 7 (Tabellen/Tabs) nur mit Spike bzw. auf ausdrueckliches Ja.
+
+---
+
 # Aktueller Plan: Lint-Warnungen abbauen (I.9 + stylelint-Ratsche) - 2026-09-09
 
 ## Ausgangslage
@@ -45,6 +170,7 @@ Die Projekt-Config (`eslint-plugin-react-hooks@7`, Compiler-Regeln inkl. `refs`)
 als die React-Doku und lehnt **beide** Muster ab. Aenderung wieder verworfen.
 
 Konsequenz: warnungsfrei geht nur ueber Architektur:
+
 - Derived-State-Resets: `key`-Prop am Elternteil setzen (aendert die Elternkomponenten).
 - Fetch/Loading: raus aus `useEffect` -- Suspense + `use()` oder eine Data-Fetching-Schicht
   (React Query o.ae., aktuell nicht im Projekt).
@@ -69,7 +195,7 @@ und der `lessons.md`-Ratschen-Philosophie.
 ## Ausgangslage
 
 `formularVersionCache` (+ `vorlagenPdfCache`) in `infrastructure/pdf/formularCache.ts` fuellt sich
-heute nur *nach* dem ersten erfolgreichen PDF-Export (`loeseVersionAuf`/`holeVorlageAlsDatei` in
+heute nur _nach_ dem ersten erfolgreichen PDF-Export (`loeseVersionAuf`/`holeVorlageAlsDatei` in
 `ladeFormular.ts`). Luecke: Export online gestartet, Verbindung faellt weg, erster Export des
 Monats -> Cache-Miss -> Abbruch. Ziel: die zum gewaehlten Monat gueltige ("neueste") Version +
 zugehoerige Vorlagen-PDF proaktiv, komplett im Hintergrund und nicht blockierend cachen.
@@ -214,17 +340,13 @@ Barrierefreiheits-Rotton fuer UI.
       `border-collapse: separate` -- und bei `separate` rendern `border`-Regeln an `<tr>` NICHT.
       Damit waren DBs `:is(tfoot,tbody) tr { border-block-end }` komplett wirkungslos (keine
       Zeilentrenner, keine untere Linie). `customtable.css`: `table.customtable {
-      border-collapse: collapse; }` -> DBs Rahmenregeln greifen wie vorgesehen.
+    border-collapse: collapse; }` -> DBs Rahmenregeln greifen wie vorgesehen.
       Browser-verifiziert Hell + Dunkel (EWT-Tabelle mit 4 Zeilen): Zeilentrenner + untere
       Abschlusslinie da, keine doppelten Rahmen.
 - [x] **I.15e Button-Farben vereinheitlicht** (User-Freigabe: Schema OK). Konvention:
       Primaer/Bestaetigen = `brand`, destruktiv = `outlined`+`critical` (weniger Gewicht),
-      neutral/schliessen/abbrechen = `filled`, Zeilen-Aktionen = `outlined`.
-      - `customTableRender.renderFooter`: "Alle Zeilen loeschen" `filled`+`critical` ->
-        `outlined`+`critical`; "Neue Zeile" bleibt `brand`.
-      - `MyShowFooter`: "Loeschen" `filled`+`critical` -> `outlined`+`critical` (Test mit).
-      - Zeilen-Edit/Delete/Undo waren schon `outlined` (neutral/critical/warning) -- ok.
-      - `MyEditorFooter` (Submit `brand` / Abbrechen `filled`) -- schon konform.
+      neutral/schliessen/abbrechen = `filled`, Zeilen-Aktionen = `outlined`. - `customTableRender.renderFooter`: "Alle Zeilen loeschen" `filled`+`critical` ->
+      `outlined`+`critical`; "Neue Zeile" bleibt `brand`. - `MyShowFooter`: "Loeschen" `filled`+`critical` -> `outlined`+`critical` (Test mit). - Zeilen-Edit/Delete/Undo waren schon `outlined` (neutral/critical/warning) -- ok. - `MyEditorFooter` (Submit `brand` / Abbrechen `filled`) -- schon konform.
 - [x] **I.15f Waagerechter Scrollbalken ab 1024px (User-Fund).** Ab `64em` laeuft die
       Navigation waagerecht; der Design-Auswahl-Flyout (`#bd-theme-menu`, 280px,
       `position: absolute`, `visibility: hidden`) war an der linken Kante verankert -> klappte
@@ -250,7 +372,7 @@ Barrierefreiheits-Rotton fuer UI.
       (`src/icons/DB_Schwelle*/Screen/…`, SVG+PNG, alle Farbvarianten) ins Repo gelegt.
       `--schwelle-motiv` = Inline-SVG mit der **exakten S-Varianten-Geometrie** (viewBox
       1304x240, 11 Balken, Raster 120, Breite 24 -> 104) als Maske; `background-color:
-      #ff002b` (Dynamic Red, exakter Asset-Farbwert). `.schwelle` in `styles.scss`, Hoehe
+    #ff002b` (Dynamic Red, exakter Asset-Farbwert). `.schwelle` in `styles.scss`, Hoehe
       `--db-sizing-regular-md` / ab 48em `-lg`. Platzierung: waagerecht an der Oberkante des
       `#start`-Panels, `mask ... right center / 66% 100%` -> rechtsbuendig ~2/3, dicke Balken
       in der oberen rechten Ecke, diagonal gegenueber der Wortmarke, 1x pro Viewport.
@@ -258,9 +380,9 @@ Barrierefreiheits-Rotton fuer UI.
       Sekundaervariante). Nicht ins Bundle gezogen (Maske ist Inline-Data-URI).
 
       **Optional, falls gewuenscht:** DB zeigt die horizontale Variante meist an der
-      UNTERkante (Balken in die untere rechte Ecke); Oberkante ist hier eine Web-Adaption
-      (Kopfzeile = oberer Rahmen). Alternativ: subtile Hintergrund-Variante (Grau-Balken
-      vollflaechig, Text ueberlagert) -- nie mit der prominenten kombinieren.
+          UNTERkante (Balken in die untere rechte Ecke); Oberkante ist hier eine Web-Adaption
+          (Kopfzeile = oberer Rahmen). Alternativ: subtile Hintergrund-Variante (Grau-Balken
+          vollflaechig, Text ueberlagert) -- nie mit der prominenten kombinieren.
 
 ## Verifikation
 
@@ -297,6 +419,7 @@ Nutzen (Warnungen, kein CI-Fehler) vs. echtes Regressionsrisiko. Einzeln mit Tes
 angehen oder bewusst als dokumentierte Ausnahme lassen.
 
 **Session 3 (2026-09-08, Forts.):**
+
 - **I.15j Schwelle final:** offizielle Standard-Geometrie (nicht S), am UNTEREN Rand des
   `#start`-Panels, buendig an der fixierten Fusszeile (kein Abstand), kein Scrollbalken auf
   keinem Tab. `#start.active`-Layout (nicht `#start` -- sonst schob das per `opacity`
@@ -348,6 +471,7 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       Browser-verifiziert (Mobil, 420px): Trennerbreite 406px, Hoehe 1px.
 
 **Browser-Verifikation EWT-Anzeige-Modal (2026-09-09, `scratchpad/ewt.mjs`, Mobil 420px):**
+
 - Schalter "Berechnen?": Row-State `unchanged` -> `modified`, `cells.berechnen` gekippt,
   `localStorage.dataE[0].berechnen` aktualisiert. ✓
 - "Tag:" Label/Wert: Abstand 7px, auf einer Zeile. ✓
@@ -391,6 +515,7 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
       rund), `type="range"`-Slider (UA). Keine `db-progress`/`db-slider`/Avatar im Einsatz.
 
 **Noch offen:**
+
 - **I.4** -- geklaert (Entscheidung, kein Code): ungenutzte woff2-Schnitte bleiben bewusst im
   Build. `@font-face`-`src` laedt der Browser erst beim tatsaechlichen Glyph-Rendering -> fuer
   echte Nutzer 0 Byte. Der Precache ist ueber `globIgnores` bereits eng (nur die 4
@@ -401,7 +526,7 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
 - **I.11** -- `frontend/CLAUDE.md` (Scripts/Styling), `.claude/skills/verify`,
   `.claude/skills/architektur` (Modal-Teardown + `beiModalSchliessen`), `../WORKSPACE.md`
   (React 19 / Bootstrap raus / neues Design), `CHANGELOG.md` (69). `frontend/.claude/README.md`
-  + Root `../CLAUDE.md` sind generisch/Workflow -> kein Phase-I-Drift. `graphify update .` gelaufen.
+  - Root `../CLAUDE.md` sind generisch/Workflow -> kein Phase-I-Drift. `graphify update .` gelaufen.
 - **I.9** -- 28 -> 21 ESLint-Warnungen. Rest (~13 setState-im-Effect, ~7 exhaustive-deps in
   verschachtelten Admin-Komponenten) bewusst als dokumentierte Ausnahme belassen: Warnungen,
   kein CI-Fehler; echtes Regressionsrisiko > Nutzen. Einzeln mit Testabdeckung angehen, wenn
@@ -411,6 +536,7 @@ angehen oder bewusst als dokumentierte Ausnahme lassen.
 ## Review Phase I -- Abschluss (2026-09-09, Session 4)
 
 **Committed auf `feat/db-ux`** (noch nicht gepusht):
+
 - `5ba1231` Phase-I-Sammelstand (eckig, Schwelle, PDF-Schriften, PWA-Farben, Button-Konvention,
   Marken-Logos raus, I.9 teilweise, Doku)
 - `ab2fa1f` EWT-Anzeige-Modal: `<hr>`-Trenner + "Berechnen?"-Schalter aendert Row-State
@@ -456,7 +582,7 @@ Ende auf `<head>` + einen React-Root.
   (helpers-Mixins, `_screen-sizes.scss` als einzige Breakpoint-Quelle, `utilities.scss`/
   `raster.scss` abgleichen).
 - **K** App-Shell nach React (`DBHeader`/`DBNavigation`/Brand, Theme-Umschalter, `navdrawer`
-  + `impressum` als `DBDrawer`, Fusszeile; `tabController` wird React-State).
+  - `impressum` als `DBDrawer`, Fusszeile; `tabController` wird React-State).
 - **L** Statische Tabs nach React (Start, Berechnung-Huelle, Einstellungen-Formular).
 - **M** `CustomTable` nach React -- offene Weiche M-a/M-b/M-c, Marktabgleich im Plan
   (Ergebnis: nur `@tanstack/react-table` waere headless-kompatibel, ersetzt aber nur die
@@ -496,16 +622,13 @@ Ende auf `<head>` + einen React-Root.
       wurde korrigiert.
 - [x] **J1 Referenz-Slice** `AdminProfileTemplateContentEditor.tsx` (2026-09-11). 14 Controls:
       10 `DBButton`, 2 `DBTag`, 3 `DBCheckbox`. Neuer Render-Test mit 6 Faellen.
-      **Muster fuer J2-J7, drei Festlegungen:**
-      1. Ein `<button class="db-tag">` laesst sich NICHT als `DBTag` abbilden -- die Komponente
-         rendert immer ein `<div>`. Interaktive Tags bekommen ein Kontrollelement als Kind
-         (DB-Beispiel "Checked"): Checkbox bei zuklappbaren Umschaltern, Radio bei fester
-         Auswahl. Sichtbare Folge: DBs Pruefzustands-Symbol (`showCheckState`) erscheint.
-      2. `db-ux/button-type-required` erzwingt `type` an jedem `DBButton`. Das ist kein
-         Lint-Rauschen: die rohen `<button>` hatten grossteils keins und haetten im `<form>`
-         als `submit` gegolten. Bei jedem Slice mitnehmen.
-      3. `data-color` und `data-disabler` bleiben Passthrough-DOM-Attribute (kein Prop),
-         `variant`/`size` werden Props.
+      **Muster fuer J2-J7, drei Festlegungen:** 1. Ein `<button class="db-tag">` laesst sich NICHT als `DBTag` abbilden -- die Komponente
+      rendert immer ein `<div>`. Interaktive Tags bekommen ein Kontrollelement als Kind
+      (DB-Beispiel "Checked"): Checkbox bei zuklappbaren Umschaltern, Radio bei fester
+      Auswahl. Sichtbare Folge: DBs Pruefzustands-Symbol (`showCheckState`) erscheint. 2. `db-ux/button-type-required` erzwingt `type` an jedem `DBButton`. Das ist kein
+      Lint-Rauschen: die rohen `<button>` hatten grossteils keins und haetten im `<form>`
+      als `submit` gegolten. Bei jedem Slice mitnehmen. 3. `data-color` und `data-disabler` bleiben Passthrough-DOM-Attribute (kein Prop),
+      `variant`/`size` werden Props.
 - [x] **J2 FormularEditor** (2026-09-11). 13 Dateien (nicht 15 -- `FeldPanel`/`FeldZeile` teilen
       sich keine eigene Datei mehr als im Plan angenommen), 74 Controls. `db-button`/`db-tag`/
       `db-checkbox`/`db-textarea` -> `DBButton`/`DBTag`/`DBCheckbox`/`DBTextarea`.
@@ -611,7 +734,7 @@ Ende auf `<head>` + einen React-Root.
       (`VorgabenBWeekRangeEditor.tsx` seit J3 bewusst ausserhalb des Umfangs; `EwtTab.tsx`s
       CustomTable-Zellparser; `createEditorModalVE.tsx`s versteckte Nwoche-Datentraeger;
       `AdminProfileTemplateContentEditor.tsx`s DBTag-Checkbox-Muster aus J1) sowie `<button
-      role="tab">` in `db-navigation`-Kontexten (Admin-Unternavigation, kein `db-button` --
+    role="tab">` in `db-navigation`-Kontexten (Admin-Unternavigation, kein `db-button` --
       anderes DB-UX-Muster, nie im Umfang). Details: CHANGELOG (102).
 
 **Phase J (J0-J9) damit vollstaendig abgeschlossen.**
@@ -731,23 +854,19 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       Drawer eingebaut mit.
       **Kernfund: `DBHeader` rendert seine `children` ZWEIMAL GLEICHZEITIG im DOM** (Desktop-
       Kopfzeile + Drawer-Kopie), kein Umzugs-Kniff -- Test-verifiziert (`render()` + `querySelectorAll`).
-      Bricht jeden `querySelector('#literal-id')`-Aufrufer, der GENAU EIN Element erwartet:
-      - `tabController.ts` war bereits sicher (Attribut-Selektoren + Sichtbarkeitsfilter) --
-        NUR die Fokus-Lookup in `zeigeTab()` ergaenzt (sichtbare Kopie bevorzugen, sonst laeuft
-        `.focus()` auf ein `display:none`-Element ins Leere).
-      - `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
-        umgestellt (2 Fundstellen je Vorkommen).
-      - `#navmenu`/`#btn-navmenu` (Login/Logout/Session-Restore-Sichtbarkeit, 3 Stellen:
-        `auth/index.ts`, `loadUserDaten.ts`, `logoutUser.ts`) gibt es unter `DBHeader` nicht mehr
-        -- ersetzt durch `navigationVisibleStore.ts`/`useNavigationVisible.ts` (Store-Pattern wie
-        `globalDisableStore`). Burger-Knopf bleibt **immer sichtbar** (User-Entscheidung):
-        `DBHeader` erzeugt ihn intern ohne Sichtbarkeits-Prop.
-      - `ThemeSwitcher` (K2) mountete bisher separat und einmalig -- jetzt direkt in
-        `AppHeader`s Navigation eingebettet, dadurch ebenfalls dupliziert. Feste Ids
-        (`bd-theme`/`bd-theme-menu`) auf `useId()` umgestellt (sonst doppelte DOM-Ids);
-        `useColorMode` von lokalem `useState` auf modul-globalen Store umgebaut (sonst haetten
-        die beiden Kopien unsynchronisierte Theme-Zustaende gehabt) -- CSS-Positionierungsregel
-        in `styles.scss` von Id- auf Klassenselektor (`.theme-umschalter-menu`) umgestellt.
+      Bricht jeden `querySelector('#literal-id')`-Aufrufer, der GENAU EIN Element erwartet: - `tabController.ts` war bereits sicher (Attribut-Selektoren + Sichtbarkeitsfilter) --
+      NUR die Fokus-Lookup in `zeigeTab()` ergaenzt (sichtbare Kopie bevorzugen, sonst laeuft
+      `.focus()` auf ein `display:none`-Element ins Leere). - `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
+      umgestellt (2 Fundstellen je Vorkommen). - `#navmenu`/`#btn-navmenu` (Login/Logout/Session-Restore-Sichtbarkeit, 3 Stellen:
+      `auth/index.ts`, `loadUserDaten.ts`, `logoutUser.ts`) gibt es unter `DBHeader` nicht mehr
+      -- ersetzt durch `navigationVisibleStore.ts`/`useNavigationVisible.ts` (Store-Pattern wie
+      `globalDisableStore`). Burger-Knopf bleibt **immer sichtbar** (User-Entscheidung):
+      `DBHeader` erzeugt ihn intern ohne Sichtbarkeits-Prop. - `ThemeSwitcher` (K2) mountete bisher separat und einmalig -- jetzt direkt in
+      `AppHeader`s Navigation eingebettet, dadurch ebenfalls dupliziert. Feste Ids
+      (`bd-theme`/`bd-theme-menu`) auf `useId()` umgestellt (sonst doppelte DOM-Ids);
+      `useColorMode` von lokalem `useState` auf modul-globalen Store umgebaut (sonst haetten
+      die beiden Kopien unsynchronisierte Theme-Zustaende gehabt) -- CSS-Positionierungsregel
+      in `styles.scss` von Id- auf Klassenselektor (`.theme-umschalter-menu`) umgestellt.
       **Zweiter Fund, main.ts-Bootstrap-Reihenfolge:** `registerAppStartTask`-Callbacks laufen in
       Registrierungsreihenfolge, aber ES-Modul-Importe werten VOR dem Top-Level-Code des
       importierenden Moduls aus -- `auth/index.ts`s eigener `registerAppStartTask`-Aufruf (via
@@ -766,25 +885,22 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       oeffnet Drawer mit Navigation drin, Klick im Drawer schaltet Tab, Escape schliesst,
       Impressum (K3) weiterhin funktionsfaehig.
       **Drei weitere Bugs beim echten Live-Test durch den User gefunden (Puppeteer deckte sie
-      nicht auf, weil dort kein `aktivierteTabs`/Admin-Szenario mitgetestet wurde):**
-      1. **`{navigationSichtbar && <DBNavigation>}` bedingtes Rendern war der falsche Ansatz.**
-         Die komplette Navigation (inkl. aller Feature-Items) existierte bis zum Login GAR NICHT
-         im DOM -- jeder `querySelector`-Aufruf davor (Admin-Toggle, `updateTabVisibility()`,
-         Klick-Listener-Anmeldung in `auth/index.ts`) lief ins Leere, und nichts wiederholte
-         diese Aufrufe, nachdem die Navigation spaeter doch gemountet wurde. Fix: `<DBNavigation
-         className={sichtbar ? undefined : 'd-none'}>` -- IMMER gerendert, nur die Klasse
-         wechselt, exakt wie beim alten `#navmenu`-Div.
-      2. **`updateTabVisibility.ts`s `toggleFeatureTab()` nutzte `querySelector` (nur EIN
-         Element)** -- Bereitschaft/EWT/Neben/EA blieben in der Drawer-Kopie haengen, obwohl die
-         Desktop-Kopie korrekt umgeschaltet wurde. Auf `querySelectorAll` umgestellt.
-      3. **`d-lg-none`/`d-lg-inline` an drei Stellen zeigten auf den falschen (alten)
-         Breakpoint** -- `DBHeader` wechselt intern bei `64em`/1024px (`@media (min-width:64em)`
-         in `core-components`-CSS) von Mobile-Drawer auf Desktop-Inline-Navigation, das ist
-         unser `md`, nicht `lg` (seit der Breakpoint-Vereinheitlichung in J0 auf 1440px
-         verschoben). Betroffen: `index.html`s `#startSchnellzugriff` (Start-Tab-Buttons blieben
-         bis 1440px statt 1024px sichtbar), `AppHeader.tsx`s Einstellungen-/Admin-Icon-vs-Text-
-         Swap, `ThemeSwitcher.tsx`s "Design auswählen"-Text -- alle auf `d-md-*` umgestellt.
-         Gleiche Fehlerklasse wie der Berechnung-Tabellen-Fund weiter oben in dieser Session.
+      nicht auf, weil dort kein `aktivierteTabs`/Admin-Szenario mitgetestet wurde):** 1. **`{navigationSichtbar && <DBNavigation>}` bedingtes Rendern war der falsche Ansatz.**
+      Die komplette Navigation (inkl. aller Feature-Items) existierte bis zum Login GAR NICHT
+      im DOM -- jeder `querySelector`-Aufruf davor (Admin-Toggle, `updateTabVisibility()`,
+      Klick-Listener-Anmeldung in `auth/index.ts`) lief ins Leere, und nichts wiederholte
+      diese Aufrufe, nachdem die Navigation spaeter doch gemountet wurde. Fix: `<DBNavigation
+       className={sichtbar ? undefined : 'd-none'}>` -- IMMER gerendert, nur die Klasse
+      wechselt, exakt wie beim alten `#navmenu`-Div. 2. **`updateTabVisibility.ts`s `toggleFeatureTab()` nutzte `querySelector` (nur EIN
+      Element)** -- Bereitschaft/EWT/Neben/EA blieben in der Drawer-Kopie haengen, obwohl die
+      Desktop-Kopie korrekt umgeschaltet wurde. Auf `querySelectorAll` umgestellt. 3. **`d-lg-none`/`d-lg-inline` an drei Stellen zeigten auf den falschen (alten)
+      Breakpoint** -- `DBHeader` wechselt intern bei `64em`/1024px (`@media (min-width:64em)`
+      in `core-components`-CSS) von Mobile-Drawer auf Desktop-Inline-Navigation, das ist
+      unser `md`, nicht `lg` (seit der Breakpoint-Vereinheitlichung in J0 auf 1440px
+      verschoben). Betroffen: `index.html`s `#startSchnellzugriff` (Start-Tab-Buttons blieben
+      bis 1440px statt 1024px sichtbar), `AppHeader.tsx`s Einstellungen-/Admin-Icon-vs-Text-
+      Swap, `ThemeSwitcher.tsx`s "Design auswählen"-Text -- alle auf `d-md-*` umgestellt.
+      Gleiche Fehlerklasse wie der Berechnung-Tabellen-Fund weiter oben in dieser Session.
       **Vierter Fund:** Monatswechsel-`<select id="Monat" required>` bekam durch DB-UXs
       automatische `:user-valid`-Erfolgsfaerbung einen gruenen Rahmen (kein Formular, `required`
       nur der Semantik wegen) -- `data-custom-validity="neutral"` ergaenzt, DB-UXs dokumentierter
@@ -798,7 +914,7 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       berechnet `aria-selected`/`tabIndex`/`className="active"`/`DBNavigationItem`s `active`-Prop
       (-> `data-active` am `<li>`) reaktiv daraus statt aus `tabController.ts`s DOM-Handschrieb --
       der entfaellt in `zeigeTab()` fuer die Hauptgruppe entsprechend (`if (hauptgruppe)
-      setAktivenTab(id); else { ...alter Schleifen-Code... }`). Bewusst NUR die Hauptgruppe:
+    setAktivenTab(id); else { ...alter Schleifen-Code... }`). Bewusst NUR die Hauptgruppe:
       Admins Unternavigation (`admin-pane-*`, `features/Admin/index.tsx`) ist eine eigene,
       unabhaengige Tab-Gruppe (kann parallel zur Hauptgruppe einen ANDEREN aktiven Tab haben --
       ein einzelner globaler "aktiver Tab" wuerde das nicht abbilden) und bleibt unveraendert am
@@ -810,8 +926,8 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       (Phase L) -- ihr Sichtbarkeits-/Aktiv-Klassenwechsel (`.active`/`.show`) laeuft weiter
       imperativ in `zeigeTab()`, unveraendert.
       A11y: roving `tabindex` bleibt korrekt -- "Berechnung" (Default-Fokusziel bei `aktiverTab
-      === null`, z. B. initial auf `#start`) faellt jetzt auf `tabIndex={aktiverTab === null ||
-      aktiverTab === 'Berechnung' ? 0 : -1}` zurueck statt fest auf `0`, sonst haetten nach einem
+    === null`, z. B. initial auf `#start`) faellt jetzt auf `tabIndex={aktiverTab === null ||
+    aktiverTab === 'Berechnung' ? 0 : -1}` zurueck statt fest auf `0`, sonst haetten nach einem
       echten Tabwechsel zwei Eintraege gleichzeitig `tabIndex={0}` gehabt.
       Test: `ui.tabController.test.ts` -- die Assertions auf `aria-selected`/`data-active` per
       `document.querySelector` (Hauptgruppen-Fixture) durch `getAktivenTab()`-Pruefung ersetzt
@@ -819,16 +935,16 @@ das Werkzeug aus `showModal.tsx`). `tabController` wird React-State.
       `navigationVisibleStore`-Testmuster in `Einstellungen.logoutUser.test.ts`).
       Puppeteer-verifiziert (`https://dev.otto.home64.de/`, ueber bereits laufenden Dev-Server):
       Deep-Link `#EWT` setzt `aria-selected="true"`/`tabIndex=0`/`class="active"`/`data-active=
-      "true"` korrekt auf BEIDEN DOM-Kopien (Desktop + Drawer) gleichzeitig; Klick auf
+    "true"` korrekt auf BEIDEN DOM-Kopien (Desktop + Drawer) gleichzeitig; Klick auf
       `#berechnung-tab` schaltet reaktiv auf beiden Kopien um (EWT wird `false`/`-1`, Berechnung
       `true`/`0`); initial ohne Login/Hash zeigt `#berechnung-tab` `tabIndex=0`/`aria-selected=
-      "false"` (Fallback-Fokus-Fall). `typecheck && lint && lint:css && test`(2120 pass) `&&
-      build` gruen. Details: CHANGELOG (110).
+    "false"` (Fallback-Fokus-Fall). `typecheck && lint && lint:css && test`(2120 pass) `&&
+    build` gruen. Details: CHANGELOG (110).
 - [x] **K7 Cleanup + Doku** (2026-09-12). Tote Dateien bereits in fruehreren K-Slices geloescht
       (`navDrawer.ts`/`NavDrawerShell.tsx` K5, `DBColorToggler.ts` K2) -- nichts mehr zu tun.
       `dbDialog.ts` bleibt: `erzeugeDbDialog` wird weiter von `confirmDialog.ts`/
       `signaturDialog.ts`/`errorHandling.ts` genutzt, kein toter Code. Grep-Gate `rg
-      'data-dialog-target|prepend\(navigation\)' src/ts src/index.html` -- 0 Treffer (nur zwei
+    'data-dialog-target|prepend\(navigation\)' src/ts src/index.html` -- 0 Treffer (nur zwei
       Doku-Kommentare in `ImpressumDialog.tsx`/`AppFooter.tsx`, die den alten Mechanismus
       historisch referenzieren, keine echten Vorkommen mehr).
       Doku aktualisiert: `frontend/CLAUDE.md` (Tab-basierte-SPA-Absatz + Hybrid-Rendering-Absatz
@@ -918,8 +1034,7 @@ Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-r
       `<input type="range" value="9">` analog auf `defaultValue` (unveraendertes Verhalten,
       vermeidet React-"unkontrolliert->kontrolliert"-Warnung).
       Puppeteer-verifiziert (Hell/Dunkel-Screenshot je Accordion-Panel, Mobile-Viewport):
-      Personendaten aus `VorgabenU` korrekt vorbefuellt (inkl. `Bundesland`-Select), Passkeys-Badge
-      + Status-Text, Sichtbare-Bereiche-Switches + AutoSave-Slider korrekt aus Storage gelesen,
+      Personendaten aus `VorgabenU` korrekt vorbefuellt (inkl. `Bundesland`-Select), Passkeys-Badge + Status-Text, Sichtbare-Bereiche-Switches + AutoSave-Slider korrekt aus Storage gelesen,
       Zulagen-Liste (3 Kategorien) imperativ befuellt, Arbeitszeit-/Fahrzeiten-Sub-Roots gemountet,
       `#tableVE` (6 Zeilen) unveraendert funktionsfaehig. `typecheck && lint && lint:css && test`
       (2120 pass) `&& build` gruen -- keine bestehende Test-Datei musste angepasst werden.
@@ -932,7 +1047,7 @@ Startbedingung erfuellt: Phase K vollstaendig abgeschlossen. Slices laut `plan-r
       -- Sortierung ordnet den bestehenden State einmalig per Klick um, ueber `updateRows`/die
       bestehende `fahrzeitPanelState`-Bridge genauso persistiert wie die manuellen Auf/Ab-Knoepfe.
       Test ergaenzt (`FahrzeitenPanel.test.tsx`): auf-/absteigend je Spalte. `typecheck && lint &&
-      test` (2121 pass) gruen. Details: CHANGELOG (115).
+    test` (2121 pass) gruen. Details: CHANGELOG (115).
 
 **Verifikation je Slice:** wie Phase K, zusaetzlich Puppeteer-Screenshot (Hell+Dunkel) bei
 jedem Slice mit sichtbarem/positionierungsrelevantem Markup (Lehre aus L1).
@@ -1275,6 +1390,7 @@ Startseite: 94 Icons im DOM, **keins ohne Glyph**, 0 `material-icons-round`-Rest
 Groessen 20/24/28 px, keine Konsolenfehler.
 
 **Zwei Dinge, die der Plan nicht auf dem Schirm hatte:**
+
 1. `.db-icon` setzt `font-size: 0 !important` -- die bisherige Groessensteuerung ueber
    `font-size` (Inline-Styles, `.small-icons`, `.big-icons`) war damit wirkungslos. Die
    Groesse kommt jetzt aus `--db-icon-font-size`, gesetzt ueber die DB-Klassen
@@ -1289,6 +1405,7 @@ Groessen 20/24/28 px, keine Konsolenfehler.
 
 **Nacharbeit nach dem Sichttest des Users (gleicher Tag).** Der Codemod ersetzt nur, was er
 als Literal sieht -- drei Fehlerklassen blieben:
+
 1. `data-icon={...}` mit JSX-Ausdruck (13 Stellen) trug weiter Material-Namen. Symptom: leere
    Dashboard-Kacheln, roter Ersatzpunkt in Listen. Lehre: nach so einem Codemod **jeden**
    Icon-Namen gegen den echten Satz pruefen, nicht nur die Literale -- dafuer gibt es jetzt
@@ -1297,7 +1414,7 @@ als Literal sieht -- drei Fehlerklassen blieben:
    `font-family: 'Material Icons Round' !important`. Ohne die Schrift stand der Name als Text
    in der Kopfzeile. Jetzt `data-icon` am Element.
 3. Rote Punkte vor Navigations- und Listeneintraegen: DB setzt `list-style-type:
-   var(--db-list-bullet)`, was Bootstraps `list-style: none` aus dem unteren Layer schlaegt.
+var(--db-list-bullet)`, was Bootstraps `list-style: none` aus dem unteren Layer schlaegt.
    Bridge-Regel ergaenzt -- dieselbe Klasse Problem wie bei den Checkbox-Groessen (DB stylt
    `input[type=checkbox]` global auf 32 px).
 
@@ -1318,6 +1435,7 @@ Aufrufstellen (MyInput 17x, MySelect 9x, MyButton/MyCheckbox je 6x, PasswordStre
 unveraendert bleiben. Die Bootstrap-Modal-Shell bleibt bis Phase E.
 
 **Geprueft vorab (installiertes Paket, nicht geraten):**
+
 - Alle relevanten DB-Komponenten sind `forwardRef` -- `myRef` zeigt weiter auf das echte
   `<input>`/`<select>`, die `submit*`-Utilities lesen also unveraendert per Ref/`querySelector`.
 - `DBInput` reicht `pattern`, `autoComplete`, `list`, `min`/`max`/`step`, `readOnly` durch,
@@ -1370,7 +1488,8 @@ im `useLayoutEffect`, der noch im `flushSync`-Commit laeuft. Im Browser bestaeti
 Feld-ids stehen sofort nach `showModal`.
 
 **Weitere Anpassungen, die der Plan nicht vorhergesehen hatte:**
-- `DBInput` reicht kein `defaultValue`-Prop weiter *als eigenes Prop*, laesst es aber ueber
+
+- `DBInput` reicht kein `defaultValue`-Prop weiter _als eigenes Prop_, laesst es aber ueber
   seinen `default*`-Passthrough durch -- die A2-Regel (Vorbelegung = `defaultValue`, sonst
   friert React das Feld ein) gilt also unveraendert weiter und ist in allen drei Feld-Adaptern
   umgesetzt. Browser-Gegenprobe: Tippen im vorbelegten Feld ergibt `vorbelegtX`.
@@ -1476,7 +1595,7 @@ Gesamtplan `tasks/plan-db-ux-migration.md`, Phase A1. Groesste Risikophase: Fram
 **ohne** DB-UX-Code, damit React-19-Umstellung und Design-System-Umstellung getrennt
 verifizierbar bleiben. Branch `feat/db-ux`.
 
-**Wichtig:** A1 stellt nur die *App* auf React um; die 33 Preact-rendernden Testdateien
+**Wichtig:** A1 stellt nur die _App_ auf React um; die 33 Preact-rendernden Testdateien
 gehoerten zu **A2**. Geplant war ein roter `bun run test` zwischen beiden Phasen --
 tatsaechlich lief A2 in derselben Sitzung direkt hinterher, der rote Zwischenstand wurde also
 nie committet. Verifikationsanker fuer A1 sind `typecheck` + `build` + `verify`-Skill.
@@ -1585,13 +1704,10 @@ Aufraeum-Phase. Der Klickpfad mit echtem Backend (Login, Speichern, PDF) ist nic
       `klickeCheckbox`, `inputMock`, `huelleMock`.
 - [x] **A2.2 Import-Codemod** ueber 32 Testdateien: `preact`-Importe auf `react` bzw. den
       Render-Helfer, `h` -> `createElement as h`, `ComponentChild(ren)` -> `ReactNode`.
-- [x] **A2.3 Event-Simulation an React angepasst.** Drei Klassen von Faellen:
-      - Checkbox: `el.checked = x` + `change`-Event erreicht React nicht (React haengt an
-        `click`) -> `klickeCheckbox`.
-      - Textfeld: `el.value = x` aktualisiert Reacts Value-Tracker mit, das folgende
-        `input`-Event gilt dann als "keine Aenderung" -> `setzeWert` schreibt ueber den
-        nativen Prototyp-Setter.
-      - `pointerenter` bubbelt nicht; React leitet `onPointerEnter` aus `pointerover` ab.
+- [x] **A2.3 Event-Simulation an React angepasst.** Drei Klassen von Faellen: - Checkbox: `el.checked = x` + `change`-Event erreicht React nicht (React haengt an
+      `click`) -> `klickeCheckbox`. - Textfeld: `el.value = x` aktualisiert Reacts Value-Tracker mit, das folgende
+      `input`-Event gilt dann als "keine Aenderung" -> `setzeWert` schreibt ueber den
+      nativen Prototyp-Setter. - `pointerenter` bubbelt nicht; React leitet `onPointerEnter` aus `pointerover` ab.
 - [x] **A2.4 Test-Doubles React-tauglich:** `h('input', props)` reichte `children` an ein
       Void-Element durch (React wirft), Props wie `myRef`/`submitText` landeten als
       DOM-Attribute, Array-Kinder ohne `key`. Ersetzt durch `inputMock`/`huelleMock`,
@@ -1698,9 +1814,10 @@ Phase 0 selbst: reines Toolchain-Gate, keine Verhaltensaenderung, kein React-/DB
 # Aktueller Plan: AutoSave-Commit-Race - Snapshot-basiertes Commit statt Live-Filter - 2026-08-05
 
 ## Kontext
+
 Vertiefende Race-Condition-Pruefung nach dem AutoSave-Race-Fix vom 2026-08-03 (`queuedDuringSave`).
 Der damalige Fix loeste zuverlaessig einen Folge-Save aus, aber `_commitCreateAndUpdate`
-(`CustomTable.ts`) selbst filterte beim Commit weiterhin den *aktuellen* Live-Tabellenzustand
+(`CustomTable.ts`) selbst filterte beim Commit weiterhin den _aktuellen_ Live-Tabellenzustand
 (`getEffectiveRowState`) statt eines Snapshots vom Request-Zeitpunkt. Zeilen, die waehrend eines
 laufenden Save-Requests neu angelegt oder geaendert wurden, wurden dadurch von der Antwort des
 VORHERIGEN Requests faelschlich mitcommittet — bei neuen Zeilen ohne `_id` (endgueltiger
@@ -1710,6 +1827,7 @@ Index-Zuordnung zwischen `changeTracking.ts` (Live-Re-Filter) und `_commitCreate
 (`getEffectiveRowState`-Filter) — beide filterten unabhaengig voneinander denselben Zustand.
 
 ## Plan
+
 - [x] Bug-Mechanismus end-to-end nachvollzogen (`autoSave.ts` -> `changeTracking.ts` ->
       `CustomTable.ts`), Test-Luecke bestaetigt (`autoSave.test.ts` stubbt `commitAutoSave` als
       `vi.fn()`, deckt die echte Commit-Logik nicht ab)
@@ -1729,12 +1847,14 @@ Index-Zuordnung zwischen `changeTracking.ts` (Live-Re-Filter) und `_commitCreate
       gemockt) — vorab gegen den alten Code verifiziert, dass sie ohne den Fix rot sind
 
 ## Verifikationskriterien (AutoSave-Commit-Race)
+
 - Waehrend eines laufenden Saves neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`
   (statt faelschlich `unchanged`)
 - Waehrend eines laufenden manuellen Saves geloeschte Zeile bleibt nach `commitChanges` erhalten
 - `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` laufen gruen
 
 ## Review (AutoSave-Commit-Race)
+
 - Ergebnis: Commit nach einem Bulk-Save basiert jetzt auf einem Row-Referenz-Snapshot vom
   Request-Zeitpunkt statt auf einem erneuten Live-Filter des aktuellen Tabellenzustands. Betrifft
   alle 4 Ressourcen (BZ/BE/EWT/N) gleichermassen, da `_commitCreateAndUpdate` fuer alle gemeinsam
@@ -1745,12 +1865,14 @@ Index-Zuordnung zwischen `changeTracking.ts` (Live-Re-Filter) und `_commitCreate
 # Aktueller Plan: Weitere Ueberschneidungs-/Duplikat-Checks mit selbem Bug wie 2026-07-30-Fix - 2026-07-31
 
 ## Kontext
+
 Nach dem Fix vom 2026-07-30 (BZ/EWT-Editor-Modal blockierte Ersatz-Anlage faelschlich wegen lokal
 geloeschter, ungesynchter Zeilen) gezielt geprueft, ob dieselbe Bug-Klasse noch anderswo existiert.
 Root Cause: alle 4 Resource-Getter (BZ/BE/EWT/N) sind strukturell identisch, keiner filtert
 `__localState === 'deleted'` — der 2026-07-30-Fix patchte nur 2 Call-Sites inline statt die Getter.
 
 ## Plan
+
 - [x] Alle Konsumenten der 4 Getter systematisch durchsucht und klassifiziert: Tabellen-Init/Reload
       (muss geloeschte Zeilen zeigen) vs. Validierung/Berechnung (muss sie ausschliessen)
 - [x] `IDataQueryOptions.excludeDeleted?: boolean` (Default false, rueckwaertskompatibel)
@@ -1767,6 +1889,7 @@ Root Cause: alle 4 Resource-Getter (BZ/BE/EWT/N) sind strukturell identisch, kei
       Assertion ergaenzt; `tsc`/Lint sauber, Suite 1306 gruen
 
 ## Review (2026-07-31)
+
 - Ergebnis: 7 weitere, bislang ungetestete Stellen mit derselben Bug-Klasse gefixt (BE-Overlap/LRE-Checks,
   BZ-Delete-Guard, BZ-Coverage, N-Tag-Disable, EWT-Verknuepfung, naechster-freier-Tag, Zulagen-Summe).
   Fix jetzt an der Wurzel (Getter-Option) statt pro Call-Site — verhindert Wiederholung des Musters.
@@ -2594,18 +2717,18 @@ rund 60 Dateien). DB liefert dafuer fertige Bausteine, die ohne JS auskommen: `d
 `db-select`, `db-checkbox`, `db-switch` -- jeweils Huelle mit `<label>` + Feld darin.
 Zuordnung (aus `@db-ux/core-components/build/styles/bundle.css` verifiziert):
 
-| Bootstrap | DB |
-| --- | --- |
-| `form-floating` + `form-control` | `.db-input[data-variant="floating"]` (Label vor dem Feld) |
-| `form-control` + eigenes `form-label` | `.db-input` mit `<label>` in der Huelle |
-| `form-select` | `.db-select` |
-| `form-control-sm`/`form-select-sm`/`input-group-sm` | `data-density="functional"` an der Huelle |
-| `input-group` + `input-group-text`-Icon | `data-icon="…"` an der Huelle (reines CSS, `content: attr(data-icon)`) |
-| `input-group` mit Text-Praefix/Knopf | App-Klasse `.feldgruppe` (DB hat keine Entsprechung) |
-| `form-check` (+ `form-check-input`/`-label`) | `.db-checkbox` mit Feld **im** Label |
-| `form-check form-switch` | `.db-switch` (`role="switch"` am Input) |
-| `form-text` / `invalid-feedback` | `.db-infotext` (`data-size="small"`, `data-semantic="critical"`) |
-| `form-label` | entfaellt (Label steht in der Huelle) |
+| Bootstrap                                           | DB                                                                     |
+| --------------------------------------------------- | ---------------------------------------------------------------------- |
+| `form-floating` + `form-control`                    | `.db-input[data-variant="floating"]` (Label vor dem Feld)              |
+| `form-control` + eigenes `form-label`               | `.db-input` mit `<label>` in der Huelle                                |
+| `form-select`                                       | `.db-select`                                                           |
+| `form-control-sm`/`form-select-sm`/`input-group-sm` | `data-density="functional"` an der Huelle                              |
+| `input-group` + `input-group-text`-Icon             | `data-icon="…"` an der Huelle (reines CSS, `content: attr(data-icon)`) |
+| `input-group` mit Text-Praefix/Knopf                | App-Klasse `.feldgruppe` (DB hat keine Entsprechung)                   |
+| `form-check` (+ `form-check-input`/`-label`)        | `.db-checkbox` mit Feld **im** Label                                   |
+| `form-check form-switch`                            | `.db-switch` (`role="switch"` am Input)                                |
+| `form-text` / `invalid-feedback`                    | `.db-infotext` (`data-size="small"`, `data-semantic="critical"`)       |
+| `form-label`                                        | entfaellt (Label steht in der Huelle)                                  |
 
 - [ ] `src/index.html` (98 Stellen): Persoenliche Daten, Jahr-Auswahl, Monatswechsel
 - [ ] `main.ts`: `Popover`-Plugin raus -- der einzige verbliebene Aufrufer ist das Jahr-Feld,
@@ -2742,17 +2865,14 @@ autoSave-Kopplung, DOM-Struktur von `customTableRender.ts`, Test-Abdeckung).
       **komplett unveraendert** (bereits reine Datenklassen, riefen schon vorher nur
       `drawRows()`/`_notifyChange()` auf). `el.instance`-Vertrag unangetastet: `$el` bleibt
       die `<table>` selbst, React mountet direkt hinein (kein Wrapper-Div).
-- [x] **Drei echte Korrekturen unterwegs gefunden** (nicht im Plan vorgesehen):
-      1. `tr.data = row` wird extern gelesen (`attachBerechnenToggleListeners.ts`, EWT) --
-         per `ref`-Callback nachgebildet, nicht nur renderinternes Bookkeeping wie vermutet.
-      2. Mobiler Zeilen-Klick-Handler brauchte `event.view?.innerWidth`, nicht das globale
-         `window.innerWidth` -- Unterschied nur mit synthetischen Test-Events sichtbar.
-      3. `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt
-         HTML-Strings fuer `dangerouslySetInnerHTML` (sauberer fuer die interaktive
-         `berechnen`-Checkbox) -- `EwtTab.tsx`s Parser umgestellt, Spaltenvertrag
-         (`parser: string | number`) unveraendert gelassen (Typ-Erweiterung auf `ReactNode`
-         haette 4 fremde Show/Edit-Modals gebrochen, die denselben Parser wiederverwenden --
-         stattdessen lokaler Cast an den zwei `html:true`-Stellen).
+- [x] **Drei echte Korrekturen unterwegs gefunden** (nicht im Plan vorgesehen): 1. `tr.data = row` wird extern gelesen (`attachBerechnenToggleListeners.ts`, EWT) --
+      per `ref`-Callback nachgebildet, nicht nur renderinternes Bookkeeping wie vermutet. 2. Mobiler Zeilen-Klick-Handler brauchte `event.view?.innerWidth`, nicht das globale
+      `window.innerWidth` -- Unterschied nur mit synthetischen Test-Events sichtbar. 3. `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt
+      HTML-Strings fuer `dangerouslySetInnerHTML` (sauberer fuer die interaktive
+      `berechnen`-Checkbox) -- `EwtTab.tsx`s Parser umgestellt, Spaltenvertrag
+      (`parser: string | number`) unveraendert gelassen (Typ-Erweiterung auf `ReactNode`
+      haette 4 fremde Show/Edit-Modals gebrochen, die denselben Parser wiederverwenden --
+      stattdessen lokaler Cast an den zwei `html:true`-Stellen).
 - [x] Zeilen-Aktionsknoepfe (Edit/Delete/Undo) und Fusszeilen-Knoepfe (Hinzufuegen/
       Alle-loeschen/Custom) auf echte `<DBButton>` umgestellt (User-Korrektur waehrend der
       Umsetzung, zwei Iterationen) statt der Handmarkup-Bruecke `erzeugeDbButton`/
@@ -2795,17 +2915,15 @@ Theme-Umschalter im mobilen Burger-Menue schliesst beim Anklicken die ganze Navi
 das Design-Untermenue zu oeffnen. Beide Regressionen stammen aus Phase K (K3/K5).
 
 - [x] **Impressum, zwei unabhaengige Ursachen (User meldete "geht immer noch nicht" nach dem
-      ersten Fix -- zweite Ursache erst dadurch gefunden):**
-      1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Annahme war,
-         `data-action="close"` wuerde ueber einen globalen `dbDialog.ts`-Listener laufen --
-         falsch, siehe 2). Fix: `onClick={onClose}`.
-      2. **Eigentlicher Blocker:** `styles.scss`s `footer { pointer-events: none; }` war ein
-         Tag-Selektor (fuer `.app-footer` gedacht), traf aber JEDES `<footer>` im Dokument --
-         auch `DBDrawerFooter` (rendert selbst `<footer class="db-drawer-footer">`). Der Knopf
-         war optisch da, aber `elementFromPoint()` an seiner Position lieferte den
-         `.db-drawer-container` dahinter -- fuer echte Mausklicks unerreichbar. Per JS
-         ausgeloeste Klicks (`.click()`, keine Hit-Testing) verdeckten das in meinem ersten
-         Test. Fix: Selektor auf `.app-footer` beschraenkt.
+      ersten Fix -- zweite Ursache erst dadurch gefunden):** 1. `ImpressumDialog.tsx`s Fusszeilen-Button hatte keinen `onClick` (Annahme war,
+      `data-action="close"` wuerde ueber einen globalen `dbDialog.ts`-Listener laufen --
+      falsch, siehe 2). Fix: `onClick={onClose}`. 2. **Eigentlicher Blocker:** `styles.scss`s `footer { pointer-events: none; }` war ein
+      Tag-Selektor (fuer `.app-footer` gedacht), traf aber JEDES `<footer>` im Dokument --
+      auch `DBDrawerFooter` (rendert selbst `<footer class="db-drawer-footer">`). Der Knopf
+      war optisch da, aber `elementFromPoint()` an seiner Position lieferte den
+      `.db-drawer-container` dahinter -- fuer echte Mausklicks unerreichbar. Per JS
+      ausgeloeste Klicks (`.click()`, keine Hit-Testing) verdeckten das in meinem ersten
+      Test. Fix: Selektor auf `.app-footer` beschraenkt.
 - [x] **Theme-Switcher:** Root-Cause im DB-UX-Quellcode verifiziert (`header.js`):
       `DBHeader`s Drawer-Kopie der Navigation traegt einen Klick-Listener, der bei JEDEM Klick,
       dessen Ziel `.closest('.db-navigation-item')` matcht, die Schublade schliesst
@@ -2998,7 +3116,7 @@ und Breakpoints testen.
 - [x] Einzige gefundene Abweichung: 375px/Bereitschaft. Per Screenshot bestaetigt: zwei echte
       Regressionen unter `regular` -- (1) Bereitschaftszeitraum-Tabelle ueberlaeuft (Pause-Spalte
       faellt raus), (2) fixierter App-Footer rutscht in den Seiteninhalt (`body {
-      padding-block-end: 3.5rem }` in `styles.scss:631` ist ein Hartwert, kalibriert auf die
+    padding-block-end: 3.5rem }` in `styles.scss:631` ist ein Hartwert, kalibriert auf die
       Footer-Hoehe bei `functional`s 14px-Wurzel -- bei `regular` reicht die reservierte Flaeche
       nicht mehr).
 - [x] Rueckfrage ergab: das eigentliche Problem war nicht die globale Dichte, sondern
@@ -3212,12 +3330,10 @@ beschlossenen) React-State-Umbau von `CustomTable`. Scope nach Rueckfrage: AutoS
 UND Cross-Tabellen-Sync (beide vom User bestaetigt).
 
 - [x] Zwei neue Methoden auf `Rows.ts`, nach dem Vorbild von `_commitCreateAndUpdate()`
-      (Aufrufer übergibt nur Batch-Daten, keine State-Verzweigung von außen):
-      - `syncCellsSilently(transform)` -- Content-Sync ohne Dirty-Flag (Server-Antwort nach
-        einem Save; Zeile soll NICHT erneut als `modified` erscheinen). Zieht
-        `_originalCells` mit, wenn die Zeile `unchanged` ist.
-      - `patchCellsAsModified(transform)` -- echte lokale Aenderung (z.B. aus einer
-        verknuepften Ressource abgeleitete Felder), markiert `unchanged` -> `modified`.
+      (Aufrufer übergibt nur Batch-Daten, keine State-Verzweigung von außen): - `syncCellsSilently(transform)` -- Content-Sync ohne Dirty-Flag (Server-Antwort nach
+      einem Save; Zeile soll NICHT erneut als `modified` erscheinen). Zieht
+      `_originalCells` mit, wenn die Zeile `unchanged` ist. - `patchCellsAsModified(transform)` -- echte lokale Aenderung (z.B. aus einer
+      verknuepften Ressource abgeleitete Felder), markiert `unchanged` -> `modified`.
       Beide rufen bewusst KEIN `drawRows()` selbst -- der Aufrufer behaelt seine bisherige
       Redraw-Bedingung (unconditional vs. nur bei echter Aenderung) ueber den Rueckgabewert.
 - [x] `savePipeline.ts`: `applyServerRowsToTable`, `unlinkNebengeldRefsForDeletedEwtIds`,
@@ -3649,3 +3765,33 @@ reflexhafter "alles auf Callback-Props umstellen"-Ansatz haette hier unnoetig vi
 wiederverwendete Bausteine angefasst.
 
 **Damit ist die "mehr echtes React"-Initiative (Teile 1-4) abgeschlossen.**
+
+---
+
+## EA-Tag-Parser: Kaskade strikt-deutsch -> locker - 2026-09-18
+
+### Plan
+
+- [x] `EaTab.tsx`s neuen `tagParser` (uncommittetes WIP, siehe Diff) von nur-lockerem
+      `dayjs(s)` auf Kaskade umstellen: erst `dayjs(s, 'DD.MM.YYYY', true)`, dann
+      `dayjs(s)`-Fallback. Grund: `dataEA` enthaelt zwei Formate -- lokale Writes als
+      `DD.MM.YYYY` (`addEaTag.ts`, `createEditorModalEA.tsx`), Server-Werte als ISO
+      (Mongo `Date`). Locker allein reichte deutsch unformatiert durch (sichtbarer Bug:
+      nur Server-Zeilen wurden zu `dd DD.MM.`), Format allein wuerde umgekehrt ISO
+      durchreichen.
+
+### Verifikation
+
+- `bunx tsc --noEmit` clean; `bun run lint` 0 Fehler (54 vorbestehende Warnings, keine aus
+  `EaTab.tsx`); `bun run format:check` clean; `bun test test/EA.*` 27/27 pass.
+- Laufzeitprobe (bun -e, echtes `configDayjs`): `14.09.2026` -> `Mo 14.09.`,
+  `2026-02-09T23:00:00.000Z` -> `Di 10.02.`, `kein datum` -> Durchreichung. Gegenprobe:
+  `dayjs('14.09.2026')` und `dayjs(iso, 'DD.MM.YYYY')` beide Invalid Date.
+
+### Review
+
+Einzeiler-Symptom, Ursache in den Daten (zwei Formate in `dataEA`), nicht in der Tabelle:
+`CustomTableView` ruft den Parser auf jeder Zelle auf. Kaskade-Muster aus `getMonatFromEA`
+uebernommen. Langfristig sauberer waere Normalisierung beim Laden/Speichern -- bewusst
+nicht angefasst (groesserer Eingriff, eigener Task). Commit nur `EaTab.tsx`;
+`CHANGELOG.md`/`todo.md` enthalten WIP des DB-Komponenten-Umbaus und bleiben uncommittet.

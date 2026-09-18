@@ -1,6 +1,5 @@
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
-import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -31,7 +30,7 @@ import {
   persistBereitschaftsZeitraumTableData,
 } from './utils';
 
-function BereitschaftTab() {
+export function BereitschaftTab() {
   // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
   // bisherige `useEffect(() => {...}, [])`-Verhalten.
   const isEinsatzLinkedToZeitraum = (einsatz: IDatenBE, zeitraum: IDatenBZ): boolean => {
@@ -314,18 +313,4 @@ function BereitschaftTab() {
       </div>
     </div>
   );
-}
-
-export function mountBereitschaftTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#bereitschaft-root');
-  if (!container) return;
-
-  mount(container, <BereitschaftTab />);
-}
-
-export function unmountBereitschaftTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#bereitschaft-root');
-  if (!container) return;
-
-  unmount(container);
 }

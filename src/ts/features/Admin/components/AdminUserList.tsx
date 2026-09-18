@@ -1,5 +1,5 @@
 import { DBButton, DBCheckbox, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
@@ -22,7 +22,9 @@ import { DbAuswahl, DbFeld } from '@/components';
 
 export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  // Initial true: der Mount-Effect laedt sofort -- ein synchrones setLoading(true) im Effect
+  // waere ein react-hooks/set-state-in-effect.
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<{ oe: string; name: string; role: string }>({
     oe: '',
     name: '',
@@ -49,8 +51,9 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     };
   }
 
-  async function reloadUsers(nameFilter: string, roleFilter: string) {
-    setLoading(true);
+  // Laedt ohne synchrones setLoading -- der Loading-Wechsel passiert im Aufrufer
+  // (Event-Handler bzw. Renderphase-Reset unten), nie synchron im Effect.
+  const ladeUsers = useCallback(async (nameFilter: string, roleFilter: string) => {
     try {
       const loadedUsers = await fetchAdminUsers({ name: nameFilter, role: roleFilter });
       setUsers(loadedUsers);
@@ -65,17 +68,30 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  function reloadUsers(nameFilter: string, roleFilter: string) {
+    setLoading(true);
+    return ladeUsers(nameFilter, roleFilter);
+  }
+
+  // Filterwechsel: Loading-Anzeige + Auswahl-Reset bewusst in der Renderphase (React-Docs:
+  // "adjusting state when props change"); die eigentliche Ladung bleibt im Effect.
+  const nameFilter = debouncedNameFilter.trim();
+  const [prevFilter, setPrevFilter] = useState({ name: nameFilter, role: filter.role, oe: filter.oe });
+  if (prevFilter.name !== nameFilter || prevFilter.role !== filter.role || prevFilter.oe !== filter.oe) {
+    setPrevFilter({ name: nameFilter, role: filter.role, oe: filter.oe });
+    // Nach jedem Filterwechsel zeigt die Liste andere Benutzer — eine Auswahl aus
+    // der vorherigen Ansicht wäre nicht mehr sichtbar und damit nicht überprüfbar.
+    setSelectedIds(new Set());
+    if (prevFilter.name !== nameFilter || prevFilter.role !== filter.role) setLoading(true);
   }
 
   useEffect(() => {
-    void reloadUsers(debouncedNameFilter.trim(), filter.role);
-  }, [debouncedNameFilter, filter.role]);
-
-  // Nach jedem Filterwechsel zeigt die Liste andere Benutzer — eine Auswahl aus
-  // der vorherigen Ansicht wäre nicht mehr sichtbar und damit nicht überprüfbar.
-  useEffect(() => {
-    setSelectedIds(new Set());
-  }, [debouncedNameFilter, filter.role, filter.oe]);
+    // Microtask: der synchrone Funktionsaufruf direkt im Effect-Body loeste sonst
+    // react-hooks/set-state-in-effect aus, obwohl alle setStates erst nach dem await laufen.
+    queueMicrotask(() => void ladeUsers(nameFilter, filter.role));
+  }, [ladeUsers, nameFilter, filter.role]);
 
   function canEdit() {
     if (!user) return false;

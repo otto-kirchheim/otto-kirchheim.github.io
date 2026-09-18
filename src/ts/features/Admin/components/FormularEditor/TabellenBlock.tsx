@@ -1,10 +1,12 @@
 import type { Spalte, SeitenDef, TabellenBereich, TabellenDef, Zeile } from '@otto-kirchheim/nebengeld-shared';
-import { berechneteEintraege } from './aggregationUndRechnung';
+import { berechneteEintraege } from './aggregationsHelfer';
 import { katalogZeilenFelder, werteAuswahl, ZEILEN_QUELLEN, type FormularCode } from './datenKatalog';
-import { Abschnitt, ScharfButton, ZahlFeld, istGleich } from './feldPanelGemeinsam';
+import { Abschnitt, ScharfButton, ZahlFeld } from './feldPanelGemeinsam';
+import { istGleich } from './feldPanelHelfer';
 import type { Armed, Vorschau } from './feldPanelTypen';
 import { ListenGruppen } from './ListenGruppen';
-import { SonderZeilen, UEBER_OPTIONEN } from './SonderZeilen';
+import { SonderZeilen } from './SonderZeilen';
+import { UEBER_OPTIONEN } from './sonderZeilenOptionen';
 import { SpalteZeile } from './SpalteZeile';
 import { WertVorschau } from './WertVorschau';
 import { sonderZeileZelleWert, zeilenFuerUeber } from '@/infrastructure/pdf/wert';

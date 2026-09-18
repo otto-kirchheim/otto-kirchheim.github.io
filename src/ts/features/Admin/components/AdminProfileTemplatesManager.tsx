@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -40,7 +40,10 @@ export function AdminProfileTemplatesManager() {
     [templates],
   );
 
-  async function reload() {
+  // `reload` stabil per useCallback, damit der Mount-Effect sie als Dep listen kann.
+  // Der Effect ruft sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body
+  // loeste react-hooks/set-state-in-effect aus (reload setzt synchron setLoading).
+  const reload = useCallback(async () => {
     setLoading(true);
     try {
       const next = await fetchProfileTemplates();
@@ -49,7 +52,7 @@ export function AdminProfileTemplatesManager() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   function updateEdit(id: string, patch: Partial<TemplateEditState>) {
     setEdits(current => ({ ...current, [id]: { ...current[id], ...patch } }));
@@ -345,8 +348,8 @@ export function AdminProfileTemplatesManager() {
   }
 
   useEffect(() => {
-    reload();
-  }, []);
+    queueMicrotask(() => void reload());
+  }, [reload]);
 
   return (
     <div>

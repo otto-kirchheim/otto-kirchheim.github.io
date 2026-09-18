@@ -73,6 +73,21 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       .finally(() => setLoading(false));
   }
 
+  // Tabwechsel: Listen- und Filter-Reset bewusst in der Renderphase (React-Docs: "adjusting
+  // state when props change") -- synchrone setState im Effect waeren react-hooks/set-state-in-effect.
+  const [prevActiveIdx, setPrevActiveIdx] = useState(activeIdx);
+  if (prevActiveIdx !== activeIdx) {
+    setPrevActiveIdx(activeIdx);
+    setPage(null);
+    setCurrentPage(1);
+    setFilterUserId('');
+    setUserSearchText('');
+    setFilterJahr('');
+    setFilterMonat('');
+    setAvailableYears([]);
+    setActiveFilter({});
+  }
+
   function loadPage(pageNum: number) {
     loadPageWith(pageNum, activeFilter);
   }
@@ -103,19 +118,15 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
   useEffect(() => {
     const ep = RESOURCES[activeIdx].endpoint;
-    setPage(null);
-    setCurrentPage(1);
-    setFilterUserId('');
-    setUserSearchText('');
-    setFilterJahr('');
-    setFilterMonat('');
-    setAvailableYears([]);
-    const empty: FilterParams = {};
-    setActiveFilter(empty);
-    loadPageWith(1, empty, ep);
+    // Microtask: der synchrone Funktionsaufruf direkt im Effect-Body loeste sonst
+    // react-hooks/set-state-in-effect aus (loadPageWith setzt synchron setLoading).
+    queueMicrotask(() => loadPageWith(1, {}, ep));
     fetchAdminResourceYears(ep)
       .then(setAvailableYears)
       .catch(() => {});
+    // loadPageWith ist bewusst keine Dep: sie wird je Render neu erzeugt und wuerde den
+    // Effect in eine Schleife ziehen; relevant ist nur der Tabwechsel (activeIdx).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIdx]);
 
   function openEdit(doc: Record<string, unknown>) {

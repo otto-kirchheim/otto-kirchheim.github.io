@@ -3,18 +3,11 @@ import { useState } from 'react';
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
 import { FeldListe } from './FeldZeile';
 import { gruppiere, katalogZeilenFelder, ZEILEN_QUELLEN } from './datenKatalog';
-import {
-  Abschnitt,
-  DarstellungsFelder,
-  ScharfButton,
-  ZahlFeld,
-  Zellkoordinaten,
-  istGleich,
-  naechsterFreierSchluessel,
-} from './feldPanelGemeinsam';
+import { Abschnitt, DarstellungsFelder, ScharfButton, ZahlFeld, Zellkoordinaten } from './feldPanelGemeinsam';
+import { istGleich, naechsterFreierSchluessel } from './feldPanelHelfer';
 import type { Props } from './feldPanelTypen';
 import { TabellenBlock } from './TabellenBlock';
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 export type { Armed, Vorschau } from './feldPanelTypen';
@@ -138,7 +131,7 @@ export function FeldPanel({
             }
           />
         ))}
-        <div className="feldgruppe">
+        <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
           <DbFeld
             beschriftung="Name der neuen Tabelle"
             dicht
@@ -149,7 +142,7 @@ export function FeldPanel({
           <DBButton type="button" variant="outlined" onClick={tabelleAnlegen}>
             + Tabelle
           </DBButton>
-        </div>
+        </DBStack>
       </Abschnitt>
 
       <Abschnitt titel="Signatur & Unterschriftsdatum">

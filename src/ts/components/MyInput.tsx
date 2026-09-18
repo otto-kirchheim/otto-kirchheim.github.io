@@ -55,7 +55,7 @@ type TModalBodyInputElementOption = Omit<
  * Der frühere Bootstrap-Popover nahm HTML-Schnipsel entgegen (`'-Mindestens 8 Zeichen <br/>'`).
  * Der DB-Tooltip bekommt Text, deshalb werden Zeilenumbrüche hier zu echten Zeilen.
  */
-export function hinweisZeilen(content: string): string[] {
+function hinweisZeilen(content: string): string[] {
   return content
     .split(/<br\s*\/?>/i)
     .map(zeile => zeile.replace(/<[^>]+>/g, '').trim())

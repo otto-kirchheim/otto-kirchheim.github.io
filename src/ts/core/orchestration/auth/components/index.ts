@@ -1,4 +1,4 @@
-import { hideConflictReviewBanner, showConflictReviewBanner } from './ConflictReviewBanner';
+import { hideConflictReviewBanner, showConflictReviewBanner } from './conflictReviewBannerMount';
 import createModalLogin from './createModalLogin';
 import createModalNewUser from './createModalNewUser';
 import createModalForgotPassword from './createModalForgotPassword';

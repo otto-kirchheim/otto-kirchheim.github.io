@@ -265,7 +265,7 @@ type SchichtenConfigState = {
 };
 
 let _veSchichtenState: SchichtenConfigState | null = null;
-export const getVorgabenBSchichtenState = (): SchichtenConfigState | null => _veSchichtenState;
+const getVorgabenBSchichtenState = (): SchichtenConfigState | null => _veSchichtenState;
 
 type SchichtenConfigSectionProps = {
   aZ: IVorgabenUaZ | undefined;

@@ -1,5 +1,20 @@
 import { featureLifecycleRegistry } from '@/core/hooks';
-import { mountEwtTab, unmountEwtTab } from './EwtTab';
+import { mount, unmount } from '@/infrastructure/ui';
+import { EwtTab } from './EwtTab';
+
+function mountEwtTab(): void {
+  const container = document.querySelector<HTMLDivElement>('#ewt-root');
+  if (!container) return;
+
+  mount(container, <EwtTab />);
+}
+
+function unmountEwtTab(): void {
+  const container = document.querySelector<HTMLDivElement>('#ewt-root');
+  if (!container) return;
+
+  unmount(container);
+}
 
 featureLifecycleRegistry.registerFeature({
   name: 'EWT',

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
-import { MemoryCard, formatUptime } from './adminDashboardCharts';
+import { MemoryCard } from './adminDashboardCharts';
+import { formatUptime } from '../utils/formatUptime';
 import { DBButton, DBTag } from '@db-ux/react-core-components';
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -70,6 +71,31 @@ export function AdminDashboard() {
     void loadHeap(days);
   }
 
+  // Initiales Laden: die setStates laufen bewusst erst in den Promise-Callbacks (asynchron) --
+  // `loading`/`error` starten als true/null, ein synchrones setState im Effect waere ein
+  // react-hooks/set-state-in-effect. `load` bleibt separater Event-Handler (Refresh-Button).
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([fetchAdminStats(), fetchAdminHeap(heapDays)])
+      .then(([s, h]) => {
+        if (cancelled) return;
+        setStats(s);
+        setHeap(h);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Fehler beim Laden');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // heapDays ist bewusst keine Dep: ein Zeitraum-Wechsel laedt den Heap separat ueber
+    // changeHeapDays -> loadHeap; dieser Effect laedt nur initial stats + heap zusammen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function load() {
     setLoading(true);
     setError(null);
@@ -81,10 +107,6 @@ export function AdminDashboard() {
       .catch((err: unknown) => setError(err instanceof Error ? err.message : 'Fehler beim Laden'))
       .finally(() => setLoading(false));
   }
-
-  useEffect(() => {
-    load();
-  }, []);
 
   if (loading) {
     return (

@@ -1,6 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import { mount } from '@/infrastructure/ui';
 import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
@@ -183,24 +182,6 @@ function BerechnungTableRows({
         </tr>
       ))}
     </>
-  );
-}
-
-export function mountBerechnungTableRows(
-  monatsErgebnisse: IBerechnungMonatsErgebnis[],
-  zulagenBreakdown: IZulagenBreakdown,
-  aktivierteTabs?: string[],
-): void {
-  const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
-  if (!tbody) return;
-
-  mount(
-    tbody,
-    <BerechnungTableRows
-      monatsErgebnisse={monatsErgebnisse}
-      aktivierteTabs={aktivierteTabs}
-      zulagenBreakdown={zulagenBreakdown}
-    />,
   );
 }
 

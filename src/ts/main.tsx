@@ -26,12 +26,12 @@ featureLifecycleRegistry.registerFeature({
       // `DBHeader`) -- beide Vorkommen anfassen, nicht nur das erste.
       document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => el.classList.remove('d-none'));
       document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
-      const { mountAdminTab } = await import('@/features/Admin');
+      const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
       mountAdminTab(ctx.userName);
     }
   },
   async unregister(): Promise<void> {
-    const { unmountAdminTab } = await import('@/features/Admin');
+    const { unmountAdminTab } = await import('@/features/Admin/mountAdminTab');
     unmountAdminTab();
   },
 });

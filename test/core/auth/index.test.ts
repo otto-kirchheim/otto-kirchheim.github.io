@@ -87,7 +87,7 @@ vi.mock('@/core/orchestration/auth/utils', () => ({
   handleAuthUrlState: handleAuthUrlStateMock,
 }));
 
-vi.mock('@/features/Admin', () => ({
+vi.mock('@/features/Admin/mountAdminTab', () => ({
   mountAdminTab: mountAdminTabMock,
 }));
 

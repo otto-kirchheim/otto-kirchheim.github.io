@@ -5,14 +5,8 @@ import { createPortal } from 'react-dom';
 import { DIALOG_RICHTUNG } from '@/components/showModal';
 
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
-import {
-  familieFuerSchnitt,
-  fehlendeVorlagenSchnitte,
-  SCHNITTE,
-  schnitteText,
-  SchriftartWahl,
-  type Schnitt,
-} from './SchriftartWahl';
+import { familieFuerSchnitt, fehlendeVorlagenSchnitte, SCHNITTE, schnitteText, type Schnitt } from './schriftartHelfer';
+import { SchriftartWahl } from './SchriftartWahl';
 import type { VorlageFontFamilie } from './vorlageFonts';
 
 /** Probetext für die Vorschau: Umlaut, Ziffern und die im Formular üblichen Begriffe. */

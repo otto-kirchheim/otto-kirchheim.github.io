@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { zeilenHoeheAus } from '@/features/Admin/components/FormularEditor/FormularEditor';
+import { zeilenHoeheAus } from '@/features/Admin/components/FormularEditor/seitenHelfer';
 
 describe('zeilenHoeheAus', () => {
   it('mittelt über alle Zeilen statt über eine einzelne Messung', () => {

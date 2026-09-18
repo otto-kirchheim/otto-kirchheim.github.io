@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { render } from './reactRender';
 
-import BerechnungMobileCards, {
-  mountBerechnungMobileCards,
-} from '@/features/Berechnung/components/BerechnungMobileCards';
+import BerechnungMobileCards from '@/features/Berechnung/components/BerechnungMobileCards';
+import { mountBerechnungMobileCards } from '@/features/Berechnung/components/mountBerechnung';
 import calculateBerechnungRows, { type IBerechnungMonatsErgebnis } from '@/features/Berechnung/calculateBerechnungRows';
 import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import { VorgabenGeldMock, datenBerechungMock } from './mockData';

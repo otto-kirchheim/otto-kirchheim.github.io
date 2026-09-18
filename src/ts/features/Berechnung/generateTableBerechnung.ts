@@ -3,8 +3,7 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
 import calculateBerechnungRows from './calculateBerechnungRows';
 import calculateZulagenBreakdown from './calculateZulagenBreakdown';
-import { mountBerechnungMobileCards } from './components/BerechnungMobileCards';
-import { mountBerechnungTableRows } from './components/BerechnungTableRows';
+import { mountBerechnungMobileCards, mountBerechnungTableRows } from './components/mountBerechnung';
 import { wendeMonatsFensterAn } from './berechnungMonatsFenster';
 
 export default function generateTableBerechnung(

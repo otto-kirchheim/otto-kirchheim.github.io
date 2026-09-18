@@ -24,7 +24,7 @@ vi.mock('@/infrastructure/api/FetchRetry', () => ({
   getServerUrl: mockGetServerUrl,
 }));
 
-import { mountAdminTab, unmountAdminTab } from '@/features/Admin';
+import { mountAdminTab, unmountAdminTab } from '@/features/Admin/mountAdminTab';
 import { featureLifecycleRegistry } from '@/core/hooks';
 import type { FeatureContext } from '@/core/hooks';
 

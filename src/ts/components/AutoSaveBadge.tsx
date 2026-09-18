@@ -82,8 +82,14 @@ const AutoSaveBadge: FC<TAutoSaveBadge> = ({ resources }) => {
   // "saved" verblasst nach 2s -- rein lokaler UI-Zustand, unabhaengig vom Store (Trennung
   // Business-Status vs. UI-Timing, siehe autoSaveStatusStore.ts).
   const [faded, setFaded] = useState(false);
-  useEffect(() => {
+  // Reset beim Status-Wechsel bewusst in der Render-Phase (React-Docs: "adjusting state when
+  // props change") -- ein synchroner setState im Effect loeste ein react-hooks/set-state-in-effect.
+  const [prevStatus, setPrevStatus] = useState(status);
+  if (prevStatus !== status) {
+    setPrevStatus(status);
     setFaded(false);
+  }
+  useEffect(() => {
     if (status !== 'saved') return undefined;
     const timer = setTimeout(() => setFaded(true), 2000);
     return () => clearTimeout(timer);

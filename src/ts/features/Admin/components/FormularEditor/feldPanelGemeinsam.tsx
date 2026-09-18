@@ -1,8 +1,7 @@
 import { useState, type ReactNode } from 'react';
 
-import type { Ausrichtung, Drehung, Feld, FormatName } from '@otto-kirchheim/nebengeld-shared';
+import type { Ausrichtung, Drehung, FormatName } from '@otto-kirchheim/nebengeld-shared';
 import { FORMATE } from './datenKatalog';
-import type { Armed } from './feldPanelTypen';
 import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
@@ -78,15 +77,6 @@ export function KlappZeile({
       <div className="mt-2">{children}</div>
     </details>
   );
-}
-
-export function istGleich(a: Armed | null, b: Armed): boolean {
-  if (!a || a.bereich !== b.bereich) return false;
-  if (a.bereich === 'feld') return a.key === (b as { key: string }).key;
-  if (a.bereich === 'spalte')
-    return a.tabelle === (b as { tabelle: string }).tabelle && a.index === (b as { index: number }).index;
-  if (a.bereich === 'tabelle' || a.bereich === 'letzteZeile') return a.tabelle === (b as { tabelle: string }).tabelle;
-  return true;
 }
 
 export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClick: () => void; titel?: string }) {
@@ -334,11 +324,4 @@ export function DarstellungsFelder<
       </div>
     </>
   );
-}
-
-/** Nächster freie Feld-Key ab `basis` -- `basis` selbst, sonst `basis2`, `basis3`, ... */
-export function naechsterFreierSchluessel(felder: Record<string, Feld>, basis: string): string {
-  let key = basis;
-  for (let i = 2; felder[key]; i++) key = `${basis}${i}`;
-  return key;
 }

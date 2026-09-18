@@ -1,8 +1,7 @@
 import type { CSSProperties } from 'react';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
-/** Payload-Grenze im Backend (`oeLevelsSchema.max(10)`); real kommen max. ~7 Ebenen vor. */
-export const MAX_OE_LEVELS = 10;
+import { MAX_OE_LEVELS } from '../utils/bulkEditOe';
 
 type OeLevelInputsProps = {
   levels: string[];

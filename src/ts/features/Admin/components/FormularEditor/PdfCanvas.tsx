@@ -208,8 +208,6 @@ export function PdfCanvas({
 
   useEffect(() => {
     let abgebrochen = false;
-    setPdf(null);
-    setFehler(null);
     void (async () => {
       const pdfjsLib = await ladePdfjs();
       const buf = await datei.arrayBuffer();
@@ -223,7 +221,19 @@ export function PdfCanvas({
     };
   }, [datei]);
 
-  useEffect(() => setAngezeigt(seiteIndex), [seiteIndex]);
+  // Resets bewusst in der Render-Phase (React-Docs: "adjusting state when props change") --
+  // synchrone setState im Effect loesen react-hooks/set-state-in-effect aus.
+  const [prevDatei, setPrevDatei] = useState(datei);
+  if (prevDatei !== datei) {
+    setPrevDatei(datei);
+    setPdf(null);
+    setFehler(null);
+  }
+  const [prevSeiteIndex, setPrevSeiteIndex] = useState(seiteIndex);
+  if (prevSeiteIndex !== seiteIndex) {
+    setPrevSeiteIndex(seiteIndex);
+    setAngezeigt(seiteIndex);
+  }
 
   // PDF-Seite nur bei echtem Seiten-/Zoom-Wechsel rendern. Die Rechteck-Vorschau liegt bewusst auf
   // einem eigenen Overlay-Canvas -- sonst würde jede Mausbewegung beim Ziehen einen kompletten
@@ -261,11 +271,15 @@ export function PdfCanvas({
   }, [pdf, angezeigt, zoom]);
 
   // Schriftgrößen-Messmodus: Textstücke der Seite einsammeln (Position + Größe in PDF-Punkten).
+  // Zuruecksetzen beim Verlassen des Modus/PDF-Wechsels in der Render-Phase (siehe oben).
+  const messAktiv = Boolean(pdf && messModus);
+  const [prevMessAktiv, setPrevMessAktiv] = useState(messAktiv);
+  if (prevMessAktiv !== messAktiv) {
+    setPrevMessAktiv(messAktiv);
+    if (!messAktiv) setMessBoxen([]);
+  }
   useEffect(() => {
-    if (!pdf || !messModus) {
-      setMessBoxen([]);
-      return;
-    }
+    if (!pdf || !messModus) return;
     let abgebrochen = false;
     const seitenNr = Math.min(Math.max(angezeigt, 0), pdf.numPages - 1) + 1;
     void (async () => {

@@ -24,7 +24,7 @@ let adminTabMounted = false;
 
 async function ensureAdminTabMounted(): Promise<void> {
   if (adminTabMounted || !isAdmin()) return;
-  const { mountAdminTab } = await import('@/features/Admin');
+  const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
   const currentUserName = getUserCookie()?.userName ?? 'admin';
   mountAdminTab(currentUserName);
   adminTabMounted = true;

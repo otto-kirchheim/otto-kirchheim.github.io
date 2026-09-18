@@ -2,6 +2,44 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (150)
+
+### refactor (ESLint: alle 54 Warnungen abgebaut — Fast Refresh ueberall wirksam)
+
+- **react-refresh/only-export-components (34 Stellen)**: Nicht-Komponenten-Exporte aus
+  Komponenten-Dateien ausgelagert, damit Vite Fast Refresh nicht mehr auf Full-Reloads
+  zurueckfaellt. Tab-Mounts (`EwtTab`/`EaTab`/`NebenTab`/`BereitschaftTab`) liegen jetzt in
+  den Feature-`index.tsx` (umbenannt von `.ts`), der Admin-Tab-Mount in `Admin/mountAdminTab.tsx`,
+  die Berechnungs-Mounts in `Berechnung/components/mountBerechnung.tsx`, Banner-/Onboarding-Mounts
+  in `conflictReviewBannerMount.tsx` bzw. `OnboardingGuidePanel.tsx`. Reine Helfer wanderten in
+  neue Dateien: `schriftartHelfer.ts`, `seitenHelfer.ts`, `feldPanelHelfer.ts`,
+  `aggregationsHelfer.ts`, `sonderZeilenOptionen.ts`, `formatUptime.ts`; Konstanten
+  (`SIMPLE_FIELD_KEYS`, `MAX_OE_LEVELS`) in `utils/bulkEditOe.ts`. `createAdminUserLinksModal.tsx`
+  und `createAdminBulkEditModal.tsx` enthalten nur noch die Mount-Funktion; die Komponenten liegen
+  in `AdminUserLinksModal.tsx` bzw. `AdminBulkEditModal.tsx`. Die Platzhalter-Hilfe des
+  FormularEditors steckt in `platzhalterHilfe.tsx` + `PlatzhalterHilfeInhalt.tsx`.
+- **react-hooks/set-state-in-effect (13 Stellen)**: synchrone setState-Aufrufe aus Effects
+  entfernt -- State-Resets bei Prop-/Dep-Wechsel laufen jetzt in der Renderphase
+  (prev-Vergleich, React-Docs-Muster: AutoSaveBadge, PdfCanvas, adminDashboardCharts,
+  AdminUserList, AdminResourceBrowser, VorgabenBWeekRangeEditor), asynchrones Laden startet
+  per `queueMicrotask` (AdminUserList, AdminResourceBrowser, AdminProfileTemplatesManager,
+  AdminVorgabenEditor, FormularUpload) bzw. per Promise-Kette (AdminDashboard).
+- **react-hooks/exhaustive-deps (7 Stellen)**: `reload`/`ladeListe`/`ladeUsers` per `useCallback`
+  stabilisiert und als Deps gelistet; drei bewusste Einmal-beim-Dateiwechsel-Effects im
+  FormularEditor mit begruendetem Inline-Disable versehen.
+
+## 2026-09-18 (149)
+
+### fix (EA-Tabelle: Tag-Spalte als `dd DD.MM.` formatiert)
+
+- **Neuer `tagParser` in `EaTab.tsx`**: die Tag-Spalte zeigt jetzt Wochentag + Datum
+  (`Mo 14.09.`) statt des Rohwerts. Weil lokale Schreibpfade (`addEaTag.ts`,
+  `createEditorModalEA.tsx`) `DD.MM.YYYY` speichern, das Backend aber ISO-Strings liefert
+  (Mongo `Date`), parst eine Kaskade erst strikt `dayjs(s, 'DD.MM.YYYY', true)` und faellt
+  bei Ungueltigkeit locker auf ISO zurueck -- jede Einzelvariante allein reichte das jeweils
+  andere Format unformatiert durch (Laufzeitprobe: beide Invalid Date). Muster wie
+  `getMonatFromEA`.
+
 ## 2026-09-18 (148)
 
 ### feat (Fahrzeiten-Sortierung im Karten-Layout)
@@ -86,7 +124,7 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   schon beim Runterziehen neu, ohne Loslassen). Der Container reichte die Geste am oberen Rand an
   den Wurzel-Scroller weiter, dessen native Geste parallel zur eigenen lief -- Headless-Chrome
   kennt sie nicht, daher fiel es im Puppeteer-Test nicht auf. Jetzt `overscroll-behavior-y:
-  contain` an `html`/`body`/`.db-shell-content` und ein nicht-passiver `touchmove` mit
+contain` an `html`/`body`/`.db-shell-content` und ein nicht-passiver `touchmove` mit
   `preventDefault()`, solange gezogen wird (waagerechtes Wischen bleibt beim Browser). Ausgeloest
   wird ausschliesslich im `touchend`, ab `AUSLOESE_DISTANZ_PX`.
 - Getestet in `test/ui.pullToRefresh.test.ts` (Daempfung, Zurueckschnappen, Ausloesen erst beim
@@ -279,7 +317,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   geschrumpft (`document.querySelector('#tableVE')?.instance` + `rows.load()`).
 - Verifiziert: `bunx tsc --noEmit`, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
   unveraendert), `bun run test` (2141/2141 pass, 4 neu durch die `VorgabenBTable`-Tests), `bun run
-  build` gruen, sowie mehrere manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server (alle
+build` gruen, sowie mehrere manuelle Puppeteer-Durchklicks gegen den laufenden Dev-Server (alle
   6 Tabellen mounten mit funktionierendem `.instance`, Sortier-Klicks, externe synchrone
   Feld-Schreibzugriffe erscheinen sofort im DOM, `tableVE`s "Standardeinstellungen"-Knopf laedt
   den Offline-Fallback korrekt) -- keine Konsolenfehler.
@@ -405,8 +443,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   DB-UX-Quellcode bewusst `justify-items: center` auf der `1fr`-Spalte "brand" (offizielles
   Verhalten fuer diesen Modus, kein Bug). Per CSS-Override auf `justify-items: start`
   korrigiert -- `actions-1`/`drawer-button` sind `min-content`-Spalten, davon unberuehrt.
-- **Drawer schliesst nicht bei Klick auf Einstellungen:** seit dem `actions2`-Umbau (Eintrag
-  133) sitzen Einstellungen/Admin/Theme auf Mobile im `DBDrawerFooter` -- AUSSERHALB von
+- **Drawer schliesst nicht bei Klick auf Einstellungen:** seit dem `actions2`-Umbau (Eintrag 133) sitzen Einstellungen/Admin/Theme auf Mobile im `DBDrawerFooter` -- AUSSERHALB von
   `.db-control-panel-mobile-drawer-scroll-container`, dem einzigen Bereich, den
   `DBControlPanelMobile`s eingebauter Auto-Close-Klick-Handler beobachtet.
   `DBControlPanelMobile` bietet keinen `open`/`onToggle`-Prop von aussen. Neuer Helfer
@@ -561,7 +598,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   7 Tabs x 4 Breakpoints (375/768/1024/1440px) gegen den funktionalen Stand verglichen, dabei
   zwei Regressionen gefunden: bei 375px ueberlaeuft die Bereitschaftszeitraum-Tabelle (Pause-
   Spalte faellt aus dem Viewport), UND der fixierte App-Footer (`body { padding-block-end:
-  3.5rem }`, Hartwert kalibriert auf die 14px-Wurzel von `functional`) rutscht in den
+3.5rem }`, Hartwert kalibriert auf die 14px-Wurzel von `functional`) rutscht in den
   Seiteninhalt statt ans Ende. Auf Rueckfrage stellte sich heraus: das eigentliche Problem war
   gar nicht die globale Dichte, sondern schlicht `size="small"` an den Zeilen-Knoepfen.
 - Fix (chirurgisch, ohne Density-Aenderung): `CustomTableView.tsx`s `editingButton()` (Bearbeiten/
@@ -701,7 +738,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   zurueckgesetzt, siehe `MyCheckbox.tsx`s Kommentar zum selben Muster).
 - "Büro"-Checkbox: Erklaerungstext `(Keine Fahrt zu einem Einsatzort)` auf eigene Zeile mit
   Abstand. Ein einfaches `<br/>` reichte NICHT, da das Switch-Label `display: flex;
-  flex-direction: row` ist -- Kinder liegen als Flex-Items nebeneinander, unabhaengig vom
+flex-direction: row` ist -- Kinder liegen als Flex-Items nebeneinander, unabhaengig vom
   `<br/>`. Fix: Text in einen `<span>` gebuendelt (ein Flex-Item, darin normaler Textfluss),
   `<small className="d-block mt-1">` fuer Zeilenumbruch + Abstand. Zusaetzlich `mt-2` an der
   Büro-Checkbox-Zeile fuer mehr Abstand zur "Berechnen"-Zeile darueber.
@@ -782,7 +819,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   2. **Der eigentliche Blocker:** `styles.scss` hatte `footer { pointer-events: none; }` als
      Tag-Selektor (fuer die eigene fixierte `.app-footer`-Leiste gedacht) -- das traf aber JEDES
      `<footer>`-Element im Dokument, auch `DBDrawerFooter` (rendert selbst ein `<footer
-     class="db-drawer-footer">`). Der Knopf war dadurch optisch vorhanden, aber fuer echte
+class="db-drawer-footer">`). Der Knopf war dadurch optisch vorhanden, aber fuer echte
      Mausklicks unerreichbar (`elementFromPoint()` an seiner Position lieferte den
      `.db-drawer-container` dahinter). Ein per JS ausgeloester Klick (Test, Screenreader) hatte
      das Problem verdeckt, weil er kein Hit-Testing macht. Fix: Selektor auf `.app-footer`
@@ -813,7 +850,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   Vertrag fuer `savePipeline.ts`/`overlapGuard.ts`/`changeTracking.ts` unangetastet.
 - `tr.data = row`-Verknuepfung (von `attachBerechnenToggleListeners.ts`, EWT, extern gelesen)
   per `ref`-Callback nachgebildet; mobiler Zeilen-Klick-Handler korrekt auf `event.view?.
-  innerWidth` umgestellt (statt globalem `window.innerWidth`).
+innerWidth` umgestellt (statt globalem `window.innerWidth`).
 - `column.html`-Spalten (EWT: `Schicht`/`berechnen`) liefern jetzt JSX direkt statt HTML-Strings
   fuer `dangerouslySetInnerHTML` — sauberer fuer die interaktive `berechnen`-Checkbox.
 - Zeilen-Aktions- und Fusszeilen-Knoepfe sind jetzt echte `<DBButton>` statt der
@@ -935,7 +972,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   `.tab-pane`-Panels bleiben statisches HTML (Phase L), ihr `.active`/`.show`-Wechsel läuft
   weiter imperativ.
 - A11y: roving `tabindex` bleibt korrekt — "Berechnung" (Default-Fokusziel bei `aktiverTab ===
-  null`) fällt jetzt auf `tabIndex={aktiverTab === null || aktiverTab === 'Berechnung' ? 0 : -1}`
+null`) fällt jetzt auf `tabIndex={aktiverTab === null || aktiverTab === 'Berechnung' ? 0 : -1}`
   zurück statt fest auf `0`.
 - `ui.tabController.test.ts`: Assertions auf `aria-selected`/`data-active` per
   `document.querySelector` durch `getAktivenTab()`-Prüfung ersetzt; `beforeEach` resettet den
@@ -953,16 +990,16 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   rendert ein `<div>`, kein `<a>`). `navDrawer.ts`/`NavDrawerShell.tsx` (Phase K4) vollständig
   gelöscht — `DBHeader` bringt den Drawer eingebaut mit.
 - **Kernfund:** `DBHeader` rendert seine `children` zweimal gleichzeitig im DOM (Desktop-Kopfzeile
-  + Drawer-Kopie), kein Umzugs-Kniff wie zuvor. Bricht jeden `querySelector('#id')`-Aufrufer, der
-  genau ein Element erwartet:
-  - `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
+  - Drawer-Kopie), kein Umzugs-Kniff wie zuvor. Bricht jeden `querySelector('#id')`-Aufrufer, der
+    genau ein Element erwartet:
+  * `auth/index.ts`: `#admin-tab`-Click-Listener + `#admin`-Toggle auf `querySelectorAll`
     umgestellt.
-  - `#navmenu`/`#btn-navmenu` (Sichtbarkeits-Toggle bei Login/Logout/Session-Restore) gibt es
+  * `#navmenu`/`#btn-navmenu` (Sichtbarkeits-Toggle bei Login/Logout/Session-Restore) gibt es
     unter `DBHeader` nicht mehr — ersetzt durch `navigationVisibleStore.ts`/
     `useNavigationVisible.ts`. Burger-Knopf bleibt immer sichtbar (keine Versteck-Option in
     `DBHeader`).
-  - `tabController.ts`: Fokus-Lookup in `zeigeTab()` bevorzugt jetzt die sichtbare Kopie.
-  - `ThemeSwitcher` (Phase K2) ist jetzt direkt eingebettet statt separat gemountet, dadurch
+  * `tabController.ts`: Fokus-Lookup in `zeigeTab()` bevorzugt jetzt die sichtbare Kopie.
+  * `ThemeSwitcher` (Phase K2) ist jetzt direkt eingebettet statt separat gemountet, dadurch
     ebenfalls dupliziert — `useColorMode` von lokalem `useState` auf modul-globalen Store
     umgebaut (sonst unsynchronisierte Theme-Anzeige zwischen den Kopien), feste Ids auf `useId()`
     umgestellt.
@@ -976,7 +1013,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   1. `{sichtbar && <DBNavigation>}` (bedingtes Rendern) war der falsche Ansatz — die Navigation
      existierte bis zum Login gar nicht im DOM, `updateTabVisibility()`/Admin-Toggle/Klick-Listener
      liefen davor ins Leere und nie wieder. Fix: `<DBNavigation className={sichtbar ? undefined :
-     'd-none'}>`, immer gerendert.
+'d-none'}>`, immer gerendert.
   2. `updateTabVisibility.ts` nutzte `querySelector` (nur eine Kopie) — Bereitschaft/EWT/Neben/EA
      blieben in der Drawer-Kopie versteckt. Auf `querySelectorAll` umgestellt.
   3. `d-lg-none`/`d-lg-inline` an drei Stellen (`#startSchnellzugriff`, `AppHeader.tsx`s
@@ -1386,7 +1423,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
   Arbeit → entfernt.
 - `.border-2` hatte keine Regel (nur `.border-1`) → die 2px-Betonung (OeLevelInputs,
   Formel-Verschachtelung, Signatur-Griff) wirkte nicht. `.border-2 { border-width:
-  var(--db-border-width-xs) }` in `utilities.scss` ergänzt, damit die 3 Aufrufstellen greifen.
+var(--db-border-width-xs) }` in `utilities.scss` ergänzt, damit die 3 Aufrufstellen greifen.
 
 ## 2026-09-10 (88)
 
@@ -1494,7 +1531,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
 
 - `generatePDF` (`infrastructure/data/generatePDF.ts`, `modus 'E'`) druckt beim Einsatzort jetzt
   Tätigkeitsstätte **und** Beschreibung (`VorgabenU.Fahrzeit[].key` + `.text`), getrennt mit
-  ` | `, statt nur der Tätigkeitsstätte. Auflösung über eine einmalig gebaute `Map` (key -> text);
+  `|`, statt nur der Tätigkeitsstätte. Auflösung über eine einmalig gebaute `Map` (key -> text);
   fehlt eine Beschreibung, bleibt es beim reinen Ort (`filter(Boolean)`).
 - Kein Datenmodell-/Typsystem-Spiegel betroffen: `Einsatzort` bleibt ein String-Feld, die
   EWT-Zeile speichert weiterhin nur den `key`.
@@ -1635,7 +1672,7 @@ ist -- keine Meldung, wenn dieselbe Information bereits anderweitig sichtbar ist
 
 ### feat (PDF-Vorlagen-Cache im Hintergrund vorwaermen)
 
-- `formularVersionCache`/`vorlagenPdfCache` fuellten sich bisher erst *nach* dem ersten
+- `formularVersionCache`/`vorlagenPdfCache` fuellten sich bisher erst _nach_ dem ersten
   erfolgreichen PDF-Export. Bricht die Verbindung waehrend des ersten Exports eines Monats weg,
   war der Cache leer und der Export schlug fehl.
 - Neu: `warmeFormularCaches()` (`infrastructure/pdf/warmeFormularCaches.ts`) loest die zum
@@ -2456,18 +2493,19 @@ im Select und die Vorschau nutzt die `FontFace` (`vfp-…`), 0 neue Konsolenfehl
 ### feat (FormularEditor: gedrehte Vorlagen -- Feld- und Tabellen-Geometrie um 90/180/270 drehen)
 
 Zeigt eine neue Vorlage dasselbe Formular gedreht (Hoch- statt Querformat o.ae.), reicht Skalieren
-+ Versatz nicht -- die Skalier-Leiste hat jetzt zusaetzlich **„Drehen" (0/90/180/270°)**:
 
-- **Felder und Signaturflaeche** werden konkret um den Seitenmittelpunkt umgerechnet
+- Versatz nicht -- die Skalier-Leiste hat jetzt zusaetzlich **„Drehen" (0/90/180/270°)**:
+
+* **Felder und Signaturflaeche** werden konkret um den Seitenmittelpunkt umgerechnet
   (`skaliereKonfig.ts::dreheKonfig`, `alt`-Seitenmasse als Referenz), die `drehung` jeder Zelle
   mitgezaehlt, die Referenzgroesse (`SeitenDef.groesse`) getauscht.
-- **Datentabellen** bleiben in der Konfiguration aufrecht (`startY`, `spalten[].x`, `hoehe`
+* **Datentabellen** bleiben in der Konfiguration aufrecht (`startY`, `spalten[].x`, `hoehe`
   unveraendert) -- neu ist nur `TabellenDef.drehung` bzw. `TabellenBereich.drehung`. Renderer
   (`build.ts`) und Editor-Vorschau (`sammleRechtecke`) drehen jede fertige Tabellenzelle ueber
   `infrastructure/pdf/tabellenDrehung.ts` um den Seitenmittelpunkt; der Editor-Drag auf einer
   gedrehten Tabelle rechnet die gezogene Flaeche per `entdrehePunkt` zurueck. `verteile.ts`
   (Paginierung ueber `maxZeilen`) bleibt unberuehrt.
-- Reihenfolge: **erst im aufrechten Layout skalieren, dann drehen** (`FormularEditor.skalierenUndDrehen`).
+* Reihenfolge: **erst im aufrechten Layout skalieren, dann drehen** (`FormularEditor.skalierenUndDrehen`).
   So bekommen Felder UND Tabellen `f.x` auf x und `f.y` auf y, bevor die Drehung die Achsen
   tauscht -- vorher liefen die Faktoren bei gedrehten Tabellen ueber Kreuz (Feld-x-Faktor wirkte
   auf die Tabellen-y-Position). Beim Setzen des Winkels schlaegt die Leiste die Faktoren so vor,
@@ -2478,8 +2516,9 @@ Zeigt eine neue Vorlage dasselbe Formular gedreht (Hoch- statt Querformat o.ae.)
 
 Verifiziert: `tsc`/`eslint` (FE/BE/Shared) sauber; `bun test` -- neue `tabellenDrehung`- (6) und
 erweiterte `skaliereKonfig`-/`build`-Suiten gruen (2055 gesamt); Headless-Chrome-Smoke: Drehen 90°
-+ Anwenden schreibt Feld `{x50,y700}->{x142,y50}`, `tabellen.haupt.drehung=90`, `groesse` getauscht,
-keine neuen Konsolenfehler. Drag auf gedrehter Tabelle nicht headless simuliert -- manuell pruefen.
+
+- Anwenden schreibt Feld `{x50,y700}->{x142,y50}`, `tabellen.haupt.drehung=90`, `groesse` getauscht,
+  keine neuen Konsolenfehler. Drag auf gedrehter Tabelle nicht headless simuliert -- manuell pruefen.
 
 ## 2026-08-29 (49)
 
@@ -2552,7 +2591,7 @@ Vier Erweiterungen am PDF-Vorlagen-Editor (`features/Admin/components/FormularEd
   Schriftgroesse und Tabellen-Zeilenhoehe (Skalare) folgen dem Y-Faktor, ohne Versatz. Auch
   manuell ueber einen Toolbar-Button. Neu: `SeitenDef.groesse` (Punkt-Masse der Vorlagenseite)
   wird vom Editor beim Laden nachgetragen und dient als Referenz.
-- **Schriftgroessen-Messmodus** auf dem bestehenden `PdfCanvas`: laedt man die *ausgefuellte*
+- **Schriftgroessen-Messmodus** auf dem bestehenden `PdfCanvas`: laedt man die _ausgefuellte_
   Vorlage, blendet der Toolbar-Toggle "Schriftgroesse messen" die Textstuecke der PDF
   (`page.getTextContent()`) als klickbare Kaestchen ein; ein Klick liefert die Schriftgroesse
   (`hypot(transform[2], transform[3])`) und die Font-Familie -- in die Zwischenablage oder, mit
@@ -2626,7 +2665,7 @@ auf. Alle Aenderungen sind reine Extraktionen ohne Verhaltensaenderung:
 - `Bereitschaft/index.ts`s `BereitschaftsEinsatzZeiträume`-Konstante nach
   `Bereitschaft/utils/constants.ts` verschoben -- löst den
   `BereitschaftTab.tsx <-> components/index.ts <-> createAddModalBereitschaftsZeit.tsx <->
-  Bereitschaft/index.ts`-Importzyklus vollständig auf (per `graphify update .` bestätigt).
+Bereitschaft/index.ts`-Importzyklus vollständig auf (per `graphify update .` bestätigt).
   Nebeneffekt: Vite konnte dadurch einen zusätzlichen `utils`-Chunk abspalten, Gesamtgröße
   unverändert, nur anders verteilt.
 - `customTableRender.ts`: `sortRows`/`handleSortClick` waren nur innerhalb der eigenen Datei
@@ -3024,6 +3063,7 @@ wie bei Bereitschaft vorberechnet beim Download) -- der bereits bestehende `Bere
 Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
 
 **Vier weitere Browser-Test-Funde (User, direkt im Anschluss):**
+
 1. Testdaten-Vorschau zeigte keine Beispielwerte für Sonderzeilen-Zellen -- `SonderZeilen.tsx` rief
    `sonderZeileZelleWert()`/`zeilenFuerUeber()` bisher gar nicht auf. Fix: `SonderZeilen` bekommt
    `tabelleName`/`vorschau` (wie andere Editor-Komponenten) und zeigt je Zelle dieselbe `WertVorschau`
@@ -3053,8 +3093,8 @@ Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
 
 - **`shared/src/formular/types.ts`:** `SonderZeileArt` (`kopf`/`summe`/`bereinigt`/`summeGeld`),
   `SonderZeileZelle` und `SonderZeile` (`ueber` + `zellen`) neu. `TabellenDef.sonderzeilen?:
-  Record<string, SonderZeile>` (Inhalt, wie `listen`), `TabellenBereich.sonderzeilen?: {name; y;
-  y2?}[]` (Platzierung je Seite -- ein `name` darf mehrfach vorkommen, deckt "Überschrift oben +
+Record<string, SonderZeile>` (Inhalt, wie `listen`), `TabellenBereich.sonderzeilen?: {name; y;
+y2?}[]` (Platzierung je Seite -- ein `name` darf mehrfach vorkommen, deckt "Überschrift oben +
   Kopie unten" mit EINER Inhaltsdefinition ab). `Berechnet.liste.index` von Pflicht auf optional --
   ohne `index` Gesamtsumme über ALLE Einträge einer Gruppe statt über einen Platz.
   **Zwei Browser-Test-Funde (User):** (a) über eine Vorlage angelegte dynamische Spalten teilen sich
@@ -3073,7 +3113,7 @@ Mechanismus (Eintrag 29) bleibt damit unverändert die Grundlage.
   je nach `liste.art` auf `summeGruppe()`/`summeBereinigtGruppe()`/`summeGeldwertGruppe()`, mit
   `index` entsprechend auf den bestehenden Platz-Pfad (`geldwertZulagenCode()`/
   `bereinigteZulagenStunden()`/roh). `Berechnet.liste.geldwert: boolean` durch `art?:
-  'summe'|'bereinigt'|'summeGeld'` ersetzt (Default `'summe'`) -- vereinheitlicht Platz- und
+'summe'|'bereinigt'|'summeGeld'` ersetzt (Default `'summe'`) -- vereinheitlicht Platz- und
   Gesamtsumme-Fall auf dieselbe Arten-Auswahl wie `SonderZeileZelle.art`. Neue Funktionen
   `zeilenFuerUeber()` (Zeilen einer Sonderzeile, eingegrenzt auf eine Tabelle) und
   `sonderZeileZelleWert()` (Zellinhalt je `art`; für eine Ankreuz-Spalte (`wenn`) zählt `'summe'` die
@@ -3399,7 +3439,7 @@ Verifiziert: `tsc`/Lint sauber, 1597/1597 -- siehe Root-`CHANGELOG.md` für die 
 Reine Code-Qualitaet, kein Verhaltensaenderung.
 
 - `infrastructure/data/download.ts`: die Ternary-Kette (`modus === 'EA' ? 'ea' : modus === 'E' ?
-  'ewt' : 'bereitschaft'`) durch ein `{ [key in typeof modus]: string }`-Lookup ersetzt, analog dem
+'ewt' : 'bereitschaft'`) durch ein `{ [key in typeof modus]: string }`-Lookup ersetzt, analog dem
   bestehenden `vorDateiName`-Muster weiter unten in derselben Datei. `typeof modus` greift dort die
   durch die vorausgehende `if`-Bedingung genarrowte Union (`'EA'|'E'|'B'`) ab -- kommt kuenftig ein
   vierter Modus zur Bedingung dazu, ohne das Lookup-Objekt nachzuziehen, ist das ein Compile-Error
@@ -3482,11 +3522,11 @@ Darstellungsmodi.**
     `maxWidth:100vw`) MIT kompakter Kopf-/Fußzeile (neue `.signatur-modal-kompakt`-Klasse,
     kleineres Padding/Titel-Schrift) -- gewinnt zusätzlichen Vertikalraum zurück statt ihn an
     Bootstraps Standard-Chrome zu verlieren.
-  Ergebnis wird direkt als `canvas.style.width/height` (px) sowie `dialog.style.maxWidth/margin`
-  gesetzt, neu berechnet bei `shown.bs.modal` UND bei jedem `resize` (Handydrehung, Fenster
-  verschieben) -- eine einzige Formel deckt beide Fälle ab, keine CSS-Breakpoint-Klasse mehr nötig.
+    Ergebnis wird direkt als `canvas.style.width/height` (px) sowie `dialog.style.maxWidth/margin`
+    gesetzt, neu berechnet bei `shown.bs.modal` UND bei jedem `resize` (Handydrehung, Fenster
+    verschieben) -- eine einzige Formel deckt beide Fälle ab, keine CSS-Breakpoint-Klasse mehr nötig.
 - **`scss/styles.scss`:** `.signatur-canvas` auf `display:block; margin:0 auto; box-sizing:
-  border-box` reduziert (Größe kommt vollständig aus JS; `border-box` verhindert, dass der 1px-
+border-box` reduziert (Größe kommt vollständig aus JS; `border-box` verhindert, dass der 1px-
   Rahmen zur gesetzten Größe dazukommt statt darin enthalten zu sein); neue
   `.signatur-modal-kompakt`-Klasse für den Fullscreen-Fall.
 
@@ -3599,7 +3639,7 @@ Siehe Root-`CHANGELOG.md` für den vollen Kontext.
 - **`dummyDaten.ts`:** `platzhalter()`-Rückgabetyp auf `boolean` erweitert (Folge der `werte`-
   Erweiterung).
 - **Tests:** `test/infrastructure/pdf/wert.test.ts` (Feld-Ebene), `shared/tests/formular/
-  aggregatoren.test.ts` (`trifftBedingung`), `test/features/Admin/FormularEditor/dummyDaten.test.ts`
+aggregatoren.test.ts` (`trifftBedingung`), `test/features/Admin/FormularEditor/dummyDaten.test.ts`
   (Vorschau-Zeilen mit `werte: [true]`).
 
 Verifiziert: `tsc --noEmit`/ESLint sauber, voller Testlauf 1590/1590 grün.
@@ -3732,7 +3772,7 @@ Gleiches Cutover-Muster wie EA (Phase 9). Siehe Root-`CHANGELOG.md` fuer den vol
   `werte` (siehe Kommentar in `abgeleiteteWerte.ts` fuer die Begruendung).
 - **`test/Utilities/download.test.ts`:** Bestandstests fuer `modus 'E'` auf den neuen Pfad
   umgeschrieben. Dabei einen Mock-Queue-Versatz gefunden: ein Test rief weiterhin `download(...,
-  'E')` mit einem auf `mockDownloadPdf` gequeueten `mockResolvedValueOnce` auf, das nach dem Cutover
+'E')` mit einem auf `mockDownloadPdf` gequeueten `mockResolvedValueOnce` auf, das nach dem Cutover
   nie mehr konsumiert wurde und dadurch mehrere NACHFOLGENDE Tests (`modus 'N'`/`'B'`) mit falschen
   Werten versorgte -- jeder Einzeltest lief isoliert grün, nur in der vollen Suite sichtbar. Fix:
   betroffenen Test auf `modus 'B'` umgestellt (ruft weiterhin `downloadPdf` auf). Lehre in
@@ -3778,7 +3818,7 @@ bisher ungeprüft ohne Auth-Header (Kommentar in `build.ts`: "Anbindung folgt in
 Anbindung jetzt nachgezogen.
 
 - **`infrastructure/pdf/ladeFormular.ts`** (neu): `ladeUndErzeugePdf(formular, stichtag, daten,
-  signaturPng?)` löst die gültige Version server-seitig auf (`GET /formulare/:f?stichtag=`), lädt
+signaturPng?)` löst die gültige Version server-seitig auf (`GET /formulare/:f?stichtag=`), lädt
   die Vorlage authentifiziert nach (`holeVorlageAlsDatei`, verschoben aus
   `Admin/components/formularVersionenApi.ts` -- Layer-Regel verletzt, wenn `infrastructure/` aus
   `features/` importiert) und biegt `layout.template` auf eine lokale `blob:`-URL um, bevor `build()`
@@ -3950,11 +3990,11 @@ Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submod
 - **Waisenzeilen-Schutz entfernt** (User-Fund „Seite 2 hat 11 Zeilen, es werden aber nur 10 eingetragen", danach User-Entscheidung). Der Schutz aus Phase 5 zog eine Zeile von der Vorseite nach, wenn die letzte Seite sonst nur eine einzige Zeile getragen hätte. Auf einem Formular mit vorgedruckten Zeilen hinterlässt das mitten im Dokument einen freien Platz, der wie ein vergessener Eintrag aussieht — und ein Prüfer kann nicht erkennen, ob dort etwas fehlt. Seiten füllen sich jetzt streng der Reihe nach; eine letzte Seite mit einer einzigen Zeile ist ausdrücklich in Ordnung. Neuer Test hält fest, dass **nur** die letzte Seite angebrochen sein darf.
 - **Verifikation:** `lint`, `tsc --noEmit`, `test` (1534/1534; der `$laufend`-Test nutzt einen eigenen Kontext mit Zeilen einer Folgeseite, sonst wären laufende Summe und Gesamtsumme in der Fixture zufällig gleich). Am real erzeugten dreiseitigen PDF nachgerechnet — 24 Zeilen à 2:30, Tage 1 bis 24 lückenlos:
 
-  | Seite | Zeilen | Übertrag | diese Seite | bis hierher | gesamt |
-  | --- | --- | --- | --- | --- | --- |
-  | 1 von 3 | 12 von 12 | 0:00 | 30:00 | 30:00 | 60:00 |
-  | 2 von 3 | 11 von 11 | 30:00 | 27:30 | 57:30 | 60:00 |
-  | 3 von 3 | 1 von 11 | 57:30 | 2:30 | 60:00 | 60:00 |
+  | Seite   | Zeilen    | Übertrag | diese Seite | bis hierher | gesamt |
+  | ------- | --------- | -------- | ----------- | ----------- | ------ |
+  | 1 von 3 | 12 von 12 | 0:00     | 30:00       | 30:00       | 60:00  |
+  | 2 von 3 | 11 von 11 | 30:00    | 27:30       | 57:30       | 60:00  |
+  | 3 von 3 | 1 von 11  | 57:30    | 2:30        | 60:00       | 60:00  |
 
 ## 2026-08-16 (9)
 
@@ -3972,7 +4012,7 @@ Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submod
 - **User-Wunsch:** die Beispielwerte direkt im Editor sehen, „so dass ich z.B. auch die Summen richtig sehe". Bisher war jeder Wert nur über die Testdaten-Vorschau als PDF prüfbar — für einen Tippfehler im Datenpfad oder einen falschen Summenbezug ein unverhältnismäßig langer Weg.
 - **Jedes Feld und jede Spalte zeigt jetzt ihren gerenderten Beispielwert** unter den Einstellungen, leere Werte als `(leer)` gekennzeichnet. Berechnet wird er über denselben `wert()`/`spaltenWert()`-Pfad wie im PDF, es kann also nicht auseinanderlaufen.
 - **Die Vorschau bekommt den echten Renderer-Kontext** (`erzeugeVorschau()`): die Beispielzeilen werden über `verteile()` auf Seiten aufgeteilt und die zum aktiven Tab passende Seite ausgewählt. Dadurch stimmen `$alle`-Gesamtsummen, `$seite`-Zwischensummen **und** der `$bisher`-Übertrag — letzterer wäre mit einem Behelfskontext immer 0 geblieben, also genau bei dem Feld nutzlos, das am schwersten zu prüfen ist. Auch `{seite}`/`{seite-1}` zeigen die Nummern der gewählten Seite. Wirft `verteile()` bei halbfertiger Konfiguration, fällt die Vorschau auf eine Einzelseite zurück, statt die Feldliste unbrauchbar zu machen.
-- **Bugfix Testdaten-Vorschau:** Datenpfade **innerhalb** von Text-Platzhaltern wurden nie mit Beispielwerten belegt — `Zulagen {Monat}/{Jahr}` erschien im Vorschau-PDF als „Zulagen /". Ursache war eine zu grobe Regel („feste Texte lesen nichts aus den Daten"): der Feld-*Key* ist bei einem Textfeld tatsächlich kein Datenpfad, die Pfade stecken aber in den Platzhaltern. Neue `datenPlatzhalter()` zieht genau diese heraus (ohne die vom Kontext bedienten `seite`/`seiten`/`heute`), sie werden jetzt mitbefüllt.
+- **Bugfix Testdaten-Vorschau:** Datenpfade **innerhalb** von Text-Platzhaltern wurden nie mit Beispielwerten belegt — `Zulagen {Monat}/{Jahr}` erschien im Vorschau-PDF als „Zulagen /". Ursache war eine zu grobe Regel („feste Texte lesen nichts aus den Daten"): der Feld-_Key_ ist bei einem Textfeld tatsächlich kein Datenpfad, die Pfade stecken aber in den Platzhaltern. Neue `datenPlatzhalter()` zieht genau diese heraus (ohne die vom Kontext bedienten `seite`/`seiten`/`heute`), sie werden jetzt mitbefüllt.
 - **Zweite Werteart „Beispieldaten"** (User-Nachtrag: „ich möchte nicht »Testwert 1« stehen haben, sondern einen passenden Wert"). Der Datenkatalog trägt jetzt je Feld einen fachlich passenden Beispielwert — konstant (Nachname „Mustermann", Betrieb, Entgeltgruppe) oder als Funktion über den Zeilenindex, wo Wiederholung stören würde (Tage, Auftragsnummern). Beide Vorschauen bleiben nebeneinander bestehen: `Beispieldaten` sieht aus wie ein ausgefülltes Formular, `Platzhalter` zeigt weiterhin, welche Zelle zu welchem Eintrag gehört. Die Werte-Vorschau in der Feldliste nutzt die Beispieldaten. Pfade ohne hinterlegtes Beispiel fallen auf den generischen Platzhalter zurück.
   - Für Bereitschaft liegt hinter `Beginn`/`Ende` bewusst ein **Zeitstempel**, kein `"HH:mm"`: Format „Uhrzeit" liest daraus die Tageszeit, „Datum kurz" das Datum — ein Wert bedient damit BZ (Zeitraum über Tage) und BE (Einsatz-Uhrzeit) gleichermaßen.
   - Bei berechneten Spalten werden die Operanden zuerst aus dem Katalog belegt, sonst gewinnt der generische Zeitwert über das `??=` in `fuelleOperanden()`.
@@ -4173,7 +4213,7 @@ Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submod
 - **Fix:** `advanceToNextEwt` setzt `select.value` nach `applySelectOptions` explizit auf den naechsten Eintrag (`next?._id ?? ''`), statt sich auf das automatische Beibehalten zu verlassen.
 - **Neuer Fallback ohne freien EWT-Eintrag:** Statt Tag/Dauer nur zu leeren, wird jetzt der naechste Kalendertag im Monat ohne bestehenden EA-Eintrag vorgeschlagen (`findNextFreeDay`). Entspricht dieser Tag zufaellig einem noch nicht verknuepften EWT-Eintrag (z.B. gerade erst angelegt), wird direkt dieser verknuepft statt Tag/Dauer manuell zu verlangen.
 - **Nachbesserung 1 (weiterhin wurde immer der erste statt der naechste EWT-Eintrag gewaehlt):** `getUsedEwtRefs` las den "bereits verknuepft"-Status bisher aus dem Storage-Snapshot (`Storage.get('dataEA')`) — dieser wird erst durch `persistTableData`/`mergeVisibleResourceRows` geschrieben, ein Roundtrip mit eigener Serialisierungs-/Filterlogik. Liest jetzt direkt aus der Live-Tabelle (`tableEA.rows.array`), synchron und ohne Storage-Abhaengigkeit — `findNextAvailableEwt` erkennt den gerade verknuepften Eintrag dadurch zuverlaessig als verbraucht.
-- **Nachbesserung 2 (Weiterschalten sprang bei fruehen Luecken zurueck statt vorwaerts):** Beispiel: Tag 1 hat bereits einen EA-Eintrag, Tag 2 ist offen (kein EWT-Bezug), Tag 3 wird gerade angelegt — danach sollte Tag 4 folgen, es kam aber wieder Tag 2. Ursache: `findNextAvailableEwt` suchte den chronologisch *ersten* noch offenen EWT-Eintrag im gesamten Monat, nicht den naechsten *nach* dem gerade bearbeiteten Tag — ein frueher liegender, weiterhin unverknuepfter Tag riss den Fortschritt bei jedem Speichern zurueck. Neuer optionaler `after`-Parameter (chronologisch letzter bearbeiteter Tag, aus dem `Tag`-Feld unmittelbar vor dem Ueberschreiben gelesen) grenzt die Suche auf "danach" ein; `findNextFreeDay`-Fallback bekommt denselben unteren Rand. Tag 2 bleibt dabei jederzeit manuell ueber das Dropdown waehlbar, wird nur nicht mehr automatisch angesprungen.
+- **Nachbesserung 2 (Weiterschalten sprang bei fruehen Luecken zurueck statt vorwaerts):** Beispiel: Tag 1 hat bereits einen EA-Eintrag, Tag 2 ist offen (kein EWT-Bezug), Tag 3 wird gerade angelegt — danach sollte Tag 4 folgen, es kam aber wieder Tag 2. Ursache: `findNextAvailableEwt` suchte den chronologisch _ersten_ noch offenen EWT-Eintrag im gesamten Monat, nicht den naechsten _nach_ dem gerade bearbeiteten Tag — ein frueher liegender, weiterhin unverknuepfter Tag riss den Fortschritt bei jedem Speichern zurueck. Neuer optionaler `after`-Parameter (chronologisch letzter bearbeiteter Tag, aus dem `Tag`-Feld unmittelbar vor dem Ueberschreiben gelesen) grenzt die Suche auf "danach" ein; `findNextFreeDay`-Fallback bekommt denselben unteren Rand. Tag 2 bleibt dabei jederzeit manuell ueber das Dropdown waehlbar, wird nur nicht mehr automatisch angesprungen.
 - **Verifikation:** `bun run lint`, `bunx tsc --noEmit`, `bun run format`, `bun run test` (1432 Tests) gruen.
 
 ### fix (Admin: Taetigkeit/Entgeltgruppe-Felder im User-Profil-Editor unsichtbar)
@@ -4192,8 +4232,8 @@ Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submod
 
 ### fix (AutoSave: Commit-Race verlor waehrend eines laufenden Saves neu angelegte/geaenderte Zeilen)
 
-- **Problem:** `_commitCreateAndUpdate` (`CustomTable.ts`) setzte nach jedem erfolgreichen Bulk-Save unconditional alle aktuell `new`/`modified`/`deleted` Zeilen zurueck, ermittelt aus dem *aktuellen* Tabellenzustand statt aus dem Zustand zum Zeitpunkt des Requests. Legte ein Nutzer waehrend eines laufenden AutoSave-Requests (Netzwerk-Roundtrip) eine neue Zeile an oder aenderte eine bestehende, wurde diese Zeile beim Commit der vorherigen Antwort ebenfalls als "gespeichert" markiert — ohne je an den Server gesendet worden zu sein. Neue Zeilen verloren dabei endgueltig ihre `_id`-Zuordnung und waren fuer `getChanges()` danach unsichtbar (stiller Datenverlust); geaenderte Zeilen verloren die zuletzt eingetippte Aenderung. Der bestehende `queuedDuringSave`-Mechanismus (siehe Eintrag vom 2026-08-03, "AutoSave-Race") loeste zwar zuverlaessig einen Folge-Save aus, kam aber zu spaet — der fehlerhafte Commit war zu dem Zeitpunkt bereits gelaufen.
-- **Fix:** Neue Methode `Rows.getChangeRows()` liefert die Row-*Referenzen* (statt Zellen-Kopien) hinter den aktuellen Aenderungen; `getChanges()` baut jetzt darauf auf (eine gemeinsame Filterquelle statt zwei unabhaengig gepflegter). `saveResourceNow` (`autoSave.ts`) nimmt vor dem Request einen Row-Referenz-Snapshot und reicht ihn als `includedRows` an `commitChanges`/`commitAutoSave` durch — nur Zeilen aus diesem Snapshot werden committet/entfernt, alles danach Angelegte/Geaenderte bleibt unangetastet und wird vom naechsten (bereits vorhandenen) Save-Lauf sauber erfasst. `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und `collectRowErrorMatches` (`savePipeline.ts`) nutzen denselben Snapshot statt den Live-Tabellenzustand erneut zu filtern, damit sich Positions-Indizes nicht mehr durch zwischenzeitliche Aenderungen verschieben koennen. `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) markiert ebenfalls nur noch Zeilen aus dem Snapshot als Fehler.
+- **Problem:** `_commitCreateAndUpdate` (`CustomTable.ts`) setzte nach jedem erfolgreichen Bulk-Save unconditional alle aktuell `new`/`modified`/`deleted` Zeilen zurueck, ermittelt aus dem _aktuellen_ Tabellenzustand statt aus dem Zustand zum Zeitpunkt des Requests. Legte ein Nutzer waehrend eines laufenden AutoSave-Requests (Netzwerk-Roundtrip) eine neue Zeile an oder aenderte eine bestehende, wurde diese Zeile beim Commit der vorherigen Antwort ebenfalls als "gespeichert" markiert — ohne je an den Server gesendet worden zu sein. Neue Zeilen verloren dabei endgueltig ihre `_id`-Zuordnung und waren fuer `getChanges()` danach unsichtbar (stiller Datenverlust); geaenderte Zeilen verloren die zuletzt eingetippte Aenderung. Der bestehende `queuedDuringSave`-Mechanismus (siehe Eintrag vom 2026-08-03, "AutoSave-Race") loeste zwar zuverlaessig einen Folge-Save aus, kam aber zu spaet — der fehlerhafte Commit war zu dem Zeitpunkt bereits gelaufen.
+- **Fix:** Neue Methode `Rows.getChangeRows()` liefert die Row-_Referenzen_ (statt Zellen-Kopien) hinter den aktuellen Aenderungen; `getChanges()` baut jetzt darauf auf (eine gemeinsame Filterquelle statt zwei unabhaengig gepflegter). `saveResourceNow` (`autoSave.ts`) nimmt vor dem Request einen Row-Referenz-Snapshot und reicht ihn als `includedRows` an `commitChanges`/`commitAutoSave` durch — nur Zeilen aus diesem Snapshot werden committet/entfernt, alles danach Angelegte/Geaenderte bleibt unangetastet und wird vom naechsten (bereits vorhandenen) Save-Lauf sauber erfasst. `mapCreatedIdsByClientRequestId`/`mapCreatedIdsByContent` (`changeTracking.ts`) und `collectRowErrorMatches` (`savePipeline.ts`) nutzen denselben Snapshot statt den Live-Tabellenzustand erneut zu filtern, damit sich Positions-Indizes nicht mehr durch zwischenzeitliche Aenderungen verschieben koennen. `markFetchErrorRows` (`errorHandling.ts`, Fehlerpfad) markiert ebenfalls nur noch Zeilen aus dem Snapshot als Fehler.
 - **Regressionstests:** `CustomTable.test.ts` ("AutoSave-Commit-Race") deckt beide Faelle direkt an der echten `Rows`-Klasse ab — waehrend des Requests neu angelegte Zeile bleibt nach `commitAutoSave` `new` ohne `_id`; waehrend des Requests geloeschte Zeile bleibt nach `commitChanges` erhalten.
 - **Verifikation:** `bunx tsc --noEmit`, `bun run lint`, `bunx prettier --check`, `bun run test` (1388 Tests) gruen.
 
@@ -4282,7 +4322,7 @@ Siehe Root-`CHANGELOG.md` fuer den vollen Bun-1.4-Kontext ueber alle drei Submod
 ### fix (Passwort-Zeichenrestriktion entfernt, Live-Stärkeanzeige ergänzt)
 
 - Alle Passwort-Felder (Login, Registrierung, Passwort-Ändern, Reset, Passkey-Passwort-Setzen, Admin-Passwort-Setzen) hatten ein `pattern`-Attribut, das versehentlich vom Benutzername-Feld kopiert wurde und Zeichen wie Umlaute, `$`, Leerzeichen und Emoji im Passwort verbot, obwohl das Backend nie eine Zeichen-Restriktion hatte (nur Längenprüfung). `pattern`-Prop entfernt.
-- Inkonsistentes `.trim()` auf Passwort-Werten behoben: alle Passwort-*setzenden* Flows trimmten den Wert vor dem Senden, der Login-Flow nicht — hätte bei Passwörtern mit Leerzeichen zum Login-Fehlschlag geführt. Trimmen jetzt nirgends mehr angewendet (an Login angeglichen).
+- Inkonsistentes `.trim()` auf Passwort-Werten behoben: alle Passwort-_setzenden_ Flows trimmten den Wert vor dem Senden, der Login-Flow nicht — hätte bei Passwörtern mit Leerzeichen zum Login-Fehlschlag geführt. Trimmen jetzt nirgends mehr angewendet (an Login angeglichen).
 - Popover-Hinweistexte und `invalidFeedbackText` auf die einzige tatsächlich geprüfte Regel (Mindestlänge) gekürzt — die bisherigen Bullet-Punkte zu Groß-/Kleinbuchstaben/Zahlen/erlaubten Zeichen waren nie durchgesetzt und damit irreführend.
 - Neu: `PasswordStrengthMeter`-Komponente (`components/PasswordStrengthMeter.tsx`, Scoring in `infrastructure/validation/passwordStrength.ts`) — eigenständige, selbst gebaute Live-Stärkeanzeige (4 Bootstrap-Progress-Segmente + Label), angehängt an das jeweilige "Neues Passwort"-Feld in Registrierung/Passwort-Ändern/Reset/Passkey-Set/Admin-Set (nicht Login, nicht Wiederholungs-/Alt-Passwort-Felder).
 - **Verifikation:** `bun run lint && bun run test && bunx tsc --noEmit -p tsconfig.json && bun run build` grün.

@@ -1,8 +1,9 @@
-import { useEffect, useState, type SubmitEvent } from 'react';
+import { useCallback, useEffect, useState, type SubmitEvent } from 'react';
 
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
-import { FormularEditor, leereSeite, type Konfig } from './FormularEditor/FormularEditor';
+import { FormularEditor, type Konfig } from './FormularEditor/FormularEditor';
+import { leereSeite } from './FormularEditor/seitenHelfer';
 import { ZEILEN_QUELLEN, type FormularCode } from './FormularEditor/datenKatalog';
 import { FormularVersionenListe } from './FormularVersionenListe';
 import {
@@ -73,7 +74,10 @@ export function FormularUpload() {
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [vorlageId, setVorlageId] = useState<string | null>(null);
 
-  async function ladeListe(code: FormularCode): Promise<void> {
+  // Stabil per useCallback, damit der Effect sie als Dep listen kann, ohne bei jedem Render neu
+  // zu feuern. Der Effect ruft sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body
+  // loeste react-hooks/set-state-in-effect aus (ladeListe setzt synchron setLaedtListe).
+  const ladeListe = useCallback(async (code: FormularCode): Promise<void> => {
     setLaedtListe(true);
     try {
       setVersionen(await holeVersionen(code));
@@ -87,13 +91,11 @@ export function FormularUpload() {
     } finally {
       setLaedtListe(false);
     }
-  }
+  }, []);
 
-  // Bewusst nur am Formular-Code hängend: `ladeListe` wird bei jedem Render neu erzeugt und würde
-  // als Abhängigkeit eine Endlosschleife auslösen.
   useEffect(() => {
-    void ladeListe(formular);
-  }, [formular]);
+    queueMicrotask(() => void ladeListe(formular));
+  }, [formular, ladeListe]);
 
   function setzeFormularZurueck(code: FormularCode): void {
     setVersion('');

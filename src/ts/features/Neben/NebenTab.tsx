@@ -1,6 +1,5 @@
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
-import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -19,7 +18,7 @@ import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './components';
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
-function NebenTab() {
+export function NebenTab() {
   const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
   const checkIfGreater2024 = (Jahr: number, showError?: boolean) => {
@@ -192,18 +191,4 @@ function NebenTab() {
       </div>
     </div>
   );
-}
-
-export function mountNebenTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#neben-root');
-  if (!container) return;
-
-  mount(container, <NebenTab />);
-}
-
-export function unmountNebenTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#neben-root');
-  if (!container) return;
-
-  unmount(container);
 }

@@ -20,7 +20,8 @@ import {
 import { dreheTabellenZelle, entdrehePunkt } from '@/infrastructure/pdf/tabellenDrehung';
 import { SkalierLeiste } from './SkalierLeiste';
 import { vorlageFontFamilien, type VorlageFontFamilie } from './vorlageFonts';
-import { schriftKurz } from './SchriftartWahl';
+import { schriftKurz } from './schriftartHelfer';
+import { leereSeite, zeilenHoeheAus } from './seitenHelfer';
 import { SchriftartDialog } from './SchriftartDialog';
 import type { FormularCode } from './datenKatalog';
 import { DBButton, DBCheckbox, DBStack, DBTextarea } from '@db-ux/react-core-components';
@@ -44,10 +45,6 @@ type Props = {
   onChange: (value: Konfig) => void;
 };
 
-export function leereSeite(quelle = 0): SeitenDef {
-  return { quelle, bereiche: [], felder: {} };
-}
-
 function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
   return { x: f.x, y: f.y, x2: f.x2 ?? f.x + 40, y2: f.y2 ?? f.y + f.size, label, aktiv };
 }
@@ -60,18 +57,6 @@ function achseFuer(armed: Armed | null): Achse {
   if (armed?.bereich === 'spalte') return 'x';
   if (armed?.bereich === 'tabelle' || armed?.bereich === 'letzteZeile' || armed?.bereich === 'sonderzeile') return 'y';
   return 'beide';
-}
-
-/**
- * Zeilenhöhe aus erster und letzter Datenzeile, über alle Zeilen gemittelt. Eine Einzelmessung an
- * nur einer Zeile ist zwangsläufig ungenau (freihändig gezogenes Band); der Renderer zieht je Zeile
- * dieselbe `hoehe` ab, wodurch sich Bruchteile eines Punktes über die Tabelle zu einem sichtbaren
- * Versatz aufsummieren. `null` bedeutet: nicht messbar (zu wenige Zeilen oder Reihenfolge vertauscht).
- */
-export function zeilenHoeheAus(startY: number, letzteY: number, zeilen: number): number | null {
-  if (zeilen < 2) return null;
-  const hoehe = (startY - letzteY) / (zeilen - 1);
-  return hoehe > 0 ? Number(hoehe.toFixed(2)) : null;
 }
 
 /** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Zeilenraster-Indikator neben der
@@ -248,7 +233,9 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     return () => {
       abbruch = true;
     };
-    // Bewusst nur an `datei` gehängt: läuft beim Laden und bei jedem Vorlagen-Wechsel.
+    // Bewusst nur an `datei` gehängt: läuft beim Laden und bei jedem Vorlagen-Wechsel. Liest
+    // bewusst die jeweils aktuelle Konfiguration (`value.seiten`/`onChange` sind keine Deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datei]);
 
   // Vorlagen-Wechsel: Skalierfaktor aus alter (Config) und neuer (gemessener) Seitengröße vorschlagen.
@@ -286,6 +273,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       abbruch = true;
     };
     // Bewusst nur an `datei` gehängt: der Vorschlag entsteht genau beim Wechsel der Datei.
+    // Liest bewusst die aktuelle Konfiguration (`value.seiten`/`seitenIndex` sind keine Deps).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [datei]);
 
   const skalierAlt = skalier?.alt ?? aktiveSeite?.groesse ?? null;
@@ -309,9 +298,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     });
   }
 
-  // Hängt bewusst an value/skalier/skalierAlt -- `skalierenUndDrehen` liest nur diese.
+  // Hängt bewusst an value/skalier/skalierAlt -- `skalierenUndDrehen` liest nur diese. Die lokale
+  // Funktion entsteht bei jedem Render neu; als Dep wuerde sie das Memo wertlos machen.
   const anzeigeKonfig = useMemo(
     () => (skalier ? skalierenUndDrehen(value, false) : value),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [value, skalier, skalierAlt],
   );
   const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];

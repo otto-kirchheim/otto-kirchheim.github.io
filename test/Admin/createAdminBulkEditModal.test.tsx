@@ -50,7 +50,7 @@ vi.mock('@/features/Admin/utils/api', () => ({
   fetchProfileTemplates: mockFetchProfileTemplates,
 }));
 
-const { AdminBulkEditModal } = await import('@/features/Admin/components/createAdminBulkEditModal');
+const { AdminBulkEditModal } = await import('@/features/Admin/components/AdminBulkEditModal');
 
 async function flush(): Promise<void> {
   await new Promise(resolve => setTimeout(resolve, 10));

@@ -4,7 +4,7 @@ import {
   fehlendeVorlagenSchnitte,
   schriftKurz,
   verdichteSchriftart,
-} from '@/features/Admin/components/FormularEditor/SchriftartWahl';
+} from '@/features/Admin/components/FormularEditor/schriftartHelfer';
 import type { VorlageFontFamilie } from '@/features/Admin/components/FormularEditor/vorlageFonts';
 
 describe('familieFuerSchnitt', () => {

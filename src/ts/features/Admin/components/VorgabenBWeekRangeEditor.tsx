@@ -1,4 +1,5 @@
-import { useEffect, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { DBButton } from '@db-ux/react-core-components';
+import { useState, type PointerEvent as ReactPointerEvent } from 'react';
 
 const WEEKDAY_SLOTS: Array<{ tag: number; short: string }> = [
   { tag: 1, short: 'Mo' },
@@ -62,24 +63,36 @@ export function VorgabenBWeekRangeEditor({
   onStartChange,
   onEndChange,
 }: WeekRangeEditorProps) {
-  const [startSlot, setStartSlot] = useState<number>(0);
-  const [endSlot, setEndSlot] = useState<number | null>(null);
-  const [awaitingEndSelection, setAwaitingEndSelection] = useState<boolean>(false);
-  const [dragAnchor, setDragAnchor] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (awaitingEndSelection) return;
-
-    const initialStartSlot =
+  // Slots aus den Props ableiten -- einmal als Lazy-Initialisierung (Mount) und bei jedem
+  // Bereichs-Wechsel in der Renderphase (React-Docs: "adjusting state when props change"),
+  // nicht synchron im Effect (set-state-in-effect). Waehrend einer laufenden End-Auswahl
+  // (Tap-Interaktion) bleiben die Slots unangetastet.
+  const slotsKey = `${selectorKey}|${start.tag}|${start.Nwoche}|${end.tag}|${end.Nwoche}|${startHasNwoche}`;
+  const initialSlots = (): { start: number; end: number } => {
+    const startSlotValue =
       startHasNwoche && start.Nwoche && start.tag === 0
         ? getSlotFromTag(start.tag, false, true)
         : getSlotFromTag(start.tag, start.Nwoche, startHasNwoche);
-    const initialEndSlot = Math.max(getSlotFromTag(end.tag, end.Nwoche, true), initialStartSlot);
+    return {
+      start: startSlotValue,
+      end: Math.max(getSlotFromTag(end.tag, end.Nwoche, true), startSlotValue),
+    };
+  };
+  const [startSlot, setStartSlot] = useState<number>(() => initialSlots().start);
+  const [endSlot, setEndSlot] = useState<number | null>(() => initialSlots().end);
+  const [awaitingEndSelection, setAwaitingEndSelection] = useState<boolean>(false);
+  const [dragAnchor, setDragAnchor] = useState<number | null>(null);
 
-    setStartSlot(initialStartSlot);
-    setEndSlot(initialEndSlot);
-    setDragAnchor(null);
-  }, [selectorKey, start.tag, start.Nwoche, end.tag, end.Nwoche, startHasNwoche, awaitingEndSelection]);
+  const [prevSlotsKey, setPrevSlotsKey] = useState(slotsKey);
+  if (prevSlotsKey !== slotsKey) {
+    setPrevSlotsKey(slotsKey);
+    if (!awaitingEndSelection) {
+      const next = initialSlots();
+      setStartSlot(next.start);
+      setEndSlot(next.end);
+      setDragAnchor(null);
+    }
+  }
 
   const updateByTap = (slot: number): void => {
     if (disabled) return;
@@ -165,13 +178,13 @@ export function VorgabenBWeekRangeEditor({
           const farbe = isStart ? 'successful' : isEnd ? 'informational' : undefined;
 
           return (
-            <button
+            <DBButton
               key={`${selectorKey}-${slot}`}
               type="button"
-              className="db-button py-2"
-              data-variant={variante}
+              className="py-2"
+              variant={variante}
               data-color={farbe}
-              data-size="small"
+              size="small"
               disabled={disabled}
               onPointerDown={event => handlePointerDown(event, slot)}
               onPointerEnter={() => handlePointerEnter(slot)}
@@ -179,7 +192,7 @@ export function VorgabenBWeekRangeEditor({
               aria-pressed={isStart || isEnd || isInRange}
             >
               {WEEKDAY_SLOTS[slot % 7].short}
-            </button>
+            </DBButton>
           );
         })}
       </div>

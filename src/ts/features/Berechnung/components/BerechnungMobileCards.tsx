@@ -1,7 +1,3 @@
-import { mount } from '@/infrastructure/ui';
-
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
 import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
@@ -155,26 +151,5 @@ const BerechnungMobileCards = ({
     ))}
   </ul>
 );
-
-export function mountBerechnungMobileCards(
-  monatsErgebnisse: IBerechnungMonatsErgebnis[],
-  aktivierteTabs?: string[],
-  zulagenBreakdown?: IZulagenBreakdown,
-): void {
-  const container = document.querySelector<HTMLDivElement>('#berechnungMobileCards');
-  if (!container) return;
-
-  const aktuellerMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-
-  mount(
-    container,
-    <BerechnungMobileCards
-      monatsErgebnisse={monatsErgebnisse}
-      aktivierteTabs={aktivierteTabs}
-      zulagenBreakdown={zulagenBreakdown}
-      offenerMonat={aktuellerMonat}
-    />,
-  );
-}
 
 export default BerechnungMobileCards;

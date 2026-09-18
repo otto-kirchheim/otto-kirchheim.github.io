@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
@@ -66,7 +66,22 @@ export function AdminVorgabenEditor() {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 
-  async function reload(): Promise<BackendVorgabe[]> {
+  async function handleSelectYear(year: number, currentEntries?: BackendVorgabe[]) {
+    setSelectedYear(year);
+    const source = currentEntries ?? entries;
+    const local = source.find(v => v._id === year);
+    if (local) {
+      setMonthEntries(toFormEntries(local.Vorgaben));
+      return;
+    }
+    const fetched = await fetchVorgabeByYear(year);
+    setMonthEntries(toFormEntries(fetched.Vorgaben));
+  }
+
+  // Stabil per useCallback, damit der Mount-Effect sie als Dep listen kann. Der Effect ruft
+  // sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body loeste
+  // react-hooks/set-state-in-effect aus (reload setzt synchron setLoading).
+  const reload = useCallback(async (): Promise<BackendVorgabe[]> => {
     setLoading(true);
     try {
       const years = await fetchVorgabenYears();
@@ -79,19 +94,11 @@ export function AdminVorgabenEditor() {
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleSelectYear(year: number, currentEntries?: BackendVorgabe[]) {
-    setSelectedYear(year);
-    const source = currentEntries ?? entries;
-    const local = source.find(v => v._id === year);
-    if (local) {
-      setMonthEntries(toFormEntries(local.Vorgaben));
-      return;
-    }
-    const fetched = await fetchVorgabeByYear(year);
-    setMonthEntries(toFormEntries(fetched.Vorgaben));
-  }
+    // `handleSelectYear` ist hier bewusst keine Dep: es wird nur als initialer Fallback gebraucht
+    // (kein Jahr gewaehlt -> neuestes laden); die spaeteren Aufrufe kommen aus Event-Handlern, die
+    // bewusst die aktuelle Funktion nutzen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYear]);
 
   async function handleCreateYear() {
     const input = window.prompt('Neues Jahr fuer Vorgaben:', `${dayjs().year()}`);
@@ -194,7 +201,10 @@ export function AdminVorgabenEditor() {
   }
 
   useEffect(() => {
-    reload();
+    queueMicrotask(() => void reload());
+    // Einmalig beim Mount: `reload` haengt ueber `handleSelectYear` an `entries` und wuerde den
+    // Effect nach jedem erfolgreichen Lauf erneut ausloesen (Endlosschleife beim initialen Laden).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

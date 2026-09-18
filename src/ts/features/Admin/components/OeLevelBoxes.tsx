@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
-import { MAX_OE_LEVELS, OeLevelInputs } from './OeLevelInputs';
+import { MAX_OE_LEVELS } from '../utils/bulkEditOe';
+import { OeLevelInputs } from './OeLevelInputs';
 
 type OeLevelBoxesProps = {
   value: string;

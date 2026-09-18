@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 import { DBNavigation } from '@db-ux/react-core-components';
-import { mount, unmount } from '@/infrastructure/ui';
 import useActiveAdminTab from '@/infrastructure/ui/useActiveAdminTab';
 
 import { AdminUserList } from './components/AdminUserList';
@@ -277,18 +276,4 @@ export default function AdminTab() {
       </div>
     </div>
   );
-}
-
-export function mountAdminTab(remountKey = 'default'): void {
-  const adminRoot = document.querySelector<HTMLDivElement>('#admin-root');
-  if (!adminRoot) return;
-
-  mount(adminRoot, <AdminTab key={remountKey} />);
-}
-
-export function unmountAdminTab(): void {
-  const adminRoot = document.querySelector<HTMLDivElement>('#admin-root');
-  if (!adminRoot) return;
-
-  unmount(adminRoot);
 }

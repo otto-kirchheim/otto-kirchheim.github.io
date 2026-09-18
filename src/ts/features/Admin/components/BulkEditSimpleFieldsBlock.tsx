@@ -1,8 +1,6 @@
-import { FIELD_LABELS, type SimpleFieldKey } from '../utils/bulkEditOe';
+import { FIELD_LABELS, SIMPLE_FIELD_KEYS, type SimpleFieldKey } from '../utils/bulkEditOe';
 import { DBCheckbox } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
-
-export const SIMPLE_FIELD_KEYS: SimpleFieldKey[] = ['betrieb', 'gewerk', 'ersteTkgSt', 'ersteTkgStAdresse'];
 
 export type SimpleFieldState = { enabled: boolean; value: string };
 

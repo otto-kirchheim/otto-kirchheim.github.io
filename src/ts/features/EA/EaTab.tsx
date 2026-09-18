@@ -1,6 +1,5 @@
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
-import { mount, unmount } from '@/infrastructure/ui';
 
 import { DBLoadingButton } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
@@ -19,7 +18,7 @@ import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
 import { getEaDaten, persistEaTableData } from './utils';
 
-function EaTab() {
+export function EaTab() {
   const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
   const checkIfGreater2025 = (Jahr: number, showError?: boolean) => {
@@ -171,18 +170,4 @@ function EaTab() {
       </div>
     </div>
   );
-}
-
-export function mountEaTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#ea-root');
-  if (!container) return;
-
-  mount(container, <EaTab />);
-}
-
-export function unmountEaTab(): void {
-  const container = document.querySelector<HTMLDivElement>('#ea-root');
-  if (!container) return;
-
-  unmount(container);
 }

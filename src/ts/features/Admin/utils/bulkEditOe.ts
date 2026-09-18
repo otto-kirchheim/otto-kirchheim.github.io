@@ -3,6 +3,11 @@ import type { BulkApplyCategory, BulkOeTargetField } from './api';
 
 export type SimpleFieldKey = 'betrieb' | 'gewerk' | 'ersteTkgSt' | 'ersteTkgStAdresse';
 
+export const SIMPLE_FIELD_KEYS: SimpleFieldKey[] = ['betrieb', 'gewerk', 'ersteTkgSt', 'ersteTkgStAdresse'];
+
+/** Payload-Grenze im Backend (`oeLevelsSchema.max(10)`); real kommen max. ~7 Ebenen vor. */
+export const MAX_OE_LEVELS = 10;
+
 /** Labels wie in AdminUserProfileEditor.tsx (Pers.Betrieb/Gewerk/ErsteTkgSt/ErsteTkgStAdresse). */
 export const FIELD_LABELS: Record<SimpleFieldKey, string> = {
   betrieb: 'Betrieb',

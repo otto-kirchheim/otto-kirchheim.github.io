@@ -1,9 +1,7 @@
-import { unmount } from '@/infrastructure/ui';
-
 import type { Feld } from '@otto-kirchheim/nebengeld-shared';
-import { FORMATE, gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
-import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
-import { DbAuswahl, DbFeld, oeffneDrawer } from '@/components';
+import { gruppiere, katalogFelder, type FormularCode, type KatalogEintrag } from './datenKatalog';
+import { DBButton, DBStack } from '@db-ux/react-core-components';
+import { DbAuswahl, DbFeld } from '@/components';
 
 /**
  * Wählt EINEN Datenpfad -- für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel
@@ -215,97 +213,5 @@ export function PlatzhalterPicker({
         </optgroup>
       ))}
     </DbAuswahl>
-  );
-}
-
-const PLATZHALTER_BEISPIELE: { platzhalter: string; beschreibung: string }[] = [
-  {
-    platzhalter: '{Datenpfad}',
-    beschreibung:
-      'Beliebiger Datenpfad, z.B. {Nachname} -- ohne Format greift der Standard-Fallback (Text/Zahl unverändert, Array als Liste ` / `, Boolean als Ja/Nein). Für VorgabenU.Pers.OE reicht das NICHT -- dafür immer explizit :oe angeben (siehe unten).',
-  },
-  {
-    platzhalter: '{Datenpfad:Format}',
-    beschreibung:
-      'Erzwingt eines der Formate unten, z.B. {VorgabenU.Pers.OE:oe} oder {Betrag:waehrung}. Unbekannter Formatname wird ignoriert, der Pfad bleibt über den Standard-Fallback nutzbar.',
-  },
-  { platzhalter: '{seite} / {seiten}', beschreibung: 'Aktuelle Seitenzahl / Gesamtseitenzahl dieses Dokuments.' },
-  {
-    platzhalter: '{seite-1} / {seite+1}',
-    beschreibung:
-      'Seitenzahl mit ganzzahligem Versatz, z.B. "Übertrag von Seite {seite-1}". Gilt genauso für {seiten-1} etc.',
-  },
-  { platzhalter: '{heute}', beschreibung: 'Erzeugungsdatum des PDFs, Format datum (15.03.2026).' },
-  {
-    platzhalter: '{heute:Format}',
-    beschreibung: 'Erzeugungsdatum mit anderem Format, z.B. {heute:datumKurz} (15.03.).',
-  },
-  { platzhalter: '{A}, {B}', beschreibung: 'Mehrere Platzhalter gemischt im selben Text, z.B. {Nachname}, {Vorname}.' },
-];
-
-function PlatzhalterHilfeInhalt() {
-  return (
-    <>
-      <div className="db-table mb-3" data-width="full" data-size="small" data-divider="both">
-        <table>
-          <thead>
-            <tr>
-              <th>Platzhalter</th>
-              <th>Bedeutung</th>
-            </tr>
-          </thead>
-          <tbody>
-            {PLATZHALTER_BEISPIELE.map(b => (
-              <tr key={b.platzhalter}>
-                <td className="font-monospace text-nowrap">{b.platzhalter}</td>
-                <td>{b.beschreibung}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="small fw-semibold mb-1">Verfügbare Formate (für das Feld-Format und {'{Pfad:Format}'})</div>
-      <div className="db-table" data-width="full" data-size="small" data-divider="both">
-        <table>
-          <tbody>
-            {FORMATE.filter(f => f.wert !== '').map(f => (
-              <tr key={f.wert}>
-                <td className="font-monospace text-nowrap">{f.wert}</td>
-                <td>{f.label}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </>
-  );
-}
-
-/**
- * Eigenständiges, dynamisch erzeugtes Modal statt des geteilten `#modal`-Elements (siehe
- * `openHelpModal.tsx`) -- der FormularEditor läuft selbst schon in einem Admin-Tab, ein zweites
- * Modal darf ein eventuell gerade offenes nicht verdrängen.
- */
-export function openPlatzhalterHilfe(): void {
-  const container = document.createElement('div');
-  document.body.appendChild(container);
-
-  oeffneDrawer(
-    container,
-    <div className="dialog-rumpf" data-breite="lg">
-      <div className="db-drawer-header">
-        <h5>Platzhalter &amp; Formate</h5>
-        <DBButton type="button" icon="cross" variant="ghost" noText data-dialog-dismiss="modal">
-          <DBTooltip>Schließen</DBTooltip>
-        </DBButton>
-      </div>
-      <div className="dialog-koerper">
-        <PlatzhalterHilfeInhalt />
-      </div>
-    </div>,
-    () => {
-      unmount(container);
-      container.remove();
-    },
   );
 }

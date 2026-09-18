@@ -1,16 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
 import { DBButton, DBCheckbox, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
-
-export function formatUptime(seconds: number): { value: string; unit: string } {
-  if (seconds < 3600) return { value: Math.round(seconds / 60).toString(), unit: 'Min.' };
-  if (seconds < 86400) return { value: Math.round(seconds / 3600).toString(), unit: 'Std.' };
-  const days = seconds / 86400;
-  return { value: days.toFixed(days < 10 ? 1 : 0), unit: 'Tage' };
-}
+import { formatUptime } from '../utils/formatUptime';
 
 const EVENT_LABELS: Record<string, string> = {
   startup: 'Serverstart',
@@ -242,9 +236,14 @@ export function MemoryCard({
     new Set(['gcp', 'homeserver']),
   );
 
-  useEffect(() => {
+  // Paginierung beim Datenwechsel bewusst in der Renderphase zuruecksetzen (React-Docs:
+  // "adjusting state when props change") -- ein synchroner setState im Effect waere ein
+  // react-hooks/set-state-in-effect.
+  const [prevHeap, setPrevHeap] = useState(heap);
+  if (prevHeap !== heap) {
+    setPrevHeap(heap);
     setEventsPage(0);
-  }, [heap]);
+  }
 
   function toggleEnvironment(env: 'gcp' | 'homeserver') {
     const newSet = new Set(visibleEnvironments);

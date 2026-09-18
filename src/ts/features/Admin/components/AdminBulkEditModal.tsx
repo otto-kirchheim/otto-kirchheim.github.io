@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { MyDivModal, MyModalBody, schliesseModal, showModal } from '@/components';
+import { MyDivModal, MyModalBody } from '@/components';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import {
   bulkUpdateUserProfiles,
@@ -15,12 +15,12 @@ import {
 import { computeCommonOeLevels, computeCommonPathLevels, computeMaxOeLevels, FIELD_LABELS } from '../utils/bulkEditOe';
 import { BulkEditUserOverview } from './BulkEditUserOverview';
 import { BulkEditOeLevelsEditor } from './BulkEditOeLevelsEditor';
-import { BulkEditSimpleFieldsBlock, SIMPLE_FIELD_KEYS, type SimpleFieldState } from './BulkEditSimpleFieldsBlock';
+import { BulkEditSimpleFieldsBlock, type SimpleFieldState } from './BulkEditSimpleFieldsBlock';
+import { MAX_OE_LEVELS, SIMPLE_FIELD_KEYS } from '../utils/bulkEditOe';
 import { BulkEditApplySourceBlock, type ApplySource } from './BulkEditApplySourceBlock';
 import { BulkEditAdminOesBlock, type AdminOeActionState } from './BulkEditAdminOesBlock';
 import { BulkEditPreviewTable, type PreviewFieldKey } from './BulkEditPreviewTable';
 import { DBButton, DBTag } from '@db-ux/react-core-components';
-import { MAX_OE_LEVELS } from './OeLevelInputs';
 
 type Step = 'form' | 'preview' | 'result';
 
@@ -423,11 +423,5 @@ export function AdminBulkEditModal({
         )}
       </MyModalBody>
     </MyDivModal>
-  );
-}
-
-export default function createAdminBulkEditModal(selectedUsers: AdminUserRow[], onApplied: () => void): void {
-  showModal(
-    <AdminBulkEditModal selectedUsers={selectedUsers} onApplied={onApplied} closeModal={() => schliesseModal()} />,
   );
 }

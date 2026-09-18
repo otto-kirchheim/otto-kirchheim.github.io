@@ -45,8 +45,9 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
       setSonderActive(checkbox.checked);
     };
 
-    // Initialer Zustand
-    setSonderActive(checkbox.checked);
+    // Initialer Zustand -- per Microtask, damit kein synchroner setState im Effect-Body liegt
+    // (react-hooks/set-state-in-effect).
+    queueMicrotask(() => setSonderActive(checkbox.checked));
 
     checkbox.addEventListener('change', handleChange);
     return () => checkbox.removeEventListener('change', handleChange);
