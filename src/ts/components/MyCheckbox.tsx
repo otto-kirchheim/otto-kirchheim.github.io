@@ -1,4 +1,4 @@
-import { DBSwitch } from '@db-ux/react-core-components';
+import { DBCheckbox, DBSwitch } from '@db-ux/react-core-components';
 import { useRef, type ChangeEventHandler, type ComponentProps, type FC, type ReactNode, type Ref } from 'react';
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
@@ -18,11 +18,19 @@ type TMyCheckbox = Omit<
   defaultChecked?: boolean;
   myRef?: Ref<HTMLInputElement>;
   changeHandler?: ChangeEventHandler<HTMLInputElement>;
+  /**
+   * Als Schalter (`DBSwitch`) statt als Checkbox darstellen. DB UX: Switch nur, wenn das
+   * Umschalten SOFORT wirkt; bei Werten, die erst mit Speichern/Absenden gelten, gehoert eine
+   * Checkbox hin ("Verwende keinen Switch in einem Formular, in dem Aenderungen erst nach Klick
+   * auf 'Speichern' angewendet werden").
+   */
+  schalter?: boolean;
 };
 
 /*
- * Alle Aufrufstellen meinen Schalter, nicht Haken -- deshalb `DBSwitch` und nicht `DBCheckbox`.
- * App-eigene Klassen (z.B. `bereitschaft`, Rasterspalten) reicht `className` durch.
+ * Standard ist `DBCheckbox` (Formularwert, gilt erst mit Speichern/Absenden); `schalter` waehlt
+ * `DBSwitch` fuer Stellen mit sofortiger Wirkung. App-eigene Klassen (z.B. `bereitschaft`,
+ * Rasterspalten) reicht `className` durch.
  */
 const MyCheckbox: FC<TMyCheckbox> = ({
   className,
@@ -32,6 +40,7 @@ const MyCheckbox: FC<TMyCheckbox> = ({
   myRef,
   checked,
   defaultChecked,
+  schalter,
   ...inputProps
 }) => {
   // Explizites `defaultChecked` -> immer ungesteuert. Sonst: mit `changeHandler` UND
@@ -51,8 +60,32 @@ const MyCheckbox: FC<TMyCheckbox> = ({
   // die zwei Aufrufstellen mit mehrzeiligem Markup (`<br />`, `<small>`) bleiben Kinder.
   const textLabel = typeof children === 'string' ? children : undefined;
 
+  if (schalter)
+    return (
+      <DBSwitch
+        className={className || undefined}
+        id={id}
+        label={textLabel}
+        aria-label={textLabel ? undefined : (inputProps.name ?? id)}
+        invalidMessage={STANDARD_UNGUELTIG_MELDUNG}
+        onChange={changeHandler}
+        ref={refZusammenfuehren(eigeneRef, myRef)}
+        {...zustand}
+        {...inputProps}
+      >
+        {textLabel ? null : children}
+      </DBSwitch>
+    );
+
+  // Nur der Schalter kennt Visual Aid, die Icons links/rechts und `variant` -- nicht an die
+  // Checkbox reichen.
+  const { visualAid, iconLeading, iconTrailing, variant, ...checkboxProps } = inputProps;
+  void visualAid;
+  void variant;
+  void iconLeading;
+  void iconTrailing;
   return (
-    <DBSwitch
+    <DBCheckbox
       className={className || undefined}
       id={id}
       label={textLabel}
@@ -61,10 +94,10 @@ const MyCheckbox: FC<TMyCheckbox> = ({
       onChange={changeHandler}
       ref={refZusammenfuehren(eigeneRef, myRef)}
       {...zustand}
-      {...inputProps}
+      {...checkboxProps}
     >
       {textLabel ? null : children}
-    </DBSwitch>
+    </DBCheckbox>
   );
 };
 export default MyCheckbox;

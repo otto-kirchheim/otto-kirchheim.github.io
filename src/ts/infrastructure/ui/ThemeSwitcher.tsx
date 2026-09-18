@@ -22,6 +22,7 @@ export default function ThemeSwitcher() {
   return (
     <MyCheckbox
       id={id}
+      schalter
       checked={istDunkel}
       iconLeading="moon"
       iconTrailing="sun"
