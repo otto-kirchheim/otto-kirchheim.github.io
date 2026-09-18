@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
 import { getAktivenTab, setAktivenTab } from '@/infrastructure/ui/activeTabStore';
+import { getAktivenAdminTab, setAktivenAdminTab } from '@/infrastructure/ui/activeAdminTabStore';
 import {
   TAB_SHOWN_EVENT,
   aktiverTab,
@@ -32,6 +33,20 @@ function aufbau(): void {
       <div class="tab-pane fade" id="EWT" role="tabpanel"></div>
       <div class="tab-pane fade" id="Admin" role="tabpanel"></div>
     </div>
+    <nav class="db-navigation admin-unternavigation" role="tablist">
+      <menu>
+        <li class="db-navigation-item" data-active="true">
+          <button id="admin-tab-users" data-tab-target="admin-pane-users" role="tab" aria-selected="true" tabindex="0">Benutzerverwaltung</button>
+        </li>
+        <li class="db-navigation-item">
+          <button id="admin-tab-logs" data-tab-target="admin-pane-logs" role="tab" aria-selected="false" tabindex="-1">Admin-Logs</button>
+        </li>
+      </menu>
+    </nav>
+    <div class="tab-content" id="admin-tab-content">
+      <div class="tab-pane fade show active" id="admin-pane-users" role="tabpanel"></div>
+      <div class="tab-pane fade" id="admin-pane-logs" role="tabpanel"></div>
+    </div>
   `;
   document.location.hash = '';
 }
@@ -39,9 +54,11 @@ function aufbau(): void {
 beforeEach(() => {
   aufbau();
   abbauen = initTabController();
-  // Phase K6: `activeTabStore` ist ein Modul-Singleton (ueberlebt zwischen Tests) -- auf den
-  // Ausgangszustand der Fixture zuruecksetzen, `setAktivenTab` feuert bei Gleichheit ohnehin nicht.
+  // Phase K6: `activeTabStore`/`activeAdminTabStore` sind Modul-Singletons (ueberleben zwischen
+  // Tests) -- auf den Ausgangszustand der Fixture zuruecksetzen, `setAktivenTab` feuert bei
+  // Gleichheit ohnehin nicht.
   setAktivenTab('start');
+  setAktivenAdminTab('admin-pane-users');
 });
 
 afterEach(() => {
@@ -93,6 +110,24 @@ describe('tabController', () => {
     expect(aktiverTab()).toBe('EWT');
     // Der Hash bleibt unveraendert -- sonst entstuende beim Zurueckgehen eine Endlosschleife.
     expect(document.location.hash).toBe('#ewt');
+  });
+
+  it('schaltet die Admin-Unternavigation ueber activeAdminTabStore, ohne den Hash zu schreiben', () => {
+    expect(zeigeTab('admin-pane-logs')).toBe(true);
+
+    expect(getAktivenAdminTab()).toBe('admin-pane-logs');
+    // Admin-Wechsel schreiben bewusst keinen Hash (nur die Hauptgruppe tut das).
+    expect(document.location.hash).toBe('');
+    // Store der Hauptgruppe bleibt von einem Admin-Wechsel unberuehrt.
+    expect(getAktivenTab()).toBe('start');
+  });
+
+  it('haelt Hauptgruppe und Admin-Unternavigation als unabhaengige Stores', () => {
+    zeigeTab('EWT');
+    zeigeTab('admin-pane-logs');
+
+    expect(getAktivenTab()).toBe('EWT');
+    expect(getAktivenAdminTab()).toBe('admin-pane-logs');
   });
 
   it('blendet Navigationseintrag und Panel gemeinsam aus', () => {

@@ -3539,3 +3539,63 @@ ohne Review haette das zu doppelt sichtbarem Checkbox-Text gefuehrt.
 **Naechster Schritt:** Teil 3 (`tabController.ts` Admin-Unternavigation) -- noch nicht begonnen,
 Detailplanung folgt direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung fuer
 `tabs`/`tab-list`/`tab-item`/`tab-panel`).
+
+## Admin-Unternavigation auf React umgebaut (2026-09-18)
+
+Teil 3 der "mehr echtes React"-Initiative, direkt nach Zulagen-Checkboxen (Teil 2). Siehe
+`plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung; Teil 4
+(`showModal.tsx`-Rest) bleibt Skizze.
+
+- [x] `activeAdminTabStore.ts`/`useActiveAdminTab.ts` neu (`infrastructure/ui/`) -- exakte Kopie
+      des `activeTabStore.ts`/`useActiveTab.ts`-Musters, eigener Store (Haupt- und Admin-Gruppe
+      bewusst nicht gekoppelt).
+- [x] `tabController.ts`: `zeigeTab()`s Verzweigung generalisiert (`TAB_GRUPPEN_STORES`-Lookup
+      ueber den Eltern-Container statt binaerer `hauptgruppe`-Unterscheidung fuer die
+      Store-vs-DOM-Frage). Hash-Schreibung bleibt exklusiv an die Hauptgruppe gebunden. Der
+      alte DOM-schreibende `else`-Zweig + der verwaiste `gruppe()`-Helper sind komplett
+      entfallen -- keine Gruppe braucht sie mehr.
+- [x] `features/Admin/index.tsx`: `aktiverUnterTab` liest jetzt `useActiveAdminTab()` reaktiv
+      statt einer hartkodierten Konstante; `paneKlasse()`-Helfer (analog `App.tsx`) macht alle
+      8 Panes reaktiv statt nur der ersten zwei. `<nav>`/`<menu>` nutzt `<DBNavigation>`
+      (DB-UX-Baustein, reiner Markup-Wrapper).
+- [x] **Gefundener Nebenbug behoben**: `aktiverUnterTab` war zuvor eine bei jedem Render neu
+      berechnete Konstante -- ein Re-Render aus anderem Grund (z. B. Act-as-Wechsel-Event)
+      ueberschrieb den von `zeigeTab()` per DOM gesetzten Zustand wieder mit dem Default. Neuer
+      Test `AdminTab.subnav.test.tsx` deckt genau diesen Fall ab (Regression waere ohne den Fix
+      sofort aufgefallen).
+- [x] **`DBNavigationItem` geprueft und verworfen**: sah im Quelltext wie ein reiner Wrapper aus
+      (`children` durchgereicht ohne `<menu>`-Kind), die Sub-Navigation-Erkennung laeuft aber
+      per `useEffect` NACH dem ersten Commit -- im ersten Render wickelt die Komponente das Kind
+      immer erst in einen eigenen `<button class="db-navigation-item-expand-button">`, was hier
+      ein ungueltiges `<button>` in `<button>` erzeugt. Erst beim Test (nicht beim Lesen der
+      Quelle) aufgefallen. Die `<li>`s bleiben deshalb roh, `<DBNavigation>` (ohne
+      `-Item`-Pendant) allein war unproblematisch.
+- [x] **Weiterer gefundener Bug (eigene Umsetzung)**: der Store haelt die volle Pane-Id
+      (`admin-pane-dashboard`), `unterTabs`/`paneKlasse` arbeiten mit der kurzen Id
+      (`dashboard`) -- ohne `.replace(/^admin-pane-/, '')` blieb `data-active` dauerhaft
+      `false`. Durch den neuen Test sofort aufgefallen, vor dem Commit korrigiert.
+- [x] `test/ui.tabController.test.ts` um einen zweiten Gruppen-Fall erweitert (Store-Wechsel
+      ohne Hash-Schreibung, Unabhaengigkeit der beiden Stores).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2145/2145 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Puppeteer-Durchklick der Hauptnavigation (Start/Berechnung/Einstellungen, Hash + Klick auf die
+  Wortmarke) gegen den laufenden Dev-Server: keine Regression durch die generalisierte
+  `zeigeTab()`-Verzweigung, keine Konsolenfehler. Die Admin-Unternavigation selbst liess sich
+  live nicht pruefen (braucht eine echte Admin-JWT-Session, kein Backend verfuegbar) -- dafuer
+  tragen die beiden neuen dedizierten Tests die Hauptlast.
+
+### Review
+
+Zwei echte Bugs gefunden, beide erst durch das TESTEN (nicht durch Lesen der Quelle) aufgefallen:
+der Admin-Nebenbug (Ziel des Umbaus) und der selbst eingefuehrte Pane-Id-Praefix-Fehler. Zeigt,
+warum ein dedizierter Render-Test hier lohnte, obwohl es vorher keinen fuer `AdminTab` gab.
+`DBNavigationItem` war der einzige DB-UX-Fund dieses Teils, der sich als ungeeignet erwies (nach
+Teil 1s `DBNotification`- und Teil 2s `DBCheckbox`-Erfolgen) -- gut, dass der Prop-Vertrag am
+echten Test statt nur am Quelltext verifiziert wurde.
+
+**Naechster Schritt:** Teil 4 (`showModal.tsx`-Rest) -- noch nicht begonnen, Detailplanung folgt
+direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung des `drawer`-Vertrags).

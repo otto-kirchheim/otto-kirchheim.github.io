@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
+import { DBNavigation } from '@db-ux/react-core-components';
 import { mount, unmount } from '@/infrastructure/ui';
+import useActiveAdminTab from '@/infrastructure/ui/useActiveAdminTab';
 
 import { AdminUserList } from './components/AdminUserList';
 import { AdminVorgabenEditor } from './components/AdminVorgabenEditor';
@@ -70,8 +72,10 @@ export default function AdminTab() {
 
   /**
    * Die Unternavigation des Admin-Panels. Sichtbarkeit haengt an den Berechtigungen; die
-   * Trenner sind rein optisch. Der `tabController` schaltet ueber `data-tab-target` und setzt
-   * `data-active` am `.db-navigation-item` -- hier steht nur der Startzustand.
+   * Trenner sind rein optisch. `tabController.ts`s `zeigeTab()` schaltet ueber `data-tab-target`
+   * und schreibt den aktiven Tab in `activeAdminTabStore` -- `data-active`/`aria-selected` unten
+   * werden reaktiv aus `aktiverUnterTab` (`useActiveAdminTab()`) berechnet, kein DOM-Handschrieb
+   * mehr (Teil 3 der "mehr echtes React"-Initiative, analog `AppHeader.tsx`s Hauptnavigation).
    */
   const unterTabs = (
     [
@@ -88,7 +92,21 @@ export default function AdminTab() {
     ] as const
   ).filter(eintrag => eintrag.sichtbar);
 
-  const aktiverUnterTab = isSuperAdmin ? 'dashboard' : 'users';
+  // `null` (Store-Anfangswert, vor jedem expliziten Wechsel) heisst "Default noch nicht
+  // ueberschrieben" -- identisches Fallback-Muster wie `tabController.ts`s `aktiverTab()`.
+  // Der Store haelt die volle Pane-Id (`zeigeTab()` kennt nur `admin-pane-*`, kein Praefix-
+  // Wissen) -- hier auf die kurze `unterTabs`/`paneKlasse`-Id zurueckgestutzt.
+  const aktiverUnterTab = useActiveAdminTab()?.replace(/^admin-pane-/, '') ?? (isSuperAdmin ? 'dashboard' : 'users');
+
+  /**
+   * Einheitliche Pane-Klasse aus dem reaktiven Store abgeleitet (statt der vormals nur fuer
+   * `dashboard`/`users` verdrahteten, sonst rein statischen Strings) -- vorher ueberschrieb ein
+   * Re-Render aus anderem Grund (`capabilitiesLoading`/`actAsState`) den von `zeigeTab()` per
+   * DOM geschriebenen Zustand der uebrigen 6 Panes wieder mit dem Default.
+   */
+  function paneKlasse(id: string, randKlasse: string): string {
+    return `tab-pane fade${aktiverUnterTab === id ? ' show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 ${randKlasse}`;
+  }
 
   function navigateToProfile(userId: string) {
     setProfileSearch(userId);
@@ -106,34 +124,32 @@ export default function AdminTab() {
       </div>
 
       <div className="mb-3">
-        <nav className="db-navigation admin-unternavigation" id="admin-tabs" role="tablist" aria-label="Adminbereiche">
-          <menu>
-            {unterTabs.map(eintrag =>
-              eintrag.art === 'trenner' ? (
-                <li key={eintrag.id} className="db-navigation-item admin-unternavigation-trenner" aria-hidden="true" />
-              ) : (
-                <li
-                  key={eintrag.id}
-                  className="db-navigation-item"
-                  data-active={String(eintrag.id === aktiverUnterTab)}
-                  role="presentation"
+        <DBNavigation className="admin-unternavigation" id="admin-tabs" role="tablist" aria-label="Adminbereiche">
+          {unterTabs.map(eintrag =>
+            eintrag.art === 'trenner' ? (
+              <li key={eintrag.id} className="db-navigation-item admin-unternavigation-trenner" aria-hidden="true" />
+            ) : (
+              <li
+                key={eintrag.id}
+                className="db-navigation-item"
+                data-active={String(eintrag.id === aktiverUnterTab)}
+                role="presentation"
+              >
+                <button
+                  id={`admin-tab-${eintrag.id}`}
+                  data-tab-target={`admin-pane-${eintrag.id}`}
+                  type="button"
+                  role="tab"
+                  aria-controls={`admin-pane-${eintrag.id}`}
+                  aria-selected={eintrag.id === aktiverUnterTab}
+                  tabIndex={eintrag.id === aktiverUnterTab ? 0 : -1}
                 >
-                  <button
-                    id={`admin-tab-${eintrag.id}`}
-                    data-tab-target={`admin-pane-${eintrag.id}`}
-                    type="button"
-                    role="tab"
-                    aria-controls={`admin-pane-${eintrag.id}`}
-                    aria-selected={eintrag.id === aktiverUnterTab}
-                    tabIndex={eintrag.id === aktiverUnterTab ? 0 : -1}
-                  >
-                    {eintrag.text}
-                  </button>
-                </li>
-              ),
-            )}
-          </menu>
-        </nav>
+                  {eintrag.text}
+                </button>
+              </li>
+            ),
+          )}
+        </DBNavigation>
       </div>
 
       {capabilitiesLoading && <div className="small text-body-secondary mb-3">Berechtigungen werden geladen...</div>}
@@ -150,7 +166,7 @@ export default function AdminTab() {
       <div className="tab-content" id="admin-tab-content">
         {isSuperAdmin && (
           <div
-            className={`tab-pane fade ${isSuperAdmin ? 'show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
+            className={paneKlasse('dashboard', 'border-primary-subtle')}
             id="admin-pane-dashboard"
             role="tabpanel"
             aria-labelledby="admin-tab-dashboard"
@@ -161,7 +177,7 @@ export default function AdminTab() {
         )}
 
         <div
-          className={`tab-pane fade ${!isSuperAdmin ? 'show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-primary-subtle`}
+          className={paneKlasse('users', 'border-primary-subtle')}
           id="admin-pane-users"
           role="tabpanel"
           aria-labelledby="admin-tab-users"
@@ -189,7 +205,7 @@ export default function AdminTab() {
 
         {canSeeVorgabenTab && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-info-subtle"
+            className={paneKlasse('vorgaben', 'border-info-subtle')}
             id="admin-pane-vorgaben"
             role="tabpanel"
             aria-labelledby="admin-tab-vorgaben"
@@ -201,7 +217,7 @@ export default function AdminTab() {
 
         {canSeeTemplatesTab && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-warning-subtle"
+            className={paneKlasse('templates', 'border-warning-subtle')}
             id="admin-pane-templates"
             role="tabpanel"
             aria-labelledby="admin-tab-templates"
@@ -213,7 +229,7 @@ export default function AdminTab() {
 
         {canSeeFormulareTab && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-info-subtle"
+            className={paneKlasse('formulare', 'border-info-subtle')}
             id="admin-pane-formulare"
             role="tabpanel"
             aria-labelledby="admin-tab-formulare"
@@ -225,7 +241,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-danger-subtle"
+            className={paneKlasse('resources', 'border-danger-subtle')}
             id="admin-pane-resources"
             role="tabpanel"
             aria-labelledby="admin-tab-resources"
@@ -237,7 +253,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-success-subtle"
+            className={paneKlasse('profiles', 'border-success-subtle')}
             id="admin-pane-profiles"
             role="tabpanel"
             aria-labelledby="admin-tab-profiles"
@@ -249,7 +265,7 @@ export default function AdminTab() {
 
         {isSuperAdmin && (
           <div
-            className="tab-pane fade bg-darkmode-override shadow-sm p-3 mb-4 border border-1 border-secondary-subtle"
+            className={paneKlasse('logs', 'border-secondary-subtle')}
             id="admin-pane-logs"
             role="tabpanel"
             aria-labelledby="admin-tab-logs"

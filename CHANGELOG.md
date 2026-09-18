@@ -2,6 +2,28 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (143)
+
+### refactor (Admin-Unternavigation auf React-Store umgebaut, Nebenbug behoben)
+
+Fortsetzung der "mehr echtes React"-Initiative (Teil 3 nach CustomSnackbar, Zulagen-Checkboxen):
+
+- `tabController.ts`s `zeigeTab()` schrieb fuer Admins Unternavigation (`admin-pane-*`) noch
+  direkt `classList`/`aria-selected`/`tabindex`/`data-active` auf DOM-Elemente -- letzter
+  DOM-schreibender Rest, seit die Hauptnavigation auf `activeTabStore` umgestellt ist. Neuer
+  `activeAdminTabStore.ts`/`useActiveAdminTab.ts` (gleiches `useSyncExternalStore`-Muster,
+  eigener Store) macht `features/Admin/index.tsx`s Unternavigation reaktiv; der alte
+  DOM-schreibende Zweig in `zeigeTab()` ist damit vollstaendig entfallen (keine Gruppe nutzt ihn
+  mehr).
+- Dabei einen bestehenden Nebenbug gefunden und behoben: `aktiverUnterTab` war bisher eine
+  hartkodierte Konstante -- jedes Re-Render aus anderem Grund (z. B. Act-as-Wechsel) setzte den
+  gewaehlten Unter-Tab optisch auf den Default zurueck, obwohl ein anderer aktiv war. Neuer Test
+  (`AdminTab.subnav.test.tsx`) deckt genau diesen Fall ab.
+- `<nav>`/`<menu>` der Unternavigation nutzt jetzt `<DBNavigation>` (DB-UX-Baustein, reiner
+  Markup-Wrapper). `<DBNavigationItem>` fuer die einzelnen Tab-`<li>`s wurde nach Pruefung
+  verworfen: die Sub-Navigation-Erkennung der Komponente rendert im ersten Zyklus ein
+  ungueltiges `<button>` in `<button>` -- die `<li>`s bleiben roh.
+
 ## 2026-09-18 (142)
 
 ### refactor (Zulagen-Checkboxen auf React umgebaut)

@@ -13,8 +13,7 @@
  * Phase K6: der aktive Tab der Hauptnavigation (`#tabContent`-Gruppe) wird zusaetzlich in
  * `activeTabStore` gespiegelt (`setAktivenTab`) -- `AppHeader.tsx` liest ihn per `useActiveTab()`
  * und berechnet `aria-selected`/`tabindex`/`data-active` selbst, der DOM-Handschrieb auf die
- * Hauptnav-Schalter entfaellt deshalb unten. Admins Unternavigation (`admin-pane-*`, eigene
- * Tab-Gruppe) ist NICHT die Hauptgruppe und bleibt am alten, DOM-schreibenden Mechanismus.
+ * Hauptnav-Schalter entfaellt deshalb unten.
  *
  * Phase N Slice 2: auch das Pane-Klassen-Toggle (`active`/`show`) der Hauptgruppe entfaellt hier
  * -- `App.tsx`s Panes lesen `activeTabStore` per `useActiveTab()` und berechnen ihre Klassen
@@ -22,10 +21,17 @@
  * `flushExtern()` (`reactRoot.ts`): `berechnungMonatsFenster.ts`s `tab:shown`-Handler misst
  * `#Berechnung`s `clientWidth` und braucht das sichtbare Pane VOR dem Event -- ohne den
  * synchronen Flush waere die React-Reaktion auf die Store-Aenderung erst nach dem Event fertig.
+ *
+ * Teil 3 ("mehr echtes React"): Admins Unternavigation (`admin-pane-*` in `#admin-tab-content`)
+ * ist seither ebenfalls store-gestuetzt (`activeAdminTabStore`/`useActiveAdminTab()`,
+ * `features/Admin/index.tsx` liest reaktiv) -- `TAB_GRUPPEN_STORES` bildet den Eltern-Container
+ * jeder Gruppe auf ihren Store ab. Nur die Hash-Schreibung bleibt exklusiv an die Hauptgruppe
+ * gebunden (`istHauptgruppe()`), Admin-Wechsel schreiben bewusst keinen Hash.
  */
 
 import { flushExtern } from './reactRoot';
 import { getAktivenTab, setAktivenTab } from './activeTabStore';
+import { getAktivenAdminTab, setAktivenAdminTab } from './activeAdminTabStore';
 
 // Standard: alles erlaubt -- Auth-Policy gehoert NICHT hierher (siehe Kopfkommentar,
 // tabController bleibt bewusst attribut-/klassenbasiert und auth-agnostisch, exakt wie die
@@ -75,22 +81,22 @@ function panel(id: string): HTMLElement | null {
   return el?.classList.contains('tab-pane') ? el : null;
 }
 
-/**
- * Geschwister-Panels einer Gruppe. Es gibt mehr als eine: die Hauptnavigation schaltet
- * `#tabContent`, das Admin-Panel seine eigene `.tab-content` -- ein Wechsel darf immer nur
- * die eigene Gruppe umschalten.
- */
-function gruppe(ziel: HTMLElement): HTMLElement[] {
-  const eltern = ziel.parentElement;
-  if (!eltern) return [ziel];
-  return [...eltern.children].filter(
-    (el): el is HTMLElement => el instanceof HTMLElement && el.classList.contains('tab-pane'),
-  );
-}
-
 /** Nur der Wechsel in der Hauptnavigation gehoert in den Hash. */
 function istHauptgruppe(ziel: HTMLElement): boolean {
   return ziel.parentElement?.id === 'tabContent';
+}
+
+type GruppenStore = { get: () => string | null; set: (id: string) => void };
+
+/** Bildet den Eltern-Container einer Tab-Gruppe auf ihren `useSyncExternalStore`-Store ab. */
+const TAB_GRUPPEN_STORES: Record<string, GruppenStore> = {
+  tabContent: { get: getAktivenTab, set: setAktivenTab },
+  'admin-tab-content': { get: getAktivenAdminTab, set: setAktivenAdminTab },
+};
+
+function gruppenStoreFuer(ziel: HTMLElement): GruppenStore | undefined {
+  const containerId = ziel.parentElement?.id;
+  return containerId ? TAB_GRUPPEN_STORES[containerId] : undefined;
 }
 
 /**
@@ -113,6 +119,7 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   if (!ziel) return false;
 
   const hauptgruppe = istHauptgruppe(ziel);
+  const gruppenStore = gruppenStoreFuer(ziel);
 
   // Nav/Einstellungen-Knopf sind zwar per `d-none` versteckt (siehe `AppHeader.tsx`), ein direkt
   // gesetzter/veraenderter Hash (Adressleiste, alter Link, Zurueck-Button) waere sonst trotzdem
@@ -127,38 +134,23 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   }
 
   const imHash = hashSchreiben && hauptgruppe;
-  // Hauptgruppe: "schon aktiv" kommt aus dem Store (die DOM-Klasse wird hier nicht mehr
-  // geschrieben). Admin-Subnav: weiterhin aus dem DOM, dort unveraendert.
-  const bereitsAktiv = hauptgruppe ? getAktivenTab() === id : ziel.classList.contains('active');
+  // Beide Gruppen sind heute store-gestuetzt (siehe Dateikopf) -- "schon aktiv" kommt aus dem
+  // jeweiligen Store, keine Gruppe schreibt hier noch DOM-Klassen.
+  const bereitsAktiv = gruppenStore ? gruppenStore.get() === id : ziel.classList.contains('active');
   if (bereitsAktiv) {
     if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
-    if (hauptgruppe) setAktivenTab(id);
+    gruppenStore?.set(id);
     return true;
   }
 
-  if (hauptgruppe) {
-    // `flushExtern`: `App.tsx`s Panes muessen VOR dem `tab:shown`-Dispatch unten sichtbar sein
-    // (siehe Kommentar am Dateikopf) -- `berechnungMonatsFenster.ts` misst sonst `clientWidth`
-    // eines noch unsichtbaren Containers.
-    flushExtern(() => setAktivenTab(id));
-  } else {
-    for (const pane of gruppe(ziel)) {
-      const aktiv = pane === ziel;
-      pane.classList.toggle('active', aktiv);
-      pane.classList.toggle('show', aktiv);
-    }
-    const gruppenIds = new Set(gruppe(ziel).map(pane => pane.id));
-    for (const el of schalter()) {
-      const elZiel = el.getAttribute(ZIEL_ATTRIBUT);
-      if (!elZiel || !gruppenIds.has(elZiel)) continue;
-      const aktiv = elZiel === id;
-      el.classList.toggle('active', aktiv);
-      // `.db-navigation-item` traegt die Aktiv-Markierung im DB-System am Listenelement.
-      el.closest('.db-navigation-item')?.setAttribute('data-active', String(aktiv));
-      if (el.getAttribute('role') === 'tab') {
-        el.setAttribute('aria-selected', String(aktiv));
-        el.setAttribute('tabindex', aktiv ? '0' : '-1');
-      }
+  if (gruppenStore) {
+    if (hauptgruppe) {
+      // `flushExtern`: `App.tsx`s Panes muessen VOR dem `tab:shown`-Dispatch unten sichtbar sein
+      // (siehe Kommentar am Dateikopf) -- `berechnungMonatsFenster.ts` misst sonst `clientWidth`
+      // eines noch unsichtbaren Containers. Admin hat keinen vergleichbaren synchronen Leser.
+      flushExtern(() => gruppenStore.set(id));
+    } else {
+      gruppenStore.set(id);
     }
   }
 
