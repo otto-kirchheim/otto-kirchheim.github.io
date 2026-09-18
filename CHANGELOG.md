@@ -2,6 +2,39 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (146)
+
+### chore (ESLint: eslint-plugin-react-refresh ergaenzt)
+
+- `react-refresh/only-export-components` als Warnung fuer `**/*.tsx` aktiviert (Vite-HMR-
+  Kompatibilitaet). 54 bestehende Warnings aufgedeckt (Tabs/Modals, die Komponenten und
+  Nicht-Komponenten aus derselben Datei exportieren) -- bewusst nur als Warnung belassen, keine
+  Aufraeumaktion im selben Zug.
+
+## 2026-09-18 (145)
+
+### fix (AutoSaveBadge: Icon im Badge nicht zentriert)
+
+- DB-UX-Bug: `.db-badge > span:empty` (core-components `badge.css`, fuer den reinen
+  Punkt-Badge ohne Icon) trifft ueber `:empty` versehentlich auch `.db-icon` -- das Glyph
+  kommt aus `::before`, zaehlt fuer `:empty` also nicht als Kind. Die Regel zwingt die
+  Icon-Box auf `--badge-size` statt auf die quadratische Icon-Groesse (nur `block-size`
+  ueberschrieben, `inline-size` bleibt am Inhalt) -- das Glyph wirkt dadurch in jedem Badge
+  mit reinem Icon (kein Text-Label) verschoben/gestaucht, betroffen z. B. `AutoSaveBadge.tsx`s
+  "gespeichert"-Haekchen im Save-Button. Kein Projekt-Override kollidiert hier -- reproduziert
+  auch mit unveraendertem DB-UX-Markup (raw `.db-badge`/`.db-icon`-Span, ebenso mit `DBIcon` ohne
+  sichtbare Kind-Beschriftung; nur Beispiele mit sichtbarem Label entgehen dem Bug, weil deren
+  Span dann nicht mehr `:empty` ist).
+- Anlass genutzt, `AutoSaveBadge.tsx` von handgebautem `<span data-icon>`/`<span data-semantic>`
+  auf die echten `<DBBadge>`/`<DBIcon>`-Komponenten umgestellt (`label`-Prop ergaenzt fuer
+  Corner-Badge-A11y, vorher gar nicht gesetzt). Fix selbst: `<DBIcon icon=... text={title} />`
+  statt `icon` ohne Kind-Inhalt -- `text` macht die `.db-icon`-Huelle nicht-leer (der String
+  bleibt wegen `.db-icon`s `font-size: 0` unsichtbar) und entschaerft den `:empty`-Treffer direkt
+  im Markup, ohne CSS-Gegenregel. Einziger `db-badge`-Verbraucher im Projekt -- kein anderer
+  Aufrufer, der eine zusaetzliche CSS-Absicherung noch braeuchte. Per Puppeteer verifiziert
+  (echter `#btnSaveEinstellungen`-Save-Button): Icon-Rect vorher 11x8px (asymmetrisch, Haekchen
+  sichtbar verschoben), nachher 11x11px, exakt zentriert im 16x16px-Badge.
+
 ## 2026-09-18 (144)
 
 ### refactor (showModal: MutationObserver-Bruecke entfernt)

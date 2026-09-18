@@ -1,3 +1,4 @@
+import { DBBadge, DBIcon, type SemanticType } from '@db-ux/react-core-components';
 import { useEffect, useState, type FC } from 'react';
 
 import useAutoSaveStatus from '@/infrastructure/autoSave/useAutoSaveStatus';
@@ -7,6 +8,17 @@ import type { TResourceKey, TSaveStatus } from '@/types';
  * AutoSave-Status als Badge in der Ecke eines Buttons -- deklarativer Nachfolger von
  * `autoSaveIndicator.ts`s `updateBadge()`. Wird von `DBLoadingButton` gerendert, wenn
  * `autoSaveResources` gesetzt ist.
+ *
+ * `DBIcon`s `text`-Prop (statt `children`) ist hier kein Zufall: ein Icon ohne jeden Text-Kind-
+ * Knoten macht seine `.db-icon`-Huelle DOM-`:empty` (das Glyph selbst sitzt im `::before`, zaehlt
+ * dafuer nicht) -- und `.db-badge > span:empty` (DB-UX-`badge.css`, fuer den reinen Punkt-Badge
+ * ohne Icon gedacht) trifft dann ueber diesen Selektor versehentlich auch das Icon, zwingt seine
+ * Box auf `--badge-size` statt auf die quadratische Icon-Groesse und verschiebt das Glyph
+ * sichtbar aus der Mitte (reproduzierbar auch mit unveraendertem DB-UX-Markup, kein
+ * Projekt-Override kollidiert hier). `text` macht die Huelle nicht-leer (der String selbst
+ * bleibt wegen `.db-icon`s `font-size: 0` unsichtbar) und entschaerft den Treffer von vornherein
+ * -- exakt das Muster, das auch DB-UX' eigene Storybook-Beispiele fuer Badge+Icon nutzen (dort
+ * mit sichtbarem Demo-Label als Kind statt `text`, mit demselben Nebeneffekt).
  *
  * Icons (DB UX, `data-icon`):
  * - idle:             kein Badge sichtbar
@@ -30,7 +42,7 @@ const ICON_MAP: Record<TSaveStatus, string> = {
 
 const ICON_OFFLINE = 'wifi_disabled';
 
-const SEMANTIK_MAP: Record<TSaveStatus, string | undefined> = {
+const SEMANTIK_MAP: Record<TSaveStatus, SemanticType | undefined> = {
   idle: undefined,
   pending: 'neutral',
   saving: 'informational',
@@ -95,16 +107,17 @@ const AutoSaveBadge: FC<TAutoSaveBadge> = ({ resources }) => {
   }
 
   return (
-    <span
-      className={`autosave-badge db-badge${status === 'saving' ? ' autosave-pulse' : ''}`}
-      data-placement="corner-top-right"
-      data-emphasis="strong"
-      data-semantic={semantic}
+    <DBBadge
+      className={`autosave-badge${status === 'saving' ? ' autosave-pulse' : ''}`}
+      placement="corner-top-right"
+      emphasis="strong"
+      semantic={semantic}
+      label={visible ? title : undefined}
       title={visible ? title : undefined}
       style={{ transition: 'opacity 0.3s ease', opacity: visible ? 1 : 0 }}
     >
-      <span className="db-icon" data-icon={visible ? iconName : undefined} aria-hidden="true" />
-    </span>
+      <DBIcon icon={visible ? iconName : undefined} text={visible ? title : undefined} aria-hidden="true" />
+    </DBBadge>
   );
 };
 

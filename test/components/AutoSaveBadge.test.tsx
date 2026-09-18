@@ -131,4 +131,24 @@ describe('AutoSaveBadge', () => {
     await new Promise(resolve => setTimeout(resolve, 2100));
     expect(badgeOf(container).style.opacity).toBe('0');
   });
+
+  it('gibt dem Icon einen Text-Kind-Knoten, damit `.db-icon` nicht `:empty` ist', async () => {
+    // DB-UX-Bug: `.db-badge > span:empty` (badge.css, fuer den reinen Punkt-Badge ohne Icon)
+    // trifft ueber `:empty` versehentlich auch ein Icon-only-`.db-icon` (das Glyph sitzt im
+    // `::before`, zaehlt fuer `:empty` nicht als Kind) und zwingt dessen Box auf `--badge-size`
+    // statt auf die quadratische Icon-Groesse -- sichtbar verschoben/gestauchtes Glyph. `DBIcon`s
+    // `text`-Prop (hier `title`, unsichtbar wegen `.db-icon`s `font-size: 0`) haelt den Span
+    // nicht-leer und umgeht den Treffer von vornherein. `matches(':empty')` selbst laesst sich
+    // hier nicht pruefen -- happy-doms Implementierung zaehlt nur Element-Kinder, nicht
+    // Text-Knoten, und meldet daher fuer einen reinen Text-Inhalt faelschlich `true` (in echtem
+    // Chrome per Puppeteer verifiziert: dort korrekt `false`). `textContent` ist der portable,
+    // aussagekraeftige Teil dieser Pruefung.
+    const { container } = setup(['N']);
+    const listener = mockOnAutoSaveStatus.mock.calls[0][0];
+
+    listener('N', 'saved');
+    await flush();
+
+    expect(iconOf(container).textContent).toBe('Gespeichert');
+  });
 });

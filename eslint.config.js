@@ -7,6 +7,7 @@ import prettierConfig from 'eslint-config-prettier';
 import dbUx from '@db-ux/core-eslint-plugin';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default defineConfig(
   // Basis
@@ -61,6 +62,15 @@ export default defineConfig(
       // in einer spaeteren Phase -- waehrend des Framework-Wechsels nur als Hinweis.
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/refs': 'warn',
+    },
+  },
+
+  // Fast-Refresh: Dateien mit gemischten Non-Component-Exports brechen HMR unter Vite.
+  {
+    files: ['**/*.tsx'],
+    plugins: { 'react-refresh': reactRefresh },
+    rules: {
+      'react-refresh/only-export-components': 'warn',
     },
   },
 
