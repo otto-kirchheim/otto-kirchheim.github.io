@@ -24,7 +24,7 @@ export function EwtTab() {
   // bisherige `useEffect(() => {...}, [])`-Verhalten.
   const tagParser = (value: unknown) => {
       const s = value as string;
-      const d = dayjs(s, 'DD.MM.YYYY', true);
+      const d = dayjs(s, 'YYYY-MM-DD', true);
       return d.isValid() ? d.format('dd DD.MM.') : s;
     },
     // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
