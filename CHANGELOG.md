@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-18 (144)
+
+### refactor (showModal: MutationObserver-Bruecke entfernt)
+
+Abschluss der "mehr echtes React"-Initiative (Teil 4 nach CustomSnackbar, Zulagen-Checkboxen,
+Admin-Unternavigation):
+
+- `beiModalSchliessen()` hing bisher einen `MutationObserver` an `#modal`, um zu erkennen, wann
+  der aktuelle Dialog-Inhalt verschwindet (Ersatz fuer das tote `hide.bs.modal`-Bootstrap-Event).
+  Beide Stellen, an denen das tatsaechlich passiert (`schliesseModal()`, `showModal()`s
+  Ersetzen-Zweig beim direkten Neu-Oeffnen), sind bereits bekannter, synchroner Code -- eine
+  neue `aufraeumer`-`WeakMap` (Container -> registrierte Aufraeum-Funktion, analog der
+  bestehenden `schliesser`-Map) ersetzt das DOM-Beobachten durch einen direkten Aufruf an genau
+  diesen zwei Stellen.
+- `beiModalSchliessen(fn)` bleibt Signatur und Aufruf-Zeitpunkt fuer alle 6 Aufrufstellen
+  unveraendert.
+- Der globale Klick-Delegator (`data-dialog-dismiss="modal"`) bleibt bewusst unveraendert --
+  kein Vanilla-DOM-Rest, sondern weiterhin das passende Muster fuer 11 Verwendungen quer durch
+  wiederverwendete Modal-Bausteine.
+- Neuer Test `test/components/showModal.test.tsx` (4 Faelle) deckt `beiModalSchliessen`s
+  tatsaechliches Verhalten erstmals ab -- vorher wurde es in allen betroffenen Tests komplett
+  gemockt.
+
 ## 2026-09-18 (143)
 
 ### refactor (Admin-Unternavigation auf React-Store umgebaut, Nebenbug behoben)

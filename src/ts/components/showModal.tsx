@@ -24,6 +24,17 @@ export const DIALOG_RICHTUNG = 'to-left' as const;
 /** Schliess-Funktion je Dialog-Container -- fuer `data-dialog-dismiss` und gestapelte Dialoge. */
 const schliesser = new WeakMap<HTMLElement, () => void>();
 
+/** Per `beiModalSchliessen` registrierte Aufraeum-Funktion je Dialog-Container. */
+const aufraeumer = new WeakMap<HTMLElement, () => void>();
+
+/** Ruft die fuer `container` registrierte Aufraeum-Funktion genau einmal auf, falls vorhanden. */
+function aufraeumenFuer(container: HTMLElement): void {
+  const aufraeumen = aufraeumer.get(container);
+  if (!aufraeumen) return;
+  aufraeumer.delete(container);
+  aufraeumen();
+}
+
 function zuruecksetzen<T extends CustomTableTypes>(modal: CustomHTMLDivElement<T>): void {
   modal.row = null;
   modal.role = 'document';
@@ -55,42 +66,36 @@ export function schliesseModal(): void {
   if (!modal || modal.childElementCount === 0) return;
 
   schliesser.delete(modal);
+  aufraeumenFuer(modal);
   unmount(modal);
   zuruecksetzen(modal);
 }
 
 /**
- * Ruft `aufraeumen` genau einmal auf, sobald der aktuell offene Dialog-Inhalt aus `#modal`
- * entfernt wird -- durch `schliesseModal`/`unmount` oder durch das direkte Neu-Oeffnen eines
- * anderen Dialogs im selben Container.
+ * Registriert `aufraeumen`, damit es genau einmal aufgerufen wird, sobald der aktuell offene
+ * Dialog-Inhalt aus `#modal` entfernt wird -- durch `schliesseModal` oder durch das direkte
+ * Neu-Oeffnen eines anderen Dialogs im selben Container (`showModal`s Ersetzen-Zweig). Beide
+ * Stellen rufen `aufraeumenFuer(modal)` synchron und direkt auf, kein DOM-Beobachten noetig.
  *
  * Ersatz fuer das tote `modal.addEventListener('hide.bs.modal', ...)`: `hide.bs.modal` ist ein
  * Bootstrap-Plugin-Event und feuert seit Phase H (Bootstrap raus) nie mehr. Ohne diese Bruecke
  * leaken pro Dialog-Oeffnung registrierte `onEvent`-Listener (Sync-Hinweise in den EA-/Neben-/
  * Bereitschaftseinsatz-Dialogen).
- *
- * Beobachtet wird der konkrete Inhaltsknoten (der `DBDrawer`-Wrapper), nicht nur
- * `childElementCount`: Beim direkten Neu-Oeffnen ersetzt `showModal` den alten Knoten synchron
- * durch einen neuen -- die Pruefung `!inhalt.isConnected` erkennt das trotzdem.
  */
 export function beiModalSchliessen(aufraeumen: () => void): void {
   const modal = document.querySelector<HTMLElement>('#modal');
-  const inhalt = modal?.firstElementChild;
-  if (!modal || !inhalt) return;
-
-  const beobachter = new MutationObserver(() => {
-    if (inhalt.isConnected) return;
-    beobachter.disconnect();
-    aufraeumen();
-  });
-  beobachter.observe(modal, { childList: true });
+  if (!modal) return;
+  aufraeumer.set(modal, aufraeumen);
 }
 
 export default function showModal<T extends CustomTableTypes>(children: ReactNode): CustomHTMLDivElement<T> {
   const modal = document.querySelector<CustomHTMLDivElement<T>>('#modal');
   if (!modal) throw new Error('Element nicht gefunden');
 
-  if (modal.childElementCount > 0) unmount(modal);
+  if (modal.childElementCount > 0) {
+    aufraeumenFuer(modal);
+    unmount(modal);
+  }
   if (modal.row !== null || modal.childElementCount > 0) zuruecksetzen(modal);
 
   oeffneDrawer(modal, children, schliesseModal);

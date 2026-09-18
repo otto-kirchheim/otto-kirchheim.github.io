@@ -3599,3 +3599,53 @@ echten Test statt nur am Quelltext verifiziert wurde.
 
 **Naechster Schritt:** Teil 4 (`showModal.tsx`-Rest) -- noch nicht begonnen, Detailplanung folgt
 direkt davor (inkl. erneuter `mcp__db-ux__*`-Pruefung des `drawer`-Vertrags).
+
+## showModal: MutationObserver-Bruecke entfernt (2026-09-18)
+
+Teil 4 (letzter Teil) der "mehr echtes React"-Initiative, direkt nach der Admin-Unternavigation
+(Teil 3). Siehe `plane-im-frontend-mehr-floating-phoenix.md` fuer die volle Detailplanung --
+damit ist die Initiative (Teile 1-4) abgeschlossen.
+
+- [x] `beiModalSchliessen()` nutzte einen `MutationObserver` (`isConnected`-Polling), um zu
+      erkennen, wann `#modal`s Inhalt verschwindet -- Ersatz fuer das seit Bootstrap-Entfernung
+      tote `hide.bs.modal`-Event. Ersetzt durch eine neue `aufraeumer`-`WeakMap` (analog der
+      bestehenden `schliesser`-Map): `schliesseModal()` und `showModal()`s Ersetzen-Zweig rufen
+      die registrierte Funktion jetzt direkt und synchron auf -- beide Stellen sind bekannter,
+      eigener Code, kein DOM-Beobachten mehr noetig.
+- [x] `beiModalSchliessen(fn)` bleibt fuer alle 6 Aufrufstellen unveraendert (Signatur +
+      Aufruf-Zeitpunkt) -- eine Signaturaenderung von `showModal(children, onClose)` haette die
+      Aufrufer NICHT vereinfacht (der Cleanup-Callback wird oft erst nach `showModal()` anhand
+      von dessen Rueckgabewert berechnet).
+- [x] **Globaler Klick-Delegator bewusst NICHT angefasst**: `data-dialog-dismiss="modal"` ist
+      kein Vanilla-DOM-Rest, sondern weiterhin das passende Muster (11 Verwendungen quer durch
+      wiederverwendete Bausteine wie `MyModalHeader`/`MyEditorFooter`/`MyHelpModal` -- eine
+      Ablösung durch Prop-Threading waere deutlich invasiver, ohne fachlichen Gewinn).
+- [x] `DBDrawer`s `onClose`/`close`-Vertrag per `mcp__db-ux__get_component_props` erneut
+      geprueft: weiterhin reine Callback-Props, ausgeloest von der drawer-eigenen
+      Schliess-Mechanik, nicht von React-Unmount -- bestaetigt, dass der Ersetzen-Fall ohnehin
+      nie ueber `onClose` liefe.
+- [x] Neuer Test `test/components/showModal.test.tsx` (4 Faelle): deckt `beiModalSchliessen`s
+      tatsaechliches Verhalten erstmals ab (vorher in allen betroffenen Tests komplett gemockt).
+
+### Verifikationskriterien
+
+- `bunx tsc --noEmit` clean, `bun run lint`/`lint:css` (0 Fehler, vorbestehende Warnungen
+  unveraendert), `bun run test` (2149/2149 pass), `bun run build` gruen, `bun run format` vor
+  Commit.
+- Puppeteer-Durchklick versucht (Neben-Tab, `#btnESN`-Dialog): Feature-Tab-Root liess sich ohne
+  vollen Boot-Zyklus (kein Backend) nicht zuverlaessig genug isoliert mounten, um den Dialog
+  echt zu oeffnen -- abgebrochen. Die 4 neuen Unit-Tests simulieren beide Teardown-Pfade
+  (expliziter Close, direktes Ersetzen) bereits direkt und decken damit die eigentliche
+  Verhaltensaenderung ab.
+
+### Review
+
+Kleinster Umbau der vier Teile: keine Aufrufstellen-Aenderung, keine neue Abstraktion -- nur ein
+`MutationObserver` durch zwei direkte Aufrufe an bereits bekannten Stellen ersetzt. Die
+Hauptarbeit war das Verifizieren, dass wirklich ALLE Teardown-Pfade abgedeckt sind (beide Wege,
+wie `#modal`-Inhalt verschwindet, liefen schon vorher durch `schliesseModal()`/`showModal()`s
+Ersetzen-Zweig) und dass der globale Klick-Delegator bewusst NICHT Teil des Umbaus ist -- ein
+reflexhafter "alles auf Callback-Props umstellen"-Ansatz haette hier unnoetig viele
+wiederverwendete Bausteine angefasst.
+
+**Damit ist die "mehr echtes React"-Initiative (Teile 1-4) abgeschlossen.**
