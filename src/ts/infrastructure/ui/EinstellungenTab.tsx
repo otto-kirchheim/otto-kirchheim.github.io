@@ -184,7 +184,7 @@ export default function EinstellungenTab() {
                     </div>
                   </div>
 
-                  <hr className="my-0" />
+                  <DBDivider width="full" margin="none" />
 
                   {/* AutoSave */}
                   <div>

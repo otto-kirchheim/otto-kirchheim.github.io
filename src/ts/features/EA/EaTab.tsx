@@ -1,4 +1,4 @@
-import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -154,7 +154,7 @@ export function EaTab() {
           </DBLoadingButton>
         </DBStack>
       </div>
-      <hr />
+      <DBDivider width="full" />
 
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table

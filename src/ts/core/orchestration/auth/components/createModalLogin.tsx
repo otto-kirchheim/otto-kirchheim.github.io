@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBDivider } from '@db-ux/react-core-components';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import { createRef, type SubmitEvent } from 'react';
 
@@ -44,7 +44,7 @@ export default function createModalLogin(): void {
         </div>
       )}
 
-      {!supportsPasskeys && <hr className="w-100 my-3 mx-0 border-secondary-subtle opacity-100" />}
+      {!supportsPasskeys && <DBDivider width="full" />}
 
       <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 w-100 px-3 pb-3">
         <span className="small text-body-secondary">Weitere Optionen</span>

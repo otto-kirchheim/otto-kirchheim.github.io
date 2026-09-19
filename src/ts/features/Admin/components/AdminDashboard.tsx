@@ -4,7 +4,7 @@ import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard } from './adminDashboardCharts';
 import { formatUptime } from '../utils/formatUptime';
-import { DBButton, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBNotification, DBStack, DBTag } from '@db-ux/react-core-components';
 
 const ROLE_LABELS: Record<Role, string> = {
   [Role.MEMBER]: 'Mitglied',
@@ -33,7 +33,7 @@ function StatCard({
   const display = label ?? value?.toLocaleString() ?? '–';
   return (
     <div className="sp-sm-6 sp-xl-3">
-      <div className="db-card border-0 shadow-sm h-100">
+      <DBCard className="border-0 shadow-sm h-100">
         <div className="d-flex gap-3 align-items-start">
           <span className={`db-icon fs-2 ${colorClass} db-font-size-lg`} data-icon={icon} />
           <div style={{ minWidth: '0' }}>
@@ -45,7 +45,7 @@ function StatCard({
             {sub && <div className="text-body-secondary small mt-1">{sub}</div>}
           </div>
         </div>
-      </div>
+      </DBCard>
     </div>
   );
 }
@@ -120,21 +120,14 @@ export function AdminDashboard() {
 
   if (error) {
     return (
-      <div className="db-notification d-flex align-items-center gap-2" data-semantic="critical">
-        <span data-area="content">
+      <DBNotification semantic="critical">
+        <DBStack direction="row" alignment="center" justifyContent="space-between" gap="x-small">
           <span>{error}</span>
-          <DBButton
-            type="button"
-            className="ms-auto"
-            variant="outlined"
-            data-color="critical"
-            size="small"
-            onClick={load}
-          >
+          <DBButton type="button" variant="outlined" data-color="critical" size="small" onClick={load}>
             Neu laden
           </DBButton>
-        </span>
-      </div>
+        </DBStack>
+      </DBNotification>
     );
   }
 
@@ -193,7 +186,7 @@ export function AdminDashboard() {
 
       <div className="raster mb-4 abstand-3">
         <div className="sp-md-4">
-          <div className="db-card border-0 shadow-sm h-100">
+          <DBCard className="border-0 shadow-sm h-100">
             <h6 className="fw-semibold mb-3">Rollenverteilung</h6>
             {Object.entries(stats.users.byRole).map(([role, count]) => (
               <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
@@ -203,11 +196,11 @@ export function AdminDashboard() {
                 </DBTag>
               </div>
             ))}
-          </div>
+          </DBCard>
         </div>
 
         <div className="sp-md-4">
-          <div className="db-card border-0 shadow-sm h-100">
+          <DBCard className="border-0 shadow-sm h-100">
             <h6 className="fw-semibold mb-3">Ressourcenbestand</h6>
             {(
               [
@@ -243,11 +236,11 @@ export function AdminDashboard() {
             <div className="text-body-secondary mt-2" style={{ fontSize: '.7rem' }}>
               +N = neue Einträge (7 Tage)
             </div>
-          </div>
+          </DBCard>
         </div>
 
         <div className="sp-md-4">
-          <div className="db-card border-0 shadow-sm h-100">
+          <DBCard className="border-0 shadow-sm h-100">
             <h6 className="fw-semibold mb-3">Auth-Aktivität</h6>
             {(
               [
@@ -266,7 +259,7 @@ export function AdminDashboard() {
                 </DBTag>
               </div>
             ))}
-          </div>
+          </DBCard>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DBButton, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld, MyCheckbox } from '@/components';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
@@ -54,9 +54,9 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
       <FahrzeitInput value={aZ.fahrzeit} onChange={updateFahrzeit} />
       <div className="raster abstand-0">
         <div className="sp-lg-6 arbeitszeit-col-left">
-          <hr className="my-3" />
+          <DBDivider width="full" />
           <SchichtSection title="Frühschicht" schicht={aZ.frueh} onChange={updateFrueh} />
-          <hr className="my-3" />
+          <DBDivider width="full" />
           <OptionalSchichtSection
             title="Spätschicht"
             schicht={aZ.spaet}
@@ -65,7 +65,7 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
           />
         </div>
         <div className="sp-lg-6 arbeitszeit-col-right">
-          <hr className="my-3" />
+          <DBDivider width="full" />
           <OptionalSchichtSection
             title="Nachtschicht"
             schicht={aZ.nacht}
@@ -73,7 +73,7 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
             defaultRegelarbeitstage={[1, 2, 3, 4, 5]}
             onChange={updateNacht}
           />
-          <hr className="my-3" />
+          <DBDivider width="full" />
           <SonderSection sonder={aZ.sonder} onChange={updateSonder} />
         </div>
       </div>

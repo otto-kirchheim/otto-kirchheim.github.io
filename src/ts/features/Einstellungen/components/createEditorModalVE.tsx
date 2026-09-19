@@ -13,7 +13,7 @@ import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModa
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { saveTableDataVorgabenU } from '../utils';
-import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBDivider } from '@db-ux/react-core-components';
 import { SchichtOverrideEditor } from './SchichtOverrideEditor';
 
 const SCHICHT_LABELS: Record<BereitschaftSchichtTyp, string> = {
@@ -389,11 +389,11 @@ export default function EditorModalVE(
         {createNameElement(row)}
         {createcheckboxElement(row, 'standard')}
         <div>
-          <hr className="my-0" />
+          <DBDivider width="full" margin="none" />
         </div>
         {createRangeElement(row, 'beginnB', 'endeB', false, 'Bereitschaft')}
         <div>
-          <hr className="my-0" />
+          <DBDivider width="full" margin="none" />
         </div>
         <SchichtenConfigSection
           aZ={aZ}

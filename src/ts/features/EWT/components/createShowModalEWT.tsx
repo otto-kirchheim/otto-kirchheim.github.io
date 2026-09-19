@@ -4,6 +4,7 @@ import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showM
 import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { persistEwtTableData } from '../utils';
+import { DBDivider } from '@db-ux/react-core-components';
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -106,7 +107,7 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
         </div>
         {createOrtSchichtElement(row, 'Einsatzort')}
         {createOrtSchichtElement(row, 'Schicht')}
-        <hr className="ewt-trenner" />
+        <DBDivider width="full" className="ewt-trenner" />
 
         <div className="ewt-zeit ewt-zeit-pfeile">
           <span className="db-icon db-font-size-lg ewt-zeit-links" data-icon="arrow_down" />

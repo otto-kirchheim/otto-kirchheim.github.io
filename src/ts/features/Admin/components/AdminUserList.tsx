@@ -368,9 +368,7 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
       {/* Keine Ergebnisse */}
       {!loading && visibleUsers.length === 0 && (
-        <div className="db-notification text-center" data-semantic="neutral" role="alert">
-          <span data-area="content">Keine Benutzer gefunden.</span>
-        </div>
+        <p className="text-body-secondary text-center">Keine Benutzer gefunden.</p>
       )}
 
       {/* Ergebnis-Anzahl + Mehrfachauswahl */}

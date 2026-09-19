@@ -1,6 +1,7 @@
 import type { Row } from '@/infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
+import { DBDivider } from '@db-ux/react-core-components';
 
 const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, falseparser?: false) => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -56,9 +57,9 @@ export default function ShowModalVE(row: Row<IVorgabenUvorgabenB>, titel: string
       <MyModalBody>
         {createShowElement(row, 'Name')}
         {createShowElement(row, 'standard')}
-        <hr className="my-2" />
+        <DBDivider width="full" />
         {createBereitschaftBlock(row)}
-        <hr className="my-2" />
+        <DBDivider width="full" />
         {createNachtschichtBlock(row)}
       </MyModalBody>
     </MyDivModal>,

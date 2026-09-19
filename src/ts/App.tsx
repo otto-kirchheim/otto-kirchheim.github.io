@@ -1,4 +1,4 @@
-import { DBButton, DBShell, DBShellContent } from '@db-ux/react-core-components';
+import { DBButton, DBNotification, DBShell, DBShellContent } from '@db-ux/react-core-components';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import SnackbarHost from '@/infrastructure/ui/SnackbarHost';
@@ -40,21 +40,19 @@ export default function App() {
         <div id="modal"></div>
 
         <div className="breit px-2 px-md-3 mt-2">
-          <div
-            className="db-notification shadow-sm d-none mb-0"
-            data-semantic="warning"
-            data-variant="standalone"
+          <DBNotification
             id="actAsNotice"
+            semantic="warning"
+            variant="standalone"
+            icon="eye"
             role="status"
-            aria-live="polite"
+            ariaLive="polite"
+            className="shadow-sm d-none mb-0"
           >
             <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2 gap-md-3">
-              <div className="d-flex align-items-start gap-2">
-                <span className="db-icon mt-1 mt-md-0" data-icon="eye"></span>
-                <div>
-                  <div className="fw-semibold">Fremde Benutzerdaten aktiv</div>
-                  <div className="small" id="actAsNoticeText"></div>
-                </div>
+              <div>
+                <div className="fw-semibold">Fremde Benutzerdaten aktiv</div>
+                <div className="small" id="actAsNoticeText"></div>
               </div>
               <div className="d-grid d-sm-flex gap-2">
                 <DBButton variant="filled" data-color="warning" size="small" id="actAsOwnDataButton" type="button">
@@ -62,7 +60,7 @@ export default function App() {
                 </DBButton>
               </div>
             </div>
-          </div>
+          </DBNotification>
         </div>
 
         <div id="conflictReviewBannerMount"></div>

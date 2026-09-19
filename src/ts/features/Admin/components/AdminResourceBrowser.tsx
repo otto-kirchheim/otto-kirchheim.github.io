@@ -23,7 +23,7 @@ import {
   fetchAdminUserNameMap,
   type AdminPage,
 } from '../utils/api';
-import { DBButton, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBNotification, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
@@ -238,7 +238,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       </nav>
 
       {/* Filter-Panel */}
-      <div className="db-card bg-body-secondary border-0 mb-3" data-spacing="none">
+      <DBCard className="bg-body-secondary border-0 mb-3" spacing="none">
         <div className="py-2 px-3">
           <div className="d-flex flex-wrap gap-2 align-items-end">
             {/* Benutzer: Text-Input mit Datalist (Suche) */}
@@ -351,15 +351,14 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             </div>
           )}
         </div>
-      </div>
+      </DBCard>
 
       {loadError && (
-        <div className="db-notification d-flex align-items-center gap-2 py-2" data-semantic="critical">
-          <span data-area="content">
+        <DBNotification semantic="critical" className="py-2">
+          <DBStack direction="row" alignment="center" justifyContent="space-between" gap="x-small">
             {loadError}
             <DBButton
               type="button"
-              className="ms-auto"
               variant="outlined"
               data-color="critical"
               size="small"
@@ -367,8 +366,8 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
             >
               ×
             </DBButton>
-          </span>
-        </div>
+          </DBStack>
+        </DBNotification>
       )}
 
       {/* Tabelle */}

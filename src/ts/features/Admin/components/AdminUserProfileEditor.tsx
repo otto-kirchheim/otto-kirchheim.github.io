@@ -1,4 +1,4 @@
-import { DBButton, DBDrawer, DBDrawerHeader, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerHeader, DBNotification, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -326,9 +326,9 @@ export function AdminUserProfileEditor({
       </div>
 
       {loadError && (
-        <div className="db-notification py-2 small" data-semantic="critical">
-          <span data-area="content">{loadError}</span>
-        </div>
+        <DBNotification semantic="critical" className="py-2 small">
+          {loadError}
+        </DBNotification>
       )}
 
       {/* Table */}
@@ -452,9 +452,9 @@ export function AdminUserProfileEditor({
             <div className="dialog-rumpf" data-breite="xl">
               <div className="dialog-koerper">
                 {edit.saveError && (
-                  <div className="db-notification py-2 small" data-semantic="critical">
-                    <span data-area="content">{edit.saveError}</span>
-                  </div>
+                  <DBNotification semantic="critical" className="py-2 small">
+                    {edit.saveError}
+                  </DBNotification>
                 )}
 
                 <div className="raster abstand-4">

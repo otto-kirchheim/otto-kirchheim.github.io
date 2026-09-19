@@ -98,10 +98,13 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       `aggregationUndRechnung` 2x, `AdminProfileTemplateContentEditor`, `PersoenlicheDatenPanel`)
       -> `<DBStack direction="row" alignment="end" gap="x-small">`. Stand `PersoenlicheDatenPanel`:
       User bearbeitet die E-Mail-Zeile gerade selbst (halbe Spalte, `message="Test"` noch drin).
-- [ ] **4. `DBNotification`** (12 Stellen, siehe Liste unten): `role`/`semantic` 1:1 uebernehmen,
+- [x] **4. `DBNotification`** (erledigt 2026-09-19; **umgeordnet nach DB-Richtlinie**, siehe CHANGELOG 152 --
+      nur Fehler-/Ereignis-Feedback und stehende Systemhinweise mit Aktion bleiben Notification;
+      Hinweise -> `DBInfotext`, Leerzustaende -> schlichter Text; `ConflictReviewBanner` bleibt roh)
+      (urspruenglich 12 Stellen, siehe Liste unten): `role`/`semantic` 1:1 uebernehmen,
       `d-none`-Umschalter an `App.tsx:44` (wird extern per DOM gesteuert, `actAsStatus.ts` -- Id
       dort nachschlagen) nicht brechen. `py-2`/`mb-*`-Klassen als `className` behalten.
-- [ ] **5. `DBDivider` + `DBCard`**: 16x `<hr>` -> `<DBDivider width="full">` (ohne `width` kollabiert
+- [x] **5. `DBDivider` + `DBCard`** (erledigt 2026-09-19, CHANGELOG 152): 16x `<hr>` -> `<DBDivider width="full">` (ohne `width` kollabiert
       die Linie -- Erfahrung aus dem Einstellungen-Umbau); 7x `div.db-card` -> `DBCard`
       (`AdminDashboard` 4x, `adminDashboardCharts`, `AdminResourceBrowser`, Onboarding).
       `data-spacing="none"`/`shadow`-Klassen pruefen.
@@ -131,6 +134,19 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       Entscheidung.
 - [ ] **8. `DBLink`**: `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
       Kommentars.
+
+- [ ] **9. `DBSection` (zu entscheiden, User-Anregung 2026-09-19)** -- ersetzt `.mitte`/`.breit`
+      (`raster.scss`; `.mitte` = max 75rem zentriert, `padding-inline: .75rem`, 10x in den Tabs +
+      3x `.breit`) und handgesetzte Block-Abstaende (`mb-3`, `py-4 py-md-5`). Fakten: `DBSection`
+      rendert `<section class="db-section" data-spacing data-width>`; `spacing` none/small/medium/
+      large (responsiver `padding-block`), `width` small/medium/large mit Seiten-Padding aus
+      `100vw` (Obergrenzen 48em/64em/90em, ohne `width`: volle Breite, 1rem Rand). Unsere 75rem
+      (1200px) gibt es nicht als Preset: `large` = volle Breite bis 1440px, dann Inhalt max 1408px
+      (breiter als heute); `medium` = ab 1024px Inhalt max 992px (schmaler; Tabellen leiden).
+      Richtlinie: Section nur fuer uebergeordnete Bloecke, nicht fuer Mikro-Abstaende; wenige,
+      konsistente Presets. Sichtbare Layout-Aenderung in JEDEM Tab -> vor Umsetzung Preset waehlen
+      (Empfehlung: `large` fuer Tab-Koepfe und -Tabellen) und einen Tab im Puppeteer-Vergleich
+      (1280/1920px) pruefen. Nicht fuer die Gruppen innerhalb der Einstellungen (Mikro-Abstaende).
 
 ### 12 `db-notification`-Fundstellen (Schritt 4)
 

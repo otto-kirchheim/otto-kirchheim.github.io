@@ -1,4 +1,12 @@
-import { DBButton, DBCheckbox, DBDrawer, DBDrawerHeader, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCheckbox,
+  DBDrawer,
+  DBDrawerHeader,
+  DBNotification,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
 import { DIALOG_RICHTUNG } from '@/components/showModal';
@@ -70,9 +78,9 @@ export function AdminResourceEditModal({
       <div className="dialog-rumpf" data-breite="lg">
         <div className="dialog-koerper">
           {edit.saveError && (
-            <div className="db-notification py-2 small" data-semantic="critical">
-              <span data-area="content">{edit.saveError}</span>
-            </div>
+            <DBNotification semantic="critical" className="py-2 small">
+              {edit.saveError}
+            </DBNotification>
           )}
 
           {Object.entries(edit.values).map(([key, val]) => {

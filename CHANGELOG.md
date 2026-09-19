@@ -2,6 +2,27 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (152)
+
+### refactor (DBNotification/DBInfotext, DBDivider, DBCard statt Roh-Markup)
+
+- **Meldungen nach DB-Richtlinie eingeordnet** (Notification = kurzes Feedback zu Ereignis/Fehler,
+  Infotext = kurzer Hinweis direkt am betroffenen Element, kein Ankuendigungsbereich):
+  `<DBNotification>` fuer Fehler nach fehlgeschlagener Aktion (`MyFormModal`/`MyDivModal`,
+  `AdminResourceEditModal`, `AdminUserProfileEditor` 2x, `AdminLogBrowser`, `AdminResourceBrowser`,
+  `AdminDashboard`; die beiden letzten mit `DBStack space-between`, damit "×"/"Neu laden" wirklich
+  rechts stehen -- das `ms-auto` im Inline-`span` wirkte nie) und fuer die stehenden Systemhinweise
+  mit Aktion (`#actAsNotice` mit `variant="standalone"`/`icon="eye"`; `ConflictReviewBanner` bleibt
+  roh, der Knopf muss direktes Kind im `close`-Bereich des Rasters sein).
+  `<DBInfotext>` fuer den Hilfe-Tipp (`MyHelpModal`) und die Pflichtangaben-Statuszeile im
+  Onboarding. Schlichter Text statt Meldung fuer Leerzustaende ("Keine Templates/Benutzer/
+  Monatswerte", fehlende Admin-Rechte) und den Dauerstatus "Eigene Daten aktiv".
+- **`<hr>` -> `<DBDivider width="full">`** (16 Stellen; `margin="none"` fuer `my-0`, sonst DB-
+  Standardabstand). `DBDivider` rendert ein `<div>` und ist eine Spur duenner als `<hr>`;
+  `.ewt-trenner` behaelt nur noch `grid-column: 1 / -1`.
+- **`div.db-card` -> `<DBCard>`** (6 Stellen, `data-spacing` -> `spacing`); live gegen das
+  Roh-Markup gemessen: Groesse, Padding, Hintergrund, Rahmen und Schatten identisch.
+
 ## 2026-09-19 (151)
 
 ### refactor (Halb-Roh-Markup auf echte DB-Komponenten, Switch vs. Checkbox)
@@ -21,6 +42,10 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   standardmaessig eine Checkbox, das neue `schalter`-Prop waehlt `DBSwitch` (`ThemeSwitcher`,
   `createShowModalEWT`). Grenzfaelle (Felder werden sofort ein-/ausgeblendet, gelten aber erst mit
   Speichern) stehen bis zur Entscheidung unveraendert auf Switch.
+- **E-Mail-Verifizierungshinweis am Feld**: der Status sitzt jetzt als `message`/`messageIcon` direkt am
+  `EmailAnzeige`-`DBInput` statt im losen `#EmailVerificationHint`-Span. `Einstellungen/index.ts`
+  schreibt ihn ueber den neuen `emailStatusStore.ts` (`useSyncExternalStore`), das Panel liest ihn per
+  `useEmailStatus()`. Neu: `test/Einstellungen/emailStatusStore.test.tsx` (Store + Meldung im Panel).
 - `db-tag` `#PasskeyAccordionCount` -> `<DBTag>` (Zaehler wird weiter per `textContent` gesetzt).
 - **Regression aus Eintrag 147 behoben**: `.feldgruppe` war seit dem `<DBStack>`-Umbau nur noch
   `display: block` -- fuenf rohe `<div className="feldgruppe">` (`FeldPanel`,

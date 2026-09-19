@@ -1,4 +1,4 @@
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBInfotext } from '@db-ux/react-core-components';
 import { type FC } from 'react';
 
 import type { HelpContent } from '@/core/help/helpContent';
@@ -87,11 +87,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
         </div>
       )}
 
-      {content.tipp && (
-        <div className="db-notification mb-0 py-2" data-semantic="informational" role="alert">
-          <span data-area="content">{content.tipp}</span>
-        </div>
-      )}
+      {content.tipp && <DBInfotext semantic="informational">{content.tipp}</DBInfotext>}
 
       {content.reopenOnboardingAction && (
         <DBButton

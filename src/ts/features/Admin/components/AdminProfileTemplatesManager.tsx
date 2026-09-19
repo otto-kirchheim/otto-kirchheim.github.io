@@ -362,9 +362,7 @@ export function AdminProfileTemplatesManager() {
 
       {loading && <div className="text-body-secondary">Lädt Templates...</div>}
       {!loading && sortedTemplates.length === 0 && (
-        <div className="db-notification mb-0" data-semantic="neutral">
-          <span data-area="content">Keine Templates vorhanden.</span>
-        </div>
+        <p className="text-body-secondary mb-0">Keine Templates vorhanden.</p>
       )}
 
       <div className="d-flex flex-column gap-2">

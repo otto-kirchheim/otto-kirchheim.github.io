@@ -2,6 +2,7 @@ import { type FC } from 'react';
 
 import type { TMyModal } from '@/types';
 import { MyEditorFooter, MyModalHeader } from '.';
+import { DBNotification } from '@db-ux/react-core-components';
 
 const MyFormModal: FC<TMyModal<HTMLFormElement>> = ({
   size,
@@ -19,9 +20,9 @@ const MyFormModal: FC<TMyModal<HTMLFormElement>> = ({
   <form ref={myRef} onSubmit={onSubmit} className="dialog-rumpf" data-breite={size}>
     {Header ?? <MyModalHeader title={title} helpContext={helpContext} />}
     {errorMessage && (
-      <div className="db-notification mx-3 mt-3 mb-0 py-2" data-semantic="critical" role="alert">
-        <span data-area="content">{errorMessage}</span>
-      </div>
+      <DBNotification semantic="critical" role="alert" className="mx-3 mt-3 mb-0 py-2">
+        {errorMessage}
+      </DBNotification>
     )}
     {children}
     {Footer ?? <MyEditorFooter submitText={submitText} customButtons={customButtons} />}

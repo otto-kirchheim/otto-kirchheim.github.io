@@ -1,4 +1,4 @@
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 
 // Direktimporte statt Barrel (@/core, @/components), um den Zyklus
@@ -171,7 +171,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
   const titel = getStepTitle(step);
 
   return (
-    <div className="db-card shadow" data-spacing="none">
+    <DBCard className="shadow" spacing="none">
       <div className="d-flex align-items-center gap-2 py-2 px-3 bg-body-secondary border-bottom">
         <strong className="me-auto">Ersteinrichtung</strong>
         <span className="text-body-secondary small">
@@ -215,13 +215,9 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
                 und zum nächsten Bahnhof.
               </p>
               {persValidation.ok ? (
-                <div className="db-notification py-2 mb-0" data-semantic="successful" role="status">
-                  <span data-area="content">Alle Pflichtangaben sind eingetragen.</span>
-                </div>
+                <DBInfotext semantic="successful">Alle Pflichtangaben sind eingetragen.</DBInfotext>
               ) : (
-                <div className="db-notification py-2 mb-0" data-semantic="warning" role="status">
-                  <span data-area="content">Noch offen: {persValidation.offeneFelder.join(', ')}</span>
-                </div>
+                <DBInfotext semantic="warning">Noch offen: {persValidation.offeneFelder.join(', ')}</DBInfotext>
               )}
             </>
           )}
@@ -279,7 +275,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
           )}
         </div>
       )}
-    </div>
+    </DBCard>
   );
 };
 

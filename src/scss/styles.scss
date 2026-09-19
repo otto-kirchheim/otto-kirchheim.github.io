@@ -381,13 +381,9 @@ hr {
   font-size: inherit;
 }
 
-// Trennlinie im EWT-Anzeige-Modal: volle Rasterbreite (die 0-Breiten-Falle des `<hr>` deckt
-// die globale `hr { margin-inline: 0 }`-Regel oben ab) plus die sichtbare Linie.
+// Trennlinie im EWT-Anzeige-Modal: `DBDivider` zeichnet die Linie, hier nur die volle Rasterbreite.
 .ewt-trenner {
   grid-column: 1 / -1;
-  margin-block: var(--db-spacing-fixed-sm);
-  border: 0;
-  border-block-start: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
 
 td:has(.SchichtBereitschaft) {

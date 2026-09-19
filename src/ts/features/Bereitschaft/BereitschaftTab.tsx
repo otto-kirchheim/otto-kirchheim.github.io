@@ -1,4 +1,4 @@
-import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -283,7 +283,7 @@ export function BereitschaftTab() {
           </DBLoadingButton>
         </DBStack>
       </div>
-      <hr />
+      <DBDivider width="full" />
       <h4 id="titelBZ">Bereitschaftszeitraum</h4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
@@ -297,7 +297,7 @@ export function BereitschaftTab() {
           <CustomTableView table={asAnyTable(ftBZ)} />
         </table>
       </div>
-      <hr />
+      <DBDivider width="full" />
       <h4 id="titelBE">Bereitschaftseinsätze</h4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table

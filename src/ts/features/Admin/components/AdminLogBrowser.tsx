@@ -3,7 +3,7 @@ import { Fragment, useEffect, useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { fetchAdminLogs, fetchAdminUserNameMap, type AdminPage } from '../utils/api';
-import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBNotification, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 const ITEMS_PER_PAGE = 25;
@@ -111,9 +111,9 @@ export function AdminLogBrowser() {
       </div>
 
       {loadError && (
-        <div className="db-notification py-2 small" data-semantic="critical">
-          <span data-area="content">{loadError}</span>
-        </div>
+        <DBNotification semantic="critical" className="py-2 small">
+          {loadError}
+        </DBNotification>
       )}
 
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
