@@ -135,7 +135,7 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
 - [ ] **8. `DBLink`**: `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
       Kommentars.
 
-- [ ] **9. `DBSection` (zu entscheiden, User-Anregung 2026-09-19)** -- ersetzt `.mitte`/`.breit`
+- [x] **9. `DBSection` (erledigt 2026-09-19, CHANGELOG 153; offen: Spalten-Schwellen s. u.)** -- ersetzt `.mitte`/`.breit`
       (`raster.scss`; `.mitte` = max 75rem zentriert, `padding-inline: .75rem`, 10x in den Tabs +
       3x `.breit`) und handgesetzte Block-Abstaende (`mb-3`, `py-4 py-md-5`). Fakten: `DBSection`
       rendert `<section class="db-section" data-spacing data-width>`; `spacing` none/small/medium/
@@ -156,11 +156,22 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       zu breit (Zeilen 1408px), `medium` macht die Tabellen-Tabs zu schmal. Vorschlag: `large`
       fuer Tabellen-Tabs (Bereitschaft/EWT/EA/Neben/Berechnung), `medium` fuer Einstellungen/Start,
       `spacing="none"` (Abstaende regelt `#tabContent`); User entscheidet.
-- [ ] **10. Switch-Grenzfaelle (Vorschlag 2026-09-19, User entscheidet)**: alle 6 Stellen -> Checkbox
+- [x] **10. Switch-Grenzfaelle (erledigt 2026-09-19, CHANGELOG 153)**: alle 6 Stellen -> Checkbox
       (Werte gelten erst mit Hinzufuegen/Speichern; im EWT-Modal steht "Berechnen" direkt ueber
       "Buero" schon als Checkbox). `eigen`/`sonder`/`nacht`/Buero: `schalter` entfernen. `toggle-*`
       (`ArbeitszeiteingabePanel`): `schalter` entfernen und das wechselnde Label "aktiv"/"inaktiv"
       durch festes "aktiv" ersetzen (eine Checkbox beschreibt nicht ihren Gegenzustand).
+
+- [ ] **11. Spalten-Schwellen der Tabellen pruefen (User-Hinweis 2026-09-19)**: Sichtbarkeit je
+      Spalte ueber `breakpoints` (verschwindet unterhalb der Viewport-Stufe, `customtable.scss`).
+      Mit `DBSection large` ist der Inhalt ab 1440px konstant 1408px -> `xxl` (2560px) bringt keinen
+      Platz mehr: EWT-"Buchungstag" (`xxl`) ist praktisch nie sichtbar. Kandidaten: EWT `Buchungstag`
+      `xxl` -> `lg`/`xl`; EWT-`lg`-Spalten (Ab 1.Tgk.-St., An Einsatzort, Ab Einsatzort, An 1.Tgk.-St.,
+      Bearbeiten-Toggle) evtl. schon ab 1280px (Inhalt dort 1248px statt frueher 1176px). Mit echten
+      Daten je Tab bei 1024/1280/1440/1920px pruefen, ob die vollstaendige Tabelle passt
+      (`table.scrollWidth <= .db-table.clientWidth`); ohne Backend liessen sich die Tabellen nicht
+      befuellen (`loadUserDaten`/`Vorgaben Geld`). Alternative: Schwellen wie das Berechnungs-
+      Monatsfenster aus der Containerbreite ableiten statt aus dem Viewport.
 
 ### 12 `db-notification`-Fundstellen (Schritt 4)
 

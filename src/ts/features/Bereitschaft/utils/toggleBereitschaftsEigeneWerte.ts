@@ -31,8 +31,8 @@ export default function toggleBereitschaftsEigeneWerte(
   nAInput.disabled = disable;
   nEInput.disabled = disable;
 
-  parentElement.querySelectorAll<HTMLElement>('.berechnet-badge').forEach(badge => {
-    badge.style.display = disable ? '' : 'none';
+  parentElement.querySelectorAll<HTMLElement>('.berechnet-badge, .berechnet-hinweis').forEach(el => {
+    el.style.display = disable ? '' : 'none';
   });
 
   // Zurück auf „berechnet": Datums- und Zeitfelder aus der Vorgabe neu ableiten.

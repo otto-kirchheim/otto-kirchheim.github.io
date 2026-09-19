@@ -2,6 +2,37 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (153)
+
+### refactor (DBSection statt `.mitte`, Switch-Grenzfaelle als Checkbox)
+
+- **Seitenbereiche als `<DBSection>`**: die `.mitte`-Huellen der Tabs sind jetzt `<DBSection
+  spacing="none">` -- `width="large"` fuer die Tabellen-Tabs (Bereitschaft, EWT, EA, Neben,
+  Berechnung: Inhalt bis 1408px, volle Breite bis 1440px Viewport), `width="medium"` fuer
+  Einstellungen und Start (Inhalt max. 992px, bessere Zeilenlaenge fuer Formulare/Akkordeon).
+  `spacing="none"`, weil `#tabContent` die Abstaende schon regelt -- die DB-Voreinstellung
+  `small` (32px mobil / 48px Desktop) schob die Ueberschrift sichtbar zu weit nach unten
+  (User-Fund). Start behaelt `spacing="small"` (vorher `py-4 py-md-5`). Das innere, verschachtelte
+  `.mitte` der Tabs ist ein schlichtes `<div>`, sonst haette sich das Padding verdoppelt.
+  Seiten-Padding mobil 12px -> 16px. `.mitte` aus `raster.scss` entfernt, `.breit` bleibt.
+- **Berechnung**: das Monatsfenster misst weiter `#Berechnung .db-table`; bei 1280px passen wie
+  zuvor alle 12 Monate, Kommentar zur Deckelung in `berechnungMonatsFenster.ts` aktualisiert.
+- **Switch-Grenzfaelle -> Checkbox**: `eigen`, `Sonderschicht`, `Nachtschicht` (Bereitschaft-
+  Modal), `Buero` (EWT-Modal; darueber stand "Berechnen" schon als Checkbox) und die
+  `toggle-*`-Haken im Arbeitszeit-Panel (Label jetzt fest "aktiv" statt wechselnd "aktiv"/
+  "inaktiv"). Switch bleibt nur bei sofortiger Wirkung: `ThemeSwitcher`, `createShowModalEWT`.
+- **Hinweis-Tooltips an berechneten Feldern (Bereitschaft-Modal)**: die deaktivierten Datums-/
+  Zeitfelder erklaeren per `DBTooltip`, warum sie nicht editierbar sind ("Wird aus der Vorgabe
+  berechnet ..." bzw. "Folgt der Arbeitszeit Spaet/Nacht ..."). Die Huelle `.feld-hinweis` ist
+  per `tabIndex` fokussierbar (deaktivierte Inputs liefern keine Hover-Events, `pointer-events:
+  none` in `styles.scss`); der "manuell"-Hinweis (`berechnet-hinweis`) verschwindet mit dem
+  "berechnet"-Badge in `toggleBereitschaftsEigeneWerte`.
+- **Offen (Spalten)**: die Spalten-Sichtbarkeit haengt an Viewport-Breakpoints
+  (`customtable.scss`: Spalte verschwindet unterhalb der Stufe). Mit `large` ist der Inhalt ab
+  1440px Viewport konstant 1408px breit -- die Stufe `xxl` (2560px) bringt keinen Platz mehr,
+  EWT-"Buchungstag" (`xxl`) ist damit praktisch nie sichtbar. Schwellen pruefen, siehe
+  `tasks/todo.md`, Schritt 9.
+
 ## 2026-09-19 (152)
 
 ### refactor (DBNotification/DBInfotext, DBDivider, DBCard statt Roh-Markup)

@@ -1,4 +1,4 @@
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBSection, DBTooltip } from '@db-ux/react-core-components';
 
 /**
  * Phase L2: Berechnung-Tab-Huelle (ehemals `index.html`: Titel, Monats-Navigation,
@@ -15,7 +15,7 @@ import { DBButton, DBTooltip } from '@db-ux/react-core-components';
  */
 export default function BerechnungTab() {
   return (
-    <div className="mitte text-center mb-3">
+    <DBSection width="large" spacing="none" className="text-center mb-3">
       <div>
         <h1 id="titelBerechnung">Berechnung</h1>
         <h4 id="MonatBerechnung"></h4>
@@ -101,6 +101,6 @@ export default function BerechnungTab() {
           <tbody id="tbodyBerechnung"></tbody>
         </table>
       </div>
-    </div>
+    </DBSection>
   );
 }

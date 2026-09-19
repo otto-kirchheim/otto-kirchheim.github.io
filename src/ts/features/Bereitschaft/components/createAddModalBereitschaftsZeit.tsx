@@ -1,5 +1,5 @@
-import { DBTag } from '@db-ux/react-core-components';
-import { createRef, type SubmitEvent, type ReactElement } from 'react';
+import { DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { createRef, type CSSProperties, type SubmitEvent, type ReactElement } from 'react';
 
 import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
 import { DbFeld, MyCheckbox, MyFormModal, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
@@ -20,40 +20,67 @@ import {
 import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeOverrides';
 import { BereitschaftOverridePanel } from './BereitschaftOverridePanel';
 
-// Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum manuell anpassen" editierbar.
-const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) => (
-  <DbFeld
-    type="date"
-    id={id}
-    beschriftung="Datum"
-    dicht
-    required
-    disabled
-    className="flex-grow-1"
-    huelleStyle={{ minWidth: 0, maxWidth: '10rem' }}
-    min={min.format('YYYY-MM-DD')}
-    max={max.format('YYYY-MM-DD')}
-    defaultValue={date.format('YYYY-MM-DD')}
-  />
+const HINWEIS_MANUELL = 'Wird aus der Vorgabe berechnet. Zum Ändern „Datum & Zeiten manuell anpassen" aktivieren.';
+const hinweisArbeitszeit = (schicht: string): string =>
+  `Folgt der Arbeitszeit ${schicht}. Zum Ändern „Andere Arbeitszeiten hinterlegen" nutzen.`;
+
+// Deaktivierte Felder bekommen keine Hover-Events (`pointer-events: none` in styles.scss) -- der Tooltip
+// hängt deshalb an einer Hülle. Der „manuell"-Hinweis (Klasse `berechnet-hinweis`) verschwindet mit dem
+// „berechnet"-Badge, sobald toggleBereitschaftsEigeneWerte die Felder freischaltet; der Arbeitszeit-Hinweis
+// bleibt, da diese Zeiten nie direkt editierbar sind.
+const mitHinweis = (feld: ReactElement, text: string, manuell: boolean, className: string, style?: CSSProperties) => (
+  // Hülle ist per `tabIndex` fokussierbar, damit der Hinweis auch per Tastatur erreichbar ist (die Lint-Regel
+  // prüft nur den Tag-Namen, deshalb hier bewusst ausgenommen).
+  <div className={`feld-hinweis ${className}`} style={style} tabIndex={0}>
+    {feld}
+    {/* eslint-disable-next-line db-ux/tooltip-requires-interactive-parent */}
+    <DBTooltip placement="top" className={manuell ? 'berechnet-hinweis' : undefined}>
+      {text}
+    </DBTooltip>
+  </div>
 );
+
+// Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum manuell anpassen" editierbar.
+const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) =>
+  mitHinweis(
+    <DbFeld
+      type="date"
+      id={id}
+      beschriftung="Datum"
+      dicht
+      required
+      disabled
+      min={min.format('YYYY-MM-DD')}
+      max={max.format('YYYY-MM-DD')}
+      defaultValue={date.format('YYYY-MM-DD')}
+    />,
+    HINWEIS_MANUELL,
+    true,
+    'flex-grow-1',
+    { minWidth: 0, maxWidth: '10rem' },
+  );
 
 // Abgeleitete Zeit – standardmäßig berechnet (disabled), per „Datum & Zeiten manuell anpassen"
 // editierbar (nur die BZ-Grenzen bAT/bET; Nacht/Spät folgen immer der Arbeitszeit bzw. dem
 // Override-Panel, da auch die Berechnung die Nacht-Blöcke daraus ableitet). Wert wird von
 // applyBereitschaftsVorgabe/updateBereitschaftsDatum gesetzt und von submitBereitschaftsZeiten gelesen.
-const createTimeInputElement = (id: string, name: string, required = false) => (
-  <DbFeld
-    type="time"
-    id={id}
-    name={name}
-    beschriftung={name}
-    dicht
-    required={required}
-    disabled
-    className="flex-shrink-0"
-    huelleStyle={{ width: '6.5rem' }}
-  />
-);
+// `schicht` gesetzt: Zeit ist nie direkt editierbar, sondern folgt der Arbeitszeit dieser Schicht.
+const createTimeInputElement = (id: string, name: string, required = false, schicht?: string) =>
+  mitHinweis(
+    <DbFeld
+      type="time"
+      id={id}
+      name={name}
+      beschriftung={name}
+      dicht
+      required={required}
+      disabled
+      huelleStyle={{ width: '6.5rem' }}
+    />,
+    schicht ? hinweisArbeitszeit(schicht) : HINWEIS_MANUELL,
+    !schicht,
+    'flex-shrink-0',
+  );
 
 const createSonderDateInputElement = (id: string, value: string) => (
   <DbFeld
@@ -204,7 +231,6 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         <div>
           <MyCheckbox
-            schalter
             className="bereitschaft"
             id="eigen"
             changeHandler={() => {
@@ -263,9 +289,9 @@ export default function createAddModalBereitschaftsZeit(): void {
               <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
                 Von
               </span>
-              {createTimeInputElement('spaetAT', 'Von')}
+              {createTimeInputElement('spaetAT', 'Von', false, 'Spät')}
               <span className="small fw-medium text-body flex-shrink-0 ms-auto pe-2">Bis</span>
-              {createTimeInputElement('spaetET', 'Bis')}
+              {createTimeInputElement('spaetET', 'Bis', false, 'Spät')}
             </div>
           </div>
         )}
@@ -273,7 +299,6 @@ export default function createAddModalBereitschaftsZeit(): void {
         {(vorgabenU as IVorgabenU).Arbeitszeit?.sonder?.aktiv && (
           <div>
             <MyCheckbox
-              schalter
               className="bereitschaft"
               id="sonder"
               defaultChecked={vorgabenB[auswahl].schichten?.includes('sonder') ?? false}
@@ -311,7 +336,6 @@ export default function createAddModalBereitschaftsZeit(): void {
 
         <div>
           <MyCheckbox
-            schalter
             className="bereitschaft"
             id="nacht"
             defaultChecked={
@@ -346,7 +370,7 @@ export default function createAddModalBereitschaftsZeit(): void {
               datum.subtract(1, 'month').endOf('M'),
               datum.add(1, 'M').endOf('M'),
             ),
-            createTimeInputElement('nAT', 'Von'),
+            createTimeInputElement('nAT', 'Von', false, 'Nacht'),
           )}
           {punktZeile(
             'Ende',
@@ -359,7 +383,7 @@ export default function createAddModalBereitschaftsZeit(): void {
               datum.startOf('M'),
               datum.add(1, 'M').endOf('M'),
             ),
-            createTimeInputElement('nET', 'Bis'),
+            createTimeInputElement('nET', 'Bis', false, 'Nacht'),
           )}
           <small className="text-muted d-block mt-2">
             Die Zeiten folgen der Arbeitszeit Nacht und lassen sich über „Andere Arbeitszeiten hinterlegen" ändern.

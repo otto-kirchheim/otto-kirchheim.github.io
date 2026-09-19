@@ -65,15 +65,8 @@ $abstaende: (
   }
 }
 
-// Zentrierter Inhaltsbereich (Ersatz fuer `.container`) und randlose Vollbreite
-// (Ersatz fuer `.container-fluid`).
-.mitte {
-  inline-size: 100%;
-  max-inline-size: 75rem;
-  margin-inline: auto;
-  padding-inline: 0.75rem;
-}
-
+// Randlose Vollbreite (Ersatz fuer `.container-fluid`). Der zentrierte Seitenbereich (frueher
+// `.mitte`, Ersatz fuer `.container`) ist seit 2026-09-19 `<DBSection>` in den Tab-Huellen.
 .breit {
   inline-size: 100%;
   padding-inline: 0.75rem;

@@ -1,4 +1,4 @@
-import { DBButton, DBDivider, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -213,7 +213,7 @@ export function EwtTab() {
   }, []);
 
   return (
-    <div className="mitte text-center">
+    <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           EWT
@@ -233,7 +233,7 @@ export function EwtTab() {
         <h4 id="MonatE"></h4>
       </div>
 
-      <div className="mitte">
+      <div>
         <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
           <DBButton type="button" variant="brand" icon="plus" id="btnESEE" data-disabler>
             Anwesenheit
@@ -271,6 +271,6 @@ export function EwtTab() {
           <CustomTableView table={asAnyTable(ftE)} />
         </table>
       </div>
-    </div>
+    </DBSection>
   );
 }

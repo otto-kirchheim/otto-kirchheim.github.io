@@ -59,4 +59,7 @@ function changeMonatTableData({ monat }: { monat?: number } = {}) {
   document
     .querySelector<CustomHTMLTableElement<IDatenN>>('#tableN')
     ?.instance.rows.setFilter(row => getMonatFromN(row) === activeMonat && jahr >= 2024);
+  document
+    .querySelector<CustomHTMLTableElement<IDatenEA>>('#tableEA')
+    ?.instance.rows.setFilter(row => getMonatFromEA(row) === activeMonat);
 }

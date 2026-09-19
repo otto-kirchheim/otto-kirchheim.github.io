@@ -173,7 +173,7 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
           </DBCheckbox>
         </div>
         <div className="mt-3">
-          <MyCheckbox schalter id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
+          <MyCheckbox id="berechnen2" changeHandler={changeBuero} myRef={bueroRef}>
             <span>
               Büro
               <small className="d-block mt-1">(Keine Fahrt zu einem Einsatzort)</small>

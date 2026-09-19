@@ -11,8 +11,8 @@ import { TAB_SHOWN_EVENT } from '@/infrastructure/ui/tabController';
  *
  * Bis 2026-09 gab es dafür zusätzlich einen `d-xl-table-cell`-Viewport-Breakpoint, der ALLE
  * Spalten erzwang, sobald der Viewport (nicht der tatsächliche Tabellen-Container!) eine
- * bestimmte Breite erreichte. Der Container ist durch `.mitte` aber auf ~1029px gedeckelt,
- * unabhängig vom Viewport (Puppeteer-gemessen, konstant von 1280px bis 2560px Breite) — nach
+ * bestimmte Breite erreichte. Der Container ist durch die Seiten-`DBSection` (`width="large"`)
+ * ab 1440px Viewport auf 1408px gedeckelt, unabhängig vom Viewport darüber — nach
  * der Breakpoint-Vereinheitlichung auf die DB-UX-Skala (`_breakpoints.scss`, `xl` 1200px ->
  * 1920px) lag dieser Breakpoint jenseits jeder real erreichbaren Containerbreite, die
  * komplette Tabelle war dadurch nie mehr erreichbar. Entfernt zugunsten von reinem

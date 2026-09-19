@@ -1,4 +1,4 @@
-import { DBButton, DBDivider, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -113,7 +113,7 @@ export function EaTab() {
   }, []);
 
   return (
-    <div className="mitte text-center">
+    <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Entgeltausgleich
@@ -133,7 +133,7 @@ export function EaTab() {
         <h4 id="MonatEA"></h4>
       </div>
 
-      <div className="mitte">
+      <div>
         <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
           <DBButton type="button" variant="brand" icon="plus" id="btnESEA" data-disabler>
             Hinzufügen
@@ -168,6 +168,6 @@ export function EaTab() {
           <CustomTableView table={asAnyTable(ftEA)} />
         </table>
       </div>
-    </div>
+    </DBSection>
   );
 }

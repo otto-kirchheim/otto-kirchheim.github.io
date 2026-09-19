@@ -1245,3 +1245,8 @@ body,
   padding-block-start: 0.75rem;
   border-block-start: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
 }
+
+// Deaktivierte Felder mit Tooltip: Hover soll die Hülle treffen (disabled-Inputs liefern je nach Browser keine Events).
+.feld-hinweis :disabled {
+  pointer-events: none;
+}

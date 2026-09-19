@@ -128,15 +128,8 @@ function OptionalSchichtSection({
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">{title}</h5>
-        <MyCheckbox
-          schalter
-          className="ms-2"
-          size="small"
-          id={`toggle-${title}`}
-          checked={enabled}
-          changeHandler={handleToggle}
-        >
-          {enabled ? 'aktiv' : 'inaktiv'}
+        <MyCheckbox className="ms-2" size="small" id={`toggle-${title}`} checked={enabled} changeHandler={handleToggle}>
+          aktiv
         </MyCheckbox>
       </div>
       {enabled && <SchichtSection title="" schicht={schicht} onChange={onChange} />}
@@ -552,14 +545,13 @@ function SonderSection({
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
         <h5 className="mb-0">Sonderschicht</h5>
         <MyCheckbox
-          schalter
           className="ms-2"
           size="small"
           id="toggle-sonder"
           checked={enabled}
           changeHandler={() => onChange({ ...sonder, aktiv: !enabled })}
         >
-          {enabled ? 'aktiv' : 'inaktiv'}
+          aktiv
         </MyCheckbox>
       </div>
       {enabled && (

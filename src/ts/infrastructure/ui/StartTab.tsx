@@ -1,4 +1,4 @@
-import { DBButton, DBCard, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
 
 /**
  * Phase L1: Start-Tab (ehemals `index.html:82-244`) als React-Komponente. Gemountet direkt in
@@ -17,7 +17,7 @@ import { DBButton, DBCard, DBStack, DBTooltip } from '@db-ux/react-core-componen
  */
 export default function StartTab() {
   return (
-    <div className="mitte py-4 py-md-5">
+    <DBSection width="medium" spacing="small">
       <div className="text-center mb-4 mb-md-5">
         <div className="d-inline-flex align-items-center justify-content-center gap-2">
           <h1 className="mt-2 mb-0" id="Willkommen">
@@ -161,6 +161,6 @@ export default function StartTab() {
           role="status"
         />
       </DBStack>
-    </div>
+    </DBSection>
   );
 }

@@ -1,4 +1,4 @@
-import { DBButton, DBDivider, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -239,7 +239,7 @@ export function BereitschaftTab() {
   }, []);
 
   return (
-    <div className="mitte text-center">
+    <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
         <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Bereitschaft
@@ -259,7 +259,7 @@ export function BereitschaftTab() {
         <h4 id="MonatB"></h4>
       </div>
 
-      <div className="mitte">
+      <div>
         <DBStack direction="row" wrap justifyContent="center" gap="medium" className="my-3 knopfreihe">
           <DBLoadingButton type="button" variant="brand" icon="plus" id="btnESZ" data-disabler>
             Bereitschaft
@@ -311,6 +311,6 @@ export function BereitschaftTab() {
           <CustomTableView table={asAnyTable(ftBE)} />
         </table>
       </div>
-    </div>
+    </DBSection>
   );
 }

@@ -1,5 +1,14 @@
 import { DBLoadingButton } from '@/components';
-import { DBButton, DBCheckbox, DBDivider, DBInput, DBStack, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCheckbox,
+  DBDivider,
+  DBInput,
+  DBSection,
+  DBStack,
+  DBTag,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
@@ -31,7 +40,7 @@ import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
  */
 export default function EinstellungenTab() {
   return (
-    <div className="mitte text-center">
+    <DBSection width="medium" spacing="none" className="text-center">
       <h1 className="d-inline-flex align-items-center justify-content-center">
         Einstellungen
         <DBButton
@@ -230,6 +239,6 @@ export default function EinstellungenTab() {
           </li>
         </ul>
       </form>
-    </div>
+    </DBSection>
   );
 }
