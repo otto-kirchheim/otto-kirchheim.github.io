@@ -2,6 +2,39 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (151)
+
+### refactor (Halb-Roh-Markup auf echte DB-Komponenten, Switch vs. Checkbox)
+
+- **Buttons als `<DBButton>`**: sechs Schnellzugriff-Knoepfe (`StartTab`, `icon`-Attribut statt
+  `DBIcon`-Kind, Layout unveraendert gestapelt), Monats-Pfeile (`BerechnungTab`, mit `aria-label`
+  und `DBTooltip` -- Regel `db-ux/button-no-text-requires-tooltip`), "Eigene Daten laden"
+  (`App.tsx`), Verifizierungs-Mail-Knopf und Wochentag-Schalter des `VorgabenBWeekRangeEditor`.
+  Ids, `data-*` und die externe Verkabelung (`disabled`/`textContent` von aussen) bleiben intakt.
+- **`PersoenlicheDatenPanel`**: 15 rohe `db-input`-Bloecke -> `<DBInput variant="floating">`, 2
+  `<select>` -> `<DBSelect>` (lokale Hilfen `Feld`/`Auswahl`, Standard-Fehlermeldung). Die
+  Taetigkeits-Vorschlaege laufen ueber die `dataList`-Prop: ein rohes `list`-Attribut reicht
+  `DBInput` nicht an das `<input>` weiter.
+- **Switch nur bei sofortiger Wirkung** (DB-UX: "Verwende keinen Switch in einem Formular, in dem
+  Aenderungen erst nach Klick auf 'Speichern' angewendet werden"): die vier "Sichtbare
+  Bereiche"-Schalter und "AutoSave aktivieren" sind jetzt `<DBCheckbox>`; `MyCheckbox` ist
+  standardmaessig eine Checkbox, das neue `schalter`-Prop waehlt `DBSwitch` (`ThemeSwitcher`,
+  `createShowModalEWT`). Grenzfaelle (Felder werden sofort ein-/ausgeblendet, gelten aber erst mit
+  Speichern) stehen bis zur Entscheidung unveraendert auf Switch.
+- `db-tag` `#PasskeyAccordionCount` -> `<DBTag>` (Zaehler wird weiter per `textContent` gesetzt).
+- **Regression aus Eintrag 147 behoben**: `.feldgruppe` war seit dem `<DBStack>`-Umbau nur noch
+  `display: block` -- fuenf rohe `<div className="feldgruppe">` (`FeldPanel`,
+  `aggregationUndRechnung` 2x, `AdminProfileTemplateContentEditor`, E-Mail-Zeile im
+  `PersoenlicheDatenPanel`) standen dadurch untereinander statt neben dem Knopf. Jetzt
+  `<DBStack direction="row" alignment="end" gap="x-small">`.
+- **Kommentar berichtigt**: `CustomTableView` behauptete natives `<button class="db-button">`,
+  rendert aber seit langem `<DBButton>`. `editText`/`deleteText`/`undoDeleteText` sind toter
+  Vertrag (nur befuellt, nie gerendert) -- nicht angefasst.
+- **`DBTable` geprueft, nicht eingefuehrt** (DB-UX 5.5.0): rendert dieselbe Struktur wie unser
+  Roh-Markup, aber sein CSS ist ein Grid-Modell; `utilities.scss` setzt es bewusst auf
+  `display: table` zurueck (`colspan`, Zeilenkoepfe, je Breakpoint ausgeblendete Spalten). Live
+  gemessen: mit `DBTable`-Markup stapeln sich die Zellen. Details in `tasks/todo.md`, Schritt 7.
+
 ## 2026-09-18 (150)
 
 ### refactor (ESLint: alle 54 Warnungen abgebaut — Fast Refresh ueberall wirksam)

@@ -51,24 +51,39 @@ Lehre: "bewusst roh"-Begruendungen aus Kommentaren immer gegen den Code pruefen.
 
 Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizierbar.
 
-- [ ] **0. Kommentar berichtigen** -- `CustomTableView.tsx` Z. 27-31 (Kopfkommentar) an den Ist-Stand
-      anpassen; pruefen, ob `editText`/`deleteText`/`undoDeleteText` in `CustomTableOptions` wirklich
+- [x] **0. Kommentar berichtigen** (erledigt, Commit `a3d9792`) -- `CustomTableView.tsx` Z. 27-31
+      (Kopfkommentar) an den Ist-Stand angepasst; pruefen, ob `editText`/`deleteText`/`undoDeleteText` in `CustomTableOptions` wirklich
       toter Vertrag sind (kein Aufrufer setzt sie) -- wenn ja, als eigenen Aufraeum-Punkt notieren,
-      nicht im selben Zug entfernen.
-- [ ] **1. Buttons** (kleines Risiko): `StartTab.tsx` (6 Schnellzugriff-Knoepfe, mit
+      nicht im selben Zug entfernen. **Ergebnis:** `editText`/`deleteText`/`undoDeleteText` werden nur
+      in `CustomTable.ts` mit Defaults befuellt und in `customTableTypes.ts` deklariert, gelesen und
+      gerendert nirgends -> toter Vertrag, Aufraeum-Kandidat (nicht angefasst).
+- [x] **1. Buttons** (erledigt, `a3d9792`): `StartTab.tsx` (6 Schnellzugriff-Knoepfe, mit
       `data-jump-tab`, Wiring in `auth/index.ts:51` per `[data-jump-tab]`), `BerechnungTab.tsx`
       (2 Monats-Pfeile, `#btnBerechnungMonatePrev/Next`), `App.tsx:60` (`#actAsOwnDataButton`),
       `PersoenlicheDatenPanel.tsx:64` (`#btnResendVerificationEmail`),
       `VorgabenBWeekRangeEditor.tsx:168` (Wochentag-Schalter, `aria-pressed`, Pointer-Events).
       Achtung: alle Ids/`data-*` muessen am `<button>` landen; `DBButton` reicht `data-*`/`aria-*`
-      per `filterPassingProps` durch (im Spike bestaetigen).
-- [ ] **2. Switches + Tag**: `EinstellungenTab.tsx` (5x `db-switch`: `tab-*`, `autoSaveEnabled`;
+      per `filterPassingProps` durch (im Spike bestaetigt: `data-jump-tab`, Ids, externes `disabled`/
+      `textContent` ueberleben; Icon-only-Knoepfe brauchen `DBTooltip` + `aria-label`, StartTab nutzt
+      das `icon`-Attribut statt `DBIcon`-Kind -- beides Lint-Regeln `db-ux/*`).
+- [~] **2. Switches + Tag** (teilweise, `a3d9792`/`b01666a`; **EwtTab-Berechnen-Schalter offen**): `EinstellungenTab.tsx` (5x `db-switch`: `tab-*`, `autoSaveEnabled`;
       `#collapseFive input[data-tab-key]` und `input[data-settings-key]` bleiben Selektoren ->
       `data-*` am inneren `<input>` pruefen) -> `DBSwitch` (Vorbild `MyCheckbox`); `db-tag`
       `#PasskeyAccordionCount` -> `DBTag` (Wiring `Einstellungen/index.ts:42`, schreibt Text
       per DOM); `EwtTab.tsx:40` Berechnen-Schalter (`row-checkbox`, `attachBerechnenToggleListeners`
       liest DOM-Zustand) -> `DBSwitch`.
-- [ ] **3. `PersoenlicheDatenPanel.tsx`** (groesster Einzelgewinn): 15x `db-input` -> `DBInput
+      **Korrektur (User + DB-UX-Doku):** Switch NUR bei sofortiger Wirkung, sonst `DBCheckbox`
+      ("Verwende keinen Switch in einem Formular, in dem Aenderungen erst nach Klick auf
+      'Speichern' angewendet werden"). Daher: die 5 Einstellungs-Schalter -> `DBCheckbox`;
+      `MyCheckbox` ist jetzt standardmaessig `DBCheckbox`, `schalter`-Prop waehlt `DBSwitch`
+      (ThemeSwitcher, `createShowModalEWT`). **Offene Entscheidung (User):** Grenzfaelle, die sofort
+      Felder ein-/ausblenden, aber erst mit Speichern gelten -- `eigen`/`sonder`/`nacht`
+      (`createAddModalBereitschaftsZeit`), Buero (`createAddModalEWT`), `toggle-*`
+      (`ArbeitszeiteingabePanel`); stehen bis dahin per `schalter` auf Switch. `EwtTab`s
+      Berechnen-Schalter persistiert per Klick sofort -> bleibt Switch; Umbau braucht Anpassung des
+      Selektors `#tableE .row-checkbox` (`DBSwitch` reicht `className` an den Root, nicht an das
+      `<input>`).
+- [x] **3. `PersoenlicheDatenPanel.tsx`** (erledigt, `a3d9792`; groesster Einzelgewinn): 15x `db-input` -> `DBInput
     variant="floating"` (Vorbild `Jahr` in `EinstellungenTab.tsx`), 2x `<select>` ->
       `DBSelect`. Beibehalten: `id`, `required`, `placeholder`, `type` (`tel`/`email`/`number`
       mit `min`/`max`), `list="taetigkeitVorschlaege"` (Datalist -> `DBInput dataList` pruefen),
@@ -76,6 +91,13 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       `reportValidity()` -- im Spike bestaetigen, dass die Validierungsmeldung weiter erscheint
       (DBInput bringt `invalidMessage`, ggf. Doppelmeldung vermeiden). Dazu
       `ArbeitszeiteingabePanel.tsx:88` `FahrzeitInput` (`type="time"`).
+      **Ergebnis:** lokale Hilfen `Feld`/`Auswahl`; Datalist ueber die `dataList`-Prop (das rohe
+      `list`-Attribut wird von `DBInput` NICHT an das `<input>` gereicht). Gueltiger TB-Wert ist
+      `'Tarifkraft'`. **Regression aus Zyklus `51f62b7` mitrepariert:** `.feldgruppe` war nach dem
+      DBStack-Umbau `display: block`; 5 rohe `<div className="feldgruppe">` (`FeldPanel`,
+      `aggregationUndRechnung` 2x, `AdminProfileTemplateContentEditor`, `PersoenlicheDatenPanel`)
+      -> `<DBStack direction="row" alignment="end" gap="x-small">`. Stand `PersoenlicheDatenPanel`:
+      User bearbeitet die E-Mail-Zeile gerade selbst (halbe Spalte, `message="Test"` noch drin).
 - [ ] **4. `DBNotification`** (12 Stellen, siehe Liste unten): `role`/`semantic` 1:1 uebernehmen,
       `d-none`-Umschalter an `App.tsx:44` (wird extern per DOM gesteuert, `actAsStatus.ts` -- Id
       dort nachschlagen) nicht brechen. `py-2`/`mb-*`-Klassen als `className` behalten.
@@ -88,8 +110,22 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       Spike-Fragen: (a) landet `id="collapseOne"` so am DOM, dass `#collapseFive
     input[data-tab-key]` weiter trifft? (b) exklusives Oeffnen (`name="einstellungen"`) ->
       `behavior="single"`? (c) `createOnboardingGuideModal.tsx:161` `closest('.db-accordion-item')`.
-- [ ] **7. Tabellen + Tabs** (nur nach Rueckfrage, groesster Umfang): 6 Admin-`db-table` ->
-      `DBTable`-Familie (nur wo Zeilen ohnehin React-gerendert); Tab-Leisten
+- [ ] **7. Tabellen + Tabs** (nur nach Rueckfrage, groesster Umfang). **`DBTable`: geprueft
+      (2026-09-19, DB-UX 5.5.0) -- NICHT einsetzbar, Empfehlung: Roh-Markup `div.db-table > table`
+      beibehalten.** Belege: (a) `DBTable` rendert dieselbe Struktur wie unser Roh-Markup plus
+      Klassen (`db-table-row` usw.), (b) sein CSS ist ein Grid-Modell (`table {display:grid}` +
+      `:has()`-Spaltenzaehlung ueber `td`/`th`-Kinder), (c) `utilities.scss` setzt bewusst
+      `.db-table > table {display: table}` zurueck, weil unsere Tabellen `colspan`, Zeilenkoepfe und
+      je Breakpoint ausgeblendete Spalten (`d-none d-md-table-cell`) nutzen, (d) live gemessen: mit
+      `DBTable`-Markup stapeln sich die Zellen (Zeile 129px statt 32px, `tr` = `grid` ohne Spalten;
+      `columnSizes` aendert nichts), Zellmasse/Padding/Schrift sonst identisch. `CustomTable`-Tabellen
+      scheiden zusaetzlich aus (mountet React direkt auf `<table id>`, `DBTable` gibt die `id` an den
+      Root-`div`). Gewinne, die `DBTable` braechte (`stickyHeader`, `columnSizes`,
+      `mobileVariant="list"`, `horizontalAlignment`), haengen alle am Grid-Modell. Nebenfunde:
+      `.table-active` (FormularVersionenListe, bearbeitete Version) existiert im CSS nicht ->
+      Hervorhebung unsichtbar; `data-interactive` am Wrapper ist NICHT tot (`styles.scss:435`
+      Hover-Regel als `table-hover`-Ersatz). Rest von 7 (nur Tab-Leisten): 6 Admin-`db-table` ->
+      entfaellt; Tab-Leisten
       (`Admin/index.tsx:138`, `AdminResourceBrowser.tsx:220`, `FormularEditor.tsx:563/570`) ->
       `DBTabs`. Tab-Leisten haengen an `data-tab-target`/`admin-unternavigation` -- eigene
       Entscheidung.
