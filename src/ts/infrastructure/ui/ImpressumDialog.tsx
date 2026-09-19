@@ -1,4 +1,4 @@
-import { DBButton, DBDrawer, DBDrawerFooter, DBDrawerHeader } from '@db-ux/react-core-components';
+import { DBButton, DBDrawer, DBDrawerFooter, DBDrawerHeader, DBLink } from '@db-ux/react-core-components';
 
 /**
  * Phase K3: `<dialog id="impressum">` (index.html) als echter React-`DBDrawer`. Ausloeser ist
@@ -20,6 +20,13 @@ function kontaktTelefon(): string {
   const country = ['+', '4', '9', '(', '0', ')'];
   const number = ['1', '7', '0', '-', '6', '7', '0', '8', '6', '9', '2'];
   return `${country.join('')}${number.join('')}`;
+}
+
+/** `tel:`-Ziel aus der angezeigten Nummer: ohne "(0)" (internationale Schreibweise) und Sonderzeichen. */
+function kontaktTelefonLink(): string {
+  return `tel:${kontaktTelefon()
+    .replace('(0)', '')
+    .replace(/[^\d+]/g, '')}`;
 }
 
 function kontaktMail(): string {
@@ -63,9 +70,15 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
         <p>
           <strong>Kontakt:</strong>
           <br />
-          Telefon: {kontaktTelefon()}
+          Telefon:{' '}
+          <DBLink href={kontaktTelefonLink()} variant="inline" showIcon={false}>
+            {kontaktTelefon()}
+          </DBLink>
           <br />
-          E-Mail: <a href={`mailto:${mail}`}>{mail}</a>
+          E-Mail:{' '}
+          <DBLink href={`mailto:${mail}`} variant="inline" showIcon={false}>
+            {mail}
+          </DBLink>
         </p>
         <p>
           <strong>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:</strong>
