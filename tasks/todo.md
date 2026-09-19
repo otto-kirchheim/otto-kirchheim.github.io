@@ -147,6 +147,20 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       konsistente Presets. Sichtbare Layout-Aenderung in JEDEM Tab -> vor Umsetzung Preset waehlen
       (Empfehlung: `large` fuer Tab-Koepfe und -Tabellen) und einen Tab im Puppeteer-Vergleich
       (1280/1920px) pruefen. Nicht fuer die Gruppen innerhalb der Einstellungen (Mikro-Abstaende).
+      **Pruefung 2026-09-19 (echte Einstellungen-Seite, `mitte` -> `db-section` zur Laufzeit):**
+      Inhaltsbreite ist/large/medium: 375px 351/343/343, 1280px 1176/1248/992, 1920px 1176/1408/
+      992; Seiten-Padding mobil 12px -> 16px. `spacing` small = 32px mobil / 48px Desktop
+      `padding-block` (heute 0) -> Ueberschrift rutscht 48px tiefer. Tabs sind zwei GESCHACHTELTE
+      `.mitte` (Kopf + Inhalt): zwei Sections stapeln Padding doppelt -> nur aeusseres Section, inneres
+      plain. Fazit: kein Preset trifft 1200px; `large` macht Formular-/Akkordeon-Seiten (Einstellungen)
+      zu breit (Zeilen 1408px), `medium` macht die Tabellen-Tabs zu schmal. Vorschlag: `large`
+      fuer Tabellen-Tabs (Bereitschaft/EWT/EA/Neben/Berechnung), `medium` fuer Einstellungen/Start,
+      `spacing="none"` (Abstaende regelt `#tabContent`); User entscheidet.
+- [ ] **10. Switch-Grenzfaelle (Vorschlag 2026-09-19, User entscheidet)**: alle 6 Stellen -> Checkbox
+      (Werte gelten erst mit Hinzufuegen/Speichern; im EWT-Modal steht "Berechnen" direkt ueber
+      "Buero" schon als Checkbox). `eigen`/`sonder`/`nacht`/Buero: `schalter` entfernen. `toggle-*`
+      (`ArbeitszeiteingabePanel`): `schalter` entfernen und das wechselnde Label "aktiv"/"inaktiv"
+      durch festes "aktiv" ersetzen (eine Checkbox beschreibt nicht ihren Gegenzustand).
 
 ### 12 `db-notification`-Fundstellen (Schritt 4)
 
