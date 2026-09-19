@@ -113,7 +113,7 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       Spike-Fragen: (a) landet `id="collapseOne"` so am DOM, dass `#collapseFive
     input[data-tab-key]` weiter trifft? (b) exklusives Oeffnen (`name="einstellungen"`) ->
       `behavior="single"`? (c) `createOnboardingGuideModal.tsx:161` `closest('.db-accordion-item')`.
-- [ ] **7. Tabellen + Tabs** (nur nach Rueckfrage, groesster Umfang). **`DBTable`: geprueft
+- [x] **7. Tabellen + Tabs** (erledigt 2026-09-19: `DBTable` NICHT einsetzbar, `DBTabs` NICHT einsetzbar -- beides mit Live-Beleg, Roh-Markup bleibt; nur Tab-Leisten siehe unten) (nur nach Rueckfrage, groesster Umfang). **`DBTable`: geprueft
       (2026-09-19, DB-UX 5.5.0) -- NICHT einsetzbar, Empfehlung: Roh-Markup `div.db-table > table`
       beibehalten.** Belege: (a) `DBTable` rendert dieselbe Struktur wie unser Roh-Markup plus
       Klassen (`db-table-row` usw.), (b) sein CSS ist ein Grid-Modell (`table {display:grid}` +
@@ -130,8 +130,18 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       Hover-Regel als `table-hover`-Ersatz). Rest von 7 (nur Tab-Leisten): 6 Admin-`db-table` ->
       entfaellt; Tab-Leisten
       (`Admin/index.tsx:138`, `AdminResourceBrowser.tsx:220`, `FormularEditor.tsx:563/570`) ->
-      `DBTabs`. Tab-Leisten haengen an `data-tab-target`/`admin-unternavigation` -- eigene
-      Entscheidung.
+      `DBTabs`. **`DBTabs` geprueft (2026-09-19, DB UX 5.5.0) -- NICHT einsetzbar, Leisten bleiben
+      `DBNavigation`/`nav` mit `role="tablist"`.** Belege: (a) Live-Test mit fester Tab-Menge: Klickfolgen,
+      externer Wechsel (`activeIndex`) und Ids sind in Ordnung; (b) aber Tabs ZUR LAUFZEIT ein-/
+      ausblenden bricht die Zuordnung -- nicht rendern (Tab + Panel): "Zwei" wieder da => zwei Panels
+      gleichzeitig sichtbar, "Drei" entfernt => kein Tab aktiv; per `d-none` verstecken: Klick auf
+      den naechsten Tab und Pfeiltasten wirkungslos, zwei Panels sichtbar (`DBTabs` ordnet Tabs und
+      Panels per INDEX zu); (c) strukturell: `DBTabItem`/`DBTabPanel` haben kein `id`-Prop (Ids
+      `admin-tab-*`/`admin-pane-*`, `data-tab-target`, `getElementById('admin-tab-profiles').click()`,
+      `tabController`/`activeAdminTabStore` haengen daran), Trenner-Eintraege und "+ Seite"-Knopf
+      (`FormularEditor`) passen nicht in `DBTabList`, `AdminResourceBrowser` und `FormularEditor`
+      teilen sich EINEN Inhaltsbereich statt je einem Panel; (d) die Admin-Tabs haengen an
+      Berechtigungen (`canSee*`) und erscheinen erst nach dem Laden -- genau der Fall (b).
 - [x] **8. `DBLink`** (erledigt 2026-09-19, CHANGELOG 155: `mailto:` im Impressum; User: die `<a>` im `AppHeader`/DBShell BLEIBEN `<a>`): `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
       Kommentars.
 
