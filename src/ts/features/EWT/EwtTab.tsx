@@ -77,7 +77,7 @@ export function EwtTab() {
           direction: 'ASC',
           parser: tagParser,
         },
-        { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'xxl', parser: tagParser },
+        { name: 'Buchungstag', title: 'Buchungs\n-Tag', breakpoints: 'lg', parser: tagParser },
         { name: 'Einsatzort', title: 'Einsatzort', classes: ['custom-text-truncate'], type: 'text' },
         {
           name: 'Schicht',

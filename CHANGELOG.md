@@ -2,6 +2,20 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (154)
+
+### fix (EWT: "Buchungstag"-Spalte ab 1440px sichtbar)
+
+- `Buchungstag` (`EwtTab.tsx`) stand auf `xxl` (2560px) und war dadurch praktisch nie sichtbar. Mit
+  der `DBSection large`-Breite (Eintrag 153) passen alle 14 EWT-Spalten ab 1440px in den
+  Container (gemessen mit echten Ortsnamen/Zeiten: Tabelle 1400px, Container 1408px, kein
+  horizontaler Scroll), daher jetzt `lg`. Bei 1280px bleibt die Spalte ausgeblendet (8 Spalten,
+  erreichbar ueber das "+"-Aufklappen der Zeile). Sehr lange Einsatzorte koennen die Tabelle
+  ueber den Container verbreitern (nur 8px Luft).
+- **Build-Fix `changeMonatJahr.ts`**: der EA-Monatsfilter (`#tableEA`, `getMonatFromEA`) war ohne
+  die Imports (`IDatenEA`, `getMonatFromEA`) committet worden -- `tsc` schlug seit `b42ef0f` mit zwei
+  Fehlern fehl. Imports ergaenzt.
+
 ## 2026-09-19 (153)
 
 ### refactor (DBSection statt `.mitte`, Switch-Grenzfaelle als Checkbox)
