@@ -162,16 +162,23 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       (`ArbeitszeiteingabePanel`): `schalter` entfernen und das wechselnde Label "aktiv"/"inaktiv"
       durch festes "aktiv" ersetzen (eine Checkbox beschreibt nicht ihren Gegenzustand).
 
-- [ ] **11. Spalten-Schwellen der Tabellen pruefen (User-Hinweis 2026-09-19)**: Sichtbarkeit je
-      Spalte ueber `breakpoints` (verschwindet unterhalb der Viewport-Stufe, `customtable.scss`).
-      Mit `DBSection large` ist der Inhalt ab 1440px konstant 1408px -> `xxl` (2560px) bringt keinen
-      Platz mehr: EWT-"Buchungstag" (`xxl`) ist praktisch nie sichtbar. Kandidaten: EWT `Buchungstag`
-      `xxl` -> `lg`/`xl`; EWT-`lg`-Spalten (Ab 1.Tgk.-St., An Einsatzort, Ab Einsatzort, An 1.Tgk.-St.,
-      Bearbeiten-Toggle) evtl. schon ab 1280px (Inhalt dort 1248px statt frueher 1176px). Mit echten
-      Daten je Tab bei 1024/1280/1440/1920px pruefen, ob die vollstaendige Tabelle passt
-      (`table.scrollWidth <= .db-table.clientWidth`); ohne Backend liessen sich die Tabellen nicht
-      befuellen (`loadUserDaten`/`Vorgaben Geld`). Alternative: Schwellen wie das Berechnungs-
-      Monatsfenster aus der Containerbreite ableiten statt aus dem Viewport.
+- [ ] **11. Spalten-Schwellen der Tabellen pruefen (User-Hinweis 2026-09-19)** -- **EWT gemessen**
+      (echte Ortsnamen/Zeiten des Users, echte `VorgabenGeld`; alle Spalten per CSS erzwungen,
+      `table` auf `max-content`): Platz = Container der `DBSection large`, "alle" = 14 Spalten.
+      768px: Platz 736, sichtbar 6, alle brauchen 1217 (fehlt 481) | 1024px: 992, sichtbar 8, alle
+      1217 (fehlt 225) | 1280px: 1248, sichtbar 8, alle 1240 (**passt, 8px Luft**) | 1440px: 1408,
+      sichtbar 13, alle 1400 (**passt, 8px Luft**) | 1920px: wie 1440px | 2560px: alle 14 sichtbar.
+      Befunde: (a) `large` (1408px) entspricht fast exakt der Breite der vollstaendigen EWT-Tabelle
+      (1400px) -- das Preset passt. (b) EWT-"Buchungstag" (`xxl`) erscheint erst ab 2560px, passt
+      aber schon ab 1440px (8px Luft) -> Kandidat `lg`; Risiko: laengere Ortsnamen als
+      "Langenschwarz" verbreitern die Tabelle ueber den Container (horizontaler Scroll), und die
+      Spalte ist sonst ueber das "+"-Aufklappen der Zeile erreichbar. (c) Zwischen 1024 und 1440px
+      gibt es keine Stufe: bei 1280-1439px passt die volle Tabelle knapp (1240 <= 1248), wird aber
+      erst ab 1440px gezeigt (`lg`-Spalten). Eine Stufe bei ~1280px gibt es in `_breakpoints.scss`
+      nicht (Skala xs 320 / sm 768 / md 1024 / lg 1440 / xl 1920 / xxl 2560). Bereitschaft/Neben/EA/
+      VorgabenB noch nicht gemessen (weniger Spalten, breite Container). Optionen: `Buchungstag`
+      `xxl` -> `lg` (klein, 8px Luft) ODER Sichtbarkeit wie das Berechnungs-Monatsfenster aus der
+      Containerbreite ableiten (robuster, groesserer Umbau).
 
 ### 12 `db-notification`-Fundstellen (Schritt 4)
 
