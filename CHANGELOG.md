@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (158)
+
+### fix (Spalten-Schwellen: breitere Tabellen ab 768px)
+
+- Mit `DBSection large` (Eintrag 153) haben die Tabellen mehr Platz als die `md`-Schwelle (1024px)
+  annimmt. Gemessen mit den echten Daten des Users (alle Spalten per CSS erzwungen, natuerliche
+  Tabellenbreite gegen Container): Bereitschaft, EWT, Neben und EA passen ab 1440px komplett, bei
+  768px fehlten aber Spalten, die problemlos gepasst haetten.
+- **Geaendert (`md` -> `sm`)**: Bereitschaftseinsaetze `Privat Km` (768px: alle 7 Spalten, 145px Luft),
+  Neben `Auftragsnummer` (alle 6 Spalten, 70px Luft; mit dem laengsten Katalog-Zulagentext
+  `819 Zwangsh. Bücken/Knieen × 99` noch 8px), Vorgaben-Tabelle `Standard` und `Nacht?` (6 von 8
+  Spalten, 107px Luft). EWT `Buchungstag` `xxl` -> `lg` siehe Eintrag 154.
+- **Unveraendert**: Bereitschaftszeitraum (4 von 4 Spalten immer sichtbar), EA (alle 5 ab `sm`,
+  80px Luft), Vorgaben-Tabelle `Nacht Von`/`Nacht Bis` bleiben `md` (alle 8 Spalten bei 768px
+  haetten nur 8px Luft und haengen von den Vorgaben-Namen ab).
+- Die Zulagen-Spalte in Neben wird durch mehr Zulagen HOEHER (Zeilenumbruch), nicht breiter; die
+  Breite bestimmt der laengste Einzeleintrag.
+
 ## 2026-09-19 (157)
 
 ### fix (Monat unter den Tab-Titeln fehlte nach dem Neuladen)

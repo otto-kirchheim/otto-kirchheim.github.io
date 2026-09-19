@@ -162,7 +162,7 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       (`ArbeitszeiteingabePanel`): `schalter` entfernen und das wechselnde Label "aktiv"/"inaktiv"
       durch festes "aktiv" ersetzen (eine Checkbox beschreibt nicht ihren Gegenzustand).
 
-- [~] **11. Spalten-Schwellen der Tabellen pruefen (User-Hinweis 2026-09-19)** -- **EWT erledigt: Weg 1 umgesetzt (`Buchungstag` `xxl` -> `lg`, CHANGELOG 154, live bestaetigt: 1280px ausgeblendet, ab 1440px 14 Spalten ohne Scroll); Bereitschaft/Neben/EA/VorgabenB offen** -- **EWT gemessen**
+- [x] **11. Spalten-Schwellen der Tabellen pruefen (erledigt 2026-09-19, CHANGELOG 154 + 158; alle Tabellen gemessen: EWT, Bereitschaft (BZ/BE), Neben, EA, Vorgaben-Tabelle)** (User-Hinweis 2026-09-19) -- **EWT erledigt: Weg 1 umgesetzt (`Buchungstag` `xxl` -> `lg`, CHANGELOG 154, live bestaetigt: 1280px ausgeblendet, ab 1440px 14 Spalten ohne Scroll); Bereitschaft/Neben/EA/VorgabenB offen** -- **EWT gemessen**
       (echte Ortsnamen/Zeiten des Users, echte `VorgabenGeld`; alle Spalten per CSS erzwungen,
       `table` auf `max-content`): Platz = Container der `DBSection large`, "alle" = 14 Spalten.
       768px: Platz 736, sichtbar 6, alle brauchen 1217 (fehlt 481) | 1024px: 992, sichtbar 8, alle

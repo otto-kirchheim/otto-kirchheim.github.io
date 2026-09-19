@@ -62,7 +62,7 @@ export default function VorgabenBTable() {
   const ftVE = useCustomTableState<IVorgabenUvorgabenB>('tableVE', {
     columns: [
       { name: 'Name', title: 'Name' },
-      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'md' },
+      { name: 'standard', title: 'Standard', longTitle: 'Standard', parser: trueParser, breakpoints: 'sm' },
       {
         classes: ['cell-multiline'],
         name: 'beginnB',
@@ -79,7 +79,7 @@ export default function VorgabenBTable() {
         parser: weekdayParser,
         breakpoints: 'sm',
       },
-      { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'md' },
+      { name: 'nacht', title: 'Nacht?', parser: trueParser, breakpoints: 'sm' },
       {
         classes: ['cell-multiline'],
         name: 'beginnN',

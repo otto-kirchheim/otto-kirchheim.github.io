@@ -196,7 +196,7 @@ export function BereitschaftTab() {
           title: 'Privat Km',
           longTitle: 'Kilometer Privatfahrzeug',
           parser: timeZeroParser,
-          breakpoints: 'md',
+          breakpoints: 'sm',
           type: 'number',
         },
       ],

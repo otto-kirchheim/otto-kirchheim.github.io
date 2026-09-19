@@ -75,7 +75,7 @@ export function NebenTab() {
       {
         name: 'Auftragsnummer',
         title: 'Auftragsnummer',
-        breakpoints: 'md',
+        breakpoints: 'sm',
         parser: (value: unknown) => {
           const s = value as string;
           return s ? s.replace(/\B(?=(\d{3})+(?!\d))/g, ' ') : '-';
