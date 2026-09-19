@@ -8,6 +8,7 @@ import { authApi } from '@/infrastructure/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { createModalChangePassword, createModalPasskeySetPassword } from './components';
+import { setEmailStatus } from './utils/emailStatusStore';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
 import {
   logoutUser,
@@ -105,7 +106,6 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
 async function ensureEmailAnzeigeLoaded(): Promise<void> {
   const emailInput = document.querySelector<HTMLInputElement>('#EmailAnzeige');
   const resendButton = document.querySelector<HTMLButtonElement>('#btnResendVerificationEmail');
-  const verificationHint = document.querySelector<HTMLElement>('#EmailVerificationHint');
 
   if (!emailInput) return;
 
@@ -113,7 +113,7 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
   if (storedEmail) {
     emailInput.value = storedEmail;
     if (resendButton) resendButton.disabled = true;
-    if (verificationHint) verificationHint.textContent = 'Verifizierungsstatus wird geladen...';
+    setEmailStatus({ text: 'Verifizierungsstatus wird geladen...', icon: 'clock' });
   }
 
   const me = await authApi.me().catch(() => null);
@@ -123,23 +123,23 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
     emailInput.value = me.email;
   }
 
-  if (!resendButton || !verificationHint) return;
+  if (!resendButton) return;
 
   if (!me?.email) {
     resendButton.hidden = true;
-    verificationHint.textContent = 'E-Mail aktuell nicht verfügbar.';
+    setEmailStatus({ text: 'E-Mail aktuell nicht verfügbar.', icon: 'exclamation_mark_circle' });
     return;
   }
 
   if (me.emailVerified === false) {
     resendButton.hidden = false;
     resendButton.disabled = false;
-    verificationHint.textContent = 'E-Mail ist noch nicht verifiziert.';
+    setEmailStatus({ text: 'E-Mail ist noch nicht verifiziert.', icon: 'exclamation_mark_circle' });
     return;
   }
 
   resendButton.hidden = true;
-  verificationHint.textContent = 'E-Mail ist verifiziert.';
+  setEmailStatus({ text: 'E-Mail ist verifiziert.', icon: 'check' });
 }
 
 async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void> {

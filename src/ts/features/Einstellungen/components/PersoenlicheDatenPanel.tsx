@@ -2,6 +2,7 @@ import { DBButton, DBInput, DBSelect, DBStack } from '@db-ux/react-core-componen
 import type { ComponentProps } from 'react';
 
 import { STANDARD_UNGUELTIG_MELDUNG } from '@/components/dbFeldHelfer';
+import { useEmailStatus } from '../utils/emailStatusStore';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
 /**
@@ -84,6 +85,8 @@ function Auswahl({
 }
 
 export default function PersoenlicheDatenPanel() {
+  const emailStatus = useEmailStatus();
+
   return (
     <div className="raster text-start abstand-3">
       <div className="sp-md-6">
@@ -98,8 +101,8 @@ export default function PersoenlicheDatenPanel() {
       <div className="sp-md-6">
         <Feld id="Telefon" label="Telefon" icon="telephone" type="tel" placeholder="0123/45678910" required />
       </div>
-      <div>
-        <DBStack direction="row" alignment="end" gap="x-small" className="feldgruppe">
+      <div className="sp-md-12">
+        <DBStack direction="row" alignment="start" gap="x-small" className="feldgruppe">
           <Feld
             id="EmailAnzeige"
             label="E-Mail"
@@ -108,17 +111,18 @@ export default function PersoenlicheDatenPanel() {
             placeholder="user@deutschebahn.com"
             readOnly
             disabled
+            message={emailStatus?.text}
+            messageIcon={emailStatus?.icon}
           />
           <DBButton variant="outlined" type="button" id="btnResendVerificationEmail" disabled>
             Verifizierungs-Mail senden
           </DBButton>
         </DBStack>
       </div>
-      <span id="EmailVerificationHint" className="db-infotext" data-size="small" data-show-icon-leading="false"></span>
-      <div>
+      <div className="sp-md-6">
         <Feld id="Adress1" label="Wohnsitz 1" icon="house" placeholder="Musterstraße 17, 12345 Musterstadt" required />
       </div>
-      <div>
+      <div className="sp-md-6">
         <Feld id="Adress2" label="Wohnsitz 2" icon="house" placeholder="Musterstraße 17, 12345 Musterstadt" />
       </div>
       <div className="sp-md-6">
