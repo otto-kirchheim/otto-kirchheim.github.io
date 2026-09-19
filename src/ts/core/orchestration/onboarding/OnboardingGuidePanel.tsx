@@ -145,12 +145,14 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
       return;
     }
 
-    const collapseId =
-      step.art === 'intro' || step.art === 'pers'
-        ? '#collapseOne'
-        : step.art === 'bestaetigung'
-          ? step.collapseId
-          : null;
+    // Das "Willkommen zur Ersteinrichtung" bleibt auf dem Start-Tab; erst der naechste Schritt
+    // ("pers") wechselt in die Einstellungen.
+    if (step.art === 'intro') {
+      springeZu('#brand-start-tab');
+      return;
+    }
+
+    const collapseId = step.art === 'pers' ? '#collapseOne' : step.art === 'bestaetigung' ? step.collapseId : null;
     if (!collapseId) return;
 
     springeZu('#einstellungen-tab', collapseId);

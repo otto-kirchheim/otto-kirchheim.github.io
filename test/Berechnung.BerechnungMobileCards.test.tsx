@@ -142,8 +142,34 @@ describe('#BerechnungMobileCards', () => {
     mountBerechnungMobileCards(monatsErgebnisse, []);
 
     const container = document.querySelector('#berechnungMobileCards')!;
-    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse2')?.open).toBe(true);
-    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse1')?.open).toBe(false);
+    // `DBAccordionItem` uebernimmt `open` erst per Effekt -- einen Tick abwarten.
+    await new Promise(r => setTimeout(r, 30));
+    // `DBAccordionItem` traegt die Id am `<li>`, das native `<details>` liegt darin.
+    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse2 > details')?.open).toBe(true);
+    expect(container.querySelector<HTMLDetailsElement>('#berechnungMonatCollapse1 > details')?.open).toBe(false);
+  });
+
+  it('klappt per Klick genau eine Monatskarte auf und die vorherige zu', async () => {
+    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    Storage.set('Monat', 2);
+    mountBerechnungMobileCards([leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)], []);
+    const container = document.querySelector('#berechnungMobileCards')!;
+    await new Promise(r => setTimeout(r, 30));
+
+    const offen = () =>
+      Array.from(container.querySelectorAll<HTMLDetailsElement>('.db-accordion-item > details'))
+        .map((d, i) => (d.open ? i + 1 : 0))
+        .filter(Boolean);
+    expect(offen()).toEqual([2]);
+
+    container.querySelector<HTMLElement>('#berechnungMonatCollapse3 summary')?.click();
+    await new Promise(r => setTimeout(r, 30));
+    expect(offen()).toEqual([3]);
+
+    // Erneuter Klick auf den zuvor geschlossenen Eintrag oeffnet ihn sofort wieder (ein Klick).
+    container.querySelector<HTMLElement>('#berechnungMonatCollapse2 summary')?.click();
+    await new Promise(r => setTimeout(r, 30));
+    expect(offen()).toEqual([2]);
   });
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {

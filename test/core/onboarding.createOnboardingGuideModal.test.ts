@@ -62,6 +62,7 @@ function renderPersInputs(values: {
 describe('createOnboardingGuideModal (Panel)', () => {
   beforeEach(() => {
     document.body.innerHTML = `
+      <a id="brand-start-tab" href="#start" data-tab-target="start"></a>
       <ul>
         <li><button id="bereitschaft-tab" type="button" data-tab-target="Bereitschaft"></button></li>
         <li class="d-none"><button id="ewt-tab" type="button" data-tab-target="EWT"></button></li>
@@ -175,11 +176,23 @@ describe('createOnboardingGuideModal (Panel)', () => {
     expect(getPanel()).toBeNull();
   });
 
-  it('automatically opens the personal-data accordion on step 1 while keeping the panel', async () => {
+  it('bleibt im Willkommens-Schritt auf dem Start-Tab und oeffnet noch keinen Einstellungen-Abschnitt', async () => {
     openOnboardingGuide();
     await tick();
 
-    expect(zeigeTabMock).toHaveBeenCalled();
+    const tabs = zeigeTabMock.mock.calls.map(call => (call as unknown as unknown[]).at(0));
+    expect(tabs).toContain('start');
+    expect(tabs).not.toContain('Einstellungen');
+    expect(document.querySelector<HTMLDetailsElement>('#collapseOne')?.open).toBe(false);
+    expect(getPanel()?.textContent).toContain('Willkommen zur Ersteinrichtung');
+  });
+
+  it('automatically opens the personal-data accordion on step 2 while keeping the panel', async () => {
+    openOnboardingGuide();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+
     expect(zeigeTabMock.mock.calls.some(call => (call as unknown as unknown[]).at(0) === 'Einstellungen')).toBe(true);
     expect(document.querySelector<HTMLDetailsElement>('#collapseOne')?.open).toBe(true);
     expect(document.querySelector('.db-accordion-item')?.classList.contains('onboarding-focus')).toBe(true);

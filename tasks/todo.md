@@ -108,7 +108,7 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       die Linie -- Erfahrung aus dem Einstellungen-Umbau); 7x `div.db-card` -> `DBCard`
       (`AdminDashboard` 4x, `adminDashboardCharts`, `AdminResourceBrowser`, Onboarding).
       `data-spacing="none"`/`shadow`-Klassen pruefen.
-- [ ] **6. Accordion** (mittleres Risiko, ZUERST Spike): `EinstellungenTab.tsx` (7 Items),
+- [x] **6. Accordion** (erledigt 2026-09-19, CHANGELOG 155; **`behavior="single"` NICHT nutzbar** -- Zwei-Klick-Fehler in DB UX 5.5.0, eigener Zustand via `offenerAbschnittStore`; nur `EinstellungenTab` + `BerechnungMobileCards` umgestellt, die ad-hoc-`<details>` in `FormularUpload`/`FormularEditor` bleiben bewusst nativ) (ZUERST Spike): `EinstellungenTab.tsx` (7 Items),
       `BerechnungMobileCards.tsx`, `FormularUpload.tsx` -> `DBAccordion`/`DBAccordionItem`.
       Spike-Fragen: (a) landet `id="collapseOne"` so am DOM, dass `#collapseFive
     input[data-tab-key]` weiter trifft? (b) exklusives Oeffnen (`name="einstellungen"`) ->
@@ -132,7 +132,7 @@ Jeder Schritt = eigener Commit (nach Rueckfrage), jeder Schritt einzeln verifizi
       (`Admin/index.tsx:138`, `AdminResourceBrowser.tsx:220`, `FormularEditor.tsx:563/570`) ->
       `DBTabs`. Tab-Leisten haengen an `data-tab-target`/`admin-unternavigation` -- eigene
       Entscheidung.
-- [ ] **8. `DBLink`**: `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
+- [x] **8. `DBLink`** (erledigt 2026-09-19, CHANGELOG 155: `mailto:` im Impressum; User: die `<a>` im `AppHeader`/DBShell BLEIBEN `<a>`): `ImpressumDialog.tsx:68` (`mailto:`), `AppHeader.tsx` nach Pruefung des
       Kommentars.
 
 - [x] **9. `DBSection` (erledigt 2026-09-19, CHANGELOG 153; offen: Spalten-Schwellen s. u.)** -- ersetzt `.mitte`/`.breit`

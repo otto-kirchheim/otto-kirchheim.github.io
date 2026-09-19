@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
 import { DBLoadingButton } from '@/components';
 import {
+  DBAccordion,
+  DBAccordionItem,
   DBButton,
   DBCheckbox,
   DBDivider,
@@ -9,6 +12,7 @@ import {
   DBTag,
   DBTooltip,
 } from '@db-ux/react-core-components';
+import { setOffenenAbschnitt, useOffenenAbschnitt } from '@/infrastructure/ui/offenerAbschnittStore';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
@@ -38,6 +42,28 @@ import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
  * - `#collapseFive` als Eltern-Id bleibt bestehen: `generateEingabeMaskeEinstellungen.ts`/
  *   `saveEinstellungen.ts` scopen ihre `[data-tab-key]`-Suche darauf.
  */
+/**
+ * Ein Abschnitt des Einstellungen-Akkordeons. Der "offen"-Zustand liegt im
+ * `offenerAbschnittStore` (genau ein Abschnitt offen, von aussen oeffenbar) statt in
+ * `behavior="single"` -- siehe dort zur Begruendung.
+ */
+function Abschnitt({ id, titel, children }: { id: string; titel: string; children: ReactNode }) {
+  const offen = useOffenenAbschnitt() === id;
+  return (
+    // `Abschnitt` wird nur unterhalb des `DBAccordion` in `EinstellungenTab` gerendert; die
+    // statische Regel sieht die Komponentengrenze nicht.
+    // eslint-disable-next-line db-ux/sub-component-required-parent
+    <DBAccordionItem
+      id={id}
+      headlinePlain={titel}
+      open={offen}
+      onToggle={istOffen => setOffenenAbschnitt(istOffen ? id : null)}
+    >
+      {children}
+    </DBAccordionItem>
+  );
+}
+
 export default function EinstellungenTab() {
   return (
     <DBSection width="medium" spacing="none" className="text-center">
@@ -103,141 +129,116 @@ export default function EinstellungenTab() {
           Speichern
         </DBLoadingButton>
 
-        <ul className="db-accordion" id="einstellungen" data-variant="card">
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseOne">
-              <summary>Persönliche Daten</summary>
-              <PersoenlicheDatenPanel />
-            </details>
-          </li>
-          <li className="db-accordion-item" id="PasskeysAccordionItem">
-            <details name="einstellungen" id="collapsePasskeys">
-              <summary>Sicherheit</summary>
-              <div className="text-start">
-                <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
-                  <div>
-                    <h6 className="mb-1 d-flex align-items-center gap-2">
-                      Registrierte Biometrie-Anmeldungen
-                      <DBTag semantic="neutral" emphasis="strong" id="PasskeyAccordionCount">
-                        0
-                      </DBTag>
-                    </h6>
-                    <p className="text-body-secondary small mb-1">
-                      Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
-                    </p>
-                    <span id="PasskeyStatus" className="db-infotext" data-size="small" data-show-icon-leading="false">
-                      Biometrie-Status wird geladen...
-                    </span>
-                  </div>
-                  <DBStack direction="column" gap="x-small">
-                    {/* Haupt-Aktion als gefuellter Knopf, die Zweit-Aktionen darunter nur
+        <DBAccordion id="einstellungen" variant="card">
+          <Abschnitt id="collapseOne" titel="Persönliche Daten">
+            <PersoenlicheDatenPanel />
+          </Abschnitt>
+          <Abschnitt id="collapsePasskeys" titel="Sicherheit">
+            <div className="text-start">
+              <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+                <div>
+                  <h6 className="mb-1 d-flex align-items-center gap-2">
+                    Registrierte Biometrie-Anmeldungen
+                    <DBTag semantic="neutral" emphasis="strong" id="PasskeyAccordionCount">
+                      0
+                    </DBTag>
+                  </h6>
+                  <p className="text-body-secondary small mb-1">
+                    Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
+                  </p>
+                  <span id="PasskeyStatus" className="db-infotext" data-size="small" data-show-icon-leading="false">
+                    Biometrie-Status wird geladen...
+                  </span>
+                </div>
+                <DBStack direction="column" gap="x-small">
+                  {/* Haupt-Aktion als gefuellter Knopf, die Zweit-Aktionen darunter nur
                          umrandet. Kein Rot: das DB-Regelwerk laesst roten Text nur fuer
                          Links und Warnungen zu (Markenfarben, Double Coding). Passwort Ändern
                          zog von der oberen Knopfreihe her -- Account-Sicherheitsaktionen
                          jetzt an einer Stelle gruppiert. */}
-                    <DBButton variant="filled" type="button" id="btnAddPasskeyInline" disabled>
-                      Biometrie einrichten
-                    </DBButton>
-                    <DBButton variant="outlined" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
-                      Passwort Ändern
-                    </DBButton>
-                    <DBButton variant="outlined" type="button" id="btnPasswortPerPasskey" hidden>
-                      Passwort per Passkey neu setzen
-                    </DBButton>
-                  </DBStack>
-                </div>
-                <div className="trennliste" id="PasskeyList"></div>
+                  <DBButton variant="filled" type="button" id="btnAddPasskeyInline" disabled>
+                    Biometrie einrichten
+                  </DBButton>
+                  <DBButton variant="outlined" type="button" name="PasswortAEndern" id="btnPasswortAEndern">
+                    Passwort Ändern
+                  </DBButton>
+                  <DBButton variant="outlined" type="button" id="btnPasswortPerPasskey" hidden>
+                    Passwort per Passkey neu setzen
+                  </DBButton>
+                </DBStack>
               </div>
-            </details>
-          </li>
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseTwo">
-              <summary>Arbeitszeit</summary>
-              <div>
-                <div id="arbeitszeit-panel"></div>
+              <div className="trennliste" id="PasskeyList"></div>
+            </div>
+          </Abschnitt>
+          <Abschnitt id="collapseTwo" titel="Arbeitszeit">
+            <div>
+              <div id="arbeitszeit-panel"></div>
+            </div>
+          </Abschnitt>
+          <Abschnitt id="collapseThree" titel="Bereitschaft">
+            <div className="raster abstand-3">
+              <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
+                <VorgabenBTable />
               </div>
-            </details>
-          </li>
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseThree">
-              <summary>Bereitschaft</summary>
-              <div className="raster abstand-3">
-                <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
-                  <VorgabenBTable />
-                </div>
-              </div>
-            </details>
-          </li>
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseFour">
-              <summary>Fahrzeiten</summary>
-              <div className="raster abstand-3">
-                <div id="fahrzeiten-panel"></div>
-              </div>
-            </details>
-          </li>
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseFive">
-              <summary>Einstellungen & Bereiche</summary>
-              <div>
-                <div className="d-flex flex-column gap-4">
-                  {/* Sichtbare Bereiche */}
-                  <div>
-                    <h6 className="fw-bold mb-3">Sichtbare Bereiche</h6>
-                    <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
-                    <div className="d-flex flex-column gap-2">
-                      <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
-                      <DBCheckbox id="tab-ewt" label="EWT" data-tab-key="ewt" />
-                      <DBCheckbox id="tab-neben" label="Nebenbezüge" data-tab-key="neben" />
-                      <DBCheckbox id="tab-ea" label="Entgeltausgleich" data-tab-key="ea" />
-                    </div>
+            </div>
+          </Abschnitt>
+          <Abschnitt id="collapseFour" titel="Fahrzeiten">
+            <div className="raster abstand-3">
+              <div id="fahrzeiten-panel"></div>
+            </div>
+          </Abschnitt>
+          <Abschnitt id="collapseFive" titel="Einstellungen & Bereiche">
+            <div>
+              <div className="d-flex flex-column gap-4">
+                {/* Sichtbare Bereiche */}
+                <div>
+                  <h6 className="fw-bold mb-3">Sichtbare Bereiche</h6>
+                  <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
+                  <div className="d-flex flex-column gap-2">
+                    <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
+                    <DBCheckbox id="tab-ewt" label="EWT" data-tab-key="ewt" />
+                    <DBCheckbox id="tab-neben" label="Nebenbezüge" data-tab-key="neben" />
+                    <DBCheckbox id="tab-ea" label="Entgeltausgleich" data-tab-key="ea" />
                   </div>
+                </div>
 
-                  <DBDivider width="full" margin="none" />
+                <DBDivider width="full" margin="none" />
 
-                  {/* AutoSave */}
-                  <div>
-                    <h6 className="fw-bold mb-3">AutoSave</h6>
-                    <div className="d-flex flex-column gap-3">
-                      <DBCheckbox
-                        id="autoSaveEnabled"
-                        label="AutoSave aktivieren"
-                        data-settings-key="autoSaveEnabled"
+                {/* AutoSave */}
+                <div>
+                  <h6 className="fw-bold mb-3">AutoSave</h6>
+                  <div className="d-flex flex-column gap-3">
+                    <DBCheckbox id="autoSaveEnabled" label="AutoSave aktivieren" data-settings-key="autoSaveEnabled" />
+                    <div>
+                      <label htmlFor="autoSaveDelay">
+                        Verzögerung:{' '}
+                        <span id="autoSaveDelayLabel" className="fw-semibold">
+                          10 s
+                        </span>
+                      </label>
+                      <input
+                        type="range"
+                        id="autoSaveDelay"
+                        data-settings-key="autoSaveDelayMs"
+                        min="0"
+                        max="24"
+                        defaultValue="9"
+                        step="1"
                       />
-                      <div>
-                        <label htmlFor="autoSaveDelay">
-                          Verzögerung:{' '}
-                          <span id="autoSaveDelayLabel" className="fw-semibold">
-                            10 s
-                          </span>
-                        </label>
-                        <input
-                          type="range"
-                          id="autoSaveDelay"
-                          data-settings-key="autoSaveDelayMs"
-                          min="0"
-                          max="24"
-                          defaultValue="9"
-                          step="1"
-                        />
-                        <div className="text-muted small">1 Sekunde bis 5 Minuten</div>
-                      </div>
+                      <div className="text-muted small">1 Sekunde bis 5 Minuten</div>
                     </div>
                   </div>
                 </div>
               </div>
-            </details>
-          </li>
-          <li className="db-accordion-item">
-            <details name="einstellungen" id="collapseSix">
-              <summary>Zulagen</summary>
-              <div className="d-flex flex-column align-items-start gap-2">
-                <p className="text-muted mb-0">Wähle die benötigten Zulagen für die Nebengeld-Erfassung.</p>
-                <div id="settings-zulagen-list" className="w-100 d-flex flex-column gap-2"></div>
-              </div>
-            </details>
-          </li>
-        </ul>
+            </div>
+          </Abschnitt>
+          <Abschnitt id="collapseSix" titel="Zulagen">
+            <div className="d-flex flex-column align-items-start gap-2">
+              <p className="text-muted mb-0">Wähle die benötigten Zulagen für die Nebengeld-Erfassung.</p>
+              <div id="settings-zulagen-list" className="w-100 d-flex flex-column gap-2"></div>
+            </div>
+          </Abschnitt>
+        </DBAccordion>
       </form>
     </DBSection>
   );

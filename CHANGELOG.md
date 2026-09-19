@@ -2,6 +2,36 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (155)
+
+### refactor (Akkordeons als `DBAccordion`, Ersteinrichtung bleibt auf Start)
+
+- **`<DBAccordion>`/`<DBAccordionItem>` statt rohem `ul.db-accordion > li > details`**:
+  `EinstellungenTab` (7 Abschnitte, `collapseOne` ... `collapseSix`, Passkeys) und
+  `BerechnungMobileCards` (Monatskarten). Die Ids sitzen jetzt am `<li>`, das native `<details>`
+  liegt darin; `#collapseFive input[data-tab-key]` u. a. treffen unveraendert.
+- **Kein `behavior="single"`**: im Live-Test (DB UX 5.5.0) brauchte ein zuvor geoeffneter, dann nativ
+  ueber `name` geschlossener Abschnitt beim naechsten Klick ZWEI Klicks -- `DBAccordionItem`
+  behaelt seinen internen "offen"-Zustand. Stattdessen liegt der Zustand an einer Stelle
+  (`open` + `onToggle`): Einstellungen ueber den neuen `offenerAbschnittStore.ts`, die
+  Berechnungskarten im lokalen State von `BerechnungMobileCards` (folgt `offenerMonat` von aussen).
+  Live geprueft: mehrere Klickfolgen, Auf-/Zuklappen, Sprung von aussen -- jeder Klick wirkt.
+- **Onboarding**: `springeZu()` oeffnet den Abschnitt ueber den Store (`flushExtern`, danach
+  `scrollIntoView`); eine Id direkt am `<details>` (aelteres Markup) funktioniert ueber einen
+  Fallback weiter.
+- **Ersteinrichtung**: "Willkommen zur Ersteinrichtung" bleibt auf dem Start-Tab
+  (`springeZu('#brand-start-tab')`); erst der naechste Schritt (persoenliche Daten) wechselt in die
+  Einstellungen und oeffnet den Abschnitt.
+- `DBAccordionItem` uebernimmt `open` erst per Effekt (ein Tick): die zu Beginn geoeffnete
+  Monatskarte erscheint daher einen Moment nach dem ersten Zeichnen offen.
+- `<a>` in `AppHeader` (DBShell) bleiben bewusst `<a>` statt `DBLink`.
+- **`mailto:` und Telefon im Impressum als `<DBLink variant="inline" showIcon={false}>`**
+  (`ImpressumDialog.tsx`); die Voreinstellung haengt ein Pfeil-Icon an, das fuer Adresse/Nummer im
+  Fliesstext stoert. Das `tel:`-Ziel wird zur Laufzeit aus der angezeigten Nummer abgeleitet (ohne
+  "(0)", nur Ziffern und "+") -- die Nummer bleibt wie bisher aus Einzelzeichen zusammengesetzt.
+- Neu/angepasst: `test/ui.offenerAbschnittStore.test.ts`, `Berechnung.BerechnungMobileCards`
+  (Id am `<li>`, Einzel-Auswahl per Klick), Onboarding-Test (Schritt 1 bleibt auf Start).
+
 ## 2026-09-19 (154)
 
 ### fix (EWT: "Buchungstag"-Spalte ab 1440px sichtbar)

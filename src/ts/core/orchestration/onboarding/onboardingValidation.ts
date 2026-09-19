@@ -2,6 +2,8 @@ import type { IVorgabenU } from '@/types';
 import Storage from '@/infrastructure/storage/Storage';
 import { PERS_FIELD_LABELS, validatePersInput } from '@/infrastructure/validation/addressValidation';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
+import { setOffenenAbschnitt } from '@/infrastructure/ui/offenerAbschnittStore';
+import { flushExtern } from '@/infrastructure/ui/reactRoot';
 
 /** Die 5 Pflichtfelder der persönlichen Daten, die der Nutzer selbst eintragen muss. */
 const PERS_FELDER = [
@@ -70,10 +72,14 @@ export function springeZu(tabButtonId: string, collapseId?: string): void {
   if ((collapseId || tabZiel) && tabZiel && !zeigeTab(tabZiel)) return;
 
   if (!collapseId) return;
-  // Die Einstellungen-Abschnitte sind seit Phase H native `<details>` (DB-Accordion) --
-  // aufklappen heisst `open`, kein Bootstrap-Collapse mehr.
-  const abschnitt = document.querySelector<HTMLDetailsElement>(collapseId);
+  // Die Einstellungen-Abschnitte sind `DBAccordionItem`s mit Zustand im `offenerAbschnittStore`
+  // (die Id sitzt am `<li>`); `flushExtern` rendert sofort, damit `scrollIntoView` unten schon
+  // die aufgeklappte Hoehe sieht. Eine Id direkt am `<details>` (aelteres Markup) oeffnet der
+  // Fallback ueber `open`.
+  flushExtern(() => setOffenenAbschnitt(collapseId.replace(/^#/, '')));
+  const abschnitt = document.querySelector<HTMLElement>(collapseId);
   if (!abschnitt) return;
-  abschnitt.open = true;
+  const details = abschnitt instanceof HTMLDetailsElement ? abschnitt : abschnitt.querySelector('details');
+  if (details && !details.open) details.open = true;
   abschnitt.closest('.db-accordion-item')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
