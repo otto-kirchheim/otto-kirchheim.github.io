@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import setMonatJahr from '@/features/Einstellungen/utils/setMonatJahr';
+import setMonatJahr, { setMonatsUeberschriften } from '@/features/Einstellungen/utils/setMonatJahr';
 
 describe('setMonatJahr', () => {
   let container: HTMLDivElement;
@@ -11,6 +11,7 @@ describe('setMonatJahr', () => {
       <h2 id="MonatB"></h2>
       <h2 id="MonatE"></h2>
       <h2 id="MonatN"></h2>
+      <h2 id="MonatEA"></h2>
       <h2 id="MonatBerechnung"></h2>
     `;
     document.body.appendChild(container);
@@ -28,6 +29,17 @@ describe('setMonatJahr', () => {
     expect(document.querySelector<HTMLHeadingElement>('#MonatE')!.innerText).toBe('03 / 26');
     expect(document.querySelector<HTMLHeadingElement>('#MonatN')!.innerText).toBe('03 / 26');
     expect(document.querySelector<HTMLHeadingElement>('#MonatBerechnung')!.innerText).toBe('2026');
+  });
+
+  it('schreibt den Monat auch in die EA-Ueberschrift', () => {
+    setMonatJahr(2026, 9);
+
+    expect(document.querySelector<HTMLHeadingElement>('#MonatEA')!.innerText).toBe('09 / 26');
+  });
+
+  it('setMonatsUeberschriften wirft nie, auch wenn Ueberschriften (noch) fehlen', () => {
+    container.remove();
+    expect(() => setMonatsUeberschriften(2026, 3)).not.toThrow();
   });
 
   it('setzt Werte korrekt für Januar', () => {

@@ -67,6 +67,21 @@ describe('syncFeatureTabs', () => {
     expect(registerBereitschaft).toHaveBeenCalledTimes(1);
   });
 
+  it('schreibt Monat/Jahr in die Ueberschriften, die das Mounten gerade erst angelegt hat', async () => {
+    const { default: Storage } = await import('@/infrastructure/storage/Storage');
+    Storage.set('Jahr', 2026);
+    Storage.set('Monat', 9);
+    // Die Ueberschrift entsteht erst beim Mounten -- wie im echten Tab (`h4#MonatB`).
+    registerBereitschaft.mockImplementation(async () => {
+      document.body.insertAdjacentHTML('beforeend', '<h4 id="MonatB"></h4>');
+    });
+
+    await syncFeatureTabs(['bereitschaft']);
+
+    expect(document.querySelector<HTMLHeadingElement>('#MonatB')?.innerText).toBe('09 / 26');
+    document.querySelector('#MonatB')?.remove();
+  });
+
   it('mountet nicht erneut, wenn bereits gemountet (kein Zustandswechsel)', async () => {
     await syncFeatureTabs(['bereitschaft']);
     await syncFeatureTabs(['bereitschaft']);
