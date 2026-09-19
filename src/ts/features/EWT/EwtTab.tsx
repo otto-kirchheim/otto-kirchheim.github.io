@@ -1,4 +1,12 @@
-import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBDivider,
+  DBHeadingH1,
+  DBHeadingH4,
+  DBSection,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -215,7 +223,7 @@ export function EwtTab() {
   return (
     <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
-        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
+        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
           EWT
           <DBButton
             type="button"
@@ -229,8 +237,8 @@ export function EwtTab() {
           >
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
-        </h1>
-        <h4 id="MonatE"></h4>
+        </DBHeadingH1>
+        <DBHeadingH4 paragraphSpacing id="MonatE"></DBHeadingH4>
       </div>
 
       <div>

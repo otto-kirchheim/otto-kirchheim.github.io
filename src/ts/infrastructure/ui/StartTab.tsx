@@ -1,4 +1,12 @@
-import { DBButton, DBCard, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBCard,
+  DBHeadingH1,
+  DBHeadingH5,
+  DBSection,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 
 /**
  * Phase L1: Start-Tab (ehemals `index.html:82-244`) als React-Komponente. Gemountet direkt in
@@ -20,9 +28,9 @@ export default function StartTab() {
     <DBSection width="medium" spacing="small">
       <div className="text-center mb-4 mb-md-5">
         <div className="d-inline-flex align-items-center justify-content-center gap-2">
-          <h1 className="mt-2 mb-0" id="Willkommen">
+          <DBHeadingH1 className="mt-2 mb-0" id="Willkommen">
             Willkommen
-          </h1>
+          </DBHeadingH1>
           <DBButton
             type="button"
             className="p-0"
@@ -46,24 +54,24 @@ export default function StartTab() {
             um), Fliesstext startet dann nicht mehr auf gleicher Hoehe (DB-UX-Card-Richtlinie
             "Inhalt-Ausrichtung": Titel/Aktionen konsistent ueber alle Karten im Grid ausrichten). */}
         <DBCard className="h-100 text-start">
-          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
             <span className="db-icon text-primary" data-icon="sliders_horizontal" />
             1. Einstellungen prüfen
-          </h5>
+          </DBHeadingH5>
           <p className="mb-0">Persönliche Daten, Arbeitszeiten und Vorgaben aktuell halten.</p>
         </DBCard>
         <DBCard className="h-100 text-start">
-          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
             <span className="db-icon text-primary" data-icon="pen" />
             2. Monate erfassen
-          </h5>
+          </DBHeadingH5>
           <p className="mb-0">Bereitschaft, EWT und Nebenbezüge eintragen und speichern.</p>
         </DBCard>
         <DBCard className="h-100 text-start">
-          <h5 className="d-flex align-items-center gap-2" style={{ minBlockSize: '3.5rem' }}>
+          <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
             <span className="db-icon text-primary" data-icon="document" />
             3. Ergebnis exportieren
-          </h5>
+          </DBHeadingH5>
           <p className="mb-0">Berechnung prüfen und die Formulare als PDF erzeugen.</p>
         </DBCard>
       </DBStack>

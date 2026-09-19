@@ -2,6 +2,48 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-19 (157)
+
+### fix (Monat unter den Tab-Titeln fehlte nach dem Neuladen)
+
+- **Ursache**: `setMonatJahr` schreibt den Monat (`09 / 26`) nur EINMAL von aussen in `h4#MonatB/-E/-N`.
+  Beim Neuladen mit gespeicherter Sitzung laeuft `selectYear` (auth/index.ts, Session-Restore) VOR
+  `loadUserDaten`, und die Tabs mounten erst an dessen Ende (`syncFeatureTabs`) -- beim Schreiben
+  gab es die Ueberschriften noch nicht. Nur beim frischen Login (`initializeAll` vor `selectYear`)
+  stimmte die Reihenfolge. Seit dem bedingten Mounten der Tabs (Commit `d726084`) bestehend.
+- **Fix**: neue, nicht werfende `setMonatsUeberschriften()` in `setMonatJahr.ts`; `syncFeatureTabs`
+  ruft sie am Ende mit Jahr/Monat aus dem Storage auf -- deckt Neuladen, Login, Jahres-/Monatswechsel
+  und das Aktivieren eines Tabs in den Einstellungen ab.
+- **EA**: `#MonatEA` hatte bisher gar keinen Schreiber (der EA-Tab filtert nach Monat, zeigte ihn aber
+  nie); wird jetzt mitgeschrieben.
+- Getestet: `test/Einstellungen/setMonatJahr.test.ts` (EA, wirft nie), `test/orchestration/
+  syncFeatureTabs.test.ts` (Ueberschrift entsteht erst beim Mounten); live im echten Ablauf
+  (`selectYear`, dann `syncFeatureTabs`).
+
+## 2026-09-19 (156)
+
+### refactor (`<h1>`-`<h6>` als `DBHeadingH1`-`DBHeadingH6`)
+
+- **55 Ueberschriften** in 25 Dateien nutzen jetzt `<DBHeadingH1>` ... `<DBHeadingH6>` statt der rohen
+  Tags (Ebene, `id`, `className` und der Inhalt bleiben). `text-center` an den sechs h4 der
+  Show-Modals (EA/Neben) ist `alignment="center"`; die drei `style`-Stellen der Start-Karten
+  (`minBlockSize`) sind die Klasse `.karten-titel`, weil `DBHeading` kein `style` dokumentiert.
+- **Abstand ueber `paragraphSpacing`** (DB-Prop, genau 1lh Abstand NUR unten) an 22 Ueberschriften: die
+  Monatszeilen (`h4#Monat*`), die Tabellentitel, die Start-Karten, das Hilfe-Modal u. a.
+  Die Tab-Titel (`h1`) und die Ueberschriften mit eigener `m*-`-Klasse (`mb-*`/`mt-*`) haben es
+  bewusst nicht (Sichtpruefung durch den User: h1 mit 64px unten war zu viel). Das ist NICHT der
+  bisherige Standardabstand der rohen Tags (oben UND unten je h1 32px, h2 24, h4 12, h5 8, h6 4):
+  der obere Abstand entfaellt bei allen 55 Ueberschriften; z. B. h4 jetzt 0 oben / 32px unten
+  (Desktop, mobil 24), h5 0 / 28 (mobil 20).
+- **Ausrichtung geerbt** (`utilities.scss`, Layer `app`, `:where()` = Spezifitaet 0): `.db-heading`
+  setzt `text-align: start` statt die Ausrichtung des Elternteils zu erben -- die Tab-Titel sind aber
+  ueber `text-center` der Section zentriert. Ein `alignment`-Prop an der Stelle gewinnt weiterhin.
+- **Gemessen** (Position, Hoehe, Schriftgroesse, Abstaende, Ausrichtung; Start, Einstellungen mit allen
+  Abschnitten offen, Bereitschaft, EWT, Neben, EA, Berechnung bei 375px und 1280px): Schriftgroesse,
+  Zeilenhoehe, Gewicht und Ausrichtung identisch zu vorher, die Abstaende wie oben beschrieben anders.
+- **Fund Bereitschaft-Tab**: `aria-describedby="TitelBZ"` an der ersten Tabelle passte nicht zur
+  Id `titelBZ` (Gross-/Kleinschreibung) -- der Bezug zur Ueberschrift war wirkungslos, korrigiert.
+
 ## 2026-09-19 (155)
 
 ### refactor (Akkordeons als `DBAccordion`, Ersteinrichtung bleibt auf Start)

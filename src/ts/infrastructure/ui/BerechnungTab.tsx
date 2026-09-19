@@ -1,4 +1,4 @@
-import { DBButton, DBSection, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH1, DBHeadingH4, DBSection, DBTooltip } from '@db-ux/react-core-components';
 
 /**
  * Phase L2: Berechnung-Tab-Huelle (ehemals `index.html`: Titel, Monats-Navigation,
@@ -17,8 +17,8 @@ export default function BerechnungTab() {
   return (
     <DBSection width="large" spacing="none" className="text-center mb-3">
       <div>
-        <h1 id="titelBerechnung">Berechnung</h1>
-        <h4 id="MonatBerechnung"></h4>
+        <DBHeadingH1 id="titelBerechnung">Berechnung</DBHeadingH1>
+        <DBHeadingH4 paragraphSpacing id="MonatBerechnung"></DBHeadingH4>
       </div>
 
       <div id="berechnungMobileCards" className="d-sm-none text-start" aria-describedby="titelBerechnung"></div>

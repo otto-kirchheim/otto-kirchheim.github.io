@@ -1,4 +1,4 @@
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH2, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect, useId, useRef, type FC } from 'react';
 
 import type { HelpContextKey } from '@/core/help/helpContent';
@@ -29,7 +29,9 @@ const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ ti
   return (
     <div className="db-drawer-header" ref={kopfRef}>
       <header className="db-drawer-header-container">
-        <h2 id={ueberschriftId}>{title}</h2>
+        <DBHeadingH2 paragraphSpacing id={ueberschriftId}>
+          {title}
+        </DBHeadingH2>
       </header>
       {helpContext && (
         <DBButton

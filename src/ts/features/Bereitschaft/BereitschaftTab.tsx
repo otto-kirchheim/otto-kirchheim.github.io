@@ -1,4 +1,12 @@
-import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBDivider,
+  DBHeadingH1,
+  DBHeadingH4,
+  DBSection,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -241,7 +249,7 @@ export function BereitschaftTab() {
   return (
     <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
-        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
+        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Bereitschaft
           <DBButton
             type="button"
@@ -255,8 +263,8 @@ export function BereitschaftTab() {
           >
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
-        </h1>
-        <h4 id="MonatB"></h4>
+        </DBHeadingH1>
+        <DBHeadingH4 paragraphSpacing id="MonatB"></DBHeadingH4>
       </div>
 
       <div>
@@ -284,12 +292,14 @@ export function BereitschaftTab() {
         </DBStack>
       </div>
       <DBDivider width="full" />
-      <h4 id="titelBZ">Bereitschaftszeitraum</h4>
+      <DBHeadingH4 paragraphSpacing id="titelBZ">
+        Bereitschaftszeitraum
+      </DBHeadingH4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableBZ"
           className="align-middle"
-          aria-describedby="TitelBZ"
+          aria-describedby="titelBZ"
           ref={(el: HTMLTableElement | null) => {
             if (el) ftBZ.attachElement(el as CustomHTMLTableElement<IDatenBZ>);
           }}
@@ -298,7 +308,9 @@ export function BereitschaftTab() {
         </table>
       </div>
       <DBDivider width="full" />
-      <h4 id="titelBE">Bereitschaftseinsätze</h4>
+      <DBHeadingH4 paragraphSpacing id="titelBE">
+        Bereitschaftseinsätze
+      </DBHeadingH4>
       <div className="db-table" data-width="full" data-variant="zebra" data-divider="both" data-size="small">
         <table
           id="tableBE"

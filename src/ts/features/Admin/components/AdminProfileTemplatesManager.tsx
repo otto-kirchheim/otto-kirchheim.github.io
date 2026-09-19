@@ -21,7 +21,7 @@ import {
   toEditState,
   type TemplateEditState,
 } from './adminProfileTemplatesManagerGemeinsam';
-import { DBButton, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBTag } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
 export function AdminProfileTemplatesManager() {
@@ -354,7 +354,7 @@ export function AdminProfileTemplatesManager() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">Profile-Templates</h5>
+        <DBHeadingH5 className="mb-0">Profile-Templates</DBHeadingH5>
         <DBButton type="button" variant="outlined" size="small" onClick={handleCreate} data-disabler>
           Hinzufügen
         </DBButton>

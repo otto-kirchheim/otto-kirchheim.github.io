@@ -1,6 +1,6 @@
 import { type JSX, useEffect, useRef, useState } from 'react';
 
-import { DBButton, DBDivider, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBHeadingH5, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld, MyCheckbox } from '@/components';
 import type { IVorgabenUaZ, IPerWeekdaySchicht, ISchichtZeiten, SchichtBase } from '@/types';
 import { groupBySchedule, isOvernightSchicht } from '@/types';
@@ -127,7 +127,7 @@ function OptionalSchichtSection({
   return (
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-        <h5 className="mb-0">{title}</h5>
+        <DBHeadingH5 className="mb-0">{title}</DBHeadingH5>
         <MyCheckbox className="ms-2" size="small" id={`toggle-${title}`} checked={enabled} changeHandler={handleToggle}>
           aktiv
         </MyCheckbox>
@@ -242,7 +242,7 @@ export function SchichtSection({
 
   return (
     <div>
-      {title && <h5>{title}</h5>}
+      {title && <DBHeadingH5 paragraphSpacing>{title}</DBHeadingH5>}
       <WeekdayChips regelarbeitstage={regelarbeitstage} onToggle={toggleDay} />
       <div className="mt-2">
         {groups.map(group => (
@@ -543,7 +543,7 @@ function SonderSection({
   return (
     <div>
       <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-        <h5 className="mb-0">Sonderschicht</h5>
+        <DBHeadingH5 className="mb-0">Sonderschicht</DBHeadingH5>
         <MyCheckbox
           className="ms-2"
           size="small"

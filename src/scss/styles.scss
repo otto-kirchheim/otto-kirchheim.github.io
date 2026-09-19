@@ -63,6 +63,12 @@ hr {
   min-inline-size: 14rem;
 }
 
+// Titelzeile der Start-Karten: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen
+// (DB-Card-Richtlinie "Inhalt-Ausrichtung").
+.karten-titel {
+  min-block-size: 3.5rem;
+}
+
 // `<DBStack>` (@db-ux/react-core-components) ist als "fuelle den Elternbereich"-Baustein
 // gedacht (`block-size`/`inline-size: 100%`). Fuer eine einzelne, flach im Fluss stehende
 // Stelle bleibt das folgenlos (Prozent-Hoehe gegen einen Elternteil ohne definierte Hoehe

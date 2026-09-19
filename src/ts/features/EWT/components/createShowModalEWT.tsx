@@ -4,7 +4,7 @@ import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showM
 import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { persistEwtTableData } from '../utils';
-import { DBDivider } from '@db-ux/react-core-components';
+import { DBDivider, DBHeadingH5 } from '@db-ux/react-core-components';
 
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -63,7 +63,9 @@ const createZeitBlock = (
   return (
     <div className="ewt-zeit">
       <span className="ewt-zeit-links">{vor}</span>
-      <h5 className="ewt-zeit-titel text-truncate">{titel}</h5>
+      <DBHeadingH5 paragraphSpacing className="ewt-zeit-titel text-truncate">
+        {titel}
+      </DBHeadingH5>
       <span className="ewt-zeit-rechts">{nach}</span>
       <span className="ewt-zeit-links" id={links.name}>
         {links.parser(row.cells[feldLinks])}

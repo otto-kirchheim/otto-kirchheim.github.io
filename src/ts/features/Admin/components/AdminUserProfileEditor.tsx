@@ -1,4 +1,12 @@
-import { DBButton, DBDrawer, DBDrawerHeader, DBNotification, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBDrawer,
+  DBDrawerHeader,
+  DBHeadingH6,
+  DBNotification,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -460,7 +468,7 @@ export function AdminUserProfileEditor({
                 <div className="raster abstand-4">
                   {/* Pers Fields */}
                   <div className="sp-md-6">
-                    <h6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</h6>
+                    <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</DBHeadingH6>
                     {Object.entries(edit.pers).map(([key, val]) => {
                       const selectOpts = PERS_SELECT_FIELDS[key];
                       return (
@@ -511,7 +519,7 @@ export function AdminUserProfileEditor({
 
                   {/* JSON Sections */}
                   <div className="sp-md-6">
-                    <h6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</h6>
+                    <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</DBHeadingH6>
                     {JSON_SECTIONS.map(section => (
                       <div key={section} className="mb-3">
                         <label className="small fw-semibold mb-1">{section}</label>
@@ -527,7 +535,7 @@ export function AdminUserProfileEditor({
 
                 {/* User Actions */}
                 <div className="border-top mt-4 pt-3">
-                  <h6 className="fw-semibold mb-3">Benutzer-Aktionen</h6>
+                  <DBHeadingH6 className="fw-semibold mb-3">Benutzer-Aktionen</DBHeadingH6>
                   <div className="d-flex flex-wrap gap-3 align-items-start">
                     {/* emailVerified */}
                     <div>

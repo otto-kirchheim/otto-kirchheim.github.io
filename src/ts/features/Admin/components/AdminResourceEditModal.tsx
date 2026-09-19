@@ -3,6 +3,7 @@ import {
   DBCheckbox,
   DBDrawer,
   DBDrawerHeader,
+  DBHeadingH2,
   DBNotification,
   DBTag,
   DBTooltip,
@@ -68,10 +69,10 @@ export function AdminResourceEditModal({
       onClose={closeEdit}
       header={
         <DBDrawerHeader closeButtonText="Schließen">
-          <h2>
+          <DBHeadingH2 paragraphSpacing>
             {resource.label} bearbeiten
             <code className="ms-2 fs-6 text-muted">{truncateId(edit.doc['_id'])}</code>
-          </h2>
+          </DBHeadingH2>
         </DBDrawerHeader>
       }
     >

@@ -10,7 +10,7 @@ import {
   upsertVorgabeByYear,
   type BackendVorgabe,
 } from '../utils/api';
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5 } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
@@ -210,7 +210,7 @@ export function AdminVorgabenEditor() {
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h5 className="mb-0">VorgabenGeld</h5>
+        <DBHeadingH5 className="mb-0">VorgabenGeld</DBHeadingH5>
         <DBButton type="button" variant="outlined" size="small" onClick={handleCreateYear} data-disabler>
           Jahr anlegen
         </DBButton>

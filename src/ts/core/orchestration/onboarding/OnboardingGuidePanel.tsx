@@ -1,4 +1,4 @@
-import { DBButton, DBCard, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBHeadingH6, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 
 // Direktimporte statt Barrel (@/core, @/components), um den Zyklus
@@ -195,7 +195,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
 
       {!minimiert && (
         <div className="d-flex flex-column gap-2 overflow-auto p-3" style={{ maxHeight: '45vh' }}>
-          <h6 className="mb-0">{titel}</h6>
+          <DBHeadingH6 className="mb-0">{titel}</DBHeadingH6>
 
           {step.art === 'intro' && (
             <>

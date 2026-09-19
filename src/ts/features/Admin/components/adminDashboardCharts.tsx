@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import dayjs from '@/infrastructure/date/configDayjs';
 import { triggerAdminHeapSnapshot, type MetricPoint, type HeapData } from '../utils/api';
-import { DBButton, DBCard, DBCheckbox, DBTag, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBCheckbox, DBHeadingH6, DBTag, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl } from '@/components';
 import { formatUptime } from '../utils/formatUptime';
 
@@ -278,10 +278,10 @@ export function MemoryCard({
     <DBCard className="border-0 shadow-sm">
       {/* ── Header ── */}
       <div className="d-flex align-items-center justify-content-between mb-2 gap-2">
-        <h6 className="fw-semibold mb-0 text-nowrap">
+        <DBHeadingH6 className="fw-semibold mb-0 text-nowrap">
           <span className="db-icon me-1 db-font-size-sm" data-icon="pulse_wave" style={{ verticalAlign: 'middle' }} />
           Memory-Verlauf
-        </h6>
+        </DBHeadingH6>
         <div className="d-flex gap-2 flex-shrink-0">
           <DbAuswahl
             beschriftung="Zeitraum des Memory-Verlaufs"

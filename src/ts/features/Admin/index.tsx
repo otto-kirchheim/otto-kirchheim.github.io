@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
-import { DBNavigation } from '@db-ux/react-core-components';
+import { DBHeadingH1, DBNavigation } from '@db-ux/react-core-components';
 import useActiveAdminTab from '@/infrastructure/ui/useActiveAdminTab';
 
 import { AdminUserList } from './components/AdminUserList';
@@ -114,12 +114,9 @@ export default function AdminTab() {
   }
 
   return (
-    <div className="py-4 px-2 px-md-4">
+    <div className="px-2 px-md-4">
       <div className="position-relative mb-3 text-center">
-        <h1 className="mb-0 d-inline-flex align-items-center gap-1 text-dark-emphasis">
-          <span className="db-icon db-font-size-lg" data-icon="profile_card" />
-          Admin
-        </h1>
+        <DBHeadingH1 className="d-inline-flex align-items-center gap-1 text-dark-emphasis">Admin</DBHeadingH1>
       </div>
 
       <div className="mb-3">

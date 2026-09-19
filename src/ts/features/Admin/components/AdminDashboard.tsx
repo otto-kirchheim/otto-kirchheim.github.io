@@ -4,7 +4,7 @@ import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard } from './adminDashboardCharts';
 import { formatUptime } from '../utils/formatUptime';
-import { DBButton, DBCard, DBNotification, DBStack, DBTag } from '@db-ux/react-core-components';
+import { DBButton, DBCard, DBHeadingH6, DBNotification, DBStack, DBTag } from '@db-ux/react-core-components';
 
 const ROLE_LABELS: Record<Role, string> = {
   [Role.MEMBER]: 'Mitglied',
@@ -187,7 +187,7 @@ export function AdminDashboard() {
       <div className="raster mb-4 abstand-3">
         <div className="sp-md-4">
           <DBCard className="border-0 shadow-sm h-100">
-            <h6 className="fw-semibold mb-3">Rollenverteilung</h6>
+            <DBHeadingH6 className="fw-semibold mb-3">Rollenverteilung</DBHeadingH6>
             {Object.entries(stats.users.byRole).map(([role, count]) => (
               <div key={role} className="d-flex justify-content-between align-items-center py-2 border-bottom">
                 <span className="small">{ROLE_LABELS[role as Role] ?? role}</span>
@@ -201,7 +201,7 @@ export function AdminDashboard() {
 
         <div className="sp-md-4">
           <DBCard className="border-0 shadow-sm h-100">
-            <h6 className="fw-semibold mb-3">Ressourcenbestand</h6>
+            <DBHeadingH6 className="fw-semibold mb-3">Ressourcenbestand</DBHeadingH6>
             {(
               [
                 [
@@ -241,7 +241,7 @@ export function AdminDashboard() {
 
         <div className="sp-md-4">
           <DBCard className="border-0 shadow-sm h-100">
-            <h6 className="fw-semibold mb-3">Auth-Aktivität</h6>
+            <DBHeadingH6 className="fw-semibold mb-3">Auth-Aktivität</DBHeadingH6>
             {(
               [
                 ['Neue Benutzer (7T)', stats.auth.newUsersLast7d, 'person_add', 'text-success'],

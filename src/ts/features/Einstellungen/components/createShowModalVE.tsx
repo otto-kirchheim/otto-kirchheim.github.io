@@ -1,7 +1,7 @@
 import type { Row } from '@/infrastructure/table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
-import { DBDivider } from '@db-ux/react-core-components';
+import { DBDivider, DBHeadingH6 } from '@db-ux/react-core-components';
 
 const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, falseparser?: false) => {
   const column = row.columns.array.find(column => column.name === columnName);
@@ -22,7 +22,7 @@ const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
       <div className="pt-2">
-        <h6 className="mb-2">Bereitschaft</h6>
+        <DBHeadingH6 className="mb-2">Bereitschaft</DBHeadingH6>
       </div>
       {createShowElement(row, 'beginnB', false)}
       {createShowElement(row, 'endeB', false)}
@@ -36,7 +36,7 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
       <div className="pt-2">
-        <h6 className="mb-2">Nachtschicht</h6>
+        <DBHeadingH6 className="mb-2">Nachtschicht</DBHeadingH6>
       </div>
       {createShowElement(row, 'nacht')}
       {isNacht ? (

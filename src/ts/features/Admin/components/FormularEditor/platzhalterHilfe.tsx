@@ -1,6 +1,6 @@
 import { unmount } from '@/infrastructure/ui';
 
-import { DBButton, DBTooltip } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBTooltip } from '@db-ux/react-core-components';
 import { oeffneDrawer } from '@/components';
 import { PlatzhalterHilfeInhalt } from './PlatzhalterHilfeInhalt';
 
@@ -17,7 +17,7 @@ export function openPlatzhalterHilfe(): void {
     container,
     <div className="dialog-rumpf" data-breite="lg">
       <div className="db-drawer-header">
-        <h5>Platzhalter &amp; Formate</h5>
+        <DBHeadingH5 paragraphSpacing>Platzhalter &amp; Formate</DBHeadingH5>
         <DBButton type="button" icon="cross" variant="ghost" noText data-dialog-dismiss="modal">
           <DBTooltip>Schließen</DBTooltip>
         </DBButton>

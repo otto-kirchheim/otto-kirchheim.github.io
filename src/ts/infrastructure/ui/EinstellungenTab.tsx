@@ -6,6 +6,8 @@ import {
   DBButton,
   DBCheckbox,
   DBDivider,
+  DBHeadingH1,
+  DBHeadingH6,
   DBInput,
   DBSection,
   DBStack,
@@ -67,7 +69,7 @@ function Abschnitt({ id, titel, children }: { id: string; titel: string; childre
 export default function EinstellungenTab() {
   return (
     <DBSection width="medium" spacing="none" className="text-center">
-      <h1 className="d-inline-flex align-items-center justify-content-center">
+      <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center">
         Einstellungen
         <DBButton
           variant="ghost"
@@ -80,7 +82,7 @@ export default function EinstellungenTab() {
         >
           <DBTooltip placement="top">Hilfe anzeigen</DBTooltip>
         </DBButton>
-      </h1>
+      </DBHeadingH1>
 
       {/* Ausloggen wanderte in die Shell-Kopfzeile (siehe AppHeader.tsx "actions2") --
           "Buttons und Elemente sollten ein Raster einhalten"-Feedback plus immer erreichbar
@@ -137,12 +139,12 @@ export default function EinstellungenTab() {
             <div className="text-start">
               <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
                 <div>
-                  <h6 className="mb-1 d-flex align-items-center gap-2">
+                  <DBHeadingH6 className="mb-1 d-flex align-items-center gap-2">
                     Registrierte Biometrie-Anmeldungen
                     <DBTag semantic="neutral" emphasis="strong" id="PasskeyAccordionCount">
                       0
                     </DBTag>
-                  </h6>
+                  </DBHeadingH6>
                   <p className="text-body-secondary small mb-1">
                     Login ohne Passwort per Fingerprint, Face ID oder Geräte-PIN.
                   </p>
@@ -192,7 +194,7 @@ export default function EinstellungenTab() {
               <div className="d-flex flex-column gap-4">
                 {/* Sichtbare Bereiche */}
                 <div>
-                  <h6 className="fw-bold mb-3">Sichtbare Bereiche</h6>
+                  <DBHeadingH6 className="fw-bold mb-3">Sichtbare Bereiche</DBHeadingH6>
                   <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
                   <div className="d-flex flex-column gap-2">
                     <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
@@ -206,7 +208,7 @@ export default function EinstellungenTab() {
 
                 {/* AutoSave */}
                 <div>
-                  <h6 className="fw-bold mb-3">AutoSave</h6>
+                  <DBHeadingH6 className="fw-bold mb-3">AutoSave</DBHeadingH6>
                   <div className="d-flex flex-column gap-3">
                     <DBCheckbox id="autoSaveEnabled" label="AutoSave aktivieren" data-settings-key="autoSaveEnabled" />
                     <div>

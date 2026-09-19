@@ -1,4 +1,4 @@
-import { DBButton, DBInfotext } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH6, DBInfotext } from '@db-ux/react-core-components';
 import { type FC } from 'react';
 
 import type { HelpContent } from '@/core/help/helpContent';
@@ -20,7 +20,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
       <p className="mb-0">{content.kurzbeschreibung}</p>
 
       <div>
-        <h6>Was kann ich hier machen?</h6>
+        <DBHeadingH6 paragraphSpacing>Was kann ich hier machen?</DBHeadingH6>
         <ul className="mb-0">
           {content.wasKannIchHierMachen.map(item => (
             <li key={item}>{item}</li>
@@ -30,7 +30,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.buttons && (
         <div>
-          <h6>Wofür sind die Buttons?</h6>
+          <DBHeadingH6 paragraphSpacing>Wofür sind die Buttons?</DBHeadingH6>
           <ul className="mb-0">
             {content.buttons.map(button => (
               <li key={button.label}>
@@ -43,7 +43,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.felder && (
         <div>
-          <h6>Eingabehilfe</h6>
+          <DBHeadingH6 paragraphSpacing>Eingabehilfe</DBHeadingH6>
           <ul className="mb-0">
             {content.felder.map(feld => (
               <li key={feld.label}>
@@ -56,7 +56,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.schritte && (
         <div>
-          <h6>Schritte</h6>
+          <DBHeadingH6 paragraphSpacing>Schritte</DBHeadingH6>
           <ol className="mb-0">
             {content.schritte.map(schritt => (
               <li key={schritt}>{schritt}</li>
@@ -67,7 +67,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.eingaberegeln && (
         <div>
-          <h6>Eingaberegeln</h6>
+          <DBHeadingH6 paragraphSpacing>Eingaberegeln</DBHeadingH6>
           <ul className="mb-0">
             {content.eingaberegeln.map(regel => (
               <li key={regel}>{regel}</li>
@@ -78,7 +78,7 @@ const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
 
       {content.haeufigeFehler && (
         <div>
-          <h6>Häufige Fehler</h6>
+          <DBHeadingH6 paragraphSpacing>Häufige Fehler</DBHeadingH6>
           <ul className="mb-0">
             {content.haeufigeFehler.map(fehler => (
               <li key={fehler}>{fehler}</li>

@@ -5,6 +5,7 @@ import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
 import { createShowElement3, createTagElement, getColumn } from '@/components/showModalHelpers';
 import type { CustomHTMLDivElement, IDatenN } from '@/types';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '../utils';
+import { DBHeadingH4 } from '@db-ux/react-core-components';
 
 const createShowElement = (
   row: Row<IDatenN>,
@@ -49,13 +50,19 @@ export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
       <MyModalBody className="p-3">
         {createTagElement(row)}
 
-        <h4 className="text-center mb-0">Auftragsnummer</h4>
+        <DBHeadingH4 alignment="center" className="mb-0">
+          Auftragsnummer
+        </DBHeadingH4>
         {createShowElement3(row, ['Auftragsnummer'])}
 
-        <h4 className="text-center mb-0">Arbeitszeit</h4>
+        <DBHeadingH4 alignment="center" className="mb-0">
+          Arbeitszeit
+        </DBHeadingH4>
         {createShowElement(row, ['Beginn'], ['Ende'])}
 
-        <h4 className="text-center mb-0">Zulagen</h4>
+        <DBHeadingH4 alignment="center" className="mb-0">
+          Zulagen
+        </DBHeadingH4>
         {createZulagenElement(row)}
       </MyModalBody>
     </MyDivModal>,

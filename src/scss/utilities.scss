@@ -34,21 +34,11 @@ $abstaende: (
 
 // Kuerzel -> CSS-Eigenschaften. `s`/`e` sind die logischen Kanten (start/end).
 $kanten: (
-  '': (
-    'margin',
-  ),
-  't': (
-    'margin-block-start',
-  ),
-  'b': (
-    'margin-block-end',
-  ),
-  's': (
-    'margin-inline-start',
-  ),
-  'e': (
-    'margin-inline-end',
-  ),
+  '': ('margin'),
+  't': ('margin-block-start'),
+  'b': ('margin-block-end'),
+  's': ('margin-inline-start'),
+  'e': ('margin-inline-end'),
   'x': (
     'margin-inline-start',
     'margin-inline-end',
@@ -512,6 +502,13 @@ $ausrichtung: (
   .trennliste,
   .list-unstyled {
     list-style: none;
+  }
+
+  // `<DBHeadingH1>` ... `<DBHeadingH6>` (`.db-heading`) setzen die Ausrichtung auf `start`, statt sie
+  // vom Elternteil zu erben -- die Tab-Titel sind aber ueber `text-center` der Section zentriert.
+  // `:where()` haelt die Spezifitaet bei 0: ein `alignment`-Prop an der Stelle gewinnt weiterhin.
+  :where(.db-heading:not([data-alignment])) {
+    text-align: inherit;
   }
 
   // DB rechnet `.db-table table` als CSS-Grid (`display: grid` plus `:has()`-Spaltenzaehlung).

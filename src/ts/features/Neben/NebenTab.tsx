@@ -1,4 +1,12 @@
-import { DBButton, DBDivider, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
+import {
+  DBButton,
+  DBDivider,
+  DBHeadingH1,
+  DBHeadingH4,
+  DBSection,
+  DBStack,
+  DBTooltip,
+} from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
@@ -136,7 +144,7 @@ export function NebenTab() {
   return (
     <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
-        <h1 className="d-inline-flex align-items-center justify-content-center gap-2">
+        <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
           Nebenbezüge
           <DBButton
             type="button"
@@ -150,8 +158,8 @@ export function NebenTab() {
           >
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
-        </h1>
-        <h4 id="MonatN"></h4>
+        </DBHeadingH1>
+        <DBHeadingH4 paragraphSpacing id="MonatN"></DBHeadingH4>
       </div>
 
       <div>

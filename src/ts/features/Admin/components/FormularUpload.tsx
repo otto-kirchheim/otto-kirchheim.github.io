@@ -17,7 +17,7 @@ import {
   type VersionNutzdaten,
   type VersionUebersicht,
 } from './formularVersionenApi';
-import { DBButton } from '@db-ux/react-core-components';
+import { DBButton, DBHeadingH5, DBHeadingH6 } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
@@ -239,7 +239,9 @@ export function FormularUpload() {
 
   return (
     <form className="d-flex flex-column gap-3" onSubmit={e => void handleSubmit(e)}>
-      <h5 className="mb-0">{bearbeiteId ? 'Formular-Version bearbeiten' : 'Formular-Vorlage hochladen'}</h5>
+      <DBHeadingH5 className="mb-0">
+        {bearbeiteId ? 'Formular-Version bearbeiten' : 'Formular-Vorlage hochladen'}
+      </DBHeadingH5>
       <p className="small text-body-secondary mb-0">
         Version anlegen: eine fertige PDF-Vorlage (reines Text-Layout, in LibreOffice aus dem xlsx exportiert) plus die
         Koordinaten-Config. Bestehende Versionen lassen sich unten bearbeiten oder löschen — beides prüft, ob die
@@ -247,7 +249,9 @@ export function FormularUpload() {
       </p>
 
       <div className="border p-2">
-        <h6 className="small fw-semibold">Vorhandene Versionen ({formular})</h6>
+        <DBHeadingH6 paragraphSpacing className="small fw-semibold">
+          Vorhandene Versionen ({formular})
+        </DBHeadingH6>
         <FormularVersionenListe
           versionen={versionen}
           bearbeiteId={bearbeiteId}

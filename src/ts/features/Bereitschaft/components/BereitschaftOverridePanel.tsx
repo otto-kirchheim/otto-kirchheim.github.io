@@ -1,4 +1,4 @@
-import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
+import { DBButton, DBCheckbox, DBHeadingH6 } from '@db-ux/react-core-components';
 import { type FC, type JSX, useEffect, useState } from 'react';
 
 import { DbFeld } from '@/components';
@@ -97,7 +97,7 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
           {aZ.sonder.aktiv && sonderActive && (
             <div className="mt-3 pt-3 border-top">
               <div className="d-flex align-items-center gap-2 mb-2">
-                <h6 className="mb-0">Sonderschicht</h6>
+                <DBHeadingH6 className="mb-0">Sonderschicht</DBHeadingH6>
                 <span className="text-muted small">eigene Arbeitszeit für diesen Eintrag</span>
               </div>
               <div className="d-flex align-items-center gap-2 flex-wrap">
