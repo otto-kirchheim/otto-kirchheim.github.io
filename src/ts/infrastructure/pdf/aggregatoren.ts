@@ -11,21 +11,24 @@ import dayjs from '@/infrastructure/date/configDayjs';
 type Aggregator = (rows: Zeile[], feld?: string) => number;
 
 /**
- * Zahlwert eines Zellinhalts. `"HH:mm"` wird als Minuten gelesen, alles andere über `Number`.
- * Ohne diesen Umweg wäre `Number("02:30")` NaN und jede Summe über eine Dauer-Spalte still 0 —
- * genau der Fall, den die Formulare für die Stundensumme brauchen.
+ * Zahlwert eines Zellinhalts. `"HH:mm"` wird als Minuten gelesen, alles andere über `Number` --
+ * sonst wäre `Number("02:30")` NaN und jede Summe über eine Dauer-Spalte still 0.
+ *
+ * @param value - Zellinhalt (Zahl, `"HH:mm"`, String, leer).
+ * @returns Zahlwert bzw. Minuten; `0` bei Unlesbarem.
  */
-export function alsZahl(v: unknown): number {
-  if (NUR_UHRZEIT.test(String(v ?? ''))) return alsMinuten(v);
-  return Number(v) || 0;
+export function alsZahl(value: unknown): number {
+  if (NUR_UHRZEIT.test(String(value ?? ''))) return alsMinuten(value);
+  return Number(value) || 0;
 }
 
 /**
- * Summe der `wert`-Felder aller Listen-Einträge (z.B. EZ: `Zulagen`) über mehrere Zeilen, gefiltert
- * auf EINEN Schlüssel (`Berechnet.liste`) -- ein flaches `feld` (siehe `OPS.summe`) kann keinen
- * Wert lesen, der erst innerhalb einer verschachtelten Liste steckt. Zeilen ohne die Liste oder mit
- * einem nicht-Array-Wert dort tragen 0 bei, statt zu werfen -- eine Tabelle ohne diese Spaltengruppe
- * soll die Summe nicht abbrechen lassen.
+ * Summe der `wert`-Felder aller Listen-Einträge (z.B. EZ: `Zulagen`) über mehrere Zeilen, gefiltert auf
+ * EINEN Schlüssel (`Berechnet.liste`). Zeilen ohne die Liste oder mit Nicht-Array tragen 0 bei.
+ *
+ * @param rows - Zeilen der Tabelle.
+ * @param liste - Listenfeld (`quelle`), Code-Feld (`schluessel`), Wertfeld (`wert`) und der gesuchte `code`.
+ * @returns Summe der `wert`-Felder aller Einträge mit diesem Code.
  */
 export function summeUeberListe(
   rows: Zeile[],
@@ -41,9 +44,12 @@ export function summeUeberListe(
 
 /**
  * Rohe Gesamtsumme ALLER Einträge einer Listen-Gruppe, unabhängig vom Code (Gegenstück zu
- * `summeUeberListe()`, die auf EINEN Code filtert) -- Grundlage von `Berechnet.liste` ohne `index`
- * bei `art: 'summe'`. Mischt Minuten und Stückzahlen, wenn die Gruppe beide Einheiten enthält --
- * das liegt in der Verantwortung der Konfiguration, genau wie bei einer normalen Spaltensumme.
+ * `summeUeberListe()`) -- `Berechnet.liste` ohne `index` bei `art: 'summe'`. Mischt Minuten und
+ * Stückzahlen, falls die Gruppe beide enthält (Sache der Konfiguration).
+ *
+ * @param rows - Zeilen der Tabelle.
+ * @param gruppe - Listenfeld (`quelle`) und Wertfeld (`wert`).
+ * @returns Summe der `wert`-Felder aller Einträge.
  */
 export function summeGruppe(rows: Zeile[], gruppe: { quelle: string; wert: string }): number {
   return rows.reduce((summe, zeile) => {
@@ -53,15 +59,41 @@ export function summeGruppe(rows: Zeile[], gruppe: { quelle: string; wert: strin
   }, 0);
 }
 
+/**
+ * Aggregationen über mehrere Zeilen (Kopf-/Fuß-Summen), je `OpName`.
+ */
 export const OPS: Record<OpName, Aggregator> = {
+  /**
+   * Summe eines Zeilenfeldes.
+   *
+   * @param rows - Zeilen der Tabelle.
+   * @param feld - Zeilenfeld.
+   * @returns Summe des Feldes (Dauern als Minuten).
+   */
   summe: (rows, feld) => rows.reduce((s, r) => s + alsZahl(r[feld!]), 0),
+  /**
+   * Anzahl der Zeilen.
+   *
+   * @param rows - Zeilen der Tabelle.
+   * @returns Anzahl der Zeilen.
+   */
   anzahl: rows => rows.length,
+  /**
+   * Größter Wert eines Zeilenfeldes.
+   *
+   * @param rows - Zeilen der Tabelle.
+   * @param feld - Zeilenfeld.
+   * @returns Größter Wert, mindestens `0`.
+   */
   max: (rows, feld) => Math.max(0, ...rows.map(r => alsZahl(r[feld!]))),
   /**
-   * Jüngster Datumswert in `feld`, als Zeitstempel in Millisekunden — `0`, wenn es keine lesbaren
-   * Werte gibt. Bewusst eine Zahl statt eines Datums-Strings: damit bleibt der Rückgabetyp
-   * einheitlich und jedes `FormatName`-Datumsformat greift unverändert (`new Date(ms)`).
-   * `max` taugt dafür nicht, weil es `Number("2026-03-15")` rechnet und damit `NaN` bekäme.
+   * Jüngster Datumswert in `feld` als Zeitstempel in ms, `0` ohne lesbare Werte. Eine Zahl statt
+   * Datums-String, damit jedes `FormatName`-Datumsformat greift; `max` taugt nicht (`Number("2026-03-15")`
+   * ist `NaN`).
+   *
+   * @param rows - Zeilen der Tabelle.
+   * @param feld - Datumsfeld.
+   * @returns Zeitstempel in ms des jüngsten Datums, `0` ohne lesbare Werte.
    */
   letztesDatum: (rows, feld) => Math.max(0, ...rows.map(r => alsDatum(r[feld!])?.getTime() ?? 0)),
 };
@@ -69,10 +101,14 @@ export const OPS: Record<OpName, Aggregator> = {
 const TAG_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Wendet die Frist aus `Berechnet.maxTage` auf ein `letztesDatum` an: liegt der jüngste Eintrag
- * höchstens `maxTage` zurück, gilt er, sonst `heute`. Ohne `maxTage` bleibt es beim Eintrag.
- * Ein in der Zukunft liegender Eintrag zählt als aktuell — beim Vorausfüllen kommender Termine
- * wäre ein Rückfall auf heute unerwartet.
+ * Wendet `Berechnet.maxTage` auf ein `letztesDatum` an: liegt der jüngste Eintrag höchstens `maxTage`
+ * zurück, gilt er, sonst `heute`. Ohne `maxTage` bleibt es beim Eintrag. Ein Eintrag in der Zukunft
+ * zählt als aktuell.
+ *
+ * @param letztes - Zeitstempel in ms aus `letztesDatum` (`0` = keiner).
+ * @param maxTage - Frist in Tagen, `undefined` = keine.
+ * @param heute - Erzeugungszeitpunkt (Rückfallwert).
+ * @returns Zeitstempel in ms: `letztes` oder `heute`.
  */
 export function datumMitFrist(letztes: number, maxTage: number | undefined, heute: Date): number {
   if (maxTage === undefined) return letztes;
@@ -81,25 +117,28 @@ export function datumMitFrist(letztes: number, maxTage: number | undefined, heut
 }
 
 /**
- * Liest `"HH:mm"` oder einen ISO-Zeitstempel als Minuten seit Mitternacht. Basis für
- * `zeitdifferenz` — `Number("07:00")` wäre `NaN`, deshalb ein eigener Parser.
+ * Liest `"HH:mm"` oder einen ISO-Zeitstempel als Minuten seit Mitternacht (Basis für `zeitdifferenz`).
+ *
+ * @param value - `"HH:mm"`, ISO-Zeitstempel oder leer.
+ * @returns Minuten seit Mitternacht; `0` bei Unlesbarem.
  */
-export function alsMinuten(v: unknown): number {
-  const treffer = /^(\d{1,2}):(\d{2})/.exec(String(v ?? ''));
+export function alsMinuten(value: unknown): number {
+  const treffer = /^(\d{1,2}):(\d{2})/.exec(String(value ?? ''));
   if (treffer) return Number(treffer[1]) * 60 + Number(treffer[2]);
-  const d = dayjs((v ?? null) as string | null);
+  const d = dayjs((value ?? null) as string | null);
   return d.isValid() ? d.hour() * 60 + d.minute() : 0;
 }
 
 /**
- * Liest einen vollständigen Zeitstempel als absolute Minuten. Basis für `zeitspanne` — anders als
- * `alsMinuten` geht dabei der Tag NICHT verloren, ein Bereitschaftszeitraum über mehrere Tage
- * kommt also korrekt heraus. Reine `"HH:mm"`-Werte fallen auf `alsMinuten` zurück, damit eine
- * versehentlich mit Uhrzeiten befüllte `zeitspanne` innerhalb eines Tages trotzdem stimmt.
+ * Liest einen Zeitstempel als absolute Minuten (Basis für `zeitspanne`). Anders als `alsMinuten` bleibt
+ * der Tag erhalten; reine `"HH:mm"`-Werte fallen auf `alsMinuten` zurück.
+ *
+ * @param value - Zeitstempel oder `"HH:mm"`.
+ * @returns Absolute Minuten seit Epoche; `0` bei Unlesbarem.
  */
-export function alsZeitstempelMinuten(v: unknown): number {
-  if (NUR_UHRZEIT.test(String(v ?? ''))) return alsMinuten(v);
-  const d = new Date(v as string);
+export function alsZeitstempelMinuten(value: unknown): number {
+  if (NUR_UHRZEIT.test(String(value ?? ''))) return alsMinuten(value);
+  const d = new Date(value as string);
   return Number.isNaN(d.getTime()) ? 0 : Math.round(d.getTime() / 60_000);
 }
 
@@ -107,35 +146,65 @@ export function alsZeitstempelMinuten(v: unknown): number {
 const ISO_ZEITSTEMPEL = /^\d{4}-\d{2}-\d{2}/;
 
 /**
- * Zahlwert für `Bedingung.bereich`-Vergleiche, ohne Annahme über die Art des Feldes: eine echte
- * Zahl bleibt Zahl (anders als `alsZeitstempelMinuten`, das z.B. `5` fälschlich als Zeitstempel in
- * ms deutet), `"HH:mm"` wird zu Minuten, ein ISO-Zeitstempel zu Minuten seit Epoche, alles andere
- * über `Number`. Dieselbe Funktion liest sowohl den Zeilenwert als auch `von`/`bis`, damit ein
- * Bereich unabhängig vom Feldtyp funktioniert -- Dauer (`"8:00"`), Kilometer (`5`) oder Datum
- * (`"2026-03-01"`) gleichermaßen. Bewusst NICHT `new Date()` auf jeden String losgelassen: dessen
- * Nicht-ISO-Fallback liest z.B. `"12.5"` als Kalenderdatum (5. Dezember) statt als Zahl 12,5.
+ * Zahlwert für `Bedingung.bereich`-Vergleiche ohne Annahme über den Feldtyp: Zahl bleibt Zahl (anders
+ * als `alsZeitstempelMinuten`), `"HH:mm"` wird zu Minuten, ISO- und deutsche Datumswerte zu Minuten seit
+ * Epoche,
+ * alles andere über `Number`. Zeilenwert und `von`/`bis` laufen durch dieselbe Funktion. Kein
+ * `new Date()` auf jeden String: dessen Nicht-ISO-Fallback liest `"12.5"` als 5. Dezember.
+ *
+ * @param value - Zeilenwert oder Bereichsgrenze (`von`/`bis`).
+ * @returns Vergleichbare Zahl; `0` bei Unlesbarem.
  */
-export function alsVergleichswert(v: unknown): number {
-  if (typeof v === 'number') return v;
-  const s = String(v ?? '');
-  if (NUR_UHRZEIT.test(s)) return alsMinuten(v);
+export function alsVergleichswert(value: unknown): number {
+  if (typeof value === 'number') return value;
+  const s = String(value ?? '');
+  if (NUR_UHRZEIT.test(s)) return alsMinuten(value);
   if (ISO_ZEITSTEMPEL.test(s) || DEUTSCHES_DATUM.test(s)) {
-    const d = alsDatum(v);
+    const d = alsDatum(value);
     if (d) return Math.round(d.getTime() / 60_000);
   }
-  return Number(v) || 0;
+  return Number(value) || 0;
 }
 
+/**
+ * Subtrahiert alle Operanden vom ersten.
+ *
+ * @param werte - Operanden; der erste ist der Minuend.
+ * @returns `erster − alle folgenden`; `0` ohne Operanden.
+ */
 const differenz = (werte: number[]): number =>
   werte.length === 0 ? 0 : werte.slice(1).reduce((a, b) => a - b, werte[0]!);
 
 /** Rechnet über die Operanden EINER Datenzeile (berechnete Spalten), nicht über mehrere Zeilen. */
 export const ZEILEN_OPS: Record<ZeilenOpName, (werte: number[]) => number> = {
+  /**
+   * Produkt aller Operanden.
+   *
+   * @param werte - Operanden.
+   * @returns Produkt; `1` ohne Operanden.
+   */
   produkt: werte => werte.reduce((a, b) => a * b, 1),
+  /**
+   * Summe aller Operanden.
+   *
+   * @param werte - Operanden.
+   * @returns Summe; `0` ohne Operanden.
+   */
   summe: werte => werte.reduce((a, b) => a + b, 0),
   differenz,
+  /**
+   * Dividiert den ersten Operanden nacheinander durch alle folgenden.
+   *
+   * @param werte - Operanden; der erste ist der Dividend.
+   * @returns `erster / alle folgenden`; ein Divisor `0` ergibt `0`, ohne Operanden `0`.
+   */
   quotient: werte => (werte.length === 0 ? 0 : werte.slice(1).reduce((a, b) => (b === 0 ? 0 : a / b), werte[0]!)),
-  /** Operanden kommen bereits als Minuten an (siehe `alsMinuten`); über Mitternacht wird ergänzt. */
+  /**
+   * Operanden kommen bereits als Minuten an (siehe `alsMinuten`); über Mitternacht wird ergänzt.
+   *
+   * @param werte - Operanden in Minuten (`erster − folgende`).
+   * @returns Differenz in Minuten, bei negativem Ergebnis um 24h ergänzt.
+   */
   zeitdifferenz: werte => {
     const d = differenz(werte);
     return d < 0 ? d + 24 * 60 : d;
@@ -144,8 +213,13 @@ export const ZEILEN_OPS: Record<ZeilenOpName, (werte: number[]) => number> = {
   zeitspanne: differenz,
 };
 
-/** Wandelt die Blatt-Operanden eines Operators in Zahlen — Zeit-Ops brauchen eigene Parser. */
-function leseOperand(op: ZeilenOpName): (v: unknown) => number {
+/**
+ * Wandelt die Blatt-Operanden eines Operators in Zahlen — Zeit-Ops brauchen eigene Parser.
+ *
+ * @param op - Zeilen-Operator.
+ * @returns Parser, der einen Blatt-Operanden in eine Zahl wandelt.
+ */
+function leseOperand(op: ZeilenOpName): (value: unknown) => number {
   if (op === 'zeitdifferenz') return alsMinuten;
   if (op === 'zeitspanne') return alsZeitstempelMinuten;
   // `alsZahl` statt `Number`, damit auch hier eine gespeicherte Dauer wie `"02:30"` mitrechnet.
@@ -154,9 +228,12 @@ function leseOperand(op: ZeilenOpName): (v: unknown) => number {
 
 /**
  * Wertet eine Zeilenrechnung gegen EINE Datenzeile aus. Operanden dürfen selbst Rechnungen sein
- * (geklammerte Zwischenrechnung) — dadurch sind gemischte Rechnungen wie Ende − Beginn + Pause
- * darstellbar, ohne eine implizite Vorrangregel einzuführen. Jeder Knoten liest seine eigenen
- * Blatt-Operanden; verschachtelte Knoten liefern bereits Zahlen (Zeit-Ops immer Minuten).
+ * (Ende − Beginn + Pause), ohne implizite Vorrangregel. Verschachtelte Knoten liefern Zahlen
+ * (Zeit-Ops immer Minuten).
+ *
+ * @param b - Rechnung mit Operator und Operanden (Feldname, Zahl oder Unterrechnung).
+ * @param zeile - Datenzeile, aus der die Feldnamen gelesen werden.
+ * @returns Ergebnis; fehlende Feldwerte zählen als `0`.
  */
 export function berechneZeile(b: ZeilenBerechnet, zeile: Zeile): number {
   const lies = leseOperand(b.op);
@@ -169,11 +246,13 @@ export function berechneZeile(b: ZeilenBerechnet, zeile: Zeile): number {
 }
 
 /**
- * Prüft eine Ankreuz-Bedingung gegen eine Zeile. Geprüfter Wert kommt aus `feld` oder `berechnet`
- * (z.B. eine Dauer); verglichen wird per `werte` (Mitgliedschaft) oder `bereich` (`von`
- * einschließlich, `bis` ausschließlich, über `alsVergleichswert` gelesen — passt sich dem
- * jeweiligen Wert an: Zahl, Uhrzeit oder voller Zeitstempel). Liegt in `shared` (nicht nur im
- * Renderer), weil `mitBerechnetenSpalten()` denselben Wert für Summen über Ankreuz-Spalten braucht.
+ * Prüft eine Ankreuz-Bedingung gegen eine Zeile. Geprüft wird `feld` oder `berechnet`; verglichen per
+ * `werte` (Mitgliedschaft) oder `bereich` (`von` einschließlich, `bis` ausschließlich, gelesen über
+ * `alsVergleichswert`).
+ *
+ * @param w - Bedingung (`feld` oder `berechnet`, dazu `werte` oder `bereich`).
+ * @param zeile - Datenzeile.
+ * @returns `true`, wenn die Zeile die Bedingung erfüllt.
  */
 export function trifftBedingung(w: Bedingung, zeile: Zeile): boolean {
   const roh = w.berechnet ? berechneZeile(w.berechnet, zeile) : zeile[w.feld!];
@@ -184,7 +263,12 @@ export function trifftBedingung(w: Bedingung, zeile: Zeile): boolean {
   return (w.werte ?? []).includes(roh as string | number | boolean);
 }
 
-/** Alle Zeilen-Feldnamen einer (ggf. verschachtelten) Rechnung — für Testdaten und Editor-Hinweise. */
+/**
+ * Alle Zeilen-Feldnamen einer (ggf. verschachtelten) Rechnung — für Testdaten und Editor-Hinweise.
+ *
+ * @param b - Rechnung, ggf. verschachtelt.
+ * @returns Alle Feldnamen der Operanden (Zahlen entfallen).
+ */
 export function operandenFelder(b: ZeilenBerechnet): string[] {
   return b.operanden.flatMap(operand => {
     if (typeof operand === 'string') return [operand];
@@ -197,32 +281,40 @@ export function operandenFelder(b: ZeilenBerechnet): string[] {
 const NUR_UHRZEIT = /^(\d{1,2}):(\d{2})/;
 
 /**
- * `Tag`-Felder kommen aus den Download-Bodies als deutsches `"DD.MM.YYYY"` (siehe `IDatenN`/
- * `IDatenEA`/`IDatenBE` im Frontend — Tabellen speichern Tage so, nicht als ISO-String).
- * `new Date("14.08.2026")` liefert je nach Engine `Invalid Date` oder ein falsches Datum, ein
- * `datum`/`tagZweistellig`/`wochentag`-Feld über einem echten Tag-Wert blieb dadurch bisher leer.
+ * `Tag`-Felder sind deutsches `"DD.MM.YYYY"` (Tabellen speichern Tage so). `new Date("14.08.2026")` ist
+ * je nach Engine `Invalid Date` oder falsch.
  */
 const DEUTSCHES_DATUM = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/;
 
-function alsDatum(v: unknown): Date | null {
-  // `new Date(null)` ergibt die Epoche statt Invalid Date -- Leerwerte deshalb vorher abfangen.
-  if (v === null || v === undefined || v === '') return null;
-  // Nur echte Strings aufs deutsche Format prüfen -- `letztesDatum` reicht hier z.B. einen
-  // Millisekunden-Zeitstempel (Zahl) durch, `String(zahl)` sähe nie wie ein Datum aus, aber
-  // `new Date(stringifizierteZahl)` (Datums-PARSING) liefert anders als `new Date(zahl)`
-  // (Epoche-Rechnung) `Invalid Date` -- deshalb Zahlen unverändert an `new Date()` weiterreichen.
-  if (typeof v === 'string') {
-    const deutsch = DEUTSCHES_DATUM.exec(v);
+/**
+ * Liest einen Wert als Datum; deutsches `"DD.MM.YYYY"` wird gesondert geparst.
+ *
+ * @param value - Datum als `"DD.MM.YYYY"`, ISO-String, Zeitstempel (ms) oder leer.
+ * @returns Das Datum, oder `null` bei Leerem/Ungültigem.
+ */
+function alsDatum(value: unknown): Date | null {
+  // `new Date(null)` ergibt die Epoche statt Invalid Date -- Leerwerte vorher abfangen.
+  if (value === null || value === undefined || value === '') return null;
+  // Nur Strings aufs deutsche Format prüfen: `letztesDatum` reicht einen ms-Zeitstempel (Zahl) durch, und
+  // `new Date("<Zahl als String>")` wäre `Invalid Date` (Parsing statt Epoche-Rechnung).
+  if (typeof value === 'string') {
+    const deutsch = DEUTSCHES_DATUM.exec(value);
     if (deutsch) {
       const [, tag, monat, jahr] = deutsch;
       const d = new Date(Number(jahr), Number(monat) - 1, Number(tag));
       return Number.isNaN(d.getTime()) ? null : d;
     }
   }
-  const d = new Date(v as string);
+  const d = new Date(value as string);
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
+/**
+ * Füllt eine Zahl auf zwei Stellen auf.
+ *
+ * @param n - Ganze Zahl.
+ * @returns `n` mit führender Null auf zwei Stellen.
+ */
 function zweistellig(n: number): string {
   return String(n).padStart(2, '0');
 }
@@ -242,82 +334,170 @@ const MONATSNAMEN = [
   'Dezember',
 ];
 
-export const FORMAT: Record<FormatName, (v: unknown) => string> = {
-  waehrung: v => `${Number(v).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
-  zahl: v => Number(v).toLocaleString('de-DE', { maximumFractionDigits: 2 }),
-  ganzzahl: v => Math.round(Number(v) || 0).toLocaleString('de-DE'),
+/**
+ * Formatierer je `FormatName`: wandeln einen Rohwert in den Zellentext (`v` = Rohwert, Ergebnis = Text).
+ */
+export const FORMAT: Record<FormatName, (value: unknown) => string> = {
+  /**
+   * Betrag als Euro mit zwei Nachkommastellen.
+   *
+   * @param value - Betrag als Zahl.
+   * @returns `1.234,50 €`.
+   */
+  waehrung: value =>
+    `${Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`,
+  /**
+   * Zahl mit deutschem Format.
+   *
+   * @param value - Zahl.
+   * @returns Deutsch formatiert, höchstens zwei Nachkommastellen.
+   */
+  zahl: value => Number(value).toLocaleString('de-DE', { maximumFractionDigits: 2 }),
+  /**
+   * Auf ganze Zahl gerundet.
+   *
+   * @param value - Zahl.
+   * @returns Auf ganze Zahl gerundet, deutsch formatiert.
+   */
+  ganzzahl: value => Math.round(Number(value) || 0).toLocaleString('de-DE'),
 
-  datum: v => {
-    const d = alsDatum(v);
+  /**
+   * Datum als `TT.MM.JJJJ`.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns `TT.MM.JJJJ`; leer bei Unlesbarem.
+   */
+  datum: value => {
+    const d = alsDatum(value);
     return d ? `${zweistellig(d.getDate())}.${zweistellig(d.getMonth() + 1)}.${d.getFullYear()}` : '';
   },
-  datumKurz: v => {
-    const d = alsDatum(v);
+  /**
+   * Datum als `TT.MM.`.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns `TT.MM.`; leer bei Unlesbarem.
+   */
+  datumKurz: value => {
+    const d = alsDatum(value);
     return d ? `${zweistellig(d.getDate())}.${zweistellig(d.getMonth() + 1)}.` : '';
   },
-  tag: v => {
-    const d = alsDatum(v);
-    return d ? String(d.getDate()) : String(v ?? '');
+  /**
+   * Tag des Monats.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns Tag ohne führende Null; unlesbare Werte kommen unverändert durch.
+   */
+  tag: value => {
+    const d = alsDatum(value);
+    return d ? String(d.getDate()) : String(value ?? '');
   },
   /**
-   * Tag mit führender Null (`05`) -- manche Formulare haben dafür ein zweistelliges Kästchen.
-   * Unlesbare Werte kommen wie bei `tag` unverändert durch; ein leerer Wert bleibt leer und wird
-   * NICHT zu `00` aufgefüllt.
+   * Tag mit führender Null (`05`). Unlesbare Werte kommen wie bei `tag` durch; ein leerer Wert bleibt
+   * leer statt `00`.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns Zweistelliger Tag; unlesbare Werte kommen unverändert durch.
    */
-  tagZweistellig: v => {
-    const d = alsDatum(v);
-    return d ? zweistellig(d.getDate()) : String(v ?? '');
+  tagZweistellig: value => {
+    const d = alsDatum(value);
+    return d ? zweistellig(d.getDate()) : String(value ?? '');
   },
-  wochentag: v => {
-    const d = alsDatum(v);
+  /**
+   * Wochentag als Kürzel.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns `So`-`Sa`; leer bei Unlesbarem.
+   */
+  wochentag: value => {
+    const d = alsDatum(value);
     return d ? ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][d.getDay()]! : '';
   },
-  monatJahr: v => {
-    const d = alsDatum(v);
+  /**
+   * Monat und Jahr.
+   *
+   * @param value - Datumswert (siehe `alsDatum`).
+   * @returns `MM/JJJJ`; leer bei Unlesbarem.
+   */
+  monatJahr: value => {
+    const d = alsDatum(value);
     return d ? `${zweistellig(d.getMonth() + 1)}/${d.getFullYear()}` : '';
   },
   /**
-   * Monatsname für den eigenständigen `Monat`-Datenpfad (1-12 als Zahl, kein Datum -- anders als
-   * `monatJahr` oben, das ein volles Datum erwartet). Absichtlich NICHT über `alsDatum`: `new
-   * Date(3)` wäre ein gültiges (aber falsches) Datum nahe der Unix-Epoche, `alsDatum` würde also
-   * "Januar" statt "März" liefern.
+   * Monatsname für den `Monat`-Datenpfad (1-12 als Zahl, kein Datum). Nicht über `alsDatum`: `new Date(3)`
+   * ergäbe ein Datum nahe der Epoche und damit "Januar" statt "März".
+   *
+   * @param value - Monat als Zahl 1-12.
+   * @returns Monatsname; leer außerhalb 1-12.
    */
-  monatName: v => MONATSNAMEN[Number(v) - 1] ?? '',
-  /** Wie `monatName`, auf die ersten drei Buchstaben gekürzt (`Mär` für März bleibt korrekt). */
-  monatNameKurz: v => MONATSNAMEN[Number(v) - 1]?.slice(0, 3) ?? '',
+  monatName: value => MONATSNAMEN[Number(value) - 1] ?? '',
+  /**
+   * Wie `monatName`, auf die ersten drei Buchstaben gekürzt (`Mär` für März bleibt korrekt).
+   *
+   * @param value - Monat als Zahl 1-12.
+   * @returns Erste drei Buchstaben des Monatsnamens.
+   */
+  monatNameKurz: value => MONATSNAMEN[Number(value) - 1]?.slice(0, 3) ?? '',
 
-  uhrzeit: v => {
-    const treffer = NUR_UHRZEIT.exec(String(v ?? ''));
+  /**
+   * Uhrzeit als `HH:mm`.
+   *
+   * @param value - `"HH:mm"` oder Datumswert.
+   * @returns `HH:mm`; leer bei Unlesbarem.
+   */
+  uhrzeit: value => {
+    const treffer = NUR_UHRZEIT.exec(String(value ?? ''));
     if (treffer) return `${zweistellig(Number(treffer[1]))}:${treffer[2]}`;
-    const d = alsDatum(v);
+    const d = alsDatum(value);
     return d ? `${zweistellig(d.getHours())}:${zweistellig(d.getMinutes())}` : '';
   },
-  /** Minuten-Zahl oder `"HH:mm"` als Zeitspanne `"H:mm"` (kann über 24h hinausgehen). */
-  stunden: v => {
-    const treffer = NUR_UHRZEIT.exec(String(v ?? ''));
-    const minuten = treffer ? Number(treffer[1]) * 60 + Number(treffer[2]) : Math.round(Number(v) || 0);
+  /**
+   * Minuten-Zahl oder `"HH:mm"` als Zeitspanne `"H:mm"` (kann über 24h hinausgehen).
+   *
+   * @param value - Minuten oder `"HH:mm"`.
+   * @returns `H:mm`.
+   */
+  stunden: value => {
+    const treffer = NUR_UHRZEIT.exec(String(value ?? ''));
+    const minuten = treffer ? Number(treffer[1]) * 60 + Number(treffer[2]) : Math.round(Number(value) || 0);
     return `${Math.floor(minuten / 60)}:${zweistellig(minuten % 60)}`;
   },
 
-  /** Arrays generisch zu einer Zelle zusammenfügen (Trenner ` / `). Für `Pers.OE` NICHT verwenden --
-   * das hat eine eigene, striktere Schreibweise, siehe `oe` unten. */
-  liste: v =>
-    Array.isArray(v) ? v.filter(t => t !== null && t !== undefined && t !== '').join(' / ') : String(v ?? ''),
-  grossbuchstaben: v => String(v ?? '').toUpperCase(),
-  /** Boolean (echt oder als `"true"`/`"false"`-String) als deutsches Wort statt `true`/`false`. */
-  jaNein: v => (v === true || v === 'true' ? 'Ja' : 'Nein'),
   /**
-   * Hierarchie-Ebenen einer Organisationseinheit (`Pers.OE`) zur kanonischen Schreibweise
-   * zusammenfügen: die ersten beiden Ebenen mit `.`, weitere mit `-`, eine rein numerische letzte
-   * Ebene (Teamnummer) mit Leerzeichen statt Bindestrich -- z.B. `['V','IW','MI','N','KSL','IL','03']`
-   * → `"V.IW-MI-N-KSL-IL 03"`. Spiegelt `joinOeSegments` (Backend `utils/oe-scope.ts`) und
-   * `joinOeLevels` (Frontend `infrastructure/data/oeLevels.ts`) -- bewusst dupliziert statt geteilt,
-   * siehe Kommentar dort. Ein generisches `liste` (` / `-Join) zerstört diese Schreibweise, siehe
-   * OE-Bug.
+   * Arrays zu einer Zelle zusammenfügen (Trenner ` / `). Nicht für `Pers.OE` -- siehe `oe`.
+   *
+   * @param value - Array oder Einzelwert.
+   * @returns Nichtleere Einträge, mit ` / ` verbunden.
    */
-  oe: v => {
-    if (!Array.isArray(v)) return String(v ?? '');
-    const segmente = v.map(teil => String(teil ?? '').trim()).filter(Boolean);
+  liste: value =>
+    Array.isArray(value)
+      ? value.filter(t => t !== null && t !== undefined && t !== '').join(' / ')
+      : String(value ?? ''),
+  /**
+   * Text in Großbuchstaben.
+   *
+   * @param value - Beliebiger Wert.
+   * @returns Text in Großbuchstaben.
+   */
+  grossbuchstaben: value => String(value ?? '').toUpperCase(),
+  /**
+   * Boolean (echt oder als `"true"`/`"false"`-String) als deutsches Wort statt `true`/`false`.
+   *
+   * @param value - Boolean oder `"true"`/`"false"`.
+   * @returns `Ja` oder `Nein`.
+   */
+  jaNein: value => (value === true || value === 'true' ? 'Ja' : 'Nein'),
+  /**
+   * Hierarchie-Ebenen einer OE (`Pers.OE`) kanonisch zusammenfügen: erste zwei Ebenen mit `.`, weitere
+   * mit `-`, eine numerische letzte Ebene (Teamnummer) mit Leerzeichen, z.B. `V.IW-MI-N-KSL-IL 03`.
+   * Spiegelt `joinOeSegments` (Backend) und `joinOeLevels` (`infrastructure/data/oeLevels.ts`), bewusst
+   * dupliziert. `liste` würde die Schreibweise zerstören.
+   *
+   * @param value - Ebenen der OE (Array); Nicht-Arrays werden als Text durchgereicht.
+   * @returns Kanonische Schreibweise, leer ohne Ebenen.
+   */
+  oe: value => {
+    if (!Array.isArray(value)) return String(value ?? '');
+    const segmente = value.map(teil => String(teil ?? '').trim()).filter(Boolean);
     if (segmente.length === 0) return '';
     if (segmente.length === 1) return segmente[0]!;
 
@@ -335,16 +515,16 @@ export const FORMAT: Record<FormatName, (v: unknown) => string> = {
 };
 
 /**
- * Stringifizierung für Werte OHNE explizites `format` -- der Renderer greift hierauf zurück, wenn
- * eine Feld-/Spalten-/Platzhalter-Konfiguration kein `format` trägt. Nie roh `String()` für Typen,
- * bei denen das eine kaputte Zelle ergäbe: Arrays (`String([...])` = kommagetrennt ohne Leerzeichen,
- * siehe der OE-Bug, der das hier ausgelöst hat), Booleans (`String(true)` = englisches "true") und
- * verschachtelte Objekte (falsch gewählter Datenpfad, `String({...})` = `"[object Object]"`).
+ * Stringifizierung für Werte ohne `format`. Nie roh `String()`: Arrays ergäben kommagetrennt ohne
+ * Leerzeichen, Booleans englisches "true", Objekte (falscher Datenpfad) `"[object Object]"`.
+ *
+ * @param value - Beliebiger Wert.
+ * @returns Anzeigetext; leer für `null`, `undefined` und Objekte.
  */
-export function standardText(v: unknown): string {
-  if (v === null || v === undefined) return '';
-  if (Array.isArray(v)) return FORMAT.liste(v);
-  if (typeof v === 'boolean') return FORMAT.jaNein(v);
-  if (typeof v === 'object') return '';
-  return String(v);
+export function standardText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return FORMAT.liste(value);
+  if (typeof value === 'boolean') return FORMAT.jaNein(value);
+  if (typeof value === 'object') return '';
+  return String(value);
 }

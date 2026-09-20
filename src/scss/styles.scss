@@ -1,101 +1,41 @@
 @use 'breakpoints' as bp;
 @import 'raster';
 
-// DB "neues Design" -- Formensprache: von rund zu eckig, Fokus auf Klarheit und Praezision
-// (90-Grad-Ecken). Die core-web-5.3-Komponenten runden ueber diese Tokens; global auf 0
-// gesetzt zieht das Karten, Knoepfe, Felder, Tags, Akkordeon, Drawer, Notifications usw. auf
-// eckige Ecken. `--db-border-radius-full` bleibt unveraendert fuer inhaerent runde Elemente
-// (Radio, Switch, Passwort-Staerke-Balken). Unlayered -> schlaegt die `:root`-Defaults des
-// db-theme.
-:root {
-  --db-border-radius-3xs: 0;
-  --db-border-radius-2xs: 0;
-  --db-border-radius-xs: 0;
-  --db-border-radius-sm: 0;
-  --db-border-radius-md: 0;
-  --db-border-radius-lg: 0;
-  --db-border-radius-xl: 0;
-  --db-border-radius-2xl: 0;
-  --db-border-radius-3xl: 0;
-}
-
-// Aus der Vor-Shell-Architektur (mehrere freistehende Mount-Roots direkt in `body`): zentrierte
-// deren Inhalt vertikal, falls `body` durch die Fusszeilen-Reservierung (`padding-block-end`
-// unten) hoeher war als der eigentliche Inhalt. Seit `App.tsx` den gesamten Baum in EINEM
-// `DBShell` buendelt, das per eigenem CSS-Grid selbst exakt auf die verfuegbare Hoehe rechnet
-// (`.db-shell` = 100% der Viewport-Hoehe), schiebt `justify-content: center` diesen einzigen,
-// bereits korrekt hohen Baum bei jeder Restfoerderung (durch `padding-block-end`) nach OBEN ins
-// Negative -- auf jedem Tab ausser `#start` (das die Reservierung per `body:has(#start.active)`
-// gezielt auf 0 setzt), Kopfzeile und Seiteninhalt ueberlappten sich dadurch. Zentrierung ist
-// obsolet: `#start`s eigenes "Fusszeile beruehren"-Verhalten laeuft unabhaengig davon ueber
-// `.db-shell-content`s eigenes Flex-Layout (siehe `#start.active` unten).
-
-// Ein `<hr>` als Flex-/Grid-Kind kollabiert auf Breite 0: die UA-Regel `hr { margin-inline:
-// auto }` ist ein Auto-Margin und schlaegt `align-self`/`justify-self: stretch` -- das `hr`
-// schrumpft auf seine 0-Intrinsic-Breite (sieht aus wie ein Punkt). Die App zentriert nie
-// eine schmale Linie, deshalb global neutralisieren. Betrifft die Trenner in den
-// Einstellungen (`d-flex`-Spalten, `.raster`-Modalkoerper) und im EWT-Anzeige-Modal.
-hr {
-  margin-inline: 0;
-}
-
-// Knopfreihen der Tabs (Bereitschaft, EWT, EA, Neben, Einstellungen): jeder Knopf bis 250px
-// gedeckelt -- ohne die Deckelung zoege jeder Knopf ueber die halbe Seite. Richtung/Umbruch/
-// Zentrierung/Abstand kommen seit dem `<DBStack>`-Umbau als Props an den Aufrufstellen.
+// Knopfreihen der Tabs: jeder Knopf max. 250px, sonst zieht er ueber die halbe Seite.
 .knopfreihe > * {
   max-inline-size: 250px;
 }
 
-// Gleich breite Knoepfe innerhalb einer Reihe (statt je eigener Inhaltsbreite) -- Alternative
-// zu einem CSS-Grid, wenn die Reihe eine `<DBStack>` bleiben soll (z. B. EinstellungenTab.tsx).
-// Feste (nicht nur minimale) Breite, sonst zieht der laengste Knopftext die anderen schief.
+// Gleich breite Knoepfe einer `<DBStack>`-Reihe: feste Breite, sonst zieht der laengste Text die anderen schief.
 .knopfreihe-gleich > * {
   inline-size: 12rem;
 }
 
-// Gleich breite Kacheln (Karten, Kurz-Zugriff-Knoepfe, ...) innerhalb einer Reihe -- anders als
-// `.knopfreihe-gleich` keine feste Breite, sondern gleichmaessiges Wachsen/Schrumpfen: die
-// Kacheln sollen die volle Zeilenbreite ausfuellen (wie zuvor `.raster-auto`s Grid-Spalten),
-// nicht auf einen festen Wert gedeckelt bleiben. `min-inline-size` entspricht `raster-auto`s
-// bisherigem `--spalte-min`.
+// Kacheln fuellen die Zeile gleichmaessig (wachsen/schrumpfen), mindestens 14rem.
 .karten-gleich > * {
   flex: 1 1 0%;
   min-inline-size: 14rem;
 }
 
-// Titelzeile der Start-Karten: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen
-// (DB-Card-Richtlinie "Inhalt-Ausrichtung").
+// Start-Karten-Titel: zwei Zeilen Platz, damit die Absaetze darunter auf einer Hoehe beginnen.
 .karten-titel {
   min-block-size: 3.5rem;
 }
 
-// `<DBStack>` (@db-ux/react-core-components) ist als "fuelle den Elternbereich"-Baustein
-// gedacht (`block-size`/`inline-size: 100%`). Fuer eine einzelne, flach im Fluss stehende
-// Stelle bleibt das folgenlos (Prozent-Hoehe gegen einen Elternteil ohne definierte Hoehe
-// loest zu `auto` auf) -- **aber sobald ein `<DBStack>` selbst FLEX-KIND eines aeusseren
-// `<DBStack direction="row">` ist** (z. B. mehrere Knopfreihen zu einer Zeile zusammengefasst),
-// zwingt `inline-size: 100%` es, die gesamte Breite des Elternteils zu beanspruchen -- alle
-// Geschwister werden dadurch auf eigene Zeilen verdraengt, obwohl reichlich Platz da waere.
-// Per Puppeteer nachgewiesen (drei verschachtelte Knopfreihen in `EinstellungenTab.tsx`, sollten
-// nebeneinander stehen, standen aber jede auf eigener Zeile). `overflow: auto` schneidet
-// ausserdem nachweislich Box-Shadows/Fokusringe ab, die ueber die Randbox eines Kindes
-// hinausragen (typisches DB-UX-Button-Fokusmuster) -- ein normales `<div>` hat als Default
-// `overflow: visible`, `<DBStack>` nicht.
+// `.db-stack` hat `inline-size: 100%` (als Flex-Kind eines Stack-Rows drueckt es die Geschwister in eigene Zeilen)
+// und `overflow: auto` (schneidet Fokusringe/Schatten ab) -- beides zuruecksetzen.
 .db-stack {
   inline-size: auto;
   overflow: visible;
 }
 
-// Jahresauswahl in den Einstellungen: mittig und nicht ueber die ganze Breite gezogen.
 .jahr-auswahl {
   max-inline-size: 18.5rem;
   margin-inline: auto;
 }
 
-// Ersatz fuer Bootstraps `.input-group`: DB kennt keine Gruppe aus Feld und angehaengtem Knopf.
-// Das Feld nimmt den freien Platz, der Knopf steht buendig daneben und behaelt seine Hoehe.
-// Container-Eigenschaften (display/align-items/gap) kommen seit dem `<DBStack>`-Umbau als Props
-// an den Aufrufstellen -- diese Kind-Selektoren bleiben, weil `<DBStack>` dafuer keine Props hat.
+// Feld + angehaengter Knopf (Ersatz fuer `.input-group`). Container-Eigenschaften kommen per `<DBStack>`-Props,
+// hier nur die Kind-Regeln.
 .feldgruppe {
   > .db-input,
   > .db-select {
@@ -103,16 +43,14 @@ hr {
     min-inline-size: 0;
   }
 
-  // Knoepfe und Vorsatztexte behalten ihre Inhaltsbreite -- ohne das schrumpft der Knopf auf
-  // die Feldbreite mit und sein Text verschwindet.
+  // Knoepfe/Vorsatztexte behalten ihre Inhaltsbreite, sonst schrumpft der Knopf mit dem Feld.
   > :not(.db-input, .db-select) {
     flex: 0 0 auto;
   }
 }
 
-// DB zeigt einen Tooltip bei `:hover`/`:focus-visible` des Elternknotens. Ein Eingabefeld gibt
-// den Fokus aber an sein `<input>` weiter, der Elternknoten selbst wird nie fokussiert --
-// `:focus-within` holt den Hinweis fuer den Tastaturweg zurueck.
+// DB zeigt den Tooltip bei `:hover`/`:focus-visible` des Elternknotens; ein Eingabefeld gibt den Fokus aber an sein
+// `<input>` weiter -- `:focus-within` holt den Hinweis fuer die Tastatur zurueck.
 [data-has-tooltip='true']:focus-within > .db-tooltip:first-of-type {
   visibility: visible;
 }
@@ -129,42 +67,15 @@ hr {
   min-inline-size: 120px;
 }
 
-// Die Icon-Groesse steuert im DB-System `--db-icon-font-size`; die Klassen
-// `db-font-size-2xs|xs|sm|md|lg` setzen sie aus der Token-Skala.
+// Icon-Groesse: `--db-icon-font-size` (gesetzt von den `db-font-size-*`-Klassen).
 
-// === ICON-SATZ ================================================================================
-// Standard: die DB-UX-Icon-Schrift aus `@db-ux/db-theme-icons` (DB-Font-Lizenz -- nur DB-Kontext,
-// keine oeffentliche Weitergabe). Der Render-Weg ist `[data-icon]::before { content:
-// var(--db-icon, attr(data-icon)) }` mit einer Ligatur-Schrift.
+// Standard: DB-UX-Icon-Schrift aus `@db-ux/db-theme-icons` (DB-Font-Lizenz, nur DB-Kontext), gerendert ueber
+// `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }` mit Ligatur-Schrift.
 //
-// Wechsel auf Material Symbols (Runbook: `src/ts/components/iconRegistry.ts`) -- diesen Block
-// aktivieren, den `@import './iconset.material.css'` in `db-ux.css` einkommentieren und
-// `bun run icons:gen` laufen lassen. Die woff2 LOKAL buendeln (CSP + oeffentliches Hosting),
-// nicht per Google-Fonts-CDN.
-//
-// @font-face {
-//   font-family: "Material Symbols Outlined";
-//   font-style: normal;
-//   font-weight: 100 700;
-//   font-display: block;
-//   src: url("../assets/material-symbols-outlined.woff2") format("woff2");
-// }
-//
-// :root {
-//   --db-icon-font-family: "Material Symbols Outlined";
-//   --db-icon-font-weight: 400;
-// }
-//
-// [data-icon]::before,
-// [data-icon-leading]::before,
-// [data-icon-trailing]::after {
-//   font-variation-settings: "opsz" 24, "wght" 400, "FILL" 0, "GRAD" 0;
-// }
-// =============================================================================================
+// Wechsel auf Material Symbols: Runbook in `src/ts/components/iconRegistry.ts`.
 
-// Icon-Buttons: `.db-icon` hat selbst `font-size: 0`, das Glyph sitzt im `::before` und
-// richtet sich an der Grundlinie aus -- neben 1-rem-Text sah das zu gross und zu tief aus.
-// Eine Flex-Zeile zentriert beides zueinander, die Groesse haengt an der Button-Schrift.
+// Icon-Buttons: `.db-icon` hat `font-size: 0`, das Glyph sitzt im `::before` auf der Grundlinie -- neben Text zu
+// gross und zu tief. Flex zentriert beides, die Groesse haengt an der Button-Schrift.
 .db-button:has(> .db-icon) {
   display: inline-flex;
   align-items: center;
@@ -181,34 +92,16 @@ hr {
   --db-icon-font-size: 1rem;
 }
 
-// DB setzt am Knopf `white-space: pre-line`, damit man Beschriftungen von Hand umbrechen kann.
-// Damit wird aber auch der Zeilenumbruch aus dem Quelltext zu einem echten Umbruch: steht die
-// Beschriftung wie ueblich in einer eigenen Zeile zwischen `<button …>` und `</button>`, ergibt
-// das eine leere erste Zeile und den Text darunter. Gemessen am Impressum-Knopf: 44 px hoch
-// statt 24, Text 23 px unter der Oberkante statt 3. Betroffen war jeder Knopf der App -- bei den
-// hohen Varianten fiel es nur weniger auf, weil `min-block-size` die Luecke ohnehin fuellt.
-//
-// Die Umbrueche kommen hier ausschliesslich aus der Formatierung (Prettier bricht die
-// Attributliste um), nie aus dem Inhalt -- deshalb wieder einsammeln.
+// DB setzt am Knopf `white-space: pre-line`: der Zeilenumbruch zwischen `<button>` und Beschriftung (kommt nur aus der
+// Prettier-Formatierung) wuerde zu einer leeren ersten Zeile. Umbrueche kommen nie aus dem Inhalt, also einsammeln.
 .db-button {
   white-space: normal;
 }
 
-// Semantik-Knoepfe (Speichern gruen, Loeschen rot, ...).
-//
-// DB kennt am Knopf nur `data-variant` (brand|filled|outlined|ghost); `data-color` ist ein
-// Paletten-Schalter, der die `--db-adaptive-*`-Tokens des Teilbaums umstellt. `filled` ist
-// dabei keine Vollfarbe, sondern eine 16-%-Lasur -- in einer Semantik-Palette also ein matter
-// Farbschleier mit farbigem Text auf farbigem Grund. Gemessen an "Speichern":
-// Grund `rgb(114 191 26 / 0.16)`, Schrift `rgb(195 255 157)` -- ein dunkelgruener Kasten.
-//
-// `buttonLook()` bildet die alten Bootstrap-Varianten aber genau darauf ab. Deshalb bekommen
-// die Semantik-Knoepfe hier die Vollfarbe ihrer Palette, mit demselben Gewicht wie
-// `data-variant="brand"` die Markenfarbe nimmt. `outlined` zeigt die Semantik in Rahmen und
-// Schrift, statt sie auf Weiss zu verlieren.
-// `brand` steht bewusst nicht in der Liste: als umrandeter Knopf waere das roter Text, und den
-// laesst das DB-Regelwerk nur fuer Links und Warnungen zu (Markenfarben, Double Coding). Die
-// Markenfarbe kommt am Knopf ueber `data-variant="brand"` -- gefuellt, mit weisser Schrift.
+// Semantik-Knoepfe: DB kennt am Knopf nur `data-variant`; `data-color` stellt die `--db-adaptive-*`-Tokens um, und `filled`
+// ist dann nur eine 16-%-Lasur (matter Grund, farbiger Text). Die Aufrufstellen nutzen `filled` + `data-color`, hier
+// bekommt es die Vollfarbe der Palette; `outlined` zeigt die Semantik in Rahmen und Schrift. `brand` fehlt bewusst:
+// roter Text am Knopf ist nach DB-Regelwerk nur fuer Links/Warnungen erlaubt (Markenfarbe: `data-variant="brand"`).
 @each $semantik in ('critical', 'successful', 'warning', 'informational') {
   .db-button[data-color='#{$semantik}'][data-variant='filled'] {
     background-color: var(--db-#{$semantik}-origin-default);
@@ -227,8 +120,7 @@ hr {
   }
 
   .db-button[data-color='#{$semantik}'][data-variant='outlined'] {
-    // Der Rahmen soll die Semantikfarbe zeigen, nicht einen Grauton. `-origin-default` ist ein
-    // echtes DB-Token; die Regel kennt fuer Rahmen nur die `-on-bg-emphasis-*`-Reihe.
+    // Rahmen in Semantikfarbe; `-origin-default` ist ein echtes DB-Token, die Regel kennt fuer Rahmen nur `-on-bg-emphasis-*`.
     /* stylelint-disable-next-line db-ux/use-border-color */
     border-color: var(--db-#{$semantik}-origin-default);
     color: var(--db-#{$semantik}-origin-default);
@@ -237,10 +129,8 @@ hr {
   }
 }
 
-// Ladeanzeige (Ersatz fuer Bootstraps `.spinner-border`): DB hat keine eigene Komponente
-// dafuer, nutzt aber an mehreren Stellen das drehende `circular_arrows`-Symbol.
-// Das Symbol teilt sich `.laedt` mit dem Zum-Aktualisieren-Ziehen (`pullToRefresh.ts`) -- dort
-// fuehrt beim Ziehen der Finger die Drehung, die Dauerdrehung kommt erst beim Ausloesen dazu.
+// Ladeanzeige (Ersatz fuer `.spinner-border`): drehendes `circular_arrows`-Symbol. `.ptr-indikator__symbol` teilt sich das
+// Glyph -- dort dreht der Finger, die Dauerdrehung (`.laedt`) kommt erst beim Ausloesen.
 .laedt,
 .ptr-indikator__symbol {
   display: inline-block;
@@ -271,11 +161,9 @@ hr {
   }
 }
 
-// Zum-Aktualisieren-Ziehen: der Kreis faehrt hinter der oberen Kante des Inhaltsbereichs hervor
-// und zeigt ueber die Drehung des Symbols, wie weit noch gezogen werden muss. `position: fixed`
-// statt eines Kindes von `.db-shell-content`, weil dessen `overflow-y: auto` ein oberhalb
-// liegendes Kind sonst abschneidet (bzw. den Scrollbereich verlaengert). Lage und Sichtbarkeit
-// setzt `pullToRefresh.ts` je Bewegung inline.
+// Zum-Aktualisieren-Ziehen (`pullToRefresh.ts`): der Kreis faehrt hinter der Oberkante des Inhaltsbereichs hervor.
+// `position: fixed`, weil `overflow-y: auto` an `.db-shell-content` ein Kind oberhalb abschneiden wuerde;
+// Lage und Sichtbarkeit setzt das Skript inline.
 .ptr-indikator {
   position: fixed;
   inset-block-start: var(--ptr-oben, 0);
@@ -296,8 +184,7 @@ hr {
   --db-icon-font-size: 1.25rem;
 }
 
-// Ab der Ausloese-Distanz: Farbe wechselt auf die Interaktionsfarbe -- das ist das Signal
-// "jetzt loslassen".
+// Ab der Ausloese-Distanz Markenfarbe: "jetzt loslassen".
 .ptr-indikator--bereit {
   --db-icon-color: var(--db-brand-origin-default);
 }
@@ -310,9 +197,8 @@ hr {
   padding: 10px 2px 0;
 }
 
-// Zwei Motive gibt es im DB-Satz nicht (Theme-Automatik, Filter zuruecksetzen). Sie liegen
-// als SVG unter `src/icons/`, zusammengesetzt nach DB-Regelwerk von `scripts/icon-varianten.py`.
-// Die Maske faerbt das SVG mit `currentColor` und nutzt dieselbe Groessenvariable wie DB-Icons.
+// Zwei Motive fehlen im DB-Satz (Theme-Automatik, Filter zuruecksetzen): SVG unter `src/icons/`
+// (`scripts/icon-varianten.py`), per Maske mit `currentColor` gefaerbt.
 .app-icon {
   display: inline-block;
   inline-size: var(--db-icon-font-size, 1.5rem);
@@ -330,9 +216,7 @@ hr {
   --app-icon: url('../icons/filter-off.svg');
 }
 
-// EWT-Anzeige-Modal: Die Tag-Zeile und der "Berechnen?"-Schalter teilen eine Flex-Zeile.
-// Der Schalter sitzt buendig oben rechts, ohne eine eigene Rasterzeile zu belegen -- die
-// Abschnitte darunter (Einsatzort/Schicht/Zeiten) bleiben unveraendert.
+// EWT-Anzeige-Modal: Tag-Zeile und "Berechnen?"-Schalter teilen eine Flex-Zeile (Schalter oben rechts, ohne eigene Rasterzeile).
 .ewt-kopf {
   display: flex;
   align-items: flex-start;
@@ -340,8 +224,8 @@ hr {
   gap: var(--db-spacing-fixed-sm);
 }
 
-// createTagElement rendert ein eigenes `.raster` -- als Flex-Kind darf es schrumpfen,
-// damit ein langer (abweichender) Buchungstag den Schalter nicht aus der Zeile drueckt.
+// `createTagElement` rendert ein eigenes `.raster`; als Flex-Kind darf es schrumpfen, damit ein langer Buchungstag den
+// Schalter nicht aus der Zeile drueckt.
 .ewt-kopf > :first-child {
   flex: 1 1 auto;
   min-inline-size: 0;
@@ -352,9 +236,8 @@ hr {
   flex: none;
 }
 
-// EWT-Anzeige-Modal: Pfeilzeile, Titelzeile und Zeitzeile teilen dasselbe Raster mit festen
-// Aussenspalten -- so stehen Ab-Pfeil, `ab`/`von` und der linke Zeitwert senkrecht
-// uebereinander, ebenso An-Pfeil, `an`/`bis` und der rechte Zeitwert.
+// EWT-Anzeige-Modal: Pfeil-, Titel- und Zeitzeile teilen ein Raster mit festen Aussenspalten, damit Pfeile, `ab`/`von`/`an`/`bis`
+// und Zeitwerte senkrecht fluchten.
 .ewt-zeit {
   display: grid;
   grid-template-columns: 4.5rem 1fr 4.5rem;
@@ -406,8 +289,7 @@ td:has(.SchichtBereitschaft) {
   margin: 0.5rem;
 }
 
-// Ersatz fuer Bootstraps `list-group list-group-flush`: eine Liste ohne Aussenrahmen, deren
-// Eintraege nur durch eine Linie getrennt sind (Passkeys, Fehlerlisten beim Massenspeichern).
+// Liste ohne Aussenrahmen, Eintraege nur durch eine Linie getrennt (Passkeys, Fehlerlisten beim Massenspeichern).
 .trennliste {
   padding: 0;
   margin: 0;
@@ -432,8 +314,7 @@ td:has(.SchichtBereitschaft) {
   white-space: nowrap;
 }
 
-// Bootstraps `table-hover` hat an der DB-Huelle kein Gegenstueck: DB markiert einzelne Zeilen
-// ueber `data-interactive` am `tr`. Fuer ganze Tabellen genuegt eine Regel an der Huelle.
+// Ersatz fuer `table-hover`: ganze Tabelle ueber `data-interactive` an der Huelle (DB markiert sonst einzelne Zeilen am `tr`).
 .db-table[data-interactive='true'] > table > tbody > tr:hover {
   background-color: var(--db-adaptive-bg-basic-transparent-full-hovered);
 }
@@ -449,36 +330,23 @@ td:has(.SchichtBereitschaft) {
   inset-inline-start: -2px;
   position: sticky;
 
-  // Feste Breite der Label-Spalte — identisch auf allen Breakpoints,
-  // Grundlage für die dynamische Monatsanzahl im Zwischenbereich
+  // Feste Label-Spalte: Grundlage der dynamischen Monatsanzahl.
   inline-size: 11.5rem;
   min-inline-size: 11.5rem;
   max-inline-size: 11.5rem;
   white-space: normal;
 }
 
-// Die Label-Spalte klebt beim horizontalen Scrollen (`position: sticky`) und braucht deshalb
-// einen eigenen Hintergrund -- sonst scrollen die Monatsspalten sichtbar darunter durch.
-// `inherit` uebernimmt dabei den Ton der jeweiligen Zeile (Zebra-Streifen, Kopfband) statt
-// wie frueher stur die Seitenfarbe zu setzen.
+// Die klebende (`sticky`) Label-Spalte braucht einen eigenen Hintergrund, sonst scrollen die Monatsspalten durch; `inherit`
+// uebernimmt den Ton der Zeile (Zebra, Kopfband).
 .table-Berechnung > thead > tr > th:first-child,
 .table-Berechnung tbody tr th {
   background-color: inherit;
 }
 
-// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes). Sie muessen in
-// der festen 11.5rem-Spalte umbrechen statt in die Monatszellen zu ueberlaufen, und duerfen das
-// Raster der `db-table`-Huelle nicht erben.
-//
-// Die Huelle greift mit mehreren Selektoren durch die verschachtelte Tabelle: `border-block-end`
-// an `tr`, `border-inline-end` an `td, th:not(:last-child)`, `border-inline` am `table` selbst
-// (Zebra-Variante) und ein Zebra-Hintergrund an jeder ungeraden `tr`. Alles zuruecksetzen, damit
-// die Auslege-Tabelle randlos und transparent in der Beschriftungsspalte sitzt.
-//
-// Ausserdem rechnet der DB-Layer `.db-table table` (Nachfahren-Selektor) als CSS-Grid. Die
-// App-Gegenregel in `utilities.scss` faengt nur `.db-table > table` ab, nicht diese
-// verschachtelte Tabelle -- ohne den `display: table`-Reset kippen Label- und Einheit-Spalte
-// uebereinander.
+// Verschachtelte Auslege-Tabellen im Zeilenkopf (EWT-Schwellen, Zulagen-Codes): umbrechen in der festen 11.5rem-Spalte und
+// erben nichts von der `db-table`-Huelle (Rahmen, Zebra, Grid) -- alles zuruecksetzen. `display: table` ist noetig, weil die
+// Gegenregel in `utilities.scss` nur `.db-table > table` abfaengt, nicht `.db-table table`.
 .berechnung-label-tabelle {
   display: table;
   inline-size: 100%;
@@ -537,9 +405,7 @@ td:has(.SchichtBereitschaft) {
   }
 }
 
-// FormularEditor: ausklappbare Abschnitte und Einzel-Zeilen (Feld/Spalte).
-// `<summary>` als Flex ohne den nativen Marker -- der Pfeil `.klapp-pfeil` ersetzt ihn und
-// dreht sich beim Aufklappen.
+// FormularEditor: ausklappbare Abschnitte/Zeilen. `<summary>` ohne nativen Marker; `.klapp-pfeil` ersetzt ihn und dreht sich.
 .klapp-zeile > summary,
 .klapp-abschnitt > summary {
   list-style: none;
@@ -572,33 +438,22 @@ td:has(.SchichtBereitschaft) {
   align-content: start;
 }
 
-/* Unterschrift-Canvas (signaturDialog.ts): Breite/Höhe kommen als exakte Pixelwerte per
-   `berechneCanvasGroesse()` aus JS (deterministisch statt CSS-`aspect-ratio`/Flex-Interaktion,
-   die sich im vorherigen Bootstrap-Layout als unzuverlässig erwies) -- hier nur noch
-   Zentrierung (Block-Element mit fester Breite < 100% zentriert per `margin: 0 auto`) und Optik. */
+/* Unterschrift-Canvas (`signaturDialog.ts`): Groesse kommt als Pixelwerte aus JS (`berechneCanvasGroesse()`), hier nur Zentrierung und Optik. */
 .signatur-canvas {
   display: block;
   margin: 0 auto;
 
-  /* border-box statt des Default content-box: sonst kommt der 1px-Rahmen zur per JS gesetzten
-     Breite/Höhe oben drauf (2px Differenz je Achse) -- in engen Fullscreen-Fällen genau der
-     Unterschied zwischen Passen und Überlaufen. */
+  /* border-box, sonst kommt der 1px-Rahmen zur per JS gesetzten Groesse dazu (2px je Achse) und laesst enge Fullscreen-Faelle ueberlaufen. */
   box-sizing: border-box;
   border: 1px solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
   touch-action: none;
 
-  /* Bewusst IMMER weiss, unabhaengig vom App-Theme: der Canvas simuliert Papier, auf das
-     spaeter die schwarze Tinte (`signaturePad.ts`s Default-`penColor`) im PDF gedruckt wird --
-     PDFs sind unabhaengig vom Dark Mode immer weiss. Im Dark Mode blieb die Flaeche sonst dunkel
-     (geerbt von der Dialog-Huelle) und die schwarze Unterschrift praktisch unsichtbar. Nur die
-     CSS-Anzeige aendert sich -- das exportierte PNG bleibt transparent (`erstelleSignaturPad()`s
-     `backgroundColor: 'rgba(0,0,0,0)'`), `toDataURL()` erfasst nur den Canvas-Inhalt, nicht die
-     CSS-Hintergrundfarbe des Elements. */
+  /* Immer weiss, unabhaengig vom Theme: der Canvas simuliert Papier fuer die schwarze Tinte im PDF (im Dark Mode waere sie unsichtbar).
+     Nur die Anzeige; das exportierte PNG bleibt transparent (`erstelleSignaturPad()`). */
   background-color: var(--db-neutral-0-default, #fff);
 }
 
-/* Der Unterschrift-Dialog hat keine Kopfzeile; die Fußzeile trägt Merken-Haken, Abbrechen,
-   Löschen und Fertig in einer schmalen Reihe. Jede Zeile Höhe hier fehlt der Schreibfläche. */
+/* Der Unterschrift-Dialog hat keine Kopfzeile; die Fusszeile haelt vier Elemente in einer schmalen Reihe -- jede Zeile Hoehe fehlt der Schreibflaeche. */
 .signatur-fusszeile {
   gap: 0.35rem;
   padding: 0.35rem 0.5rem;
@@ -614,9 +469,7 @@ td:has(.SchichtBereitschaft) {
   }
 }
 
-/* Randloser Unterschrift-Modus (signaturDialog.ts, aktiviert wenn die Höhe die bindende Dimension
-   ist -- typisch Querformat-Handy): noch kompaktere Fußzeile gewinnt zusätzlichen Vertikalraum
-   für den Canvas zurück, statt ihn an das Standard-Padding zu verlieren. */
+/* Randloser Modus (`signaturDialog.ts`, wenn die Hoehe bindet, z. B. Querformat-Handy): kompaktere Fusszeile gibt dem Canvas Vertikalraum zurueck. */
 .signatur-kompakt .dialog-koerper {
   padding: 0.25rem;
 }
@@ -625,8 +478,7 @@ td:has(.SchichtBereitschaft) {
   padding: 0.25rem 0.5rem;
 }
 
-// Formularbeschriftungen richten sich am Feld aus, nicht an der Textausrichtung des
-// umgebenden Abschnitts (`text-center` in den Einstellungen zog sie sonst in die Mitte).
+// Formularbeschriftungen richten sich am Feld aus, nicht an `text-center` des Abschnitts.
 .db-input > label,
 .db-select > label,
 .db-textarea > label,
@@ -635,8 +487,7 @@ td:has(.SchichtBereitschaft) {
   text-align: start;
 }
 
-/* Tabellenzellen mit mehrzeiligem Inhalt: Umbrueche kommen aus dem Datenwert
-   selbst, damit CustomTable die Zelle als Text (nicht als HTML) setzen kann. */
+/* Zellen mit Zeilenumbruechen im Datenwert (CustomTable setzt Zellen als Text, nicht als HTML). */
 .cell-multiline {
   white-space: pre-line;
 }
@@ -656,15 +507,8 @@ td > .db-switch {
   inline-size: 90%;
 }
 
-// Bug-Fund: `footer { pointer-events: none }` (Tag-Selektor statt `.app-footer`) traf JEDES
-// `<footer>`-Element im Dokument -- auch `DBDrawerFooter` (rendert selbst ein `<footer
-// class="db-drawer-footer">`, siehe `@db-ux/react-core-components`). Der "Schließen"-Knopf im
-// Impressum-Dialog (und jeder andere Knopf in einem `DBDrawerFooter`) war dadurch fuer echte
-// Mausklicks unerreichbar -- optisch da, aber `pointer-events: none` von diesem globalen Tag-
-// Selektor geerbt. `elementFromPoint()` an der Knopf-Position lieferte den `.db-drawer-container`
-// dahinter statt des Knopfs. Fix: auf `.app-footer` beschraenkt, damit nur die eigene fixierte
-// App-Fusszeile betroffen ist (ihre Randflaeche jenseits von Text/Knopf soll Klicks auf Inhalt
-// dahinter durchlassen), nicht jedes `<footer>` im Dokument.
+// Nur die eigene fixierte Fusszeile laesst Klicks durch (`pointer-events: none`). Ein Tag-Selektor `footer` traf auch
+// `DBDrawerFooter` und machte dessen Knoepfe (z. B. Impressum-"Schliessen") fuer Mausklicks unerreichbar.
 .app-footer {
   position: fixed;
   inset-inline: 0;
@@ -673,41 +517,27 @@ td > .db-switch {
   pointer-events: none;
 }
 
-// Nachfahren- statt Kind-Selektor: `DBFooterMeta` (@db-ux/react-core-components 5.4.0)
-// verschachtelt den Button in `.db-footer-meta-content`; `pointer-events` vererbt sich, die
-// Selektortiefe ist also unerheblich.
+// Nachfahren- statt Kind-Selektor: `DBFooterMeta` verschachtelt den Knopf in `.db-footer-meta-content`.
 .app-footer .impressum {
   pointer-events: all;
 }
 
-// Reservierung fuer `.app-footer` (`position: fixed`, siehe unten) MUSS in `.db-shell-content`
-// selbst sitzen, nicht auf `body`: `.db-shell` ist bereits exakt auf `100dvh` gerechnet (eigenes
-// CSS-Grid, `.db-shell-content` als zweite Zeile) -- ein `padding-block-end` auf `body` blaeht
-// `body`s Box UEBER diese `100dvh` hinaus auf, wodurch zusaetzlich zu `.db-shell-content`s
-// eigenem `overflow-y: auto` (Shells Vorgabe) noch das gesamte Dokument (`html`) scrollbar wird.
-// Zwei gleichzeitig aktive, am selben Rand gestapelte Scrollbalken sind das Ergebnis -- der
-// aeussere (Dokument-)Balken verschwindet dabei optisch hinter dem `position: sticky`-Header
-// (User-Fund). Die Reservierung gehoert deshalb IN den ohnehin schon scrollenden Container.
+// Die Fusszeilen-Reservierung gehoert IN `.db-shell-content`, nicht auf `body`: `.db-shell` ist schon exakt `100dvh` hoch, ein
+// `padding-block-end` auf `body` machte zusaetzlich das Dokument scrollbar (zwei gestapelte Scrollbalken).
 .db-shell-content {
   padding-block-end: 3.5rem;
 }
 
-// Chromes eingebautes Zum-Aktualisieren-Ziehen aus: sonst reicht der Container die Geste am
-// oberen Rand an den Wurzel-Scroller weiter, der parallel zu `pullToRefresh.ts` neu laedt --
-// nach eigener Schwelle, gerade nicht erst beim Loslassen nach unserer Anzeige (User-Fund am
-// Geraet). Die eigene Geste ersetzt es vollstaendig.
+// Chromes eigenes Zum-Aktualisieren-Ziehen aus (`pullToRefresh.ts` ersetzt es): sonst reicht der Container die Geste an den
+// Wurzel-Scroller weiter, der parallel und mit eigener Schwelle neu laedt.
 html,
 body,
 .db-shell-content {
   overscroll-behavior-y: contain;
 }
 
-// `DBFooterMeta` stapelt Copyright/Impressum-Knopf unter genau dieser Breite
-// (`footer-meta.css`: `@media (max-width: 47.9375em) { flex-direction: column }`) -- der Footer
-// wird dadurch von 41px auf 69px hoeher (per Puppeteer gemessen), die feste `3.5rem`-Reservierung
-// (56px) reicht dann nicht mehr, Inhalt landet sichtbar HINTER dem `position: fixed`-Footer statt
-// darueber. Reservierung an derselben Bruchstelle anpassen, nicht den Footer zwingen, einzeilig
-// zu bleiben (auf schmalen Handys waeren Copyright+Knopf sonst nebeneinander gequetscht).
+// `DBFooterMeta` stapelt Copyright/Knopf unter dieser Breite (Footer 41px -> 69px); die `3.5rem`-Reservierung reicht dann nicht.
+// An derselben Bruchstelle auf 5rem erhoehen, statt den Footer einzeilig zu erzwingen (Handys waeren sonst gequetscht).
 @media (max-width: 47.9375em) {
   .db-shell-content {
     padding-block-end: 5rem;
@@ -724,8 +554,7 @@ body,
   white-space: nowrap;
 }
 
-// Zulagen stehen als einzeln umrandete Zeilen untereinander; DBs Haken bringt Abstand und
-// Ausrichtung selbst mit, hier kommt nur der Rahmen um die jeweilige Zeile dazu.
+// Zulagen als einzeln umrandete Zeilen; Haken und Abstand kommen von DB, hier nur der Rahmen.
 #settings-zulagen-list .db-checkbox {
   padding: 0.5rem 0.75rem;
   border: var(--db-border-width-3xs) solid var(--db-adaptive-on-bg-basic-emphasis-60-default);
@@ -775,8 +604,7 @@ body,
   flex-wrap: nowrap;
 }
 
-// Die drei Felder teilen sich die Zeile nach den flex-Vorgaben unten, nicht nach ihrer
-// Wunschbreite -- ohne `min-inline-size: 0` setzt jedes Feld seine Mindestbreite durch.
+// Die drei Felder teilen sich die Zeile nach den flex-Vorgaben unten; ohne `min-inline-size: 0` setzt jedes seine Mindestbreite durch.
 .admin-fahrzeit-input-group > .db-input {
   min-inline-size: 0;
 }
@@ -797,9 +625,8 @@ body,
   flex: 0 0 auto;
 }
 
-// Zwischenbereich (Tabelle mit dynamischem Monats-Fenster, unterhalb xl):
-// table-layout: fixed hält die Label-Spalte hart auf 11.5rem, unabhängig davon,
-// wie viele Monatsspalten berechnungMonatsFenster.ts einblendet. Scrollen bleibt Fallback.
+// Unter 1200px (dynamisches Monatsfenster): `table-layout: fixed` haelt die Label-Spalte bei 11.5rem, egal wie viele
+// Monatsspalten `berechnungMonatsFenster.ts` einblendet; Scrollen bleibt Fallback.
 @media screen and (max-width: 1199.98px) {
   #Berechnung .db-table {
     overflow-x: auto;
@@ -817,17 +644,15 @@ body,
     z-index: 1;
   }
 
-  // Sichtbare Monatsspalten teilen sich den Platz rechts der festen
-  // Label-Spalte gleichmäßig; die Anzahl liefert berechnungMonatsFenster.ts
-  // über die CSS-Variable (col-1-Prozentbreite wird hier überschrieben)
+  // Sichtbare Monatsspalten teilen sich den Platz rechts der Label-Spalte; die Anzahl liefert `berechnungMonatsFenster.ts` ueber
+  // `--berechnung-monatsspalten` (ueberschreibt die `sp-1`-Prozentbreite).
   .table-Berechnung > thead th[data-monat]:not(.d-none) {
     inline-size: calc((100% - 11.5rem) / var(--berechnung-monatsspalten, 6));
   }
 }
 
-// Ab md tragen die Spaltenkoepfe die Beschriftung; im Feld bleibt sie nur fuer Screenreader.
-// `--db-label-visible-above: 0` muss mit: sonst haelt DB die Zeile ueber dem Feld weiter frei
-// und jede Tabellenzeile bekommt eine leere Zeile Hoehe dazu.
+// Ab sm (48em) tragen die Spaltenkoepfe die Beschriftung, im Feld bleibt sie nur fuer Screenreader. `--db-label-visible-above: 0`
+// ist noetig, sonst haelt DB die Zeile ueber dem Feld frei (leere Zeile Hoehe je Tabellenzeile).
 @media screen and (min-width: 48em) {
   .fahrzeit-feld {
     --db-label-visible-above: 0;
@@ -843,15 +668,13 @@ body,
   }
 }
 
-// Aktionen-Spalte der Fahrzeiten-Tabelle so schmal wie ihre Buttons halten
+// Aktionen-Spalte der Fahrzeiten-Tabelle: so schmal wie ihre Buttons.
 .fahrzeiten-aktionen-spalte {
   inline-size: 1%;
   white-space: nowrap;
 }
 
-// Sortier-Leiste des Fahrzeiten-Panels (Auswahl + Knopf): nur unter sm noetig, weil dort das
-// Karten-Layout den Tabellenkopf samt Sortier-Knoepfen ausblendet; ab sm uebernehmen die
-// Kopf-Knoepfe wieder.
+// Sortier-Leiste des Fahrzeiten-Panels: nur unter sm, weil dort das Karten-Layout den Tabellenkopf samt Sortier-Knoepfen ausblendet.
 .fahrzeiten-sortierung {
   margin-block-end: var(--db-spacing-fixed-sm);
 }
@@ -950,9 +773,8 @@ body,
   }
 }
 
-// Kappungsbreite der `Einsatzort`-Spalte, gestuft entlang derselben DB-Schwellen, an denen die
-// Nachbarspalten der EWT-Tabelle auftauchen (`customtable.scss`) -- sonst stuft der Text an
-// anderen Breiten als die Spalten. Oberhalb der groessten Stufe bleibt der Text ungekappt.
+// Kappungsbreite der `Einsatzort`-Spalte, gestuft an denselben DB-Schwellen, an denen die Nachbarspalten der EWT-Tabelle
+// auftauchen (`customtable.scss`); oberhalb der groessten Stufe ungekappt.
 @media screen and (max-width: #{bp.$xs - 0.05}px) {
   .custom-text-truncate {
     max-inline-size: 120px;
@@ -983,7 +805,7 @@ body,
   }
 }
 
-// Ersteinrichtungs-Panel: volle Breite auf xs/sm, feste Breite ab md (schwebt unten rechts)
+// Ersteinrichtungs-Panel: unter sm volle Breite, ab sm feste Breite (schwebt unten rechts).
 .onboarding-panel {
   inline-size: 100%;
 }
@@ -1001,10 +823,8 @@ body,
   border-radius: var(--db-border-radius-sm);
 }
 
-// --- DB Shell / Control Panel (Header-Umbau von DBHeader auf DB UX Shell) ------------------
-// Die Kopfzeile bleibt beim Scrollen stehen (wie bisher `.sticky-top`); weder `.db-control-panel-
-// desktop` noch `.db-control-panel-mobile` bringen das von sich aus mit. Beide Klassen noetig,
-// da `DBShell` Desktop- UND Mobile-Control-Panel gleichzeitig im DOM haelt (CSS-Weiche bei 48em).
+// Die Kopfzeile bleibt beim Scrollen stehen (sticky); weder Desktop- noch Mobile-Control-Panel bringen das mit, und `DBShell`
+// haelt beide gleichzeitig im DOM (CSS-Weiche bei 48em) -- daher beide Klassen.
 .db-control-panel-desktop,
 .db-control-panel-mobile {
   position: sticky;
@@ -1012,54 +832,35 @@ body,
   z-index: 1030;
 }
 
-// DB-UX' eigene Regel fuer `data-position="top"` zentriert die Marke im mobilen Header
-// (`justify-items: center` auf der `1fr`-Spalte "brand" -- offizielles Verhalten, kein Bug,
-// siehe `node_modules/@db-ux/core-components/build/components/control-panel-mobile/
-// control-panel-mobile.css:268-274). Diese App will die Marke linksbuendig wie am Desktop --
-// `actions-1`/`drawer-button` sind `min-content`-Spalten, `start` statt `center` aendert dort
-// nichts sichtbar.
+// DBs `data-position="top"` zentriert die Marke im mobilen Header (`justify-items: center`, gewolltes DB-Verhalten); hier
+// linksbuendig wie am Desktop. Die uebrigen Spalten sind `min-content`, `start` aendert dort nichts.
 .db-control-panel-mobile[data-position='top'] {
   justify-items: start;
 }
 
-// `DBControlPanelNavigationItem` leitet OHNE `tooltip`/`text`-Prop automatisch einen Tooltip vom
-// sichtbaren Link-Text ab (`control-panel-navigation-item.js`: faellt mangels beider Props auf
-// `anchor.textContent` zurueck) -- laut eigener Prop-Doku fuer eingeklappte Sidebar-Navigation
-// (`DBShell` mit `controlPanelDesktopPosition="left"`) gedacht, wo nur das Icon sichtbar ist. In
-// unserem horizontalen `position="top"`-Modus ist das Label ohnehin immer sichtbar -- der
-// Tooltip verdoppelt es nur (User-Fund: Klick/Fokus auf einen Nav-Eintrag zeigt ein Popup mit
-// exakt demselben Text wie der Link selbst). Kein Prop zum Abschalten (Quelle geprueft), deshalb
-// per CSS unterdrueckt statt eines leeren `tooltip=""`, das denselben Fallback trotzdem ausloest.
+// `DBControlPanelNavigationItem` leitet ohne `tooltip`/`text`-Prop selbst einen Tooltip aus dem Link-Text ab (gedacht fuer
+// eingeklappte Sidebars). Im horizontalen `position="top"`-Modus verdoppelt er nur das sichtbare Label; kein Prop schaltet
+// ihn ab (`tooltip=""` loest den Fallback trotzdem aus), daher per CSS.
 .db-control-panel-navigation-item .db-tooltip {
   display: none;
 }
 
-// `DBControlPanelBrand` zeigt sein Logo per `::before`/`background-image: var(--db-logo-url)`
-// (siehe `control-panel-brand.css`) -- Standardwert ist DB-UX' eigenes `logo.svg`. Eigenes
-// App-Icon per Override statt Kind-`<img>` (letzteres erzeugte ein zusaetzliches, zweites Icon
-// NEBEN dem DB-Logo, da das `::before` unabhaengig von Kindern immer rendert).
+// `DBControlPanelBrand` zeigt sein Logo per `::before`/`--db-logo-url`; eigenes App-Icon per Variable, nicht als Kind-`<img>`
+// (das erzeugte ein zweites Icon neben dem DB-Logo).
 .db-control-panel-brand {
   --db-logo-url: url('/icons/192x192-icon.png');
 }
 
-// Startseite reicht exakt bis zur Fusszeilen-Oberkante (kein senkrechter Scrollbalken). Der
-// Freiraum fuer die Fusszeile (`padding-block-end`) entfaellt hier deshalb -- `#tabContent`s
-// `mt-3`-Abstand zur Kopfzeile wird fuer Start bereits in `App.tsx` weggelassen (nicht hier per
-// CSS: `.mt-3` ist DB-UXs eigenes `!important`, ein unlayered Gegenrule kann das nicht schlagen).
-//
-// NUR oberhalb der Fusszeilen-Bruchstelle: die Annahme "Start passt exakt, scrollt also nie"
-// gilt auf dem Handy nicht -- dort blendet `#startSchnellzugriff` (`d-md-none`) sechs zusaetzliche
-// Kacheln ein, der Startbereich scrollt, und ohne Reservierung verschwindet die letzte Kachel
-// hinter der `position: fixed`-Fusszeile (User-Fund am Geraet). Unterhalb greift deshalb die
-// normale Reservierung aus der Basisregel.
+// Startseite reicht exakt bis zur Fusszeile (kein senkrechter Scrollbalken), deshalb entfaellt hier die Reservierung -- aber
+// NUR ab der Fusszeilen-Bruchstelle: auf dem Handy blendet `#startSchnellzugriff` sechs Kacheln ein, der Bereich scrollt, und die
+// letzte Kachel verschwaende sonst hinter der fixierten Fusszeile. (Der `mt-3`-Abstand entfaellt fuer Start in `App.tsx`.)
 @media (min-width: 48em) {
   .db-shell-content:has(#start.active) {
     padding-block-end: 0;
   }
 }
 
-// Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (nur per `opacity` versteckte)
-// Panel als 100dvh hohe Leerflaeche im Layout und schiebt die anderen Tabs nach unten weg.
+// Nur wenn der Startbereich sichtbar ist -- sonst bleibt der (per `opacity` versteckte) Panel als 100dvh hohe Leerflaeche im Layout.
 #start.active {
   display: flex;
   flex-direction: column;
@@ -1102,9 +903,8 @@ body,
   }
 }
 
-// Unternavigation des Admin-Panels. DB legt `.db-navigation > menu` erst ab `md` waagerecht
-// aus und bricht nie um; die Adminbereiche sind aber bis zu acht kurze Eintraege, die auch
-// auf dem Handy nebeneinander passen sollen.
+// Unternavigation des Admin-Panels: DB legt `.db-navigation > menu` erst ab `md` waagerecht aus und bricht nie um; die bis zu
+// acht kurzen Eintraege sollen auch auf dem Handy nebeneinander passen.
 .admin-unternavigation {
   inline-size: 100%;
   padding: var(--db-spacing-fixed-2xs);
@@ -1132,33 +932,17 @@ body,
   min-inline-size: 8rem;
 }
 
-// --- Dialoge als DB-Drawer ------------------------------------------------------------------
-// Dialoge liegen seit Phase E in einem `DBDrawer` (nativer `<dialog>`). Die App-Huellen darin
-// (`dialog-kopf`/`-koerper`/`-fuss`) liefern nur Kopfzeile, Rumpf und Fusszeile -- Rahmen,
-// Hintergrund und Abstand kommen vom Drawer, sonst staende ein Kasten im Kasten.
+// Dialoge liegen in einem `DBDrawer` (nativer `<dialog>`); die App-Huellen `dialog-kopf`/`-koerper`/`-fuss` liefern nur die
+// Gliederung, Rahmen/Hintergrund/Abstand kommen vom Drawer (sonst Kasten im Kasten).
 //
-// Variable bleibt bewusst am `.db-drawer` (dem `<dialog>`) gesetzt, nicht am Container: die
-// `:has(> .signatur-drawer)`-Ausnahme unten setzt sie ebenfalls dort, `var(...)` unten muss beide
-// Faelle per normaler Vererbung sehen. Ein `:not(.db-control-panel-mobile-drawer)` waere hier
-// wirkungslos -- die Klasse sitzt NIE auf `.db-drawer` selbst, siehe naechster Kommentar.
+// Die Variable sitzt am `.db-drawer` (`<dialog>`), damit auch die `:has(> .signatur-drawer)`-Ausnahme sie per Vererbung sieht.
 .db-drawer {
   --db-drawer-max-width: 36rem;
 }
 
-// `:not(.db-control-panel-mobile-drawer)` MUSS auf `.db-drawer-container` sitzen, nicht auf
-// `.db-drawer`: `DBDrawer` reicht die `className`-Prop an sein INNERES
-// `<article class="db-drawer-container">` durch, nicht an das `<dialog>`-Wurzelelement selbst
-// (Puppeteer-verifiziert -- `DBControlPanelMobile`s Schublade ist `<dialog class="db-drawer">
-// <article class="db-drawer-container db-control-panel-mobile-drawer">`). Frueher stand der
-// `:not()` versehentlich am `<dialog>`, wo die Klasse nie ankommt -- die 36rem-Deckelung unten
-// griff dadurch unbeabsichtigt auch fuer die mobile Navigations-Schublade.
-//
-// Der Drawer ist rechtsbuendig verankert. `--db-drawer-max-width` sind 36rem -- mit
-// `data-density="functional"` (14px-Basis) = 504px. Ist der sichtbare Viewport schmaler
-// (kleiner Bildschirm oder ~508px mit klassischem Scrollbalken), lief die linke Kante des
-// Drawers ins Negative -> linksbuendiger Text ("Von"/"Bis"/"Pause") war links abgeschnitten.
-// `min(..., 100%)` deckelt zusaetzlich auf die Breite des enthaltenden Blocks (ICB, ohne
-// Scrollbalken) -> der Drawer bleibt immer vollstaendig im Bild.
+// `:not(.db-control-panel-mobile-drawer)` gehoert an `.db-drawer-container`: `DBDrawer` reicht `className` an das innere
+// `<article class="db-drawer-container">`, nicht an das `<dialog>`. `min(..., 100%)` haelt den Drawer bei schmalem Viewport
+// (auch mit klassischem Scrollbalken) vollstaendig im Bild -- sonst lief seine linke Kante ins Negative und schnitt Text ab.
 .db-drawer-container:not(.db-control-panel-mobile-drawer) {
   max-inline-size: min(var(--db-drawer-max-width), 100%);
 }
@@ -1174,8 +958,7 @@ body,
   max-inline-size: 100vw;
   border-radius: 0;
 
-  /* Im Hochformat bindet die Breite -- Feld und Fusszeile stehen dann mittig statt oben
-     angeklebt mit einer leeren Flaeche darunter. */
+  /* Im Hochformat bindet die Breite: Feld und Fusszeile stehen mittig statt oben angeklebt. */
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1183,14 +966,13 @@ body,
   > .db-drawer-content {
     flex: 0 0 auto;
 
-    /* Der Drawer-Innenabstand geht sonst von der Schreibflaeche ab, ohne dass
-       `berechneCanvasGroesse()` ihn sieht -- das Feld lief rechts aus dem Bild. */
+    /* Der Drawer-Innenabstand ginge sonst von der Schreibflaeche ab, ohne dass `berechneCanvasGroesse()` ihn sieht. */
     --db-drawer-content-padding: 0;
   }
 }
 
-// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie
-// hoch, damit der Dialog-Inhalt seine Breite selbst mitbringen kann (`TMyModal.size`).
+// Breitenstufen: die Vorgabe steht am `<dialog>`, der Rumpf liegt darin -- `:has()` hebt sie hoch, damit der Dialog-Inhalt seine
+// Breite selbst mitbringen kann (`TMyModal.size`).
 .db-drawer:has([data-breite='lg']) {
   --db-drawer-max-width: 48rem;
 }
@@ -1199,8 +981,7 @@ body,
   --db-drawer-max-width: 64rem;
 }
 
-// Rumpf, Kopf, Koerper und Fusszeile eines Dialogs. Rahmen, Hintergrund und Aussenabstand
-// kommen vom Drawer; hier steht nur die innere Gliederung.
+// Rumpf, Kopf, Koerper und Fusszeile eines Dialogs: nur die innere Gliederung.
 .dialog-rumpf {
   display: flex;
   flex-direction: column;
