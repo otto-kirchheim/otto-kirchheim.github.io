@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (171)
+
+### fix (Berechnung blendet einen deaktivierten Tab nicht sofort aus)
+
+- Die Berechnung liest `aktivierteTabs` erst beim Rendern (`generateTableBerechnung`) und rendert nur bei Login/Laden und `data:changed`. Nach dem Speichern geaenderter Einstellungen
+  blieb eine deaktivierte, datenlose Gruppe deshalb bis zum Neuladen stehen (vorbestehend, im Browser nach P1e aufgefallen). `saveDaten` meldet jetzt nach dem Tab-Sync
+  `data:changed` mit `resource: 'settings'`, wenn sich die Tab-Auswahl geaendert hat (Reihenfolge egal, `undefined` = leer); `Berechnung` rendert daraufhin neu, AutoSave
+  ignoriert `settings`. Tests in `test/Utilities/saveDaten.test.ts` (Aenderung meldet, gleiche Auswahl in anderer Reihenfolge nicht).
+
 ## 2026-09-20 (170)
 
 ### fix (Ausloggen in der mobilen Schublade ohne Wirkung)

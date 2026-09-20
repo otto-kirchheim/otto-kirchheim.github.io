@@ -53,6 +53,7 @@ vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSy
 import '@/app/features';
 import Storage from '@/infrastructure/storage/Storage';
 import saveDaten from '@/infrastructure/data/saveDaten';
+import { onEvent, clearAllEventListeners } from '@/core/events/appEvents';
 import { registerHook, clearAllHooks } from '@/core/hooks';
 
 describe('saveDaten', () => {
@@ -63,6 +64,7 @@ describe('saveDaten', () => {
     vi.clearAllMocks();
     localStorage.clear();
     clearAllHooks();
+    clearAllEventListeners();
     registerHook('pre-save:settings', mockSaveEinstellungen);
 
     document.body.innerHTML = '<button id="btnSave"></button>';
@@ -336,6 +338,37 @@ describe('saveDaten', () => {
     await saveDaten(button);
 
     expect(mockSyncFeatureTabs).toHaveBeenCalledWith(['ewt']);
+  });
+
+  it('meldet data:changed (settings), wenn sich die Tab-Auswahl aendert, damit die Berechnung neu rendert', async () => {
+    Storage.set('VorgabenU', {
+      Pers: { Vorname: 'Alt' },
+      Einstellungen: { aktivierteTabs: ['bereitschaft', 'neben'] },
+    });
+    mockSaveEinstellungen.mockReturnValue({
+      Pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['neben', 'bereitschaft', 'ewt'] },
+    });
+    const gemeldet: unknown[] = [];
+    onEvent('data:changed', payload => gemeldet.push(payload));
+
+    await saveDaten(button);
+
+    expect(gemeldet).toContainEqual({ resource: 'settings', action: 'update' });
+  });
+
+  it('meldet kein data:changed, wenn die Tab-Auswahl gleich bleibt (auch bei anderer Reihenfolge)', async () => {
+    Storage.set('VorgabenU', { Pers: { Vorname: 'Alt' }, Einstellungen: { aktivierteTabs: ['ewt', 'neben'] } });
+    mockSaveEinstellungen.mockReturnValue({
+      Pers: { Vorname: 'Test' },
+      Einstellungen: { aktivierteTabs: ['neben', 'ewt'] },
+    });
+    const gemeldet: unknown[] = [];
+    onEvent('data:changed', payload => gemeldet.push(payload));
+
+    await saveDaten(button);
+
+    expect(gemeldet).toHaveLength(0);
   });
 
   it('ruft syncFeatureTabs mit den alten aktivierteTabs auf, wenn das Einstellungen-Sammeln fehlschlägt', async () => {

@@ -13,6 +13,7 @@ import {
 } from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
+import { publishEvent } from '@/core/events/appEvents';
 import { featureRegistry, invokeHook } from '@/core/hooks';
 import { resourceKeys } from './resourceConfig';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
@@ -26,6 +27,19 @@ import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
  */
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
+}
+
+/**
+ * Vergleicht zwei Tab-Auswahlen unabhaengig von der Reihenfolge.
+ *
+ * @param previous - Auswahl vor dem Speichern.
+ * @param next - Neue Auswahl.
+ * @returns `true`, wenn beide dieselben Tabs enthalten (`undefined` gilt wie eine leere Liste).
+ */
+function sameTabs(previous: string[] | undefined, next: string[] | undefined): boolean {
+  const a = [...(previous ?? [])].sort();
+  const b = [...(next ?? [])].sort();
+  return a.length === b.length && a.every((tab, index) => tab === b[index]);
 }
 
 /**
@@ -104,6 +118,12 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     //     Tabellen-Daten durch flushAll() (oben) bereits geflusht sind (sonst würde ein Unmount die
     //     betroffene Tabelle aus dem DOM entfernen, bevor ihre Änderungen gesendet wurden).
     await syncFeatureTabs((userData ?? previousUserData).Einstellungen?.aktivierteTabs);
+
+    // 2c. Wechselt die Tab-Auswahl, muss die Berechnung neu rendern: sie blendet deaktivierte Gruppen ohne Daten aus
+    //     (`aktivierteTabs` wird beim Rendern gelesen). Das Event loest keinen AutoSave aus (`settings`).
+    if (userData && !sameTabs(previousUserData.Einstellungen?.aktivierteTabs, userData.Einstellungen?.aktivierteTabs)) {
+      publishEvent('data:changed', { resource: 'settings', action: 'update' });
+    }
 
     // 3. Profil nur bei Änderungen speichern
     const profileResult = settingsNeedsSync && userData ? await profileApi.updateMyProfile(userData) : null;
