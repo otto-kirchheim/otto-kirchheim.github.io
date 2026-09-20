@@ -8,7 +8,7 @@
 
 import { onEvent } from '@/core/events/appEvents';
 import type { EventChannel, EventChannels } from '@/core/events/types';
-import type { IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
+import type { IFeatureBerechnung, IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
 /** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
@@ -150,6 +150,8 @@ export interface FeatureParts {
    * Features inklusive vorberechneter Werte; wird in die Basisdaten von `generatePDF` gemischt. Darf werfen.
    */
   pdf: { baueDaten(context: FeaturePdfContext): Record<string, unknown> };
+  /** Berechnungs-Slot: Aggregation, Formeln und Darstellung der Gruppe des Features in der Berechnung. */
+  berechnung: IFeatureBerechnung;
 }
 
 export type FeaturePartName = keyof FeatureParts;

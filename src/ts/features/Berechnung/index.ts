@@ -9,12 +9,14 @@ import { initBerechnungMonatsFensterNav } from './berechnungMonatsFenster';
 
 export { generateTableBerechnung, aktualisiereBerechnung };
 
-registerAppStartTask(() => {
-  onEvent('data:changed', () => aktualisiereBerechnung());
+registerAppStartTask(async () => {
+  onEvent('data:changed', () => {
+    Promise.resolve(aktualisiereBerechnung()).catch(error => console.error('Berechnung fehlgeschlagen:', error));
+  });
   initBerechnungMonatsFensterNav();
 
   if (Storage.check('VorgabenU') && Storage.check('datenBerechnung') && Storage.check('VorgabenGeld')) {
-    generateTableBerechnung(
+    await generateTableBerechnung(
       Storage.get<IVorgabenBerechnung>('datenBerechnung', { check: true }),
       Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
     );

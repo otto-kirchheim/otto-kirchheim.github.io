@@ -1,13 +1,14 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
 import Storage from '@/infrastructure/storage/Storage';
+import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';
 import type { IVorgabenGeld } from '@/core/types/IVorgabenGeldType';
 import type { IVorgabenU } from '@/core/types';
 
 describe('#generateTableBerechnung', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     Storage.set('VorgabenU', VorgabenUMock);
     Storage.set('datenBerechnung', datenBerechungMock);
     Storage.set('VorgabenGeld', VorgabenGeldMock);
@@ -31,8 +32,8 @@ describe('#generateTableBerechnung', () => {
       '<th class="col-1">Dez</th>' +
       '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>';
   });
-  it("should generate 'Berechnung' Table", () => {
-    generateTableBerechnung(
+  it("should generate 'Berechnung' Table", async () => {
+    await generateTableBerechnung(
       Storage.get<IVorgabenBerechnung>('datenBerechnung', { check: true }),
       Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
     );
@@ -72,7 +73,7 @@ describe('#generateTableBerechnung', () => {
     });
   });
 
-  it('merges multi-month VorgabenGeld overrides and calculates Beamte Schichtarbeit (S8) values', () => {
+  it('merges multi-month VorgabenGeld overrides and calculates Beamte Schichtarbeit (S8) values', async () => {
     // Nicht-Tarifkraft (Besoldungsgruppe) → case 9 nutzt BE8/BE14 statt TE8/TE14 (Zeilen 158-161).
     const beamterVorgabenU: IVorgabenU = {
       ...VorgabenUMock,
@@ -94,7 +95,7 @@ describe('#generateTableBerechnung', () => {
       },
     } as unknown as IVorgabenBerechnung;
 
-    generateTableBerechnung(datenBerechnungMonat2, multiMonthVorgabenGeld);
+    await generateTableBerechnung(datenBerechnungMonat2, multiMonthVorgabenGeld);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     if (!tbody) throw new Error('tbody not found');

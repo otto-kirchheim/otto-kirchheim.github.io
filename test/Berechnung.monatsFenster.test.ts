@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
 import Storage from '@/infrastructure/storage/Storage';
+import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { ermittleFensterGroesse, initBerechnungMonatsFensterNav } from '@/features/Berechnung/berechnungMonatsFenster';
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
@@ -10,7 +11,7 @@ const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'S
 describe('#berechnungMonatsFenster', () => {
   let groesse: number;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     Storage.set('VorgabenU', VorgabenUMock);
     Storage.set('VorgabenGeld', VorgabenGeldMock);
     Storage.set('Monat', 1); // Fenster startet bei Jan
@@ -26,7 +27,7 @@ describe('#berechnungMonatsFenster', () => {
       '</tr></thead><tbody id="tbodyBerechnung"></tbody></table>';
 
     initBerechnungMonatsFensterNav();
-    generateTableBerechnung(
+    await generateTableBerechnung(
       datenBerechungMock as IVorgabenBerechnung,
       Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),
     );
@@ -36,12 +37,12 @@ describe('#berechnungMonatsFenster', () => {
 
   const kopfzelle = (monat: number) => document.querySelector<HTMLElement>(`thead [data-monat="${monat}"]`)!;
 
-  it('berechnet eine dynamische Fenstergröße zwischen 1 und 12', () => {
+  it('berechnet eine dynamische Fenstergröße zwischen 1 und 12', async () => {
     expect(groesse).toBeGreaterThanOrEqual(1);
     expect(groesse).toBeLessThanOrEqual(12);
   });
 
-  it('blendet Monate außerhalb des Fensters aus (d-none)', () => {
+  it('blendet Monate außerhalb des Fensters aus (d-none)', async () => {
     expect(kopfzelle(1).classList.contains('d-none')).toBe(false);
     expect(kopfzelle(groesse).classList.contains('d-none')).toBe(false);
 
@@ -58,7 +59,7 @@ describe('#berechnungMonatsFenster', () => {
     expect(document.querySelector<HTMLButtonElement>('#btnBerechnungMonatePrev')?.disabled).toBe(true);
   });
 
-  it('verschiebt das Fenster über den Next-Button um einen Monat', () => {
+  it('verschiebt das Fenster über den Next-Button um einen Monat', async () => {
     if (groesse >= 12) return; // nichts zu verschieben
 
     document.querySelector<HTMLButtonElement>('#btnBerechnungMonateNext')?.click();
@@ -69,7 +70,7 @@ describe('#berechnungMonatsFenster', () => {
     expect(document.querySelector<HTMLButtonElement>('#btnBerechnungMonatePrev')?.disabled).toBe(false);
   });
 
-  it('stoppt am Jahresende (Dez sichtbar, Next disabled)', () => {
+  it('stoppt am Jahresende (Dez sichtbar, Next disabled)', async () => {
     const next = document.querySelector<HTMLButtonElement>('#btnBerechnungMonateNext')!;
     for (let i = 0; i < 15; i++) next.click();
 
@@ -80,7 +81,7 @@ describe('#berechnungMonatsFenster', () => {
     );
   });
 
-  it('blendet die Navigation aus, wenn alle 12 Monate sichtbar sind', () => {
+  it('blendet die Navigation aus, wenn alle 12 Monate sichtbar sind', async () => {
     const nav = document.querySelector<HTMLElement>('#berechnungMonatsNav');
     expect(nav).not.toBeNull();
 

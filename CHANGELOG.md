@@ -2,6 +2,40 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (170)
+
+### fix (Ausloggen in der mobilen Schublade ohne Wirkung)
+
+- `Einstellungen/index.ts` haengte den Logout-Handler mit `querySelector('#btnLogout')` nur an die erste Kopie. `#btnLogout` existiert im `AppHeader` zweimal
+  (Desktop-Kopfzeile und Mobil-Schublade, siehe `970f813` fuer `#btnLogin`/`#Monat`); die Mobil-Kopie blieb ohne Handler. Jetzt `querySelectorAll` ueber alle Kopien.
+  Vorbestehend, nicht durch den FSD-Umbau entstanden. Kein automatischer Test: der Handler haengt in einem App-Start-Task mit vielen Abhaengigkeiten.
+
+## 2026-09-20 (169)
+
+### refactor (FSD-Umbau P1e: Berechnung ueber Feature-Slots)
+
+- **Neuer lazy Teil `berechnung`** je Feature (`features/<Ordner>/parts/berechnung.tsx`, `IFeatureBerechnung` in `core/types/IBerechnung.ts`):
+  Aggregation der Zeilen eines Monats (`aggregate`), Formeln (`calc`: Beitrag mit Ergebnisfeldern, Zwischensumme und `zaehltInGesamtsumme`), Sichtbarkeit
+  (`hatDaten`, optional `hatZusatzDaten`), Hilfsdaten (`vorbereite`, z. B. Zulagen-Aufschluesselung), Tabellenzeilen (`tabelle`) und Monatskarte (`karte`).
+  Die Zwischensummen bauen sich wie bisher per `+=` je Feature auf (die frueheren `sums[0..2]`); die Reihenfolge folgt `meta.order` (ber, ewt, ez), Entgeltausgleich
+  zaehlt nicht in `summeGesamt`. Auch die bisherigen Randfaelle (offene Buckets aelterer Snapshots ohne `EA`, `+=` ohne Startwert) sind unveraendert uebernommen.
+- **`features/Berechnung` kennt kein Feature mehr**: `aktualisiereBerechnung` (`aggregate` je Feature und Monat, Bucket-Schluessel aus dem Slot),
+  `calculateBerechnungRows(…, teile)` (fasst die Beitraege zusammen), `generateTableBerechnung` sowie `BerechnungTableRows`/`BerechnungMobileCards` (Zeilen
+  und Karten je Feature aus dem Slot, Sichtbarkeitsregel `isGroupVisible` bleibt global) lesen die Slots aus `ladeBerechnungsTeile()`. Ein fehlgeschlagener Slot blockiert
+  die anderen nicht (Snackbar "Berechnung unvollstaendig …", Log). `aktualisiereBerechnung` und `generateTableBerechnung` sind dadurch `async`; `loadUserDaten`
+  und der App-Start-Task warten darauf, der `data:changed`-Handler faengt Fehler ab.
+- **Umgezogen**: `calculateZulagenBreakdown` nach `features/Neben/utils/` (nutzt `ZULAGEN_CATALOG` aus `@otto-kirchheim/nebengeld-shared` statt aus `Einstellungen`);
+  Formatter (`timeConvert`, `formatCurrency`, `parseDauerToMinutes`, `anzeige`, `currency`) nach `infrastructure/data/berechnungWerte.ts`; `IBerechnungMonatsErgebnis`/`TarifKraft`
+  nach `core/types/IBerechnung.ts`; gemeinsame Darstellungs-Komponenten (`LabelTabelle`, `DetailZeile`, `GruppenTitel`, `SchwellenZeilen`) nach `infrastructure/ui/berechnungBausteine.tsx`.
+  `gruppeHatDaten`/`BerechnungGruppe` entfallen (jetzt `hatDaten` im Slot).
+- Tests: die Berechnung-Tests (`aktualisiereBerechnung`, `calculateBerechnungRows`, `groupVisibility`, `monatsFenster`, `Berechnung`, `BerechnungMobileCards`) pruefen
+  unveraendert dieselben Ausgaben, nur mit `await`, Manifest-Import und den Slots als Parameter. Neu: `test/features/Berechnung/featureSlots.test.tsx`
+  (Reihenfolge und Bucket-Schluessel, Entfernbarkeit eines Features, Chunk-Fehler, Erweiterbarkeit mit einem Fantasie-Feature). Testanzahl 2203 -> 2207.
+  `lint:fsd`-Baseline 107 -> 103 (`features/Berechnung` importiert kein anderes Feature mehr).
+- `calculateBerechnungRows` nimmt fuer einen fehlenden Bucket (aelterer/unvollstaendiger Snapshot, oder Feature beim Speichern nicht geladen) den leeren Bucket des Features (`aggregate({}, monat)`) statt zu werfen (im Browser aufgefallen: `Cannot read properties of undefined (reading 'A8')`). Test in `featureSlots.test.tsx`; Testanzahl damit 2208.
+- Offen (Latent-Bugs, nicht Teil dieses Schritts): leeres `aktivierteTabs` zeigt in der Berechnung alle Gruppen (inkl. EA), Nav/Tabs nur die Legacy-Default-Features;
+  `calculateZulagenBreakdown` filtert `getNebengeldDaten` ab 2024, die Aggregation liest `dataN` ungefiltert.
+
 ## 2026-09-20 (168)
 
 ### refactor (FSD-Umbau P1d: PDF-Daten je Feature statt zentral in `generatePDF`)

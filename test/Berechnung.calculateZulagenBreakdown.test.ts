@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import calculateZulagenBreakdown from '@/features/Berechnung/calculateZulagenBreakdown';
+import calculateZulagenBreakdown from '@/features/Neben/utils/calculateZulagenBreakdown';
 import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IDatenN } from '@/types';
 

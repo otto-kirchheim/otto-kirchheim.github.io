@@ -102,7 +102,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   Storage.set('VorgabenGeld', datenGeld);
 
-  const datenBerechnung = aktualisiereBerechnung({
+  const datenBerechnung = await aktualisiereBerechnung({
     BZ: rowsOf<IDatenBZ>('BZ'),
     BE: rowsOf<IDatenBE>('BE'),
     EWT: rowsOf<IDatenEWT>('EWT'),
@@ -199,7 +199,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
       );
   }
 
-  generateTableBerechnung(datenBerechnung, datenGeld);
+  await generateTableBerechnung(datenBerechnung, datenGeld);
   generateEingabeMaskeEinstellungen(vorgabenU);
 
   updateTabVisibility(vorgabenU.Einstellungen?.aktivierteTabs);

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { VorgabenGeldMock, VorgabenUMock } from '@test/mockData';
 import Storage from '@/infrastructure/storage/Storage';
+import '@/app/features';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import { isGroupVisible } from '@/features/Berechnung/berechnungGroupVisibility';
 import type { IVorgabenBerechnung, IVorgabenU } from '@/types';
@@ -32,16 +33,16 @@ function setVorgabenU(aktivierteTabs: string[]): void {
 }
 
 describe('#isGroupVisible', () => {
-  it('zeigt alles ohne Einschränkung (leer/undefined)', () => {
+  it('zeigt alles ohne Einschränkung (leer/undefined)', async () => {
     expect(isGroupVisible('neben', [], false)).toBe(true);
     expect(isGroupVisible('neben', undefined, false)).toBe(true);
   });
 
-  it('zeigt global aktivierte Gruppen unabhängig von Daten', () => {
+  it('zeigt global aktivierte Gruppen unabhängig von Daten', async () => {
     expect(isGroupVisible('neben', ['neben'], false)).toBe(true);
   });
 
-  it('blendet deaktivierte Gruppen ohne Daten aus, zeigt sie mit Daten (Ausnahme)', () => {
+  it('blendet deaktivierte Gruppen ohne Daten aus, zeigt sie mit Daten (Ausnahme)', async () => {
     expect(isGroupVisible('neben', ['bereitschaft', 'ewt'], false)).toBe(false);
     expect(isGroupVisible('neben', ['bereitschaft', 'ewt'], true)).toBe(true);
   });
@@ -53,10 +54,10 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     Storage.set('VorgabenGeld', VorgabenGeldMock);
   });
 
-  it('entfernt die Erschwerniszulagen-Zeile, wenn deaktiviert und ganzjährig ohne Daten', () => {
+  it('entfernt die Erschwerniszulagen-Zeile, wenn deaktiviert und ganzjährig ohne Daten', async () => {
     setVorgabenU(['bereitschaft', 'ewt']);
 
-    generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.children.length).toBe(12);
@@ -64,27 +65,27 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     expect(tbody?.textContent).toContain('Summe Gesamt');
   });
 
-  it('zeigt die Erschwerniszulagen-Zeile trotz Deaktivierung, wenn ein Monat Daten hat', () => {
+  it('zeigt die Erschwerniszulagen-Zeile trotz Deaktivierung, wenn ein Monat Daten hat', async () => {
     setVorgabenU(['bereitschaft', 'ewt']);
 
-    generateTableBerechnung({ 1: monatOhneNeben, 2: monatMitNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben, 2: monatMitNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.children.length).toBe(13);
     expect(tbody?.textContent).toContain('Summe Zulagen');
   });
 
-  it('zeigt alle 14 Zeilen (inkl. Entgeltausgleich), wenn keine Einschränkung gesetzt ist', () => {
+  it('zeigt alle 14 Zeilen (inkl. Entgeltausgleich), wenn keine Einschränkung gesetzt ist', async () => {
     setVorgabenU([]);
 
-    generateTableBerechnung({ 1: monatOhneNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     // Leeres aktivierteTabs = keine Einschränkung → isGroupVisible zeigt auch 'ea' ohne Daten.
     expect(tbody?.children.length).toBe(14);
   });
 
-  it('fügt bei mehreren Jahres-Zulagen eine Aufschlüsselungszeile vor Summe Zulagen ein', () => {
+  it('fügt bei mehreren Jahres-Zulagen eine Aufschlüsselungszeile vor Summe Zulagen ein', async () => {
     setVorgabenU([]);
     Storage.set('Benutzer', 'testuser');
     Storage.set('Jahr', 2026);
@@ -93,7 +94,7 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
       { Tag: '10.03.2026', Beginn: '08:00', Ende: '16:00', Auftragsnummer: 'A1', Zulagen: [{ Typ: '846', Wert: 120 }] },
     ]);
 
-    generateTableBerechnung({ 1: monatMitNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatMitNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     // Leeres aktivierteTabs = keine Einschränkung → isGroupVisible zeigt auch 'ea' ohne Daten (+1).
@@ -111,36 +112,36 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     Storage.set('dataN', []);
   });
 
-  it('zeigt die Entgeltausgleich-Zeile nur, wenn der Tab aktiv ist oder Daten vorhanden sind', () => {
+  it('zeigt die Entgeltausgleich-Zeile nur, wenn der Tab aktiv ist oder Daten vorhanden sind', async () => {
     setVorgabenU(['bereitschaft', 'ewt', 'neben']);
 
     const monatMitEA = { ...monatOhneNeben, EA: { Minuten: 120 } };
-    generateTableBerechnung({ 1: monatOhneNeben, 2: monatMitEA } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben, 2: monatMitEA } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     // 'ea' fehlt in aktivierteTabs, aber Monat 2 hat Daten → Zeile bleibt sichtbar (Ausnahme).
     expect(tbody?.textContent).toContain('Entgeltausgleich');
   });
 
-  it('blendet die Entgeltausgleich-Zeile aus, wenn der Tab inaktiv ist und ganzjährig keine Daten vorliegen', () => {
+  it('blendet die Entgeltausgleich-Zeile aus, wenn der Tab inaktiv ist und ganzjährig keine Daten vorliegen', async () => {
     setVorgabenU(['bereitschaft', 'ewt', 'neben']);
 
-    generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.textContent).not.toContain('Entgeltausgleich');
   });
 
-  it('zeigt die Entgeltausgleich-Zeile, wenn der ea-Tab explizit aktiv ist, auch ohne Daten', () => {
+  it('zeigt die Entgeltausgleich-Zeile, wenn der ea-Tab explizit aktiv ist, auch ohne Daten', async () => {
     setVorgabenU(['bereitschaft', 'ewt', 'neben', 'ea']);
 
-    generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.textContent).toContain('Entgeltausgleich');
   });
 
-  it('entfernt mehrere deaktivierte Gruppen ohne Daten gemeinsam', () => {
+  it('entfernt mehrere deaktivierte Gruppen ohne Daten gemeinsam', async () => {
     setVorgabenU(['bereitschaft']);
 
     const monatNurBereitschaft = {
@@ -150,7 +151,7 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
       EA: { Minuten: 0 },
     };
 
-    generateTableBerechnung({ 1: monatNurBereitschaft } as unknown as IVorgabenBerechnung);
+    await generateTableBerechnung({ 1: monatNurBereitschaft } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     // 13 - 3 (ewt) - 1 (neben) = 9 Zeilen

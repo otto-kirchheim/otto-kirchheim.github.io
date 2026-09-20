@@ -1,218 +1,44 @@
-import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import { generateTableBerechnung } from '.';
-import type {
-  IDaten,
-  IDatenBE,
-  IDatenBZ,
-  IDatenEA,
-  IDatenEWT,
-  IDatenN,
-  IVorgabenBerechnung,
-  IVorgabenBerechnungMonat,
-} from '@/types';
+import type { IVorgabenBerechnung } from '@/types';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import { type ResourceKind, resourceDefs } from '@/infrastructure/data/resourceConfig';
 import Storage from '@/infrastructure/storage/Storage';
-import dayjs from '@/infrastructure/date/configDayjs';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromEWTBuchungstag,
-  getMonatFromN,
-} from '@/infrastructure/date/getMonatFromItem';
-import { ZULAGEN_CATALOG, type IZulageCatalogItem } from '@/features/Einstellungen/utils/zulagenCatalog';
-import { parseDauerToMinutes } from './calculateBerechnungRows';
-
-const CATALOG_BY_CODE = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
+import type { TStorageData } from '@/infrastructure/storage/Storage';
+import generateTableBerechnung from './generateTableBerechnung';
+import { ladeBerechnungsTeile } from './ladeBerechnungsTeile';
 
 /**
- * Berechnet für alle zwölf Monate die Summen aus BZ, BE, EWT, Nebengeld und Entgeltausgleich, speichert sie unter `datenBerechnung` und rendert die Berechnungstabelle neu.
+ * Berechnet für alle zwölf Monate die Summen der Features (Aggregation im Slot `berechnung` jedes Features), speichert sie unter
+ * `datenBerechnung` und rendert die Berechnungstabelle neu. Wartet auf das Laden der Berechnungs-Slots der Features.
  *
- * @param daten - Zu verwendende Daten; ohne Angabe werden sie aus dem Storage gelesen.
+ * @param daten - Zu verwendende Zeilen je Ressource; ohne Angabe werden sie aus dem Storage gelesen.
  * @returns Berechnung je Monat (1-12).
  */
-export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
-  const datenQuelle: Required<IDaten> = daten ?? {
-    BZ: Storage.get<IDatenBZ[]>('dataBZ', { default: [] }),
-    BE: Storage.get<IDatenBE[]>('dataBE', { default: [] }),
-    EWT: Storage.get<IDatenEWT[]>('dataE', { default: [] }),
-    N: Storage.get<IDatenN[]>('dataN', { default: [] }),
-    EA: Storage.get<IDatenEA[]>('dataEA', { default: [] }),
-  };
+export default async function aktualisiereBerechnung(
+  daten?: Partial<Record<ResourceKind, unknown>>,
+): Promise<IVorgabenBerechnung> {
+  const teile = await ladeBerechnungsTeile();
+
+  const rows: Record<string, unknown[]> = {};
+  for (const resource of resourceDefs()) {
+    const quelle = daten
+      ? daten[resource.key]
+      : Storage.get<unknown>(resource.storageKey as TStorageData, { default: [] });
+    rows[resource.key] = normalizeResourceRows<unknown>(quelle);
+  }
 
   const Berechnung: IVorgabenBerechnung = Storage.get<IVorgabenBerechnung>('datenBerechnung', {
     check: true,
     default: {} as IVorgabenBerechnung,
   });
 
-  const BZ = normalizeResourceRows<IDatenBZ>(datenQuelle.BZ);
-  const BE = normalizeResourceRows<IDatenBE>(datenQuelle.BE);
-  const EWT = normalizeResourceRows<IDatenEWT>(datenQuelle.EWT);
-  const N = normalizeResourceRows<IDatenN>(datenQuelle.N);
-  const EA = normalizeResourceRows<IDatenEA>(datenQuelle.EA);
-
-  /**
-   * Filtert Einträge auf einen Monat.
-   *
-   * @typeParam T - Typ der Einträge.
-   * @param items - Einträge.
-   * @param getMonat - Liefert den Monat (1-12) eines Eintrags.
-   * @param monat - Gewünschter Monat.
-   * @returns Einträge des Monats.
-   */
-  const filterByMonat = <T>(items: T[], getMonat: (item: T) => number, monat: number): T[] =>
-    items.filter(item => getMonat(item) === monat);
-
   for (let Monat = 1; Monat <= 12; Monat++) {
-    const BZMonat = filterByMonat(BZ, getMonatFromBZ, Monat);
-    const BEMonat = filterByMonat(BE, getMonatFromBE, Monat);
-    const EWTMonat = filterByMonat(EWT, getMonatFromEWTBuchungstag, Monat);
-    const NMonat = filterByMonat(N, getMonatFromN, Monat);
-    const EAMonat = filterByMonat(EA, getMonatFromEA, Monat);
-    Berechnung[Monat as keyof IVorgabenBerechnung] = aktualisiereBerechnungMonat(
-      BZMonat,
-      BEMonat,
-      EWTMonat,
-      NMonat,
-      EAMonat,
-    );
+    Berechnung[Monat as keyof IVorgabenBerechnung] = Object.fromEntries(
+      teile.map(({ part }) => [part.bucketKey, part.aggregate(rows, Monat)]),
+    ) as unknown as IVorgabenBerechnung[keyof IVorgabenBerechnung];
   }
 
   Storage.set<IVorgabenBerechnung>('datenBerechnung', Berechnung);
-  generateTableBerechnung(Berechnung);
+  await generateTableBerechnung(Berechnung);
 
   return Berechnung;
-
-  /**
-   * Summiert die Werte eines Monats: Bereitschaftsminuten (Zeitraum abzüglich Einsatzzeiten) und LRE-Zähler, EWT-Abwesenheitsklassen, Nebengeld je Zahlungshinweis und Entgeltausgleich in Minuten.
-   *
-   * @param BZMonat - Bereitschaftszeiträume des Monats.
-   * @param BEMonat - Bereitschaftseinsätze des Monats.
-   * @param EWTMonat - Einsatzwechseltätigkeiten des Monats.
-   * @param NMonat - Nebengeld-Einträge des Monats.
-   * @param EAMonat - Entgeltausgleich-Einträge des Monats.
-   * @returns Summen des Monats.
-   */
-  function aktualisiereBerechnungMonat(
-    BZMonat: IDatenBZ[],
-    BEMonat: IDatenBE[],
-    EWTMonat: IDatenEWT[],
-    NMonat: IDatenN[],
-    EAMonat: IDatenEA[],
-  ): IVorgabenBerechnungMonat {
-    const Berechnung: IVorgabenBerechnungMonat = {
-      B: { B: 0, L1: 0, L2: 0, L3: 0, K: 0 },
-      E: { A8: 0, A14: 0, A24: 0, S8: 0, S14: 0 },
-      N: { F: 0, A: 0, B: 0, C: 0, CA: 0, CB: 0, C9: 0, SIPO: 0 },
-      EA: { Minuten: 0 },
-    };
-
-    BZMonat.forEach(value => {
-      Berechnung.B.B += dayjs(value.Ende).diff(dayjs(value.Beginn), 'minute') + value.Pause;
-    });
-
-    BEMonat.forEach(value => {
-      const von = dayjs(`${value.Tag} ${value.Beginn}`, 'DD.MM.YYYY HH:mm');
-      let bis = dayjs(`${value.Tag} ${value.Ende}`, 'DD.MM.YYYY HH:mm');
-      if (bis.isBefore(von)) bis = bis.add(1, 'day');
-      Berechnung.B.B -= bis.diff(von, 'minute');
-
-      const LREValue = value.LRE;
-
-      switch (LREValue) {
-        case LreType.LRE_1:
-          Berechnung.B.L1++;
-          break;
-        case LreType.LRE_2:
-          Berechnung.B.L2++;
-          break;
-        case LreType.LRE_3:
-          Berechnung.B.L3++;
-          break;
-      }
-
-      if (value.PrivatKm) Berechnung.B.K += value.PrivatKm;
-    });
-
-    /**
-     * Prüft, ob `value` im halboffenen Bereich `[min, max)` liegt.
-     *
-     * @param value - Zu prüfender Wert.
-     * @param min - Untergrenze (eingeschlossen).
-     * @param max - Obergrenze (ausgeschlossen).
-     * @returns `true` bei Treffer.
-     */
-    const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;
-
-    EWTMonat.forEach(value => {
-      const tagAnfang = dayjs(value.Tag);
-      if (!tagAnfang.isValid()) return;
-
-      if (value.abWE && value.anWE) {
-        const [abWH, abWM] = value.abWE.split(':').map(Number);
-        const [anWH, anWM] = value.anWE.split(':').map(Number);
-        const von = tagAnfang.hour(abWH).minute(abWM);
-        let bis = tagAnfang.hour(anWH).minute(anWM);
-        if (bis.isBefore(von)) bis = bis.add(1, 'day');
-
-        const abWohnung = bis.diff(von, 'hour', true);
-
-        if (isInRange(abWohnung, 8, 14)) Berechnung.E.A8++;
-        else if (isInRange(abWohnung, 14, 24)) Berechnung.E.A14++;
-        else if (abWohnung >= 24) Berechnung.E.A24++;
-      }
-      if (value.ab1E && value.an1E) {
-        const [ab1H, ab1M] = value.ab1E.split(':').map(Number);
-        const [an1H, an1M] = value.an1E.split(':').map(Number);
-        const von = tagAnfang.hour(ab1H).minute(ab1M);
-        let bis = tagAnfang.hour(an1H).minute(an1M);
-        if (bis.isBefore(von)) bis = bis.add(1, 'day');
-
-        const ab1Taetigkeit = bis.diff(von, 'hour', true);
-
-        if (ab1Taetigkeit >= 8 && ab1Taetigkeit < 24) Berechnung.E.S8++;
-        else if (ab1Taetigkeit >= 24) Berechnung.E.S14++;
-      }
-    });
-
-    NMonat.forEach(entry => {
-      for (const zulage of entry.Zulagen ?? []) {
-        const item = CATALOG_BY_CODE.get(zulage.Typ);
-        if (!item) continue;
-        switch (item.paymentHint) {
-          case 'Fahrentschaedigung':
-            Berechnung.N.F += zulage.Wert;
-            break;
-          case 'A':
-            Berechnung.N.A += zulage.Wert;
-            break;
-          case 'B':
-            Berechnung.N.B += zulage.Wert;
-            break;
-          case 'C':
-            Berechnung.N.C += zulage.Wert;
-            break;
-          case 'C+A':
-            Berechnung.N.CA += zulage.Wert;
-            break;
-          case 'C+B':
-            Berechnung.N.CB += zulage.Wert;
-            break;
-          case 'C*9':
-            Berechnung.N.C9 += zulage.Wert;
-            break;
-          case 'SIPO':
-            Berechnung.N.SIPO += zulage.Wert;
-            break;
-          // Ganzkoerperreinigung: noch nicht berechnet
-        }
-      }
-    });
-
-    EAMonat.forEach(entry => {
-      Berechnung.EA.Minuten += parseDauerToMinutes(entry.Dauer);
-    });
-
-    return Berechnung;
-  }
 }

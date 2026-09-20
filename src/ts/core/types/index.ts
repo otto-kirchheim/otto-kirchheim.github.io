@@ -2,6 +2,7 @@ export * from './api.js';
 export * from './CustomHTMLElements.js';
 export * from './IAdmin.js';
 export * from './IAutoSave.js';
+export * from './IBerechnung.js';
 export * from './IDataQuery.js';
 export * from './IDaten.js';
 export * from './IUserDatenServer.js';

@@ -2,8 +2,8 @@ import { mount } from '@/infrastructure/ui';
 
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
-import type { IBerechnungMonatsErgebnis } from '../calculateBerechnungRows';
-import type { IZulagenBreakdown } from '../calculateZulagenBreakdown';
+import type { IBerechnungMonatsErgebnis } from '@/types';
+import type { IBerechnungGruppe } from '../ladeBerechnungsTeile';
 import BerechnungMobileCards from './BerechnungMobileCards';
 import BerechnungTableRows from './BerechnungTableRows';
 
@@ -13,12 +13,12 @@ import BerechnungTableRows from './BerechnungTableRows';
  *
  * @param monatsErgebnisse - Berechnungsergebnisse je Monat.
  * @param aktivierteTabs - Aktivierte Feature-Tabs des Benutzers; steuert die sichtbaren Gruppen.
- * @param zulagenBreakdown - Aufschlüsselung der Zulagen je Code.
+ * @param gruppen - Gruppen der Features (Slot `berechnung` plus Hilfsdaten).
  */
 export function mountBerechnungMobileCards(
   monatsErgebnisse: IBerechnungMonatsErgebnis[],
-  aktivierteTabs?: string[],
-  zulagenBreakdown?: IZulagenBreakdown,
+  aktivierteTabs: string[] | undefined,
+  gruppen: IBerechnungGruppe[],
 ): void {
   const container = document.querySelector<HTMLDivElement>('#berechnungMobileCards');
   if (!container) return;
@@ -30,7 +30,7 @@ export function mountBerechnungMobileCards(
     <BerechnungMobileCards
       monatsErgebnisse={monatsErgebnisse}
       aktivierteTabs={aktivierteTabs}
-      zulagenBreakdown={zulagenBreakdown}
+      gruppen={gruppen}
       offenerMonat={aktuellerMonat}
     />,
   );
@@ -40,12 +40,12 @@ export function mountBerechnungMobileCards(
  * Rendert die Zeilen der Desktop-Tabelle als eigenen React-Root direkt in `#tbodyBerechnung`; ohne den Container passiert nichts.
  *
  * @param monatsErgebnisse - Berechnungsergebnisse je Monat.
- * @param zulagenBreakdown - Aufschlüsselung der Zulagen je Code.
+ * @param gruppen - Gruppen der Features (Slot `berechnung` plus Hilfsdaten).
  * @param aktivierteTabs - Aktivierte Feature-Tabs des Benutzers; steuert die sichtbaren Gruppen.
  */
 export function mountBerechnungTableRows(
   monatsErgebnisse: IBerechnungMonatsErgebnis[],
-  zulagenBreakdown: IZulagenBreakdown,
+  gruppen: IBerechnungGruppe[],
   aktivierteTabs?: string[],
 ): void {
   const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
@@ -53,10 +53,6 @@ export function mountBerechnungTableRows(
 
   mount(
     tbody,
-    <BerechnungTableRows
-      monatsErgebnisse={monatsErgebnisse}
-      aktivierteTabs={aktivierteTabs}
-      zulagenBreakdown={zulagenBreakdown}
-    />,
+    <BerechnungTableRows monatsErgebnisse={monatsErgebnisse} aktivierteTabs={aktivierteTabs} gruppen={gruppen} />,
   );
 }

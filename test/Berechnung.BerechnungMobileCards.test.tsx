@@ -1,12 +1,18 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
+import { beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import '@/app/features';
 import { render } from '@test/reactRender';
 
 import BerechnungMobileCards from '@/features/Berechnung/components/BerechnungMobileCards';
 import { mountBerechnungMobileCards } from '@/features/Berechnung/components/mountBerechnung';
-import calculateBerechnungRows, { type IBerechnungMonatsErgebnis } from '@/features/Berechnung/calculateBerechnungRows';
+import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
+import {
+  type IBerechnungGruppe,
+  type IBerechnungTeil,
+  ladeBerechnungsTeile,
+} from '@/features/Berechnung/ladeBerechnungsTeile';
 import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
-import type { IVorgabenBerechnung } from '@/types';
+import type { IBerechnungMonatsErgebnis, IVorgabenBerechnung } from '@/types';
 
 const leeresErgebnis = (monat: number): IBerechnungMonatsErgebnis => ({
   monat,
@@ -27,13 +33,21 @@ const leeresErgebnis = (monat: number): IBerechnungMonatsErgebnis => ({
 });
 
 describe('#BerechnungMobileCards', () => {
+  let teile: IBerechnungTeil[];
+  let gruppen: IBerechnungGruppe[];
+
+  beforeAll(async () => {
+    teile = await ladeBerechnungsTeile();
+    gruppen = teile.map(teil => ({ ...teil, extra: teil.part.vorbereite?.() }));
+  });
+
   beforeEach(() => {
     document.body.innerHTML = '<div id="berechnungMobileCards"></div>';
   });
 
   it('rendert ein Accordion-Item pro Monat mit Summe Gesamt im Header', () => {
-    const monatsErgebnisse = calculateBerechnungRows(datenBerechungMock, VorgabenGeldMock, 'Tarifkraft');
-    mountBerechnungMobileCards(monatsErgebnisse, ['bereitschaft', 'ewt', 'neben']);
+    const monatsErgebnisse = calculateBerechnungRows(datenBerechungMock, VorgabenGeldMock, 'Tarifkraft', teile);
+    mountBerechnungMobileCards(monatsErgebnisse, ['bereitschaft', 'ewt', 'neben'], gruppen);
 
     const container = document.querySelector('#berechnungMobileCards')!;
     const items = container.querySelectorAll('.db-accordion-item');
@@ -58,7 +72,7 @@ describe('#BerechnungMobileCards', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const ergebnis = { ...leeresErgebnis(1), summeNebenbezuege: 13.3, summeGesamt: 13.3 };
-    render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} />, container);
+    render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} gruppen={gruppen} />, container);
 
     expect(container.textContent).toContain('Zulagen');
     expect(container.textContent).toContain('13,30');
@@ -76,6 +90,7 @@ describe('#BerechnungMobileCards', () => {
       <BerechnungMobileCards
         monatsErgebnisse={[januarMitNeben, februarOhneNeben]}
         aktivierteTabs={['bereitschaft', 'ewt']}
+        gruppen={gruppen}
       />,
       container,
     );
@@ -101,7 +116,7 @@ describe('#BerechnungMobileCards', () => {
       <BerechnungMobileCards
         monatsErgebnisse={[ergebnis, { ...leeresErgebnis(2), summeGesamt: 0 }]}
         aktivierteTabs={[]}
-        zulagenBreakdown={zulagenBreakdown}
+        gruppen={gruppen.map(gruppe => (gruppe.id === 'ez' ? { ...gruppe, extra: zulagenBreakdown } : gruppe))}
       />,
       container,
     );
@@ -126,7 +141,7 @@ describe('#BerechnungMobileCards', () => {
       summeGesamt: 36.81,
     };
 
-    render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} />, container);
+    render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} gruppen={gruppen} />, container);
 
     expect(container.textContent).toContain('Abwesenheiten >8 Std.');
     expect(container.textContent).not.toContain('>14 Std.');
@@ -139,7 +154,7 @@ describe('#BerechnungMobileCards', () => {
     Storage.set('Monat', 2);
 
     const monatsErgebnisse = [leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)];
-    mountBerechnungMobileCards(monatsErgebnisse, []);
+    mountBerechnungMobileCards(monatsErgebnisse, [], gruppen);
 
     const container = document.querySelector('#berechnungMobileCards')!;
     // `DBAccordionItem` uebernimmt `open` erst per Effekt -- einen Tick abwarten.
@@ -152,7 +167,7 @@ describe('#BerechnungMobileCards', () => {
   it('klappt per Klick genau eine Monatskarte auf und die vorherige zu', async () => {
     const { default: Storage } = await import('@/infrastructure/storage/Storage');
     Storage.set('Monat', 2);
-    mountBerechnungMobileCards([leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)], []);
+    mountBerechnungMobileCards([leeresErgebnis(1), leeresErgebnis(2), leeresErgebnis(3)], [], gruppen);
     const container = document.querySelector('#berechnungMobileCards')!;
     await new Promise(r => setTimeout(r, 30));
 
@@ -182,7 +197,7 @@ describe('#BerechnungMobileCards', () => {
     document.body.innerHTML =
       '<div id="berechnungMobileCards"></div><table><tbody id="tbodyBerechnung"></tbody></table>';
 
-    generateTableBerechnung(datenBerechungMock as IVorgabenBerechnung, VorgabenGeldMock);
+    await generateTableBerechnung(datenBerechungMock as IVorgabenBerechnung, VorgabenGeldMock);
 
     const items = document.querySelectorAll('#berechnungMobileCards .db-accordion-item');
     expect(items.length).toBe(Object.keys(datenBerechungMock).length);

@@ -1,14 +1,23 @@
-import { describe, expect, it } from 'bun:test';
+import { beforeAll, describe, expect, it } from 'bun:test';
+import '@/app/features';
 import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
-import calculateBerechnungRows, { formatCurrency } from '@/features/Berechnung/calculateBerechnungRows';
+import calculateBerechnungRows from '@/features/Berechnung/calculateBerechnungRows';
+import { type IBerechnungTeil, ladeBerechnungsTeile } from '@/features/Berechnung/ladeBerechnungsTeile';
+import { formatCurrency } from '@/infrastructure/data/berechnungWerte';
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
 
 // formatCurrency trennt Betrag und Euro-Zeichen mit geschütztem Leerzeichen (U+00A0)
 const eur = (betrag: string): string => `${betrag}\u00a0€`;
 
 describe('#calculateBerechnungRows', () => {
+  let teile: IBerechnungTeil[];
+
+  beforeAll(async () => {
+    teile = await ladeBerechnungsTeile();
+  });
+
   it('berechnet alle Zeilenwerte identisch zur bisherigen Tabellenausgabe (Tarifkraft)', () => {
-    const ergebnisse = calculateBerechnungRows(datenBerechungMock, VorgabenGeldMock, 'Tarifkraft');
+    const ergebnisse = calculateBerechnungRows(datenBerechungMock, VorgabenGeldMock, 'Tarifkraft', teile);
 
     expect(ergebnisse.length).toBe(Object.keys(datenBerechungMock).length);
 
@@ -40,7 +49,7 @@ describe('#calculateBerechnungRows', () => {
       },
     } as unknown as IVorgabenBerechnung;
 
-    const [ergebnis] = calculateBerechnungRows(leererMonat, VorgabenGeldMock, 'Tarifkraft');
+    const [ergebnis] = calculateBerechnungRows(leererMonat, VorgabenGeldMock, 'Tarifkraft', teile);
 
     expect(ergebnis.bereitschaftMinuten).toBeNull();
     expect(ergebnis.bereitschaftAnzeige).toBeNull();
@@ -65,7 +74,7 @@ describe('#calculateBerechnungRows', () => {
       },
     } as unknown as IVorgabenBerechnung;
 
-    const [ergebnis] = calculateBerechnungRows(datenMitEA, VorgabenGeldMock, 'Tarifkraft');
+    const [ergebnis] = calculateBerechnungRows(datenMitEA, VorgabenGeldMock, 'Tarifkraft', teile);
 
     expect(ergebnis.eaMinuten).toBe(135);
     // EA ist eine reine Stunden-Anzeige (kein Geldwert) — summeGesamt bleibt unberührt.
@@ -82,7 +91,7 @@ describe('#calculateBerechnungRows', () => {
       },
     } as unknown as IVorgabenBerechnung;
 
-    const [ergebnis] = calculateBerechnungRows(datenOhneEA, VorgabenGeldMock, 'Tarifkraft');
+    const [ergebnis] = calculateBerechnungRows(datenOhneEA, VorgabenGeldMock, 'Tarifkraft', teile);
 
     expect(ergebnis.eaMinuten).toBeNull();
   });
@@ -101,7 +110,7 @@ describe('#calculateBerechnungRows', () => {
       },
     } as unknown as IVorgabenBerechnung;
 
-    const [ergebnis] = calculateBerechnungRows(datenMonat2, multiMonthVorgabenGeld, 'Besoldungsgruppe A 8');
+    const [ergebnis] = calculateBerechnungRows(datenMonat2, multiMonthVorgabenGeld, 'Besoldungsgruppe A 8', teile);
 
     expect(ergebnis.monat).toBe(2);
     expect(ergebnis.summeEwt).toBe(2 * 999);
