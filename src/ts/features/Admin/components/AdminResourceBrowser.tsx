@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { AdminResourceEditModal } from './AdminResourceEditModal';
+import { useAdminFeatures } from '../adminFeatures';
 import {
   IMMUTABLE_FIELDS,
   ITEMS_PER_PAGE,
   MONATE,
   READONLY_FIELDS,
-  RESOURCES,
   buildEditState,
   formatCell,
   truncateId,
@@ -51,7 +51,10 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   // Committed filter (nur beim Klick auf „Filtern" übernommen)
   const [activeFilter, setActiveFilter] = useState<FilterParams>({});
 
-  const resource = RESOURCES[activeIdx];
+  // Ressourcen der geladenen Admin-Anteile aller Features (Reihenfolge nach `meta.order`).
+  const { features: adminFeatures, fehler: adminFehler, geladen: adminGeladen } = useAdminFeatures();
+  const resources = adminFeatures.flatMap(feature => feature.resources);
+  const resource = resources[activeIdx];
 
   useEffect(() => {
     fetchAdminUserNameMap()
@@ -140,7 +143,8 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   }
 
   useEffect(() => {
-    const ep = RESOURCES[activeIdx].endpoint;
+    const ep = resources[activeIdx]?.endpoint;
+    if (!ep) return;
     // Microtask: der synchrone Funktionsaufruf direkt im Effect-Body loeste sonst
     // react-hooks/set-state-in-effect aus (loadPageWith setzt synchron setLoading).
     queueMicrotask(() => loadPageWith(1, {}, ep));
@@ -150,7 +154,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     // loadPageWith ist bewusst keine Dep: sie wird je Render neu erzeugt und wuerde den
     // Effect in eine Schleife ziehen; relevant ist nur der Tabwechsel (activeIdx).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIdx]);
+  }, [activeIdx, resources.length]);
 
   /**
    * Öffnet den Bearbeiten-Dialog für einen Datensatz.
@@ -171,18 +175,20 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   /**
    * Springt zu einem verlinkten Datensatz einer anderen Ressource und öffnet ihn im Bearbeiten-Dialog; ist er nicht auffindbar, erscheint eine Fehlermeldung.
    *
-   * @param resourceIdx - Index der Ziel-Ressource in `RESOURCES`.
+   * @param endpoint - `endpoint` der Ziel-Ressource.
    * @param docId - Id des verlinkten Datensatzes.
    */
-  async function navigateToEntry(resourceIdx: number, docId: string) {
+  async function navigateToEntry(endpoint: string, docId: string) {
+    const targetIdx = resources.findIndex(candidate => candidate.endpoint === endpoint);
+    if (targetIdx < 0) return;
     closeEdit();
-    setActiveIdx(resourceIdx);
+    setActiveIdx(targetIdx);
     try {
-      const doc = await fetchAdminResourceById(RESOURCES[resourceIdx].endpoint, docId);
+      const doc = await fetchAdminResourceById(endpoint, docId);
       // Kurz warten, bis useEffect([activeIdx]) gefeuert hat
-      setTimeout(() => setEdit(buildEditState(doc, RESOURCES[resourceIdx].endpoint)), 50);
+      setTimeout(() => setEdit(buildEditState(doc, endpoint)), 50);
     } catch {
-      setLoadError(`Verlinkter ${RESOURCES[resourceIdx].label}-Eintrag nicht gefunden`);
+      setLoadError(`Verlinkter ${resources[targetIdx].label}-Eintrag nicht gefunden`);
     }
   }
 
@@ -268,6 +274,18 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     }
   }
 
+  if (!resource) {
+    return adminGeladen ? (
+      <DBNotification semantic="warning" variant="docked">
+        {adminFehler.length > 0
+          ? `Ressourcen konnten nicht geladen werden (${adminFehler.join(', ')}) – bitte Seite neu laden.`
+          : 'Keine Ressourcen verfügbar.'}
+      </DBNotification>
+    ) : (
+      <p className="text-muted">Ressourcen werden geladen …</p>
+    );
+  }
+
   const totalPages = page ? Math.ceil(page.total / ITEMS_PER_PAGE) : 1;
   const totalCols = 2 + resource.tableFields.length + (resource.extraFields?.length ?? 0);
   const sortedUsers = Object.entries(userNameMap).sort((a, b) => a[1].localeCompare(b[1]));
@@ -277,7 +295,7 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     <div>
       <nav className="db-navigation admin-unternavigation mb-3" role="tablist" aria-label="Ressourcen">
         <menu>
-          {RESOURCES.map((r, i) => (
+          {resources.map((r, i) => (
             <li
               key={r.endpoint}
               className="db-navigation-item"

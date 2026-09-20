@@ -1,6 +1,7 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { klickeCheckbox, render } from '@test/reactRender';
 
+import '@/app/features';
 import { AdminProfileTemplateContentEditor } from '@/features/Admin/components/AdminProfileTemplateContentEditor';
 import type { TemplateContentDraft } from '@/features/Admin/components/profileTemplates.shared';
 
@@ -91,7 +92,7 @@ describe('AdminProfileTemplateContentEditor', () => {
     const { container, spies } = zeichne();
     klickeCheckbox(abschnittsSchalter(container, 'Einstellungen'), true);
 
-    // Die ersten vier Checkboxen sind die sichtbaren Bereiche (TAB_OPTIONS), danach die Zulagen.
+    // Die ersten vier Checkboxen sind die sichtbaren Bereiche (`tabOptions()`), danach die Zulagen.
     const alle = container.querySelectorAll<HTMLInputElement>('.db-checkbox input[type="checkbox"]');
     klickeCheckbox(alle[4], true);
 

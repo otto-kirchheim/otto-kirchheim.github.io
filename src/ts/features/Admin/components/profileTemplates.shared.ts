@@ -1,4 +1,5 @@
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
+import { featureRegistry } from '@/core/hooks';
 import { HOLIDAY_REGION_OPTIONS } from '@/infrastructure/date/holidayRegion';
 import type { BereitschaftSchichtTyp, IVorgabenUaZ, IVorgabenUPers } from '@/types';
 
@@ -77,12 +78,14 @@ export const PERS_FIELDS: TemplateField[] = [
   { key: 'Entgeltgruppe', label: 'Entgeltgruppe (Entgeltausgleich)' },
 ];
 
-export const TAB_OPTIONS = [
-  { key: 'bereitschaft', label: 'Bereitschaft' },
-  { key: 'ewt', label: 'EWT' },
-  { key: 'neben', label: 'Erschwerniszulagen' },
-  { key: 'ea', label: 'Entgeltausgleich' },
-] as const;
+/**
+ * Auswahl der sichtbaren Bereiche (`aktivierteTabs`) im Profil-Template: ein Eintrag je angemeldetem Feature (`meta.legacy.tabKey`, Langname).
+ *
+ * @returns Tab-Schluessel und Anzeigetext in `meta.order`; ohne angemeldete Features leer.
+ */
+export function tabOptions(): { key: string; label: string }[] {
+  return featureRegistry.metas().map(meta => ({ key: meta.legacy.tabKey, label: meta.longLabel ?? meta.label }));
+}
 
 export const WEEKDAY_OPTIONS = [
   { value: 1, label: 'Mo' },

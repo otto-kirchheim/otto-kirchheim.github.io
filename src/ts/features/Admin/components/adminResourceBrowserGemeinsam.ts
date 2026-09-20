@@ -1,60 +1,9 @@
-import { LreType } from '@otto-kirchheim/nebengeld-shared';
 import dayjs from '@/infrastructure/date/configDayjs';
+import { adminCrossRef, adminSchemaFields } from '../adminFeatures';
 
 export const IMMUTABLE_FIELDS = new Set(['_id', '__v', 'createdAt']);
 export const READONLY_FIELDS = new Set(['updatedAt']);
 export const ITEMS_PER_PAGE = 25;
-
-// Felder mit festen Enum-Werten → Dropdown
-export const FIELD_ENUMS: Record<string, string[]> = {
-  LRE: Object.values(LreType),
-  Schicht: ['T', 'SP', 'N', 'S', 'BN'],
-};
-
-// Cross-Resource-Referenzen: Feldname → Ziel-Ressource (`resourceIdx` = Index in RESOURCES)
-export type CrossRef = { resourceIdx: number; isArray?: boolean };
-export const CROSS_REFS: Record<string, CrossRef> = {
-  EWT: { resourceIdx: 2 },
-  Bereitschaftszeitraum: { resourceIdx: 1, isArray: true },
-};
-// EA referenziert EWT ebenfalls über das Feld `EWT`; CROSS_REFS gilt pro Feldname, nicht pro Ressource.
-
-// Schema-Felder je Ressource (für Darstellung optionaler null-Felder)
-export const SCHEMA_FIELDS: Record<string, string[]> = {
-  bereitschaftseinsaetze: [
-    'User',
-    'Bereitschaftszeitraum',
-    'Jahr',
-    'Monat',
-    'Tag',
-    'Auftragsnummer',
-    'Beginn',
-    'Ende',
-    'LRE',
-    'PrivatKm',
-  ],
-  bereitschaftszeitraeume: ['User', 'Jahr', 'Monat', 'Beginn', 'Ende', 'Pause'],
-  einsatzwechseltaetigkeiten: [
-    'User',
-    'Jahr',
-    'Monat',
-    'Tag',
-    'Buchungstag',
-    'Einsatzort',
-    'Schicht',
-    'abWE',
-    'ab1E',
-    'anEE',
-    'beginE',
-    'endeE',
-    'abEE',
-    'an1E',
-    'anWE',
-    'berechnen',
-  ],
-  nebengeld: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Beginn', 'Ende', 'Auftragsnummer', 'Zulagen'],
-  entgeltausgleich: ['User', 'EWT', 'Jahr', 'Monat', 'Tag', 'Dauer', 'Taetigkeit', 'Entgeltgruppe'],
-};
 
 // Datumsfelder die NUR als Datum gespeichert sind (kein Zeitanteil relevant)
 export const DATE_ONLY_FIELDS = new Set(['Tag', 'Buchungstag']);
@@ -74,52 +23,6 @@ export const TIME_STRING_FIELDS = new Set([
   'anWE', // EWT
   'Dauer', // EA
 ]);
-
-export type ResourceConfig = {
-  label: string;
-  shortLabel: string;
-  endpoint: string;
-  tableFields: string[];
-  extraFields?: string[];
-};
-
-export const RESOURCES: ResourceConfig[] = [
-  {
-    label: 'Bereitschaftseinsatz',
-    shortLabel: 'BE',
-    endpoint: 'bereitschaftseinsaetze',
-    tableFields: ['User', 'Jahr', 'Monat', 'LRE', 'Auftragsnummer'],
-    extraFields: ['Tag', 'createdAt'],
-  },
-  {
-    label: 'Bereitschaftszeitraum',
-    shortLabel: 'BZ',
-    endpoint: 'bereitschaftszeitraeume',
-    tableFields: ['User', 'Jahr', 'Monat', 'Beginn', 'Ende'],
-    extraFields: ['createdAt'],
-  },
-  {
-    label: 'Einsatzwechseltätigkeit',
-    shortLabel: 'EWT',
-    endpoint: 'einsatzwechseltaetigkeiten',
-    tableFields: ['User', 'Jahr', 'Monat', 'Schicht', 'Tag'],
-    extraFields: ['createdAt'],
-  },
-  {
-    label: 'Nebengeld',
-    shortLabel: 'NG',
-    endpoint: 'nebengeld',
-    tableFields: ['User', 'Jahr', 'Monat', 'Tag'],
-    extraFields: ['EWT', 'createdAt'],
-  },
-  {
-    label: 'Entgeltausgleich',
-    shortLabel: 'EA',
-    endpoint: 'entgeltausgleich',
-    tableFields: ['User', 'Jahr', 'Monat', 'Tag', 'Dauer'],
-    extraFields: ['EWT', 'Taetigkeit', 'Entgeltgruppe', 'createdAt'],
-  },
-];
 
 export const MONATE = [
   'Januar',
@@ -244,11 +147,11 @@ export type EditState = {
  * Erstellt den Bearbeitungszustand eines Dokuments; Feldreihenfolge: Schema-Felder (fehlende als `null`), System-Felder, übrige. Objektwerte außer Cross-Refs erhalten einen JSON-Rohtext.
  *
  * @param doc - Originaldokument.
- * @param endpoint - Ressourcen-Endpunkt, bestimmt die Schema-Felder.
+ * @param endpoint - Ressourcen-Endpunkt, bestimmt die Schema-Felder (aus den Admin-Anteilen der Features).
  * @returns Ausgangszustand des Editors.
  */
 export function buildEditState(doc: Record<string, unknown>, endpoint: string): EditState {
-  const schemaFields = SCHEMA_FIELDS[endpoint] ?? [];
+  const schemaFields = adminSchemaFields(endpoint);
   const systemFields = ['_id', '__v', 'createdAt', 'updatedAt'];
 
   // Felder in Reihenfolge: Schema-Felder (mit null für fehlende) → System-Felder → Rest
@@ -265,7 +168,7 @@ export function buildEditState(doc: Record<string, unknown>, endpoint: string): 
 
   const rawStrings: Record<string, string> = {};
   for (const [key, val] of Object.entries(values)) {
-    if (val !== null && typeof val === 'object' && !CROSS_REFS[key]) {
+    if (val !== null && typeof val === 'object' && !adminCrossRef(key)) {
       rawStrings[key] = JSON.stringify(val, null, 2);
     }
   }

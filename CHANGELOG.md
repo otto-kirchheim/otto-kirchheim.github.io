@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (173)
+
+### refactor (FSD-Umbau P1g: Admin nach Features gegliedert, Admin-Manifest)
+
+- **Admin-Manifest** `features/Admin/adminFeatures.ts` (`AdminFeature`, `ladeAdminFeatures`, `useAdminFeatures`) und je Feature ein eigener Admin-Ordner `features/Admin/features/{ber,ewt,ez,ea}/index.ts`
+  (Ziel spaeter `pages/admin/features/<key>/`). Die Feature-Module enthalten keinen Admin-Code; der Admin kennt die Features nur ueber ihren Schluessel (`meta.id`). Die Ordner werden mit `Promise.allSettled`
+  gleichzeitig geladen (nur im Admin-Chunk, also nur fuer Admins); ein fehlgeschlagener Ordner blockiert die anderen nicht, wird nicht gemerkt (naechster Aufruf versucht es erneut) und im Ressourcenbrowser gemeldet;
+  ein Admin-Ordner ohne im Feature-Manifest angemeldetes Feature wird ignoriert.
+- **Was die Ordner liefern**: Ressourcen des Ressourcenbrowsers (Endpunkt, Labels, Tabellen- und Schema-Felder), Verweis-Felder **per Endpunkt statt Array-Index** (`EWT` -> `einsatzwechseltaetigkeiten`,
+  `Bereitschaftszeitraum` -> `bereitschaftszeitraeume`; fehlt das Ziel-Feature, entfaellt der Link), feste Feldwerte (`LRE`, `Schicht`), das PDF-Formular fuer den Formular-Upload (Code, Label, Reihenfolge) und die
+  Zeilen der Dashboard-Karte "Ressourcenbestand". Die Konstanten `RESOURCES`, `CROSS_REFS`, `SCHEMA_FIELDS`, `FIELD_ENUMS` in `adminResourceBrowserGemeinsam.ts` und `FORMULAR_CODES`/`FORMULAR_LABELS` in `FormularUpload.tsx` entfallen.
+- **Umgestellt**: `AdminResourceBrowser` (Tabs aus den Ressourcen, Sprung zu verlinkten Eintraegen per Endpunkt, Ladezustand/Fehlermeldung statt leerer Liste), `AdminResourceEditModal`, `AdminDashboard`, `FormularUpload`
+  (fehlt das gewaehlte Formular, gilt das erste verfuegbare). Die Auswahl der sichtbaren Bereiche im Profil-Template kommt aus `featureRegistry.metas()` (`tabOptions()` statt `TAB_OPTIONS`; Langname, `tabKey`).
+- Reihenfolge und Beschriftungen unveraendert (Ressourcen BE, BZ, EWT, NG, EA; Formulare EZ, EWT, B, EA).
+- Tests: `test/features/Admin/adminFeatures.test.tsx` (neu: Reihenfolge und Inhalte, Chunk-Fehler mit Retry, Entfernbarkeit eines Features samt entfallendem Link, Ressourcenbrowser-Tabs); `profileTemplates.shared`- und
+  `AdminProfileTemplateContentEditor`-Test mit Manifest. Testanzahl 2217 -> 2221. `lint:fsd` unveraendert 107.
+- Offen (P1h/Folge): `datenKatalog.ts` (Feldlisten je Formular) bleibt handgepflegt und zentral; ein generischer Admin-Fallback fuer Features ohne Admin-Ordner ist nicht moeglich, solange `meta.resources` keinen Admin-Endpunkt kennt
+  (ein neues Feature legt deshalb seinen Admin-Ordner und eine Manifest-Zeile an; `new-feature` erzeugt beides).
+
 ## 2026-09-20 (172)
 
 ### refactor (FSD-Umbau P1f: Einstellungen-Abschnitte und -Felder ueber Feature-Slots)

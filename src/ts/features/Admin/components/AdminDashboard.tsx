@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
+import { useAdminFeatures } from '../adminFeatures';
 import { fetchAdminStats, fetchAdminHeap, type AdminStats, type HeapData } from '../utils/api';
 import { MemoryCard } from './adminDashboardCharts';
 import { formatUptime } from '../utils/formatUptime';
@@ -59,6 +60,8 @@ function StatCard({
  * Admin-Dashboard: Benutzer-, Template-, Ressourcen- und Auth-Kennzahlen sowie Server-Speicherverlauf (MemoryCard).
  */
 export function AdminDashboard() {
+  // Zeilen der Karte "Ressourcenbestand" kommen aus den Admin-Anteilen der Features.
+  const { features: adminFeatures } = useAdminFeatures();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [heap, setHeap] = useState<HeapData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -225,21 +228,13 @@ export function AdminDashboard() {
           <DBCard className="border-0 shadow-sm h-100">
             <DBHeadingH6 className="fw-semibold mb-3">Ressourcenbestand</DBHeadingH6>
             {(
-              [
-                [
-                  'Bereitschaftseinsätze',
-                  stats.resources.bereitschaftseinsaetze,
-                  stats.growth.bereitschaftseinsaetzeLast7d,
-                ],
-                [
-                  'Bereitschaftszeiträume',
-                  stats.resources.bereitschaftszeitraeume,
-                  stats.growth.bereitschaftszaetraumeLast7d,
-                ],
-                ['Einsatzwechseltätigkeiten', stats.resources.einsatzwechseltaetigkeiten, stats.growth.ewtLast7d],
-                ['Nebengeld-Einträge', stats.resources.nebengeld, stats.growth.nebengeldLast7d],
-                ['Entgeltausgleich-Einträge', stats.resources.entgeltausgleich, stats.growth.entgeltausgleichLast7d],
-              ] as [string, number, number][]
+              adminFeatures
+                .flatMap(feature => feature.statsRows)
+                .map(row => [row.label, stats.resources[row.countKey], stats.growth[row.growthKey]]) as [
+                string,
+                number,
+                number,
+              ][]
             ).map(([label, count, growth]) => (
               <div key={label} className="d-flex justify-content-between align-items-start py-2 border-bottom gap-2">
                 <span className="small" style={{ minWidth: '0', wordBreak: 'break-word' }}>

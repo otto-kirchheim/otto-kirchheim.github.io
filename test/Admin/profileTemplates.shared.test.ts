@@ -3,10 +3,11 @@ import { describe, expect, it } from 'bun:test';
 import {
   normalizeVorgabenBRows,
   PERS_FIELDS,
-  TAB_OPTIONS,
+  tabOptions,
   TB_OPTIONS,
   WEEKDAY_OPTIONS,
 } from '@/features/Admin/components/profileTemplates.shared';
+import '@/app/features';
 import type { VorgabenBRow } from '@/features/Admin/components/profileTemplates.shared';
 
 function makeRow(name: string, standard: boolean): VorgabenBRow {
@@ -117,12 +118,14 @@ describe('TB_OPTIONS', () => {
   });
 });
 
-describe('TAB_OPTIONS', () => {
-  it('enthält bereitschaft, ewt und neben', () => {
-    const keys = TAB_OPTIONS.map(t => t.key);
-    expect(keys).toContain('bereitschaft');
-    expect(keys).toContain('ewt');
-    expect(keys).toContain('neben');
+describe('tabOptions', () => {
+  it('enthält je angemeldetem Feature seinen Tab-Schlüssel (bereitschaft, ewt, neben, ea) mit Langname', () => {
+    expect(tabOptions()).toEqual([
+      { key: 'bereitschaft', label: 'Bereitschaft' },
+      { key: 'ewt', label: 'EWT' },
+      { key: 'neben', label: 'Erschwerniszulagen' },
+      { key: 'ea', label: 'Entgeltausgleich' },
+    ]);
   });
 });
 

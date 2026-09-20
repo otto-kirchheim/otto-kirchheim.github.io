@@ -19,15 +19,7 @@ import {
 } from './formularVersionenApi';
 import { DBButton, DBHeadingH5, DBHeadingH6 } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
-
-const FORMULAR_CODES = ['ez', 'ewt', 'bereitschaft', 'ea'] as const;
-
-const FORMULAR_LABELS: Record<(typeof FORMULAR_CODES)[number], string> = {
-  ez: 'Zulagenzettel (EZ)',
-  ewt: 'Einsatzwechseltätigkeit (EWT)',
-  bereitschaft: 'Bereitschaft (B)',
-  ea: 'Endgeltausgleich (EA)',
-};
+import { useAdminFeatures } from '../adminFeatures';
 
 /** Intervall-Konflikt: die Kette hat danach eine Lücke oder eine nicht offene letzte Version. */
 const KONFLIKT = 409;
@@ -67,7 +59,17 @@ function fehlerText(error: unknown): string {
  * werden können muss.
  */
 export function FormularUpload() {
-  const [formular, setFormular] = useState<FormularCode>('ez');
+  // Auswahl der Formulare aus den Admin-Anteilen der Features (Reihenfolge nach `formular.order`).
+  const { features: adminFeatures } = useAdminFeatures();
+  const formulare = adminFeatures
+    .flatMap(feature => (feature.formular ? [feature.formular] : []))
+    .sort((a, b) => a.order - b.order);
+  const [gewaehltesFormular, setFormular] = useState<FormularCode>('ez');
+  // Fehlt das gewaehlte Formular (Feature nicht angemeldet), gilt das erste verfuegbare.
+  const formular =
+    formulare.length === 0 || formulare.some(f => f.code === gewaehltesFormular)
+      ? gewaehltesFormular
+      : formulare[0].code;
   const [version, setVersion] = useState('');
   const [gueltigVon, setGueltigVon] = useState('');
   const [gueltigBis, setGueltigBis] = useState('');
@@ -312,9 +314,9 @@ export function FormularUpload() {
             value={formular}
             onChange={e => wechsleFormular(e.target.value as FormularCode)}
           >
-            {FORMULAR_CODES.map(code => (
+            {formulare.map(({ code, label }) => (
               <option key={code} value={code}>
-                {FORMULAR_LABELS[code]}
+                {label}
               </option>
             ))}
           </DbAuswahl>

@@ -4,7 +4,7 @@ import { ZULAGEN_CATALOG } from '../../Einstellungen/utils/zulagenCatalog';
 import { ArbeitszeiteingabePanel } from '../../Einstellungen/components/ArbeitszeiteingabePanel';
 import {
   PERS_FIELDS,
-  TAB_OPTIONS,
+  tabOptions,
   type FahrzeitRow,
   type TemplateContentDraft,
   type VorgabenBRow,
@@ -619,7 +619,7 @@ export function AdminProfileTemplateContentEditor({
           <div className="mb-2">
             <label className="small mb-1">Sichtbare Bereiche</label>
             <DBStack direction="row" wrap gap="x-small">
-              {TAB_OPTIONS.map(option => (
+              {tabOptions().map(option => (
                 <DBCheckbox
                   className="m-0"
                   size="small"

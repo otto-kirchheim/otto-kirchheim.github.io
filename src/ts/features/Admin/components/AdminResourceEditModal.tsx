@@ -15,12 +15,9 @@ import { DIALOG_RICHTUNG } from '@/components/showModal';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { JsonEditor } from './JsonEditor';
 import {
-  CROSS_REFS,
   DATE_ONLY_FIELDS,
-  FIELD_ENUMS,
   IMMUTABLE_FIELDS,
   READONLY_FIELDS,
-  RESOURCES,
   TIME_STRING_FIELDS,
   formatDateOnly,
   formatDateTime,
@@ -30,20 +27,20 @@ import {
   toDatetimeLocal,
   truncateId,
   type EditState,
-  type ResourceConfig,
 } from './adminResourceBrowserGemeinsam';
+import { type AdminResourceConfig, adminCrossRef, adminFieldEnum, adminResourceByEndpoint } from '../adminFeatures';
 import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = {
   edit: EditState;
-  resource: ResourceConfig;
+  resource: AdminResourceConfig;
   userNameMap: Record<string, string>;
   onNavigateToUser?: (userId: string) => void;
   closeEdit: () => void;
   saveEdit: () => void;
   handleValueChange: (key: string, val: unknown) => void;
   handleTextareaChange: (key: string, raw: string) => void;
-  navigateToEntry: (resourceIdx: number, docId: string) => void;
+  navigateToEntry: (endpoint: string, docId: string) => void;
 };
 
 /**
@@ -91,10 +88,12 @@ export function AdminResourceEditModal({
             const immutable = IMMUTABLE_FIELDS.has(key);
             const readonly = READONLY_FIELDS.has(key);
             const isUserRef = key === 'User';
-            const crossRef = CROSS_REFS[key];
+            // Verweis nur, wenn das Ziel-Feature geladen ist; sonst entfaellt der Link (Feld bleibt als Id sichtbar).
+            const crossRef = adminCrossRef(key);
+            const crossTarget = crossRef ? adminResourceByEndpoint(crossRef.endpoint) : undefined;
             const disabled = immutable || readonly;
             const isNull = val === null;
-            const fieldEnum = FIELD_ENUMS[key];
+            const fieldEnum = adminFieldEnum(key);
             const isDateOnly = typeof val === 'string' && looksLikeIso(val) && DATE_ONLY_FIELDS.has(key);
             const isDateTime = typeof val === 'string' && looksLikeIso(val) && !DATE_ONLY_FIELDS.has(key);
             // String-Zeitfelder: "HH:mm" (kein ISO) → type="time"
@@ -107,9 +106,7 @@ export function AdminResourceEditModal({
                   {immutable && <span className="fw-normal text-muted ms-1">(nicht änderbar)</span>}
                   {readonly && <span className="fw-normal text-muted ms-1">(nur lesen)</span>}
                   {isUserRef && <span className="fw-normal text-muted ms-1">(Benutzerreferenz)</span>}
-                  {crossRef && (
-                    <span className="fw-normal text-info ms-1">→ {RESOURCES[crossRef.resourceIdx].label}</span>
-                  )}
+                  {crossRef && <span className="fw-normal text-info ms-1">→ {crossTarget?.label}</span>}
                   {isNull && !disabled && !isUserRef && (
                     <DBTag
                       className="text-dark ms-1"
@@ -174,11 +171,9 @@ export function AdminResourceEditModal({
                             data-color="informational"
                             size="small"
                             icon="arrow_up_right"
-                            onClick={() => void navigateToEntry(crossRef.resourceIdx, id)}
+                            onClick={() => void navigateToEntry(crossRef.endpoint, id)}
                           >
-                            <span className="ms-1 d-none d-sm-inline">
-                              {RESOURCES[crossRef.resourceIdx].shortLabel}
-                            </span>
+                            <span className="ms-1 d-none d-sm-inline">{crossTarget?.shortLabel}</span>
                           </DBButton>
                         </div>
                       ))}
@@ -194,9 +189,9 @@ export function AdminResourceEditModal({
                         data-color="informational"
                         size="small"
                         icon="arrow_up_right"
-                        onClick={() => void navigateToEntry(crossRef.resourceIdx, String(val))}
+                        onClick={() => void navigateToEntry(crossRef.endpoint, String(val))}
                       >
-                        {RESOURCES[crossRef.resourceIdx].label}
+                        {crossTarget?.label}
                       </DBButton>
                     </div>
                   )
