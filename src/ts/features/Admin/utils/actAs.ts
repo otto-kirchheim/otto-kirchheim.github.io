@@ -12,6 +12,7 @@ export function clearLoadedUserResourceCache(): void {
   Storage.remove('dataBE');
   Storage.remove('dataE');
   Storage.remove('dataN');
+  Storage.remove('dataEA');
   Storage.remove('datenBerechnung');
   Storage.remove('dataServer');
 }

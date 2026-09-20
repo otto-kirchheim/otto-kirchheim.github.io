@@ -45,6 +45,7 @@ describe('actAs utilities', () => {
       Storage.set('dataBE', []);
       Storage.set('dataE', []);
       Storage.set('dataN', []);
+      Storage.set('dataEA', []);
       Storage.set('datenBerechnung', {});
       Storage.set('dataServer', {});
 
@@ -55,6 +56,7 @@ describe('actAs utilities', () => {
       expect(Storage.get('dataBE')).toBeNull();
       expect(Storage.get('dataE')).toBeNull();
       expect(Storage.get('dataN')).toBeNull();
+      expect(Storage.get('dataEA')).toBeNull();
       expect(Storage.get('datenBerechnung')).toBeNull();
       expect(Storage.get('dataServer')).toBeNull();
     });

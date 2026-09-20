@@ -128,9 +128,9 @@ Start/Nav/Tab-Visibility kommen aus `meta` ohne Chunk; **Admin** hat ein eigenes
 (3) Der genaue Slot-Zuschnitt (v. a. `berechnung`, `einstellungen`) wird in P1 gegen den Code verifiziert, bevor er festgeschrieben wird.
 
 ### Latent-Bugs (im Contract-Commit **nicht** mitfixen; danach mit deinem OK je einzeln)
-- `Admin/utils/actAs.ts:9-17` leert `dataBZ/BE/E/N`, nicht `dataEA`.
+- ~~`Admin/utils/actAs.ts:9-17` leert `dataBZ/BE/E/N`, nicht `dataEA`.~~ Behoben (Changelog 165).
 - „Leeres `aktivierteTabs`“: `berechnungGroupVisibility` = alle inkl. EA sichtbar, `syncFeatureTabs`/`updateTabVisibility` = Legacy-Set ohne EA.
-- EA-Jahresgate `jahr >= 2025` in `loadUserDaten.ts:314`, nicht in `changeMonatJahr.ts:80`.
+- EA-Jahresgate `jahr >= 2025` in `loadUserDaten.ts:314`, nicht in `changeMonatJahr.ts:80` — laut User keine Verhinderung, bleibt unverändert; in P1c nur in `meta` abbilden.
 - `calculateZulagenBreakdown` nutzt `getNebengeldDaten(minYear:2024)`, `aktualisiereBerechnung` liest `dataN` ungefiltert.
 Vorgehen: erst aktuelles Verhalten je Stelle exakt in `meta` abbilden (ggf. mehrere Felder), dann angleichen.
 

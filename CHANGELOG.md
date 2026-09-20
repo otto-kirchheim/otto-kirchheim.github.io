@@ -2,6 +2,14 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (165)
+
+### fix (Act-as: Entgeltausgleich-Cache wurde nicht geleert)
+
+- **`clearLoadedUserResourceCache`** (`Admin/utils/actAs.ts`) entfernt jetzt auch `dataEA`. Beim Wechsel des Act-as-Benutzers blieben
+  sonst die EA-Zeilen des vorherigen Benutzers im Storage stehen (die uebrigen Ressourcen wurden geleert).
+- Test in `test/Admin/actAs.test.ts` erweitert. Kein Jahresgate-Eingriff: `jahr >= 2025` (EA) bleibt unveraendert (keine Verhinderung, siehe Plan).
+
 ## 2026-09-20 (164)
 
 ### refactor (FSD-Umbau P1b: Nav, Panes, Schnellzugriff, Sichtbarkeit und Tab-Sync aus Feature-`meta`)
