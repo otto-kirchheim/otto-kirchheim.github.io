@@ -2,6 +2,21 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (163)
+
+### refactor (FSD-Umbau P1a: Feature-Registry mit lazy Teilen, EA als Referenz)
+
+- **`core/hooks/featureRegistry.ts`** (neu): `FeatureMeta` (eager, deklarativ) plus `parts` (`ui`, `events`) je als eigener
+  `import()`-Chunk. `define()` meldet das Feature in der bestehenden `featureLifecycleRegistry` an (Name unveraendert `EA`);
+  `load`/`loadMany`/`loadAll` laden Teile einmal (Promise-Cache, Fehler werden nicht gecacht); Wake-Events (`meta.wakeOn`) werden
+  stellvertretend abonniert und nach dem Laden des `events`-Teils in Eingangsreihenfolge zugestellt, danach synchron wie bisher.
+- **`app/features.ts`** (neu): Feature-Manifest, einzige Stelle mit Feature-Kenntnis; `main.tsx` importiert es an der Stelle des alten
+  `@/features/EA`-Imports (Registrierungsreihenfolge unveraendert).
+- **EA**: `features/EA/index.tsx` ersetzt durch `meta.ts`, `parts/ui.tsx` (Tab mounten/unmounten) und `parts/events.ts`
+  (`ewt:persisted` -> `syncEaDurationFromEwtRows`). Verhalten unveraendert.
+- Tests: `test/core/hooks/featureRegistry.test.ts` (Lazy, Cache, Chunk-Fehler, Teilmengen, Wake-Reihenfolge) und `test/app/features.test.ts`.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
 ## 2026-09-20 (162)
 
 ### chore (Anzeigetext "Nebenbezuege" -> "Erschwerniszulagen" / Kurzform "Zulagen")
