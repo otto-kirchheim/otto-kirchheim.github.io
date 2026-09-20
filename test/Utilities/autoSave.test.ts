@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
+import '@/app/features';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 
 const viCompat = vi as typeof vi & {

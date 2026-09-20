@@ -17,7 +17,7 @@ import Storage from '../storage/Storage';
 import type { TStorageData } from '../storage/Storage';
 import dayjs from '../date/configDayjs';
 import mergeVisibleResourceRows from '../data/mergeVisibleResourceRows';
-import { RESOURCE_STORAGE_MAP, RESOURCE_TABLE_ID_MAP } from '../data/resourceConfig';
+import { resourceKeys, storageKeyOf, tableIdOf } from '../data/resourceConfig';
 import { mapCreatedIdsByClientRequestId, mapCreatedIdsByContent } from './changeTracking';
 import {
   applyServerRowsToTable,
@@ -140,7 +140,7 @@ function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string):
  * @param table - Zugehörige Tabelle.
  */
 function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: CustomTable<CustomTableTypes>): void {
-  const storageKey: TStorageData = RESOURCE_STORAGE_MAP[resource];
+  const storageKey: TStorageData = storageKeyOf(resource);
   const mergedRows = mergeVisibleResourceRows(resource, table);
   Storage.set(storageKey, mergedRows);
 }
@@ -249,7 +249,7 @@ export function cancelAllPending(resetStatus = true): void {
 export async function flushAll(): Promise<void> {
   cancelAllPending(false);
   const promises: Promise<void>[] = [];
-  for (const key of ['BZ', 'BE', 'EWT', 'N', 'EA'] as const) {
+  for (const key of resourceKeys()) {
     if (hasPendingResourceChanges(key, true)) {
       promises.push(saveResourceNow(key, true));
     } else if (resourceStates[key].status === 'pending') {
@@ -267,7 +267,7 @@ export async function flushAll(): Promise<void> {
  * @returns `true`, wenn es Neues, Geändertes (oder Gelöschtes) gibt.
  */
 function hasPendingResourceChanges(resource: Exclude<TResourceKey, 'settings'>, includeDeletes = false): boolean {
-  const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
+  const table = findTable(tableIdOf(resource));
   if (!table) return false;
   const changes = table.rows.getChanges(includeDeletes);
   return changes.create.length > 0 || changes.update.length > 0 || changes.delete.length > 0;
@@ -292,7 +292,7 @@ export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings
 export function initAutoSaveEventListener(): void {
   onEvent('data:changed', ({ resource }) => {
     if (resource === 'all') {
-      for (const key of ['BZ', 'BE', 'EWT', 'N', 'EA'] as const) {
+      for (const key of resourceKeys()) {
         scheduleAutoSave(key);
       }
     } else if (resource !== 'settings') {
@@ -339,7 +339,7 @@ export function scheduleAutoSave(resource: TResourceKey): void {
   }
 
   if (resource !== 'settings') {
-    const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
+    const table = findTable(tableIdOf(resource));
     if (table) {
       const changes = table.rows.getChanges(false);
       const hasCreateOrUpdate = changes.create.length > 0 || changes.update.length > 0;
@@ -405,7 +405,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     return;
   }
 
-  const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
+  const table = findTable(tableIdOf(resource));
   if (!table) return;
 
   // AutoSave sendet keine Löschungen. Überschneidet sich eine Neuanlage/Änderung mit einer noch nicht
@@ -491,7 +491,7 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       return !max || d.updatedAt > max ? d.updatedAt : max;
     }, null);
     if (maxUpdatedAt) {
-      const storageKey = RESOURCE_STORAGE_MAP[resource];
+      const storageKey = storageKeyOf(resource);
       const currentData = Storage.get(storageKey, { check: true });
       Storage.setWithTimestamp(storageKey, currentData, dayjs(maxUpdatedAt).valueOf());
     }

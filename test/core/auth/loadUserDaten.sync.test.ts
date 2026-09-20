@@ -20,6 +20,7 @@ vi.mock('@/infrastructure/data/normalizeResourceRows', () => ({
   default: (rows: unknown) => (Array.isArray(rows) ? rows : []),
 }));
 
+import '@/app/features';
 import { syncLoadedYearResources } from '@/core/orchestration/auth/utils/loadUserDaten.sync';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 
@@ -52,11 +53,13 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
 
     const result = syncLoadedYearResources({
       vorgabenU,
-      BZ: [{ _id: 'bz1' }] as never,
-      BE: [{ _id: 'be1' }, { _id: 'be2' }] as never,
-      EWT: [] as never,
-      N: [] as never,
-      EA: [] as never,
+      resources: {
+        BZ: [{ _id: 'bz1' }] as never,
+        BE: [{ _id: 'be1' }, { _id: 'be2' }] as never,
+        EWT: [] as never,
+        N: [] as never,
+        EA: [] as never,
+      },
       serverTimestamps,
     });
 
@@ -77,18 +80,14 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
 
     const result = syncLoadedYearResources({
       vorgabenU,
-      BZ: [{ _id: 'bz1' }] as never,
-      BE: [] as never,
-      EWT: [] as never,
-      N: [] as never,
-      EA: [] as never,
+      resources: { BZ: [{ _id: 'bz1' }] as never, BE: [] as never, EWT: [] as never, N: [] as never, EA: [] as never },
       serverTimestamps,
     });
 
     expect(result.vorhanden).toHaveLength(0);
     expect(Object.keys(result.dataServer)).toHaveLength(0);
     // Lokale Daten inkl. Pending-New-Row bleiben erhalten und landen im Tabellen-Load
-    expect(result.BZ).toHaveLength(2);
+    expect(result.rows.BZ).toHaveLength(2);
   });
 
   it('meldet keinen Konflikt für lokale Pending-New-Rows mit explizitem __localState-Marker', () => {
@@ -98,11 +97,7 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
 
     const result = syncLoadedYearResources({
       vorgabenU,
-      BZ: [{ _id: 'bz1' }] as never,
-      BE: [] as never,
-      EWT: [] as never,
-      N: [] as never,
-      EA: [] as never,
+      resources: { BZ: [{ _id: 'bz1' }] as never, BE: [] as never, EWT: [] as never, N: [] as never, EA: [] as never },
       serverTimestamps,
     });
 
@@ -118,11 +113,13 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
 
     const result = syncLoadedYearResources({
       vorgabenU,
-      BZ: [{ _id: 'bz1', bz: 'server-stand' }] as never,
-      BE: [] as never,
-      EWT: [] as never,
-      N: [] as never,
-      EA: [] as never,
+      resources: {
+        BZ: [{ _id: 'bz1', bz: 'server-stand' }] as never,
+        BE: [] as never,
+        EWT: [] as never,
+        N: [] as never,
+        EA: [] as never,
+      },
       serverTimestamps: {
         VorgabenU: '2020-01-01T00:00:00.000Z',
         dataBZ: new Date(Date.now() + 1_000_000).toISOString(),
@@ -133,6 +130,6 @@ describe('syncLoadedYearResources – Bug 2: kein stale dataServer', () => {
     });
 
     // Lokale (geänderte) Daten bleiben erhalten statt vom neueren Server-Stand überschrieben zu werden
-    expect((result.BZ[0] as unknown as { bz: string }).bz).toBe('lokal-geaendert');
+    expect(((result.rows.BZ as unknown[])[0] as unknown as { bz: string }).bz).toBe('lokal-geaendert');
   });
 });

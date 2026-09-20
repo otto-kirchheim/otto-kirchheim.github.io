@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (166)
+
+### refactor (FSD-Umbau P1c-1: Ressourcen-Meta und Daten-Teil je Feature)
+
+- **`meta.resources` ist jetzt beschreibend** (`FeatureResource`): Schluessel, Storage-Key (`dataBZ` ...), Tabellen-Id (`tableBZ` ...), Anzeigename fuer die
+  Konfliktmeldung, `monatOf`/`inMonat` (EWT: auch Buchungstag) und die Jahres-Gates `minYear`/`filterMinYear` (Neben ab 2024 in beiden, EA ab 2025 nur beim
+  Laden -- die bisherige Abweichung ist unveraendert uebernommen, Latent-Bug). Die vier `meta.ts` tragen diese Werte; `featureRegistry.resources()` und
+  `featureIdOfResource()` liefern sie gesammelt.
+- **`infrastructure/data/resourceConfig`** (`resourceDefs`, `resourceKeys`, `resourceDef`, `resourceByStorageKey`, `storageKeyOf`, `tableIdOf`, `isRowInMonat`)
+  ersetzt die Tabellen `RESOURCE_STORAGE_MAP`/`RESOURCE_TABLE_ID_MAP`. Nutzer: `autoSave` (inkl. der Ressourcen-Schleifen), `savePipeline`, `persistTableData`,
+  `mergeVisibleResourceRows` (Monatsermittlung statt `switch`), `warmeFormularCaches` (Legacy-Default-Tabs aus `meta`), `actAs` (Cache leeren je Ressource).
+- **Laden und Konflikte generisch**: `loadUserDaten` (Tabellen laden/filtern, Konflikt-Aktionen ueber `applyConflictToTables`), `loadUserDaten.sync`
+  (`syncLoadedYearResources({ resources })` -> `rows`), `loadUserDaten.helpers` und `.conflict` arbeiten ueber `resourceDefs()` statt je Ressource
+  hartkodierter Bloecke; `changeMonatJahr` filtert alle Tabellen der Features per Schleife.
+- **Neuer lazy Teil `data`** je Feature (`features/<Ordner>/parts/data.ts`, im Manifest ergaenzt): baut aus Rohzeilen die Tabellenzeilen (alle Monate).
+  `overwriteUserDaten` ist dadurch `async` und laedt den Teil nur, wenn die Tabelle im DOM steht; bei Chunk-Fehler bleiben Storage und Filter gesetzt und
+  eine Snackbar bittet um Neuladen. Der Aufrufer (Snackbar-Aktion "Serverdaten uebernehmen") awaitet.
+- Tests: `test/infrastructure/data/resourceConfig.test.ts` (neu), Registry- und Manifest-Tests um Ressourcen/`data` erweitert, Chunk-Fehler-Test fuer
+  `overwriteUserDaten`; 13 Tests importieren `@/app/features`, weil `resourceConfig` die Ressourcen aus der Registry liest. Testanzahl 2189 -> 2196.
+- `lint:fsd`-Baseline 110 -> 109 (`--max-warnings 109`).
+- **Noch offen (P1c-2)**: `savePipeline`/`changeTracking`/`dataApi`/`fieldMapper`/`apiService.loadAllYearData` (API-Adapter je Ressource, `switch`),
+  `saveDaten.getButtonResources`, `setMonatJahr` -> Monat/Jahr-Store, Storage-Enum/`RESOURCE_KEYS` (typisierter Vertrag, bleibt statisch).
+
 ## 2026-09-20 (165)
 
 ### fix (Act-as: Entgeltausgleich-Cache wurde nicht geleert)

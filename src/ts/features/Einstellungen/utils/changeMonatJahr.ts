@@ -1,12 +1,6 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromN,
-  isEwtInMonat,
-} from '@/infrastructure/date/getMonatFromItem';
+import type { CustomHTMLTableElement } from '@/types';
+import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
 import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
@@ -56,7 +50,7 @@ export default function changeMonatJahr(event?: Event): void {
 }
 
 /**
- * Setzt den Monatsfilter aller Tabellen (BZ, BE, EWT, Neben, EA). Neben zeigt vor 2024 keine Zeilen.
+ * Setzt den Monatsfilter der Tabellen aller angemeldeten Features. Ressourcen mit `filterMinYear` (Neben) zeigen davor keine Zeilen.
  *
  * @param options - `monat`: Monat, nach dem gefiltert wird; ohne Angabe der gespeicherte Monat.
  */
@@ -64,19 +58,13 @@ function changeMonatTableData({ monat }: { monat?: number } = {}) {
   const { monat: storedMonat, jahr } = getStoredMonatJahr();
   const activeMonat = monat ?? storedMonat;
 
-  document
-    .querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ')
-    ?.instance.rows.setFilter(row => getMonatFromBZ(row) === activeMonat);
-  document
-    .querySelector<CustomHTMLTableElement<IDatenBE>>('#tableBE')
-    ?.instance.rows.setFilter(row => getMonatFromBE(row) === activeMonat);
-  document
-    .querySelector<CustomHTMLTableElement<IDatenEWT>>('#tableE')
-    ?.instance.rows.setFilter(row => isEwtInMonat(row, activeMonat));
-  document
-    .querySelector<CustomHTMLTableElement<IDatenN>>('#tableN')
-    ?.instance.rows.setFilter(row => getMonatFromN(row) === activeMonat && jahr >= 2024);
-  document
-    .querySelector<CustomHTMLTableElement<IDatenEA>>('#tableEA')
-    ?.instance.rows.setFilter(row => getMonatFromEA(row) === activeMonat);
+  for (const resource of resourceDefs()) {
+    document
+      .querySelector<CustomHTMLTableElement>(`#${resource.tableId}`)
+      ?.instance.rows.setFilter(
+        row =>
+          isRowInMonat(resource, row, activeMonat) &&
+          (resource.filterMinYear === undefined || jahr >= resource.filterMinYear),
+      );
+  }
 }

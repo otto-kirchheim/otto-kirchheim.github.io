@@ -1,5 +1,6 @@
-import Storage from '@/infrastructure/storage/Storage';
+import Storage, { type TStorageData } from '@/infrastructure/storage/Storage';
 import { getStoredMonatJahr } from '@/infrastructure/date/dateStorage';
+import { resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import { setActAsUser } from './api';
 
@@ -8,11 +9,7 @@ import { setActAsUser } from './api';
  */
 export function clearLoadedUserResourceCache(): void {
   Storage.remove('VorgabenU');
-  Storage.remove('dataBZ');
-  Storage.remove('dataBE');
-  Storage.remove('dataE');
-  Storage.remove('dataN');
-  Storage.remove('dataEA');
+  for (const resource of resourceDefs()) Storage.remove(resource.storageKey as TStorageData);
   Storage.remove('datenBerechnung');
   Storage.remove('dataServer');
 }

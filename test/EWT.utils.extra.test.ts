@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
+import '@/app/features';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenEWT, IVorgabenU } from '@/core/types';

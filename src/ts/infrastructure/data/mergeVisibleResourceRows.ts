@@ -1,33 +1,8 @@
 import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
-import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
 import Storage from '../storage/Storage';
 import { getStoredMonatJahr } from '../date/dateStorage';
-import { getMonatFromBE, getMonatFromBZ, getMonatFromEA, getMonatFromN, isEwtInMonat } from '../date/getMonatFromItem';
 import normalizeResourceRows from './normalizeResourceRows';
-import { type ResourceKind, RESOURCE_STORAGE_MAP } from './resourceConfig';
-
-/**
- * Prueft, ob ein Datensatz zum angegebenen Monat gehoert (Monatsermittlung je Ressource).
- *
- * @param resource - Ressourcenart.
- * @param row - Zellen des Datensatzes.
- * @param monat - Monat (1-12).
- * @returns `true`, wenn der Datensatz im Monat liegt.
- */
-function isRowInActiveMonat(resource: ResourceKind, row: CustomTableTypes, monat: number): boolean {
-  switch (resource) {
-    case 'BZ':
-      return getMonatFromBZ(row as IDatenBZ) === monat;
-    case 'BE':
-      return getMonatFromBE(row as IDatenBE) === monat;
-    case 'EWT':
-      return isEwtInMonat(row as IDatenEWT, monat);
-    case 'N':
-      return getMonatFromN(row as IDatenN) === monat;
-    case 'EA':
-      return getMonatFromEA(row as IDatenEA) === monat;
-  }
-}
+import { type ResourceKind, isRowInMonat, resourceDef, storageKeyOf } from './resourceConfig';
 
 /**
  * Schreibt nur die aktuell sichtbaren Monatszeilen zurück in den Storage und behält
@@ -44,7 +19,8 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
   resource: ResourceKind,
   table: CustomTable<T>,
 ): T[] {
-  const storageKey = RESOURCE_STORAGE_MAP[resource];
+  const resourceMeta = resourceDef(resource);
+  const storageKey = storageKeyOf(resource);
   const activeMonat = getStoredMonatJahr().monat;
 
   const rawRowsCandidate =
@@ -73,14 +49,14 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
   const shouldMergeWithStoredYear =
     filteredRows.length < rawRows.length ||
     allRows.length === 0 ||
-    allRows.every(row => isRowInActiveMonat(resource, row as CustomTableTypes, activeMonat));
+    allRows.every(row => isRowInMonat(resourceMeta, row, activeMonat));
 
   if (!shouldMergeWithStoredYear) {
     return allRows;
   }
 
   const existingRows = normalizeResourceRows<T>(Storage.get<unknown>(storageKey, { default: [] }));
-  const preservedRows = existingRows.filter(row => !isRowInActiveMonat(resource, row as CustomTableTypes, activeMonat));
+  const preservedRows = existingRows.filter(row => !isRowInMonat(resourceMeta, row, activeMonat));
 
   return [...preservedRows, ...visibleRows];
 }

@@ -39,6 +39,7 @@ vi.mock('@/infrastructure/date/dateStorage', () => ({
   getStoredMonatJahr: getStoredMonatJahrMock,
 }));
 
+import '@/app/features';
 import changeMonatJahr from '@/features/Einstellungen/utils/changeMonatJahr';
 
 function createInputs(monat: number, jahr: number): void {

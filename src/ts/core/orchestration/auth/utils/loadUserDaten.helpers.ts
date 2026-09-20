@@ -1,15 +1,6 @@
-import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromEWT,
-  getMonatFromN,
-} from '@/infrastructure/date/getMonatFromItem';
 import { default as normalizeResourceRows } from '@/infrastructure/data/normalizeResourceRows';
+import { resourceByStorageKey } from '@/infrastructure/data/resourceConfig';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
-
-const MONTH_AWARE_STORAGE_NAMES: TStorageData[] = ['dataBZ', 'dataBE', 'dataE', 'dataN', 'dataEA'];
 
 /**
  * Erkennt Fehlermeldungen, die auf eine ungültige/abgelaufene Session hindeuten.
@@ -75,7 +66,7 @@ function serializeRowWithoutMeta(row: unknown): string {
  *   Id und die Inhalte (ohne Metafelder) uebereinstimmen.
  */
 export function shouldRepairMissingIds(storageName: TStorageData, localData: unknown, serverData: unknown): boolean {
-  if (!MONTH_AWARE_STORAGE_NAMES.includes(storageName)) return false;
+  if (!resourceByStorageKey(storageName)) return false;
 
   const localRows = normalizeRows<Record<string, unknown>>(localData);
   const serverRows = normalizeRows<Record<string, unknown>>(serverData);
@@ -111,12 +102,7 @@ export function countByMonth(rows: unknown, storageName: TStorageData): Map<numb
     // Die `_id`-Prüfung darunter fängt zusätzlich Alt-Daten ohne `__localState` ab.
     if ((row as Record<string, unknown>).__localState === 'new') return;
     if (!hasStringId(row)) return;
-    let m = -1;
-    if (storageName === 'dataBZ') m = getMonatFromBZ(row as IDatenBZ);
-    else if (storageName === 'dataBE') m = getMonatFromBE(row as IDatenBE);
-    else if (storageName === 'dataE') m = getMonatFromEWT(row as IDatenEWT);
-    else if (storageName === 'dataN') m = getMonatFromN(row as IDatenN);
-    else if (storageName === 'dataEA') m = getMonatFromEA(row as IDatenEA);
+    const m = resourceByStorageKey(storageName)?.monatOf(row) ?? -1;
 
     const bucket = m > 0 ? m : 0;
     monthCount.set(bucket, (monthCount.get(bucket) ?? 0) + 1);
@@ -134,32 +120,9 @@ export function countByMonth(rows: unknown, storageName: TStorageData): Map<numb
  * @returns `true` bei Treffer; `false` auch für unbekannte Storage-Keys oder leere Zeile.
  */
 export function rowMatchesMonth(storageName: TStorageData, row: unknown, month: number): boolean {
-  if (storageName === 'dataBZ' && row) {
-    const m = getMonatFromBZ(row as IDatenBZ);
-    return month === 0 ? m <= 0 : m === month;
-  }
+  const resource = resourceByStorageKey(storageName);
+  if (!resource || !row) return false;
 
-  if (storageName === 'dataBE' && row) {
-    const m = getMonatFromBE(row as IDatenBE);
-    return month === 0 ? m <= 0 : m === month;
-  }
-
-  if (storageName === 'dataE' && row) {
-    const m = getMonatFromEWT(row as IDatenEWT);
-    return month === 0 ? m <= 0 : m === month;
-  }
-
-  if (storageName === 'dataN' && row) {
-    const m = getMonatFromN(row as IDatenN);
-    return month === 0 ? m <= 0 : m === month;
-  }
-
-  if (storageName === 'dataEA' && row) {
-    const m = getMonatFromEA(row as IDatenEA);
-    return month === 0 ? m <= 0 : m === month;
-  }
-
-  return false;
+  const m = resource.monatOf(row);
+  return month === 0 ? m <= 0 : m === month;
 }
-
-export { MONTH_AWARE_STORAGE_NAMES };

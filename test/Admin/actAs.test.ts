@@ -18,6 +18,7 @@ vi.mock('@/infrastructure/date/dateStorage', () => ({
   getStoredMonatJahr: mockGetStoredMonatJahr,
 }));
 
+import '@/app/features';
 import Storage from '@/infrastructure/storage/Storage';
 import {
   clearLoadedUserResourceCache,

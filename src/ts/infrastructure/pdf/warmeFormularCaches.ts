@@ -1,3 +1,4 @@
+import { featureRegistry } from '@/core/hooks';
 import dayjs from '../date/configDayjs';
 import { warmeVorlagenCache } from './ladeFormular';
 
@@ -8,9 +9,6 @@ const FORMULAR_JE_TAB: Record<string, string> = {
   neben: 'ez',
   ea: 'ea',
 };
-
-/** Wie in `syncFeatureTabs.ts`: leere Liste = Alt-User, Bereitschaft/EWT/Neben sind dann an. */
-const LEGACY_DEFAULT_ON_KEYS = ['bereitschaft', 'ewt', 'neben'];
 
 /**
  * Fuehrt `aufgabe` bei Leerlauf des Browsers aus (spaetestens nach 10 s), sonst per `setTimeout`.
@@ -34,12 +32,18 @@ function plane(aufgabe: () => void): void {
  * Gecacht wird nur fuer die aktivierten Feature-Tabs und den gewaehlten Monat -- der Cache-Schluessel
  * enthaelt den Stichtag, ein anderer Monat bleibt also ein Cache-Miss, bis er selbst geladen wurde.
  *
- * @param aktivierteTabs - Aktivierte Feature-Tabs der Einstellungen; leer/`undefined` = Alt-User (siehe `LEGACY_DEFAULT_ON_KEYS`).
+ * @param aktivierteTabs - Aktivierte Feature-Tabs der Einstellungen; leer/`undefined` = Alt-User (Features mit `meta.legacyDefaultOn`, wie in `syncFeatureTabs.ts`).
  * @param monat - Gewaehlter Monat, 1-basiert.
  * @param jahr - Gewaehltes Jahr.
  */
 export function warmeFormularCaches(aktivierteTabs: string[] | undefined, monat: number, jahr: number): void {
-  const tabs = !aktivierteTabs || aktivierteTabs.length === 0 ? LEGACY_DEFAULT_ON_KEYS : aktivierteTabs;
+  const tabs =
+    !aktivierteTabs || aktivierteTabs.length === 0
+      ? featureRegistry
+          .metas()
+          .filter(meta => meta.legacyDefaultOn)
+          .map(meta => meta.legacy.tabKey)
+      : aktivierteTabs;
   const formulare = [...new Set(tabs.map(tab => FORMULAR_JE_TAB[tab]).filter((f): f is string => Boolean(f)))];
   if (formulare.length === 0) return;
 

@@ -5,6 +5,7 @@ import {
   unlinkEaRefsForDeletedEwtIds,
   unlinkNebengeldRefsForDeletedEwtIds,
 } from '@/infrastructure/autoSave/savePipeline';
+import '@/app/features';
 import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import Storage from '@/infrastructure/storage/Storage';

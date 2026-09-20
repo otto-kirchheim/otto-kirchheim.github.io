@@ -16,7 +16,7 @@ const mountedFeatures = new Set<string>();
  */
 function hasUnsyncedChanges(meta: FeatureMeta): boolean {
   return meta.resources.some(
-    resource => hasPendingTableChanges(resource, true) || getResourceStatus(resource).status === 'error',
+    ({ key }) => hasPendingTableChanges(key, true) || getResourceStatus(key).status === 'error',
   );
 }
 

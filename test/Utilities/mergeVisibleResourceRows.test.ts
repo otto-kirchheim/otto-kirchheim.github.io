@@ -25,6 +25,7 @@ vi.mock('@/infrastructure/date/getMonatFromItem', () => ({
   getMonatFromN: getMonatFromNMock,
 }));
 
+import '@/app/features';
 import { createCustomTable, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
 import mergeVisibleResourceRows from '@/infrastructure/data/mergeVisibleResourceRows';
 

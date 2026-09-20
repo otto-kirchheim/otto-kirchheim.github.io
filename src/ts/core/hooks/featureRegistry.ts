@@ -11,6 +11,32 @@ import type { EventChannel, EventChannels } from '@/core/events/types';
 import type { TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
+/** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
+export type FeatureResourceKey = Exclude<TResourceKey, 'settings'>;
+
+/**
+ * Eine Datenressource eines Features (rein deklarativ). Ersetzt die frueher ueber die App verstreuten Tabellen
+ * (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates); Lese-Helfer stehen in `infrastructure/data/resourceConfig`.
+ */
+export interface FeatureResource {
+  /** Ressourcen-Schluessel (`BZ`, `BE`, `EWT`, `N`, `EA`). */
+  key: FeatureResourceKey;
+  /** Storage-Key der Zeilen (`TStorageData`, z. B. `dataBZ`); bewusst `string`, damit `core` keine Infrastruktur importiert. */
+  storageKey: string;
+  /** Id des `<table>`-Elements im Tab (Vertrag mit den Tab-Komponenten). */
+  tableId: string;
+  /** Anzeigename in der Konfliktmeldung beim Laden (`Unterschiede erkannt`). */
+  beschreibung: string;
+  /** Monat (1-12) einer Zeile; `<= 0` = kein erkennbarer Monat. Fuer Zaehlung und Konfliktabgleich. */
+  monatOf(row: unknown): number;
+  /** Ob die Zeile in den Monat faellt (Tabellenfilter); ohne Angabe gilt `monatOf(row) === monat`. */
+  inMonat?(row: unknown, monat: number): boolean;
+  /** Tabelle zeigt beim Laden (`loadUserDaten`) Zeilen erst ab diesem Jahr; ohne Angabe immer. */
+  minYear?: number;
+  /** Wie `minYear`, aber fuer den Monatswechsel (`changeMonatJahr`); weicht bei EA heute bewusst ab (Latent-Bug, spaeter angleichen). */
+  filterMinYear?: number;
+}
+
 /** Eager gehaltene, rein deklarative Beschreibung eines Features (klein halten, kein Feature-Code importieren). */
 export interface FeatureMeta {
   /** Schluessel des Features (Ordner, Manifest), z. B. `ea`. */
@@ -24,7 +50,7 @@ export interface FeatureMeta {
   /** Sortierung der Features untereinander (Nav, Tabs). */
   order: number;
   /** Ressourcen des Features; vor dem Abbau des Tabs auf ungesyncte Aenderungen geprueft. */
-  resources: readonly Exclude<TResourceKey, 'settings'>[];
+  resources: readonly FeatureResource[];
   /** `true`: Tab ist bei leerem `aktivierteTabs` (Alt-User ohne explizite Einstellung) an. */
   legacyDefaultOn: boolean;
   /**
@@ -44,6 +70,8 @@ export type FeatureEventHandlers = { [K in EventChannel]?: (data: EventChannels[
 export interface FeatureParts {
   /** Tab-Inhalt mounten/unmounten. */
   ui: { mount(): void; unmount(): void };
+  /** Daten-Aufbereitung je Ressource: macht aus Rohzeilen (Storage/Server) die Zeilen der Tabelle (alle Monate). */
+  data: { tableRows: { [K in FeatureResourceKey]?: (rows: unknown[]) => unknown[] } };
   /** Event-Handler fuer `meta.wakeOn`. */
   events: FeatureEventHandlers;
 }
@@ -161,6 +189,25 @@ class FeatureRegistry {
    */
   metas(): FeatureMeta[] {
     return Array.from(this.definitions.values(), definition => definition.meta).sort((a, b) => a.order - b.order);
+  }
+
+  /**
+   * Liefert die Ressourcen aller Features in `meta.order` (innerhalb eines Features in Deklarationsreihenfolge).
+   *
+   * @returns Flache Liste; ohne Features leer.
+   */
+  resources(): FeatureResource[] {
+    return this.metas().flatMap(meta => meta.resources);
+  }
+
+  /**
+   * Liefert die `id` des Features, das eine Ressource besitzt.
+   *
+   * @param key - Ressourcen-Schluessel.
+   * @returns Feature-`id` oder `undefined`, wenn kein Feature die Ressource anmeldet.
+   */
+  featureIdOfResource(key: FeatureResourceKey): string | undefined {
+    return this.metas().find(meta => meta.resources.some(resource => resource.key === key))?.id;
   }
 
   /**

@@ -11,7 +11,7 @@ import {
 } from '../api/apiService';
 import Storage from '../storage/Storage';
 import dayjs from '../date/configDayjs';
-import { RESOURCE_TABLE_ID_MAP } from '../data/resourceConfig';
+import { tableIdOf } from '../data/resourceConfig';
 import { buildCreatePayloadWithClientRequestId, mapServerDocToFrontend } from './changeTracking';
 
 export type ErrorSourceState = 'new' | 'modified' | 'deleted';
@@ -141,7 +141,7 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
     Storage.set('dataN', nextDataN);
   }
 
-  const nebenTable = findTable<IDatenN>(RESOURCE_TABLE_ID_MAP.N);
+  const nebenTable = findTable<IDatenN>(tableIdOf('N'));
   if (!nebenTable) return;
 
   const tableChanged = nebenTable.rows.syncCellsSilently(row => {
@@ -177,7 +177,7 @@ export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
     Storage.set('dataEA', nextDataEA);
   }
 
-  const eaTable = findTable<IDatenEA>(RESOURCE_TABLE_ID_MAP.EA);
+  const eaTable = findTable<IDatenEA>(tableIdOf('EA'));
   if (!eaTable) return;
 
   const tableChanged = eaTable.rows.syncCellsSilently(row => {

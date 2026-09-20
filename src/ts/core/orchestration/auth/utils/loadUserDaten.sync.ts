@@ -1,15 +1,11 @@
-import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, UserDatenServer } from '@/types';
+import type { UserDatenServer } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import type { LoadedYearData } from '@/infrastructure/api/apiService';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
-import {
-  MONTH_AWARE_STORAGE_NAMES,
-  countByMonth,
-  normalizeRows,
-  shouldRepairMissingIds,
-} from './loadUserDaten.helpers';
+import { countByMonth, normalizeRows, shouldRepairMissingIds } from './loadUserDaten.helpers';
 import { hasPendingLocalChanges } from '@/infrastructure/data/metaFields';
+import { type ResourceKind, resourceByStorageKey, resourceDefs } from '@/infrastructure/data/resourceConfig';
 
 export interface UnterschiedNachMonat {
   beschreibung: string;
@@ -20,22 +16,16 @@ export interface UnterschiedNachMonat {
 
 interface SyncLoadedYearResourcesParams {
   vorgabenU: LoadedYearData['vorgabenU'];
-  BZ: LoadedYearData['BZ'];
-  BE: LoadedYearData['BE'];
-  EWT: LoadedYearData['EWT'];
-  N: LoadedYearData['N'];
-  EA: LoadedYearData['EA'];
+  /** Serverdaten je Ressource der angemeldeten Features (`meta.resources`). */
+  resources: Partial<Record<ResourceKind, unknown>>;
   serverTimestamps: LoadedYearData['timestamps'];
   isJahreswechsel?: boolean;
 }
 
 interface SyncLoadedYearResourcesResult {
   vorgabenU: LoadedYearData['vorgabenU'];
-  BZ: IDatenBZ[];
-  BE: IDatenBE[];
-  EWT: IDatenEWT[];
-  N: IDatenN[];
-  EA: IDatenEA[];
+  /** Abgeglichene Zeilen je Ressource der angemeldeten Features. */
+  rows: Partial<Record<ResourceKind, unknown[]>>;
   dataServer: Partial<UserDatenServer>;
   vorhanden: UnterschiedNachMonat[];
 }
@@ -53,11 +43,7 @@ interface SyncLoadedYearResourcesResult {
  */
 export function syncLoadedYearResources({
   vorgabenU,
-  BZ,
-  BE,
-  EWT,
-  N,
-  EA,
+  resources,
   serverTimestamps,
   isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
@@ -104,7 +90,7 @@ export function syncLoadedYearResources({
       }
     }
 
-    if (localData !== undefined && MONTH_AWARE_STORAGE_NAMES.includes(storageName)) {
+    if (localData !== undefined && resourceByStorageKey(storageName)) {
       const localRows = normalizeRows<unknown>(localData);
       const serverRows = normalizeRows<unknown>(serverData);
       if (localRows.length !== serverRows.length) {
@@ -129,11 +115,8 @@ export function syncLoadedYearResources({
         // dataServer nur setzen wenn die Zählung echte Unterschiede ergab — ein reiner
         // Längenunterschied durch Pending-New-Rows (ohne _id) ist kein Konflikt.
         if (vorhanden.length > vorhandenBefore) {
-          if (storageName === 'dataBZ') dataServer.BZ = serverData as UserDatenServer['BZ'];
-          if (storageName === 'dataBE') dataServer.BE = serverData as UserDatenServer['BE'];
-          if (storageName === 'dataE') dataServer.EWT = serverData as UserDatenServer['EWT'];
-          if (storageName === 'dataN') dataServer.N = serverData as UserDatenServer['N'];
-          if (storageName === 'dataEA') dataServer.EA = serverData as UserDatenServer['EA'];
+          const resource = resourceByStorageKey(storageName);
+          if (resource) (dataServer as Record<string, unknown>)[resource.key] = serverData;
         }
       }
     }
@@ -148,47 +131,21 @@ export function syncLoadedYearResources({
     'Persönliche Daten',
   );
 
-  const syncedBZ = syncResource(
-    'dataBZ',
-    BZ,
-    serverTimestamps.dataBZ ? dayjs(serverTimestamps.dataBZ).valueOf() : 0,
-    'Bereitschaftszeit',
-  );
-
-  const syncedBE = syncResource(
-    'dataBE',
-    BE,
-    serverTimestamps.dataBE ? dayjs(serverTimestamps.dataBE).valueOf() : 0,
-    'Bereitschaftseinsatz',
-  );
-
-  const syncedEWT = syncResource(
-    'dataE',
-    EWT,
-    serverTimestamps.dataE ? dayjs(serverTimestamps.dataE).valueOf() : 0,
-    'EWT',
-  );
-  const syncedN = syncResource(
-    'dataN',
-    N,
-    serverTimestamps.dataN ? dayjs(serverTimestamps.dataN).valueOf() : 0,
-    'Erschwerniszulagen',
-  );
-
-  const syncedEA = syncResource(
-    'dataEA',
-    EA,
-    serverTimestamps.dataEA ? dayjs(serverTimestamps.dataEA).valueOf() : 0,
-    'Entgeltausgleich',
-  );
+  const rows: Partial<Record<ResourceKind, unknown[]>> = {};
+  for (const resource of resourceDefs()) {
+    const timestamp = (serverTimestamps as unknown as Record<string, string | null | undefined>)[resource.storageKey];
+    const synced = syncResource(
+      resource.storageKey as TStorageData,
+      resources[resource.key],
+      timestamp ? dayjs(timestamp).valueOf() : 0,
+      resource.beschreibung,
+    );
+    rows[resource.key] = normalizeRows<unknown>(synced);
+  }
 
   return {
     vorgabenU: syncedVorgabenU,
-    BZ: normalizeRows<IDatenBZ>(syncedBZ),
-    BE: normalizeRows<IDatenBE>(syncedBE),
-    EWT: normalizeRows<IDatenEWT>(syncedEWT),
-    N: normalizeRows<IDatenN>(syncedN),
-    EA: normalizeRows<IDatenEA>(syncedEA),
+    rows,
     dataServer,
     vorhanden,
   };

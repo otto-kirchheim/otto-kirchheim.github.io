@@ -107,6 +107,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   cancelAllPending: cancelAllPendingMock,
 }));
 
+import '@/app/features';
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
 import { showConflictReviewBanner } from '@/core/orchestration/auth/components';
 import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
@@ -739,11 +740,11 @@ describe('loadUserDaten', () => {
     const infoCall = createSnackBarMock.mock.calls.find(([c]) => c?.status === 'info');
     expect(infoCall).toBeDefined();
 
-    const actions = infoCall?.[0]?.actions as Array<{ text: string; function: () => void }>;
+    const actions = infoCall?.[0]?.actions as Array<{ text: string; function: () => void | Promise<void> }>;
     const overwriteAction = actions?.find(a => a.text.includes('Serverdaten übernehmen'));
     expect(overwriteAction).toBeDefined();
 
-    overwriteAction!.function();
+    await overwriteAction!.function();
 
     expect(overwriteUserDatenMock).toHaveBeenCalledTimes(1);
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');

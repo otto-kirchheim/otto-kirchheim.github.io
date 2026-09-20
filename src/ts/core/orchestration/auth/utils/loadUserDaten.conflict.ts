@@ -1,6 +1,7 @@
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
+import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
 import type { TStorageData } from '@/infrastructure/storage/Storage';
+import { resourceDefs } from '@/infrastructure/data/resourceConfig';
 import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';
 import type { UnterschiedNachMonat } from './loadUserDaten.sync';
@@ -12,13 +13,9 @@ import type { UnterschiedNachMonat } from './loadUserDaten.sync';
  * @returns Storage-Key auf die Monate mit Unterschied; Beschreibungen ohne Storage-Zuordnung fehlen.
  */
 export function createChangedMonthsByStorage(vorhanden: UnterschiedNachMonat[]): Map<TStorageData, Set<number>> {
-  const beschreibungToStorage: Partial<Record<UnterschiedNachMonat['beschreibung'], TStorageData>> = {
-    Bereitschaftszeit: 'dataBZ',
-    Bereitschaftseinsatz: 'dataBE',
-    EWT: 'dataE',
-    Erschwerniszulagen: 'dataN',
-    Entgeltausgleich: 'dataEA',
-  };
+  const beschreibungToStorage: Partial<Record<UnterschiedNachMonat['beschreibung'], TStorageData>> = Object.fromEntries(
+    resourceDefs().map(resource => [resource.beschreibung, resource.storageKey as TStorageData]),
+  );
 
   const changedMonthsByStorage = new Map<TStorageData, Set<number>>();
   vorhanden.forEach(unterschied => {
@@ -134,9 +131,12 @@ export function markRowsForAutosave(selector: string, storageName: TStorageData,
  * @param changedMonths - Zu prüfende Monate; leer bedeutet alle Zeilen.
  * @returns Anzahl abgeglichener Zeilen; 0 ohne Tabelle.
  */
-export function reconcileRowsAsDeleted<
-  T extends CustomTableTypes = IDatenBE | IDatenBZ | IDatenEWT | IDatenN | IDatenEA,
->(selector: string, storageName: TStorageData, serverData: T[], changedMonths: Set<number>): number {
+export function reconcileRowsAsDeleted<T extends CustomTableTypes = CustomTableTypes>(
+  selector: string,
+  storageName: TStorageData,
+  serverData: T[],
+  changedMonths: Set<number>,
+): number {
   const tableEl = document.querySelector<CustomHTMLTableElement>(selector);
   if (!tableEl?.instance?.rows) return 0;
 
@@ -163,4 +163,31 @@ export function reconcileRowsAsDeleted<
  */
 export function normalizeServerRowsForConflict<T>(rows: unknown): T[] {
   return normalizeRows<T>(rows);
+}
+
+/**
+ * Gleicht die Tabellen aller Ressourcen mit einem Serverkonflikt ab: markiert lokale Zeilen der abweichenden
+ * Monate fuer AutoSave und behandelt Zeilen, die nur der Server kennt, als geloescht.
+ *
+ * @param dataServer - Serverstand der Konflikt-Ressourcen (`syncLoadedYearResources`).
+ * @param changedMonthsByStorage - Abweichende Monate je Storage-Key (`createChangedMonthsByStorage`).
+ * @param reihenfolge - `'markieren-zuerst'` (Vergleichen & manuell speichern) oder `'abgleichen-zuerst'` (Lokale behalten).
+ */
+export function applyConflictToTables(
+  dataServer: Partial<UserDatenServer>,
+  changedMonthsByStorage: Map<TStorageData, Set<number>>,
+  reihenfolge: 'markieren-zuerst' | 'abgleichen-zuerst',
+): void {
+  for (const resource of resourceDefs()) {
+    if (!(resource.key in dataServer)) continue;
+
+    const storageKey = resource.storageKey as TStorageData;
+    const selector = `#${resource.tableId}`;
+    const months = changedMonthsByStorage.get(storageKey) ?? new Set<number>();
+    const serverRows = normalizeServerRowsForConflict<CustomTableTypes>(dataServer[resource.key]);
+
+    if (reihenfolge === 'markieren-zuerst') markRowsForAutosave(selector, storageKey, months);
+    reconcileRowsAsDeleted(selector, storageKey, serverRows, months);
+    if (reihenfolge === 'abgleichen-zuerst') markRowsForAutosave(selector, storageKey, months);
+  }
 }

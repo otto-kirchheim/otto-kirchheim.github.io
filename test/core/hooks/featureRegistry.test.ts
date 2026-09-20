@@ -44,6 +44,27 @@ describe('featureRegistry', () => {
     clearAllEventListeners();
   });
 
+  it('resources liefert die Ressourcen aller Features in meta.order, featureIdOfResource findet den Besitzer', () => {
+    const resource = (key: 'BZ' | 'BE' | 'N') => ({
+      key,
+      storageKey: `data${key}`,
+      tableId: `table${key}`,
+      beschreibung: key,
+      monatOf: () => 1,
+    });
+    const spaet = definition('spaet', 5);
+    const frueh = definition('frueh', 1);
+    spaet.def.meta.resources = [resource('N')];
+    frueh.def.meta.resources = [resource('BZ'), resource('BE')];
+    featureRegistry.define(spaet.def);
+    featureRegistry.define(frueh.def);
+
+    expect(featureRegistry.resources().map(r => r.key)).toEqual(['BZ', 'BE', 'N']);
+    expect(featureRegistry.featureIdOfResource('BE')).toBe('frueh');
+    expect(featureRegistry.featureIdOfResource('N')).toBe('spaet');
+    expect(featureRegistry.featureIdOfResource('EA')).toBeUndefined();
+  });
+
   it('define registriert unter dem Lifecycle-Namen; register laedt den ui-Teil und mountet', async () => {
     const a = definition('ea', 1);
     featureRegistry.define(a.def);

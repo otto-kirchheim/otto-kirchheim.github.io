@@ -4,6 +4,7 @@ import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnu
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN } from '@/types';
+import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
 import { cancelAllPending, flushAll, isAutoSaveEnabled, setAutoSaveEnabled } from '@/infrastructure/autoSave/autoSave';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
@@ -13,23 +14,14 @@ import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStor
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 import { warmeFormularCaches } from '@/infrastructure/pdf/warmeFormularCaches';
 import { type LoadedYearData, loadAllYearData } from '@/infrastructure/api/apiService';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromN,
-  isEwtInMonat,
-} from '@/infrastructure/date/getMonatFromItem';
 import { hideConflictReviewBanner, showConflictReviewBanner } from '../components';
 import { isSessionErrorMessage } from './loadUserDaten.helpers';
 import {
+  applyConflictToTables,
   buildReviewResources,
   buildUnterschiedeMessage,
   createChangedMonthsByStorage,
   groupUnterschiedeByResource,
-  markRowsForAutosave,
-  normalizeServerRowsForConflict,
-  reconcileRowsAsDeleted,
 } from './loadUserDaten.conflict';
 import { syncLoadedYearResources } from './loadUserDaten.sync';
 
@@ -73,7 +65,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   console.log('Daten geladen: ', userData);
   const { datenGeld, timestamps: serverTimestamps } = userData;
-  const { vorgabenU: serverVorgabenU, BZ: serverBZ, BE: serverBE, EWT: serverEWT, N: serverN, EA: serverEA } = userData;
+  const { vorgabenU: serverVorgabenU } = userData;
 
   // Jahreswechsel-Flag auslesen und zurücksetzen
   const isJahreswechsel = Storage.check('Jahreswechsel') && Storage.get<boolean>('Jahreswechsel', { default: false });
@@ -81,16 +73,13 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   const synced = syncLoadedYearResources({
     vorgabenU: serverVorgabenU,
-    BZ: serverBZ,
-    BE: serverBE,
-    EWT: serverEWT,
-    N: serverN,
-    EA: serverEA,
+    resources: Object.fromEntries(resourceDefs().map(resource => [resource.key, userData[resource.key]])),
     serverTimestamps,
     isJahreswechsel,
   });
 
-  const { vorgabenU, BZ, BE, EWT, N, EA } = synced;
+  const { vorgabenU, rows } = synced;
+  const rowsOf = <T>(key: keyof typeof rows): T[] => (rows[key] ?? []) as T[];
   const { vorhanden } = synced;
   const dataServer = synced.dataServer;
 
@@ -113,7 +102,13 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
 
   Storage.set('VorgabenGeld', datenGeld);
 
-  const datenBerechnung = aktualisiereBerechnung({ BZ, BE, EWT, N, EA });
+  const datenBerechnung = aktualisiereBerechnung({
+    BZ: rowsOf<IDatenBZ>('BZ'),
+    BE: rowsOf<IDatenBE>('BE'),
+    EWT: rowsOf<IDatenEWT>('EWT'),
+    N: rowsOf<IDatenN>('N'),
+    EA: rowsOf<IDatenEA>('EA'),
+  });
 
   if (vorhanden.length > 0) {
     if (Object.keys(dataServer).length > 0) console.log('Unterschiede Server - Client', dataServer);
@@ -133,8 +128,8 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
         {
           text: 'Serverdaten übernehmen & speichern',
           /** Ersetzt lokale Daten durch die Serverdaten (`overwriteUserDaten`) und gibt die Bedienung frei. */
-          function: () => {
-            overwriteUserDaten();
+          function: async () => {
+            await overwriteUserDaten();
             clearLoading('btnAuswaehlen');
             buttonDisable(false);
           },
@@ -145,58 +140,8 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
           text: 'Lokale Daten behalten & speichern',
           /** Markiert die lokalen Zeilen der abweichenden Monate für AutoSave und speichert sofort (`flushAll`). */
           function: async () => {
-            const bzMonths = changedMonthsByStorage.get('dataBZ') ?? new Set<number>();
-            const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
-            const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
-            const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
-            const eaMonths = changedMonthsByStorage.get('dataEA') ?? new Set<number>();
-
             // Zuerst Server-only-Rows als gelöscht markieren, dann lokale Rows für Speichern vorbereiten
-            if ('BZ' in dataServer) {
-              reconcileRowsAsDeleted(
-                '#tableBZ',
-                'dataBZ',
-                normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ),
-                bzMonths,
-              );
-              markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
-            }
-            if ('BE' in dataServer) {
-              reconcileRowsAsDeleted(
-                '#tableBE',
-                'dataBE',
-                normalizeServerRowsForConflict<IDatenBE>(dataServer.BE),
-                beMonths,
-              );
-              markRowsForAutosave('#tableBE', 'dataBE', beMonths);
-            }
-            if ('EWT' in dataServer) {
-              reconcileRowsAsDeleted(
-                '#tableE',
-                'dataE',
-                normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT),
-                eMonths,
-              );
-              markRowsForAutosave('#tableE', 'dataE', eMonths);
-            }
-            if ('N' in dataServer) {
-              reconcileRowsAsDeleted(
-                '#tableN',
-                'dataN',
-                normalizeServerRowsForConflict<IDatenN>(dataServer.N),
-                nMonths,
-              );
-              markRowsForAutosave('#tableN', 'dataN', nMonths);
-            }
-            if ('EA' in dataServer) {
-              reconcileRowsAsDeleted(
-                '#tableEA',
-                'dataEA',
-                normalizeServerRowsForConflict<IDatenEA>(dataServer.EA),
-                eaMonths,
-              );
-              markRowsForAutosave('#tableEA', 'dataEA', eaMonths);
-            }
+            applyConflictToTables(dataServer, changedMonthsByStorage, 'abgleichen-zuerst');
 
             Storage.remove('dataServer');
             await flushAll();
@@ -213,57 +158,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
             setAutoSaveEnabled(false);
             buttonDisable(true);
 
-            const bzMonths = changedMonthsByStorage.get('dataBZ') ?? new Set<number>();
-            const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
-            const eMonths = changedMonthsByStorage.get('dataE') ?? new Set<number>();
-            const nMonths = changedMonthsByStorage.get('dataN') ?? new Set<number>();
-            const eaMonths = changedMonthsByStorage.get('dataEA') ?? new Set<number>();
-
-            if ('BZ' in dataServer) {
-              markRowsForAutosave('#tableBZ', 'dataBZ', bzMonths);
-              reconcileRowsAsDeleted(
-                '#tableBZ',
-                'dataBZ',
-                normalizeServerRowsForConflict<IDatenBZ>(dataServer.BZ),
-                bzMonths,
-              );
-            }
-            if ('BE' in dataServer) {
-              markRowsForAutosave('#tableBE', 'dataBE', beMonths);
-              reconcileRowsAsDeleted(
-                '#tableBE',
-                'dataBE',
-                normalizeServerRowsForConflict<IDatenBE>(dataServer.BE),
-                beMonths,
-              );
-            }
-            if ('EWT' in dataServer) {
-              markRowsForAutosave('#tableE', 'dataE', eMonths);
-              reconcileRowsAsDeleted(
-                '#tableE',
-                'dataE',
-                normalizeServerRowsForConflict<IDatenEWT>(dataServer.EWT),
-                eMonths,
-              );
-            }
-            if ('N' in dataServer) {
-              markRowsForAutosave('#tableN', 'dataN', nMonths);
-              reconcileRowsAsDeleted(
-                '#tableN',
-                'dataN',
-                normalizeServerRowsForConflict<IDatenN>(dataServer.N),
-                nMonths,
-              );
-            }
-            if ('EA' in dataServer) {
-              markRowsForAutosave('#tableEA', 'dataEA', eaMonths);
-              reconcileRowsAsDeleted(
-                '#tableEA',
-                'dataEA',
-                normalizeServerRowsForConflict<IDatenEA>(dataServer.EA),
-                eaMonths,
-              );
-            }
+            applyConflictToTables(dataServer, changedMonthsByStorage, 'markieren-zuerst');
 
             showReviewBanner(buildReviewResources(grouped), async () => {
               setAutoSaveEnabled(true);
@@ -289,30 +184,20 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   cancelAllPending();
 
   // Immer laden: die Sync-Ergebnisse sind lokale Daten, sofern der Abgleich sie nicht durch Serverdaten ersetzt hat.
-  document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(BZ);
-  document.querySelector<CustomHTMLTableElement>('#tableBE')?.instance.rows.load(BE);
-  document.querySelector<CustomHTMLTableElement>('#tableE')?.instance.rows.load(EWT);
-  document.querySelector<CustomHTMLTableElement>('#tableN')?.instance.rows.load(N);
-  document.querySelector<CustomHTMLTableElement>('#tableEA')?.instance.rows.load(EA);
+  for (const resource of resourceDefs()) {
+    document.querySelector<CustomHTMLTableElement>(`#${resource.tableId}`)?.instance.rows.load(rowsOf(resource.key));
+  }
   document
     .querySelector<CustomHTMLTableElement>('#tableVE')
     ?.instance.rows.load([...Object.values(vorgabenU.VorgabenB)]);
 
-  document
-    .querySelector<CustomHTMLTableElement>('#tableBZ')
-    ?.instance.rows.setFilter(row => getMonatFromBZ(row as IDatenBZ) === monat);
-  document
-    .querySelector<CustomHTMLTableElement>('#tableBE')
-    ?.instance.rows.setFilter(row => getMonatFromBE(row as IDatenBE) === monat);
-  document
-    .querySelector<CustomHTMLTableElement>('#tableE')
-    ?.instance.rows.setFilter(row => isEwtInMonat(row as IDatenEWT, monat));
-  document
-    .querySelector<CustomHTMLTableElement>('#tableN')
-    ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === monat && jahr >= 2024);
-  document
-    .querySelector<CustomHTMLTableElement>('#tableEA')
-    ?.instance.rows.setFilter(row => getMonatFromEA(row as IDatenEA) === monat && jahr >= 2025);
+  for (const resource of resourceDefs()) {
+    document
+      .querySelector<CustomHTMLTableElement>(`#${resource.tableId}`)
+      ?.instance.rows.setFilter(
+        row => isRowInMonat(resource, row, monat) && (resource.minYear === undefined || jahr >= resource.minYear),
+      );
+  }
 
   generateTableBerechnung(datenBerechnung, datenGeld);
   generateEingabeMaskeEinstellungen(vorgabenU);

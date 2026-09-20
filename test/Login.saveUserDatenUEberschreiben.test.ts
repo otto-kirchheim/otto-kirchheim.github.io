@@ -57,6 +57,8 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   scheduleAutoSave: scheduleAutoSaveMock,
 }));
 
+import '@/app/features';
+import { featureRegistry } from '@/core/hooks';
 import overwriteUserDaten from '@/core/orchestration/auth/utils/overwriteUserDaten';
 
 function createTable(id: string, loadSpy: ReturnType<typeof vi.fn>): void {
@@ -74,7 +76,7 @@ describe('overwriteUserDaten', () => {
     vi.clearAllMocks();
   });
 
-  it('ueberschreibt alle vorhandenen Datenbereiche und aktualisiert Tabellen', () => {
+  it('ueberschreibt alle vorhandenen Datenbereiche und aktualisiert Tabellen', async () => {
     const loadVE = vi.fn();
     const loadBZ = vi.fn();
     const loadBE = vi.fn();
@@ -114,7 +116,7 @@ describe('overwriteUserDaten', () => {
     getEwtDatenMock.mockReturnValue([{ mapped: 'ewt' }]);
     getNebengeldDatenMock.mockReturnValue([{ mapped: 'n' }]);
 
-    overwriteUserDaten();
+    await overwriteUserDaten();
 
     expect(storageSetMock).toHaveBeenCalledWith('VorgabenU', vorgabenU);
     expect(storageSetMock).toHaveBeenCalledWith('dataBZ', expectedBZ);
@@ -140,21 +142,53 @@ describe('overwriteUserDaten', () => {
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 
-  it('funktioniert mit leerem dataServer und entfernt trotzdem dataServer', () => {
+  it('laedt den data-Teil nur bei vorhandener Tabelle und behaelt Storage/Filter bei Chunk-Fehler', async () => {
+    const loadBZ = vi.fn();
+    createTable('tableBZ', loadBZ);
+    const setFilterBZ = (
+      document.querySelector('#tableBZ') as unknown as { instance: { rows: { setFilter: ReturnType<typeof vi.fn> } } }
+    ).instance.rows.setFilter;
+    const serverBZ = [{ tag: 'bz' }];
+    const serverN = [{ tag: 'n' }];
+    const dataServer = { BZ: serverBZ, N: serverN };
+    storageGetMock.mockImplementation((key: string) => {
+      if (key === 'dataServer') return dataServer;
+      if (key === 'Monat') return 3;
+      return undefined;
+    });
+    const loadSpy = vi.spyOn(featureRegistry, 'load').mockRejectedValue(new Error('Chunk nicht ladbar'));
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await overwriteUserDaten();
+
+    // Nur BZ hat eine Tabelle im DOM: der data-Teil wird genau einmal (fuer ber) angefragt, N ohne Tabelle nie.
+    expect(loadSpy).toHaveBeenCalledTimes(1);
+    expect(loadSpy).toHaveBeenCalledWith('ber', 'data');
+    expect(errorSpy).toHaveBeenCalled();
+    // Storage und Filter werden trotz Fehler gesetzt, Tabellen-Load entfaellt.
+    expect(storageSetMock).toHaveBeenCalledWith('dataBZ', serverBZ);
+    expect(storageSetMock).toHaveBeenCalledWith('dataN', serverN);
+    expect(loadBZ).not.toHaveBeenCalled();
+    expect(setFilterBZ).toHaveBeenCalledTimes(1);
+    expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
+    expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
+  });
+
+  it('funktioniert mit leerem dataServer und entfernt trotzdem dataServer', async () => {
     storageGetMock.mockImplementation((key: string) => {
       if (key === 'dataServer') return {};
       if (key === 'Monat') return 3;
       return undefined;
     });
 
-    overwriteUserDaten();
+    await overwriteUserDaten();
 
     expect(storageSetMock).not.toHaveBeenCalled();
     expect(publishDataChangedMock).toHaveBeenCalledTimes(1);
     expect(storageRemoveMock).toHaveBeenCalledWith('dataServer');
   });
 
-  it('setFilter-Callbacks filtern korrekt nach Monat (BZ, BE, EWT, N)', () => {
+  it('setFilter-Callbacks filtern korrekt nach Monat (BZ, BE, EWT, N)', async () => {
     const setFilterBZ = vi.fn();
     const setFilterBE = vi.fn();
     const setFilterE = vi.fn();
@@ -197,7 +231,7 @@ describe('overwriteUserDaten', () => {
     getEwtDatenMock.mockReturnValue([]);
     getNebengeldDatenMock.mockReturnValue([]);
 
-    overwriteUserDaten();
+    await overwriteUserDaten();
 
     // setFilter-Callbacks aufrufen, um die Arrow-Functions zu covern
     const bzFilter = setFilterBZ.mock.calls[0]?.[0] as (row: unknown) => boolean;

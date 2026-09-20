@@ -7,6 +7,8 @@ export type {
   FeatureDefinition,
   FeatureEventHandlers,
   FeatureMeta,
+  FeatureResource,
+  FeatureResourceKey,
   FeaturePartLoaders,
   FeaturePartName,
   FeaturePartResult,

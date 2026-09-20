@@ -1,27 +1,11 @@
 import { publishEvent } from '@/core';
-import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '@/features/Bereitschaft/utils';
-import { getEwtDaten } from '@/features/EWT/utils';
-import { getEaDaten } from '@/features/EA/utils';
+import { featureRegistry } from '@/core/hooks';
 import { generateEingabeMaskeEinstellungen } from '@/features/Einstellungen/utils';
+import { isRowInMonat, resourceDefs } from '@/infrastructure/data/resourceConfig';
+import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
-import type {
-  CustomHTMLTableElement,
-  IDatenBE,
-  IDatenBZ,
-  IDatenEA,
-  IDatenEWT,
-  IDatenN,
-  UserDatenServer,
-} from '@/types';
-import { getNebengeldDaten } from '@/features/Neben/utils';
-import {
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromN,
-  isEwtInMonat,
-} from '@/infrastructure/date/getMonatFromItem';
-import Storage from '@/infrastructure/storage/Storage';
+import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
+import Storage, { type TStorageData } from '@/infrastructure/storage/Storage';
 
 /**
  * Lädt Zeilen in die Tabelle zum Selektor; ohne passende Tabelle wirkungslos.
@@ -37,11 +21,11 @@ function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
 /**
  * Übernimmt die unter `dataServer` gemerkten Serverdaten: schreibt jede vorhandene Ressource in den
  * Storage und die Tabelle (Filter auf den gewählten Monat), meldet `data:changed` und verwirft
- * `dataServer`.
+ * `dataServer`. Die Tabellenzeilen baut der lazy Feature-Teil `data`; ohne Tabelle im DOM wird er nicht geladen.
  *
  * @throws {Error} Wenn `Monat` im Storage fehlt.
  */
-export default function overwriteUserDaten(): void {
+export default async function overwriteUserDaten(): Promise<void> {
   const dataServer: Partial<UserDatenServer> = Storage.get<Partial<UserDatenServer>>('dataServer', { default: {} });
   console.log({ dataServer });
 
@@ -54,50 +38,33 @@ export default function overwriteUserDaten(): void {
     generateEingabeMaskeEinstellungen(dataServer.vorgabenU);
     delete dataServer.vorgabenU;
   }
-  if (dataServer.BZ) {
-    console.log('DatenBZ überschreiben');
-    Storage.set('dataBZ', dataServer.BZ);
-    applyDataToTable('#tableBZ', getBereitschaftsZeitraumDaten(dataServer.BZ, undefined, { scope: 'all' }));
-    document
-      .querySelector<CustomHTMLTableElement>('#tableBZ')
-      ?.instance.rows.setFilter(row => getMonatFromBZ(row as IDatenBZ) === Monat);
-    delete dataServer.BZ;
-  }
-  if (dataServer.BE) {
-    console.log('DatenBE überschreiben');
-    Storage.set('dataBE', dataServer.BE);
-    applyDataToTable('#tableBE', getBereitschaftsEinsatzDaten(dataServer.BE, undefined, { scope: 'all' }));
-    document
-      .querySelector<CustomHTMLTableElement>('#tableBE')
-      ?.instance.rows.setFilter(row => getMonatFromBE(row as IDatenBE) === Monat);
-    delete dataServer.BE;
-  }
-  if (dataServer.EWT) {
-    console.log('DatenE überschreiben');
-    Storage.set('dataE', dataServer.EWT);
-    applyDataToTable('#tableE', getEwtDaten(dataServer.EWT, undefined, { scope: 'all' }));
-    document
-      .querySelector<CustomHTMLTableElement>('#tableE')
-      ?.instance.rows.setFilter(row => isEwtInMonat(row as IDatenEWT, Monat));
-    delete dataServer.EWT;
-  }
-  if (dataServer.N) {
-    console.log('DatenN überschreiben');
-    Storage.set('dataN', dataServer.N);
-    applyDataToTable('#tableN', getNebengeldDaten(dataServer.N, undefined, { scope: 'all' }));
-    document
-      .querySelector<CustomHTMLTableElement>('#tableN')
-      ?.instance.rows.setFilter(row => getMonatFromN(row as IDatenN) === Monat);
-    delete dataServer.N;
-  }
-  if (dataServer.EA) {
-    console.log('DatenEA überschreiben');
-    Storage.set('dataEA', dataServer.EA);
-    applyDataToTable('#tableEA', getEaDaten(dataServer.EA, undefined, { scope: 'all' }));
-    document
-      .querySelector<CustomHTMLTableElement>('#tableEA')
-      ?.instance.rows.setFilter(row => getMonatFromEA(row as IDatenEA) === Monat);
-    delete dataServer.EA;
+
+  for (const resource of resourceDefs()) {
+    const serverRows = dataServer[resource.key];
+    if (!serverRows) continue;
+
+    console.log(`Daten${resource.key} überschreiben`);
+    Storage.set(resource.storageKey as TStorageData, serverRows);
+
+    const table = document.querySelector<CustomHTMLTableElement>(`#${resource.tableId}`);
+    if (table) {
+      try {
+        const featureId = featureRegistry.featureIdOfResource(resource.key);
+        const data = featureId ? await featureRegistry.load(featureId, 'data') : undefined;
+        const tableRows = data?.tableRows[resource.key]?.(serverRows as unknown[]);
+        if (tableRows) table.instance.rows.load(tableRows as CustomTableTypes[]);
+      } catch (error) {
+        console.error(`Tabelle '${resource.tableId}' konnte nicht aktualisiert werden:`, error);
+        createSnackBar({
+          message: `Tabelle konnte nicht aktualisiert werden – bitte Seite neu laden.`,
+          status: 'error',
+          timeout: 5000,
+          fixed: true,
+        });
+      }
+      table.instance.rows.setFilter(row => isRowInMonat(resource, row, Monat));
+    }
+    delete dataServer[resource.key];
   }
   publishEvent('data:changed', { resource: 'all', action: 'sync' });
 

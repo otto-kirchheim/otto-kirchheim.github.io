@@ -4,6 +4,7 @@ const warmeVorlagenCache = vi.fn<(formular: string, stichtag: string) => Promise
 
 vi.mock('@/infrastructure/pdf/ladeFormular', () => ({ warmeVorlagenCache }));
 
+import '@/app/features';
 import { warmeFormularCaches } from '@/infrastructure/pdf/warmeFormularCaches';
 
 /** `warmeFormularCaches` plant die Arbeit per `requestIdleCallback`/`setTimeout` -- eine Runde

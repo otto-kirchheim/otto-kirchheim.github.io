@@ -20,6 +20,7 @@ vi.mock('@/infrastructure/data/normalizeResourceRows', () => ({
   default: (rows: unknown) => (Array.isArray(rows) ? rows : []),
 }));
 
+import '@/app/features';
 import { rowMatchesMonth, countByMonth } from '@/core/orchestration/auth/utils/loadUserDaten.helpers';
 
 const ROW = { _id: 'x' };

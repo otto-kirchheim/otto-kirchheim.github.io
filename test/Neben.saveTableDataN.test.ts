@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
+import '@/app/features';
 import type { IDatenN } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage';
 

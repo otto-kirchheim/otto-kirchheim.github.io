@@ -12,18 +12,25 @@ import { ezMeta } from '@/features/Neben/meta';
 
 featureRegistry.define({
   meta: berMeta,
-  parts: { ui: () => import('@/features/Bereitschaft/parts/ui') },
+  parts: {
+    ui: () => import('@/features/Bereitschaft/parts/ui'),
+    data: () => import('@/features/Bereitschaft/parts/data'),
+  },
 });
 
 featureRegistry.define({
   meta: ewtMeta,
-  parts: { ui: () => import('@/features/EWT/parts/ui') },
+  parts: {
+    ui: () => import('@/features/EWT/parts/ui'),
+    data: () => import('@/features/EWT/parts/data'),
+  },
 });
 
 featureRegistry.define({
   meta: ezMeta,
   parts: {
     ui: () => import('@/features/Neben/parts/ui'),
+    data: () => import('@/features/Neben/parts/data'),
     events: () => import('@/features/Neben/parts/events'),
   },
 });
@@ -32,6 +39,7 @@ featureRegistry.define({
   meta: eaMeta,
   parts: {
     ui: () => import('@/features/EA/parts/ui'),
+    data: () => import('@/features/EA/parts/data'),
     events: () => import('@/features/EA/parts/events'),
   },
 });
