@@ -339,9 +339,12 @@ registerAppStartTask(() => {
     void handlePasskeyRegistration();
   });
 
-  const btnLogout = document.querySelector<HTMLButtonElement>('#btnLogout');
-  btnLogout?.addEventListener('click', () => {
-    logoutUser({ reason: 'manual' });
+  // `querySelectorAll`, nicht `querySelector`: `#btnLogout` existiert zweimal (Desktop-Kopfzeile und Mobil-Schublade im
+  // `AppHeader`); mit `querySelector` bliebe die Mobil-Kopie ohne Handler.
+  document.querySelectorAll<HTMLButtonElement>('#btnLogout').forEach(btnLogout => {
+    btnLogout.addEventListener('click', () => {
+      logoutUser({ reason: 'manual' });
+    });
   });
 
   const form = document.querySelector<HTMLFormElement>('#formEinstellungen');
