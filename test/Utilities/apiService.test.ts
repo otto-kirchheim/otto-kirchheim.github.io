@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
+import '@/app/features';
 import type { IDatenBE, IDatenBZ, IDatenEWT, IDatenN } from '@/core/types';
 
 // --- Hoisted mocks ---

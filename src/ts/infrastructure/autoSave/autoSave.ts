@@ -19,14 +19,7 @@ import dayjs from '../date/configDayjs';
 import mergeVisibleResourceRows from '../data/mergeVisibleResourceRows';
 import { resourceKeys, storageKeyOf, tableIdOf } from '../data/resourceConfig';
 import { mapCreatedIdsByClientRequestId, mapCreatedIdsByContent } from './changeTracking';
-import {
-  applyServerRowsToTable,
-  collectRowErrorMatches,
-  findTable,
-  sendBulk,
-  unlinkEaRefsForDeletedEwtIds,
-  unlinkNebengeldRefsForDeletedEwtIds,
-} from './savePipeline';
+import { applyServerRowsToTable, collectRowErrorMatches, findTable, sendBulk } from './savePipeline';
 import {
   buildRowLabel,
   markErrorRows,
@@ -475,9 +468,9 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
       if (uncommitted.length > 0 && typeof table.drawRows === 'function') table.drawRows();
     }
 
+    // Verknuepfte Features (EZ, EA) loesen ihre EWT-Verweise auf die geloeschten Ids, auch ohne gemounteten Tab.
     if (resource === 'EWT' && includeDeletes && result.deleted.length > 0) {
-      unlinkNebengeldRefsForDeletedEwtIds(result.deleted);
-      unlinkEaRefsForDeletedEwtIds(result.deleted);
+      publishEvent('ewt:deleted', { ids: result.deleted });
     }
 
     updateLocalStorage(resource, table);

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test';
 import '@/app/features';
+import { publishEvent } from '@/core/events/appEvents';
 import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
+import Storage from '@/infrastructure/storage/Storage';
 
 describe('app/features (Manifest)', () => {
   it('definiert ber, ewt, ez, ea in dieser Reihenfolge mit den bisherigen Lifecycle-Namen und Tab-Keys', () => {
@@ -24,7 +26,7 @@ describe('app/features (Manifest)', () => {
     expect(featureRegistry.meta('ea')).toMatchObject({
       label: 'Entgeltausgleich',
       legacy: { lifecycleName: 'EA', tabKey: 'ea' },
-      wakeOn: ['ewt:persisted'],
+      wakeOn: ['ewt:persisted', 'ewt:deleted'],
     });
   });
 
@@ -41,5 +43,22 @@ describe('app/features (Manifest)', () => {
       const data = await featureRegistry.load(meta.id, 'data');
       expect(Object.keys(data.tableRows).sort()).toEqual(meta.resources.map(r => r.key).sort());
     }
+  });
+
+  it('ewt:deleted loest die EWT-Verweise in dataN und dataEA, auch ohne gemounteten Tab (Wake-Event)', async () => {
+    await Promise.all([featureRegistry.load('ez', 'events'), featureRegistry.load('ea', 'events')]);
+    Storage.set('dataN', [
+      { _id: 'n1', EWT: 'e1' },
+      { _id: 'n2', EWT: 'e2' },
+    ]);
+    Storage.set('dataEA', [{ _id: 'a1', EWT: 'e1' }]);
+
+    publishEvent('ewt:deleted', { ids: ['e1'] });
+
+    expect(Storage.get<{ _id: string; EWT?: string }[]>('dataN', { check: true })).toEqual([
+      { _id: 'n1' },
+      { _id: 'n2', EWT: 'e2' },
+    ]);
+    expect(Storage.get<{ _id: string; EWT?: string }[]>('dataEA', { check: true })).toEqual([{ _id: 'a1' }]);
   });
 });

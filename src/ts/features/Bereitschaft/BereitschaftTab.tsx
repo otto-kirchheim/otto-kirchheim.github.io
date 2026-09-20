@@ -10,6 +10,7 @@ import {
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
+import MonatUeberschrift from '@/infrastructure/ui/MonatUeberschrift';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
@@ -346,7 +347,7 @@ export function BereitschaftTab() {
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
         </DBHeadingH1>
-        <DBHeadingH4 paragraphSpacing id="MonatB"></DBHeadingH4>
+        <MonatUeberschrift id="MonatB" />
       </div>
 
       <div>

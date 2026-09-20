@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
+import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 
 const viCompat = vi as typeof vi & {
@@ -981,6 +982,9 @@ describe('autoSave', () => {
       Storage.set('dataN', [{ _id: 'n1', EWT: 'ewt-del-1', Tag: '10.03.2025' }]);
 
       createMockTable('tableE', { create: [], update: [], delete: ['ewt-del-1'] });
+
+      // Das Feature EZ haengt sich per Wake-Event an `ewt:deleted`; die Listener werden im Test zwischendurch geleert.
+      onEvent('ewt:deleted', ({ ids }) => unlinkEwtRefsForDeletedIds('N', ids));
 
       mockEwtBulk.mockResolvedValue({ created: [], updated: [], deleted: ['ewt-del-1'], errors: [] });
 

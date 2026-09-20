@@ -1,19 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import setMonatJahr, { setMonatsUeberschriften } from '@/features/Einstellungen/utils/setMonatJahr';
+import { getMonatJahr, resetMonatJahr } from '@/infrastructure/ui/monatJahrStore';
 
 describe('setMonatJahr', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
+    resetMonatJahr();
     container = document.createElement('div');
-    container.innerHTML = `
-      <input id="Monat" />
-      <h2 id="MonatB"></h2>
-      <h2 id="MonatE"></h2>
-      <h2 id="MonatN"></h2>
-      <h2 id="MonatEA"></h2>
-      <h2 id="MonatBerechnung"></h2>
-    `;
+    container.innerHTML = '<input id="Monat" />';
     document.body.appendChild(container);
   });
 
@@ -21,43 +16,32 @@ describe('setMonatJahr', () => {
     container.remove();
   });
 
-  it('setzt Monat-Input und Überschriften korrekt', () => {
+  it('setzt Monat-Input und Store (Monat/Jahr der Ueberschriften)', () => {
     setMonatJahr(2026, 3);
 
     expect(document.querySelector<HTMLInputElement>('#Monat')!.value).toBe('3');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatB')!.innerText).toBe('03 / 26');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatE')!.innerText).toBe('03 / 26');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatN')!.innerText).toBe('03 / 26');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatBerechnung')!.innerText).toBe('2026');
+    expect(getMonatJahr()).toEqual({ monat: 3, jahr: 2026 });
   });
 
-  it('schreibt den Monat auch in die EA-Ueberschrift', () => {
-    setMonatJahr(2026, 9);
-
-    expect(document.querySelector<HTMLHeadingElement>('#MonatEA')!.innerText).toBe('09 / 26');
-  });
-
-  it('setMonatsUeberschriften wirft nie, auch wenn Ueberschriften (noch) fehlen', () => {
+  it('setMonatsUeberschriften wirft nie und setzt den Store auch ohne Felder im DOM', () => {
     container.remove();
     expect(() => setMonatsUeberschriften(2026, 3)).not.toThrow();
+    expect(getMonatJahr()).toEqual({ monat: 3, jahr: 2026 });
   });
 
-  it('setzt Werte korrekt für Januar', () => {
+  it('setzt Werte korrekt fuer Januar und Dezember', () => {
     setMonatJahr(2025, 1);
-
     expect(document.querySelector<HTMLInputElement>('#Monat')!.value).toBe('1');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatB')!.innerText).toBe('01 / 25');
-  });
+    expect(getMonatJahr()).toEqual({ monat: 1, jahr: 2025 });
 
-  it('setzt Werte korrekt für Dezember', () => {
     setMonatJahr(2026, 12);
-
     expect(document.querySelector<HTMLInputElement>('#Monat')!.value).toBe('12');
-    expect(document.querySelector<HTMLHeadingElement>('#MonatB')!.innerText).toBe('12 / 26');
+    expect(getMonatJahr()).toEqual({ monat: 12, jahr: 2026 });
   });
 
-  it('wirft Fehler wenn DOM-Elemente fehlen', () => {
+  it('wirft Fehler wenn #Monat fehlt und laesst den Store unberuehrt', () => {
     container.remove();
     expect(() => setMonatJahr(2026, 3)).toThrow('One or more elements not found.');
+    expect(getMonatJahr()).toBeNull();
   });
 });

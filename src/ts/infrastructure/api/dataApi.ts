@@ -1,4 +1,5 @@
 import type { IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, IVorgabenGeld, IVorgabenU } from '@/types';
+import { type ResourceKind, resourceDefs } from '../data/resourceConfig';
 import {
   type BackendBereitschaftseinsatz,
   type BackendBereitschaftszeitraum,
@@ -274,58 +275,39 @@ export const eaApi = {
 
 // ─── Alle Daten eines Jahres laden ────────────────────────
 
+/** Server-Zeitstempel (`updatedAt`) je Storage-Key: `VorgabenU` sowie `dataBZ`, `dataE` usw. der angemeldeten Features. */
 export interface SyncTimestamps {
   VorgabenU: string | null;
-  dataBZ: string | null;
-  dataBE: string | null;
-  dataE: string | null;
-  dataN: string | null;
-  dataEA: string | null;
+  [storageKey: string]: string | null;
 }
 
-export interface LoadedYearData {
+/** Jahresdaten: Profil, Geldvorgaben, Zeitstempel und je Ressource der angemeldeten Features (`BZ`, `BE`, ...) die Zeilen. */
+export type LoadedYearData = {
   vorgabenU: IVorgabenU;
   datenGeld: IVorgabenGeld;
-  BZ: IDatenBZ[];
-  BE: IDatenBE[];
-  EWT: IDatenEWT[];
-  N: IDatenN[];
-  EA: IDatenEA[];
   timestamps: SyncTimestamps;
-}
+} & Partial<Record<ResourceKind, unknown[]>>;
 
 /**
- * Lädt Profil, Vorgaben und alle Ressourcen eines Jahres parallel.
+ * Lädt Profil, Vorgaben und alle Ressourcen der angemeldeten Features eines Jahres parallel.
  *
  * @param year - Jahr.
  * @returns Alle Daten und die `updatedAt`-Zeitstempel je Ressource.
  */
 export async function loadAllYearData(year: number): Promise<LoadedYearData> {
-  const [profileResult, datenGeld, bzResult, beResult, ewtResult, nResult, eaResult] = await Promise.all([
+  const resources = resourceDefs();
+  const [profileResult, datenGeld, ...resourceResults] = await Promise.all([
     profileApi.getMyProfile(),
     vorgabenApi.getByYear(year),
-    bereitschaftszeitraumApi.loadYear(year),
-    bereitschaftseinsatzApi.loadYear(year),
-    ewtApi.loadYear(year),
-    nebengeldApi.loadYear(year),
-    eaApi.loadYear(year),
+    ...resources.map(resource => resource.api.loadYear(year)),
   ]);
 
-  return {
-    vorgabenU: profileResult.data,
-    datenGeld,
-    BZ: bzResult.data,
-    BE: beResult.data,
-    EWT: ewtResult.data,
-    N: nResult.data,
-    EA: eaResult.data,
-    timestamps: {
-      VorgabenU: profileResult.updatedAt,
-      dataBZ: bzResult.updatedAt,
-      dataBE: beResult.updatedAt,
-      dataE: ewtResult.updatedAt,
-      dataN: nResult.updatedAt,
-      dataEA: eaResult.updatedAt,
-    },
-  };
+  const timestamps: SyncTimestamps = { VorgabenU: profileResult.updatedAt };
+  const rows: Partial<Record<ResourceKind, unknown[]>> = {};
+  resources.forEach((resource, index) => {
+    rows[resource.key] = resourceResults[index].data;
+    timestamps[resource.storageKey] = resourceResults[index].updatedAt;
+  });
+
+  return { vorgabenU: profileResult.data, datenGeld, ...rows, timestamps };
 }

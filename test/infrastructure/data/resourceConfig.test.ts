@@ -3,6 +3,7 @@ import '@/app/features';
 import { featureRegistry } from '@/core/hooks';
 import {
   isRowInMonat,
+  resourceDefs,
   resourceByStorageKey,
   resourceDef,
   resourceKeys,
@@ -54,5 +55,31 @@ describe('resourceConfig (aus meta.resources der Features)', () => {
     expect(resourceDef('EA').minYear).toBe(2025);
     expect(resourceDef('EA').filterMinYear).toBeUndefined();
     expect(resourceDef('BZ').minYear).toBeUndefined();
+  });
+
+  it('bestimmt den Speicher-Zeitraum je Ressource aus dem Datumsfeld im jeweiligen Format', () => {
+    expect(resourceDef('BZ').periodOf({ Beginn: '2026-05-10T08:00:00' })).toEqual({ monat: 5, jahr: 2026 });
+    expect(resourceDef('BE').periodOf({ Tag: '10.05.2026' })).toEqual({ monat: 5, jahr: 2026 });
+    expect(resourceDef('EWT').periodOf({ Tag: '2026-05-10' })).toEqual({ monat: 5, jahr: 2026 });
+    expect(resourceDef('N').periodOf({ Tag: '10.05.2026' })).toEqual({ monat: 5, jahr: 2026 });
+    expect(resourceDef('EA').periodOf({ Tag: '10.05.2026' })).toEqual({ monat: 5, jahr: 2026 });
+    // Strikte Formate: ein falsches Format ergibt keinen Zeitraum (Aufrufer nutzt dann Monat/Jahr der Anzeige).
+    expect(resourceDef('BE').periodOf({ Tag: '2026-05-10' })).toBeUndefined();
+    expect(resourceDef('EWT').periodOf({ Tag: 'kein Datum' })).toBeUndefined();
+  });
+
+  it('N und EA ignorieren die EWT-Verknuepfung beim Signatur-Abgleich, die anderen nicht', () => {
+    expect(resourceDef('N').signatureOmitKeys).toEqual(['EWT']);
+    expect(resourceDef('EA').signatureOmitKeys).toEqual(['EWT']);
+    expect(resourceDef('BZ').signatureOmitKeys).toBeUndefined();
+    expect(resourceDef('EWT').signatureOmitKeys).toBeUndefined();
+  });
+
+  it('stellt je Ressource einen Backend-Adapter bereit', () => {
+    for (const resource of resourceDefs()) {
+      expect(typeof resource.api.fromBackend).toBe('function');
+      expect(typeof resource.api.loadYear).toBe('function');
+      expect(typeof resource.api.bulk).toBe('function');
+    }
   });
 });

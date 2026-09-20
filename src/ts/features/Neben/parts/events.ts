@@ -1,4 +1,5 @@
 import type { FeatureParts } from '@/core/hooks';
+import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import syncNebengeldTimesFromEwtRows from '../utils/syncEwtToNeben';
 
 /**
@@ -7,6 +8,7 @@ import syncNebengeldTimesFromEwtRows from '../utils/syncEwtToNeben';
  */
 const events: FeatureParts['events'] = {
   'ewt:persisted': ({ rows }) => syncNebengeldTimesFromEwtRows(rows),
+  'ewt:deleted': ({ ids }) => unlinkEwtRefsForDeletedIds('N', ids),
 };
 
 export default events;

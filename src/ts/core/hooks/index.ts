@@ -6,7 +6,9 @@ export { featureRegistry } from './featureRegistry';
 export type {
   FeatureDefinition,
   FeatureEventHandlers,
+  FeatureBulkResult,
   FeatureMeta,
+  FeatureResourceApi,
   FeatureResource,
   FeatureResourceKey,
   FeaturePartLoaders,

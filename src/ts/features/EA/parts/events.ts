@@ -1,4 +1,5 @@
 import type { FeatureParts } from '@/core/hooks';
+import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import syncEaDurationFromEwtRows from '../utils/syncEwtToEa';
 
 /**
@@ -7,6 +8,7 @@ import syncEaDurationFromEwtRows from '../utils/syncEwtToEa';
  */
 const events: FeatureParts['events'] = {
   'ewt:persisted': ({ rows }) => syncEaDurationFromEwtRows(rows),
+  'ewt:deleted': ({ ids }) => unlinkEwtRefsForDeletedIds('EA', ids),
 };
 
 export default events;

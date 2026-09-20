@@ -2,8 +2,6 @@ import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
 import type { FeatureContext, FeatureMeta } from '@/core/hooks';
 import { getResourceStatus, hasPendingTableChanges } from '@/infrastructure/autoSave/autoSave';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { default as Storage } from '@/infrastructure/storage/Storage';
-import { setMonatsUeberschriften } from '@/features/Einstellungen/utils/setMonatJahr';
 
 /** Aktuell gemountete Feature-Namen — verhindert doppeltes register()/unregister() bei unverändertem Zustand. */
 const mountedFeatures = new Set<string>();
@@ -78,13 +76,6 @@ export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Pro
     await feature.unregister?.();
     mountedFeatures.delete(name);
   }
-
-  // `setMonatJahr` schreibt die Monats-Überschriften der Tabs nur einmal von aussen ins DOM. Tabs,
-  // die erst danach mounten (Neuladen mit gespeicherter Sitzung, Aktivieren eines Tabs), blieben
-  // sonst leer.
-  const jahr = Storage.get<number>('Jahr', { default: 0 });
-  const monat = Storage.get<number>('Monat', { default: 0 });
-  if (jahr > 0 && monat > 0) setMonatsUeberschriften(jahr, monat);
 }
 
 /**

@@ -1,15 +1,8 @@
-import {
-  DBButton,
-  DBDivider,
-  DBHeadingH1,
-  DBHeadingH4,
-  DBSection,
-  DBStack,
-  DBTooltip,
-} from '@db-ux/react-core-components';
+import { DBButton, DBDivider, DBHeadingH1, DBSection, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 
 import { DBLoadingButton } from '@/components';
+import MonatUeberschrift from '@/infrastructure/ui/MonatUeberschrift';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
 import CustomTableView from '@/infrastructure/table/CustomTableView';
@@ -217,7 +210,7 @@ export function NebenTab() {
             <DBTooltip>Hilfe anzeigen</DBTooltip>
           </DBButton>
         </DBHeadingH1>
-        <DBHeadingH4 paragraphSpacing id="MonatN"></DBHeadingH4>
+        <MonatUeberschrift id="MonatN" />
       </div>
 
       <div>

@@ -14,6 +14,36 @@ import { featureLifecycleRegistry } from './featureLifecycle';
 /** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
 export type FeatureResourceKey = Exclude<TResourceKey, 'settings'>;
 
+/** Antwort eines Bulk-Requests (Form wie `BulkResponse` in `infrastructure/api`, hier ohne Import aus der Infrastruktur). */
+export interface FeatureBulkResult {
+  created: unknown[];
+  updated: unknown[];
+  deleted: string[];
+  createdReferences?: { _id: string; clientRequestId: string }[];
+  errors: {
+    operation: 'create' | 'update' | 'delete';
+    index?: number;
+    id?: string;
+    clientRequestId?: string;
+    message: string;
+    label?: string;
+  }[];
+}
+
+/** Backend-Adapter einer Ressource (Mapping und Requests), aufgerufen von Laden und AutoSave. */
+export interface FeatureResourceApi {
+  /** Backend-Dokument ins Frontend-Format; kann bei unvollstaendigen Dokumenten werfen. */
+  fromBackend(doc: unknown): unknown;
+  /** Alle Zeilen eines Jahres und der juengste `updatedAt` (`null` ohne Zeitstempel). */
+  loadYear(year: number): Promise<{ data: unknown[]; updatedAt: string | null }>;
+  /** Sendet neue (mit `clientRequestId`), geaenderte und geloeschte Zeilen fuer einen Monat/ein Jahr gebuendelt. */
+  bulk(
+    items: { create: unknown[]; update: unknown[]; delete: string[] },
+    monat: number,
+    jahr: number,
+  ): Promise<FeatureBulkResult>;
+}
+
 /**
  * Eine Datenressource eines Features (rein deklarativ). Ersetzt die frueher ueber die App verstreuten Tabellen
  * (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates); Lese-Helfer stehen in `infrastructure/data/resourceConfig`.
@@ -31,6 +61,12 @@ export interface FeatureResource {
   monatOf(row: unknown): number;
   /** Ob die Zeile in den Monat faellt (Tabellenfilter); ohne Angabe gilt `monatOf(row) === monat`. */
   inMonat?(row: unknown, monat: number): boolean;
+  /** Monat und Jahr, zu dem eine Zeile beim Speichern gehoert (Datumsfeld je Ressource); `undefined` bei ungueltigem Datum. */
+  periodOf(row: unknown): { monat: number; jahr: number } | undefined;
+  /** Zeilenfelder, die den Inhalts-Abgleich neuer Zeilen mit Serverdokumenten nicht stoeren (serverseitig ergaenzt, z. B. `EWT`-Verknuepfung). */
+  signatureOmitKeys?: readonly string[];
+  /** Backend-Adapter der Ressource. */
+  api: FeatureResourceApi;
   /** Tabelle zeigt beim Laden (`loadUserDaten`) Zeilen erst ab diesem Jahr; ohne Angabe immer. */
   minYear?: number;
   /** Wie `minYear`, aber fuer den Monatswechsel (`changeMonatJahr`); weicht bei EA heute bewusst ab (Latent-Bug, spaeter angleichen). */
@@ -56,9 +92,17 @@ export interface FeatureMeta {
   /**
    * Heutige, persistierte oder vertragliche Werte und DOM-Ids, die sich nicht aendern (siehe Plan, Namenskonvention).
    * `lifecycleName`: Name in `featureLifecycleRegistry`; `tabKey`: Wert in `aktivierteTabs`; `paneId`: Tab-Pane und
-   * `data-tab-target`; `rootId`: React-Mount-Punkt in der Pane; `navId`: Id des Nav-Eintrags (`quick-<navId>` = Schnellzugriff).
+   * `data-tab-target`; `rootId`: React-Mount-Punkt in der Pane; `navId`: Id des Nav-Eintrags (`quick-<navId>` = Schnellzugriff);
+   * `saveButtonId`: Id des Speichern-Buttons im Tab (bestimmt die Ressourcen, die er speichert).
    */
-  legacy: { lifecycleName: string; tabKey: string; paneId: string; rootId: string; navId: string };
+  legacy: {
+    lifecycleName: string;
+    tabKey: string;
+    paneId: string;
+    rootId: string;
+    navId: string;
+    saveButtonId: string;
+  };
   /** Events, die das Feature auch ohne gemounteten Tab verarbeiten muss (Teil `events` wird dafuer geladen). */
   wakeOn?: readonly EventChannel[];
 }

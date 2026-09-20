@@ -1,4 +1,8 @@
 import type { FeatureMeta } from '@/core/hooks';
+import { bereitschaftseinsatzApi, bereitschaftszeitraumApi } from '@/infrastructure/api/apiService';
+import { createResourceApi } from '@/infrastructure/api/resourceApi';
+import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import { beFromBackend, bzFromBackend } from '@/infrastructure/data/fieldMapper';
 import { getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 import type { IDatenBE, IDatenBZ } from '@/types';
 
@@ -15,6 +19,8 @@ export const berMeta: FeatureMeta = {
       tableId: 'tableBZ',
       beschreibung: 'Bereitschaftszeit',
       monatOf: row => getMonatFromBZ(row as IDatenBZ),
+      periodOf: row => periodFromDate((row as IDatenBZ).Beginn),
+      api: createResourceApi(bzFromBackend, () => bereitschaftszeitraumApi),
     },
     {
       key: 'BE',
@@ -22,6 +28,8 @@ export const berMeta: FeatureMeta = {
       tableId: 'tableBE',
       beschreibung: 'Bereitschaftseinsatz',
       monatOf: row => getMonatFromBE(row as IDatenBE),
+      periodOf: row => periodFromDate((row as IDatenBE).Tag, 'DD.MM.YYYY'),
+      api: createResourceApi(beFromBackend, () => bereitschaftseinsatzApi),
     },
   ],
   legacyDefaultOn: true,
@@ -31,5 +39,6 @@ export const berMeta: FeatureMeta = {
     paneId: 'Bereitschaft',
     rootId: 'bereitschaft-root',
     navId: 'bereitschaft-tab',
+    saveButtonId: 'btnSaveB',
   },
 };

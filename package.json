@@ -17,7 +17,7 @@
     "lint": "bunx --bun eslint src/ test/",
     "lint:fix": "bunx --bun eslint src/ test/ --fix",
     "lint:files": "bunx --bun eslint",
-    "lint:fsd": "bunx --bun eslint -c eslint.fsd.config.js \"src/ts/**/*.{ts,tsx}\" --max-warnings 109",
+    "lint:fsd": "bunx --bun eslint -c eslint.fsd.config.js \"src/ts/**/*.{ts,tsx}\" --max-warnings 107",
     "lint:css": "bunx --bun stylelint \"src/**/*.{css,scss}\" --max-warnings 93",
     "lint:css:fix": "bunx --bun stylelint \"src/**/*.{css,scss}\" --fix",
     "preview": "bunx --bun vite preview --outDir=../public/public",

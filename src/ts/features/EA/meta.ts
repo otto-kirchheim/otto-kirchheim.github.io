@@ -1,4 +1,8 @@
 import type { FeatureMeta } from '@/core/hooks';
+import { eaApi } from '@/infrastructure/api/apiService';
+import { createResourceApi } from '@/infrastructure/api/resourceApi';
+import { periodFromDate } from '@/infrastructure/date/periodFromDate';
+import { eaFromBackend } from '@/infrastructure/data/fieldMapper';
 import { getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
 import type { IDatenEA } from '@/types';
 
@@ -15,6 +19,10 @@ export const eaMeta: FeatureMeta = {
       tableId: 'tableEA',
       beschreibung: 'Entgeltausgleich',
       monatOf: row => getMonatFromEA(row as IDatenEA),
+      periodOf: row => periodFromDate((row as IDatenEA).Tag, 'DD.MM.YYYY'),
+      // Die EWT-Verknuepfung ergaenzt der Server; sie soll das Create-Matching nicht stoeren.
+      signatureOmitKeys: ['EWT'],
+      api: createResourceApi(eaFromBackend, () => eaApi),
       // Backend erzwingt Jahr >= 2025. Der Monatswechsel (`changeMonatJahr`) filtert bisher ohne dieses Gate
       // (`filterMinYear` fehlt bewusst): Latent-Bug, wird in eigenem Schritt angeglichen.
       minYear: 2025,
@@ -22,7 +30,14 @@ export const eaMeta: FeatureMeta = {
   ],
   // Bewusst aus: der Tab mountet nur bei explizitem 'ea' in aktivierteTabs, nicht fuer Bestands- und Neu-User.
   legacyDefaultOn: false,
-  legacy: { lifecycleName: 'EA', tabKey: 'ea', paneId: 'EA', rootId: 'ea-root', navId: 'ea-tab' },
-  // Verknuepfte EA-Dauern muessen auch bei deaktiviertem EA-Tab mit EWT synchron bleiben.
-  wakeOn: ['ewt:persisted'],
+  legacy: {
+    lifecycleName: 'EA',
+    tabKey: 'ea',
+    paneId: 'EA',
+    rootId: 'ea-root',
+    navId: 'ea-tab',
+    saveButtonId: 'btnSaveEA',
+  },
+  // Verknuepfte EA-Dauern und EWT-Verweise muessen auch bei deaktiviertem EA-Tab mit EWT synchron bleiben.
+  wakeOn: ['ewt:persisted', 'ewt:deleted'],
 };

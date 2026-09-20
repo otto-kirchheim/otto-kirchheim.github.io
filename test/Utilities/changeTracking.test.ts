@@ -7,6 +7,7 @@ import {
   buildCreatePayloadWithClientRequestId,
   mapServerDocToFrontend,
 } from '@/infrastructure/autoSave/changeTracking';
+import '@/app/features';
 import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 
 describe('changeTracking', () => {

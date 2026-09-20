@@ -1,17 +1,7 @@
 import type { CustomTable, CustomTableTypes, Row, TableChanges } from '../table/CustomTable';
-import type { CustomHTMLTableElement, IDatenBE, IDatenBZ, IDatenEA, IDatenEWT, IDatenN, TResourceKey } from '@/types';
-import {
-  type BulkErrorEntry,
-  type BulkRequest,
-  bereitschaftseinsatzApi,
-  bereitschaftszeitraumApi,
-  eaApi,
-  ewtApi,
-  nebengeldApi,
-} from '../api/apiService';
-import Storage from '../storage/Storage';
-import dayjs from '../date/configDayjs';
-import { tableIdOf } from '../data/resourceConfig';
+import type { CustomHTMLTableElement, TResourceKey } from '@/types';
+import type { BulkErrorEntry, BulkRequest } from '../api/apiService';
+import { resourceDef } from '../data/resourceConfig';
 import { buildCreatePayloadWithClientRequestId, mapServerDocToFrontend } from './changeTracking';
 
 export type ErrorSourceState = 'new' | 'modified' | 'deleted';
@@ -119,78 +109,6 @@ export function collectRowErrorMatches(
 }
 
 /**
- * Entfernt in Storage (`dataN`) und offener Neben-Tabelle die `EWT`-Verknuepfung auf geloeschte
- * EWT-Zeilen. Die Tabellenzeilen behalten ihren Zustand (kein `modified`).
- *
- * @param deletedIds - Ids der auf dem Server geloeschten EWT-Datensaetze.
- */
-export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void {
-  if (deletedIds.length === 0) return;
-
-  const deletedIdSet = new Set(deletedIds);
-
-  const currentDataN = Storage.get<IDatenN[]>('dataN', { default: [] });
-  let storageChanged = false;
-  const nextDataN = currentDataN.map(item => {
-    if (!item.EWT || !deletedIdSet.has(item.EWT)) return item;
-    storageChanged = true;
-    const { EWT: _removed, ...withoutRef } = item;
-    return withoutRef as IDatenN;
-  });
-  if (storageChanged) {
-    Storage.set('dataN', nextDataN);
-  }
-
-  const nebenTable = findTable<IDatenN>(tableIdOf('N'));
-  if (!nebenTable) return;
-
-  const tableChanged = nebenTable.rows.syncCellsSilently(row => {
-    const ref = (row.cells as IDatenN).EWT;
-    if (!ref || !deletedIdSet.has(ref)) return null;
-    const { EWT: _removed, ...withoutRef } = row.cells as IDatenN;
-    return withoutRef as IDatenN;
-  });
-
-  if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
-}
-
-/**
- * Entfernt in Storage (`dataEA`) und offener EA-Tabelle die `EWT`-Verknuepfung auf geloeschte
- * EWT-Zeilen. Die Tabellenzeilen behalten ihren Zustand (kein `modified`).
- *
- * @param deletedIds - Ids der auf dem Server geloeschten EWT-Datensaetze.
- */
-export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
-  if (deletedIds.length === 0) return;
-
-  const deletedIdSet = new Set(deletedIds);
-
-  const currentDataEA = Storage.get<IDatenEA[]>('dataEA', { default: [] });
-  let storageChanged = false;
-  const nextDataEA = currentDataEA.map(item => {
-    if (!item.EWT || !deletedIdSet.has(item.EWT)) return item;
-    storageChanged = true;
-    const { EWT: _removed, ...withoutRef } = item;
-    return withoutRef as IDatenEA;
-  });
-  if (storageChanged) {
-    Storage.set('dataEA', nextDataEA);
-  }
-
-  const eaTable = findTable<IDatenEA>(tableIdOf('EA'));
-  if (!eaTable) return;
-
-  const tableChanged = eaTable.rows.syncCellsSilently(row => {
-    const ref = (row.cells as IDatenEA).EWT;
-    if (!ref || !deletedIdSet.has(ref)) return null;
-    const { EWT: _removed, ...withoutRef } = row.cells as IDatenEA;
-    return withoutRef as IDatenEA;
-  });
-
-  if (tableChanged && typeof eaTable.drawRows === 'function') eaTable.drawRows();
-}
-
-/**
  * Sendet die Aenderungen einer Ressource als Bulk-Requests, gruppiert nach Monat/Jahr des jeweiligen
  * Datensatzes (aufsteigend). Loeschungen gehen nur im ersten Request mit; enthaelt der Save nur
  * Loeschungen, laeuft ein Request fuer `monat`/`jahr`. Die Teilergebnisse werden zusammengefuehrt.
@@ -223,32 +141,7 @@ export async function sendBulk(
    * @param item - Zellen der Zeile.
    * @returns Monat (1-12) und Jahr; `monat`/`jahr` des Aufrufs bei ungueltigem Datum.
    */
-  const getPeriod = (item: CustomTableTypes): SavePeriod => {
-    const fallback = { monat, jahr };
-
-    switch (resource) {
-      case 'BZ': {
-        const parsed = dayjs(String((item as IDatenBZ).Beginn));
-        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
-      }
-      case 'BE': {
-        const parsed = dayjs((item as IDatenBE).Tag, 'DD.MM.YYYY', true);
-        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
-      }
-      case 'EWT': {
-        const parsed = dayjs((item as IDatenEWT).Tag, 'YYYY-MM-DD', true);
-        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
-      }
-      case 'N': {
-        const parsed = dayjs((item as IDatenN).Tag, 'DD.MM.YYYY', true);
-        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
-      }
-      case 'EA': {
-        const parsed = dayjs((item as IDatenEA).Tag, 'DD.MM.YYYY', true);
-        return parsed.isValid() ? { monat: parsed.month() + 1, jahr: parsed.year() } : fallback;
-      }
-    }
-  };
+  const getPeriod = (item: CustomTableTypes): SavePeriod => resourceDef(resource).periodOf(item) ?? { monat, jahr };
 
   const allCreateItems = buildCreatePayloadWithClientRequestId(resource, table, changes.create);
 
@@ -316,38 +209,7 @@ export async function sendBulk(
       delete: withDelete ? changes.delete : [],
     };
 
-    switch (resource) {
-      case 'BZ':
-        return bereitschaftszeitraumApi.bulk(
-          bulk as { create: (IDatenBZ & { clientRequestId: string })[]; update: IDatenBZ[]; delete: string[] },
-          period.monat,
-          period.jahr,
-        );
-      case 'BE':
-        return bereitschaftseinsatzApi.bulk(
-          bulk as { create: (IDatenBE & { clientRequestId: string })[]; update: IDatenBE[]; delete: string[] },
-          period.monat,
-          period.jahr,
-        );
-      case 'EWT':
-        return ewtApi.bulk(
-          bulk as { create: (IDatenEWT & { clientRequestId: string })[]; update: IDatenEWT[]; delete: string[] },
-          period.monat,
-          period.jahr,
-        );
-      case 'N':
-        return nebengeldApi.bulk(
-          bulk as { create: (IDatenN & { clientRequestId: string })[]; update: IDatenN[]; delete: string[] },
-          period.monat,
-          period.jahr,
-        );
-      case 'EA':
-        return eaApi.bulk(
-          bulk as { create: (IDatenEA & { clientRequestId: string })[]; update: IDatenEA[]; delete: string[] },
-          period.monat,
-          period.jahr,
-        );
-    }
+    return resourceDef(resource).api.bulk(bulk as never, period.monat, period.jahr);
   };
 
   if (sortedPeriods.length === 0) {

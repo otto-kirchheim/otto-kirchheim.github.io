@@ -1,12 +1,5 @@
 import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
-import type {
-  BackendBereitschaftseinsatz,
-  BackendBereitschaftszeitraum,
-  BackendEA,
-  BackendEWT,
-  BackendNebengeld,
-} from '../data/fieldMapper';
-import { beFromBackend, bzFromBackend, eaFromBackend, ewtFromBackend, nebengeldFromBackend } from '../data/fieldMapper';
+import { resourceDef } from '../data/resourceConfig';
 import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,18 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @returns Frontend-Zeile.
  */
 export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings'>, doc: unknown): CustomTableTypes {
-  switch (resource) {
-    case 'BZ':
-      return bzFromBackend(doc as BackendBereitschaftszeitraum);
-    case 'BE':
-      return beFromBackend(doc as BackendBereitschaftseinsatz);
-    case 'EWT':
-      return ewtFromBackend(doc as BackendEWT);
-    case 'N':
-      return nebengeldFromBackend(doc as BackendNebengeld);
-    case 'EA':
-      return eaFromBackend(doc as BackendEA);
-  }
+  return resourceDef(resource).api.fromBackend(doc) as CustomTableTypes;
 }
 
 /**
@@ -59,7 +41,7 @@ export function createClientRequestId(): string {
 }
 
 /**
- * Bildet eine Inhalts-Signatur der Zeile ohne `_id`, Zeitstempel und `__v` (bei `N`/`EA` auch ohne `EWT`), um Zeilen mit Server-Dokumenten abzugleichen.
+ * Bildet eine Inhalts-Signatur der Zeile ohne `_id`, Zeitstempel und `__v` (sowie `signatureOmitKeys` der Ressource), um Zeilen mit Server-Dokumenten abzugleichen.
  *
  * @param resource - Ressource (nicht `settings`).
  * @param row - Zellen der Zeile oder Server-Dokument im Frontend-Format.
@@ -69,8 +51,8 @@ export function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: C
   const source = row as Record<string, unknown>;
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
 
-  // Serverseitig ergänzte/verknüpfte Felder sollen das Create-Matching nicht stören.
-  if (resource === 'N' || resource === 'EA') omitKeys.add('EWT');
+  // Serverseitig ergänzte/verknüpfte Felder (`meta.signatureOmitKeys`) sollen das Create-Matching nicht stören.
+  for (const key of resourceDef(resource).signatureOmitKeys ?? []) omitKeys.add(key);
 
   const normalized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(source)) {

@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import {
-  applyServerRowsToTable,
-  collectRowErrorMatches,
-  unlinkEaRefsForDeletedEwtIds,
-  unlinkNebengeldRefsForDeletedEwtIds,
-} from '@/infrastructure/autoSave/savePipeline';
+import { applyServerRowsToTable, collectRowErrorMatches } from '@/infrastructure/autoSave/savePipeline';
 import '@/app/features';
+import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
 import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 import type { BulkErrorEntry } from '@/infrastructure/api/apiService';
 import Storage from '@/infrastructure/storage/Storage';
 import type { IDatenEA, IDatenN } from '@/core/types';
+
+const unlinkNebengeldRefsForDeletedEwtIds = (ids: string[]) => unlinkEwtRefsForDeletedIds('N', ids);
+const unlinkEaRefsForDeletedEwtIds = (ids: string[]) => unlinkEwtRefsForDeletedIds('EA', ids);
 
 function makeNRow(
   overrides: Partial<{ _state: string; _id: string; EWT: string }> = {},
@@ -121,7 +120,7 @@ function makeTable(rows: Row<CustomTableTypes>[]): CustomTable<CustomTableTypes>
   } as unknown as CustomTable<CustomTableTypes>;
 }
 
-describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
+describe('unlinkEwtRefsForDeletedIds (N)', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -197,7 +196,7 @@ describe('unlinkNebengeldRefsForDeletedEwtIds', () => {
   });
 });
 
-describe('unlinkEaRefsForDeletedEwtIds', () => {
+describe('unlinkEwtRefsForDeletedIds (EA)', () => {
   beforeEach(() => {
     localStorage.clear();
   });

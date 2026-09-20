@@ -50,6 +50,7 @@ vi.mock('@/infrastructure/api/apiService', () => ({
 }));
 vi.mock('@/core/orchestration/syncFeatureTabs', () => ({ syncFeatureTabs: mockSyncFeatureTabs }));
 
+import '@/app/features';
 import Storage from '@/infrastructure/storage/Storage';
 import saveDaten from '@/infrastructure/data/saveDaten';
 import { registerHook, clearAllHooks } from '@/core/hooks';

@@ -13,7 +13,14 @@ function meta(id: string, order: number, wakeOn?: FeatureMeta['wakeOn']): Featur
     order,
     resources: [],
     legacyDefaultOn: true,
-    legacy: { lifecycleName: id.toUpperCase(), tabKey: id, paneId: id, rootId: `${id}-root`, navId: `${id}-tab` },
+    legacy: {
+      lifecycleName: id.toUpperCase(),
+      tabKey: id,
+      paneId: id,
+      rootId: `${id}-root`,
+      navId: `${id}-tab`,
+      saveButtonId: `btnSave${id}`,
+    },
     wakeOn,
   };
 }
@@ -51,6 +58,8 @@ describe('featureRegistry', () => {
       tableId: `table${key}`,
       beschreibung: key,
       monatOf: () => 1,
+      periodOf: () => undefined,
+      api: {} as never,
     });
     const spaet = definition('spaet', 5);
     const frueh = definition('frueh', 1);

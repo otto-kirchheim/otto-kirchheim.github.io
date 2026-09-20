@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (167)
+
+### refactor (FSD-Umbau P1c-2: Backend-Adapter je Ressource, `ewt:deleted`, Monat/Jahr-Store)
+
+- **Backend-Adapter in `meta.resources[].api`** (`FeatureResourceApi`: `fromBackend`, `loadYear`, `bulk`; gebaut mit `createResourceApi` aus
+  `infrastructure/api/resourceApi.ts`, spaete Bindung an die API-Objekte in `dataApi`). Dazu `periodOf` (Speicher-Zeitraum aus dem Datumsfeld je
+  Format, `periodFromDate`) und `signatureOmitKeys` (`EWT` bei N/EA). Ersetzt die `switch (resource)` in `sendBulk` (Zeitraum + Bulk-Aufruf),
+  `mapServerDocToFrontend` und `rowSignature`. Der Adapter liegt bewusst in `meta` (eager, ohne Chunk): Speichern und Laden muessen ohne
+  nachzuladenden Chunk funktionieren (Offline-Queue).
+- **`loadAllYearData` generisch**: laedt Profil, Vorgaben und je angemeldetes Feature dessen Ressourcen parallel; `LoadedYearData` behaelt die flachen Keys
+  (`BZ`, `BE`, ...) und `SyncTimestamps` wird zu `{ VorgabenU, [storageKey] }`.
+- **`saveDaten`**: die Zuordnung Speichern-Button -> Ressourcen kommt aus `meta.legacy.saveButtonId` (`btnSaveB/E/N/EA`), `shouldMarkSavedAfterFlush` per
+  Schleife ueber `resourceKeys()`.
+- **Neues Event `ewt:deleted`** (`{ ids }`, `core/events/types.ts`): AutoSave meldet geloeschte EWT-Ids, EZ und EA loesen ihre `EWT`-Verweise per Wake-Event
+  (`meta.wakeOn`, `parts/events.ts`) mit der gemeinsamen `infrastructure/data/unlinkEwtRefs.ts` (ersetzt die zwei fast gleichen
+  `unlinkNebengeldRefs…`/`unlinkEaRefs…` in `savePipeline.ts`). Damit kennt `autoSave` EZ/EA nicht mehr.
+- **Monat/Jahr-Store** (`infrastructure/ui/monatJahrStore.ts`, `MonatUeberschrift.tsx`): `setMonatJahr` schreibt nicht mehr in `#MonatB/E/N/EA/Berechnung`
+  per `querySelector`, sondern in den Store; jeder Tab (und `BerechnungTab`) rendert seine Ueberschrift selbst daraus. Das Nachschreiben nach jedem
+  Mounten in `syncFeatureTabs` entfaellt. `#Monat` (Auswahlfeld) bleibt DOM-basiert; die Ids der Ueberschriften bleiben.
+- Tests: `resourceConfig.test.ts` (Zeitraum, Signatur, Adapter), `features.test.ts` (Wake `ewt:deleted`), `MonatUeberschrift.test.tsx` (neu),
+  `setMonatJahr.test.ts` (auf Store umgestellt); 6 Tests importieren `@/app/features`. Testanzahl 2196 -> 2201. `lint:fsd`-Baseline 109 -> 107.
+- Bleibt statisch (typisierter Vertrag mit shared/Backend): Storage-Enum/`RESOURCE_KEYS`, `TResourceKey`, die Mapper in `fieldMapper.ts` und `dataApi.ts`
+  (Dateien wandern erst in den Move-Phasen).
+
 ## 2026-09-20 (166)
 
 ### refactor (FSD-Umbau P1c-1: Ressourcen-Meta und Daten-Teil je Feature)

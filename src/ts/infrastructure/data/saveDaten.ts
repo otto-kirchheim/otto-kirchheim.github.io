@@ -13,7 +13,8 @@ import {
 } from '../autoSave/autoSave';
 import { profileApi } from '../api/apiService';
 import dayjs from '../date/configDayjs';
-import { invokeHook } from '@/core/hooks';
+import { featureRegistry, invokeHook } from '@/core/hooks';
+import { resourceKeys } from './resourceConfig';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 
 /**
@@ -30,24 +31,16 @@ function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU)
 /**
  * Ordnet einen Speichern-Button den Ressourcen zu, die er betrifft.
  *
- * @param buttonId - Id des Buttons (`btnSaveB`, `btnSaveE`, `btnSaveN`, `btnSaveEA`, `btnSaveEinstellungen`).
+ * @param buttonId - Id des Buttons (`meta.legacy.saveButtonId` eines Features oder `btnSaveEinstellungen`).
  * @returns Betroffene Ressourcen; bei unbekannter Id alle.
  */
 function getButtonResources(buttonId: string): TResourceKey[] {
-  switch (buttonId) {
-    case 'btnSaveB':
-      return ['BZ', 'BE'];
-    case 'btnSaveE':
-      return ['EWT'];
-    case 'btnSaveN':
-      return ['N'];
-    case 'btnSaveEA':
-      return ['EA'];
-    case 'btnSaveEinstellungen':
-      return ['settings'];
-    default:
-      return ['BZ', 'BE', 'EWT', 'N', 'EA', 'settings'];
-  }
+  if (buttonId === 'btnSaveEinstellungen') return ['settings'];
+
+  const feature = featureRegistry.metas().find(meta => meta.legacy.saveButtonId === buttonId);
+  if (feature) return feature.resources.map(resource => resource.key);
+
+  return [...resourceKeys(), 'settings'];
 }
 
 /**
@@ -90,14 +83,10 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
       (hasLocalSettingsChanges(previousUserData, userData) ||
         settingsStatus === 'pending' ||
         settingsStatus === 'error');
-    const shouldMarkSavedAfterFlush: Record<TResourceKey, boolean> = {
-      BZ: buttonResources.includes('BZ') && hasPendingTableChanges('BZ', true),
-      BE: buttonResources.includes('BE') && hasPendingTableChanges('BE', true),
-      EWT: buttonResources.includes('EWT') && hasPendingTableChanges('EWT', true),
-      N: buttonResources.includes('N') && hasPendingTableChanges('N', true),
-      EA: buttonResources.includes('EA') && hasPendingTableChanges('EA', true),
-      settings: settingsNeedsSync,
-    };
+    const shouldMarkSavedAfterFlush: Partial<Record<TResourceKey, boolean>> = { settings: settingsNeedsSync };
+    for (const key of resourceKeys()) {
+      shouldMarkSavedAfterFlush[key] = buttonResources.includes(key) && hasPendingTableChanges(key, true);
+    }
 
     // 2. Alle ausstehenden Tabellen-Änderungen sofort senden – auch bei Einstellungs-Fehler
     await flushAll();
