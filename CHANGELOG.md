@@ -2,6 +2,19 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (162)
+
+### chore (Anzeigetext "Nebenbezuege" -> "Erschwerniszulagen" / Kurzform "Zulagen")
+
+- **Kurzform "Zulagen"** (Platz knapp): Nav (`AppHeader`), Start-Schnellzugriff und Startbeschreibung, Tab-Ueberschrift (`NebenTab`),
+  Einstellungen-Checkbox "Sichtbare Bereiche", Berechnung (Zeile "Summe Zulagen", Mobile-Karte), PWA-`short_name`.
+- **Langform "Erschwerniszulagen"**: Hilfetexte (Tab- und Modal-Hilfe, Onboarding-Tour "Tab: ..."), Sync-/Konflikt-Beschreibungen,
+  Warn-Snackbar beim Tab-Abbau, Admin-Template-Tab-Optionen, PWA-Shortcut-`name` und Beschreibung.
+- **Unveraendert**: Code-Namen und persistierte Werte (`Neben`, `summeNebenbezuege`, `aktivierteTabs`-Wert `neben`, DOM-Ids `#neben-tab`/`#Neben`,
+  URL-Hash `/#Neben`, Storage-Key `dataN`); die Code-Umbenennung auf `ez` folgt im FSD-Umbau (`tasks/plan-fsd-feature-module.md`).
+- Hinweis: "Zulagen" heisst auch die Einstellungs-Sektion "Zulagen" (benoetigte Zulagen-Codes) und die Zulagen-Aufschluesselung in der Berechnung.
+- Tests: Erwartungstexte in `Berechnung.*`, `onboarding.createOnboardingGuideModal`, `syncFeatureTabs` angepasst.
+
 ## 2026-09-20 (161)
 
 ### chore (FSD-Umbau P0: Aliase, Schichtgrenzen als Warnung, Test-Helper-Imports)

@@ -49,7 +49,7 @@ describe('#BerechnungMobileCards', () => {
     // Gruppensummen stehen in den Zwischenüberschriften
     expect(ersterBody.textContent).toContain('EWT');
     expect(ersterBody.textContent).toContain('77,20');
-    expect(ersterBody.textContent).toContain('Nebenbezüge');
+    expect(ersterBody.textContent).toContain('Zulagen');
     expect(ersterBody.textContent).toContain('13,30');
     expect(ersterBody.textContent).toContain('Gesamt');
   });
@@ -60,7 +60,7 @@ describe('#BerechnungMobileCards', () => {
     const ergebnis = { ...leeresErgebnis(1), summeNebenbezuege: 13.3, summeGesamt: 13.3 };
     render(<BerechnungMobileCards monatsErgebnisse={[ergebnis]} aktivierteTabs={[]} />, container);
 
-    expect(container.textContent).toContain('Nebenbezüge');
+    expect(container.textContent).toContain('Zulagen');
     expect(container.textContent).toContain('13,30');
     expect(container.textContent).not.toContain('LRE 1');
     expect(container.textContent).not.toContain('Bereitschaftszulage');
@@ -82,9 +82,9 @@ describe('#BerechnungMobileCards', () => {
 
     const items = container.querySelectorAll('.db-accordion-item');
     // Januar: neben deaktiviert, aber Daten vorhanden → Block sichtbar
-    expect(items[0].querySelector('summary + div')!.textContent).toContain('Nebenbezüge');
+    expect(items[0].querySelector('summary + div')!.textContent).toContain('Zulagen');
     // Februar: neben deaktiviert, keine Daten → Block ausgeblendet
-    expect(items[1].querySelector('summary + div')!.textContent).not.toContain('Nebenbezüge');
+    expect(items[1].querySelector('summary + div')!.textContent).not.toContain('Zulagen');
   });
 
   it('zeigt Zulagen des Monats auch bei nur einem Code im Jahr, lässt 0-Zeilen weg', () => {

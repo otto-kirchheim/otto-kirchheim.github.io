@@ -172,7 +172,7 @@ export function syncLoadedYearResources({
     'dataN',
     N,
     serverTimestamps.dataN ? dayjs(serverTimestamps.dataN).valueOf() : 0,
-    'Nebenbezüge',
+    'Erschwerniszulagen',
   );
 
   const syncedEA = syncResource(

@@ -117,7 +117,7 @@ export function createDatenGeldProxy(datenGeldVorgabe: IVorgabenGeld): IVorgaben
 
 /**
  * Reine Berechnungslogik der Berechnungstabelle: je Monat Bereitschaft (sums[0]), EWT (sums[1]) und
- * Nebenbezüge (sums[2]) sowie deren Gesamtsumme. Die Blöcke bauen die Zwischensummen nacheinander auf
+ * Erschwerniszulagen (sums[2]) sowie deren Gesamtsumme. Die Blöcke bauen die Zwischensummen nacheinander auf
  * (`+=`), ihre Reihenfolge darf nicht verändert werden. Nicht anzuzeigende Werte bleiben `null`.
  *
  * @param datenBerechnung - Monatsdaten (Bereitschaft B, EWT E, Nebengeld N, Entgeltausgleich EA).

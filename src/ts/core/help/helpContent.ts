@@ -84,12 +84,12 @@ const HELP_CONTENT: Record<HelpContextKey, HelpContent> = {
       '"Alle Zeiten entfernen" löscht auch bereits berechnete Zeilen unwiderruflich für den Monat.',
       'Nach Änderungen wird „Berechnen" nicht erneut ausgeführt, wodurch veraltete Fahrzeiten gespeichert werden.',
     ],
-    tipp: 'EWT kann als Hilfe für die Nebenbezüge dienen, ist dafür aber kein Muss.',
+    tipp: 'EWT kann als Hilfe für die Erschwerniszulagen dienen, ist dafür aber kein Muss.',
   },
   'tab.neben': {
-    title: 'Nebenbezüge',
-    kurzbeschreibung: 'Erfassung von Nebenbezügen je Kalendertag im gewählten Monat.',
-    wasKannIchHierMachen: ['Nebenbezüge zu einem Tag hinzufügen', 'Erfasste Nebenbezüge speichern'],
+    title: 'Erschwerniszulagen',
+    kurzbeschreibung: 'Erfassung von Erschwerniszulagen je Kalendertag im gewählten Monat.',
+    wasKannIchHierMachen: ['Erschwerniszulagen zu einem Tag hinzufügen', 'Erfasste Erschwerniszulagen speichern'],
     buttons: [
       { label: 'Hinzufügen', description: 'Neuen Nebenbezugs-Eintrag für einen Tag anlegen' },
       { label: 'Speichern', description: 'Erfasste Einträge dauerhaft sichern' },

@@ -80,7 +80,7 @@ export const PERS_FIELDS: TemplateField[] = [
 export const TAB_OPTIONS = [
   { key: 'bereitschaft', label: 'Bereitschaft' },
   { key: 'ewt', label: 'EWT' },
-  { key: 'neben', label: 'Nebenbezüge' },
+  { key: 'neben', label: 'Erschwerniszulagen' },
   { key: 'ea', label: 'Entgeltausgleich' },
 ] as const;
 

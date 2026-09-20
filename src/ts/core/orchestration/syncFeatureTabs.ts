@@ -35,7 +35,7 @@ const FEATURE_RESOURCES: Record<string, TabResourceKey[]> = {
 const FEATURE_LABELS: Record<string, string> = {
   Bereitschaft: 'Bereitschaft',
   EWT: 'EWT',
-  Neben: 'Nebenbezüge',
+  Neben: 'Erschwerniszulagen',
   EA: 'Entgeltausgleich',
 };
 

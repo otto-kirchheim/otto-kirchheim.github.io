@@ -16,7 +16,7 @@ export function createChangedMonthsByStorage(vorhanden: UnterschiedNachMonat[]):
     Bereitschaftszeit: 'dataBZ',
     Bereitschaftseinsatz: 'dataBE',
     EWT: 'dataE',
-    Nebenbezüge: 'dataN',
+    Erschwerniszulagen: 'dataN',
     Entgeltausgleich: 'dataEA',
   };
 

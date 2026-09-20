@@ -53,25 +53,25 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     Storage.set('VorgabenGeld', VorgabenGeldMock);
   });
 
-  it('entfernt die Nebenbezüge-Zeile, wenn deaktiviert und ganzjährig ohne Daten', () => {
+  it('entfernt die Erschwerniszulagen-Zeile, wenn deaktiviert und ganzjährig ohne Daten', () => {
     setVorgabenU(['bereitschaft', 'ewt']);
 
     generateTableBerechnung({ 1: monatOhneNeben, 2: monatOhneNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.children.length).toBe(12);
-    expect(tbody?.textContent).not.toContain('Summe Nebenbezüge');
+    expect(tbody?.textContent).not.toContain('Summe Zulagen');
     expect(tbody?.textContent).toContain('Summe Gesamt');
   });
 
-  it('zeigt die Nebenbezüge-Zeile trotz Deaktivierung, wenn ein Monat Daten hat', () => {
+  it('zeigt die Erschwerniszulagen-Zeile trotz Deaktivierung, wenn ein Monat Daten hat', () => {
     setVorgabenU(['bereitschaft', 'ewt']);
 
     generateTableBerechnung({ 1: monatOhneNeben, 2: monatMitNeben } as unknown as IVorgabenBerechnung);
 
     const tbody = document.querySelector<HTMLTableSectionElement>('#tbodyBerechnung');
     expect(tbody?.children.length).toBe(13);
-    expect(tbody?.textContent).toContain('Summe Nebenbezüge');
+    expect(tbody?.textContent).toContain('Summe Zulagen');
   });
 
   it('zeigt alle 14 Zeilen (inkl. Entgeltausgleich), wenn keine Einschränkung gesetzt ist', () => {
@@ -84,7 +84,7 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     expect(tbody?.children.length).toBe(14);
   });
 
-  it('fügt bei mehreren Jahres-Zulagen eine Aufschlüsselungszeile vor Summe Nebenbezüge ein', () => {
+  it('fügt bei mehreren Jahres-Zulagen eine Aufschlüsselungszeile vor Summe Zulagen ein', () => {
     setVorgabenU([]);
     Storage.set('Benutzer', 'testuser');
     Storage.set('Jahr', 2026);
@@ -101,7 +101,7 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     expect(tbody?.textContent).toContain('040 Fahrentsch.');
     expect(tbody?.textContent).toContain('846 kein SiPo');
 
-    // Breakdown-Zeile = vorletzte Zeile (vor Summe Nebenbezüge ... Summe Gesamt)
+    // Breakdown-Zeile = vorletzte Zeile (vor Summe Zulagen ... Summe Gesamt)
     const breakdownRow = Array.from(tbody!.children).find(row => row.textContent?.includes('040 Fahrentsch.'))!;
     const zellen = breakdownRow.querySelectorAll(':scope > td');
     // Januar hat Zulagen (040: 2) → gestapelte Werte; Februar ohne Zulagen → leere Zelle
@@ -156,7 +156,7 @@ describe('#generateTableBerechnung Gruppen-Sichtbarkeit (Jahres-Scope)', () => {
     // 13 - 3 (ewt) - 1 (neben) = 9 Zeilen
     expect(tbody?.children.length).toBe(9);
     expect(tbody?.textContent).not.toContain('Summe EWT');
-    expect(tbody?.textContent).not.toContain('Summe Nebenbezüge');
+    expect(tbody?.textContent).not.toContain('Summe Zulagen');
     expect(tbody?.textContent).toContain('Summe Bereitschaft');
     expect(tbody?.textContent).toContain('Summe Gesamt');
   });

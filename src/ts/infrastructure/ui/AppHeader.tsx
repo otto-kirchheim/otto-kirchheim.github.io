@@ -194,7 +194,7 @@ export default function AppHeader() {
           aria-selected={aktiverTab === 'Neben'}
           tabIndex={aktiverTab === 'Neben' ? 0 : -1}
         >
-          Nebenbezüge
+          Zulagen
         </a>
       </DBControlPanelNavigationItem>
       <DBControlPanelNavigationItem active={aktiverTab === 'EA'}>

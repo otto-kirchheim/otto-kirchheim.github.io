@@ -183,7 +183,7 @@ export default function EinstellungenTab() {
                   <div className="d-flex flex-column gap-2">
                     <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
                     <DBCheckbox id="tab-ewt" label="EWT" data-tab-key="ewt" />
-                    <DBCheckbox id="tab-neben" label="Nebenbezüge" data-tab-key="neben" />
+                    <DBCheckbox id="tab-neben" label="Zulagen" data-tab-key="neben" />
                     <DBCheckbox id="tab-ea" label="Entgeltausgleich" data-tab-key="ea" />
                   </div>
                 </div>

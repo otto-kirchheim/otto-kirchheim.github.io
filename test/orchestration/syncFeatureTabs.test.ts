@@ -133,7 +133,7 @@ describe('syncFeatureTabs', () => {
 
     expect(unregisterNeben).not.toHaveBeenCalled();
     expect(mockCreateSnackBar).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'warning', message: expect.stringContaining('Nebenbezüge') }),
+      expect.objectContaining({ status: 'warning', message: expect.stringContaining('Erschwerniszulagen') }),
     );
   });
 

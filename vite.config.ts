@@ -49,7 +49,7 @@ export default defineConfig(() => ({
         start_url: '/',
         display_override: ['window-controls-overlay', 'standalone', 'browser'],
         display: 'standalone',
-        description: 'Generiert PDF von Bereitschaft, EWT & Nebenbezüge Zetteln',
+        description: 'Generiert PDF von Bereitschaft, EWT & Erschwerniszulagen Zetteln',
         lang: 'de',
         dir: 'ltr',
         // DB "neues Design": Weiss als Grund, DB Red bleibt Akzent (nie Flaeche). Das
@@ -246,9 +246,10 @@ export default defineConfig(() => ({
             ],
           },
           {
-            name: 'Nebenbezüge',
+            name: 'Erschwerniszulagen',
+            short_name: 'Zulagen',
             url: '/#Neben',
-            description: 'Nebenbezüge-Zettel',
+            description: 'Erschwerniszulagen-Zettel',
             icons: [
               {
                 src: 'icons/96x96-icon.png',

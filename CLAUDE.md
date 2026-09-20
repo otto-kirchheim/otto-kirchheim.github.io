@@ -83,7 +83,7 @@ src/
 │   └── features/          # Feature-Module
 │       ├── Bereitschaft/  # Bereitschaftsdienst (index, components/, utils/)
 │       ├── EWT/           # Einsatzwechseltaetigkeit
-│       ├── Neben/         # Nebenbezuege
+│       ├── Neben/         # Erschwerniszulagen (EZ)
 │       ├── Berechnung/    # Gesamtberechnung
 │       ├── Einstellungen/ # Benutzer-Einstellungen
 │       └── Admin/         # Admin-Panel (React)

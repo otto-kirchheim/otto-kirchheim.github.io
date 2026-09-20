@@ -27,7 +27,7 @@ import { EditorModalNeben, ShowModalNeben, createAddModalNeben } from './compone
 import { getNebengeldDaten, persistNebengeldTableData } from './utils';
 
 /**
- * Neben-Tab: Tabelle `#tableN` mit Toolbar (Hinzufügen, Speichern, PDF, Hilfe). Nebenbezüge gibt es erst ab 2024; für frühere Jahre bleibt die Tabelle leer und Hinzufügen/PDF melden das per Snackbar.
+ * Neben-Tab: Tabelle `#tableN` mit Toolbar (Hinzufügen, Speichern, PDF, Hilfe). Erschwerniszulagen gibt es erst ab 2024; für frühere Jahre bleibt die Tabelle leer und Hinzufügen/PDF melden das per Snackbar.
  */
 export function NebenTab() {
   const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
@@ -203,7 +203,7 @@ export function NebenTab() {
     <DBSection width="large" spacing="none" className="text-center">
       <div className="raster justify-content-center">
         <DBHeadingH1 className="d-inline-flex align-items-center justify-content-center gap-2">
-          Nebenbezüge
+          Zulagen
           <DBButton
             type="button"
             className="p-0"

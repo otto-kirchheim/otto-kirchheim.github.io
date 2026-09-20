@@ -41,7 +41,7 @@ const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null })
 
 /**
  * Aufklappbare Karte eines Monats: Monatssumme im Kopf, darunter die Gruppen Bereitschaft, EWT,
- * Nebenbezüge, Entgeltausgleich und Gesamt.
+ * Erschwerniszulagen, Entgeltausgleich und Gesamt.
  *
  * @param props - Monatsergebnis, aktivierte Tabs, Zulagen-Aufschlüsselung, Offen-Zustand und Toggle-Callback.
  */
@@ -153,7 +153,7 @@ function MonatsKarte({
         )}
         {zeigeGruppe('neben') && (
           <>
-            <GruppenTitel titel="Nebenbezüge" summe={ergebnis.summeNebenbezuege} />
+            <GruppenTitel titel="Zulagen" summe={ergebnis.summeNebenbezuege} />
             {zulagenZeilen}
           </>
         )}

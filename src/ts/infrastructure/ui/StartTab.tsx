@@ -57,7 +57,7 @@ export default function StartTab() {
             <span className="db-icon text-primary" data-icon="pen" />
             2. Monate erfassen
           </DBHeadingH5>
-          <p className="mb-0">Bereitschaft, EWT und Nebenbezüge eintragen und speichern.</p>
+          <p className="mb-0">Bereitschaft, EWT und Zulagen eintragen und speichern.</p>
         </DBCard>
         <DBCard className="h-100 text-start">
           <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
@@ -104,7 +104,7 @@ export default function StartTab() {
             data-jump-tab="neben-tab"
             icon="cash"
           >
-            Nebenbezüge
+            Zulagen
           </DBButton>
         </div>
         <div className="d-none" id="quick-ea-tab">

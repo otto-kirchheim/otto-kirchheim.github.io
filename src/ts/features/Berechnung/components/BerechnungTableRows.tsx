@@ -124,7 +124,7 @@ const ZEILEN: IZeile[] = [
   {
     id: 'summeNebenbezuege',
     gruppe: 'neben',
-    label: 'Summe Nebenbezüge',
+    label: 'Summe Zulagen',
     inhalt: m => currency(m.summeNebenbezuege),
   },
   {
@@ -165,7 +165,7 @@ function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeile {
 
 /**
  * Zeilen des Berechnungs-`<tbody>`: alle sichtbaren Gruppenzeilen mit je einer Zelle pro Monat.
- * Die Zulagen-Zeile wird nur bei vorhandenen Codes vor "Summe Nebenbezüge" eingefügt.
+ * Die Zulagen-Zeile wird nur bei vorhandenen Codes vor "Summe Zulagen" eingefügt.
  *
  * @param props - Monatsergebnisse, aktivierte Tabs und Zulagen-Aufschlüsselung.
  */
@@ -203,7 +203,7 @@ function BerechnungTableRows({
       {sichtbareZeilen.map((zeile, i) => (
         <tr
           key={zeile.id}
-          // Gruppenwechsel (Bereitschaft/EWT/Nebenbezüge/Gesamt) mit kräftiger Trennlinie markieren
+          // Gruppenwechsel (Bereitschaft/EWT/Zulagen/Gesamt) mit kräftiger Trennlinie markieren
           className={i > 0 && zeile.gruppe !== sichtbareZeilen[i - 1].gruppe ? 'berechnung-gruppen-start' : undefined}
         >
           {zeile.label !== undefined && <th rowSpan={zeile.rowSpan}>{zeile.label}</th>}

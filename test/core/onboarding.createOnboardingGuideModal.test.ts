@@ -159,7 +159,7 @@ describe('createOnboardingGuideModal (Panel)', () => {
     // Tab-Tour: EWT ist versteckt (d-none) und darf nicht vorkommen.
     for (const [titel, _tabSelector] of [
       ['Tab: Bereitschaft', '#bereitschaft-tab'],
-      ['Tab: Nebenbezüge', '#neben-tab'],
+      ['Tab: Erschwerniszulagen', '#neben-tab'],
       ['Tab: Berechnung', '#berechnung-tab'],
     ] as const) {
       expect(getPanel()?.textContent).toContain(titel);
