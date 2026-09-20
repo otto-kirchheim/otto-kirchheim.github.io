@@ -69,39 +69,41 @@ export function isEwtInMonat(item: IDatenEWT, monat: number, mode: TEwtFilter = 
 }
 
 /**
- * Monat einer Nebengeld-Zeile. `Tag` ist `DD.MM.YYYY`, eine reine Tageszahl (dann gilt der
- * gespeicherte Monat) oder ein ISO-Datum.
+ * Monat aus einem `Tag`-Wert von Nebengeld-/Entgeltausgleich-Zeilen: `DD.MM.YYYY`, eine reine
+ * Tageszahl (dann gilt der gespeicherte Monat) oder ein ISO-Datum.
+ *
+ * @param tag - Wert des Feldes `Tag`.
+ * @returns Monat (1-12).
+ */
+function monatAusTag(tag: string): number {
+  const parsedDate = dayjs(tag, 'DD.MM.YYYY', true);
+  if (parsedDate.isValid()) return parsedDate.month() + 1;
+
+  if (/^\d{1,2}$/.test(tag)) {
+    return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
+  }
+
+  return dayjs(tag).month() + 1;
+}
+
+/**
+ * Monat einer Nebengeld-Zeile (`Tag`, siehe `monatAusTag`).
  *
  * @param item - Nebengeld-Zeile.
  * @returns Monat (1-12).
  */
 export function getMonatFromN(item: IDatenN): number {
-  const parsedDate = dayjs(item.Tag, 'DD.MM.YYYY', true);
-  if (parsedDate.isValid()) return parsedDate.month() + 1;
-
-  if (/^\d{1,2}$/.test(item.Tag)) {
-    return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-  }
-
-  return dayjs(item.Tag).month() + 1;
+  return monatAusTag(item.Tag);
 }
 
 /**
- * Monat einer Entgeltausgleich-Zeile. `Tag` ist `DD.MM.YYYY`, eine reine Tageszahl (dann gilt der
- * gespeicherte Monat) oder ein ISO-Datum.
+ * Monat einer Entgeltausgleich-Zeile (`Tag`, siehe `monatAusTag`).
  *
  * @param item - Entgeltausgleich-Zeile.
  * @returns Monat (1-12).
  */
 export function getMonatFromEA(item: IDatenEA): number {
-  const parsedDate = dayjs(item.Tag, 'DD.MM.YYYY', true);
-  if (parsedDate.isValid()) return parsedDate.month() + 1;
-
-  if (/^\d{1,2}$/.test(item.Tag)) {
-    return Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-  }
-
-  return dayjs(item.Tag).month() + 1;
+  return monatAusTag(item.Tag);
 }
 
 /**

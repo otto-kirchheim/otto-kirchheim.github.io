@@ -19,7 +19,7 @@ import { B_WECHSEL_ZEIT } from './constants';
 export default function applyBereitschaftsVorgabe(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,
-  datum = dayjs(parentElement.querySelector<HTMLInputElement>('#bA')?.value) ?? null,
+  datum = dayjs(parentElement.querySelector<HTMLInputElement>('#bA')?.value),
 ): void {
   if (!datum) throw new Error('Datum nicht gefunden');
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });

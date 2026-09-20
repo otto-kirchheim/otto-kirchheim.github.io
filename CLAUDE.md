@@ -24,7 +24,7 @@
 - **Framework:** React 19 (seit 2026-09-06, vorher Preact 10 – siehe `tasks/plan-db-ux-migration.md`)
 - **Build Tool:** Vite (v8) mit `@vitejs/plugin-react` (Oxc)
 - **Sprache:** TypeScript (strict mode; kein any)
-- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app < unlayered` (`src/scss/layers.scss`, dort ausführlich begründet). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`). DB "neues Design" (Phase I): `<html data-density="regular">` (seit 2026-09-13; vorher `functional` -- umgestellt wegen zu kleiner Zeilen-Aktionsknoepfe in Tabellen, siehe `CHANGELOG.md` Eintrag 128/129), Formensprache eckig (`--db-border-radius-*` = 0 am `:root` in `styles.scss`, nur `-full` bleibt), DB-Schwelle (`.schwelle` + `--schwelle-motiv`) am oberen Rand des Startbereichs. `AppHeader.tsx`s `useHeaderForceMobile()` gleicht dabei aus, dass `DBHeader`s fixe `min-width:64em`-CSS-Weiche nicht auf `data-density` reagiert (siehe dort). Brand-Regeln in der Memory `db-brand-farben-neues-design`
+- **Styling:** DB UX Design System 5.3 (`@db-ux/*`, `db-theme` 6.2) + eigene Hilfsklassen (`src/scss/utilities.scss`) + SCSS; Cascade Layers `db-ux < app < unlayered` (`src/scss/layers.scss`, dort ausführlich begründet). Bootstrap ist seit Phase H komplett raus (Paket, CSS, JS, `data-bs-*`). DB "neues Design" (Phase I): `<html data-density="regular">` (seit 2026-09-13; vorher `functional` -- umgestellt wegen zu kleiner Zeilen-Aktionsknoepfe in Tabellen, siehe `CHANGELOG.md` Eintrag 128/129), DB-Schwelle (`.schwelle` + `--schwelle-motiv`) am oberen Rand des Startbereichs. `AppHeader.tsx`s `useHeaderForceMobile()` gleicht dabei aus, dass `DBHeader`s fixe `min-width:64em`-CSS-Weiche nicht auf `data-density` reagiert (siehe dort). Brand-Regeln in der Memory `db-brand-farben-neues-design`
 - **Datum:** dayjs (IMMER dayjs verwenden, NIEMALS native Date-Methoden oder moment.js)
 - **PWA:** vite-plugin-pwa (Service Worker, Auto-Update)
 - **Testing:** Bun test + happy-dom
@@ -106,7 +106,7 @@ reaktiv gelesen. Seit Phase N Slice 2 (abgeschlossen 2026-09-13) gilt das auch f
 Klassen mehr, `App.tsx`s Panes berechnen sie React-eigen aus demselben Store. `setAktivenTab()`
 läuft dafür durch `flushExtern()` (`reactRoot.ts`) – `berechnungMonatsFenster.ts`s
 `tab:shown`-Handler misst synchron `clientWidth` und braucht das Pane davor sichtbar. Admins
-Unternavigation (eigene Tab-Gruppe) bleibt am alten, DOM-schreibenden Mechanismus. Seit Phase N
+Unternavigation (eigene Tab-Gruppe) nutzt denselben Mechanismus mit eigenem Store (`activeAdminTabStore.ts`/`useActiveAdminTab.ts`). Seit Phase N
 (Slice 1, abgeschlossen 2026-09-13) ist die gesamte Shell
 (`App.tsx`) ein einziger React-Baum, der ueber `main.tsx` per `mount()`
 (`infrastructure/ui/reactRoot.ts`, NICHT direkt `createRoot().render()` -- siehe unten) in

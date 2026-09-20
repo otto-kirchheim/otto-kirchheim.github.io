@@ -2,6 +2,24 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (160)
+
+### refactor (Nachlauf zur Kommentar-Durchsicht: Dateien geteilt, Duplikat entfernt)
+
+- **`submitBereitschaftsEinsatz.ts` (570 -> 330 Zeilen)**: Coverage-Logik (`classifyBzCoverage`,
+  `ensureCompleteBzSynced`, `resolveGap`, `resolvePartial`, ...) nach `bzCoverage.ts`, die
+  Einsatz-Pruefungen (`hasOverlap`, `hasConflictingLre1`, `hasLre12TooClose`) nach
+  `bereitschaftsEinsatzPruefungen.ts`. Verhalten unveraendert; `utils/index.ts` importiert aus den neuen Modulen.
+- **`ArbeitszeiteingabePanel.tsx` (690 -> 255 Zeilen)**: `SchichtSection`, `WeekdayChips` und
+  `ScheduleGroupRow` nach `SchichtSection.tsx`; `SchichtOverrideEditor.tsx` importiert von dort.
+- **`getMonatFromItem.ts`**: `getMonatFromN`/`getMonatFromEA` waren identisch und teilen sich jetzt
+  `monatAusTag()`; die exportierten Funktionen bleiben.
+- **`applyBereitschaftsVorgabe.ts`**: redundantes `?? null` am Default-Datum entfernt (`dayjs()` liefert nie
+  `null`). Die Pruefung `!datum` bleibt: ein explizit uebergebenes `null` wird weiter abgefangen (Test).
+- **Doku**: `frontend/CLAUDE.md` ohne den entfernten `:root`-Radius-Block und mit dem eigenen Store der
+  Admin-Unternavigation; `shared/src/formular/types.ts` verweist fuer `schluesselAufPlatz()`/`listenBelegung()`
+  auf `infrastructure/pdf/listen.ts` im Frontend.
+
 ## 2026-09-20 (159)
 
 ### docs (Kommentare durchgesehen, gekuerzt, JSDoc fuer jede Funktion)
@@ -23,12 +41,6 @@ Dieses Changelog dokumentiert Aenderungen im Frontend.
   (`customTableRender.ts`, `autoSaveIndicator.ts`, `DBColorToggler.ts`, `customtable.css`,
   Block `ICON-SATZ`), Tab-Panes werden von `App.tsx` statt `tabController.ts` geschaltet,
   `saveDaten`-Tabellen-Buttons unvollstaendig (`btnSaveEA`), Spaltenkopf-Schwelle `md` -> `sm`.
-- **Bekannte Restpunkte** (nicht Teil dieses Eintrags): `shared/src/formular/types.ts:86` verweist auf
-  `listen.ts` in shared (liegt im Frontend); `frontend/CLAUDE.md` nennt noch den `:root`-Radius-Block
-  in `styles.scss` und Admins alten DOM-Mechanismus; `submitBereitschaftsEinsatz.ts` (570 Zeilen) und
-  `ArbeitszeiteingabePanel.tsx` (690 Zeilen) liegen jetzt ueber der 500-Zeilen-Regel (vorher 451/594);
-  toter Code laut Durchsicht: `dayjs(...) ?? null`-Zweig in `applyBereitschaftsVorgabe.ts`,
-  `getMonatFromN`/`getMonatFromEA` identisch.
 
 ## 2026-09-19 (158)
 

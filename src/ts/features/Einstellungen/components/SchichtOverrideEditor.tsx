@@ -3,7 +3,7 @@ import { type FC } from 'react';
 import type { BereitschaftSchichtTyp, IPerWeekdaySchicht, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { mergePerWeekdaySchicht } from '@/types';
 import { DBCheckbox } from '@db-ux/react-core-components';
-import { SchichtSection } from './ArbeitszeiteingabePanel';
+import { SchichtSection } from './SchichtSection';
 
 const SCHICHT_LABELS: Record<'frueh' | 'spaet' | 'nacht', string> = { frueh: 'Früh', spaet: 'Spät', nacht: 'Nacht' };
 // sonder hat keine Wochentagsstruktur und ist daher nicht per Wochentag überschreibbar.
