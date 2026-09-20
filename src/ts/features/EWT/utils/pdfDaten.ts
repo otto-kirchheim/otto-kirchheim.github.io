@@ -5,8 +5,39 @@ import { isEwtInMonat } from '@/infrastructure/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
 import { alsMinuten, FORMAT, ZEILEN_OPS } from '@/infrastructure/pdf/aggregatoren';
-import type { IEwtPdfBody, IPdfEWT } from '@/infrastructure/pdf/pdfDaten';
 import type { IDatenEWT } from '@/types';
+
+export interface IPdfEWT {
+  Buchungstag: string;
+  Einsatzort: string;
+  Schicht: string;
+  abWE?: string;
+  ab1E?: string;
+  anEE?: string;
+  beginE?: string;
+  endeE?: string;
+  abEE?: string;
+  an1E?: string;
+  anWE?: string;
+  berechnen: boolean;
+  // Vorberechnete Werte, erst durch `ewtAbgeleiteteWerte()` (`features/EWT/utils/pdfDaten.ts`) berechnet,
+  // deshalb optional statt vom Typsystem erzwungen. Renderer-seitig immer vorhanden, sobald
+  // `ewtAbgeleiteteWerte()` durchgelaufen ist.
+  DauerWohnung?: string;
+  DauerErsteTkgSt?: string;
+  Wohnung8bis14?: boolean;
+  Wohnung14bis24?: boolean;
+  WohnungUeber24?: boolean;
+  BeamterUeber8Wohnung?: boolean;
+  TkgSt8bis24?: boolean;
+  TkgStUeber24?: boolean;
+}
+
+export type IEwtPdfBody = {
+  Daten: {
+    EWT: IPdfEWT[];
+  };
+};
 
 const STUNDE = 60;
 

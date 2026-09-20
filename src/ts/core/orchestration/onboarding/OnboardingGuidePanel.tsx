@@ -5,25 +5,21 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 // OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
 import { onEvent } from '@/core/events/appEvents';
 import { featureRegistry } from '@/core/hooks';
-import { getHelpContent, type HelpContextKey } from '@/core/help/helpContent';
+import { getHelpContent } from '@/core/help/helpContent';
+import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { capturePersSnapshot, springeZu, validatePersoenlicheDaten } from './onboardingValidation';
 
 /** Eintrag der Tab-Tour: Tab-Knopf (Selektor), Titel, Kurzbeschreibung und Stichpunkte. */
 export type TourTab = { tabButtonId: string; titel: string; kurzbeschreibung: string; punkte: string[] };
 
 /** Schritt der Ersteinrichtung, unterschieden nach `art`. */
+type BestaetigungSchritt = { art: 'bestaetigung'; id: string; titel: string; beschreibung: string; collapseId: string };
+
 type GuideStep =
-  | { art: 'intro' }
-  | { art: 'pers' }
-  | {
-      art: 'bestaetigung';
-      id: 'arbeitszeit' | 'bereitschaft' | 'fahrzeiten';
-      titel: string;
-      beschreibung: string;
-      collapseId: string;
-    }
-  | { art: 'tour'; tab: TourTab }
-  | { art: 'abschluss' };
+  { art: 'intro' } | { art: 'pers' } | BestaetigungSchritt | { art: 'tour'; tab: TourTab } | { art: 'abschluss' };
+
+/** Feature-abhängiger Teil der Ersteinrichtung, asynchron aus den lazy Feature-Teilen `help` und `einstellungen` geladen. */
+type FeatureInhalt = { tourTabs: TourTab[]; pruefSchritte: BestaetigungSchritt[] };
 
 /**
  * Prüft, ob der Tab-Knopf sichtbar ist (sein `<li>` ist nicht per `d-none` ausgeblendet).
@@ -38,20 +34,22 @@ function istTabSichtbar(tabButtonId: string): boolean {
 }
 
 /**
- * Baut die Tour-Einträge für alle sichtbaren Feature-Tabs (Hilfetexte) und Berechnung.
+ * Baut die Tour-Einträge für alle sichtbaren Feature-Tabs (Hilfetexte) und Berechnung. Ein Feature, dessen Hilfe nicht
+ * geladen werden kann, fehlt in der Tour.
  *
  * @returns Tour-Tabs in Feature-Reihenfolge (`meta.order`), danach Berechnung.
  */
-function getTourTabs(): TourTab[] {
+async function getTourTabs(): Promise<TourTab[]> {
   const tabs: TourTab[] = [];
-  const helpTabs = featureRegistry.metas().map(meta => ({
-    tabButtonId: `#${meta.legacy.navId}`,
-    key: `tab.${meta.legacy.tabKey}` as HelpContextKey,
-  }));
 
-  for (const { tabButtonId, key } of helpTabs) {
+  for (const meta of featureRegistry.metas()) {
+    const tabButtonId = `#${meta.legacy.navId}`;
     if (!istTabSichtbar(tabButtonId)) continue;
-    const content = getHelpContent(key);
+    const content = await getHelpContent(`tab.${meta.legacy.tabKey}`).catch((error: unknown) => {
+      console.error(`Hilfe von '${meta.id}' konnte nicht geladen werden:`, error);
+      return undefined;
+    });
+    if (!content) continue;
     tabs.push({
       tabButtonId,
       titel: content.title,
@@ -70,6 +68,26 @@ function getTourTabs(): TourTab[] {
   }
 
   return tabs;
+}
+
+/**
+ * Baut die Prüf-Schritte der Feature-Abschnitte in den Einstellungen (`section.onboarding`), nach `order` der Abschnitte.
+ * Ein Feature, dessen Tab ausgeblendet ist (in den Einstellungen deaktiviert), hat auch keinen Prüf-Schritt: sein Abschnitt ist versteckt.
+ *
+ * @returns Schritte; leer, wenn kein sichtbares Feature einen Prüf-Schritt anmeldet.
+ */
+async function getPruefSchritte(): Promise<BestaetigungSchritt[]> {
+  const teile = await ladeEinstellungenTeile();
+  return teile
+    .filter(teil => {
+      const navId = featureRegistry.meta(teil.id)?.legacy.navId;
+      return navId === undefined || istTabSichtbar(`#${navId}`);
+    })
+    .flatMap(teil => teil.part.sections)
+    .sort((a, b) => a.order - b.order)
+    .flatMap(({ id, onboarding }) =>
+      onboarding ? [{ art: 'bestaetigung' as const, id, ...onboarding, collapseId: `#${id}` }] : [],
+    );
 }
 
 /**
@@ -123,7 +141,17 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
     if (captureSnapshot) capturePersSnapshot();
   });
 
-  const tourTabs = useMemo(() => getTourTabs(), []);
+  const [inhalt, setInhalt] = useState<FeatureInhalt>({ tourTabs: [], pruefSchritte: [] });
+  useEffect(() => {
+    let aktiv = true;
+    void Promise.all([getTourTabs(), getPruefSchritte()]).then(([tourTabs, pruefSchritte]) => {
+      if (aktiv) setInhalt({ tourTabs, pruefSchritte });
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, []);
+  const { tourTabs, pruefSchritte } = inhalt;
 
   const steps: GuideStep[] = useMemo(
     () => [
@@ -137,25 +165,11 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
           'Prüfe, ob die Schichtzeiten (Früh/Spät/Nacht/Sonder) und die Fahrzeit zu dir passen, und passe sie bei Bedarf direkt dort an.',
         collapseId: '#collapseTwo',
       },
-      {
-        art: 'bestaetigung',
-        id: 'bereitschaft',
-        titel: 'Bereitschaft prüfen',
-        beschreibung:
-          'Prüfe, ob die Vorlagen (Wochentage, Zeiträume und Schichten) deiner Bereitschaftsplanung entsprechen.',
-        collapseId: '#collapseThree',
-      },
-      {
-        art: 'bestaetigung',
-        id: 'fahrzeiten',
-        titel: 'Fahrzeiten prüfen',
-        beschreibung: 'Prüfe, ob alle deine Einsatzorte mit den passenden Fahrzeiten hinterlegt sind.',
-        collapseId: '#collapseFour',
-      },
+      ...pruefSchritte,
       ...tourTabs.map(tab => ({ art: 'tour', tab }) as const),
       { art: 'abschluss' },
     ],
-    [tourTabs],
+    [tourTabs, pruefSchritte],
   );
 
   const step = steps[stepIndex];

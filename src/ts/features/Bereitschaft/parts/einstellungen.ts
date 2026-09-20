@@ -12,7 +12,19 @@ import { BereitschaftsEinsatzZeiträume } from '../utils/constants';
  * Ohne gespeicherte `VorgabenB` gelten die Standard-Einsatzzeiträume.
  */
 const einstellungen: FeatureParts['einstellungen'] = {
-  sections: [{ id: 'collapseThree', titel: 'Bereitschaft', order: 40, Component: BereitschaftAbschnitt }],
+  sections: [
+    {
+      id: 'collapseThree',
+      titel: 'Bereitschaft',
+      order: 40,
+      Component: BereitschaftAbschnitt,
+      onboarding: {
+        titel: 'Bereitschaft prüfen',
+        beschreibung:
+          'Prüfe, ob die Vorlagen (Wochentage, Zeiträume und Schichten) deiner Bereitschaftsplanung entsprechen.',
+      },
+    },
+  ],
 
   /**
    * Laedt die Einsatzzeiträume in die Tabelle und uebernimmt sie in `VorgabenU`.

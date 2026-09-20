@@ -1,9 +1,20 @@
+import type { INebengeld } from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/core/hooks';
 import { filterByMonat, getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
-import type { INebengeldPdfBody, IPdfNebengeld } from '@/infrastructure/pdf/pdfDaten';
+import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';
 import type { IDatenN } from '@/types';
+
+// `Arbeitszeit` wird erst durch `ezAbgeleiteteWerte()` (`features/Neben/utils/pdfDaten.ts`) berechnet, deshalb
+// optional statt vom Typsystem erzwungen.
+export type IPdfNebengeld = Required<Omit<INebengeld, '_id' | 'EWT'>> & { Arbeitszeit?: string };
+
+export interface INebengeldPdfBody extends IPdfBase {
+  Daten: {
+    N: IPdfNebengeld[];
+  };
+}
 
 export interface EzAbgeleiteteWerte {
   /** `"Beginn-Ende"`, z.B. `"07:00-15:45"` -- eine Spalte hat keine `Feld.quellen`/`trenner`-Verkettung. */

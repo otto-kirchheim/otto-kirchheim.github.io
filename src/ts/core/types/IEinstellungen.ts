@@ -11,6 +11,8 @@ export interface IEinstellungenSection {
   order: number;
   /** Inhalt des Abschnitts. */
   Component: ComponentType;
+  /** Prueft-Schritt der Ersteinrichtung fuer diesen Abschnitt (in Reihenfolge von `order`); ohne Angabe kein Schritt. */
+  onboarding?: { titel: string; beschreibung: string };
 }
 
 /** Werte, die ein Feature beim Speichern in `VorgabenU` einbringt; `Einstellungen` wird feldweise zusammengefuehrt. */

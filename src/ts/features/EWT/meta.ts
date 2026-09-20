@@ -35,4 +35,5 @@ export const ewtMeta: FeatureMeta = {
     navId: 'ewt-tab',
     saveButtonId: 'btnSaveE',
   },
+  helpKeys: ['tab.ewt', 'modal.ewt.add', 'modal.ewtEintrag.add', 'modal.ewtEintrag.edit'],
 };

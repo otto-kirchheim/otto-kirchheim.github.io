@@ -8,6 +8,7 @@
 
 import { onEvent } from '@/core/events/appEvents';
 import type { EventChannel, EventChannels } from '@/core/events/types';
+import type { HelpContent } from '@/core/help/helpContent';
 import type { IFeatureBerechnung, IFeatureEinstellungen, IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
@@ -132,6 +133,8 @@ export interface FeatureMeta {
   pdf?: FeaturePdfMeta;
   /** Events, die das Feature auch ohne gemounteten Tab verarbeiten muss (Teil `events` wird dafuer geladen). */
   wakeOn?: readonly EventChannel[];
+  /** Hilfe-Schluessel des Features (`tab.<tabKey>`, `modal.…`); die Texte liefert der lazy Teil `help`. Bestimmt, welches Feature einen Schluessel besitzt. */
+  helpKeys?: readonly string[];
 }
 
 /** Handler je Event fuer das Feature (Teil `events`). */
@@ -154,6 +157,8 @@ export interface FeatureParts {
   berechnung: IFeatureBerechnung;
   /** Einstellungen-Slot: Abschnitte im Akkordeon sowie Befuellen und Einsammeln der Felder des Features. */
   einstellungen: IFeatureEinstellungen;
+  /** Hilfetexte je Schluessel aus `meta.helpKeys` (Tab-Hilfe, Hilfe der Dialoge). */
+  help: Record<string, HelpContent>;
 }
 
 export type FeaturePartName = keyof FeatureParts;

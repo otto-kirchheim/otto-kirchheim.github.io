@@ -42,4 +42,14 @@ export const berMeta: FeatureMeta = {
     navId: 'bereitschaft-tab',
     saveButtonId: 'btnSaveB',
   },
+  helpKeys: [
+    'tab.bereitschaft',
+    'modal.bereitschaft.add',
+    'modal.bereitschaftEintrag.add',
+    'modal.bereitschaftEintrag.edit',
+    'modal.bereitschaftEinsatz.add',
+    'modal.bereitschaftEinsatzEintrag.add',
+    'modal.bereitschaftEinsatzEintrag.edit',
+    'modal.einstellungen.ve',
+  ],
 };

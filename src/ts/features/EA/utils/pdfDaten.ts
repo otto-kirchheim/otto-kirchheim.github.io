@@ -1,9 +1,18 @@
+import type { IEntgeltausgleich } from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/core/hooks';
 import { filterByMonat, getMonatFromEA } from '@/infrastructure/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
-import type { IEntgeltausgleichPdfBody } from '@/infrastructure/pdf/pdfDaten';
+import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';
 import type { IDatenEA } from '@/types';
+
+export type IPdfEA = Required<Omit<IEntgeltausgleich, '_id' | 'EWT'>>;
+
+export interface IEntgeltausgleichPdfBody extends IPdfBase {
+  Daten: {
+    EA: IPdfEA[];
+  };
+}
 
 /**
  * Baut die PDF-Daten des Entgeltausgleichs aus der EA-Tabelle des Exportmonats (nur Feld-Mapping, keine Ableitung).

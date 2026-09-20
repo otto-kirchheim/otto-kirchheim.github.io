@@ -1,15 +1,45 @@
-import type { IVorgabeValue, TarifBesoldung } from '@otto-kirchheim/nebengeld-shared';
+import type {
+  IBereitschaftseinsatz,
+  IBereitschaftszeitraum,
+  IVorgabeValue,
+  TarifBesoldung,
+} from '@otto-kirchheim/nebengeld-shared';
 import type { FeaturePdfContext } from '@/core/hooks';
 import { filterByMonat, getMonatFromBE, getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 import tableToArray from '@/infrastructure/data/tableToArray';
 import { tableIdOf } from '@/infrastructure/data/resourceConfig';
 import { alsMinuten, alsZeitstempelMinuten, ZEILEN_OPS } from '@/infrastructure/pdf/aggregatoren';
-import type {
-  IBereitschaftszeitraumPdfBody,
-  IPdfBereitschaftseinsatz,
-  IPdfBereitschaftszeitraum,
-} from '@/infrastructure/pdf/pdfDaten';
+import type { IPdfBase } from '@/infrastructure/pdf/pdfDaten';
 import type { IDatenBE, IDatenBZ } from '@/types';
+
+// `Dauer` wird erst durch `bzAbgeleiteteWerte()` (`features/Bereitschaft/utils/pdfDaten.ts`) berechnet, deshalb optional
+// statt vom Typsystem erzwungen. Bewusst `number` (Minuten), nicht `"HH:mm"` wie bei EWT.
+// `Pause` bleibt optional (statt über `Required` erzwungen): `generatePDF` setzt eine 0-Pause bewusst
+// auf `undefined`, damit die Spalte leer bleibt statt „0" zu drucken; `bzAbgeleiteteWerte()` rechnet
+// mit `?? 0` weiter.
+export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_id' | 'Pause'>> & {
+  Pause?: number | undefined;
+  Dauer?: number;
+};
+
+// `PrivatKmBetrag` (Euro, Tarifkraft-/Beamter-Satz aus VorgabenGeld) ist wie `Dauer` optional.
+// `PrivatKm` fehlt hier bewusst im `Required`: gedruckt wird je Person nur eine der beiden Spalten
+// (Tarifkraft: rohe km / Beamter: Euro-Betrag), siehe `beAbgeleiteteWerte()`.
+export type IPdfBereitschaftseinsatz = Required<
+  Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'Pause' | 'PrivatKm'>
+> & {
+  Pause?: number | undefined;
+  Dauer?: number;
+  PrivatKmBetrag?: number;
+};
+
+export interface IBereitschaftszeitraumPdfBody extends IPdfBase {
+  Daten: {
+    BZ: IPdfBereitschaftszeitraum[];
+    BE?: IPdfBereitschaftseinsatz[];
+  };
+  Bereitschaftszulage?: Partial<BereitschaftszulageWerte>;
+}
 
 export interface BzAbgeleiteteWerte {
   /** Minuten, nicht HH:mm. */

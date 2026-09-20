@@ -4,6 +4,8 @@ const zeigeTabMock = vi.fn(() => true);
 vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
 import '@/app/features';
+import { featureRegistry } from '@/core/hooks';
+import { resetEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import Storage from '@/infrastructure/storage/Storage';
 import type { IVorgabenU } from '@/types';
 import {
@@ -152,10 +154,8 @@ describe('createOnboardingGuideModal (Panel)', () => {
 
     findButton('Weiter')?.click();
     await tick();
-    expect(getPanel()?.textContent).toContain('Fahrzeiten prüfen');
-
-    findButton('Weiter')?.click();
-    await tick();
+    // EWT ist ausgeblendet: sein Prüf-Schritt (Fahrzeiten) entfällt, es geht direkt in die Tab-Tour.
+    expect(getPanel()?.textContent).not.toContain('Fahrzeiten prüfen');
 
     // Tab-Tour: EWT ist versteckt (d-none) und darf nicht vorkommen.
     for (const [titel, _tabSelector] of [
@@ -207,5 +207,83 @@ describe('createOnboardingGuideModal (Panel)', () => {
     await tick();
 
     expect(getPanel()).toBeNull();
+  });
+
+  it('überspringt den Prüf-Schritt eines Features, dessen Tab ausgeblendet ist, und zeigt die übrigen', async () => {
+    document.querySelector('#bereitschaft-tab')!.closest('li')!.classList.add('d-none');
+    document.querySelector('#ewt-tab')!.closest('li')!.classList.remove('d-none');
+    openOnboardingGuide();
+    await tick();
+    for (let schritt = 0; schritt < 3; schritt++) {
+      findButton('Weiter')?.click();
+      await tick();
+    }
+
+    expect(getPanel()?.textContent).toContain('Fahrzeiten prüfen');
+    expect(getPanel()?.textContent).not.toContain('Bereitschaft prüfen');
+  });
+
+  it('nimmt den Prüf-Schritt und die Tour-Hilfe eines neu angemeldeten Features ohne weitere Änderung auf', async () => {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<ul><li><button id="x-tab" type="button" data-tab-target="X"></button></li></ul>',
+    );
+    featureRegistry.define({
+      meta: {
+        id: 'x',
+        label: 'Dummy',
+        icon: 'document',
+        order: 99,
+        resources: [],
+        legacyDefaultOn: false,
+        legacy: {
+          lifecycleName: 'X',
+          tabKey: 'x',
+          paneId: 'X',
+          rootId: 'x-root',
+          navId: 'x-tab',
+          saveButtonId: 'btnSaveX',
+        },
+        helpKeys: ['tab.x'],
+      },
+      parts: {
+        help: async () => ({
+          default: { 'tab.x': { title: 'Dummy', kurzbeschreibung: 'Ein Dummy.', wasKannIchHierMachen: ['Nichts'] } },
+        }),
+        einstellungen: async () => ({
+          default: {
+            sections: [
+              {
+                id: 'collapseX',
+                titel: 'Dummy',
+                order: 90,
+                Component: () => null,
+                onboarding: { titel: 'Dummy prüfen', beschreibung: 'Dummy-Schritt.' },
+              },
+            ],
+            read: () => undefined,
+            collect: () => ({}),
+          },
+        }),
+      },
+    });
+    resetEinstellungenTeile();
+
+    openOnboardingGuide();
+    await tick();
+    // intro, pers, Arbeitszeit, Bereitschaft (EWT ist ausgeblendet), dann der Schritt des neuen Features
+    for (let schritt = 0; schritt < 4; schritt++) {
+      findButton('Weiter')?.click();
+      await tick();
+    }
+    expect(getPanel()?.textContent).toContain('Dummy prüfen');
+
+    findButton('Weiter')?.click();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+    findButton('Weiter')?.click();
+    await tick();
+    expect(getPanel()?.textContent).toContain('Tab: Dummy');
   });
 });

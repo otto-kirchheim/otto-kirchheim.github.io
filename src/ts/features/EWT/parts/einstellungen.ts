@@ -43,7 +43,18 @@ function collectFahrzeiten(rows: IVorgabenUfZ[]): IVorgabenUfZ[] {
 
 /** Einstellungen-Slot der EWT: Abschnitt "Fahrzeiten" (Tätigkeitsstätten mit Fahrzeit). */
 const einstellungen: FeatureParts['einstellungen'] = {
-  sections: [{ id: 'collapseFour', titel: 'Fahrzeiten', order: 45, Component: FahrzeitenAbschnitt }],
+  sections: [
+    {
+      id: 'collapseFour',
+      titel: 'Fahrzeiten',
+      order: 45,
+      Component: FahrzeitenAbschnitt,
+      onboarding: {
+        titel: 'Fahrzeiten prüfen',
+        beschreibung: 'Prüfe, ob alle deine Einsatzorte mit den passenden Fahrzeiten hinterlegt sind.',
+      },
+    },
+  ],
 
   /**
    * Mountet das `FahrzeitenPanel` mit den gespeicherten Fahrzeiten.

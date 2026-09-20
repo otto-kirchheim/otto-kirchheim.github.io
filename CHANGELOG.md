@@ -2,6 +2,29 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (174)
+
+### refactor (FSD-Umbau P1h: Hilfe und Ersteinrichtung ueber Feature-Slots, Scaffold, Abnahmetests)
+
+- **Neuer lazy Teil `help`** je Feature (`features/<Ordner>/parts/help.ts`): die Hilfetexte von Tab und Dialogen wandern aus `core/help/helpContent.ts` in ihr Feature; `meta.helpKeys` nennt die Schluessel
+  (bestimmt, welches Feature einen Schluessel besitzt). `helpContent.ts` behaelt nur `tab.start` und `tab.einstellungen`. `HelpContextKey` ist jetzt Kern-Schluessel oder String (Feature-Schluessel).
+- **`getHelpContent`/`openHelpModal` sind async** (`openHelpModal` wirft nie: bei Ladefehler oder unbekanntem Schluessel erscheint eine Snackbar statt des Dialogs). Der Text wird erst beim Oeffnen der Hilfe geladen.
+- **Ersteinrichtung aus Slots**: `IEinstellungenSection.onboarding` (Titel, Beschreibung) erzeugt den Pruef-Schritt eines Feature-Abschnitts (Bereitschaft `collapseThree`, Fahrzeiten `collapseFour`) statt fest verdrahteter
+  Schritte; die Tour-Hilfe holt `getHelpContent(tab.<tabKey>)`. Das Panel laedt beides asynchron. **Verhaltensaenderung (auf User-Hinweis):** Ist der Tab eines Features ausgeblendet, entfaellt auch dessen Pruef-Schritt
+  (vorher zeigte er auf einen versteckten Abschnitt). Der Schritt "Arbeitszeit pruefen" bleibt global.
+- **PDF-Body-Typen in die Features**: `IPdfBereitschaftszeitraum`/`IPdfBereitschaftseinsatz`/`IBereitschaftszeitraumPdfBody`, `IPdfEWT`/`IEwtPdfBody`, `IPdfNebengeld`/`INebengeldPdfBody`, `IPdfEA`/`IEntgeltausgleichPdfBody` liegen
+  jetzt in `features/<Ordner>/utils/pdfDaten.ts`; `infrastructure/pdf/pdfDaten.ts` behaelt die Basis (`IPdfBase`, `IPdfPers`, `IPdfFahrzeit`, `IPdfVorgabenGeld`). `Bereitschaftszulage` nutzt `Partial<BereitschaftszulageWerte>`
+  statt der Inline-Kopie (der Zyklus entfaellt).
+- **Scaffold** `bun run new-feature <slug> [--ordner] [--label] [--icon] [--dry-run]` (`scripts/new-feature.ts`): legt `meta.ts`, Tab-Komponente, `parts/ui.tsx`, `parts/help.ts`, einen Test und den Manifest-Eintrag an
+  (`resources: []`; weitere Teile, Ressourcen und ein Eintrag im Admin-Manifest `features/Admin/adminFeatures.ts` von Hand, `features/EA` als Vorlage; ein neues Datenobjekt braucht zusaetzlich `TResourceKey` im shared-Paket).
+- **Abnahme** `test/app/featureAbnahme.test.tsx`: (a) Vertrag je Manifest-Feature (Eindeutigkeit von Ids/Keys/DOM-Ids, Teile passen zu `meta`), (b) Nav, Start, Ressourcen, Berechnung, Einstellungen, Hilfe, PDF-Modus und Tab-Sync
+  laufen mit **jeder der 16 Teilmengen** der vier Features, (c) ein Dummy-Feature erscheint in Nav, Schnellzugriff, Ressourcen, PDF-Modus, Hilfe, Einstellungen und Wake-Events ohne Aenderung ausserhalb des Manifests,
+  (d) Teile laden lazy und je Teil einmal. Dazu `test/scripts.newFeature.test.ts`, Hilfe-Vertrag in `help.helpContent.test.ts` (Schluessel je Feature, im Quellcode verwendete Schluessel loesen auf), Ersteinrichtungs-Tests
+  fuer Dummy-Feature und ausgeblendete Tabs. `test/app/features.test.ts` bezieht sich auf die Kern-Features (weitere Features brechen es nicht).
+- Build: 113 PWA-Precache-Eintraege (vorher 109: +4 `help`-Chunks, je Feature einer, nicht im Eager-Satz). Eager-JS 1274 kB (P0-Baseline ca. 1200 kB): das Ziel "Haupt-Bundle kleiner als Baseline" ist nicht erreicht; die Feature-Komponenten
+  in `features/Einstellungen/components/index.ts` (Barrel) und geteilte Bausteine bleiben statisch im Eager-Satz, das loesen die Move-Phasen (P2 ff.).
+- Gate: typecheck, lint, `lint:fsd` 109 (temporaer +2: `core/help` und `core/orchestration/onboarding` importieren Infrastruktur; sinkt mit P5/P6), Tests 2172 -> 2270, build i.o.
+
 ## 2026-09-20 (173)
 
 ### refactor (FSD-Umbau P1g: Admin nach Features gegliedert, Admin-Manifest)

@@ -10,6 +10,7 @@ vi.mock('@/core/orchestration/onboarding/createOnboardingGuideModal', () => ({
 // registriert einen document-weiten Click-Handler, der ohne echtes .modal-Element crasht.
 // Fuer diesen isolierten Komponententest wird das Modul daher wie in MyShowFooter.test.tsx gemockt.
 
+import '@/app/features';
 import { getHelpContent } from '@/core/help/helpContent';
 
 const { default: MyHelpModal } = await import('@/components/MyHelpModal');
@@ -26,14 +27,14 @@ describe('MyHelpModal', () => {
     vi.clearAllMocks();
   });
 
-  it('does not render a reopen-onboarding action for regular contexts', () => {
-    const container = renderMyHelpModal(getHelpContent('tab.ewt'));
+  it('does not render a reopen-onboarding action for regular contexts', async () => {
+    const container = renderMyHelpModal((await getHelpContent('tab.ewt'))!);
 
     expect(container.textContent).not.toContain('Ersteinrichtung erneut öffnen');
   });
 
-  it('renders and wires the reopen-onboarding action for the start context', () => {
-    const container = renderMyHelpModal(getHelpContent('tab.start'));
+  it('renders and wires the reopen-onboarding action for the start context', async () => {
+    const container = renderMyHelpModal((await getHelpContent('tab.start'))!);
 
     const button = Array.from(container.querySelectorAll('button')).find(btn =>
       btn.textContent?.includes('Ersteinrichtung erneut öffnen'),

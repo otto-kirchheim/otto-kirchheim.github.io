@@ -95,8 +95,8 @@ function zeitpunkt(index: number, stunde: number, plusTage = 0): string {
   return new Date(2026, 2, 1 + index + plusTage, stunde).toISOString();
 }
 
-// Abgeleitet aus `infrastructure/pdf/pdfDaten.ts`: die TS-Typen sind zur Laufzeit weg, daher von Hand
-// gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
+// Abgeleitet aus `infrastructure/pdf/pdfDaten.ts` (Basis) und `features/<Feature>/utils/pdfDaten.ts` (`IPdf*`-Typen je
+// Ressource): die TS-Typen sind zur Laufzeit weg, daher von Hand gepflegt -- bei Änderungen an den `IPdf*`-Typen mitziehen.
 
 const BASIS: KatalogEintrag[] = [
   { pfad: 'Jahr', label: 'Jahr', gruppe: 'Zeitraum', beispiel: 2026 },

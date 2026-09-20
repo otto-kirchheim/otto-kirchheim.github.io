@@ -41,4 +41,5 @@ export const ezMeta: FeatureMeta = {
   },
   // Verknuepfte Zeiten (EWT) muessen auch bei deaktiviertem Tab synchron bleiben, ebenso die Verweise auf geloeschte EWT.
   wakeOn: ['ewt:persisted', 'ewt:deleted'],
+  helpKeys: ['tab.neben', 'modal.neben.add', 'modal.nebenEintrag.add', 'modal.nebenEintrag.edit'],
 };
