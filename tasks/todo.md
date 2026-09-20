@@ -1,4 +1,28 @@
-# Aktueller Plan: Kommentare pruefen und kuerzen - 2026-09-19
+# Aktueller Plan: FSD-Umbau + steckbare Feature-Module - 2026-09-20
+
+Vollständiger Plan: `tasks/plan-fsd-feature-module.md` (Branch `feat/fsd-feature-module`, Basis `feat/react-umbau`). Phasen mit grünem Gate je Phase;
+Dateien verschiebt der User in der IDE, Zielordner legt Claude vorher an.
+
+Gate: `bun run typecheck && bun run lint && bun run test` (+ `bun run build`, `lint:css` bei Alias/CSS/Chunks).
+Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass / 0 fail (198 Dateien), Build-Baseline unten.
+
+- [x] P-1 Branch `feat/fsd-feature-module` angelegt, Baseline typecheck/lint/test notiert
+- [x] P-1 Baseline `bun run build`: exit 0; Entry `index-*.js` 176,61 kB (gzip 43,03 kB); lazy vorhanden: `mountAdminTab` 257,03 kB, `actAs` 6,69 kB, `pdf` 430,94 kB, `decompress` 295,15 kB, `fontkit` 756,37 kB; `react` 218,84 kB; `utils` 1023,53 kB; PWA-Precache 48 Einträge (4691,30 KiB)
+- [ ] P0 Enabling (Aliase `@/*`, `@test/*`, Boundaries als warn, `lint:fsd`, PWA-Precache-Glob prüfen)
+- [ ] P1a Contract-Kern + EA als Referenz
+- [ ] P1b Shell aus `meta`
+- [ ] P1c Ressourcen-Meta & Daten (ez, ewt, ber)
+- [ ] P1d PDF-Provider (`tasks/plan-pdf-feature-provider.md`)
+- [ ] P1e Berechnung-Slot
+- [ ] P1f Einstellungen-Sections
+- [ ] P1g Admin nach Features
+- [ ] P1h Help/Onboarding-Slots + Abnahme
+- [ ] P2 Shared-Leaves · P3 Shared-UI · P4 Domänen-Shared · P5 Geteilte Features + app/session
+- [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
+
+---
+
+# Vorheriger Plan: Kommentare pruefen und kuerzen - 2026-09-19
 
 ## Auftrag
 
