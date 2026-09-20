@@ -152,11 +152,8 @@ registerAppStartTask(() => {
 });
 
 import '@/features/Berechnung';
-import '@/features/Bereitschaft';
-import '@/features/EWT';
 import '@/features/Einstellungen';
 import './core/orchestration/auth';
-import '@/features/Neben';
 import '@/app/features';
 
 initializeAppBootstrap();

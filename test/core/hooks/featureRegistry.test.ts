@@ -6,7 +6,16 @@ import type { FeatureDefinition, FeatureMeta } from '@/core/hooks';
 const ctx = { isAdmin: false, userName: 'TestUser' };
 
 function meta(id: string, order: number, wakeOn?: FeatureMeta['wakeOn']): FeatureMeta {
-  return { id, label: id.toUpperCase(), order, legacy: { lifecycleName: id.toUpperCase(), tabKey: id }, wakeOn };
+  return {
+    id,
+    label: id.toUpperCase(),
+    icon: 'cash',
+    order,
+    resources: [],
+    legacyDefaultOn: true,
+    legacy: { lifecycleName: id.toUpperCase(), tabKey: id, paneId: id, rootId: `${id}-root`, navId: `${id}-tab` },
+    wakeOn,
+  };
 }
 
 /** Definition mit zaehlbaren Ladern statt echter Chunks. */

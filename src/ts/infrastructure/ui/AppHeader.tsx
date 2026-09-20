@@ -13,9 +13,11 @@ import {
   DBTooltip,
 } from '@db-ux/react-core-components';
 import { DBLoadingButton } from '@/components';
+import { featureRegistry } from '@/core/hooks';
 import schliesseMobilenDrawer from './schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
 import useActiveTab from './useActiveTab';
+import useFeatureTabsVisible from './useFeatureTabsVisible';
 import useMediaQuery from './useMediaQuery';
 import useNavigationVisible from './useNavigationVisible';
 import { BREAKPOINTS } from './breakpoints';
@@ -58,6 +60,7 @@ const MONATE_KURZ = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'S
 export default function AppHeader() {
   const navigationSichtbar = useNavigationVisible();
   const aktiverTab = useActiveTab();
+  const featureTabs = useFeatureTabsVisible();
   // Bis ${BREAKPOINTS.md}px kurze Monatsnamen: die volle Namensliste macht das Select auf
   // schmalen Viewports zu breit (siehe `actions1`).
   const schmalerViewport = useMediaQuery(`(max-width: ${BREAKPOINTS.md}px)`);
@@ -158,58 +161,25 @@ export default function AppHeader() {
 
   const navigation = (
     <DBControlPanelNavigation className={navigationSichtbar ? undefined : 'd-none'} aria-label="Hauptnavigation">
-      <DBControlPanelNavigationItem active={aktiverTab === 'Bereitschaft'}>
-        <a
-          role="tab"
-          id="bereitschaft-tab"
-          href="#Bereitschaft"
-          data-tab-target="Bereitschaft"
-          aria-controls="Bereitschaft"
-          aria-selected={aktiverTab === 'Bereitschaft'}
-          tabIndex={aktiverTab === 'Bereitschaft' ? 0 : -1}
+      {featureRegistry.metas().map(({ label, legacy }) => (
+        <DBControlPanelNavigationItem
+          active={aktiverTab === legacy.paneId}
+          className={featureTabs.nav(legacy.navId) ? undefined : 'd-none'}
+          key={legacy.navId}
         >
-          Bereitschaft
-        </a>
-      </DBControlPanelNavigationItem>
-      <DBControlPanelNavigationItem active={aktiverTab === 'EWT'}>
-        <a
-          role="tab"
-          id="ewt-tab"
-          href="#EWT"
-          data-tab-target="EWT"
-          aria-controls="EWT"
-          aria-selected={aktiverTab === 'EWT'}
-          tabIndex={aktiverTab === 'EWT' ? 0 : -1}
-        >
-          EWT
-        </a>
-      </DBControlPanelNavigationItem>
-      <DBControlPanelNavigationItem active={aktiverTab === 'Neben'}>
-        <a
-          role="tab"
-          id="neben-tab"
-          href="#Neben"
-          data-tab-target="Neben"
-          aria-controls="Neben"
-          aria-selected={aktiverTab === 'Neben'}
-          tabIndex={aktiverTab === 'Neben' ? 0 : -1}
-        >
-          Zulagen
-        </a>
-      </DBControlPanelNavigationItem>
-      <DBControlPanelNavigationItem active={aktiverTab === 'EA'}>
-        <a
-          role="tab"
-          id="ea-tab"
-          href="#EA"
-          data-tab-target="EA"
-          aria-controls="EA"
-          aria-selected={aktiverTab === 'EA'}
-          tabIndex={aktiverTab === 'EA' ? 0 : -1}
-        >
-          Entgeltausgleich
-        </a>
-      </DBControlPanelNavigationItem>
+          <a
+            role="tab"
+            id={legacy.navId}
+            href={`#${legacy.paneId}`}
+            data-tab-target={legacy.paneId}
+            aria-controls={legacy.paneId}
+            aria-selected={aktiverTab === legacy.paneId}
+            tabIndex={aktiverTab === legacy.paneId ? 0 : -1}
+          >
+            {label}
+          </a>
+        </DBControlPanelNavigationItem>
+      ))}
       <DBDivider variant={istMobil ? 'horizontal' : 'vertical'} />
       {/* `aktiverTab === null` (Panel `start`, kein eigener Tab) legt den Tastaturfokus der Tabliste
           hierher -- der Roving-Tabindex braucht sonst keinen Eintrag mit `0`. */}

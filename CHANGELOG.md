@@ -2,6 +2,30 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (164)
+
+### refactor (FSD-Umbau P1b: Nav, Panes, Schnellzugriff, Sichtbarkeit und Tab-Sync aus Feature-`meta`)
+
+- **Alle vier Features im Manifest** (`app/features.ts`): Bereitschaft (`ber`), EWT (`ewt`), Neben/EZ (`ez`), EA (`ea`) als `meta.ts` plus lazy `parts/ui.tsx`
+  (`ez` zusaetzlich `parts/events.ts`); die `index.tsx` der drei Features entfallen. `FeatureMeta` traegt jetzt Kurz-/Langlabel, Icon, Ressourcen,
+  `legacyDefaultOn` und die bisherigen Ids (`paneId`, `rootId`, `navId`) in `legacy`.
+- **Aus `meta` erzeugt**: Nav-Eintraege (`AppHeader`), Tab-Panes (`App.tsx`), Start-Schnellzugriff (`StartTab`), Sichtbare-Bereiche-Checkboxen
+  (`EinstellungenTab`), Sichtbarkeit (`updateTabVisibility`) und der Mount/Unmount-Sync samt Ressourcenpruefung und Warntext (`syncFeatureTabs`).
+  Die hartkodierten Tabellen `FEATURE_TAB_MAP`, `LEGACY_DEFAULT_ON_KEYS`, `FEATURE_RESOURCES`, `FEATURE_LABELS`, `TAB_MAP` entfallen; DOM-Ids und
+  Werte (`aktivierteTabs`, `#neben-tab`, `#Neben`) bleiben unveraendert.
+- **Sichtbarkeit per Store**: `updateTabVisibility` schaltet nicht mehr `d-none` per `querySelector`, sondern schreibt in den neuen
+  `featureTabsStore` (`useFeatureTabsVisible`); `AppHeader` (Nav) und `StartTab` (Schnellzugriff) rendern daraus. Der Update laeuft ueber `flushExtern`,
+  das Ergebnis im DOM ist also weiter synchron. Vor dem ersten Setzen gilt das bisherige Markup (Nav sichtbar, Schnellzugriff versteckt).
+- **Startsatz und Onboarding-Tour**: der Satz "... eintragen und speichern." in `StartTab` und die Tour-Tabs im `OnboardingGuidePanel` entstehen aus `meta`
+  (Startsatz: Features mit `legacyDefaultOn`).
+- **`lint:fsd`-Ratsche korrigiert**: die Baseline 132 aus P0 enthielt 22 "unused eslint-disable"-Meldungen der nur registrierten Plugins; diese sind
+  abgeschaltet, die echte Baseline (Schichtverstoesse) ist 110 (`--max-warnings 110`).
+- **Neu**: laesst sich ein Feature-Chunk nicht laden (offline, veraltete Version), zeigt `syncFeatureTabs` eine Fehler-Snackbar, merkt das Feature nicht als
+  gemountet und versucht es beim naechsten Aufruf erneut; die uebrige App laeuft weiter.
+- Tests: `syncFeatureTabs` auf die Registry umgestellt (+ Chunk-Fehler-Fall), `updateTabVisibility` rendert jetzt `AppHeader`/`StartTab` und prueft
+  das DOM (`test/Utilities/updateTabVisibility.test.tsx`), neu `test/app/featureShell.test.tsx` (Nav/Schnellzugriff-Ids) und Manifest-Test fuer alle vier Features.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
 ## 2026-09-20 (163)
 
 ### refactor (FSD-Umbau P1a: Feature-Registry mit lazy Teilen, EA als Referenz)

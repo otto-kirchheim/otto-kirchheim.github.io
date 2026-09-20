@@ -1,3 +1,4 @@
+import type { ComponentProps } from 'react';
 import {
   DBButton,
   DBCard,
@@ -7,6 +8,8 @@ import {
   DBStack,
   DBTooltip,
 } from '@db-ux/react-core-components';
+import { featureRegistry } from '@/core/hooks';
+import useFeatureTabsVisible from './useFeatureTabsVisible';
 
 /**
  * Start-Tab: Willkommenstext, drei Einstiegskarten, Schnellzugriff (nur Mobil) und Ladeanzeige.
@@ -19,6 +22,14 @@ import {
  * in `setLoading.ts`/`clearLoading.ts`) -- diese Bezeichner nicht ohne die Gegenstellen aendern.
  */
 export default function StartTab() {
+  const featureTabs = useFeatureTabsVisible();
+  // Startsatz: die Features, die bei Neu-/Bestandsnutzern standardmaessig an sind (EA erst nach expliziter Aktivierung).
+  const standardFeatures = featureRegistry
+    .metas()
+    .filter(meta => meta.legacyDefaultOn)
+    .map(meta => meta.label);
+  const featureListe = `${standardFeatures.slice(0, -1).join(', ')} und ${standardFeatures.at(-1)}`;
+
   return (
     <DBSection width="medium" spacing="small">
       <div className="text-center mb-4 mb-md-5">
@@ -57,7 +68,7 @@ export default function StartTab() {
             <span className="db-icon text-primary" data-icon="pen" />
             2. Monate erfassen
           </DBHeadingH5>
-          <p className="mb-0">Bereitschaft, EWT und Zulagen eintragen und speichern.</p>
+          <p className="mb-0">{featureListe} eintragen und speichern.</p>
         </DBCard>
         <DBCard className="h-100 text-start">
           <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
@@ -71,54 +82,24 @@ export default function StartTab() {
       {/* d-md-none, nicht d-lg-none: DBHeader wechselt intern bei 64em/1024px (unser
              md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation. */}
       <div className="raster-auto mb-4 d-md-none d-none abstand-3" id="startSchnellzugriff">
-        <div className="d-none" id="quick-bereitschaft-tab">
-          <DBButton
-            type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
-            variant="outlined"
-            width="full"
-            data-jump-tab="bereitschaft-tab"
-            icon="calendar"
+        {featureRegistry.metas().map(({ label, icon, legacy }) => (
+          <div
+            className={featureTabs.quick(legacy.navId) ? undefined : 'd-none'}
+            id={`quick-${legacy.navId}`}
+            key={legacy.navId}
           >
-            Bereitschaft
-          </DBButton>
-        </div>
-        <div className="d-none" id="quick-ewt-tab">
-          <DBButton
-            type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
-            variant="outlined"
-            width="full"
-            data-jump-tab="ewt-tab"
-            icon="changeover"
-          >
-            EWT
-          </DBButton>
-        </div>
-        <div className="d-none" id="quick-neben-tab">
-          <DBButton
-            type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
-            variant="outlined"
-            width="full"
-            data-jump-tab="neben-tab"
-            icon="cash"
-          >
-            Zulagen
-          </DBButton>
-        </div>
-        <div className="d-none" id="quick-ea-tab">
-          <DBButton
-            type="button"
-            className="d-flex flex-column align-items-center gap-1 py-3"
-            variant="outlined"
-            width="full"
-            data-jump-tab="ea-tab"
-            icon="euro_sign"
-          >
-            Entgeltausgleich
-          </DBButton>
-        </div>
+            <DBButton
+              type="button"
+              className="d-flex flex-column align-items-center gap-1 py-3"
+              variant="outlined"
+              width="full"
+              data-jump-tab={legacy.navId}
+              icon={icon as ComponentProps<typeof DBButton>['icon']}
+            >
+              {label}
+            </DBButton>
+          </div>
+        ))}
         <div>
           <DBButton
             type="button"

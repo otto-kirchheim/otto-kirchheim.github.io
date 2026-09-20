@@ -4,6 +4,7 @@ import { type FC, useEffect, useMemo, useState } from 'react';
 // Direktimporte statt Barrel (@/core, @/components), um den Zyklus createOnboardingGuideModal →
 // OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
 import { onEvent } from '@/core/events/appEvents';
+import { featureRegistry } from '@/core/hooks';
 import { getHelpContent, type HelpContextKey } from '@/core/help/helpContent';
 import { capturePersSnapshot, springeZu, validatePersoenlicheDaten } from './onboardingValidation';
 
@@ -39,16 +40,14 @@ function istTabSichtbar(tabButtonId: string): boolean {
 /**
  * Baut die Tour-Einträge für alle sichtbaren Feature-Tabs (Hilfetexte) und Berechnung.
  *
- * @returns Tour-Tabs in Reihenfolge Bereitschaft, EWT, Neben, EA, Berechnung.
+ * @returns Tour-Tabs in Feature-Reihenfolge (`meta.order`), danach Berechnung.
  */
 function getTourTabs(): TourTab[] {
   const tabs: TourTab[] = [];
-  const helpTabs: { tabButtonId: string; key: HelpContextKey }[] = [
-    { tabButtonId: '#bereitschaft-tab', key: 'tab.bereitschaft' },
-    { tabButtonId: '#ewt-tab', key: 'tab.ewt' },
-    { tabButtonId: '#neben-tab', key: 'tab.neben' },
-    { tabButtonId: '#ea-tab', key: 'tab.ea' },
-  ];
+  const helpTabs = featureRegistry.metas().map(meta => ({
+    tabButtonId: `#${meta.legacy.navId}`,
+    key: `tab.${meta.legacy.tabKey}` as HelpContextKey,
+  }));
 
   for (const { tabButtonId, key } of helpTabs) {
     if (!istTabSichtbar(tabButtonId)) continue;

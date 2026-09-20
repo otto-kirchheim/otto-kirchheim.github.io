@@ -14,7 +14,11 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 }));
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
-import { featureLifecycleRegistry } from '@/core/hooks';
+import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
+import { berMeta } from '@/features/Bereitschaft/meta';
+import { eaMeta } from '@/features/EA/meta';
+import { ewtMeta } from '@/features/EWT/meta';
+import { ezMeta } from '@/features/Neben/meta';
 import { resetFeatureTabSync, syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 
 describe('syncFeatureTabs', () => {
@@ -28,6 +32,7 @@ describe('syncFeatureTabs', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     featureLifecycleRegistry.clearAll();
+    featureRegistry.clear();
     resetFeatureTabSync();
 
     mockHasPendingTableChanges.mockReturnValue(false);
@@ -40,26 +45,13 @@ describe('syncFeatureTabs', () => {
     registerEA = vi.fn().mockResolvedValue(undefined);
     unregisterEA = vi.fn().mockResolvedValue(undefined);
 
-    featureLifecycleRegistry.registerFeature({
-      name: 'Bereitschaft',
-      register: registerBereitschaft,
-      unregister: unregisterBereitschaft,
+    const ui = (mount: ReturnType<typeof vi.fn>, unmount: ReturnType<typeof vi.fn>) => async () => ({
+      default: { mount, unmount },
     });
-    featureLifecycleRegistry.registerFeature({
-      name: 'EWT',
-      register: vi.fn().mockResolvedValue(undefined),
-      unregister: vi.fn().mockResolvedValue(undefined),
-    });
-    featureLifecycleRegistry.registerFeature({
-      name: 'Neben',
-      register: registerNeben,
-      unregister: unregisterNeben,
-    });
-    featureLifecycleRegistry.registerFeature({
-      name: 'EA',
-      register: registerEA,
-      unregister: unregisterEA,
-    });
+    featureRegistry.define({ meta: berMeta, parts: { ui: ui(registerBereitschaft, unregisterBereitschaft) } });
+    featureRegistry.define({ meta: ewtMeta, parts: { ui: ui(vi.fn(), vi.fn()) } });
+    featureRegistry.define({ meta: ezMeta, parts: { ui: ui(registerNeben, unregisterNeben) } });
+    featureRegistry.define({ meta: eaMeta, parts: { ui: ui(registerEA, unregisterEA) } });
   });
 
   it('mountet ein Feature, das neu in aktivierteTabs aufgenommen wird', async () => {
@@ -174,5 +166,24 @@ describe('syncFeatureTabs', () => {
   it('ignoriert unbekannte/nicht registrierte Features', async () => {
     featureLifecycleRegistry.clearAll();
     await expect(syncFeatureTabs(['bereitschaft'])).resolves.toBeUndefined();
+  });
+  it('Feature-Chunk nicht ladbar: Fehler-Snackbar, nicht als gemountet gemerkt, naechster Aufruf versucht es erneut', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    featureLifecycleRegistry.clearAll();
+    featureRegistry.clear();
+    const mount = vi.fn();
+    const loadUi = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Failed to fetch dynamically imported module'))
+      .mockResolvedValue({ default: { mount, unmount: vi.fn() } });
+    featureRegistry.define({ meta: berMeta, parts: { ui: loadUi } });
+
+    await expect(syncFeatureTabs(['bereitschaft'])).resolves.toBeUndefined();
+    expect(mockCreateSnackBar).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
+    expect(mount).not.toHaveBeenCalled();
+
+    await syncFeatureTabs(['bereitschaft']);
+    expect(mount).toHaveBeenCalledTimes(1);
+    consoleError.mockRestore();
   });
 });

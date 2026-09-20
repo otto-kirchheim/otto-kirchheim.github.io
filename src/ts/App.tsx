@@ -1,4 +1,5 @@
 import { DBButton, DBNotification, DBShell, DBShellContent } from '@db-ux/react-core-components';
+import { featureRegistry } from '@/core/hooks';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
 import SnackbarHost from '@/infrastructure/ui/SnackbarHost';
@@ -76,21 +77,11 @@ export default function App() {
             <StartTab />
           </div>
 
-          <div className={paneKlasse('Bereitschaft')} id="Bereitschaft" role="tabpanel">
-            <div id="bereitschaft-root"></div>
-          </div>
-
-          <div className={paneKlasse('EWT')} id="EWT" role="tabpanel">
-            <div id="ewt-root"></div>
-          </div>
-
-          <div className={paneKlasse('Neben')} id="Neben" role="tabpanel">
-            <div id="neben-root"></div>
-          </div>
-
-          <div className={paneKlasse('EA')} id="EA" role="tabpanel">
-            <div id="ea-root"></div>
-          </div>
+          {featureRegistry.metas().map(({ legacy }) => (
+            <div className={paneKlasse(legacy.paneId)} id={legacy.paneId} role="tabpanel" key={legacy.paneId}>
+              <div id={legacy.rootId}></div>
+            </div>
+          ))}
 
           <div className={paneKlasse('Berechnung')} id="Berechnung" role="tabpanel">
             <BerechnungTab />

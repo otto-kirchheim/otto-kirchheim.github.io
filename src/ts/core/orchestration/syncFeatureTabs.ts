@@ -1,43 +1,9 @@
-import { featureLifecycleRegistry } from '@/core/hooks';
-import type { FeatureContext } from '@/core/hooks';
+import { featureLifecycleRegistry, featureRegistry } from '@/core/hooks';
+import type { FeatureContext, FeatureMeta } from '@/core/hooks';
 import { getResourceStatus, hasPendingTableChanges } from '@/infrastructure/autoSave/autoSave';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { setMonatsUeberschriften } from '@/features/Einstellungen/utils/setMonatJahr';
-import type { TResourceKey } from '@/types';
-
-type TabResourceKey = Exclude<TResourceKey, 'settings'>;
-
-/** Mapping: aktivierteTabs-Wert → featureLifecycleRegistry-Name (siehe updateTabVisibility.ts) */
-const FEATURE_TAB_MAP: Record<string, string> = {
-  bereitschaft: 'Bereitschaft',
-  ewt: 'EWT',
-  neben: 'Neben',
-  ea: 'EA',
-};
-
-/**
- * Tabs, die bei leerem aktivierteTabs (Alt-User ohne explizite Einstellung) weiterhin automatisch
- * an sind. 'ea' ist bewusst NICHT enthalten — der Tab mountet nur, wenn aktivierteTabs 'ea' explizit
- * enthält, damit er für Bestands- und Neu-User nicht ungewollt standardmäßig sichtbar wird.
- */
-const LEGACY_DEFAULT_ON_KEYS = ['bereitschaft', 'ewt', 'neben'];
-
-/** Ressourcen je Feature — vor dem Unmount geprüft, ob dort noch ungesynchte Änderungen liegen. */
-const FEATURE_RESOURCES: Record<string, TabResourceKey[]> = {
-  Bereitschaft: ['BZ', 'BE'],
-  EWT: ['EWT'],
-  Neben: ['N'],
-  EA: ['EA'],
-};
-
-/** Anzeigename je Feature für die Warn-Snackbar. */
-const FEATURE_LABELS: Record<string, string> = {
-  Bereitschaft: 'Bereitschaft',
-  EWT: 'EWT',
-  Neben: 'Erschwerniszulagen',
-  EA: 'Entgeltausgleich',
-};
 
 /** Aktuell gemountete Feature-Namen — verhindert doppeltes register()/unregister() bei unverändertem Zustand. */
 const mountedFeatures = new Set<string>();
@@ -45,12 +11,11 @@ const mountedFeatures = new Set<string>();
 /**
  * Prüft, ob Ressourcen des Features noch ungesyncte Änderungen haben oder im Fehlerstatus sind.
  *
- * @param name - Feature-Name (Schlüssel in `FEATURE_RESOURCES`).
+ * @param meta - Metadaten des Features (`resources`).
  * @returns `true`, wenn mindestens eine Ressource Änderungen oder einen Fehler trägt.
  */
-function hasUnsyncedChanges(name: string): boolean {
-  const resources = FEATURE_RESOURCES[name] ?? [];
-  return resources.some(
+function hasUnsyncedChanges(meta: FeatureMeta): boolean {
+  return meta.resources.some(
     resource => hasPendingTableChanges(resource, true) || getResourceStatus(resource).status === 'error',
   );
 }
@@ -64,13 +29,18 @@ function hasUnsyncedChanges(name: string): boolean {
  * diesem Durchlauf übersprungen (Set-Eintrag bleibt "gemountet") und eine Warn-Snackbar gezeigt — der
  * nächste erfolgreiche Aufruf (nächstes Speichern oder Login) holt das Unmounten automatisch nach.
  *
- * @param aktivierteTabs - Schlüssel der aktiven Tabs; leer/`undefined` steht für `LEGACY_DEFAULT_ON_KEYS`.
+ * @param aktivierteTabs - Schlüssel der aktiven Tabs; leer/`undefined` steht für die Features mit `legacyDefaultOn`.
  */
 export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Promise<void> {
-  const enabledKeys = !aktivierteTabs || aktivierteTabs.length === 0 ? LEGACY_DEFAULT_ON_KEYS : aktivierteTabs;
+  const metas = featureRegistry.metas();
+  const enabledKeys =
+    !aktivierteTabs || aktivierteTabs.length === 0
+      ? metas.filter(meta => meta.legacyDefaultOn).map(meta => meta.legacy.tabKey)
+      : aktivierteTabs;
 
-  for (const [key, name] of Object.entries(FEATURE_TAB_MAP)) {
-    const shouldBeMounted = enabledKeys.includes(key);
+  for (const meta of metas) {
+    const name = meta.legacy.lifecycleName;
+    const shouldBeMounted = enabledKeys.includes(meta.legacy.tabKey);
     const isMounted = mountedFeatures.has(name);
     if (shouldBeMounted === isMounted) continue;
 
@@ -78,14 +48,26 @@ export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Pro
     if (!feature) continue;
 
     if (shouldBeMounted) {
-      await feature.register({} as FeatureContext);
-      mountedFeatures.add(name);
+      try {
+        await feature.register({} as FeatureContext);
+        mountedFeatures.add(name);
+      } catch (error) {
+        // Feature-Chunk nicht ladbar (offline, veraltete Version): nicht als gemountet merken, damit der
+        // naechste Aufruf es erneut versucht; die uebrige App laeuft weiter.
+        console.error(`Feature '${name}' konnte nicht geladen werden:`, error);
+        createSnackBar({
+          message: `${meta.longLabel ?? meta.label} konnte nicht geladen werden – bitte Seite neu laden`,
+          status: 'error',
+          timeout: 5000,
+          fixed: true,
+        });
+      }
       continue;
     }
 
-    if (hasUnsyncedChanges(name)) {
+    if (hasUnsyncedChanges(meta)) {
       createSnackBar({
-        message: `${FEATURE_LABELS[name]} konnte nicht deaktiviert werden – ungespeicherte Änderungen`,
+        message: `${meta.longLabel ?? meta.label} konnte nicht deaktiviert werden – ungespeicherte Änderungen`,
         status: 'warning',
         timeout: 5000,
         fixed: true,

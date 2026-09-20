@@ -4,7 +4,7 @@
  * geschrieben wird aus `auth/index.ts`, `loadUserDaten.ts` und `logoutUser.ts`.
  *
  * WICHTIG: Die Navigation wird IMMER gerendert, nur die Klasse wechselt -- nicht bedingt
- * (`{sichtbar && <Navigation>}`). `auth/index.ts`s `updateTabVisibility()`, der Admin-Toggle und
+ * (`{sichtbar && <Navigation>}`). der Admin-Toggle und
  * die Klick-Listener greifen per `querySelector` auf Nav-Kinder (`#admin-tab`,
  * `#bereitschaft-tab`, ...) zu, bevor `setNavigationSichtbar(true)` lief; bei bedingtem Rendern
  * gaebe es die Elemente dann noch nicht, die Aufrufe liefen ins Leere und wuerden nie wiederholt.

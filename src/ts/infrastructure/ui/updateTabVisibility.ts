@@ -1,55 +1,28 @@
-/** Mapping: aktivierteTabs-Wert → HTML-Tab-Button-ID */
-const TAB_MAP: Record<string, string> = {
-  bereitschaft: 'bereitschaft-tab',
-  ewt: 'ewt-tab',
-  neben: 'neben-tab',
-  ea: 'ea-tab',
-};
-
-/** Alle steuerbaren Tab-IDs */
-const ALL_TAB_IDS = Object.values(TAB_MAP);
+import { featureRegistry } from '@/core/hooks';
+import { setFeatureTabsVisible } from './featureTabsStore';
+import { flushExtern } from './reactRoot';
 
 /**
- * Tab-IDs, die bei leerem aktivierteTabs (Alt-User ohne explizite Einstellung) sichtbar sind —
- * deckungsgleich mit LEGACY_DEFAULT_ON_KEYS in syncFeatureTabs.ts. 'ea-tab' fehlt bewusst: der
- * Entgeltausgleich-Tab wuerde sonst als Nav-Eintrag erscheinen, obwohl syncFeatureTabs.ts das
- * Feature ohne explizites 'ea' nicht mountet.
- */
-const LEGACY_DEFAULT_ON_TAB_IDS = new Set(['bereitschaft-tab', 'ewt-tab', 'neben-tab']);
-
-/**
- * Blendet Nav-Eintrag und zugehörigen Schnellzugriff-Button (Start-Tab) gemeinsam ein/aus.
+ * Zeigt/Versteckt Feature-Tabs (Nav-Eintrag und Start-Schnellzugriff gemeinsam) basierend auf `aktivierteTabs`.
+ * Wenn `aktivierteTabs` leer oder nicht gesetzt ist, werden nur die Features mit `legacyDefaultOn` angezeigt
+ * (deckungsgleich mit `syncFeatureTabs.ts`; EA fehlt bewusst: ohne explizites `ea` wird das Feature nicht gemountet).
+ * Schreibt in `featureTabsStore`; `AppHeader.tsx` und `StartTab.tsx` rendern daraus.
  *
- * @param tabId - Id des Nav-Buttons (Wert aus `TAB_MAP`); der Schnellzugriff heisst `quick-<tabId>`.
- * @param visible - `false` setzt `d-none`.
- */
-function toggleFeatureTab(tabId: string, visible: boolean): void {
-  // `querySelectorAll`, nicht `querySelector`: die Nav-Eintraege existieren zweimal
-  // (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`).
-  document
-    .querySelectorAll<HTMLButtonElement>(`#${tabId}`)
-    .forEach(el => el.parentElement?.classList.toggle('d-none', !visible));
-  document.querySelector<HTMLButtonElement>(`#quick-${tabId}`)?.classList.toggle('d-none', !visible);
-}
-
-/**
- * Zeigt/Versteckt Feature-Tabs basierend auf `aktivierteTabs`.
- * Wenn `aktivierteTabs` leer oder nicht gesetzt ist, werden nur die Legacy-Default-Tabs angezeigt.
- *
- * @param aktivierteTabs - Schluessel aus `TAB_MAP` (`bereitschaft`, `ewt`, `neben`, `ea`); unbekannte werden ignoriert.
+ * @param aktivierteTabs - Werte aus `meta.legacy.tabKey` (`bereitschaft`, `ewt`, `neben`, `ea`); unbekannte werden ignoriert.
  */
 export default function updateTabVisibility(aktivierteTabs?: string[]): void {
-  if (!aktivierteTabs || aktivierteTabs.length === 0) {
-    for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, LEGACY_DEFAULT_ON_TAB_IDS.has(tabId));
-    return;
-  }
+  const useDefaults = !aktivierteTabs || aktivierteTabs.length === 0;
 
-  const activeIds = new Set(aktivierteTabs.map(tab => TAB_MAP[tab]).filter(Boolean));
+  const navIds = featureRegistry
+    .metas()
+    .filter(meta => (useDefaults ? meta.legacyDefaultOn : aktivierteTabs.includes(meta.legacy.tabKey)))
+    .map(meta => meta.legacy.navId);
 
-  for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, activeIds.has(tabId));
+  // Synchron ins DOM, wie das bisherige direkte `d-none`-Toggeln (Aufrufer lesen die Sichtbarkeit danach z. B. per `closest('li')`).
+  flushExtern(() => setFeatureTabsVisible(navIds));
 }
 
 /** Versteckt alle Feature-Tabs (z. B. beim logoutUser). */
 export function hideAllFeatureTabs(): void {
-  for (const tabId of ALL_TAB_IDS) toggleFeatureTab(tabId, false);
+  flushExtern(() => setFeatureTabsVisible([]));
 }

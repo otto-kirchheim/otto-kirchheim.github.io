@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 const zeigeTabMock = vi.fn(() => true);
 vi.mock('@/infrastructure/ui/tabController', () => ({ zeigeTab: zeigeTabMock }));
 
+import '@/app/features';
 import Storage from '@/infrastructure/storage/Storage';
 import type { IVorgabenU } from '@/types';
 import {

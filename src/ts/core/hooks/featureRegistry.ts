@@ -8,21 +8,31 @@
 
 import { onEvent } from '@/core/events/appEvents';
 import type { EventChannel, EventChannels } from '@/core/events/types';
+import type { TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
 /** Eager gehaltene, rein deklarative Beschreibung eines Features (klein halten, kein Feature-Code importieren). */
 export interface FeatureMeta {
   /** Schluessel des Features (Ordner, Manifest), z. B. `ea`. */
   id: string;
-  /** Anzeigename. */
+  /** Kurzer Anzeigename fuer Nav, Schnellzugriff und Tabs (Platz knapp). */
   label: string;
+  /** Langer Anzeigename fuer Fliesstext; ohne Angabe gilt `label`. */
+  longLabel?: string;
+  /** Icon-Name (DB-UX-Iconset) fuer den Schnellzugriff auf der Startseite. */
+  icon: string;
   /** Sortierung der Features untereinander (Nav, Tabs). */
   order: number;
+  /** Ressourcen des Features; vor dem Abbau des Tabs auf ungesyncte Aenderungen geprueft. */
+  resources: readonly Exclude<TResourceKey, 'settings'>[];
+  /** `true`: Tab ist bei leerem `aktivierteTabs` (Alt-User ohne explizite Einstellung) an. */
+  legacyDefaultOn: boolean;
   /**
-   * Heutige, persistierte oder vertragliche Werte, die sich nicht aendern (siehe Plan, Namenskonvention).
-   * `lifecycleName` ist der Name in `featureLifecycleRegistry`, `tabKey` der Wert in `aktivierteTabs`.
+   * Heutige, persistierte oder vertragliche Werte und DOM-Ids, die sich nicht aendern (siehe Plan, Namenskonvention).
+   * `lifecycleName`: Name in `featureLifecycleRegistry`; `tabKey`: Wert in `aktivierteTabs`; `paneId`: Tab-Pane und
+   * `data-tab-target`; `rootId`: React-Mount-Punkt in der Pane; `navId`: Id des Nav-Eintrags (`quick-<navId>` = Schnellzugriff).
    */
-  legacy: { lifecycleName: string; tabKey: string };
+  legacy: { lifecycleName: string; tabKey: string; paneId: string; rootId: string; navId: string };
   /** Events, die das Feature auch ohne gemounteten Tab verarbeiten muss (Teil `events` wird dafuer geladen). */
   wakeOn?: readonly EventChannel[];
 }

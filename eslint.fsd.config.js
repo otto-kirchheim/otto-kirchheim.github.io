@@ -26,6 +26,8 @@ export default defineConfig(
   {
     files: ['src/ts/**/*.ts', 'src/ts/**/*.tsx'],
     languageOptions: { parser: tseslint.parser },
+    // Die Plugins sind nur registriert, nicht aktiv: ihre Direktiven wuerden sonst als 'unused' gezaehlt.
+    linterOptions: { reportUnusedDisableDirectives: 'off' },
     // Nur registriert (ohne Regeln), damit vorhandene `eslint-disable`-Kommentare dieser Plugins aufloesen.
     plugins: { 'db-ux': dbUx, 'react-hooks': reactHooks },
   },

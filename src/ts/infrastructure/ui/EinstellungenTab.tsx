@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { DBLoadingButton } from '@/components';
+import { featureRegistry } from '@/core/hooks';
 import {
   DBAccordion,
   DBAccordionItem,
@@ -181,10 +182,14 @@ export default function EinstellungenTab() {
                   <DBHeadingH6 className="fw-bold mb-3">Sichtbare Bereiche</DBHeadingH6>
                   <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
                   <div className="d-flex flex-column gap-2">
-                    <DBCheckbox id="tab-bereitschaft" label="Bereitschaft" data-tab-key="bereitschaft" />
-                    <DBCheckbox id="tab-ewt" label="EWT" data-tab-key="ewt" />
-                    <DBCheckbox id="tab-neben" label="Zulagen" data-tab-key="neben" />
-                    <DBCheckbox id="tab-ea" label="Entgeltausgleich" data-tab-key="ea" />
+                    {featureRegistry.metas().map(({ label, legacy }) => (
+                      <DBCheckbox
+                        id={`tab-${legacy.tabKey}`}
+                        label={label}
+                        data-tab-key={legacy.tabKey}
+                        key={legacy.tabKey}
+                      />
+                    ))}
                   </div>
                 </div>
 
