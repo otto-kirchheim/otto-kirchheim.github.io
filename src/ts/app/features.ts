@@ -17,6 +17,7 @@ featureRegistry.define({
     data: () => import('@/features/Bereitschaft/parts/data'),
     pdf: () => import('@/features/Bereitschaft/parts/pdf'),
     berechnung: () => import('@/features/Bereitschaft/parts/berechnung'),
+    einstellungen: () => import('@/features/Bereitschaft/parts/einstellungen'),
   },
 });
 
@@ -27,6 +28,7 @@ featureRegistry.define({
     data: () => import('@/features/EWT/parts/data'),
     pdf: () => import('@/features/EWT/parts/pdf'),
     berechnung: () => import('@/features/EWT/parts/berechnung'),
+    einstellungen: () => import('@/features/EWT/parts/einstellungen'),
   },
 });
 
@@ -37,6 +39,7 @@ featureRegistry.define({
     data: () => import('@/features/Neben/parts/data'),
     pdf: () => import('@/features/Neben/parts/pdf'),
     berechnung: () => import('@/features/Neben/parts/berechnung'),
+    einstellungen: () => import('@/features/Neben/parts/einstellungen'),
     events: () => import('@/features/Neben/parts/events'),
   },
 });

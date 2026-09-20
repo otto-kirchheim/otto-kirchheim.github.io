@@ -8,7 +8,7 @@
 
 import { onEvent } from '@/core/events/appEvents';
 import type { EventChannel, EventChannels } from '@/core/events/types';
-import type { IFeatureBerechnung, IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
+import type { IFeatureBerechnung, IFeatureEinstellungen, IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
 /** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
@@ -152,6 +152,8 @@ export interface FeatureParts {
   pdf: { baueDaten(context: FeaturePdfContext): Record<string, unknown> };
   /** Berechnungs-Slot: Aggregation, Formeln und Darstellung der Gruppe des Features in der Berechnung. */
   berechnung: IFeatureBerechnung;
+  /** Einstellungen-Slot: Abschnitte im Akkordeon sowie Befuellen und Einsammeln der Felder des Features. */
+  einstellungen: IFeatureEinstellungen;
 }
 
 export type FeaturePartName = keyof FeatureParts;
@@ -249,13 +251,15 @@ class FeatureRegistry {
   }
 
   /**
-   * Laedt einen Teil fuer alle definierten Features (nach `meta.order`).
+   * Laedt einen Teil fuer alle definierten Features, die ihn haben (nach `meta.order`); Features ohne diesen Teil werden uebersprungen.
    *
    * @param part - Teil-Name.
    */
   loadAll<P extends FeaturePartName>(part: P): Promise<FeaturePartResult<P>[]> {
     return this.loadMany(
-      this.metas().map(meta => meta.id),
+      this.metas()
+        .filter(meta => this.definitions.get(meta.id)?.parts[part])
+        .map(meta => meta.id),
       part,
     );
   }

@@ -6,6 +6,9 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   setMonatJahr: vi.fn(),
 }));
 
+vi.mock('@/features/Einstellungen/utils/saveTableDataVorgabenU', () => ({ default: vi.fn() }));
+vi.mock('@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB', () => ({ default: vi.fn() }));
+
 vi.mock('@/features/Bereitschaft/utils/constants', () => ({
   BereitschaftsEinsatzZeiträume: {},
 }));
@@ -14,6 +17,7 @@ vi.mock('@/infrastructure/storage/Storage', () => ({
   default: { get: vi.fn(), set: vi.fn(), check: vi.fn() },
 }));
 
+import '@/app/features';
 import {
   default as generateEingabeMaskeEinstellungen,
   formatDelayLabel,
@@ -24,7 +28,7 @@ import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/
 import type { IVorgabenU } from '@/types';
 import { createCustomTable } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/core/types';
-import { saveTableDataVorgabenU } from '@/features/Einstellungen/utils';
+import { default as saveTableDataVorgabenU } from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
 import Storage from '@/infrastructure/storage/Storage';
 
 afterEach(() => {
@@ -41,19 +45,19 @@ async function flush(): Promise<void> {
 // ─── formatDelayLabel ────────────────────────────────────────────────────────
 
 describe('formatDelayLabel', () => {
-  it('zeigt ms unter 1000ms', () => {
+  it('zeigt ms unter 1000ms', async () => {
     expect(formatDelayLabel(0)).toBe('0 ms');
     expect(formatDelayLabel(500)).toBe('500 ms');
     expect(formatDelayLabel(999)).toBe('999 ms');
   });
 
-  it('zeigt Sekunden zwischen 1000 und 59999ms', () => {
+  it('zeigt Sekunden zwischen 1000 und 59999ms', async () => {
     expect(formatDelayLabel(1000)).toBe('1 s');
     expect(formatDelayLabel(5000)).toBe('5 s');
     expect(formatDelayLabel(59999)).toBe('60 s');
   });
 
-  it('zeigt Minuten ab 60000ms', () => {
+  it('zeigt Minuten ab 60000ms', async () => {
     expect(formatDelayLabel(60000)).toBe('1 min');
     expect(formatDelayLabel(120000)).toBe('2 min');
     expect(formatDelayLabel(300000)).toBe('5 min');
@@ -155,14 +159,14 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
     document.body.appendChild(table);
   }
 
-  it('begrenzt Erschwerniszulagen auf max. 7 bei Initialwerten', () => {
+  it('begrenzt Erschwerniszulagen auf max. 7 bei Initialwerten', async () => {
     setupDomShell();
 
     const erschwernisCodes = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
       .slice(0, 8)
       .map(item => item.code);
 
-    generateEingabeMaskeEinstellungen(buildVorgabenU(erschwernisCodes));
+    await generateEingabeMaskeEinstellungen(buildVorgabenU(erschwernisCodes));
 
     const checkedErschwernis = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
       .map(item =>
@@ -175,7 +179,7 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
 
   it('deaktiviert weitere Erschwerniszulagen nach 7 Selektionen und aktiviert bei Abwahl wieder', async () => {
     setupDomShell();
-    generateEingabeMaskeEinstellungen(buildVorgabenU());
+    await generateEingabeMaskeEinstellungen(buildVorgabenU());
 
     const erschwernisInputs = ZULAGEN_CATALOG.filter(item => item.category === ZulageCategory.Erschwerniszulage)
       .slice(0, 8)
@@ -201,9 +205,9 @@ describe('generateEingabeMaskeEinstellungen - Zulagen Limits', () => {
     expect(eighth.disabled).toBe(false);
   });
 
-  it('rendert Zulagen in sichtbaren Kategorie-Sektionen mit Limit-Hinweis', () => {
+  it('rendert Zulagen in sichtbaren Kategorie-Sektionen mit Limit-Hinweis', async () => {
     setupDomShell();
-    generateEingabeMaskeEinstellungen(buildVorgabenU());
+    await generateEingabeMaskeEinstellungen(buildVorgabenU());
 
     const sections = document.querySelectorAll<HTMLElement>('#settings-zulagen-list [data-zulage-category-section]');
     expect(sections.length).toBe(3);
@@ -298,7 +302,7 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
     document.body.appendChild(table);
   }
 
-  it('befüllt Tätigkeitsstätten-Tabelle, persönliche Felder, Tabs, AutoSave-Einstellungen und nutzt eine echte CustomTable-Instanz', () => {
+  it('befüllt Tätigkeitsstätten-Tabelle, persönliche Felder, Tabs, AutoSave-Einstellungen und nutzt eine echte CustomTable-Instanz', async () => {
     setupFullDomShell();
     (Storage.get as ReturnType<typeof vi.fn>).mockReturnValue('erika@example.com');
 
@@ -309,7 +313,7 @@ describe('generateEingabeMaskeEinstellungen - vollständige Maske', () => {
       sorting: { enabled: false },
     });
 
-    generateEingabeMaskeEinstellungen(buildFullVorgabenU());
+    await generateEingabeMaskeEinstellungen(buildFullVorgabenU());
 
     // renderFahrzeitenPanel: Preact-Panel rendert genau die fZ-Zeilen (keine fixen Leerzeilen mehr).
     const fahrzeitenPanel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');

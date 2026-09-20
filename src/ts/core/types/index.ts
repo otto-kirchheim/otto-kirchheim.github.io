@@ -5,6 +5,7 @@ export * from './IAutoSave.js';
 export * from './IBerechnung.js';
 export * from './IDataQuery.js';
 export * from './IDaten.js';
+export * from './IEinstellungen.js';
 export * from './IUserDatenServer.js';
 export * from './IVorgabenBerechnungMonat.js';
 export * from './IVorgabenE.js';

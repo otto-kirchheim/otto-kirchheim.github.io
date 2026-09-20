@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (172)
+
+### refactor (FSD-Umbau P1f: Einstellungen-Abschnitte und -Felder ueber Feature-Slots)
+
+- **Neuer lazy Teil `einstellungen`** fuer Bereitschaft, EWT und EZ (`features/<Ordner>/parts/einstellungen.ts`, `IFeatureEinstellungen` in `core/types/IEinstellungen.ts`):
+  `sections` (Id, Titel, `order`, Inhalt), `read(vorgabenU)` (Felder befuellen) und `collect(vorgabenU)` (Felder einsammeln und validieren).
+  - Bereitschaft: Abschnitt `collapseThree` mit der Einsatzzeitraum-Tabelle `#tableVE` (Standard-Einsatzzeitraeume, `saveTableDataVorgabenU`, `VorgabenB`).
+  - EWT: Abschnitt `collapseFour` "Fahrzeiten" (`FahrzeitenPanel`, `collectFahrzeiten` samt Fehler-Snackbar).
+  - EZ: Abschnitt `collapseSix` "Zulagen" (`ZulagenCheckboxList`, `benoetigteZulagen`).
+  Die Abschnitts-Ids, die Container-Ids (`#fahrzeiten-panel`, `#settings-zulagen-list`, `#tableVE`) und die Reihenfolge im Akkordeon bleiben unveraendert.
+- **`EinstellungenTab` kennt die Feature-Abschnitte nicht mehr**: er rendert die globalen Abschnitte (Persoenliche Daten, Sicherheit, Arbeitszeit, Einstellungen & Bereiche) und die der Features
+  aus `infrastructure/ui/einstellungenTeile.ts` (Store + `ladeEinstellungenTeile()`; synchron per `flushExtern`), sortiert nach `order`. Die Abschnitts-Komponenten der Features liegen
+  in eigenen Dateien (`components/*EinstellungenAbschnitt.tsx`), die Slots sind reines TypeScript.
+- **`generateEingabeMaskeEinstellungen` ist `async`** (wartet auf die Slots, ruft danach je Slot `read`), **`saveEinstellungen` sammelt die Felder ueber die geladenen Slots** (`collect`, Reihenfolge der
+  `Einstellungen`-Schluessel unveraendert: `aktivierteTabs`, Feature-Felder, AutoSave). Ein Feature ohne geladenen Slot laesst seine Werte unveraendert. Aufrufer (`loadUserDaten`, `overwriteUserDaten`,
+  Start-Task der Einstellungen) warten darauf. `loadUserDaten` und `overwriteUserDaten` laden `#tableVE` nicht mehr selbst (macht der Slot der Bereitschaft).
+- **`featureRegistry.loadAll(part)`** ueberspringt Features ohne diesen Teil (EA hat keinen `einstellungen`-Slot); ein Ladefehler zeigt eine Snackbar und blockiert die anderen Slots nicht.
+- Tests: `test/features/Einstellungen/featureSlots.test.tsx` (neu: Ids/Reihenfolge, Rendering im Akkordeon, Entfernbarkeit, Chunk-Fehler, `read`/`collect` der Bereitschaft); `generateEingabeMaskeEinstellungen`- und
+  `saveEinstellungen`-Tests mit Manifest und `await`; `#tableVE`-Erwartungen aus den Login-Tests entfernt. Testanzahl 2210 -> 2217.
+- `lint:fsd`-Baseline 103 -> 107 (`--max-warnings 107`), **temporaer**: die Slots importieren die Komponenten noch aus `features/Einstellungen/` (`VorgabenBTable`, `FahrzeitenPanel`, `ZulagenCheckboxList`,
+  `fahrzeitPanelState`, Hilfsfunktionen); sie sinken, sobald die Dateien in die Features verschoben werden (P7/P8, durch dich in der IDE).
+- **Abschnitte deaktivierter Features sind ausgeblendet** (`d-none`, ohne Abbau): sobald `aktivierteTabs` gesetzt ist (`updateTabVisibility`, Login und Speichern), verschwinden die Einstellungen-Abschnitte
+  "Bereitschaft", "Fahrzeiten" und "Zulagen" fuer abgewaehlte "Sichtbare Bereiche". Felder und Werte bleiben im DOM erhalten; `saveEinstellungen` sammelt sie weiter, es gehen also keine
+  Fahrzeiten, Zulagen oder Einsatzzeitraeume verloren. Vorher (auch vor P1f) waren alle Abschnitte immer sichtbar. Test in `featureSlots.test.tsx`.
+- **`main.tsx` laedt die Einstellungen-Slots vor dem App-Mount** (`await ladeEinstellungenTeile()`): kaemen sie erst danach, wuerden die Feld-Komponenten des Einstellungen-Tabs (u. a. `PersoenlicheDatenPanel`) neu gemountet
+  und Handler, die ein Start-Task an sie gehaengt hat (z. B. `#btnResendVerificationEmail`), gingen verloren.
+- Nicht Teil dieses Schritts: `Bundesland`/`Taetigkeit`/`Entgeltgruppe` (bleiben in `PersoenlicheDatenPanel`), `ArbeitszeiteingabePanel` (Ber + EWT + Admin, wandert in P3 nach `shared/ui`), Onboarding-Schritte und Hilfe (P1h).
+
 ## 2026-09-20 (171)
 
 ### fix (Berechnung blendet einen deaktivierten Tab nicht sofort aus)

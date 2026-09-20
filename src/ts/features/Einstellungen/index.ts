@@ -7,17 +7,11 @@ import { applyAutoSaveSettings } from '@/infrastructure/autoSave/autoSave';
 import { authApi } from '@/infrastructure/api/apiService';
 import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { createModalChangePassword, createModalPasskeySetPassword } from './components';
 import { setEmailStatus } from './utils/emailStatusStore';
 import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
-import {
-  logoutUser,
-  selectYear,
-  changeMonatJahr,
-  generateEingabeMaskeEinstellungen,
-  generateEingabeTabelleEinstellungenVorgabenB,
-  registerPasskey,
-} from './utils';
+import { logoutUser, selectYear, changeMonatJahr, generateEingabeMaskeEinstellungen, registerPasskey } from './utils';
 
 type PasskeyListItem = Awaited<ReturnType<typeof authApi.getPasskeys>>[number];
 
@@ -309,7 +303,7 @@ function applyEinstellungenToRuntime(): void {
   applyAutoSaveSettings(VorgabenU?.Einstellungen);
 }
 
-registerAppStartTask(() => {
+registerAppStartTask(async () => {
   // `#Monat` existiert zweimal (Desktop- und Mobile-Kopie im `AppHeader`) -- `querySelectorAll`,
   // sonst reagiert nur die zuerst gefundene Kopie auf Änderungen.
   document.querySelectorAll<HTMLInputElement>('#Monat').forEach(el => el.addEventListener('change', changeMonatJahr));
@@ -357,10 +351,11 @@ registerAppStartTask(() => {
       saveDaten(saveButton);
     });
 
+  // Die Einstellungen-Slots der Features laden (rendert deren Abschnitte); mit gespeicherten Vorgaben gleich befuellen.
   if (Storage.check('VorgabenU')) {
-    generateEingabeMaskeEinstellungen();
+    await generateEingabeMaskeEinstellungen();
     applyEinstellungenToRuntime();
-  } else generateEingabeTabelleEinstellungenVorgabenB({});
+  } else await ladeEinstellungenTeile();
 
   const einstellungenTab = document.querySelector<HTMLButtonElement>('#einstellungen-tab');
   einstellungenTab?.addEventListener('click', () => {

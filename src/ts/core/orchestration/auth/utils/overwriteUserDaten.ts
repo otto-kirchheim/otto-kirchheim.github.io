@@ -8,17 +8,6 @@ import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
 import Storage, { type TStorageData } from '@/infrastructure/storage/Storage';
 
 /**
- * Lädt Zeilen in die Tabelle zum Selektor; ohne passende Tabelle wirkungslos.
- *
- * @param selector - CSS-Selektor der Tabelle, z. B. `#tableBZ`.
- * @param data - Zeilen, die die bisherigen ersetzen.
- */
-function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
-  const table = document.querySelector<CustomHTMLTableElement>(selector);
-  table?.instance.rows.load(data);
-}
-
-/**
  * Übernimmt die unter `dataServer` gemerkten Serverdaten: schreibt jede vorhandene Ressource in den
  * Storage und die Tabelle (Filter auf den gewählten Monat), meldet `data:changed` und verwirft
  * `dataServer`. Die Tabellenzeilen baut der lazy Feature-Teil `data`; ohne Tabelle im DOM wird er nicht geladen.
@@ -34,8 +23,8 @@ export default async function overwriteUserDaten(): Promise<void> {
   if (dataServer.vorgabenU) {
     console.log('VorgabenU überschreiben');
     Storage.set('VorgabenU', dataServer.vorgabenU);
-    applyDataToTable('#tableVE', [...Object.values(dataServer.vorgabenU.VorgabenB)]);
-    generateEingabeMaskeEinstellungen(dataServer.vorgabenU);
+    // Die Bereitschafts-Vorgaben (`#tableVE`) laedt der Einstellungen-Slot der Bereitschaft (`read`).
+    await generateEingabeMaskeEinstellungen(dataServer.vorgabenU);
     delete dataServer.vorgabenU;
   }
 

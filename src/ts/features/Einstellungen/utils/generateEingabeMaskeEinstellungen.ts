@@ -1,26 +1,24 @@
-import { generateEingabeTabelleEinstellungenVorgabenB, saveTableDataVorgabenU } from '.';
-import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
-import { ArbeitszeiteingabePanel, FahrzeitenPanel, ZulagenCheckboxList } from '../components';
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { ArbeitszeiteingabePanel } from '../components';
 import { setupBundeslandAutoFill } from '@/infrastructure/date/holidayRegion';
-import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUPers, IVorgabenUvorgabenB } from '@/types';
+import type { IVorgabenU, IVorgabenUPers } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import { setupPersValidation } from '@/infrastructure/validation/addressValidation';
 import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/fieldMapper';
+import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui';
 
 /**
- * Befüllt die Einstellungen-Maske aus den Benutzer-Vorgaben: persönliche Daten, Arbeitszeit, Fahrzeiten, Tabs, Zulagen, AutoSave und die Bereitschafts-Vorgaben in `#tableVE`.
- * Ohne gespeicherte `VorgabenB` gelten die Standard-Einsatzzeiträume.
+ * Befüllt die Einstellungen-Maske aus den Benutzer-Vorgaben: persönliche Daten, Arbeitszeit, Tabs, AutoSave und -- über den Einstellungen-Slot jedes
+ * Features -- dessen Felder (Bereitschafts-Vorgaben in `#tableVE`, Fahrzeiten, Zulagen). Wartet auf das Laden der Slots, damit deren Abschnitte gerendert sind.
  *
  * @param VorgabenU - Benutzer-Vorgaben; Standard ist der gespeicherte Datensatz aus dem Storage.
- * @throws {Error} Wenn `#tableVE` fehlt.
+ * @throws {Error} Wenn ein Feature-Slot seine Tabelle nicht findet (Bereitschaft: `#tableVE`).
  */
-export default function generateEingabeMaskeEinstellungen(
+export default async function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
-): void {
-  const VorgabenB = VorgabenU.VorgabenB ?? BereitschaftsEinsatzZeiträume;
+): Promise<void> {
+  const teile = await ladeEinstellungenTeile();
 
   // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
   // Default fehlt der Object-Key komplett und setElementValues/saveEinstellungen sehen ihn nie.
@@ -33,21 +31,9 @@ export default function generateEingabeMaskeEinstellungen(
   setupPersValidation();
   setupBundeslandAutoFill();
   populateTabCheckboxes(VorgabenU.Einstellungen?.aktivierteTabs);
-  populateZulagenCheckboxes(VorgabenU.Einstellungen?.benoetigteZulagen);
   populateAutoSaveSettings(VorgabenU.Einstellungen?.autoSaveEnabled, VorgabenU.Einstellungen?.autoSaveDelayMs);
 
-  renderFahrzeitenPanel(VorgabenU);
-
-  const table = document.querySelector<CustomHTMLTableElement<IVorgabenUvorgabenB>>(`#tableVE`);
-  if (!table) throw new Error('Tabelle nicht gefunden');
-  const ftVE = table.instance;
-
-  if (ftVE instanceof CustomTable) {
-    // rows.load() ist synchron (siehe Rows.ts) -- saveTableDataVorgabenU() liest danach
-    // garantiert den frisch geladenen State, kein Race moeglich.
-    ftVE.rows.load([...Object.values(VorgabenB)]);
-    saveTableDataVorgabenU(ftVE);
-  } else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
+  for (const teil of teile) teil.part.read(VorgabenU);
 }
 
 /**
@@ -62,22 +48,6 @@ function populateEmailField(): void {
 // Zählt jeden Aufruf hoch, damit `key` sich ändert und React das Panel neu mountet statt
 // den bestehenden Component-State (inkl. veralteter Arbeitszeit nach Act-as-Wechsel) zu behalten.
 let arbeitszeitPanelRenderCount = 0;
-let fahrzeitPanelRenderCount = 0;
-let zulagenPanelRenderCount = 0;
-
-/**
- * Mountet das `FahrzeitenPanel` in `#fahrzeiten-panel`.
- *
- * @param VorgabenU - Benutzer-Vorgaben; `Fahrzeit` liefert die Anfangszeilen.
- */
-function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
-  const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
-  if (!panel) return;
-  mount(
-    panel,
-    createElement(FahrzeitenPanel, { key: fahrzeitPanelRenderCount++, initialRows: VorgabenU.Fahrzeit ?? [] }),
-  );
-}
 
 /**
  * Mountet das `ArbeitszeiteingabePanel` in `#arbeitszeit-panel`.
@@ -131,17 +101,6 @@ function populateTabCheckboxes(aktivierteTabs?: string[]): void {
   for (const cb of Array.from(checkboxes)) {
     cb.checked = !aktivierteTabs || aktivierteTabs.length === 0 || aktivierteTabs.includes(cb.dataset.tabKey!);
   }
-}
-
-/**
- * Mountet die `ZulagenCheckboxList` in `#settings-zulagen-list`.
- *
- * @param benoetigteZulagen - Codes der benötigten Zulagen.
- */
-function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
-  const host = document.querySelector<HTMLDivElement>('#settings-zulagen-list');
-  if (!host) return;
-  mount(host, createElement(ZulagenCheckboxList, { key: zulagenPanelRenderCount++, benoetigteZulagen }));
 }
 
 /**

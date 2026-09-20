@@ -187,9 +187,6 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   for (const resource of resourceDefs()) {
     document.querySelector<CustomHTMLTableElement>(`#${resource.tableId}`)?.instance.rows.load(rowsOf(resource.key));
   }
-  document
-    .querySelector<CustomHTMLTableElement>('#tableVE')
-    ?.instance.rows.load([...Object.values(vorgabenU.VorgabenB)]);
 
   for (const resource of resourceDefs()) {
     document
@@ -200,7 +197,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   }
 
   await generateTableBerechnung(datenBerechnung, datenGeld);
-  generateEingabeMaskeEinstellungen(vorgabenU);
+  await generateEingabeMaskeEinstellungen(vorgabenU);
 
   updateTabVisibility(vorgabenU.Einstellungen?.aktivierteTabs);
   await syncFeatureTabs(vorgabenU.Einstellungen?.aktivierteTabs);

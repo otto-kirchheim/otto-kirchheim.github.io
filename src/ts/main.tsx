@@ -93,6 +93,7 @@ import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui/reactRoot';
 import App from './App';
 import { initializeAppBootstrap, registerAppStartTask } from './core';
+import { ladeEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
@@ -104,6 +105,10 @@ console.log('Version:', import.meta.env.APP_VERSION);
 // `createRoot().render()`: nur so laufen auch die `useEffect`-Hooks (z. B. Tabellen-Erzeugung in
 // `EinstellungenTab`) synchron, bevor der erste Start-Task (spaetestens bei `window: 'load'`) ihre
 // Elemente erwartet.
+// Die Einstellungen-Slots der Features (Abschnitte im Akkordeon) vorher laden: kaemen sie erst nach dem Mount, wuerden die
+// Feld-Komponenten des Einstellungen-Tabs neu gemountet und Handler, die ein Start-Task an sie gehaengt hat, gingen verloren.
+await ladeEinstellungenTeile();
+
 const appRoot = document.getElementById('app');
 if (appRoot) mount(appRoot, createElement(App));
 

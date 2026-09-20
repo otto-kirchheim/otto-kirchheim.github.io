@@ -124,7 +124,7 @@ describe('overwriteUserDaten', () => {
     expect(storageSetMock).toHaveBeenCalledWith('dataE', expectedEWT);
     expect(storageSetMock).toHaveBeenCalledWith('dataN', expectedN);
 
-    expect(loadVE).toHaveBeenCalledWith([{ Name: 'A' }]);
+    // Die Bereitschafts-Vorgaben (`#tableVE`) laedt der Einstellungen-Slot der Bereitschaft (`read`), siehe Bereitschaft.einstellungen.test.tsx.
     expect(loadBZ).toHaveBeenCalledWith([{ mapped: 'bz' }]);
     expect(loadBE).toHaveBeenCalledWith([{ mapped: 'be' }]);
     expect(loadE).toHaveBeenCalledWith([{ mapped: 'ewt' }]);

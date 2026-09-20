@@ -285,7 +285,7 @@ describe('loadUserDaten', () => {
     expect(loadBE).toHaveBeenCalledWith([{ be: 1 }]);
     expect(loadE).toHaveBeenCalledWith([{ ewt: 1 }]);
     expect(loadN).toHaveBeenCalledWith([{ n: 1 }]);
-    expect(loadVE).toHaveBeenCalledWith([{ Name: 'A' }]);
+    // Die Bereitschafts-Vorgaben (`#tableVE`) laedt der Einstellungen-Slot der Bereitschaft (`read`), siehe Bereitschaft.einstellungen.test.tsx.
 
     expect(buttonDisableMock).toHaveBeenCalledWith(false);
     expect(clearLoadingMock).toHaveBeenCalledWith('btnAuswaehlen');
@@ -573,7 +573,7 @@ describe('loadUserDaten', () => {
     expect(storageSetMock).toHaveBeenCalledWith('VorgabenGeld', loaded.datenGeld);
 
     // Tabellen werden geladen (Server überschreibt)
-    expect(loadVE).toHaveBeenCalledWith([{ Name: 'Server' }]);
+    // Die Bereitschafts-Vorgaben (`#tableVE`) laedt der Einstellungen-Slot der Bereitschaft (`read`), siehe Bereitschaft.einstellungen.test.tsx.
     expect(loadBZ).toHaveBeenCalledWith([{ bz: 'server' }]);
     expect(loadBE).toHaveBeenCalledWith([{ be: 'server' }]);
     expect(loadE).toHaveBeenCalledWith([{ ewt: 'server' }]);

@@ -1,19 +1,18 @@
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import type { IVorgabenU, IVorgabenUPers, IVorgabenUfZ, IVorgabenUvorgabenB } from '@/types';
+import type { IEinstellungenBeitrag, IVorgabenU, IVorgabenUPers } from '@/types';
 import {
   PERS_FIELD_LABELS,
   setupPersValidation,
   validatePersInput,
 } from '@/infrastructure/validation/addressValidation';
 import { default as Storage } from '@/infrastructure/storage/Storage';
-import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';
-import { getFahrzeitPanelState } from '../components/fahrzeitPanelState';
+import { getEinstellungenTeile } from '@/infrastructure/ui/einstellungenTeile';
 
 /**
- * Liest die Einstellungen-Maske aus (persönliche Daten, Arbeitszeit, Fahrzeiten, Tabs, Zulagen, AutoSave, Bereitschafts-Vorgaben), validiert sie und speichert sie in `VorgabenU`.
+ * Liest die Einstellungen-Maske aus (persönliche Daten, Arbeitszeit, Tabs, AutoSave sowie die Felder der Features über deren Einstellungen-Slot), validiert sie und speichert sie in `VorgabenU`.
  *
  * @returns Die aktualisierten und im Storage gespeicherten `VorgabenU`.
  * @throws {Error} Bei ungültigen persönlichen Daten oder unvollständigen Fahrzeiten (mit Snackbar-Hinweis).
@@ -72,24 +71,18 @@ export default function saveEinstellungen(): IVorgabenU {
     VorgabenU.Arbeitszeit = panelState;
   }
 
-  const fahrzeitState = getFahrzeitPanelState();
-  if (fahrzeitState) {
-    VorgabenU.Fahrzeit = collectFahrzeiten(fahrzeitState);
+  // Felder der Features (Fahrzeiten, benoetigte Zulagen, Bereitschafts-Vorgaben ...) aus deren Einstellungen-Slots; ein Feature
+  // ohne geladenen Slot hat keine Felder und laesst seine Werte unveraendert. Ein Fehler (z. B. unvollstaendige Fahrzeiten) bricht ab.
+  const featureEinstellungen: NonNullable<IEinstellungenBeitrag['Einstellungen']> = {};
+  const featureBeitraege = getEinstellungenTeile().map(teil => teil.part.collect(VorgabenU));
+  for (const { Einstellungen: einstellungen, ...felder } of featureBeitraege) {
+    Object.assign(VorgabenU, felder);
+    Object.assign(featureEinstellungen, einstellungen);
   }
 
   const aktivierteTabs: string[] = [];
   for (const cb of Array.from(document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]'))) {
     if (cb.checked) aktivierteTabs.push(cb.dataset.tabKey!);
-  }
-
-  const zulagenContainer = document.querySelector('#settings-zulagen-list');
-  const benoetigteZulagen: string[] = [];
-  if (zulagenContainer) {
-    for (const cb of Array.from(
-      document.querySelectorAll<HTMLInputElement>('#settings-zulagen-list input[data-zulage-code]'),
-    )) {
-      if (cb.checked) benoetigteZulagen.push(cb.dataset.zulageCode!);
-    }
   }
 
   // Sammle neue Einstellungsfelder: AutoSave
@@ -103,46 +96,14 @@ export default function saveEinstellungen(): IVorgabenU {
 
   VorgabenU.Einstellungen = {
     aktivierteTabs,
-    ...(benoetigteZulagen.length > 0 && { benoetigteZulagen }),
+    ...featureEinstellungen,
     autoSaveEnabled,
     autoSaveDelayMs,
   };
 
   updateTabVisibility(VorgabenU.Einstellungen.aktivierteTabs);
 
-  VorgabenU.VorgabenB = Object.fromEntries(tableToArray('tableVE').entries()) as { [key: string]: IVorgabenUvorgabenB };
-
   Storage.set('VorgabenU', VorgabenU);
 
   return VorgabenU;
-}
-
-/**
- * Übernimmt die Fahrzeiten-Zeilen: leere Zeilen entfallen, unvollständige lösen einen Fehler aus.
- *
- * @param rows - Zeilen des Fahrzeiten-Panels.
- * @returns Nur die vollständigen Zeilen.
- * @throws {Error} Wenn Tätigkeitsstätte oder Fahrzeit einer nicht leeren Zeile fehlt (mit Snackbar-Hinweis).
- */
-function collectFahrzeiten(rows: IVorgabenUfZ[]): IVorgabenUfZ[] {
-  const liste: IVorgabenUfZ[] = [];
-  for (const { key, text, value } of rows) {
-    // Komplett leere Zeilen (z.B. gerade hinzugefügt) werden still verworfen.
-    if (!key && !text && !value) continue;
-
-    // Beschreibung (text) ist ein reines Notizfeld und darf leer bleiben.
-    if (!key || !value) {
-      const fehlend = [!key && 'Tätigkeitsstätte', !value && 'Fahrzeit'].filter(Boolean).join(' / ');
-      createSnackBar({
-        message: `Einstellungen > Fahrzeiten > "${key || text}": ${fehlend} fehlt`,
-        status: 'error',
-        timeout: 3000,
-        fixed: true,
-      });
-      throw new Error(`${fehlend} fehlt`);
-    }
-    liste.push({ key, text, value });
-  }
-
-  return liste;
 }
