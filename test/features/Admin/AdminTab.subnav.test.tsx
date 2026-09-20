@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import { Role } from '@otto-kirchheim/nebengeld-shared';
-import { render } from '../../reactRender';
+import { render } from '@test/reactRender';
 import { setAktivenAdminTab } from '@/infrastructure/ui/activeAdminTabStore';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
 

@@ -12,7 +12,7 @@ import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStor
 import { setzeHauptTabErlaubtPruefung } from '@/infrastructure/ui/tabController';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
-import { markStep } from '../initSequence';
+import { markStep } from '@/core/orchestration/initSequence';
 
 // `tabController.ts` bleibt bewusst auth-agnostisch (siehe dortiger Kommentar) -- die Login-Policy
 // fuer Hauptgruppen-Tabs (ohne Session nur `start`) sitzt deshalb hier. Die Pruefung laeuft live

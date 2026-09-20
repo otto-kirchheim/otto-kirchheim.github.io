@@ -6,7 +6,7 @@ import Storage from '@/infrastructure/storage/Storage'; // Import Storage direct
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { splitOeInput } from '@/infrastructure/data/oeLevels';
 import tableToArray from '@/infrastructure/data/tableToArray';
-import { VorgabenGeldMock, VorgabenUMock } from '../mockData';
+import { VorgabenGeldMock, VorgabenUMock } from '@test/mockData';
 
 // --- Mocks ---
 

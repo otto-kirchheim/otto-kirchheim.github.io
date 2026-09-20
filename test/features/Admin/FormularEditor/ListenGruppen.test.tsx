@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { klickeCheckbox, render, setzeWert } from '../../../reactRender';
+import { klickeCheckbox, render, setzeWert } from '@test/reactRender';
 
 import type { ListenGruppe, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import { ListenGruppen } from '@/features/Admin/components/FormularEditor/ListenGruppen';

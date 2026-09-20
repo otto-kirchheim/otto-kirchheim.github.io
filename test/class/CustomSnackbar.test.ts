@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement } from 'react';
-import { render } from '../reactRender';
+import { render } from '@test/reactRender';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { resetSnackbarStore } from '@/infrastructure/ui/snackbarStore';
 import SnackbarHost from '@/infrastructure/ui/SnackbarHost';

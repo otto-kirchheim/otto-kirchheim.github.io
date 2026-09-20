@@ -1,6 +1,6 @@
 import { describe, expect, it, mock } from 'bun:test';
 import { useState } from 'react';
-import { render } from '../../reactRender';
+import { render } from '@test/reactRender';
 
 import {
   VorgabenBWeekRangeEditor,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { render, setzeWert } from '../../reactRender';
+import { render, setzeWert } from '@test/reactRender';
 
 import { JsonEditor } from '@/features/Admin/components/JsonEditor';
 

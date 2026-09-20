@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h, type ReactNode } from 'react';
-import { render } from '../../reactRender';
+import { render } from '@test/reactRender';
 
 import type { Row } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/types';

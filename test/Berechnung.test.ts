@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'bun:test';
-import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from './mockData';
+import { VorgabenGeldMock, VorgabenUMock, datenBerechungMock } from '@test/mockData';
 import Storage from '@/infrastructure/storage/Storage';
 import generateTableBerechnung from '@/features/Berechnung/generateTableBerechnung';
 import type { IVorgabenBerechnung } from '@/core/types/IVorgabenBerechnungMonat';

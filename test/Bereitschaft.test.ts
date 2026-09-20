@@ -18,7 +18,7 @@ import {
   datenEWTMock,
   datenNMock,
   mockBereitschaft,
-} from './mockData';
+} from '@test/mockData';
 
 describe('#Bereitschaftseingabe', () => {
   it('Bereitschaft an Zeitumstellung (Sommerzeit) – Wechsel bleibt 08:00', () => {

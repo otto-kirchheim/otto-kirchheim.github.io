@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'bun:test';
-import { render } from '../reactRender';
+import { render } from '@test/reactRender';
 
 import type { CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
 

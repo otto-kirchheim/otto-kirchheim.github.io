@@ -3,12 +3,14 @@
 Vollständiger Plan: `tasks/plan-fsd-feature-module.md` (Branch `feat/fsd-feature-module`, Basis `feat/react-umbau`). Phasen mit grünem Gate je Phase;
 Dateien verschiebt der User in der IDE, Zielordner legt Claude vorher an.
 
+**Vor jeder Phase:** Token-/Session-Budget prüfen und ansagen (Phasengröße, geschätzter Kontext; bei L/XL-Phasen `/usage` durch den User); bei knappem Budget Phase nicht beginnen.
+
 Gate: `bun run typecheck && bun run lint && bun run test` (+ `bun run build`, `lint:css` bei Alias/CSS/Chunks).
 Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass / 0 fail (198 Dateien), Build-Baseline unten.
 
 - [x] P-1 Branch `feat/fsd-feature-module` angelegt, Baseline typecheck/lint/test notiert
 - [x] P-1 Baseline `bun run build`: exit 0; Entry `index-*.js` 176,61 kB (gzip 43,03 kB); lazy vorhanden: `mountAdminTab` 257,03 kB, `actAs` 6,69 kB, `pdf` 430,94 kB, `decompress` 295,15 kB, `fontkit` 756,37 kB; `react` 218,84 kB; `utils` 1023,53 kB; PWA-Precache 48 Einträge (4691,30 KiB)
-- [ ] P0 Enabling (Aliase `@/*`, `@test/*`, Boundaries als warn, `lint:fsd`, PWA-Precache-Glob prüfen)
+- [x] P0 Enabling: Aliase `@/*`/`@test/*`, 3 relative core-Imports, 47 Test-Helper-Imports, `lint:fsd` (Ratsche 132, eigene Config statt eslint-plugin-boundaries: kein neues Dependency nötig), PWA-Precache enthält Lazy-Chunks bereits. Gate grün: typecheck 0, lint 0, test 2172 pass, build 0 (Entry 176,61 kB unverändert)
 - [ ] P1a Contract-Kern + EA als Referenz
 - [ ] P1b Shell aus `meta`
 - [ ] P1c Ressourcen-Meta & Daten (ez, ewt, ber)

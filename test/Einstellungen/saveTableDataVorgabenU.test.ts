@@ -12,7 +12,7 @@ import Storage from '@/infrastructure/storage/Storage';
 import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
 import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/core/types';
-import { VorgabenUMock } from '../mockData';
+import { VorgabenUMock } from '@test/mockData';
 
 vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),

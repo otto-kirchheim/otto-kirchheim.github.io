@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { huelleMock, inputMock, render } from '../../reactRender';
+import { huelleMock, inputMock, render } from '@test/reactRender';
 
 import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenBZ } from '@/types';

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { render } from '../reactRender';
+import { render } from '@test/reactRender';
 
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import { setEmailStatus, useEmailStatus, type EmailStatus } from '@/features/Einstellungen/utils/emailStatusStore';

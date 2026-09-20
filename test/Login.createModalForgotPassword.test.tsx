@@ -1,4 +1,4 @@
-import { huelleMock, inputMock } from './reactRender';
+import { huelleMock, inputMock } from '@test/reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 
 const { showModalMock, createSnackBarMock, forgotPasswordMock, hideMock } = (

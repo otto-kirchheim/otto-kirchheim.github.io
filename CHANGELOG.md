@@ -2,6 +2,22 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (161)
+
+### chore (FSD-Umbau P0: Aliase, Schichtgrenzen als Warnung, Test-Helper-Imports)
+
+- **Aliase**: generischer Alias `@/*` -> `src/ts/*` (tsconfig + Vite, in Vite zuletzt: die spezifischen Aliase haben Vorrang)
+  und `@test/*` -> `test/*` (nur tsconfig, Bun liest `paths`). Das tote `@/features`-Mapping auf die nicht vorhandene
+  `features/index.ts` ist entfernt.
+- **Imports**: die drei relativen Ausreisser in `core/orchestration` (`'../../..'`, `'../initSequence'`, `'../../initSequence'`)
+  laufen ueber `@/core...`; 47 Testdateien importieren `reactRender`/`mockData` per `@test/...` statt relativ.
+- **`lint:fsd`** (neu, `eslint.fsd.config.js`, ohne Einfluss auf `lint`): zaehlt Verstoesse gegen die Schichtgrenzen der Legacy-Struktur
+  (`core -> infrastructure/features`, `infrastructure/components -> features`, Feature -> Feature) als Warnung. Ratsche `--max-warnings 132`
+  (Baseline), darf nur sinken; in P10 wandert der Regelsatz nach `eslint.config.js` als `error`.
+- **PWA geprueft**: der Precache (48 Eintraege) enthaelt bereits alle Lazy-Chunks (`mountAdminTab`, `actAs`, `pdf`, ...);
+  fuer die spaeteren Feature-Chunks ist keine Glob-Aenderung noetig.
+- Plan: `tasks/plan-fsd-feature-module.md`.
+
 ## 2026-09-20 (160)
 
 ### refactor (Nachlauf zur Kommentar-Durchsicht: Dateien geteilt, Duplikat entfernt)

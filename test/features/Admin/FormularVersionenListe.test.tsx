@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { render } from '../../reactRender';
+import { render } from '@test/reactRender';
 
 import { FormularVersionenListe } from '@/features/Admin/components/FormularVersionenListe';
 import type { VersionUebersicht } from '@/features/Admin/components/formularVersionenApi';

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render, setzeWert } from '../reactRender';
+import { render, setzeWert } from '@test/reactRender';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import type { AdminUserRow } from '@/features/Admin/utils/api';

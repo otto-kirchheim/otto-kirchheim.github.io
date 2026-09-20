@@ -1,4 +1,4 @@
-import { publishEvent } from '../../..';
+import { publishEvent } from '@/core';
 import { getBereitschaftsEinsatzDaten, getBereitschaftsZeitraumDaten } from '@/features/Bereitschaft/utils';
 import { getEwtDaten } from '@/features/EWT/utils';
 import { getEaDaten } from '@/features/EA/utils';

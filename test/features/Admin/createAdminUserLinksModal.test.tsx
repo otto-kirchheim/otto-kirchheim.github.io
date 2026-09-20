@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h } from 'react';
-import { render } from '../../reactRender';
+import { render } from '@test/reactRender';
 
 const { showModalMock, createSnackBarMock, issueVerificationLinkMock, issuePasswordResetLinkMock, writeTextMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }

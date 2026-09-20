@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render, setzeWert } from '../../reactRender';
+import { render, setzeWert } from '@test/reactRender';
 
 const { fetchAdminLogsMock, fetchAdminUserNameMapMock } = (
   vi as typeof vi & { hoisted: <T>(factory: () => T) => T }

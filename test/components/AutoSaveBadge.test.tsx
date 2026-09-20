@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from '../reactRender';
+import { render } from '@test/reactRender';
 
 // Hoisted mock fuer autoSave.ts -- gleiches Muster wie autoSaveStatusStore.test.ts.
 const { mockOnAutoSaveStatus } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => {

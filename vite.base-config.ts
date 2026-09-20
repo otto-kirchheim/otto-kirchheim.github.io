@@ -25,6 +25,8 @@ const baseConfig: UserConfig = {
       '@/types': path.resolve(import.meta.dirname, 'src/ts/core/types'),
       '@/infrastructure': path.resolve(import.meta.dirname, 'src/ts/infrastructure'),
       '@/features': path.resolve(import.meta.dirname, 'src/ts/features'),
+      // Generischer Alias zuletzt: die spezifischen Aliase oben haben Vorrang (erster Treffer gewinnt).
+      '@': path.resolve(import.meta.dirname, 'src/ts'),
     },
   },
   base: '/',

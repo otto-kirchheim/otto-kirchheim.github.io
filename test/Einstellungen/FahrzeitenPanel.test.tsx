@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'bun:test';
-import { feldMitBeschriftung, render, setzeWert } from '../reactRender';
+import { feldMitBeschriftung, render, setzeWert } from '@test/reactRender';
 
 import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
 import { getFahrzeitPanelState, setFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';

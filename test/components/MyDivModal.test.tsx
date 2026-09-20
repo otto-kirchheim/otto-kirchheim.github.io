@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { render } from '../reactRender';
+import { render } from '@test/reactRender';
 
 import MyDivModal from '@/components/MyDivModal';
 

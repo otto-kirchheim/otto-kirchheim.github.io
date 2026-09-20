@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { calculateEwtEintraege } from '@/features/EWT/utils';
 import type { IVorgabenU } from '@/core/types/IVorgabenU';
-import { VorgabenUMock } from './mockData';
+import { VorgabenUMock } from '@test/mockData';
 import type { IMonatsDaten } from '@/core/types';
 
 describe('berechnen', () => {

@@ -8,7 +8,7 @@ import { isAdmin } from '@/infrastructure/tokenManagement/decodeAccessToken';
 import dayjs from '@/infrastructure/date/configDayjs';
 import requestVerificationMail from './requestVerificationMail';
 import { featureLifecycleRegistry } from '@/core/hooks';
-import { markStep } from '../../initSequence';
+import { markStep } from '@/core/orchestration/initSequence';
 
 /**
  * Maskiert HTML-Sonderzeichen fuer die Ausgabe per `innerHTML`.

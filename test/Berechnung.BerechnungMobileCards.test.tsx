@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { render } from './reactRender';
+import { render } from '@test/reactRender';
 
 import BerechnungMobileCards from '@/features/Berechnung/components/BerechnungMobileCards';
 import { mountBerechnungMobileCards } from '@/features/Berechnung/components/mountBerechnung';
 import calculateBerechnungRows, { type IBerechnungMonatsErgebnis } from '@/features/Berechnung/calculateBerechnungRows';
 import { ZulageEntryUnit } from '@/features/Einstellungen/utils/zulagenCatalog';
-import { VorgabenGeldMock, datenBerechungMock } from './mockData';
+import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
 import type { IVorgabenBerechnung } from '@/types';
 
 const leeresErgebnis = (monat: number): IBerechnungMonatsErgebnis => ({
@@ -174,7 +174,7 @@ describe('#BerechnungMobileCards', () => {
 
   it('wird über generateTableBerechnung mit gerendert (Integration)', async () => {
     const { default: Storage } = await import('@/infrastructure/storage/Storage');
-    const { VorgabenUMock } = await import('./mockData');
+    const { VorgabenUMock } = await import('@test/mockData');
     const { default: generateTableBerechnung } = await import('@/features/Berechnung/generateTableBerechnung');
 
     Storage.set('VorgabenU', VorgabenUMock);

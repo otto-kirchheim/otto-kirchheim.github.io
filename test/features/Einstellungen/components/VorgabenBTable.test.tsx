@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { render } from '../../../reactRender';
+import { render } from '@test/reactRender';
 
 const {
   createSnackBarMock,

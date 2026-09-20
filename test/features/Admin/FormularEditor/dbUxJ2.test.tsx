@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { render } from '../../../reactRender';
+import { render } from '@test/reactRender';
 
 import { ScharfButton, Zellkoordinaten } from '@/features/Admin/components/FormularEditor/feldPanelGemeinsam';
 import { FeldListe } from '@/features/Admin/components/FormularEditor/FeldZeile';

@@ -1,5 +1,5 @@
 import { describe, expect, it, mock } from 'bun:test';
-import { klickeCheckbox, render } from '../../reactRender';
+import { klickeCheckbox, render } from '@test/reactRender';
 
 import { AdminProfileTemplateContentEditor } from '@/features/Admin/components/AdminProfileTemplateContentEditor';
 import type { TemplateContentDraft } from '@/features/Admin/components/profileTemplates.shared';

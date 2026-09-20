@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { VorgabenGeldMock, datenBerechungMock } from './mockData';
+import { VorgabenGeldMock, datenBerechungMock } from '@test/mockData';
 import calculateBerechnungRows, { formatCurrency } from '@/features/Berechnung/calculateBerechnungRows';
 import type { IVorgabenBerechnung, IVorgabenGeld } from '@/types';
 

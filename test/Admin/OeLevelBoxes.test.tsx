@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { useState } from 'react';
-import { render, setzeWert } from '../reactRender';
+import { render, setzeWert } from '@test/reactRender';
 
 import { OeLevelBoxes } from '@/features/Admin/components/OeLevelBoxes';
 
