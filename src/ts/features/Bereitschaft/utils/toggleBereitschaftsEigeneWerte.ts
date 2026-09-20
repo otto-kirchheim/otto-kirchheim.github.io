@@ -4,9 +4,15 @@ import type dayjs from '@/infrastructure/date/configDayjs';
 
 /**
  * Schalter „Datum & Zeiten manuell anpassen": ent-/sperrt die berechneten Datumsfelder (bE/nA/nE)
- * und die BZ-Grenzzeiten (bAT/bET) — z. B. für stundenweise Bereitschafts-Übernahme.
+ * und die BZ-Grenzzeiten (bAT/bET) — z. B. für stundenweise Bereitschafts-Übernahme. Beim Zurückschalten
+ * werden alle Felder aus der Vorgabe neu abgeleitet.
  * Nacht-/Spät-Zeiten bleiben immer aus der Arbeitszeit abgeleitet (Override-Editor), da auch die
  * Berechnung die Nacht-Blöcke daraus zieht — manuelle Werte würden ihr widersprechen.
+ *
+ * @param parentElement - Modal-Element mit den Feldern.
+ * @param vorgabenB - Gewählte (effektive) Bereitschafts-Vorgabe.
+ * @param datum - Startdatum der Bereitschaft.
+ * @throws {Error} Wenn ein benötigtes Feld im Modal fehlt.
  */
 export default function toggleBereitschaftsEigeneWerte(
   parentElement: HTMLDivElement,
@@ -35,6 +41,6 @@ export default function toggleBereitschaftsEigeneWerte(
     el.style.display = disable ? '' : 'none';
   });
 
-  // Zurück auf „berechnet": Datums- und Zeitfelder aus der Vorgabe neu ableiten.
+  // Zurück auf „berechnet": Felder neu ableiten.
   if (disable) applyBereitschaftsVorgabe(parentElement, vorgabenB, datum);
 }

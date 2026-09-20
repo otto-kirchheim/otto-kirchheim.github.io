@@ -32,6 +32,10 @@ export const CATEGORY_LABELS: Record<BulkApplyCategory, string> = {
 /**
  * Ermittelt je OE-Position den gemeinsamen Wert der Auswahl (case-sensitiv
  * exakt), sonst `null`. Dient als Vorbefüllung für den Ersetzen-Editor.
+ *
+ * @param users - Benutzer mit ihren OE-Ebenen.
+ * @param maxLevels - Anzahl der zu prüfenden Positionen.
+ * @returns Je Position der gemeinsame Wert oder `null` (auch wenn schon der erste Benutzer keinen hat).
  */
 export function computeCommonOeLevels(users: { oe: string[] }[], maxLevels: number): (string | null)[] {
   return Array.from({ length: maxLevels }, (_, index) => {
@@ -45,7 +49,10 @@ export function computeCommonOeLevels(users: { oe: string[] }[], maxLevels: numb
 /**
  * Gemeinsame Ebenen über eine Liste fertiger OE-Pfade (Team-/Org-Admin-OEs) —
  * dieselbe Logik wie `computeCommonOeLevels`, nur mit vorheriger Zerlegung.
- * Leere Liste ⇒ keine Vorbefüllung.
+ *
+ * @param paths - OE-Pfade als kanonische Strings.
+ * @param maxLevels - Anzahl der zu prüfenden Positionen.
+ * @returns Gemeinsame Werte je Position (`''` wenn keine); leeres Array bei leerer Liste (keine Vorbefüllung).
  */
 export function computeCommonPathLevels(paths: string[], maxLevels: number): string[] {
   if (paths.length === 0) return [];
@@ -59,6 +66,9 @@ export function computeCommonPathLevels(paths: string[], maxLevels: number): str
  * Größte Ebenen-Tiefe über Pers.OE UND alle Team-/Org-Admin-OE-Einträge der
  * Auswahl — unabhängig davon, welches Ziel gerade angehakt ist, damit die
  * Box-Anzahl beim Umschalten der Ziel-Checkboxen nicht springt.
+ *
+ * @param users - Benutzer mit OE-Ebenen und Admin-OE-Listen.
+ * @returns Maximale Tiefe, mindestens 1.
  */
 export function computeMaxOeLevels(
   users: { oe: string[]; adminForTeamOes: string[]; adminForOrganizationOes: string[] }[],

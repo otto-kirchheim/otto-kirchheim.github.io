@@ -2,10 +2,14 @@ import type { Spalte, TabellenDef } from '@otto-kirchheim/nebengeld-shared';
 import type { KatalogEintrag } from './datenKatalog';
 
 /**
- * Berechnete/Ankreuz-Spalten als Katalogeinträge -- `mitBerechnetenSpalten()` in `shared` trägt
- * ihren Wert schon unter `key` in die Zeile ein, andere Rechnungen können sie also direkt
- * referenzieren, statt dieselbe Rechnung ein zweites Mal aufzubauen. Gemeinsam genutzt von der
- * Feldliste (alle Tabellen) und je einer einzelnen `TabellenBlock` (nur deren eigene Spalten).
+ * Berechnete/Ankreuz-Spalten als Katalogeinträge. `mitBerechnetenSpalten()` (`infrastructure/pdf/
+ * tabellenZeilen.ts`) trägt ihren Wert schon unter `key` in die Zeile ein, andere Rechnungen können
+ * sie also direkt referenzieren. Genutzt von der Feldliste (alle Tabellen) und je einer `TabellenBlock`
+ * (nur deren Spalten).
+ *
+ * @param spalten - Spalten einer Tabelle; berücksichtigt werden nur solche mit `berechnet` oder `wenn` und `key`.
+ * @param gruppe - Gruppenname, unter dem die Einträge in der Auswahl erscheinen.
+ * @returns Katalogeinträge mit `pfad` = Spalten-`key` und `label` = Spalten-Label (sonst `key`).
  */
 export function berechneteEintraege(spalten: Spalte[], gruppe: string): KatalogEintrag[] {
   return spalten
@@ -15,11 +19,12 @@ export function berechneteEintraege(spalten: Spalte[], gruppe: string): KatalogE
 
 /**
  * Alle berechneten/Ankreuz-Spalten über SÄMTLICHE Tabellen, per `pfad` dedupliziert (bei
- * Namensgleichheit gewinnt die zuletzt iterierte Tabelle, andere gehen verloren) -- nur der
- * Fallback für eine NICHT auf eine Tabelle eingegrenzte Aggregation (`Berechnet.tabelle` unset).
- * Bei Namenskollisionen zwischen Tabellen (z.B. gleicher Spalten-Key in zwei Tabellen) gezielt über
- * die Tabellenauswahl in `AggregationEditor` eingrenzen, statt sich auf diese Dedup-Reihenfolge zu
- * verlassen.
+ * Namensgleichheit gewinnt die zuletzt iterierte Tabelle) -- nur der Fallback für eine nicht
+ * eingegrenzte Aggregation (`Berechnet.tabellen` leer). Bei Namenskollisionen gezielt über die
+ * Tabellenauswahl in `AggregationEditor` eingrenzen, statt sich auf die Dedup-Reihenfolge zu verlassen.
+ *
+ * @param tabellen - Tabellendefinitionen der Version, nach Name.
+ * @returns Deduplizierte Katalogeinträge aller Tabellen.
  */
 export function alleBerechneteEintraege(tabellen: Record<string, TabellenDef>): KatalogEintrag[] {
   return [

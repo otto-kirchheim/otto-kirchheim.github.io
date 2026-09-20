@@ -42,6 +42,12 @@ const FEATURE_LABELS: Record<string, string> = {
 /** Aktuell gemountete Feature-Namen — verhindert doppeltes register()/unregister() bei unverändertem Zustand. */
 const mountedFeatures = new Set<string>();
 
+/**
+ * Prüft, ob Ressourcen des Features noch ungesyncte Änderungen haben oder im Fehlerstatus sind.
+ *
+ * @param name - Feature-Name (Schlüssel in `FEATURE_RESOURCES`).
+ * @returns `true`, wenn mindestens eine Ressource Änderungen oder einen Fehler trägt.
+ */
 function hasUnsyncedChanges(name: string): boolean {
   const resources = FEATURE_RESOURCES[name] ?? [];
   return resources.some(
@@ -50,13 +56,15 @@ function hasUnsyncedChanges(name: string): boolean {
 }
 
 /**
- * Mountet/unmountet den Tab-Inhalt von Bereitschaft/EWT/Neben passend zu aktivierteTabs.
+ * Mountet/unmountet den Tab-Inhalt von Bereitschaft/EWT/Neben/EA passend zu aktivierteTabs.
  * Aufgerufen aus loadUserDaten.ts (Login + Jahr-/Monatswechsel) und aus saveDaten.ts (nach flushAll(),
  * damit ein live deaktiviertes Feature erst unmounted wird, wenn seine Daten sicher geflusht sind).
  *
  * Bleibt eine Ressource trotz Flush ungesynct (offline/Fehler), wird das Unmounten für dieses Feature in
  * diesem Durchlauf übersprungen (Set-Eintrag bleibt "gemountet") und eine Warn-Snackbar gezeigt — der
  * nächste erfolgreiche Aufruf (nächstes Speichern oder Login) holt das Unmounten automatisch nach.
+ *
+ * @param aktivierteTabs - Schlüssel der aktiven Tabs; leer/`undefined` steht für `LEGACY_DEFAULT_ON_KEYS`.
  */
 export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Promise<void> {
   const enabledKeys = !aktivierteTabs || aktivierteTabs.length === 0 ? LEGACY_DEFAULT_ON_KEYS : aktivierteTabs;
@@ -89,9 +97,9 @@ export async function syncFeatureTabs(aktivierteTabs: string[] | undefined): Pro
     mountedFeatures.delete(name);
   }
 
-  // Die Monats-Ueberschriften der Tabs werden von `setMonatJahr` nur EINMAL von aussen beschrieben --
-  // beim Neuladen mit gespeicherter Sitzung (`selectYear` laeuft vor `loadUserDaten`) und beim
-  // Aktivieren eines Tabs mounten sie erst danach, ihr Text bliebe leer.
+  // `setMonatJahr` schreibt die Monats-Überschriften der Tabs nur einmal von aussen ins DOM. Tabs,
+  // die erst danach mounten (Neuladen mit gespeicherter Sitzung, Aktivieren eines Tabs), blieben
+  // sonst leer.
   const jahr = Storage.get<number>('Jahr', { default: 0 });
   const monat = Storage.get<number>('Monat', { default: 0 });
   if (jahr > 0 && monat > 0) setMonatsUeberschriften(jahr, monat);

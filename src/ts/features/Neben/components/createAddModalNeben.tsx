@@ -17,6 +17,14 @@ type ReturnTypeTagOptions = {
   selected?: boolean;
 };
 
+/**
+ * Baut die Optionen der Tag-Auswahl aus den EWT-Tagen; der Wert ist ein JSON mit Tag, Beginn, Ende und EWT-Id.
+ * Deaktiviert sind noch nicht gespeicherte EWT-Tage (ohne `_id` oder lokal geändert) und Tage, für die schon ein
+ * Nebenbezug existiert; Optionen mit gleichem Text werden nur einmal aufgeführt.
+ *
+ * @param dataE - EWT-Einträge des aktiven Monats.
+ * @returns Select-Optionen.
+ */
 const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
   const dataN = getNebengeldDaten(undefined, undefined, { scope: 'monat', excludeDeleted: true });
 
@@ -68,6 +76,13 @@ const getTagOptions = (dataE: IDatenEWT[]): ReturnTypeTagOptions[] => {
   return options;
 };
 
+/**
+ * Öffnet den Modal für einen neuen Nebenbezug zu einem EWT-Tag des aktiven Monats. Die Tag-Auswahl wird bei
+ * `data:changed` für EWT aktualisiert, bis der Modal schließt.
+ *
+ * @param tableN - Nebenbezug-Tabelle, in die der neue Eintrag kommt.
+ * @throws {Error} Wenn der Monat keine EWT-Tage hat (mit Snackbar) oder die Formular-Referenz fehlt.
+ */
 export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -164,6 +179,11 @@ export default function createAddModalNeben(tableN: CustomTable<IDatenN>): void 
   });
   beiModalSchliessen(unsubscribeEwtSync);
 
+  /**
+   * Baut den Submit-Handler des Formulars: bei gültigem Formular wird der Nebenbezug per `addNebengeldTag` angelegt.
+   *
+   * @returns Submit-Handler.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;

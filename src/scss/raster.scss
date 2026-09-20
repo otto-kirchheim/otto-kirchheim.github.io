@@ -1,23 +1,19 @@
-// App-eigene Rasterhilfen -- Ersatz fuer Bootstraps `.row`/`.col-*`/`.container` (Phase H).
+// App-eigene Rasterhilfen.
 // Zwei Muster decken alles ab, was die App braucht:
 //   `.raster`      12 Spalten, Kinder standardmaessig ueber die volle Breite; `.sp-*`
-//                  verschmaelert einzelne Kinder. Ersetzt `row` + `col-*`.
+//                  verschmaelert einzelne Kinder.
 //   `.raster-auto` so viele gleich breite Spalten, wie bei `--spalte-min` Mindestbreite
-//                  hineinpassen. Ersetzt `row row-cols-*` + `col`.
-// Anders als bei Bootstrap gibt es keine negativen Aussenabstaende und kein Innenpolster an
-// den Kindern -- der Abstand kommt aus `gap`, der Inhalt steht buendig am Containerrand.
+//                  hineinpassen.
+// Es gibt keine negativen Aussenabstaende und kein Innenpolster an den Kindern -- der Abstand
+// kommt aus `gap`, der Inhalt steht buendig am Containerrand.
 
-// Umbruchstufen aus `_breakpoints.scss` (J-Q2) -- xs-xl aus `@db-ux/core-foundations`, xxl als
-// Projekt-Erweiterung. Die Werte weichen bewusst von der frueheren Bootstrap-Staffel ab
-// (sm 36em -> 48em, md 48em -> 64em, lg 62em -> 90em, xl 75em -> 120em, xxl 87.5em -> 160em).
+// Umbruchstufen aus `_breakpoints.scss`.
 @use 'breakpoints' as bp;
 
 $breakpoints: bp.$em;
 
 // Rasterabstaende auf die DB-UX-Tokens `--db-spacing-fixed-*` gelegt: der Abstand folgt so
-// automatisch der Density. Die Stufen entsprechen weiterhin Bootstraps Rinnenbreiten `g-0`
-// bis `g-5` -- bei `functional`/`regular` sind die rem-Werte identisch zu vorher
-// (2xs 0.25rem, xs 0.5rem, md 1rem, lg 1.5rem, 2xl 3rem).
+// automatisch der Density.
 $abstaende: (
   0: 0,
   1: var(--db-spacing-fixed-2xs),
@@ -65,8 +61,7 @@ $abstaende: (
   }
 }
 
-// Randlose Vollbreite (Ersatz fuer `.container-fluid`). Der zentrierte Seitenbereich (frueher
-// `.mitte`, Ersatz fuer `.container`) ist seit 2026-09-19 `<DBSection>` in den Tab-Huellen.
+// Randlose Vollbreite mit schmalem Seitenrand.
 .breit {
   inline-size: 100%;
   padding-inline: 0.75rem;

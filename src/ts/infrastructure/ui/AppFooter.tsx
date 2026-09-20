@@ -4,17 +4,14 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import ImpressumDialog from './ImpressumDialog';
 
 /**
- * Phase K1: erster React-Slice der App-Shell. Nutzt die mit `@db-ux/react-core-components`
- * 5.4.0 hinzugekommenen `DBFooter`/`DBFooterMeta` (Copyright-Zeile + Sekundaerinhalt,
- * `.db-footer-meta`-Styling deckt sich mit dem bisherigen Handbau) statt eigenem Markup.
+ * Fusszeile der App-Shell: Copyright-Zeile mit Version (`DBFooter`/`DBFooterMeta`) und
+ * Impressum-Knopf. `ImpressumDialog` sitzt als Geschwister, weil Ausloeser und Dialog denselben
+ * State teilen.
  *
- * `footer .impressum { pointer-events: all }` (styles.scss:601) ist ein Nachfahren- kein
- * Kind-Selektor, weil `DBFooterMeta` den Button jetzt in `.db-footer-meta-content` verschachtelt
- * -- `pointer-events` vererbt sich, der Selektor muss die Verschachtelungstiefe nicht kennen.
+ * `.app-footer .impressum { pointer-events: all }` (styles.scss) ist ein Nachfahren- kein
+ * Kind-Selektor, weil `DBFooterMeta` den Button in `.db-footer-meta-content` verschachtelt.
  *
- * Phase K3: Impressum-Knopf setzt jetzt React-State statt `data-dialog-target` + `dbDialog.ts`;
- * `ImpressumDialog` sitzt hier als Geschwister, weil Ausloeser und Dialog denselben State
- * teilen (kein zweiter Mount-Punkt noetig).
+ * @param props - `startYear`: erstes Jahr der Copyright-Angabe (Standard 2021).
  */
 export default function AppFooter({ startYear = 2021 }: { startYear?: number }) {
   const [impressumOffen, setImpressumOffen] = useState(false);

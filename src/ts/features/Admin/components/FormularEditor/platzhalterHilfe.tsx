@@ -5,9 +5,10 @@ import { oeffneDrawer } from '@/components';
 import { PlatzhalterHilfeInhalt } from './PlatzhalterHilfeInhalt';
 
 /**
- * Eigenständiges, dynamisch erzeugtes Modal statt des geteilten `#modal`-Elements (siehe
- * `openHelpModal.tsx`) -- der FormularEditor läuft selbst schon in einem Admin-Tab, ein zweites
- * Modal darf ein eventuell gerade offenes nicht verdrängen.
+ * Öffnet die Platzhalter-Hilfe in einem eigenständigen, dynamisch erzeugten Drawer statt im
+ * geteilten `#modal`-Element (wie `openHelpModal.tsx`): der FormularEditor läuft schon in einem
+ * Admin-Tab, ein zweiter Dialog darf einen gerade offenen nicht verdrängen. Beim Schließen wird der
+ * Container wieder entfernt.
  */
 export function openPlatzhalterHilfe(): void {
   const container = document.createElement('div');

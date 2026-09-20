@@ -6,6 +6,16 @@ import { mergePerWeekdaySchicht } from '@/types';
 import { resolveBzBis, resolveBzVon } from './resolveBereitschaftsGrenze';
 import { B_WECHSEL_ZEIT } from './constants';
 
+/**
+ * Leitet die Datums- und Zeitfelder des „Neue Bereitschaft"-Modals aus Startdatum und Vorgabe ab:
+ * BZ-Grenzen (bAT/bET), Spät- (spaetAT/spaetET) und Nachtzeiten (nAT/nET) aus der Arbeitszeit des jeweiligen
+ * Wochentags, Ende-/Nacht-Datumsfelder (bE/nA/nE) aus der Vorgabe.
+ *
+ * @param parentElement - Modal-Element mit den Feldern.
+ * @param vorgabenB - Effektive Bereitschafts-Vorgabe (inkl. Schicht-Overrides).
+ * @param datum - Startdatum der Bereitschaft.
+ * @throws {Error} Wenn ein benötigtes Feld im Modal fehlt.
+ */
 export default function updateBereitschaftsDatum(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,
@@ -13,9 +23,8 @@ export default function updateBereitschaftsDatum(
 ): void {
   const vorgabenU = Storage.get<Partial<IVorgabenU>>('VorgabenU', { default: {} });
   const az = vorgabenU.Arbeitszeit;
-  // Handbetrieb ("Datum & Zeiten manuell anpassen"): berechnete Datumsfelder (bE/nA/nE) nicht
-  // überschreiben. Zeiten werden immer zum jeweiligen Wochentag neu abgeleitet — sie dienen im
-  // Handbetrieb als Startwert und werden erst danach vom User feinjustiert.
+  // Handbetrieb ("Datum & Zeiten manuell anpassen"): Datumsfelder (bE/nA/nE) nicht überschreiben.
+  // Zeiten werden immer neu abgeleitet und dienen im Handbetrieb als Startwert.
   const eigen = parentElement.querySelector<HTMLInputElement>('#eigen')?.checked ?? false;
   const bAT = parentElement.querySelector<HTMLInputElement>('#bAT');
   const spaetCheckbox = parentElement.querySelector<HTMLInputElement>('#spaet');

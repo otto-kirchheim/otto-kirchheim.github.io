@@ -6,14 +6,18 @@ import { parseVersion } from './configSchema';
 import { build } from './build';
 import { cacheVersion, cacheVorlage, getCachedVersion, getCachedVorlage } from './formularCache';
 
-/** Warmlauf-Aufrufe (`warmeVorlagenCache`) laufen still: kein "Offline"-Snackbar, wenn der
- * Prefetch scheitert. Der normale Export-Pfad bleibt bei `false`. */
+/** `still`: Warmlauf-Aufrufe (`warmeVorlagenCache`) zeigen keinen "Offline"-Snackbar, wenn sie auf den
+ * Cache zurückfallen. Der normale Export-Pfad bleibt bei `false`. */
 interface LadeOptionen {
   still?: boolean;
 }
 
 /** Trägt den HTTP-Status mit, z.B. um einen 404 ("keine gültige Version") erkennbar zu machen. */
 export class ApiFehler extends Error {
+  /**
+   * @param message - Fehlertext.
+   * @param statusCode - HTTP-Status der Serverantwort.
+   */
   constructor(
     message: string,
     readonly statusCode: number,
@@ -23,6 +27,11 @@ export class ApiFehler extends Error {
   }
 }
 
+/**
+ * Header für Roh-`fetch()`-Aufrufe: Bearer-Token (falls angemeldet) und Client-Version.
+ *
+ * @returns Header-Objekt ohne `Authorization`, wenn kein Token gespeichert ist.
+ */
 export function authHeader(): Record<string, string> {
   const token = Storage.get<string>('AccessToken', { default: undefined });
   return {
@@ -31,6 +40,7 @@ export function authHeader(): Record<string, string> {
   };
 }
 
+/** Zeigt den Snackbar-Hinweis, dass eine zwischengespeicherte Vorlage bzw. Version verwendet wird. */
 function zeigeOfflineHinweis(): void {
   createSnackBar({
     message: 'Offline: zwischengespeicherte Vorlage verwendet.',
@@ -49,6 +59,12 @@ function zeigeOfflineHinweis(): void {
  * erfolgreich geladene Vorlage aus `formularCache` zurück -- ein `ApiFehler` (erreichbarer Server
  * antwortet mit einem echten HTTP-Fehler, z.B. 404 "gelöscht") wird dagegen NIE durch den Cache
  * maskiert und immer weitergereicht.
+ *
+ * @param vorlageId - Id der Vorlage (`/vorlagen/:id`).
+ * @param optionen - `still`: bei Cache-Fallback keinen Offline-Hinweis zeigen.
+ * @returns Die Vorlagen-PDF.
+ * @throws {ApiFehler} Bei HTTP-Fehler des erreichbaren Servers.
+ * @throws {Error} Bei Transportfehler ohne Cache-Eintrag.
  */
 export async function holeVorlageAlsDatei(vorlageId: string, { still = false }: LadeOptionen = {}): Promise<File> {
   try {
@@ -67,8 +83,14 @@ export async function holeVorlageAlsDatei(vorlageId: string, { still = false }: 
   }
 }
 
-/** Extrahiert die Vorlagen-ID aus `Version.layout.template` (`/api/v2/vorlagen/<id>`, vom Server
- * gesetzt, siehe `versionAnlegen.service.ts::zuFormular()`). */
+/**
+ * Extrahiert die Vorlagen-ID aus `Version.layout.template` (`/api/v2/vorlagen/<id>`, vom Server
+ * gesetzt, siehe `versionAnlegen.service.ts::zuFormular()`).
+ *
+ * @param template - Wert von `Version.layout.template`.
+ * @returns Letztes Pfadsegment der URL.
+ * @throws {Error} Wenn die URL kein Pfadsegment enthält.
+ */
 function vorlagenId(template: string): string {
   const id = template.split('/').pop();
   if (!id) throw new Error(`Ungültige Vorlagen-URL: ${template}`);
@@ -76,12 +98,18 @@ function vorlagenId(template: string): string {
 }
 
 /**
- * Löst die gültige Version zum Leistungsdatum server-seitig auf (`GET /formulare/:f?stichtag=`,
- * Server statt Client -- siehe Phase-7-Design-Entscheidung in der Plandatei, Version und
- * ausgelieferte PDF laufen dadurch nie auseinander). Bei echtem Transportfehler fällt der Aufruf
- * auf eine zuvor erfolgreich geladene Version aus `formularCache` zurück -- ein `ApiFehler`
+ * Löst die gültige Version zum Leistungsdatum server-seitig auf (`GET /formulare/:f?stichtag=`) --
+ * so laufen Version und ausgelieferte PDF nie auseinander. Bei echtem Transportfehler fällt der
+ * Aufruf auf eine zuvor erfolgreich geladene Version aus `formularCache` zurück -- ein `ApiFehler`
  * (erreichbarer Server sagt bewusst "nein", z.B. "keine gültige Version für diesen Stichtag") wird
  * dagegen NIE durch den Cache maskiert.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`).
+ * @param optionen - `still`: bei Cache-Fallback keinen Offline-Hinweis zeigen.
+ * @returns Die validierte Version.
+ * @throws {ApiFehler} Wenn der Server keine gültige Version liefert.
+ * @throws {Error} Bei Transportfehler ohne Cache-Eintrag.
  */
 async function loeseVersionAuf(formular: string, stichtag: string, { still = false }: LadeOptionen = {}) {
   try {
@@ -120,6 +148,9 @@ async function loeseVersionAuf(formular: string, stichtag: string, { still = fal
  * - Version wird bewusst bei jedem Lauf neu aufgeloest und ueberschrieben, damit eine laengst
  *   veroeffentlichte neue Version nicht dauerhaft an einer alten Cache-Zeile haengenbleibt.
  * - Die Vorlagen-PDF (Binaerdaten) wird nur gezogen, wenn sie noch nicht im Cache liegt.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`).
  */
 export async function warmeVorlagenCache(formular: string, stichtag: string): Promise<void> {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
@@ -140,6 +171,13 @@ export async function warmeVorlagenCache(formular: string, stichtag: string): Pr
  * `/vorlagen/:id` verlangt aber Login. Deshalb hier die Vorlage vorab laden und `template` auf eine
  * lokale `blob:`-URL umbiegen, derselbe Trick wie die Testdaten-Vorschau im Admin-Editor
  * (`FormularEditor.tsx`), nur mit einer echt hochgeladenen statt einer lokal gewählten Datei.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`) zur Versionsauflösung.
+ * @param daten - Quelldaten des PDFs.
+ * @param signaturPng - Unterschrift als PNG-Data-URL, optional (siehe `build()`).
+ * @param digitaleSignatur - true bei Wahl "Digital" (siehe `build()`).
+ * @returns Die PDF-Bytes.
  */
 export async function ladeUndErzeugePdf(
   formular: string,

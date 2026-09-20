@@ -4,6 +4,14 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import getEwtDaten from './getEwtDaten';
 
+/**
+ * Trägt in `#Tag` den nächsten freien Tag des aktiven Monats ein: ab `tag` aufwärts, am Monatsende weiter beim 1.
+ * Sind alle Tage belegt, wird der Bestätigen-Knopf im Modal deaktiviert und eine Snackbar gezeigt.
+ *
+ * @param tag - Ausgangstag (Zahl oder Zahl-String); leer/`undefined`: Wert aus `#Tag`, sonst der höchste belegte Tag.
+ * @param dataE - Belegte EWT-Einträge; Standard: aktiver Monat ohne gelöschte Zeilen.
+ * @throws {Error} Wenn `#Tag` fehlt oder alle Tage im Monat belegt sind.
+ */
 export default function setNaechsterEwtTag(
   tag?: string | number | null,
   dataE: IMonatsDaten['EWT'] = getEwtDaten(undefined, undefined, { scope: 'monat', excludeDeleted: true }),
@@ -54,6 +62,7 @@ export default function setNaechsterEwtTag(
   throw new Error('Fehler beim Finden eines Freien Tages');
 }
 
+/** Zeigt die Fehler-Snackbar "Alle Tage im Monat sind bereits belegt". */
 function showAllDaysOccupiedMessage() {
   createSnackBar({
     message: `EWT<br/>Alle Tage im Monat sind bereits belegt.`,

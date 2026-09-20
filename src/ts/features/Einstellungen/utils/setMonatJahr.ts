@@ -5,6 +5,9 @@ import dayjs from '@/infrastructure/date/configDayjs';
  * Wirft nie: Bereitschaft/EWT/Neben/EA mounten je nach `aktivierteTabs` erst NACH dem Laden der Daten
  * (`syncFeatureTabs`), der Text wird von aussen ins DOM geschrieben und geht mit einem Remount
  * verloren -- deshalb ruft `syncFeatureTabs` diese Funktion nach jedem Mounten erneut auf.
+ *
+ * @param jahr - Jahr.
+ * @param monat - Monat 1-12.
  */
 export function setMonatsUeberschriften(jahr: number, monat: number): void {
   const monatLabel = dayjs([+jahr, monat - 1]).format('MM / YY');
@@ -16,8 +19,15 @@ export function setMonatsUeberschriften(jahr: number, monat: number): void {
   if (headingBerechnung) headingBerechnung.innerText = jahr.toString();
 }
 
+/**
+ * Schreibt Monat und Jahr in alle `#Monat`-Felder und die Tab-Überschriften.
+ *
+ * @param jahr - Jahr.
+ * @param monat - Monat 1-12.
+ * @throws {Error} Wenn `#Monat` oder `#MonatBerechnung` fehlt.
+ */
 export default function setMonatJahr(jahr: number, monat: number): void {
-  // `#Monat` existiert seit dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel).
+  // `#Monat` existiert zweimal (Desktop- und Mobile-Kopie im `AppHeader`).
   const inputMonatElemente = document.querySelectorAll<HTMLInputElement>('#Monat');
   const headingMonatBerechnung = document.querySelector<HTMLHeadingElement>('#MonatBerechnung');
 

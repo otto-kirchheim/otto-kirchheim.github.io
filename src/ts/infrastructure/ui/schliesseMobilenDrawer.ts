@@ -12,6 +12,8 @@
  * durch (Puppeteer-verifiziert -- `<dialog class="db-drawer">` traegt nur diese eine, feste
  * Klasse). `closest('dialog')` ist trotzdem eindeutig: auf Desktop hat der Klick-Ursprung
  * keinen `<dialog>`-Vorfahren (No-op), auf Mobile genau den umschliessenden Drawer.
+ *
+ * @param el - Element, in dem geklickt wurde (z. B. `event.currentTarget`).
  */
 export default function schliesseMobilenDrawer(el: Element): void {
   el.closest<HTMLDialogElement>('dialog')?.close();

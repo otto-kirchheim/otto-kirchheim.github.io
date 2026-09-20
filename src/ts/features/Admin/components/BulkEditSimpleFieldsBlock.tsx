@@ -9,7 +9,11 @@ type Props = {
   onChange: (key: SimpleFieldKey, patch: Partial<SimpleFieldState>) => void;
 };
 
-/** "Weitere Felder setzen": Betrieb/Gewerk/Erste TkgSt/TkgSt Adresse als Checkbox+Textfeld. */
+/**
+ * "Weitere Felder setzen": Betrieb/Gewerk/Erste TkgSt/TkgSt Adresse als Checkbox+Textfeld.
+ *
+ * @param props - `fields` (Zustand je Feld) und `onChange` für Aktivierung bzw. Wert.
+ */
 export function BulkEditSimpleFieldsBlock({ fields, onChange }: Props) {
   return (
     <div className="border p-3">

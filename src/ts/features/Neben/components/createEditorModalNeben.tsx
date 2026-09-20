@@ -28,12 +28,28 @@ import {
   validateNebengeldZulagen,
 } from '../utils';
 
+/**
+ * Sucht eine Spalte der Nebenbezug-Tabelle.
+ *
+ * @param row - Tabelle oder Zeile, deren Spalten durchsucht werden.
+ * @param columnName - Spaltenname.
+ * @returns Die Spalte.
+ * @throws {Error} Wenn die Spalte fehlt.
+ */
 const getColumn = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string): Column<IDatenN> => {
   const column = row.columns.array.find(column => column.name === columnName);
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return column;
 };
 
+/**
+ * Baut das Zeit-Eingabefeld einer Spalte; bei einer Zeile mit deren Wert vorbelegt.
+ *
+ * @param row - Tabelle (neu) oder Zeile (bearbeiten).
+ * @param columnName - Spaltenname.
+ * @param options - `required` macht das Feld zum Pflichtfeld.
+ * @returns Eingabefeld.
+ */
 const createTimeElement = (
   row: CustomTable<IDatenN> | Row<IDatenN>,
   columnName: string,
@@ -55,6 +71,13 @@ const createTimeElement = (
   );
 };
 
+/**
+ * Baut das Pflicht-Textfeld einer Spalte mit genau 9 Zeichen (Auftragsnummer); bei einer Zeile vorbelegt.
+ *
+ * @param row - Tabelle (neu) oder Zeile (bearbeiten).
+ * @param columnName - Spaltenname.
+ * @returns Eingabefeld.
+ */
 const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName: string) => {
   const column = getColumn(row, columnName);
   return (
@@ -73,6 +96,15 @@ const createTextElement = (row: CustomTable<IDatenN> | Row<IDatenN>, columnName:
   );
 };
 
+/**
+ * Öffnet den Editor-Modal für einen Nebenbezug: neu, wenn `row` die Tabelle ist, sonst Bearbeiten der Zeile. Optional
+ * ist ein EWT-Eintrag zuordenbar; dann sind Tag, Beginn und Ende von ihm übernommen und der Tag gesperrt. Pro Tag ist
+ * nur ein Nebenbezug erlaubt.
+ *
+ * @param row - Tabelle (neue Zeile) oder zu bearbeitende Zeile.
+ * @param titel - Titel des Modals.
+ * @throws {Error} Wenn `row` weder Tabelle noch Zeile ist oder die Formular-Referenz fehlt.
+ */
 export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -99,6 +131,13 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
       .map(n => n.EWT as string),
   );
 
+  /**
+   * Baut die Optionen der EWT-Auswahl ("keine Zuordnung" plus EWT-Tage). Deaktiviert sind noch nicht gespeicherte Tage
+   * und Tage, die schon einem anderen Nebenbezug zugeordnet sind.
+   *
+   * @param rows - EWT-Einträge des aktiven Monats.
+   * @returns Select-Optionen.
+   */
   const buildEwtOptions = (rows: IDatenEWT[]) => [
     { value: '', text: '— keine Zuordnung —', selected: !currentEwtRef },
     ...rows.map(day => {
@@ -119,6 +158,11 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
 
   const ewtOptions = buildEwtOptions(dataE);
 
+  /**
+   * Sperrt bei gewählter EWT-Zuordnung das Tag-Feld und übernimmt Tag, Beginn und Ende aus dem EWT-Eintrag.
+   *
+   * @param evt - Change-Event der EWT-Auswahl.
+   */
   const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
     const selectedId = select.value;
@@ -219,6 +263,12 @@ export default function EditorModalNeben(row: CustomTable<IDatenN> | Row<IDatenN
   });
   beiModalSchliessen(unsubscribeEwtSync);
 
+  /**
+   * Baut den Submit-Handler: prüft Zulagen und doppelte Tage, schreibt bzw. fügt die Zeile ein, schließt den Modal und
+   * speichert die Tabelle.
+   *
+   * @returns Submit-Handler.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;

@@ -19,6 +19,12 @@ type RegisterPasskeyOptions = {
   showUnsupportedToast?: boolean;
 };
 
+/**
+ * Erkennt einen vom Nutzer abgebrochenen WebAuthn-Vorgang (`AbortError`).
+ *
+ * @param error - Gefangener Fehler.
+ * @returns `true` bei `AbortError` (als `DOMException` oder `Error`).
+ */
 function isAbortError(error: unknown): boolean {
   return (
     (error instanceof DOMException && error.name === 'AbortError') ||
@@ -26,6 +32,13 @@ function isAbortError(error: unknown): boolean {
   );
 }
 
+/**
+ * Liefert eine anzeigbare Meldung zu einem Passkey-Fehler.
+ *
+ * @param error - Gefangener Fehler.
+ * @param fallback - Meldung, wenn der Fehler keinen Text mitbringt.
+ * @returns Abbruch-Hinweis bei `AbortError`, sonst die Fehlermeldung, sonst `fallback`.
+ */
 export function getPasskeyErrorMessage(
   error: unknown,
   fallback = 'Biometrie-Anmeldung konnte nicht eingerichtet werden',
@@ -39,6 +52,11 @@ export function getPasskeyErrorMessage(
   return fallback;
 }
 
+/**
+ * Rät anhand des User-Agents einen Gerätenamen für den neuen Passkey.
+ *
+ * @returns Grober Gerätename (z. B. `'Mac'`, `'Android-Gerät'`); `'Dieses Gerät'`, wenn unbekannt.
+ */
 export function guessPasskeyDeviceName(): string {
   const userAgent = navigator.userAgent;
 
@@ -50,6 +68,15 @@ export function guessPasskeyDeviceName(): string {
   return 'Dieses Gerät';
 }
 
+/**
+ * Registriert einen Passkey für den angemeldeten Nutzer (Options vom Server, WebAuthn-Dialog,
+ * Abschluss am Server) und meldet das Ergebnis als Wert statt per Exception. Snackbars sind je Fall
+ * abschaltbar, die Texte überschreibbar.
+ *
+ * @param options - Meldungstexte (`successMessage`, `unsupportedMessage`, `cancelledMessage`,
+ *   `errorFallbackMessage`) und die Schalter `show…Toast` (Standard: alle an).
+ * @returns Ergebnis mit `ok`, Grund (`success`, `unsupported`, `cancelled`, `error`) und Meldung.
+ */
 export async function registerPasskeyWithResult(
   options: RegisterPasskeyOptions = {},
 ): Promise<PasskeyRegistrationResult> {

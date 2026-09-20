@@ -1,10 +1,6 @@
 import type { IDatenEWT, TResourceKey } from '@/types';
 
-/**
- * Typed event channel definitions.
- *
- * Add new channels here — publishers and subscribers get full type safety.
- */
+/** Kanal-Definitionen (Name -> Nutzlast); neue Kanaele hier ergaenzen, dann sind Sender und Empfaenger typsicher. */
 export interface EventChannels {
   'data:changed': { resource: TResourceKey | 'all'; action: 'create' | 'update' | 'delete' | 'sync' };
   'ewt:persisted': { rows: IDatenEWT[] };

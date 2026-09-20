@@ -27,21 +27,33 @@ import { EditorModalEWT, ShowModalEWT, createAddModalEWT } from './components';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { attachBerechnenToggleListeners, recalculateEwtMonat, getEwtDaten, persistEwtTableData } from './utils';
 
+/**
+ * Tab "EWT": Tabelle der Anwesenheitseinträge des aktiven Monats mit Anwesenheit-, Berechnen-,
+ * Speichern-, PDF- und Hilfe-Buttons sowie "Berechnen?"-Schalter je Zeile.
+ */
 export function EwtTab() {
-  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
-  // bisherige `useEffect(() => {...}, [])`-Verhalten.
+  /**
+   * Formatiert einen Tag-Zellwert für die Anzeige als `dd DD.MM.`.
+   *
+   * @param value - Tag als `YYYY-MM-DD`.
+   * @returns Formatierter Tag; bei nicht parsbarem Wert der Originalstring.
+   */
   const tagParser = (value: unknown) => {
       const s = value as string;
       const d = dayjs(s, 'YYYY-MM-DD', true);
       return d.isValid() ? d.format('dd DD.MM.') : s;
     },
-    // Beide Parser geben JSX zurueck (Boolean-Schalter bzw. Switch ueber feste Faelle) --
-    // nur deshalb duerfen die Spalten `html: true` setzen (`CustomTableView.tsx` rendert den
-    // Rueckgabewert dann direkt statt ihn zu `String()`en).
+    // `berechnenParser` und `schichtParser` geben JSX zurück; nur deshalb dürfen ihre Spalten
+    // `html: true` setzen (`CustomTableView.tsx` rendert den Rückgabewert dann direkt).
+    /**
+     * Rendert den "Berechnen?"-Schalter einer Zeile.
+     *
+     * @param value - Zellwert `berechnen`; truthy = eingeschaltet.
+     * @returns Switch-Element.
+     */
     berechnenParser = (value: unknown) => (
-      // Unkontrolliert mit Absicht: `attachBerechnenToggleListeners` (unten) liest den
-      // Klick-Zustand direkt vom DOM-Element, kein React-State noetig. Beschriftung steht
-      // in der Spaltenueberschrift, deshalb nur ein `aria-label` am Feld.
+      // Unkontrolliert mit Absicht: `attachBerechnenToggleListeners` liest den Klick-Zustand direkt
+      // vom DOM-Element. Beschriftung steht in der Spaltenüberschrift, daher nur ein `aria-label`.
       <div className="db-switch">
         <label>
           <input
@@ -54,6 +66,12 @@ export function EwtTab() {
         </label>
       </div>
     ),
+    /**
+     * Wandelt das Schichtkürzel in den Anzeigetext um.
+     *
+     * @param value - Schichtkürzel `T`, `N`, `SP`, `BN` oder `S`.
+     * @returns Anzeigetext bzw. JSX (BN); "Unbekannt" bei anderem Wert.
+     */
     schichtParser = (value: unknown) => {
       switch (value as string) {
         case 'T':
@@ -75,6 +93,7 @@ export function EwtTab() {
           return 'Unbekannt';
       }
     },
+    // Optionen werden nur beim ersten Aufruf gelesen (siehe Docblock von `useCustomTableState()`).
     ftE = useCustomTableState<IDatenEWT>('tableE', {
       columns: [
         {
@@ -90,9 +109,8 @@ export function EwtTab() {
         {
           name: 'Schicht',
           title: 'Schicht',
-          // `parser` ist auf `string | number` typisiert (gilt fuer alle anderen Spalten
-          // dieser und aller anderen Tabellen); `html: true`-Spalten sind der dokumentierte
-          // Ausnahmefall und geben tatsaechlich JSX zurueck, siehe `CustomTableView.tsx`.
+          // `parser` ist auf `string | number` typisiert; `html: true`-Spalten sind der dokumentierte
+          // Ausnahmefall und geben JSX zurück (siehe `CustomTableView.tsx`).
           parser: schichtParser as unknown as (value: unknown) => string,
           type: 'time',
           html: true,
@@ -118,22 +136,46 @@ export function EwtTab() {
       onChange: createOnChangeHandler('EWT'),
       editing: {
         enabled: true,
+        /** Öffnet den Editor für eine neue Anwesenheit. */
         addRow: () => {
           EditorModalEWT(ftE, 'Anwesenheit hinzufügen');
         },
+        /**
+         * Öffnet den Editor für eine bestehende Anwesenheit.
+         *
+         * @param row - Zu bearbeitende Zeile.
+         */
         editRow: row => {
           EditorModalEWT(row, 'Anwesenheit bearbeiten');
         },
+        /**
+         * Zeigt eine Anwesenheit schreibgeschützt an.
+         *
+         * @param row - Anzuzeigende Zeile.
+         */
         showRow: row => {
           ShowModalEWT(row, 'Anwesenheit anzeigen');
         },
+        /**
+         * Löscht die Zeile und speichert die Tabelle.
+         *
+         * @param row - Zu löschende Zeile.
+         */
         deleteRow: row => {
           row.deleteRow();
           persistEwtTableData(ftE);
         },
+        /** Löscht nach Rückfrage alle Zeilen des aktiven Monats. */
         deleteAllRows: () => {
           confirmDeleteAllRows({
             table: ftE,
+            /**
+             * Zeile zählt zum Monat, wenn Tag oder Buchungstag darin liegen.
+             *
+             * @param cells - Zeilenwerte.
+             * @param m - Monat (1-12).
+             * @returns `true`, wenn die Zeile gelöscht werden soll.
+             */
             rowFilter: (cells, m) => isEwtInMonat(cells, m),
             persist: persistEwtTableData,
           });
@@ -142,6 +184,7 @@ export function EwtTab() {
           {
             look: { variant: 'filled' },
             text: 'Alle Zeiten entfernen',
+            /** Fragt per Snackbar nach, ob die Zeiten der berechneten Zeilen entfernt werden sollen. */
             function: () => {
               createSnackBar({
                 titel: 'Alle Zeiten entfernen?',
@@ -154,6 +197,7 @@ export function EwtTab() {
                 actions: [
                   {
                     text: 'Ja',
+                    /** Leert die Zeitfelder aller berechneten, nicht gelöschten Zeilen des aktiven Monats und speichert die Tabelle. */
                     function: () => {
                       const activeMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
 
@@ -216,7 +260,7 @@ export function EwtTab() {
     ftE.rows.setFilter(row => isEwtInMonat(row, monat));
 
     return unbindButtons;
-    // Bewusst einmalig wie vorher -- `ftE` ist stabil (siehe `NebenTab.tsx`).
+    // Bewusst einmalig: `ftE` ist stabil (wie in `NebenTab.tsx`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

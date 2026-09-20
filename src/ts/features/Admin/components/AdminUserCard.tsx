@@ -30,7 +30,11 @@ type Props = {
   onDelete: () => void;
 };
 
-/** Eine Benutzer-Karte: kompakte Kopfzeile (immer sichtbar) + aufklappbarer Bearbeitungsbereich. */
+/**
+ * Benutzer-Karte: kompakte Kopfzeile und Übersicht (immer sichtbar) plus aufklappbarer Bearbeitungsbereich.
+ *
+ * @param props - Benutzerzeile, Bearbeitungsstand, Berechtigungs-/Zustands-Flags und die Callbacks der Liste.
+ */
 export function AdminUserCard({
   currentUser,
   edit,
@@ -59,7 +63,6 @@ export function AdminUserCard({
         className={`db-card ${isSelfRow ? 'border-primary' : ''} ${changed ? 'border-warning' : ''}`}
         data-spacing="none"
       >
-        {/* Card Header */}
         <div
           className="d-flex justify-content-between align-items-center py-2 px-3 bg-body-secondary border-bottom"
           style={{ cursor: 'pointer' }}
@@ -98,7 +101,6 @@ export function AdminUserCard({
           </div>
         </div>
 
-        {/* Kompakt-Info (immer sichtbar) */}
         <div className="py-2 px-3">
           <div className="d-flex flex-wrap gap-2 align-items-center small">
             <span className="text-body-secondary">OE:</span>
@@ -134,10 +136,8 @@ export function AdminUserCard({
           </div>
         </div>
 
-        {/* Erweiterte Bearbeitung (aufklappbar) */}
         {isExpanded && (
           <div className="border-top pt-3 pb-3 px-3">
-            {/* Rolle */}
             <div className="mb-3">
               <DbAuswahl
                 beschriftung="Rolle"
@@ -154,13 +154,11 @@ export function AdminUserCard({
               </DbAuswahl>
             </div>
 
-            {/* OE */}
             <div className="mb-3">
               <label className="fw-semibold small mb-1">OE</label>
               <OeLevelBoxes value={edit.oe} onChange={value => updateEdit({ oe: value })} disabled={!editable} />
             </div>
 
-            {/* Team-Admin OEs */}
             <OeTagInput
               label="Team-Admin OEs"
               values={edit.adminForTeamOes}
@@ -170,7 +168,6 @@ export function AdminUserCard({
               defaultLevelCount={splitOeInput(edit.oe).length}
             />
 
-            {/* Org-Admin OEs */}
             <OeTagInput
               label="Org-Admin OEs"
               values={edit.adminForOrganizationOes}
@@ -250,7 +247,6 @@ export function AdminUserCard({
               )}
             </div>
 
-            {/* Aktionsbuttons */}
             <div className="d-flex flex-wrap gap-2 mt-3 pt-2 border-top">
               {editable && (
                 <>

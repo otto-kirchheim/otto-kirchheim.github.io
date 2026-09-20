@@ -4,6 +4,9 @@ import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } f
 import { PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 import { checkNeuerBenutzer } from '../utils';
 
+/**
+ * Öffnet den Registrierungsdialog (Zugangscode, Benutzer, E-Mail, zweimal Passwort mit Stärkeanzeige).
+ */
 export default function createModalNewUser(): void {
   const ref = createRef<HTMLFormElement>();
   const passwortRef = createRef<HTMLInputElement>();
@@ -108,6 +111,9 @@ export default function createModalNewUser(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Baut den Submit-Handler: verhindert den Standard-Submit und ruft bei gültigem Formular `checkNeuerBenutzer` auf.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;

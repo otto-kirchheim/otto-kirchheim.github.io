@@ -10,6 +10,12 @@ import requestVerificationMail from './requestVerificationMail';
 import { featureLifecycleRegistry } from '@/core/hooks';
 import { markStep } from '../../initSequence';
 
+/**
+ * Maskiert HTML-Sonderzeichen fuer die Ausgabe per `innerHTML`.
+ *
+ * @param unsafe - Ungepruefter Text.
+ * @returns Text mit `&`, `<`, `>`, `"` und `'` als Entities.
+ */
 function escapeHtml(unsafe: string): string {
   return unsafe.replace(/[&<"']/g, function (match) {
     const escape: { [key: string]: string } = {
@@ -23,6 +29,14 @@ function escapeHtml(unsafe: string): string {
   });
 }
 
+/**
+ * Nachbereitung eines erfolgreichen Logins: speichert Benutzerdaten, setzt Begruessung sowie
+ * Jahr/Monat auf heute, initialisiert die Features (Admin-Tab nur fuer Nicht-Mitglieder), weist
+ * bei unverifizierter E-Mail hin und laedt die Daten des aktuellen Monats.
+ *
+ * @param params - Anmeldename (wird mit grossem Anfangsbuchstaben gespeichert), optional Rolle,
+ *   E-Mail und Verifizierungsstatus; ohne Rolle wird der Access-Token ausgewertet.
+ */
 export default async function userLoginSuccess({
   username,
   role,
@@ -47,8 +61,8 @@ export default async function userLoginSuccess({
   const willkommen = document.querySelector<HTMLHeadingElement>('#Willkommen');
   if (willkommen) willkommen.innerHTML = `Hallo, ${escapeHtml(username)}.`;
 
-  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat` existieren seit dem
-  // Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel rendern `actions1` beide).
+  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat` existieren zweimal (Desktop-
+  // und Mobile-Control-Panel in `AppHeader.tsx` rendern `actions1` beide).
   document.querySelectorAll<HTMLButtonElement>('#btnLogin').forEach(element => element.classList.add('d-none'));
 
   const aktJahr = dayjs().year();
@@ -81,6 +95,7 @@ export default async function userLoginSuccess({
       actions: [
         {
           text: 'Verifizierungs-Mail erneut senden',
+          /** Fordert eine neue Verifizierungs-Mail für die Login-E-Mail an. */
           function: () => {
             void requestVerificationMail(email);
           },

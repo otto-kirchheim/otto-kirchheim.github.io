@@ -3,16 +3,12 @@ import { MyCheckbox } from '@/components';
 import { useColorMode } from './useColorMode';
 
 /**
- * Vereinfacht auf einen simplen Hell/Dunkel-Schalter (vorher: Hell/Dunkel/Auto-Flyout-Menue) --
- * das Flyout funktionierte im `DBControlPanelNavigation`s horizontal scrollendem `<menu>` nicht
- * mehr zuverlaessig (Shell-Umbau, siehe `AppHeader.tsx`). `useColorMode()`s zugrunde liegender
- * Store kennt weiterhin `'auto'` (Erststart folgt der OS-Praeferenz, `Storage`-Default) -- der
- * Schalter selbst bietet nur noch die beiden expliziten Zustaende an, ein Klick verlaesst
- * `'auto'` endgueltig zugunsten des jeweils angezeigten Zustands.
+ * Hell/Dunkel-Schalter. Der Store hinter `useColorMode()` kennt zusaetzlich `'auto'` (Erststart,
+ * folgt der OS-Praeferenz); der Schalter zeigt dann den effektiven Zustand, und ein Klick
+ * verlaesst `'auto'` zugunsten von `'dark'`/`'light'`.
  *
- * KEIN `<li>`-Wrapper mehr (Nachtrag): sitzt seit dem `actions2`-Umbau nicht mehr in
- * `DBControlPanelNavigation`s `<menu>`, sondern direkt in `actions2` (Desktop: eigener Slot;
- * Mobile: `DBDrawerFooter`) -- ein `<li>` ausserhalb jeder Liste waere ungueltiges HTML.
+ * Bewusst ohne `<li>`-Wrapper: Der Schalter sitzt direkt in `actions2` von `AppHeader.tsx`
+ * (Desktop: eigener Slot; Mobil: `DBDrawerFooter`), also in keiner Liste.
  */
 export default function ThemeSwitcher() {
   const [theme, setTheme] = useColorMode();

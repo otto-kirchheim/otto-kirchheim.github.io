@@ -1,11 +1,8 @@
 /**
- * Feature Lifecycle Registry
+ * Feature-Lifecycle-Registry: zentrale Initialisierung und Abbau der Features.
  *
- * Centralizes feature initialization and teardown via a formal registry pattern.
- * Replaces ad-hoc mount/unmount calls with declarative feature registration.
- *
- * Features can optionally provide lifecycle hooks (beforeLoad, afterLoad, etc.)
- * that the orchestration layer invokes at appropriate points in the app lifecycle.
+ * Features koennen optional Lifecycle-Hooks (beforeLoad, afterLoad, ...) mitbringen, die die
+ * Orchestrierung an passenden Stellen des App-Lebenszyklus aufruft.
  */
 
 export interface FeatureContext {
@@ -26,7 +23,7 @@ export interface FeatureRegistration {
   name: string;
   register(ctx: FeatureContext): Promise<void>;
   unregister?(): Promise<void>;
-  /** Optional app-wide lifecycle callbacks for this feature. */
+  /** Optionale app-weite Lifecycle-Callbacks dieses Features. */
   lifecycle?: FeatureLifecycleHooks;
 }
 
@@ -36,8 +33,10 @@ class FeatureLifecycleRegistry {
   private features: Map<string, FeatureRegistration> = new Map();
 
   /**
-   * Register a feature with lifecycle hooks.
-   * Silently skips if a feature with the same name is already registered.
+   * Registriert ein Feature samt Lifecycle-Hooks. Ein bereits unter demselben Namen
+   * registriertes Feature bleibt bestehen; das Duplikat wird nur per Warnung uebersprungen.
+   *
+   * @param feature - Registrierung mit eindeutigem `name`.
    */
   registerFeature(feature: FeatureRegistration): void {
     if (this.features.has(feature.name)) {
@@ -47,7 +46,13 @@ class FeatureLifecycleRegistry {
     this.features.set(feature.name, feature);
   }
 
-  /** Initialize all registered features. */
+  /**
+   * Ruft `register` aller Features nacheinander in Registrierungsreihenfolge auf. Ein Fehler
+   * wird geloggt und abgebrochen weitergereicht; spaetere Features bleiben dann uninitialisiert.
+   *
+   * @param ctx - Kontext (Admin-Flag, Benutzername), der an jedes Feature geht.
+   * @throws {Error} Wenn `register` eines Features wirft.
+   */
   async initializeAll(ctx: FeatureContext): Promise<void> {
     const features = Array.from(this.features.values());
     if (features.length === 0) {
@@ -64,7 +69,10 @@ class FeatureLifecycleRegistry {
     }
   }
 
-  /** Teardown all registered features in reverse order. */
+  /**
+   * Ruft `unregister` aller Features in umgekehrter Registrierungsreihenfolge auf. Fehler
+   * einzelner Features werden geloggt und stoppen den Abbau der uebrigen nicht.
+   */
   async teardownAll(): Promise<void> {
     const features = Array.from(this.features.values()).reverse();
     if (features.length === 0) {
@@ -81,9 +89,10 @@ class FeatureLifecycleRegistry {
   }
 
   /**
-   * Invoke a lifecycle stage across all features that declare it.
-   * Errors in individual features are caught and reported but do not
-   * prevent other features from running.
+   * Ruft die Lifecycle-Stufe bei allen Features auf, die sie deklarieren. Fehler einzelner
+   * Features werden geloggt und an deren `onError`-Hook gemeldet, die uebrigen laufen weiter.
+   *
+   * @param stage - Stufe (ausser `onError`, das ueber `invokeOnError` laeuft).
    */
   async invokeLifecycle(stage: Exclude<LifecycleStage, 'onError'>): Promise<void> {
     const features = Array.from(this.features.values());
@@ -103,7 +112,12 @@ class FeatureLifecycleRegistry {
     }
   }
 
-  /** Invoke the onError lifecycle hook for a specific feature. */
+  /**
+   * Ruft den `onError`-Hook eines Features auf; wirft der Hook selbst, wird nur geloggt.
+   *
+   * @param featureName - Name des betroffenen Features; unbekannt oder ohne Hook wirkungslos.
+   * @param error - Der aufgetretene Fehler.
+   */
   async invokeOnError(featureName: string, error: Error): Promise<void> {
     const hook = this.features.get(featureName)?.lifecycle?.onError;
     if (!hook) return;
@@ -114,17 +128,27 @@ class FeatureLifecycleRegistry {
     }
   }
 
-  /** Get a registered feature by name. */
+  /**
+   * Liefert ein registriertes Feature.
+   *
+   * @param name - Feature-Name.
+   * @returns Die Registrierung oder `undefined`.
+   */
   getFeature(name: string): FeatureRegistration | undefined {
     return this.features.get(name);
   }
 
-  /** Check if a feature is registered. */
+  /**
+   * Prueft, ob ein Feature registriert ist.
+   *
+   * @param name - Feature-Name.
+   * @returns `true`, wenn unter `name` eine Registrierung existiert.
+   */
   isFeatureRegistered(name: string): boolean {
     return this.features.has(name);
   }
 
-  /** Remove all features (for testing). */
+  /** Entfernt alle Features (nur fuer Tests). */
   clearAll(): void {
     this.features.clear();
   }

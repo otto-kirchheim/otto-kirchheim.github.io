@@ -7,7 +7,13 @@ export interface ListenAufloesung {
   belegung: Record<string, string[]>;
 }
 
-/** Platzvergabe aller Gruppen einer Tabelle — einmal je Dokument, gültig für alle Seiten. */
+/**
+ * Platzvergabe aller Gruppen einer Tabelle — einmal je Dokument, gültig für alle Seiten.
+ *
+ * @param tabelle - Tabellen-Definition mit optionalen `listen`.
+ * @param zeilen - Alle Zeilen der Tabelle (über alle Seiten).
+ * @returns Auflösung, `undefined` wenn die Tabelle keine Listengruppen hat.
+ */
 export function loeseListenAuf(tabelle: TabellenDef, zeilen: Zeile[]): ListenAufloesung | undefined {
   if (!tabelle.listen) return undefined;
   const belegung: Record<string, string[]> = {};
@@ -15,7 +21,14 @@ export function loeseListenAuf(tabelle: TabellenDef, zeilen: Zeile[]): ListenAuf
   return { gruppen: tabelle.listen, belegung };
 }
 
-/** Schlüssel auf einem Platz, `undefined` wenn der Platz leer bleibt (weniger Schlüssel als Plätze). */
+/**
+ * Schlüssel auf einem Platz.
+ *
+ * @param aufloesung - Ergebnis von `loeseListenAuf()`; `undefined` bei Tabellen ohne Listen.
+ * @param gruppe - Name der Gruppe.
+ * @param index - Platz innerhalb der Gruppe (0-basiert).
+ * @returns Der Schlüssel, `undefined` wenn der Platz leer bleibt (weniger Schlüssel als Plätze).
+ */
 export function schluesselAufPlatz(
   aufloesung: ListenAufloesung | undefined,
   gruppe: string,
@@ -24,7 +37,13 @@ export function schluesselAufPlatz(
   return aufloesung?.belegung[gruppe]?.[index];
 }
 
-/** Die Listeneinträge einer Zeile; alles, was nicht wie eine Liste von Objekten aussieht, fällt weg. */
+/**
+ * Die Listeneinträge einer Zeile; alles, was nicht wie eine Liste von Objekten aussieht, fällt weg.
+ *
+ * @param zeile - Tabellenzeile.
+ * @param gruppe - Gruppe, deren `quelle` das Array in der Zeile benennt.
+ * @returns Die Einträge, leer wenn `quelle` kein Array ist.
+ */
 function eintraege(zeile: Zeile, gruppe: ListenGruppe): Record<string, unknown>[] {
   const roh = zeile[gruppe.quelle];
   if (!Array.isArray(roh)) return [];
@@ -38,6 +57,10 @@ function eintraege(zeile: Zeile, gruppe: ListenGruppe): Record<string, unknown>[
  *
  * Mit `auswahl` gibt deren Reihenfolge die Platzvergabe vor (nur tatsächlich vorkommende Schlüssel
  * belegen einen Platz), ohne sie zählt das erste Vorkommen in den Daten.
+ *
+ * @param zeilen - Alle Zeilen der Tabelle.
+ * @param gruppe - Gruppen-Definition.
+ * @returns Schlüssel in Platzreihenfolge.
  */
 export function listenBelegung(zeilen: Zeile[], gruppe: ListenGruppe): string[] {
   const vorhanden = new Set<string>();
@@ -57,13 +80,26 @@ export function listenBelegung(zeilen: Zeile[], gruppe: ListenGruppe): string[] 
   return gruppe.auswahl ? gruppe.auswahl.filter(k => vorhanden.has(k)) : reihenfolge;
 }
 
-/** Wert dieser Zeile zum Schlüssel eines Platzes; `undefined`, wenn die Zeile ihn nicht führt. */
+/**
+ * Wert dieser Zeile zum Schlüssel eines Platzes.
+ *
+ * @param zeile - Tabellenzeile.
+ * @param gruppe - Gruppen-Definition.
+ * @param schluessel - Schlüssel des Platzes.
+ * @returns Wert des Eintrags, `undefined`, wenn die Zeile den Schlüssel nicht führt.
+ */
 export function listenWert(zeile: Zeile, gruppe: ListenGruppe, schluessel: string): unknown {
   const treffer = eintraege(zeile, gruppe).find(e => String(e[gruppe.schluessel] ?? '') === schluessel);
   return treffer?.[gruppe.wert];
 }
 
-/** Beschriftung eines Schlüssels für die Spaltenüberschrift; ohne Eintrag der Schlüssel selbst. */
+/**
+ * Beschriftung eines Schlüssels für die Spaltenüberschrift.
+ *
+ * @param gruppe - Gruppen-Definition mit optionalen `beschriftungen`.
+ * @param schluessel - Schlüssel des Platzes.
+ * @returns Beschriftung, ohne Eintrag der Schlüssel selbst.
+ */
 export function listenBeschriftung(gruppe: ListenGruppe, schluessel: string): string {
   return gruppe.beschriftungen?.[schluessel] ?? schluessel;
 }

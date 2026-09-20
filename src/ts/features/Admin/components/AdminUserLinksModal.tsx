@@ -30,6 +30,14 @@ const LINK_CONFIG: Record<
   },
 };
 
+/**
+ * Baut die Nachricht, die der Admin dem Benutzer zusammen mit dem Link schicken kann.
+ *
+ * @param kind - Link-Art (Verifizierung oder Passwort-Reset).
+ * @param userName - Anzeigename für die Anrede.
+ * @param url - Der erzeugte Link.
+ * @returns Mehrzeiliger Text zum Weitergeben an den Benutzer, inkl. Gültigkeitsdauer.
+ */
 function buildShareText(kind: LinkKind, userName: string, url: string): string {
   if (kind === 'verification') {
     return [
@@ -52,6 +60,12 @@ function buildShareText(kind: LinkKind, userName: string, url: string): string {
   ].join('\n');
 }
 
+/**
+ * Kopiert Text in die Zwischenablage und meldet Erfolg oder Fehler per Snackbar.
+ *
+ * @param text - Zu kopierender Text.
+ * @param successMessage - Text der Erfolgs-Snackbar.
+ */
 async function copyToClipboard(text: string, successMessage: string): Promise<void> {
   try {
     // Benötigt einen Secure Context (HTTPS/localhost) – im Produktivsystem gegeben.
@@ -66,6 +80,11 @@ async function copyToClipboard(text: string, successMessage: string): Promise<vo
   }
 }
 
+/**
+ * Abschnitt zum Erzeugen und Kopieren eines Verifizierungs- oder Passwort-Reset-Links.
+ *
+ * @param props - `kind` (Link-Art), `userId`, `userName` und optional `disabledHint` (ersetzt den Button durch einen Hinweis).
+ */
 function LinkSection({
   kind,
   userId,
@@ -82,6 +101,9 @@ function LinkSection({
   const [link, setLink] = useState<AdminIssuedLink | null>(null);
   const [error, setError] = useState('');
 
+  /**
+   * Fordert einen neuen Link beim Backend an; Fehler werden im Abschnitt angezeigt.
+   */
   async function handleIssue(): Promise<void> {
     setLoading(true);
     setError('');
@@ -171,6 +193,11 @@ function LinkSection({
   );
 }
 
+/**
+ * Dialog mit Login-Hilfe-Links (Verifizierung, Passwort-Reset) für einen Benutzer.
+ *
+ * @param props - Benutzer (`userId`, `userName`) und ob seine E-Mail bereits verifiziert ist (dann entfällt der Verifizierungs-Link).
+ */
 export function AdminUserLinksModal({
   userId,
   userName,

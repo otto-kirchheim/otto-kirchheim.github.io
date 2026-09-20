@@ -10,11 +10,12 @@ type Props = {
 };
 
 /**
- * Bestandsliste der gespeicherten Versionen eines Formulars mit den beiden Reparaturwegen:
- * Bearbeiten lädt Konfiguration und PDF zurück in den Editor, Löschen entfernt die Version samt
- * ihrer PDF-Vorlage. Ohne die Liste wäre eine einmal falsch angelegte Version nicht mehr
- * korrigierbar — und eine zweite Version gar nicht anlegbar, da dafür erst die Vorgängerin
- * geschlossen (also bearbeitet) werden muss.
+ * Bestandsliste der gespeicherten Versionen eines Formulars mit Bearbeiten (lädt Konfiguration und
+ * PDF zurück in den Editor) und Löschen. Nur so lässt sich eine falsch angelegte Version korrigieren
+ * oder die Vorgängerversion schließen, bevor eine neue angelegt wird.
+ *
+ * @param props - Versionen, Id der gerade bearbeiteten Version, Ladezustand und die Handler
+ *   `onBearbeiten`/`onLoeschen`.
  */
 export function FormularVersionenListe({ versionen, bearbeiteId, laedt, onBearbeiten, onLoeschen }: Props) {
   if (laedt) return <p className="small text-body-secondary mb-0">Versionen werden geladen…</p>;

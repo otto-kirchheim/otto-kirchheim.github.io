@@ -5,7 +5,13 @@ interface SelectOption {
   selected?: boolean;
 }
 
-/** Baut die <option>-Elemente eines <select> neu auf, ohne die Preact-Render-Bäume anzufassen. */
+/**
+ * Baut die `<option>`-Elemente eines `<select>` neu auf, ohne die React-Render-Bäume anzufassen.
+ * Die bisherige Auswahl bleibt erhalten, sofern sie unter den neuen Optionen noch vorkommt; sonst gilt die Option mit `selected`.
+ *
+ * @param select - Zu befüllendes Select-Element.
+ * @param options - Neue Optionen.
+ */
 export default function applySelectOptions(select: HTMLSelectElement, options: SelectOption[]): void {
   const previousValue = select.value;
   select.innerHTML = '';

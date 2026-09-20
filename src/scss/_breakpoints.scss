@@ -1,11 +1,10 @@
 // Projektweite Umbruchstufen -- die EINE Quelle fuer `raster.scss`, `utilities.scss`,
-// `styles.scss` und `infrastructure/table/customtable.scss`.
+// `styles.scss` und `infrastructure/table/customtable.scss`. `infrastructure/ui/breakpoints.ts`
+// spiegelt dieselbe Tabelle fuer die TypeScript-Seite.
 //
 // `xs`-`xl` kommen unveraendert aus `@db-ux/core-foundations` (320/768/1024/1440/1920).
-// `xxl` ist eine bewusste Projekt-Erweiterung: DB endet bei `xl`, die EWT-Tabelle hat aber
-// mehr Spalten, als auf 1920 px nebeneinander passen, und braucht darueber noch eine Stufe.
-// Der Wert 2560 ist die naechste reale Geraeteklasse (QHD/1440p-Schirme).
-// `infrastructure/ui/breakpoints.ts` spiegelt dieselbe Tabelle fuer die TypeScript-Seite.
+// `xxl` ist eine Projekt-Erweiterung: die EWT-Tabelle hat mehr Spalten, als auf 1920 px
+// nebeneinander passen. 2560 ist die naechste reale Geraeteklasse (QHD).
 
 @use '@db-ux/core-foundations/build/styles/screen-sizes' as db;
 

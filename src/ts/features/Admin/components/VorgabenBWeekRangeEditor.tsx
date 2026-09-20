@@ -19,15 +19,29 @@ const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
   5: 4,
   6: 5,
   7: 6,
-  0: 6, // legacy: data saved before migration used 0 for Sunday
+  0: 6, // Altdaten: Sonntag wurde früher als 0 gespeichert
 };
 
+/**
+ * Slot-Index (0-6 = Woche 1, 7-13 = Woche 2) zu Wochentag und Wochenmarkierung.
+ *
+ * @param tag - Wochentag 1 (Mo) bis 7 (So); 0 gilt als Sonntag (Altdaten).
+ * @param Nwoche - `true` für die zweite Woche.
+ * @param allowSecondWeek - `false` erzwingt Woche 1 unabhängig von `Nwoche`.
+ * @returns Slot-Index; unbekannte Tage fallen auf Montag zurück.
+ */
 const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): number => {
   const baseIndex = SLOT_LOOKUP_BY_TAG[tag] ?? 0;
   if (!allowSecondWeek) return baseIndex;
   return baseIndex + (Nwoche ? 7 : 0);
 };
 
+/**
+ * Kehrt `getSlotFromTag` um; der Slot wird auf 0-13 begrenzt.
+ *
+ * @param slot - Slot-Index.
+ * @returns Wochentag 1-7 und `Nwoche` (`true` ab Slot 7).
+ */
 const getTagFromSlot = (slot: number): { tag: number; Nwoche: boolean } => {
   const normalizedSlot = Math.max(0, Math.min(13, slot));
   return {
@@ -36,6 +50,12 @@ const getTagFromSlot = (slot: number): { tag: number; Nwoche: boolean } => {
   };
 };
 
+/**
+ * Beschriftung eines Slots, z.B. `Mo W1`.
+ *
+ * @param slot - Slot-Index; wird auf 0-13 begrenzt.
+ * @returns Kürzel und Wochenlabel.
+ */
 const getSlotLabel = (slot: number): string => {
   const normalizedSlot = Math.max(0, Math.min(13, slot));
   const weekLabel = normalizedSlot >= 7 ? 'W2' : 'W1';
@@ -53,6 +73,14 @@ export type WeekRangeEditorProps = {
   onEndChange: (tag: number, Nwoche: boolean) => void;
 };
 
+/**
+ * Auswahl eines Wochenbereichs (Start bis Ende) über 14 Tages-Slots (zwei Wochen). Maus: Ziehen von
+ * Start nach Ende; Touch/Klick: erst Start, dann Ende antippen. Ohne `startHasNwoche` ist der Start
+ * auf Woche 1 beschränkt.
+ *
+ * @param props - `selectorKey` (Key-Präfix/Neuinitialisierung), `label`, `start`/`end`, `startHasNwoche`,
+ *   `disabled` und die Handler `onStartChange`/`onEndChange`.
+ */
 export function VorgabenBWeekRangeEditor({
   selectorKey,
   label,
@@ -63,11 +91,14 @@ export function VorgabenBWeekRangeEditor({
   onStartChange,
   onEndChange,
 }: WeekRangeEditorProps) {
-  // Slots aus den Props ableiten -- einmal als Lazy-Initialisierung (Mount) und bei jedem
-  // Bereichs-Wechsel in der Renderphase (React-Docs: "adjusting state when props change"),
-  // nicht synchron im Effect (set-state-in-effect). Waehrend einer laufenden End-Auswahl
-  // (Tap-Interaktion) bleiben die Slots unangetastet.
+  // Slots aus den Props ableiten: beim Mount und bei jedem Bereichswechsel in der Renderphase
+  // (statt im Effect, set-state-in-effect). Während einer laufenden End-Auswahl bleiben sie unangetastet.
   const slotsKey = `${selectorKey}|${start.tag}|${start.Nwoche}|${end.tag}|${end.Nwoche}|${startHasNwoche}`;
+  /**
+   * Berechnet Start- und End-Slot aus den Props; das Ende liegt nie vor dem Start.
+   *
+   * @returns Start- und End-Slot.
+   */
   const initialSlots = (): { start: number; end: number } => {
     const startSlotValue =
       startHasNwoche && start.Nwoche && start.tag === 0
@@ -94,6 +125,11 @@ export function VorgabenBWeekRangeEditor({
     }
   }
 
+  /**
+   * Zwei-Schritt-Auswahl per Tippen: erster Tipp setzt den Start, zweiter das Ende (nie vor dem Start).
+   *
+   * @param slot - Getippter Slot.
+   */
   const updateByTap = (slot: number): void => {
     if (disabled) return;
 
@@ -114,6 +150,12 @@ export function VorgabenBWeekRangeEditor({
     onEndChange(nextEnd.tag, nextEnd.Nwoche);
   };
 
+  /**
+   * Maus: startet eine Ziehauswahl am Slot; Touch/Stift: delegiert an `updateByTap`.
+   *
+   * @param event - Pointer-Event des Buttons.
+   * @param slot - Slot unter dem Zeiger.
+   */
   const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slot: number): void => {
     if (disabled) return;
 
@@ -131,6 +173,11 @@ export function VorgabenBWeekRangeEditor({
     updateByTap(slot);
   };
 
+  /**
+   * Aktualisiert während einer Ziehauswahl Start und Ende aus Ankerslot und aktuellem Slot.
+   *
+   * @param slot - Slot, den der Zeiger betritt.
+   */
   const handlePointerEnter = (slot: number): void => {
     if (disabled || dragAnchor === null) return;
 
@@ -145,6 +192,9 @@ export function VorgabenBWeekRangeEditor({
     onEndChange(nextEnd.tag, nextEnd.Nwoche);
   };
 
+  /**
+   * Beendet die Ziehauswahl; ist ein Ende gesetzt, wartet die Auswahl nicht mehr auf eine End-Wahl.
+   */
   const clearDrag = (): void => {
     if (dragAnchor === null) return;
     setDragAnchor(null);

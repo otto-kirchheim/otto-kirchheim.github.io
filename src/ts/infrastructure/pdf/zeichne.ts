@@ -27,6 +27,13 @@ export interface FontSet {
   fettKursiv: PDFFont;
 }
 
+/**
+ * Wählt den Schriftschnitt passend zu `fett`/`kursiv` der Zelle.
+ *
+ * @param f - Zelle mit den Stil-Flags.
+ * @param fonts - Die vier Schnitte der Formular-Schriftfamilie.
+ * @returns Der passende Schnitt.
+ */
 function waehleFont(f: Zelle, fonts: FontSet): PDFFont {
   if (f.fett && f.kursiv) return fonts.fettKursiv;
   if (f.fett) return fonts.fett;
@@ -47,21 +54,42 @@ const ACHSEN: Record<Drehung, { laengsX: boolean; laengsVor: 1 | -1; querVor: 1 
   270: { laengsX: false, laengsVor: -1, querVor: 1 },
 };
 
-/** Faustformel: die Oberlänge einer Helvetica-Zeile liegt bei ~0.72*size über der Baseline. */
+/** Faustformel: die Oberlänge einer Zeile liegt bei ~0.72*size über der Baseline. */
 const OBERLAENGE = 0.72;
 const ZEILENABSTAND = 1.15;
 const MIN_GROESSE = 4;
 
+/**
+ * Textbreite in Punkt.
+ *
+ * @param text - Zu messender Text.
+ * @param size - Schriftgröße in Punkt.
+ * @param font - Schriftschnitt.
+ * @returns Breite von `text` bei `size`.
+ */
 function breite(text: string, size: number, font: PDFFont): number {
   return font.widthOfTextAtSize(text, size);
 }
 
-/** Harte Umbrüche im Text -- entstehen z.B. durch `"\n"` als Trenner zusammengesetzter Felder. */
+/**
+ * Harte Umbrüche im Text -- entstehen z.B. durch `"\n"` als Trenner zusammengesetzter Felder.
+ *
+ * @param text - Text mit möglichen Zeilenumbrüchen.
+ * @returns Die Absätze in Reihenfolge.
+ */
 function harteZeilen(text: string): string[] {
   return text.split('\n');
 }
 
-/** Bricht an Wortgrenzen; ein Wort, das allein zu breit ist, bleibt ungebrochen in seiner Zeile. */
+/**
+ * Bricht an Wortgrenzen; ein Wort, das allein zu breit ist, bleibt ungebrochen in seiner Zeile.
+ *
+ * @param text - Zu umbrechender Text; harte Umbrüche bleiben erhalten.
+ * @param maxBreite - Maximale Zeilenbreite in Punkt.
+ * @param size - Schriftgröße in Punkt.
+ * @param font - Schriftschnitt.
+ * @returns Die Zeilen; mindestens `['']`.
+ */
 function umbrechen(text: string, maxBreite: number, size: number, font: PDFFont): string[] {
   const zeilen: string[] = [];
   for (const absatz of harteZeilen(text)) {
@@ -80,7 +108,17 @@ function umbrechen(text: string, maxBreite: number, size: number, font: PDFFont)
   return zeilen.length > 0 ? zeilen : [''];
 }
 
-/** Größte Schriftgröße ≤ `f.size`, bei der der Text in die Zelle passt. */
+/**
+ * Größte Schriftgröße ≤ `f.size` (in 0.25er-Schritten, mindestens `MIN_GROESSE`), bei der der Text
+ * in die Zelle passt.
+ *
+ * @param text - Zu setzender Text.
+ * @param f - Zelle (`size` als Obergrenze, `umbruch` schaltet den Umbruch mit ein).
+ * @param zellBreite - Breite der Laufachse in Punkt.
+ * @param zellHoehe - Höhe der Querachse in Punkt; 0 = keine Höhenprüfung.
+ * @param font - Schriftschnitt.
+ * @returns Die passende Schriftgröße.
+ */
 function passendeGroesse(text: string, f: Zelle, zellBreite: number, zellHoehe: number, font: PDFFont): number {
   let size = f.size;
   while (size > MIN_GROESSE) {
@@ -95,8 +133,15 @@ function passendeGroesse(text: string, f: Zelle, zellBreite: number, zellHoehe: 
 
 /**
  * Startpunkt des Textes auf der Laufachse. `vor` kehrt die Achse um (gedrehter Text läuft bei 180°
- * und 270° zur kleineren Koordinate hin), `laenge === 0` bedeutet: keine gegenüberliegende Kante
- * gesetzt, dann ist die Kante selbst der Anker.
+ * und 270° zur kleineren Koordinate hin). Ohne gegenüberliegende Kante (`min === max`) richtet
+ * `align` den Text am Punkt aus: links beginnt, rechts endet, zentriert liegt mittig darauf.
+ *
+ * @param textBreite - Breite der Zeile in Punkt.
+ * @param min - Kleinere Koordinate der Zelle auf der Laufachse.
+ * @param max - Größere Koordinate der Zelle auf der Laufachse.
+ * @param align - Ausrichtung; ohne Angabe wie links.
+ * @param vor - Laufrichtung: 1 = zur größeren, -1 = zur kleineren Koordinate.
+ * @returns Koordinate, an der der Text auf der Laufachse ansetzt.
  */
 function ankerLaengs(
   textBreite: number,
@@ -113,13 +158,18 @@ function ankerLaengs(
 
 /**
  * Zeichnet Text in eine Zelle. Ohne die gegenüberliegenden Kanten verhält sich `f` wie ein reiner
- * Ankerpunkt (abwärtskompatibel zu Konfigurationen aus Phase 3–8), mit beiden Kanten wird der Text
- * laut `align` längs und immer quer mittig in der Zelle gesetzt. `umbruch` bricht an Wortgrenzen um,
+ * Ankerpunkt, mit beiden Kanten wird der Text laut `align` längs und immer quer mittig in der Zelle
+ * gesetzt. `umbruch` bricht an Wortgrenzen um,
  * `autoGroesse` verkleinert die Schrift, bis der Text in die Zelle passt.
  *
  * `drehung` dreht den Text in der Zelle (90° = von unten nach oben lesbar, wie die schmalen
  * Namensfelder am Rand mancher Zettel). Gerechnet wird dafür nicht mit x/y, sondern mit Lauf- und
  * Querachse: die Formeln bleiben dieselben, nur ihre Zuordnung zu den Seitenkoordinaten dreht sich.
+ *
+ * @param seite - Zielseite.
+ * @param text - Zu zeichnender Text; leer = nichts zeichnen.
+ * @param f - Zellgeometrie und Schriftstil.
+ * @param fonts - Schriftschnitte der Formular-Schriftfamilie.
  */
 export function zeichne(seite: PDFPage, text: string, f: Zelle, fonts: FontSet): void {
   if (!text) return;
@@ -137,7 +187,7 @@ export function zeichne(seite: PDFPage, text: string, f: Zelle, fonts: FontSet):
   const laengsMax = laengsX ? xMax : yMax;
   const querMin = laengsX ? yMin : xMin;
   const hatQuer = (laengsX ? f.y2 : f.x2) !== undefined;
-  // Ohne Querkante bleibt die gesetzte Koordinate die Baseline der ERSTEN Zeile (altes Verhalten).
+  // Ohne Querkante bleibt die gesetzte Koordinate die Baseline der ERSTEN Zeile (Ankerpunkt-Verhalten).
   const querAnker = laengsX ? f.y : f.x;
   const laenge = laengsMax - laengsMin;
   const querLaenge = hatQuer ? (laengsX ? yMax - yMin : xMax - xMin) : 0;

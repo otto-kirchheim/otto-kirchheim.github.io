@@ -45,13 +45,24 @@ type Props = {
   onChange: (value: Konfig) => void;
 };
 
+/**
+ * Bildet ein Feld als Rechteck für die PDF-Vorschau ab.
+ *
+ * @param f - Feld mit Position.
+ * @param label - Beschriftung des Rechtecks.
+ * @param aktiv - `true`, wenn das Feld scharfgeschaltet ist.
+ * @returns Rechteck des Feldes; ohne `x2`/`y2` 40 Punkte breit bzw. eine Schriftgröße hoch.
+ */
 function feldRechteck(f: Feld, label: string, aktiv: boolean): Rechteck {
   return { x: f.x, y: f.y, x2: f.x2 ?? f.x + 40, y2: f.y2 ?? f.y + f.size, label, aktiv };
 }
 
 /**
- * Spalten uebernehmen nur die x-Kanten, das Zeilenraster nur die y-Kanten -- das Canvas zeigt beim
- * Ziehen deshalb ein Band statt eines Rechtecks, dessen halbe Angabe verworfen wuerde.
+ * Spalten übernehmen nur die x-Kanten, das Zeilenraster nur die y-Kanten -- das Canvas zeigt beim Ziehen
+ * deshalb ein Band statt eines Rechtecks, dessen halbe Angabe verworfen würde.
+ *
+ * @param armed - Scharfgeschalteter Bereich oder `null`.
+ * @returns `x` für Spalten, `y` für Zeilenraster, erste Datenzeile und Sonderzeilen, sonst `beide`.
  */
 function achseFuer(armed: Armed | null): Achse {
   if (armed?.bereich === 'spalte') return 'x';
@@ -59,9 +70,16 @@ function achseFuer(armed: Armed | null): Achse {
   return 'beide';
 }
 
-/** Spannweite jeder Tabelle dieser Seite -- Grundlage für den Zeilenraster-Indikator neben der
- * jeweils ersten Spalte (siehe `spaltenFuer` für seitenspezifische Spalten). Für gedrehte Tabellen
- * gibt es keinen (vertikalen) Raster-Indikator -- die Zell-Rechtecke zeigen die Lage. */
+/**
+ * Spannweite jeder Tabelle dieser Seite als Zeilenraster-Indikator neben der jeweils ersten Spalte
+ * (seitenspezifische Spalten siehe `spaltenFuer`). Gedrehte Tabellen bekommen keinen (vertikalen)
+ * Indikator -- die Zell-Rechtecke zeigen ihre Lage.
+ *
+ * @param seite - Aktuelle Seite.
+ * @param tabellen - Alle Tabellen-Definitionen.
+ * @param armed - Scharfgeschalteter Bereich oder `null`; die Marke der scharfen Tabelle ist aktiv.
+ * @returns Eine Marke je nicht gedrehter Tabelle der Seite.
+ */
 function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Armed | null): RasterMarke[] {
   return seite.bereiche.flatMap(bereich => {
     const tabelle = tabellen[bereich.tabelle];
@@ -70,8 +88,7 @@ function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Ar
     const spalten = spaltenFuer(bereich, tabelle);
     return [
       {
-        // Ohne eigene Spalten (leere Tabelle) bleibt der Rand als Rückfall -- 0 ist derselbe
-        // Ursprung, an dem der Indikator vorher immer stand.
+        // Ohne Spalten (leere Tabelle) Rückfall auf x = 0.
         x: spalten.length > 0 ? Math.min(...spalten.map(s => s.x)) : 0,
         startY: startYFuer(bereich, tabelle),
         hoehe: hoeheFuer(bereich, tabelle),
@@ -84,6 +101,15 @@ function sammleRaster(seite: SeitenDef, tabellen: Version['tabellen'], armed: Ar
   });
 }
 
+/**
+ * Sammelt alle Rechtecke der Seite für die PDF-Vorschau.
+ *
+ * @param seite - Aktuelle Seite.
+ * @param tabellen - Alle Tabellen-Definitionen.
+ * @param armed - Scharfgeschalteter Bereich oder `null`; sein Rechteck ist aktiv.
+ * @param seiteGroesse - Seitenmaße in PDF-Punkten, nötig zum Drehen gedrehter Tabellen.
+ * @returns Rechtecke für Felder, Tabellen (Spalten, erste Zeile, Sonderzeilen) und Signatur-Fläche.
+ */
 function sammleRechtecke(
   seite: SeitenDef,
   tabellen: Version['tabellen'],
@@ -103,9 +129,15 @@ function sammleRechtecke(
     const spalten = spaltenFuer(bereich, tabelle);
     const hoehe = hoeheFuer(bereich, tabelle);
     const startY = startYFuer(bereich, tabelle);
-    // Tabellen-Konfiguration ist aufrecht gedacht; ist die Vorlage gedreht, dreht diese Funktion die
-    // fertigen Rechtecke wie der Renderer (siehe `tabellenDrehung.ts`).
+    // Die Tabellen-Konfiguration ist aufrecht; bei gedrehter Vorlage dreht `dreheRect` die fertigen
+    // Rechtecke wie der Renderer (siehe `tabellenDrehung.ts`).
     const drehung = bereich.drehung ?? tabelle.drehung ?? 0;
+    /**
+     * Dreht ein Tabellen-Rechteck um den Seitenmittelpunkt.
+     *
+     * @param rr - Rechteck in aufrechten Tabellen-Koordinaten.
+     * @returns Das gedrehte Rechteck; unverändert ohne Drehung, ohne Seitenmaße oder ohne x-Kanten.
+     */
     const dreheRect = (rr: Rechteck): Rechteck => {
       if (drehung === 0 || !seiteGroesse || rr.x === undefined || rr.x2 === undefined) return rr;
       const g = dreheTabellenZelle({ x: rr.x, x2: rr.x2, y: rr.y, y2: rr.y2 }, drehung, seiteGroesse.w, seiteGroesse.h);
@@ -139,16 +171,16 @@ function sammleRechtecke(
       labelRechts: true,
     });
 
-    // Sonderzeilen-Platzierungen (Kopf-/Summenzeile über mehrere Spalten, siehe SonderZeile) --
-    // span wie der Tabellenrahmen über die Spaltenbreite, `index` ist die Position im Array (ein
-    // Name kann mehrfach vorkommen, z.B. Überschrift oben + Kopie unten).
+    // Sonderzeilen-Platzierungen (Kopf-/Summenzeile über mehrere Spalten, siehe SonderZeile) spannen wie
+    // der Tabellenrahmen über die Spaltenbreite; `index` ist die Position im Array (ein Name kann
+    // mehrfach vorkommen, z.B. Überschrift oben + Kopie unten).
     (bereich.sonderzeilen ?? []).forEach((platz, index) => {
       tabellenRechtecke.push({
         x: links.length > 0 ? Math.min(...links) : undefined,
         y: platz.y,
         x2: rechts.length > 0 ? Math.max(...rechts) : undefined,
-        // Ohne eigenes y2 nur ein schmaler Platzhalter-Streifen zur Orientierung -- reine
-        // Anzeige, in die Konfiguration übernommen wird nur, was der Klick tatsächlich liefert.
+        // Ohne eigenes y2 ein schmaler Platzhalter-Streifen -- reine Anzeige, übernommen wird nur, was
+        // der Klick liefert.
         y2: platz.y2 ?? platz.y + 12,
         label: `${bereich.tabelle}: ${platz.name}`,
         aktiv: Boolean(armed?.bereich === 'sonderzeile' && armed.tabelle === bereich.tabelle && armed.index === index),
@@ -175,27 +207,42 @@ function sammleRechtecke(
 }
 
 /**
- * Ersetzt die JSON-Textarea aus Phase 7 (User-Vorgabe) -- Zellen werden als Rechteck auf der echten
- * PDF-Vorschau aufgezogen statt per Hand ins JSON getippt. Laeuft komplett gegen die lokal
- * gewaehlte `datei: File`, kein Server-Roundtrip noetig.
+ * Visueller Editor für die Vorlagen-Konfiguration: Zellen werden als Rechteck auf der echten PDF-Vorschau
+ * aufgezogen statt per Hand ins JSON getippt. Läuft komplett gegen die lokal gewählte `datei`, kein
+ * Server-Roundtrip nötig; die Rohkonfiguration bleibt über `KonfigJson` editierbar.
+ *
+ * @param props - Formular, lokal gewählte Vorlagen-PDF, Konfiguration (`value`) und `onChange` mit der geänderten.
  */
 export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const [tab, setTab] = useState(0);
   const [armed, setArmed] = useState<Armed | null>(null);
   const [vorschauLaeuft, setVorschauLaeuft] = useState<Werteart | null>(null);
-  // Anteil des Canvas an der Splitbreite in Prozent -- entspricht dem vorherigen col-lg-7 (~58%).
+  // Anteil des Canvas an der Splitbreite in Prozent.
   const [splitAnteil, setSplitAnteil] = useState(58);
   const splitRef = useRef<HTMLDivElement>(null);
 
+  /**
+   * Startet das Ziehen des Trenners zwischen Canvas und Feldpanel; der Canvas-Anteil bleibt zwischen 25 und 75 Prozent.
+   *
+   * @param e - Mouse-Down-Ereignis auf dem Trenner.
+   */
   function starteSplitZiehen(e: ReactMouseEvent<HTMLDivElement>) {
     e.preventDefault();
     const container = splitRef.current;
     if (!container) return;
     const rect = container.getBoundingClientRect();
+    /**
+     * Setzt den Canvas-Anteil aus der Mausposition relativ zum Split-Container.
+     *
+     * @param ev - Mausbewegung im Fenster.
+     */
     function onMove(ev: MouseEvent) {
       const anteil = ((ev.clientX - rect.left) / rect.width) * 100;
       setSplitAnteil(Math.min(75, Math.max(25, anteil)));
     }
+    /**
+     * Beendet das Ziehen und entfernt die Fenster-Listener.
+     */
     function onUp() {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseup', onUp);
@@ -248,13 +295,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     let abbruch = false;
     void (async () => {
       const quelle = value.seiten[seitenIndex]?.quelle ?? 0;
-      // `alt` ist die Größe der ZULETZT angezeigten Vorlage (`prev`), gemessen -- nicht die in der
-      // Konfiguration eingefrorene `groesse`. Nach einem Wechsel ohne „Anwenden" (z. B. ausgefülltes
-      // Muster laden, Felder setzen, Skalier-Vorschlag abbrechen) gehört `groesse` noch zum
-      // ursprünglichen Template. Vergliche der nächste Wechsel gegen diese alte `groesse`, käme bei
-      // „Muster (A4) → leere Vorlage (A4)" fälschlich „gleich groß, nichts zu tun" heraus, obwohl die
-      // Koordinaten am zwischenzeitlich gezeigten Muster (andere Größe) gesetzt wurden. `groesse`
-      // bleibt nur als Rückfall, falls `prev` nicht lesbar ist.
+      // `alt` ist die gemessene Größe der ZULETZT angezeigten Vorlage (`prev`), nicht die in der Konfiguration
+      // eingefrorene `groesse`: nach einem Wechsel ohne „Anwenden" gehört `groesse` noch zum ursprünglichen
+      // Template, und „Muster (A4) → leere Vorlage (A4)" käme fälschlich als „gleich groß" heraus, obwohl die
+      // Koordinaten am zwischenzeitlich gezeigten Muster (andere Größe) gesetzt wurden. `groesse` bleibt nur
+      // Rückfall, falls `prev` nicht lesbar ist.
       const alt = (await seitenMasse(prev, quelle).catch(() => null)) ?? value.seiten[seitenIndex]?.groesse ?? null;
       const neu = await seitenMasse(datei, quelle).catch(() => null);
       if (abbruch || !alt || !neu) return;
@@ -280,10 +325,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const skalierAlt = skalier?.alt ?? aktiveSeite?.groesse ?? null;
 
   /**
-   * Skalieren + Drehen in EINEM Bezugssystem: erst im aufrechten Layout skalieren (`x` mit `f.x`,
-   * `y` mit `f.y` -- Felder UND Tabellen gleich), dann drehen, damit erst danach die Achsen tauschen.
-   * `alt` für die Drehung ist die mitskalierte Seitengröße. `mitGroesse` nur beim „Anwenden": nur
-   * dann wird die Referenzgröße in die Konfiguration geschrieben.
+   * Skalieren + Drehen in EINEM Bezugssystem: erst im aufrechten Layout skalieren (`x` mit `f.x`, `y` mit
+   * `f.y` -- Felder UND Tabellen gleich), dann drehen, damit erst danach die Achsen tauschen. `alt` für die
+   * Drehung ist die mitskalierte Seitengröße.
+   *
+   * @param k - Konfiguration, auf die die Skalierung (und ggf. Drehung) aus `skalier` angewandt wird.
+   * @param mitGroesse - Nur beim „Anwenden": ohne Drehung wird dann die neue Referenzgröße in die Konfiguration geschrieben (mit Drehung setzt `dreheKonfig` sie stets).
+   * @returns Transformierte Kopie; `k` selbst, solange keine Skalierung offen ist.
    */
   function skalierenUndDrehen(k: Konfig, mitGroesse: boolean): Konfig {
     if (!skalier) return k;
@@ -307,15 +355,21 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   );
   const anzeigeSeite = anzeigeKonfig.seiten[seitenIndex];
 
+  /**
+   * Öffnet die Skalier-Leiste mit Faktor 1; die Ausgangsgröße wird an der gezeigten `datei` gemessen.
+   */
   async function oeffneSkalierenManuell() {
-    // Die tatsächlich gezeigte `datei` messen statt `aktiveSeite.groesse` zu vertrauen -- letzteres
-    // kann nach einem abgebrochenen Vorlagen-Wechsel noch zum alten Template gehören (siehe
-    // Swap-Erkennung oben). `groesse` nur als Rückfall.
+    // Die tatsächlich gezeigte `datei` messen statt `aktiveSeite.groesse` zu vertrauen -- letzteres kann
+    // nach einem abgebrochenen Vorlagen-Wechsel noch zum alten Template gehören (siehe Vorlagen-Wechsel-
+    // Effekt oben). `groesse` nur als Rückfall.
     const masse =
       (await seitenMasse(datei, aktiveSeite?.quelle ?? 0).catch(() => null)) ?? aktiveSeite?.groesse ?? null;
     setSkalier({ alt: masse, neu: null, faktoren: { x: 1, y: 1, dx: 0, dy: 0 }, gekoppelt: true, drehung: 0 });
   }
 
+  /**
+   * Schreibt die skalierte (und ggf. gedrehte) Konfiguration samt neuer Referenzgröße zurück und schließt die Skalier-Leiste.
+   */
   function skalierAnwenden() {
     if (!skalier) return;
     onChange(skalierenUndDrehen(value, true));
@@ -324,8 +378,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
 
   const [messModus, setMessModus] = useState(false);
 
-  // In der Vorlage eingebettete Schriftfamilien -- Testschritt, nur für die Vorschau (siehe
-  // `vorlageFonts.ts`). Einmal je Datei gelesen.
+  // In der Vorlage eingebettete Schriftfamilien -- nur für die Vorschau (siehe `vorlageFonts.ts`). Einmal
+  // je Datei gelesen.
   const [vorlageFonts, setVorlageFonts] = useState<VorlageFontFamilie[]>([]);
   const [unbrauchbareFonts, setUnbrauchbareFonts] = useState<string[]>([]);
   useEffect(() => {
@@ -342,7 +396,12 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
   const eingebetteteFonts = useMemo(() => new Map(vorlageFonts.map(f => [f.id, f.schnitte])), [vorlageFonts]);
   const [schriftDialogOffen, setSchriftDialogOffen] = useState(false);
 
-  /** Setzt nur die Schriftgröße des scharfgeschalteten Feldes/der Spalte -- für den Messmodus. */
+  /**
+   * Setzt nur die Schriftgröße des scharfgeschalteten Feldes/der Spalte -- für den Messmodus.
+   *
+   * @param size - Schriftgröße in pt.
+   * @returns `true`, wenn ein Feld oder eine Spalte scharf war und geändert wurde, sonst `false`.
+   */
   function setzeGroesseAmArmed(size: number): boolean {
     if (!armed || !aktiveSeite) return false;
     if (armed.bereich === 'feld') {
@@ -355,6 +414,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       const tabelle = value.tabellen[armed.tabelle];
       if (!tabelle) return false;
       const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      /**
+       * Setzt die Schriftgröße an der scharfgeschalteten Spalte.
+       *
+       * @param s - Spalte.
+       * @param i - Index der Spalte.
+       * @returns Die Spalte mit neuer Größe, wenn sie die scharfgeschaltete ist, sonst unverändert.
+       */
       const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, size } : s);
       if (bereich?.spalten) {
         setzeAktiveSeite({
@@ -374,6 +440,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     return false;
   }
 
+  /**
+   * Übernimmt die gemessene Schriftgröße ins scharfe Feld/die scharfe Spalte; sonst kopiert sie sie in die Zwischenablage.
+   *
+   * @param m - Gemessenes Textstück.
+   */
   function handleGemessen(m: Messung) {
     if (setzeGroesseAmArmed(m.size)) {
       createSnackBar({
@@ -391,14 +462,30 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     });
   }
 
+  /**
+   * Ersetzt eine Seite der Konfiguration.
+   *
+   * @param index - Index der Seite.
+   * @param seite - Neue Seitendefinition.
+   */
   function setzeSeite(index: number, seite: SeitenDef) {
     onChange({ ...value, seiten: value.seiten.map((s, i) => (i === index ? seite : s)) });
   }
 
+  /**
+   * Ersetzt die aktuell gezeigte Seite der Konfiguration.
+   *
+   * @param seite - Neue Definition der aktuell gezeigten Seite.
+   */
   function setzeAktiveSeite(seite: SeitenDef) {
     setzeSeite(seitenIndex, seite);
   }
 
+  /**
+   * Übernimmt das aufgezogene Rechteck in das scharfgeschaltete Element (Feld, Spalte, Zeilenraster, Sonderzeile oder Signatur-Fläche) und hebt die Scharfschaltung auf; bei gedrehten Tabellen wird vorher zurück in aufrechte Koordinaten gerechnet.
+   *
+   * @param r0 - Aufgezogenes Rechteck in PDF-Punkten der (ggf. gedrehten) Vorschau.
+   */
   function handleRechteck(r0: { x: number; y: number; x2: number; y2: number }) {
     if (!armed || !aktiveSeite) return;
 
@@ -429,6 +516,13 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
       const tabelle = value.tabellen[armed.tabelle];
       if (!tabelle) return;
       const bereich = aktiveSeite.bereiche.find(b => b.tabelle === armed.tabelle);
+      /**
+       * Setzt die x-Kanten an der scharfgeschalteten Spalte.
+       *
+       * @param s - Spalte.
+       * @param i - Index der Spalte.
+       * @returns Die Spalte mit neuen x-Kanten, wenn sie die scharfgeschaltete ist, sonst unverändert.
+       */
       const gesetzt = (s: Spalte, i: number) => (i === armed.index ? { ...s, x: r.x, x2: r.x2 } : s);
       // Hat die Seite ein eigenes Spaltenraster, gilt die Markierung nur dort -- sonst verschöbe
       // das Nachjustieren auf Seite 2 auch die Spalte auf Seite 1.
@@ -459,8 +553,8 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
         return;
       }
       // Hat diese Seite schon eine eigene Platzierung (startY/Höhe/Zeilen zusammen, siehe
-      // "eigene je Seite"-Checkbox), bleibt die Messung dort -- sonst wie bisher für die ganze
-      // Tabelle (gleiches Muster wie die Spalten-Markierung oben).
+      // "eigene je Seite"-Checkbox), bleibt die Messung dort, sonst gilt sie für die ganze Tabelle
+      // (gleiches Muster wie die Spalten-Markierung oben).
       if (bereich.startY !== undefined) {
         setzeAktiveSeite({
           ...aktiveSeite,
@@ -510,6 +604,11 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
     setArmed(null);
   }
 
+  /**
+   * Baut das PDF mit erzeugten Testdaten und öffnet es in einem neuen Fenster; Fehler erscheinen als Snackbar.
+   *
+   * @param art - Art der Testwerte (Beispieldaten oder Platzhalter).
+   */
   async function testdatenVorschau(art: Werteart) {
     setVorschauLaeuft(art);
     try {
@@ -783,12 +882,17 @@ export function FormularEditor({ formular, datei, value, onChange }: Props) {
  * Rohansicht der kompletten Konfiguration -- zum Sichern, Übertragen auf ein anderes Formular oder
  * für Massenänderungen, die im visuellen Editor Feld für Feld zu mühsam wären. Übernommen wird
  * erst auf Knopfdruck, damit halbfertiges Tippen den Editor nicht laufend zurücksetzt.
+ *
+ * @param props - Konfiguration (`value`) und `onChange` für die übernommene Konfiguration.
  */
 function KonfigJson({ value, onChange }: { value: Konfig; onChange: (value: Konfig) => void }) {
   const [entwurf, setEntwurf] = useState<string | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const angezeigt = entwurf ?? JSON.stringify(value, null, 2);
 
+  /**
+   * Validiert den JSON-Entwurf gegen `konfigSchema`, übernimmt ihn per `onChange` und meldet Fehler im Textfeld.
+   */
   function uebernehmen() {
     try {
       onChange(konfigSchema.parse(JSON.parse(angezeigt)));

@@ -5,6 +5,11 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
 import { getPasswordValidationMessage, PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 
+/**
+ * Öffnet den Dialog zum Setzen eines neuen Passworts nach dem Reset-Link.
+ *
+ * @param token - Reset-Token aus dem Link der Reset-Mail.
+ */
 export default function createModalResetPassword(token: string): void {
   const ref = createRef<HTMLFormElement>();
   const passwortRef = createRef<HTMLInputElement>();
@@ -59,6 +64,10 @@ export default function createModalResetPassword(token: string): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Baut den Submit-Handler: prüft Übereinstimmung, Passwortregeln und Online-Status, setzt das Passwort über die API zurück, schließt den Dialog und zeigt eine Snackbar.
+   * Fehlertexte landen in `#errorMessage`.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;

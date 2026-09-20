@@ -3,6 +3,15 @@ import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from 
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
 import { DBDivider, DBHeadingH6 } from '@db-ux/react-core-components';
 
+/**
+ * Rendert ein Label-Wert-Paar für eine Spalte der Zeile.
+ *
+ * @param row - VorgabenB-Zeile.
+ * @param columnName - Name der Spalte, deren geparster Wert angezeigt wird.
+ * @param falseparser - Wird als Option an den Spalten-Parser gereicht.
+ * @returns Anzeige-Zeile mit Spaltentitel und Wert.
+ * @throws {Error} Wenn die Spalte nicht existiert.
+ */
 const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, falseparser?: false) => {
   const column = row.columns.array.find(column => column.name === columnName);
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
@@ -18,6 +27,12 @@ const createShowElement = (row: Row<IVorgabenUvorgabenB>, columnName: string, fa
   );
 };
 
+/**
+ * Rendert den Abschnitt "Bereitschaft".
+ *
+ * @param row - VorgabenB-Zeile.
+ * @returns Abschnitt mit Bereitschaftsbeginn und -ende.
+ */
 const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   return (
     <>
@@ -30,6 +45,12 @@ const createBereitschaftBlock = (row: Row<IVorgabenUvorgabenB>) => {
   );
 };
 
+/**
+ * Rendert den Abschnitt "Nachtschicht".
+ *
+ * @param row - VorgabenB-Zeile.
+ * @returns Abschnitt mit Nachtschicht-Flag und, falls aktiv, Nachtbeginn und -ende; sonst ein Hinweis.
+ */
 const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
   const isNacht = Boolean(row.cells.nacht);
 
@@ -51,6 +72,12 @@ const createNachtschichtBlock = (row: Row<IVorgabenUvorgabenB>) => {
   );
 };
 
+/**
+ * Öffnet das schreibgeschützte Modal einer Bereitschafts-Vorgabe (Name, Standard, Bereitschaft, Nachtschicht).
+ *
+ * @param row - Anzuzeigende VorgabenB-Zeile.
+ * @param titel - Modal-Titel.
+ */
 export default function ShowModalVE(row: Row<IVorgabenUvorgabenB>, titel: string): void {
   const modal: CustomHTMLDivElement<IVorgabenUvorgabenB> = showModal<IVorgabenUvorgabenB>(
     <MyDivModal title={titel} Footer={<MyShowFooter row={row} />}>

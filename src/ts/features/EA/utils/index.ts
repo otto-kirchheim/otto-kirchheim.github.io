@@ -3,6 +3,11 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenEA } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 
+/**
+ * Schreibt die aktuellen EA-Tabellenzeilen per `persistTableData` in den Storage.
+ *
+ * @param ft - EA-Tabelle.
+ */
 const persistEaTableData = (ft: CustomTable<IDatenEA>) => persistTableData('EA', ft);
 
 export { getEaDaten, persistEaTableData };

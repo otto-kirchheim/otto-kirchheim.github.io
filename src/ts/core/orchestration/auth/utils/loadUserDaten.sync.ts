@@ -40,6 +40,17 @@ interface SyncLoadedYearResourcesResult {
   vorhanden: UnterschiedNachMonat[];
 }
 
+/**
+ * Gleicht die vom Server geladenen Jahresdaten je Ressource mit dem lokalen Storage ab:
+ * Serverdaten ersetzen lokale, wenn diese fehlen, älter sind oder nur Ids nachzutragen sind
+ * und keine ungesyncten Änderungen vorliegen; sonst bleiben die lokalen Daten. Weichen bei
+ * monatsbezogenen Ressourcen die Zeilenzahlen ab, werden die Unterschiede je Monat gesammelt.
+ * Bei Jahreswechsel gehören lokale Daten zum Vorjahr, dann gewinnt immer der Server.
+ *
+ * @param params - Serverdaten je Ressource, Server-Zeitstempel und Jahreswechsel-Flag.
+ * @returns Abgeglichene Ressourcen, Serverstand der Konflikt-Ressourcen (`dataServer`) und die
+ *   Unterschiede je Monat (`vorhanden`; leer = kein Konflikt).
+ */
 export function syncLoadedYearResources({
   vorgabenU,
   BZ,
@@ -51,10 +62,21 @@ export function syncLoadedYearResources({
   isJahreswechsel,
 }: SyncLoadedYearResourcesParams): SyncLoadedYearResourcesResult {
   const vorhanden: UnterschiedNachMonat[] = [];
-  // Immer frisch starten — Konflikte werden je Load aus aktuellen Server+Local-Daten berechnet.
-  // Altdaten aus einem vorigen Jahres-Load dürfen nicht in einen anderen Load durchsickern (Bug 2).
+  // Immer frisch starten: Konflikte werden je Load aus aktuellen Server- und Lokaldaten berechnet,
+  // Altdaten eines vorigen Jahres-Loads dürfen nicht durchsickern.
   const dataServer: Partial<UserDatenServer> = {};
 
+  /**
+   * Gleicht eine Ressource ab und liefert die zu verwendenden Daten; sammelt Konflikte in
+   * `vorhanden`/`dataServer`.
+   *
+   * @typeParam T - Datentyp der Ressource.
+   * @param storageName - Storage-Key.
+   * @param serverData - Serverdaten.
+   * @param serverTimestamp - Server-Zeitstempel in ms; 0 = unbekannt.
+   * @param beschreibung - Anzeigename für die Konfliktmeldung.
+   * @returns Serverdaten oder lokale Daten.
+   */
   const syncResource = <T>(
     storageName: TStorageData,
     serverData: T,

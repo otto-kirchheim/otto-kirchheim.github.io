@@ -88,7 +88,7 @@ export interface BackendVorgabe {
 
 // ─── Arbeitszeit Migration (altes Flat-Format → neues Modell) ───
 
-/** Altes Flat-Format mit 9 Strings — entspricht dem aktuellen Backend-Schema */
+/** Altes Flat-Format mit 9 Strings; das Backend kennt es nur noch als Legacy-Felder (`LEGACY_ARBEITSZEIT_FIELDS`). */
 interface LegacyArbeitszeit {
   bT: string;
   eT: string;
@@ -101,14 +101,28 @@ interface LegacyArbeitszeit {
   rZ: string;
 }
 
+/**
+ * Erkennt das alte flache Arbeitszeit-Format (`bT` als String, ohne strukturiertes `frueh`).
+ *
+ * @param raw - Beliebiger Wert aus Server oder Storage.
+ * @returns Type Guard auf `LegacyArbeitszeit`.
+ */
 export function isLegacyArbeitszeit(raw: unknown): raw is LegacyArbeitszeit {
   if (typeof raw !== 'object' || raw === null) return false;
   const r = raw as Record<string, unknown>;
-  // If the new structured 'frueh' field is present, treat as already migrated
+  // Strukturiertes `frueh` vorhanden: bereits migriert.
   if (typeof r.frueh === 'object' && r.frueh !== null) return false;
   return 'bT' in r && typeof r.bT === 'string';
 }
 
+/**
+ * Wandelt das alte flache Arbeitszeit-Format in `IVorgabenUaZ` um. Weicht `eTF` (Freitag) von `eT`
+ * ab, wird daraus ein Freitags-Override (Wochentag 5, ohne Pause); Nacht und Sonder sind nur aktiv,
+ * wenn `bN` bzw. `bS` gesetzt sind.
+ *
+ * @param raw - Altes Format.
+ * @returns Neues Modell mit `aktiv`-Flag je Schicht.
+ */
 export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
   const bT = raw.bT ?? '';
   const eT = raw.eT ?? '';
@@ -135,6 +149,14 @@ export function migrateArbeitszeit(raw: LegacyArbeitszeit): IVorgabenUaZ {
   };
 }
 
+/**
+ * Normalisiert eine Schicht mit Wochentags-Overrides. Fehlt die Schicht ganz, ist sie inaktiv mit
+ * `defaultBase`; fehlt nur `aktiv`, gilt sie als aktiv.
+ *
+ * @param raw - Rohwert der Schicht.
+ * @param defaultBase - Standardzeiten (Beginn/Ende `HH:mm`, Pause in Minuten).
+ * @returns Vollstaendige Schicht.
+ */
 function normalizePerWeekdaySchicht(
   raw: unknown,
   defaultBase: { beginn: string; ende: string; pause: number },
@@ -151,6 +173,12 @@ function normalizePerWeekdaySchicht(
   };
 }
 
+/**
+ * Normalisiert die Sonderschicht (feste Zeiten ohne Wochentags-Overrides); Standard 06:00-14:30, 20 Min. Pause.
+ *
+ * @param raw - Rohwert der Sonderschicht.
+ * @returns Vollstaendige Schicht; fehlt sie ganz, inaktiv, sonst `aktiv` standardmaessig `true`.
+ */
 function normalizeSchichtZeiten(raw: unknown): ISchichtZeiten {
   const defaults = { beginn: '06:00', ende: '14:30', pause: 20 };
   if (!raw || typeof raw !== 'object') {
@@ -168,6 +196,9 @@ function normalizeSchichtZeiten(raw: unknown): ISchichtZeiten {
 /**
  * Normalisiert beliebige Arbeitszeit-Daten (Legacy, altes Strukturformat ohne aktiv, neues Format)
  * zu einem vollständigen IVorgabenUaZ mit aktiv-Flag auf allen Schichten.
+ *
+ * @param raw - Rohwert aus Server oder Storage; bei fehlendem/ungueltigem Wert gelten die Standardzeiten.
+ * @returns Vollstaendiges `IVorgabenUaZ`.
  */
 export function normalizeAZ(raw: unknown): IVorgabenUaZ {
   if (!raw || typeof raw !== 'object') {
@@ -190,7 +221,12 @@ export function normalizeAZ(raw: unknown): IVorgabenUaZ {
   };
 }
 
-/** Migriert ein VorgabenB-Objekt: nacht: boolean → schichten: ['nacht'] */
+/**
+ * Migriert ein VorgabenB-Objekt: nacht: boolean → schichten: ['nacht'].
+ *
+ * @param entry - VorgabenB-Eintrag, evtl. im alten Format.
+ * @returns Kopie mit `schichten`, sofern `nacht === true` und `schichten` fehlte.
+ */
 function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgabenB {
   const result = { ...entry } as IVorgabenUvorgabenB;
   if (!result.schichten && result.nacht === true) {
@@ -203,6 +239,9 @@ function migrateVorgabenBEntry(entry: Record<string, unknown>): IVorgabenUvorgab
 
 /**
  * Konvertiert ein Backend-Bereitschaftszeitraum-Dokument in das Frontend-Format.
+ *
+ * @param doc - Backend-Dokument.
+ * @returns Frontend-Zeile; fehlende `Pause` wird `0`.
  */
 export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
   return {
@@ -215,6 +254,9 @@ export function bzFromBackend(doc: BackendBereitschaftszeitraum): IDatenBZ {
 
 /**
  * Konvertiert ein Backend-Bereitschaftseinsatz-Dokument in das Frontend-Format.
+ *
+ * @param doc - Backend-Dokument.
+ * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`; ein einzelner `Bereitschaftszeitraum` wird zum Array.
  */
 export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
   return {
@@ -235,6 +277,9 @@ export function beFromBackend(doc: BackendBereitschaftseinsatz): IDatenBE {
 
 /**
  * Konvertiert ein Backend-EWT-Dokument in das Frontend-Format.
+ *
+ * @param doc - Backend-Dokument.
+ * @returns Frontend-Zeile mit `Tag`/`Buchungstag` als `YYYY-MM-DD` (Buchungstag Standard: `Tag`); fehlende Zeiten werden leere Strings.
  */
 export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
   return {
@@ -256,8 +301,11 @@ export function ewtFromBackend(doc: BackendEWT): IDatenEWT {
 }
 
 /**
- * Konvertiert ein Backend-Nebengeld-Dokument in das Frontend-Format.
- * Die Zulagen-Array-Struktur wird auf das flache Frontend-Format gemappt.
+ * Konvertiert ein Backend-Nebengeld-Dokument in das Frontend-Format. Zulagen mit `Wert` 0 entfallen;
+ * `zulagenAnzeigeN` wird daraus fuer die Tabelle abgeleitet.
+ *
+ * @param doc - Backend-Dokument.
+ * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`.
  */
 export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
   const Zulagen = doc.Zulagen.map(zulage => ({ Typ: zulage.Typ, Wert: zulage.Wert })).filter(z => z.Wert > 0);
@@ -275,6 +323,9 @@ export function nebengeldFromBackend(doc: BackendNebengeld): IDatenN {
 
 /**
  * Konvertiert ein Backend-Entgeltausgleich-Dokument in das Frontend-Format.
+ *
+ * @param doc - Backend-Dokument.
+ * @returns Frontend-Zeile mit `Tag` als `DD.MM.YYYY`; fehlende Texte werden leere Strings.
  */
 export function eaFromBackend(doc: BackendEA): IDatenEA {
   return {
@@ -288,11 +339,12 @@ export function eaFromBackend(doc: BackendEA): IDatenEA {
 }
 
 /**
- * Konvertiert ein Backend-UserProfile in das Frontend-Format (IVorgabenU).
- * Backend und Frontend nutzen dieselben Container-Keys (Pers, Arbeitszeit,
- * Fahrzeit, VorgabenB, Einstellungen) -- VorgabenB bleibt intern als Map
- * (Array ↔ Map ist die einzige bewusst nicht vereinheitlichte Formdifferenz,
- * siehe Kommentar bei `IPers`/`IFahrzeit` in `shared/src/domain.ts`).
+ * Konvertiert ein Backend-UserProfile in das Frontend-Format (IVorgabenU). Die Container-Keys
+ * (Pers, Arbeitszeit, Fahrzeit, VorgabenB, Einstellungen) sind gleich; `VorgabenB` ist im Backend
+ * ein Array, im Frontend eine Map. Fehlende Felder erhalten Standardwerte.
+ *
+ * @param doc - Backend-UserProfile.
+ * @returns Vollstaendiges `IVorgabenU`; `OE` als ein Textfeld, Arbeitszeit normalisiert.
  */
 export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
   // VorgabenB: Array [{key, value}] → Map {key: value}
@@ -345,6 +397,9 @@ export function userProfileFromBackend(doc: BackendUserProfile): IVorgabenU {
  * Konvertiert Backend-Vorgaben in das Frontend-Format (IVorgabenGeld).
  * Backend: { _id: Jahr, Vorgaben: [{key, value}] }
  * Frontend: { [monat]: IVorgabenGeldType }
+ *
+ * @param doc - Backend-Dokument eines Jahres.
+ * @returns Werte je Monat (`key`); `undefined`-Werte entfallen.
  */
 export function vorgabenFromBackend(doc: BackendVorgabe): Record<number, Record<string, number>> {
   const result: Record<number, Record<string, number>> = {};
@@ -362,6 +417,15 @@ export function vorgabenFromBackend(doc: BackendVorgabe): Record<number, Record<
 
 // ─── Frontend → Backend (Speichern) ──────────────────────
 
+/**
+ * Bestimmt Monat und Jahr eines Datumswerts.
+ *
+ * @param value - Datumswert.
+ * @param fallbackMonat - Monat bei ungueltigem Datum.
+ * @param fallbackJahr - Jahr bei ungueltigem Datum.
+ * @param format - Optionales Format; dann strikt geparst.
+ * @returns Monat (1-12) und Jahr.
+ */
 function resolveYearMonth(value: string, fallbackMonat: number, fallbackJahr: number, format?: string) {
   const parsed = format ? dayjs(value, format, true) : dayjs(value);
   if (!parsed.isValid()) {
@@ -376,6 +440,11 @@ function resolveYearMonth(value: string, fallbackMonat: number, fallbackJahr: nu
 
 /**
  * Konvertiert einen Frontend-BZ-Eintrag in das Backend-Format.
+ *
+ * @param item - Frontend-Zeile.
+ * @param monat - Fallback-Monat bei ungueltigem `Beginn`.
+ * @param jahr - Fallback-Jahr bei ungueltigem `Beginn`.
+ * @returns Backend-Dokument ohne `User`; `Monat`/`Jahr` stammen aus `Beginn`.
  */
 export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<BackendBereitschaftszeitraum, 'User'> {
   const period = resolveYearMonth(item.Beginn, monat, jahr);
@@ -392,6 +461,11 @@ export function bzToBackend(item: IDatenBZ, monat: number, jahr: number): Omit<B
 
 /**
  * Konvertiert einen Frontend-BE-Eintrag in das Backend-Format.
+ *
+ * @param item - Frontend-Zeile.
+ * @param monat - Fallback-Monat bei ungueltigem `Tag`.
+ * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
+ * @returns Backend-Dokument ohne `User`; `Tag` als ISO-String, `Monat`/`Jahr` aus `Tag`.
  */
 export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<BackendBereitschaftseinsatz, 'User'> {
   const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
@@ -412,6 +486,11 @@ export function beToBackend(item: IDatenBE, monat: number, jahr: number): Omit<B
 
 /**
  * Konvertiert einen Frontend-EWT-Eintrag in das Backend-Format.
+ *
+ * @param item - Frontend-Zeile.
+ * @param monat - Fallback-Monat bei ungueltigem `Tag`.
+ * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
+ * @returns Backend-Dokument ohne `User`; `Tag`/`Buchungstag` als ISO-String (Buchungstag Standard: `Tag`).
  */
 export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit<BackendEWT, 'User'> {
   const buchungstag = item.Buchungstag || item.Tag;
@@ -441,6 +520,11 @@ export function ewtToBackend(item: IDatenEWT, monat: number, jahr: number): Omit
 
 /**
  * Konvertiert einen Frontend-Nebengeld-Eintrag in das Backend-Format.
+ *
+ * @param item - Frontend-Zeile.
+ * @param monat - Fallback-Monat bei ungueltigem `Tag`.
+ * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
+ * @returns Backend-Dokument ohne `User`; `EWT` ist `null` ohne Verknuepfung, `Zulagen` sind normalisiert.
  */
 export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): Omit<BackendNebengeld, 'User'> {
   const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
@@ -467,6 +551,11 @@ export function nebengeldToBackend(item: IDatenN, monat: number, jahr: number): 
 
 /**
  * Konvertiert einen Frontend-EA-Eintrag in das Backend-Format.
+ *
+ * @param item - Frontend-Zeile.
+ * @param monat - Fallback-Monat bei ungueltigem `Tag`.
+ * @param jahr - Fallback-Jahr bei ungueltigem `Tag`.
+ * @returns Backend-Dokument ohne `User`; `EWT` ist `null` ohne Verknuepfung.
  */
 export function eaToBackend(item: IDatenEA, monat: number, jahr: number): Omit<BackendEA, 'User'> {
   const period = resolveYearMonth(item.Tag, monat, jahr, 'DD.MM.YYYY');
@@ -488,6 +577,9 @@ export function eaToBackend(item: IDatenEA, monat: number, jahr: number): Omit<B
 /**
  * Konvertiert Frontend IVorgabenU in das Backend UserProfile-Update-Format.
  * VorgabenB: Map (Frontend-intern) ↔ Array (Backend-Wire-Format).
+ *
+ * @param data - Profil im Frontend-Format.
+ * @returns Update-Payload ohne `_id`/`User`; `Pers.OE` als Ebenen-Array.
  */
 export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile, '_id' | 'User'> {
   // VorgabenB: Map {key: value} → Array [{key, value}]
@@ -511,6 +603,9 @@ export function userProfileToBackend(data: IVorgabenU): Omit<BackendUserProfile,
 /**
  * Konvertiert IVorgabenUServer (Array-Format) → IVorgabenU (Map-Format).
  * Wird verwendet, wenn der Server das Array-Format für VorgabenB zurückgibt.
+ *
+ * @param server - Profil im Server-Format.
+ * @returns Profil im Frontend-Format mit normalisierter Arbeitszeit und migriertem `VorgabenB`.
  */
 export function vorgabenUFromServer(server: IVorgabenUServer): IVorgabenU {
   const VorgabenB: IVorgabenU['VorgabenB'] = {};
@@ -533,6 +628,15 @@ export interface FlatMappedDocs<TFrontend> {
   maxUpdatedAt: string | null;
 }
 
+/**
+ * Mappt Backend-Dokumente auf Frontend-Zeilen und ermittelt dabei den neuesten `updatedAt`-Wert.
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @typeParam TFrontend - Frontend-Zeilentyp.
+ * @param docs - Backend-Dokumente.
+ * @param mapper - Konvertierung eines Dokuments.
+ * @returns Gemappte Zeilen und der hoechste `updatedAt` (`null`, wenn keins gesetzt ist).
+ */
 export function flatMapDocs<TBackend extends { updatedAt?: string }, TFrontend>(
   docs: TBackend[],
   mapper: (doc: TBackend) => TFrontend,

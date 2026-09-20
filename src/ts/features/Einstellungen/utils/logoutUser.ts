@@ -14,12 +14,22 @@ import { publishEvent } from '@/core/events/appEvents';
 
 type LogoutReason = 'manual' | 'token-expired' | 'version-mismatch';
 
-// `querySelectorAll`, nicht `querySelector`: `#admin` existiert seit Phase K5 zweimal
-// (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`).
+/**
+ * Schaltet eine CSS-Klasse an allen Treffern des Selektors. `querySelectorAll`, weil Elemente wie `#admin` in der Desktop- und Mobile-Kopie des `AppHeader` doppelt vorkommen.
+ *
+ * @param selector - CSS-Selektor der Elemente.
+ * @param addClass - `true` setzt die Klasse, `false` entfernt sie.
+ * @param className - Zu schaltende Klasse.
+ */
 function toggleClassForElement(selector: string, addClass: boolean = true, className: string = 'd-none'): void {
   document.querySelectorAll<HTMLElement>(selector).forEach(element => element.classList.toggle(className, addClass));
 }
 
+/**
+ * Meldet den Benutzer ab: bricht offene Requests und AutoSaves ab, baut die Feature-Tabs ab, leert den Storage und setzt die Oberfläche auf den Startzustand zurück.
+ *
+ * @param options - `serverLogout`: Server-Logout auslösen (Standard `true`, nur mit vorhandenem Access-Token); `reason`: Grund des Logouts, wird im Event `user:logout` mitgegeben (Standard "manual").
+ */
 export default function logoutUser({
   serverLogout = true,
   reason = 'manual',

@@ -25,6 +25,7 @@ const PLATZHALTER_BEISPIELE: { platzhalter: string; beschreibung: string }[] = [
   { platzhalter: '{A}, {B}', beschreibung: 'Mehrere Platzhalter gemischt im selben Text, z.B. {Nachname}, {Vorname}.' },
 ];
 
+/** Inhalt des Hilfe-Dialogs: Tabellen der Platzhalter-Syntax und der verfügbaren Formate. */
 export function PlatzhalterHilfeInhalt() {
   return (
     <>

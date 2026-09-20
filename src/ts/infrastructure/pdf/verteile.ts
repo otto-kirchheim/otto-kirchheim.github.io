@@ -9,20 +9,41 @@ export interface Block {
   zeilen: TabellenZeilen;
 }
 
-/** `maxZeilen` gilt heute meist über die Tabelle (global), kann pro Seite aber überschrieben sein
- * -- fehlt die referenzierte Tabelle (sollte nicht vorkommen, aber der Bereich könnte verwaist
- * sein), bleibt es defensiv beim rohen Bereichswert wie schon vor der Seiten-Override-Umstellung. */
+/**
+ * Zeilenkapazität eines Bereichs: `maxZeilen` gilt meist über die Tabelle, kann pro Seite aber
+ * überschrieben sein. Fehlt die referenzierte Tabelle (verwaister Bereich), bleibt es defensiv beim
+ * rohen Bereichswert.
+ *
+ * @param bereich - Tabellenbereich einer Seite.
+ * @param tabellen - Tabellendefinitionen der Version, nach Key.
+ * @returns Anzahl Zeilen, die der Bereich aufnimmt (0 ohne Angabe).
+ */
 function kapazitaetVon(bereich: TabellenBereich, tabellen: Version['tabellen']): number {
   const tabelle = tabellen[bereich.tabelle];
   return tabelle ? maxZeilenFuer(bereich, tabelle) : (bereich.maxZeilen ?? 0);
 }
 
+/**
+ * Zeilenkapazität einer Seite für eine bestimmte Tabelle.
+ *
+ * @param def - Seitendefinition.
+ * @param tabellenName - Key der Tabelle.
+ * @param tabellen - Tabellendefinitionen der Version, nach Key.
+ * @returns Kapazität des passenden Bereichs; 0, wenn die Seite keinen Bereich dafür hat.
+ */
 function kapazitaet(def: SeitenDef, tabellenName: string, tabellen: Version['tabellen']): number {
   const bereich = def.bereiche.find(b => b.tabelle === tabellenName);
   return bereich ? kapazitaetVon(bereich, tabellen) : 0;
 }
 
-/** Hat diese Seite Platz für eine Tabelle, die noch Zeilen offen hat? */
+/**
+ * Hat diese Seite Platz für eine Tabelle, die noch Zeilen offen hat?
+ *
+ * @param def - Seitendefinition.
+ * @param rest - Noch nicht verteilte Zeilen je Tabelle.
+ * @param tabellen - Tabellendefinitionen der Version, nach Key.
+ * @returns `true`, wenn mindestens ein Bereich Kapazität > 0 hat und seine Tabelle noch Zeilen offen hat.
+ */
 function nimmtZeilenAuf(def: SeitenDef, rest: TabellenZeilen, tabellen: Version['tabellen']): boolean {
   // `maxZeilen <= 0` zählt bewusst nicht: ein solcher Bereich nähme nie eine Zeile ab und die
   // Wiederholung liefe endlos.
@@ -40,13 +61,26 @@ function nimmtZeilenAuf(def: SeitenDef, rest: TabellenZeilen, tabellen: Version[
  *
  * Wirft, wenn am Ende Zeilen übrig bleiben — dann fehlt eine wiederholte Seite oder ein Bereich für
  * die betroffene Tabelle.
+ *
+ * @param zeilen - Alle Zeilen je Tabellen-Key.
+ * @param layout - Layout mit der Seitenfolge.
+ * @param tabellen - Tabellendefinitionen der Version, nach Key; ohne Angabe gilt der rohe Bereichswert.
+ * @returns Je zu druckender Seite ein Block aus Seitendefinition und den dort platzierten Zeilen.
+ * @throws {Error} Bei Layout ohne Seiten oder wenn Zeilen in keine Seite passen.
  */
 export function verteile(zeilen: TabellenZeilen, layout: Layout, tabellen: Version['tabellen'] = {}): Block[] {
   if (layout.seiten.length === 0) throw new Error('Layout ohne Seiten');
 
   const rest: TabellenZeilen = Object.fromEntries(Object.entries(zeilen).map(([k, v]) => [k, [...v]]));
+  /** Noch nicht verteilte Tabellen als `[key, zeilen]`-Paare. */
   const offen = () => Object.entries(rest).filter(([, v]) => v.length > 0);
 
+  /**
+   * Entnimmt aus `rest` so viele Zeilen je Bereich, wie die Seite aufnimmt.
+   *
+   * @param def - Seitendefinition.
+   * @returns Der Block für diese Seite.
+   */
   function nimm(def: SeitenDef): Block {
     const block: Block = { def, zeilen: {} };
     for (const bereich of def.bereiche) {

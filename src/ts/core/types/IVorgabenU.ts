@@ -25,13 +25,13 @@ export interface IVorgabenUServer {
   Einstellungen: IVorgabenUEinstellungen;
 }
 
-/** Wie shared `IPers`, nur `OE` als EIN Text-Feld statt Ebenen-Array — Formular pflegt es so,
- *  `joinOeLevels`/`splitOeInput` (`infrastructure/data/fieldMapper.ts`) wandeln beim Laden/Speichern. */
+/** Wie shared `IPers`, nur `OE` als EIN Text-Feld statt Ebenen-Array — das Formular pflegt es so;
+ *  `joinOeLevels`/`splitOeInput` (`infrastructure/data/oeLevels.ts`, genutzt in `fieldMapper.ts`) wandeln beim Laden/Speichern. */
 export interface IVorgabenUPers extends Omit<IPers, 'OE'> {
   OE: string;
 }
 
-// --- Arbeitszeiten (neues per-Wochentag-Modell) ---
+// --- Arbeitszeiten (pro Wochentag) ---
 
 export type SchichtBase = {
   beginn: string; // HH:mm
@@ -75,7 +75,7 @@ export type { BereitschaftSchichtTyp };
 /**
  * Wie shared `IVorgabeBWert`, nur mit den Optionalitäts-Garantien der hydrierten Frontend-Form
  * (analog `IVorgabenUaZ`): `Nwoche` ist bei `endeB`/`beginnN`/`endeN` immer gesetzt (nie bei
- * `beginnB` -- siehe shared-Kommentar), `schichtenOverrides` stärker typisiert, `standard` als
+ * `beginnB` -- siehe `IZeitpunktMitWoche` in shared), `schichtenOverrides` stärker typisiert, `standard` als
  * `true`-Literal (Abwesenheit statt `false` markiert "nicht Standard").
  */
 export interface IVorgabenUvorgabenB extends Omit<

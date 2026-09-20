@@ -29,6 +29,13 @@ import {
   persistBereitschaftsEinsatzTableData,
 } from '../utils';
 
+/**
+ * Baut die Formularfelder des Einsatz-Modals aus den Tabellenspalten.
+ *
+ * @param row - Zeile (Bearbeiten, Felder vorbelegt) oder Tabelle (Anlegen, Felder leer).
+ * @param datum - Vorbelegung des Tag-Felds; bestimmt dessen Monatsgrenzen (`min`/`max`).
+ * @returns Ein Eingabefeld je bekannter Spalte (Tag, Auftragsnummer, Beginn/Ende, LRE, PrivatKm).
+ */
 const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs): ReactNode => {
   return row.columns.array.map(column => {
     switch (column.name) {
@@ -122,9 +129,23 @@ const createElements = (row: CustomTable<IDatenBE> | Row<IDatenBE>, datum: Dayjs
   });
 };
 
+/**
+ * Prüft, ob es einen noch nicht synchronisierten Bereitschaftszeitraum gibt.
+ *
+ * @returns `true`, wenn ein nicht gelöschter Bereitschaftszeitraum noch nicht auf dem Server ist.
+ */
 const hasUnsyncedBz = (): boolean =>
   getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(isBzUnsynced);
 
+/**
+ * Öffnet das Modal zum Bearbeiten eines Bereitschaftseinsatzes bzw. zum Anlegen (bei Tabelle). Beim Speichern braucht der Einsatz einen
+ * passenden, gespeicherten Bereitschaftszeitraum (dessen IDs werden eingetragen); außerdem: keine Überschneidung, höchstens ein LRE 1 je
+ * Bereitschaftstag und 10 Minuten Abstand nach LRE 1/2. Verstöße zeigen eine Warn-Snackbar und lassen das Modal offen.
+ *
+ * @param row - Zu bearbeitende Zeile oder Tabelle (= neuen Einsatz anlegen).
+ * @param titel - Modal-Titel.
+ * @throws {Error} Bei unbekanntem `row`-Typ oder fehlender Formular-Referenz.
+ */
 export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
   const bzSyncHintRef = createRef<HTMLParagraphElement>();
@@ -175,6 +196,11 @@ export default function EditorModalBE(row: CustomTable<IDatenBE> | Row<IDatenBE>
   });
   beiModalSchliessen(unsubscribeBzSyncHint);
 
+  /**
+   * Baut den Submit-Handler des Formulars.
+   *
+   * @returns Async-Handler: validiert, schreibt den Einsatz in Zeile bzw. Tabelle, schließt das Modal und speichert.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!form.checkValidity()) return;

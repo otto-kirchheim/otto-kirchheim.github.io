@@ -13,12 +13,10 @@ import { DbAuswahl, DbFeld } from '@/components';
 export type { Armed, Vorschau } from './feldPanelTypen';
 
 /**
- * Vorlage für das Unterschriftsdatum -- bewusst NICHT in `VORLAGEN` (allgemeine Feldliste), sondern
- * nur über die Signatur-Fläche anlegbar (siehe `FeldPanel`): `nurBeiSignatur: true` verknüpft das
- * Feld inhaltlich mit der Unterschrift, es druckt nur, wenn tatsächlich eine (nicht-digitale)
- * Unterschrift vorliegt. Frist 14 Tage: unterschrieben wird am Tag der letzten Leistung, sofern die
- * noch nicht lange zurueckliegt -- sonst heute. `feld` muss der Admin noch waehlen (je Ressource
- * anders).
+ * Vorlage für das Unterschriftsdatum -- nur über die Signatur-Fläche anlegbar, nicht über `VORLAGEN`
+ * (`FeldZeile.tsx`). `nurBeiSignatur: true` bindet das Feld an die Unterschrift: es druckt nur bei einer
+ * nicht-digitalen. Frist 14 Tage: der Tag der letzten Leistung, sofern er nicht länger zurückliegt, sonst
+ * heute (`datumMitFrist`). `feld` wählt der Admin, es ist je Ressource anders.
  */
 const UNTERSCHRIFTSDATUM_FELD: Feld = {
   x: 50,
@@ -30,6 +28,11 @@ const UNTERSCHRIFTSDATUM_FELD: Feld = {
   nurBeiSignatur: true,
 };
 
+/**
+ * Seitenleiste des Formular-Editors: Feldliste, Datentabellen sowie Signatur-Fläche und Unterschriftsdatum der aktuellen Seite.
+ *
+ * @param props - Formular, aktuelle Seite samt Tabellen, Scharfschalt-Zustand (`armed`), Vorschau und Änderungs-Callbacks.
+ */
 export function FeldPanel({
   formular,
   seite,
@@ -43,24 +46,34 @@ export function FeldPanel({
 }: Props) {
   const [neuerName, setNeuerName] = useState('');
   const signaturAktiv = istGleich(armed, { bereich: 'signaturBild' });
-  // Höchstens EIN Unterschriftsdatum-Feld -- über das `nurBeiSignatur`-Flag gefunden statt über
-  // einen festen Key, damit ein umbenanntes Feld (z.B. durch spätere manuelle Anpassung) trotzdem
-  // erkannt wird.
+  // Höchstens ein Unterschriftsdatum-Feld, gefunden über `nurBeiSignatur` statt über einen festen Key,
+  // damit ein umbenanntes Feld erkannt bleibt.
   const datumEintrag = Object.entries(seite.felder).find(([, f]) => f.nurBeiSignatur);
   const [datumKey, datumFeld] = datumEintrag ?? [undefined, undefined];
   const datumArmed = datumKey !== undefined && istGleich(armed, { bereich: 'feld', key: datumKey });
 
+  /**
+   * Legt das Unterschriftsdatum-Feld aus `UNTERSCHRIFTSDATUM_FELD` unter einem freien Schlüssel an und schaltet es scharf.
+   */
   function datumHinzufuegen() {
     const key = naechsterFreierSchluessel(seite.felder, 'unterschriftsdatum');
     onSeiteChange({ ...seite, felder: { ...seite.felder, [key]: { ...UNTERSCHRIFTSDATUM_FELD } } });
     onArm({ bereich: 'feld', key });
   }
 
+  /**
+   * Übernimmt `patch` ins Unterschriftsdatum-Feld; ohne vorhandenes Feld passiert nichts.
+   *
+   * @param patch - Felder, die im Unterschriftsdatum-Feld überschrieben werden.
+   */
   function datumAendern(patch: Partial<Feld>) {
     if (!datumKey || !datumFeld) return;
     onSeiteChange({ ...seite, felder: { ...seite.felder, [datumKey]: { ...datumFeld, ...patch } } });
   }
 
+  /**
+   * Entfernt das Unterschriftsdatum-Feld aus der Seite und hebt die Scharfschaltung auf, falls es scharf war.
+   */
   function datumLoeschen() {
     if (!datumKey) return;
     const rest = { ...seite.felder };
@@ -69,6 +82,9 @@ export function FeldPanel({
     if (datumArmed) onArm(null);
   }
 
+  /**
+   * Legt eine neue Datentabelle unter dem eingegebenen Namen (sonst `tabelleN`) mit der ersten Zeilenquelle des Formulars an; existiert der Name schon, passiert nichts.
+   */
   function tabelleAnlegen() {
     const name = neuerName.trim() || `tabelle${Object.keys(tabellen).length + 1}`;
     if (tabellen[name]) return;

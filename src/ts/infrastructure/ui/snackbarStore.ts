@@ -1,9 +1,7 @@
 /**
  * Snackbar-Status als `useSyncExternalStore`-kompatibler Modul-Store, analog
- * `autoSaveStatusStore.ts`. `CustomSnackbar.ts`s `createSnackBar()` bleibt die einzige
- * oeffentliche Funktion (124 Aufrufstellen unveraendert) -- ruft hier nur noch `addSnackbar()`
- * auf. `SnackbarHost.tsx`/`SnackbarItem.tsx` rendern den Store deklarativ statt per
- * `document.createElement`.
+ * `autoSaveStatusStore.ts`. `createSnackBar()` (`CustomSnackbar.ts`) ruft `addSnackbar()` auf;
+ * `SnackbarHost.tsx`/`SnackbarItem.tsx` rendern den Store.
  */
 
 export type Tstatus =
@@ -71,12 +69,18 @@ const listeners = new Set<Listener>();
 let snapshot: SnackbarEntry[] = entries;
 let nextId = 0;
 
+/** Erzeugt einen neuen Snapshot (React vergleicht per Referenz) und benachrichtigt alle Listener. */
 function notify(): void {
   snapshot = [...entries];
   for (const listener of listeners) listener();
 }
 
-/** Wie die alte `_setContainer()`: String-Selektor auflösen, bei Fehlschlag auf `document.body` zurückfallen + warnen. */
+/**
+ * Loest den Ziel-Container auf.
+ *
+ * @param container - Element oder CSS-Selektor.
+ * @returns Das Element; bei nicht gefundenem Selektor `document.body` (mit `console.warn`).
+ */
 function resolveContainer(container: HTMLElement | string): HTMLElement {
   if (typeof container !== 'string') return container;
   const found = document.querySelector<HTMLElement>(container);
@@ -85,15 +89,33 @@ function resolveContainer(container: HTMLElement | string): HTMLElement {
   return document.body;
 }
 
+/**
+ * Meldet einen Listener fuer Aenderungen am Store an (`useSyncExternalStore`-`subscribe`).
+ *
+ * @param listener - Wird nach jeder Aenderung aufgerufen.
+ * @returns Funktion, die den Listener wieder abmeldet.
+ */
 export function subscribeSnackbars(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
+/**
+ * Liefert den aktuellen Snapshot (`useSyncExternalStore`-`getSnapshot`); die Referenz aendert sich nur bei Aenderungen.
+ *
+ * @returns Alle aktuellen Snackbar-Eintraege.
+ */
 export function getSnackbarsSnapshot(): SnackbarEntry[] {
   return snapshot;
 }
 
+/**
+ * Legt eine Snackbar an: fuellt Standardwerte (Status `info`, 5000 ms, unten rechts, `document.body`) und
+ * loest den Container auf.
+ *
+ * @param options - Optionen der Snackbar; nicht gesetzte Felder erhalten die Standardwerte.
+ * @returns Handle, dessen `Close()` die Schliess-Animation startet.
+ */
 export function addSnackbar(options: SnackBarOptions): { Close: () => void } {
   const id = String(nextId++);
   const entry: SnackbarEntry = {
@@ -117,7 +139,11 @@ export function addSnackbar(options: SnackBarOptions): { Close: () => void } {
   return { Close: () => startClosingSnackbar(id) };
 }
 
-/** Startet die Schliess-Animation (siehe `SnackbarItem.tsx`); No-Op, wenn schon geschlossen wird. */
+/**
+ * Startet die Schliess-Animation (siehe `SnackbarItem.tsx`); No-Op bei unbekannter Id oder wenn schon geschlossen wird.
+ *
+ * @param id - Id des Eintrags.
+ */
 export function startClosingSnackbar(id: string): void {
   const entry = entries.find(e => e.id === id);
   if (!entry || entry.closing) return;
@@ -125,7 +151,11 @@ export function startClosingSnackbar(id: string): void {
   notify();
 }
 
-/** Entfernt den Eintrag endgueltig -- von `SnackbarItem.tsx` nach Ablauf der Schliess-Animation aufgerufen. */
+/**
+ * Entfernt den Eintrag endgueltig -- von `SnackbarItem.tsx` nach Ablauf der Schliess-Animation aufgerufen.
+ *
+ * @param id - Id des Eintrags; unbekannte Ids werden ignoriert.
+ */
 export function removeSnackbar(id: string): void {
   const index = entries.findIndex(e => e.id === id);
   if (index === -1) return;
@@ -133,7 +163,7 @@ export function removeSnackbar(id: string): void {
   notify();
 }
 
-/** Für Tests: Store auf Ausgangszustand zurücksetzen. */
+/** Setzt den Store auf den Ausgangszustand zurueck (nur fuer Tests). */
 export function resetSnackbarStore(): void {
   entries.length = 0;
   nextId = 0;

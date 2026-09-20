@@ -7,6 +7,12 @@ import mergeVisibleResourceRows from './mergeVisibleResourceRows';
 import { default as tableToArray } from './tableToArray';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
+/**
+ * Schreibt die sichtbaren EWT-Zeilen in den Storage. Vorher wird `Buchungstag` neu berechnet und bei Abweichung in die Live-Zeile übernommen (Tabelle wird neu gezeichnet). Danach gehen die Events `ewt:persisted` und `data:changed` raus.
+ *
+ * @param ft - EWT-Tabelle.
+ * @returns Zeilen, wie sie im Storage stehen.
+ */
 export default function persistEwtTableData(ft: CustomTable<IDatenEWT>): IDatenEWT[] {
   const rawRows = typeof ft.getRows === 'function' ? ft.getRows() : [];
   const liveRows = Array.isArray(rawRows) ? rawRows.filter(row => row._state !== 'deleted') : [];

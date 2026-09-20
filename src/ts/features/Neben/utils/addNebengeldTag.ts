@@ -5,6 +5,14 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IDatenN } from '@/types';
 import { formatNebengeldZulagen, readNebengeldZulagenFromForm, validateNebengeldZulagen } from './nebengeldZulagen';
 
+/**
+ * Übernimmt den im Add-Modal gewählten EWT-Tag samt Zulagen und Auftragsnummer als Nebengeld-Zeile und speichert die Tabelle.
+ * Ungültige Zulagen oder ein bereits vorhandener Tag brechen mit einer Warnung ab. Die gewählte Option wird gesperrt und die nächste freie vorausgewählt.
+ *
+ * @param form - Formular- oder Modal-Container mit `#Tag`, `#AuftragN` und den Zulagen-Inputs.
+ * @param tableN - Nebengeld-Tabelle, der die Zeile hinzugefügt wird.
+ * @throws {Error} Wenn `#Tag` oder `#AuftragN` fehlt.
+ */
 export default function addNebengeldTag(form: HTMLDivElement | HTMLFormElement, tableN: CustomTable<IDatenN>): void {
   const select = form.querySelector<HTMLSelectElement>('#Tag');
   if (!select) throw new Error("Select element with ID 'Tag' not found");

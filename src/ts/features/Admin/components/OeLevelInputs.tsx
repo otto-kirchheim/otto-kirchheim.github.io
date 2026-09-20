@@ -16,11 +16,13 @@ type OeLevelInputsProps = {
 };
 
 /**
- * Trenner vor `index` in der kanonischen Schreibweise: `.` nach der ersten
- * Ebene, sonst `-`. Die letzte Ebene bekommt keinen Bindestrich, solange sie
- * leer oder eine Teamnummer ist — beides erzeugt in `joinOeLevels` ebenfalls
- * keinen; der Bindestrich erscheint erst, sobald dort etwas anderes als eine
- * Zahl steht.
+ * Trenner vor Ebene `index` in der kanonischen Schreibweise von `joinOeLevels`: `.` nach der ersten
+ * Ebene, sonst `-`. Vor einer leeren letzten Ebene und vor einer Teamnummer (rein numerische letzte
+ * befüllte Ebene ab Position 4) steht kein Bindestrich.
+ *
+ * @param levels - Aktuelle Ebenen inkl. leerer Felder.
+ * @param index - Position der Ebene, vor der der Trenner steht.
+ * @returns `'.'`, `'-'` oder `''`.
  */
 function separatorBefore(levels: string[], index: number): string {
   if (index === 1) return '.';
@@ -34,12 +36,24 @@ function separatorBefore(levels: string[], index: number): string {
   return '-';
 }
 
+/**
+ * Feldbreite passend zur längeren von Wert und Platzhalter (mindestens 2 Zeichen).
+ *
+ * @param value - Aktueller Feldwert.
+ * @param placeholder - Platzhaltertext des Feldes.
+ * @returns Inline-Style mit `width`.
+ */
 function widthFor(value: string, placeholder: string): CSSProperties {
   const chars = Math.max(2, value.length, placeholder.length);
   return { width: `calc(${chars}ch + 1.5rem)` };
 }
 
-/** Reine Darstellung einer OE-Kette als ein Textfeld je Ebene (positionsgebunden, leere Ebenen bleiben erhalten). */
+/**
+ * Reine Darstellung einer OE-Kette als ein Textfeld je Ebene (positionsgebunden, leere Ebenen bleiben
+ * erhalten). Hinzufügen/Entfernen-Knöpfe erscheinen nur, wenn der jeweilige Handler übergeben wird.
+ *
+ * @param props - Ebenen, Platzhalter, Änderungs-Handler, `ariaLabel` je Ebene und `highlightFilled`.
+ */
 export function OeLevelInputs({
   levels,
   placeholders = [],

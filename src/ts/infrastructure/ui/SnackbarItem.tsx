@@ -6,7 +6,12 @@ import type { SnackbarEntry, Ticon, Tstatus } from './snackbarStore';
 
 type Tsemantik = 'adaptive' | 'successful' | 'warning' | 'critical' | 'informational';
 
-/** App-Status auf DB-Semantik samt Standardsymbol abbilden. */
+/**
+ * Bildet den App-Status auf die DB-Semantik samt Standardsymbol ab.
+ *
+ * @param status - Status der Snackbar (`success`/`green`, `warning`/`alert`/`orange`, `danger`/`error`/`red`, `info`).
+ * @returns Semantik und Symbolname; `null` ohne bekannten Status (neutral, ohne Symbol).
+ */
 function semantikFuerStatus(status: Tstatus): { semantik: Tsemantik; icon: string } | null {
   switch (status) {
     case 'success':
@@ -28,7 +33,12 @@ function semantikFuerStatus(status: Tstatus): { semantik: Tsemantik; icon: strin
   }
 }
 
-/** Alte Ein-Zeichen-Symbole auf DB-Symbolnamen abbilden; alles andere gilt bereits als DB-Name. */
+/**
+ * Bildet Kurzsymbole (`!`, `?`, `+`, `warn`, ...) auf DB-Symbolnamen ab; alles andere gilt bereits als DB-Name.
+ *
+ * @param icon - Symbolangabe aus den Snackbar-Optionen.
+ * @returns DB-Symbolname.
+ */
 function dbSymbol(icon: Ticon): string {
   switch (icon) {
     case 'exclamation':
@@ -52,16 +62,16 @@ function dbSymbol(icon: Ticon): string {
 }
 
 /**
- * Eine einzelne Snackbar-Karte. Die Karte selbst ist `<DBNotification variant="overlay">`
- * (DB-UX-Baustein, laut Doku explizit fuer "absolute and floating notifications like snackbars
- * etc." gedacht) -- Positionierung/Stapel-Container kommen von `SnackbarHost.tsx`, die
- * Hoehen-Animation um die Karte bleibt hier per `ref`, exakt die Sequenz der alten
- * `SnackBar.Open()`/`Close()`-Methoden (siehe dort).
+ * Eine einzelne Snackbar-Karte als `<DBNotification variant="overlay">` (laut DB-UX-Doku fuer
+ * schwebende Meldungen wie Snackbars gedacht). Positionierung und Stapel-Container kommen von
+ * `SnackbarHost.tsx`; die Hoehen-Animation beim Auf-/Zuklappen laeuft hier per `ref` am Wrapper.
+ *
+ * @param props - `entry`: der darzustellende Store-Eintrag.
  */
 export default function SnackbarItem({ entry }: { entry: SnackbarEntry }): ReactNode {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
-  // Oeffnen: Hoehe von 0 auf den gemessenen Inhalt animieren (Aequivalent zu `SnackBar.Open()`).
+  // Oeffnen: Hoehe von 0 auf den gemessenen Inhalt animieren.
   useLayoutEffect(() => {
     const el = wrapperRef.current;
     if (!el) return undefined;
@@ -70,16 +80,16 @@ export default function SnackbarItem({ entry }: { entry: SnackbarEntry }): React
     el.style.marginTop = '5px';
     el.style.marginBottom = '5px';
 
+    /** Loest nach dem Aufklappen die feste Hoehe (`auto`); eingeklappt wird nur ueber `entry.closing`. */
     const onTransitionEnd = (): void => {
       el.removeEventListener('transitionend', onTransitionEnd);
-      // Offen bleiben nach dem Oeffnen; nur ueber `Close()` wieder einklappen.
       el.style.height = 'auto';
     };
     el.addEventListener('transitionend', onTransitionEnd);
     return () => el.removeEventListener('transitionend', onTransitionEnd);
   }, []);
 
-  // Schliessen: derselbe Doppel-rAF-Kollaps wie `SnackBar.Close()`, danach Entfernen aus dem Store.
+  // Schliessen: aktuelle Hoehe fixieren, im naechsten Frame auf 0 kollabieren (Doppel-rAF), nach 1 s aus dem Store entfernen.
   useEffect(() => {
     if (!entry.closing) return undefined;
     const el = wrapperRef.current;
@@ -140,8 +150,7 @@ export default function SnackbarItem({ entry }: { entry: SnackbarEntry }): React
         closeButtonText="Schließen"
         onClose={() => startClosingSnackbar(entry.id)}
       >
-        {/* Entwicklerkontrollierter HTML-Inhalt (kein Nutzereingabe-Pfad), wie beim
-            bisherigen `innerHTML`-Vertrag. */}
+        {/* `message` ist entwicklerkontrolliertes HTML (kein Nutzereingabe-Pfad). */}
         <span className="CustomSnackbar__message" dangerouslySetInnerHTML={{ __html: entry.message }} />
         {entry.actions.length > 0 && (
           <div className="CustomSnackbar__actions">

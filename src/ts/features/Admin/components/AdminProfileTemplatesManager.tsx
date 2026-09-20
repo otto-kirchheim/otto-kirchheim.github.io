@@ -24,6 +24,9 @@ import {
 import { DBButton, DBHeadingH5, DBTag } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
+/**
+ * Verwaltung der Profil-Templates: Liste mit aufklappbarem Editor, Anlegen, Kopieren, Inhalt übernehmen, (De-)Aktivieren und Löschen (nur Super-Admin).
+ */
 export function AdminProfileTemplatesManager() {
   const [templates, setTemplates] = useState<BackendProfileTemplate[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -40,9 +43,12 @@ export function AdminProfileTemplatesManager() {
     [templates],
   );
 
-  // `reload` stabil per useCallback, damit der Mount-Effect sie als Dep listen kann.
+  // `reload` ist per useCallback stabil, damit der Mount-Effect sie als Dep listen kann.
   // Der Effect ruft sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body
   // loeste react-hooks/set-state-in-effect aus (reload setzt synchron setLoading).
+  /**
+   * Lädt alle Templates neu und setzt die Bearbeitungsstände darauf zurück (verwirft ungespeicherte Änderungen).
+   */
   const reload = useCallback(async () => {
     setLoading(true);
     try {
@@ -54,10 +60,22 @@ export function AdminProfileTemplatesManager() {
     }
   }, []);
 
+  /**
+   * Ändert Stammfelder (Code, Name, Beschreibung, aktiv) im Bearbeitungsstand eines Templates.
+   *
+   * @param id - Template-Id.
+   * @param patch - Zu ändernde Felder des Bearbeitungsstands.
+   */
   function updateEdit(id: string, patch: Partial<TemplateEditState>) {
     setEdits(current => ({ ...current, [id]: { ...current[id], ...patch } }));
   }
 
+  /**
+   * Prüft auf ungespeicherte Änderungen.
+   *
+   * @param id - Template-Id.
+   * @returns `true`, wenn der Bearbeitungsstand vom geladenen Template abweicht; `false` auch, wenn Template oder Stand fehlen.
+   */
   function hasChanges(id: string): boolean {
     const source = templates.find(t => t._id === id);
     const edit = edits[id];
@@ -72,6 +90,12 @@ export function AdminProfileTemplatesManager() {
     );
   }
 
+  /**
+   * Ändert Abschnitte des Inhalts-Entwurfs eines Templates.
+   *
+   * @param id - Template-Id.
+   * @param patch - Zu ändernde Abschnitte des Inhalts-Entwurfs.
+   */
   function updateTemplateContent(id: string, patch: Partial<TemplateContentDraft>) {
     setEdits(current => ({
       ...current,
@@ -85,6 +109,13 @@ export function AdminProfileTemplatesManager() {
     }));
   }
 
+  /**
+   * Setzt ein Feld des Abschnitts Pers.
+   *
+   * @param id - Template-Id.
+   * @param key - Name des Pers-Felds.
+   * @param value - Neuer Wert.
+   */
   function updatePersField(id: string, key: string, value: string) {
     const state = edits[id];
     if (!state) return;
@@ -96,6 +127,12 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Übernimmt geänderte Arbeitszeit-Vorgaben.
+   *
+   * @param id - Template-Id.
+   * @param value - Neue Arbeitszeit-Vorgaben.
+   */
   function updateArbeitszeit(id: string, value: NonNullable<TemplateContentDraft['Arbeitszeit']>) {
     const state = edits[id];
     if (!state) return;
@@ -104,6 +141,11 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Legt den Abschnitt Arbeitszeit mit den Standardwerten an, falls er noch fehlt.
+   *
+   * @param id - Template-Id.
+   */
   function enableArbeitszeit(id: string) {
     const state = edits[id];
     if (!state || state.templateContent.Arbeitszeit) return;
@@ -112,6 +154,11 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Hängt eine leere Fahrzeit-Zeile an.
+   *
+   * @param id - Template-Id.
+   */
   function addFahrzeitRow(id: string) {
     const state = edits[id];
     if (!state) return;
@@ -120,6 +167,14 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Ändert ein Feld einer Fahrzeit-Zeile.
+   *
+   * @param id - Template-Id.
+   * @param index - Zeilenindex.
+   * @param field - Geändertes Feld der Zeile.
+   * @param value - Neuer Wert.
+   */
   function updateFahrzeitRow(id: string, index: number, field: keyof FahrzeitRow, value: string) {
     const state = edits[id];
     if (!state) return;
@@ -128,6 +183,12 @@ export function AdminProfileTemplatesManager() {
     updateTemplateContent(id, { Fahrzeit: next });
   }
 
+  /**
+   * Entfernt eine Fahrzeit-Zeile.
+   *
+   * @param id - Template-Id.
+   * @param index - Zeilenindex.
+   */
   function removeFahrzeitRow(id: string, index: number) {
     const state = edits[id];
     if (!state) return;
@@ -136,6 +197,11 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Hängt einen leeren VorgabenB-Eintrag an (nur Frühschicht), normalisiert die Liste und wählt den neuen Eintrag aus.
+   *
+   * @param id - Template-Id.
+   */
   function addVorgabenBRow(id: string) {
     const state = edits[id];
     if (!state) return;
@@ -160,6 +226,13 @@ export function AdminProfileTemplatesManager() {
     setActiveVorgabenBIndex(current => ({ ...current, [id]: Math.max(0, nextRows.length - 1) }));
   }
 
+  /**
+   * Ändert einen VorgabenB-Eintrag per Updater; ein ungültiger Index wird ignoriert.
+   *
+   * @param id - Template-Id.
+   * @param index - Index des Eintrags.
+   * @param updater - Liefert aus dem bisherigen Eintrag den neuen.
+   */
   function updateVorgabenBRow(id: string, index: number, updater: (row: VorgabenBRow) => VorgabenBRow) {
     const state = edits[id];
     if (!state) return;
@@ -170,6 +243,12 @@ export function AdminProfileTemplatesManager() {
     updateTemplateContent(id, { VorgabenB: next });
   }
 
+  /**
+   * Entfernt einen VorgabenB-Eintrag, normalisiert die Liste und hält die Auswahl im gültigen Bereich.
+   *
+   * @param id - Template-Id.
+   * @param index - Index des zu entfernenden Eintrags.
+   */
   function removeVorgabenBRow(id: string, index: number) {
     const state = edits[id];
     if (!state) return;
@@ -186,6 +265,13 @@ export function AdminProfileTemplatesManager() {
     setActiveVorgabenBIndex(current => ({ ...current, [id]: nextRows.length === 0 ? 0 : nextIndex }));
   }
 
+  /**
+   * Verschiebt einen VorgabenB-Eintrag um eine Position; die Standard-Markierung bleibt am selben Eintrag, die Auswahl folgt dem verschobenen.
+   *
+   * @param id - Template-Id.
+   * @param index - Index des Eintrags.
+   * @param direction - Verschieberichtung.
+   */
   function moveVorgabenBRow(id: string, index: number, direction: 'up' | 'down') {
     const state = edits[id];
     if (!state) return;
@@ -210,6 +296,12 @@ export function AdminProfileTemplatesManager() {
     setActiveVorgabenBIndex(current => ({ ...current, [id]: targetIndex }));
   }
 
+  /**
+   * Markiert einen VorgabenB-Eintrag als Standard (genau einer je Template).
+   *
+   * @param id - Template-Id.
+   * @param index - Index des neuen Standard-Eintrags.
+   */
   function setVorgabenBStandard(id: string, index: number) {
     const state = edits[id];
     if (!state) return;
@@ -218,10 +310,22 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Wählt den angezeigten VorgabenB-Eintrag.
+   *
+   * @param id - Template-Id.
+   * @param index - Gewünschter Index (negative Werte werden auf 0 gesetzt).
+   */
   function selectVorgabenBRow(id: string, index: number) {
     setActiveVorgabenBIndex(current => ({ ...current, [id]: Math.max(0, index) }));
   }
 
+  /**
+   * Schaltet einen Tab in den sichtbaren Bereichen um.
+   *
+   * @param id - Template-Id.
+   * @param key - Schlüssel des Tabs.
+   */
   function toggleAktivierterTab(id: string, key: string) {
     const state = edits[id];
     if (!state) return;
@@ -236,6 +340,12 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Schaltet eine benötigte Zulage um.
+   *
+   * @param id - Template-Id.
+   * @param code - Zulagen-Code.
+   */
   function toggleZulage(id: string, code: string) {
     const state = edits[id];
     if (!state) return;
@@ -250,6 +360,9 @@ export function AdminProfileTemplatesManager() {
     });
   }
 
+  /**
+   * Legt nach Abfrage von Code und Name ein leeres, aktives Template an; Abbruch im Prompt beendet still.
+   */
   async function handleCreate() {
     const code = window.prompt('Neuer Template-Code:');
     if (!code) return;
@@ -266,6 +379,11 @@ export function AdminProfileTemplatesManager() {
     await reload();
   }
 
+  /**
+   * Kopiert ein Template unter neuem Code und Namen als inaktives Template.
+   *
+   * @param source - Zu kopierendes Template.
+   */
   async function handleCopy(source: BackendProfileTemplate) {
     const code = window.prompt('Neuer Code fuer Kopie:', `${source.code}-copy`);
     if (!code) return;
@@ -282,6 +400,11 @@ export function AdminProfileTemplatesManager() {
     await reload();
   }
 
+  /**
+   * Speichert den Bearbeitungsstand eines Templates (Code kleingeschrieben, Texte getrimmt) und lädt neu.
+   *
+   * @param template - Zu speicherndes Template.
+   */
   async function handleSave(template: BackendProfileTemplate) {
     const edit = edits[template._id];
     if (!edit) return;
@@ -301,6 +424,11 @@ export function AdminProfileTemplatesManager() {
     }
   }
 
+  /**
+   * Überschreibt den Inhalt des Templates mit dem eines per Code gewählten Quell-Templates.
+   *
+   * @param template - Ziel-Template, dessen Inhalt überschrieben wird.
+   */
   async function handleAdoptTemplateContent(template: BackendProfileTemplate) {
     const sourceCode = window.prompt('Template-Code als Quelle eingeben:');
     if (!sourceCode) return;
@@ -321,6 +449,11 @@ export function AdminProfileTemplatesManager() {
     }
   }
 
+  /**
+   * Schaltet ein Template aktiv/inaktiv und lädt neu.
+   *
+   * @param template - Template, dessen Aktiv-Status umgeschaltet wird.
+   */
   async function handleToggleActive(template: BackendProfileTemplate) {
     setSavingId(template._id);
     try {
@@ -331,6 +464,11 @@ export function AdminProfileTemplatesManager() {
     }
   }
 
+  /**
+   * Löscht ein Template nach Bestätigung; nur für Super-Admins erlaubt.
+   *
+   * @param template - Zu löschendes Template.
+   */
   async function handleDelete(template: BackendProfileTemplate) {
     if (!canDelete) {
       createSnackBar({ message: 'Löschen nur als Super-Admin erlaubt', status: 'error', timeout: 2500 });

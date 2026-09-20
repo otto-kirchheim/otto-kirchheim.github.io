@@ -1,21 +1,16 @@
 /**
- * Sichtbarkeit der Hauptnavigation (Phase K5). Ersetzt das bisherige `#navmenu`-`d-none`-Toggle
- * (`auth/index.ts`, `loadUserDaten.ts`, `logoutUser.ts`): `DBHeader` rendert seine `children`
- * selbst (Desktop-Kopfzeile + Drawer-Kopie), es gibt keinen `#navmenu`-Knoten mehr, an dem eine
- * Klasse haengen koennte. `AppHeader.tsx` haengt die `d-none`-Klasse stattdessen reaktiv an
- * `<DBNavigation>` selbst.
+ * Sichtbarkeit der Hauptnavigation (Login-Zustand). `AppHeader.tsx` haengt dafuer reaktiv `d-none`
+ * an `<DBControlPanelNavigation>` und die Einstellungen-/Admin-/Logout-Elemente in `actions2`;
+ * geschrieben wird aus `auth/index.ts`, `loadUserDaten.ts` und `logoutUser.ts`.
  *
- * WICHTIG: `<DBNavigation>` wird IMMER gerendert (nur die Klasse wechselt), NICHT bedingt
- * (`{sichtbar && <DBNavigation>}`). Erster Versuch war bedingtes Rendern -- brach `auth/index.ts`s
- * `updateTabVisibility()`/Admin-Toggle/Klick-Listener-Anmeldung, die alle per `querySelector`
- * auf Nav-Kinder (`#admin-tab`, `#bereitschaft-tab`, ...) zugreifen: die Elemente existierten zum
- * Zeitpunkt dieser Aufrufe noch gar nicht im DOM (Nav erst NACH `setNavigationSichtbar(true)`
- * gemountet), die Aufrufe liefen ins Leere, und niemand wiederholte sie danach. Mit permanentem
- * Rendern existieren die Elemente immer, exakt wie beim alten `#navmenu`-Div.
+ * WICHTIG: Die Navigation wird IMMER gerendert, nur die Klasse wechselt -- nicht bedingt
+ * (`{sichtbar && <Navigation>}`). `auth/index.ts`s `updateTabVisibility()`, der Admin-Toggle und
+ * die Klick-Listener greifen per `querySelector` auf Nav-Kinder (`#admin-tab`,
+ * `#bereitschaft-tab`, ...) zu, bevor `setNavigationSichtbar(true)` lief; bei bedingtem Rendern
+ * gaebe es die Elemente dann noch nicht, die Aufrufe liefen ins Leere und wuerden nie wiederholt.
  *
- * Der Burger-Knopf selbst bleibt bewusst IMMER sichtbar -- `DBHeader` erzeugt ihn intern ohne
- * Sichtbarkeits-Prop, ein Verstecken ist ohne Eingriff in die Komponente nicht vorgesehen
- * (User-Entscheidung: vor Login oeffnet er eine fast leere Schublade statt zu verschwinden).
+ * Der Burger-Knopf bleibt bewusst immer sichtbar: `DBHeader` erzeugt ihn ohne Sichtbarkeits-Prop;
+ * vor dem Login oeffnet er eine fast leere Schublade.
  */
 
 type Listener = () => void;
@@ -23,15 +18,31 @@ type Listener = () => void;
 let sichtbar = false;
 const listeners = new Set<Listener>();
 
+/**
+ * Liefert die Sichtbarkeit der Hauptnavigation.
+ *
+ * @returns `true`, wenn die Navigation sichtbar ist (Standard: `false`).
+ */
 export function isNavigationSichtbar(): boolean {
   return sichtbar;
 }
 
+/**
+ * Registriert einen Listener fuer Sichtbarkeits-Wechsel der Navigation.
+ *
+ * @param listener - Callback ohne Argumente.
+ * @returns Funktion, die den Listener wieder abmeldet.
+ */
 export function subscribeNavigationSichtbar(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
+/**
+ * Setzt die Sichtbarkeit der Navigation und benachrichtigt die Listener; bei unveraendertem Wert passiert nichts.
+ *
+ * @param next - `true` blendet die Navigation ein.
+ */
 export function setNavigationSichtbar(next: boolean): void {
   if (next === sichtbar) return;
   sichtbar = next;

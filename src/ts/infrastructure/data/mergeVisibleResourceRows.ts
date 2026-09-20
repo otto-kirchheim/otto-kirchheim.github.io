@@ -6,6 +6,14 @@ import { getMonatFromBE, getMonatFromBZ, getMonatFromEA, getMonatFromN, isEwtInM
 import normalizeResourceRows from './normalizeResourceRows';
 import { type ResourceKind, RESOURCE_STORAGE_MAP } from './resourceConfig';
 
+/**
+ * Prueft, ob ein Datensatz zum angegebenen Monat gehoert (Monatsermittlung je Ressource).
+ *
+ * @param resource - Ressourcenart.
+ * @param row - Zellen des Datensatzes.
+ * @param monat - Monat (1-12).
+ * @returns `true`, wenn der Datensatz im Monat liegt.
+ */
 function isRowInActiveMonat(resource: ResourceKind, row: CustomTableTypes, monat: number): boolean {
   switch (resource) {
     case 'BZ':
@@ -23,7 +31,14 @@ function isRowInActiveMonat(resource: ResourceKind, row: CustomTableTypes, monat
 
 /**
  * Schreibt nur die aktuell sichtbaren Monatszeilen zurück in den Storage und behält
- * alle übrigen Monate des bereits geladenen Jahres unverändert bei.
+ * alle übrigen Monate des bereits geladenen Jahres unverändert bei. Der Zeilenzustand wird als
+ * `__localState` bzw. bei Fehlern als `__errorMessage`/`__errorState` mitgespeichert.
+ *
+ * @typeParam T - Zeilentyp der Ressource.
+ * @param resource - Ressourcenart (bestimmt Storage-Key und Monatsermittlung).
+ * @param table - Tabelle mit den aktuellen Zeilen.
+ * @returns Neue Gesamtliste fuer den Storage; nur die Tabellenzeilen, wenn diese Monate
+ *   ausserhalb des aktiven enthalten und ungefiltert sind (dann ersetzen sie den Storage komplett).
  */
 export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
   resource: ResourceKind,
@@ -40,6 +55,12 @@ export default function mergeVisibleResourceRows<T extends CustomTableTypes>(
     typeof table.rows?.getFilteredRows === 'function' ? table.rows.getFilteredRows() : rawRows;
   const filteredRows = Array.isArray(filteredRowsCandidate) ? filteredRowsCandidate : rawRows;
 
+  /**
+   * Wandelt eine Zeile in den Storage-Datensatz um (Zellen plus Zustand bzw. Fehlerinfo).
+   *
+   * @param row - Tabellenzeile.
+   * @returns Zellen mit `__localState` oder `__errorMessage`/`__errorState`.
+   */
   const toStorage = (row: Row<T>): T => {
     if (row._state === 'error' && row._errorMessage)
       return { ...(row.cells as T), __errorMessage: row._errorMessage, __errorState: row._errorState ?? 'new' };

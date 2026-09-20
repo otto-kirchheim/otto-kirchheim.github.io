@@ -19,7 +19,12 @@ const POSITION_CLASS: Record<Tposition, string> = {
 let targetIdCounter = 0;
 const targetIds = new WeakMap<HTMLElement, number>();
 
-/** Stabiler String-Schluessel je Ziel-Element (fuer die Gruppierung unten). */
+/**
+ * Liefert einen stabilen String-Schluessel je Ziel-Element (fuer die Gruppierung in `SnackbarHost`).
+ *
+ * @param target - Ziel-Element der Snackbar; `document.body` ergibt immer `'body'`, andere Elemente eine fortlaufende Id.
+ * @returns Schluessel, der pro Element gleich bleibt.
+ */
 function targetKey(target: HTMLElement): string {
   if (target === document.body) return 'body';
   let id = targetIds.get(target);
@@ -31,14 +36,14 @@ function targetKey(target: HTMLElement): string {
 }
 
 /**
- * Rendert alle aktiven Snackbars gruppiert nach (Ziel-Element, Position) -- ein
+ * Rendert alle aktiven Snackbars gruppiert nach (Ziel-Element, Position): ein
  * `CustomSnackbar-container`-Div pro Gruppe, per `createPortal` in das jeweilige Ziel
- * (Default: `document.body`) gehaengt. Ersetzt die alte `getOrAddContainerIn()`-DOM-Suche:
- * dieselbe Kombination nutzt weiterhin denselben (jetzt React-verwalteten) Container.
+ * (Default: `document.body`) gehaengt. Dieselbe Kombination nutzt immer denselben Container.
  *
- * Einmal in `App.tsx` gemountet, als Geschwister von `<AppFooter />` -- reine Overlay-Ebene,
- * unabhaengig davon, wo sie im Baum haengt (Positionierung kommt vollstaendig aus
- * `CustomSnackbar.css`s `position: absolute/fixed`).
+ * Einmal in `App.tsx` neben `<AppFooter />` gemountet; die Positionierung kommt vollstaendig aus
+ * `CustomSnackbar.css` (`position: absolute/fixed`), der Platz im Baum ist unerheblich.
+ *
+ * @returns Die Portale aller Gruppen.
  */
 export default function SnackbarHost(): ReactNode {
   const entries = useSnackbars();
@@ -55,8 +60,7 @@ export default function SnackbarHost(): ReactNode {
         group = { target: entry.container, position: entry.position, fixed: entry.fixed, entries: [] };
         map.set(key, group);
       }
-      // Letzter Eintrag dieser Gruppe gewinnt die `--fixed`-Klasse -- dieselbe (etwas
-      // eigenwillige) Regel wie im alten `_applyPositionClasses()`, keine Verhaltensaenderung.
+      // Der letzte Eintrag einer Gruppe bestimmt die `--fixed`-Klasse.
       group.fixed = entry.fixed;
       group.entries.push(entry);
     }

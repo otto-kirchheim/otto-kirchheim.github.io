@@ -28,11 +28,27 @@ const ERROR_OPERATION_STATE_MAP: Record<BulkErrorEntry['operation'], ErrorSource
   delete: 'deleted',
 };
 
+/**
+ * Sucht die `CustomTable`-Instanz zu einer Tabellen-Id im DOM.
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param id - Element-Id der Tabelle (ohne `#`).
+ * @returns Tabelleninstanz, `null` wenn das Element fehlt oder keine Instanz traegt.
+ */
 export function findTable<T extends CustomTableTypes>(id: string): CustomTable<T> | null {
   const el = document.querySelector<CustomHTMLTableElement<T>>(`#${id}`);
   return el?.instance ?? null;
 }
 
+/**
+ * Uebernimmt die vom Server zurueckgegebenen Dokumente (`created`/`updated`) per `_id` in die Zeilen
+ * der Tabelle, ohne deren Zustand zu aendern, und zeichnet neu. Nicht abbildbare Dokumente werden
+ * uebersprungen.
+ *
+ * @param resource - Ressource der Tabelle.
+ * @param table - Zieltabelle.
+ * @param result - Bulk-Antwort mit `created`/`updated`.
+ */
 export function applyServerRowsToTable(
   resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
@@ -59,12 +75,16 @@ export function applyServerRowsToTable(
 }
 
 /**
- * @param createRows - Row-Snapshot aus `getChangeRows()`, VOR dem Request genommen. Bestimmt
- *   die Positionen fuer den Index-Fallback exakt so, wie sie im gesendeten Payload standen -
- *   Zeilen, die erst waehrend der laufenden Anfrage entstanden sind, verschieben die
- *   Positionen sonst (AutoSave-Commit-Race).
- * @param updateRows - siehe `createRows`, fuer `update`-Fehler.
- * @param deleteRows - siehe `createRows`, nur fuer den `_id`-Fallback bei `delete`-Fehlern.
+ * Ordnet Bulk-Fehler den Zeilen zu: bei `create` per `clientRequestId`, sonst per `_id`, zuletzt
+ * ueber die Payload-Position (`index`, nur `create`/`update`).
+ *
+ * @param createRows - Snapshot aus `getChangeRows()`, VOR dem Request genommen. Nur so stimmen die
+ *   Positionen des Index-Fallbacks mit dem gesendeten Payload ueberein; waehrend des Requests
+ *   entstandene Zeilen wuerden sie verschieben (AutoSave-Commit-Race).
+ * @param updateRows - Wie `createRows`, fuer `update`-Fehler.
+ * @param deleteRows - Wie `createRows`, nur fuer den `_id`-Abgleich bei `delete`-Fehlern.
+ * @param errors - Fehlereintraege der Bulk-Antwort.
+ * @returns Treffer je zuordenbarem Fehler; nicht zuordenbare Fehler entfallen.
  */
 export function collectRowErrorMatches(
   createRows: Row<CustomTableTypes>[],
@@ -98,6 +118,12 @@ export function collectRowErrorMatches(
   return matches;
 }
 
+/**
+ * Entfernt in Storage (`dataN`) und offener Neben-Tabelle die `EWT`-Verknuepfung auf geloeschte
+ * EWT-Zeilen. Die Tabellenzeilen behalten ihren Zustand (kein `modified`).
+ *
+ * @param deletedIds - Ids der auf dem Server geloeschten EWT-Datensaetze.
+ */
 export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void {
   if (deletedIds.length === 0) return;
 
@@ -128,6 +154,12 @@ export function unlinkNebengeldRefsForDeletedEwtIds(deletedIds: string[]): void 
   if (tableChanged && typeof nebenTable.drawRows === 'function') nebenTable.drawRows();
 }
 
+/**
+ * Entfernt in Storage (`dataEA`) und offener EA-Tabelle die `EWT`-Verknuepfung auf geloeschte
+ * EWT-Zeilen. Die Tabellenzeilen behalten ihren Zustand (kein `modified`).
+ *
+ * @param deletedIds - Ids der auf dem Server geloeschten EWT-Datensaetze.
+ */
 export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
   if (deletedIds.length === 0) return;
 
@@ -158,6 +190,18 @@ export function unlinkEaRefsForDeletedEwtIds(deletedIds: string[]): void {
   if (tableChanged && typeof eaTable.drawRows === 'function') eaTable.drawRows();
 }
 
+/**
+ * Sendet die Aenderungen einer Ressource als Bulk-Requests, gruppiert nach Monat/Jahr des jeweiligen
+ * Datensatzes (aufsteigend). Loeschungen gehen nur im ersten Request mit; enthaelt der Save nur
+ * Loeschungen, laeuft ein Request fuer `monat`/`jahr`. Die Teilergebnisse werden zusammengefuehrt.
+ *
+ * @param resource - Ressource der Tabelle.
+ * @param table - Tabelle, aus der die `clientRequestId`s der neuen Zeilen stammen.
+ * @param changes - Zu sendende Aenderungen (`create`/`update`/`delete`).
+ * @param monat - Fallback-Monat (1-12), wenn ein Datensatz kein gueltiges Datum hat, und Monat fuer reine Loeschungen.
+ * @param jahr - Fallback-Jahr, siehe `monat`.
+ * @returns Vereinigte Bulk-Antwort; alle Listen leer, wenn nichts zu senden war.
+ */
 export async function sendBulk(
   resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
@@ -173,6 +217,12 @@ export async function sendBulk(
 }> {
   type SavePeriod = { monat: number; jahr: number };
 
+  /**
+   * Bestimmt Monat/Jahr eines Datensatzes aus seinem Datumsfeld (Format je Ressource).
+   *
+   * @param item - Zellen der Zeile.
+   * @returns Monat (1-12) und Jahr; `monat`/`jahr` des Aufrufs bei ungueltigem Datum.
+   */
   const getPeriod = (item: CustomTableTypes): SavePeriod => {
     const fallback = { monat, jahr };
 
@@ -212,6 +262,12 @@ export async function sendBulk(
   const updateByPeriod = new Map<string, (CustomTableTypes & { _id: string })[]>();
   const periods = new Map<string, SavePeriod>();
 
+  /**
+   * Schluessel fuer die Gruppierung nach Zeitraum.
+   *
+   * @param period - Monat und Jahr.
+   * @returns `Jahr-Monat`.
+   */
   const toPeriodKey = (period: SavePeriod): string => `${period.jahr}-${period.monat}`;
 
   for (const item of createItems) {
@@ -245,6 +301,13 @@ export async function sendBulk(
     errors: BulkErrorEntry[];
   } = { created: [], updated: [], deleted: [], createdReferences: [], errors: [] };
 
+  /**
+   * Ruft den Bulk-Endpunkt der Ressource fuer einen Zeitraum auf.
+   *
+   * @param period - Zeitraum der `create`/`update`-Eintraege.
+   * @param withDelete - Ob die Loeschungen in diesem Request mitgehen.
+   * @returns Bulk-Antwort des Servers.
+   */
   const callBulk = async (period: SavePeriod, withDelete: boolean) => {
     const key = toPeriodKey(period);
     const bulk: BulkRequest = {

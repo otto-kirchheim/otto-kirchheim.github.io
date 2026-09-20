@@ -26,7 +26,17 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenBE, IDatenBZ } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 
+/**
+ * Schreibt die aktuellen BZ-Tabellenzeilen per `persistTableData` in den Storage.
+ *
+ * @param ft - Bereitschaftszeitraum-Tabelle (BZ).
+ */
 const persistBereitschaftsZeitraumTableData = (ft: CustomTable<IDatenBZ>) => persistTableData('BZ', ft);
+/**
+ * Schreibt die aktuellen BE-Tabellenzeilen per `persistTableData` in den Storage.
+ *
+ * @param ft - Bereitschaftseinsatz-Tabelle (BE).
+ */
 const persistBereitschaftsEinsatzTableData = (ft: CustomTable<IDatenBE>) => persistTableData('BE', ft);
 
 export type { BzCoverage };

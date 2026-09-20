@@ -1,47 +1,37 @@
 /**
- * Leichter Ersatz fuer Bootstraps `Tab`-Plugin.
+ * Tab-Navigation der SPA ohne Router (Ersatz fuer Bootstraps `Tab`-Plugin).
  *
- * Die App ist eine Tab-SPA ohne Router: `#tabContent` enthaelt alle `.tab-pane`s, die
- * Navigation im DB-Header schaltet sie um. Bootstrap brachte dafuer sein `Tab`-Plugin plus
- * `data-bs-toggle="pill"` mit; beides faellt mit dem DB-Header weg. Der Controller uebernimmt
- * exakt dessen Aufgaben -- Panel wechseln, `aria-selected` pflegen, Hash schreiben -- und
- * meldet den Wechsel als `tab:shown`-CustomEvent, auf das der Feature-Lifecycle hoert.
+ * `#tabContent` enthaelt alle `.tab-pane`s; Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`.
+ * Sie werden per Delegation bedient, damit die Navigation zwischen Kopfzeile und Schublade umziehen darf.
+ * Der Controller wechselt das Panel, schreibt den Hash und meldet den Wechsel als `tab:shown`-CustomEvent,
+ * auf das der Feature-Lifecycle hoert.
  *
- * Schalter sind alle Elemente mit `data-tab-target="<Panel-Id>"`; sie werden ueber
- * Delegation bedient, damit die Navigation zwischen Kopfzeile und Schublade umziehen darf.
+ * Der aktive Tab jeder Gruppe liegt in einem Store (`activeTabStore` fuer `#tabContent`,
+ * `activeAdminTabStore` fuer `#admin-tab-content`; Zuordnung ueber `TAB_GRUPPEN_STORES`). `App.tsx`,
+ * `AppHeader.tsx` und `features/Admin/index.tsx` lesen ihn per Hook und berechnen Klassen und
+ * `aria-selected`/`tabindex` selbst; `zeigeTab()` schreibt keine DOM-Klassen.
  *
- * Phase K6: der aktive Tab der Hauptnavigation (`#tabContent`-Gruppe) wird zusaetzlich in
- * `activeTabStore` gespiegelt (`setAktivenTab`) -- `AppHeader.tsx` liest ihn per `useActiveTab()`
- * und berechnet `aria-selected`/`tabindex`/`data-active` selbst, der DOM-Handschrieb auf die
- * Hauptnav-Schalter entfaellt deshalb unten.
- *
- * Phase N Slice 2: auch das Pane-Klassen-Toggle (`active`/`show`) der Hauptgruppe entfaellt hier
- * -- `App.tsx`s Panes lesen `activeTabStore` per `useActiveTab()` und berechnen ihre Klassen
- * selbst (React-eigen statt DOM-Handschrieb). `setAktivenTab()` laeuft dafuer durch
- * `flushExtern()` (`reactRoot.ts`): `berechnungMonatsFenster.ts`s `tab:shown`-Handler misst
- * `#Berechnung`s `clientWidth` und braucht das sichtbare Pane VOR dem Event -- ohne den
- * synchronen Flush waere die React-Reaktion auf die Store-Aenderung erst nach dem Event fertig.
- *
- * Teil 3 ("mehr echtes React"): Admins Unternavigation (`admin-pane-*` in `#admin-tab-content`)
- * ist seither ebenfalls store-gestuetzt (`activeAdminTabStore`/`useActiveAdminTab()`,
- * `features/Admin/index.tsx` liest reaktiv) -- `TAB_GRUPPEN_STORES` bildet den Eltern-Container
- * jeder Gruppe auf ihren Store ab. Nur die Hash-Schreibung bleibt exklusiv an die Hauptgruppe
- * gebunden (`istHauptgruppe()`), Admin-Wechsel schreiben bewusst keinen Hash.
+ * Der Store-Wechsel der Hauptgruppe laeuft durch `flushExtern()` (`reactRoot.ts`): der `tab:shown`-Handler in
+ * `berechnungMonatsFenster.ts` misst `#Berechnung`s `clientWidth` und braucht das sichtbare Pane VOR dem Event.
+ * Nur die Hauptgruppe schreibt den Hash (`istHauptgruppe()`), Admin-Wechsel bewusst nicht.
  */
 
 import { flushExtern } from './reactRoot';
 import { getAktivenTab, setAktivenTab } from './activeTabStore';
 import { getAktivenAdminTab, setAktivenAdminTab } from './activeAdminTabStore';
 
-// Standard: alles erlaubt -- Auth-Policy gehoert NICHT hierher (siehe Kopfkommentar,
-// tabController bleibt bewusst attribut-/klassenbasiert und auth-agnostisch, exakt wie die
-// Unit-Tests es pruefen). `auth/index.ts` ersetzt diese Pruefung EINMAL bei Modul-Ladezeit durch
-// die echte Login-Pruefung -- `zeigeTab()` ist die einzige Konvergenzstelle (Hash, Klick,
-// Tastatur, Deep-Link), ein zweiter, paralleler `hashchange`-Listener in der Auth-Schicht waere
-// reihenfolge-abhaengig/race-anfaellig.
+// Standard: alles erlaubt -- der Controller bleibt auth-agnostisch. `auth/index.ts` ersetzt diese
+// Pruefung einmal beim Modulladen durch die Login-Pruefung. `zeigeTab()` ist die einzige
+// Konvergenzstelle (Hash, Klick, Tastatur, Deep-Link); ein zweiter `hashchange`-Listener in der
+// Auth-Schicht waere reihenfolgeabhaengig.
+/** Aktuelle Erlaubnis-Pruefung fuer Hauptgruppen-Tabs; per `setzeHauptTabErlaubtPruefung()` austauschbar. */
 let istHauptTabErlaubt: (id: string) => boolean = () => true;
 
-/** Ersetzt die Erlaubnis-Pruefung fuer Hauptgruppen-Tabs (z. B. Login-Gate). */
+/**
+ * Ersetzt die Erlaubnis-Pruefung fuer Hauptgruppen-Tabs (z. B. Login-Gate).
+ *
+ * @param pruefung - Liefert fuer eine Panel-Id, ob der Tab gezeigt werden darf; sonst faellt `zeigeTab()` auf `start` zurueck.
+ */
 export function setzeHauptTabErlaubtPruefung(pruefung: (id: string) => boolean): void {
   istHauptTabErlaubt = pruefung;
 }
@@ -54,34 +44,54 @@ export const TAB_SHOWN_EVENT = 'tab:shown';
 const ZIEL_ATTRIBUT = 'data-tab-target';
 
 /**
- * Schreibt den Hash OHNE `location.hash = ...` -- das loest nativ einen Scroll-zum-Anker aus,
- * sobald ein Element mit dieser Id existiert (hier IMMER, die `.tab-pane`s tragen exakt diese
- * Ids). Ohne `scroll-margin-top` in Header-Hoehe landet der native Sprung genau am Dokument-
- * Layout-Top des Panes -- hinter dem `position: sticky`-Header verdeckt (Bug: Kopfzeile
- * ueberdeckt Panel-Inhalt sofort beim Tab-Wechsel, auf jedem Tab ausser Start). `history.
- * pushState` aktualisiert Hash/History identisch (inkl. Back/Forward -- `hashchange` feuert
- * bei Popstate weiterhin, MDN: Fragment-Unterschied zwischen History-Eintraegen genuegt,
- * unabhaengig davon ob per Anker-Klick oder `pushState` erzeugt), aber ganz ohne Scroll.
+ * Schreibt den Hash per `history.pushState` statt `location.hash = ...`: Letzteres loest nativ einen
+ * Scroll zum gleichnamigen Element aus (die `.tab-pane`s tragen exakt diese Ids) und landet hinter dem
+ * `position: sticky`-Header. `pushState` legt denselben History-Eintrag an, ohne zu scrollen;
+ * `hashchange` feuert bei Back/Forward weiterhin.
+ *
+ * @param id - Panel-Id ohne `#`.
  */
 function schreibeHash(id: string): void {
   history.pushState(null, '', `#${id}`);
 }
 
+/**
+ * Sammelt Tab-Schalter (`data-tab-target`).
+ *
+ * @param id - Panel-Id; ohne Angabe werden alle Schalter geliefert.
+ * @returns Passende Schalter (leer, wenn keiner existiert).
+ */
 function schalter(id?: string): HTMLElement[] {
   const selektor = id ? `[${ZIEL_ATTRIBUT}="${CSS.escape(id)}"]` : `[${ZIEL_ATTRIBUT}]`;
   return Array.from(document.querySelectorAll<HTMLElement>(selektor));
 }
 
+/**
+ * Sichtbare Tab-Schalter (`role="tab"`, nicht `display:none`) in DOM-Reihenfolge -- Grundlage der Tastatursteuerung.
+ *
+ * @returns Sichtbare Schalter.
+ */
 function sichtbareSchalter(): HTMLElement[] {
   return schalter().filter(el => el.getAttribute('role') === 'tab' && el.offsetParent !== null);
 }
 
+/**
+ * Sucht das Panel zu einer Id.
+ *
+ * @param id - Panel-Id.
+ * @returns Das Element, sofern es die Klasse `tab-pane` traegt; sonst `null`.
+ */
 function panel(id: string): HTMLElement | null {
   const el = document.getElementById(id);
   return el?.classList.contains('tab-pane') ? el : null;
 }
 
-/** Nur der Wechsel in der Hauptnavigation gehoert in den Hash. */
+/**
+ * Nur der Wechsel in der Hauptnavigation gehoert in den Hash.
+ *
+ * @param ziel - Zielpanel.
+ * @returns `true`, wenn das Panel direkt in `#tabContent` liegt.
+ */
 function istHauptgruppe(ziel: HTMLElement): boolean {
   return ziel.parentElement?.id === 'tabContent';
 }
@@ -94,25 +104,34 @@ const TAB_GRUPPEN_STORES: Record<string, GruppenStore> = {
   'admin-tab-content': { get: getAktivenAdminTab, set: setAktivenAdminTab },
 };
 
+/**
+ * Ermittelt den Store der Tab-Gruppe, zu der ein Panel gehoert.
+ *
+ * @param ziel - Zielpanel.
+ * @returns Store des Eltern-Containers oder `undefined`, wenn dessen Gruppe keinen Store hat.
+ */
 function gruppenStoreFuer(ziel: HTMLElement): GruppenStore | undefined {
   const containerId = ziel.parentElement?.id;
   return containerId ? TAB_GRUPPEN_STORES[containerId] : undefined;
 }
 
 /**
- * Id des aktuell aktiven Hauptgruppen-Panels. Liest seit Slice 2 `activeTabStore` statt des DOM
- * (`App.tsx` schreibt die `active`/`show`-Klassen React-eigen, nicht mehr `zeigeTab()`) --
- * `null` (Store-Anfangswert vor jedem Wechsel) bedeutet "start", die Default-Pane.
+ * Id des aktuell aktiven Hauptgruppen-Panels, gelesen aus `activeTabStore` (nicht aus dem DOM).
+ *
+ * @returns Panel-Id; `start` (Default-Pane), solange der Store noch `null` (vor dem ersten Wechsel) ist.
  */
 export function aktiverTab(): string | null {
   return getAktivenTab() ?? 'start';
 }
 
 /**
- * Schaltet auf das Panel `id` um.
+ * Schaltet auf das Panel `id` um, meldet `tab:shown` und faellt fuer nicht erlaubte Hauptgruppen-Tabs auf `start` zurueck.
  *
- * @param hashSchreiben `false`, wenn der Aufruf aus dem `hashchange`-Handler kommt --
- *   sonst wuerde jeder Zurueck-Schritt einen neuen History-Eintrag erzeugen.
+ * @param id - Panel-Id.
+ * @param options - `hashSchreiben` (Default `true`): `false`, wenn der Aufruf aus dem `hashchange`-Handler
+ *   kommt, sonst erzeugte jeder Zurueck-Schritt einen neuen History-Eintrag. `fokus` (Default `false`):
+ *   `true` setzt den Fokus auf den Schalter (Tastatursteuerung).
+ * @returns `false`, wenn kein Panel zur Id existiert; sonst `true`.
  */
 export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {}): boolean {
   const ziel = panel(id);
@@ -121,21 +140,17 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
   const hauptgruppe = istHauptgruppe(ziel);
   const gruppenStore = gruppenStoreFuer(ziel);
 
-  // Nav/Einstellungen-Knopf sind zwar per `d-none` versteckt (siehe `AppHeader.tsx`), ein direkt
-  // gesetzter/veraenderter Hash (Adressleiste, alter Link, Zurueck-Button) waere sonst trotzdem
-  // ein Schlupfloch. Admin hat mit `#admin-tab`s eigenem Rollen-Redirect (`auth/index.ts`)
-  // bereits ein Analogon.
+  // Die Nav-/Einstellungen-Schalter sind per `d-none` versteckt (`AppHeader.tsx`), ein direkt
+  // gesetzter Hash (Adressleiste, alter Link, Zurueck-Button) umgeht das aber. Admin hat
+  // zusaetzlich den eigenen Rollen-Redirect in `auth/index.ts`.
   if (hauptgruppe && !istHauptTabErlaubt(id)) {
-    // `hashSchreiben: true` erzwungen (nicht durchgereicht): der Aufrufer wollte `id` zeigen,
-    // nicht `start` -- ohne Korrektur zeigt die Adressleiste weiter den (jetzt falschen) alten
-    // Hash, waehrend `start` bereits sichtbar ist (z. B. `zeigeTabAusHash()` beim Laden ruft mit
-    // `hashSchreiben: false`, weil der Hash ja schon zum urspruenglichen Ziel passt).
+    // `hashSchreiben: true` erzwungen (nicht durchgereicht): sonst zeigt die Adressleiste weiter den
+    // urspruenglichen Hash `id`, obwohl `start` sichtbar ist (z. B. `zeigeTabAusHash()` ruft mit `false`).
     return zeigeTab('start', { hashSchreiben: true, fokus });
   }
 
   const imHash = hashSchreiben && hauptgruppe;
-  // Beide Gruppen sind heute store-gestuetzt (siehe Dateikopf) -- "schon aktiv" kommt aus dem
-  // jeweiligen Store, keine Gruppe schreibt hier noch DOM-Klassen.
+  // "Schon aktiv" kommt aus dem Gruppen-Store; die DOM-Klasse ist nur Fallback fuer Panes ohne Store.
   const bereitsAktiv = gruppenStore ? gruppenStore.get() === id : ziel.classList.contains('active');
   if (bereitsAktiv) {
     if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
@@ -145,9 +160,8 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 
   if (gruppenStore) {
     if (hauptgruppe) {
-      // `flushExtern`: `App.tsx`s Panes muessen VOR dem `tab:shown`-Dispatch unten sichtbar sein
-      // (siehe Kommentar am Dateikopf) -- `berechnungMonatsFenster.ts` misst sonst `clientWidth`
-      // eines noch unsichtbaren Containers. Admin hat keinen vergleichbaren synchronen Leser.
+      // `flushExtern`: die Panes muessen VOR dem `tab:shown`-Dispatch unten sichtbar sein (siehe
+      // Dateikopf). Admin hat keinen vergleichbaren synchronen Leser.
       flushExtern(() => gruppenStore.set(id));
     } else {
       gruppenStore.set(id);
@@ -156,10 +170,9 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 
   if (imHash && document.location.hash.slice(1) !== id) schreibeHash(id);
 
-  // Seit Phase K5 (`DBHeader`) existiert jeder Schalter potenziell zweimal gleichzeitig im DOM
-  // (Desktop-Kopfzeile + Drawer-Kopie) -- die sichtbare Kopie bevorzugen, sonst kann `.focus()`
-  // ins Leere laufen (ein `display:none`-Element laesst sich nicht fokussieren) und das
-  // `tab:shown`-Event haengt am falschen (unsichtbaren) Element.
+  // Jeder Schalter existiert potenziell zweimal (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`):
+  // die sichtbare Kopie bevorzugen, sonst laeuft `.focus()` ins Leere (`display:none`) und
+  // `tab:shown` haengt am unsichtbaren Element.
   const tabSchalter = schalter(id).filter(el => el.getAttribute('role') === 'tab');
   const ausloeser = tabSchalter.find(el => el.offsetParent !== null) ?? tabSchalter[0] ?? null;
   if (fokus) ausloeser?.focus();
@@ -172,7 +185,9 @@ export function zeigeTab(id: string, { hashSchreiben = true, fokus = false } = {
 
 /**
  * Schaltet auf das Panel aus `location.hash`. Der Hash wird case-insensitiv aufgeloest,
- * damit alte Deep-Links wie `/#ewt` weiter funktionieren.
+ * damit alte Deep-Links wie `/#ewt` weiter funktionieren; der Hash selbst bleibt unveraendert.
+ *
+ * @returns `true`, wenn ein Hauptgruppen-Panel zum Hash gefunden und geschaltet wurde; sonst `false`.
  */
 export function zeigeTabAusHash(): boolean {
   const roh = decodeURIComponent(document.location.hash.replace(/^#/, ''));
@@ -184,12 +199,22 @@ export function zeigeTabAusHash(): boolean {
   return zeigeTab(treffer.id, { hashSchreiben: false });
 }
 
-/** Blendet einen Nav-Eintrag samt Panel aus (z. B. Admin ohne Adminrechte). */
+/**
+ * Blendet einen Nav-Eintrag samt Panel ein oder aus (z. B. Admin ohne Adminrechte).
+ *
+ * @param id - Panel-Id.
+ * @param sichtbar - `false` setzt `d-none` auf Listeneintrag der Schalter und Panel.
+ */
 export function setzeTabSichtbar(id: string, sichtbar: boolean): void {
   for (const el of schalter(id)) el.closest('li')?.classList.toggle('d-none', !sichtbar);
   panel(id)?.classList.toggle('d-none', !sichtbar);
 }
 
+/**
+ * Pfeiltasten/Home/End wechseln zwischen den sichtbaren Tab-Schaltern (zirkulaer bei Pfeil) und fokussieren den neuen.
+ *
+ * @param event - `keydown` auf `document`; nur Ereignisse auf einem `role="tab"`-Schalter zaehlen.
+ */
 function tastaturWechsel(event: KeyboardEvent): void {
   const aktuell = (event.target as HTMLElement | null)?.closest<HTMLElement>(`[${ZIEL_ATTRIBUT}][role="tab"]`);
   if (!aktuell) return;
@@ -221,6 +246,11 @@ function tastaturWechsel(event: KeyboardEvent): void {
   if (ziel) zeigeTab(ziel, { fokus: true });
 }
 
+/**
+ * Delegierter Klick-Handler: schaltet auf das Panel des angeklickten `data-tab-target`-Schalters.
+ *
+ * @param event - `click` auf `document`.
+ */
 function klick(event: MouseEvent): void {
   const el = (event.target as HTMLElement | null)?.closest<HTMLElement>(`[${ZIEL_ATTRIBUT}]`);
   const ziel = el?.getAttribute(ZIEL_ATTRIBUT);
@@ -229,11 +259,16 @@ function klick(event: MouseEvent): void {
   zeigeTab(ziel);
 }
 
+/** `hashchange`-Handler: uebernimmt den neuen Hash, ohne ihn erneut zu schreiben. */
 function hashWechsel(): void {
   zeigeTabAusHash();
 }
 
-/** Haengt Delegation, Tastatursteuerung und Hash-Synchronisation an. Gibt den Abbau zurueck. */
+/**
+ * Haengt Delegation, Tastatursteuerung und Hash-Synchronisation an.
+ *
+ * @returns Abbau-Funktion, die alle drei Listener wieder entfernt.
+ */
 export function initTabController(): () => void {
   document.addEventListener('click', klick);
   document.addEventListener('keydown', tastaturWechsel);

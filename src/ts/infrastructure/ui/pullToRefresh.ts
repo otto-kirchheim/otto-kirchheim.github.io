@@ -3,15 +3,12 @@
  *
  * Chromes eingebautes Pull-to-Refresh ist eine Geste des WURZEL-Scrollers. In dieser App scrollt
  * das Dokument aber nie: `DBShell` rechnet sein Raster exakt auf `100dvh`, gescrollt wird
- * ausschliesslich in `.db-shell-content` (`overflow-y: auto`, Shells Vorgabe). Sobald ein
- * Tab-Inhalt laenger als der Viewport ist, verschluckt dieser innere Container die Geste -- die
- * Browser-Aktualisierung bleibt aus (User-Fund am Geraet: "geht nicht, wenn #-Tags genutzt
- * werden", denn genau dann scrollt der Inhalt). `overscroll-behavior` ist unbeteiligt (`auto`;
- * DB UX setzt `contain` nur am Drawer).
+ * ausschliesslich in `.db-shell-content` (`overflow-y: auto`). Sobald ein Tab-Inhalt laenger als
+ * der Viewport ist, verschluckt dieser Container die Geste und die Browser-Aktualisierung bleibt aus.
+ * `styles.scss` schaltet die native Geste per `overscroll-behavior-y: contain` ab.
  *
- * Ersatz deshalb hier, bewusst im Container statt per Umbau auf einen Dokument-Scroller:
- * Letzteres hatte in der Shell-Architektur schon einmal zwei gestapelte Scrollbalken zur Folge
- * (siehe `styles.scss`s Begruendung zur Fusszeilen-Reservierung).
+ * Ersatz deshalb hier, bewusst im Container statt per Umbau auf einen Dokument-Scroller: Letzteres
+ * ergaebe zwei gestapelte Scrollbalken (siehe `styles.scss`, Begruendung zur Fusszeilen-Reservierung).
  */
 
 /** Container, der tatsaechlich scrollt (siehe Kopfkommentar). */
@@ -38,6 +35,10 @@ const ZURUECK_DAUER_MS = 200;
 /** Volle Umdrehungen des Symbols auf dem Weg bis zur Ausloese-Distanz. */
 const INDIKATOR_UMDREHUNGEN = 1;
 
+/**
+ * Richtet die Zieh-Geste am Scroll-Container ein: erzeugt den Indikator (`.ptr-indikator`) und haengt die
+ * Touch-Handler an. Loslassen ab `AUSLOESE_DISTANZ_PX` laedt die Seite neu. Ohne `.db-shell-content` passiert nichts.
+ */
 export default function initPullToRefresh(): void {
   const container = document.querySelector<HTMLElement>(SCROLL_CONTAINER);
   if (!container) return;
@@ -58,6 +59,11 @@ export default function initPullToRefresh(): void {
   let zieht = false;
   let distanz = 0;
 
+  /**
+   * Stellt Position, Deckkraft und Drehung des Indikators passend zur aktuellen Zugstrecke ein.
+   *
+   * @param animiert - `true` blendet weich per Transition (Zurueckschnappen), sonst direkt (Mitziehen).
+   */
   function zeigeIndikator(animiert: boolean): void {
     const fortschritt = Math.min(distanz / AUSLOESE_DISTANZ_PX, 1);
     indikator.style.transition = animiert
@@ -69,6 +75,11 @@ export default function initPullToRefresh(): void {
     indikator.classList.toggle('ptr-indikator--bereit', distanz >= AUSLOESE_DISTANZ_PX);
   }
 
+  /**
+   * Bringt Container und Indikator in die Ruhelage zurueck und beendet die Geste.
+   *
+   * @param animiert - `true` schnappt weich zurueck, sonst sofort.
+   */
   function zuruecksetzen(animiert: boolean): void {
     if (!container) return;
     container.style.transition = animiert ? `transform ${ZURUECK_DAUER_MS}ms ease-out` : '';

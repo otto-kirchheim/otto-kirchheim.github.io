@@ -1,8 +1,5 @@
 /**
- * AutoSave-Status als `useSyncExternalStore`-kompatibler Modul-Store, analog
- * `buttonLoadingStore.ts`. Dockt an denselben Kanal an, den `autoSaveIndicator.ts` (Vanilla-DOM-
- * Vorgänger) nutzt (`onAutoSaveStatus` aus `autoSave.ts`), macht den Status aber deklarativ
- * abonnierbar statt per `classList`/`appendChild` direkt am Button zu manipulieren.
+ * AutoSave-Status als `useSyncExternalStore`-kompatibler Modul-Store (analog `buttonLoadingStore.ts`), gespeist aus `onAutoSaveStatus` (`autoSave.ts`).
  *
  * Ein Snapshot-Cache ist nötig, weil `getAutoSaveSnapshot` ein zusammengesetztes Objekt
  * zurückgibt (Status + Fehlermeldungen mehrerer Ressourcen) -- ohne stabile Referenz zwischen
@@ -30,9 +27,15 @@ let snapshotCache = new Map<string, AutoSaveSnapshot>();
 let unsubscribeCore: (() => void) | null = null;
 let onlineOfflineHandler: (() => void) | null = null;
 
-/** Priorität: error > blocked > saving > pending > saved > idle (wie `autoSaveIndicator.ts`). */
+/** Priorität: error > blocked > saving > pending > saved > idle. */
 const PRIORITY: TSaveStatus[] = ['error', 'blocked', 'saving', 'pending', 'saved', 'idle'];
 
+/**
+ * Ermittelt den Status mit der höchsten Priorität unter den angegebenen Ressourcen.
+ *
+ * @param resources - Zu berücksichtigende Ressourcen.
+ * @returns Schlimmster Status laut `PRIORITY`; `idle`, wenn keine Ressource einen Status hat.
+ */
 function worstStatus(resources: readonly TResourceKey[]): TSaveStatus {
   for (const prio of PRIORITY) {
     for (const res of resources) {
@@ -42,6 +45,12 @@ function worstStatus(resources: readonly TResourceKey[]): TSaveStatus {
   return 'idle';
 }
 
+/**
+ * Baut den Snapshot aus dem schlimmsten Status, den Fehlermeldungen der Ressourcen im Status `error` und dem Online-Zustand.
+ *
+ * @param resources - Zu berücksichtigende Ressourcen.
+ * @returns Neuer Snapshot.
+ */
 function computeSnapshot(resources: readonly TResourceKey[]): AutoSaveSnapshot {
   const status = worstStatus(resources);
   const errors = resources
@@ -50,11 +59,17 @@ function computeSnapshot(resources: readonly TResourceKey[]): AutoSaveSnapshot {
   return { status, errorMessages: errors, offline: !navigator.onLine };
 }
 
+/**
+ * Verwirft den Snapshot-Cache und benachrichtigt alle Abonnenten.
+ */
 function notify(): void {
   snapshotCache = new Map();
   for (const listener of listeners) listener();
 }
 
+/**
+ * Verbindet den Store beim ersten Abonnenten mit `onAutoSaveStatus` und den Browser-Events `online`/`offline`; danach wirkungslos.
+ */
 function ensureWired(): void {
   if (unsubscribeCore) return;
 
@@ -70,12 +85,24 @@ function ensureWired(): void {
   window.addEventListener('offline', onlineOfflineHandler);
 }
 
+/**
+ * Meldet einen Abonnenten an und verdrahtet den Store bei Bedarf (`subscribe`-Argument für `useSyncExternalStore`).
+ *
+ * @param listener - Wird bei jeder Änderung des Status oder des Online-Zustands aufgerufen.
+ * @returns Funktion zum Abmelden.
+ */
 export function subscribeAutoSaveStatus(listener: Listener): () => void {
   ensureWired();
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
+/**
+ * Liefert den Snapshot für die Ressourcen; solange sich nichts ändert, immer dieselbe Referenz.
+ *
+ * @param resources - Zu berücksichtigende Ressourcen; leer ergibt den konstanten Leerlauf-Snapshot.
+ * @returns Status, Fehlermeldungen und Offline-Flag.
+ */
 export function getAutoSaveSnapshot(resources: readonly TResourceKey[]): AutoSaveSnapshot {
   if (resources.length === 0) return IDLE_SNAPSHOT;
 

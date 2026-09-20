@@ -46,9 +46,12 @@ type Props = {
   navigateToEntry: (resourceIdx: number, docId: string) => void;
 };
 
-/** Bearbeiten-Modal für einen einzelnen Admin-Datensatz -- als Portal gerendert, damit es auch
- * sichtbar bleibt, wenn `AdminResourceBrowser` in einer gerade ausgeblendeten Bootstrap-Tab-Pane
- * steckt. */
+/**
+ * Bearbeiten-Dialog für einen einzelnen Admin-Datensatz -- als Portal in `document.body` gerendert, damit er auch
+ * sichtbar bleibt, wenn `AdminResourceBrowser` in einer gerade ausgeblendeten Tab-Pane steckt.
+ *
+ * @param props - Bearbeitungsstand (`edit`), Ressourcen-Konfiguration, Namens-Map und die Callbacks des Browsers.
+ */
 export function AdminResourceEditModal({
   edit,
   resource,

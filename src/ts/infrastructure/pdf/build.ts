@@ -11,8 +11,8 @@ import { dreheTabellenZelle } from './tabellenDrehung';
 import { verteile } from './verteile';
 import { dbFontBytes, istDbFamilie } from './dbFonts';
 
-/** Standard-14-Schnitte je wählbarer Familie (`Layout.schriftart`). Einbetten kostet nichts --
- *  pdf-lib legt für Standard-Fonts keine Font-Bytes ins PDF. */
+/** Standard-14-Schnitte (normal, fett, kursiv, fettKursiv) je Familie von `Layout.schriftart`. Einbetten
+ *  kostet nichts -- pdf-lib legt für Standard-Fonts keine Font-Bytes ins PDF. */
 const STANDARD_FAMILIEN: Record<string, [StandardFonts, StandardFonts, StandardFonts, StandardFonts]> = {
   helvetica: [
     StandardFonts.Helvetica,
@@ -42,14 +42,30 @@ type Schnitt = (typeof SCHNITTE)[number];
  *  ohne diesen Parameter, `vorlage:*` fällt dort auf Helvetica zurück. */
 export type EingebetteteFonts = Map<string, Partial<Record<Schnitt, Uint8Array>>>;
 
-/** Familie eines Schnitts: `schriftart` ist entweder eine Familie für alle vier oder ein Objekt je
- *  Schnitt (fehlt ein Schnitt, gilt `normal`, sonst `'helvetica'`). */
+/**
+ * Familie eines Schnitts: `schriftart` ist entweder eine Familie für alle vier oder ein Objekt je
+ * Schnitt (fehlt ein Schnitt, gilt `normal`, sonst `'helvetica'`).
+ *
+ * @param schriftart - `Layout.schriftart`; `undefined` bedeutet Helvetica.
+ * @param schnitt - Gesuchter Schnitt.
+ * @returns Familien-Wert (`'helvetica'|'times'|'courier'|'db-sans'|'db-head'|'vorlage:<Name>'`).
+ */
 function familieFuerSchnitt(schriftart: Schriftart | undefined, schnitt: Schnitt): string {
   if (!schriftart) return 'helvetica';
   if (typeof schriftart === 'string') return schriftart;
   return schriftart[schnitt] ?? schriftart.normal ?? 'helvetica';
 }
 
+/**
+ * Bettet einen Schnitt der Familie ins PDF ein. Ist die Schrift nicht verfügbar oder nicht
+ * einbettbar, wird Helvetica im passenden Schnitt eingebettet (mit `console.warn`, wo es Anlass gibt).
+ *
+ * @param pdf - Zieldokument.
+ * @param familie - Familien-Wert aus `familieFuerSchnitt()`.
+ * @param schnitt - Einzubettender Schnitt.
+ * @param eingebettet - Font-Bytes der Vorlagen-Familien (`vorlage:<Name>`); nur die Editor-Vorschau übergibt sie.
+ * @returns Die eingebettete Schrift.
+ */
 async function ladeSchnitt(
   pdf: PDFDocument,
   familie: string,
@@ -58,10 +74,9 @@ async function ladeSchnitt(
 ): Promise<PDFFont> {
   const index = SCHNITTE.indexOf(schnitt);
   if (istDbFamilie(familie)) {
-    // DB Neo Screen Sans/Head aus `@db-ux/db-theme-fonts` (in `dbFonts.ts` nach TrueType
-    // entpackt) VOLLSTAENDIG einbetten -- `@pdf-lib/fontkit` 1.1.1 kann diese Schriften nicht
-    // subsetten (bricht bei `pdf.save()` mit `reading 'pos'` ab). Fehlt das Asset (Build ohne
-    // ASSET-Secrets) oder scheitert das Entpacken, gilt Helvetica im passenden Schnitt.
+    // DB-Schriften (in `dbFonts.ts` nach TrueType entpackt) VOLLSTAENDIG einbetten -- `@pdf-lib/fontkit`
+    // 1.1.1 kann sie nicht subsetten (bricht bei `pdf.save()` mit `reading 'pos'` ab). Fehlt das Asset
+    // (Build ohne ASSET-Secrets) oder scheitert das Entpacken, gilt Helvetica im passenden Schnitt.
     const bytes = await dbFontBytes(familie, schnitt);
     if (bytes) {
       try {
@@ -91,6 +106,15 @@ async function ladeSchnitt(
   return pdf.embedFont(fam[index]!);
 }
 
+/**
+ * Bettet alle vier Schnitte der in `schriftart` gewählten Familien ein. Registriert fontkit nur, wenn
+ * eine DB- oder Vorlagen-Familie im Spiel ist.
+ *
+ * @param pdf - Zieldokument.
+ * @param schriftart - `Layout.schriftart`; `undefined` bedeutet Helvetica.
+ * @param eingebettet - Font-Bytes der Vorlagen-Familien (nur Editor-Vorschau).
+ * @returns Die Schriften je Schnitt für `zeichne()`.
+ */
 async function ladeFontSet(
   pdf: PDFDocument,
   schriftart: Schriftart | undefined,
@@ -113,6 +137,13 @@ async function ladeFontSet(
   };
 }
 
+/**
+ * Hängt die Zeilen von `b` je Tabelle hinten an die von `a`; die Eingaben bleiben unverändert.
+ *
+ * @param a - Bisherige Zeilen je Tabellenname.
+ * @param b - Anzuhängende Zeilen je Tabellenname.
+ * @returns Neues Objekt mit den zusammengeführten Zeilen.
+ */
 function verbinde(a: TabellenZeilen, b: TabellenZeilen): TabellenZeilen {
   const zusammen: TabellenZeilen = { ...a };
   for (const [name, zeilen] of Object.entries(b)) zusammen[name] = [...(zusammen[name] ?? []), ...zeilen];
@@ -124,6 +155,10 @@ function verbinde(a: TabellenZeilen, b: TabellenZeilen): TabellenZeilen {
  * dynamischen UND Ankreuz-Spalten regelmäßig leer, siehe `SonderZeileZelle`-Kommentar in `shared`).
  * Nach einem Löschen/Verschieben von Spalten kann der Index ins Leere zeigen -- die Zelle wird dann
  * beim Rendern übersprungen statt eine falsche Spalte zu treffen.
+ *
+ * @param spalten - Spalten der Tabelle bzw. des Seitenbereichs.
+ * @param zelle - Sonderzeilen-Zelle mit `spaltenIndex`.
+ * @returns Die referenzierte Spalte, `undefined` wenn der Index ins Leere zeigt.
  */
 export function spalteFuerZelle(spalten: Spalte[], zelle: SonderZeileZelle): Spalte | undefined {
   return spalten[zelle.spaltenIndex];
@@ -133,6 +168,12 @@ export function spalteFuerZelle(spalten: Spalte[], zelle: SonderZeileZelle): Spa
  * Zeichen-Geometrie einer Sonderzeilen-Zelle: x/x2 immer von der Spalte, `size`/`align`/
  * `autoGroesse` von der Zelle ÜBERSCHRIEBEN, wenn gesetzt (z.B. eine fett-große Gesamtsumme bei
  * sonst kleiner Datenzeilen-Schrift) -- ohne Angabe gilt jeweils der Wert der Spalte.
+ *
+ * @param spalte - Spalte, die die Zelle referenziert.
+ * @param zelle - Sonderzeilen-Zelle mit optionalen Überschreibungen.
+ * @param y - Untere y-Kante der Zelle.
+ * @param y2 - Obere y-Kante der Zelle; `undefined` = keine.
+ * @returns Spalte mit den überschriebenen Werten und `y`/`y2`.
  */
 export function zellGeometrie(
   spalte: Spalte,
@@ -154,17 +195,19 @@ export function zellGeometrie(
 }
 
 /**
- * Renderer — verteilt die Zeilen aller Tabellen über `verteile()` auf die Seitenfolge
- * `cfg.layout.seiten` (inkl. Wiederholung bei Überlauf), noch ohne
- * `resolve()`-Anbindung im Aufrufer selbst (folgt in Phase 9). `signaturPng` ist optional — bei
- * fehlendem Input bleibt die Signaturfläche leer (siehe Entscheidungsdialog "Jetzt unterschreiben?"
- * im aufrufenden Code, Kandidat E: kein Nachsignieren eines heruntergeladenen PDFs vorgesehen).
- * `digitaleSignatur` kommt aus demselben Dialog (`SignaturErgebnis.digital`) und ist UNABHÄNGIG
- * von `signaturPng` -- auch "Ohne Unterschrift" liefert kein `signaturPng`, unterdrückt aber (anders
- * als "Digital") kein `Feld.nurBeiSignatur` (siehe `Kontext.digitaleSignatur`).
+ * Renderer: verteilt die Zeilen aller Tabellen über `verteile()` auf die Seitenfolge
+ * `cfg.layout.seiten` (inkl. Wiederholung bei Überlauf) und zeichnet Felder, Tabellenzeilen,
+ * Sonderzeilen und Signatur auf Kopien der Vorlagenseiten.
  *
  * Die Seitenzahl ist bewusst NICHT fest eingebaut: sie entsteht als normales Feld mit festem Text
  * und den Platzhaltern `{seite}`/`{seiten}` — Wortlaut und Position bestimmt damit die Konfiguration.
+ *
+ * @param cfg - Version samt Formular-Code; `layout.template` wird per `fetch` OHNE Auth-Header geladen.
+ * @param daten - Quelldaten für Tabellenzeilen und Feldwerte.
+ * @param signaturPng - Unterschrift als PNG-Data-URL; ohne bleibt die Signaturfläche leer (kein Nachsignieren eines heruntergeladenen PDFs).
+ * @param digitaleSignatur - true bei Wahl "Digital" (`SignaturErgebnis.digital`), UNABHÄNGIG von `signaturPng`: unterdrückt `Feld.nurBeiSignatur` (siehe `Kontext.digitaleSignatur`), "Ohne Unterschrift" nicht.
+ * @param eingebetteteFonts - Font-Bytes für `vorlage:<Name>`-Familien (nur Editor-Vorschau); sonst fällt `vorlage:*` auf Helvetica zurück.
+ * @returns Die PDF-Bytes; `subject` ist `<formular>@<version>`.
  */
 export async function build(
   cfg: Version & { formular: string },

@@ -21,6 +21,12 @@ import {
 
 type PasskeyListItem = Awaited<ReturnType<typeof authApi.getPasskeys>>[number];
 
+/**
+ * Beschreibt die Geräteart eines Passkeys für die Anzeige (mehrgerätefähig, ob synchronisiert, oder gerätegebunden).
+ *
+ * @param passkey - Passkey-Eintrag der API.
+ * @returns Anzeigetext ("Synchronisierte", "Mehrgeräte-", "Gerätegebundene" oder allgemeine Biometrie).
+ */
 function getPasskeyDeviceLabel(passkey: PasskeyListItem): string {
   if (passkey.deviceType === 'multiDevice') {
     return passkey.backedUp ? 'Synchronisierte Biometrie' : 'Mehrgeräte-Biometrie';
@@ -33,11 +39,22 @@ function getPasskeyDeviceLabel(passkey: PasskeyListItem): string {
   return 'Biometrie';
 }
 
+/**
+ * Formatiert einen Passkey-Zeitstempel für die Anzeige.
+ *
+ * @param value - ISO-Zeitstempel oder `undefined`.
+ * @returns Text im Format `DD.MM.YYYY HH:mm`, bei fehlendem Wert "noch nie".
+ */
 function formatPasskeyTimestamp(value?: string): string {
   if (!value) return 'noch nie';
   return dayjs(value).format('DD.MM.YYYY HH:mm');
 }
 
+/**
+ * Zeichnet die Passkey-Liste (`#PasskeyList`) samt Zähler-Badge neu, zuletzt genutzte zuerst. Jeder Eintrag hat einen "Entfernen"-Knopf.
+ *
+ * @param passkeys - Passkeys des Benutzers.
+ */
 function renderPasskeyList(passkeys: PasskeyListItem[]): void {
   const passkeyList = document.querySelector<HTMLElement>('#PasskeyList');
   const countBadge = document.querySelector<HTMLElement>('#PasskeyAccordionCount');
@@ -103,6 +120,9 @@ function renderPasskeyList(passkeys: PasskeyListItem[]): void {
   });
 }
 
+/**
+ * Befüllt das E-Mail-Feld und den Verifizierungsstatus: zuerst aus dem Storage, dann mit der Antwort von `authApi.me()`. Der Knopf zum erneuten Senden erscheint nur bei nicht verifizierter Adresse.
+ */
 async function ensureEmailAnzeigeLoaded(): Promise<void> {
   const emailInput = document.querySelector<HTMLInputElement>('#EmailAnzeige');
   const resendButton = document.querySelector<HTMLButtonElement>('#btnResendVerificationEmail');
@@ -142,6 +162,11 @@ async function ensureEmailAnzeigeLoaded(): Promise<void> {
   setEmailStatus({ text: 'E-Mail ist verifiziert.', icon: 'check' });
 }
 
+/**
+ * Entfernt einen Passkey nach Rückfrage, meldet das Ergebnis per Snackbar und lädt die Anzeige neu.
+ *
+ * @param passkey - Zu entfernender Passkey.
+ */
 async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void> {
   const confirmed = await confirmDialog(`Biometrie-Anmeldung „${passkey.name}“ wirklich entfernen?`);
   if (!confirmed) return;
@@ -165,6 +190,9 @@ async function removePasskeyFromSettings(passkey: PasskeyListItem): Promise<void
   }
 }
 
+/**
+ * Lädt die Passkeys und setzt Liste, Statushinweis sowie Beschriftung und Verfügbarkeit des Einrichten-Knopfs. "Passwort per Passkey" erscheint nur, wenn WebAuthn unterstützt wird und mindestens ein Passkey existiert.
+ */
 async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
   const inlinePasskeyButton = document.querySelector<HTMLButtonElement>('#btnAddPasskeyInline');
   const passkeySetPasswordButton = document.querySelector<HTMLButtonElement>('#btnPasswortPerPasskey');
@@ -215,11 +243,17 @@ async function ensurePasskeyAnzeigeLoaded(): Promise<void> {
       : `${passkeys.length} Biometrie-Anmeldungen eingerichtet.`;
 }
 
+/**
+ * Richtet einen neuen Passkey ein und aktualisiert bei Erfolg die Anzeige.
+ */
 async function handlePasskeyRegistration(): Promise<void> {
   const success = await registerPasskey();
   if (success) await ensurePasskeyAnzeigeLoaded();
 }
 
+/**
+ * Sendet die Verifizierungs-E-Mail erneut und zeigt das Ergebnis per Snackbar. Der Knopf ist währenddessen deaktiviert; danach wird der Status neu geladen.
+ */
 async function resendVerificationEmailFromSettings(): Promise<void> {
   const resendButton = document.querySelector<HTMLButtonElement>('#btnResendVerificationEmail');
   const emailInput = document.querySelector<HTMLInputElement>('#EmailAnzeige');
@@ -264,9 +298,8 @@ async function resendVerificationEmailFromSettings(): Promise<void> {
 }
 
 /**
- * Appliziert die gespeicherten Einstellungen zur Runtime.
- * - AutoSave: Setzt den Global State
- * - Theme: Wird über bestehende `useColorMode`-Logik von Storage gelesen
+ * Wendet die gespeicherten Einstellungen zur Laufzeit an.
+ * Derzeit nur AutoSave; das Theme liest `useColorMode` selbst aus dem Storage.
  */
 function applyEinstellungenToRuntime(): void {
   const VorgabenU = Storage.get<{
@@ -277,8 +310,8 @@ function applyEinstellungenToRuntime(): void {
 }
 
 registerAppStartTask(() => {
-  // `#Monat` existiert seit dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel) --
-  // `querySelectorAll`, sonst reagiert nur die zuerst gefundene Kopie auf Aenderungen.
+  // `#Monat` existiert zweimal (Desktop- und Mobile-Kopie im `AppHeader`) -- `querySelectorAll`,
+  // sonst reagiert nur die zuerst gefundene Kopie auf Änderungen.
   document.querySelectorAll<HTMLInputElement>('#Monat').forEach(el => el.addEventListener('change', changeMonatJahr));
 
   const Jahr = document.querySelector<HTMLInputElement>('#Jahr');

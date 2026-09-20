@@ -30,6 +30,11 @@ const ENV_COLORS: Record<string, string> = {
   homeserver: '#34A853',
 };
 
+/**
+ * SVG-Verlaufsdiagramm für Heap (kräftig) und RSS (blass) je Umgebung mit Zeitachse und Ereignismarkern; zeigt bei weniger als zwei sichtbaren Messpunkten einen Hinweis.
+ *
+ * @param props - `history` (Messpunkte) und `visibleEnvironments` (eingeblendete Umgebungen).
+ */
 function MemorySparkline({
   history,
   visibleEnvironments,
@@ -58,14 +63,38 @@ function MemorySparkline({
   const vMax = Math.max(...filtered.flatMap(p => [p.heapUsed, p.rss]));
   const vRange = vMax || 1;
 
+  /**
+   * Zeitstempel (ms) auf die x-Koordinate im Zeichenbereich abbilden.
+   *
+   * @param t - Zeitstempel in ms.
+   * @returns x-Koordinate im viewBox-Raum.
+   */
   const toX = (t: number) => PX + ((t - tMin) / tRange) * cW;
+  /**
+   * Speicherwert (MB) auf die y-Koordinate abbilden (0 unten, `vMax` oben).
+   *
+   * @param v - Wert in MB.
+   * @returns y-Koordinate im viewBox-Raum.
+   */
   const toY = (v: number) => PT + (1 - v / vRange) * cH;
 
+  /**
+   * Baut das `points`-Attribut einer Polyline für ein Metrikfeld.
+   *
+   * @param items - Messpunkte eines Segments.
+   * @param field - `'heapUsed'` oder `'rss'`.
+   * @returns Koordinatenpaare `x,y`, durch Leerzeichen getrennt.
+   */
   const pts = (items: MetricPoint[], field: 'heapUsed' | 'rss') =>
     items.map(p => `${toX(dayjs(p.timestamp).valueOf()).toFixed(1)},${toY(p[field]).toFixed(1)}`).join(' ');
 
-  // Nur Punkte derselben Server-Session verbinden – kein Strich über Downtime hinweg.
-  // Fallback für Alt-Daten ohne sessionId: neues Segment bei jedem Startup-Event.
+  /**
+   * Teilt Messpunkte in zusammenhängende Segmente, damit keine Linie über Downtime hinweg gezeichnet
+   * wird: neues Segment bei anderer `sessionId` und (Fallback für Altdaten ohne `sessionId`) bei jedem Startup-Event.
+   *
+   * @param items - Zeitlich sortierte Messpunkte einer Umgebung.
+   * @returns Segmente, die je als eigene Polyline gezeichnet werden.
+   */
   const toSegments = (items: MetricPoint[]): MetricPoint[][] => {
     const segments: MetricPoint[][] = [];
     for (const p of items) {
@@ -77,7 +106,7 @@ function MemorySparkline({
     return segments;
   };
 
-  // X-Achsen-Ticks: Intervall abhängig vom Zeitbereich
+  // X-Achsen-Ticks: Abstand (2/6/24/48 Std.) richtet sich nach der Spanne des Zeitbereichs
   const rangeH = tRange / 3_600_000;
   const tickH = rangeH <= 12 ? 2 : rangeH <= 48 ? 6 : rangeH <= 168 ? 24 : 48;
   const tickMs = tickH * 3_600_000;
@@ -85,6 +114,12 @@ function MemorySparkline({
   const ticks: number[] = [];
   for (let t = firstTick; t <= tMax; t += tickMs) ticks.push(t);
 
+  /**
+   * Formatiert einen Achsen-Tick: mit voller Stunde bei Abstand unter 24 Std., sonst nur das Datum.
+   *
+   * @param t - Zeitstempel in ms.
+   * @returns Beschriftung des Ticks.
+   */
   const fmtTick = (t: number) => dayjs(t).format(tickH < 24 ? 'DD.MM HH:[00]' : 'DD.MM');
 
   const gcp = filtered.filter(p => p.environment === 'gcp');
@@ -217,6 +252,11 @@ const EVENTS_PAGE_SIZE = 10;
 
 const HEAP_RANGE_OPTIONS = [1, 3, 7, 14, 30] as const;
 
+/**
+ * Karte mit Memory-Verlauf (Heap/RSS) je Umgebung, Zeitraumwahl, manuellem Heap-Snapshot, Legende und paginierter Ereignisliste.
+ *
+ * @param props - `heap` (Daten oder `null`), `loading`, `days` (Zeitraum), `onDaysChange` und `onRefresh`.
+ */
 export function MemoryCard({
   heap,
   loading,
@@ -236,15 +276,19 @@ export function MemoryCard({
     new Set(['gcp', 'homeserver']),
   );
 
-  // Paginierung beim Datenwechsel bewusst in der Renderphase zuruecksetzen (React-Docs:
-  // "adjusting state when props change") -- ein synchroner setState im Effect waere ein
-  // react-hooks/set-state-in-effect.
+  // Paginierung beim Datenwechsel in der Renderphase zurücksetzen (setState im Effect wäre
+  // react-hooks/set-state-in-effect).
   const [prevHeap, setPrevHeap] = useState(heap);
   if (prevHeap !== heap) {
     setPrevHeap(heap);
     setEventsPage(0);
   }
 
+  /**
+   * Blendet eine Umgebung im Diagramm ein bzw. aus.
+   *
+   * @param env - Umgebung, deren Sichtbarkeit umgeschaltet wird.
+   */
   function toggleEnvironment(env: 'gcp' | 'homeserver') {
     const newSet = new Set(visibleEnvironments);
     if (newSet.has(env)) {
@@ -255,6 +299,9 @@ export function MemoryCard({
     setVisibleEnvironments(newSet);
   }
 
+  /**
+   * Löst einen manuellen Heap-Snapshot im Backend aus und lädt danach die Daten neu (`onRefresh`).
+   */
   async function takeSnapshot() {
     setSnapping(true);
     try {

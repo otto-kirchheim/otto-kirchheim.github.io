@@ -4,31 +4,38 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag, persistEwtTableData } from '.';
 
+/**
+ * Legt aus den Feldern des Add-Modals einen EWT-Eintrag an (Zeiten aus den Vorgaben berechnet),
+ * persistiert die Tabelle und setzt den Tag im Modal auf den nächsten Tag. Identische Einträge werden
+ * abgelehnt; eine gelöschte Zeile desselben Tages wird wiederhergestellt statt neu angelegt.
+ *
+ * @param modal - Add-Modal mit den Feldern `#Tag`, `#EOrt`, `#Schicht` und `#berechnen1`.
+ * @param vorgabenU - Persönliche Vorgaben für die Zeitberechnung.
+ * @param berechneBuero - Bürotag (keine Fahrt zu einem Einsatzort): Zeiten werden berechnet, `ab1E`/`anEE`/`abEE`/`an1E` danach geleert und `berechnen` ausgeschaltet.
+ * @param tableE - EWT-Tabelle, in die eingefügt wird.
+ * @throws {Error} Wenn ein Pflichtfeld im Modal fehlt.
+ */
 export default function addEwtTag(
   modal: CustomHTMLDivElement<IDatenEWT>,
   vorgabenU: IVorgabenU,
   berechneBuero: boolean = false,
   tableE: CustomTable<IDatenEWT>,
 ): void {
-  // Get the input and select elements
   const tagEInput = modal.querySelector<HTMLInputElement>('#Tag');
   const eOrtESelect = modal.querySelector<HTMLSelectElement>('#EOrt');
   const schichtESelect = modal.querySelector<HTMLSelectElement>('#Schicht');
   const berechnenInput = modal.querySelector<HTMLInputElement>('#berechnen1');
 
-  // Throw an error if any of the required elements is missing
   if (!tagEInput) throw new Error('TagE input not found');
   if (!eOrtESelect) throw new Error('EOrt select not found');
   if (!schichtESelect) throw new Error('Schicht select not found');
   if (!berechnenInput) throw new Error('Berechnen input not found');
 
-  // Get the values of the input and select elements
   const Tag = tagEInput.value;
   const Einsatzort = eOrtESelect.value;
   const Schicht = schichtESelect.value;
   const berechnen = berechnenInput.checked;
 
-  // Create a new data object with the values
   let data: IDatenEWT = {
     Tag,
     Buchungstag: Tag,
@@ -85,8 +92,8 @@ export default function addEwtTag(
     return;
   }
 
-  // Statt eines neuen Datensatzes einen bereits zum Löschen vorgemerkten Eintrag
-  // für denselben Tag reaktivieren (bleibt als Update statt Delete+Create erhalten).
+  // Einen zum Löschen vorgemerkten Eintrag desselben Tages reaktivieren, damit er als Update statt
+  // als Delete+Create erhalten bleibt.
   const deletedRowSameTag = ftE.rows.array.find(
     existingRow => existingRow._state === 'deleted' && existingRow.cells.Tag === data.Tag,
   );
@@ -99,10 +106,9 @@ export default function addEwtTag(
   }
   persistEwtTableData(ftE);
 
-  // Calculate and set the next tag value
   const existingRows: IDatenEWT[] = ftE.getRows().map(row => row.cells);
   setNaechsterEwtTag(dayjs(Tag).date(), existingRows);
 
-  // Trigger re-calculation in the add modal (e.g. buchungstag hint) after tag changes.
+  // Change-Event, damit das Add-Modal z. B. den Buchungstag-Hinweis neu berechnet.
   tagEInput.dispatchEvent(new Event('change', { bubbles: true }));
 }

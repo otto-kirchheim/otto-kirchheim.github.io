@@ -3,8 +3,12 @@ import type { IPerWeekdaySchicht, SchichtBase } from './IVorgabenU.js';
 const DEFAULT_REGELARBEITSTAGE: readonly number[] = [1, 2, 3, 4, 5];
 
 /**
- * Löst den effektiven Schicht-Eintrag für einen Wochentag auf.
- * Gibt null zurück wenn der Tag arbeitsfrei ist (nicht in regelarbeitstage).
+ * Löst den effektiven Schicht-Eintrag für einen Wochentag auf: `default`, überlagert vom Tages-Override.
+ * Ohne (oder mit leerem) `regelarbeitstage` gilt Mo-Fr.
+ *
+ * @param schicht - Schicht mit Default, Regelarbeitstagen und Overrides.
+ * @param isoWeekday - ISO-Wochentag 1 (Mo) bis 7 (So).
+ * @returns Effektive Zeiten oder `null`, wenn der Tag arbeitsfrei ist (nicht in `regelarbeitstage`).
  */
 export function resolveSchichtDay(schicht: IPerWeekdaySchicht, isoWeekday: number): SchichtBase | null {
   const regelarbeitstage = schicht.regelarbeitstage?.length ? schicht.regelarbeitstage : DEFAULT_REGELARBEITSTAGE;
@@ -20,6 +24,10 @@ export function resolveSchichtDay(schicht: IPerWeekdaySchicht, isoWeekday: numbe
 /**
  * Merged eine globale Schicht mit den per-Variante hinterlegten (Teil-)Overrides.
  * `default` und `overrides` werden feldweise zusammengeführt, der Override gewinnt.
+ *
+ * @param base - Globale Schicht.
+ * @param override - Teil-Overrides der Variante; ohne Angabe bleibt `base` unverändert.
+ * @returns Zusammengeführte Schicht (neues Objekt) bzw. `base` selbst ohne Override.
  */
 export function mergePerWeekdaySchicht(
   base: IPerWeekdaySchicht,
@@ -40,8 +48,10 @@ export type ScheduleGroup = {
 };
 
 /**
- * Fasst Wochentage mit identischem resolved config in Gruppen zusammen.
- * Gibt alle 7 Tage (1–7) als Gruppen zurück, sortiert nach erstem Wochentag.
+ * Fasst Wochentage mit identischer aufgelöster Config in Gruppen zusammen.
+ *
+ * @param schicht - Schicht, deren 7 Wochentage gruppiert werden.
+ * @returns Gruppen über alle Tage 1–7, sortiert nach dem ersten Wochentag; arbeitsfreie Tage bilden eine Gruppe mit `config: null`.
  */
 export function groupBySchedule(schicht: IPerWeekdaySchicht): ScheduleGroup[] {
   const groups: ScheduleGroup[] = [];
@@ -60,13 +70,25 @@ export function groupBySchedule(schicht: IPerWeekdaySchicht): ScheduleGroup[] {
   return groups.sort((a, b) => (a.days[0] ?? 0) - (b.days[0] ?? 0));
 }
 
+/**
+ * Vergleicht zwei aufgelöste Tages-Configs feldweise.
+ *
+ * @param a - Erste Config oder `null` (arbeitsfrei).
+ * @param b - Zweite Config oder `null` (arbeitsfrei).
+ * @returns `true`, wenn beide `null` sind oder Beginn, Ende und Pause übereinstimmen.
+ */
 function configsEqual(a: SchichtBase | null, b: SchichtBase | null): boolean {
   if (a === null && b === null) return true;
   if (a === null || b === null) return false;
   return a.beginn === b.beginn && a.ende === b.ende && a.pause === b.pause;
 }
 
-/** Erkennt ob eine Schicht über Mitternacht geht (ende < beginn als HH:mm-Vergleich). */
+/**
+ * Erkennt, ob eine Schicht über Mitternacht geht (`ende < beginn` als HH:mm-Stringvergleich).
+ *
+ * @param config - Schichtzeiten im Format HH:mm.
+ * @returns `true` bei Tageswechsel.
+ */
 export function isOvernightSchicht(config: SchichtBase): boolean {
   return config.ende < config.beginn;
 }

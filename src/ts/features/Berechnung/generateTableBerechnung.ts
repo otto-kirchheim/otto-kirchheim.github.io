@@ -6,6 +6,13 @@ import calculateZulagenBreakdown from './calculateZulagenBreakdown';
 import { mountBerechnungMobileCards, mountBerechnungTableRows } from './components/mountBerechnung';
 import { wendeMonatsFensterAn } from './berechnungMonatsFenster';
 
+/**
+ * Rendert die Berechnungsansicht (Monatskarten und Tabellenzeilen) und wendet danach das Monats-Fenster an.
+ * Bei `true` wird nur der Lade-Zustand von `btnNeuBerech` zurückgesetzt.
+ *
+ * @param datenBerechnung - Berechnungsdaten des Jahres; `true` = noch keine Daten vorhanden.
+ * @param datenGeldVorgabe - Geld-Vorgaben; Standard aus dem Storage (`VorgabenGeld`).
+ */
 export default function generateTableBerechnung(
   datenBerechnung: true | IVorgabenBerechnung,
   datenGeldVorgabe: IVorgabenGeld = Storage.get<IVorgabenGeld>('VorgabenGeld', { check: true }),

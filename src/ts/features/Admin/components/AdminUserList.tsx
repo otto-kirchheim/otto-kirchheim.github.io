@@ -20,6 +20,11 @@ import { AdminUserCard } from './AdminUserCard';
 import type { UserEditState } from './adminUserListTypen';
 import { DbAuswahl, DbFeld } from '@/components';
 
+/**
+ * Benutzerverwaltung als Kartenliste mit Filter (Name, OE, Rolle), Einzelbearbeitung und Massenänderung.
+ *
+ * @param props - `isSuperAdmin`: schaltet Mehrfachauswahl und Massenänderung frei.
+ */
 export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean }) {
   const [users, setUsers] = useState<AdminUserRow[]>([]);
   // Initial true: der Mount-Effect laedt sofort -- ein synchrones setLoading(true) im Effect
@@ -37,6 +42,12 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
   const user = getUserCookie();
   const debouncedNameFilter = useDebouncedValue(filter.name, 300);
 
+  /**
+   * Leitet den Bearbeitungsstand einer Benutzerzeile ab.
+   *
+   * @param entry - Benutzerzeile aus der Admin-API.
+   * @returns Bearbeitungsstand mit OE als Text und kopierten Listen.
+   */
   function buildEditState(entry: AdminUserRow): UserEditState {
     return {
       oe: joinOeLevels(entry.oe),
@@ -53,6 +64,12 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
   // Laedt ohne synchrones setLoading -- der Loading-Wechsel passiert im Aufrufer
   // (Event-Handler bzw. Renderphase-Reset unten), nie synchron im Effect.
+  /**
+   * Lädt die Benutzer und setzt die Bearbeitungsstände zurück; bei Fehlern wird die Liste geleert (Session-Fehler werden nicht geloggt).
+   *
+   * @param nameFilter - Namensfilter (bereits getrimmt).
+   * @param roleFilter - Rollenfilter; leer = alle.
+   */
   const ladeUsers = useCallback(async (nameFilter: string, roleFilter: string) => {
     try {
       const loadedUsers = await fetchAdminUsers({ name: nameFilter, role: roleFilter });
@@ -70,6 +87,13 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     }
   }, []);
 
+  /**
+   * Lädt die Liste mit Ladeanzeige neu.
+   *
+   * @param nameFilter - Namensfilter.
+   * @param roleFilter - Rollenfilter.
+   * @returns Promise, das nach dem Laden erfüllt ist.
+   */
   function reloadUsers(nameFilter: string, roleFilter: string) {
     setLoading(true);
     return ladeUsers(nameFilter, roleFilter);
@@ -93,25 +117,52 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     queueMicrotask(() => void ladeUsers(nameFilter, filter.role));
   }, [ladeUsers, nameFilter, filter.role]);
 
+  /**
+   * Prüft, ob der angemeldete Benutzer Benutzerdaten bearbeiten darf.
+   *
+   * @returns `true` ab Team-Admin.
+   */
   function canEdit() {
     if (!user) return false;
     return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.TEAM_ADMIN];
   }
 
+  /**
+   * Prüft, ob der angemeldete Benutzer Rollen ändern darf.
+   *
+   * @returns `true` ab Org-Admin.
+   */
   function canEditRole() {
     if (!user) return false;
     return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[Role.ORG_ADMIN];
   }
 
+  /**
+   * Prüft, ob der angemeldete Benutzer Sonderberechtigungen ändern darf.
+   *
+   * @returns `true` nur für Super-Admins.
+   */
   function canEditPermissions() {
     if (!user) return false;
     return user.role === Role.SUPER_ADMIN;
   }
 
+  /**
+   * Ändert den Bearbeitungsstand eines Benutzers.
+   *
+   * @param userId - Id des Benutzers.
+   * @param patch - Zu ändernde Felder des Bearbeitungsstands.
+   */
   function updateEdit(userId: string, patch: Partial<UserEditState>) {
     setEdits(current => ({ ...current, [userId]: { ...current[userId], ...patch } }));
   }
 
+  /**
+   * Prüft auf ungespeicherte Änderungen eines Benutzers.
+   *
+   * @param userId - Id des Benutzers.
+   * @returns `true`, wenn der Bearbeitungsstand vom geladenen Stand abweicht.
+   */
   function hasChanges(userId: string): boolean {
     const row = users.find(u => u._id === userId);
     const edit = edits[userId];
@@ -130,6 +181,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     );
   }
 
+  /**
+   * Lädt die Daten des Benutzers in die App (für die eigene Zeile die eigenen Daten); erfordert Bearbeitungsrecht.
+   *
+   * @param userId - Id des Benutzers.
+   */
   async function handleLoadAsUser(userId: string) {
     if (!canEdit()) return;
 
@@ -146,6 +202,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     }
   }
 
+  /**
+   * Speichert geänderte Rolle, OE und Scopes/Berechtigungen des Benutzers mit je einem API-Aufruf, nur soweit geändert; die eigene Zeile wird nie gespeichert.
+   *
+   * @param userId - Id des Benutzers.
+   */
   async function handleSave(userId: string) {
     if (!canEdit()) return;
 
@@ -192,6 +253,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     }
   }
 
+  /**
+   * Löscht einen Benutzer nach Bestätigung; die eigene Zeile bleibt ausgenommen.
+   *
+   * @param userId - Id des Benutzers.
+   */
   async function handleDelete(userId: string) {
     if (!canEdit()) return;
 
@@ -215,6 +281,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     }
   }
 
+  /**
+   * Verwirft die Änderungen eines Benutzers und stellt den geladenen Stand wieder her.
+   *
+   * @param userId - Id des Benutzers.
+   */
   function handleResetEdit(userId: string) {
     const row = users.find(u => u._id === userId);
     if (row) setEdits(current => ({ ...current, [userId]: buildEditState(row) }));
@@ -237,10 +308,16 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     });
   }, [users, filter.name, filter.oe]);
 
+  /**
+   * Setzt Name-, OE- und Rollenfilter zurück.
+   */
   function resetFilters() {
     setFilter({ oe: '', name: '', role: '' });
   }
 
+  /**
+   * Lädt die Liste sofort neu, ohne das Debouncing des Namensfilters abzuwarten.
+   */
   async function refreshUsersNow() {
     await reloadUsers(filter.name.trim(), filter.role);
   }
@@ -259,6 +336,11 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
   const allSelectableSelected = selectableUsers.length > 0 && selectedUsers.length === selectableUsers.length;
 
+  /**
+   * Schaltet einen Benutzer in der Mehrfachauswahl um.
+   *
+   * @param userId - Id des Benutzers.
+   */
   function toggleSelection(userId: string) {
     setSelectedIds(current => {
       const next = new Set(current);
@@ -268,10 +350,16 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
     });
   }
 
+  /**
+   * Wählt alle auswählbaren Benutzer aus oder hebt die Auswahl auf, wenn bereits alle gewählt sind.
+   */
   function toggleSelectAll() {
     setSelectedIds(allSelectableSelected ? new Set() : new Set(selectableUsers.map(entry => entry._id)));
   }
 
+  /**
+   * Öffnet den Massenänderungs-Dialog für die Auswahl; nach dem Anwenden wird die Auswahl geleert und die Liste neu geladen.
+   */
   function openBulkEdit() {
     createAdminBulkEditModal(selectedUsers, () => {
       setSelectedIds(new Set());
@@ -281,7 +369,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
 
   return (
     <div>
-      {/* Filter-Leiste */}
       <div className="raster mb-3 abstand-2">
         <div className="sp-sm-4">
           <div>
@@ -357,7 +444,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
       </div>
 
-      {/* Ladeanzeige */}
       {loading && (
         <div className="text-center py-4">
           <div className="laedt text-primary" role="status">
@@ -366,12 +452,10 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
       )}
 
-      {/* Keine Ergebnisse */}
       {!loading && visibleUsers.length === 0 && (
         <p className="text-body-secondary text-center">Keine Benutzer gefunden.</p>
       )}
 
-      {/* Ergebnis-Anzahl + Mehrfachauswahl */}
       {!loading && visibleUsers.length > 0 && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-2">
           {isSuperAdmin && selectableUsers.length > 0 && (
@@ -389,7 +473,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
       )}
 
-      {/* Aktionsleiste bei aktiver Auswahl */}
       {isSuperAdmin && selectedUsers.length > 0 && (
         <div className="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border bg-body-tertiary sticky-top">
           <span className="fw-semibold small">{selectedUsers.length} ausgewählt</span>
@@ -402,7 +485,6 @@ export function AdminUserList({ isSuperAdmin = false }: { isSuperAdmin?: boolean
         </div>
       )}
 
-      {/* User-Cards */}
       <div className="admin-user-cards">
         {visibleUsers.map(currentUser => {
           const isSelfRow = user?.userName === currentUser.userName;

@@ -9,6 +9,13 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { addEwtTag, calculateBuchungstagEwt, calculateEwtEintraege, setNaechsterEwtTag } from '../utils';
 
+/**
+ * Baut die Optionen des Schicht-Selects: Früh immer (vorausgewählt, mit abweichendem Freitagsende), Spät, Nacht und
+ * Sonder nur, wenn sie in den Arbeitszeit-Vorgaben aktiv sind.
+ *
+ * @param vorgabenU - Benutzer-Vorgaben mit `Arbeitszeit`.
+ * @returns Select-Optionen (`T`, `SP`, `N`, `S`).
+ */
 function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: string; selected?: boolean }[] {
   const { Arbeitszeit: aZ } = vorgabenU;
   const freitagEnde = aZ.frueh.overrides?.[5]?.ende;
@@ -24,6 +31,13 @@ function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: str
   ];
 }
 
+/**
+ * Öffnet den Modal zum Anlegen eines EWT-Tags im aktiven Monat. Ein Hinweisfeld zeigt den Buchungstag, sobald er vom
+ * Starttag abweicht.
+ *
+ * @param tableE - EWT-Tabelle, in die der neue Tag eingefügt wird.
+ * @throws {Error} Wenn Formular- oder Büro-Referenz nach dem Rendern fehlen.
+ */
 export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -41,6 +55,10 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
   const buchungstagHinweisRef = createRef<HTMLDivElement>();
   const buchungstagHinweisTextRef = createRef<HTMLInputElement>();
 
+  /**
+   * Berechnet aus den aktuellen Formularwerten den Buchungstag (`calculateBuchungstagEwt`) und blendet das Hinweisfeld
+   * nur bei Abweichung vom Starttag ein. Ohne Starttag wird der Hinweis ausgeblendet.
+   */
   const updateBuchungstagAnzeige = () => {
     const tagInput = document.querySelector<HTMLInputElement>('#Tag');
     if (!tagInput || !EOrtRef.current || !SchichtRef.current || !berechnenRef.current || !bueroRef.current) {
@@ -94,6 +112,12 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
     buchungstagHinweisRef.current.classList.add('d-none');
   };
 
+  /**
+   * Büro-Checkbox: schaltet "Berechnen" gegengleich; bei "Büro" wird der Einsatzort auf die Erste Tätigkeitsstätte
+   * (sonst die leere Option) und die Schicht auf die erste Option gesetzt.
+   *
+   * @param event - Change-Event der Büro-Checkbox.
+   */
   const changeBuero = (event: ChangeEvent<HTMLInputElement>) => {
     event.stopPropagation();
     if (!berechnenRef.current || !EOrtRef.current || !SchichtRef.current) return;
@@ -197,6 +221,11 @@ export default function createAddModalEWT(tableE: CustomTable<IDatenEWT>): void 
 
   updateBuchungstagAnzeige();
 
+  /**
+   * Baut den Submit-Handler des Formulars: bei gültigem Formular wird der Tag per `addEwtTag` angelegt.
+   *
+   * @returns Submit-Handler.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;

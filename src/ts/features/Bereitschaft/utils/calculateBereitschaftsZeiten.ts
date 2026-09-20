@@ -20,11 +20,25 @@ type Schicht = {
   pause: number;
 };
 
+/**
+ * Setzt auf einem Tag die Uhrzeit aus einem "HH:mm"-Text.
+ *
+ * @param baseDate - Tag, auf den die Uhrzeit gelegt wird.
+ * @param time - Uhrzeit im Format "HH:mm".
+ * @returns `baseDate` mit der Uhrzeit, Sekunden und Millisekunden auf 0.
+ */
 function setTimeFromHHMM(baseDate: Dayjs, time: string): Dayjs {
   const [hours, minutes] = time.split(':').map(Number);
   return baseDate.set('hour', hours).set('minute', minutes).set('second', 0).set('millisecond', 0);
 }
 
+/**
+ * Überlagert eine Wochentags-Schicht mit den Overrides der Bereitschaftsvorgabe.
+ *
+ * @param base - Schicht aus der Arbeitszeit.
+ * @param override - Abweichungen der Bereitschaftsvorgabe (optional).
+ * @returns Zusammengeführte Schicht; `default` und `overrides` werden feldweise überlagert.
+ */
 function mergePerWeekdaySchicht(base: IPerWeekdaySchicht, override?: Partial<IPerWeekdaySchicht>): IPerWeekdaySchicht {
   if (!override) return base;
 
@@ -42,6 +56,25 @@ function mergePerWeekdaySchicht(base: IPerWeekdaySchicht, override?: Partial<IPe
   };
 }
 
+/**
+ * Erzeugt die Bereitschaftszeiträume (BZ) zwischen den Arbeitsschichten: aus Früh-, optional Spät-/Sonder- und Nachtschichten werden die
+ * Lücken zwischen zwei Schichten zu Zeiträumen (Pause der vorherigen Schicht) und in die vorhandenen Zeiträume eingearbeitet;
+ * diese werden dabei ggf. direkt angepasst.
+ *
+ * @param bereitschaftsAnfang - Beginn der Bereitschaft.
+ * @param bereitschaftsEnde - Ende der Bereitschaft.
+ * @param nachtAnfang - Beginn des Nachtzeitraums.
+ * @param nachtEnde - Ende des Nachtzeitraums.
+ * @param nacht - Nachtschichten berücksichtigen.
+ * @param spaet - Spätschichten berücksichtigen.
+ * @param sonder - Sonderschicht berücksichtigen.
+ * @param sonderRangeOrDaten - Zeitbereich der Sonderschicht; alternativ direkt die vorhandenen Zeiträume (dann ist `datenOrSchichtenOverrides` die Override-Angabe).
+ * @param datenOrSchichtenOverrides - Vorhandene Zeiträume (bei Sonder-Zeitbereich) bzw. Schicht-Overrides (bei Zeiträumen als vorherigem Argument).
+ * @param schichtenOverrides - Schicht-Overrides der Bereitschaftsvorgabe (bei Sonder-Zeitbereich).
+ * @param sonderOverride - Zeiten der Sonderschicht statt `Arbeitszeit.sonder`.
+ * @returns Neue bzw. ergänzte Zeiträume, nach Beginn sortiert; `false`, wenn sich nichts geändert hat.
+ * @throws {Error} Wenn `VorgabenU` fehlt oder die Zusammenführung zu tief rekursiert.
+ */
 export default function calculateBereitschaftsZeiten(
   bereitschaftsAnfang: Dayjs,
   bereitschaftsEnde: Dayjs,
@@ -81,7 +114,6 @@ export default function calculateBereitschaftsZeiten(
 
   let changed: boolean = false;
 
-  // Voreinstellungen Übernehmen
   const datenU: IVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
   if (!datenU) throw new Error('VorgabenU nicht gefunden');
   const effectiveSonder = sonderOverride ?? datenU.Arbeitszeit.sonder;
@@ -90,10 +122,16 @@ export default function calculateBereitschaftsZeiten(
 
   const datenVorher: number = daten.length;
 
-  // Feste Variablen
   const RUHE_ZEIT: number = 10;
   const NACHT_PAUSEN_VORGABE: number = 45;
 
+  /**
+   * Prüft, ob der Tag ein Arbeitstag ist.
+   *
+   * @param datum - Bezugstag.
+   * @param zusatz - Zusätzliche Tage, die zu `datum` addiert werden.
+   * @returns `true`, wenn der Tag weder Wochenende noch Feiertag der Region ist.
+   */
   const Arbeitstag = (datum: dayjs.Dayjs, zusatz = 0): boolean => {
     const adjustedDatum = datum.add(zusatz, 'day');
     const isWeekend = adjustedDatum.isoWeekday() > 5;
@@ -102,6 +140,15 @@ export default function calculateBereitschaftsZeiten(
     return !isWeekend && !isHoliday;
   };
 
+  /**
+   * Baut die Nachtschichten des Nachtzeitraums.
+   *
+   * @param anfang - Beginn des Nachtzeitraums.
+   * @param ende - Ende des Nachtzeitraums (letzter Tag zählt nicht mit).
+   * @param nachtSchicht - Wochentags-Konfiguration der Nachtschicht; `null` = Zeiten aus `anfang`/`ende`.
+   * @param fallbackPause - Pause in Minuten ohne Konfiguration.
+   * @returns Eine Nachtschicht je Kalendertag; endet sie nicht nach dem Beginn, liegt das Ende am Folgetag.
+   */
   const getNachtSchichten = (
     anfang: Dayjs,
     ende: Dayjs,
@@ -134,6 +181,16 @@ export default function calculateBereitschaftsZeiten(
     return schichten;
   };
 
+  /**
+   * Baut die Tagesschichten (Früh, optional Spät und Sonder) je Tag. Früh-/Spätschicht gibt es nur an Arbeitstagen.
+   *
+   * @param anfang - Beginn der Bereitschaft.
+   * @param ende - Ende der Bereitschaft.
+   * @param includeSpaet - Spätschicht berücksichtigen.
+   * @param includeSonder - Sonderschicht berücksichtigen.
+   * @param sonderBereich - Tage, an denen die Sonderschicht Früh-/Spätschicht ersetzt.
+   * @returns Schichten je Tag, höchstens bis Monatsende; Tage ohne Schicht liefern eine leere Schicht zur Wechselzeit, überlappende Schichten sind zusammengeführt.
+   */
   const getTagSchichten = (
     anfang: Dayjs,
     ende: Dayjs,
@@ -309,7 +366,8 @@ export default function calculateBereitschaftsZeiten(
     const aktuelleSchicht = kombinierteSchichten[i];
     const nächsteSchicht = kombinierteSchichten[i + 1];
 
-    //Prüfen auf ruheZeit
+    // Ruhezeit nach Nachtschichtende: dort entsteht kein BZ; die nächste Schicht rückt auf `RUHE_ZEIT` Stunden
+    // nach dem Ende (nur bei mehr als 1 h Abstand zur übernächsten bzw. nächsten Schicht).
     if (
       nacht &&
       nachtEnde &&
@@ -351,6 +409,16 @@ export default function calculateBereitschaftsZeiten(
   return daten;
 }
 
+/**
+ * Arbeitet einen neuen Zeitraum in die vorhandenen ein: schon enthalten (nichts tun), umschließt einen vorhandenen (ersetzt ihn),
+ * überlappt am Rand (verlängert den vorhandenen, am Wechselzeitpunkt 08:00 gesplittet, Rest rekursiv) oder neu (an der Monatsgrenze gesplittet).
+ *
+ * @param daten - Vorhandene Zeiträume; Zeilen können direkt angepasst werden.
+ * @param newDaten - Neuer Zeitraum.
+ * @param depth - Rekursionstiefe (intern).
+ * @returns `[geändert, Zeiträume]`; `[false, daten]`, wenn der neue Zeitraum schon enthalten ist.
+ * @throws {Error} Wenn die Rekursionstiefe 5 überschritten wird.
+ */
 function vorhandenCheck(daten: IDatenBZ[], newDaten: IDatenBZ, depth: number = 1): [boolean, IDatenBZ[]] {
   const MAX_DEPTH = 5;
   if (depth > MAX_DEPTH) throw new Error('Fehler bei vorhandenCheck - Recurse Funktion');

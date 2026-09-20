@@ -26,22 +26,35 @@ const BALKEN_FARBE: Record<Semantik, string> = {
 type Props = { passwordInputRef: RefObject<HTMLInputElement | null> };
 type State = { level: PasswordStrengthLevel | null };
 
+/**
+ * Vier-Balken-Anzeige der Passwortstaerke unter einem Passwortfeld. Lauscht per nativem
+ * `input`-Listener am uebergebenen Feld (das Feld gehoert der Aufrufstelle) und rendert nichts,
+ * solange das Feld leer ist.
+ */
 export default class PasswordStrengthMeter extends Component<Props, State> {
   state: State = { level: null };
 
+  /** Registriert den `input`-Listener am Passwortfeld. */
   componentDidMount(): void {
     this.props.passwordInputRef.current?.addEventListener('input', this.handleInput);
   }
 
+  /** Entfernt den `input`-Listener wieder. */
   componentWillUnmount(): void {
     this.props.passwordInputRef.current?.removeEventListener('input', this.handleInput);
   }
 
+  /**
+   * Berechnet die Staerkestufe neu; leeres Feld blendet die Anzeige aus (`level: null`).
+   *
+   * @param event - `input`-Event des Passwortfelds.
+   */
   handleInput = (event: Event): void => {
     const value = (event.target as HTMLInputElement).value;
     this.setState({ level: value ? getPasswordStrength(value) : null });
   };
 
+  /** Rendert die Balken (aktive in der Semantikfarbe, Rest neutral) und die Stufenbeschriftung. */
   render() {
     const { level } = this.state;
     if (!level) return null;

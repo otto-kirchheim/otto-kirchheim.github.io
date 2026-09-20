@@ -1,6 +1,6 @@
 import type { IBerechnungMonatsErgebnis } from './calculateBerechnungRows';
 
-/** Gruppen-Schlüssel identisch zu Einstellungen.aktivierteTabs (siehe updateTabVisibility.ts) */
+/** Gruppen-Schlüssel identisch zu Einstellungen.aktivierteTabs (siehe updateTabVisibility.ts). */
 export type BerechnungGruppe = 'bereitschaft' | 'ewt' | 'neben' | 'ea';
 
 /**
@@ -8,6 +8,11 @@ export type BerechnungGruppe = 'bereitschaft' | 'ewt' | 'neben' | 'ea';
  * Ein Bereich ist sichtbar, wenn keine Einschränkung gesetzt ist, er global aktiviert ist,
  * oder – als Ausnahme – im geprüften Scope trotzdem Daten existieren (z. B. Altdaten
  * aus der Zeit vor der Deaktivierung).
+ *
+ * @param gruppe - Zu prüfender Bereich.
+ * @param aktivierteTabs - Aktivierte Tabs aus den Einstellungen; leer/fehlend = keine Einschränkung.
+ * @param hatDaten - `true`, wenn im geprüften Scope Daten für die Gruppe existieren.
+ * @returns `true`, wenn der Block angezeigt werden soll.
  */
 export function isGroupVisible(
   gruppe: BerechnungGruppe,
@@ -19,7 +24,13 @@ export function isGroupVisible(
   return hatDaten;
 }
 
-/** Prüft, ob ein Monatsergebnis anzeigbare Werte für die jeweilige Gruppe enthält. */
+/**
+ * Prüft, ob ein Monatsergebnis anzeigbare Werte für die jeweilige Gruppe enthält.
+ *
+ * @param gruppe - Zu prüfender Bereich.
+ * @param ergebnis - Monatsergebnis der Berechnung.
+ * @returns `true`, wenn mindestens ein Feld der Gruppe nicht `null` ist.
+ */
 export function gruppeHatDaten(gruppe: BerechnungGruppe, ergebnis: IBerechnungMonatsErgebnis): boolean {
   switch (gruppe) {
     case 'bereitschaft':

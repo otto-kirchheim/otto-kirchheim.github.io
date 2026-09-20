@@ -8,7 +8,7 @@ interface IDataQueryOptions {
 }
 
 interface IEwtQueryOptions extends IDataQueryOptions {
-  /** EWT-spezifisch: Filter nach starttag, buchungstag oder beide (Standard: beide) */
+  /** EWT-spezifisch: Filter nach starttag, buchungstag oder beide (Standard: beide). */
   filter?: TEwtFilter;
 }
 

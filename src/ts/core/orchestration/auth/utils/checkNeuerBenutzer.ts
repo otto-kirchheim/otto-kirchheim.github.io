@@ -9,6 +9,10 @@ import { openOnboardingGuideOnce } from '@/core/orchestration/onboarding/createO
 import userLoginSuccess from './userLoginSuccess';
 import { schliesseModal } from '@/components';
 
+/**
+ * Bietet nach der Registrierung die Passkey-Einrichtung an, sofern der Browser `PublicKeyCredential` kennt.
+ * Bei einem Fehler wird erneut angeboten; Ende bei Erfolg, "unsupported", "cancelled" oder wenn der Nutzer nicht wiederholen will.
+ */
 async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   if (typeof PublicKeyCredential === 'undefined') {
     return;
@@ -48,6 +52,12 @@ async function maybeSetupPasskeyAfterSignup(): Promise<void> {
   }
 }
 
+/**
+ * Liest die Felder des Registrierungsdialogs aus dem DOM, validiert sie und legt den Benutzer über die API an.
+ * Danach: Passkey-Angebot, Dialog schließen, Login abschließen und Ersteinrichtung einmalig öffnen. Fehler landen in `#errorMessage` und einer Snackbar; der Lade-Zustand von `btnNeu` wird immer beendet.
+ *
+ * @throws {Error} Wenn `#errorMessage` im DOM fehlt.
+ */
 export default async function checkNeuerBenutzer(): Promise<void> {
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
   if (!errorMessage) throw new Error('errorMessage not found');

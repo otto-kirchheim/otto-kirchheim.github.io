@@ -87,7 +87,15 @@ type Ziehen = { startX: number; startY: number; x: number; y: number };
 
 const LABEL_HOEHE = 12;
 
-/** Rückt eine Beschriftung so weit nach oben, bis sie keine bereits gesetzte mehr überdeckt. */
+/**
+ * Rückt eine Beschriftung so weit nach oben, bis sie keine bereits gesetzte mehr überdeckt.
+ *
+ * @param x - Linke Kante der Beschriftung in Canvas-Pixeln.
+ * @param y - Gewünschte y-Position (Grundlinie) in Canvas-Pixeln.
+ * @param breite - Textbreite der Beschriftung.
+ * @param belegt - Bereits gesetzte Beschriftungen; die neue wird angehängt (Mutation).
+ * @returns Freie y-Position, spätestens 8 Beschriftungshöhen über `y`.
+ */
 function freieLabelPosition(
   x: number,
   y: number,
@@ -104,6 +112,13 @@ function freieLabelPosition(
   return ypos;
 }
 
+/**
+ * Zeichnet die Rechtecke samt Beschriftung aufs Overlay; überlappende Beschriftungen werden nach oben versetzt.
+ *
+ * @param ctx - Zeichenkontext des Overlay-Canvas.
+ * @param viewport - Viewport der gerenderten Seite für die Umrechnung von PDF-Punkten.
+ * @param rechtecke - Zu zeichnende Rechtecke; aktive rot, übrige blau, mit Beschriftung.
+ */
 function zeichneRechtecke(ctx: CanvasRenderingContext2D, viewport: Viewport, rechtecke: Rechteck[]): void {
   ctx.font = '11px sans-serif';
   ctx.lineWidth = 1.5;
@@ -141,6 +156,10 @@ const RASTER_STRICH = 6;
  * Zeichnet je Tabelle einen Klammer-Indikator mit leichtem Versatz links neben ihrer ersten Spalte:
  * eine durchgehende Linie über die Spannweite, ein kurzer Strich je Zeilengrenze, keine
  * Beschriftung.
+ *
+ * @param ctx - Zeichenkontext des Overlay-Canvas.
+ * @param viewport - Viewport der gerenderten Seite für die Umrechnung von PDF-Punkten.
+ * @param raster - Indikatoren je Tabelle; Marken ohne Zeilen oder Höhe werden übersprungen.
  */
 function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster: RasterMarke[]): void {
   raster.forEach(r => {
@@ -150,6 +169,12 @@ function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster
     // `startY` ist die Grundlinie der ERSTEN Zeile; die Zeile selbst steht darüber, weitere folgen
     // nach unten -- deshalb oben eine Zeilenhöhe zugeben und von dort abwärts zählen.
     const oben = r.startY + r.hoehe;
+    /**
+     * Rechnet ein PDF-y in die Canvas-y-Koordinate um.
+     *
+     * @param pdfY - y in PDF-Punkten.
+     * @returns y im Canvas.
+     */
     const nachY = (pdfY: number) => viewport.convertToViewportPoint(0, pdfY)[1]!;
 
     ctx.strokeStyle = r.aktiv ? '#dc3545' : '#0d6efd';
@@ -168,10 +193,12 @@ function zeichneRaster(ctx: CanvasRenderingContext2D, viewport: Viewport, raster
 
 /**
  * Rendert eine lokale PDF-Datei (noch nicht hochgeladen) via `pdfjs-dist` aufs Canvas -- kein
- * Server-Roundtrip noetig. Felder werden als Rechteck aufgezogen (Maustaste druecken, ziehen,
- * loslassen), waehrend des Ziehens zeigt eine Lupe den vergroesserten Ausschnitt, damit auch bei
- * kleiner Darstellung praezise gesetzt werden kann. Ziehen ist nur aktiv, wenn ein Feld scharf
- * geschaltet ist (`scharfGeschaltet`).
+ * Server-Roundtrip nötig. Felder werden als Rechteck aufgezogen (Maustaste drücken, ziehen, loslassen),
+ * während des Ziehens zeigt eine Lupe den vergrößerten Ausschnitt, damit auch bei kleiner Darstellung
+ * präzise gesetzt werden kann. Ziehen ist nur aktiv, wenn ein Feld scharf geschaltet ist
+ * (`scharfGeschaltet`); im Messmodus liefert ein Klick auf ein Textstück dessen Schriftgröße.
+ *
+ * @param props - Datei, anzuzeigende PDF-Seite, Rechtecke und Raster-Marken, Modus (`scharfGeschaltet`, `achse`, `messModus`) und Callbacks (`onRechteck`, `onQuelleWaehlen`, `onGemessen`).
  */
 export function PdfCanvas({
   datei,
@@ -351,6 +378,12 @@ export function PdfCanvas({
     ctx.setLineDash([]);
   }, [rechtecke, raster, ziehen, gerendert, achse, messModus, messBoxen]);
 
+  /**
+   * Rechnet Mauskoordinaten des Fensters in Canvas-Pixel um.
+   *
+   * @param e - Ereignis mit Client-Koordinaten.
+   * @returns Position in Canvas-Pixeln (auf die Canvas-Größe skaliert), `null` ohne Canvas.
+   */
   function canvasKoordinate(e: { clientX: number; clientY: number }): { x: number; y: number } | null {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -361,6 +394,11 @@ export function PdfCanvas({
     };
   }
 
+  /**
+   * Zeichnet den Ausschnitt um `mitte` dreifach vergrößert in die Lupe, mit Fadenkreuz.
+   *
+   * @param mitte - Canvas-Position, die vergrößert in der Lupenmitte liegt.
+   */
   function zeichneLupe(mitte: { x: number; y: number }): void {
     const quelle = canvasRef.current;
     const lupe = lupeRef.current;
@@ -389,6 +427,11 @@ export function PdfCanvas({
     ctx.stroke();
   }
 
+  /**
+   * Startet bei scharfgeschaltetem Feld das Aufziehen an der Mausposition.
+   *
+   * @param e - Mausereignis.
+   */
   function handleDown(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!scharfGeschaltet) return;
     const p = canvasKoordinate(e);
@@ -397,6 +440,11 @@ export function PdfCanvas({
     zeichneLupe(p);
   }
 
+  /**
+   * Führt das Aufziehen nach, zeigt die Lupe und aktualisiert die Live-Koordinaten (nur bei scharfgeschaltetem Feld).
+   *
+   * @param e - Mausereignis.
+   */
   function handleMove(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!scharfGeschaltet) return;
     const p = canvasKoordinate(e);
@@ -408,13 +456,20 @@ export function PdfCanvas({
     zeichneLupe(p);
   }
 
+  /**
+   * Bricht ein laufendes Aufziehen ab und blendet Lupe und Live-Koordinaten aus.
+   */
   function handleLeave(): void {
     setZiehen(null);
     setLupeSichtbar(false);
     setCursorPdf(null);
   }
 
-  /** Werte, die beim Loslassen gesetzt würden -- nur für die tatsächlich genutzten Achsen. */
+  /**
+   * Werte, die beim Loslassen gesetzt würden -- nur für die tatsächlich genutzten Achsen.
+   *
+   * @returns Anzeigetext; `null`, solange der Cursor nicht über dem Canvas ist.
+   */
   function liveAnzeige(): string | null {
     if (!cursorPdf) return null;
     const start = ziehen ? viewportRef.current?.convertToPdfPoint(ziehen.startX, ziehen.startY) : null;
@@ -432,6 +487,11 @@ export function PdfCanvas({
     return `x ${x.toFixed(0)}–${x2.toFixed(0)}, y ${y.toFixed(0)}–${y2.toFixed(0)}  (${(x2 - x).toFixed(0)} × ${(y2 - y).toFixed(0)})`;
   }
 
+  /**
+   * Liefert `hinweis`, sonst den vom `achse`-Wert abhängigen Standardhinweis.
+   *
+   * @returns Hinweistext zur passenden Geste.
+   */
   function ziehHinweis(): string {
     if (hinweis) return hinweis;
     if (achse === 'x')
@@ -441,6 +501,11 @@ export function PdfCanvas({
     return 'Rechteck über die Zelle ziehen (Maustaste gedrückt halten — die Lupe zeigt den vergrößerten Ausschnitt).';
   }
 
+  /**
+   * Meldet im Messmodus das getroffene Textstück per `onGemessen`; bei mehreren Treffern das mit der kleinsten Fläche.
+   *
+   * @param e - Klick-Ereignis.
+   */
   function handleMessKlick(e: ReactMouseEvent<HTMLDivElement>): void {
     if (!messModus || !onGemessen) return;
     const viewport = viewportRef.current;
@@ -455,6 +520,9 @@ export function PdfCanvas({
     if (treffer) onGemessen(treffer);
   }
 
+  /**
+   * Beendet das Aufziehen und meldet das Rechteck in PDF-Punkten; die nicht genutzte Achse wird auf die volle Seite gesetzt.
+   */
   function handleUp(): void {
     const viewport = viewportRef.current;
     if (!ziehen || !viewport) return;
@@ -473,9 +541,9 @@ export function PdfCanvas({
     });
   }
 
-  // Einmal berechnen statt zweimal aus dem JSX aufrufen. Liest `viewportRef` -- bewusst:
-  // der Wert entsteht nur bei aktivem Ziehen, der Viewport ist dann aus dem Mount-Effect
-  // laengst gesetzt und das pdf.js-Objekt gehoert nicht in State.
+  // Einmal berechnen statt zweimal aus dem JSX aufrufen. Liest `viewportRef` bewusst im Render: der Wert
+  // entsteht nur bei aktivem Ziehen, der Viewport ist dann aus dem Render-Effekt laengst gesetzt, und das
+  // pdf.js-Objekt gehoert nicht in State.
   // eslint-disable-next-line react-hooks/refs
   const liveText = liveAnzeige();
 

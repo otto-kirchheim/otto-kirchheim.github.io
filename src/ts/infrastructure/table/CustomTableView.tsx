@@ -8,42 +8,33 @@ import type { Column } from './Column';
 import type { Row } from './Row';
 import type { CustomHTMLTableRowElement, CustomTableTypes, Directions } from './customTableTypes';
 
-/**
- * Phase M0/M1: React-Ersatz fuer `customTableRender.ts` (Vanilla-DOM). `Row`/`Rows`/`Column`
- * bleiben unveraendert reine Datenklassen (kein DOM) -- diese Komponente liest bei jedem
- * `CustomTable.draw()`/`drawRows()`/... nur `table.columns.array`/`table.rows.getFilteredRows()`
- * neu und rendert komplett neu (kein Diffing zwischen Kopf/Zeilen/Fuss noetig, React uebernimmt
- * das). Der `el.instance`-Vertrag (savePipeline/overlapGuard/changeTracking) bleibt unberuehrt:
- * `CustomTable.ts` mountet diese Komponente direkt auf `$el` (das `<table>`-Element selbst,
- * kein Wrapper), React ruehrt nie `$el` selbst an (Klassen/`.instance` bleiben Sache von
- * `CustomTable.ts`).
- *
- * Nicht generisch (arbeitet auf `CustomTableTypes`, dem Laufzeit-Erasure-Typ von `CustomTable`):
- * `CustomTable<T>` selbst ruft diese Komponente aus einer Methode heraus auf, in der `T` nicht
- * mehr als konkreter Typ vorliegt -- exakt der Grund, warum `customTableRender.ts` vorher
- * dieselbe Signatur (`self: CustomTable<T extends CustomTableTypes>` mit `T` nur als
- * Funktions-eigenem Typparameter, nie aus dem Aufrufkontext) nutzte.
- *
- * Zeilen-Aktionen sind echte `<DBButton>` (siehe `editingButton()`); die Icon-Button-Texte
- * `editText`/`deleteText`/`undoDeleteText` aus dem `CustomTableOptions`-Vertrag werden nicht mehr
- * gerendert.
- */
-
 type AnyTable = CustomTable<CustomTableTypes>;
 type AnyColumn = Column<CustomTableTypes>;
 type AnyRow = Row<CustomTableTypes>;
 
 /**
- * Reine Datensortierung, portiert unveraendert aus `customTableRender.ts`s `sortRows()`.
- * `renderRows()` sortierte dort bei JEDEM Zeichnen anhand der aktuell als `sorted` markierten
- * Spalte (nicht nur nach einem Klick) -- z. B. `EaTab.tsx`s `Tag`-Spalte startet bereits mit
- * `sorted: true, direction: 'ASC'`.
+ * Sortiert `table.rows.array` in place nach der Spalte `columnIndex`: leere Werte (`null`,
+ * `undefined`, `''`) stets ans Ende, Dayjs-Werte nach Zeit, sonst natuerlich (numerisch) und
+ * ohne Beachtung der Gross-/Kleinschreibung. Laeuft bei jedem Render fuer die als `sorted`
+ * markierte Spalte, nicht nur nach einem Klick -- z. B. startet die `Tag`-Spalte in `EaTab.tsx`
+ * mit `sorted: true, direction: 'ASC'`.
+ *
+ * @param table - Tabelle, deren Zeilen sortiert werden.
+ * @param columnIndex - Index der Sortierspalte in `columns.array`.
+ * @param direction - `'DESC'` absteigend, sonst aufsteigend.
  */
 function sortRows(table: AnyTable, columnIndex: number, direction: Directions | null): void {
   type ValueType = string | number | boolean | object | Dayjs;
 
   const order = direction === 'DESC' ? [-1, 1] : [1, -1];
 
+  /**
+   * Vergleichsfunktion fuer `Array.prototype.sort` nach der Sortierspalte und `direction`.
+   *
+   * @param a - Erste Zeile.
+   * @param b - Zweite Zeile.
+   * @returns Negativ, `0` oder positiv wie bei `sort`; leere Werte sortieren immer nach hinten.
+   */
   const sorter = (a: AnyRow, b: AnyRow): number => {
     const aColumn = a.columns.array[columnIndex].name;
     const aValue = a.cells[aColumn] as ValueType;
@@ -67,6 +58,12 @@ function sortRows(table: AnyTable, columnIndex: number, direction: Directions | 
 
   table.rows.array.sort(sorter);
 
+  /**
+   * Macht einen Zellwert vergleichbar: Strings kleingeschrieben, Dayjs als ISO-String, Objekte als JSON.
+   *
+   * @param value - Zellwert.
+   * @returns Vergleichs-String.
+   */
   function normalizeValue(value: ValueType): string {
     switch (typeof value) {
       case 'string':
@@ -83,11 +80,13 @@ function sortRows(table: AnyTable, columnIndex: number, direction: Directions | 
 }
 
 /**
- * Icon-only Zeilen-Aktion (Bearbeiten/Loeschen/Rueckgaengig) -- echte `DBButton`, wie im Rest
- * der App (z. B. `EaTab.tsx`s Hilfe-Knopf, `FahrzeitenPanel.tsx`s Auf/Ab/Loeschen-Knoepfe).
- * `editText`/`deleteText`/`undoDeleteText` aus `CustomTableOptions` (Icon-HTML-Strings der
- * alten Vanilla-DOM-Bruecke) werden hier bewusst NICHT mehr gerendert -- kein Aufrufer
- * ueberschreibt sie, Icon + Tooltip sind deshalb pro Rolle fest.
+ * Icon-only Zeilen-Aktion (Bearbeiten/Loeschen/Rueckgaengig) als `DBButton`. Icon und Tooltip sind
+ * pro Rolle fest; `editText`/`deleteText`/`undoDeleteText` aus `CustomTableOptions` werden nicht
+ * gerendert, weil kein Aufrufer sie ueberschreibt. Der Klick wird nicht an die Zeile weitergereicht.
+ *
+ * @param props - `key` (React-Key bei Listen), `icon`, `tooltip` (auch `aria-label`), optionale
+ *   `color` und der Klick-Handler `onClick`.
+ * @returns Der Button.
  */
 function editingButton(props: {
   key?: string;
@@ -118,17 +117,24 @@ function editingButton(props: {
 }
 
 /**
- * Toggelt die Sortierung auf `column` (aus einem Klick-Handler heraus, nicht in der
- * Render-Funktion einer Komponente) -- absichtlich eine eigenstaendige Funktion statt einer
- * Closure in `HeaderCell`. Dispatcht seit Phase A `TOGGLE_COLUMN_SORT` (siehe
- * `tableReducer.ts`) statt einzelner Spalten-Feld-Mutationen -- `Column` ist seither ein
- * reines Lese-Objekt ohne Setter (siehe `Column.ts`).
+ * Toggelt die Sortierung auf `column` und zeichnet die Tabelle neu. Aus einem Klick-Handler
+ * aufgerufen, nicht in der Render-Funktion einer Komponente. Dispatcht `TOGGLE_COLUMN_SORT`
+ * (siehe `tableReducer.ts`), weil `Column` ein reines Lese-Objekt ohne Setter ist (siehe `Column.ts`).
+ *
+ * @param table - Tabelle der Spalte.
+ * @param column - Spalte, deren Sortierung umgeschaltet wird.
  */
 function toggleColumnSort(table: AnyTable, column: AnyColumn): void {
   table.dispatch({ type: 'TOGGLE_COLUMN_SORT', columnName: column.name });
   table.draw();
 }
 
+/**
+ * Kopfzelle einer Spalte; sortierbare Spalten (Tabelle sortierbar und `column.sortable`) tragen
+ * Sortier-Icon und Klick-Handler.
+ *
+ * @param props - `table` und die darzustellende `column`.
+ */
 function HeaderCell({ table, column }: { table: AnyTable; column: AnyColumn }): ReactNode {
   const sortable = Boolean(table.state.sorting) && column.sortable;
   const classes = [...column.classes.filter(c => c !== 'customtable-editing')];
@@ -160,11 +166,22 @@ function HeaderCell({ table, column }: { table: AnyTable; column: AnyColumn }): 
   );
 }
 
+/**
+ * Tabellenzeile mit Zellen der sichtbaren Spalten, Fehlerhinweis und Zeilen-Aktionen.
+ *
+ * @param props - `table` und die darzustellende `row`.
+ */
 function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
   const columns = row.columns.array.filter(c => c.visible);
   const classes = [row.isDeleted && 'customtable-deleted', row.isError && 'customtable-error'].filter(Boolean);
   const errorMessage = row.isError ? row._errorMessage : null;
 
+  /**
+   * Oeffnet die Zeilenansicht, wenn die Fensterbreite nicht ueber dem groessten Breakpoint der
+   * Tabelle liegt (Kartenansicht); geloeschte Zeilen ignoriert sie.
+   *
+   * @param event - Klick auf die Zeile.
+   */
   const handleRowClick = (event: MouseEvent<HTMLTableRowElement>): void => {
     if (row.isDeleted) return;
     if (((event.view as unknown as Window | null)?.innerWidth ?? 0) > table.maxBreakpoint()) return;
@@ -187,9 +204,7 @@ function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
       onClick={handleRowClick}
     >
       {columns.map((column, columnIndex) => {
-        // Fehler-Icon nur an der ersten (sichtbaren) Zelle -- entspricht dem alten
-        // `errorIconRendered`-Merker in `customTableRender.ts`, hier ohne Mutation waehrend
-        // des Renderns: die erste Spalte hat immer Index 0.
+        // Fehler-Icon nur an der ersten sichtbaren Zelle (Index 0).
         const showErrorIcon = Boolean(errorMessage) && columnIndex === 0;
 
         const cellClasses = [...column.classes];
@@ -236,16 +251,13 @@ function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
                     ]}
               </DBStack>
             ) : (
-              // `html: true`-Spalten liefern JSX direkt (kein `dangerouslySetInnerHTML` mehr
-              // noetig, seit `Column.parser` `ReactNode` zurueckgeben darf, siehe
-              // `customTableTypes.ts`); alle anderen werden wie bisher zu Text stringifiziert.
+              // `html: true`-Spalten liefern JSX direkt (siehe `customTableTypes.ts`), alle
+              // anderen werden zu Text stringifiziert.
               <span>
                 {column.html
-                  ? // `parser` ist auf `string | number` typisiert (gilt fuer praktisch alle
-                    // Spalten), `html: true`-Spalten sind der dokumentierte Ausnahmefall und
-                    // geben tatsaechlich JSX zurueck (siehe `EwtTab.tsx`s `schichtParser`/
-                    // `berechnenParser`) -- Cast bewusst hier lokalisiert, nicht im
-                    // Spalten-Vertrag selbst (der bleibt fuer alle anderen Aufrufer unveraendert).
+                  ? // `parser` ist auf `string | number` typisiert; `html: true`-Spalten geben
+                    // tatsaechlich JSX zurueck (siehe `schichtParser`/`berechnenParser` in
+                    // `EwtTab.tsx`). Der Cast bleibt hier lokal, der Spalten-Vertrag unveraendert.
                     (column.parser(cellValue) as unknown as ReactNode)
                   : String(column.parser(cellValue))}
               </span>
@@ -257,16 +269,32 @@ function BodyRow({ table, row }: { table: AnyTable; row: AnyRow }): ReactNode {
   );
 }
 
+/**
+ * React-Key einer Zeile: Server-Id, sonst Client-Request-Id, sonst Position in `rows.array`.
+ *
+ * @param row - Zeile.
+ * @returns Key-String.
+ */
 function rowKey(row: AnyRow): string {
   return row._id ?? row._clientRequestId ?? String(row.CustomTable.rows.array.indexOf(row));
 }
 
+/**
+ * Rendert Kopf, Zeilen und Fuss einer `CustomTable` als `<thead>`/`<tbody>`/`<tfoot>` in ein
+ * umgebendes `<table>`. Achse B: Tab-Komponenten setzen sie in JSX ein; Achse A: `CustomTable.render()`
+ * mountet sie auf `$el` (dem `<table>` selbst, React beruehrt dessen Klassen und `.instance` nie).
+ * `Row`/`Rows`/`Column` bleiben reine Datenklassen; gelesen wird bei jedem Render neu.
+ *
+ * Nicht generisch: arbeitet auf `CustomTableTypes` (Laufzeit-Erasure-Typ), weil `CustomTable<T>` sie
+ * aus einer Methode ohne konkretes `T` aufruft. Zeilen-Aktionen siehe `editingButton()`.
+ *
+ * @param props - `table`: die darzustellende Tabelle.
+ */
 export default function CustomTableView({ table }: { table: AnyTable }): ReactNode {
   const columns = table.columns.array.filter(c => c.visible);
 
-  // Mutiert `table.rows.array` waehrend des Renderns -- unrein, aber idempotent (sortiert
-  // eine bereits sortierte Liste erneut identisch) und exakt das bisherige Verhalten von
-  // `customTableRender.ts`s `renderRows()`, das ebenfalls bei jedem Zeichnen sortierte.
+  // Mutiert `table.rows.array` waehrend des Renderns -- unrein, aber idempotent (eine bereits
+  // sortierte Liste bleibt beim erneuten Sortieren identisch).
   const sortedColumn = table.columns.array.find(c => c.sorted);
   if (sortedColumn) sortRows(table, sortedColumn.index, sortedColumn.direction);
 
@@ -274,10 +302,9 @@ export default function CustomTableView({ table }: { table: AnyTable }): ReactNo
   const state = table.getState();
 
   // Achse B (`useCustomTableState()`): `CustomTable.draw()`/`render()` sind dort No-Ops (React
-  // rendert schon selbst) -- die `customFunction`-Hooks (aktuell nur `EwtTab.tsx`s
-  // `afterDrawRows: attachBerechnenToggleListeners`) muessen deshalb hier ausgeloest werden,
-  // nach jedem Commit dieser Komponente. In Achse A (`isReactManaged() === false`) feuert
-  // `render()` sie bereits selbst rund um `mount()` -- hier zusaetzlich waere doppelt.
+  // rendert selbst) -- die `customFunction`-Hooks (aktuell nur `afterDrawRows:
+  // attachBerechnenToggleListeners` in `EwtTab.tsx`) muessen deshalb hier nach jedem Commit
+  // ausgeloest werden. In Achse A feuert `render()` sie selbst rund um `mount()`.
   useEffect(() => {
     if (!table.isReactManaged()) return;
     const hooks = table.options.customFunction;
@@ -287,7 +314,7 @@ export default function CustomTableView({ table }: { table: AnyTable }): ReactNo
     hooks?.afterDrawHeader?.call(table);
     hooks?.afterDrawFooter?.call(table);
     hooks?.afterDrawRows?.call(table);
-    // `table` ist stabil (siehe `useCustomTableState()`s `useRef`); `state` steht hier fuer
+    // `table` ist stabil (`useRef` in `useCustomTableState()`); `state` steht hier fuer
     // "irgendetwas hat sich geaendert", nicht fuer einen echten Datenfluss.
   }, [state, table]);
 

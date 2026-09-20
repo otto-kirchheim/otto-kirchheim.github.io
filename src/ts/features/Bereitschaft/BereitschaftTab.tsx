@@ -38,9 +38,19 @@ import {
   persistBereitschaftsZeitraumTableData,
 } from './utils';
 
+/**
+ * Bereitschaft-Tab: Tabellen für Bereitschaftszeiträume (BZ) und -einsätze (BE) samt Knopfleiste
+ * (Anlegen, Speichern, PDF, Hilfe). Beide Tabellen werden auf den gewählten Monat gefiltert.
+ */
 export function BereitschaftTab() {
-  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
-  // bisherige `useEffect(() => {...}, [])`-Verhalten.
+  /**
+   * Prüft, ob ein Einsatz zeitlich mit einem Bereitschaftszeitraum überlappt. Endet der Einsatz vor
+   * seinem Beginn, liegt das Ende am Folgetag.
+   *
+   * @param einsatz - Bereitschaftseinsatz (BE).
+   * @param zeitraum - Bereitschaftszeitraum (BZ).
+   * @returns `true` bei Überlappung der beiden Zeitfenster.
+   */
   const isEinsatzLinkedToZeitraum = (einsatz: IDatenBE, zeitraum: IDatenBZ): boolean => {
     const einsatzDate = dayjs(einsatz.Tag, 'DD.MM.YYYY').format('YYYY-MM-DD');
     const einsatzStart = dayjs(`${einsatzDate}T${einsatz.Beginn}`);
@@ -49,19 +59,28 @@ export function BereitschaftTab() {
     const bzStart = dayjs(String(zeitraum.Beginn));
     const bzEnd = dayjs(String(zeitraum.Ende));
 
-    // Überlappung: BE-Zeitfenster überlappt mit BZ-Zeitfenster
     return einsatzStart.isBefore(bzEnd) && einsatzEnd.isAfter(bzStart);
   };
 
+  /**
+   * Zählt die nicht gelöschten Einsätze (alle Monate), die mit dem Zeitraum überlappen.
+   *
+   * @param zeitraum - Bereitschaftszeitraum (BZ).
+   * @returns Anzahl überlappender Einsätze.
+   */
   const countLinkedEinsaetze = (zeitraum: IDatenBZ): number => {
     return getBereitschaftsEinsatzDaten(undefined, undefined, { scope: 'all', excludeDeleted: true }).filter(einsatz =>
       isEinsatzLinkedToZeitraum(einsatz, zeitraum),
     ).length;
   };
 
-  // Zwei Zeilen (Datum, Zeit) statt "DD.MM.YYYY, HH:mm" in einer -- schmaler, dadurch auf
-  // schmalen Viewports (siehe `html: true`-Praezedenzfall in `EwtTab.tsx`s `schichtParser`)
-  // eher ohne Tabellen-Ueberlauf lesbar.
+  /**
+   * Spaltenparser für Datum und Zeit. Bis 768 px Breite in zwei Zeilen (Datum, Zeit), damit die Tabelle
+   * nicht überläuft; liefert dann JSX (Spalte braucht `html: true`, Präzedenzfall `schichtParser` in `EwtTab.tsx`).
+   *
+   * @param value - ISO-Zeitstempel.
+   * @returns Formatierter Text bzw. zweizeiliges JSX; der Rohwert bei ungültigem Datum.
+   */
   const datetimeParser = (value: unknown) => {
       const mediaQuery: MediaQueryList = window.matchMedia('(max-width: 768px)');
       const d = dayjs(value as string);
@@ -74,14 +93,19 @@ export function BereitschaftTab() {
         </span>
       );
     },
+    /**
+     * Spaltenparser für Zahlen, bei denen 0 als leer angezeigt wird.
+     *
+     * @param value - Zahl (oder leer).
+     * @returns Leerer String bei falsy-Wert, sonst der Wert.
+     */
     timeZeroParser = (value: unknown): number | string => (!value ? '' : (value as number)),
     ftBZ: CustomTable<IDatenBZ> = useCustomTableState<IDatenBZ>('tableBZ', {
       columns: [
         {
           name: 'Beginn',
           title: 'Von',
-          // `parser` ist auf `string | number` typisiert (siehe EwtTab.tsx), `html: true`
-          // ist der dokumentierte Ausnahmefall fuer tatsaechlich JSX-lieferende Parser.
+          // `parser` ist auf `string | number` typisiert; `html: true` ist der Ausnahmefall für JSX-liefernde Parser.
           parser: datetimeParser as unknown as (value: unknown) => string,
           html: true,
           sortable: true,
@@ -104,15 +128,31 @@ export function BereitschaftTab() {
       onChange: createOnChangeHandler('BZ'),
       editing: {
         enabled: true,
+        /** Öffnet das Modal zum Anlegen eines Zeitraums. */
         addRow: () => {
           EditorModalBereitschaftsZeit(ftBZ, 'Zeitraum hinzufügen');
         },
+        /**
+         * Öffnet das Bearbeiten-Modal für den Zeitraum.
+         *
+         * @param row - Zu bearbeitende Zeile.
+         */
         editRow: row => {
           EditorModalBereitschaftsZeit(row, 'Zeitraum bearbeiten');
         },
+        /**
+         * Öffnet das Anzeige-Modal für den Zeitraum.
+         *
+         * @param row - Anzuzeigende Zeile.
+         */
         showRow: row => {
           ShowModalBereitschaft(row, 'Zeitraum anzeigen');
         },
+        /**
+         * Löscht den Zeitraum und speichert die Tabelle; mit Warnung abgebrochen, solange ein nicht gelöschter Einsatz in den Zeitraum fällt.
+         *
+         * @param row - Zu löschende Zeile.
+         */
         deleteRow: row => {
           const bzToDelete = row.cells as IDatenBZ;
           const beImZeitraum = getBereitschaftsEinsatzDaten(undefined, undefined, {
@@ -132,6 +172,7 @@ export function BereitschaftTab() {
           row.deleteRow();
           persistBereitschaftsZeitraumTableData(ftBZ);
         },
+        /** Löscht nach Bestätigung alle Zeiträume des gewählten Monats; mit Warnung abgebrochen, solange ein Zeitraum des Monats noch verknüpfte Einsätze hat. */
         deleteAllRows: () => {
           const hasLinked = getBereitschaftsZeitraumDaten().some(zeitraum => countLinkedEinsaetze(zeitraum) > 0);
           if (hasLinked) {
@@ -147,6 +188,12 @@ export function BereitschaftTab() {
 
           confirmDeleteAllRows({
             table: ftBZ,
+            /**
+             * Wählt die Zeiträume des Monats `m`.
+             *
+             * @param cells - Zellwerte der Zeile.
+             * @param m - Monat (1-12).
+             */
             rowFilter: (cells, m) => getMonatFromBZ(cells) === m,
             persist: persistBereitschaftsZeitraumTableData,
           });
@@ -156,10 +203,22 @@ export function BereitschaftTab() {
 
   // ----------------------------- Bereitschaftseinsätze ------------------------------------------------
 
+  /**
+   * Spaltenparser für das Einsatz-Datum.
+   *
+   * @param value - Datum im Format "DD.MM.YYYY".
+   * @returns Kurzform "dd DD.MM."; der Rohwert bei ungültigem Datum.
+   */
   const dateParser = (value: unknown) => {
       const d = dayjs(value as string, 'DD.MM.YYYY', true);
       return d.isValid() ? d.format('dd DD.MM.') : (value as string);
     },
+    /**
+     * Spaltenparser für die LRE-Art in Kurzform.
+     *
+     * @param value - LRE-Text, z. B. "LRE 1/2 ohne x".
+     * @returns "-" bei leerem Wert, sonst z. B. "12oX" bzw. "12"; unbekannte Texte unverändert.
+     */
     lreParser = (value: unknown) => {
       const s = value as string;
       if (!s) return '-';
@@ -205,22 +264,45 @@ export function BereitschaftTab() {
       onChange: createOnChangeHandler('BE'),
       editing: {
         enabled: true,
+        /** Öffnet das Modal zum Anlegen eines Einsatzes. */
         addRow: () => {
           EditorModalBE(ftBE, 'Einsatz hinzufügen');
         },
+        /**
+         * Öffnet das Bearbeiten-Modal für den Einsatz.
+         *
+         * @param row - Zu bearbeitende Zeile.
+         */
         editRow: row => {
           EditorModalBE(row, 'Einsatz bearbeiten');
         },
+        /**
+         * Öffnet das Anzeige-Modal für den Einsatz.
+         *
+         * @param row - Anzuzeigende Zeile.
+         */
         showRow: row => {
           ShowModalBereitschaft(row, 'Einsatz anzeigen');
         },
+        /**
+         * Löscht den Einsatz und speichert die Tabelle.
+         *
+         * @param row - Zu löschende Zeile.
+         */
         deleteRow: row => {
           row.deleteRow();
           persistBereitschaftsEinsatzTableData(ftBE);
         },
+        /** Löscht nach Bestätigung alle Einsätze des gewählten Monats. */
         deleteAllRows: () => {
           confirmDeleteAllRows({
             table: ftBE,
+            /**
+             * Wählt die Einsätze des Monats `m`.
+             *
+             * @param cells - Zellwerte der Zeile.
+             * @param m - Monat (1-12).
+             */
             rowFilter: (cells, m) => getMonatFromBE(cells) === m,
             persist: persistBereitschaftsEinsatzTableData,
           });
@@ -242,7 +324,7 @@ export function BereitschaftTab() {
     ftBE.rows.setFilter(row => getMonatFromBE(row) === monat);
 
     return unbindButtons;
-    // Bewusst einmalig wie vorher -- `ftBZ`/`ftBE` sind stabil (siehe `NebenTab.tsx`).
+    // Bewusst einmalig: `ftBZ`/`ftBE` sind stabil (siehe `NebenTab.tsx`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

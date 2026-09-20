@@ -7,6 +7,16 @@ import type { CustomHTMLDivElement, IDatenN } from '@/types';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '../utils';
 import { DBHeadingH4 } from '@db-ux/react-core-components';
 
+/**
+ * Zeigt zwei Spalten der Zeile nebeneinander, getrennt durch `separator` (Standard: Pfeil), z.B. Beginn und Ende.
+ *
+ * @param row - Anzuzeigende Zeile.
+ * @param column_1 - Linke Spalte als `[Spaltenname, CSS-Klasse]`; der Spaltenname ist zugleich die `id` des Spans.
+ * @param column_2 - Rechte Spalte, gleiche Form wie `column_1`.
+ * @param classNameDiv - CSS-Klassen des umgebenden Divs.
+ * @param separator - Element zwischen den beiden Werten.
+ * @returns Div mit beiden über den Spalten-`parser` formatierten Werten.
+ */
 const createShowElement = (
   row: Row<IDatenN>,
   column_1: [columnName: string, className?: string],
@@ -29,6 +39,13 @@ const createShowElement = (
   );
 };
 
+/**
+ * Zeigt die Zulagen der Zeile (Text aus `formatNebengeldZulagen`) zeilenweise untereinander.
+ *
+ * @param row - Anzuzeigende Zeile.
+ * @param classNameDiv - CSS-Klassen des umgebenden Divs.
+ * @returns Div mit einer Zeile je Zulage.
+ */
 const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 col-12 text-center') => {
   const lines = formatNebengeldZulagen(normalizeNebengeldZulagen(row.cells)).split('\n');
   return (
@@ -40,6 +57,12 @@ const createZulagenElement = (row: Row<IDatenN>, classNameDiv: string = 'mb-2 co
   );
 };
 
+/**
+ * Öffnet das Anzeige-Modal einer Neben-Zeile (Tag, Auftragsnummer, Arbeitszeit, Zulagen) und hängt die Zeile an das Modal-Element.
+ *
+ * @param row - Anzuzeigende Zeile.
+ * @param titel - Modal-Titel.
+ */
 export default function ShowModalNeben(row: Row<IDatenN>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenN> = showModal(
     <MyDivModal

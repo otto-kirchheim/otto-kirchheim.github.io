@@ -1,17 +1,14 @@
 import { DBButton, DBHeadingH1, DBHeadingH4, DBSection, DBTooltip } from '@db-ux/react-core-components';
 
 /**
- * Phase L2: Berechnung-Tab-Huelle (ehemals `index.html`: Titel, Monats-Navigation,
- * `db-table`-Geruest) als React-Komponente, gemountet direkt in die `#Berechnung`-Tab-Pane
- * (analog `StartTab`/L1 -- kein Wrapper-Div, `class="tab-pane fade"` bleibt Sache von
- * `tabController.ts`).
+ * Huelle des Berechnung-Tabs (Titel, Monats-Navigation, `db-table`-Geruest), von `App.tsx` direkt in
+ * die `#Berechnung`-Tab-Pane gesetzt.
  *
- * Rein praesentational -- die Verkabelung bleibt bewusst extern und unveraendert:
- * `#MonatBerechnung`-Text in `setMonatJahr.ts`, `#berechnungMonatsNav`/`#btnBerechnungMonate*`/
- * `#berechnungMonatsFensterLabel` in `berechnungMonatsFenster.ts`. `#berechnungMobileCards` und
- * `#tbodyBerechnung` bleiben leere Container -- eigene, unabhaengige React-Roots
- * (`BerechnungMobileCards`/`BerechnungTableRows`) werden bei jeder Datenaenderung separat per
- * `mount()` aus `generateTableBerechnung.ts` hineingerendert, exakt wie zuvor per `innerHTML`.
+ * Rein praesentational, die Verkabelung liegt extern: `#MonatBerechnung`-Text in `setMonatJahr.ts`,
+ * `#berechnungMonatsNav`/`#btnBerechnungMonate*`/`#berechnungMonatsFensterLabel` in
+ * `berechnungMonatsFenster.ts`. `#berechnungMobileCards` und `#tbodyBerechnung` bleiben leere
+ * Container: `BerechnungMobileCards`/`BerechnungTableRows` mounten dort als eigene React-Roots bei
+ * jeder Datenaenderung (`generateTableBerechnung.ts`).
  */
 export default function BerechnungTab() {
   return (

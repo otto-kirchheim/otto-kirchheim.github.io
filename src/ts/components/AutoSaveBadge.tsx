@@ -4,33 +4,7 @@ import { useEffect, useState, type FC } from 'react';
 import useAutoSaveStatus from '@/infrastructure/autoSave/useAutoSaveStatus';
 import type { TResourceKey, TSaveStatus } from '@/types';
 
-/**
- * AutoSave-Status als Badge in der Ecke eines Buttons -- deklarativer Nachfolger von
- * `autoSaveIndicator.ts`s `updateBadge()`. Wird von `DBLoadingButton` gerendert, wenn
- * `autoSaveResources` gesetzt ist.
- *
- * `DBIcon`s `text`-Prop (statt `children`) ist hier kein Zufall: ein Icon ohne jeden Text-Kind-
- * Knoten macht seine `.db-icon`-Huelle DOM-`:empty` (das Glyph selbst sitzt im `::before`, zaehlt
- * dafuer nicht) -- und `.db-badge > span:empty` (DB-UX-`badge.css`, fuer den reinen Punkt-Badge
- * ohne Icon gedacht) trifft dann ueber diesen Selektor versehentlich auch das Icon, zwingt seine
- * Box auf `--badge-size` statt auf die quadratische Icon-Groesse und verschiebt das Glyph
- * sichtbar aus der Mitte (reproduzierbar auch mit unveraendertem DB-UX-Markup, kein
- * Projekt-Override kollidiert hier). `text` macht die Huelle nicht-leer (der String selbst
- * bleibt wegen `.db-icon`s `font-size: 0` unsichtbar) und entschaerft den Treffer von vornherein
- * -- exakt das Muster, das auch DB-UX' eigene Storybook-Beispiele fuer Badge+Icon nutzen (dort
- * mit sichtbarem Demo-Label als Kind statt `text`, mit demselben Nebeneffekt).
- *
- * Icons (DB UX, `data-icon`):
- * - idle:             kein Badge sichtbar
- * - pending:          cloud                       (grau)
- * - pending+offline:  wifi_disabled               (gelb) -- Änderungen warten auf Verbindung
- * - saving:           cloud_upload                (blau, pulse-Animation)
- * - saved:            check_circle                (grün, verblasst nach 2 s)
- * - error (Daten):    exclamation_mark_circle     (rot)
- * - error (Netzwerk): wifi_disabled               (rot)  -- Server nicht erreichbar
- * - blocked:          exclamation_mark_triangle   (gelb) -- Überschneidung mit ungespeicherter Löschung
- */
-
+/** Icon (DB UX, `data-icon`) je Status; `idle` hat keins, das Badge bleibt dann unsichtbar. */
 const ICON_MAP: Record<TSaveStatus, string> = {
   idle: '',
   pending: 'cloud',
@@ -68,6 +42,12 @@ const NETWORK_ERROR_PATTERNS = [
   'Failed to fetch',
 ];
 
+/**
+ * Prueft, ob eine AutoSave-Fehlermeldung auf ein Netzwerk-/Erreichbarkeitsproblem hindeutet.
+ *
+ * @param msg - Fehlermeldung aus dem AutoSave-Status.
+ * @returns `true`, wenn die Meldung eines der `NETWORK_ERROR_PATTERNS` enthaelt.
+ */
 function isNetworkError(msg: string): boolean {
   return NETWORK_ERROR_PATTERNS.some(p => msg.includes(p));
 }
@@ -76,14 +56,35 @@ type TAutoSaveBadge = {
   resources: readonly TResourceKey[];
 };
 
+/**
+ * AutoSave-Status als Badge in der Ecke eines Buttons; `DBLoadingButton` rendert es, wenn
+ * `autoSaveResources` gesetzt ist.
+ *
+ * `DBIcon` bekommt `text` statt `children`, damit seine `.db-icon`-Huelle nicht DOM-`:empty`
+ * ist (das Glyph sitzt im `::before`): sonst trifft `.db-badge > span:empty` (fuer den reinen
+ * Punkt-Badge gedacht) versehentlich das Icon, zwingt es auf `--badge-size` und verschiebt das
+ * Glyph aus der Mitte. Der String bleibt wegen `font-size: 0` der `.db-icon` unsichtbar.
+ *
+ * Icons (DB UX, `data-icon`):
+ * - idle:             kein Badge sichtbar
+ * - pending:          cloud                       (grau)
+ * - pending+offline:  wifi_disabled               (gelb) -- Änderungen warten auf Verbindung
+ * - saving:           cloud_upload                (blau, pulse-Animation)
+ * - saved:            check_circle                (grün, verblasst nach 2 s)
+ * - error (Daten):    exclamation_mark_circle     (rot)
+ * - error (Netzwerk): wifi_disabled               (rot)  -- Server nicht erreichbar
+ * - blocked:          exclamation_mark_triangle   (gelb) -- Überschneidung mit ungespeicherter Löschung
+ *
+ * Props: `resources`: die beobachteten Ressourcen, deren AutoSave-Status angezeigt wird.
+ */
 const AutoSaveBadge: FC<TAutoSaveBadge> = ({ resources }) => {
   const { status, errorMessages, offline } = useAutoSaveStatus(resources);
 
-  // "saved" verblasst nach 2s -- rein lokaler UI-Zustand, unabhaengig vom Store (Trennung
-  // Business-Status vs. UI-Timing, siehe autoSaveStatusStore.ts).
+  // "saved" verblasst nach 2 s -- rein lokaler UI-Zustand, unabhaengig vom Store (Business-Status
+  // vs. UI-Timing).
   const [faded, setFaded] = useState(false);
-  // Reset beim Status-Wechsel bewusst in der Render-Phase (React-Docs: "adjusting state when
-  // props change") -- ein synchroner setState im Effect loeste ein react-hooks/set-state-in-effect.
+  // Reset beim Status-Wechsel in der Render-Phase (React-Docs: "adjusting state when props
+  // change"); ein synchrones setState im Effect verletzt `react-hooks/set-state-in-effect`.
   const [prevStatus, setPrevStatus] = useState(status);
   if (prevStatus !== status) {
     setPrevStatus(status);

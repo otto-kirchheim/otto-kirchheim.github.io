@@ -23,14 +23,22 @@ export interface IZulagenBreakdown {
 
 const zulagenCatalogByCode = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
+/**
+ * Kurzform der Einheit einer Zulage für die Anzeige.
+ *
+ * @param unit - Einheit des Zulagen-Eintrags.
+ * @returns "min" für Minuten, sonst "Stk.".
+ */
 export function zulagenEinheitKurz(unit: ZulageEntryUnit): string {
   return unit === ZulageEntryUnit.Minuten ? 'min' : 'Stk.';
 }
 
 /**
- * Aggregiert die Roh-Zulagenwerte (Zulagen) aller Nebengeld-Tage des Jahres
- * pro Zulagen-Code und Monat. Unabhängig von der Euro-Berechnung (NFields-Buckets),
- * die Code-Informationen dort bereits zusammengefasst hat.
+ * Aggregiert die Roh-Zulagenwerte aller Nebengeld-Tage des Jahres pro Zulagen-Code und Monat.
+ * Unabhängig von der Euro-Berechnung (NFields-Buckets), die die Codes dort bereits zusammengefasst hat.
+ *
+ * @param rows - Nebengeld-Zeilen; Standard: alle nicht gelöschten des Jahres.
+ * @returns Vorkommende Codes (sortiert, mit Label und Einheit) und je Code 12 Monatssummen.
  */
 export default function calculateZulagenBreakdown(
   rows: IDatenN[] = getNebengeldDaten(undefined, undefined, { scope: 'all', excludeDeleted: true }),

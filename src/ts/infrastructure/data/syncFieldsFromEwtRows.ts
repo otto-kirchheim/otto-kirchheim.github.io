@@ -6,7 +6,13 @@ import { publishEvent } from '@/core';
  * Übernimmt geänderte EWT-Felder (z.B. Beginn/Ende oder eine daraus abgeleitete Dauer) in eine
  * abhängige Ressource (Neben/EA), die per `EWT`-Referenz verknüpft ist — sowohl im Storage als
  * auch in der ggf. gerade geöffneten Live-`CustomTable`. Nur `deriveFields` (welche Felder aus
- * dem EWT-Datensatz abgeleitet werden) ist pro Ressource unterschiedlich.
+ * dem EWT-Datensatz abgeleitet werden) ist pro Ressource unterschiedlich. Ohne Änderung im Storage
+ * bleibt auch die Tabelle unberührt.
+ *
+ * @typeParam T - Zeilentyp der abhängigen Ressource.
+ * @param updatedEwtRows - Geänderte EWT-Zeilen; Zeilen ohne `_id` werden ignoriert.
+ * @param config - `storageKey`/`tableId`/`resource` der abhängigen Ressource und `deriveFields`,
+ *   das aus einer EWT-Zeile die zu übernehmenden Felder liefert.
  */
 export function syncFieldsFromEwtRows<T extends { EWT?: string }>(
   updatedEwtRows: IDatenEWT[],
@@ -21,6 +27,13 @@ export function syncFieldsFromEwtRows<T extends { EWT?: string }>(
 
   const ewtById = new Map<string, IDatenEWT>(updatedEwtRows.filter(e => e._id).map(e => [e._id as string, e]));
 
+  /**
+   * Prüft, ob `patch` mindestens einen Wert enthält, der vom aktuellen Zielwert abweicht.
+   *
+   * @param target - Aktuelle Zeile.
+   * @param patch - Abgeleitete Felder.
+   * @returns `true`, wenn ein Feld abweicht.
+   */
   function hasChanges(target: T, patch: Partial<T>): boolean {
     return Object.entries(patch).some(([key, value]) => (target as Record<string, unknown>)[key] !== value);
   }

@@ -1,40 +1,45 @@
 import { DBButton, DBDrawer, DBDrawerFooter, DBDrawerHeader, DBLink } from '@db-ux/react-core-components';
 
 /**
- * Phase K3: `<dialog id="impressum">` (index.html) als echter React-`DBDrawer`. Ausloeser ist
- * der Impressum-Knopf in `AppFooter.tsx`, der `open`/`onClose` haelt -- kein
- * `data-dialog-target`/`dbDialog.ts` mehr fuer diesen Dialog.
+ * Telefonnummer, aus Zeichen zusammengesetzt: kein zusammenhaengender String im Bundle, den
+ * simple Scraper direkt faenden (gleiches gilt fuer die Mail-Adresse).
  *
- * Neuer Dialog, keine Altlast: nutzt `DBDrawer`s `header`/`footer`-Slots mit den echten
- * `DBDrawerHeader`/`DBDrawerFooter`-Komponenten statt der `MyModalHeader`/`dialog-koerper`/
- * `dialog-fuss`-Handkonvention der bestehenden Dialoge (die bleibt dort unangetastet -- der
- * Umstieg auf DB-UX-Komponenten gilt nur fuer neue Dialoge, nicht als Sweep ueber alte). Spart
- * die Handklassen: `.db-drawer-content`/`.db-drawer-footer` bringen Padding/Flex-Layout schon
- * mit (core-components CSS).
- *
- * Telefon/Mail bleiben als Zeichen-Array zusammengesetzt (wie zuvor in `main.ts`): kein
- * zusammenhaengender String im Bundle, den simple Scraper direkt fänden.
+ * @returns Nummer in der angezeigten Schreibweise ("+49(0)...").
  */
-
 function kontaktTelefon(): string {
   const country = ['+', '4', '9', '(', '0', ')'];
   const number = ['1', '7', '0', '-', '6', '7', '0', '8', '6', '9', '2'];
   return `${country.join('')}${number.join('')}`;
 }
 
-/** `tel:`-Ziel aus der angezeigten Nummer: ohne "(0)" (internationale Schreibweise) und Sonderzeichen. */
+/**
+ * Baut das `tel:`-Ziel aus der angezeigten Nummer: ohne "(0)" (internationale Schreibweise) und Sonderzeichen.
+ *
+ * @returns `tel:`-URI.
+ */
 function kontaktTelefonLink(): string {
   return `tel:${kontaktTelefon()
     .replace('(0)', '')
     .replace(/[^\d+]/g, '')}`;
 }
 
+/**
+ * E-Mail-Adresse, aus Zeichen zusammengesetzt (siehe `kontaktTelefon`).
+ *
+ * @returns Mail-Adresse.
+ */
 function kontaktMail(): string {
   const local = ['j', 'a', 'n', 'o', 't', 't', 'o', '1', '9', '8', '9'].join('');
   const domain = ['g', 'm', 'a', 'i', 'l', '.', 'c', 'o', 'm'].join('');
   return `${local}@${domain}`;
 }
 
+/**
+ * Impressum als `DBDrawer` mit `DBDrawerHeader`/`DBDrawerFooter`. Ausloeser ist der Impressum-Knopf in
+ * `AppFooter.tsx`, der `open`/`onClose` haelt.
+ *
+ * @param props - `open` steuert die Sichtbarkeit, `onClose` wird beim Schliessen (Header-X, Footer-Knopf) aufgerufen.
+ */
 export default function ImpressumDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const mail = kontaktMail();
 
@@ -48,10 +53,8 @@ export default function ImpressumDialog({ open, onClose }: { open: boolean; onCl
       header={<DBDrawerHeader text="Impressum" closeButtonText="Schließen" />}
       footer={
         <DBDrawerFooter>
-          {/* Kein `dbDialog.ts`/`data-action="close"` mehr (K3: eigener React-State) -- der
-              Knopf braucht deshalb einen echten `onClick`, sonst tut er nichts (Bug-Fund:
-              Schliessen-Knopf im Footer reagierte nicht; nur `DBDrawerHeader`s eingebauter
-              X-Knopf war ueber `onClose` verdrahtet). */}
+          {/* Der Footer-Knopf braucht einen eigenen `onClick`: nur `DBDrawerHeader`s eingebauter X-Knopf
+              ist ueber `onClose` verdrahtet. */}
           <DBButton type="button" variant="filled" onClick={onClose}>
             Schließen
           </DBButton>

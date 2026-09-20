@@ -7,6 +7,12 @@ type Props = {
   error?: string;
 };
 
+/**
+ * Fasst den JSON-Text für die Kopfzeile zusammen (Typ/Größe als Label, Vorschau der Inhalte als Hinweis).
+ *
+ * @param raw - Roher JSON-Text aus dem Editor.
+ * @returns `label` und `hint` für die Anzeige; `valid` ist `false`, wenn `raw` kein gültiges JSON ist.
+ */
 function buildSummary(raw: string): { label: string; hint: string; valid: boolean } {
   try {
     const parsed: unknown = JSON.parse(raw);
@@ -26,6 +32,12 @@ function buildSummary(raw: string): { label: string; hint: string; valid: boolea
   }
 }
 
+/**
+ * Kurzvorschau eines Array-Elements: bei Objekten die ersten zwei Schlüssel, sonst der auf 30 Zeichen gekürzte Wert.
+ *
+ * @param v - Beliebiger JSON-Wert.
+ * @returns Vorschautext; `'null'` für `null`/`undefined`.
+ */
 function previewValue(v: unknown): string {
   if (v === null || v === undefined) return 'null';
   if (typeof v === 'object') {
@@ -35,17 +47,31 @@ function previewValue(v: unknown): string {
   return String(v).slice(0, 30);
 }
 
+/**
+ * Zeilenzahl der Textarea passend zum Inhalt, begrenzt auf 5 bis 24.
+ *
+ * @param raw - Aktueller Editortext.
+ * @returns Anzahl sichtbarer Zeilen.
+ */
 function autoRows(raw: string): number {
   const lines = (raw.match(/\n/g) ?? []).length + 1;
   return Math.min(24, Math.max(5, lines + 1));
 }
 
+/**
+ * Einklappbarer JSON-Editor mit Kopfzeile (Typ, Vorschau, Formatieren) und Textarea; markiert ungültiges JSON und externe Fehler.
+ *
+ * @param props - `value` (JSON-Text), `onChange` (neuer Rohtext) und optional `error` (externe Fehlermeldung).
+ */
 export function JsonEditor({ value, onChange, error }: Props) {
   const [open, setOpen] = useState(false);
 
   const { label, hint, valid } = buildSummary(value);
   const hasError = Boolean(error) || !valid;
 
+  /**
+   * Formatiert den Text mit zwei Leerzeichen Einrückung; bei ungültigem JSON bleibt er unverändert.
+   */
   function handleFormat() {
     try {
       onChange(JSON.stringify(JSON.parse(value), null, 2));
@@ -58,7 +84,7 @@ export function JsonEditor({ value, onChange, error }: Props) {
     <div
       className={`border ${hasError ? 'border-danger' : open ? 'border-primary-subtle' : 'border-secondary-subtle'}`}
     >
-      {/* Kopfzeile / Summary – immer sichtbar, zum Auf-/Zuklappen */}
+      {/* Kopfzeile: immer sichtbar, klappt den Editor auf/zu */}
       <div
         className={`d-flex align-items-center gap-2 px-2 py-1 ${hasError ? 'bg-danger-subtle' : 'bg-body-secondary'} ${open ? 'border-bottom' : ''}`}
         style={{ cursor: 'pointer', userSelect: 'none', borderRadius: 'inherit' }}
@@ -112,7 +138,6 @@ export function JsonEditor({ value, onChange, error }: Props) {
         </div>
       </div>
 
-      {/* Editor */}
       {open && (
         <div className="p-2">
           <DBTextarea
@@ -128,9 +153,8 @@ export function JsonEditor({ value, onChange, error }: Props) {
               resize: 'vertical',
               minHeight: '80px',
               lineHeight: '1.45',
-              // `.font-monospace` (utilities.scss) steht am Wrapper (`className`, einzige verfuegbare
-              // Klassen-Prop von DBTextarea), aber DB setzt font-family direkt am <textarea> --
-              // Vererbung vom Wrapper verliert dagegen. Deshalb hier inline, direkt am Feld.
+              // Inline statt `.font-monospace` am Wrapper: DBTextarea setzt font-family direkt am
+              // <textarea>, eine vom Wrapper geerbte Schrift würde dagegen verlieren.
               fontFamily: 'var(--db-font-family-mono, ui-monospace, "SFMono-Regular", "Menlo", monospace)',
             }}
             value={value}

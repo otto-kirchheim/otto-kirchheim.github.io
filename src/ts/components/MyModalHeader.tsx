@@ -12,6 +12,8 @@ import { openHelpModal } from '@/core/help/openHelpModal';
  * Verknuepft den umschliessenden `<dialog>` per `aria-labelledby` mit der Ueberschrift (wie
  * `DBDrawerHeader` es taete) -- `showModal` reicht den Header im `children`-Slot durch, nicht
  * ueber die `header`-Prop von `DBDrawer`, deshalb hier von Hand.
+ *
+ * Props: `title` (Dialogtitel) und optional `helpContext` (blendet den Hilfe-Knopf ein).
  */
 const MyModalHeader: FC<{ title: string; helpContext?: HelpContextKey }> = ({ title, helpContext }) => {
   const ueberschriftId = `dialog-titel-${useId()}`;

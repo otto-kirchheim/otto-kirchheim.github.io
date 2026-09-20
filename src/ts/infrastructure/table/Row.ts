@@ -10,24 +10,17 @@ import type {
 } from './customTableTypes';
 
 /**
- * `.instance`-Shim für Zeilen (Phase A des `useReducer`-Umbaus): `Row` ist keine Datenklasse
- * mehr, sondern eine dünne, stabile Wrapper-Instanz über einem `RowRecord<T>` im
- * `CustomTable`-Reducer-State. Felder sind Getter (Lesen: `record`-Lookup per `uid`), Methoden
- * dispatchen die passende `TableAction`. `uid` ist der einzige Wert, den diese Klasse selbst
- * hält -- der Rest kommt live aus dem State, damit externe Aufrufer (14 Dateien außerhalb von
- * React, siehe Plan-Dokument) unverändert `row.cells`/`row._state`/... lesen können.
+ * Stabile Wrapper-Instanz über einem `RowRecord<T>` im `CustomTable`-Reducer-State, damit Aufrufer
+ * außerhalb von React weiter `row.cells`/`row._state` lesen und schreiben können. Felder sind Getter
+ * (Lookup per `uid` im aktuellen State), Setter und Methoden dispatchen die passende `TableAction`;
+ * nur `uid` hält die Klasse selbst.
  *
- * Identität bleibt über die Zeit stabil: `Rows.array`s Wrapper-Cache liefert für dieselbe `uid`
- * immer dieselbe `Row`-Instanz zurück (siehe Rows.ts) -- das ist zwingend, weil die 6
- * Editor-Modals eine beim Öffnen gehaltene `Row`-Referenz per `===` gegen einen späteren
- * `.array`-Zugriff vergleichen.
+ * Die Identität bleibt stabil: `Rows.array` liefert für dieselbe `uid` immer dieselbe `Row`-Instanz
+ * (Wrapper-Cache in `Rows.ts`). Das ist zwingend, weil die Editor-Modals eine gehaltene `Row` per `===`
+ * mit einem späteren `.array`-Zugriff vergleichen.
  *
- * Bewusst KEIN `flushExtern` beim Schreiben: Der Reducer-State ist in Phase A ein simples
- * Instanzfeld auf `CustomTable` (`dispatch()` mutiert es synchron, kein React-`useReducer`,
- * kein Batching) -- ein Lesezugriff direkt nach dem Schreiben sieht den neuen Wert bereits
- * ohne Flush. Sobald Achse B den State in einen echten `useReducer`-Hook verschiebt, wird
- * `dispatch` asynchron/batched und externe Lesezugriffe brauchen dann `flushExtern` (siehe
- * Plan-Dokument, Abschnitt ".instance-Shim-Design") -- an dieser Stelle nachtragen.
+ * Kein `flushExtern` beim Schreiben: `CustomTable.dispatch()` flusht selbst, sodass ein Lesezugriff
+ * direkt nach dem Schreiben bereits den neuen Wert sieht.
  */
 export class Row<T extends CustomTableTypes> {
   public CustomTable: CustomTable<T>;
@@ -35,12 +28,21 @@ export class Row<T extends CustomTableTypes> {
   public readonly uid: string;
   public $el: CustomHTMLTableRowElement<T> | null = null;
 
+  /**
+   * @param table - Zugehörige Tabelle.
+   * @param uid - Eindeutige Zeilen-Id im State.
+   */
   constructor(table: CustomTable<T>, uid: string) {
     this.CustomTable = table;
     this.columns = table.columns;
     this.uid = uid;
   }
 
+  /**
+   * Der aktuelle `RowRecord` dieser Zeile aus dem State.
+   *
+   * @throws {Error} Wenn die Zeile nicht mehr im State existiert.
+   */
   private get record(): RowRecord<T> {
     const record = this.CustomTable.getRowRecord(this.uid);
     if (!record) {
@@ -49,48 +51,85 @@ export class Row<T extends CustomTableTypes> {
     return record;
   }
 
+  /** Zellwerte der Zeile. */
   get cells(): T {
     return this.record.cells;
   }
+  /**
+   * Setzt die Zellwerte direkt (ohne Statuswechsel, anders als `val()`).
+   *
+   * @param value - Neue Zellwerte.
+   */
   set cells(value: T) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: 'cells', value });
   }
 
+  /** Server-Id; `undefined` bei noch nicht gespeicherten Zeilen. */
   get _id(): string | undefined {
     return this.record._id;
   }
+  /**
+   * Setzt die Server-Id.
+   *
+   * @param value - Neue Id.
+   */
   set _id(value: string | undefined) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: '_id', value });
   }
 
+  /** Änderungsstatus der Zeile. */
   get _state(): RowState {
     return this.record._state;
   }
+  /**
+   * Setzt den Änderungsstatus.
+   *
+   * @param value - Neuer Status.
+   */
   set _state(value: RowState) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: '_state', value });
   }
 
+  /** Status, in dem der Fehler auftrat (für die Rückkehr nach Korrektur). */
   get _errorState(): DirtyRowState | undefined {
     return this.record._errorState;
   }
+  /**
+   * Setzt den Status vor dem Fehler.
+   *
+   * @param value - Status oder `undefined`.
+   */
   set _errorState(value: DirtyRowState | undefined) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: '_errorState', value });
   }
 
+  /** Fehlermeldung; `null` ohne Fehler. */
   get _errorMessage(): string | null {
     return this.record._errorMessage;
   }
+  /**
+   * Setzt die Fehlermeldung.
+   *
+   * @param value - Meldung oder `null`.
+   */
   set _errorMessage(value: string | null) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: '_errorMessage', value });
   }
 
+  /** Zellwerte beim Laden bzw. vor der ersten Änderung; `undefined` bei neuen Zeilen. */
   get _originalCells(): T | undefined {
     return this.record._originalCells;
   }
 
+  /** Client-seitige Anfrage-Id der Zeile (Zuordnung beim Speichern). */
   get _clientRequestId(): string | undefined {
     return this.record._clientRequestId;
   }
+  /**
+   * Setzt die Client-Anfrage-Id.
+   *
+   * @param value - Id oder `undefined`.
+   */
   set _clientRequestId(value: string | undefined) {
     this.CustomTable.dispatch({ type: 'SET_ROW_FIELD', uid: this.uid, field: '_clientRequestId', value });
   }
@@ -111,9 +150,8 @@ export class Row<T extends CustomTableTypes> {
   }
 
   /**
-   * Soft-Delete: Zeile wird als gelöscht markiert, bleibt aber sichtbar.
-   * Durchgestrichen + ausgegraut im UI. Neue (noch nicht gespeicherte) Zeilen werden direkt
-   * entfernt (siehe `tableReducer.ts`s `DELETE_ROW`-Case).
+   * Soft-Delete: Die Zeile wird als gelöscht markiert und bleibt (durchgestrichen) sichtbar. Neue,
+   * noch nicht gespeicherte Zeilen werden direkt entfernt (`DELETE_ROW` in `tableReducer.ts`).
    */
   deleteRow(): void {
     this.CustomTable.dispatch({ type: 'DELETE_ROW', uid: this.uid });
@@ -122,7 +160,7 @@ export class Row<T extends CustomTableTypes> {
   }
 
   /**
-   * Undo: Löschen rückgängig machen.
+   * Macht das Löschen rückgängig; tut nichts, wenn die Zeile nicht als gelöscht vorgemerkt ist.
    */
   undoDelete(): void {
     if (getEffectiveRowState(this.record) !== 'deleted') return;
@@ -132,8 +170,10 @@ export class Row<T extends CustomTableTypes> {
   }
 
   /**
-   * Zelldaten aktualisieren. Setzt State auf 'modified' wenn vorher 'unchanged'.
-   * Behält _id bei.
+   * Aktualisiert die Zelldaten. Setzt den Status von `unchanged` auf `modified` (`new` bleibt `new`)
+   * und übernimmt eine `_id` aus `value`, sonst bleibt die bisherige.
+   *
+   * @param value - Neue Zellwerte.
    */
   val(value: T): void {
     this.CustomTable.dispatch({ type: 'UPDATE_CELLS', uid: this.uid, value });

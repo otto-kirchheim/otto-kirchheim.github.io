@@ -1,12 +1,13 @@
 import dayjs from '@/infrastructure/date/configDayjs';
 import type { IVorgabenUvorgabenB } from '@/types';
 
+// Wechselzeit 08:00: Bereitschaftszeiträume werden hier getrennt; Rückfall, wenn keine Arbeitszeit vorliegt.
 export const B_WECHSEL_STUNDE = 8;
 export const B_WECHSEL_MINUTE = 0;
 export const B_WECHSEL_ZEIT = dayjs().hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).format('HH:mm');
 
-// Zeiten werden je Wochentag aus vorgabenU.aZ abgeleitet; die Vorgaben definieren nur Tag-/Wochen-Bereich + Schichten.
-// Wird auch von Einstellungen (generateEingabeMaskeEinstellungen.ts) als Default verwendet.
+// Zeiten werden je Wochentag aus `VorgabenU.Arbeitszeit` abgeleitet; die Vorgaben definieren nur Tag-/Wochen-Bereich + Schichten.
+// Wird auch von Einstellungen (generateEingabeMaskeEinstellungen.ts, VorgabenBTable.tsx) als Default verwendet.
 export const BereitschaftsEinsatzZeiträume: { [key: number]: IVorgabenUvorgabenB } = {
   0: {
     Name: 'B1',

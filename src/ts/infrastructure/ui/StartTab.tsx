@@ -9,19 +9,14 @@ import {
 } from '@db-ux/react-core-components';
 
 /**
- * Phase L1: Start-Tab (ehemals `index.html:82-244`) als React-Komponente. Gemountet direkt in
- * die `#start`-Tab-Pane hinein (kein Wrapper-Div wie bei `AppHeader`/`AppFooter`): `styles.scss`s
- * `#start.active > .schwelle`-Kindselektor (Fusszeilen-buendige Platzierung per
- * `margin-block-start: auto`) verlangt die Schwelle als direktes Kind, ein Zwischen-Div bricht
- * den Selektor. `class="tab-pane fade show active"` bleibt unveraendert Sache von
- * `tabController.ts` -- React ruehrt nur die Kinder des Containers an.
+ * Start-Tab: Willkommenstext, drei Einstiegskarten, Schnellzugriff (nur Mobil) und Ladeanzeige.
+ * Wird direkt in die `#start`-Pane von `App.tsx` gemountet (ohne Wrapper-Div); die Pane-Klassen
+ * (`active`/`show`) setzt `App.tsx`.
  *
- * Rein praesentational -- die Verkabelung bleibt bewusst extern und unveraendert:
- * `#btnHelpStart`-Klick, `#startSchnellzugriff [data-jump-tab]`-Klicks und der
- * `#Willkommen`-Textinhalt in `core/orchestration/auth/index.ts`, `#quick-*-tab`-Sichtbarkeit in
- * `updateTabVisibility.ts`, `#startSchnellzugriff`-Sichtbarkeit in `auth/index.ts` /
- * `loadUserDaten.ts` / `logoutUser.ts`, `#ladeAnzeige` in `setLoading.ts`/`clearLoading.ts`.
- * Alle IDs/Klassen deshalb 1:1 uebernommen (analog K5s "Login-Button unveraendertes Markup").
+ * Rein praesentational: Die Verkabelung liegt ausserhalb und haengt an den IDs/Klassen hier
+ * (`#btnHelpStart`, `#Willkommen`, `#startSchnellzugriff [data-jump-tab]` in
+ * `core/orchestration/auth/index.ts`; `#quick-*-tab` in `updateTabVisibility.ts`; `#ladeAnzeige`
+ * in `setLoading.ts`/`clearLoading.ts`) -- diese Bezeichner nicht ohne die Gegenstellen aendern.
  */
 export default function StartTab() {
   return (
@@ -48,11 +43,8 @@ export default function StartTab() {
       </div>
 
       <DBStack direction="row" wrap gap="medium" className="mb-4 karten-gleich">
-        {/* `minBlockSize` reserviert Platz fuer 2 Zeilen Titel (28px Zeilenhoehe) -- ohne das
-            faengt "Persönliche Daten..." unterhalb eines einzeiligen Titels hoeher an als
-            unterhalb eines zweizeiligen ("1. Einstellungen prüfen" wickelt bei dieser Breite
-            um), Fliesstext startet dann nicht mehr auf gleicher Hoehe (DB-UX-Card-Richtlinie
-            "Inhalt-Ausrichtung": Titel/Aktionen konsistent ueber alle Karten im Grid ausrichten). */}
+        {/* `.karten-titel` (`min-block-size: 3.5rem`) reserviert zwei Titelzeilen, damit der
+            Fliesstext in allen Karten auf gleicher Hoehe beginnt, auch wenn ein Titel umbricht. */}
         <DBCard className="h-100 text-start">
           <DBHeadingH5 paragraphSpacing className="d-flex align-items-center gap-2 karten-titel">
             <span className="db-icon text-primary" data-icon="sliders_horizontal" />
@@ -77,8 +69,7 @@ export default function StartTab() {
       </DBStack>
 
       {/* d-md-none, nicht d-lg-none: DBHeader wechselt intern bei 64em/1024px (unser
-             md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation -- siehe K5-Begruendung
-             in tasks/todo.md. */}
+             md-Breakpoint) von Mobile-Drawer auf Desktop-Inline-Navigation. */}
       <div className="raster-auto mb-4 d-md-none d-none abstand-3" id="startSchnellzugriff">
         <div className="d-none" id="quick-bereitschaft-tab">
           <DBButton

@@ -1,9 +1,8 @@
 import { z } from 'zod';
 import type { Registry, Version, ZeilenBerechnet } from '@otto-kirchheim/nebengeld-shared';
 
-// Spiegelt das Typsystem aus @otto-kirchheim/nebengeld-shared (formular/types.ts) --
-// die vom Server gelieferte Konfiguration ist zur Laufzeit `unknown` und muss vor der
-// Verwendung (insbesondere vor `resolve()`) validiert werden.
+// Spiegelt das Typsystem aus @otto-kirchheim/nebengeld-shared (formular/types.ts) -- die vom Server
+// gelieferte Konfiguration ist zur Laufzeit `unknown` und muss vor der Verwendung validiert werden.
 
 const ausrichtungSchema = z.enum(['links', 'rechts', 'zentriert']);
 const formatNameSchema = z.enum([
@@ -34,9 +33,8 @@ const berechnetSchema = z.object({
   feld: z.string().optional(),
   tabellen: z.array(z.string()).optional(),
   maxTage: z.number().optional(),
-  // Gleiche Form wie listenPlatzSchema (unten definiert, hier nicht wiederverwendbar wegen der
-  // Deklarationsreihenfolge) + tabelle (wie bei Feld.listenKopf) + art. Ohne `index`: Summe über
-  // ALLE Einträge der Gruppe (Gesamtsumme) statt über einen Platz, `art` gilt genauso.
+  // Wie listenPlatzSchema (unten definiert, wegen der Deklarationsreihenfolge hier nicht nutzbar) plus
+  // `tabelle` (wie bei Feld.listenKopf) und `art`. Ohne `index`: Summe über ALLE Einträge der Gruppe.
   liste: z
     .object({
       tabelle: z.string(),
@@ -189,7 +187,7 @@ const tabellenBereichSchema = z.object({
   drehung: drehungSchema.optional(),
   /** Platzierungen der Tabellen-Sonderzeilen auf dieser Seite; `name` darf mehrfach vorkommen
    *  (z.B. Überschrift oben UND als Kopie unten). `ueber` überschreibt `SonderZeile.ueber` nur
-   *  für diese Platzierung (Seiten-Override, siehe Typsystem-Spiegel). */
+   *  für diese Platzierung (Seiten-Override, siehe `TabellenBereich.sonderzeilen` in shared). */
   sonderzeilen: z
     .array(
       z.object({
@@ -267,8 +265,14 @@ export const versionSchema = z.object({
   tabellen: z.record(z.string(), tabellenDefSchema),
 });
 
-/** Validiert die vom Server aufgelöste Einzel-Version (`GET /formulare/:f?stichtag=`) -- anders als
- * `parseRegistry()`, das eine ganze Registry aus mehreren Formularen/Versionen erwartet. */
+/**
+ * Validiert die vom Server aufgelöste Einzel-Version (`GET /formulare/:f?stichtag=`) -- anders als
+ * `parseRegistry()`, das eine ganze Registry aus mehreren Formularen/Versionen erwartet.
+ *
+ * @param json - Ungeprüfte Serverantwort bzw. Cache-Inhalt.
+ * @returns Die validierte Version.
+ * @throws {ZodError} Bei ungültiger Form.
+ */
 export function parseVersion(json: unknown): Version {
   return versionSchema.parse(json);
 }
@@ -280,7 +284,13 @@ const formularSchema = z.object({
 
 export const registrySchema = z.record(z.string(), formularSchema);
 
-/** Validiert eine vom Server geladene Registry-Konfiguration; wirft `ZodError` bei ungültiger Form. */
+/**
+ * Validiert eine vom Server geladene Registry-Konfiguration.
+ *
+ * @param json - Ungeprüfte Registry (Formular-Code -> Formular mit Versionen).
+ * @returns Die validierte Registry.
+ * @throws {ZodError} Bei ungültiger Form.
+ */
 export function parseRegistry(json: unknown): Registry {
   return registrySchema.parse(json);
 }

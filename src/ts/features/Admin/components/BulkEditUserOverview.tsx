@@ -6,7 +6,12 @@ import type { AdminUserRow } from '../utils/api';
 import { DBButton, DBTooltip } from '@db-ux/react-core-components';
 import { DbFeld } from '@/components';
 
-/** Übersichtstabelle der für die Massenänderung ausgewählten Benutzer mit aktuellen Werten. */
+/**
+ * Übersichtstabelle der für die Massenänderung ausgewählten Benutzer mit aktuellen Werten.
+ * Ab mehr als 5 Benutzern erscheint ein Filter nach Name oder OE.
+ *
+ * @param props - `selectedUsers` (Auswahl) und `onRemoveUser` (nimmt einen Benutzer aus der Auswahl).
+ */
 export function BulkEditUserOverview({
   selectedUsers,
   onRemoveUser,

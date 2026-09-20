@@ -1,14 +1,16 @@
 import { DBButton, DBCard, DBHeadingH6, DBInfotext, DBTooltip } from '@db-ux/react-core-components';
 import { type FC, useEffect, useMemo, useState } from 'react';
 
-// Direktimporte statt Barrel (@/core, @/components), um den Zyklus
-// createOnboardingGuideModal → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
+// Direktimporte statt Barrel (@/core, @/components), um den Zyklus createOnboardingGuideModal →
+// OnboardingGuidePanel → openHelpModal → MyHelpModal → createOnboardingGuideModal zu vermeiden.
 import { onEvent } from '@/core/events/appEvents';
 import { getHelpContent, type HelpContextKey } from '@/core/help/helpContent';
 import { capturePersSnapshot, springeZu, validatePersoenlicheDaten } from './onboardingValidation';
 
+/** Eintrag der Tab-Tour: Tab-Knopf (Selektor), Titel, Kurzbeschreibung und Stichpunkte. */
 export type TourTab = { tabButtonId: string; titel: string; kurzbeschreibung: string; punkte: string[] };
 
+/** Schritt der Ersteinrichtung, unterschieden nach `art`. */
 type GuideStep =
   | { art: 'intro' }
   | { art: 'pers' }
@@ -22,12 +24,23 @@ type GuideStep =
   | { art: 'tour'; tab: TourTab }
   | { art: 'abschluss' };
 
+/**
+ * Prüft, ob der Tab-Knopf sichtbar ist (sein `<li>` ist nicht per `d-none` ausgeblendet).
+ *
+ * @param tabButtonId - CSS-Selektor des Tab-Knopfs, z. B. `#ewt-tab`.
+ * @returns `false`, wenn der Knopf fehlt oder ausgeblendet ist.
+ */
 function istTabSichtbar(tabButtonId: string): boolean {
   const button = document.querySelector<HTMLButtonElement>(tabButtonId);
   if (!button) return false;
   return !button.closest('li')?.classList.contains('d-none');
 }
 
+/**
+ * Baut die Tour-Einträge für alle sichtbaren Feature-Tabs (Hilfetexte) und Berechnung.
+ *
+ * @returns Tour-Tabs in Reihenfolge Bereitschaft, EWT, Neben, EA, Berechnung.
+ */
 function getTourTabs(): TourTab[] {
   const tabs: TourTab[] = [];
   const helpTabs: { tabButtonId: string; key: HelpContextKey }[] = [
@@ -60,6 +73,12 @@ function getTourTabs(): TourTab[] {
   return tabs;
 }
 
+/**
+ * Liefert die Überschrift eines Schritts.
+ *
+ * @param step - Aktueller Schritt.
+ * @returns Titeltext.
+ */
 function getStepTitle(step: GuideStep): string {
   switch (step.art) {
     case 'intro':
@@ -75,14 +94,23 @@ function getStepTitle(step: GuideStep): string {
   }
 }
 
+/**
+ * Schwebendes Panel der Ersteinrichtung: führt schrittweise durch persönliche Daten,
+ * Einstellungs-Abschnitte und Tabs; springt dabei zum jeweiligen Bereich. Weiter ist im
+ * Schritt "pers" erst bei vollständigen Pflichtangaben möglich.
+ *
+ * @param props - `captureSnapshot` (Snapshot der Template-Werte anlegen) und `onClose`.
+ */
 const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }> = ({ captureSnapshot, onClose }) => {
   const [stepIndex, setStepIndex] = useState(0);
   const [minimiert, setMinimiert] = useState(false);
   const [, setVersion] = useState(0);
+  /** Erzwingt ein Neurendern, damit die Pflichtfeld-Prüfung den Formularstand neu liest. */
   const refresh = () => setVersion(version => version + 1);
 
   useEffect(() => onEvent('data:changed', refresh), []);
   useEffect(() => {
+    /** Erzwingt bei jeder Eingabe im Dokument ein Neurendern (Pflichtfeld-Prüfung liest den Formularstand). */
     const handleInput = () => refresh();
     document.addEventListener('input', handleInput, true);
     document.addEventListener('change', handleInput, true);
@@ -145,8 +173,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
       return;
     }
 
-    // Das "Willkommen zur Ersteinrichtung" bleibt auf dem Start-Tab; erst der naechste Schritt
-    // ("pers") wechselt in die Einstellungen.
+    // Das Intro bleibt auf dem Start-Tab; erst der nächste Schritt ("pers") wechselt in die Einstellungen.
     if (step.art === 'intro') {
       springeZu('#brand-start-tab');
       return;
@@ -163,6 +190,7 @@ const OnboardingGuidePanel: FC<{ captureSnapshot: boolean; onClose: () => void }
 
   const weiterErlaubt = step.art === 'pers' ? persValidation.ok : true;
   const weiterText = 'Weiter';
+  /** Geht zum nächsten Schritt; nach dem letzten Tour-Tab zurück auf den Start-Tab. */
   const weiter = () => {
     if (step.art === 'tour' && step.tab.tabButtonId === letzterTourTab) {
       void springeZu('#brand-start-tab');

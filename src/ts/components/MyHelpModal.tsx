@@ -5,6 +5,12 @@ import type { HelpContent } from '@/core/help/helpContent';
 import { openOnboardingGuide } from '@/core/orchestration/onboarding/createOnboardingGuideModal';
 import { MyDivModal, MyModalBody } from '.';
 
+/**
+ * Hilfedialog: zeigt Titel, Kurzbeschreibung und die optionalen Abschnitte des `HelpContent`.
+ * Bei `reopenOnboardingAction` schließt ein Button den Dialog und öffnet die Ersteinrichtung erneut.
+ *
+ * @param props - `content`: Hilfetext des Kontexts (`getHelpContent`); optionale Abschnitte werden nur bei vorhandenen Daten gerendert.
+ */
 const MyHelpModal: FC<{ content: HelpContent }> = ({ content }) => (
   <MyDivModal
     title={content.title}

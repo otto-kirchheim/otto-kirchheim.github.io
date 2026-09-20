@@ -15,6 +15,11 @@ interface IBerechnungMobileCardsProps {
   offenerMonat?: number;
 }
 
+/**
+ * Einzelne Detailzeile einer Monatskarte (Label links, Wert rechts).
+ *
+ * @param props - `label` und `wert` als bereits formatierte Texte.
+ */
 const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
   <div className="d-flex justify-content-between gap-2 py-1 ps-3 berechnung-card-zeile">
     <span className="text-start">{label}</span>
@@ -22,6 +27,11 @@ const DetailZeile = ({ label, wert }: { label: string; wert: string }) => (
   </div>
 );
 
+/**
+ * Fette Gruppenzeile einer Monatskarte mit Summe rechts.
+ *
+ * @param props - `titel` und `summe` (Euro; `null` = keine Anzeige).
+ */
 const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null }) => (
   <div className="d-flex justify-content-between gap-2 fw-bold pt-2 pb-1 berechnung-card-gruppe">
     <span className="text-start">{titel}</span>
@@ -29,6 +39,12 @@ const GruppenTitel = ({ titel, summe }: { titel: string; summe: number | null })
   </div>
 );
 
+/**
+ * Aufklappbare Karte eines Monats: Monatssumme im Kopf, darunter die Gruppen Bereitschaft, EWT,
+ * Nebenbezüge, Entgeltausgleich und Gesamt.
+ *
+ * @param props - Monatsergebnis, aktivierte Tabs, Zulagen-Aufschlüsselung, Offen-Zustand und Toggle-Callback.
+ */
 function MonatsKarte({
   ergebnis,
   aktivierteTabs,
@@ -48,11 +64,22 @@ function MonatsKarte({
   const monatHatZulagen =
     zulagenBreakdown?.codes.some(c => zulagenBreakdown.values[c.code][ergebnis.monat - 1] > 0) ?? false;
 
-  // Mobil-Scope = einzelner Monat: deaktivierte Gruppen nur zeigen, wenn dieser Monat Daten hat
+  /**
+   * Mobil-Scope = einzelner Monat: deaktivierte Gruppen nur zeigen, wenn dieser Monat Daten hat.
+   *
+   * @param gruppe - Zu prüfende Berechnungsgruppe.
+   * @returns `true`, wenn die Gruppe in dieser Karte angezeigt wird.
+   */
   const zeigeGruppe = (gruppe: BerechnungGruppe): boolean =>
     isGroupVisible(gruppe, aktivierteTabs, gruppeHatDaten(gruppe, ergebnis) || (gruppe === 'neben' && monatHatZulagen));
 
-  // Kompakt: pro Schwelle eine eigene Zeile, Nullwerte werden weggelassen
+  /**
+   * Kompakt: pro Schwelle eine eigene Zeile, Nullwerte werden weggelassen.
+   *
+   * @param praefix - Zeilenpräfix (z. B. "Abwesenheiten").
+   * @param eintraege - Paare aus Schwellen-Text (z. B. ">8") und Anzahl.
+   * @returns Detailzeilen für alle Einträge mit Wert > 0.
+   */
   const schwellenZeilen = (praefix: string, eintraege: Array<[string, number | null]>) =>
     eintraege
       .filter(([, wert]) => (wert ?? 0) > 0)
@@ -143,11 +170,12 @@ function MonatsKarte({
 }
 
 /**
- * Genau eine Monatskarte ist offen. Der Zustand liegt hier (`open` + `onToggle`) statt in
- * `<DBAccordion behavior="single">`: dort braucht ein zuvor geoeffneter, dann nativ geschlossener
- * Eintrag zwei Klicks (DB UX 5.5.0, siehe `offenerAbschnittStore.ts`). Wechselt `offenerMonat`
- * von aussen (anderer Monat gewaehlt), folgt die Auswahl -- per Vergleich mit dem Vorwert im
- * Render statt im Effekt.
+ * Mobile Monatskarten der Berechnung; genau eine Karte ist offen. Der Zustand liegt hier (`open` +
+ * `onToggle`) statt in `<DBAccordion behavior="single">`: dort braucht ein zuvor geoeffneter, dann nativ
+ * geschlossener Eintrag zwei Klicks (DB UX 5.5.0, siehe `offenerAbschnittStore.ts`). Wechselt `offenerMonat`
+ * von aussen, folgt die Auswahl -- per Vergleich mit dem Vorwert im Render statt im Effekt.
+ *
+ * @param props - Monatsergebnisse, aktivierte Tabs, Zulagen-Aufschlüsselung und initial offener Monat.
  */
 const BerechnungMobileCards = ({
   monatsErgebnisse,

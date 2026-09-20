@@ -13,6 +13,11 @@ const ROLE_LABELS: Record<Role, string> = {
   [Role.SUPER_ADMIN]: 'Super-Admin',
 };
 
+/**
+ * Kennzahl-Kachel des Dashboards; ohne `label` und `value` erscheint "–".
+ *
+ * @param props - `title`, Kennzahl als `value` oder Freitext `label` (Vorrang), optional `unit`/`sub`, `icon` und `colorClass` des Icons.
+ */
 function StatCard({
   title,
   value,
@@ -50,6 +55,9 @@ function StatCard({
   );
 }
 
+/**
+ * Admin-Dashboard: Benutzer-, Template-, Ressourcen- und Auth-Kennzahlen sowie Server-Speicherverlauf (MemoryCard).
+ */
 export function AdminDashboard() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [heap, setHeap] = useState<HeapData | null>(null);
@@ -58,6 +66,12 @@ export function AdminDashboard() {
   const [heapDays, setHeapDays] = useState(7);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Lädt den Heap-Verlauf neu und setzt dabei den Lade-Indikator der Speicherkarte.
+   *
+   * @param days - Zeitraum in Tagen; Standard ist der aktuell gewählte.
+   * @returns Promise, das nach dem Laden erfüllt ist (Fehler werden verschluckt, der alte Stand bleibt).
+   */
   function loadHeap(days = heapDays) {
     setHeapLoading(true);
     return fetchAdminHeap(days)
@@ -66,6 +80,11 @@ export function AdminDashboard() {
       .finally(() => setHeapLoading(false));
   }
 
+  /**
+   * Übernimmt einen neuen Heap-Zeitraum und lädt die Daten dafür.
+   *
+   * @param days - Neuer Zeitraum in Tagen.
+   */
   function changeHeapDays(days: number) {
     setHeapDays(days);
     void loadHeap(days);
@@ -73,7 +92,7 @@ export function AdminDashboard() {
 
   // Initiales Laden: die setStates laufen bewusst erst in den Promise-Callbacks (asynchron) --
   // `loading`/`error` starten als true/null, ein synchrones setState im Effect waere ein
-  // react-hooks/set-state-in-effect. `load` bleibt separater Event-Handler (Refresh-Button).
+  // react-hooks/set-state-in-effect. `load` ist der separate Handler fuer den Refresh-Button.
   useEffect(() => {
     let cancelled = false;
     Promise.all([fetchAdminStats(), fetchAdminHeap(heapDays)])
@@ -96,6 +115,9 @@ export function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /**
+   * Lädt Kennzahlen und Heap komplett neu (Aktualisieren-/Neu-laden-Button).
+   */
   function load() {
     setLoading(true);
     setError(null);

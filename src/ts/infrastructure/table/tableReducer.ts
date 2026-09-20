@@ -1,7 +1,6 @@
 /**
- * Reiner Reducer-Kern für `CustomTable` (Phase A des `useReducer`-Umbaus). Jede Aktion
- * entspricht 1:1 einer heutigen `Row`/`Rows`-Methode (siehe Kommentare je Case) -- nur die
- * Implementierung wandert von einer in-place mutierenden Klassenmethode in eine reine
+ * Reiner Reducer-Kern für `CustomTable`. Jede Aktion entspricht einer `Row`/`Rows`-Methode
+ * (Zuordnung an den Varianten von `TableAction` in `customTableTypes.ts`) und ist eine reine
  * `(state, action) => state`-Funktion, die immer ein NEUES State-Objekt zurückgibt.
  *
  * Bewusste Abweichung von strikter Reducer-Reinheit: `createRowRecord()` vergibt per `uuidv4()`
@@ -10,9 +9,8 @@
  * über zwei Aufrufe hinweg vergleicht; ein verworfener Wert aus Reacts StrictMode-Doppelaufruf
  * hat keine beobachtbare Auswirkung.
  *
- * `drawRows()`/`_notifyChange()`-Seiteneffekte sind hier bewusst NICHT enthalten -- die
- * gehören der Shim-Schicht (`Row.ts`/`Rows.ts`), die anhand des Rückgabewerts entscheidet,
- * ob/wann sie ausgelöst werden.
+ * `drawRows()`/`_notifyChange()`-Seiteneffekte gehören bewusst NICHT hierher, sondern in die
+ * Shim-Schicht (`Row.ts`/`Rows.ts`).
  */
 import { v4 as uuidv4 } from 'uuid';
 import { stripMetaFields } from '../data/metaFields';
@@ -30,10 +28,15 @@ const NON_ERROR_ROW_STATES: readonly RowState[] = ['unchanged', 'new', 'modified
 const DIRTY_ROW_STATES: readonly DirtyRowState[] = ['new', 'modified', 'deleted'];
 
 /**
- * Spiegelt `Row.ts`s Konstruktor. Exportiert, weil `CustomTable.ts`s Konstruktor denselben
- * Aufbau für den initialen Reducer-State braucht (kein `LOAD` -- das restauriert zusätzlich
- * Meta-Felder aus `__localState`/`__errorMessage`, was die alte `Rows`-Konstruktor-Zeile
- * `rows.map(row => new Row(table, row, 'unchanged'))` nie tat).
+ * Baut den `RowRecord` einer Zeile: vergibt `uid`, übernimmt `_id` bzw. `clientRequestId` aus den
+ * Zellen, erzeugt für `new` bei Bedarf eine `_clientRequestId` und sichert für `unchanged` die
+ * `_originalCells`. Exportiert, weil `CustomTable.ts` damit den initialen Reducer-State baut
+ * (ohne `LOAD`, das zusätzlich Meta-Felder aus `__localState`/`__errorMessage` restauriert).
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param cells - Zellenwerte der Zeile.
+ * @param state - Anfangszustand; Standard `'unchanged'`.
+ * @returns Neuer `RowRecord` mit frischer `uid`.
  */
 export function createRowRecord<T extends CustomTableTypes>(cells: T, state: RowState = 'unchanged'): RowRecord<T> {
   const record: RowRecord<T> = {
@@ -50,7 +53,18 @@ export function createRowRecord<T extends CustomTableTypes>(cells: T, state: Row
   return record;
 }
 
-/** Spiegelt `Rows.ts`s private `_commitCreateAndUpdate()`. */
+/**
+ * Gemeinsamer Commit-Schritt für `COMMIT_CHANGES`/`COMMIT_AUTO_SAVE`: setzt `new`/`modified`
+ * (und bei `deleted` nur die Fehlermarker) zurück, außer für fehlgeschlagene Zeilen und
+ * Zeilen außerhalb des Snapshots. Vergibt neue `_id`s der Reihe nach an die `new`-Zeilen im Batch.
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param rows - Aktuelle Zeilen.
+ * @param createdIds - Index unter den neuen Zeilen im Batch -> vom Backend vergebene `_id`.
+ * @param failedRowKeys - `getRowKey()`-Schlüssel fehlgeschlagener Zeilen.
+ * @param includedRowKeys - Snapshot der zu committenden Zeilen; `undefined` = alle.
+ * @returns Neues Zeilen-Array.
+ */
 function commitCreateAndUpdate<T extends CustomTableTypes>(
   rows: RowRecord<T>[],
   createdIds: Map<number, string> | undefined,
@@ -99,6 +113,14 @@ function commitCreateAndUpdate<T extends CustomTableTypes>(
   });
 }
 
+/**
+ * Reducer für den Zeilen-/Spaltenzustand einer `CustomTable`.
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param state - Bisheriger State.
+ * @param action - Auszuführende Aktion.
+ * @returns Neuer State; bei unbekannter Aktion oder nicht gefundener Zeile der unveränderte State.
+ */
 export function tableReducer<T extends CustomTableTypes>(
   state: TableReducerState<T>,
   action: TableAction<T>,
@@ -164,7 +186,7 @@ export function tableReducer<T extends CustomTableTypes>(
           if (row._state === 'unchanged') {
             return { ...row, cells: action.value, _id: nextId, _state: 'modified' as RowState };
           }
-          // 'new' bleibt 'new', 'deleted'/'modified' bleiben unveraendert (siehe Row.ts).
+          // 'new' bleibt 'new', 'deleted'/'modified' behalten ihren State.
           return { ...row, cells: action.value, _id: nextId };
         }),
       };

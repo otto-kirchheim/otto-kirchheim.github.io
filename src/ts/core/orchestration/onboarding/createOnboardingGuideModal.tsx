@@ -5,6 +5,11 @@ import OnboardingGuidePanel from './OnboardingGuidePanel';
 
 const PANEL_ID = 'onboarding-guide-panel';
 
+/**
+ * Mountet das Ersteinrichtungs-Panel unten rechts am Body; ist es schon offen, passiert nichts.
+ *
+ * @param captureSnapshot - Ob das Panel den Snapshot der Template-Werte anlegen soll.
+ */
 function openGuidePanel(captureSnapshot: boolean): void {
   if (document.querySelector(`#${PANEL_ID}`)) return;
 
@@ -16,6 +21,7 @@ function openGuidePanel(captureSnapshot: boolean): void {
   container.style.zIndex = '1040';
   document.body.appendChild(container);
 
+  /** Entfernt das Panel wieder aus dem DOM. */
   const close = () => {
     unmount(container);
     container.remove();
@@ -24,10 +30,12 @@ function openGuidePanel(captureSnapshot: boolean): void {
   mount(container, <OnboardingGuidePanel captureSnapshot={captureSnapshot} onClose={close} />);
 }
 
+/** Oeffnet die Ersteinrichtung (z. B. ueber die Hilfe), unabhaengig davon, ob sie schon abgeschlossen wurde. */
 export function openOnboardingGuide(): void {
   openGuidePanel(false);
 }
 
+/** Oeffnet die Ersteinrichtung nur beim ersten Mal und merkt sich das im Storage (`OnboardingAbgeschlossen`). */
 export function openOnboardingGuideOnce(): void {
   if (Storage.get<boolean>('OnboardingAbgeschlossen', { default: false })) return;
   Storage.set('OnboardingAbgeschlossen', true);

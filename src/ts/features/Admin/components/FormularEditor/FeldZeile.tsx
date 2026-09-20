@@ -14,6 +14,11 @@ import { WertVorschau } from './WertVorschau';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
+/**
+ * Aufklappbare Zeile für ein Feld der Seite: Position, Art des Inhalts (Datenfeld, Text, Mehrere, Summe, Ankreuzen, Überschrift), Anzeigename, Darstellung und Beispielwert.
+ *
+ * @param props - Feld samt Schlüssel, Formular, Tabellen, bereits belegten Datenpfaden, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Scharfschalten, Ändern, Umbenennen, Löschen).
+ */
 function FeldZeile({
   keyName,
   feld,
@@ -342,6 +347,11 @@ const VORLAGEN: { label: string; key: string; feld: Feld }[] = [
   },
 ];
 
+/**
+ * Liste aller allgemeinen Felder einer Seite (ohne `nurBeiSignatur`-Felder) mit Schaltflächen zum Anlegen aus `VORLAGEN`.
+ *
+ * @param props - Felder der Seite, Formular, Tabellen, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Scharfschalten, Ändern).
+ */
 export function FeldListe({
   felder,
   formular,
@@ -359,10 +369,16 @@ export function FeldListe({
   onChange: (felder: Record<string, Feld>) => void;
   vorschau: Vorschau;
 }) {
+  /**
+   * Benennt den Schlüssel eines Feldes um (Reihenfolge bleibt erhalten), übernimmt bei fehlendem Format den Katalog-Vorschlag und führt die Scharfschaltung auf den neuen Schlüssel mit.
+   *
+   * @param alt - Bisheriger Schlüssel des Feldes.
+   * @param neu - Neuer Schlüssel; leer, gleich `alt` oder bereits vergeben = keine Änderung.
+   */
   function umbenennen(alt: string, neu: string) {
     if (!neu || neu === alt || felder[neu]) return;
-    // Format-Vorschlag aus dem Katalog übernehmen, aber nur wenn das Feld noch keins hat --
-    // verhindert Bugs wie bei OE (Array ohne `liste`-Format), ohne eine bewusste Wahl zu überschreiben.
+    // Format-Vorschlag aus dem Katalog nur übernehmen, wenn das Feld noch keins hat: so bleibt eine bewusste
+    // Wahl erhalten, und ein Array ohne `liste`-Format (z.B. OE) wird trotzdem korrekt dargestellt.
     const vorschlag = katalogFelder(formular).find(e => e.pfad === neu)?.format;
     const naechste: Record<string, Feld> = {};
     for (const [k, v] of Object.entries(felder))
@@ -371,6 +387,12 @@ export function FeldListe({
     if (istGleich(armed, { bereich: 'feld', key: alt })) onArm({ bereich: 'feld', key: neu });
   }
 
+  /**
+   * Fügt ein Feld unter einem freien Schlüssel hinzu und schaltet es scharf.
+   *
+   * @param basis - Wunschschlüssel; wird bei Kollision zu einem freien Schlüssel erweitert.
+   * @param feld - Anzulegendes Feld.
+   */
   function hinzufuegen(basis: string, feld: Feld) {
     const key = naechsterFreierSchluessel(felder, basis);
     onChange({ ...felder, [key]: feld });

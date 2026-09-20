@@ -5,15 +5,6 @@ import { STANDARD_UNGUELTIG_MELDUNG } from '@/components/dbFeldHelfer';
 import { useEmailStatus } from '../utils/emailStatusStore';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
-/**
- * Phase L3: "Persönliche Daten"-Accordion-Panel (ehemals `index.html`, `#collapseOne`-Inhalt)
- * als React-Komponente. Rein praesentational -- alle Feld-IDs 1:1 uebernommen, denn
- * `generateEingabeMaskeEinstellungen.ts`/`saveEinstellungen.ts` lesen/schreiben jedes Feld
- * ausschliesslich per `document.querySelector('#<Feldname>')` (Feld-Id === `IVorgabenUPers`-Key)
- * -- unveraendert gueltig, unabhaengig davon, ob React oder statisches HTML das Element erzeugt
- * hat. Keine dieser Dateien musste fuer den Umbau angefasst werden.
- */
-
 const TAETIGKEIT_VORSCHLAEGE = ['Arbeiter', 'Facharbeiter', 'Signalmechaniker', 'Signalmechaniker RBEG', 'Meister'];
 
 const BUNDESLAENDER = [
@@ -39,7 +30,11 @@ type FeldProps = { id: string; label: string; icon: string } & Partial<
   Omit<ComponentProps<typeof DBInput>, 'id' | 'label' | 'icon'>
 >;
 
-/** Gemeinsame Huelle der Stammdaten-Felder: schwebendes Label, Icon, Standard-Fehlermeldung. */
+/**
+ * Gemeinsame Huelle der Stammdaten-Felder: schwebendes Label, Icon, Standard-Fehlermeldung.
+ *
+ * @param props - `id`, `label`, `icon`; weitere Props gehen an `DBInput`.
+ */
 function Feld({ id, label, icon, ...rest }: FeldProps) {
   return (
     <DBInput
@@ -55,7 +50,11 @@ function Feld({ id, label, icon, ...rest }: FeldProps) {
   );
 }
 
-/** Auswahlfeld analog `Feld`; die Optionen kommen als Kinder. */
+/**
+ * Auswahlfeld analog `Feld`; die Optionen kommen als Kinder.
+ *
+ * @param props - `id`, `label`, `icon`, `children` (Optionen); weitere Props gehen an `DBSelect`.
+ */
 function Auswahl({
   id,
   label,
@@ -84,6 +83,11 @@ function Auswahl({
   );
 }
 
+/**
+ * Panel "Persoenliche Daten" der Einstellungen. Rein praesentational: `generateEingabeMaskeEinstellungen.ts` und
+ * `saveEinstellungen.ts` lesen/schreiben jedes Feld per `document.querySelector('#<Feld-Id>')`, die Feld-Id entspricht
+ * deshalb dem `IVorgabenUPers`-Schluessel. Den Hinweis zur E-Mail-Verifizierung liefert `useEmailStatus()`.
+ */
 export default function PersoenlicheDatenPanel() {
   const emailStatus = useEmailStatus();
 

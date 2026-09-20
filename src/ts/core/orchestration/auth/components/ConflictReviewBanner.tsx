@@ -10,6 +10,12 @@ type Props = {
   onSave: () => Promise<void>;
 };
 
+/**
+ * Hinweisbanner nach einem Sync mit Konflikten: nennt die betroffenen Ressourcen samt Monaten
+ * und bietet den Knopf zum Uebernehmen (Speichern), waehrend dessen der Knopf gesperrt ist.
+ *
+ * @param props - `resources` (Name plus Monate 1-12) und `onSave` (async Speichern).
+ */
 const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +33,7 @@ const ConflictReviewBanner: FC<Props> = ({ resources, onSave }) => {
     )
     .join(', ')}`;
 
+  /** Startet `onSave` und sperrt den Knopf bis zum Ende, auch bei Fehlern. */
   const handleClick = async () => {
     setSaving(true);
     try {

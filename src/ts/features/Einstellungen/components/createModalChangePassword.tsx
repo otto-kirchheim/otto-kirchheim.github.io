@@ -4,6 +4,9 @@ import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, showModal } f
 import { PASSWORD_MIN_LENGTH } from '@/infrastructure/validation/passwordValidation';
 import { checkPasswort } from '../utils';
 
+/**
+ * Öffnet das Modal zum Ändern des Passworts (altes Passwort, neues Passwort mit Stärke-Anzeige und Wiederholung). Nach gültiger Formularprüfung übernimmt `checkPasswort` das Absenden.
+ */
 export default function createModalChangePassword(): void {
   const ref = createRef<HTMLFormElement>();
   const passwortRef = createRef<HTMLInputElement>();
@@ -75,6 +78,11 @@ export default function createModalChangePassword(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Erzeugt den Submit-Handler: unterdrückt das Standard-Submit, bricht bei ungültigem Formular ab und ruft sonst `checkPasswort`.
+   *
+   * @returns Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;

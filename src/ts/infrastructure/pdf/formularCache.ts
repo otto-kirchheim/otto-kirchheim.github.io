@@ -19,12 +19,24 @@ interface VorlagenCacheEintrag {
 type VersionCache = Record<string, VersionCacheEintrag>;
 type VorlagenCache = Record<string, VorlagenCacheEintrag>;
 
+/**
+ * Cache-Schlüssel einer Version.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`).
+ * @returns `<formular>:<stichtag>`.
+ */
 function versionSchluessel(formular: string, stichtag: string): string {
   return `${formular}:${stichtag}`;
 }
 
 /** Speichert eine erfolgreich aufgelöste Version -- best-effort, ein Schreibfehler (z.B. Quota)
- * darf den eigentlichen PDF-Export nie verhindern. */
+ * darf den eigentlichen PDF-Export nie verhindern.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`), für den die Version aufgelöst wurde.
+ * @param version - Die aufgelöste Version.
+ */
 export function cacheVersion(formular: string, stichtag: string, version: Version): void {
   try {
     const cache = Storage.get<VersionCache>('formularVersionCache', { default: {} });
@@ -37,7 +49,12 @@ export function cacheVersion(formular: string, stichtag: string, version: Versio
 
 /** Liest eine zwischengespeicherte Version. Validiert über `parseVersion()` -- eine strukturell
  * nicht mehr passende Altlast (z.B. nach einer Breaking-Change am Typsystem) gilt als Cache-Miss
- * statt offline mit einem Zod-Fehler abzustürzen. */
+ * statt offline mit einem Zod-Fehler abzustürzen.
+ *
+ * @param formular - Formular-Code.
+ * @param stichtag - Stichtag (`YYYY-MM-DD`).
+ * @returns Die Version, `undefined` bei Cache-Miss oder nicht mehr gültiger Struktur.
+ */
 export function getCachedVersion(formular: string, stichtag: string): Version | undefined {
   try {
     const cache = Storage.get<VersionCache>('formularVersionCache', { default: {} });
@@ -50,7 +67,11 @@ export function getCachedVersion(formular: string, stichtag: string): Version | 
 }
 
 /** Speichert eine geladene Vorlagen-PDF, dedupliziert über die (inhaltsstabile) `vorlagenId`.
- * Best-effort wie `cacheVersion()`. */
+ * Best-effort wie `cacheVersion()`; hält höchstens `MAX_VORLAGEN_EINTRAEGE` Einträge (ältester fliegt zuerst).
+ *
+ * @param vorlagenId - Inhaltsstabile Id der Vorlage.
+ * @param datei - Die geladene Vorlagen-PDF.
+ */
 export async function cacheVorlage(vorlagenId: string, datei: File): Promise<void> {
   try {
     const cache = Storage.get<VorlagenCache>('vorlagenPdfCache', { default: {} });
@@ -63,7 +84,12 @@ export async function cacheVorlage(vorlagenId: string, datei: File): Promise<voi
   }
 }
 
-/** Liest eine zwischengespeicherte Vorlagen-PDF. */
+/**
+ * Liest eine zwischengespeicherte Vorlagen-PDF.
+ *
+ * @param vorlagenId - Inhaltsstabile Id der Vorlage.
+ * @returns Die PDF als `File`, `undefined` bei Cache-Miss oder Lesefehler.
+ */
 export function getCachedVorlage(vorlagenId: string): File | undefined {
   try {
     const cache = Storage.get<VorlagenCache>('vorlagenPdfCache', { default: {} });
@@ -77,6 +103,11 @@ export function getCachedVorlage(vorlagenId: string): File | undefined {
   }
 }
 
+/**
+ * Entfernt den Eintrag mit dem kleinsten `timestamp` (verändert `cache` direkt).
+ *
+ * @param cache - Vorlagen-Cache; bei leerem Cache passiert nichts.
+ */
 function evictAelteste(cache: VorlagenCache): void {
   const schluessel = Object.keys(cache);
   if (schluessel.length === 0) return;
@@ -84,6 +115,13 @@ function evictAelteste(cache: VorlagenCache): void {
   delete cache[aeltester];
 }
 
+/**
+ * Kodiert eine Datei als Base64. Die Bytes gehen in Blöcken an `String.fromCharCode`, weil ein
+ * Spread über die ganze Datei das Argument-Limit sprengen würde.
+ *
+ * @param datei - Zu kodierende Datei.
+ * @returns Base64-String.
+ */
 async function datenAlsBase64(datei: File): Promise<string> {
   const bytes = new Uint8Array(await datei.arrayBuffer());
   const CHUNK = 0x8000;
@@ -92,6 +130,12 @@ async function datenAlsBase64(datei: File): Promise<string> {
   return btoa(binaer);
 }
 
+/**
+ * Dekodiert einen Base64-String zu Bytes.
+ *
+ * @param base64 - Base64-String aus `datenAlsBase64()`.
+ * @returns Die dekodierten Bytes.
+ */
 function base64AlsBytes(base64: string): Uint8Array {
   const binaer = atob(base64);
   const bytes = new Uint8Array(binaer.length);

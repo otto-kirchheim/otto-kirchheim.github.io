@@ -4,6 +4,10 @@ import type { Spalte, TabellenBereich, TabellenDef } from '@otto-kirchheim/neben
  * Die auf DIESER Seite gültigen Spalten einer Tabelle: der seitenspezifische Satz, sonst der der
  * Tabelle. Bewusst eine gemeinsame Funktion für Renderer, Editor und Vorschau — sonst zeichnete
  * eine der drei Stellen irgendwann nach der jeweils anderen Regel.
+ *
+ * @param bereich - Seitenbereich der Tabelle.
+ * @param tabelle - Tabellen-Definition (Standardwerte).
+ * @returns Der Spaltensatz.
  */
 export function spaltenFuer(bereich: TabellenBereich, tabelle: TabellenDef): Spalte[] {
   return bereich.spalten ?? tabelle.spalten;
@@ -12,6 +16,10 @@ export function spaltenFuer(bereich: TabellenBereich, tabelle: TabellenDef): Spa
 /**
  * Die auf DIESER Seite gültige Zeilenhöhe einer Tabelle: der seitenspezifische Wert, sonst der der
  * Tabelle. Gleiches Muster wie `spaltenFuer()`, aus demselben Grund.
+ *
+ * @param bereich - Seitenbereich der Tabelle.
+ * @param tabelle - Tabellen-Definition (Standardwerte).
+ * @returns Die Zeilenhöhe.
  */
 export function hoeheFuer(bereich: TabellenBereich, tabelle: TabellenDef): number {
   return bereich.hoehe ?? tabelle.hoehe;
@@ -20,6 +28,10 @@ export function hoeheFuer(bereich: TabellenBereich, tabelle: TabellenDef): numbe
 /**
  * Die auf DIESER Seite gültige Startposition einer Tabelle: der seitenspezifische Wert, sonst der
  * der Tabelle. Gleiches Muster wie `spaltenFuer()`, aus demselben Grund.
+ *
+ * @param bereich - Seitenbereich der Tabelle.
+ * @param tabelle - Tabellen-Definition (Standardwerte).
+ * @returns Die Startposition.
  */
 export function startYFuer(bereich: TabellenBereich, tabelle: TabellenDef): number {
   return bereich.startY ?? tabelle.startY;
@@ -28,6 +40,10 @@ export function startYFuer(bereich: TabellenBereich, tabelle: TabellenDef): numb
 /**
  * Die auf DIESER Seite gültige Zeilenzahl einer Tabelle: der seitenspezifische Wert, sonst der der
  * Tabelle. Gleiches Muster wie `spaltenFuer()`, aus demselben Grund.
+ *
+ * @param bereich - Seitenbereich der Tabelle.
+ * @param tabelle - Tabellen-Definition (Standardwerte).
+ * @returns Die Zeilenzahl.
  */
 export function maxZeilenFuer(bereich: TabellenBereich, tabelle: TabellenDef): number {
   return bereich.maxZeilen ?? tabelle.maxZeilen;

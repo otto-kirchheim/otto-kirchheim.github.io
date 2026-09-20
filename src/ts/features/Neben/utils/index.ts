@@ -4,6 +4,12 @@ import type { CustomTable } from '@/infrastructure/table/CustomTable';
 import type { IDatenN } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 
+/**
+ * Schreibt die sichtbaren Zeilen der Neben-Tabelle in den Storage.
+ *
+ * @param ft - Neben-Tabelle.
+ * @returns Zeilen, wie sie im Storage stehen.
+ */
 const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData('N', ft);
 
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };

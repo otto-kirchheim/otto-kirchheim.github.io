@@ -32,11 +32,13 @@ const ARTEN: { wert: SonderZeileArt; label: string; nurListenPlatz?: boolean }[]
 ];
 
 /**
- * Name-Eingabe mit eigenem Entwurfsstand: `tabelle.sonderzeilen` ist ein `Record`, dessen Key sich
- * beim Umbenennen ändert -- ein `onChange`/`onInput` direkt auf den Record-Key würde bei JEDEM
- * Tastendruck umbenennen und (weil die Karte darüber mit diesem Namen schlüsselt) das Eingabefeld
- * neu mounten, was Fokus/Cursor-Position verliert. Der Entwurf lebt deshalb lokal und wird erst bei
- * `onBlur` übernommen -- ungültige oder leere Eingaben springen zurück auf den bisherigen Namen.
+ * Name-Eingabe mit eigenem Entwurfsstand: `tabelle.sonderzeilen` ist ein `Record`, dessen Key sich beim
+ * Umbenennen ändert -- ein `onChange` direkt auf den Key würde bei JEDEM Tastendruck umbenennen und
+ * (weil die Karte darüber mit diesem Namen schlüsselt) das Eingabefeld neu mounten, was Fokus und
+ * Cursorposition verliert. Der Entwurf lebt deshalb lokal und wird erst bei `onBlur` übernommen;
+ * leere, unveränderte oder vergebene Namen springen auf den bisherigen zurück.
+ *
+ * @param props - Aktueller Name, bereits vergebene andere Namen (`vergeben`) und `onRename` für den übernommenen Namen.
  */
 function SonderZeileName({
   name,
@@ -69,16 +71,24 @@ function SonderZeileName({
 }
 
 /**
- * Kopf-/Fußzeilen-Inhalt einer Tabelle (siehe `SonderZeile` in `shared`): pro Spalte ein Kreuz statt
- * einer eigenen Koordinate -- x kommt beim Rendern von der Spalte selbst (`build.ts`). Gegenstück zu
- * `ListenGruppen` (dynamische Spaltengruppen), gleiches Card-pro-Eintrag-Muster. WO eine Sonderzeile
- * auf einer Seite erscheint (auch mehrfach, z.B. Überschrift oben+unten), legt der Platzierungs-Block
- * in `FeldPanel.tsx`s `TabellenBlock` fest, nicht diese Komponente. `vorschau` liefert dieselben
- * Beispielwerte, die auch das erzeugte PDF zeigen würde (siehe `Vorschau` in `FeldPanel.tsx`).
+ * Kopf-/Fußzeilen-Inhalt einer Tabelle (siehe `SonderZeile` in `shared`): pro Spalte ein Kreuz statt einer
+ * eigenen Koordinate -- x kommt beim Rendern von der Spalte selbst (`build.ts`). Gegenstück zu
+ * `ListenGruppen` (dynamische Spaltengruppen), gleiches Card-pro-Eintrag-Muster. WO eine Sonderzeile auf
+ * einer Seite erscheint (auch mehrfach, z.B. Überschrift oben+unten), legt der Platzierungs-Block in
+ * `TabellenBlock.tsx` fest, nicht diese Komponente. `vorschau` liefert dieselben Beispielwerte wie das
+ * erzeugte PDF (siehe `Vorschau` in `feldPanelTypen.ts`).
+ *
+ * @param props - Tabelle samt Name, Vorschau, `onChange` für die geänderte Tabelle und `onUmbenennen` für das seitenübergreifende Umbenennen.
  */
 export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmbenennen }: Props) {
   const zeilen = Object.entries(tabelle.sonderzeilen ?? {});
 
+  /**
+   * Setzt oder löscht eine Sonderzeile der Tabelle; ohne verbleibende Sonderzeilen wird `sonderzeilen` entfernt.
+   *
+   * @param name - Name der Sonderzeile.
+   * @param zeile - Neue Sonderzeile; `undefined` löscht sie.
+   */
   function setzeZeile(name: string, zeile: SonderZeile | undefined): void {
     const rest = { ...(tabelle.sonderzeilen ?? {}) };
     if (zeile) rest[name] = zeile;
@@ -86,6 +96,9 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
     onChange({ ...tabelle, sonderzeilen: Object.keys(rest).length > 0 ? rest : undefined });
   }
 
+  /**
+   * Legt eine leere Sonderzeile mit dem ersten freien Namen (`Sonderzeile`, `Sonderzeile 2`, ...) und dem Bezug `$alle` an.
+   */
   function neueZeile(): void {
     let name = 'Sonderzeile';
     let i = 2;
@@ -93,11 +106,18 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
     setzeZeile(name, { ueber: '$alle', zellen: [] });
   }
 
-  // Umbenennen läuft eine Ebene höher (`onUmbenennen`), weil dabei nicht nur der Key in
-  // `tabelle.sonderzeilen` wandert, sondern auch jede Platzierung
-  // (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite -- sonst zeigen die Platzierungen
-  // nach dem Umbenennen ins Leere.
+  // Umbenennen läuft eine Ebene höher (`onUmbenennen`): dabei wandert nicht nur der Key in
+  // `tabelle.sonderzeilen`, sondern auch jede Platzierung (`TabellenBereich.sonderzeilen[].name`) auf JEDER
+  // Seite -- sonst zeigen die Platzierungen nach dem Umbenennen ins Leere.
 
+  /**
+   * Ersetzt die Zelle einer Spalte innerhalb einer Sonderzeile oder entfernt sie.
+   *
+   * @param name - Name der Sonderzeile.
+   * @param zeile - Bisherige Sonderzeile.
+   * @param spaltenIndex - Index der Spalte, deren Zelle ersetzt wird.
+   * @param zelle - Neue Zelle; `undefined` entfernt sie.
+   */
   function setzeZelle(
     name: string,
     zeile: SonderZeile,
@@ -155,7 +175,6 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                 : undefined;
               return (
                 <div key={index} className="raster mb-1 align-items-center abstand-1">
-                  {/* Was: welche Spalte, welcher Wert. */}
                   <div className="sp-4 small text-truncate" title={bezeichnung}>
                     {bezeichnung}
                   </div>
@@ -185,7 +204,6 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
 
                   {zelle && (
                     <>
-                      {/* Format: wie der Wert dieser Zelle angezeigt wird. */}
                       <div className="mt-1">
                         <DbAuswahl
                           beschriftung="Format dieser Zelle -- ohne Auswahl gilt das Format der Spalte"
@@ -207,7 +225,6 @@ export function SonderZeilen({ tabelle, tabelleName, vorschau, onChange, onUmben
                         </DbAuswahl>
                       </div>
 
-                      {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen. */}
                       <div className="sp-3 mt-1">
                         <DbFeld
                           beschriftung="Schriftgröße dieser Zelle -- ohne Angabe gilt die Größe der Spalte"

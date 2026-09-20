@@ -46,7 +46,12 @@ export const HOLIDAY_REGION_OPTIONS: Array<{ value: Region; label: string }> = [
 
 const VALID_REGIONS = new Set<string>(HOLIDAY_REGION_OPTIONS.map(o => o.value));
 
-/** Extrahiert eine 5-stellige PLZ aus einem Freitext-Adressstring. */
+/**
+ * Extrahiert eine 5-stellige PLZ aus einem Freitext-Adressstring.
+ *
+ * @param address - Adresse als Freitext.
+ * @returns Die erste 5-stellige Zahl, oder `null`.
+ */
 function extractPlz(address: string): string | null {
   const match = /\b(\d{5})\b/.exec(address);
   return match ? match[1] : null;
@@ -61,6 +66,9 @@ type OpenPlzLocalityResponse = Array<{ federalState?: { key?: string } }>;
  *
  * Diese Funktion ist **async** und eignet sich zur einmaligen Vorbesetzung in der
  * Einstellungen-UI. Für die Bereitschaftsberechnung → `resolveHolidayRegion` verwenden.
+ *
+ * @param address - Adresse als Freitext (wird vorher normalisiert).
+ * @returns Regionscode, oder `null` (siehe oben).
  */
 export async function deriveHolidayRegionFromAddress(address: string): Promise<Region | null> {
   const normalizedAddress = normalizeGermanAddress(address);
@@ -89,7 +97,11 @@ type BundeslandAutoFillOptions = {
 
 /**
  * Bindet die automatische Bundesland-Ermittlung an das Einstellungsformular.
- * Vorhandene manuelle Auswahlen werden nicht überschrieben.
+ * Vorhandene manuelle Auswahlen werden nicht überschrieben. Die Listener (`blur`/`change`) werden
+ * pro Adressfeld nur einmal gebunden; ist noch kein Bundesland gewählt, läuft die Ermittlung sofort.
+ *
+ * @param opts - Optionale Selektoren für das Adressfeld (`addressSelector`) und die Bundesland-Auswahl
+ *   (`bundeslandSelector`); ohne beide Elemente im DOM passiert nichts.
  */
 export function setupBundeslandAutoFill(opts: BundeslandAutoFillOptions = {}): void {
   const { addressSelector = '#ErsteTkgStAdresse', bundeslandSelector = '#Bundesland' } = opts;
@@ -98,6 +110,10 @@ export function setupBundeslandAutoFill(opts: BundeslandAutoFillOptions = {}): v
 
   if (!addressInput || !bundeslandSelect) return;
 
+  /**
+   * Normalisiert die Adresse im Feld und setzt daraus das Bundesland, solange der Nutzer es nicht
+   * selbst geändert hat (leer oder noch der zuletzt automatisch gesetzte Wert).
+   */
   const syncBundeslandFromAddress = async (): Promise<void> => {
     const normalizedAddress = normalizeGermanAddress(addressInput.value);
     addressInput.value = normalizedAddress;
@@ -137,6 +153,9 @@ export function setupBundeslandAutoFill(opts: BundeslandAutoFillOptions = {}): v
  * Gibt `'BUND'` zurück, wenn kein gültiger Regionscode gespeichert ist.
  *
  * Diese Funktion ist **synchron** und sicher für den Einsatz in der Bereitschaftsberechnung.
+ *
+ * @param opts - `bundesland`: gespeicherter Regionscode (z. B. `'BY'`); leer oder ungültig ergibt `'BUND'`.
+ * @returns Regionscode für die Feiertagsberechnung.
  */
 export function resolveHolidayRegion(opts: { bundesland?: string | null }): Region {
   const { bundesland } = opts;

@@ -19,35 +19,11 @@ import PersoenlicheDatenPanel from '@/features/Einstellungen/components/Persoenl
 import VorgabenBTable from '@/features/Einstellungen/components/VorgabenBTable';
 
 /**
- * Phase L3: Einstellungen-Tab-Huelle (ehemals `index.html`: Toolbar, Jahr-Formular,
- * Accordion-Geruest) als React-Komponente, gemountet direkt in die `#Einstellungen`-Tab-Pane
- * (analog `StartTab`/`BerechnungTab` aus L1/L2 -- kein Wrapper-Div).
- *
- * Rein praesentational -- die gesamte Verkabelung (`Einstellungen/index.ts`,
- * `saveEinstellungen.ts`, `generateEingabeMaskeEinstellungen.ts`, `selectYear.ts`, ...) bleibt
- * bewusst unveraendert: sie liest/schreibt jedes Feld ausschliesslich per
- * `document.querySelector('#<Id>')`, unabhaengig davon, ob React oder statisches HTML das
- * Element erzeugt hat. Alle IDs behalten deshalb ihren Wert -- nur die reine Markup-Huelle
- * (Knopf-Reihen als `<DBStack>`/`<DBButton>` statt Hand-Markup, siehe Umbau "Flex-Layouts ->
- * DBStack") wurde angepasst:
- * - `#PasskeyList` bleibt leerer Container, der von `index.ts` (`renderPasskeyList`) weiterhin
- *   per plain-DOM (`document.createElement`) befuellt wird -- kein React-Root, unveraendert.
- * - `#arbeitszeit-panel`/`#fahrzeiten-panel`/`#settings-zulagen-list` bleiben leere Container
- *   fuer die bereits bestehenden, unabhaengigen React-Roots
- *   (`ArbeitszeiteingabePanel`/`FahrzeitenPanel`/`ZulagenCheckboxList`, per `mount()` aus
- *   `generateEingabeMaskeEinstellungen.ts` -- exakt das gleiche Leerer-Blatt-Prinzip wie
- *   `#berechnungMobileCards` in `BerechnungTab.tsx`).
- * - `#tableVE` ist seit Achse B des `useReducer`-Umbaus eine eigene Feature-Komponente
- *   (`VorgabenBTable`, siehe `features/Einstellungen/components/`) statt eines rohen
- *   `<table>` -- ausgelagert, weil diese Huelle bewusst infrastructure-schichtig ist und laut
- *   Architektur nicht auf `features/` zugreifen darf (analog `PersoenlicheDatenPanel`).
- * - `#collapseFive` als Eltern-Id bleibt bestehen: `generateEingabeMaskeEinstellungen.ts`/
- *   `saveEinstellungen.ts` scopen ihre `[data-tab-key]`-Suche darauf.
- */
-/**
  * Ein Abschnitt des Einstellungen-Akkordeons. Der "offen"-Zustand liegt im
  * `offenerAbschnittStore` (genau ein Abschnitt offen, von aussen oeffenbar) statt in
  * `behavior="single"` -- siehe dort zur Begruendung.
+ *
+ * @param props - `id` des Abschnitts, `titel` der Kopfzeile, `children` als Inhalt.
  */
 function Abschnitt({ id, titel, children }: { id: string; titel: string; children: ReactNode }) {
   const offen = useOffenenAbschnitt() === id;
@@ -66,6 +42,20 @@ function Abschnitt({ id, titel, children }: { id: string; titel: string; childre
   );
 }
 
+/**
+ * Einstellungen-Tab (Toolbar, Jahr-Formular, Accordion), gemountet in die `#Einstellungen`-Tab-Pane.
+ *
+ * Rein praesentational: die Verkabelung (`Einstellungen/index.ts`, `saveEinstellungen.ts`,
+ * `generateEingabeMaskeEinstellungen.ts`, `selectYear.ts`, ...) liest und schreibt jedes Feld per
+ * `document.querySelector('#<Id>')`, die IDs sind deshalb ein Vertrag.
+ * - `#PasskeyList` bleibt leerer Container, den `renderPasskeyList` (`Einstellungen/index.ts`) per DOM befuellt.
+ * - `#arbeitszeit-panel`/`#fahrzeiten-panel`/`#settings-zulagen-list` sind leere Container fuer eigene
+ *   React-Roots, die `generateEingabeMaskeEinstellungen.ts` per `mount()` einhaengt.
+ * - `#tableVE` steckt in `VorgabenBTable` (`features/Einstellungen/components/`): diese Huelle liegt in
+ *   `infrastructure/` und darf laut Architektur nicht auf `features/` zugreifen -- daher wird sie dort
+ *   nur eingebunden (analog `PersoenlicheDatenPanel`).
+ * - `#collapseFive` als Eltern-Id: `saveEinstellungen.ts` scopt seine `[data-tab-key]`-Suche darauf.
+ */
 export default function EinstellungenTab() {
   return (
     <DBSection width="medium" spacing="none" className="text-center">
@@ -84,10 +74,8 @@ export default function EinstellungenTab() {
         </DBButton>
       </DBHeadingH1>
 
-      {/* Ausloggen wanderte in die Shell-Kopfzeile (siehe AppHeader.tsx "actions2") --
-          "Buttons und Elemente sollten ein Raster einhalten"-Feedback plus immer erreichbar
-          statt im Tab versteckt. Passwort Ändern wanderte in den Biometrie-Accordion (siehe
-          dort) -- Account-Sicherheitsaktionen jetzt an einer Stelle gruppiert. */}
+      {/* Ausloggen liegt in der Shell-Kopfzeile (`AppHeader.tsx`, `actions2`), Passwort Ändern im
+          Abschnitt "Sicherheit". */}
       <DBStack direction="column" alignment="center" justifyContent="center" gap="medium">
         <form id="formSelectMonatJahr">
           <DBStack direction="row" alignment="end" gap="medium" className="knopfreihe-gleich">
@@ -153,11 +141,8 @@ export default function EinstellungenTab() {
                   </span>
                 </div>
                 <DBStack direction="column" gap="x-small">
-                  {/* Haupt-Aktion als gefuellter Knopf, die Zweit-Aktionen darunter nur
-                         umrandet. Kein Rot: das DB-Regelwerk laesst roten Text nur fuer
-                         Links und Warnungen zu (Markenfarben, Double Coding). Passwort Ändern
-                         zog von der oberen Knopfreihe her -- Account-Sicherheitsaktionen
-                         jetzt an einer Stelle gruppiert. */}
+                  {/* Haupt-Aktion als gefuellter Knopf, Zweit-Aktionen nur umrandet. Kein Rot: das
+                         DB-Regelwerk laesst roten Text nur fuer Links und Warnungen zu. */}
                   <DBButton variant="filled" type="button" id="btnAddPasskeyInline" disabled>
                     Biometrie einrichten
                   </DBButton>
@@ -192,7 +177,6 @@ export default function EinstellungenTab() {
           <Abschnitt id="collapseFive" titel="Einstellungen & Bereiche">
             <div>
               <div className="d-flex flex-column gap-4">
-                {/* Sichtbare Bereiche */}
                 <div>
                   <DBHeadingH6 className="fw-bold mb-3">Sichtbare Bereiche</DBHeadingH6>
                   <p className="text-muted small mb-3">Welche Bereiche sollen in der Navigation sichtbar sein?</p>
@@ -206,7 +190,6 @@ export default function EinstellungenTab() {
 
                 <DBDivider width="full" margin="none" />
 
-                {/* AutoSave */}
                 <div>
                   <DBHeadingH6 className="fw-bold mb-3">AutoSave</DBHeadingH6>
                   <div className="d-flex flex-column gap-3">

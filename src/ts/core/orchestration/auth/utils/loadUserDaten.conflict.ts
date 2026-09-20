@@ -5,6 +5,12 @@ import dayjs from 'dayjs';
 import { normalizeRows, rowMatchesMonth } from './loadUserDaten.helpers';
 import type { UnterschiedNachMonat } from './loadUserDaten.sync';
 
+/**
+ * Ordnet die Unterschiede den Storage-Keys der Ressourcen zu und sammelt je Key die betroffenen Monate.
+ *
+ * @param vorhanden - Erkannte Unterschiede.
+ * @returns Storage-Key auf die Monate mit Unterschied; Beschreibungen ohne Storage-Zuordnung fehlen.
+ */
 export function createChangedMonthsByStorage(vorhanden: UnterschiedNachMonat[]): Map<TStorageData, Set<number>> {
   const beschreibungToStorage: Partial<Record<UnterschiedNachMonat['beschreibung'], TStorageData>> = {
     Bereitschaftszeit: 'dataBZ',
@@ -27,6 +33,12 @@ export function createChangedMonthsByStorage(vorhanden: UnterschiedNachMonat[]):
   return changedMonthsByStorage;
 }
 
+/**
+ * Gruppiert die Unterschiede nach Ressourcenbeschreibung.
+ *
+ * @param vorhanden - Erkannte Unterschiede.
+ * @returns Beschreibung der Ressource auf ihre Unterschiede.
+ */
 export function groupUnterschiedeByResource(vorhanden: UnterschiedNachMonat[]): Map<string, UnterschiedNachMonat[]> {
   const grouped = new Map<string, UnterschiedNachMonat[]>();
 
@@ -39,6 +51,13 @@ export function groupUnterschiedeByResource(vorhanden: UnterschiedNachMonat[]): 
   return grouped;
 }
 
+/**
+ * Baut den HTML-Text des Konfliktdialogs: je Ressource die Monate mit lokalem und Serverwert.
+ * Sortiert die Listen in `grouped` dabei nach Monat (in place).
+ *
+ * @param grouped - Unterschiede je Ressource.
+ * @returns HTML für den Konfliktdialog.
+ */
 export function buildUnterschiedeMessage(grouped: Map<string, UnterschiedNachMonat[]>): string {
   const unterschiedeText = Array.from(grouped.entries())
     .map(([ressource, unterschiede]) => {
@@ -69,6 +88,12 @@ export function buildUnterschiedeMessage(grouped: Map<string, UnterschiedNachMon
     `;
 }
 
+/**
+ * Bereitet die Unterschiede für das Konflikt-Hinweisbanner auf.
+ *
+ * @param grouped - Unterschiede je Ressource.
+ * @returns Ressourcenname mit aufsteigend sortierten, eindeutigen Monaten; Monat 0 (ohne erkennbaren Monat) entfällt.
+ */
 export function buildReviewResources(
   grouped: Map<string, UnterschiedNachMonat[]>,
 ): { name: string; months: number[] }[] {
@@ -80,6 +105,14 @@ export function buildReviewResources(
   }));
 }
 
+/**
+ * Markiert Zeilen der Tabelle, deren Monat in `changedMonths` liegt, als geändert, damit AutoSave sie sendet.
+ * Ohne Monate oder ohne Tabelle im DOM passiert nichts.
+ *
+ * @param selector - CSS-Selektor der Tabelle.
+ * @param storageName - Storage-Key der Ressource.
+ * @param changedMonths - Betroffene Monate (1-12).
+ */
 export function markRowsForAutosave(selector: string, storageName: TStorageData, changedMonths: Set<number>): void {
   if (changedMonths.size === 0) return;
 
@@ -91,12 +124,28 @@ export function markRowsForAutosave(selector: string, storageName: TStorageData,
   );
 }
 
+/**
+ * Gleicht die Tabelle mit dem Serverbestand ab (`reconcileDeletedRows`) und zeichnet sie bei Änderungen neu.
+ *
+ * @typeParam T - Zeilentyp der Ressource.
+ * @param selector - CSS-Selektor der Tabelle.
+ * @param storageName - Storage-Key der Ressource.
+ * @param serverData - Aktueller Serverbestand.
+ * @param changedMonths - Zu prüfende Monate; leer bedeutet alle Zeilen.
+ * @returns Anzahl abgeglichener Zeilen; 0 ohne Tabelle.
+ */
 export function reconcileRowsAsDeleted<
   T extends CustomTableTypes = IDatenBE | IDatenBZ | IDatenEWT | IDatenN | IDatenEA,
 >(selector: string, storageName: TStorageData, serverData: T[], changedMonths: Set<number>): number {
   const tableEl = document.querySelector<CustomHTMLTableElement>(selector);
   if (!tableEl?.instance?.rows) return 0;
 
+  /**
+   * Trifft Zeilen der geänderten Monate; ohne Monatsangabe alle.
+   *
+   * @param cells - Zellen einer Tabellenzeile.
+   * @returns `true`, wenn die Zeile abgeglichen werden soll.
+   */
   const matcher = (cells: unknown): boolean =>
     changedMonths.size === 0 || [...changedMonths].some(month => rowMatchesMonth(storageName, cells, month));
 
@@ -105,6 +154,13 @@ export function reconcileRowsAsDeleted<
   return count;
 }
 
+/**
+ * Normalisiert Server-Zeilen für den Konfliktabgleich (`normalizeRows`).
+ *
+ * @typeParam T - Zeilentyp.
+ * @param rows - Rohdaten vom Server.
+ * @returns Zeilen-Array.
+ */
 export function normalizeServerRowsForConflict<T>(rows: unknown): T[] {
   return normalizeRows<T>(rows);
 }

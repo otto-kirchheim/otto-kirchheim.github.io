@@ -10,6 +10,12 @@ type TMyShowElement = {
   text?: string | number | Date | Dayjs;
 };
 
+/**
+ * Schreibgeschützte Label-Wert-Zeile für Anzeige-Dialoge.
+ * Das geschützte Leerzeichen als Fallback hält die Zeilenhöhe bei leerem Wert stabil.
+ *
+ * @param props - `title` (Label), `id` (für `label`/`span`), `text` (Anzeigewert; Standard und Fallback ist ein geschütztes Leerzeichen), optionale Klassen `divClass`, `labelClass`, `spanClass`.
+ */
 const MyShowElement: FC<TMyShowElement> = ({
   divClass = 'raster mb-1',
   labelClass = 'sp-3 text-wrap fw-bold',

@@ -21,6 +21,8 @@ type Props = {
  * wird (Mehrfachauswahl der Ziele). Die Boxen erscheinen erst mit einem Ziel;
  * die aktuellen Werte stehen nur als Platzhalter darin, damit ausschließlich
  * tatsächlich eingetippte Ebenen ersetzt werden.
+ *
+ * @param props - Ebenenwerte, Platzhalter, Ebenen-Callbacks sowie gewählte Ziele (`applyTo`) mit `onToggleTarget`.
  */
 export function BulkEditOeLevelsEditor({
   levelValues,

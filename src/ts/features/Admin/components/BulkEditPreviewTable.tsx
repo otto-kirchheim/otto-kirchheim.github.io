@@ -10,6 +10,11 @@ const COLUMN_LABELS: Record<PreviewFieldKey, string> = {
   organizationOes: 'Org-Admin-OEs',
 };
 
+/**
+ * Zeigt einen Wert; bei Änderung den alten durchgestrichen und den neuen hervorgehoben.
+ *
+ * @param props - `before` (Wert vorher) und `after` (Wert nachher).
+ */
 function DiffCell({ before, after }: { before: string; after: string }) {
   if (before === after) return <>{before || '–'}</>;
   return (
@@ -20,6 +25,13 @@ function DiffCell({ before, after }: { before: string; after: string }) {
   );
 }
 
+/**
+ * Liest das Vorher/Nachher-Paar eines Felds aus einem Ergebniseintrag.
+ *
+ * @param entry - Ergebniseintrag eines Benutzers.
+ * @param field - Feld, dessen Vorher/Nachher gewünscht ist.
+ * @returns Vorher- und Nachher-Wert des Felds.
+ */
 function entryField(entry: BulkApplyEntry, field: PreviewFieldKey): { before: string; after: string } {
   return entry[field];
 }
@@ -30,7 +42,11 @@ type Props = {
   showApplyFrom: boolean;
 };
 
-/** Vorschau-/Ergebnistabelle: rendert nur Spalten für tatsächlich aktivierte Felder. */
+/**
+ * Vorschau-/Ergebnistabelle: rendert nur Spalten für tatsächlich aktivierte Felder.
+ *
+ * @param props - Ergebnis der Bulk-API (`preview`), anzuzeigende Spalten (`activeFields`) und ob die Spalte "Übernahme" erscheint.
+ */
 export function BulkEditPreviewTable({ preview, activeFields, showApplyFrom }: Props) {
   const columnCount = activeFields.length + (showApplyFrom ? 1 : 0);
 

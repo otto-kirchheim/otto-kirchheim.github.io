@@ -63,6 +63,11 @@ type FetchRetryEnvelope<T> = {
 
 type FetchRetryResponse<T> = FetchRetryEnvelope<T> | Error;
 
+/**
+ * Liest die Id des Benutzers, als der ein Admin handelt (`actAsUserId` im localStorage).
+ *
+ * @returns Getrimmte Id oder `null`, wenn keine gesetzt ist.
+ */
 function getActAsUserIdFromStorage(): string | null {
   const raw = localStorage.getItem('actAsUserId');
   if (!raw) return null;
@@ -75,10 +80,22 @@ function getActAsUserIdFromStorage(): string | null {
   }
 }
 
+/**
+ * Entfernt führende Slashes und wandelt in Kleinbuchstaben, damit Pfadvergleiche stabil sind.
+ *
+ * @param urlPath - API-Pfad.
+ * @returns Normalisierter Pfad.
+ */
 function normalizeUrlPath(urlPath: string): string {
   return urlPath.replace(/^\/+/, '').toLowerCase();
 }
 
+/**
+ * Prüft, ob `x-act-as-user-id` mitgesendet wird: nur für Daten-Pfade (Profil, Ressourcen, Vorgaben, `savedata`, Jahres-Pfad `YYYY`).
+ *
+ * @param urlPath - API-Pfad.
+ * @returns `true`, wenn der Header gesetzt werden soll.
+ */
 function shouldAttachActAsHeader(urlPath: string): boolean {
   const normalizedPath = normalizeUrlPath(urlPath);
 
@@ -97,6 +114,13 @@ function shouldAttachActAsHeader(urlPath: string): boolean {
   return actAsPaths.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
 }
 
+/**
+ * Prüft, ob eine 401-Antwort einen Token-Refresh mit erneutem Versuch auslöst: nur mit vorhandenem Refresh-Token und nicht bei öffentlichen Auth-Pfaden oder `auth/reset-password/`.
+ *
+ * @param urlPath - API-Pfad.
+ * @param status - HTTP-Status der Antwort.
+ * @returns `true`, wenn erneuert und wiederholt werden soll.
+ */
 function shouldRetryWithRefresh(urlPath: string, status: number): boolean {
   if (status !== 401 || !Storage.check('RefreshToken')) return false;
 
@@ -107,6 +131,12 @@ function shouldRetryWithRefresh(urlPath: string, status: number): boolean {
   return !isPublicAuthPath(normalizedPath);
 }
 
+/**
+ * Prüft, ob der Bearer-Header gesendet wird: nicht bei öffentlichen Auth-Pfaden und `auth/reset-password/`.
+ *
+ * @param urlPath - API-Pfad.
+ * @returns `true`, wenn der Header gesetzt werden soll.
+ */
 function shouldAttachAuthorizationHeader(urlPath: string): boolean {
   const normalizedPath = normalizeUrlPath(urlPath);
 
@@ -115,10 +145,23 @@ function shouldAttachAuthorizationHeader(urlPath: string): boolean {
   return !isPublicAuthPath(normalizedPath);
 }
 
+/**
+ * Prüft, ob der Pfad ein öffentlicher Auth-Pfad ist (ohne Anmeldung erreichbar).
+ *
+ * @param normalizedPath - Bereits mit `normalizeUrlPath` normalisierter Pfad.
+ * @returns `true` bei Treffer oder Unterpfad eines Eintrags aus `PUBLIC_AUTH_PATHS`.
+ */
 function isPublicAuthPath(normalizedPath: string): boolean {
   return PUBLIC_AUTH_PATHS.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
 }
 
+/**
+ * Prüft, ob identische gleichzeitige Aufrufe zu einem Request zusammengefasst werden: Auth-POSTs aus `SINGLE_FLIGHT_AUTH_ROUTES` und `GET auth/verify-email`.
+ *
+ * @param urlPath - API-Pfad.
+ * @param method - HTTP-Methode.
+ * @returns `true`, wenn Single-Flight gilt.
+ */
 function shouldUseSingleFlight(urlPath: string, method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'): boolean {
   const normalizedPath = normalizeUrlPath(urlPath);
 
@@ -131,6 +174,15 @@ function shouldUseSingleFlight(urlPath: string, method: 'GET' | 'POST' | 'PUT' |
   return SINGLE_FLIGHT_AUTH_ROUTES.some(path => normalizedPath === path || normalizedPath.startsWith(`${path}/`));
 }
 
+/**
+ * Bildet den Schlüssel, unter dem gleiche Aufrufe erkannt werden (Methode, Pfad und Body).
+ *
+ * @typeParam I - Typ des Request-Bodys.
+ * @param urlPath - API-Pfad.
+ * @param method - HTTP-Methode.
+ * @param data - Request-Body.
+ * @returns Schlüssel für `singleFlightRequests`.
+ */
 function buildSingleFlightKey<I>(
   urlPath: string,
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
@@ -139,6 +191,12 @@ function buildSingleFlightKey<I>(
   return `${method}:${normalizeUrlPath(urlPath)}:${JSON.stringify(data ?? null)}`;
 }
 
+/**
+ * Liest den Ablaufzeitpunkt (`exp`) aus dem Payload eines JWT, ohne die Signatur zu prüfen.
+ *
+ * @param token - JWT.
+ * @returns Ablauf in Millisekunden seit Epoche oder `null`, wenn er sich nicht lesen lässt.
+ */
 function readJwtExpMillis(token: string): number | null {
   const parts = token.split('.');
   if (parts.length < 2) return null;
@@ -153,6 +211,13 @@ function readJwtExpMillis(token: string): number | null {
   }
 }
 
+/**
+ * Prüft, ob das Access-Token vor dem Request erneuert wird, weil es innerhalb von `PROACTIVE_REFRESH_LEEWAY_MS` abläuft. Nicht bei öffentlichen Auth-Pfaden, `auth/reset-password/` oder ohne Refresh-Token.
+ *
+ * @param urlPath - API-Pfad.
+ * @param accessToken - Aktuelles Access-Token.
+ * @returns `true`, wenn vorab erneuert werden soll.
+ */
 function shouldRefreshBeforeRequest(urlPath: string, accessToken: string | null): boolean {
   if (!accessToken || !Storage.check('RefreshToken')) return false;
 
@@ -166,6 +231,11 @@ function shouldRefreshBeforeRequest(urlPath: string, accessToken: string | null)
   return expMillis - Date.now() <= PROACTIVE_REFRESH_LEEWAY_MS;
 }
 
+/**
+ * Erneuert das Access-Token; gleichzeitige Aufrufe teilen sich einen laufenden Refresh.
+ *
+ * @param retry - Nummer des Wiederholungsversuchs, wird an `tokenErneuern` weitergegeben.
+ */
 async function refreshAccessTokenSingleFlight(retry: number): Promise<void> {
   if (refreshFlightPromise) return refreshFlightPromise;
 
@@ -176,16 +246,20 @@ async function refreshAccessTokenSingleFlight(retry: number): Promise<void> {
   return refreshFlightPromise;
 }
 
+/**
+ * Verwirft die gemerkte Server-URL samt letztem Kontakt, sodass `getServerUrl` neu sucht.
+ */
 function invalidateServerCache(): void {
   sessionStorage.removeItem('lastServerContact');
   sessionStorage.removeItem('currentServerUrl');
 }
 
 /**
- * Checks the server connection with a configurable timeout.
- * @param serverUrl - The URL of the server to check.
- * @param timeout - The timeout duration in milliseconds.
- * @returns A promise that resolves to a boolean indicating the server's availability.
+ * Prüft per `GET <serverUrl>/`, ob der Server antwortet, und wertet dabei `min_frontend_version` der Antwort aus (ist die App zu alt, feuert der Hook `app:version-outdated` einmalig).
+ *
+ * @param serverUrl - Basis-URL des zu prüfenden Servers.
+ * @param timeout - Abbruchzeit in Millisekunden.
+ * @returns `true`, wenn der Server geantwortet hat (auch mit Fehlerstatus), sonst `false` bei Timeout oder Netzfehler.
  */
 async function checkServerConnection(serverUrl: string, timeout: number): Promise<boolean> {
   const controller = new AbortController();
@@ -211,7 +285,7 @@ async function checkServerConnection(serverUrl: string, timeout: number): Promis
         invokeHook('app:version-outdated');
       }
     } catch {
-      // non-JSON response – version check skipped
+      // Keine JSON-Antwort: Versionsprüfung entfällt.
     }
     return true;
   } catch (error) {
@@ -224,6 +298,12 @@ async function checkServerConnection(serverUrl: string, timeout: number): Promis
   }
 }
 
+/**
+ * Liefert die Basis-URL des erreichbaren Servers. Innerhalb von 5 Minuten nach dem letzten Kontakt gilt die gemerkte URL, sonst werden die Server aus `API_URL` der Reihe nach geprüft; dabei zeigt eine Snackbar den Verbindungsaufbau.
+ *
+ * @returns URL des ersten erreichbaren Servers.
+ * @throws {Error} Wenn kein Server erreichbar ist.
+ */
 export async function getServerUrl(): Promise<string> {
   const lastServerContact = sessionStorage.getItem('lastServerContact');
   const serverConfigs: ServerConfig[] = API_URL.map(config => ({
@@ -237,7 +317,7 @@ export async function getServerUrl(): Promise<string> {
     return currentServerUrl ?? defaultServerUrl;
   }
 
-  // Reuse one active probe for concurrent API calls during startup/offline phases.
+  // Gleichzeitige API-Aufrufe (Start, Offline-Phase) teilen sich eine laufende Serversuche.
   if (serverProbePromise) return serverProbePromise;
 
   serverProbePromise = (async () => {
@@ -288,6 +368,18 @@ export async function getServerUrl(): Promise<string> {
   return serverProbePromise;
 }
 
+/**
+ * Ruft die API auf: setzt Bearer-, Act-As- und Client-Version-Header, erneuert das Access-Token vorab oder nach 401 und wiederholt den Request. Identische öffentliche Auth-Aufrufe werden zusammengefasst (Single-Flight).
+ *
+ * @typeParam I - Typ des Request-Bodys.
+ * @typeParam T - Typ der Antwortdaten.
+ * @param UrlPath - Pfad relativ zur Server-URL.
+ * @param data - Optionaler JSON-Body.
+ * @param method - HTTP-Methode; Standard `GET`.
+ * @param retry - Anzahl bisheriger Token-Refresh-Wiederholungen; nur der rekursive Aufruf setzt sie größer als 0.
+ * @returns Antwort-Envelope mit `data`, `success`, `statusCode` und `message`.
+ * @throws {Error} Bei veralteter App-Version, fehlender Verbindung, zu vielen Token-Fehlern oder Fetch-Fehlern.
+ */
 export async function FetchRetry<I, T>(
   UrlPath: string,
   data?: I,
@@ -314,6 +406,19 @@ export async function FetchRetry<I, T>(
   return executeFetchRetry<I, T>(UrlPath, data, method, retry);
 }
 
+/**
+ * Führt einen einzelnen Request aus (ohne Single-Flight): Vorab-Refresh, Header, Serversuche, bei 401 Refresh und Wiederholung. Ist der Server nicht erreichbar, wird der Request bis zu dreimal wiederholt; vor der letzten Wiederholung wird der Server-Cache verworfen.
+ *
+ * @typeParam I - Typ des Request-Bodys.
+ * @typeParam T - Typ der Antwortdaten.
+ * @param UrlPath - Pfad relativ zur Server-URL.
+ * @param data - Optionaler JSON-Body.
+ * @param method - HTTP-Methode; Standard `GET`.
+ * @param retry - Anzahl bisheriger Token-Refresh-Wiederholungen; mehr als 2 bricht ab.
+ * @param serverRetry - Anzahl bisheriger Wiederholungen wegen nicht erreichbarem Server.
+ * @returns Antwort-Envelope mit `data`, `success`, `statusCode` und `message`.
+ * @throws {Error} Ohne Internetverbindung, bei zu vielen Token-Fehlern oder Fetch-Fehlern.
+ */
 async function executeFetchRetry<I, T>(
   UrlPath: string,
   data?: I,

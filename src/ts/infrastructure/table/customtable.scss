@@ -4,9 +4,8 @@ $stufen: bp.$px;
 
 /* Die `db-table`-Huelle legt ihre Linien per `border-block-end` an `tr` -- das rendert nur bei
    `border-collapse: collapse`. Weil `utilities.scss` das native `display: table` erzwingt (statt
-   DBs Grid), stand die Tabelle sonst auf `separate`: keine Zeilentrenner und keine
-   Abschlusslinie unten ("Box wirkt offen"). Mit `collapse` greifen DBs Rahmenregeln wie
-   vorgesehen. */
+   DBs Grid), stuende die Tabelle sonst auf `separate`: keine Zeilentrenner, keine Abschlusslinie
+   unten. */
 table.customtable {
   border-collapse: collapse;
 }
@@ -24,8 +23,7 @@ tr.customtable-empty {
 }
 
 /* Soft-Delete: Gelöschte Zeilen durchgestrichen + ausgegraut.
-   Farben aus dem DB-Token-Satz; die `--bs-*`-Fallbacks sind weg, seit Phase B/G die Tabelle
-   auf DB-Markup steht. `light-dark()` in den Tokens deckt beide Modi ab. */
+   Farben aus dem DB-Token-Satz; `light-dark()` in den Tokens deckt beide Modi ab. */
 tr.customtable-deleted > td,
 tr.customtable-deleted > th {
   opacity: 0.45;
@@ -115,9 +113,7 @@ th.customtable-sortable:hover > span.customtableIcon {
   opacity: 1;
 }
 
-/* Die DB-Icons sind bereits mittig; die Material-Sonderabstaende entfallen. */
-
-/* Das Motiv steht in `data-icon` (siehe customTableRender.ts); die DB-Icon-Schrift
+/* Das Motiv steht in `data-icon` (siehe `CustomTableView.tsx`); die DB-Icon-Schrift
    loest den Namen als Ligatur auf. */
 
 th.customtable-sortable > span.customtableIcon {
@@ -172,8 +168,6 @@ th.customtable-sortable:hover > span.customtableIcon {
   }
 }
 
-/* ─── AutoSave Indicator ─────────────────────────────── */
-
 /* ─── AutoSave-Zustandspunkt auf Speichern-Buttons ─── */
 
 /* `position: absolute`, die Eck-Verankerung (`transform: translate(50%, -50%)` an der
@@ -187,7 +181,7 @@ th.customtable-sortable:hover > span.customtableIcon {
    - `fit-content` + `min-inline-size` machten den Punkt oval -> feste quadratische Groesse.
    - Halb aus einem eckigen Knopf ragend ohne Absetzung wirkte er "abgeschnitten" -> ein
      heller Ring (`box-shadow`) trennt ihn sauber vom Knopfgrund.
-   `customtable.css` ist unlayered -> schlaegt `@layer db-ux` ohne `!important`. */
+   `customtable.scss` ist unlayered -> schlaegt `@layer db-ux` ohne `!important`. */
 .autosave-badge {
   inline-size: var(--db-sizing-xs);
   block-size: var(--db-sizing-xs);

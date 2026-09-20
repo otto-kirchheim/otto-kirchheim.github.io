@@ -9,6 +9,8 @@ import { DbAuswahl, DbFeld } from '@/components';
  * Ausklappbarer Abschnitt (natives `<details>`, kein State) -- hält die lange Editor-Spalte
  * (Felder / Spalten / Sonderzeilen …) übersichtlich. `titel` steht in der `<summary>`, optional
  * mit `zusatz` rechts (z.B. Anzahl oder ein „+"-Knopf). `offen` = anfangs aufgeklappt.
+ *
+ * @param props - `titel`, `zusatz`, `offen` und `children` (Inhalt des Abschnitts).
  */
 export function Abschnitt({
   titel,
@@ -45,6 +47,8 @@ export function Abschnitt({
  * Fokus-Klick) -- Koordinatenfelder o.ä. in `children` an den Anfang setzen.
  * `offen` erzwingt aufgeklappt (z.B. wenn der Eintrag gerade scharf geschaltet ist); ist es
  * `false`/`undefined`, entscheidet der Nutzer per Klick.
+ *
+ * @param props - `titel`, `aktionen` (nur `<button>`s), `offen` und `children` (Editor-Inhalt).
  */
 export function KlappZeile({
   titel,
@@ -79,6 +83,11 @@ export function KlappZeile({
   );
 }
 
+/**
+ * Knopf zum Scharfschalten eines Eintrags: nur Icon mit Tooltip, hervorgehoben solange aktiv.
+ *
+ * @param props - `aktiv` ob scharf geschaltet, `onClick` Umschalter, `titel` optionaler Tooltip-Text (Standard: Hinweis zum Rechteck-Aufziehen).
+ */
 export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClick: () => void; titel?: string }) {
   return (
     <DBButton
@@ -98,9 +107,12 @@ export function ScharfButton({ aktiv, onClick, titel }: { aktiv: boolean; onClic
 
 /**
  * Zahleneingabe. `step="any"` ist Absicht: Koordinaten entstehen beim Ziehen als Kommazahlen, und
- * ein festes Raster (früher `0.5`) ließ das Formular beim Absenden alles dazwischen als ungültig
- * abweisen. Zählwerte wie „Zeilen" setzen dagegen `ganzzahl`, damit dort keine halbe oder negative
- * Angabe entsteht -- die wäre als Kapazität sinnlos und der Server lehnt sie ab.
+ * ein festes Raster ließe das Formular alles dazwischen beim Absenden als ungültig abweisen.
+ * Zählwerte wie „Zeilen" setzen dagegen `ganzzahl` (und `min`), weil eine halbe oder nicht positive
+ * Kapazität sinnlos ist und der Server sie ablehnt.
+ *
+ * @param props - `label`, `wert` (`undefined` = leer), `onChange` (`undefined` bei leerem Feld),
+ *   `ganzzahl` rundet Eingaben, `min` untere Grenze.
  */
 export function ZahlFeld({
   label,
@@ -115,6 +127,12 @@ export function ZahlFeld({
   ganzzahl?: boolean;
   min?: number;
 }) {
+  /**
+   * Wendet Rundung (`ganzzahl`) und Untergrenze (`min`) auf eine Eingabe an.
+   *
+   * @param v - Eingegebene Zahl.
+   * @returns Begrenzter Wert.
+   */
   const begrenzt = (v: number): number => {
     const gerundet = ganzzahl ? Math.round(v) : v;
     return min === undefined ? gerundet : Math.max(gerundet, min);
@@ -141,7 +159,11 @@ export function ZahlFeld({
 
 /**
  * Nachjustieren der gezogenen Zelle -- freihändig gezogene Rechtecke treffen selten exakt dieselbe
- * Höhe wie das Feld daneben, deshalb sind alle vier Kanten auch direkt eingebbar.
+ * Höhe wie das Feld daneben, deshalb sind alle vier Kanten auch direkt eingebbar. Zugeklappt zeigt
+ * ein Knopf die gerundeten Werte, aufgeklappt erscheinen die Eingabefelder.
+ *
+ * @typeParam T - Zelle mit Koordinaten (Feld oder Spalte).
+ * @param props - `wert` die Zelle, `onChange` mit der geänderten Zelle, `nurX` blendet y/y2 aus.
  */
 export function Zellkoordinaten<T extends { x: number; y?: number; x2?: number; y2?: number }>({
   wert,
@@ -195,7 +217,12 @@ const DREHUNGEN: { wert: Drehung; label: string }[] = [
   { wert: 180, label: '180° (auf dem Kopf)' },
 ];
 
-/** Schriftgröße, Auto-Verkleinerung, Umbruch, Ausrichtung, Format, Drehung und Schriftschnitt -- Felder wie Spalten. */
+/**
+ * Schriftgröße, Auto-Verkleinerung, Umbruch, Ausrichtung, Format, Drehung und Schriftschnitt -- Felder wie Spalten.
+ *
+ * @typeParam T - Zelle mit den Darstellungs-Eigenschaften (Feld oder Spalte).
+ * @param props - `wert` die Zelle, `onChange` mit der geänderten Zelle.
+ */
 export function DarstellungsFelder<
   T extends {
     size: number;
@@ -211,7 +238,7 @@ export function DarstellungsFelder<
 >({ wert, onChange }: { wert: T; onChange: (next: T) => void }) {
   return (
     <>
-      {/* Schrift: Größe direkt neben Fett/Kursiv/Unterstrichen -- alles Schriftschnitt-Optik. */}
+      {/* Schrift: Größe neben Fett/Kursiv/Unterstrichen. */}
       <div className="raster align-items-center abstand-1">
         <div className="sp-3">
           <DbFeld
@@ -248,7 +275,7 @@ export function DarstellungsFelder<
           />
         </div>
       </div>
-      {/* Ausrichtung: Textausrichtung und Drehung gehören zusammen (beide steuern die Textrichtung in der Zelle). */}
+      {/* Ausrichtung: Textausrichtung und Drehung steuern beide die Textrichtung in der Zelle. */}
       <div className="raster mt-1 abstand-1">
         <div className="sp-5">
           <DbAuswahl

@@ -24,6 +24,12 @@ import { DBButton, DBTag } from '@db-ux/react-core-components';
 
 type Step = 'form' | 'preview' | 'result';
 
+/**
+ * Entfernt Duplikate und sortiert alphabetisch.
+ *
+ * @param values - Beliebige Strings, ggf. mit Duplikaten.
+ * @returns Duplikatfreie, sortierte Kopie.
+ */
 function uniqueSorted(values: string[]): string[] {
   return Array.from(new Set(values)).sort();
 }
@@ -34,6 +40,8 @@ function uniqueSorted(values: string[]): string[] {
  * Entfernen und Übernahme einzelner Kategorien aus einer Vorlage oder einem
  * Muster-Benutzer. Vor dem Speichern läuft immer eine Vorschau (dryRun) über
  * dieselbe API.
+ *
+ * @param props - `selectedUsers` (Startauswahl), `onApplied` (nach erfolgreichem Speichern), `closeModal` (schließt den Dialog).
  */
 export function AdminBulkEditModal({
   selectedUsers: initialUsers,
@@ -100,6 +108,9 @@ export function AdminBulkEditModal({
   });
   const [result, setResult] = useState<BulkApplyResult | null>(null);
 
+  /**
+   * Lädt die Profilvorlagen einmalig (nur wenn noch keine geladen sind); Fehler landen in der Dialog-Fehlermeldung.
+   */
   async function loadTemplates(): Promise<void> {
     if (templates.length > 0) return;
     try {
@@ -109,6 +120,11 @@ export function AdminBulkEditModal({
     }
   }
 
+  /**
+   * Schaltet ein Zielfeld für das OE-Ersetzen um.
+   *
+   * @param target - OE-Zielfeld, das ein- bzw. ausgeschaltet wird.
+   */
   function toggleOeTarget(target: BulkOeTargetField): void {
     setOeLevelsApplyTo(current => {
       const next = new Set(current);
@@ -118,33 +134,66 @@ export function AdminBulkEditModal({
     });
   }
 
+  /**
+   * Setzt den Text einer OE-Ebene.
+   *
+   * @param index - Position der Ebene.
+   * @param value - Neuer Ebenen-Text.
+   */
   function changeOeLevel(index: number, value: string): void {
     setOeLevelValues(current => current.map((entry, i) => (i === index ? value : entry)));
   }
 
+  /**
+   * Fügt eine leere OE-Ebene an (bis `MAX_OE_LEVELS`).
+   */
   function addOeLevel(): void {
     setOeLevelValues(current => (current.length < MAX_OE_LEVELS ? [...current, ''] : current));
   }
 
+  /**
+   * Entfernt die letzte OE-Ebene (mindestens eine bleibt).
+   */
   function removeOeLevel(): void {
     setOeLevelValues(current => (current.length > 1 ? current.slice(0, -1) : current));
   }
 
+  /**
+   * Nimmt einen Benutzer aus der Auswahl (der letzte bleibt); war er Muster-Benutzer, wird die Quelle zurückgesetzt.
+   *
+   * @param userId - Id des zu entfernenden Benutzers.
+   */
   function removeSelectedUser(userId: string): void {
     setSelectedUsers(current => (current.length > 1 ? current.filter(user => user._id !== userId) : current));
     if (sourceUserId === userId) setSourceUserId('');
   }
 
+  /**
+   * Aktualisiert den Zustand eines Einfachfelds.
+   *
+   * @param key - Schlüssel des Einfachfelds.
+   * @param patch - Teilweise Änderung von Aktivierung/Wert.
+   */
   function updateSimpleField(key: string, patch: Partial<SimpleFieldState>): void {
     setSimpleFields(current => ({ ...current, [key]: { ...current[key], ...patch } }));
   }
 
+  /**
+   * Schaltet eine Übernahme-Kategorie um.
+   *
+   * @param category - Kategorie, die aus der Quelle übernommen wird.
+   */
   function toggleCategory(category: BulkApplyCategory): void {
     setCategories(current =>
       current.includes(category) ? current.filter(entry => entry !== category) : [...current, category],
     );
   }
 
+  /**
+   * Ermittelt, welche Felder die aktuelle Eingabe ändert.
+   *
+   * @returns Felder, die die Vorschau-Tabelle als Spalten zeigt.
+   */
   function computeActiveFields(): PreviewFieldKey[] {
     const fields: PreviewFieldKey[] = [];
     if (oeLevelsApplyTo.has('pers')) fields.push('oe');
@@ -154,17 +203,20 @@ export function AdminBulkEditModal({
     return fields;
   }
 
+  /**
+   * Validiert die Formulareingaben und baut daraus die Bulk-Update-Payload.
+   *
+   * @param dryRun - `true` für die Vorschau, `false` zum Speichern.
+   * @returns Payload für die Bulk-API oder `null` (Fehlermeldung ist dann gesetzt).
+   */
   function buildPayload(dryRun: boolean): BulkUserProfileUpdatePayload | null {
     const payload: BulkUserProfileUpdatePayload = {
       userIds: selectedUsers.map(user => user._id),
       dryRun,
     };
 
-    // Das Ziel-Häkchen ist der bewusste Auslöser fürs Ersetzen — nicht die
-    // (evtl. per Vorbefüllung bereits ausgefüllten) Ebenen-Boxen. Sonst würde
-    // schon eine reine Vorbefüllung (z.B. bei nur einem ausgewählten Benutzer
-    // stimmen alle Ebenen zwangsläufig "überein") ungewollt einen Fehler
-    // erzwingen, obwohl niemand OE ändern wollte.
+    // Das Ziel-Häkchen löst das Ersetzen aus, nicht die (evtl. vorbefüllten) Ebenen-Boxen —
+    // sonst würde schon eine Vorbefüllung (bei einem Benutzer stimmen alle Ebenen überein) ungewollt einen Fehler erzwingen.
     if (oeLevelsApplyTo.size > 0) {
       const hasFilledLevel = oeLevelValues.some(value => value.trim());
       if (!hasFilledLevel) {
@@ -240,6 +292,9 @@ export function AdminBulkEditModal({
     return payload;
   }
 
+  /**
+   * Führt die Änderung als Trockenlauf (dryRun) aus und wechselt bei Erfolg zur Vorschau.
+   */
   async function runPreview(): Promise<void> {
     setError('');
     const payload = buildPayload(true);
@@ -259,6 +314,9 @@ export function AdminBulkEditModal({
     }
   }
 
+  /**
+   * Wendet die Änderung an, zeigt das Ergebnis und benachrichtigt den Aufrufer.
+   */
   async function runApply(): Promise<void> {
     setError('');
     const payload = buildPayload(false);

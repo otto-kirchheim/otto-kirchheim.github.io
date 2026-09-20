@@ -14,18 +14,27 @@ interface PanelProps {
   onChange?: (value: IVorgabenUaZ) => void;
 }
 
+/**
+ * Editor für die Arbeitszeiten (Früh-, Spät-, Nacht- und Sonderschicht, Fahrzeit Wohnung/Arbeitsort). Meldet jeden Stand an `arbeitszeitPanelState` und optional an `onChange`.
+ *
+ * @param props - `initialValues`: Anfangswerte der Arbeitszeiten; `onChange`: wird nach jeder Änderung mit dem neuen Stand gerufen.
+ */
 export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps): JSX.Element {
   const [aZ, setAZ] = useState<IVorgabenUaZ>(initialValues);
   const panelStateRef = useRef<IVorgabenUaZ>(initialValues);
-  // Neueste `onChange`-Referenz halten, ohne bei jeder neuen Funktions-Identitaet den
-  // `[aZ]`-Effect neu zu feuern. Zuweisung im Effect (nicht im Render), damit React 19
-  // die Ref nicht waehrend des Renderns beschrieben sieht; dieser Effect steht bewusst VOR
-  // dem `[aZ]`-Effect, der die Ref liest.
+  // Neueste `onChange`-Referenz halten, ohne den `[aZ]`-Effect bei jeder neuen Funktions-Identität neu zu feuern.
+  // Zuweisung im Effect (nicht im Render), damit React 19 die Ref nicht beim Rendern beschrieben sieht; der Effect steht
+  // bewusst VOR dem `[aZ]`-Effect, der die Ref liest.
   const onChangeRef = useRef(onChange);
   useEffect(() => {
     onChangeRef.current = onChange;
   });
 
+  /**
+   * Wendet eine Änderung an und aktualisiert Ref, Panel-State und React-State synchron, damit `saveEinstellungen()` den Stand auch vor dem nächsten Effect lesen kann.
+   *
+   * @param updater - Berechnet aus dem aktuellen Stand den neuen.
+   */
   const updatePanelState = (updater: (current: IVorgabenUaZ) => IVorgabenUaZ): void => {
     const next = updater(panelStateRef.current);
     panelStateRef.current = next;
@@ -33,9 +42,8 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
     setAZ(next);
   };
 
-  // Kein Effect für initialValues: der key-Prop im Parent sorgt bei Template-Wechsel
-  // für einen vollständigen Remount. Ein Effect hier würde bei jedem Parent-Re-Render
-  // (z.B. nach onChange) aZ zurücksetzen und eine Endlosschleife auslösen.
+  // Kein Effect für `initialValues`: der `key`-Prop im Parent sorgt für einen vollständigen Remount. Ein Effect hier würde
+  // `aZ` bei jedem Parent-Re-Render (z.B. nach `onChange`) zurücksetzen und eine Endlosschleife auslösen.
 
   useEffect(() => {
     panelStateRef.current = aZ;
@@ -43,10 +51,35 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
     onChangeRef.current?.(aZ);
   }, [aZ]);
 
+  /**
+   * Ersetzt die Frühschicht.
+   *
+   * @param schicht - Neue Frühschicht.
+   */
   const updateFrueh = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, frueh: schicht }));
+  /**
+   * Ersetzt die Spätschicht.
+   *
+   * @param schicht - Neue Spätschicht.
+   */
   const updateSpaet = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, spaet: schicht }));
+  /**
+   * Ersetzt die Nachtschicht.
+   *
+   * @param schicht - Neue Nachtschicht.
+   */
   const updateNacht = (schicht: IPerWeekdaySchicht) => updatePanelState(current => ({ ...current, nacht: schicht }));
+  /**
+   * Ersetzt die Sonderschicht.
+   *
+   * @param sonder - Neue Sonderschicht.
+   */
   const updateSonder = (sonder: ISchichtZeiten) => updatePanelState(current => ({ ...current, sonder }));
+  /**
+   * Setzt die Fahrzeit Wohnung/Arbeitsort.
+   *
+   * @param v - Fahrzeit als `HH:mm`.
+   */
   const updateFahrzeit = (v: string) => updatePanelState(current => ({ ...current, fahrzeit: v }));
 
   return (
@@ -81,6 +114,11 @@ export function ArbeitszeiteingabePanel({ initialValues, onChange }: PanelProps)
   );
 }
 
+/**
+ * Zeitfeld für die Fahrzeit Wohnung/Arbeitsort.
+ *
+ * @param props - `value`: Fahrzeit als `HH:mm`; `onChange`: wird mit dem neuen Wert gerufen.
+ */
 function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: string) => void }): JSX.Element {
   return (
     <div className="db-input" data-icon="car">
@@ -96,6 +134,11 @@ function FahrzeitInput({ value, onChange }: { value: string; onChange: (v: strin
   );
 }
 
+/**
+ * Abschnitt für eine abschaltbare Schicht (Spät/Nacht): Checkbox "aktiv" plus `SchichtSection`, solange aktiv.
+ *
+ * @param props - `title`, `schicht`, `defaultTemplate` (Zeiten beim erstmaligen Aktivieren), optional `defaultRegelarbeitstage` und `onChange`.
+ */
 function OptionalSchichtSection({
   title,
   schicht,
@@ -111,6 +154,9 @@ function OptionalSchichtSection({
 }): JSX.Element {
   const enabled = schicht.aktiv;
 
+  /**
+   * Schaltet die Schicht um. Beim Deaktivieren bleibt die Konfiguration erhalten; beim Aktivieren ohne gespeicherte Zeiten (`default.beginn` leer) wird `defaultTemplate` verwendet.
+   */
   const handleToggle = () => {
     if (enabled) {
       onChange({ ...schicht, aktiv: false });
@@ -137,6 +183,11 @@ function OptionalSchichtSection({
   );
 }
 
+/**
+ * Editor einer Schicht je Wochentag: Regelarbeitstage, Zeitgruppen (Standard und Abweichungen) und Anlegen neuer Zeitvarianten. Ist auch im `SchichtOverrideEditor` im Einsatz.
+ *
+ * @param props - `title` (leer = keine Überschrift), `schicht` und `onChange`.
+ */
 export function SchichtSection({
   title,
   schicht,
@@ -153,6 +204,11 @@ export function SchichtSection({
   const [newDays, setNewDays] = useState<number[]>([]);
   const [newConfig, setNewConfig] = useState<SchichtBase>(schicht.default);
 
+  /**
+   * Schaltet einen Regelarbeitstag um. Entspricht das Ergebnis Mo-Fr, wird `regelarbeitstage` als Standard weggelassen.
+   *
+   * @param day - Wochentag 1 (Mo) bis 7 (So).
+   */
   const toggleDay = (day: number): void => {
     const rat = schicht.regelarbeitstage?.length ? schicht.regelarbeitstage : DEFAULT_REGELARBEITSTAGE;
     const newRat = rat.includes(day) ? rat.filter(d => d !== day) : [...rat, day].sort((a, b) => a - b);
@@ -163,6 +219,12 @@ export function SchichtSection({
     });
   };
 
+  /**
+   * Übernimmt geänderte Zeiten einer Gruppe. Betrifft sie den Standard, wird `default` ersetzt und Abweichungen, die danach gleich sind, entfallen; sonst wird je Tag nur der Unterschied zum Standard als Override gespeichert.
+   *
+   * @param days - Wochentage der bearbeiteten Gruppe.
+   * @param updatedConfig - Neue Zeiten der Gruppe.
+   */
   const updateGroup = (days: number[], updatedConfig: SchichtBase): void => {
     const newSchicht = { ...schicht };
 
@@ -210,6 +272,9 @@ export function SchichtSection({
     onChange(newSchicht);
   };
 
+  /**
+   * Speichert die Zeitvariante aus dem Anlege-Formular für die gewählten Tage (nur abweichende Felder) und setzt das Formular zurück. Ohne gewählte Tage passiert nichts.
+   */
   const saveNewOverride = (): void => {
     if (newDays.length === 0) return;
     const newOverrides = { ...(schicht.overrides ?? {}) } as Record<number, Partial<SchichtBase>>;
@@ -229,6 +294,11 @@ export function SchichtSection({
     setNewConfig(schicht.default);
   };
 
+  /**
+   * Entfernt die Overrides der Tage; sie fallen auf den Standard zurück.
+   *
+   * @param days - Wochentage, deren Abweichung entfällt.
+   */
   const deleteOverride = (days: number[]): void => {
     const newOverrides = { ...(schicht.overrides ?? {}) } as Record<number, Partial<SchichtBase>>;
     for (const day of days) delete newOverrides[day];
@@ -238,6 +308,12 @@ export function SchichtSection({
     });
   };
 
+  /**
+   * Prüft, ob die Gruppe eine löschbare Zeitvariante ist.
+   *
+   * @param days - Wochentage einer Gruppe.
+   * @returns `true`, wenn mindestens ein Tag eine Abweichung vom Standard hat.
+   */
   const isOverrideGroup = (days: number[]): boolean => days.some(d => d in (schicht.overrides ?? {}));
 
   return (
@@ -359,6 +435,11 @@ export function SchichtSection({
   );
 }
 
+/**
+ * Wochentag-Schalter Mo bis So für die Regelarbeitstage.
+ *
+ * @param props - `regelarbeitstage` (aktive Tage 1-7) und `onToggle`.
+ */
 function WeekdayChips({
   regelarbeitstage,
   onToggle,
@@ -384,6 +465,11 @@ function WeekdayChips({
   );
 }
 
+/**
+ * Zeile einer Zeitgruppe: Anzeige mit Bearbeiten-Modus für Beginn, Ende und Pause bzw. "Arbeitsfrei".
+ *
+ * @param props - `days`, `config` (`null` = arbeitsfrei), `defaultConfig`, `onUpdate` und optional `onDelete` (nur bei Abweichungen).
+ */
 function ScheduleGroupRow({
   days,
   config,
@@ -529,6 +615,11 @@ function ScheduleGroupRow({
   );
 }
 
+/**
+ * Abschnitt für die Sonderschicht: Checkbox "aktiv" plus Beginn, Ende und Pause, solange aktiv.
+ *
+ * @param props - `sonder` und `onChange`.
+ */
 function SonderSection({
   sonder,
   onChange,
@@ -538,6 +629,11 @@ function SonderSection({
 }): JSX.Element {
   const enabled = sonder.aktiv;
 
+  /**
+   * Übernimmt einzelne Felder in die Sonderschicht.
+   *
+   * @param partial - Zu ändernde Felder der Sonderschicht.
+   */
   const update = (partial: Partial<ISchichtZeiten>) => onChange({ ...sonder, ...partial });
 
   return (

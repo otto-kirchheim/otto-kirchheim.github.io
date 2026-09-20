@@ -6,6 +6,14 @@ import { authApi } from '@/infrastructure/api/apiService';
 import { getPasswordValidationMessage } from '@/infrastructure/validation/passwordValidation';
 import { schliesseModal } from '@/components';
 
+/**
+ * Prüft die Eingaben des Passwort-Ändern-Modals (alle Felder gefüllt, Passwort-Regeln, Wiederholung, neu != alt,
+ * online) und ändert bei Erfolg das Passwort per API. Fehler stehen in `#errorMessage`; bei Erfolg schließt der
+ * Modal und eine Snackbar meldet es.
+ *
+ * @param modal - Modal mit `#errorMessage`, `#PasswortAlt`, `#PasswortNeu`, `#PasswortNeu2`.
+ * @throws {Error} Wenn eines dieser Elemente fehlt.
+ */
 export default async function checkPasswort(modal: CustomHTMLDivElement): Promise<void> {
   const errorMessage = modal.querySelector<HTMLDivElement>('#errorMessage');
   if (!errorMessage) throw new Error('Fehler: errorMessage nicht gefunden!');

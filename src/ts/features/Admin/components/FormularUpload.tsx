@@ -32,6 +32,12 @@ const FORMULAR_LABELS: Record<(typeof FORMULAR_CODES)[number], string> = {
 /** Intervall-Konflikt: die Kette hat danach eine Lücke oder eine nicht offene letzte Version. */
 const KONFLIKT = 409;
 
+/**
+ * Leere Start-Konfiguration für ein Formular: eine leere Seite und die Haupttabelle mit der ersten Zeilen-Quelle des Formulars.
+ *
+ * @param formular - Formularcode; bestimmt die vorbelegte Zeilen-Quelle.
+ * @returns Konfiguration mit einer leeren Seite und einer leeren Haupttabelle.
+ */
 function leereKonfig(formular: FormularCode): Konfig {
   return {
     seiten: [leereSeite()],
@@ -41,22 +47,24 @@ function leereKonfig(formular: FormularCode): Konfig {
   };
 }
 
+/**
+ * Wandelt einen abgefangenen Fehler in eine Snackbar-taugliche Meldung.
+ *
+ * @param error - Beliebiger abgefangener Fehler.
+ * @returns `error.message` bei einem `Error`, sonst die String-Darstellung.
+ */
 function fehlerText(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
 /**
- * Admin-Oberfläche für die Formular-Versionen: EINE PDF-Vorlage (ein Layout pro Version -- die
- * ursprünglich geplante Aufteilung in einseitig/mehrseitig war nur wegen Kandidat C
- * (pyHanko-Signaturfeld-Namenskollision) nötig und entfällt unter Kandidat E) plus die
- * Koordinaten-Config, per `FormularEditor` (Phase 8) durch Klicken auf die echte PDF-Vorschau
- * gesetzt statt per Hand ins JSON getippt.
+ * Admin-Oberfläche für die Formular-Versionen: EINE PDF-Vorlage (ein Layout pro Version) plus die
+ * Koordinaten-Config, die der `FormularEditor` per Klick auf die PDF-Vorschau setzt.
  *
- * Dieselbe Maske dient dem Anlegen und dem Bearbeiten: eine bestehende Version lädt ihre
- * Konfiguration und ihre PDF zurück in den Editor und wird per `PUT` überschrieben. Ohne diesen
- * Weg wäre ein Tippfehler nicht mehr korrigierbar und eine zweite Version gar nicht anlegbar --
- * `pruefeIntervalle()` verlangt eine lückenlose Kette, die Vorgängerin muss also erst geschlossen
- * werden können.
+ * Dieselbe Maske dient dem Anlegen und dem Bearbeiten: eine bestehende Version lädt ihre Konfiguration
+ * und ihre PDF zurück in den Editor und wird per `PUT` überschrieben. Das ist nötig, weil
+ * `pruefeIntervalle()` eine lückenlose Kette verlangt, die Vorgängerversion also erst geschlossen
+ * werden können muss.
  */
 export function FormularUpload() {
   const [formular, setFormular] = useState<FormularCode>('ez');
@@ -74,9 +82,14 @@ export function FormularUpload() {
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
   const [vorlageId, setVorlageId] = useState<string | null>(null);
 
-  // Stabil per useCallback, damit der Effect sie als Dep listen kann, ohne bei jedem Render neu
-  // zu feuern. Der Effect ruft sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body
-  // loeste react-hooks/set-state-in-effect aus (ladeListe setzt synchron setLaedtListe).
+  /**
+   * Lädt die Versionsliste des Formulars in den State; bei Fehler Snackbar und leere Liste.
+   * Stabil per `useCallback`, damit der Effect sie als Dep listen kann, ohne bei jedem Render neu zu feuern.
+   * Der Effect ruft sie per `queueMicrotask` auf: ein synchroner Aufruf im Effect-Body löst
+   * `react-hooks/set-state-in-effect` aus (sie setzt synchron `setLaedtListe`).
+   *
+   * @param code - Formularcode, dessen Versionen geladen werden.
+   */
   const ladeListe = useCallback(async (code: FormularCode): Promise<void> => {
     setLaedtListe(true);
     try {
@@ -97,6 +110,11 @@ export function FormularUpload() {
     queueMicrotask(() => void ladeListe(formular));
   }, [formular, ladeListe]);
 
+  /**
+   * Setzt die Maske in den leeren Anlege-Zustand zurück (Felder, Datei, Vorlage, Bearbeiten-Modus, Konfiguration).
+   *
+   * @param code - Formularcode, für den die leere Start-Konfiguration gesetzt wird.
+   */
   function setzeFormularZurueck(code: FormularCode): void {
     setVersion('');
     setGueltigVon('');
@@ -107,6 +125,11 @@ export function FormularUpload() {
     setKonfig(leereKonfig(code));
   }
 
+  /**
+   * Wechselt das Formular und setzt die Maske zurück.
+   *
+   * @param code - Neu gewählter Formularcode.
+   */
   function wechsleFormular(code: FormularCode): void {
     setFormular(code);
     // Zeilen-Quelle und Datenpfade sind ressourcenspezifisch -- eine für `ez` gebaute Konfiguration
@@ -114,6 +137,12 @@ export function FormularUpload() {
     setzeFormularZurueck(code);
   }
 
+  /**
+   * Wechselt in den Bearbeiten-Modus: lädt die PDF-Vorlage der Version als Datei und übernimmt Felder und Konfiguration in die Maske.
+   * Bei Fehler bleibt die Maske unverändert und eine Snackbar erscheint.
+   *
+   * @param eintrag - Zu bearbeitende Version aus der Liste.
+   */
   async function beginneBearbeiten(eintrag: VersionUebersicht): Promise<void> {
     setSpeichert(true);
     try {
@@ -154,6 +183,12 @@ export function FormularUpload() {
     });
   }
 
+  /**
+   * Löscht eine Version nach Bestätigung. Entstünde dadurch eine Lücke in der Versionsreihe (HTTP 409), wird gesondert nachgefragt und
+   * mit Force-Flag erneut gelöscht. Danach wird die Liste neu geladen; war die Version im Bearbeiten-Modus, wird die Maske zurückgesetzt.
+   *
+   * @param eintrag - Zu löschende Version.
+   */
   async function handleLoeschen(eintrag: VersionUebersicht): Promise<void> {
     const bestaetigt = await confirmDialog(
       `Version "${eintrag.version}" (ab ${eintrag.gueltigVon}) endgültig löschen?\nDie zugehörige PDF-Vorlage wird mit entfernt, sofern keine andere Version sie nutzt.`,
@@ -185,6 +220,13 @@ export function FormularUpload() {
     }
   }
 
+  /**
+   * Legt die Version an (`POST`) bzw. speichert sie im Bearbeiten-Modus (`PUT`). Die PDF wird nur hochgeladen, wenn keine gespeicherte
+   * Vorlage übernommen wurde. Bei Lücke in der Versionsreihe (HTTP 409) wird nachgefragt und mit Force-Flag wiederholt.
+   * Danach werden Maske zurückgesetzt und Liste neu geladen.
+   *
+   * @param e - Submit-Event des Formulars.
+   */
   async function handleSubmit(e: SubmitEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
     if (!datei) {

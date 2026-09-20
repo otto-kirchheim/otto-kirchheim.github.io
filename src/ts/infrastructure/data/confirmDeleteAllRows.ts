@@ -3,6 +3,12 @@ import type { CustomTable, CustomTableTypes } from '../table/CustomTable';
 import buttonDisable from '../ui/buttonDisable';
 import { getStoredMonatJahr } from '../date/dateStorage';
 
+/**
+ * Fragt per Snackbar nach und löscht bei "Ja" alle Zeilen des gespeicherten Monats, aktiviert die Buttons wieder und schreibt die Tabelle über `persist`.
+ *
+ * @typeParam T - Zeilentyp der Tabelle.
+ * @param options - `table`: Tabelle, `rowFilter`: wählt Zeilen eines Monats, `persist`: speichert die Tabelle.
+ */
 export function confirmDeleteAllRows<T extends CustomTableTypes>(options: {
   table: CustomTable<T>;
   rowFilter: (cells: T, monat: number) => boolean;

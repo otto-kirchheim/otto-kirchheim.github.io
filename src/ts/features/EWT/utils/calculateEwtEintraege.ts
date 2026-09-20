@@ -8,6 +8,16 @@ import calculateBuchungstagEwt from '@/infrastructure/date/calculateBuchungstagE
 // BN ist Legacy-Alias für N (svzA identisch); SP wird als explizite Spätschicht unterstützt
 type SchichtKeys = 'T' | 'SP' | 'N' | 'S';
 
+/**
+ * Berechnet die fehlenden Zeiten der EWT-Einträge aus Schicht, Fahrzeiten und Arbeitszeit-Vorgaben.
+ * Nur Einträge mit `berechnen` werden verändert; bereits gefüllte Zeitfelder (`HH:mm`) bleiben
+ * erhalten. Die übergebenen Objekte werden direkt mutiert.
+ *
+ * @param vorgabenU - Persönliche Vorgaben (Arbeitszeit je Schicht, Fahrzeiten je Einsatzort).
+ * @param daten - EWT-Einträge; werden in-place ergänzt.
+ * @returns Dasselbe `daten`-Array.
+ * @throws {Error} Bei fehlenden bzw. unvollständigen Vorgaben oder wenn `daten` kein Array ist.
+ */
 export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDatenEWT[]): IDatenEWT[] {
   if (vorgabenU == null || daten == null || !Array.isArray(daten)) {
     throw new Error('Daten fehlen');
@@ -43,14 +53,35 @@ export default function calculateEwtEintraege(vorgabenU: IVorgabenU, daten: IDat
   return daten;
 }
 
+/**
+ * Bündelt die von den Vorgaben abhängigen Hilfsfunktionen der Zeitberechnung.
+ *
+ * @param userSettings - Persönliche Vorgaben des Nutzers.
+ * @returns `getPascalEnde`, `initializeVorgabenE`, `calculateTimes` und `getSchichtDaten`.
+ */
 function createHelpers(userSettings: IVorgabenU) {
   const { Arbeitszeit: aZ } = userSettings;
 
+  /**
+   * Sonderzuschlag von 5 Minuten auf "An Wohnung" für einen bestimmten Nutzer (Pascal Ackermann).
+   *
+   * @returns 5 Minuten für diesen Nutzer, sonst 0.
+   */
   const getPascalEnde = (): Duration =>
     userSettings.Pers.Vorname === 'Pascal' && userSettings.Pers.Nachname === 'Ackermann'
       ? dayjs.duration(5, 'm')
       : dayjs.duration(0, 'm');
 
+  /**
+   * Liefert Beginn, Ende und Vor-/Nachlaufzeiten der Schicht für den Wochentag.
+   * `svzA` liegt zwischen Arbeitsbeginn und Abfahrt von der 1. Tätigkeitsstätte, `svzE` zwischen
+   * Ankunft dort und Arbeitsende; bei Nacht liegt das Ende am Folgetag.
+   *
+   * @param schicht - Schichtkürzel (`T`, `SP`, `N`, `S`; `BN` gilt als `N`).
+   * @param datum - Tag der Schicht (bestimmt den Wochentag der Überschreibungen).
+   * @returns Schichtdaten mit `beginn`, `ende`, `svzA`, `svzE`, `overnight`.
+   * @throws {Error} Wenn die Schicht nicht konfiguriert oder unbekannt ist.
+   */
   const getSchichtDaten = (schicht: string, datum: dayjs.Dayjs) => {
     const isoWeekday = datum.isoWeekday();
     const key: SchichtKeys = schicht === 'BN' ? 'N' : (schicht as SchichtKeys);
@@ -106,6 +137,11 @@ function createHelpers(userSettings: IVorgabenU) {
     }
   };
 
+  /**
+   * Wandelt Fahrzeit-Vorgaben in Durationen um.
+   *
+   * @returns `rZ` (Fahrzeit Wohnung–Tätigkeitsstätte) und `fZ` (Fahrzeit je Einsatzort-Schlüssel).
+   */
   const initializeVorgabenE = (): IVorgabenE => {
     const fZ: IVorgabenE['fZ'] = {};
     userSettings.Fahrzeit.forEach(place => {
@@ -117,6 +153,18 @@ function createHelpers(userSettings: IVorgabenU) {
     };
   };
 
+  /**
+   * Berechnet alle Zeitfelder eines Eintrags; bereits gefüllte Felder (`HH:mm`) bleiben erhalten,
+   * Einsatzort-Zeiten werden nur für bekannte Einsatzorte ergänzt.
+   *
+   * @param TagDaten - Eintrag mit ggf. schon vorhandenen Zeiten.
+   * @param datum - Tag der Schicht.
+   * @param schichtDaten - Ergebnis von `getSchichtDaten`.
+   * @param eOrt - true, wenn der Einsatzort in den Fahrzeit-Vorgaben existiert.
+   * @param vorgabenE - Fahrzeiten aus `initializeVorgabenE`.
+   * @param endePascal - Zuschlag aus `getPascalEnde`.
+   * @returns Die Zeitfelder `beginE`, `endeE`, `abWE`, `ab1E`, `an1E`, `anWE`, `anEE`, `abEE`.
+   */
   const calculateTimes = (
     TagDaten: IDatenEWT,
     datum: dayjs.Dayjs,
@@ -125,6 +173,14 @@ function createHelpers(userSettings: IVorgabenU) {
     vorgabenE: IVorgabenE,
     endePascal: Duration,
   ) => {
+    /**
+     * Setzt eine `HH:mm`-Angabe auf den Tag des Eintrags; bei Nacht/BN und `addTag` wird der Tag um 1 verringert.
+     *
+     * @param value - Uhrzeit `HH:mm`.
+     * @param addTag - true für Zeiten der zweiten Schichthälfte (Ende-Seite).
+     * @param Tag - Eintrag, dessen `Tag` und `Schicht` verwendet werden.
+     * @returns dayjs-Zeitpunkt.
+     */
     const convertToDayjs = (value: string, addTag: boolean, Tag: IDatenEWT): dayjs.Dayjs => {
       const [stunden, minuten] = value.split(':');
       let tag = dayjs(Tag.Tag).date();

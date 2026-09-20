@@ -4,6 +4,7 @@ import dayjs from '@/infrastructure/date/configDayjs';
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
 type Zeitfeld = (typeof ZEITFELDER)[number];
 
+/** Fehler zu einem Zeitfeld mit anzeigefertiger Meldung. */
 export type TZeitreihenfolgeFehler = {
   feld: Zeitfeld;
   message: string;
@@ -20,9 +21,15 @@ const FELD_LABELS: Record<Zeitfeld, string> = {
   anWE: 'An Wohnung',
 };
 
+/**
+ * Prüft, ob das Feld die Wohnung betrifft (Rand der Zeitfolge).
+ *
+ * @param feld - Zeitfeld.
+ * @returns true für `abWE` und `anWE`.
+ */
 const isWohnungFeld = (feld: Zeitfeld): boolean => feld === 'abWE' || feld === 'anWE';
 
-// Maximale Gesamtspanne: 20 Stunden (fängt durch Tagesübertrag verschleierte Reihenfolge-Fehler ab)
+// Maximale Gesamtspanne ohne Tageswechsel: 20 Stunden.
 const MAX_SPAN_MINUTES = 20 * 60;
 
 /**
@@ -35,6 +42,7 @@ const MAX_SPAN_MINUTES = 20 * 60;
  * ein Tagesübertrag (+1 Tag) angenommen. Übersteigt die Gesamtspanne 20 Stunden,
  * deutet das auf einen Reihenfolge-Fehler hin.
  *
+ * @param values - EWT-Eintrag mit `Tag`, `Schicht` und den Zeitfeldern.
  * @returns Feldbezogene Fehlermeldungen oder null bei korrekter Reihenfolge.
  */
 export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitreihenfolgeFehler[] | null {
@@ -79,6 +87,13 @@ export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitre
   if (rollovers.length > 0) {
     // In N/BN ist genau ein plausibler Mitternachtswechsel erlaubt (abends -> morgens).
     // Beispiel plausibel: 20:50 -> 05:10. Beispiel unplausibel: 19:25 -> 18:45.
+    /**
+     * Prüft, ob ein Tageswechsel plausibel ist (abends nach morgens, Grenze 12:00).
+     *
+     * @param prev - Vorherige Uhrzeit in Minuten seit 0:00.
+     * @param curr - Aktuelle Uhrzeit in Minuten seit 0:00.
+     * @returns true, wenn `prev >= 12:00` und `curr <= 12:00`.
+     */
     const isPlausiblerMitternachtswechsel = (prev: number, curr: number): boolean => prev >= 12 * 60 && curr <= 12 * 60;
 
     let erlaubterMitternachtswechselVerbraucht = false;
@@ -98,6 +113,13 @@ export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitre
     const fehlerNachFeld = new Map<Zeitfeld, TZeitreihenfolgeFehler>();
     const fehlerPrioritaet = new Map<Zeitfeld, number>();
 
+    /**
+     * Merkt einen Fehler zum Feld vor; eine niedrigere Priorität überschreibt keinen vorhandenen Eintrag.
+     *
+     * @param feld - Betroffenes Zeitfeld.
+     * @param message - Fehlermeldung.
+     * @param prioritaet - Vorrang der Meldung (höher gewinnt).
+     */
     const setFehler = (feld: Zeitfeld, message: string, prioritaet: number): void => {
       const bestehendePrioritaet = fehlerPrioritaet.get(feld) ?? -1;
       if (prioritaet < bestehendePrioritaet) return;
@@ -106,11 +128,24 @@ export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitre
       fehlerNachFeld.set(feld, { feld, message });
     };
 
+    /**
+     * Liefert die Nachbarfelder in der Reihenfolge der ausgefüllten Felder.
+     *
+     * @param index - Index in `resolved`.
+     * @returns Vorheriges und nächstes Feld oder null am Rand.
+     */
     const getNachbarFelder = (index: number): { prevFeld: Zeitfeld | null; nextFeld: Zeitfeld | null } => ({
       prevFeld: index > 0 ? resolved[index - 1].feld : null,
       nextFeld: index < resolved.length - 1 ? resolved[index + 1].feld : null,
     });
 
+    /**
+     * Formuliert die Meldung für das Feld, bei dem der Tageswechsel auftrat ("nach", "vor" oder "zwischen").
+     *
+     * @param feld - Betroffenes Zeitfeld.
+     * @param prevFallback - Feld, auf das sich die Meldung ersatzweise bezieht.
+     * @returns Meldungstext.
+     */
     const getZwischenMessage = (feld: Zeitfeld, prevFallback: Zeitfeld): string => {
       const index = resolvedIndexByField.get(feld);
       if (index === undefined) {
@@ -147,6 +182,13 @@ export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitre
       return `Muss nach "${FELD_LABELS[prevFallback]}" liegen.`;
     };
 
+    /**
+     * Formuliert die Meldung für das Feld vor dem Tageswechsel.
+     *
+     * @param prevFeld - Feld vor dem Tageswechsel.
+     * @param currFeld - Feld, bei dem der Tageswechsel auftrat.
+     * @returns Meldungstext.
+     */
     const getVorherigesFeldMessage = (prevFeld: Zeitfeld, currFeld: Zeitfeld): string => {
       const prevIndex = resolvedIndexByField.get(prevFeld);
       const currIndex = resolvedIndexByField.get(currFeld);
@@ -178,8 +220,7 @@ export default function validateEwtZeitenReihenfolge(values: IDatenEWT): TZeitre
     return Array.from(fehlerNachFeld.values());
   }
 
-  // Zusätzlicher Guard: ungewöhnlich große Gesamtspanne ohne klaren Rollover-Hinweis.
-  // Dieser Fall ist selten, soll aber keine stillen Falsch-Positiven erzeugen.
+  // Guard: Ohne Tageswechsel gilt eine Gesamtspanne über 20 Stunden (z. B. 00:10 bis 23:50) als Fehler.
   const totalMinutes = resolved[resolved.length - 1].dt.diff(resolved[0].dt, 'minute');
   if (totalMinutes > MAX_SPAN_MINUTES) {
     return [

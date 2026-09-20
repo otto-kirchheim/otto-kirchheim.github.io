@@ -12,6 +12,12 @@ import { sliderPositionToMs } from './generateEingabeMaskeEinstellungen';
 import { getArbeitszeitPanelState } from '../components/arbeitszeitPanelState';
 import { getFahrzeitPanelState } from '../components/fahrzeitPanelState';
 
+/**
+ * Liest die Einstellungen-Maske aus (persönliche Daten, Arbeitszeit, Fahrzeiten, Tabs, Zulagen, AutoSave, Bereitschafts-Vorgaben), validiert sie und speichert sie in `VorgabenU`.
+ *
+ * @returns Die aktualisierten und im Storage gespeicherten `VorgabenU`.
+ * @throws {Error} Bei ungültigen persönlichen Daten oder unvollständigen Fahrzeiten (mit Snackbar-Hinweis).
+ */
 export default function saveEinstellungen(): IVorgabenU {
   const VorgabenU: IVorgabenU = Storage.get('VorgabenU', { check: true });
   // Bestandsnutzer haben diese Felder ggf. nicht im Dokument (kein Server-Default) -- ohne
@@ -20,6 +26,15 @@ export default function saveEinstellungen(): IVorgabenU {
   VorgabenU.Pers.Entgeltgruppe ??= '';
   setupPersValidation();
 
+  /**
+   * Setzt typsicher einen Wert an einem Schlüssel des Objekts.
+   *
+   * @typeParam T - Objekttyp.
+   * @typeParam K - Schlüssel von `T`.
+   * @param obj - Zielobjekt.
+   * @param key - Zu setzender Schlüssel.
+   * @param value - Neuer Wert.
+   */
   const updateVorgabenU = <T, K extends keyof T>(obj: T, key: K, value: T[K]): void => {
     obj[key] = value;
   };
@@ -102,6 +117,13 @@ export default function saveEinstellungen(): IVorgabenU {
   return VorgabenU;
 }
 
+/**
+ * Übernimmt die Fahrzeiten-Zeilen: leere Zeilen entfallen, unvollständige lösen einen Fehler aus.
+ *
+ * @param rows - Zeilen des Fahrzeiten-Panels.
+ * @returns Nur die vollständigen Zeilen.
+ * @throws {Error} Wenn Tätigkeitsstätte oder Fahrzeit einer nicht leeren Zeile fehlt (mit Snackbar-Hinweis).
+ */
 function collectFahrzeiten(rows: IVorgabenUfZ[]): IVorgabenUfZ[] {
   const liste: IVorgabenUfZ[] = [];
   for (const { key, text, value } of rows) {

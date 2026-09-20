@@ -6,6 +6,16 @@ import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern'
 import type { CustomHTMLDivElement } from '@/types';
 import { schliesseModal } from '@/components';
 
+/**
+ * Meldet den Benutzer über das Login-Modal an: fehlende Zugangsdaten kommen aus `#Benutzer`/
+ * `#Passwort`, bei Erfolg folgt `userLoginSuccess`. Fehler erscheinen in `#errorMessage`; offline
+ * wird ohne API-Aufruf abgebrochen.
+ *
+ * @param modal - Login-Modal mit den Eingabefeldern.
+ * @param username - Vorgegebener Benutzername; sonst der Wert aus `#Benutzer`.
+ * @param passwort - Vorgegebenes Passwort; sonst der Wert aus `#Passwort`.
+ * @throws {Error} Wenn ein Eingabefeld oder `#errorMessage` fehlt.
+ */
 export default async function loginUser(
   modal: CustomHTMLDivElement,
   username?: string,

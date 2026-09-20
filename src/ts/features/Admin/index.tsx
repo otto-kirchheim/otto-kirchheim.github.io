@@ -23,6 +23,9 @@ type AdminCapabilities = {
   canEditFormularVorlagen: boolean;
 };
 
+/**
+ * Admin-Bereich mit Unternavigation; welche Tabs erscheinen, hängt von Rolle und Einzelrechten des angemeldeten Benutzers ab (Super-Admin sieht alle).
+ */
 export default function AdminTab() {
   const [capabilities, setCapabilities] = useState<AdminCapabilities | null>(null);
   const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
@@ -46,6 +49,9 @@ export default function AdminTab() {
   }, []);
 
   useEffect(() => {
+    /**
+     * Übernimmt den aktuellen Act-as-Zustand in den State.
+     */
     const syncActAsState = () => setActAsState(getActAsState());
 
     syncActAsState();
@@ -69,13 +75,9 @@ export default function AdminTab() {
   const canSeeFormulareTab = Boolean(isTeamAdminOrHigher && capabilities?.canEditFormularVorlagen);
   const isSuperAdmin = capabilities?.role === Role.SUPER_ADMIN;
 
-  /**
-   * Die Unternavigation des Admin-Panels. Sichtbarkeit haengt an den Berechtigungen; die
-   * Trenner sind rein optisch. `tabController.ts`s `zeigeTab()` schaltet ueber `data-tab-target`
-   * und schreibt den aktiven Tab in `activeAdminTabStore` -- `data-active`/`aria-selected` unten
-   * werden reaktiv aus `aktiverUnterTab` (`useActiveAdminTab()`) berechnet, kein DOM-Handschrieb
-   * mehr (Teil 3 der "mehr echtes React"-Initiative, analog `AppHeader.tsx`s Hauptnavigation).
-   */
+  // Unternavigation des Admin-Panels: Sichtbarkeit hängt an den Berechtigungen, Trenner sind rein optisch.
+  // `zeigeTab()` (tabController.ts) schaltet über `data-tab-target` und schreibt den aktiven Tab in
+  // `activeAdminTabStore`; `data-active`/`aria-selected` werden daraus über `aktiverUnterTab` abgeleitet.
   const unterTabs = (
     [
       { art: 'tab', id: 'dashboard', text: 'Dashboard', sichtbar: isSuperAdmin },
@@ -91,22 +93,27 @@ export default function AdminTab() {
     ] as const
   ).filter(eintrag => eintrag.sichtbar);
 
-  // `null` (Store-Anfangswert, vor jedem expliziten Wechsel) heisst "Default noch nicht
-  // ueberschrieben" -- identisches Fallback-Muster wie `tabController.ts`s `aktiverTab()`.
-  // Der Store haelt die volle Pane-Id (`zeigeTab()` kennt nur `admin-pane-*`, kein Praefix-
-  // Wissen) -- hier auf die kurze `unterTabs`/`paneKlasse`-Id zurueckgestutzt.
+  // `null` (Store-Anfangswert vor dem ersten Wechsel) bedeutet: Default-Tab, wie in `aktiverTab()`
+  // (tabController.ts). Der Store hält die volle Pane-Id, hier auf die kurze Id von `unterTabs` gekürzt.
   const aktiverUnterTab = useActiveAdminTab()?.replace(/^admin-pane-/, '') ?? (isSuperAdmin ? 'dashboard' : 'users');
 
   /**
-   * Einheitliche Pane-Klasse aus dem reaktiven Store abgeleitet (statt der vormals nur fuer
-   * `dashboard`/`users` verdrahteten, sonst rein statischen Strings) -- vorher ueberschrieb ein
-   * Re-Render aus anderem Grund (`capabilitiesLoading`/`actAsState`) den von `zeigeTab()` per
-   * DOM geschriebenen Zustand der uebrigen 6 Panes wieder mit dem Default.
+   * Klassenliste eines Tab-Panels, der aktive Zustand kommt aus dem Store. So überschreibt ein
+   * Re-Render aus anderem Grund den aktiven Tab nicht mit dem Default.
+   *
+   * @param id - Kurze Pane-Id (wie in `unterTabs`).
+   * @param randKlasse - Bootstrap-Klasse für die Randfarbe.
+   * @returns Vollständiger `className`-String.
    */
   function paneKlasse(id: string, randKlasse: string): string {
     return `tab-pane fade${aktiverUnterTab === id ? ' show active' : ''} bg-darkmode-override shadow-sm p-3 mb-4 border border-1 ${randKlasse}`;
   }
 
+  /**
+   * Wechselt in den Profile-Tab und übergibt die Benutzer-Id als Suche.
+   *
+   * @param userId - Id des Benutzers, dessen Profil gesucht wird.
+   */
   function navigateToProfile(userId: string) {
     setProfileSearch(userId);
     setProfileSearchKey(k => k + 1);

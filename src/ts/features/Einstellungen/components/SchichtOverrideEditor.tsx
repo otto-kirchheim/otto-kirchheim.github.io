@@ -11,6 +11,12 @@ const OVERRIDABLE_SCHICHTEN: Array<'frueh' | 'spaet' | 'nacht'> = ['frueh', 'spa
 
 type Overrides = NonNullable<IVorgabenUvorgabenB['schichtenOverrides']>;
 
+/**
+ * Entfernt `undefined`-Einträge aus den Overrides.
+ *
+ * @param next - Overrides nach einer Änderung.
+ * @returns Bereinigte Overrides; `undefined`, wenn keine Einträge übrig bleiben.
+ */
 const cleanOverrides = (next: Overrides): IVorgabenUvorgabenB['schichtenOverrides'] => {
   const entries = Object.entries(next).filter(([, value]) => value !== undefined);
   return entries.length > 0 ? (Object.fromEntries(entries) as IVorgabenUvorgabenB['schichtenOverrides']) : undefined;
@@ -27,6 +33,9 @@ type SchichtOverrideEditorProps = {
 /**
  * Kontrollierter Editor für optionale per-Wochentag-Overrides je Schicht. Wiederverwendet `SchichtSection`
  * und liefert pro aktivierter Schicht ein vollständiges `IPerWeekdaySchicht` als Snapshot-Override zurück.
+ *
+ * @param props - `aZ` (Basis-Arbeitszeit), `schichten` (angebotene Schichten), `overrides` (aktueller Stand),
+ *   `onChange` (erhält die neuen Overrides).
  */
 export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
   aZ,
@@ -39,6 +48,12 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
   );
   if (overridable.length === 0) return null;
 
+  /**
+   * Schaltet die Override-Zeiten einer Schicht ein (Start: Basiszeiten, ggf. mit vorhandenem Override gemischt) oder aus.
+   *
+   * @param typ - Schicht.
+   * @param enabled - `true` aktiviert den Override, `false` entfernt ihn.
+   */
   const setEnabled = (typ: 'frueh' | 'spaet' | 'nacht', enabled: boolean): void => {
     const next: Overrides = { ...overrides };
     if (enabled) {
@@ -50,6 +65,12 @@ export const SchichtOverrideEditor: FC<SchichtOverrideEditorProps> = ({
     onChange(cleanOverrides(next));
   };
 
+  /**
+   * Ersetzt den Override einer Schicht durch die bearbeiteten Zeiten.
+   *
+   * @param typ - Schicht.
+   * @param schicht - Vollständige Wochentagszeiten der Schicht.
+   */
   const updateOverride = (typ: 'frueh' | 'spaet' | 'nacht', schicht: IPerWeekdaySchicht): void => {
     onChange(cleanOverrides({ ...overrides, [typ]: schicht }));
   };

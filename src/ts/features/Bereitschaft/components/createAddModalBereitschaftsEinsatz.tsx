@@ -18,9 +18,20 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { onEvent } from '@/core';
 import { getBereitschaftsZeitraumDaten, isBzUnsynced, submitBereitschaftsEinsatz } from '../utils';
 
+/**
+ * Prüft, ob es einen noch nicht synchronisierten Bereitschaftszeitraum gibt (dann fehlt dem Einsatz evtl. dessen Server-ID).
+ *
+ * @returns `true`, wenn ein nicht gelöschter Bereitschaftszeitraum noch nicht auf dem Server ist.
+ */
 const hasUnsyncedBz = (): boolean =>
   getBereitschaftsZeitraumDaten(undefined, undefined, { excludeDeleted: true }).some(isBzUnsynced);
 
+/**
+ * Öffnet das Modal zum Anlegen eines Bereitschaftseinsatzes. Das Datum ist auf den gewählten Monat begrenzt und mit dem heutigen Tag
+ * (sonst dem 1.) vorbelegt. Ein Hinweis warnt vor noch nicht synchronisierten Zeiträumen und folgt `data:changed` live.
+ *
+ * @throws {Error} Wenn `#tableBE`/`#tableBZ` nicht instanziiert sind oder die Formular-Referenz fehlt.
+ */
 export default function createAddModalBereitschaftsEinsatz(): void {
   const formRef = createRef<HTMLFormElement>();
   const bzSyncHintRef = createRef<HTMLParagraphElement>();
@@ -126,6 +137,11 @@ export default function createAddModalBereitschaftsEinsatz(): void {
   });
   beiModalSchliessen(unsubscribeBzSyncHint);
 
+  /**
+   * Baut den Submit-Handler des Formulars.
+   *
+   * @returns Async-Handler: prüft die Browser-Validierung und speichert per `submitBereitschaftsEinsatz`; das Modal schließt nur bei Erfolg.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;

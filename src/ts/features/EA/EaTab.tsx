@@ -26,9 +26,20 @@ import generatePDF from '@/infrastructure/data/generatePDF';
 import { EditorModalEA, ShowModalEA, createAddModalEA } from './components';
 import { getEaDaten, persistEaTableData } from './utils';
 
+/**
+ * Tab "Entgeltausgleich": Tabelle der EA-Einträge des aktiven Monats samt Hinzufügen-, Speichern-,
+ * PDF- und Hilfe-Buttons. Entgeltausgleich gibt es erst ab 2025.
+ */
 export function EaTab() {
   const Jahr: number = Storage.get('Jahr', { default: dayjs().year() });
 
+  /**
+   * Prüft, ob das Jahr Entgeltausgleich zulässt (ab 2025).
+   *
+   * @param Jahr - Zu prüfendes Jahr.
+   * @param showError - Bei true erscheint bei unzulässigem Jahr eine Fehler-Snackbar.
+   * @returns true, wenn `Jahr >= 2025`.
+   */
   const checkIfGreater2025 = (Jahr: number, showError?: boolean) => {
     const checked: boolean = Jahr >= 2025;
     if (!checked && showError)
@@ -41,20 +52,29 @@ export function EaTab() {
     return checked;
   };
 
+  /**
+   * Formatiert einen Tag-Zellwert für die Anzeige als `dd DD.MM.`.
+   *
+   * @param value - Tag als `DD.MM.YYYY` (lokale Pfade wie `addEaTag.ts`) oder ISO-String vom Server.
+   * @returns Formatierter Tag; bei nicht parsbarem Wert der Originalstring.
+   */
   const tagParser = (value: unknown) => {
       const s = value as string;
-      // Erst strikt deutsch parsen (lokale Speicherpfade schreiben 'DD.MM.YYYY', z. B.
-      // `addEaTag.ts`), erst danach locker fuer ISO-Strings vom Server --
-      // `dayjs(s, 'DD.MM.YYYY')` allein laesst ISO ungueltig, `dayjs(s)` allein laesst
-      // deutsch ungueltig (gleiches Muster wie `getMonatFromEA`).
+      // Erst strikt deutsch parsen, dann locker für ISO: `dayjs(s, 'DD.MM.YYYY')` allein lässt ISO
+      // ungültig, `dayjs(s)` allein lässt deutsche Daten ungültig (Muster wie `getMonatFromEA`).
       const strict = dayjs(s, 'DD.MM.YYYY', true);
       const d = strict.isValid() ? strict : dayjs(s);
       return d.isValid() ? d.format('dd DD.MM.') : s;
     },
+    /**
+     * Liefert den Leertext der Tabelle.
+     *
+     * @param Jahr - Aktives Jahr.
+     * @returns Hinweis "Neu ab 2025" vor 2025, sonst "Keine Daten gefunden".
+     */
     getEmptyText = (Jahr: number) => (checkIfGreater2025(Jahr) ? 'Keine Daten gefunden' : 'Neu ab 2025');
 
-  // Nur beim allerersten Aufruf gelesen (siehe `useCustomTableState()`s Docblock) -- exakt das
-  // bisherige `useEffect(() => {...}, [])`-Verhalten.
+  // Optionen werden nur beim ersten Aufruf gelesen (siehe Docblock von `useCustomTableState()`).
   const ftEA = useCustomTableState<IDatenEA>('tableEA', {
     columns: [
       { name: 'Tag', title: 'Tag', sortable: true, sorted: true, direction: 'ASC', parser: tagParser },
@@ -68,19 +88,36 @@ export function EaTab() {
     onChange: createOnChangeHandler('EA'),
     editing: {
       enabled: true,
+      /** Öffnet das Hinzufügen-Modal (nur ab 2025). */
       addRow: () => {
         if (checkIfGreater2025(Jahr, true)) createAddModalEA(ftEA);
       },
+      /**
+       * Öffnet das Bearbeiten-Modal der Zeile.
+       *
+       * @param row - Zu bearbeitende EA-Zeile.
+       */
       editRow: row => {
         EditorModalEA(row, 'Entgeltausgleich bearbeiten');
       },
+      /**
+       * Öffnet das Anzeige-Modal der Zeile.
+       *
+       * @param row - Anzuzeigende EA-Zeile.
+       */
       showRow: row => {
         ShowModalEA(row, 'Entgeltausgleich anzeigen');
       },
+      /**
+       * Löscht die Zeile und speichert die Tabelle in den Storage.
+       *
+       * @param row - Zu löschende EA-Zeile.
+       */
       deleteRow: row => {
         row.deleteRow();
         persistEaTableData(ftEA);
       },
+      /** Löscht nach Bestätigung alle Zeilen des aktiven Monats. */
       deleteAllRows: () => {
         confirmDeleteAllRows({
           table: ftEA,
@@ -115,8 +152,8 @@ export function EaTab() {
     );
 
     return unbindButtons;
-    // Bewusst einmalig wie vorher -- `ftEA` ist stabil, `Jahr`/`checkIfGreater2025` bleiben auf
-    // den Mount-Zeitpunkt eingefroren (siehe `NebenTab.tsx`).
+    // Bewusst einmalig: `ftEA` ist stabil, `Jahr`/`checkIfGreater2025` bleiben auf den Mount-Zeitpunkt
+    // eingefroren (wie in `NebenTab.tsx`).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

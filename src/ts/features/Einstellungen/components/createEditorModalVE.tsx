@@ -45,6 +45,14 @@ const SLOT_LOOKUP_BY_TAG: Record<number, number> = {
   7: 6,
 };
 
+/**
+ * Wandelt Wochentag und Folgewochen-Flag in einen Slot-Index des Wochenrasters um.
+ *
+ * @param tag - Wochentag 1 (Mo) bis 7 (So); ungültige Werte ergeben Slot 0.
+ * @param Nwoche - `true`, wenn der Tag in der Folgewoche liegt (wirkt nur bei `allowSecondWeek`).
+ * @param allowSecondWeek - `false` beschränkt die Auswahl auf die erste Woche (Slots 0-6).
+ * @returns Slot-Index 0-13 (0-6 = Woche 1, 7-13 = Woche 2).
+ */
 const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): number => {
   const baseIndex = SLOT_LOOKUP_BY_TAG[tag] ?? -1;
   if (baseIndex < 0) return 0;
@@ -52,6 +60,12 @@ const getSlotFromTag = (tag: number, Nwoche = false, allowSecondWeek = true): nu
   return baseIndex + (Nwoche ? 7 : 0);
 };
 
+/**
+ * Umkehrung von `getSlotFromTag`: Slot-Index zurück in Wochentag und Folgewochen-Flag.
+ *
+ * @param slot - Slot-Index; wird auf 0-13 begrenzt.
+ * @returns Wochentag 1-7 und `Nwoche` (`true` ab Slot 7).
+ */
 const getTagFromSlot = (slot: number): { tag: number; Nwoche: boolean } => {
   const normalizedSlot = Math.max(0, Math.min(13, slot));
   return {
@@ -60,6 +74,12 @@ const getTagFromSlot = (slot: number): { tag: number; Nwoche: boolean } => {
   };
 };
 
+/**
+ * Erzeugt die Anzeigebeschriftung eines Slots (Wochentag-Kürzel plus Woche).
+ *
+ * @param slot - Slot-Index; wird auf 0-13 begrenzt.
+ * @returns Beschriftung wie "Mo W1" oder "So W2".
+ */
 const getSlotLabel = (slot: number): string => {
   const normalizedSlot = Math.max(0, Math.min(13, slot));
   const weekLabel = normalizedSlot >= 7 ? 'W2' : 'W1';
@@ -75,6 +95,12 @@ type WeekdayRangeSelectorProps = {
   initialEnd: vorgabenBElement;
 };
 
+/**
+ * Wochentag-Bereichswähler über 14 Slots (zwei Wochen), bedienbar per Tap (Start, dann Ende) oder Maus-Drag.
+ * Das Ergebnis steht in versteckten Inputs (`#<startId>Tag`, `#<endId>Tag`, `#<endId>Nwoche` sowie `#<startId>Nwoche` nur bei `startHasNwoche`), die der Submit-Handler von `EditorModalVE` ausliest.
+ *
+ * @param props - `startId`/`endId` (Präfix der versteckten Inputs), `label`, `startHasNwoche` (Start in Woche 2 wählbar) und die Anfangswerte `initialStart`/`initialEnd`.
+ */
 const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
   startId,
   endId,
@@ -95,6 +121,11 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
   const [awaitingEndSelection, setAwaitingEndSelection] = useState<boolean>(false);
   const [dragAnchor, setDragAnchor] = useState<number | null>(null);
 
+  /**
+   * Zweistufige Tap-Auswahl: der erste Tap setzt den Start und lässt das Ende offen, der zweite setzt das Ende (nie vor dem Start).
+   *
+   * @param slot - Getippter Slot-Index.
+   */
   const updateByTap = (slot: number): void => {
     if (!awaitingEndSelection) {
       const nextStartSlot = startHasNwoche ? slot : slot % 7;
@@ -110,6 +141,12 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
     setAwaitingEndSelection(false);
   };
 
+  /**
+   * Maus: beginnt einen Drag mit diesem Slot als Anker. Touch und Stift verhalten sich wie ein Tap (`updateByTap`).
+   *
+   * @param event - Pointer-Ereignis des Slot-Buttons.
+   * @param slot - Slot-Index des Buttons.
+   */
   const handlePointerDown = (event: ReactPointerEvent<HTMLButtonElement>, slot: number): void => {
     if (event.pointerType === 'mouse') {
       const normalizedAnchor = startHasNwoche ? slot : slot % 7;
@@ -126,6 +163,11 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
     updateByTap(slot);
   };
 
+  /**
+   * Aktualisiert während eines Drags den Bereich zwischen Anker und aktuellem Slot; ohne aktiven Drag wirkungslos.
+   *
+   * @param slot - Slot-Index, über den der Zeiger gerade fährt.
+   */
   const handlePointerEnter = (slot: number): void => {
     if (dragAnchor === null) return;
     const nextStart = Math.min(dragAnchor, slot);
@@ -135,6 +177,9 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
     if (startHasNwoche) setStartNwocheState(nextStart >= 7);
   };
 
+  /**
+   * Beendet einen laufenden Drag (Zeiger losgelassen oder Bereich verlassen).
+   */
   const clearDrag = (): void => {
     if (dragAnchor !== null) {
       setDragAnchor(null);
@@ -199,6 +244,13 @@ const WeekdayRangeSelector: FC<WeekdayRangeSelectorProps> = ({
   );
 };
 
+/**
+ * Erzeugt das Eingabefeld für den Namen der Vorgabe.
+ *
+ * @param row - Bestehende Zeile (Bearbeiten) oder die Tabelle (Hinzufügen, leeres Feld).
+ * @returns Das Pflichtfeld `#Name`.
+ * @throws {Error} Wenn die Spalte "Name" fehlt.
+ */
 const createNameElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>) => {
   const column = row.columns.array.find(column => column.name === 'Name');
   if (!column) throw Error(`Spalte "Name" nicht gefunden`);
@@ -211,6 +263,14 @@ const createNameElement = (row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgaben
     </MyInput>
   );
 };
+/**
+ * Erzeugt eine Checkbox für eine boolesche Spalte der Vorgabe.
+ *
+ * @param row - Bestehende Zeile (Bearbeiten) oder die Tabelle (Hinzufügen, nicht angehakt).
+ * @param columnName - Name der booleschen Spalte; Id und Beschriftung der Checkbox stammen aus ihr.
+ * @returns Die Checkbox.
+ * @throws {Error} Wenn die Spalte fehlt.
+ */
 const createcheckboxElement = (
   row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>,
   columnName: string,
@@ -229,6 +289,17 @@ const createcheckboxElement = (
   );
 };
 
+/**
+ * Erzeugt den Wochentag-Bereichswähler für ein Start-/Ende-Spaltenpaar.
+ *
+ * @param row - Bestehende Zeile (Bearbeiten) oder die Tabelle (Hinzufügen, Standard Mo bis Fr).
+ * @param startColumnName - Name der Start-Spalte.
+ * @param endColumnName - Name der Ende-Spalte.
+ * @param startHasNwoche - Ob der Start in der zweiten Woche liegen kann.
+ * @param label - Überschrift des Bereichswählers.
+ * @returns Der `WeekdayRangeSelector` mit den Anfangswerten aus den beiden Spalten.
+ * @throws {Error} Wenn eine der Spalten fehlt.
+ */
 const createRangeElement = (
   row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>,
   startColumnName: string,
@@ -265,6 +336,11 @@ type SchichtenConfigState = {
 };
 
 let _veSchichtenState: SchichtenConfigState | null = null;
+/**
+ * Liefert den Schichten-Zustand des offenen Modals (Modul-State, den `SchichtenConfigSection` pflegt und der Submit-Handler liest).
+ *
+ * @returns Der zuletzt gesetzte Schichten-Zustand oder `null`, wenn noch kein Modal geöffnet wurde.
+ */
 const getVorgabenBSchichtenState = (): SchichtenConfigState | null => _veSchichtenState;
 
 type SchichtenConfigSectionProps = {
@@ -275,6 +351,12 @@ type SchichtenConfigSectionProps = {
   nachtEnde: vorgabenBElement;
 };
 
+/**
+ * Konfiguration der aktiven Schichten samt Nachtschicht-Zeitraum und Wochentag-Overrides.
+ * Spiegelt jede Änderung per Effekt in den Modul-State `_veSchichtenState`.
+ *
+ * @param props - `aZ` (Arbeitszeit-Vorgaben; bestimmt die wählbaren Schichten), Anfangswerte für Schichten und Overrides sowie Beginn/Ende der Nachtschicht.
+ */
 const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
   aZ,
   initialSchichten,
@@ -301,6 +383,12 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
     ...(aZ?.sonder?.aktiv ? (['sonder'] as BereitschaftSchichtTyp[]) : []),
   ];
 
+  /**
+   * Schaltet eine optionale Schicht in der Auswahl an oder aus.
+   *
+   * @param typ - Schichttyp.
+   * @param checked - `true` aktiviert die Schicht, `false` deaktiviert sie.
+   */
   const toggleSchicht = (typ: BereitschaftSchichtTyp, checked: boolean): void => {
     setSchichten(prev => (checked ? [...prev.filter(s => s !== typ), typ] : prev.filter(s => s !== typ)));
   };
@@ -352,6 +440,13 @@ const SchichtenConfigSection: FC<SchichtenConfigSectionProps> = ({
   );
 };
 
+/**
+ * Öffnet das Modal zum Anlegen oder Bearbeiten einer Bereitschafts-Vorgabe (`VorgabenB`).
+ *
+ * @param row - Bestehende Zeile (Bearbeiten) oder die Tabelle (Hinzufügen).
+ * @param titel - Titel des Modals.
+ * @throws {Error} Wenn das Formular nach dem Rendern nicht referenziert werden kann.
+ */
 export default function EditorModalVE(
   row: Row<IVorgabenUvorgabenB> | CustomTable<IVorgabenUvorgabenB>,
   titel: string,
@@ -411,6 +506,11 @@ export default function EditorModalVE(
 
   modal.row = row;
 
+  /**
+   * Erzeugt den Submit-Handler: liest die Formularwerte, setzt bei "Standard" alle anderen Zeilen zurück, schreibt die Zeile bzw. fügt sie hinzu, schließt das Modal und speichert.
+   *
+   * @returns Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;
@@ -468,6 +568,12 @@ export default function EditorModalVE(
       schliesseModal();
       saveTableDataVorgabenU(table);
     };
+    /**
+     * Setzt `standard` nur an der übergebenen Zeile und entfernt es von allen anderen.
+     *
+     * @param ft - Tabelle der Vorgaben.
+     * @param newStandard - Zeile, die Standard wird; `null` bei einer noch nicht angelegten Zeile.
+     */
     function setStandard(ft: CustomTable<IVorgabenUvorgabenB>, newStandard: Row<IVorgabenUvorgabenB> | null): void {
       const rows = ft.getRows();
 

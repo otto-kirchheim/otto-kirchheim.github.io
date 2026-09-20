@@ -6,12 +6,26 @@ import dayjs from '@/infrastructure/date/configDayjs';
 import { persistEwtTableData } from '../utils';
 import { DBDivider, DBHeadingH5 } from '@db-ux/react-core-components';
 
+/**
+ * Sucht eine Spaltendefinition der EWT-Tabelle.
+ *
+ * @param row - Zeile, deren Spalten durchsucht werden.
+ * @param columnName - Spaltenname (`name`).
+ * @returns Die gefundene Spalte.
+ * @throws {Error} Wenn die Spalte nicht existiert.
+ */
 const getColumn = (row: Row<IDatenEWT>, columnName: string): Column<IDatenEWT> => {
   const column = row.columns.array.find(column => column.name === columnName);
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return column;
 };
 
+/**
+ * Erzeugt die Tag-Zeile; weicht der Buchungstag vom Tag ab, wird er als `Tag -> Buchungstag` angehängt.
+ *
+ * @param row - Anzuzeigende EWT-Zeile.
+ * @returns Das `MyShowElement` für den Tag.
+ */
 const createTagElement = (row: Row<IDatenEWT>) => {
   const column: Column<IDatenEWT> = getColumn(row, 'Tag');
   const tag = dayjs(row.cells.Tag);
@@ -35,6 +49,13 @@ const createTagElement = (row: Row<IDatenEWT>) => {
   );
 };
 
+/**
+ * Erzeugt eine Anzeigezeile für eine Textspalte (Einsatzort bzw. Schicht).
+ *
+ * @param row - Anzuzeigende EWT-Zeile.
+ * @param columnName - Spaltenname (`Einsatzort` oder `Schicht`).
+ * @returns Das `MyShowElement` mit dem geparsten Zellwert.
+ */
 const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
   const column: Column<IDatenEWT> = getColumn(row, columnName);
   return (
@@ -48,8 +69,18 @@ const createOrtSchichtElement = (row: Row<IDatenEWT>, columnName: string) => {
   );
 };
 
-// Ein Zeit-Block: Richtungskuerzel + Zeitwert stehen links bzw. rechts auf einer senkrechten
-// Linie -- dieselbe wie die Pfeile darueber (`.ewt-zeit`-Raster, feste Aussenspalten).
+/**
+ * Erzeugt einen Zeit-Block: Richtungskürzel und Zeitwert stehen links bzw. rechts auf derselben
+ * senkrechten Linie wie die Pfeile darüber (`.ewt-zeit`-Raster, feste Außenspalten).
+ *
+ * @param row - Anzuzeigende EWT-Zeile.
+ * @param vor - Richtungskürzel links (z. B. "ab").
+ * @param titel - Überschrift des Blocks.
+ * @param nach - Richtungskürzel rechts (z. B. "an").
+ * @param feldLinks - Spaltenname des linken Zeitwerts.
+ * @param feldRechts - Spaltenname des rechten Zeitwerts.
+ * @returns Das Raster-Element des Blocks.
+ */
 const createZeitBlock = (
   row: Row<IDatenEWT>,
   vor: string,
@@ -77,6 +108,13 @@ const createZeitBlock = (
   );
 };
 
+/**
+ * Öffnet das Anzeige-Modal einer EWT-Zeile (Tag, Einsatzort, Schicht, alle Zeiten). Der
+ * "Berechnen?"-Schalter ist auch hier änderbar und wird sofort persistiert.
+ *
+ * @param row - Anzuzeigende Zeile.
+ * @param titel - Modal-Titel.
+ */
 export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenEWT> = showModal(
     <MyDivModal
@@ -95,11 +133,9 @@ export default function ShowModalEWT(row: Row<IDatenEWT>, titel: string): void {
             id={'berechnen'}
             defaultChecked={row.cells?.['berechnen'] ?? true}
             changeHandler={(e: ChangeEvent<HTMLInputElement>) => {
-              // `row` kommt aus dem Aufruf-Closure -- der fruehere `closest('.modal')`-Umweg
-              // ging ins Leere (`#modal` ist eine Id, keine Klasse) -> Schalter ohne Wirkung.
-              // `val()` statt direkter `cells`-Mutation: setzt den Row-State auf 'modified'
-              // und meldet die Aenderung an AutoSave -- genau wie der Checkbox-Handler der
-              // Tabelle (`attachBerechnenToggleListeners`).
+              // `val()` statt direkter `cells`-Mutation: setzt den Row-State auf 'modified' und
+              // meldet die Änderung an AutoSave, wie der Checkbox-Handler der Tabelle
+              // (`attachBerechnenToggleListeners`).
               row.val({ ...row.cells, berechnen: e.target.checked });
               persistEwtTableData(row.CustomTable);
             }}

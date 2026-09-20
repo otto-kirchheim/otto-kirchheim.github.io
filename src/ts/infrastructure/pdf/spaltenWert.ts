@@ -8,6 +8,11 @@ import type { Spalte, Zeile } from '@otto-kirchheim/nebengeld-shared';
  * Zeile (Operand = Feldname der Zeile oder Konstante) — im Unterschied zu `wert.ts`, das über
  * mehrere Zeilen aggregiert (Kopf-/Fuß-Summen). `wenn` macht die Spalte zur Ankreuz-Spalte,
  * `listenPlatz` zur dynamischen Spalte (EZ: eine Zulage je Platz, siehe `ListenGruppe`).
+ *
+ * @param sp - Spaltendefinition (Vorrang: `wenn`, dann `listenPlatz`, dann `berechnet`, sonst Feld `key`).
+ * @param zeile - Datenzeile, gegen die aufgelöst wird.
+ * @param listen - Aufgelöste Listen-Belegung der Tabelle; nur für `listenPlatz`-Spalten nötig.
+ * @returns Der druckfertige Text; leer bei fehlendem Wert oder unbelegtem Listenplatz.
  */
 export function spaltenWert(sp: Spalte, zeile: Zeile, listen?: ListenAufloesung): string {
   if (sp.wenn) {
@@ -24,11 +29,18 @@ export function spaltenWert(sp: Spalte, zeile: Zeile, listen?: ListenAufloesung)
 
   if (!sp.berechnet) return formatiere(zeile[sp.key], sp);
 
-  // Auswertung liegt in `shared`, weil sie rekursiv ist (Operanden dürfen Zwischenrechnungen sein)
-  // und je Operator einen eigenen Parser braucht -- `Number("07:00")` wäre NaN.
+  // `berechneZeile` (aggregatoren.ts) ist rekursiv (Operanden dürfen Zwischenrechnungen sein) und
+  // parst Operanden je Operator eigens -- `Number("07:00")` wäre NaN.
   return formatiere(berechneZeile(sp.berechnet, zeile), sp);
 }
 
+/**
+ * Formatiert einen Rohwert gemäß `sp.format`, sonst als Standardtext.
+ *
+ * @param roh - Ungeformter Zellwert.
+ * @param sp - Spalte, deren `format` maßgeblich ist.
+ * @returns Der formatierte Text; leer bei `null`/`undefined`.
+ */
 function formatiere(roh: unknown, sp: Spalte): string {
   if (roh === null || roh === undefined) return '';
   return sp.format ? FORMAT[sp.format](roh) : standardText(roh);

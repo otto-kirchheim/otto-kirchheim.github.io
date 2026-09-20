@@ -31,6 +31,17 @@ export interface BulkResponse<T = unknown> {
   errors: BulkErrorEntry[];
 }
 
+/**
+ * Ruft die API über `FetchRetry` auf und liefert die entpackte `data` der Antwort.
+ *
+ * @typeParam I - Typ des Request-Bodys.
+ * @typeParam T - Typ der Antwortdaten.
+ * @param path - Pfad relativ zur API-URL, ohne führenden Slash.
+ * @param data - Optionaler JSON-Body.
+ * @param method - HTTP-Methode; Standard `GET`.
+ * @returns `data` des Antwort-Envelopes.
+ * @throws {Error} Bei Netz-/Fetch-Fehlern oder einer Fehlerantwort (Status ab 400).
+ */
 export async function apiFetch<I, T>(
   path: string,
   data?: I,
@@ -41,6 +52,16 @@ export async function apiFetch<I, T>(
   return unwrapEnvelope(result as unknown as ApiHttpResponse<T>);
 }
 
+/**
+ * Lädt alle Dokumente einer Ressource für ein Jahr, mappt sie ins Frontend-Format und ermittelt den jüngsten `updatedAt`-Zeitstempel (für den Sync-Vergleich).
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @typeParam TFrontend - Frontend-Zeilentyp.
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param year - Jahr.
+ * @param mapper - Wandelt ein Backend-Dokument in eine Frontend-Zeile.
+ * @returns Gemappte Zeilen und der größte `updatedAt`-Wert (`null` ohne Zeitstempel).
+ */
 export async function loadResourceYear<TBackend extends { updatedAt?: string }, TFrontend>(
   resource: ResourceName,
   year: number,
@@ -53,6 +74,14 @@ export async function loadResourceYear<TBackend extends { updatedAt?: string }, 
   return { data, maxUpdatedAt };
 }
 
+/**
+ * Sendet Anlegen, Ändern und Löschen einer Ressource gebündelt an `<resource>/bulk`.
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param bulk - Zu sendende Änderungen.
+ * @returns Ergebnis je Operation samt Fehlern.
+ */
 export async function bulkResource<TBackend>(
   resource: ResourceName,
   bulk: BulkRequest,
@@ -60,18 +89,49 @@ export async function bulkResource<TBackend>(
   return apiFetch<BulkRequest, BulkResponse<TBackend>>(`${resource}/bulk`, bulk, 'POST');
 }
 
+/**
+ * Legt ein einzelnes Dokument an (`POST <resource>`).
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param data - Neues Dokument.
+ * @returns Angelegtes Dokument.
+ */
 async function createResource<TBackend>(resource: ResourceName, data: unknown): Promise<TBackend> {
   return apiFetch<unknown, TBackend>(resource, data, 'POST');
 }
 
+/**
+ * Ersetzt die Felder eines Dokuments (`PUT <resource>/<id>`).
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param id - `_id` des Dokuments.
+ * @param data - Zu schreibende Felder.
+ * @returns Aktualisiertes Dokument.
+ */
 async function updateResource<TBackend>(resource: ResourceName, id: string, data: unknown): Promise<TBackend> {
   return apiFetch<unknown, TBackend>(`${resource}/${id}`, data, 'PUT');
 }
 
+/**
+ * Löscht ein einzelnes Dokument (`DELETE <resource>/<id>`).
+ *
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param id - `_id` des Dokuments.
+ */
 async function deleteResource(resource: ResourceName, id: string): Promise<void> {
   await apiFetch<undefined, unknown>(`${resource}/${id}`, undefined, 'DELETE');
 }
 
+/**
+ * Sendet Änderungen: genau eine Operation läuft über den passenden Einzel-Endpunkt, alle anderen Fälle (auch keine) über Bulk. Das Ergebnis hat immer die Form der Bulk-Antwort.
+ *
+ * @typeParam TBackend - Backend-Dokumenttyp.
+ * @param resource - Ressourcenname als API-Pfadsegment.
+ * @param bulk - Zu sendende Änderungen.
+ * @returns Bulk-förmige Antwort; beim Einzel-Create mit `createdReferences` aus `clientRequestId` und neuer `_id`.
+ */
 export async function smartSync<TBackend>(resource: ResourceName, bulk: BulkRequest): Promise<BulkResponse<TBackend>> {
   const createCount = bulk.create?.length ?? 0;
   const updateCount = bulk.update?.length ?? 0;

@@ -4,6 +4,13 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
 
+/**
+ * Öffnet den Dialog, in dem ein Admin direkt ein neues Passwort für einen Benutzer setzt.
+ *
+ * @param userId - Id des Benutzers.
+ * @param userName - Anzeigename im Dialogtitel.
+ * @throws {Error} Wenn die Formular-Referenz nach dem Rendern nicht gesetzt ist.
+ */
 export default function createAdminUserPasswordModal(userId: string, userName: string): void {
   const ref = createRef<HTMLFormElement>();
   const passwortRef = createRef<HTMLInputElement>();
@@ -53,6 +60,12 @@ export default function createAdminUserPasswordModal(userId: string, userName: s
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Baut den Submit-Handler: prüft Länge (mind. 8 Zeichen), Wiederholung und Online-Status, setzt das
+   * Passwort per API und schließt den Dialog. Fehler erscheinen in `#errorMessage` und per Snackbar.
+   *
+   * @returns Asynchroner Handler; wirft, wenn Dialogfelder fehlen.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;

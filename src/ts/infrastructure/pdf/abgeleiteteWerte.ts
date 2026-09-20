@@ -6,9 +6,12 @@ import type { IPdfBereitschaftseinsatz, IPdfBereitschaftszeitraum, IPdfEWT, IPdf
 const STUNDE = 60;
 
 /**
- * Dauer zwischen zwei `"HH:mm"`-Zeiten in Minuten, Mitternacht-Wrap über die bestehende
- * `zeitdifferenz`-Rechnung (siehe `ZEILEN_OPS`). Fehlt einer der beiden Werte, gibt es keine
- * Dauer -- eine Differenz gegen `0` würde sonst eine falsche Zeitspanne vortäuschen.
+ * Dauer zwischen zwei `"HH:mm"`-Zeiten in Minuten (Mitternacht-Wrap via `zeitdifferenz`). Ohne einen der
+ * Werte gibt es keine Dauer -- eine Differenz gegen `0` täuschte sonst eine Zeitspanne vor.
+ *
+ * @param ende - Endzeit `"HH:mm"`.
+ * @param beginn - Startzeit `"HH:mm"`.
+ * @returns Dauer in Minuten; `0`, wenn einer der Werte fehlt.
  */
 function dauerMinuten(ende: string | undefined, beginn: string | undefined): number {
   if (!ende || !beginn) return 0;
@@ -27,23 +30,20 @@ export interface EwtAbgeleiteteWerte {
 }
 
 /**
- * Vorberechnete Zeiten/Ankreuzfelder für eine EWT-Zeile (Phase 10 PDF-Vorlagen-Pipeline) --
- * ersetzt die Overlay-Rechnung im Editor durch fest verdrahtete, getestete Logik, die jede
- * Version direkt aus dem Datenkatalog wählen kann. `beamter` kommt aus `VorgabenU.Pers.TB`
- * (Konvention im Rest der Codebase: Beamter = `TB !== 'Tarifkraft'`), nicht aus der Zeile selbst
- * -- `BeamterUeber8Wohnung` ist der einzige hier feldübergreifende Fall.
+ * Vorberechnete Zeiten/Ankreuzfelder einer EWT-Zeile. `beamter` (= `VorgabenU.Pers.TB !== 'Tarifkraft'`)
+ * kommt nicht aus der Zeile; `BeamterUeber8Wohnung` ist der einzige feldübergreifende Fall.
  *
- * Die sechs Boolean-Felder im Editor als Ankreuz-Quelle über `Bedingung.bereich: { von: 1, bis: 2 }`
- * verwenden, NICHT über `werte` -- `werte` ist UI-seitig nur für Checkbox-/Freitext-Auswahl aus
- * `string`-Werten gebaut (`alsVergleichswert(true) === 1`/`alsVergleichswert(false) === 0` macht den
- * `bereich`-Vergleich funktionsfähig, ohne den Editor oder das Typsystem anzufassen).
+ * Die Boolean-Felder im Editor über `Bedingung.bereich: { von: 1, bis: 2 }` als Ankreuz-Quelle
+ * verwenden, nicht über `werte` (nur für `string`-Auswahl gebaut); `alsVergleichswert` macht `true`/`false`
+ * zu `1`/`0`.
+ *
+ * `WohnungUeber24`/`TkgStUeber24` sind mit den reinen Uhrzeit-Feldern nie erreichbar (höchstens ein
+ * Mitternachtswechsel, Gesamtspanne auf 20h gedeckelt), aber symmetrisch zu den anderen Bändern gebaut.
+ *
+ * @param zeile - EWT-Zeile mit Wohnung- (`abWE`/`anWE`) und erster TkgSt-Zeit (`ab1E`/`an1E`).
+ * @param beamter - `true` für Beamte (`TB !== 'Tarifkraft'`).
+ * @returns Dauern als Text sowie die Ankreuzfelder der Zeitbänder.
  */
-// `WohnungUeber24`/`TkgStUeber24` sind mit dem aktuellen Datenmodell strukturell nie erreichbar --
-// abWE/anWE/ab1E/an1E sind reine Uhrzeit-Felder (kein Datum, `type="time"` im Editor), die
-// Reihenfolge-Validierung erlaubt höchstens einen Mitternachtswechsel und deckelt die Gesamtspanne
-// auf 20h. Bewusst trotzdem exakt wie spezifiziert gebaut (User-Rückfrage 2026-08-21) -- symmetrisch
-// zu den anderen Bändern, kein Sonderfall im Code, greift automatisch, falls die Zeitfelder später
-// echte mehrtägige Spannen abbilden.
 export function ewtAbgeleiteteWerte(
   zeile: Pick<IPdfEWT, 'abWE' | 'anWE' | 'ab1E' | 'an1E'>,
   beamter: boolean,
@@ -64,18 +64,17 @@ export function ewtAbgeleiteteWerte(
 }
 
 export interface BzAbgeleiteteWerte {
-  /** Minuten, nicht HH:mm -- siehe Modulkommentar. */
+  /** Minuten, nicht HH:mm. */
   Dauer: number;
 }
 
 /**
- * Dauer eines Bereitschaftszeitraums in Minuten (Phase 11 PDF-Vorlagen-Pipeline) -- bewusst eine
- * Zahl statt `FORMAT.stunden`-Text (anders als bei EWT), User-Vorgabe. `Beginn`/`Ende` sind volle
- * Zeitstempel (siehe `IPdfBereitschaftszeitraum`), ein Zeitraum darf über Tage laufen, deshalb
- * `zeitspanne` (keine Mitternachts-Korrektur wie bei `zeitdifferenz`). `Pause` wird ADDIERT, wie
- * `aktualisiereBerechnung.ts` (Bereitschaft zählt inkl. Pause als Dienstzeit) -- ein früherer
- * Subtraktions-Fix war falsch (widersprach der produktiv genutzten Bereitschaftszulage-Berechnung)
- * und wurde korrigiert.
+ * Dauer eines Bereitschaftszeitraums in Minuten (bewusst Zahl statt `FORMAT.stunden`-Text). `Beginn`/`Ende`
+ * sind volle Zeitstempel und dürfen über Tage laufen, daher `zeitspanne` statt `zeitdifferenz`. `Pause`
+ * wird ADDIERT (Bereitschaft zählt inkl. Pause, wie `aktualisiereBerechnung.ts`).
+ *
+ * @param zeile - Bereitschaftszeitraum mit `Beginn`, `Ende` und optionaler `Pause` (Minuten).
+ * @returns Dauer in Minuten inklusive Pause.
  */
 export function bzAbgeleiteteWerte(
   zeile: Pick<IPdfBereitschaftszeitraum, 'Beginn' | 'Ende' | 'Pause'>,
@@ -87,26 +86,25 @@ export function bzAbgeleiteteWerte(
 }
 
 export interface BeAbgeleiteteWerte {
-  /** Minuten, nicht HH:mm -- siehe Modulkommentar. */
+  /** Minuten, nicht HH:mm. */
   Dauer: number;
   /** Euro (km * Satz), auf 2 Nachkommastellen gerundet; `undefined` bei 0 km. */
   PrivatKmBetrag?: number;
 }
 
 /**
- * Dauer und Privat-km-Wert eines Bereitschaftseinsatzes (Phase 11) -- `Beginn`/`Ende` sind reine
- * `"HH:mm"`-Uhrzeiten eines Tages (siehe `IPdfBereitschaftseinsatz`), deshalb `zeitdifferenz`
- * (ergänzt über Mitternacht, wie bei `ewtAbgeleiteteWerte`).
+ * Dauer und Privat-km-Wert eines Bereitschaftseinsatzes. `Beginn`/`Ende` sind reine `"HH:mm"`-Zeiten,
+ * daher `zeitdifferenz` (Mitternacht-Wrap).
  *
- * `privatKmSatz` (Euro/km) kommt vorberechnet vom Aufrufer -- welcher Satz gilt (Tarifkraft vs.
- * Beamter, `VorgabenGeld.PrivatPKWTarif`/`PrivatPKWBeamter`) ist reine Konfigurations-Auswahl ohne
- * eigene Testlogik, anders als die Zeitband-Schwellen bei `ewtAbgeleiteteWerte`. `Math.round(... *
- * 100) / 100` vermeidet Fließkomma-Rauschen (z.B. `12 * 0.27`), das sich über mehrere Zeilen zu
- * einer sichtbar falschen Summe aufaddieren würde.
+ * `privatKmSatz` (Euro/km, Tarifkraft vs. Beamter) kommt vorberechnet vom Aufrufer. Das Runden auf
+ * 2 Nachkommastellen verhindert Fließkomma-Rauschen (`12 * 0.27`) in aufaddierten Summen.
  *
- * Gedruckt wird je Person nur EINE der beiden Spalten (Tarifkraft: rohe km / Beamter: Euro-Betrag,
- * User-Vorgabe 2026-08-25). Beide Werte liegen auf der Zeile -- die rohe `PrivatKm` aus dem
- * Zeilenobjekt selbst, der Euro-Betrag hier --; welche Spalte erscheint, entscheidet die Vorlage.
+ * Gedruckt wird je Person nur eine der Spalten (Tarifkraft: rohe km, Beamter: Euro-Betrag) -- die
+ * Vorlage wählt.
+ *
+ * @param zeile - Bereitschaftseinsatz mit `Beginn`, `Ende` und rohen `PrivatKm`.
+ * @param privatKmSatz - Euro je km (vom Aufrufer nach Tarifkraft/Beamter gewählt).
+ * @returns Dauer in Minuten und Privat-km-Betrag (`undefined` bei 0 km).
  */
 export function beAbgeleiteteWerte(
   zeile: Pick<IPdfBereitschaftseinsatz, 'Beginn' | 'Ende'> & { PrivatKm: number },
@@ -125,9 +123,11 @@ export interface EzAbgeleiteteWerte {
 }
 
 /**
- * Zusammengesetzte Arbeitszeit-Anzeige für eine Nebengeld-Zeile (Phase 12 PDF-Vorlagen-Pipeline) --
- * `Spalte` (anders als `Feld`) kann mehrere Datenpfade nicht per `quellen`/`trenner` in einer Zelle
- * verketten, deshalb wie bei EWT/Bereitschaft vorberechnet statt im Renderer generisch gelöst.
+ * Arbeitszeit einer Nebengeld-Zeile als `"Beginn-Ende"`. Vorberechnet, weil `Spalte` (anders als `Feld`)
+ * keine `quellen`/`trenner`-Verkettung kennt.
+ *
+ * @param zeile - Nebengeld-Zeile mit `Beginn` und `Ende`.
+ * @returns `Arbeitszeit` als `"Beginn-Ende"`.
  */
 export function ezAbgeleiteteWerte(zeile: Pick<IPdfNebengeld, 'Beginn' | 'Ende'>): EzAbgeleiteteWerte {
   return { Arbeitszeit: `${zeile.Beginn}-${zeile.Ende}` };
@@ -136,16 +136,23 @@ export function ezAbgeleiteteWerte(zeile: Pick<IPdfNebengeld, 'Beginn' | 'Ende'>
 type ZulagenGeldSatz = Pick<IVorgabeValue, 'A' | 'B' | 'C' | 'Fahrentsch' | 'SIPO' | 'GKR'>;
 
 /**
- * Geldwert eines einzelnen Zulagen-Codes (Phase 12, PDF-Vorlagen-Pipeline) -- repliziert exakt die
- * Formel aus `calculateBerechnungRows.ts::N_ZULAGEN_CALC` (Berechnung-Tab), dort je `paymentHint`
- * auf eine ganze Kategorie (alle Codes desselben Satzes zusammen) angewandt, hier auf den Wert
- * EINES Codes -- mehrere Codes teilen sich denselben `paymentHint`/Satz (siehe `ZULAGEN_CATALOG`).
- * `wert` ist Minuten bei `ZulageEntryUnit.Minuten`-Codes (A/B/C/C+A/C+B/SIPO, gerundet auf volle
- * Stunden wie im Original), sonst eine reine Stückzahl (Fahrentschädigung, C*9, Ganzkörper-
- * reinigung). Unbekannter Code (kein Katalogeintrag) oder fehlender Satz ergibt 0 statt eines
- * Absturzes -- Fahrlässigkeit bei der Eingabe soll keinen kaputten Export verursachen.
+ * Geldwert eines einzelnen Zulagen-Codes -- gleiche Formel wie `N_ZULAGEN_CALC` in
+ * `calculateBerechnungRows.ts`, dort je `paymentHint` über die ganze Kategorie, hier für EINEN Code.
+ * `wert` ist bei `ZulageEntryUnit.Minuten`-Codes Minuten (auf volle Stunden gerundet), sonst eine
+ * Stückzahl. Unbekannter Code oder fehlender Satz ergibt 0 statt eines Absturzes.
+ *
+ * @param code - Zulagen-Code aus `ZULAGEN_CATALOG`.
+ * @param wert - Minuten bei Minuten-Codes, sonst Stückzahl.
+ * @param geldMonat - Sätze des Monats (A, B, C, Fahrentschädigung, SIPO, Ganzkörperreinigung).
+ * @returns Geldwert in Euro; `0` bei unbekanntem Code oder fehlendem Satz.
  */
 export function geldwertZulagenCode(code: string, wert: number, geldMonat: ZulagenGeldSatz): number {
+  /**
+   * Satz aus `geldMonat`.
+   *
+   * @param feld - Name des Satzes.
+   * @returns Satz oder `0`, wenn er fehlt.
+   */
   const satz = (feld: keyof ZulagenGeldSatz): number => geldMonat[feld] ?? 0;
   switch (ZULAGEN_CATALOG.find(z => z.code === code)?.paymentHint) {
     case 'Fahrentschaedigung':
@@ -172,11 +179,13 @@ export function geldwertZulagenCode(code: string, wert: number, geldMonat: Zulag
 }
 
 /**
- * Bereinigte Summe [Std.] eines Zulagen-Codes (Phase 13, Sonderzeilen) -- Minuten-Codes (siehe
- * `ZulageEntryUnit.Minuten` in `ZULAGEN_CATALOG`) gerundet auf volle Stunden, exakt wie der erste
- * Rechenschritt in `geldwertZulagenCode()`. Stück-Codes (Fahrentschädigung, C*9, Ganzkörper-
- * reinigung) haben keine Std.-Umrechnung -- `undefined` statt einer irreführenden Zahl, der
- * Renderer zeigt dafür `"-"`. Unbekannter Code ebenfalls `undefined`.
+ * Bereinigte Summe [Std.] eines Zulagen-Codes: Minuten-Codes auf volle Stunden gerundet (wie in
+ * `geldwertZulagenCode()`). Stück-Codes und unbekannte Codes haben keine Umrechnung -> `undefined`
+ * (Renderer zeigt `"-"`).
+ *
+ * @param code - Zulagen-Code aus `ZULAGEN_CATALOG`.
+ * @param wert - Minuten (bei Minuten-Codes).
+ * @returns Volle Stunden, oder `undefined` für Stück- und unbekannte Codes.
  */
 export function bereinigteZulagenStunden(code: string, wert: number): number | undefined {
   const eintrag = ZULAGEN_CATALOG.find(z => z.code === code);
@@ -184,11 +193,13 @@ export function bereinigteZulagenStunden(code: string, wert: number): number | u
 }
 
 /**
- * Alle Zulagen-Einträge einer Listen-Gruppe über mehrere Zeilen, je mit eigenem (String-)Code und
- * numerischem Wert -- gemeinsame Grundlage von `summeGeldwertGruppe()`/`summeBereinigtGruppe()`.
- * Einträge ohne String-Code (fehlende `Zulagenart`) oder aus einer Nicht-Array-Quelle fallen raus.
- * Eine leere Rückgabe heißt: die Spalte trägt gar keine Zulage -- die Aufrufer geben dann
- * `undefined` statt `0` zurück (leere Summenzelle, keine irreführende Null).
+ * Alle Zulagen-Einträge einer Listen-Gruppe über mehrere Zeilen (Code + Wert). Einträge ohne
+ * String-Code oder aus einer Nicht-Array-Quelle fallen raus. Leer = die Spalte trägt keine Zulage;
+ * die Aufrufer geben dann `undefined` statt `0` zurück.
+ *
+ * @param rows - Zeilen der Tabelle.
+ * @param gruppe - Listenfeld (`quelle`), Code-Feld (`schluessel`) und Wertfeld (`wert`).
+ * @returns Alle Einträge mit Code und Zahlenwert.
  */
 function zulagenEintraegeGruppe(
   rows: Zeile[],
@@ -206,13 +217,14 @@ function zulagenEintraegeGruppe(
 }
 
 /**
- * Geldwert ALLER Einträge einer Listen-Gruppe zusammen (Phase 13, Sonderzeilen) -- anders als
- * `geldwertZulagenCode()` nicht für EINEN vorgegebenen Code, sondern je Eintrag mit dessen EIGENEM
- * Code aus `zeile[gruppe.schluessel]`: Grundlage der Gesamtsumme über alle Zulagen-Spaltenplätze
- * einer Tabelle (`Berechnet.liste` ohne `index`), unabhängig davon, welcher Code gerade auf welchem
- * Platz steht. Ein Eintrag mit unbekanntem Code trägt `0` bei, statt die Summe zu verwerfen.
- * Trägt keine Zeile eine Zulagenart (kein einziger Eintrag mit Code), gibt es `undefined` statt
- * `0` -- die Summenzelle bleibt leer.
+ * Geldwert ALLER Einträge einer Listen-Gruppe zusammen, je mit dem EIGENEN Code aus
+ * `zeile[gruppe.schluessel]` (Gesamtsumme über alle Zulagen-Spaltenplätze). Unbekannter Code trägt `0`
+ * bei. Ohne Eintrag `undefined` (leere Summenzelle).
+ *
+ * @param rows - Zeilen der Tabelle.
+ * @param gruppe - Listenfeld (`quelle`), Code-Feld (`schluessel`) und Wertfeld (`wert`).
+ * @param geldMonat - Sätze des Monats.
+ * @returns Summe in Euro, `undefined` ohne Eintrag.
  */
 export function summeGeldwertGruppe(
   rows: Zeile[],
@@ -225,12 +237,13 @@ export function summeGeldwertGruppe(
 }
 
 /**
- * Bereinigte Summe [Std.] ALLER Einträge einer Listen-Gruppe zusammen (Phase 13, Sonderzeilen) --
- * wie `summeGeldwertGruppe()`, aber über `bereinigteZulagenStunden()` statt `geldwertZulagenCode()`.
- * Stück-Codes (keine Std.-Umrechnung) tragen `0` bei statt die Summe zu verwerfen -- anders als bei
- * einer einzelnen Zelle (dort `"-"`, siehe `sonderZeileZelleWert()`) ist eine Gesamtsumme ohne den
- * nicht umrechenbaren Anteil weiterhin eine sinnvolle Zahl. Ohne jede Zulagenart (kein Eintrag mit
- * Code) gibt es wie bei `summeGeldwertGruppe()` `undefined` statt `0`.
+ * Bereinigte Summe [Std.] ALLER Einträge einer Listen-Gruppe -- wie `summeGeldwertGruppe()` mit
+ * `bereinigteZulagenStunden()`. Stück-Codes tragen `0` bei (anders als die Einzelzelle mit `"-"`, siehe
+ * `sonderZeileZelleWert()`): eine Summe ohne den nicht umrechenbaren Anteil bleibt sinnvoll.
+ *
+ * @param rows - Zeilen der Tabelle.
+ * @param gruppe - Listenfeld (`quelle`), Code-Feld (`schluessel`) und Wertfeld (`wert`).
+ * @returns Summe in Stunden, `undefined` ohne Eintrag.
  */
 export function summeBereinigtGruppe(
   rows: Zeile[],
@@ -242,10 +255,10 @@ export function summeBereinigtGruppe(
 }
 
 export interface BereitschaftszulageWerte {
-  /** Tarifkraft/Beamter als eigenständiges Druckfeld -- `tarifKraft` selbst ist einer von drei
-   * `TB_VALUES` (zwei Besoldungsgruppen + Tarifkraft), fürs PDF zählt aber nur diese Unterscheidung
-   * (Konvention im Rest der Codebase: Beamter = `TB !== 'Tarifkraft'`). Immer gesetzt, unabhängig
-   * von `bereitschaftMinuten`. */
+  /**
+   * Tarifkraft/Beamter als Druckfeld (`TB_VALUES` kennt drei Werte, das PDF nur diese Unterscheidung).
+   * Immer gesetzt, auch bei 0 Minuten.
+   */
   TarifBeamter: 'Tarifkraft' | 'Beamter';
   BereitschaftsMinuten?: number;
   SummeTarif?: number;
@@ -256,20 +269,18 @@ export interface BereitschaftszulageWerte {
 }
 
 /**
- * Bereitschaftszulage-Zwischenwerte (Phase 11, Nachtrag) -- Arithmetik aus
- * `calculateBerechnungRows.ts` (Berechnung-Tab), aufgeschlüsselt in benannte Zwischenschritte für
- * den Druck. `bereitschaftMinuten` (="Differenz BZ-BE" in Minuten) wird vom Aufrufer live aus den
- * BZ-/BE-Zeilen desselben Exports berechnet, NICHT hier -- bewusst kein Storage-Zugriff (würde
- * entweder veraltete Werte riskieren oder, um das zu vermeiden, ein `data:changed`-Event
- * erzwingen müssen, das nebenbei einen kompletten AutoSave-Zyklus auslösen würde, siehe
- * `infrastructure/autoSave/autoSave.ts`).
+ * Bereitschaftszulage-Zwischenwerte -- Arithmetik aus `calculateBerechnungRows.ts`, in benannte
+ * Schritte für den Druck zerlegt. `bereitschaftMinuten` ("Differenz BZ-BE") kommt live vom Aufrufer;
+ * kein Storage-Zugriff hier (veraltete Werte, oder ein `data:changed` mit vollem AutoSave-Zyklus).
  *
- * `0` Minuten -> nur `TarifBeamter` gesetzt (wie `IBerechnungMonatsErgebnis`: keine Anzeige statt
- * `0` für einen Monat ganz ohne Bereitschaft). Von den Geld-Zwischenwerten wird nur EIN Zweig
- * befüllt, der jeweils andere bleibt `undefined` -- reicht als "Anzeige abhängig von TB", ohne
- * eigenes Sichtbarkeits-Feature. `SummeTarif` ist bewusst NICHT mit einem Satz multipliziert (reine
- * Stundenzahl); nur `SummeBeamter3` ist ein Geldwert, `SummeBeamter1`/`SummeBeamter2` bleiben
- * Ganzzahlen (Minuten bzw. Sätze).
+ * `0` Minuten -> nur `TarifBeamter` (wie `IBerechnungMonatsErgebnis`). Je nach TB wird nur EIN
+ * Geld-Zweig befüllt, der andere bleibt `undefined`. `SummeTarif` ist eine reine Stundenzahl; nur
+ * `SummeBeamter3` ist ein Geldwert.
+ *
+ * @param bereitschaftMinuten - Differenz BZ-BE in Minuten.
+ * @param tarifKraft - Tarifkraft oder Besoldungsgruppe.
+ * @param geldMonat - Sätze der Besoldungsgruppen A 8 und A 9.
+ * @returns Zwischenwerte; nur `TarifBeamter` bei 0 Minuten.
  */
 export function bereitschaftszulageAbgeleiteteWerte(
   bereitschaftMinuten: number,
@@ -293,7 +304,7 @@ export function bereitschaftszulageAbgeleiteteWerte(
     BereitschaftsMinuten: bereitschaftMinuten,
     SummeBeamter1: summeBeamter1,
     SummeBeamter2: summeBeamter2,
-    // Gerundet wie PrivatKmBetrag (Fließkomma-Rauschen, z.B. 11 * 16.37 === 180.07000000000002).
+    // Gerundet gegen Fließkomma-Rauschen (`11 * 16.37 === 180.07000000000002`).
     SummeBeamter3: Math.round(summeBeamter2 * geldwertBeamter * 100) / 100,
     GeldwertBeamter: geldwertBeamter,
   };

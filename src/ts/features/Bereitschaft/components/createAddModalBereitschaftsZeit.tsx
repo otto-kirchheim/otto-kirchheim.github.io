@@ -21,13 +21,28 @@ import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeO
 import { BereitschaftOverridePanel } from './BereitschaftOverridePanel';
 
 const HINWEIS_MANUELL = 'Wird aus der Vorgabe berechnet. Zum Ändern „Datum & Zeiten manuell anpassen" aktivieren.';
+/**
+ * Tooltip-Text für Zeitfelder, die aus der Arbeitszeit einer Schicht folgen.
+ *
+ * @param schicht - Schichtname ("Spät" oder "Nacht").
+ * @returns Hinweistext.
+ */
 const hinweisArbeitszeit = (schicht: string): string =>
   `Folgt der Arbeitszeit ${schicht}. Zum Ändern „Andere Arbeitszeiten hinterlegen" nutzen.`;
 
-// Deaktivierte Felder bekommen keine Hover-Events (`pointer-events: none` in styles.scss) -- der Tooltip
-// hängt deshalb an einer Hülle. Der „manuell"-Hinweis (Klasse `berechnet-hinweis`) verschwindet mit dem
-// „berechnet"-Badge, sobald toggleBereitschaftsEigeneWerte die Felder freischaltet; der Arbeitszeit-Hinweis
-// bleibt, da diese Zeiten nie direkt editierbar sind.
+/**
+ * Hängt einen Tooltip an ein (meist deaktiviertes) Feld. Deaktivierte Felder bekommen keine Hover-Events
+ * (`pointer-events: none` in styles.scss), deshalb sitzt der Tooltip an einer Hülle. Der „manuell"-Hinweis
+ * (Klasse `berechnet-hinweis`) verschwindet mit dem „berechnet"-Badge, sobald `toggleBereitschaftsEigeneWerte`
+ * die Felder freischaltet; der Arbeitszeit-Hinweis bleibt, da diese Zeiten nie direkt editierbar sind.
+ *
+ * @param feld - Das umhüllte Feld.
+ * @param text - Tooltip-Text.
+ * @param manuell - `true` = Hinweis gehört zum „manuell anpassen"-Schalter (wird mit ihm ausgeblendet).
+ * @param className - Zusätzliche CSS-Klassen der Hülle.
+ * @param style - Optionaler Inline-Style der Hülle.
+ * @returns Die Hülle mit Feld und Tooltip.
+ */
 const mitHinweis = (feld: ReactElement, text: string, manuell: boolean, className: string, style?: CSSProperties) => (
   // Hülle ist per `tabIndex` fokussierbar, damit der Hinweis auch per Tastatur erreichbar ist (die Lint-Regel
   // prüft nur den Tag-Namen, deshalb hier bewusst ausgenommen).
@@ -40,7 +55,15 @@ const mitHinweis = (feld: ReactElement, text: string, manuell: boolean, classNam
   </div>
 );
 
-// Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum manuell anpassen" editierbar.
+/**
+ * Kompaktes, einzeiliges Datumsfeld; standardmäßig berechnet (disabled), per „Datum & Zeiten manuell anpassen" editierbar.
+ *
+ * @param id - Feld-Id (bE, nA oder nE).
+ * @param date - Vorbelegter Wert.
+ * @param min - Frühestes zulässiges Datum.
+ * @param max - Spätestes zulässiges Datum.
+ * @returns Das Feld samt Hinweis-Tooltip.
+ */
 const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs, max: dayjs.Dayjs) =>
   mitHinweis(
     <DbFeld
@@ -60,11 +83,18 @@ const createDateInputElement = (id: string, date: dayjs.Dayjs, min: dayjs.Dayjs,
     { minWidth: 0, maxWidth: '10rem' },
   );
 
-// Abgeleitete Zeit – standardmäßig berechnet (disabled), per „Datum & Zeiten manuell anpassen"
-// editierbar (nur die BZ-Grenzen bAT/bET; Nacht/Spät folgen immer der Arbeitszeit bzw. dem
-// Override-Panel, da auch die Berechnung die Nacht-Blöcke daraus ableitet). Wert wird von
-// applyBereitschaftsVorgabe/updateBereitschaftsDatum gesetzt und von submitBereitschaftsZeiten gelesen.
-// `schicht` gesetzt: Zeit ist nie direkt editierbar, sondern folgt der Arbeitszeit dieser Schicht.
+/**
+ * Abgeleitetes Zeitfeld, standardmäßig berechnet (disabled). Per „Datum & Zeiten manuell anpassen"
+ * editierbar sind nur die BZ-Grenzen bAT/bET; Nacht/Spät folgen immer der Arbeitszeit bzw. dem Override-Panel,
+ * da auch die Berechnung die Nacht-Blöcke daraus ableitet. Der Wert wird von `applyBereitschaftsVorgabe`/
+ * `updateBereitschaftsDatum` gesetzt und von `submitBereitschaftsZeiten` gelesen.
+ *
+ * @param id - Feld-Id.
+ * @param name - Feldname, zugleich Beschriftung ("Von"/"Bis").
+ * @param required - Pflichtfeld.
+ * @param schicht - Gesetzt, wenn die Zeit nie direkt editierbar ist, sondern der Arbeitszeit dieser Schicht folgt.
+ * @returns Das Feld samt Hinweis-Tooltip.
+ */
 const createTimeInputElement = (id: string, name: string, required = false, schicht?: string) =>
   mitHinweis(
     <DbFeld
@@ -82,6 +112,13 @@ const createTimeInputElement = (id: string, name: string, required = false, schi
     'flex-shrink-0',
   );
 
+/**
+ * Editierbares Datumsfeld für den Sonderschicht-Zeitraum.
+ *
+ * @param id - Feld-Id (sonderVon oder sonderBis).
+ * @param value - Vorbelegter Wert ("YYYY-MM-DD").
+ * @returns Das Datumsfeld.
+ */
 const createSonderDateInputElement = (id: string, value: string) => (
   <DbFeld
     type="date"
@@ -94,7 +131,15 @@ const createSonderDateInputElement = (id: string, value: string) => (
   />
 );
 
-// Ein „Zeitpunkt" (Anfang/Ende) als kompakte Zeile: Label · Datum (füllt) · Zeit · optional „berechnet"-Badge.
+/**
+ * Ein „Zeitpunkt" (Anfang/Ende) als kompakte Zeile: Label · Datum (füllt) · Zeit · optional „berechnet"-Badge.
+ *
+ * @param label - Zeilenbeschriftung ("Anfang"/"Ende").
+ * @param berechnet - `true` zeigt das „berechnet"-Badge.
+ * @param dateEl - Datumsfeld.
+ * @param timeEl - Zeitfeld.
+ * @returns Die Zeile.
+ */
 const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, timeEl: ReactElement) => (
   <div className="d-flex align-items-center gap-2 py-1">
     <span className="small fw-medium text-body flex-shrink-0" style={{ width: '3.5rem' }}>
@@ -115,6 +160,13 @@ const punktZeile = (label: string, berechnet: boolean, dateEl: ReactElement, tim
   </div>
 );
 
+/**
+ * Öffnet das Modal „Neue Bereitschaft eingeben": Vorgabe wählen, Zeiten aus der Vorgabe ableiten lassen
+ * (oder manuell anpassen), Spät-/Sonder-/Nachtschicht und Arbeitszeit-Overrides festlegen. Beim Absenden
+ * legt `submitBereitschaftsZeiten` die Zeiträume an.
+ *
+ * @throws {Error} Wenn die Formular-Referenz nach dem Rendern fehlt.
+ */
 export default function createAddModalBereitschaftsZeit(): void {
   const formRef = createRef<HTMLFormElement>();
 
@@ -136,13 +188,28 @@ export default function createAddModalBereitschaftsZeit(): void {
   // Interaktiv im Modal gesetzte Arbeitszeit-Overrides (BereitschaftOverridePanel) für diesen Eintrag.
   let runtimeOverrides: BereitschaftRuntimeOverrides | undefined;
   setBereitschaftRuntimeOverrides(undefined);
+  /**
+   * Gewählte Vorgabe samt Schicht-Overrides (Vorgabe + interaktiv im Panel gesetzte).
+   *
+   * @returns Vorgabe mit zusammengeführten `schichtenOverrides`.
+   */
   const effektiveVorgabe = (): IVorgabenUvorgabenB => ({
     ...vorgabenB[auswahl],
     schichtenOverrides: mergeSchichtenOverrides(vorgabenB[auswahl].schichtenOverrides, runtimeOverrides),
   });
 
+  /**
+   * Auswahlfeld für die Bereitschafts-Vorgabe; ein Wechsel leitet die Felder aus der neuen Vorgabe neu ab.
+   *
+   * @returns Das Auswahlfeld.
+   */
   const vorgabenB_Select = () => {
     const ref = createRef<HTMLSelectElement>();
+    /**
+     * Übernimmt die gewählte Vorgabe und wendet sie auf die Felder an.
+     *
+     * @throws {Error} Wenn die Select-Referenz fehlt.
+     */
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       auswahl = ref.current.value;
@@ -194,8 +261,18 @@ export default function createAddModalBereitschaftsZeit(): void {
     datum = datum.subtract(1, 'w');
   }
 
+  /**
+   * Startdatum-Feld der Bereitschaft; eine Änderung leitet die abhängigen Zeiten und Felder neu ab.
+   *
+   * @returns Das Datumsfeld (`#bA`).
+   */
   const datumInput = () => {
     const ref = createRef<HTMLInputElement>();
+    /**
+     * Übernimmt das geänderte Startdatum und leitet die Zeiten neu ab.
+     *
+     * @throws {Error} Wenn die Feld-Referenz fehlt.
+     */
     const changeHandler = () => {
       if (ref.current === null) throw Error('Referenz fehlt');
       datum = dayjs(ref.current.value);
@@ -408,7 +485,7 @@ export default function createAddModalBereitschaftsZeit(): void {
 
   applyBereitschaftsVorgabe(modal, effektiveVorgabe(), datum);
 
-  // Spät-Zeiten bleiben abgeleitet (Override-Panel) → nur Sichtbarkeit des Spät-Blocks steuern.
+  /** Spät-Zeiten bleiben abgeleitet (Override-Panel); steuert nur die Sichtbarkeit des Spät-Blocks. */
   const refreshSpaetFelder = (): void => {
     const spaetChecked = modal.querySelector<HTMLInputElement>('#spaet')?.checked ?? false;
     const spaetContainer = modal.querySelector<HTMLElement>('#spaetschicht');
@@ -434,6 +511,12 @@ export default function createAddModalBereitschaftsZeit(): void {
   });
   refreshSpaetFelder();
 
+  /**
+   * Erzeugt den Submit-Handler des Formulars: prüft die Validität, legt die Zeiträume an, schließt das
+   * Modal und speichert die BZ-Tabelle. Wirft `submitBereitschaftsZeiten`, bleibt das Modal offen.
+   *
+   * @returns Asynchroner Submit-Handler.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;
@@ -441,8 +524,8 @@ export default function createAddModalBereitschaftsZeit(): void {
       event.preventDefault();
       const table = document.querySelector<CustomHTMLTableElement<IDatenBZ>>('#tableBZ');
       if (!table) throw new Error('tableBZ nicht gefunden');
-      // `submitBereitschaftsZeiten` kann werfen (fehlende Inputs/Jahreswechsel-Inkonsistenz) --
-      // await verhindert, dass sich das Modal bei einem Fehler faelschlich trotzdem schliesst.
+      // `submitBereitschaftsZeiten` kann werfen (fehlende Inputs/Jahreswechsel-Inkonsistenz); das await
+      // verhindert, dass sich das Modal dann trotzdem schließt.
       await submitBereitschaftsZeiten(modal, table);
       schliesseModal();
       persistBereitschaftsZeitraumTableData(table.instance);

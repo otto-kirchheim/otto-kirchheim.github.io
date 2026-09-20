@@ -6,6 +6,15 @@ import { invokeHook } from '@/core/hooks';
 let REFRESHED = 0;
 let isLogoutInProgress = false;
 
+/**
+ * Erneuert das Access-Token über `authApi.refreshToken()` und speichert die Rolle. Bricht nach
+ * mehr als zwei Wiederholungen oder mehr als zwei Erneuerungen seit dem letzten Login ab, um
+ * Refresh-Schleifen zu vermeiden: dann Fehlermeldung, `auth:failure`-Hook und Fehler. Läuft
+ * bereits ein Logout, tut der Aufruf nichts.
+ *
+ * @param retry - Nummer des aktuellen Wiederholungsversuchs; Standard 0.
+ * @throws {Error} Bei zu vielen Versuchen oder wenn der Refresh fehlschlägt.
+ */
 export default async function tokenErneuern(retry?: number): Promise<void> {
   if (isLogoutInProgress) return;
   if ((retry ?? 0) > 2 || REFRESHED > 2) {
@@ -27,21 +36,24 @@ export default async function tokenErneuern(retry?: number): Promise<void> {
   }
 }
 
+/** Setzt Refresh-Zähler und Logout-Sperre zurück. */
 function resetRefreshCounter(): void {
   REFRESHED = 0;
   isLogoutInProgress = false;
 }
 
-/** Setzt internen Modulzustand zurück (nach erfolgreichem Login aufrufen). */
+/** Setzt Refresh-Zähler und Logout-Sperre zurück; nach erfolgreichem Login aufrufen. */
 export function resetTokenState(): void {
   REFRESHED = 0;
   isLogoutInProgress = false;
 }
 
+/** Zählt eine erfolgreiche Token-Erneuerung mit. */
 function incrementRefreshCounter(): void {
   REFRESHED++;
 }
 
+/** Löst den `auth:failure`-Hook aus und zeigt eine Fehler-Snackbar zur erneuten Anmeldung. */
 function showErrorAndLogout(): void {
   invokeHook('auth:failure');
   createSnackBar({

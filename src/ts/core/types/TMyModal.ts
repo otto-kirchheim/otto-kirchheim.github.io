@@ -16,6 +16,6 @@ export type TMyModal<T> = {
   Footer?: React.ReactNode;
   Header?: React.ReactNode;
   errorMessage?: string;
-  /** React 19 vererbt `children` nicht mehr implizit an FC-Props (Preact tat das). */
+  /** Explizit deklariert: FC-Props enthalten unter React 19 kein implizites `children`. */
   children?: React.ReactNode;
 };

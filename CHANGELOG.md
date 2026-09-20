@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (159)
+
+### docs (Kommentare durchgesehen, gekuerzt, JSDoc fuer jede Funktion)
+
+- **Umfang**: 339 Dateien in `frontend/src` (ts/tsx/scss/css). Nur Kommentare geaendert; Beweis per
+  Skript: Code ohne Kommentare (TypeScript-Transpile bzw. postcss-scss) und alle Direktiven
+  (`eslint-disable`, `@ts-expect-error`, `stylelint-disable`, ...) identisch zu `HEAD`. Ausnahme sind
+  die Nutzer-Aenderungen in `styles.scss`, `datenKatalog.ts` und `aggregatoren.ts` (siehe Commit).
+- **Regel**: nur behalten, was ein WARUM erklaert; Historie ("Phase K6", "ehemals", Datums-/User-
+  Vermerke), Wiederholungen des Codes und Duplikate raus; jede sachliche Aussage gegen den Code
+  geprueft.
+- **JSDoc**: jede benannte Funktion/Methode/Komponente hat Beschreibung, `@param`, `@returns` und
+  `@throws` (wo sie wirft). Ausgenommen sind anonyme Inline-Callbacks und Daten-Lambdas in
+  Konfigurationen (`beispiel: i => ...`, `inhalt: m => ...`). Geprueft per AST-Skript: 1515 Funktionen,
+  `@param`-Namen passen zu den Signaturen.
+- **Falsche/veraltete Kommentare korrigiert** (Auswahl): `trifftBedingung` "liegt in shared" (liegt im
+  Frontend), `useMediaQuery` (hoert nur auf `change`, nicht auf `resize`), `pullToRefresh`
+  (`overscroll-behavior` ist sehr wohl beteiligt), Verweise auf nicht mehr existierende Dateien
+  (`customTableRender.ts`, `autoSaveIndicator.ts`, `DBColorToggler.ts`, `customtable.css`,
+  Block `ICON-SATZ`), Tab-Panes werden von `App.tsx` statt `tabController.ts` geschaltet,
+  `saveDaten`-Tabellen-Buttons unvollstaendig (`btnSaveEA`), Spaltenkopf-Schwelle `md` -> `sm`.
+- **Bekannte Restpunkte** (nicht Teil dieses Eintrags): `shared/src/formular/types.ts:86` verweist auf
+  `listen.ts` in shared (liegt im Frontend); `frontend/CLAUDE.md` nennt noch den `:root`-Radius-Block
+  in `styles.scss` und Admins alten DOM-Mechanismus; `submitBereitschaftsEinsatz.ts` (570 Zeilen) und
+  `ArbeitszeiteingabePanel.tsx` (690 Zeilen) liegen jetzt ueber der 500-Zeilen-Regel (vorher 451/594);
+  toter Code laut Durchsicht: `dayjs(...) ?? null`-Zweig in `applyBereitschaftsVorgabe.ts`,
+  `getMonatFromN`/`getMonatFromEA` identisch.
+
 ## 2026-09-19 (158)
 
 ### fix (Spalten-Schwellen: breitere Tabellen ab 768px)

@@ -54,6 +54,12 @@ export const PERS_FIELD_LABELS = {
 
 const DEFAULT_PERS_VALIDATION_SELECTORS = Object.keys(PERS_FIELD_LABELS).map(key => `#${key}`);
 
+/**
+ * Normalisiert eine Adresse: trimmt, setzt genau ein Leerzeichen nach Kommas und faltet Leerraum.
+ *
+ * @param value - Rohe Adresseingabe.
+ * @returns Normalisierte Adresse.
+ */
 export function normalizeGermanAddress(value: string): string {
   return value
     .trim()
@@ -61,18 +67,34 @@ export function normalizeGermanAddress(value: string): string {
     .replace(/\s+/g, ' ');
 }
 
+/**
+ * Trimmt und faltet aufeinanderfolgenden Leerraum zu einem Leerzeichen.
+ *
+ * @param value - Rohe Eingabe.
+ * @returns Bereinigter Text.
+ */
 function normalizeTextValue(value: string): string {
   return value.trim().replace(/\s+/g, ' ');
 }
 
+/**
+ * Prueft das Adressformat "Straße [Hausnummer], 12345 Ort" (nach Normalisierung).
+ *
+ * @param value - Adresse, roh oder bereits normalisiert.
+ * @returns `true` bei passendem Format; leere Werte sind ungueltig.
+ */
 export function isValidGermanAddress(value: string): boolean {
   const normalizedValue = normalizeGermanAddress(value);
   return normalizedValue.length > 0 && GERMAN_ADDRESS_REGEX.test(normalizedValue);
 }
 
 /**
- * Fehlertext zum Feld. DB rendert Meldungen als `db-infotext` innerhalb der Feldhuelle
- * (`db-input`/`db-select`) -- dort landet der Text, sonst direkt hinter dem Feld.
+ * Liefert das Fehlertext-Element zum Feld und legt es bei Bedarf an (samt `aria-describedby`). DB rendert
+ * Meldungen als `db-infotext` innerhalb der Feldhuelle (`db-input`/`db-select`) -- dort landet der Text,
+ * sonst direkt hinter dem Feld.
+ *
+ * @param input - Zu validierendes Feld.
+ * @returns Das vorhandene oder neu erzeugte `db-infotext`-Element.
  */
 function getOrCreateValidationFeedback(input: ValidatableElement): HTMLSpanElement {
   const feedbackId = `${input.id || 'field'}-feedback`;
@@ -107,6 +129,14 @@ function getOrCreateValidationFeedback(input: ValidatableElement): HTMLSpanEleme
   return feedback;
 }
 
+/**
+ * Uebernimmt das Validierungsergebnis ins Feld: Custom-Validity, `data-custom-validity` und Fehlertext.
+ *
+ * @param input - Zu markierendes Feld.
+ * @param isValid - `true` blendet den Fehlertext aus.
+ * @param message - Fehlermeldung; leer bei gueltigem Wert.
+ * @returns `isValid`, unveraendert durchgereicht.
+ */
 function setValidationState(input: ValidatableElement, isValid: boolean, message: string): boolean {
   const feedback = getOrCreateValidationFeedback(input);
 
@@ -120,6 +150,13 @@ function setValidationState(input: ValidatableElement, isValid: boolean, message
   return isValid;
 }
 
+/**
+ * Prueft eine Kilometer-Angabe auf Pflichtfeld, Zahl und Bereich.
+ *
+ * @param input - Feld; `min`/`max` bestimmen den Bereich (Default 1 bis 100).
+ * @param label - Feldbezeichnung fuer die Meldung.
+ * @returns Fehlermeldung oder '' bei gueltigem Wert.
+ */
 function validateDistanceInput(input: HTMLInputElement, label: string): string {
   const normalizedValue = normalizeTextValue(input.value);
   if (normalizedValue === '') return `${label} ist erforderlich.`;
@@ -137,6 +174,14 @@ function validateDistanceInput(input: HTMLInputElement, label: string): string {
   return '';
 }
 
+/**
+ * Validiert ein Adressfeld und zeigt das Ergebnis am Feld an.
+ *
+ * @param input - Adressfeld.
+ * @param opts - `optional`: leer erlaubt (Default: Feld nicht `required` oder `Adress2`).
+ *   `normalize`: schreibt den normalisierten Wert ins Feld zurueck (Default `true`).
+ * @returns `true`, wenn der Wert gueltig ist.
+ */
 export function validateGermanAddressInput(
   input: HTMLInputElement,
   opts: { optional?: boolean; normalize?: boolean } = {},
@@ -152,6 +197,14 @@ export function validateGermanAddressInput(
   return setValidationState(input, isValid, feedbackMessage);
 }
 
+/**
+ * Validiert ein Feld der persoenlichen Daten anhand seiner Id (Schluessel aus `PERS_FIELD_LABELS`) und
+ * zeigt das Ergebnis am Feld an. Felder mit unbekannter Id gelten als gueltig.
+ *
+ * @param input - Eingabe- oder Select-Feld.
+ * @param opts - `normalize`: schreibt den bereinigten Wert ins Feld zurueck (Default `true`).
+ * @returns `true`, wenn der Wert gueltig ist.
+ */
 export function validatePersInput(input: ValidatableElement, opts: { normalize?: boolean } = {}): boolean {
   const key = input.id as keyof typeof PERS_FIELD_LABELS;
   if (!(key in PERS_FIELD_LABELS)) return true;
@@ -233,6 +286,11 @@ export function validatePersInput(input: ValidatableElement, opts: { normalize?:
   return setValidationState(input, validationMessage === '', validationMessage);
 }
 
+/**
+ * Bindet die Adressvalidierung (input/change/blur) an die Felder; bereits gebundene Felder werden uebersprungen.
+ *
+ * @param selectors - CSS-Selektoren der Adressfelder (Default: `#Adress1`, `#Adress2`, `#ErsteTkgStAdresse`).
+ */
 export function setupGermanAddressValidation(selectors: readonly string[] = DEFAULT_GERMAN_ADDRESS_SELECTORS): void {
   for (const selector of selectors) {
     const input = document.querySelector<HTMLInputElement>(selector);
@@ -240,6 +298,7 @@ export function setupGermanAddressValidation(selectors: readonly string[] = DEFA
 
     input.dataset.addressValidationBound = 'true';
 
+    /** Validiert mit Normalisierung (bei `change`/`blur`). */
     const syncValidationState = (): void => {
       validateGermanAddressInput(input);
     };
@@ -250,6 +309,12 @@ export function setupGermanAddressValidation(selectors: readonly string[] = DEFA
   }
 }
 
+/**
+ * Bindet die Validierung der persoenlichen Daten (input/change/blur) an die Felder; bereits gebundene Felder
+ * werden uebersprungen.
+ *
+ * @param selectors - CSS-Selektoren der Felder (Default: alle Schluessel aus `PERS_FIELD_LABELS`).
+ */
 export function setupPersValidation(selectors: readonly string[] = DEFAULT_PERS_VALIDATION_SELECTORS): void {
   for (const selector of selectors) {
     const input = document.querySelector<ValidatableElement>(selector);
@@ -257,6 +322,7 @@ export function setupPersValidation(selectors: readonly string[] = DEFAULT_PERS_
 
     input.dataset.persValidationBound = 'true';
 
+    /** Validiert mit Normalisierung (bei `change`/`blur`). */
     const syncValidationState = (): void => {
       validatePersInput(input);
     };

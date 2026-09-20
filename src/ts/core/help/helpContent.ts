@@ -443,6 +443,12 @@ const HELP_CONTENT: Record<HelpContextKey, HelpContent> = {
   },
 };
 
+/**
+ * Liefert den Hilfetext eines Kontexts.
+ *
+ * @param key - Hilfekontext.
+ * @returns Hilfetext zum Kontext.
+ */
 export function getHelpContent(key: HelpContextKey): HelpContent {
   return HELP_CONTENT[key];
 }

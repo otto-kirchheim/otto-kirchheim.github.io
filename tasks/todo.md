@@ -1,3 +1,69 @@
+# Aktueller Plan: Kommentare pruefen und kuerzen - 2026-09-19
+
+## Auftrag
+
+User: alle Kommentare durchgehen, auf das Wichtigste verkuerzen, und pruefen, ob der Kommentar
+ueberhaupt noetig UND korrekt ist. Umfang (Stand `HEAD`): 4581 Kommentarzeilen in 261 von 374
+Dateien unter `frontend/src` (ts 2835, tsx 1227, scss 481, css 38); 24 Zeilen sind Direktiven.
+Verteilung: 191 Dateien mit 0-5 Zeilen, 127 mit 6-20, 38 mit 21-50, 18 mit mehr als 50
+(`styles.scss` 331, `pdf/abgeleiteteWerte.ts` 118, `pdf/aggregatoren.ts` 113, `CustomTable.ts` 103 ...).
+
+## Regeln
+
+- **Behalten**: das WARUM, das aus dem Code nicht ablesbar ist -- Workarounds, DB-UX-/Browser-Eigenheiten,
+  externe Verkabelung (Ids, `querySelector`), Reihenfolge-/Timing-Zwaenge, bewusste Ausnahmen.
+- **Streichen**: Erzaehlung des Offensichtlichen, Historie ("ehemals index.html", "seit Phase K5",
+  Datum-/Commit-Verweise -- steht in CHANGELOG/`git log`), Doppelungen, Kommentare ueber entfernten Code.
+- **Korrigieren**: jede Aussage gegen den echten Code pruefen (Namen, Ids, Dateien, Zahlen, Verhalten);
+  falsche/veraltete Kommentare berichtigen oder streichen (Beispiel: `CustomTableView` behauptete natives
+  `<button>`, rendert aber `DBButton`).
+- **Nie anfassen**: Direktiven (`eslint-disable`, `@ts-expect-error`, `stylelint-disable` ...) samt ihrer
+  Begruendungszeile.
+- Stil der Umgebung beibehalten (Deutsch, Umlaute wie in der jeweiligen Datei), JSDoc nur wo es Typ-/
+  Vertragsinformation traegt.
+
+## Verifikation (pro Batch)
+
+1. `kommentar-check.mjs` (Scratchpad): je geaenderte Datei Code OHNE Kommentare `HEAD` gegen Arbeitsbaum
+   (TS: `transpileModule` mit `removeComments`, SCSS: `postcss-scss` ohne Kommentarknoten) MUSS identisch
+   sein; Direktiven-Zeilen unveraendert. Beweist "nur Kommentare geaendert".
+2. `bunx tsc --noEmit`, `bun run lint`, `bun run lint:css`, `bun run test`.
+3. Ein Commit je Batch (nach Rueckfrage bzw. wie bisher freigegeben).
+
+## Batches
+
+- [x] **1. Die 8 groessten Dateien**: `styles.scss`, `pdf/abgeleiteteWerte.ts`, `pdf/aggregatoren.ts`,
+      `table/CustomTable.ts`, `FormularEditor/datenKatalog.ts`, `autoSave/autoSave.ts`, `pdf/wert.ts`,
+      `FormularEditor/dummyDaten.ts`
+- [x] **2-16. Rest in 15 Chunks** (255 Dateien mit Kommentaren, 1197 Funktionen; Listen in `chunk_01..15.txt` im Scratchpad,
+      nach Pfad sortiert, je ca. 430 Gewicht). Ein Subagent nach dem anderen (nie zwei Schreiber im Worktree), Regeln in
+      `REGELN.md`. Nach jedem Chunk: eigener Check (Checker gegen Snapshot, `pmatch.mjs`, prettier/eslint/tsc).
+- [x] **17. Abschluss**: `bun run test`, `lint`, `lint:css`, `tsc`, Gesamtvergleich, CHANGELOG-Eintrag, Lessons; EIN Commit fuer alles
+      (User-Vorgabe: erst alle Chunks, dann zusammen committen).
+
+## Fortschritt / Ergebnisse
+
+**Batch 1 (2026-09-19):** 8 Dateien, Kommentarzeilen 1049 -> 625 (-40 %). Checker OK (Code
+ohne Kommentare identisch, Direktiven unveraendert), tsc/lint/lint:css (87 Warnungen, Grenze 93)/
+`bun run test` (2172 pass) gruen.
+
+Nachtrag (auf User-Wunsch): Jede Funktion/Methode in den bearbeiteten Dateien bekommt ein JSDoc mit
+`@param`/`@returns` (`@throws`, wo sie wirft) -- gilt als Standard fuer Batches 2-5. Pruefung per AST-Skript
+(`pmatch.mjs`: Funktion ohne JSDoc, `@param` passt nicht zur Signatur). Batch 1: 147 Funktionen, 0 ohne
+JSDoc, 0 Abweichungen; Ausnahme: die `beispiel: i => ...`-Datenlambdas im `datenKatalog.ts`.
+
+Falsche/veraltete Aussagen gefunden und korrigiert:
+- `aggregatoren.ts`: "`trifftBedingung` liegt in `shared`" -- liegt im Frontend.
+- `abgeleiteteWerte.ts`: "siehe Modulkommentar" ohne Ziel; "Phase 10-13"/Datums-Historie.
+- `CustomTable.ts`: "die 14 `.instance`-Dateien" (heute 22), Verweis auf nicht mehr existierendes
+  `customTableRender.ts`.
+
+Offen fuer spaetere Batches: `TabellenBlock.tsx` (Zeilen ~20/60/63) und `aggregationsHelfer.ts`
+nennen `mitBerechnetenSpalten()` "in `shared`" -- die Funktion ist privat in
+`pdf/tabellenZeilen.ts`.
+
+---
+
 # Aktueller Plan: Halb-Roh-Markup auf echte DB-Komponenten umstellen - 2026-09-18
 
 ## Ausgangslage
@@ -3889,3 +3955,10 @@ Einzeiler-Symptom, Ursache in den Daten (zwei Formate in `dataEA`), nicht in der
 uebernommen. Langfristig sauberer waere Normalisierung beim Laden/Speichern -- bewusst
 nicht angefasst (groesserer Eingriff, eigener Task). Commit nur `EaTab.tsx`;
 `CHANGELOG.md`/`todo.md` enthalten WIP des DB-Komponenten-Umbaus und bleiben uncommittet.
+
+
+**Abschluss (2026-09-20):** 339 Dateien, +9446/-2635 Zeilen (Kommentare/JSDoc). Verifikation: Checker gegen HEAD
+(nur 3 Nutzer-Aenderungen als "Code veraendert": `styles.scss`, `datenKatalog.ts`, `aggregatoren.ts`), AST-Pruefung 1515
+Funktionen (38 ohne JSDoc = erlaubte Daten-/Inline-Lambdas, 1 Falschmeldung `getEmptyText`), `tsc`, `lint`, `lint:css`
+(87 Warnungen, Grenze 93), `bun run test` (2172 pass), `bun run build` gruen. Ablauf: 15 parallele Subagenten, 13 durch
+Session-Limit abgebrochen, Rest neu verteilt (`rest_01..08`).

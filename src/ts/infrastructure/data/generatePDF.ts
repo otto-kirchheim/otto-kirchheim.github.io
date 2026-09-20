@@ -42,14 +42,22 @@ import {
 } from '../date/getMonatFromItem';
 import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
+/**
+ * Erzeugt das PDF eines Formulars aus den Tabellendaten des aktuellen Monats und laedt es herunter.
+ * Bricht ohne Button oder offline still ab; Fehler erscheinen als Snackbar, Button-Sperre und
+ * Ladeanzeige werden am Ende immer zurueckgesetzt.
+ *
+ * @param button - Ausloesender Button (Id fuer die Ladeanzeige); bei `null` passiert nichts.
+ * @param modus - Formular: `B` Bereitschaft, `E` EWT, `N` Nebengeld, `EA` Entgeltausgleich.
+ * @throws {Error} Bei unbekanntem `modus` ('Modus fehlt').
+ */
 export default async function generatePDF(
   button: HTMLButtonElement | null,
   modus: 'B' | 'E' | 'N' | 'EA',
 ): Promise<void> {
   if (button === null) return;
 
-  // Kein eigener Offline-Hinweis hier: `setOffline.ts` zeigt bereits eine dauerhafte,
-  // globale Banner fuer die ganze Session, solange `navigator.onLine === false`.
+  // Kein eigener Offline-Hinweis: `setOffline.ts` zeigt solange `navigator.onLine === false` eine dauerhafte Snackbar.
   if (!navigator.onLine) return;
 
   setLoading(button.id);
@@ -57,6 +65,14 @@ export default async function generatePDF(
 
   const VorgabenGeldDaten: IVorgabenGeld = Storage.get('VorgabenGeld', { check: true });
   const VorgabenGeldHandler: ProxyHandler<IVorgabenGeld> = {
+    /**
+     * Liefert die Geld-Vorgaben eines Monats: Monat 1 als Basis, darueber die Aenderungen der
+     * Monate 2 bis `prop` in aufsteigender Reihenfolge.
+     *
+     * @param target - Vorgaben je Monat (nur Aenderungen ab Monat 2).
+     * @param prop - Monatsnummer als Property-Name.
+     * @returns Zusammengefuehrte Vorgaben fuer den Monat.
+     */
     get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
       const maxMonat: number = Number(prop);
       let returnObjekt = target[1];
@@ -66,6 +82,14 @@ export default async function generatePDF(
           if (typeof target[monat] !== 'undefined') returnObjekt = { ...returnObjekt, ...target[monat] };
       return returnObjekt;
     },
+    /**
+     * Verbietet Schreibzugriffe auf die Vorgaben.
+     *
+     * @param _target - Vorgaben (ungenutzt).
+     * @param prop - Property-Name.
+     * @param newValue - Versuchter Wert.
+     * @returns Immer `false`.
+     */
     set: (_target: IVorgabenGeld, prop: string, newValue) => {
       console.log('veränderung von datenGeld nicht erlaubt:', prop, newValue);
       return false;
@@ -76,14 +100,12 @@ export default async function generatePDF(
   const Monat = Storage.get<number>('Monat', { check: true });
   const Jahr = Storage.get<number>('Jahr', { check: true });
   const localVorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true });
-  // `Pers.OE` ist im Profil ein einzelnes Freitextfeld (`"V.IW-MI-N-KSL-IL 03"`), die
-  // PDF-Vorlagen-Pipeline (`datenKatalog.ts`/`wert.ts`, `FORMAT.oe`) erwartet die Ebenen als
-  // Array -- einziger Transform, den `Pers` hier braucht.
+  // `Pers.OE` ist im Profil ein Freitextfeld (`"V.IW-MI-N-KSL-IL 03"`), die PDF-Vorlagen-Pipeline
+  // (`datenKatalog.ts`/`wert.ts`, `FORMAT.oe`) erwartet ein Ebenen-Array.
   const pers = { ...localVorgabenU.Pers, OE: splitOeInput(localVorgabenU.Pers.OE) };
 
   const data: Record<string, unknown> = {
-    // `Name` gibt es in `IPers` nicht (kein echtes Profil-Feld, nur PDF-Druckkomfort) -- deshalb
-    // hier zusammengesetzt statt im Profil selbst gepflegt.
+    // `Name` ist kein Profil-Feld (`IPers`), sondern nur Druckkomfort und wird hier zusammengesetzt.
     VorgabenU: {
       Pers: { ...pers, Name: `${pers.Nachname}, ${pers.Vorname}` },
       Fahrzeit: localVorgabenU.Fahrzeit,
@@ -93,6 +115,12 @@ export default async function generatePDF(
     Jahr,
   };
 
+  /**
+   * Bildet die Schichtkuerzel `SP` und `BN` auf `T` bzw. `N` ab (Kuerzel der PDF-Vorlage).
+   *
+   * @param schicht - Schichtkuerzel der Tabelle.
+   * @returns Kuerzel fuer den Druck; unbekannte bleiben unveraendert.
+   */
   const normalizeEwtSchichtForDownload = (schicht: string): string => {
     if (schicht === 'SP') return 'T';
     if (schicht === 'BN') return 'N';
@@ -104,16 +132,14 @@ export default async function generatePDF(
     case 'B': {
       const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
       const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
-      // Beamter = TB !== 'Tarifkraft' (Konvention siehe calculateBerechnungRows.ts) -- bestimmt den
-      // Privat-km-Satz aus VorgabenGeld fuer beAbgeleiteteWerte(); Tarifkraft/Beamter haben laut
-      // VorgabenGeld unterschiedliche Sollwerte.
+      // Beamter = TB !== 'Tarifkraft' (Konvention wie in calculateBerechnungRows.ts); bestimmt den
+      // Privat-km-Satz (`PrivatPKWBeamter`/`PrivatPKWTarif`) fuer beAbgeleiteteWerte().
       const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
       const geldMonatB = VorgabenGeld[Monat];
       const privatKmSatz = beamter ? geldMonatB.PrivatPKWBeamter : geldMonatB.PrivatPKWTarif;
-      // Vorberechnete `Dauer`/`PrivatKmBetrag` (Phase 11) direkt mit ins Zeilenobjekt -- `build()`
-      // sieht sie dann als normalen Datenpfad (Daten.BZ[].Dauer/Daten.BE[].Dauer/PrivatKmBetrag),
-      // analog EWT (Phase 10). In benannten Variablen gehalten (statt inline in `data.Daten`), weil
-      // dieselben Zeilen gleich nochmal für die Bereitschaftszulage summiert werden.
+      // Vorberechnete `Dauer`/`PrivatKmBetrag` stehen mit im Zeilenobjekt, `build()` liest sie als
+      // normale Datenpfade (Daten.BZ[].Dauer, Daten.BE[].Dauer/PrivatKmBetrag). Eigene Variablen,
+      // weil dieselben Zeilen unten fuer die Bereitschaftszulage summiert werden.
       const bzMitDauer = bzRaw.map(bz => {
         // 0-Pause bewusst als `undefined` -- die Spalte bleibt leer statt „0" zu drucken;
         // `bzAbgeleiteteWerte()` deckelt intern mit `?? 0`, die Dauer bleibt korrekt.
@@ -133,9 +159,8 @@ export default async function generatePDF(
       });
       data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumPdfBody['Daten'];
 
-      // Bereitschaftszulage (Nachtrag Phase 11): "Differenz BZ-BE" live aus denselben Zeilen, die
-      // auch die gedruckte Dauer-Spalte füllen -- kein Storage-Cache (`datenBerechnung`), keine
-      // Staleness möglich, siehe `bereitschaftszulageAbgeleiteteWerte()`-Kommentar.
+      // Bereitschaftszulage: "Differenz BZ-BE" live aus denselben Zeilen wie die gedruckte Dauer-Spalte,
+      // nicht aus dem Storage-Cache `datenBerechnung` (koennte veraltet sein).
       const bereitschaftMinuten =
         bzMitDauer.reduce((s, r) => s + r.Dauer, 0) - beMitDauer.reduce((s, r) => s + r.Dauer, 0);
       data.Bereitschaftszulage = bereitschaftszulageAbgeleiteteWerte(
@@ -147,17 +172,13 @@ export default async function generatePDF(
     }
     case 'E': {
       const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
-      // Beamter = TB !== 'Tarifkraft' (Konvention siehe calculateBerechnungRows.ts) -- Grundlage
-      // für `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
+      // Beamter = TB !== 'Tarifkraft' (Konvention wie in calculateBerechnungRows.ts); Grundlage für
+      // `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
       const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
-      // Einsatzort-Auswahl speichert nur die Tätigkeitsstätte (`Fahrzeit[].key`); Beschreibung
-      // (`Fahrzeit[].text`) für den Druck anhängen -- volle Ortsangabe statt nur erster Teil.
+      // Die Einsatzort-Auswahl speichert nur die Tätigkeitsstätte (`Fahrzeit[].key`); für den Druck
+      // wird die Beschreibung (`Fahrzeit[].text`) angehängt.
       const einsatzortBeschreibung = new Map(localVorgabenU.Fahrzeit.map(fz => [fz.key, fz.text]));
       data.Daten = {
-        // Hinweis: `Buchungstag` wird hier als zweistelliger Tages-String gesendet, `IPdfEWT`
-        // typisiert es (wie das bisherige Backend-Modell) als `number` -- vorbestehende
-        // Diskrepanz, unveraendert uebernommen (kein Funktions-/Logik-Fix im Rahmen dieser
-        // Typen-Migration).
         EWT: ewtRaw.map(e => {
           const basis = {
             Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
@@ -173,8 +194,8 @@ export default async function generatePDF(
             anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
             berechnen: e.berechnen,
           };
-          // Vorberechnete Dauer/Zeitband-Felder (Phase 10) direkt mit ins Zeilenobjekt --
-          // `build()` sieht sie dann als normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
+          // Vorberechnete Dauer-/Zeitband-Felder stehen mit im Zeilenobjekt, `build()` liest sie als
+          // normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
           return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
         }),
       } satisfies IEwtPdfBody['Daten'];
@@ -191,8 +212,7 @@ export default async function generatePDF(
             Auftragsnummer: n.Auftragsnummer,
             Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
           };
-          // Vorberechnete Arbeitszeit-Anzeige (Phase 12) direkt mit ins Zeilenobjekt -- `build()`
-          // sieht sie dann als normalen Datenpfad (Daten.N[].Arbeitszeit), analog EWT/Bereitschaft.
+          // Vorberechnete Arbeitszeit-Anzeige steht mit im Zeilenobjekt (Datenpfad Daten.N[].Arbeitszeit).
           return { ...basis, ...ezAbgeleiteteWerte(basis) };
         }),
       } satisfies INebengeldPdfBody['Daten'];
@@ -217,11 +237,9 @@ export default async function generatePDF(
   try {
     console.time('generatePDF');
 
-    // Version server-seitig auflösen (`GET /formulare/<formular>?stichtag=`), PDF client-seitig
-    // per `build()` erzeugen -- kein Backend-Roundtrip mehr für den PDF-Inhalt selbst (seit
-    // Phase 9-12 gilt das für alle vier Modi). Stichtag = erster Tag des Exportmonats (ein
-    // Formular-Wechsel mitten im Monat ist die Ausnahme, nicht der Regelfall). `data` hat hier
-    // bereits exakt die Form, die `build()` als `Daten` braucht.
+    // Die Formularversion wird server-seitig aufgelöst (`GET /formulare/<formular>?stichtag=`), das PDF
+    // client-seitig per `build()` erzeugt. Stichtag = erster Tag des Exportmonats (ein Formularwechsel
+    // mitten im Monat ist die Ausnahme). `data` hat bereits die Form, die `build()` als `Daten` braucht.
     const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
     const formular = FORMULAR_JE_MODUS[modus];
     const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
@@ -229,8 +247,6 @@ export default async function generatePDF(
     const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signatur.png, signatur.digital);
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
 
-    // Namensschema deckt sich bewusst mit dem früheren Server-Schema (Backend liefert seit
-    // Phase 9-12 keinen Download-Header mehr, kein Backend-Roundtrip für den PDF-Inhalt).
     const vorDateiName: { [key in typeof modus]: string } = {
       B: 'RB',
       E: 'Verpf.',

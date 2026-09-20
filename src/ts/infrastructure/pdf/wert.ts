@@ -43,24 +43,29 @@ export interface Kontext {
   $alle: TabellenZeilen;
   seite: number;
   seiten: number;
-  /** Platzvergabe der dynamischen Spaltengruppen je Tabelle -- Grundlage der Spaltenüberschriften.
-   * Einmal je Dokument bestimmt, damit auf jeder Seite dieselbe Zulage über derselben Spalte steht. */
+  /**
+   * Platzvergabe der dynamischen Spaltengruppen je Tabelle (Spaltenüberschriften). Einmal je Dokument
+   * bestimmt, damit auf jeder Seite dieselbe Zulage über derselben Spalte steht.
+   */
   listen: Record<string, ListenAufloesung>;
-  /** Erzeugungszeitpunkt -- als Wert im Kontext statt `new Date()` im Renderer, damit das
-   * Unterschriftsdatum und der Platzhalter `{heute}` testbar bleiben. */
+  /** Erzeugungszeitpunkt; im Kontext statt `new Date()`, damit Unterschriftsdatum und `{heute}` testbar sind. */
   heute: Date;
   /**
-   * true NUR bei explizit gewählter "Digital"-Signatur (siehe `SignaturErgebnis.digital` in
-   * `signaturDialog.ts`) -- steuert `Feld.nurBeiSignatur`. Weder eine gezeichnete Unterschrift NOCH
-   * "Ohne Unterschrift" (z.B. für eine spätere Unterschrift auf Papier) setzen dieses Flag: nur bei
-   * "Digital" ist das Unterschriftsdatum falsch, weil die echte Signatur erst später zu einem
-   * unbekannten Zeitpunkt passiert.
+   * true nur bei gewählter "Digital"-Signatur (`SignaturErgebnis.digital`) -- steuert `Feld.nurBeiSignatur`.
+   * Bei gezeichneter oder fehlender Unterschrift (z.B. später auf Papier) bleibt das Datum richtig; nur
+   * bei "Digital" passiert die Signatur erst zu einem unbekannten Zeitpunkt.
    */
   digitaleSignatur: boolean;
 }
 
-/** Ohne `tabellen` (oder leeres Array) laufen die Zeilen ALLER Tabellen zusammen in die Rechnung;
- * mit mehreren Tabellen laufen ihre Zeilen zusammen in EINE Rechnung. */
+/**
+ * Ohne `tabellen` (oder leer) laufen die Zeilen ALLER Tabellen in die Rechnung, mit mehreren Tabellen
+ * ihre Zeilen zusammen in EINE Rechnung.
+ *
+ * @param quelle - Zeilen je Tabelle (`$seite`, `$bisher`, `$laufend` oder `$alle` des Kontexts).
+ * @param tabellen - Tabellen-Keys, `undefined`/leer = alle.
+ * @returns Die zusammengefassten Zeilen.
+ */
 function ausKontext(quelle: TabellenZeilen, tabellen: string[] | undefined): Zeile[] {
   if (tabellen !== undefined && tabellen.length > 0) return tabellen.flatMap(t => quelle[t] ?? []);
   return Object.values(quelle).flat();
@@ -69,17 +74,17 @@ function ausKontext(quelle: TabellenZeilen, tabellen: string[] | undefined): Zei
 const PLATZHALTER = /\{([^{}]+)\}/g;
 
 /**
- * Seitenzahl-Platzhalter mit optionalem Versatz: `{seite}`, `{seite-1}`, `{seite + 1}`, `{seiten-1}`.
- * Bewusst nur ganzzahliges Plus/Minus auf den beiden Seitenzahlen statt einer allgemeinen Formel --
- * gebraucht wird der Nachbar ("Übertrag von Seite 2", "Fortsetzung auf Seite 4"), und alles
- * darüber hinaus wäre eine Ausdruckssprache im Fließtext mit entsprechendem Fehlerpotenzial.
+ * Seitenzahl-Platzhalter mit Versatz: `{seite}`, `{seite-1}`, `{seite + 1}`, `{seiten-1}`. Bewusst nur
+ * ganzzahliges Plus/Minus (gebraucht wird der Nachbar, "Übertrag von Seite 2"), keine Ausdruckssprache.
  */
 const SEITEN_PLATZHALTER = /^(seite|seiten)\s*([+-]\s*\d+)?$/;
 
 /**
- * Trennt `{Pfad}` von optionalem `{Pfad:Format}` -- das Format muss ein bekannter `FormatName` sein
- * (siehe `FORMAT`), sonst wird die Angabe stillschweigend ignoriert statt den Platzhalter kaputt zu
- * machen (z.B. bei einem Tippfehler im Formatnamen).
+ * Trennt `{Pfad}` von `{Pfad:Format}`. Ein unbekanntes `FormatName` wird ignoriert statt den Platzhalter
+ * zu zerstören (Tippfehler).
+ *
+ * @param name - Inhalt zwischen den Klammern, z.B. `Pfad` oder `Pfad:Format`.
+ * @returns Datenpfad und, falls bekannt, das gewünschte Format.
  */
 function zerlegePlatzhalter(name: string): { pfad: string; format?: FormatName } {
   const trimmed = name.trim();
@@ -91,9 +96,11 @@ function zerlegePlatzhalter(name: string): { pfad: string; format?: FormatName }
 }
 
 /**
- * Alle Platzhalternamen eines festen Textes, die tatsaechlich aus den Nutzdaten kommen -- die vom
- * Kontext bedienten (`seite`, `seiten`, `heute`) fallen raus. Die Testdaten-Vorschau braucht das,
- * um genau diese Pfade mit Beispielwerten zu belegen.
+ * Alle Platzhalternamen eines festen Textes, die aus den Nutzdaten kommen (ohne `seite`, `seiten`,
+ * `heute`) -- die Testdaten-Vorschau belegt genau diese Pfade.
+ *
+ * @param text - Fester Text mit `{…}`-Platzhaltern.
+ * @returns Datenpfade ohne Format-Suffix.
  */
 export function datenPlatzhalter(text: string): string[] {
   return [...text.matchAll(PLATZHALTER)]
@@ -101,18 +108,27 @@ export function datenPlatzhalter(text: string): string[] {
     .filter(pfad => pfad !== 'heute' && !SEITEN_PLATZHALTER.test(pfad));
 }
 
+/**
+ * Formatiert einen Feldwert (`format` des Feldes, sonst `standardText`).
+ *
+ * @param roh - Rohwert des Feldes.
+ * @param f - Feld mit optionalem `format`.
+ * @returns Formatierter Text; leer bei `null`/`undefined`.
+ */
 function formatiere(roh: unknown, f: Feld): string {
   if (roh === null || roh === undefined) return '';
   return f.format ? FORMAT[f.format](roh) : standardText(roh);
 }
 
 /**
- * Ersetzt `{name}` in festen Texten: `{seite}`/`{seiten}` liefern die Seitenzahlen (wahlweise mit
- * Versatz, siehe `SEITEN_PLATZHALTER`), `{heute}` das Erzeugungsdatum, jeder andere Name wird als
- * Datenpfad aufgelöst. Unbekannte Pfade werden zu einem leeren String, damit kein roher Platzhalter
- * im fertigen PDF landet. Optional lässt sich das Format erzwingen (`{Pfad:Format}`, z.B.
- * `{VorgabenU.Pers.OE:liste}` oder `{heute:datumKurz}`) -- ohne Angabe greift derselbe Fallback wie
- * bei unformatierten Feldern (`standardText`/`FORMAT.datum`).
+ * Ersetzt `{name}` in festen Texten: `{seite}`/`{seiten}` (Versatz siehe `SEITEN_PLATZHALTER`), `{heute}`,
+ * sonst Datenpfad. Unbekannte Pfade werden leer, damit kein roher Platzhalter im PDF landet. Das Format
+ * lässt sich erzwingen (`{heute:datumKurz}`), sonst greift der Fallback unformatierter Felder.
+ *
+ * @param text - Fester Text mit `{…}`-Platzhaltern.
+ * @param daten - Nutzdaten für die Datenpfade.
+ * @param kontext - Seitenzahlen und Erzeugungsdatum.
+ * @returns Der Text mit ersetzten Platzhaltern.
  */
 function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): string {
   return text.replace(PLATZHALTER, (_treffer, name: string) => {
@@ -120,7 +136,7 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
     const seitenTreffer = SEITEN_PLATZHALTER.exec(pfad);
     if (seitenTreffer) {
       const basis = seitenTreffer[1] === 'seite' ? kontext.seite : kontext.seiten;
-      // Leerzeichen im Versatz entfernen, damit `{seite - 1}` genauso liest wie `{seite-1}`.
+      // Leerzeichen im Versatz entfernen: `{seite - 1}` liest wie `{seite-1}`.
       const versatz = seitenTreffer[2] ? Number(seitenTreffer[2].replace(/\s+/g, '')) : 0;
       return String(basis + versatz);
     }
@@ -132,9 +148,13 @@ function ersetzePlatzhalter(text: string, daten: Daten, kontext: Kontext): strin
 }
 
 /**
- * Aggregiert über Zeilen (Kopf-/Fuß-Summen) -- gemeinsam genutzt von `Feld.berechnet` (Direktwert)
- * und `Feld.wenn.berechnet` (Bedingung, z.B. "Gesamtsumme > 0"), damit beide dieselbe `$seite`/
- * `$bisher`/`$laufend`/`$alle`-Auflösung und Frist-Behandlung für `letztesDatum` teilen.
+ * Aggregiert über Zeilen (Kopf-/Fuß-Summen) für `Feld.berechnet` und `Feld.wenn.berechnet`, damit beide
+ * dieselbe `$seite`/`$bisher`/`$laufend`/`$alle`-Auflösung und Frist-Behandlung teilen.
+ *
+ * @param b - Aggregation (`ueber`, `op`, `feld`/`liste`, `tabellen`, `maxTage`).
+ * @param daten - Nutzdaten (für Datenpfade und `VorgabenGeld`).
+ * @param kontext - Zeilen je Seite und Platzvergabe der Listen.
+ * @returns Rohwert (Zahl, bei unbelegtem Listenplatz `undefined`).
  */
 function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unknown {
   const q = b.ueber;
@@ -145,29 +165,24 @@ function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unkn
   if (b.liste) {
     const aufloesung = kontext.listen[b.liste.tabelle];
     const gruppe = aufloesung?.gruppen[b.liste.gruppe];
-    // VorgabenGeld liegt einmal pro Dokument unter Daten.VorgabenGeld (siehe IPdfBase) --
-    // derselbe Weg wie jeder andere Datenpfad, kein eigener Kontext-Eintrag nötig.
+    // `VorgabenGeld` liegt einmal pro Dokument unter `Daten.VorgabenGeld` (`IPdfBase`).
     const geldMonat = (get(daten, 'VorgabenGeld') as IVorgabeValue | undefined) ?? {};
     const art = b.liste.art ?? 'summe';
     if (b.liste.index === undefined) {
-      // Gesamtsumme über ALLE Einträge der Gruppe, jeder mit seinem EIGENEN Code -- nicht an einen
-      // Platz gebunden, deshalb keine schluesselAufPlatz()-Auflösung nötig.
+      // Gesamtsumme über ALLE Einträge, jeder mit EIGENEM Code -- nicht an einen Platz gebunden.
       if (!gruppe) roh = 0;
       else if (art === 'summeGeld') roh = summeGeldwertGruppe(rows ?? [], gruppe, geldMonat);
       else if (art === 'bereinigt') roh = summeBereinigtGruppe(rows ?? [], gruppe);
       else roh = summeGruppe(rows ?? [], gruppe);
     } else {
-      // Derselbe zur Laufzeit aufgelöste Code wie die Spaltenüberschrift dieses Platzes (siehe
-      // Feld.listenKopf) -- ein fest im Berechnet.liste eingetragener Code würde an der
-      // Überschrift vorbeirechnen, sobald sich die monatliche Platzbelegung verschiebt.
+      // Derselbe Code wie in der Spaltenüberschrift dieses Platzes (`Feld.listenKopf`): ein fest
+      // eingetragener Code liefe an der Überschrift vorbei, wenn sich die Platzbelegung verschiebt.
       const code = schluesselAufPlatz(aufloesung, b.liste.gruppe, b.liste.index);
       if (!gruppe) {
-        // Keine Zulagen-Gruppe in dieser Tabelle: 0 -- das wäre eine kaputte Konfiguration, keine
-        // fehlende Eingabe.
+        // Keine Zulagen-Gruppe in dieser Tabelle: 0 (kaputte Konfiguration, keine fehlende Eingabe).
         roh = 0;
       } else if (code === undefined) {
-        // Dynamischer Platz ohne Code (diesen Monat trägt die Spalte keine Zulagenart): leer statt
-        // einer 0, die eine echte Nullsumme vortäuschen würde.
+        // Platz ohne Code (diesen Monat keine Zulagenart): leer statt einer 0, die eine echte Nullsumme vortäuschte.
         roh = undefined;
       } else {
         const wert = summeUeberListe(rows ?? [], {
@@ -184,17 +199,20 @@ function berechneAggregation(b: Berechnet, daten: Daten, kontext: Kontext): unkn
   } else {
     roh = OPS[b.op](rows ?? [], b.feld);
   }
-  // Das Unterschriftsdatum braucht zusätzlich den Erzeugungstag als Rückfallwert -- der steckt im
-  // Kontext, nicht in den Zeilen, und liegt deshalb außerhalb der reinen Aggregation.
+  // Rückfallwert ist der Erzeugungstag aus dem Kontext, nicht aus den Zeilen -- außerhalb der Aggregation.
   if (b.op === 'letztesDatum') roh = datumMitFrist(roh as number, b.maxTage, kontext.heute);
   return roh;
 }
 
 /**
- * Zeilen einer Sonderzeile (`SonderZeile.ueber`), eingegrenzt auf EINE Tabelle -- anders als
- * `Berechnet.ueber` braucht eine Sonderzeilen-Zelle nie eine tabellenübergreifende Rechnung, sie
- * gehört immer zu genau der Tabelle, auf deren Seite sie platziert ist. Nur `$seite`/`$bisher`/
- * `$laufend`/`$alle` ergeben hier einen Sinn, ein Datenpfad wie bei `Berechnet.ueber` nicht.
+ * Zeilen einer Sonderzeile (`SonderZeile.ueber`), eingegrenzt auf EINE Tabelle -- eine Sonderzeile gehört
+ * immer zu genau der Tabelle, auf deren Seite sie steht. Nur `$seite`/`$bisher`/`$laufend`/`$alle`, kein
+ * Datenpfad.
+ *
+ * @param ueber - `$seite`, `$bisher`, `$laufend` oder `$alle`.
+ * @param tabelle - Key der Tabelle.
+ * @param kontext - Zeilen je Seite.
+ * @returns Die Zeilen; leer bei anderem `ueber`.
  */
 export function zeilenFuerUeber(ueber: string, tabelle: string, kontext: Kontext): Zeile[] {
   if (!ueber.startsWith('$')) return [];
@@ -202,9 +220,16 @@ export function zeilenFuerUeber(ueber: string, tabelle: string, kontext: Kontext
 }
 
 /**
- * Wert einer Sonderzeilen-Zelle (Kopf-/Summenzeile, siehe `SonderZeile`) für EINE Spalte -- die
- * x-Position kommt beim Zeichnen von der Spalte selbst (siehe `build.ts`), hier nur der Zellinhalt.
- * `rows` kommt einmal pro Sonderzeile über `zeilenFuerUeber()`, nicht neu pro Zelle.
+ * Wert einer Sonderzeilen-Zelle für EINE Spalte (die x-Position kommt beim Zeichnen, siehe `build.ts`).
+ * `rows` kommt einmal pro Sonderzeile aus `zeilenFuerUeber()`.
+ *
+ * @param zelle - Zellenart (`kopf`, `summe`, `bereinigt`, `summeGeld`) und optionales Format.
+ * @param spalte - Spalte, zu der die Zelle gehört.
+ * @param tabelleName - Key der Tabelle (für die Platzvergabe der Listen).
+ * @param rows - Zeilen der Sonderzeile (aus `zeilenFuerUeber()`).
+ * @param daten - Nutzdaten (für `VorgabenGeld`).
+ * @param kontext - Platzvergabe der Listen.
+ * @returns Zellentext; leer bei unbelegtem Platz, `-` bei `bereinigt` ohne Stundenwert.
  */
 export function sonderZeileZelleWert(
   zelle: SonderZeileZelle,
@@ -215,10 +240,16 @@ export function sonderZeileZelleWert(
   kontext: Kontext,
 ): string {
   const format = zelle.format ?? spalte.format;
+  /**
+   * Formatiert mit dem Format der Zelle bzw. Spalte.
+   *
+   * @param roh - Rohwert.
+   * @returns Formatierter Text.
+   */
   const formatiere = (roh: unknown): string => (format ? FORMAT[format](roh) : standardText(roh));
 
   if (zelle.art === 'kopf') {
-    // Ohne dynamischen Platz ist die Spalte selbst schon eindeutig -- ihr Label ist die Überschrift.
+    // Ohne dynamischen Platz ist das Spalten-Label die Überschrift.
     if (!spalte.listenPlatz) return spalte.label ?? '';
     const aufloesung = kontext.listen[tabelleName];
     const schluessel = schluesselAufPlatz(aufloesung, spalte.listenPlatz.gruppe, spalte.listenPlatz.index);
@@ -227,22 +258,19 @@ export function sonderZeileZelleWert(
   }
 
   if (!spalte.listenPlatz) {
-    // Ankreuz-Spalte (bedingter Zellinhalt): ihr Wert entsteht erst je Zeile aus der Bedingung
-    // (siehe spaltenWert.ts), es gibt kein flaches Zeilenfeld zum Summieren -- "Summe" zählt deshalb,
-    // wie viele Zeilen die Bedingung erfüllen.
+    // Ankreuz-Spalte: der Wert entsteht erst je Zeile aus der Bedingung (`spaltenWert.ts`), es gibt
+    // nichts Flaches zu summieren -- "Summe" zählt die Zeilen, die die Bedingung erfüllen.
     if (spalte.wenn) return formatiere(rows.filter(z => trifftBedingung(spalte.wenn!, z)).length);
-    // Normale Spalte ohne dynamischen Platz: reguläre Summe über diese Tabelle -- nutzbar auch ohne
-    // Zulagen-Bezug (EA/EWT/Bereitschaft-Fußsummen brauchen weder bereinigt noch summeGeld).
+    // Normale Spalte: reguläre Summe, auch ohne Zulagen-Bezug (EA/EWT/Bereitschaft-Fußsummen).
     return formatiere(OPS.summe(rows, spalte.key));
   }
 
   const aufloesung = kontext.listen[tabelleName];
   const gruppe = aufloesung?.gruppen[spalte.listenPlatz.gruppe];
   const code = schluesselAufPlatz(aufloesung, spalte.listenPlatz.gruppe, spalte.listenPlatz.index);
-  // Keine Zulagen-Gruppe in dieser Tabelle: 0 -- kaputte Konfiguration, keine fehlende Eingabe.
+  // Keine Zulagen-Gruppe in dieser Tabelle: 0 (kaputte Konfiguration).
   if (!gruppe) return formatiere(0);
-  // Unbelegter Platz (dieser Monat trägt die Spalte keine Zulagenart): leere Zelle statt einer 0,
-  // die eine echte Nullsumme vortäuschen würde.
+  // Unbelegter Platz: leer statt einer 0, die eine echte Nullsumme vortäuschte.
   if (code === undefined) return '';
   const summe = summeUeberListe(rows, {
     quelle: gruppe.quelle,
@@ -256,15 +284,18 @@ export function sonderZeileZelleWert(
     const std = bereinigteZulagenStunden(code, summe);
     return std === undefined ? '-' : formatiere(std);
   }
-  // summeGeld
   const geld = geldwertZulagenCode(code, summe, (get(daten, 'VorgabenGeld') as IVorgabeValue | undefined) ?? {});
   return formatiere(geld);
 }
 
 /**
- * Prüft eine Feld-Bedingung -- das Gegenstück zu `trifftBedingung` (shared, zeilenbezogen), aber auf
- * Dokumentebene: `feld` liest einen Datenpfad direkt aus `Daten`, `berechnet` aggregiert über Zeilen.
- * Bleibt hier statt in `shared`, weil sie den frontend-eigenen `Kontext`-Typ braucht.
+ * Prüft eine Feld-Bedingung auf Dokumentebene (Gegenstück zu `trifftBedingung` je Zeile): `feld` liest
+ * einen Datenpfad, `berechnet` aggregiert über Zeilen.
+ *
+ * @param w - Bedingung (`feld` oder `berechnet`, dazu `werte` oder `bereich`).
+ * @param daten - Nutzdaten.
+ * @param kontext - Zeilen je Seite.
+ * @returns `true`, wenn die Bedingung zutrifft.
  */
 function trifftFeldBedingung(w: FeldBedingung, daten: Daten, kontext: Kontext): boolean {
   const roh = w.berechnet ? berechneAggregation(w.berechnet, daten, kontext) : get(daten, w.feld!);
@@ -275,15 +306,23 @@ function trifftFeldBedingung(w: FeldBedingung, daten: Daten, kontext: Kontext): 
   return (w.werte ?? []).includes(roh as string | number | boolean);
 }
 
-/** Löst ein Feld gegen die Nutzdaten (Direktwert, Bedingung, Text oder Aggregation) auf. */
+/**
+ * Löst ein Feld gegen die Nutzdaten (Direktwert, Bedingung, Text oder Aggregation) auf.
+ *
+ * @param f - Feld (Direktwert, Bedingung, Text, Verkettung oder Aggregation).
+ * @param key - Datenpfad des Feldes (bei Direktwert).
+ * @param daten - Nutzdaten.
+ * @param kontext - Seitenzahlen, Zeilen je Seite, Platzvergabe, Signatur-Flag.
+ * @returns Zellentext; leer, wenn nichts anzuzeigen ist.
+ */
 export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): string {
   if (f.nurBeiSignatur && kontext.digitaleSignatur) return '';
 
   let roh: unknown;
 
   if (f.listenKopf) {
-    // Überschrift eines dynamischen Spaltenplatzes: welcher Schlüssel dort steht, entscheiden die
-    // Daten. Unbelegte Plätze bleiben leer, damit im Formular keine Geisterspalte beschriftet wird.
+    // Überschrift eines dynamischen Platzes: die Daten entscheiden den Schlüssel; unbelegte Plätze bleiben
+    // leer (keine Geisterspalte).
     const aufloesung = kontext.listen[f.listenKopf.tabelle];
     const schluessel = schluesselAufPlatz(aufloesung, f.listenKopf.gruppe, f.listenKopf.index);
     const gruppe = aufloesung?.gruppen[f.listenKopf.gruppe];
@@ -291,11 +330,10 @@ export function wert(f: Feld, key: string, daten: Daten, kontext: Kontext): stri
   } else if (f.wenn) {
     return trifftFeldBedingung(f.wenn, daten, kontext) ? f.wenn.dann : '';
   } else if (f.text !== undefined) {
-    // Platzhalter-Ersetzung liefert bereits fertigen Text -- ein `format` würde ihn nur zerstören.
+    // Platzhalter-Ersetzung liefert fertigen Text -- ein `format` würde ihn zerstören.
     return ersetzePlatzhalter(f.text, daten, kontext);
   } else if (f.quellen) {
-    // Leere Teile überspringen -- sonst hinterlassen optionale Felder (z.B. Adress2) doppelte
-    // oder führende Trennzeichen in der Zelle.
+    // Leere Teile überspringen, sonst bleiben bei optionalen Feldern (Adress2) Trenner zurück.
     return f.quellen
       .map(pfad => formatiere(get(daten, pfad), f))
       .filter(teil => teil !== '')

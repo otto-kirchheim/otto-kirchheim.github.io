@@ -16,9 +16,9 @@
  * SWAP-RUNBOOK (z. B. auf Material Symbols)
  *   1. `bun run icons:gen`  -> schreibt/aktualisiert `src/scss/iconset.material.css`.
  *   2. `src/scss/db-ux.css`: den auskommentierten `@import './iconset.material.css'` aktivieren.
- *   3. `src/scss/styles.scss`: den Block `ICON-SATZ` aktivieren -- `@font-face` (Material-Symbols-
- *      woff2 LOKAL buendeln, nicht vom Google-CDN: CSP + oeffentliches Hosting), plus
- *      `--db-icon-font-family` und `font-variation-settings`.
+ *   3. `src/scss/styles.scss`: `@font-face` (Material-Symbols-woff2 LOKAL buendeln, nicht vom
+ *      Google-CDN: CSP + oeffentliches Hosting), plus `--db-icon-font-family` und
+ *      `font-variation-settings` ergaenzen (der frueher vorbereitete Block `ICON-SATZ` existiert nicht mehr).
  *   4. `@db-ux/db-theme*` aus `package.json` entfernen, `ASSET_*`-Secrets aus dem CI nehmen
  *      (siehe deploy.yml). DB-Schriften (`--db-font-family-sans/-head`) separat auf eine freie
  *      Alternative setzen; `--db-logo-url` durch ein freigegebenes Asset ersetzen.
@@ -36,8 +36,8 @@
  * Eigenbau-Motive `theme-auto` und `filter-off` (`src/icons/`, ueber `.app-icon`-Maske, nicht
  * ueber die Icon-Schrift) und `none` (DB-Logo-Abschaltung) sind hier bewusst NICHT enthalten.
  *
- * Spiegel-Datei: `dbIcons.ts` haelt die (vor dem React-Umbau freigegebene) Gegenrichtung
- * Material -> DB fuer die alte Vergleichsseite. Diese Registry ist die maszgebliche Quelle.
+ * `dbIcons.ts` haelt die Gegenrichtung Material -> DB (nur noch von `test/icons.dbSet.test.ts`
+ * genutzt). Massgebliche Quelle ist diese Registry.
  */
 
 /** Ziel-Icon in einem anderen Satz plus optionaler Hinweis, wo die Entsprechung ungenau ist. */

@@ -23,11 +23,24 @@ import {
 } from '@/infrastructure/date/getMonatFromItem';
 import Storage from '@/infrastructure/storage/Storage';
 
+/**
+ * Lädt Zeilen in die Tabelle zum Selektor; ohne passende Tabelle wirkungslos.
+ *
+ * @param selector - CSS-Selektor der Tabelle, z. B. `#tableBZ`.
+ * @param data - Zeilen, die die bisherigen ersetzen.
+ */
 function applyDataToTable(selector: string, data: CustomTableTypes[]): void {
   const table = document.querySelector<CustomHTMLTableElement>(selector);
   table?.instance.rows.load(data);
 }
 
+/**
+ * Übernimmt die unter `dataServer` gemerkten Serverdaten: schreibt jede vorhandene Ressource in den
+ * Storage und die Tabelle (Filter auf den gewählten Monat), meldet `data:changed` und verwirft
+ * `dataServer`.
+ *
+ * @throws {Error} Wenn `Monat` im Storage fehlt.
+ */
 export default function overwriteUserDaten(): void {
   const dataServer: Partial<UserDatenServer> = Storage.get<Partial<UserDatenServer>>('dataServer', { default: {} });
   console.log({ dataServer });

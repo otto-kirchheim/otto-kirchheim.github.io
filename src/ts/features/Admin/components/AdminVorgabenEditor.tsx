@@ -14,6 +14,9 @@ import { DBButton, DBHeadingH5 } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 
+/**
+ * Editor für die Geld-Vorgaben (VorgabenGeld) je Jahr: Monatseinträge mit Beträgen pro Feld anlegen, ändern, speichern und löschen.
+ */
 export function AdminVorgabenEditor() {
   const [entries, setEntries] = useState<BackendVorgabe[]>([]);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -45,6 +48,12 @@ export function AdminVorgabenEditor() {
 
   const sortedYears = useMemo(() => [...entries].sort((a, b) => b._id - a._id), [entries]);
 
+  /**
+   * Wandelt Backend-Vorgaben in den Formularzustand um.
+   *
+   * @param data - Vorgaben-Einträge aus dem Backend (optional).
+   * @returns Nach Monat sortierte Einträge; Zahlen als Text, nicht-numerische Werte als `undefined`.
+   */
   function toFormEntries(data: BackendVorgabe['Vorgaben'] | undefined) {
     return [...(data ?? [])]
       .map(entry => ({
@@ -59,6 +68,12 @@ export function AdminVorgabenEditor() {
       .sort((a, b) => a.key - b.key);
   }
 
+  /**
+   * Parst eine Zahl mit Komma oder Punkt als Dezimaltrenner.
+   *
+   * @param raw - Eingabetext, Dezimalkomma erlaubt.
+   * @returns Die Zahl oder `undefined` bei leerer/ungültiger Eingabe.
+   */
   function parseLocalizedNumber(raw: string): number | undefined {
     const normalized = raw.trim().replace(',', '.');
     if (!normalized) return undefined;
@@ -66,6 +81,12 @@ export function AdminVorgabenEditor() {
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 
+  /**
+   * Wählt ein Jahr und befüllt das Formular aus den lokalen Daten oder, falls dort nicht vorhanden, vom Backend.
+   *
+   * @param year - Zu ladendes Jahr.
+   * @param currentEntries - Bereits geladene Jahre statt des State-Stands (direkt nach dem Laden, bevor der State aktualisiert ist).
+   */
   async function handleSelectYear(year: number, currentEntries?: BackendVorgabe[]) {
     setSelectedYear(year);
     const source = currentEntries ?? entries;
@@ -78,9 +99,13 @@ export function AdminVorgabenEditor() {
     setMonthEntries(toFormEntries(fetched.Vorgaben));
   }
 
-  // Stabil per useCallback, damit der Mount-Effect sie als Dep listen kann. Der Effect ruft
-  // sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body loeste
-  // react-hooks/set-state-in-effect aus (reload setzt synchron setLoading).
+  // Der Mount-Effect ruft sie per queueMicrotask auf: ein synchroner Aufruf im Effect-Body
+  // loeste react-hooks/set-state-in-effect aus (reload setzt synchron setLoading).
+  /**
+   * Lädt alle Jahre der Vorgaben und wählt, falls noch keines gewählt ist, das neueste.
+   *
+   * @returns Die geladenen Jahre.
+   */
   const reload = useCallback(async (): Promise<BackendVorgabe[]> => {
     setLoading(true);
     try {
@@ -100,6 +125,9 @@ export function AdminVorgabenEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedYear]);
 
+  /**
+   * Legt nach Abfrage ein neues Jahr (ab 2020) mit einem leeren Januar-Eintrag im Formular an; gespeichert wird erst per Speichern.
+   */
   async function handleCreateYear() {
     const input = window.prompt('Neues Jahr fuer Vorgaben:', `${dayjs().year()}`);
     if (!input) return;
@@ -112,16 +140,30 @@ export function AdminVorgabenEditor() {
     setMonthEntries([{ key: 1, value: {} }]);
   }
 
+  /**
+   * Hängt einen leeren Monatseintrag mit dem nächsten Monat an (höchstens 12).
+   */
   function addMonthEntry() {
     const nextMonth = Math.max(0, ...monthEntries.map(entry => entry.key)) + 1;
     const boundedMonth = Math.min(12, nextMonth);
     setMonthEntries(current => [...current, { key: boundedMonth, value: {} }]);
   }
 
+  /**
+   * Entfernt einen Monatseintrag aus dem Formular.
+   *
+   * @param index - Index des Monatseintrags.
+   */
   function removeMonthEntry(index: number) {
     setMonthEntries(current => current.filter((_, i) => i !== index));
   }
 
+  /**
+   * Ändert den Monat eines Eintrags; der Januar-Eintrag (Monat 1) bleibt unverändert.
+   *
+   * @param index - Index des Monatseintrags.
+   * @param month - Neuer Monat, auf 1–12 begrenzt.
+   */
   function updateMonthKey(index: number, month: number) {
     setMonthEntries(current => {
       const next = [...current];
@@ -131,6 +173,13 @@ export function AdminVorgabenEditor() {
     });
   }
 
+  /**
+   * Setzt oder entfernt den Betrag eines Feldes in einem Monatseintrag.
+   *
+   * @param index - Index des Monatseintrags.
+   * @param field - Feldname des Betrags.
+   * @param inputValue - Eingabetext; Komma wird zu Punkt, leer entfernt das Feld.
+   */
   function updateField(index: number, field: string, inputValue: string) {
     setMonthEntries(current => {
       const next = [...current];
@@ -144,6 +193,12 @@ export function AdminVorgabenEditor() {
     });
   }
 
+  /**
+   * Wandelt den Formularzustand in numerische Backend-Werte um.
+   *
+   * @param raw - Formularzustand der Monatseinträge.
+   * @returns Nach Monat sortierte Einträge mit Monat 1–12; nicht parsbare Beträge entfallen.
+   */
   function normalizeEntries(raw: Array<{ key: number; value: Record<string, string | undefined> }>) {
     return [...raw]
       .filter(entry => Number.isInteger(entry.key) && entry.key >= 1 && entry.key <= 12)
@@ -158,6 +213,9 @@ export function AdminVorgabenEditor() {
       .sort((a, b) => a.key - b.key);
   }
 
+  /**
+   * Speichert die Monatswerte des gewählten Jahres; ohne gültigen Monatseintrag erscheint eine Fehlermeldung.
+   */
   async function handleSave() {
     if (!selectedYear) return;
     const parsed = normalizeEntries(monthEntries);
@@ -184,6 +242,9 @@ export function AdminVorgabenEditor() {
     }
   }
 
+  /**
+   * Löscht nach Bestätigung das gewählte Jahr und wählt das nächste verbleibende.
+   */
   async function handleDelete() {
     if (!selectedYear) return;
     if (!(await confirmDialog(`Vorgaben für ${selectedYear} wirklich löschen?`))) return;
@@ -202,8 +263,8 @@ export function AdminVorgabenEditor() {
 
   useEffect(() => {
     queueMicrotask(() => void reload());
-    // Einmalig beim Mount: `reload` haengt ueber `handleSelectYear` an `entries` und wuerde den
-    // Effect nach jedem erfolgreichen Lauf erneut ausloesen (Endlosschleife beim initialen Laden).
+    // Einmalig beim Mount: `reload` aendert seine Identitaet mit `selectedYear`; als Dep wuerde der
+    // Effect nach der ersten Jahreswahl unnoetig erneut laden.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

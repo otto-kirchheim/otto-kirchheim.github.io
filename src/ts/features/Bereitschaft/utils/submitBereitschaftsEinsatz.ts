@@ -19,6 +19,13 @@ import { flushResource, scheduleAutoSave } from '@/infrastructure/autoSave/autoS
 
 // ─── Grenz-Hilfsfunktion ─────────────────────────────────────────────────────
 
+/**
+ * Sucht die erste Grenze, an der Bereitschaftszeiträume getrennt werden (B-Wechselzeit oder Monatswechsel).
+ *
+ * @param start - Beginn des Bereichs (exklusiv).
+ * @param end - Ende des Bereichs (exklusiv).
+ * @returns Frühester Wechselzeitpunkt (nächste 08:00-Uhr-Grenze oder nächster Monatsbeginn) strikt zwischen `start` und `end`; `null`, wenn keiner im Bereich liegt.
+ */
 function findFirstBoundaryInRange(
   start: ReturnType<typeof dayjs>,
   end: ReturnType<typeof dayjs>,
@@ -50,7 +57,12 @@ type GapResolution =
 
 // ─── Sync-Absicherung ────────────────────────────────────────────────────────
 
-/** Lokal angelegte/geänderte Zeile, die den Server noch nicht erreicht hat (kein `_id` bzw. `__localState`). */
+/**
+ * Lokal angelegte/geänderte Zeile, die den Server noch nicht erreicht hat (kein `_id` bzw. `__localState`).
+ *
+ * @param bz - Bereitschaftszeitraum-Zeile.
+ * @returns `true`, wenn die Zeile noch nicht auf dem Server ist.
+ */
 export function isBzUnsynced(bz: IDatenBZ): boolean {
   return !bz._id || bz.__localState === 'modified';
 }
@@ -62,6 +74,11 @@ export function isBzUnsynced(bz: IDatenBZ): boolean {
  * werden intern von AutoSave behandelt/angezeigt, siehe `saveResourceNow`) -- schlägt der Sync
  * dennoch fehl, bleibt die Coverage unverändert und das bestehende Verhalten (BE ohne BZ-Referenz)
  * greift wie bisher. Das Speichern selbst wird dadurch nie blockiert oder fehlschlagen gelassen.
+ *
+ * @param coverage - Bereits ermittelte Coverage; nur `complete` wird bearbeitet.
+ * @param einsatzStart - Beginn des Einsatzes.
+ * @param einsatzEnd - Ende des Einsatzes.
+ * @returns Ursprüngliche Coverage oder, nach dem Flush, die neu klassifizierte.
  */
 export async function ensureCompleteBzSynced(
   coverage: BzCoverage,
@@ -80,6 +97,14 @@ export async function ensureCompleteBzSynced(
 
 // ─── Coverage-Klassifikation ─────────────────────────────────────────────────
 
+/**
+ * Klassifiziert, wie gut die Bereitschaftszeiträume den Einsatz abdecken: BZ, in dem Start bzw. Ende liegt, entscheidet die Art.
+ *
+ * @param bzData - Nicht gelöschte BZ-Zeilen.
+ * @param einsatzStart - Beginn des Einsatzes.
+ * @param einsatzEnd - Ende des Einsatzes.
+ * @returns `complete` (Start und Ende in gleichem/direkt angrenzendem BZ), `gap` (beide gefunden, aber nicht angrenzend), `partial` (nur eine Seite gedeckt) oder `none`.
+ */
 export function classifyBzCoverage(
   bzData: IDatenBZ[],
   einsatzStart: ReturnType<typeof dayjs>,
@@ -105,6 +130,13 @@ export function classifyBzCoverage(
 
 // ─── Gap / Partial-Auflösung ─────────────────────────────────────────────────
 
+/**
+ * Schließt die Lücke zwischen zwei Bereitschaftszeiträumen.
+ *
+ * @param startBz - BZ, in dem der Einsatz beginnt.
+ * @param endBz - BZ, in dem der Einsatz endet.
+ * @returns `boundary`: beide BZ werden an der ersten Wechselgrenze in der Lücke aneinandergelegt; ohne Grenze `merge`: `startBz` wird bis `endBz.Ende` verlängert und `endBz` entfällt.
+ */
 function resolveGap(startBz: IDatenBZ, endBz: IDatenBZ): GapResolution {
   const boundary = findFirstBoundaryInRange(dayjs(String(startBz.Ende)), dayjs(String(endBz.Beginn)));
   if (boundary)
@@ -116,6 +148,14 @@ function resolveGap(startBz: IDatenBZ, endBz: IDatenBZ): GapResolution {
   return { kind: 'merge', mergedBz: { ...startBz, Ende: endBz.Ende }, deletedBz: endBz };
 }
 
+/**
+ * Erweitert den vorhandenen Bereitschaftszeitraum bis zum Einsatzende bzw. rückwärts bis zum Einsatzbeginn.
+ *
+ * @param coverage - `partial`-Coverage; mindestens eine Seite ist gesetzt.
+ * @param einsatzStart - Beginn des Einsatzes.
+ * @param einsatzEnd - Ende des Einsatzes.
+ * @returns Erweiterter BZ (`updatedBz`); liegt eine Wechselgrenze dazwischen, zusätzlich ein neuer BZ (`newBz`) für den Rest.
+ */
 function resolvePartial(
   coverage: Extract<BzCoverage, { kind: 'partial' }>,
   einsatzStart: ReturnType<typeof dayjs>,
@@ -143,6 +183,14 @@ function resolvePartial(
 
 // ─── Geteilte Validatoren ────────────────────────────────────────────────────
 
+/**
+ * Prüft, ob der Einsatz einen bestehenden überschneidet. Liegt das Ende eines vorhandenen Einsatzes nicht nach dessen Beginn, gilt es als am Folgetag.
+ *
+ * @param einsatzStart - Beginn des neuen Einsatzes.
+ * @param einsatzEnd - Ende des neuen Einsatzes.
+ * @param exclude - Einsatz, der beim Vergleich ignoriert wird (beim Bearbeiten).
+ * @returns `true`, wenn sich der Zeitraum mit einem vorhandenen, nicht gelöschten Einsatz überschneidet.
+ */
 export function hasOverlap(
   einsatzStart: ReturnType<typeof dayjs>,
   einsatzEnd: ReturnType<typeof dayjs>,
@@ -158,6 +206,13 @@ export function hasOverlap(
   });
 }
 
+/**
+ * Prüft den Mindestabstand von 10 Minuten zu einem vorherigen LRE-1/2-Einsatz im selben Bereitschaftstag (Fenster ab 08:00).
+ *
+ * @param einsatzStart - Beginn des neuen Einsatzes.
+ * @param exclude - Einsatz, der beim Vergleich ignoriert wird (beim Bearbeiten).
+ * @returns `true`, wenn ein LRE-1/2-Einsatz im laufenden 08:00-Fenster weniger als 10 Minuten vor `einsatzStart` endet.
+ */
 export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude?: IDatenBE): boolean {
   const cutoff = einsatzStart.startOf('day').hour(B_WECHSEL_STUNDE).minute(B_WECHSEL_MINUTE).second(0).millisecond(0);
   const windowStart = einsatzStart.isBefore(cutoff) ? cutoff.subtract(1, 'day') : cutoff;
@@ -174,6 +229,14 @@ export function hasLre12TooClose(einsatzStart: ReturnType<typeof dayjs>, exclude
   });
 }
 
+/**
+ * Prüft, ob im selben Bereitschaftstag (08:00 bis 08:00) schon ein LRE-1-Einsatz existiert.
+ *
+ * @param einsatzStart - Beginn des neuen Einsatzes.
+ * @param Tag - Datum des Einsatzes im Format `YYYY-MM-DD` (Wert des Datumsfelds).
+ * @param exclude - Einsatz, der beim Vergleich ignoriert wird (beim Bearbeiten).
+ * @returns `true`, wenn im 08:00-bis-08:00-Fenster um den Einsatz bereits ein LRE 1 beginnt.
+ */
 export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, Tag: string, exclude?: IDatenBE): boolean {
   const cutoff = dayjs(Tag)
     .set('hour', B_WECHSEL_STUNDE)
@@ -195,6 +258,14 @@ export function hasConflictingLre1(einsatzStart: ReturnType<typeof dayjs>, Tag: 
 
 // ─── Submit-Hilfsfunktionen ──────────────────────────────────────────────────
 
+/**
+ * Bricht den Submit ab: beendet den Lade-Zustand des Buttons `btnESE` und zeigt eine Snackbar.
+ *
+ * @param message - Text der Meldung (wird mit "Bereitschaft" als Titel gerendert).
+ * @param status - Snackbar-Status.
+ * @param timeout - Anzeigedauer in ms.
+ * @returns Immer `false`, damit Aufrufer direkt `return failWith(...)` schreiben können.
+ */
 function failWith(message: string, status: 'warning' | 'error' = 'warning', timeout = 4000): false {
   clearLoading('btnESE');
   createSnackBar({ message: `Bereitschaft<br/>${message}`, status, timeout, fixed: true });
@@ -214,6 +285,12 @@ const COVERAGE_FINAL_WARNING: Record<'gap' | 'partial' | 'none', string> = {
   none: 'Kein passender Bereitschaftszeitraum gefunden.<br/>Bitte zuerst einen Zeitraum über "Bereitschaftszeitraum hinzufügen" anlegen.',
 };
 
+/**
+ * Lädt die BZ-Tabelle aus dem Storage neu und filtert sie auf den angegebenen Monat.
+ *
+ * @param tableBZ - BZ-Tabellenelement.
+ * @param monat - Monat (1-12), auf den die Tabelle gefiltert wird.
+ */
 function reloadBzTable(tableBZ: CustomHTMLTableElement<IDatenBZ>, monat: number): void {
   tableBZ.instance.rows.load(getBereitschaftsZeitraumDaten(undefined, undefined, { scope: 'all' }));
   tableBZ.instance.rows.setFilter(row => getMonatFromBZ(row) === monat);
@@ -221,6 +298,17 @@ function reloadBzTable(tableBZ: CustomHTMLTableElement<IDatenBZ>, monat: number)
 
 // ─── Coverage-Handler ────────────────────────────────────────────────────────
 
+/**
+ * Schließt eine Lücke zwischen zwei Bereitschaftszeiträumen in Storage und Tabelle (Grenze setzen oder verschmelzen). Betroffene BZ-Zeilen werden als `modified` markiert; das Speichern übernimmt der Aufrufer.
+ *
+ * @param coverage - `gap`-Coverage.
+ * @param tableBZ - BZ-Tabellenelement.
+ * @param tableBE - BE-Tabellenelement (Verweise auf einen entfernten BZ werden umgehängt).
+ * @param monat - Monat (1-12) des Einsatzes.
+ * @param monthBzs - BZ-Zeilen dieses Monats.
+ * @param otherMonths - BZ-Zeilen aller anderen Monate.
+ * @returns `needsBeFlush`: `true`, wenn BE-Zeilen auf einen gelöschten BZ verwiesen haben und deshalb ebenfalls gespeichert werden müssen.
+ */
 function handleGap(
   coverage: Extract<BzCoverage, { kind: 'gap' }>,
   tableBZ: CustomHTMLTableElement<IDatenBZ>,
@@ -295,6 +383,16 @@ function handleGap(
   return { needsBeFlush };
 }
 
+/**
+ * Erweitert einen teilweise passenden Bereitschaftszeitraum (ggf. mit neuem Anschluss-BZ) in Storage und Tabelle und markiert ihn als `modified`.
+ *
+ * @param coverage - `partial`-Coverage.
+ * @param einsatzStart - Beginn des Einsatzes.
+ * @param einsatzEnd - Ende des Einsatzes.
+ * @param tableBZ - BZ-Tabellenelement.
+ * @param monat - Monat (1-12) des Einsatzes.
+ * @param savedData - Alle BZ-Zeilen aus dem Storage.
+ */
 function handlePartial(
   coverage: Extract<BzCoverage, { kind: 'partial' }>,
   einsatzStart: ReturnType<typeof dayjs>,
@@ -318,6 +416,17 @@ function handlePartial(
   });
 }
 
+/**
+ * Legt für einen Einsatz ohne passenden Bereitschaftszeitraum einen neuen BZ über die Einsatzdauer an (ohne Nacht/Spät/Sonder).
+ * Ohne berechnetes Ergebnis (z. B. BZ bereits vorhanden) passiert nichts.
+ *
+ * @param einsatzStart - Beginn des Einsatzes.
+ * @param einsatzEnd - Ende des Einsatzes.
+ * @param tableBZ - BZ-Tabellenelement.
+ * @param monat - Monat (1-12) des Einsatzes.
+ * @param monthBzs - BZ-Zeilen dieses Monats.
+ * @param otherMonths - BZ-Zeilen aller anderen Monate.
+ */
 function handleNone(
   einsatzStart: ReturnType<typeof dayjs>,
   einsatzEnd: ReturnType<typeof dayjs>,
@@ -349,6 +458,16 @@ function handleNone(
 
 // ─── Submit ──────────────────────────────────────────────────────────────────
 
+/**
+ * Validiert und speichert einen Bereitschaftseinsatz. Der Einsatz braucht einen passenden Bereitschaftszeitraum; nur mit `#berZeit` wird ein fehlender BZ angelegt bzw. angepasst und vor dem BE gespeichert.
+ * Weitere Prüfungen: keine Überschneidung, höchstens ein LRE 1 je Bereitschaftstag, 10 Minuten Abstand nach LRE 1/2.
+ *
+ * @param $modal - Modal mit den Eingabefeldern (`#Datum`, `#SAPNR`, `#ZeitVon`, `#ZeitBis`, `#LRE`, `#privatkm`, `#berZeit`).
+ * @param tableBE - BE-Tabellenelement, dem der Einsatz hinzugefügt wird.
+ * @param tableBZ - BZ-Tabellenelement (für automatisch angelegte/angepasste Zeiträume).
+ * @returns `true`, wenn der Einsatz hinzugefügt wurde; `false` nach einer Validierungs-Snackbar.
+ * @throws {Error} Wenn ein Eingabefeld fehlt oder der LRE-Wert unbekannt ist.
+ */
 export default async function submitBereitschaftsEinsatz(
   $modal: HTMLDivElement,
   tableBE: CustomHTMLTableElement<IDatenBE>,

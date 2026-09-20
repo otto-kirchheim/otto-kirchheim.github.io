@@ -9,6 +9,13 @@ import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 
+/**
+ * Baut die Schicht-Optionen aus den Vorgaben; Früh ist immer vorhanden und vorausgewählt, Spät, Nacht
+ * und Sonder nur, wenn aktiviert. Ein abweichendes Freitagsende der Frühschicht steht im Label.
+ *
+ * @param vorgabenU - Persönliche Vorgaben mit den Arbeitszeiten je Schicht.
+ * @returns Optionsliste für `MySelect`.
+ */
 function buildSchichtOptionen(vorgabenU: IVorgabenU): { value: string; text: string; selected?: boolean }[] {
   const { Arbeitszeit: aZ } = vorgabenU;
   const freitagEnde = aZ.frueh.overrides?.[5]?.ende;
@@ -35,8 +42,22 @@ import {
 } from '../utils';
 
 const ZEITFELDER = ['abWE', 'beginE', 'ab1E', 'anEE', 'abEE', 'an1E', 'endeE', 'anWE'] as const;
+/**
+ * Liefert die Id des Fehlertext-Elements zu einem Zeitfeld.
+ *
+ * @param feld - Zeitfeld.
+ * @returns Id `zeitfehler-<feld>`.
+ */
 const getZeitfehlerElementId = (feld: (typeof ZEITFELDER)[number]): string => `zeitfehler-${feld}`;
 
+/**
+ * Erzeugt ein Zeit-Eingabefeld für eine Spalte, bei einer Zeile mit deren Wert vorbelegt.
+ *
+ * @param row - Tabelle (Neuanlage) oder Zeile (Bearbeiten).
+ * @param columnName - Spaltenname, aus dem Id und Beschriftung stammen.
+ * @returns Das `MyInput`-Element.
+ * @throws {Error} Wenn die Spalte nicht existiert.
+ */
 const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnName: string) => {
   const column = row.columns.array.find(column => column.name === columnName);
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
@@ -54,6 +75,15 @@ const createTimeElement = (row: CustomTable<IDatenEWT> | Row<IDatenEWT>, columnN
   );
 };
 
+/**
+ * Öffnet das Modal zum Bearbeiten (Zeile) bzw. Anlegen (Tabelle) eines EWT-Eintrags. Beim Speichern
+ * werden fehlende Zeiten berechnet, die Zeitreihenfolge, Überschneidungen mit anderen Einträgen und
+ * exakte Duplikate geprüft und die Tabelle persistiert.
+ *
+ * @param row - Zu bearbeitende Zeile oder Tabelle für einen neuen Eintrag.
+ * @param titel - Modal-Titel.
+ * @throws {Error} Wenn die Formular-Referenz nach dem Rendern nicht gesetzt ist.
+ */
 export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenEWT>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
   const buchungstagHinweisRef = createRef<HTMLDivElement>();
@@ -185,6 +215,11 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Liest das Formular aus, berechnet fehlende Zeiten und den Buchungstag.
+   *
+   * @returns Der vollständige EWT-Eintrag aus den aktuellen Formularwerten.
+   */
   const getFormValues = (): IDatenEWT => {
     let values: IDatenEWT = {
       _id: rowCells?._id,
@@ -212,6 +247,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     return values;
   };
 
+  /** Zeigt das Buchungstag-Feld nur, wenn der berechnete Buchungstag vom Tag abweicht. */
   const updateBuchungstagAnzeige = (): void => {
     if (!buchungstagHinweisRef.current) return;
 
@@ -235,6 +271,7 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     buchungstagHinweisRef.current.classList.remove('d-none');
   };
 
+  /** Setzt die Validierungsfehler aller Zeitfelder zurück. */
   const clearZeitfehler = (): void => {
     ZEITFELDER.forEach(feld => {
       const input = form.querySelector<HTMLInputElement>(`#${feld}`);
@@ -246,6 +283,11 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
     });
   };
 
+  /**
+   * Zeigt die Fehlermeldung eines als ungültig markierten Zeitfelds bei Klick/Fokus erneut an.
+   *
+   * @param event - Click- oder Focus-Event des Zeitfelds.
+   */
   const showZeitfehlerPopup = (event: Event): void => {
     const input = event.currentTarget as HTMLInputElement | null;
     if (!input) return;
@@ -275,6 +317,13 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
 
   modal.row = row;
 
+  /**
+   * Erzeugt den Submit-Handler: validiert die Zeitreihenfolge, prüft auf Zeitüberschneidung und
+   * exakte Duplikate, schreibt die Werte in die Zeile bzw. legt eine neue an (oder reaktiviert eine
+   * gelöschte) und persistiert die Tabelle.
+   *
+   * @returns Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       event.preventDefault();
@@ -309,10 +358,9 @@ export default function EditorModalEWT(row: CustomTable<IDatenEWT> | Row<IDatenE
       }
 
       const currentWindow = getEwtWindow(values);
-      // Beim Neuanlegen: Statt eines separaten Delete+Create eine bereits zum Löschen vorgemerkte,
-      // zeitlich überschneidende Zeile reaktivieren (bleibt als Update erhalten — Vorbild:
-      // `addEwtTag.ts`. Erhält dabei die ursprüngliche `_id`, sodass z. B. eine verknüpfte
-      // Nebengeld-Referenz (`EWT`) nicht verwaist).
+      // Beim Neuanlegen eine zum Löschen vorgemerkte, zeitlich überschneidende Zeile reaktivieren
+      // (Update statt Delete+Create, wie in `addEwtTag.ts`); die ursprüngliche `_id` bleibt erhalten,
+      // damit verknüpfte Nebengeld-/EA-Einträge (`EWT`-Referenz) nicht verwaisen.
       let deletedRowToReactivate: Row<IDatenEWT> | undefined;
 
       if (currentWindow) {

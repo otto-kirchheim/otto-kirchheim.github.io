@@ -4,19 +4,28 @@ import { formatCurrency, timeConvert, type IBerechnungMonatsErgebnis } from '../
 import { gruppeHatDaten, isGroupVisible, type BerechnungGruppe } from '../berechnungGroupVisibility';
 import { zulagenEinheitKurz, type IZulagenBreakdown } from '../calculateZulagenBreakdown';
 
-/**
- * Phase L2: `#tbodyBerechnung` (bisher per `innerHTML`-Strings befuellt) als React-Komponente.
- * Eigener Root direkt auf dem `<tbody id="tbodyBerechnung">`-Element (analog
- * `BerechnungMobileCards`/`#berechnungMobileCards`) -- `BerechnungTab.tsx` rendert das `<tbody>`
- * nur als leeres Blatt, ruehrt seine Kinder nie an.
+/*
+ * `#tbodyBerechnung` ist ein eigener React-Root direkt auf dem `<tbody>` (analog `BerechnungMobileCards`);
+ * `BerechnungTab.tsx` rendert das `<tbody>` nur leer und ruehrt seine Kinder nie an.
  *
- * `wendeMonatsFensterAn()` liest direkt nach dem Mount `td[data-monat]`-Zellen aus dem DOM
- * (Spalten-Fenster) -- `mount()` ist per `flushSync` synchron, die Aufrufreihenfolge in
- * `generateTableBerechnung.ts` bleibt deshalb unveraendert gueltig.
+ * `wendeMonatsFensterAn()` liest direkt nach dem Mount `td[data-monat]`-Zellen aus dem DOM. `mount()` ist
+ * per `flushSync` synchron, daher muss `generateTableBerechnung.ts` es erst nach dem Mount aufrufen.
  */
 
 const NBSP = ' ';
+/**
+ * Zellwert für die Schwellen-Zeilen: `null` wird zu einem geschützten Leerzeichen, damit die Zeile Höhe behält.
+ *
+ * @param wert - Anzahl oder `null`.
+ * @returns Der Wert bzw. `NBSP` bei `null`.
+ */
 const anzeige = (wert: number | null): ReactNode => (wert === null ? NBSP : wert);
+/**
+ * Formatiert einen Euro-Betrag für die Tabelle.
+ *
+ * @param wert - Betrag oder `null`.
+ * @returns Formatierter Betrag; leerer String bei `null`.
+ */
 const currency = (wert: number | null): string => (wert === null ? '' : formatCurrency(wert));
 
 interface IZeile {
@@ -29,6 +38,13 @@ interface IZeile {
   inhalt: (m: IBerechnungMonatsErgebnis) => ReactNode;
 }
 
+/**
+ * Verschachtelte zweispaltige Zeilenkopf-Tabelle für mehrzeilige Labels (EWT-Schwellen, Zulagen-Codes);
+ * ihre Zeilen entsprechen den per `<br />` getrennten Werten in den Monatszellen.
+ *
+ * @param zeilen - Paare aus linker und rechter Zelle.
+ * @returns Tabellen-Element für die `th`-Zelle.
+ */
 function labelTabelle(zeilen: Array<[ReactNode, ReactNode]>): ReactNode {
   return (
     <table className="berechnung-label-tabelle">
@@ -120,6 +136,12 @@ const ZEILEN: IZeile[] = [
   { id: 'summeGesamt', gruppe: null, label: 'Summe Gesamt', inhalt: m => currency(m.summeGesamt) },
 ];
 
+/**
+ * Baut die Tabellenzeile mit den Roh-Zulagen je Code (Label links, Monatswerte je Code untereinander).
+ *
+ * @param breakdown - Zulagen-Aufschlüsselung des Jahres.
+ * @returns Zeilendefinition der Gruppe "neben".
+ */
 function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeile {
   return {
     id: 'zulagenBreakdown',
@@ -141,6 +163,12 @@ function buildZulagenBreakdownZeile(breakdown: IZulagenBreakdown): IZeile {
   };
 }
 
+/**
+ * Zeilen des Berechnungs-`<tbody>`: alle sichtbaren Gruppenzeilen mit je einer Zelle pro Monat.
+ * Die Zulagen-Zeile wird nur bei vorhandenen Codes vor "Summe Nebenbezüge" eingefügt.
+ *
+ * @param props - Monatsergebnisse, aktivierte Tabs und Zulagen-Aufschlüsselung.
+ */
 function BerechnungTableRows({
   monatsErgebnisse,
   aktivierteTabs,
@@ -156,8 +184,13 @@ function BerechnungTableRows({
     zeilen.splice(nebenIndex, 0, buildZulagenBreakdownZeile(zulagenBreakdown));
   }
 
-  // Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten.
-  // Roh-Zulagen zaehlen fuer 'neben' auch dann als Daten, wenn keine Euro-Summe berechnet wurde.
+  /**
+   * Desktop-Scope = ganzes Jahr: Gruppe nur ausblenden, wenn deaktiviert und in keinem Monat Daten.
+   * Roh-Zulagen zaehlen fuer 'neben' auch dann als Daten, wenn keine Euro-Summe berechnet wurde.
+   *
+   * @param gruppe - Zu prüfende Berechnungsgruppe.
+   * @returns `true`, wenn irgendein Monat Daten für die Gruppe hat.
+   */
   const hatGruppenDaten = (gruppe: BerechnungGruppe): boolean =>
     monatsErgebnisse.some(m => gruppeHatDaten(gruppe, m)) || (gruppe === 'neben' && zulagenBreakdown.codes.length > 0);
 

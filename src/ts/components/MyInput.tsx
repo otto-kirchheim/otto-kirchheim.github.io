@@ -24,7 +24,7 @@ type TModalBodyInputElementOption = Omit<
   | 'type'
   | 'popover'
 > & {
-  /** React 19 vererbt `children` nicht mehr implizit (Preact tat das). */
+  /** In React 19 nicht mehr implizit im Komponententyp enthalten. */
   children?: ReactNode;
   myRef?: RefObject<HTMLInputElement | null>;
   id: string;
@@ -52,8 +52,11 @@ type TModalBodyInputElementOption = Omit<
 };
 
 /**
- * Der frühere Bootstrap-Popover nahm HTML-Schnipsel entgegen (`'-Mindestens 8 Zeichen <br/>'`).
- * Der DB-Tooltip bekommt Text, deshalb werden Zeilenumbrüche hier zu echten Zeilen.
+ * Zerlegt einen Popover-Text mit HTML-Schnipseln (`'-Mindestens 8 Zeichen <br/>'`) in Textzeilen,
+ * weil der DB-Tooltip nur Text bekommt: `<br>` trennt Zeilen, andere Tags werden entfernt.
+ *
+ * @param content - Popover-Inhalt, ggf. mit `<br>` und weiteren Tags.
+ * @returns Getrimmte, nicht leere Zeilen.
  */
 function hinweisZeilen(content: string): string[] {
   return content
@@ -62,6 +65,13 @@ function hinweisZeilen(content: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * `DBInput` mit der Aufrufstellen-API der Modals: Huelle mit `divClass`, Popover als `DBTooltip`,
+ * optionaler Fehler-Span (`invalidFeedbackId`) und `defaultValue` statt `value`, wenn kein
+ * `onChange` vorhanden ist.
+ *
+ * @param props - `TModalBodyInputElementOption`; `id`, `name` und `type` sind Pflicht.
+ */
 const MyInput: FC<TModalBodyInputElementOption> = props => {
   const {
     myRef,
@@ -82,8 +92,8 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
   const eigeneRef = useRef<HTMLInputElement>(null);
   useSofortigeId(eigeneRef, props.id);
 
-  // Ohne `onChange` waere `value` in React ein schreibgeschuetztes Feld. Die Modals nutzen das
-  // Feld als Vorbelegung und lesen den Endwert per Ref aus dem DOM -- das ist `defaultValue`.
+  // Ohne `onChange` waere `value` in React schreibgeschuetzt. Die Modals nutzen das Feld als
+  // Vorbelegung und lesen den Endwert per Ref aus dem DOM -- also `defaultValue`.
   const wert = onChange ? { value, onChange } : { defaultValue: value };
   const hinweis = popover ? hinweisZeilen(popover.content) : [];
 
@@ -109,13 +119,10 @@ const MyInput: FC<TModalBodyInputElementOption> = props => {
             ))}
           </DBTooltip>
         ) : null}
-        {/* Nur fuer Aufrufer OHNE `invalidFeedbackText` (z.B. `createEditorModalEWT.tsx`s
-            Zeitfehler-Validierung): die brauchen ein stabiles, leeres Element mit `id`, das sie
-            per `querySelector(...).textContent = ...` zur Laufzeit selbst befuellen -- eigene
-            Geschaeftsregel-Validierung, kein natives HTML5-`required`/`pattern`. Ist `invalidFeedbackText`
-            gesetzt, uebernimmt bereits `invalidMessage` oben (Zeile 86) die native DBInput-Anzeige;
-            dieser Span wuerde denselben Text sonst zusaetzlich DAUERHAFT (nicht nur bei Invalid-Status)
-            anzeigen -- Duplikat statt Fallback. */}
+        {/* Nur fuer Aufrufer OHNE `invalidFeedbackText` (z.B. Zeitfehler in `createEditorModalEWT.tsx`):
+            Sie brauchen ein stabiles, leeres Element mit `id`, das sie per `querySelector(...).textContent`
+            selbst befuellen (Geschaeftsregel-Validierung). Mit `invalidFeedbackText` zeigt bereits
+            `invalidMessage` die Meldung; der Span wuerde sie zusaetzlich DAUERHAFT anzeigen. */}
         {invalidFeedbackId && !invalidFeedbackText ? (
           <span id={invalidFeedbackId} className="db-infotext" data-semantic="critical" data-size="small" />
         ) : null}

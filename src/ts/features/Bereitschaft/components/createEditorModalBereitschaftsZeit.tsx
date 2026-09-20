@@ -10,6 +10,13 @@ import { default as checkMaxTag } from '@/infrastructure/validation/checkMaxTag'
 import dayjs from '@/infrastructure/date/configDayjs';
 import { getBereitschaftsZeitraumDaten, persistBereitschaftsZeitraumTableData } from '../utils';
 
+/**
+ * Baut das Feld einer Spalte für eine bestehende Zeile: Beginn/Ende als `datetime-local` (Grenzen: Monat des Werts bis Monatsende), sonst Pause in Minuten (0-60).
+ *
+ * @param column - Tabellenspalte.
+ * @param row - Zu bearbeitende Zeile; liefert die Vorbelegung.
+ * @returns Eingabefeld; `undefined` für die Aktionsspalte `editing`.
+ */
 const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ReactNode => {
   let datum: dayjs.Dayjs, min: string, max: string;
   switch (column.name) {
@@ -53,6 +60,14 @@ const createElementRow = (column: Column<IDatenBZ>, row: Row<IDatenBZ>): ReactNo
   }
 };
 
+/**
+ * Baut das Feld einer Spalte für einen neuen Zeitraum (ohne Vorbelegung, Grenzen aus dem gewählten Monat).
+ *
+ * @param column - Tabellenspalte.
+ * @param Monat - Gewählter Monat (1-12).
+ * @param Jahr - Gewähltes Jahr.
+ * @returns Leeres Eingabefeld; `undefined` für die Aktionsspalte `editing`.
+ */
 const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr: number): ReactNode => {
   let datum, min, max;
   switch (column.name) {
@@ -94,6 +109,13 @@ const createElementCustomtable = (column: Column<IDatenBZ>, Monat: number, Jahr:
   }
 };
 
+/**
+ * Baut die Formularfelder des Zeitraum-Modals.
+ *
+ * @param row - Zeile (Bearbeiten) oder Tabelle (Anlegen).
+ * @returns Felder aller Spalten.
+ * @throws {Error} Bei unbekanntem `row`-Typ.
+ */
 const createElements = (row: CustomTable<IDatenBZ> | Row<IDatenBZ>): ReactNode => {
   if (row instanceof Row) {
     return row.columns.array.map(column => createElementRow(column, row));
@@ -104,6 +126,13 @@ const createElements = (row: CustomTable<IDatenBZ> | Row<IDatenBZ>): ReactNode =
   } else throw new Error('unbekannter Fehler');
 };
 
+/**
+ * Öffnet das Modal zum Bearbeiten eines Bereitschaftszeitraums bzw. zum Anlegen (bei Tabelle).
+ *
+ * @param row - Zu bearbeitende Zeile oder Tabelle (= neuen Zeitraum anlegen).
+ * @param titel - Modal-Titel.
+ * @throws {Error} Wenn die Formular-Referenz fehlt.
+ */
 export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> | Row<IDatenBZ>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -125,6 +154,11 @@ export default function EditorModalBereitschaftsZeit(row: CustomTable<IDatenBZ> 
 
   modal.row = row;
 
+  /**
+   * Baut den Submit-Handler des Formulars.
+   *
+   * @returns Handler: verlangt Ende nach Beginn und keine Überschneidung mit anderen nicht gelöschten Zeiträumen, schreibt dann in Zeile bzw. Tabelle, schließt das Modal und speichert.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;

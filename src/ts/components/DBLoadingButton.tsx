@@ -16,9 +16,12 @@ type TDBLoadingButton = ComponentProps<typeof DBButton> & {
 
 /**
  * `DBButton`, dessen Ladezustand `setLoading(id)`/`clearLoading(id)` von aussen steuern
- * (Business-Logik ausserhalb von React, z.B. `saveDaten.ts`, `submitBereitschaftsZeiten.ts`).
- * `data-react-loading="true"` sagt den beiden Funktionen, den Zustand ueber den
- * `buttonLoadingStore` statt per `replaceChildren` zu setzen -- siehe dort fuer den Grund.
+ * (Business-Logik ausserhalb von React, z.B. `loginUser.ts`). `data-react-loading="true"` sagt
+ * den beiden Funktionen, den Zustand ueber den `buttonLoadingStore` statt per `replaceChildren`
+ * zu setzen (das wuerde den React-Baum zerstoeren).
+ *
+ * Props: `DBButton`-Props plus `id` (Schluessel im Loading-Store), `loadingText` (Text
+ *   waehrend des Ladens) und `autoSaveResources` (blendet ein AutoSave-Badge ein).
  */
 const DBLoadingButton: FC<TDBLoadingButton> = ({
   id,

@@ -4,14 +4,16 @@ import { DBButton, DBStack } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
- * Wählt EINEN Datenpfad -- für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel
- * selbst der Pfad (siehe `umbenennen()` in `FeldListe`), dort kann ein Pfad also nur von EINEM
- * Feld gleichzeitig belegt sein. `belegt` (Pfade anderer Felder, das eigene ausgenommen) markiert
- * bereits vergebene Optionen als `disabled` -- ohne das wählt man scheinbar folgenlos einen
- * belegten Pfad aus (`umbenennen()` bricht still ab, `felder[neu]` existiert schon), ohne zu
- * verstehen, warum sich der Titel des Feldes nicht ändert. Denselben Wert an zwei Positionen
- * zeigen: stattdessen "Text"-Modus mit `{Pfad}`-Platzhalter verwenden. Andere Aufrufer (Spalten-
- * Schlüssel, `Feld.quellen`) kennen diese Einschränkung nicht -- dort bleibt `belegt` leer.
+ * Wählt EINEN Datenpfad. Für Kopf-/Fuß-Felder im "Datenfeld"-Modus ist der Objekt-Schlüssel selbst
+ * der Pfad (`umbenennen()` in `FeldListe`), ein Pfad kann dort also nur von EINEM Feld belegt sein.
+ * `belegt` (Pfade anderer Felder, das eigene ausgenommen) markiert diese Optionen als `disabled`:
+ * sonst bräche `umbenennen()` bei einem belegten Pfad still ab (`felder[neu]` existiert schon), und
+ * der Titel änderte sich ohne erkennbaren Grund. Denselben Wert an zwei Positionen zeigt der
+ * "Text"-Modus mit `{Pfad}`-Platzhalter. Andere Aufrufer (Spalten-Schlüssel, `Feld.quellen`) haben
+ * die Einschränkung nicht und lassen `belegt` leer.
+ *
+ * @param props - `wert` gewählter Pfad, `eintraege` wählbare Katalogeinträge, `belegt` bereits
+ *   vergebene Pfade, `onChange` bei neuer Wahl (auch für frei getippte Pfade).
  */
 export function DatenpfadWahl({
   wert,
@@ -75,9 +77,14 @@ const TRENNER: { wert: string; label: string }[] = [
   { wert: '\n', label: 'Neue Zeile (braucht Zeilenumbruch)' },
 ];
 
-/** Mehrere Datenpfade in eine Zelle, verbunden mit einem frei wählbaren Trennzeichen -- im
- * Unterschied zu Text+Platzhaltern (`PlatzhalterPicker`) werden leere/fehlende Teile automatisch
- * übersprungen statt eine Trennzeichen-Lücke zu hinterlassen (z.B. optionales `Adress2`). */
+/**
+ * Mehrere Datenpfade in eine Zelle, verbunden mit einem frei wählbaren Trennzeichen. Anders als
+ * Text+Platzhalter (`PlatzhalterPicker`) werden leere/fehlende Teile übersprungen, statt eine
+ * Trennzeichen-Lücke zu hinterlassen (z.B. optionales `Adress2`).
+ *
+ * @param props - `feld` das bearbeitete Feld (`quellen`, `trenner`), `formular` Formularcode für den
+ *   Katalog, `onChange` mit dem geänderten Feld.
+ */
 export function ZusammengesetzteQuellen({
   feld,
   formular,
@@ -161,8 +168,10 @@ export function ZusammengesetzteQuellen({
 
 /**
  * Fügt einen Datenpfad als `{pfad}`-Platzhalter an der Cursorposition eines Textfelds ein -- per
- * Klick statt Freihand-Tippen (tippfehleranfällig, ein falscher Pfad liefert still einen leeren
- * Wert).
+ * Klick statt Freihand-Tippen, denn ein falscher Pfad liefert still einen leeren Wert.
+ *
+ * @param props - `formular` Formularcode für den Katalog, `inputRef` das Textfeld (Cursorposition),
+ *   `wert` aktueller Text, `onEinfuegen` mit dem neuen Gesamttext.
  */
 export function PlatzhalterPicker({
   formular,
@@ -175,6 +184,12 @@ export function PlatzhalterPicker({
   wert: string;
   onEinfuegen: (neuerText: string) => void;
 }) {
+  /**
+   * Setzt `{pfad}` an die Cursorposition bzw. ans Textende, meldet den neuen Text und stellt danach
+   * Fokus und Cursor hinter der Einfügung wieder her.
+   *
+   * @param pfad - Gewählter Datenpfad; leer = nichts tun.
+   */
   function einfuegen(pfad: string) {
     if (!pfad) return;
     const einfuegung = `{${pfad}}`;

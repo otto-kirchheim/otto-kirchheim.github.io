@@ -45,6 +45,11 @@ type Props = {
   onToggleZulage: (code: string) => void;
 };
 
+/**
+ * Editor für den Inhalt eines Profil-Templates, gegliedert in aufklappbare Abschnitte (Pers, Arbeitszeit, Fahrzeit, VorgabenB, Einstellungen).
+ *
+ * @param props - Template-Entwurf (`templateContent`), `isSaving` sperrt Aktionen, `activeVorgabenBIndex` wählt den angezeigten Eintrag; die `on*`-Callbacks melden jede Änderung an den Manager.
+ */
 export function AdminProfileTemplateContentEditor({
   templateId,
   templateContent,
@@ -80,10 +85,16 @@ export function AdminProfileTemplateContentEditor({
     [templateContent],
   );
 
-  // Interaktives Tag nach DB-Muster: `DBTag` rendert immer ein `<div>` und kann selbst kein
-  // Button sein -- ein Kontrollelement kommt als Kind hinein (siehe DB-Beispiel "Checked").
-  // Eine Checkbox statt Radio, weil ein erneuter Klick den Abschnitt wieder zuklappt; ein
-  // `role="tablist"` waere falsch, dort ist immer genau ein Eintrag gewaehlt.
+  // `DBTag` rendert immer ein `<div>` und kann selbst kein Button sein -- das Kontrollelement kommt als Kind hinein.
+  // Checkbox statt Radio, weil ein erneuter Klick den Abschnitt wieder zuklappt; `role="tablist"` waere falsch,
+  // dort ist immer genau ein Eintrag gewaehlt.
+  /**
+   * Erzeugt den Umschalter für einen Abschnitt; erneutes Anklicken klappt ihn zu.
+   *
+   * @param key - Abschnitt, den der Tag steuert.
+   * @param label - Beschriftung.
+   * @returns Tag mit Checkbox; hervorgehoben, wenn aktiv oder der Abschnitt Daten enthält.
+   */
   const sectionButton = (key: SectionKey, label: string) => {
     const active = activeSection === key;
     const hasData = badgeState[key];

@@ -13,6 +13,11 @@ type OeTagInputProps = {
   defaultLevelCount?: number;
 };
 
+/**
+ * Tag-Liste von OE-Pfaden mit Eingabe über `OeLevelBoxes`; ein Tag anklicken übernimmt ihn zum Bearbeiten in die Eingabe.
+ *
+ * @param props - `label`, `values`/`onChange` (Liste der OE-Strings), `disabled`, `placeholder` und `defaultLevelCount`.
+ */
 export function OeTagInput({
   label,
   values,
@@ -23,6 +28,9 @@ export function OeTagInput({
 }: OeTagInputProps) {
   const [inputValue, setInputValue] = useState('');
 
+  /**
+   * Fügt die getrimmte Eingabe der Liste hinzu und leert sie; leere Eingaben und Duplikate werden ignoriert.
+   */
   function handleAdd() {
     const trimmed = inputValue.trim();
     if (!trimmed || values.includes(trimmed)) return;
@@ -30,13 +38,21 @@ export function OeTagInput({
     setInputValue('');
   }
 
+  /**
+   * Entfernt den Eintrag an `index` aus der Liste.
+   *
+   * @param index - Position des Tags in `values`.
+   */
   function handleRemove(index: number) {
     onChange(values.filter((_, i) => i !== index));
   }
 
-  /** Tag anklicken -- Wert in die Eingabe uebernehmen und aus der Liste entfernen (bearbeiten
-      statt nur loeschen zu koennen). `DBTag`s `onRemove` ruft `event.stopPropagation()` -- ein
-      Klick auf den X-Knopf loest deshalb NICHT zusaetzlich das Bearbeiten aus. */
+  /**
+   * Übernimmt den Tag an `index` in die Eingabe und entfernt ihn aus der Liste (Bearbeiten statt nur
+   * Löschen). `DBTag` ruft in `onRemove` `stopPropagation()`, der X-Knopf löst das Bearbeiten daher nicht aus.
+   *
+   * @param index - Position des Tags in `values`.
+   */
   function handleEdit(index: number) {
     setInputValue(values[index]);
     onChange(values.filter((_, i) => i !== index));

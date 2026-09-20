@@ -7,6 +7,14 @@ import type { IZulagenBreakdown } from '../calculateZulagenBreakdown';
 import BerechnungMobileCards from './BerechnungMobileCards';
 import BerechnungTableRows from './BerechnungTableRows';
 
+/**
+ * Rendert die Monatskarten der mobilen Ansicht in `#berechnungMobileCards`; der aktuelle Monat (Storage `Monat`) ist aufgeklappt.
+ * Ohne den Container passiert nichts.
+ *
+ * @param monatsErgebnisse - Berechnungsergebnisse je Monat.
+ * @param aktivierteTabs - Aktivierte Feature-Tabs des Benutzers; steuert die sichtbaren Gruppen.
+ * @param zulagenBreakdown - Aufschlüsselung der Zulagen je Code.
+ */
 export function mountBerechnungMobileCards(
   monatsErgebnisse: IBerechnungMonatsErgebnis[],
   aktivierteTabs?: string[],
@@ -28,6 +36,13 @@ export function mountBerechnungMobileCards(
   );
 }
 
+/**
+ * Rendert die Zeilen der Desktop-Tabelle als eigenen React-Root direkt in `#tbodyBerechnung`; ohne den Container passiert nichts.
+ *
+ * @param monatsErgebnisse - Berechnungsergebnisse je Monat.
+ * @param zulagenBreakdown - Aufschlüsselung der Zulagen je Code.
+ * @param aktivierteTabs - Aktivierte Feature-Tabs des Benutzers; steuert die sichtbaren Gruppen.
+ */
 export function mountBerechnungTableRows(
   monatsErgebnisse: IBerechnungMonatsErgebnis[],
   zulagenBreakdown: IZulagenBreakdown,

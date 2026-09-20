@@ -28,10 +28,21 @@ const SORT_BUTTON_STYLE = {
   gap: '0.25rem',
 } as const;
 
-// Legacy-Werte wie "0:30" auf "HH:mm" heben – ein type="time"-Input zeigt sie sonst leer an
+// Alte Werte wie "0:30" auf "HH:mm" heben, sonst zeigt ein `type="time"`-Input sie leer an.
+/**
+ * Normalisiert die Fahrzeit jeder Zeile über `normalizeTimeString`.
+ *
+ * @param rows - Gespeicherte Fahrzeit-Zeilen.
+ * @returns Kopie der Zeilen mit normalisiertem `value`.
+ */
 const normalizeInitialRows = (rows: IVorgabenUfZ[]): IVorgabenUfZ[] =>
   rows.map(row => ({ ...row, value: normalizeTimeString(row.value) }));
 
+/**
+ * Editor für die Fahrzeiten je Tätigkeitsstätte (Zeilen hinzufügen, ändern, verschieben, löschen, sortieren). Meldet jeden Stand an `fahrzeitPanelState`.
+ *
+ * @param props - `initialRows`: Fahrzeit-Zeilen aus den gespeicherten Vorgaben.
+ */
 export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
   const [rows, setRows] = useState<IVorgabenUfZ[]>(() => normalizeInitialRows(initialRows));
   const [sort, setSort] = useState<SortState>(null);
@@ -40,8 +51,13 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
   const focusRowIndex = useRef<number | null>(null);
 
-  // Bridge synchron beim Update setzen: saveEinstellungen() liest den State ggf. bevor
-  // ein Effect gelaufen ist (gleiche Begründung wie im ArbeitszeiteingabePanel).
+  // Stand synchron an `fahrzeitPanelState` melden: `saveEinstellungen()` kann ihn lesen, bevor ein Effect gelaufen ist
+  // (gleiche Begründung wie im `ArbeitszeiteingabePanel`).
+  /**
+   * Wendet eine Änderung an und aktualisiert Ref, Panel-State und React-State gemeinsam.
+   *
+   * @param updater - Berechnet aus den aktuellen Zeilen die neuen.
+   */
   const updateRows = (updater: (current: IVorgabenUfZ[]) => IVorgabenUfZ[]): void => {
     const next = updater(rowsRef.current);
     rowsRef.current = next;
@@ -63,19 +79,40 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
     input?.focus();
   }, [rows]);
 
+  /**
+   * Hängt eine leere Zeile an und fokussiert deren erstes Feld.
+   */
   const addRow = (): void => {
     focusRowIndex.current = rows.length;
     updateRows(current => [...current, { key: '', text: '', value: '' }]);
   };
 
+  /**
+   * Setzt ein Feld einer Zeile.
+   *
+   * @param index - Zeilenindex.
+   * @param field - Geändertes Feld.
+   * @param value - Neuer Feldwert.
+   */
   const updateRow = (index: number, field: FahrzeitField, value: string): void => {
     updateRows(current => current.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
   };
 
+  /**
+   * Entfernt die Zeile.
+   *
+   * @param index - Zeilenindex.
+   */
   const removeRow = (index: number): void => {
     updateRows(current => current.filter((_, i) => i !== index));
   };
 
+  /**
+   * Tauscht die Zeile mit ihrem Nachbarn.
+   *
+   * @param index - Zeilenindex.
+   * @param direction - Verschieberichtung; am Rand passiert nichts.
+   */
   const moveRow = (index: number, direction: 'up' | 'down'): void => {
     updateRows(current => {
       const target = direction === 'up' ? index - 1 : index + 1;
@@ -86,10 +123,13 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
     });
   };
 
-  // Sortiert die bestehenden Zeilen einmalig neu (kein persistenter Live-Sort -- Tippen in
-  // einer Zeile soll sie nicht mitten in der Eingabe verschieben); erneuter Klick auf dieselbe
-  // Spalte dreht die Richtung um, analog dem Sortier-Icon-Muster aus `CustomTable`
-  // (`arrows_vertical`/`arrow_up`/`arrow_down`, siehe `customTableRender.ts`).
+  // Sortiert die vorhandenen Zeilen einmalig (kein Live-Sort, damit Tippen die Zeile nicht verschiebt).
+  // Erneuter Aufruf für dieselbe Spalte dreht die Richtung um; Icons wie in `CustomTableView.tsx`.
+  /**
+   * Sortiert nach der Spalte (`asc`, bei erneutem Aufruf derselben Spalte `desc`).
+   *
+   * @param field - Spalte, nach der sortiert wird.
+   */
   const toggleSort = (field: SortField): void => {
     const direction = sort?.field === field && sort.direction === 'asc' ? 'desc' : 'asc';
     setSort({ field, direction });
@@ -101,6 +141,12 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
     );
   };
 
+  /**
+   * Wählt das Sortier-Icon einer Spalte.
+   *
+   * @param field - Sortierspalte.
+   * @returns Icon-Name: Pfeil nach oben/unten für die aktive Spalte, sonst `arrows_vertical`.
+   */
   const sortIcon = (field: SortField): 'arrows_vertical' | 'arrow_up' | 'arrow_down' =>
     sort?.field === field ? (sort.direction === 'asc' ? 'arrow_up' : 'arrow_down') : 'arrows_vertical';
 
@@ -113,10 +159,8 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
       data-size="small"
       data-interactive="true"
     >
-      {/* Sortier-Leiste fuer das Karten-Layout: unter sm blendet styles.scss den Tabellenkopf
-          samt Sortier-Knoepfen aus (`#collapseFour table thead`), darum eigene Auswahl + Knopf.
-          Erneutes Antippen bei gleichem Kriterium dreht die Richtung um -- dasselbe
-          toggleSort-Muster wie die Kopf-Knoepfe, die ab sm wieder uebernehmen. */}
+      {/* Sortier-Leiste für das Karten-Layout: unter sm blendet `styles.scss` den Tabellenkopf samt Sortier-Knöpfen aus
+          (`#collapseFour table thead`), darum eigene Auswahl + Knopf. Ab sm ist sie ausgeblendet. */}
       <DBStack
         direction="row"
         wrap={false}
@@ -183,8 +227,7 @@ export function FahrzeitenPanel({ initialRows }: PanelProps): JSX.Element {
               <tr key={index} data-row-index={index}>
                 {fields.map(field => (
                   <td key={field}>
-                    {/* Die Beschriftung steht ab md im Tabellenkopf; darunter (Karten-Layout)
-                        zeigt sie das Feld selbst -- fruehere `input-group-text`-Vorsatzbox. */}
+                    {/* Ab sm steht die Beschriftung im Tabellenkopf; darunter (Karten-Layout) zeigt sie das Feld selbst. */}
                     <DbFeld
                       className="fahrzeit-feld"
                       beschriftungZeigen

@@ -16,10 +16,23 @@ import dayjs from '../date/configDayjs';
 import { invokeHook } from '@/core/hooks';
 import { syncFeatureTabs } from '@/core/orchestration/syncFeatureTabs';
 
+/**
+ * Vergleicht zwei Einstellungsstände per JSON-Serialisierung.
+ *
+ * @param previousData - Stand vor dem Sammeln aus dem Formular.
+ * @param nextData - Neu gesammelter Stand.
+ * @returns `true`, wenn sich die Einstellungen unterscheiden.
+ */
 function hasLocalSettingsChanges(previousData: IVorgabenU, nextData: IVorgabenU): boolean {
   return JSON.stringify(previousData) !== JSON.stringify(nextData);
 }
 
+/**
+ * Ordnet einen Speichern-Button den Ressourcen zu, die er betrifft.
+ *
+ * @param buttonId - Id des Buttons (`btnSaveB`, `btnSaveE`, `btnSaveN`, `btnSaveEA`, `btnSaveEinstellungen`).
+ * @returns Betroffene Ressourcen; bei unbekannter Id alle.
+ */
 function getButtonResources(buttonId: string): TResourceKey[] {
   switch (buttonId) {
     case 'btnSaveB':
@@ -38,10 +51,12 @@ function getButtonResources(buttonId: string): TResourceKey[] {
 }
 
 /**
- * Speichert alle Daten: Tabellen-Änderungen via AutoSave-Flush + Einstellungen via API.
- * Ersetzt den alten einzelnen POST /saveData Call.
+ * Speichert Daten auf Knopfdruck: Tabellen-Änderungen per AutoSave-Flush, Einstellungen (Profil)
+ * per API. Zeigt danach eine Erfolgs- bzw. Fehler-Snackbar; der Button ist währenddessen gesperrt.
+ * Ohne Button oder offline passiert nichts.
+ *
+ * @param button - Der geklickte Speichern-Button (seine Id bestimmt die betroffenen Ressourcen), oder `null`.
  */
-
 export default async function saveDaten(button: HTMLButtonElement | null): Promise<void> {
   if (button === null) return;
 
@@ -97,8 +112,8 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     }
 
     // 2b. Tab-Inhalt von Bereitschaft/EWT/Neben live an aktivierteTabs anpassen — erst jetzt, da die
-    //     Tabellen-Daten durch flushAll() (oben) bereits sicher geflusht sind (sonst würde ein Unmount vor
-    //     dem Flush die betroffene Tabelle aus dem DOM entfernen, bevor ihre Änderungen gesendet wurden).
+    //     Tabellen-Daten durch flushAll() (oben) bereits geflusht sind (sonst würde ein Unmount die
+    //     betroffene Tabelle aus dem DOM entfernen, bevor ihre Änderungen gesendet wurden).
     await syncFeatureTabs((userData ?? previousUserData).Einstellungen?.aktivierteTabs);
 
     // 3. Profil nur bei Änderungen speichern
@@ -115,9 +130,9 @@ export default async function saveDaten(button: HTMLButtonElement | null): Promi
     if (settingsNeedsSync) markResourceSaved('settings');
 
     // 6. Erfolgsmeldung unterdrücken nur, wenn der Button ausschließlich Einstellungen betrifft
-    //    UND diese fehlgeschlagen sind. Sonst wäre bei Tabellen-Buttons (btnSaveB/E/N) die
-    //    feldgenaue Fehler-Snackbar aus saveEinstellungen die einzige Rückmeldung, obwohl die
-    //    eigentlich angeforderten Tabellendaten erfolgreich gespeichert wurden.
+    //    UND diese fehlgeschlagen sind. Bei Tabellen-Buttons wäre sonst die feldgenaue
+    //    Fehler-Snackbar aus saveEinstellungen die einzige Rückmeldung, obwohl die angeforderten
+    //    Tabellendaten erfolgreich gespeichert wurden.
     const settingsOnlyButton = buttonResources.length === 1 && buttonResources[0] === 'settings';
     if (!(settingsOnlyButton && userData === null)) {
       createSnackBar({

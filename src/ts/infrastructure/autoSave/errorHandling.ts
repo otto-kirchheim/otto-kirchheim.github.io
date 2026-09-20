@@ -4,6 +4,15 @@ import type { BulkErrorEntry } from '../api/apiService';
 import type { TResourceKey } from '@/types';
 import type { RowErrorMatch } from './savePipeline';
 
+/**
+ * Markiert die vom Server abgelehnten Zeilen als `error` (Ursprungszustand und Servermeldung bleiben
+ * an der Zeile) und zeichnet die Tabelle neu.
+ *
+ * @param table - Tabelle, in der die Zeilen liegen.
+ * @param rowErrorMatches - Zuordnung Fehler zu Zeile aus `collectRowErrorMatches`.
+ * @param errors - Fehlereintraege der Bulk-Antwort.
+ * @returns Die unveraenderten `errors` (leer, wenn keine Fehler vorlagen).
+ */
 export function markErrorRows(
   table: CustomTable<CustomTableTypes>,
   rowErrorMatches: RowErrorMatch[],
@@ -30,10 +39,12 @@ export const OVERLAP_BLOCK_MESSAGE =
   'Überschneidet sich mit einer noch nicht gespeicherten Löschung. Bitte manuell auf „Speichern" klicken, damit die Löschung mit übernommen wird.';
 
 /**
- * Markiert Zeilen, deren AutoSave wegen Überschneidung mit einer ungesyncten Löschung derselben
- * Ressource zurückgehalten wird (siehe `overlapGuard.ts`). Nutzt dieselbe Fehler-Darstellung wie
- * echte Server-Fehler (rote Zeile, Tooltip, Modal-Banner), damit der Grund für den Nutzer sichtbar
- * ist, ohne die Zeile tatsächlich an den Server zu senden.
+ * Markiert Zeilen, die AutoSave wegen Überschneidung mit einer ungesyncten Löschung zurückhält
+ * (siehe `overlapGuard.ts`), mit der Fehler-Darstellung echter Server-Fehler (rote Zeile, Tooltip,
+ * Modal-Banner). So sieht der Nutzer den Grund, ohne dass die Zeile gesendet wird.
+ *
+ * @param table - Tabelle, in der die Zeilen liegen.
+ * @param rows - Blockierte Zeilen aus `findOverlapBlockedRows`; bei leerer Liste passiert nichts.
  */
 export function markOverlapBlockedRows(table: CustomTable<CustomTableTypes>, rows: Row<CustomTableTypes>[]): void {
   if (rows.length === 0) return;
@@ -48,6 +59,13 @@ export function markOverlapBlockedRows(table: CustomTable<CustomTableTypes>, row
   if (typeof table.drawRows === 'function') table.drawRows();
 }
 
+/**
+ * Baut die Kurzbezeichnung einer Zeile fuer die Fehlerliste: die sichtbaren Spaltenwerte
+ * (ohne Bearbeiten-Spalte, HTML entfernt, ohne Duplikate), hoechstens vier, mit ` · ` verbunden.
+ *
+ * @param row - Tabellenzeile.
+ * @returns Bezeichnung oder leerer String, wenn die Zeile keine Spalten kennt.
+ */
 export function buildRowLabel(row: Row<CustomTableTypes>): string {
   if (!row.columns?.array) return '';
   const parts = row.columns.array
@@ -64,7 +82,21 @@ export function buildRowLabel(row: Row<CustomTableTypes>): string {
   return [...new Set(parts)].slice(0, 4).join(' · ');
 }
 
+/**
+ * Erzeugt das HTML eines Eintrags der Fehlerliste (Operation, Zeilenbezeichnung, Meldung).
+ * Alle Texte werden mit `escapeHtml` maskiert.
+ *
+ * @param err - Fehlereintrag der Bulk-Antwort.
+ * @param globalIdx - Laufende Nummer, falls weder Label noch Id vorliegen (`#n`).
+ * @returns `<li>`-Markup.
+ */
 function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
+  /**
+   * Uebersetzt die Bulk-Operation in die Anzeigebezeichnung.
+   *
+   * @param op - Operation des Fehlers.
+   * @returns Deutsche Bezeichnung.
+   */
   const opLabel = (op: BulkErrorEntry['operation']) =>
     op === 'create' ? 'Erstellen' : op === 'update' ? 'Ändern' : 'Löschen';
   const rowDesc = err.label ?? (err.operation !== 'create' && err.id ? err.id : `#${globalIdx + 1}`);
@@ -82,9 +114,15 @@ function buildErrorItemHtml(err: BulkErrorEntry, globalIdx: number): string {
   </li>`;
 }
 
+/**
+ * Zeigt die Fehler eines Speichervorgangs in einem Dialog. Ist bereits ein Fehlerdialog offen,
+ * werden die Eintraege dort angehaengt und der Zaehler aktualisiert.
+ *
+ * @param _resource - Betroffene Ressource (derzeit ungenutzt).
+ * @param errors - Anzuzeigende Fehlereintraege.
+ */
 export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, errors: BulkErrorEntry[]): void {
-  // Bestehendes offenes Dialog erweitern statt ein gestapeltes neues zu erzeugen.
-  // `[open]` trägt der native `<dialog>`, solange er sichtbar ist.
+  // Offenen Fehlerdialog erweitern statt einen zweiten zu stapeln (`[open]` setzt der native `<dialog>`).
   const existingModal = document.querySelector<HTMLElement>('dialog[open] [data-error-dialog]');
   if (existingModal) {
     const list = existingModal.querySelector('ul');
@@ -136,14 +174,14 @@ export function showErrorDialog(_resource: Exclude<TResourceKey, 'settings'>, er
 }
 
 /**
- * Markiert alle Zeilen eines fehlgeschlagenen HTTP-Requests als Fehler.
- * Greift, wenn der gesamte Request (z.B. per smartSync) mit einer Exception abbricht,
- * statt Einzelfehler in result.errors zurückzugeben.
+ * Markiert alle Zeilen eines fehlgeschlagenen HTTP-Requests als Fehler. Greift, wenn der gesamte
+ * Request mit einer Exception abbricht, statt Einzelfehler in `result.errors` zu liefern.
  *
- * @param changeRows - Row-Snapshot aus `getChangeRows()`, VOR dem Request genommen. Nur
- *   diese Zeilen waren tatsaechlich Teil der fehlgeschlagenen Anfrage - Zeilen, die erst
- *   waehrend des Requests neu angelegt/geaendert wurden, werden NICHT als Fehler markiert
- *   und bleiben stattdessen fuer den naechsten Save-Lauf vorgemerkt (AutoSave-Commit-Race).
+ * @param table - Tabelle, in der die Zeilen liegen.
+ * @param changeRows - Snapshot aus `getChangeRows()`, VOR dem Request genommen. Nur diese Zeilen
+ *   waren Teil der Anfrage; waehrend des Requests neu angelegte/geaenderte Zeilen bleiben fuer den
+ *   naechsten Save-Lauf vorgemerkt (AutoSave-Commit-Race).
+ * @param message - Fehlermeldung, die an jeder betroffenen Zeile haengt.
  */
 export function markFetchErrorRows(
   table: CustomTable<CustomTableTypes>,
@@ -174,6 +212,12 @@ export function markFetchErrorRows(
   if (marked && typeof table.drawRows === 'function') table.drawRows();
 }
 
+/**
+ * Maskiert die HTML-Sonderzeichen `& < > " '` fuer die Einbettung in `innerHTML`.
+ *
+ * @param text - Rohtext.
+ * @returns Maskierter Text.
+ */
 export function escapeHtml(text: string): string {
   const map: Record<string, string> = {
     '&': '&amp;',

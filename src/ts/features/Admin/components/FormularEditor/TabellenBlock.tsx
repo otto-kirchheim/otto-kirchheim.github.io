@@ -14,10 +14,14 @@ import { DBButton, DBCheckbox, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
 /**
- * Schlüssel für eine neu angelegte Spalte, ohne eine bestehende Spalte derselben Tabelle zu
- * überschreiben -- ohne das würde eine zweite frisch angelegte Spalte denselben Default-Schlüssel
- * bekommen (immer `zeilenFelder[0]?.pfad`) und in Bedingungen/Summen die erste stillschweigend
- * verdrängen (siehe `mitBerechnetenSpalten()` in `shared`: gleicher Schlüssel = überschrieben).
+ * Schlüssel für eine neu angelegte Spalte, ohne eine bestehende Spalte derselben Tabelle zu überschreiben.
+ * Sonst bekäme eine zweite frische Spalte denselben Default-Schlüssel (immer `zeilenFelder[0]?.pfad`) und
+ * würde in Bedingungen/Summen die erste stillschweigend verdrängen (`mitBerechnetenSpalten()` in
+ * `infrastructure/pdf/tabellenZeilen.ts`: gleicher Schlüssel = überschrieben).
+ *
+ * @param basis - Wunschschlüssel.
+ * @param spalten - Bestehende Spalten der Tabelle.
+ * @returns `basis`, falls frei, sonst `basis` mit Zähler ab 2.
  */
 function eindeutigerSpaltenSchluessel(basis: string, spalten: Spalte[]): string {
   if (!spalten.some(sp => sp.key === basis)) return basis;
@@ -26,7 +30,11 @@ function eindeutigerSpaltenSchluessel(basis: string, spalten: Spalte[]): string 
   return `${basis}${n}`;
 }
 
-/** Eine Datentabelle: Quelle, Filter, Platz auf DIESER Seite und ihre Spalten. */
+/**
+ * Eine Datentabelle: Quelle, Filter, Platz auf DIESER Seite und ihre Spalten.
+ *
+ * @param props - Tabelle mit Name, aktuelle Seite, Formular, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Ändern, Löschen, Von-Seite-Entfernen, Sonderzeile-Umbenennen).
+ */
 export function TabellenBlock({
   name,
   tabelle,
@@ -55,13 +63,12 @@ export function TabellenBlock({
   onSonderzeileUmbenannt: (alt: string, neu: string) => void;
 }) {
   const zeilenFelder = katalogZeilenFelder(formular, tabelle.quelle);
-  // Bereits konfigurierte berechnete UND Ankreuz-Spalten dieser Tabelle -- der Renderer trägt ihren
-  // Wert (Rechenergebnis bzw. das gedruckte Zeichen, sonst leer) schon unter `key` in die Zeile ein
-  // (`mitBerechnetenSpalten()` in `shared`, sonst liefe eine Bedingung/Summe darüber ins Leere), eine
-  // Ankreuz-Bedingung kann sie also per `feld` direkt wiederverwenden, statt dieselbe Rechnung ein
-  // zweites Mal aufzubauen. Bewusst aus `tabelle.spalten`, nicht dem seitenspezifischen `spalten`
-  // unten: `mitBerechnetenSpalten()` kennt nur die Tabellen-Spalten, eine NUR auf einer Seite
-  // gesetzte Spalte würde also nie befüllt.
+  // Bereits konfigurierte berechnete UND Ankreuz-Spalten dieser Tabelle: der Renderer trägt ihren Wert (Rechen-
+  // ergebnis bzw. gedrucktes Zeichen, sonst leer) schon unter `key` in die Zeile ein (`mitBerechnetenSpalten()`
+  // in `infrastructure/pdf/tabellenZeilen.ts`), eine Ankreuz-Bedingung kann sie also per `feld` direkt
+  // wiederverwenden. Bewusst aus `tabelle.spalten`, nicht aus dem seitenspezifischen `spalten` unten:
+  // `mitBerechnetenSpalten()` kennt nur die Tabellen-Spalten, eine NUR auf einer Seite gesetzte Spalte würde
+  // nie befüllt.
   const andereBerechnete = berechneteEintraege(tabelle.spalten, 'Berechnete/Ankreuz-Spalten dieser Tabelle');
   // Erste Beispielzeile dieser Tabelle -- der Filter ist darin schon angewandt.
   const beispielZeile: Zeile = vorschau.kontext.$alle[name]?.[0] ?? {};
@@ -70,6 +77,11 @@ export function TabellenBlock({
   const letzteAktiv = istGleich(armed, { bereich: 'letzteZeile', tabelle: name });
   const filterWerte = tabelle.filter ? werteAuswahl(tabelle.filter.feld) : [];
 
+  /**
+   * Setzt Felder im Bereich dieser Tabelle auf der aktuellen Seite und legt den Bereich an, falls er fehlt.
+   *
+   * @param next - Zu überschreibende Felder des Seitenbereichs.
+   */
   function setzeBereich(
     next: Partial<Pick<TabellenBereich, 'startY' | 'maxZeilen' | 'spalten' | 'hoehe' | 'sonderzeilen'>>,
   ) {
@@ -86,6 +98,11 @@ export function TabellenBlock({
   const eigeneSpalten = bereich?.spalten !== undefined;
   const spalten = bereich && bereich.spalten ? bereich.spalten : tabelle.spalten;
 
+  /**
+   * Speichert die Spalten im Seitenbereich (bei „eigene je Seite") oder in der Tabelle.
+   *
+   * @param next - Neue Spaltenliste.
+   */
   function setzeSpalten(next: Spalte[]) {
     if (eigeneSpalten) setzeBereich({ spalten: next });
     else onChange({ ...tabelle, spalten: next });
@@ -100,14 +117,29 @@ export function TabellenBlock({
   const zeilenHoehe = bereich?.hoehe ?? tabelle.hoehe;
   const maxZeilen = bereich?.maxZeilen ?? tabelle.maxZeilen;
 
+  /**
+   * Setzt `startY` im Seitenbereich (bei eigener Platzierung) oder in der Tabelle.
+   *
+   * @param next - Neue Startposition (`startY`) in PDF-Punkten.
+   */
   function setzeStartY(next: number) {
     if (eigenePlatzierung) setzeBereich({ startY: next });
     else onChange({ ...tabelle, startY: next });
   }
+  /**
+   * Setzt die Zeilenhöhe im Seitenbereich (bei eigener Platzierung) oder in der Tabelle.
+   *
+   * @param next - Neue Zeilenhöhe in PDF-Punkten.
+   */
   function setzeZeilenHoehe(next: number) {
     if (eigenePlatzierung) setzeBereich({ hoehe: next });
     else onChange({ ...tabelle, hoehe: next });
   }
+  /**
+   * Setzt die maximale Zeilenzahl im Seitenbereich (bei eigener Platzierung) oder in der Tabelle.
+   *
+   * @param next - Neue Zeilenzahl.
+   */
   function setzeMaxZeilen(next: number) {
     if (eigenePlatzierung) setzeBereich({ maxZeilen: next });
     else onChange({ ...tabelle, maxZeilen: next });

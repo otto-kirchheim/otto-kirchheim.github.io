@@ -1,17 +1,16 @@
 // Reihenfolge der Cascade Layers -- muss als allererstes CSS geladen werden, damit die
 // Prioritaet unabhaengig von der Import-Reihenfolge feststeht.
 //
-// Bewusstes 3-Stufen-Modell (Phase H/I):
+// 3-Stufen-Modell:
 //   1. @layer db-ux  -- das DB-UX-Bundle (`db-theme` + `core-components`)
 //   2. @layer app    -- eigene Hilfsklassen und Gegenregeln (`utilities.scss`); schlagen db-ux
-//   3. unlayered     -- `styles.scss` + `customtable.css`: App-spezifische Regeln, die auch
+//   3. unlayered     -- `styles.scss` + `customtable.scss`: App-spezifische Regeln, die auch
 //                       gegen eine Hilfsklasse gewinnen sollen. Schlagen alle Layer.
 //
-// `customtable.css` bleibt bewusst UNlayered (Phase-I-Entscheidung I.2): ein Verschieben nach
-// @layer app wuerde seine `!important`-Regeln (Hintergrund geloeschter/fehlerhafter Zeilen)
-// hinter jedes `!important` in @layer db-ux fallen lassen -- bei `!important` kehrt sich die
-// Layer-Rangfolge um -- und das unlayered `styles.scss` (`.db-table[data-interactive] tr:hover`)
-// wuerde die Warnfarbe der Fehlerzeilen-Hover ueberschreiben. Sauber schichten hiesse
-// styles.scss + customtable.css gemeinsam umziehen und jeden `!important`-/Spezifitaets-
-// Konflikt einzeln pruefen -- ein eigenes Vorhaben, kein Cleanup-Einzeiler.
+// `customtable.scss` bleibt bewusst UNlayered: In @layer app fielen seine `!important`-Regeln
+// (Hintergrund geloeschter/fehlerhafter Zeilen) hinter jedes `!important` in @layer db-ux --
+// bei `!important` kehrt sich die Layer-Rangfolge um --, und das unlayered `styles.scss`
+// (`.db-table[data-interactive='true'] > table > tbody > tr:hover`) wuerde die Warnfarbe der
+// Fehlerzeilen-Hover ueberschreiben. Beide gemeinsam zu schichten hiesse, jeden `!important`-/
+// Spezifitaets-Konflikt einzeln zu pruefen.
 @layer db-ux, app;

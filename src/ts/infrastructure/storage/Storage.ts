@@ -54,14 +54,22 @@ type DataWithTimestamp<T = unknown> = { data: T; timestamp: number };
 class Storage implements IStorage {
   private static instance: Storage;
 
+  /**
+   * Liefert die einzige Instanz (Singleton, lazy angelegt).
+   *
+   * @returns Die gemeinsame `Storage`-Instanz.
+   */
   static getInstance(): Storage {
     if (!Storage.instance) Storage.instance = new Storage();
     return Storage.instance;
   }
 
   /**
-   * Speichert einen Wert.
-   * Bei Ressourcen-Keys wird automatisch in `{ data, timestamp }` gewrappt.
+   * Speichert einen Wert als JSON im `localStorage`. Bei Ressourcen-Keys wird automatisch in
+   * `{ data, timestamp }` gewrappt (Timestamp = jetzt).
+   *
+   * @param key - Storage-Key.
+   * @param value - Zu speichernder Wert.
    */
   set<T>(key: TStorageData, value: T): void {
     if (RESOURCE_KEYS.has(key)) {
@@ -73,7 +81,11 @@ class Storage implements IStorage {
   }
 
   /**
-   * Speichert einen Ressourcen-Wert mit explizitem Timestamp (z.B. vom Server).
+   * Speichert einen Wert immer als `{ data, timestamp }` mit explizitem Timestamp (z.B. vom Server).
+   *
+   * @param key - Storage-Key.
+   * @param value - Zu speichernder Wert.
+   * @param timestamp - Zeitstempel der Daten in ms.
    */
   setWithTimestamp<T>(key: TStorageData, value: T, timestamp: number): void {
     const wrapped: DataWithTimestamp<T> = { data: value, timestamp };
@@ -81,7 +93,10 @@ class Storage implements IStorage {
   }
 
   /**
-   * Gibt den Timestamp einer Ressource zurück (0 falls nicht vorhanden oder kein Ressourcen-Key).
+   * Gibt den Timestamp einer Ressource zurück.
+   *
+   * @param key - Storage-Key.
+   * @returns Der Timestamp in ms; 0, wenn kein Ressourcen-Key, nicht vorhanden oder ohne Wrapper.
    */
   getTimestamp(key: TStorageData): number {
     if (!RESOURCE_KEYS.has(key)) return 0;
@@ -97,13 +112,36 @@ class Storage implements IStorage {
   }
 
   /**
-   * Liest einen Wert.
-   * Bei Ressourcen-Keys wird automatisch `{ data, timestamp }` unwrappt → nur `data` zurückgegeben.
-   * Altbestände (ohne Wrapper) werden automatisch migriert.
+   * Liest einen Wert; `null`, wenn der Key fehlt.
+   *
+   * @param key - Storage-Key.
    */
   get<T>(key: TStorageData): T | null;
+  /**
+   * Liest einen Wert; wirft (mit Snackbar), wenn der Key fehlt.
+   *
+   * @param key - Storage-Key.
+   * @param checked - Immer `true`.
+   */
   get<T>(key: TStorageData, checked: true): T;
+  /**
+   * Liest einen Wert mit Prüfung und/oder Ersatzwert.
+   *
+   * @param key - Storage-Key.
+   * @param options - `check`: wirft, wenn der Key fehlt; `default`: Ersatzwert, wenn er fehlt.
+   */
   get<T>(key: TStorageData, options: { check?: true; default?: T }): T;
+  /**
+   * Liest einen Wert. Bei Ressourcen-Keys wird `{ data, timestamp }` automatisch entpackt (nur `data`
+   * kommt zurück); Altbestände ohne Wrapper und doppelt gewrappte Werte werden dabei korrigiert und
+   * neu gespeichert. Nicht-JSON-Strings werden als JSON zurückgeschrieben.
+   *
+   * @param key - Storage-Key.
+   * @param optionsOrChecked - `true` oder `{ check: true }`: wirft (mit Snackbar), wenn der Key fehlt.
+   *   `{ default }`: Ersatzwert, wenn der Key fehlt.
+   * @returns Der gespeicherte Wert; ohne Vorgabe `null`, wenn der Key fehlt.
+   * @throws {Error} Wenn der Key fehlt und `true`/`check` gesetzt ist (ohne `default`).
+   */
   get<T>(key: TStorageData, optionsOrChecked?: { check?: true; default?: T } | true): T | null {
     if (optionsOrChecked !== true && optionsOrChecked !== undefined) {
       if (optionsOrChecked.default !== undefined && !this.check(key)) {
@@ -141,22 +179,47 @@ class Storage implements IStorage {
     return parsed as T;
   }
 
+  /**
+   * Entfernt einen Key.
+   *
+   * @param key - Storage-Key.
+   */
   remove(key: TStorageData): void {
     localStorage.removeItem(key);
   }
 
+  /** Leert den gesamten `localStorage` (nicht nur die Keys dieser App). */
   clear(): void {
     localStorage.clear();
   }
 
+  /**
+   * Prüft, ob unter dem Key ein nicht-leerer Wert liegt.
+   *
+   * @param key - Storage-Key.
+   * @returns `true`, wenn der Rohwert vorhanden und nicht der leere String ist.
+   */
   check(key: string extends TStorageData ? TStorageData : string): boolean {
     return Boolean(localStorage.getItem(key));
   }
 
+  /**
+   * Anzahl der Einträge im `localStorage`.
+   *
+   * @returns Die Anzahl aller Keys, nicht nur der dieser App.
+   */
   size(): number {
     return localStorage.length;
   }
 
+  /**
+   * Vergleicht den gespeicherten Wert mit `compareValue`, unabhängig von der Reihenfolge der
+   * Objekt-Keys.
+   *
+   * @param key - Storage-Key.
+   * @param compareValue - Vergleichswert.
+   * @returns `true` bei Gleichheit; `false` bei fehlendem Key oder Fehler beim Vergleich.
+   */
   compare<T>(key: TStorageData, compareValue: T): boolean {
     const storedValue = localStorage.getItem(key);
     if (storedValue === null) return false;
@@ -169,6 +232,13 @@ class Storage implements IStorage {
     }
   }
 
+  /**
+   * Serialisiert einen Wert kanonisch: Objekt-Keys rekursiv sortiert, damit gleiche Inhalte gleich
+   * aussehen.
+   *
+   * @param value - Beliebiger JSON-Wert.
+   * @returns Der kanonische JSON-String.
+   */
   private normalizeAndStringify<T>(value: T): string {
     if (value === null || value === undefined) return JSON.stringify(value);
     if (typeof value !== 'object') return JSON.stringify(value);
@@ -187,11 +257,24 @@ class Storage implements IStorage {
     return JSON.stringify(sorted);
   }
 
+  /**
+   * Migriert einen nicht als JSON gespeicherten Rohwert, indem er über `set` neu (als JSON) abgelegt wird.
+   *
+   * @param key - Storage-Key.
+   * @param value - Der gelesene Rohwert.
+   * @returns `value` unverändert.
+   */
   private convertToJson<T>(key: TStorageData, value: T): T {
     this.set(key, value);
     return value;
   }
 
+  /**
+   * Prüft, ob ein Wert ein parsbarer JSON-String ist.
+   *
+   * @param str - Zu prüfender Wert.
+   * @returns `true` bei String, der sich mit `JSON.parse` lesen lässt.
+   */
   private isJsonString(str: unknown): boolean {
     if (typeof str !== 'string') return false;
     try {
@@ -202,6 +285,12 @@ class Storage implements IStorage {
     }
   }
 
+  /**
+   * Zeigt den Fehler als Snackbar an und reicht ihn zum Werfen zurück (`throw this.…`).
+   *
+   * @param err - Der Fehler.
+   * @returns `err` unverändert.
+   */
   private showSnackbarAndThrowError(err: Error): Error {
     createSnackBar({
       message: `Fehler: ${err.message}`,

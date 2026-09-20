@@ -1,6 +1,12 @@
 import type { IDatenEWT } from '@/types';
 import dayjs from '@/infrastructure/date/configDayjs';
 
+/**
+ * Bestimmt das Zeitfenster der Arbeitszeit (`beginE`–`endeE`) eines EWT-Eintrags für Überschneidungsprüfungen.
+ *
+ * @param entry - EWT-Eintrag.
+ * @returns Start und Ende (Ende ggf. am Folgetag); null, wenn Beginn/Ende fehlen oder der Tag ungültig ist.
+ */
 export default function getEwtWindow(entry: IDatenEWT): { start: dayjs.Dayjs; end: dayjs.Dayjs } | null {
   if (!entry.beginE || !entry.endeE) return null;
 

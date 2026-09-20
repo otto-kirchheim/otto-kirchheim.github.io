@@ -4,6 +4,13 @@ import { default as setLoading } from '@/infrastructure/ui/setLoading';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import setMonatJahr from './setMonatJahr';
 
+/**
+ * Wählt Monat und Jahr aus: merkt sie im Storage (Jahreswechsel wird vermerkt), aktualisiert die Überschriften und lädt bei angemeldetem Benutzer die Daten. Offline passiert nichts.
+ *
+ * @param monat - Monat 1-12; ohne Angabe aus `#Monat`.
+ * @param jahr - Jahr; ohne Angabe aus `#Jahr`.
+ * @throws {Error} Wenn ein benötigtes Eingabefeld fehlt.
+ */
 export default function selectYear(monat?: number, jahr?: number): void {
   // Kein eigener Offline-Hinweis hier: `setOffline.ts` zeigt bereits eine dauerhafte,
   // globale Banner fuer die ganze Session, solange `navigator.onLine === false`.

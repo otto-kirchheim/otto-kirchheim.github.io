@@ -4,6 +4,12 @@ import { createShowElement3, createTagElement } from '@/components/showModalHelp
 import type { CustomHTMLDivElement, IDatenEA } from '@/types';
 import { DBHeadingH4 } from '@db-ux/react-core-components';
 
+/**
+ * Öffnet das schreibgeschützte Modal mit Tag, Dauer, Tätigkeit und Entgeltgruppe einer EA-Zeile.
+ *
+ * @param row - Anzuzeigende EA-Zeile.
+ * @param titel - Modal-Titel.
+ */
 export default function ShowModalEA(row: Row<IDatenEA>, titel: string): void {
   const modal: CustomHTMLDivElement<IDatenEA> = showModal(
     <MyDivModal

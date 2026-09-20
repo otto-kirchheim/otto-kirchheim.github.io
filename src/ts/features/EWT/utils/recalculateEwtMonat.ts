@@ -12,6 +12,13 @@ type ewtBerechnenType = {
   tableE: CustomTable<IDatenEWT>;
 };
 
+/**
+ * Berechnet die Zeiten aller EWT-Einträge eines Monats neu, lädt sie in die Tabelle, persistiert
+ * und meldet `data:changed` sowie eine Erfolgs-Snackbar.
+ *
+ * @param params - Objekt mit `monat` (1-12), `daten` (EWT-Daten des Monats), `vorgabenU` und `tableE`.
+ * @throws {Error} Wenn `monat`, `daten` oder `vorgabenU` fehlen.
+ */
 export default function recalculateEwtMonat({ monat, daten, vorgabenU, tableE }: ewtBerechnenType): void {
   if (!monat || !daten || !vorgabenU) throw new Error('Daten fehlen');
 

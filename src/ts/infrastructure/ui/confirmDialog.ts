@@ -1,10 +1,5 @@
 import { erzeugeDbDialog } from './dbDialog';
 
-/**
- * Async Dialog-Ersatz für window.confirm() (DB-Drawer über nativem `<dialog>`).
- * Gibt ein Promise<boolean> zurück (true = bestätigt, false = abgebrochen).
- */
-
 export interface ConfirmDialogOptions {
   /** Titel im Modal-Header (default: 'Bestätigung') */
   title?: string;
@@ -12,15 +7,21 @@ export interface ConfirmDialogOptions {
   confirmLabel?: string;
   /** Text des Abbrechen-Buttons (default: 'Abbrechen') */
   cancelLabel?: string;
-  /**
-   * Semantik des Bestätigungs-Buttons (default: 'critical'). Steuert die Farbe des
-   * DB-Buttons; `undefined` laesst ihn neutral.
-   */
+  /** Semantik des Bestätigungs-Buttons (default: 'critical'); steuert `data-color` des DB-Buttons. */
   confirmColor?: 'critical' | 'warning' | 'successful' | 'informational';
   /** Variante des Bestätigungs-Buttons (default: 'filled'). */
   confirmVariant?: 'brand' | 'filled' | 'outlined' | 'ghost';
 }
 
+/**
+ * Async-Ersatz für `window.confirm()` als DB-Drawer über einem nativen `<dialog>`. `message`, `title`
+ * und Labels gehen als HTML in den Dialog (nur `\n` wird zu `<br>`), dürfen also keine
+ * ungeprüften Nutzereingaben enthalten.
+ *
+ * @param message - Dialogtext.
+ * @param options - Titel, Button-Beschriftungen und -Look (siehe `ConfirmDialogOptions`).
+ * @returns Promise: `true` bei Bestätigung, `false` bei Abbrechen/Schließen/Escape/Hintergrundklick.
+ */
 export function confirmDialog(message: string, options: ConfirmDialogOptions = {}): Promise<boolean> {
   const {
     title = 'Bestätigung',

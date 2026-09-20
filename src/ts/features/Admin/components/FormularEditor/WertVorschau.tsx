@@ -1,4 +1,8 @@
-/** Gerenderter Beispielwert unter einem Eintrag; leere Werte werden als solche kenntlich gemacht. */
+/**
+ * Gerenderter Beispielwert unter einem Eintrag; leere Werte werden als solche kenntlich gemacht.
+ *
+ * @param props - `text` ist der anzuzeigende Wert.
+ */
 export function WertVorschau({ text }: { text: string }) {
   return (
     <div className="small text-body-secondary mb-0">

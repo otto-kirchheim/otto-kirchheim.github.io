@@ -3,9 +3,8 @@ import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 
 /**
- * React 19 verlangt pro Container genau eine `Root`. Preacts `render(vnode, el)` war dagegen
- * beliebig oft auf demselben Element aufrufbar. Der Cache bildet das nach: gleicher Container
- * -> gleiche Root, `unmount` raeumt den Eintrag wieder ab.
+ * React 19 verlangt pro Container genau eine `Root`. Der Cache erlaubt beliebig viele `mount()`-Aufrufe
+ * je Container: gleicher Container -> gleiche Root, `unmount` raeumt den Eintrag wieder ab.
  */
 const roots = new WeakMap<Element | DocumentFragment, Root>();
 
@@ -26,6 +25,8 @@ let imFlush = false;
  * Tab-Wechsel, der aus einem gerade per `flushSync` gemounteten Baum heraus ausgeloest
  * wird) lassen das innere `flushSync` weg, statt zu warnen -- die aeussere Flush-Phase
  * arbeitet die Sync-Lane ohnehin mit ab.
+ *
+ * @param fn - Auszufuehrende Funktion (loest React-Updates aus).
  */
 export function flushExtern(fn: () => void): void {
   if (imFlush) {
@@ -44,14 +45,16 @@ export function flushExtern(fn: () => void): void {
 /**
  * Rendert `node` in `container`.
  *
- * Der Aufruf ist per `flushSync` bewusst synchron: der bestehende Code (Bootstrap-Modals,
- * CustomTable, Signatur-Dialog) liest direkt nach dem Rendern aus dem DOM. Preacts `render`
- * war synchron, `root.render` ist es nicht -- ohne `flushSync` liefen diese Stellen ins Leere.
+ * Der Aufruf ist per `flushSync` bewusst synchron: der bestehende Code (Modals, CustomTable,
+ * Signatur-Dialog) liest direkt nach dem Rendern aus dem DOM, `root.render` allein ist asynchron.
  *
- * Verschachtelte Aufrufe gibt es seit Phase M regelmaessig: `CustomTable.draw()` mountet, und aus
+ * Verschachtelte Aufrufe kommen regelmaessig vor: `CustomTable.draw()` mountet, und aus
  * einer so gerenderten Tabelle heraus oeffnet ein Klick per `showModal()` den naechsten Mount.
  * Der innere Aufruf laesst `flushSync` deshalb weg -- React arbeitet die Sync-Lane des neuen
  * Roots beim Verlassen des aeusseren `flushSync` mit ab.
+ *
+ * @param container - DOM-Element, in das gerendert wird; die `Root` wird je Container wiederverwendet.
+ * @param node - Zu rendernder React-Knoten.
  */
 export function mount(container: Element | DocumentFragment, node: ReactNode): void {
   let root = roots.get(container);
@@ -64,8 +67,10 @@ export function mount(container: Element | DocumentFragment, node: ReactNode): v
 }
 
 /**
- * Haengt den Container ab und gibt die Root frei. Ersetzt Preacts `render(null, el)`.
- * Ohne Root ist der Aufruf ein No-op, mehrfaches Abhaengen also unkritisch.
+ * Haengt den Container ab und gibt die Root frei. Ohne Root ist der Aufruf ein No-op,
+ * mehrfaches Abhaengen also unkritisch.
+ *
+ * @param container - Zuvor mit `mount()` befuellter Container.
  */
 export function unmount(container: Element | DocumentFragment): void {
   const root = roots.get(container);

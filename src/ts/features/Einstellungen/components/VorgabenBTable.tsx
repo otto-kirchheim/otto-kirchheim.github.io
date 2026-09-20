@@ -13,6 +13,12 @@ type ProfileTemplateVorgabenBResponse = {
   template?: { VorgabenB?: Array<{ key: string; value: Record<string, unknown> }> };
 };
 
+/**
+ * Laedt die `VorgabenB` eines Profil-Templates vom Server (`profile-templates/code/<code>`).
+ *
+ * @param code - Kuerzel des Templates (Erste Taetigkeitsstaette oder `muster`); wird kleingeschrieben abgefragt.
+ * @returns Vorgaben des Templates; `null` bei Fehler, fehlendem oder leerem Template.
+ */
 async function fetchTemplateVorgabenB(code: string): Promise<IVorgabenUvorgabenB[] | null> {
   try {
     const result = await apiFetch<undefined, ProfileTemplateVorgabenBResponse>(
@@ -26,8 +32,21 @@ async function fetchTemplateVorgabenB(code: string): Promise<IVorgabenUvorgabenB
   }
 }
 
+/**
+ * Zellen-Parser fuer Ja/Nein-Spalten.
+ *
+ * @param value - Wahrheitswert der Zelle.
+ * @returns `Ja` bei truthy, sonst `Nein`.
+ */
 const trueParser = (value: unknown): string => (value ? 'Ja' : 'Nein');
 
+/**
+ * Zellen-Parser fuer Wochentag/Woche/Zeit-Werte (`{ tag, zeit, Nwoche }`).
+ *
+ * @param value - Zellwert; `tag` 1-7 (0 und 7 sind Sonntag), `Nwoche` waehlt Woche 2.
+ * @param option - `false` trennt mit ` | ` statt Zeilenumbruch.
+ * @returns Text wie `Mo W1` plus Trenner und Zeit (`-` ohne Zeit).
+ */
 const weekdayParser = (value: unknown, option: unknown = true): string => {
   const v = value as { tag: number; zeit?: string; Nwoche?: boolean };
   const umbruch = option !== false;
@@ -40,23 +59,25 @@ const weekdayParser = (value: unknown, option: unknown = true): string => {
   return `${weekday} ${week}${separator}${v.zeit || '-'}`;
 };
 
+/**
+ * Zellen-Parser der Nachtschicht-Spalten; formatiert wie `weekdayParser`.
+ *
+ * @param value - Zellwert `{ tag, zeit, Nwoche }`.
+ * @param option - `false` trennt mit ` | ` statt Zeilenumbruch.
+ * @returns Formatierter Text.
+ */
 const nachtRangeParser = (value: unknown, option: unknown = true): string => {
   return weekdayParser(value, option);
 };
 
 /**
- * `.instance`-Anker fuer `#tableVE` (Achse B des `useReducer`-Umbaus). Eigene, kleine
- * Feature-Komponente statt Teil von `infrastructure/ui/EinstellungenTab.tsx` -- die Huelle
- * dort ist bewusst infrastructure-schichtig und darf laut Architektur (`CLAUDE.md`) nicht auf
- * `features/` zugreifen (analog `PersoenlicheDatenPanel`, das aus demselben Grund schon als
- * eigene Feature-Komponente eingebunden ist). `generateEingabeMaskeEinstellungen.ts`/
- * `generateEingabeTabelleEinstellungenVorgabenB.ts` bleiben unveraendert `document.querySelector
- * ('#tableVE')?.instance`-basiert und laden nur noch Daten (`rows.load()`) -- die Instanz wird
- * seit Achse B ausschliesslich hier, einmalig bei Mount, konstruiert.
+ * Tabelle `#tableVE` (Voreinstellungen Bereitschaft) und Anker ihrer `.instance` (Achse B, `useCustomTableState`).
+ * Eigene Feature-Komponente, weil `infrastructure/ui/EinstellungenTab.tsx` laut Schichtenregel nicht auf `features/`
+ * zugreifen darf. Die Instanz entsteht nur hier, einmalig beim Mount; `generateEingabeTabelleEinstellungenVorgabenB.ts`
+ * findet sie ueber `#tableVE` und laedt nur Zeilen (`rows.load()`).
  */
 export default function VorgabenBTable() {
-  // Nur beim allerersten Mount gelesen (siehe `useCustomTableState()`s Docblock) -- deckt sich
-  // mit dem bisherigen Erstanlage-Zeitpunkt von `generateEingabeTabelleEinstellungenVorgabenB()`.
+  // Nur beim ersten Mount gelesen: `useCustomTableState()` wertet `options` nur beim ersten Aufruf aus.
   const initialVorgabenB = Storage.check('VorgabenU') ? Storage.get<IVorgabenU>('VorgabenU', true).VorgabenB : {};
 
   const ftVE = useCustomTableState<IVorgabenUvorgabenB>('tableVE', {
@@ -100,15 +121,31 @@ export default function VorgabenBTable() {
     rows: [...Object.values(initialVorgabenB ?? {})],
     editing: {
       enabled: true,
+      /** Oeffnet den Editor fuer eine neue Voreinstellung. */
       addRow: () => {
         EditorModalVE(ftVE, 'Voreinstellung hinzufügen');
       },
+      /**
+       * Oeffnet den Editor fuer eine bestehende Voreinstellung.
+       *
+       * @param row - Zu bearbeitende Zeile.
+       */
       editRow: row => {
         EditorModalVE(row, 'Voreinstellung bearbeiten');
       },
+      /**
+       * Zeigt eine Voreinstellung schreibgeschuetzt an.
+       *
+       * @param row - Anzuzeigende Zeile.
+       */
       showRow: row => {
         ShowModalVE(row, 'Voreinstellung anzeigen');
       },
+      /**
+       * Loescht eine Voreinstellung; der Standard ist nicht loeschbar (Hinweis, erst neuen Standard setzen).
+       *
+       * @param row - Zu loeschende Zeile.
+       */
       deleteRow: row => {
         if (!row.cells.standard) {
           row.deleteRow();
@@ -122,6 +159,7 @@ export default function VorgabenBTable() {
           });
         }
       },
+      /** Fragt per Snackbar nach und leert bei "Ja" die Tabelle. */
       deleteAllRows: () => {
         createSnackBar({
           message: 'Möchtest du wirklich alle Zeilen löschen?',
@@ -133,6 +171,7 @@ export default function VorgabenBTable() {
           actions: [
             {
               text: 'Ja',
+              /** Leert die Tabelle und gibt die per `buttonDisable` gesperrten Knoepfe wieder frei. */
               function: () => {
                 ftVE.rows.load([]);
                 buttonDisable(false);
@@ -147,6 +186,10 @@ export default function VorgabenBTable() {
         {
           text: 'Standardeinstellungen',
           look: { variant: 'filled' },
+          /**
+           * Ersetzt die Tabelle durch das Template der Ersten Taetigkeitsstaette (Fallback `muster`, dann
+           * `BereitschaftsEinsatzZeiträume`) und speichert die Einstellungen.
+           */
           function: async () => {
             const code = Storage.check('VorgabenU')
               ? Storage.get<IVorgabenU>('VorgabenU', true).Pers.ErsteTkgSt.toLowerCase()

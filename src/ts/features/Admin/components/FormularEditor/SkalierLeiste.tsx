@@ -18,6 +18,11 @@ type Props = {
   onAbbrechen: () => void;
 };
 
+/**
+ * Zahlenfeld für einen Skalier-Parameter; ungültige Eingaben werden verworfen.
+ *
+ * @param props - Beschriftung, aktueller Wert, Schrittweite und `onChange`, das nur endliche Zahlen erhält.
+ */
 function ZahlEingabe({
   label,
   wert,
@@ -48,11 +53,19 @@ function ZahlEingabe({
 }
 
 /**
- * Inline-Leiste über dem Canvas (kein Modal, damit die Live-Vorschau der Rechtecke sichtbar
- * bleibt). Jede Koordinate wird `wert * faktor + versatz`. Beim „Anwenden" landen die neuen Zahlen
- * in der Konfiguration; danach wird die Leiste geschlossen.
+ * Inline-Leiste über dem Canvas (kein Modal, damit die Live-Vorschau der Rechtecke sichtbar bleibt).
+ * Jede Koordinate wird `wert * faktor + versatz`. Beim „Anwenden" landen die neuen Zahlen in der
+ * Konfiguration; danach wird die Leiste geschlossen.
+ *
+ * @param props - Alte/neue Seitenmaße, Faktoren, Kopplung X=Y, Drehwinkel sowie `onChange`, `onAnwenden` und `onAbbrechen`.
  */
 export function SkalierLeiste({ alt, neu, faktoren, gekoppelt, drehung, onChange, onAnwenden, onAbbrechen }: Props) {
+  /**
+   * Meldet die Faktoren samt Kopplung an `onChange`.
+   *
+   * @param teil - Zu ändernde Faktoren.
+   * @param g - Kopplung X=Y; Standard ist der aktuelle Wert.
+   */
   const setze = (teil: Partial<SkalierFaktoren>, g = gekoppelt) =>
     onChange({ faktoren: { ...faktoren, ...teil }, gekoppelt: g });
 

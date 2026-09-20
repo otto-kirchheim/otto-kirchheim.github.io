@@ -28,6 +28,11 @@ import { DbAuswahl, DbFeld } from '@/components';
 
 type Props = { onNavigateToUser?: (userId: string) => void };
 
+/**
+ * Admin-Browser für Rohdaten der Ressourcen: Tabs je Ressource, Filter (Benutzer, Jahr, Monat), Seitennavigation sowie Bearbeiten und Löschen einzelner Datensätze.
+ *
+ * @param props - Optional `onNavigateToUser`: wechselt zum Profil eines Benutzers.
+ */
 export function AdminResourceBrowser({ onNavigateToUser }: Props) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [page, setPage] = useState<AdminPage | null>(null);
@@ -54,6 +59,13 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
       .catch(() => {});
   }, []);
 
+  /**
+   * Lädt eine Seite der Ressource mit dem Filter; Fehler erscheinen als Meldung über der Tabelle.
+   *
+   * @param pageNum - Seitennummer (ab 1).
+   * @param filter - Anzuwendender Filter.
+   * @param endpointOverride - Endpunkt statt dem der aktiven Ressource (für den Tabwechsel, bevor der State aktualisiert ist).
+   */
   function loadPageWith(pageNum: number, filter: FilterParams, endpointOverride?: string) {
     const ep = endpointOverride ?? resource.endpoint;
     setLoading(true);
@@ -88,10 +100,18 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     setActiveFilter({});
   }
 
+  /**
+   * Lädt eine Seite mit dem zuletzt übernommenen Filter.
+   *
+   * @param pageNum - Seitennummer (ab 1).
+   */
   function loadPage(pageNum: number) {
     loadPageWith(pageNum, activeFilter);
   }
 
+  /**
+   * Übernimmt die Filter-Eingaben und lädt ab Seite 1.
+   */
   function applyFilter() {
     const filter: FilterParams = {
       userId: filterUserId || undefined,
@@ -104,6 +124,9 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     loadPageWith(1, filter);
   }
 
+  /**
+   * Leert Eingaben und übernommenen Filter und lädt ab Seite 1.
+   */
   function resetFilter() {
     setFilterUserId('');
     setUserSearchText('');
@@ -129,14 +152,28 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIdx]);
 
+  /**
+   * Öffnet den Bearbeiten-Dialog für einen Datensatz.
+   *
+   * @param doc - Datensatz, der bearbeitet wird.
+   */
   function openEdit(doc: Record<string, unknown>) {
     setEdit(buildEditState(doc, resource.endpoint));
   }
 
+  /**
+   * Schließt den Bearbeiten-Dialog.
+   */
   function closeEdit() {
     setEdit(null);
   }
 
+  /**
+   * Springt zu einem verlinkten Datensatz einer anderen Ressource und öffnet ihn im Bearbeiten-Dialog; ist er nicht auffindbar, erscheint eine Fehlermeldung.
+   *
+   * @param resourceIdx - Index der Ziel-Ressource in `RESOURCES`.
+   * @param docId - Id des verlinkten Datensatzes.
+   */
   async function navigateToEntry(resourceIdx: number, docId: string) {
     closeEdit();
     setActiveIdx(resourceIdx);
@@ -149,6 +186,12 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     }
   }
 
+  /**
+   * Übernimmt JSON-Text eines Feldes; bei ungültigem JSON bleibt der Wert unverändert und ein Fehler wird gemerkt.
+   *
+   * @param key - Feldname.
+   * @param raw - Roher JSON-Text aus dem Editor.
+   */
   function handleTextareaChange(key: string, raw: string) {
     if (!edit) return;
     const rawStrings = { ...edit.rawStrings, [key]: raw };
@@ -164,11 +207,20 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     setEdit({ ...edit, values, rawStrings, jsonErrors });
   }
 
+  /**
+   * Übernimmt den geänderten Wert eines Feldes in den Bearbeitungsstand.
+   *
+   * @param key - Feldname.
+   * @param val - Neuer Wert.
+   */
   function handleValueChange(key: string, val: unknown) {
     if (!edit) return;
     setEdit({ ...edit, values: { ...edit.values, [key]: val } });
   }
 
+  /**
+   * Speichert den bearbeiteten Datensatz ohne unveränderbare/schreibgeschützte Felder und ohne `User` und ersetzt ihn in der Liste; bei JSON-Fehlern wird nicht gespeichert.
+   */
   async function saveEdit() {
     if (!edit) return;
     if (Object.keys(edit.jsonErrors).length > 0) {
@@ -195,6 +247,11 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
     }
   }
 
+  /**
+   * Löscht einen Datensatz nach Bestätigung und entfernt ihn aus der Liste.
+   *
+   * @param doc - Zu löschender Datensatz.
+   */
   async function handleDelete(doc: Record<string, unknown>) {
     const confirmed = await confirmDialog(`ID: ${String(doc['_id'])}`, {
       title: 'Eintrag löschen?',
@@ -218,7 +275,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
 
   return (
     <div>
-      {/* Resource Tabs */}
       <nav className="db-navigation admin-unternavigation mb-3" role="tablist" aria-label="Ressourcen">
         <menu>
           {RESOURCES.map((r, i) => (
@@ -237,7 +293,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </menu>
       </nav>
 
-      {/* Filter-Panel */}
       <DBCard className="bg-body-secondary border-0 mb-3" spacing="none">
         <div className="py-2 px-3">
           <div className="d-flex flex-wrap gap-2 align-items-end">
@@ -301,7 +356,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
               </DbAuswahl>
             </div>
 
-            {/* Monat */}
             <div style={{ minWidth: '130px' }}>
               <DbAuswahl
                 beschriftung="Monat"
@@ -370,7 +424,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </DBNotification>
       )}
 
-      {/* Tabelle */}
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
         <table className="align-middle mb-0">
           <thead>
@@ -481,7 +534,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </table>
       </div>
 
-      {/* Pagination */}
       <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
         <small className="text-muted">
           {page ? `${page.total} Einträge · Seite ${currentPage}/${totalPages}` : ''}
@@ -519,7 +571,6 @@ export function AdminResourceBrowser({ onNavigateToUser }: Props) {
         </DBButton>
       </DBStack>
 
-      {/* Edit Modal – Portal: sichtbar auch in versteckten Tab-Panes */}
       {edit && (
         <AdminResourceEditModal
           edit={edit}

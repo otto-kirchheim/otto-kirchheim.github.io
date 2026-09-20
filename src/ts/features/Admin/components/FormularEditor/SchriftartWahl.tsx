@@ -19,18 +19,31 @@ type Props = {
 };
 
 /**
- * Formularweite Schrift: eine Grundfamilie plus optionale Abweichung je Schnitt. Nötig, weil eine
- * in der Vorlage eingebettete Schrift oft nicht alle Schnitte mitbringt (z.B. nur Regular + Bold) --
- * für den fehlenden Schnitt lässt sich hier gezielt eine Standard-14-Familie wählen.
+ * Formularweite Schrift: eine Grundfamilie plus optionale Abweichung je Schnitt. Nötig, weil eine in der
+ * Vorlage eingebettete Schrift oft nicht alle Schnitte mitbringt (z.B. nur Regular + Bold) -- für den
+ * fehlenden Schnitt lässt sich gezielt eine Standardfamilie wählen.
+ *
+ * @param props - Aktuelle Schriftart, Vorlagen-Familien und `onChange` mit der neuen (verdichteten) Schriftart.
  */
 export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
   const objekt = value && typeof value === 'object' ? value : undefined;
   const basis = familieFuerSchnitt(value, 'normal');
+  /**
+   * Liest die aktuell gesetzten Abweichungen je Schnitt aus `value`.
+   *
+   * @returns Die gesetzten Schnitt-Abweichungen (Schnitt zu Familie); leer bei einheitlicher Schrift.
+   */
   const abweichungen = (): Partial<Record<Abweichung, string>> =>
     objekt ? Object.fromEntries(ABWEICHUNGEN.filter(k => objekt[k] !== undefined).map(k => [k, objekt[k]!])) : {};
 
-  /** Standard-14 immer; eine Vorlagen-Familie nur, wenn sie genau diesen Schnitt mitbringt (oder
-   *  bereits gewählt ist, damit ein Bestandswert sichtbar bleibt). */
+  /**
+   * Auswahlliste für einen Schnitt: alle Standardfamilien, dazu jede Vorlagen-Familie, die genau diesen
+   * Schnitt mitbringt oder bereits gewählt ist (damit ein Bestandswert sichtbar bleibt).
+   *
+   * @param schnitt - Schnitt, für den die Liste gilt.
+   * @param gewaehlt - Aktuell gewählte Familie dieses Schnitts.
+   * @returns Einträge mit Wert und Beschriftung; eine Vorlagen-Familie ohne den Schnitt trägt den Zusatz „ohne <Schnitt>".
+   */
   const familienFuer = (schnitt: Schnitt, gewaehlt: string) => [
     ...SCHRIFTARTEN.map(f => ({ wert: f.wert, label: f.label })),
     ...vorlageFonts
@@ -41,10 +54,21 @@ export function SchriftartWahl({ value, vorlageFonts, onChange }: Props) {
       })),
   ];
 
+  /**
+   * Setzt die Grundfamilie und behält die Abweichungen je Schnitt bei.
+   *
+   * @param familie - Neue Grundfamilie.
+   */
   function setzeBasis(familie: string) {
     onChange(verdichteSchriftart(familie, abweichungen()));
   }
 
+  /**
+   * Setzt oder entfernt die Familie eines einzelnen Schnitts und behält die Grundfamilie bei.
+   *
+   * @param schnitt - Schnitt, dessen Abweichung geändert wird.
+   * @param familie - Neue Familie; leer entfernt die Abweichung.
+   */
   function setzeAbweichung(schnitt: Abweichung, familie: string) {
     const abw = abweichungen();
     if (familie === '') delete abw[schnitt];

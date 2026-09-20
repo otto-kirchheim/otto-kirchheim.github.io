@@ -4,6 +4,10 @@ import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import { authApi } from '@/infrastructure/api/apiService';
 
+/**
+ * Öffnet den Dialog "Passwort vergessen" (E-Mail auf `@deutschebahn.com` beschränkt).
+ * Der Reset-Link wird über die API angefordert; die Erfolgsmeldung ist bewusst bedingt formuliert ("Falls ... registriert ist").
+ */
 export default function createModalForgotPassword(): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -28,6 +32,10 @@ export default function createModalForgotPassword(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Baut den Submit-Handler: prüft Formular und Online-Status, fordert den Reset-Link an, schließt den Dialog und zeigt eine Snackbar.
+   * Fehlertexte landen in `#errorMessage`.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;

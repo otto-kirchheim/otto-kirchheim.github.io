@@ -15,6 +15,13 @@ type OeLevelBoxesProps = {
   placeholders?: string[];
 };
 
+/**
+ * Zerlegt den OE-String in Ebenen und füllt mit leeren Feldern auf mindestens `defaultLevelCount` (höchstens `MAX_OE_LEVELS`) auf.
+ *
+ * @param value - Kanonischer OE-String.
+ * @param defaultLevelCount - Mindestanzahl Ebenen, solange `value` weniger enthält.
+ * @returns Ebenen-Array mit `''` für leere Positionen.
+ */
 function levelsFrom(value: string, defaultLevelCount: number): string[] {
   const levels = splitOeInput(value);
   const count = Math.min(MAX_OE_LEVELS, Math.max(1, levels.length, defaultLevelCount));
@@ -22,11 +29,12 @@ function levelsFrom(value: string, defaultLevelCount: number): string[] {
 }
 
 /**
- * Mehrfeld-Eingabe für eine einzelne OE-Kette: ein Textfeld pro Ebene statt
- * eines zusammengesetzten Strings. String-in/String-out über `value`/`onChange`
- * hält die Aufrufstellen unverändert (sie arbeiten bereits mit dem kanonischen
- * OE-String aus `joinOeLevels`). Die Ebenen liegen zusätzlich lokal, damit eine
- * zwischendurch leere Ebene nicht sofort wegnormalisiert wird.
+ * Mehrfeld-Eingabe für eine einzelne OE-Kette: ein Textfeld pro Ebene, nach außen aber String-in/
+ * String-out (kanonischer OE-String aus `joinOeLevels`). Die Ebenen liegen zusätzlich lokal, damit
+ * eine zwischendurch leere Ebene nicht sofort wegnormalisiert wird.
+ *
+ * @param props - `value`/`onChange` (OE-String), `disabled`, `allowAddRemove` (Ebenen hinzufügen/entfernen),
+ *   `defaultLevelCount` und `placeholders` (bisherige Werte je Ebene).
  */
 export function OeLevelBoxes({
   value,
@@ -37,18 +45,21 @@ export function OeLevelBoxes({
   placeholders,
 }: OeLevelBoxesProps) {
   const [levels, setLevels] = useState(() => levelsFrom(value, defaultLevelCount));
-  // Zuletzt gesehener/emittierter Wert als State (nicht Ref) -- so ist das Nachziehen bei
-  // externer Prop-Aenderung das von React dokumentierte "State beim Prop-Wechsel anpassen"
-  // und schreibt keine Ref waehrend des Renderns.
+  // Zuletzt gesehener/emittierter Wert als State statt Ref: erlaubt das Nachziehen bei
+  // Prop-Wechsel in der Renderphase, ohne während des Renderns eine Ref zu schreiben.
   const [lastEmitted, setLastEmitted] = useState(value);
 
-  // Externe Änderung (z.B. Reset nach dem Hinzufügen einer Tag-OE) übernehmen,
-  // eigene Emissionen ignorieren.
+  // Externe Änderung (z.B. Reset nach dem Hinzufügen einer Tag-OE) übernehmen, eigene Emissionen nicht.
   if (value !== lastEmitted) {
     setLastEmitted(value);
     setLevels(levelsFrom(value, defaultLevelCount));
   }
 
+  /**
+   * Übernimmt neue Ebenen lokal und meldet den daraus zusammengesetzten OE-String an `onChange`.
+   *
+   * @param next - Neue Ebenen (leere bleiben lokal erhalten).
+   */
   function emit(next: string[]): void {
     const joined = joinOeLevels(next);
     setLastEmitted(joined);

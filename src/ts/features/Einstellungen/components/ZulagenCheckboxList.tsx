@@ -9,6 +9,12 @@ const categoryDisplayOrder: ZulageCategory[] = [
   ZulageCategory.Ganzkoerperreinigung,
 ];
 
+/**
+ * Anzeigename einer Zulagen-Kategorie.
+ *
+ * @param category - Kategorie.
+ * @returns Ueberschrift der Kategorie; `Zulagen` als Fallback.
+ */
 function getCategoryLabel(category: ZulageCategory): string {
   switch (category) {
     case ZulageCategory.Erschwerniszulage:
@@ -22,7 +28,12 @@ function getCategoryLabel(category: ZulageCategory): string {
   }
 }
 
-/** Katalog-Reihenfolge, bis das Kategorie-Limit erreicht ist -- identisch zur bisherigen Logik. */
+/**
+ * Ermittelt die anfangs angehakten Zulagen: Katalog-Reihenfolge, bis das Limit je Kategorie erreicht ist.
+ *
+ * @param benoetigteZulagen - Gespeicherte Zulagen-Codes des Benutzers.
+ * @returns Map Code -> `true` fuer die angehakten Zulagen.
+ */
 function computeInitialChecked(benoetigteZulagen: string[] | undefined): Record<string, boolean> {
   const selectedCodes = new Set(benoetigteZulagen ?? []);
   const countByCategory = new Map<ZulageCategory, number>();
@@ -40,12 +51,11 @@ function computeInitialChecked(benoetigteZulagen: string[] | undefined): Record<
 }
 
 /**
- * Zulagen-Checkboxenliste (Einstellungen > Zulagen), gruppiert per Kategorie mit
- * Selektions-Limit je Kategorie (`ZULAGEN_CATEGORY_MAX_SELECTIONS`). Ersetzt die vormalige
- * `document.createElement`-Konstruktion in `generateEingabeMaskeEinstellungen.ts` -- gemountet
- * per `mount()` in `#settings-zulagen-list`, analog `ArbeitszeiteingabePanel`/`FahrzeitenPanel`.
- * `id`/`data-zulage-code`/`data-zulage-category` bleiben unveraendert, `saveEinstellungen.ts`
- * liest weiterhin per DOM-Query aus derselben `#settings-zulagen-list`-Verschachtelung.
+ * Zulagen-Checkboxenliste (Einstellungen > Zulagen), gruppiert per Kategorie mit Selektions-Limit je Kategorie
+ * (`ZULAGEN_CATEGORY_MAX_SELECTIONS`). `generateEingabeMaskeEinstellungen.ts` mountet sie in `#settings-zulagen-list`;
+ * `saveEinstellungen.ts` liest die Auswahl per DOM-Query ueber `id`/`data-zulage-code`/`data-zulage-category`.
+ *
+ * @param props - `benoetigteZulagen`: Codes der anfangs angehakten Zulagen.
  */
 export default function ZulagenCheckboxList({ benoetigteZulagen }: { benoetigteZulagen?: string[] }): ReactNode {
   const [checkedByCode, setCheckedByCode] = useState<Record<string, boolean>>(() =>
@@ -58,6 +68,11 @@ export default function ZulagenCheckboxList({ benoetigteZulagen }: { benoetigteZ
       countByCategory.set(zulage.category, (countByCategory.get(zulage.category) ?? 0) + 1);
   }
 
+  /**
+   * Kehrt den Haken einer Zulage um.
+   *
+   * @param code - Zulagen-Code.
+   */
   function toggle(code: string): void {
     setCheckedByCode(prev => ({ ...prev, [code]: !prev[code] }));
   }

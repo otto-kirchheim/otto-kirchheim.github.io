@@ -7,6 +7,15 @@ import { mergePerWeekdaySchicht } from '@/types';
 import { resolveBzBis, resolveBzVon } from './resolveBereitschaftsGrenze';
 import { B_WECHSEL_ZEIT } from './constants';
 
+/**
+ * Füllt die Felder des Bereitschaft-Modals aus einer Vorgabe: Beginn/Ende, Nacht-/Spät-/Sonder-Auswahl und die Uhrzeiten aus der Arbeitszeit
+ * (Nachtzeiten aus der Wochentagskonfiguration, sonst aus der Vorgabe mit Wechselzeit als Rückfall). Blendet zuletzt die Nachtfelder passend ein/aus.
+ *
+ * @param parentElement - Modal-Wurzel mit den Feldern `#bA`, `#bAT`, `#bE`, `#bET`, `#nacht`, `#nA`, `#nAT`, `#nE`, `#nET` (Pflicht) und optional `#spaet*`, `#sonder*`.
+ * @param vorgabenB - Gewählte Bereitschaftsvorgabe; Tage: 0 = Sonntag, `Nwoche` verschiebt um eine Woche.
+ * @param datum - Bezugstag, von dem aus die Wochentage aufgelöst werden; Standard: Wert von `#bA`.
+ * @throws {Error} Wenn kein Datum vorliegt oder ein Pflichtfeld fehlt.
+ */
 export default function applyBereitschaftsVorgabe(
   parentElement: HTMLDivElement,
   vorgabenB: IVorgabenUvorgabenB,

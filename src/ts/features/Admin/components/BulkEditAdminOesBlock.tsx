@@ -25,8 +25,10 @@ type Props = {
 
 /**
  * Hinzufügen/Entfernen ganzer OE-Pfade in Team-/Org-Admin-OE-Listen (Ersetzen läuft über
- * BulkEditOeLevelsEditor). Beim Hinzufügen füllen die Platzhalter der Auswahl alle Ebenen,
+ * `BulkEditOeLevelsEditor`). Beim Hinzufügen füllen die Platzhalter der Auswahl alle Ebenen,
  * die leer bleiben — anders als beim Ersetzen muss hier ein vollständiger Pfad entstehen.
+ *
+ * @param props - `field`/`label` (Ziel-Liste), `action` mit `onChange`, `existingPaths` (Auswahl beim Entfernen), `defaultLevelCount` (Startebenen) und `placeholders`.
  */
 export function BulkEditAdminOesBlock({
   field,
@@ -37,15 +39,31 @@ export function BulkEditAdminOesBlock({
   defaultLevelCount,
   placeholders,
 }: Props) {
+  /**
+   * Baut aus den Ebenen den vollständigen OE-Pfad.
+   *
+   * @param levels - Eingegebene Ebenen.
+   * @returns Zusammengesetzter Pfad mit Platzhaltern für leere Ebenen oder leer, wenn keine Ebene ausgefüllt ist.
+   */
   function effectivePath(levels: string[]): string {
     if (!levels.some(level => level.trim())) return '';
     return joinOeLevels(levels.map((level, index) => level.trim() || placeholders[index] || ''));
   }
 
+  /**
+   * Übernimmt geänderte Ebenen samt daraus berechnetem Pfad.
+   *
+   * @param levels - Neue Ebenen.
+   */
   function updateLevels(levels: string[]): void {
     onChange({ levels, value: effectivePath(levels) });
   }
 
+  /**
+   * Wechselt die Aktion und setzt Pfad und Ebenen zurück.
+   *
+   * @param mode - Gewählte Aktion.
+   */
   function selectMode(mode: AdminOeActionMode): void {
     onChange({ mode, value: '', levels: Array.from({ length: Math.max(1, defaultLevelCount) }, () => '') });
   }

@@ -10,7 +10,12 @@
  * über ein einzelnes Textfeld.
  */
 
-/** Zerlegt eine Eingabe wie "V.IW-MI-M-KSL-IL 03" in ihre Ebenen. */
+/**
+ * Zerlegt eine Eingabe wie "V.IW-MI-M-KSL-IL 03" in ihre Ebenen.
+ *
+ * @param value - OE-Eingabe.
+ * @returns Ebenen; `/` gilt als `-`, leere Segmente entfallen.
+ */
 export function splitOeInput(value: string): string[] {
   return value
     .trim()
@@ -24,6 +29,9 @@ export function splitOeInput(value: string): string[] {
 /**
  * Fügt Ebenen zur kanonischen Schreibweise zusammen: die ersten beiden mit `.`,
  * weitere mit `-`, eine rein numerische letzte Ebene (Teamnummer) mit Leerzeichen.
+ *
+ * @param levels - OE-Ebenen.
+ * @returns OE-Text; leer ohne Ebenen.
  */
 export function joinOeLevels(levels: string[]): string {
   const segments = levels.map(level => level.trim()).filter(Boolean);

@@ -1,9 +1,9 @@
 /**
- * AutoSave-Manager: Automatisches Speichern pro Ressource nach Inaktivität.
+ * AutoSave-Manager: speichert je Ressource nach Inaktivität.
  *
  * - Löschungen werden NICHT automatisch gesendet (nur beim manuellen Speichern)
- * - Erstellt/Geänderte Zeilen werden nach konfigurierbarer Inaktivitätszeit gespeichert
- * - Status-Anzeige per `AutoSaveBadge` (Tooltip zeigt Fehlermeldungen)
+ * - Neue/geänderte Zeilen werden nach der konfigurierten Inaktivitätszeit gespeichert
+ * - Status per `AutoSaveBadge` (Tooltip zeigt Fehlermeldungen)
  * - Einstellungen (UserProfile) werden ebenfalls automatisch gespeichert
  */
 
@@ -118,6 +118,13 @@ const statusListeners: StatusListener[] = [];
 
 // ─── Hilfsfunktionen ─────────────────────────────────────
 
+/**
+ * Setzt den Status einer Ressource und benachrichtigt die Status-Listener.
+ *
+ * @param resource - Betroffene Ressource.
+ * @param status - Neuer Status.
+ * @param error - Fehlermeldung (nur bei `error`).
+ */
 function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string): void {
   const state = resourceStates[resource];
   state.status = status;
@@ -126,6 +133,12 @@ function setStatus(resource: TResourceKey, status: TSaveStatus, error?: string):
   statusListeners.forEach(fn => fn(resource, status, status === 'error' ? (state.lastError ?? undefined) : undefined));
 }
 
+/**
+ * Schreibt die sichtbaren Zeilen (mit dem Rest aus dem Storage gemergt) zurück in den localStorage.
+ *
+ * @param resource - Tabellen-Ressource.
+ * @param table - Zugehörige Tabelle.
+ */
 function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: CustomTable<CustomTableTypes>): void {
   const storageKey: TStorageData = RESOURCE_STORAGE_MAP[resource];
   const mergedRows = mergeVisibleResourceRows(resource, table);
@@ -135,21 +148,27 @@ function updateLocalStorage(resource: Exclude<TResourceKey, 'settings'>, table: 
 // ─── Öffentliche API ─────────────────────────────────────
 
 /**
- * Auto-Save Verzögerung setzen (in ms).
+ * Setzt die AutoSave-Verzögerung.
+ *
+ * @param ms - Verzögerung in Millisekunden.
  */
 export function setAutoSaveDelay(ms: number): void {
   AUTO_SAVE_DELAY = ms;
 }
 
 /**
- * Aktuelle Verzögerung abfragen.
+ * Aktuelle AutoSave-Verzögerung.
+ *
+ * @returns Verzögerung in Millisekunden.
  */
 export function getAutoSaveDelay(): number {
   return AUTO_SAVE_DELAY;
 }
 
 /**
- * Auto-Save global aktivieren/deaktivieren.
+ * Aktiviert/deaktiviert AutoSave global.
+ *
+ * @param enabled - `true` = AutoSave aktiv.
  */
 export function setAutoSaveEnabled(enabled: boolean): void {
   autoSaveEnabled = enabled;
@@ -157,16 +176,20 @@ export function setAutoSaveEnabled(enabled: boolean): void {
 }
 
 /**
- * Ist Auto-Save aktiviert?
+ * Ist AutoSave aktiviert?
+ *
+ * @returns `true`, wenn AutoSave aktiv ist.
  */
 export function isAutoSaveEnabled(): boolean {
   return autoSaveEnabled;
 }
 
 /**
- * Appliziert AutoSave-Einstellungen (enabled/delay) aus dem Benutzerprofil auf den Runtime-State.
- * Gemeinsam genutzt von App-Start (`Einstellungen/index.ts`) und direkt nach dem Speichern
- * der Einstellungen (`saveDaten.ts`), damit eine Änderung sofort greift statt erst nach Reload.
+ * Übernimmt `enabled`/`delay` aus dem Benutzerprofil in den Runtime-State. Genutzt beim App-Start
+ * (`Einstellungen/index.ts`) und direkt nach dem Speichern der Einstellungen (`saveDaten.ts`), damit
+ * eine Änderung sofort greift.
+ *
+ * @param settings - `autoSaveEnabled`/`autoSaveDelayMs` aus dem Profil; fehlende Felder bleiben unverändert.
  */
 export function applyAutoSaveSettings(settings?: { autoSaveEnabled?: boolean; autoSaveDelayMs?: number }): void {
   if (settings?.autoSaveEnabled !== undefined) setAutoSaveEnabled(settings.autoSaveEnabled);
@@ -174,8 +197,10 @@ export function applyAutoSaveSettings(settings?: { autoSaveEnabled?: boolean; au
 }
 
 /**
- * Status-Listener registrieren (z.B. für UI-Badge).
- * Gibt Unsubscribe-Funktion zurück.
+ * Status-Listener registrieren (z.B. für das Badge). Gibt die Unsubscribe-Funktion zurück.
+ *
+ * @param listener - Wird bei jeder Statusänderung mit Ressource, Status und Fehlermeldung aufgerufen.
+ * @returns Funktion, die den Listener wieder abmeldet.
  */
 export function onAutoSaveStatus(listener: StatusListener): () => void {
   statusListeners.push(listener);
@@ -186,16 +211,20 @@ export function onAutoSaveStatus(listener: StatusListener): () => void {
 }
 
 /**
- * Aktueller Status einer Ressource.
+ * Aktueller Zustand einer Ressource.
+ *
+ * @param resource - Ressource.
+ * @returns Kopie des Zustands (Status, letzter Speicherzeitpunkt, letzter Fehler).
  */
 export function getResourceStatus(resource: TResourceKey): ResourceState {
   return { ...resourceStates[resource] };
 }
 
 /**
- * Alle ausstehenden Timer abbrechen.
- * @param resetStatus - false wenn der Status nicht auf idle gesetzt werden soll
- *   (z.B. bei flushAll, wo saveResourceNow direkt danach saving setzt).
+ * Bricht alle ausstehenden Timer ab. `resetStatus = false` lässt den Status stehen (flushAll: danach
+ * setzt `saveResourceNow` direkt `saving`).
+ *
+ * @param resetStatus - `false` lässt den Status unverändert.
  */
 export function cancelAllPending(resetStatus = true): void {
   for (const key of Object.keys(resourceStates) as TResourceKey[]) {
@@ -213,8 +242,9 @@ export function cancelAllPending(resetStatus = true): void {
 }
 
 /**
- * Sofort alle ausstehenden Änderungen senden (z.B. beim manuellen Speichern).
- * Inklusive Löschungen.
+ * Sendet sofort alle ausstehenden Änderungen inklusive Löschungen (manuelles Speichern).
+ *
+ * @returns Promise, das nach allen Speichervorgängen erfüllt wird (Fehler einzelner Ressourcen brechen nicht ab).
  */
 export async function flushAll(): Promise<void> {
   cancelAllPending(false);
@@ -229,6 +259,13 @@ export async function flushAll(): Promise<void> {
   await Promise.allSettled(promises);
 }
 
+/**
+ * Gibt es ungespeicherte Änderungen an der Tabelle der Ressource?
+ *
+ * @param resource - Tabellen-Ressource.
+ * @param includeDeletes - Gelöschte Zeilen mitzählen.
+ * @returns `true`, wenn es Neues, Geändertes (oder Gelöschtes) gibt.
+ */
 function hasPendingResourceChanges(resource: Exclude<TResourceKey, 'settings'>, includeDeletes = false): boolean {
   const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
   if (!table) return false;
@@ -237,7 +274,11 @@ function hasPendingResourceChanges(resource: Exclude<TResourceKey, 'settings'>, 
 }
 
 /**
- * Externer Check für offene Änderungen einer Tabellen-Ressource.
+ * Offene Änderungen einer Tabellen-Ressource (externer Check).
+ *
+ * @param resource - Tabellen-Ressource.
+ * @param includeDeletes - Gelöschte Zeilen mitzählen.
+ * @returns `true`, wenn es ungespeicherte Änderungen gibt.
  */
 export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings'>, includeDeletes = false): boolean {
   return hasPendingResourceChanges(resource, includeDeletes);
@@ -246,8 +287,7 @@ export function hasPendingTableChanges(resource: Exclude<TResourceKey, 'settings
 // ─── Event-Driven AutoSave ──────────────────────────────
 
 /**
- * Registriert den AutoSave-Listener auf das typed Event-System.
- * Muss einmal beim App-Start aufgerufen werden, bevor Features Events feuern.
+ * Registriert den AutoSave-Listener am Event-System; einmal beim App-Start, bevor Features Events feuern.
  */
 export function initAutoSaveEventListener(): void {
   onEvent('data:changed', ({ resource }) => {
@@ -264,9 +304,11 @@ export function initAutoSaveEventListener(): void {
 // ─── onChange-Handler (werden an CustomTable.onChange gebunden) ──
 
 /**
- * Erstellt einen onChange-Handler für eine bestimmte Ressource.
- * Wird als `onChange` Option beim createCustomTable übergeben.
- * Publiziert ein 'data:changed' Event — AutoSave reagiert via initAutoSaveEventListener.
+ * Erstellt den `onChange`-Handler einer Ressource für `createCustomTable`. Publiziert `data:changed`,
+ * worauf `initAutoSaveEventListener` reagiert.
+ *
+ * @param resource - Ressource der Tabelle.
+ * @returns `onChange`-Handler; ohne aktives AutoSave ein No-Op.
  */
 export function createOnChangeHandler<T extends CustomTableTypes>(
   resource: TResourceKey,
@@ -278,8 +320,9 @@ export function createOnChangeHandler<T extends CustomTableTypes>(
 }
 
 /**
- * Manuell eine Ressource zum Auto-Save vormerken.
- * Nützlich wenn Daten außerhalb der Tabelle geändert werden.
+ * Merkt eine Ressource für AutoSave vor -- für Änderungen außerhalb der Tabelle.
+ *
+ * @param resource - Vorzumerkende Ressource.
  */
 export function scheduleAutoSave(resource: TResourceKey): void {
   if (!autoSaveEnabled) return;
@@ -305,8 +348,8 @@ export function scheduleAutoSave(resource: TResourceKey): void {
           clearTimeout(state.timer);
           state.timer = null;
         }
-        // Always sync localStorage even when no backend call is needed — e.g. after undo-delete
-        // restores an 'unchanged' row that was absent from storage due to a prior auto-save while deleted.
+        // localStorage immer abgleichen, auch ohne Backend-Aufruf: nach Undo-Delete fehlt die wiederhergestellte
+        // 'unchanged'-Zeile sonst im Storage (ein AutoSave lief, während sie gelöscht war).
         updateLocalStorage(resource, table);
         setStatus(resource, 'idle');
         return;
@@ -331,10 +374,23 @@ export function scheduleAutoSave(resource: TResourceKey): void {
 
 // ─── Eigentliche Save-Logik ──────────────────────────────
 
+/**
+ * Speichert eine Ressource sofort, inklusive Löschungen (manuelles Speichern).
+ *
+ * @param resource - Zu speichernde Ressource.
+ * @returns Promise, das nach dem Speichern erfüllt wird.
+ */
 export async function flushResource(resource: TResourceKey): Promise<void> {
   await saveResourceNow(resource, true);
 }
 
+/**
+ * Sendet die anstehenden Änderungen einer Ressource und übernimmt die Antwort. Offline: `pending` mit Online-Retry; Überlappung mit ungesyncter Löschung: `blocked`. Änderungen während des Requests (`queuedDuringSave`) löst ein Folgelauf aus.
+ *
+ * @param resource - Zu speichernde Ressource.
+ * @param includeDeletes - Löschungen mitsenden (nur manuelles Speichern).
+ * @returns Promise, das nach Abschluss erfüllt wird; Fehler landen im Status.
+ */
 async function saveResourceNow(resource: TResourceKey, includeDeletes = false): Promise<void> {
   const state = resourceStates[resource];
 
@@ -352,12 +408,10 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   const table = findTable(RESOURCE_TABLE_ID_MAP[resource]);
   if (!table) return;
 
-  // AutoSave sendet Löschungen bewusst nicht mit (nur manuelles Speichern tut das). Überschneidet
-  // sich eine anstehende Neuanlage/Änderung mit einer noch nicht synchronisierten Löschung derselben
-  // Ressource, würde der Server sie ablehnen (BZ/EWT `ensureNoOverlap` sieht den alten Datensatz noch).
-  // Statt eines vermeidbaren Fehlschlags: diese Ressource für AutoSave zurückhalten, betroffene Zeilen
-  // sichtbar markieren und auf manuelles Speichern verweisen (sendet Delete+Create zusammen, Server
-  // verarbeitet Löschungen zuerst — siehe `base.controller.ts`).
+  // AutoSave sendet keine Löschungen. Überschneidet sich eine Neuanlage/Änderung mit einer noch nicht
+  // synchronisierten Löschung derselben Ressource, lehnt der Server sie ab (BZ/EWT `ensureNoOverlap` sieht
+  // den alten Datensatz). Daher: Ressource zurückhalten, betroffene Zeilen markieren und auf manuelles
+  // Speichern verweisen (Delete+Create zusammen, der Server löscht zuerst -- `base.controller.ts`).
   if (!includeDeletes) {
     const blockedRows = findOverlapBlockedRows(resource, table);
     if (blockedRows.length > 0) {
@@ -374,11 +428,9 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
     return;
   }
 
-  // Row-Referenz-Snapshot VOR dem Request: legt exakt fest, welche Zeilen zu diesem
-  // Save-Lauf gehören. Zeilen, die erst während des laufenden Requests neu angelegt oder
-  // geändert werden, sind hier nicht enthalten und bleiben dadurch beim Commit unangetastet
-  // (AutoSave-Commit-Race) — der bereits vorhandene queuedDuringSave-Mechanismus holt sie
-  // im nächsten Save-Lauf nach.
+  // Row-Snapshot VOR dem Request legt fest, welche Zeilen zu diesem Lauf gehören. Was währenddessen neu
+  // entsteht oder sich ändert, bleibt beim Commit unangetastet (AutoSave-Commit-Race) und wird über
+  // `queuedDuringSave` im nächsten Lauf nachgeholt.
   const changeRows = table.rows.getChangeRows(includeDeletes);
   const includedRows = new Set([...changeRows.create, ...changeRows.update, ...changeRows.delete].map(getRowKey));
 
@@ -410,9 +462,8 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
 
     markErrorRows(table, rowErrorMatches, result.errors);
 
-    // Fallback: wenn Backend Fehler ohne Zeilennummer liefert (keine clientRequestId/id),
-    // die betroffenen Batch-Zeilen als Fehler markieren (nur Zeilen aus diesem Save-Lauf -
-    // nicht den kompletten Live-Zustand, siehe AutoSave-Commit-Race).
+    // Fehler ohne Zeilennummer (keine clientRequestId/id): nur die Zeilen dieses Laufs als Fehler markieren,
+    // nicht den ganzen Live-Zustand (AutoSave-Commit-Race).
     if (result.errors.length > 0 && rowErrorMatches.length === 0) {
       const uncommitted = [...changeRows.create, ...changeRows.update].filter(r => r._state !== 'unchanged');
       const msg = result.errors.map(e => e.message).join(' · ');
@@ -482,6 +533,11 @@ async function saveResourceNow(resource: TResourceKey, includeDeletes = false): 
   }
 }
 
+/**
+ * Speichert das Benutzerprofil (`VorgabenU`) und übernimmt die Serverantwort.
+ *
+ * @returns Promise, das nach Abschluss erfüllt wird; Fehler landen im Status.
+ */
 async function saveSettingsNow(): Promise<void> {
   const state = resourceStates.settings;
 
@@ -505,10 +561,8 @@ async function saveSettingsNow(): Promise<void> {
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error('AutoSave Einstellungen fehlgeschlagen:', msg);
-    // Kein eigener Snackbar hier: `setStatus('error', msg)` treibt `AutoSaveBadge`s
-    // Tooltip (zeigt exakt dieselbe Fehlermeldung) -- konsistent mit BZ/BE/EWT/N/EA, die
-    // bei AutoSave-Fehlern ebenfalls keine zusaetzliche Snackbar zeigen (nur Badge +
-    // `showErrorDialog` fuer Tabellen).
+    // Kein Snackbar: `setStatus('error', msg)` treibt den Tooltip von `AutoSaveBadge` mit derselben
+    // Meldung -- wie bei allen Ressourcen (Tabellen zusätzlich `showErrorDialog`).
     setStatus('settings', 'error', msg);
   } finally {
     const hasQueuedChanges = state.queuedDuringSave;
@@ -521,6 +575,9 @@ async function saveSettingsNow(): Promise<void> {
 
 // ─── Online-Retry ────────────────────────────────────────
 
+/**
+ * Plant beim nächsten `online`-Event einen AutoSave für alle Ressourcen mit Status `pending` (einmalig registriert).
+ */
 function registerOnlineRetry(): void {
   if (onlineListenerRegistered) return;
   onlineListenerRegistered = true;
@@ -541,14 +598,18 @@ function registerOnlineRetry(): void {
 }
 
 /**
- * Markiert eine Ressource als gespeichert (für externes Speichern, z.B. saveDaten).
+ * Markiert eine Ressource als gespeichert (externes Speichern, z.B. `saveDaten`).
+ *
+ * @param resource - Gespeicherte Ressource.
  */
 export function markResourceSaved(resource: TResourceKey): void {
   setStatus(resource, 'saved');
 }
 
 /**
- * Setzt mehrere Ressourcen explizit auf idle (z. B. nach manuellem Speichern).
+ * Setzt mehrere Ressourcen auf idle (nach manuellem Speichern).
+ *
+ * @param resources - Ressourcen, deren Timer und Status zurückgesetzt werden.
  */
 export function markResourcesIdle(resources: TResourceKey[]): void {
   resources.forEach(resource => {
@@ -562,7 +623,7 @@ export function markResourcesIdle(resources: TResourceKey[]): void {
 }
 
 /**
- * Setzt alle Ressourcen explizit auf idle (hard reset für manuelles Speichern).
+ * Setzt alle Ressourcen auf idle (Hard-Reset nach manuellem Speichern).
  */
 export function markAllResourcesIdle(): void {
   (Object.keys(resourceStates) as TResourceKey[]).forEach(resource => setStatus(resource, 'idle'));

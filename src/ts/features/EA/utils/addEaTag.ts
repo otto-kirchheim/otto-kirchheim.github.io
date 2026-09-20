@@ -4,7 +4,15 @@ import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { persistEaTableData } from '.';
 
-/** @returns true, wenn die Zeile angelegt/reaktiviert wurde; false bei Abbruch (Duplikat-Tag). */
+/**
+ * Legt aus den Feldern des Add-Modals einen EA-Eintrag an und persistiert die Tabelle. Eine
+ * gelöschte Zeile desselben Tages wird wiederhergestellt statt neu angelegt.
+ *
+ * @param modal - Add-Modal mit den Feldern `#Tag`, `#Dauer`, `#Taetigkeit`, `#Entgeltgruppe` und optional `#ewtRefSelect`.
+ * @param tableEA - EA-Tabelle, in die eingefügt wird.
+ * @returns true, wenn die Zeile angelegt/reaktiviert wurde; false bei Abbruch (Duplikat-Tag, mit Snackbar).
+ * @throws {Error} Wenn ein Pflichtfeld im Modal fehlt.
+ */
 export default function addEaTag(modal: CustomHTMLDivElement<IDatenEA>, tableEA: CustomTable<IDatenEA>): boolean {
   const tagInput = modal.querySelector<HTMLInputElement>('#Tag');
   const ewtRefSelect = modal.querySelector<HTMLSelectElement>('#ewtRefSelect');

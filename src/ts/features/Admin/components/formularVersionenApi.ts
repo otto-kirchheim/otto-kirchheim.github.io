@@ -7,9 +7,8 @@ import type {
 import type { Konfig } from './FormularEditor/FormularEditor';
 import type { FormularCode } from './FormularEditor/datenKatalog';
 
-// `holeVorlageAlsDatei`/`ApiFehler` leben in `infrastructure/pdf/ladeFormular.ts` (auch vom neuen
-// Download-Pfad der Ressourcen-Tabs genutzt, siehe Phase 9) -- hier re-exportiert, damit bestehende
-// Importe (`FormularUpload.tsx`) unverändert bleiben.
+// Definiert in `infrastructure/pdf/ladeFormular.ts` (auch vom Download-Pfad der Ressourcen-Tabs
+// genutzt) und hier re-exportiert, damit Importe wie in `FormularUpload.tsx` unverändert bleiben.
 export { ApiFehler, holeVorlageAlsDatei };
 
 /**
@@ -26,6 +25,16 @@ export interface VersionNutzdaten extends Omit<SharedVersionNutzdaten, 'konfig' 
   tabellen: Konfig['tabellen'];
 }
 
+/**
+ * Ruft einen Endpunkt über `FetchRetry` auf und liefert dessen Nutzdaten.
+ *
+ * @typeParam T - Typ der Antwort-Nutzdaten.
+ * @param pfad - Endpunktpfad relativ zur API.
+ * @param daten - Request-Body (bei GET/DELETE `undefined`).
+ * @param methode - HTTP-Methode.
+ * @returns Nutzdaten der Antwort.
+ * @throws {Error} Bei Netzwerkfehler; `ApiFehler` mit Statuscode, wenn die Antwort nicht erfolgreich ist.
+ */
 async function ruf<T>(pfad: string, daten: unknown, methode: 'GET' | 'POST' | 'PUT' | 'DELETE'): Promise<T> {
   const antwort = await FetchRetry<unknown, T>(pfad, daten, methode);
   if (antwort instanceof Error) throw antwort;
@@ -37,6 +46,11 @@ async function ruf<T>(pfad: string, daten: unknown, methode: 'GET' | 'POST' | 'P
 /**
  * Lädt die PDF-Vorlage hoch. `FetchRetry` unterstützt nur JSON-Bodies, daher hier ein eigener
  * Roh-`fetch()` mit denselben Auth-Headern.
+ *
+ * @param formular - Formularcode, dem die Vorlage zugeordnet wird.
+ * @param datei - Die PDF-Datei.
+ * @returns Id der angelegten Vorlage.
+ * @throws {ApiFehler} Wenn der Upload fehlschlägt.
  */
 export async function ladeVorlagenHoch(formular: FormularCode, datei: File): Promise<string> {
   const form = new FormData();
@@ -51,15 +65,36 @@ export async function ladeVorlagenHoch(formular: FormularCode, datei: File): Pro
   return body.data.id;
 }
 
+/**
+ * Lädt alle gespeicherten Versionen eines Formulars.
+ *
+ * @param formular - Formularcode.
+ * @returns Versionen des Formulars.
+ */
 export function holeVersionen(formular: FormularCode): Promise<VersionUebersicht[]> {
   return ruf<VersionUebersicht[]>(`formulare/${formular}/versionen`, undefined, 'GET');
 }
 
+/**
+ * Legt eine neue Version eines Formulars an.
+ *
+ * @param formular - Formularcode.
+ * @param daten - Konfiguration, Tabellen und Gültigkeit der neuen Version.
+ * @returns Antwortdaten des Backends.
+ */
 export function legeVersionAn(formular: FormularCode, daten: VersionNutzdaten): Promise<unknown> {
   return ruf(`formulare/${formular}/versionen`, daten, 'POST');
 }
 
-/** `erzwingen` übergeht die Intervallprüfung — nötig, um die Vorgängerversion zu schließen. */
+/**
+ * Ändert eine Version. `erzwingen` übergeht die Intervallprüfung — nötig, um die Vorgängerversion zu schließen.
+ *
+ * @param formular - Formularcode.
+ * @param id - Id der Version.
+ * @param daten - Neue Nutzdaten der Version.
+ * @param erzwingen - `true` übergeht die Intervallprüfung.
+ * @returns Antwortdaten des Backends.
+ */
 export function aendereVersion(
   formular: FormularCode,
   id: string,
@@ -69,6 +104,14 @@ export function aendereVersion(
   return ruf(`formulare/${formular}/versionen/${id}`, { ...daten, erzwingen }, 'PUT');
 }
 
+/**
+ * Löscht eine Version. Entstünde dadurch eine lückenhafte Kette, braucht das Backend `erzwingen`.
+ *
+ * @param formular - Formularcode.
+ * @param id - Id der Version.
+ * @param erzwingen - `true` löscht trotz entstehender Lücke.
+ * @returns Antwortdaten des Backends.
+ */
 export function loescheVersion(formular: FormularCode, id: string, erzwingen = false): Promise<unknown> {
   const query = erzwingen ? '?erzwingen=true' : '';
   return ruf(`formulare/${formular}/versionen/${id}${query}`, undefined, 'DELETE');

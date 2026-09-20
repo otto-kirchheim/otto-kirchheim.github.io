@@ -1,6 +1,8 @@
 import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 
+// Nebengeld-Buckets eines Monats: F und C9 als Stückzahl, alle übrigen in Minuten.
 type NFields = { F: number; A: number; B: number; C: number; CA: number; CB: number; C9: number; SIPO: number };
+// Euro-Betrag je NFields-Bucket; Minuten-Buckets werden zu ganzen Stunden gerundet.
 const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
   (n, g) => n.F * g.Fahrentsch,
   (n, g) => Math.round(n.A / 60) * g.A,
@@ -12,19 +14,36 @@ const N_ZULAGEN_CALC: Array<(n: NFields, g: IVorgabenGeldType) => number> = [
   (n, g) => Math.round(n.SIPO / 60) * g.SIPO,
 ];
 
+/**
+ * Formatiert Minuten als "H:mm".
+ *
+ * @param num - Dauer in Minuten.
+ * @returns Stunden ohne führende Null, Minuten zweistellig (z. B. 90 -> "1:30").
+ */
 export const timeConvert = (num: number): string => {
   const hours = Math.floor(num / 60);
   const minutes = Math.round(num % 60);
   return `${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
-/** Kehrfunktion zu `timeConvert`: parst eine "HH:mm"-Zeitspanne in die Gesamtminuten. */
+/**
+ * Kehrfunktion zu `timeConvert`: parst eine "HH:mm"-Zeitspanne in Gesamtminuten.
+ *
+ * @param value - Zeitspanne im Format "HH:mm".
+ * @returns Gesamtminuten; 0, wenn Stunden oder Minuten keine Zahl sind.
+ */
 export const parseDauerToMinutes = (value: string): number => {
   const [stunden, minuten] = value.split(':').map(Number);
   if (!Number.isFinite(stunden) || !Number.isFinite(minuten)) return 0;
   return stunden * 60 + minuten;
 };
 
+/**
+ * Formatiert einen Betrag als Euro-Betrag im deutschen Format.
+ *
+ * @param value - Betrag in Euro.
+ * @returns Formatierter String (z. B. "1.234,50 €").
+ */
 export const formatCurrency = (value: number): string =>
   value.toLocaleString('de-DE', {
     style: 'currency',
@@ -53,9 +72,23 @@ export interface IBerechnungMonatsErgebnis {
   summeGesamt: number | null;
 }
 
-/** Merge-Proxy: VorgabenGeld-Einträge späterer Monate überschreiben frühere feldweise. */
+/**
+ * Merge-Proxy: VorgabenGeld-Einträge späterer Monate überschreiben frühere feldweise. Zugriff auf Monat n
+ * liefert die Werte von Monat 1, überlagert mit allen vorhandenen Einträgen bis einschließlich n. Schreiben
+ * ist nicht erlaubt (wird geloggt und abgelehnt).
+ *
+ * @param datenGeldVorgabe - VorgabenGeld, Schlüssel = Monat ab dem der Eintrag gilt (1 ist Pflicht).
+ * @returns Proxy, der pro Monat (1-12) die zusammengeführten Geldwerte liefert.
+ */
 export function createDatenGeldProxy(datenGeldVorgabe: IVorgabenGeld): IVorgabenGeld {
   const datenGeldHandler: ProxyHandler<IVorgabenGeld> = {
+    /**
+     * Liefert die zusammengeführten Geldwerte für den Monat `prop`.
+     *
+     * @param target - Ursprüngliche VorgabenGeld.
+     * @param prop - Monat als Property-Schlüssel (String).
+     * @returns Geldwerte, wie sie im Monat `prop` gelten.
+     */
     get: (target: IVorgabenGeld, prop: string): IVorgabenGeldType => {
       const maxMonat: number = Number(prop);
       let returnObjekt = target[1];
@@ -65,6 +98,14 @@ export function createDatenGeldProxy(datenGeldVorgabe: IVorgabenGeld): IVorgaben
           if (typeof target[monat] !== 'undefined') returnObjekt = { ...returnObjekt, ...target[monat] };
       return returnObjekt;
     },
+    /**
+     * Lehnt jede Schreiboperation ab.
+     *
+     * @param _target - Ursprüngliche VorgabenGeld (ungenutzt).
+     * @param prop - Angefragter Schlüssel.
+     * @param newValue - Abgelehnter Wert.
+     * @returns Immer `false` (Schreiben nicht erlaubt).
+     */
     set: (_target: IVorgabenGeld, prop: string, newValue) => {
       console.log('veränderung von datenGeld nicht erlaubt:', prop, newValue);
       return false;
@@ -75,9 +116,14 @@ export function createDatenGeldProxy(datenGeldVorgabe: IVorgabenGeld): IVorgaben
 }
 
 /**
- * Reine Berechnungslogik der Berechnungstabelle, extrahiert aus generateTableBerechnung.
- * Die sequenzielle Zwischensummen-Semantik (sums[0..2]) entspricht exakt dem früheren
- * zeilenweisen switch-Block; die Reihenfolge der Blöcke darf nicht verändert werden.
+ * Reine Berechnungslogik der Berechnungstabelle: je Monat Bereitschaft (sums[0]), EWT (sums[1]) und
+ * Nebenbezüge (sums[2]) sowie deren Gesamtsumme. Die Blöcke bauen die Zwischensummen nacheinander auf
+ * (`+=`), ihre Reihenfolge darf nicht verändert werden. Nicht anzuzeigende Werte bleiben `null`.
+ *
+ * @param datenBerechnung - Monatsdaten (Bereitschaft B, EWT E, Nebengeld N, Entgeltausgleich EA).
+ * @param datenGeldVorgabe - Geldsätze je Monat (werden über `createDatenGeldProxy` zusammengeführt).
+ * @param tarifKraft - Tarifkraft oder Beamter; steuert Bereitschaftsformel, EWT-Sätze und Privat-PKW-Satz.
+ * @returns Ein Ergebnis je Monat in der Reihenfolge von `datenBerechnung`.
  */
 export default function calculateBerechnungRows(
   datenBerechnung: IVorgabenBerechnung,
@@ -171,9 +217,8 @@ export default function calculateBerechnungRows(
       sums[2] = 0;
     }
 
-    // Reine Stunden-Anzeige — bewusst außerhalb von sums[], fließt nicht in summeGesamt ein.
-    // item.EA kann bei gecachtem datenBerechnung aus einer Session vor Einführung von EA fehlen
-    // (Storage-Snapshot wird beim App-Start ungeprüft gerendert, siehe Berechnung/index.ts).
+    // Reine Stunden-Anzeige, bewusst außerhalb von sums[]. `item.EA` kann in einem älteren Storage-Snapshot
+    // fehlen, der beim App-Start ohne Neuberechnung gerendert wird (Berechnung/index.ts).
     const eaMinuten = item.EA?.Minuten ?? 0;
     if (eaMinuten > 0) ergebnis.eaMinuten = eaMinuten;
 

@@ -33,6 +33,15 @@ import {
 } from './loadUserDaten.conflict';
 import { syncLoadedYearResources } from './loadUserDaten.sync';
 
+/**
+ * Laedt die Jahresdaten vom Server, gleicht sie mit dem lokalen Stand ab und befuellt Tabellen,
+ * Berechnung, Einstellungen und Tab-Sichtbarkeit. Bei Unterschieden zeigt eine Snackbar drei
+ * Wege: Serverdaten uebernehmen, lokale behalten oder vergleichen und manuell speichern
+ * (AutoSave pausiert, Review-Banner). Ladefehler werden gemeldet, Session-Fehler still beendet.
+ *
+ * @param monat - Angezeigter Monat (1-12); bestimmt die Tabellenfilter.
+ * @param jahr - Zu ladendes Jahr; N gilt ab 2024, EA ab 2025.
+ */
 export default async function loadUserDaten(monat: number, jahr: number): Promise<void> {
   // Vorherige Überprüfung zurücksetzen wenn noch aktiv
   const bannerMount = document.getElementById('conflictReviewBannerMount');
@@ -85,7 +94,12 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   const { vorhanden } = synced;
   const dataServer = synced.dataServer;
 
-  // Review-Banner unterhalb der Navbar anzeigen.
+  /**
+   * Zeigt das Review-Banner im Mount-Punkt `#conflictReviewBannerMount`; ohne Mount wirkungslos.
+   *
+   * @param resources - Betroffene Ressourcen mit Monaten.
+   * @param onSave - Wird beim Klick auf "Uebernehmen" ausgefuehrt.
+   */
   const showReviewBanner = (resources: { name: string; months: number[] }[], onSave: () => Promise<void>): void => {
     const mount = document.getElementById('conflictReviewBannerMount');
     if (!mount) return;
@@ -118,6 +132,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
       actions: [
         {
           text: 'Serverdaten übernehmen & speichern',
+          /** Ersetzt lokale Daten durch die Serverdaten (`overwriteUserDaten`) und gibt die Bedienung frei. */
           function: () => {
             overwriteUserDaten();
             clearLoading('btnAuswaehlen');
@@ -128,6 +143,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
         },
         {
           text: 'Lokale Daten behalten & speichern',
+          /** Markiert die lokalen Zeilen der abweichenden Monate für AutoSave und speichert sofort (`flushAll`). */
           function: async () => {
             const bzMonths = changedMonthsByStorage.get('dataBZ') ?? new Set<number>();
             const beMonths = changedMonthsByStorage.get('dataBE') ?? new Set<number>();
@@ -192,6 +208,7 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
         },
         {
           text: 'Vergleichen & manuell speichern',
+          /** Pausiert AutoSave, markiert die Abweichungen und zeigt das Review-Banner; gespeichert wird erst dessen "Übernehmen". */
           function: () => {
             setAutoSaveEnabled(false);
             buttonDisable(true);
@@ -268,10 +285,10 @@ export default async function loadUserDaten(monat: number, jahr: number): Promis
   }
 
   // Pending AutoSave-Timer abbrechen, bevor neu geladen wird — sonst zeigt der Status-Indicator
-  // nach dem Reload bis zu 10s fälschlich 'pending', obwohl alle Rows 'unchanged' sind (Bug 3).
+  // nach dem Reload bis zu 10s fälschlich 'pending', obwohl alle Rows 'unchanged' sind.
   cancelAllPending();
 
-  // Immer laden: Bei Längenmismatch mit lokalen Daten, sonst mit Server-Daten
+  // Immer laden: die Sync-Ergebnisse sind lokale Daten, sofern der Abgleich sie nicht durch Serverdaten ersetzt hat.
   document.querySelector<CustomHTMLTableElement>('#tableBZ')?.instance.rows.load(BZ);
   document.querySelector<CustomHTMLTableElement>('#tableBE')?.instance.rows.load(BE);
   document.querySelector<CustomHTMLTableElement>('#tableE')?.instance.rows.load(EWT);

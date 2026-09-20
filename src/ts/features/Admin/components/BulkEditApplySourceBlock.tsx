@@ -28,6 +28,8 @@ type Props = {
  * "Daten übernehmen von": Radio-Auswahl der Quelle, mit dem passenden Select
  * jeweils direkt unter der gewählten Option eingerückt (statt gemeinsam
  * unterhalb aller Radios), damit die Zugehörigkeit eindeutig ist.
+ *
+ * @param props - Gewählte Quelle, Vorlagen bzw. Muster-Benutzer mit Auswahl und die zu übernehmenden Kategorien samt Callbacks.
  */
 export function BulkEditApplySourceBlock({
   applySource,

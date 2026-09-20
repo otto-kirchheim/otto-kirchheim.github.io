@@ -20,7 +20,12 @@ type Props = {
   onClose: () => void;
 };
 
-/** CSS-Familienname für eine eingebettete Vorlagen-Schrift (FontFace-Registrierung). */
+/**
+ * CSS-Familienname für eine eingebettete Vorlagen-Schrift (FontFace-Registrierung).
+ *
+ * @param id - Id der Vorlagen-Familie.
+ * @returns Familienname der Form `vfp-<id>` mit Sonderzeichen als `-`.
+ */
 function faceName(id: string): string {
   return `vfp-${id.replace(/[^a-z0-9]+/gi, '-')}`;
 }
@@ -41,6 +46,9 @@ const HELVETICA = CSS_STANDARD.helvetica!;
  * gleicher Familienname mit weight/style-Deskriptor) und gibt die Namen der fertig geladenen Familien
  * zurück. Die Bytes liegen bereits aus `vorlageFonts.ts` vor -- reine Browser-Registrierung, kein
  * Netzugriff. Bei fehlendem `FontFace` (alte Engine) bleibt die Vorschau bei Helvetica.
+ *
+ * @param vorlageFonts - Aus der Vorlage gelesene Schriftfamilien.
+ * @returns Namen (`faceName`) der Familien, von denen mindestens ein Schnitt geladen ist.
  */
 function useVorlagenFaces(vorlageFonts: VorlageFontFamilie[]): Set<string> {
   const [geladen, setGeladen] = useState<Set<string>>(() => new Set());
@@ -87,6 +95,14 @@ function useVorlagenFaces(vorlageFonts: VorlageFontFamilie[]): Set<string> {
   return geladen;
 }
 
+/**
+ * Wählt die CSS-Schriftfamilie für die Vorschau eines Schnitts.
+ *
+ * @param familie - Familienwert der Schriftart (Standardfamilie oder `vorlage:<Name>`).
+ * @param ersatz - `true`, wenn der Renderer für diesen Schnitt auf Helvetica ausweicht.
+ * @param geladen - Namen der bereits geladenen Vorlagen-Familien.
+ * @returns CSS-`font-family`-Liste; Helvetica für Ersatz, ungeladene oder unbekannte Familien.
+ */
 function cssFamilie(familie: string, ersatz: boolean, geladen: Set<string>): string {
   if (ersatz) return HELVETICA;
   if (familie.startsWith('vorlage:')) {
@@ -95,6 +111,11 @@ function cssFamilie(familie: string, ersatz: boolean, geladen: Set<string>): str
   return CSS_STANDARD[familie] ?? HELVETICA;
 }
 
+/**
+ * Eine Vorschauzeile: Probetext im Schnitt (fett/kursiv) der gewählten Familie, mit Hinweis bei Helvetica-Ersatz.
+ *
+ * @param props - Schnitt mit Beschriftung, Familie, Ersatz-Kennzeichen und den geladenen Vorlagen-Familien.
+ */
 function SchnittZeile({
   schnitt,
   label,
@@ -132,6 +153,11 @@ function SchnittZeile({
   );
 }
 
+/**
+ * Live-Vorschau aller Schnitte der gewählten Schriftart; Schnitte, die die Vorlagen-Schrift nicht mitbringt, erscheinen als Helvetica-Ersatz.
+ *
+ * @param props - Gewählte Schriftart und die Vorlagen-Familien.
+ */
 function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorlageFonts: VorlageFontFamilie[] }) {
   const geladen = useVorlagenFaces(vorlageFonts);
   const fehlt = new Set(fehlendeVorlagenSchnitte(value, vorlageFonts));
@@ -153,11 +179,18 @@ function Vorschau({ value, vorlageFonts }: { value: Schriftart | undefined; vorl
 
 /**
  * Modal für die formularweite Schriftwahl samt Live-Vorschau je Schnitt. Eigenständiges Portal-Modal
- * (nicht das geteilte `#modal`), weil der FormularEditor selbst schon in einem Admin-Tab läuft.
- * Änderungen wirken sofort auf `value` -- der Dialog hält keinen eigenen Entwurf.
+ * (`createPortal` in `document.body`), nicht das geteilte `#modal` aus `showModal`. Änderungen wirken
+ * sofort auf `value`, der Dialog hält keinen eigenen Entwurf.
+ *
+ * @param props - Aktuelle Schriftart, Vorlagen-Familien, nicht nutzbare Schriften sowie `onChange` und `onClose`.
  */
 export function SchriftartDialog({ value, vorlageFonts, unbrauchbareFonts, onChange, onClose }: Props) {
   useEffect(() => {
+    /**
+     * Schließt den Dialog bei Escape.
+     *
+     * @param e - Tastaturereignis.
+     */
     const beiTaste = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };

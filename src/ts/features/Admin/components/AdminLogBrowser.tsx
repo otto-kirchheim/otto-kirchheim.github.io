@@ -8,17 +8,36 @@ import { DbFeld } from '@/components';
 
 const ITEMS_PER_PAGE = 25;
 
+/**
+ * Formatiert einen Log-Zeitstempel für die Tabelle.
+ *
+ * @param val - Zeitstempel (ISO-String o.ä.), beliebiger Typ.
+ * @returns "DD.MM.YY, HH:mm", "—" bei leerem Wert oder der Rohwert bei ungültigem Datum.
+ */
 function formatTs(val: unknown): string {
   if (!val) return '—';
   const d = dayjs(String(val));
   return d.isValid() ? d.format('DD.MM.YY, HH:mm') : String(val);
 }
 
+/**
+ * Kürzt eine lange Id für die Anzeige.
+ *
+ * @param val - Id (beliebiger Typ, wird zu String).
+ * @returns Bei mehr als 10 Zeichen "…" plus die letzten 8, sonst unverändert.
+ */
 function truncateId(val: unknown): string {
   const s = String(val ?? '');
   return s.length > 10 ? `…${s.slice(-8)}` : s;
 }
 
+/**
+ * Löst eine Benutzer-Id zum Anzeigenamen auf.
+ *
+ * @param map - Zuordnung Benutzer-Id zu Anzeigename.
+ * @param id - Benutzer-Id oder `null`.
+ * @returns Name, gekürzte Id als `<code>` bei unbekanntem Benutzer oder "—" ohne Id.
+ */
 function userName(map: Record<string, string>, id: string | null): React.JSX.Element | string {
   if (!id) return '—';
   const name = map[id];
@@ -26,13 +45,21 @@ function userName(map: Record<string, string>, id: string | null): React.JSX.Ele
   return <code className="text-muted">{truncateId(id)}</code>;
 }
 
-/** Der geloggte Payload liegt unter `params.payload` (siehe writeAdminLog im Backend). */
+/**
+ * Der geloggte Payload liegt unter `params.payload` (siehe writeAdminLog im Backend).
+ *
+ * @param entry - Log-Eintrag der Admin-Log-API.
+ * @returns Payload oder `null`, wenn keiner vorhanden ist.
+ */
 function logPayload(entry: Record<string, unknown>): unknown {
   const params = entry['params'];
   if (!params || typeof params !== 'object') return null;
   return (params as { payload?: unknown }).payload ?? null;
 }
 
+/**
+ * Seitenweise Ansicht der Admin-Logs mit Aktionsfilter und aufklappbarem Payload je Eintrag.
+ */
 export function AdminLogBrowser() {
   const [logs, setLogs] = useState<AdminPage | null>(null);
   const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
@@ -49,6 +76,12 @@ export function AdminLogBrowser() {
     loadPage(1, '');
   }, []);
 
+  /**
+   * Lädt eine Log-Seite und übernimmt sie samt Seitennummer; Fehler erscheinen als Meldung über der Tabelle.
+   *
+   * @param pageNum - Seitennummer (ab 1).
+   * @param action - Aktionsfilter; leer = ungefiltert.
+   */
   function loadPage(pageNum: number, action: string) {
     setLoading(true);
     setLoadError(null);
@@ -61,6 +94,9 @@ export function AdminLogBrowser() {
       .finally(() => setLoading(false));
   }
 
+  /**
+   * Startet die Suche mit dem aktuellen Aktionsfilter ab Seite 1.
+   */
   function search() {
     loadPage(1, actionFilter);
   }

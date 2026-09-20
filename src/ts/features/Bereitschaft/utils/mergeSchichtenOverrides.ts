@@ -6,8 +6,18 @@ type SchichtKey = 'frueh' | 'spaet' | 'nacht' | 'sonder';
 /**
  * Merged zwei `schichtenOverrides`-Objekte feldweise je Schicht; `runtime` gewinnt.
  * `default` und `overrides` werden innerhalb einer Schicht zusammengeführt.
+ *
+ * @param base - Overrides der gewählten Vorgabe.
+ * @param runtime - Interaktiv im Modal gesetzte Overrides (haben Vorrang).
+ * @returns Zusammengeführte Overrides je Schicht (frueh, spaet, nacht, sonder).
  */
 export default function mergeSchichtenOverrides(base: Overrides = {}, runtime: Overrides = {}): Overrides {
+  /**
+   * Führt die Einträge einer Schicht aus `base` und `runtime` zusammen.
+   *
+   * @param key - Schicht.
+   * @returns Zusammengeführter Eintrag; `undefined`, wenn beide fehlen.
+   */
   const mergeOne = (key: SchichtKey): Partial<IPerWeekdaySchicht> | undefined => {
     const baseEntry = base?.[key];
     const runtimeEntry = runtime?.[key];

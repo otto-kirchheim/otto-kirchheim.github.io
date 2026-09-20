@@ -64,6 +64,11 @@ export default function createModalPasskeySetPassword(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Erzeugt den Submit-Handler: prüft Eingaben, Browser-Unterstützung und Verbindung, bestätigt per Passkey-Assertion und setzt das Passwort. Fehler erscheinen im Meldungsfeld des Modals.
+   *
+   * @returns Asynchroner Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => Promise<void> {
     return async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
       if (!(form instanceof HTMLFormElement)) return;

@@ -28,6 +28,10 @@ export type DbDialogOptionen = {
  * Haengt einen offenen Drawer-Dialog an `document.body` und meldet ihn samt Inhaltsknoten
  * zurueck. `beimSchliessen` laeuft genau einmal -- egal ob per Escape, Hintergrund,
  * `data-dialog-dismiss` oder `schliessen()`.
+ *
+ * @param beimSchliessen - Callback nach dem Schliessen und Entfernen des Dialogs.
+ * @param optionen - Schliessverhalten und zusaetzliche Rahmenklassen (siehe `DbDialogOptionen`).
+ * @returns Dialog-Element, Inhaltsbereich und `schliessen()`-Funktion.
  */
 export function erzeugeDbDialog(beimSchliessen: () => void, optionen: DbDialogOptionen = {}): DbDialog {
   const { hintergrundSchliesst = true, escapeSchliesst = true, rahmenKlassen = [] } = optionen;
@@ -50,6 +54,7 @@ export function erzeugeDbDialog(beimSchliessen: () => void, optionen: DbDialogOp
   document.body.append(dialog);
 
   let erledigt = false;
+  /** Schliesst und entfernt den Dialog und ruft `beimSchliessen`; jeder weitere Aufruf ist ein No-op. */
   const schliessen = () => {
     if (erledigt) return;
     erledigt = true;

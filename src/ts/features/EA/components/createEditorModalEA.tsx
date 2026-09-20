@@ -22,12 +22,27 @@ import { onEvent } from '@/core';
 import { calculateEaDauerFromEwt, persistEaTableData } from '../utils';
 import { TAETIGKEIT_VORSCHLAEGE } from '../utils/taetigkeitVorschlaege';
 
+/**
+ * Sucht eine Spaltendefinition der EA-Tabelle.
+ *
+ * @param row - Tabelle oder Zeile, deren Spalten durchsucht werden.
+ * @param columnName - Spaltenname (`name`).
+ * @returns Die gefundene Spalte.
+ * @throws {Error} Wenn die Spalte nicht existiert.
+ */
 const getColumn = (row: CustomTable<IDatenEA> | Row<IDatenEA>, columnName: string): Column<IDatenEA> => {
   const column = row.columns.array.find(column => column.name === columnName);
   if (!column) throw Error(`Spalte ${columnName} nicht gefunden`);
   return column;
 };
 
+/**
+ * Erzeugt ein Pflicht-Textfeld für eine Spalte, bei einer Zeile mit deren aktuellem Wert vorbelegt.
+ *
+ * @param row - Tabelle (Neuanlage) oder Zeile (Bearbeiten).
+ * @param columnName - Spaltenname, aus dem Id und Beschriftung stammen.
+ * @returns Das `MyInput`-Element.
+ */
 const createTextElement = (row: CustomTable<IDatenEA> | Row<IDatenEA>, columnName: string) => {
   const column = getColumn(row, columnName);
   return (
@@ -44,6 +59,15 @@ const createTextElement = (row: CustomTable<IDatenEA> | Row<IDatenEA>, columnNam
   );
 };
 
+/**
+ * Öffnet das Modal zum Bearbeiten (Zeile) bzw. Anlegen (Tabelle) eines EA-Eintrags. Ein gewählter
+ * EWT-Eintrag sperrt Tag/Dauer und liefert sie; jeder EWT-Eintrag lässt sich nur einer EA-Zeile
+ * zuordnen. Speichern prüft auf doppelte Tage und persistiert die Tabelle.
+ *
+ * @param row - Zu bearbeitende Zeile oder Tabelle für einen neuen Eintrag.
+ * @param titel - Modal-Titel.
+ * @throws {Error} Bei unbekanntem `row`-Typ oder wenn die Formular-Referenz nicht gesetzt ist.
+ */
 export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>, titel: string): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -68,6 +92,13 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
       .map(ea => ea.EWT as string),
   );
 
+  /**
+   * Baut die Optionen des EWT-Selects; unsynchronisierte und von anderen EA-Zeilen belegte Einträge
+   * sind gesperrt, der aktuell verknüpfte ist vorausgewählt.
+   *
+   * @param rows - Anzubietende EWT-Einträge.
+   * @returns Optionsliste für `MySelect` bzw. `applySelectOptions`.
+   */
   const buildEwtOptions = (rows: IDatenEWT[]) => [
     { value: '', text: '— keine Zuordnung —', selected: !currentEwtRef },
     ...rows.map(day => {
@@ -88,6 +119,13 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
 
   const ewtOptions = buildEwtOptions(dataE);
 
+  /**
+   * Sperrt Tag und Dauer, solange ein EWT-Eintrag gewählt ist, und füllt sie daraus; ohne Auswahl
+   * werden beide Felder wieder freigegeben.
+   *
+   * @param currentForm - Formular des Modals.
+   * @param selectedId - Gewählte EWT-Id oder leerer String für "keine Zuordnung".
+   */
   const applyEwtSelection = (currentForm: HTMLFormElement, selectedId: string): void => {
     const tagInput = currentForm.querySelector<HTMLInputElement>('#Tag');
     const dauerInput = currentForm.querySelector<HTMLInputElement>('#Dauer');
@@ -100,6 +138,11 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
     if (dauerInput) dauerInput.value = calculateEaDauerFromEwt(entry);
   };
 
+  /**
+   * Übernimmt bei Wechsel der EWT-Auswahl Tag und Dauer aus dem gewählten Eintrag.
+   *
+   * @param evt - Change-Event des EWT-Selects.
+   */
   const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
     const currentForm = ref.current;
@@ -185,12 +228,18 @@ export default function EditorModalEA(row: CustomTable<IDatenEA> | Row<IDatenEA>
     if (!select) return;
     const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     applySelectOptions(select, buildEwtOptions(freshDataE));
-    // Der aktuell gewählte EWT-Eintrag kann sich zeitlich geändert haben (z.B. Beginn/Ende bearbeitet,
-    // während dieses Modal noch offen ist) — Dauer muss dann neu berechnet werden.
+    // Der gewählte EWT-Eintrag kann sich bei offenem Modal geändert haben (z.B. Beginn/Ende) — Dauer
+    // daher erneut übernehmen.
     if (select.value) applyEwtSelection(form, select.value);
   });
   beiModalSchliessen(unsubscribeEwtSync);
 
+  /**
+   * Erzeugt den Submit-Handler: prüft auf doppelten Tag, schreibt die Werte in die Zeile bzw. legt
+   * eine neue an, schließt das Modal und persistiert die Tabelle.
+   *
+   * @returns Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;

@@ -2,6 +2,7 @@ import type { Daten, SeitenDef, TabellenDef } from '@otto-kirchheim/nebengeld-sh
 import type { Kontext } from '@/infrastructure/pdf/wert';
 import type { FormularCode } from './datenKatalog';
 
+/** Scharf geschaltetes Ziel: das nächste auf dem PDF aufgezogene Rechteck wird dorthin geschrieben. */
 export type Armed =
   | { bereich: 'feld'; key: string }
   | { bereich: 'spalte'; tabelle: string; index: number }
@@ -21,16 +22,15 @@ export type Props = {
   vorschau: Vorschau;
   /**
    * Benennt eine Sonderzeile um -- Inhalt (`TabellenDef.sonderzeilen`) UND alle Platzierungen
-   * (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite in einem Zug, sonst zeigen die
-   * Platzierungen nach dem Umbenennen ins Leere. Muss auf `value`-Ebene laufen (kennt alle Seiten).
+   * (`TabellenBereich.sonderzeilen[].name`) auf JEDER Seite in einem Zug. Läuft auf `value`-Ebene,
+   * weil nur dort alle Seiten bekannt sind.
    */
   onSonderzeileUmbenannt: (tabelle: string, alt: string, neu: string) => void;
 };
 
 /**
- * Beispieldaten samt Renderer-Kontext. Damit zeigt die Feldliste denselben Wert, den das erzeugte
- * PDF zeigen wuerde -- Summen und Uebertrag eingeschlossen, die sonst nur ueber die PDF-Vorschau
- * pruefbar waeren.
+ * Beispieldaten samt Renderer-Kontext. Damit zeigt die Feldliste denselben Wert wie das erzeugte
+ * PDF, auch bei Summen und Uebertrag.
  */
 export interface Vorschau {
   daten: Daten;

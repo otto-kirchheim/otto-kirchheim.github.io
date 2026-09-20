@@ -3,11 +3,11 @@ import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/
 import { default as Storage } from '@/infrastructure/storage/Storage';
 
 /**
- * Laedt `VorgabenB`-Zeilen in die bestehende `#tableVE`-Instanz (seit Achse B des
- * `useReducer`-Umbaus konstruiert `VorgabenBTable.tsx` -- eine feste, immer gemountete
- * Feature-Komponente, siehe dort -- die Instanz genau einmal; hier wird nur noch
- * nachgeladen). `rows.load()` ist synchron (siehe `Rows.ts`), ein Aufrufer, der direkt danach
- * liest, sieht garantiert den frisch geladenen State.
+ * Lädt `VorgabenB`-Zeilen in die bestehende `#tableVE`-Instanz. Die Instanz konstruiert `VorgabenBTable.tsx`
+ * einmalig beim Mount; ohne Instanz passiert nichts. `rows.load()` ist synchron (siehe `Rows.ts`), ein direkt
+ * folgender Lesezugriff sieht den frisch geladenen Stand.
+ *
+ * @param VorgabenB - Zu ladende Vorgaben; ohne Angabe die gespeicherten aus `VorgabenU` (leer, falls keine vorhanden).
  */
 export default function generateEingabeTabelleEinstellungenVorgabenB(VorgabenB?: {
   [key: string]: IVorgabenUvorgabenB;

@@ -11,6 +11,11 @@ import { WertVorschau } from './WertVorschau';
 import { DBButton, DBStack, DBTooltip } from '@db-ux/react-core-components';
 import { DbAuswahl, DbFeld } from '@/components';
 
+/**
+ * Aufklappbare Zeile für eine Tabellenspalte: x-Kanten, Art des Inhalts (Datenfeld, Berechnet, Ankreuzen, Listen-Platz), Anzeigename, Darstellung und Beispielwert.
+ *
+ * @param props - Spalte mit Tabellenname und Index, Formular, Zeilenquelle, berechneten Nachbarspalten (`andereBerechnete`), Beispielzeile, Listen-Gruppen, Scharfschalt-Zustand (`armed`), Vorschau und Callbacks (Scharfschalten, Ändern, Löschen, Verschieben).
+ */
 export function SpalteZeile({
   spalte,
   tabellenName,
@@ -165,10 +170,9 @@ export function SpalteZeile({
           title="Schlüssel, unter dem der Wert dieser Spalte in die Zeile geschrieben wird -- darüber ist er in Ankreuz-Bedingungen und Summenfeldern anderer Spalten wiederverwendbar. Muss sich von anderen Spalten unterscheiden, sonst überschreiben sie sich gegenseitig."
           placeholder="z.B. dauer"
           value={spalte.key}
-          // Leerer Schlüssel macht die Spalte für berechneteEintraege() (Feld-Dropdown in
-          // Summenfeldern) unsichtbar und wird von mitBerechnetenSpalten() in `shared` unter
-          // `zeile['']` geschrieben -- niemals speichern, Eingabe bei leerem Wert verwerfen statt
-          // den Schlüssel zu löschen.
+          // Ein leerer Schlüssel macht die Spalte für `berechneteEintraege()` (Feld-Dropdown in Summenfeldern)
+          // unsichtbar, und `mitBerechnetenSpalten()` (`infrastructure/pdf/tabellenZeilen.ts`) würde ihren Wert
+          // unter `zeile['']` ablegen -- deshalb nie speichern: leere Eingaben verwerfen, den Schlüssel nicht löschen.
           onChange={e => {
             const wert = e.target.value;
             if (wert !== '') onChange({ ...spalte, key: wert });

@@ -1,14 +1,12 @@
 /**
- * Material-Icon-Name -> DB-UX-Icon-Name.
- *
- * Freigegeben am 2026-09-06 (Vergleichsseite alt/neu). Zwei Motive gibt es im DB-Satz nicht;
- * sie sind nach DB-Regelwerk aus je zwei offiziellen Icons zusammengesetzt und liegen als
- * SVG unter `src/icons/` (erzeugt von `scripts/icon-varianten.py`):
+ * Zwei Motive gibt es im DB-Satz nicht; sie sind nach DB-Regelwerk aus offiziellen Icons
+ * zusammengesetzt und liegen als SVG unter `src/icons/` (erzeugt von `scripts/icon-varianten.py`):
  * `theme-auto` (Sonne + Mond) und `filter-off` (Trichter mit 2-dp-Durchstreichung).
  */
 export const EIGENE_ICONS = ['theme-auto', 'filter-off'] as const;
 export type EigenesIcon = (typeof EIGENE_ICONS)[number];
 
+/** Material-Icon-Name -> DB-UX-Icon-Name. */
 export const DB_ICON = {
   // --- Aktionen
   add: 'plus',

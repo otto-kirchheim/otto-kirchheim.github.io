@@ -20,16 +20,22 @@ registerHook('app:version-outdated', () => setVersionOutdated(updateSW));
 
 featureLifecycleRegistry.registerFeature({
   name: 'Admin',
+  /**
+   * Zeigt den Admin-Bereich und mountet den Admin-Tab (lazy geladen), sofern der Benutzer Admin ist.
+   *
+   * @param ctx - Feature-Kontext mit `isAdmin` und `userName`.
+   */
   async register(ctx: FeatureContext): Promise<void> {
     if (ctx.isAdmin) {
-      // `#admin` existiert seit Phase K5 zweimal (Desktop-Kopfzeile + Drawer-Kopie von
-      // `DBHeader`) -- beide Vorkommen anfassen, nicht nur das erste.
+      // `#admin` existiert zweimal (Desktop-Kopfzeile + Drawer-Kopie von `DBHeader`) --
+      // beide Vorkommen anfassen, nicht nur das erste.
       document.querySelectorAll<HTMLDivElement>('#admin').forEach(el => el.classList.remove('d-none'));
       document.querySelector<HTMLDivElement>('#Admin')?.classList.remove('d-none');
       const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
       mountAdminTab(ctx.userName);
     }
   },
+  /** Unmountet den Admin-Tab (Modul lazy geladen). */
   async unregister(): Promise<void> {
     const { unmountAdminTab } = await import('@/features/Admin/mountAdminTab');
     unmountAdminTab();
@@ -55,6 +61,12 @@ if (import.meta.env.DEV && 'serviceWorker' in navigator) {
 const intervalMS = 60 * 60 * 1000;
 
 const updateSW = registerSW({
+  /**
+   * Prueft stuendlich, ob der Service-Worker-Code auf dem Server erreichbar ist, und stoesst dann ein Update an.
+   *
+   * @param swUrl - URL des Service Workers.
+   * @param r - Registrierung; ohne Registrierung wird kein Intervall gestartet.
+   */
   onRegisteredSW(swUrl, r) {
     if (r)
       setInterval(async () => {
@@ -84,25 +96,18 @@ import { initializeAppBootstrap, registerAppStartTask } from './core';
 
 console.log('Version:', import.meta.env.APP_VERSION);
 
-// Bewusst AUSSERHALB von `registerAppStartTask`: ES-Module-Imports werten VOR dem Top-Level-Code
-// des importierenden Moduls aus -- `auth/index.ts`s eigener `registerAppStartTask`-Aufruf (per
-// `import './core/orchestration/auth'` unten) landet dadurch in der Warteschlange VOR diesem
-// hier, obwohl er im Quelltext spaeter steht. `auth`s Task griff (`selectYear` ->
-// `setMonatJahr`) auf `#Monat` zu, das seit Phase K5 erst durch `AppHeader`s Mount entsteht --
-// mit dem Mount in der Warteschlange kam die Race genau umgekehrt zur Absicht: `auth`s Task lief
-// zuerst und warf, bevor Header/Footer je gemountet wurden. Der Root-Render (und
-// `initTabController()`) laeuft deshalb synchron beim Modul-Import, nicht als Queue-Eintrag --
-// UND ueber `mount()` (nicht direkt `createRoot().render()`), weil `mount()` per `flushSync`
-// auch die passiven Effekte der gemounteten Baeume synchron abarbeitet. Ein reines
-// `createRoot().render()` committet zwar das DOM synchron, plant `useEffect`-Hooks (z. B.
-// `EinstellungenTab`s Tabellen-Erzeugung) aber nur asynchron ein -- ohne `flushSync` liefe der
-// erste `registerAppStartTask`-Callback (spaetestens bei `window: 'load'`) potenziell VOR diesen
-// Effekten und faende die von ihnen erzeugten Elemente noch nicht vor.
+// Root-Render und `initTabController()` laufen bewusst synchron beim Modul-Import, nicht als
+// `registerAppStartTask`-Eintrag: ES-Imports werten VOR dem Top-Level-Code aus, daher steht `auth/index.ts`s
+// Start-Task (`import './core/orchestration/auth'` unten) trotz spaeterer Quelltextposition VOR einem hier
+// registrierten in der Queue. Er greift ueber `selectYear` -> `setMonatJahr` auf `#Monat` zu, das erst
+// `AppHeader`s Mount erzeugt. Gemountet wird ueber `mount()` (per `flushSync`), nicht ueber
+// `createRoot().render()`: nur so laufen auch die `useEffect`-Hooks (z. B. Tabellen-Erzeugung in
+// `EinstellungenTab`) synchron, bevor der erste Start-Task (spaetestens bei `window: 'load'`) ihre
+// Elemente erwartet.
 const appRoot = document.getElementById('app');
 if (appRoot) mount(appRoot, createElement(App));
 
-// Tabs laufen seit dem DB-Header ohne Bootstrap-Plugins; die mobile Navigations-Schublade
-// bringt `DBHeader` (AppHeader.tsx) seit Phase K5 eingebaut mit.
+// Die mobile Navigations-Schublade bringt `DBHeader` (AppHeader.tsx) eingebaut mit.
 initTabController();
 
 // Muss nach dem Root-Mount stehen: `.db-shell-content` entsteht erst mit `App.tsx`s Baum.
@@ -136,11 +141,10 @@ registerAppStartTask(() => {
   if (!navigator.onLine) setOffline();
   else window.addEventListener('offline', setOffline);
 
-  // `zeigeTabAusHash()` IMMER aufrufen (nicht nur wenn angemeldet): `tabController.ts`s
-  // Login-Gate (`zeigeTab()`, geschuetzte Haupttabs -> `start`) korrigiert einen tief
-  // verlinkten/alten Hash (`#EWT` u.ae.) sonst nicht -- die Adressleiste bliebe falsch, obwohl
-  // bereits `start` angezeigt wird. `scrollTo(0, 1)` (Mobile-Safari: Adressleiste einklappen)
-  // bleibt bewusst nur fuer den eingeloggten Fall gaengig, wie zuvor.
+  // `zeigeTabAusHash()` IMMER aufrufen (nicht nur wenn angemeldet): `tabController.ts`s Login-Gate
+  // (`zeigeTab()`, geschuetzte Haupttabs -> `start`) korrigiert einen Deep-Link-/Alt-Hash (`#EWT` u.ae.)
+  // sonst nicht -- die Adressleiste bliebe falsch, obwohl `start` angezeigt wird. `scrollTo(0, 1)`
+  // (Mobile-Safari: Adressleiste einklappen) nur fuer den eingeloggten Fall.
   const hashGezeigt = zeigeTabAusHash();
   if (Storage.check('Benutzer') && hashGezeigt) window.scrollTo(0, 1);
 

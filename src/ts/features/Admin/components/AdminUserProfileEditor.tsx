@@ -103,6 +103,12 @@ type EditState = {
   saveError: string | null;
 };
 
+/**
+ * Leitet aus einem Profil-Dokument die Tabellenzeile ab.
+ *
+ * @param doc - Profil-Dokument aus der Admin-API.
+ * @returns Tabellenzeile mit Namen und OE als Text.
+ */
 function extractRow(doc: Record<string, unknown>): ProfileRow {
   const pers = (doc['Pers'] ?? {}) as Record<string, unknown>;
   return {
@@ -115,12 +121,24 @@ function extractRow(doc: Record<string, unknown>): ProfileRow {
   };
 }
 
-/** OE wird als Ebenen-Array gespeichert, hier aber als ein Textfeld bearbeitet. */
+/**
+ * OE wird als Ebenen-Array gespeichert, hier aber als ein Textfeld bearbeitet.
+ *
+ * @param key - Name des Pers-Felds.
+ * @param value - Gespeicherter Wert.
+ * @returns Text für das Eingabefeld (OE-Ebenen zu einem Text zusammengefügt).
+ */
 function persFieldToInput(key: string, value: unknown): string {
   if (key === 'OE') return joinOeLevels((value as string[] | undefined) ?? []);
   return String(value ?? '');
 }
 
+/**
+ * Erzeugt den Bearbeitungsstand eines Profils inkl. JSON-Rohtexten der komplexen Abschnitte.
+ *
+ * @param doc - Profil-Dokument aus der Admin-API.
+ * @returns Bearbeitungsstand; fehlende Felder erhalten Standardwerte, E-Mail-Status und Passkeys werden später nachgeladen.
+ */
 function buildEditState(doc: Record<string, unknown>): EditState {
   const pers = { ...((doc['Pers'] ?? {}) as Record<string, unknown>) };
   // Bestandsnutzer haben diese Felder noch nicht im Dokument (kein Schema-Default) -- ohne
@@ -151,10 +169,21 @@ function buildEditState(doc: Record<string, unknown>): EditState {
   };
 }
 
+/**
+ * Unterscheidet eine Benutzer-Id von einem Suchtext.
+ *
+ * @param s - Zu prüfender Text.
+ * @returns `true` bei einer 24-stelligen Hex-Id (MongoDB-ObjectId).
+ */
 function isUserId(s: string): boolean {
   return /^[0-9a-f]{24}$/i.test(s);
 }
 
+/**
+ * Admin-Editor für Benutzerprofile: seitenweise Liste mit Suche und Bearbeiten-Dialog (Pers, JSON-Abschnitte, E-Mail-Status, Passkeys).
+ *
+ * @param props - `initialSearch`: Suchtext oder Benutzer-Id (öffnet direkt dessen Profil); `searchKey` löst die Auswertung erneut aus, auch bei gleichem Wert.
+ */
 export function AdminUserProfileEditor({
   initialSearch = '',
   searchKey = 0,
@@ -170,6 +199,11 @@ export function AdminUserProfileEditor({
   const [edit, setEdit] = useState<EditState | null>(null);
   const [search, setSearch] = useState('');
 
+  /**
+   * Lädt eine Seite der Profile; Fehler erscheinen als Meldung über der Tabelle.
+   *
+   * @param pageNum - Seitennummer (ab 1).
+   */
   function loadPage(pageNum: number) {
     setLoading(true);
     setLoadError(null);
@@ -202,6 +236,11 @@ export function AdminUserProfileEditor({
     }
   }, [initialSearch, searchKey]);
 
+  /**
+   * Öffnet den Bearbeiten-Dialog und lädt E-Mail-Status und Passkeys des Benutzers nach.
+   *
+   * @param row - Zu bearbeitendes Profil.
+   */
   async function openEdit(row: ProfileRow) {
     const state = buildEditState(row.doc);
     setEdit({ ...state, passkeysLoading: true });
@@ -218,10 +257,19 @@ export function AdminUserProfileEditor({
     }
   }
 
+  /**
+   * Schließt den Bearbeiten-Dialog.
+   */
   function closeEdit() {
     setEdit(null);
   }
 
+  /**
+   * Übernimmt eine Änderung eines Pers-Felds in den Bearbeitungsstand.
+   *
+   * @param key - Name des Pers-Felds.
+   * @param value - Eingabetext; für Zahlenfelder als Zahl (Fallback 0), für OE als Ebenen-Array übernommen.
+   */
   function handlePersChange(key: string, value: string) {
     if (!edit) return;
     const parsed: unknown = PERS_NUMBER_FIELDS.has(key)
@@ -235,6 +283,12 @@ export function AdminUserProfileEditor({
     });
   }
 
+  /**
+   * Übernimmt JSON-Text eines Abschnitts; bei ungültigem JSON bleibt der Wert unverändert und ein Fehler wird gemerkt.
+   *
+   * @param section - Name des JSON-Abschnitts.
+   * @param raw - Roher JSON-Text aus dem Editor.
+   */
   function handleJsonChange(section: string, raw: string) {
     if (!edit) return;
     const jsonRaw = { ...edit.jsonRaw, [section]: raw };
@@ -250,6 +304,9 @@ export function AdminUserProfileEditor({
     setEdit({ ...edit, jsonRaw, jsonErrors, jsonValues });
   }
 
+  /**
+   * Speichert Pers und JSON-Abschnitte des Profils und aktualisiert die Zeile; bei JSON-Fehlern wird nicht gespeichert.
+   */
   async function saveEdit() {
     if (!edit) return;
     if (Object.keys(edit.jsonErrors).length > 0) {
@@ -274,6 +331,9 @@ export function AdminUserProfileEditor({
     }
   }
 
+  /**
+   * Schaltet nach Bestätigung das Flag emailVerified des Benutzers um.
+   */
   async function handleToggleEmailVerified() {
     if (!edit) return;
     const newVal = !(edit.emailVerified ?? false);
@@ -291,6 +351,11 @@ export function AdminUserProfileEditor({
     }
   }
 
+  /**
+   * Löscht einen Passkey des Benutzers nach Bestätigung.
+   *
+   * @param credentialId - Id des zu löschenden Passkeys.
+   */
   async function handleDeletePasskey(credentialId: string) {
     if (!edit) return;
     const confirmed = await confirmDialog(`credentialId: ${credentialId}`, {
@@ -321,7 +386,6 @@ export function AdminUserProfileEditor({
 
   return (
     <div>
-      {/* Search */}
       <div className="mb-3">
         <DbFeld
           beschriftung="Name oder OE suchen…"
@@ -339,7 +403,6 @@ export function AdminUserProfileEditor({
         </DBNotification>
       )}
 
-      {/* Table */}
       <div className="db-table" data-width="full" data-size="small" data-divider="both" data-interactive="true">
         <table className="align-middle mb-0">
           <thead>
@@ -400,7 +463,6 @@ export function AdminUserProfileEditor({
         </table>
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <DBStack direction="row" wrap alignment="center" justifyContent="space-between" gap="x-small" className="mt-3">
           <small className="text-muted">
@@ -441,7 +503,7 @@ export function AdminUserProfileEditor({
         </DBButton>
       </div>
 
-      {/* Edit Modal – Portal: rendert außerhalb des Tab-Pane (display:none-Problem) */}
+      {/* Portal: in einer ausgeblendeten Tab-Pane (display:none) wäre der Dialog sonst unsichtbar */}
       {edit &&
         createPortal(
           <DBDrawer
@@ -466,7 +528,6 @@ export function AdminUserProfileEditor({
                 )}
 
                 <div className="raster abstand-4">
-                  {/* Pers Fields */}
                   <div className="sp-md-6">
                     <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Persönliche Daten</DBHeadingH6>
                     {Object.entries(edit.pers).map(([key, val]) => {
@@ -517,7 +578,6 @@ export function AdminUserProfileEditor({
                     })}
                   </div>
 
-                  {/* JSON Sections */}
                   <div className="sp-md-6">
                     <DBHeadingH6 className="fw-semibold mb-3 border-bottom pb-2">Komplexe Felder (JSON)</DBHeadingH6>
                     {JSON_SECTIONS.map(section => (
@@ -533,11 +593,9 @@ export function AdminUserProfileEditor({
                   </div>
                 </div>
 
-                {/* User Actions */}
                 <div className="border-top mt-4 pt-3">
                   <DBHeadingH6 className="fw-semibold mb-3">Benutzer-Aktionen</DBHeadingH6>
                   <div className="d-flex flex-wrap gap-3 align-items-start">
-                    {/* emailVerified */}
                     <div>
                       <div className="small text-muted mb-1">emailVerified</div>
                       <DBButton
@@ -558,7 +616,6 @@ export function AdminUserProfileEditor({
                       )}
                     </div>
 
-                    {/* Passkeys */}
                     <div className="flex-grow-1">
                       <div className="small text-muted mb-1">
                         Passkeys

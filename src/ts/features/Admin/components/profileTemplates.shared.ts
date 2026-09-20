@@ -40,10 +40,9 @@ type TemplateField = {
 };
 
 /**
- * Zulässige Werte für `Pers.TB`, aus dem shared-Paket — dieselbe Liste prüfen
- * Zod und Mongoose im Backend. Der Wert dient in der Berechnung als Schlüssel
- * in die Geld-Vorgaben (`datenGeld[monat][TB]`), ein freier Text führt dort zu
- * `undefined` und damit zu NaN-Ergebnissen.
+ * Zulässige Werte für `Pers.TB` aus dem shared-Paket; dieselbe Liste prüfen Zod und Mongoose im
+ * Backend. Der Wert dient in der Berechnung als Schlüssel in die Geld-Vorgaben, ein freier Text
+ * führt dort zu `undefined` und damit zu NaN-Ergebnissen.
  */
 export const TB_OPTIONS: readonly IVorgabenUPers['TB'][] = TB_VALUES;
 
@@ -95,6 +94,13 @@ export const WEEKDAY_OPTIONS = [
   { value: 7, label: 'So' },
 ] as const;
 
+/**
+ * Vergibt fortlaufende Schlüssel (`'1'`, `'2'`, …) und markiert genau eine Zeile als Standard.
+ *
+ * @param rows - Bereitschafts-Vorgaben.
+ * @param preferredStandardIndex - Gewünschter Standard-Index; ungültig oder fehlend gilt die bisherige Standardzeile, sonst die erste.
+ * @returns Neue Zeilen; leeres Array bei leerer Eingabe.
+ */
 export function normalizeVorgabenBRows(rows: VorgabenBRow[], preferredStandardIndex?: number): VorgabenBRow[] {
   if (rows.length === 0) return [];
 

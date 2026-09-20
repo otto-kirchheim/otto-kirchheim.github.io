@@ -10,6 +10,13 @@ import { isLegacyArbeitszeit, migrateArbeitszeit } from '@/infrastructure/data/f
 import { createElement } from 'react';
 import { mount } from '@/infrastructure/ui';
 
+/**
+ * Befüllt die Einstellungen-Maske aus den Benutzer-Vorgaben: persönliche Daten, Arbeitszeit, Fahrzeiten, Tabs, Zulagen, AutoSave und die Bereitschafts-Vorgaben in `#tableVE`.
+ * Ohne gespeicherte `VorgabenB` gelten die Standard-Einsatzzeiträume.
+ *
+ * @param VorgabenU - Benutzer-Vorgaben; Standard ist der gespeicherte Datensatz aus dem Storage.
+ * @throws {Error} Wenn `#tableVE` fehlt.
+ */
 export default function generateEingabeMaskeEinstellungen(
   VorgabenU = Storage.get<IVorgabenU>('VorgabenU', { check: true }),
 ): void {
@@ -43,6 +50,9 @@ export default function generateEingabeMaskeEinstellungen(
   } else generateEingabeTabelleEinstellungenVorgabenB(VorgabenB);
 }
 
+/**
+ * Trägt die im Storage gemerkte E-Mail-Adresse in `#EmailAnzeige` ein.
+ */
 function populateEmailField(): void {
   const emailInput = document.querySelector<HTMLInputElement>('#EmailAnzeige');
   if (!emailInput) return;
@@ -55,6 +65,11 @@ let arbeitszeitPanelRenderCount = 0;
 let fahrzeitPanelRenderCount = 0;
 let zulagenPanelRenderCount = 0;
 
+/**
+ * Mountet das `FahrzeitenPanel` in `#fahrzeiten-panel`.
+ *
+ * @param VorgabenU - Benutzer-Vorgaben; `Fahrzeit` liefert die Anfangszeilen.
+ */
 function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#fahrzeiten-panel');
   if (!panel) return;
@@ -64,6 +79,11 @@ function renderFahrzeitenPanel(VorgabenU: IVorgabenU): void {
   );
 }
 
+/**
+ * Mountet das `ArbeitszeiteingabePanel` in `#arbeitszeit-panel`.
+ *
+ * @param VorgabenU - Benutzer-Vorgaben; `Arbeitszeit` liefert die Anfangswerte (altes Format wird migriert).
+ */
 function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   const panel = document.querySelector<HTMLDivElement>('#arbeitszeit-panel');
   if (!panel) return;
@@ -73,6 +93,13 @@ function renderArbeitszeiteingabePanel(VorgabenU: IVorgabenU): void {
   mount(panel, createElement(ArbeitszeiteingabePanel, { key: arbeitszeitPanelRenderCount++, initialValues: aZ }));
 }
 
+/**
+ * Schreibt jeden Wert in das Input/Select mit der gleichnamigen Id.
+ *
+ * @typeParam T - Objekttyp; die Schlüssel entsprechen den Element-Ids.
+ * @param values - Werte je Feld-Id; nur vorhandene Input-/Select-Elemente werden befüllt.
+ * @throws {Error} Wenn ein Wert weder Zahl noch String ist.
+ */
 function setElementValues<T>(values: T): void {
   for (const key in values) {
     const element = document.querySelector<HTMLInputElement | HTMLSelectElement>(`#${key}`);
@@ -84,10 +111,21 @@ function setElementValues<T>(values: T): void {
   }
 }
 
+/**
+ * Typprüfung für Zahl oder String.
+ *
+ * @param value - Zu prüfender Wert.
+ * @returns `true` bei Zahl oder String.
+ */
 function isNumberOrString(value: unknown): value is number | string {
   return typeof value === 'number' || typeof value === 'string';
 }
 
+/**
+ * Hakt die Tab-Checkboxen (`data-tab-key`) entsprechend der aktivierten Tabs an.
+ *
+ * @param aktivierteTabs - Aktive Tab-Schlüssel; leer oder fehlend heißt alle aktiv.
+ */
 function populateTabCheckboxes(aktivierteTabs?: string[]): void {
   const checkboxes = document.querySelectorAll<HTMLInputElement>('#collapseFive input[data-tab-key]');
   for (const cb of Array.from(checkboxes)) {
@@ -95,6 +133,11 @@ function populateTabCheckboxes(aktivierteTabs?: string[]): void {
   }
 }
 
+/**
+ * Mountet die `ZulagenCheckboxList` in `#settings-zulagen-list`.
+ *
+ * @param benoetigteZulagen - Codes der benötigten Zulagen.
+ */
 function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
   const host = document.querySelector<HTMLDivElement>('#settings-zulagen-list');
   if (!host) return;
@@ -103,6 +146,9 @@ function populateZulagenCheckboxes(benoetigteZulagen?: string[]): void {
 
 /**
  * Formatiert Millisekunden als lesbaren Zeittext (z.B. "10 s", "2 min").
+ *
+ * @param ms - Dauer in Millisekunden.
+ * @returns Text in ms (unter 1 s), s (unter 1 min) oder min.
  */
 export function formatDelayLabel(ms: number): string {
   if (ms < 1000) return `${ms} ms`;
@@ -111,11 +157,13 @@ export function formatDelayLabel(ms: number): string {
 }
 
 /**
- * Mappt Slider-Position (0-24) auf Millisekunden.
- * Diskrete Stufen:
- * - 0-9: 1-10s (1s Schritte)
- * - 10-19: 15-60s (5s Schritte, beginnend bei 15s)
- * - 20-24: 60-300s (1min Schritte)
+ * Mappt die Slider-Position (0-24) auf Millisekunden. Diskrete Stufen:
+ * - 0-9: 1-10 s (1-s-Schritte)
+ * - 10-19: 15-60 s (5-s-Schritte)
+ * - 20-24: 60-300 s (1-min-Schritte)
+ *
+ * @param position - Slider-Position; wird auf 0-24 begrenzt.
+ * @returns Verzögerung in Millisekunden.
  */
 export function sliderPositionToMs(position: number): number {
   if (position < 0) position = 0;
@@ -134,8 +182,10 @@ export function sliderPositionToMs(position: number): number {
 }
 
 /**
- * Mappt Millisekunden auf Slider-Position (0-24).
- * Findet die nächste verfügbare Position.
+ * Mappt Millisekunden auf die nächstliegende Slider-Position (0-24), Umkehrung von `sliderPositionToMs`.
+ *
+ * @param ms - Verzögerung in Millisekunden.
+ * @returns Slider-Position 0-24.
  */
 export function msToSliderPosition(ms: number): number {
   if (ms <= 10000) {
@@ -150,6 +200,12 @@ export function msToSliderPosition(ms: number): number {
   }
 }
 
+/**
+ * Setzt Checkbox, Slider und Label der AutoSave-Einstellungen und hängt den Live-Update-Listener des Labels an den Slider.
+ *
+ * @param autoSaveEnabled - AutoSave an/aus; Standard `true`.
+ * @param autoSaveDelayMs - Verzögerung in ms; Standard 10000.
+ */
 function populateAutoSaveSettings(autoSaveEnabled?: boolean, autoSaveDelayMs?: number): void {
   const enabledCheckbox = document.querySelector<HTMLInputElement>('#autoSaveEnabled');
   const delayInput = document.querySelector<HTMLInputElement>('#autoSaveDelay');

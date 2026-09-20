@@ -8,28 +8,30 @@ import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
 import useActiveTab from '@/infrastructure/ui/useActiveTab';
 
 /**
- * App-Shell, ein einziger React-Baum (Phase N, Slice 1). Bildet die vormalige
- * `index.html`-Body-Struktur 1:1 nach -- identische `id`/`class`-Attribute, damit
- * `tabController`, `autoSave`, `featureLifecycleRegistry`/`syncFeatureTabs` und der
- * Admin-Sichtbarkeits-Toggle ihre Elemente weiterhin per `querySelector` finden (bewaehrtes
- * Phase-L-Muster fuer `#start`/`#Berechnung`/`#Einstellungen`, jetzt auf die ganze Shell
- * ausgeweitet). `#modal` und die leeren Feature-Root-Divs (`bereitschaft-root` etc.) bleiben
- * leer -- `showModal`/`featureLifecycleRegistry` mounten dort weiterhin selbst per `mount()`.
+ * App-Shell als ein einziger React-Baum. Die `id`/`class`-Attribute der Panes und Mount-Divs
+ * bleiben stabil, damit `tabController`, `autoSave`, `featureLifecycleRegistry`/`syncFeatureTabs`
+ * und der Admin-Sichtbarkeits-Toggle ihre Elemente per `querySelector` finden. `#modal` und die
+ * leeren Feature-Root-Divs (`bereitschaft-root` etc.) bleiben leer -- `showModal` und
+ * `featureLifecycleRegistry` mounten dort selbst per `mount()`.
  *
- * Seit Phase N Slice 2 berechnen die `#tabContent`-Panes ihre `active`/`show`-Klassen selbst aus
- * `activeTabStore` (`useActiveTab()`) -- `tabController.ts`s `zeigeTab()` schreibt fuer diese
- * Hauptgruppe keine DOM-Klassen mehr, siehe dortiger Kommentar. `null` (Store-Anfangswert) heisst
- * "start" ist aktiv, identisch zum vormals hartkodierten `fade show active` auf `#start`.
+ * Die `#tabContent`-Panes berechnen `active`/`show` selbst aus `activeTabStore`
+ * (`useActiveTab()`); `tabController.zeigeTab()` schreibt fuer diese Hauptgruppe keine
+ * DOM-Klassen. `null` (Store-Anfangswert) heisst: "start" ist aktiv.
  *
- * Header-Umbau (DBHeader -> DB UX Shell): `<DBShell>` umschliesst `AppHeader` (liefert die
- * beiden Control-Panels, kein eigenes `DBShell`, siehe dort) UND `<DBShellContent>` --
- * `DBShell`s CSS-Grid braucht beide als direkte Geschwister. `AppFooter`/`SnackbarHost` bleiben
- * bewusst AUSSERHALB von `DBShellContent` (eigene `position: fixed/absolute`-Overlays,
- * unabhaengig vom Content-Scroll) -- `SnackbarHost` rendert seine Container ohnehin per
- * `createPortal` direkt in `document.body`, die Position im Baum hier ist nur Konvention.
+ * `<DBShell>` umschliesst `AppHeader` (liefert die beiden Control-Panels, kein eigenes `DBShell`)
+ * UND `<DBShellContent>`, weil sein CSS-Grid beide als direkte Geschwister braucht.
+ * `AppFooter`/`SnackbarHost` stehen bewusst AUSSERHALB von `DBShellContent` (eigene fixed/absolute
+ * Overlays, unabhaengig vom Content-Scroll); `SnackbarHost` rendert per `createPortal` in
+ * `document.body`, die Position im Baum ist nur Konvention.
  */
 export default function App() {
   const aktiverTab = useActiveTab() ?? 'start';
+  /**
+   * CSS-Klassen einer Tab-Pane: `show active` nur, wenn `id` der aktive Tab ist.
+   *
+   * @param id - Panel-Id (`#start`, `#Berechnung`, ...).
+   * @returns Klassenstring der Pane.
+   */
   const paneKlasse = (id: string): string => `tab-pane fade${aktiverTab === id ? ' show active' : ''}`;
 
   return (
@@ -65,12 +67,10 @@ export default function App() {
 
         <div id="conflictReviewBannerMount"></div>
 
-        {/* `mt-3` (Abstand zur Kopfzeile) nur ausserhalb Start: `.mt-3` nutzt DB-UXs eigenes
-            `!important` -- ein CSS-Gegenrule in `styles.scss` (unlayered, sonst hoechste
-            Prioritaet) kann das NICHT schlagen, `!important` kehrt die Cascade-Layer-Reihenfolge
-            um. Start reicht per `min-block-size` exakt bis zur Fusszeile (siehe `#start.active`
-            unten) -- mit `mt-3` ragte Start um genau diese 12px unter die Fusszeile (User-Fund,
-            Puppeteer-gemessen `startRect.bottom` vs. `footerRect.top`). */}
+        {/* `mt-3` (Abstand zur Kopfzeile) nur ausserhalb Start: die Klasse ist `!important`
+            (`utilities.scss`), eine unlayered Gegenregel in `styles.scss` schlaegt sie nicht --
+            bei `!important` kehrt sich die Layer-Rangfolge um. Start reicht per `min-block-size`
+            exakt bis zur Fusszeile (`#start.active`); mit `mt-3` ragte es darunter. */}
         <div className={`tab-content${aktiverTab === 'start' ? '' : ' mt-3'}`} id="tabContent">
           <div className={paneKlasse('start')} id="start" role="tabpanel">
             <StartTab />

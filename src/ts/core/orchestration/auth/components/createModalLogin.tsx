@@ -7,6 +7,10 @@ import { DBLoadingButton, MyFormModal, MyInput, MyModalBody, showModal } from '@
 import { createModalForgotPassword, createModalNewUser } from '.';
 import type { CustomHTMLDivElement } from '@/types';
 
+/**
+ * Öffnet den Login-Dialog mit Benutzer/Passwort sowie Links zu "Passwort vergessen" und "Registrieren".
+ * Wenn der Browser WebAuthn unterstützt, gibt es "Mit Passkey" (Benutzername darf dann leer bleiben). Das Modal-Element gibt es erst nach `showModal`, daher hält `currentModal` es für den Passkey-Button vor.
+ */
 export default function createModalLogin(): void {
   let currentModal: CustomHTMLDivElement | null = null;
 
@@ -107,6 +111,9 @@ export default function createModalLogin(): void {
   if (ref.current === null) throw new Error('referenz nicht gesetzt');
   const form = ref.current;
 
+  /**
+   * Baut den Submit-Handler: bei gültigem Formular wird der Standard-Submit verhindert und `loginUser` mit dem Modal aufgerufen.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!(form instanceof HTMLFormElement)) return;

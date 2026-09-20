@@ -12,6 +12,13 @@ type NonErrorRowState = 'unchanged' | DirtyRowState;
 
 export type RowState = NonErrorRowState | 'error';
 
+/**
+ * Liefert den Zustand ohne Fehlerhülle: Fehler-Zeilen zählen mit ihrem `_errorState` (Standard
+ * `'unchanged'`), alle anderen mit `_state`.
+ *
+ * @param row - Zeile bzw. `RowRecord` mit `_state` und optional `_errorState`.
+ * @returns Zustand ohne `'error'`.
+ */
 export function getEffectiveRowState(row: { _state: RowState; _errorState?: DirtyRowState }): NonErrorRowState {
   return row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
 }
@@ -19,10 +26,14 @@ export function getEffectiveRowState(row: { _state: RowState; _errorState?: Dirt
 /**
  * Stabiler, ID-basierter Schlüssel für eine Zeile — Ersatz für Objektidentitäts-Vergleiche
  * (`Set<Row>.has(row)`) über asynchrone Grenzen hinweg (AutoSave-Commit-Race). `new`-Zeilen
- * (auch im Fehlerzustand mit `_errorState === 'new'`) nutzen `_clientRequestId` (immer
- * vorhanden, siehe `Row`-Konstruktor); alle anderen nutzen `_id` (für `modified`/`deleted`
- * durch `getChangeRows()` bereits garantiert vorhanden). Wirft bei Verletzung dieser Invariante
- * bewusst, statt eine falsche Zeile zufällig zu matchen.
+ * (auch im Fehlerzustand mit `_errorState === 'new'`) nutzen `_clientRequestId` (wird von
+ * `createRowRecord()` für `new` immer vergeben); alle anderen nutzen `_id` (für `modified`/
+ * `deleted` durch `getChangeRows()` bereits garantiert vorhanden). Wirft bei Verletzung dieser
+ * Invariante bewusst, statt eine falsche Zeile zufällig zu matchen.
+ *
+ * @param row - Zeile bzw. `RowRecord` mit State und `_id`/`_clientRequestId`.
+ * @returns `new:<_clientRequestId>` oder `id:<_id>`.
+ * @throws {Error} Wenn die dafür nötige ID fehlt.
  */
 export function getRowKey(row: {
   _state: RowState;
@@ -161,17 +172,16 @@ export interface CustomHTMLTableRowElement<T extends CustomTableTypes> extends H
 export type Breakpoints = BreakpointName;
 export type Directions = 'ASC' | 'DESC';
 
-// ─── Reducer-Kern (Phase A) ────────────────────────────────────────────────
+// ─── Reducer-Kern ──────────────────────────────────────────────────────────
 //
-// Reine, serialisierbare Datenform einer Zeile/Spalte für den `useReducer`-Kern. KEINE
-// Klasse, kein DOM-/Table-Backref -- der `.instance`-Shim (`Row`/`Rows`/`Column`/`Columns`
-// in Row.ts/Rows.ts/Column.ts) baut die nach außen sichtbare Klassen-API darüber.
+// Reine, serialisierbare Datenform einer Zeile/Spalte für den Reducer-Kern. KEINE Klasse, kein
+// DOM-/Table-Backref -- der `.instance`-Shim (`Row`/`Rows`/`Column`/`Columns` in Row.ts/Rows.ts/
+// Column.ts) baut die nach außen sichtbare Klassen-API darüber.
 //
-// `uid` ist ein drittes, von `getRowKey()` UNABHÄNGIGES Konzept: ein permanenter, intern
-// vergebener Cache-Schlüssel für die Row-Shim-Instanz (löst das `===`-Problem der 6
-// Editor-Modals, siehe Plan-Dokument), ändert sich nie über die Lebenszeit der Zeile.
-// `getRowKey()` bleibt ausschließlich für den AutoSave-Commit-Race-Abgleich zuständig und
-// ändert sich bewusst bei new→unchanged.
+// `uid` ist UNABHÄNGIG von `getRowKey()`: ein permanenter, intern vergebener Cache-Schlüssel für
+// die Row-Shim-Instanz (die Editor-Modals vergleichen gehaltene `Row`-Referenzen per `===`), der
+// sich über die Lebenszeit der Zeile nie ändert. `getRowKey()` dient nur dem AutoSave-Commit-
+// Race-Abgleich und ändert sich bewusst bei new -> unchanged.
 
 export interface RowRecord<T extends CustomTableTypes> {
   uid: string;
@@ -217,11 +227,10 @@ export type TableAction<T extends CustomTableTypes> =
   | { type: 'DELETE_ROW'; uid: string } // Row.deleteRow()
   | { type: 'UNDO_DELETE'; uid: string } // Row.undoDelete()
   | {
-      // Escape-Hatch für Direktzuweisungen auf Row-Felder außerhalb von val()/deleteRow()/
-      // undoDelete() -- u.a. Phase-0-Stellen (submitBereitschaftsEinsatz.ts B/C/D) und die
-      // AutoSave-Fehlerpfade (errorHandling.ts, changeTracking.ts, persistEwtTableData.ts),
-      // die schon vor dem Reducer-Umbau per Rohfeld-Zuweisung arbeiteten. Kein Vorbild für
-      // neuen Code -- neue Schreibzugriffe gehören in eine eigene TableAction.
+      // Escape-Hatch für Direktzuweisungen auf Row-Felder (`row._state = ...` u.ä.) außerhalb von
+      // val()/deleteRow()/undoDelete() -- z.B. in `submitBereitschaftsEinsatz.ts` und den
+      // AutoSave-Fehlerpfaden (`errorHandling.ts`). Kein Vorbild für neuen Code: neue
+      // Schreibzugriffe gehören in eine eigene TableAction.
       type: 'SET_ROW_FIELD';
       uid: string;
       field: '_state' | '_errorState' | '_errorMessage' | '_id' | '_clientRequestId' | 'cells';

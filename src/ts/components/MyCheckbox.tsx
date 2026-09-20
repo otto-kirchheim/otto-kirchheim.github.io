@@ -3,8 +3,7 @@ import { useRef, type ChangeEventHandler, type ComponentProps, type FC, type Rea
 
 import { refZusammenfuehren, STANDARD_UNGUELTIG_MELDUNG, useSofortigeId } from './dbFeldHelfer';
 
-/** Von `DBSwitch`s eigenem Prop-Typ abgeleitet statt einer Hand-Allowlist -- siehe `MyInput.tsx`
- *  fuer die Begruendung. */
+/** Von `DBSwitch`s eigenem Prop-Typ abgeleitet statt einer Hand-Allowlist -- siehe `MyInput.tsx`. */
 type TMyCheckbox = Omit<
   ComponentProps<typeof DBSwitch>,
   'ref' | 'label' | 'checked' | 'defaultChecked' | 'onChange' | 'children' | 'id'
@@ -27,10 +26,13 @@ type TMyCheckbox = Omit<
   schalter?: boolean;
 };
 
-/*
+/**
  * Standard ist `DBCheckbox` (Formularwert, gilt erst mit Speichern/Absenden); `schalter` waehlt
- * `DBSwitch` fuer Stellen mit sofortiger Wirkung. App-eigene Klassen (z.B. `bereitschaft`,
- * Rasterspalten) reicht `className` durch.
+ * `DBSwitch` fuer Stellen mit sofortiger Wirkung. Gesteuert ist das Feld nur mit `changeHandler`
+ * UND `checked`, sonst ungesteuert.
+ *
+ * Props: `id`, `children` (Beschriftung), optional `checked`/`defaultChecked`,
+ *   `changeHandler`, `myRef`, `schalter`, `className` sowie weitere `DBSwitch`-Props.
  */
 const MyCheckbox: FC<TMyCheckbox> = ({
   className,

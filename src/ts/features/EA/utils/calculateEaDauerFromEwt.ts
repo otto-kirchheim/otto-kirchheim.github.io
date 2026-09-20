@@ -7,6 +7,9 @@ import dayjs from '@/infrastructure/date/configDayjs';
  * §4 ArbZG: ab 6h Arbeitszeit 30 Minuten Pause, ab 9h 45 Minuten (die 45 ersetzen die 30, sie
  * addieren sich nicht). Bewusst unabhängig von den persönlichen Arbeitszeit-/Schicht-Pause-
  * Einstellungen des Nutzers — reine Funktion der rohen Arbeitsdauer, kein Nutzer-Setting.
+ *
+ * @param entry - EWT-Eintrag mit Beginn und Ende (`HH:mm`); Ende <= Beginn gilt als Folgetag.
+ * @returns Dauer als `HH:mm` (nie negativ).
  */
 export default function calculateEaDauerFromEwt(entry: Pick<IDatenEWT, 'beginE' | 'endeE'>): string {
   const beginn = dayjs(entry.beginE, 'HH:mm');

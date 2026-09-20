@@ -2,6 +2,13 @@ import type { IDatenEWT } from '@/types';
 import type { Dayjs } from 'dayjs';
 import dayjs from './configDayjs';
 
+/**
+ * Parst eine Uhrzeit `HH:mm` (strikt) und legt sie auf den Tag von `baseDate`.
+ *
+ * @param baseDate - Tag, auf den die Uhrzeit gesetzt wird.
+ * @param value - Uhrzeit als `HH:mm`.
+ * @returns Zeitpunkt mit Sekunden/Millisekunden 0; `null` bei fehlendem oder ungültigem Wert.
+ */
 function parseTime(baseDate: Dayjs, value?: string): Dayjs | null {
   if (!value) return null;
   const parsed = dayjs(value, 'HH:mm', true);
@@ -9,6 +16,14 @@ function parseTime(baseDate: Dayjs, value?: string): Dayjs | null {
   return baseDate.hour(parsed.hour()).minute(parsed.minute()).second(0).millisecond(0);
 }
 
+/**
+ * Ermittelt den Buchungstag eines EWT-Eintrags: der Tag, auf den der größere Teil der Zeitspanne
+ * fällt. Endet die Zeit nicht nach dem Beginn, gilt sie als über Mitternacht hinaus; bei Gleichstand
+ * der beiden Teile zählt der Starttag.
+ *
+ * @param row - EWT-Zeile mit `Tag`, `beginE` und `endeE` (`HH:mm`).
+ * @returns Buchungstag als `YYYY-MM-DD`; bei fehlender Zeit der Starttag, bei ungültigem `Tag` dessen Rohwert.
+ */
 export default function calculateBuchungstagEwt(row: IDatenEWT): string {
   const tag = dayjs(row.Tag);
   if (!tag.isValid()) return row.Tag;

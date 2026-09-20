@@ -6,6 +6,14 @@ import type { BereitschaftRuntimeOverrides } from '../utils/bereitschaftRuntimeO
 import type { BereitschaftSchichtTyp, ISchichtZeiten, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { SchichtOverrideEditor } from '@/features/Einstellungen/components/SchichtOverrideEditor';
 
+/**
+ * Kompaktes Zeitfeld für Beginn/Ende der Sonderschicht (Label folgt aus der Id: endet sie auf "Ende", "Ende", sonst "Beginn").
+ *
+ * @param id - Feld-Id.
+ * @param value - Aktueller Wert ("HH:mm").
+ * @param onChange - Wird bei Änderung mit dem neuen Wert aufgerufen.
+ * @returns Das Eingabefeld.
+ */
 const createSonderTimeInput = (id: string, value: string, onChange: (value: string) => void): JSX.Element => (
   <DbFeld
     type="time"
@@ -24,8 +32,11 @@ type BereitschaftOverridePanelProps = {
 };
 
 /**
- * Optionaler Abschnitt im „Neue Bereitschaft eingeben"-Modal: erlaubt, die aZ-Arbeitszeiten je Wochentag
- * für genau diesen Eintrag zu überschreiben (gleicher Editor wie im VorgabenB-Editor).
+ * Optionaler Abschnitt im „Neue Bereitschaft eingeben"-Modal: erlaubt, die Arbeitszeiten je Wochentag
+ * für genau diesen Eintrag zu überschreiben (gleicher Editor wie im VorgabenB-Editor). Rendert nichts,
+ * wenn keine Frühschicht konfiguriert ist.
+ *
+ * @param props - `aZ` (Arbeitszeit-Vorgabe) und `onChange` (meldet die Overrides; `undefined` = keine).
  */
 export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
   aZ,
@@ -36,11 +47,12 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
   const [sonderOverride, setSonderOverride] = useState<ISchichtZeiten | undefined>(undefined);
   const [sonderActive, setSonderActive] = useState(false);
 
-  // Beobachte den #sonder Checkbox und aktualisiere sonderActive reaktiv
+  // `#sonder` liegt außerhalb dieser Komponente (createAddModalBereitschaftsZeit); sein Zustand wird hier gespiegelt.
   useEffect(() => {
     const checkbox = document.querySelector<HTMLInputElement>('#sonder');
     if (!checkbox) return;
 
+    /** Übernimmt den Zustand der `#sonder`-Checkbox. */
     const handleChange = () => {
       setSonderActive(checkbox.checked);
     };
@@ -61,19 +73,34 @@ export const BereitschaftOverridePanel: FC<BereitschaftOverridePanelProps> = ({
     ...(aZ?.nacht?.aktiv ? (['nacht'] as BereitschaftSchichtTyp[]) : []),
   ];
 
+  /**
+   * Übernimmt geänderte Schicht-Overrides und meldet sie zusammen mit der Sonderschicht-Überschreibung.
+   *
+   * @param next - Neue Overrides aus dem Editor; `undefined` = keine.
+   */
   const handleEditor = (next: IVorgabenUvorgabenB['schichtenOverrides']): void => {
     setOverrides(next ?? {});
     onChange(next ? { ...next, sonderOverride } : sonderOverride ? { sonderOverride } : undefined);
   };
 
+  /**
+   * Übernimmt eine geänderte Sonderschicht-Überschreibung und meldet sie zusammen mit den Schicht-Overrides.
+   *
+   * @param next - Neue Arbeitszeit der Sonderschicht; `undefined` = zurückgesetzt.
+   */
   const handleSonderChange = (next: ISchichtZeiten | undefined): void => {
     setSonderOverride(next);
     onChange(next ? { ...overrides, sonderOverride: next } : Object.keys(overrides).length > 0 ? overrides : undefined);
   };
 
+  /**
+   * Klappt den Override-Bereich auf/zu. Zugeklappt gelten keine Overrides; beim Aufklappen werden die
+   * bereits erfassten wieder angewendet.
+   *
+   * @param next - `true` = aufgeklappt.
+   */
   const toggleOpen = (next: boolean): void => {
     setOpen(next);
-    // Bei deaktiviertem Schalter gelten keine Overrides; beim Aktivieren die bereits erfassten anwenden.
     onChange(
       next
         ? { ...(Object.keys(overrides).length > 0 ? overrides : {}), ...(sonderOverride ? { sonderOverride } : {}) }

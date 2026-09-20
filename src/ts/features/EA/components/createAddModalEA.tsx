@@ -12,6 +12,12 @@ import { default as applySelectOptions } from '../../Neben/utils/applySelectOpti
 import { addEaTag, calculateEaDauerFromEwt } from '../utils';
 import { TAETIGKEIT_VORSCHLAEGE } from '../utils/taetigkeitVorschlaege';
 
+/**
+ * Schlägt die Entgeltgruppe für höherwertige Arbeit vor: die Entgeltgruppe des Nutzers minus 1.
+ *
+ * @param vorgabenU - Persönliche Vorgaben mit `Pers.Entgeltgruppe`.
+ * @returns Vorschlag als String; leer, wenn die Entgeltgruppe fehlt oder nicht rein numerisch ist.
+ */
 export function suggestNextEntgeltgruppe(vorgabenU: IVorgabenU): string {
   const basis = vorgabenU.Pers.Entgeltgruppe;
   if (!basis || !/^\d+$/.test(basis)) return '';
@@ -20,10 +26,13 @@ export function suggestNextEntgeltgruppe(vorgabenU: IVorgabenU): string {
 
 /**
  * Chronologisch erster EWT-Eintrag ab (exklusive) `after`, der weder unsynchronisiert noch bereits
- * mit einer EA-Zeile verknüpft ist. Ohne `after` zählt der gesamte Monat (initialer Modal-Zustand).
- * `after` sorgt dafür, dass beim Weiterschalten nur vorwaerts gesprungen wird -- sonst würde ein
- * frueherer, weiterhin offener Tag (z.B. Tag 2 ohne EWT-Bezug) den Fortschritt immer wieder dorthin
- * zurückreißen, statt beim zuletzt bearbeiteten Tag fortzufahren.
+ * mit einer EA-Zeile verknüpft ist. `after` verhindert beim Weiterschalten Rücksprünge: sonst würde
+ * ein früherer, weiterhin offener Tag den Fortschritt immer wieder dorthin zurückreißen.
+ *
+ * @param dataE - EWT-Einträge des Monats.
+ * @param usedEwtRefs - Ids der bereits mit einer EA-Zeile verknüpften EWT-Einträge.
+ * @param after - Nur Einträge nach diesem Tag; ohne Angabe zählt der gesamte Monat.
+ * @returns Der nächste freie EWT-Eintrag oder undefined.
  */
 function findNextAvailableEwt(
   dataE: IDatenEWT[],
@@ -41,7 +50,14 @@ function findNextAvailableEwt(
     );
 }
 
-/** Erster Kalendertag im [start, ende]-Bereich, für den noch kein EA-Eintrag existiert. */
+/**
+ * Erster Kalendertag im [start, ende]-Bereich, für den noch kein EA-Eintrag existiert.
+ *
+ * @param existingTags - Bereits belegte Tage als `DD.MM.YYYY`.
+ * @param start - Erster zu prüfender Tag.
+ * @param ende - Letzter zu prüfender Tag (inklusiv).
+ * @returns Freier Tag als `YYYY-MM-DD` (Format des Date-Inputs) oder undefined, wenn alle belegt sind.
+ */
 function findNextFreeDay(
   existingTags: Set<string>,
   start: ReturnType<typeof dayjs>,
@@ -55,6 +71,14 @@ function findNextFreeDay(
   return undefined;
 }
 
+/**
+ * Öffnet das Modal zum Hinzufügen eines EA-Eintrags im aktiven Monat. Optional wird ein EWT-Eintrag
+ * verknüpft (sperrt Tag/Dauer und übernimmt sie aus dem EWT); nach dem Speichern springt das Modal
+ * zum nächsten offenen Tag, damit mehrere Einträge ohne Neustart erfasst werden können.
+ *
+ * @param tableEA - EA-Tabelle, in die der Eintrag eingefügt wird.
+ * @throws {Error} Wenn die Formular-Referenz nach dem Rendern nicht gesetzt ist.
+ */
 export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
   const ref = createRef<HTMLFormElement>();
 
@@ -65,13 +89,26 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
   const datum = dayjs([Jahr, Monat - 1, 1]);
   const maxDate = datum.endOf('month').format('YYYY-MM-DD');
 
-  // Liest direkt aus der Live-Tabelle statt aus dem Storage-Snapshot -- vermeidet jede
-  // Abhaengigkeit von persistTableData/Storage-Serialisierung fuer den Weiterschalten-Check.
+  /**
+   * Ids der EWT-Einträge, die bereits von einer nicht gelöschten EA-Zeile referenziert werden.
+   * Liest aus der Live-Tabelle statt aus dem Storage-Snapshot, damit der Weiterschalten-Check nicht
+   * von der Persistierung abhängt.
+   *
+   * @returns Menge der verknüpften EWT-Ids.
+   */
   const getUsedEwtRefs = (): Set<string> =>
     new Set(
       tableEA.rows.array.filter(row => row._state !== 'deleted' && row.cells.EWT).map(row => row.cells.EWT as string),
     );
 
+  /**
+   * Baut die Optionen des EWT-Selects; unsynchronisierte und bereits verknüpfte Einträge sind gesperrt.
+   *
+   * @param rows - Anzubietende EWT-Einträge.
+   * @param usedEwtRefs - Ids bereits verknüpfter EWT-Einträge.
+   * @param selectedId - Vorausgewählte EWT-Id; ohne Angabe ist "keine Zuordnung" gewählt.
+   * @returns Optionsliste für `MySelect` bzw. `applySelectOptions`.
+   */
   const buildEwtOptions = (rows: IDatenEWT[], usedEwtRefs: Set<string>, selectedId?: string) => [
     { value: '', text: '— keine Zuordnung —', selected: !selectedId },
     ...rows.map(day => {
@@ -90,6 +127,13 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     }),
   ];
 
+  /**
+   * Sperrt Tag und Dauer, solange ein EWT-Eintrag gewählt ist, und füllt sie daraus; ohne Auswahl
+   * werden beide Felder wieder freigegeben.
+   *
+   * @param dataE - EWT-Einträge, in denen `selectedId` gesucht wird.
+   * @param selectedId - Gewählte EWT-Id oder leerer String für "keine Zuordnung".
+   */
   const applyEwtSelection = (dataE: IDatenEWT[], selectedId: string): void => {
     const currentForm = ref.current;
     if (!currentForm) return;
@@ -105,6 +149,11 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     dauerInput.value = calculateEaDauerFromEwt(entry);
   };
 
+  /**
+   * Übernimmt bei Wechsel der EWT-Auswahl Tag und Dauer aus dem gewählten Eintrag.
+   *
+   * @param evt - Change-Event des EWT-Selects.
+   */
   const handleEwtChange = (evt: ChangeEvent<HTMLSelectElement>): void => {
     const select = evt.target as HTMLSelectElement;
     const dataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
@@ -185,12 +234,16 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
   });
   beiModalSchliessen(unsubscribeEwtSync);
 
-  /** Wählt nach dem Speichern den nächsten noch nicht verknüpften EWT-Eintrag und füllt Tag/Dauer neu — ermöglicht durchgängiges Erfassen ohne Modal-Neustart. */
+  /**
+   * Wählt nach dem Speichern den nächsten noch nicht verknüpften EWT-Eintrag und füllt Tag/Dauer neu.
+   * Gibt es keinen, wird der nächste Kalendertag ohne EA-Eintrag vorgeschlagen (oder direkt mit einem
+   * dort liegenden freien EWT-Eintrag verknüpft); sind alle Tage belegt, erscheint ein Hinweis.
+   */
   function advanceToNextEwt(): void {
     const select = form.querySelector<HTMLSelectElement>('#ewtRefSelect');
     const tagInput = form.querySelector<HTMLInputElement>('#Tag');
-    // Tag-Feld enthaelt an dieser Stelle noch den Wert des gerade abgeschickten Eintrags (day3) --
-    // vor der ersten Verwendung dient der Vortag des Monatsbeginns als "vor allem" liegender Anker.
+    // Das Tag-Feld enthält hier noch den Wert des gerade gespeicherten Eintrags; ist es leer, dient
+    // der Vortag des Monatsbeginns als Anker vor allen Tagen.
     const lastTag = tagInput?.value ? dayjs(tagInput.value) : datum.subtract(1, 'day');
     const freshDataE = getEwtDaten(undefined, undefined, { scope: 'monat', filter: 'starttag', excludeDeleted: true });
     const usedEwtRefs = getUsedEwtRefs();
@@ -198,9 +251,8 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
 
     if (select) {
       applySelectOptions(select, buildEwtOptions(freshDataE, usedEwtRefs, next?._id));
-      // applySelectOptions haelt die vorherige Auswahl, solange sie unter den neuen Optionen noch
-      // existiert (jetzt nur disabled) -- ohne diesen Override bliebe die Auswahl auf dem gerade
-      // verbrauchten EWT-Eintrag stehen und nur das Tag-Feld wuerde sichtbar weiterspringen.
+      // applySelectOptions behält die vorherige Auswahl, solange sie noch existiert (jetzt nur
+      // disabled); ohne Override bliebe der gerade verbrauchte EWT-Eintrag gewählt.
       select.value = next?._id ?? '';
     }
 
@@ -209,13 +261,13 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
       return;
     }
 
-    // Kein weiterer freier EWT-Eintrag: naechsten Kalendertag ohne EA-Eintrag vorschlagen -- ebenfalls
-    // erst ab lastTag, sonst wuerde auch hier ein frueherer offener Tag den Fortschritt zurueckreissen.
+    // Kein weiterer freier EWT-Eintrag: nächsten Kalendertag ohne EA-Eintrag vorschlagen, ebenfalls
+    // erst ab lastTag (kein Rücksprung auf frühere offene Tage).
     const existingTags = new Set(tableEA.rows.array.filter(row => row._state !== 'deleted').map(row => row.cells.Tag));
     const nextFreeDay = findNextFreeDay(existingTags, lastTag.add(1, 'day'), datum.endOf('month'));
 
-    // Entspricht der freie Tag zufaellig einem noch nicht verknuepften EWT-Eintrag (z.B. gerade erst
-    // angelegt, noch unsynchronisiert), direkt verknuepfen statt Tag/Dauer manuell zu verlangen.
+    // Liegt auf dem freien Tag ein noch nicht verknüpfter, synchronisierter EWT-Eintrag, direkt
+    // verknüpfen statt Tag/Dauer manuell zu verlangen.
     const dayMatch = nextFreeDay
       ? freshDataE.find(day => dayjs(day.Tag).format('YYYY-MM-DD') === nextFreeDay)
       : undefined;
@@ -248,6 +300,11 @@ export default function createAddModalEA(tableEA: CustomTable<IDatenEA>): void {
     }
   }
 
+  /**
+   * Erzeugt den Submit-Handler: legt bei gültigem Formular den EA-Eintrag an und schaltet weiter.
+   *
+   * @returns Submit-Handler des Formulars.
+   */
   function onSubmit(): (event: SubmitEvent<HTMLFormElement>) => void {
     return (event: SubmitEvent<HTMLFormElement>): void => {
       if (!form.checkValidity()) return;

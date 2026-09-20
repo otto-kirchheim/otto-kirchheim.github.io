@@ -10,13 +10,19 @@
  * `Cannot read properties of undefined (reading 'pos')` ab, sowohl aus woff2 als auch aus
  * entpacktem TTF. `build.ts` bettet sie deshalb OHNE Subset ein; das verlangt echtes SFNT
  * (woff2-Bytes in einem `FontFile2` ergeben eine kaputte PDF), also wird hier per
- * `woff2-encoder` nach TrueType entpackt. Das wasm-Modul (~90 KB gz) laedt lazy und nur,
- * wenn wirklich eine DB-Schrift gebraucht wird.
+ * `woff2-encoder` nach TrueType entpackt. Das wasm-Modul laedt lazy und nur, wenn wirklich eine
+ * DB-Schrift gebraucht wird.
  */
 
 export type DbSchriftFamilie = 'db-sans' | 'db-head';
 type Schnitt = 'normal' | 'fett' | 'kursiv' | 'fettKursiv';
 
+/**
+ * Type-Guard: ist `familie` eine der beiden DB-Familien (`db-sans`/`db-head`)?
+ *
+ * @param familie - Familien-Wert aus `Layout.schriftart`.
+ * @returns true bei `db-sans` oder `db-head`.
+ */
 export function istDbFamilie(familie: string): familie is DbSchriftFamilie {
   return familie === 'db-sans' || familie === 'db-head';
 }
@@ -44,8 +50,10 @@ let urlMap: Record<string, string> | undefined;
  * URL-Map aller DB-woff2, lazy aufgebaut. `import.meta.glob` ist ein Vite-Feature -- der
  * Aufruf wird im Build durch ein Objekt-Literal ersetzt. In der Bun-Testumgebung fehlt es;
  * dieser Zweig wird dort nur betreten, wenn eine DB-Schrift wirklich gebraucht wird
- * (`dbFontBytes`), und faengt den ReferenceError ab -> leere Map -> Helvetica-Fallback.
- * Ebenso wenn die (nur mit ASSET-Secrets entschluesselten) Dateien im Build fehlen.
+ * (`dbFontBytes`), und faengt den Fehler ab -> leere Map -> Helvetica-Fallback. Ebenso wenn
+ * die (nur mit ASSET-Secrets entschluesselten) Dateien im Build fehlen.
+ *
+ * @returns Pfad -> URL je woff2-Datei; leer, wenn `import.meta.glob` fehlt oder keine Datei da ist.
  */
 function urls(): Record<string, string> {
   if (urlMap) return urlMap;
@@ -65,7 +73,11 @@ const cache = new Map<string, Promise<Uint8Array | null>>();
 /**
  * SFNT-(TrueType-)Bytes fuer einen DB-Schnitt, aus dem woff2-Asset entpackt -- oder `null`,
  * wenn das Asset fehlt bzw. nicht ladbar/entpackbar ist (dann faellt `build.ts` auf Helvetica
- * zurueck).
+ * zurueck). Ergebnisse werden je Datei zwischengespeichert.
+ *
+ * @param familie - DB-Familie (`db-sans`/`db-head`).
+ * @param schnitt - Gewuenschter Schnitt.
+ * @returns TrueType-Bytes, oder `null` bei fehlendem/nicht entpackbarem Asset.
  */
 export function dbFontBytes(familie: DbSchriftFamilie, schnitt: Schnitt): Promise<Uint8Array | null> {
   const datei = DATEI[familie][schnitt];

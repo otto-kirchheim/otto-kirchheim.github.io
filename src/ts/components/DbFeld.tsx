@@ -18,15 +18,9 @@ import {
 } from './dbFeldHelfer';
 
 /**
- * Kompakte Eingabefelder ohne sichtbare Beschriftung (Panels, Zeilen-Editoren, Werkzeugleisten).
- *
- * Duenner Wrapper um `DBInput`/`DBSelect`: die beiden erzeugen die `db-input`/`db-select`-Huelle
- * inklusive `<label>`-Verknuepfung selbst, diese Komponenten uebersetzen nur die kompaktere
- * Aufrufstellen-API (verstecktes Label per Default, `dicht`, `huelleStyle`, `feldKlasse`)
- * in deren Props. Rund 60 Aufrufstellen bleiben dadurch unveraendert.
- *
- * Sichtbare Beschriftung: `beschriftungZeigen`. Gedraengte Groesse (Ersatz fuer
- * `form-control-sm`/`form-select-sm`): `dicht`.
+ * Props von `DbFeld`/`DbAuswahl`: kompakte Eingabefelder ohne sichtbare Beschriftung (Panels,
+ * Zeilen-Editoren, Werkzeugleisten). Sichtbar wird das Label mit `beschriftungZeigen`, die
+ * gedraengte Groesse (`data-density="functional"`) kommt mit `dicht`.
  */
 type GemeinsameProps = {
   beschriftung: string;
@@ -44,11 +38,19 @@ type DbFeldProps = GemeinsameProps &
   Omit<InputHTMLAttributes<HTMLInputElement>, 'className' | 'id' | 'ref' | 'onInput'> & {
     /** Klasse am `<input>` selbst (z.B. `text-center`), nicht an der Huelle. */
     feldKlasse?: string;
-    /** Ersetzt Bootstraps `is-invalid`: DB faerbt ueber `data-custom-validity`. */
+    /** Markiert das Feld als ungueltig (DB faerbt ueber `data-custom-validity`). */
     ungueltig?: boolean;
     feldRef?: Ref<HTMLInputElement>;
   };
 
+/**
+ * Duenner Wrapper um `DBInput` mit der kompakteren Aufrufstellen-API (verstecktes Label per
+ * Default, `dicht`, `huelleStyle`, `feldKlasse`). `DBInput` erzeugt Huelle und `<label>`-
+ * Verknuepfung selbst.
+ *
+ * Props: `GemeinsameProps`, `feldKlasse` (Klasse am `<input>`), `ungueltig`, `feldRef`
+ *   sowie alle weiteren `<input>`-Attribute.
+ */
 export function DbFeld({
   beschriftung,
   beschriftungZeigen,
@@ -91,6 +93,13 @@ type DbAuswahlProps = GemeinsameProps &
     feldRef?: Ref<HTMLSelectElement>;
   };
 
+/**
+ * Duenner Wrapper um `DBSelect` mit derselben kompakten API wie `DbFeld`; die `<option>`-Eintraege
+ * kommen als `children`.
+ *
+ * Props: `GemeinsameProps`, `children` (Optionen), `feldRef` sowie alle weiteren
+ *   `<select>`-Attribute.
+ */
 export function DbAuswahl({
   beschriftung,
   beschriftungZeigen,

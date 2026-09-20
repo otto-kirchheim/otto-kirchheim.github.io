@@ -14,14 +14,14 @@ import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';
 import { markStep } from '../initSequence';
 
-// `tabController.ts` bleibt bewusst auth-agnostisch (siehe dortiger Kommentar) -- die eigentliche
-// Login-Policy fuer Hauptgruppen-Tabs (nur `start` ohne Session) sitzt deshalb hier, nicht dort.
-// Pruefung live bei jedem Aufruf (nicht einmalig `hasRestorableSession` zwischenspeichern):
-// deckt Login/Logout waehrend der Laufzeit korrekt ab, ohne einen zweiten `hashchange`-Listener.
+// `tabController.ts` bleibt bewusst auth-agnostisch (siehe dortiger Kommentar) -- die Login-Policy
+// fuer Hauptgruppen-Tabs (ohne Session nur `start`) sitzt deshalb hier. Die Pruefung laeuft live
+// bei jedem Aufruf, damit Login/Logout zur Laufzeit ohne zweiten `hashchange`-Listener greifen.
 setzeHauptTabErlaubtPruefung(id => id === 'start' || (Storage.check('Benutzer') && Boolean(getUserCookie())));
 
 let adminTabMounted = false;
 
+/** Mountet den Admin-Tab einmalig per Lazy-Import, sofern der Benutzer Admin ist. */
 async function ensureAdminTabMounted(): Promise<void> {
   if (adminTabMounted || !isAdmin()) return;
   const { mountAdminTab } = await import('@/features/Admin/mountAdminTab');
@@ -38,9 +38,9 @@ registerAppStartTask(() => {
     if (vorgabenU?.VorgabenB?.[0]?.endeB?.Nwoche === undefined) Storage.remove('VorgabenU');
   }
 
-  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat`/`#MonatFeld` existieren seit
-  // dem Shell-Umbau zweimal (Desktop- + Mobile-Control-Panel rendern `actions1` beide) --
-  // dasselbe Muster wie `#admin`/`#admin-tab` unten.
+  // `querySelectorAll`, nicht `querySelector`: `#btnLogin`/`#Monat`/`#MonatFeld` existieren zweimal
+  // (Desktop- und Mobile-Control-Panel in `AppHeader.tsx` rendern `actions1` beide) -- ebenso
+  // `#admin`/`#admin-tab` unten.
   const btnLoginElemente = document.querySelectorAll<HTMLButtonElement>('#btnLogin');
   btnLoginElemente.forEach(el => el.addEventListener('click', () => createModalLogin()));
 
@@ -61,6 +61,7 @@ registerAppStartTask(() => {
   const loginDisplayEl = document.querySelector<HTMLDivElement>('#loginDisplay');
   const actAsButtonEl = document.querySelector<HTMLButtonElement>('#actAsOwnDataButton');
 
+  /** Aktualisiert Act-As-Banner und Begruessung (Vorname, im Act-As-Modus der Anmeldename). */
   const syncActAsNotice = () => {
     const actAsState = updateActAsBanner();
     const storedUserName = Storage.get<string | null>('Benutzer', { default: null });
@@ -71,8 +72,6 @@ registerAppStartTask(() => {
     willkommenEl.innerHTML = `Hallo, ${displayName}.`;
   };
 
-  // `#admin`/`#admin-tab` existieren seit Phase K5 zweimal (Desktop-Kopfzeile + Drawer-Kopie
-  // von `DBHeader`) -- ueberall `querySelectorAll` statt `querySelector`.
   const adminElemente = document.querySelectorAll<HTMLDivElement>('#admin');
   const adminTabPaneEl = document.querySelector<HTMLDivElement>('#Admin');
   const adminTabButtonElemente = document.querySelectorAll<HTMLButtonElement>('#admin-tab');

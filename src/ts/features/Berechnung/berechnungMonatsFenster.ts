@@ -2,27 +2,13 @@ import { default as Storage } from '@/infrastructure/storage/Storage';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { TAB_SHOWN_EVENT } from '@/infrastructure/ui/tabController';
 
-/**
- * Monats-Fenster für die Berechnungstabelle: die Anzahl sichtbarer Monatsspalten wird
- * rein aus der verfügbaren Containerbreite berechnet (Containerbreite − erste Spalte −
- * Reserve, geteilt durch die Monatsspaltenbreite); per Prev/Next-Buttons verschiebbar.
- * Erreichen alle 12 Monate das Fenster, blendet sich die Navigation selbst aus (unten) —
- * das ist die "komplette Tabelle".
- *
- * Bis 2026-09 gab es dafür zusätzlich einen `d-xl-table-cell`-Viewport-Breakpoint, der ALLE
- * Spalten erzwang, sobald der Viewport (nicht der tatsächliche Tabellen-Container!) eine
- * bestimmte Breite erreichte. Der Container ist durch die Seiten-`DBSection` (`width="large"`)
- * ab 1440px Viewport auf 1408px gedeckelt, unabhängig vom Viewport darüber — nach
- * der Breakpoint-Vereinheitlichung auf die DB-UX-Skala (`_breakpoints.scss`, `xl` 1200px ->
- * 1920px) lag dieser Breakpoint jenseits jeder real erreichbaren Containerbreite, die
- * komplette Tabelle war dadurch nie mehr erreichbar. Entfernt zugunsten von reinem
- * Breiten-JS -- kein Viewport-Container-Mismatch mehr möglich.
+/*
+ * Monats-Fenster der Berechnungstabelle: Wie viele Monatsspalten sichtbar sind, folgt allein aus der
+ * Breite des Tabellen-Containers (nicht aus dem Viewport); per Prev/Next-Buttons verschiebbar.
+ * Passen alle 12 Monate, blendet sich die Navigation aus.
  */
-// Mindestbreite je Monatsspalte (Währungsbeträge). `--db-sizing-xl` statt Handwert: bei
-// Functional-Density/14px-Root real 70px (Puppeteer gemessen) -- die einzige DB-UX-Sizing-Stufe,
-// die alle 12 Spalten noch in den gedeckelten ~1029px-Container passen laesst (12 x 70 = 840px
-// von 845px nutzbarer Breite, ~5px Reserve). Wie `infrastructure/ui/breakpoints.ts` ist dies ein
-// TS-Spiegel eines CSS-Tokens, kein Live-`getComputedStyle`-Read.
+// Mindestbreite je Monatsspalte in px (Währungsbeträge); bewusst ein fester Wert statt eines
+// Live-`getComputedStyle`-Reads.
 const MONAT_MIN_PX = 70;
 const RESERVE_PX = 24; // Container-Margin/-Padding
 const ERSTE_SPALTE_PX = 184; // feste 11.5rem der Label-Spalte, siehe styles.scss
@@ -31,15 +17,12 @@ const MONATSNAMEN = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'S
 let startMonat: number | null = null;
 
 /**
- * Berechnet die Monatsanzahl rein aus der Containerbreite und festen Werten
- * (bewusst KEINE Messung gerenderter Zellen — deren Breite hängt von der
- * Spaltenanzahl ab und ergäbe einen Rückkopplungs-Kreis).
+ * Berechnet die Anzahl sichtbarer Monatsspalten aus der Containerbreite und festen Werten
+ * (bewusst keine Messung gerenderter Zellen: deren Breite hängt von der Spaltenanzahl ab, das wäre
+ * ein Rückkopplungs-Kreis). Die Spalten teilen sich den Platz rechts der festen Label-Spalte gleichmäßig
+ * (`table-layout: fixed`); es passen so viele hinein, dass jede mindestens `MONAT_MIN_PX` breit bleibt.
  *
- * Die sichtbaren Monatsspalten teilen sich den Platz rechts der festen
- * Label-Spalte gleichmäßig (table-layout: fixed). Es passen so viele Monate
- * hinein, dass jede Spalte mindestens MONAT_MIN_PX breit ist; würde eine
- * Spalte doppelt so breit (max), kommt durch das floor() automatisch die
- * nächste hinzu.
+ * @returns Anzahl Monatsspalten, begrenzt auf 1 bis 12.
  */
 export function ermittleFensterGroesse(): number {
   const container = document.querySelector<HTMLElement>('#Berechnung .db-table');
@@ -49,19 +32,35 @@ export function ermittleFensterGroesse(): number {
   return Math.min(Math.max(Math.floor(verfuegbar / MONAT_MIN_PX), 1), 12);
 }
 
+/**
+ * Startmonat des Fensters beim ersten Anzeigen: der gespeicherte bzw. aktuelle Monat mittig im Fenster.
+ *
+ * @param fensterGroesse - Anzahl sichtbarer Monatsspalten (1-12).
+ * @returns Startmonat (1-12), so begrenzt, dass das Fenster nicht über Dezember hinausragt.
+ */
 function initialerStart(fensterGroesse: number): number {
   const aktuellerMonat = Storage.get<number>('Monat', { default: dayjs().month() + 1 });
-  // Aktuellen Monat mittig im Fenster platzieren
   const start = aktuellerMonat - Math.floor(fensterGroesse / 2) + 1;
   return Math.min(Math.max(start, 1), Math.max(1, 12 - fensterGroesse + 1));
 }
 
+/**
+ * Wendet das Monats-Fenster auf die Tabelle an: blendet Monatsspalten außerhalb aus, setzt die
+ * Spaltenanzahl als CSS-Variable, aktualisiert Beschriftung und Prev/Next-Buttons und blendet die
+ * Navigation aus, wenn alle 12 Monate passen. Klemmt den Startmonat in den gültigen Bereich.
+ */
 export function wendeMonatsFensterAn(): void {
   const fensterGroesse = ermittleFensterGroesse();
   const maxStart = Math.max(1, 12 - fensterGroesse + 1);
 
   startMonat = startMonat === null ? initialerStart(fensterGroesse) : Math.min(Math.max(startMonat, 1), maxStart);
   const start = startMonat;
+  /**
+   * Prüft, ob ein Monat im aktuellen Fenster liegt.
+   *
+   * @param monat - Monat (1-12).
+   * @returns `true`, wenn der Monat im aktuellen Fenster liegt.
+   */
   const sichtbar = (monat: number): boolean => monat >= start && monat < start + fensterGroesse;
 
   const zellen = document.querySelectorAll<HTMLTableCellElement>(
@@ -72,8 +71,7 @@ export function wendeMonatsFensterAn(): void {
     zelle.classList.toggle('d-none', !sichtbar(monat));
   }
 
-  // Spaltenanzahl als CSS-Variable — die zugehörige width-Regel greift nur
-  // unterhalb xl (styles.scss); Desktop behält die col-1-Gleichverteilung
+  // Spaltenanzahl als CSS-Variable; die zugehörige width-Regel in styles.scss greift nur unter 1200px
   document
     .querySelector<HTMLTableElement>('table.table-Berechnung')
     ?.style.setProperty('--berechnung-monatsspalten', String(fensterGroesse));
@@ -98,7 +96,16 @@ export function wendeMonatsFensterAn(): void {
   }
 }
 
+/**
+ * Verdrahtet Prev/Next-Buttons, Fenster-Resize (entprellt, 150 ms) und das Öffnen des Berechnung-Tabs
+ * mit `wendeMonatsFensterAn`. Einmalig beim App-Start aufrufen.
+ */
 export function initBerechnungMonatsFensterNav(): void {
+  /**
+   * Verschiebt das Fenster um `delta` Monate und rendert neu (Begrenzung übernimmt `wendeMonatsFensterAn`).
+   *
+   * @param delta - Verschiebung in Monaten (-1 = zurück, 1 = vor).
+   */
   const verschiebe = (delta: number): void => {
     if (startMonat !== null) startMonat += delta;
     wendeMonatsFensterAn();

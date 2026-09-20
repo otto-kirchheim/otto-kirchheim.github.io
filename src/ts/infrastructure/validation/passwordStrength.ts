@@ -2,6 +2,12 @@ import { PASSWORD_MIN_LENGTH } from './passwordValidation';
 
 export type PasswordStrengthLevel = 'tooWeak' | 'weak' | 'medium' | 'strong';
 
+/**
+ * Bewertet ein Passwort nach erfuellten Regeln: Mindestlaenge, Kleinbuchstabe, Grossbuchstabe, Ziffer, Sonderzeichen.
+ *
+ * @param password - Zu bewertendes Passwort.
+ * @returns `tooWeak` bei hoechstens 1, `weak` bei 2, `medium` bei 3, `strong` bei mindestens 4 erfuellten Regeln.
+ */
 export function getPasswordStrength(password: string): PasswordStrengthLevel {
   const rulesMatched = [
     password.length >= PASSWORD_MIN_LENGTH,

@@ -1,15 +1,16 @@
 import type { EventChannel, EventChannels } from './types';
 
-// --- Typed event channel system ---
+// --- Typisiertes Kanal-System ---
 type ChannelListener<K extends EventChannel> = (data: EventChannels[K]) => void;
 
 const channelListeners = new Map<EventChannel, Set<ChannelListener<EventChannel>>>();
 
 /**
- * Publish a typed event on a specific channel.
+ * Sendet ein Event synchron an alle Listener des Kanals; ohne Listener passiert nichts.
  *
- * @param channel - The event channel name
- * @param data - Typed payload matching the channel definition
+ * @typeParam K - Kanalname aus `EventChannels`.
+ * @param channel - Kanalname.
+ * @param data - Nutzlast passend zur Kanal-Definition.
  *
  * @example
  * publishEvent('data:changed', { resource: 'EWT', action: 'update' });
@@ -23,11 +24,12 @@ export function publishEvent<K extends EventChannel>(channel: K, data: EventChan
 }
 
 /**
- * Subscribe to a typed event channel. Returns an unsubscribe function.
+ * Registriert einen Listener auf einem Kanal.
  *
- * @param channel - The event channel name
- * @param listener - Callback receiving the typed payload
- * @returns Unsubscribe function
+ * @typeParam K - Kanalname aus `EventChannels`.
+ * @param channel - Kanalname.
+ * @param listener - Callback, der die typisierte Nutzlast erhaelt.
+ * @returns Funktion, die den Listener wieder abmeldet.
  *
  * @example
  * const unsub = onEvent('data:changed', ({ resource, action }) => {
@@ -47,7 +49,7 @@ export function onEvent<K extends EventChannel>(channel: K, listener: ChannelLis
   };
 }
 
-/** Remove all listeners from all typed channels (for testing). */
+/** Entfernt alle Listener aller Kanaele (nur fuer Tests). */
 export function clearAllEventListeners(): void {
   channelListeners.clear();
 }

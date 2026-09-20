@@ -8,18 +8,23 @@ const CANVAS_RATIO = 5 / 2;
  * braucht keine 1500px, das wirkt nur unnötig gestreckt. */
 const MAX_BREITE = 900;
 /** Fester Dialog-Außenrand -- klein und überall gleich, damit die Rechnung unten den tatsächlich
- * verfügbaren Platz trifft, statt auf einen fremden Rand noch einen eigenen Sicherheits-Faktor
- * draufzuschlagen (führte zu einem spürbar kleineren Feld, siehe Git-Historie dieser Datei --
- * User-Fund: "zu klein, da das Fullscreen fehlt"). Auf kleinen Screens nutzt das Feld dadurch
- * wieder fast die volle Breite.
+ * verfügbaren Platz trifft, ohne eigenen Sicherheitsabstand. Auf kleinen Screens nutzt das Feld so
+ * fast die volle Breite.
  */
 const DIALOG_RAND = 8;
 
 /**
  * Größtmögliche Canvas-Größe im festen `CANVAS_RATIO`, die noch komplett in den Dialog passt, plus
  * ob dabei die Höhe die bindende Dimension war (dann lohnt sich randlos + kompakte Fußzeile, siehe
- * `aufGroesseAnpassen()`). Der Dialog hat keine Kopfzeile mehr; die Fußzeile ist unabhängig von der
- * Canvas-Größe messbar, kein Henne-Ei-Problem.
+ * `aufGroesseAnpassen()`). Der Dialog hat keine Kopfzeile; die Fußzeile ist unabhängig von der
+ * Canvas-Größe messbar.
+ *
+ * @param footer - Fußzeile des Dialogs (ihre Höhe geht vom verfügbaren Platz ab).
+ * @param body - Körper mit dem Canvas (sein Padding geht ab).
+ * @param rumpf - Dialog-Rumpf (sein Rahmen geht ab).
+ * @param rand - Außenrand des Dialogs in px, je Seite.
+ * @param maxBreiteVorgabe - Obergrenze der Canvas-Breite in px.
+ * @returns Canvas-Größe in CSS-Pixeln und ob die Höhe bindend war.
  */
 function berechneCanvasGroesse(
   footer: HTMLElement,
@@ -31,9 +36,8 @@ function berechneCanvasGroesse(
   const bodyStil = getComputedStyle(body);
   const paddingX = parseFloat(bodyStil.paddingLeft) + parseFloat(bodyStil.paddingRight);
   const paddingY = parseFloat(bodyStil.paddingTop) + parseFloat(bodyStil.paddingBottom);
-  // Ein Rahmen am Rumpf liegt außerhalb von Body und Fußzeile -- ohne ihn lief die Höhen-Rechnung
-  // im Fullscreen-Fall um genau diesen Rahmen über den Viewport hinaus (per Puppeteer gemessen:
-  // 2px Überlauf in jedem Querformat-Testfall).
+  // Ein Rahmen am Rumpf liegt außerhalb von Body und Fußzeile -- ohne ihn liefe die Höhen-Rechnung
+  // im Fullscreen-Fall um genau diesen Rahmen über den Viewport hinaus.
   const rumpfStil = getComputedStyle(rumpf);
   const rumpfRahmenY = parseFloat(rumpfStil.borderTopWidth) + parseFloat(rumpfStil.borderBottomWidth);
 
@@ -66,20 +70,22 @@ type SignaturWahl = 'verwenden' | 'neu' | 'ohne' | 'digital';
 
 /**
  * Erste Nachfrage vor dem PDF-Erzeugen: ohne Cache "Ja" / "Ohne Unterschrift" / "Digital", mit Cache
- * zusätzlich "Verwenden" / "Ändern" statt nur "Ja" -- eigener Dialog statt `confirmDialog` (das nur
- * zwei Buttons kennt), da echte drei/vier Ausgänge gebraucht werden: Unterschrift jetzt zeichnen/
- * übernehmen, GAR KEINE Unterschrift (Papier-Fall, Datum bleibt) oder explizit "Digital" (Datum
- * verschwindet, siehe `SignaturErgebnis.digital`). Gleiches Vanilla-DOM-Muster wie `confirmDialog`
- * (eigenes `<div class="modal">`, promise-basiert). `backdrop: 'static', keyboard: false` -- Backdrop-
- * Klick/Escape schließen NICHT, nur der explizite X-Button oben rechts (gleicher Grund wie beim
- * Pad-Dialog: keine versehentlich verworfene Entscheidung). Schließen über X zählt wie
- * "Ohne Unterschrift", NICHT wie "Digital" -- ein Wegklicken soll nicht überraschend das
- * Unterschriftsdatum verschlucken.
+ * zusätzlich "Verwenden" / "Ändern" statt nur "Ja". Eigener Dialog statt `confirmDialog` (das nur zwei
+ * Buttons kennt), da drei bis vier Ausgänge nötig sind: Unterschrift zeichnen/übernehmen, GAR KEINE
+ * Unterschrift (Papier-Fall, Datum bleibt) oder "Digital" (Datum verschwindet, siehe
+ * `SignaturErgebnis.digital`). Promise-basiert wie `confirmDialog`.
+ *
+ * Hintergrundklick und Escape schließen NICHT (`hintergrundSchliesst`/`escapeSchliesst` aus), nur der
+ * X-Button -- keine versehentlich verworfene Entscheidung. X zählt wie "Ohne Unterschrift", NICHT wie
+ * "Digital": ein Wegklicken soll nicht überraschend das Unterschriftsdatum verschlucken.
+ *
+ * @param cachedPng - Gespeicherte Unterschrift (PNG-Data-URL) oder `null`; steuert Texte und Buttons.
+ * @returns Die gewählte Aktion.
  */
 function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
   return new Promise<SignaturWahl>(resolve => {
-    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus -- `.fade` ohne `.show` haelt den
-    // Inhalt sonst auf `opacity: 0` (siehe `utilities.scss`).
+    // Der Rahmen kommt vom Drawer; kein `.modal`/`.fade` verwenden -- `.fade` ohne `.show` haelt den
+    // Inhalt auf `opacity: 0` (siehe `utilities.scss`).
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="dialog-rumpf">
@@ -144,18 +150,17 @@ function signaturEntscheidung(cachedPng: string | null): Promise<SignaturWahl> {
 }
 
 /**
- * Entscheidungsdialog vor dem PDF-Erzeugen (Kandidat E, siehe Plandatei Phase 4): fragt erst
- * "Jetzt unterschreiben?" (oder bei vorhandenem Cache: "verwenden/ändern/ohne/digital"), zeigt bei
- * Bedarf ein Canvas-Pad. Liefert `{ png, digital }` -- `png` fehlt bei "Ohne Unterschrift"/"Digital"
- * oder einem leer gelassenen Pad, `digital` ist NUR bei explizitem "Digital" true (siehe
- * `SignaturErgebnis`). Kein Nachsignieren eines bereits heruntergeladenen PDFs vorgesehen -- der
- * Signatur-Schritt ist für diesen Download dann endgültig übersprungen.
+ * Entscheidungsdialog vor dem PDF-Erzeugen: fragt erst "Jetzt unterschreiben?" (bei vorhandenem Cache:
+ * "verwenden/ändern/ohne/digital") und zeigt bei Bedarf ein Canvas-Pad. Kein Nachsignieren eines
+ * bereits heruntergeladenen PDFs vorgesehen -- der Signatur-Schritt ist dann für diesen Download
+ * endgültig übersprungen.
  *
- * Vanilla DOM wie `confirmDialog` (eigenes `<div class="modal">`, nicht über `showModal()`/Preact) --
- * dieselbe einfache, promise-basierte Bedienung, kein Formular-State nötig. Das Pad wird erst nach
- * dem `shown.bs.modal`-Event erstellt, nicht beim Rendern: Phase 4 deckte auf, dass ein vorher
- * erstelltes Pad auf einem noch unsichtbaren Canvas (`offsetWidth`/`offsetHeight` 0) unbenutzbar
- * bleibt.
+ * Vanilla DOM über `erzeugeDbDialog()`, promise-basiert wie `confirmDialog`. Das Pad entsteht erst
+ * im nächsten Frame nach dem Öffnen, nicht beim Rendern: auf einem noch unsichtbaren Canvas
+ * (`offsetWidth`/`offsetHeight` 0) bliebe es unbenutzbar.
+ *
+ * @returns `{ png, digital }` -- `png` fehlt bei "Ohne Unterschrift"/"Digital" oder leerem Pad,
+ *   `digital` ist NUR bei explizitem "Digital" true (siehe `SignaturErgebnis`).
  */
 export async function signaturDialog(): Promise<SignaturErgebnis> {
   const cachedPng = Storage.get<string>('signaturCache');
@@ -167,11 +172,7 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
   // wahl === 'neu' -- weiter zum Pad, ggf. vorbefüllt mit der bisherigen Unterschrift
 
   return new Promise<SignaturErgebnis>(resolve => {
-    // Der Rahmen kommt vom Drawer; `.modal`/`.fade` sind raus -- `.fade` ohne `.show` haelt den
-    // Inhalt sonst auf `opacity: 0` (siehe `utilities.scss`).
-    // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche. Titel und Schliessen-Knopf
-    // sassen frueher oben und kosteten im Querformat rund ein Viertel der Hoehe -- die
-    // Fusszeile traegt beides jetzt als kleine Schaltflaechen mit.
+    // Ohne Kopfzeile: jeder Pixel gehoert der Schreibflaeche; "Abbrechen" liegt in der Fusszeile.
     const modal = document.createElement('div');
     modal.innerHTML = `
       <div class="dialog-rumpf">
@@ -204,8 +205,8 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
         window.removeEventListener('resize', aufResizeReagieren);
         resolve({ png: ergebnis, digital: false });
       },
-      // Das Unterschriftenfeld braucht die volle Breite -- die Standardbreite des Drawers
-      // (36rem) liess im Querformat kaum Platz zum Schreiben.
+      // Das Unterschriftenfeld braucht die volle Breite -- die Standardbreite des Drawers (36rem)
+      // liesse im Querformat kaum Platz zum Schreiben.
       { hintergrundSchliesst: false, escapeSchliesst: false, rahmenKlassen: ['signatur-drawer'] },
     );
     inhalt.append(modal);
@@ -215,12 +216,11 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
      * -- reine Breiten-Klassen steuern nie die Höhe, größere Screens bekamen dadurch trotz mehr
      * Platz nur einen dünnen Streifen statt einer proportional größeren Fläche.
      *
-     * Erster Durchlauf mit normalem Rand/Kopf-/Fußzeile prüft, ob die Höhe bindet (typisch:
-     * Querformat-Handy, wenig Vertikalraum -- User-Fund: "im Querformat wird definitiv Fullscreen
-     * benötigt"). Falls ja, zweiter Durchlauf randlos (`rand=0`, volle Breite) MIT kompakter
-     * Kopf-/Fußzeile (`.signatur-kompakt`, kleineres Padding) -- Kopf-/Fußzeile werden dafür
-     * neu gemessen, ihre Höhe ändert sich durch die kompaktere Klasse. Im Breiten-gebundenen Fall
-     * (meist Hochformat/große Screens) bleibt die bisherige, ruhigere zentrierte Box-Darstellung.
+     * Erster Durchlauf mit normalem Rand prüft, ob die Höhe bindet (typisch: Querformat-Handy, wenig
+     * Vertikalraum). Falls ja, zweiter Durchlauf randlos (`rand=0`, volle Breite) mit kompakter
+     * Fußzeile (`.signatur-kompakt`, kleineres Padding) -- die Fußzeile wird dafür neu gemessen, ihre
+     * Höhe ändert sich durch die kompaktere Klasse. Im breitengebundenen Fall (meist Hochformat/große
+     * Screens) bleibt es bei der zentrierten Box.
      */
     const aufGroesseAnpassen = () => {
       rumpf.classList.remove('signatur-kompakt');
@@ -242,9 +242,8 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
       rumpf.style.maxWidth = hoehengebunden ? '100vw' : `${breite + paddingX}px`;
     };
 
-    // Der native `<dialog>` ist nach `showModal()` sofort sichtbar -- anders als beim
-    // Bootstrap-Modal braucht das Pad kein `shown`-Ereignis mehr abzuwarten. Die Messung
-    // laeuft trotzdem erst im naechsten Frame, damit Layout und Schriften stehen.
+    // Der native `<dialog>` ist nach `showModal()` sofort sichtbar. Die Messung laeuft trotzdem
+    // erst im naechsten Frame, damit Layout und Schriften stehen.
     requestAnimationFrame(() => {
       if (!canvas.isConnected) return; // Dialog war schneller wieder zu als der naechste Frame
       aufGroesseAnpassen();
@@ -253,14 +252,12 @@ export async function signaturDialog(): Promise<SignaturErgebnis> {
     });
 
     /**
-     * Beim Drehen des Handys (oder Verschieben auf einen anderen Monitor) ändert sich der
-     * verfügbare Platz -- Canvas-CSS-Größe neu berechnen UND die interne Pixelgröße aus
-     * `erstelleSignaturPad()` neu setzen, sonst verzerrt die Anzeige und die Touch-Koordinaten von
-     * `signature_pad` laufen gegenüber der neuen Canvas-Größe aus dem Ruder. Pad bei jeder
-     * Größenänderung neu aufziehen; `pad.off()` löst zuerst die alten Pointer-Listener (auch welche
-     * auf `window`), sonst sammeln sich bei mehrfachem Drehen doppelte Listener an. Eine bereits
-     * begonnene Unterschrift geht dabei verloren -- die Alternative (Punkte proportional zur neuen
-     * Größe umzurechnen) ist fehleranfällig, die paar Striche sind schnell nachgezogen.
+     * Beim Drehen des Handys (oder Verschieben auf einen anderen Monitor) ändert sich der verfügbare
+     * Platz -- Canvas-CSS-Größe neu berechnen UND die interne Pixelgröße per `erstelleSignaturPad()`
+     * neu setzen, sonst verzerrt die Anzeige und die Touch-Koordinaten von `signature_pad` laufen
+     * aus dem Ruder. `pad.off()` löst vorher die alten Pointer-Listener (auch die auf `window`),
+     * sonst sammeln sich Duplikate an. Eine begonnene Unterschrift geht dabei verloren (proportionale
+     * Umrechnung der Punkte wäre fehleranfällig).
      */
     const aufResizeReagieren = () => {
       // `isConnected` faengt den Fall ab, dass der Dialog schon aus dem Dokument ist, der

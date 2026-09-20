@@ -20,14 +20,13 @@ interface VergleichsTeil {
 }
 
 /**
- * Vergleich einer Bedingung: Werte-Liste (Mitgliedschaft, mit Checkboxen bei bekannter Auswahl aus
- * `werteAuswahl()`) ODER Wertebereich (`von` einschließlich, `bis` ausschließlich — z.B. Einsatzdauer
- * ab 8:00 bis vor 14:00), plus das anzuzeigende Zeichen. Bei `istBoolean` (echtes `boolean`-Feld,
- * z.B. `Wohnung8bis14`) entfällt die Werte-Liste/Wertebereich-Wahl zugunsten einer einfachen
- * Ja/Nein-Auswahl -- vorher musste ein Boolean über `bereich: { von: 1, bis: 2 }` erzwungen werden
- * (`alsVergleichswert(true) === 1`), was unintuitiv war und in der Editor-Vorschau leicht als „geht
- * nicht" missverstanden wurde. Gemeinsam genutzt von `AnkreuzBedingung` (Spalte) und
- * `FeldAnkreuzBedingung` (Feld).
+ * Vergleich einer Bedingung: Werte-Liste (Mitgliedschaft; Checkboxen, wenn `werteAuswahl()` eine feste
+ * Auswahl kennt) ODER Wertebereich (`von` einschließlich, `bis` ausschließlich, z.B. 8:00 bis vor
+ * 14:00), plus das anzuzeigende Zeichen. Bei `istBoolean` (echtes `boolean`-Feld, z.B. `Wohnung8bis14`)
+ * gibt es stattdessen eine einfache Ja/Nein-Auswahl. Gemeinsam genutzt von `AnkreuzBedingung` (Spalte)
+ * und `FeldAnkreuzBedingung` (Feld).
+ *
+ * @param props - `wenn` (Vergleichsteil), `auswahl` (feste Werte für Checkboxen, sonst leer), `istBoolean` und `onChange`.
  */
 function VergleichWahl({
   wenn,
@@ -40,6 +39,12 @@ function VergleichWahl({
   istBoolean?: boolean;
   onChange: (next: Partial<VergleichsTeil>) => void;
 }) {
+  /**
+   * Nimmt einen Wert in die Werte-Liste auf bzw. entfernt ihn.
+   *
+   * @param wert - Wert der Checkbox.
+   * @param an - `true` zum Hinzufügen, `false` zum Entfernen.
+   */
   function schalte(wert: string, an: boolean) {
     const werte = an ? [...(wenn.werte ?? []), wert] : (wenn.werte ?? []).filter(w => w !== wert);
     onChange({ werte });
@@ -168,6 +173,8 @@ function VergleichWahl({
  * Das Feld darf auch eine bereits in dieser Tabelle angelegte berechnete Spalte sein
  * (`andereBerechnete`) — der Renderer trägt deren Wert schon in die Zeile ein, eine zweite Rechnung
  * ist dann unnötig.
+ *
+ * @param props - `spalte` (mit gesetztem `wenn`), `zeilenFelder`, `andereBerechnete` und `onChange`.
  */
 export function AnkreuzBedingung({
   spalte,
@@ -185,6 +192,11 @@ export function AnkreuzBedingung({
   const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
   const feldOptionen = [...zeilenFelder, ...andereBerechnete];
 
+  /**
+   * Übernimmt Änderungen in die Bedingung der Spalte.
+   *
+   * @param next - Zu überschreibende Bedingungsfelder.
+   */
   function setzeWenn(next: Partial<Bedingung>) {
     onChange({ ...spalte, wenn: { ...wenn, ...next } });
   }
@@ -232,11 +244,10 @@ export function AnkreuzBedingung({
           value={wenn.feld ?? ''}
           onChange={e => {
             const feld = (e.target as HTMLSelectElement).value;
-            // Titel folgt dem geprüften Feld -- anders als der Format-Vorschlag (der eine bewusste
-            // Wahl nie überschreibt) IST der Titel hier direkt an die Bedingung gekoppelt: wechselt
-            // das geprüfte Feld, beschreibt ein stehen gelassener alter Titel die falsche Bedingung.
-            // Diese Auswahl ist immer ein reiner Dropdown aus `feldOptionen`, `vorschlag` also immer
-            // gesetzt. Wer einen abweichenden Titel will, tippt ihn danach im Anzeigename-Feld ein.
+            // Der Titel folgt immer dem geprüften Feld (anders als der Format-Vorschlag, der eine
+            // bewusste Wahl nie überschreibt): ein stehen gelassener alter Titel würde nach einem
+            // Feldwechsel die falsche Bedingung beschreiben. Abweichende Titel werden danach im
+            // Anzeigename-Feld eingetragen.
             const vorschlag = feldOptionen.find(o => o.pfad === feld)?.label;
             onChange({
               ...spalte,
@@ -266,6 +277,8 @@ export function AnkreuzBedingung({
  * Bedingter Feld-Inhalt (`FeldBedingung`): das Gegenstück zu `AnkreuzBedingung` auf Dokument- statt
  * Zeilenebene. Geprüfter Wert kommt aus einem Datenpfad (`katalogFelder`, z.B. ein Personenfeld)
  * ODER einer Aggregation über Zeilen (`AggregationEditor`, z.B. die Gesamtsumme).
+ *
+ * @param props - `feld` (mit gesetztem `wenn`), `formular`, `tabellen` und `onChange`.
  */
 export function FeldAnkreuzBedingung({
   feld,
@@ -283,6 +296,11 @@ export function FeldAnkreuzBedingung({
   const auswahl = wenn.feld ? werteAuswahl(wenn.feld) : [];
   const istBoolean = wenn.feld !== undefined && istBooleanFeld(wenn.feld);
 
+  /**
+   * Übernimmt Änderungen in die Bedingung des Felds.
+   *
+   * @param next - Zu überschreibende Bedingungsfelder.
+   */
   function setzeWenn(next: Partial<FeldBedingung>) {
     onChange({ ...feld, wenn: { ...wenn, ...next } });
   }
@@ -331,9 +349,7 @@ export function FeldAnkreuzBedingung({
           value={wenn.feld ?? ''}
           onChange={e => {
             const pfad = (e.target as HTMLSelectElement).value;
-            // Gleicher Titel wie in `AnkreuzBedingung` -- folgt dem geprüften Feld statt nur einmal
-            // vorbelegt zu werden, sonst beschreibt ein stehen gelassener Titel nach einem
-            // Feld-Wechsel die falsche Bedingung.
+            // Titel folgt dem geprüften Feld, Begründung siehe `AnkreuzBedingung`.
             const vorschlag = feldOptionen.find(o => o.pfad === pfad)?.label;
             onChange({
               ...feld,

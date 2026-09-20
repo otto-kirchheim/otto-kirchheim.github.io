@@ -25,6 +25,12 @@ import { parseDauerToMinutes } from './calculateBerechnungRows';
 
 const CATALOG_BY_CODE = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
+/**
+ * Berechnet für alle zwölf Monate die Summen aus BZ, BE, EWT, Nebengeld und Entgeltausgleich, speichert sie unter `datenBerechnung` und rendert die Berechnungstabelle neu.
+ *
+ * @param daten - Zu verwendende Daten; ohne Angabe werden sie aus dem Storage gelesen.
+ * @returns Berechnung je Monat (1-12).
+ */
 export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorgabenBerechnung {
   const datenQuelle: Required<IDaten> = daten ?? {
     BZ: Storage.get<IDatenBZ[]>('dataBZ', { default: [] }),
@@ -45,6 +51,15 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
   const N = normalizeResourceRows<IDatenN>(datenQuelle.N);
   const EA = normalizeResourceRows<IDatenEA>(datenQuelle.EA);
 
+  /**
+   * Filtert Einträge auf einen Monat.
+   *
+   * @typeParam T - Typ der Einträge.
+   * @param items - Einträge.
+   * @param getMonat - Liefert den Monat (1-12) eines Eintrags.
+   * @param monat - Gewünschter Monat.
+   * @returns Einträge des Monats.
+   */
   const filterByMonat = <T>(items: T[], getMonat: (item: T) => number, monat: number): T[] =>
     items.filter(item => getMonat(item) === monat);
 
@@ -68,6 +83,16 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
 
   return Berechnung;
 
+  /**
+   * Summiert die Werte eines Monats: Bereitschaftsminuten (Zeitraum abzüglich Einsatzzeiten) und LRE-Zähler, EWT-Abwesenheitsklassen, Nebengeld je Zahlungshinweis und Entgeltausgleich in Minuten.
+   *
+   * @param BZMonat - Bereitschaftszeiträume des Monats.
+   * @param BEMonat - Bereitschaftseinsätze des Monats.
+   * @param EWTMonat - Einsatzwechseltätigkeiten des Monats.
+   * @param NMonat - Nebengeld-Einträge des Monats.
+   * @param EAMonat - Entgeltausgleich-Einträge des Monats.
+   * @returns Summen des Monats.
+   */
   function aktualisiereBerechnungMonat(
     BZMonat: IDatenBZ[],
     BEMonat: IDatenBE[],
@@ -109,6 +134,14 @@ export default function aktualisiereBerechnung(daten?: Required<IDaten>): IVorga
       if (value.PrivatKm) Berechnung.B.K += value.PrivatKm;
     });
 
+    /**
+     * Prüft, ob `value` im halboffenen Bereich `[min, max)` liegt.
+     *
+     * @param value - Zu prüfender Wert.
+     * @param min - Untergrenze (eingeschlossen).
+     * @param max - Obergrenze (ausgeschlossen).
+     * @returns `true` bei Treffer.
+     */
     const isInRange = (value: number, min: number, max = Infinity): boolean => value >= min && value < max;
 
     EWTMonat.forEach(value => {

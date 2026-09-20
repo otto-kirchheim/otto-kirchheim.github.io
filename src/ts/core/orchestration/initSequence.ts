@@ -1,10 +1,8 @@
 /**
- * Initialization Sequence Registry
+ * Init-Sequenz-Registry: deklariert und validiert die verbindliche Initialisierungsreihenfolge
+ * der Pfade boot, auth-gate, session-restore und login.
  *
- * Declares and validates the mandatory initialization order for all three
- * initialization paths: boot, session-restore, and login.
- *
- * Dependency graph: see DEPENDENCIES.md in this directory.
+ * Abhaengigkeitsgraph: siehe DEPENDENCIES.md in diesem Ordner.
  */
 
 export interface InitStep {
@@ -147,6 +145,13 @@ export type StepNameFor<S extends SequenceName> = (typeof SEQUENCES)[S][number][
 
 const executedStepsMap = new Map<SequenceName, string[]>();
 
+/**
+ * Merkt einen ausgefuehrten Init-Schritt vor (im Dev-Modus zusaetzlich `console.info`).
+ *
+ * @typeParam S - Sequenzname.
+ * @param sequence - Sequenz, zu der der Schritt gehoert.
+ * @param step - Schrittname aus dieser Sequenz.
+ */
 export function markStep<S extends SequenceName>(sequence: S, step: StepNameFor<S>): void {
   const existing = executedStepsMap.get(sequence);
   if (import.meta.env.DEV) {
@@ -159,10 +164,22 @@ export function markStep<S extends SequenceName>(sequence: S, step: StepNameFor<
   }
 }
 
+/**
+ * Liefert die bisher ausgefuehrten Schritte einer Sequenz in Reihenfolge.
+ *
+ * @typeParam S - Sequenzname.
+ * @param sequence - Sequenzname.
+ * @returns Schrittnamen; leer, wenn noch keiner markiert wurde.
+ */
 export function getSteps<S extends SequenceName>(sequence: S): readonly StepNameFor<S>[] {
   return (executedStepsMap.get(sequence) ?? []) as StepNameFor<S>[];
 }
 
+/**
+ * Verwirft die markierten Schritte.
+ *
+ * @param sequence - Nur diese Sequenz; ohne Angabe alle.
+ */
 export function resetSteps(sequence?: SequenceName): void {
   if (sequence) {
     executedStepsMap.delete(sequence);
@@ -172,8 +189,12 @@ export function resetSteps(sequence?: SequenceName): void {
 }
 
 /**
- * Validate that all declared dependencies are declared before the step that references them.
- * Throws if the sequence contains dangling or forward references.
+ * Prueft, dass jede Abhaengigkeit bekannt und, sofern in derselben Sequenz, vor dem abhaengigen
+ * Schritt deklariert ist (Abhaengigkeiten aus anderen Sequenzen sind ueber `declaredStepNames` erlaubt).
+ *
+ * @param sequence - Zu pruefende Sequenz.
+ * @param declaredStepNames - Alle bekannten Schrittnamen; Standard: nur die der Sequenz.
+ * @throws {Error} Bei unbekannter Abhaengigkeit oder Vorwaertsreferenz.
  */
 export function validateInitSequence(sequence: ReadonlyArray<InitStep>, declaredStepNames?: ReadonlySet<string>): void {
   const knownStepNames = declaredStepNames ?? new Set(sequence.map(step => step.name));
@@ -189,6 +210,11 @@ export function validateInitSequence(sequence: ReadonlyArray<InitStep>, declared
   }
 }
 
+/**
+ * Validiert alle Sequenzen; Abhaengigkeiten duerfen auf Schritte anderer Sequenzen zeigen.
+ *
+ * @throws {Error} Siehe `validateInitSequence`.
+ */
 export function validateAllSequences(): void {
   const knownStepNames = new Set(Object.values(SEQUENCES).flatMap(sequence => sequence.map(step => step.name)));
   for (const sequence of Object.values(SEQUENCES)) {

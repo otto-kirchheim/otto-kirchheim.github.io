@@ -1,28 +1,23 @@
-// Eigene Hilfsklassen -- der Ersatz fuer Bootstraps Utility-API (Phase H der DB-UX-Migration).
-// Die Klassennamen sind bewusst dieselben wie bei Bootstrap: rund 5.000 Vorkommen in gut 100
-// Dateien bleiben damit unveraendert, und die Umstellung bleibt auf diese Datei begrenzt.
-// Werte und Farben kommen aber aus den DB-Tokens, nicht aus Bootstraps Scale -- deshalb sind
-// die Abstaende hier auf die `--db-spacing-*`-Stufen abgebildet und nicht auf .25/.5/1/1.5/3rem.
+// Eigene Hilfsklassen mit Bootstrap-kompatiblen Namen (`mt-3`, `d-flex`, `text-center`, ...).
+// Werte und Farben kommen aus den DB-Tokens; die Abstaende sind deshalb auf die
+// `--db-spacing-*`-Stufen abgebildet.
 // Die Schleifen unten erzeugen das VOLLSTAENDIGE Raster (jede Stufe x jeder Breakpoint), nicht
-// nur die belegten Kombinationen: von 901 erzeugten Klassen sind 697 aktuell ungenutzt. Das ist
-// Absicht -- wer `mt-5` schreibt, soll es vorfinden. Kosten dafuer sind 3,6 KB gzip (3,8 % des
-// CSS-Bundles), gemessen 2026-09-11; Utility-CSS ist hochgradig repetitiv und komprimiert gut.
-// Das Inventar gehoert aus dem GEBAUTEN CSS ermittelt, nicht per grep ueber diese Datei -- die
-// Klassennamen entstehen erst durch die Schleifen (siehe `tasks/lessons.md`).
+// nur die belegten Kombinationen -- wer `mt-5` schreibt, soll es vorfinden; Utility-CSS ist
+// repetitiv und komprimiert gut. Ein Inventar der genutzten Klassen gehoert aus dem GEBAUTEN
+// CSS ermittelt, nicht per grep ueber diese Datei: die Klassennamen entstehen erst durch die
+// Schleifen.
 //
-// `@db-ux/core-foundations` ist hier KEIN Ersatz: das Paket liefert Tokens und genau neun
+// `@db-ux/core-foundations` ist hier KEIN Ersatz: das Paket liefert Tokens und nur wenige
 // Hilfsklassen (`db-divider-*`, `db-focus-default`), kein Utility-System.
 
 @use 'sass:math';
 @use 'sass:string';
 @use 'breakpoints' as bp;
 
-// Umbruchstufen aus `_breakpoints.scss` (J-Q2) -- dieselbe Quelle wie `raster.scss` und
-// `customtable.scss`. Die Schwellen liegen hoeher als in der frueheren Bootstrap-Staffel
-// (sm 36em -> 48em, md 48em -> 64em, lg 62em -> 90em, xl 75em -> 120em, xxl 87.5em -> 160em).
+// Umbruchstufen aus `_breakpoints.scss` -- dieselbe Quelle wie `raster.scss` und `customtable.scss`.
 $umbrueche: bp.$em;
 
-// Abstandsstufen. 0-5 folgen Bootstraps Stufung, liegen aber auf den DB-Spacing-Tokens.
+// Abstandsstufen 0-5 auf den DB-Spacing-Tokens.
 $abstaende: (
   '0': 0,
   '1': var(--db-spacing-fixed-2xs),
@@ -95,9 +90,8 @@ $kanten-versatz: (
 //
 // `none` MUSS am Ende stehen. Alle `d-*`-Klassen haben dieselbe Spezifitaet und dasselbe
 // `!important`; ueber `<div class="d-flex ... d-none">` entscheidet damit allein die
-// Reihenfolge in dieser Datei. Der Bestand blendet an rund 40 Stellen so aus (Ladeanzeige,
-// Navigationseintraege, Schnellzugriff) -- steht `none` vorn, gewinnt `d-flex` und das
-// Element bleibt sichtbar. Bootstrap gibt `none` aus demselben Grund zuletzt aus.
+// Reihenfolge in dieser Datei. Die App blendet Elemente so aus (Ladeanzeige, Navigationseintraege,
+// Schnellzugriff) -- steht `none` vorn, gewinnt `d-flex` und das Element bleibt sichtbar.
 $anzeigen: (
   'block': block,
   'inline': inline,
@@ -120,10 +114,9 @@ $ausrichtung: (
 // `:not([hidden])` nach dem Vorbild von `helpers/_display.scss` aus `@db-ux/core-foundations`
 // (dort `@mixin display`): ohne den Schutz schlaegt das `!important` die UA-Regel
 // `[hidden] { display: none }`, und ein `el.hidden = true` im TypeScript bleibt auf jedem
-// Element mit `d-*`-Klasse wirkungslos. DBs Mixin selbst ist hier nicht nutzbar, weil es ohne
-// `!important` arbeitet -- diese Klassen brauchen es (Bootstrap-kompatible Utility-API).
-// Die Spezifitaet steigt fuer ALLE `d-*` gleichermaessig, die Reihenfolge-Regel oben
-// (`none` zuletzt) bleibt damit unveraendert gueltig.
+// Element mit `d-*`-Klasse wirkungslos. DBs Mixin ist hier nicht nutzbar, weil es ohne
+// `!important` arbeitet. Die Spezifitaet steigt fuer ALLE `d-*` gleich, die Reihenfolge-Regel
+// oben (`none` zuletzt) bleibt gueltig.
 @mixin anzeige-klassen($suffix: '') {
   @each $name, $wert in $anzeigen {
     .d#{$suffix}-#{$name}:not([hidden]) {
@@ -286,7 +279,6 @@ $ausrichtung: (
     vertical-align: baseline !important;
   }
 
-  // Schriftgewichte: Bootstraps Stufen auf die DB-Schnitte.
   .fw-normal {
     font-weight: 400 !important;
   }
@@ -336,7 +328,7 @@ $ausrichtung: (
     }
   }
 
-  // `text-bg-*` setzt Grund und Schrift zusammen -- Warnhinweise in den Eingabemasken.
+  // `text-bg-*` setzt Grund und Schrift zusammen (Warnhinweise in den Eingabemasken).
   .text-bg-warning {
     background-color: var(--db-warning-bg-basic-level-1-default) !important;
     color: var(--db-warning-on-bg-basic-emphasis-100-default) !important;
@@ -380,10 +372,8 @@ $ausrichtung: (
     }
   }
 
-  // `.rounded` / `.rounded-1..3` gab es als Bootstrap-Ersatz -- im DB "neuen Design" sind alle
-  // `--db-border-radius-*` (ausser `-full`) auf 0 (`styles.scss :root`, Formensprache eckig),
-  // die Klassen waren also wirkungslos und wurden aus dem Markup entfernt. Nur `.rounded-circle`
-  // bleibt (echte 50%-Rundung, z.B. Signatur-Griff im PdfCanvas).
+  // Eckenradien kommen aus den `--db-border-radius-*`-Tokens; eine `.rounded`-Stufenklasse gibt
+  // es nicht. Nur `.rounded-circle` (echte 50%-Rundung, z.B. Signatur-Griff im PdfCanvas).
   .rounded-circle {
     border-radius: 50% !important;
   }
@@ -486,8 +476,8 @@ $ausrichtung: (
   }
 
   // ── Tab-Panels ──
-  // Der `tabController` schaltet `.active`/`.show`; die Panels selbst bringen keine eigene
-  // Sichtbarkeitslogik mit. Frueher kam beides aus Bootstraps `.tab-pane`/`.fade`.
+  // `App.tsx` (Hauptgruppe) und `features/Admin/index.tsx` (Unternavigation) setzen `.active`/`.show`
+  // selbst; die Panels bringen keine eigene Sichtbarkeitslogik mit.
   .tab-pane {
     display: none;
 
@@ -498,7 +488,7 @@ $ausrichtung: (
 
   // ── Gegenregeln zum DB-Layer ──
   // DB setzt `list-style-type: var(--db-list-bullet)` auf Listen; ohne Gegenregel steht vor
-  // jedem Eintrag der App-Listen ein roter Punkt.
+  // jedem Eintrag der App-Listen ein Aufzaehlungspunkt.
   .trennliste,
   .list-unstyled {
     list-style: none;

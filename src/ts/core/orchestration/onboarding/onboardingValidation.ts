@@ -20,10 +20,10 @@ type PersSnapshot = Partial<Record<PersFeldKey, string>>;
 const PERS_VALIDATION_SELECTORS = Object.keys(PERS_FIELD_LABELS).map(key => `#${key}`);
 
 /**
- * Legt einmalig einen Snapshot der Template-Werte an, gegen den "wurde bearbeitet" geprüft wird.
- * Die Werte kommen aus dem Profile-Template zum Zugangscode und sind daher template-abhängig —
- * ein Vergleich gegen hartkodierte Platzhalter wäre unzuverlässig. Ein vorhandener Snapshot wird
- * nie überschrieben; ohne geladene VorgabenU passiert nichts (Aufruf ist dann später wiederholbar).
+ * Legt einmalig einen Snapshot der Template-Werte der Pflichtfelder im Storage
+ * (`OnboardingPersSnapshot`) ab. Ein vorhandener Snapshot wird nie überschrieben; ohne geladene
+ * VorgabenU passiert nichts (Aufruf ist später wiederholbar). Aktuell liest ihn kein Code aus:
+ * `validatePersoenlicheDaten` prüft den Formularstand.
  */
 export function capturePersSnapshot(): void {
   if (Storage.check('OnboardingPersSnapshot')) return;
@@ -38,6 +38,9 @@ export function capturePersSnapshot(): void {
 /**
  * Prüft die sichtbaren Pflichtfelder der persönlichen Daten direkt im Formular.
  * Damit zählt der aktuelle Eingabestand und nicht ein früherer Speicherstand oder Template-Wert.
+ * Sind die Felder nicht im DOM, werden die gespeicherten VorgabenU auf leere Pflichtfelder geprüft.
+ *
+ * @returns `ok` und die Bezeichnungen der offenen Felder.
  */
 export function validatePersoenlicheDaten(): { ok: boolean; offeneFelder: string[] } {
   const sichtbareFelder = PERS_VALIDATION_SELECTORS.map(selector =>
@@ -63,6 +66,9 @@ export function validatePersoenlicheDaten(): { ok: boolean; offeneFelder: string
 /**
  * Wechselt zum angegebenen Tab und öffnet optional das passende Einstellungen-Accordion,
  * damit der Nutzer direkt im richtigen Abschnitt landet.
+ *
+ * @param tabButtonId - CSS-Selektor des Tab-Knopfs; fehlt er, passiert nichts.
+ * @param collapseId - Optional CSS-Selektor des Accordion-Abschnitts, der geöffnet und ins Bild gescrollt wird.
  */
 export function springeZu(tabButtonId: string, collapseId?: string): void {
   const tabButton = document.querySelector<HTMLButtonElement>(tabButtonId);
@@ -74,8 +80,7 @@ export function springeZu(tabButtonId: string, collapseId?: string): void {
   if (!collapseId) return;
   // Die Einstellungen-Abschnitte sind `DBAccordionItem`s mit Zustand im `offenerAbschnittStore`
   // (die Id sitzt am `<li>`); `flushExtern` rendert sofort, damit `scrollIntoView` unten schon
-  // die aufgeklappte Hoehe sieht. Eine Id direkt am `<details>` (aelteres Markup) oeffnet der
-  // Fallback ueber `open`.
+  // die aufgeklappte Höhe sieht. Sitzt die Id direkt am `<details>`, öffnet der Fallback über `open`.
   flushExtern(() => setOffenenAbschnitt(collapseId.replace(/^#/, '')));
   const abschnitt = document.querySelector<HTMLElement>(collapseId);
   if (!abschnitt) return;

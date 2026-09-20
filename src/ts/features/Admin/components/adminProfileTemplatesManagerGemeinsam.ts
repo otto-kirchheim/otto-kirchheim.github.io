@@ -18,52 +18,96 @@ export type TemplateEditState = {
   templateContent: TemplateContentDraft;
 };
 
+/**
+ * Wandelt einen Wert in eine endliche Zahl um.
+ *
+ * @param value - Beliebiger Eingabewert.
+ * @param fallback - Ersatz, wenn das Ergebnis keine endliche Zahl ist.
+ * @returns Zahl oder `fallback`.
+ */
 function toNumber(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+/**
+ * Liefert `value` nur, wenn es ein String ist.
+ *
+ * @param value - Beliebiger Eingabewert.
+ * @param fallback - Ersatz für Nicht-Strings.
+ * @returns String oder `fallback`.
+ */
 function toString(value: unknown, fallback = ''): string {
   return typeof value === 'string' ? value : fallback;
 }
 
+/**
+ * Liefert `value` nur, wenn es ein Boolean ist.
+ *
+ * @param value - Beliebiger Eingabewert.
+ * @param fallback - Ersatz für Nicht-Booleans.
+ * @returns Boolean oder `fallback`.
+ */
 function toBoolean(value: unknown, fallback = false): boolean {
   return typeof value === 'boolean' ? value : fallback;
 }
 
 const SCHICHT_TYPEN: BereitschaftSchichtTyp[] = ['frueh', 'spaet', 'nacht', 'sonder'];
 
-// Liest das neue schichten-Array, fällt für Legacy-Einträge auf nacht zurück; frueh ist immer aktiv.
+/**
+ * Liest das `schichten`-Array; fehlt es, gilt bei Legacy-Einträgen `nacht` als Schalter. `frueh` ist immer aktiv.
+ *
+ * @param value - Rohwert von `schichten`.
+ * @param legacyNacht - Altes `nacht`-Flag, gilt nur ohne gültiges Array.
+ * @returns Schichttypen in fester Reihenfolge (`SCHICHT_TYPEN`).
+ */
 function normalizeSchichten(value: unknown, legacyNacht: boolean): BereitschaftSchichtTyp[] {
   const fromArray = Array.isArray(value) ? SCHICHT_TYPEN.filter(typ => (value as unknown[]).includes(typ)) : [];
   const schichten = fromArray.length > 0 ? fromArray : legacyNacht ? ['frueh', 'nacht'] : ['frueh'];
   return SCHICHT_TYPEN.filter(typ => typ === 'frueh' || schichten.includes(typ));
 }
 
+/**
+ * Reduziert ein Objekt auf String-Werte (Zahlen/Booleans werden gestringt, alles andere verworfen); `OE` wird von Ebenen-Array zu Text zusammengesetzt.
+ *
+ * @param input - Rohobjekt, z.B. `template.Pers`.
+ * @returns Record aus Strings; leer bei Nicht-Objekten.
+ */
 export function normalizePrimitiveRecord(input: unknown): Record<string, string> {
   if (!input || typeof input !== 'object') return {};
   return Object.fromEntries(
     Object.entries(input as Record<string, unknown>)
-      // OE ist ein Ebenen-Array, wird aber wie die übrigen Pers-Felder als
-      // Textfeld gepflegt; ohne diesen Zweig fiele sie durch den Primitiv-Filter
-      // und ginge beim Speichern verloren.
+      // OE ist ein Ebenen-Array, wird aber als Textfeld gepflegt; ohne diesen Zweig fiele sie
+      // durch den Primitiv-Filter und ginge beim Speichern verloren.
       .filter(([key, value]) => key === 'OE' || ['string', 'number', 'boolean'].includes(typeof value))
       .map(([key, value]) => [key, key === 'OE' ? joinOeLevels((value as string[] | undefined) ?? []) : String(value)]),
   );
 }
 
+/**
+ * Normalisiert die Fahrzeit-Einträge und verwirft komplett leere Zeilen.
+ *
+ * @param input - Rohwert von `Fahrzeit`.
+ * @returns Zeilen mit String-Feldern; leer bei Nicht-Arrays.
+ */
 function normalizeFahrzeit(input: unknown): FahrzeitRow[] {
   if (!Array.isArray(input)) return [];
   return input
     .map(entry => ({
       key: String((entry as { key?: unknown }).key ?? ''),
       text: String((entry as { text?: unknown }).text ?? ''),
-      // Legacy-Werte wie "0:30" auf "HH:mm" heben – ein type="time"-Input zeigt sie sonst leer an
+      // Legacy-Werte wie "0:30" auf "HH:mm" heben, ein type="time"-Input zeigt sie sonst leer an
       value: normalizeTimeString(String((entry as { value?: unknown }).value ?? '')),
     }))
     .filter(row => row.key || row.text || row.value);
 }
 
+/**
+ * Normalisiert die Einstellungen auf zwei String-Listen.
+ *
+ * @param input - Rohwert von `Einstellungen`.
+ * @returns `aktivierteTabs` und `benoetigteZulagen` (jeweils nur Strings).
+ */
 function normalizeSettings(input: unknown): TemplateContentDraft['Einstellungen'] {
   if (!input || typeof input !== 'object') return { aktivierteTabs: [], benoetigteZulagen: [] };
   const settings = input as { aktivierteTabs?: unknown; benoetigteZulagen?: unknown };
@@ -76,8 +120,20 @@ function normalizeSettings(input: unknown): TemplateContentDraft['Einstellungen'
   return { aktivierteTabs, benoetigteZulagen };
 }
 
+/**
+ * Begrenzt einen Wochentag auf 1 (Mo) bis 7 (So); die Altkodierung 0 (Sonntag) wird zu 7.
+ *
+ * @param n - Wochentag.
+ * @returns Wochentag 1-7.
+ */
 const normalizeTagValue = (n: number): number => (n === 0 ? 7 : Math.min(7, Math.max(1, n)));
 
+/**
+ * Normalisiert die Bereitschafts-Vorgaben: Tage/Zeiten/Schichten werden bereinigt, Zeilen ohne Schlüssel verworfen, danach erhält genau eine Zeile `standard`.
+ *
+ * @param input - Rohwert von `VorgabenB`.
+ * @returns Normalisierte Zeilen; leer bei Nicht-Arrays.
+ */
 function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
   if (!Array.isArray(input)) return [];
 
@@ -126,11 +182,23 @@ function normalizeVorgabenB(input: unknown): VorgabenBRow[] {
   return normalizeVorgabenBRows(rows);
 }
 
+/**
+ * Normalisiert die Arbeitszeit-Vorgaben über `normalizeAZ`.
+ *
+ * @param input - Rohwert von `Arbeitszeit`.
+ * @returns Arbeitszeit-Objekt oder `null` bei Nicht-Objekten.
+ */
 function normalizeArbeitszeit(input: unknown): TemplateContentDraft['Arbeitszeit'] {
   if (!input || typeof input !== 'object') return null;
   return normalizeAZ(input);
 }
 
+/**
+ * Sortiert die Schlüssel verschachtelter Objekte rekursiv, damit gleiche Inhalte gleich serialisiert werden.
+ *
+ * @param value - Beliebiger Wert; Arrays werden elementweise behandelt.
+ * @returns Kopie mit alphabetisch sortierten Objektschlüsseln.
+ */
 function sortObjectKeysDeep(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(sortObjectKeysDeep);
   if (!value || typeof value !== 'object') return value;
@@ -142,6 +210,12 @@ function sortObjectKeysDeep(value: unknown): unknown {
   return Object.fromEntries(entries);
 }
 
+/**
+ * Überführt den Rohinhalt eines Templates in den editierbaren Entwurf.
+ *
+ * @param template - Template-Inhalt aus dem Backend (kann fehlen).
+ * @returns Normalisierter Entwurf.
+ */
 export function normalizeTemplateContent(template: BackendProfileTemplate['template']): TemplateContentDraft {
   return {
     Pers: normalizePrimitiveRecord(template?.Pers),
@@ -152,6 +226,12 @@ export function normalizeTemplateContent(template: BackendProfileTemplate['templ
   };
 }
 
+/**
+ * Serialisiert einen Entwurf mit sortierten Schlüsseln und Listen, um Änderungen unabhängig von der Reihenfolge zu erkennen.
+ *
+ * @param draft - Aktueller Entwurf.
+ * @returns JSON-Text.
+ */
 export function serializeDraft(draft: TemplateContentDraft): string {
   return JSON.stringify({
     Pers: Object.fromEntries(Object.entries(draft.Pers).sort(([a], [b]) => a.localeCompare(b))),
@@ -165,6 +245,12 @@ export function serializeDraft(draft: TemplateContentDraft): string {
   });
 }
 
+/**
+ * Entfernt Einträge, deren Wert nur aus Leerraum besteht.
+ *
+ * @param record - Schlüssel-Wert-Paare aus Textfeldern.
+ * @returns Gefilterte Kopie.
+ */
 function removeEmptyValues(record: Record<string, string>): Record<string, string> {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value.trim() !== ''));
 }
@@ -177,6 +263,13 @@ export const DEFAULT_ARBEITSZEIT: NonNullable<TemplateContentDraft['Arbeitszeit'
   fahrzeit: '00:30',
 };
 
+/**
+ * Baut aus dem Entwurf den Template-Inhalt fürs Backend: leere Abschnitte werden weggelassen, unbekannte Felder des Originals bleiben erhalten.
+ *
+ * @param original - Bisheriger Template-Inhalt, falls vorhanden.
+ * @param draft - Bearbeiteter Entwurf.
+ * @returns Template-Inhalt zum Speichern.
+ */
 export function buildTemplatePayload(
   original: BackendProfileTemplate['template'] | undefined,
   draft: TemplateContentDraft,
@@ -225,6 +318,12 @@ export function buildTemplatePayload(
   return result as BackendProfileTemplate['template'];
 }
 
+/**
+ * Erstellt aus einem Backend-Template den Bearbeitungszustand.
+ *
+ * @param template - Template aus dem Backend.
+ * @returns Bearbeitungszustand mit normalisiertem Inhalt.
+ */
 export function toEditState(template: BackendProfileTemplate): TemplateEditState {
   return {
     code: template.code,

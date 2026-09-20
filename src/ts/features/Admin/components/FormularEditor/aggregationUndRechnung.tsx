@@ -21,7 +21,13 @@ const AGGREGATIONS_OPS: { wert: OpName; label: string }[] = [
   { wert: 'letztesDatum', label: 'Letztes Datum' },
 ];
 
-/** Berechnete/Zeilenfelder EINER Tabelle -- Baustein für die Feld-Auswahl in `AggregationEditor`. */
+/**
+ * Berechnete/Zeilenfelder EINER Tabelle -- Baustein für die Feld-Auswahl in `AggregationEditor`.
+ *
+ * @param formular - Formular, dessen Katalog die Zeilenfelder liefert.
+ * @param tabelle - Tabelle, deren `quelle` und berechnete Spalten gelten.
+ * @returns Zeilenfelder der Quelle plus die berechneten/Ankreuz-Spalten der Tabelle.
+ */
 function feldOptionenFuerTabelle(formular: FormularCode, tabelle: TabellenDef): KatalogEintrag[] {
   return [
     ...katalogZeilenFelder(formular, tabelle.quelle),
@@ -31,28 +37,31 @@ function feldOptionenFuerTabelle(formular: FormularCode, tabelle: TabellenDef): 
 
 type ListenOption = { key: string; label: string; liste: NonNullable<Berechnet['liste']> };
 
-/**
- * Summenfeld-Optionen je dynamischem Spaltenplatz einer Tabelle (EZ) -- eine normale (Minuten/
- * Stück) und eine "(€)"-Variante je konfiguriertem Platz, siehe `Berechnet.liste`. Bewusst NICHT
- * je Code (aus `ListenGruppe.auswahl`): welcher Code an einem Platz landet, steht erst mit den
- * Daten des Monats fest (`schluesselAufPlatz()`) -- die Summe muss demselben Platz folgen wie die
- * Spaltenüberschrift, nicht einem beim Konfigurieren fest gewählten Code. Plätze kommen deshalb aus
- * den TATSÄCHLICH angelegten Spalten (`Spalte.listenPlatz`), nicht aus der maximal möglichen
- * Codezahl der Gruppe. Label übernimmt den Spalten-`label`, damit Summenfeld und Datenspalte im
- * Dropdown erkennbar zusammengehören.
- */
 /** Suffix je `art` -- `summe` bleibt ohne Suffix (bestehender Key-Bestand bliebe sonst mehrdeutig). */
 const LISTE_ART_SUFFIX: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = {
   summe: '',
   bereinigt: ':bereinigt',
   summeGeld: ':geld',
 };
+/** Label-Zusatz je `art`. */
 const LISTE_ART_LABEL: Record<NonNullable<Berechnet['liste']>['art'] & string, string> = {
   summe: '',
   bereinigt: ' (bereinigt, Std.)',
   summeGeld: ' (€)',
 };
 
+/**
+ * Summenfeld-Optionen je dynamischem Spaltenplatz einer Tabelle (EZ): je konfiguriertem Platz eine
+ * Variante je `art` (roh, bereinigt, "(€)"), dazu je Listengruppe eine Gesamtsumme, siehe
+ * `Berechnet.liste`. Bewusst je Platz statt je Code: welcher Code an einem Platz landet, steht erst
+ * mit den Monatsdaten fest (`schluesselAufPlatz()`), und die Summe muss demselben Platz folgen wie die
+ * Spaltenüberschrift. Plätze kommen deshalb aus den tatsächlich angelegten Spalten
+ * (`Spalte.listenPlatz`); das Label übernimmt das Spalten-`label`.
+ *
+ * @param name - Tabellenname (Key in `tabellen`), Teil von Key und `liste.tabelle`.
+ * @param tabelle - Tabellendefinition mit Spalten und Listengruppen.
+ * @returns Auswahloptionen mit Key, Label und `Berechnet.liste`-Wert.
+ */
 function listenOptionenFuerTabelle(name: string, tabelle: TabellenDef): ListenOption[] {
   const arten = ['summe', 'bereinigt', 'summeGeld'] as const;
   const jePlatz = tabelle.spalten
@@ -79,20 +88,18 @@ function listenOptionenFuerTabelle(name: string, tabelle: TabellenDef): ListenOp
 }
 
 /**
- * Aggregation über Zeilen (`Berechnet`): Op, Zeilenbezug (`$seite`/`$bisher`/`$laufend`/`$alle`),
- * optionale Eingrenzung auf eine oder mehrere Tabellen (`Berechnet.tabellen`) und das aggregierte
- * Zeilenfeld. Genutzt für Kopf-/Fuß-Summen UND für die "Berechnung"-Variante einer Feld-Bedingung
- * (z.B. "Gesamtsumme > 0") -- beide teilen sich dieselbe Rechnung, nur der Vergleich danach
- * unterscheidet sich.
+ * Editor einer Aggregation über Zeilen (`Berechnet`): Rechenart, Zeilenbezug (`$seite`/`$bisher`/
+ * `$laufend`/`$alle`), optionale Eingrenzung auf Tabellen (`Berechnet.tabellen`) und das aggregierte
+ * Zeilenfeld bzw. die Zulagen-Liste. Genutzt für berechnete Felder (`Feld.berechnet`) und für die
+ * "Berechnung"-Variante einer Feld-Bedingung (`FeldAnkreuzBedingung`).
  *
- * Ohne Tabellenauswahl ("alle Tabellen") laufen Zeilenfelder aller Quellen zusammen
- * (`katalogZeilenFelder(formular)` ohne `quelle`) und berechnete/Ankreuz-Spalten werden über
- * `alleBerechneteEintraege()` per `pfad` dedupliziert -- bei zwei Tabellen mit gleichnamiger Spalte
- * (z.B. `Dauer`) verschwindet eine davon aus der Auswahl. Mit EINER ODER MEHREREN ausgewählten
- * Tabellen kommen nur deren eigene Felder (`quelle`-gefiltert plus ihre eigenen berechneten
- * Spalten), über alle ausgewählten Tabellen vereinigt und per `pfad` dedupliziert -- löst sowohl
- * Namenskollisionen als auch "Summe über zwei von drei Teiltabellen" (z.B. LRE1/2 + LRE3, ohne die
- * BZ-Haupttabelle).
+ * Ohne Tabellenauswahl werden die Zeilenfelder aller Quellen und die berechneten Spalten aller
+ * Tabellen angeboten, per `pfad` dedupliziert -- bei gleichnamigen Spalten (z.B. `Dauer`) bleibt nur
+ * eine. Mit gewählten Tabellen kommen nur deren eigene Felder (vereinigt, ebenfalls per `pfad`
+ * dedupliziert); das löst Namenskollisionen und erlaubt Summen über Teiltabellen (z.B. LRE1/2 + LRE3
+ * ohne die BZ-Haupttabelle).
+ *
+ * @param props - `wert` (aktuelle Aggregation), `formular`, `tabellen` (Tabellen des Formulars) und `onChange`.
  */
 export function AggregationEditor({
   wert,
@@ -116,8 +123,8 @@ export function AggregationEditor({
           ).values(),
         ]
       : [...katalogZeilenFelder(formular), ...alleBerechneteEintraege(tabellen)];
-  // Zulagen-Platz-Summen nur bei op "summe" -- eine Anzahl/ein Maximum "je Platz" hat hier keine
-  // eindeutige Bedeutung, siehe Berechnet.liste-Kommentar.
+  // Zulagen-Platz-Summen nur bei op "summe": eine Anzahl/ein Maximum "je Platz" hat keine
+  // eindeutige Bedeutung (siehe `Berechnet.liste`).
   const relevanteTabellen: [string, TabellenDef][] =
     gewaehlt.length > 0
       ? gewaehlt.flatMap(name => (tabellen[name] ? [[name, tabellen[name]] as [string, TabellenDef]] : []))
@@ -125,6 +132,12 @@ export function AggregationEditor({
   const listenOptionen =
     wert.op === 'summe' ? relevanteTabellen.flatMap(([name, t]) => listenOptionenFuerTabelle(name, t)) : [];
 
+  /**
+   * Schaltet eine Tabelle in der Eingrenzung ein/aus; `feld` und `liste` werden zurückgesetzt, weil
+   * sich die Auswahlmöglichkeiten ändern.
+   *
+   * @param name - Tabellenname.
+   */
   function schalteTabelle(name: string) {
     const naechste = gewaehlt.includes(name) ? gewaehlt.filter(t => t !== name) : [...gewaehlt, name];
     onChange({ ...wert, tabellen: naechste.length > 0 ? naechste : undefined, feld: undefined, liste: undefined });
@@ -182,9 +195,8 @@ export function AggregationEditor({
           {gruppiere(feldOptionen).map(([gruppe, felder]) => (
             <optgroup key={gruppe} label={gruppe}>
               {felder.map(f => (
-                // Key aus pfad+label statt nur pfad: ohne Tabellenauswahl mischt `feldOptionen`
-                // Einträge mehrerer Zeilenquellen (z.B. "Dauer" aus Daten.BZ UND Daten.BE) --
-                // gleicher Pfad, aber unterschiedliches Label, sonst React-Key-Kollision.
+                // Key aus pfad+label: ohne Tabellenauswahl mischt `feldOptionen` mehrere Zeilenquellen
+                // (z.B. "Dauer" aus Daten.BZ und Daten.BE) mit gleichem Pfad, aber anderem Label.
                 <option key={`${f.pfad}|${f.label}`} value={f.pfad}>
                   {f.label}
                 </option>
@@ -270,6 +282,9 @@ const ZEILEN_OPS_AUSWAHL: { wert: ZeilenOpName; text: string }[] = [
  * Rechnung einer berechneten Spalte. Ruft sich für geklammerte Zwischenrechnungen selbst auf —
  * damit sind gemischte Rechnungen wie Ende − Beginn + Pause abbildbar, ohne eine Vorrangregel
  * einzuführen: die Klammerung steht sichtbar in der Struktur.
+ *
+ * @param props - `wert` (Rechnung), `zeilenFelder` (wählbare Operanden), `onChange` und `onEntfernen`
+ *   (nur bei Zwischenrechnungen; zeigt den Entfernen-Knopf).
  */
 export function Rechnung({
   wert,
@@ -282,10 +297,21 @@ export function Rechnung({
   onChange: (wert: ZeilenBerechnet) => void;
   onEntfernen?: () => void;
 }) {
+  /**
+   * Ersetzt einen Operanden.
+   *
+   * @param index - Position in `wert.operanden`.
+   * @param operand - Neues Feld, Festwert oder Zwischenrechnung.
+   */
   function setzeOperand(index: number, operand: ZeilenOperand) {
     onChange({ ...wert, operanden: wert.operanden.map((o, j) => (j === index ? operand : o)) });
   }
 
+  /**
+   * Entfernt einen Operanden.
+   *
+   * @param index - Position in `wert.operanden`.
+   */
   function entferneOperand(index: number) {
     onChange({ ...wert, operanden: wert.operanden.filter((_, j) => j !== index) });
   }

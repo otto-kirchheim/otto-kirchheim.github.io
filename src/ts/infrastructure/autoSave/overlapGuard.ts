@@ -7,6 +7,12 @@ interface OverlapWindow {
   end: number;
 }
 
+/**
+ * Zeitfenster eines Bereitschaftszeitraums aus `Beginn`/`Ende`.
+ *
+ * @param cells - Zellen einer BZ-Zeile.
+ * @returns Fenster in ms, `null` bei ungueltigem Datum.
+ */
 function getBzWindow(cells: CustomTableTypes): OverlapWindow | null {
   const bz = cells as IDatenBZ;
   const start = dayjs(String(bz.Beginn));
@@ -16,10 +22,13 @@ function getBzWindow(cells: CustomTableTypes): OverlapWindow | null {
 }
 
 /**
- * Spiegelt `getWindowForOverlap` aus dem Backend (`ewt.service.ts`) sowie das Frontend-Pendant
- * `features/EWT/utils/getEwtWindow.ts`: Nachtschichten duerfen ueber den Tagesbeginn rollen, `Tag`
- * bleibt dabei der echte Starttag. Lokal dupliziert statt importiert, da `infrastructure/` laut
- * Architektur nicht von `features/` abhaengen darf.
+ * Zeitfenster einer EWT-Zeile aus `Tag`, `beginE` und `endeE`. Spiegelt `getWindowForOverlap` im
+ * Backend (`ewt.service.ts`) und `features/EWT/utils/getEwtWindow.ts`: Endet die Schicht nicht nach
+ * dem Beginn (Nachtschicht), rollt das Ende auf den Folgetag, `Tag` bleibt der Starttag. Lokal
+ * dupliziert, da `infrastructure/` nicht von `features/` abhaengen darf.
+ *
+ * @param cells - Zellen einer EWT-Zeile.
+ * @returns Fenster in ms, `null` ohne Zeiten oder bei ungueltigem `Tag`.
  */
 function getEwtWindowLocal(cells: CustomTableTypes): OverlapWindow | null {
   const ewt = cells as IDatenEWT;
@@ -42,20 +51,36 @@ const WINDOW_RESOLVERS: Partial<
   EWT: getEwtWindowLocal,
 };
 
+/**
+ * Prueft, ob sich zwei Fenster ueberschneiden; reines Beruehren der Grenzen zaehlt nicht.
+ *
+ * @param a - Erstes Fenster.
+ * @param b - Zweites Fenster.
+ * @returns `true` bei echter Ueberschneidung.
+ */
 function windowsOverlap(a: OverlapWindow, b: OverlapWindow): boolean {
   return a.start < b.end && b.start < a.end;
 }
 
+/**
+ * Liefert den fachlichen Zustand einer Zeile; bei `error` den Zustand, aus dem der Fehler entstand.
+ *
+ * @param row - Zeile mit `_state` und optional `_errorState`.
+ * @returns Fachlicher Zustand, `unchanged` bei `error` ohne gemerkten Ursprungszustand.
+ */
 function effectiveState(row: { _state: RowState; _errorState?: Exclude<RowState, 'error'> }): RowState {
   return row._state === 'error' ? (row._errorState ?? 'unchanged') : row._state;
 }
 
 /**
- * Zeilen, die AutoSave aktuell nicht senden darf: Ihr Zeitfenster ueberschneidet sich mit einer
- * bereits lokal geloeschten, aber noch nicht synchronisierten Zeile derselben Ressource. Serverseitig
- * (BZ/EWT `ensureNoOverlap`) existiert der geloeschte Datensatz noch, solange AutoSave Loeschungen
- * nicht mitsendet (nur manuelles Speichern tut das — Bulk-Reihenfolge Delete-vor-Create/Update ist
- * dort bereits abgesichert, siehe `base.controller.ts`).
+ * Zeilen, die AutoSave nicht senden darf: Ihr Zeitfenster ueberschneidet sich mit einer lokal
+ * geloeschten, noch nicht synchronisierten Zeile derselben Ressource. Serverseitig (`ensureNoOverlap`
+ * bei BZ/EWT) existiert der Datensatz noch, solange AutoSave Loeschungen nicht mitsendet; nur das
+ * manuelle Speichern tut das, und der Bulk-Endpunkt loescht zuerst (`base.controller.ts`).
+ *
+ * @param resource - Ressource der Tabelle.
+ * @param table - Tabelle mit den lokalen Zeilen.
+ * @returns Neue/geaenderte Zeilen mit Kollision; leer bei Ressourcen ohne Fensterpruefung.
  */
 export function findOverlapBlockedRows(
   resource: Exclude<TResourceKey, 'settings'>,

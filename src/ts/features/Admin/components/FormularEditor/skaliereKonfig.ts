@@ -19,11 +19,23 @@ interface Geometrie {
   maxBreite?: number;
 }
 
-/** Auf 2 Nachkommastellen, wie die Koordinaten-Eingaben im Editor (`ZahlFeld`). */
+/**
+ * Rundet auf 2 Nachkommastellen, wie die Koordinaten-Eingaben im Editor (`ZahlFeld`).
+ *
+ * @param n - Zu rundende Zahl.
+ * @returns Gerundeter Wert.
+ */
 function r(n: number): number {
   return Number(n.toFixed(2));
 }
 
+/**
+ * Skaliert die vorhandenen Geometrie-Felder einer Zelle in place: x/x2/maxBreite mit dem x-Faktor,
+ * y/y2/size mit dem y-Faktor, Koordinaten zusätzlich mit Versatz.
+ *
+ * @param z - Feld oder Spalte; wird verändert.
+ * @param f - Skalierfaktoren und Versatz.
+ */
 function skaliereZelle<T extends Geometrie>(z: T, f: SkalierFaktoren): void {
   if (z.x !== undefined) z.x = r(z.x * f.x + f.dx);
   if (z.x2 !== undefined) z.x2 = r(z.x2 * f.x + f.dx);
@@ -36,7 +48,12 @@ function skaliereZelle<T extends Geometrie>(z: T, f: SkalierFaktoren): void {
 /**
  * Schreibt alle Geometrie-Werte der Konfiguration um, damit die Platzierung auf einer Vorlage mit
  * anderer Seitengröße bzw. anderen Rändern wieder passt. Reine Funktion -- die Eingabe bleibt
- * unberührt (tiefe Kopie). `neueGroesse` aktualisiert die je Seite gespeicherte Referenzgröße.
+ * unberührt (tiefe Kopie).
+ *
+ * @param k - Konfiguration vor dem Vorlagen-Wechsel.
+ * @param f - Skalierfaktoren und Versatz.
+ * @param neueGroesse - Seitenmaße der neuen Vorlage in Punkten; aktualisiert die je Seite gespeicherte Referenzgröße.
+ * @returns Skalierte Kopie der Konfiguration.
  */
 export function skaliereKonfig(k: Konfig, f: SkalierFaktoren, neueGroesse?: { w: number; h: number }): Konfig {
   const kopie: Konfig = structuredClone(k);
@@ -88,19 +105,36 @@ export type Drehwinkel = 0 | 90 | 180 | 270;
  * mitgezählt, die Referenzgröße (`groesse`) getauscht. Für Datentabellen bleibt die Konfiguration
  * aufrecht -- nur `TabellenDef.drehung` (bzw. `TabellenBereich.drehung`) wird gesetzt; Renderer und
  * Editor-Vorschau drehen jede fertige Tabellenzelle um den Seitenmittelpunkt (siehe
- * `infrastructure/pdf/tabellenDrehung.ts`). Reine Funktion (tiefe Kopie). `alt` sind die Punkt-Maße
- * der Seite VOR der Drehung.
+ * `infrastructure/pdf/tabellenDrehung.ts`). Reine Funktion (tiefe Kopie).
+ *
+ * @param k - Konfiguration vor der Drehung.
+ * @param grad - Drehwinkel gegen den Uhrzeigersinn; `0` liefert nur die Kopie.
+ * @param alt - Seitenmaße in Punkten VOR der Drehung.
+ * @returns Gedrehte Kopie der Konfiguration.
  */
 export function dreheKonfig(k: Konfig, grad: Drehwinkel, alt: { w: number; h: number }): Konfig {
   const kopie: Konfig = structuredClone(k);
   if (grad === 0) return kopie;
 
+  /**
+   * Dreht einen Punkt aus dem alten in das neue Seitenkoordinatensystem.
+   *
+   * @param x - x im alten System.
+   * @param y - y im alten System.
+   * @returns Neues Paar `[x, y]`, auf 2 Nachkommastellen gerundet.
+   */
   const dreh = (x: number, y: number): [number, number] => {
     if (grad === 90) return [r(alt.h - y), r(x)];
     if (grad === 180) return [r(alt.w - x), r(alt.h - y)];
     return [r(y), r(alt.w - x)]; // 270
   };
   const neueGroesse = grad === 180 ? { w: alt.w, h: alt.h } : { w: alt.h, h: alt.w };
+  /**
+   * Addiert die Drehung dieser Konfiguration zur bestehenden Zellen-Drehung.
+   *
+   * @param d - Bisherige Drehung der Zelle.
+   * @returns Summe modulo 360; `undefined` bei 0 (keine Drehung).
+   */
   const plusDrehung = (d?: Drehung): Drehung | undefined => {
     const summe = (((d ?? 0) + grad) % 360) as Drehung;
     return summe === 0 ? undefined : summe;
@@ -146,6 +180,12 @@ export function dreheKonfig(k: Konfig, grad: Drehwinkel, alt: { w: number; h: nu
  * Platzierungen nach dem Umbenennen ins Leere (`build.ts` findet die Sonderzeile nicht mehr).
  * No-op, wenn `alt === neu`, `alt` nicht existiert oder `neu` schon vergeben ist. Reine Funktion.
  * Die Iterationsreihenfolge im Record bleibt erhalten, damit die Editor-Karte nicht springt.
+ *
+ * @param k - Konfiguration.
+ * @param tabelle - Name der Tabelle, deren Sonderzeile umbenannt wird.
+ * @param alt - Bisheriger Sonderzeilen-Name.
+ * @param neu - Neuer Sonderzeilen-Name.
+ * @returns Umbenannte Kopie; bei No-op dieselbe Instanz `k`.
  */
 export function benenneSonderzeileUm(k: Konfig, tabelle: string, alt: string, neu: string): Konfig {
   const inhalt = k.tabellen[tabelle]?.sonderzeilen;

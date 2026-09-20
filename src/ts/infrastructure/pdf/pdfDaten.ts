@@ -61,12 +61,9 @@ export type IPdfBereitschaftszeitraum = Required<Omit<IBereitschaftszeitraum, '_
   Dauer?: number;
 };
 
-// Hinweis: `Tag` ist hier `"DD.MM.YYYY"` formatiert statt ISO-Date wie im
-// domain-Basistyp -- generatePDF formatiert es um, kein Typ-Diff.
-// `PrivatKmBetrag` (Euro, Tarifkraft-/Beamter-Satz aus VorgabenGeld) ebenfalls optional, siehe Dauer.
-// `PrivatKm` selbst ebenfalls optional (statt wie sonst hier über `Required` erzwungen): gedruckt
-// wird je Person nur eine der beiden Spalten (Tarifkraft: rohe km / Beamter: Euro-Betrag), siehe
-// `beAbgeleiteteWerte()`.
+// `PrivatKmBetrag` (Euro, Tarifkraft-/Beamter-Satz aus VorgabenGeld) ist wie `Dauer` optional.
+// `PrivatKm` fehlt hier bewusst im `Required`: gedruckt wird je Person nur eine der beiden Spalten
+// (Tarifkraft: rohe km / Beamter: Euro-Betrag), siehe `beAbgeleiteteWerte()`.
 export type IPdfBereitschaftseinsatz = Required<
   Omit<IBereitschaftseinsatz, '_id' | 'Bereitschaftszeitraum' | 'Pause' | 'PrivatKm'>
 > & {

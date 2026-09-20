@@ -22,12 +22,20 @@ type Props = {
  * `Zulagen` eine Liste, im Formular stehen dafür feste Spaltenplätze, und welcher Code über welcher
  * Spalte landet, ergibt sich erst aus den Daten des Monats. Statt jede Zulage einzeln zu
  * konfigurieren, legt eine Vorlage Gruppe und Spaltenplätze in einem Zug an.
+ *
+ * @param props - Tabelle, Formular, `onChange` für die geänderte Tabelle und `onVorlage` für das Anlegen einer Vorlage samt Spaltenplätzen.
  */
 export function ListenGruppen({ tabelle, formular, onChange, onVorlage }: Props) {
   const gruppen = Object.entries(tabelle.listen ?? {});
   const vorlagen = LISTEN_VORLAGEN[formular].filter(v => !(v.name in (tabelle.listen ?? {})));
   const zeilenFelder = katalogZeilenFelder(formular);
 
+  /**
+   * Setzt oder löscht eine Listen-Gruppe der Tabelle; ohne verbleibende Gruppen wird `listen` entfernt.
+   *
+   * @param name - Name der Gruppe.
+   * @param gruppe - Neue Gruppe; `undefined` löscht sie.
+   */
   function setzeGruppe(name: string, gruppe: ListenGruppe | undefined): void {
     const rest = { ...(tabelle.listen ?? {}) };
     if (gruppe) rest[name] = gruppe;

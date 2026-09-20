@@ -9,6 +9,11 @@ import {
 
 const zulagenCatalogByCode = new Map<string, IZulageCatalogItem>(ZULAGEN_CATALOG.map(item => [item.code, item]));
 
+/**
+ * Liest die in den Einstellungen als benötigt markierten Zulagen-Codes.
+ *
+ * @returns Codes aus den Einstellungen; leer, wenn keine Vorgaben vorliegen.
+ */
 function getSelectedZulagenCodes(): string[] {
   try {
     return Storage.get<IVorgabenU>('VorgabenU', { check: true })?.Einstellungen?.benoetigteZulagen ?? [];
@@ -17,12 +22,24 @@ function getSelectedZulagenCodes(): string[] {
   }
 }
 
+/**
+ * Ermittelt die Zulagen, die im Neben-Formular angeboten werden.
+ *
+ * @param existingCodes - Codes, die zusätzlich enthalten sein müssen (z.B. bereits erfasste, aber inzwischen abgewählte Zulagen).
+ * @returns Katalogeinträge der gewählten und zusätzlichen Codes in Katalogreihenfolge.
+ */
 export function getConfiguredNebenZulagen(existingCodes: string[] = []): IZulageCatalogItem[] {
   const selectedCodes = getSelectedZulagenCodes();
   const codes = new Set([...selectedCodes, ...existingCodes]);
   return ZULAGEN_CATALOG.filter(item => codes.has(item.code));
 }
 
+/**
+ * Liefert die Zulagen eines Datensatzes bereinigt; ältere Datensätze mit `anzahl040N` werden zur Zulage "040" umgewandelt.
+ *
+ * @param item - Nebengeld-Datensatz.
+ * @returns Nur Zulagen mit Typ und positivem Wert; leer, wenn keine vorhanden.
+ */
 export function normalizeNebengeldZulagen(item: Partial<IDatenN>): INebenZulage[] {
   if (Array.isArray(item.Zulagen) && item.Zulagen.length > 0) {
     return item.Zulagen.filter(
@@ -30,7 +47,7 @@ export function normalizeNebengeldZulagen(item: Partial<IDatenN>): INebenZulage[
     ).filter(zulage => zulage.Wert > 0);
   }
 
-  // Fallback für alte IndexedDB-Einträge vor Einführung von Zulagen
+  // Fallback für Datensätze aus der Zeit vor den Zulagen (Feld `anzahl040N`).
   const legacy040 = item['anzahl040N'];
   if (typeof legacy040 === 'number' && legacy040 > 0) {
     return [{ Typ: '040', Wert: legacy040 }];
@@ -39,6 +56,12 @@ export function normalizeNebengeldZulagen(item: Partial<IDatenN>): INebenZulage[
   return [];
 }
 
+/**
+ * Formatiert Zulagen für die Anzeige, z.B. "040 Kurzlabel × 2" oder "… 30 min".
+ *
+ * @param zulagen - Zulagen des Datensatzes.
+ * @returns Eine Zeile je Zulage (Minuten- oder Anzahl-Angabe), durch Zeilenumbruch getrennt; "-" ohne Zulagen.
+ */
 export function formatNebengeldZulagen(zulagen: INebenZulage[]): string {
   if (zulagen.length === 0) return '-';
 
@@ -52,6 +75,12 @@ export function formatNebengeldZulagen(zulagen: INebenZulage[]): string {
     .join('\n');
 }
 
+/**
+ * Ergänzt einen Datensatz um bereinigte Zulagen und deren Anzeigetext.
+ *
+ * @param item - Nebengeld-Datensatz.
+ * @returns Kopie mit bereinigten `Zulagen` und aktualisiertem `zulagenAnzeigeN`.
+ */
 export function hydrateNebengeldRow(item: IDatenN): IDatenN {
   const Zulagen = normalizeNebengeldZulagen(item);
 
@@ -62,10 +91,22 @@ export function hydrateNebengeldRow(item: IDatenN): IDatenN {
   };
 }
 
+/**
+ * Wendet `hydrateNebengeldRow` auf mehrere Datensätze an.
+ *
+ * @param rows - Nebengeld-Datensätze.
+ * @returns Ergänzte Kopien (siehe `hydrateNebengeldRow`).
+ */
 export function hydrateNebengeldRows(rows: IDatenN[]): IDatenN[] {
   return rows.map(hydrateNebengeldRow);
 }
 
+/**
+ * Prüft Zulagen gegen die Katalogregeln: Höchstanzahl pro Tag, Mindestminuten pro Tag und Ausschluss anderer Zulagen derselben Kategorie.
+ *
+ * @param zulagen - Erfasste Zulagen; Werte von 0 oder weniger werden ignoriert.
+ * @returns Fehlermeldungen; leer, wenn alles zulässig ist.
+ */
 export function validateNebengeldZulagen(zulagen: INebenZulage[]): string[] {
   const errors: string[] = [];
   const positiveZulagen = zulagen.filter(zulage => zulage.Wert > 0);
@@ -104,6 +145,12 @@ export function validateNebengeldZulagen(zulagen: INebenZulage[]): string[] {
   return errors;
 }
 
+/**
+ * Liest die Zulagen-Eingaben aus dem Formular.
+ *
+ * @param form - Container mit den Inputs `data-zulage-input-code`.
+ * @returns Zulagen mit positivem Zahlenwert; leere oder ungültige Felder entfallen.
+ */
 export function readNebengeldZulagenFromForm(form: HTMLDivElement | HTMLFormElement): INebenZulage[] {
   const zulagen: INebenZulage[] = [];
 

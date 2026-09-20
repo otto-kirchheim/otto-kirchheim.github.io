@@ -2,6 +2,14 @@ import type { Column, CustomTableTypes, Row } from '@/infrastructure/table/Custo
 import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenBE, IDatenBZ } from '@/types';
 
+/**
+ * Baut eine Anzeigezeile (Beschriftung und Wert) für eine Spalte.
+ *
+ * @typeParam T - Zeilentyp (BZ oder BE).
+ * @param column - Tabellenspalte.
+ * @param row - Anzuzeigende Zeile.
+ * @returns Beschriftung mit geparstem Wert; `undefined` für die Aktionsspalte.
+ */
 const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(column: Column<T>, row: Row<T>) => {
   if (column.editing) return;
   return (
@@ -16,6 +24,13 @@ const createShowElement = <T extends CustomTableTypes = IDatenBZ | IDatenBE>(col
   );
 };
 
+/**
+ * Öffnet ein schreibgeschütztes Modal mit allen Spalten der Zeile.
+ *
+ * @typeParam T - Zeilentyp (BZ oder BE).
+ * @param row - Anzuzeigende Zeile.
+ * @param titel - Modal-Titel.
+ */
 export default function ShowModalBereitschaft<T extends CustomTableTypes = IDatenBZ | IDatenBE>(
   row: Row<T>,
   titel: string,

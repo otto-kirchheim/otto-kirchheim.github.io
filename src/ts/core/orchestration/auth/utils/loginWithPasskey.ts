@@ -8,6 +8,14 @@ import { resetTokenState } from '@/infrastructure/tokenManagement/tokenErneuern'
 import type { CustomHTMLDivElement } from '@/types';
 import { schliesseModal } from '@/components';
 
+/**
+ * Meldet per Passkey (WebAuthn) an. Der Benutzername im Login-Dialog ist optional (ohne ihn
+ * löst der Server über den Passkey auf). Bei Erfolg wird der Dialog geschlossen und
+ * `userLoginSuccess` gestartet; Fehler erscheinen im Feld `#errorMessage`.
+ *
+ * @param modal - Login-Dialog mit dem Eingabefeld `#Benutzer`.
+ * @throws {Error} Wenn `#Benutzer` oder `#errorMessage` im DOM fehlen.
+ */
 export default async function loginWithPasskey(modal: CustomHTMLDivElement): Promise<void> {
   const usernameInput = modal.querySelector<HTMLInputElement>('#Benutzer');
   const errorMessage = document.querySelector<HTMLDivElement>('#errorMessage');
@@ -28,9 +36,8 @@ export default async function loginWithPasskey(modal: CustomHTMLDivElement): Pro
     const { options, challengeToken, userName: resolvedUserName } = await authApi.beginPasskeyLogin(userName);
     const credential = await startAuthentication({
       optionsJSON: options,
-      // Der Button-klick soll die native Passkey-Abfrage sofort öffnen.
-      // Conditional UI / Autofill über das Input-Feld bleibt separat möglich,
-      // darf aber den expliziten Login-Flow nicht still blockieren.
+      // Der Button-Klick soll die native Passkey-Abfrage sofort öffnen. Conditional UI /
+      // Autofill über das Input-Feld darf den expliziten Login-Flow nicht still blockieren.
       useBrowserAutofill: false,
     });
     await authApi.finishPasskeyLogin(credential, challengeToken, userName ?? resolvedUserName);

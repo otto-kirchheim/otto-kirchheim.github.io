@@ -9,6 +9,9 @@ import { NebenTab } from './NebenTab';
 // (Neben deaktiviert, EWT aber aktiv) — sonst driften verknüpfte Nebengeld-Zeiten (EWT) unbemerkt.
 onEvent('ewt:persisted', ({ rows }) => syncNebengeldTimesFromEwtRows(rows));
 
+/**
+ * Rendert den Neben-Tab in `#neben-root`; ohne den Container passiert nichts.
+ */
 function mountNebenTab(): void {
   const container = document.querySelector<HTMLDivElement>('#neben-root');
   if (!container) return;
@@ -16,6 +19,9 @@ function mountNebenTab(): void {
   mount(container, <NebenTab />);
 }
 
+/**
+ * Entfernt den Neben-Tab aus `#neben-root`; ohne den Container passiert nichts.
+ */
 function unmountNebenTab(): void {
   const container = document.querySelector<HTMLDivElement>('#neben-root');
   if (!container) return;
@@ -25,9 +31,15 @@ function unmountNebenTab(): void {
 
 featureLifecycleRegistry.registerFeature({
   name: 'Neben',
+  /**
+   * Lifecycle-Hook: mountet den Tab, sobald das Feature aktiv wird.
+   */
   async register(): Promise<void> {
     mountNebenTab();
   },
+  /**
+   * Lifecycle-Hook: unmountet den Tab, wenn das Feature abgebaut wird.
+   */
   async unregister(): Promise<void> {
     unmountNebenTab();
   },

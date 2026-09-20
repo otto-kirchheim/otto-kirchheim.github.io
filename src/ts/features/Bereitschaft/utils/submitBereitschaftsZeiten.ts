@@ -15,6 +15,14 @@ import { bereitschaftszeitraumApi } from '@/infrastructure/api/apiService';
 import dayjs from '@/infrastructure/date/configDayjs';
 import { getMonatFromBZ } from '@/infrastructure/date/getMonatFromItem';
 
+/**
+ * Berechnet aus dem Modal neue Bereitschaftszeiträume und schreibt sie in Storage und Tabelle. Bei Monatswechsel wird der Folgemonat mitberechnet; bei Jahreswechsel wird er sofort per Bulk-API gespeichert (offline nur ohne Wechsel möglich).
+ * Validierungsfehler und "bereits vorhanden" zeigen eine Snackbar und brechen ohne Änderung ab.
+ *
+ * @param modal - Modal mit den Eingabefeldern (`#bA`/`#bAT`/`#bE`/`#bET`, Nacht-, Spät-, Sonder- und Vorgabe-Felder).
+ * @param tableBZ - BZ-Tabellenelement, das nach dem Speichern neu geladen wird.
+ * @throws {Error} Wenn ein Pflichtfeld fehlt oder die Nacht-/Bereitschaftszeiten unplausibel sind.
+ */
 export default async function submitBereitschaftsZeiten(
   modal: CustomHTMLDivElement<IDatenBZ>,
   tableBZ: CustomHTMLTableElement<IDatenBZ>,
@@ -41,6 +49,13 @@ export default async function submitBereitschaftsZeiten(
     ? vorgabenU.VorgabenB?.[vorgabeSelect.value]?.schichtenOverrides
     : undefined;
 
+  /**
+   * Lädt alle Zeilen (inkl. gelöschter) in die Tabelle, filtert auf den Monat und zeichnet neu; die Sortierung läuft wie gewohnt.
+   *
+   * @param table - BZ-Tabellenelement.
+   * @param reloadedRows - Alle Zeilen inkl. gelöschter.
+   * @param monatToSet - Monat (1-12) für den Tabellenfilter.
+   */
   const preserveDeletedRows = (
     table: CustomHTMLTableElement<IDatenBZ>,
     reloadedRows: IDatenBZ[],
@@ -115,11 +130,26 @@ export default async function submitBereitschaftsZeiten(
   const monat: number = Storage.get<number>('Monat', { check: true });
   const jahr: number = Storage.get<number>('Jahr', { check: true });
 
+  /**
+   * Ersetzt die Zeilen eines Monats durch neue.
+   *
+   * @param allRows - Alle BZ-Zeilen.
+   * @param monthRows - Neue Zeilen des Monats.
+   * @param month - Monat (1-12), dessen alte Zeilen ersetzt werden.
+   * @returns Zeilen aller anderen Monate plus `monthRows`.
+   */
   const mergeMonatRows = (allRows: IDatenBZ[], monthRows: IDatenBZ[], month: number): IDatenBZ[] => {
     const otherMonths = allRows.filter(item => getMonatFromBZ(item) !== month);
     return [...otherMonths, ...monthRows];
   };
 
+  /**
+   * Filtert BZ-Zeilen auf einen Monat.
+   *
+   * @param rows - Alle BZ-Zeilen.
+   * @param month - Monat (1-12).
+   * @returns Nur die Zeilen dieses Monats.
+   */
   const getMonatRows = (rows: IDatenBZ[], month: number): IDatenBZ[] => {
     return rows.filter(item => getMonatFromBZ(item) === month);
   };
@@ -161,6 +191,7 @@ export default async function submitBereitschaftsZeiten(
       actions: [
         {
           text: 'ohne wechsel fortsetzten?',
+          /** Berechnet nur bis zum Monatswechsel (ohne Folgemonat) und übernimmt das Ergebnis in Storage und Tabelle. */
           function: () => {
             if (!currentMonatRows) throw new Error('Fehler bei Datenermittlung');
             monatData = calculateBereitschaftsZeiten(
@@ -213,6 +244,7 @@ export default async function submitBereitschaftsZeiten(
         },
         {
           text: 'Abbrechen',
+          /** Beendet den Lade-Zustand des Buttons, ohne etwas zu ändern. */
           function: () => {
             clearLoading('btnESZ');
           },

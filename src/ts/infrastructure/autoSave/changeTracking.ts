@@ -10,6 +10,13 @@ import { beFromBackend, bzFromBackend, eaFromBackend, ewtFromBackend, nebengeldF
 import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';
 
+/**
+ * Wandelt ein Backend-Dokument der Ressource ins Frontend-Format.
+ *
+ * @param resource - Ressource (nicht `settings`).
+ * @param doc - Backend-Dokument; wird ungeprüft auf den Backend-Typ der Ressource gecastet.
+ * @returns Frontend-Zeile.
+ */
 export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings'>, doc: unknown): CustomTableTypes {
   switch (resource) {
     case 'BZ':
@@ -25,6 +32,12 @@ export function mapServerDocToFrontend(resource: Exclude<TResourceKey, 'settings
   }
 }
 
+/**
+ * Serialisiert einen Wert als JSON mit alphabetisch sortierten Objekt-Schlüsseln, sodass gleicher Inhalt unabhängig von der Schlüsselreihenfolge denselben String ergibt.
+ *
+ * @param value - Beliebiger JSON-artiger Wert.
+ * @returns Serialisierter String.
+ */
 export function stableSerialize(value: unknown): string {
   if (value === null || value === undefined) return JSON.stringify(value);
   if (typeof value !== 'object') return JSON.stringify(value);
@@ -36,10 +49,22 @@ export function stableSerialize(value: unknown): string {
   return `{${entries.join(',')}}`;
 }
 
+/**
+ * Erzeugt die `clientRequestId` (UUID v4), über die der Server ein angelegtes Dokument der lokalen Zeile zuordnen kann.
+ *
+ * @returns Neue UUID.
+ */
 export function createClientRequestId(): string {
   return uuidv4();
 }
 
+/**
+ * Bildet eine Inhalts-Signatur der Zeile ohne `_id`, Zeitstempel und `__v` (bei `N`/`EA` auch ohne `EWT`), um Zeilen mit Server-Dokumenten abzugleichen.
+ *
+ * @param resource - Ressource (nicht `settings`).
+ * @param row - Zellen der Zeile oder Server-Dokument im Frontend-Format.
+ * @returns Signatur-String.
+ */
 export function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: CustomTableTypes): string {
   const source = row as Record<string, unknown>;
   const omitKeys = new Set<string>(['_id', 'updatedAt', 'createdAt', '__v']);
@@ -57,6 +82,14 @@ export function rowSignature(resource: Exclude<TResourceKey, 'settings'>, row: C
   return stableSerialize(normalized);
 }
 
+/**
+ * Ergänzt jedes Create-Item um eine `clientRequestId`: Items übernehmen per Inhalts-Signatur die `_clientRequestId` der neuen Tabellenzeilen (an der Zeile bei Bedarf erzeugt), ohne Treffer gibt es eine frische Id.
+ *
+ * @param resource - Ressource (nicht `settings`).
+ * @param table - Tabelle mit den neuen Zeilen (`_state === 'new'`).
+ * @param createItems - Zu sendende Create-Items.
+ * @returns Create-Items mit `clientRequestId`, in derselben Reihenfolge.
+ */
 export function buildCreatePayloadWithClientRequestId(
   resource: Exclude<TResourceKey, 'settings'>,
   table: CustomTable<CustomTableTypes>,
@@ -81,6 +114,13 @@ export function buildCreatePayloadWithClientRequestId(
   });
 }
 
+/**
+ * Ordnet neuen Zeilen die vom Server vergebene `_id` über die `clientRequestId` zu.
+ *
+ * @param createRows - Gesendete neue Zeilen.
+ * @param createdReferences - Vom Server gelieferte Paare aus `_id` und `clientRequestId`.
+ * @returns Zeilenindex in `createRows` auf `_id`; nur für Zeilen mit Treffer.
+ */
 export function mapCreatedIdsByClientRequestId(
   createRows: Row<CustomTableTypes>[],
   createdReferences: { _id: string; clientRequestId: string }[],
@@ -99,6 +139,14 @@ export function mapCreatedIdsByClientRequestId(
   return createdIds;
 }
 
+/**
+ * Ausweichlösung, wenn `clientRequestId` nichts zuordnet: gleicht neue Zeilen und angelegte Server-Dokumente über die Inhalts-Signatur ab. Zeilen ohne Treffer erhalten der Reihe nach die übrigen Server-Ids.
+ *
+ * @param resource - Ressource (nicht `settings`).
+ * @param createRows - Gesendete neue Zeilen.
+ * @param createdDocs - Vom Server angelegte Dokumente im Backend-Format.
+ * @returns Zeilenindex in `createRows` auf `_id`.
+ */
 export function mapCreatedIdsByContent(
   resource: Exclude<TResourceKey, 'settings'>,
   createRows: Row<CustomTableTypes>[],
