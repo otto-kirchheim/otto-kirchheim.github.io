@@ -1,0 +1,47 @@
+import type { FeaturePdfContext } from '@/core/hooks';
+import { filterByMonat, getMonatFromN } from '@/infrastructure/date/getMonatFromItem';
+import tableToArray from '@/infrastructure/data/tableToArray';
+import { tableIdOf } from '@/infrastructure/data/resourceConfig';
+import type { INebengeldPdfBody, IPdfNebengeld } from '@/infrastructure/pdf/pdfDaten';
+import type { IDatenN } from '@/types';
+
+export interface EzAbgeleiteteWerte {
+  /** `"Beginn-Ende"`, z.B. `"07:00-15:45"` -- eine Spalte hat keine `Feld.quellen`/`trenner`-Verkettung. */
+  Arbeitszeit: string;
+}
+
+/**
+ * Arbeitszeit einer Nebengeld-Zeile als `"Beginn-Ende"`. Vorberechnet, weil `Spalte` (anders als `Feld`)
+ * keine `quellen`/`trenner`-Verkettung kennt.
+ *
+ * @param zeile - Nebengeld-Zeile mit `Beginn` und `Ende`.
+ * @returns `Arbeitszeit` als `"Beginn-Ende"`.
+ */
+export function ezAbgeleiteteWerte(zeile: Pick<IPdfNebengeld, 'Beginn' | 'Ende'>): EzAbgeleiteteWerte {
+  return { Arbeitszeit: `${zeile.Beginn}-${zeile.Ende}` };
+}
+
+/**
+ * Baut die PDF-Daten der Erschwerniszulagen (Neben/EZ) aus der Tabelle des Exportmonats inklusive vorberechneter `Arbeitszeit`.
+ *
+ * @param context - Exportmonat u. a. (`FeaturePdfContext`).
+ * @returns `Daten.N` in der Form der Vorlagen-Pipeline.
+ */
+export function baueEzPdfDaten({ monat }: FeaturePdfContext): { Daten: INebengeldPdfBody['Daten'] } {
+  const nRaw = filterByMonat(tableToArray<IDatenN>(tableIdOf('N')), monat, getMonatFromN);
+  return {
+    Daten: {
+      N: nRaw.map(n => {
+        const basis = {
+          Tag: n.Tag,
+          Beginn: n.Beginn,
+          Ende: n.Ende,
+          Auftragsnummer: n.Auftragsnummer,
+          Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
+        };
+        // Vorberechnete Arbeitszeit-Anzeige steht mit im Zeilenobjekt (Datenpfad Daten.N[].Arbeitszeit).
+        return { ...basis, ...ezAbgeleiteteWerte(basis) };
+      }),
+    },
+  };
+}

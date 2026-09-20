@@ -2,13 +2,15 @@ import { featureRegistry } from '@/core/hooks';
 import dayjs from '../date/configDayjs';
 import { warmeVorlagenCache } from './ladeFormular';
 
-/** aktivierteTabs-Wert -> FormularCode (deckt sich mit `FORMULAR_JE_MODUS` in `generatePDF.ts`). */
-const FORMULAR_JE_TAB: Record<string, string> = {
-  bereitschaft: 'bereitschaft',
-  ewt: 'ewt',
-  neben: 'ez',
-  ea: 'ea',
-};
+/**
+ * Formular-Code (`meta.pdf.formular`) zu einem `aktivierteTabs`-Wert (`meta.legacy.tabKey`).
+ *
+ * @param tab - Wert aus `aktivierteTabs`.
+ * @returns Formular-Code oder `undefined`, wenn kein Feature den Tab mit PDF anmeldet.
+ */
+function formularFuerTab(tab: string): string | undefined {
+  return featureRegistry.metas().find(meta => meta.legacy.tabKey === tab)?.pdf?.formular;
+}
 
 /**
  * Fuehrt `aufgabe` bei Leerlauf des Browsers aus (spaetestens nach 10 s), sonst per `setTimeout`.
@@ -44,7 +46,7 @@ export function warmeFormularCaches(aktivierteTabs: string[] | undefined, monat:
           .filter(meta => meta.legacyDefaultOn)
           .map(meta => meta.legacy.tabKey)
       : aktivierteTabs;
-  const formulare = [...new Set(tabs.map(tab => FORMULAR_JE_TAB[tab]).filter((f): f is string => Boolean(f)))];
+  const formulare = [...new Set(tabs.map(formularFuerTab).filter((f): f is string => Boolean(f)))];
   if (formulare.length === 0) return;
 
   const stichtag = dayjs([jahr, monat - 1, 1]).format('YYYY-MM-DD');

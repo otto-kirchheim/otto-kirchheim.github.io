@@ -33,6 +33,7 @@ export const berMeta: FeatureMeta = {
     },
   ],
   legacyDefaultOn: true,
+  pdf: { modus: 'B', formular: 'bereitschaft', dateiPraefix: 'RB' },
   legacy: {
     lifecycleName: 'Bereitschaft',
     tabKey: 'bereitschaft',

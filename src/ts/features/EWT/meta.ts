@@ -26,6 +26,7 @@ export const ewtMeta: FeatureMeta = {
     },
   ],
   legacyDefaultOn: true,
+  pdf: { modus: 'E', formular: 'ewt', dateiPraefix: 'Verpf.' },
   legacy: {
     lifecycleName: 'EWT',
     tabKey: 'ewt',

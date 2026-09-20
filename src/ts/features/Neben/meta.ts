@@ -30,6 +30,7 @@ export const ezMeta: FeatureMeta = {
     },
   ],
   legacyDefaultOn: true,
+  pdf: { modus: 'N', formular: 'ez', dateiPraefix: 'EZ' },
   legacy: {
     lifecycleName: 'Neben',
     tabKey: 'neben',

@@ -61,4 +61,17 @@ describe('app/features (Manifest)', () => {
     ]);
     expect(Storage.get<{ _id: string; EWT?: string }[]>('dataEA', { check: true })).toEqual([{ _id: 'a1' }]);
   });
+
+  it('meldet je Feature das PDF-Formular mit den bisherigen Werten an und liefert den pdf-Teil', async () => {
+    expect(featureRegistry.metas().map(m => [m.pdf?.modus, m.pdf?.formular, m.pdf?.dateiPraefix])).toEqual([
+      ['B', 'bereitschaft', 'RB'],
+      ['E', 'ewt', 'Verpf.'],
+      ['N', 'ez', 'EZ'],
+      ['EA', 'ea', 'Entgeltausgleich'],
+    ]);
+    for (const meta of featureRegistry.metas()) {
+      const pdf = await featureRegistry.load(meta.id, 'pdf');
+      expect(typeof pdf.baueDaten).toBe('function');
+    }
+  });
 });

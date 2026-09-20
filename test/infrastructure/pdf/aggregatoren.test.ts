@@ -361,7 +361,7 @@ describe('alsVergleichswert (Bedingung.bereich, feldunabhängig)', () => {
     expect(alsVergleichswert('14.08.2026')).toBe(Math.round(new Date(2026, 7, 14).getTime() / 60_000));
   });
 
-  it('liest echte Booleans als 1/0 -- bereich:{von:1,bis:2} bleibt für Boolean-Zeilenfelder (z.B. abgeleiteteWerte.ts) als Altweg gültig, auch nachdem werte direkt boolean unterstützt', () => {
+  it('liest echte Booleans als 1/0 -- bereich:{von:1,bis:2} bleibt für Boolean-Zeilenfelder (z.B. `features/EWT/utils/pdfDaten.ts`) als Altweg gültig, auch nachdem werte direkt boolean unterstützt', () => {
     expect(alsVergleichswert(true)).toBe(1);
     expect(alsVergleichswert(false)).toBe(0);
   });

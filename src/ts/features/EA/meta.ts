@@ -30,6 +30,7 @@ export const eaMeta: FeatureMeta = {
   ],
   // Bewusst aus: der Tab mountet nur bei explizitem 'ea' in aktivierteTabs, nicht fuer Bestands- und Neu-User.
   legacyDefaultOn: false,
+  pdf: { modus: 'EA', formular: 'ea', dateiPraefix: 'Entgeltausgleich' },
   legacy: {
     lifecycleName: 'EA',
     tabKey: 'ea',

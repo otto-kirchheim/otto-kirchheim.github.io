@@ -16,7 +16,7 @@ import {
   geldwertZulagenCode,
   summeBereinigtGruppe,
   summeGeldwertGruppe,
-} from './abgeleiteteWerte';
+} from './zulagenWerte';
 import type {
   Berechnet,
   Daten,

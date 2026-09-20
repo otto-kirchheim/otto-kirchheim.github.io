@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '@/core/types';
 import Storage from '@/infrastructure/storage/Storage'; // Import Storage directly
+import '@/app/features';
 import generatePDF from '@/infrastructure/data/generatePDF';
 import { splitOeInput } from '@/infrastructure/data/oeLevels';
 import tableToArray from '@/infrastructure/data/tableToArray';

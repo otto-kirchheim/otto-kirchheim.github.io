@@ -4,43 +4,13 @@ import buttonDisable from '../ui/buttonDisable';
 import clearLoading from '../ui/clearLoading';
 import setLoading from '../ui/setLoading';
 import { createSnackBar } from '../ui/CustomSnackbar';
-import type {
-  IDatenBE,
-  IDatenBZ,
-  IDatenEA,
-  IDatenEWT,
-  IDatenN,
-  IVorgabenGeld,
-  IVorgabenGeldType,
-  IVorgabenU,
-} from '@/types';
-import type {
-  IBereitschaftszeitraumPdfBody,
-  IEntgeltausgleichPdfBody,
-  IEwtPdfBody,
-  INebengeldPdfBody,
-} from '../pdf/pdfDaten';
-import {
-  beAbgeleiteteWerte,
-  bereitschaftszulageAbgeleiteteWerte,
-  bzAbgeleiteteWerte,
-  ewtAbgeleiteteWerte,
-  ezAbgeleiteteWerte,
-} from '../pdf/abgeleiteteWerte';
-import tableToArray from './tableToArray';
+import type { IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
+import { featureRegistry } from '@/core/hooks';
+import type { FeaturePdfModus } from '@/core/hooks';
 import dayjs from '../date/configDayjs';
 import { splitOeInput } from './oeLevels';
 import { ladeUndErzeugePdf } from '../pdf/ladeFormular';
 import { signaturDialog } from '../pdf/signaturDialog';
-import {
-  filterByMonat,
-  getMonatFromBE,
-  getMonatFromBZ,
-  getMonatFromEA,
-  getMonatFromN,
-  isEwtInMonat,
-} from '../date/getMonatFromItem';
-import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
 
 /**
  * Erzeugt das PDF eines Formulars aus den Tabellendaten des aktuellen Monats und laedt es herunter.
@@ -48,13 +18,10 @@ import calculateBuchungstagEwt from '../date/calculateBuchungstagEwt';
  * Ladeanzeige werden am Ende immer zurueckgesetzt.
  *
  * @param button - Ausloesender Button (Id fuer die Ladeanzeige); bei `null` passiert nichts.
- * @param modus - Formular: `B` Bereitschaft, `E` EWT, `N` Nebengeld, `EA` Entgeltausgleich.
+ * @param modus - Formular-Modus eines Features (`meta.pdf.modus`): `B` Bereitschaft, `E` EWT, `N` Nebengeld, `EA` Entgeltausgleich.
  * @throws {Error} Bei unbekanntem `modus` ('Modus fehlt').
  */
-export default async function generatePDF(
-  button: HTMLButtonElement | null,
-  modus: 'B' | 'E' | 'N' | 'EA',
-): Promise<void> {
+export default async function generatePDF(button: HTMLButtonElement | null, modus: FeaturePdfModus): Promise<void> {
   if (button === null) return;
 
   // Kein eigener Offline-Hinweis: `setOffline.ts` zeigt solange `navigator.onLine === false` eine dauerhafte Snackbar.
@@ -115,147 +82,32 @@ export default async function generatePDF(
     Jahr,
   };
 
-  /**
-   * Bildet die Schichtkuerzel `SP` und `BN` auf `T` bzw. `N` ab (Kuerzel der PDF-Vorlage).
-   *
-   * @param schicht - Schichtkuerzel der Tabelle.
-   * @returns Kuerzel fuer den Druck; unbekannte bleiben unveraendert.
-   */
-  const normalizeEwtSchichtForDownload = (schicht: string): string => {
-    if (schicht === 'SP') return 'T';
-    if (schicht === 'BN') return 'N';
-    return schicht;
-  };
-
-  // Daten: CustomTable-Zeilen → kanonisches PDF-Daten-Format (datenKatalog.ts/wert.ts)
-  switch (modus) {
-    case 'B': {
-      const bzRaw = filterByMonat(tableToArray<IDatenBZ<string>>('tableBZ'), Monat, getMonatFromBZ);
-      const beRaw = filterByMonat(tableToArray<IDatenBE>('tableBE'), Monat, getMonatFromBE);
-      // Beamter = TB !== 'Tarifkraft' (Konvention wie in calculateBerechnungRows.ts); bestimmt den
-      // Privat-km-Satz (`PrivatPKWBeamter`/`PrivatPKWTarif`) fuer beAbgeleiteteWerte().
-      const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
-      const geldMonatB = VorgabenGeld[Monat];
-      const privatKmSatz = beamter ? geldMonatB.PrivatPKWBeamter : geldMonatB.PrivatPKWTarif;
-      // Vorberechnete `Dauer`/`PrivatKmBetrag` stehen mit im Zeilenobjekt, `build()` liest sie als
-      // normale Datenpfade (Daten.BZ[].Dauer, Daten.BE[].Dauer/PrivatKmBetrag). Eigene Variablen,
-      // weil dieselben Zeilen unten fuer die Bereitschaftszulage summiert werden.
-      const bzMitDauer = bzRaw.map(bz => {
-        // 0-Pause bewusst als `undefined` -- die Spalte bleibt leer statt „0" zu drucken;
-        // `bzAbgeleiteteWerte()` deckelt intern mit `?? 0`, die Dauer bleibt korrekt.
-        const basis = { Beginn: bz.Beginn, Ende: bz.Ende, Pause: bz.Pause || undefined };
-        return { ...basis, ...bzAbgeleiteteWerte(basis) };
-      });
-      const beMitDauer = beRaw.map(be => {
-        const basis = {
-          Tag: be.Tag,
-          Auftragsnummer: be.Auftragsnummer,
-          Beginn: be.Beginn,
-          Ende: be.Ende,
-          LRE: be.LRE,
-          PrivatKm: be.PrivatKm ?? 0,
-        };
-        return { ...basis, ...beAbgeleiteteWerte(basis, privatKmSatz) };
-      });
-      data.Daten = { BZ: bzMitDauer, BE: beMitDauer } satisfies IBereitschaftszeitraumPdfBody['Daten'];
-
-      // Bereitschaftszulage: "Differenz BZ-BE" live aus denselben Zeilen wie die gedruckte Dauer-Spalte,
-      // nicht aus dem Storage-Cache `datenBerechnung` (koennte veraltet sein).
-      const bereitschaftMinuten =
-        bzMitDauer.reduce((s, r) => s + r.Dauer, 0) - beMitDauer.reduce((s, r) => s + r.Dauer, 0);
-      data.Bereitschaftszulage = bereitschaftszulageAbgeleiteteWerte(
-        bereitschaftMinuten,
-        localVorgabenU.Pers.TB,
-        geldMonatB,
-      );
-      break;
-    }
-    case 'E': {
-      const ewtRaw = tableToArray<IDatenEWT<string>>('tableE').filter(e => isEwtInMonat(e, Monat, 'buchungstag'));
-      // Beamter = TB !== 'Tarifkraft' (Konvention wie in calculateBerechnungRows.ts); Grundlage für
-      // `BeamterUeber8Wohnung`, den einzigen feldübergreifenden Fall in `ewtAbgeleiteteWerte()`.
-      const beamter = localVorgabenU.Pers.TB !== 'Tarifkraft';
-      // Die Einsatzort-Auswahl speichert nur die Tätigkeitsstätte (`Fahrzeit[].key`); für den Druck
-      // wird die Beschreibung (`Fahrzeit[].text`) angehängt.
-      const einsatzortBeschreibung = new Map(localVorgabenU.Fahrzeit.map(fz => [fz.key, fz.text]));
-      data.Daten = {
-        EWT: ewtRaw.map(e => {
-          const basis = {
-            Buchungstag: dayjs(e.Buchungstag || calculateBuchungstagEwt(e)).format('DD'),
-            Einsatzort: [e.Einsatzort, einsatzortBeschreibung.get(e.Einsatzort)].filter(Boolean).join(' | '),
-            Schicht: normalizeEwtSchichtForDownload(e.Schicht),
-            abWE: e.abWE ? dayjs(e.abWE, 'HH:mm').format('HH:mm') : undefined,
-            ab1E: e.ab1E ? dayjs(e.ab1E, 'HH:mm').format('HH:mm') : undefined,
-            anEE: e.anEE ? dayjs(e.anEE, 'HH:mm').format('HH:mm') : undefined,
-            beginE: e.beginE ? dayjs(e.beginE, 'HH:mm').format('HH:mm') : undefined,
-            endeE: e.endeE ? dayjs(e.endeE, 'HH:mm').format('HH:mm') : undefined,
-            abEE: e.abEE ? dayjs(e.abEE, 'HH:mm').format('HH:mm') : undefined,
-            an1E: e.an1E ? dayjs(e.an1E, 'HH:mm').format('HH:mm') : undefined,
-            anWE: e.anWE ? dayjs(e.anWE, 'HH:mm').format('HH:mm') : undefined,
-            berechnen: e.berechnen,
-          };
-          // Vorberechnete Dauer-/Zeitband-Felder stehen mit im Zeilenobjekt, `build()` liest sie als
-          // normale Datenpfade (Daten.EWT[].DauerWohnung etc.).
-          return { ...basis, ...ewtAbgeleiteteWerte(basis, beamter) };
-        }),
-      } satisfies IEwtPdfBody['Daten'];
-      break;
-    }
-    case 'N': {
-      const nRaw = filterByMonat(tableToArray<IDatenN>('tableN'), Monat, getMonatFromN);
-      data.Daten = {
-        N: nRaw.map(n => {
-          const basis = {
-            Tag: n.Tag,
-            Beginn: n.Beginn,
-            Ende: n.Ende,
-            Auftragsnummer: n.Auftragsnummer,
-            Zulagen: (n.Zulagen ?? []).map(z => ({ Typ: z.Typ, Wert: z.Wert })),
-          };
-          // Vorberechnete Arbeitszeit-Anzeige steht mit im Zeilenobjekt (Datenpfad Daten.N[].Arbeitszeit).
-          return { ...basis, ...ezAbgeleiteteWerte(basis) };
-        }),
-      } satisfies INebengeldPdfBody['Daten'];
-      break;
-    }
-    case 'EA': {
-      const eaRaw = filterByMonat(tableToArray<IDatenEA>('tableEA'), Monat, getMonatFromEA);
-      data.Daten = {
-        EA: eaRaw.map(ea => ({
-          Tag: ea.Tag,
-          Dauer: ea.Dauer,
-          Taetigkeit: ea.Taetigkeit,
-          Entgeltgruppe: ea.Entgeltgruppe,
-        })),
-      } satisfies IEntgeltausgleichPdfBody['Daten'];
-      break;
-    }
-    default:
-      throw new Error('Modus fehlt');
-  }
+  // Das Feature zum Modus liefert Formular, Dateiprefix und (lazy) den Datenaufbau.
+  const feature = featureRegistry.metaByPdfModus(modus);
+  if (!feature) throw new Error('Modus fehlt');
 
   try {
     console.time('generatePDF');
 
+    // Daten: CustomTable-Zeilen -> kanonisches PDF-Daten-Format (datenKatalog.ts/wert.ts), aufgebaut vom Feature.
+    const pdfTeil = await featureRegistry.load(feature.id, 'pdf');
+    Object.assign(
+      data,
+      pdfTeil.baueDaten({ monat: Monat, jahr: Jahr, vorgabenU: localVorgabenU, vorgabenGeld: VorgabenGeld[Monat] }),
+    );
+
     // Die Formularversion wird server-seitig aufgelöst (`GET /formulare/<formular>?stichtag=`), das PDF
     // client-seitig per `build()` erzeugt. Stichtag = erster Tag des Exportmonats (ein Formularwechsel
     // mitten im Monat ist die Ausnahme). `data` hat bereits die Form, die `build()` als `Daten` braucht.
-    const FORMULAR_JE_MODUS: { [key in typeof modus]: string } = { EA: 'ea', E: 'ewt', B: 'bereitschaft', N: 'ez' };
-    const formular = FORMULAR_JE_MODUS[modus];
+    const { formular, dateiPraefix } = feature.pdf;
     const stichtag = dayjs([Jahr, Monat - 1, 1]).format('YYYY-MM-DD');
     const signatur = await signaturDialog();
     const bytes = await ladeUndErzeugePdf(formular, stichtag, data, signatur.png, signatur.digital);
     const blob = new Blob([bytes as BlobPart], { type: 'application/pdf' });
 
-    const vorDateiName: { [key in typeof modus]: string } = {
-      B: 'RB',
-      E: 'Verpf.',
-      N: 'EZ',
-      EA: 'Entgeltausgleich',
-    };
     const { Nachname, Vorname, Gewerk, ErsteTkgSt } = localVorgabenU.Pers;
     const monatStr = String(Monat).padStart(2, '0');
-    const dateiName = `${vorDateiName[modus]} ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} ${monatStr}.${Jahr}.pdf`;
+    const dateiName = `${dateiPraefix} ${Nachname} ${Vorname.charAt(0)}. ${Gewerk} ${ErsteTkgSt} ${monatStr}.${Jahr}.pdf`;
 
     saveAs(blob, dateiName);
   } catch (error: unknown) {

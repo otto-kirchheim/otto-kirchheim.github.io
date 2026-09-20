@@ -51,7 +51,7 @@ export interface IPdfBase {
 
 // ─── Daten-Formate pro Ressource ─────────────────────────
 
-// `Dauer` wird erst durch `bzAbgeleiteteWerte()` (abgeleiteteWerte.ts) berechnet, deshalb optional
+// `Dauer` wird erst durch `bzAbgeleiteteWerte()` (`features/Bereitschaft/utils/pdfDaten.ts`) berechnet, deshalb optional
 // statt vom Typsystem erzwungen. Bewusst `number` (Minuten), nicht `"HH:mm"` wie bei EWT.
 // `Pause` bleibt optional (statt über `Required` erzwungen): `generatePDF` setzt eine 0-Pause bewusst
 // auf `undefined`, damit die Spalte leer bleibt statt „0" zu drucken; `bzAbgeleiteteWerte()` rechnet
@@ -85,7 +85,7 @@ export interface IPdfEWT {
   an1E?: string;
   anWE?: string;
   berechnen: boolean;
-  // Vorberechnete Werte, erst durch `ewtAbgeleiteteWerte()` (abgeleiteteWerte.ts) berechnet,
+  // Vorberechnete Werte, erst durch `ewtAbgeleiteteWerte()` (`features/EWT/utils/pdfDaten.ts`) berechnet,
   // deshalb optional statt vom Typsystem erzwungen. Renderer-seitig immer vorhanden, sobald
   // `ewtAbgeleiteteWerte()` durchgelaufen ist.
   DauerWohnung?: string;
@@ -104,7 +104,7 @@ export type IEwtPdfBody = {
   };
 };
 
-// `Arbeitszeit` wird erst durch `ezAbgeleiteteWerte()` (abgeleiteteWerte.ts) berechnet, deshalb
+// `Arbeitszeit` wird erst durch `ezAbgeleiteteWerte()` (`features/Neben/utils/pdfDaten.ts`) berechnet, deshalb
 // optional statt vom Typsystem erzwungen.
 export type IPdfNebengeld = Required<Omit<INebengeld, '_id' | 'EWT'>> & { Arbeitszeit?: string };
 
@@ -117,7 +117,7 @@ export interface IBereitschaftszeitraumPdfBody extends IPdfBase {
     BZ: IPdfBereitschaftszeitraum[];
     BE?: IPdfBereitschaftseinsatz[];
   };
-  // Inline statt Import von `BereitschaftszulageWerte` (abgeleiteteWerte.ts) -- diese Datei
+  // Inline statt Import von `BereitschaftszulageWerte` (`features/Bereitschaft/utils/pdfDaten.ts`) -- diese Datei
   // importiert bereits Typen VON hier (IPdfBereitschaftseinsatz etc.), ein Rückimport würde
   // einen Zyklus erzeugen. Struktur muss manuell synchron gehalten werden.
   Bereitschaftszulage?: {

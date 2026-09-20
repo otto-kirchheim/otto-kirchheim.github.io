@@ -74,6 +74,18 @@ describe('featureRegistry', () => {
     expect(featureRegistry.featureIdOfResource('EA')).toBeUndefined();
   });
 
+  it('metaByPdfModus findet das Feature zum Formular-Modus, sonst undefined', () => {
+    const a = definition('a', 1);
+    const b = definition('b', 2);
+    a.def.meta.pdf = { modus: 'E', formular: 'ewt', dateiPraefix: 'Verpf.' };
+    featureRegistry.define(a.def);
+    featureRegistry.define(b.def);
+
+    expect(featureRegistry.metaByPdfModus('E')?.id).toBe('a');
+    expect(featureRegistry.metaByPdfModus('E')?.pdf.formular).toBe('ewt');
+    expect(featureRegistry.metaByPdfModus('B')).toBeUndefined();
+  });
+
   it('define registriert unter dem Lifecycle-Namen; register laedt den ui-Teil und mountet', async () => {
     const a = definition('ea', 1);
     featureRegistry.define(a.def);

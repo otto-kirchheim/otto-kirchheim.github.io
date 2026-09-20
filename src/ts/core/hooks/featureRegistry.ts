@@ -8,7 +8,7 @@
 
 import { onEvent } from '@/core/events/appEvents';
 import type { EventChannel, EventChannels } from '@/core/events/types';
-import type { TResourceKey } from '@/types';
+import type { IVorgabenGeldType, IVorgabenU, TResourceKey } from '@/types';
 import { featureLifecycleRegistry } from './featureLifecycle';
 
 /** Ressourcen-Schluessel der Features (alle ausser den Einstellungen). */
@@ -73,6 +73,31 @@ export interface FeatureResource {
   filterMinYear?: number;
 }
 
+/** Formular-Modus des PDF-Downloads (Schluessel in `generatePDF`). */
+export type FeaturePdfModus = 'B' | 'E' | 'N' | 'EA';
+
+/** Deklaration des PDF-Formulars eines Features (Teil von `FeatureMeta`; der Datenaufbau liegt im lazy Teil `pdf`). */
+export interface FeaturePdfMeta {
+  /** Schluessel des Formulars, wie ihn die Download-Buttons an `generatePDF` uebergeben. */
+  modus: FeaturePdfModus;
+  /** Formular-Code der Vorlage (`GET /formulare/<formular>`; Backend-Vertrag, unveraendert). */
+  formular: string;
+  /** Anfang des Dateinamens, z. B. `RB` oder `Verpf.`. */
+  dateiPraefix: string;
+}
+
+/** Kontext, den `generatePDF` dem Feature fuer den Datenaufbau uebergibt. */
+export interface FeaturePdfContext {
+  /** Exportmonat (1-12). */
+  monat: number;
+  /** Exportjahr. */
+  jahr: number;
+  /** Persoenliche Vorgaben des Benutzers. */
+  vorgabenU: IVorgabenU;
+  /** Geld-Vorgaben des Exportmonats. */
+  vorgabenGeld: IVorgabenGeldType;
+}
+
 /** Eager gehaltene, rein deklarative Beschreibung eines Features (klein halten, kein Feature-Code importieren). */
 export interface FeatureMeta {
   /** Schluessel des Features (Ordner, Manifest), z. B. `ea`. */
@@ -103,6 +128,8 @@ export interface FeatureMeta {
     navId: string;
     saveButtonId: string;
   };
+  /** PDF-Formular des Features; ohne Angabe hat es keinen PDF-Download. */
+  pdf?: FeaturePdfMeta;
   /** Events, die das Feature auch ohne gemounteten Tab verarbeiten muss (Teil `events` wird dafuer geladen). */
   wakeOn?: readonly EventChannel[];
 }
@@ -118,6 +145,11 @@ export interface FeatureParts {
   data: { tableRows: { [K in FeatureResourceKey]?: (rows: unknown[]) => unknown[] } };
   /** Event-Handler fuer `meta.wakeOn`. */
   events: FeatureEventHandlers;
+  /**
+   * Baut den Nutzdaten-Teil des PDFs (`Daten` und ggf. Top-Level-Felder wie `Bereitschaftszulage`) aus den Tabellen des
+   * Features inklusive vorberechneter Werte; wird in die Basisdaten von `generatePDF` gemischt. Darf werfen.
+   */
+  pdf: { baueDaten(context: FeaturePdfContext): Record<string, unknown> };
 }
 
 export type FeaturePartName = keyof FeatureParts;
@@ -252,6 +284,16 @@ class FeatureRegistry {
    */
   featureIdOfResource(key: FeatureResourceKey): string | undefined {
     return this.metas().find(meta => meta.resources.some(resource => resource.key === key))?.id;
+  }
+
+  /**
+   * Liefert das Feature, dessen PDF-Formular zum Modus gehoert.
+   *
+   * @param modus - Formular-Modus (`B`, `E`, `N`, `EA`).
+   * @returns Metadaten mit `pdf` oder `undefined`, wenn kein Feature den Modus anmeldet.
+   */
+  metaByPdfModus(modus: FeaturePdfModus): (FeatureMeta & { pdf: FeaturePdfMeta }) | undefined {
+    return this.metas().find((meta): meta is FeatureMeta & { pdf: FeaturePdfMeta } => meta.pdf?.modus === modus);
   }
 
   /**

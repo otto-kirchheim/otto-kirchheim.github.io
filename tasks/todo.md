@@ -15,11 +15,11 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
 - [x] P1b Shell aus `meta` (komplett): ber/ewt/ez migriert (meta + lazy `parts/ui`, `ez` auch `events`); `AppHeader`, `App.tsx`, `StartTab` (Schnellzugriff + Startsatz), `EinstellungenTab`-Checkboxen, `OnboardingGuidePanel`-Tour, `syncFeatureTabs` aus `meta`; Sichtbarkeit über `featureTabsStore` statt DOM-`d-none`; Chunk-Fehler-Snackbar. 2189 Tests grün. `lint:fsd`-Baseline auf 110 korrigiert (P0-Wert 132 enthielt 22 Unused-Directive-Meldungen). Browser-Check durch den User: i.o. (2026-09-20)
 - [x] P1c-1 Ressourcen-Meta & Daten-Teil (ber, ewt, ez, ea): `meta.resources` beschreibend (Storage-Key, Tabellen-Id, Monatsermittlung, Jahres-Gates), `resourceConfig`, `autoSave`, `persist*`, `mergeVisibleResourceRows`, `warmeFormularCaches`, `loadUserDaten.*`, `overwriteUserDaten` (async, lazy Teil `data`), `changeMonatJahr`, `actAs`. Gate: typecheck, lint, `lint:fsd` 109, Tests 2196, build i.o.; Browser-Check offen.
 - [x] P1c-2 Backend-Adapter (`meta.resources[].api`, `periodOf`, `signatureOmitKeys`), generisches `loadAllYearData`, `saveDaten`-Button-Zuordnung aus `meta`, Event `ewt:deleted` + `unlinkEwtRefs`, Monat/Jahr-Store (`MonatUeberschrift`). Gate: typecheck, lint, `lint:fsd` 107, Tests 2201, build i.o.; Browser-Check offen (P1c gesamt).
-- [ ] P1d PDF-Provider (`tasks/plan-pdf-feature-provider.md`)
+- [x] P1d PDF-Provider (`meta.pdf` + lazy Teil `pdf`, `pdfDaten.ts` je Feature, `zulagenWerte.ts`, `generatePDF` ohne Feature-Wissen, `abgeleiteteWerte.ts` entfaellt). Gate: typecheck, lint, `lint:fsd` 107, Tests 2203, build i.o.; `generatePDF.test.ts` unveraendert gruen. Browser-Check (PDF je Modus B/E/N/EA) offen.
 - [ ] P1e Berechnung-Slot
 - [ ] P1f Einstellungen-Sections
 - [ ] P1g Admin nach Features
-- [ ] P1h Help/Onboarding-Slots + Abnahme
+- [ ] P1h Help/Onboarding-Slots + Abnahme Zusaetzlich: Body-Typen je Ressource (`IPdfEWT`, `IPdfBereitschaft*`, `IPdfNebengeld`, `IPdfEA`, `…PdfBody`) aus `infrastructure/pdf/pdfDaten.ts` in die Features verlagern, sobald `datenKatalog`/Pipeline sie nicht mehr aus `infrastructure` importieren (Basis-Typen `IPdfBase`/`IPdfPers` bleiben Pipeline-Vertrag).
 - [ ] P2 Shared-Leaves · P3 Shared-UI · P4 Domänen-Shared · P5 Geteilte Features + app/session
 - [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 

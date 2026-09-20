@@ -2,6 +2,25 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-20 (168)
+
+### refactor (FSD-Umbau P1d: PDF-Daten je Feature statt zentral in `generatePDF`)
+
+- **`meta.pdf`** (`modus`, `formular`, `dateiPraefix`) je Feature und neuer lazy Teil **`pdf`** (`features/<Ordner>/parts/pdf.ts`,
+  `baueDaten(FeaturePdfContext)`), im Manifest ergaenzt. `generatePDF` kennt kein Feature mehr: es baut nur die Basisdaten (`VorgabenU`, `VorgabenGeld`,
+  `Monat`, `Jahr`), sucht das Feature per `featureRegistry.metaByPdfModus`, laedt dessen `pdf`-Teil und mischt dessen Daten ein; `FORMULAR_JE_MODUS`,
+  `vorDateiName` und der `switch (modus)` entfallen. Der Datenaufbau laeuft jetzt innerhalb des `try` (Chunk-/Aufbaufehler zeigen die Snackbar und geben den
+  Button frei); ein unbekannter Modus wirft weiter `Modus fehlt`. Formular-Codes und Dateipraefixe bleiben unveraendert.
+- **`features/{Bereitschaft,EWT,Neben,EA}/utils/pdfDaten.ts`** enthalten den Datenaufbau und die Ableitungen (`bzAbgeleiteteWerte`, `beAbgeleiteteWerte`,
+  `bereitschaftszulageAbgeleiteteWerte`, `ewtAbgeleiteteWerte`, `ezAbgeleiteteWerte`), 1:1 aus `generatePDF.ts` und der geloeschten
+  `infrastructure/pdf/abgeleiteteWerte.ts`. Die Zulagen-Regeln und -Summen (`geldwertZulagenCode`, `bereinigteZulagenStunden`, `summe*Gruppe`) liegen jetzt
+  in `infrastructure/pdf/zulagenWerte.ts` (nur die PDF-Pipeline nutzt sie; `wert.ts` importiert von dort).
+- **`warmeFormularCaches`** liest Formular-Codes aus `meta.pdf.formular` statt aus einer eigenen Tab-Tabelle.
+- Tests: `abgeleiteteWerte.test.ts` in `EWT.pdfDaten`, `Bereitschaft.pdfDaten`, `Neben.pdfDaten` und `infrastructure/pdf/zulagenWerte` aufgeteilt (Inhalt unveraendert);
+  `generatePDF.test.ts` unveraendert (Ausgabe-Vertrag, nur Manifest-Import); Registry-/Manifest-Tests um `metaByPdfModus`/`pdf` erweitert. Testanzahl 2201 -> 2203.
+- Root-`.claude/CLAUDE.md` (PDF-Pipeline): Hinweis, dass abgeleitete Felder im Feature-`pdfDaten.ts` entstehen und `datenKatalog.ts` von Hand nachzuziehen ist.
+- Offen/Folge: `datenKatalog.ts` bleibt handgepflegt; Zulagen-Formel-Duplikat `N_ZULAGEN_CALC` <-> `geldwertZulagenCode` zusammenfuehren (Folge-Refactoring).
+
 ## 2026-09-20 (167)
 
 ### refactor (FSD-Umbau P1c-2: Backend-Adapter je Ressource, `ewt:deleted`, Monat/Jahr-Store)
