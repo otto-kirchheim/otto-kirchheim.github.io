@@ -2,7 +2,7 @@ import { DBButton, DBDrawer, DBDrawerHeader } from '@db-ux/react-core-components
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DIALOG_RICHTUNG } from '@/components/showModal';
+import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
 import type { Schriftart } from '@otto-kirchheim/nebengeld-shared';
 import { familieFuerSchnitt, fehlendeVorlagenSchnitte, SCHNITTE, schnitteText, type Schnitt } from './schriftartHelfer';

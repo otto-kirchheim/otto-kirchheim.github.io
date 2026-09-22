@@ -1,6 +1,6 @@
 import { createRef, type SubmitEvent } from 'react';
 
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, PasswordStrengthMeter, schliesseModal, showModal } from '@/components';
 import { updateUserPassword } from '../utils/api';
 

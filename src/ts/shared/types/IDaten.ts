@@ -1,4 +1,4 @@
-import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import type { LreType } from '@otto-kirchheim/nebengeld-shared';
 
 export interface IMonatsDaten<EWTType = string> {

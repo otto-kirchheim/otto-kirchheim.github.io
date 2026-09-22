@@ -15,11 +15,11 @@ import {
   DBTag,
   DBTooltip,
 } from '@db-ux/react-core-components';
-import { setOffenenAbschnitt, useOffenenAbschnitt } from '@/infrastructure/ui/offenerAbschnittStore';
+import { setOffenenAbschnitt, useOffenenAbschnitt } from '@/shared/model/navigation/offenerAbschnittStore';
 import PersoenlicheDatenPanel from '@/features/Einstellungen/components/PersoenlicheDatenPanel';
 import type { IEinstellungenSection } from '@/types';
 import { useEinstellungenTeile } from './einstellungenTeile';
-import useFeatureTabsVisible from './useFeatureTabsVisible';
+import useFeatureTabsVisible from '../../shared/model/navigation/useFeatureTabsVisible';
 
 /**
  * Ein Abschnitt des Einstellungen-Akkordeons. Der "offen"-Zustand liegt im

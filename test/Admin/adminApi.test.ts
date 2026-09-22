@@ -14,7 +14,7 @@ vi.mock('@/shared/api/FetchRetry', () => ({
   getServerUrl: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: mockCreateSnackBar,
 }));
 

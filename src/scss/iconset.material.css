@@ -1,6 +1,6 @@
 /*
  * GENERIERT von scripts/gen-iconset.mts -- NICHT von Hand editieren.
- * Quelle: src/ts/components/iconRegistry.ts   (Neu erzeugen: bun run icons:gen)
+ * Quelle: src/ts/shared/ui/icons/iconRegistry.ts   (Neu erzeugen: bun run icons:gen)
  *
  * CSS-Remap-Layer fuer den Wechsel des Icon-Satzes auf Material Symbols. Bildet jeden in der
  * App genutzten DB-UX-Icon-Namen auf den Material-Namen ab, indem der vom Design-System

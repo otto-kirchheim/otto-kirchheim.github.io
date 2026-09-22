@@ -22,11 +22,11 @@ const {
   confirmMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
@@ -51,7 +51,7 @@ vi.mock('@/shared/api/token/tokenErneuern', () => ({
 
 vi.mock('@/components', () => ({ schliesseModal: hideMock }));
 
-vi.mock('@/infrastructure/ui/confirmDialog', () => ({
+vi.mock('@/shared/ui/dialog/confirmDialog', () => ({
   confirmDialog: confirmMock,
 }));
 

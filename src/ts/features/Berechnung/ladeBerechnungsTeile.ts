@@ -1,6 +1,6 @@
 import { featureRegistry } from '@/shared/lib/feature';
 import type { IFeatureBerechnung } from '@/types';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
 /** Berechnungs-Slot eines Features samt Kennung; `tabKey` ist der `aktivierteTabs`-Wert des Features. */
 export interface IBerechnungTeil {

@@ -1,4 +1,4 @@
-import type { Row } from '@/infrastructure/table/CustomTable';
+import type { Row } from '@/shared/ui/custom-table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IVorgabenUvorgabenB } from '@/types';
 import { DBDivider, DBHeadingH6 } from '@db-ux/react-core-components';

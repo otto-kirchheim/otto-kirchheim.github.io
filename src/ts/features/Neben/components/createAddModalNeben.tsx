@@ -1,8 +1,8 @@
 import { DBButton } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
 import type { CustomHTMLTableElement, IDatenEWT, IDatenN } from '@/types';

@@ -2,7 +2,7 @@ import { DBButton, DBCheckbox, DBInfotext, DBTooltip } from '@db-ux/react-core-c
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import {
   fetchAdminUsers,
   updateUserOe,

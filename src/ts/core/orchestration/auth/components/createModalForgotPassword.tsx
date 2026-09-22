@@ -1,7 +1,7 @@
 import { createRef, type SubmitEvent } from 'react';
 
 import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { authApi } from '@/shared/api/apiService';
 
 /**

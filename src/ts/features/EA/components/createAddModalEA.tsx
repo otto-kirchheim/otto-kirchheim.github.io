@@ -1,14 +1,14 @@
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { MyFormModal, MyInput, MyModalBody, MySelect, beiModalSchliessen, showModal } from '@/components';
 import type { IDatenEA, IDatenEWT, IVorgabenU } from '@/types';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { onEvent } from '@/core';
 import { getEwtDaten } from '../../EWT/utils';
-import { default as applySelectOptions } from '../../Neben/utils/applySelectOptions';
+import { default as applySelectOptions } from '../../../shared/ui/form/applySelectOptions';
 import { addEaTag, calculateEaDauerFromEwt } from '../utils';
 import { TAETIGKEIT_VORSCHLAEGE } from '../utils/taetigkeitVorschlaege';
 

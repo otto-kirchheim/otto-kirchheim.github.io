@@ -20,7 +20,7 @@ vi.mock('@/components', () => ({
     h('input', { type: 'text', 'aria-label': props.beschriftung, value: props.value, readOnly: true }),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

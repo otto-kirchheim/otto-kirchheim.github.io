@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 
-import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
+import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { BereitschaftSchichtTyp, IVorgabenU, IVorgabenUaZ, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';

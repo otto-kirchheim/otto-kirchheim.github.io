@@ -4,7 +4,7 @@ import { hoeheFuer, maxZeilenFuer, spaltenFuer, startYFuer } from '@/infrastruct
 import type { Feld, Schriftart, SeitenDef, Spalte, Version } from '@otto-kirchheim/nebengeld-shared';
 import { build } from '@/infrastructure/pdf/build';
 import { konfigSchema } from '@/infrastructure/pdf/configSchema';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { PdfCanvas, type Achse, type Messung, type RasterMarke, type Rechteck } from './PdfCanvas';
 import { FeldPanel, type Armed } from './FeldPanel';
 import { erzeugeDummyDaten, erzeugeVorschau, type Werteart } from './dummyDaten';

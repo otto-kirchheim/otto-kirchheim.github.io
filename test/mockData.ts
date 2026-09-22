@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDaten } from '@/shared/types/IDaten';
 import type { IVorgabenBerechnung } from '@/shared/types/IVorgabenBerechnungMonat';
 import type { IVorgabenGeld } from '@/shared/types/IVorgabenGeldType';

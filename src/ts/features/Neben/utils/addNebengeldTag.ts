@@ -1,7 +1,7 @@
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { persistNebengeldTableData } from '.';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IDatenN } from '@/types';
 import { formatNebengeldZulagen, readNebengeldZulagenFromForm, validateNebengeldZulagen } from './nebengeldZulagen';
 

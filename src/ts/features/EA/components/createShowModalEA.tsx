@@ -1,6 +1,6 @@
-import type { Row } from '@/infrastructure/table/CustomTable';
+import type { Row } from '@/shared/ui/custom-table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
-import { createShowElement3, createTagElement } from '@/components/showModalHelpers';
+import { createShowElement3, createTagElement } from '@/shared/ui/modal/showModalHelpers';
 import type { CustomHTMLDivElement, IDatenEA } from '@/types';
 import { DBHeadingH4 } from '@db-ux/react-core-components';
 

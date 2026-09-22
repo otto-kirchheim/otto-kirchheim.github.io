@@ -8,7 +8,7 @@ import {
   mapServerDocToFrontend,
 } from '@/infrastructure/autoSave/changeTracking';
 import '@/app/features';
-import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
 
 describe('changeTracking', () => {
   describe('stableSerialize', () => {

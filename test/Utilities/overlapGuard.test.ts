@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { findOverlapBlockedRows } from '@/infrastructure/autoSave/overlapGuard';
-import type { CustomTable, CustomTableTypes, RowState } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, RowState } from '@/shared/ui/custom-table/CustomTable';
 
 type MockRow = {
   _state: RowState;

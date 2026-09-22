@@ -2,7 +2,7 @@ import { createElement } from 'react';
 import type { FeatureParts } from '@/shared/lib/feature';
 import FahrzeitenAbschnitt from '../components/FahrzeitenEinstellungenAbschnitt';
 import type { IVorgabenUfZ } from '@/types';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { mount } from '@/infrastructure/ui';
 import { FahrzeitenPanel } from '@/features/Einstellungen/components/FahrzeitenPanel';
 import { getFahrzeitPanelState } from '@/features/Einstellungen/components/fahrzeitPanelState';

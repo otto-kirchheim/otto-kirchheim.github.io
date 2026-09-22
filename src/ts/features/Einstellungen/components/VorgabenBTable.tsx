@@ -1,11 +1,11 @@
 import { saveEinstellungen } from '../utils';
 import { BereitschaftsEinsatzZeiträume } from '../../Bereitschaft/utils/constants';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { asAnyTable, useCustomTableState } from '@/infrastructure/table/CustomTable';
-import CustomTableView from '@/infrastructure/table/CustomTableView';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { asAnyTable, useCustomTableState } from '@/shared/ui/custom-table/CustomTable';
+import CustomTableView from '@/shared/ui/custom-table/CustomTableView';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
+import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';
 import { EditorModalVE, ShowModalVE } from '.';
 import { apiFetch } from '@/shared/api/apiFetchHelper';
 

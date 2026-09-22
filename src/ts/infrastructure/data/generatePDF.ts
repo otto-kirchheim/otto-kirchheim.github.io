@@ -1,9 +1,9 @@
 import { saveAs } from 'file-saver';
 import Storage from '../../shared/lib/storage/Storage';
-import buttonDisable from '../ui/buttonDisable';
-import clearLoading from '../ui/clearLoading';
-import setLoading from '../ui/setLoading';
-import { createSnackBar } from '../ui/CustomSnackbar';
+import buttonDisable from '../../shared/ui/button-loading/buttonDisable';
+import clearLoading from '../../shared/ui/button-loading/clearLoading';
+import setLoading from '../../shared/ui/button-loading/setLoading';
+import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenGeldType, IVorgabenU } from '@/types';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { FeaturePdfModus } from '@/shared/lib/feature';

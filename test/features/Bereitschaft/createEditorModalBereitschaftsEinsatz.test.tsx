@@ -2,7 +2,7 @@ import { huelleMock, inputMock } from '@test/reactRender';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h } from 'react';
 
-import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, type CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenBE } from '@/types';
 
 const {
@@ -43,7 +43,7 @@ vi.mock('@/components', () => ({
   MySelect: (props: Record<string, unknown>) => h('select', props),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

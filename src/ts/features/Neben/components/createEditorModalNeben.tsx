@@ -1,8 +1,8 @@
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
-import type { Column } from '@/infrastructure/table/CustomTable';
-import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { Column } from '@/shared/ui/custom-table/CustomTable';
+import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import {
   MyFormModal,
   MyInput,

@@ -12,7 +12,7 @@ const { persistEaTableDataMock, createSnackBarMock } = (
 vi.mock('@/features/EA/utils', () => ({
   persistEaTableData: persistEaTableDataMock,
 }));
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 
 import addEaTag from '@/features/EA/utils/addEaTag';
 

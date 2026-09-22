@@ -5,7 +5,7 @@ import {
   markFetchErrorRows,
   showErrorDialog,
 } from '@/infrastructure/autoSave/errorHandling';
-import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
 import type { BulkErrorEntry } from '@/shared/api/apiService';
 import type { RowErrorMatch } from '@/infrastructure/autoSave/savePipeline';
 

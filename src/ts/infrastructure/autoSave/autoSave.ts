@@ -9,8 +9,8 @@
 
 import { publishEvent } from '@/core';
 import { onEvent } from '@/shared/lib/events/appEvents';
-import type { CustomTable, CustomTableTypes, TableChanges } from '../table/CustomTable';
-import { getRowKey } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, TableChanges } from '../../shared/ui/custom-table/CustomTable';
+import { getRowKey } from '../../shared/ui/custom-table/CustomTable';
 import type { IVorgabenU, TResourceKey, TSaveStatus } from '@/types';
 import { profileApi } from '@/shared/api/apiService';
 import Storage from '../../shared/lib/storage/Storage';

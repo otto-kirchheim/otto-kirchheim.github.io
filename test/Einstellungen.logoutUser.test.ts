@@ -25,7 +25,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   onAutoSaveStatus: vi.fn(() => () => {}),
 }));
 
-vi.mock('@/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
@@ -53,7 +53,7 @@ vi.mock('@/infrastructure/ui/tabController', () => ({
 
 import logoutUser from '@/features/Einstellungen/utils/logoutUser';
 import Storage from '@/shared/lib/storage/Storage';
-import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 
 describe('logoutUser', () => {
   beforeEach(() => {

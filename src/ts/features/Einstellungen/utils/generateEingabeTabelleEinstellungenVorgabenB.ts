@@ -1,4 +1,4 @@
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 

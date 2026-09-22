@@ -1,7 +1,7 @@
 import { DBButton, DBInput, DBSelect, DBStack } from '@db-ux/react-core-components';
 import type { ComponentProps } from 'react';
 
-import { STANDARD_UNGUELTIG_MELDUNG } from '@/components/dbFeldHelfer';
+import { STANDARD_UNGUELTIG_MELDUNG } from '@/shared/ui/form/dbFeldHelfer';
 import { useEmailStatus } from '../utils/emailStatusStore';
 import { TB_VALUES } from '@otto-kirchheim/nebengeld-shared';
 

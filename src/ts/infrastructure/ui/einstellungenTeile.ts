@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { featureRegistry } from '@/shared/lib/feature';
 import type { IFeatureEinstellungen } from '@/types';
-import { createSnackBar } from './CustomSnackbar';
+import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
 import { flushExtern } from './reactRoot';
 
 /**

@@ -20,7 +20,7 @@ vi.mock('@/components', () => ({
   PasswordStrengthMeter: () => h('div', {}),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

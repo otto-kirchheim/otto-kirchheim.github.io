@@ -35,7 +35,24 @@ Baseline vor P0 (2026-09-20, Branch-Start): typecheck 0, lint 0, test 2172 pass 
       Hand, `core/index.ts`-Barrel umgehängt. `lint:fsd` 111 → 73 (Ratsche nachgezogen). Gate: typecheck 0, lint 0,
       `lint:fsd` 73, Tests 2289 unverändert, build i.o. (Precache weiterhin 113), `lint:css` 87 unverändert.
       Details CHANGELOG 179.
-- [ ] P3 Shared-UI · P4 Domänen-Shared · P5 Geteilte Features + app/session
+- [x] P3 Shared-UI (2026-09-22): `components/*` (außer `MyHelpModal.tsx`, bleibt für P6) + generische
+      `infrastructure/ui` (*Store*/`use*`-Familie + Dialog/Snackbar/Button-Loading) + `infrastructure/table` (+SCSS)
+      → `shared/ui/{dialog,snackbar,button-loading,icons,form,modal,custom-table}`; Tab-/Sichtbarkeits-Stores →
+      `shared/model/navigation`; `bindClickHandlers.ts` → `shared/lib/dom` (4 Feature-Konsumenten); `applySelectOptions.ts`
+      aus `features/Neben/utils/` → `shared/ui/form`. **Abweichung vom Plan:** `AutoSaveBadge.tsx` NICHT nach
+      `widgets/autosave-badge` (P6), sondern mit `DBLoadingButton.tsx` nach `shared/ui/button-loading` (einziger
+      Konsument, sonst shared→widgets-Layering-Verstoß). Zurückgestellt: App-Shell-Tabs/Widgets (P6/P8),
+      `tabController`/`pullToRefresh`/`reactRoot`/`setOffline`/`setVersionOutdated` (P10), `actAsStatus.ts`/
+      `monatJahrStore.ts` (P5), `useMediaQuery.ts`/`useColorMode.ts` (bleiben bei einzigen Konsumenten).
+      Nacharbeit: IDE-Move übersah die komplette Snackbar-Dateigruppe (nachgezogen) + hinterließ ein Duplikat
+      `infrastructure/table/CustomTable.ts` (gelöscht); danach gebrochene Innen-Importe der verschobenen Dateien,
+      ~40 Test-Dateien mit `mock.module`/`vi.mock`-Strings auf alte Pfade (v. a. `CustomSnackbar`, in fast jedem
+      Fehlerpfad-Test gemockt), `gen-iconset.mts`+2 SCSS-Kommentare+`iconset.material.css` neu generiert,
+      `customtable.scss`-`@use`-Tiefe korrigiert. `@/components`-Barrel bleibt bewusst als Re-Export-Fassade
+      (74 Konsumenten) -- kein Auftrag für Massenumzug der Aufrufstellen. `lint:fsd` 73 → 47 (User zog die Ratsche
+      selbst nach). Gate: typecheck 0, lint 0, `lint:fsd` 47, Tests 2289 unverändert, build i.o. (Precache 113),
+      `lint:css` 87 unverändert. Details CHANGELOG 180.
+- [ ] P4 Domänen-Shared · P5 Geteilte Features + app/session
 - [ ] P6 Widgets · P7 Module verschieben · P8 Globale Bereiche → Pages · P9 Admin · P10 Abschluss
 
 ---

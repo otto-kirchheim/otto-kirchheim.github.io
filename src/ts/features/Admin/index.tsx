@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Role, ROLE_HIERARCHY } from '@otto-kirchheim/nebengeld-shared';
 import { DBHeadingH1, DBNavigation } from '@db-ux/react-core-components';
-import useActiveAdminTab from '@/infrastructure/ui/useActiveAdminTab';
+import useActiveAdminTab from '@/shared/model/navigation/useActiveAdminTab';
 
 import { AdminUserList } from './components/AdminUserList';
 import { AdminVorgabenEditor } from './components/AdminVorgabenEditor';

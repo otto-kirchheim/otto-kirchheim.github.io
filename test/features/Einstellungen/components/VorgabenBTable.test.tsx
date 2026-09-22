@@ -21,11 +21,11 @@ const {
   storageGetMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
-vi.mock('@/infrastructure/ui/buttonDisable', () => ({
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 

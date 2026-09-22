@@ -26,7 +26,7 @@ vi.mock('@/shared/lib/date/getMonatFromItem', () => ({
 }));
 
 import '@/app/features';
-import { createCustomTable, type CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, type CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import mergeVisibleResourceRows from '@/infrastructure/data/mergeVisibleResourceRows';
 
 interface TableRow extends CustomTableTypes {

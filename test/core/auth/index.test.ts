@@ -96,7 +96,7 @@ vi.mock('@/features/Admin/utils/actAs', () => ({
 }));
 
 import { SESSION_RESTORE_SEQUENCE, getSteps, resetSteps } from '@/core/orchestration/initSequence';
-import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 
 let authModuleLoaded = false;
 

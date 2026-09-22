@@ -2,7 +2,7 @@ import type { IVorgabenU } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
 import { PERS_FIELD_LABELS, validatePersInput } from '@/shared/lib/validation/addressValidation';
 import { zeigeTab } from '@/infrastructure/ui/tabController';
-import { setOffenenAbschnitt } from '@/infrastructure/ui/offenerAbschnittStore';
+import { setOffenenAbschnitt } from '@/shared/model/navigation/offenerAbschnittStore';
 import { flushExtern } from '@/infrastructure/ui/reactRoot';
 
 /** Die 5 Pflichtfelder der persönlichen Daten, die der Nutzer selbst eintragen muss. */

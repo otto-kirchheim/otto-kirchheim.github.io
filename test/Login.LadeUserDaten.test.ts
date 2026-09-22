@@ -64,7 +64,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   generateEingabeMaskeEinstellungen: generateEingabeMaskeEinstellungenMock,
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
@@ -79,11 +79,11 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/ui/buttonDisable', () => ({
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
-vi.mock('@/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 
@@ -110,7 +110,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
 import '@/app/features';
 import loadUserDaten from '@/core/orchestration/auth/utils/loadUserDaten';
 import { showConflictReviewBanner } from '@/core/orchestration/auth/components';
-import { isNavigationSichtbar, setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
+import { isNavigationSichtbar, setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 
 type MockRow = { _id?: string; _state: string; cells: Record<string, unknown>; CustomTable: unknown; columns: unknown };
 

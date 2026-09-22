@@ -1,8 +1,8 @@
 import { createRef, type SubmitEvent, type ReactNode } from 'react';
 
-import type { Column } from '@/infrastructure/table/CustomTable';
-import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { Column } from '@/shared/ui/custom-table/CustomTable';
+import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { MyFormModal, MyInput, MyModalBody, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenBZ } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';

@@ -1,6 +1,6 @@
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
-import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
+import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
 import { authApi } from '@/shared/api/apiService';
 import { registerPasskeyWithResult } from '@/shared/api/token/passkeys';
 import { getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';

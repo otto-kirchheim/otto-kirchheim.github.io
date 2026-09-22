@@ -15,11 +15,11 @@ vi.mock('@/core/orchestration/auth/utils', () => ({
   userLoginSuccess: userLoginSuccessMock,
 }));
 
-vi.mock('@/infrastructure/ui/setLoading', () => ({
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('@/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 

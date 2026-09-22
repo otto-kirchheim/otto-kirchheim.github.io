@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import dayjs from '@/shared/lib/date/configDayjs';
 import {
   deleteVorgabeByYear,

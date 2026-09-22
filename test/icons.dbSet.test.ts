@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { DB_ICON, EIGENE_ICONS } from '@/components/dbIcons';
+import { DB_ICON, EIGENE_ICONS } from '@/shared/ui/icons/dbIcons';
 
 /**
  * Ein Icon-Name, den der DB-Satz nicht kennt, faellt nicht auf: die Icon-Schrift rendert

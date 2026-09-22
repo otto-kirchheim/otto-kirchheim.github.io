@@ -1,8 +1,8 @@
 import { createRef, type ChangeEvent, type SubmitEvent } from 'react';
 
-import type { Column } from '@/infrastructure/table/CustomTable';
-import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import type { Column } from '@/shared/ui/custom-table/CustomTable';
+import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import {
   MyFormModal,
   MyInput,
@@ -13,7 +13,7 @@ import {
   showModal,
 } from '@/components';
 import { getEwtDaten } from '../../EWT/utils';
-import { default as applySelectOptions } from '../../Neben/utils/applySelectOptions';
+import { default as applySelectOptions } from '../../../shared/ui/form/applySelectOptions';
 import type { CustomHTMLDivElement, IDatenEA, IDatenEWT } from '@/types';
 import Storage from '@/shared/lib/storage/Storage';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';

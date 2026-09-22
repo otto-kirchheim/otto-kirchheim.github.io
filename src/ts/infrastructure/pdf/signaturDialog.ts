@@ -1,4 +1,4 @@
-import { erzeugeDbDialog } from '@/infrastructure/ui/dbDialog';
+import { erzeugeDbDialog } from '@/shared/ui/dialog/dbDialog';
 import Storage from '../../shared/lib/storage/Storage';
 import { erstelleSignaturPad, holeSignaturPng, setzeSignaturPng } from './signaturePad';
 

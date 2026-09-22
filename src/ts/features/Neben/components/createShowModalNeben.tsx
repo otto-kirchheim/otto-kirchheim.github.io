@@ -1,8 +1,8 @@
 import { type JSX } from 'react';
 
-import type { Column, Row } from '@/infrastructure/table/CustomTable';
+import type { Column, Row } from '@/shared/ui/custom-table/CustomTable';
 import { MyDivModal, MyModalBody, MyShowFooter, showModal } from '@/components';
-import { createShowElement3, createTagElement, getColumn } from '@/components/showModalHelpers';
+import { createShowElement3, createTagElement, getColumn } from '@/shared/ui/modal/showModalHelpers';
 import type { CustomHTMLDivElement, IDatenN } from '@/types';
 import { formatNebengeldZulagen, normalizeNebengeldZulagen } from '../utils';
 import { DBHeadingH4 } from '@db-ux/react-core-components';

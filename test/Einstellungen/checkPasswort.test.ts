@@ -10,7 +10,7 @@ const { createSnackBarMock, changePasswordMock, setLoadingMock, clearLoadingMock
   modalHideMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
@@ -18,11 +18,11 @@ vi.mock('@/shared/api/apiService', () => ({
   authApi: { changePassword: changePasswordMock },
 }));
 
-vi.mock('@/infrastructure/ui/setLoading', () => ({
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
 }));
 
-vi.mock('@/infrastructure/ui/clearLoading', () => ({
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({
   default: clearLoadingMock,
 }));
 

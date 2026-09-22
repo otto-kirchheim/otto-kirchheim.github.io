@@ -1,7 +1,7 @@
 import { DBButton, DBHeadingH1, DBSection, DBTooltip } from '@db-ux/react-core-components';
 import { useEffect } from 'react';
 import { openHelpModal } from '@/core';
-import { bindClickHandlers } from '@/infrastructure/ui/bindClickHandlers';
+import { bindClickHandlers } from '@/shared/lib/dom/bindClickHandlers';
 import MonatUeberschrift from './MonatUeberschrift';
 
 /**

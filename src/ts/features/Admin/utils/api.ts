@@ -1,7 +1,7 @@
 import { FetchRetry } from '@/shared/api/FetchRetry';
 import Storage from '@/shared/lib/storage/Storage';
 import { notifyActAsStateChanged } from '@/infrastructure/ui/actAsStatus';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { TUserRole } from '@/types';
 import {
   Role,

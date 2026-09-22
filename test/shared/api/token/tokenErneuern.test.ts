@@ -12,7 +12,7 @@ const { mockRefreshToken, mockCreateSnackBar, mockAuthFailureHandler } = (
 vi.mock('@/shared/api/apiService', () => ({
   authApi: { refreshToken: mockRefreshToken },
 }));
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
 import tokenErneuern, { resetTokenState } from '@/shared/api/token/tokenErneuern';
 import { registerHook, clearAllHooks } from '@/shared/lib/feature';

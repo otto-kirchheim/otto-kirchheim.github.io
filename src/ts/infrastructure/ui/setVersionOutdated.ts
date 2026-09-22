@@ -1,5 +1,5 @@
-import { createSnackBar } from './CustomSnackbar';
-import { setDisableButton } from './buttonDisable';
+import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
+import { setDisableButton } from '../../shared/ui/button-loading/buttonDisable';
 
 /**
  * Meldet eine neue App-Version: sperrt die Buttons und zeigt eine dauerhafte Meldung mit Aktualisieren-Knopf.

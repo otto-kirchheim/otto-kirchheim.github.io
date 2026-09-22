@@ -2,13 +2,13 @@ import { afterAll, afterEach, beforeAll, describe, expect, it, setSystemTime, vi
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { default as DatenSortieren } from '@/infrastructure/data/DatenSortieren';
 import Storage from '@/shared/lib/storage/Storage';
-import { default as buttonDisable } from '@/infrastructure/ui/buttonDisable';
+import { default as buttonDisable } from '@/shared/ui/button-loading/buttonDisable';
 import { default as checkMaxTag } from '@/shared/lib/validation/checkMaxTag';
-import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
-import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
+import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { getUserCookie, isAdmin } from '@/shared/api/token/decodeAccessToken';
 /* import * as exportBerechnung from "@/Berechnung";
-import * as exportSnackbar from "@/infrastructure/ui/CustomSnackbar";
+import * as exportSnackbar from "@/shared/ui/snackbar/CustomSnackbar";
 import * as exportEinstelllungen from "@/features/Einstellungen/utils"; */
 /* import { VorgabenUMock, mockBereitschaft, mockEWT, mockNeben } from "./mockData";
  */

@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '../../shared/ui/custom-table/CustomTable';
 import { resourceDef } from '../data/resourceConfig';
 import type { TResourceKey } from '@/types';
 import { v4 as uuidv4 } from 'uuid';

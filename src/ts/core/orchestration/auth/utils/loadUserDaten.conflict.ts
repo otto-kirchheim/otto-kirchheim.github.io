@@ -1,4 +1,4 @@
-import type { CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, UserDatenServer } from '@/types';
 import type { TStorageData } from '@/shared/lib/storage/Storage';
 import { resourceDefs } from '@/infrastructure/data/resourceConfig';

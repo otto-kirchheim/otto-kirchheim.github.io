@@ -1,6 +1,6 @@
 import getNebengeldDaten from './getNebengeldDaten';
 import addNebengeldTag from './addNebengeldTag';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenN } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 
@@ -13,7 +13,7 @@ import persistTableData from '@/infrastructure/data/persistTableData';
 const persistNebengeldTableData = (ft: CustomTable<IDatenN>) => persistTableData('N', ft);
 
 export { addNebengeldTag, getNebengeldDaten, persistNebengeldTableData };
-export { default as applySelectOptions } from './applySelectOptions';
+export { default as applySelectOptions } from '../../../shared/ui/form/applySelectOptions';
 export { default as syncNebengeldTimesFromEwtRows } from './syncEwtToNeben';
 export {
   formatNebengeldZulagen,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 import { createElement } from 'react';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 
 type Row = { _id: string; Einsatzort: string };
 

@@ -1,6 +1,6 @@
 import type { IVorgabenBerechnung, IVorgabenGeld, IVorgabenU } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
+import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
 import calculateBerechnungRows from './calculateBerechnungRows';
 import { mountBerechnungMobileCards, mountBerechnungTableRows } from './components/mountBerechnung';
 import { wendeMonatsFensterAn } from './berechnungMonatsFenster';

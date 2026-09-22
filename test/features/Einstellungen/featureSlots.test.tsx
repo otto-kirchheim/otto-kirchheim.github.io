@@ -7,9 +7,9 @@ import {
   ladeEinstellungenTeile,
   resetEinstellungenTeile,
 } from '@/infrastructure/ui/einstellungenTeile';
-import { CustomTable, createCustomTable } from '@/infrastructure/table/CustomTable';
+import { CustomTable, createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 import Storage from '@/shared/lib/storage/Storage';
-import { resetFeatureTabsVisible } from '@/infrastructure/ui/featureTabsStore';
+import { resetFeatureTabsVisible } from '@/shared/model/navigation/featureTabsStore';
 import updateTabVisibility from '@/infrastructure/ui/updateTabVisibility';
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
 import { VorgabenUMock } from '@test/mockData';

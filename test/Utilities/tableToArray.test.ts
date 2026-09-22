@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import tableToArray from '@/infrastructure/data/tableToArray';
-import type { CustomTable, Row } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement } from '@/shared/types';
 
 interface MockData {

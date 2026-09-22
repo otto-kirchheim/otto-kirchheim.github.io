@@ -1,5 +1,5 @@
 import type { IVorgabenU, IVorgabenUvorgabenB } from '@/types';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 

@@ -1,6 +1,6 @@
 import { abortController } from './abortController';
 import tokenErneuern from './token/tokenErneuern';
-import { createSnackBar } from '../../infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '../lib/storage/Storage';
 import dayjs from 'dayjs';
 import compareVersion from '../lib/version/compareVersion';

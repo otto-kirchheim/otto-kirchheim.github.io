@@ -1,5 +1,5 @@
 import { unmount } from '@/infrastructure/ui';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
 import { MyHelpModal, oeffneDrawer } from '@/components';
 import { getHelpContent, type HelpContent, type HelpContextKey } from './helpContent';

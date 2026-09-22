@@ -14,13 +14,13 @@ import {
 } from '@db-ux/react-core-components';
 import { DBLoadingButton } from '@/components';
 import { featureRegistry } from '@/shared/lib/feature';
-import schliesseMobilenDrawer from './schliesseMobilenDrawer';
+import schliesseMobilenDrawer from '../../shared/model/navigation/schliesseMobilenDrawer';
 import ThemeSwitcher from './ThemeSwitcher';
-import useActiveTab from './useActiveTab';
-import useFeatureTabsVisible from './useFeatureTabsVisible';
+import useActiveTab from '../../shared/model/navigation/useActiveTab';
+import useFeatureTabsVisible from '../../shared/model/navigation/useFeatureTabsVisible';
 import useMediaQuery from './useMediaQuery';
-import useNavigationVisible from './useNavigationVisible';
-import { BREAKPOINTS } from './breakpoints';
+import useNavigationVisible from '../../shared/model/navigation/useNavigationVisible';
+import { BREAKPOINTS } from '../../shared/ui/custom-table/breakpoints';
 
 const MONATE_LANG = [
   'Januar',

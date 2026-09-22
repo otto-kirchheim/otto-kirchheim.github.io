@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { applyServerRowsToTable, collectRowErrorMatches } from '@/infrastructure/autoSave/savePipeline';
 import '@/app/features';
 import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
-import type { CustomTable, CustomTableTypes, Row } from '@/infrastructure/table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row } from '@/shared/ui/custom-table/CustomTable';
 import type { BulkErrorEntry } from '@/shared/api/apiService';
 import Storage from '@/shared/lib/storage/Storage';
 import type { IDatenEA, IDatenN } from '@/shared/types';

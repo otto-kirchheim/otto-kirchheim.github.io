@@ -1,7 +1,7 @@
 import { DBButton, DBCheckbox } from '@db-ux/react-core-components';
 import { createRef, type ChangeEvent, type MouseEvent, type SubmitEvent } from 'react';
 
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, showModal } from '@/components';
 import type { IDatenEWT } from '@/types';
 import { type IVorgabenU, type IVorgabenUfZ } from '@/types';

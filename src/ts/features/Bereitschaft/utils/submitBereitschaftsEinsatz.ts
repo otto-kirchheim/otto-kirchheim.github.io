@@ -7,11 +7,11 @@ import {
 } from '.';
 import { classifyBzCoverage, ensureCompleteBzSynced, resolveGap, resolvePartial, type BzCoverage } from './bzCoverage';
 import { hasConflictingLre1, hasLre12TooClose, hasOverlap } from './bereitschaftsEinsatzPruefungen';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { CustomHTMLTableElement, IDatenBE, IDatenBZ } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
-import { default as clearLoading } from '@/infrastructure/ui/clearLoading';
-import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { default as clearLoading } from '@/shared/ui/button-loading/clearLoading';
+import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { getMonatFromBZ } from '@/shared/lib/date/getMonatFromItem';
 import { flushResource, scheduleAutoSave } from '@/infrastructure/autoSave/autoSave';

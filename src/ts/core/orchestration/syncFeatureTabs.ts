@@ -1,7 +1,7 @@
 import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
 import type { FeatureContext, FeatureMeta } from '@/shared/lib/feature';
 import { getResourceStatus, hasPendingTableChanges } from '@/infrastructure/autoSave/autoSave';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 
 /** Aktuell gemountete Feature-Namen — verhindert doppeltes register()/unregister() bei unverändertem Zustand. */
 const mountedFeatures = new Set<string>();

@@ -11,7 +11,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   default: { check: storageCheckMock, get: storageGetMock },
 }));
 
-import { createCustomTable, CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import generateEingabeTabelleEinstellungenVorgabenB from '@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB';
 
 /**

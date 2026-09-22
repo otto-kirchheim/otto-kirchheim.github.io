@@ -1,6 +1,6 @@
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLDivElement, IDatenEA } from '@/types';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import dayjs from '@/shared/lib/date/configDayjs';
 import { persistEaTableData } from '.';
 

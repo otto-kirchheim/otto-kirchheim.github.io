@@ -1,5 +1,5 @@
 import { FetchRetry } from '@/shared/api/FetchRetry';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { createModalResetPassword } from '../components';
 
 /**

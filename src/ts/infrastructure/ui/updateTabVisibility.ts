@@ -1,5 +1,5 @@
 import { featureRegistry } from '@/shared/lib/feature';
-import { setFeatureTabsVisible } from './featureTabsStore';
+import { setFeatureTabsVisible } from '../../shared/model/navigation/featureTabsStore';
 import { flushExtern } from './reactRoot';
 
 /**

@@ -5,7 +5,7 @@
 @import '@db-ux/core-components/build/styles/bundle.css' layer(db-ux);
 
 /* Icon-Satz-Wechsel (Standard ist die DB-UX-Icon-Schrift).
-   Umschalten auf Material Symbols (Details: src/ts/components/iconRegistry.ts):
+   Umschalten auf Material Symbols (Details: src/ts/shared/ui/icons/iconRegistry.ts):
      1. bun run icons:gen  -- iconset.material.css aktualisieren
      2. den @import unten einkommentieren
      3. src/scss/styles.scss: @font-face fuer Material Symbols und --db-icon-font-family setzen

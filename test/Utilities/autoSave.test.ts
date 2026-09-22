@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 import '@/app/features';
 import { unlinkEwtRefsForDeletedIds } from '@/infrastructure/data/unlinkEwtRefs';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 
 const viCompat = vi as typeof vi & {
   hoisted: <T>(factory: () => T) => T;
@@ -28,7 +28,7 @@ const {
 }));
 
 // --- Mocks ---
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 vi.mock('@/shared/api/apiService', () => ({
   profileApi: { updateMyProfile: mockUpdateMyProfile },
   bereitschaftszeitraumApi: { bulk: mockBzBulk },

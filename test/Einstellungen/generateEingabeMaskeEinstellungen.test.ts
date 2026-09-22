@@ -26,7 +26,7 @@ import {
 } from '@/features/Einstellungen/utils/generateEingabeMaskeEinstellungen';
 import { ZULAGEN_CATALOG, ZulageCategory } from '@/features/Einstellungen/utils/zulagenCatalog';
 import type { IVorgabenU } from '@/types';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/shared/types';
 import { default as saveTableDataVorgabenU } from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
 import Storage from '@/shared/lib/storage/Storage';

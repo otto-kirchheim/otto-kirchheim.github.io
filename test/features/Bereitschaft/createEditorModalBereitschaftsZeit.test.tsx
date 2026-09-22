@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { huelleMock, inputMock, render } from '@test/reactRender';
 
-import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, type CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenBZ } from '@/types';
 
 const {
@@ -28,7 +28,7 @@ vi.mock('@/components', () => ({
   MyInput: inputMock,
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

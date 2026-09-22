@@ -1,5 +1,5 @@
 import type { ChangeEvent } from 'react';
-import type { Column, Row } from '@/infrastructure/table/CustomTable';
+import type { Column, Row } from '@/shared/ui/custom-table/CustomTable';
 import { MyCheckbox, MyDivModal, MyModalBody, MyShowElement, MyShowFooter, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT } from '@/types';
 import dayjs from '@/shared/lib/date/configDayjs';

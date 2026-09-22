@@ -20,7 +20,7 @@ const {
   requestVerificationMailMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
@@ -39,7 +39,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/ui/setLoading', () => ({
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({
   default: setLoadingMock,
 }));
 

@@ -72,7 +72,7 @@
 // Standard: DB-UX-Icon-Schrift aus `@db-ux/db-theme-icons` (DB-Font-Lizenz, nur DB-Kontext), gerendert ueber
 // `[data-icon]::before { content: var(--db-icon, attr(data-icon)) }` mit Ligatur-Schrift.
 //
-// Wechsel auf Material Symbols: Runbook in `src/ts/components/iconRegistry.ts`.
+// Wechsel auf Material Symbols: Runbook in `src/ts/shared/ui/icons/iconRegistry.ts`.
 
 // Icon-Buttons: `.db-icon` hat `font-size: 0`, das Glyph sitzt im `::before` auf der Grundlinie -- neben Text zu
 // gross und zu tief. Flex zentriert beides, die Groesse haengt an der Button-Schrift.

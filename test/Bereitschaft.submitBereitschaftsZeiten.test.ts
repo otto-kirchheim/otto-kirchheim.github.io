@@ -26,9 +26,9 @@ vi.mock('@/features/Bereitschaft/utils', () => ({
   calculateBereitschaftsZeiten: calculateBereitschaftsZeitenMock,
 }));
 vi.mock('@/infrastructure/data/tableToArray', () => ({ default: tableToArrayMock }));
-vi.mock('@/infrastructure/ui/setLoading', () => ({ default: setLoadingMock }));
-vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: clearLoadingMock }));
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: setLoadingMock }));
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: clearLoadingMock }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: createSnackBarMock }));
 vi.mock('@/core', () => ({ publishEvent: publishDataChangedMock }));
 vi.mock('@/shared/api/apiService', () => ({
   bereitschaftszeitraumApi: { loadYear: apiLoadYearMock, bulk: apiBulkMock },

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type SubmitEvent } from 'react';
 
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { FormularEditor, type Konfig } from './FormularEditor/FormularEditor';
 import { leereSeite } from './FormularEditor/seitenHelfer';
 import { ZEILEN_QUELLEN, type FormularCode } from './FormularEditor/datenKatalog';

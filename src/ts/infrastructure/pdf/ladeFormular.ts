@@ -1,7 +1,7 @@
 import type { Daten } from '@otto-kirchheim/nebengeld-shared';
 import { FetchRetry, getServerUrl } from '@/shared/api/FetchRetry';
 import Storage from '../../shared/lib/storage/Storage';
-import { createSnackBar } from '../ui/CustomSnackbar';
+import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
 import { parseVersion } from './configSchema';
 import { build } from './build';
 import { cacheVersion, cacheVorlage, getCachedVersion, getCachedVorlage } from './formularCache';

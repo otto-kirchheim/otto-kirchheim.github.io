@@ -1,4 +1,4 @@
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IMonatsDaten } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import dayjs from '@/shared/lib/date/configDayjs';

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h, type ReactNode } from 'react';
 import { inputMock, render } from '@test/reactRender';
 
-import { createCustomTable, type CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable, type CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenEA, IVorgabenU } from '@/types';
 
 const {
@@ -49,7 +49,7 @@ vi.mock('@/components', () => ({
     ),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 
@@ -65,7 +65,7 @@ vi.mock('@/features/EWT/utils', () => ({
   getEwtDaten: getEwtDatenMock,
 }));
 
-vi.mock('@/features/Neben/utils/applySelectOptions', () => ({
+vi.mock('@/shared/ui/form/applySelectOptions', () => ({
   default: applySelectOptionsMock,
 }));
 

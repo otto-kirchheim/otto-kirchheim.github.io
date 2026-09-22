@@ -23,7 +23,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
   },
 }));
 
-vi.mock('@/infrastructure/ui/buttonDisable', () => ({
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({
   default: buttonDisableMock,
 }));
 
@@ -31,7 +31,7 @@ vi.mock('@/features/Einstellungen/utils', () => ({
   setMonatJahr: setMonatJahrMock,
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

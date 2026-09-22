@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'bun:test';
 import { createElement as h, type ReactNode } from 'react';
 import { render } from '@test/reactRender';
 
-import type { Column, Row, CustomTableTypes } from '@/infrastructure/table/CustomTable';
+import type { Column, Row, CustomTableTypes } from '@/shared/ui/custom-table/CustomTable';
 
 const { showModalMock } = (vi as typeof vi & { hoisted: <T>(factory: () => T) => T }).hoisted(() => ({
   showModalMock: vi.fn(),

@@ -1,5 +1,5 @@
 import type { IDatenEWT } from '@/types';
-import type { CustomTable } from '../table/CustomTable';
+import type { CustomTable } from '../../shared/ui/custom-table/CustomTable';
 import { publishEvent } from '@/core';
 import Storage from '../../shared/lib/storage/Storage';
 import normalizeResourceRows from './normalizeResourceRows';

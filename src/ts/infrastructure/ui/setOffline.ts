@@ -1,5 +1,5 @@
-import { createSnackBar } from '../ui/CustomSnackbar';
-import { setDisableButton } from './buttonDisable';
+import { createSnackBar } from '../../shared/ui/snackbar/CustomSnackbar';
+import { setDisableButton } from '../../shared/ui/button-loading/buttonDisable';
 import { invokeHook } from '@/shared/lib/feature';
 
 /**

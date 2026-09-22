@@ -12,7 +12,7 @@ vi.mock('@/infrastructure/autoSave/autoSave', () => ({
   hasPendingTableChanges: mockHasPendingTableChanges,
   getResourceStatus: mockGetResourceStatus,
 }));
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({ createSnackBar: mockCreateSnackBar }));
 
 import { featureLifecycleRegistry, featureRegistry } from '@/shared/lib/feature';
 import { berMeta } from '@/features/Bereitschaft/meta';

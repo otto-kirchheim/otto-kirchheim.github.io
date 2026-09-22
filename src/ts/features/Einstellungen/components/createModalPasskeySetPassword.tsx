@@ -6,7 +6,7 @@ import { authApi } from '@/shared/api/apiService';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import { getPasskeyErrorMessage } from '@/shared/api/token/passkeys';
 import { resetTokenState } from '@/shared/api/token/tokenErneuern';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { PASSWORD_MIN_LENGTH, getPasswordValidationMessage } from '@/shared/lib/validation/passwordValidation';
 
 /**

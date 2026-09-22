@@ -1,5 +1,5 @@
 import { persistEwtTableData } from '.';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableRowElement, IDatenEWT } from '@/types';
 
 /**

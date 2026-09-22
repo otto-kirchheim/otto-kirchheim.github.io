@@ -1,8 +1,8 @@
 import { Role } from '@otto-kirchheim/nebengeld-shared';
 import { selectYear } from '@/features/Einstellungen/utils';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
-import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { updateActAsBanner } from '@/infrastructure/ui/actAsStatus';
 import { isAdmin } from '@/shared/api/token/decodeAccessToken';
 import dayjs from '@/shared/lib/date/configDayjs';

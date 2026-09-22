@@ -10,9 +10,9 @@ import {
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { DIALOG_RICHTUNG } from '@/components/showModal';
+import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { joinOeLevels, splitOeInput } from '@/infrastructure/data/oeLevels';
 import { JsonEditor } from './JsonEditor';
 import { OeLevelBoxes } from './OeLevelBoxes';

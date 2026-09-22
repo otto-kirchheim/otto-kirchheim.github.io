@@ -1,9 +1,9 @@
 import { DBButton } from '@db-ux/react-core-components';
 import { createRef, type SubmitEvent } from 'react';
 
-import { Row } from '@/infrastructure/table/CustomTable';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { Row } from '@/shared/ui/custom-table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { MyCheckbox, MyFormModal, MyInput, MyModalBody, MySelect, schliesseModal, showModal } from '@/components';
 import type { CustomHTMLDivElement, IDatenEWT, IVorgabenU } from '@/types';
 import { default as Storage } from '@/shared/lib/storage/Storage';

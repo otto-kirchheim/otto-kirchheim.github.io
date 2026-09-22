@@ -1,4 +1,4 @@
-import type { CustomTable, CustomTableTypes, Row, RowState } from '../table/CustomTable';
+import type { CustomTable, CustomTableTypes, Row, RowState } from '../../shared/ui/custom-table/CustomTable';
 import type { IDatenBZ, IDatenEWT, TResourceKey } from '@/types';
 import dayjs from '@/shared/lib/date/configDayjs';
 

@@ -8,7 +8,7 @@ const { createSnackBarMock, createModalResetPasswordMock, fetchRetryMock } = (
   fetchRetryMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

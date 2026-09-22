@@ -16,7 +16,7 @@ import { mergePerWeekdaySchicht } from '@/shared/lib/schicht/resolveSchichtDay';
 import { resolveBzVon, resolveBzBis } from './resolveBereitschaftsGrenze';
 import mergeSchichtenOverrides from './mergeSchichtenOverrides';
 import { setBereitschaftRuntimeOverrides, getBereitschaftRuntimeOverrides } from './bereitschaftRuntimeOverrides';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenBE, IDatenBZ } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 

@@ -1,4 +1,4 @@
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IEinstellungenBeitrag, IVorgabenU, IVorgabenUPers } from '@/types';
 import { PERS_FIELD_LABELS, setupPersValidation, validatePersInput } from '@/shared/lib/validation/addressValidation';
 import { default as Storage } from '@/shared/lib/storage/Storage';

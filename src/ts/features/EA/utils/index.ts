@@ -1,5 +1,5 @@
 import getEaDaten from './getEaDaten';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenEA } from '@/types';
 import persistTableData from '@/infrastructure/data/persistTableData';
 

@@ -1,6 +1,6 @@
 import type { FeatureParts } from '@/shared/lib/feature';
 import BereitschaftAbschnitt from '../components/BereitschaftEinstellungenAbschnitt';
-import { CustomTable } from '@/infrastructure/table/CustomTable';
+import { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { CustomHTMLTableElement, IVorgabenUvorgabenB } from '@/types';
 import { default as tableToArray } from '@/infrastructure/data/tableToArray';
 import generateEingabeTabelleEinstellungenVorgabenB from '@/features/Einstellungen/utils/generateEingabeTabelleEinstellungenVorgabenB';

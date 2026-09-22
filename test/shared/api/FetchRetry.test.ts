@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import Storage from '@/shared/lib/storage/Storage';
 import tokenErneuern from '@/shared/api/token/tokenErneuern';
 import { API_URL, FetchRetry, getServerUrl } from '@/shared/api/FetchRetry';
@@ -21,7 +21,7 @@ vi.mock('@/shared/lib/storage/Storage', () => ({
 }));
 
 // Mock createSnackBar
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: vi.fn(() => ({ Close: vi.fn() })), // Mock Close method as well
 }));
 

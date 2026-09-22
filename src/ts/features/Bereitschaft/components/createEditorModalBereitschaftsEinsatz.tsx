@@ -2,8 +2,8 @@ import type { Dayjs } from 'dayjs';
 import { createRef, type SubmitEvent, Fragment, type ReactNode } from 'react';
 
 import { LreType } from '@otto-kirchheim/nebengeld-shared';
-import { CustomTable, Row } from '@/infrastructure/table/CustomTable';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { CustomTable, Row } from '@/shared/ui/custom-table/CustomTable';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import {
   MyFormModal,
   MyInput,

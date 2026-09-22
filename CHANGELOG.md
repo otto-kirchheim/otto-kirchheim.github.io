@@ -2,6 +2,34 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-22 (180)
+
+### refactor (P3: Shared-UI nach `shared/ui`/`shared/model`/`shared/lib`)
+
+- `components/*` (außer `MyHelpModal.tsx`, bleibt für P6 Widgets) + die generische `infrastructure/ui`-*Store*/`use*`-Familie
+  + `infrastructure/table` (+SCSS) nach `shared/ui/{dialog,snackbar,button-loading,icons,form,modal,custom-table}` verschoben
+  (User in der IDE). Tab-/Sichtbarkeits-Stores (`activeTabStore`, `activeAdminTabStore`, `featureTabsStore`,
+  `navigationVisibleStore`, `offenerAbschnittStore`, `schliesseMobilenDrawer` + `use*`-Pendants) nach `shared/model/navigation`;
+  `bindClickHandlers.ts` (4 Feature-Konsumenten) nach `shared/lib/dom`; `applySelectOptions.ts` aus `features/Neben/utils/`
+  nach `shared/ui/form` (lag als generischer Code in einem Feature, Plan-Vorgabe).
+- **Abweichung vom Plan:** `AutoSaveBadge.tsx` nicht nach `widgets/autosave-badge` (P6) wie im Plan notiert, sondern
+  zusammen mit `DBLoadingButton.tsx` nach `shared/ui/button-loading` -- einziger Konsument, sonst müsste `shared`
+  von `widgets` importieren (verbotene Richtung).
+- Zurückgestellt (spätere Phasen, unverändert an Ort und Stelle): App-Shell-Tabs/Widgets (P6/P8), `tabController`/
+  `pullToRefresh`/`reactRoot`/`setOffline`/`setVersionOutdated` (P10), `actAsStatus.ts`/`monatJahrStore.ts` (P5, mit
+  Auth/Session), `useMediaQuery.ts`/`useColorMode.ts` (einzige Konsumenten bleiben vorerst).
+- Nacharbeit: zwei vom IDE-Move übersehene Dateigruppen (Snackbar-Familie, `CustomTable.ts`-Duplikat in
+  `infrastructure/table/` mit veraltetem Column-Importpfad) von Hand nachgezogen bzw. gelöscht; danach ~40 Dateien mit
+  gebrochenen Innen-Importen der verschobenen Dateien selbst (Tiefe/Ziel falsch, analog P2) und -- groesster Batzen --
+  ca. 40 Test-Dateien mit `mock.module`/`vi.mock`-Strings auf alte `@/infrastructure/ui/*`-Pfade (v. a. `CustomSnackbar`,
+  da in fast jedem Fehlerpfad-Test gemockt) per Bulk-Ersetzung korrigiert; `gen-iconset.mts` + zwei SCSS-Kommentare
+  (`db-ux.css`, `styles.scss`) auf neuen `iconRegistry.ts`-Pfad, `iconset.material.css` neu generiert;
+  `customtable.scss`s `@use '../../../scss/breakpoints'` auf neue Verschachtelungstiefe (`../../../../`) korrigiert.
+  `@/components`-Barrel bleibt bewusst als Re-Export-Fassade über `shared/ui/*` bestehen (74 Konsumenten importieren
+  weiterhin darüber) -- kein Auftrag für einen Massenumzug aller Aufrufstellen in dieser Phase.
+- Gate: typecheck 0, lint 0, `lint:fsd` 47 (Ratsche vom User bereits während des Moves nachgezogen, 73 → 47), Tests
+  2289 unverändert, build i.o. (Precache weiterhin 113 Einträge), `lint:css` 87 unverändert.
+
 ## 2026-09-22 (179)
 
 ### refactor (P2: Shared-Leaves nach `shared/`)

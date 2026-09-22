@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import { beforeEach, describe, expect, it, vi } from 'bun:test';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import type { IVorgabenGeld, IVorgabenU } from '@/shared/types';
 import Storage from '@/shared/lib/storage/Storage'; // Import Storage directly
 import '@/app/features';
@@ -15,7 +15,7 @@ vi.mock('file-saver', () => ({
   saveAs: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 
@@ -37,9 +37,9 @@ const { mockSetLoading, mockClearLoading, mockButtonDisable, mockLadeUndErzeugeP
 });
 
 // Mock individual utility files directly
-vi.mock('@/infrastructure/ui/setLoading', () => ({ default: mockSetLoading }));
-vi.mock('@/infrastructure/ui/clearLoading', () => ({ default: mockClearLoading }));
-vi.mock('@/infrastructure/ui/buttonDisable', () => ({ default: mockButtonDisable }));
+vi.mock('@/shared/ui/button-loading/setLoading', () => ({ default: mockSetLoading }));
+vi.mock('@/shared/ui/button-loading/clearLoading', () => ({ default: mockClearLoading }));
+vi.mock('@/shared/ui/button-loading/buttonDisable', () => ({ default: mockButtonDisable }));
 vi.mock('@/infrastructure/pdf/ladeFormular', () => ({
   ladeUndErzeugePdf: mockLadeUndErzeugePdf,
 }));

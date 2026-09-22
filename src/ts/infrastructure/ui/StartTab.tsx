@@ -9,7 +9,7 @@ import {
   DBTooltip,
 } from '@db-ux/react-core-components';
 import { featureRegistry } from '@/shared/lib/feature';
-import useFeatureTabsVisible from './useFeatureTabsVisible';
+import useFeatureTabsVisible from '../../shared/model/navigation/useFeatureTabsVisible';
 
 /**
  * Start-Tab: Willkommenstext, drei Einstiegskarten, Schnellzugriff (nur Mobil) und Ladeanzeige.

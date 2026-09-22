@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Role } from '@otto-kirchheim/nebengeld-shared';
-import { createSnackBar } from '@/infrastructure/ui/CustomSnackbar';
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
 import {
   createProfileTemplate,

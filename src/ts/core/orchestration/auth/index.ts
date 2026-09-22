@@ -8,7 +8,7 @@ import Storage from '@/shared/lib/storage/Storage';
 import { default as updateTabVisibility } from '@/infrastructure/ui/updateTabVisibility';
 import { getUserCookie, isAdmin } from '@/shared/api/token/decodeAccessToken';
 import { initAutoSaveEventListener } from '@/infrastructure/autoSave/autoSave';
-import { setNavigationSichtbar } from '@/infrastructure/ui/navigationVisibleStore';
+import { setNavigationSichtbar } from '@/shared/model/navigation/navigationVisibleStore';
 import { setzeHauptTabErlaubtPruefung } from '@/infrastructure/ui/tabController';
 import { createModalLogin } from './components';
 import { handleAuthUrlState } from './utils';

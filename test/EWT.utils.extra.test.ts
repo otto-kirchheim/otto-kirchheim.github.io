@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'bun:test';
 
 import '@/app/features';
-import { createCustomTable } from '@/infrastructure/table/CustomTable';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import { createCustomTable } from '@/shared/ui/custom-table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IDatenEWT, IVorgabenU } from '@/shared/types';
 import EditorModalEWT from '@/features/EWT/components/createEditorModalEWT';
 import calculateBuchungstagEwt from '@/features/EWT/utils/calculateBuchungstagEwt';
@@ -16,7 +16,7 @@ const { createSnackBarMock } = (vi as typeof vi & { hoisted: <T>(factory: () => 
   createSnackBarMock: vi.fn(),
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

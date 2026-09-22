@@ -10,7 +10,7 @@ import {
 } from '@db-ux/react-core-components';
 import { createPortal } from 'react-dom';
 
-import { DIALOG_RICHTUNG } from '@/components/showModal';
+import { DIALOG_RICHTUNG } from '@/shared/ui/modal/showModal';
 
 import dayjs from '@/shared/lib/date/configDayjs';
 import { JsonEditor } from './JsonEditor';

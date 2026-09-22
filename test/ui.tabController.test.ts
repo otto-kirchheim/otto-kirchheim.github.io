@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 
-import { getAktivenTab, setAktivenTab } from '@/infrastructure/ui/activeTabStore';
-import { getAktivenAdminTab, setAktivenAdminTab } from '@/infrastructure/ui/activeAdminTabStore';
+import { getAktivenTab, setAktivenTab } from '@/shared/model/navigation/activeTabStore';
+import { getAktivenAdminTab, setAktivenAdminTab } from '@/shared/model/navigation/activeAdminTabStore';
 import {
   TAB_SHOWN_EVENT,
   aktiverTab,

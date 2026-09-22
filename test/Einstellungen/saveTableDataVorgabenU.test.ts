@@ -10,11 +10,11 @@ vi.mock('@/infrastructure/data/tableToArray', () => ({
 
 import Storage from '@/shared/lib/storage/Storage';
 import saveTableDataVorgabenU from '@/features/Einstellungen/utils/saveTableDataVorgabenU';
-import type { CustomTable } from '@/infrastructure/table/CustomTable';
+import type { CustomTable } from '@/shared/ui/custom-table/CustomTable';
 import type { IVorgabenUvorgabenB } from '@/shared/types';
 import { VorgabenUMock } from '@test/mockData';
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: vi.fn(),
 }));
 

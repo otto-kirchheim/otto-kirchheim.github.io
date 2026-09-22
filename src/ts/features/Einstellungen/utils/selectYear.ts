@@ -1,6 +1,6 @@
 import { default as Storage } from '@/shared/lib/storage/Storage';
 import { getUserCookie } from '@/shared/api/token/decodeAccessToken';
-import { default as setLoading } from '@/infrastructure/ui/setLoading';
+import { default as setLoading } from '@/shared/ui/button-loading/setLoading';
 import { loadUserDaten } from '@/core/orchestration/auth/utils';
 import setMonatJahr from './setMonatJahr';
 

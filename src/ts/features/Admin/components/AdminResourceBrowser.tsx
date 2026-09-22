@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { confirmDialog } from '@/infrastructure/ui/confirmDialog';
+import { confirmDialog } from '@/shared/ui/dialog/confirmDialog';
 import { AdminResourceEditModal } from './AdminResourceEditModal';
 import { useAdminFeatures } from '../adminFeatures';
 import {

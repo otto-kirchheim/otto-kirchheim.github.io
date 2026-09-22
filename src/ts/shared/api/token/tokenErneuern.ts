@@ -1,4 +1,4 @@
-import { createSnackBar } from '../../../infrastructure/ui/CustomSnackbar';
+import { createSnackBar } from '@/shared/ui/snackbar/CustomSnackbar';
 import { authApi } from '../apiService';
 import Storage from '../../lib/storage/Storage';
 import { invokeHook } from '@/shared/lib/feature';

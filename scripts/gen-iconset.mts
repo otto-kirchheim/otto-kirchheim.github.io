@@ -1,5 +1,5 @@
 /**
- * Generator fuer `src/scss/iconset.<satz>.css` aus `src/ts/components/iconRegistry.ts`.
+ * Generator fuer `src/scss/iconset.<satz>.css` aus `src/ts/shared/ui/icons/iconRegistry.ts`.
  *
  * Die erzeugte Datei ist ein CSS-Remap-Layer: sie setzt pro DB-Icon-Name das `--db-icon`
  * des Design-Systems auf den Namen im Zielsatz. Sie ist eingecheckt, aber NICHT importiert --
@@ -8,12 +8,12 @@
  *   bun run icons:gen          schreibt die Datei
  *   bun scripts/gen-iconset.mts --check   nur pruefen (Exit 1 bei Abweichung)
  *
- * `test/iconRegistry.test.ts` nutzt `renderIconsetCss()` als Drift-Schutz.
+ * `test/shared/ui/icons/iconRegistry.test.ts` nutzt `renderIconsetCss()` als Drift-Schutz.
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { ICON_REGISTRY, type IconZiel } from '../src/ts/components/iconRegistry.ts';
+import { ICON_REGISTRY, type IconZiel } from '../src/ts/shared/ui/icons/iconRegistry.ts';
 
 const ZIEL_DATEI = new URL('../src/scss/iconset.material.css', import.meta.url);
 
@@ -31,7 +31,7 @@ export function renderIconsetCss(): string {
 
   return `/*
  * GENERIERT von scripts/gen-iconset.mts -- NICHT von Hand editieren.
- * Quelle: src/ts/components/iconRegistry.ts   (Neu erzeugen: bun run icons:gen)
+ * Quelle: src/ts/shared/ui/icons/iconRegistry.ts   (Neu erzeugen: bun run icons:gen)
  *
  * CSS-Remap-Layer fuer den Wechsel des Icon-Satzes auf Material Symbols. Bildet jeden in der
  * App genutzten DB-UX-Icon-Namen auf den Material-Namen ab, indem der vom Design-System

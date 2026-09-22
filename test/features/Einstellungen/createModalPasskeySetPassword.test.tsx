@@ -59,7 +59,7 @@ vi.mock('@/shared/api/token/tokenErneuern', () => ({
   resetTokenState: resetTokenStateMock,
 }));
 
-vi.mock('@/infrastructure/ui/CustomSnackbar', () => ({
+vi.mock('@/shared/ui/snackbar/CustomSnackbar', () => ({
   createSnackBar: createSnackBarMock,
 }));
 

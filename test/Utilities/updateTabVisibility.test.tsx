@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import '@/app/features';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import StartTab from '@/infrastructure/ui/StartTab';
-import { resetFeatureTabsVisible } from '@/infrastructure/ui/featureTabsStore';
+import { resetFeatureTabsVisible } from '@/shared/model/navigation/featureTabsStore';
 import updateTabVisibility, { hideAllFeatureTabs } from '@/infrastructure/ui/updateTabVisibility';
 import { render } from '@test/reactRender';
 

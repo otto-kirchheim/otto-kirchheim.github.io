@@ -2,11 +2,11 @@ import { DBButton, DBNotification, DBShell, DBShellContent } from '@db-ux/react-
 import { featureRegistry } from '@/shared/lib/feature';
 import AppHeader from '@/infrastructure/ui/AppHeader';
 import AppFooter from '@/infrastructure/ui/AppFooter';
-import SnackbarHost from '@/infrastructure/ui/SnackbarHost';
+import SnackbarHost from '@/shared/ui/snackbar/SnackbarHost';
 import StartTab from '@/infrastructure/ui/StartTab';
 import BerechnungTab from '@/infrastructure/ui/BerechnungTab';
 import EinstellungenTab from '@/infrastructure/ui/EinstellungenTab';
-import useActiveTab from '@/infrastructure/ui/useActiveTab';
+import useActiveTab from '@/shared/model/navigation/useActiveTab';
 
 /**
  * App-Shell als ein einziger React-Baum. Die `id`/`class`-Attribute der Panes und Mount-Divs
