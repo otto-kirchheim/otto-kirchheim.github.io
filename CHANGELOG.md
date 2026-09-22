@@ -2,6 +2,15 @@
 
 Dieses Changelog dokumentiert Aenderungen im Frontend.
 
+## 2026-09-22 (178)
+
+### docs (CLAUDE.md an FSD-Feature-Contract angepasst)
+
+- `frontend/CLAUDE.md` beschrieb noch das alte `index.ts` (`featureLifecycleRegistry.registerFeature()`)-Muster und einen `core/`-Bereich "ohne Feature-Abhaengigkeiten (ausser lazy-imports fuer Admin)" -- beides seit P1a-P1i ueberholt.
+- Verzeichnisbaum + 3-Schichten-Abschnitt jetzt: `app/features.ts` (Feature-Manifest), `core/hooks/featureRegistry.ts` (Contract/Registry, kennt kein Modul selbst), `core/help/`, Admin-Feature-Ordner (`features/Admin/features/{ber,ewt,ez,ea}/` + `adminFeatures.ts`), Berechnung/Einstellungen/Admin als "globale Bereiche" statt Feature-Module.
+- Neuer Abschnitt "Feature-Contract der vier Module": `meta.ts` (eager) + `parts/{ui,data,berechnung,einstellungen,pdf,help,events}` (lazy, je Slot ein Chunk), `bun run new-feature <slug> [--admin]`-Scaffold. Regel 1 in Abschnitt 2 entsprechend aktualisiert.
+- Keine Code-Aenderung, nur Doku. Gate nicht erneut noetig (Markdown).
+
 ## 2026-09-22 (177)
 
 ### feat (Scaffold: optionaler Admin-Ordner)

@@ -61,11 +61,14 @@ src/
 ├── ts/
 │   ├── main.tsx           # App-Init (PWA, Version-Check) + Root-Mount von `App.tsx`
 │   ├── App.tsx            # App-Shell als ein React-Baum (Header, Tabs, Footer, Phase N)
+│   ├── app/
+│   │   └── features.ts    # Feature-Manifest: einzige Stelle mit dynamischem `import()` je Modul (ber/ewt/ez/ea)
 │   ├── components/        # React UI-Bausteine (Modals, Buttons, Inputs)
-│   ├── core/              # Zentrale Contracts und Events
+│   ├── core/              # Zentrale Contracts und Events, kennt kein Feature-Modul
 │   │   ├── types/         # Alle TS-Interfaces + API-Envelope-Typen
-│   │   ├── hooks/         # Hook-Registry (registerHook/invokeHook)
+│   │   ├── hooks/         # `featureRegistry.ts` (Feature-Contract/Registry, siehe unten), `featureLifecycle.ts`, `hookRegistry.ts`
 │   │   ├── events/        # App-Events (publishDataChanged, EventChannels)
+│   │   ├── help/          # `helpContent.ts` (nur Kern-Kontexte `tab.start`/`tab.einstellungen`/`tab.berechnung`), `openHelpModal.tsx` (async)
 │   │   └── orchestration/ # Init-Sequenz, Feature-Lifecycle-Registry, Auth-Lifecycle
 │   │       └── auth/      # Auth-Orchestrierung (Login, Modals, User-Daten)
 │   │           ├── components/ # Login/Register/Reset-Modals, ConflictReviewBanner
@@ -78,15 +81,16 @@ src/
 │   │   ├── storage/       # Storage-Singleton
 │   │   ├── table/         # CustomTable (Datenmodell Row/Rows/Column, Rendering seit Phase M React via CustomTableView.tsx)
 │   │   ├── tokenManagement/ # JWT, Passkeys, Token-Refresh
-│   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, CustomSnackbar
+│   │   ├── ui/            # buttonDisable, confirmDialog, setOffline, setLoading, CustomSnackbar; liest Features nur über `featureRegistry`/`featureTabsStore`
 │   │   └── validation/    # Passwort-Validierung
-│   └── features/          # Feature-Module
-│       ├── Bereitschaft/  # Bereitschaftsdienst (index, components/, utils/)
-│       ├── EWT/           # Einsatzwechseltaetigkeit
-│       ├── Neben/         # Erschwerniszulagen (EZ)
-│       ├── Berechnung/    # Gesamtberechnung
-│       ├── Einstellungen/ # Benutzer-Einstellungen
-│       └── Admin/         # Admin-Panel (React)
+│   └── features/
+│       ├── Bereitschaft/  # Feature-Modul „ber“ (steckbar, lazy) -- meta.ts + parts/, s. u.
+│       ├── EWT/           # Feature-Modul „ewt“
+│       ├── Neben/         # Feature-Modul „ez“ (Erschwerniszulagen, UI-Text „Nebenbezüge“)
+│       ├── EA/            # Feature-Modul „ea“ (Entgeltausgleich)
+│       ├── Berechnung/    # globaler Bereich: aggregiert die `berechnung`-Teile der Module, kennt selbst kein Modul
+│       ├── Einstellungen/ # globaler Bereich: rendert die `einstellungen`-Teile der Module
+│       └── Admin/         # Admin-Panel; Feature-Anteile in `features/Admin/features/{ber,ewt,ez,ea}/` + eigenes Manifest `adminFeatures.ts`
 test/
 ├── setupBun.ts            # Setup: happy-dom + Bun-Kompatibilitaet
 ├── mockData.ts            # Gemeinsame Test-Daten
@@ -128,19 +132,29 @@ erste `registerAppStartTask`-Callback laeuft dann potenziell VOR diesen Effekten
 
 **3-Schichten-Architektur:**
 
-- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung. `core/types/` enthält alle geteilten Interfaces. Keine Feature-Abhängigkeiten (außer lazy-imports für Admin).
-- **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities, CustomTable). Darf `core/` nutzen, nicht `features/`.
-- **`features/`** – Daten-getriebene Feature-Module (Bereitschaft, EWT, Neben, etc.). Dürfen `core/` und `infrastructure/` nutzen.
+- **`core/`** – Zentrale Contracts, Events, Hooks, Lifecycle-Registry, Auth-Orchestrierung. `core/types/` enthält alle geteilten Interfaces. **Kennt kein Feature-Modul** – `core/hooks/featureRegistry.ts` ist nur Contract/Registry, referenziert die vier Module nicht selbst.
+- **`infrastructure/`** – Technische Bausteine (API, Storage, AutoSave, UI-Utilities, CustomTable). Darf `core/` nutzen, nicht `features/`; liest Feature-Wissen ausschließlich über `featureRegistry` (`featureTabsStore`, `StartTab`, `AppHeader`, `BerechnungTab`, `EinstellungenTab`).
+- **`features/`** – Vier **steckbare, lazy geladene Feature-Module** (`ber`=Bereitschaft, `ewt`=EWT, `ez`=Neben/Erschwerniszulagen, `ea`=Entgeltausgleich) plus die **globalen Bereiche** `Berechnung`/`Einstellungen`/`Admin` (aggregieren nur die Modul-Teile, kennen kein Modul direkt). Module dürfen `core/`/`infrastructure/` nutzen, nie ein anderes Modul; einzige Stelle mit Modul-Wissen ist `app/features.ts` (Feature-Manifest) bzw. `features/Admin/adminFeatures.ts` (Admin-Manifest). Durchgesetzt per `eslint.fsd.config.js` (`bun run lint:fsd`, Warnungs-Ratchet). Hintergrund/Rationale: `tasks/plan-fsd-feature-module.md`.
 
-**Feature-Modul-Pattern:**
-Jedes Feature folgt der gleichen Struktur:
+**Feature-Contract der vier Module (`ber`/`ewt`/`ez`/`ea`):**
+Jedes Modul trennt einen kleinen eager Teil von lazy nachladbaren Teilen (Ordnername bleibt vorerst `Bereitschaft`/`EWT`/`Neben`/`EA`, P7 der FSD-Migration steht noch aus):
 
 ```
-features/Feature/
-├── index.ts          # featureLifecycleRegistry.registerFeature() -> mount()/unmount() der Tab-Komponente
-├── components/       # React TSX: Add/Edit/Show Modals
-└── utils/            # Business-Logik, Berechnungen, Daten-Handling
+features/Bereitschaft/          # meta.id = 'ber'
+├── meta.ts            # FeatureMeta: id, label, icon, order, legacy-Mapping (Tab/Storage/Formular-Codes), helpKeys, resources[] -- eager, kein Chunk
+├── parts/             # je Slot ein Lazy-Chunk, in app/features.ts per `() => import(...)` registriert
+│   ├── ui.tsx         # Tab-Komponente
+│   ├── data.ts        # getDaten/applyDaten/monatFilter je Ressource
+│   ├── berechnung.tsx # aggregate/calc/tableRows/mobileCard fuer die Berechnung
+│   ├── einstellungen.ts # sections[] (read/collect) fuer die Einstellungen
+│   ├── pdf.ts         # baueDaten() fuer den PDF-Export
+│   ├── help.ts        # Hilfetexte des Moduls (`meta.helpKeys`)
+│   └── events.ts      # Wake-Event-Handler (optional)
+├── components/        # React TSX: Add/Edit/Show Modals
+└── utils/             # Business-Logik, Berechnungen, Daten-Handling
 ```
+
+Ein globaler Bereich laedt ein Modul nie direkt, sondern ueber `featureRegistry.load(id, teil)`/`loadMany`/`loadAll` (`core/hooks/featureRegistry.ts`); nicht benoetigte Teile bleiben ungeladen. **Admin-Anteile liegen nie im Modul selbst**, sondern in `features/Admin/features/<id>/` (`index.ts` = `AdminFeature`, `katalog.ts` = PDF-Feldkatalog fuers FormularEditor), angemeldet im separaten Admin-Manifest `features/Admin/adminFeatures.ts` (nur fuer Admins geladen). Neues Modul/Admin-Ordner anlegen: `bun run new-feature <slug> --label "..." [--admin]` (`scripts/new-feature.ts`).
 
 **Hybrid-Rendering:**
 
@@ -153,7 +167,7 @@ features/Feature/
 
 ## 2. Frontend-spezifische Regeln
 
-1. **Feature-Modul-Pattern** einhalten: `index.ts` → `components/` → `utils/`
+1. **Feature-Contract** einhalten: `meta.ts` (eager) → `parts/*` (lazy, je Slot ein Chunk) → `components/` → `utils/`; Module importieren sich nie gegenseitig, Admin-Anteile nie im Modul (siehe oben)
 2. **dayjs** für alle Datumsoperationen (aus `infrastructure/date/configDayjs.ts`)
 3. **Barrel-Exports** in jedem Ordner (`index.ts` mit Re-Exports)
 4. **React** für die gesamte App-Shell (`App.tsx`, ein Baum), Modals/Dialoge, die Feature-Tabs und alle Tab-Panel-Inhalte (seit Phase N, 2026-09-13); `index.html` ist nur noch `<noscript>` + `<div id="app">`
